@@ -1,0 +1,1 @@
+import"../../../base/common/uri.js";import"./environmentVariable.js";import"./terminal.js";var t=(t=>(t[t.WriteMaxChunkSize=50]="WriteMaxChunkSize",t))(t||{});function v(t){const n=[];let r=0;for(let e=0;e<t.length-1;e++)(e-r+1>=50||""===t[e+1])&&(n.push(t.substring(r,e+1)),r=e+1,e++);return r!==t.length&&n.push(t.substring(r)),n}export{v as chunkInput};

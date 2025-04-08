@@ -1,0 +1,1 @@
+import"../../../base/common/uri.js";import"../../workspace/common/workspace.js";function p(o){return o&&o.hasOwnProperty("folderUri")}function I(o){return o&&o.hasOwnProperty("workspace")}export{p as isFolderBackupInfo,I as isWorkspaceBackupInfo};

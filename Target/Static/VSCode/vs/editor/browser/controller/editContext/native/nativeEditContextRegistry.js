@@ -1,0 +1,1 @@
+import"../../../../../base/common/lifecycle.js";import"./nativeEditContext.js";class i{_nativeEditContextMapping=new Map;register(t,e){return this._nativeEditContextMapping.set(t,e),{dispose:()=>{this._nativeEditContextMapping.delete(t)}}}get(t){return this._nativeEditContextMapping.get(t)}}const r=new i;export{r as NativeEditContextRegistry};

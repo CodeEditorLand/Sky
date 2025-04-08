@@ -1,0 +1,1 @@
+var t="../../../../../../Asset/shellIntegration-fish-OJYUWMPJ.fish";export{t as default};

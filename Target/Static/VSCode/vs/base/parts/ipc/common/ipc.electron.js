@@ -1,0 +1,1 @@
+import"../../../common/buffer.js";import"../../../common/event.js";import"./ipc.js";class a{constructor(s,e){this.sender=s,this.onMessage=e}send(s){try{this.sender.send("vscode:message",s.buffer)}catch{}}disconnect(){this.sender.send("vscode:disconnect",null)}}export{a as Protocol};

@@ -1,0 +1,1 @@
+import"./instantiation.js";import"./descriptors.js";class a{_entries=new Map;constructor(...t){for(const[s,e]of t)this.set(s,e)}set(t,s){const e=this._entries.get(t);return this._entries.set(t,s),e}has(t){return this._entries.has(t)}get(t){return this._entries.get(t)}}export{a as ServiceCollection};

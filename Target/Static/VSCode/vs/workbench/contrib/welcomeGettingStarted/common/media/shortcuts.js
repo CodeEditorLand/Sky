@@ -1,0 +1,1 @@
+var r="../../../../../../Asset/shortcuts-D4BF4NLX.svg";export{r as default};

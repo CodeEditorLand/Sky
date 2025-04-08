@@ -1,0 +1,1 @@
+class n{constructor(t,n){this.x=t,this.y=n}static equals(t,n){return t.x===n.x&&t.y===n.y}add(t){return new n(this.x+t.x,this.y+t.y)}deltaX(t){return new n(this.x+t,this.y)}deltaY(t){return new n(this.x,this.y+t)}toString(){return`(${this.x},${this.y})`}}export{n as Point};

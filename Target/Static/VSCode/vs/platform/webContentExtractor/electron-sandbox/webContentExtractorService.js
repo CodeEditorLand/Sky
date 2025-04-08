@@ -1,0 +1,1 @@
+import{registerMainProcessRemoteService as e,registerSharedProcessRemoteService as r}from"../../ipc/electron-sandbox/services.js";import{ISharedWebContentExtractorService as t,IWebContentExtractorService as o}from"../common/webContentExtractor.js";e(o,"webContentExtractor"),r(t,"sharedWebContentExtractor");

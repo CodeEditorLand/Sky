@@ -1,0 +1,1 @@
+import{networkInterfaces as f}from"os";const o=new Set(["00:00:00:00:00:00","ff:ff:ff:ff:ff:ff","ac:de:48:00:11:22"]);function a(f){const e=f.replace(/\-/g,":").toLowerCase();return!o.has(e)}function s(){const o=f();for(const f in o){const e=o[f];if(e)for(const{mac:f}of e)if(a(f))return f}throw new Error("Unable to retrieve mac address (unexpected format)")}export{s as getMac};

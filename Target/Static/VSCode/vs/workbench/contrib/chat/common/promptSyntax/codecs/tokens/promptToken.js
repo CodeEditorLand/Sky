@@ -1,0 +1,1 @@
+import{BaseToken as e}from"../../../../../../../editor/common/codecs/baseToken.js";class r extends e{}export{r as PromptToken};

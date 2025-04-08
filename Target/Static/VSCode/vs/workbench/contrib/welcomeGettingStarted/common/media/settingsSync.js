@@ -1,0 +1,1 @@
+var r="../../../../../../Asset/settingsSync-LEFRAJRB.svg";export{r as default};

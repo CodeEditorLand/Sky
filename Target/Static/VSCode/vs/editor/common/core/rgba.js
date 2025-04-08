@@ -1,0 +1,1 @@
+class n{_rgba8Brand=void 0;static Empty=new n(0,0,0,0);r;g;b;a;constructor(t,a,s,r){this.r=n._clamp(t),this.g=n._clamp(a),this.b=n._clamp(s),this.a=n._clamp(r)}equals(t){return this.r===t.r&&this.g===t.g&&this.b===t.b&&this.a===t.a}static _clamp(t){return t<0?0:t>255?255:0|t}}export{n as RGBA8};

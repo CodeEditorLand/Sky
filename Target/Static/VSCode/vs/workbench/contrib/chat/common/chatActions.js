@@ -1,0 +1,1 @@
+import{MarshalledId as e}from"../../../../base/common/marshallingIds.js";function n(t){return!!t&&"string"==typeof t.sessionId&&t.$mid===e.ChatViewContext}export{n as isChatViewTitleActionContext};

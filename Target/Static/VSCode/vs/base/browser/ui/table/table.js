@@ -1,0 +1,1 @@
+import"../list/list.js";import"../../../common/event.js";class I extends Error{constructor(r,o){super(`TableError [${r}] ${o}`)}}export{I as TableError};

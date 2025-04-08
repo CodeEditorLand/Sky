@@ -1,0 +1,1 @@
+import"../../../../base/common/uri.js";import"../../../../base/common/worker/webWorker.js";import"./search.js";class r{static CHANNEL_NAME="localFileSearchWorkerHost";static getChannel(e){return e.getChannel(r.CHANNEL_NAME)}static setChannel(e,t){e.setChannel(r.CHANNEL_NAME,t)}}export{r as LocalFileSearchWorkerHost};

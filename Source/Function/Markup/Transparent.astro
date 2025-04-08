@@ -1,16 +1,26 @@
 ---
+// import "@Source/Function/Stylesheet/Inner.css";
+
+import Meta from "@Source/Function/Meta.astro";
 import { Head } from "astro-capo";
-
-import "@Function/Stylesheet/Inner.css";
-
-import Meta from "@Function/Meta.astro";
 ---
 
 <!doctype html>
 <html lang="en" class="no-js" dir="ltr">
 	<Head>
+		<script>
+			document.documentElement.classList.remove("no-js");
+			document.documentElement.classList.add("js");
+		</script>
+
 		<Meta />
 
+		<link
+			rel="preconnect"
+			href="HTTPS://fonts.googleapis.com"
+			crossorigin
+		/>
+		<link rel="preconnect" href="HTTPS://fonts.gstatic.com" crossorigin />
 		<link
 			rel="manifest"
 			href="/Manifest.json"
@@ -18,7 +28,7 @@ import Meta from "@Function/Meta.astro";
 		/>
 
 		<style is:global>
-			@import "@Function/Stylesheet/Transparent.css";
+			@import "@Source/Function/Stylesheet/Transparent.css";
 		</style>
 
 		<slot name="Head" />
@@ -26,8 +36,8 @@ import Meta from "@Function/Meta.astro";
 	<body>
 		<slot />
 
-		<script>
-			import "@Function/API.js";
-		</script>
-	</body>
+		<!-- <script>
+			import "@Source/Function/API.js";
+		</script> -->
+	</body><slot name="BodyAfter" />
 </html>

@@ -6,8 +6,10 @@ export default {
 	content: [
 		`./Public/**/${Common}`,
 		`./Source/**/${Common}`,
-		`./node_modules/@codeeditorland/wind/Target/**/${Common}`,
 		`./node_modules/@codeeditorland/output/Target/**/${Common}`,
+		`./node_modules/@codeeditorland/shim/Target/**/${Common}`,
+		`./node_modules/@codeeditorland/wind/Target/**/${Common}`,
+		`./node_modules/@codeeditorland/worker/Target/**/${Common}`,
 	],
 
 	darkMode: "media",

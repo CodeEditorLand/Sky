@@ -1,0 +1,1 @@
+import"../../../common/buffer.js";const r="Offline";function i(s){return s instanceof t||s instanceof Error&&s.name===r&&s.message===r}class t extends Error{constructor(){super(r),this.name=this.message}}export{t as OfflineError,i as isOfflineError};

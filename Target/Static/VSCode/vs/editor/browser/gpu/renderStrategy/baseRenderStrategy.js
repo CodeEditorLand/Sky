@@ -1,0 +1,1 @@
+import{ViewEventHandler as e}from"../../../common/viewEventHandler.js";import"../raster/glyphRasterizer.js";class w extends e{constructor(e,t,r,s){super(),this._context=e,this._viewGpuContext=t,this._device=r,this._glyphRasterizer=s,this._context.addEventHandler(this)}get glyphRasterizer(){return this._glyphRasterizer.value}}export{w as BaseRenderStrategy};

@@ -1,0 +1,1 @@
+import"../../../../base/common/lifecycle.js";import"../../../../base/common/event.js";import"../../../../base/common/cancellation.js";import"../../../../base/common/buffer.js";import"../../../../base/common/uri.js";import"./workingCopy.js";var o=(o=>(o[o.Save=1]="Save",o[o.Backup=2]="Backup",o))(o||{});export{o as SnapshotContext};

@@ -1,0 +1,1 @@
+import"./constants.js";const n="copilot";export{n as CHAT_PROVIDER_ID};

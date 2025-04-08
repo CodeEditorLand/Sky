@@ -1,0 +1,1 @@
+import"../../../../platform/workspace/common/workspace.js";import"../../../../platform/files/common/files.js";async function s(o,r){for(const e of o.folders){const o=await r.resolve(e.uri);if(o.children&&o.children.length>0)return!1}return!0}export{s as areWorkspaceFoldersEmpty};

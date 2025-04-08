@@ -1,0 +1,1 @@
+import"./constants.js";function f(o,t){if(void 0!==t)return"function"==typeof t?t(o):t}export{f as checkModeOption};

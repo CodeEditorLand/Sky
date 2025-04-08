@@ -1,0 +1,1 @@
+var i="../../../../../../Asset/letterpress-light-E73SU3CI.svg";export{i as default};

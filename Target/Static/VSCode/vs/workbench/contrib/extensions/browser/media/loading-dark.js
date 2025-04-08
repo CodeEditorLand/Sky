@@ -1,0 +1,1 @@
+var l="../../../../../../Asset/loading-dark-T56347KP.svg";export{l as default};

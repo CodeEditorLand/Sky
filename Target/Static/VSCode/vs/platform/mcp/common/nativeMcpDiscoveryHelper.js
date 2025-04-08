@@ -1,0 +1,1 @@
+import"../../../base/common/platform.js";import"../../../base/common/uri.js";import{createDecorator as e}from"../../instantiation/common/instantiation.js";const a=e("INativeMcpDiscoveryHelperService"),p="NativeMcpDiscoveryHelper";export{a as INativeMcpDiscoveryHelperService,p as NativeMcpDiscoveryHelperChannelName};

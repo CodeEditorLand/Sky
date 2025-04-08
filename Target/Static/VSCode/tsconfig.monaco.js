@@ -1,0 +1,1 @@
+var t="./Asset/tsconfig.monaco-XMBI6LBN.json";export{t as default};

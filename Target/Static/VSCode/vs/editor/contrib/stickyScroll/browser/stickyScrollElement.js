@@ -1,0 +1,1 @@
+import"../../../../base/common/uri.js";class c{constructor(t,s){this.startLineNumber=t,this.endLineNumber=s}}class d{constructor(t,s,i){this.range=t,this.children=s,this.parent=i}}class u{constructor(t,s,i,e){this.uri=t,this.version=s,this.element=i,this.outlineProviderId=e}}export{d as StickyElement,u as StickyModel,c as StickyRange};

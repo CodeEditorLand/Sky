@@ -1,0 +1,1 @@
+import{create as r}from"./languageDetectionWebWorker.js";import{bootstrapWebWorker as o}from"../../../../base/common/worker/webWorkerBootstrap.js";o(r);

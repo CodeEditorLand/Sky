@@ -1,0 +1,1 @@
+import"../../keybinding/common/keybinding.js";function n(o){return"Up"===o.lookupKeybinding("history.showPrevious")?.getElectronAccelerator()&&"Down"===o.lookupKeybinding("history.showNext")?.getElectronAccelerator()}export{n as showHistoryKeybindingHint};

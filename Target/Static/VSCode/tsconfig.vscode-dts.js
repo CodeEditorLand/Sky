@@ -1,0 +1,1 @@
+var s="./Asset/tsconfig.vscode-dts-LCJ5SPSR.json";export{s as default};

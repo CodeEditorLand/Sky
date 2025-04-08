@@ -1,0 +1,4 @@
+function h(a){const o=new Map,f=a.replace(/\r\n?/g,`
+`).split(`
+`);for(let t of f){if(t=t.trim(),!t||t.startsWith("#"))continue;const[e,i]=c(t);e&&o.set(e,i)}return o;function c(t){t.startsWith("export ")&&(t=t.substring(7).trim());const e=u(t,r=>r==="="||r===":");if(e===-1)return[null,null];const i=t.substring(0,e).trim();let n=t.substring(e+1).trim();const s=u(n,r=>r==="#");if(s!==-1&&(n=n.substring(0,s).trim()),n.length>=2){const r=n[0],l=n[n.length-1];(r==='"'&&l==='"'||r==="'"&&l==="'"||r==="`"&&l==="`")&&(n=n.substring(1,n.length-1),r==='"'&&(n=n.replace(/\\n/g,`
+`).replace(/\\r/g,"\r")))}return[i,n]}function u(t,e){let i=!1,n="";for(let s=0;s<t.length;s++){const r=t[s];if(i)r===n&&t[s-1]!=="\\"&&(i=!1);else if(r==='"'||r==="'"||r==="`")i=!0,n=r;else if(e(r))return s}return-1}}export{h as parseEnvFile};

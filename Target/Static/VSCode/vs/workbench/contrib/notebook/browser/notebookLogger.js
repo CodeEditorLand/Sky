@@ -1,0 +1,1 @@
+class n{constructor(){this._domFrameLog()}_frameId=0;_domFrameLog(){}debug(...o){const e=new Date;console.log(`${e.getSeconds()}:${e.getMilliseconds().toString().padStart(3,"0")}`,`frame #${this._frameId}: `,...o)}}const a=new n;function r(...o){a.debug(...o)}export{r as notebookDebug};

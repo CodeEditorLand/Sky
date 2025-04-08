@@ -1,0 +1,1 @@
+var n;(n||={}).create=function(t,n){return new t.EditContext(n)};export{n as EditContext};

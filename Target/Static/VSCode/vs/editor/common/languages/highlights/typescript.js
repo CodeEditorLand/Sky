@@ -1,0 +1,1 @@
+var n="../../../../../Asset/typescript-Y2YE4XVB.scm";export{n as default};

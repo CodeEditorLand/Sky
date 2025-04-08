@@ -1,0 +1,1 @@
+import"../../../../common/core/textEdit.js";import"../../../../common/languages.js";import"./provideInlineCompletions.js";class a{constructor(t,e,i){this.edit=t,this.commands=e,this.inlineCompletion=i}get range(){return this.edit.range}get text(){return this.edit.text}equals(t){return this.edit.equals(t.edit)&&this.inlineCompletion===t.inlineCompletion}}export{a as InlineEdit};

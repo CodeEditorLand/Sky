@@ -1,0 +1,1 @@
+const e="remote.defaultExtensionsIfInstalledLocally";export{e as REMOTE_DEFAULT_IF_LOCAL_EXTENSIONS};

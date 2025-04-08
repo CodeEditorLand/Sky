@@ -1,0 +1,1 @@
+import"../../../../base/common/event.js";import"../../../../base/common/uri.js";import"../../../common/editor.js";import"../../../../base/common/cancellation.js";import"../../../../base/common/buffer.js";var o=(o=>(o[o.None=0]="None",o[o.Untitled=2]="Untitled",o[o.Scratchpad=4]="Scratchpad",o))(o||{});const s="";export{s as NO_TYPE_ID,o as WorkingCopyCapabilities};

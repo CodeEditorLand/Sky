@@ -1,0 +1,1 @@
+var r=(a=>(a[a.CommandPalette=0]="CommandPalette",a[a.StatusBarWindowIndicatorMenu=1]="StatusBarWindowIndicatorMenu",a))(r||{}),n=(a=>(a.DARK="dark",a.LIGHT="light",a.HIGH_CONTRAST_LIGHT="hcLight",a.HIGH_CONTRAST_DARK="hcDark",a))(n||{});export{n as ColorScheme,r as Menu};

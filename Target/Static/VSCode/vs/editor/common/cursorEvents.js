@@ -1,0 +1,1 @@
+import"./core/position.js";import"./core/selection.js";var e=(e=>(e[e.NotSet=0]="NotSet",e[e.ContentFlush=1]="ContentFlush",e[e.RecoverFromMarkers=2]="RecoverFromMarkers",e[e.Explicit=3]="Explicit",e[e.Paste=4]="Paste",e[e.Undo=5]="Undo",e[e.Redo=6]="Redo",e))(e||{});export{e as CursorChangeReason};

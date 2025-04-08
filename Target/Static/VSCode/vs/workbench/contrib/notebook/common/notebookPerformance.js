@@ -1,0 +1,1 @@
+class o{_marks={};get value(){return{...this._marks}}mark(r){this._marks[r]?console.error(`Skipping overwrite of notebook perf value: ${r}`):this._marks[r]=Date.now()}}export{o as NotebookPerfMarks};

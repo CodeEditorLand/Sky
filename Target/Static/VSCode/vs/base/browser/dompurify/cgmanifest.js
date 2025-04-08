@@ -1,0 +1,1 @@
+var t="../../../../Asset/cgmanifest-GOMFH5PS.json";export{t as default};

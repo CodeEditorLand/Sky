@@ -1,0 +1,1 @@
+import{create as e}from"./extensionHostWorker.js";const s=e();self.onmessage=e=>s.onmessage(e.data);

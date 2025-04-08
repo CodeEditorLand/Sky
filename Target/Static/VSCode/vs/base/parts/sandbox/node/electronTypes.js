@@ -1,0 +1,1 @@
+function s(t){return!!t.parentPort}export{s as isUtilityProcess};

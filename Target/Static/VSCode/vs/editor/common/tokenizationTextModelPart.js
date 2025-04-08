@@ -1,0 +1,1 @@
+import"./core/range.js";import"./encodedTokenAttributes.js";import"./tokens/lineTokens.js";import"./tokens/sparseMultilineTokens.js";var n=(e=>(e[e.InProgress=1]="InProgress",e[e.Completed=2]="Completed",e))(n||{});export{n as BackgroundTokenizationState};

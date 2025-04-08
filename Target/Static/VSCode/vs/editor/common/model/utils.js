@@ -1,0 +1,1 @@
+import{CharCode as i}from"../../../base/common/charCode.js";function u(e,o){let t=0,r=0;const a=e.length;for(;r<a;){const a=e.charCodeAt(r);if(a===i.Space)t++;else{if(a!==i.Tab)break;t=t-t%o+o}r++}return r===a?-1:t}export{u as computeIndentLevel};

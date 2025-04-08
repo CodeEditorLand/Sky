@@ -1,0 +1,1 @@
+import"../../../common/lifecycle.js";import{Client as t}from"../common/ipc.mp.js";class n extends t{constructor(o,t){super(o,t)}}export{n as Client};

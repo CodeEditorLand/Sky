@@ -1,0 +1,1 @@
+import"../model.js";import{createDecorator as r}from"../../../platform/instantiation/common/instantiation.js";import"../../../platform/markers/common/markers.js";import"../../../base/common/event.js";import"../core/range.js";import"../../../base/common/uri.js";import"../../../base/common/lifecycle.js";const D=r("markerDecorationsService");export{D as IMarkerDecorationsService};

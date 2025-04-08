@@ -1,9 +1,9 @@
 ---
-import "@Function/Stylesheet/Inner.css";
+import "@Source/Function/Stylesheet/Inner.css";
 
-import Meta from "@Function/Meta.astro";
+import Meta from "@Source/Function/Meta.astro";
 import { Head } from "astro-capo";
-import { ClientRouter } from "astro:transitions";
+// import { ClientRouter } from "astro:transitions";
 ---
 
 <!doctype html>
@@ -29,12 +29,12 @@ import { ClientRouter } from "astro:transitions";
 		/>
 
 		<style is:global>
-			@import "@Function/Stylesheet/Base.css";
+			@import "@Source/Function/Stylesheet/Base.css";
 		</style>
 
 		<slot name="Head" />
 
-		<ClientRouter />
+		<!-- <ClientRouter /> -->
 	</Head>
 	<body aria-label="">
 		<div class="grow p-5 text-center">
@@ -47,12 +47,13 @@ import { ClientRouter } from "astro:transitions";
 				</li>
 			</ul>
 		</div>
+
 		<div class="grow">
 			<slot />
 		</div>
 
-		<script>
-			import "@Function/API.js";
-		</script>
+		<!-- <script>
+			import "@Source/Function/API.js";
+		</script> -->
 	</body><slot name="BodyAfter" />
 </html>

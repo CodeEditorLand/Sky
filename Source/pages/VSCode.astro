@@ -1,25 +1,31 @@
 ---
-import Layout from "@Function/Markup/Base.astro";
+import Layout from "@Source/Function/Markup/Base.astro";
 ---
 
 <Layout>
 	<meta
 		id="vscode-workbench-web-configuration"
-		data-settings='{"remoteAuthority":"localhost:9888","serverBasePath":"/","developmentOptions":{"logLevel":3},"enableWorkspaceTrust":true,"productConfiguration":{"embedderIdentifier":"server-distro"},"callbackRoute":"/oss-dev/callback"}'
+		data-settings='{"remoteAuthority":"localhost:9999","serverBasePath":"/","developmentOptions":{"logLevel":3},"enableWorkspaceTrust":true,"productConfiguration":{"embedderIdentifier":"server-distro"},"callbackRoute":"/oss-dev/callback"}'
 		slot="Head"
 	/>
 
 	<script is:inline slot="Head">
-		globalThis._VSCODE_FILE_ROOT =
-			"http://localhost:9888/oss-dev/static/out/";
+		globalThis._VSCODE_FILE_ROOT = "http://localhost:9999/Static/VSCode/";
 	</script>
 
-	<script>
-		import "@codeeditorland/output/Target/Microsoft/VSCode/vs/code/browser/workbench/workbench.js";
+	<script is:inline type="module" src="/Worker/CSS/Load.js" slot="Head"
+	></script>
+
+	<script is:inline slot="Head">
+		// @ts-expect-error
+		window._WORKER_CODE_EDITOR_LAND = "/Worker.js";
 	</script>
 
-	<!-- <script>
-		// @ts-ignore
-		import "@VSCode/out/vs/code/browser/workbench/workbench.js";
-	</script> -->
+	<script is:inline type="module" src="/Worker/Register.js" slot="Head"
+	></script>
+
+	<script
+		is:inline
+		type="module"
+		src="/Static/VSCode/vs/code/browser/workbench/workbench.js"></script>
 </Layout>

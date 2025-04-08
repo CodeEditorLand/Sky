@@ -1,0 +1,1 @@
+import"../../common/keymapInfo.js";class o{static INSTANCE=new o;_layoutInfos=[];get layoutInfos(){return this._layoutInfos}constructor(){}registerKeyboardLayout(o){this._layoutInfos.push(o)}}export{o as KeyboardLayoutContribution};

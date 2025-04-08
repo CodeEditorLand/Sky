@@ -1,0 +1,1 @@
+import"./themables.js";import{isString as i}from"./types.js";const e=Object.create(null);function u(r,n){if(i(n)){const t=e[n];if(void 0===t)throw new Error(`${r} references an unknown codicon: ${n}`);n=t}return e[r]=n,{id:r}}function m(){return e}export{m as getCodiconFontCharacters,u as register};

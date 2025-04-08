@@ -1,0 +1,1 @@
+var o=(o=>(o[o.GlyphInfo=0]="GlyphInfo",o[o.Cells=1]="Cells",o[o.TextureSampler=2]="TextureSampler",o[o.Texture=3]="Texture",o[o.LayoutInfoUniform=4]="LayoutInfoUniform",o[o.AtlasDimensionsUniform=5]="AtlasDimensionsUniform",o[o.ScrollOffset=6]="ScrollOffset",o))(o||{});export{o as BindingId};

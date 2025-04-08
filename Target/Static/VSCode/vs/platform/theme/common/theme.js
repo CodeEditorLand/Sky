@@ -1,0 +1,1 @@
+var A=(r=>(r.DARK="dark",r.LIGHT="light",r.HIGH_CONTRAST_DARK="hcDark",r.HIGH_CONTRAST_LIGHT="hcLight",r))(A||{}),n=(r=>(r.VS="vs",r.VS_DARK="vs-dark",r.HC_BLACK="hc-black",r.HC_LIGHT="hc-light",r))(n||{});function o(r){return"hcDark"===r||"hcLight"===r}function r(r){return"dark"===r||"hcDark"===r}export{A as ColorScheme,n as ThemeTypeSelector,r as isDark,o as isHighContrast};

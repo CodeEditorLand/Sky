@@ -1,3 +1,4 @@
+import { fileURLToPath } from "node:url";
 import { defineConfig } from "astro/config";
 import type { ViteDevServer } from "vite";
 
@@ -92,50 +93,113 @@ export default defineConfig({
 				? {
 						exclude: [
 							"@codeeditorland/common",
-							"@codeeditorland/wind",
 							"@codeeditorland/output",
+							"@codeeditorland/shim",
+							"@codeeditorland/worker",
+							"@codeeditorland/wind",
 						],
 					}
 				: {}),
 		},
 		resolve: {
 			preserveSymlinks: false,
-			alias: [
-				...[
-					"vscode",
-					"@microsoft/1ds-core-js",
-					"@microsoft/1ds-post-js",
-				].map((Module) => ({
-					find: Module,
-					replacement: new URL("./Source/Shim.ts", import.meta.url)
-						.pathname,
-				})),
-			],
+			// alias: [
+			// 	...[
+			// 		"vscode",
+			// 		"@microsoft/1ds-core-js",
+			// 		"@microsoft/1ds-post-js",
+			// 	].map((Module) => ({
+			// 		find: Module,
+			// 		replacement: new URL("./Source/Shim.ts", import.meta.url)
+			// 			.pathname,
+			// 	})),
+			// ],
 		},
 		css: {
 			devSourcemap: On,
 			transformer: "postcss",
 		},
 		plugins: [
+			(await import("vite-plugin-static-copy")).viteStaticCopy({
+				targets: [
+					{
+						src: "node_modules/@codeeditorland/output/Target/Microsoft/VSCode/*",
+						dest: "Static/VSCode/",
+					},
+
+					// TODO: DO THIS FOR THE CodeEditorLand/Editor BUILD AS WELL
+					// {
+					// 	src: "node_modules/@codeeditorland/output/Target/CodeEditorLand/Editor/",
+					// 	dest: "Editor/",
+					// },
+
+					{
+						src: "node_modules/@codeeditorland/shim/Target/*",
+						dest: "Static/Shim/",
+					},
+
+					{
+						src: "node_modules/@codeeditorland/worker/Target/*",
+						dest: ".",
+					},
+				],
+				structured: false,
+			}),
 			(await import("vite-plugin-top-level-await")).default(),
 			((Module: string[]) => ({
-				name: "NodeModules",
+				name: "ExtendedWatcherIgnore",
 				configureServer: (Server: ViteDevServer): void => {
 					Server.watcher.options = {
 						...Server.watcher.options,
 						ignored: [
 							new RegExp(
-								`/node_modules\\/(?!${Module.join("|")}).*/`,
+								`^${fileURLToPath(
+									new URL(
+										"./Target/Static/",
+										import.meta.url,
+									),
+								).replace(/\\/g, "\\\\")}`,
 							),
+
+							new RegExp(
+								`[/\\\\]node_modules[/\\\\](?!(${Module.join("|")})([/\\\\]|$)).*`,
+							),
+
 							"**/.git/**",
+
+							new RegExp(
+								`^${fileURLToPath(new URL("./Target/", import.meta.url)).replace(/\\/g, "\\\\")}`,
+							),
 						],
 					};
 				},
 			}))([
 				"@codeeditorland/common",
-				"@codeeditorland/wind",
 				"@codeeditorland/output",
+				"@codeeditorland/shim",
+				"@codeeditorland/wind",
+				"@codeeditorland/worker",
 			]),
+			// (() => ({
+			// 	name: "ServiceWorker",
+			// 	configureServer(Server) {
+			// 		Server.middlewares.use((Request, Response, Next) => {
+			// 			if (Request.url === "/Static/Worker/Worker.js") {
+			// 				Response.setHeader(
+			// 					"Service-Worker-Allowed",
+			// 					"/VSCode",
+			// 				);
+
+			// 				Response.setHeader(
+			// 					"Content-Type",
+			// 					"application/javascript; charset=utf-8",
+			// 				);
+			// 			}
+
+			// 			Next();
+			// 		});
+			// 	},
+			// }))(),
 		],
 	},
 }) as typeof defineConfig;

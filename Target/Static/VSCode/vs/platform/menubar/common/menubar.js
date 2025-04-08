@@ -1,0 +1,1 @@
+import"../../../base/common/uri.js";function n(n){return void 0!==n.submenu}function r(n){return"vscode.menubar.separator"===n.id}function t(n){return void 0!==n.uri}function i(e){return!n(e)&&!r(e)&&!t(e)}export{i as isMenubarMenuItemAction,t as isMenubarMenuItemRecentAction,r as isMenubarMenuItemSeparator,n as isMenubarMenuItemSubmenu};

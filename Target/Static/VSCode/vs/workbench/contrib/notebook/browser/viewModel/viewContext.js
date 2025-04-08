@@ -1,0 +1,1 @@
+import"../notebookBrowser.js";import"./eventDispatcher.js";import"../notebookOptions.js";class c{constructor(t,o,s){this.notebookOptions=t,this.eventDispatcher=o,this.getBaseCellEditorOptions=s}}export{c as ViewContext};

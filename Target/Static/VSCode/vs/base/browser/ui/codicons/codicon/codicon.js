@@ -1,0 +1,1 @@
+var l="../../../../../../Asset/codicon-AU54QHFO.ttf";export{l as default};

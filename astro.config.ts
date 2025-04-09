@@ -23,13 +23,10 @@ export default defineConfig({
 	site: On
 		? "http://localhost"
 		: Tauri
-			? "https://tauri.localhost"
+			? "http://tauri.localhost"
 			: "https://editor.land",
 	compressHTML: !On,
-	prefetch: {
-		defaultStrategy: "hover",
-		prefetchAll: true,
-	},
+	prefetch: false,
 	server: {
 		port: 9999,
 	},

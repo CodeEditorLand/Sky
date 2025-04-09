@@ -1,31 +1,42 @@
 ---
 import Layout from "@Source/Function/Markup/Base.astro";
+
+const Origin = Astro.url.origin;
 ---
 
 <Layout>
 	<meta
 		id="vscode-workbench-web-configuration"
-		data-settings='{"remoteAuthority":"localhost:9999","serverBasePath":"/","developmentOptions":{"logLevel":3},"enableWorkspaceTrust":true,"productConfiguration":{"embedderIdentifier":"server-distro"},"callbackRoute":"/oss-dev/callback"}'
+		data-settings={JSON.stringify({
+			remoteAuthority: "localhost:9999",
+			serverBasePath: "/",
+			developmentOptions: { logLevel: 3 },
+			enableWorkspaceTrust: true,
+			productConfiguration: { embedderIdentifier: "server-distro" },
+			callbackRoute: "/oss-dev/callback",
+		})}
 		slot="Head"
 	/>
 
-	<script is:inline slot="Head">
-		globalThis._VSCODE_FILE_ROOT = "http://localhost:9999/Static/VSCode/";
+	<script is:inline type="module" define:vars={{ Origin }} slot="Head" defer>
+		// @ts-expect-error
+		globalThis._VSCODE_FILE_ROOT = `${Origin}/Static/VSCode/`;
 	</script>
 
-	<script is:inline type="module" src="/Worker/CSS/Load.js" slot="Head"
+	<script is:inline type="module" src="/Worker/CSS/Load.js" slot="Head" defer
 	></script>
 
-	<script is:inline slot="Head">
+	<script is:inline type="module" slot="Head" defer>
 		// @ts-expect-error
 		window._WORKER = "/Worker.js";
 	</script>
 
-	<script is:inline type="module" src="/Worker/Register.js" slot="Head"
+	<script is:inline type="module" src="/Worker/Register.js" slot="Head" defer
 	></script>
 
 	<script
 		is:inline
 		type="module"
-		src="/Static/VSCode/vs/code/browser/workbench/workbench.js"></script>
+		src="/Static/VSCode/vs/code/browser/workbench/workbench.js"
+		defer></script>
 </Layout>

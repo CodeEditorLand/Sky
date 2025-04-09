@@ -1,6 +1,1 @@
-import { RawChatParticipantLocation } from "./constants.js";
-const CHAT_PROVIDER_ID = "copilot";
-export {
-  CHAT_PROVIDER_ID
-};
-//# sourceMappingURL=chatParticipantContribTypes.js.map
+export const CHAT_PROVIDER_ID="copilot";

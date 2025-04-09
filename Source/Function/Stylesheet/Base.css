@@ -4,7 +4,7 @@ html {
 
 html,
 body {
-	@apply h-full w-full bg-transparent;
+	@apply h-full w-full bg-white;
 }
 
 body {

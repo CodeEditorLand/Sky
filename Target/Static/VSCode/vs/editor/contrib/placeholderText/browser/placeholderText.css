@@ -1,13 +1,1 @@
-.monaco-editor {
-  --vscode-editor-placeholder-foreground: var(--vscode-editorGhostText-foreground);
-  .editorPlaceholder {
-    top: 0px;
-    position: absolute;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    text-wrap: nowrap;
-    pointer-events: none;
-    color: var(--vscode-editor-placeholder-foreground);
-  }
-}
-/*# sourceMappingURL=placeholderText.css.map */
+.monaco-editor{--vscode-editor-placeholder-foreground:var(--vscode-editorGhostText-foreground)}.monaco-editor .editorPlaceholder{top:0;position:absolute;overflow:hidden;text-overflow:ellipsis;text-wrap:nowrap;pointer-events:none;color:var(--vscode-editor-placeholder-foreground)}

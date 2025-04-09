@@ -1,4 +1,1 @@
-import { registerSharedProcessRemoteService } from "../../ipc/electron-sandbox/services.js";
-import { ISharedProcessTunnelService, ipcSharedProcessTunnelChannelName } from "../common/sharedProcessTunnelService.js";
-registerSharedProcessRemoteService(ISharedProcessTunnelService, ipcSharedProcessTunnelChannelName);
-//# sourceMappingURL=sharedProcessTunnelService.js.map
+import{registerSharedProcessRemoteService}from"../../ipc/electron-sandbox/services.js";import{ISharedProcessTunnelService,ipcSharedProcessTunnelChannelName}from"../common/sharedProcessTunnelService.js";registerSharedProcessRemoteService(ISharedProcessTunnelService,ipcSharedProcessTunnelChannelName);

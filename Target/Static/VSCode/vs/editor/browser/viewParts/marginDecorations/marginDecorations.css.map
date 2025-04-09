@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["../../../../../../../../../../Dependency/Microsoft/Dependency/Editor/src/vs/editor/browser/viewParts/marginDecorations/marginDecorations.css"],
-  "sourcesContent": ["/*---------------------------------------------------------------------------------------------\r\n *  Copyright (c) Microsoft Corporation. All rights reserved.\r\n *  Licensed under the MIT License. See License.txt in the project root for license information.\r\n *--------------------------------------------------------------------------------------------*/\r\n\r\n/*\r\n\tKeeping name short for faster parsing.\r\n\tcmdr = core margin decorations rendering (div)\r\n*/\r\n.monaco-editor .margin-view-overlays .cmdr {\r\n\tposition: absolute;\r\n\tleft: 0;\r\n\twidth: 100%;\r\n\theight: 100%;\r\n}"],
-  "mappings": "AASA,CAAC,cAAc,CAAC,qBAAqB,CAAC;AACrC,YAAU;AACV,QAAM;AACN,SAAO;AACP,UAAQ;AACT;",
-  "names": []
-}

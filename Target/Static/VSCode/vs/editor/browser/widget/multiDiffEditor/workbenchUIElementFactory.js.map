@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["../../../../../../../../../../Dependency/Microsoft/Dependency/Editor/src/vs/editor/browser/widget/multiDiffEditor/workbenchUIElementFactory.ts"],
-  "sourcesContent": ["/*---------------------------------------------------------------------------------------------\r\n *  Copyright (c) Microsoft Corporation. All rights reserved.\r\n *  Licensed under the MIT License. See License.txt in the project root for license information.\r\n *--------------------------------------------------------------------------------------------*/\r\n\r\nimport { IDisposable } from '../../../../base/common/lifecycle.js';\r\nimport { URI } from '../../../../base/common/uri.js';\r\n\r\n/**\r\n * This solves the problem that the editor layer cannot depend on the workbench layer.\r\n *\r\n * Maybe the multi diff editor widget should be moved to the workbench layer?\r\n * This would make monaco-editor consumption much more difficult though.\r\n */\r\nexport interface IWorkbenchUIElementFactory {\r\n\tcreateResourceLabel?(element: HTMLElement): IResourceLabel;\r\n}\r\n\r\nexport interface IResourceLabel extends IDisposable {\r\n\tsetUri(uri: URI | undefined, options?: IResourceLabelOptions): void;\r\n}\r\n\r\nexport interface IResourceLabelOptions {\r\n\tstrikethrough?: boolean;\r\n}\r\n"],
-  "mappings": "AAKA,SAAS,mBAAmB;AAC5B,SAAS,WAAW;",
-  "names": []
-}

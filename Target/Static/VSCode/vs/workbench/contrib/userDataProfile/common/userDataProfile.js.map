@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["../../../../../../../../../../Dependency/Microsoft/Dependency/Editor/src/vs/workbench/contrib/userDataProfile/common/userDataProfile.ts"],
-  "sourcesContent": ["/*---------------------------------------------------------------------------------------------\r\n *  Copyright (c) Microsoft Corporation. All rights reserved.\r\n *  Licensed under the MIT License. See License.txt in the project root for license information.\r\n *--------------------------------------------------------------------------------------------*/\r\n\r\nimport { URI } from '../../../../base/common/uri.js';\r\nimport { IUserDataProfile } from '../../../../platform/userDataProfile/common/userDataProfile.js';\r\nimport { IEditorPane } from '../../../common/editor.js';\r\n\r\nexport interface IUserDataProfilesEditor extends IEditorPane {\r\n\tcreateNewProfile(copyFrom?: URI | IUserDataProfile): Promise<void>;\r\n\tselectProfile(profile: IUserDataProfile): void;\r\n}\r\n"],
-  "mappings": "AAKA,SAAS,WAAW;AACpB,SAAS,wBAAwB;AACjC,SAAS,mBAAmB;",
-  "names": []
-}

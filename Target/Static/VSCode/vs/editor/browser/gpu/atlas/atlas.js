@@ -1,11 +1,1 @@
-var UsagePreviewColors = /* @__PURE__ */ ((UsagePreviewColors2) => {
-  UsagePreviewColors2["Unused"] = "#808080";
-  UsagePreviewColors2["Used"] = "#4040FF";
-  UsagePreviewColors2["Wasted"] = "#FF0000";
-  UsagePreviewColors2["Restricted"] = "#FF000088";
-  return UsagePreviewColors2;
-})(UsagePreviewColors || {});
-export {
-  UsagePreviewColors
-};
-//# sourceMappingURL=atlas.js.map
+export var UsagePreviewColors;!function(e){e.Unused="#808080",e.Used="#4040FF",e.Wasted="#FF0000",e.Restricted="#FF000088"}(UsagePreviewColors||(UsagePreviewColors={}));

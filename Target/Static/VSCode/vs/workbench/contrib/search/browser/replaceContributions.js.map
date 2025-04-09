@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["../../../../../../../../../../Dependency/Microsoft/Dependency/Editor/src/vs/workbench/contrib/search/browser/replaceContributions.ts"],
-  "sourcesContent": ["/*---------------------------------------------------------------------------------------------\r\n *  Copyright (c) Microsoft Corporation. All rights reserved.\r\n *  Licensed under the MIT License. See License.txt in the project root for license information.\r\n *--------------------------------------------------------------------------------------------*/\r\nimport { InstantiationType, registerSingleton } from '../../../../platform/instantiation/common/extensions.js';\r\nimport { IReplaceService } from './replace.js';\r\nimport { ReplaceService, ReplacePreviewContentProvider } from './replaceService.js';\r\nimport { WorkbenchPhase, registerWorkbenchContribution2 } from '../../../common/contributions.js';\r\n\r\nexport function registerContributions(): void {\r\n\tregisterSingleton(IReplaceService, ReplaceService, InstantiationType.Delayed);\r\n\tregisterWorkbenchContribution2(ReplacePreviewContentProvider.ID, ReplacePreviewContentProvider, WorkbenchPhase.BlockStartup /* registration only */);\r\n}\r\n"],
-  "mappings": ";;AAIA,SAAS,mBAAmB,yBAAyB;AACrD,SAAS,uBAAuB;AAChC,SAAS,gBAAgB,qCAAqC;AAC9D,SAAS,gBAAgB,sCAAsC;AAExD,SAAS,wBAA8B;AAC7C,oBAAkB,iBAAiB,gBAAgB,kBAAkB,OAAO;AAC5E;AAAA,IAA+B,8BAA8B;AAAA,IAAI;AAAA,IAA+B,eAAe;AAAA;AAAA,EAAoC;AACpJ;AAHgB;",
-  "names": []
-}

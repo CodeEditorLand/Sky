@@ -1,14 +1,1 @@
-var BindingId = /* @__PURE__ */ ((BindingId2) => {
-  BindingId2[BindingId2["GlyphInfo"] = 0] = "GlyphInfo";
-  BindingId2[BindingId2["Cells"] = 1] = "Cells";
-  BindingId2[BindingId2["TextureSampler"] = 2] = "TextureSampler";
-  BindingId2[BindingId2["Texture"] = 3] = "Texture";
-  BindingId2[BindingId2["LayoutInfoUniform"] = 4] = "LayoutInfoUniform";
-  BindingId2[BindingId2["AtlasDimensionsUniform"] = 5] = "AtlasDimensionsUniform";
-  BindingId2[BindingId2["ScrollOffset"] = 6] = "ScrollOffset";
-  return BindingId2;
-})(BindingId || {});
-export {
-  BindingId
-};
-//# sourceMappingURL=gpu.js.map
+export var BindingId;!function(n){n[n.GlyphInfo=0]="GlyphInfo",n[n.Cells=1]="Cells",n[n.TextureSampler=2]="TextureSampler",n[n.Texture=3]="Texture",n[n.LayoutInfoUniform=4]="LayoutInfoUniform",n[n.AtlasDimensionsUniform=5]="AtlasDimensionsUniform",n[n.ScrollOffset=6]="ScrollOffset"}(BindingId||(BindingId={}));

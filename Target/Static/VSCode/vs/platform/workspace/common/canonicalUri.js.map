@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["../../../../../../../../../Dependency/Microsoft/Dependency/Editor/src/vs/platform/workspace/common/canonicalUri.ts"],
-  "sourcesContent": ["/*---------------------------------------------------------------------------------------------\r\n *  Copyright (c) Microsoft Corporation. All rights reserved.\r\n *  Licensed under the MIT License. See License.txt in the project root for license information.\r\n *--------------------------------------------------------------------------------------------*/\r\n\r\nimport { CancellationToken } from '../../../base/common/cancellation.js';\r\nimport { IDisposable } from '../../../base/common/lifecycle.js';\r\nimport { URI, UriComponents } from '../../../base/common/uri.js';\r\nimport { createDecorator } from '../../instantiation/common/instantiation.js';\r\n\r\nexport interface ICanonicalUriProvider {\r\n\treadonly scheme: string;\r\n\tprovideCanonicalUri(uri: UriComponents, targetScheme: string, token: CancellationToken): Promise<URI | undefined>;\r\n}\r\n\r\nexport const ICanonicalUriService = createDecorator<ICanonicalUriService>('canonicalUriIdentityService');\r\n\r\nexport interface ICanonicalUriService {\r\n\treadonly _serviceBrand: undefined;\r\n\tregisterCanonicalUriProvider(provider: ICanonicalUriProvider): IDisposable;\r\n}\r\n"],
-  "mappings": "AAKA,SAAS,yBAAyB;AAClC,SAAS,mBAAmB;AAC5B,SAAS,KAAK,qBAAqB;AACnC,SAAS,uBAAuB;AAOzB,MAAM,uBAAuB,gBAAsC,6BAA6B;",
-  "names": []
-}

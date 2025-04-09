@@ -1,0 +1,1 @@
+import{stub}from"sinon";export function mock(){return function(){}}export const mockObject=()=>t=>new Proxy({...t},{get:(t,o)=>(t.hasOwnProperty(o)||(t[o]=stub()),t[o]),set:(t,o,n)=>(t[o]=n,!0)});

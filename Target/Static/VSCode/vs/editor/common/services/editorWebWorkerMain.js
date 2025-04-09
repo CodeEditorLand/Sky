@@ -1,4 +1,1 @@
-import { bootstrapWebWorker } from "../../../base/common/worker/webWorkerBootstrap.js";
-import { EditorWorker } from "./editorWebWorker.js";
-bootstrapWebWorker(() => new EditorWorker(null));
-//# sourceMappingURL=editorWebWorkerMain.js.map
+import{bootstrapWebWorker}from"../../../base/common/worker/webWorkerBootstrap.js";import{EditorWorker}from"./editorWebWorker.js";bootstrapWebWorker((()=>new EditorWorker(null)));

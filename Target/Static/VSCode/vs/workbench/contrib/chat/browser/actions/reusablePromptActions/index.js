@@ -1,0 +1,1 @@
+import{registerRunPromptActions}from"./chatRunPromptAction.js";import{registerAttachPromptActions}from"./chatAttachPromptAction.js";export const registerReusablePromptActions=()=>{registerRunPromptActions(),registerAttachPromptActions()};export{runAttachPromptAction}from"./chatAttachPromptAction.js";

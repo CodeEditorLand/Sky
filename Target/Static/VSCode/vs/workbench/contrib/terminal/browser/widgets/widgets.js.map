@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["../../../../../../../../../../../Dependency/Microsoft/Dependency/Editor/src/vs/workbench/contrib/terminal/browser/widgets/widgets.ts"],
-  "sourcesContent": ["/*---------------------------------------------------------------------------------------------\r\n *  Copyright (c) Microsoft Corporation. All rights reserved.\r\n *  Licensed under the MIT License. See License.txt in the project root for license information.\r\n *--------------------------------------------------------------------------------------------*/\r\n\r\nimport { IDisposable } from '../../../../../base/common/lifecycle.js';\r\n\r\nexport interface ITerminalWidget extends IDisposable {\r\n\t/**\r\n\t * Only one widget of each ID can be displayed at once.\r\n\t */\r\n\tid: string;\r\n\tattach(container: HTMLElement): void;\r\n}\r\n"],
-  "mappings": "AAKA,SAAS,mBAAmB;",
-  "names": []
-}

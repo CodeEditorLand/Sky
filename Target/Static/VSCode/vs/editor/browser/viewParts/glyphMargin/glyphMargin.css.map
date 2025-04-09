@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["../../../../../../../../../../Dependency/Microsoft/Dependency/Editor/src/vs/editor/browser/viewParts/glyphMargin/glyphMargin.css"],
-  "sourcesContent": ["/*---------------------------------------------------------------------------------------------\r\n *  Copyright (c) Microsoft Corporation. All rights reserved.\r\n *  Licensed under the MIT License. See License.txt in the project root for license information.\r\n *--------------------------------------------------------------------------------------------*/\r\n\r\n.monaco-editor .glyph-margin {\r\n\tposition: absolute;\r\n\ttop: 0;\r\n}\r\n\r\n/*\r\n\tKeeping name short for faster parsing.\r\n\tcgmr = core glyph margin rendering (div)\r\n*/\r\n.monaco-editor .glyph-margin-widgets .cgmr {\r\n\tposition: absolute;\r\n\tdisplay: flex;\r\n\talign-items: center;\r\n\tjustify-content: center;\r\n}\r\n\r\n/*\r\n\tEnsure spinning icons are pixel-perfectly centered and avoid wobble.\r\n\tThis is only applied to icons that spin to avoid unnecessary\r\n\tGPU layers and blurry subpixel AA.\r\n*/\r\n.monaco-editor .glyph-margin-widgets .cgmr.codicon-modifier-spin::before  {\r\n\tposition: absolute;\r\n\ttop: 50%;\r\n\tleft: 50%;\r\n\ttransform: translate(-50%, -50%);\r\n}\r\n"],
-  "mappings": "AAKA,CAAC,cAAc,CAAC;AACf,YAAU;AACV,OAAK;AACN;AAMA,CATC,cASc,CAAC,qBAAqB,CAAC;AACrC,YAAU;AACV,WAAS;AACT,eAAa;AACb,mBAAiB;AAClB;AAOA,CArBC,cAqBc,CAZC,qBAYqB,CAZC,IAYI,CAAC,qBAAqB;AAC/D,YAAU;AACV,OAAK;AACL,QAAM;AACN,aAAW,UAAU,IAAI,EAAE;AAC5B;",
-  "names": []
-}

@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["../../../../../../../../../Dependency/Microsoft/Dependency/Editor/src/vs/platform/state/node/state.ts"],
-  "sourcesContent": ["/*---------------------------------------------------------------------------------------------\r\n *  Copyright (c) Microsoft Corporation. All rights reserved.\r\n *  Licensed under the MIT License. See License.txt in the project root for license information.\r\n *--------------------------------------------------------------------------------------------*/\r\n\r\nimport { createDecorator } from '../../instantiation/common/instantiation.js';\r\n\r\nexport const IStateReadService = createDecorator<IStateReadService>('stateReadService');\r\nexport interface IStateReadService {\r\n\r\n\treadonly _serviceBrand: undefined;\r\n\r\n\tgetItem<T>(key: string, defaultValue: T): T;\r\n\tgetItem<T>(key: string, defaultValue?: T): T | undefined;\r\n\r\n}\r\n\r\nexport const IStateService = createDecorator<IStateService>('stateService');\r\nexport interface IStateService extends IStateReadService {\r\n\r\n\treadonly _serviceBrand: undefined;\r\n\r\n\tsetItem(key: string, data?: object | string | number | boolean | undefined | null): void;\r\n\tsetItems(items: readonly { key: string; data?: object | string | number | boolean | undefined | null }[]): void;\r\n\r\n\tremoveItem(key: string): void;\r\n\r\n\tclose(): Promise<void>;\r\n}\r\n"],
-  "mappings": "AAKA,SAAS,uBAAuB;AAEzB,MAAM,oBAAoB,gBAAmC,kBAAkB;AAU/E,MAAM,gBAAgB,gBAA+B,cAAc;",
-  "names": []
-}

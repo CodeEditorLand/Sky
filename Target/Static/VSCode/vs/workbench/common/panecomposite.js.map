@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["../../../../../../../../Dependency/Microsoft/Dependency/Editor/src/vs/workbench/common/panecomposite.ts"],
-  "sourcesContent": ["/*---------------------------------------------------------------------------------------------\r\n *  Copyright (c) Microsoft Corporation. All rights reserved.\r\n *  Licensed under the MIT License. See License.txt in the project root for license information.\r\n *--------------------------------------------------------------------------------------------*/\r\n\r\nimport { IView, IViewPaneContainer } from './views.js';\r\nimport { IComposite } from './composite.js';\r\n\r\nexport interface IPaneComposite extends IComposite {\r\n\r\n\t/**\r\n\t * Returns the minimal width needed to avoid any content horizontal truncation\r\n\t */\r\n\tgetOptimalWidth(): number | undefined;\r\n\r\n\topenView<T extends IView>(id: string, focus?: boolean): T | undefined;\r\n\tgetViewPaneContainer(): IViewPaneContainer | undefined;\r\n}\r\n\r\n"],
-  "mappings": "AAKA,SAAS,OAAO,0BAA0B;AAC1C,SAAS,kBAAkB;",
-  "names": []
-}

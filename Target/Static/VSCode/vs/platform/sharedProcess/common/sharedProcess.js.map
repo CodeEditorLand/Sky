@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["../../../../../../../../../Dependency/Microsoft/Dependency/Editor/src/vs/platform/sharedProcess/common/sharedProcess.ts"],
-  "sourcesContent": ["/*---------------------------------------------------------------------------------------------\r\n *  Copyright (c) Microsoft Corporation. All rights reserved.\r\n *  Licensed under the MIT License. See License.txt in the project root for license information.\r\n *--------------------------------------------------------------------------------------------*/\r\n\r\nexport const SharedProcessLifecycle = {\r\n\texit: 'vscode:electron-main->shared-process=exit',\r\n\tipcReady: 'vscode:shared-process->electron-main=ipc-ready',\r\n\tinitDone: 'vscode:shared-process->electron-main=init-done'\r\n};\r\n\r\nexport const SharedProcessChannelConnection = {\r\n\trequest: 'vscode:createSharedProcessChannelConnection',\r\n\tresponse: 'vscode:createSharedProcessChannelConnectionResult'\r\n};\r\n\r\nexport const SharedProcessRawConnection = {\r\n\trequest: 'vscode:createSharedProcessRawConnection',\r\n\tresponse: 'vscode:createSharedProcessRawConnectionResult'\r\n};\r\n"],
-  "mappings": "AAKO,MAAM,yBAAyB;AAAA,EACrC,MAAM;AAAA,EACN,UAAU;AAAA,EACV,UAAU;AACX;AAEO,MAAM,iCAAiC;AAAA,EAC7C,SAAS;AAAA,EACT,UAAU;AACX;AAEO,MAAM,6BAA6B;AAAA,EACzC,SAAS;AAAA,EACT,UAAU;AACX;",
-  "names": []
-}

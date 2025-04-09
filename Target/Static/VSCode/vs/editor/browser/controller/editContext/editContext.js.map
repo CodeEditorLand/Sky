@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["../../../../../../../../../../Dependency/Microsoft/Dependency/Editor/src/vs/editor/browser/controller/editContext/editContext.ts"],
-  "sourcesContent": ["/*---------------------------------------------------------------------------------------------\r\n *  Copyright (c) Microsoft Corporation. All rights reserved.\r\n *  Licensed under the MIT License. See License.txt in the project root for license information.\r\n *--------------------------------------------------------------------------------------------*/\r\n\r\nimport { FastDomNode } from '../../../../base/browser/fastDomNode.js';\r\nimport { Position } from '../../../common/core/position.js';\r\nimport { IEditorAriaOptions } from '../../editorBrowser.js';\r\nimport { ViewPart } from '../../view/viewPart.js';\r\n\r\nexport abstract class AbstractEditContext extends ViewPart {\r\n\tabstract domNode: FastDomNode<HTMLElement>;\r\n\tabstract focus(): void;\r\n\tabstract isFocused(): boolean;\r\n\tabstract refreshFocusState(): void;\r\n\tabstract setAriaOptions(options: IEditorAriaOptions): void;\r\n\tabstract getLastRenderData(): Position | null;\r\n\tabstract writeScreenReaderContent(reason: string): void;\r\n}\r\n"],
-  "mappings": ";;AAKA,SAAS,mBAAmB;AAC5B,SAAS,gBAAgB;AACzB,SAAS,0BAA0B;AACnC,SAAS,gBAAgB;AAElB,MAAe,4BAA4B,SAAS;AAAA,EAV3D,OAU2D;AAAA;AAAA;AAQ3D;",
-  "names": []
-}

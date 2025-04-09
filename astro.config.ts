@@ -8,6 +8,14 @@ export const On =
 	process.env["NODE_ENV"] === "development" ||
 	process.env["TAURI_ENV_DEBUG"] === "true";
 
+export const Link = [
+	"@codeeditorland/common",
+	"@codeeditorland/output",
+	"@codeeditorland/shim",
+	"@codeeditorland/worker",
+	"@codeeditorland/wind",
+];
+
 export default defineConfig({
 	srcDir: "./Source",
 	publicDir: "./Public",
@@ -91,18 +99,13 @@ export default defineConfig({
 		optimizeDeps: {
 			...(On
 				? {
-						exclude: [
-							"@codeeditorland/common",
-							"@codeeditorland/output",
-							"@codeeditorland/shim",
-							"@codeeditorland/worker",
-							"@codeeditorland/wind",
-						],
+						exclude: Link,
 					}
 				: {}),
 		},
 		resolve: {
 			preserveSymlinks: false,
+			// TODO: UNCOMMENT WHEN WE'VE RESOLVED ALL SHIMS AND DECIDED TO INCLUDE THEM IN THE BUILD AS FOR NOW THEIR SHIMMED THROUGH IMPORTMAP
 			// alias: [
 			// 	...[
 			// 		"vscode",
@@ -119,19 +122,25 @@ export default defineConfig({
 			devSourcemap: On,
 			transformer: "postcss",
 		},
+
 		plugins: [
 			(await import("vite-plugin-static-copy")).viteStaticCopy({
 				targets: [
-					{
-						src: "node_modules/@codeeditorland/output/Target/Microsoft/VSCode/*",
-						dest: "Static/VSCode/",
-					},
+					// {
+					// 	src: "node_modules/@codeeditorland/output/Target/Microsoft/VSCode/*",
+					// 	dest: "Static/VSCode/",
+					// },
 
 					// TODO: DO THIS FOR THE CodeEditorLand/Editor BUILD AS WELL
 					// {
 					// 	src: "node_modules/@codeeditorland/output/Target/CodeEditorLand/Editor/",
 					// 	dest: "Editor/",
 					// },
+
+					{
+						src: "../../Dependency/Microsoft/Dependency/Editor/out/*",
+						dest: "Static/VSCode/",
+					},
 
 					{
 						src: "node_modules/@codeeditorland/shim/Target/*",
@@ -173,13 +182,8 @@ export default defineConfig({
 						],
 					};
 				},
-			}))([
-				"@codeeditorland/common",
-				"@codeeditorland/output",
-				"@codeeditorland/shim",
-				"@codeeditorland/wind",
-				"@codeeditorland/worker",
-			]),
+			}))(Link),
+			// TODO: UNCOMMENT WHEN THE DAEMON IS RUNNING IN MULTIPLE CODESPACES
 			// (() => ({
 			// 	name: "ServiceWorker",
 			// 	configureServer(Server) {
@@ -194,10 +198,13 @@ export default defineConfig({
 			// 					"Content-Type",
 			// 					"application/javascript; charset=utf-8",
 			// 				);
+
 			// 			}
 
 			// 			Next();
+
 			// 		});
+
 			// 	},
 			// }))(),
 		],

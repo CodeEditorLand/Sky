@@ -1,2 +1,1 @@
-delete process.env["VSCODE_CWD"];
-//# sourceMappingURL=bootstrap-cli.js.map
+"use strict";delete process.env.VSCODE_CWD;

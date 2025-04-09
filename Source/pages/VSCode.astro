@@ -8,7 +8,7 @@ const Origin = Astro.url.origin;
 	<meta
 		id="vscode-workbench-web-configuration"
 		data-settings={JSON.stringify({
-			remoteAuthority: "localhost:9999",
+			remoteAuthority: Astro.url.host,
 			serverBasePath: "/",
 			developmentOptions: { logLevel: 3 },
 			enableWorkspaceTrust: true,
@@ -18,7 +18,15 @@ const Origin = Astro.url.origin;
 		slot="Head"
 	/>
 
-	<script is:inline type="module" define:vars={{ Origin }} slot="Head" defer>
+	<script is:inline type="importmap" slot="Head">
+		{
+			"imports": {
+				"vscode": "/Static/Shim/Empty.js"
+			}
+		}
+	</script>
+
+	<script is:inline type="module" define:vars={{ Origin }} slot="Head">
 		// @ts-expect-error
 		globalThis._VSCODE_FILE_ROOT = `${Origin}/Static/VSCode/`;
 	</script>
@@ -26,7 +34,7 @@ const Origin = Astro.url.origin;
 	<script is:inline type="module" src="/Worker/CSS/Load.js" slot="Head" defer
 	></script>
 
-	<script is:inline type="module" slot="Head" defer>
+	<script is:inline type="module" slot="Head">
 		// @ts-expect-error
 		window._WORKER = "/Worker.js";
 	</script>

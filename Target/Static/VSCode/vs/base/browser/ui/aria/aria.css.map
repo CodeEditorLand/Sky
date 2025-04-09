@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["../../../../../../../../../../Dependency/Microsoft/Dependency/Editor/src/vs/base/browser/ui/aria/aria.css"],
-  "sourcesContent": ["/*---------------------------------------------------------------------------------------------\r\n *  Copyright (c) Microsoft Corporation. All rights reserved.\r\n *  Licensed under the MIT License. See License.txt in the project root for license information.\r\n *--------------------------------------------------------------------------------------------*/\r\n\r\n.monaco-aria-container {\r\n\tposition: absolute; /* try to hide from window but not from screen readers */\r\n\tleft:-999em;\r\n}"],
-  "mappings": "AAKA,CAAC;AACA,YAAU;AACV,QAAK;AACN;",
-  "names": []
-}

@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["../../../../../../../../../../Dependency/Microsoft/Dependency/Editor/src/vs/base/browser/ui/grid/gridview.css"],
-  "sourcesContent": ["/*---------------------------------------------------------------------------------------------\r\n *  Copyright (c) Microsoft Corporation. All rights reserved.\r\n *  Licensed under the MIT License. See License.txt in the project root for license information.\r\n *--------------------------------------------------------------------------------------------*/\r\n\r\n.monaco-grid-view {\r\n\tposition: relative;\r\n\toverflow: hidden;\r\n\twidth: 100%;\r\n\theight: 100%;\r\n}\r\n\r\n.monaco-grid-branch-node {\r\n\twidth: 100%;\r\n\theight: 100%;\r\n}"],
-  "mappings": "AAKA,CAAC;AACA,YAAU;AACV,YAAU;AACV,SAAO;AACP,UAAQ;AACT;AAEA,CAAC;AACA,SAAO;AACP,UAAQ;AACT;",
-  "names": []
-}

@@ -1,11 +1,1 @@
-var TerminalLinksCommandId = /* @__PURE__ */ ((TerminalLinksCommandId2) => {
-  TerminalLinksCommandId2["OpenDetectedLink"] = "workbench.action.terminal.openDetectedLink";
-  TerminalLinksCommandId2["OpenWordLink"] = "workbench.action.terminal.openWordLink";
-  TerminalLinksCommandId2["OpenFileLink"] = "workbench.action.terminal.openFileLink";
-  TerminalLinksCommandId2["OpenWebLink"] = "workbench.action.terminal.openUrlLink";
-  return TerminalLinksCommandId2;
-})(TerminalLinksCommandId || {});
-export {
-  TerminalLinksCommandId
-};
-//# sourceMappingURL=terminal.links.js.map
+export var TerminalLinksCommandId;!function(n){n.OpenDetectedLink="workbench.action.terminal.openDetectedLink",n.OpenWordLink="workbench.action.terminal.openWordLink",n.OpenFileLink="workbench.action.terminal.openFileLink",n.OpenWebLink="workbench.action.terminal.openUrlLink"}(TerminalLinksCommandId||(TerminalLinksCommandId={}));

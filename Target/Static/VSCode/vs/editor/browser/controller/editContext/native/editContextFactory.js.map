@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["../../../../../../../../../../../Dependency/Microsoft/Dependency/Editor/src/vs/editor/browser/controller/editContext/native/editContextFactory.ts"],
-  "sourcesContent": ["/*---------------------------------------------------------------------------------------------\r\n *  Copyright (c) Microsoft Corporation. All rights reserved.\r\n *  Licensed under the MIT License. See License.txt in the project root for license information.\r\n *--------------------------------------------------------------------------------------------*/\r\n\r\n\r\nexport namespace EditContext {\r\n\r\n\t/**\r\n\t * Create an edit context.\r\n\t */\r\n\texport function create(window: Window, options?: EditContextInit): EditContext {\r\n\t\treturn new (window as any).EditContext(options);\r\n\t}\r\n}\r\n"],
-  "mappings": ";;AAMO,IAAU;AAAA,CAAV,CAAUA,iBAAV;AAKC,WAAS,OAAO,QAAgB,SAAwC;AAC9E,WAAO,IAAK,OAAe,YAAY,OAAO;AAAA,EAC/C;AAFO,EAAAA,aAAS;AAAA;AAAA,GALA;",
-  "names": ["EditContext"]
-}

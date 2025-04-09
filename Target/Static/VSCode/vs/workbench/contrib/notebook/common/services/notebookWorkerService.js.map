@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["../../../../../../../../../../../Dependency/Microsoft/Dependency/Editor/src/vs/workbench/contrib/notebook/common/services/notebookWorkerService.ts"],
-  "sourcesContent": ["/*---------------------------------------------------------------------------------------------\r\n *  Copyright (c) Microsoft Corporation. All rights reserved.\r\n *  Licensed under the MIT License. See License.txt in the project root for license information.\r\n *--------------------------------------------------------------------------------------------*/\r\n\r\nimport { URI } from '../../../../../base/common/uri.js';\r\nimport { createDecorator } from '../../../../../platform/instantiation/common/instantiation.js';\r\nimport { INotebookDiffResult } from '../notebookCommon.js';\r\n\r\nexport const ID_NOTEBOOK_EDITOR_WORKER_SERVICE = 'notebookEditorWorkerService';\r\nexport const INotebookEditorWorkerService = createDecorator<INotebookEditorWorkerService>(ID_NOTEBOOK_EDITOR_WORKER_SERVICE);\r\n\r\nexport interface INotebookEditorWorkerService {\r\n\treadonly _serviceBrand: undefined;\r\n\r\n\tcanComputeDiff(original: URI, modified: URI): boolean;\r\n\tcomputeDiff(original: URI, modified: URI): Promise<INotebookDiffResult>;\r\n\tcanPromptRecommendation(model: URI): Promise<boolean>;\r\n}\r\n"],
-  "mappings": "AAKA,SAAS,WAAW;AACpB,SAAS,uBAAuB;AAChC,SAAS,2BAA2B;AAE7B,MAAM,oCAAoC;AAC1C,MAAM,+BAA+B,gBAA8C,iCAAiC;",
-  "names": []
-}

@@ -1,1 +1,1 @@
-//# sourceMappingURL=monarchTypes.js.map
+export{};

@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["../../../../../../../../../../Dependency/Microsoft/Dependency/Editor/src/vs/editor/standalone/browser/quickAccess/standaloneHelpQuickAccess.ts"],
-  "sourcesContent": ["/*---------------------------------------------------------------------------------------------\r\n *  Copyright (c) Microsoft Corporation. All rights reserved.\r\n *  Licensed under the MIT License. See License.txt in the project root for license information.\r\n *--------------------------------------------------------------------------------------------*/\r\n\r\nimport { Registry } from '../../../../platform/registry/common/platform.js';\r\nimport { IQuickAccessRegistry, Extensions } from '../../../../platform/quickinput/common/quickAccess.js';\r\nimport { QuickHelpNLS } from '../../../common/standaloneStrings.js';\r\nimport { HelpQuickAccessProvider } from '../../../../platform/quickinput/browser/helpQuickAccess.js';\r\n\r\nRegistry.as<IQuickAccessRegistry>(Extensions.Quickaccess).registerQuickAccessProvider({\r\n\tctor: HelpQuickAccessProvider,\r\n\tprefix: '',\r\n\thelpEntries: [{ description: QuickHelpNLS.helpQuickAccessActionLabel }]\r\n});\r\n"],
-  "mappings": "AAKA,SAAS,gBAAgB;AACzB,SAAS,sBAAsB,kBAAkB;AACjD,SAAS,oBAAoB;AAC7B,SAAS,+BAA+B;AAExC,SAAS,GAAyB,WAAW,WAAW,EAAE,4BAA4B;AAAA,EACrF,MAAM;AAAA,EACN,QAAQ;AAAA,EACR,aAAa,CAAC,EAAE,aAAa,aAAa,2BAA2B,CAAC;AACvE,CAAC;",
-  "names": []
-}

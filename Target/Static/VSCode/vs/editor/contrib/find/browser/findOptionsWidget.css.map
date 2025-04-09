@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["../../../../../../../../../../Dependency/Microsoft/Dependency/Editor/src/vs/editor/contrib/find/browser/findOptionsWidget.css"],
-  "sourcesContent": ["/*---------------------------------------------------------------------------------------------\r\n *  Copyright (c) Microsoft Corporation. All rights reserved.\r\n *  Licensed under the MIT License. See License.txt in the project root for license information.\r\n *--------------------------------------------------------------------------------------------*/\r\n\r\n.monaco-editor .findOptionsWidget {\r\n\tbackground-color: var(--vscode-editorWidget-background);\r\n\tcolor: var(--vscode-editorWidget-foreground);\r\n\tbox-shadow: 0 0 8px 2px var(--vscode-widget-shadow);\r\n\tborder: 2px solid var(--vscode-contrastBorder);\r\n}\r\n"],
-  "mappings": "AAKA,CAAC,cAAc,CAAC;AACf,oBAAkB,IAAI;AACtB,SAAO,IAAI;AACX,cAAY,EAAE,EAAE,IAAI,IAAI,IAAI;AAC5B,UAAQ,IAAI,MAAM,IAAI;AACvB;",
-  "names": []
-}

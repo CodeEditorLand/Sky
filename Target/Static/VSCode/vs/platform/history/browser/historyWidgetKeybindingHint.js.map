@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["../../../../../../../../../Dependency/Microsoft/Dependency/Editor/src/vs/platform/history/browser/historyWidgetKeybindingHint.ts"],
-  "sourcesContent": ["/*---------------------------------------------------------------------------------------------\r\n *  Copyright (c) Microsoft Corporation. All rights reserved.\r\n *  Licensed under the MIT License. See License.txt in the project root for license information.\r\n *--------------------------------------------------------------------------------------------*/\r\n\r\nimport { IKeybindingService } from '../../keybinding/common/keybinding.js';\r\n\r\nexport function showHistoryKeybindingHint(keybindingService: IKeybindingService): boolean {\r\n\treturn keybindingService.lookupKeybinding('history.showPrevious')?.getElectronAccelerator() === 'Up' && keybindingService.lookupKeybinding('history.showNext')?.getElectronAccelerator() === 'Down';\r\n}\r\n"],
-  "mappings": ";;AAKA,SAAS,0BAA0B;AAE5B,SAAS,0BAA0B,mBAAgD;AACzF,SAAO,kBAAkB,iBAAiB,sBAAsB,GAAG,uBAAuB,MAAM,QAAQ,kBAAkB,iBAAiB,kBAAkB,GAAG,uBAAuB,MAAM;AAC9L;AAFgB;",
-  "names": []
-}

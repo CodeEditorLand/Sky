@@ -1,2 +1,1 @@
-delete process.env["ELECTRON_RUN_AS_NODE"];
-//# sourceMappingURL=bootstrap-server.js.map
+"use strict";delete process.env.ELECTRON_RUN_AS_NODE;

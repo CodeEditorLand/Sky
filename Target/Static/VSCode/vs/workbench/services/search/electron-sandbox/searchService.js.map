@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["../../../../../../../../../../Dependency/Microsoft/Dependency/Editor/src/vs/workbench/services/search/electron-sandbox/searchService.ts"],
-  "sourcesContent": ["/*---------------------------------------------------------------------------------------------\r\n *  Copyright (c) Microsoft Corporation. All rights reserved.\r\n *  Licensed under the MIT License. See License.txt in the project root for license information.\r\n *--------------------------------------------------------------------------------------------*/\r\n\r\nimport { InstantiationType, registerSingleton } from '../../../../platform/instantiation/common/extensions.js';\r\nimport { ISearchService } from '../common/search.js';\r\nimport { SearchService } from '../common/searchService.js';\r\n\r\nregisterSingleton(ISearchService, SearchService, InstantiationType.Delayed);\r\n"],
-  "mappings": "AAKA,SAAS,mBAAmB,yBAAyB;AACrD,SAAS,sBAAsB;AAC/B,SAAS,qBAAqB;AAE9B,kBAAkB,gBAAgB,eAAe,kBAAkB,OAAO;",
-  "names": []
-}

@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["../../../../../../../../../Dependency/Microsoft/Dependency/Editor/src/vs/platform/actions/common/actions.contribution.ts"],
-  "sourcesContent": ["/*---------------------------------------------------------------------------------------------\r\n *  Copyright (c) Microsoft Corporation. All rights reserved.\r\n *  Licensed under the MIT License. See License.txt in the project root for license information.\r\n *--------------------------------------------------------------------------------------------*/\r\n\r\nimport { IMenuService, registerAction2 } from './actions.js';\r\nimport { MenuHiddenStatesReset } from './menuResetAction.js';\r\nimport { MenuService } from './menuService.js';\r\nimport { InstantiationType, registerSingleton } from '../../instantiation/common/extensions.js';\r\n\r\nregisterSingleton(IMenuService, MenuService, InstantiationType.Delayed);\r\n\r\nregisterAction2(MenuHiddenStatesReset);\r\n"],
-  "mappings": "AAKA,SAAS,cAAc,uBAAuB;AAC9C,SAAS,6BAA6B;AACtC,SAAS,mBAAmB;AAC5B,SAAS,mBAAmB,yBAAyB;AAErD,kBAAkB,cAAc,aAAa,kBAAkB,OAAO;AAEtE,gBAAgB,qBAAqB;",
-  "names": []
-}

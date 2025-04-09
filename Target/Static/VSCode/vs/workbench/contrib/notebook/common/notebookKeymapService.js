@@ -1,6 +1,1 @@
-import { createDecorator } from "../../../../platform/instantiation/common/instantiation.js";
-const INotebookKeymapService = createDecorator("notebookKeymapService");
-export {
-  INotebookKeymapService
-};
-//# sourceMappingURL=notebookKeymapService.js.map
+import{createDecorator}from"../../../../platform/instantiation/common/instantiation.js";export const INotebookKeymapService=createDecorator("notebookKeymapService");

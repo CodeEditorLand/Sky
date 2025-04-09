@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["../../../../../../../../../../Dependency/Microsoft/Dependency/Editor/src/vs/workbench/contrib/performance/browser/performance.web.contribution.ts"],
-  "sourcesContent": ["/*---------------------------------------------------------------------------------------------\r\n *  Copyright (c) Microsoft Corporation. All rights reserved.\r\n *  Licensed under the MIT License. See License.txt in the project root for license information.\r\n *--------------------------------------------------------------------------------------------*/\r\n\r\nimport { LifecyclePhase } from '../../../services/lifecycle/common/lifecycle.js';\r\nimport { Registry } from '../../../../platform/registry/common/platform.js';\r\nimport { Extensions, IWorkbenchContributionsRegistry } from '../../../common/contributions.js';\r\nimport { BrowserResourcePerformanceMarks, BrowserStartupTimings } from './startupTimings.js';\r\n\r\n// -- startup timings\r\n\r\nRegistry.as<IWorkbenchContributionsRegistry>(Extensions.Workbench).registerWorkbenchContribution(\r\n\tBrowserResourcePerformanceMarks,\r\n\tLifecyclePhase.Eventually\r\n);\r\n\r\nRegistry.as<IWorkbenchContributionsRegistry>(Extensions.Workbench).registerWorkbenchContribution(\r\n\tBrowserStartupTimings,\r\n\tLifecyclePhase.Eventually\r\n);\r\n"],
-  "mappings": "AAKA,SAAS,sBAAsB;AAC/B,SAAS,gBAAgB;AACzB,SAAS,YAAY,uCAAuC;AAC5D,SAAS,iCAAiC,6BAA6B;AAIvE,SAAS,GAAoC,WAAW,SAAS,EAAE;AAAA,EAClE;AAAA,EACA,eAAe;AAChB;AAEA,SAAS,GAAoC,WAAW,SAAS,EAAE;AAAA,EAClE;AAAA,EACA,eAAe;AAChB;",
-  "names": []
-}

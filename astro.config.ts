@@ -20,10 +20,10 @@ export default defineConfig({
 	srcDir: "./Source",
 	publicDir: "./Public",
 	outDir: "./Target",
-	site: On
-		? "http://localhost"
-		: Tauri
-			? "http://tauri.localhost"
+	site: Tauri
+		? "http://tauri.localhost"
+		: On
+			? "http://localhost"
 			: "https://editor.land",
 	compressHTML: !On,
 	prefetch: false,

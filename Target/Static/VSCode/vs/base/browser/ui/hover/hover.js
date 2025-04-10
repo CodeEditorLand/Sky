@@ -1,1 +1,0 @@
-export function isManagedHoverTooltipMarkdownString(o){return"object"==typeof o&&"markdown"in o&&"markdownNotSupportedFallback"in o}export function isManagedHoverTooltipHTMLElement(o){return"object"==typeof o&&"element"in o}

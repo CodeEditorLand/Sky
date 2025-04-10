@@ -1,1 +1,39 @@
-import*as browser from"./browser.js";import{mainWindow}from"./window.js";import*as platform from"../common/platform.js";export var KeyboardSupport;!function(o){o[o.Always=0]="Always",o[o.FullScreen=1]="FullScreen",o[o.None=2]="None"}(KeyboardSupport||(KeyboardSupport={}));export const BrowserFeatures={clipboard:{writeText:platform.isNative||document.queryCommandSupported&&document.queryCommandSupported("copy")||!!(navigator&&navigator.clipboard&&navigator.clipboard.writeText),readText:platform.isNative||!!(navigator&&navigator.clipboard&&navigator.clipboard.readText)},keyboard:platform.isNative||browser.isStandalone()?0:navigator.keyboard||browser.isSafari?1:2,touch:"ontouchstart"in mainWindow||navigator.maxTouchPoints>0,pointerEvents:mainWindow.PointerEvent&&("ontouchstart"in mainWindow||navigator.maxTouchPoints>0)};
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
+import * as browser from './browser.js';
+import { mainWindow } from './window.js';
+import * as platform from '../common/platform.js';
+export var KeyboardSupport;
+(function (KeyboardSupport) {
+    KeyboardSupport[KeyboardSupport["Always"] = 0] = "Always";
+    KeyboardSupport[KeyboardSupport["FullScreen"] = 1] = "FullScreen";
+    KeyboardSupport[KeyboardSupport["None"] = 2] = "None";
+})(KeyboardSupport || (KeyboardSupport = {}));
+/**
+ * Browser feature we can support in current platform, browser and environment.
+ */
+export const BrowserFeatures = {
+    clipboard: {
+        writeText: (platform.isNative
+            || (document.queryCommandSupported && document.queryCommandSupported('copy'))
+            || !!(navigator && navigator.clipboard && navigator.clipboard.writeText)),
+        readText: (platform.isNative
+            || !!(navigator && navigator.clipboard && navigator.clipboard.readText))
+    },
+    keyboard: (() => {
+        if (platform.isNative || browser.isStandalone()) {
+            return 0 /* KeyboardSupport.Always */;
+        }
+        if (navigator.keyboard || browser.isSafari) {
+            return 1 /* KeyboardSupport.FullScreen */;
+        }
+        return 2 /* KeyboardSupport.None */;
+    })(),
+    // 'ontouchstart' in window always evaluates to true with typescript's modern typings. This causes `window` to be
+    // `never` later in `window.navigator`. That's why we need the explicit `window as Window` cast
+    touch: 'ontouchstart' in mainWindow || navigator.maxTouchPoints > 0,
+    pointerEvents: mainWindow.PointerEvent && ('ontouchstart' in mainWindow || navigator.maxTouchPoints > 0)
+};
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiY2FuSVVzZS5qcyIsInNvdXJjZVJvb3QiOiJmaWxlOi8vL0Q6L0RldmVsb3Blci9BcHBsaWNhdGlvbi9Db2RlRWRpdG9yTGFuZC9MYW5kL0RlcGVuZGVuY3kvTWljcm9zb2Z0L0RlcGVuZGVuY3kvRWRpdG9yL3NyYy8iLCJzb3VyY2VzIjpbInZzL2Jhc2UvYnJvd3Nlci9jYW5JVXNlLnRzIl0sIm5hbWVzIjpbXSwibWFwcGluZ3MiOiJBQUFBOzs7Z0dBR2dHO0FBRWhHLE9BQU8sS0FBSyxPQUFPLE1BQU0sY0FBYyxDQUFDO0FBQ3hDLE9BQU8sRUFBRSxVQUFVLEVBQUUsTUFBTSxhQUFhLENBQUM7QUFDekMsT0FBTyxLQUFLLFFBQVEsTUFBTSx1QkFBdUIsQ0FBQztBQUVsRCxNQUFNLENBQU4sSUFBa0IsZUFJakI7QUFKRCxXQUFrQixlQUFlO0lBQ2hDLHlEQUFNLENBQUE7SUFDTixpRUFBVSxDQUFBO0lBQ1YscURBQUksQ0FBQTtBQUNMLENBQUMsRUFKaUIsZUFBZSxLQUFmLGVBQWUsUUFJaEM7QUFFRDs7R0FFRztBQUNILE1BQU0sQ0FBQyxNQUFNLGVBQWUsR0FBRztJQUM5QixTQUFTLEVBQUU7UUFDVixTQUFTLEVBQUUsQ0FDVixRQUFRLENBQUMsUUFBUTtlQUNkLENBQUMsUUFBUSxDQUFDLHFCQUFxQixJQUFJLFFBQVEsQ0FBQyxxQkFBcUIsQ0FBQyxNQUFNLENBQUMsQ0FBQztlQUMxRSxDQUFDLENBQUMsQ0FBQyxTQUFTLElBQUksU0FBUyxDQUFDLFNBQVMsSUFBSSxTQUFTLENBQUMsU0FBUyxDQUFDLFNBQVMsQ0FBQyxDQUN4RTtRQUNELFFBQVEsRUFBRSxDQUNULFFBQVEsQ0FBQyxRQUFRO2VBQ2QsQ0FBQyxDQUFDLENBQUMsU0FBUyxJQUFJLFNBQVMsQ0FBQyxTQUFTLElBQUksU0FBUyxDQUFDLFNBQVMsQ0FBQyxRQUFRLENBQUMsQ0FDdkU7S0FDRDtJQUNELFFBQVEsRUFBRSxDQUFDLEdBQUcsRUFBRTtRQUNmLElBQUksUUFBUSxDQUFDLFFBQVEsSUFBSSxPQUFPLENBQUMsWUFBWSxFQUFFLEVBQUUsQ0FBQztZQUNqRCxzQ0FBOEI7UUFDL0IsQ0FBQztRQUVELElBQVUsU0FBVSxDQUFDLFFBQVEsSUFBSSxPQUFPLENBQUMsUUFBUSxFQUFFLENBQUM7WUFDbkQsMENBQWtDO1FBQ25DLENBQUM7UUFFRCxvQ0FBNEI7SUFDN0IsQ0FBQyxDQUFDLEVBQUU7SUFFSixpSEFBaUg7SUFDakgsK0ZBQStGO0lBQy9GLEtBQUssRUFBRSxjQUFjLElBQUksVUFBVSxJQUFJLFNBQVMsQ0FBQyxjQUFjLEdBQUcsQ0FBQztJQUNuRSxhQUFhLEVBQUUsVUFBVSxDQUFDLFlBQVksSUFBSSxDQUFDLGNBQWMsSUFBSSxVQUFVLElBQUksU0FBUyxDQUFDLGNBQWMsR0FBRyxDQUFDLENBQUM7Q0FDeEcsQ0FBQyJ9

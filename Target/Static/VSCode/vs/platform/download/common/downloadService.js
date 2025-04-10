@@ -1,1 +1,45 @@
-var __decorate=this&&this.__decorate||function(e,t,r,o){var i,c=arguments.length,a=c<3?t:null===o?o=Object.getOwnPropertyDescriptor(t,r):o;if("object"==typeof Reflect&&"function"==typeof Reflect.decorate)a=Reflect.decorate(e,t,r,o);else for(var s=e.length-1;s>=0;s--)(i=e[s])&&(a=(c<3?i(a):c>3?i(t,r,a):i(t,r))||a);return c>3&&a&&Object.defineProperty(t,r,a),a},__param=this&&this.__param||function(e,t){return function(r,o){t(r,o,e)}};import{CancellationToken}from"../../../base/common/cancellation.js";import{Schemas}from"../../../base/common/network.js";import{IFileService}from"../../files/common/files.js";import{asTextOrError,IRequestService}from"../../request/common/request.js";let DownloadService=class{constructor(e,t){this.requestService=e,this.fileService=t}async download(e,t,r=CancellationToken.None){if(e.scheme===Schemas.file||e.scheme===Schemas.vscodeRemote)return void await this.fileService.copy(e,t);const o={type:"GET",url:e.toString(!0)},i=await this.requestService.request(o,r);if(200!==i.res.statusCode){const e=await asTextOrError(i);throw new Error(`Expected 200, got back ${i.res.statusCode} instead.\n\n${e}`)}await this.fileService.writeFile(t,i.stream)}};DownloadService=__decorate([__param(0,IRequestService),__param(1,IFileService)],DownloadService);export{DownloadService};
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = (this && this.__param) || function (paramIndex, decorator) {
+    return function (target, key) { decorator(target, key, paramIndex); }
+};
+import { CancellationToken } from '../../../base/common/cancellation.js';
+import { Schemas } from '../../../base/common/network.js';
+import { IFileService } from '../../files/common/files.js';
+import { asTextOrError, IRequestService } from '../../request/common/request.js';
+let DownloadService = class DownloadService {
+    constructor(requestService, fileService) {
+        this.requestService = requestService;
+        this.fileService = fileService;
+    }
+    async download(resource, target, cancellationToken = CancellationToken.None) {
+        if (resource.scheme === Schemas.file || resource.scheme === Schemas.vscodeRemote) {
+            // Intentionally only support this for file|remote<->file|remote scenarios
+            await this.fileService.copy(resource, target);
+            return;
+        }
+        const options = { type: 'GET', url: resource.toString(true) };
+        const context = await this.requestService.request(options, cancellationToken);
+        if (context.res.statusCode === 200) {
+            await this.fileService.writeFile(target, context.stream);
+        }
+        else {
+            const message = await asTextOrError(context);
+            throw new Error(`Expected 200, got back ${context.res.statusCode} instead.\n\n${message}`);
+        }
+    }
+};
+DownloadService = __decorate([
+    __param(0, IRequestService),
+    __param(1, IFileService)
+], DownloadService);
+export { DownloadService };
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiZG93bmxvYWRTZXJ2aWNlLmpzIiwic291cmNlUm9vdCI6ImZpbGU6Ly8vRDovRGV2ZWxvcGVyL0FwcGxpY2F0aW9uL0NvZGVFZGl0b3JMYW5kL0xhbmQvRGVwZW5kZW5jeS9NaWNyb3NvZnQvRGVwZW5kZW5jeS9FZGl0b3Ivc3JjLyIsInNvdXJjZXMiOlsidnMvcGxhdGZvcm0vZG93bmxvYWQvY29tbW9uL2Rvd25sb2FkU2VydmljZS50cyJdLCJuYW1lcyI6W10sIm1hcHBpbmdzIjoiQUFBQTs7O2dHQUdnRzs7Ozs7Ozs7OztBQUVoRyxPQUFPLEVBQUUsaUJBQWlCLEVBQUUsTUFBTSxzQ0FBc0MsQ0FBQztBQUN6RSxPQUFPLEVBQUUsT0FBTyxFQUFFLE1BQU0saUNBQWlDLENBQUM7QUFHMUQsT0FBTyxFQUFFLFlBQVksRUFBRSxNQUFNLDZCQUE2QixDQUFDO0FBQzNELE9BQU8sRUFBRSxhQUFhLEVBQUUsZUFBZSxFQUFFLE1BQU0saUNBQWlDLENBQUM7QUFFMUUsSUFBTSxlQUFlLEdBQXJCLE1BQU0sZUFBZTtJQUkzQixZQUNtQyxjQUErQixFQUNsQyxXQUF5QjtRQUR0QixtQkFBYyxHQUFkLGNBQWMsQ0FBaUI7UUFDbEMsZ0JBQVcsR0FBWCxXQUFXLENBQWM7SUFDckQsQ0FBQztJQUVMLEtBQUssQ0FBQyxRQUFRLENBQUMsUUFBYSxFQUFFLE1BQVcsRUFBRSxvQkFBdUMsaUJBQWlCLENBQUMsSUFBSTtRQUN2RyxJQUFJLFFBQVEsQ0FBQyxNQUFNLEtBQUssT0FBTyxDQUFDLElBQUksSUFBSSxRQUFRLENBQUMsTUFBTSxLQUFLLE9BQU8sQ0FBQyxZQUFZLEVBQUUsQ0FBQztZQUNsRiwwRUFBMEU7WUFDMUUsTUFBTSxJQUFJLENBQUMsV0FBVyxDQUFDLElBQUksQ0FBQyxRQUFRLEVBQUUsTUFBTSxDQUFDLENBQUM7WUFDOUMsT0FBTztRQUNSLENBQUM7UUFDRCxNQUFNLE9BQU8sR0FBRyxFQUFFLElBQUksRUFBRSxLQUFLLEVBQUUsR0FBRyxFQUFFLFFBQVEsQ0FBQyxRQUFRLENBQUMsSUFBSSxDQUFDLEVBQUUsQ0FBQztRQUM5RCxNQUFNLE9BQU8sR0FBRyxNQUFNLElBQUksQ0FBQyxjQUFjLENBQUMsT0FBTyxDQUFDLE9BQU8sRUFBRSxpQkFBaUIsQ0FBQyxDQUFDO1FBQzlFLElBQUksT0FBTyxDQUFDLEdBQUcsQ0FBQyxVQUFVLEtBQUssR0FBRyxFQUFFLENBQUM7WUFDcEMsTUFBTSxJQUFJLENBQUMsV0FBVyxDQUFDLFNBQVMsQ0FBQyxNQUFNLEVBQUUsT0FBTyxDQUFDLE1BQU0sQ0FBQyxDQUFDO1FBQzFELENBQUM7YUFBTSxDQUFDO1lBQ1AsTUFBTSxPQUFPLEdBQUcsTUFBTSxhQUFhLENBQUMsT0FBTyxDQUFDLENBQUM7WUFDN0MsTUFBTSxJQUFJLEtBQUssQ0FBQywwQkFBMEIsT0FBTyxDQUFDLEdBQUcsQ0FBQyxVQUFVLGdCQUFnQixPQUFPLEVBQUUsQ0FBQyxDQUFDO1FBQzVGLENBQUM7SUFDRixDQUFDO0NBQ0QsQ0FBQTtBQXhCWSxlQUFlO0lBS3pCLFdBQUEsZUFBZSxDQUFBO0lBQ2YsV0FBQSxZQUFZLENBQUE7R0FORixlQUFlLENBd0IzQiJ9

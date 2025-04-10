@@ -1,1 +1,0 @@
-import{createDecorator}from"../../../../../../platform/instantiation/common/instantiation.js";export const IPromptsService=createDecorator("IPromptsService");export var CssClassModifiers;!function(o){o.Inactive=".prompt-decoration-inactive"}(CssClassModifiers||(CssClassModifiers={}));

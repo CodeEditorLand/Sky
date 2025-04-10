@@ -1,1 +1,382 @@
-import{Lazy}from"./lazy.js";import*as streams from"./stream.js";const hasBuffer="undefined"!=typeof Buffer,indexOfTable=new Lazy((()=>new Uint8Array(256)));let textEncoder,textDecoder;export class VSBuffer{static alloc(e){return new VSBuffer(hasBuffer?Buffer.allocUnsafe(e):new Uint8Array(e))}static wrap(e){return hasBuffer&&!Buffer.isBuffer(e)&&(e=Buffer.from(e.buffer,e.byteOffset,e.byteLength)),new VSBuffer(e)}static fromString(e,t){return!(t?.dontUseNodeBuffer||!1)&&hasBuffer?new VSBuffer(Buffer.from(e)):(textEncoder||(textEncoder=new TextEncoder),new VSBuffer(textEncoder.encode(e)))}static fromByteArray(e){const t=VSBuffer.alloc(e.length);for(let r=0,f=e.length;r<f;r++)t.buffer[r]=e[r];return t}static concat(e,t){if(void 0===t){t=0;for(let r=0,f=e.length;r<f;r++)t+=e[r].byteLength}const r=VSBuffer.alloc(t);let f=0;for(let t=0,n=e.length;t<n;t++){const n=e[t];r.set(n,f),f+=n.byteLength}return r}constructor(e){this.buffer=e,this.byteLength=this.buffer.byteLength}clone(){const e=VSBuffer.alloc(this.byteLength);return e.set(this),e}toString(){return hasBuffer?this.buffer.toString():(textDecoder||(textDecoder=new TextDecoder),textDecoder.decode(this.buffer))}slice(e,t){return new VSBuffer(this.buffer.subarray(e,t))}set(e,t){if(e instanceof VSBuffer)this.buffer.set(e.buffer,t);else if(e instanceof Uint8Array)this.buffer.set(e,t);else if(e instanceof ArrayBuffer)this.buffer.set(new Uint8Array(e),t);else{if(!ArrayBuffer.isView(e))throw new Error("Unknown argument 'array'");this.buffer.set(new Uint8Array(e.buffer,e.byteOffset,e.byteLength),t)}}readUInt32BE(e){return readUInt32BE(this.buffer,e)}writeUInt32BE(e,t){writeUInt32BE(this.buffer,e,t)}readUInt32LE(e){return readUInt32LE(this.buffer,e)}writeUInt32LE(e,t){writeUInt32LE(this.buffer,e,t)}readUInt8(e){return readUInt8(this.buffer,e)}writeUInt8(e,t){writeUInt8(this.buffer,e,t)}indexOf(e,t=0){return binaryIndexOf(this.buffer,e instanceof VSBuffer?e.buffer:e,t)}equals(e){return this===e||this.byteLength===e.byteLength&&this.buffer.every(((t,r)=>t===e.buffer[r]))}}export function binaryIndexOf(e,t,r=0){const f=t.byteLength,n=e.byteLength;if(0===f)return 0;if(1===f)return e.indexOf(t[0]);if(f>n-r)return-1;const a=indexOfTable.value;a.fill(t.length);for(let e=0;e<t.length;e++)a[t[e]]=t.length-e-1;let o=r+t.length-1,u=o,s=-1;for(;o<n;)if(e[o]===t[u]){if(0===u){s=o;break}o--,u--}else o+=Math.max(t.length-u,a[e[o]]),u=t.length-1;return s}export function readUInt16LE(e,t){return(e[t+0]|0)>>>0|e[t+1]<<8>>>0}export function writeUInt16LE(e,t,r){e[r+0]=255&t,t>>>=8,e[r+1]=255&t}export function readUInt32BE(e,t){return e[t]*2**24+65536*e[t+1]+256*e[t+2]+e[t+3]}export function writeUInt32BE(e,t,r){e[r+3]=t,t>>>=8,e[r+2]=t,t>>>=8,e[r+1]=t,t>>>=8,e[r]=t}export function readUInt32LE(e,t){return(e[t+0]|0)>>>0|e[t+1]<<8>>>0|e[t+2]<<16>>>0|e[t+3]<<24>>>0}export function writeUInt32LE(e,t,r){e[r+0]=255&t,t>>>=8,e[r+1]=255&t,t>>>=8,e[r+2]=255&t,t>>>=8,e[r+3]=255&t}export function readUInt8(e,t){return e[t]}export function writeUInt8(e,t,r){e[r]=t}export function readableToBuffer(e){return streams.consumeReadable(e,(e=>VSBuffer.concat(e)))}export function bufferToReadable(e){return streams.toReadable(e)}export function streamToBuffer(e){return streams.consumeStream(e,(e=>VSBuffer.concat(e)))}export async function bufferedStreamToBuffer(e){return e.ended?VSBuffer.concat(e.buffer):VSBuffer.concat([...e.buffer,await streamToBuffer(e.stream)])}export function bufferToStream(e){return streams.toStream(e,(e=>VSBuffer.concat(e)))}export function streamToBufferReadableStream(e){return streams.transform(e,{data:e=>"string"==typeof e?VSBuffer.fromString(e):VSBuffer.wrap(e)},(e=>VSBuffer.concat(e)))}export function newWriteableBufferStream(e){return streams.newWriteableStream((e=>VSBuffer.concat(e)),e)}export function prefixedBufferReadable(e,t){return streams.prefixedReadable(e,t,(e=>VSBuffer.concat(e)))}export function prefixedBufferStream(e,t){return streams.prefixedStream(e,t,(e=>VSBuffer.concat(e)))}export function decodeBase64(e){let t=0,r=0,f=0;const n=new Uint8Array(Math.floor(e.length/4*3)),a=e=>{switch(r){case 3:n[f++]=t|e,r=0;break;case 2:n[f++]=t|e>>>2,t=e<<6,r=3;break;case 1:n[f++]=t|e>>>4,t=e<<4,r=2;break;default:t=e<<2,r=1}};for(let t=0;t<e.length;t++){const r=e.charCodeAt(t);if(r>=65&&r<=90)a(r-65);else if(r>=97&&r<=122)a(r-97+26);else if(r>=48&&r<=57)a(r-48+52);else if(43===r||45===r)a(62);else{if(47!==r&&95!==r){if(61===r)break;throw new SyntaxError(`Unexpected base64 character ${e[t]}`)}a(63)}}const o=f;for(;r>0;)a(0);return VSBuffer.wrap(n).slice(0,o)}const base64Alphabet="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/",base64UrlSafeAlphabet="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_";export function encodeBase64({buffer:e},t=!0,r=!1){const f=r?base64UrlSafeAlphabet:base64Alphabet;let n="";const a=e.byteLength%3;let o=0;for(;o<e.byteLength-a;o+=3){const t=e[o+0],r=e[o+1],a=e[o+2];n+=f[t>>>2],n+=f[63&(t<<4|r>>>4)],n+=f[63&(r<<2|a>>>6)],n+=f[63&a]}if(1===a){const r=e[o+0];n+=f[r>>>2],n+=f[r<<4&63],t&&(n+="==")}else if(2===a){const r=e[o+0],a=e[o+1];n+=f[r>>>2],n+=f[63&(r<<4|a>>>4)],n+=f[a<<2&63],t&&(n+="=")}return n}
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
+import { Lazy } from './lazy.js';
+import * as streams from './stream.js';
+const hasBuffer = (typeof Buffer !== 'undefined');
+const indexOfTable = new Lazy(() => new Uint8Array(256));
+let textEncoder;
+let textDecoder;
+export class VSBuffer {
+    /**
+     * When running in a nodejs context, the backing store for the returned `VSBuffer` instance
+     * might use a nodejs Buffer allocated from node's Buffer pool, which is not transferrable.
+     */
+    static alloc(byteLength) {
+        if (hasBuffer) {
+            return new VSBuffer(Buffer.allocUnsafe(byteLength));
+        }
+        else {
+            return new VSBuffer(new Uint8Array(byteLength));
+        }
+    }
+    /**
+     * When running in a nodejs context, if `actual` is not a nodejs Buffer, the backing store for
+     * the returned `VSBuffer` instance might use a nodejs Buffer allocated from node's Buffer pool,
+     * which is not transferrable.
+     */
+    static wrap(actual) {
+        if (hasBuffer && !(Buffer.isBuffer(actual))) {
+            // https://nodejs.org/dist/latest-v10.x/docs/api/buffer.html#buffer_class_method_buffer_from_arraybuffer_byteoffset_length
+            // Create a zero-copy Buffer wrapper around the ArrayBuffer pointed to by the Uint8Array
+            actual = Buffer.from(actual.buffer, actual.byteOffset, actual.byteLength);
+        }
+        return new VSBuffer(actual);
+    }
+    /**
+     * When running in a nodejs context, the backing store for the returned `VSBuffer` instance
+     * might use a nodejs Buffer allocated from node's Buffer pool, which is not transferrable.
+     */
+    static fromString(source, options) {
+        const dontUseNodeBuffer = options?.dontUseNodeBuffer || false;
+        if (!dontUseNodeBuffer && hasBuffer) {
+            return new VSBuffer(Buffer.from(source));
+        }
+        else {
+            if (!textEncoder) {
+                textEncoder = new TextEncoder();
+            }
+            return new VSBuffer(textEncoder.encode(source));
+        }
+    }
+    /**
+     * When running in a nodejs context, the backing store for the returned `VSBuffer` instance
+     * might use a nodejs Buffer allocated from node's Buffer pool, which is not transferrable.
+     */
+    static fromByteArray(source) {
+        const result = VSBuffer.alloc(source.length);
+        for (let i = 0, len = source.length; i < len; i++) {
+            result.buffer[i] = source[i];
+        }
+        return result;
+    }
+    /**
+     * When running in a nodejs context, the backing store for the returned `VSBuffer` instance
+     * might use a nodejs Buffer allocated from node's Buffer pool, which is not transferrable.
+     */
+    static concat(buffers, totalLength) {
+        if (typeof totalLength === 'undefined') {
+            totalLength = 0;
+            for (let i = 0, len = buffers.length; i < len; i++) {
+                totalLength += buffers[i].byteLength;
+            }
+        }
+        const ret = VSBuffer.alloc(totalLength);
+        let offset = 0;
+        for (let i = 0, len = buffers.length; i < len; i++) {
+            const element = buffers[i];
+            ret.set(element, offset);
+            offset += element.byteLength;
+        }
+        return ret;
+    }
+    constructor(buffer) {
+        this.buffer = buffer;
+        this.byteLength = this.buffer.byteLength;
+    }
+    /**
+     * When running in a nodejs context, the backing store for the returned `VSBuffer` instance
+     * might use a nodejs Buffer allocated from node's Buffer pool, which is not transferrable.
+     */
+    clone() {
+        const result = VSBuffer.alloc(this.byteLength);
+        result.set(this);
+        return result;
+    }
+    toString() {
+        if (hasBuffer) {
+            return this.buffer.toString();
+        }
+        else {
+            if (!textDecoder) {
+                textDecoder = new TextDecoder();
+            }
+            return textDecoder.decode(this.buffer);
+        }
+    }
+    slice(start, end) {
+        // IMPORTANT: use subarray instead of slice because TypedArray#slice
+        // creates shallow copy and NodeBuffer#slice doesn't. The use of subarray
+        // ensures the same, performance, behaviour.
+        return new VSBuffer(this.buffer.subarray(start, end));
+    }
+    set(array, offset) {
+        if (array instanceof VSBuffer) {
+            this.buffer.set(array.buffer, offset);
+        }
+        else if (array instanceof Uint8Array) {
+            this.buffer.set(array, offset);
+        }
+        else if (array instanceof ArrayBuffer) {
+            this.buffer.set(new Uint8Array(array), offset);
+        }
+        else if (ArrayBuffer.isView(array)) {
+            this.buffer.set(new Uint8Array(array.buffer, array.byteOffset, array.byteLength), offset);
+        }
+        else {
+            throw new Error(`Unknown argument 'array'`);
+        }
+    }
+    readUInt32BE(offset) {
+        return readUInt32BE(this.buffer, offset);
+    }
+    writeUInt32BE(value, offset) {
+        writeUInt32BE(this.buffer, value, offset);
+    }
+    readUInt32LE(offset) {
+        return readUInt32LE(this.buffer, offset);
+    }
+    writeUInt32LE(value, offset) {
+        writeUInt32LE(this.buffer, value, offset);
+    }
+    readUInt8(offset) {
+        return readUInt8(this.buffer, offset);
+    }
+    writeUInt8(value, offset) {
+        writeUInt8(this.buffer, value, offset);
+    }
+    indexOf(subarray, offset = 0) {
+        return binaryIndexOf(this.buffer, subarray instanceof VSBuffer ? subarray.buffer : subarray, offset);
+    }
+    equals(other) {
+        if (this === other) {
+            return true;
+        }
+        if (this.byteLength !== other.byteLength) {
+            return false;
+        }
+        return this.buffer.every((value, index) => value === other.buffer[index]);
+    }
+}
+/**
+ * Like String.indexOf, but works on Uint8Arrays.
+ * Uses the boyer-moore-horspool algorithm to be reasonably speedy.
+ */
+export function binaryIndexOf(haystack, needle, offset = 0) {
+    const needleLen = needle.byteLength;
+    const haystackLen = haystack.byteLength;
+    if (needleLen === 0) {
+        return 0;
+    }
+    if (needleLen === 1) {
+        return haystack.indexOf(needle[0]);
+    }
+    if (needleLen > haystackLen - offset) {
+        return -1;
+    }
+    // find index of the subarray using boyer-moore-horspool algorithm
+    const table = indexOfTable.value;
+    table.fill(needle.length);
+    for (let i = 0; i < needle.length; i++) {
+        table[needle[i]] = needle.length - i - 1;
+    }
+    let i = offset + needle.length - 1;
+    let j = i;
+    let result = -1;
+    while (i < haystackLen) {
+        if (haystack[i] === needle[j]) {
+            if (j === 0) {
+                result = i;
+                break;
+            }
+            i--;
+            j--;
+        }
+        else {
+            i += Math.max(needle.length - j, table[haystack[i]]);
+            j = needle.length - 1;
+        }
+    }
+    return result;
+}
+export function readUInt16LE(source, offset) {
+    return (((source[offset + 0] << 0) >>> 0) |
+        ((source[offset + 1] << 8) >>> 0));
+}
+export function writeUInt16LE(destination, value, offset) {
+    destination[offset + 0] = (value & 0b11111111);
+    value = value >>> 8;
+    destination[offset + 1] = (value & 0b11111111);
+}
+export function readUInt32BE(source, offset) {
+    return (source[offset] * 2 ** 24
+        + source[offset + 1] * 2 ** 16
+        + source[offset + 2] * 2 ** 8
+        + source[offset + 3]);
+}
+export function writeUInt32BE(destination, value, offset) {
+    destination[offset + 3] = value;
+    value = value >>> 8;
+    destination[offset + 2] = value;
+    value = value >>> 8;
+    destination[offset + 1] = value;
+    value = value >>> 8;
+    destination[offset] = value;
+}
+export function readUInt32LE(source, offset) {
+    return (((source[offset + 0] << 0) >>> 0) |
+        ((source[offset + 1] << 8) >>> 0) |
+        ((source[offset + 2] << 16) >>> 0) |
+        ((source[offset + 3] << 24) >>> 0));
+}
+export function writeUInt32LE(destination, value, offset) {
+    destination[offset + 0] = (value & 0b11111111);
+    value = value >>> 8;
+    destination[offset + 1] = (value & 0b11111111);
+    value = value >>> 8;
+    destination[offset + 2] = (value & 0b11111111);
+    value = value >>> 8;
+    destination[offset + 3] = (value & 0b11111111);
+}
+export function readUInt8(source, offset) {
+    return source[offset];
+}
+export function writeUInt8(destination, value, offset) {
+    destination[offset] = value;
+}
+export function readableToBuffer(readable) {
+    return streams.consumeReadable(readable, chunks => VSBuffer.concat(chunks));
+}
+export function bufferToReadable(buffer) {
+    return streams.toReadable(buffer);
+}
+export function streamToBuffer(stream) {
+    return streams.consumeStream(stream, chunks => VSBuffer.concat(chunks));
+}
+export async function bufferedStreamToBuffer(bufferedStream) {
+    if (bufferedStream.ended) {
+        return VSBuffer.concat(bufferedStream.buffer);
+    }
+    return VSBuffer.concat([
+        // Include already read chunks...
+        ...bufferedStream.buffer,
+        // ...and all additional chunks
+        await streamToBuffer(bufferedStream.stream)
+    ]);
+}
+export function bufferToStream(buffer) {
+    return streams.toStream(buffer, chunks => VSBuffer.concat(chunks));
+}
+export function streamToBufferReadableStream(stream) {
+    return streams.transform(stream, { data: data => typeof data === 'string' ? VSBuffer.fromString(data) : VSBuffer.wrap(data) }, chunks => VSBuffer.concat(chunks));
+}
+export function newWriteableBufferStream(options) {
+    return streams.newWriteableStream(chunks => VSBuffer.concat(chunks), options);
+}
+export function prefixedBufferReadable(prefix, readable) {
+    return streams.prefixedReadable(prefix, readable, chunks => VSBuffer.concat(chunks));
+}
+export function prefixedBufferStream(prefix, stream) {
+    return streams.prefixedStream(prefix, stream, chunks => VSBuffer.concat(chunks));
+}
+/** Decodes base64 to a uint8 array. URL-encoded and unpadded base64 is allowed. */
+export function decodeBase64(encoded) {
+    let building = 0;
+    let remainder = 0;
+    let bufi = 0;
+    // The simpler way to do this is `Uint8Array.from(atob(str), c => c.charCodeAt(0))`,
+    // but that's about 10-20x slower than this function in current Chromium versions.
+    const buffer = new Uint8Array(Math.floor(encoded.length / 4 * 3));
+    const append = (value) => {
+        switch (remainder) {
+            case 3:
+                buffer[bufi++] = building | value;
+                remainder = 0;
+                break;
+            case 2:
+                buffer[bufi++] = building | (value >>> 2);
+                building = value << 6;
+                remainder = 3;
+                break;
+            case 1:
+                buffer[bufi++] = building | (value >>> 4);
+                building = value << 4;
+                remainder = 2;
+                break;
+            default:
+                building = value << 2;
+                remainder = 1;
+        }
+    };
+    for (let i = 0; i < encoded.length; i++) {
+        const code = encoded.charCodeAt(i);
+        // See https://datatracker.ietf.org/doc/html/rfc4648#section-4
+        // This branchy code is about 3x faster than an indexOf on a base64 char string.
+        if (code >= 65 && code <= 90) {
+            append(code - 65); // A-Z starts ranges from char code 65 to 90
+        }
+        else if (code >= 97 && code <= 122) {
+            append(code - 97 + 26); // a-z starts ranges from char code 97 to 122, starting at byte 26
+        }
+        else if (code >= 48 && code <= 57) {
+            append(code - 48 + 52); // 0-9 starts ranges from char code 48 to 58, starting at byte 52
+        }
+        else if (code === 43 || code === 45) {
+            append(62); // "+" or "-" for URLS
+        }
+        else if (code === 47 || code === 95) {
+            append(63); // "/" or "_" for URLS
+        }
+        else if (code === 61) {
+            break; // "="
+        }
+        else {
+            throw new SyntaxError(`Unexpected base64 character ${encoded[i]}`);
+        }
+    }
+    const unpadded = bufi;
+    while (remainder > 0) {
+        append(0);
+    }
+    // slice is needed to account for overestimation due to padding
+    return VSBuffer.wrap(buffer).slice(0, unpadded);
+}
+const base64Alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
+const base64UrlSafeAlphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_';
+/** Encodes a buffer to a base64 string. */
+export function encodeBase64({ buffer }, padded = true, urlSafe = false) {
+    const dictionary = urlSafe ? base64UrlSafeAlphabet : base64Alphabet;
+    let output = '';
+    const remainder = buffer.byteLength % 3;
+    let i = 0;
+    for (; i < buffer.byteLength - remainder; i += 3) {
+        const a = buffer[i + 0];
+        const b = buffer[i + 1];
+        const c = buffer[i + 2];
+        output += dictionary[a >>> 2];
+        output += dictionary[(a << 4 | b >>> 4) & 0b111111];
+        output += dictionary[(b << 2 | c >>> 6) & 0b111111];
+        output += dictionary[c & 0b111111];
+    }
+    if (remainder === 1) {
+        const a = buffer[i + 0];
+        output += dictionary[a >>> 2];
+        output += dictionary[(a << 4) & 0b111111];
+        if (padded) {
+            output += '==';
+        }
+    }
+    else if (remainder === 2) {
+        const a = buffer[i + 0];
+        const b = buffer[i + 1];
+        output += dictionary[a >>> 2];
+        output += dictionary[(a << 4 | b >>> 4) & 0b111111];
+        output += dictionary[(b << 2) & 0b111111];
+        if (padded) {
+            output += '=';
+        }
+    }
+    return output;
+}
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiYnVmZmVyLmpzIiwic291cmNlUm9vdCI6ImZpbGU6Ly8vRDovRGV2ZWxvcGVyL0FwcGxpY2F0aW9uL0NvZGVFZGl0b3JMYW5kL0xhbmQvRGVwZW5kZW5jeS9NaWNyb3NvZnQvRGVwZW5kZW5jeS9FZGl0b3Ivc3JjLyIsInNvdXJjZXMiOlsidnMvYmFzZS9jb21tb24vYnVmZmVyLnRzIl0sIm5hbWVzIjpbXSwibWFwcGluZ3MiOiJBQUFBOzs7Z0dBR2dHO0FBRWhHLE9BQU8sRUFBRSxJQUFJLEVBQUUsTUFBTSxXQUFXLENBQUM7QUFDakMsT0FBTyxLQUFLLE9BQU8sTUFBTSxhQUFhLENBQUM7QUFJdkMsTUFBTSxTQUFTLEdBQUcsQ0FBQyxPQUFPLE1BQU0sS0FBSyxXQUFXLENBQUMsQ0FBQztBQUNsRCxNQUFNLFlBQVksR0FBRyxJQUFJLElBQUksQ0FBQyxHQUFHLEVBQUUsQ0FBQyxJQUFJLFVBQVUsQ0FBQyxHQUFHLENBQUMsQ0FBQyxDQUFDO0FBRXpELElBQUksV0FBK0IsQ0FBQztBQUNwQyxJQUFJLFdBQStCLENBQUM7QUFFcEMsTUFBTSxPQUFPLFFBQVE7SUFFcEI7OztPQUdHO0lBQ0gsTUFBTSxDQUFDLEtBQUssQ0FBQyxVQUFrQjtRQUM5QixJQUFJLFNBQVMsRUFBRSxDQUFDO1lBQ2YsT0FBTyxJQUFJLFFBQVEsQ0FBQyxNQUFNLENBQUMsV0FBVyxDQUFDLFVBQVUsQ0FBQyxDQUFDLENBQUM7UUFDckQsQ0FBQzthQUFNLENBQUM7WUFDUCxPQUFPLElBQUksUUFBUSxDQUFDLElBQUksVUFBVSxDQUFDLFVBQVUsQ0FBQyxDQUFDLENBQUM7UUFDakQsQ0FBQztJQUNGLENBQUM7SUFFRDs7OztPQUlHO0lBQ0gsTUFBTSxDQUFDLElBQUksQ0FBQyxNQUFrQjtRQUM3QixJQUFJLFNBQVMsSUFBSSxDQUFDLENBQUMsTUFBTSxDQUFDLFFBQVEsQ0FBQyxNQUFNLENBQUMsQ0FBQyxFQUFFLENBQUM7WUFDN0MsMEhBQTBIO1lBQzFILHdGQUF3RjtZQUN4RixNQUFNLEdB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

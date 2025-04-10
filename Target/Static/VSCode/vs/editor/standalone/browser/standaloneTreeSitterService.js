@@ -1,1 +1,34 @@
-import{Event}from"../../../base/common/event.js";export class StandaloneTreeSitterParserService{constructor(){this.onDidUpdateTree=Event.None,this.onDidAddLanguage=Event.None}async getLanguage(e){}getTreeSync(e,t){}async getTextModelTreeSitter(e,t){}async getTree(e,t){}getOrInitLanguage(e){}getParseResult(e){}}
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
+import { Event } from '../../../base/common/event.js';
+/**
+ * The monaco build doesn't like the dynamic import of tree sitter in the real service.
+ * We use a dummy service here to make the build happy.
+ */
+export class StandaloneTreeSitterParserService {
+    constructor() {
+        this.onDidUpdateTree = Event.None;
+        this.onDidAddLanguage = Event.None;
+    }
+    async getLanguage(languageId) {
+        return undefined;
+    }
+    getTreeSync(content, languageId) {
+        return undefined;
+    }
+    async getTextModelTreeSitter(model, parseImmediately) {
+        return undefined;
+    }
+    async getTree(content, languageId) {
+        return undefined;
+    }
+    getOrInitLanguage(_languageId) {
+        return undefined;
+    }
+    getParseResult(textModel) {
+        return undefined;
+    }
+}
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoic3RhbmRhbG9uZVRyZWVTaXR0ZXJTZXJ2aWNlLmpzIiwic291cmNlUm9vdCI6ImZpbGU6Ly8vRDovRGV2ZWxvcGVyL0FwcGxpY2F0aW9uL0NvZGVFZGl0b3JMYW5kL0xhbmQvRGVwZW5kZW5jeS9NaWNyb3NvZnQvRGVwZW5kZW5jeS9FZGl0b3Ivc3JjLyIsInNvdXJjZXMiOlsidnMvZWRpdG9yL3N0YW5kYWxvbmUvYnJvd3Nlci9zdGFuZGFsb25lVHJlZVNpdHRlclNlcnZpY2UudHMiXSwibmFtZXMiOltdLCJtYXBwaW5ncyI6IkFBQUE7OztnR0FHZ0c7QUFHaEcsT0FBTyxFQUFFLEtBQUssRUFBRSxNQUFNLCtCQUErQixDQUFDO0FBSXREOzs7R0FHRztBQUNILE1BQU0sT0FBTyxpQ0FBaUM7SUFBOUM7UUFhQyxvQkFBZSxHQUEyQixLQUFLLENBQUMsSUFBSSxDQUFDO1FBRXJELHFCQUFnQixHQUFxRCxLQUFLLENBQUMsSUFBSSxDQUFDO0lBUWpGLENBQUM7SUF0QkEsS0FBSyxDQUFDLFdBQVcsQ0FBQyxVQUFrQjtRQUNuQyxPQUFPLFNBQVMsQ0FBQztJQUNsQixDQUFDO0lBQ0QsV0FBVyxDQUFDLE9BQWUsRUFBRSxVQUFrQjtRQUM5QyxPQUFPLFNBQVMsQ0FBQztJQUNsQixDQUFDO0lBQ0QsS0FBSyxDQUFDLHNCQUFzQixDQUFDLEtBQWlCLEVBQUUsZ0JBQTBCO1FBQ3pFLE9BQU8sU0FBUyxDQUFDO0lBQ2xCLENBQUM7SUFDRCxLQUFLLENBQUMsT0FBTyxDQUFDLE9BQWUsRUFBRSxVQUFrQjtRQUNoRCxPQUFPLFNBQVMsQ0FBQztJQUNsQixDQUFDO0lBS0QsaUJBQWlCLENBQUMsV0FBbUI7UUFDcEMsT0FBTyxTQUFTLENBQUM7SUFDbEIsQ0FBQztJQUNELGNBQWMsQ0FBQyxTQUFxQjtRQUNuQyxPQUFPLFNBQVMsQ0FBQztJQUNsQixDQUFDO0NBQ0QifQ==

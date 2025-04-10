@@ -1,7 +1,8 @@
 ---
 import Layout from "@Source/Function/Markup/Base.astro";
 
-const Origin = Astro.url.origin;
+const Site = Astro.site;
+const Worker = `/Worker.js?BASE_REMOTE=${encodeURIComponent(Site?.toString() ?? Astro.url.origin)}`;
 ---
 
 <Layout>
@@ -26,17 +27,17 @@ const Origin = Astro.url.origin;
 		}
 	</script>
 
-	<script is:inline type="module" define:vars={{ Origin }} slot="Head">
+	<script is:inline type="module" define:vars={{ Site }} slot="Head">
 		// @ts-expect-error
-		globalThis._VSCODE_FILE_ROOT = `${Origin}/Static/VSCode/`;
+		globalThis._VSCODE_FILE_ROOT = `${Site}/Static/VSCode/`;
 	</script>
 
 	<script is:inline type="module" src="/Worker/CSS/Load.js" slot="Head" defer
 	></script>
 
-	<script is:inline type="module" slot="Head">
+	<script is:inline type="module" define:vars={{ Worker }} slot="Head">
 		// @ts-expect-error
-		window._WORKER = "/Worker.js";
+		window._WORKER = Worker;
 	</script>
 
 	<script is:inline type="module" src="/Worker/Register.js" slot="Head" defer

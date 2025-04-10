@@ -1,1 +1,0 @@
-export function isChatViewTitleActionContext(t){return!!t&&"string"==typeof t.sessionId&&19===t.$mid}

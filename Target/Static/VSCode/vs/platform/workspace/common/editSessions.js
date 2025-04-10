@@ -1,1 +1,13 @@
-import{createDecorator}from"../../instantiation/common/instantiation.js";export const IEditSessionIdentityService=createDecorator("editSessionIdentityService");export var EditSessionIdentityMatch;!function(t){t[t.Complete=100]="Complete",t[t.Partial=50]="Partial",t[t.None=0]="None"}(EditSessionIdentityMatch||(EditSessionIdentityMatch={}));
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
+import { createDecorator } from '../../instantiation/common/instantiation.js';
+export const IEditSessionIdentityService = createDecorator('editSessionIdentityService');
+export var EditSessionIdentityMatch;
+(function (EditSessionIdentityMatch) {
+    EditSessionIdentityMatch[EditSessionIdentityMatch["Complete"] = 100] = "Complete";
+    EditSessionIdentityMatch[EditSessionIdentityMatch["Partial"] = 50] = "Partial";
+    EditSessionIdentityMatch[EditSessionIdentityMatch["None"] = 0] = "None";
+})(EditSessionIdentityMatch || (EditSessionIdentityMatch = {}));
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiZWRpdFNlc3Npb25zLmpzIiwic291cmNlUm9vdCI6ImZpbGU6Ly8vRDovRGV2ZWxvcGVyL0FwcGxpY2F0aW9uL0NvZGVFZGl0b3JMYW5kL0xhbmQvRGVwZW5kZW5jeS9NaWNyb3NvZnQvRGVwZW5kZW5jeS9FZGl0b3Ivc3JjLyIsInNvdXJjZXMiOlsidnMvcGxhdGZvcm0vd29ya3NwYWNlL2NvbW1vbi9lZGl0U2Vzc2lvbnMudHMiXSwibmFtZXMiOltdLCJtYXBwaW5ncyI6IkFBQUE7OztnR0FHZ0c7QUFJaEcsT0FBTyxFQUFFLGVBQWUsRUFBRSxNQUFNLDZDQUE2QyxDQUFDO0FBUzlFLE1BQU0sQ0FBQyxNQUFNLDJCQUEyQixHQUFHLGVBQWUsQ0FBOEIsNEJBQTRCLENBQUMsQ0FBQztBQWdCdEgsTUFBTSxDQUFOLElBQVksd0JBSVg7QUFKRCxXQUFZLHdCQUF3QjtJQUNuQyxpRkFBYyxDQUFBO0lBQ2QsOEVBQVksQ0FBQTtJQUNaLHVFQUFRLENBQUE7QUFDVCxDQUFDLEVBSlcsd0JBQXdCLEtBQXhCLHdCQUF3QixRQUluQyJ9

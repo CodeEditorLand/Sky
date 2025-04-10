@@ -1,1 +1,0 @@
-export async function areWorkspaceFoldersEmpty(r,e){for(const n of r.folders){const r=await e.resolve(n.uri);if(r.children&&r.children.length>0)return!1}return!0}

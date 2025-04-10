@@ -1,1 +1,0 @@
-export class StaticServiceAccessor{constructor(){this.services=new Map}withService(e,s){return this.services.set(e,s),this}get(e){const s=this.services.get(e);if(!s)throw new Error("Service does not exist");return s}}

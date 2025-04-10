@@ -1,1 +1,31 @@
-export var MarshalledId;!function(e){e[e.Uri=1]="Uri",e[e.Regexp=2]="Regexp",e[e.ScmResource=3]="ScmResource",e[e.ScmResourceGroup=4]="ScmResourceGroup",e[e.ScmProvider=5]="ScmProvider",e[e.CommentController=6]="CommentController",e[e.CommentThread=7]="CommentThread",e[e.CommentThreadInstance=8]="CommentThreadInstance",e[e.CommentThreadReply=9]="CommentThreadReply",e[e.CommentNode=10]="CommentNode",e[e.CommentThreadNode=11]="CommentThreadNode",e[e.TimelineActionContext=12]="TimelineActionContext",e[e.NotebookCellActionContext=13]="NotebookCellActionContext",e[e.NotebookActionContext=14]="NotebookActionContext",e[e.TerminalContext=15]="TerminalContext",e[e.TestItemContext=16]="TestItemContext",e[e.Date=17]="Date",e[e.TestMessageMenuArgs=18]="TestMessageMenuArgs",e[e.ChatViewContext=19]="ChatViewContext",e[e.LanguageModelToolResult=20]="LanguageModelToolResult",e[e.LanguageModelTextPart=21]="LanguageModelTextPart",e[e.LanguageModelPromptTsxPart=22]="LanguageModelPromptTsxPart",e[e.LanguageModelDataPart=23]="LanguageModelDataPart"}(MarshalledId||(MarshalledId={}));
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
+export var MarshalledId;
+(function (MarshalledId) {
+    MarshalledId[MarshalledId["Uri"] = 1] = "Uri";
+    MarshalledId[MarshalledId["Regexp"] = 2] = "Regexp";
+    MarshalledId[MarshalledId["ScmResource"] = 3] = "ScmResource";
+    MarshalledId[MarshalledId["ScmResourceGroup"] = 4] = "ScmResourceGroup";
+    MarshalledId[MarshalledId["ScmProvider"] = 5] = "ScmProvider";
+    MarshalledId[MarshalledId["CommentController"] = 6] = "CommentController";
+    MarshalledId[MarshalledId["CommentThread"] = 7] = "CommentThread";
+    MarshalledId[MarshalledId["CommentThreadInstance"] = 8] = "CommentThreadInstance";
+    MarshalledId[MarshalledId["CommentThreadReply"] = 9] = "CommentThreadReply";
+    MarshalledId[MarshalledId["CommentNode"] = 10] = "CommentNode";
+    MarshalledId[MarshalledId["CommentThreadNode"] = 11] = "CommentThreadNode";
+    MarshalledId[MarshalledId["TimelineActionContext"] = 12] = "TimelineActionContext";
+    MarshalledId[MarshalledId["NotebookCellActionContext"] = 13] = "NotebookCellActionContext";
+    MarshalledId[MarshalledId["NotebookActionContext"] = 14] = "NotebookActionContext";
+    MarshalledId[MarshalledId["TerminalContext"] = 15] = "TerminalContext";
+    MarshalledId[MarshalledId["TestItemContext"] = 16] = "TestItemContext";
+    MarshalledId[MarshalledId["Date"] = 17] = "Date";
+    MarshalledId[MarshalledId["TestMessageMenuArgs"] = 18] = "TestMessageMenuArgs";
+    MarshalledId[MarshalledId["ChatViewContext"] = 19] = "ChatViewContext";
+    MarshalledId[MarshalledId["LanguageModelToolResult"] = 20] = "LanguageModelToolResult";
+    MarshalledId[MarshalledId["LanguageModelTextPart"] = 21] = "LanguageModelTextPart";
+    MarshalledId[MarshalledId["LanguageModelPromptTsxPart"] = 22] = "LanguageModelPromptTsxPart";
+    MarshalledId[MarshalledId["LanguageModelDataPart"] = 23] = "LanguageModelDataPart";
+})(MarshalledId || (MarshalledId = {}));
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoibWFyc2hhbGxpbmdJZHMuanMiLCJzb3VyY2VSb290IjoiZmlsZTovLy9EOi9EZXZlbG9wZXIvQXBwbGljYXRpb24vQ29kZUVkaXRvckxhbmQvTGFuZC9EZXBlbmRlbmN5L01pY3Jvc29mdC9EZXBlbmRlbmN5L0VkaXRvci9zcmMvIiwic291cmNlcyI6WyJ2cy9iYXNlL2NvbW1vbi9tYXJzaGFsbGluZ0lkcy50cyJdLCJuYW1lcyI6W10sIm1hcHBpbmdzIjoiQUFBQTs7O2dHQUdnRztBQUVoRyxNQUFNLENBQU4sSUFBa0IsWUF3QmpCO0FBeEJELFdBQWtCLFlBQVk7SUFDN0IsNkNBQU8sQ0FBQTtJQUNQLG1EQUFNLENBQUE7SUFDTiw2REFBVyxDQUFBO0lBQ1gsdUVBQWdCLENBQUE7SUFDaEIsNkRBQVcsQ0FBQTtJQUNYLHlFQUFpQixDQUFBO0lBQ2pCLGlFQUFhLENBQUE7SUFDYixpRkFBcUIsQ0FBQTtJQUNyQiwyRUFBa0IsQ0FBQTtJQUNsQiw4REFBVyxDQUFBO0lBQ1gsMEVBQWlCLENBQUE7SUFDakIsa0ZBQXFCLENBQUE7SUFDckIsMEZBQXlCLENBQUE7SUFDekIsa0ZBQXFCLENBQUE7SUFDckIsc0VBQWUsQ0FBQTtJQUNmLHNFQUFlLENBQUE7SUFDZixnREFBSSxDQUFBO0lBQ0osOEVBQW1CLENBQUE7SUFDbkIsc0VBQWUsQ0FBQTtJQUNmLHNGQUF1QixDQUFBO0lBQ3ZCLGtGQUFxQixDQUFBO0lBQ3JCLDRGQUEwQixDQUFBO0lBQzFCLGtGQUFxQixDQUFBO0FBQ3RCLENBQUMsRUF4QmlCLFlBQVksS0FBWixZQUFZLFFBd0I3QiJ9

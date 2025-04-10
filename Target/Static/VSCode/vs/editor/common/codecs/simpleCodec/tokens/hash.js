@@ -1,1 +1,0 @@
-import{SimpleToken}from"./simpleToken.js";export class Hash extends SimpleToken{static{this.symbol="#"}get text(){return Hash.symbol}toString(){return`hash${this.range}`}}

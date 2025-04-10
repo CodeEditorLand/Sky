@@ -1,1 +1,0 @@
-import{ChatPromptDecoder}from"./chatPromptDecoder.js";export const ChatPromptCodec=Object.freeze({encode:e=>{throw new Error("The `encode` method is not implemented.")},decode:e=>new ChatPromptDecoder(e)});

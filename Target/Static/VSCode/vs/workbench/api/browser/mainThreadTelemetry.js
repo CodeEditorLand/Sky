@@ -1,1 +1,65 @@
-var MainThreadTelemetry_1,__decorate=this&&this.__decorate||function(e,t,r,o){var i,n=arguments.length,m=n<3?t:null===o?o=Object.getOwnPropertyDescriptor(t,r):o;if("object"==typeof Reflect&&"function"==typeof Reflect.decorate)m=Reflect.decorate(e,t,r,o);else for(var s=e.length-1;s>=0;s--)(i=e[s])&&(m=(n<3?i(m):n>3?i(t,r,m):i(t,r))||m);return n>3&&m&&Object.defineProperty(t,r,m),m},__param=this&&this.__param||function(e,t){return function(r,o){t(r,o,e)}};import{Disposable}from"../../../base/common/lifecycle.js";import{IConfigurationService}from"../../../platform/configuration/common/configuration.js";import{IEnvironmentService}from"../../../platform/environment/common/environment.js";import{IProductService}from"../../../platform/product/common/productService.js";import{ITelemetryService,TELEMETRY_OLD_SETTING_ID,TELEMETRY_SETTING_ID}from"../../../platform/telemetry/common/telemetry.js";import{supportsTelemetry}from"../../../platform/telemetry/common/telemetryUtils.js";import{extHostNamedCustomer}from"../../services/extensions/common/extHostCustomers.js";import{ExtHostContext,MainContext}from"../common/extHost.protocol.js";let MainThreadTelemetry=class extends Disposable{static{MainThreadTelemetry_1=this}static{this._name="pluginHostTelemetry"}constructor(e,t,r,o,i){super(),this._telemetryService=t,this._configurationService=r,this._environmentService=o,this._productService=i,this._proxy=e.getProxy(ExtHostContext.ExtHostTelemetry),supportsTelemetry(this._productService,this._environmentService)&&this._register(this._configurationService.onDidChangeConfiguration((e=>{(e.affectsConfiguration(TELEMETRY_SETTING_ID)||e.affectsConfiguration(TELEMETRY_OLD_SETTING_ID))&&this._proxy.$onDidChangeTelemetryLevel(this.telemetryLevel)}))),this._proxy.$initializeTelemetryLevel(this.telemetryLevel,supportsTelemetry(this._productService,this._environmentService),this._productService.enabledTelemetryLevels)}get telemetryLevel(){return supportsTelemetry(this._productService,this._environmentService)?this._telemetryService.telemetryLevel:0}$publicLog(e,t=Object.create(null)){t[MainThreadTelemetry_1._name]=!0,this._telemetryService.publicLog(e,t)}$publicLog2(e,t){this.$publicLog(e,t)}};MainThreadTelemetry=MainThreadTelemetry_1=__decorate([extHostNamedCustomer(MainContext.MainThreadTelemetry),__param(1,ITelemetryService),__param(2,IConfigurationService),__param(3,IEnvironmentService),__param(4,IProductService)],MainThreadTelemetry);export{MainThreadTelemetry};
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = (this && this.__param) || function (paramIndex, decorator) {
+    return function (target, key) { decorator(target, key, paramIndex); }
+};
+var MainThreadTelemetry_1;
+import { Disposable } from '../../../base/common/lifecycle.js';
+import { IConfigurationService } from '../../../platform/configuration/common/configuration.js';
+import { IEnvironmentService } from '../../../platform/environment/common/environment.js';
+import { IProductService } from '../../../platform/product/common/productService.js';
+import { ITelemetryService, TELEMETRY_OLD_SETTING_ID, TELEMETRY_SETTING_ID } from '../../../platform/telemetry/common/telemetry.js';
+import { supportsTelemetry } from '../../../platform/telemetry/common/telemetryUtils.js';
+import { extHostNamedCustomer } from '../../services/extensions/common/extHostCustomers.js';
+import { ExtHostContext, MainContext } from '../common/extHost.protocol.js';
+let MainThreadTelemetry = class MainThreadTelemetry extends Disposable {
+    static { MainThreadTelemetry_1 = this; }
+    static { this._name = 'pluginHostTelemetry'; }
+    constructor(extHostContext, _telemetryService, _configurationService, _environmentService, _productService) {
+        super();
+        this._telemetryService = _telemetryService;
+        this._configurationService = _configurationService;
+        this._environmentService = _environmentService;
+        this._productService = _productService;
+        this._proxy = extHostContext.getProxy(ExtHostContext.ExtHostTelemetry);
+        if (supportsTelemetry(this._productService, this._environmentService)) {
+            this._register(this._configurationService.onDidChangeConfiguration(e => {
+                if (e.affectsConfiguration(TELEMETRY_SETTING_ID) || e.affectsConfiguration(TELEMETRY_OLD_SETTING_ID)) {
+                    this._proxy.$onDidChangeTelemetryLevel(this.telemetryLevel);
+                }
+            }));
+        }
+        this._proxy.$initializeTelemetryLevel(this.telemetryLevel, supportsTelemetry(this._productService, this._environmentService), this._productService.enabledTelemetryLevels);
+    }
+    get telemetryLevel() {
+        if (!supportsTelemetry(this._productService, this._environmentService)) {
+            return 0 /* TelemetryLevel.NONE */;
+        }
+        return this._telemetryService.telemetryLevel;
+    }
+    $publicLog(eventName, data = Object.create(null)) {
+        // __GDPR__COMMON__ "pluginHostTelemetry" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true }
+        data[MainThreadTelemetry_1._name] = true;
+        this._telemetryService.publicLog(eventName, data);
+    }
+    $publicLog2(eventName, data) {
+        this.$publicLog(eventName, data);
+    }
+};
+MainThreadTelemetry = MainThreadTelemetry_1 = __decorate([
+    extHostNamedCustomer(MainContext.MainThreadTelemetry),
+    __param(1, ITelemetryService),
+    __param(2, IConfigurationService),
+    __param(3, IEnvironmentService),
+    __param(4, IProductService)
+], MainThreadTelemetry);
+export { MainThreadTelemetry };
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoibWFpblRocmVhZFRlbGVtZXRyeS5qcyIsInNvdXJjZVJvb3QiOiJmaWxlOi8vL0Q6L0RldmVsb3Blci9BcHBsaWNhdGlvbi9Db2RlRWRpdG9yTGFuZC9MYW5kL0RlcGVuZGVuY3kvTWljcm9zb2Z0L0RlcGVuZGVuY3kvRWRpdG9yL3NyYy8iLCJzb3VyY2VzIjpbInZzL3dvcmtiZW5jaC9hcGkvYnJvd3Nlci9tYWluVGhyZWFkVGVsZW1ldHJ5LnRzIl0sIm5hbWVzIjpbXSwibWFwcGluZ3MiOiJBQUFBOzs7Z0dBR2dHOzs7Ozs7Ozs7OztBQUVoRyxPQUFPLEVBQUUsVUFBVSxFQUFFLE1BQU0sbUNBQW1DLENBQUM7QUFDL0QsT0FBTyxFQUFFLHFCQUFxQixFQUFFLE1BQU0seURBQXlELENBQUM7QUFDaEcsT0FBTyxFQUFFLG1CQUFtQixFQUFFLE1BQU0scURBQXFELENBQUM7QUFDMUYsT0FBTyxFQUFFLGVBQWUsRUFBRSxNQUFNLG9EQUFvRCxDQUFDO0FBRXJGLE9BQU8sRUFBRSxpQkFBaUIsRUFBa0Isd0JBQXdCLEVBQUUsb0JBQW9CLEVBQUUsTUFBTSxpREFBaUQsQ0FBQztBQUNwSixPQUFPLEVBQUUsaUJBQWlCLEVBQUUsTUFBTSxzREFBc0QsQ0FBQztBQUN6RixPQUFPLEVBQUUsb0JBQW9CLEVBQW1CLE1BQU0sc0RBQXNELENBQUM7QUFDN0csT0FBTyxFQUFFLGNBQWMsRUFBeUIsV0FBVyxFQUE0QixNQUFNLCtCQUErQixDQUFDO0FBR3RILElBQU0sbUJBQW1CLEdBQXpCLE1BQU0sbUJBQW9CLFNBQVEsVUFBVTs7YUFHMUIsVUFBSyxHQUFHLHFCQUFxQixBQUF4QixDQUF5QjtJQUV0RCxZQUNDLGNBQStCLEVBQ0ssaUJBQW9DLEVBQ2hDLHFCQUE0QyxFQUM5QyxtQkFBd0MsRUFDNUMsZUFBZ0M7UUFFbEUsS0FBSyxFQUFFLENBQUM7UUFMNEIsc0JBQWlCLEdBQWpCLGlCQUFpQixDQUFtQjtRQUNoQywwQkFBcUIsR0FBckIscUJBQXFCLENBQXVCO1FBQzlDLHdCQUFtQixHQUFuQixtQkFBbUIsQ0FBcUI7UUFDNUMsb0JBQWUsR0FBZixlQUFlLENBQWlCO1FBSWxFLElBQUksQ0FBQyxNQUFNLEdBQUcsY0FBYyxDQUFDLFFBQVEsQ0FBQyxjQUFjLENBQUMsZ0JBQWdCLENBQUMsQ0FBQztRQUV2RSxJQUFJLGlCQUFpQixDQUFDLElBQUksQ0FBQyxlQUFlLEVBQUUsSUFBSSxDQUFDLG1CQUFtQixDQUFDLEVBQUUsQ0FBQztZQUN2RSxJQUFJLENBQUMsU0FBUyxDQUFDLElBQUksQ0FBQyxxQkFBcUIsQ0FBQyx3QkFBd0IsQ0FBQyxDQUFDLENBQUMsRUFBRTtnQkFDdEUsSUFBSSxDQUFDLENBQUMsb0JBQW9CLENBQUMsb0JBQW9CLENBQUMsSUFBSSxDQUFDLENBQUMsb0JBQW9CLENBQUMsd0JBQXdCLENBQUMsRUFBRSxDQUFDO29CQUN0RyxJQUFJLENBQUMsTUFBTSxDQUFDLDBCQUEwQixDQUFDLElBQUksQ0FBQyxjQUFjLENBQUMsQ0FBQztnQkFDN0QsQ0FBQztZQUNGLENBQUMsQ0FBQyxDQUFDLENBQUM7UUFDTCxDQUFDO1FBQ0QsSUFBSSxDQUFDLE1BQU0sQ0FBQyx5QkFBeUIsQ0FBQyxJQUFJLENBQUMsY0FBYyxFQUFFLGlCQUFpQixDQUFDLElBQUksQ0FBQyxlQUFlLEVBQUUsSUFBSSxDQUFDLG1CQUFtQixDQUFDLEVBQUUsSUFBSSxDQUFDLGVBQWUsQ0FBQyxzQkFBc0IsQ0FBQyxDQUFDO0lBQzVLLENBQUM7SUFFRCxJQUFZLGNBQWM7UUFDekIsSUFBSSxDQUFDLGlCQUFpQixDQUFDLElBQUksQ0FBQyxlQUFlLEVBQUUsSUFBSSxDQUFDLG1CQUFtQixDQUFDLEVBQUUsQ0FBQztZQUN4RSxtQ0FBMkI7UUFDNUIsQ0FBQztRQUVELE9BQU8sSUFBSSxDQUFDLGlCQUFpQixDQUFDLGNBQWMsQ0FBQztJQUM5QyxDQUFDO0lBRUQsVUFBVSxDQUFDLFNBQWlCLEVBQUUsT0FBWSxNQUFNLENBQUMsTUFBTSxDQUFDLElBQUksQ0FBQztRQUM1RCxzSUFBc0k7UUFDdEksSUFBSSxDQUFDLHFCQUFtQixDQUFDLEtBQUssQ0FBQyxHQUFHLElBQUksQ0FBQztRQUN2QyxJQUFJLENBQUMsaUJBQWlCLENBQUMsU0FBUyxDQUFDLFNBQVMsRUFBRSxJQUFJLENBQUMsQ0FBQztJQUNuRCxDQUFDO0lBRUQsV0FBVyxDQUFzRixTQUFpQixFQUFFLElBQWdDO1FBQ25KLElBQUksQ0FBQyxVQUFVLENBQUMsU0FBUyxFQUFFLElBQVcsQ0FBQyxDQUFDO0lBQ3pDLENBQUM7O0FBMUNXLG1CQUFtQjtJQUQvQixvQkFBb0IsQ0FBQyxXQUFXLENBQUMsbUJBQW1CLENBQUM7SUFRbkQsV0FBQSxpQkFBaUIsQ0FBQTtJQUNqQixXQUFBLHFCQUFxQixDQUFBO0lBQ3JCLFdBQUEsbUJBQW1CLENBQUE7SUFDbkIsV0FBQSxlQUFlLENBQUE7R0FWTCxtQkFBbUIsQ0EyQy9CIn0=

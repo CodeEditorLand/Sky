@@ -1,1 +1,20 @@
-import{isString}from"./types.js";const _codiconFontCharacters=Object.create(null);export function register(o,r){if(isString(r)){const n=_codiconFontCharacters[r];if(void 0===n)throw new Error(`${o} references an unknown codicon: ${r}`);r=n}return _codiconFontCharacters[o]=r,{id:o}}export function getCodiconFontCharacters(){return _codiconFontCharacters}
+import { isString } from './types.js';
+const _codiconFontCharacters = Object.create(null);
+export function register(id, fontCharacter) {
+    if (isString(fontCharacter)) {
+        const val = _codiconFontCharacters[fontCharacter];
+        if (val === undefined) {
+            throw new Error(`${id} references an unknown codicon: ${fontCharacter}`);
+        }
+        fontCharacter = val;
+    }
+    _codiconFontCharacters[id] = fontCharacter;
+    return { id };
+}
+/**
+ * Only to be used by the iconRegistry.
+ */
+export function getCodiconFontCharacters() {
+    return _codiconFontCharacters;
+}
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiY29kaWNvbnNVdGlsLmpzIiwic291cmNlUm9vdCI6ImZpbGU6Ly8vRDovRGV2ZWxvcGVyL0FwcGxpY2F0aW9uL0NvZGVFZGl0b3JMYW5kL0xhbmQvRGVwZW5kZW5jeS9NaWNyb3NvZnQvRGVwZW5kZW5jeS9FZGl0b3Ivc3JjLyIsInNvdXJjZXMiOlsidnMvYmFzZS9jb21tb24vY29kaWNvbnNVdGlsLnRzIl0sIm5hbWVzIjpbXSwibWFwcGluZ3MiOiJBQUtBLE9BQU8sRUFBRSxRQUFRLEVBQUUsTUFBTSxZQUFZLENBQUM7QUFHdEMsTUFBTSxzQkFBc0IsR0FBNkIsTUFBTSxDQUFDLE1BQU0sQ0FBQyxJQUFJLENBQUMsQ0FBQztBQUU3RSxNQUFNLFVBQVUsUUFBUSxDQUFDLEVBQVUsRUFBRSxhQUE4QjtJQUNsRSxJQUFJLFFBQVEsQ0FBQyxhQUFhLENBQUMsRUFBRSxDQUFDO1FBQzdCLE1BQU0sR0FBRyxHQUFHLHNCQUFzQixDQUFDLGFBQWEsQ0FBQyxDQUFDO1FBQ2xELElBQUksR0FBRyxLQUFLLFNBQVMsRUFBRSxDQUFDO1lBQ3ZCLE1BQU0sSUFBSSxLQUFLLENBQUMsR0FBRyxFQUFFLG1DQUFtQyxhQUFhLEVBQUUsQ0FBQyxDQUFDO1FBQzFFLENBQUM7UUFDRCxhQUFhLEdBQUcsR0FBRyxDQUFDO0lBQ3JCLENBQUM7SUFDRCxzQkFBc0IsQ0FBQyxFQUFFLENBQUMsR0FBRyxhQUFhLENBQUM7SUFDM0MsT0FBTyxFQUFFLEVBQUUsRUFBRSxDQUFDO0FBQ2YsQ0FBQztBQUVEOztHQUVHO0FBQ0gsTUFBTSxVQUFVLHdCQUF3QjtJQUN2QyxPQUFPLHNCQUFzQixDQUFDO0FBQy9CLENBQUMifQ==

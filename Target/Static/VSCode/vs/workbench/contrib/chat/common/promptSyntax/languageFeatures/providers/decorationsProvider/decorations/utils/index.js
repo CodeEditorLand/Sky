@@ -1,1 +1,0 @@
-export const asCssVariable=e=>`var(--vscode-${e.replaceAll(".","-")})`;export{DecorationBase}from"./decorationBase.js";export{ReactiveDecorationBase}from"./reactiveDecorationBase.js";

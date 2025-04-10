@@ -1,1 +1,0 @@
-import{Range}from"../../../../../editor/common/core/range.js";export function isSearchTreeAIFileMatch(e){return e&&e.getFullRange&&e.getFullRange()instanceof Range}

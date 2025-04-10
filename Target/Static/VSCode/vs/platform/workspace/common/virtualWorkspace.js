@@ -1,1 +1,27 @@
-import{Schemas}from"../../../base/common/network.js";export function isVirtualResource(e){return e.scheme!==Schemas.file&&e.scheme!==Schemas.vscodeRemote}export function getVirtualWorkspaceLocation(e){return e.folders.length?e.folders.every((e=>isVirtualResource(e.uri)))?e.folders[0].uri:void 0:e.configuration&&isVirtualResource(e.configuration)?e.configuration:void 0}export function getVirtualWorkspaceScheme(e){return getVirtualWorkspaceLocation(e)?.scheme}export function getVirtualWorkspaceAuthority(e){return getVirtualWorkspaceLocation(e)?.authority}export function isVirtualWorkspace(e){return void 0!==getVirtualWorkspaceLocation(e)}
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
+import { Schemas } from '../../../base/common/network.js';
+export function isVirtualResource(resource) {
+    return resource.scheme !== Schemas.file && resource.scheme !== Schemas.vscodeRemote;
+}
+export function getVirtualWorkspaceLocation(workspace) {
+    if (workspace.folders.length) {
+        return workspace.folders.every(f => isVirtualResource(f.uri)) ? workspace.folders[0].uri : undefined;
+    }
+    else if (workspace.configuration && isVirtualResource(workspace.configuration)) {
+        return workspace.configuration;
+    }
+    return undefined;
+}
+export function getVirtualWorkspaceScheme(workspace) {
+    return getVirtualWorkspaceLocation(workspace)?.scheme;
+}
+export function getVirtualWorkspaceAuthority(workspace) {
+    return getVirtualWorkspaceLocation(workspace)?.authority;
+}
+export function isVirtualWorkspace(workspace) {
+    return getVirtualWorkspaceLocation(workspace) !== undefined;
+}
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoidmlydHVhbFdvcmtzcGFjZS5qcyIsInNvdXJjZVJvb3QiOiJmaWxlOi8vL0Q6L0RldmVsb3Blci9BcHBsaWNhdGlvbi9Db2RlRWRpdG9yTGFuZC9MYW5kL0RlcGVuZGVuY3kvTWljcm9zb2Z0L0RlcGVuZGVuY3kvRWRpdG9yL3NyYy8iLCJzb3VyY2VzIjpbInZzL3BsYXRmb3JtL3dvcmtzcGFjZS9jb21tb24vdmlydHVhbFdvcmtzcGFjZS50cyJdLCJuYW1lcyI6W10sIm1hcHBpbmdzIjoiQUFBQTs7O2dHQUdnRztBQUVoRyxPQUFPLEVBQUUsT0FBTyxFQUFFLE1BQU0saUNBQWlDLENBQUM7QUFJMUQsTUFBTSxVQUFVLGlCQUFpQixDQUFDLFFBQWE7SUFDOUMsT0FBTyxRQUFRLENBQUMsTUFBTSxLQUFLLE9BQU8sQ0FBQyxJQUFJLElBQUksUUFBUSxDQUFDLE1BQU0sS0FBSyxPQUFPLENBQUMsWUFBWSxDQUFDO0FBQ3JGLENBQUM7QUFFRCxNQUFNLFVBQVUsMkJBQTJCLENBQUMsU0FBcUI7SUFDaEUsSUFBSSxTQUFTLENBQUMsT0FBTyxDQUFDLE1BQU0sRUFBRSxDQUFDO1FBQzlCLE9BQU8sU0FBUyxDQUFDLE9BQU8sQ0FBQyxLQUFLLENBQUMsQ0FBQyxDQUFDLEVBQUUsQ0FBQyxpQkFBaUIsQ0FBQyxDQUFDLENBQUMsR0FBRyxDQUFDLENBQUMsQ0FBQyxDQUFDLENBQUMsU0FBUyxDQUFDLE9BQU8sQ0FBQyxDQUFDLENBQUMsQ0FBQyxHQUFHLENBQUMsQ0FBQyxDQUFDLFNBQVMsQ0FBQztJQUN0RyxDQUFDO1NBQU0sSUFBSSxTQUFTLENBQUMsYUFBYSxJQUFJLGlCQUFpQixDQUFDLFNBQVMsQ0FBQyxhQUFhLENBQUMsRUFBRSxDQUFDO1FBQ2xGLE9BQU8sU0FBUyxDQUFDLGFBQWEsQ0FBQztJQUNoQyxDQUFDO0lBQ0QsT0FBTyxTQUFTLENBQUM7QUFDbEIsQ0FBQztBQUVELE1BQU0sVUFBVSx5QkFBeUIsQ0FBQyxTQUFxQjtJQUM5RCxPQUFPLDJCQUEyQixDQUFDLFNBQVMsQ0FBQyxFQUFFLE1BQU0sQ0FBQztBQUN2RCxDQUFDO0FBRUQsTUFBTSxVQUFVLDRCQUE0QixDQUFDLFNBQXFCO0lBQ2pFLE9BQU8sMkJBQTJCLENBQUMsU0FBUyxDQUFDLEVBQUUsU0FBUyxDQUFDO0FBQzFELENBQUM7QUFFRCxNQUFNLFVBQVUsa0JBQWtCLENBQUMsU0FBcUI7SUFDdkQsT0FBTywyQkFBMkIsQ0FBQyxTQUFTLENBQUMsS0FBSyxTQUFTLENBQUM7QUFDN0QsQ0FBQyJ9

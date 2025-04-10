@@ -1,1 +1,0 @@
-import{Disposable}from"../../../../base/common/lifecycle.js";export const NullCommandService={_serviceBrand:void 0,onWillExecuteCommand:()=>Disposable.None,onDidExecuteCommand:()=>Disposable.None,executeCommand:()=>Promise.resolve(void 0)};

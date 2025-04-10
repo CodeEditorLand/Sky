@@ -1,1 +1,0 @@
-import{SimpleToken}from"./simpleToken.js";export class At extends SimpleToken{static{this.symbol="@"}get text(){return At.symbol}toString(){return`at${this.range}`}}

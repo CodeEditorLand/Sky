@@ -1,1 +1,0 @@
-import{SimpleToken}from"./simpleToken.js";export class Slash extends SimpleToken{static{this.symbol="/"}get text(){return Slash.symbol}toString(){return`slash${this.range}`}}

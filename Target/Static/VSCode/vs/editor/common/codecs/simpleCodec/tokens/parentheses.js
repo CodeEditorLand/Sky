@@ -1,1 +1,0 @@
-import{SimpleToken}from"./simpleToken.js";export class LeftParenthesis extends SimpleToken{static{this.symbol="("}get text(){return LeftParenthesis.symbol}toString(){return`left-parenthesis${this.range}`}}export class RightParenthesis extends SimpleToken{static{this.symbol=")"}get text(){return RightParenthesis.symbol}toString(){return`right-parenthesis${this.range}`}}

@@ -1,1 +1,0 @@
-import{Client as MessagePortClient}from"../common/ipc.mp.js";export class Client extends MessagePortClient{constructor(e,s){super(e,s)}}

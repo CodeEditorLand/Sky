@@ -1,1 +1,0 @@
-import{$}from"../../dom.js";import"./dnd.css";export function applyDragImage(e,t,a,n=[]){if(!e.dataTransfer)return;const o=$(".monaco-drag-image");o.textContent=a,o.classList.add(...n);(e=>{for(;e&&!e.classList.contains("monaco-workbench");)e=e.parentElement;return e||t.ownerDocument.body})(t).appendChild(o),e.dataTransfer.setDragImage(o,-10,-10),setTimeout((()=>o.remove()),0)}

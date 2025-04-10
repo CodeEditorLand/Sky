@@ -1,1 +1,0 @@
-class UserActivityRegistry{constructor(){this.todo=[],this.add=t=>{this.todo.push(t)}}take(t,s){this.add=i=>s.createInstance(i,t),this.todo.forEach(this.add),this.todo=[]}}export const userActivityRegistry=new UserActivityRegistry;

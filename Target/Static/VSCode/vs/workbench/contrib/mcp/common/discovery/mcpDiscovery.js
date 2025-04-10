@@ -1,1 +1,0 @@
-class McpDiscoveryRegistry{constructor(){this._discovery=[]}register(s){this._discovery.push(s)}getAll(){return this._discovery}}export const mcpDiscoveryRegistry=new McpDiscoveryRegistry;

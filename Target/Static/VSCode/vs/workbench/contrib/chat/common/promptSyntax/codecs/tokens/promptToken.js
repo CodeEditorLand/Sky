@@ -1,1 +1,0 @@
-import{BaseToken}from"../../../../../../../editor/common/codecs/baseToken.js";export class PromptToken extends BaseToken{}

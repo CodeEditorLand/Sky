@@ -1,1 +1,0 @@
-import{VSBuffer}from"../../../../../base/common/buffer.js";import{SimpleToken}from"../../simpleCodec/tokens/simpleToken.js";export class NewLine extends SimpleToken{static{this.symbol="\n"}static{this.byte=VSBuffer.fromString(NewLine.symbol)}get text(){return NewLine.symbol}get byte(){return NewLine.byte}toString(){return`newline${this.range}`}}

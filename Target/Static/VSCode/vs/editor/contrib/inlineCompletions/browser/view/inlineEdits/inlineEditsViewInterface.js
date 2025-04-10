@@ -1,1 +1,0 @@
-export var InlineEditTabAction;!function(i){i.Jump="jump",i.Accept="accept",i.Inactive="inactive"}(InlineEditTabAction||(InlineEditTabAction={}));

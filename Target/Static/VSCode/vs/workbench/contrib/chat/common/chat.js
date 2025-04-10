@@ -1,1 +1,0 @@
-export function checkModeOption(o,n){if(void 0!==n)return"function"==typeof n?n(o):n}

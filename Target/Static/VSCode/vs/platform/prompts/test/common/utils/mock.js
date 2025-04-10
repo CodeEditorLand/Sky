@@ -1,0 +1,1 @@
+import{assertOneOf}from"../../../../../base/common/types.js";export function mockObject(e){e=Object.freeze(e);const t=Object.keys(e);return new Proxy({},{get:(o,c)=>(assertOneOf(c,t,`The '${c}' is not mocked.`),e[c])})}export function mockService(e){return mockObject(e)}

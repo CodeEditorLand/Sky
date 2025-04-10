@@ -1,0 +1,1 @@
+import{WebviewService}from"../browser/webviewService.js";import{ElectronWebviewElement}from"./webviewElement.js";export class ElectronWebviewService extends WebviewService{createWebviewElement(e){const i=this._instantiationService.createInstance(ElectronWebviewElement,e,this._webviewThemeDataProvider);return this.registerNewWebview(i),i}}

@@ -1,0 +1,1 @@
+import{Server}from"../../node/ipc.cp.js";import{TestChannel,TestService}from"./testService.js";const server=new Server("test"),service=new TestService;server.registerChannel("test",new TestChannel(service));

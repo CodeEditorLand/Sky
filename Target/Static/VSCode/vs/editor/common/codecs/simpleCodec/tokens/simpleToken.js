@@ -1,0 +1,1 @@
+import{Range}from"../../../core/range.js";import{BaseToken}from"../../baseToken.js";export class SimpleToken extends BaseToken{static newOnLine(e,n,r){const{range:s}=e;return new r(new Range(s.startLineNumber,n,s.startLineNumber,n+r.symbol.length))}}

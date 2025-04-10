@@ -1,0 +1,1 @@
+import{SimpleToken}from"./simpleToken.js";export class Colon extends SimpleToken{static{this.symbol=":"}get text(){return Colon.symbol}toString(){return`colon${this.range}`}}

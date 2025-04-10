@@ -1,0 +1,1 @@
+import{toDisposable}from"../../../../base/common/lifecycle.js";export class ChatCodeBlockContextProviderService{constructor(){this._providers=new Map}get providers(){return[...this._providers.values()]}registerProvider(e,r){return this._providers.set(r,e),toDisposable((()=>this._providers.delete(r)))}}

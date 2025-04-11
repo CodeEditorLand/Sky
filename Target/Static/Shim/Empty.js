@@ -1,1 +1,1 @@
-var t={test:5};export{t as default};
+var e={};export{e as default};

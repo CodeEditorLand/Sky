@@ -30,7 +30,7 @@
 	"dependencies": {
 		"@astrojs/partytown": "2.1.4",
 		"@astrojs/sitemap": "3.3.0",
-		"@astrojs/solid-js": "5.0.7",
+		"@astrojs/solid-js": "5.0.8",
 		"@codeeditorland/common": "0.0.6",
 		"@codeeditorland/output": "0.0.1",
 		"@codeeditorland/shim": "0.0.1",

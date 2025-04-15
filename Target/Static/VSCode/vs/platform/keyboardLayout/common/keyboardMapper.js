@@ -1,1 +1,0 @@
-export class CachedKeyboardMapper{constructor(e){this._actual=e,this._cache=new Map}dumpDebugInfo(){return this._actual.dumpDebugInfo()}resolveKeyboardEvent(e){return this._actual.resolveKeyboardEvent(e)}resolveKeybinding(e){const t=e.getHashCode(),a=this._cache.get(t);if(!a){const a=this._actual.resolveKeybinding(e);return this._cache.set(t,a),a}return a}}

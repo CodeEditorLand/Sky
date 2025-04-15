@@ -1,1 +1,0 @@
-export function showHistoryKeybindingHint(o){return"Up"===o.lookupKeybinding("history.showPrevious")?.getElectronAccelerator()&&"Down"===o.lookupKeybinding("history.showNext")?.getElectronAccelerator()}

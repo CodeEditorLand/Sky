@@ -1,1 +1,0 @@
-import assert from"assert";import{readFileSync}from"fs";import{FileAccess}from"../../common/network.js";import{URI}from"../../common/uri.js";import{ensureNoDisposablesAreLeakedInTestSuite}from"../common/utils.js";suite("URI - perf",(function(){return void 0}));

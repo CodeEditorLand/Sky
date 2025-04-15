@@ -1,1 +1,0 @@
-import{SimpleToken}from"./simpleToken.js";export class Space extends SimpleToken{static{this.symbol=" "}get text(){return Space.symbol}toString(){return`space${this.range}`}}

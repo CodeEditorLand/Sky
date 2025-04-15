@@ -1,1 +1,0 @@
-import{createDecorator}from"../../instantiation/common/instantiation.js";export const IEditSessionIdentityService=createDecorator("editSessionIdentityService");export var EditSessionIdentityMatch;!function(t){t[t.Complete=100]="Complete",t[t.Partial=50]="Partial",t[t.None=0]="None"}(EditSessionIdentityMatch||(EditSessionIdentityMatch={}));

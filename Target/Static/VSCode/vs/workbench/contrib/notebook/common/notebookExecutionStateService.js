@@ -1,1 +1,0 @@
-import{createDecorator}from"../../../../platform/instantiation/common/instantiation.js";export var NotebookExecutionType;!function(o){o[o.cell=0]="cell",o[o.notebook=1]="notebook"}(NotebookExecutionType||(NotebookExecutionType={}));export const INotebookExecutionStateService=createDecorator("INotebookExecutionStateService");

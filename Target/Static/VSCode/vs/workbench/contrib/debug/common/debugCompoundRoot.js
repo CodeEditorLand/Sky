@@ -1,1 +1,0 @@
-import{Emitter}from"../../../../base/common/event.js";export class DebugCompoundRoot{constructor(){this.stopped=!1,this.stopEmitter=new Emitter,this.onDidSessionStop=this.stopEmitter.event}sessionStopped(){this.stopped||(this.stopped=!0,this.stopEmitter.fire())}}

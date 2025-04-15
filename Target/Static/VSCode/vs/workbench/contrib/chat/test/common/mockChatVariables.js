@@ -1,1 +1,0 @@
-export class MockChatVariablesService{getDynamicVariables(e){return[]}resolveVariables(e,r){return{variables:[]}}attachContext(e,r,a){throw new Error("Method not implemented.")}}

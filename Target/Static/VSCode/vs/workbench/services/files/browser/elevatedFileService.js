@@ -1,1 +1,0 @@
-import{registerSingleton}from"../../../../platform/instantiation/common/extensions.js";import{IElevatedFileService}from"../common/elevatedFileService.js";export class BrowserElevatedFileService{isSupported(e){return!1}async writeFileElevated(e,r,i){throw new Error("Unsupported")}}registerSingleton(IElevatedFileService,BrowserElevatedFileService,1);

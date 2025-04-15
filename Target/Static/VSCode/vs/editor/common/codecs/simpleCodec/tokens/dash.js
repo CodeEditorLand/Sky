@@ -1,1 +1,0 @@
-import{SimpleToken}from"./simpleToken.js";export class Dash extends SimpleToken{static{this.symbol="-"}get text(){return Dash.symbol}toString(){return`dash${this.range}`}}

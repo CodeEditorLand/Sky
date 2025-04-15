@@ -1,1 +1,0 @@
-import{Action}from"../../../common/actions.js";import*as nls from"../../../../nls.js";export class CollapseAllAction extends Action{constructor(l,s){super("vs.tree.collapse",nls.localize("collapse all","Collapse All"),"collapse-all",s),this.viewer=l}async run(){this.viewer.collapseAll(),this.viewer.setSelection([]),this.viewer.setFocus([])}}

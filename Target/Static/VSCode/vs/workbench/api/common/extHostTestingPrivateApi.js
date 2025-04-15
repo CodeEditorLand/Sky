@@ -1,1 +1,0 @@
-import{InvalidTestItemError}from"../../contrib/testing/common/testItemCollection.js";const eventPrivateApis=new WeakMap;export const createPrivateApiFor=(t,e)=>{const r={controllerId:e};return eventPrivateApis.set(t,r),r};export const getPrivateApiFor=t=>{const e=eventPrivateApis.get(t);if(!e)throw new InvalidTestItemError(t?.id||"<unknown>");return e};

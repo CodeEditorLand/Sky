@@ -1,1 +1,0 @@
-import{AbstractOneDataSystemAppender}from"../common/1dsAppender.js";export class OneDataSystemWebAppender extends AbstractOneDataSystemAppender{constructor(e,t,r,s){super(e,t,r,s),fetch(this.endPointHealthUrl,{method:"GET"}).catch((e=>{this._aiCoreOrKey=void 0}))}}

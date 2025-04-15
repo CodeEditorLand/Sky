@@ -1,1 +1,0 @@
-import{createDecorator}from"../../instantiation/common/instantiation.js";export const INativeMcpDiscoveryHelperService=createDecorator("INativeMcpDiscoveryHelperService");export const NativeMcpDiscoveryHelperChannelName="NativeMcpDiscoveryHelper";

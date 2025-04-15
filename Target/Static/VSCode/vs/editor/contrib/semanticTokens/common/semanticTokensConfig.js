@@ -1,1 +1,0 @@
-export const SEMANTIC_HIGHLIGHTING_SETTING_ID="editor.semanticHighlighting";export function isSemanticColoringEnabled(e,i,t){const n=t.getValue("editor.semanticHighlighting",{overrideIdentifier:e.getLanguageId(),resource:e.uri})?.enabled;return"boolean"==typeof n?n:i.getColorTheme().semanticHighlighting}

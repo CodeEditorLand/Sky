@@ -1,1 +1,0 @@
-export function isLocalizedString(o){return o&&"object"==typeof o&&"string"==typeof o.original&&"string"==typeof o.value}export function isICommandActionToggleInfo(o){return!!o&&void 0!==o.condition}

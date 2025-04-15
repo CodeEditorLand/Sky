@@ -1,1 +1,0 @@
-export function isFolderBackupInfo(r){return r&&r.hasOwnProperty("folderUri")}export function isWorkspaceBackupInfo(r){return r&&r.hasOwnProperty("workspace")}

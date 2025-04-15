@@ -1,1 +1,0 @@
-import{createDecorator}from"../../instantiation/common/instantiation.js";export const ILabelService=createDecorator("labelService");export var Verbosity;!function(t){t[t.SHORT=0]="SHORT",t[t.MEDIUM=1]="MEDIUM",t[t.LONG=2]="LONG"}(Verbosity||(Verbosity={}));

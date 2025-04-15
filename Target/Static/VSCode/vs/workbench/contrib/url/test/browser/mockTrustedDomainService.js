@@ -1,1 +1,0 @@
-import{Event}from"../../../../../base/common/event.js";import{isURLDomainTrusted}from"../../common/trustedDomains.js";export class MockTrustedDomainService{constructor(s=[]){this._trustedDomains=s,this.onDidChangeTrustedDomains=Event.None}isValid(s){return isURLDomainTrusted(s,this._trustedDomains)}}

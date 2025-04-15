@@ -1,1 +1,0 @@
-import{isString}from"./types.js";const _codiconFontCharacters=Object.create(null);export function register(o,r){if(isString(r)){const n=_codiconFontCharacters[r];if(void 0===n)throw new Error(`${o} references an unknown codicon: ${r}`);r=n}return _codiconFontCharacters[o]=r,{id:o}}export function getCodiconFontCharacters(){return _codiconFontCharacters}

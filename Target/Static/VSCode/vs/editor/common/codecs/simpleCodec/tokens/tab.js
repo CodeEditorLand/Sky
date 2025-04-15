@@ -1,1 +1,0 @@
-import{SimpleToken}from"./simpleToken.js";export class Tab extends SimpleToken{static{this.symbol="\t"}get text(){return Tab.symbol}toString(){return`tab${this.range}`}}

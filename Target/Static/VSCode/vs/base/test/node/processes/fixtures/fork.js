@@ -1,1 +1,0 @@
-import*as processes from"../../../../node/processes.js";const sender=processes.createQueuedSender(process);process.on("message",(e=>{sender.send(e)})),sender.send("ready");

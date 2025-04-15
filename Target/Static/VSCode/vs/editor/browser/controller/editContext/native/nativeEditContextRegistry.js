@@ -1,1 +1,0 @@
-class NativeEditContextRegistryImpl{constructor(){this._nativeEditContextMapping=new Map}register(t,e){return this._nativeEditContextMapping.set(t,e),{dispose:()=>{this._nativeEditContextMapping.delete(t)}}}get(t){return this._nativeEditContextMapping.get(t)}}export const NativeEditContextRegistry=new NativeEditContextRegistryImpl;

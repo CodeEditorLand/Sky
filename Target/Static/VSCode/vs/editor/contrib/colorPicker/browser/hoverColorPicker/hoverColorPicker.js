@@ -1,1 +1,0 @@
-import{ColorDecorationInjectedTextMarker}from"../colorDetector.js";export function isOnColorDecorator(t){const e=t.target;return!!e&&6===e.type&&e.detail.injectedText?.options.attachedData===ColorDecorationInjectedTextMarker}

@@ -1,1 +1,0 @@
-import{Registry}from"../../../../platform/registry/common/platform.js";import{Extensions}from"../../../common/configuration.js";Registry.as(Extensions.ConfigurationMigration).registerConfigurationMigrations([{key:"debug.autoExpandLazyVariables",migrateFn:o=>!0===o?{value:"on"}:!1===o?{value:"off"}:[]}]);

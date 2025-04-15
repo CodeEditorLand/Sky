@@ -1,1 +1,0 @@
-import{SimpleToken}from"./simpleToken.js";export class FormFeed extends SimpleToken{static{this.symbol="\f"}get text(){return FormFeed.symbol}toString(){return`formfeed${this.range}`}}

@@ -1,1 +1,0 @@
-export const nullDocumentDiff=Object.freeze({identical:!0,quitEarly:!1,changes:Object.freeze([]),moves:Object.freeze([])});

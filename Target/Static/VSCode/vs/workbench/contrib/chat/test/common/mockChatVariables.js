@@ -1,0 +1,1 @@
+export class MockChatVariablesService{getDynamicVariables(e){return[]}getSelectedTools(e){return[]}}

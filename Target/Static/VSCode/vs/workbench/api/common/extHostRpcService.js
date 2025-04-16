@@ -1,0 +1,1 @@
+import{createDecorator}from"../../../platform/instantiation/common/instantiation.js";export const IExtHostRpcService=createDecorator("IExtHostRpcService");export class ExtHostRpcService{constructor(t){this.getProxy=t.getProxy.bind(t),this.set=t.set.bind(t),this.dispose=t.dispose.bind(t),this.assertRegistered=t.assertRegistered.bind(t),this.drain=t.drain.bind(t)}}

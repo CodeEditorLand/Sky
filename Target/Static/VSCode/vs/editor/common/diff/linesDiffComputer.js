@@ -1,0 +1,1 @@
+export class LinesDiff{constructor(e,i,s){this.changes=e,this.moves=i,this.hitTimeout=s}}export class MovedText{constructor(e,i){this.lineRangeMapping=e,this.changes=i}flip(){return new MovedText(this.lineRangeMapping.flip(),this.changes.map((e=>e.flip())))}}

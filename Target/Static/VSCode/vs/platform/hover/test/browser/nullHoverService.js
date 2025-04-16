@@ -1,0 +1,1 @@
+import{Disposable}from"../../../../base/common/lifecycle.js";export const NullHoverService={_serviceBrand:void 0,hideHover:()=>{},showInstantHover:()=>{},showDelayedHover:()=>{},setupDelayedHover:()=>Disposable.None,setupDelayedHoverAtMouse:()=>Disposable.None,setupManagedHover:()=>Disposable.None,showAndFocusLastHover:()=>{},showManagedHover:()=>{}};

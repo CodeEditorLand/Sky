@@ -1,0 +1,1 @@
+import{SimpleToken}from"./simpleToken.js";export class Quote extends SimpleToken{static{this.symbol="'"}get text(){return Quote.symbol}sameType(t){return t instanceof this.constructor}toString(){return`quote${this.range}`}}

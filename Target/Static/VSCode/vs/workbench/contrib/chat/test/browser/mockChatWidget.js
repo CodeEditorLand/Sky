@@ -1,0 +1,1 @@
+import{Event}from"../../../../../base/common/event.js";export class MockChatWidgetService{constructor(){this.onDidAddWidget=Event.None}getWidgetByInputUri(e){}getWidgetBySessionId(e){}getWidgetsByLocations(e){return[]}getAllWidgets(){throw new Error("Method not implemented.")}}

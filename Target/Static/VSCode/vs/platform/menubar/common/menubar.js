@@ -1,0 +1,1 @@
+export function isMenubarMenuItemSubmenu(e){return void 0!==e.submenu}export function isMenubarMenuItemSeparator(e){return"vscode.menubar.separator"===e.id}export function isMenubarMenuItemRecentAction(e){return void 0!==e.uri}export function isMenubarMenuItemAction(e){return!isMenubarMenuItemSubmenu(e)&&!isMenubarMenuItemSeparator(e)&&!isMenubarMenuItemRecentAction(e)}

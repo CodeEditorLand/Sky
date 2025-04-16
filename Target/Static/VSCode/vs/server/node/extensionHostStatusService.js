@@ -1,0 +1,1 @@
+import{createDecorator}from"../../platform/instantiation/common/instantiation.js";export const IExtensionHostStatusService=createDecorator("extensionHostStatusService");export class ExtensionHostStatusService{constructor(){this._exitInfo=new Map}setExitInfo(t,e){this._exitInfo.set(t,e)}getExitInfo(t){return this._exitInfo.get(t)||null}}

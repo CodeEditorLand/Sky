@@ -1,0 +1,1 @@
+export function stringifyPromptElementJSON(t){const e=[];return stringifyPromptNodeJSON(t.node,e),e.join("")}function stringifyPromptNodeJSON(t,e){if(2===t.type)t.lineBreakBefore&&e.push("\n"),"string"==typeof t.text&&e.push(t.text);else if(3===t.ctor)e.push("<image>");else if(1===t.ctor||2===t.ctor)for(const o of t.children)stringifyPromptNodeJSON(o,e)}

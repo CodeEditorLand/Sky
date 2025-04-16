@@ -1,0 +1,1 @@
+import{MainContext}from"./extHost.protocol.js";export class ExtHostClipboard{constructor(t){const e=t.getProxy(MainContext.MainThreadClipboard);this.value=Object.freeze({readText:()=>e.$readText(),writeText:t=>e.$writeText(t)})}}

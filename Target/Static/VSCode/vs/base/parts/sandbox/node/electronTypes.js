@@ -1,0 +1,1 @@
+export function isUtilityProcess(t){return!!t.parentPort}

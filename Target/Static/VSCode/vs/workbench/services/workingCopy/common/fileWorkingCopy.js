@@ -1,0 +1,1 @@
+export var SnapshotContext;!function(t){t[t.Save=1]="Save",t[t.Backup=2]="Backup"}(SnapshotContext||(SnapshotContext={}));

@@ -1,0 +1,1 @@
+import{onUnexpectedError}from"../common/errors.js";export function createTrustedTypesPolicy(r,e){const o=globalThis.MonacoEnvironment;if(o?.createTrustedTypesPolicy)try{return o.createTrustedTypesPolicy(r,e)}catch(r){return void onUnexpectedError(r)}try{return globalThis.trustedTypes?.createPolicy(r,e)}catch(r){return void onUnexpectedError(r)}}

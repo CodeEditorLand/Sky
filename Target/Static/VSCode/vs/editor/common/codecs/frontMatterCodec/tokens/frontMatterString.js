@@ -1,0 +1,1 @@
+import{BaseToken}from"../../baseToken.js";import{FrontMatterValueToken}from"./frontMatterToken.js";export class FrontMatterString extends FrontMatterValueToken{constructor(t){super(BaseToken.fullRange(t)),this.tokens=t}get text(){return BaseToken.render(this.tokens)}toString(){return`front-matter-string(${this.shortText()})${this.range}`}}

@@ -1,0 +1,1 @@
+export var Menu;!function(e){e[e.CommandPalette=0]="CommandPalette",e[e.StatusBarWindowIndicatorMenu=1]="StatusBarWindowIndicatorMenu"}(Menu||(Menu={}));export var ColorScheme;!function(e){e.DARK="dark",e.LIGHT="light",e.HIGH_CONTRAST_LIGHT="hcLight",e.HIGH_CONTRAST_DARK="hcDark"}(ColorScheme||(ColorScheme={}));

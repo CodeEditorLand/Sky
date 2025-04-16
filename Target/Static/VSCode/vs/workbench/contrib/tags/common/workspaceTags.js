@@ -1,0 +1,1 @@
+import{createDecorator}from"../../../../platform/instantiation/common/instantiation.js";import{getRemotes}from"../../../../platform/extensionManagement/common/configRemotes.js";export const IWorkspaceTagsService=createDecorator("workspaceTagsService");export async function getHashedRemotesFromConfig(e,o=!1,t){return Promise.all(getRemotes(e,o).map((e=>t(e))))}

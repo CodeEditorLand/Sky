@@ -1,0 +1,1 @@
+export function ensureCodeWindow(n,o){const e=n;"number"!=typeof e.vscodeWindowId&&Object.defineProperty(e,"vscodeWindowId",{get:()=>o})}export const mainWindow=window;export function isAuxiliaryWindow(n){if(n===mainWindow)return!1;const o=n;return"number"==typeof o?.vscodeWindowId}

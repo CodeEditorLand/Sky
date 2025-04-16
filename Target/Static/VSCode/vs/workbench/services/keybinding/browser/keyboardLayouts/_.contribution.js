@@ -1,0 +1,1 @@
+export class KeyboardLayoutContribution{static{this.INSTANCE=new KeyboardLayoutContribution}get layoutInfos(){return this._layoutInfos}constructor(){this._layoutInfos=[]}registerKeyboardLayout(t){this._layoutInfos.push(t)}}

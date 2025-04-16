@@ -1,0 +1,1 @@
+import{generateUuid}from"../../../base/common/uuid.js";import{AbstractLoggerService}from"../common/log.js";import{SpdLogLogger}from"./spdlogLog.js";export class LoggerService extends AbstractLoggerService{doCreateLogger(e,o,r){return new SpdLogLogger(generateUuid(),e.fsPath,!r?.donotRotate,!!r?.donotUseFormatters,o)}}

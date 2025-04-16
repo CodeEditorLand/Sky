@@ -1,0 +1,1 @@
+export var BackgroundTokenizationState;!function(o){o[o.InProgress=1]="InProgress",o[o.Completed=2]="Completed"}(BackgroundTokenizationState||(BackgroundTokenizationState={}));

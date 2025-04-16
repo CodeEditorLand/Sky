@@ -1,0 +1,1 @@
+export class RGBA8{static{this.Empty=new RGBA8(0,0,0,0)}constructor(t,s,a,i){this._rgba8Brand=void 0,this.r=RGBA8._clamp(t),this.g=RGBA8._clamp(s),this.b=RGBA8._clamp(a),this.a=RGBA8._clamp(i)}equals(t){return this.r===t.r&&this.g===t.g&&this.b===t.b&&this.a===t.a}static _clamp(t){return t<0?0:t>255?255:0|t}}

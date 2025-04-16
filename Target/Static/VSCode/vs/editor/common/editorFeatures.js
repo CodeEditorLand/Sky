@@ -1,0 +1,1 @@
+const editorFeatures=[];export function registerEditorFeature(e){editorFeatures.push(e)}export function getEditorFeatures(){return editorFeatures.slice(0)}

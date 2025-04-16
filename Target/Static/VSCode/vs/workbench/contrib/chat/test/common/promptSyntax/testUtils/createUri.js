@@ -1,0 +1,1 @@
+import{URI}from"../../../../../../../base/common/uri.js";import{isWindows}from"../../../../../../../base/common/platform.js";export const createURI=o=>URI.file(createPath(o));export const createPath=o=>isWindows&&o.startsWith("/")?`/d:${o}`:o;

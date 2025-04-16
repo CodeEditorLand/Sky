@@ -1,0 +1,1 @@
+export class LocalFileSearchWorkerHost{static{this.CHANNEL_NAME="localFileSearchWorkerHost"}static getChannel(e){return e.getChannel(LocalFileSearchWorkerHost.CHANNEL_NAME)}static setChannel(e,t){e.setChannel(LocalFileSearchWorkerHost.CHANNEL_NAME,t)}}

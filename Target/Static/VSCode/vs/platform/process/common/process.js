@@ -1,0 +1,1 @@
+import{createDecorator}from"../../instantiation/common/instantiation.js";export var IssueSource;!function(e){e.VSCode="vscode",e.Extension="extension",e.Marketplace="marketplace"}(IssueSource||(IssueSource={}));export const IProcessMainService=createDecorator("processService");

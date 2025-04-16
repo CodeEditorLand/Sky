@@ -1,0 +1,1 @@
+export var TerminalDeveloperCommandId;!function(e){e.WriteDataToTerminal="workbench.action.terminal.writeDataToTerminal",e.RecordSession="workbench.action.terminal.recordSession",e.ShowTextureAtlas="workbench.action.terminal.showTextureAtlas",e.RestartPtyHost="workbench.action.terminal.restartPtyHost"}(TerminalDeveloperCommandId||(TerminalDeveloperCommandId={}));

@@ -1,0 +1,1 @@
+export const DOCUMENTATION_URL="https://aka.ms/vscode-ghcp-prompt-snippets";export const PROMPT_LANGUAGE_ID="prompt";export const LANGUAGE_SELECTOR=Object.freeze({language:"prompt"});

@@ -1,0 +1,1 @@
+export class StickyRange{constructor(t,e){this.startLineNumber=t,this.endLineNumber=e}}export class StickyElement{constructor(t,e,s){this.range=t,this.children=e,this.parent=s}}export class StickyModel{constructor(t,e,s,i){this.uri=t,this.version=e,this.element=s,this.outlineProviderId=i}}

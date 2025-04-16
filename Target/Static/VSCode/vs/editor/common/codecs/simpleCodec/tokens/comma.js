@@ -1,0 +1,1 @@
+import{SimpleToken}from"./simpleToken.js";export class Comma extends SimpleToken{static{this.symbol=","}get text(){return Comma.symbol}toString(){return`comma${this.range}`}}

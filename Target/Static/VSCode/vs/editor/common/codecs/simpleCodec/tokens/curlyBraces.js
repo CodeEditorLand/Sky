@@ -1,0 +1,1 @@
+import{SimpleToken}from"./simpleToken.js";export class LeftCurlyBrace extends SimpleToken{static{this.symbol="{"}get text(){return LeftCurlyBrace.symbol}toString(){return`left-curly-brace${this.range}`}}export class RightCurlyBrace extends SimpleToken{static{this.symbol="}"}get text(){return RightCurlyBrace.symbol}toString(){return`right-curly-brace${this.range}`}}

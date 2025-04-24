@@ -29,7 +29,11 @@
 	},
 	"dependencies": {
 		"@astrojs/partytown": "2.1.4",
+<<<<<<< HEAD
 		"@astrojs/sitemap": "3.3.1",
+=======
+		"@astrojs/sitemap": "3.3.0",
+>>>>>>> 5e8c98f35a9a09488d461514086b942a56a10cf3
 		"@astrojs/solid-js": "5.0.9",
 		"@codeeditorland/common": "0.0.6",
 		"@codeeditorland/output": "0.0.1",

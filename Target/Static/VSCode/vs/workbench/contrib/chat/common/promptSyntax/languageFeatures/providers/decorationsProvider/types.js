@@ -1,0 +1,1 @@
+export var DecorationClassNames;!function(s){s.default="prompt-decoration",s.fileReference="prompt-decoration"}(DecorationClassNames||(DecorationClassNames={}));export var CssClassModifiers;!function(s){s.inactive=".prompt-decoration-inactive"}(CssClassModifiers||(CssClassModifiers={}));

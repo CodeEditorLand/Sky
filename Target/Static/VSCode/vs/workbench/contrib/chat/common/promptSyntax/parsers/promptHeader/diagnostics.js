@@ -1,0 +1,1 @@
+export class PromptMetadataDiagnostic{constructor(t,a){this.range=t,this.message=a}}export class PromptMetadataWarning extends PromptMetadataDiagnostic{toString(){return`warning(${this.message})${this.range}`}}export class PromptMetadataError extends PromptMetadataDiagnostic{toString(){return`error(${this.message})${this.range}`}}

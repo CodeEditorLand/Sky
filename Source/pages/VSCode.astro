@@ -9,12 +9,141 @@ const Worker = `/Worker.js?BASE_REMOTE=${encodeURIComponent(Site?.toString() ?? 
 	<meta
 		id="vscode-workbench-web-configuration"
 		data-settings={JSON.stringify({
-			remoteAuthority: Astro.url.host,
+			// --- Core Local Configuration ---
+			// Explicitly set to null to indicate no remote server authority
+			remoteAuthority: null,
+
+			// Standard base path for web assets
 			serverBasePath: "/",
-			developmentOptions: { logLevel: 3 },
+
+			// No connection token needed for local
+			connectionToken: undefined,
+
+			// Assume this is the initial load (adjust dynamically if needed)
+			isInitialStartup: true,
+
+			// --- Explicitly Disable/Exclude Remote/Web Features ---
+			// Do NOT provide a WebSocket factory
+			webSocketFactory: undefined,
+
+			// Do NOT provide a resource URI provider (used with websockets)
+			resourceUriProvider: undefined,
+
+			// Do NOT provide a remote resource provider
+			remoteResourceProvider: undefined,
+
+			// No remote tunnels needed locally
+			tunnelProvider: undefined,
+
+			// Not needed for local auth (if any)
+			codeExchangeProxyEndpoints: undefined,
+
+			// No cloud edit session initially
+			editSessionId: undefined,
+
+			// --- Workspace & Profile ---
+			// Let the backend (Mountain via initData/RPC) determine the workspace after load
+			workspaceProvider: undefined,
+
+			// Keep workspace trust enabled for testing the feature flow
 			enableWorkspaceTrust: true,
-			productConfiguration: { embedderIdentifier: "server-distro" },
+
+			// Let the backend manage profiles
+			profile: undefined,
+
+			// No profile preview
+			profileToPreview: undefined,
+
+			// --- Features & Services (Let Backend/Shims Handle) ---
+			// Let Cocoon's shim provide the proxy to Mountain's native storage
+			secretStorageProvider: undefined,
+
+			// Disable settings sync for MVP simplicity
+			settingsSyncOptions: { enabled: false },
+
+			// Rely on extensions or backend for auth if needed later
+			authenticationProviders: undefined,
+
+			// Rely on Mountain's native protocol handler
+			urlCallbackProvider: undefined,
+
+			// --- Extensions ---
+			// Don't force extra built-ins for now
+			additionalBuiltinExtensions: undefined,
+
+			// Don't force enable specific extensions for now
+			enabledExtensions: undefined,
+
+			// --- Branding & UI ---
+			productConfiguration: {
+				// Identify as desktop-like, might influence some UI/feature paths
+				// Important to suggest non-web behavior
+				embedderIdentifier: "desktop",
+
+				// Optional: Branding
+				nameShort: "FIDDEE",
+
+				// Optional: Branding
+				nameLong: "FIDDEE",
+
+				// Optional: Branding
+				applicationName: "fiddee",
+
+				// Add other product overrides if needed
+			},
+
+			// Use default window indicator
+			windowIndicator: undefined,
+
+			// Use default theme initially
+			initialColorTheme: undefined,
+
+			// No custom banner
+			welcomeBanner: undefined,
+
+			// Use default layout
+			defaultLayout: undefined,
+
+			// No extra default settings from embedder
+			configurationDefaults: undefined,
+
+			// --- Security & Misc ---
+			// No extra trusted domains initially
+			additionalTrustedDomains: undefined,
+
+			// No special opener prefixes initially
+			openerAllowedExternalUrlPrefixes: undefined,
+
+			// No custom telemetry properties initially
+			resolveCommonTelemetryProperties: undefined,
+
+			// No extra embedder commands initially
+			commands: undefined,
+
+			// No specific message ports needed for Cocoon/Vine
+			messagePorts: undefined,
+
+			// Keep this from your example, might be harmlessly ignored
 			callbackRoute: "/oss-dev/callback",
+
+			// --- Development ---
+			developmentOptions: {
+				// Set to Trace (1) or Debug (2) for maximum insight during development
+				logLevel: 3,
+
+				enableSmokeTestDriver: false,
+
+				// Only set if running integration tests
+				// extensionTestsPath: undefined,
+
+				// Only set if loading specific dev extensions
+				// extensions: undefined,
+			},
+
+			// --- Update/Quality ---
+			updateProvider: undefined,
+
+			productQualityChangeHandler: undefined,
 		})}
 		slot="Head"
 	/>

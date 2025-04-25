@@ -1,0 +1,1 @@
+import{getChatWidgetObject}from"./attachInstructions.js";import{getPromptCommandName}from"../../../../../../common/promptSyntax/service/promptsService.js";export const runPromptFile=async(t,e)=>{const m=await getChatWidgetObject(e);return m.setInput(`/${getPromptCommandName(t.path)}`),await m.acceptInput(),{widget:m}};

@@ -1,1 +1,0 @@
-import{registerAction2 as e}from"../../../../platform/actions/common/actions.js";import{registerSingleton as o}from"../../../../platform/instantiation/common/extensions.js";import{IWebviewService as r}from"../browser/webview.js";import*as i from"./webviewCommands.js";import{ElectronWebviewService as m}from"./webviewService.js";o(r,m,1),e(i.OpenWebviewDeveloperToolsAction);

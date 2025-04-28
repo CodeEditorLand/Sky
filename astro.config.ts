@@ -16,8 +16,6 @@ export const Link = [
 	"@codeeditorland/shim",
 
 	"@codeeditorland/worker",
-
-	"@codeeditorland/wind",
 ];
 
 export default defineConfig({
@@ -46,13 +44,6 @@ export default defineConfig({
 	},
 
 	integrations: [
-		(await import("@astrojs/solid-js")).default({
-			// @ts-ignore
-			devtools: On,
-		}),
-
-		Tauri ? null : (await import("@astrojs/sitemap")).default(),
-
 		!On ? (await import("@playform/inline")).default({ Logger: 1 }) : null,
 
 		!On
@@ -70,7 +61,7 @@ export default defineConfig({
 		build: {
 			sourcemap: On,
 
-			manifest: true,
+			manifest: On,
 
 			minify: On ? false : "terser",
 

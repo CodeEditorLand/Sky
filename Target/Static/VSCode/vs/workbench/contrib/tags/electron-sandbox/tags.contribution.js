@@ -1,1 +1,0 @@
-import{Registry as o}from"../../../../platform/registry/common/platform.js";import{Extensions as r}from"../../../common/contributions.js";import{WorkspaceTags as s}from"./workspaceTags.js";o.as(r.Workbench).registerWorkbenchContribution(s,4);

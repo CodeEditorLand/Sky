@@ -1,1 +1,371 @@
-import{isFirefox}from"../../browser.js";import{EventType as TouchEventType,Gesture}from"../../touch.js";import{$,addDisposableListener,append,clearNode,Dimension,EventHelper,EventType,getActiveElement,getWindow,isAncestor,isInShadowDOM}from"../../dom.js";import{createStyleSheet}from"../../domStylesheets.js";import{StandardKeyboardEvent}from"../../keyboardEvent.js";import{StandardMouseEvent}from"../../mouseEvent.js";import{ActionBar}from"../actionbar/actionbar.js";import{ActionViewItem,BaseActionViewItem}from"../actionbar/actionViewItems.js";import{layout}from"../contextview/contextview.js";import{DomScrollableElement}from"../scrollbar/scrollableElement.js";import{EmptySubmenuAction,Separator,SubmenuAction}from"../../../common/actions.js";import{RunOnceScheduler}from"../../../common/async.js";import{Codicon}from"../../../common/codicons.js";import{getCodiconFontCharacters}from"../../../common/codiconsUtil.js";import{ThemeIcon}from"../../../common/themables.js";import{stripIcons}from"../../../common/iconLabels.js";import{DisposableStore}from"../../../common/lifecycle.js";import{isLinux,isMacintosh}from"../../../common/platform.js";import*as strings from"../../../common/strings.js";export const MENU_MNEMONIC_REGEX=/\(&([^\s&])\)|(^|[^&])&([^\s&])/;export const MENU_ESCAPED_MNEMONIC_REGEX=/(&amp;)?(&amp;)([^\s&])/g;export var HorizontalDirection;!function(t){t[t.Right=0]="Right",t[t.Left=1]="Left"}(HorizontalDirection||(HorizontalDirection={}));export var VerticalDirection;!function(t){t[t.Above=0]="Above",t[t.Below=1]="Below"}(VerticalDirection||(VerticalDirection={}));export const unthemedMenuStyles={shadowColor:void 0,borderColor:void 0,foregroundColor:void 0,backgroundColor:void 0,selectionForegroundColor:void 0,selectionBackgroundColor:void 0,selectionBorderColor:void 0,separatorColor:void 0,scrollbarShadow:void 0,scrollbarSliderBackground:void 0,scrollbarSliderHoverBackground:void 0,scrollbarSliderActiveBackground:void 0};export class Menu extends ActionBar{constructor(t,e,n,i){t.classList.add("monaco-menu-container"),t.setAttribute("role","presentation");const o=document.createElement("div");o.classList.add("monaco-menu"),o.setAttribute("role","presentation"),super(o,{orientation:1,actionViewItemProvider:t=>this.doGetActionViewItem(t,n,s),context:n.context,actionRunner:n.actionRunner,ariaLabel:n.ariaLabel,ariaRole:"menu",focusOnlyEnabledItems:!0,triggerKeys:{keys:[3,...isMacintosh||isLinux?[10]:[]],keyDown:!0}}),this.menuStyles=i,this.menuElement=o,this.actionsList.tabIndex=0,this.initializeOrUpdateStyleSheet(t,i),this._register(Gesture.addTarget(o)),this._register(addDisposableListener(o,EventType.KEY_DOWN,(t=>{new StandardKeyboardEvent(t).equals(2)&&t.preventDefault()}))),n.enableMnemonics&&this._register(addDisposableListener(o,EventType.KEY_DOWN,(t=>{const e=t.key.toLocaleLowerCase();if(this.mnemonics.has(e)){EventHelper.stop(t,!0);const n=this.mnemonics.get(e);if(1===n.length&&(n[0]instanceof SubmenuMenuActionViewItem&&n[0].container&&this.focusItemByElement(n[0].container),n[0].onClick(t)),n.length>1){const t=n.shift();t&&t.container&&(this.focusItemByElement(t.container),n.push(t)),this.mnemonics.set(e,n)}}}))),isLinux&&this._register(addDisposableListener(o,EventType.KEY_DOWN,(t=>{const e=new StandardKeyboardEvent(t);e.equals(14)||e.equals(11)?(this.focusedItem=this.viewItems.length-1,this.focusNext(),EventHelper.stop(t,!0)):(e.equals(13)||e.equals(12))&&(this.focusedItem=0,this.focusPrevious(),EventHelper.stop(t,!0))}))),this._register(addDisposableListener(this.domNode,EventType.MOUSE_OUT,(t=>{const e=t.relatedTarget;isAncestor(e,this.domNode)||(this.focusedItem=void 0,this.updateFocus(),t.stopPropagation())}))),this._register(addDisposableListener(this.actionsList,EventType.MOUSE_OVER,(t=>{let e=t.target;if(e&&isAncestor(e,this.actionsList)&&e!==this.actionsList){for(;e.parentElement!==this.actionsList&&null!==e.parentElement;)e=e.parentElement;if(e.classList.contains("action-item")){const t=this.focusedItem;this.setFocusedItem(e),t!==this.focusedItem&&this.updateFocus()}}}))),this._register(Gesture.addTarget(this.actionsList)),this._register(addDisposableListener(this.actionsList,TouchEventType.Tap,(t=>{let e=t.initialTarget;if(e&&isAncestor(e,this.actionsList)&&e!==this.actionsList){for(;e.parentElement!==this.actionsList&&null!==e.parentElement;)e=e.parentElement;if(e.classList.contains("action-item")){const t=this.focusedItem;this.setFocusedItem(e),t!==this.focusedItem&&this.updateFocus()}}})));const s={parent:this};this.mnemonics=new Map,this.scrollableElement=this._register(new DomScrollableElement(o,{alwaysConsumeMouseWheel:!0,horizontal:2,vertical:3,verticalScrollbarSize:7,handleMouseWheel:!0,useShadows:!0}));const a=this.scrollableElement.getDomNode();a.style.position="",this.styleScrollElement(a,i),this._register(addDisposableListener(o,TouchEventType.Change,(t=>{EventHelper.stop(t,!0);const e=this.scrollableElement.getScrollPosition().scrollTop;this.scrollableElement.setScrollPosition({scrollTop:e-t.translationY})}))),this._register(addDisposableListener(a,EventType.MOUSE_UP,(t=>{t.preventDefault()})));const r=getWindow(t);o.style.maxHeight=`${Math.max(10,r.innerHeight-t.getBoundingClientRect().top-35)}px`,e=e.filter(((t,i)=>{if(n.submenuIds?.has(t.id))return console.warn(`Found submenu cycle: ${t.id}`),!1;if(t instanceof Separator){if(i===e.length-1||0===i)return!1;if(e[i-1]instanceof Separator)return!1}return!0})),this.push(e,{icon:!0,label:!0,isMenu:!0}),t.appendChild(this.scrollableElement.getDomNode()),this.scrollableElement.scanDomNode(),this.viewItems.filter((t=>!(t instanceof MenuSeparatorActionViewItem))).forEach(((t,e,n)=>{t.updatePositionInSet(e+1,n.length)}))}initializeOrUpdateStyleSheet(t,e){this.styleSheet||(isInShadowDOM(t)?this.styleSheet=createStyleSheet(t):(Menu.globalStyleSheet||(Menu.globalStyleSheet=createStyleSheet()),this.styleSheet=Menu.globalStyleSheet)),this.styleSheet.textContent=getMenuWidgetCSS(e,isInShadowDOM(t))}styleScrollElement(t,e){const n=e.foregroundColor??"",i=e.backgroundColor??"",o=e.borderColor?`1px solid ${e.borderColor}`:"",s=e.shadowColor?`0 2px 8px ${e.shadowColor}`:"";t.style.outline=o,t.style.borderRadius="5px",t.style.color=n,t.style.backgroundColor=i,t.style.boxShadow=s}getContainer(){return this.scrollableElement.getDomNode()}get onScroll(){return this.scrollableElement.onScroll}get scrollOffset(){return this.menuElement.scrollTop}trigger(t){if(t<=this.viewItems.length&&t>=0){const e=this.viewItems[t];if(e instanceof SubmenuMenuActionViewItem)super.focus(t),e.open(!0);else{if(!(e instanceof BaseMenuActionViewItem))return;super.run(e._action,e._context)}}}focusItemByElement(t){const e=this.focusedItem;this.setFocusedItem(t),e!==this.focusedItem&&this.updateFocus()}setFocusedItem(t){for(let e=0;e<this.actionsList.children.length;e++){if(t===this.actionsList.children[e]){this.focusedItem=e;break}}}updateFocus(t){super.updateFocus(t,!0,!0),void 0!==this.focusedItem&&this.scrollableElement.setScrollPosition({scrollTop:Math.round(this.menuElement.scrollTop)})}doGetActionViewItem(t,e,n){if(t instanceof Separator)return new MenuSeparatorActionViewItem(e.context,t,{icon:!0},this.menuStyles);if(t instanceof SubmenuAction){const i=new SubmenuMenuActionViewItem(t,t.actions,n,{...e,submenuIds:new Set([...e.submenuIds||[],t.id])},this.menuStyles);if(e.enableMnemonics){const t=i.getMnemonic();if(t&&i.isEnabled()){let e=[];this.mnemonics.has(t)&&(e=this.mnemonics.get(t)),e.push(i),this.mnemonics.set(t,e)}}return i}{const n={enableMnemonics:e.enableMnemonics,useEventAsContext:e.useEventAsContext};if(e.getKeyBinding){const i=e.getKeyBinding(t);if(i){const t=i.getLabel();t&&(n.keybinding=t)}}const i=new BaseMenuActionViewItem(e.context,t,n,this.menuStyles);if(e.enableMnemonics){const t=i.getMnemonic();if(t&&i.isEnabled()){let e=[];this.mnemonics.has(t)&&(e=this.mnemonics.get(t)),e.push(i),this.mnemonics.set(t,e)}}return i}}}class BaseMenuActionViewItem extends BaseActionViewItem{constructor(t,e,n,i){if(n.isMenu=!0,super(e,e,n),this.menuStyle=i,this.options=n,this.options.icon=void 0!==n.icon&&n.icon,this.options.label=void 0===n.label||n.label,this.cssClass="",this.options.label&&n.enableMnemonics){const t=this.action.label;if(t){const e=MENU_MNEMONIC_REGEX.exec(t);e&&(this.mnemonic=(e[1]?e[1]:e[3]).toLocaleLowerCase())}}this.runOnceToEnableMouseUp=new RunOnceScheduler((()=>{this.element&&(this._register(addDisposableListener(this.element,EventType.MOUSE_UP,(t=>{if(EventHelper.stop(t,!0),isFirefox){if(new StandardMouseEvent(getWindow(this.element),t).rightButton)return;this.onClick(t)}else setTimeout((()=>{this.onClick(t)}),0)}))),this._register(addDisposableListener(this.element,EventType.CONTEXT_MENU,(t=>{EventHelper.stop(t,!0)}))))}),100),this._register(this.runOnceToEnableMouseUp)}render(t){super.render(t),this.element&&(this.container=t,this.item=append(this.element,$("a.action-menu-item")),this._action.id===Separator.ID?this.item.setAttribute("role","presentation"):(this.item.setAttribute("role","menuitem"),this.mnemonic&&this.item.setAttribute("aria-keyshortcuts",`${this.mnemonic}`)),this.check=append(this.item,$("span.menu-item-check"+ThemeIcon.asCSSSelector(Codicon.menuSelection))),this.check.setAttribute("role","none"),this.label=append(this.item,$("span.action-label")),this.options.label&&this.options.keybinding&&(append(this.item,$("span.keybinding")).textContent=this.options.keybinding),this.runOnceToEnableMouseUp.schedule(),this.updateClass(),this.updateLabel(),this.updateTooltip(),this.updateEnabled(),this.updateChecked(),this.applyStyle())}blur(){super.blur(),this.applyStyle()}focus(){super.focus(),this.item?.focus(),this.applyStyle()}updatePositionInSet(t,e){this.item&&(this.item.setAttribute("aria-posinset",`${t}`),this.item.setAttribute("aria-setsize",`${e}`))}updateLabel(){if(this.label&&this.options.label){clearNode(this.label);let t=stripIcons(this.action.label);if(t){const e=cleanMnemonic(t);this.options.enableMnemonics||(t=e),this.label.setAttribute("aria-label",e.replace(/&&/g,"&"));const n=MENU_MNEMONIC_REGEX.exec(t);if(n){t=strings.escape(t),MENU_ESCAPED_MNEMONIC_REGEX.lastIndex=0;let e=MENU_ESCAPED_MNEMONIC_REGEX.exec(t);for(;e&&e[1];)e=MENU_ESCAPED_MNEMONIC_REGEX.exec(t);const i=t=>t.replace(/&amp;&amp;/g,"&amp;");e?this.label.append(strings.ltrim(i(t.substr(0,e.index))," "),$("u",{"aria-hidden":"true"},e[3]),strings.rtrim(i(t.substr(e.index+e[0].length))," ")):this.label.innerText=i(t).trim(),this.item?.setAttribute("aria-keyshortcuts",(n[1]?n[1]:n[3]).toLocaleLowerCase())}else this.label.innerText=t.replace(/&&/g,"&").trim()}}}updateTooltip(){}updateClass(){this.cssClass&&this.item&&this.item.classList.remove(...this.cssClass.split(" ")),this.options.icon&&this.label?(this.cssClass=this.action.class||"",this.label.classList.add("icon"),this.cssClass&&this.label.classList.add(...this.cssClass.split(" ")),this.updateEnabled()):this.label&&this.label.classList.remove("icon")}updateEnabled(){this.action.enabled?(this.element&&(this.element.classList.remove("disabled"),this.element.removeAttribute("aria-disabled")),this.item&&(this.item.classList.remove("disabled"),this.item.removeAttribute("aria-disabled"),this.item.tabIndex=0)):(this.element&&(this.element.classList.add("disabled"),this.element.setAttribute("aria-disabled","true")),this.item&&(this.item.classList.add("disabled"),this.item.setAttribute("aria-disabled","true")))}updateChecked(){if(!this.item)return;const t=this.action.checked;this.item.classList.toggle("checked",!!t),void 0!==t?(this.item.setAttribute("role","menuitemcheckbox"),this.item.setAttribute("aria-checked",t?"true":"false")):(this.item.setAttribute("role","menuitem"),this.item.setAttribute("aria-checked",""))}getMnemonic(){return this.mnemonic}applyStyle(){const t=this.element&&this.element.classList.contains("focused"),e=t&&this.menuStyle.selectionForegroundColor?this.menuStyle.selectionForegroundColor:this.menuStyle.foregroundColor,n=t&&this.menuStyle.selectionBackgroundColor?this.menuStyle.selectionBackgroundColor:void 0,i=t&&this.menuStyle.selectionBorderColor?`1px solid ${this.menuStyle.selectionBorderColor}`:"",o=t&&this.menuStyle.selectionBorderColor?"-1px":"";this.item&&(this.item.style.color=e??"",this.item.style.backgroundColor=n??"",this.item.style.outline=i,this.item.style.outlineOffset=o),this.check&&(this.check.style.color=e??"")}}class SubmenuMenuActionViewItem extends BaseMenuActionViewItem{constructor(t,e,n,i,o){super(t,t,i,o),this.submenuActions=e,this.parentData=n,this.submenuOptions=i,this.mysubmenu=null,this.submenuDisposables=this._register(new DisposableStore),this.mouseOver=!1,this.expandDirection=i&&void 0!==i.expandDirection?i.expandDirection:{horizontal:HorizontalDirection.Right,vertical:VerticalDirection.Below},this.showScheduler=new RunOnceScheduler((()=>{this.mouseOver&&(this.cleanupExistingSubmenu(!1),this.createSubmenu(!1))}),250),this.hideScheduler=new RunOnceScheduler((()=>{this.element&&!isAncestor(getActiveElement(),this.element)&&this.parentData.submenu===this.mysubmenu&&(this.parentData.parent.focus(!1),this.cleanupExistingSubmenu(!0))}),750)}render(t){super.render(t),this.element&&(this.item&&(this.item.classList.add("monaco-submenu-item"),this.item.tabIndex=0,this.item.setAttribute("aria-haspopup","true"),this.updateAriaExpanded("false"),this.submenuIndicator=append(this.item,$("span.submenu-indicator"+ThemeIcon.asCSSSelector(Codicon.menuSubmenu))),this.submenuIndicator.setAttribute("aria-hidden","true")),this._register(addDisposableListener(this.element,EventType.KEY_UP,(t=>{const e=new StandardKeyboardEvent(t);(e.equals(17)||e.equals(3))&&(EventHelper.stop(t,!0),this.createSubmenu(!0))}))),this._register(addDisposableListener(this.element,EventType.KEY_DOWN,(t=>{const e=new StandardKeyboardEvent(t);getActiveElement()===this.item&&(e.equals(17)||e.equals(3))&&EventHelper.stop(t,!0)}))),this._register(addDisposableListener(this.element,EventType.MOUSE_OVER,(t=>{this.mouseOver||(this.mouseOver=!0,this.showScheduler.schedule())}))),this._register(addDisposableListener(this.element,EventType.MOUSE_LEAVE,(t=>{this.mouseOver=!1}))),this._register(addDisposableListener(this.element,EventType.FOCUS_OUT,(t=>{this.element&&!isAncestor(getActiveElement(),this.element)&&this.hideScheduler.schedule()}))),this._register(this.parentData.parent.onScroll((()=>{this.parentData.submenu===this.mysubmenu&&(this.parentData.parent.focus(!1),this.cleanupExistingSubmenu(!0))}))))}updateEnabled(){}open(t){this.cleanupExistingSubmenu(!1),this.createSubmenu(t)}onClick(t){EventHelper.stop(t,!0),this.cleanupExistingSubmenu(!1),this.createSubmenu(!0)}cleanupExistingSubmenu(t){if(this.parentData.submenu&&(t||this.parentData.submenu!==this.mysubmenu)){try{this.parentData.submenu.dispose()}catch{}this.parentData.submenu=void 0,this.updateAriaExpanded("false"),this.submenuContainer&&(this.submenuDisposables.clear(),this.submenuContainer=void 0)}}calculateSubmenuMenuLayout(t,e,n,i){const o={top:0,left:0};return o.left=layout(t.width,e.width,{position:i.horizontal===HorizontalDirection.Right?0:1,offset:n.left,size:n.width}),o.left>=n.left&&o.left<n.left+n.width&&(n.left+10+e.width<=t.width&&(o.left=n.left+10),n.top+=10,n.height=0),o.top=layout(t.height,e.height,{position:0,offset:n.top,size:0}),o.top+e.height===n.top&&o.top+n.height+e.height<=t.height&&(o.top+=n.height),o}createSubmenu(t=!0){if(this.element)if(this.parentData.submenu)this.parentData.submenu.focus(!1);else{this.updateAriaExpanded("true"),this.submenuContainer=append(this.element,$("div.monaco-submenu")),this.submenuContainer.classList.add("menubar-menu-items-holder","context-view");const e=getWindow(this.parentData.parent.domNode).getComputedStyle(this.parentData.parent.domNode),n=parseFloat(e.paddingTop||"0")||0;this.submenuContainer.style.position="fixed",this.submenuContainer.style.top="0",this.submenuContainer.style.left="0",this.parentData.submenu=new Menu(this.submenuContainer,this.submenuActions.length?this.submenuActions:[new EmptySubmenuAction],this.submenuOptions,this.menuStyle);const i=this.element.getBoundingClientRect(),o={top:i.top-n,left:i.left,height:i.height+2*n,width:i.width},s=this.submenuContainer.getBoundingClientRect(),a=getWindow(this.element),{top:r,left:c}=this.calculateSubmenuMenuLayout(new Dimension(a.innerWidth,a.innerHeight),Dimension.lift(s),o,this.expandDirection);this.submenuContainer.style.left=c-s.left+"px",this.submenuContainer.style.top=r-s.top+"px",this.submenuDisposables.add(addDisposableListener(this.submenuContainer,EventType.KEY_UP,(t=>{new StandardKeyboardEvent(t).equals(15)&&(EventHelper.stop(t,!0),this.parentData.parent.focus(),this.cleanupExistingSubmenu(!0))}))),this.submenuDisposables.add(addDisposableListener(this.submenuContainer,EventType.KEY_DOWN,(t=>{new StandardKeyboardEvent(t).equals(15)&&EventHelper.stop(t,!0)}))),this.submenuDisposables.add(this.parentData.submenu.onDidCancel((()=>{this.parentData.parent.focus(),this.cleanupExistingSubmenu(!0)}))),this.parentData.submenu.focus(t),this.mysubmenu=this.parentData.submenu}}updateAriaExpanded(t){this.item&&this.item?.setAttribute("aria-expanded",t)}applyStyle(){super.applyStyle();const t=this.element&&this.element.classList.contains("focused")&&this.menuStyle.selectionForegroundColor?this.menuStyle.selectionForegroundColor:this.menuStyle.foregroundColor;this.submenuIndicator&&(this.submenuIndicator.style.color=t??"")}dispose(){super.dispose(),this.hideScheduler.dispose(),this.mysubmenu&&(this.mysubmenu.dispose(),this.mysubmenu=null),this.submenuContainer&&(this.submenuContainer=void 0)}}class MenuSeparatorActionViewItem extends ActionViewItem{constructor(t,e,n,i){super(t,e,n),this.menuStyles=i}render(t){super.render(t),this.label&&(this.label.style.borderBottomColor=this.menuStyles.separatorColor?`${this.menuStyles.separatorColor}`:"")}}export function cleanMnemonic(t){const e=MENU_MNEMONIC_REGEX,n=e.exec(t);if(!n)return t;const i=!n[1];return t.replace(e,i?"$2$3":"").trim()}export function formatRule(t){const e=getCodiconFontCharacters()[t.id];return`.codicon-${t.id}:before { content: '\\${e.toString(16)}'; }`}function getMenuWidgetCSS(t,e){let n=`\n.monaco-menu {\n\tfont-size: 13px;\n\tborder-radius: 5px;\n\tmin-width: 160px;\n}\n\n${formatRule(Codicon.menuSelection)}\n${formatRule(Codicon.menuSubmenu)}\n\n.monaco-menu .monaco-action-bar {\n\ttext-align: right;\n\toverflow: hidden;\n\twhite-space: nowrap;\n}\n\n.monaco-menu .monaco-action-bar .actions-container {\n\tdisplay: flex;\n\tmargin: 0 auto;\n\tpadding: 0;\n\twidth: 100%;\n\tjustify-content: flex-end;\n}\n\n.monaco-menu .monaco-action-bar.vertical .actions-container {\n\tdisplay: inline-block;\n}\n\n.monaco-menu .monaco-action-bar.reverse .actions-container {\n\tflex-direction: row-reverse;\n}\n\n.monaco-menu .monaco-action-bar .action-item {\n\tcursor: pointer;\n\tdisplay: inline-block;\n\ttransition: transform 50ms ease;\n\tposition: relative;  /* DO NOT REMOVE - this is the key to preventing the ghosting icon bug in Chrome 42 */\n}\n\n.monaco-menu .monaco-action-bar .action-item.disabled {\n\tcursor: default;\n}\n\n.monaco-menu .monaco-action-bar .action-item .icon,\n.monaco-menu .monaco-action-bar .action-item .codicon {\n\tdisplay: inline-block;\n}\n\n.monaco-menu .monaco-action-bar .action-item .codicon {\n\tdisplay: flex;\n\talign-items: center;\n}\n\n.monaco-menu .monaco-action-bar .action-label {\n\tfont-size: 11px;\n\tmargin-right: 4px;\n}\n\n.monaco-menu .monaco-action-bar .action-item.disabled .action-label,\n.monaco-menu .monaco-action-bar .action-item.disabled .action-label:hover {\n\tcolor: var(--vscode-disabledForeground);\n}\n\n/* Vertical actions */\n\n.monaco-menu .monaco-action-bar.vertical {\n\ttext-align: left;\n}\n\n.monaco-menu .monaco-action-bar.vertical .action-item {\n\tdisplay: block;\n}\n\n.monaco-menu .monaco-action-bar.vertical .action-label.separator {\n\tdisplay: block;\n\tborder-bottom: 1px solid var(--vscode-menu-separatorBackground);\n\tpadding-top: 1px;\n\tpadding: 30px;\n}\n\n.monaco-menu .secondary-actions .monaco-action-bar .action-label {\n\tmargin-left: 6px;\n}\n\n/* Action Items */\n.monaco-menu .monaco-action-bar .action-item.select-container {\n\toverflow: hidden; /* somehow the dropdown overflows its container, we prevent it here to not push */\n\tflex: 1;\n\tmax-width: 170px;\n\tmin-width: 60px;\n\tdisplay: flex;\n\talign-items: center;\n\tjustify-content: center;\n\tmargin-right: 10px;\n}\n\n.monaco-menu .monaco-action-bar.vertical {\n\tmargin-left: 0;\n\toverflow: visible;\n}\n\n.monaco-menu .monaco-action-bar.vertical .actions-container {\n\tdisplay: block;\n}\n\n.monaco-menu .monaco-action-bar.vertical .action-item {\n\tpadding: 0;\n\ttransform: none;\n\tdisplay: flex;\n}\n\n.monaco-menu .monaco-action-bar.vertical .action-item.active {\n\ttransform: none;\n}\n\n.monaco-menu .monaco-action-bar.vertical .action-menu-item {\n\tflex: 1 1 auto;\n\tdisplay: flex;\n\theight: 2em;\n\talign-items: center;\n\tposition: relative;\n\tmargin: 0 4px;\n\tborder-radius: 4px;\n}\n\n.monaco-menu .monaco-action-bar.vertical .action-menu-item:hover .keybinding,\n.monaco-menu .monaco-action-bar.vertical .action-menu-item:focus .keybinding {\n\topacity: unset;\n}\n\n.monaco-menu .monaco-action-bar.vertical .action-label {\n\tflex: 1 1 auto;\n\ttext-decoration: none;\n\tpadding: 0 1em;\n\tbackground: none;\n\tfont-size: 12px;\n\tline-height: 1;\n}\n\n.monaco-menu .monaco-action-bar.vertical .keybinding,\n.monaco-menu .monaco-action-bar.vertical .submenu-indicator {\n\tdisplay: inline-block;\n\tflex: 2 1 auto;\n\tpadding: 0 1em;\n\ttext-align: right;\n\tfont-size: 12px;\n\tline-height: 1;\n\topacity: 0.7;\n}\n\n.monaco-menu .monaco-action-bar.vertical .submenu-indicator {\n\theight: 100%;\n}\n\n.monaco-menu .monaco-action-bar.vertical .submenu-indicator.codicon {\n\tfont-size: 16px !important;\n\tdisplay: flex;\n\talign-items: center;\n}\n\n.monaco-menu .monaco-action-bar.vertical .submenu-indicator.codicon::before {\n\tmargin-left: auto;\n\tmargin-right: -20px;\n}\n\n.monaco-menu .monaco-action-bar.vertical .action-item.disabled .keybinding,\n.monaco-menu .monaco-action-bar.vertical .action-item.disabled .submenu-indicator {\n\topacity: 0.4;\n}\n\n.monaco-menu .monaco-action-bar.vertical .action-label:not(.separator) {\n\tdisplay: inline-block;\n\tbox-sizing: border-box;\n\tmargin: 0;\n}\n\n.monaco-menu .monaco-action-bar.vertical .action-item {\n\tposition: static;\n\toverflow: visible;\n}\n\n.monaco-menu .monaco-action-bar.vertical .action-item .monaco-submenu {\n\tposition: absolute;\n}\n\n.monaco-menu .monaco-action-bar.vertical .action-label.separator {\n\twidth: 100%;\n\theight: 0px !important;\n\topacity: 1;\n}\n\n.monaco-menu .monaco-action-bar.vertical .action-label.separator.text {\n\tpadding: 0.7em 1em 0.1em 1em;\n\tfont-weight: bold;\n\topacity: 1;\n}\n\n.monaco-menu .monaco-action-bar.vertical .action-label:hover {\n\tcolor: inherit;\n}\n\n.monaco-menu .monaco-action-bar.vertical .menu-item-check {\n\tposition: absolute;\n\tvisibility: hidden;\n\twidth: 1em;\n\theight: 100%;\n}\n\n.monaco-menu .monaco-action-bar.vertical .action-menu-item.checked .menu-item-check {\n\tvisibility: visible;\n\tdisplay: flex;\n\talign-items: center;\n\tjustify-content: center;\n}\n\n/* Context Menu */\n\n.context-view.monaco-menu-container {\n\toutline: 0;\n\tborder: none;\n\tanimation: fadeIn 0.083s linear;\n\t-webkit-app-region: no-drag;\n}\n\n.context-view.monaco-menu-container :focus,\n.context-view.monaco-menu-container .monaco-action-bar.vertical:focus,\n.context-view.monaco-menu-container .monaco-action-bar.vertical :focus {\n\toutline: 0;\n}\n\n.hc-black .context-view.monaco-menu-container,\n.hc-light .context-view.monaco-menu-container,\n:host-context(.hc-black) .context-view.monaco-menu-container,\n:host-context(.hc-light) .context-view.monaco-menu-container {\n\tbox-shadow: none;\n}\n\n.hc-black .monaco-menu .monaco-action-bar.vertical .action-item.focused,\n.hc-light .monaco-menu .monaco-action-bar.vertical .action-item.focused,\n:host-context(.hc-black) .monaco-menu .monaco-action-bar.vertical .action-item.focused,\n:host-context(.hc-light) .monaco-menu .monaco-action-bar.vertical .action-item.focused {\n\tbackground: none;\n}\n\n/* Vertical Action Bar Styles */\n\n.monaco-menu .monaco-action-bar.vertical {\n\tpadding: 4px 0;\n}\n\n.monaco-menu .monaco-action-bar.vertical .action-menu-item {\n\theight: 2em;\n}\n\n.monaco-menu .monaco-action-bar.vertical .action-label:not(.separator),\n.monaco-menu .monaco-action-bar.vertical .keybinding {\n\tfont-size: inherit;\n\tpadding: 0 2em;\n\tmax-height: 100%;\n}\n\n.monaco-menu .monaco-action-bar.vertical .menu-item-check {\n\tfont-size: inherit;\n\twidth: 2em;\n}\n\n.monaco-menu .monaco-action-bar.vertical .action-label.separator {\n\tfont-size: inherit;\n\tmargin: 5px 0 !important;\n\tpadding: 0;\n\tborder-radius: 0;\n}\n\n.linux .monaco-menu .monaco-action-bar.vertical .action-label.separator,\n:host-context(.linux) .monaco-menu .monaco-action-bar.vertical .action-label.separator {\n\tmargin-left: 0;\n\tmargin-right: 0;\n}\n\n.monaco-menu .monaco-action-bar.vertical .submenu-indicator {\n\tfont-size: 60%;\n\tpadding: 0 1.8em;\n}\n\n.linux .monaco-menu .monaco-action-bar.vertical .submenu-indicator,\n:host-context(.linux) .monaco-menu .monaco-action-bar.vertical .submenu-indicator {\n\theight: 100%;\n\tmask-size: 10px 10px;\n\t-webkit-mask-size: 10px 10px;\n}\n\n.monaco-menu .action-item {\n\tcursor: default;\n}`;if(e){n+="\n\t\t\t/* Arrows */\n\t\t\t.monaco-scrollable-element > .scrollbar > .scra {\n\t\t\t\tcursor: pointer;\n\t\t\t\tfont-size: 11px !important;\n\t\t\t}\n\n\t\t\t.monaco-scrollable-element > .visible {\n\t\t\t\topacity: 1;\n\n\t\t\t\t/* Background rule added for IE9 - to allow clicks on dom node */\n\t\t\t\tbackground:rgba(0,0,0,0);\n\n\t\t\t\ttransition: opacity 100ms linear;\n\t\t\t}\n\t\t\t.monaco-scrollable-element > .invisible {\n\t\t\t\topacity: 0;\n\t\t\t\tpointer-events: none;\n\t\t\t}\n\t\t\t.monaco-scrollable-element > .invisible.fade {\n\t\t\t\ttransition: opacity 800ms linear;\n\t\t\t}\n\n\t\t\t/* Scrollable Content Inset Shadow */\n\t\t\t.monaco-scrollable-element > .shadow {\n\t\t\t\tposition: absolute;\n\t\t\t\tdisplay: none;\n\t\t\t}\n\t\t\t.monaco-scrollable-element > .shadow.top {\n\t\t\t\tdisplay: block;\n\t\t\t\ttop: 0;\n\t\t\t\tleft: 3px;\n\t\t\t\theight: 3px;\n\t\t\t\twidth: 100%;\n\t\t\t}\n\t\t\t.monaco-scrollable-element > .shadow.left {\n\t\t\t\tdisplay: block;\n\t\t\t\ttop: 3px;\n\t\t\t\tleft: 0;\n\t\t\t\theight: 100%;\n\t\t\t\twidth: 3px;\n\t\t\t}\n\t\t\t.monaco-scrollable-element > .shadow.top-left-corner {\n\t\t\t\tdisplay: block;\n\t\t\t\ttop: 0;\n\t\t\t\tleft: 0;\n\t\t\t\theight: 3px;\n\t\t\t\twidth: 3px;\n\t\t\t}\n\t\t\t/* Fix for https://github.com/microsoft/vscode/issues/103170 */\n\t\t\t.monaco-menu .action-item .monaco-submenu {\n\t\t\t\tz-index: 1;\n\t\t\t}\n\t\t";const e=t.scrollbarShadow;e&&(n+=`\n\t\t\t\t.monaco-scrollable-element > .shadow.top {\n\t\t\t\t\tbox-shadow: ${e} 0 6px 6px -6px inset;\n\t\t\t\t}\n\n\t\t\t\t.monaco-scrollable-element > .shadow.left {\n\t\t\t\t\tbox-shadow: ${e} 6px 0 6px -6px inset;\n\t\t\t\t}\n\n\t\t\t\t.monaco-scrollable-element > .shadow.top.left {\n\t\t\t\t\tbox-shadow: ${e} 6px 6px 6px -6px inset;\n\t\t\t\t}\n\t\t\t`);const i=t.scrollbarSliderBackground;i&&(n+=`\n\t\t\t\t.monaco-scrollable-element > .scrollbar > .slider {\n\t\t\t\t\tbackground: ${i};\n\t\t\t\t}\n\t\t\t`);const o=t.scrollbarSliderHoverBackground;o&&(n+=`\n\t\t\t\t.monaco-scrollable-element > .scrollbar > .slider:hover {\n\t\t\t\t\tbackground: ${o};\n\t\t\t\t}\n\t\t\t`);const s=t.scrollbarSliderActiveBackground;s&&(n+=`\n\t\t\t\t.monaco-scrollable-element > .scrollbar > .slider.active {\n\t\t\t\t\tbackground: ${s};\n\t\t\t\t}\n\t\t\t`)}return n}
+import{isFirefox as q}from"../../browser.js";import{EventType as O,Gesture as T}from"../../touch.js";import{$ as b,addDisposableListener as m,append as p,clearNode as K,Dimension as F,EventHelper as d,EventType as h,getActiveElement as k,getWindow as S,isAncestor as g,isInShadowDOM as N}from"../../dom.js";import{createStyleSheet as $}from"../../domStylesheets.js";import{StandardKeyboardEvent as f}from"../../keyboardEvent.js";import{StandardMouseEvent as W}from"../../mouseEvent.js";import{ActionBar as Y}from"../actionbar/actionbar.js";import{ActionViewItem as G,BaseActionViewItem as H}from"../actionbar/actionViewItems.js";import{layout as U}from"../contextview/contextview.js";import{DomScrollableElement as j}from"../scrollbar/scrollableElement.js";import{EmptySubmenuAction as X,Separator as y,SubmenuAction as J}from"../../../common/actions.js";import{RunOnceScheduler as I}from"../../../common/async.js";import{Codicon as w}from"../../../common/codicons.js";import{getCodiconFontCharacters as Q}from"../../../common/codiconsUtil.js";import{ThemeIcon as z}from"../../../common/themables.js";import{stripIcons as Z}from"../../../common/iconLabels.js";import{DisposableStore as ee}from"../../../common/lifecycle.js";import{isLinux as R,isMacintosh as te}from"../../../common/platform.js";import*as A from"../../../common/strings.js";const L=/\(&([^\s&])\)|(^|[^&])&([^\s&])/,D=/(&amp;)?(&amp;)([^\s&])/g;var C;(function(c){c[c.Right=0]="Right",c[c.Left=1]="Left"})(C||(C={}));var M;(function(c){c[c.Above=0]="Above",c[c.Below=1]="Below"})(M||(M={}));const we={shadowColor:void 0,borderColor:void 0,foregroundColor:void 0,backgroundColor:void 0,selectionForegroundColor:void 0,selectionBackgroundColor:void 0,selectionBorderColor:void 0,separatorColor:void 0,scrollbarShadow:void 0,scrollbarSliderBackground:void 0,scrollbarSliderHoverBackground:void 0,scrollbarSliderActiveBackground:void 0};class x extends Y{constructor(e,t,i,s){e.classList.add("monaco-menu-container"),e.setAttribute("role","presentation");const n=document.createElement("div");n.classList.add("monaco-menu"),n.setAttribute("role","presentation"),super(n,{orientation:1,actionViewItemProvider:a=>this.doGetActionViewItem(a,i,r),context:i.context,actionRunner:i.actionRunner,ariaLabel:i.ariaLabel,ariaRole:"menu",focusOnlyEnabledItems:!0,triggerKeys:{keys:[3,...te||R?[10]:[]],keyDown:!0}}),this.menuStyles=s,this.menuElement=n,this.actionsList.tabIndex=0,this.initializeOrUpdateStyleSheet(e,s),this._register(T.addTarget(n)),this._register(m(n,h.KEY_DOWN,a=>{new f(a).equals(2)&&a.preventDefault()})),i.enableMnemonics&&this._register(m(n,h.KEY_DOWN,a=>{const o=a.key.toLocaleLowerCase();if(this.mnemonics.has(o)){d.stop(a,!0);const l=this.mnemonics.get(o);if(l.length===1&&(l[0]instanceof B&&l[0].container&&this.focusItemByElement(l[0].container),l[0].onClick(a)),l.length>1){const v=l.shift();v&&v.container&&(this.focusItemByElement(v.container),l.push(v)),this.mnemonics.set(o,l)}}})),R&&this._register(m(n,h.KEY_DOWN,a=>{const o=new f(a);o.equals(14)||o.equals(11)?(this.focusedItem=this.viewItems.length-1,this.focusNext(),d.stop(a,!0)):(o.equals(13)||o.equals(12))&&(this.focusedItem=0,this.focusPrevious(),d.stop(a,!0))})),this._register(m(this.domNode,h.MOUSE_OUT,a=>{const o=a.relatedTarget;g(o,this.domNode)||(this.focusedItem=void 0,this.updateFocus(),a.stopPropagation())})),this._register(m(this.actionsList,h.MOUSE_OVER,a=>{let o=a.target;if(!(!o||!g(o,this.actionsList)||o===this.actionsList)){for(;o.parentElement!==this.actionsList&&o.parentElement!==null;)o=o.parentElement;if(o.classList.contains("action-item")){const l=this.focusedItem;this.setFocusedItem(o),l!==this.focusedItem&&this.updateFocus()}}})),this._register(T.addTarget(this.actionsList)),this._register(m(this.actionsList,O.Tap,a=>{let o=a.initialTarget;if(!(!o||!g(o,this.actionsList)||o===this.actionsList)){for(;o.parentElement!==this.actionsList&&o.parentElement!==null;)o=o.parentElement;if(o.classList.contains("action-item")){const l=this.focusedItem;this.setFocusedItem(o),l!==this.focusedItem&&this.updateFocus()}}}));const r={parent:this};this.mnemonics=new Map,this.scrollableElement=this._register(new j(n,{alwaysConsumeMouseWheel:!0,horizontal:2,vertical:3,verticalScrollbarSize:7,handleMouseWheel:!0,useShadows:!0}));const u=this.scrollableElement.getDomNode();u.style.position="",this.styleScrollElement(u,s),this._register(m(n,O.Change,a=>{d.stop(a,!0);const o=this.scrollableElement.getScrollPosition().scrollTop;this.scrollableElement.setScrollPosition({scrollTop:o-a.translationY})})),this._register(m(u,h.MOUSE_UP,a=>{a.preventDefault()}));const E=S(e);n.style.maxHeight=`${Math.max(10,E.innerHeight-e.getBoundingClientRect().top-35)}px`,t=t.filter((a,o)=>i.submenuIds?.has(a.id)?(console.warn(`Found submenu cycle: ${a.id}`),!1):!(a instanceof y&&(o===t.length-1||o===0||t[o-1]instanceof y))),this.push(t,{icon:!0,label:!0,isMenu:!0}),e.appendChild(this.scrollableElement.getDomNode()),this.scrollableElement.scanDomNode(),this.viewItems.filter(a=>!(a instanceof V)).forEach((a,o,l)=>{a.updatePositionInSet(o+1,l.length)})}initializeOrUpdateStyleSheet(e,t){this.styleSheet||(N(e)?this.styleSheet=$(e):(x.globalStyleSheet||(x.globalStyleSheet=$()),this.styleSheet=x.globalStyleSheet)),this.styleSheet.textContent=ne(t,N(e))}styleScrollElement(e,t){const i=t.foregroundColor??"",s=t.backgroundColor??"",n=t.borderColor?`1px solid ${t.borderColor}`:"",r="5px",u=t.shadowColor?`0 2px 8px ${t.shadowColor}`:"";e.style.outline=n,e.style.borderRadius=r,e.style.color=i,e.style.backgroundColor=s,e.style.boxShadow=u}getContainer(){return this.scrollableElement.getDomNode()}get onScroll(){return this.scrollableElement.onScroll}get scrollOffset(){return this.menuElement.scrollTop}trigger(e){if(e<=this.viewItems.length&&e>=0){const t=this.viewItems[e];if(t instanceof B)super.focus(e),t.open(!0);else if(t instanceof _)super.run(t._action,t._context);else return}}focusItemByElement(e){const t=this.focusedItem;this.setFocusedItem(e),t!==this.focusedItem&&this.updateFocus()}setFocusedItem(e){for(let t=0;t<this.actionsList.children.length;t++){const i=this.actionsList.children[t];if(e===i){this.focusedItem=t;break}}}updateFocus(e){super.updateFocus(e,!0,!0),typeof this.focusedItem<"u"&&this.scrollableElement.setScrollPosition({scrollTop:Math.round(this.menuElement.scrollTop)})}doGetActionViewItem(e,t,i){if(e instanceof y)return new V(t.context,e,{icon:!0},this.menuStyles);if(e instanceof J){const s=new B(e,e.actions,i,{...t,submenuIds:new Set([...t.submenuIds||[],e.id])},this.menuStyles);if(t.enableMnemonics){const n=s.getMnemonic();if(n&&s.isEnabled()){let r=[];this.mnemonics.has(n)&&(r=this.mnemonics.get(n)),r.push(s),this.mnemonics.set(n,r)}}return s}else{const s={enableMnemonics:t.enableMnemonics,useEventAsContext:t.useEventAsContext};if(t.getKeyBinding){const r=t.getKeyBinding(e);if(r){const u=r.getLabel();u&&(s.keybinding=u)}}const n=new _(t.context,e,s,this.menuStyles);if(t.enableMnemonics){const r=n.getMnemonic();if(r&&n.isEnabled()){let u=[];this.mnemonics.has(r)&&(u=this.mnemonics.get(r)),u.push(n),this.mnemonics.set(r,u)}}return n}}}class _ extends H{constructor(e,t,i,s){if(i.isMenu=!0,super(t,t,i),this.menuStyle=s,this.options=i,this.options.icon=i.icon!==void 0?i.icon:!1,this.options.label=i.label!==void 0?i.label:!0,this.cssClass="",this.options.label&&i.enableMnemonics){const n=this.action.label;if(n){const r=L.exec(n);r&&(this.mnemonic=(r[1]?r[1]:r[3]).toLocaleLowerCase())}}this.runOnceToEnableMouseUp=new I(()=>{this.element&&(this._register(m(this.element,h.MOUSE_UP,n=>{if(d.stop(n,!0),q){if(new W(S(this.element),n).rightButton)return;this.onClick(n)}else setTimeout(()=>{this.onClick(n)},0)})),this._register(m(this.element,h.CONTEXT_MENU,n=>{d.stop(n,!0)})))},100),this._register(this.runOnceToEnableMouseUp)}render(e){super.render(e),this.element&&(this.container=e,this.item=p(this.element,b("a.action-menu-item")),this._action.id===y.ID?this.item.setAttribute("role","presentation"):(this.item.setAttribute("role","menuitem"),this.mnemonic&&this.item.setAttribute("aria-keyshortcuts",`${this.mnemonic}`)),this.check=p(this.item,b("span.menu-item-check"+z.asCSSSelector(w.menuSelection))),this.check.setAttribute("role","none"),this.label=p(this.item,b("span.action-label")),this.options.label&&this.options.keybinding&&(p(this.item,b("span.keybinding")).textContent=this.options.keybinding),this.runOnceToEnableMouseUp.schedule(),this.updateClass(),this.updateLabel(),this.updateTooltip(),this.updateEnabled(),this.updateChecked(),this.applyStyle())}blur(){super.blur(),this.applyStyle()}focus(){super.focus(),this.item?.focus(),this.applyStyle()}updatePositionInSet(e,t){this.item&&(this.item.setAttribute("aria-posinset",`${e}`),this.item.setAttribute("aria-setsize",`${t}`))}updateLabel(){if(this.label&&this.options.label){K(this.label);let e=Z(this.action.label);if(e){const t=ie(e);this.options.enableMnemonics||(e=t),this.label.setAttribute("aria-label",t.replace(/&&/g,"&"));const i=L.exec(e);if(i){e=A.escape(e),D.lastIndex=0;let s=D.exec(e);for(;s&&s[1];)s=D.exec(e);const n=r=>r.replace(/&amp;&amp;/g,"&amp;");s?this.label.append(A.ltrim(n(e.substr(0,s.index))," "),b("u",{"aria-hidden":"true"},s[3]),A.rtrim(n(e.substr(s.index+s[0].length))," ")):this.label.innerText=n(e).trim(),this.item?.setAttribute("aria-keyshortcuts",(i[1]?i[1]:i[3]).toLocaleLowerCase())}else this.label.innerText=e.replace(/&&/g,"&").trim()}}}updateTooltip(){}updateClass(){this.cssClass&&this.item&&this.item.classList.remove(...this.cssClass.split(" ")),this.options.icon&&this.label?(this.cssClass=this.action.class||"",this.label.classList.add("icon"),this.cssClass&&this.label.classList.add(...this.cssClass.split(" ")),this.updateEnabled()):this.label&&this.label.classList.remove("icon")}updateEnabled(){this.action.enabled?(this.element&&(this.element.classList.remove("disabled"),this.element.removeAttribute("aria-disabled")),this.item&&(this.item.classList.remove("disabled"),this.item.removeAttribute("aria-disabled"),this.item.tabIndex=0)):(this.element&&(this.element.classList.add("disabled"),this.element.setAttribute("aria-disabled","true")),this.item&&(this.item.classList.add("disabled"),this.item.setAttribute("aria-disabled","true")))}updateChecked(){if(!this.item)return;const e=this.action.checked;this.item.classList.toggle("checked",!!e),e!==void 0?(this.item.setAttribute("role","menuitemcheckbox"),this.item.setAttribute("aria-checked",e?"true":"false")):(this.item.setAttribute("role","menuitem"),this.item.setAttribute("aria-checked",""))}getMnemonic(){return this.mnemonic}applyStyle(){const e=this.element&&this.element.classList.contains("focused"),t=e&&this.menuStyle.selectionForegroundColor?this.menuStyle.selectionForegroundColor:this.menuStyle.foregroundColor,i=e&&this.menuStyle.selectionBackgroundColor?this.menuStyle.selectionBackgroundColor:void 0,s=e&&this.menuStyle.selectionBorderColor?`1px solid ${this.menuStyle.selectionBorderColor}`:"",n=e&&this.menuStyle.selectionBorderColor?"-1px":"";this.item&&(this.item.style.color=t??"",this.item.style.backgroundColor=i??"",this.item.style.outline=s,this.item.style.outlineOffset=n),this.check&&(this.check.style.color=t??"")}}class B extends _{constructor(e,t,i,s,n){super(e,e,s,n),this.submenuActions=t,this.parentData=i,this.submenuOptions=s,this.mysubmenu=null,this.submenuDisposables=this._register(new ee),this.mouseOver=!1,this.expandDirection=s&&s.expandDirection!==void 0?s.expandDirection:{horizontal:C.Right,vertical:M.Below},this.showScheduler=new I(()=>{this.mouseOver&&(this.cleanupExistingSubmenu(!1),this.createSubmenu(!1))},250),this.hideScheduler=new I(()=>{this.element&&!g(k(),this.element)&&this.parentData.submenu===this.mysubmenu&&(this.parentData.parent.focus(!1),this.cleanupExistingSubmenu(!0))},750)}render(e){super.render(e),this.element&&(this.item&&(this.item.classList.add("monaco-submenu-item"),this.item.tabIndex=0,this.item.setAttribute("aria-haspopup","true"),this.updateAriaExpanded("false"),this.submenuIndicator=p(this.item,b("span.submenu-indicator"+z.asCSSSelector(w.menuSubmenu))),this.submenuIndicator.setAttribute("aria-hidden","true")),this._register(m(this.element,h.KEY_UP,t=>{const i=new f(t);(i.equals(17)||i.equals(3))&&(d.stop(t,!0),this.createSubmenu(!0))})),this._register(m(this.element,h.KEY_DOWN,t=>{const i=new f(t);k()===this.item&&(i.equals(17)||i.equals(3))&&d.stop(t,!0)})),this._register(m(this.element,h.MOUSE_OVER,t=>{this.mouseOver||(this.mouseOver=!0,this.showScheduler.schedule())})),this._register(m(this.element,h.MOUSE_LEAVE,t=>{this.mouseOver=!1})),this._register(m(this.element,h.FOCUS_OUT,t=>{this.element&&!g(k(),this.element)&&this.hideScheduler.schedule()})),this._register(this.parentData.parent.onScroll(()=>{this.parentData.submenu===this.mysubmenu&&(this.parentData.parent.focus(!1),this.cleanupExistingSubmenu(!0))})))}updateEnabled(){}open(e){this.cleanupExistingSubmenu(!1),this.createSubmenu(e)}onClick(e){d.stop(e,!0),this.cleanupExistingSubmenu(!1),this.createSubmenu(!0)}cleanupExistingSubmenu(e){if(this.parentData.submenu&&(e||this.parentData.submenu!==this.mysubmenu)){try{this.parentData.submenu.dispose()}catch{}this.parentData.submenu=void 0,this.updateAriaExpanded("false"),this.submenuContainer&&(this.submenuDisposables.clear(),this.submenuContainer=void 0)}}calculateSubmenuMenuLayout(e,t,i,s){const n={top:0,left:0};return n.left=U(e.width,t.width,{position:s.horizontal===C.Right?0:1,offset:i.left,size:i.width}),n.left>=i.left&&n.left<i.left+i.width&&(i.left+10+t.width<=e.width&&(n.left=i.left+10),i.top+=10,i.height=0),n.top=U(e.height,t.height,{position:0,offset:i.top,size:0}),n.top+t.height===i.top&&n.top+i.height+t.height<=e.height&&(n.top+=i.height),n}createSubmenu(e=!0){if(this.element)if(this.parentData.submenu)this.parentData.submenu.focus(!1);else{this.updateAriaExpanded("true"),this.submenuContainer=p(this.element,b("div.monaco-submenu")),this.submenuContainer.classList.add("menubar-menu-items-holder","context-view");const t=S(this.parentData.parent.domNode).getComputedStyle(this.parentData.parent.domNode),i=parseFloat(t.paddingTop||"0")||0;this.submenuContainer.style.position="fixed",this.submenuContainer.style.top="0",this.submenuContainer.style.left="0",this.parentData.submenu=new x(this.submenuContainer,this.submenuActions.length?this.submenuActions:[new X],this.submenuOptions,this.menuStyle);const s=this.element.getBoundingClientRect(),n={top:s.top-i,left:s.left,height:s.height+2*i,width:s.width},r=this.submenuContainer.getBoundingClientRect(),u=S(this.element),{top:E,left:a}=this.calculateSubmenuMenuLayout(new F(u.innerWidth,u.innerHeight),F.lift(r),n,this.expandDirection);this.submenuContainer.style.left=`${a-r.left}px`,this.submenuContainer.style.top=`${E-r.top}px`,this.submenuDisposables.add(m(this.submenuContainer,h.KEY_UP,o=>{new f(o).equals(15)&&(d.stop(o,!0),this.parentData.parent.focus(),this.cleanupExistingSubmenu(!0))})),this.submenuDisposables.add(m(this.submenuContainer,h.KEY_DOWN,o=>{new f(o).equals(15)&&d.stop(o,!0)})),this.submenuDisposables.add(this.parentData.submenu.onDidCancel(()=>{this.parentData.parent.focus(),this.cleanupExistingSubmenu(!0)})),this.parentData.submenu.focus(e),this.mysubmenu=this.parentData.submenu}}updateAriaExpanded(e){this.item&&this.item?.setAttribute("aria-expanded",e)}applyStyle(){super.applyStyle();const t=this.element&&this.element.classList.contains("focused")&&this.menuStyle.selectionForegroundColor?this.menuStyle.selectionForegroundColor:this.menuStyle.foregroundColor;this.submenuIndicator&&(this.submenuIndicator.style.color=t??"")}dispose(){super.dispose(),this.hideScheduler.dispose(),this.mysubmenu&&(this.mysubmenu.dispose(),this.mysubmenu=null),this.submenuContainer&&(this.submenuContainer=void 0)}}class V extends G{constructor(e,t,i,s){super(e,t,i),this.menuStyles=s}render(e){super.render(e),this.label&&(this.label.style.borderBottomColor=this.menuStyles.separatorColor?`${this.menuStyles.separatorColor}`:"")}}function ie(c){const e=L,t=e.exec(c);if(!t)return c;const i=!t[1];return c.replace(e,i?"$2$3":"").trim()}function P(c){const e=Q()[c.id];return`.codicon-${c.id}:before { content: '\\${e.toString(16)}'; }`}function ne(c,e){let t=`
+.monaco-menu {
+	font-size: 13px;
+	border-radius: 5px;
+	min-width: 160px;
+}
+
+${P(w.menuSelection)}
+${P(w.menuSubmenu)}
+
+.monaco-menu .monaco-action-bar {
+	text-align: right;
+	overflow: hidden;
+	white-space: nowrap;
+}
+
+.monaco-menu .monaco-action-bar .actions-container {
+	display: flex;
+	margin: 0 auto;
+	padding: 0;
+	width: 100%;
+	justify-content: flex-end;
+}
+
+.monaco-menu .monaco-action-bar.vertical .actions-container {
+	display: inline-block;
+}
+
+.monaco-menu .monaco-action-bar.reverse .actions-container {
+	flex-direction: row-reverse;
+}
+
+.monaco-menu .monaco-action-bar .action-item {
+	cursor: pointer;
+	display: inline-block;
+	transition: transform 50ms ease;
+	position: relative;  /* DO NOT REMOVE - this is the key to preventing the ghosting icon bug in Chrome 42 */
+}
+
+.monaco-menu .monaco-action-bar .action-item.disabled {
+	cursor: default;
+}
+
+.monaco-menu .monaco-action-bar .action-item .icon,
+.monaco-menu .monaco-action-bar .action-item .codicon {
+	display: inline-block;
+}
+
+.monaco-menu .monaco-action-bar .action-item .codicon {
+	display: flex;
+	align-items: center;
+}
+
+.monaco-menu .monaco-action-bar .action-label {
+	font-size: 11px;
+	margin-right: 4px;
+}
+
+.monaco-menu .monaco-action-bar .action-item.disabled .action-label,
+.monaco-menu .monaco-action-bar .action-item.disabled .action-label:hover {
+	color: var(--vscode-disabledForeground);
+}
+
+/* Vertical actions */
+
+.monaco-menu .monaco-action-bar.vertical {
+	text-align: left;
+}
+
+.monaco-menu .monaco-action-bar.vertical .action-item {
+	display: block;
+}
+
+.monaco-menu .monaco-action-bar.vertical .action-label.separator {
+	display: block;
+	border-bottom: 1px solid var(--vscode-menu-separatorBackground);
+	padding-top: 1px;
+	padding: 30px;
+}
+
+.monaco-menu .secondary-actions .monaco-action-bar .action-label {
+	margin-left: 6px;
+}
+
+/* Action Items */
+.monaco-menu .monaco-action-bar .action-item.select-container {
+	overflow: hidden; /* somehow the dropdown overflows its container, we prevent it here to not push */
+	flex: 1;
+	max-width: 170px;
+	min-width: 60px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	margin-right: 10px;
+}
+
+.monaco-menu .monaco-action-bar.vertical {
+	margin-left: 0;
+	overflow: visible;
+}
+
+.monaco-menu .monaco-action-bar.vertical .actions-container {
+	display: block;
+}
+
+.monaco-menu .monaco-action-bar.vertical .action-item {
+	padding: 0;
+	transform: none;
+	display: flex;
+}
+
+.monaco-menu .monaco-action-bar.vertical .action-item.active {
+	transform: none;
+}
+
+.monaco-menu .monaco-action-bar.vertical .action-menu-item {
+	flex: 1 1 auto;
+	display: flex;
+	height: 2em;
+	align-items: center;
+	position: relative;
+	margin: 0 4px;
+	border-radius: 4px;
+}
+
+.monaco-menu .monaco-action-bar.vertical .action-menu-item:hover .keybinding,
+.monaco-menu .monaco-action-bar.vertical .action-menu-item:focus .keybinding {
+	opacity: unset;
+}
+
+.monaco-menu .monaco-action-bar.vertical .action-label {
+	flex: 1 1 auto;
+	text-decoration: none;
+	padding: 0 1em;
+	background: none;
+	font-size: 12px;
+	line-height: 1;
+}
+
+.monaco-menu .monaco-action-bar.vertical .keybinding,
+.monaco-menu .monaco-action-bar.vertical .submenu-indicator {
+	display: inline-block;
+	flex: 2 1 auto;
+	padding: 0 1em;
+	text-align: right;
+	font-size: 12px;
+	line-height: 1;
+	opacity: 0.7;
+}
+
+.monaco-menu .monaco-action-bar.vertical .submenu-indicator {
+	height: 100%;
+}
+
+.monaco-menu .monaco-action-bar.vertical .submenu-indicator.codicon {
+	font-size: 16px !important;
+	display: flex;
+	align-items: center;
+}
+
+.monaco-menu .monaco-action-bar.vertical .submenu-indicator.codicon::before {
+	margin-left: auto;
+	margin-right: -20px;
+}
+
+.monaco-menu .monaco-action-bar.vertical .action-item.disabled .keybinding,
+.monaco-menu .monaco-action-bar.vertical .action-item.disabled .submenu-indicator {
+	opacity: 0.4;
+}
+
+.monaco-menu .monaco-action-bar.vertical .action-label:not(.separator) {
+	display: inline-block;
+	box-sizing: border-box;
+	margin: 0;
+}
+
+.monaco-menu .monaco-action-bar.vertical .action-item {
+	position: static;
+	overflow: visible;
+}
+
+.monaco-menu .monaco-action-bar.vertical .action-item .monaco-submenu {
+	position: absolute;
+}
+
+.monaco-menu .monaco-action-bar.vertical .action-label.separator {
+	width: 100%;
+	height: 0px !important;
+	opacity: 1;
+}
+
+.monaco-menu .monaco-action-bar.vertical .action-label.separator.text {
+	padding: 0.7em 1em 0.1em 1em;
+	font-weight: bold;
+	opacity: 1;
+}
+
+.monaco-menu .monaco-action-bar.vertical .action-label:hover {
+	color: inherit;
+}
+
+.monaco-menu .monaco-action-bar.vertical .menu-item-check {
+	position: absolute;
+	visibility: hidden;
+	width: 1em;
+	height: 100%;
+}
+
+.monaco-menu .monaco-action-bar.vertical .action-menu-item.checked .menu-item-check {
+	visibility: visible;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+/* Context Menu */
+
+.context-view.monaco-menu-container {
+	outline: 0;
+	border: none;
+	animation: fadeIn 0.083s linear;
+	-webkit-app-region: no-drag;
+}
+
+.context-view.monaco-menu-container :focus,
+.context-view.monaco-menu-container .monaco-action-bar.vertical:focus,
+.context-view.monaco-menu-container .monaco-action-bar.vertical :focus {
+	outline: 0;
+}
+
+.hc-black .context-view.monaco-menu-container,
+.hc-light .context-view.monaco-menu-container,
+:host-context(.hc-black) .context-view.monaco-menu-container,
+:host-context(.hc-light) .context-view.monaco-menu-container {
+	box-shadow: none;
+}
+
+.hc-black .monaco-menu .monaco-action-bar.vertical .action-item.focused,
+.hc-light .monaco-menu .monaco-action-bar.vertical .action-item.focused,
+:host-context(.hc-black) .monaco-menu .monaco-action-bar.vertical .action-item.focused,
+:host-context(.hc-light) .monaco-menu .monaco-action-bar.vertical .action-item.focused {
+	background: none;
+}
+
+/* Vertical Action Bar Styles */
+
+.monaco-menu .monaco-action-bar.vertical {
+	padding: 4px 0;
+}
+
+.monaco-menu .monaco-action-bar.vertical .action-menu-item {
+	height: 2em;
+}
+
+.monaco-menu .monaco-action-bar.vertical .action-label:not(.separator),
+.monaco-menu .monaco-action-bar.vertical .keybinding {
+	font-size: inherit;
+	padding: 0 2em;
+	max-height: 100%;
+}
+
+.monaco-menu .monaco-action-bar.vertical .menu-item-check {
+	font-size: inherit;
+	width: 2em;
+}
+
+.monaco-menu .monaco-action-bar.vertical .action-label.separator {
+	font-size: inherit;
+	margin: 5px 0 !important;
+	padding: 0;
+	border-radius: 0;
+}
+
+.linux .monaco-menu .monaco-action-bar.vertical .action-label.separator,
+:host-context(.linux) .monaco-menu .monaco-action-bar.vertical .action-label.separator {
+	margin-left: 0;
+	margin-right: 0;
+}
+
+.monaco-menu .monaco-action-bar.vertical .submenu-indicator {
+	font-size: 60%;
+	padding: 0 1.8em;
+}
+
+.linux .monaco-menu .monaco-action-bar.vertical .submenu-indicator,
+:host-context(.linux) .monaco-menu .monaco-action-bar.vertical .submenu-indicator {
+	height: 100%;
+	mask-size: 10px 10px;
+	-webkit-mask-size: 10px 10px;
+}
+
+.monaco-menu .action-item {
+	cursor: default;
+}`;if(e){t+=`
+			/* Arrows */
+			.monaco-scrollable-element > .scrollbar > .scra {
+				cursor: pointer;
+				font-size: 11px !important;
+			}
+
+			.monaco-scrollable-element > .visible {
+				opacity: 1;
+
+				/* Background rule added for IE9 - to allow clicks on dom node */
+				background:rgba(0,0,0,0);
+
+				transition: opacity 100ms linear;
+			}
+			.monaco-scrollable-element > .invisible {
+				opacity: 0;
+				pointer-events: none;
+			}
+			.monaco-scrollable-element > .invisible.fade {
+				transition: opacity 800ms linear;
+			}
+
+			/* Scrollable Content Inset Shadow */
+			.monaco-scrollable-element > .shadow {
+				position: absolute;
+				display: none;
+			}
+			.monaco-scrollable-element > .shadow.top {
+				display: block;
+				top: 0;
+				left: 3px;
+				height: 3px;
+				width: 100%;
+			}
+			.monaco-scrollable-element > .shadow.left {
+				display: block;
+				top: 3px;
+				left: 0;
+				height: 100%;
+				width: 3px;
+			}
+			.monaco-scrollable-element > .shadow.top-left-corner {
+				display: block;
+				top: 0;
+				left: 0;
+				height: 3px;
+				width: 3px;
+			}
+			/* Fix for https://github.com/microsoft/vscode/issues/103170 */
+			.monaco-menu .action-item .monaco-submenu {
+				z-index: 1;
+			}
+		`;const i=c.scrollbarShadow;i&&(t+=`
+				.monaco-scrollable-element > .shadow.top {
+					box-shadow: ${i} 0 6px 6px -6px inset;
+				}
+
+				.monaco-scrollable-element > .shadow.left {
+					box-shadow: ${i} 6px 0 6px -6px inset;
+				}
+
+				.monaco-scrollable-element > .shadow.top.left {
+					box-shadow: ${i} 6px 6px 6px -6px inset;
+				}
+			`);const s=c.scrollbarSliderBackground;s&&(t+=`
+				.monaco-scrollable-element > .scrollbar > .slider {
+					background: ${s};
+				}
+			`);const n=c.scrollbarSliderHoverBackground;n&&(t+=`
+				.monaco-scrollable-element > .scrollbar > .slider:hover {
+					background: ${n};
+				}
+			`);const r=c.scrollbarSliderActiveBackground;r&&(t+=`
+				.monaco-scrollable-element > .scrollbar > .slider.active {
+					background: ${r};
+				}
+			`)}return t}export{C as HorizontalDirection,D as MENU_ESCAPED_MNEMONIC_REGEX,L as MENU_MNEMONIC_REGEX,x as Menu,M as VerticalDirection,ie as cleanMnemonic,P as formatRule,we as unthemedMenuStyles};

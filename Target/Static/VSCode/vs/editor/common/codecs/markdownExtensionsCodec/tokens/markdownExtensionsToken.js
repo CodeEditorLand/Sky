@@ -1,1 +1,1 @@
-import{MarkdownToken}from"../../markdownCodec/tokens/markdownToken.js";export class MarkdownExtensionsToken extends MarkdownToken{}
+import{MarkdownToken as o}from"../../markdownCodec/tokens/markdownToken.js";class r extends o{}export{r as MarkdownExtensionsToken};

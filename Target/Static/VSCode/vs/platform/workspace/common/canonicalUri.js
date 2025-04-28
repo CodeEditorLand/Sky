@@ -1,1 +1,1 @@
-import{createDecorator}from"../../instantiation/common/instantiation.js";export const ICanonicalUriService=createDecorator("canonicalUriIdentityService");
+import{createDecorator as r}from"../../instantiation/common/instantiation.js";const c=r("canonicalUriIdentityService");export{c as ICanonicalUriService};

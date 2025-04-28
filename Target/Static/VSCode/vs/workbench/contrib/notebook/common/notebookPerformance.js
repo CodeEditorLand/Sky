@@ -1,1 +1,1 @@
-export class NotebookPerfMarks{constructor(){this._marks={}}get value(){return{...this._marks}}mark(r){this._marks[r]?console.error(`Skipping overwrite of notebook perf value: ${r}`):this._marks[r]=Date.now()}}
+class t{constructor(){this._marks={}}get value(){return{...this._marks}}mark(r){this._marks[r]?console.error(`Skipping overwrite of notebook perf value: ${r}`):this._marks[r]=Date.now()}}export{t as NotebookPerfMarks};

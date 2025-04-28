@@ -1,1 +1,1 @@
-import{createDecorator}from"../../../../platform/instantiation/common/instantiation.js";export const IViewsService=createDecorator("viewsService");
+import{createDecorator as e}from"../../../../platform/instantiation/common/instantiation.js";const o=e("viewsService");export{o as IViewsService};

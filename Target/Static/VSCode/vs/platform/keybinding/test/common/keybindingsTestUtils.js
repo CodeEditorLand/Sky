@@ -1,1 +1,0 @@
-import{decodeKeybinding}from"../../../../base/common/keybindings.js";import{USLayoutResolvedKeybinding}from"../../common/usLayoutResolvedKeybinding.js";export function createUSLayoutResolvedKeybinding(e,n){if(0===e)return;const o=decodeKeybinding(e,n);if(!o)return;const i=USLayoutResolvedKeybinding.resolveKeybinding(o,n);return i.length>0?i[0]:void 0}

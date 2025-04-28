@@ -1,1 +1,1 @@
-import{SimpleToken}from"./simpleToken.js";export class Hash extends SimpleToken{static{this.symbol="#"}get text(){return Hash.symbol}toString(){return`hash${this.range}`}}
+import{SimpleToken as e}from"./simpleToken.js";class t extends e{static{this.symbol="#"}get text(){return t.symbol}toString(){return`hash${this.range}`}}export{t as Hash};

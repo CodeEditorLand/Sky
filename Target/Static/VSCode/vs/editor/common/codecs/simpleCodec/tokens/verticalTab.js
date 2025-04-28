@@ -1,1 +1,1 @@
-import{SimpleToken}from"./simpleToken.js";export class VerticalTab extends SimpleToken{static{this.symbol="\v"}get text(){return VerticalTab.symbol}toString(){return`vtab${this.range}`}}
+import{SimpleToken as e}from"./simpleToken.js";class t extends e{static{this.symbol="\v"}get text(){return t.symbol}toString(){return`vtab${this.range}`}}export{t as VerticalTab};

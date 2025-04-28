@@ -1,1 +1,1 @@
-const offlineName="Offline";export function isOfflineError(e){return e instanceof OfflineError||e instanceof Error&&"Offline"===e.name&&"Offline"===e.message}export class OfflineError extends Error{constructor(){super("Offline"),this.name=this.message}}
+const n="Offline";function t(r){return r instanceof s||r instanceof Error&&r.name===n&&r.message===n}class s extends Error{constructor(){super(n),this.name=this.message}}export{s as OfflineError,t as isOfflineError};

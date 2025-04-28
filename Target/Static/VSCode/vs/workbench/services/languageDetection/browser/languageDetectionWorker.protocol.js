@@ -1,1 +1,1 @@
-export class LanguageDetectionWorkerHost{static{this.CHANNEL_NAME="languageDetectionWorkerHost"}static getChannel(e){return e.getChannel(LanguageDetectionWorkerHost.CHANNEL_NAME)}static setChannel(e,t){e.setChannel(LanguageDetectionWorkerHost.CHANNEL_NAME,t)}}
+class e{static{this.CHANNEL_NAME="languageDetectionWorkerHost"}static getChannel(t){return t.getChannel(e.CHANNEL_NAME)}static setChannel(t,a){t.setChannel(e.CHANNEL_NAME,a)}}export{e as LanguageDetectionWorkerHost};

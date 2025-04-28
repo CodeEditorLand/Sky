@@ -1,1 +1,1 @@
-export class Protocol{constructor(s,e){this.sender=s,this.onMessage=e}send(s){try{this.sender.send("vscode:message",s.buffer)}catch(s){}}disconnect(){this.sender.send("vscode:disconnect",null)}}
+class c{constructor(s,e){this.sender=s,this.onMessage=e}send(s){try{this.sender.send("vscode:message",s.buffer)}catch{}}disconnect(){this.sender.send("vscode:disconnect",null)}}export{c as Protocol};

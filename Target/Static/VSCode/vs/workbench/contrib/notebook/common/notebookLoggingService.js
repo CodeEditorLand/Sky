@@ -1,1 +1,1 @@
-import{createDecorator}from"../../../../platform/instantiation/common/instantiation.js";export const INotebookLoggingService=createDecorator("INotebookLoggingService");
+import{createDecorator as o}from"../../../../platform/instantiation/common/instantiation.js";const r=o("INotebookLoggingService");export{r as INotebookLoggingService};

@@ -1,1 +1,0 @@
-import{AbstractNonRecursiveWatcherClient}from"../../../common/watcher.js";import{NodeJSWatcher}from"./nodejsWatcher.js";export class NodeJSWatcherClient extends AbstractNonRecursiveWatcherClient{constructor(e,t,r){super(e,t,r),this.init()}createWatcher(e){return e.add(new NodeJSWatcher(void 0))}}

@@ -1,1 +1,1 @@
-export const flatTestItemDelimiter=" › ";
+const t=" › ";export{t as flatTestItemDelimiter};

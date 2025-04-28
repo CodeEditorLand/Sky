@@ -1,1 +1,1 @@
-import{createDecorator}from"../../instantiation/common/instantiation.js";export const IURLService=createDecorator("urlService");
+import{createDecorator as r}from"../../instantiation/common/instantiation.js";const o=r("urlService");export{o as IURLService};

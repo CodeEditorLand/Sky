@@ -1,1 +1,1 @@
-import{hash}from"../../../../base/common/hash.js";export function getWorkspaceIdentifier(e){return{id:getWorkspaceId(e),configPath:e}}export function getSingleFolderWorkspaceIdentifier(e){return{id:getWorkspaceId(e),uri:e}}function getWorkspaceId(e){return hash(e.toString()).toString(16)}
+import{hash as n}from"../../../../base/common/hash.js";function i(n){return{id:e(n),configPath:n}}function o(n){return{id:e(n),uri:n}}function e(e){return n(e.toString()).toString(16)}export{o as getSingleFolderWorkspaceIdentifier,i as getWorkspaceIdentifier};

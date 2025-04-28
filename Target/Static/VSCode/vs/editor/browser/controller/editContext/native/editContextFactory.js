@@ -1,1 +1,1 @@
-export var EditContext;!function(t){t.create=function(t,n){return new t.EditContext(n)}}(EditContext||(EditContext={}));
+var t;(t||(t={})).create=function(t,e){return new t.EditContext(e)};export{t as EditContext};

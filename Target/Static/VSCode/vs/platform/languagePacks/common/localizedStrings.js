@@ -1,1 +1,1 @@
-import*as nls from"../../../nls.js";const open=nls.localize("open","open"),close=nls.localize("close","close"),find=nls.localize("find","find");export default{open:open,close:close,find:find};
+import*as o from"../../../nls.js";const e=o.localize("open","open"),l=o.localize("close","close"),n=o.localize("find","find");var c={open:e,close:l,find:n};export{c as default};

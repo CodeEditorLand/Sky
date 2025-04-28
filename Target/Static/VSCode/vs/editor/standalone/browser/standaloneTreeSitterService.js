@@ -1,1 +1,0 @@
-import{Event}from"../../../base/common/event.js";export class StandaloneTreeSitterParserService{constructor(){this.onDidUpdateTree=Event.None,this.onDidAddLanguage=Event.None}async getLanguage(e){}getTreeSync(e,t){}async getTextModelTreeSitter(e,t){}async getTree(e,t){}getOrInitLanguage(e){}getParseResult(e){}}

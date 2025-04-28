@@ -1,1 +1,1 @@
-import{SimpleToken}from"./simpleToken.js";export class DoubleQuote extends SimpleToken{static{this.symbol='"'}get text(){return DoubleQuote.symbol}sameType(e){return e instanceof this.constructor}toString(){return`double-quote${this.range}`}}
+import{SimpleToken as r}from"./simpleToken.js";class t extends r{static{this.symbol='"'}get text(){return t.symbol}sameType(t){return t instanceof this.constructor}toString(){return`double-quote${this.range}`}}export{t as DoubleQuote};

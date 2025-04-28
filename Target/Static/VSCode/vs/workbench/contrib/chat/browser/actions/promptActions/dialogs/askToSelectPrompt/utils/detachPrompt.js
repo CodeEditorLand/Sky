@@ -1,1 +1,1 @@
-export const detachPrompt=async(t,e)=>{const{widget:o}=e;return o.attachmentModel.promptInstructions.remove(t),o};
+const n=async(t,n)=>{const{widget:e}=n;return e.attachmentModel.promptInstructions.remove(t),e};export{n as detachPrompt};

@@ -1,1 +1,62 @@
-export var RectangleRendererBindingId;!function(n){n[n.Shapes=0]="Shapes",n[n.LayoutInfoUniform=1]="LayoutInfoUniform",n[n.ScrollOffset=2]="ScrollOffset"}(RectangleRendererBindingId||(RectangleRendererBindingId={}));export const rectangleRendererWgsl="\n\nstruct Vertex {\n\t@location(0) position: vec2f,\n};\n\nstruct LayoutInfo {\n\tcanvasDims: vec2f,\n\tviewportOffset: vec2f,\n\tviewportDims: vec2f,\n}\n\nstruct ScrollOffset {\n\toffset: vec2f,\n}\n\nstruct Shape {\n\tposition: vec2f,\n\tsize: vec2f,\n\tcolor: vec4f,\n};\n\nstruct VSOutput {\n\t@builtin(position) position: vec4f,\n\t@location(1)       color:    vec4f,\n};\n\n// Uniforms\n@group(0) @binding(1) var<uniform>       layoutInfo:      LayoutInfo;\n\n// Storage buffers\n@group(0) @binding(0)            var<storage, read> shapes:          array<Shape>;\n@group(0) @binding(2)      var<uniform>       scrollOffset:    ScrollOffset;\n\n@vertex fn vs(\n\tvert: Vertex,\n\t@builtin(instance_index) instanceIndex: u32,\n\t@builtin(vertex_index) vertexIndex : u32\n) -> VSOutput {\n\tlet shape = shapes[instanceIndex];\n\n\tvar vsOut: VSOutput;\n\tvsOut.position = vec4f(\n\t\t(\n\t\t\t// Top left corner\n\t\t\tvec2f(-1,  1) +\n\t\t\t// Convert pixel position to clipspace\n\t\t\tvec2f( 2, -2) / layoutInfo.canvasDims *\n\t\t\t// Shape position and size\n\t\t\t(layoutInfo.viewportOffset - scrollOffset.offset + shape.position + vert.position * shape.size)\n\t\t),\n\t\t0.0,\n\t\t1.0\n\t);\n\tvsOut.color = shape.color;\n\treturn vsOut;\n}\n\n@fragment fn fs(vsOut: VSOutput) -> @location(0) vec4f {\n\treturn vsOut.color;\n}\n";
+var o;(function(t){t[t.Shapes=0]="Shapes",t[t.LayoutInfoUniform=1]="LayoutInfoUniform",t[t.ScrollOffset=2]="ScrollOffset"})(o||(o={}));const e=`
+
+struct Vertex {
+	@location(0) position: vec2f,
+};
+
+struct LayoutInfo {
+	canvasDims: vec2f,
+	viewportOffset: vec2f,
+	viewportDims: vec2f,
+}
+
+struct ScrollOffset {
+	offset: vec2f,
+}
+
+struct Shape {
+	position: vec2f,
+	size: vec2f,
+	color: vec4f,
+};
+
+struct VSOutput {
+	@builtin(position) position: vec4f,
+	@location(1)       color:    vec4f,
+};
+
+// Uniforms
+@group(0) @binding(1) var<uniform>       layoutInfo:      LayoutInfo;
+
+// Storage buffers
+@group(0) @binding(0)            var<storage, read> shapes:          array<Shape>;
+@group(0) @binding(2)      var<uniform>       scrollOffset:    ScrollOffset;
+
+@vertex fn vs(
+	vert: Vertex,
+	@builtin(instance_index) instanceIndex: u32,
+	@builtin(vertex_index) vertexIndex : u32
+) -> VSOutput {
+	let shape = shapes[instanceIndex];
+
+	var vsOut: VSOutput;
+	vsOut.position = vec4f(
+		(
+			// Top left corner
+			vec2f(-1,  1) +
+			// Convert pixel position to clipspace
+			vec2f( 2, -2) / layoutInfo.canvasDims *
+			// Shape position and size
+			(layoutInfo.viewportOffset - scrollOffset.offset + shape.position + vert.position * shape.size)
+		),
+		0.0,
+		1.0
+	);
+	vsOut.color = shape.color;
+	return vsOut;
+}
+
+@fragment fn fs(vsOut: VSOutput) -> @location(0) vec4f {
+	return vsOut.color;
+}
+`;export{o as RectangleRendererBindingId,e as rectangleRendererWgsl};

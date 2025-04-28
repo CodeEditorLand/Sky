@@ -1,1 +1,1 @@
-import{BaseToken}from"../../baseToken.js";export class MarkdownToken extends BaseToken{}
+import{BaseToken as e}from"../../baseToken.js";class r extends e{}export{r as MarkdownToken};

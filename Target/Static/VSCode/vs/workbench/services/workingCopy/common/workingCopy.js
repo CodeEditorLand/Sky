@@ -1,1 +1,1 @@
-export var WorkingCopyCapabilities;!function(i){i[i.None=0]="None",i[i.Untitled=2]="Untitled",i[i.Scratchpad=4]="Scratchpad"}(WorkingCopyCapabilities||(WorkingCopyCapabilities={}));export const NO_TYPE_ID="";
+var t;!function(t){t[t.None=0]="None",t[t.Untitled=2]="Untitled",t[t.Scratchpad=4]="Scratchpad"}(t||(t={}));const d="";export{d as NO_TYPE_ID,t as WorkingCopyCapabilities};

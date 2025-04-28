@@ -1,1 +1,1 @@
-import{createDecorator}from"../../../../platform/instantiation/common/instantiation.js";export const IBannerService=createDecorator("bannerService");
+import{createDecorator as e}from"../../../../platform/instantiation/common/instantiation.js";const o=e("bannerService");export{o as IBannerService};

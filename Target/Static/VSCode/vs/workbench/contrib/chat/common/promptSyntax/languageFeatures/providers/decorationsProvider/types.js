@@ -1,1 +1,1 @@
-export var DecorationClassNames;!function(s){s.default="prompt-decoration",s.fileReference="prompt-decoration"}(DecorationClassNames||(DecorationClassNames={}));export var CssClassModifiers;!function(s){s.inactive=".prompt-decoration-inactive"}(CssClassModifiers||(CssClassModifiers={}));
+var o,t;!function(o){o.default="prompt-decoration",o.fileReference="prompt-decoration"}(o||(o={})),(t||(t={})).inactive=".prompt-decoration-inactive";export{t as CssClassModifiers,o as DecorationClassNames};

@@ -1,1 +1,1 @@
-export const SelectionClipboardContributionID="editor.contrib.selectionClipboard";
+const o="editor.contrib.selectionClipboard";export{o as SelectionClipboardContributionID};

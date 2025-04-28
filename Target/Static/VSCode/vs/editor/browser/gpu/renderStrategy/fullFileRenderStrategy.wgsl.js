@@ -1,1 +1,84 @@
-import{TextureAtlas}from"../atlas/textureAtlas.js";import{TextureAtlasPage}from"../atlas/textureAtlasPage.js";export const fullFileRenderStrategyWgsl=`\nstruct GlyphInfo {\n\tposition: vec2f,\n\tsize: vec2f,\n\torigin: vec2f,\n};\n\nstruct Vertex {\n\t@location(0) position: vec2f,\n};\n\nstruct Cell {\n\tposition: vec2f,\n\tunused1: vec2f,\n\tglyphIndex: f32,\n\ttextureIndex: f32\n};\n\nstruct LayoutInfo {\n\tcanvasDims: vec2f,\n\tviewportOffset: vec2f,\n\tviewportDims: vec2f,\n}\n\nstruct ScrollOffset {\n\toffset: vec2f\n}\n\nstruct VSOutput {\n\t@builtin(position) position:   vec4f,\n\t@location(1)       layerIndex: f32,\n\t@location(0)       texcoord:   vec2f,\n};\n\n// Uniforms\n@group(0) @binding(4)       var<uniform>       layoutInfo:      LayoutInfo;\n@group(0) @binding(5)  var<uniform>       atlasDims:       vec2f;\n@group(0) @binding(6)            var<uniform>       scrollOffset:    ScrollOffset;\n\n// Storage buffers\n@group(0) @binding(0)               var<storage, read> glyphInfo:       array<array<GlyphInfo, ${TextureAtlasPage.maximumGlyphCount}>, ${TextureAtlas.maximumPageCount}>;\n@group(0) @binding(1)                   var<storage, read> cells:           array<Cell>;\n\n@vertex fn vs(\n\tvert: Vertex,\n\t@builtin(instance_index) instanceIndex: u32,\n\t@builtin(vertex_index) vertexIndex : u32\n) -> VSOutput {\n\tlet cell = cells[instanceIndex];\n\tvar glyph = glyphInfo[u32(cell.textureIndex)][u32(cell.glyphIndex)];\n\n\tvar vsOut: VSOutput;\n\t// Multiple vert.position by 2,-2 to get it into clipspace which ranged from -1 to 1\n\tvsOut.position = vec4f(\n\t\t// Make everything relative to top left instead of center\n\t\tvec2f(-1, 1) +\n\t\t((vert.position * vec2f(2, -2)) / layoutInfo.canvasDims) * glyph.size +\n\t\t((cell.position * vec2f(2, -2)) / layoutInfo.canvasDims) +\n\t\t((glyph.origin * vec2f(2, -2)) / layoutInfo.canvasDims) +\n\t\t(((layoutInfo.viewportOffset - scrollOffset.offset * vec2(1, -1)) * 2) / layoutInfo.canvasDims),\n\t\t0.0,\n\t\t1.0\n\t);\n\n\tvsOut.layerIndex = cell.textureIndex;\n\t// Textures are flipped from natural direction on the y-axis, so flip it back\n\tvsOut.texcoord = vert.position;\n\tvsOut.texcoord = (\n\t\t// Glyph offset (0-1)\n\t\t(glyph.position / atlasDims) +\n\t\t// Glyph coordinate (0-1)\n\t\t(vsOut.texcoord * (glyph.size / atlasDims))\n\t);\n\n\treturn vsOut;\n}\n\n@group(0) @binding(2) var ourSampler: sampler;\n@group(0) @binding(3)        var ourTexture: texture_2d_array<f32>;\n\n@fragment fn fs(vsOut: VSOutput) -> @location(0) vec4f {\n\treturn textureSample(ourTexture, ourSampler, vsOut.texcoord, u32(vsOut.layerIndex));\n}\n`;
+import{TextureAtlas as e}from"../atlas/textureAtlas.js";import{TextureAtlasPage as t}from"../atlas/textureAtlasPage.js";const i=`
+struct GlyphInfo {
+	position: vec2f,
+	size: vec2f,
+	origin: vec2f,
+};
+
+struct Vertex {
+	@location(0) position: vec2f,
+};
+
+struct Cell {
+	position: vec2f,
+	unused1: vec2f,
+	glyphIndex: f32,
+	textureIndex: f32
+};
+
+struct LayoutInfo {
+	canvasDims: vec2f,
+	viewportOffset: vec2f,
+	viewportDims: vec2f,
+}
+
+struct ScrollOffset {
+	offset: vec2f
+}
+
+struct VSOutput {
+	@builtin(position) position:   vec4f,
+	@location(1)       layerIndex: f32,
+	@location(0)       texcoord:   vec2f,
+};
+
+// Uniforms
+@group(0) @binding(4)       var<uniform>       layoutInfo:      LayoutInfo;
+@group(0) @binding(5)  var<uniform>       atlasDims:       vec2f;
+@group(0) @binding(6)            var<uniform>       scrollOffset:    ScrollOffset;
+
+// Storage buffers
+@group(0) @binding(0)               var<storage, read> glyphInfo:       array<array<GlyphInfo, ${t.maximumGlyphCount}>, ${e.maximumPageCount}>;
+@group(0) @binding(1)                   var<storage, read> cells:           array<Cell>;
+
+@vertex fn vs(
+	vert: Vertex,
+	@builtin(instance_index) instanceIndex: u32,
+	@builtin(vertex_index) vertexIndex : u32
+) -> VSOutput {
+	let cell = cells[instanceIndex];
+	var glyph = glyphInfo[u32(cell.textureIndex)][u32(cell.glyphIndex)];
+
+	var vsOut: VSOutput;
+	// Multiple vert.position by 2,-2 to get it into clipspace which ranged from -1 to 1
+	vsOut.position = vec4f(
+		// Make everything relative to top left instead of center
+		vec2f(-1, 1) +
+		((vert.position * vec2f(2, -2)) / layoutInfo.canvasDims) * glyph.size +
+		((cell.position * vec2f(2, -2)) / layoutInfo.canvasDims) +
+		((glyph.origin * vec2f(2, -2)) / layoutInfo.canvasDims) +
+		(((layoutInfo.viewportOffset - scrollOffset.offset * vec2(1, -1)) * 2) / layoutInfo.canvasDims),
+		0.0,
+		1.0
+	);
+
+	vsOut.layerIndex = cell.textureIndex;
+	// Textures are flipped from natural direction on the y-axis, so flip it back
+	vsOut.texcoord = vert.position;
+	vsOut.texcoord = (
+		// Glyph offset (0-1)
+		(glyph.position / atlasDims) +
+		// Glyph coordinate (0-1)
+		(vsOut.texcoord * (glyph.size / atlasDims))
+	);
+
+	return vsOut;
+}
+
+@group(0) @binding(2) var ourSampler: sampler;
+@group(0) @binding(3)        var ourTexture: texture_2d_array<f32>;
+
+@fragment fn fs(vsOut: VSOutput) -> @location(0) vec4f {
+	return textureSample(ourTexture, ourSampler, vsOut.texcoord, u32(vsOut.layerIndex));
+}
+`;export{i as fullFileRenderStrategyWgsl};

@@ -1,1 +1,1 @@
-export class ServiceCollection{constructor(...t){this._entries=new Map;for(const[e,s]of t)this.set(e,s)}set(t,e){const s=this._entries.get(t);return this._entries.set(t,e),s}has(t){return this._entries.has(t)}get(t){return this._entries.get(t)}}
+class i{constructor(...t){this._entries=new Map;for(const[e,s]of t)this.set(e,s)}set(t,e){const s=this._entries.get(t);return this._entries.set(t,e),s}has(t){return this._entries.has(t)}get(t){return this._entries.get(t)}}export{i as ServiceCollection};

@@ -1,1 +1,1 @@
-export function createSingleCallFunction(n,t){const e=this;let l,r=!1;return function(){if(r)return l;if(r=!0,t)try{l=n.apply(e,arguments)}finally{t()}else l=n.apply(e,arguments);return l}}
+function i(n,t){const e=this;let i,l=!1;return function(){if(l)return i;if(l=!0,t)try{i=n.apply(e,arguments)}finally{t()}else i=n.apply(e,arguments);return i}}export{i as createSingleCallFunction};

@@ -1,1 +1,1 @@
-export function checkModeOption(o,n){if(void 0!==n)return"function"==typeof n?n(o):n}
+function f(o,f){if(void 0!==f)return"function"==typeof f?f(o):f}export{f as checkModeOption};

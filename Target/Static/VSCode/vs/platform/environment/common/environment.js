@@ -1,1 +1,1 @@
-import{createDecorator,refineServiceDecorator}from"../../instantiation/common/instantiation.js";export const IEnvironmentService=createDecorator("environmentService");export const INativeEnvironmentService=refineServiceDecorator(IEnvironmentService);
+import{createDecorator as e,refineServiceDecorator as r}from"../../instantiation/common/instantiation.js";const o=e("environmentService"),t=r(o);export{o as IEnvironmentService,t as INativeEnvironmentService};

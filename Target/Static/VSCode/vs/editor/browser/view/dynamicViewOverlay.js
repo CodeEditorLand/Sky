@@ -1,1 +1,1 @@
-import{ViewEventHandler}from"../../common/viewEventHandler.js";export class DynamicViewOverlay extends ViewEventHandler{}
+import{ViewEventHandler as e}from"../../common/viewEventHandler.js";class i extends e{}export{i as DynamicViewOverlay};

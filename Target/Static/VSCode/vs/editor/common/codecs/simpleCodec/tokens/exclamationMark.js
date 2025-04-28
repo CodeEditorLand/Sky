@@ -1,1 +1,1 @@
-import{SimpleToken}from"./simpleToken.js";export class ExclamationMark extends SimpleToken{static{this.symbol="!"}get text(){return ExclamationMark.symbol}toString(){return`exclamation-mark${this.range}`}}
+import{SimpleToken as e}from"./simpleToken.js";class t extends e{static{this.symbol="!"}get text(){return t.symbol}toString(){return`exclamation-mark${this.range}`}}export{t as ExclamationMark};

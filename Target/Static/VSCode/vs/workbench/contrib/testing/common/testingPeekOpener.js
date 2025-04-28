@@ -1,1 +1,1 @@
-import{createDecorator}from"../../../../platform/instantiation/common/instantiation.js";export const ITestingPeekOpener=createDecorator("testingPeekOpener");
+import{createDecorator as e}from"../../../../platform/instantiation/common/instantiation.js";const t=e("testingPeekOpener");export{t as ITestingPeekOpener};

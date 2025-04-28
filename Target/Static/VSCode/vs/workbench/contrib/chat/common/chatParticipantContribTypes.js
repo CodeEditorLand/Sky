@@ -1,1 +1,1 @@
-export const CHAT_PROVIDER_ID="copilot";
+const o="copilot";export{o as CHAT_PROVIDER_ID};

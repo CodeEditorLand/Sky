@@ -1,1 +1,1 @@
-import{SimpleToken}from"./simpleToken.js";export class DollarSign extends SimpleToken{static{this.symbol="$"}get text(){return DollarSign.symbol}toString(){return`dollarSign${this.range}`}}
+import{SimpleToken as e}from"./simpleToken.js";class t extends e{static{this.symbol="$"}get text(){return t.symbol}toString(){return`dollarSign${this.range}`}}export{t as DollarSign};

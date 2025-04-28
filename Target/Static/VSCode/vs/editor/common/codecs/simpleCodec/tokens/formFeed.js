@@ -1,1 +1,1 @@
-import{SimpleToken}from"./simpleToken.js";export class FormFeed extends SimpleToken{static{this.symbol="\f"}get text(){return FormFeed.symbol}toString(){return`formfeed${this.range}`}}
+import{SimpleToken as e}from"./simpleToken.js";class t extends e{static{this.symbol="\f"}get text(){return t.symbol}toString(){return`formfeed${this.range}`}}export{t as FormFeed};

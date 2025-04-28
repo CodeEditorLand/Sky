@@ -1,1 +1,1 @@
-import{createDecorator}from"../../../../platform/instantiation/common/instantiation.js";export const IReplaceService=createDecorator("replaceService");
+import{createDecorator as e}from"../../../../platform/instantiation/common/instantiation.js";const c=e("replaceService");export{c as IReplaceService};

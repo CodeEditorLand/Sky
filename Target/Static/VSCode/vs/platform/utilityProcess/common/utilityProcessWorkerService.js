@@ -1,1 +1,1 @@
-export const ipcUtilityProcessWorkerChannelName="utilityProcessWorker";
+const e="utilityProcessWorker";export{e as ipcUtilityProcessWorkerChannelName};

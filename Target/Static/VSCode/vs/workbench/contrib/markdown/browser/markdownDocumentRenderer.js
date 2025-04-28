@@ -1,1 +1,142 @@
-import{basicMarkupHtmlTags,hookDomPurifyHrefAndSrcSanitizer}from"../../../../base/browser/dom.js";import dompurify from"../../../../base/browser/dompurify/dompurify.js";import{allowedMarkdownAttr}from"../../../../base/browser/markdownRenderer.js";import*as marked from"../../../../base/common/marked/marked.js";import{Schemas}from"../../../../base/common/network.js";import{escape}from"../../../../base/common/strings.js";import{tokenizeToString}from"../../../../editor/common/languages/textToHtmlTokenizer.js";import{markedGfmHeadingIdPlugin}from"./markedGfmHeadingIdPlugin.js";export const DEFAULT_MARKDOWN_STYLES='\nbody {\n\tpadding: 10px 20px;\n\tline-height: 22px;\n\tmax-width: 882px;\n\tmargin: 0 auto;\n}\n\nbody *:last-child {\n\tmargin-bottom: 0;\n}\n\nimg {\n\tmax-width: 100%;\n\tmax-height: 100%;\n}\n\na {\n\ttext-decoration: var(--text-link-decoration);\n}\n\na:hover {\n\ttext-decoration: underline;\n}\n\na:focus,\ninput:focus,\nselect:focus,\ntextarea:focus {\n\toutline: 1px solid -webkit-focus-ring-color;\n\toutline-offset: -1px;\n}\n\nhr {\n\tborder: 0;\n\theight: 2px;\n\tborder-bottom: 2px solid;\n}\n\nh1 {\n\tpadding-bottom: 0.3em;\n\tline-height: 1.2;\n\tborder-bottom-width: 1px;\n\tborder-bottom-style: solid;\n}\n\nh1, h2, h3 {\n\tfont-weight: normal;\n}\n\ntable {\n\tborder-collapse: collapse;\n}\n\nth {\n\ttext-align: left;\n\tborder-bottom: 1px solid;\n}\n\nth,\ntd {\n\tpadding: 5px 10px;\n}\n\ntable > tbody > tr + tr > td {\n\tborder-top-width: 1px;\n\tborder-top-style: solid;\n}\n\nblockquote {\n\tmargin: 0 7px 0 5px;\n\tpadding: 0 16px 0 10px;\n\tborder-left-width: 5px;\n\tborder-left-style: solid;\n}\n\ncode {\n\tfont-family: "SF Mono", Monaco, Menlo, Consolas, "Ubuntu Mono", "Liberation Mono", "DejaVu Sans Mono", "Courier New", monospace;\n}\n\npre {\n\tpadding: 16px;\n\tborder-radius: 3px;\n\toverflow: auto;\n}\n\npre code {\n\tfont-family: var(--vscode-editor-font-family);\n\tfont-weight: var(--vscode-editor-font-weight);\n\tfont-size: var(--vscode-editor-font-size);\n\tline-height: 1.5;\n\tcolor: var(--vscode-editor-foreground);\n\ttab-size: 4;\n}\n\n.monaco-tokenized-source {\n\twhite-space: pre;\n}\n\n/** Theming */\n\n.pre {\n\tbackground-color: var(--vscode-textCodeBlock-background);\n}\n\n.vscode-high-contrast h1 {\n\tborder-color: rgb(0, 0, 0);\n}\n\n.vscode-light th {\n\tborder-color: rgba(0, 0, 0, 0.69);\n}\n\n.vscode-dark th {\n\tborder-color: rgba(255, 255, 255, 0.69);\n}\n\n.vscode-light h1,\n.vscode-light hr,\n.vscode-light td {\n\tborder-color: rgba(0, 0, 0, 0.18);\n}\n\n.vscode-dark h1,\n.vscode-dark hr,\n.vscode-dark td {\n\tborder-color: rgba(255, 255, 255, 0.18);\n}\n\n@media (forced-colors: active) and (prefers-color-scheme: light){\n\tbody {\n\t\tforced-color-adjust: none;\n\t}\n}\n\n@media (forced-colors: active) and (prefers-color-scheme: dark){\n\tbody {\n\t\tforced-color-adjust: none;\n\t}\n}\n';const allowedProtocols=[Schemas.http,Schemas.https,Schemas.command];function sanitize(n,t){const e=hookDomPurifyHrefAndSrcSanitizer(allowedProtocols,!0);try{return dompurify.sanitize(n,{ALLOWED_TAGS:[...basicMarkupHtmlTags,"checkbox","checklist"],ALLOWED_ATTR:[...allowedMarkdownAttr,"data-command","name","id","role","tabindex","x-dispatch","required","checked","placeholder","when-checked","checked-on"],...t?{ALLOW_UNKNOWN_PROTOCOLS:!0}:{}})}finally{e.dispose()}}export async function renderMarkdownDocument(n,t,e,o){const r=new marked.Marked(MarkedHighlight.markedHighlight({async:!0,async highlight(n,r){if("string"!=typeof r)return escape(n);if(await t.whenInstalledExtensionsRegistered(),o?.token?.isCancellationRequested)return"";const i=e.getLanguageIdByLanguageName(r)??e.getLanguageIdByLanguageName(r.split(/\s+|:|,|(?!^)\{|\?]/,1)[0]);return tokenizeToString(e,n,i)}}),markedGfmHeadingIdPlugin(),...o?.markedExtensions??[]),i=await r.parse(n,{async:!0});return o?.shouldSanitize??1?sanitize(i,o?.allowUnknownProtocols??!1):i}var MarkedHighlight;!function(n){function t(n){return t=>{"string"==typeof t&&t!==n.text&&(n.escaped=!0,n.text=t)}}n.markedHighlight=function(n){if("function"==typeof n&&(n={highlight:n}),!n||"function"!=typeof n.highlight)throw new Error("Must provide highlight function");return{async:!!n.async,walkTokens(e){if("code"!==e.type)return;if(n.async)return Promise.resolve(n.highlight(e.text,e.lang)).then(t(e));const o=n.highlight(e.text,e.lang);if(o instanceof Promise)throw new Error("markedHighlight is not set to async but the highlight function is async. Set the async option to true on markedHighlight to await the async highlight function.");t(e)(o)},renderer:{code({text:n,lang:t,escaped:e}){const o=t?` class="language-${s(t)}"`:"";return n=n.replace(/\n$/,""),`<pre><code${o}>${e?n:s(n,!0)}\n</code></pre>`}}}};const e=/[&<>"']/,o=new RegExp(e.source,"g"),r=/[<>"']|&(?!(#\d{1,7}|#[Xx][a-fA-F0-9]{1,6}|\w+);)/,i=new RegExp(r.source,"g"),a={"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"},d=n=>a[n];function s(n,t){if(t){if(e.test(n))return n.replace(o,d)}else if(r.test(n))return n.replace(i,d);return n}}(MarkedHighlight||(MarkedHighlight={}));
+import{basicMarkupHtmlTags as b,hookDomPurifyHrefAndSrcSanitizer as x}from"../../../../base/browser/dom.js";import w from"../../../../base/browser/dompurify/dompurify.js";import{allowedMarkdownAttr as y}from"../../../../base/browser/markdownRenderer.js";import*as k from"../../../../base/common/marked/marked.js";import{Schemas as h}from"../../../../base/common/network.js";import{escape as v}from"../../../../base/common/strings.js";import{tokenizeToString as L}from"../../../../editor/common/languages/textToHtmlTokenizer.js";import{markedGfmHeadingIdPlugin as E}from"./markedGfmHeadingIdPlugin.js";const D=`
+body {
+	padding: 10px 20px;
+	line-height: 22px;
+	max-width: 882px;
+	margin: 0 auto;
+}
+
+body *:last-child {
+	margin-bottom: 0;
+}
+
+img {
+	max-width: 100%;
+	max-height: 100%;
+}
+
+a {
+	text-decoration: var(--text-link-decoration);
+}
+
+a:hover {
+	text-decoration: underline;
+}
+
+a:focus,
+input:focus,
+select:focus,
+textarea:focus {
+	outline: 1px solid -webkit-focus-ring-color;
+	outline-offset: -1px;
+}
+
+hr {
+	border: 0;
+	height: 2px;
+	border-bottom: 2px solid;
+}
+
+h1 {
+	padding-bottom: 0.3em;
+	line-height: 1.2;
+	border-bottom-width: 1px;
+	border-bottom-style: solid;
+}
+
+h1, h2, h3 {
+	font-weight: normal;
+}
+
+table {
+	border-collapse: collapse;
+}
+
+th {
+	text-align: left;
+	border-bottom: 1px solid;
+}
+
+th,
+td {
+	padding: 5px 10px;
+}
+
+table > tbody > tr + tr > td {
+	border-top-width: 1px;
+	border-top-style: solid;
+}
+
+blockquote {
+	margin: 0 7px 0 5px;
+	padding: 0 16px 0 10px;
+	border-left-width: 5px;
+	border-left-style: solid;
+}
+
+code {
+	font-family: "SF Mono", Monaco, Menlo, Consolas, "Ubuntu Mono", "Liberation Mono", "DejaVu Sans Mono", "Courier New", monospace;
+}
+
+pre {
+	padding: 16px;
+	border-radius: 3px;
+	overflow: auto;
+}
+
+pre code {
+	font-family: var(--vscode-editor-font-family);
+	font-weight: var(--vscode-editor-font-weight);
+	font-size: var(--vscode-editor-font-size);
+	line-height: 1.5;
+	color: var(--vscode-editor-foreground);
+	tab-size: 4;
+}
+
+.monaco-tokenized-source {
+	white-space: pre;
+}
+
+/** Theming */
+
+.pre {
+	background-color: var(--vscode-textCodeBlock-background);
+}
+
+.vscode-high-contrast h1 {
+	border-color: rgb(0, 0, 0);
+}
+
+.vscode-light th {
+	border-color: rgba(0, 0, 0, 0.69);
+}
+
+.vscode-dark th {
+	border-color: rgba(255, 255, 255, 0.69);
+}
+
+.vscode-light h1,
+.vscode-light hr,
+.vscode-light td {
+	border-color: rgba(0, 0, 0, 0.18);
+}
+
+.vscode-dark h1,
+.vscode-dark hr,
+.vscode-dark td {
+	border-color: rgba(255, 255, 255, 0.18);
+}
+
+@media (forced-colors: active) and (prefers-color-scheme: light){
+	body {
+		forced-color-adjust: none;
+	}
+}
+
+@media (forced-colors: active) and (prefers-color-scheme: dark){
+	body {
+		forced-color-adjust: none;
+	}
+}
+`,M=[h.http,h.https,h.command];function T(a,i){const t=x(M,!0);try{return w.sanitize(a,{ALLOWED_TAGS:[...b,"checkbox","checklist"],ALLOWED_ATTR:[...y,"data-command","name","id","role","tabindex","x-dispatch","required","checked","placeholder","when-checked","checked-on"],...i?{ALLOW_UNKNOWN_PROTOCOLS:!0}:{}})}finally{t.dispose()}}async function P(a,i,t,r){const n=await new k.Marked(g.markedHighlight({async:!0,async highlight(s,c){if(typeof c!="string")return v(s);if(await i.whenInstalledExtensionsRegistered(),r?.token?.isCancellationRequested)return"";const l=t.getLanguageIdByLanguageName(c)??t.getLanguageIdByLanguageName(c.split(/\s+|:|,|(?!^)\{|\?]/,1)[0]);return L(t,s,l)}}),E(),...r?.markedExtensions??[]).parse(a,{async:!0});return r?.shouldSanitize??!0?T(n,r?.allowUnknownProtocols??!1):n}var g;(function(a){function i(e){if(typeof e=="function"&&(e={highlight:e}),!e||typeof e.highlight!="function")throw new Error("Must provide highlight function");return{async:!!e.async,walkTokens(o){if(o.type!=="code")return;if(e.async)return Promise.resolve(e.highlight(o.text,o.lang)).then(t(o));const d=e.highlight(o.text,o.lang);if(d instanceof Promise)throw new Error("markedHighlight is not set to async but the highlight function is async. Set the async option to true on markedHighlight to await the async highlight function.");t(o)(d)},renderer:{code({text:o,lang:d,escaped:f}){const m=d?` class="language-${u(d)}"`:"";return o=o.replace(/\n$/,""),`<pre><code${m}>${f?o:u(o,!0)}
+</code></pre>`}}}}a.markedHighlight=i;function t(e){return o=>{typeof o=="string"&&o!==e.text&&(e.escaped=!0,e.text=o)}}const r=/[&<>"']/,p=new RegExp(r.source,"g"),n=/[<>"']|&(?!(#\d{1,7}|#[Xx][a-fA-F0-9]{1,6}|\w+);)/,s=new RegExp(n.source,"g"),c={"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"},l=e=>c[e];function u(e,o){if(o){if(r.test(e))return e.replace(p,l)}else if(n.test(e))return e.replace(s,l);return e}})(g||(g={}));export{D as DEFAULT_MARKDOWN_STYLES,P as renderMarkdownDocument};

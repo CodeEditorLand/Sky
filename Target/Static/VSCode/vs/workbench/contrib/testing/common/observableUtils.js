@@ -1,1 +1,1 @@
-export function onObservableChange(e,n){const r={beginUpdate(){},endUpdate(){},handlePossibleChange(e){e.reportChanges()},handleChange(e,r){n(r)}};return e.addObserver(r),{dispose(){e.removeObserver(r)}}}
+function s(e,n){const s={beginUpdate(){},endUpdate(){},handlePossibleChange(e){e.reportChanges()},handleChange(e,s){n(s)}};return e.addObserver(s),{dispose(){e.removeObserver(s)}}}export{s as onObservableChange};

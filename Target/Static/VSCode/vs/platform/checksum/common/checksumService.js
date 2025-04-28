@@ -1,1 +1,1 @@
-import{createDecorator}from"../../instantiation/common/instantiation.js";export const IChecksumService=createDecorator("checksumService");
+import{createDecorator as e}from"../../instantiation/common/instantiation.js";const r=e("checksumService");export{r as IChecksumService};

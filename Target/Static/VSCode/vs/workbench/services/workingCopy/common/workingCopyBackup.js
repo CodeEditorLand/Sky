@@ -1,1 +1,1 @@
-import{createDecorator}from"../../../../platform/instantiation/common/instantiation.js";export const IWorkingCopyBackupService=createDecorator("workingCopyBackupService");
+import{createDecorator as o}from"../../../../platform/instantiation/common/instantiation.js";const e=o("workingCopyBackupService");export{e as IWorkingCopyBackupService};

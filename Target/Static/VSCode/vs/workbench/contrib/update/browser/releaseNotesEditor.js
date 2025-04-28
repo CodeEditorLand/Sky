@@ -1,1 +1,146 @@
-var __decorate=this&&this.__decorate||function(t,e,n,o){var r,i=arguments.length,s=i<3?e:null===o?o=Object.getOwnPropertyDescriptor(e,n):o;if("object"==typeof Reflect&&"function"==typeof Reflect.decorate)s=Reflect.decorate(t,e,n,o);else for(var a=t.length-1;a>=0;a--)(r=t[a])&&(s=(i<3?r(s):i>3?r(e,n,s):r(e,n))||s);return i>3&&s&&Object.defineProperty(e,n,s),s},__param=this&&this.__param||function(t,e){return function(n,o){e(n,o,t)}};import"./media/releasenoteseditor.css";import{CancellationToken}from"../../../../base/common/cancellation.js";import{onUnexpectedError}from"../../../../base/common/errors.js";import{escapeMarkdownSyntaxTokens}from"../../../../base/common/htmlContent.js";import{KeybindingParser}from"../../../../base/common/keybindingParser.js";import{escape}from"../../../../base/common/strings.js";import{URI}from"../../../../base/common/uri.js";import{generateUuid}from"../../../../base/common/uuid.js";import{TokenizationRegistry}from"../../../../editor/common/languages.js";import{generateTokensCSSForColorMap}from"../../../../editor/common/languages/supports/tokenization.js";import{ILanguageService}from"../../../../editor/common/languages/language.js";import*as nls from"../../../../nls.js";import{IEnvironmentService}from"../../../../platform/environment/common/environment.js";import{IKeybindingService}from"../../../../platform/keybinding/common/keybinding.js";import{IOpenerService}from"../../../../platform/opener/common/opener.js";import{IProductService}from"../../../../platform/product/common/productService.js";import{asTextOrError,IRequestService}from"../../../../platform/request/common/request.js";import{DEFAULT_MARKDOWN_STYLES,renderMarkdownDocument}from"../../markdown/browser/markdownDocumentRenderer.js";import{IWebviewWorkbenchService}from"../../webviewPanel/browser/webviewWorkbenchService.js";import{IEditorGroupsService}from"../../../services/editor/common/editorGroupsService.js";import{ACTIVE_GROUP,IEditorService}from"../../../services/editor/common/editorService.js";import{IExtensionService}from"../../../services/extensions/common/extensions.js";import{getTelemetryLevel,supportsTelemetry}from"../../../../platform/telemetry/common/telemetryUtils.js";import{IConfigurationService}from"../../../../platform/configuration/common/configuration.js";import{DisposableStore}from"../../../../base/common/lifecycle.js";import{SimpleSettingRenderer}from"../../markdown/browser/markdownSettingRenderer.js";import{IInstantiationService}from"../../../../platform/instantiation/common/instantiation.js";import{Schemas}from"../../../../base/common/network.js";import{ICodeEditorService}from"../../../../editor/browser/services/codeEditorService.js";import{dirname}from"../../../../base/common/resources.js";import{asWebviewUri}from"../../webview/common/webview.js";let ReleaseNotesManager=class{constructor(t,e,n,o,r,i,s,a,c,d,l,p,m){this._environmentService=t,this._keybindingService=e,this._languageService=n,this._openerService=o,this._requestService=r,this._configurationService=i,this._editorService=s,this._editorGroupService=a,this._codeEditorService=c,this._webviewWorkbenchService=d,this._extensionService=l,this._productService=p,this._instantiationService=m,this._releaseNotesCache=new Map,this._currentReleaseNotes=void 0,this.disposables=new DisposableStore,TokenizationRegistry.onDidChange((()=>this.updateHtml())),i.onDidChangeConfiguration(this.onDidChangeConfiguration,this,this.disposables),d.onDidChangeActiveWebviewEditor(this.onDidChangeActiveWebviewEditor,this,this.disposables),this._simpleSettingRenderer=this._instantiationService.createInstance(SimpleSettingRenderer)}async updateHtml(){if(!this._currentReleaseNotes||!this._lastMeta)return;const t=await this.renderBody(this._lastMeta);this._currentReleaseNotes&&this._currentReleaseNotes.webview.setHtml(t)}async getBase(t){if(t){const t=this._codeEditorService.getActiveCodeEditor()?.getModel()?.uri;if(t)return dirname(t)}return URI.parse("https://code.visualstudio.com/raw")}async show(t,e){const n=await this.loadReleaseNotes(t,e),o=await this.getBase(e);this._lastMeta={text:n,base:o};const r=await this.renderBody(this._lastMeta),i=nls.localize("releaseNotesInputName","Release Notes: {0}",t),s=this._editorService.activeEditorPane;if(this._currentReleaseNotes)this._currentReleaseNotes.setName(i),this._currentReleaseNotes.webview.setHtml(r),this._webviewWorkbenchService.revealWebview(this._currentReleaseNotes,s?s.group:this._editorGroupService.activeGroup,!1);else{this._currentReleaseNotes=this._webviewWorkbenchService.openWebview({title:i,options:{tryRestoreScrollPosition:!0,enableFindWidget:!0,disableServiceWorker:!e},contentOptions:{localResourceRoots:e?[o]:[],allowScripts:!0},extension:void 0},"releaseNotes",i,{group:ACTIVE_GROUP,preserveFocus:!1}),this._currentReleaseNotes.webview.onDidClickLink((t=>this.onDidClickLink(URI.parse(t))));const t=new DisposableStore;t.add(this._currentReleaseNotes.webview.onMessage((t=>{if("showReleaseNotes"===t.message.type)this._configurationService.updateValue("update.showReleaseNotes",t.message.value);else if("clickSetting"===t.message.type){const e=this._currentReleaseNotes?.webview.container.offsetLeft+t.message.value.x,n=this._currentReleaseNotes?.webview.container.offsetTop+t.message.value.y;this._simpleSettingRenderer.updateSetting(URI.parse(t.message.value.uri),e,n)}}))),t.add(this._currentReleaseNotes.onWillDispose((()=>{t.dispose(),this._currentReleaseNotes=void 0}))),this._currentReleaseNotes.webview.setHtml(r)}return!0}async loadReleaseNotes(t,e){const n=/^(\d+\.\d+)\./.exec(t);if(!n)throw new Error("not found");const o=`https://code.visualstudio.com/raw/v${n[1].replace(/\./g,"_")}.md`,r=nls.localize("unassigned","unassigned"),i=t=>escape(t).replace(/\\/g,"\\\\"),s=t=>{const e=(t,e)=>{const n=this._keybindingService.lookupKeybinding(e);return n&&n.getLabel()||r},n=(t,e)=>{const n=KeybindingParser.parseKeybinding(e);if(!n)return r;const o=this._keybindingService.resolveKeybinding(n);return 0===o.length?r:o[0].getLabel()||r};return t.replace(/`kb\(([a-z.\d\-]+)\)`/gi,((t,n)=>{const o=e(0,n);return o?`<code title="${n}">${i(o)}</code>`:o})).replace(/`kbstyle\(([^\)]+)\)`/gi,((t,e)=>{const o=n(0,e);return o?`<code title="${e}">${i(o)}</code>`:o})).replace(/kb\(([a-z.\d\-]+)\)/gi,((t,n)=>escapeMarkdownSyntaxTokens(e(0,n)))).replace(/kbstyle\(([^\)]+)\)/gi,((t,e)=>escapeMarkdownSyntaxTokens(n(0,e))))},a=async()=>{let t;try{if(e){const e=this._codeEditorService.getActiveCodeEditor()?.getModel()?.getValue();t=e?e.substring(e.indexOf("#")):void 0}else t=await asTextOrError(await this._requestService.request({url:o},CancellationToken.None))}catch{throw new Error("Failed to fetch release notes")}if(!t||!/^#\s/.test(t)&&!e)throw new Error("Invalid release notes");return s(t)};return e?a():(this._releaseNotesCache.has(t)||this._releaseNotesCache.set(t,(async()=>{try{return await a()}catch(e){throw this._releaseNotesCache.delete(t),e}})()),this._releaseNotesCache.get(t))}async onDidClickLink(t){t.scheme===Schemas.codeSetting||this.addGAParameters(t,"ReleaseNotes").then((t=>this._openerService.open(t,{allowCommands:["workbench.action.openSettings"]}))).then(void 0,onUnexpectedError)}async addGAParameters(t,e,n="1"){return supportsTelemetry(this._productService,this._environmentService)&&3===getTelemetryLevel(this._configurationService)&&"https"===t.scheme&&"code.visualstudio.com"===t.authority?t.with({query:`${t.query?t.query+"&":""}utm_source=VsCode&utm_medium=${encodeURIComponent(e)}&utm_content=${encodeURIComponent(n)}`}):t}async renderBody(t){const e=generateUuid(),n=await renderMarkdownDocument(t.text,this._extensionService,this._languageService,{shouldSanitize:!1,markedExtensions:[{renderer:{html:this._simpleSettingRenderer.getHtmlRenderer(),codespan:this._simpleSettingRenderer.getCodeSpanRenderer()}}]}),o=TokenizationRegistry.getColorMap(),r=o?generateTokensCSSForColorMap(o):"",i=Boolean(this._configurationService.getValue("update.showReleaseNotes"));return`<!DOCTYPE html>\n\t\t<html>\n\t\t\t<head>\n\t\t\t\t<base href="${asWebviewUri(t.base).toString(!0)}/" >\n\t\t\t\t<meta http-equiv="Content-type" content="text/html;charset=UTF-8">\n\t\t\t\t<meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src https: data:; media-src https:; style-src 'nonce-${e}' https://code.visualstudio.com; script-src 'nonce-${e}';">\n\t\t\t\t<style nonce="${e}">\n\t\t\t\t\t${DEFAULT_MARKDOWN_STYLES}\n\t\t\t\t\t${r}\n\n\t\t\t\t\t/* codesetting */\n\n\t\t\t\t\tcode:has(.codesetting) {\n\t\t\t\t\t\tbackground-color: var(--vscode-textPreformat-background);\n\t\t\t\t\t\tcolor: var(--vscode-textPreformat-foreground);\n\t\t\t\t\t\tpadding-left: 1px;\n\t\t\t\t\t\tmargin-right: 3px;\n\t\t\t\t\t\tpadding-right: 0px;\n\t\t\t\t\t}\n\n\t\t\t\t\tcode:has(.codesetting):focus {\n\t\t\t\t\t\tborder: 1px solid var(--vscode-button-border, transparent);\n\t\t\t\t\t}\n\n\t\t\t\t\t.codesetting {\n\t\t\t\t\t\tcolor: var(--vscode-textPreformat-foreground);\n\t\t\t\t\t\tpadding: 0px 1px 1px 0px;\n\t\t\t\t\t\tfont-size: 0px;\n\t\t\t\t\t\toverflow: hidden;\n\t\t\t\t\t\ttext-overflow: ellipsis;\n\t\t\t\t\t\toutline-offset: 2px !important;\n\t\t\t\t\t\tbox-sizing: border-box;\n\t\t\t\t\t\ttext-align: center;\n\t\t\t\t\t\tcursor: pointer;\n\t\t\t\t\t\tdisplay: inline;\n\t\t\t\t\t\tmargin-right: 3px;\n\t\t\t\t\t}\n\t\t\t\t\t.codesetting svg {\n\t\t\t\t\t\tfont-size: 12px;\n\t\t\t\t\t\ttext-align: center;\n\t\t\t\t\t\tcursor: pointer;\n\t\t\t\t\t\tborder: 1px solid var(--vscode-button-secondaryBorder, transparent);\n\t\t\t\t\t\toutline: 1px solid transparent;\n\t\t\t\t\t\tline-height: 9px;\n\t\t\t\t\t\tmargin-bottom: -5px;\n\t\t\t\t\t\tpadding-left: 0px;\n\t\t\t\t\t\tpadding-top: 2px;\n\t\t\t\t\t\tpadding-bottom: 2px;\n\t\t\t\t\t\tpadding-right: 2px;\n\t\t\t\t\t\tdisplay: inline-block;\n\t\t\t\t\t\ttext-decoration: none;\n\t\t\t\t\t\ttext-rendering: auto;\n\t\t\t\t\t\ttext-transform: none;\n\t\t\t\t\t\t-webkit-font-smoothing: antialiased;\n\t\t\t\t\t\t-moz-osx-font-smoothing: grayscale;\n\t\t\t\t\t\tuser-select: none;\n\t\t\t\t\t\t-webkit-user-select: none;\n\t\t\t\t\t}\n\t\t\t\t\t.codesetting .setting-name {\n\t\t\t\t\t\tfont-size: 13px;\n\t\t\t\t\t\tpadding-left: 2px;\n\t\t\t\t\t\tpadding-right: 3px;\n\t\t\t\t\t\tpadding-top: 1px;\n\t\t\t\t\t\tpadding-bottom: 1px;\n\t\t\t\t\t\tmargin-top: -3px;\n\t\t\t\t\t}\n\t\t\t\t\t.codesetting:hover {\n\t\t\t\t\t\tcolor: var(--vscode-textPreformat-foreground) !important;\n\t\t\t\t\t\ttext-decoration: none !important;\n\t\t\t\t\t}\n\t\t\t\t\tcode:has(.codesetting):hover {\n\t\t\t\t\t\tfilter: brightness(140%);\n\t\t\t\t\t\ttext-decoration: none !important;\n\t\t\t\t\t}\n\t\t\t\t\t.codesetting:focus {\n\t\t\t\t\t\toutline: 0 !important;\n\t\t\t\t\t\ttext-decoration: none !important;\n\t\t\t\t\t\tcolor: var(--vscode-button-hoverForeground) !important;\n\t\t\t\t\t}\n\t\t\t\t\t.codesetting .separator {\n\t\t\t\t\t\twidth: 1px;\n\t\t\t\t\t\theight: 14px;\n\t\t\t\t\t\tmargin-bottom: -3px;\n\t\t\t\t\t\tdisplay: inline-block;\n\t\t\t\t\t\tbackground-color: var(--vscode-editor-background);\n\t\t\t\t\t\tfont-size: 12px;\n\t\t\t\t\t\tmargin-right: 4px;\n\t\t\t\t\t}\n\n\t\t\t\t\theader { display: flex; align-items: center; padding-top: 1em; }\n\t\t\t\t</style>\n\t\t\t</head>\n\t\t\t<body>\n\t\t\t\t${n}\n\t\t\t\t<script nonce="${e}">\n\t\t\t\t\tconst vscode = acquireVsCodeApi();\n\t\t\t\t\tconst container = document.createElement('p');\n\t\t\t\t\tcontainer.style.display = 'flex';\n\t\t\t\t\tcontainer.style.alignItems = 'center';\n\n\t\t\t\t\tconst input = document.createElement('input');\n\t\t\t\t\tinput.type = 'checkbox';\n\t\t\t\t\tinput.id = 'showReleaseNotes';\n\t\t\t\t\tinput.checked = ${i};\n\t\t\t\t\tcontainer.appendChild(input);\n\n\t\t\t\t\tconst label = document.createElement('label');\n\t\t\t\t\tlabel.htmlFor = 'showReleaseNotes';\n\t\t\t\t\tlabel.textContent = '${nls.localize("showOnUpdate","Show release notes after an update")}';\n\t\t\t\t\tcontainer.appendChild(label);\n\n\t\t\t\t\tconst beforeElement = document.querySelector("body > h1")?.nextElementSibling;\n\t\t\t\t\tif (beforeElement) {\n\t\t\t\t\t\tdocument.body.insertBefore(container, beforeElement);\n\t\t\t\t\t} else {\n\t\t\t\t\t\tdocument.body.appendChild(container);\n\t\t\t\t\t}\n\n\t\t\t\t\twindow.addEventListener('message', event => {\n\t\t\t\t\t\tif (event.data.type === 'showReleaseNotes') {\n\t\t\t\t\t\t\tinput.checked = event.data.value;\n\t\t\t\t\t\t}\n\t\t\t\t\t});\n\n\t\t\t\t\twindow.addEventListener('click', event => {\n\t\t\t\t\t\tconst href = event.target.href ?? event.target.parentElement?.href ?? event.target.parentElement?.parentElement?.href;\n\t\t\t\t\t\tif (href && (href.startsWith('${Schemas.codeSetting}'))) {\n\t\t\t\t\t\t\tvscode.postMessage({ type: 'clickSetting', value: { uri: href, x: event.clientX, y: event.clientY }});\n\t\t\t\t\t\t}\n\t\t\t\t\t});\n\n\t\t\t\t\twindow.addEventListener('keypress', event => {\n\t\t\t\t\t\tif (event.keyCode === 13) {\n\t\t\t\t\t\t\tif (event.target.children.length > 0 && event.target.children[0].href) {\n\t\t\t\t\t\t\t\tconst clientRect = event.target.getBoundingClientRect();\n\t\t\t\t\t\t\t\tvscode.postMessage({ type: 'clickSetting', value: { uri: event.target.children[0].href, x: clientRect.right , y: clientRect.bottom }});\n\t\t\t\t\t\t\t}\n\t\t\t\t\t\t}\n\t\t\t\t\t});\n\n\t\t\t\t\tinput.addEventListener('change', event => {\n\t\t\t\t\t\tvscode.postMessage({ type: 'showReleaseNotes', value: input.checked }, '*');\n\t\t\t\t\t});\n\t\t\t\t<\/script>\n\t\t\t</body>\n\t\t</html>`}onDidChangeConfiguration(t){t.affectsConfiguration("update.showReleaseNotes")&&this.updateCheckboxWebview()}onDidChangeActiveWebviewEditor(t){t&&t===this._currentReleaseNotes&&this.updateCheckboxWebview()}updateCheckboxWebview(){this._currentReleaseNotes&&this._currentReleaseNotes.webview.postMessage({type:"showReleaseNotes",value:this._configurationService.getValue("update.showReleaseNotes")})}};ReleaseNotesManager=__decorate([__param(0,IEnvironmentService),__param(1,IKeybindingService),__param(2,ILanguageService),__param(3,IOpenerService),__param(4,IRequestService),__param(5,IConfigurationService),__param(6,IEditorService),__param(7,IEditorGroupsService),__param(8,ICodeEditorService),__param(9,IWebviewWorkbenchService),__param(10,IExtensionService),__param(11,IProductService),__param(12,IInstantiationService)],ReleaseNotesManager);export{ReleaseNotesManager};
+var E=function(v,e,t,o){var a=arguments.length,i=a<3?e:o===null?o=Object.getOwnPropertyDescriptor(e,t):o,r;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")i=Reflect.decorate(v,e,t,o);else for(var s=v.length-1;s>=0;s--)(r=v[s])&&(i=(a<3?r(i):a>3?r(e,t,i):r(e,t))||i);return a>3&&i&&Object.defineProperty(e,t,i),i},l=function(v,e){return function(t,o){e(t,o,v)}};import"./media/releasenoteseditor.css";import{CancellationToken as I}from"../../../../base/common/cancellation.js";import{onUnexpectedError as M}from"../../../../base/common/errors.js";import{escapeMarkdownSyntaxTokens as y}from"../../../../base/common/htmlContent.js";import{KeybindingParser as $}from"../../../../base/common/keybindingParser.js";import{escape as W}from"../../../../base/common/strings.js";import{URI as b}from"../../../../base/common/uri.js";import{generateUuid as D}from"../../../../base/common/uuid.js";import{TokenizationRegistry as S}from"../../../../editor/common/languages.js";import{generateTokensCSSForColorMap as L}from"../../../../editor/common/languages/supports/tokenization.js";import{ILanguageService as P}from"../../../../editor/common/languages/language.js";import*as w from"../../../../nls.js";import{IEnvironmentService as T}from"../../../../platform/environment/common/environment.js";import{IKeybindingService as z}from"../../../../platform/keybinding/common/keybinding.js";import{IOpenerService as U}from"../../../../platform/opener/common/opener.js";import{IProductService as q}from"../../../../platform/product/common/productService.js";import{asTextOrError as A,IRequestService as O}from"../../../../platform/request/common/request.js";import{DEFAULT_MARKDOWN_STYLES as B,renderMarkdownDocument as K}from"../../markdown/browser/markdownDocumentRenderer.js";import{IWebviewWorkbenchService as G}from"../../webviewPanel/browser/webviewWorkbenchService.js";import{IEditorGroupsService as H}from"../../../services/editor/common/editorGroupsService.js";import{ACTIVE_GROUP as V,IEditorService as F}from"../../../services/editor/common/editorService.js";import{IExtensionService as j}from"../../../services/extensions/common/extensions.js";import{getTelemetryLevel as Y,supportsTelemetry as X}from"../../../../platform/telemetry/common/telemetryUtils.js";import{IConfigurationService as J}from"../../../../platform/configuration/common/configuration.js";import{DisposableStore as R}from"../../../../base/common/lifecycle.js";import{SimpleSettingRenderer as Q}from"../../markdown/browser/markdownSettingRenderer.js";import{IInstantiationService as Z}from"../../../../platform/instantiation/common/instantiation.js";import{Schemas as k}from"../../../../base/common/network.js";import{ICodeEditorService as ee}from"../../../../editor/browser/services/codeEditorService.js";import{dirname as te}from"../../../../base/common/resources.js";import{asWebviewUri as oe}from"../../webview/common/webview.js";let _=class{constructor(e,t,o,a,i,r,s,m,p,g,n,u,f){this._environmentService=e,this._keybindingService=t,this._languageService=o,this._openerService=a,this._requestService=i,this._configurationService=r,this._editorService=s,this._editorGroupService=m,this._codeEditorService=p,this._webviewWorkbenchService=g,this._extensionService=n,this._productService=u,this._instantiationService=f,this._releaseNotesCache=new Map,this._currentReleaseNotes=void 0,this.disposables=new R,S.onDidChange(()=>this.updateHtml()),r.onDidChangeConfiguration(this.onDidChangeConfiguration,this,this.disposables),g.onDidChangeActiveWebviewEditor(this.onDidChangeActiveWebviewEditor,this,this.disposables),this._simpleSettingRenderer=this._instantiationService.createInstance(Q)}async updateHtml(){if(!this._currentReleaseNotes||!this._lastMeta)return;const e=await this.renderBody(this._lastMeta);this._currentReleaseNotes&&this._currentReleaseNotes.webview.setHtml(e)}async getBase(e){if(e){const t=this._codeEditorService.getActiveCodeEditor()?.getModel()?.uri;if(t)return te(t)}return b.parse("https://code.visualstudio.com/raw")}async show(e,t){const o=await this.loadReleaseNotes(e,t),a=await this.getBase(t);this._lastMeta={text:o,base:a};const i=await this.renderBody(this._lastMeta),r=w.localize("releaseNotesInputName","Release Notes: {0}",e),s=this._editorService.activeEditorPane;if(this._currentReleaseNotes)this._currentReleaseNotes.setName(r),this._currentReleaseNotes.webview.setHtml(i),this._webviewWorkbenchService.revealWebview(this._currentReleaseNotes,s?s.group:this._editorGroupService.activeGroup,!1);else{this._currentReleaseNotes=this._webviewWorkbenchService.openWebview({title:r,options:{tryRestoreScrollPosition:!0,enableFindWidget:!0,disableServiceWorker:!t},contentOptions:{localResourceRoots:t?[a]:[],allowScripts:!0},extension:void 0},"releaseNotes",r,{group:V,preserveFocus:!1}),this._currentReleaseNotes.webview.onDidClickLink(p=>this.onDidClickLink(b.parse(p)));const m=new R;m.add(this._currentReleaseNotes.webview.onMessage(p=>{if(p.message.type==="showReleaseNotes")this._configurationService.updateValue("update.showReleaseNotes",p.message.value);else if(p.message.type==="clickSetting"){const g=this._currentReleaseNotes?.webview.container.offsetLeft+p.message.value.x,n=this._currentReleaseNotes?.webview.container.offsetTop+p.message.value.y;this._simpleSettingRenderer.updateSetting(b.parse(p.message.value.uri),g,n)}})),m.add(this._currentReleaseNotes.onWillDispose(()=>{m.dispose(),this._currentReleaseNotes=void 0})),this._currentReleaseNotes.webview.setHtml(i)}return!0}async loadReleaseNotes(e,t){const o=/^(\d+\.\d+)\./.exec(e);if(!o)throw new Error("not found");const r=`https://code.visualstudio.com/raw/v${o[1].replace(/\./g,"_")}.md`,s=w.localize("unassigned","unassigned"),m=n=>W(n).replace(/\\/g,"\\\\"),p=n=>{const u=(h,c)=>{const d=this._keybindingService.lookupKeybinding(c);return d&&d.getLabel()||s},f=(h,c)=>{const d=$.parseKeybinding(c);if(!d)return s;const x=this._keybindingService.resolveKeybinding(d);return x.length===0?s:x[0].getLabel()||s},N=(h,c)=>{const d=u(h,c);return d&&`<code title="${c}">${m(d)}</code>`},C=(h,c)=>{const d=f(h,c);return d&&`<code title="${c}">${m(d)}</code>`};return n.replace(/`kb\(([a-z.\d\-]+)\)`/gi,N).replace(/`kbstyle\(([^\)]+)\)`/gi,C).replace(/kb\(([a-z.\d\-]+)\)/gi,(h,c)=>y(u(h,c))).replace(/kbstyle\(([^\)]+)\)/gi,(h,c)=>y(f(h,c)))},g=async()=>{let n;try{if(t){const u=this._codeEditorService.getActiveCodeEditor()?.getModel()?.getValue();n=u?u.substring(u.indexOf("#")):void 0}else n=await A(await this._requestService.request({url:r},I.None))}catch{throw new Error("Failed to fetch release notes")}if(!n||!/^#\s/.test(n)&&!t)throw new Error("Invalid release notes");return p(n)};return t?g():(this._releaseNotesCache.has(e)||this._releaseNotesCache.set(e,(async()=>{try{return await g()}catch(n){throw this._releaseNotesCache.delete(e),n}})()),this._releaseNotesCache.get(e))}async onDidClickLink(e){e.scheme===k.codeSetting||this.addGAParameters(e,"ReleaseNotes").then(t=>this._openerService.open(t,{allowCommands:["workbench.action.openSettings"]})).then(void 0,M)}async addGAParameters(e,t,o="1"){return X(this._productService,this._environmentService)&&Y(this._configurationService)===3&&e.scheme==="https"&&e.authority==="code.visualstudio.com"?e.with({query:`${e.query?e.query+"&":""}utm_source=VsCode&utm_medium=${encodeURIComponent(t)}&utm_content=${encodeURIComponent(o)}`}):e}async renderBody(e){const t=D(),o=await K(e.text,this._extensionService,this._languageService,{shouldSanitize:!1,markedExtensions:[{renderer:{html:this._simpleSettingRenderer.getHtmlRenderer(),codespan:this._simpleSettingRenderer.getCodeSpanRenderer()}}]}),a=S.getColorMap(),i=a?L(a):"",r=!!this._configurationService.getValue("update.showReleaseNotes");return`<!DOCTYPE html>
+		<html>
+			<head>
+				<base href="${oe(e.base).toString(!0)}/" >
+				<meta http-equiv="Content-type" content="text/html;charset=UTF-8">
+				<meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src https: data:; media-src https:; style-src 'nonce-${t}' https://code.visualstudio.com; script-src 'nonce-${t}';">
+				<style nonce="${t}">
+					${B}
+					${i}
+
+					/* codesetting */
+
+					code:has(.codesetting) {
+						background-color: var(--vscode-textPreformat-background);
+						color: var(--vscode-textPreformat-foreground);
+						padding-left: 1px;
+						margin-right: 3px;
+						padding-right: 0px;
+					}
+
+					code:has(.codesetting):focus {
+						border: 1px solid var(--vscode-button-border, transparent);
+					}
+
+					.codesetting {
+						color: var(--vscode-textPreformat-foreground);
+						padding: 0px 1px 1px 0px;
+						font-size: 0px;
+						overflow: hidden;
+						text-overflow: ellipsis;
+						outline-offset: 2px !important;
+						box-sizing: border-box;
+						text-align: center;
+						cursor: pointer;
+						display: inline;
+						margin-right: 3px;
+					}
+					.codesetting svg {
+						font-size: 12px;
+						text-align: center;
+						cursor: pointer;
+						border: 1px solid var(--vscode-button-secondaryBorder, transparent);
+						outline: 1px solid transparent;
+						line-height: 9px;
+						margin-bottom: -5px;
+						padding-left: 0px;
+						padding-top: 2px;
+						padding-bottom: 2px;
+						padding-right: 2px;
+						display: inline-block;
+						text-decoration: none;
+						text-rendering: auto;
+						text-transform: none;
+						-webkit-font-smoothing: antialiased;
+						-moz-osx-font-smoothing: grayscale;
+						user-select: none;
+						-webkit-user-select: none;
+					}
+					.codesetting .setting-name {
+						font-size: 13px;
+						padding-left: 2px;
+						padding-right: 3px;
+						padding-top: 1px;
+						padding-bottom: 1px;
+						margin-top: -3px;
+					}
+					.codesetting:hover {
+						color: var(--vscode-textPreformat-foreground) !important;
+						text-decoration: none !important;
+					}
+					code:has(.codesetting):hover {
+						filter: brightness(140%);
+						text-decoration: none !important;
+					}
+					.codesetting:focus {
+						outline: 0 !important;
+						text-decoration: none !important;
+						color: var(--vscode-button-hoverForeground) !important;
+					}
+					.codesetting .separator {
+						width: 1px;
+						height: 14px;
+						margin-bottom: -3px;
+						display: inline-block;
+						background-color: var(--vscode-editor-background);
+						font-size: 12px;
+						margin-right: 4px;
+					}
+
+					header { display: flex; align-items: center; padding-top: 1em; }
+				</style>
+			</head>
+			<body>
+				${o}
+				<script nonce="${t}">
+					const vscode = acquireVsCodeApi();
+					const container = document.createElement('p');
+					container.style.display = 'flex';
+					container.style.alignItems = 'center';
+
+					const input = document.createElement('input');
+					input.type = 'checkbox';
+					input.id = 'showReleaseNotes';
+					input.checked = ${r};
+					container.appendChild(input);
+
+					const label = document.createElement('label');
+					label.htmlFor = 'showReleaseNotes';
+					label.textContent = '${w.localize("showOnUpdate","Show release notes after an update")}';
+					container.appendChild(label);
+
+					const beforeElement = document.querySelector("body > h1")?.nextElementSibling;
+					if (beforeElement) {
+						document.body.insertBefore(container, beforeElement);
+					} else {
+						document.body.appendChild(container);
+					}
+
+					window.addEventListener('message', event => {
+						if (event.data.type === 'showReleaseNotes') {
+							input.checked = event.data.value;
+						}
+					});
+
+					window.addEventListener('click', event => {
+						const href = event.target.href ?? event.target.parentElement?.href ?? event.target.parentElement?.parentElement?.href;
+						if (href && (href.startsWith('${k.codeSetting}'))) {
+							vscode.postMessage({ type: 'clickSetting', value: { uri: href, x: event.clientX, y: event.clientY }});
+						}
+					});
+
+					window.addEventListener('keypress', event => {
+						if (event.keyCode === 13) {
+							if (event.target.children.length > 0 && event.target.children[0].href) {
+								const clientRect = event.target.getBoundingClientRect();
+								vscode.postMessage({ type: 'clickSetting', value: { uri: event.target.children[0].href, x: clientRect.right , y: clientRect.bottom }});
+							}
+						}
+					});
+
+					input.addEventListener('change', event => {
+						vscode.postMessage({ type: 'showReleaseNotes', value: input.checked }, '*');
+					});
+				</script>
+			</body>
+		</html>`}onDidChangeConfiguration(e){e.affectsConfiguration("update.showReleaseNotes")&&this.updateCheckboxWebview()}onDidChangeActiveWebviewEditor(e){e&&e===this._currentReleaseNotes&&this.updateCheckboxWebview()}updateCheckboxWebview(){this._currentReleaseNotes&&this._currentReleaseNotes.webview.postMessage({type:"showReleaseNotes",value:this._configurationService.getValue("update.showReleaseNotes")})}};_=E([l(0,T),l(1,z),l(2,P),l(3,U),l(4,O),l(5,J),l(6,F),l(7,H),l(8,ee),l(9,G),l(10,j),l(11,q),l(12,Z)],_);export{_ as ReleaseNotesManager};

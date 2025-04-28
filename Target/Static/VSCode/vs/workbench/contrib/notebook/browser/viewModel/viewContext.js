@@ -1,1 +1,1 @@
-export class ViewContext{constructor(t,e,o){this.notebookOptions=t,this.eventDispatcher=e,this.getBaseCellEditorOptions=o}}
+class i{constructor(t,s,e){this.notebookOptions=t,this.eventDispatcher=s,this.getBaseCellEditorOptions=e}}export{i as ViewContext};

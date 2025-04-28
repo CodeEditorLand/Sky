@@ -1,1 +1,1 @@
-import{createDecorator}from"../../../platform/instantiation/common/instantiation.js";export const IExtHostInitDataService=createDecorator("IExtHostInitDataService");
+import{createDecorator as t}from"../../../platform/instantiation/common/instantiation.js";const o=t("IExtHostInitDataService");export{o as IExtHostInitDataService};

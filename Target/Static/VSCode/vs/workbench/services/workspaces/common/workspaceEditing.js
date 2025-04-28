@@ -1,1 +1,1 @@
-import{createDecorator}from"../../../../platform/instantiation/common/instantiation.js";export const IWorkspaceEditingService=createDecorator("workspaceEditingService");
+import{createDecorator as e}from"../../../../platform/instantiation/common/instantiation.js";const o=e("workspaceEditingService");export{o as IWorkspaceEditingService};

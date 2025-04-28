@@ -1,1 +1,1 @@
-import{createDecorator}from"../../../platform/instantiation/common/instantiation.js";export const IMarkerDecorationsService=createDecorator("markerDecorationsService");
+import{createDecorator as r}from"../../../platform/instantiation/common/instantiation.js";const o=r("markerDecorationsService");export{o as IMarkerDecorationsService};

@@ -1,1 +1,1 @@
-import{createDecorator}from"../../instantiation/common/instantiation.js";export const IUriIdentityService=createDecorator("IUriIdentityService");
+import{createDecorator as e}from"../../instantiation/common/instantiation.js";const t=e("IUriIdentityService");export{t as IUriIdentityService};

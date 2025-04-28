@@ -1,1 +1,1 @@
-import{ViewPart}from"../../view/viewPart.js";export class AbstractEditContext extends ViewPart{}
+import{ViewPart as t}from"../../view/viewPart.js";class o extends t{}export{o as AbstractEditContext};

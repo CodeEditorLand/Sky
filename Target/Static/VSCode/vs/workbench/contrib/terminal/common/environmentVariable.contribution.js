@@ -1,1 +1,1 @@
-import{EnvironmentVariableService}from"./environmentVariableService.js";import{registerSingleton}from"../../../../platform/instantiation/common/extensions.js";import{IEnvironmentVariableService}from"./environmentVariable.js";registerSingleton(IEnvironmentVariableService,EnvironmentVariableService,1);
+import{EnvironmentVariableService as r}from"./environmentVariableService.js";import{registerSingleton as e}from"../../../../platform/instantiation/common/extensions.js";import{IEnvironmentVariableService as i}from"./environmentVariable.js";e(i,r,1);

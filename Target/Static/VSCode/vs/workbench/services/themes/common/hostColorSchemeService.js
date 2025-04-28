@@ -1,1 +1,1 @@
-import{createDecorator}from"../../../../platform/instantiation/common/instantiation.js";export const IHostColorSchemeService=createDecorator("hostColorSchemeService");
+import{createDecorator as e}from"../../../../platform/instantiation/common/instantiation.js";const r=e("hostColorSchemeService");export{r as IHostColorSchemeService};

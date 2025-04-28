@@ -1,1 +1,1 @@
-import{createDecorator}from"../../../../platform/instantiation/common/instantiation.js";export const INotebookKeymapService=createDecorator("notebookKeymapService");
+import{createDecorator as e}from"../../../../platform/instantiation/common/instantiation.js";const r=e("notebookKeymapService");export{r as INotebookKeymapService};

@@ -2,20 +2,23 @@
 import "@Source/Function/Stylesheet/Inner.css";
 
 import Meta from "@Source/Function/Meta.astro";
-import { Head } from "astro-capo";
+
+// import { Head } from "astro-capo";
 
 // import { ClientRouter } from "astro:transitions";
 ---
 
 <!doctype html>
 <html lang="en" class="no-js" dir="ltr">
-	<Head>
+	<head>
 		<script>
 			document.documentElement.classList.remove("no-js");
 			document.documentElement.classList.add("js");
 		</script>
 
 		<Meta />
+
+		<slot name="Meta" />
 
 		<link
 			rel="preconnect"
@@ -36,7 +39,7 @@ import { Head } from "astro-capo";
 		<slot name="Head" />
 
 		<!-- <ClientRouter /> -->
-	</Head>
+	</head>
 	<body aria-label="">
 		<div class="grow p-5 text-center">
 			<ul class="flex">

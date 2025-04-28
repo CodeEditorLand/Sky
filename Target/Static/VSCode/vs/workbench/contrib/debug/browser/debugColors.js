@@ -1,1 +1,140 @@
-import{registerColor,foreground,editorInfoForeground,editorWarningForeground,errorForeground,badgeBackground,badgeForeground,listDeemphasizedForeground,contrastBorder,inputBorder,toolbarHoverBackground}from"../../../../platform/theme/common/colorRegistry.js";import{registerThemingParticipant}from"../../../../platform/theme/common/themeService.js";import{ThemeIcon}from"../../../../base/common/themables.js";import{Color}from"../../../../base/common/color.js";import{localize}from"../../../../nls.js";import*as icons from"./debugIcons.js";import{isHighContrast}from"../../../../platform/theme/common/theme.js";export const debugToolBarBackground=registerColor("debugToolBar.background",{dark:"#333333",light:"#F3F3F3",hcDark:"#000000",hcLight:"#FFFFFF"},localize("debugToolBarBackground","Debug toolbar background color."));export const debugToolBarBorder=registerColor("debugToolBar.border",null,localize("debugToolBarBorder","Debug toolbar border color."));export const debugIconStartForeground=registerColor("debugIcon.startForeground",{dark:"#89D185",light:"#388A34",hcDark:"#89D185",hcLight:"#388A34"},localize("debugIcon.startForeground","Debug toolbar icon for start debugging."));export function registerColors(){const o=registerColor("debugTokenExpression.name",{dark:"#c586c0",light:"#9b46b0",hcDark:foreground,hcLight:foreground},"Foreground color for the token names shown in the debug views (ie. the Variables or Watch view)."),e=registerColor("debugTokenExpression.type",{dark:"#4A90E2",light:"#4A90E2",hcDark:foreground,hcLight:foreground},"Foreground color for the token types shown in the debug views (ie. the Variables or Watch view)."),t=registerColor("debugTokenExpression.value",{dark:"#cccccc99",light:"#6c6c6ccc",hcDark:foreground,hcLight:foreground},"Foreground color for the token values shown in the debug views (ie. the Variables or Watch view)."),r=registerColor("debugTokenExpression.string",{dark:"#ce9178",light:"#a31515",hcDark:"#f48771",hcLight:"#a31515"},"Foreground color for strings in the debug views (ie. the Variables or Watch view)."),n=registerColor("debugTokenExpression.boolean",{dark:"#4e94ce",light:"#0000ff",hcDark:"#75bdfe",hcLight:"#0000ff"},"Foreground color for booleans in the debug views (ie. the Variables or Watch view)."),c=registerColor("debugTokenExpression.number",{dark:"#b5cea8",light:"#098658",hcDark:"#89d185",hcLight:"#098658"},"Foreground color for numbers in the debug views (ie. the Variables or Watch view)."),a=registerColor("debugTokenExpression.error",{dark:"#f48771",light:"#e51400",hcDark:"#f48771",hcLight:"#e51400"},"Foreground color for expression errors in the debug views (ie. the Variables or Watch view) and for error logs shown in the debug console."),l=registerColor("debugView.exceptionLabelForeground",{dark:foreground,light:"#FFF",hcDark:foreground,hcLight:foreground},"Foreground color for a label shown in the CALL STACK view when the debugger breaks on an exception."),i=registerColor("debugView.exceptionLabelBackground",{dark:"#6C2022",light:"#A31515",hcDark:"#6C2022",hcLight:"#A31515"},"Background color for a label shown in the CALL STACK view when the debugger breaks on an exception."),s=registerColor("debugView.stateLabelForeground",foreground,"Foreground color for a label in the CALL STACK view showing the current session's or thread's state."),g=registerColor("debugView.stateLabelBackground","#88888844","Background color for a label in the CALL STACK view showing the current session's or thread's state."),d=registerColor("debugView.valueChangedHighlight","#569CD6","Color used to highlight value changes in the debug views (ie. in the Variables view)."),u=registerColor("debugConsole.infoForeground",{dark:editorInfoForeground,light:editorInfoForeground,hcDark:foreground,hcLight:foreground},"Foreground color for info messages in debug REPL console."),b=registerColor("debugConsole.warningForeground",{dark:editorWarningForeground,light:editorWarningForeground,hcDark:"#008000",hcLight:editorWarningForeground},"Foreground color for warning messages in debug REPL console."),h=registerColor("debugConsole.errorForeground",errorForeground,"Foreground color for error messages in debug REPL console."),m=registerColor("debugConsole.sourceForeground",foreground,"Foreground color for source filenames in debug REPL console."),p=registerColor("debugConsoleInputIcon.foreground",foreground,"Foreground color for debug console input marker icon."),k=registerColor("debugIcon.pauseForeground",{dark:"#75BEFF",light:"#007ACC",hcDark:"#75BEFF",hcLight:"#007ACC"},localize("debugIcon.pauseForeground","Debug toolbar icon for pause.")),C=registerColor("debugIcon.stopForeground",{dark:"#F48771",light:"#A1260D",hcDark:"#F48771",hcLight:"#A1260D"},localize("debugIcon.stopForeground","Debug toolbar icon for stop.")),w=registerColor("debugIcon.disconnectForeground",{dark:"#F48771",light:"#A1260D",hcDark:"#F48771",hcLight:"#A1260D"},localize("debugIcon.disconnectForeground","Debug toolbar icon for disconnect.")),S=registerColor("debugIcon.restartForeground",{dark:"#89D185",light:"#388A34",hcDark:"#89D185",hcLight:"#388A34"},localize("debugIcon.restartForeground","Debug toolbar icon for restart.")),F=registerColor("debugIcon.stepOverForeground",{dark:"#75BEFF",light:"#007ACC",hcDark:"#75BEFF",hcLight:"#007ACC"},localize("debugIcon.stepOverForeground","Debug toolbar icon for step over.")),f=registerColor("debugIcon.stepIntoForeground",{dark:"#75BEFF",light:"#007ACC",hcDark:"#75BEFF",hcLight:"#007ACC"},localize("debugIcon.stepIntoForeground","Debug toolbar icon for step into.")),$=registerColor("debugIcon.stepOutForeground",{dark:"#75BEFF",light:"#007ACC",hcDark:"#75BEFF",hcLight:"#007ACC"},localize("debugIcon.stepOutForeground","Debug toolbar icon for step over.")),v=registerColor("debugIcon.continueForeground",{dark:"#75BEFF",light:"#007ACC",hcDark:"#75BEFF",hcLight:"#007ACC"},localize("debugIcon.continueForeground","Debug toolbar icon for continue.")),I=registerColor("debugIcon.stepBackForeground",{dark:"#75BEFF",light:"#007ACC",hcDark:"#75BEFF",hcLight:"#007ACC"},localize("debugIcon.stepBackForeground","Debug toolbar icon for step back."));registerThemingParticipant(((D,T)=>{const L=D.getColor(badgeBackground),x=D.getColor(badgeForeground),B=D.getColor(listDeemphasizedForeground),A=D.getColor(l),R=D.getColor(i),E=D.getColor(s),V=D.getColor(g),z=D.getColor(d),y=D.getColor(toolbarHoverBackground);T.addRule(`\n\t\t\t/* Text colour of the call stack row's filename */\n\t\t\t.debug-pane .debug-call-stack .monaco-list-row:not(.selected) .stack-frame > .file .file-name {\n\t\t\t\tcolor: ${B}\n\t\t\t}\n\n\t\t\t/* Line & column number "badge" for selected call stack row */\n\t\t\t.debug-pane .monaco-list-row.selected .line-number {\n\t\t\t\tbackground-color: ${L};\n\t\t\t\tcolor: ${x};\n\t\t\t}\n\n\t\t\t/* Line & column number "badge" for unselected call stack row (basically all other rows) */\n\t\t\t.debug-pane .line-number {\n\t\t\t\tbackground-color: ${L.transparent(.6)};\n\t\t\t\tcolor: ${x.transparent(.6)};\n\t\t\t}\n\n\t\t\t/* State "badge" displaying the active session's current state.\n\t\t\t* Only visible when there are more active debug sessions/threads running.\n\t\t\t*/\n\t\t\t.debug-pane .debug-call-stack .thread > .state.label,\n\t\t\t.debug-pane .debug-call-stack .session > .state.label {\n\t\t\t\tbackground-color: ${V};\n\t\t\t\tcolor: ${E};\n\t\t\t}\n\n\t\t\t/* State "badge" displaying the active session's current state.\n\t\t\t* Only visible when there are more active debug sessions/threads running\n\t\t\t* and thread paused due to a thrown exception.\n\t\t\t*/\n\t\t\t.debug-pane .debug-call-stack .thread > .state.label.exception,\n\t\t\t.debug-pane .debug-call-stack .session > .state.label.exception {\n\t\t\t\tbackground-color: ${R};\n\t\t\t\tcolor: ${A};\n\t\t\t}\n\n\t\t\t/* Info "badge" shown when the debugger pauses due to a thrown exception. */\n\t\t\t.debug-pane .call-stack-state-message > .label.exception {\n\t\t\t\tbackground-color: ${R};\n\t\t\t\tcolor: ${A};\n\t\t\t}\n\n\t\t\t/* Animation of changed values in Debug viewlet */\n\t\t\t@keyframes debugViewletValueChanged {\n\t\t\t\t0%   { background-color: ${z.transparent(0)} }\n\t\t\t\t5%   { background-color: ${z.transparent(.9)} }\n\t\t\t\t100% { background-color: ${z.transparent(.3)} }\n\t\t\t}\n\n\t\t\t.debug-pane .monaco-list-row .expression .value.changed {\n\t\t\t\tbackground-color: ${z.transparent(.3)};\n\t\t\t\tanimation-name: debugViewletValueChanged;\n\t\t\t\tanimation-duration: 1s;\n\t\t\t\tanimation-fill-mode: forwards;\n\t\t\t}\n\n\t\t\t.monaco-list-row .expression .lazy-button:hover {\n\t\t\t\tbackground-color: ${y}\n\t\t\t}\n\t\t`);const O=D.getColor(contrastBorder);O&&T.addRule(`\n\t\t\t.debug-pane .line-number {\n\t\t\t\tborder: 1px solid ${O};\n\t\t\t}\n\t\t\t`),isHighContrast(D.type)&&T.addRule(`\n\t\t\t.debug-pane .line-number {\n\t\t\t\tbackground-color: ${L};\n\t\t\t\tcolor: ${x};\n\t\t\t}`);const W=D.getColor(o),P=D.getColor(e),j=D.getColor(t),H=D.getColor(r),K=D.getColor(n),q=D.getColor(a),G=D.getColor(c);T.addRule(`\n\t\t\t.monaco-workbench .monaco-list-row .expression .name {\n\t\t\t\tcolor: ${W};\n\t\t\t}\n\n\t\t\t.monaco-workbench .monaco-list-row .expression .type {\n\t\t\t\tcolor: ${P};\n\t\t\t}\n\n\t\t\t.monaco-workbench .monaco-list-row .expression .value,\n\t\t\t.monaco-workbench .debug-hover-widget .value {\n\t\t\t\tcolor: ${j};\n\t\t\t}\n\n\t\t\t.monaco-workbench .monaco-list-row .expression .value.string,\n\t\t\t.monaco-workbench .debug-hover-widget .value.string {\n\t\t\t\tcolor: ${H};\n\t\t\t}\n\n\t\t\t.monaco-workbench .monaco-list-row .expression .value.boolean,\n\t\t\t.monaco-workbench .debug-hover-widget .value.boolean {\n\t\t\t\tcolor: ${K};\n\t\t\t}\n\n\t\t\t.monaco-workbench .monaco-list-row .expression .error,\n\t\t\t.monaco-workbench .debug-hover-widget .error,\n\t\t\t.monaco-workbench .debug-pane .debug-variables .scope .error {\n\t\t\t\tcolor: ${q};\n\t\t\t}\n\n\t\t\t.monaco-workbench .monaco-list-row .expression .value.number,\n\t\t\t.monaco-workbench .debug-hover-widget .value.number {\n\t\t\t\tcolor: ${G};\n\t\t\t}\n\t\t`);const J=D.getColor(inputBorder)||Color.fromHex("#80808060"),M=D.getColor(u),N=D.getColor(b),Q=D.getColor(h),U=D.getColor(m),X=D.getColor(p);T.addRule(`\n\t\t\t.repl .repl-input-wrapper {\n\t\t\t\tborder-top: 1px solid ${J};\n\t\t\t}\n\n\t\t\t.monaco-workbench .repl .repl-tree .output .expression .value.info {\n\t\t\t\tcolor: ${M};\n\t\t\t}\n\n\t\t\t.monaco-workbench .repl .repl-tree .output .expression .value.warn {\n\t\t\t\tcolor: ${N};\n\t\t\t}\n\n\t\t\t.monaco-workbench .repl .repl-tree .output .expression .value.error {\n\t\t\t\tcolor: ${Q};\n\t\t\t}\n\n\t\t\t.monaco-workbench .repl .repl-tree .output .expression .source {\n\t\t\t\tcolor: ${U};\n\t\t\t}\n\n\t\t\t.monaco-workbench .repl .repl-tree .monaco-tl-contents .arrow {\n\t\t\t\tcolor: ${X};\n\t\t\t}\n\t\t`),D.defines(p)||T.addRule("\n\t\t\t\t.monaco-workbench.vs .repl .repl-tree .monaco-tl-contents .arrow {\n\t\t\t\t\topacity: 0.25;\n\t\t\t\t}\n\n\t\t\t\t.monaco-workbench.vs-dark .repl .repl-tree .monaco-tl-contents .arrow {\n\t\t\t\t\topacity: 0.4;\n\t\t\t\t}\n\n\t\t\t\t.monaco-workbench.hc-black .repl .repl-tree .monaco-tl-contents .arrow,\n\t\t\t\t.monaco-workbench.hc-light .repl .repl-tree .monaco-tl-contents .arrow {\n\t\t\t\t\topacity: 1;\n\t\t\t\t}\n\t\t\t");const Y=D.getColor(debugIconStartForeground);Y&&T.addRule(`.monaco-workbench ${ThemeIcon.asCSSSelector(icons.debugStart)} { color: ${Y}; }`);const Z=D.getColor(k);Z&&T.addRule(`.monaco-workbench .part > .title > .title-actions .action-label${ThemeIcon.asCSSSelector(icons.debugPause)}, .monaco-workbench ${ThemeIcon.asCSSSelector(icons.debugPause)} { color: ${Z}; }`);const _=D.getColor(C);_&&T.addRule(`.monaco-workbench .part > .title > .title-actions .action-label${ThemeIcon.asCSSSelector(icons.debugStop)},.monaco-workbench ${ThemeIcon.asCSSSelector(icons.debugStop)} { color: ${_}; }`);const oo=D.getColor(w);oo&&T.addRule(`.monaco-workbench .part > .title > .title-actions .action-label${ThemeIcon.asCSSSelector(icons.debugDisconnect)},.monaco-workbench .debug-view-content ${ThemeIcon.asCSSSelector(icons.debugDisconnect)}, .monaco-workbench .debug-toolbar ${ThemeIcon.asCSSSelector(icons.debugDisconnect)}, .monaco-workbench .command-center-center ${ThemeIcon.asCSSSelector(icons.debugDisconnect)} { color: ${oo}; }`);const eo=D.getColor(S);eo&&T.addRule(`.monaco-workbench ${ThemeIcon.asCSSSelector(icons.debugRestart)}, .monaco-workbench ${ThemeIcon.asCSSSelector(icons.debugRestartFrame)}, .monaco-workbench .part > .title > .title-actions .action-label${ThemeIcon.asCSSSelector(icons.debugRestart)}, .monaco-workbench .part > .title > .title-actions .action-label${ThemeIcon.asCSSSelector(icons.debugRestartFrame)} { color: ${eo}; }`);const to=D.getColor(F);to&&T.addRule(`.monaco-workbench .part > .title > .title-actions .action-label${ThemeIcon.asCSSSelector(icons.debugStepOver)}, .monaco-workbench ${ThemeIcon.asCSSSelector(icons.debugStepOver)} { color: ${to}; }`);const ro=D.getColor(f);ro&&T.addRule(`.monaco-workbench .part > .title > .title-actions .action-label${ThemeIcon.asCSSSelector(icons.debugStepInto)}, .monaco-workbench .part > .title > .title-actions .action-label${ThemeIcon.asCSSSelector(icons.debugStepInto)}, .monaco-workbench ${ThemeIcon.asCSSSelector(icons.debugStepInto)} { color: ${ro}; }`);const no=D.getColor($);no&&T.addRule(`.monaco-workbench .part > .title > .title-actions .action-label${ThemeIcon.asCSSSelector(icons.debugStepOut)}, .monaco-workbench .part > .title > .title-actions .action-label${ThemeIcon.asCSSSelector(icons.debugStepOut)}, .monaco-workbench ${ThemeIcon.asCSSSelector(icons.debugStepOut)} { color: ${no}; }`);const co=D.getColor(v);co&&T.addRule(`.monaco-workbench .part > .title > .title-actions .action-label${ThemeIcon.asCSSSelector(icons.debugContinue)}, .monaco-workbench ${ThemeIcon.asCSSSelector(icons.debugContinue)}, .monaco-workbench .part > .title > .title-actions .action-label${ThemeIcon.asCSSSelector(icons.debugReverseContinue)}, .monaco-workbench ${ThemeIcon.asCSSSelector(icons.debugReverseContinue)} { color: ${co}; }`);const ao=D.getColor(I);ao&&T.addRule(`.monaco-workbench .part > .title > .title-actions .action-label${ThemeIcon.asCSSSelector(icons.debugStepBack)}, .monaco-workbench ${ThemeIcon.asCSSSelector(icons.debugStepBack)} { color: ${ao}; }`)}))}
+import{registerColor as e,foreground as a,editorInfoForeground as I,editorWarningForeground as u,errorForeground as po,badgeBackground as ko,badgeForeground as Co,listDeemphasizedForeground as wo,contrastBorder as So,inputBorder as Fo,toolbarHoverBackground as mo}from"../../../../platform/theme/common/colorRegistry.js";import{registerThemingParticipant as fo}from"../../../../platform/theme/common/themeService.js";import{ThemeIcon as r}from"../../../../base/common/themables.js";import{Color as $o}from"../../../../base/common/color.js";import{localize as c}from"../../../../nls.js";import*as n from"./debugIcons.js";import{isHighContrast as vo}from"../../../../platform/theme/common/theme.js";const Vo=e("debugToolBar.background",{dark:"#333333",light:"#F3F3F3",hcDark:"#000000",hcLight:"#FFFFFF"},c("debugToolBarBackground","Debug toolbar background color.")),To=e("debugToolBar.border",null,c("debugToolBarBorder","Debug toolbar border color.")),Io=e("debugIcon.startForeground",{dark:"#89D185",light:"#388A34",hcDark:"#89D185",hcLight:"#388A34"},c("debugIcon.startForeground","Debug toolbar icon for start debugging."));function Ro(){const D=e("debugTokenExpression.name",{dark:"#c586c0",light:"#9b46b0",hcDark:a,hcLight:a},"Foreground color for the token names shown in the debug views (ie. the Variables or Watch view)."),x=e("debugTokenExpression.type",{dark:"#4A90E2",light:"#4A90E2",hcDark:a,hcLight:a},"Foreground color for the token types shown in the debug views (ie. the Variables or Watch view)."),L=e("debugTokenExpression.value",{dark:"#cccccc99",light:"#6c6c6ccc",hcDark:a,hcLight:a},"Foreground color for the token values shown in the debug views (ie. the Variables or Watch view)."),B=e("debugTokenExpression.string",{dark:"#ce9178",light:"#a31515",hcDark:"#f48771",hcLight:"#a31515"},"Foreground color for strings in the debug views (ie. the Variables or Watch view)."),E=e("debugTokenExpression.boolean",{dark:"#4e94ce",light:"#0000ff",hcDark:"#75bdfe",hcLight:"#0000ff"},"Foreground color for booleans in the debug views (ie. the Variables or Watch view)."),A=e("debugTokenExpression.number",{dark:"#b5cea8",light:"#098658",hcDark:"#89d185",hcLight:"#098658"},"Foreground color for numbers in the debug views (ie. the Variables or Watch view)."),V=e("debugTokenExpression.error",{dark:"#f48771",light:"#e51400",hcDark:"#f48771",hcLight:"#e51400"},"Foreground color for expression errors in the debug views (ie. the Variables or Watch view) and for error logs shown in the debug console."),T=e("debugView.exceptionLabelForeground",{dark:a,light:"#FFF",hcDark:a,hcLight:a},"Foreground color for a label shown in the CALL STACK view when the debugger breaks on an exception."),R=e("debugView.exceptionLabelBackground",{dark:"#6C2022",light:"#A31515",hcDark:"#6C2022",hcLight:"#A31515"},"Background color for a label shown in the CALL STACK view when the debugger breaks on an exception."),y=e("debugView.stateLabelForeground",a,"Foreground color for a label in the CALL STACK view showing the current session's or thread's state."),O=e("debugView.stateLabelBackground","#88888844","Background color for a label in the CALL STACK view showing the current session's or thread's state."),W=e("debugView.valueChangedHighlight","#569CD6","Color used to highlight value changes in the debug views (ie. in the Variables view)."),P=e("debugConsole.infoForeground",{dark:I,light:I,hcDark:a,hcLight:a},"Foreground color for info messages in debug REPL console."),H=e("debugConsole.warningForeground",{dark:u,light:u,hcDark:"#008000",hcLight:u},"Foreground color for warning messages in debug REPL console."),z=e("debugConsole.errorForeground",po,"Foreground color for error messages in debug REPL console."),K=e("debugConsole.sourceForeground",a,"Foreground color for source filenames in debug REPL console."),d=e("debugConsoleInputIcon.foreground",a,"Foreground color for debug console input marker icon."),N=e("debugIcon.pauseForeground",{dark:"#75BEFF",light:"#007ACC",hcDark:"#75BEFF",hcLight:"#007ACC"},c("debugIcon.pauseForeground","Debug toolbar icon for pause.")),j=e("debugIcon.stopForeground",{dark:"#F48771",light:"#A1260D",hcDark:"#F48771",hcLight:"#A1260D"},c("debugIcon.stopForeground","Debug toolbar icon for stop.")),q=e("debugIcon.disconnectForeground",{dark:"#F48771",light:"#A1260D",hcDark:"#F48771",hcLight:"#A1260D"},c("debugIcon.disconnectForeground","Debug toolbar icon for disconnect.")),G=e("debugIcon.restartForeground",{dark:"#89D185",light:"#388A34",hcDark:"#89D185",hcLight:"#388A34"},c("debugIcon.restartForeground","Debug toolbar icon for restart.")),J=e("debugIcon.stepOverForeground",{dark:"#75BEFF",light:"#007ACC",hcDark:"#75BEFF",hcLight:"#007ACC"},c("debugIcon.stepOverForeground","Debug toolbar icon for step over.")),M=e("debugIcon.stepIntoForeground",{dark:"#75BEFF",light:"#007ACC",hcDark:"#75BEFF",hcLight:"#007ACC"},c("debugIcon.stepIntoForeground","Debug toolbar icon for step into.")),Q=e("debugIcon.stepOutForeground",{dark:"#75BEFF",light:"#007ACC",hcDark:"#75BEFF",hcLight:"#007ACC"},c("debugIcon.stepOutForeground","Debug toolbar icon for step over.")),U=e("debugIcon.continueForeground",{dark:"#75BEFF",light:"#007ACC",hcDark:"#75BEFF",hcLight:"#007ACC"},c("debugIcon.continueForeground","Debug toolbar icon for continue.")),X=e("debugIcon.stepBackForeground",{dark:"#75BEFF",light:"#007ACC",hcDark:"#75BEFF",hcLight:"#007ACC"},c("debugIcon.stepBackForeground","Debug toolbar icon for step back."));fo((o,t)=>{const g=o.getColor(ko),s=o.getColor(Co),Y=o.getColor(wo),i=o.getColor(T),b=o.getColor(R),Z=o.getColor(y),_=o.getColor(O),l=o.getColor(W),oo=o.getColor(mo);t.addRule(`
+			/* Text colour of the call stack row's filename */
+			.debug-pane .debug-call-stack .monaco-list-row:not(.selected) .stack-frame > .file .file-name {
+				color: ${Y}
+			}
+
+			/* Line & column number "badge" for selected call stack row */
+			.debug-pane .monaco-list-row.selected .line-number {
+				background-color: ${g};
+				color: ${s};
+			}
+
+			/* Line & column number "badge" for unselected call stack row (basically all other rows) */
+			.debug-pane .line-number {
+				background-color: ${g.transparent(.6)};
+				color: ${s.transparent(.6)};
+			}
+
+			/* State "badge" displaying the active session's current state.
+			* Only visible when there are more active debug sessions/threads running.
+			*/
+			.debug-pane .debug-call-stack .thread > .state.label,
+			.debug-pane .debug-call-stack .session > .state.label {
+				background-color: ${_};
+				color: ${Z};
+			}
+
+			/* State "badge" displaying the active session's current state.
+			* Only visible when there are more active debug sessions/threads running
+			* and thread paused due to a thrown exception.
+			*/
+			.debug-pane .debug-call-stack .thread > .state.label.exception,
+			.debug-pane .debug-call-stack .session > .state.label.exception {
+				background-color: ${b};
+				color: ${i};
+			}
+
+			/* Info "badge" shown when the debugger pauses due to a thrown exception. */
+			.debug-pane .call-stack-state-message > .label.exception {
+				background-color: ${b};
+				color: ${i};
+			}
+
+			/* Animation of changed values in Debug viewlet */
+			@keyframes debugViewletValueChanged {
+				0%   { background-color: ${l.transparent(0)} }
+				5%   { background-color: ${l.transparent(.9)} }
+				100% { background-color: ${l.transparent(.3)} }
+			}
+
+			.debug-pane .monaco-list-row .expression .value.changed {
+				background-color: ${l.transparent(.3)};
+				animation-name: debugViewletValueChanged;
+				animation-duration: 1s;
+				animation-fill-mode: forwards;
+			}
+
+			.monaco-list-row .expression .lazy-button:hover {
+				background-color: ${oo}
+			}
+		`);const h=o.getColor(So);h&&t.addRule(`
+			.debug-pane .line-number {
+				border: 1px solid ${h};
+			}
+			`),vo(o.type)&&t.addRule(`
+			.debug-pane .line-number {
+				background-color: ${g};
+				color: ${s};
+			}`);const eo=o.getColor(D),ro=o.getColor(x),no=o.getColor(L),to=o.getColor(B),ao=o.getColor(E),co=o.getColor(V),lo=o.getColor(A);t.addRule(`
+			.monaco-workbench .monaco-list-row .expression .name {
+				color: ${eo};
+			}
+
+			.monaco-workbench .monaco-list-row .expression .type {
+				color: ${ro};
+			}
+
+			.monaco-workbench .monaco-list-row .expression .value,
+			.monaco-workbench .debug-hover-widget .value {
+				color: ${no};
+			}
+
+			.monaco-workbench .monaco-list-row .expression .value.string,
+			.monaco-workbench .debug-hover-widget .value.string {
+				color: ${to};
+			}
+
+			.monaco-workbench .monaco-list-row .expression .value.boolean,
+			.monaco-workbench .debug-hover-widget .value.boolean {
+				color: ${ao};
+			}
+
+			.monaco-workbench .monaco-list-row .expression .error,
+			.monaco-workbench .debug-hover-widget .error,
+			.monaco-workbench .debug-pane .debug-variables .scope .error {
+				color: ${co};
+			}
+
+			.monaco-workbench .monaco-list-row .expression .value.number,
+			.monaco-workbench .debug-hover-widget .value.number {
+				color: ${lo};
+			}
+		`);const go=o.getColor(Fo)||$o.fromHex("#80808060"),so=o.getColor(P),uo=o.getColor(H),io=o.getColor(z),bo=o.getColor(K),ho=o.getColor(d);t.addRule(`
+			.repl .repl-input-wrapper {
+				border-top: 1px solid ${go};
+			}
+
+			.monaco-workbench .repl .repl-tree .output .expression .value.info {
+				color: ${so};
+			}
+
+			.monaco-workbench .repl .repl-tree .output .expression .value.warn {
+				color: ${uo};
+			}
+
+			.monaco-workbench .repl .repl-tree .output .expression .value.error {
+				color: ${io};
+			}
+
+			.monaco-workbench .repl .repl-tree .output .expression .source {
+				color: ${bo};
+			}
+
+			.monaco-workbench .repl .repl-tree .monaco-tl-contents .arrow {
+				color: ${ho};
+			}
+		`),o.defines(d)||t.addRule(`
+				.monaco-workbench.vs .repl .repl-tree .monaco-tl-contents .arrow {
+					opacity: 0.25;
+				}
+
+				.monaco-workbench.vs-dark .repl .repl-tree .monaco-tl-contents .arrow {
+					opacity: 0.4;
+				}
+
+				.monaco-workbench.hc-black .repl .repl-tree .monaco-tl-contents .arrow,
+				.monaco-workbench.hc-light .repl .repl-tree .monaco-tl-contents .arrow {
+					opacity: 1;
+				}
+			`);const p=o.getColor(Io);p&&t.addRule(`.monaco-workbench ${r.asCSSSelector(n.debugStart)} { color: ${p}; }`);const k=o.getColor(N);k&&t.addRule(`.monaco-workbench .part > .title > .title-actions .action-label${r.asCSSSelector(n.debugPause)}, .monaco-workbench ${r.asCSSSelector(n.debugPause)} { color: ${k}; }`);const C=o.getColor(j);C&&t.addRule(`.monaco-workbench .part > .title > .title-actions .action-label${r.asCSSSelector(n.debugStop)},.monaco-workbench ${r.asCSSSelector(n.debugStop)} { color: ${C}; }`);const w=o.getColor(q);w&&t.addRule(`.monaco-workbench .part > .title > .title-actions .action-label${r.asCSSSelector(n.debugDisconnect)},.monaco-workbench .debug-view-content ${r.asCSSSelector(n.debugDisconnect)}, .monaco-workbench .debug-toolbar ${r.asCSSSelector(n.debugDisconnect)}, .monaco-workbench .command-center-center ${r.asCSSSelector(n.debugDisconnect)} { color: ${w}; }`);const S=o.getColor(G);S&&t.addRule(`.monaco-workbench ${r.asCSSSelector(n.debugRestart)}, .monaco-workbench ${r.asCSSSelector(n.debugRestartFrame)}, .monaco-workbench .part > .title > .title-actions .action-label${r.asCSSSelector(n.debugRestart)}, .monaco-workbench .part > .title > .title-actions .action-label${r.asCSSSelector(n.debugRestartFrame)} { color: ${S}; }`);const F=o.getColor(J);F&&t.addRule(`.monaco-workbench .part > .title > .title-actions .action-label${r.asCSSSelector(n.debugStepOver)}, .monaco-workbench ${r.asCSSSelector(n.debugStepOver)} { color: ${F}; }`);const m=o.getColor(M);m&&t.addRule(`.monaco-workbench .part > .title > .title-actions .action-label${r.asCSSSelector(n.debugStepInto)}, .monaco-workbench .part > .title > .title-actions .action-label${r.asCSSSelector(n.debugStepInto)}, .monaco-workbench ${r.asCSSSelector(n.debugStepInto)} { color: ${m}; }`);const f=o.getColor(Q);f&&t.addRule(`.monaco-workbench .part > .title > .title-actions .action-label${r.asCSSSelector(n.debugStepOut)}, .monaco-workbench .part > .title > .title-actions .action-label${r.asCSSSelector(n.debugStepOut)}, .monaco-workbench ${r.asCSSSelector(n.debugStepOut)} { color: ${f}; }`);const $=o.getColor(U);$&&t.addRule(`.monaco-workbench .part > .title > .title-actions .action-label${r.asCSSSelector(n.debugContinue)}, .monaco-workbench ${r.asCSSSelector(n.debugContinue)}, .monaco-workbench .part > .title > .title-actions .action-label${r.asCSSSelector(n.debugReverseContinue)}, .monaco-workbench ${r.asCSSSelector(n.debugReverseContinue)} { color: ${$}; }`);const v=o.getColor(X);v&&t.addRule(`.monaco-workbench .part > .title > .title-actions .action-label${r.asCSSSelector(n.debugStepBack)}, .monaco-workbench ${r.asCSSSelector(n.debugStepBack)} { color: ${v}; }`)})}export{Io as debugIconStartForeground,Vo as debugToolBarBackground,To as debugToolBarBorder,Ro as registerColors};

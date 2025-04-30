@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["../../../../../../../../../../Dependency/Microsoft/Dependency/Editor/src/vs/workbench/contrib/notebook/common/notebookKeymapService.ts"],
+  "sourcesContent": ["/*---------------------------------------------------------------------------------------------\r\n *  Copyright (c) Microsoft Corporation. All rights reserved.\r\n *  Licensed under the MIT License. See License.txt in the project root for license information.\r\n *--------------------------------------------------------------------------------------------*/\r\n\r\nimport { createDecorator } from '../../../../platform/instantiation/common/instantiation.js';\r\n\r\nexport const INotebookKeymapService = createDecorator<INotebookKeymapService>('notebookKeymapService');\r\n\r\nexport interface INotebookKeymapService {\r\n\treadonly _serviceBrand: undefined;\r\n}\r\n"],
+  "mappings": "AAKA,SAAS,uBAAuB;AAEzB,MAAM,yBAAyB,gBAAwC,uBAAuB;",
+  "names": []
+}

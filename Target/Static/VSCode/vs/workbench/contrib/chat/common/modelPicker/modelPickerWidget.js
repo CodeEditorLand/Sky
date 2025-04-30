@@ -1,1 +1,0 @@
-import{localize as e}from"../../../../../nls.js";const r={label:e("chat.modelPicker.other","Other Models"),order:Number.MAX_SAFE_INTEGER};export{r as DEFAULT_MODEL_PICKER_CATEGORY};

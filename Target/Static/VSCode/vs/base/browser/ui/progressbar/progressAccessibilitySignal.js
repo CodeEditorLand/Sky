@@ -1,1 +1,0 @@
-const c=()=>({msLoopTime:-1,msDelayTime:-1,dispose:()=>{}});let s=c;function r(e){s=e}function l(e,c){return s(e,c)}export{l as getProgressAcccessibilitySignalScheduler,r as setProgressAcccessibilitySignalScheduler};

@@ -1,1 +1,0 @@
-import{registerSingleton as i}from"../../../../platform/instantiation/common/extensions.js";import{ITerminalContributionService as r,TerminalContributionService as e}from"./terminalExtensionPoints.js";i(r,e,1);

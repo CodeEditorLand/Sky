@@ -1,3 +1,0 @@
-import{TextSearchMatch as c}from"../../../services/search/common/search.js";import{Range as h}from"../../../../editor/common/core/range.js";function g(r){return"cellResults"in r}const L="rawCell#";function m(r,a){let s=-1;const o=[];let t=[];return r.forEach(e=>{e.range.startLineNumber!==s&&t.length>0&&(o.push([...t]),t=[]),t.push(e),s=e.range.endLineNumber}),t.length>0&&o.push([...t]),o.map(e=>{const i=[],l=e[0].range.startLineNumber,u=e[e.length-1].range.endLineNumber;for(let n=l;n<=u;n++)i.push(a.getLineContent(n));return new c(i.join(`
-`)+`
-`,e.map(n=>new h(n.range.startLineNumber-1,n.range.startColumn-1,n.range.endLineNumber-1,n.range.endColumn-1)))})}export{m as genericCellMatchesToTextSearchMatches,g as isINotebookFileMatchNoModel,L as rawCellPrefix};

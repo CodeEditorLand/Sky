@@ -1,1 +1,0 @@
-import{createDecorator as e}from"../../instantiation/common/instantiation.js";const o=e("nativeHostService");export{o as INativeHostService};

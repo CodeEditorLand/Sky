@@ -1,1 +1,0 @@
-import{CellContentPart as r}from"../../cellPart.js";class o extends r{get activeCell(){return this.currentCell}constructor(e,r){super()}didRenderCell(e){super.didRenderCell(e)}unrenderCell(e){super.unrenderCell(e)}updateInternalLayoutNow(e){}dispose(){super.dispose()}}export{o as CellChatPart};

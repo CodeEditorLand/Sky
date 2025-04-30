@@ -1,1 +1,0 @@
-import{URI as e}from"../../../base/common/uri.js";import{MainContext as n}from"./extHost.protocol.js";class h{constructor(o){this._proxy=o.getProxy(n.MainThreadDialogs)}showOpenDialog(o){return this._proxy.$showOpenDialog(o).then(r=>r?r.map(t=>e.revive(t)):void 0)}showSaveDialog(o){return this._proxy.$showSaveDialog(o).then(r=>r?e.revive(r):void 0)}}export{h as ExtHostDialogs};

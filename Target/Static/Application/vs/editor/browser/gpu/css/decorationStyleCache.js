@@ -1,0 +1,42 @@
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { NKeyMap } from "../../../../base/common/map.js";
+class DecorationStyleCache {
+  static {
+    __name(this, "DecorationStyleCache");
+  }
+  constructor() {
+    this._nextId = 1;
+    this._cacheById = /* @__PURE__ */ new Map();
+    this._cacheByStyle = new NKeyMap();
+  }
+  getOrCreateEntry(color, bold, opacity) {
+    if (color === void 0 && bold === void 0 && opacity === void 0) {
+      return 0;
+    }
+    const result = this._cacheByStyle.get(color ?? 0, bold ? 1 : 0, opacity === void 0 ? "" : opacity.toFixed(2));
+    if (result) {
+      return result.id;
+    }
+    const id = this._nextId++;
+    const entry = {
+      id,
+      color,
+      bold,
+      opacity
+    };
+    this._cacheById.set(id, entry);
+    this._cacheByStyle.set(entry, color ?? 0, bold ? 1 : 0, opacity === void 0 ? "" : opacity.toFixed(2));
+    return id;
+  }
+  getStyleSet(id) {
+    if (id === 0) {
+      return void 0;
+    }
+    return this._cacheById.get(id);
+  }
+}
+export {
+  DecorationStyleCache
+};
+//# sourceMappingURL=decorationStyleCache.js.map

@@ -1,1 +1,0 @@
-var d;!function(e){e[e.Replace=1]="Replace",e[e.Append=2]="Append",e[e.Prepend=3]="Prepend"}(d||(d={}));export{d as EnvironmentVariableMutatorType};

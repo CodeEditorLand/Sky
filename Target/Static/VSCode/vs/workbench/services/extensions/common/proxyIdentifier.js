@@ -1,1 +1,0 @@
-class i{static{this.count=0}constructor(t){this._proxyIdentifierBrand=void 0,this.sid=t,this.nid=++i.count}}const r=[];function n(t){const n=new i(t);return r[n.nid]=n,n}function s(i){return r[i].sid}class o{constructor(i){this.value=i}}export{i as ProxyIdentifier,o as SerializableObjectWithBuffers,n as createProxyIdentifier,s as getStringIdentifierForProxy};

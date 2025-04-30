@@ -1,1 +1,0 @@
-import{writeFileSync as o}from"fs";import{tmpdir as i}from"os";import{randomPath as a}from"../../../base/common/extpath.js";function m(e){const r=a(i());try{return o(r,""),e&&console.log(`Marker file for --wait created: ${r}`),r}catch(t){e&&console.error(`Failed to create marker file for --wait: ${t}`);return}}export{m as createWaitMarkerFileSync};

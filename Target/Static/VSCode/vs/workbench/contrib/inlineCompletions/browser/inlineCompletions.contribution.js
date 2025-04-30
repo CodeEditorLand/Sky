@@ -1,1 +1,0 @@
-import{registerEditorContribution as t}from"../../../../editor/browser/editorExtensions.js";import{wrapInHotClass1 as r}from"../../../../platform/observable/common/wrapInHotClass.js";import{InlineCompletionLanguageStatusBarContribution as o}from"./inlineCompletionLanguageStatusBarContribution.js";t(o.Id,r(o.hot),3);

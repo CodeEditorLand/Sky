@@ -1,1 +1,0 @@
-import{FuzzyScore as t}from"../../../../base/common/filters.js";class a{constructor(e){this.completion=e,this.score=t.Default,this.isInvalid=!1,this.textLabel="string"==typeof e.label?e.label:e.label?.label,this.labelLow=this.textLabel.toLowerCase()}}export{a as SimpleCompletionItem};

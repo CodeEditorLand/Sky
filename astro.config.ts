@@ -2,6 +2,8 @@ import { fileURLToPath } from "node:url";
 import { defineConfig } from "astro/config";
 import type { ViteDevServer } from "vite";
 
+export const { readFile } = await import("fs/promises");
+
 export const Tauri = typeof process.env["TAURI_ENV_ARCH"] !== "undefined";
 
 export const On =
@@ -18,6 +20,14 @@ export const Link = [
 	"@codeeditorland/worker",
 ];
 
+const Host = process.env["TAURI_DEV_HOST"]
+	? `https://${process.env["TAURI_DEV_HOST"]}`
+	: Tauri
+		? "https://tauri.localhost"
+		: On
+			? "https://localhost"
+			: "https://editor.land";
+
 export default defineConfig({
 	srcDir: "./Source",
 
@@ -25,17 +35,15 @@ export default defineConfig({
 
 	outDir: "./Target",
 
-	site: Tauri
-		? "http://tauri.localhost"
-		: On
-			? "http://localhost"
-			: "https://editor.land",
+	site: Host,
 
 	compressHTML: !On,
 
 	prefetch: false,
 
 	server: {
+		host: Host,
+
 		port: 9999,
 	},
 
@@ -58,6 +66,8 @@ export default defineConfig({
 	},
 
 	vite: {
+		clearScreen: false,
+
 		build: {
 			sourcemap: On,
 
@@ -156,13 +166,42 @@ export default defineConfig({
 			transformer: "postcss",
 		},
 
+		server: {
+			port: 9999,
+
+			host: Host,
+
+			strictPort: true,
+
+			https: {
+				cert: await readFile("./dev-server.pem", {
+					encoding: "utf-8",
+				}),
+
+				key: await readFile("./dev-server-key.pem", {
+					encoding: "utf-8",
+				}),
+			},
+
+			hmr: Host
+				? {
+						protocol: "wss",
+						host: Host.replace("http://", "").replace(
+							"https://",
+							"",
+						),
+						port: 9999,
+					}
+				: false,
+		},
+
 		plugins: [
 			(await import("vite-plugin-static-copy")).viteStaticCopy({
 				targets: [
 					{
 						src: "node_modules/@codeeditorland/output/Target/Microsoft/VSCode/*",
 
-						dest: "Static/VSCode/",
+						dest: "Static/Application/",
 					},
 
 					// TODO: DO THIS FOR THE CodeEditorLand/Editor BUILD AS WELL
@@ -220,26 +259,6 @@ export default defineConfig({
 					};
 				},
 			}))(Link),
-
-			// TODO: UNCOMMENT WHEN THE DAEMON IS RUNNING IN MULTIPLE CODESPACES
-			// (() => ({
-			// 	name: "ServiceWorker",
-			// 	configureServer(Server) {
-			// 		Server.middlewares.use((Request, Response, Next) => {
-			// 			if (Request.url === "/Static/Worker/Worker.js") {
-			// 				Response.setHeader(
-			// 					"Service-Worker-Allowed",
-			// 					"/VSCode",
-			// 				);
-			// 				Response.setHeader(
-			// 					"Content-Type",
-			// 					"application/javascript; charset=utf-8",
-			// 				);
-			// 			}
-			// 			Next();
-			// 		});
-			// 	},
-			// }))(),
 		],
 	},
 }) as typeof defineConfig;

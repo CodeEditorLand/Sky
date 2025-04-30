@@ -1,1 +1,0 @@
-import{createDecorator as i}from"../../../../platform/instantiation/common/instantiation.js";const n=i("jsonEditingService");var o;!function(o){o[o.ERROR_INVALID_FILE=0]="ERROR_INVALID_FILE"}(o||(o={}));class E extends Error{constructor(o,r){super(o),this.code=r}}export{n as IJSONEditingService,E as JSONEditingError,o as JSONEditingErrorCode};

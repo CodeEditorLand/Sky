@@ -1,0 +1,14 @@
+var MCP;
+(function(MCP2) {
+  MCP2.LATEST_PROTOCOL_VERSION = "2025-03-26";
+  MCP2.JSONRPC_VERSION = "2.0";
+  MCP2.PARSE_ERROR = -32700;
+  MCP2.INVALID_REQUEST = -32600;
+  MCP2.METHOD_NOT_FOUND = -32601;
+  MCP2.INVALID_PARAMS = -32602;
+  MCP2.INTERNAL_ERROR = -32603;
+})(MCP || (MCP = {}));
+export {
+  MCP
+};
+//# sourceMappingURL=modelContextProtocol.js.map

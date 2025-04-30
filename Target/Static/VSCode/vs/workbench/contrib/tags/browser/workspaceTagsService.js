@@ -1,1 +1,0 @@
-import{registerSingleton as s}from"../../../../platform/instantiation/common/extensions.js";import{IWorkspaceTagsService as o}from"../common/workspaceTags.js";class t{getTags(){return Promise.resolve({})}async getTelemetryWorkspaceId(e,s){}getHashedRemotesFromUri(e,s){return Promise.resolve([])}}s(o,t,1);export{t as NoOpWorkspaceTagsService};

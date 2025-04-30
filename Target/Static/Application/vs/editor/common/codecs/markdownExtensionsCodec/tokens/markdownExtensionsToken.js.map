@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["../../../../../../../../../../../Dependency/Microsoft/Dependency/Editor/src/vs/editor/common/codecs/markdownExtensionsCodec/tokens/markdownExtensionsToken.ts"],
+  "sourcesContent": ["/*---------------------------------------------------------------------------------------------\r\n *  Copyright (c) Microsoft Corporation. All rights reserved.\r\n *  Licensed under the MIT License. See License.txt in the project root for license information.\r\n *--------------------------------------------------------------------------------------------*/\r\n\r\nimport { MarkdownToken } from '../../markdownCodec/tokens/markdownToken.js';\r\n\r\n/**\r\n * Base class for all tokens produced by the `MarkdownExtensionsDecoder`.\r\n */\r\nexport abstract class MarkdownExtensionsToken extends MarkdownToken { }\r\n"],
+  "mappings": ";;AAKA,SAAS,qBAAqB;AAKxB,MAAgB,gCAAgC,cAAa;EAVnE,OAUmE;;;;",
+  "names": []
+}

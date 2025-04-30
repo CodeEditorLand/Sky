@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["../../../../../../../../../../../../../../../../../Dependency/Microsoft/Dependency/Editor/src/vs/workbench/contrib/chat/common/promptSyntax/contributions/languageFeatures/providers/decorationsProvider/decorations/utils/index.ts"],
+  "sourcesContent": ["/*---------------------------------------------------------------------------------------------\r\n *  Copyright (c) Microsoft Corporation. All rights reserved.\r\n *  Licensed under the MIT License. See License.txt in the project root for license information.\r\n *--------------------------------------------------------------------------------------------*/\r\n\r\nimport { ColorIdentifier } from '../../../../../../../../../../../platform/theme/common/colorUtils.js';\r\n\r\n/**\r\n * Convert a registered color to a CSS variable string.\r\n */\r\nexport const asCssVariable = (color: ColorIdentifier): string => {\r\n\treturn `var(--vscode-${color.replaceAll('.', '-')})`;\r\n};\r\n\r\nexport type * from './types.js';\r\nexport { DecorationBase, type TDecorationClass } from './decorationBase.js';\r\nexport { ReactiveDecorationBase, type TChangedDecorator } from './reactiveDecorationBase.js';\r\n\r\n"],
+  "mappings": ";;AAUO,MAAM,gBAAgB,wBAAC,UAAkC;AAC/D,SAAO,gBAAgB,MAAM,WAAW,KAAK,GAAG,CAAC;AAClD,GAF6B;AAK7B,SAAS,sBAA6C;AACtD,SAAS,8BAAsD;",
+  "names": []
+}

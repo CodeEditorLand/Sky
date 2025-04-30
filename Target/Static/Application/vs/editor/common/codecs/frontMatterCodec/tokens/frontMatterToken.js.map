@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["../../../../../../../../../../../Dependency/Microsoft/Dependency/Editor/src/vs/editor/common/codecs/frontMatterCodec/tokens/frontMatterToken.ts"],
+  "sourcesContent": ["/*---------------------------------------------------------------------------------------------\r\n *  Copyright (c) Microsoft Corporation. All rights reserved.\r\n *  Licensed under the MIT License. See License.txt in the project root for license information.\r\n *--------------------------------------------------------------------------------------------*/\r\n\r\nimport { BaseToken } from '../../baseToken.js';\r\n\r\n/**\r\n * Base class for all tokens inside a Front Matter header.\r\n */\r\nexport abstract class FrontMatterToken extends BaseToken { }\r\n\r\n/**\r\n * List of all currently supported value types.\r\n */\r\nexport type TValueTypeName = 'string' | 'boolean' | 'array';\r\n\r\n/**\r\n * Base class for all tokens that represent a `value` inside a Front Matter header.\r\n */\r\nexport abstract class FrontMatterValueToken<TTypeName extends TValueTypeName = TValueTypeName> extends FrontMatterToken {\r\n\t/**\r\n\t * Type name of the `value` represented by this token.\r\n\t */\r\n\tpublic abstract readonly valueTypeName: TTypeName;\r\n}\r\n"],
+  "mappings": ";;AAKA,SAAS,iBAAiB;AAKpB,MAAgB,yBAAyB,UAAS;EAVxD,OAUwD;;;;AAUlD,MAAgB,8BAAiF,iBAAgB;EApBvH,OAoBuH;;;;",
+  "names": []
+}

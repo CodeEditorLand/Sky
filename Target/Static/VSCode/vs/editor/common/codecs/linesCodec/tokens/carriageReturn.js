@@ -1,1 +1,0 @@
-import{VSBuffer as e}from"../../../../../base/common/buffer.js";import{SimpleToken as o}from"../../simpleCodec/tokens/simpleToken.js";class t extends o{static{this.symbol="\r"}static{this.byte=e.fromString(t.symbol)}get byte(){return t.byte}get text(){return t.symbol}toString(){return`CR${this.range}`}}export{t as CarriageReturn};

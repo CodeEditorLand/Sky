@@ -1,1 +1,0 @@
-import{create as r}from"./textMateTokenizationWorker.worker.js";import{bootstrapWebWorker as o}from"../../../../../../base/common/worker/webWorkerBootstrap.js";o(r);

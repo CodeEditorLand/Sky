@@ -1,1 +1,0 @@
-const e="utilityProcessWorker";export{e as ipcUtilityProcessWorkerChannelName};

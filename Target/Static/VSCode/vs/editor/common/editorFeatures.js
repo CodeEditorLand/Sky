@@ -1,1 +1,0 @@
-const e=[];function r(r){e.push(r)}function o(){return e.slice(0)}export{o as getEditorFeatures,r as registerEditorFeature};

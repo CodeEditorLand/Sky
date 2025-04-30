@@ -1,0 +1,49 @@
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { Schemas } from "../../../../base/common/network.js";
+import { URI } from "../../../../base/common/uri.js";
+const webviewResourceBaseHost = "vscode-cdn.net";
+const webviewRootResourceAuthority = `vscode-resource.${webviewResourceBaseHost}`;
+const webviewGenericCspSource = `'self' https://*.${webviewResourceBaseHost}`;
+function asWebviewUri(resource, remoteInfo) {
+  if (resource.scheme === Schemas.http || resource.scheme === Schemas.https) {
+    return resource;
+  }
+  if (remoteInfo && remoteInfo.authority && remoteInfo.isRemote && resource.scheme === Schemas.file) {
+    resource = URI.from({
+      scheme: Schemas.vscodeRemote,
+      authority: remoteInfo.authority,
+      path: resource.path
+    });
+  }
+  return URI.from({
+    scheme: Schemas.https,
+    authority: `${resource.scheme}+${encodeAuthority(resource.authority)}.${webviewRootResourceAuthority}`,
+    path: resource.path,
+    fragment: resource.fragment,
+    query: resource.query
+  });
+}
+__name(asWebviewUri, "asWebviewUri");
+function encodeAuthority(authority) {
+  return authority.replace(/./g, (char) => {
+    const code = char.charCodeAt(0);
+    if (code >= 97 && code <= 122 || code >= 65 && code <= 90 || code >= 48 && code <= 57) {
+      return char;
+    }
+    return "-" + code.toString(16).padStart(4, "0");
+  });
+}
+__name(encodeAuthority, "encodeAuthority");
+function decodeAuthority(authority) {
+  return authority.replace(/-([0-9a-f]{4})/g, (_, code) => String.fromCharCode(parseInt(code, 16)));
+}
+__name(decodeAuthority, "decodeAuthority");
+export {
+  asWebviewUri,
+  decodeAuthority,
+  webviewGenericCspSource,
+  webviewResourceBaseHost,
+  webviewRootResourceAuthority
+};
+//# sourceMappingURL=webview.js.map

@@ -1,1 +1,0 @@
-const o="copilot";export{o as CHAT_PROVIDER_ID};

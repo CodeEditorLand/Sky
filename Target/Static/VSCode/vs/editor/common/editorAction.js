@@ -1,1 +1,0 @@
-class h{constructor(t,i,e,s,r,o,n){this.id=t,this.label=i,this.alias=e,this.metadata=s,this._precondition=r,this._run=o,this._contextKeyService=n}isSupported(){return this._contextKeyService.contextMatchesRules(this._precondition)}run(t){return this.isSupported()?this._run(t):Promise.resolve(void 0)}}export{h as InternalEditorAction};

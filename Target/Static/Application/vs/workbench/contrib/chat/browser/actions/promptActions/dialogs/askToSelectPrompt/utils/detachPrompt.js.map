@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["../../../../../../../../../../../../../../../Dependency/Microsoft/Dependency/Editor/src/vs/workbench/contrib/chat/browser/actions/promptActions/dialogs/askToSelectPrompt/utils/detachPrompt.ts"],
+  "sourcesContent": ["/*---------------------------------------------------------------------------------------------\r\n *  Copyright (c) Microsoft Corporation. All rights reserved.\r\n *  Licensed under the MIT License. See License.txt in the project root for license information.\r\n *--------------------------------------------------------------------------------------------*/\r\n\r\nimport { IChatWidget } from '../../../../../chat.js';\r\nimport { URI } from '../../../../../../../../../base/common/uri.js';\r\n\r\n/**\r\n * Options for the {@link detachPrompt} function.\r\n */\r\nexport interface IDetachPromptOptions {\r\n\t/**\r\n\t * Chat widget instance to attach the prompt to.\r\n\t */\r\n\treadonly widget: IChatWidget;\r\n}\r\n\r\n/**\r\n * Detaches provided prompts to a chat input.\r\n */\r\nexport const detachPrompt = async (\r\n\tfile: URI,\r\n\toptions: IDetachPromptOptions,\r\n): Promise<IChatWidget> => {\r\n\tconst { widget } = options;\r\n\r\n\twidget\r\n\t\t.attachmentModel\r\n\t\t.promptInstructions\r\n\t\t.remove(file);\r\n\r\n\treturn widget;\r\n};\r\n"],
+  "mappings": ";;AAqBO,MAAM,eAAe,8BAC3B,MACA,YACyB;AACzB,QAAM,EAAE,OAAM,IAAK;AAEnB,SACE,gBACA,mBACA,OAAO,IAAI;AAEb,SAAO;AACR,GAZ4B;",
+  "names": []
+}

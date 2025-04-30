@@ -1,1 +1,0 @@
-import{Emitter as n}from"../common/event.js";class d{get event(){return this.emitter.event}constructor(e,t,i){const s=e=>this.emitter.fire(e);this.emitter=new n({onWillAddFirstListener:()=>e.addEventListener(t,s,i),onDidRemoveLastListener:()=>e.removeEventListener(t,s,i)})}dispose(){this.emitter.dispose()}}export{d as DomEmitter};

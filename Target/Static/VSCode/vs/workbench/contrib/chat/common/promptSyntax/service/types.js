@@ -1,1 +1,0 @@
-import{createDecorator as r}from"../../../../../../platform/instantiation/common/instantiation.js";const o=r("IPromptsService");export{o as IPromptsService};

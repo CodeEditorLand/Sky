@@ -1,1 +1,0 @@
-function e(){return globalThis._VSCODE_NLS_MESSAGES}function S(){return globalThis._VSCODE_NLS_LANGUAGE}export{S as getNLSLanguage,e as getNLSMessages};

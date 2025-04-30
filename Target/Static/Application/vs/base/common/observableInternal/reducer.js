@@ -1,0 +1,44 @@
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { strictEquals } from "../equals.js";
+import { BugIndicatingError } from "../errors.js";
+import { subtransaction } from "./base.js";
+import { DebugNameData } from "./debugName.js";
+import { DerivedWithSetter } from "./derived.js";
+function observableReducer(owner, options) {
+  return observableReducerSettable(owner, options);
+}
+__name(observableReducer, "observableReducer");
+function observableReducerSettable(owner, options) {
+  let prevValue = void 0;
+  let hasValue = false;
+  const d = new DerivedWithSetter(new DebugNameData(owner, void 0, options.update), (reader, changeSummary) => {
+    if (!hasValue) {
+      prevValue = options.initial instanceof Function ? options.initial() : options.initial;
+      hasValue = true;
+    }
+    const newValue = options.update(reader, prevValue, changeSummary);
+    prevValue = newValue;
+    return newValue;
+  }, options.changeTracker, () => {
+    if (hasValue) {
+      options.disposeFinal?.(prevValue);
+      hasValue = false;
+    }
+  }, options.equalityComparer ?? strictEquals, (value, tx, change) => {
+    if (!hasValue) {
+      throw new BugIndicatingError("Can only set when there is a listener! This is to prevent leaks.");
+    }
+    subtransaction(tx, (tx2) => {
+      prevValue = value;
+      d.setValue(value, tx2, change);
+    });
+  });
+  return d;
+}
+__name(observableReducerSettable, "observableReducerSettable");
+export {
+  observableReducer,
+  observableReducerSettable
+};
+//# sourceMappingURL=reducer.js.map

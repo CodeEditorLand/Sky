@@ -1,1 +1,0 @@
-import{hash as n}from"../../../../base/common/hash.js";function i(n){return{id:e(n),configPath:n}}function o(n){return{id:e(n),uri:n}}function e(e){return n(e.toString()).toString(16)}export{o as getSingleFolderWorkspaceIdentifier,i as getWorkspaceIdentifier};

@@ -1,1 +1,0 @@
-import{ExtensionIdentifier as o}from"../../../../platform/extensions/common/extensions.js";import{createDecorator as r}from"../../../../platform/instantiation/common/instantiation.js";function c(e,i){return`${"string"==typeof e?e:o.toKey(e)}|${i}`}const I="timeline",i="timeline",p=r(i);export{p as ITimelineService,I as TimelinePaneId,c as toKey};

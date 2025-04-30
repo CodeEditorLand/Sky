@@ -1,1 +1,0 @@
-import{refineServiceDecorator as r}from"../../../../platform/instantiation/common/instantiation.js";import{IEnvironmentService as e}from"../../../../platform/environment/common/environment.js";const i=r(e);export{i as IWorkbenchEnvironmentService};

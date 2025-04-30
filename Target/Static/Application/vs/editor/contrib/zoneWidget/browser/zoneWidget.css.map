@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["../../../../../../../../../../Dependency/Microsoft/Dependency/Editor/out/vs/editor/contrib/zoneWidget/browser/zoneWidget.css"],
+  "sourcesContent": ["/*---------------------------------------------------------------------------------------------\r\n *  Copyright (c) Microsoft Corporation. All rights reserved.\r\n *  Licensed under the MIT License. See License.txt in the project root for license information.\r\n *--------------------------------------------------------------------------------------------*/\r\n.monaco-editor .zone-widget {\r\n\tposition: absolute;\r\n\tz-index: 10;\r\n}\r\n\r\n\r\n.monaco-editor .zone-widget .zone-widget-container {\r\n\tborder-top-style: solid;\r\n\tborder-bottom-style: solid;\r\n\tborder-top-width: 0;\r\n\tborder-bottom-width: 0;\r\n\tposition: relative;\r\n}\r\n"],
+  "mappings": "AAIA,CAAC,cAAc,CAAC;AACf,YAAU;AACV,WAAS;AACV;AAGA,CANC,cAMc,CANC,YAMY,CAAC;AAC5B,oBAAkB;AAClB,uBAAqB;AACrB,oBAAkB;AAClB,uBAAqB;AACrB,YAAU;AACX;",
+  "names": []
+}

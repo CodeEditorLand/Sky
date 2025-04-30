@@ -1,1 +1,0 @@
-var p;!function(p){p.Jump="jump",p.Accept="accept",p.Inactive="inactive"}(p||(p={}));export{p as InlineEditTabAction};

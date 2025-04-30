@@ -1,1 +1,0 @@
-var i;function r(n){const t=[];let i=0;for(let r=0;r<n.length-1;r++)(r-i+1>=50||""===n[r+1])&&(t.push(n.substring(i,r+1)),i=r+1,r++);return i!==n.length&&t.push(n.substring(i)),t}!function(n){n[n.WriteMaxChunkSize=50]="WriteMaxChunkSize"}(i||(i={}));export{r as chunkInput};

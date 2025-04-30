@@ -1,4 +1,0 @@
-import{equals as i}from"../../../../../base/common/arrays.js";import{Range as t}from"../../../../../editor/common/core/range.js";class E{constructor(e,n){this.range=e,this.newLines=n}equals(e){return this.range.equals(e.range)&&i(this.newLines,e.newLines)}toEdits(e){return new a([this]).toEdits(e)}}class m{constructor(e,n){this.range=e,this.newText=n}equals(e){return t.equalsRange(this.range,e.range)&&this.newText===e.newText}}class a{constructor(e){this.edits=e}toEdits(e){return this.edits.map(n=>n.range.endLineNumberExclusive<=e?{range:new t(n.range.startLineNumber,1,n.range.endLineNumberExclusive,1),text:n.newLines.map(r=>r+`
-`).join("")}:n.range.startLineNumber===1?{range:new t(1,1,e,Number.MAX_SAFE_INTEGER),text:n.newLines.join(`
-`)}:{range:new t(n.range.startLineNumber-1,Number.MAX_SAFE_INTEGER,e,Number.MAX_SAFE_INTEGER),text:n.newLines.map(r=>`
-`+r).join("")})}}export{a as LineEdits,E as LineRangeEdit,m as RangeEdit};

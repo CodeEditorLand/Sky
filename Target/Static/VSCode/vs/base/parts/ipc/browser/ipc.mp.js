@@ -1,1 +1,0 @@
-import{Client as s}from"../common/ipc.mp.js";class n extends s{constructor(s,n){super(s,n)}}export{n as Client};

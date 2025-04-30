@@ -1,1 +1,0 @@
-import{SyncDescriptor as o}from"./descriptors.js";const g=[];var r;function l(e,r,t){r instanceof o||(r=new o(r,[],!!t)),g.push([e,r])}function t(){return g}!function(e){e[e.Eager=0]="Eager",e[e.Delayed=1]="Delayed"}(r||(r={}));export{r as InstantiationType,t as getSingletonServiceDescriptors,l as registerSingleton};

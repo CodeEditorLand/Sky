@@ -1,1 +1,0 @@
-import{NewLine as e}from"../linesCodec/tokens/newLine.js";import{CarriageReturn as r}from"../linesCodec/tokens/carriageReturn.js";import{FormFeed as o,Space as t,Tab as m,VerticalTab as a}from"../simpleCodec/tokens/index.js";const f=Object.freeze([t,m,r,e,o,a]);export{f as VALID_SPACE_TOKENS};

@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["../../../../../../../../../../Dependency/Microsoft/Dependency/Editor/out/vs/workbench/contrib/share/browser/share.css"],
+  "sourcesContent": ["/*---------------------------------------------------------------------------------------------\r\n *  Copyright (c) Microsoft Corporation. All rights reserved.\r\n *  Licensed under the MIT License. See License.txt in the project root for license information.\r\n *--------------------------------------------------------------------------------------------*/\r\n\r\ndiv.share-dialog-input-text,\r\ndiv.share-dialog-input-link {\r\n\tborder: 1px solid var(--vscode-input-border, transparent);\r\n\tborder-radius: 2px;\r\n\tcolor: var(--vscode-input-foreground);\r\n\tbackground-color: var(--vscode-input-background);\r\n\tpadding: 2px;\r\n\tuser-select: all;\r\n\tline-height: 24px;\r\n}\r\n\r\ndiv.share-dialog-input-link {\r\n\toverflow: hidden;\r\n\twhite-space: nowrap;\r\n\ttext-overflow: ellipsis;\r\n}\r\n"],
+  "mappings": "AAKA,GAAG,CAAC;AACJ,GAAG,CAAC;AACH,UAAQ,IAAI,MAAM,IAAI,qBAAqB,EAAE;AAC7C,iBAAe;AACf,SAAO,IAAI;AACX,oBAAkB,IAAI;AACtB,WAAS;AACT,eAAa;AACb,eAAa;AACd;AAEA,GAAG,CAVC;AAWH,YAAU;AACV,eAAa;AACb,iBAAe;AAChB;",
+  "names": []
+}

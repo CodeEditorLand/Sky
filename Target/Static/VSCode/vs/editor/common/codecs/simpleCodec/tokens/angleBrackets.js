@@ -1,1 +1,0 @@
-import{SimpleToken as t}from"./simpleToken.js";class e extends t{static{this.symbol="<"}get text(){return e.symbol}toString(){return`left-angle-bracket${this.range}`}}class r extends t{static{this.symbol=">"}get text(){return r.symbol}toString(){return`right-angle-bracket${this.range}`}}export{e as LeftAngleBracket,r as RightAngleBracket};

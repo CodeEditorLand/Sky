@@ -1,1 +1,0 @@
-function n(e,n={}){let r="";return n.excludeLeadingNewLine||(r+="\r\n"),r+="[0m[7m * ",n.loudFormatting?r+="[0;104m":r+="[0m",r+=` ${e} [0m\n\r`,r}export{n as formatMessageForTerminal};

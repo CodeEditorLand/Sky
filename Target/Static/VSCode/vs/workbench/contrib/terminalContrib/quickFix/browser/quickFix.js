@@ -1,1 +1,0 @@
-import{createDecorator as t}from"../../../../../platform/instantiation/common/instantiation.js";const e=t("terminalQuickFixService");var r;!function(r){r[r.TerminalCommand=0]="TerminalCommand",r[r.Opener=1]="Opener",r[r.Port=2]="Port",r[r.VscodeCommand=3]="VscodeCommand"}(r||(r={}));export{e as ITerminalQuickFixService,r as TerminalQuickFixType};

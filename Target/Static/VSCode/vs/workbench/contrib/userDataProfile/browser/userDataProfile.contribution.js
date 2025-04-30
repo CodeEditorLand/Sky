@@ -1,1 +1,0 @@
-import{registerWorkbenchContribution2 as o}from"../../../common/contributions.js";import{UserDataProfilesWorkbenchContribution as r}from"./userDataProfile.js";import"./userDataProfileActions.js";o(r.ID,r,2);

@@ -1,1 +1,0 @@
-function f(o,f){if(void 0!==f)return"function"==typeof f?f(o):f}export{f as checkModeOption};

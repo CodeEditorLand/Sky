@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["../../../../../../../../../../Dependency/Microsoft/Dependency/Editor/out/vs/editor/browser/viewParts/indentGuides/indentGuides.css"],
+  "sourcesContent": ["/*---------------------------------------------------------------------------------------------\r\n *  Copyright (c) Microsoft Corporation. All rights reserved.\r\n *  Licensed under the MIT License. See License.txt in the project root for license information.\r\n *--------------------------------------------------------------------------------------------*/\r\n\r\n.monaco-editor .lines-content .core-guide {\r\n\tposition: absolute;\r\n\tbox-sizing: border-box;\r\n\theight: 100%;\r\n}\r\n"],
+  "mappings": "AAKA,CAAC,cAAc,CAAC,cAAc,CAAC;AAC9B,YAAU;AACV,cAAY;AACZ,UAAQ;AACT;",
+  "names": []
+}

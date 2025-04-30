@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["../../../../../../../../../../Dependency/Microsoft/Dependency/Editor/src/vs/workbench/contrib/update/common/update.ts"],
+  "sourcesContent": ["/*---------------------------------------------------------------------------------------------\r\n *  Copyright (c) Microsoft Corporation. All rights reserved.\r\n *  Licensed under the MIT License. See License.txt in the project root for license information.\r\n *--------------------------------------------------------------------------------------------*/\r\n\r\nexport const ShowCurrentReleaseNotesActionId = 'update.showCurrentReleaseNotes';\r\nexport const ShowCurrentReleaseNotesFromCurrentFileActionId = 'developer.showCurrentFileAsReleaseNotes';\r\n"],
+  "mappings": "AAKO,MAAM,kCAAkC;AACxC,MAAM,iDAAiD;",
+  "names": []
+}

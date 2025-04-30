@@ -1,0 +1,17 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<title>Isolation Secure Script</title>
+	</head>
+	<body>
+		<script>
+			// @ts-expect-error
+			window.__TAURI_ISOLATION_HOOK__ = (payload: any) => {
+				console.log("hook", payload);
+
+				return payload;
+			};
+		</script>
+	</body>
+</html>

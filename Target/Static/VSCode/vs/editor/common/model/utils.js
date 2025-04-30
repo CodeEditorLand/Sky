@@ -1,1 +1,0 @@
-function c(e,t){let n=0,c=0;const o=e.length;for(;c<o;){const o=e.charCodeAt(c);if(32===o)n++;else{if(9!==o)break;n=n-n%t+t}c++}return c===o?-1:n}export{c as computeIndentLevel};

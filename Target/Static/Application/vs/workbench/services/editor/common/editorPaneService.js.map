@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["../../../../../../../../../../Dependency/Microsoft/Dependency/Editor/src/vs/workbench/services/editor/common/editorPaneService.ts"],
+  "sourcesContent": ["/*---------------------------------------------------------------------------------------------\r\n *  Copyright (c) Microsoft Corporation. All rights reserved.\r\n *  Licensed under the MIT License. See License.txt in the project root for license information.\r\n *--------------------------------------------------------------------------------------------*/\r\n\r\nimport { createDecorator } from '../../../../platform/instantiation/common/instantiation.js';\r\nimport { IWillInstantiateEditorPaneEvent } from '../../../common/editor.js';\r\nimport { Event } from '../../../../base/common/event.js';\r\n\r\nexport const IEditorPaneService = createDecorator<IEditorPaneService>('editorPaneService');\r\n\r\nexport interface IEditorPaneService {\r\n\r\n\treadonly _serviceBrand: undefined;\r\n\r\n\t/**\r\n\t * Emitted when an editor pane is about to be instantiated.\r\n\t */\r\n\treadonly onWillInstantiateEditorPane: Event<IWillInstantiateEditorPaneEvent>;\r\n\r\n\t/**\r\n\t * Returns whether a editor pane with the given type id has been instantiated.\r\n\t */\r\n\tdidInstantiateEditorPane(typeId: string): boolean;\r\n}\r\n"],
+  "mappings": "AAKA,SAAS,uBAAuB;AAIzB,MAAM,qBAAqB,gBAAoC,mBAAmB;",
+  "names": []
+}

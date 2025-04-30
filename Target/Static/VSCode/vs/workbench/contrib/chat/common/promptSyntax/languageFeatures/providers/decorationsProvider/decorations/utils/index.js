@@ -1,1 +1,0 @@
-const r=a=>`var(--vscode-${a.replaceAll(".","-")})`;import{DecorationBase as t}from"./decorationBase.js";import{ReactiveDecorationBase as c}from"./reactiveDecorationBase.js";export{t as DecorationBase,c as ReactiveDecorationBase,r as asCssVariable};

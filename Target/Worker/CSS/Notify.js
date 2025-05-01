@@ -1,1 +1,0 @@
-var s=async(s,t)=>{if(s)try{const a=await self.clients.get(s);a&&a.postMessage({_LOAD_CSS_WORKER:t})}catch{}};export{s as default};

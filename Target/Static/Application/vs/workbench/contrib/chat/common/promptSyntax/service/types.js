@@ -1,6 +1,1 @@
-import { createDecorator } from "../../../../../../platform/instantiation/common/instantiation.js";
-const IPromptsService = createDecorator("IPromptsService");
-export {
-  IPromptsService
-};
-//# sourceMappingURL=types.js.map
+import{createDecorator as r}from"../../../../../../platform/instantiation/common/instantiation.js";const o=r("IPromptsService");export{o as IPromptsService};

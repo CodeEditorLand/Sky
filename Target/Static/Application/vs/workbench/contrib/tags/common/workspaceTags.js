@@ -1,14 +1,1 @@
-var __defProp = Object.defineProperty;
-var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
-import { createDecorator } from "../../../../platform/instantiation/common/instantiation.js";
-import { getRemotes } from "../../../../platform/extensionManagement/common/configRemotes.js";
-const IWorkspaceTagsService = createDecorator("workspaceTagsService");
-async function getHashedRemotesFromConfig(text, stripEndingDotGit = false, sha1Hex) {
-  return Promise.all(getRemotes(text, stripEndingDotGit).map((remote) => sha1Hex(remote)));
-}
-__name(getHashedRemotesFromConfig, "getHashedRemotesFromConfig");
-export {
-  IWorkspaceTagsService,
-  getHashedRemotesFromConfig
-};
-//# sourceMappingURL=workspaceTags.js.map
+import{createDecorator as a}from"../../../../platform/instantiation/common/instantiation.js";import{getRemotes as s}from"../../../../platform/extensionManagement/common/configRemotes.js";const i=a("workspaceTagsService");async function p(e,o=!1,r){return Promise.all(s(e,o).map(t=>r(t)))}export{i as IWorkspaceTagsService,p as getHashedRemotesFromConfig};

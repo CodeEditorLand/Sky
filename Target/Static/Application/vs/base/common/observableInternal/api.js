@@ -1,17 +1,1 @@
-var __defProp = Object.defineProperty;
-var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
-import { ObservableValue } from "./base.js";
-import { DebugNameData } from "./debugName.js";
-import { strictEquals } from "./commonFacade/deps.js";
-import { LazyObservableValue } from "./lazyObservableValue.js";
-function observableValueOpts(options, initialValue) {
-  if (options.lazy) {
-    return new LazyObservableValue(new DebugNameData(options.owner, options.debugName, void 0), initialValue, options.equalsFn ?? strictEquals);
-  }
-  return new ObservableValue(new DebugNameData(options.owner, options.debugName, void 0), initialValue, options.equalsFn ?? strictEquals);
-}
-__name(observableValueOpts, "observableValueOpts");
-export {
-  observableValueOpts
-};
-//# sourceMappingURL=api.js.map
+import{ObservableValue as m}from"./base.js";import{DebugNameData as a}from"./debugName.js";import{strictEquals as u}from"./commonFacade/deps.js";import{LazyObservableValue as b}from"./lazyObservableValue.js";function w(e,s){return e.lazy?new b(new a(e.owner,e.debugName,void 0),s,e.equalsFn??u):new m(new a(e.owner,e.debugName,void 0),s,e.equalsFn??u)}export{w as observableValueOpts};

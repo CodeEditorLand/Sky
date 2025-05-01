@@ -1,17 +1,1 @@
-var __defProp = Object.defineProperty;
-var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
-import { generateUuid } from "../../../base/common/uuid.js";
-import { AbstractLoggerService } from "../common/log.js";
-import { SpdLogLogger } from "./spdlogLog.js";
-class LoggerService extends AbstractLoggerService {
-  static {
-    __name(this, "LoggerService");
-  }
-  doCreateLogger(resource, logLevel, options) {
-    return new SpdLogLogger(generateUuid(), resource.fsPath, !options?.donotRotate, !!options?.donotUseFormatters, logLevel);
-  }
-}
-export {
-  LoggerService
-};
-//# sourceMappingURL=loggerService.js.map
+import{generateUuid as t}from"../../../base/common/uuid.js";import{AbstractLoggerService as g}from"../common/log.js";import{SpdLogLogger as a}from"./spdlogLog.js";class n extends g{doCreateLogger(o,e,r){return new a(t(),o.fsPath,!r?.donotRotate,!!r?.donotUseFormatters,e)}}export{n as LoggerService};

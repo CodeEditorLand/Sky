@@ -1,14 +1,1 @@
-import { Registry } from "../../../../platform/registry/common/platform.js";
-import { Extensions } from "../../../common/contributions.js";
-import { BrowserResourcePerformanceMarks, BrowserStartupTimings } from "./startupTimings.js";
-Registry.as(Extensions.Workbench).registerWorkbenchContribution(
-  BrowserResourcePerformanceMarks,
-  4
-  /* LifecyclePhase.Eventually */
-);
-Registry.as(Extensions.Workbench).registerWorkbenchContribution(
-  BrowserStartupTimings,
-  4
-  /* LifecyclePhase.Eventually */
-);
-//# sourceMappingURL=performance.web.contribution.js.map
+import{Registry as r}from"../../../../platform/registry/common/platform.js";import{Extensions as o}from"../../../common/contributions.js";import{BrowserResourcePerformanceMarks as e,BrowserStartupTimings as i}from"./startupTimings.js";r.as(o.Workbench).registerWorkbenchContribution(e,4),r.as(o.Workbench).registerWorkbenchContribution(i,4);

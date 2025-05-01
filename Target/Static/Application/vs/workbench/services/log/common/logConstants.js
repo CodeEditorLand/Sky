@@ -1,10 +1,1 @@
-import { localize } from "../../../../nls.js";
-const windowLogId = "rendererLog";
-const windowLogGroup = { id: windowLogId, name: localize("window", "Window") };
-const showWindowLogActionId = "workbench.action.showWindowLog";
-export {
-  showWindowLogActionId,
-  windowLogGroup,
-  windowLogId
-};
-//# sourceMappingURL=logConstants.js.map
+import{localize as o}from"../../../../nls.js";const n="rendererLog",i={id:n,name:o("window","Window")},d="workbench.action.showWindowLog";export{d as showWindowLogActionId,i as windowLogGroup,n as windowLogId};

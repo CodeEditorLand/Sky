@@ -1,17 +1,1 @@
-var __defProp = Object.defineProperty;
-var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
-function isManagedHoverTooltipMarkdownString(obj) {
-  const candidate = obj;
-  return typeof candidate === "object" && "markdown" in candidate && "markdownNotSupportedFallback" in candidate;
-}
-__name(isManagedHoverTooltipMarkdownString, "isManagedHoverTooltipMarkdownString");
-function isManagedHoverTooltipHTMLElement(obj) {
-  const candidate = obj;
-  return typeof candidate === "object" && "element" in candidate;
-}
-__name(isManagedHoverTooltipHTMLElement, "isManagedHoverTooltipHTMLElement");
-export {
-  isManagedHoverTooltipHTMLElement,
-  isManagedHoverTooltipMarkdownString
-};
-//# sourceMappingURL=hover.js.map
+function t(e){return"object"==typeof e&&"markdown"in e&&"markdownNotSupportedFallback"in e}function e(e){return"object"==typeof e&&"element"in e}export{e as isManagedHoverTooltipHTMLElement,t as isManagedHoverTooltipMarkdownString};

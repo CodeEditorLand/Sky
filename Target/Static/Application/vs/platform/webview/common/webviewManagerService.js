@@ -1,6 +1,1 @@
-import { createDecorator } from "../../instantiation/common/instantiation.js";
-const IWebviewManagerService = createDecorator("webviewManagerService");
-export {
-  IWebviewManagerService
-};
-//# sourceMappingURL=webviewManagerService.js.map
+import{createDecorator as e}from"../../instantiation/common/instantiation.js";const a=e("webviewManagerService");export{a as IWebviewManagerService};

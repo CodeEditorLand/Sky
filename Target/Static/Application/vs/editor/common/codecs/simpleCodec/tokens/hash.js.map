@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["../../../../../../../../../../../Dependency/Microsoft/Dependency/Editor/src/vs/editor/common/codecs/simpleCodec/tokens/hash.ts"],
-  "sourcesContent": ["/*---------------------------------------------------------------------------------------------\r\n *  Copyright (c) Microsoft Corporation. All rights reserved.\r\n *  Licensed under the MIT License. See License.txt in the project root for license information.\r\n *--------------------------------------------------------------------------------------------*/\r\n\r\nimport { SimpleToken } from './simpleToken.js';\r\n\r\n/**\r\n * A token that represent a `#` with a `range`. The `range`\r\n * value reflects the position of the token in the original data.\r\n */\r\nexport class Hash extends SimpleToken {\r\n\t/**\r\n\t * The underlying symbol of the token.\r\n\t */\r\n\tpublic static override readonly symbol: '#' = '#';\r\n\r\n\t/**\r\n\t * Return text representation of the token.\r\n\t */\r\n\tpublic override get text() {\r\n\t\treturn Hash.symbol;\r\n\t}\r\n\r\n\t/**\r\n\t * Returns a string representation of the token.\r\n\t */\r\n\tpublic override toString(): string {\r\n\t\treturn `hash${this.range}`;\r\n\t}\r\n}\r\n"],
-  "mappings": ";;AAKA,SAAS,mBAAmB;AAMtB,MAAO,aAAa,YAAW;EAXrC,OAWqC;;;;AAIJ,SAAA,SAAc;EAAI;;;;EAKlD,IAAoB,OAAI;AACvB,WAAO,KAAK;EACb;;;;EAKgB,WAAQ;AACvB,WAAO,OAAO,KAAK,KAAK;EACzB;;",
-  "names": []
-}

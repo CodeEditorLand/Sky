@@ -1,16 +1,1 @@
-var __defProp = Object.defineProperty;
-var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
-import { registerRunPromptActions } from "./chatRunPromptAction.js";
-import { registerSaveToPromptActions } from "./chatSaveToPromptAction.js";
-import { registerAttachPromptActions } from "./chatAttachInstructionsAction.js";
-import { runAttachInstructionsAction } from "./chatAttachInstructionsAction.js";
-const registerPromptActions = /* @__PURE__ */ __name(() => {
-  registerRunPromptActions();
-  registerAttachPromptActions();
-  registerSaveToPromptActions();
-}, "registerPromptActions");
-export {
-  registerPromptActions,
-  runAttachInstructionsAction
-};
-//# sourceMappingURL=index.js.map
+import{registerRunPromptActions as t}from"./chatRunPromptAction.js";import{registerSaveToPromptActions as r}from"./chatSaveToPromptAction.js";import{registerAttachPromptActions as o}from"./chatAttachInstructionsAction.js";import{runAttachInstructionsAction as p}from"./chatAttachInstructionsAction.js";const s=()=>{t(),o(),r()};export{s as registerPromptActions,p as runAttachInstructionsAction};

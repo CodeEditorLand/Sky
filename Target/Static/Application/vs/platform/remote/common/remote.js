@@ -1,5 +1,1 @@
-const REMOTE_DEFAULT_IF_LOCAL_EXTENSIONS = "remote.defaultExtensionsIfInstalledLocally";
-export {
-  REMOTE_DEFAULT_IF_LOCAL_EXTENSIONS
-};
-//# sourceMappingURL=remote.js.map
+const e="remote.defaultExtensionsIfInstalledLocally";export{e as REMOTE_DEFAULT_IF_LOCAL_EXTENSIONS};

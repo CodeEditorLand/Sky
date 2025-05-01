@@ -1,48 +1,6 @@
-var __defProp = Object.defineProperty;
-var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
-import Severity from "../../../../../base/common/severity.js";
-import { localize } from "../../../../../nls.js";
-import { Action2 } from "../../../../../platform/actions/common/actions.js";
-import { IDialogService } from "../../../../../platform/dialogs/common/dialogs.js";
-import { IAuthenticationAccessService } from "../../../../services/authentication/browser/authenticationAccessService.js";
-import { IAuthenticationUsageService } from "../../../../services/authentication/browser/authenticationUsageService.js";
-import { IAuthenticationService } from "../../../../services/authentication/common/authentication.js";
-class SignOutOfAccountAction extends Action2 {
-  static {
-    __name(this, "SignOutOfAccountAction");
-  }
-  constructor() {
-    super({
-      id: "_signOutOfAccount",
-      title: localize("signOutOfAccount", "Sign out of account"),
-      f1: false
-    });
-  }
-  async run(accessor, { providerId, accountLabel }) {
-    const authenticationService = accessor.get(IAuthenticationService);
-    const authenticationUsageService = accessor.get(IAuthenticationUsageService);
-    const authenticationAccessService = accessor.get(IAuthenticationAccessService);
-    const dialogService = accessor.get(IDialogService);
-    if (!providerId || !accountLabel) {
-      throw new Error("Invalid arguments. Expected: { providerId: string; accountLabel: string }");
-    }
-    const allSessions = await authenticationService.getSessions(providerId);
-    const sessions = allSessions.filter((s) => s.account.label === accountLabel);
-    const accountUsages = authenticationUsageService.readAccountUsages(providerId, accountLabel);
-    const { confirmed } = await dialogService.confirm({
-      type: Severity.Info,
-      message: accountUsages.length ? localize("signOutMessage", "The account '{0}' has been used by: \n\n{1}\n\n Sign out from these extensions?", accountLabel, accountUsages.map((usage) => usage.extensionName).join("\n")) : localize("signOutMessageSimple", "Sign out of '{0}'?", accountLabel),
-      primaryButton: localize({ key: "signOut", comment: ["&& denotes a mnemonic"] }, "&&Sign Out")
-    });
-    if (confirmed) {
-      const removeSessionPromises = sessions.map((session) => authenticationService.removeSession(providerId, session.id));
-      await Promise.all(removeSessionPromises);
-      authenticationUsageService.removeAccountUsage(providerId, accountLabel);
-      authenticationAccessService.removeAllowedExtensions(providerId, accountLabel);
-    }
-  }
-}
-export {
-  SignOutOfAccountAction
-};
-//# sourceMappingURL=signOutOfAccountAction.js.map
+import S from"../../../../../base/common/severity.js";import{localize as o}from"../../../../../nls.js";import{Action2 as l}from"../../../../../platform/actions/common/actions.js";import{IDialogService as A}from"../../../../../platform/dialogs/common/dialogs.js";import{IAuthenticationAccessService as h}from"../../../../services/authentication/browser/authenticationAccessService.js";import{IAuthenticationUsageService as p}from"../../../../services/authentication/browser/authenticationUsageService.js";import{IAuthenticationService as v}from"../../../../services/authentication/common/authentication.js";class P extends l{constructor(){super({id:"_signOutOfAccount",title:o("signOutOfAccount","Sign out of account"),f1:!1})}async run(i,{providerId:t,accountLabel:e}){const s=i.get(v),c=i.get(p),m=i.get(h),a=i.get(A);if(!t||!e)throw new Error("Invalid arguments. Expected: { providerId: string; accountLabel: string }");const g=(await s.getSessions(t)).filter(n=>n.account.label===e),r=c.readAccountUsages(t,e),{confirmed:u}=await a.confirm({type:S.Info,message:r.length?o("signOutMessage",`The account '{0}' has been used by: 
+
+{1}
+
+ Sign out from these extensions?`,e,r.map(n=>n.extensionName).join(`
+`)):o("signOutMessageSimple","Sign out of '{0}'?",e),primaryButton:o({key:"signOut",comment:["&& denotes a mnemonic"]},"&&Sign Out")});if(u){const n=g.map(f=>s.removeSession(t,f.id));await Promise.all(n),c.removeAccountUsage(t,e),m.removeAllowedExtensions(t,e)}}}export{P as SignOutOfAccountAction};

@@ -1,73 +1,11 @@
-var __defProp = Object.defineProperty;
-var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
-var __decorate = function(decorators, target, key, desc) {
-  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
-  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
-  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
-  return c > 3 && r && Object.defineProperty(target, key, r), r;
-};
-var __param = function(paramIndex, decorator) {
-  return function(target, key) {
-    decorator(target, key, paramIndex);
-  };
-};
-import * as dom from "../../../../../base/browser/dom.js";
-import { Button } from "../../../../../base/browser/ui/button/button.js";
-import { Disposable } from "../../../../../base/common/lifecycle.js";
-import { localize } from "../../../../../nls.js";
-import { ITelemetryService } from "../../../../../platform/telemetry/common/telemetry.js";
-import { getCodeCitationsMessage } from "../../common/chatModel.js";
-import { IEditorService } from "../../../../services/editor/common/editorService.js";
-let ChatCodeCitationContentPart = class ChatCodeCitationContentPart2 extends Disposable {
-  static {
-    __name(this, "ChatCodeCitationContentPart");
-  }
-  constructor(citations, context, editorService, telemetryService) {
-    super();
-    this.editorService = editorService;
-    this.telemetryService = telemetryService;
-    const label = getCodeCitationsMessage(citations.citations);
-    const elements = dom.h(".chat-code-citation-message@root", [
-      dom.h("span.chat-code-citation-label@label"),
-      dom.h(".chat-code-citation-button-container@button")
-    ]);
-    elements.label.textContent = label + " - ";
-    const button = this._register(new Button(elements.button, {
-      buttonBackground: void 0,
-      buttonBorder: void 0,
-      buttonForeground: void 0,
-      buttonHoverBackground: void 0,
-      buttonSecondaryBackground: void 0,
-      buttonSecondaryForeground: void 0,
-      buttonSecondaryHoverBackground: void 0,
-      buttonSeparator: void 0
-    }));
-    button.label = localize("viewMatches", "View matches");
-    this._register(button.onDidClick(() => {
-      const citationText = `# Code Citations
+var m=function(r,t,n,o){var a=arguments.length,e=a<3?t:o===null?o=Object.getOwnPropertyDescriptor(t,n):o,i;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")e=Reflect.decorate(r,t,n,o);else for(var c=r.length-1;c>=0;c--)(i=r[c])&&(e=(a<3?i(e):a>3?i(t,n,e):i(t,n))||e);return a>3&&e&&Object.defineProperty(t,n,e),e},l=function(r,t){return function(n,o){t(n,o,r)}};import*as u from"../../../../../base/browser/dom.js";import{Button as h}from"../../../../../base/browser/ui/button/button.js";import{Disposable as p}from"../../../../../base/common/lifecycle.js";import{localize as b}from"../../../../../nls.js";import{ITelemetryService as C}from"../../../../../platform/telemetry/common/telemetry.js";import{getCodeCitationsMessage as g}from"../../common/chatModel.js";import{IEditorService as v}from"../../../../services/editor/common/editorService.js";let s=class extends p{constructor(t,n,o,a){super(),this.editorService=o,this.telemetryService=a;const e=g(t.citations),i=u.h(".chat-code-citation-message@root",[u.h("span.chat-code-citation-label@label"),u.h(".chat-code-citation-button-container@button")]);i.label.textContent=e+" - ";const c=this._register(new h(i.button,{buttonBackground:void 0,buttonBorder:void 0,buttonForeground:void 0,buttonHoverBackground:void 0,buttonSecondaryBackground:void 0,buttonSecondaryForeground:void 0,buttonSecondaryHoverBackground:void 0,buttonSeparator:void 0}));c.label=b("viewMatches","View matches"),this._register(c.onDidClick(()=>{const f=`# Code Citations
 
-` + citations.citations.map((c) => `## License: ${c.license}
-${c.value.toString()}
+`+t.citations.map(d=>`## License: ${d.license}
+${d.value.toString()}
 
 \`\`\`
-${c.snippet}
+${d.snippet}
 \`\`\`
 
-`).join("\n");
-      this.editorService.openEditor({ resource: void 0, contents: citationText, languageId: "markdown" });
-      this.telemetryService.publicLog2("openedChatCodeCitations");
-    }));
-    this.domNode = elements.root;
-  }
-  hasSameContent(other, followingContent, element) {
-    return other.kind === "codeCitations";
-  }
-};
-ChatCodeCitationContentPart = __decorate([
-  __param(2, IEditorService),
-  __param(3, ITelemetryService)
-], ChatCodeCitationContentPart);
-export {
-  ChatCodeCitationContentPart
-};
-//# sourceMappingURL=chatCodeCitationContentPart.js.map
+`).join(`
+`);this.editorService.openEditor({resource:void 0,contents:f,languageId:"markdown"}),this.telemetryService.publicLog2("openedChatCodeCitations")})),this.domNode=i.root}hasSameContent(t,n,o){return t.kind==="codeCitations"}};s=m([l(2,v),l(3,C)],s);export{s as ChatCodeCitationContentPart};

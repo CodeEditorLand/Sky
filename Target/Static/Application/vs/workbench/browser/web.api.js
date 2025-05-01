@@ -1,17 +1,1 @@
-var Menu;
-(function(Menu2) {
-  Menu2[Menu2["CommandPalette"] = 0] = "CommandPalette";
-  Menu2[Menu2["StatusBarWindowIndicatorMenu"] = 1] = "StatusBarWindowIndicatorMenu";
-})(Menu || (Menu = {}));
-var ColorScheme;
-(function(ColorScheme2) {
-  ColorScheme2["DARK"] = "dark";
-  ColorScheme2["LIGHT"] = "light";
-  ColorScheme2["HIGH_CONTRAST_LIGHT"] = "hcLight";
-  ColorScheme2["HIGH_CONTRAST_DARK"] = "hcDark";
-})(ColorScheme || (ColorScheme = {}));
-export {
-  ColorScheme,
-  Menu
-};
-//# sourceMappingURL=web.api.js.map
+var a,n;!function(a){a[a.CommandPalette=0]="CommandPalette",a[a.StatusBarWindowIndicatorMenu=1]="StatusBarWindowIndicatorMenu"}(a||(a={})),function(a){a.DARK="dark",a.LIGHT="light",a.HIGH_CONTRAST_LIGHT="hcLight",a.HIGH_CONTRAST_DARK="hcDark"}(n||(n={}));export{n as ColorScheme,a as Menu};

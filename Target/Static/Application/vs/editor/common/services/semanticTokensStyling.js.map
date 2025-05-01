@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["../../../../../../../../../Dependency/Microsoft/Dependency/Editor/src/vs/editor/common/services/semanticTokensStyling.ts"],
-  "sourcesContent": ["/*---------------------------------------------------------------------------------------------\r\n *  Copyright (c) Microsoft Corporation. All rights reserved.\r\n *  Licensed under the MIT License. See License.txt in the project root for license information.\r\n *--------------------------------------------------------------------------------------------*/\r\n\r\nimport { createDecorator } from '../../../platform/instantiation/common/instantiation.js';\r\nimport { DocumentSemanticTokensProvider, DocumentRangeSemanticTokensProvider } from '../languages.js';\r\nimport { SemanticTokensProviderStyling } from './semanticTokensProviderStyling.js';\r\n\r\nexport const ISemanticTokensStylingService = createDecorator<ISemanticTokensStylingService>('semanticTokensStylingService');\r\n\r\nexport type DocumentTokensProvider = DocumentSemanticTokensProvider | DocumentRangeSemanticTokensProvider;\r\n\r\nexport interface ISemanticTokensStylingService {\r\n\treadonly _serviceBrand: undefined;\r\n\r\n\tgetStyling(provider: DocumentTokensProvider): SemanticTokensProviderStyling;\r\n}\r\n"],
-  "mappings": "AAKA,SAAS,uBAAuB;AAIzB,MAAM,gCAAgC,gBAA+C,8BAA8B;",
-  "names": []
-}

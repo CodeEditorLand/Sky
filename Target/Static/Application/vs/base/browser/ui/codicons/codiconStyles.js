@@ -1,3 +1,1 @@
-import "./codicon/codicon.css";
-import "./codicon/codicon-modifiers.css";
-//# sourceMappingURL=codiconStyles.js.map
+import"./codicon/codicon.css";import"./codicon/codicon-modifiers.css";

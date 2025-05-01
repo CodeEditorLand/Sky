@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["../../../../../../../../../Dependency/Microsoft/Dependency/Editor/src/vs/base/browser/domImpl/domObservable.ts"],
-  "sourcesContent": ["/*---------------------------------------------------------------------------------------------\r\n *  Copyright (c) Microsoft Corporation. All rights reserved.\r\n *  Licensed under the MIT License. See License.txt in the project root for license information.\r\n *--------------------------------------------------------------------------------------------*/\r\n\r\nimport { DisposableStore, IDisposable } from '../../common/lifecycle.js';\r\nimport { autorun, IObservable } from '../../common/observable.js';\r\nimport { createStyleSheet2 } from '../domStylesheets.js';\r\n\r\nexport function createStyleSheetFromObservable(css: IObservable<string>): IDisposable {\r\n\tconst store = new DisposableStore();\r\n\tconst w = store.add(createStyleSheet2());\r\n\tstore.add(autorun(reader => {\r\n\t\tw.setStyle(css.read(reader));\r\n\t}));\r\n\treturn store;\r\n}\r\n"],
-  "mappings": ";;AAKA,SAAS,uBAAoC;AAC7C,SAAS,eAA4B;AACrC,SAAS,yBAAyB;AAE5B,SAAU,+BAA+B,KAAwB;AACtE,QAAM,QAAQ,IAAI,gBAAe;AACjC,QAAM,IAAI,MAAM,IAAI,kBAAiB,CAAE;AACvC,QAAM,IAAI,QAAQ,YAAS;AAC1B,MAAE,SAAS,IAAI,KAAK,MAAM,CAAC;EAC5B,CAAC,CAAC;AACF,SAAO;AACR;AAPgB;",
-  "names": []
-}

@@ -1,18 +1,1 @@
-var __defProp = Object.defineProperty;
-var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
-import { registerSingleton } from "../../../../../platform/instantiation/common/extensions.js";
-import { INotebookSearchService } from "../../common/notebookSearch.js";
-import { NotebookSearchService } from "./notebookSearchService.js";
-function registerContributions() {
-  registerSingleton(
-    INotebookSearchService,
-    NotebookSearchService,
-    1
-    /* InstantiationType.Delayed */
-  );
-}
-__name(registerContributions, "registerContributions");
-export {
-  registerContributions
-};
-//# sourceMappingURL=notebookSearchContributions.js.map
+import{registerSingleton as o}from"../../../../../platform/instantiation/common/extensions.js";import{INotebookSearchService as r}from"../../common/notebookSearch.js";import{NotebookSearchService as e}from"./notebookSearchService.js";function n(){o(r,e,1)}export{n as registerContributions};

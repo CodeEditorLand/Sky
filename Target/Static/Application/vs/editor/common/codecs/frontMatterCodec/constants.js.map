@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["../../../../../../../../../../Dependency/Microsoft/Dependency/Editor/src/vs/editor/common/codecs/frontMatterCodec/constants.ts"],
-  "sourcesContent": ["/*---------------------------------------------------------------------------------------------\r\n *  Copyright (c) Microsoft Corporation. All rights reserved.\r\n *  Licensed under the MIT License. See License.txt in the project root for license information.\r\n *--------------------------------------------------------------------------------------------*/\r\n\r\nimport { NewLine } from '../linesCodec/tokens/newLine.js';\r\nimport { CarriageReturn } from '../linesCodec/tokens/carriageReturn.js';\r\nimport { FormFeed, Space, Tab, VerticalTab } from '../simpleCodec/tokens/index.js';\r\n\r\n/**\r\n * List of valid \"space\" tokens that are valid between\r\n * different entities of the Front Matter header.\r\n */\r\nexport const VALID_SPACE_TOKENS = Object.freeze([\r\n\tSpace, Tab, CarriageReturn, NewLine, FormFeed, VerticalTab,\r\n]);\r\n"],
-  "mappings": "AAKA,SAAS,eAAe;AACxB,SAAS,sBAAsB;AAC/B,SAAS,UAAU,OAAO,KAAK,mBAAmB;AAM3C,MAAM,qBAAqB,OAAO,OAAO;EAC/C;EAAO;EAAK;EAAgB;EAAS;EAAU;CAC/C;",
-  "names": []
-}

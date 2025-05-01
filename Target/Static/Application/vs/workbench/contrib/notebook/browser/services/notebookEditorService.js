@@ -1,6 +1,1 @@
-import { createDecorator } from "../../../../../platform/instantiation/common/instantiation.js";
-const INotebookEditorService = createDecorator("INotebookEditorWidgetService");
-export {
-  INotebookEditorService
-};
-//# sourceMappingURL=notebookEditorService.js.map
+import{createDecorator as o}from"../../../../../platform/instantiation/common/instantiation.js";const r=o("INotebookEditorWidgetService");export{r as INotebookEditorService};

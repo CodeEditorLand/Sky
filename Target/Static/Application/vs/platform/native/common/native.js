@@ -1,6 +1,1 @@
-import { createDecorator } from "../../instantiation/common/instantiation.js";
-const INativeHostService = createDecorator("nativeHostService");
-export {
-  INativeHostService
-};
-//# sourceMappingURL=native.js.map
+import{createDecorator as e}from"../../instantiation/common/instantiation.js";const o=e("nativeHostService");export{o as INativeHostService};

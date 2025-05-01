@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["../../../../../../../../../../../Dependency/Microsoft/Dependency/Editor/src/vs/workbench/contrib/chat/common/promptSyntax/constants.ts"],
-  "sourcesContent": ["/*---------------------------------------------------------------------------------------------\r\n *  Copyright (c) Microsoft Corporation. All rights reserved.\r\n *  Licensed under the MIT License. See License.txt in the project root for license information.\r\n *--------------------------------------------------------------------------------------------*/\r\n\r\nimport { LanguageSelector } from '../../../../../editor/common/languageSelector.js';\r\n\r\n/**\r\n * Documentation link for the reusable prompts feature.\r\n */\r\nexport const PROMPT_DOCUMENTATION_URL = 'https://aka.ms/vscode-ghcp-prompt-snippets';\r\nexport const INSTRUCTIONS_DOCUMENTATION_URL = 'https://aka.ms/vscode-ghcp-custom-instructions';\r\n\r\n/**\r\n * Language ID for the reusable prompt syntax.\r\n */\r\nexport const PROMPT_LANGUAGE_ID = 'prompt';\r\n\r\n/**\r\n * Language ID for instructions syntax.\r\n */\r\nexport const INSTRUCTIONS_LANGUAGE_ID = 'instructions';\r\n\r\n/**\r\n * Prompt and instructions files language selector.\r\n */\r\nexport const PROMPT_AND_INSTRUCTIONS_LANGUAGE_SELECTOR: LanguageSelector = [PROMPT_LANGUAGE_ID, INSTRUCTIONS_LANGUAGE_ID];\r\n"],
-  "mappings": "AAUO,MAAM,2BAA2B;AACjC,MAAM,iCAAiC;AAKvC,MAAM,qBAAqB;AAK3B,MAAM,2BAA2B;AAKjC,MAAM,4CAA8D,CAAC,oBAAoB,wBAAwB;",
-  "names": []
-}

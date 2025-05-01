@@ -1,6 +1,1 @@
-import { createDecorator } from "../../../../platform/instantiation/common/instantiation.js";
-const INotebookEditorModelResolverService = createDecorator("INotebookModelResolverService");
-export {
-  INotebookEditorModelResolverService
-};
-//# sourceMappingURL=notebookEditorModelResolverService.js.map
+import{createDecorator as o}from"../../../../platform/instantiation/common/instantiation.js";const r=o("INotebookModelResolverService");export{r as INotebookEditorModelResolverService};

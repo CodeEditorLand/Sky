@@ -1,17 +1,1 @@
-import { assertFn } from "../../assert.js";
-import { strictEquals } from "../../equals.js";
-import { BugIndicatingError, onBugIndicatingError } from "../../errors.js";
-import { Event } from "../../event.js";
-import { DisposableStore, markAsDisposed, toDisposable, trackDisposable } from "../../lifecycle.js";
-export {
-  BugIndicatingError,
-  DisposableStore,
-  Event,
-  assertFn,
-  markAsDisposed,
-  onBugIndicatingError,
-  strictEquals,
-  toDisposable,
-  trackDisposable
-};
-//# sourceMappingURL=deps.js.map
+import{assertFn as t}from"../../assert.js";import{strictEquals as e}from"../../equals.js";import{BugIndicatingError as i,onBugIndicatingError as p}from"../../errors.js";import{Event as m}from"../../event.js";import{DisposableStore as x,markAsDisposed as c,toDisposable as g,trackDisposable as l}from"../../lifecycle.js";export{i as BugIndicatingError,x as DisposableStore,m as Event,t as assertFn,c as markAsDisposed,p as onBugIndicatingError,e as strictEquals,g as toDisposable,l as trackDisposable};

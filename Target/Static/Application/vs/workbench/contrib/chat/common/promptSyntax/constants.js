@@ -1,13 +1,1 @@
-const PROMPT_DOCUMENTATION_URL = "https://aka.ms/vscode-ghcp-prompt-snippets";
-const INSTRUCTIONS_DOCUMENTATION_URL = "https://aka.ms/vscode-ghcp-custom-instructions";
-const PROMPT_LANGUAGE_ID = "prompt";
-const INSTRUCTIONS_LANGUAGE_ID = "instructions";
-const PROMPT_AND_INSTRUCTIONS_LANGUAGE_SELECTOR = [PROMPT_LANGUAGE_ID, INSTRUCTIONS_LANGUAGE_ID];
-export {
-  INSTRUCTIONS_DOCUMENTATION_URL,
-  INSTRUCTIONS_LANGUAGE_ID,
-  PROMPT_AND_INSTRUCTIONS_LANGUAGE_SELECTOR,
-  PROMPT_DOCUMENTATION_URL,
-  PROMPT_LANGUAGE_ID
-};
-//# sourceMappingURL=constants.js.map
+const o="https://aka.ms/vscode-ghcp-prompt-snippets",p="https://aka.ms/vscode-ghcp-custom-instructions",t="prompt",s="instructions",N=[t,s];export{p as INSTRUCTIONS_DOCUMENTATION_URL,s as INSTRUCTIONS_LANGUAGE_ID,N as PROMPT_AND_INSTRUCTIONS_LANGUAGE_SELECTOR,o as PROMPT_DOCUMENTATION_URL,t as PROMPT_LANGUAGE_ID};

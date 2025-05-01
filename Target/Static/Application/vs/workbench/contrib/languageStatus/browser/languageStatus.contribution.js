@@ -1,11 +1,1 @@
-import { registerWorkbenchContribution2 } from "../../../common/contributions.js";
-import { registerAction2 } from "../../../../platform/actions/common/actions.js";
-import { LanguageStatusContribution, ResetAction } from "./languageStatus.js";
-registerWorkbenchContribution2(
-  LanguageStatusContribution.Id,
-  LanguageStatusContribution,
-  3
-  /* WorkbenchPhase.AfterRestored */
-);
-registerAction2(ResetAction);
-//# sourceMappingURL=languageStatus.contribution.js.map
+import{registerWorkbenchContribution2 as o}from"../../../common/contributions.js";import{registerAction2 as r}from"../../../../platform/actions/common/actions.js";import{LanguageStatusContribution as t,ResetAction as i}from"./languageStatus.js";o(t.Id,t,3),r(i);

@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["../../../../../../../../../../../../Dependency/Microsoft/Dependency/Editor/src/vs/workbench/contrib/chat/browser/actions/promptActions/index.ts"],
-  "sourcesContent": ["/*---------------------------------------------------------------------------------------------\r\n *  Copyright (c) Microsoft Corporation. All rights reserved.\r\n *  Licensed under the MIT License. See License.txt in the project root for license information.\r\n *--------------------------------------------------------------------------------------------*/\r\n\r\nimport { registerRunPromptActions } from './chatRunPromptAction.js';\r\nimport { registerSaveToPromptActions } from './chatSaveToPromptAction.js';\r\nimport { registerAttachPromptActions } from './chatAttachInstructionsAction.js';\r\nexport { runAttachInstructionsAction } from './chatAttachInstructionsAction.js';\r\n\r\n/**\r\n * Helper to register all actions related to reusable prompt files.\r\n */\r\nexport const registerPromptActions = () => {\r\n\tregisterRunPromptActions();\r\n\tregisterAttachPromptActions();\r\n\tregisterSaveToPromptActions();\r\n};\r\n"],
-  "mappings": ";;AAKA,SAAS,gCAAgC;AACzC,SAAS,mCAAmC;AAC5C,SAAS,mCAAmC;AAC5C,SAAS,mCAAmC;AAKrC,MAAM,wBAAwB,6BAAK;AACzC,2BAAwB;AACxB,8BAA2B;AAC3B,8BAA2B;AAC5B,GAJqC;",
-  "names": []
-}

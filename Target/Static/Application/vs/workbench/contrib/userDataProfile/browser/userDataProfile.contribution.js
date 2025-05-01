@@ -1,10 +1,1 @@
-import { registerWorkbenchContribution2 } from "../../../common/contributions.js";
-import { UserDataProfilesWorkbenchContribution } from "./userDataProfile.js";
-import "./userDataProfileActions.js";
-registerWorkbenchContribution2(
-  UserDataProfilesWorkbenchContribution.ID,
-  UserDataProfilesWorkbenchContribution,
-  2
-  /* WorkbenchPhase.BlockRestore */
-);
-//# sourceMappingURL=userDataProfile.contribution.js.map
+import{registerWorkbenchContribution2 as o}from"../../../common/contributions.js";import{UserDataProfilesWorkbenchContribution as r}from"./userDataProfile.js";import"./userDataProfileActions.js";o(r.ID,r,2);

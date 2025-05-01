@@ -1,6 +1,1 @@
-import { createDecorator } from "../../../../platform/instantiation/common/instantiation.js";
-const ITitleService = createDecorator("titleService");
-export {
-  ITitleService
-};
-//# sourceMappingURL=titleService.js.map
+import{createDecorator as e}from"../../../../platform/instantiation/common/instantiation.js";const t=e("titleService");export{t as ITitleService};

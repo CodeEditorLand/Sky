@@ -1,6 +1,1 @@
-import { RawContextKey } from "../../../../../../platform/contextkey/common/contextkey.js";
-const NOTEBOOK_VARIABLE_VIEW_ENABLED = new RawContextKey("notebookVariableViewEnabled", false);
-export {
-  NOTEBOOK_VARIABLE_VIEW_ENABLED
-};
-//# sourceMappingURL=notebookVariableContextKeys.js.map
+import{RawContextKey as e}from"../../../../../../platform/contextkey/common/contextkey.js";const t=new e("notebookVariableViewEnabled",!1);export{t as NOTEBOOK_VARIABLE_VIEW_ENABLED};

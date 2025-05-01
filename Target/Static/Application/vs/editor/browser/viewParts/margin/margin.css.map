@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["../../../../../../../../../../Dependency/Microsoft/Dependency/Editor/out/vs/editor/browser/viewParts/margin/margin.css"],
-  "sourcesContent": ["/*---------------------------------------------------------------------------------------------\r\n *  Copyright (c) Microsoft Corporation. All rights reserved.\r\n *  Licensed under the MIT License. See License.txt in the project root for license information.\r\n *--------------------------------------------------------------------------------------------*/\r\n\r\n.monaco-editor .margin {\r\n\tbackground-color: var(--vscode-editorGutter-background);\r\n}\r\n"],
-  "mappings": "AAKA,CAAC,cAAc,CAAC;AACf,oBAAkB,IAAI;AACvB;",
-  "names": []
-}

@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["../../../../../../../../../../Dependency/Microsoft/Dependency/Editor/out/vs/editor/browser/viewParts/scrollDecoration/scrollDecoration.css"],
-  "sourcesContent": ["/*---------------------------------------------------------------------------------------------\r\n *  Copyright (c) Microsoft Corporation. All rights reserved.\r\n *  Licensed under the MIT License. See License.txt in the project root for license information.\r\n *--------------------------------------------------------------------------------------------*/\r\n\r\n.monaco-editor .scroll-decoration {\r\n\tposition: absolute;\r\n\ttop: 0;\r\n\tleft: 0;\r\n\theight: 6px;\r\n\tbox-shadow: var(--vscode-scrollbar-shadow) 0 6px 6px -6px inset;\r\n}\r\n"],
-  "mappings": "AAKA,CAAC,cAAc,CAAC;AACf,YAAU;AACV,OAAK;AACL,QAAM;AACN,UAAQ;AACR,cAAY,IAAI,2BAA2B,EAAE,IAAI,IAAI,KAAK;AAC3D;",
-  "names": []
-}

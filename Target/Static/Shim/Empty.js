@@ -1,5 +1,1 @@
-var Empty_default = {};
-export {
-  Empty_default as default
-};
-//# sourceMappingURL=Empty.js.map
+var e={};export{e as default};

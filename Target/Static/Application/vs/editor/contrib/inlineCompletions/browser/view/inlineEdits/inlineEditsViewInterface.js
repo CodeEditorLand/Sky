@@ -1,10 +1,1 @@
-var InlineEditTabAction;
-(function(InlineEditTabAction2) {
-  InlineEditTabAction2["Jump"] = "jump";
-  InlineEditTabAction2["Accept"] = "accept";
-  InlineEditTabAction2["Inactive"] = "inactive";
-})(InlineEditTabAction || (InlineEditTabAction = {}));
-export {
-  InlineEditTabAction
-};
-//# sourceMappingURL=inlineEditsViewInterface.js.map
+var p;!function(p){p.Jump="jump",p.Accept="accept",p.Inactive="inactive"}(p||(p={}));export{p as InlineEditTabAction};

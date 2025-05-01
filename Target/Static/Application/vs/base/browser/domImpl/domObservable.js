@@ -1,18 +1,1 @@
-var __defProp = Object.defineProperty;
-var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
-import { DisposableStore } from "../../common/lifecycle.js";
-import { autorun } from "../../common/observable.js";
-import { createStyleSheet2 } from "../domStylesheets.js";
-function createStyleSheetFromObservable(css) {
-  const store = new DisposableStore();
-  const w = store.add(createStyleSheet2());
-  store.add(autorun((reader) => {
-    w.setStyle(css.read(reader));
-  }));
-  return store;
-}
-__name(createStyleSheetFromObservable, "createStyleSheetFromObservable");
-export {
-  createStyleSheetFromObservable
-};
-//# sourceMappingURL=domObservable.js.map
+import{DisposableStore as a}from"../../common/lifecycle.js";import{autorun as m}from"../../common/observable.js";import{createStyleSheet2 as n}from"../domStylesheets.js";function d(t){const e=new a,r=e.add(n());return e.add(m(o=>{r.setStyle(t.read(o))})),e}export{d as createStyleSheetFromObservable};

@@ -1,6 +1,1 @@
-import { createDecorator } from "../../../../platform/instantiation/common/instantiation.js";
-const IMcpRegistry = createDecorator("mcpRegistry");
-export {
-  IMcpRegistry
-};
-//# sourceMappingURL=mcpRegistryTypes.js.map
+import{createDecorator as r}from"../../../../platform/instantiation/common/instantiation.js";const e=r("mcpRegistry");export{e as IMcpRegistry};

@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["../../../../../../../../../../Dependency/Microsoft/Dependency/Editor/out/vs/base/browser/ui/selectBox/selectBox.css"],
-  "sourcesContent": ["/*---------------------------------------------------------------------------------------------\r\n *  Copyright (c) Microsoft Corporation. All rights reserved.\r\n *  Licensed under the MIT License. See License.txt in the project root for license information.\r\n *--------------------------------------------------------------------------------------------*/\r\n\r\n.monaco-select-box {\r\n\twidth: 100%;\r\n\tcursor: pointer;\r\n\tborder-radius: 2px;\r\n}\r\n\r\n.monaco-select-box-dropdown-container {\r\n\tfont-size: 13px;\r\n\tfont-weight: normal;\r\n\ttext-transform: none;\r\n}\r\n\r\n/** Actions */\r\n\r\n.monaco-action-bar .action-item.select-container {\r\n\tcursor: default;\r\n}\r\n\r\n.monaco-action-bar .action-item .monaco-select-box {\r\n\tcursor: pointer;\r\n\tmin-width: 100px;\r\n\tmin-height: 18px;\r\n\tpadding: 2px 23px 2px 8px;\r\n}\r\n\r\n.mac .monaco-action-bar .action-item .monaco-select-box {\r\n\tfont-size: 11px;\r\n\tborder-radius: 5px;\r\n}\r\n"],
-  "mappings": "AAKA,CAAC;AACA,SAAO;AACP,UAAQ;AACR,iBAAe;AAChB;AAEA,CAAC;AACA,aAAW;AACX,eAAa;AACb,kBAAgB;AACjB;AAIA,CAAC,kBAAkB,CAAC,WAAW,CAAC;AAC/B,UAAQ;AACT;AAEA,CAJC,kBAIkB,CAJC,YAIY,CAlB/B;AAmBA,UAAQ;AACR,aAAW;AACX,cAAY;AACZ,WAAS,IAAI,KAAK,IAAI;AACvB;AAEA,CAAC,IAAI,CAXJ,kBAWuB,CAXJ,YAWiB,CAzBpC;AA0BA,aAAW;AACX,iBAAe;AAChB;",
-  "names": []
-}

@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["../../../../../../../../../Dependency/Microsoft/Dependency/Editor/src/vs/platform/product/common/productService.ts"],
-  "sourcesContent": ["/*---------------------------------------------------------------------------------------------\r\n *  Copyright (c) Microsoft Corporation. All rights reserved.\r\n *  Licensed under the MIT License. See License.txt in the project root for license information.\r\n *--------------------------------------------------------------------------------------------*/\r\n\r\nimport { IProductConfiguration } from '../../../base/common/product.js';\r\nimport { createDecorator } from '../../instantiation/common/instantiation.js';\r\n\r\nexport const IProductService = createDecorator<IProductService>('productService');\r\n\r\nexport interface IProductService extends Readonly<IProductConfiguration> {\r\n\r\n\treadonly _serviceBrand: undefined;\r\n\r\n}\r\n\r\nexport const productSchemaId = 'vscode://schemas/vscode-product';\r\n"],
-  "mappings": "AAMA,SAAS,uBAAuB;AAEzB,MAAM,kBAAkB,gBAAiC,gBAAgB;AAQzE,MAAM,kBAAkB;",
-  "names": []
-}

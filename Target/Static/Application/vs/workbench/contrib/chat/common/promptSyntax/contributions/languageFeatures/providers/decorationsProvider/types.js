@@ -1,14 +1,1 @@
-var DecorationClassNames;
-(function(DecorationClassNames2) {
-  DecorationClassNames2["default"] = "prompt-decoration";
-  DecorationClassNames2["fileReference"] = "prompt-decoration";
-})(DecorationClassNames || (DecorationClassNames = {}));
-var CssClassModifiers;
-(function(CssClassModifiers2) {
-  CssClassModifiers2["inactive"] = ".prompt-decoration-inactive";
-})(CssClassModifiers || (CssClassModifiers = {}));
-export {
-  CssClassModifiers,
-  DecorationClassNames
-};
-//# sourceMappingURL=types.js.map
+var o,t;!function(o){o.default="prompt-decoration",o.fileReference="prompt-decoration"}(o||(o={})),(t||(t={})).inactive=".prompt-decoration-inactive";export{t as CssClassModifiers,o as DecorationClassNames};

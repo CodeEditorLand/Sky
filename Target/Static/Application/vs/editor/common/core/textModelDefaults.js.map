@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["../../../../../../../../../Dependency/Microsoft/Dependency/Editor/src/vs/editor/common/core/textModelDefaults.ts"],
-  "sourcesContent": ["/*---------------------------------------------------------------------------------------------\r\n *  Copyright (c) Microsoft Corporation. All rights reserved.\r\n *  Licensed under the MIT License. See License.txt in the project root for license information.\r\n *--------------------------------------------------------------------------------------------*/\r\n\r\nexport const EDITOR_MODEL_DEFAULTS = {\r\n\ttabSize: 4,\r\n\tindentSize: 4,\r\n\tinsertSpaces: true,\r\n\tdetectIndentation: true,\r\n\ttrimAutoWhitespace: true,\r\n\tlargeFileOptimizations: true,\r\n\tbracketPairColorizationOptions: {\r\n\t\tenabled: true,\r\n\t\tindependentColorPoolPerBracketType: false,\r\n\t},\r\n};\r\n"],
-  "mappings": "AAKO,MAAM,wBAAwB;EACpC,SAAS;EACT,YAAY;EACZ,cAAc;EACd,mBAAmB;EACnB,oBAAoB;EACpB,wBAAwB;EACxB,gCAAgC;IAC/B,SAAS;IACT,oCAAoC;;;",
-  "names": []
-}

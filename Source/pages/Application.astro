@@ -4,6 +4,8 @@ import Layout from "@Source/Function/Markup/Base.astro";
 
 const Site = Astro.site;
 
+const Worker = `/Worker.js?BASE_REMOTE=${encodeURIComponent(Site?.toString() ?? Astro.url.origin)}`;
+
 const Default = {
 	// --- Core Local Configuration ---
 	// Explicitly set to null to indicate no remote server authority
@@ -156,6 +158,14 @@ const Default = {
 	</script>
 
 	<script is:inline type="module" src="/Worker/CSS/Load.js" slot="Head" defer
+	></script>
+
+	<script is:inline type="module" define:vars={{ Worker }} slot="Head">
+		// @ts-expect-error
+		window._WORKER = Worker;
+	</script>
+
+	<script is:inline type="module" src="/Worker/Register.js" slot="Head" defer
 	></script>
 
 	<script

@@ -1,9 +1,1 @@
-import { Registry } from "../../../../platform/registry/common/platform.js";
-import { Extensions as WorkbenchExtensions } from "../../../common/contributions.js";
-import { RemoteStartEntry } from "./remoteStartEntry.js";
-Registry.as(WorkbenchExtensions.Workbench).registerWorkbenchContribution(
-  RemoteStartEntry,
-  3
-  /* LifecyclePhase.Restored */
-);
-//# sourceMappingURL=remoteStartEntry.contribution.js.map
+import{Registry as r}from"../../../../platform/registry/common/platform.js";import{Extensions as o}from"../../../common/contributions.js";import{RemoteStartEntry as t}from"./remoteStartEntry.js";r.as(o.Workbench).registerWorkbenchContribution(t,3);

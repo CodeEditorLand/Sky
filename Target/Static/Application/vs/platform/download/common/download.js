@@ -1,6 +1,1 @@
-import { createDecorator } from "../../instantiation/common/instantiation.js";
-const IDownloadService = createDecorator("downloadService");
-export {
-  IDownloadService
-};
-//# sourceMappingURL=download.js.map
+import{createDecorator as o}from"../../instantiation/common/instantiation.js";const r=o("downloadService");export{r as IDownloadService};

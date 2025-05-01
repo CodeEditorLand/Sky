@@ -1,8 +1,1 @@
-import { createDecorator } from "../../instantiation/common/instantiation.js";
-const ISharedProcessTunnelService = createDecorator("sharedProcessTunnelService");
-const ipcSharedProcessTunnelChannelName = "sharedProcessTunnel";
-export {
-  ISharedProcessTunnelService,
-  ipcSharedProcessTunnelChannelName
-};
-//# sourceMappingURL=sharedProcessTunnelService.js.map
+import{createDecorator as e}from"../../instantiation/common/instantiation.js";const n=e("sharedProcessTunnelService"),o="sharedProcessTunnel";export{n as ISharedProcessTunnelService,o as ipcSharedProcessTunnelChannelName};

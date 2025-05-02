@@ -190,7 +190,7 @@ export default defineConfig({
 							"https://",
 							"",
 						),
-						port: 9999,
+						port: 10000,
 					}
 				: false,
 		},

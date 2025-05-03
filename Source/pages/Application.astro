@@ -143,6 +143,9 @@ const Default = {
 
 	// productQualityChangeHandler: undefined,
 } satisfies IWorkbenchConstructionOptions as IWorkbenchConstructionOptions;
+
+const Bust = (Base: string): string =>
+	`${Base}${Base.includes("?") ? "&" : "?"}v=${encodeURIComponent(Date.now())}`;
 ---
 
 <Layout>
@@ -157,23 +160,36 @@ const Default = {
 		globalThis._VSCODE_FILE_ROOT = `${Site}/Static/Application/`;
 	</script>
 
-	<script is:inline type="module" src="/Worker/CSS/Load.js" slot="Head" defer
-	></script>
+	<script
+		is:inline
+		type="module"
+		src={Bust("/Worker/CSS/Load.js")}
+		slot="Head"
+		defer></script>
 
-	<script is:inline type="module" define:vars={{ Worker }} slot="Head">
+	<script
+		is:inline
+		type="module"
+		define:vars={{ Worker: Bust(Worker) }}
+		slot="Head"
+	>
 		// @ts-expect-error
 		window._WORKER = Worker;
 	</script>
 
-	<script is:inline type="module" src="/Worker/Policy.js" slot="Head"
-	></script>
-
-	<script is:inline type="module" src="/Worker/Register.js" slot="Head" defer
+	<script is:inline type="module" src={Bust("/Worker/Policy.js")} slot="Head"
 	></script>
 
 	<script
 		is:inline
 		type="module"
-		src="/Static/Application/vs/code/browser/workbench/workbench.js"
+		src={Bust("/Worker/Register.js")}
+		slot="Head"
+		defer></script>
+
+	<script
+		is:inline
+		type="module"
+		src={Bust("/Static/Application/vs/code/browser/workbench/workbench.js")}
 		defer></script>
 </Layout>

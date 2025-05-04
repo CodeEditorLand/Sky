@@ -146,6 +146,10 @@ const Default = {
 
 const Bust = (Base: string): string =>
 	`${Base}${Base.includes("?") ? "&" : "?"}v=${encodeURIComponent(Date.now())}`;
+
+const On =
+	process.env["NODE_ENV"] === "development" ||
+	process.env["TAURI_ENV_DEBUG"] === "true";
 ---
 
 <Layout>
@@ -187,9 +191,21 @@ const Bust = (Base: string): string =>
 		slot="Head"
 		defer></script>
 
-	<script
-		is:inline
-		type="module"
-		src={Bust("/Static/Application/vs/code/browser/workbench/workbench.js")}
-		defer></script>
+	{
+		On ? (
+			<script
+				is:inline
+				type="module"
+				src={Bust(
+					"/Static/Application/vs/code/browser/workbench/workbench.js",
+				)}
+				defer
+			/>
+		) : (
+			<script>
+				import
+				"@codeeditorland/output/Target/Microsoft/VSCode/vs/code/browser/workbench/workbench.js";
+			</script>
+		)
+	}
 </Layout>

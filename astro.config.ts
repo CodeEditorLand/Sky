@@ -69,6 +69,10 @@ export default defineConfig({
 		clearScreen: false,
 
 		build: {
+			rollupOptions: {
+				external: ["@microsoft/1ds-core-js", "@microsoft/1ds-post-js"],
+			},
+
 			sourcemap: On,
 
 			manifest: On,

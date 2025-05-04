@@ -1,1 +1,0 @@
-import{ActionRunner as e}from"../../../../base/common/actions.js";class s extends e{constructor(t){super(),this._getContext=t}runAction(t,n){const e=this._getContext();return super.runAction(t,e)}}export{s as ActionRunnerWithContext};

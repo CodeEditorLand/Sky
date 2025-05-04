@@ -1,1 +1,0 @@
-import{timeout as r}from"../../../../base/common/async.js";async function m(e,n){return new Promise((i,o)=>{const t=r(2e3);t.then(()=>o("Writing to xterm is taking longer than 2 seconds")),e.write(n,()=>{t.cancel(),i()})})}export{m as writeP};

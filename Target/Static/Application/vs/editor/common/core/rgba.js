@@ -1,1 +1,0 @@
-class s{static{this.Empty=new s(0,0,0,0)}constructor(t,a,i,r){this._rgba8Brand=void 0,this.r=s._clamp(t),this.g=s._clamp(a),this.b=s._clamp(i),this.a=s._clamp(r)}equals(s){return this.r===s.r&&this.g===s.g&&this.b===s.b&&this.a===s.a}static _clamp(s){return s<0?0:s>255?255:0|s}}export{s as RGBA8};

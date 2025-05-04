@@ -1,1 +1,0 @@
-class r{constructor(r,t){this.range=r,this.message=t}}class a extends r{toString(){return`warning(${this.message})${this.range}`}}class n extends r{toString(){return`error(${this.message})${this.range}`}}export{r as PromptMetadataDiagnostic,n as PromptMetadataError,a as PromptMetadataWarning};

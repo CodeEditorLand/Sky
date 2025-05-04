@@ -147,9 +147,7 @@ const Default = {
 const Bust = (Base: string): string =>
 	`${Base}${Base.includes("?") ? "&" : "?"}v=${encodeURIComponent(Date.now())}`;
 
-const On =
-	process.env["NODE_ENV"] === "development" ||
-	process.env["TAURI_ENV_DEBUG"] === "true";
+const Bundle = typeof process.env["Bundle"] !== "undefined";
 ---
 
 <Layout>
@@ -167,13 +165,6 @@ const On =
 	<script
 		is:inline
 		type="module"
-		src={Bust("/Worker/CSS/Load.js")}
-		slot="Head"
-		defer></script>
-
-	<script
-		is:inline
-		type="module"
 		define:vars={{ Worker: Bust(Worker) }}
 		slot="Head"
 	>
@@ -181,31 +172,48 @@ const On =
 		window._WORKER = Worker;
 	</script>
 
-	<script is:inline type="module" src={Bust("/Worker/Policy.js")} slot="Head"
-	></script>
-
-	<script
-		is:inline
-		type="module"
-		src={Bust("/Worker/Register.js")}
-		slot="Head"
-		defer></script>
-
 	{
-		On ? (
-			<script
-				is:inline
-				type="module"
-				src={Bust(
-					"/Static/Application/vs/code/browser/workbench/workbench.js",
-				)}
-				defer
-			/>
-		) : (
+		Bundle ? (
 			<script>
-				import
+				import "@codeeditorland/Worker/Target/Worker/CSS/Load.js";
+				import "@codeeditorland/Worker/Target/Worker/Policy.js"; import
+				"@codeeditorland/Worker/Target/Worker/Register.js"; import
 				"@codeeditorland/output/Target/Microsoft/VSCode/vs/code/browser/workbench/workbench.js";
 			</script>
+		) : (
+			<Fragment>
+				<script
+					is:inline
+					type="module"
+					src={Bust("/Worker/CSS/Load.js")}
+					slot="Head"
+					defer
+				/>
+
+				<script
+					is:inline
+					type="module"
+					src={Bust("/Worker/Policy.js")}
+					slot="Head"
+				/>
+
+				<script
+					is:inline
+					type="module"
+					src={Bust("/Worker/Register.js")}
+					slot="Head"
+					defer
+				/>
+
+				<script
+					is:inline
+					type="module"
+					src={Bust(
+						"/Static/Application/vs/code/browser/workbench/workbench.js",
+					)}
+					defer
+				/>
+			</Fragment>
 		)
 	}
 </Layout>

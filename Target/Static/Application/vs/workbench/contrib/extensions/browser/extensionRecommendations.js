@@ -1,1 +1,0 @@
-import{Disposable as t}from"../../../../base/common/lifecycle.js";class e extends t{constructor(){super(...arguments),this._activationPromise=null}get activated(){return null!==this._activationPromise}activate(){return this._activationPromise||(this._activationPromise=this.doActivate()),this._activationPromise}}export{e as ExtensionRecommendations};

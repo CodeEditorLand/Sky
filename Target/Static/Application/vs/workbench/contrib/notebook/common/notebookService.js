@@ -1,1 +1,0 @@
-import{createDecorator as r}from"../../../../platform/instantiation/common/instantiation.js";const c=r("notebookService");class a{constructor(o,t,e){this.viewType=o,this.serializer=t,this.extensionData=e}}export{c as INotebookService,a as SimpleNotebookProviderInfo};

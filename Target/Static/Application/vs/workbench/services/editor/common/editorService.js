@@ -1,1 +1,0 @@
-import{createDecorator as o}from"../../../../platform/instantiation/common/instantiation.js";import{isEditorGroup as t}from"./editorGroupsService.js";const n=o("editorService"),p=-1,d=-2,s=-3;function a(r){return"number"==typeof r||t(r)}export{p as ACTIVE_GROUP,s as AUX_WINDOW_GROUP,n as IEditorService,d as SIDE_GROUP,a as isPreferredGroup};

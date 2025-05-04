@@ -1,1 +1,0 @@
-class s extends Error{constructor(r,s){super(`TableError [${r}] ${s}`)}}export{s as TableError};

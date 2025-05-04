@@ -1,1 +1,0 @@
-class i{constructor(){this._nativeEditContextMapping=new Map}register(t,e){return this._nativeEditContextMapping.set(t,e),{dispose:()=>{this._nativeEditContextMapping.delete(t)}}}get(t){return this._nativeEditContextMapping.get(t)}}const s=new i;export{s as NativeEditContextRegistry};

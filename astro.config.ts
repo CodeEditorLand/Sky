@@ -4,6 +4,8 @@ import type { ViteDevServer } from "vite";
 
 export const { readFile } = await import("fs/promises");
 
+export const Bundle = typeof process.env["Bundle"] !== "undefined";
+
 export const Tauri = typeof process.env["TAURI_ENV_ARCH"] !== "undefined";
 
 export const On =
@@ -20,13 +22,51 @@ export const Link = [
 	"@codeeditorland/worker",
 ];
 
-const Host = process.env["TAURI_DEV_HOST"]
+export const Host = process.env["TAURI_DEV_HOST"]
 	? `https://${process.env["TAURI_DEV_HOST"]}`
 	: Tauri
 		? "https://tauri.localhost"
 		: On
 			? "https://localhost"
 			: "https://editor.land";
+
+export const Static = {
+	targets: [
+		{
+			src: "node_modules/@codeeditorland/shim/Target/*",
+
+			dest: "Static/Shim/",
+		},
+	],
+
+	structured: false,
+};
+
+Bundle
+	? Static.targets.push(
+			...[
+				{
+					src: "node_modules/@codeeditorland/worker/Target/Worker.js",
+
+					dest: ".",
+				},
+			],
+		)
+	: Static.targets.push(
+			...[
+				{
+					src: "node_modules/@codeeditorland/output/Target/Microsoft/VSCode/*",
+
+					dest: "Static/Application/",
+				},
+
+				{
+					src: "node_modules/@codeeditorland/worker/Target/*",
+
+					dest: ".",
+				},
+			],
+		);
 
 export default defineConfig({
 	srcDir: "./Source",
@@ -200,35 +240,7 @@ export default defineConfig({
 		},
 
 		plugins: [
-			(await import("vite-plugin-static-copy")).viteStaticCopy({
-				targets: [
-					{
-						src: "node_modules/@codeeditorland/output/Target/Microsoft/VSCode/*",
-
-						dest: "Static/Application/",
-					},
-
-					// TODO: DO THIS FOR THE CodeEditorLand/Editor BUILD AS WELL
-					// {
-					// 	src: "node_modules/@codeeditorland/output/Target/CodeEditorLand/Editor/",
-					// 	dest: "Editor/",
-					// },
-
-					{
-						src: "node_modules/@codeeditorland/shim/Target/*",
-
-						dest: "Static/Shim/",
-					},
-
-					{
-						src: "node_modules/@codeeditorland/worker/Target/*",
-
-						dest: ".",
-					},
-				],
-
-				structured: false,
-			}),
+			(await import("vite-plugin-static-copy")).viteStaticCopy(Static),
 
 			(await import("vite-plugin-top-level-await")).default(),
 

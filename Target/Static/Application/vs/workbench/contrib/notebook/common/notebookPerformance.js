@@ -1,1 +1,0 @@
-class o{constructor(){this._marks={}}get value(){return{...this._marks}}mark(s){this._marks[s]||(this._marks[s]=Date.now())}}export{o as NotebookPerfMarks};

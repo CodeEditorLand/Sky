@@ -1,1 +1,0 @@
-import{rtrim as t}from"../../../../base/common/strings.js";function s(s){return s.endsWith(".git")&&(s=s.substr(0,s.length-4)),(s=t(s,"/")).endsWith("/new")&&(s=t(s,"/new")),s.endsWith("/issues")&&(s=t(s,"/issues")),s}export{s as normalizeGitHubUrl};

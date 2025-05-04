@@ -1,1 +1,0 @@
-import{WebWorkerServer as t}from"./webWorker.js";let i=!1;function a(r){if(i)throw new Error("WebWorker already initialized!");i=!0;const o=new t(e=>globalThis.postMessage(e),e=>r(e));return globalThis.onmessage=e=>{o.onmessage(e.data)},o}function n(r){globalThis.onmessage=o=>{i||a(r)}}export{n as bootstrapWebWorker,a as initialize};

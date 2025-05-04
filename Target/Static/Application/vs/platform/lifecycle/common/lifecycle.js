@@ -1,1 +1,0 @@
-import{isThenable as l,Promises as n}from"../../../base/common/async.js";function f(s,i){if(s.length===0)return Promise.resolve(!1);const o=[];let e=!1;for(const r of s){if(r===!0)return Promise.resolve(!0);l(r)&&o.push(r.then(t=>{t&&(e=!0)},t=>{i(t),e=!0}))}return n.settled(o).then(()=>e)}export{f as handleVetos};

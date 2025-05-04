@@ -1,1 +1,0 @@
-import{localize as o}from"../../../../../nls.js";const r="screenshot-focused-window";function t(e){return{id:r,name:o("screenshot","Screenshot"),value:e.buffer,kind:"image"}}export{r as ScreenshotVariableId,t as convertBufferToScreenshotVariable};

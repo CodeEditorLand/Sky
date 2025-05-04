@@ -1,1 +1,0 @@
-class o{constructor(){this._frameId=0,this._domFrameLog()}_domFrameLog(){}debug(...o){new Date}}const t=new o;function n(...o){t.debug(...o)}export{n as notebookDebug};

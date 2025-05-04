@@ -1,1 +1,0 @@
-import{PromptStringMetadata as o}from"./record.js";import{FrontMatterRecord as a}from"../../../../../../../../editor/common/codecs/frontMatterCodec/tokens/index.js";const r="description";class c extends o{get recordName(){return r}constructor(t,o){super(r,t,o)}static isDescriptionRecord(t){return t instanceof a&&t.nameToken.text===r}}export{c as PromptDescriptionMetadata};

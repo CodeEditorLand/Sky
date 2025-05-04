@@ -1,1 +1,0 @@
-import{createDecorator as e}from"../../instantiation/common/instantiation.js";const n=e("sharedProcessTunnelService"),o="sharedProcessTunnel";export{n as ISharedProcessTunnelService,o as ipcSharedProcessTunnelChannelName};

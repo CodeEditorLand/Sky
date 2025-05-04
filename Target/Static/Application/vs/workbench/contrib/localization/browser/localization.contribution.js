@@ -1,1 +1,0 @@
-import{BaseLocalizationWorkbenchContribution as o}from"../common/localization.contribution.js";import{Registry as n}from"../../../../platform/registry/common/platform.js";import{Extensions as r}from"../../../common/contributions.js";class t extends o{}const i=n.as(r.Workbench);i.registerWorkbenchContribution(t,4);export{t as WebLocalizationWorkbenchContribution};

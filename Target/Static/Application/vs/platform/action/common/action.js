@@ -1,1 +1,0 @@
-function e(n){return n&&"object"==typeof n&&"string"==typeof n.original&&"string"==typeof n.value}function n(n){return!!n&&void 0!==n.condition}export{n as isICommandActionToggleInfo,e as isLocalizedString};

@@ -1,1 +1,0 @@
-import{TestId as t}from"../../common/testId.js";function i(e,r){r instanceof t||(r=t.fromString(r));let o=e;for(const t of r.path){if(!o.children?.hasOwnProperty(t))return;o=o.children[t]}return o.collapsed}export{i as isCollapsedInSerializedTestTree};

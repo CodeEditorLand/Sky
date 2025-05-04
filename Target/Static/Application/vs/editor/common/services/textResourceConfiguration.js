@@ -1,1 +1,0 @@
-import{createDecorator as e}from"../../../platform/instantiation/common/instantiation.js";const o=e("textResourceConfigurationService"),t=e("textResourcePropertiesService");export{o as ITextResourceConfigurationService,t as ITextResourcePropertiesService};

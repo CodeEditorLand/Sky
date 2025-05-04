@@ -1,1 +1,0 @@
-import{createDecorator as r}from"../../instantiation/common/instantiation.js";const o=r("clipboardService");export{o as IClipboardService};

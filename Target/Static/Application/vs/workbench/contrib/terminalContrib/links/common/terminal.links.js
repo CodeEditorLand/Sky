@@ -1,1 +1,0 @@
-var n;!function(n){n.OpenDetectedLink="workbench.action.terminal.openDetectedLink",n.OpenWordLink="workbench.action.terminal.openWordLink",n.OpenFileLink="workbench.action.terminal.openFileLink",n.OpenWebLink="workbench.action.terminal.openUrlLink"}(n||(n={}));export{n as TerminalLinksCommandId};

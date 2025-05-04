@@ -1,1 +1,0 @@
-import{createDecorator as c}from"../../instantiation/common/instantiation.js";const e=c("productService"),r="vscode://schemas/vscode-product";export{e as IProductService,r as productSchemaId};

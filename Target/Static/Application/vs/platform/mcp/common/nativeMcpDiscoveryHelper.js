@@ -1,1 +1,0 @@
-import{createDecorator as e}from"../../instantiation/common/instantiation.js";const c=e("INativeMcpDiscoveryHelperService"),o="NativeMcpDiscoveryHelper";export{c as INativeMcpDiscoveryHelperService,o as NativeMcpDiscoveryHelperChannelName};

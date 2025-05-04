@@ -1,1 +1,0 @@
-function i(i){return!!i&&"string"==typeof i.sessionId&&19===i.$mid}export{i as isChatViewTitleActionContext};

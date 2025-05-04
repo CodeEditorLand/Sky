@@ -1,1 +1,0 @@
-import{createDecorator as s}from"../../instantiation/common/instantiation.js";const n=s("mainProcessService");class o{constructor(e,r){this.server=e,this.router=r}getChannel(e){return this.server.getChannel(e,this.router)}registerChannel(e,r){this.server.registerChannel(e,r)}}export{n as IMainProcessService,o as MainProcessService};

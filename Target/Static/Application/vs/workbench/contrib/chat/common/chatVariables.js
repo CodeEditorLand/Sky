@@ -1,1 +1,0 @@
-import{createDecorator as r}from"../../../../platform/instantiation/common/instantiation.js";const a=a=>"object"==typeof a&&null!==a&&"id"in a&&"vscode.problems"===a.id,i=r("IChatVariablesService");export{i as IChatVariablesService,a as isIChatRequestProblemsVariable};

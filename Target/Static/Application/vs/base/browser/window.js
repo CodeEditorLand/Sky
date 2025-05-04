@@ -1,1 +1,0 @@
-function i(n,o){const d=n;"number"!=typeof d.vscodeWindowId&&Object.defineProperty(d,"vscodeWindowId",{get:()=>o})}const d=window;function t(n){return n!==d&&"number"==typeof n?.vscodeWindowId}export{i as ensureCodeWindow,t as isAuxiliaryWindow,d as mainWindow};

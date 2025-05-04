@@ -1,1 +1,0 @@
-class h{constructor(i,t,r,e){this.originalStart=i,this.originalLength=t,this.modifiedStart=r,this.modifiedLength=e}getOriginalEnd(){return this.originalStart+this.originalLength}getModifiedEnd(){return this.modifiedStart+this.modifiedLength}}export{h as DiffChange};

@@ -1,1 +1,0 @@
-import*as o from"../../../nls.js";const e=o.localize("open","open"),l=o.localize("close","close"),n=o.localize("find","find");var c={open:e,close:l,find:n};export{c as default};

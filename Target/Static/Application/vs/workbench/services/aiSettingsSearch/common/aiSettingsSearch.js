@@ -1,1 +1,0 @@
-import{createDecorator as o}from"../../../../platform/instantiation/common/instantiation.js";const L=o("IAiSettingsSearchService");var D;!function(t){t[t.EMBEDDED=1]="EMBEDDED",t[t.LLM_RANKED=2]="LLM_RANKED",t[t.CANCELED=3]="CANCELED"}(D||(D={}));export{D as AiSettingsSearchResultKind,L as IAiSettingsSearchService};

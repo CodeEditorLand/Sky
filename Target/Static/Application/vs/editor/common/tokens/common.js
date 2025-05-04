@@ -1,1 +1,0 @@
-class n{constructor(t=5){this.timesPerSecond=t,this._lastRun=0,this._minimumTimeBetweenRuns=1e3/t}runIfNotLimited(t){const e=Date.now();e-this._lastRun>=this._minimumTimeBetweenRuns&&(this._lastRun=e,t())}}export{n as RateLimiter};

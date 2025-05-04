@@ -1,1 +1,0 @@
-import{createDecorator as o}from"../../../../platform/instantiation/common/instantiation.js";const e=o("workingCopyHistoryService"),t=20;export{e as IWorkingCopyHistoryService,t as MAX_PARALLEL_HISTORY_IO_OPS};

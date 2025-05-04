@@ -1,1 +1,0 @@
-import{Emitter as e}from"../../base/common/event.js";class n{constructor(){this._inputMode="insert",this._onDidChangeInputMode=new e,this.onDidChangeInputMode=this._onDidChangeInputMode.event}getInputMode(){return this._inputMode}setInputMode(t){this._inputMode=t,this._onDidChangeInputMode.fire(this._inputMode)}}const d=new n;export{d as InputMode};

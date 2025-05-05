@@ -174,12 +174,24 @@ const Bundle = typeof process.env["Bundle"] !== "undefined";
 
 	{
 		Bundle ? (
-			<script>
-				import "@codeeditorland/Worker/Target/Worker/CSS/Load.js";
-				import "@codeeditorland/Worker/Target/Worker/Policy.js"; import
-				"@codeeditorland/Worker/Target/Worker/Register.js"; import
-				"@codeeditorland/output/Target/Microsoft/VSCode/vs/code/browser/workbench/workbench.js";
-			</script>
+			<Fragment>
+				<script>
+					import "@codeeditorland/Worker/Target/Worker/CSS/Load.js";
+				</script>
+
+				<script>
+					import "@codeeditorland/Worker/Target/Worker/Policy.js";
+				</script>
+
+				<script>
+					import "@codeeditorland/Worker/Target/Worker/Register.js";
+				</script>
+
+				<script>
+					import
+					"@codeeditorland/output/Target/Microsoft/VSCode/vs/code/browser/workbench/workbench.js";
+				</script>
+			</Fragment>
 		) : (
 			<Fragment>
 				<script
@@ -187,8 +199,7 @@ const Bundle = typeof process.env["Bundle"] !== "undefined";
 					type="module"
 					src={Bust("/Worker/CSS/Load.js")}
 					slot="Head"
-					defer
-				/>
+							/>
 
 				<script
 					is:inline

@@ -151,7 +151,9 @@ const Default = {
 const Bust = (Base: string): string =>
 	`${Base}${Base.includes("?") ? "&" : "?"}Time=${encodeURIComponent(Date.now())}`;
 
-const Bundle = typeof process.env["Bundle"] !== "undefined";
+const Bundle = process.env["Bundle"] === "true";
+
+const Browser = process.env["Browser"] === "true";
 ---
 
 <Layout>
@@ -183,9 +185,28 @@ const Bundle = typeof process.env["Bundle"] !== "undefined";
 					import "@codeeditorland/Worker/Target/Worker/CSS/Load.js";
 					import "@codeeditorland/Worker/Target/Worker/Policy.js";
 					import "@codeeditorland/Worker/Target/Worker/Register.js";
-					import
-					"@codeeditorland/output/Target/Microsoft/VSCode/vs/code/browser/workbench/workbench.js";
 				</script>
+
+				{Browser ? (
+					<script>
+						import
+						"@codeeditorland/output/Target/Microsoft/VSCode/vs/code/browser/workbench/workbench.js";
+					</script>
+				) : (
+					<Fragment>
+						{On ? (
+							<script>
+								import
+								"@codeeditorland/output/Target/Microsoft/VSCode/bootstrap-window.js";
+							</script>
+						) : null}
+
+						<script>
+							import
+							"@codeeditorland/output/Target/Microsoft/VSCode/vs/code/electron-sandbox/workbench/workbench.js";
+						</script>
+					</Fragment>
+				)}
 			</Fragment>
 		) : (
 			<Fragment>
@@ -212,14 +233,37 @@ const Bundle = typeof process.env["Bundle"] !== "undefined";
 					defer
 				/>
 
-				<script
-					is:inline
-					type="module"
-					src={Bust(
-						"/Static/Application/vs/code/browser/workbench/workbench.js",
-					)}
-					defer
-				/>
+				{Browser ? (
+					<script
+						is:inline
+						type="module"
+						src={Bust(
+							"/Static/Application/vs/code/browser/workbench/workbench.js",
+						)}
+						defer
+					/>
+				) : (
+					<Fragment>
+						{On ? (
+							<script
+								is:inline
+								type="module"
+								src={Bust(
+									"/Static/Application/bootstrap-window.js",
+								)}
+							/>
+						) : null}
+
+						<script
+							is:inline
+							type="module"
+							src={Bust(
+								"/Static/Application/vs/code/electron-sandbox/workbench/workbench.js",
+							)}
+							defer
+						/>
+					</Fragment>
+				)}
 			</Fragment>
 		)
 	}

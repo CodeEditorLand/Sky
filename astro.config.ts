@@ -4,7 +4,9 @@ import type { ViteDevServer } from "vite";
 
 export const { readFile } = await import("fs/promises");
 
-export const Bundle = typeof process.env["Bundle"] !== "undefined";
+export const Bundle = process.env["Bundle"] === "true";
+
+export const Browser = process.env["Browser"] === "true";
 
 export const Tauri = typeof process.env["TAURI_ENV_ARCH"] !== "undefined";
 
@@ -110,7 +112,13 @@ export default defineConfig({
 
 		build: {
 			rollupOptions: {
-				external: ["@microsoft/1ds-core-js", "@microsoft/1ds-post-js"],
+				external: [
+					"@microsoft/1ds-core-js",
+					"@microsoft/1ds-post-js",
+					Browser
+						? "@codeeditorland/output/Target/Microsoft/VSCode/vs/code/electron-sandbox/workbench/workbench.js"
+						: "",
+				],
 			},
 
 			sourcemap: On,

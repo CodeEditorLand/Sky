@@ -1,6 +1,8 @@
 ---
 import type { IWorkbenchConstructionOptions } from "@Editor/vs/workbench/browser/web.api.js";
 import Layout from "@Source/Function/Markup/Base.astro";
+import BrowserWorkbench from "@Source/Workbench/Browser.astro";
+import DefaultWorkbench from "@Source/Workbench/Default.astro";
 
 const Site = Astro.site;
 
@@ -187,26 +189,7 @@ const Browser = process.env["Browser"] === "true";
 					import "@codeeditorland/Worker/Target/Worker/Register.js";
 				</script>
 
-				{Browser ? (
-					<script>
-						import
-						"@codeeditorland/output/Target/Microsoft/VSCode/vs/code/browser/workbench/workbench.js";
-					</script>
-				) : (
-					<Fragment>
-						{On ? (
-							<script>
-								import
-								"@codeeditorland/output/Target/Microsoft/VSCode/bootstrap-window.js";
-							</script>
-						) : null}
-
-						<script>
-							import
-							"@codeeditorland/output/Target/Microsoft/VSCode/vs/code/electron-sandbox/workbench/workbench.js";
-						</script>
-					</Fragment>
-				)}
+				{Browser ? <BrowserWorkbench /> : <DefaultWorkbench />}
 			</Fragment>
 		) : (
 			<Fragment>

@@ -24,6 +24,8 @@ export const Link = [
 	"@codeeditorland/worker",
 ];
 
+export const External = ["@microsoft/1ds-core-js", "@microsoft/1ds-post-js"];
+
 export const Host = process.env["TAURI_DEV_HOST"]
 	? `https://${process.env["TAURI_DEV_HOST"]}`
 	: Tauri
@@ -70,6 +72,14 @@ Bundle
 			],
 		);
 
+Browser
+	? External.push(
+			...[
+				"@codeeditorland/output/Target/Microsoft/VSCode/vs/code/electron-sandbox/workbench/workbench.js",
+			],
+		)
+	: {};
+
 export default defineConfig({
 	srcDir: "./Source",
 
@@ -112,13 +122,7 @@ export default defineConfig({
 
 		build: {
 			rollupOptions: {
-				external: [
-					"@microsoft/1ds-core-js",
-					"@microsoft/1ds-post-js",
-					Browser
-						? "@codeeditorland/output/Target/Microsoft/VSCode/vs/code/electron-sandbox/workbench/workbench.js"
-						: "",
-				],
+				external: External,
 			},
 
 			sourcemap: On,

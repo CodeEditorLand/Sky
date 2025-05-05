@@ -6,6 +6,10 @@ const Site = Astro.site;
 
 const Worker = `/Worker.js?BASE_REMOTE=${encodeURIComponent(Site?.toString() ?? Astro.url.origin)}`;
 
+export const On =
+	process.env["NODE_ENV"] === "development" ||
+	process.env["TAURI_ENV_DEBUG"] === "true";
+
 const Default = {
 	// --- Core Local Configuration ---
 	// Explicitly set to null to indicate no remote server authority
@@ -127,9 +131,9 @@ const Default = {
 	// --- Development ---
 	developmentOptions: {
 		// Set to Trace (1) or Debug (2) for maximum insight during development
-		logLevel: 2,
+		logLevel: On ? 2 : 0,
 
-		enableSmokeTestDriver: false,
+		enableSmokeTestDriver: On,
 
 		// Only set if running integration tests
 		// extensionTestsPath: undefined,
@@ -145,7 +149,7 @@ const Default = {
 } satisfies IWorkbenchConstructionOptions as IWorkbenchConstructionOptions;
 
 const Bust = (Base: string): string =>
-	`${Base}${Base.includes("?") ? "&" : "?"}v=${encodeURIComponent(Date.now())}`;
+	`${Base}${Base.includes("?") ? "&" : "?"}Time=${encodeURIComponent(Date.now())}`;
 
 const Bundle = typeof process.env["Bundle"] !== "undefined";
 ---
@@ -199,7 +203,7 @@ const Bundle = typeof process.env["Bundle"] !== "undefined";
 					type="module"
 					src={Bust("/Worker/CSS/Load.js")}
 					slot="Head"
-							/>
+				/>
 
 				<script
 					is:inline
@@ -213,7 +217,6 @@ const Bundle = typeof process.env["Bundle"] !== "undefined";
 					type="module"
 					src={Bust("/Worker/Register.js")}
 					slot="Head"
-					defer
 				/>
 
 				<script
@@ -222,7 +225,6 @@ const Bundle = typeof process.env["Bundle"] !== "undefined";
 					src={Bust(
 						"/Static/Application/vs/code/browser/workbench/workbench.js",
 					)}
-					defer
 				/>
 			</Fragment>
 		)

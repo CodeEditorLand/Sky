@@ -4,6 +4,20 @@ import type { ViteDevServer } from "vite";
 
 export const { readFile } = await import("fs/promises");
 
+export const Reserved = [
+	"WorkerApplication",
+
+	"_LOAD_CSS_WORKER",
+
+	"_POLICY_WORKER",
+
+	"_WORKER",
+
+	"value",
+
+	"get",
+];
+
 export const Bundle = process.env["Bundle"] === "true";
 
 export const Browser = process.env["Browser"] === "true";
@@ -40,6 +54,12 @@ export const Static = {
 			src: "node_modules/@codeeditorland/shim/Target/*",
 
 			dest: "Static/Shim/",
+		},
+
+		{
+			src: "node_modules/@codeeditorland/output/Target/Microsoft/VSCode/vs/workbench/services/keybinding/browser/keyboardLayouts/layout.contribution.win.js",
+
+			dest: "Static/Application/vs/workbench/services/keybinding/browser/keyboardLayouts/",
 		},
 	],
 
@@ -164,7 +184,7 @@ export default defineConfig({
 
 							preamble: "",
 
-							ecma: 5,
+							ecma: 2020,
 
 							preserve_annotations: true,
 
@@ -201,7 +221,117 @@ export default defineConfig({
 
 						toplevel: true,
 					}
-				: {},
+				: {
+						compress: {
+							passes: 3,
+
+							drop_console: true,
+
+							drop_debugger: true,
+
+							pure_funcs: [],
+						},
+
+						ecma: 2020,
+
+						enclose: false,
+
+						format: {
+							ascii_only: false,
+
+							braces: false,
+
+							comments: false,
+
+							ie8: false,
+
+							indent_level: 0,
+
+							indent_start: 0,
+
+							inline_script: false,
+
+							keep_numbers: false,
+
+							keep_quoted_props: false,
+
+							max_line_len: false,
+
+							preamble: "",
+
+							ecma: 2020,
+
+							preserve_annotations: false,
+
+							quote_keys: false,
+
+							quote_style: 3,
+
+							safari10: false,
+
+							semicolons: false,
+
+							shebang: true,
+
+							shorthand: true,
+
+							webkit: true,
+
+							wrap_func_args: true,
+
+							wrap_iife: true,
+						},
+
+						ie8: false,
+
+						keep_classnames: false,
+
+						keep_fnames: false,
+
+						// mangle: {
+						// 	eval: true,
+
+						// 	keep_classnames: false,
+
+						// 	keep_fnames: false,
+
+						// 	module: true,
+
+						// 	properties: {
+						// 		reserved: Reserved,
+
+						// 		keep_quoted: true,
+						// 	},
+
+						// 	reserved: Reserved,
+
+						// 	safari10: false,
+
+						// 	toplevel: true,
+						// },
+
+						mangle: false,
+
+						maxWorkers: 12,
+
+						module: true,
+
+						nameCache: {},
+
+						parse: {
+							bare_returns: true,
+
+							html5_comments: false,
+
+							shebang: true,
+						},
+
+						safari10: false,
+
+						sourceMap: false,
+
+						toplevel: true,
+					},
 		},
 
 		optimizeDeps: {
@@ -242,10 +372,13 @@ export default defineConfig({
 			hmr: Host
 				? {
 						protocol: "wss",
+
 						host: Host.replace("http://", "").replace(
 							"https://",
+
 							"",
 						),
+
 						port: 10000,
 					}
 				: false,

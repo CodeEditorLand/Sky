@@ -1,24 +1,41 @@
 {
 	"$schema": "https://json.schemastore.org/tsconfig",
+
 	"compilerOptions": {
 		"baseUrl": "./",
+
 		"emitDeclarationOnly": false,
+
 		"lib": ["ESNext", "DOM", "DOM.Iterable"],
+
 		"moduleResolution": "Bundler",
+
 		"noEmit": true,
+
 		"outDir": "Target",
+
 		"paths": {
 			"@Source/*": ["Source/*"]
 		},
+
 		"plugins": [
 			{
 				"name": "@astrojs/ts-plugin"
 			}
 		],
+
 		"rootDir": ".",
-		"types": ["astro/client", "astro/env"]
+
+		"types": ["astro/client", "astro/env"],
+
+		"emitDecoratorMetadata": true,
+
+		"experimentalDecorators": true
 	},
+
 	"exclude": ["Target"],
+
 	"extends": "@playform/build/tsconfig",
+
 	"include": [".astro/types.d.ts", "Source"]
 }

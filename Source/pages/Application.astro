@@ -160,8 +160,84 @@ const Browser = process.env["Browser"] === "true";
 
 <Layout>
 	<meta
+		http-equiv="Content-Security-Policy"
+		content="
+				default-src
+					'none'
+				;
+				img-src
+					'self'
+					data:
+					blob:
+					vscode-remote-resource:
+					vscode-managed-remote-resource:
+					https:
+				;
+				manifest-src
+					'self'
+				;
+				media-src
+					'self'
+				;
+				frame-src
+					'self'
+					vscode-webview:
+				;
+				script-src
+					'self'
+					'unsafe-eval'
+					blob:
+				;
+				style-src
+					'self'
+					'unsafe-inline'
+				;
+				connect-src
+					'self'
+					wss://tauri.localhost
+					https:
+				;
+				font-src
+					'self'
+					vscode-remote-resource:
+					vscode-managed-remote-resource:
+				;
+				block-all-mixed-content
+				;
+				upgrade-insecure-requests
+				;
+				require-trusted-types-for
+					'script'
+				;
+				trusted-types
+					WorkerApplication
+					amdLoader
+					cellRendererEditorText
+					defaultWorkerFactory
+					diffEditorWidget
+					diffReview
+					domLineBreaksComputer
+					dompurify
+					editorGhostText
+					editorViewLayer
+					notebookRenderer
+					stickyScrollViewLayer
+					tokenizeToString
+					notebookChatEditController
+				;
+		"
+		slot="Meta"
+	/>
+
+	<meta
 		id="vscode-workbench-web-configuration"
 		data-settings={JSON.stringify(Default)}
+		slot="Meta"
+	/>
+
+	<meta
+		id="vscode-workbench-auth-session"
+		data-settings={JSON.stringify({})}
 		slot="Meta"
 	/>
 

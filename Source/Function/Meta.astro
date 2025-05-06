@@ -1,5 +1,5 @@
 ---
-const { Title = "", Description = "" } = Astro.props;
+const { Title = "FIDDEE", Description = "" } = Astro.props;
 
 interface Props {
 	Title?: string;
@@ -11,7 +11,17 @@ interface Props {
 
 <meta charset="utf-8" />
 <meta name="description" content={Description} />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-title" content="FIDDEE" />
+
+<!-- <link rel="apple-touch-icon" href="{{WORKBENCH_WEB_BASE_URL}}/resources/server/code-192.png" /> -->
+
+<meta
+	name="viewport"
+	content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no"
+/>
 <meta name="theme-color" content="#ffffff" />
 <meta name="format-detection" content="telephone=no" />
 <meta name="twitter:dnt" content="on" />

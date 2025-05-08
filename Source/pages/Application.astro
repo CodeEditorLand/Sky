@@ -4,13 +4,16 @@ import Layout from "@Source/Function/Markup/Base.astro";
 import BrowserWorkbench from "@Source/Workbench/Browser.astro";
 import DefaultWorkbench from "@Source/Workbench/Default.astro";
 
-const Site = Astro.site;
-
-const Worker = `/Worker.js?BASE_REMOTE=${encodeURIComponent(Site?.toString() ?? Astro.url.origin)}`;
-
 const On =
 	process.env["NODE_ENV"] === "development" ||
 	process.env["TAURI_ENV_DEBUG"] === "true";
+const Bundle = process.env["Bundle"] === "true";
+
+const Browser = process.env["Browser"] === "true";
+
+const Site = Astro.site;
+
+const Worker = `/Worker.js?BASE_REMOTE=${encodeURIComponent(Site?.toString() ?? Astro.url.origin)}`;
 
 const Default = {
 	// --- Core Local Configuration ---
@@ -153,9 +156,7 @@ const Default = {
 const Bust = (Base: string): string =>
 	`${Base}${Base.includes("?") ? "&" : "?"}Time=${encodeURIComponent(Date.now())}`;
 
-const Bundle = process.env["Bundle"] === "true";
-
-const Browser = process.env["Browser"] === "true";
+console.log(Bundle);
 ---
 
 <Layout>
@@ -315,26 +316,14 @@ const Browser = process.env["Browser"] === "true";
 						defer
 					/>
 				) : (
-					<Fragment>
-						{On ? (
-							<script
-								is:inline
-								type="module"
-								src={Bust(
-									"/Static/Application/bootstrap-window.js",
-								)}
-							/>
-						) : null}
-
-						<script
-							is:inline
-							type="module"
-							src={Bust(
-								"/Static/Application/vs/code/electron-sandbox/workbench/workbench.js",
-							)}
-							defer
-						/>
-					</Fragment>
+					<script
+						is:inline
+						type="module"
+						src={Bust(
+							"/Static/Application/vs/code/electron-sandbox/workbench/workbench.js",
+						)}
+						defer
+					/>
 				)}
 			</Fragment>
 		)

@@ -71,6 +71,7 @@ export const Static = {
 
 			dest: "Static/Shim/",
 		},
+
 		{
 			src: `${VSCodeOutput}/${KeyboardLayouts}/_.contribution.js`,
 
@@ -85,6 +86,24 @@ switch (Platform) {
 	case "Windows":
 		Static.targets.push({
 			src: `${VSCodeOutput}/${KeyboardLayouts}/*.win.js`,
+
+			dest: `${ApplicationStatic}/${KeyboardLayouts}/`,
+		});
+
+		break;
+
+	case "Mac":
+		Static.targets.push({
+			src: `${VSCodeOutput}/${KeyboardLayouts}/*.darwin.js`,
+
+			dest: `${ApplicationStatic}/${KeyboardLayouts}/`,
+		});
+
+		break;
+
+	case "Linux":
+		Static.targets.push({
+			src: `${VSCodeOutput}/${KeyboardLayouts}/*.linux.js`,
 
 			dest: `${ApplicationStatic}/${KeyboardLayouts}/`,
 		});
@@ -142,6 +161,7 @@ export default defineConfig({
 
 	prefetch: {
 		prefetchAll: true,
+
 		defaultStrategy: "viewport",
 	},
 
@@ -331,20 +351,21 @@ export default defineConfig({
 
 						// 	properties: {
 						// 		reserved: [
-						// 	"WorkerApplication",
+						// 		 	"WorkerApplication",
 
-						// 	"_LOAD_CSS_WORKER",
+						// 		 	"_LOAD_CSS_WORKER",
 
-						// 	"_POLICY_WORKER",
+						// 		 	"_POLICY_WORKER",
 
-						// 	"_WORKER",
+						// 		 	"_WORKER",
 
-						// 	"value",
+						// 		 	"value",
 
-						// 	"get",
+						// 		 	"get",
 						// ],
 
 						// 		keep_quoted: true,
+
 						// 	},
 
 						// 	reserved: [],
@@ -352,6 +373,7 @@ export default defineConfig({
 						// 	safari10: false,
 
 						// 	toplevel: true,
+
 						// },
 
 						mangle: false,
@@ -429,10 +451,8 @@ export default defineConfig({
 		},
 
 		plugins: [
-			// @ts-expect-error
 			(await import("vite-plugin-static-copy")).viteStaticCopy(Static),
 
-			// @ts-expect-error
 			(await import("vite-plugin-top-level-await")).default(),
 
 			((Module: string[]) => ({

@@ -1,18 +1,3 @@
----
-const On =
-	process.env["NODE_ENV"] === "development" ||
-	process.env["TAURI_ENV_DEBUG"] === "true";
----
-
-{
-	On ? (
-		<script>
-			import
-			"@codeeditorland/output/Target/Microsoft/VSCode/bootstrap-window.js";
-		</script>
-	) : null
-}
-
 <script>
 	import "@codeeditorland/output/Target/Microsoft/VSCode/vs/code/electron-sandbox/workbench/workbench.js";
 </script>

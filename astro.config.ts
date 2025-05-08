@@ -2,27 +2,37 @@ import { fileURLToPath } from "node:url";
 import { defineConfig } from "astro/config";
 import type { ViteDevServer } from "vite";
 
+import VSCode from "../Output/Source/ESBuild/Microsoft/VSCode";
+
 export const { readFile } = await import("fs/promises");
-
-export const Reserved = [
-	"WorkerApplication",
-
-	"_LOAD_CSS_WORKER",
-
-	"_POLICY_WORKER",
-
-	"_WORKER",
-
-	"value",
-
-	"get",
-];
 
 export const Bundle = process.env["Bundle"] === "true";
 
 export const Browser = process.env["Browser"] === "true";
 
 export const Tauri = typeof process.env["TAURI_ENV_ARCH"] !== "undefined";
+
+export const Platform = ((Platform) => {
+	switch (Platform?.toLowerCase()) {
+		case "windows":
+			return "Windows";
+
+		case "darwin":
+			return "Mac";
+
+		case "linux":
+			return "Linux";
+
+		case "android":
+			return "Android";
+
+		case "ios":
+			return "iOS";
+
+		default:
+			return "Windows";
+	}
+})(process.env["TAURI_ENV_PLATFORM"]);
 
 export const On =
 	process.env["NODE_ENV"] === "development" ||
@@ -48,6 +58,11 @@ export const Host = process.env["TAURI_DEV_HOST"]
 			? "https://localhost"
 			: "https://editor.land";
 
+export const ApplicationStatic = "Static/Application";
+
+export const VSCodeOutput =
+	"node_modules/@codeeditorland/output/Target/Microsoft/VSCode";
+
 export const Static = {
 	targets: [
 		{
@@ -55,16 +70,29 @@ export const Static = {
 
 			dest: "Static/Shim/",
 		},
-
 		{
-			src: "node_modules/@codeeditorland/output/Target/Microsoft/VSCode/vs/workbench/services/keybinding/browser/keyboardLayouts/layout.contribution.win.js",
+			src: `${VSCodeOutput}/vs/workbench/services/keybinding/browser/keyboardLayouts/_.contribution.js`,
 
-			dest: "Static/Application/vs/workbench/services/keybinding/browser/keyboardLayouts/",
+			dest: `${ApplicationStatic}/vs/workbench/services/keybinding/browser/keyboardLayouts/`,
 		},
 	],
 
 	structured: false,
 };
+
+switch (Platform) {
+	case "Windows":
+		Static.targets.push({
+			src: `${VSCodeOutput}/vs/workbench/services/keybinding/browser/keyboardLayouts/*.win.js`,
+
+			dest: `${ApplicationStatic}/vs/workbench/services/keybinding/browser/keyboardLayouts/`,
+		});
+
+		break;
+
+	default:
+		break;
+}
 
 Bundle
 	? Static.targets.push(
@@ -79,9 +107,9 @@ Bundle
 	: Static.targets.push(
 			...[
 				{
-					src: "node_modules/@codeeditorland/output/Target/Microsoft/VSCode/*",
+					src: `${VSCodeOutput}/*`,
 
-					dest: "Static/Application/",
+					dest: ApplicationStatic,
 				},
 
 				{
@@ -298,12 +326,24 @@ export default defineConfig({
 						// 	module: true,
 
 						// 	properties: {
-						// 		reserved: Reserved,
+						// 		reserved: [
+						// 	"WorkerApplication",
+
+						// 	"_LOAD_CSS_WORKER",
+
+						// 	"_POLICY_WORKER",
+
+						// 	"_WORKER",
+
+						// 	"value",
+
+						// 	"get",
+						// ],
 
 						// 		keep_quoted: true,
 						// 	},
 
-						// 	reserved: Reserved,
+						// 	reserved: [],
 
 						// 	safari10: false,
 

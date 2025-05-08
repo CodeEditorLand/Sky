@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["../Source/Shim/Empty.ts"],
-  "sourcesContent": ["export default {};\r\n"],
-  "mappings": "AAAA,IAAO,gBAAQ,CAAC;",
-  "names": []
-}

@@ -2,8 +2,6 @@ import { fileURLToPath } from "node:url";
 import { defineConfig } from "astro/config";
 import type { ViteDevServer } from "vite";
 
-import VSCode from "../Output/Source/ESBuild/Microsoft/VSCode";
-
 export const { readFile } = await import("fs/promises");
 
 export const Bundle = process.env["Bundle"] === "true";
@@ -63,6 +61,9 @@ export const ApplicationStatic = "Static/Application";
 export const VSCodeOutput =
 	"node_modules/@codeeditorland/output/Target/Microsoft/VSCode";
 
+export const KeyboardLayouts =
+	"vs/workbench/services/keybinding/browser/keyboardLayouts";
+
 export const Static = {
 	targets: [
 		{
@@ -71,9 +72,9 @@ export const Static = {
 			dest: "Static/Shim/",
 		},
 		{
-			src: `${VSCodeOutput}/vs/workbench/services/keybinding/browser/keyboardLayouts/_.contribution.js`,
+			src: `${VSCodeOutput}/${KeyboardLayouts}/_.contribution.js`,
 
-			dest: `${ApplicationStatic}/vs/workbench/services/keybinding/browser/keyboardLayouts/`,
+			dest: `${ApplicationStatic}/${KeyboardLayouts}/`,
 		},
 	],
 
@@ -83,9 +84,9 @@ export const Static = {
 switch (Platform) {
 	case "Windows":
 		Static.targets.push({
-			src: `${VSCodeOutput}/vs/workbench/services/keybinding/browser/keyboardLayouts/*.win.js`,
+			src: `${VSCodeOutput}/${KeyboardLayouts}/*.win.js`,
 
-			dest: `${ApplicationStatic}/vs/workbench/services/keybinding/browser/keyboardLayouts/`,
+			dest: `${ApplicationStatic}/${KeyboardLayouts}/`,
 		});
 
 		break;
@@ -139,7 +140,10 @@ export default defineConfig({
 
 	compressHTML: !On,
 
-	prefetch: false,
+	prefetch: {
+		prefetchAll: true,
+		defaultStrategy: "viewport",
+	},
 
 	server: {
 		host: Host,
@@ -425,8 +429,10 @@ export default defineConfig({
 		},
 
 		plugins: [
+			// @ts-expect-error
 			(await import("vite-plugin-static-copy")).viteStaticCopy(Static),
 
+			// @ts-expect-error
 			(await import("vite-plugin-top-level-await")).default(),
 
 			((Module: string[]) => ({

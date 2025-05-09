@@ -15,7 +15,9 @@
 		"outDir": "Target",
 
 		"paths": {
-			"@Source/*": ["Source/*"]
+			"@Source/*": ["Source/*"],
+
+			"@VSCode/*": ["../../Dependency/Microsoft/Dependency/Editor/src/*"]
 		},
 
 		"plugins": [
@@ -24,13 +26,13 @@
 			}
 		],
 
-		"rootDir": ".",
-
 		"types": ["astro/client", "astro/env"],
 
 		"emitDecoratorMetadata": true,
 
-		"experimentalDecorators": true
+		"experimentalDecorators": true,
+
+		"rootDirs": [".", "../../Dependency/Microsoft/Dependency/Editor/src/"]
 	},
 
 	"exclude": ["Target"],

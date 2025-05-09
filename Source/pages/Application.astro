@@ -18,7 +18,7 @@ const Worker = `/Worker.js?BASE_REMOTE=${encodeURIComponent(Site?.toString() ?? 
 const Default = {
 	// --- Core Local Configuration ---
 	// Explicitly set to null to indicate no remote server authority
-	remoteAuthority: "",
+	remoteAuthority: null,
 
 	// Standard base path for web assets
 	serverBasePath: "/",
@@ -31,7 +31,7 @@ const Default = {
 
 	// --- Explicitly Disable/Exclude Remote/Web Features ---
 	// Do NOT provide a WebSocket factory
-	// webSocketFactory: undefined,
+	webSocketFactory: "SocketSky",
 
 	// Do NOT provide a resource URI provider (used with websockets)
 	// resourceUriProvider: undefined,

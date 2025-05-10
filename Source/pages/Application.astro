@@ -19,20 +19,23 @@ const Worker = `/Worker.js?BASE_REMOTE=${encodeURIComponent(Site?.toString() ?? 
 const Default = {
 	// --- Core Local Configuration ---
 	// Explicitly set to null to indicate no remote server authority
+	// @ts-expect-error
 	remoteAuthority: null,
 
 	// Standard base path for web assets
-	serverBasePath: "/",
+	serverBasePath: "/Static/Application/",
 
 	// No connection token needed for local
-	connectionToken: "",
+	// @ts-expect-error
+	connectionToken: null,
 
 	// Assume this is the initial load (adjust dynamically if needed)
 	// isInitialStartup: true,
 
 	// --- Explicitly Disable/Exclude Remote/Web Features ---
 	// Do NOT provide a WebSocket factory
-	webSocketFactory: "Socket",
+	// @ts-expect-error
+	webSocketFactory: null,
 
 	// Do NOT provide a resource URI provider (used with websockets)
 	// resourceUriProvider: undefined,

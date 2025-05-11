@@ -159,11 +159,7 @@ export default defineConfig({
 
 	compressHTML: !On,
 
-	prefetch: {
-		prefetchAll: true,
-
-		defaultStrategy: "viewport",
-	},
+	prefetch: false,
 
 	server: {
 		host: Host,

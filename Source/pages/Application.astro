@@ -293,6 +293,7 @@ console.log(Bundle);
 					type="module"
 					src={Bust("/Worker/CSS/Load.js")}
 					slot="Head"
+					defer
 				/>
 
 				<script
@@ -307,6 +308,7 @@ console.log(Bundle);
 					type="module"
 					src={Bust("/Worker/Register.js")}
 					slot="Head"
+					defer
 				/>
 
 				{Browser ? (
@@ -323,6 +325,7 @@ console.log(Bundle);
 							src={Bust(
 								"/Static/Application/vs/code/browser/workbench/workbench.js",
 							)}
+							defer
 						/>
 					</Fragment>
 				) : (
@@ -332,6 +335,7 @@ console.log(Bundle);
 						src={Bust(
 							"/Static/Application/vs/code/electron-sandbox/workbench/workbench.js",
 						)}
+						defer
 					/>
 				)}
 			</Fragment>

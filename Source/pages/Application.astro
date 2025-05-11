@@ -23,7 +23,8 @@ const Default = {
 	remoteAuthority: null,
 
 	// Standard base path for web assets
-	serverBasePath: "/Static/Application/",
+	// @ts-expect-error
+	serverBasePath: null,
 
 	// No connection token needed for local
 	// @ts-expect-error
@@ -292,7 +293,6 @@ console.log(Bundle);
 					type="module"
 					src={Bust("/Worker/CSS/Load.js")}
 					slot="Head"
-					defer
 				/>
 
 				<script
@@ -307,18 +307,24 @@ console.log(Bundle);
 					type="module"
 					src={Bust("/Worker/Register.js")}
 					slot="Head"
-					defer
 				/>
 
 				{Browser ? (
-					<script
-						is:inline
-						type="module"
-						src={Bust(
-							"/Static/Application/vs/code/browser/workbench/workbench.js",
-						)}
-						defer
-					/>
+					<Fragment>
+						<script
+							is:inline
+							type="module"
+							src={Bust("/Static/Application/nls.messages.js")}
+						/>
+
+						<script
+							is:inline
+							type="module"
+							src={Bust(
+								"/Static/Application/vs/code/browser/workbench/workbench.js",
+							)}
+						/>
+					</Fragment>
 				) : (
 					<script
 						is:inline
@@ -326,7 +332,6 @@ console.log(Bundle);
 						src={Bust(
 							"/Static/Application/vs/code/electron-sandbox/workbench/workbench.js",
 						)}
-						defer
 					/>
 				)}
 			</Fragment>

@@ -2,7 +2,7 @@ import { fileURLToPath } from "node:url";
 import { defineConfig } from "astro/config";
 import type { ViteDevServer } from "vite";
 
-export const { readFile } = await import("fs/promises");
+export const { readFile } = await import("node:fs/promises");
 
 export const Bundle = process.env["Bundle"] === "true";
 

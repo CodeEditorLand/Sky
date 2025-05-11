@@ -1,1 +1,1 @@
-class t{static{this.INSTANCE=new t}get layoutInfos(){return this._layoutInfos}constructor(){this._layoutInfos=[]}registerKeyboardLayout(t){this._layoutInfos.push(t)}}export{t as KeyboardLayoutContribution};
+class t{static{this.INSTANCE=new t}get layoutInfos(){return this.a}constructor(){this.a=[]}registerKeyboardLayout(t){this.a.push(t)}}export{t as $QNc};

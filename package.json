@@ -9,9 +9,9 @@
 		"codeeditorland",
 		"playform"
 	],
-	"homepage": "HTTPS://GitHub.Com/CodeEditorLand/Sky#readme",
+	"homepage": "https://GitHub.Com/CodeEditorLand/Sky#readme",
 	"bugs": {
-		"url": "HTTPS://GitHub.Com/CodeEditorLand/Sky/issues"
+		"url": "https://GitHub.Com/CodeEditorLand/Sky/issues"
 	},
 	"repository": {
 		"type": "git",
@@ -21,7 +21,7 @@
 	"author": {
 		"name": "Source 🖋️ Open 👐🏻",
 		"email": "Source/Open@Editor.Land",
-		"url": "HTTPS://Editor.Land"
+		"url": "https://Editor.Land"
 	},
 	"scripts": {
 		"Run": "astro dev --host",

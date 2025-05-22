@@ -284,6 +284,12 @@ console.log(Bundle);
 					import "@codeeditorland/Worker/Target/Worker/Register.js";
 				</script>
 
+				<script
+					is:inline
+					type="module"
+					src={Bust("/Static/Application/nls.messages.js")}
+				/>
+
 				{Browser ? <BrowserWorkbench /> : <DefaultWorkbench />}
 			</Fragment>
 		) : (
@@ -311,23 +317,21 @@ console.log(Bundle);
 					defer
 				/>
 
-				{Browser ? (
-					<Fragment>
-						<script
-							is:inline
-							type="module"
-							src={Bust("/Static/Application/nls.messages.js")}
-						/>
+				<script
+					is:inline
+					type="module"
+					src={Bust(`/Static/Application/nls.messages.js`)}
+				/>
 
-						<script
-							is:inline
-							type="module"
-							src={Bust(
-								"/Static/Application/vs/code/browser/workbench/workbench.js",
-							)}
-							defer
-						/>
-					</Fragment>
+				{Browser ? (
+					<script
+						is:inline
+						type="module"
+						src={Bust(
+							"/Static/Application/vs/code/browser/workbench/workbench.js",
+						)}
+						defer
+					/>
 				) : (
 					<script
 						is:inline

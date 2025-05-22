@@ -73,6 +73,12 @@ export const Static = {
 		},
 
 		{
+			src: `node_modules/@codeeditorland/output/Target/Microsoft/VSCode/${On ? "vs/" : ""}nls.messages.js`,
+
+			dest: ApplicationStatic,
+		},
+
+		{
 			src: `${VSCodeOutput}/${KeyboardLayouts}/_.contribution.js`,
 
 			dest: `${ApplicationStatic}/${KeyboardLayouts}/`,

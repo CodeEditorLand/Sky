@@ -174,7 +174,7 @@ export default defineConfig({
 	},
 
 	build: {
-		concurrency: 9999,
+		concurrency: 8,
 	},
 
 	integrations: [

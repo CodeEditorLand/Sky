@@ -42,7 +42,11 @@
 		"vite": "6.3.5",
 		"vite-plugin-static-copy": "3.0.0",
 		"vite-plugin-top-level-await": "1.5.0",
+<<<<<<< HEAD
 		"zod": "3.25.30"
+=======
+		"zod": "3.25.31"
+>>>>>>> 8cbf26d8de43a4146a08f7f160d4f6f335a58fe9
 	},
 	"devDependencies": {
 		"@astrojs/ts-plugin": "1.10.4",

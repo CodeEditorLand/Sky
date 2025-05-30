@@ -1,0 +1,1 @@
+import{$Kh as r}from"../../../../base/common/async.js";async function s(t,e){return new Promise((i,o)=>{const n=r(2e3);n.then(()=>o("Writing to xterm is taking longer than 2 seconds")),t.write(e,()=>{n.cancel(),i()})})}export{s as $4Pc};

@@ -1,0 +1,1 @@
+function S(){return globalThis._VSCODE_NLS_MESSAGES}function n(){return globalThis._VSCODE_NLS_LANGUAGE}export{S as $f,n as $g};

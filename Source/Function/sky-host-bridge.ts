@@ -37,7 +37,6 @@
  * The script also handles early initialization of the configuration cache and updates
  * the `process` shim with accurate data once the configuration is fetched from Mountain.
  *
- * Last Reviewed/Updated: 2025-05-28
  *--------------------------------------------------------------------------------------------*/
 
 // --- Tauri API Imports ---
@@ -282,7 +281,7 @@ const ipcRendererShimInstance: IpcRendererShim = {
 		// Invoke a Tauri command on Mountain to handle the "send" operation.
 		// Arguments are passed as a named field `argsList` in the payload.
 		invoke("mountain_ipc_bridge_send", { channel, argsList: args }).catch(
-			(error) =>
+			(error: any) =>
 				console.error(
 					`[Sky Host Bridge] Error in ipcRenderer.send (Tauri invoke) for channel '${channel}':`,
 					error,
@@ -603,7 +602,7 @@ const webFrameShimInstance: WebFrameShim = {
 		if (typeof level === "number" && isFinite(level)) {
 			// console.debug(`[Sky Host Bridge] webFrame.setZoomLevel: Level=${level}`);
 			// Invoke a Tauri command on Mountain to handle setting the zoom level.
-			invoke("mountain_set_zoom_level", { level }).catch((error) =>
+			invoke("mountain_set_zoom_level", { level }).catch((error: any) =>
 				console.error(
 					"[Sky Host Bridge] Error calling mountain_set_zoom_level via Tauri invoke:",
 					error,
@@ -839,7 +838,7 @@ const contextShimInstance: ContextShim = {
 		resolveConfigurationPromise = invoke(
 			"mountain_get_workbench_configuration",
 		)
-			.then((configDataFromMountain) => {
+			.then((configDataFromMountain: ISandboxConfiguration) => {
 				// Validate the received configuration data.
 				if (
 					!configDataFromMountain ||
@@ -925,7 +924,7 @@ const contextShimInstance: ContextShim = {
 
 				return resolvedConfigurationCache; // Return the resolved configuration.
 			})
-			.catch((error) => {
+			.catch((error: { name: any; message: any; stack: any }) => {
 				console.error(
 					"[Sky Host Bridge] CRITICAL: Failed to resolve workbench configuration from Mountain. Workbench startup will likely fail.",
 					error,

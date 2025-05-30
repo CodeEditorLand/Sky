@@ -1,0 +1,1 @@
+import{$gI as m}from"../../../../platform/actions/common/actions.js";import{$UB as o}from"../../../../platform/instantiation/common/extensions.js";import{$Yyb as r}from"../browser/webview.js";import*as i from"./webviewCommands.js";import{$SJc as f}from"./webviewService.js";o(r,f,1);m(i.$PJc);

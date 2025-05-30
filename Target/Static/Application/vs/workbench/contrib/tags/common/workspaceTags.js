@@ -1,0 +1,1 @@
+import{$oj as t}from"../../../../platform/instantiation/common/instantiation.js";import{$Kwc as a}from"../../../../platform/extensionManagement/common/configRemotes.js";const s=t("workspaceTagsService");async function i(o,r=!1,c){return Promise.all(a(o,r).map(e=>c(e)))}export{s as $Lwc,i as $Mwc};

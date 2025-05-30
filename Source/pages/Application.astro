@@ -90,7 +90,7 @@ const Default = {
 	productConfiguration: {
 		// Identify as desktop-like, might influence some UI/feature paths
 		// Important to suggest non-web behavior
-		embedderIdentifier: "desktop",
+		embedderIdentifier: Browser ? "web" : "desktop",
 
 		// Optional: Branding
 		nameShort: "FIDDEE",
@@ -262,7 +262,7 @@ console.log(Bundle);
 
 	<script is:inline type="module" define:vars={{ Site }} slot="Head">
 		// @ts-expect-error
-		globalThis._VSCODE_FILE_ROOT = `${Site}/Static/Application/`;
+		globalThis._VSCODE_FILE_ROOT = `${Site}Static/Application/`;
 	</script>
 
 	<script
@@ -294,12 +294,10 @@ console.log(Bundle);
 			</Fragment>
 		) : (
 			<Fragment>
-				HELLO
 				<script
 					is:inline
 					type="module"
 					src={Bust("/Worker/CSS/Load.js")}
-					slot="Head"
 					defer
 				/>
 
@@ -307,14 +305,12 @@ console.log(Bundle);
 					is:inline
 					type="module"
 					src={Bust("/Worker/Policy.js")}
-					slot="Head"
 				/>
 
 				<script
 					is:inline
 					type="module"
 					src={Bust("/Worker/Register.js")}
-					slot="Head"
 					defer
 				/>
 

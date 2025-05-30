@@ -1,0 +1,1 @@
+import{$ud as e}from"../../../../../base/common/lifecycle.js";class r extends e{get inUse(){return this.b}constructor(t){super(),this.c=t,this.a=[],this.b=new Set}get(){if(this.a.length>0){const s=this.a.pop();return this.b.add(s),s}const t=this.B(this.c());return this.b.add(t),t}release(t){this.b.delete(t),this.a.push(t)}}export{r as $2Pb};

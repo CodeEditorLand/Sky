@@ -1,0 +1,1 @@
+import{$ud as n}from"../../../base/common/lifecycle.js";import{$f$ as r}from"../../../base/parts/ipc/electron-sandbox/ipc.electron.js";class o extends n{constructor(e){super(),this.a=this.B(new r(`window:${e}`))}getChannel(e){return this.a.getChannel(e)}registerChannel(e,t){this.a.registerChannel(e,t)}}export{o as $wCc};

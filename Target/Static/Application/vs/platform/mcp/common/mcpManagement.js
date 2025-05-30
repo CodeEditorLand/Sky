@@ -1,0 +1,1 @@
+import{$oj as o}from"../../instantiation/common/instantiation.js";var e;(function(r){r.NODE="npm",r.DOCKER="docker",r.PYTHON="pypi",r.REMOTE="remote"})(e||(e={}));const c=o("IMcpGalleryService"),p=o("IMcpManagementService"),n="chat.mcp.gallery.serviceUrl";export{c as $$V,p as $_V,n as $aW,e as PackageType};

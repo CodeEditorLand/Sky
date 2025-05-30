@@ -1,0 +1,1 @@
+import{$cf as r}from"../common/event.js";class a{get event(){return this.a.event}constructor(e,t,s){const i=n=>this.a.fire(n);this.a=new r({onWillAddFirstListener:()=>e.addEventListener(t,i,s),onDidRemoveLastListener:()=>e.removeEventListener(t,i,s)})}dispose(){this.a.dispose()}}export{a as $X7};

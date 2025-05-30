@@ -1,0 +1,1 @@
+import{$wic as n}from"./abstractRuntimeExtensionsEditor.js";import{$LBc as r}from"../common/reportExtensionIssueAction.js";class u extends n{nb(){return null}ob(e){}pb(e){return null}qb(e){return e.marketplaceInfo?this.db.createInstance(r,e.description):null}}export{u as $MBc};

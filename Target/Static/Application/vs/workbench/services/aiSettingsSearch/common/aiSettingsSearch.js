@@ -1,0 +1,1 @@
+import{$oj as o}from"../../../../platform/instantiation/common/instantiation.js";const C=o("IAiSettingsSearchService");var D;(function(E){E[E.EMBEDDED=1]="EMBEDDED",E[E.LLM_RANKED=2]="LLM_RANKED",E[E.CANCELED=3]="CANCELED"})(D||(D={}));export{C as $ZW,D as AiSettingsSearchResultKind};

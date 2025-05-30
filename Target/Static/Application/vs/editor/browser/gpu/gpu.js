@@ -1,0 +1,1 @@
+var o;(function(e){e[e.GlyphInfo=0]="GlyphInfo",e[e.Cells=1]="Cells",e[e.TextureSampler=2]="TextureSampler",e[e.Texture=3]="Texture",e[e.LayoutInfoUniform=4]="LayoutInfoUniform",e[e.AtlasDimensionsUniform=5]="AtlasDimensionsUniform",e[e.ScrollOffset=6]="ScrollOffset"})(o||(o={}));export{o as BindingId};

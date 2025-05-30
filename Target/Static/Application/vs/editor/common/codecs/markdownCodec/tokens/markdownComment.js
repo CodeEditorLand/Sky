@@ -1,0 +1,1 @@
+import{$1R as s}from"./markdownToken.js";import{$Tc as e}from"../../../../../base/common/assert.js";class h extends s{constructor(r,t){e(t.startsWith("<!--"),`The comment must start with '<!--', got '${t.substring(0,10)}'.`),super(r),this.text=t}get hasEndMarker(){return this.text.endsWith("-->")}toString(){return`md-comment("${this.shortText()}")${this.range}`}}export{h as $8R};

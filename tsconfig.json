@@ -6,6 +6,10 @@
 
 		"emitDeclarationOnly": false,
 
+		"emitDecoratorMetadata": true,
+
+		"experimentalDecorators": true,
+
 		"lib": ["ESNext", "DOM", "DOM.Iterable"],
 
 		"moduleResolution": "Bundler",
@@ -17,7 +21,9 @@
 		"paths": {
 			"@Source/*": ["Source/*"],
 
-			"@VSCode/*": ["../../Dependency/Microsoft/Dependency/Editor/src/*"]
+			"@VSCode/*": ["../../Dependency/Microsoft/Dependency/Editor/src/*"],
+
+			"vs/*": ["../../Dependency/Microsoft/Dependency/Editor/src/vs/*"]
 		},
 
 		"plugins": [
@@ -26,13 +32,9 @@
 			}
 		],
 
-		"types": ["astro/client", "astro/env"],
+		"rootDirs": [".", "../../Dependency/Microsoft/Dependency/Editor/src/"],
 
-		"emitDecoratorMetadata": true,
-
-		"experimentalDecorators": true,
-
-		"rootDirs": [".", "../../Dependency/Microsoft/Dependency/Editor/src/"]
+		"types": ["astro/client", "astro/env"]
 	},
 
 	"exclude": ["Target"],

@@ -1,0 +1,1 @@
+import{$Ux as o}from"../../../../platform/update/common/update.js";import{$iCc as r}from"../../../../platform/ipc/electron-sandbox/services.js";import{$dy as m}from"../../../../platform/update/common/updateIpc.js";r(o,"update",{channelClientCtor:m});

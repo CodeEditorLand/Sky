@@ -1,0 +1,1 @@
+import{$oj as r}from"../../../../platform/instantiation/common/instantiation.js";import{$a$ as o}from"../../../../base/parts/sandbox/electron-sandbox/globals.js";import{$UB as e}from"../../../../platform/instantiation/common/extensions.js";const t=r("shellEnvironmentService");class l{getShellEnv(){return o.shellEnv()}}e(t,l,1);export{t as $yIc,l as $zIc};

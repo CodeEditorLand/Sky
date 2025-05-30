@@ -1,0 +1,1 @@
+import{$Y8 as a}from"./webWorker.js";let i=!1;function s(o){if(i)throw new Error("WebWorker already initialized!");i=!0;const r=new a(e=>globalThis.postMessage(e),e=>o(e));return globalThis.onmessage=e=>{r.onmessage(e.data)},r}function n(o){globalThis.onmessage=r=>{i||s(o)}}export{s as $50,n as $60};

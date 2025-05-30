@@ -1,0 +1,1 @@
+import{$oCc as l}from"../../../../platform/storage/common/storageService.js";class n extends l{constructor(r,e,t,i,o){super(r,{currentProfile:e.currentProfile,defaultProfile:t.defaultProfile},i,o),this.kb=e,this.lb()}lb(){this.B(this.kb.onDidChangeCurrentProfile(r=>r.join(this.R(r.profile))))}}export{n as $pCc};

@@ -1,0 +1,1 @@
+import{$fQ as t}from"./simpleToken.js";class e extends t{static{this.symbol="["}get text(){return e.symbol}toString(){return`left-bracket${this.range}`}}class r extends t{static{this.symbol="]"}get text(){return r.symbol}toString(){return`right-bracket${this.range}`}}export{e as $wQ,r as $xQ};

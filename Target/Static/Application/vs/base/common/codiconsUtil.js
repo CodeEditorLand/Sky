@@ -1,0 +1,1 @@
+import{$Xc as r}from"./types.js";const e=Object.create(null);function i(o,n){if(r(n)){const c=e[n];if(c===void 0)throw new Error(`${o} references an unknown codicon: ${n}`);n=c}return e[o]=n,{id:o}}function t(){return e}export{i as $Ij,t as $Jj};

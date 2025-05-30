@@ -1,0 +1,1 @@
+import{$Ki as r}from"../../../../../base/common/buffer.js";import{$fQ as e}from"../../simpleCodec/tokens/simpleToken.js";class t extends e{static{this.symbol="\r"}static{this.byte=r.fromString(t.symbol)}get byte(){return t.byte}get text(){return t.symbol}toString(){return`CR${this.range}`}}export{t as $GQ};

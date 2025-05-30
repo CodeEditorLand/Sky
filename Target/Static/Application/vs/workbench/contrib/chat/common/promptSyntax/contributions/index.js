@@ -1,0 +1,1 @@
+import{$efc as t}from"./configMigration.js";import{$lfc as i}from"./languageFeatures/index.js";import{$Ql as n}from"../../../../../../platform/registry/common/platform.js";import{Extensions as e}from"../../../../../common/contributions.js";const p=()=>{s(i),r(t)},r=o=>{n.as(e.Workbench).registerWorkbenchContribution(o,4)},s=o=>{o.forEach(r)};export{p as $mfc};

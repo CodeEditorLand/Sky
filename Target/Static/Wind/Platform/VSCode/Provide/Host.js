@@ -1,0 +1,1 @@
+import{Context as e}from"../../../effect";const i=e.Tag("vscode/HostService");var n=i;export{n as default};

@@ -1,1 +1,0 @@
-import*as t from"../../../../../../base/browser/dom.js";import{$FTb as c}from"../cellPart.js";class r extends c{constructor(o,s,i){super(),this.B(t.$G5(o,t.$C6.FOCUS,()=>{this.c&&i.focusElement(this.c)},!0)),s&&this.B(t.$G5(s,t.$C6.FOCUS,()=>{this.c&&this.c.outputsViewModels.length&&i.focusNotebookCell(this.c,"output")}))}}export{r as $MUb};

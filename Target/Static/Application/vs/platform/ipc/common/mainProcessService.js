@@ -1,1 +1,0 @@
-import{$oj as r}from"../../instantiation/common/instantiation.js";const h=r("mainProcessService");class i{constructor(e,t){this.a=e,this.b=t}getChannel(e){return this.a.getChannel(e,this.b)}registerChannel(e,t){this.a.registerChannel(e,t)}}export{h as $gCc,i as $hCc};

@@ -1,0 +1,1 @@
+function e(e){return{folderUri:e}}export{e as default};

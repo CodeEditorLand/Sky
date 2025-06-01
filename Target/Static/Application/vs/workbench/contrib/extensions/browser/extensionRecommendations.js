@@ -1,1 +1,0 @@
-import{$ud as t}from"../../../../base/common/lifecycle.js";class i extends t{constructor(){super(...arguments),this.f=null}get activated(){return this.f!==null}activate(){return this.f||(this.f=this.c()),this.f}}export{i as $eic};

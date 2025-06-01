@@ -1,0 +1,1 @@
+import{Option as t,pipe as i}from"../../../effect";import{Scheme as o}from"../../../Platform/VSCode/Type.js";function p(e){return i(t.fromNullable(e),t.filter(r=>r.scheme===o.file),t.map(r=>r.fsPath))}export{p as default};

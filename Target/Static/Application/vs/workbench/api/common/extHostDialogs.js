@@ -1,1 +1,0 @@
-import{URI as o}from"../../../base/common/uri.js";import{$bY as i}from"./extHost.protocol.js";class h{constructor(e){this.a=e.getProxy(i.MainThreadDialogs)}showOpenDialog(e){return this.a.$showOpenDialog(e).then(r=>r?r.map(n=>o.revive(n)):void 0)}showSaveDialog(e){return this.a.$showSaveDialog(e).then(r=>r?o.revive(r):void 0)}}export{h as $LLc};

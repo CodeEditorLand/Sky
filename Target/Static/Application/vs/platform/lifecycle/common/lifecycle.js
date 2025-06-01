@@ -1,1 +1,0 @@
-import{$uh as i,Promises as f}from"../../../base/common/async.js";function n(o,u){if(o.length===0)return Promise.resolve(!1);const s=[];let e=!1;for(const r of o){if(r===!0)return Promise.resolve(!0);i(r)&&s.push(r.then(t=>{t&&(e=!0)},t=>{u(t),e=!0}))}return f.settled(s).then(()=>e)}export{n as $5zc};

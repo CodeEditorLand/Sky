@@ -1,1 +1,0 @@
-import{$5ob as m}from"../../../../platform/observable/common/wrapInHotClass.js";import{$SK as r}from"../../../common/contributions.js";import{$cyc as o}from"./inlineCompletionLanguageStatusBarContribution.js";r(o.Id,m(o.hot),4);

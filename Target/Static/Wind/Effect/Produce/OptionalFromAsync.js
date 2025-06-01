@@ -1,0 +1,1 @@
+import{Effect as r,Option as u}from"../../effect";function s(t,e,a){return(...f)=>r.tryPromise({try:()=>t(...f),catch:r=>e({...a,cause:r})}).pipe(r.map(u.fromNullable))}export{s as default};

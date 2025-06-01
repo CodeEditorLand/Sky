@@ -1,1 +1,0 @@
-import{$t_ as n}from"../editorTheme.js";class v{constructor(e,i,t){this.configuration=e,this.theme=new n(i),this.viewModel=t,this.viewLayout=t.viewLayout}addEventHandler(e){this.viewModel.addViewEventHandler(e)}removeEventHandler(e){this.viewModel.removeViewEventHandler(e)}}export{v as $nbb};

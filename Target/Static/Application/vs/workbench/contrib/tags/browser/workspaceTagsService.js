@@ -1,1 +1,0 @@
-import{$UB as t}from"../../../../platform/instantiation/common/extensions.js";import{$Lwc as o}from"../common/workspaceTags.js";class s{getTags(){return Promise.resolve({})}async getTelemetryWorkspaceId(e,r){}getHashedRemotesFromUri(e,r){return Promise.resolve([])}}t(o,s,1);export{s as $QBc};

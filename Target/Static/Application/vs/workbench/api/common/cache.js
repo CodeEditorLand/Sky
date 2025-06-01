@@ -1,1 +1,0 @@
-class s{static{this.a=!1}constructor(t){this.d=t,this.b=new Map,this.c=1}add(t){const e=this.c++;return this.b.set(e,t),this.e(),e}get(t,e){return this.b.has(t)?this.b.get(t)[e]:void 0}delete(t){this.b.delete(t),this.e()}e(){s.a}}export{s as $iKc};

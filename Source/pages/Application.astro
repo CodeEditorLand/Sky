@@ -2,7 +2,7 @@
 import Layout from "@Source/Function/Markup/Base.astro";
 import BrowserWorkbench from "@Source/Workbench/Browser.astro";
 import DefaultWorkbench from "@Source/Workbench/Default.astro";
-import type { IWorkbenchConstructionOptions } from "@VSCode/vs/workbench/browser/web.api.js";
+import type { IWorkbenchConstructionOptions } from "vs/workbench/browser/web.api.js";
 
 const On =
 	process.env["NODE_ENV"] === "development" ||
@@ -172,6 +172,7 @@ console.log(Bundle);
 					'none'
 				;
 				
+				
 				img-src
 					'self'
 					data:
@@ -181,18 +182,22 @@ console.log(Bundle);
 					https:
 				;
 				
+				
 				manifest-src
 					'self'
 				;
+				
 				
 				media-src
 					'self'
 				;
 				
+				
 				frame-src
 					'self'
 					vscode-webview:
 				;
+				
 				
 				script-src
 					'self'
@@ -201,10 +206,12 @@ console.log(Bundle);
 					blob:
 				;
 				
+				
 				style-src
 					'self'
 					'unsafe-inline'
 				;
+				
 				
 				connect-src
 					'self'
@@ -212,21 +219,26 @@ console.log(Bundle);
 					https:
 				;
 				
+				
 				font-src
 					'self'
 					vscode-remote-resource:
 					vscode-managed-remote-resource:
 				;
 				
+				
 				block-all-mixed-content
 				;
+				
 				
 				upgrade-insecure-requests
 				;
 				
+				
 				require-trusted-types-for
 					'script'
 				;
+				
 				
 				trusted-types
 					WorkerApplication
@@ -244,6 +256,7 @@ console.log(Bundle);
 					tokenizeToString
 					notebookChatEditController
 				;
+				
 		"
 		slot="Meta"
 	/>

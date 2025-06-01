@@ -52,8 +52,8 @@ import { invoke } from "@tauri-apps/api/tauri"; // For calling Rust commands.
 // --- VS Code Utility Imports (Bundled with Sky or from a shared location) ---
 // These are used for type consistency and utility functions.
 // Assuming these are made available to the Sky webview environment, e.g., via ESBuild/Rollup bundling.
-import { URI } from "@VSCode/vs/base/common/uri.js"; // VS Code's URI implementation.
-import { LogLevel } from "@VSCode/vs/platform/log/common/log.js"; // VS Code's LogLevel enum.
+import { URI } from "vs/base/common/uri.js"; // VS Code's URI implementation.
+import { LogLevel } from "vs/platform/log/common/log.js"; // VS Code's LogLevel enum.
 
 // --- Type Definitions (Shim Interfaces) ---
 // These interfaces define the shape of the `window.vscode` object that this bridge creates.

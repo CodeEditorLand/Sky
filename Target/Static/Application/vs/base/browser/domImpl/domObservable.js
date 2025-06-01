@@ -1,1 +1,0 @@
-import{$td as n}from"../../common/lifecycle.js";import{autorun as d}from"../../common/observable.js";import{$v5 as m}from"../domStylesheets.js";function p(o){const t=new n,r=t.add(m());return t.add(d(e=>{r.setStyle(o.read(e))})),t}export{p as $A5};

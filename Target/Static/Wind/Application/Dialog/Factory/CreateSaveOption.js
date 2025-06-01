@@ -1,0 +1,1 @@
+import{Option as i,pipe as n}from"../../../effect";import{localize as p}from"vs/nls";import{ConvertFiltersToTauri as r}from"../../../Integration/Tauri.js";function m(e,a){return n({title:e.title||p("saveAsTitle","Save As")},o=>i.match(a,{onNone:()=>o,onSome:t=>({...o,defaultPath:t})}),o=>i.match(r(e.filters),{onNone:()=>o,onSome:t=>({...o,filters:t})}))}export{m as default};

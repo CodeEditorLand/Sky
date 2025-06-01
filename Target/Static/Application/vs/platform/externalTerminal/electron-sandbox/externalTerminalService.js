@@ -1,1 +1,0 @@
-import{$oj as r}from"../../instantiation/common/instantiation.js";import{$iCc as e}from"../../ipc/electron-sandbox/services.js";const o=r("externalTerminal");e(o,"externalTerminal");export{o as $nHc};

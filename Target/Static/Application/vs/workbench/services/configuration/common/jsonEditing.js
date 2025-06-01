@@ -1,1 +1,0 @@
-import{$oj as s}from"../../../../platform/instantiation/common/instantiation.js";const c=s("jsonEditingService");var r;(function(o){o[o.ERROR_INVALID_FILE=0]="ERROR_INVALID_FILE"})(r||(r={}));class n extends Error{constructor(t,e){super(t),this.code=e}}export{c as $XEb,n as $YEb,r as JSONEditingErrorCode};

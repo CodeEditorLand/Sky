@@ -1,0 +1,1 @@
+import{Effect as o}from"../../effect";function s(t,e,r){return(...f)=>o.tryPromise({try:()=>t(...f),catch:t=>e({...r,cause:t})})}export{s as default};

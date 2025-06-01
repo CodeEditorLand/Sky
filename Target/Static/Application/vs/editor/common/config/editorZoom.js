@@ -1,1 +1,0 @@
-import{$cf as i}from"../../../base/common/event.js";const h=new class{constructor(){this.a=0,this.b=new i,this.onDidChangeZoomLevel=this.b.event}getZoomLevel(){return this.a}setZoomLevel(t){t=Math.min(Math.max(-5,t),20),this.a!==t&&(this.a=t,this.b.fire(this.a))}};export{h as EditorZoom};

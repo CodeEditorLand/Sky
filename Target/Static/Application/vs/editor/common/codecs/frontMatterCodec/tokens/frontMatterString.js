@@ -1,1 +1,0 @@
-import{$dQ as t}from"../../baseToken.js";import{$QQ as r}from"./frontMatterToken.js";class i extends r{constructor(){super(...arguments),this.valueTypeName="quoted-string"}get cleanText(){return t.render(this.children.slice(1,this.children.length-1))}toString(){return`front-matter-string(${this.shortText()})${this.range}`}}export{i as $SQ};

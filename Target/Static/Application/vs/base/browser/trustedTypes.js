@@ -1,1 +1,0 @@
-import{$jb as o}from"../common/errors.js";function u(e,t){const n=globalThis.MonacoEnvironment;if(n?.createTrustedTypesPolicy)try{return n.createTrustedTypesPolicy(e,t)}catch(r){o(r);return}try{return globalThis.trustedTypes?.createPolicy(e,t)}catch(r){o(r);return}}export{u as $V8};

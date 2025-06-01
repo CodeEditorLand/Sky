@@ -1,1 +1,0 @@
-class r{static equals(t,s){return t.x===s.x&&t.y===s.y}constructor(t,s){this.x=t,this.y=s}add(t){return new r(this.x+t.x,this.y+t.y)}deltaX(t){return new r(this.x+t,this.y)}deltaY(t){return new r(this.x,this.y+t)}toString(){return`(${this.x},${this.y})`}}export{r as $keb};

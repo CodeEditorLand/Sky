@@ -1,0 +1,1 @@
+import{open as n}from"@tauri-apps/plugin-dialog";import{OptionalFromAsync as e}from"../../../Effect/Produce.js";import{DialogProblem as r}from"../Error.js";const p=o=>new r({cause:o,operation:"open"}),t=e(n,p,{operation:"open"});var s=t;export{s as default};

@@ -1,0 +1,1 @@
+function r(e){return{folderUri:e}}function t(e){return{fileUri:e}}function a(e){return{workspaceUri:e}}export{t as DefineFileOpen,r as DefineFolderOpen,a as DefineWorkspaceOpen};

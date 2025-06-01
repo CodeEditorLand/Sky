@@ -1,0 +1,1 @@
+import{Layer as o}from"../../effect";import e from"./Definition.js";import i from"./Tag.js";const r=o.succeed(i,e);var a=r;export{a as default};

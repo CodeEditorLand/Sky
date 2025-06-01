@@ -41,7 +41,7 @@ export const Link = [
 
 	"@codeeditorland/output",
 
-	"@codeeditorland/shim",
+	"@codeeditorland/wind",
 
 	"@codeeditorland/worker",
 ];
@@ -67,84 +67,87 @@ export const KeyboardLayouts =
 export const Static = {
 	targets: [
 		{
-			src: "node_modules/@codeeditorland/shim/Target/*",
+			src: "node_modules/@codeeditorland/wind/Target/*",
 
-			dest: "Static/Shim/",
-		},
-
-		{
-			src: `node_modules/@codeeditorland/output/Target/Microsoft/VSCode/${On ? "vs/" : ""}nls.messages.js`,
-
-			dest: ApplicationStatic,
-		},
-
-		{
-			src: `${VSCodeOutput}/${KeyboardLayouts}/_.contribution.js`,
-
-			dest: `${ApplicationStatic}/${KeyboardLayouts}/`,
+			dest: "Static/Wind/",
 		},
 	],
 
 	structured: false,
 };
 
-switch (Platform) {
-	case "Windows":
-		Static.targets.push({
-			src: `${VSCodeOutput}/${KeyboardLayouts}/*.win.js`,
+if (Bundle) {
+	switch (Platform) {
+		case "Windows":
+			Static.targets.push({
+				src: `${VSCodeOutput}/${KeyboardLayouts}/*.win.js`,
 
-			dest: `${ApplicationStatic}/${KeyboardLayouts}/`,
-		});
+				dest: `${ApplicationStatic}/${KeyboardLayouts}/`,
+			});
 
-		break;
+			break;
 
-	case "Mac":
-		Static.targets.push({
-			src: `${VSCodeOutput}/${KeyboardLayouts}/*.darwin.js`,
+		case "Mac":
+			Static.targets.push({
+				src: `${VSCodeOutput}/${KeyboardLayouts}/*.darwin.js`,
 
-			dest: `${ApplicationStatic}/${KeyboardLayouts}/`,
-		});
+				dest: `${ApplicationStatic}/${KeyboardLayouts}/`,
+			});
 
-		break;
+			break;
 
-	case "Linux":
-		Static.targets.push({
-			src: `${VSCodeOutput}/${KeyboardLayouts}/*.linux.js`,
+		case "Linux":
+			Static.targets.push({
+				src: `${VSCodeOutput}/${KeyboardLayouts}/*.linux.js`,
 
-			dest: `${ApplicationStatic}/${KeyboardLayouts}/`,
-		});
+				dest: `${ApplicationStatic}/${KeyboardLayouts}/`,
+			});
 
-		break;
+			break;
 
-	default:
-		break;
+		default:
+			break;
+	}
+
+	Static.targets.push(
+		...[
+			{
+				// TODO: TEST THIS
+				src: `node_modules/@codeeditorland/output/Target/Microsoft/VSCode/${On ? "vs/" : ""}nls.messages.js`,
+
+				dest: ApplicationStatic,
+			},
+
+			{
+				src: `${VSCodeOutput}/${KeyboardLayouts}/_.contribution.js`,
+
+				dest: `${ApplicationStatic}/${KeyboardLayouts}/`,
+			},
+
+			{
+				src: "node_modules/@codeeditorland/worker/Target/Worker.js",
+
+				dest: ".",
+			},
+		],
+	);
+} else {
+	Static.targets.push(
+		...[
+			{
+				src: `${VSCodeOutput}/*`,
+
+				dest: ApplicationStatic,
+			},
+
+			{
+				src: "node_modules/@codeeditorland/worker/Target/*",
+
+				dest: ".",
+			},
+		],
+	);
 }
-
-Bundle
-	? Static.targets.push(
-			...[
-				{
-					src: "node_modules/@codeeditorland/worker/Target/Worker.js",
-
-					dest: ".",
-				},
-			],
-		)
-	: Static.targets.push(
-			...[
-				{
-					src: `${VSCodeOutput}/*`,
-
-					dest: ApplicationStatic,
-				},
-
-				{
-					src: "node_modules/@codeeditorland/worker/Target/*",
-
-					dest: ".",
-				},
-			],
-		);
 
 Browser
 	? External.push(
@@ -174,7 +177,7 @@ export default defineConfig({
 	},
 
 	build: {
-		concurrency: 8,
+		concurrency: 9999,
 	},
 
 	integrations: [
@@ -343,6 +346,7 @@ export default defineConfig({
 						keep_fnames: false,
 
 						// mangle: {
+
 						// 	eval: true,
 
 						// 	keep_classnames: false,
@@ -352,6 +356,7 @@ export default defineConfig({
 						// 	module: true,
 
 						// 	properties: {
+
 						// 		reserved: [
 						// 		 	"WorkerApplication",
 

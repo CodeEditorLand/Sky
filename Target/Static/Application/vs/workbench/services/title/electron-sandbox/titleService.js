@@ -1,1 +1,0 @@
-import{$UB as m}from"../../../../platform/instantiation/common/extensions.js";import{$tIc as o}from"../../../electron-sandbox/parts/titlebar/titlebarPart.js";import{$H4b as r}from"../browser/titleService.js";m(r,o,0);

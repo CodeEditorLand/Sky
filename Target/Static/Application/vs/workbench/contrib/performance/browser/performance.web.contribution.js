@@ -1,1 +1,0 @@
-import{$Ql as r}from"../../../../platform/registry/common/platform.js";import{Extensions as o}from"../../../common/contributions.js";import{$CBc as i,$BBc as n}from"./startupTimings.js";r.as(o.Workbench).registerWorkbenchContribution(i,4);r.as(o.Workbench).registerWorkbenchContribution(n,4);

@@ -1,1 +1,0 @@
-import{localize as s}from"../../../../../../../nls.js";class o extends Error{}class c extends o{constructor(r){super(s(5574,null,r))}}class l extends o{constructor(r){super(s(5575,null,r))}}export{c as $Rfc,l as $Sfc};

@@ -1,1 +1,0 @@
-import{$oj as o}from"../../../../platform/instantiation/common/instantiation.js";const r=e=>typeof e=="object"&&e!==null&&"id"in e&&e.id==="vscode.problems",i=o("IChatVariablesService");export{r as $YP,i as $ZP};

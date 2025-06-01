@@ -1,1 +1,0 @@
-import{$UB as r}from"../../../../platform/instantiation/common/extensions.js";import{$Lcc as m}from"./replace.js";import{$Dnc as c,$Cnc as o}from"./replaceService.js";import{$SK as t}from"../../../common/contributions.js";function p(){r(m,c,1),t(o.ID,o,1)}export{p as $Enc};

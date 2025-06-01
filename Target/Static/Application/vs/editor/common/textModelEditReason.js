@@ -1,1 +1,0 @@
-class r{static{this.a=0}static{this.b=new Map}static editWithReason(t,s){const a=this.a++;this.b.set(a,t.metadata);try{return s()}finally{this.b.delete(a)}}static _getCurrentMetadata(){const t={};for(const s of this.b.values())Object.assign(t,s);return t}constructor(t){this.metadata=t}}export{r as $ZE};

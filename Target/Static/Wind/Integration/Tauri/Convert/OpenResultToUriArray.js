@@ -1,0 +1,1 @@
+import{Option as t,pipe as p}from"../../../effect";import{UriConstructor as n}from"../../../Platform/VSCode/Type.js";function f(o){return p(o,t.map(r=>Array.isArray(r)?r:[r]),t.filter(r=>r.length>0&&r.every(i=>typeof i=="string"&&i.length>0)),t.map(r=>r.map(i=>n.file(i))))}export{f as default};

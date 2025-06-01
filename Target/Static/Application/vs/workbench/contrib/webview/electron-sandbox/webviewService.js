@@ -1,1 +1,0 @@
-import{$KBc as r}from"../browser/webviewService.js";import{$RJc as c}from"./webviewElement.js";class o extends r{createWebviewElement(t){const e=this.b.createInstance(c,t,this.a);return this.j(e),e}}export{o as $SJc};

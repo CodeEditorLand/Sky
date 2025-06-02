@@ -30,6 +30,7 @@
 	"dependencies": {
 		"@codeeditorland/common": "0.0.6",
 		"@codeeditorland/output": "0.0.1",
+		"@codeeditorland/wind": "0.0.1",
 		"@codeeditorland/worker": "0.0.1",
 		"@playform/build": "0.2.4",
 		"@playform/compress": "0.1.9",

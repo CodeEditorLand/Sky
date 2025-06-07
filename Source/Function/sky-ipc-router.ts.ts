@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------------------------
- * Cocoon Sky IPC Router (sky-ipc-router.ts)
+ * Cocoon Sky IPC Router 
  * --------------------------------------------------------------------------------------------
  * This module is responsible for handling IPC messages that originate from the Sky
  * frontend, are proxied through Mountain, and finally arrive in Cocoon via the
@@ -51,12 +51,12 @@ export function initializeSkyIpcRouter(logService?: ILogService): void {
 			const originalChannel = vineMessage.method.substring(
 				"ipc:send:".length,
 			);
-			const originalArgs = vineMessage.params; // Expected to be an array
+			const originalArgument = vineMessage.params; // Expected to be an array
 
 			logService?.debug(
 				LOG_PREFIX,
-				`Received forwarded 'send' for original channel '${originalChannel}'. Args:`,
-				originalArgs,
+				`Received forwarded 'send' for original channel '${originalChannel}'. Argument:`,
+				originalArgument,
 			);
 
 			// Construct a mock event object
@@ -77,9 +77,9 @@ export function initializeSkyIpcRouter(logService?: ILogService): void {
 				skyToCocoonMessageBus.emit(
 					originalChannel,
 					mockIpcEvent,
-					...(Array.isArray(originalArgs)
-						? originalArgs
-						: [originalArgs]),
+					...(Array.isArray(originalArgument)
+						? originalArgument
+						: [originalArgument]),
 				);
 			} catch (error) {
 				logService?.error(
@@ -97,22 +97,22 @@ export function initializeSkyIpcRouter(logService?: ILogService): void {
 			const originalChannel = vineMessage.method.substring(
 				"ipc:invoke:".length,
 			);
-			const originalArgs = vineMessage.params; // Expected to be an array
+			const originalArgument = vineMessage.params; // Expected to be an array
 			const requestIdFromMountain = vineMessage.id!;
 
 			logService?.debug(
 				LOG_PREFIX,
-				`Received forwarded 'invoke' for channel '${originalChannel}' (MountainReqID: ${requestIdFromMountain}). Args:`,
-				originalArgs,
+				`Received forwarded 'invoke' for channel '${originalChannel}' (MountainReqID: ${requestIdFromMountain}). Argument:`,
+				originalArgument,
 			);
 
 			const handler = invokeHandlers.get(originalChannel);
 			if (handler) {
 				Promise.resolve(
 					handler(
-						...(Array.isArray(originalArgs)
-							? originalArgs
-							: [originalArgs]),
+						...(Array.isArray(originalArgument)
+							? originalArgument
+							: [originalArgument]),
 					),
 				)
 					.then((result) => {

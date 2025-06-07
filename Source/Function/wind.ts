@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------------------------
- * Wind Package Entry Point (index.ts) - Wind Package
+ * Wind Package Entry Point  - Wind Package
  * --------------------------------------------------------------------------------------------
  * This file can serve as the main entry point for the "Wind" package if it's intended
  * to be imported as a module by the Sky/Astro application.
@@ -21,7 +21,7 @@ import "./sky-host-bridge";
 // export { someWindUtilityFunction } from './wind-utils';
 
 console.log(
-	"[Wind Package] Main entry point (index.ts) executed. Sky Host Bridge should now be initialized on window.vscode.",
+	"[Wind Package] Main entry point  executed. Sky Host Bridge should now be initialized on window.vscode.",
 );
 
 // If sky-host-bridge.ts exports its main object, you could re-export it:

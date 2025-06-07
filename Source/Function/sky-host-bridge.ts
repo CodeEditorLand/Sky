@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------------------------
- * Sky Host Bridge (sky-host-bridge.ts) - Wind Package
+ * Sky Host Bridge  - Wind Package
  * --------------------------------------------------------------------------------------------
  * This script is designed to run in the Sky webview (the client-side of the Astro-based
  * application, referred to as "Wind") at a very early stage of its lifecycle. Specifically,

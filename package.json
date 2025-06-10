@@ -33,20 +33,20 @@
 		"@codeeditorland/wind": "0.0.1",
 		"@codeeditorland/worker": "0.0.1",
 		"@playform/build": "0.2.4",
-		"@playform/compress": "0.1.9",
+		"@playform/compress": "0.2.0",
 		"@playform/inline": "0.1.2",
-		"astro": "5.9.0",
+		"astro": "5.9.2",
 		"deepmerge-ts": "7.1.5",
 		"dotenv": "16.5.0",
 		"typescript": "5.8.3",
 		"vite": "6.3.5",
 		"vite-plugin-static-copy": "3.0.0",
 		"vite-plugin-top-level-await": "1.5.0",
-		"zod": "3.25.56"
+		"zod": "3.25.57"
 	},
 	"devDependencies": {
 		"@astrojs/ts-plugin": "1.10.4",
-		"ulid": "3.0.0"
+		"ulid": "3.0.1"
 	},
 	"publishConfig": {
 		"access": "restricted",

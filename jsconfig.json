@@ -7,9 +7,6 @@
 		"moduleResolution": "Bundler",
 		"noEmit": true,
 		"outDir": "Target",
-		"paths": {
-			"@Source/*": ["Source/*"]
-		},
 		"plugins": [
 			{
 				"name": "@astrojs/ts-plugin"

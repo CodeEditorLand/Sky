@@ -1,0 +1,1 @@
+import{$DBc as o}from"../common/localization.contribution.js";import{$Ql as r}from"../../../../platform/registry/common/platform.js";import{Extensions as e}from"../../../common/contributions.js";class n extends o{}const s=r.as(e.Workbench);s.registerWorkbenchContribution(n,4);export{n as $EBc};

@@ -1,0 +1,1 @@
+import{$dh as r}from"../../../../../base/common/resources.js";import{$Lgb as n}from"../../../../../editor/browser/widget/diffEditor/commands.js";function m(o,i,e){const t=n(o,e);if(!t)return!1;const d=t.getOriginalEditor().getModel(),s=t.getModifiedEditor().getModel();return r(d?.uri,i.originalURI)&&r(s?.uri,i.modifiedURI)}export{m as $Ufc};

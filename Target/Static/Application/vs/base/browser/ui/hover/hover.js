@@ -1,0 +1,1 @@
+function e(e){return"object"==typeof e&&"markdown"in e&&"markdownNotSupportedFallback"in e}function o(e){return"object"==typeof e&&"element"in e}export{e as $H7,o as $I7};

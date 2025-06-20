@@ -1,1 +1,0 @@
-import{VsCodeScheme as e}from"../../../Integration/Tauri.js";function t(t){return![e.file,e.vscodeUserData,e.tmp].includes(t)}export{t as default};

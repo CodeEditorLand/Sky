@@ -1,1 +1,0 @@
-import"../../../effect";import{ShowTauriMessage as t}from"../../../Integration/Tauri.js";function o(e){return t(`The requested file operation (${e}) might not be fully optimal in this environment.`,{title:"Notice",kind:"warning"})}export{o as default};

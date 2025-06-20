@@ -1,0 +1,1 @@
+class e{static{this.CHANNEL_NAME="editorWorkerHost"}static getChannel(t){return t.getChannel(e.CHANNEL_NAME)}static setChannel(t,s){t.setChannel(e.CHANNEL_NAME,s)}}export{e as $P7b};

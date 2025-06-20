@@ -1,0 +1,1 @@
+class s{constructor(s){this.a=s,this.b=0}nextId(){return this.a+ ++this.b}}const o=new s("id#");export{s as $n2,o as $o2};

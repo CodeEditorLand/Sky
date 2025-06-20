@@ -1,0 +1,1 @@
+class o{constructor(t,s=[],o=!1){this.ctor=t,this.staticArguments=s,this.supportsDelayedInstantiation=o}}export{o as $kj};

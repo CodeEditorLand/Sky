@@ -1,0 +1,1 @@
+import{ChatMode as e}from"../../../../constants.js";import{$0Q as s}from"./base/enum.js";import{FrontMatterRecord as n}from"../../../codecs/base/frontMatterCodec/tokens/index.js";const r="mode";class m extends s{constructor(t,s){super([e.Ask,e.Edit,e.Agent],r,t,s)}static isModeRecord(e){return e instanceof n&&e.nameToken.text===r}}export{m as $$Q};

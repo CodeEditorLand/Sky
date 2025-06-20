@@ -1,0 +1,1 @@
+class n{constructor(s,t){this.startLineNumber=s,this.endLineNumber=t}}class o{constructor(s,t,r){this.range=s,this.children=t,this.parent=r}}class c{constructor(s,t,r,i){this.uri=s,this.version=t,this.element=r,this.outlineProviderId=i}}export{c as $Apb,n as $ypb,o as $zpb};

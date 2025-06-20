@@ -1,0 +1,1 @@
+import{$oQ as o}from"./simpleToken.js";class t extends o{static{this.symbol=":"}get text(){return t.symbol}toString(){return`colon${this.range}`}}export{t as $vQ};

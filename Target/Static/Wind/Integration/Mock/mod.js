@@ -1,0 +1,1 @@
+import{Layer as o}from"../../effect";import{IntegrationServiceTag as r}from"../Tauri/Definition.js";import{MockClipboard as e}from"./Clipboard/mod.js";const c=o.succeed(r,{...e});export{c as MockIntegrationLayer};

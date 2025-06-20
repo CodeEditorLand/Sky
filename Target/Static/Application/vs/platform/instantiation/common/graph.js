@@ -1,0 +1,5 @@
+class r{constructor(o,t){this.key=o,this.data=t,this.incoming=new Map,this.outgoing=new Map}}class u{constructor(o){this.b=o,this.a=new Map}roots(){const o=[];for(const t of this.a.values())t.outgoing.size===0&&o.push(t);return o}insertEdge(o,t){const e=this.lookupOrInsertNode(o),n=this.lookupOrInsertNode(t);e.outgoing.set(n.key,n),n.incoming.set(e.key,e)}removeNode(o){const t=this.b(o);this.a.delete(t);for(const e of this.a.values())e.outgoing.delete(t),e.incoming.delete(t)}lookupOrInsertNode(o){const t=this.b(o);let e=this.a.get(t);return e||(e=new r(t,o),this.a.set(t,e)),e}lookup(o){return this.a.get(this.b(o))}isEmpty(){return this.a.size===0}toString(){const o=[];for(const[t,e]of this.a)o.push(`${t}
+	(-> incoming)[${[...e.incoming.keys()].join(", ")}]
+	(outgoing ->)[${[...e.outgoing.keys()].join(",")}]
+`);return o.join(`
+`)}findCycleSlow(){for(const[o,t]of this.a){const e=new Set([o]),n=this.c(t,e);if(n)return n}}c(o,t){for(const[e,n]of o.outgoing){if(t.has(e))return[...t,e].join(" -> ");t.add(e);const i=this.c(n,t);if(i)return i;t.delete(e)}}}export{r as $_A,u as $aB};

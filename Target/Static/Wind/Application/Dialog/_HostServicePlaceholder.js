@@ -1,1 +1,0 @@
-import{Layer as o}from"../../effect";import{ProvideHost as e}from"../../Platform/VSCode/Provide.js";const c=o.succeed(e,{openWindow:(e,o)=>Promise.resolve()});export{c as HostServiceLivePlaceholder};

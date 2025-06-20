@@ -1,0 +1,1 @@
+var t;!function(t){t[t.None=0]="None",t[t.Untitled=2]="Untitled",t[t.Scratchpad=4]="Scratchpad"}(t||(t={}));const d="";export{d as $eF,t as WorkingCopyCapabilities};

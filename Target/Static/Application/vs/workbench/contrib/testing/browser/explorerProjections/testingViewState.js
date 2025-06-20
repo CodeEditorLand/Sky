@@ -1,0 +1,1 @@
+import{$vU as o}from"../../common/testId.js";function c(r,t){t instanceof o||(t=o.fromString(t));let n=r;for(const o of t.path){if(!n.children?.hasOwnProperty(o))return;n=n.children[o]}return n.collapsed}export{c as $Qlc};

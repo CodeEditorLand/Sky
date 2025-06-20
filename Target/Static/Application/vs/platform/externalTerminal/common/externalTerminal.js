@@ -1,0 +1,1 @@
+import{$nj as r}from"../../instantiation/common/instantiation.js";const n=r("externalTerminal"),o="Terminal.app";export{n as $Jw,o as $Kw};

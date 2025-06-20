@@ -1,0 +1,1 @@
+import{$WB as o}from"../../../../platform/instantiation/common/extensions.js";import{$o1b as m,$p1b as r}from"./webviewViewService.js";o(m,r,1);

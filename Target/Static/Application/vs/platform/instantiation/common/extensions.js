@@ -1,0 +1,1 @@
+import{$kj as n}from"./descriptors.js";const o=[];var u;function l(a,e,t){e instanceof n||(e=new n(e,[],!!t)),o.push([a,e])}function x(){return o}!function(n){n[n.Eager=0]="Eager",n[n.Delayed=1]="Delayed"}(u||(u={}));export{l as $WB,x as $XB,u as InstantiationType};

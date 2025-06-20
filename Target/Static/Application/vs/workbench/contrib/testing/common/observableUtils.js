@@ -1,0 +1,1 @@
+function o(e,n){const r={beginUpdate(){},endUpdate(){},handlePossibleChange(e){e.reportChanges()},handleChange(e,r){n(r)}};return e.addObserver(r),{dispose(){e.removeObserver(r)}}}export{o as $5kc};

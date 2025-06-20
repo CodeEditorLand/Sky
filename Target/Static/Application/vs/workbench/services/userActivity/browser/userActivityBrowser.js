@@ -1,0 +1,1 @@
+import{$N7b as m}from"./domActivityTracker.js";import{$b1b as o}from"../common/userActivityRegistry.js";o.add(m);

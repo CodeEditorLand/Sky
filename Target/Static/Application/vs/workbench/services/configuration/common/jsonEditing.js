@@ -1,0 +1,1 @@
+import{$nj as n}from"../../../../platform/instantiation/common/instantiation.js";const c=n("jsonEditingService");var o;!function(o){o[o.ERROR_INVALID_FILE=0]="ERROR_INVALID_FILE"}(o||(o={}));class E extends Error{constructor(o,n){super(o),this.code=n}}export{c as $EMb,E as $FMb,o as JSONEditingErrorCode};

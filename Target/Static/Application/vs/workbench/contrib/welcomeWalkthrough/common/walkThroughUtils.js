@@ -1,0 +1,1 @@
+import{$op as o}from"../../../../platform/theme/common/colorRegistry.js";import{localize as r}from"../../../../nls.js";import{$hp as l,$ep as e}from"../../../../base/common/color.js";const m=o("walkThrough.embeddedEditorBackground",{dark:new l(new e(0,0,0,.4)),light:"#f4f4f4",hcDark:null,hcLight:null},r(13372,null));export{m as $Yvc};

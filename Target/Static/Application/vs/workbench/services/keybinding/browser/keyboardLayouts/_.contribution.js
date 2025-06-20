@@ -1,1 +1,1 @@
-class t{static{this.INSTANCE=new t}get layoutInfos(){return this.a}constructor(){this.a=[]}registerKeyboardLayout(t){this.a.push(t)}}export{t as $rQc};
+class t{static{this.INSTANCE=new t}get layoutInfos(){return this.a}constructor(){this.a=[]}registerKeyboardLayout(t){this.a.push(t)}}export{t as $uQc};

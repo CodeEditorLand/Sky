@@ -1,0 +1,1 @@
+import{FuzzyScore as e}from"../../../../base/common/filters.js";class a{constructor(t){this.completion=t,this.score=e.Default,this.isInvalid=!1,this.textLabel="string"==typeof t.label?t.label:t.label?.label,this.labelLow=this.textLabel.toLowerCase()}}export{a as $CZb};

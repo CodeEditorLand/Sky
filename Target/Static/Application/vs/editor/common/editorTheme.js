@@ -1,0 +1,1 @@
+class r{get type(){return this.a.type}get value(){return this.a}constructor(t){this.a=t}update(t){this.a=t}getColor(t){return this.a.getColor(t)}}export{r as $z_};

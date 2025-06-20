@@ -1,0 +1,1 @@
+class s{static{this.a=!1}constructor(t){this.d=t,this.b=new Map,this.c=1}add(t){const s=this.c++;return this.b.set(s,t),this.e(),s}get(t,s){return this.b.has(t)?this.b.get(t)[s]:void 0}delete(t){this.b.delete(t),this.e()}e(){s.a}}export{s as $bKc};

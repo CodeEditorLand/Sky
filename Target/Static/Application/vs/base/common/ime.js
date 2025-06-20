@@ -1,0 +1,1 @@
+import{$df as t}from"./event.js";class e{constructor(){this.a=new t,this.onDidChange=this.a.event,this.b=!0}get enabled(){return this.b}enable(){this.b=!0,this.a.fire()}disable(){this.b=!1,this.a.fire()}}const r=new e;export{e as $X0,r as IME};

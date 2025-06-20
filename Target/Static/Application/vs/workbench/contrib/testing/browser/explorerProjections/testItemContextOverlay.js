@@ -1,0 +1,1 @@
+import{$W2b as m}from"../../common/testProfileService.js";import{$vU as i}from"../../common/testId.js";import{TestingContextKeys as r}from"../../common/testingContextKeys.js";const c=(t,e)=>{if(!t)return[];const o=i.fromString(t.item.extId);return[[r.testItemExtId.key,o.localId],[r.controllerId.key,t.controllerId],[r.testItemHasUri.key,!!t.item.uri],...m(e)]};export{c as $alc};

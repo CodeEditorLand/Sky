@@ -1,0 +1,1 @@
+import{$vd as t}from"../../../../base/common/lifecycle.js";class e extends t{constructor(){super(...arguments),this.f=null}get activated(){return null!==this.f}activate(){return this.f||(this.f=this.c()),this.f}}export{e as $Shc};

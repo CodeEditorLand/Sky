@@ -1,0 +1,1 @@
+function t(d,o){const e=d;"number"!=typeof e.vscodeWindowId&&Object.defineProperty(e,"vscodeWindowId",{get:()=>o})}const d=window;function c(o){return o!==d&&"number"==typeof o?.vscodeWindowId}export{t as $b5,d as $c5,c as $d5};

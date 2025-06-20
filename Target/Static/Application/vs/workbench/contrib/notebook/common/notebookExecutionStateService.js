@@ -1,0 +1,1 @@
+import{$nj as r}from"../../../../platform/instantiation/common/instantiation.js";var t;!function(o){o[o.cell=0]="cell",o[o.notebook=1]="notebook"}(t||(t={}));const n=r("INotebookExecutionStateService");export{n as $DK,t as NotebookExecutionType};

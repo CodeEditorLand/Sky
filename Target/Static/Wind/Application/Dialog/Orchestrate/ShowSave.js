@@ -1,1 +1,0 @@
-import{Effect as t,pipe as r}from"../../../effect";import{ProcessSaveResultToUri as a,RequestTauriSave as p,ResolveFinalDefaultPath as i}from"../../../Integration/Tauri.js";import f from"../Factory/CreateSaveOption.js";function m(o){return r(i(o.defaultUri),t.map(e=>f(o,e)),t.flatMap(e=>p(e)),t.map(a))}export{m as default};

@@ -1,0 +1,1 @@
+function f(f,n){if(void 0!==n)return"function"==typeof n?n(f):n}export{f as $OCb};

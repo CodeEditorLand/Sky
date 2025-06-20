@@ -1,1 +1,0 @@
-import{default as t}from"./Type/Uri.js";import{default as o}from"./Type/Scheme.js";export{o as Scheme,t as UriConstructor};

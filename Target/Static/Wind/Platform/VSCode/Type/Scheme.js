@@ -1,1 +1,0 @@
-import{Schemas as t}from"vs/base/common/network";const o=t;var a=o;export{a as default};

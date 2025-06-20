@@ -1,1 +1,0 @@
-function e(e){return{workspaceUri:e}}export{e as default};

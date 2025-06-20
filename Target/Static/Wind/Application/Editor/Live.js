@@ -1,0 +1,1 @@
+import{Layer as r}from"../../effect";import"../EditorGroups/mod.js";import"../Instantiation/mod.js";import"../TextEditor/mod.js";import{Definition as e}from"./Definition.js";import{Tag as t}from"./Service.js";const o=r.effect(t,e);var s=o;export{s as default};

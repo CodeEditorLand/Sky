@@ -1,0 +1,1 @@
+class e{constructor(s,e){this.range=s,this.message=e}}class n extends e{toString(){return`warning(${this.message})${this.range}`}}class a extends e{toString(){return`error(${this.message})${this.range}`}}export{e as $jQ,n as $kQ,a as $lQ};

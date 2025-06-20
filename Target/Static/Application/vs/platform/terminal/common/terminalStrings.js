@@ -1,0 +1,1 @@
+function x(e,n={}){let m="";return n.excludeLeadingNewLine||(m+="\r\n"),m+="[0m[7m * ",n.loudFormatting?m+="[0;104m":m+="[0m",m+=` ${e} [0m\n\r`,m}export{x as $qlc};

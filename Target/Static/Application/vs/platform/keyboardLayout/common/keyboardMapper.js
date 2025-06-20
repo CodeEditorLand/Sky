@@ -1,0 +1,1 @@
+class n{constructor(e){this.a=e,this.b=new Map}dumpDebugInfo(){return this.a.dumpDebugInfo()}resolveKeyboardEvent(e){return this.a.resolveKeyboardEvent(e)}resolveKeybinding(e){const t=e.getHashCode(),s=this.b.get(t);if(!s){const s=this.a.resolveKeybinding(e);return this.b.set(t,s),s}return s}}export{n as $vx};

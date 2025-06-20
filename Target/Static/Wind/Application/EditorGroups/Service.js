@@ -1,0 +1,1 @@
+import{Context as e}from"../../effect";const o=e.Tag("vscode/EditorGroupsService");export{o as Tag};

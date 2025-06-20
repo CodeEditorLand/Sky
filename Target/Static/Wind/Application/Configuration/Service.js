@@ -1,0 +1,1 @@
+import{Context as o}from"../../effect";const t=o.Tag("vscode/ConfigurationService");export{t as Tag};

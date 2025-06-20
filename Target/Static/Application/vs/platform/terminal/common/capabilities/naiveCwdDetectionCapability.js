@@ -1,0 +1,1 @@
+import{$df as i}from"../../../../base/common/event.js";class h{constructor(t){this.a=t,this.type=1,this.b="",this.c=new i,this.onDidChangeCwd=this.c.event}async getCwd(){if(!this.a)return Promise.resolve("");const t=await this.a.getCwd();return t!==this.b&&this.c.fire(t),this.b=t,this.b}}export{h as $vrc};

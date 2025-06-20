@@ -1,0 +1,1 @@
+class s{get dataOffset(){return this.a}get dirtySize(){if(void 0!==this.a&&void 0!==this.b)return this.b-this.a+1}get isDirty(){return void 0!==this.a}flag(i,t=1){return this.c(i),t>1&&this.c(i+t-1),i}c(i){(void 0===this.a||i<this.a)&&(this.a=i),(void 0===this.b||i>this.b)&&(this.b=i)}clear(){this.a=void 0,this.b=void 0}}export{s as $Ybb};

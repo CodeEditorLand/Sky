@@ -1,0 +1,1 @@
+class n{constructor(t,s,i,e,h,r,a){this.id=t,this.label=s,this.alias=i,this.metadata=e,this.a=h,this.b=r,this.c=a}isSupported(){return this.c.contextMatchesRules(this.a)}run(t){return this.isSupported()?this.b(t):Promise.resolve(void 0)}}export{n as $jdb};

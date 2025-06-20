@@ -1,0 +1,1 @@
+import{$WB as t}from"../../../../platform/instantiation/common/extensions.js";import{$ugc as o}from"./browserElementsService.js";class n{constructor(){}async getElementData(t,o){throw new Error("Not implemented")}startDebugSession(t,o){throw new Error("Not implemented")}}t(o,n,1);

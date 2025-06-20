@@ -1,0 +1,1 @@
+import{localize as l}from"../../../../nls.js";const n={showLanguagePackExtensions:l(8499,null),searchMarketplace:l(8500,null),installAndRestartMessage:l(8501,null),installAndRestart:l(8502,null)};export{n as $XIc};

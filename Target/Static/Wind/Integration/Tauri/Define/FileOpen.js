@@ -1,1 +1,0 @@
-function i(i){return{fileUri:i}}export{i as default};

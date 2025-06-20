@@ -1,0 +1,1 @@
+import{$d$ as m}from"../../../../base/common/worker/webWorkerBootstrap.js";import{$CQc as o}from"./localFileSearch.js";m(o);

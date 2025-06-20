@@ -1,0 +1,1 @@
+class d{constructor(i,t,r,d){this.originalStart=i,this.originalLength=t,this.modifiedStart=r,this.modifiedLength=d}getOriginalEnd(){return this.originalStart+this.originalLength}getModifiedEnd(){return this.modifiedStart+this.modifiedLength}}export{d as $9B};

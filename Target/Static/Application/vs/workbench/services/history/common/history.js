@@ -1,0 +1,1 @@
+import{$nj as T}from"../../../../platform/instantiation/common/instantiation.js";const N=T("historyService");var I,O;!function(o){o[o.NONE=0]="NONE",o[o.EDITS=1]="EDITS",o[o.NAVIGATION=2]="NAVIGATION"}(I||(I={})),function(o){o[o.DEFAULT=0]="DEFAULT",o[o.EDITOR_GROUP=1]="EDITOR_GROUP",o[o.EDITOR=2]="EDITOR"}(O||(O={}));export{N as $x4,I as GoFilter,O as GoScope};

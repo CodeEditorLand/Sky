@@ -1,0 +1,1 @@
+import{Context as e}from"../../effect";const r=e.Tag("vscode/TextEditorService");export{r as Tag};

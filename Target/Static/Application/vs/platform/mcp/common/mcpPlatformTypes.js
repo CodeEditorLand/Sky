@@ -1,0 +1,1 @@
+var t;!function(t){t.PROMPT="promptString",t.PICK="pickString"}(t||(t={}));export{t as McpServerVariableType};

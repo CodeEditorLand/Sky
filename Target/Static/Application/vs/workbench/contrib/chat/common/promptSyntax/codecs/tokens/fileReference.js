@@ -1,0 +1,1 @@
+import{$TR as o}from"./promptVariable.js";import{$Uc as s}from"../../../../../../../base/common/assert.js";const e="file";class r extends o{constructor(a,r){super(a,e,r),this.path=r}static from(a){return s(a.name===e,`Variable name must be '${e}', got '${a.name}'.`),new r(a.range,a.data)}get linkRange(){return super.dataRange}}export{r as $mS};

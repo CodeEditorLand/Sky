@@ -1,0 +1,1 @@
+import{$mQ as s}from"../../baseToken.js";import{$ZQ as e}from"./frontMatterToken.js";class m extends e{constructor(){super(...arguments),this.valueTypeName="array"}get items(){const r=[];for(const t of this.children)t instanceof e&&r.push(t);return r}toString(){return`front-matter-array(${s.render(this.items,", ")})${this.range}`}}export{m as $1Q};

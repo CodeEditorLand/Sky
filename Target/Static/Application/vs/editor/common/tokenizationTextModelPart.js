@@ -1,0 +1,1 @@
+var s;!function(e){e[e.InProgress=1]="InProgress",e[e.Completed=2]="Completed"}(s||(s={}));export{s as BackgroundTokenizationState};

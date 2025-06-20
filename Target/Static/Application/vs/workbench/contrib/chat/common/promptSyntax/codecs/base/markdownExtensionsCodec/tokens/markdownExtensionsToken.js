@@ -1,0 +1,1 @@
+import{$sR as s}from"../../markdownCodec/tokens/markdownToken.js";class o extends s{}export{o as $tR};

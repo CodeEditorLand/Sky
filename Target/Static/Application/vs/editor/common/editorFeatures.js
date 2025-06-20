@@ -1,0 +1,1 @@
+const t=[];function n(n){t.push(n)}function o(){return t.slice(0)}export{n as $ghb,o as $hhb};

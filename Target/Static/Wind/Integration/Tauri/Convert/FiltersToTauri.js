@@ -1,1 +1,0 @@
-import{Option as t,pipe as i}from"../../../effect";function l(r){return i(t.fromNullable(r),t.filter(e=>e.length>0),t.map(e=>e.map(o=>({name:o.name,extensions:[...o.extensions]}))))}export{l as default};

@@ -1,0 +1,1 @@
+class i{constructor(){this.a=[],this.add=s=>{this.a.push(s)}}take(s,t){this.add=a=>t.createInstance(a,s),this.a.forEach(this.add),this.a=[]}}const c=new i;export{c as $b1b};

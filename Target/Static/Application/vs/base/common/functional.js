@@ -1,0 +1,1 @@
+function s(t,n){const r=this;let e,i=!1;return function(){if(i)return e;if(i=!0,n)try{e=t.apply(r,arguments)}finally{n()}else e=t.apply(r,arguments);return e}}export{s as $Cb};

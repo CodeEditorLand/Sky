@@ -1,0 +1,1 @@
+import{$oY as o}from"./extHost.protocol.js";class c{constructor(e){const t=e.getProxy(o.MainThreadClipboard);this.value=Object.freeze({readText:()=>t.$readText(),writeText:e=>t.$writeText(e)})}}export{c as $DKc};

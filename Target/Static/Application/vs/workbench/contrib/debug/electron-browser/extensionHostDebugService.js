@@ -1,0 +1,1 @@
+import{$Xv as m}from"../../../../platform/debug/common/extensionHostDebug.js";import{$nCc as o}from"../../../../platform/ipc/electron-browser/services.js";import{$Zv as r,$Yv as n}from"../../../../platform/debug/common/extensionHostDebugIpc.js";o(m,n.ChannelName,{channelClientCtor:r});

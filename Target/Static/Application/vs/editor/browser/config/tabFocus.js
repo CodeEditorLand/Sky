@@ -1,0 +1,1 @@
+import{$df as t}from"../../../base/common/event.js";class e{constructor(){this.a=!1,this.b=new t,this.onDidChangeTabFocus=this.b.event}getTabFocusMode(){return this.a}setTabFocusMode(s){this.a=s,this.b.fire(this.a)}}const i=new e;export{i as $l_};

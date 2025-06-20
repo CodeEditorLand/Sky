@@ -1,0 +1,1 @@
+import{$$m as r}from"../../../../base/common/hash.js";function i(r){return{id:n(r),configPath:r}}function u(r){return{id:n(r),uri:r}}function n(n){return r(n.toString()).toString(16)}export{i as $ezc,u as $fzc};

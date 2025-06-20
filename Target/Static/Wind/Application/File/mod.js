@@ -1,0 +1,1 @@
+import{Layer as e}from"../../effect";import{Live as r}from"../FileSystem/mod.js";import{Log as i}from"../Log.js";import{Definition as t}from"./Definition.js";import{Tag as o}from"./Service.js";const p=o,v=e.effect(p,t).pipe(e.provide(e.merge(r,i.Live)));export{v as Live,p as Tag};

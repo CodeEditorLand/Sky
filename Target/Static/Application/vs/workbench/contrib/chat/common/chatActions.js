@@ -1,0 +1,1 @@
+function t(t){return!!t&&"string"==typeof t.sessionId&&19===t.$mid}export{t as $MDb};

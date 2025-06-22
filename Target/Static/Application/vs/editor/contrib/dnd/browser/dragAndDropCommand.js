@@ -1,1 +1,50 @@
-import{$cC as n}from"../../../common/core/range.js";import{$RC as i}from"../../../common/core/selection.js";class r{constructor(i,t,e){this.a=i,this.b=t,this.d=e,this.c=null}getEditOperations(t,e){const s=t.getValueInRange(this.a);this.d||e.addEditOperation(this.a,null),e.addEditOperation(new n(this.b.lineNumber,this.b.column,this.b.lineNumber,this.b.column),s),!this.a.containsPosition(this.b)||this.d&&(this.a.getEndPosition().equals(this.b)||this.a.getStartPosition().equals(this.b))?this.d?this.c=new i(this.b.lineNumber,this.b.column,this.a.endLineNumber-this.a.startLineNumber+this.b.lineNumber,this.a.startLineNumber===this.a.endLineNumber?this.b.column+this.a.endColumn-this.a.startColumn:this.a.endColumn):this.b.lineNumber>this.a.endLineNumber?this.c=new i(this.b.lineNumber-this.a.endLineNumber+this.a.startLineNumber,this.b.column,this.b.lineNumber,this.a.startLineNumber===this.a.endLineNumber?this.b.column+this.a.endColumn-this.a.startColumn:this.a.endColumn):this.b.lineNumber<this.a.endLineNumber?this.c=new i(this.b.lineNumber,this.b.column,this.b.lineNumber+this.a.endLineNumber-this.a.startLineNumber,this.a.startLineNumber===this.a.endLineNumber?this.b.column+this.a.endColumn-this.a.startColumn:this.a.endColumn):this.a.endColumn<=this.b.column?this.c=new i(this.b.lineNumber-this.a.endLineNumber+this.a.startLineNumber,(this.a.startLineNumber,this.a.endLineNumber,this.b.column-this.a.endColumn+this.a.startColumn),this.b.lineNumber,this.a.startLineNumber===this.a.endLineNumber?this.b.column:this.a.endColumn):this.c=new i(this.b.lineNumber-this.a.endLineNumber+this.a.startLineNumber,this.b.column,this.b.lineNumber,this.b.column+this.a.endColumn-this.a.startColumn):this.c=this.a}computeCursorState(i,t){return this.c}}export{r as $unb};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { Range } from "../../../common/core/range.js";
+import { Selection } from "../../../common/core/selection.js";
+class DragAndDropCommand {
+  static {
+    __name(this, "DragAndDropCommand");
+  }
+  constructor(selection, targetPosition, copy) {
+    this.selection = selection;
+    this.targetPosition = targetPosition;
+    this.copy = copy;
+    this.targetSelection = null;
+  }
+  getEditOperations(model, builder) {
+    const text = model.getValueInRange(this.selection);
+    if (!this.copy) {
+      builder.addEditOperation(this.selection, null);
+    }
+    builder.addEditOperation(new Range(this.targetPosition.lineNumber, this.targetPosition.column, this.targetPosition.lineNumber, this.targetPosition.column), text);
+    if (this.selection.containsPosition(this.targetPosition) && !(this.copy && (this.selection.getEndPosition().equals(this.targetPosition) || this.selection.getStartPosition().equals(this.targetPosition)))) {
+      this.targetSelection = this.selection;
+      return;
+    }
+    if (this.copy) {
+      this.targetSelection = new Selection(this.targetPosition.lineNumber, this.targetPosition.column, this.selection.endLineNumber - this.selection.startLineNumber + this.targetPosition.lineNumber, this.selection.startLineNumber === this.selection.endLineNumber ? this.targetPosition.column + this.selection.endColumn - this.selection.startColumn : this.selection.endColumn);
+      return;
+    }
+    if (this.targetPosition.lineNumber > this.selection.endLineNumber) {
+      this.targetSelection = new Selection(this.targetPosition.lineNumber - this.selection.endLineNumber + this.selection.startLineNumber, this.targetPosition.column, this.targetPosition.lineNumber, this.selection.startLineNumber === this.selection.endLineNumber ? this.targetPosition.column + this.selection.endColumn - this.selection.startColumn : this.selection.endColumn);
+      return;
+    }
+    if (this.targetPosition.lineNumber < this.selection.endLineNumber) {
+      this.targetSelection = new Selection(this.targetPosition.lineNumber, this.targetPosition.column, this.targetPosition.lineNumber + this.selection.endLineNumber - this.selection.startLineNumber, this.selection.startLineNumber === this.selection.endLineNumber ? this.targetPosition.column + this.selection.endColumn - this.selection.startColumn : this.selection.endColumn);
+      return;
+    }
+    if (this.selection.endColumn <= this.targetPosition.column) {
+      this.targetSelection = new Selection(this.targetPosition.lineNumber - this.selection.endLineNumber + this.selection.startLineNumber, this.selection.startLineNumber === this.selection.endLineNumber ? this.targetPosition.column - this.selection.endColumn + this.selection.startColumn : this.targetPosition.column - this.selection.endColumn + this.selection.startColumn, this.targetPosition.lineNumber, this.selection.startLineNumber === this.selection.endLineNumber ? this.targetPosition.column : this.selection.endColumn);
+    } else {
+      this.targetSelection = new Selection(this.targetPosition.lineNumber - this.selection.endLineNumber + this.selection.startLineNumber, this.targetPosition.column, this.targetPosition.lineNumber, this.targetPosition.column + this.selection.endColumn - this.selection.startColumn);
+    }
+  }
+  computeCursorState(model, helper) {
+    return this.targetSelection;
+  }
+}
+export {
+  DragAndDropCommand
+};
+//# sourceMappingURL=dragAndDropCommand.js.map

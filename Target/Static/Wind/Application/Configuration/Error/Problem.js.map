@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["../../../../Source/Application/Configuration/Error/Problem.ts"],
+  "sourcesContent": ["/**\n * @module Problem (Configuration/Error)\n * @description Defines a domain-specific, tagged error for configuration operations\n * at the application layer.\n */\n\nimport { Data } from \"effect\";\n\nimport type { IntegrationConfigurationProblem } from \"../../../Integration/Tauri/Configuration/Error.js\";\n\n/**\n * Represents a failure within the Configuration application service.\n *\n * This error acts as a wrapper around a more specific problem from the\n * Integration layer (e.g., a file system error or a JSON parsing error).\n * This allows higher-level code to catch a single, well-defined error type\n * for this domain while preserving the original cause for logging.\n */\nexport class Problem extends Data.TaggedError(\n\t\"ApplicationConfigurationProblem\",\n)<{\n\t/** The underlying problem from the Integration layer that caused this failure. */\n\treadonly cause: IntegrationConfigurationProblem;\n\t/** A string describing the context of the operation (e.g., 'FailedToResolveDefaultSettings'). */\n\treadonly context: string;\n}> {}\n"],
+  "mappings": ";;AAMA,SAAS,YAAY;AAYd,MAAM,gBAAgB,KAAK;AAAA,EACjC;AACD,EAKG;AAAA,EAzBH,OAyBG;AAAA;AAAA;AAAC;",
+  "names": []
+}

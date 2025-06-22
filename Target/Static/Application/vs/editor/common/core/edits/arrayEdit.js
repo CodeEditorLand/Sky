@@ -1,1 +1,79 @@
-import{$bD as l}from"../ranges/offsetRange.js";import{$WL as u,$XL as i}from"./edit.js";class r extends u{static{this.empty=new r([])}static create(e){return new r(e)}static single(e){return new r([e])}static replace(e,t){return new r([new a(e,t)])}static insert(e,t){return new r([new a(l.emptyAt(e),t)])}static delete(e){return new r([new a(e,[])])}a(e){return new r(e)}apply(e){const t=[];let s=0;for(const n of this.replacements)t.push(...e.slice(s,n.replaceRange.start)),t.push(...n.newValue),s=n.replaceRange.endExclusive;return t.push(...e.slice(s)),t}inverse(e){const t=[];let s=0;for(const n of this.replacements)t.push(new a(l.ofStartAndLength(n.replaceRange.start+s,n.newValue.length),e.slice(n.replaceRange.start,n.replaceRange.endExclusive))),s+=n.newValue.length-n.replaceRange.length;return new r(t)}}class a extends i{constructor(e,t){super(e),this.newValue=t}equals(e){return this.replaceRange.equals(e.replaceRange)&&this.newValue.length===e.newValue.length&&this.newValue.every((t,s)=>t===e.newValue[s])}getNewLength(){return this.newValue.length}tryJoinTouching(e){return new a(this.replaceRange.joinRightTouching(e.replaceRange),this.newValue.concat(e.newValue))}slice(e,t){return new a(e,t.slice(this.newValue))}}export{a as $AFc,r as $zFc};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { OffsetRange } from "../ranges/offsetRange.js";
+import { BaseEdit, BaseReplacement } from "./edit.js";
+class ArrayEdit extends BaseEdit {
+  static {
+    __name(this, "ArrayEdit");
+  }
+  static {
+    this.empty = new ArrayEdit([]);
+  }
+  static create(replacements) {
+    return new ArrayEdit(replacements);
+  }
+  static single(replacement) {
+    return new ArrayEdit([replacement]);
+  }
+  static replace(range, replacement) {
+    return new ArrayEdit([new ArrayReplacement(range, replacement)]);
+  }
+  static insert(offset, replacement) {
+    return new ArrayEdit([new ArrayReplacement(OffsetRange.emptyAt(offset), replacement)]);
+  }
+  static delete(range) {
+    return new ArrayEdit([new ArrayReplacement(range, [])]);
+  }
+  _createNew(replacements) {
+    return new ArrayEdit(replacements);
+  }
+  apply(data) {
+    const resultData = [];
+    let pos = 0;
+    for (const edit of this.replacements) {
+      resultData.push(...data.slice(pos, edit.replaceRange.start));
+      resultData.push(...edit.newValue);
+      pos = edit.replaceRange.endExclusive;
+    }
+    resultData.push(...data.slice(pos));
+    return resultData;
+  }
+  /**
+   * Creates an edit that reverts this edit.
+   */
+  inverse(baseVal) {
+    const edits = [];
+    let offset = 0;
+    for (const e of this.replacements) {
+      edits.push(new ArrayReplacement(OffsetRange.ofStartAndLength(e.replaceRange.start + offset, e.newValue.length), baseVal.slice(e.replaceRange.start, e.replaceRange.endExclusive)));
+      offset += e.newValue.length - e.replaceRange.length;
+    }
+    return new ArrayEdit(edits);
+  }
+}
+class ArrayReplacement extends BaseReplacement {
+  static {
+    __name(this, "ArrayReplacement");
+  }
+  constructor(range, newValue) {
+    super(range);
+    this.newValue = newValue;
+  }
+  equals(other) {
+    return this.replaceRange.equals(other.replaceRange) && this.newValue.length === other.newValue.length && this.newValue.every((v, i) => v === other.newValue[i]);
+  }
+  getNewLength() {
+    return this.newValue.length;
+  }
+  tryJoinTouching(other) {
+    return new ArrayReplacement(this.replaceRange.joinRightTouching(other.replaceRange), this.newValue.concat(other.newValue));
+  }
+  slice(range, rangeInReplacement) {
+    return new ArrayReplacement(range, rangeInReplacement.slice(this.newValue));
+  }
+}
+export {
+  ArrayEdit,
+  ArrayReplacement
+};
+//# sourceMappingURL=arrayEdit.js.map

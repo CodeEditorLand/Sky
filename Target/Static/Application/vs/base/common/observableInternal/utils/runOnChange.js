@@ -1,1 +1,62 @@
-import{cancelOnDispose as d}from"../commonFacade/cancellation.js";import{DisposableStore as u}from"../commonFacade/deps.js";import{$Yd as p}from"../reactions/autorun.js";function f(s,i){let e,o=!0;return p({changeTracker:{createChangeSummary:()=>({deltas:[],didChange:!1}),handleChange:(t,r)=>{if(t.didChange(s)){const n=t.change;n!==void 0&&r.deltas.push(n),r.didChange=!0}return!0}}},(t,r)=>{const n=s.read(t),a=e;r.didChange&&(e=n,i(n,a,r.deltas)),o&&(o=!1,e=n)})}function l(s,i){const e=new u,o=f(s,(t,r,n)=>{e.clear(),i(t,r,n,e)});return{dispose(){o.dispose(),e.dispose()}}}function C(s,i){return l(s,(e,o,t,r)=>{i(e,o,t,d(r))})}export{f as $Re,l as $Se,C as $Te};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { cancelOnDispose } from "../commonFacade/cancellation.js";
+import { DisposableStore } from "../commonFacade/deps.js";
+import { autorunWithStoreHandleChanges } from "../reactions/autorun.js";
+function runOnChange(observable, cb) {
+  let _previousValue;
+  let _firstRun = true;
+  return autorunWithStoreHandleChanges({
+    changeTracker: {
+      createChangeSummary: /* @__PURE__ */ __name(() => ({ deltas: [], didChange: false }), "createChangeSummary"),
+      handleChange: /* @__PURE__ */ __name((context, changeSummary) => {
+        if (context.didChange(observable)) {
+          const e = context.change;
+          if (e !== void 0) {
+            changeSummary.deltas.push(e);
+          }
+          changeSummary.didChange = true;
+        }
+        return true;
+      }, "handleChange")
+    }
+  }, (reader, changeSummary) => {
+    const value = observable.read(reader);
+    const previousValue = _previousValue;
+    if (changeSummary.didChange) {
+      _previousValue = value;
+      cb(value, previousValue, changeSummary.deltas);
+    }
+    if (_firstRun) {
+      _firstRun = false;
+      _previousValue = value;
+    }
+  });
+}
+__name(runOnChange, "runOnChange");
+function runOnChangeWithStore(observable, cb) {
+  const store = new DisposableStore();
+  const disposable = runOnChange(observable, (value, previousValue, deltas) => {
+    store.clear();
+    cb(value, previousValue, deltas, store);
+  });
+  return {
+    dispose() {
+      disposable.dispose();
+      store.dispose();
+    }
+  };
+}
+__name(runOnChangeWithStore, "runOnChangeWithStore");
+function runOnChangeWithCancellationToken(observable, cb) {
+  return runOnChangeWithStore(observable, (value, previousValue, deltas, store) => {
+    cb(value, previousValue, deltas, cancelOnDispose(store));
+  });
+}
+__name(runOnChangeWithCancellationToken, "runOnChangeWithCancellationToken");
+export {
+  runOnChange,
+  runOnChangeWithCancellationToken,
+  runOnChangeWithStore
+};
+//# sourceMappingURL=runOnChange.js.map

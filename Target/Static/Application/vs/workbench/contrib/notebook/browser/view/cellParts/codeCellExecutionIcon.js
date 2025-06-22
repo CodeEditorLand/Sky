@@ -1,1 +1,93 @@
-import*as h from"../../../../../../base/browser/dom.js";import{$E8 as m}from"../../../../../../base/browser/ui/iconLabel/iconLabels.js";import{$vd as d}from"../../../../../../base/common/lifecycle.js";import{localize as l}from"../../../../../../nls.js";import{ThemeIcon as $}from"../../../../../../base/common/themables.js";import{$3Tb as b,$5Tb as x,$4Tb as g,$2Tb as _}from"../../notebookIcons.js";import{NotebookCellExecutionState as f}from"../../../common/notebookCommon.js";import{$DK as y,NotebookExecutionType as E}from"../../../common/notebookExecutionStateService.js";var u=function(t,e,o,i){var s,n=arguments.length,l=n<3?e:null===i?i=Object.getOwnPropertyDescriptor(e,o):i;if("object"==typeof Reflect&&"function"==typeof Reflect.decorate)l=Reflect.decorate(t,e,o,i);else for(var a=t.length-1;a>=0;a--)(s=t[a])&&(l=(n<3?s(l):n>3?s(e,o,l):s(e,o))||l);return n>3&&l&&Object.defineProperty(e,o,l),l},p=function(t,e){return function(o,i){e(o,i,t)}};let a=class extends d{constructor(t,e,o,i){super(),this.b=e,this.c=o,this.f=i,this.a=!1,this.g(),this.B(this.f.onDidChangeExecution((t=>{t.type===E.cell&&t.affectsCell(this.b.uri)&&this.g()}))),this.B(this.b.model.onDidChangeInternalMetadata((()=>this.g())))}setVisibility(t){this.a=t,this.g()}g(){if(!this.a)return;const t=this.f.getCellExecution(this.b.uri),e=this.h(t,this.b.model.internalMetadata);e?(this.c.style.display="",h.$O6(this.c,...m(e.text)),this.c.title=e.tooltip??""):(this.c.style.display="none",h.$O6(this.c))}h(t,e){const o=t?.state,{lastRunSuccess:i}=e;return!o&&i?{text:`$(${_.id})`,tooltip:l(9607,null)}:o||!1!==i?o===f.Pending||o===f.Unconfirmed?{text:`$(${g.id})`,tooltip:l(9609,null)}:o===f.Executing?{text:`$(${$.modify(x,"spin").id})`,tooltip:l(9610,null)}:void 0:{text:`$(${b.id})`,tooltip:l(9608,null)}}};a=u([p(3,y)],a);export{a as $rUb};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import * as DOM from "../../../../../../base/browser/dom.js";
+import { renderLabelWithIcons } from "../../../../../../base/browser/ui/iconLabel/iconLabels.js";
+import { Disposable } from "../../../../../../base/common/lifecycle.js";
+import { localize } from "../../../../../../nls.js";
+import { ThemeIcon } from "../../../../../../base/common/themables.js";
+import { errorStateIcon, executingStateIcon, pendingStateIcon, successStateIcon } from "../../notebookIcons.js";
+import { NotebookCellExecutionState } from "../../../common/notebookCommon.js";
+import { INotebookExecutionStateService, NotebookExecutionType } from "../../../common/notebookExecutionStateService.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+let CollapsedCodeCellExecutionIcon = class CollapsedCodeCellExecutionIcon2 extends Disposable {
+  static {
+    __name(this, "CollapsedCodeCellExecutionIcon");
+  }
+  constructor(_notebookEditor, _cell, _element, _executionStateService) {
+    super();
+    this._cell = _cell;
+    this._element = _element;
+    this._executionStateService = _executionStateService;
+    this._visible = false;
+    this._update();
+    this._register(this._executionStateService.onDidChangeExecution((e) => {
+      if (e.type === NotebookExecutionType.cell && e.affectsCell(this._cell.uri)) {
+        this._update();
+      }
+    }));
+    this._register(this._cell.model.onDidChangeInternalMetadata(() => this._update()));
+  }
+  setVisibility(visible) {
+    this._visible = visible;
+    this._update();
+  }
+  _update() {
+    if (!this._visible) {
+      return;
+    }
+    const runState = this._executionStateService.getCellExecution(this._cell.uri);
+    const item = this._getItemForState(runState, this._cell.model.internalMetadata);
+    if (item) {
+      this._element.style.display = "";
+      DOM.reset(this._element, ...renderLabelWithIcons(item.text));
+      this._element.title = item.tooltip ?? "";
+    } else {
+      this._element.style.display = "none";
+      DOM.reset(this._element);
+    }
+  }
+  _getItemForState(runState, internalMetadata) {
+    const state = runState?.state;
+    const { lastRunSuccess } = internalMetadata;
+    if (!state && lastRunSuccess) {
+      return {
+        text: `$(${successStateIcon.id})`,
+        tooltip: localize("notebook.cell.status.success", "Success")
+      };
+    } else if (!state && lastRunSuccess === false) {
+      return {
+        text: `$(${errorStateIcon.id})`,
+        tooltip: localize("notebook.cell.status.failure", "Failure")
+      };
+    } else if (state === NotebookCellExecutionState.Pending || state === NotebookCellExecutionState.Unconfirmed) {
+      return {
+        text: `$(${pendingStateIcon.id})`,
+        tooltip: localize("notebook.cell.status.pending", "Pending")
+      };
+    } else if (state === NotebookCellExecutionState.Executing) {
+      const icon = ThemeIcon.modify(executingStateIcon, "spin");
+      return {
+        text: `$(${icon.id})`,
+        tooltip: localize("notebook.cell.status.executing", "Executing")
+      };
+    }
+    return;
+  }
+};
+CollapsedCodeCellExecutionIcon = __decorate([
+  __param(3, INotebookExecutionStateService)
+], CollapsedCodeCellExecutionIcon);
+export {
+  CollapsedCodeCellExecutionIcon
+};
+//# sourceMappingURL=codeCellExecutionIcon.js.map

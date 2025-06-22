@@ -1,1 +1,194 @@
-import{$Zf as c}from"../../../base/common/strings.js";import{$cz as d}from"./extensionManagement.js";import{$Qy as m,$My as h}from"../../extensions/common/extensions.js";import{$o as $,$y as g}from"../../../base/common/platform.js";import{URI as p}from"../../../base/common/uri.js";import{$wb as y}from"../../../base/common/errors.js";import{$2 as I}from"../../../base/common/process.js";import{$yu as l}from"../../telemetry/common/telemetryUtils.js";import{$Yc as b}from"../../../base/common/types.js";function o(e,r){return e.uuid&&r.uuid?e.uuid===r.uuid:e.id===r.id?!0:c(e.id,r.id)===0}const z=/^([^.]+\..+)-(\d+\.\d+\.\d+)(-(.+))?$/;class u{static create(r){const t=r.manifest?r.manifest.version:r.version,i=r.manifest?r.targetPlatform:r.properties.targetPlatform;return new u(r.identifier,t,i)}static parse(r){const t=z.exec(r);return t&&t[1]&&t[2]?new u({id:t[1]},t[2],t[4]||void 0):null}constructor(r,t,i="undefined"){this.identifier=r,this.version=t,this.targetPlatform=i,this.id=r.id}toString(){return`${this.id}-${this.version}${this.targetPlatform!=="undefined"?`-${this.targetPlatform}`:""}`}equals(r){return r instanceof u?o(this,r)&&this.version===r.version&&this.targetPlatform===r.targetPlatform:!1}}const D=/^([^.]+\..+)@((prerelease)|(\d+\.\d+\.\d+(-.*)?))$/;function G(e){const r=D.exec(e);return r&&r[1]?[f(r[1]),r[2]]:[f(e),void 0]}function v(e,r){return`${e}.${r}`}function f(e){return e.toLowerCase()}function L(e,r){return f(v(e??h,r))}function A(e,r){const t=[],i=n=>{for(const s of t)if(s.some(a=>o(r(a),r(n))))return s;return null};for(const n of e){const s=i(n);s?s.push(n):t.push([n])}return t}function H(e){return{id:e.identifier.id,name:e.manifest.name,galleryId:null,publisherId:e.publisherId,publisherName:e.manifest.publisher,publisherDisplayName:e.publisherDisplayName,dependencies:e.manifest.extensionDependencies&&e.manifest.extensionDependencies.length>0}}function X(e){return{id:new l(e.identifier.id),name:new l(e.name),extensionVersion:e.version,galleryId:e.identifier.uuid,publisherId:e.publisherId,publisherName:e.publisher,publisherDisplayName:e.publisherDisplayName,isPreReleaseVersion:e.properties.isPreReleaseVersion,dependencies:!!(e.properties.dependencies&&e.properties.dependencies.length>0),isSigned:e.isSigned,...e.telemetryData}}const q=new m("pprice.better-merge");function B(e,r){const t=[],i=r.manifest.extensionDependencies?.slice(0)??[];for(;i.length;){const n=i.shift();if(n&&t.every(s=>!o(s.identifier,{id:n}))){const s=e.filter(a=>o(a.identifier,{id:n}));s.length===1&&(t.push(s[0]),i.push(...s[0].manifest.extensionDependencies?.slice(0)??[]))}}return t}async function w(e,r){if(!$)return!1;let t;try{t=(await e.readFile(p.file("/etc/os-release"))).value.toString()}catch{try{t=(await e.readFile(p.file("/usr/lib/os-release"))).value.toString()}catch(n){r.debug("Error while getting the os-release file.",y(n))}}return!!t&&(t.match(/^ID=([^\u001b\r\n]*)/m)||[])[1]==="alpine"}async function K(e,r){const t=await w(e,r),i=d(t?"alpine":g,I);return r.info("ComputeTargetPlatform:",i),i}function M(e,r){return E(e,r)!==void 0}function E(e,r){return r.find(({extensionOrPublisher:t})=>b(t)?c(e.id.split(".")[0],t)===0:o(e,t))}export{L as $Az,A as $Bz,H as $Cz,X as $Dz,q as $Ez,B as $Fz,K as $Gz,M as $Hz,E as $Iz,o as $vz,u as $wz,G as $xz,v as $yz,f as $zz};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { compareIgnoreCase } from "../../../base/common/strings.js";
+import { getTargetPlatform } from "./extensionManagement.js";
+import { ExtensionIdentifier, UNDEFINED_PUBLISHER } from "../../extensions/common/extensions.js";
+import { isLinux, platform } from "../../../base/common/platform.js";
+import { URI } from "../../../base/common/uri.js";
+import { getErrorMessage } from "../../../base/common/errors.js";
+import { arch } from "../../../base/common/process.js";
+import { TelemetryTrustedValue } from "../../telemetry/common/telemetryUtils.js";
+import { isString } from "../../../base/common/types.js";
+function areSameExtensions(a, b) {
+  if (a.uuid && b.uuid) {
+    return a.uuid === b.uuid;
+  }
+  if (a.id === b.id) {
+    return true;
+  }
+  return compareIgnoreCase(a.id, b.id) === 0;
+}
+__name(areSameExtensions, "areSameExtensions");
+const ExtensionKeyRegex = /^([^.]+\..+)-(\d+\.\d+\.\d+)(-(.+))?$/;
+class ExtensionKey {
+  static {
+    __name(this, "ExtensionKey");
+  }
+  static create(extension) {
+    const version = extension.manifest ? extension.manifest.version : extension.version;
+    const targetPlatform = extension.manifest ? extension.targetPlatform : extension.properties.targetPlatform;
+    return new ExtensionKey(extension.identifier, version, targetPlatform);
+  }
+  static parse(key) {
+    const matches = ExtensionKeyRegex.exec(key);
+    return matches && matches[1] && matches[2] ? new ExtensionKey({ id: matches[1] }, matches[2], matches[4] || void 0) : null;
+  }
+  constructor(identifier, version, targetPlatform = "undefined") {
+    this.identifier = identifier;
+    this.version = version;
+    this.targetPlatform = targetPlatform;
+    this.id = identifier.id;
+  }
+  toString() {
+    return `${this.id}-${this.version}${this.targetPlatform !== "undefined" ? `-${this.targetPlatform}` : ""}`;
+  }
+  equals(o) {
+    if (!(o instanceof ExtensionKey)) {
+      return false;
+    }
+    return areSameExtensions(this, o) && this.version === o.version && this.targetPlatform === o.targetPlatform;
+  }
+}
+const EXTENSION_IDENTIFIER_WITH_VERSION_REGEX = /^([^.]+\..+)@((prerelease)|(\d+\.\d+\.\d+(-.*)?))$/;
+function getIdAndVersion(id) {
+  const matches = EXTENSION_IDENTIFIER_WITH_VERSION_REGEX.exec(id);
+  if (matches && matches[1]) {
+    return [adoptToGalleryExtensionId(matches[1]), matches[2]];
+  }
+  return [adoptToGalleryExtensionId(id), void 0];
+}
+__name(getIdAndVersion, "getIdAndVersion");
+function getExtensionId(publisher, name) {
+  return `${publisher}.${name}`;
+}
+__name(getExtensionId, "getExtensionId");
+function adoptToGalleryExtensionId(id) {
+  return id.toLowerCase();
+}
+__name(adoptToGalleryExtensionId, "adoptToGalleryExtensionId");
+function getGalleryExtensionId(publisher, name) {
+  return adoptToGalleryExtensionId(getExtensionId(publisher ?? UNDEFINED_PUBLISHER, name));
+}
+__name(getGalleryExtensionId, "getGalleryExtensionId");
+function groupByExtension(extensions, getExtensionIdentifier) {
+  const byExtension = [];
+  const findGroup = /* @__PURE__ */ __name((extension) => {
+    for (const group of byExtension) {
+      if (group.some((e) => areSameExtensions(getExtensionIdentifier(e), getExtensionIdentifier(extension)))) {
+        return group;
+      }
+    }
+    return null;
+  }, "findGroup");
+  for (const extension of extensions) {
+    const group = findGroup(extension);
+    if (group) {
+      group.push(extension);
+    } else {
+      byExtension.push([extension]);
+    }
+  }
+  return byExtension;
+}
+__name(groupByExtension, "groupByExtension");
+function getLocalExtensionTelemetryData(extension) {
+  return {
+    id: extension.identifier.id,
+    name: extension.manifest.name,
+    galleryId: null,
+    publisherId: extension.publisherId,
+    publisherName: extension.manifest.publisher,
+    publisherDisplayName: extension.publisherDisplayName,
+    dependencies: extension.manifest.extensionDependencies && extension.manifest.extensionDependencies.length > 0
+  };
+}
+__name(getLocalExtensionTelemetryData, "getLocalExtensionTelemetryData");
+function getGalleryExtensionTelemetryData(extension) {
+  return {
+    id: new TelemetryTrustedValue(extension.identifier.id),
+    name: new TelemetryTrustedValue(extension.name),
+    extensionVersion: extension.version,
+    galleryId: extension.identifier.uuid,
+    publisherId: extension.publisherId,
+    publisherName: extension.publisher,
+    publisherDisplayName: extension.publisherDisplayName,
+    isPreReleaseVersion: extension.properties.isPreReleaseVersion,
+    dependencies: !!(extension.properties.dependencies && extension.properties.dependencies.length > 0),
+    isSigned: extension.isSigned,
+    ...extension.telemetryData
+  };
+}
+__name(getGalleryExtensionTelemetryData, "getGalleryExtensionTelemetryData");
+const BetterMergeId = new ExtensionIdentifier("pprice.better-merge");
+function getExtensionDependencies(installedExtensions, extension) {
+  const dependencies = [];
+  const extensions = extension.manifest.extensionDependencies?.slice(0) ?? [];
+  while (extensions.length) {
+    const id = extensions.shift();
+    if (id && dependencies.every((e) => !areSameExtensions(e.identifier, { id }))) {
+      const ext = installedExtensions.filter((e) => areSameExtensions(e.identifier, { id }));
+      if (ext.length === 1) {
+        dependencies.push(ext[0]);
+        extensions.push(...ext[0].manifest.extensionDependencies?.slice(0) ?? []);
+      }
+    }
+  }
+  return dependencies;
+}
+__name(getExtensionDependencies, "getExtensionDependencies");
+async function isAlpineLinux(fileService, logService) {
+  if (!isLinux) {
+    return false;
+  }
+  let content;
+  try {
+    const fileContent = await fileService.readFile(URI.file("/etc/os-release"));
+    content = fileContent.value.toString();
+  } catch (error) {
+    try {
+      const fileContent = await fileService.readFile(URI.file("/usr/lib/os-release"));
+      content = fileContent.value.toString();
+    } catch (error2) {
+      logService.debug(`Error while getting the os-release file.`, getErrorMessage(error2));
+    }
+  }
+  return !!content && (content.match(/^ID=([^\u001b\r\n]*)/m) || [])[1] === "alpine";
+}
+__name(isAlpineLinux, "isAlpineLinux");
+async function computeTargetPlatform(fileService, logService) {
+  const alpineLinux = await isAlpineLinux(fileService, logService);
+  const targetPlatform = getTargetPlatform(alpineLinux ? "alpine" : platform, arch);
+  logService.info("ComputeTargetPlatform:", targetPlatform);
+  return targetPlatform;
+}
+__name(computeTargetPlatform, "computeTargetPlatform");
+function isMalicious(identifier, malicious) {
+  return findMatchingMaliciousEntry(identifier, malicious) !== void 0;
+}
+__name(isMalicious, "isMalicious");
+function findMatchingMaliciousEntry(identifier, malicious) {
+  return malicious.find(({ extensionOrPublisher }) => {
+    if (isString(extensionOrPublisher)) {
+      return compareIgnoreCase(identifier.id.split(".")[0], extensionOrPublisher) === 0;
+    }
+    return areSameExtensions(identifier, extensionOrPublisher);
+  });
+}
+__name(findMatchingMaliciousEntry, "findMatchingMaliciousEntry");
+export {
+  BetterMergeId,
+  ExtensionKey,
+  adoptToGalleryExtensionId,
+  areSameExtensions,
+  computeTargetPlatform,
+  findMatchingMaliciousEntry,
+  getExtensionDependencies,
+  getExtensionId,
+  getGalleryExtensionId,
+  getGalleryExtensionTelemetryData,
+  getIdAndVersion,
+  getLocalExtensionTelemetryData,
+  groupByExtension,
+  isMalicious
+};
+//# sourceMappingURL=extensionManagementUtil.js.map

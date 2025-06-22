@@ -1,1 +1,54 @@
-import{$Ad as b}from"../../../../../base/common/lifecycle.js";import{$mj as p,$nj as h}from"../../../../../platform/instantiation/common/instantiation.js";import{$ZUb as m}from"./notebookOutlineDataSource.js";var f=function(t,e,o,r){var n,a=arguments.length,s=a<3?e:null===r?r=Object.getOwnPropertyDescriptor(e,o):r;if("object"==typeof Reflect&&"function"==typeof Reflect.decorate)s=Reflect.decorate(t,e,o,r);else for(var c=t.length-1;c>=0;c--)(n=t[c])&&(s=(a<3?n(s):a>3?n(e,o,s):n(e,o))||s);return a>3&&s&&Object.defineProperty(e,o,s),s},s=function(t,e){return function(o,r){e(o,r,t)}};let i=class extends b{constructor(t){super(),this.a=t}f(t,e){return this.a.createInstance(m,e)}g(t,e){e.dispose()}};i=f([s(0,p)],i);const j=h("INotebookCellOutlineDataSourceFactory");let u=class{constructor(t){this.a=t.createInstance(i)}getOrCreate(t){return this.a.acquire(t.getId(),t)}};u=f([s(0,p)],u);export{j as $7Ub,u as $8Ub};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { ReferenceCollection } from "../../../../../base/common/lifecycle.js";
+import { IInstantiationService, createDecorator } from "../../../../../platform/instantiation/common/instantiation.js";
+import { NotebookCellOutlineDataSource } from "./notebookOutlineDataSource.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+let NotebookCellOutlineDataSourceReferenceCollection = class NotebookCellOutlineDataSourceReferenceCollection2 extends ReferenceCollection {
+  static {
+    __name(this, "NotebookCellOutlineDataSourceReferenceCollection");
+  }
+  constructor(instantiationService) {
+    super();
+    this.instantiationService = instantiationService;
+  }
+  createReferencedObject(_key, editor) {
+    return this.instantiationService.createInstance(NotebookCellOutlineDataSource, editor);
+  }
+  destroyReferencedObject(_key, object) {
+    object.dispose();
+  }
+};
+NotebookCellOutlineDataSourceReferenceCollection = __decorate([
+  __param(0, IInstantiationService)
+], NotebookCellOutlineDataSourceReferenceCollection);
+const INotebookCellOutlineDataSourceFactory = createDecorator("INotebookCellOutlineDataSourceFactory");
+let NotebookCellOutlineDataSourceFactory = class NotebookCellOutlineDataSourceFactory2 {
+  static {
+    __name(this, "NotebookCellOutlineDataSourceFactory");
+  }
+  constructor(instantiationService) {
+    this._data = instantiationService.createInstance(NotebookCellOutlineDataSourceReferenceCollection);
+  }
+  getOrCreate(editor) {
+    return this._data.acquire(editor.getId(), editor);
+  }
+};
+NotebookCellOutlineDataSourceFactory = __decorate([
+  __param(0, IInstantiationService)
+], NotebookCellOutlineDataSourceFactory);
+export {
+  INotebookCellOutlineDataSourceFactory,
+  NotebookCellOutlineDataSourceFactory
+};
+//# sourceMappingURL=notebookOutlineDataSourceFactory.js.map

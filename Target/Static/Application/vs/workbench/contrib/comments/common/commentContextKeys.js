@@ -1,1 +1,35 @@
-import*as n from"../../../../nls.js";import{$Un as l}from"../../../../platform/contextkey/common/contextkey.js";var o;!function(e){e.activeCursorHasCommentingRange=new l("activeCursorHasCommentingRange",!1,{description:n.localize(6140,null),type:"boolean"}),e.activeCursorHasComment=new l("activeCursorHasComment",!1,{description:n.localize(6141,null),type:"boolean"}),e.activeEditorHasCommentingRange=new l("activeEditorHasCommentingRange",!1,{description:n.localize(6142,null),type:"boolean"}),e.WorkspaceHasCommenting=new l("workspaceHasCommenting",!1,{description:n.localize(6143,null),type:"boolean"}),e.commentThreadIsEmpty=new l("commentThreadIsEmpty",!1,{type:"boolean",description:n.localize(6144,null)}),e.commentIsEmpty=new l("commentIsEmpty",!1,{type:"boolean",description:n.localize(6145,null)}),e.commentContext=new l("comment",void 0,{type:"string",description:n.localize(6146,null)}),e.commentThreadContext=new l("commentThread",void 0,{type:"string",description:n.localize(6147,null)}),e.commentControllerContext=new l("commentController",void 0,{type:"string",description:n.localize(6148,null)}),e.commentFocused=new l("commentFocused",!1,{type:"boolean",description:n.localize(6149,null)}),e.commentingEnabled=new l("commentingEnabled",!0,{description:n.localize(6150,null),type:"boolean"})}(o||(o={}));export{o as CommentContextKeys};
+import * as nls from "../../../../nls.js";
+import { RawContextKey } from "../../../../platform/contextkey/common/contextkey.js";
+var CommentContextKeys;
+(function(CommentContextKeys2) {
+  CommentContextKeys2.activeCursorHasCommentingRange = new RawContextKey("activeCursorHasCommentingRange", false, {
+    description: nls.localize("hasCommentingRange", "Whether the position at the active cursor has a commenting range"),
+    type: "boolean"
+  });
+  CommentContextKeys2.activeCursorHasComment = new RawContextKey("activeCursorHasComment", false, {
+    description: nls.localize("hasComment", "Whether the position at the active cursor has a comment"),
+    type: "boolean"
+  });
+  CommentContextKeys2.activeEditorHasCommentingRange = new RawContextKey("activeEditorHasCommentingRange", false, {
+    description: nls.localize("editorHasCommentingRange", "Whether the active editor has a commenting range"),
+    type: "boolean"
+  });
+  CommentContextKeys2.WorkspaceHasCommenting = new RawContextKey("workspaceHasCommenting", false, {
+    description: nls.localize("hasCommentingProvider", "Whether the open workspace has either comments or commenting ranges."),
+    type: "boolean"
+  });
+  CommentContextKeys2.commentThreadIsEmpty = new RawContextKey("commentThreadIsEmpty", false, { type: "boolean", description: nls.localize("commentThreadIsEmpty", "Set when the comment thread has no comments") });
+  CommentContextKeys2.commentIsEmpty = new RawContextKey("commentIsEmpty", false, { type: "boolean", description: nls.localize("commentIsEmpty", "Set when the comment has no input") });
+  CommentContextKeys2.commentContext = new RawContextKey("comment", void 0, { type: "string", description: nls.localize("comment", "The context value of the comment") });
+  CommentContextKeys2.commentThreadContext = new RawContextKey("commentThread", void 0, { type: "string", description: nls.localize("commentThread", "The context value of the comment thread") });
+  CommentContextKeys2.commentControllerContext = new RawContextKey("commentController", void 0, { type: "string", description: nls.localize("commentController", "The comment controller id associated with a comment thread") });
+  CommentContextKeys2.commentFocused = new RawContextKey("commentFocused", false, { type: "boolean", description: nls.localize("commentFocused", "Set when the comment is focused") });
+  CommentContextKeys2.commentingEnabled = new RawContextKey("commentingEnabled", true, {
+    description: nls.localize("commentingEnabled", "Whether commenting functionality is enabled"),
+    type: "boolean"
+  });
+})(CommentContextKeys || (CommentContextKeys = {}));
+export {
+  CommentContextKeys
+};
+//# sourceMappingURL=commentContextKeys.js.map

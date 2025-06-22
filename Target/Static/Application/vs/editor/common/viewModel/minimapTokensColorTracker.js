@@ -1,1 +1,63 @@
-import{$df as o}from"../../../base/common/event.js";import{$vd as c,$od as a}from"../../../base/common/lifecycle.js";import{$Scb as e}from"../core/misc/rgba.js";import{$AD as n}from"../languages.js";class r extends c{static{this.c=null}static getInstance(){return this.c||(this.c=a(new r)),this.c}constructor(){super(),this.j=new o,this.onDidChange=this.j.event,this.m(),this.B(n.onDidChange(t=>{t.changedColorMap&&this.m()}))}m(){const t=n.getColorMap();if(!t){this.f=[e.Empty],this.h=!0;return}this.f=[e.Empty];for(let i=1;i<t.length;i++){const s=t[i].rgba;this.f[i]=new e(s.r,s.g,s.b,Math.round(s.a*255))}const h=t[2].getRelativeLuminance();this.h=h>=.5,this.j.fire(void 0)}getColor(t){return(t<1||t>=this.f.length)&&(t=2),this.f[t]}backgroundIsLight(){return this.h}}export{r as $Wcb};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { Emitter } from "../../../base/common/event.js";
+import { Disposable, markAsSingleton } from "../../../base/common/lifecycle.js";
+import { RGBA8 } from "../core/misc/rgba.js";
+import { TokenizationRegistry } from "../languages.js";
+class MinimapTokensColorTracker extends Disposable {
+  static {
+    __name(this, "MinimapTokensColorTracker");
+  }
+  static {
+    this._INSTANCE = null;
+  }
+  static getInstance() {
+    if (!this._INSTANCE) {
+      this._INSTANCE = markAsSingleton(new MinimapTokensColorTracker());
+    }
+    return this._INSTANCE;
+  }
+  constructor() {
+    super();
+    this._onDidChange = new Emitter();
+    this.onDidChange = this._onDidChange.event;
+    this._updateColorMap();
+    this._register(TokenizationRegistry.onDidChange((e) => {
+      if (e.changedColorMap) {
+        this._updateColorMap();
+      }
+    }));
+  }
+  _updateColorMap() {
+    const colorMap = TokenizationRegistry.getColorMap();
+    if (!colorMap) {
+      this._colors = [RGBA8.Empty];
+      this._backgroundIsLight = true;
+      return;
+    }
+    this._colors = [RGBA8.Empty];
+    for (let colorId = 1; colorId < colorMap.length; colorId++) {
+      const source = colorMap[colorId].rgba;
+      this._colors[colorId] = new RGBA8(source.r, source.g, source.b, Math.round(source.a * 255));
+    }
+    const backgroundLuminosity = colorMap[
+      2
+      /* ColorId.DefaultBackground */
+    ].getRelativeLuminance();
+    this._backgroundIsLight = backgroundLuminosity >= 0.5;
+    this._onDidChange.fire(void 0);
+  }
+  getColor(colorId) {
+    if (colorId < 1 || colorId >= this._colors.length) {
+      colorId = 2;
+    }
+    return this._colors[colorId];
+  }
+  backgroundIsLight() {
+    return this._backgroundIsLight;
+  }
+}
+export {
+  MinimapTokensColorTracker
+};
+//# sourceMappingURL=minimapTokensColorTracker.js.map

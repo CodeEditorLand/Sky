@@ -1,2 +1,344 @@
-class h{get command(){return this.b.command}get commandLineConfidence(){return this.b.commandLineConfidence}get isTrusted(){return this.b.isTrusted}get timestamp(){return this.b.timestamp}get duration(){return this.b.duration}get promptStartMarker(){return this.b.promptStartMarker}get marker(){return this.b.marker}get endMarker(){return this.b.endMarker}set endMarker(t){this.b.endMarker=t}get executedMarker(){return this.b.executedMarker}get aliases(){return this.b.aliases}get wasReplayed(){return this.b.wasReplayed}get cwd(){return this.b.cwd}get exitCode(){return this.b.exitCode}get commandStartLineContent(){return this.b.commandStartLineContent}get markProperties(){return this.b.markProperties}get executedX(){return this.b.executedX}get startX(){return this.b.startX}constructor(t,e){this.a=t,this.b=e}static deserialize(t,e,r){const n=t.buffer.normal,s=e.startLine!==void 0?t.registerMarker(e.startLine-(n.baseY+n.cursorY)):void 0;if(!s)return;const o=e.promptStartLine!==void 0?t.registerMarker(e.promptStartLine-(n.baseY+n.cursorY)):void 0,a=e.endLine!==void 0?t.registerMarker(e.endLine-(n.baseY+n.cursorY)):void 0,u=e.executedLine!==void 0?t.registerMarker(e.executedLine-(n.baseY+n.cursorY)):void 0;return new h(t,{command:r?"":e.command,commandLineConfidence:e.commandLineConfidence??"low",isTrusted:e.isTrusted,promptStartMarker:o,marker:s,startX:e.startX,endMarker:a,executedMarker:u,executedX:e.executedX,timestamp:e.timestamp,duration:e.duration,cwd:e.cwd,commandStartLineContent:e.commandStartLineContent,exitCode:e.exitCode,markProperties:e.markProperties,aliases:void 0,wasReplayed:!0})}serialize(t){return{promptStartLine:this.promptStartMarker?.line,startLine:this.marker?.line,startX:void 0,endLine:this.endMarker?.line,executedLine:this.executedMarker?.line,executedX:this.executedX,command:t?"":this.command,commandLineConfidence:t?"low":this.commandLineConfidence,isTrusted:this.isTrusted,cwd:this.cwd,exitCode:this.exitCode,commandStartLineContent:this.commandStartLineContent,timestamp:this.timestamp,duration:this.duration,markProperties:this.markProperties}}extractCommandLine(){return p(this.a.buffer.active,this.a.cols,this.marker,this.startX,this.executedMarker,this.executedX)}getOutput(){if(!this.executedMarker||!this.endMarker)return;const t=this.executedMarker.line,e=this.endMarker.line;if(t===e)return;let r="",n;for(let s=t;s<e;s++)n=this.a.buffer.active.getLine(s),n&&(r+=n.translateToString(!n.isWrapped)+(n.isWrapped?"":`
-`));return r===""?void 0:r}getOutputMatch(t){if(!this.executedMarker||!this.endMarker)return;const e=this.endMarker.line;if(e===-1)return;const r=this.a.buffer.active,n=Math.max(this.executedMarker.line,0),s=t.lineMatcher,o=typeof s=="string"?1:t.length||L(s),a=[];let u;if(t.anchor==="bottom")for(let d=e-(t.offset||0);d>=n;d--){let c=d;const m=d;for(;c>=n&&r.getLine(c)?.isWrapped;)c--;if(d=c,a.unshift(f(r,c,m,this.a.cols)),u||(u=a[0].match(s)),a.length>=o)break}else for(let d=n+(t.offset||0);d<e;d++){const c=d;let m=d;for(;m+1<e&&r.getLine(m+1)?.isWrapped;)m++;if(d=m,a.push(f(r,c,m,this.a.cols)),u||(u=a[a.length-1].match(s)),a.length>=o)break}return u?{regexMatch:u,outputLines:a}:void 0}hasOutput(){return!this.executedMarker?.isDisposed&&!this.endMarker?.isDisposed&&!!(this.executedMarker&&this.endMarker&&this.executedMarker.line<this.endMarker.line)}getPromptRowCount(){return k(this,this.a.buffer.active)}getCommandRowCount(){return l(this)}}class M{constructor(t){this.c=t}serialize(t){if(this.commandStartMarker)return{promptStartLine:this.promptStartMarker?.line,startLine:this.commandStartMarker.line,startX:this.commandStartX,endLine:void 0,executedLine:void 0,executedX:void 0,command:"",commandLineConfidence:"low",isTrusted:!0,cwd:t,exitCode:void 0,commandStartLineContent:void 0,timestamp:0,duration:0,markProperties:void 0}}promoteToFullCommand(t,e,r,n){if(e===void 0&&this.command===void 0&&(this.command=""),this.command!==void 0&&!this.command.startsWith("\\")||r)return new h(this.c,{command:r?"":this.command||"",commandLineConfidence:r?"low":this.commandLineConfidence||"low",isTrusted:!!this.isTrusted,promptStartMarker:this.promptStartMarker,marker:this.commandStartMarker,startX:this.commandStartX,endMarker:this.commandFinishedMarker,executedMarker:this.commandExecutedMarker,executedX:this.commandExecutedX,timestamp:Date.now(),duration:this.b||0,cwd:t,exitCode:e,commandStartLineContent:this.commandStartLineContent,markProperties:n})}markExecutedTime(){this.a===void 0&&(this.a=Date.now())}markFinishedTime(){this.b===void 0&&this.a!==void 0&&(this.b=Date.now()-this.a)}extractCommandLine(){return p(this.c.buffer.active,this.c.cols,this.commandStartMarker,this.commandStartX,this.commandExecutedMarker,this.commandExecutedX)}getPromptRowCount(){return k(this,this.c.buffer.active)}getCommandRowCount(){return l(this)}}function p(i,t,e,r,n,s){if(!e||!n||r===void 0||s===void 0)return"";let o="";for(let a=e.line;a<=n.line;a++){const u=i.getLine(a);u&&(o+=u.translateToString(!0,a===e.line?r:0,a===n.line?s:t))}return o}function f(i,t,e,r){const n=Math.max(2048/r*2);e=Math.min(e,t+n);let s="";for(let o=t;o<=e;o++){const a=i.getLine(o);a&&(s+=a.translateToString(!0,0,r))}return s}function L(i){if(!i.multiline)return 1;const t=i.source;let e=1,r=t.indexOf("\\n");for(;r!==-1;)e++,r=t.indexOf("\\n",r+1);return e}function k(i,t){const e="hasOutput"in i?i.marker:i.commandStartMarker;if(!e||!i.promptStartMarker)return 1;let r=1,n=i.promptStartMarker.line;for(;n<e.line&&(t.getLine(n)?.translateToString(!0)??"").length===0;)n++;return r=e.line-n+1,r}function l(i){const t="hasOutput"in i?i.marker:i.commandStartMarker,e="hasOutput"in i?i.executedMarker:i.commandExecutedMarker;if(!t||!e)return 1;let n=Math.max(e.line,t.line)-t.line+1;return("hasOutput"in i?i.executedX:i.commandExecutedX)===0&&n--,n}export{h as $Bw,M as $Cw};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+class TerminalCommand {
+  static {
+    __name(this, "TerminalCommand");
+  }
+  get command() {
+    return this._properties.command;
+  }
+  get commandLineConfidence() {
+    return this._properties.commandLineConfidence;
+  }
+  get isTrusted() {
+    return this._properties.isTrusted;
+  }
+  get timestamp() {
+    return this._properties.timestamp;
+  }
+  get duration() {
+    return this._properties.duration;
+  }
+  get promptStartMarker() {
+    return this._properties.promptStartMarker;
+  }
+  get marker() {
+    return this._properties.marker;
+  }
+  get endMarker() {
+    return this._properties.endMarker;
+  }
+  set endMarker(value) {
+    this._properties.endMarker = value;
+  }
+  get executedMarker() {
+    return this._properties.executedMarker;
+  }
+  get aliases() {
+    return this._properties.aliases;
+  }
+  get wasReplayed() {
+    return this._properties.wasReplayed;
+  }
+  get cwd() {
+    return this._properties.cwd;
+  }
+  get exitCode() {
+    return this._properties.exitCode;
+  }
+  get commandStartLineContent() {
+    return this._properties.commandStartLineContent;
+  }
+  get markProperties() {
+    return this._properties.markProperties;
+  }
+  get executedX() {
+    return this._properties.executedX;
+  }
+  get startX() {
+    return this._properties.startX;
+  }
+  constructor(_xterm, _properties) {
+    this._xterm = _xterm;
+    this._properties = _properties;
+  }
+  static deserialize(xterm, serialized, isCommandStorageDisabled) {
+    const buffer = xterm.buffer.normal;
+    const marker = serialized.startLine !== void 0 ? xterm.registerMarker(serialized.startLine - (buffer.baseY + buffer.cursorY)) : void 0;
+    if (!marker) {
+      return void 0;
+    }
+    const promptStartMarker = serialized.promptStartLine !== void 0 ? xterm.registerMarker(serialized.promptStartLine - (buffer.baseY + buffer.cursorY)) : void 0;
+    const endMarker = serialized.endLine !== void 0 ? xterm.registerMarker(serialized.endLine - (buffer.baseY + buffer.cursorY)) : void 0;
+    const executedMarker = serialized.executedLine !== void 0 ? xterm.registerMarker(serialized.executedLine - (buffer.baseY + buffer.cursorY)) : void 0;
+    const newCommand = new TerminalCommand(xterm, {
+      command: isCommandStorageDisabled ? "" : serialized.command,
+      commandLineConfidence: serialized.commandLineConfidence ?? "low",
+      isTrusted: serialized.isTrusted,
+      promptStartMarker,
+      marker,
+      startX: serialized.startX,
+      endMarker,
+      executedMarker,
+      executedX: serialized.executedX,
+      timestamp: serialized.timestamp,
+      duration: serialized.duration,
+      cwd: serialized.cwd,
+      commandStartLineContent: serialized.commandStartLineContent,
+      exitCode: serialized.exitCode,
+      markProperties: serialized.markProperties,
+      aliases: void 0,
+      wasReplayed: true
+    });
+    return newCommand;
+  }
+  serialize(isCommandStorageDisabled) {
+    return {
+      promptStartLine: this.promptStartMarker?.line,
+      startLine: this.marker?.line,
+      startX: void 0,
+      endLine: this.endMarker?.line,
+      executedLine: this.executedMarker?.line,
+      executedX: this.executedX,
+      command: isCommandStorageDisabled ? "" : this.command,
+      commandLineConfidence: isCommandStorageDisabled ? "low" : this.commandLineConfidence,
+      isTrusted: this.isTrusted,
+      cwd: this.cwd,
+      exitCode: this.exitCode,
+      commandStartLineContent: this.commandStartLineContent,
+      timestamp: this.timestamp,
+      duration: this.duration,
+      markProperties: this.markProperties
+    };
+  }
+  extractCommandLine() {
+    return extractCommandLine(this._xterm.buffer.active, this._xterm.cols, this.marker, this.startX, this.executedMarker, this.executedX);
+  }
+  getOutput() {
+    if (!this.executedMarker || !this.endMarker) {
+      return void 0;
+    }
+    const startLine = this.executedMarker.line;
+    const endLine = this.endMarker.line;
+    if (startLine === endLine) {
+      return void 0;
+    }
+    let output = "";
+    let line;
+    for (let i = startLine; i < endLine; i++) {
+      line = this._xterm.buffer.active.getLine(i);
+      if (!line) {
+        continue;
+      }
+      output += line.translateToString(!line.isWrapped) + (line.isWrapped ? "" : "\n");
+    }
+    return output === "" ? void 0 : output;
+  }
+  getOutputMatch(outputMatcher) {
+    if (!this.executedMarker || !this.endMarker) {
+      return void 0;
+    }
+    const endLine = this.endMarker.line;
+    if (endLine === -1) {
+      return void 0;
+    }
+    const buffer = this._xterm.buffer.active;
+    const startLine = Math.max(this.executedMarker.line, 0);
+    const matcher = outputMatcher.lineMatcher;
+    const linesToCheck = typeof matcher === "string" ? 1 : outputMatcher.length || countNewLines(matcher);
+    const lines = [];
+    let match;
+    if (outputMatcher.anchor === "bottom") {
+      for (let i = endLine - (outputMatcher.offset || 0); i >= startLine; i--) {
+        let wrappedLineStart = i;
+        const wrappedLineEnd = i;
+        while (wrappedLineStart >= startLine && buffer.getLine(wrappedLineStart)?.isWrapped) {
+          wrappedLineStart--;
+        }
+        i = wrappedLineStart;
+        lines.unshift(getXtermLineContent(buffer, wrappedLineStart, wrappedLineEnd, this._xterm.cols));
+        if (!match) {
+          match = lines[0].match(matcher);
+        }
+        if (lines.length >= linesToCheck) {
+          break;
+        }
+      }
+    } else {
+      for (let i = startLine + (outputMatcher.offset || 0); i < endLine; i++) {
+        const wrappedLineStart = i;
+        let wrappedLineEnd = i;
+        while (wrappedLineEnd + 1 < endLine && buffer.getLine(wrappedLineEnd + 1)?.isWrapped) {
+          wrappedLineEnd++;
+        }
+        i = wrappedLineEnd;
+        lines.push(getXtermLineContent(buffer, wrappedLineStart, wrappedLineEnd, this._xterm.cols));
+        if (!match) {
+          match = lines[lines.length - 1].match(matcher);
+        }
+        if (lines.length >= linesToCheck) {
+          break;
+        }
+      }
+    }
+    return match ? { regexMatch: match, outputLines: lines } : void 0;
+  }
+  hasOutput() {
+    return !this.executedMarker?.isDisposed && !this.endMarker?.isDisposed && !!(this.executedMarker && this.endMarker && this.executedMarker.line < this.endMarker.line);
+  }
+  getPromptRowCount() {
+    return getPromptRowCount(this, this._xterm.buffer.active);
+  }
+  getCommandRowCount() {
+    return getCommandRowCount(this);
+  }
+}
+class PartialTerminalCommand {
+  static {
+    __name(this, "PartialTerminalCommand");
+  }
+  constructor(_xterm) {
+    this._xterm = _xterm;
+  }
+  serialize(cwd) {
+    if (!this.commandStartMarker) {
+      return void 0;
+    }
+    return {
+      promptStartLine: this.promptStartMarker?.line,
+      startLine: this.commandStartMarker.line,
+      startX: this.commandStartX,
+      endLine: void 0,
+      executedLine: void 0,
+      executedX: void 0,
+      command: "",
+      commandLineConfidence: "low",
+      isTrusted: true,
+      cwd,
+      exitCode: void 0,
+      commandStartLineContent: void 0,
+      timestamp: 0,
+      duration: 0,
+      markProperties: void 0
+    };
+  }
+  promoteToFullCommand(cwd, exitCode, ignoreCommandLine, markProperties) {
+    if (exitCode === void 0 && this.command === void 0) {
+      this.command = "";
+    }
+    if (this.command !== void 0 && !this.command.startsWith("\\") || ignoreCommandLine) {
+      return new TerminalCommand(this._xterm, {
+        command: ignoreCommandLine ? "" : this.command || "",
+        commandLineConfidence: ignoreCommandLine ? "low" : this.commandLineConfidence || "low",
+        isTrusted: !!this.isTrusted,
+        promptStartMarker: this.promptStartMarker,
+        marker: this.commandStartMarker,
+        startX: this.commandStartX,
+        endMarker: this.commandFinishedMarker,
+        executedMarker: this.commandExecutedMarker,
+        executedX: this.commandExecutedX,
+        timestamp: Date.now(),
+        duration: this.commandDuration || 0,
+        cwd,
+        exitCode,
+        commandStartLineContent: this.commandStartLineContent,
+        markProperties
+      });
+    }
+    return void 0;
+  }
+  markExecutedTime() {
+    if (this.commandExecutedTimestamp === void 0) {
+      this.commandExecutedTimestamp = Date.now();
+    }
+  }
+  markFinishedTime() {
+    if (this.commandDuration === void 0 && this.commandExecutedTimestamp !== void 0) {
+      this.commandDuration = Date.now() - this.commandExecutedTimestamp;
+    }
+  }
+  extractCommandLine() {
+    return extractCommandLine(this._xterm.buffer.active, this._xterm.cols, this.commandStartMarker, this.commandStartX, this.commandExecutedMarker, this.commandExecutedX);
+  }
+  getPromptRowCount() {
+    return getPromptRowCount(this, this._xterm.buffer.active);
+  }
+  getCommandRowCount() {
+    return getCommandRowCount(this);
+  }
+}
+function extractCommandLine(buffer, cols, commandStartMarker, commandStartX, commandExecutedMarker, commandExecutedX) {
+  if (!commandStartMarker || !commandExecutedMarker || commandStartX === void 0 || commandExecutedX === void 0) {
+    return "";
+  }
+  let content = "";
+  for (let i = commandStartMarker.line; i <= commandExecutedMarker.line; i++) {
+    const line = buffer.getLine(i);
+    if (line) {
+      content += line.translateToString(true, i === commandStartMarker.line ? commandStartX : 0, i === commandExecutedMarker.line ? commandExecutedX : cols);
+    }
+  }
+  return content;
+}
+__name(extractCommandLine, "extractCommandLine");
+function getXtermLineContent(buffer, lineStart, lineEnd, cols) {
+  const maxLineLength = Math.max(2048 / cols * 2);
+  lineEnd = Math.min(lineEnd, lineStart + maxLineLength);
+  let content = "";
+  for (let i = lineStart; i <= lineEnd; i++) {
+    const line = buffer.getLine(i);
+    if (line) {
+      content += line.translateToString(true, 0, cols);
+    }
+  }
+  return content;
+}
+__name(getXtermLineContent, "getXtermLineContent");
+function countNewLines(regex) {
+  if (!regex.multiline) {
+    return 1;
+  }
+  const source = regex.source;
+  let count = 1;
+  let i = source.indexOf("\\n");
+  while (i !== -1) {
+    count++;
+    i = source.indexOf("\\n", i + 1);
+  }
+  return count;
+}
+__name(countNewLines, "countNewLines");
+function getPromptRowCount(command, buffer) {
+  const marker = "hasOutput" in command ? command.marker : command.commandStartMarker;
+  if (!marker || !command.promptStartMarker) {
+    return 1;
+  }
+  let promptRowCount = 1;
+  let promptStartLine = command.promptStartMarker.line;
+  while (promptStartLine < marker.line && (buffer.getLine(promptStartLine)?.translateToString(true) ?? "").length === 0) {
+    promptStartLine++;
+  }
+  promptRowCount = marker.line - promptStartLine + 1;
+  return promptRowCount;
+}
+__name(getPromptRowCount, "getPromptRowCount");
+function getCommandRowCount(command) {
+  const marker = "hasOutput" in command ? command.marker : command.commandStartMarker;
+  const executedMarker = "hasOutput" in command ? command.executedMarker : command.commandExecutedMarker;
+  if (!marker || !executedMarker) {
+    return 1;
+  }
+  const commandExecutedLine = Math.max(executedMarker.line, marker.line);
+  let commandRowCount = commandExecutedLine - marker.line + 1;
+  const executedX = "hasOutput" in command ? command.executedX : command.commandExecutedX;
+  if (executedX === 0) {
+    commandRowCount--;
+  }
+  return commandRowCount;
+}
+__name(getCommandRowCount, "getCommandRowCount");
+export {
+  PartialTerminalCommand,
+  TerminalCommand
+};
+//# sourceMappingURL=terminalCommand.js.map

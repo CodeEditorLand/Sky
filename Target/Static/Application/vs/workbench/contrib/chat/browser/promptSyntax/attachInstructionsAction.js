@@ -1,1 +1,202 @@
-import{$rWb as F,$lWb as P,$mWb as N}from"../chat.js";import{$VDb as I}from"../actions/chatActions.js";import{localize as a,localize2 as C}from"../../../../../nls.js";import{ChatContextKeys as d}from"../../common/chatContextKeys.js";import{$HS as O}from"../../common/promptSyntax/service/promptsService.js";import{PromptsConfig as m}from"../../common/promptSyntax/config/config.js";import{$Jwb as j}from"../../../../services/views/common/viewsService.js";import{$ffc as w}from"./pickers/promptFilePickers.js";import{$Bn as u}from"../../../../../platform/contextkey/common/contextkey.js";import{$iI as _,$dI as v,$jI as b}from"../../../../../platform/actions/common/actions.js";import{$mj as S}from"../../../../../platform/instantiation/common/instantiation.js";import{$Mj as y}from"../../../../../base/common/codicons.js";import{$yS as E}from"../../common/promptSyntax/config/promptFileLocations.js";import{$fR as R,PromptsType as h}from"../../common/promptSyntax/promptTypes.js";import{$Xf as W}from"../../../../../base/common/strings.js";import{$2H as D}from"../../../../../platform/label/common/label.js";import{$jh as M}from"../../../../../base/common/resources.js";import{$7P as p}from"../../common/chatVariableEntries.js";import{$0_ as U}from"../../../../../editor/browser/services/codeEditorService.js";import{CancellationToken as H}from"../../../../../base/common/cancellation.js";import{$4$ as z}from"../../../../../platform/opener/common/opener.js";import{$El as L}from"../../../../../platform/configuration/common/configuration.js";var A=function(i,e,t,n){var c=arguments.length,r=c<3?e:n===null?n=Object.getOwnPropertyDescriptor(e,t):n,o;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")r=Reflect.decorate(i,e,t,n);else for(var s=i.length-1;s>=0;s--)(o=i[s])&&(r=(c<3?o(r):c>3?o(e,t,r):o(e,t))||r);return c>3&&r&&Object.defineProperty(e,t,r),r},f=function(i,e){return function(t,n){e(t,n,i)}};const T="workbench.action.chat.attach.instructions",k="workbench.action.chat.configure.instructions";class V extends _{constructor(){super({id:T,title:C(5573,"Attach Instructions..."),f1:!1,precondition:u.and(m.enabledCtx,d.enabled),category:I,keybinding:{primary:2650,weight:200},menu:{id:v.CommandPalette,when:u.and(m.enabledCtx,d.enabled)}})}async run(e,t){const n=e.get(j),c=e.get(S);t||(t={resource:G(e),widget:B(e)});const r=c.createInstance(w),{skipSelectionDialog:o,resource:s}=t,l=t.widget??await N(n);if(!l)return;if(o&&s){l.attachmentModel.addContext(p(s,!0)),l.focusInput();return}const x=a(5567,null),g=await r.selectPromptFile({resource:s,placeholder:x,type:h.instructions});g!==void 0&&(l.attachmentModel.addContext(p(g.promptFile,!0)),l.focusInput())}}class q extends _{constructor(){super({id:k,title:C(5574,"Configure Instructions..."),icon:y.bookmark,f1:!0,precondition:u.and(m.enabledCtx,d.enabled),category:I,menu:{id:v.ViewTitle,when:u.and(m.enabledCtx,d.enabled,u.equals("view",F)),order:11,group:"2_manage"}})}async run(e){const t=e.get(z),c=e.get(S).createInstance(w),r=a(5568,null),o=await c.selectPromptFile({placeholder:r,type:h.instructions,optionEdit:!1});o!==void 0&&await t.open(o.promptFile)}}function B(i){const e=i.get(P),{lastFocusedWidget:t}=e;if(t&&t.hasInputFocus())return t}function G(i){const t=i.get(U).getActiveCodeEditor()?.getModel();if(t?.getLanguageId()===R)return t.uri}function gt(){b(V),b(q)}let $=class{constructor(e,t,n){this.c=e,this.d=t,this.e=n,this.type="pickerPick",this.label=a(5569,null),this.icon=y.bookmark,this.commandId=T}isEnabled(e){return m.enabled(this.e)}asPicker(){const e=this.c.listPromptFiles(h.instructions,H.None).then(t=>{const n=[];t=t.slice(0).sort((r,o)=>W(r.storage,o.storage));let c;for(const{uri:r,storage:o}of t)c!==o&&(c=o,n.push({type:"separator",label:o==="user"?a(5570,null):this.d.getUriLabel(M(r),{relative:!0})})),n.push({label:E(r),asAttachment:()=>p(r,!0)});return n});return{placeholder:a(5571,null),picks:e,configure:{label:a(5572,null),commandId:k}}}};$=A([f(0,O),f(1,D),f(2,L)],$);export{gt as $gfc,$ as $hfc};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { ChatViewId, IChatWidgetService, showChatView } from "../chat.js";
+import { CHAT_CATEGORY } from "../actions/chatActions.js";
+import { localize, localize2 } from "../../../../../nls.js";
+import { ChatContextKeys } from "../../common/chatContextKeys.js";
+import { IPromptsService } from "../../common/promptSyntax/service/promptsService.js";
+import { PromptsConfig } from "../../common/promptSyntax/config/config.js";
+import { IViewsService } from "../../../../services/views/common/viewsService.js";
+import { PromptFilePickers } from "./pickers/promptFilePickers.js";
+import { ContextKeyExpr } from "../../../../../platform/contextkey/common/contextkey.js";
+import { Action2, MenuId, registerAction2 } from "../../../../../platform/actions/common/actions.js";
+import { IInstantiationService } from "../../../../../platform/instantiation/common/instantiation.js";
+import { Codicon } from "../../../../../base/common/codicons.js";
+import { getCleanPromptName } from "../../common/promptSyntax/config/promptFileLocations.js";
+import { INSTRUCTIONS_LANGUAGE_ID, PromptsType } from "../../common/promptSyntax/promptTypes.js";
+import { compare } from "../../../../../base/common/strings.js";
+import { ILabelService } from "../../../../../platform/label/common/label.js";
+import { dirname } from "../../../../../base/common/resources.js";
+import { toPromptFileVariableEntry } from "../../common/chatVariableEntries.js";
+import { ICodeEditorService } from "../../../../../editor/browser/services/codeEditorService.js";
+import { CancellationToken } from "../../../../../base/common/cancellation.js";
+import { IOpenerService } from "../../../../../platform/opener/common/opener.js";
+import { IConfigurationService } from "../../../../../platform/configuration/common/configuration.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+const ATTACH_INSTRUCTIONS_ACTION_ID = "workbench.action.chat.attach.instructions";
+const CONFIGURE_INSTRUCTIONS_ACTION_ID = "workbench.action.chat.configure.instructions";
+class AttachInstructionsAction extends Action2 {
+  static {
+    __name(this, "AttachInstructionsAction");
+  }
+  constructor() {
+    super({
+      id: ATTACH_INSTRUCTIONS_ACTION_ID,
+      title: localize2("attach-instructions.capitalized.ellipses", "Attach Instructions..."),
+      f1: false,
+      precondition: ContextKeyExpr.and(PromptsConfig.enabledCtx, ChatContextKeys.enabled),
+      category: CHAT_CATEGORY,
+      keybinding: {
+        primary: 2048 | 512 | 90,
+        weight: 200
+        /* KeybindingWeight.WorkbenchContrib */
+      },
+      menu: {
+        id: MenuId.CommandPalette,
+        when: ContextKeyExpr.and(PromptsConfig.enabledCtx, ChatContextKeys.enabled)
+      }
+    });
+  }
+  async run(accessor, options) {
+    const viewsService = accessor.get(IViewsService);
+    const instaService = accessor.get(IInstantiationService);
+    if (!options) {
+      options = {
+        resource: getActiveInstructionsFileUri(accessor),
+        widget: getFocusedChatWidget(accessor)
+      };
+    }
+    const pickers = instaService.createInstance(PromptFilePickers);
+    const { skipSelectionDialog, resource } = options;
+    const widget = options.widget ?? await showChatView(viewsService);
+    if (!widget) {
+      return;
+    }
+    if (skipSelectionDialog && resource) {
+      widget.attachmentModel.addContext(toPromptFileVariableEntry(resource, true));
+      widget.focusInput();
+      return;
+    }
+    const placeholder = localize("commands.instructions.select-dialog.placeholder", "Select instructions files to attach");
+    const result = await pickers.selectPromptFile({ resource, placeholder, type: PromptsType.instructions });
+    if (result !== void 0) {
+      widget.attachmentModel.addContext(toPromptFileVariableEntry(result.promptFile, true));
+      widget.focusInput();
+    }
+  }
+}
+class ManageInstructionsFilesAction extends Action2 {
+  static {
+    __name(this, "ManageInstructionsFilesAction");
+  }
+  constructor() {
+    super({
+      id: CONFIGURE_INSTRUCTIONS_ACTION_ID,
+      title: localize2("configure-instructions", "Configure Instructions..."),
+      icon: Codicon.bookmark,
+      f1: true,
+      precondition: ContextKeyExpr.and(PromptsConfig.enabledCtx, ChatContextKeys.enabled),
+      category: CHAT_CATEGORY,
+      menu: {
+        id: MenuId.ViewTitle,
+        when: ContextKeyExpr.and(PromptsConfig.enabledCtx, ChatContextKeys.enabled, ContextKeyExpr.equals("view", ChatViewId)),
+        order: 11,
+        group: "2_manage"
+      }
+    });
+  }
+  async run(accessor) {
+    const openerService = accessor.get(IOpenerService);
+    const instaService = accessor.get(IInstantiationService);
+    const pickers = instaService.createInstance(PromptFilePickers);
+    const placeholder = localize("commands.prompt.manage-dialog.placeholder", "Select the instructions file to open");
+    const result = await pickers.selectPromptFile({ placeholder, type: PromptsType.instructions, optionEdit: false });
+    if (result !== void 0) {
+      await openerService.open(result.promptFile);
+    }
+  }
+}
+function getFocusedChatWidget(accessor) {
+  const chatWidgetService = accessor.get(IChatWidgetService);
+  const { lastFocusedWidget } = chatWidgetService;
+  if (!lastFocusedWidget) {
+    return void 0;
+  }
+  if (!lastFocusedWidget.hasInputFocus()) {
+    return void 0;
+  }
+  return lastFocusedWidget;
+}
+__name(getFocusedChatWidget, "getFocusedChatWidget");
+function getActiveInstructionsFileUri(accessor) {
+  const codeEditorService = accessor.get(ICodeEditorService);
+  const model = codeEditorService.getActiveCodeEditor()?.getModel();
+  if (model?.getLanguageId() === INSTRUCTIONS_LANGUAGE_ID) {
+    return model.uri;
+  }
+  return void 0;
+}
+__name(getActiveInstructionsFileUri, "getActiveInstructionsFileUri");
+function registerAttachPromptActions() {
+  registerAction2(AttachInstructionsAction);
+  registerAction2(ManageInstructionsFilesAction);
+}
+__name(registerAttachPromptActions, "registerAttachPromptActions");
+let ChatInstructionsPickerPick = class ChatInstructionsPickerPick2 {
+  static {
+    __name(this, "ChatInstructionsPickerPick");
+  }
+  constructor(promptsService, labelService, configurationService) {
+    this.promptsService = promptsService;
+    this.labelService = labelService;
+    this.configurationService = configurationService;
+    this.type = "pickerPick";
+    this.label = localize("chatContext.attach.instructions.label", "Instructions...");
+    this.icon = Codicon.bookmark;
+    this.commandId = ATTACH_INSTRUCTIONS_ACTION_ID;
+  }
+  isEnabled(widget) {
+    return PromptsConfig.enabled(this.configurationService);
+  }
+  asPicker() {
+    const picks = this.promptsService.listPromptFiles(PromptsType.instructions, CancellationToken.None).then((value) => {
+      const result = [];
+      value = value.slice(0).sort((a, b) => compare(a.storage, b.storage));
+      let storageType;
+      for (const { uri, storage } of value) {
+        if (storageType !== storage) {
+          storageType = storage;
+          result.push({
+            type: "separator",
+            label: storage === "user" ? localize("user-data-dir.capitalized", "User data folder") : this.labelService.getUriLabel(dirname(uri), { relative: true })
+          });
+        }
+        result.push({
+          label: getCleanPromptName(uri),
+          asAttachment: /* @__PURE__ */ __name(() => {
+            return toPromptFileVariableEntry(uri, true);
+          }, "asAttachment")
+        });
+      }
+      return result;
+    });
+    return {
+      placeholder: localize("placeholder", "Select instructions files to attach"),
+      picks,
+      configure: {
+        label: localize("configureInstructions", "Configure Instructions..."),
+        commandId: CONFIGURE_INSTRUCTIONS_ACTION_ID
+      }
+    };
+  }
+};
+ChatInstructionsPickerPick = __decorate([
+  __param(0, IPromptsService),
+  __param(1, ILabelService),
+  __param(2, IConfigurationService)
+], ChatInstructionsPickerPick);
+export {
+  ChatInstructionsPickerPick,
+  registerAttachPromptActions
+};
+//# sourceMappingURL=attachInstructionsAction.js.map

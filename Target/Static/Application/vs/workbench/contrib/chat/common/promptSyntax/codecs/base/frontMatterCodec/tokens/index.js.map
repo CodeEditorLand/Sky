@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["../../../../../../../../../../../../../../../Dependency/Microsoft/Dependency/Editor/src/vs/workbench/contrib/chat/common/promptSyntax/codecs/base/frontMatterCodec/tokens/index.ts"],
+  "sourcesContent": ["/*---------------------------------------------------------------------------------------------\r\n *  Copyright (c) Microsoft Corporation. All rights reserved.\r\n *  Licensed under the MIT License. See License.txt in the project root for license information.\r\n *--------------------------------------------------------------------------------------------*/\r\n\r\nexport { FrontMatterArray } from './frontMatterArray.js';\r\nexport { FrontMatterString } from './frontMatterString.js';\r\nexport { FrontMatterBoolean } from './frontMatterBoolean.js';\r\nexport { FrontMatterToken, FrontMatterValueToken } from './frontMatterToken.js';\r\nexport {\r\n\tFrontMatterRecordName,\r\n\tFrontMatterRecordDelimiter,\r\n\tFrontMatterRecord,\r\n\ttype TNameToken as TRecordNameToken,\r\n} from './frontMatterRecord.js';\r\n"],
+  "mappings": "AAKA,SAAS,wBAAwB;AACjC,SAAS,yBAAyB;AAClC,SAAS,0BAA0B;AACnC,SAAS,kBAAkB,6BAA6B;AACxD,SACC,uBACA,4BACA,yBAEM;",
+  "names": []
+}

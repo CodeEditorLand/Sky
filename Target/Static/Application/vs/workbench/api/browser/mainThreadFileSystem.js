@@ -1,1 +1,249 @@
-import{$df as $,Event as w}from"../../../base/common/event.js";import{$td as b,$ud as F,$Ed as g}from"../../../base/common/lifecycle.js";import{URI as a}from"../../../base/common/uri.js";import{$5j as P,FileType as l,$ok as D,FileSystemProviderErrorCode as h,FilePermission as S,$jk as C}from"../../../platform/files/common/files.js";import{$Kyb as k}from"../../services/extensions/common/extHostCustomers.js";import{$pY as f,$oY as E}from"../common/extHost.protocol.js";import{$Ji as y}from"../../../base/common/buffer.js";var p=function(c,e,t,i){var r=arguments.length,s=r<3?e:i===null?i=Object.getOwnPropertyDescriptor(e,t):i,o;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")s=Reflect.decorate(c,e,t,i);else for(var d=c.length-1;d>=0;d--)(o=c[d])&&(s=(r<3?o(s):r>3?o(e,t,s):o(e,t))||s);return r>3&&s&&Object.defineProperty(e,t,s),s},v=function(c,e){return function(t,i){e(t,i,c)}},n;let u=n=class{constructor(e,t){this.d=t,this.b=new g,this.c=new F,this.a=e.getProxy(f.ExtHostFileSystem);const i=e.getProxy(f.ExtHostFileSystemInfo);for(const r of t.listCapabilities())i.$acceptProviderInfos(a.from({scheme:r.scheme,path:"/dummy"}),r.capabilities);this.c.add(t.onDidChangeFileSystemProviderRegistrations(r=>i.$acceptProviderInfos(a.from({scheme:r.scheme,path:"/dummy"}),r.provider?.capabilities??null))),this.c.add(t.onDidChangeFileSystemProviderCapabilities(r=>i.$acceptProviderInfos(a.from({scheme:r.scheme,path:"/dummy"}),r.provider.capabilities)))}dispose(){this.c.dispose(),this.b.dispose()}async $registerFileSystemProvider(e,t,i,r){this.b.set(e,new m(this.d,t,i,r,e,this.a))}$unregisterProvider(e){this.b.deleteAndDispose(e)}$onFileSystemChange(e,t){const i=this.b.get(e);if(!i)throw new Error("Unknown file provider");i.$onFileSystemChange(t)}async $stat(e){try{const t=await this.d.stat(a.revive(e));return{ctime:t.ctime,mtime:t.mtime,size:t.size,permissions:t.readonly?S.Readonly:void 0,type:n.f(t)}}catch(t){return n.g(t)}}async $readdir(e){try{const t=await this.d.resolve(a.revive(e),{resolveMetadata:!1});if(!t.isDirectory){const i=new Error(t.name);throw i.name=h.FileNotADirectory,i}return t.children?t.children.map(i=>[i.name,n.f(i)]):[]}catch(t){return n.g(t)}}static f(e){let t=0;return e.isFile?t+=l.File:e.isDirectory&&(t+=l.Directory),e.isSymbolicLink&&(t+=l.SymbolicLink),t}async $readFile(e){try{return(await this.d.readFile(a.revive(e))).value}catch(t){return n.g(t)}}async $writeFile(e,t){try{await this.d.writeFile(a.revive(e),t)}catch(i){return n.g(i)}}async $rename(e,t,i){try{await this.d.move(a.revive(e),a.revive(t),i.overwrite)}catch(r){return n.g(r)}}async $copy(e,t,i){try{await this.d.copy(a.revive(e),a.revive(t),i.overwrite)}catch(r){return n.g(r)}}async $mkdir(e){try{await this.d.createFolder(a.revive(e))}catch(t){return n.g(t)}}async $delete(e,t){try{return await this.d.del(a.revive(e),t)}catch(i){return n.g(i)}}static g(e){if(e instanceof D)switch(e.fileOperationResult){case 1:e.name=h.FileNotFound;break;case 0:e.name=h.FileIsADirectory;break;case 6:e.name=h.NoPermissions;break;case 4:e.name=h.FileExists;break}else if(e instanceof Error){const t=C(e);t!==h.Unknown&&(e.name=t)}throw e}$ensureActivation(e){return this.d.activateProvider(e)}};u=n=p([k(E.MainThreadFileSystem),v(1,P)],u);class m{constructor(e,t,i,r,s,o){this.readOnlyMessage=r,this.c=s,this.d=o,this.a=new $,this.onDidChangeFile=this.a.event,this.onDidChangeCapabilities=w.None,this.capabilities=i,this.b=e.registerProvider(t,this)}dispose(){this.b.dispose(),this.a.dispose()}watch(e,t){const i=Math.random();return this.d.$watch(this.c,i,e,t),b(()=>{this.d.$unwatch(this.c,i)})}$onFileSystemChange(e){this.a.fire(e.map(m.f))}static f(e){return{resource:a.revive(e.resource),type:e.type}}async stat(e){try{return await this.d.$stat(this.c,e)}catch(t){throw t}}async readFile(e){return(await this.d.$readFile(this.c,e)).buffer}writeFile(e,t,i){return this.d.$writeFile(this.c,e,y.wrap(t),i)}delete(e,t){return this.d.$delete(this.c,e,t)}mkdir(e){return this.d.$mkdir(this.c,e)}readdir(e){return this.d.$readdir(this.c,e)}rename(e,t,i){return this.d.$rename(this.c,e,t,i)}copy(e,t,i){return this.d.$copy(this.c,e,t,i)}open(e,t){return this.d.$open(this.c,e,t)}close(e){return this.d.$close(this.c,e)}async read(e,t,i,r,s){const o=await this.d.$read(this.c,e,t,s);return i.set(o.buffer,r),o.byteLength}write(e,t,i,r,s){return this.d.$write(this.c,e,t,y.wrap(i).slice(r,r+s))}}export{u as $ZYb};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { Emitter, Event } from "../../../base/common/event.js";
+import { toDisposable, DisposableStore, DisposableMap } from "../../../base/common/lifecycle.js";
+import { URI } from "../../../base/common/uri.js";
+import { IFileService, FileType, FileOperationError, FileSystemProviderErrorCode, FilePermission, toFileSystemProviderErrorCode } from "../../../platform/files/common/files.js";
+import { extHostNamedCustomer } from "../../services/extensions/common/extHostCustomers.js";
+import { ExtHostContext, MainContext } from "../common/extHost.protocol.js";
+import { VSBuffer } from "../../../base/common/buffer.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+var MainThreadFileSystem_1;
+let MainThreadFileSystem = MainThreadFileSystem_1 = class MainThreadFileSystem2 {
+  static {
+    __name(this, "MainThreadFileSystem");
+  }
+  constructor(extHostContext, _fileService) {
+    this._fileService = _fileService;
+    this._fileProvider = new DisposableMap();
+    this._disposables = new DisposableStore();
+    this._proxy = extHostContext.getProxy(ExtHostContext.ExtHostFileSystem);
+    const infoProxy = extHostContext.getProxy(ExtHostContext.ExtHostFileSystemInfo);
+    for (const entry of _fileService.listCapabilities()) {
+      infoProxy.$acceptProviderInfos(URI.from({ scheme: entry.scheme, path: "/dummy" }), entry.capabilities);
+    }
+    this._disposables.add(_fileService.onDidChangeFileSystemProviderRegistrations((e) => infoProxy.$acceptProviderInfos(URI.from({ scheme: e.scheme, path: "/dummy" }), e.provider?.capabilities ?? null)));
+    this._disposables.add(_fileService.onDidChangeFileSystemProviderCapabilities((e) => infoProxy.$acceptProviderInfos(URI.from({ scheme: e.scheme, path: "/dummy" }), e.provider.capabilities)));
+  }
+  dispose() {
+    this._disposables.dispose();
+    this._fileProvider.dispose();
+  }
+  async $registerFileSystemProvider(handle, scheme, capabilities, readonlyMessage) {
+    this._fileProvider.set(handle, new RemoteFileSystemProvider(this._fileService, scheme, capabilities, readonlyMessage, handle, this._proxy));
+  }
+  $unregisterProvider(handle) {
+    this._fileProvider.deleteAndDispose(handle);
+  }
+  $onFileSystemChange(handle, changes) {
+    const fileProvider = this._fileProvider.get(handle);
+    if (!fileProvider) {
+      throw new Error("Unknown file provider");
+    }
+    fileProvider.$onFileSystemChange(changes);
+  }
+  // --- consumer fs, vscode.workspace.fs
+  async $stat(uri) {
+    try {
+      const stat = await this._fileService.stat(URI.revive(uri));
+      return {
+        ctime: stat.ctime,
+        mtime: stat.mtime,
+        size: stat.size,
+        permissions: stat.readonly ? FilePermission.Readonly : void 0,
+        type: MainThreadFileSystem_1._asFileType(stat)
+      };
+    } catch (err) {
+      return MainThreadFileSystem_1._handleError(err);
+    }
+  }
+  async $readdir(uri) {
+    try {
+      const stat = await this._fileService.resolve(URI.revive(uri), { resolveMetadata: false });
+      if (!stat.isDirectory) {
+        const err = new Error(stat.name);
+        err.name = FileSystemProviderErrorCode.FileNotADirectory;
+        throw err;
+      }
+      return !stat.children ? [] : stat.children.map((child) => [child.name, MainThreadFileSystem_1._asFileType(child)]);
+    } catch (err) {
+      return MainThreadFileSystem_1._handleError(err);
+    }
+  }
+  static _asFileType(stat) {
+    let res = 0;
+    if (stat.isFile) {
+      res += FileType.File;
+    } else if (stat.isDirectory) {
+      res += FileType.Directory;
+    }
+    if (stat.isSymbolicLink) {
+      res += FileType.SymbolicLink;
+    }
+    return res;
+  }
+  async $readFile(uri) {
+    try {
+      const file = await this._fileService.readFile(URI.revive(uri));
+      return file.value;
+    } catch (err) {
+      return MainThreadFileSystem_1._handleError(err);
+    }
+  }
+  async $writeFile(uri, content) {
+    try {
+      await this._fileService.writeFile(URI.revive(uri), content);
+    } catch (err) {
+      return MainThreadFileSystem_1._handleError(err);
+    }
+  }
+  async $rename(source, target, opts) {
+    try {
+      await this._fileService.move(URI.revive(source), URI.revive(target), opts.overwrite);
+    } catch (err) {
+      return MainThreadFileSystem_1._handleError(err);
+    }
+  }
+  async $copy(source, target, opts) {
+    try {
+      await this._fileService.copy(URI.revive(source), URI.revive(target), opts.overwrite);
+    } catch (err) {
+      return MainThreadFileSystem_1._handleError(err);
+    }
+  }
+  async $mkdir(uri) {
+    try {
+      await this._fileService.createFolder(URI.revive(uri));
+    } catch (err) {
+      return MainThreadFileSystem_1._handleError(err);
+    }
+  }
+  async $delete(uri, opts) {
+    try {
+      return await this._fileService.del(URI.revive(uri), opts);
+    } catch (err) {
+      return MainThreadFileSystem_1._handleError(err);
+    }
+  }
+  static _handleError(err) {
+    if (err instanceof FileOperationError) {
+      switch (err.fileOperationResult) {
+        case 1:
+          err.name = FileSystemProviderErrorCode.FileNotFound;
+          break;
+        case 0:
+          err.name = FileSystemProviderErrorCode.FileIsADirectory;
+          break;
+        case 6:
+          err.name = FileSystemProviderErrorCode.NoPermissions;
+          break;
+        case 4:
+          err.name = FileSystemProviderErrorCode.FileExists;
+          break;
+      }
+    } else if (err instanceof Error) {
+      const code = toFileSystemProviderErrorCode(err);
+      if (code !== FileSystemProviderErrorCode.Unknown) {
+        err.name = code;
+      }
+    }
+    throw err;
+  }
+  $ensureActivation(scheme) {
+    return this._fileService.activateProvider(scheme);
+  }
+};
+MainThreadFileSystem = MainThreadFileSystem_1 = __decorate([
+  extHostNamedCustomer(MainContext.MainThreadFileSystem),
+  __param(1, IFileService)
+], MainThreadFileSystem);
+class RemoteFileSystemProvider {
+  static {
+    __name(this, "RemoteFileSystemProvider");
+  }
+  constructor(fileService, scheme, capabilities, readOnlyMessage, _handle, _proxy) {
+    this.readOnlyMessage = readOnlyMessage;
+    this._handle = _handle;
+    this._proxy = _proxy;
+    this._onDidChange = new Emitter();
+    this.onDidChangeFile = this._onDidChange.event;
+    this.onDidChangeCapabilities = Event.None;
+    this.capabilities = capabilities;
+    this._registration = fileService.registerProvider(scheme, this);
+  }
+  dispose() {
+    this._registration.dispose();
+    this._onDidChange.dispose();
+  }
+  watch(resource, opts) {
+    const session = Math.random();
+    this._proxy.$watch(this._handle, session, resource, opts);
+    return toDisposable(() => {
+      this._proxy.$unwatch(this._handle, session);
+    });
+  }
+  $onFileSystemChange(changes) {
+    this._onDidChange.fire(changes.map(RemoteFileSystemProvider._createFileChange));
+  }
+  static _createFileChange(dto) {
+    return { resource: URI.revive(dto.resource), type: dto.type };
+  }
+  // --- forwarding calls
+  async stat(resource) {
+    try {
+      return await this._proxy.$stat(this._handle, resource);
+    } catch (err) {
+      throw err;
+    }
+  }
+  async readFile(resource) {
+    const buffer = await this._proxy.$readFile(this._handle, resource);
+    return buffer.buffer;
+  }
+  writeFile(resource, content, opts) {
+    return this._proxy.$writeFile(this._handle, resource, VSBuffer.wrap(content), opts);
+  }
+  delete(resource, opts) {
+    return this._proxy.$delete(this._handle, resource, opts);
+  }
+  mkdir(resource) {
+    return this._proxy.$mkdir(this._handle, resource);
+  }
+  readdir(resource) {
+    return this._proxy.$readdir(this._handle, resource);
+  }
+  rename(resource, target, opts) {
+    return this._proxy.$rename(this._handle, resource, target, opts);
+  }
+  copy(resource, target, opts) {
+    return this._proxy.$copy(this._handle, resource, target, opts);
+  }
+  open(resource, opts) {
+    return this._proxy.$open(this._handle, resource, opts);
+  }
+  close(fd) {
+    return this._proxy.$close(this._handle, fd);
+  }
+  async read(fd, pos, data, offset, length) {
+    const readData = await this._proxy.$read(this._handle, fd, pos, length);
+    data.set(readData.buffer, offset);
+    return readData.byteLength;
+  }
+  write(fd, pos, data, offset, length) {
+    return this._proxy.$write(this._handle, fd, pos, VSBuffer.wrap(data).slice(offset, offset + length));
+  }
+}
+export {
+  MainThreadFileSystem
+};
+//# sourceMappingURL=mainThreadFileSystem.js.map

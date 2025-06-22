@@ -1,1 +1,79 @@
-import{$df as m}from"../../../../../base/common/event.js";import{$vd as k}from"../../../../../base/common/lifecycle.js";import{$0e as p}from"../../../../../base/common/stopwatch.js";import{$9C as w}from"../../../../../editor/common/encodedTokenAttributes.js";import{$rD as l}from"../../../../../editor/common/languages.js";class M extends k{constructor(t,e,s,o,n,i,r){super(),this.c=t,this.f=e,this.g=s,this.h=o,this.j=n,this.m=i,this.n=r,this.a=[],this.b=this.B(new m),this.onDidEncounterLanguage=this.b.event}get backgroundTokenizerShouldOnlyVerifyTokens(){return this.j()}getInitialState(){return this.f}tokenize(t,e,s){throw new Error("Not supported!")}createBackgroundTokenizer(t,e){if(this.h)return this.h(t,e)}tokenizeEncoded(t,e,s){const o=1e4*Math.random()<1,n=this.n||o,i=n?new p(!0):void 0,r=this.c.tokenizeLine2(t,s,500);if(n){const e=i.elapsed();(o||e>32)&&this.m(e,t.length,o)}if(r.stoppedEarly)return new l(r.tokens,s);if(this.g){const t=this.a,e=r.tokens;for(let s=0,o=e.length>>>1;s<o;s++){const o=e[1+(s<<1)],n=w.getLanguageId(o);t[n]||(t[n]=!0,this.b.fire(n))}}let a;return a=s.equals(r.ruleStack)?s:r.ruleStack,new l(r.tokens,a)}}export{M as $t7b};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { Emitter } from "../../../../../base/common/event.js";
+import { Disposable } from "../../../../../base/common/lifecycle.js";
+import { StopWatch } from "../../../../../base/common/stopwatch.js";
+import { TokenMetadata } from "../../../../../editor/common/encodedTokenAttributes.js";
+import { EncodedTokenizationResult } from "../../../../../editor/common/languages.js";
+class TextMateTokenizationSupport extends Disposable {
+  static {
+    __name(this, "TextMateTokenizationSupport");
+  }
+  constructor(_grammar, _initialState, _containsEmbeddedLanguages, _createBackgroundTokenizer, _backgroundTokenizerShouldOnlyVerifyTokens, _reportTokenizationTime, _reportSlowTokenization) {
+    super();
+    this._grammar = _grammar;
+    this._initialState = _initialState;
+    this._containsEmbeddedLanguages = _containsEmbeddedLanguages;
+    this._createBackgroundTokenizer = _createBackgroundTokenizer;
+    this._backgroundTokenizerShouldOnlyVerifyTokens = _backgroundTokenizerShouldOnlyVerifyTokens;
+    this._reportTokenizationTime = _reportTokenizationTime;
+    this._reportSlowTokenization = _reportSlowTokenization;
+    this._seenLanguages = [];
+    this._onDidEncounterLanguage = this._register(new Emitter());
+    this.onDidEncounterLanguage = this._onDidEncounterLanguage.event;
+  }
+  get backgroundTokenizerShouldOnlyVerifyTokens() {
+    return this._backgroundTokenizerShouldOnlyVerifyTokens();
+  }
+  getInitialState() {
+    return this._initialState;
+  }
+  tokenize(line, hasEOL, state) {
+    throw new Error("Not supported!");
+  }
+  createBackgroundTokenizer(textModel, store) {
+    if (this._createBackgroundTokenizer) {
+      return this._createBackgroundTokenizer(textModel, store);
+    }
+    return void 0;
+  }
+  tokenizeEncoded(line, hasEOL, state) {
+    const isRandomSample = Math.random() * 1e4 < 1;
+    const shouldMeasure = this._reportSlowTokenization || isRandomSample;
+    const sw = shouldMeasure ? new StopWatch(true) : void 0;
+    const textMateResult = this._grammar.tokenizeLine2(line, state, 500);
+    if (shouldMeasure) {
+      const timeMS = sw.elapsed();
+      if (isRandomSample || timeMS > 32) {
+        this._reportTokenizationTime(timeMS, line.length, isRandomSample);
+      }
+    }
+    if (textMateResult.stoppedEarly) {
+      console.warn(`Time limit reached when tokenizing line: ${line.substring(0, 100)}`);
+      return new EncodedTokenizationResult(textMateResult.tokens, state);
+    }
+    if (this._containsEmbeddedLanguages) {
+      const seenLanguages = this._seenLanguages;
+      const tokens = textMateResult.tokens;
+      for (let i = 0, len = tokens.length >>> 1; i < len; i++) {
+        const metadata = tokens[(i << 1) + 1];
+        const languageId = TokenMetadata.getLanguageId(metadata);
+        if (!seenLanguages[languageId]) {
+          seenLanguages[languageId] = true;
+          this._onDidEncounterLanguage.fire(languageId);
+        }
+      }
+    }
+    let endState;
+    if (state.equals(textMateResult.ruleStack)) {
+      endState = state;
+    } else {
+      endState = textMateResult.ruleStack;
+    }
+    return new EncodedTokenizationResult(textMateResult.tokens, endState);
+  }
+}
+export {
+  TextMateTokenizationSupport
+};
+//# sourceMappingURL=textMateTokenizationSupport.js.map

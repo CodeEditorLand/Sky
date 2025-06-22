@@ -1,1 +1,127 @@
-import{$p6 as C}from"../../../../base/browser/dom.js";import{$Ji as f}from"../../../../base/common/buffer.js";import{URI as g}from"../../../../base/common/uri.js";import{localize as d,localize2 as F}from"../../../../nls.js";import{$El as G}from"../../../../platform/configuration/common/configuration.js";import{$Bn as T}from"../../../../platform/contextkey/common/contextkey.js";import{$5j as $}from"../../../../platform/files/common/files.js";import{$mj as _}from"../../../../platform/instantiation/common/instantiation.js";import{$3n as j}from"../../../../platform/log/common/log.js";import{$OM as S}from"../../../../platform/quickinput/common/quickInput.js";import{$hl as k}from"../../../../platform/workspace/common/workspace.js";import{$cab as z,$hab as B}from"../../../browser/editorExtensions.js";import{$Obb as D}from"../../../browser/gpu/gpuUtils.js";import{$Qbb as U}from"../../../browser/gpu/raster/glyphRasterizer.js";import{$4bb as l}from"../../../browser/gpu/viewGpuContext.js";class E extends z{constructor(){super({id:"editor.action.debugEditorGpuRenderer",label:F(1226,"Developer: Debug Editor GPU Renderer"),precondition:T.true()})}async run(t,e){const o=t.get(_),a=await t.get(S).pick([{label:d(1223,null),id:"logTextureAtlasStats"},{label:d(1224,null),id:"saveTextureAtlas"},{label:d(1225,null),id:"drawGlyph"}],{canPickMany:!1});if(a)switch(a.id){case"logTextureAtlasStats":o.invokeFunction((t=>{const e=t.get(j),o=l.atlas;if(!l.atlas)return void e.error("No texture atlas found");const a=o.getStats();e.info(["Texture atlas stats",...a].join("\n\n"))}));break;case"saveTextureAtlas":o.invokeFunction((async t=>{const e=t.get(k),o=t.get($),a=e.getWorkspace().folders;if(a.length>0){const t=l.atlas,e=[];for(const[r,i]of t.pages.entries())e.push(o.writeFile(g.joinPath(a[0].uri,`textureAtlasPage${r}_actual.png`),f.wrap(new Uint8Array(await(await i.source.convertToBlob()).arrayBuffer()))),o.writeFile(g.joinPath(a[0].uri,`textureAtlasPage${r}_usage.png`),f.wrap(new Uint8Array(await(await i.getUsagePreview()).arrayBuffer()))));await Promise.all(e)}}));break;case"drawGlyph":o.invokeFunction((async t=>{const e=t.get(G),o=t.get($),a=t.get(S),r=t.get(k).getWorkspace().folders;if(0===r.length)return;const i=l.atlas,s=e.getValue("editor.fontFamily"),n=e.getValue("editor.fontSize"),c=new U(n,s,C().devicePixelRatio,l.decorationStyleCache);let p=await a.input({prompt:"Enter a character to draw (prefix with 0x for code point))"});if(!p)return;const m=p.match(/0x(?<codePoint>[0-9a-f]+)/i)?.groups?.codePoint;void 0!==m&&(p=String.fromCodePoint(parseInt(m,16)));const u=i.getGlyph(c,p,0,0,0);if(!u)return;const d=i.pages[u.pageIndex].source.getContext("2d")?.getImageData(u.x,u.y,u.w,u.h);if(!d)return;const w=new OffscreenCanvas(d.width,d.height);D(w.getContext("2d")).putImageData(d,0,0);const b=await w.convertToBlob({type:"image/png"}),j=g.joinPath(r[0].uri,`glyph_${p}_0_${n}px_${s.replaceAll(/[,\\\/\.'\s]/g,"_")}.png`);await o.writeFile(j,f.wrap(new Uint8Array(await b.arrayBuffer())))}))}}}B(E);
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { getActiveWindow } from "../../../../base/browser/dom.js";
+import { VSBuffer } from "../../../../base/common/buffer.js";
+import { URI } from "../../../../base/common/uri.js";
+import { localize, localize2 } from "../../../../nls.js";
+import { IConfigurationService } from "../../../../platform/configuration/common/configuration.js";
+import { ContextKeyExpr } from "../../../../platform/contextkey/common/contextkey.js";
+import { IFileService } from "../../../../platform/files/common/files.js";
+import { IInstantiationService } from "../../../../platform/instantiation/common/instantiation.js";
+import { ILogService } from "../../../../platform/log/common/log.js";
+import { IQuickInputService } from "../../../../platform/quickinput/common/quickInput.js";
+import { IWorkspaceContextService } from "../../../../platform/workspace/common/workspace.js";
+import { EditorAction, registerEditorAction } from "../../../browser/editorExtensions.js";
+import { ensureNonNullable } from "../../../browser/gpu/gpuUtils.js";
+import { GlyphRasterizer } from "../../../browser/gpu/raster/glyphRasterizer.js";
+import { ViewGpuContext } from "../../../browser/gpu/viewGpuContext.js";
+class DebugEditorGpuRendererAction extends EditorAction {
+  static {
+    __name(this, "DebugEditorGpuRendererAction");
+  }
+  constructor() {
+    super({
+      id: "editor.action.debugEditorGpuRenderer",
+      label: localize2("gpuDebug.label", "Developer: Debug Editor GPU Renderer"),
+      // TODO: Why doesn't `ContextKeyExpr.equals('config:editor.experimentalGpuAcceleration', 'on')` work?
+      precondition: ContextKeyExpr.true()
+    });
+  }
+  async run(accessor, editor) {
+    const instantiationService = accessor.get(IInstantiationService);
+    const quickInputService = accessor.get(IQuickInputService);
+    const choice = await quickInputService.pick([
+      {
+        label: localize("logTextureAtlasStats.label", "Log Texture Atlas Stats"),
+        id: "logTextureAtlasStats"
+      },
+      {
+        label: localize("saveTextureAtlas.label", "Save Texture Atlas"),
+        id: "saveTextureAtlas"
+      },
+      {
+        label: localize("drawGlyph.label", "Draw Glyph"),
+        id: "drawGlyph"
+      }
+    ], { canPickMany: false });
+    if (!choice) {
+      return;
+    }
+    switch (choice.id) {
+      case "logTextureAtlasStats":
+        instantiationService.invokeFunction((accessor2) => {
+          const logService = accessor2.get(ILogService);
+          const atlas = ViewGpuContext.atlas;
+          if (!ViewGpuContext.atlas) {
+            logService.error("No texture atlas found");
+            return;
+          }
+          const stats = atlas.getStats();
+          logService.info(["Texture atlas stats", ...stats].join("\n\n"));
+        });
+        break;
+      case "saveTextureAtlas":
+        instantiationService.invokeFunction(async (accessor2) => {
+          const workspaceContextService = accessor2.get(IWorkspaceContextService);
+          const fileService = accessor2.get(IFileService);
+          const folders = workspaceContextService.getWorkspace().folders;
+          if (folders.length > 0) {
+            const atlas = ViewGpuContext.atlas;
+            const promises = [];
+            for (const [layerIndex, page] of atlas.pages.entries()) {
+              promises.push(...[
+                fileService.writeFile(URI.joinPath(folders[0].uri, `textureAtlasPage${layerIndex}_actual.png`), VSBuffer.wrap(new Uint8Array(await (await page.source.convertToBlob()).arrayBuffer()))),
+                fileService.writeFile(URI.joinPath(folders[0].uri, `textureAtlasPage${layerIndex}_usage.png`), VSBuffer.wrap(new Uint8Array(await (await page.getUsagePreview()).arrayBuffer())))
+              ]);
+            }
+            await Promise.all(promises);
+          }
+        });
+        break;
+      case "drawGlyph":
+        instantiationService.invokeFunction(async (accessor2) => {
+          const configurationService = accessor2.get(IConfigurationService);
+          const fileService = accessor2.get(IFileService);
+          const quickInputService2 = accessor2.get(IQuickInputService);
+          const workspaceContextService = accessor2.get(IWorkspaceContextService);
+          const folders = workspaceContextService.getWorkspace().folders;
+          if (folders.length === 0) {
+            return;
+          }
+          const atlas = ViewGpuContext.atlas;
+          const fontFamily = configurationService.getValue("editor.fontFamily");
+          const fontSize = configurationService.getValue("editor.fontSize");
+          const rasterizer = new GlyphRasterizer(fontSize, fontFamily, getActiveWindow().devicePixelRatio, ViewGpuContext.decorationStyleCache);
+          let chars = await quickInputService2.input({
+            prompt: "Enter a character to draw (prefix with 0x for code point))"
+          });
+          if (!chars) {
+            return;
+          }
+          const codePoint = chars.match(/0x(?<codePoint>[0-9a-f]+)/i)?.groups?.codePoint;
+          if (codePoint !== void 0) {
+            chars = String.fromCodePoint(parseInt(codePoint, 16));
+          }
+          const tokenMetadata = 0;
+          const charMetadata = 0;
+          const rasterizedGlyph = atlas.getGlyph(rasterizer, chars, tokenMetadata, charMetadata, 0);
+          if (!rasterizedGlyph) {
+            return;
+          }
+          const imageData = atlas.pages[rasterizedGlyph.pageIndex].source.getContext("2d")?.getImageData(rasterizedGlyph.x, rasterizedGlyph.y, rasterizedGlyph.w, rasterizedGlyph.h);
+          if (!imageData) {
+            return;
+          }
+          const canvas = new OffscreenCanvas(imageData.width, imageData.height);
+          const ctx = ensureNonNullable(canvas.getContext("2d"));
+          ctx.putImageData(imageData, 0, 0);
+          const blob = await canvas.convertToBlob({ type: "image/png" });
+          const resource = URI.joinPath(folders[0].uri, `glyph_${chars}_${tokenMetadata}_${fontSize}px_${fontFamily.replaceAll(/[,\\\/\.'\s]/g, "_")}.png`);
+          await fileService.writeFile(resource, VSBuffer.wrap(new Uint8Array(await blob.arrayBuffer())));
+        });
+        break;
+    }
+  }
+}
+registerEditorAction(DebugEditorGpuRendererAction);
+//# sourceMappingURL=gpuActions.js.map

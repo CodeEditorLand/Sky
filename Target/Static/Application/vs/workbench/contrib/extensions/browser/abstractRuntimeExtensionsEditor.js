@@ -1,1 +1,449 @@
-import{$ as m,$M6 as $,$I5 as B}from"../../../../base/browser/dom.js";import{$M7 as j}from"../../../../base/browser/ui/actionbar/actionbar.js";import{$K7 as y}from"../../../../base/browser/ui/hover/hoverDelegateFactory.js";import{$E8 as w}from"../../../../base/browser/ui/iconLabel/iconLabels.js";import{$_l as L,$bm as k}from"../../../../base/common/actions.js";import{$$b as A}from"../../../../base/common/arrays.js";import{$Yh as q}from"../../../../base/common/async.js";import{$in as F}from"../../../../base/common/date.js";import{$qd as R}from"../../../../base/common/lifecycle.js";import{Schemas as S}from"../../../../base/common/network.js";import*as f from"../../../../nls.js";import{$Xn as N}from"../../../../platform/action/common/actionCommonCategories.js";import{$0fb as W}from"../../../../platform/actions/browser/menuEntryActionViewItem.js";import{$iI as X,$eI as K,$dI as H}from"../../../../platform/actions/common/actions.js";import{$mfb as U}from"../../../../platform/clipboard/common/clipboardService.js";import{$Bn as V,$Vn as Y}from"../../../../platform/contextkey/common/contextkey.js";import{$ofb as G}from"../../../../platform/contextview/browser/contextView.js";import{$Sy as M}from"../../../../platform/extensions/common/extensions.js";import{$ngb as J}from"../../../../platform/hover/browser/hover.js";import{$mj as Q}from"../../../../platform/instantiation/common/instantiation.js";import{$2H as Z}from"../../../../platform/label/common/label.js";import{$zmb as ee}from"../../../../platform/list/browser/listService.js";import{$RI as te,Severity as ie}from"../../../../platform/notification/common/notification.js";import{$Ql as ne}from"../../../../platform/registry/common/platform.js";import{$Ho as se}from"../../../../platform/storage/common/storage.js";import{$Po as oe}from"../../../../platform/telemetry/common/telemetry.js";import{$7p as re}from"../../../../platform/theme/common/colorRegistry.js";import{$Mt as ae}from"../../../../platform/theme/common/themeService.js";import{$DDb as le}from"../../../browser/parts/editor/editorPane.js";import{$oI as ce}from"../../../services/editor/common/editorService.js";import{$KX as ue}from"../../../services/environment/common/environmentService.js";import{Extensions as me,$Rtb as fe}from"../../../services/extensionManagement/common/extensionFeatures.js";import{$NO as _}from"../../../services/extensions/common/extensionRunningLocation.js";import{$XO as pe}from"../../../services/extensions/common/extensions.js";import{$bDb as he}from"../common/extensions.js";import{$0hc as de}from"../common/runtimeExtensionsInput.js";import{$xNb as ge,$yNb as be}from"./extensionsIcons.js";import{$3Ob as $e}from"./extensionsWidgets.js";import"./media/runtimeExtensionsEditor.css";var O=function(T,a,p,b){var v=arguments.length,e=v<3?a:b===null?b=Object.getOwnPropertyDescriptor(a,p):b,s;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")e=Reflect.decorate(T,a,p,b);else for(var i=T.length-1;i>=0;i--)(s=T[i])&&(e=(v<3?s(e):v>3?s(a,p,e):s(a,p))||e);return v>3&&e&&Object.defineProperty(a,p,e),e},d=function(T,a){return function(p,b){a(p,b,T)}},D;let P=class extends le{static{D=this}static{this.ID="workbench.editor.runtimeExtensions"}constructor(a,p,b,v,e,s,i,c,g,u,t,l,n,o,r,h){super(D.ID,a,p,b,u),this.m=v,this.r=e,this.s=s,this.u=i,this.cb=c,this.db=g,this.eb=t,this.fb=l,this.gb=n,this.hb=o,this.ib=r,this.jb=h,this.c=null,this.f=null,this.g=this.B(new q(()=>this.kb(),200)),this.B(this.s.onDidChangeExtensionsStatus(()=>this.g.schedule())),this.B(this.hb.onDidChangeAccessData(()=>this.g.schedule())),this.kb()}async kb(){this.f=await this.lb(),this.c?.splice(0,this.c.length,this.f)}async lb(){await this.s.whenInstalledExtensionsRegistered();const a=this.s.extensions.filter(t=>!!t.main||!!t.browser),p=new M,b=await this.r.queryLocal();for(const t of b)p.set(t.identifier.id,t);const v=this.s.getExtensionsStatus(),e=new M,s=this.nb();if(s){let t=s.startTime;for(let l=0,n=s.deltas.length;l<n;l++){const o=s.ids[l],r=s.deltas[l];let h=e.get(o);h||(h=[],e.set(o,h)),h.push(t),t=t+r,h.push(t)}}let i=[];for(let t=0,l=a.length;t<l;t++){const n=a[t];let o=null;if(s){const r=e.get(n.identifier)||[];let h=0;for(let x=0,E=r.length/2;x<E;x++){const I=r[2*x],z=r[2*x+1];h+=z-I}o={segments:r,totalTime:h}}i[t]={originalIndex:t,description:n,marketplaceInfo:p.get(n.identifier),status:v[n.identifier.value],profileInfo:o||void 0,unresponsiveProfile:this.ob(n.identifier)}}i=i.filter(t=>t.status.activationStarted);const c=t=>t.unresponsiveProfile===s,g=t=>t.profileInfo?.totalTime??0,u=t=>(t.status.activationTimes?.codeLoadingTime??0)+(t.status.activationTimes?.activateCallTime??0);return i=i.sort((t,l)=>c(t)||c(l)?+c(l)-+c(t):g(t)||g(l)?g(l)-g(t):u(t)||u(l)?u(l)-u(t):t.originalIndex-l.originalIndex),i}Y(a){a.classList.add("runtime-extensions-editor");const p="runtimeExtensionElementTemplate",b=new class{getHeight(e){return 70}getTemplateId(e){return p}},v={templateId:p,renderTemplate:e=>{const s=$(e,m(".extension")),i=$(s,m(".icon-container")),c=this.db.createInstance($e,i),g=$(s,m("div.desc")),u=$(g,m(".header-container")),t=$(u,m(".header")),l=$(t,m("div.name")),n=$(t,m("span.version")),o=$(g,m("div.msg")),r=new j(g),h=r.onDidRun(({error:C})=>C&&this.u.error(C)),x=$(s,m(".time")),E=$(x,m("div.activation-time")),I=$(x,m("div.profile-time"));return{root:e,element:s,name:l,version:n,actionbar:r,activationTime:E,profileTime:I,msgContainer:o,set extension(C){c.extension=C||null},disposables:[c,r,h],elementDisposables:[]}},renderElement:(e,s,i)=>{i.elementDisposables=R(i.elementDisposables),i.extension=e.marketplaceInfo,i.root.classList.toggle("odd",s%2===1),i.name.textContent=(e.marketplaceInfo?.displayName||e.description.identifier.value).substr(0,50),i.version.textContent=e.description.version;const c=e.status.activationTimes;if(c){const n=c.codeLoadingTime+c.activateCallTime;i.activationTime.textContent=c.activationReason.startup?`Startup Activation: ${n}ms`:`Activation: ${n}ms`}else i.activationTime.textContent="Activating...";i.actionbar.clear();const g=this.pb(e);if(g&&i.actionbar.push(g,{icon:!1,label:!0}),A(e.status.runtimeErrors)){const n=this.qb(e);n&&i.actionbar.push(n,{icon:!1,label:!0})}let u;if(c){const n=c.activationReason.extensionId.value,o=c.activationReason.activationEvent;if(o==="*")u=f.localize(7032,null,n);else if(/^workspaceContains:/.test(o)){const r=o.substr(18);r.indexOf("*")>=0||r.indexOf("?")>=0?u=f.localize(7033,null,r,n):u=f.localize(7034,null,r,n)}else if(/^workspaceContainsTimeout:/.test(o)){const r=o.substr(25);u=f.localize(7035,null,r,n)}else if(o==="onStartupFinished")u=f.localize(7036,null,n);else if(/^onLanguage:/.test(o)){const r=o.substr(11);u=f.localize(7037,null,r,n)}else u=f.localize(7038,null,o,n)}else u=f.localize(7039,null);if(i.elementDisposables.push(this.ib.setupManagedHover(y("mouse"),i.activationTime,u)),B(i.msgContainer),this.ob(e.description.identifier)){const n=m("span",void 0,...w(" $(alert) Unresponsive")),o=f.localize(7040,null);i.elementDisposables.push(this.ib.setupManagedHover(y("mouse"),n,o)),i.msgContainer.appendChild(n)}if(A(e.status.runtimeErrors)){const n=m("span",void 0,...w(`$(bug) ${f.localize(7041,null,e.status.runtimeErrors.length)}`));i.msgContainer.appendChild(n)}if(e.status.messages&&e.status.messages.length>0){const n=m("span",void 0,...w(`$(alert) ${e.status.messages[0].message}`));i.msgContainer.appendChild(n)}let t=null;if(e.status.runningLocation&&e.status.runningLocation.equals(new _(0)))t="$(globe) web worker";else if(e.description.extensionLocation.scheme===S.vscodeRemote){const n=this.eb.getHostLabel(S.vscodeRemote,this.fb.remoteAuthority);n?t=`$(remote) ${n}`:t=`$(remote) ${e.description.extensionLocation.authority}`}else e.status.runningLocation&&e.status.runningLocation.affinity>0&&(t=e.status.runningLocation instanceof _?`$(globe) web worker ${e.status.runningLocation.affinity+1}`:`$(server-process) local process ${e.status.runningLocation.affinity+1}`);if(t){const n=m("span",void 0,...w(t));i.msgContainer.appendChild(n)}const l=ne.as(me.ExtensionFeaturesRegistry).getExtensionFeatures();for(const n of l){const o=this.hb.getAccessData(e.description.identifier,n.id);if(o){const r=o?.current?.status;if(r&&(i.msgContainer.appendChild(m("span",void 0,`${n.label}: `)),i.msgContainer.appendChild(m("span",void 0,...w(`$(${r.severity===ie.Error?ge.id:be.id}) ${r.message}`)))),o?.accessTimes.length>0){const h=m("span",void 0,`${f.localize(7042,null,n.label,o.accessTimes.length)}${o.current?f.localize(7043,null,o.current.accessTimes.length):""}`);if(o.current){const x=f.localize(7044,null,F(o.current.lastAccessed,!0,!0));i.elementDisposables.push(this.ib.setupManagedHover(y("mouse"),h,x))}i.msgContainer.appendChild(h)}}}e.profileInfo?i.profileTime.textContent=`Profile: ${(e.profileInfo.totalTime/1e3).toFixed(2)}ms`:i.profileTime.textContent=""},disposeTemplate:e=>{e.disposables=R(e.disposables)}};this.c=this.db.createInstance(ee,"RuntimeExtensions",a,b,[v],{multipleSelectionSupport:!1,setRowLineHeight:!1,horizontalScrolling:!1,overrideStyles:{listBackground:re},accessibilityProvider:new class{getWidgetAriaLabel(){return f.localize(7045,null)}getAriaLabel(e){return e.description.name}}}),this.c.splice(0,this.c.length,this.f||void 0),this.B(this.c.onContextMenu(e=>{if(!e.element)return;const s=[];s.push(new L("runtimeExtensionsEditor.action.copyId",f.localize(7046,null,e.element.description.identifier.value),void 0,!0,()=>{this.gb.writeText(e.element.description.identifier.value)}));const i=this.qb(e.element);i&&s.push(i),s.push(new k),e.element.marketplaceInfo&&(s.push(new L("runtimeExtensionsEditor.action.disableWorkspace",f.localize(7047,null),void 0,!0,()=>this.r.setEnablement(e.element.marketplaceInfo,10))),s.push(new L("runtimeExtensionsEditor.action.disable",f.localize(7048,null),void 0,!0,()=>this.r.setEnablement(e.element.marketplaceInfo,9)))),s.push(new k);const c=this.jb.getMenuActions(H.ExtensionEditorContextMenu,this.m);s.push(...W(c).secondary),this.cb.showContextMenu({getAnchor:()=>e.anchor,getActions:()=>s})}))}layout(a){this.c?.layout(a.height)}};P=D=O([d(1,oe),d(2,ae),d(3,Y),d(4,he),d(5,pe),d(6,te),d(7,G),d(8,Q),d(9,se),d(10,Z),d(11,ue),d(12,U),d(13,fe),d(14,J),d(15,K)],P);class st extends X{constructor(){super({id:"workbench.action.showRuntimeExtensions",title:f.localize2(7049,"Show Running Extensions"),category:N.Developer,f1:!0,menu:{id:H.ViewContainerTitle,when:V.equals("viewContainer","workbench.view.extensions"),group:"2_enablement",order:3}})}async run(a){await a.get(ce).openEditor(de.instance,{pinned:!0})}}export{P as $$hc,st as $_hc};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { $, append, clearNode } from "../../../../base/browser/dom.js";
+import { ActionBar } from "../../../../base/browser/ui/actionbar/actionbar.js";
+import { getDefaultHoverDelegate } from "../../../../base/browser/ui/hover/hoverDelegateFactory.js";
+import { renderLabelWithIcons } from "../../../../base/browser/ui/iconLabel/iconLabels.js";
+import { Action, Separator } from "../../../../base/common/actions.js";
+import { isNonEmptyArray } from "../../../../base/common/arrays.js";
+import { RunOnceScheduler } from "../../../../base/common/async.js";
+import { fromNow } from "../../../../base/common/date.js";
+import { dispose } from "../../../../base/common/lifecycle.js";
+import { Schemas } from "../../../../base/common/network.js";
+import * as nls from "../../../../nls.js";
+import { Categories } from "../../../../platform/action/common/actionCommonCategories.js";
+import { getContextMenuActions } from "../../../../platform/actions/browser/menuEntryActionViewItem.js";
+import { Action2, IMenuService, MenuId } from "../../../../platform/actions/common/actions.js";
+import { IClipboardService } from "../../../../platform/clipboard/common/clipboardService.js";
+import { ContextKeyExpr, IContextKeyService } from "../../../../platform/contextkey/common/contextkey.js";
+import { IContextMenuService } from "../../../../platform/contextview/browser/contextView.js";
+import { ExtensionIdentifierMap } from "../../../../platform/extensions/common/extensions.js";
+import { IHoverService } from "../../../../platform/hover/browser/hover.js";
+import { IInstantiationService } from "../../../../platform/instantiation/common/instantiation.js";
+import { ILabelService } from "../../../../platform/label/common/label.js";
+import { WorkbenchList } from "../../../../platform/list/browser/listService.js";
+import { INotificationService, Severity } from "../../../../platform/notification/common/notification.js";
+import { Registry } from "../../../../platform/registry/common/platform.js";
+import { IStorageService } from "../../../../platform/storage/common/storage.js";
+import { ITelemetryService } from "../../../../platform/telemetry/common/telemetry.js";
+import { editorBackground } from "../../../../platform/theme/common/colorRegistry.js";
+import { IThemeService } from "../../../../platform/theme/common/themeService.js";
+import { EditorPane } from "../../../browser/parts/editor/editorPane.js";
+import { IEditorService } from "../../../services/editor/common/editorService.js";
+import { IWorkbenchEnvironmentService } from "../../../services/environment/common/environmentService.js";
+import { Extensions, IExtensionFeaturesManagementService } from "../../../services/extensionManagement/common/extensionFeatures.js";
+import { LocalWebWorkerRunningLocation } from "../../../services/extensions/common/extensionRunningLocation.js";
+import { IExtensionService } from "../../../services/extensions/common/extensions.js";
+import { IExtensionsWorkbenchService } from "../common/extensions.js";
+import { RuntimeExtensionsInput } from "../common/runtimeExtensionsInput.js";
+import { errorIcon, warningIcon } from "./extensionsIcons.js";
+import { ExtensionIconWidget } from "./extensionsWidgets.js";
+import "./media/runtimeExtensionsEditor.css";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+var AbstractRuntimeExtensionsEditor_1;
+let AbstractRuntimeExtensionsEditor = class AbstractRuntimeExtensionsEditor2 extends EditorPane {
+  static {
+    __name(this, "AbstractRuntimeExtensionsEditor");
+  }
+  static {
+    AbstractRuntimeExtensionsEditor_1 = this;
+  }
+  static {
+    this.ID = "workbench.editor.runtimeExtensions";
+  }
+  constructor(group, telemetryService, themeService, contextKeyService, _extensionsWorkbenchService, _extensionService, _notificationService, _contextMenuService, _instantiationService, storageService, _labelService, _environmentService, _clipboardService, _extensionFeaturesManagementService, _hoverService, _menuService) {
+    super(AbstractRuntimeExtensionsEditor_1.ID, group, telemetryService, themeService, storageService);
+    this.contextKeyService = contextKeyService;
+    this._extensionsWorkbenchService = _extensionsWorkbenchService;
+    this._extensionService = _extensionService;
+    this._notificationService = _notificationService;
+    this._contextMenuService = _contextMenuService;
+    this._instantiationService = _instantiationService;
+    this._labelService = _labelService;
+    this._environmentService = _environmentService;
+    this._clipboardService = _clipboardService;
+    this._extensionFeaturesManagementService = _extensionFeaturesManagementService;
+    this._hoverService = _hoverService;
+    this._menuService = _menuService;
+    this._list = null;
+    this._elements = null;
+    this._updateSoon = this._register(new RunOnceScheduler(() => this._updateExtensions(), 200));
+    this._register(this._extensionService.onDidChangeExtensionsStatus(() => this._updateSoon.schedule()));
+    this._register(this._extensionFeaturesManagementService.onDidChangeAccessData(() => this._updateSoon.schedule()));
+    this._updateExtensions();
+  }
+  async _updateExtensions() {
+    this._elements = await this._resolveExtensions();
+    this._list?.splice(0, this._list.length, this._elements);
+  }
+  async _resolveExtensions() {
+    await this._extensionService.whenInstalledExtensionsRegistered();
+    const extensionsDescriptions = this._extensionService.extensions.filter((extension) => {
+      return Boolean(extension.main) || Boolean(extension.browser);
+    });
+    const marketplaceMap = new ExtensionIdentifierMap();
+    const marketPlaceExtensions = await this._extensionsWorkbenchService.queryLocal();
+    for (const extension of marketPlaceExtensions) {
+      marketplaceMap.set(extension.identifier.id, extension);
+    }
+    const statusMap = this._extensionService.getExtensionsStatus();
+    const segments = new ExtensionIdentifierMap();
+    const profileInfo = this._getProfileInfo();
+    if (profileInfo) {
+      let currentStartTime = profileInfo.startTime;
+      for (let i = 0, len = profileInfo.deltas.length; i < len; i++) {
+        const id = profileInfo.ids[i];
+        const delta = profileInfo.deltas[i];
+        let extensionSegments = segments.get(id);
+        if (!extensionSegments) {
+          extensionSegments = [];
+          segments.set(id, extensionSegments);
+        }
+        extensionSegments.push(currentStartTime);
+        currentStartTime = currentStartTime + delta;
+        extensionSegments.push(currentStartTime);
+      }
+    }
+    let result = [];
+    for (let i = 0, len = extensionsDescriptions.length; i < len; i++) {
+      const extensionDescription = extensionsDescriptions[i];
+      let extProfileInfo = null;
+      if (profileInfo) {
+        const extensionSegments = segments.get(extensionDescription.identifier) || [];
+        let extensionTotalTime = 0;
+        for (let j = 0, lenJ = extensionSegments.length / 2; j < lenJ; j++) {
+          const startTime = extensionSegments[2 * j];
+          const endTime = extensionSegments[2 * j + 1];
+          extensionTotalTime += endTime - startTime;
+        }
+        extProfileInfo = {
+          segments: extensionSegments,
+          totalTime: extensionTotalTime
+        };
+      }
+      result[i] = {
+        originalIndex: i,
+        description: extensionDescription,
+        marketplaceInfo: marketplaceMap.get(extensionDescription.identifier),
+        status: statusMap[extensionDescription.identifier.value],
+        profileInfo: extProfileInfo || void 0,
+        unresponsiveProfile: this._getUnresponsiveProfile(extensionDescription.identifier)
+      };
+    }
+    result = result.filter((element) => element.status.activationStarted);
+    const isUnresponsive = /* @__PURE__ */ __name((extension) => extension.unresponsiveProfile === profileInfo, "isUnresponsive");
+    const profileTime = /* @__PURE__ */ __name((extension) => extension.profileInfo?.totalTime ?? 0, "profileTime");
+    const activationTime = /* @__PURE__ */ __name((extension) => (extension.status.activationTimes?.codeLoadingTime ?? 0) + (extension.status.activationTimes?.activateCallTime ?? 0), "activationTime");
+    result = result.sort((a, b) => {
+      if (isUnresponsive(a) || isUnresponsive(b)) {
+        return +isUnresponsive(b) - +isUnresponsive(a);
+      } else if (profileTime(a) || profileTime(b)) {
+        return profileTime(b) - profileTime(a);
+      } else if (activationTime(a) || activationTime(b)) {
+        return activationTime(b) - activationTime(a);
+      }
+      return a.originalIndex - b.originalIndex;
+    });
+    return result;
+  }
+  createEditor(parent) {
+    parent.classList.add("runtime-extensions-editor");
+    const TEMPLATE_ID = "runtimeExtensionElementTemplate";
+    const delegate = new class {
+      getHeight(element) {
+        return 70;
+      }
+      getTemplateId(element) {
+        return TEMPLATE_ID;
+      }
+    }();
+    const renderer = {
+      templateId: TEMPLATE_ID,
+      renderTemplate: /* @__PURE__ */ __name((root) => {
+        const element = append(root, $(".extension"));
+        const iconContainer = append(element, $(".icon-container"));
+        const extensionIconWidget = this._instantiationService.createInstance(ExtensionIconWidget, iconContainer);
+        const desc = append(element, $("div.desc"));
+        const headerContainer = append(desc, $(".header-container"));
+        const header = append(headerContainer, $(".header"));
+        const name = append(header, $("div.name"));
+        const version = append(header, $("span.version"));
+        const msgContainer = append(desc, $("div.msg"));
+        const actionbar = new ActionBar(desc);
+        const listener = actionbar.onDidRun(({ error }) => error && this._notificationService.error(error));
+        const timeContainer = append(element, $(".time"));
+        const activationTime = append(timeContainer, $("div.activation-time"));
+        const profileTime = append(timeContainer, $("div.profile-time"));
+        const disposables = [extensionIconWidget, actionbar, listener];
+        return {
+          root,
+          element,
+          name,
+          version,
+          actionbar,
+          activationTime,
+          profileTime,
+          msgContainer,
+          set extension(extension) {
+            extensionIconWidget.extension = extension || null;
+          },
+          disposables,
+          elementDisposables: []
+        };
+      }, "renderTemplate"),
+      renderElement: /* @__PURE__ */ __name((element, index, data) => {
+        data.elementDisposables = dispose(data.elementDisposables);
+        data.extension = element.marketplaceInfo;
+        data.root.classList.toggle("odd", index % 2 === 1);
+        data.name.textContent = (element.marketplaceInfo?.displayName || element.description.identifier.value).substr(0, 50);
+        data.version.textContent = element.description.version;
+        const activationTimes = element.status.activationTimes;
+        if (activationTimes) {
+          const syncTime = activationTimes.codeLoadingTime + activationTimes.activateCallTime;
+          data.activationTime.textContent = activationTimes.activationReason.startup ? `Startup Activation: ${syncTime}ms` : `Activation: ${syncTime}ms`;
+        } else {
+          data.activationTime.textContent = `Activating...`;
+        }
+        data.actionbar.clear();
+        const slowExtensionAction = this._createSlowExtensionAction(element);
+        if (slowExtensionAction) {
+          data.actionbar.push(slowExtensionAction, { icon: false, label: true });
+        }
+        if (isNonEmptyArray(element.status.runtimeErrors)) {
+          const reportExtensionIssueAction = this._createReportExtensionIssueAction(element);
+          if (reportExtensionIssueAction) {
+            data.actionbar.push(reportExtensionIssueAction, { icon: false, label: true });
+          }
+        }
+        let title;
+        if (activationTimes) {
+          const activationId = activationTimes.activationReason.extensionId.value;
+          const activationEvent = activationTimes.activationReason.activationEvent;
+          if (activationEvent === "*") {
+            title = nls.localize({
+              key: "starActivation",
+              comment: [
+                "{0} will be an extension identifier"
+              ]
+            }, "Activated by {0} on start-up", activationId);
+          } else if (/^workspaceContains:/.test(activationEvent)) {
+            const fileNameOrGlob = activationEvent.substr("workspaceContains:".length);
+            if (fileNameOrGlob.indexOf("*") >= 0 || fileNameOrGlob.indexOf("?") >= 0) {
+              title = nls.localize({
+                key: "workspaceContainsGlobActivation",
+                comment: [
+                  "{0} will be a glob pattern",
+                  "{1} will be an extension identifier"
+                ]
+              }, "Activated by {1} because a file matching {0} exists in your workspace", fileNameOrGlob, activationId);
+            } else {
+              title = nls.localize({
+                key: "workspaceContainsFileActivation",
+                comment: [
+                  "{0} will be a file name",
+                  "{1} will be an extension identifier"
+                ]
+              }, "Activated by {1} because file {0} exists in your workspace", fileNameOrGlob, activationId);
+            }
+          } else if (/^workspaceContainsTimeout:/.test(activationEvent)) {
+            const glob = activationEvent.substr("workspaceContainsTimeout:".length);
+            title = nls.localize({
+              key: "workspaceContainsTimeout",
+              comment: [
+                "{0} will be a glob pattern",
+                "{1} will be an extension identifier"
+              ]
+            }, "Activated by {1} because searching for {0} took too long", glob, activationId);
+          } else if (activationEvent === "onStartupFinished") {
+            title = nls.localize({
+              key: "startupFinishedActivation",
+              comment: [
+                "This refers to an extension. {0} will be an activation event."
+              ]
+            }, "Activated by {0} after start-up finished", activationId);
+          } else if (/^onLanguage:/.test(activationEvent)) {
+            const language = activationEvent.substr("onLanguage:".length);
+            title = nls.localize("languageActivation", "Activated by {1} because you opened a {0} file", language, activationId);
+          } else {
+            title = nls.localize({
+              key: "workspaceGenericActivation",
+              comment: [
+                "{0} will be an activation event, like e.g. 'language:typescript', 'debug', etc.",
+                "{1} will be an extension identifier"
+              ]
+            }, "Activated by {1} on {0}", activationEvent, activationId);
+          }
+        } else {
+          title = nls.localize("extensionActivating", "Extension is activating...");
+        }
+        data.elementDisposables.push(this._hoverService.setupManagedHover(getDefaultHoverDelegate("mouse"), data.activationTime, title));
+        clearNode(data.msgContainer);
+        if (this._getUnresponsiveProfile(element.description.identifier)) {
+          const el = $("span", void 0, ...renderLabelWithIcons(` $(alert) Unresponsive`));
+          const extensionHostFreezTitle = nls.localize("unresponsive.title", "Extension has caused the extension host to freeze.");
+          data.elementDisposables.push(this._hoverService.setupManagedHover(getDefaultHoverDelegate("mouse"), el, extensionHostFreezTitle));
+          data.msgContainer.appendChild(el);
+        }
+        if (isNonEmptyArray(element.status.runtimeErrors)) {
+          const el = $("span", void 0, ...renderLabelWithIcons(`$(bug) ${nls.localize("errors", "{0} uncaught errors", element.status.runtimeErrors.length)}`));
+          data.msgContainer.appendChild(el);
+        }
+        if (element.status.messages && element.status.messages.length > 0) {
+          const el = $("span", void 0, ...renderLabelWithIcons(`$(alert) ${element.status.messages[0].message}`));
+          data.msgContainer.appendChild(el);
+        }
+        let extraLabel = null;
+        if (element.status.runningLocation && element.status.runningLocation.equals(new LocalWebWorkerRunningLocation(0))) {
+          extraLabel = `$(globe) web worker`;
+        } else if (element.description.extensionLocation.scheme === Schemas.vscodeRemote) {
+          const hostLabel = this._labelService.getHostLabel(Schemas.vscodeRemote, this._environmentService.remoteAuthority);
+          if (hostLabel) {
+            extraLabel = `$(remote) ${hostLabel}`;
+          } else {
+            extraLabel = `$(remote) ${element.description.extensionLocation.authority}`;
+          }
+        } else if (element.status.runningLocation && element.status.runningLocation.affinity > 0) {
+          extraLabel = element.status.runningLocation instanceof LocalWebWorkerRunningLocation ? `$(globe) web worker ${element.status.runningLocation.affinity + 1}` : `$(server-process) local process ${element.status.runningLocation.affinity + 1}`;
+        }
+        if (extraLabel) {
+          const el = $("span", void 0, ...renderLabelWithIcons(extraLabel));
+          data.msgContainer.appendChild(el);
+        }
+        const features = Registry.as(Extensions.ExtensionFeaturesRegistry).getExtensionFeatures();
+        for (const feature of features) {
+          const accessData = this._extensionFeaturesManagementService.getAccessData(element.description.identifier, feature.id);
+          if (accessData) {
+            const status = accessData?.current?.status;
+            if (status) {
+              data.msgContainer.appendChild($("span", void 0, `${feature.label}: `));
+              data.msgContainer.appendChild($("span", void 0, ...renderLabelWithIcons(`$(${status.severity === Severity.Error ? errorIcon.id : warningIcon.id}) ${status.message}`)));
+            }
+            if (accessData?.accessTimes.length > 0) {
+              const element2 = $("span", void 0, `${nls.localize("requests count", "{0} Usage: {1} Requests", feature.label, accessData.accessTimes.length)}${accessData.current ? nls.localize("session requests count", ", {0} Requests (Session)", accessData.current.accessTimes.length) : ""}`);
+              if (accessData.current) {
+                const title2 = nls.localize("requests count title", "Last request was {0}.", fromNow(accessData.current.lastAccessed, true, true));
+                data.elementDisposables.push(this._hoverService.setupManagedHover(getDefaultHoverDelegate("mouse"), element2, title2));
+              }
+              data.msgContainer.appendChild(element2);
+            }
+          }
+        }
+        if (element.profileInfo) {
+          data.profileTime.textContent = `Profile: ${(element.profileInfo.totalTime / 1e3).toFixed(2)}ms`;
+        } else {
+          data.profileTime.textContent = "";
+        }
+      }, "renderElement"),
+      disposeTemplate: /* @__PURE__ */ __name((data) => {
+        data.disposables = dispose(data.disposables);
+      }, "disposeTemplate")
+    };
+    this._list = this._instantiationService.createInstance(WorkbenchList, "RuntimeExtensions", parent, delegate, [renderer], {
+      multipleSelectionSupport: false,
+      setRowLineHeight: false,
+      horizontalScrolling: false,
+      overrideStyles: {
+        listBackground: editorBackground
+      },
+      accessibilityProvider: new class {
+        getWidgetAriaLabel() {
+          return nls.localize("runtimeExtensions", "Runtime Extensions");
+        }
+        getAriaLabel(element) {
+          return element.description.name;
+        }
+      }()
+    });
+    this._list.splice(0, this._list.length, this._elements || void 0);
+    this._register(this._list.onContextMenu((e) => {
+      if (!e.element) {
+        return;
+      }
+      const actions = [];
+      actions.push(new Action("runtimeExtensionsEditor.action.copyId", nls.localize("copy id", "Copy id ({0})", e.element.description.identifier.value), void 0, true, () => {
+        this._clipboardService.writeText(e.element.description.identifier.value);
+      }));
+      const reportExtensionIssueAction = this._createReportExtensionIssueAction(e.element);
+      if (reportExtensionIssueAction) {
+        actions.push(reportExtensionIssueAction);
+      }
+      actions.push(new Separator());
+      if (e.element.marketplaceInfo) {
+        actions.push(new Action("runtimeExtensionsEditor.action.disableWorkspace", nls.localize("disable workspace", "Disable (Workspace)"), void 0, true, () => this._extensionsWorkbenchService.setEnablement(
+          e.element.marketplaceInfo,
+          10
+          /* EnablementState.DisabledWorkspace */
+        )));
+        actions.push(new Action("runtimeExtensionsEditor.action.disable", nls.localize("disable", "Disable"), void 0, true, () => this._extensionsWorkbenchService.setEnablement(
+          e.element.marketplaceInfo,
+          9
+          /* EnablementState.DisabledGlobally */
+        )));
+      }
+      actions.push(new Separator());
+      const menuActions = this._menuService.getMenuActions(MenuId.ExtensionEditorContextMenu, this.contextKeyService);
+      actions.push(...getContextMenuActions(menuActions).secondary);
+      this._contextMenuService.showContextMenu({
+        getAnchor: /* @__PURE__ */ __name(() => e.anchor, "getAnchor"),
+        getActions: /* @__PURE__ */ __name(() => actions, "getActions")
+      });
+    }));
+  }
+  layout(dimension) {
+    this._list?.layout(dimension.height);
+  }
+};
+AbstractRuntimeExtensionsEditor = AbstractRuntimeExtensionsEditor_1 = __decorate([
+  __param(1, ITelemetryService),
+  __param(2, IThemeService),
+  __param(3, IContextKeyService),
+  __param(4, IExtensionsWorkbenchService),
+  __param(5, IExtensionService),
+  __param(6, INotificationService),
+  __param(7, IContextMenuService),
+  __param(8, IInstantiationService),
+  __param(9, IStorageService),
+  __param(10, ILabelService),
+  __param(11, IWorkbenchEnvironmentService),
+  __param(12, IClipboardService),
+  __param(13, IExtensionFeaturesManagementService),
+  __param(14, IHoverService),
+  __param(15, IMenuService)
+], AbstractRuntimeExtensionsEditor);
+class ShowRuntimeExtensionsAction extends Action2 {
+  static {
+    __name(this, "ShowRuntimeExtensionsAction");
+  }
+  constructor() {
+    super({
+      id: "workbench.action.showRuntimeExtensions",
+      title: nls.localize2("showRuntimeExtensions", "Show Running Extensions"),
+      category: Categories.Developer,
+      f1: true,
+      menu: {
+        id: MenuId.ViewContainerTitle,
+        when: ContextKeyExpr.equals("viewContainer", "workbench.view.extensions"),
+        group: "2_enablement",
+        order: 3
+      }
+    });
+  }
+  async run(accessor) {
+    await accessor.get(IEditorService).openEditor(RuntimeExtensionsInput.instance, { pinned: true });
+  }
+}
+export {
+  AbstractRuntimeExtensionsEditor,
+  ShowRuntimeExtensionsAction
+};
+//# sourceMappingURL=abstractRuntimeExtensionsEditor.js.map

@@ -1,1 +1,408 @@
-import{$9C as f}from"../encodedTokenAttributes.js";import{$bD as d}from"../core/ranges/offsetRange.js";import{$kb as T}from"../../../base/common/errors.js";class h{static createEmpty(t,e){const n=h.defaultTokenMetadata,s=new Uint32Array(2);return s[0]=t.length,s[1]=n,new h(s,t,e)}static createFromTextAndMetadata(t,e){let n=0,s="";const a=new Array;for(const{text:e,metadata:r}of t)a.push(n+e.length,r),n+=e.length,s+=e;return new h(new Uint32Array(a),s,e)}static convertToEndOffset(t,e){const n=(t.length>>>1)-1;for(let e=0;e<n;e++)t[e<<1]=t[e+1<<1];t[n<<1]=e}static findIndexInTokensArray(t,e){if(t.length<=2)return 0;let n=0,s=(t.length>>>1)-1;for(;n<s;){const a=n+Math.floor((s-n)/2),r=t[a<<1];if(r===e)return a+1;r<e?n=a+1:r>e&&(s=a)}return n}static{this.defaultTokenMetadata=33587200}constructor(t,e,n){this._lineTokensBrand=void 0,(t.length>1?t[t.length-2]:0)!==e.length&&T(new Error("Token length and text length do not match!")),this.a=t,this.b=this.a.length>>>1,this.c=e,this.languageIdCodec=n}getTextLength(){return this.c.length}equals(t){return t instanceof h&&this.slicedEquals(t,0,this.b)}slicedEquals(t,e,n){if(this.c!==t.c||this.b!==t.b)return!1;const s=e<<1,a=s+(n<<1);for(let e=s;e<a;e++)if(this.a[e]!==t.a[e])return!1;return!0}getLineContent(){return this.c}getCount(){return this.b}getStartOffset(t){return t>0?this.a[t-1<<1]:0}getMetadata(t){return this.a[1+(t<<1)]}getLanguageId(t){const e=this.a[1+(t<<1)],n=f.getLanguageId(e);return this.languageIdCodec.decodeLanguageId(n)}getStandardTokenType(t){const e=this.a[1+(t<<1)];return f.getTokenType(e)}getForeground(t){const e=this.a[1+(t<<1)];return f.getForeground(e)}getClassName(t){const e=this.a[1+(t<<1)];return f.getClassNameFromMetadata(e)}getInlineStyle(t,e){const n=this.a[1+(t<<1)];return f.getInlineStyleFromMetadata(n,e)}getPresentation(t){const e=this.a[1+(t<<1)];return f.getPresentationFromMetadata(e)}getEndOffset(t){return this.a[t<<1]}findTokenIndexAtOffset(t){return h.findIndexInTokensArray(this.a,t)}inflate(){return this}sliceAndInflate(t,e,n){return new k(this,t,e,n)}sliceZeroCopy(t){return this.sliceAndInflate(t.start,t.endExclusive,0)}withInserted(t){if(0===t.length)return this;let e=0,n=0,s="";const a=new Array;let r=0;for(;;){const i=e<this.b?this.a[e<<1]:-1,o=n<t.length?t[n]:null;if(-1!==i&&(null===o||i<=o.offset)){s+=this.c.substring(r,i);const t=this.a[1+(e<<1)];a.push(s.length,t),e++,r=i}else{if(!o)break;if(o.offset>r){s+=this.c.substring(r,o.offset);const t=this.a[1+(e<<1)];a.push(s.length,t),r=o.offset}s+=o.text,a.push(s.length,o.tokenMetadata),n++}}return new h(new Uint32Array(a),s,this.languageIdCodec)}getTokensInRange(t){const e=new x,n=this.findTokenIndexAtOffset(t.start),s=this.findTokenIndexAtOffset(t.endExclusive);for(let a=n;a<=s;a++){const n=new d(this.getStartOffset(a),this.getEndOffset(a)).intersectionLength(t);n>0&&e.add(n,this.getMetadata(a))}return e.build()}getTokenText(t){const e=this.getStartOffset(t),n=this.getEndOffset(t);return this.c.substring(e,n)}forEach(t){const e=this.getCount();for(let n=0;n<e;n++)t(n)}toString(){let t="";return this.forEach((e=>{t+=`[${this.getTokenText(e)}]{${this.getClassName(e)}}`})),t}}class k{constructor(t,e,n,s){this.a=t,this.b=e,this.c=n,this.d=s,this.e=t.findTokenIndexAtOffset(e),this.languageIdCodec=t.languageIdCodec,this.f=0;for(let e=this.e,s=t.getCount();e<s&&!(t.getStartOffset(e)>=n);e++)this.f++}getMetadata(t){return this.a.getMetadata(this.e+t)}getLanguageId(t){return this.a.getLanguageId(this.e+t)}getLineContent(){return this.a.getLineContent().substring(this.b,this.c)}equals(t){return t instanceof k&&(this.b===t.b&&this.c===t.c&&this.d===t.d&&this.a.slicedEquals(t.a,this.e,this.f))}getCount(){return this.f}getStandardTokenType(t){return this.a.getStandardTokenType(this.e+t)}getForeground(t){return this.a.getForeground(this.e+t)}getEndOffset(t){const e=this.a.getEndOffset(this.e+t);return Math.min(this.c,e)-this.b+this.d}getClassName(t){return this.a.getClassName(this.e+t)}getInlineStyle(t,e){return this.a.getInlineStyle(this.e+t,e)}getPresentation(t){return this.a.getPresentation(this.e+t)}findTokenIndexAtOffset(t){return this.a.findTokenIndexAtOffset(t+this.b-this.d)-this.e}getTokenText(t){const e=this.e+t,n=this.a.getStartOffset(e),s=this.a.getEndOffset(e);let a=this.a.getTokenText(e);return n<this.b&&(a=a.substring(this.b-n)),s>this.c&&(a=a.substring(0,a.length-(s-this.c))),a}forEach(t){for(let e=0;e<this.getCount();e++)t(e)}}function O(t,e){const n=e.lineNumber;if(!t.tokenization.isCheapToTokenize(n))return;t.tokenization.forceTokenization(n);const s=t.tokenization.getLineTokens(n),a=s.findTokenIndexAtOffset(e.column-1);return s.getStandardTokenType(a)}class g{static fromLineTokens(t){const e=[];for(let n=0;n<t.getCount();n++)e.push(new c(t.getEndOffset(n)-t.getStartOffset(n),t.getMetadata(n)));return g.create(e)}static create(t){return new g(t)}constructor(t){this.a=t}toLineTokens(t,e){return h.createFromTextAndMetadata(this.map(((e,n)=>({text:e.substring(t),metadata:n.metadata}))),e)}forEach(t){let e=0;for(const n of this.a){t(new d(e,e+n.length),n),e+=n.length}}map(t){const e=[];let n=0;for(const s of this.a){const a=new d(n,n+s.length);e.push(t(a,s)),n+=s.length}return e}slice(t){const e=[];let n=0;for(const s of this.a){const a=n,r=a+s.length;if(r>t.start){if(a>=t.endExclusive)break;const n=Math.max(0,t.start-a),i=Math.max(0,r-t.endExclusive);e.push(new c(s.length-n-i,s.metadata))}n+=s.length}return g.create(e)}append(t){const e=this.a.concat(t.a);return g.create(e)}}class c{constructor(t,e){this.length=t,this.metadata=e}}class x{constructor(){this.a=[]}add(t,e){this.a.push(new c(t,e))}build(){return g.create(this.a)}}export{h as $dD,O as $eD,g as $fD,c as $gD,x as $hD};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { TokenMetadata } from "../encodedTokenAttributes.js";
+import { OffsetRange } from "../core/ranges/offsetRange.js";
+import { onUnexpectedError } from "../../../base/common/errors.js";
+class LineTokens {
+  static {
+    __name(this, "LineTokens");
+  }
+  static createEmpty(lineContent, decoder) {
+    const defaultMetadata = LineTokens.defaultTokenMetadata;
+    const tokens = new Uint32Array(2);
+    tokens[0] = lineContent.length;
+    tokens[1] = defaultMetadata;
+    return new LineTokens(tokens, lineContent, decoder);
+  }
+  static createFromTextAndMetadata(data, decoder) {
+    let offset = 0;
+    let fullText = "";
+    const tokens = new Array();
+    for (const { text, metadata } of data) {
+      tokens.push(offset + text.length, metadata);
+      offset += text.length;
+      fullText += text;
+    }
+    return new LineTokens(new Uint32Array(tokens), fullText, decoder);
+  }
+  static convertToEndOffset(tokens, lineTextLength) {
+    const tokenCount = tokens.length >>> 1;
+    const lastTokenIndex = tokenCount - 1;
+    for (let tokenIndex = 0; tokenIndex < lastTokenIndex; tokenIndex++) {
+      tokens[tokenIndex << 1] = tokens[tokenIndex + 1 << 1];
+    }
+    tokens[lastTokenIndex << 1] = lineTextLength;
+  }
+  static findIndexInTokensArray(tokens, desiredIndex) {
+    if (tokens.length <= 2) {
+      return 0;
+    }
+    let low = 0;
+    let high = (tokens.length >>> 1) - 1;
+    while (low < high) {
+      const mid = low + Math.floor((high - low) / 2);
+      const endOffset = tokens[mid << 1];
+      if (endOffset === desiredIndex) {
+        return mid + 1;
+      } else if (endOffset < desiredIndex) {
+        low = mid + 1;
+      } else if (endOffset > desiredIndex) {
+        high = mid;
+      }
+    }
+    return low;
+  }
+  static {
+    this.defaultTokenMetadata = (0 << 11 | 1 << 15 | 2 << 24) >>> 0;
+  }
+  constructor(tokens, text, decoder) {
+    this._lineTokensBrand = void 0;
+    const tokensLength = tokens.length > 1 ? tokens[tokens.length - 2] : 0;
+    if (tokensLength !== text.length) {
+      onUnexpectedError(new Error("Token length and text length do not match!"));
+    }
+    this._tokens = tokens;
+    this._tokensCount = this._tokens.length >>> 1;
+    this._text = text;
+    this.languageIdCodec = decoder;
+  }
+  getTextLength() {
+    return this._text.length;
+  }
+  equals(other) {
+    if (other instanceof LineTokens) {
+      return this.slicedEquals(other, 0, this._tokensCount);
+    }
+    return false;
+  }
+  slicedEquals(other, sliceFromTokenIndex, sliceTokenCount) {
+    if (this._text !== other._text) {
+      return false;
+    }
+    if (this._tokensCount !== other._tokensCount) {
+      return false;
+    }
+    const from = sliceFromTokenIndex << 1;
+    const to = from + (sliceTokenCount << 1);
+    for (let i = from; i < to; i++) {
+      if (this._tokens[i] !== other._tokens[i]) {
+        return false;
+      }
+    }
+    return true;
+  }
+  getLineContent() {
+    return this._text;
+  }
+  getCount() {
+    return this._tokensCount;
+  }
+  getStartOffset(tokenIndex) {
+    if (tokenIndex > 0) {
+      return this._tokens[tokenIndex - 1 << 1];
+    }
+    return 0;
+  }
+  getMetadata(tokenIndex) {
+    const metadata = this._tokens[(tokenIndex << 1) + 1];
+    return metadata;
+  }
+  getLanguageId(tokenIndex) {
+    const metadata = this._tokens[(tokenIndex << 1) + 1];
+    const languageId = TokenMetadata.getLanguageId(metadata);
+    return this.languageIdCodec.decodeLanguageId(languageId);
+  }
+  getStandardTokenType(tokenIndex) {
+    const metadata = this._tokens[(tokenIndex << 1) + 1];
+    return TokenMetadata.getTokenType(metadata);
+  }
+  getForeground(tokenIndex) {
+    const metadata = this._tokens[(tokenIndex << 1) + 1];
+    return TokenMetadata.getForeground(metadata);
+  }
+  getClassName(tokenIndex) {
+    const metadata = this._tokens[(tokenIndex << 1) + 1];
+    return TokenMetadata.getClassNameFromMetadata(metadata);
+  }
+  getInlineStyle(tokenIndex, colorMap) {
+    const metadata = this._tokens[(tokenIndex << 1) + 1];
+    return TokenMetadata.getInlineStyleFromMetadata(metadata, colorMap);
+  }
+  getPresentation(tokenIndex) {
+    const metadata = this._tokens[(tokenIndex << 1) + 1];
+    return TokenMetadata.getPresentationFromMetadata(metadata);
+  }
+  getEndOffset(tokenIndex) {
+    return this._tokens[tokenIndex << 1];
+  }
+  /**
+   * Find the token containing offset `offset`.
+   * @param offset The search offset
+   * @return The index of the token containing the offset.
+   */
+  findTokenIndexAtOffset(offset) {
+    return LineTokens.findIndexInTokensArray(this._tokens, offset);
+  }
+  inflate() {
+    return this;
+  }
+  sliceAndInflate(startOffset, endOffset, deltaOffset) {
+    return new SliceLineTokens(this, startOffset, endOffset, deltaOffset);
+  }
+  sliceZeroCopy(range) {
+    return this.sliceAndInflate(range.start, range.endExclusive, 0);
+  }
+  /**
+   * @pure
+   * @param insertTokens Must be sorted by offset.
+  */
+  withInserted(insertTokens) {
+    if (insertTokens.length === 0) {
+      return this;
+    }
+    let nextOriginalTokenIdx = 0;
+    let nextInsertTokenIdx = 0;
+    let text = "";
+    const newTokens = new Array();
+    let originalEndOffset = 0;
+    while (true) {
+      const nextOriginalTokenEndOffset = nextOriginalTokenIdx < this._tokensCount ? this._tokens[nextOriginalTokenIdx << 1] : -1;
+      const nextInsertToken = nextInsertTokenIdx < insertTokens.length ? insertTokens[nextInsertTokenIdx] : null;
+      if (nextOriginalTokenEndOffset !== -1 && (nextInsertToken === null || nextOriginalTokenEndOffset <= nextInsertToken.offset)) {
+        text += this._text.substring(originalEndOffset, nextOriginalTokenEndOffset);
+        const metadata = this._tokens[(nextOriginalTokenIdx << 1) + 1];
+        newTokens.push(text.length, metadata);
+        nextOriginalTokenIdx++;
+        originalEndOffset = nextOriginalTokenEndOffset;
+      } else if (nextInsertToken) {
+        if (nextInsertToken.offset > originalEndOffset) {
+          text += this._text.substring(originalEndOffset, nextInsertToken.offset);
+          const metadata = this._tokens[(nextOriginalTokenIdx << 1) + 1];
+          newTokens.push(text.length, metadata);
+          originalEndOffset = nextInsertToken.offset;
+        }
+        text += nextInsertToken.text;
+        newTokens.push(text.length, nextInsertToken.tokenMetadata);
+        nextInsertTokenIdx++;
+      } else {
+        break;
+      }
+    }
+    return new LineTokens(new Uint32Array(newTokens), text, this.languageIdCodec);
+  }
+  getTokensInRange(range) {
+    const builder = new TokenArrayBuilder();
+    const startTokenIndex = this.findTokenIndexAtOffset(range.start);
+    const endTokenIndex = this.findTokenIndexAtOffset(range.endExclusive);
+    for (let tokenIndex = startTokenIndex; tokenIndex <= endTokenIndex; tokenIndex++) {
+      const tokenRange = new OffsetRange(this.getStartOffset(tokenIndex), this.getEndOffset(tokenIndex));
+      const length = tokenRange.intersectionLength(range);
+      if (length > 0) {
+        builder.add(length, this.getMetadata(tokenIndex));
+      }
+    }
+    return builder.build();
+  }
+  getTokenText(tokenIndex) {
+    const startOffset = this.getStartOffset(tokenIndex);
+    const endOffset = this.getEndOffset(tokenIndex);
+    const text = this._text.substring(startOffset, endOffset);
+    return text;
+  }
+  forEach(callback) {
+    const tokenCount = this.getCount();
+    for (let tokenIndex = 0; tokenIndex < tokenCount; tokenIndex++) {
+      callback(tokenIndex);
+    }
+  }
+  toString() {
+    let result = "";
+    this.forEach((i) => {
+      result += `[${this.getTokenText(i)}]{${this.getClassName(i)}}`;
+    });
+    return result;
+  }
+}
+class SliceLineTokens {
+  static {
+    __name(this, "SliceLineTokens");
+  }
+  constructor(source, startOffset, endOffset, deltaOffset) {
+    this._source = source;
+    this._startOffset = startOffset;
+    this._endOffset = endOffset;
+    this._deltaOffset = deltaOffset;
+    this._firstTokenIndex = source.findTokenIndexAtOffset(startOffset);
+    this.languageIdCodec = source.languageIdCodec;
+    this._tokensCount = 0;
+    for (let i = this._firstTokenIndex, len = source.getCount(); i < len; i++) {
+      const tokenStartOffset = source.getStartOffset(i);
+      if (tokenStartOffset >= endOffset) {
+        break;
+      }
+      this._tokensCount++;
+    }
+  }
+  getMetadata(tokenIndex) {
+    return this._source.getMetadata(this._firstTokenIndex + tokenIndex);
+  }
+  getLanguageId(tokenIndex) {
+    return this._source.getLanguageId(this._firstTokenIndex + tokenIndex);
+  }
+  getLineContent() {
+    return this._source.getLineContent().substring(this._startOffset, this._endOffset);
+  }
+  equals(other) {
+    if (other instanceof SliceLineTokens) {
+      return this._startOffset === other._startOffset && this._endOffset === other._endOffset && this._deltaOffset === other._deltaOffset && this._source.slicedEquals(other._source, this._firstTokenIndex, this._tokensCount);
+    }
+    return false;
+  }
+  getCount() {
+    return this._tokensCount;
+  }
+  getStandardTokenType(tokenIndex) {
+    return this._source.getStandardTokenType(this._firstTokenIndex + tokenIndex);
+  }
+  getForeground(tokenIndex) {
+    return this._source.getForeground(this._firstTokenIndex + tokenIndex);
+  }
+  getEndOffset(tokenIndex) {
+    const tokenEndOffset = this._source.getEndOffset(this._firstTokenIndex + tokenIndex);
+    return Math.min(this._endOffset, tokenEndOffset) - this._startOffset + this._deltaOffset;
+  }
+  getClassName(tokenIndex) {
+    return this._source.getClassName(this._firstTokenIndex + tokenIndex);
+  }
+  getInlineStyle(tokenIndex, colorMap) {
+    return this._source.getInlineStyle(this._firstTokenIndex + tokenIndex, colorMap);
+  }
+  getPresentation(tokenIndex) {
+    return this._source.getPresentation(this._firstTokenIndex + tokenIndex);
+  }
+  findTokenIndexAtOffset(offset) {
+    return this._source.findTokenIndexAtOffset(offset + this._startOffset - this._deltaOffset) - this._firstTokenIndex;
+  }
+  getTokenText(tokenIndex) {
+    const adjustedTokenIndex = this._firstTokenIndex + tokenIndex;
+    const tokenStartOffset = this._source.getStartOffset(adjustedTokenIndex);
+    const tokenEndOffset = this._source.getEndOffset(adjustedTokenIndex);
+    let text = this._source.getTokenText(adjustedTokenIndex);
+    if (tokenStartOffset < this._startOffset) {
+      text = text.substring(this._startOffset - tokenStartOffset);
+    }
+    if (tokenEndOffset > this._endOffset) {
+      text = text.substring(0, text.length - (tokenEndOffset - this._endOffset));
+    }
+    return text;
+  }
+  forEach(callback) {
+    for (let tokenIndex = 0; tokenIndex < this.getCount(); tokenIndex++) {
+      callback(tokenIndex);
+    }
+  }
+}
+function getStandardTokenTypeAtPosition(model, position) {
+  const lineNumber = position.lineNumber;
+  if (!model.tokenization.isCheapToTokenize(lineNumber)) {
+    return void 0;
+  }
+  model.tokenization.forceTokenization(lineNumber);
+  const lineTokens = model.tokenization.getLineTokens(lineNumber);
+  const tokenIndex = lineTokens.findTokenIndexAtOffset(position.column - 1);
+  const tokenType = lineTokens.getStandardTokenType(tokenIndex);
+  return tokenType;
+}
+__name(getStandardTokenTypeAtPosition, "getStandardTokenTypeAtPosition");
+class TokenArray {
+  static {
+    __name(this, "TokenArray");
+  }
+  static fromLineTokens(lineTokens) {
+    const tokenInfo = [];
+    for (let i = 0; i < lineTokens.getCount(); i++) {
+      tokenInfo.push(new TokenInfo(lineTokens.getEndOffset(i) - lineTokens.getStartOffset(i), lineTokens.getMetadata(i)));
+    }
+    return TokenArray.create(tokenInfo);
+  }
+  static create(tokenInfo) {
+    return new TokenArray(tokenInfo);
+  }
+  constructor(_tokenInfo) {
+    this._tokenInfo = _tokenInfo;
+  }
+  toLineTokens(lineContent, decoder) {
+    return LineTokens.createFromTextAndMetadata(this.map((r, t) => ({ text: r.substring(lineContent), metadata: t.metadata })), decoder);
+  }
+  forEach(cb) {
+    let lengthSum = 0;
+    for (const tokenInfo of this._tokenInfo) {
+      const range = new OffsetRange(lengthSum, lengthSum + tokenInfo.length);
+      cb(range, tokenInfo);
+      lengthSum += tokenInfo.length;
+    }
+  }
+  map(cb) {
+    const result = [];
+    let lengthSum = 0;
+    for (const tokenInfo of this._tokenInfo) {
+      const range = new OffsetRange(lengthSum, lengthSum + tokenInfo.length);
+      result.push(cb(range, tokenInfo));
+      lengthSum += tokenInfo.length;
+    }
+    return result;
+  }
+  slice(range) {
+    const result = [];
+    let lengthSum = 0;
+    for (const tokenInfo of this._tokenInfo) {
+      const tokenStart = lengthSum;
+      const tokenEndEx = tokenStart + tokenInfo.length;
+      if (tokenEndEx > range.start) {
+        if (tokenStart >= range.endExclusive) {
+          break;
+        }
+        const deltaBefore = Math.max(0, range.start - tokenStart);
+        const deltaAfter = Math.max(0, tokenEndEx - range.endExclusive);
+        result.push(new TokenInfo(tokenInfo.length - deltaBefore - deltaAfter, tokenInfo.metadata));
+      }
+      lengthSum += tokenInfo.length;
+    }
+    return TokenArray.create(result);
+  }
+  append(other) {
+    const result = this._tokenInfo.concat(other._tokenInfo);
+    return TokenArray.create(result);
+  }
+}
+class TokenInfo {
+  static {
+    __name(this, "TokenInfo");
+  }
+  constructor(length, metadata) {
+    this.length = length;
+    this.metadata = metadata;
+  }
+}
+class TokenArrayBuilder {
+  static {
+    __name(this, "TokenArrayBuilder");
+  }
+  constructor() {
+    this._tokens = [];
+  }
+  add(length, metadata) {
+    this._tokens.push(new TokenInfo(length, metadata));
+  }
+  build() {
+    return TokenArray.create(this._tokens);
+  }
+}
+export {
+  LineTokens,
+  TokenArray,
+  TokenArrayBuilder,
+  TokenInfo,
+  getStandardTokenTypeAtPosition
+};
+//# sourceMappingURL=lineTokens.js.map

@@ -1,2 +1,150 @@
-import{$5_ as w}from"../../../../editor/browser/editorBrowser.js";import{$RK as u,$SK as B}from"../../../services/lifecycle/common/lifecycle.js";import{$Wx as l}from"../../../../platform/update/common/update.js";import*as P from"../../files/common/files.js";import{$oI as $}from"../../../services/editor/common/editorService.js";import{$RM as d}from"../../../../platform/workspace/common/workspaceTrust.js";import{$Cxb as b}from"../../../services/panecomposite/browser/panecomposite.js";import{$3n as R}from"../../../../platform/log/common/log.js";import{$nn as y}from"../../../../platform/product/common/productService.js";import{$Po as g}from"../../../../platform/telemetry/common/telemetry.js";import{$2$ as C}from"../../../services/environment/browser/environmentService.js";import{$VYb as E}from"../../../services/timer/browser/timerService.js";import{$4 as S}from"../../../../base/common/path.js";import{$$m as j}from"../../../../base/common/hash.js";var p=function(n,t,e,r){var s=arguments.length,o=s<3?t:r===null?r=Object.getOwnPropertyDescriptor(t,e):r,a;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")o=Reflect.decorate(n,t,e,r);else for(var c=n.length-1;c>=0;c--)(a=n[c])&&(o=(s<3?a(o):s>3?a(t,e,o):a(t,e))||o);return s>3&&o&&Object.defineProperty(t,e,o),o},i=function(n,t){return function(e,r){t(e,r,n)}};let f=class{constructor(t,e,r,s,o){this.a=t,this.b=e,this.c=r,this.d=s,this.e=o}async f(){if(this.c.startupKind!==1)return B(this.c.startupKind);if(!this.e.isWorkspaceTrusted())return"Workspace not trusted";const t=this.b.getActivePaneComposite(0);if(!t||t.getId()!==P.$iFb)return"Explorer viewlet not visible";const e=this.a.visibleEditorPanes;if(e.length!==1)return`Expected text editor count : 1, Actual : ${e.length}`;if(!w(e[0].getControl()))return"Active editor is not a text editor";const r=this.b.getActivePaneComposite(1);if(r)return`Current active panel : ${this.b.getPaneComposite(r.getId(),1)?.name}`;if(await this.d.isLatestVersion()===!1)return"Not on latest version, updates available"}};f=p([i(0,$),i(1,b),i(2,u),i(3,l),i(4,d)],f);let m=class extends f{constructor(t,e,r,s,o,a,c,v,_,x){super(t,e,r,s,o),this.g=a,this.h=c,this.i=v,this.j=_,this.k=x,this.l()}async l(){if(!this.i.profDurationMarkers)return;await this.g.whenReady();const t=await this.f(),e=await this.g.perfBaseline,[r,s]=this.i.profDurationMarkers,o=`${this.g.getDuration(r,s)}	${this.k.nameShort}	${(this.k.commit||"").slice(0,10)||"0000000000"}	${this.j.sessionId}	${t===void 0?"standard_start":"NO_standard_start : "+t}	${String(e).padStart(4,"0")}ms
-`;this.h.info(`[prof-timers] ${o}`)}};m=p([i(0,$),i(1,b),i(2,u),i(3,l),i(4,d),i(5,E),i(6,R),i(7,C),i(8,g),i(9,y)],m);let h=class{constructor(t){for(const e of performance.getEntriesByType("resource"))try{const r=new URL(e.name),s=S.basename(r.pathname);t.publicLog2("startup.resource.perf",{hosthash:`H${j(r.host).toString(16)}`,name:s,duration:e.duration})}catch{}}};h=p([i(0,g)],h);export{f as $FBc,m as $GBc,h as $HBc};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { isCodeEditor } from "../../../../editor/browser/editorBrowser.js";
+import { ILifecycleService, StartupKindToString } from "../../../services/lifecycle/common/lifecycle.js";
+import { IUpdateService } from "../../../../platform/update/common/update.js";
+import * as files from "../../files/common/files.js";
+import { IEditorService } from "../../../services/editor/common/editorService.js";
+import { IWorkspaceTrustManagementService } from "../../../../platform/workspace/common/workspaceTrust.js";
+import { IPaneCompositePartService } from "../../../services/panecomposite/browser/panecomposite.js";
+import { ILogService } from "../../../../platform/log/common/log.js";
+import { IProductService } from "../../../../platform/product/common/productService.js";
+import { ITelemetryService } from "../../../../platform/telemetry/common/telemetry.js";
+import { IBrowserWorkbenchEnvironmentService } from "../../../services/environment/browser/environmentService.js";
+import { ITimerService } from "../../../services/timer/browser/timerService.js";
+import { posix } from "../../../../base/common/path.js";
+import { hash } from "../../../../base/common/hash.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+let StartupTimings = class StartupTimings2 {
+  static {
+    __name(this, "StartupTimings");
+  }
+  constructor(_editorService, _paneCompositeService, _lifecycleService, _updateService, _workspaceTrustService) {
+    this._editorService = _editorService;
+    this._paneCompositeService = _paneCompositeService;
+    this._lifecycleService = _lifecycleService;
+    this._updateService = _updateService;
+    this._workspaceTrustService = _workspaceTrustService;
+  }
+  async _isStandardStartup() {
+    if (this._lifecycleService.startupKind !== 1) {
+      return StartupKindToString(this._lifecycleService.startupKind);
+    }
+    if (!this._workspaceTrustService.isWorkspaceTrusted()) {
+      return "Workspace not trusted";
+    }
+    const activeViewlet = this._paneCompositeService.getActivePaneComposite(
+      0
+      /* ViewContainerLocation.Sidebar */
+    );
+    if (!activeViewlet || activeViewlet.getId() !== files.VIEWLET_ID) {
+      return "Explorer viewlet not visible";
+    }
+    const visibleEditorPanes = this._editorService.visibleEditorPanes;
+    if (visibleEditorPanes.length !== 1) {
+      return `Expected text editor count : 1, Actual : ${visibleEditorPanes.length}`;
+    }
+    if (!isCodeEditor(visibleEditorPanes[0].getControl())) {
+      return "Active editor is not a text editor";
+    }
+    const activePanel = this._paneCompositeService.getActivePaneComposite(
+      1
+      /* ViewContainerLocation.Panel */
+    );
+    if (activePanel) {
+      return `Current active panel : ${this._paneCompositeService.getPaneComposite(
+        activePanel.getId(),
+        1
+        /* ViewContainerLocation.Panel */
+      )?.name}`;
+    }
+    const isLatestVersion = await this._updateService.isLatestVersion();
+    if (isLatestVersion === false) {
+      return "Not on latest version, updates available";
+    }
+    return void 0;
+  }
+};
+StartupTimings = __decorate([
+  __param(0, IEditorService),
+  __param(1, IPaneCompositePartService),
+  __param(2, ILifecycleService),
+  __param(3, IUpdateService),
+  __param(4, IWorkspaceTrustManagementService)
+], StartupTimings);
+let BrowserStartupTimings = class BrowserStartupTimings2 extends StartupTimings {
+  static {
+    __name(this, "BrowserStartupTimings");
+  }
+  constructor(editorService, paneCompositeService, lifecycleService, updateService, workspaceTrustService, timerService, logService, environmentService, telemetryService, productService) {
+    super(editorService, paneCompositeService, lifecycleService, updateService, workspaceTrustService);
+    this.timerService = timerService;
+    this.logService = logService;
+    this.environmentService = environmentService;
+    this.telemetryService = telemetryService;
+    this.productService = productService;
+    this.logPerfMarks();
+  }
+  async logPerfMarks() {
+    if (!this.environmentService.profDurationMarkers) {
+      return;
+    }
+    await this.timerService.whenReady();
+    const standardStartupError = await this._isStandardStartup();
+    const perfBaseline = await this.timerService.perfBaseline;
+    const [from, to] = this.environmentService.profDurationMarkers;
+    const content = `${this.timerService.getDuration(from, to)}	${this.productService.nameShort}	${(this.productService.commit || "").slice(0, 10) || "0000000000"}	${this.telemetryService.sessionId}	${standardStartupError === void 0 ? "standard_start" : "NO_standard_start : " + standardStartupError}	${String(perfBaseline).padStart(4, "0")}ms
+`;
+    this.logService.info(`[prof-timers] ${content}`);
+  }
+};
+BrowserStartupTimings = __decorate([
+  __param(0, IEditorService),
+  __param(1, IPaneCompositePartService),
+  __param(2, ILifecycleService),
+  __param(3, IUpdateService),
+  __param(4, IWorkspaceTrustManagementService),
+  __param(5, ITimerService),
+  __param(6, ILogService),
+  __param(7, IBrowserWorkbenchEnvironmentService),
+  __param(8, ITelemetryService),
+  __param(9, IProductService)
+], BrowserStartupTimings);
+let BrowserResourcePerformanceMarks = class BrowserResourcePerformanceMarks2 {
+  static {
+    __name(this, "BrowserResourcePerformanceMarks");
+  }
+  constructor(telemetryService) {
+    for (const item of performance.getEntriesByType("resource")) {
+      try {
+        const url = new URL(item.name);
+        const name = posix.basename(url.pathname);
+        telemetryService.publicLog2("startup.resource.perf", {
+          hosthash: `H${hash(url.host).toString(16)}`,
+          name,
+          duration: item.duration
+        });
+      } catch {
+      }
+    }
+  }
+};
+BrowserResourcePerformanceMarks = __decorate([
+  __param(0, ITelemetryService)
+], BrowserResourcePerformanceMarks);
+export {
+  BrowserResourcePerformanceMarks,
+  BrowserStartupTimings,
+  StartupTimings
+};
+//# sourceMappingURL=startupTimings.js.map

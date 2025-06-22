@@ -1,1 +1,121 @@
-import*as n from"../../../../../../base/browser/dom.js";import{$Mj as u}from"../../../../../../base/common/codicons.js";import{ThemeIcon as c}from"../../../../../../base/common/themables.js";import{localize as f}from"../../../../../../nls.js";import{$AUb as I}from"../../controller/foldingController.js";import{CellEditState as y}from"../../notebookBrowser.js";import{$DSb as E}from"../cellPart.js";import{$5Tb as p}from"../../notebookIcons.js";import{$DK as w}from"../../../common/notebookExecutionStateService.js";import{CellKind as R,NotebookCellExecutionState as m}from"../../../common/notebookCommon.js";import{$wd as g}from"../../../../../../base/common/lifecycle.js";var $=function(r,t,e,i){var s=arguments.length,o=s<3?t:i===null?i=Object.getOwnPropertyDescriptor(t,e):i,a;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")o=Reflect.decorate(r,t,e,i);else for(var l=r.length-1;l>=0;l--)(a=r[l])&&(o=(s<3?a(o):s>3?a(t,e,o):a(t,e))||o);return s>3&&o&&Object.defineProperty(t,e,o),o},x=function(r,t){return function(e,i){t(e,i,r)}};let C=class extends E{constructor(t,e,i){super(),this.g=t,this.h=e,this.j=i,this.a=this.B(new g),this.b=this.B(new g)}didRenderCell(t){this.m(t)}m(t){if(!this.g.hasModel()){this.b.clear(),this.a.clear();return}if(t.isInputCollapsed||t.getEditState()===y.Editing)this.b.clear(),this.a.clear(),n.$T6(this.h);else if(t.foldingState===2){const e=this.g.getViewModel().getCellIndex(t),i=this.g.getViewModel().getFoldedLength(e),s=this.s({start:e,end:e+i+1});s?n.$O6(this.h,s,this.n(i),this.r(t)):n.$O6(this.h,this.n(i),this.r(t)),n.$S6(this.h);const o=t.layoutInfo.previewHeight;this.h.style.top=`${o}px`}else this.b.clear(),this.a.clear(),n.$T6(this.h)}n(t){const e=t===1?f(9615,null):f(9616,null,t);return n.$("span.notebook-folded-hint-label",void 0,e)}r(t){const e=n.$("span.cell-expand-part-button");return e.classList.add(...c.asClassNameArray(u.more)),this.B(n.$J5(e,n.$F6.CLICK,()=>{const i=this.g.getContribution(I.id),s=this.g.getCellIndex(t);typeof s=="number"&&i.setFoldingStateDown(s,1,1)})),e}s(t){const e=n.$("span.folded-cell-run-section-button"),i=this.g.getCellsInRange(t);if(!i.some(l=>l.cellKind===R.Code))return;const a=i.some(l=>{const h=this.j.getCellExecution(l.uri);return h&&h.state===m.Executing})?c.modify(p,"spin"):u.play;return e.classList.add(...c.asClassNameArray(a)),this.a.value=n.$J5(e,n.$F6.CLICK,()=>{this.g.executeNotebookCells(i)}),this.b.value=this.j.onDidChangeExecution(()=>{const h=i.some(b=>{const d=this.j.getCellExecution(b.uri);return d&&d.state===m.Executing})?c.modify(p,"spin"):u.play;e.className="",e.classList.add("folded-cell-run-section-button",...c.asClassNameArray(h))}),e}updateInternalLayoutNow(t){this.m(t)}};C=$([x(2,w)],C);export{C as $BUb};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import * as DOM from "../../../../../../base/browser/dom.js";
+import { Codicon } from "../../../../../../base/common/codicons.js";
+import { ThemeIcon } from "../../../../../../base/common/themables.js";
+import { localize } from "../../../../../../nls.js";
+import { FoldingController } from "../../controller/foldingController.js";
+import { CellEditState } from "../../notebookBrowser.js";
+import { CellContentPart } from "../cellPart.js";
+import { executingStateIcon } from "../../notebookIcons.js";
+import { INotebookExecutionStateService } from "../../../common/notebookExecutionStateService.js";
+import { CellKind, NotebookCellExecutionState } from "../../../common/notebookCommon.js";
+import { MutableDisposable } from "../../../../../../base/common/lifecycle.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+let FoldedCellHint = class FoldedCellHint2 extends CellContentPart {
+  static {
+    __name(this, "FoldedCellHint");
+  }
+  constructor(_notebookEditor, _container, _notebookExecutionStateService) {
+    super();
+    this._notebookEditor = _notebookEditor;
+    this._container = _container;
+    this._notebookExecutionStateService = _notebookExecutionStateService;
+    this._runButtonListener = this._register(new MutableDisposable());
+    this._cellExecutionListener = this._register(new MutableDisposable());
+  }
+  didRenderCell(element) {
+    this.update(element);
+  }
+  update(element) {
+    if (!this._notebookEditor.hasModel()) {
+      this._cellExecutionListener.clear();
+      this._runButtonListener.clear();
+      return;
+    }
+    if (element.isInputCollapsed || element.getEditState() === CellEditState.Editing) {
+      this._cellExecutionListener.clear();
+      this._runButtonListener.clear();
+      DOM.hide(this._container);
+    } else if (element.foldingState === 2) {
+      const idx = this._notebookEditor.getViewModel().getCellIndex(element);
+      const length = this._notebookEditor.getViewModel().getFoldedLength(idx);
+      const runSectionButton = this.getRunFoldedSectionButton({ start: idx, end: idx + length + 1 });
+      if (!runSectionButton) {
+        DOM.reset(this._container, this.getHiddenCellsLabel(length), this.getHiddenCellHintButton(element));
+      } else {
+        DOM.reset(this._container, runSectionButton, this.getHiddenCellsLabel(length), this.getHiddenCellHintButton(element));
+      }
+      DOM.show(this._container);
+      const foldHintTop = element.layoutInfo.previewHeight;
+      this._container.style.top = `${foldHintTop}px`;
+    } else {
+      this._cellExecutionListener.clear();
+      this._runButtonListener.clear();
+      DOM.hide(this._container);
+    }
+  }
+  getHiddenCellsLabel(num) {
+    const label = num === 1 ? localize("hiddenCellsLabel", "1 cell hidden") : localize("hiddenCellsLabelPlural", "{0} cells hidden", num);
+    return DOM.$("span.notebook-folded-hint-label", void 0, label);
+  }
+  getHiddenCellHintButton(element) {
+    const expandIcon = DOM.$("span.cell-expand-part-button");
+    expandIcon.classList.add(...ThemeIcon.asClassNameArray(Codicon.more));
+    this._register(DOM.addDisposableListener(expandIcon, DOM.EventType.CLICK, () => {
+      const controller = this._notebookEditor.getContribution(FoldingController.id);
+      const idx = this._notebookEditor.getCellIndex(element);
+      if (typeof idx === "number") {
+        controller.setFoldingStateDown(idx, 1, 1);
+      }
+    }));
+    return expandIcon;
+  }
+  getRunFoldedSectionButton(range) {
+    const runAllContainer = DOM.$("span.folded-cell-run-section-button");
+    const cells = this._notebookEditor.getCellsInRange(range);
+    const hasCodeCells = cells.some((cell) => cell.cellKind === CellKind.Code);
+    if (!hasCodeCells) {
+      return void 0;
+    }
+    const isRunning = cells.some((cell) => {
+      const cellExecution = this._notebookExecutionStateService.getCellExecution(cell.uri);
+      return cellExecution && cellExecution.state === NotebookCellExecutionState.Executing;
+    });
+    const runAllIcon = isRunning ? ThemeIcon.modify(executingStateIcon, "spin") : Codicon.play;
+    runAllContainer.classList.add(...ThemeIcon.asClassNameArray(runAllIcon));
+    this._runButtonListener.value = DOM.addDisposableListener(runAllContainer, DOM.EventType.CLICK, () => {
+      this._notebookEditor.executeNotebookCells(cells);
+    });
+    this._cellExecutionListener.value = this._notebookExecutionStateService.onDidChangeExecution(() => {
+      const isRunning2 = cells.some((cell) => {
+        const cellExecution = this._notebookExecutionStateService.getCellExecution(cell.uri);
+        return cellExecution && cellExecution.state === NotebookCellExecutionState.Executing;
+      });
+      const runAllIcon2 = isRunning2 ? ThemeIcon.modify(executingStateIcon, "spin") : Codicon.play;
+      runAllContainer.className = "";
+      runAllContainer.classList.add("folded-cell-run-section-button", ...ThemeIcon.asClassNameArray(runAllIcon2));
+    });
+    return runAllContainer;
+  }
+  updateInternalLayoutNow(element) {
+    this.update(element);
+  }
+};
+FoldedCellHint = __decorate([
+  __param(2, INotebookExecutionStateService)
+], FoldedCellHint);
+export {
+  FoldedCellHint
+};
+//# sourceMappingURL=foldedCellHint.js.map

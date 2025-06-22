@@ -1,1 +1,71 @@
-import*as o from"../../../../../../base/browser/dom.js";import{$DSb as r}from"../cellPart.js";class l extends r{constructor(t,e,a){super(),this.notebookEditor=t,this.rootContainer=e,this.decorationContainer=a}didRenderCell(t){const e=[];this.rootContainer.classList.forEach(s=>{/^nb\-.*$/.test(s)&&e.push(s)}),e.forEach(s=>{this.rootContainer.classList.remove(s)}),this.decorationContainer.innerText="";const a=()=>{this.decorationContainer.innerText="",t.getCellDecorations().filter(s=>s.topClassName!==void 0).forEach(s=>{this.decorationContainer.append(o.$(`.${s.topClassName}`))})};this.f.add(t.onCellDecorationsChanged(s=>{(s.added.find(i=>i.topClassName)||s.removed.find(i=>i.topClassName))&&a()})),a(),this.a()}a(){this.c&&(this.f.add(this.c.onCellDecorationsChanged(t=>{t.added.forEach(e=>{e.className&&this.c&&this.rootContainer.classList.add(e.className)}),t.removed.forEach(e=>{e.className&&this.c&&this.rootContainer.classList.remove(e.className)})})),this.c.getCellDecorations().forEach(t=>{t.className&&this.c&&(this.rootContainer.classList.add(t.className),this.notebookEditor.deltaCellContainerClassNames(this.c.id,[t.className],[],this.c.cellKind)),t.outputClassName&&this.c&&this.notebookEditor.deltaCellContainerClassNames(this.c.id,[t.outputClassName],[],this.c.cellKind)}))}}export{l as $LTb};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import * as DOM from "../../../../../../base/browser/dom.js";
+import { CellContentPart } from "../cellPart.js";
+class CellDecorations extends CellContentPart {
+  static {
+    __name(this, "CellDecorations");
+  }
+  constructor(notebookEditor, rootContainer, decorationContainer) {
+    super();
+    this.notebookEditor = notebookEditor;
+    this.rootContainer = rootContainer;
+    this.decorationContainer = decorationContainer;
+  }
+  didRenderCell(element) {
+    const removedClassNames = [];
+    this.rootContainer.classList.forEach((className) => {
+      if (/^nb\-.*$/.test(className)) {
+        removedClassNames.push(className);
+      }
+    });
+    removedClassNames.forEach((className) => {
+      this.rootContainer.classList.remove(className);
+    });
+    this.decorationContainer.innerText = "";
+    const generateCellTopDecorations = /* @__PURE__ */ __name(() => {
+      this.decorationContainer.innerText = "";
+      element.getCellDecorations().filter((options) => options.topClassName !== void 0).forEach((options) => {
+        this.decorationContainer.append(DOM.$(`.${options.topClassName}`));
+      });
+    }, "generateCellTopDecorations");
+    this.cellDisposables.add(element.onCellDecorationsChanged((e) => {
+      const modified = e.added.find((e2) => e2.topClassName) || e.removed.find((e2) => e2.topClassName);
+      if (modified) {
+        generateCellTopDecorations();
+      }
+    }));
+    generateCellTopDecorations();
+    this.registerDecorations();
+  }
+  registerDecorations() {
+    if (!this.currentCell) {
+      return;
+    }
+    this.cellDisposables.add(this.currentCell.onCellDecorationsChanged((e) => {
+      e.added.forEach((options) => {
+        if (options.className && this.currentCell) {
+          this.rootContainer.classList.add(options.className);
+        }
+      });
+      e.removed.forEach((options) => {
+        if (options.className && this.currentCell) {
+          this.rootContainer.classList.remove(options.className);
+        }
+      });
+    }));
+    this.currentCell.getCellDecorations().forEach((options) => {
+      if (options.className && this.currentCell) {
+        this.rootContainer.classList.add(options.className);
+        this.notebookEditor.deltaCellContainerClassNames(this.currentCell.id, [options.className], [], this.currentCell.cellKind);
+      }
+      if (options.outputClassName && this.currentCell) {
+        this.notebookEditor.deltaCellContainerClassNames(this.currentCell.id, [options.outputClassName], [], this.currentCell.cellKind);
+      }
+    });
+  }
+}
+export {
+  CellDecorations
+};
+//# sourceMappingURL=cellDecorations.js.map

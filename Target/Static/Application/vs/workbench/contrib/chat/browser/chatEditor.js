@@ -1,1 +1,135 @@
-import{$Vn as f}from"../../../../platform/contextkey/common/contextkey.js";import{$mj as l}from"../../../../platform/instantiation/common/instantiation.js";import{$lj as d}from"../../../../platform/instantiation/common/serviceCollection.js";import{$Ho as g}from"../../../../platform/storage/common/storage.js";import{$Po as $}from"../../../../platform/telemetry/common/telemetry.js";import{$7p as p,$8p as w,$Ur as b}from"../../../../platform/theme/common/colorRegistry.js";import{$Mt as S}from"../../../../platform/theme/common/themeService.js";import{$DDb as v}from"../../../browser/parts/editor/editorPane.js";import{$6tb as I}from"../../../common/memento.js";import{$Pub as y}from"../../../common/theme.js";import{$hT as B}from"../common/chatParticipantContribTypes.js";import{ChatAgentLocation as C,ChatMode as u}from"../common/constants.js";import{$KDb as D}from"./actions/chatClear.js";import{$FDb as E}from"./chatEditorInput.js";import{$OQb as x}from"./chatWidget.js";var m=function(s,t,e,i){var o=arguments.length,r=o<3?t:i===null?i=Object.getOwnPropertyDescriptor(t,e):i,n;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")r=Reflect.decorate(s,t,e,i);else for(var h=s.length-1;h>=0;h--)(n=s[h])&&(r=(o<3?n(r):o>3?n(t,e,r):n(t,e))||r);return o>3&&r&&Object.defineProperty(t,e,r),r},a=function(s,t){return function(e,i){t(e,i,s)}};let c=class extends v{get scopedContextKeyService(){return this.b}constructor(t,e,i,o,r,n){super(E.EditorID,t,e,i,r),this.g=o,this.j=r,this.m=n}async r(){if(this.input)return this.g.invokeFunction(D,this.input)}Y(t){this.b=this.B(this.m.createScoped(t));const e=this.B(this.g.createChild(new d([f,this.scopedContextKeyService])));this.a=this.B(e.createInstance(x,C.Panel,void 0,{autoScroll:i=>i!==u.Ask,renderFollowups:!0,supportsFileReferences:!0,rendererOptions:{renderTextEditsAsSummary:i=>!0,referencesExpandedWhenEmptyResponse:!1,progressMessageAtBottomOfResponse:i=>i!==u.Ask},enableImplicitContext:!0,enableWorkingSet:"explicit",supportsChangingModes:!0},{listForeground:w,listBackground:p,overlayBackground:y,inputEditorBackground:b,resultEditorBackground:p})),this.B(this.a.onDidClear(()=>this.r())),this.a.render(t),this.a.setVisible(!0)}Z(t){super.Z(t),this.a?.setVisible(t)}focus(){super.focus(),this.a?.focusInput()}clearInput(){this.I(),super.clearInput()}async setInput(t,e,i,o){super.setInput(t,e,i,o);const r=await t.resolve();if(!r)throw new Error(`Failed to get model for chat editor. id: ${t.sessionId}`);if(!this.a)throw new Error("ChatEditor lifecycle issue: no editor widget");this.$(r.model,e?.viewState??t.options.viewState)}$(t,e){this.c=new I("interactive-session-editor-"+B,this.j),this.f=e??this.c.getMemento(1,1),this.a.setModel(t,{...this.f})}I(){if(this.a?.saveState(),this.c&&this.f){const t=this.a.getViewState();this.f.inputValue=t.inputValue,this.f.inputState=t.inputState,this.c.saveMemento()}}getViewState(){return{...this.f}}layout(t,e){this.a&&this.a.layout(t.height,t.width)}};c=m([a(1,$),a(2,S),a(3,l),a(4,g),a(5,f)],c);export{c as $LDb};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { IContextKeyService } from "../../../../platform/contextkey/common/contextkey.js";
+import { IInstantiationService } from "../../../../platform/instantiation/common/instantiation.js";
+import { ServiceCollection } from "../../../../platform/instantiation/common/serviceCollection.js";
+import { IStorageService } from "../../../../platform/storage/common/storage.js";
+import { ITelemetryService } from "../../../../platform/telemetry/common/telemetry.js";
+import { editorBackground, editorForeground, inputBackground } from "../../../../platform/theme/common/colorRegistry.js";
+import { IThemeService } from "../../../../platform/theme/common/themeService.js";
+import { EditorPane } from "../../../browser/parts/editor/editorPane.js";
+import { Memento } from "../../../common/memento.js";
+import { EDITOR_DRAG_AND_DROP_BACKGROUND } from "../../../common/theme.js";
+import { CHAT_PROVIDER_ID } from "../common/chatParticipantContribTypes.js";
+import { ChatAgentLocation, ChatMode } from "../common/constants.js";
+import { clearChatEditor } from "./actions/chatClear.js";
+import { ChatEditorInput } from "./chatEditorInput.js";
+import { ChatWidget } from "./chatWidget.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+let ChatEditor = class ChatEditor2 extends EditorPane {
+  static {
+    __name(this, "ChatEditor");
+  }
+  get scopedContextKeyService() {
+    return this._scopedContextKeyService;
+  }
+  constructor(group, telemetryService, themeService, instantiationService, storageService, contextKeyService) {
+    super(ChatEditorInput.EditorID, group, telemetryService, themeService, storageService);
+    this.instantiationService = instantiationService;
+    this.storageService = storageService;
+    this.contextKeyService = contextKeyService;
+  }
+  async clear() {
+    if (this.input) {
+      return this.instantiationService.invokeFunction(clearChatEditor, this.input);
+    }
+  }
+  createEditor(parent) {
+    this._scopedContextKeyService = this._register(this.contextKeyService.createScoped(parent));
+    const scopedInstantiationService = this._register(this.instantiationService.createChild(new ServiceCollection([IContextKeyService, this.scopedContextKeyService])));
+    this.widget = this._register(scopedInstantiationService.createInstance(ChatWidget, ChatAgentLocation.Panel, void 0, {
+      autoScroll: /* @__PURE__ */ __name((mode) => mode !== ChatMode.Ask, "autoScroll"),
+      renderFollowups: true,
+      supportsFileReferences: true,
+      rendererOptions: {
+        renderTextEditsAsSummary: /* @__PURE__ */ __name((uri) => {
+          return true;
+        }, "renderTextEditsAsSummary"),
+        referencesExpandedWhenEmptyResponse: false,
+        progressMessageAtBottomOfResponse: /* @__PURE__ */ __name((mode) => mode !== ChatMode.Ask, "progressMessageAtBottomOfResponse")
+      },
+      enableImplicitContext: true,
+      enableWorkingSet: "explicit",
+      supportsChangingModes: true
+    }, {
+      listForeground: editorForeground,
+      listBackground: editorBackground,
+      overlayBackground: EDITOR_DRAG_AND_DROP_BACKGROUND,
+      inputEditorBackground: inputBackground,
+      resultEditorBackground: editorBackground
+    }));
+    this._register(this.widget.onDidClear(() => this.clear()));
+    this.widget.render(parent);
+    this.widget.setVisible(true);
+  }
+  setEditorVisible(visible) {
+    super.setEditorVisible(visible);
+    this.widget?.setVisible(visible);
+  }
+  focus() {
+    super.focus();
+    this.widget?.focusInput();
+  }
+  clearInput() {
+    this.saveState();
+    super.clearInput();
+  }
+  async setInput(input, options, context, token) {
+    super.setInput(input, options, context, token);
+    const editorModel = await input.resolve();
+    if (!editorModel) {
+      throw new Error(`Failed to get model for chat editor. id: ${input.sessionId}`);
+    }
+    if (!this.widget) {
+      throw new Error("ChatEditor lifecycle issue: no editor widget");
+    }
+    this.updateModel(editorModel.model, options?.viewState ?? input.options.viewState);
+  }
+  updateModel(model, viewState) {
+    this._memento = new Memento("interactive-session-editor-" + CHAT_PROVIDER_ID, this.storageService);
+    this._viewState = viewState ?? this._memento.getMemento(
+      1,
+      1
+      /* StorageTarget.MACHINE */
+    );
+    this.widget.setModel(model, { ...this._viewState });
+  }
+  saveState() {
+    this.widget?.saveState();
+    if (this._memento && this._viewState) {
+      const widgetViewState = this.widget.getViewState();
+      this._viewState.inputValue = widgetViewState.inputValue;
+      this._viewState.inputState = widgetViewState.inputState;
+      this._memento.saveMemento();
+    }
+  }
+  getViewState() {
+    return { ...this._viewState };
+  }
+  layout(dimension, position) {
+    if (this.widget) {
+      this.widget.layout(dimension.height, dimension.width);
+    }
+  }
+};
+ChatEditor = __decorate([
+  __param(1, ITelemetryService),
+  __param(2, IThemeService),
+  __param(3, IInstantiationService),
+  __param(4, IStorageService),
+  __param(5, IContextKeyService)
+], ChatEditor);
+export {
+  ChatEditor
+};
+//# sourceMappingURL=chatEditor.js.map

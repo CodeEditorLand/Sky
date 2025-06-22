@@ -1,1 +1,247 @@
-import{$oj as p}from"../../../../platform/instantiation/common/instantiation.js";import{$zhb as d}from"../../../../platform/layout/browser/layoutService.js";import{$n as w,$q as c,$s as l}from"../../../../base/common/platform.js";import{$d5 as I}from"../../../../base/browser/window.js";import{$7t as B,$8t as m,$6t as N,$9t as _}from"../../../../platform/window/common/window.js";import{$m5 as L,$w5 as O}from"../../../../base/browser/browser.js";const H=p(d);var s,b,i,A,f,E,R,h;function S(t){return 2===t||3===t}function o(t){switch(t){case 0:return"left";case 1:return"right";case 2:default:return"bottom";case 3:return"top"}}!function(t){t.TITLEBAR_PART="workbench.parts.titlebar",t.BANNER_PART="workbench.parts.banner",t.ACTIVITYBAR_PART="workbench.parts.activitybar",t.SIDEBAR_PART="workbench.parts.sidebar",t.PANEL_PART="workbench.parts.panel",t.AUXILIARYBAR_PART="workbench.parts.auxiliarybar",t.EDITOR_PART="workbench.parts.editor",t.STATUSBAR_PART="workbench.parts.statusbar"}(s||(s={})),function(t){t.SHOW_TABS="zenMode.showTabs",t.HIDE_LINENUMBERS="zenMode.hideLineNumbers",t.HIDE_STATUSBAR="zenMode.hideStatusBar",t.HIDE_ACTIVITYBAR="zenMode.hideActivityBar",t.CENTER_LAYOUT="zenMode.centerLayout",t.FULLSCREEN="zenMode.fullScreen",t.RESTORE="zenMode.restore",t.SILENT_NOTIFICATIONS="zenMode.silentNotifications"}(b||(b={})),function(t){t.ACTIVITY_BAR_LOCATION="workbench.activityBar.location",t.EDITOR_TABS_MODE="workbench.editor.showTabs",t.EDITOR_ACTIONS_LOCATION="workbench.editor.editorActionsLocation",t.COMMAND_CENTER="window.commandCenter",t.LAYOUT_ACTIONS="workbench.layoutControl.enabled"}(i||(i={})),function(t){t.DEFAULT="default",t.TOP="top",t.BOTTOM="bottom",t.HIDDEN="hidden"}(A||(A={})),function(t){t.MULTIPLE="multiple",t.SINGLE="single",t.NONE="none"}(f||(f={})),function(t){t.DEFAULT="default",t.TITLEBAR="titleBar",t.HIDDEN="hidden"}(E||(E={})),function(t){t[t.LEFT=0]="LEFT",t[t.RIGHT=1]="RIGHT",t[t.BOTTOM=2]="BOTTOM",t[t.TOP=3]="TOP"}(R||(R={})),function(t){t[t.ALWAYS=0]="ALWAYS",t[t.NEVER=1]="NEVER",t[t.REMEMBER_LAST=2]="REMEMBER_LAST"}(h||(h={}));const $={[o(0)]:0,[o(1)]:1,[o(2)]:2,[o(3)]:3};function Y(t){return $[t]}function a(t){switch(t){case 0:return"always";case 1:return"never";default:return"preserve"}}const k={[a(0)]:0,[a(1)]:1,[a(2)]:2};function z(t){return k[t]}function F(t){return"workbench.parts.editor"===t||"workbench.parts.statusbar"===t||"workbench.parts.titlebar"===t}function G(t,e,o){if(!m(t))return!1;const n=L(e),r=_(t);if(!l){const e=t.getValue("window.customTitleBarVisibility");if("never"===e&&r||"windowed"===e&&n)return!1}if(!C(t))return!0;if(r&&N(t))return!1;if(w&&c)return!n;if(c&&!n||O()&&!n)return!0;switch(I(e)?"hidden":B(t)){case"classic":return!n||!!o;case"compact":case"hidden":return!1;case"toggle":return!!o;case"visible":return!0;default:return!l&&(!n||!!o)}}function C(t){if(t.getValue("window.commandCenter"))return!1;const e=t.getValue("workbench.activityBar.location");if("top"===e||"bottom"===e)return!1;const o=t.getValue("workbench.editor.editorActionsLocation"),n=t.getValue("workbench.editor.showTabs");return!("titleBar"===o||"default"===o&&"none"===n||t.getValue("workbench.layoutControl.enabled"))}export{Y as $$tb,o as $0tb,H as $8tb,S as $9tb,z as $_tb,F as $aub,G as $bub,A as ActivityBarPosition,E as EditorActionsLocation,f as EditorTabsMode,i as LayoutSettings,h as PanelOpensMaximizedOptions,s as Parts,R as Position,b as ZenModeSettings};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { refineServiceDecorator } from "../../../../platform/instantiation/common/instantiation.js";
+import { ILayoutService } from "../../../../platform/layout/browser/layoutService.js";
+import { isMacintosh, isNative, isWeb } from "../../../../base/common/platform.js";
+import { isAuxiliaryWindow } from "../../../../base/browser/window.js";
+import { getMenuBarVisibility, hasCustomTitlebar, hasNativeMenu, hasNativeTitlebar } from "../../../../platform/window/common/window.js";
+import { isFullscreen, isWCOEnabled } from "../../../../base/browser/browser.js";
+const IWorkbenchLayoutService = refineServiceDecorator(ILayoutService);
+var Parts;
+(function(Parts2) {
+  Parts2["TITLEBAR_PART"] = "workbench.parts.titlebar";
+  Parts2["BANNER_PART"] = "workbench.parts.banner";
+  Parts2["ACTIVITYBAR_PART"] = "workbench.parts.activitybar";
+  Parts2["SIDEBAR_PART"] = "workbench.parts.sidebar";
+  Parts2["PANEL_PART"] = "workbench.parts.panel";
+  Parts2["AUXILIARYBAR_PART"] = "workbench.parts.auxiliarybar";
+  Parts2["EDITOR_PART"] = "workbench.parts.editor";
+  Parts2["STATUSBAR_PART"] = "workbench.parts.statusbar";
+})(Parts || (Parts = {}));
+var ZenModeSettings;
+(function(ZenModeSettings2) {
+  ZenModeSettings2["SHOW_TABS"] = "zenMode.showTabs";
+  ZenModeSettings2["HIDE_LINENUMBERS"] = "zenMode.hideLineNumbers";
+  ZenModeSettings2["HIDE_STATUSBAR"] = "zenMode.hideStatusBar";
+  ZenModeSettings2["HIDE_ACTIVITYBAR"] = "zenMode.hideActivityBar";
+  ZenModeSettings2["CENTER_LAYOUT"] = "zenMode.centerLayout";
+  ZenModeSettings2["FULLSCREEN"] = "zenMode.fullScreen";
+  ZenModeSettings2["RESTORE"] = "zenMode.restore";
+  ZenModeSettings2["SILENT_NOTIFICATIONS"] = "zenMode.silentNotifications";
+})(ZenModeSettings || (ZenModeSettings = {}));
+var LayoutSettings;
+(function(LayoutSettings2) {
+  LayoutSettings2["ACTIVITY_BAR_LOCATION"] = "workbench.activityBar.location";
+  LayoutSettings2["EDITOR_TABS_MODE"] = "workbench.editor.showTabs";
+  LayoutSettings2["EDITOR_ACTIONS_LOCATION"] = "workbench.editor.editorActionsLocation";
+  LayoutSettings2["COMMAND_CENTER"] = "window.commandCenter";
+  LayoutSettings2["LAYOUT_ACTIONS"] = "workbench.layoutControl.enabled";
+})(LayoutSettings || (LayoutSettings = {}));
+var ActivityBarPosition;
+(function(ActivityBarPosition2) {
+  ActivityBarPosition2["DEFAULT"] = "default";
+  ActivityBarPosition2["TOP"] = "top";
+  ActivityBarPosition2["BOTTOM"] = "bottom";
+  ActivityBarPosition2["HIDDEN"] = "hidden";
+})(ActivityBarPosition || (ActivityBarPosition = {}));
+var EditorTabsMode;
+(function(EditorTabsMode2) {
+  EditorTabsMode2["MULTIPLE"] = "multiple";
+  EditorTabsMode2["SINGLE"] = "single";
+  EditorTabsMode2["NONE"] = "none";
+})(EditorTabsMode || (EditorTabsMode = {}));
+var EditorActionsLocation;
+(function(EditorActionsLocation2) {
+  EditorActionsLocation2["DEFAULT"] = "default";
+  EditorActionsLocation2["TITLEBAR"] = "titleBar";
+  EditorActionsLocation2["HIDDEN"] = "hidden";
+})(EditorActionsLocation || (EditorActionsLocation = {}));
+var Position;
+(function(Position2) {
+  Position2[Position2["LEFT"] = 0] = "LEFT";
+  Position2[Position2["RIGHT"] = 1] = "RIGHT";
+  Position2[Position2["BOTTOM"] = 2] = "BOTTOM";
+  Position2[Position2["TOP"] = 3] = "TOP";
+})(Position || (Position = {}));
+function isHorizontal(position) {
+  return position === 2 || position === 3;
+}
+__name(isHorizontal, "isHorizontal");
+var PanelOpensMaximizedOptions;
+(function(PanelOpensMaximizedOptions2) {
+  PanelOpensMaximizedOptions2[PanelOpensMaximizedOptions2["ALWAYS"] = 0] = "ALWAYS";
+  PanelOpensMaximizedOptions2[PanelOpensMaximizedOptions2["NEVER"] = 1] = "NEVER";
+  PanelOpensMaximizedOptions2[PanelOpensMaximizedOptions2["REMEMBER_LAST"] = 2] = "REMEMBER_LAST";
+})(PanelOpensMaximizedOptions || (PanelOpensMaximizedOptions = {}));
+function positionToString(position) {
+  switch (position) {
+    case 0:
+      return "left";
+    case 1:
+      return "right";
+    case 2:
+      return "bottom";
+    case 3:
+      return "top";
+    default:
+      return "bottom";
+  }
+}
+__name(positionToString, "positionToString");
+const positionsByString = {
+  [positionToString(
+    0
+    /* Position.LEFT */
+  )]: 0,
+  [positionToString(
+    1
+    /* Position.RIGHT */
+  )]: 1,
+  [positionToString(
+    2
+    /* Position.BOTTOM */
+  )]: 2,
+  [positionToString(
+    3
+    /* Position.TOP */
+  )]: 3
+  /* Position.TOP */
+};
+function positionFromString(str) {
+  return positionsByString[str];
+}
+__name(positionFromString, "positionFromString");
+function panelOpensMaximizedSettingToString(setting) {
+  switch (setting) {
+    case 0:
+      return "always";
+    case 1:
+      return "never";
+    case 2:
+      return "preserve";
+    default:
+      return "preserve";
+  }
+}
+__name(panelOpensMaximizedSettingToString, "panelOpensMaximizedSettingToString");
+const panelOpensMaximizedByString = {
+  [panelOpensMaximizedSettingToString(
+    0
+    /* PanelOpensMaximizedOptions.ALWAYS */
+  )]: 0,
+  [panelOpensMaximizedSettingToString(
+    1
+    /* PanelOpensMaximizedOptions.NEVER */
+  )]: 1,
+  [panelOpensMaximizedSettingToString(
+    2
+    /* PanelOpensMaximizedOptions.REMEMBER_LAST */
+  )]: 2
+  /* PanelOpensMaximizedOptions.REMEMBER_LAST */
+};
+function panelOpensMaximizedFromString(str) {
+  return panelOpensMaximizedByString[str];
+}
+__name(panelOpensMaximizedFromString, "panelOpensMaximizedFromString");
+function isMultiWindowPart(part) {
+  return part === "workbench.parts.editor" || part === "workbench.parts.statusbar" || part === "workbench.parts.titlebar";
+}
+__name(isMultiWindowPart, "isMultiWindowPart");
+function shouldShowCustomTitleBar(configurationService, window, menuBarToggled) {
+  if (!hasCustomTitlebar(configurationService)) {
+    return false;
+  }
+  const inFullscreen = isFullscreen(window);
+  const nativeTitleBarEnabled = hasNativeTitlebar(configurationService);
+  if (!isWeb) {
+    const showCustomTitleBar = configurationService.getValue(
+      "window.customTitleBarVisibility"
+      /* TitleBarSetting.CUSTOM_TITLE_BAR_VISIBILITY */
+    );
+    if (showCustomTitleBar === "never" && nativeTitleBarEnabled || showCustomTitleBar === "windowed" && inFullscreen) {
+      return false;
+    }
+  }
+  if (!isTitleBarEmpty(configurationService)) {
+    return true;
+  }
+  if (nativeTitleBarEnabled && hasNativeMenu(configurationService)) {
+    return false;
+  }
+  if (isMacintosh && isNative) {
+    return !inFullscreen;
+  }
+  if (isNative && !inFullscreen) {
+    return true;
+  }
+  if (isWCOEnabled() && !inFullscreen) {
+    return true;
+  }
+  const menuBarVisibility = !isAuxiliaryWindow(window) ? getMenuBarVisibility(configurationService) : "hidden";
+  switch (menuBarVisibility) {
+    case "classic":
+      return !inFullscreen || !!menuBarToggled;
+    case "compact":
+    case "hidden":
+      return false;
+    case "toggle":
+      return !!menuBarToggled;
+    case "visible":
+      return true;
+    default:
+      return isWeb ? false : !inFullscreen || !!menuBarToggled;
+  }
+}
+__name(shouldShowCustomTitleBar, "shouldShowCustomTitleBar");
+function isTitleBarEmpty(configurationService) {
+  if (configurationService.getValue(
+    "window.commandCenter"
+    /* LayoutSettings.COMMAND_CENTER */
+  )) {
+    return false;
+  }
+  const activityBarPosition = configurationService.getValue(
+    "workbench.activityBar.location"
+    /* LayoutSettings.ACTIVITY_BAR_LOCATION */
+  );
+  if (activityBarPosition === "top" || activityBarPosition === "bottom") {
+    return false;
+  }
+  const editorActionsLocation = configurationService.getValue(
+    "workbench.editor.editorActionsLocation"
+    /* LayoutSettings.EDITOR_ACTIONS_LOCATION */
+  );
+  const editorTabsMode = configurationService.getValue(
+    "workbench.editor.showTabs"
+    /* LayoutSettings.EDITOR_TABS_MODE */
+  );
+  if (editorActionsLocation === "titleBar" || editorActionsLocation === "default" && editorTabsMode === "none") {
+    return false;
+  }
+  if (configurationService.getValue(
+    "workbench.layoutControl.enabled"
+    /* LayoutSettings.LAYOUT_ACTIONS */
+  )) {
+    return false;
+  }
+  return true;
+}
+__name(isTitleBarEmpty, "isTitleBarEmpty");
+export {
+  ActivityBarPosition,
+  EditorActionsLocation,
+  EditorTabsMode,
+  IWorkbenchLayoutService,
+  LayoutSettings,
+  PanelOpensMaximizedOptions,
+  Parts,
+  Position,
+  ZenModeSettings,
+  isHorizontal,
+  isMultiWindowPart,
+  panelOpensMaximizedFromString,
+  positionFromString,
+  positionToString,
+  shouldShowCustomTitleBar
+};
+//# sourceMappingURL=layoutService.js.map

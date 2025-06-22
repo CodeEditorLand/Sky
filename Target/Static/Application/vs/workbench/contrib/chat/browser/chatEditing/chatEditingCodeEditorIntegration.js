@@ -1,1 +1,715 @@
-import"../media/chatEditorController.css";import{$95 as Y}from"../../../../../base/browser/dom.js";import{Event as K}from"../../../../../base/common/event.js";import{$ud as W,$qd as J,$td as D}from"../../../../../base/common/lifecycle.js";import{autorun as v,constObservable as Q,derived as k,observableFromEvent as tt,observableValue as B}from"../../../../../base/common/observable.js";import{$hh as U,$dh as M}from"../../../../../base/common/resources.js";import{$Nj as z}from"../../../../../base/common/themables.js";import{$reb as it}from"../../../../../editor/browser/observableCodeEditor.js";import{$Dfb as et}from"../../../../../editor/browser/widget/diffEditor/components/accessibleDiffViewer.js";import{$sfb as st,$rfb as nt,$qfb as ot}from"../../../../../editor/browser/widget/diffEditor/components/diffEditorViewZones/renderLines.js";import{$gfb as rt,$hfb as at,$jfb as dt}from"../../../../../editor/browser/widget/diffEditor/registrations.contribution.js";import{$lD as ct}from"../../../../../editor/common/core/ranges/lineRange.js";import{$bC as P}from"../../../../../editor/common/core/position.js";import{$cC as L}from"../../../../../editor/common/core/range.js";import{$RC as ht}from"../../../../../editor/common/core/selection.js";import{OverviewRulerLane as ft}from"../../../../../editor/common/model.js";import{$YH as C}from"../../../../../editor/common/model/textModel.js";import{$X_ as lt}from"../../../../../editor/common/viewModel.js";import{localize as H}from"../../../../../nls.js";import{$0db as S,$5db as gt}from"../../../../../platform/accessibilitySignal/browser/accessibilitySignalService.js";import{$mgb as ut}from"../../../../../platform/actions/browser/toolbar.js";import{$dI as mt}from"../../../../../platform/actions/common/actions.js";import{$mj as _}from"../../../../../platform/instantiation/common/instantiation.js";import{$lK as pt}from"../../../../common/editor.js";import{$oI as bt}from"../../../../services/editor/common/editorService.js";import{$YWb as yt,$VWb as vt,$ZWb as Rt,$WWb as It,$1Wb as Et,$XWb as Nt}from"../../../scm/common/quickDiff.js";import{$iT as Lt}from"../../common/chatAgents.js";import{$Ufc as Ot}from"./chatEditing.js";import{ChatAgentLocation as wt}from"../../common/constants.js";var Z=function(y,t,e,s){var d=arguments.length,n=d<3?t:s===null?s=Object.getOwnPropertyDescriptor(t,e):s,c;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")n=Reflect.decorate(y,t,e,s);else for(var l=y.length-1;l>=0;l--)(c=y[l])&&(n=(d<3?c(n):d>3?c(t,e,n):c(t,e))||n);return d>3&&n&&Object.defineProperty(t,e,n),n},O=function(y,t){return function(e,s){t(e,s,y)}},x,A;let F=class{static{x=this}static{this.c=C.register({description:"diff-line-decoration"})}constructor(t,e,s,d,n,c,l,f){this.q=t,this.s=e,this.t=n,this.u=c,this.x=l,this.f=B(this,-1),this.currentIndex=this.f,this.g=new W,this.k=this.g.add(new W),this.n=[],this.o=[],this.p=B(this,!1),this.h=e.createDecorationsCollection();const g=it(e);this.h=this.s.createDecorationsCollection(),this.j=this.s.createDecorationsCollection();const m=k(i=>!(!M(g.model.read(i)?.uri,s.read(i).modifiedModel.uri)||this.s.getOption(66)&&!f.invokeFunction(Ot,t,this.s)));this.g.add(v(i=>{if(!m.read(i)){this.h.clear();return}const o=[],a=s.read(i);for(const r of a.changes)o.push({range:r.modified.toInclusiveRange()??new L(r.modified.startLineNumber,1,r.modified.startLineNumber,Number.MAX_SAFE_INTEGER),options:x.c});this.h.set(o)}));let p;this.g.add(v(i=>{if(m.read(i)&&!t.isCurrentlyBeingModifiedBy.read(i)&&p!==t.lastModifyingRequestId&&!s.read(i).identical){p=t.lastModifyingRequestId;const o=e.getPosition()??new P(1,1),a=this.h.getRanges();let r=a.findIndex(b=>b.containsPosition(o));if(r<0)for(r=0;r<a.length-1&&!(a[r].endLineNumber>=o.lineNumber);r++);this.f.set(r,void 0),e.revealRange(a[r])}})),this.g.add(v(i=>{if(!m.read(i)){this.z();return}if(!t.isCurrentlyBeingModifiedBy.read(i)||d){const o=this.s.getOption(66);g.getOption(55).read(i),g.getOption(71).read(i);const a=t.reviewMode.read(i),r=s.read(i);this.A(r,a,o)}})),this.g.add(v(i=>{const o=g.positions.read(i)?.at(0);if(!o||!m.read(i))return;const r=s.read(i).changes.find(b=>b.modified.contains(o.lineNumber)||b.modified.isEmpty&&b.modified.startLineNumber===o.lineNumber);r?.modified.isEmpty?this.x.playSignal(S.diffLineDeleted,{source:"chatEditingEditor.cursorPositionChanged"}):r?.original.isEmpty?this.x.playSignal(S.diffLineInserted,{source:"chatEditingEditor.cursorPositionChanged"}):r&&this.x.playSignal(S.diffLineModified,{source:"chatEditingEditor.cursorPositionChanged"})})),this.g.add(v(i=>{if(!this.p.read(i)||!m.read(i))return;const a=new $t;e.addOverlayWidget(a),i.store.add(D(()=>e.removeOverlayWidget(a))),i.store.add(f.createInstance(et,a.getDomNode(),m,(r,b)=>this.p.set(r,b),Q(!0),g.layoutInfo.map((r,b)=>r.width),g.layoutInfo.map((r,b)=>r.height),s.map(r=>r.changes.slice()),f.createInstance(Ct,s,e)))}));let I;const N=()=>{I!==void 0&&(this.s.updateOptions(I),I=void 0)};this.g.add(D(N));const R=k(this,i=>m.read(i)&&!!t.isCurrentlyBeingModifiedBy.read(i));this.g.add(v(i=>{R.read(i)?(I??={readOnly:this.s.getOption(99),stickyScroll:this.s.getOption(123),codeLens:this.s.getOption(20),guides:this.s.getOption(19)},this.s.updateOptions({readOnly:!0,stickyScroll:{enabled:!1},codeLens:!1,guides:{indentation:!1,bracketPairs:!1}})):N()}))}dispose(){this.y(),this.g.dispose()}y(){this.h.clear(),this.z(),this.f.set(-1,void 0)}z(){this.s.changeViewZones(t=>{for(const e of this.o)t.removeZone(e)}),this.o=[],this.k.clear(),this.j.clear()}A(t,e,s){const d=C.createDynamic({...rt,stickiness:1}),n=C.createDynamic({...at,stickiness:1}),c=(i,o)=>C.createDynamic({description:"chat-editing-decoration",overviewRuler:{color:z(i),position:ft.Left},minimap:{color:z(o),position:2}}),l=c(yt,vt),f=c(Rt,It),g=c(Et,Nt);this.k.clear(),this.n.length=0;const m=[];this.s.changeViewZones(i=>{for(const h of this.o)i.removeZone(h);this.o=[];const o=[],a=t.originalModel.mightContainNonBasicASCII(),r=t.originalModel.mightContainRTL(),b=st.fromEditor(this.s),X=this.s.getModel()?.getLineCount();for(const h of t.changes){const T=h.original;t.originalModel.tokenization.forceTokenization(Math.max(1,T.endLineNumberExclusive-1));const G=new nt(T.mapToLineArray(u=>t.originalModel.tokenization.getLineTokens(u)),[],a,r),w=[];if(e)for(const u of h.innerChanges||[])w.push(new lt(u.originalRange.delta(-(h.original.startLineNumber-1)),dt.className,0)),!(u.originalRange.isEmpty()&&u.originalRange.startLineNumber===1&&u.modifiedRange.endLineNumber===X)&&!u.modifiedRange.isEmpty()&&o.push({range:u.modifiedRange,options:d});const q=w.length===1&&w[0].range.isEmpty()&&h.original.startLineNumber===1;h.modified.isEmpty||o.push({range:h.modified.toInclusiveRange(),options:n}),h.original.isEmpty?o.push({range:h.modified.toInclusiveRange(),options:f}):h.modified.isEmpty?o.push({range:new L(h.modified.startLineNumber-1,1,h.modified.startLineNumber,1),options:g}):o.push({range:h.modified.toInclusiveRange(),options:l});let V=0;if(e&&!s){const u=document.createElement("div");u.className="chat-editing-original-zone view-lines line-delete monaco-mouse-cursor-text";const $=ot(G,b,w,u);if(V=$.heightInLines,!q){const j={afterLineNumber:h.modified.startLineNumber-1,heightInLines:$.heightInLines,domNode:u,ordinal:50002};this.o.push(i.addZone(j))}}if(e||s){const u=this.s.invokeWithinContext($=>$.get(_).createInstance(E,t,h,this.s.getModel().getVersionId(),this.s,q?0:V));u.layout(h.modified.startLineNumber),this.n.push(u),m.push({range:h.modified.toInclusiveRange()??new L(h.modified.startLineNumber,1,h.modified.startLineNumber,Number.MAX_SAFE_INTEGER),options:{description:"diff-hunk-widget",stickiness:0}})}}this.j.set(s?[]:o)});const p=this.s.createDecorationsCollection(m);this.k.add(D(()=>{J(this.n),this.n.length=0,p.clear()}));const I=tt(this.s.onDidChangeCursorPosition,i=>this.s.getPosition()),N=k(i=>{const o=I.read(i);return o?p.getRanges().findIndex(r=>r.containsPosition(o)):-1}),R=i=>{const o=N.get();for(let a=0;a<this.n.length;a++){const r=this.n[a];r.toggle(r===i||a===o)}};this.k.add(v(i=>{const o=N.read(i),a=this.n[o];R(a)})),this.k.add(this.s.onMouseMove(i=>{if(i.target.type===12){const o=i.target.detail,a=this.n.find(r=>r.getId()===o);R(a)}else if(i.target.type===8){const o=i.target.detail,a=this.o.findIndex(r=>r===o.viewZoneId);R(this.n[a])}else if(i.target.position){const{position:o}=i.target,a=p.getRanges().findIndex(r=>r.containsPosition(o));R(this.n[a])}else R(void 0)})),this.k.add(K.any(this.s.onDidScrollChange,this.s.onDidLayoutChange)(()=>{for(let i=0;i<this.n.length;i++){const o=this.n[i],a=p.getRange(i);a?o.layout(a?.startLineNumber):o.dispose()}}))}enableAccessibleDiffView(){this.p.set(!0,void 0)}reveal(t,e){const s=this.h.getRanges().sort((c,l)=>L.compareRangesUsingStarts(c,l)),d=t?0:s.length-1,n=s.at(d);n&&(this.s.setPosition(n.getStartPosition()),this.s.revealRange(n),e||this.s.focus(),this.f.set(d,void 0))}next(t){return this.B(!0,!t)}previous(t){return this.B(!1,!t)}B(t,e){const s=this.s.getPosition();if(!s)return this.f.set(-1,void 0),!1;const d=this.h.getRanges().sort((f,g)=>L.compareRangesUsingStarts(f,g));if(d.length===0)return this.f.set(-1,void 0),!1;let n=-1;for(let f=0;f<d.length;f++){const g=d[f];if(g.containsPosition(s)){n=f+(t?1:-1);break}else if(P.isBefore(s,g.getStartPosition())){n=t?f:f-1;break}}if(e&&(n<0||n>=d.length))return!1;n=(n+d.length)%d.length,this.f.set(n,void 0);const c=d[n],l=t?c.getStartPosition():c.getEndPosition();return this.s.setPosition(l),this.s.revealPositionInCenter(c.getStartPosition().delta(-1)),this.s.focus(),!0}C(){if(!this.s.hasModel())return;const t=this.s.getTopForLineNumber(this.s.getPosition().lineNumber)-this.s.getScrollTop();let e,s=Number.MAX_VALUE;for(const d of this.n){const n=d.getPosition()?.preference?.top;if(n!==void 0){const c=Math.abs(n-t);c<s&&(s=c,e=d)}}return e}async rejectNearestChange(t){t=t??this.C(),t instanceof E&&(await t.reject(),this.next(!0))}async acceptNearestChange(t){t=t??this.C(),t instanceof E&&(await t.accept(),this.next(!0))}async toggleDiff(t,e){if(!this.s.hasModel())return;let s=this.s.getSelection();if(t instanceof E){const n=t.getStartLineNumber(),c=n?new P(n,1):void 0;c&&!s.containsPosition(c)&&(s=ht.fromPositions(c))}const d=this.s.getOption(66);if(e!==void 0?e:!d){const n=this.t.getDefaultAgent(wt.Panel)?.fullName,c=await this.u.openEditor({original:{resource:this.q.originalURI},modified:{resource:this.q.modifiedURI},options:{selection:s},label:n?H(5252,null,U(this.q.modifiedURI),n):H(5253,null,U(this.q.modifiedURI))});if(c&&c.input){c.getControl()?.setSelection(s);const l=v(f=>{const g=this.q.state.read(f);if(g===1||g===2){l.dispose();const m=[];for(const p of this.u.getEditors(0))pt(p.editor)&&M(p.editor.original.resource,this.q.originalURI)&&M(p.editor.modified.resource,this.q.modifiedURI)&&m.push(p);this.u.closeEditors(m)}})}}else await this.u.openEditor({resource:this.q.modifiedURI,options:{selection:s,selectionRevealType:3}})}};F=x=Z([O(4,Lt),O(5,bt),O(6,gt),O(7,_)],F);let E=class{static{A=this}static{this.c=0}constructor(t,e,s,d,n,c){this.n=t,this.o=e,this.p=s,this.q=d,this.s=n,this.f=`diff-change-widget-${A.c++}`,this.h=new W,this.g=document.createElement("div"),this.g.className="chat-diff-change-content-widget";const l=c.createInstance(ut,this.g,mt.ChatEditingEditorHunk,{telemetrySource:"chatEditingEditorHunk",hiddenItemStrategy:-1,toolbarOptions:{primaryGroup:()=>!0},menuOptions:{renderShortTitle:!0,arg:this}});this.h.add(l),this.h.add(l.actionRunner.onWillRun(f=>d.focus())),this.q.addOverlayWidget(this)}dispose(){this.h.dispose(),this.q.removeOverlayWidget(this)}getId(){return this.f}layout(t){const e=this.q.getOption(71),{contentLeft:s,contentWidth:d,verticalScrollbarWidth:n}=this.q.getLayoutInfo(),c=this.q.getScrollTop();this.j={stackOridinal:1,preference:{top:this.q.getTopForLineNumber(t)-c-e*this.s,left:s+d-(2*n+Y(this.g))}},this.q.layoutOverlayWidget(this),this.k=t}toggle(t){this.g.classList.toggle("hover",t),this.k&&this.layout(this.k)}getDomNode(){return this.g}getPosition(){return this.j??null}getStartLineNumber(){return this.k}async reject(){return this.p!==this.q.getModel()?.getVersionId()?!1:await this.n.undo(this.o)}async accept(){return this.p!==this.q.getModel()?.getVersionId()?!1:this.n.keep(this.o)}};E=A=Z([O(5,_)],E);class $t{constructor(){this.c=document.createElement("div"),this.c.className="accessible-diff-view",this.c.style.width="100%",this.c.style.position="absolute"}getId(){return"chatEdits.accessibleDiffView"}getDomNode(){return this.c}getPosition(){return{preference:{top:0,left:0},stackOridinal:1}}}class Ct{constructor(t,e){this.c=t,this.f=e}getOriginalModel(){return this.c.get().originalModel}getOriginalOptions(){return this.f.getOptions()}originalReveal(t){const e=this.c.get().changes,s=e.findIndex(d=>d.original.intersect(ct.fromRange(t)));s>=0&&(t=e[s].modified.toInclusiveRange()??t),this.modifiedReveal(t)}getModifiedModel(){return this.f.getModel()}getModifiedOptions(){return this.f.getOptions()}modifiedReveal(t){t&&(this.f.revealRange(t),this.f.setSelection(t)),this.f.focus()}modifiedSetSelection(t){this.f.setSelection(t)}modifiedFocus(){this.f.focus()}getModifiedPosition(){return this.f.getPosition()??void 0}}export{F as $Vfc};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import "../media/chatEditorController.css";
+import { getTotalWidth } from "../../../../../base/browser/dom.js";
+import { Event } from "../../../../../base/common/event.js";
+import { DisposableStore, dispose, toDisposable } from "../../../../../base/common/lifecycle.js";
+import { autorun, constObservable, derived, observableFromEvent, observableValue } from "../../../../../base/common/observable.js";
+import { basename, isEqual } from "../../../../../base/common/resources.js";
+import { themeColorFromId } from "../../../../../base/common/themables.js";
+import { observableCodeEditor } from "../../../../../editor/browser/observableCodeEditor.js";
+import { AccessibleDiffViewer } from "../../../../../editor/browser/widget/diffEditor/components/accessibleDiffViewer.js";
+import { RenderOptions, LineSource, renderLines } from "../../../../../editor/browser/widget/diffEditor/components/diffEditorViewZones/renderLines.js";
+import { diffAddDecoration, diffWholeLineAddDecoration, diffDeleteDecoration } from "../../../../../editor/browser/widget/diffEditor/registrations.contribution.js";
+import { LineRange } from "../../../../../editor/common/core/ranges/lineRange.js";
+import { Position } from "../../../../../editor/common/core/position.js";
+import { Range } from "../../../../../editor/common/core/range.js";
+import { Selection } from "../../../../../editor/common/core/selection.js";
+import { OverviewRulerLane } from "../../../../../editor/common/model.js";
+import { ModelDecorationOptions } from "../../../../../editor/common/model/textModel.js";
+import { InlineDecoration } from "../../../../../editor/common/viewModel.js";
+import { localize } from "../../../../../nls.js";
+import { AccessibilitySignal, IAccessibilitySignalService } from "../../../../../platform/accessibilitySignal/browser/accessibilitySignalService.js";
+import { MenuWorkbenchToolBar } from "../../../../../platform/actions/browser/toolbar.js";
+import { MenuId } from "../../../../../platform/actions/common/actions.js";
+import { IInstantiationService } from "../../../../../platform/instantiation/common/instantiation.js";
+import { isDiffEditorInput } from "../../../../common/editor.js";
+import { IEditorService } from "../../../../services/editor/common/editorService.js";
+import { overviewRulerModifiedForeground, minimapGutterModifiedBackground, overviewRulerAddedForeground, minimapGutterAddedBackground, overviewRulerDeletedForeground, minimapGutterDeletedBackground } from "../../../scm/common/quickDiff.js";
+import { IChatAgentService } from "../../common/chatAgents.js";
+import { isTextDiffEditorForEntry } from "./chatEditing.js";
+import { ChatAgentLocation } from "../../common/constants.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+var ChatEditingCodeEditorIntegration_1;
+var DiffHunkWidget_1;
+let ChatEditingCodeEditorIntegration = class ChatEditingCodeEditorIntegration2 {
+  static {
+    __name(this, "ChatEditingCodeEditorIntegration");
+  }
+  static {
+    ChatEditingCodeEditorIntegration_1 = this;
+  }
+  static {
+    this._diffLineDecorationData = ModelDecorationOptions.register({ description: "diff-line-decoration" });
+  }
+  constructor(_entry, _editor, documentDiffInfo, renderDiffImmediately, _chatAgentService, _editorService, _accessibilitySignalsService, instantiationService) {
+    this._entry = _entry;
+    this._editor = _editor;
+    this._chatAgentService = _chatAgentService;
+    this._editorService = _editorService;
+    this._accessibilitySignalsService = _accessibilitySignalsService;
+    this._currentIndex = observableValue(this, -1);
+    this.currentIndex = this._currentIndex;
+    this._store = new DisposableStore();
+    this._diffHunksRenderStore = this._store.add(new DisposableStore());
+    this._diffHunkWidgets = [];
+    this._viewZones = [];
+    this._accessibleDiffViewVisible = observableValue(this, false);
+    this._diffLineDecorations = _editor.createDecorationsCollection();
+    const codeEditorObs = observableCodeEditor(_editor);
+    this._diffLineDecorations = this._editor.createDecorationsCollection();
+    this._diffVisualDecorations = this._editor.createDecorationsCollection();
+    const enabledObs = derived((r) => {
+      if (!isEqual(codeEditorObs.model.read(r)?.uri, documentDiffInfo.read(r).modifiedModel.uri)) {
+        return false;
+      }
+      if (this._editor.getOption(
+        66
+        /* EditorOption.inDiffEditor */
+      ) && !instantiationService.invokeFunction(isTextDiffEditorForEntry, _entry, this._editor)) {
+        return false;
+      }
+      return true;
+    });
+    this._store.add(autorun((r) => {
+      if (!enabledObs.read(r)) {
+        this._diffLineDecorations.clear();
+        return;
+      }
+      const data = [];
+      const diff = documentDiffInfo.read(r);
+      for (const diffEntry of diff.changes) {
+        data.push({
+          range: diffEntry.modified.toInclusiveRange() ?? new Range(diffEntry.modified.startLineNumber, 1, diffEntry.modified.startLineNumber, Number.MAX_SAFE_INTEGER),
+          options: ChatEditingCodeEditorIntegration_1._diffLineDecorationData
+        });
+      }
+      this._diffLineDecorations.set(data);
+    }));
+    let lastModifyingRequestId;
+    this._store.add(autorun((r) => {
+      if (enabledObs.read(r) && !_entry.isCurrentlyBeingModifiedBy.read(r) && lastModifyingRequestId !== _entry.lastModifyingRequestId && !documentDiffInfo.read(r).identical) {
+        lastModifyingRequestId = _entry.lastModifyingRequestId;
+        const position = _editor.getPosition() ?? new Position(1, 1);
+        const ranges = this._diffLineDecorations.getRanges();
+        let initialIndex = ranges.findIndex((r2) => r2.containsPosition(position));
+        if (initialIndex < 0) {
+          initialIndex = 0;
+          for (; initialIndex < ranges.length - 1; initialIndex++) {
+            const range = ranges[initialIndex];
+            if (range.endLineNumber >= position.lineNumber) {
+              break;
+            }
+          }
+        }
+        this._currentIndex.set(initialIndex, void 0);
+        _editor.revealRange(ranges[initialIndex]);
+      }
+    }));
+    this._store.add(autorun((r) => {
+      if (!enabledObs.read(r)) {
+        this._clearDiffRendering();
+        return;
+      }
+      if (!_entry.isCurrentlyBeingModifiedBy.read(r) || renderDiffImmediately) {
+        const isDiffEditor = this._editor.getOption(
+          66
+          /* EditorOption.inDiffEditor */
+        );
+        codeEditorObs.getOption(
+          55
+          /* EditorOption.fontInfo */
+        ).read(r);
+        codeEditorObs.getOption(
+          71
+          /* EditorOption.lineHeight */
+        ).read(r);
+        const reviewMode = _entry.reviewMode.read(r);
+        const diff = documentDiffInfo.read(r);
+        this._updateDiffRendering(diff, reviewMode, isDiffEditor);
+      }
+    }));
+    this._store.add(autorun((r) => {
+      const position = codeEditorObs.positions.read(r)?.at(0);
+      if (!position || !enabledObs.read(r)) {
+        return;
+      }
+      const diff = documentDiffInfo.read(r);
+      const mapping = diff.changes.find((m) => m.modified.contains(position.lineNumber) || m.modified.isEmpty && m.modified.startLineNumber === position.lineNumber);
+      if (mapping?.modified.isEmpty) {
+        this._accessibilitySignalsService.playSignal(AccessibilitySignal.diffLineDeleted, { source: "chatEditingEditor.cursorPositionChanged" });
+      } else if (mapping?.original.isEmpty) {
+        this._accessibilitySignalsService.playSignal(AccessibilitySignal.diffLineInserted, { source: "chatEditingEditor.cursorPositionChanged" });
+      } else if (mapping) {
+        this._accessibilitySignalsService.playSignal(AccessibilitySignal.diffLineModified, { source: "chatEditingEditor.cursorPositionChanged" });
+      }
+    }));
+    this._store.add(autorun((r) => {
+      const visible = this._accessibleDiffViewVisible.read(r);
+      if (!visible || !enabledObs.read(r)) {
+        return;
+      }
+      const accessibleDiffWidget = new AccessibleDiffViewContainer();
+      _editor.addOverlayWidget(accessibleDiffWidget);
+      r.store.add(toDisposable(() => _editor.removeOverlayWidget(accessibleDiffWidget)));
+      r.store.add(instantiationService.createInstance(AccessibleDiffViewer, accessibleDiffWidget.getDomNode(), enabledObs, (visible2, tx) => this._accessibleDiffViewVisible.set(visible2, tx), constObservable(true), codeEditorObs.layoutInfo.map((v, r2) => v.width), codeEditorObs.layoutInfo.map((v, r2) => v.height), documentDiffInfo.map((diff) => diff.changes.slice()), instantiationService.createInstance(AccessibleDiffViewerModel, documentDiffInfo, _editor)));
+    }));
+    let actualOptions;
+    const restoreActualOptions = /* @__PURE__ */ __name(() => {
+      if (actualOptions !== void 0) {
+        this._editor.updateOptions(actualOptions);
+        actualOptions = void 0;
+      }
+    }, "restoreActualOptions");
+    this._store.add(toDisposable(restoreActualOptions));
+    const renderAsBeingModified = derived(this, (r) => {
+      return enabledObs.read(r) && Boolean(_entry.isCurrentlyBeingModifiedBy.read(r));
+    });
+    this._store.add(autorun((r) => {
+      const value = renderAsBeingModified.read(r);
+      if (value) {
+        actualOptions ??= {
+          readOnly: this._editor.getOption(
+            99
+            /* EditorOption.readOnly */
+          ),
+          stickyScroll: this._editor.getOption(
+            123
+            /* EditorOption.stickyScroll */
+          ),
+          codeLens: this._editor.getOption(
+            20
+            /* EditorOption.codeLens */
+          ),
+          guides: this._editor.getOption(
+            19
+            /* EditorOption.guides */
+          )
+        };
+        this._editor.updateOptions({
+          readOnly: true,
+          stickyScroll: { enabled: false },
+          codeLens: false,
+          guides: { indentation: false, bracketPairs: false }
+        });
+      } else {
+        restoreActualOptions();
+      }
+    }));
+  }
+  dispose() {
+    this._clear();
+    this._store.dispose();
+  }
+  _clear() {
+    this._diffLineDecorations.clear();
+    this._clearDiffRendering();
+    this._currentIndex.set(-1, void 0);
+  }
+  // ---- diff rendering logic
+  _clearDiffRendering() {
+    this._editor.changeViewZones((viewZoneChangeAccessor) => {
+      for (const id of this._viewZones) {
+        viewZoneChangeAccessor.removeZone(id);
+      }
+    });
+    this._viewZones = [];
+    this._diffHunksRenderStore.clear();
+    this._diffVisualDecorations.clear();
+  }
+  _updateDiffRendering(diff, reviewMode, diffMode) {
+    const chatDiffAddDecoration = ModelDecorationOptions.createDynamic({
+      ...diffAddDecoration,
+      stickiness: 1
+      /* TrackedRangeStickiness.NeverGrowsWhenTypingAtEdges */
+    });
+    const chatDiffWholeLineAddDecoration = ModelDecorationOptions.createDynamic({
+      ...diffWholeLineAddDecoration,
+      stickiness: 1
+    });
+    const createOverviewDecoration = /* @__PURE__ */ __name((overviewRulerColor, minimapColor) => {
+      return ModelDecorationOptions.createDynamic({
+        description: "chat-editing-decoration",
+        overviewRuler: { color: themeColorFromId(overviewRulerColor), position: OverviewRulerLane.Left },
+        minimap: {
+          color: themeColorFromId(minimapColor),
+          position: 2
+          /* MinimapPosition.Gutter */
+        }
+      });
+    }, "createOverviewDecoration");
+    const modifiedDecoration = createOverviewDecoration(overviewRulerModifiedForeground, minimapGutterModifiedBackground);
+    const addedDecoration = createOverviewDecoration(overviewRulerAddedForeground, minimapGutterAddedBackground);
+    const deletedDecoration = createOverviewDecoration(overviewRulerDeletedForeground, minimapGutterDeletedBackground);
+    this._diffHunksRenderStore.clear();
+    this._diffHunkWidgets.length = 0;
+    const diffHunkDecorations = [];
+    this._editor.changeViewZones((viewZoneChangeAccessor) => {
+      for (const id of this._viewZones) {
+        viewZoneChangeAccessor.removeZone(id);
+      }
+      this._viewZones = [];
+      const modifiedVisualDecorations = [];
+      const mightContainNonBasicASCII = diff.originalModel.mightContainNonBasicASCII();
+      const mightContainRTL = diff.originalModel.mightContainRTL();
+      const renderOptions = RenderOptions.fromEditor(this._editor);
+      const editorLineCount = this._editor.getModel()?.getLineCount();
+      for (const diffEntry of diff.changes) {
+        const originalRange = diffEntry.original;
+        diff.originalModel.tokenization.forceTokenization(Math.max(1, originalRange.endLineNumberExclusive - 1));
+        const source = new LineSource(originalRange.mapToLineArray((l) => diff.originalModel.tokenization.getLineTokens(l)), [], mightContainNonBasicASCII, mightContainRTL);
+        const decorations = [];
+        if (reviewMode) {
+          for (const i of diffEntry.innerChanges || []) {
+            decorations.push(new InlineDecoration(
+              i.originalRange.delta(-(diffEntry.original.startLineNumber - 1)),
+              diffDeleteDecoration.className,
+              0
+              /* InlineDecorationType.Regular */
+            ));
+            if (!(i.originalRange.isEmpty() && i.originalRange.startLineNumber === 1 && i.modifiedRange.endLineNumber === editorLineCount) && !i.modifiedRange.isEmpty()) {
+              modifiedVisualDecorations.push({
+                range: i.modifiedRange,
+                options: chatDiffAddDecoration
+              });
+            }
+          }
+        }
+        const isCreatedContent = decorations.length === 1 && decorations[0].range.isEmpty() && diffEntry.original.startLineNumber === 1;
+        if (!diffEntry.modified.isEmpty) {
+          modifiedVisualDecorations.push({
+            range: diffEntry.modified.toInclusiveRange(),
+            options: chatDiffWholeLineAddDecoration
+          });
+        }
+        if (diffEntry.original.isEmpty) {
+          modifiedVisualDecorations.push({
+            range: diffEntry.modified.toInclusiveRange(),
+            options: addedDecoration
+          });
+        } else if (diffEntry.modified.isEmpty) {
+          modifiedVisualDecorations.push({
+            range: new Range(diffEntry.modified.startLineNumber - 1, 1, diffEntry.modified.startLineNumber, 1),
+            options: deletedDecoration
+          });
+        } else {
+          modifiedVisualDecorations.push({
+            range: diffEntry.modified.toInclusiveRange(),
+            options: modifiedDecoration
+          });
+        }
+        let extraLines = 0;
+        if (reviewMode && !diffMode) {
+          const domNode = document.createElement("div");
+          domNode.className = "chat-editing-original-zone view-lines line-delete monaco-mouse-cursor-text";
+          const result = renderLines(source, renderOptions, decorations, domNode);
+          extraLines = result.heightInLines;
+          if (!isCreatedContent) {
+            const viewZoneData = {
+              afterLineNumber: diffEntry.modified.startLineNumber - 1,
+              heightInLines: result.heightInLines,
+              domNode,
+              ordinal: 5e4 + 2
+              // more than https://github.com/microsoft/vscode/blob/bf52a5cfb2c75a7327c9adeaefbddc06d529dcad/src/vs/workbench/contrib/inlineChat/browser/inlineChatZoneWidget.ts#L42
+            };
+            this._viewZones.push(viewZoneChangeAccessor.addZone(viewZoneData));
+          }
+        }
+        if (reviewMode || diffMode) {
+          const widget = this._editor.invokeWithinContext((accessor) => {
+            const instaService = accessor.get(IInstantiationService);
+            return instaService.createInstance(DiffHunkWidget, diff, diffEntry, this._editor.getModel().getVersionId(), this._editor, isCreatedContent ? 0 : extraLines);
+          });
+          widget.layout(diffEntry.modified.startLineNumber);
+          this._diffHunkWidgets.push(widget);
+          diffHunkDecorations.push({
+            range: diffEntry.modified.toInclusiveRange() ?? new Range(diffEntry.modified.startLineNumber, 1, diffEntry.modified.startLineNumber, Number.MAX_SAFE_INTEGER),
+            options: {
+              description: "diff-hunk-widget",
+              stickiness: 0
+              /* TrackedRangeStickiness.AlwaysGrowsWhenTypingAtEdges */
+            }
+          });
+        }
+      }
+      this._diffVisualDecorations.set(!diffMode ? modifiedVisualDecorations : []);
+    });
+    const diffHunkDecoCollection = this._editor.createDecorationsCollection(diffHunkDecorations);
+    this._diffHunksRenderStore.add(toDisposable(() => {
+      dispose(this._diffHunkWidgets);
+      this._diffHunkWidgets.length = 0;
+      diffHunkDecoCollection.clear();
+    }));
+    const positionObs = observableFromEvent(this._editor.onDidChangeCursorPosition, (_) => this._editor.getPosition());
+    const activeWidgetIdx = derived((r) => {
+      const position = positionObs.read(r);
+      if (!position) {
+        return -1;
+      }
+      const idx = diffHunkDecoCollection.getRanges().findIndex((r2) => r2.containsPosition(position));
+      return idx;
+    });
+    const toggleWidget = /* @__PURE__ */ __name((activeWidget) => {
+      const positionIdx = activeWidgetIdx.get();
+      for (let i = 0; i < this._diffHunkWidgets.length; i++) {
+        const widget = this._diffHunkWidgets[i];
+        widget.toggle(widget === activeWidget || i === positionIdx);
+      }
+    }, "toggleWidget");
+    this._diffHunksRenderStore.add(autorun((r) => {
+      const idx = activeWidgetIdx.read(r);
+      const widget = this._diffHunkWidgets[idx];
+      toggleWidget(widget);
+    }));
+    this._diffHunksRenderStore.add(this._editor.onMouseMove((e) => {
+      if (e.target.type === 12) {
+        const id = e.target.detail;
+        const widget = this._diffHunkWidgets.find((w) => w.getId() === id);
+        toggleWidget(widget);
+      } else if (e.target.type === 8) {
+        const zone = e.target.detail;
+        const idx = this._viewZones.findIndex((id) => id === zone.viewZoneId);
+        toggleWidget(this._diffHunkWidgets[idx]);
+      } else if (e.target.position) {
+        const { position } = e.target;
+        const idx = diffHunkDecoCollection.getRanges().findIndex((r) => r.containsPosition(position));
+        toggleWidget(this._diffHunkWidgets[idx]);
+      } else {
+        toggleWidget(void 0);
+      }
+    }));
+    this._diffHunksRenderStore.add(Event.any(this._editor.onDidScrollChange, this._editor.onDidLayoutChange)(() => {
+      for (let i = 0; i < this._diffHunkWidgets.length; i++) {
+        const widget = this._diffHunkWidgets[i];
+        const range = diffHunkDecoCollection.getRange(i);
+        if (range) {
+          widget.layout(range?.startLineNumber);
+        } else {
+          widget.dispose();
+        }
+      }
+    }));
+  }
+  enableAccessibleDiffView() {
+    this._accessibleDiffViewVisible.set(true, void 0);
+  }
+  // ---- navigation logic
+  reveal(firstOrLast, preserveFocus) {
+    const decorations = this._diffLineDecorations.getRanges().sort((a, b) => Range.compareRangesUsingStarts(a, b));
+    const index = firstOrLast ? 0 : decorations.length - 1;
+    const range = decorations.at(index);
+    if (range) {
+      this._editor.setPosition(range.getStartPosition());
+      this._editor.revealRange(range);
+      if (!preserveFocus) {
+        this._editor.focus();
+      }
+      this._currentIndex.set(index, void 0);
+    }
+  }
+  next(wrap) {
+    return this._reveal(true, !wrap);
+  }
+  previous(wrap) {
+    return this._reveal(false, !wrap);
+  }
+  _reveal(next, strict) {
+    const position = this._editor.getPosition();
+    if (!position) {
+      this._currentIndex.set(-1, void 0);
+      return false;
+    }
+    const decorations = this._diffLineDecorations.getRanges().sort((a, b) => Range.compareRangesUsingStarts(a, b));
+    if (decorations.length === 0) {
+      this._currentIndex.set(-1, void 0);
+      return false;
+    }
+    let newIndex = -1;
+    for (let i = 0; i < decorations.length; i++) {
+      const range = decorations[i];
+      if (range.containsPosition(position)) {
+        newIndex = i + (next ? 1 : -1);
+        break;
+      } else if (Position.isBefore(position, range.getStartPosition())) {
+        newIndex = next ? i : i - 1;
+        break;
+      }
+    }
+    if (strict && (newIndex < 0 || newIndex >= decorations.length)) {
+      return false;
+    }
+    newIndex = (newIndex + decorations.length) % decorations.length;
+    this._currentIndex.set(newIndex, void 0);
+    const targetRange = decorations[newIndex];
+    const targetPosition = next ? targetRange.getStartPosition() : targetRange.getEndPosition();
+    this._editor.setPosition(targetPosition);
+    this._editor.revealPositionInCenter(targetRange.getStartPosition().delta(-1));
+    this._editor.focus();
+    return true;
+  }
+  // --- hunks
+  _findClosestWidget() {
+    if (!this._editor.hasModel()) {
+      return void 0;
+    }
+    const lineRelativeTop = this._editor.getTopForLineNumber(this._editor.getPosition().lineNumber) - this._editor.getScrollTop();
+    let closestWidget;
+    let closestDistance = Number.MAX_VALUE;
+    for (const widget of this._diffHunkWidgets) {
+      const widgetTop = widget.getPosition()?.preference?.top;
+      if (widgetTop !== void 0) {
+        const distance = Math.abs(widgetTop - lineRelativeTop);
+        if (distance < closestDistance) {
+          closestDistance = distance;
+          closestWidget = widget;
+        }
+      }
+    }
+    return closestWidget;
+  }
+  async rejectNearestChange(closestWidget) {
+    closestWidget = closestWidget ?? this._findClosestWidget();
+    if (closestWidget instanceof DiffHunkWidget) {
+      await closestWidget.reject();
+      this.next(true);
+    }
+  }
+  async acceptNearestChange(closestWidget) {
+    closestWidget = closestWidget ?? this._findClosestWidget();
+    if (closestWidget instanceof DiffHunkWidget) {
+      await closestWidget.accept();
+      this.next(true);
+    }
+  }
+  async toggleDiff(widget, show) {
+    if (!this._editor.hasModel()) {
+      return;
+    }
+    let selection = this._editor.getSelection();
+    if (widget instanceof DiffHunkWidget) {
+      const lineNumber = widget.getStartLineNumber();
+      const position = lineNumber ? new Position(lineNumber, 1) : void 0;
+      if (position && !selection.containsPosition(position)) {
+        selection = Selection.fromPositions(position);
+      }
+    }
+    const isDiffEditor = this._editor.getOption(
+      66
+      /* EditorOption.inDiffEditor */
+    );
+    if (show !== void 0 ? show : !isDiffEditor) {
+      const defaultAgentName = this._chatAgentService.getDefaultAgent(ChatAgentLocation.Panel)?.fullName;
+      const diffEditor = await this._editorService.openEditor({
+        original: { resource: this._entry.originalURI },
+        modified: { resource: this._entry.modifiedURI },
+        options: { selection },
+        label: defaultAgentName ? localize("diff.agent", "{0} (changes from {1})", basename(this._entry.modifiedURI), defaultAgentName) : localize("diff.generic", "{0} (changes from chat)", basename(this._entry.modifiedURI))
+      });
+      if (diffEditor && diffEditor.input) {
+        diffEditor.getControl()?.setSelection(selection);
+        const d = autorun((r) => {
+          const state = this._entry.state.read(r);
+          if (state === 1 || state === 2) {
+            d.dispose();
+            const editorIdents = [];
+            for (const candidate of this._editorService.getEditors(
+              0
+              /* EditorsOrder.MOST_RECENTLY_ACTIVE */
+            )) {
+              if (isDiffEditorInput(candidate.editor) && isEqual(candidate.editor.original.resource, this._entry.originalURI) && isEqual(candidate.editor.modified.resource, this._entry.modifiedURI)) {
+                editorIdents.push(candidate);
+              }
+            }
+            this._editorService.closeEditors(editorIdents);
+          }
+        });
+      }
+    } else {
+      await this._editorService.openEditor({
+        resource: this._entry.modifiedURI,
+        options: {
+          selection,
+          selectionRevealType: 3
+          /* TextEditorSelectionRevealType.NearTopIfOutsideViewport */
+        }
+      });
+    }
+  }
+};
+ChatEditingCodeEditorIntegration = ChatEditingCodeEditorIntegration_1 = __decorate([
+  __param(4, IChatAgentService),
+  __param(5, IEditorService),
+  __param(6, IAccessibilitySignalService),
+  __param(7, IInstantiationService)
+], ChatEditingCodeEditorIntegration);
+let DiffHunkWidget = class DiffHunkWidget2 {
+  static {
+    __name(this, "DiffHunkWidget");
+  }
+  static {
+    DiffHunkWidget_1 = this;
+  }
+  static {
+    this._idPool = 0;
+  }
+  constructor(_diffInfo, _change, _versionId, _editor, _lineDelta, instaService) {
+    this._diffInfo = _diffInfo;
+    this._change = _change;
+    this._versionId = _versionId;
+    this._editor = _editor;
+    this._lineDelta = _lineDelta;
+    this._id = `diff-change-widget-${DiffHunkWidget_1._idPool++}`;
+    this._store = new DisposableStore();
+    this._domNode = document.createElement("div");
+    this._domNode.className = "chat-diff-change-content-widget";
+    const toolbar = instaService.createInstance(MenuWorkbenchToolBar, this._domNode, MenuId.ChatEditingEditorHunk, {
+      telemetrySource: "chatEditingEditorHunk",
+      hiddenItemStrategy: -1,
+      toolbarOptions: { primaryGroup: /* @__PURE__ */ __name(() => true, "primaryGroup") },
+      menuOptions: {
+        renderShortTitle: true,
+        arg: this
+      }
+    });
+    this._store.add(toolbar);
+    this._store.add(toolbar.actionRunner.onWillRun((_) => _editor.focus()));
+    this._editor.addOverlayWidget(this);
+  }
+  dispose() {
+    this._store.dispose();
+    this._editor.removeOverlayWidget(this);
+  }
+  getId() {
+    return this._id;
+  }
+  layout(startLineNumber) {
+    const lineHeight = this._editor.getOption(
+      71
+      /* EditorOption.lineHeight */
+    );
+    const { contentLeft, contentWidth, verticalScrollbarWidth } = this._editor.getLayoutInfo();
+    const scrollTop = this._editor.getScrollTop();
+    this._position = {
+      stackOridinal: 1,
+      preference: {
+        top: this._editor.getTopForLineNumber(startLineNumber) - scrollTop - lineHeight * this._lineDelta,
+        left: contentLeft + contentWidth - (2 * verticalScrollbarWidth + getTotalWidth(this._domNode))
+      }
+    };
+    this._editor.layoutOverlayWidget(this);
+    this._lastStartLineNumber = startLineNumber;
+  }
+  toggle(show) {
+    this._domNode.classList.toggle("hover", show);
+    if (this._lastStartLineNumber) {
+      this.layout(this._lastStartLineNumber);
+    }
+  }
+  getDomNode() {
+    return this._domNode;
+  }
+  getPosition() {
+    return this._position ?? null;
+  }
+  getStartLineNumber() {
+    return this._lastStartLineNumber;
+  }
+  // ---
+  async reject() {
+    if (this._versionId !== this._editor.getModel()?.getVersionId()) {
+      return false;
+    }
+    return await this._diffInfo.undo(this._change);
+  }
+  async accept() {
+    if (this._versionId !== this._editor.getModel()?.getVersionId()) {
+      return false;
+    }
+    return this._diffInfo.keep(this._change);
+  }
+};
+DiffHunkWidget = DiffHunkWidget_1 = __decorate([
+  __param(5, IInstantiationService)
+], DiffHunkWidget);
+class AccessibleDiffViewContainer {
+  static {
+    __name(this, "AccessibleDiffViewContainer");
+  }
+  constructor() {
+    this._domNode = document.createElement("div");
+    this._domNode.className = "accessible-diff-view";
+    this._domNode.style.width = "100%";
+    this._domNode.style.position = "absolute";
+  }
+  getId() {
+    return "chatEdits.accessibleDiffView";
+  }
+  getDomNode() {
+    return this._domNode;
+  }
+  getPosition() {
+    return {
+      preference: { top: 0, left: 0 },
+      stackOridinal: 1
+    };
+  }
+}
+class AccessibleDiffViewerModel {
+  static {
+    __name(this, "AccessibleDiffViewerModel");
+  }
+  constructor(_documentDiffInfo, _editor) {
+    this._documentDiffInfo = _documentDiffInfo;
+    this._editor = _editor;
+  }
+  getOriginalModel() {
+    return this._documentDiffInfo.get().originalModel;
+  }
+  getOriginalOptions() {
+    return this._editor.getOptions();
+  }
+  originalReveal(range) {
+    const changes = this._documentDiffInfo.get().changes;
+    const idx = changes.findIndex((value) => value.original.intersect(LineRange.fromRange(range)));
+    if (idx >= 0) {
+      range = changes[idx].modified.toInclusiveRange() ?? range;
+    }
+    this.modifiedReveal(range);
+  }
+  getModifiedModel() {
+    return this._editor.getModel();
+  }
+  getModifiedOptions() {
+    return this._editor.getOptions();
+  }
+  modifiedReveal(range) {
+    if (range) {
+      this._editor.revealRange(range);
+      this._editor.setSelection(range);
+    }
+    this._editor.focus();
+  }
+  modifiedSetSelection(range) {
+    this._editor.setSelection(range);
+  }
+  modifiedFocus() {
+    this._editor.focus();
+  }
+  getModifiedPosition() {
+    return this._editor.getPosition() ?? void 0;
+  }
+}
+export {
+  ChatEditingCodeEditorIntegration
+};
+//# sourceMappingURL=chatEditingCodeEditorIntegration.js.map

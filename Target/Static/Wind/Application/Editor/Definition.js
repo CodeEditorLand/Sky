@@ -1,1 +1,64 @@
-import{Effect as r}from"../../effect";import{Emitter as i}from"vs/base/common/event.js";import{isEditorInput as f}from"vs/workbench/common/editor.js";import{findGroup as l,isPreferredGroup as c}from"vs/workbench/services/editor/common/editorGroupFinder.js";import"../EditorGroups/mod.js";import"../Instantiation/mod.js";import"../TextEditor/mod.js";const I=r.gen(function*(d){const v=yield*d(Instantiation.Tag),y=yield*d(EditorGroups.Tag),E=yield*d(TextEditor.Tag),p=(t,e,s)=>r.gen(function*(o){const n=f(t)?t:yield*o(r.promise(()=>E.resolve(t))),[a,u]=v.invokeFunction(l,{editor:n,options:e},s),m={...e,activation:u};return yield*o(r.promise(()=>a.openEditor(n,m)))});return{_serviceBrand:void 0,openEditor:(t,e,s)=>{const o=c(e)?void 0:e,n=c(e)?e:s;return r.runPromise(p(t,o,n))},openEditors:()=>Promise.resolve([]),replaceEditors:()=>Promise.resolve(),save:()=>Promise.resolve({success:!0,editors:[]}),saveAll:()=>Promise.resolve({success:!0,editors:[]}),revert:()=>Promise.resolve({success:!0,editors:[]}),revertAll:()=>Promise.resolve({success:!0,editors:[]}),activeEditorPane:void 0,activeEditor:void 0,count:0,visibleEditorPanes:[],visibleEditors:[],onDidActiveEditorChange:new i().event,onDidVisibleEditorsChange:new i().event,onDidCloseEditor:new i().event,onDidOpenEditorFail:new i().event,onDidMostRecentlyActiveEditorsChange:new i().event}});var k=I;export{k as default};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { Effect } from "../../effect";
+import { Emitter } from "vs/base/common/event.js";
+import { isEditorInput } from "vs/workbench/common/editor.js";
+import {
+  findGroup,
+  isPreferredGroup
+} from "vs/workbench/services/editor/common/editorGroupFinder.js";
+const Definition = Effect.gen(function* (_) {
+  const InstantiationService = yield* _(Instantiation.Tag);
+  const EditorGroupsService = yield* _(EditorGroups.Tag);
+  const TextEditorService = yield* _(TextEditor.Tag);
+  const CreateOpenEditorEffect = /* @__PURE__ */ __name((Editor, Options, Group) => Effect.gen(function* (_2) {
+    const TypedEditor = isEditorInput(Editor) ? Editor : yield* _2(
+      Effect.promise(() => TextEditorService.resolve(Editor))
+    );
+    const [TargetGroup, Activation] = InstantiationService.invokeFunction(
+      findGroup,
+      { editor: TypedEditor, options: Options },
+      Group
+    );
+    const FinalOptions = { ...Options, activation: Activation };
+    return yield* _2(
+      Effect.promise(
+        () => TargetGroup.openEditor(TypedEditor, FinalOptions)
+      )
+    );
+  }), "CreateOpenEditorEffect");
+  const Service = {
+    _serviceBrand: void 0,
+    openEditor: /* @__PURE__ */ __name((editor, optionsOrGroup, group) => {
+      const options = !isPreferredGroup(optionsOrGroup) ? optionsOrGroup : void 0;
+      const targetGroup = isPreferredGroup(optionsOrGroup) ? optionsOrGroup : group;
+      return Effect.runPromise(
+        CreateOpenEditorEffect(editor, options, targetGroup)
+      );
+    }, "openEditor"),
+    // --- Stubs for other methods and events ---
+    // A full implementation would involve more complex orchestration Effects.
+    openEditors: /* @__PURE__ */ __name(() => Promise.resolve([]), "openEditors"),
+    replaceEditors: /* @__PURE__ */ __name(() => Promise.resolve(), "replaceEditors"),
+    save: /* @__PURE__ */ __name(() => Promise.resolve({ success: true, editors: [] }), "save"),
+    saveAll: /* @__PURE__ */ __name(() => Promise.resolve({ success: true, editors: [] }), "saveAll"),
+    revert: /* @__PURE__ */ __name(() => Promise.resolve({ success: true, editors: [] }), "revert"),
+    revertAll: /* @__PURE__ */ __name(() => Promise.resolve({ success: true, editors: [] }), "revertAll"),
+    activeEditorPane: void 0,
+    activeEditor: void 0,
+    count: 0,
+    visibleEditorPanes: [],
+    visibleEditors: [],
+    onDidActiveEditorChange: new Emitter().event,
+    onDidVisibleEditorsChange: new Emitter().event,
+    onDidCloseEditor: new Emitter().event,
+    onDidOpenEditorFail: new Emitter().event,
+    onDidMostRecentlyActiveEditorsChange: new Emitter().event
+  };
+  return Service;
+});
+var Definition_default = Definition;
+export {
+  Definition_default as default
+};
+//# sourceMappingURL=Definition.js.map

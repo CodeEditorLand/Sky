@@ -1,1 +1,362 @@
-import{$Gh as I}from"../../../../base/common/async.js";import{$Ji as C}from"../../../../base/common/buffer.js";import{$fm as D}from"../../../../base/common/errorMessage.js";import{$Uj as g}from"../../../../base/common/htmlContent.js";import{$vd as j}from"../../../../base/common/lifecycle.js";import{$ym as J}from"../../../../base/common/marshalling.js";import{$kh as c}from"../../../../base/common/resources.js";import{localize as S}from"../../../../nls.js";import{$fl as E}from"../../../../platform/environment/common/environment.js";import{$5j as H,$kk as l}from"../../../../platform/files/common/files.js";import{$3n as O}from"../../../../platform/log/common/log.js";import{$Ho as M}from"../../../../platform/storage/common/storage.js";import{$Po as b}from"../../../../platform/telemetry/common/telemetry.js";import{$Ao as k}from"../../../../platform/userDataProfile/common/userDataProfile.js";import{$hl as q}from"../../../../platform/workspace/common/workspace.js";import{$RK as F}from"../../../services/lifecycle/common/lifecycle.js";import{$cT as u,$_S as R}from"./chatModel.js";var v=function(n,t,e,s){var i=arguments.length,r=i<3?t:s===null?s=Object.getOwnPropertyDescriptor(t,e):s,o;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")r=Reflect.decorate(n,t,e,s);else for(var h=n.length-1;h>=0;h--)(o=n[h])&&(r=(i<3?o(r):i>3?o(t,e,r):o(t,e))||r);return i>3&&r&&Object.defineProperty(t,e,r),r},a=function(n,t){return function(e,s){t(e,s,n)}};const p=25,f="chat.ChatSessionStore.index";let y=class extends j{constructor(t,e,s,i,r,o,h,w){super(),this.m=t,this.n=e,this.r=s,this.s=i,this.t=r,this.u=o,this.w=h,this.y=w,this.g=new I,this.j=!1;const d=this.s.getWorkspace(),m=!d.configuration&&d.folders.length===0,$=this.s.getWorkspace().id;this.c=m?c(this.y.defaultProfile.globalStorageHome,"emptyWindowChatSessions"):c(this.n.workspaceStorageHome,$,"chatSessions"),this.f=m?c(this.n.workspaceStorageHome,"no-workspace","chatSessions"):void 0,this.B(this.w.onWillShutdown(x=>{this.j=!0,this.h&&x.join(this.h,{id:"join.chatSessionStore",label:S(5715,null)})}))}async storeSessions(t){if(!this.j)try{this.h=this.g.queue(async()=>{try{await Promise.all(t.map(e=>this.z(e))),await this.F(),await this.C()}catch(e){this.H("storeSessions","Error storing chat sessions",e)}}),await this.h}finally{this.h=void 0}}async z(t){try{const e=this.J(),s=this.N(t.sessionId),i=JSON.stringify(t,void 0,2);await this.m.writeFile(s,C.fromString(i)),e.entries[t.sessionId]=N(t)}catch(e){this.H("sessionWrite","Error writing chat session",e)}}async C(){const t=this.J();try{this.u.store(f,t,this.D(),1)}catch(e){this.H("indexWrite","Error writing index",e)}}D(){const t=this.s.getWorkspace();return!t.configuration&&t.folders.length===0?-1:1}async F(){const t=this.J(),e=Object.entries(t.entries).sort((s,i)=>i[1].lastMessageDate-s[1].lastMessageDate).map(([s])=>s);if(e.length>p){const s=e.slice(p);for(const i of s)delete t.entries[i];this.r.trace(`ChatSessionStore: Trimmed ${s.length} old chat sessions from index`)}}async G(t){const e=this.J();if(!e.entries[t])return;const s=this.N(t);try{await this.m.del(s)}catch(i){l(i)!==1&&this.H("sessionDelete","Error deleting chat session",i)}finally{delete e.entries[t]}}hasSessions(){return Object.keys(this.J().entries).length>0}isSessionEmpty(t){return this.J().entries[t]?.isEmpty??!0}async deleteSession(t){await this.g.queue(async()=>{await this.G(t),await this.C()})}async clearAllSessions(){await this.g.queue(async()=>{const t=this.J(),e=Object.keys(t.entries);this.r.info(`ChatSessionStore: Clearing ${e.length} chat sessions`),await Promise.all(e.map(s=>this.G(s))),await this.C()})}async setSessionTitle(t,e){await this.g.queue(async()=>{const s=this.J();s.entries[t]&&(s.entries[t].title=e)})}H(t,e,s){this.r.error("ChatSessionStore: "+e,D(s));const i=s&&l(s);this.t.publicLog2("chatSessionStoreError",{reason:t,fileOperationReason:i??-1})}J(){if(this.I)return this.I;const t=this.u.get(f,this.D(),void 0);if(!t)return this.I={version:1,entries:{}},this.I;try{const e=JSON.parse(t);return L(e)?this.I=e:(this.H("invalidIndexFormat",`Invalid index format: ${t}`),this.I={version:1,entries:{}}),this.I}catch(e){return this.H("invalidIndexJSON",`Index corrupt: ${t}`,e),this.I={version:1,entries:{}},this.I}}async getIndex(){return this.g.queue(async()=>this.J().entries)}logIndex(){const t=this.u.get(f,this.D(),void 0);this.r.info("ChatSessionStore index: ",t)}async migrateDataIfNeeded(t){await this.g.queue(async()=>{if(!this.u.get(f,this.D(),void 0)){const i=t();i&&await this.L(i)}})}async L(t){const e=Object.keys(t).length;this.r.info(`ChatSessionStore: Migrating ${e} chat sessions from storage service to file system`),await Promise.all(Object.values(t).map(async s=>{await this.z(s)})),await this.C()}async readSession(t){return await this.g.queue(async()=>{let e;const s=this.N(t);try{e=(await this.m.readFile(s)).value.toString()}catch(i){if(this.H("sessionReadFile",`Error reading chat session file ${t}`,i),l(i)===1&&this.f&&(e=await this.M(t)),!e)return}try{const i=J(JSON.parse(e));for(const r of i.requests)Array.isArray(r.response)?r.response=r.response.map(o=>typeof o=="string"?new g(o):o):typeof r.response=="string"&&(r.response=[new g(r.response)]);return R(i)}catch(i){this.H("malformedSession",`Malformed session data in ${s.fsPath}: [${e.substring(0,20)}${e.length>20?"...":""}]`,i);return}})}async M(t){let e;if(this.f){const s=c(this.f,`${t}.json`);try{e=(await this.m.readFile(s)).value.toString(),this.r.info(`ChatSessionStore: Read chat session ${t} from previous location`)}catch(i){this.H("sessionReadFile",`Error reading chat session file ${t} from previous location`,i);return}}return e}N(t){return c(this.c,`${t}.json`)}getChatStorageFolder(){return this.c}};y=v([a(0,H),a(1,E),a(2,O),a(3,q),a(4,b),a(5,M),a(6,F),a(7,k)],y);function W(n){return!!n&&typeof n=="object"&&typeof n.sessionId=="string"&&typeof n.title=="string"&&typeof n.lastMessageDate=="number"}function L(n){if(typeof n!="object"||n===null)return!1;const t=n;if(t.version!==1||typeof t.entries!="object"||t.entries===null)return!1;for(const e in t.entries)if(!W(t.entries[e]))return!1;return!0}function N(n){const t=n instanceof u?n.title||S(5716,null):n.customTitle??u.getDefaultTitle(n.requests);return{sessionId:n.sessionId,title:t,lastMessageDate:n.lastMessageDate,isImported:n.isImported,initialLocation:n.initialLocation,isEmpty:n instanceof u?n.getRequests().length===0:n.requests.length===0}}export{y as $uec};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { Sequencer } from "../../../../base/common/async.js";
+import { VSBuffer } from "../../../../base/common/buffer.js";
+import { toErrorMessage } from "../../../../base/common/errorMessage.js";
+import { MarkdownString } from "../../../../base/common/htmlContent.js";
+import { Disposable } from "../../../../base/common/lifecycle.js";
+import { revive } from "../../../../base/common/marshalling.js";
+import { joinPath } from "../../../../base/common/resources.js";
+import { localize } from "../../../../nls.js";
+import { IEnvironmentService } from "../../../../platform/environment/common/environment.js";
+import { IFileService, toFileOperationResult } from "../../../../platform/files/common/files.js";
+import { ILogService } from "../../../../platform/log/common/log.js";
+import { IStorageService } from "../../../../platform/storage/common/storage.js";
+import { ITelemetryService } from "../../../../platform/telemetry/common/telemetry.js";
+import { IUserDataProfilesService } from "../../../../platform/userDataProfile/common/userDataProfile.js";
+import { IWorkspaceContextService } from "../../../../platform/workspace/common/workspace.js";
+import { ILifecycleService } from "../../../services/lifecycle/common/lifecycle.js";
+import { ChatModel, normalizeSerializableChatData } from "./chatModel.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+const maxPersistedSessions = 25;
+const ChatIndexStorageKey = "chat.ChatSessionStore.index";
+let ChatSessionStore = class ChatSessionStore2 extends Disposable {
+  static {
+    __name(this, "ChatSessionStore");
+  }
+  constructor(fileService, environmentService, logService, workspaceContextService, telemetryService, storageService, lifecycleService, userDataProfilesService) {
+    super();
+    this.fileService = fileService;
+    this.environmentService = environmentService;
+    this.logService = logService;
+    this.workspaceContextService = workspaceContextService;
+    this.telemetryService = telemetryService;
+    this.storageService = storageService;
+    this.lifecycleService = lifecycleService;
+    this.userDataProfilesService = userDataProfilesService;
+    this.storeQueue = new Sequencer();
+    this.shuttingDown = false;
+    const workspace = this.workspaceContextService.getWorkspace();
+    const isEmptyWindow = !workspace.configuration && workspace.folders.length === 0;
+    const workspaceId = this.workspaceContextService.getWorkspace().id;
+    this.storageRoot = isEmptyWindow ? joinPath(this.userDataProfilesService.defaultProfile.globalStorageHome, "emptyWindowChatSessions") : joinPath(this.environmentService.workspaceStorageHome, workspaceId, "chatSessions");
+    this.previousEmptyWindowStorageRoot = isEmptyWindow ? joinPath(this.environmentService.workspaceStorageHome, "no-workspace", "chatSessions") : void 0;
+    this._register(this.lifecycleService.onWillShutdown((e) => {
+      this.shuttingDown = true;
+      if (!this.storeTask) {
+        return;
+      }
+      e.join(this.storeTask, {
+        id: "join.chatSessionStore",
+        label: localize("join.chatSessionStore", "Saving chat history")
+      });
+    }));
+  }
+  async storeSessions(sessions) {
+    if (this.shuttingDown) {
+      return;
+    }
+    try {
+      this.storeTask = this.storeQueue.queue(async () => {
+        try {
+          await Promise.all(sessions.map((session) => this.writeSession(session)));
+          await this.trimEntries();
+          await this.flushIndex();
+        } catch (e) {
+          this.reportError("storeSessions", "Error storing chat sessions", e);
+        }
+      });
+      await this.storeTask;
+    } finally {
+      this.storeTask = void 0;
+    }
+  }
+  // async storeTransferSession(transferData: IChatTransfer, session: ISerializableChatData): Promise<void> {
+  // 	try {
+  // 		const content = JSON.stringify(session, undefined, 2);
+  // 		await this.fileService.writeFile(this.transferredSessionStorageRoot, VSBuffer.fromString(content));
+  // 	} catch (e) {
+  // 		this.reportError('sessionWrite', 'Error writing chat session', e);
+  // 		return;
+  // 	}
+  // 	const index = this.getTransferredSessionIndex();
+  // 	index[transferData.toWorkspace.toString()] = transferData;
+  // 	try {
+  // 		this.storageService.store(ChatTransferIndexStorageKey, index, StorageScope.PROFILE, StorageTarget.MACHINE);
+  // 	} catch (e) {
+  // 		this.reportError('storeTransferSession', 'Error storing chat transfer session', e);
+  // 	}
+  // }
+  // private getTransferredSessionIndex(): IChatTransferIndex {
+  // 	try {
+  // 		const data: IChatTransferIndex = this.storageService.getObject(ChatTransferIndexStorageKey, StorageScope.PROFILE, {});
+  // 		return data;
+  // 	} catch (e) {
+  // 		this.reportError('getTransferredSessionIndex', 'Error reading chat transfer index', e);
+  // 		return {};
+  // 	}
+  // }
+  async writeSession(session) {
+    try {
+      const index = this.internalGetIndex();
+      const storageLocation = this.getStorageLocation(session.sessionId);
+      const content = JSON.stringify(session, void 0, 2);
+      await this.fileService.writeFile(storageLocation, VSBuffer.fromString(content));
+      index.entries[session.sessionId] = getSessionMetadata(session);
+    } catch (e) {
+      this.reportError("sessionWrite", "Error writing chat session", e);
+    }
+  }
+  async flushIndex() {
+    const index = this.internalGetIndex();
+    try {
+      this.storageService.store(
+        ChatIndexStorageKey,
+        index,
+        this.getIndexStorageScope(),
+        1
+        /* StorageTarget.MACHINE */
+      );
+    } catch (e) {
+      this.reportError("indexWrite", "Error writing index", e);
+    }
+  }
+  getIndexStorageScope() {
+    const workspace = this.workspaceContextService.getWorkspace();
+    const isEmptyWindow = !workspace.configuration && workspace.folders.length === 0;
+    return isEmptyWindow ? -1 : 1;
+  }
+  async trimEntries() {
+    const index = this.internalGetIndex();
+    const entries = Object.entries(index.entries).sort((a, b) => b[1].lastMessageDate - a[1].lastMessageDate).map(([id]) => id);
+    if (entries.length > maxPersistedSessions) {
+      const entriesToDelete = entries.slice(maxPersistedSessions);
+      for (const entry of entriesToDelete) {
+        delete index.entries[entry];
+      }
+      this.logService.trace(`ChatSessionStore: Trimmed ${entriesToDelete.length} old chat sessions from index`);
+    }
+  }
+  async internalDeleteSession(sessionId) {
+    const index = this.internalGetIndex();
+    if (!index.entries[sessionId]) {
+      return;
+    }
+    const storageLocation = this.getStorageLocation(sessionId);
+    try {
+      await this.fileService.del(storageLocation);
+    } catch (e) {
+      if (toFileOperationResult(e) !== 1) {
+        this.reportError("sessionDelete", "Error deleting chat session", e);
+      }
+    } finally {
+      delete index.entries[sessionId];
+    }
+  }
+  hasSessions() {
+    return Object.keys(this.internalGetIndex().entries).length > 0;
+  }
+  isSessionEmpty(sessionId) {
+    const index = this.internalGetIndex();
+    return index.entries[sessionId]?.isEmpty ?? true;
+  }
+  async deleteSession(sessionId) {
+    await this.storeQueue.queue(async () => {
+      await this.internalDeleteSession(sessionId);
+      await this.flushIndex();
+    });
+  }
+  async clearAllSessions() {
+    await this.storeQueue.queue(async () => {
+      const index = this.internalGetIndex();
+      const entries = Object.keys(index.entries);
+      this.logService.info(`ChatSessionStore: Clearing ${entries.length} chat sessions`);
+      await Promise.all(entries.map((entry) => this.internalDeleteSession(entry)));
+      await this.flushIndex();
+    });
+  }
+  async setSessionTitle(sessionId, title) {
+    await this.storeQueue.queue(async () => {
+      const index = this.internalGetIndex();
+      if (index.entries[sessionId]) {
+        index.entries[sessionId].title = title;
+      }
+    });
+  }
+  reportError(reasonForTelemetry, message, error) {
+    this.logService.error(`ChatSessionStore: ` + message, toErrorMessage(error));
+    const fileOperationReason = error && toFileOperationResult(error);
+    this.telemetryService.publicLog2("chatSessionStoreError", {
+      reason: reasonForTelemetry,
+      fileOperationReason: fileOperationReason ?? -1
+    });
+  }
+  internalGetIndex() {
+    if (this.indexCache) {
+      return this.indexCache;
+    }
+    const data = this.storageService.get(ChatIndexStorageKey, this.getIndexStorageScope(), void 0);
+    if (!data) {
+      this.indexCache = { version: 1, entries: {} };
+      return this.indexCache;
+    }
+    try {
+      const index = JSON.parse(data);
+      if (isChatSessionIndex(index)) {
+        this.indexCache = index;
+      } else {
+        this.reportError("invalidIndexFormat", `Invalid index format: ${data}`);
+        this.indexCache = { version: 1, entries: {} };
+      }
+      return this.indexCache;
+    } catch (e) {
+      this.reportError("invalidIndexJSON", `Index corrupt: ${data}`, e);
+      this.indexCache = { version: 1, entries: {} };
+      return this.indexCache;
+    }
+  }
+  async getIndex() {
+    return this.storeQueue.queue(async () => {
+      return this.internalGetIndex().entries;
+    });
+  }
+  logIndex() {
+    const data = this.storageService.get(ChatIndexStorageKey, this.getIndexStorageScope(), void 0);
+    this.logService.info("ChatSessionStore index: ", data);
+  }
+  async migrateDataIfNeeded(getInitialData) {
+    await this.storeQueue.queue(async () => {
+      const data = this.storageService.get(ChatIndexStorageKey, this.getIndexStorageScope(), void 0);
+      const needsMigrationFromStorageService = !data;
+      if (needsMigrationFromStorageService) {
+        const initialData = getInitialData();
+        if (initialData) {
+          await this.migrate(initialData);
+        }
+      }
+    });
+  }
+  async migrate(initialData) {
+    const numSessions = Object.keys(initialData).length;
+    this.logService.info(`ChatSessionStore: Migrating ${numSessions} chat sessions from storage service to file system`);
+    await Promise.all(Object.values(initialData).map(async (session) => {
+      await this.writeSession(session);
+    }));
+    await this.flushIndex();
+  }
+  async readSession(sessionId) {
+    return await this.storeQueue.queue(async () => {
+      let rawData;
+      const storageLocation = this.getStorageLocation(sessionId);
+      try {
+        rawData = (await this.fileService.readFile(storageLocation)).value.toString();
+      } catch (e) {
+        this.reportError("sessionReadFile", `Error reading chat session file ${sessionId}`, e);
+        if (toFileOperationResult(e) === 1 && this.previousEmptyWindowStorageRoot) {
+          rawData = await this.readSessionFromPreviousLocation(sessionId);
+        }
+        if (!rawData) {
+          return void 0;
+        }
+      }
+      try {
+        const session = revive(JSON.parse(rawData));
+        for (const request of session.requests) {
+          if (Array.isArray(request.response)) {
+            request.response = request.response.map((response) => {
+              if (typeof response === "string") {
+                return new MarkdownString(response);
+              }
+              return response;
+            });
+          } else if (typeof request.response === "string") {
+            request.response = [new MarkdownString(request.response)];
+          }
+        }
+        return normalizeSerializableChatData(session);
+      } catch (err) {
+        this.reportError("malformedSession", `Malformed session data in ${storageLocation.fsPath}: [${rawData.substring(0, 20)}${rawData.length > 20 ? "..." : ""}]`, err);
+        return void 0;
+      }
+    });
+  }
+  async readSessionFromPreviousLocation(sessionId) {
+    let rawData;
+    if (this.previousEmptyWindowStorageRoot) {
+      const storageLocation2 = joinPath(this.previousEmptyWindowStorageRoot, `${sessionId}.json`);
+      try {
+        rawData = (await this.fileService.readFile(storageLocation2)).value.toString();
+        this.logService.info(`ChatSessionStore: Read chat session ${sessionId} from previous location`);
+      } catch (e) {
+        this.reportError("sessionReadFile", `Error reading chat session file ${sessionId} from previous location`, e);
+        return void 0;
+      }
+    }
+    return rawData;
+  }
+  getStorageLocation(chatSessionId) {
+    return joinPath(this.storageRoot, `${chatSessionId}.json`);
+  }
+  getChatStorageFolder() {
+    return this.storageRoot;
+  }
+};
+ChatSessionStore = __decorate([
+  __param(0, IFileService),
+  __param(1, IEnvironmentService),
+  __param(2, ILogService),
+  __param(3, IWorkspaceContextService),
+  __param(4, ITelemetryService),
+  __param(5, IStorageService),
+  __param(6, ILifecycleService),
+  __param(7, IUserDataProfilesService)
+], ChatSessionStore);
+function isChatSessionEntryMetadata(obj) {
+  return !!obj && typeof obj === "object" && typeof obj.sessionId === "string" && typeof obj.title === "string" && typeof obj.lastMessageDate === "number";
+}
+__name(isChatSessionEntryMetadata, "isChatSessionEntryMetadata");
+function isChatSessionIndex(data) {
+  if (typeof data !== "object" || data === null) {
+    return false;
+  }
+  const index = data;
+  if (index.version !== 1) {
+    return false;
+  }
+  if (typeof index.entries !== "object" || index.entries === null) {
+    return false;
+  }
+  for (const key in index.entries) {
+    if (!isChatSessionEntryMetadata(index.entries[key])) {
+      return false;
+    }
+  }
+  return true;
+}
+__name(isChatSessionIndex, "isChatSessionIndex");
+function getSessionMetadata(session) {
+  const title = session instanceof ChatModel ? session.title || localize("newChat", "New Chat") : session.customTitle ?? ChatModel.getDefaultTitle(session.requests);
+  return {
+    sessionId: session.sessionId,
+    title,
+    lastMessageDate: session.lastMessageDate,
+    isImported: session.isImported,
+    initialLocation: session.initialLocation,
+    isEmpty: session instanceof ChatModel ? session.getRequests().length === 0 : session.requests.length === 0
+  };
+}
+__name(getSessionMetadata, "getSessionMetadata");
+export {
+  ChatSessionStore
+};
+//# sourceMappingURL=chatSessionStore.js.map

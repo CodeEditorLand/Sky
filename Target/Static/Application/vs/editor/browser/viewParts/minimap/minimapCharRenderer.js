@@ -1,1 +1,92 @@
-import{$Ucb as O}from"./minimapCharSheet.js";import{$wf as $}from"../../../../base/common/uint.js";class A{constructor(t,e){this.scale=e,this._minimapCharRendererBrand=void 0,this.a=A.e(t,.8),this.d=A.e(t,50/60)}static e(t,e){const r=new Uint8ClampedArray(t.length);for(let s=0,a=t.length;s<a;s++)r[s]=$(t[s]*e);return r}renderChar(t,e,r,s,a,i,h,n,o,c,l){const d=1*this.scale,m=2*this.scale,f=l?1:m;if(e+d>t.width||r+f>t.height)return;const b=c?this.d:this.a,g=O(s,o),p=4*t.width,w=h.r,u=h.g,A=h.b,C=a.r-w,$=a.g-u,x=a.b-A,j=Math.max(i,n),M=t.data;let R=g*d*m,U=r*p+4*e;for(let t=0;t<f;t++){let t=U;for(let e=0;e<d;e++){const e=b[R++]/255*(i/255);M[t++]=w+C*e,M[t++]=u+$*e,M[t++]=A+x*e,M[t++]=j}U+=p}}blockRenderChar(t,e,r,s,a,i,h,n){const o=1*this.scale,c=2*this.scale,l=n?1:c;if(e+o>t.width||r+l>t.height)return;const d=4*t.width,m=a/255*.5,f=i.r,b=i.g,g=i.b,p=f+(s.r-f)*m,w=b+(s.g-b)*m,u=g+(s.b-g)*m,A=Math.max(a,h),C=t.data;let $=r*d+4*e;for(let t=0;t<l;t++){let t=$;for(let e=0;e<o;e++)C[t++]=p,C[t++]=w,C[t++]=u,C[t++]=A;$+=d}}}export{A as $Vcb};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { getCharIndex } from "./minimapCharSheet.js";
+import { toUint8 } from "../../../../base/common/uint.js";
+class MinimapCharRenderer {
+  static {
+    __name(this, "MinimapCharRenderer");
+  }
+  constructor(charData, scale) {
+    this.scale = scale;
+    this._minimapCharRendererBrand = void 0;
+    this.charDataNormal = MinimapCharRenderer.soften(charData, 12 / 15);
+    this.charDataLight = MinimapCharRenderer.soften(charData, 50 / 60);
+  }
+  static soften(input, ratio) {
+    const result = new Uint8ClampedArray(input.length);
+    for (let i = 0, len = input.length; i < len; i++) {
+      result[i] = toUint8(input[i] * ratio);
+    }
+    return result;
+  }
+  renderChar(target, dx, dy, chCode, color, foregroundAlpha, backgroundColor, backgroundAlpha, fontScale, useLighterFont, force1pxHeight) {
+    const charWidth = 1 * this.scale;
+    const charHeight = 2 * this.scale;
+    const renderHeight = force1pxHeight ? 1 : charHeight;
+    if (dx + charWidth > target.width || dy + renderHeight > target.height) {
+      console.warn("bad render request outside image data");
+      return;
+    }
+    const charData = useLighterFont ? this.charDataLight : this.charDataNormal;
+    const charIndex = getCharIndex(chCode, fontScale);
+    const destWidth = target.width * 4;
+    const backgroundR = backgroundColor.r;
+    const backgroundG = backgroundColor.g;
+    const backgroundB = backgroundColor.b;
+    const deltaR = color.r - backgroundR;
+    const deltaG = color.g - backgroundG;
+    const deltaB = color.b - backgroundB;
+    const destAlpha = Math.max(foregroundAlpha, backgroundAlpha);
+    const dest = target.data;
+    let sourceOffset = charIndex * charWidth * charHeight;
+    let row = dy * destWidth + dx * 4;
+    for (let y = 0; y < renderHeight; y++) {
+      let column = row;
+      for (let x = 0; x < charWidth; x++) {
+        const c = charData[sourceOffset++] / 255 * (foregroundAlpha / 255);
+        dest[column++] = backgroundR + deltaR * c;
+        dest[column++] = backgroundG + deltaG * c;
+        dest[column++] = backgroundB + deltaB * c;
+        dest[column++] = destAlpha;
+      }
+      row += destWidth;
+    }
+  }
+  blockRenderChar(target, dx, dy, color, foregroundAlpha, backgroundColor, backgroundAlpha, force1pxHeight) {
+    const charWidth = 1 * this.scale;
+    const charHeight = 2 * this.scale;
+    const renderHeight = force1pxHeight ? 1 : charHeight;
+    if (dx + charWidth > target.width || dy + renderHeight > target.height) {
+      console.warn("bad render request outside image data");
+      return;
+    }
+    const destWidth = target.width * 4;
+    const c = 0.5 * (foregroundAlpha / 255);
+    const backgroundR = backgroundColor.r;
+    const backgroundG = backgroundColor.g;
+    const backgroundB = backgroundColor.b;
+    const deltaR = color.r - backgroundR;
+    const deltaG = color.g - backgroundG;
+    const deltaB = color.b - backgroundB;
+    const colorR = backgroundR + deltaR * c;
+    const colorG = backgroundG + deltaG * c;
+    const colorB = backgroundB + deltaB * c;
+    const destAlpha = Math.max(foregroundAlpha, backgroundAlpha);
+    const dest = target.data;
+    let row = dy * destWidth + dx * 4;
+    for (let y = 0; y < renderHeight; y++) {
+      let column = row;
+      for (let x = 0; x < charWidth; x++) {
+        dest[column++] = colorR;
+        dest[column++] = colorG;
+        dest[column++] = colorB;
+        dest[column++] = destAlpha;
+      }
+      row += destWidth;
+    }
+  }
+}
+export {
+  MinimapCharRenderer
+};
+//# sourceMappingURL=minimapCharRenderer.js.map

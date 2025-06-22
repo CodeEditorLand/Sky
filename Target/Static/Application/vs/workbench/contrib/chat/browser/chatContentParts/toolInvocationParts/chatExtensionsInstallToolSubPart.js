@@ -1,1 +1,97 @@
-import*as h from"../../../../../../base/browser/dom.js";import{$df as j}from"../../../../../../base/common/event.js";import{localize as c}from"../../../../../../nls.js";import{$Vn as K}from"../../../../../../platform/contextkey/common/contextkey.js";import{$jz as N}from"../../../../../../platform/extensionManagement/common/extensionManagement.js";import{$vz as T}from"../../../../../../platform/extensionManagement/common/extensionManagementUtil.js";import{$mj as L}from"../../../../../../platform/instantiation/common/instantiation.js";import{$ux as M}from"../../../../../../platform/keybinding/common/keybinding.js";import{ChatContextKeys as O}from"../../../common/chatContextKeys.js";import{$HEb as P}from"../../actions/chatExecuteActions.js";import{$qEb as z}from"../../actions/chatToolActions.js";import{$lWb as H}from"../../chat.js";import{$UOb as Q}from"../chatConfirmationWidget.js";import{$qPb as R}from"../chatExtensionsContentPart.js";import{$vQb as W}from"./chatToolInvocationSubPart.js";var y=function(n,e,t,i){var s=arguments.length,o=s<3?e:i===null?i=Object.getOwnPropertyDescriptor(e,t):i,r;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")o=Reflect.decorate(n,e,t,i);else for(var f=n.length-1;f>=0;f--)(r=n[f])&&(o=(s<3?r(o):s>3?r(e,t,o):r(e,t))||o);return s>3&&o&&Object.defineProperty(e,t,o),o},m=function(n,e){return function(t,i){e(t,i,n)}};let x=class extends W{constructor(e,t,i,s,o,r,f){if(super(e),this.codeblocks=[],e.toolSpecificData?.kind!=="extensions")throw new Error("Tool specific data is missing or not of kind extensions");const u=e.toolSpecificData;this.domNode=h.$("");const b=this.B(f.createInstance(R,u));if(this.B(b.onDidChangeHeight(()=>this.c.fire())),h.$M6(this.domNode,b.domNode),e.isConfirmed===void 0){const l=c(5198,null),$=i.lookupKeybinding(z)?.getLabel(),B=$?`${l} (${$})`:l,a=c(5199,null),g=i.lookupKeybinding(P)?.getLabel(),D=g?`${a} (${g})`:a,C=this.B(new j),_=[{label:l,data:!0,tooltip:B,disabled:!0,onDidChangeDisablement:C.event},{label:a,data:!1,isSecondary:!0,tooltip:D}],d=this.B(f.createInstance(Q,e.confirmationMessages?.title??c(5200,null),void 0,e.confirmationMessages?.message??c(5201,null),_,t.container));this.B(d.onDidChangeHeight(()=>this.c.fire())),h.$M6(this.domNode,d.domNode),this.B(d.onDidClick(p=>{e.confirmed.complete(p.data),o.getWidgetBySessionId(t.element.sessionId)?.focusInput()})),e.confirmed.p.then(()=>{O.Editing.hasToolConfirmation.bindTo(s).set(!1),this.b.fire()});const E=this.B(r.onInstallExtension(p=>{u.extensions.some(w=>T({id:w},p.identifier))&&(E.dispose(),C.fire(!1))}))}}};x=y([m(2,M),m(3,K),m(4,H),m(5,N),m(6,L)],x);export{x as $wQb};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import * as dom from "../../../../../../base/browser/dom.js";
+import { Emitter } from "../../../../../../base/common/event.js";
+import { localize } from "../../../../../../nls.js";
+import { IContextKeyService } from "../../../../../../platform/contextkey/common/contextkey.js";
+import { IExtensionManagementService } from "../../../../../../platform/extensionManagement/common/extensionManagement.js";
+import { areSameExtensions } from "../../../../../../platform/extensionManagement/common/extensionManagementUtil.js";
+import { IInstantiationService } from "../../../../../../platform/instantiation/common/instantiation.js";
+import { IKeybindingService } from "../../../../../../platform/keybinding/common/keybinding.js";
+import { ChatContextKeys } from "../../../common/chatContextKeys.js";
+import { CancelChatActionId } from "../../actions/chatExecuteActions.js";
+import { AcceptToolConfirmationActionId } from "../../actions/chatToolActions.js";
+import { IChatWidgetService } from "../../chat.js";
+import { ChatConfirmationWidget } from "../chatConfirmationWidget.js";
+import { ChatExtensionsContentPart } from "../chatExtensionsContentPart.js";
+import { BaseChatToolInvocationSubPart } from "./chatToolInvocationSubPart.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+let ExtensionsInstallConfirmationWidgetSubPart = class ExtensionsInstallConfirmationWidgetSubPart2 extends BaseChatToolInvocationSubPart {
+  static {
+    __name(this, "ExtensionsInstallConfirmationWidgetSubPart");
+  }
+  constructor(toolInvocation, context, keybindingService, contextKeyService, chatWidgetService, extensionManagementService, instantiationService) {
+    super(toolInvocation);
+    this.codeblocks = [];
+    if (toolInvocation.toolSpecificData?.kind !== "extensions") {
+      throw new Error("Tool specific data is missing or not of kind extensions");
+    }
+    const extensionsContent = toolInvocation.toolSpecificData;
+    this.domNode = dom.$("");
+    const chatExtensionsContentPart = this._register(instantiationService.createInstance(ChatExtensionsContentPart, extensionsContent));
+    this._register(chatExtensionsContentPart.onDidChangeHeight(() => this._onDidChangeHeight.fire()));
+    dom.append(this.domNode, chatExtensionsContentPart.domNode);
+    if (toolInvocation.isConfirmed === void 0) {
+      const continueLabel = localize("continue", "Continue");
+      const continueKeybinding = keybindingService.lookupKeybinding(AcceptToolConfirmationActionId)?.getLabel();
+      const continueTooltip = continueKeybinding ? `${continueLabel} (${continueKeybinding})` : continueLabel;
+      const cancelLabel = localize("cancel", "Cancel");
+      const cancelKeybinding = keybindingService.lookupKeybinding(CancelChatActionId)?.getLabel();
+      const cancelTooltip = cancelKeybinding ? `${cancelLabel} (${cancelKeybinding})` : cancelLabel;
+      const enableContinueButtonEvent = this._register(new Emitter());
+      const buttons = [
+        {
+          label: continueLabel,
+          data: true,
+          tooltip: continueTooltip,
+          disabled: true,
+          onDidChangeDisablement: enableContinueButtonEvent.event
+        },
+        {
+          label: cancelLabel,
+          data: false,
+          isSecondary: true,
+          tooltip: cancelTooltip
+        }
+      ];
+      const confirmWidget = this._register(instantiationService.createInstance(ChatConfirmationWidget, toolInvocation.confirmationMessages?.title ?? localize("installExtensions", "Install Extensions"), void 0, toolInvocation.confirmationMessages?.message ?? localize("installExtensionsConfirmation", "Click the Install button on the extension and then press Continue when finished."), buttons, context.container));
+      this._register(confirmWidget.onDidChangeHeight(() => this._onDidChangeHeight.fire()));
+      dom.append(this.domNode, confirmWidget.domNode);
+      this._register(confirmWidget.onDidClick((button) => {
+        toolInvocation.confirmed.complete(button.data);
+        chatWidgetService.getWidgetBySessionId(context.element.sessionId)?.focusInput();
+      }));
+      toolInvocation.confirmed.p.then(() => {
+        ChatContextKeys.Editing.hasToolConfirmation.bindTo(contextKeyService).set(false);
+        this._onNeedsRerender.fire();
+      });
+      const disposable = this._register(extensionManagementService.onInstallExtension((e) => {
+        if (extensionsContent.extensions.some((id) => areSameExtensions({ id }, e.identifier))) {
+          disposable.dispose();
+          enableContinueButtonEvent.fire(false);
+        }
+      }));
+    }
+  }
+};
+ExtensionsInstallConfirmationWidgetSubPart = __decorate([
+  __param(2, IKeybindingService),
+  __param(3, IContextKeyService),
+  __param(4, IChatWidgetService),
+  __param(5, IExtensionManagementService),
+  __param(6, IInstantiationService)
+], ExtensionsInstallConfirmationWidgetSubPart);
+export {
+  ExtensionsInstallConfirmationWidgetSubPart
+};
+//# sourceMappingURL=chatExtensionsInstallToolSubPart.js.map

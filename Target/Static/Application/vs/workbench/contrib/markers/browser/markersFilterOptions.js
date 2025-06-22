@@ -1,1 +1,92 @@
-import{$yj as u,$zj as j}from"../../../../base/common/filters.js";import{$0i as y,$7i as $,$aj as x}from"../../../../base/common/glob.js";import*as n from"../../../../base/common/strings.js";import{$mh as b}from"../../../../base/common/resources.js";import{$jj as W}from"../../../../base/common/ternarySearchTree.js";class l{constructor(s,t,i){this.a=x(s),this.b=W.forUris(r=>i.extUri.ignorePathCasing(r));for(const r of t)this.b.set(r.root,{root:r.root,expression:x(r.expression)})}matches(s){const t=this.b.findSubstr(s);if(t){const i=b(t.root,s);if(i&&t.expression(i))return!0}return!!this.a(s.path)}}class w{static{this._filter=j}static{this._messageFilter=u}static EMPTY(s){return new w("",[],!1,!1,!1,s)}constructor(s,t,i,r,g,h){this.filter=s,this.showWarnings=!1,this.showErrors=!1,this.showInfos=!1,s=s.trim(),this.showWarnings=i,this.showErrors=r,this.showInfos=g;const a=Array.isArray(t)?t:[],f=Array.isArray(t)?$():t;for(const{expression:e}of a)for(const o of Object.keys(e))o.endsWith("/**")||(e[`${n.$Jf(o,"/")}/**`]=e[o]);const c=s.startsWith("!");this.textFilter={text:(c?n.$If(s,"!"):s).trim(),negate:c};const m=$();if(s){const e=y(s,",").map(o=>o.trim()).filter(o=>!!o.length);for(const o of e)if(o.startsWith("!")){const p=n.$If(o,"!");p&&this.a(f,p)}else this.a(m,o)}this.excludesMatcher=new l(f,a,h),this.includesMatcher=new l(m,[],h)}a(s,t){t[0]==="."&&(t="*"+t),s[`**/${t}/**`]=!0,s[`**/${t}`]=!0}}export{l as $vpc,w as $wpc};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { matchesFuzzy, matchesFuzzy2 } from "../../../../base/common/filters.js";
+import { splitGlobAware, getEmptyExpression, parse } from "../../../../base/common/glob.js";
+import * as strings from "../../../../base/common/strings.js";
+import { relativePath } from "../../../../base/common/resources.js";
+import { TernarySearchTree } from "../../../../base/common/ternarySearchTree.js";
+class ResourceGlobMatcher {
+  static {
+    __name(this, "ResourceGlobMatcher");
+  }
+  constructor(globalExpression, rootExpressions, uriIdentityService) {
+    this.globalExpression = parse(globalExpression);
+    this.expressionsByRoot = TernarySearchTree.forUris((uri) => uriIdentityService.extUri.ignorePathCasing(uri));
+    for (const expression of rootExpressions) {
+      this.expressionsByRoot.set(expression.root, { root: expression.root, expression: parse(expression.expression) });
+    }
+  }
+  matches(resource) {
+    const rootExpression = this.expressionsByRoot.findSubstr(resource);
+    if (rootExpression) {
+      const path = relativePath(rootExpression.root, resource);
+      if (path && !!rootExpression.expression(path)) {
+        return true;
+      }
+    }
+    return !!this.globalExpression(resource.path);
+  }
+}
+class FilterOptions {
+  static {
+    __name(this, "FilterOptions");
+  }
+  static {
+    this._filter = matchesFuzzy2;
+  }
+  static {
+    this._messageFilter = matchesFuzzy;
+  }
+  static EMPTY(uriIdentityService) {
+    return new FilterOptions("", [], false, false, false, uriIdentityService);
+  }
+  constructor(filter, filesExclude, showWarnings, showErrors, showInfos, uriIdentityService) {
+    this.filter = filter;
+    this.showWarnings = false;
+    this.showErrors = false;
+    this.showInfos = false;
+    filter = filter.trim();
+    this.showWarnings = showWarnings;
+    this.showErrors = showErrors;
+    this.showInfos = showInfos;
+    const filesExcludeByRoot = Array.isArray(filesExclude) ? filesExclude : [];
+    const excludesExpression = Array.isArray(filesExclude) ? getEmptyExpression() : filesExclude;
+    for (const { expression } of filesExcludeByRoot) {
+      for (const pattern of Object.keys(expression)) {
+        if (!pattern.endsWith("/**")) {
+          expression[`${strings.rtrim(pattern, "/")}/**`] = expression[pattern];
+        }
+      }
+    }
+    const negate = filter.startsWith("!");
+    this.textFilter = { text: (negate ? strings.ltrim(filter, "!") : filter).trim(), negate };
+    const includeExpression = getEmptyExpression();
+    if (filter) {
+      const filters = splitGlobAware(filter, ",").map((s) => s.trim()).filter((s) => !!s.length);
+      for (const f of filters) {
+        if (f.startsWith("!")) {
+          const filterText = strings.ltrim(f, "!");
+          if (filterText) {
+            this.setPattern(excludesExpression, filterText);
+          }
+        } else {
+          this.setPattern(includeExpression, f);
+        }
+      }
+    }
+    this.excludesMatcher = new ResourceGlobMatcher(excludesExpression, filesExcludeByRoot, uriIdentityService);
+    this.includesMatcher = new ResourceGlobMatcher(includeExpression, [], uriIdentityService);
+  }
+  setPattern(expression, pattern) {
+    if (pattern[0] === ".") {
+      pattern = "*" + pattern;
+    }
+    expression[`**/${pattern}/**`] = true;
+    expression[`**/${pattern}`] = true;
+  }
+}
+export {
+  FilterOptions,
+  ResourceGlobMatcher
+};
+//# sourceMappingURL=markersFilterOptions.js.map

@@ -1,2 +1,1039 @@
-import{$7b as N}from"../../../base/common/arrays.js";import{$Dh as p}from"../../../base/common/async.js";import{$df as l}from"../../../base/common/event.js";import{$vd as L,$td as D}from"../../../base/common/lifecycle.js";import{ThemeIcon as F}from"../../../base/common/themables.js";import{URI as g}from"../../../base/common/uri.js";import{$Qy as $}from"../../../platform/extensions/common/extensions.js";import{$nj as U}from"../../../platform/instantiation/common/instantiation.js";import{$KWb as q}from"../../contrib/debug/common/abstractDebugAdapter.js";import{$BT as Z,$CT as _,$xT as O}from"../../contrib/debug/common/debugUtils.js";import{$oY as S}from"./extHost.protocol.js";import{$E2 as x}from"./extHostCommands.js";import{$OKc as W}from"./extHostConfiguration.js";import{$1Kc as T}from"./extHostEditorTabs.js";import{$nLc as V}from"./extHostExtensionService.js";import{$i2 as B}from"./extHostRpcService.js";import{$qLc as j}from"./extHostTesting.js";import*as Q from"./extHostTypeConverters.js";import{$zZ as C,$AZ as K,$DZ as E,$CZ as Y,$BZ as M,DebugConsoleMode as H,$EZ as J,$FZ as G,$qY as b,$yZ as m,$EY as I,$rY as z,$vZ as X,$xZ as w,$sZ as ee}from"./extHostTypes.js";import{$vLc as A}from"./extHostVariableResolverService.js";import{$LKc as k}from"./extHostWorkspace.js";var R=function(c,e,t,i){var s=arguments.length,n=s<3?e:i===null?i=Object.getOwnPropertyDescriptor(e,t):i,r;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")n=Reflect.decorate(c,e,t,i);else for(var o=c.length-1;o>=0;o--)(r=c[o])&&(n=(s<3?r(n):s>3?r(e,t,n):r(e,t))||n);return s>3&&n&&Object.defineProperty(e,t,n),n},h=function(c,e){return function(t,i){e(t,i,c)}};const Ee=U("IExtHostDebugService");let y=class extends L{get onDidStartDebugSession(){return this.y.event}get onDidTerminateDebugSession(){return this.z.event}get onDidChangeActiveDebugSession(){return this.C.event}get activeDebugSession(){return this.D?.api}get onDidReceiveDebugSessionCustomEvent(){return this.F.event}get activeDebugConsole(){return this.G.value}constructor(e,t,i,s,n,r,o,u){super(),this.Z=t,this.$=i,this.ab=s,this.bb=n,this.cb=r,this.db=o,this.eb=u,this.w=new Map,this.O=0,this.P=new Map,this.Q=new Map,this.R=new WeakMap,this.S=new Map,this.W=new Map,this.X=0,this.f=0,this.g=[],this.h=0,this.j=[],this.m=0,this.n=[],this.M=new Map,this.N=new Map,this.y=this.B(new l),this.z=this.B(new l),this.C=this.B(new l),this.F=this.B(new l),this.u=e.getProxy(S.MainThreadDebugService),this.I=this.B(new l),this.L=this.B(new l),this.G=new ie(this.u),this.H=new Map,this.$.getExtensionRegistry().then(a=>{this.B(a.onDidChange(f=>{this.gb(a)})),this.gb(a)}),this.Y=e.getProxy(S.MainThreadTelemetry)}async $getVisualizerTreeItem(e,t){const i=this.hb(t);if(!i)return;const s=await this.Q.get(e)?.getTreeItem?.(i);return s?this.fb(e,s):void 0}registerDebugVisualizationTree(e,t,i){const s=$.toKey(e.identifier),n=this.zb(s,t);if(this.P.has(n))throw new Error(`A debug visualization provider with id '${t}' is already registered`);return this.Q.set(n,i),this.u.$registerDebugVisualizerTree(n,!!i.editItem),D(()=>{this.u.$unregisterDebugVisualizerTree(n),this.Q.delete(t)})}async $getVisualizerTreeItemChildren(e,t){const i=this.S.get(t)?.item;return i?(await this.Q.get(e)?.getChildren?.(i))?.map(n=>this.fb(e,n))||[]:[]}async $editVisualizerTreeItem(e,t){const i=this.S.get(e);if(!i)return;const s=await this.Q.get(i.provider)?.editItem?.(i.item,t);return this.fb(i.provider,s||i.item)}$disposeVisualizedTree(e){const t=this.S.get(e);if(!t)return;const i=[t.children];for(const s of i)if(s)for(const n of s)i.push(this.S.get(n)?.children),this.S.delete(n)}fb(e,t){let i=this.R.get(t);return i||(i=this.O++,this.R.set(t,i),this.S.set(i,{provider:e,item:t})),Q.DebugTreeItem.from(t,i)}asDebugSourceUri(e,t){const i=e;if(typeof i.sourceReference=="number"&&i.sourceReference>0){let s=`debug:${encodeURIComponent(i.path||"")}`,n="?";return t&&(s+=`${n}session=${encodeURIComponent(t.id)}`,n="&"),s+=`${n}ref=${i.sourceReference}`,g.parse(s)}else{if(i.path)return g.file(i.path);throw new Error("cannot create uri from DAP 'source' object; properties 'path' and 'sourceReference' are both missing.")}}gb(e){const t=[];for(const i of e.getAllExtensionDescriptions())if(i.contributes){const s=i.contributes.debuggers;if(s&&s.length>0)for(const n of s)O(n)&&t.push(n.type)}this.u.$registerDebugTypes(t)}get activeStackItem(){return this.J}get onDidChangeActiveStackItem(){return this.L.event}get onDidChangeBreakpoints(){return this.I.event}get breakpoints(){const e=[];return this.H.forEach(t=>e.push(t)),e}async $resolveDebugVisualizer(e,t){const i=this.W.get(e);if(!i)throw new Error(`No debug visualizer found with id '${e}'`);let{v:s,provider:n,extensionId:r}=i;if(s.visualization||(s=await n.resolveDebugVisualization?.(s,t)||s,i.v=s),!s.visualization)throw new Error(`No visualization returned from resolveDebugVisualization in '${n}'`);return this.Ab(r,s.visualization)}async $executeDebugVisualizerCommand(e){const t=this.W.get(e);if(!t)throw new Error(`No debug visualizer found with id '${e}'`);const i=t.v.visualization;i&&"command"in i&&this.db.executeCommand(i.command,...i.arguments||[])}hb(e){const t=this.w.get(e.sessionId);return t&&{session:t.api,variable:e.variable,containerId:e.containerId,frameId:e.frameId,threadId:e.threadId}}async $provideDebugVisualizers(e,t,i,s){const n=this.hb(i),r=this.zb(e,t),o=this.P.get(r);if(!n||!o)return[];const u=await o.provideDebugVisualization(n,s);return u?u.map(a=>{const f=++this.X;this.W.set(f,{v:a,provider:o,extensionId:e});const d=a.iconPath?this.Bb(a.iconPath):void 0;return{id:f,name:a.name,iconClass:d?.iconClass,iconPath:d?.iconPath,visualization:this.Ab(e,a.visualization)}}):[]}$disposeDebugVisualizers(e){for(const t of e)this.W.delete(t)}registerDebugVisualizationProvider(e,t,i){if(!e.contributes?.debugVisualizers?.some(r=>r.id===t))throw new Error(`Extensions may only call registerDebugVisualizationProvider() for renderers they contribute (got ${t})`);const s=$.toKey(e.identifier),n=this.zb(s,t);if(this.P.has(n))throw new Error(`A debug visualization provider with id '${t}' is already registered`);return this.P.set(n,i),this.u.$registerDebugVisualizer(s,t),D(()=>{this.u.$unregisterDebugVisualizer(s,t),this.P.delete(t)})}addBreakpoints(e){const t=e.filter(n=>{const r=n.id;return this.H.has(r)?!1:(this.H.set(r,n),!0)});this.wb(t,[],[]);const i=[],s=new Map;for(const n of t)if(n instanceof w){let r=s.get(n.location.uri.toString());r||(r={type:"sourceMulti",uri:n.location.uri,lines:[]},s.set(n.location.uri.toString(),r),i.push(r)),r.lines.push({id:n.id,enabled:n.enabled,condition:n.condition,hitCondition:n.hitCondition,logMessage:n.logMessage,line:n.location.range.start.line,character:n.location.range.start.character,mode:n.mode})}else n instanceof m&&i.push({type:"function",id:n.id,enabled:n.enabled,hitCondition:n.hitCondition,logMessage:n.logMessage,condition:n.condition,functionName:n.functionName,mode:n.mode});return this.u.$registerBreakpoints(i)}removeBreakpoints(e){const t=e.filter(r=>this.H.delete(r.id));this.wb([],t,[]);const i=t.filter(r=>r instanceof w).map(r=>r.id),s=t.filter(r=>r instanceof m).map(r=>r.id),n=t.filter(r=>r instanceof C).map(r=>r.id);return this.u.$unregisterBreakpoints(i,s,n)}startDebugging(e,t,i){const s=i.testRun&&this.eb.getMetadataForRun(i.testRun);return this.u.$startDebugging(e?e.uri:void 0,t,{parentSessionID:i.parentSession?i.parentSession.id:void 0,lifecycleManagedByParent:i.lifecycleManagedByParent,repl:i.consoleMode===H.MergeWithParent?"mergeWithParent":"separate",noDebug:i.noDebug,compact:i.compact,suppressSaveBeforeStart:i.suppressSaveBeforeStart,testRun:s&&{runId:s.runId,taskId:s.taskId},suppressDebugStatusbar:i.suppressDebugStatusbar??i.debugUI?.simple,suppressDebugToolbar:i.suppressDebugToolbar??i.debugUI?.simple,suppressDebugView:i.suppressDebugView??i.debugUI?.simple})}stopDebugging(e){return this.u.$stopDebugging(e?e.id:void 0)}registerDebugConfigurationProvider(e,t,i){if(!t)return new b(()=>{});const s=this.f++;return this.g.push({type:e,handle:s,provider:t}),this.u.$registerDebugConfigurationProvider(e,i,!!t.provideDebugConfigurations,!!t.resolveDebugConfiguration,!!t.resolveDebugConfigurationWithSubstitutedVariables,s),new b(()=>{this.g=this.g.filter(n=>n.provider!==t),this.u.$unregisterDebugConfigurationProvider(s)})}registerDebugAdapterDescriptorFactory(e,t,i){if(!i)return new b(()=>{});if(!this.sb(e,t))throw new Error(`a DebugAdapterDescriptorFactory can only be registered from the extension that defines the '${t}' debugger.`);if(this.pb(t))throw new Error("a DebugAdapterDescriptorFactory can only be registered once per a type.");const s=this.h++;return this.j.push({type:t,handle:s,factory:i}),this.u.$registerDebugAdapterDescriptorFactory(t,s),new b(()=>{this.j=this.j.filter(n=>n.factory!==i),this.u.$unregisterDebugAdapterDescriptorFactory(s)})}registerDebugAdapterTrackerFactory(e,t){if(!t)return new b(()=>{});const i=this.m++;return this.n.push({type:e,handle:i,factory:t}),new b(()=>{this.n=this.n.filter(s=>s.factory!==t)})}async $runInTerminal(e,t){return Promise.resolve(void 0)}async $substituteVariables(e,t){let i;const s=await this.yb(e);return s&&(i={uri:s.uri,name:s.name,index:s.index,toResource:()=>{throw new Error("Not implemented")}}),(await this.cb.getResolver()).resolveAsync(i,t)}ib(e,t){if(e instanceof E)return new se(e.implementation)}jb(){}async $startDASession(e,t){const i=this,s=await this.xb(t);return this.ub(this.pb(s.type),s).then(n=>{if(!n)throw new Error(`Couldn't find a debug adapter descriptor for debug type '${s.type}' (extension might have failed to activate)`);const r=this.ib(n,s);if(!r)throw new Error(`Couldn't create a debug adapter for type '${s.type}'.`);const o=r;return this.M.set(e,o),this.tb(s).then(u=>(u&&this.N.set(e,u),o.onMessage(async a=>{if(a.type==="request"&&a.command==="handshake"){const f=a,d={type:"response",seq:0,command:f.command,request_seq:f.seq,success:!0};this.U||(this.U=this.jb());try{if(this.U){const v=await this.U.sign(f.arguments.value);d.body={signature:v},o.sendResponse(d)}else throw new Error("no signer")}catch(v){d.success=!1,d.message=v.message,o.sendResponse(d)}}else{u&&u.onDidSendMessage&&u.onDidSendMessage(a);try{a=_(a,!0)}catch(f){const d=a.type+"_"+(a.command??a.event??"");throw this.Y.$publicLog2("debugProtocolMessageError",{type:d,from:s.type}),f}i.u.$acceptDAMessage(e,a)}}),o.onError(a=>{u&&u.onError&&u.onError(a),this.u.$acceptDAError(e,a.name,a.message,a.stack)}),o.onExit(a=>{u&&u.onExit&&u.onExit(a??void 0,void 0),this.u.$acceptDAExit(e,a??void 0,void 0)}),u&&u.onWillStartSession&&u.onWillStartSession(),o.startSession()))})}$sendDAMessage(e,t){t=Z(t,!1);const i=this.N.get(e);i&&i.onWillReceiveMessage&&i.onWillReceiveMessage(t),this.M.get(e)?.sendMessage(t)}$stopDASession(e){const t=this.N.get(e);this.N.delete(e),t&&t.onWillStopSession&&t.onWillStopSession();const i=this.M.get(e);return this.M.delete(e),i?i.stopSession():Promise.resolve(void 0)}$acceptBreakpointsDelta(e){const t=[],i=[],s=[];if(e.added)for(const n of e.added){const r=n.id;if(r&&!this.H.has(r)){let o;if(n.type==="function")o=new m(n.functionName,n.enabled,n.condition,n.hitCondition,n.logMessage,n.mode);else if(n.type==="data")o=new C(n.label,n.dataId,n.canPersist,n.enabled,n.hitCondition,n.condition,n.logMessage,n.mode);else{const u=g.revive(n.uri);o=new w(new I(u,new z(n.line,n.character)),n.enabled,n.condition,n.hitCondition,n.logMessage,n.mode)}X(o,r),this.H.set(r,o),t.push(o)}}if(e.removed)for(const n of e.removed){const r=this.H.get(n);r&&(this.H.delete(n),i.push(r))}if(e.changed){for(const n of e.changed)if(n.id){const r=this.H.get(n.id);if(r){if(r instanceof m&&n.type==="function"){const o=r;o.enabled=n.enabled,o.condition=n.condition,o.hitCondition=n.hitCondition,o.logMessage=n.logMessage,o.functionName=n.functionName}else if(r instanceof w&&n.type==="source"){const o=r;o.enabled=n.enabled,o.condition=n.condition,o.hitCondition=n.hitCondition,o.logMessage=n.logMessage,o.location=new I(g.revive(n.uri),new z(n.line,n.character))}s.push(r)}}}this.wb(t,i,s)}async $acceptStackFrameFocus(e){let t;if(e){const i=await this.xb(e.sessionId);e.kind==="thread"?t=new G(i.api,e.threadId):t=new J(i.api,e.threadId,e.frameId)}this.J=t,this.L.fire(this.J)}$provideDebugConfigurations(e,t,i){return p(async()=>{const s=this.rb(e);if(!s)throw new Error("no DebugConfigurationProvider found");if(!s.provideDebugConfigurations)throw new Error("DebugConfigurationProvider has no method provideDebugConfigurations");const n=await this.yb(t);return s.provideDebugConfigurations(n,i)}).then(s=>{if(!s)throw new Error("nothing returned from DebugConfigurationProvider.provideDebugConfigurations");return s})}$resolveDebugConfiguration(e,t,i,s){return p(async()=>{const n=this.rb(e);if(!n)throw new Error("no DebugConfigurationProvider found");if(!n.resolveDebugConfiguration)throw new Error("DebugConfigurationProvider has no method resolveDebugConfiguration");const r=await this.yb(t);return n.resolveDebugConfiguration(r,i,s)})}$resolveDebugConfigurationWithSubstitutedVariables(e,t,i,s){return p(async()=>{const n=this.rb(e);if(!n)throw new Error("no DebugConfigurationProvider found");if(!n.resolveDebugConfigurationWithSubstitutedVariables)throw new Error("DebugConfigurationProvider has no method resolveDebugConfigurationWithSubstitutedVariables");const r=await this.yb(t);return n.resolveDebugConfigurationWithSubstitutedVariables(r,i,s)})}async $provideDebugAdapter(e,t){const i=this.qb(e);if(!i)return Promise.reject(new Error("no adapter descriptor factory found for handle"));const s=await this.xb(t);return this.ub(i,s).then(n=>{if(!n)throw new Error(`Couldn't find a debug adapter descriptor for debug type '${s.type}'`);return this.kb(n)})}async $acceptDebugSessionStarted(e){const t=await this.xb(e);this.y.fire(t.api)}async $acceptDebugSessionTerminated(e){const t=await this.xb(e);t&&(this.z.fire(t.api),this.w.delete(t.id))}async $acceptDebugSessionActiveChanged(e){this.D=e?await this.xb(e):void 0,this.C.fire(this.D?.api)}async $acceptDebugSessionNameChanged(e,t){(await this.xb(e))?._acceptNameChanged(t)}async $acceptDebugSessionCustomEvent(e,t){const s={session:(await this.xb(e)).api,event:t.event,body:t.body};this.F.fire(s)}kb(e){if(e instanceof K)return this.lb(e);if(e instanceof M)return this.mb(e);if(e instanceof Y)return this.nb(e);if(e instanceof E)return this.ob(e);throw new Error("convertToDto unexpected type")}lb(e){return{type:"executable",command:e.command,args:e.args,options:e.options}}mb(e){return{type:"server",port:e.port,host:e.host}}nb(e){return{type:"pipeServer",path:e.path}}ob(e){return{type:"implementation"}}pb(e){const t=this.j.filter(i=>i.type===e);if(t.length>0)return t[0].factory}qb(e){const t=this.j.filter(i=>i.handle===e);if(t.length>0)return t[0].factory}rb(e){const t=this.g.filter(i=>i.handle===e);if(t.length>0)return t[0].provider}sb(e,t){if(e.contributes){const i=e.contributes.debuggers;if(i&&i.length>0){for(const s of i)if(s.label&&s.type&&s.type===t)return!0}}return!1}tb(e){const i=e.configuration.type,s=this.n.filter(n=>n.type===i||n.type==="*").map(n=>p(()=>n.factory.createDebugAdapterTracker(e.api)).then(r=>r,r=>null));return Promise.race([Promise.all(s).then(n=>{const r=N(n);if(r.length>0)return new ne(r)}),new Promise(n=>setTimeout(()=>n(void 0),1e3))]).catch(n=>{})}async ub(e,t){const i=t.configuration.debugServer;if(typeof i=="number")return Promise.resolve(new M(i));if(e){const n=await this.$.getExtensionRegistry();return p(()=>e.createDebugAdapterDescriptor(t.api,this.vb(t,n))).then(r=>{if(r)return r})}const s=await this.$.getExtensionRegistry();return Promise.resolve(this.vb(t,s))}vb(e,t){}wb(e,t,i){(e.length>0||t.length>0||i.length>0)&&this.I.fire(Object.freeze({added:e,removed:t,changed:i}))}async xb(e){if(e)if(typeof e=="string"){const t=this.w.get(e);if(t)return t}else{let t=this.w.get(e.id);if(!t){const i=await this.yb(e.folderUri),s=e.parent?this.w.get(e.parent):void 0;t=new te(this.u,e.id,e.type,e.name,i,e.configuration,s?.api),this.w.set(t.id,t),this.u.$sessionCached(t.id)}return t}throw new Error("cannot find session")}yb(e){if(e){const t=g.revive(e);return this.Z.resolveWorkspaceFolder(t)}return Promise.resolve(void 0)}zb(e,t){return`${e}\0${t}`}Ab(e,t){if(t){if("title"in t&&"command"in t)return{type:0};if("treeId"in t)return{type:1,id:`${e}\0${t.treeId}`};throw new Error("Unsupported debug visualization type")}}Bb(e){const t=this.Cb(e);let i,s;return"id"in t?s=F.asClassName(t):i=t,{iconPath:i,iconClass:s}}Cb(e){if(e instanceof ee)return{id:e.id};const t=typeof e=="object"&&"dark"in e?e.dark:e,i=typeof e=="object"&&"light"in e?e.light:e;return{dark:typeof t=="string"?g.file(t):t,light:typeof i=="string"?g.file(i):i}}};y=R([h(0,B),h(1,k),h(2,V),h(3,W),h(4,T),h(5,A),h(6,x),h(7,j)],y);class te{constructor(e,t,i,s,n,r,o){this.f=e,this.g=t,this.h=i,this.j=s,this.k=n,this.l=r,this.m=o}get api(){const e=this;return this.d??=Object.freeze({id:e.g,type:e.h,get name(){return e.j},set name(t){e.j=t,e.f.$setDebugSessionName(e.g,t)},parentSession:e.m,workspaceFolder:e.k,configuration:e.l,customRequest(t,i){return e.f.$customDebugAdapterRequest(e.g,t,i)},getDebugProtocolBreakpoint(t){return e.f.$getDebugProtocolBreakpoint(e.g,t.id)}})}get id(){return this.g}get type(){return this.h}_acceptNameChanged(e){this.j=e}get configuration(){return this.l}}class ie{constructor(e){this.value=Object.freeze({append(t){e.$appendDebugConsole(t)},appendLine(t){this.append(t+`
-`)}})}}class ne{constructor(e){this.d=e}onWillStartSession(){this.d.forEach(e=>e.onWillStartSession?e.onWillStartSession():void 0)}onWillReceiveMessage(e){this.d.forEach(t=>t.onWillReceiveMessage?t.onWillReceiveMessage(e):void 0)}onDidSendMessage(e){this.d.forEach(t=>t.onDidSendMessage?t.onDidSendMessage(e):void 0)}onWillStopSession(){this.d.forEach(e=>e.onWillStopSession?e.onWillStopSession():void 0)}onError(e){this.d.forEach(t=>t.onError?t.onError(e):void 0)}onExit(e,t){this.d.forEach(i=>i.onExit?i.onExit(e,t):void 0)}}class se extends q{constructor(e){super(),this.h=e,e.onDidSendMessage(t=>{this.acceptMessage(t)})}startSession(){return Promise.resolve(void 0)}sendMessage(e){this.h.handleMessage(e)}stopSession(){return this.h.dispose(),Promise.resolve(void 0)}}let P=class extends y{constructor(e,t,i,s,n,r,o,u){super(e,t,i,s,n,r,o,u)}};P=R([h(0,B),h(1,k),h(2,V),h(3,W),h(4,T),h(5,A),h(6,x),h(7,j)],P);export{ie as $ALc,P as $BLc,Ee as $xLc,y as $yLc,te as $zLc};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { coalesce } from "../../../base/common/arrays.js";
+import { asPromise } from "../../../base/common/async.js";
+import { Emitter } from "../../../base/common/event.js";
+import { Disposable as DisposableCls, toDisposable } from "../../../base/common/lifecycle.js";
+import { ThemeIcon as ThemeIconUtils } from "../../../base/common/themables.js";
+import { URI } from "../../../base/common/uri.js";
+import { ExtensionIdentifier } from "../../../platform/extensions/common/extensions.js";
+import { createDecorator } from "../../../platform/instantiation/common/instantiation.js";
+import { AbstractDebugAdapter } from "../../contrib/debug/common/abstractDebugAdapter.js";
+import { convertToDAPaths, convertToVSCPaths, isDebuggerMainContribution } from "../../contrib/debug/common/debugUtils.js";
+import { MainContext } from "./extHost.protocol.js";
+import { IExtHostCommands } from "./extHostCommands.js";
+import { IExtHostConfiguration } from "./extHostConfiguration.js";
+import { IExtHostEditorTabs } from "./extHostEditorTabs.js";
+import { IExtHostExtensionService } from "./extHostExtensionService.js";
+import { IExtHostRpcService } from "./extHostRpcService.js";
+import { IExtHostTesting } from "./extHostTesting.js";
+import * as Convert from "./extHostTypeConverters.js";
+import { DataBreakpoint, DebugAdapterExecutable, DebugAdapterInlineImplementation, DebugAdapterNamedPipeServer, DebugAdapterServer, DebugConsoleMode, DebugStackFrame, DebugThread, Disposable, FunctionBreakpoint, Location, Position, setBreakpointId, SourceBreakpoint, ThemeIcon } from "./extHostTypes.js";
+import { IExtHostVariableResolverProvider } from "./extHostVariableResolverService.js";
+import { IExtHostWorkspace } from "./extHostWorkspace.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+const IExtHostDebugService = createDecorator("IExtHostDebugService");
+let ExtHostDebugServiceBase = class ExtHostDebugServiceBase2 extends DisposableCls {
+  static {
+    __name(this, "ExtHostDebugServiceBase");
+  }
+  get onDidStartDebugSession() {
+    return this._onDidStartDebugSession.event;
+  }
+  get onDidTerminateDebugSession() {
+    return this._onDidTerminateDebugSession.event;
+  }
+  get onDidChangeActiveDebugSession() {
+    return this._onDidChangeActiveDebugSession.event;
+  }
+  get activeDebugSession() {
+    return this._activeDebugSession?.api;
+  }
+  get onDidReceiveDebugSessionCustomEvent() {
+    return this._onDidReceiveDebugSessionCustomEvent.event;
+  }
+  get activeDebugConsole() {
+    return this._activeDebugConsole.value;
+  }
+  constructor(extHostRpcService, _workspaceService, _extensionService, _configurationService, _editorTabs, _variableResolver, _commands, _testing) {
+    super();
+    this._workspaceService = _workspaceService;
+    this._extensionService = _extensionService;
+    this._configurationService = _configurationService;
+    this._editorTabs = _editorTabs;
+    this._variableResolver = _variableResolver;
+    this._commands = _commands;
+    this._testing = _testing;
+    this._debugSessions = /* @__PURE__ */ new Map();
+    this._debugVisualizationTreeItemIdsCounter = 0;
+    this._debugVisualizationProviders = /* @__PURE__ */ new Map();
+    this._debugVisualizationTrees = /* @__PURE__ */ new Map();
+    this._debugVisualizationTreeItemIds = /* @__PURE__ */ new WeakMap();
+    this._debugVisualizationElements = /* @__PURE__ */ new Map();
+    this._visualizers = /* @__PURE__ */ new Map();
+    this._visualizerIdCounter = 0;
+    this._configProviderHandleCounter = 0;
+    this._configProviders = [];
+    this._adapterFactoryHandleCounter = 0;
+    this._adapterFactories = [];
+    this._trackerFactoryHandleCounter = 0;
+    this._trackerFactories = [];
+    this._debugAdapters = /* @__PURE__ */ new Map();
+    this._debugAdaptersTrackers = /* @__PURE__ */ new Map();
+    this._onDidStartDebugSession = this._register(new Emitter());
+    this._onDidTerminateDebugSession = this._register(new Emitter());
+    this._onDidChangeActiveDebugSession = this._register(new Emitter());
+    this._onDidReceiveDebugSessionCustomEvent = this._register(new Emitter());
+    this._debugServiceProxy = extHostRpcService.getProxy(MainContext.MainThreadDebugService);
+    this._onDidChangeBreakpoints = this._register(new Emitter());
+    this._onDidChangeActiveStackItem = this._register(new Emitter());
+    this._activeDebugConsole = new ExtHostDebugConsole(this._debugServiceProxy);
+    this._breakpoints = /* @__PURE__ */ new Map();
+    this._extensionService.getExtensionRegistry().then((extensionRegistry) => {
+      this._register(extensionRegistry.onDidChange((_) => {
+        this.registerAllDebugTypes(extensionRegistry);
+      }));
+      this.registerAllDebugTypes(extensionRegistry);
+    });
+    this._telemetryProxy = extHostRpcService.getProxy(MainContext.MainThreadTelemetry);
+  }
+  async $getVisualizerTreeItem(treeId, element) {
+    const context = this.hydrateVisualizationContext(element);
+    if (!context) {
+      return void 0;
+    }
+    const item = await this._debugVisualizationTrees.get(treeId)?.getTreeItem?.(context);
+    return item ? this.convertVisualizerTreeItem(treeId, item) : void 0;
+  }
+  registerDebugVisualizationTree(manifest, id, provider) {
+    const extensionId = ExtensionIdentifier.toKey(manifest.identifier);
+    const key = this.extensionVisKey(extensionId, id);
+    if (this._debugVisualizationProviders.has(key)) {
+      throw new Error(`A debug visualization provider with id '${id}' is already registered`);
+    }
+    this._debugVisualizationTrees.set(key, provider);
+    this._debugServiceProxy.$registerDebugVisualizerTree(key, !!provider.editItem);
+    return toDisposable(() => {
+      this._debugServiceProxy.$unregisterDebugVisualizerTree(key);
+      this._debugVisualizationTrees.delete(id);
+    });
+  }
+  async $getVisualizerTreeItemChildren(treeId, element) {
+    const item = this._debugVisualizationElements.get(element)?.item;
+    if (!item) {
+      return [];
+    }
+    const children = await this._debugVisualizationTrees.get(treeId)?.getChildren?.(item);
+    return children?.map((i) => this.convertVisualizerTreeItem(treeId, i)) || [];
+  }
+  async $editVisualizerTreeItem(element, value) {
+    const e = this._debugVisualizationElements.get(element);
+    if (!e) {
+      return void 0;
+    }
+    const r = await this._debugVisualizationTrees.get(e.provider)?.editItem?.(e.item, value);
+    return this.convertVisualizerTreeItem(e.provider, r || e.item);
+  }
+  $disposeVisualizedTree(element) {
+    const root = this._debugVisualizationElements.get(element);
+    if (!root) {
+      return;
+    }
+    const queue = [root.children];
+    for (const children of queue) {
+      if (children) {
+        for (const child of children) {
+          queue.push(this._debugVisualizationElements.get(child)?.children);
+          this._debugVisualizationElements.delete(child);
+        }
+      }
+    }
+  }
+  convertVisualizerTreeItem(treeId, item) {
+    let id = this._debugVisualizationTreeItemIds.get(item);
+    if (!id) {
+      id = this._debugVisualizationTreeItemIdsCounter++;
+      this._debugVisualizationTreeItemIds.set(item, id);
+      this._debugVisualizationElements.set(id, { provider: treeId, item });
+    }
+    return Convert.DebugTreeItem.from(item, id);
+  }
+  asDebugSourceUri(src, session) {
+    const source = src;
+    if (typeof source.sourceReference === "number" && source.sourceReference > 0) {
+      let debug = `debug:${encodeURIComponent(source.path || "")}`;
+      let sep = "?";
+      if (session) {
+        debug += `${sep}session=${encodeURIComponent(session.id)}`;
+        sep = "&";
+      }
+      debug += `${sep}ref=${source.sourceReference}`;
+      return URI.parse(debug);
+    } else if (source.path) {
+      return URI.file(source.path);
+    } else {
+      throw new Error(`cannot create uri from DAP 'source' object; properties 'path' and 'sourceReference' are both missing.`);
+    }
+  }
+  registerAllDebugTypes(extensionRegistry) {
+    const debugTypes = [];
+    for (const ed of extensionRegistry.getAllExtensionDescriptions()) {
+      if (ed.contributes) {
+        const debuggers = ed.contributes["debuggers"];
+        if (debuggers && debuggers.length > 0) {
+          for (const dbg of debuggers) {
+            if (isDebuggerMainContribution(dbg)) {
+              debugTypes.push(dbg.type);
+            }
+          }
+        }
+      }
+    }
+    this._debugServiceProxy.$registerDebugTypes(debugTypes);
+  }
+  // extension debug API
+  get activeStackItem() {
+    return this._activeStackItem;
+  }
+  get onDidChangeActiveStackItem() {
+    return this._onDidChangeActiveStackItem.event;
+  }
+  get onDidChangeBreakpoints() {
+    return this._onDidChangeBreakpoints.event;
+  }
+  get breakpoints() {
+    const result = [];
+    this._breakpoints.forEach((bp) => result.push(bp));
+    return result;
+  }
+  async $resolveDebugVisualizer(id, token) {
+    const visualizer = this._visualizers.get(id);
+    if (!visualizer) {
+      throw new Error(`No debug visualizer found with id '${id}'`);
+    }
+    let { v, provider, extensionId } = visualizer;
+    if (!v.visualization) {
+      v = await provider.resolveDebugVisualization?.(v, token) || v;
+      visualizer.v = v;
+    }
+    if (!v.visualization) {
+      throw new Error(`No visualization returned from resolveDebugVisualization in '${provider}'`);
+    }
+    return this.serializeVisualization(extensionId, v.visualization);
+  }
+  async $executeDebugVisualizerCommand(id) {
+    const visualizer = this._visualizers.get(id);
+    if (!visualizer) {
+      throw new Error(`No debug visualizer found with id '${id}'`);
+    }
+    const command = visualizer.v.visualization;
+    if (command && "command" in command) {
+      this._commands.executeCommand(command.command, ...command.arguments || []);
+    }
+  }
+  hydrateVisualizationContext(context) {
+    const session = this._debugSessions.get(context.sessionId);
+    return session && {
+      session: session.api,
+      variable: context.variable,
+      containerId: context.containerId,
+      frameId: context.frameId,
+      threadId: context.threadId
+    };
+  }
+  async $provideDebugVisualizers(extensionId, id, context, token) {
+    const contextHydrated = this.hydrateVisualizationContext(context);
+    const key = this.extensionVisKey(extensionId, id);
+    const provider = this._debugVisualizationProviders.get(key);
+    if (!contextHydrated || !provider) {
+      return [];
+    }
+    const visualizations = await provider.provideDebugVisualization(contextHydrated, token);
+    if (!visualizations) {
+      return [];
+    }
+    return visualizations.map((v) => {
+      const id2 = ++this._visualizerIdCounter;
+      this._visualizers.set(id2, { v, provider, extensionId });
+      const icon = v.iconPath ? this.getIconPathOrClass(v.iconPath) : void 0;
+      return {
+        id: id2,
+        name: v.name,
+        iconClass: icon?.iconClass,
+        iconPath: icon?.iconPath,
+        visualization: this.serializeVisualization(extensionId, v.visualization)
+      };
+    });
+  }
+  $disposeDebugVisualizers(ids) {
+    for (const id of ids) {
+      this._visualizers.delete(id);
+    }
+  }
+  registerDebugVisualizationProvider(manifest, id, provider) {
+    if (!manifest.contributes?.debugVisualizers?.some((r) => r.id === id)) {
+      throw new Error(`Extensions may only call registerDebugVisualizationProvider() for renderers they contribute (got ${id})`);
+    }
+    const extensionId = ExtensionIdentifier.toKey(manifest.identifier);
+    const key = this.extensionVisKey(extensionId, id);
+    if (this._debugVisualizationProviders.has(key)) {
+      throw new Error(`A debug visualization provider with id '${id}' is already registered`);
+    }
+    this._debugVisualizationProviders.set(key, provider);
+    this._debugServiceProxy.$registerDebugVisualizer(extensionId, id);
+    return toDisposable(() => {
+      this._debugServiceProxy.$unregisterDebugVisualizer(extensionId, id);
+      this._debugVisualizationProviders.delete(id);
+    });
+  }
+  addBreakpoints(breakpoints0) {
+    const breakpoints = breakpoints0.filter((bp) => {
+      const id = bp.id;
+      if (!this._breakpoints.has(id)) {
+        this._breakpoints.set(id, bp);
+        return true;
+      }
+      return false;
+    });
+    this.fireBreakpointChanges(breakpoints, [], []);
+    const dtos = [];
+    const map = /* @__PURE__ */ new Map();
+    for (const bp of breakpoints) {
+      if (bp instanceof SourceBreakpoint) {
+        let dto = map.get(bp.location.uri.toString());
+        if (!dto) {
+          dto = {
+            type: "sourceMulti",
+            uri: bp.location.uri,
+            lines: []
+          };
+          map.set(bp.location.uri.toString(), dto);
+          dtos.push(dto);
+        }
+        dto.lines.push({
+          id: bp.id,
+          enabled: bp.enabled,
+          condition: bp.condition,
+          hitCondition: bp.hitCondition,
+          logMessage: bp.logMessage,
+          line: bp.location.range.start.line,
+          character: bp.location.range.start.character,
+          mode: bp.mode
+        });
+      } else if (bp instanceof FunctionBreakpoint) {
+        dtos.push({
+          type: "function",
+          id: bp.id,
+          enabled: bp.enabled,
+          hitCondition: bp.hitCondition,
+          logMessage: bp.logMessage,
+          condition: bp.condition,
+          functionName: bp.functionName,
+          mode: bp.mode
+        });
+      }
+    }
+    return this._debugServiceProxy.$registerBreakpoints(dtos);
+  }
+  removeBreakpoints(breakpoints0) {
+    const breakpoints = breakpoints0.filter((b) => this._breakpoints.delete(b.id));
+    this.fireBreakpointChanges([], breakpoints, []);
+    const ids = breakpoints.filter((bp) => bp instanceof SourceBreakpoint).map((bp) => bp.id);
+    const fids = breakpoints.filter((bp) => bp instanceof FunctionBreakpoint).map((bp) => bp.id);
+    const dids = breakpoints.filter((bp) => bp instanceof DataBreakpoint).map((bp) => bp.id);
+    return this._debugServiceProxy.$unregisterBreakpoints(ids, fids, dids);
+  }
+  startDebugging(folder, nameOrConfig, options) {
+    const testRunMeta = options.testRun && this._testing.getMetadataForRun(options.testRun);
+    return this._debugServiceProxy.$startDebugging(folder ? folder.uri : void 0, nameOrConfig, {
+      parentSessionID: options.parentSession ? options.parentSession.id : void 0,
+      lifecycleManagedByParent: options.lifecycleManagedByParent,
+      repl: options.consoleMode === DebugConsoleMode.MergeWithParent ? "mergeWithParent" : "separate",
+      noDebug: options.noDebug,
+      compact: options.compact,
+      suppressSaveBeforeStart: options.suppressSaveBeforeStart,
+      testRun: testRunMeta && {
+        runId: testRunMeta.runId,
+        taskId: testRunMeta.taskId
+      },
+      // Check debugUI for back-compat, #147264
+      suppressDebugStatusbar: options.suppressDebugStatusbar ?? options.debugUI?.simple,
+      suppressDebugToolbar: options.suppressDebugToolbar ?? options.debugUI?.simple,
+      suppressDebugView: options.suppressDebugView ?? options.debugUI?.simple
+    });
+  }
+  stopDebugging(session) {
+    return this._debugServiceProxy.$stopDebugging(session ? session.id : void 0);
+  }
+  registerDebugConfigurationProvider(type, provider, trigger) {
+    if (!provider) {
+      return new Disposable(() => {
+      });
+    }
+    const handle = this._configProviderHandleCounter++;
+    this._configProviders.push({ type, handle, provider });
+    this._debugServiceProxy.$registerDebugConfigurationProvider(type, trigger, !!provider.provideDebugConfigurations, !!provider.resolveDebugConfiguration, !!provider.resolveDebugConfigurationWithSubstitutedVariables, handle);
+    return new Disposable(() => {
+      this._configProviders = this._configProviders.filter((p) => p.provider !== provider);
+      this._debugServiceProxy.$unregisterDebugConfigurationProvider(handle);
+    });
+  }
+  registerDebugAdapterDescriptorFactory(extension, type, factory) {
+    if (!factory) {
+      return new Disposable(() => {
+      });
+    }
+    if (!this.definesDebugType(extension, type)) {
+      throw new Error(`a DebugAdapterDescriptorFactory can only be registered from the extension that defines the '${type}' debugger.`);
+    }
+    if (this.getAdapterDescriptorFactoryByType(type)) {
+      throw new Error(`a DebugAdapterDescriptorFactory can only be registered once per a type.`);
+    }
+    const handle = this._adapterFactoryHandleCounter++;
+    this._adapterFactories.push({ type, handle, factory });
+    this._debugServiceProxy.$registerDebugAdapterDescriptorFactory(type, handle);
+    return new Disposable(() => {
+      this._adapterFactories = this._adapterFactories.filter((p) => p.factory !== factory);
+      this._debugServiceProxy.$unregisterDebugAdapterDescriptorFactory(handle);
+    });
+  }
+  registerDebugAdapterTrackerFactory(type, factory) {
+    if (!factory) {
+      return new Disposable(() => {
+      });
+    }
+    const handle = this._trackerFactoryHandleCounter++;
+    this._trackerFactories.push({ type, handle, factory });
+    return new Disposable(() => {
+      this._trackerFactories = this._trackerFactories.filter((p) => p.factory !== factory);
+    });
+  }
+  // RPC methods (ExtHostDebugServiceShape)
+  async $runInTerminal(args, sessionId) {
+    return Promise.resolve(void 0);
+  }
+  async $substituteVariables(folderUri, config) {
+    let ws;
+    const folder = await this.getFolder(folderUri);
+    if (folder) {
+      ws = {
+        uri: folder.uri,
+        name: folder.name,
+        index: folder.index,
+        toResource: /* @__PURE__ */ __name(() => {
+          throw new Error("Not implemented");
+        }, "toResource")
+      };
+    }
+    const variableResolver = await this._variableResolver.getResolver();
+    return variableResolver.resolveAsync(ws, config);
+  }
+  createDebugAdapter(adapter, session) {
+    if (adapter instanceof DebugAdapterInlineImplementation) {
+      return new DirectDebugAdapter(adapter.implementation);
+    }
+    return void 0;
+  }
+  createSignService() {
+    return void 0;
+  }
+  async $startDASession(debugAdapterHandle, sessionDto) {
+    const mythis = this;
+    const session = await this.getSession(sessionDto);
+    return this.getAdapterDescriptor(this.getAdapterDescriptorFactoryByType(session.type), session).then((daDescriptor) => {
+      if (!daDescriptor) {
+        throw new Error(`Couldn't find a debug adapter descriptor for debug type '${session.type}' (extension might have failed to activate)`);
+      }
+      const da = this.createDebugAdapter(daDescriptor, session);
+      if (!da) {
+        throw new Error(`Couldn't create a debug adapter for type '${session.type}'.`);
+      }
+      const debugAdapter = da;
+      this._debugAdapters.set(debugAdapterHandle, debugAdapter);
+      return this.getDebugAdapterTrackers(session).then((tracker) => {
+        if (tracker) {
+          this._debugAdaptersTrackers.set(debugAdapterHandle, tracker);
+        }
+        debugAdapter.onMessage(async (message) => {
+          if (message.type === "request" && message.command === "handshake") {
+            const request = message;
+            const response = {
+              type: "response",
+              seq: 0,
+              command: request.command,
+              request_seq: request.seq,
+              success: true
+            };
+            if (!this._signService) {
+              this._signService = this.createSignService();
+            }
+            try {
+              if (this._signService) {
+                const signature = await this._signService.sign(request.arguments.value);
+                response.body = {
+                  signature
+                };
+                debugAdapter.sendResponse(response);
+              } else {
+                throw new Error("no signer");
+              }
+            } catch (e) {
+              response.success = false;
+              response.message = e.message;
+              debugAdapter.sendResponse(response);
+            }
+          } else {
+            if (tracker && tracker.onDidSendMessage) {
+              tracker.onDidSendMessage(message);
+            }
+            try {
+              message = convertToVSCPaths(message, true);
+            } catch (e) {
+              const type = message.type + "_" + (message.command ?? message.event ?? "");
+              this._telemetryProxy.$publicLog2("debugProtocolMessageError", { type, from: session.type });
+              throw e;
+            }
+            mythis._debugServiceProxy.$acceptDAMessage(debugAdapterHandle, message);
+          }
+        });
+        debugAdapter.onError((err) => {
+          if (tracker && tracker.onError) {
+            tracker.onError(err);
+          }
+          this._debugServiceProxy.$acceptDAError(debugAdapterHandle, err.name, err.message, err.stack);
+        });
+        debugAdapter.onExit((code) => {
+          if (tracker && tracker.onExit) {
+            tracker.onExit(code ?? void 0, void 0);
+          }
+          this._debugServiceProxy.$acceptDAExit(debugAdapterHandle, code ?? void 0, void 0);
+        });
+        if (tracker && tracker.onWillStartSession) {
+          tracker.onWillStartSession();
+        }
+        return debugAdapter.startSession();
+      });
+    });
+  }
+  $sendDAMessage(debugAdapterHandle, message) {
+    message = convertToDAPaths(message, false);
+    const tracker = this._debugAdaptersTrackers.get(debugAdapterHandle);
+    if (tracker && tracker.onWillReceiveMessage) {
+      tracker.onWillReceiveMessage(message);
+    }
+    const da = this._debugAdapters.get(debugAdapterHandle);
+    da?.sendMessage(message);
+  }
+  $stopDASession(debugAdapterHandle) {
+    const tracker = this._debugAdaptersTrackers.get(debugAdapterHandle);
+    this._debugAdaptersTrackers.delete(debugAdapterHandle);
+    if (tracker && tracker.onWillStopSession) {
+      tracker.onWillStopSession();
+    }
+    const da = this._debugAdapters.get(debugAdapterHandle);
+    this._debugAdapters.delete(debugAdapterHandle);
+    if (da) {
+      return da.stopSession();
+    } else {
+      return Promise.resolve(void 0);
+    }
+  }
+  $acceptBreakpointsDelta(delta) {
+    const a = [];
+    const r = [];
+    const c = [];
+    if (delta.added) {
+      for (const bpd of delta.added) {
+        const id = bpd.id;
+        if (id && !this._breakpoints.has(id)) {
+          let bp;
+          if (bpd.type === "function") {
+            bp = new FunctionBreakpoint(bpd.functionName, bpd.enabled, bpd.condition, bpd.hitCondition, bpd.logMessage, bpd.mode);
+          } else if (bpd.type === "data") {
+            bp = new DataBreakpoint(bpd.label, bpd.dataId, bpd.canPersist, bpd.enabled, bpd.hitCondition, bpd.condition, bpd.logMessage, bpd.mode);
+          } else {
+            const uri = URI.revive(bpd.uri);
+            bp = new SourceBreakpoint(new Location(uri, new Position(bpd.line, bpd.character)), bpd.enabled, bpd.condition, bpd.hitCondition, bpd.logMessage, bpd.mode);
+          }
+          setBreakpointId(bp, id);
+          this._breakpoints.set(id, bp);
+          a.push(bp);
+        }
+      }
+    }
+    if (delta.removed) {
+      for (const id of delta.removed) {
+        const bp = this._breakpoints.get(id);
+        if (bp) {
+          this._breakpoints.delete(id);
+          r.push(bp);
+        }
+      }
+    }
+    if (delta.changed) {
+      for (const bpd of delta.changed) {
+        if (bpd.id) {
+          const bp = this._breakpoints.get(bpd.id);
+          if (bp) {
+            if (bp instanceof FunctionBreakpoint && bpd.type === "function") {
+              const fbp = bp;
+              fbp.enabled = bpd.enabled;
+              fbp.condition = bpd.condition;
+              fbp.hitCondition = bpd.hitCondition;
+              fbp.logMessage = bpd.logMessage;
+              fbp.functionName = bpd.functionName;
+            } else if (bp instanceof SourceBreakpoint && bpd.type === "source") {
+              const sbp = bp;
+              sbp.enabled = bpd.enabled;
+              sbp.condition = bpd.condition;
+              sbp.hitCondition = bpd.hitCondition;
+              sbp.logMessage = bpd.logMessage;
+              sbp.location = new Location(URI.revive(bpd.uri), new Position(bpd.line, bpd.character));
+            }
+            c.push(bp);
+          }
+        }
+      }
+    }
+    this.fireBreakpointChanges(a, r, c);
+  }
+  async $acceptStackFrameFocus(focusDto) {
+    let focus;
+    if (focusDto) {
+      const session = await this.getSession(focusDto.sessionId);
+      if (focusDto.kind === "thread") {
+        focus = new DebugThread(session.api, focusDto.threadId);
+      } else {
+        focus = new DebugStackFrame(session.api, focusDto.threadId, focusDto.frameId);
+      }
+    }
+    this._activeStackItem = focus;
+    this._onDidChangeActiveStackItem.fire(this._activeStackItem);
+  }
+  $provideDebugConfigurations(configProviderHandle, folderUri, token) {
+    return asPromise(async () => {
+      const provider = this.getConfigProviderByHandle(configProviderHandle);
+      if (!provider) {
+        throw new Error("no DebugConfigurationProvider found");
+      }
+      if (!provider.provideDebugConfigurations) {
+        throw new Error("DebugConfigurationProvider has no method provideDebugConfigurations");
+      }
+      const folder = await this.getFolder(folderUri);
+      return provider.provideDebugConfigurations(folder, token);
+    }).then((debugConfigurations) => {
+      if (!debugConfigurations) {
+        throw new Error("nothing returned from DebugConfigurationProvider.provideDebugConfigurations");
+      }
+      return debugConfigurations;
+    });
+  }
+  $resolveDebugConfiguration(configProviderHandle, folderUri, debugConfiguration, token) {
+    return asPromise(async () => {
+      const provider = this.getConfigProviderByHandle(configProviderHandle);
+      if (!provider) {
+        throw new Error("no DebugConfigurationProvider found");
+      }
+      if (!provider.resolveDebugConfiguration) {
+        throw new Error("DebugConfigurationProvider has no method resolveDebugConfiguration");
+      }
+      const folder = await this.getFolder(folderUri);
+      return provider.resolveDebugConfiguration(folder, debugConfiguration, token);
+    });
+  }
+  $resolveDebugConfigurationWithSubstitutedVariables(configProviderHandle, folderUri, debugConfiguration, token) {
+    return asPromise(async () => {
+      const provider = this.getConfigProviderByHandle(configProviderHandle);
+      if (!provider) {
+        throw new Error("no DebugConfigurationProvider found");
+      }
+      if (!provider.resolveDebugConfigurationWithSubstitutedVariables) {
+        throw new Error("DebugConfigurationProvider has no method resolveDebugConfigurationWithSubstitutedVariables");
+      }
+      const folder = await this.getFolder(folderUri);
+      return provider.resolveDebugConfigurationWithSubstitutedVariables(folder, debugConfiguration, token);
+    });
+  }
+  async $provideDebugAdapter(adapterFactoryHandle, sessionDto) {
+    const adapterDescriptorFactory = this.getAdapterDescriptorFactoryByHandle(adapterFactoryHandle);
+    if (!adapterDescriptorFactory) {
+      return Promise.reject(new Error("no adapter descriptor factory found for handle"));
+    }
+    const session = await this.getSession(sessionDto);
+    return this.getAdapterDescriptor(adapterDescriptorFactory, session).then((adapterDescriptor) => {
+      if (!adapterDescriptor) {
+        throw new Error(`Couldn't find a debug adapter descriptor for debug type '${session.type}'`);
+      }
+      return this.convertToDto(adapterDescriptor);
+    });
+  }
+  async $acceptDebugSessionStarted(sessionDto) {
+    const session = await this.getSession(sessionDto);
+    this._onDidStartDebugSession.fire(session.api);
+  }
+  async $acceptDebugSessionTerminated(sessionDto) {
+    const session = await this.getSession(sessionDto);
+    if (session) {
+      this._onDidTerminateDebugSession.fire(session.api);
+      this._debugSessions.delete(session.id);
+    }
+  }
+  async $acceptDebugSessionActiveChanged(sessionDto) {
+    this._activeDebugSession = sessionDto ? await this.getSession(sessionDto) : void 0;
+    this._onDidChangeActiveDebugSession.fire(this._activeDebugSession?.api);
+  }
+  async $acceptDebugSessionNameChanged(sessionDto, name) {
+    const session = await this.getSession(sessionDto);
+    session?._acceptNameChanged(name);
+  }
+  async $acceptDebugSessionCustomEvent(sessionDto, event) {
+    const session = await this.getSession(sessionDto);
+    const ee = {
+      session: session.api,
+      event: event.event,
+      body: event.body
+    };
+    this._onDidReceiveDebugSessionCustomEvent.fire(ee);
+  }
+  // private & dto helpers
+  convertToDto(x) {
+    if (x instanceof DebugAdapterExecutable) {
+      return this.convertExecutableToDto(x);
+    } else if (x instanceof DebugAdapterServer) {
+      return this.convertServerToDto(x);
+    } else if (x instanceof DebugAdapterNamedPipeServer) {
+      return this.convertPipeServerToDto(x);
+    } else if (x instanceof DebugAdapterInlineImplementation) {
+      return this.convertImplementationToDto(x);
+    } else {
+      throw new Error("convertToDto unexpected type");
+    }
+  }
+  convertExecutableToDto(x) {
+    return {
+      type: "executable",
+      command: x.command,
+      args: x.args,
+      options: x.options
+    };
+  }
+  convertServerToDto(x) {
+    return {
+      type: "server",
+      port: x.port,
+      host: x.host
+    };
+  }
+  convertPipeServerToDto(x) {
+    return {
+      type: "pipeServer",
+      path: x.path
+    };
+  }
+  convertImplementationToDto(x) {
+    return {
+      type: "implementation"
+    };
+  }
+  getAdapterDescriptorFactoryByType(type) {
+    const results = this._adapterFactories.filter((p) => p.type === type);
+    if (results.length > 0) {
+      return results[0].factory;
+    }
+    return void 0;
+  }
+  getAdapterDescriptorFactoryByHandle(handle) {
+    const results = this._adapterFactories.filter((p) => p.handle === handle);
+    if (results.length > 0) {
+      return results[0].factory;
+    }
+    return void 0;
+  }
+  getConfigProviderByHandle(handle) {
+    const results = this._configProviders.filter((p) => p.handle === handle);
+    if (results.length > 0) {
+      return results[0].provider;
+    }
+    return void 0;
+  }
+  definesDebugType(ed, type) {
+    if (ed.contributes) {
+      const debuggers = ed.contributes["debuggers"];
+      if (debuggers && debuggers.length > 0) {
+        for (const dbg of debuggers) {
+          if (dbg.label && dbg.type) {
+            if (dbg.type === type) {
+              return true;
+            }
+          }
+        }
+      }
+    }
+    return false;
+  }
+  getDebugAdapterTrackers(session) {
+    const config = session.configuration;
+    const type = config.type;
+    const promises = this._trackerFactories.filter((tuple) => tuple.type === type || tuple.type === "*").map((tuple) => asPromise(() => tuple.factory.createDebugAdapterTracker(session.api)).then((p) => p, (err) => null));
+    return Promise.race([
+      Promise.all(promises).then((result) => {
+        const trackers = coalesce(result);
+        if (trackers.length > 0) {
+          return new MultiTracker(trackers);
+        }
+        return void 0;
+      }),
+      new Promise((resolve) => setTimeout(() => resolve(void 0), 1e3))
+    ]).catch((err) => {
+      return void 0;
+    });
+  }
+  async getAdapterDescriptor(adapterDescriptorFactory, session) {
+    const serverPort = session.configuration.debugServer;
+    if (typeof serverPort === "number") {
+      return Promise.resolve(new DebugAdapterServer(serverPort));
+    }
+    if (adapterDescriptorFactory) {
+      const extensionRegistry2 = await this._extensionService.getExtensionRegistry();
+      return asPromise(() => adapterDescriptorFactory.createDebugAdapterDescriptor(session.api, this.daExecutableFromPackage(session, extensionRegistry2))).then((daDescriptor) => {
+        if (daDescriptor) {
+          return daDescriptor;
+        }
+        return void 0;
+      });
+    }
+    const extensionRegistry = await this._extensionService.getExtensionRegistry();
+    return Promise.resolve(this.daExecutableFromPackage(session, extensionRegistry));
+  }
+  daExecutableFromPackage(session, extensionRegistry) {
+    return void 0;
+  }
+  fireBreakpointChanges(added, removed, changed) {
+    if (added.length > 0 || removed.length > 0 || changed.length > 0) {
+      this._onDidChangeBreakpoints.fire(Object.freeze({
+        added,
+        removed,
+        changed
+      }));
+    }
+  }
+  async getSession(dto) {
+    if (dto) {
+      if (typeof dto === "string") {
+        const ds = this._debugSessions.get(dto);
+        if (ds) {
+          return ds;
+        }
+      } else {
+        let ds = this._debugSessions.get(dto.id);
+        if (!ds) {
+          const folder = await this.getFolder(dto.folderUri);
+          const parent = dto.parent ? this._debugSessions.get(dto.parent) : void 0;
+          ds = new ExtHostDebugSession(this._debugServiceProxy, dto.id, dto.type, dto.name, folder, dto.configuration, parent?.api);
+          this._debugSessions.set(ds.id, ds);
+          this._debugServiceProxy.$sessionCached(ds.id);
+        }
+        return ds;
+      }
+    }
+    throw new Error("cannot find session");
+  }
+  getFolder(_folderUri) {
+    if (_folderUri) {
+      const folderURI = URI.revive(_folderUri);
+      return this._workspaceService.resolveWorkspaceFolder(folderURI);
+    }
+    return Promise.resolve(void 0);
+  }
+  extensionVisKey(extensionId, id) {
+    return `${extensionId}\0${id}`;
+  }
+  serializeVisualization(extensionId, viz) {
+    if (!viz) {
+      return void 0;
+    }
+    if ("title" in viz && "command" in viz) {
+      return {
+        type: 0
+        /* DebugVisualizationType.Command */
+      };
+    }
+    if ("treeId" in viz) {
+      return { type: 1, id: `${extensionId}\0${viz.treeId}` };
+    }
+    throw new Error("Unsupported debug visualization type");
+  }
+  getIconPathOrClass(icon) {
+    const iconPathOrIconClass = this.getIconUris(icon);
+    let iconPath;
+    let iconClass;
+    if ("id" in iconPathOrIconClass) {
+      iconClass = ThemeIconUtils.asClassName(iconPathOrIconClass);
+    } else {
+      iconPath = iconPathOrIconClass;
+    }
+    return {
+      iconPath,
+      iconClass
+    };
+  }
+  getIconUris(iconPath) {
+    if (iconPath instanceof ThemeIcon) {
+      return { id: iconPath.id };
+    }
+    const dark = typeof iconPath === "object" && "dark" in iconPath ? iconPath.dark : iconPath;
+    const light = typeof iconPath === "object" && "light" in iconPath ? iconPath.light : iconPath;
+    return {
+      dark: typeof dark === "string" ? URI.file(dark) : dark,
+      light: typeof light === "string" ? URI.file(light) : light
+    };
+  }
+};
+ExtHostDebugServiceBase = __decorate([
+  __param(0, IExtHostRpcService),
+  __param(1, IExtHostWorkspace),
+  __param(2, IExtHostExtensionService),
+  __param(3, IExtHostConfiguration),
+  __param(4, IExtHostEditorTabs),
+  __param(5, IExtHostVariableResolverProvider),
+  __param(6, IExtHostCommands),
+  __param(7, IExtHostTesting)
+], ExtHostDebugServiceBase);
+class ExtHostDebugSession {
+  static {
+    __name(this, "ExtHostDebugSession");
+  }
+  constructor(_debugServiceProxy, _id, _type, _name, _workspaceFolder, _configuration, _parentSession) {
+    this._debugServiceProxy = _debugServiceProxy;
+    this._id = _id;
+    this._type = _type;
+    this._name = _name;
+    this._workspaceFolder = _workspaceFolder;
+    this._configuration = _configuration;
+    this._parentSession = _parentSession;
+  }
+  get api() {
+    const that = this;
+    return this.apiSession ??= Object.freeze({
+      id: that._id,
+      type: that._type,
+      get name() {
+        return that._name;
+      },
+      set name(name) {
+        that._name = name;
+        that._debugServiceProxy.$setDebugSessionName(that._id, name);
+      },
+      parentSession: that._parentSession,
+      workspaceFolder: that._workspaceFolder,
+      configuration: that._configuration,
+      customRequest(command, args) {
+        return that._debugServiceProxy.$customDebugAdapterRequest(that._id, command, args);
+      },
+      getDebugProtocolBreakpoint(breakpoint) {
+        return that._debugServiceProxy.$getDebugProtocolBreakpoint(that._id, breakpoint.id);
+      }
+    });
+  }
+  get id() {
+    return this._id;
+  }
+  get type() {
+    return this._type;
+  }
+  _acceptNameChanged(name) {
+    this._name = name;
+  }
+  get configuration() {
+    return this._configuration;
+  }
+}
+class ExtHostDebugConsole {
+  static {
+    __name(this, "ExtHostDebugConsole");
+  }
+  constructor(proxy) {
+    this.value = Object.freeze({
+      append(value) {
+        proxy.$appendDebugConsole(value);
+      },
+      appendLine(value) {
+        this.append(value + "\n");
+      }
+    });
+  }
+}
+class MultiTracker {
+  static {
+    __name(this, "MultiTracker");
+  }
+  constructor(trackers) {
+    this.trackers = trackers;
+  }
+  onWillStartSession() {
+    this.trackers.forEach((t) => t.onWillStartSession ? t.onWillStartSession() : void 0);
+  }
+  onWillReceiveMessage(message) {
+    this.trackers.forEach((t) => t.onWillReceiveMessage ? t.onWillReceiveMessage(message) : void 0);
+  }
+  onDidSendMessage(message) {
+    this.trackers.forEach((t) => t.onDidSendMessage ? t.onDidSendMessage(message) : void 0);
+  }
+  onWillStopSession() {
+    this.trackers.forEach((t) => t.onWillStopSession ? t.onWillStopSession() : void 0);
+  }
+  onError(error) {
+    this.trackers.forEach((t) => t.onError ? t.onError(error) : void 0);
+  }
+  onExit(code, signal) {
+    this.trackers.forEach((t) => t.onExit ? t.onExit(code, signal) : void 0);
+  }
+}
+class DirectDebugAdapter extends AbstractDebugAdapter {
+  static {
+    __name(this, "DirectDebugAdapter");
+  }
+  constructor(implementation) {
+    super();
+    this.implementation = implementation;
+    implementation.onDidSendMessage((message) => {
+      this.acceptMessage(message);
+    });
+  }
+  startSession() {
+    return Promise.resolve(void 0);
+  }
+  sendMessage(message) {
+    this.implementation.handleMessage(message);
+  }
+  stopSession() {
+    this.implementation.dispose();
+    return Promise.resolve(void 0);
+  }
+}
+let WorkerExtHostDebugService = class WorkerExtHostDebugService2 extends ExtHostDebugServiceBase {
+  static {
+    __name(this, "WorkerExtHostDebugService");
+  }
+  constructor(extHostRpcService, workspaceService, extensionService, configurationService, editorTabs, variableResolver, commands, testing) {
+    super(extHostRpcService, workspaceService, extensionService, configurationService, editorTabs, variableResolver, commands, testing);
+  }
+};
+WorkerExtHostDebugService = __decorate([
+  __param(0, IExtHostRpcService),
+  __param(1, IExtHostWorkspace),
+  __param(2, IExtHostExtensionService),
+  __param(3, IExtHostConfiguration),
+  __param(4, IExtHostEditorTabs),
+  __param(5, IExtHostVariableResolverProvider),
+  __param(6, IExtHostCommands),
+  __param(7, IExtHostTesting)
+], WorkerExtHostDebugService);
+export {
+  ExtHostDebugConsole,
+  ExtHostDebugServiceBase,
+  ExtHostDebugSession,
+  IExtHostDebugService,
+  WorkerExtHostDebugService
+};
+//# sourceMappingURL=extHostDebugService.js.map

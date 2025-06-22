@@ -1,1 +1,122 @@
-import{$fJ as c}from"../../../../services/textfile/common/textfiles.js";import{$RK as p}from"../../../../services/lifecycle/common/lifecycle.js";import{$vd as b}from"../../../../../base/common/lifecycle.js";import{$_b as m,$7b as $}from"../../../../../base/common/arrays.js";import{$8$ as D}from"../../../../services/host/browser/host.js";import{$oI as g}from"../../../../services/editor/common/editorService.js";import{$1h as v}from"../../../../../base/common/async.js";import{$0_ as _}from"../../../../../editor/browser/services/codeEditorService.js";import{$7I as S}from"../../../../services/filesConfiguration/common/filesConfigurationService.js";import{$FFb as w}from"../../common/files.js";import{Schemas as u}from"../../../../../base/common/network.js";import{$rAb as y}from"../../../../services/untitled/common/untitledTextEditorInput.js";import{$9I as I}from"../../../../services/workingCopy/common/workingCopyEditorService.js";import{$7J as B}from"../../../../common/editor.js";var a=function(n,t,i,e){var s=arguments.length,r=s<3?t:e===null?e=Object.getOwnPropertyDescriptor(t,i):e,h;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")r=Reflect.decorate(n,t,i,e);else for(var f=n.length-1;f>=0;f--)(h=n[f])&&(r=(s<3?h(r):s>3?h(t,i,r):h(t,i))||r);return s>3&&r&&Object.defineProperty(t,i,r),r},o=function(n,t){return function(i,e){t(i,e,n)}};let d=class extends b{static{this.ID="workbench.contrib.textFileEditorTracker"}constructor(t,i,e,s,r,h,f){super(),this.a=t,this.b=i,this.c=e,this.f=s,this.g=r,this.h=h,this.j=f,this.n=this.B(new v(l=>this.s(l),this.r())),this.m()}m(){this.B(this.b.files.onDidChangeDirty(t=>this.n.work(t.resource))),this.B(this.b.files.onDidSaveError(t=>this.n.work(t.resource))),this.B(this.b.untitled.onDidChangeDirty(t=>this.n.work(t.resource))),this.B(this.f.onDidChangeFocus(t=>t?this.u():void 0)),this.B(this.c.onDidShutdown(()=>this.dispose()))}r(){return 800}s(t){this.t(m(t.filter(i=>{if(!this.b.isDirty(i))return!1;const e=this.b.files.get(i);if(e?.hasState(2)||i.scheme!==u.untitled&&!e?.hasState(5)&&this.h.hasShortAutoSaveDelay(i)||this.a.isOpened({resource:i,typeId:i.scheme===u.untitled?y.ID:w,editorId:B.id}))return!1;const s=e??this.b.untitled.get(i);return!(s&&this.j.findEditor(s))}),i=>i.toString()))}t(t){t.length&&this.a.openEditors(t.map(i=>({resource:i,options:{inactive:!0,pinned:!0,preserveFocus:!0}})))}u(){m($(this.g.listCodeEditors().map(t=>{const i=t.getModel()?.uri;if(!i)return;const e=this.b.files.get(i);if(!(!e||e.isDirty()||!e.isResolved()))return e})),t=>t.resource.toString()).forEach(t=>this.b.files.resolve(t.resource,{reload:{async:!0}}))}};d=a([o(0,g),o(1,c),o(2,p),o(3,D),o(4,_),o(5,S),o(6,I)],d);export{d as $7mc};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { ITextFileService } from "../../../../services/textfile/common/textfiles.js";
+import { ILifecycleService } from "../../../../services/lifecycle/common/lifecycle.js";
+import { Disposable } from "../../../../../base/common/lifecycle.js";
+import { distinct, coalesce } from "../../../../../base/common/arrays.js";
+import { IHostService } from "../../../../services/host/browser/host.js";
+import { IEditorService } from "../../../../services/editor/common/editorService.js";
+import { RunOnceWorker } from "../../../../../base/common/async.js";
+import { ICodeEditorService } from "../../../../../editor/browser/services/codeEditorService.js";
+import { IFilesConfigurationService } from "../../../../services/filesConfiguration/common/filesConfigurationService.js";
+import { FILE_EDITOR_INPUT_ID } from "../../common/files.js";
+import { Schemas } from "../../../../../base/common/network.js";
+import { UntitledTextEditorInput } from "../../../../services/untitled/common/untitledTextEditorInput.js";
+import { IWorkingCopyEditorService } from "../../../../services/workingCopy/common/workingCopyEditorService.js";
+import { DEFAULT_EDITOR_ASSOCIATION } from "../../../../common/editor.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+let TextFileEditorTracker = class TextFileEditorTracker2 extends Disposable {
+  static {
+    __name(this, "TextFileEditorTracker");
+  }
+  static {
+    this.ID = "workbench.contrib.textFileEditorTracker";
+  }
+  constructor(editorService, textFileService, lifecycleService, hostService, codeEditorService, filesConfigurationService, workingCopyEditorService) {
+    super();
+    this.editorService = editorService;
+    this.textFileService = textFileService;
+    this.lifecycleService = lifecycleService;
+    this.hostService = hostService;
+    this.codeEditorService = codeEditorService;
+    this.filesConfigurationService = filesConfigurationService;
+    this.workingCopyEditorService = workingCopyEditorService;
+    this.ensureDirtyFilesAreOpenedWorker = this._register(new RunOnceWorker((units) => this.ensureDirtyTextFilesAreOpened(units), this.getDirtyTextFileTrackerDelay()));
+    this.registerListeners();
+  }
+  registerListeners() {
+    this._register(this.textFileService.files.onDidChangeDirty((model) => this.ensureDirtyFilesAreOpenedWorker.work(model.resource)));
+    this._register(this.textFileService.files.onDidSaveError((model) => this.ensureDirtyFilesAreOpenedWorker.work(model.resource)));
+    this._register(this.textFileService.untitled.onDidChangeDirty((model) => this.ensureDirtyFilesAreOpenedWorker.work(model.resource)));
+    this._register(this.hostService.onDidChangeFocus((hasFocus) => hasFocus ? this.reloadVisibleTextFileEditors() : void 0));
+    this._register(this.lifecycleService.onDidShutdown(() => this.dispose()));
+  }
+  getDirtyTextFileTrackerDelay() {
+    return 800;
+  }
+  ensureDirtyTextFilesAreOpened(resources) {
+    this.doEnsureDirtyTextFilesAreOpened(distinct(resources.filter((resource) => {
+      if (!this.textFileService.isDirty(resource)) {
+        return false;
+      }
+      const fileModel = this.textFileService.files.get(resource);
+      if (fileModel?.hasState(
+        2
+        /* TextFileEditorModelState.PENDING_SAVE */
+      )) {
+        return false;
+      }
+      if (resource.scheme !== Schemas.untitled && !fileModel?.hasState(
+        5
+        /* TextFileEditorModelState.ERROR */
+      ) && this.filesConfigurationService.hasShortAutoSaveDelay(resource)) {
+        return false;
+      }
+      if (this.editorService.isOpened({ resource, typeId: resource.scheme === Schemas.untitled ? UntitledTextEditorInput.ID : FILE_EDITOR_INPUT_ID, editorId: DEFAULT_EDITOR_ASSOCIATION.id })) {
+        return false;
+      }
+      const model = fileModel ?? this.textFileService.untitled.get(resource);
+      if (model && this.workingCopyEditorService.findEditor(model)) {
+        return false;
+      }
+      return true;
+    }), (resource) => resource.toString()));
+  }
+  doEnsureDirtyTextFilesAreOpened(resources) {
+    if (!resources.length) {
+      return;
+    }
+    this.editorService.openEditors(resources.map((resource) => ({
+      resource,
+      options: { inactive: true, pinned: true, preserveFocus: true }
+    })));
+  }
+  //#endregion
+  //#region Window Focus Change: Update visible code editors when focus is gained that have a known text file model
+  reloadVisibleTextFileEditors() {
+    distinct(coalesce(this.codeEditorService.listCodeEditors().map((codeEditor) => {
+      const resource = codeEditor.getModel()?.uri;
+      if (!resource) {
+        return void 0;
+      }
+      const model = this.textFileService.files.get(resource);
+      if (!model || model.isDirty() || !model.isResolved()) {
+        return void 0;
+      }
+      return model;
+    })), (model) => model.resource.toString()).forEach((model) => this.textFileService.files.resolve(model.resource, { reload: { async: true } }));
+  }
+};
+TextFileEditorTracker = __decorate([
+  __param(0, IEditorService),
+  __param(1, ITextFileService),
+  __param(2, ILifecycleService),
+  __param(3, IHostService),
+  __param(4, ICodeEditorService),
+  __param(5, IFilesConfigurationService),
+  __param(6, IWorkingCopyEditorService)
+], TextFileEditorTracker);
+export {
+  TextFileEditorTracker
+};
+//# sourceMappingURL=textFileEditorTracker.js.map

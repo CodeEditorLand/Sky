@@ -1,40 +1,731 @@
-import{$r5 as j}from"../../../../base/browser/browser.js";import{$y5 as _}from"../../../../base/browser/canIUse.js";import*as M from"../../../../base/browser/dom.js";import{$B5 as U}from"../../../../base/browser/mouseEvent.js";import{$_l as C,$bm as H,$cm as I}from"../../../../base/common/actions.js";import{$_b as V}from"../../../../base/common/arrays.js";import{$Yh as G,$Mh as K}from"../../../../base/common/async.js";import{$tm as J}from"../../../../base/common/decorators.js";import{$kb as X}from"../../../../base/common/errors.js";import{$Uj as y}from"../../../../base/common/htmlContent.js";import{$qd as E,$rd as Y}from"../../../../base/common/lifecycle.js";import*as q from"../../../../base/common/platform.js";import Q from"../../../../base/common/severity.js";import{$Bg as F}from"../../../../base/common/strings.js";import{ThemeIcon as f}from"../../../../base/common/themables.js";import{$Rm as Z}from"../../../../base/common/uuid.js";import{$cC as z}from"../../../../editor/common/core/range.js";import{$BD as ee}from"../../../../editor/common/languages/language.js";import{GlyphMarginLane as P,OverviewRulerLane as te}from"../../../../editor/common/model.js";import*as l from"../../../../nls.js";import{$El as ie}from"../../../../platform/configuration/common/configuration.js";import{$Vn as ne}from"../../../../platform/contextkey/common/contextkey.js";import{$ofb as oe}from"../../../../platform/contextview/browser/contextView.js";import{$_o as se}from"../../../../platform/dialogs/common/dialogs.js";import{$mj as re}from"../../../../platform/instantiation/common/instantiation.js";import{$2H as O}from"../../../../platform/label/common/label.js";import{$op as S}from"../../../../platform/theme/common/colorRegistry.js";import{$St as ae,$Nt as le}from"../../../../platform/theme/common/themeService.js";import{$zdc as ce}from"../../codeEditor/browser/editorLineNumberMenu.js";import{$$$b as x}from"./breakpointsView.js";import{$Bdc as ue}from"./breakpointWidget.js";import*as m from"./debugIcons.js";import{$bW as de,$hV as he,DebuggerString as ge,$hW as L}from"../common/debug.js";var R=function(d,e,t,o){var n=arguments.length,r=n<3?e:o===null?o=Object.getOwnPropertyDescriptor(e,t):o,s;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")r=Reflect.decorate(d,e,t,o);else for(var i=d.length-1;i>=0;i--)(s=d[i])&&(r=(n<3?s(r):n>3?s(e,t,r):s(e,t))||r);return n>3&&r&&Object.defineProperty(e,t,r),r},w=function(d,e){return function(t,o){e(t,o,d)}};const pe=M.$,fe={description:"breakpoint-helper-decoration",glyphMarginClassName:f.asClassName(m.$qBb),glyphMargin:{position:P.Right},glyphMarginHoverMessage:new y().appendText(l.localize(6170,null)),stickiness:1};function me(d,e,t,o,n,r){const s=[];return t.forEach(i=>{if(i.lineNumber>e.getLineCount())return;const a=t.some(g=>g!==i&&g.lineNumber===i.lineNumber),c=e.getLineFirstNonWhitespaceColumn(i.lineNumber),u=e.validateRange(i.column?new z(i.lineNumber,i.column,i.lineNumber,i.column+1):new z(i.lineNumber,c,i.lineNumber,c+1));s.push({options:be(d,e,i,o,n,r,a),range:u})}),s}function be(d,e,t,o,n,r,s){const i=d.get(L),a=d.get(ee),c=d.get(O),{icon:u,message:g,showAdapterUnverifiedMessage:b}=x(o,n,t,c,i.getModel());let h,p;if(b){let $;p=i.getModel().getSessions().map(v=>{const D=i.getAdapterManager().getDebugger(v.configuration.type),W=D?.strings?.[ge.UnverifiedBreakpoints];if(W)return $||($=a.guessLanguageIdByFilepathOrFirstLine(t.uri)??void 0),$&&D.interestedInLanguage($)?W:void 0}).find(v=>!!v)}if(g)if(h=new y(void 0,{isTrusted:!0,supportThemeIcons:!0}),t.condition||t.hitCondition){const $=e.getLanguageId();h.appendCodeblock($,g),p&&h.appendMarkdown("$(warning) "+p)}else h.appendText(g),p&&h.appendMarkdown(`
-
-$(warning) `+p);else p&&(h=new y(void 0,{isTrusted:!0,supportThemeIcons:!0}).appendMarkdown(p));let B=null;r&&(B={color:le(T),position:te.Left});const k=t.column&&(s||t.column>e.getLineFirstNonWhitespaceColumn(t.lineNumber));return{description:"breakpoint-decoration",glyphMargin:{position:P.Right},glyphMarginClassName:f.asClassName(u),glyphMarginHoverMessage:h,stickiness:1,before:k?{content:F,inlineClassName:"debug-breakpoint-placeholder",inlineClassNameAffectsLetterSpacing:!0}:void 0,overviewRuler:B,zIndex:9999}}async function ke(d,e,t){return t.capabilities.supportsBreakpointLocationsRequest?await Promise.all(V(e,o=>o).map(async o=>{try{return{lineNumber:o,positions:await t.breakpointsLocations(d.uri,o)}}catch{return{lineNumber:o,positions:[]}}})):[]}function Ce(d,e,t){const o=[];for(const{positions:n,lineNumber:r}of t){if(n.length===0)continue;const s=d.getLineFirstNonWhitespaceColumn(r),i=d.getLineLastNonWhitespaceColumn(r);n.forEach(a=>{const c=new z(a.lineNumber,a.column,a.lineNumber,a.column+1);if(a.column<=s&&!e.some(g=>g.range.startColumn>s&&g.range.startLineNumber===a.lineNumber)||a.column>i)return;const u=e.find(g=>g.range.equalsRange(c));u&&u.inlineWidget||o.push({range:c,options:{description:"breakpoint-placeholder-decoration",stickiness:1,before:u?void 0:{content:F,inlineClassName:"debug-breakpoint-placeholder",inlineClassNameAffectsLetterSpacing:!0}},breakpoint:u?u.breakpoint:void 0})})}return o}let A=class{constructor(e,t,o,n,r,s,i,a){this.q=e,this.r=t,this.t=o,this.u=n,this.w=s,this.x=i,this.y=a,this.a=null,this.h=[],this.j=!1,this.k=!1,this.m=[],this.n=[],this.g=he.bindTo(r),this.o=new G(()=>this.D(),30),this.o.schedule(),this.z()}getContextMenuActionsAtPosition(e,t){if(!this.r.getAdapterManager().hasEnabledDebuggers())return[];if(!this.r.canSetBreakpointsIn(t))return[];const o=this.r.getModel().getBreakpoints({lineNumber:e,uri:t.uri});return this.A(o,t.uri,e)}z(){this.h.push(this.q.onMouseDown(async e=>{if(!this.r.getAdapterManager().hasEnabledDebuggers())return;const t=this.q.getModel();if(!e.target.position||!t||e.target.type!==2||e.target.detail.isAfterLines||!this.B(e.target.position.lineNumber)&&!e.target.element?.className.includes("breakpoint"))return;const o=this.r.canSetBreakpointsIn(t),n=e.target.position.lineNumber,r=t.uri;if(!(e.event.rightButton||q.$n&&e.event.leftButton&&e.event.ctrlKey)){const s=this.r.getModel().getBreakpoints({uri:r,lineNumber:n});if(s.length){const i=e.event.shiftKey,a=s.some(c=>c.enabled);if(i)s.forEach(c=>this.r.enableOrDisableBreakpoints(!a,c));else if(!q.$o&&s.some(c=>!!c.condition||!!c.logMessage||!!c.hitCondition||!!c.triggeredBy)){const c=s.every(h=>!!h.logMessage),u=c?l.localize(6171,null):l.localize(6172,null),g=l.localize(6173,null,u.toLowerCase(),c?l.localize(6174,null):l.localize(6175,null)),b=l.localize(6176,null,u.toLowerCase(),c?l.localize(6177,null):l.localize(6178,null));await this.w.prompt({type:Q.Info,message:a?b:g,buttons:[{label:l.localize(6179,null,u),run:()=>s.forEach(h=>this.r.removeBreakpoints(h.getId()))},{label:l.localize(6180,null,a?l.localize(6181,null):l.localize(6182,null),u),run:()=>s.forEach(h=>this.r.enableOrDisableBreakpoints(!a,h))}],cancelButton:!0})}else a?s.forEach(c=>this.r.removeBreakpoints(c.getId())):s.forEach(c=>this.r.enableOrDisableBreakpoints(!a,c))}else if(o)if(e.event.middleButton){const i=this.x.getValue("debug").gutterMiddleClickAction;if(i!=="none"){let a;switch(i){case"logpoint":a=2;break;case"conditionalBreakpoint":a=0;break;case"triggeredBreakpoint":a=3}this.showBreakpointWidget(n,void 0,a)}}else this.r.addBreakpoints(r,[{lineNumber:n}])}})),_.pointerEvents&&j||(this.h.push(this.q.onMouseMove(e=>{if(!this.r.getAdapterManager().hasEnabledDebuggers())return;let t=-1;const o=this.q.getModel();o&&e.target.position&&(e.target.type===2||e.target.type===3)&&this.r.canSetBreakpointsIn(o)&&this.B(e.target.position.lineNumber)&&(e.target.detail.isAfterLines||(t=e.target.position.lineNumber)),this.C(t)})),this.h.push(this.q.onMouseLeave(()=>{this.C(-1)}))),this.h.push(this.q.onDidChangeModel(async()=>{this.closeBreakpointWidget(),await this.D()})),this.h.push(this.r.getModel().onDidChangeBreakpoints(()=>{!this.k&&!this.o.isScheduled()&&this.o.schedule()})),this.h.push(this.r.onDidChangeState(()=>{this.o.isScheduled()||this.o.schedule()})),this.h.push(this.q.onDidChangeModelDecorations(()=>this.E())),this.h.push(this.x.onDidChangeConfiguration(async e=>{(e.affectsConfiguration("debug.showBreakpointsInOverviewRuler")||e.affectsConfiguration("debug.showInlineBreakpointCandidates"))&&await this.D()}))}A(e,t,o,n){const r=[];if(e.length===1){const s=e[0].logMessage?l.localize(6183,null):l.localize(6184,null);r.push(new C("debug.removeBreakpoint",l.localize(6185,null,s),void 0,!0,async()=>{await this.r.removeBreakpoints(e[0].getId())})),r.push(new C("workbench.debug.action.editBreakpointAction",l.localize(6186,null,s),void 0,!0,()=>Promise.resolve(this.showBreakpointWidget(e[0].lineNumber,e[0].column)))),r.push(new C("workbench.debug.viewlet.action.toggleBreakpoint",e[0].enabled?l.localize(6187,null,s):l.localize(6188,null,s),void 0,!0,()=>this.r.enableOrDisableBreakpoints(!e[0].enabled,e[0])))}else if(e.length>1){const s=e.slice().sort((i,a)=>i.column&&a.column?i.column-a.column:1);r.push(new I("debug.removeBreakpoints",l.localize(6189,null),s.map(i=>new C("removeInlineBreakpoint",i.column?l.localize(6190,null,i.column):l.localize(6191,null),void 0,!0,()=>this.r.removeBreakpoints(i.getId()))))),r.push(new I("debug.editBreakpoints",l.localize(6192,null),s.map(i=>new C("editBreakpoint",i.column?l.localize(6193,null,i.column):l.localize(6194,null),void 0,!0,()=>Promise.resolve(this.showBreakpointWidget(i.lineNumber,i.column)))))),r.push(new I("debug.enableDisableBreakpoints",l.localize(6195,null),s.map(i=>new C(i.enabled?"disableColumnBreakpoint":"enableColumnBreakpoint",i.enabled?i.column?l.localize(6196,null,i.column):l.localize(6197,null):i.column?l.localize(6198,null,i.column):l.localize(6199,null),void 0,!0,()=>this.r.enableOrDisableBreakpoints(!i.enabled,i)))))}else r.push(new C("addBreakpoint",l.localize(6200,null),void 0,!0,()=>this.r.addBreakpoints(t,[{lineNumber:o,column:n}]))),r.push(new C("addConditionalBreakpoint",l.localize(6201,null),void 0,!0,()=>Promise.resolve(this.showBreakpointWidget(o,n,0)))),r.push(new C("addLogPoint",l.localize(6202,null),void 0,!0,()=>Promise.resolve(this.showBreakpointWidget(o,n,2)))),r.push(new C("addTriggeredBreakpoint",l.localize(6203,null),void 0,!0,()=>Promise.resolve(this.showBreakpointWidget(o,n,3))));return this.r.state===2&&(r.push(new H),r.push(new C("runToLine",l.localize(6204,null),void 0,!0,()=>this.r.runTo(t,o).catch(X)))),r}B(e){const t=this.q.getLineDecorations(e);if(t)for(const{options:o}of t){const n=o.glyphMarginClassName;if(!n)continue;if(!(n.includes("codicon-")||n.startsWith("coverage-deco-"))||n.includes("codicon-testing-")||n.includes("codicon-merge-")||n.includes("codicon-arrow-")||n.includes("codicon-loading")||n.includes("codicon-fold")||n.includes("codicon-gutter-lightbulb")||n.includes("codicon-lightbulb-sparkle"))return!1}return!0}C(e){this.q.changeDecorations(t=>{this.a&&(t.removeDecoration(this.a),this.a=null),e!==-1&&(this.a=t.addDecoration({startLineNumber:e,startColumn:1,endLineNumber:e,endColumn:1},fe))})}async D(){if(!this.q.hasModel())return;const e=(u,g)=>{const b=Ce(o,this.m,g),h=u.deltaDecorations(this.n.map(p=>p.decorationId),b);this.n.forEach(p=>{p.inlineWidget.dispose()}),this.n=h.map((p,B)=>{const k=b[B],$=k.breakpoint?x(this.r.state,this.r.getModel().areBreakpointsActivated(),k.breakpoint,this.y,this.r.getModel()).icon:m.$lBb.disabled,v=()=>this.A(k.breakpoint?[k.breakpoint]:[],t.getModel().uri,k.range.startLineNumber,k.range.startColumn),D=new N(t,p,f.asClassName($),k.breakpoint,this.r,this.t,v);return{decorationId:p,inlineWidget:D}})},t=this.q,o=t.getModel(),n=this.r.getModel().getBreakpoints({uri:o.uri}),r=this.x.getValue("debug"),s=this.u.invokeFunction(u=>me(u,o,n,this.r.state,this.r.getModel().areBreakpointsActivated(),r.showBreakpointsInOverviewRuler)),i=this.r.getViewModel().focusedSession,a=r.showInlineBreakpointCandidates&&i?ke(this.q.getModel(),s.map(u=>u.range.startLineNumber),i):Promise.resolve([]),c=await Promise.race([a,K(500).then(()=>{})]);c===void 0&&a.then(u=>t.changeDecorations(g=>e(g,u)));try{this.j=!0,t.changeDecorations(u=>{const g=u.deltaDecorations(this.m.map(b=>b.decorationId),s);this.m.forEach(b=>{b.inlineWidget?.dispose()}),this.m=g.map((b,h)=>{let p;const B=n[h];if(s[h].options.before){const k=()=>this.A([B],t.getModel().uri,B.lineNumber,B.column);p=new N(t,b,s[h].options.glyphMarginClassName,B,this.r,this.t,k)}return{decorationId:b,breakpoint:B,range:s[h].range,inlineWidget:p}}),c&&e(u,c)})}finally{this.j=!1}for(const u of this.m)u.inlineWidget&&this.q.layoutContentWidget(u.inlineWidget)}async E(){if(this.m.length===0||this.j||!this.q.hasModel())return;let e=!1;const t=this.q.getModel();if(this.m.forEach(n=>{if(e)return;const r=t.getDecorationRange(n.decorationId);r&&!n.range.equalsRange(r)&&(e=!0,n.range=r)}),!e)return;const o=new Map;for(let n=0,r=this.m.length;n<r;n++){const s=this.m[n],i=t.getDecorationRange(s.decorationId);i&&s.breakpoint&&o.set(s.breakpoint.getId(),{lineNumber:i.startLineNumber,column:s.breakpoint.column?i.startColumn:void 0})}try{this.k=!0,await this.r.updateBreakpoints(t.uri,o,!0)}finally{this.k=!1}}showBreakpointWidget(e,t,o){this.f?.dispose(),this.f=this.u.createInstance(ue,this.q,e,t,o),this.f.show({lineNumber:e,column:1}),this.g.set(!0)}closeBreakpointWidget(){this.f&&(this.f.dispose(),this.f=void 0,this.g.reset(),this.q.focus())}dispose(){this.f?.dispose(),this.q.removeDecorations(this.m.map(e=>e.decorationId)),E(this.h)}};A=R([w(1,L),w(2,oe),w(3,re),w(4,ne),w(5,se),w(6,ie),w(7,O)],A);ce.registerGutterActionsGenerator(({lineNumber:d,editor:e,accessor:t},o)=>{const n=e.getModel(),r=t.get(L);if(!n||!r.getAdapterManager().hasEnabledDebuggers()||!r.canSetBreakpointsIn(n))return;const s=e.getContribution(de);if(!s)return;const i=s.getContextMenuActionsAtPosition(d,n);for(const a of i)o.push(a,"2_debug")});class N{constructor(e,t,o,n,r,s,i){this.h=e,this.j=t,this.k=n,this.m=r,this.n=s,this.o=i,this.allowEditorOverflow=!1,this.suppressMouseDown=!0,this.g=[],this.f=this.h.getModel().getDecorationRange(t),this.g.push(this.h.onDidChangeModelDecorations(()=>{const c=this.h.getModel().getDecorationRange(this.j);this.f&&!this.f.equalsRange(c)&&(this.f=c,this.h.layoutContentWidget(this),this.r())})),this.q(o),this.h.addContentWidget(this),this.h.layoutContentWidget(this)}q(e){this.a=pe(".inline-breakpoint-widget"),e&&this.a.classList.add(...e.split(" ")),this.g.push(M.$J5(this.a,M.$F6.CLICK,async t=>{switch(this.k?.enabled){case void 0:await this.m.addBreakpoints(this.h.getModel().uri,[{lineNumber:this.f.startLineNumber,column:this.f.startColumn}]);break;case!0:await this.m.removeBreakpoints(this.k.getId());break;case!1:this.m.enableOrDisableBreakpoints(!0,this.k);break}})),this.g.push(M.$J5(this.a,M.$F6.CONTEXT_MENU,t=>{const o=new U(M.getWindow(this.a),t),n=this.o();this.n.showContextMenu({getAnchor:()=>o,getActions:()=>n,getActionsContext:()=>this.k,onHide:()=>Y(n)})})),this.r(),this.g.push(this.h.onDidChangeConfiguration(t=>{(t.hasChanged(57)||t.hasChanged(71))&&this.r()}))}r(){const e=this.f?this.h.getLineHeightForPosition(this.f.getStartPosition()):this.h.getOption(71);this.a.style.height=`${e}px`,this.a.style.width=`${Math.ceil(.8*e)}px`,this.a.style.marginLeft="4px"}getId(){return Z()}getDomNode(){return this.a}getPosition(){return this.f?(this.a.classList.toggle("line-start",this.f.startColumn===1),{position:{lineNumber:this.f.startLineNumber,column:this.f.startColumn-1},preference:[0]}):null}dispose(){this.h.removeContentWidget(this),E(this.g)}}R([J],N.prototype,"getId",null);ae((d,e)=>{const t=".monaco-editor .glyph-margin-widgets, .monaco-workbench .debug-breakpoints, .monaco-workbench .disassembly-view, .monaco-editor .contentWidgets",o=d.getColor(T);o&&(e.addRule(`${t} {
-			${m.$sBb.map(a=>`${f.asCSSSelector(a.regular)}`).join(`,
-		`)},
-			${f.asCSSSelector(m.$rBb)},
-			${f.asCSSSelector(m.$qBb)}:not([class*='codicon-debug-breakpoint']):not([class*='codicon-debug-stackframe']),
-			${f.asCSSSelector(m.$lBb.regular)}${f.asCSSSelector(m.$uBb)}::after,
-			${f.asCSSSelector(m.$lBb.regular)}${f.asCSSSelector(m.$tBb)}::after {
-				color: ${o} !important;
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { isSafari } from "../../../../base/browser/browser.js";
+import { BrowserFeatures } from "../../../../base/browser/canIUse.js";
+import * as dom from "../../../../base/browser/dom.js";
+import { StandardMouseEvent } from "../../../../base/browser/mouseEvent.js";
+import { Action, Separator, SubmenuAction } from "../../../../base/common/actions.js";
+import { distinct } from "../../../../base/common/arrays.js";
+import { RunOnceScheduler, timeout } from "../../../../base/common/async.js";
+import { memoize } from "../../../../base/common/decorators.js";
+import { onUnexpectedError } from "../../../../base/common/errors.js";
+import { MarkdownString } from "../../../../base/common/htmlContent.js";
+import { dispose, disposeIfDisposable } from "../../../../base/common/lifecycle.js";
+import * as env from "../../../../base/common/platform.js";
+import severity from "../../../../base/common/severity.js";
+import { noBreakWhitespace } from "../../../../base/common/strings.js";
+import { ThemeIcon } from "../../../../base/common/themables.js";
+import { generateUuid } from "../../../../base/common/uuid.js";
+import { Range } from "../../../../editor/common/core/range.js";
+import { ILanguageService } from "../../../../editor/common/languages/language.js";
+import { GlyphMarginLane, OverviewRulerLane } from "../../../../editor/common/model.js";
+import * as nls from "../../../../nls.js";
+import { IConfigurationService } from "../../../../platform/configuration/common/configuration.js";
+import { IContextKeyService } from "../../../../platform/contextkey/common/contextkey.js";
+import { IContextMenuService } from "../../../../platform/contextview/browser/contextView.js";
+import { IDialogService } from "../../../../platform/dialogs/common/dialogs.js";
+import { IInstantiationService } from "../../../../platform/instantiation/common/instantiation.js";
+import { ILabelService } from "../../../../platform/label/common/label.js";
+import { registerColor } from "../../../../platform/theme/common/colorRegistry.js";
+import { registerThemingParticipant, themeColorFromId } from "../../../../platform/theme/common/themeService.js";
+import { GutterActionsRegistry } from "../../codeEditor/browser/editorLineNumberMenu.js";
+import { getBreakpointMessageAndIcon } from "./breakpointsView.js";
+import { BreakpointWidget } from "./breakpointWidget.js";
+import * as icons from "./debugIcons.js";
+import { BREAKPOINT_EDITOR_CONTRIBUTION_ID, CONTEXT_BREAKPOINT_WIDGET_VISIBLE, DebuggerString, IDebugService } from "../common/debug.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+const $ = dom.$;
+const breakpointHelperDecoration = {
+  description: "breakpoint-helper-decoration",
+  glyphMarginClassName: ThemeIcon.asClassName(icons.debugBreakpointHint),
+  glyphMargin: { position: GlyphMarginLane.Right },
+  glyphMarginHoverMessage: new MarkdownString().appendText(nls.localize("breakpointHelper", "Click to add a breakpoint")),
+  stickiness: 1
+  /* TrackedRangeStickiness.NeverGrowsWhenTypingAtEdges */
+};
+function createBreakpointDecorations(accessor, model, breakpoints, state, breakpointsActivated, showBreakpointsInOverviewRuler) {
+  const result = [];
+  breakpoints.forEach((breakpoint) => {
+    if (breakpoint.lineNumber > model.getLineCount()) {
+      return;
+    }
+    const hasOtherBreakpointsOnLine = breakpoints.some((bp) => bp !== breakpoint && bp.lineNumber === breakpoint.lineNumber);
+    const column = model.getLineFirstNonWhitespaceColumn(breakpoint.lineNumber);
+    const range = model.validateRange(
+      breakpoint.column ? new Range(breakpoint.lineNumber, breakpoint.column, breakpoint.lineNumber, breakpoint.column + 1) : new Range(breakpoint.lineNumber, column, breakpoint.lineNumber, column + 1)
+      // Decoration has to have a width #20688
+    );
+    result.push({
+      options: getBreakpointDecorationOptions(accessor, model, breakpoint, state, breakpointsActivated, showBreakpointsInOverviewRuler, hasOtherBreakpointsOnLine),
+      range
+    });
+  });
+  return result;
+}
+__name(createBreakpointDecorations, "createBreakpointDecorations");
+function getBreakpointDecorationOptions(accessor, model, breakpoint, state, breakpointsActivated, showBreakpointsInOverviewRuler, hasOtherBreakpointsOnLine) {
+  const debugService = accessor.get(IDebugService);
+  const languageService = accessor.get(ILanguageService);
+  const labelService = accessor.get(ILabelService);
+  const { icon, message, showAdapterUnverifiedMessage } = getBreakpointMessageAndIcon(state, breakpointsActivated, breakpoint, labelService, debugService.getModel());
+  let glyphMarginHoverMessage;
+  let unverifiedMessage;
+  if (showAdapterUnverifiedMessage) {
+    let langId;
+    unverifiedMessage = debugService.getModel().getSessions().map((s) => {
+      const dbg = debugService.getAdapterManager().getDebugger(s.configuration.type);
+      const message2 = dbg?.strings?.[DebuggerString.UnverifiedBreakpoints];
+      if (message2) {
+        if (!langId) {
+          langId = languageService.guessLanguageIdByFilepathOrFirstLine(breakpoint.uri) ?? void 0;
+        }
+        return langId && dbg.interestedInLanguage(langId) ? message2 : void 0;
+      }
+      return void 0;
+    }).find((messages) => !!messages);
+  }
+  if (message) {
+    glyphMarginHoverMessage = new MarkdownString(void 0, { isTrusted: true, supportThemeIcons: true });
+    if (breakpoint.condition || breakpoint.hitCondition) {
+      const languageId = model.getLanguageId();
+      glyphMarginHoverMessage.appendCodeblock(languageId, message);
+      if (unverifiedMessage) {
+        glyphMarginHoverMessage.appendMarkdown("$(warning) " + unverifiedMessage);
+      }
+    } else {
+      glyphMarginHoverMessage.appendText(message);
+      if (unverifiedMessage) {
+        glyphMarginHoverMessage.appendMarkdown("\n\n$(warning) " + unverifiedMessage);
+      }
+    }
+  } else if (unverifiedMessage) {
+    glyphMarginHoverMessage = new MarkdownString(void 0, { isTrusted: true, supportThemeIcons: true }).appendMarkdown(unverifiedMessage);
+  }
+  let overviewRulerDecoration = null;
+  if (showBreakpointsInOverviewRuler) {
+    overviewRulerDecoration = {
+      color: themeColorFromId(debugIconBreakpointForeground),
+      position: OverviewRulerLane.Left
+    };
+  }
+  const renderInline = breakpoint.column && (hasOtherBreakpointsOnLine || breakpoint.column > model.getLineFirstNonWhitespaceColumn(breakpoint.lineNumber));
+  return {
+    description: "breakpoint-decoration",
+    glyphMargin: { position: GlyphMarginLane.Right },
+    glyphMarginClassName: ThemeIcon.asClassName(icon),
+    glyphMarginHoverMessage,
+    stickiness: 1,
+    before: renderInline ? {
+      content: noBreakWhitespace,
+      inlineClassName: `debug-breakpoint-placeholder`,
+      inlineClassNameAffectsLetterSpacing: true
+    } : void 0,
+    overviewRuler: overviewRulerDecoration,
+    zIndex: 9999
+  };
+}
+__name(getBreakpointDecorationOptions, "getBreakpointDecorationOptions");
+async function requestBreakpointCandidateLocations(model, lineNumbers, session) {
+  if (!session.capabilities.supportsBreakpointLocationsRequest) {
+    return [];
+  }
+  return await Promise.all(distinct(lineNumbers, (l) => l).map(async (lineNumber) => {
+    try {
+      return { lineNumber, positions: await session.breakpointsLocations(model.uri, lineNumber) };
+    } catch {
+      return { lineNumber, positions: [] };
+    }
+  }));
+}
+__name(requestBreakpointCandidateLocations, "requestBreakpointCandidateLocations");
+function createCandidateDecorations(model, breakpointDecorations, lineBreakpoints) {
+  const result = [];
+  for (const { positions, lineNumber } of lineBreakpoints) {
+    if (positions.length === 0) {
+      continue;
+    }
+    const firstColumn = model.getLineFirstNonWhitespaceColumn(lineNumber);
+    const lastColumn = model.getLineLastNonWhitespaceColumn(lineNumber);
+    positions.forEach((p) => {
+      const range = new Range(p.lineNumber, p.column, p.lineNumber, p.column + 1);
+      if (p.column <= firstColumn && !breakpointDecorations.some((bp) => bp.range.startColumn > firstColumn && bp.range.startLineNumber === p.lineNumber) || p.column > lastColumn) {
+        return;
+      }
+      const breakpointAtPosition = breakpointDecorations.find((bpd) => bpd.range.equalsRange(range));
+      if (breakpointAtPosition && breakpointAtPosition.inlineWidget) {
+        return;
+      }
+      result.push({
+        range,
+        options: {
+          description: "breakpoint-placeholder-decoration",
+          stickiness: 1,
+          before: breakpointAtPosition ? void 0 : {
+            content: noBreakWhitespace,
+            inlineClassName: `debug-breakpoint-placeholder`,
+            inlineClassNameAffectsLetterSpacing: true
+          }
+        },
+        breakpoint: breakpointAtPosition ? breakpointAtPosition.breakpoint : void 0
+      });
+    });
+  }
+  return result;
+}
+__name(createCandidateDecorations, "createCandidateDecorations");
+let BreakpointEditorContribution = class BreakpointEditorContribution2 {
+  static {
+    __name(this, "BreakpointEditorContribution");
+  }
+  constructor(editor, debugService, contextMenuService, instantiationService, contextKeyService, dialogService, configurationService, labelService) {
+    this.editor = editor;
+    this.debugService = debugService;
+    this.contextMenuService = contextMenuService;
+    this.instantiationService = instantiationService;
+    this.dialogService = dialogService;
+    this.configurationService = configurationService;
+    this.labelService = labelService;
+    this.breakpointHintDecoration = null;
+    this.toDispose = [];
+    this.ignoreDecorationsChangedEvent = false;
+    this.ignoreBreakpointsChangeEvent = false;
+    this.breakpointDecorations = [];
+    this.candidateDecorations = [];
+    this.breakpointWidgetVisible = CONTEXT_BREAKPOINT_WIDGET_VISIBLE.bindTo(contextKeyService);
+    this.setDecorationsScheduler = new RunOnceScheduler(() => this.setDecorations(), 30);
+    this.setDecorationsScheduler.schedule();
+    this.registerListeners();
+  }
+  /**
+   * Returns context menu actions at the line number if breakpoints can be
+   * set. This is used by the {@link TestingDecorations} to allow breakpoint
+   * setting on lines where breakpoint "run" actions are present.
+   */
+  getContextMenuActionsAtPosition(lineNumber, model) {
+    if (!this.debugService.getAdapterManager().hasEnabledDebuggers()) {
+      return [];
+    }
+    if (!this.debugService.canSetBreakpointsIn(model)) {
+      return [];
+    }
+    const breakpoints = this.debugService.getModel().getBreakpoints({ lineNumber, uri: model.uri });
+    return this.getContextMenuActions(breakpoints, model.uri, lineNumber);
+  }
+  registerListeners() {
+    this.toDispose.push(this.editor.onMouseDown(async (e) => {
+      if (!this.debugService.getAdapterManager().hasEnabledDebuggers()) {
+        return;
+      }
+      const model = this.editor.getModel();
+      if (!e.target.position || !model || e.target.type !== 2 || e.target.detail.isAfterLines || !this.marginFreeFromNonDebugDecorations(e.target.position.lineNumber) && !e.target.element?.className.includes("breakpoint")) {
+        return;
+      }
+      const canSetBreakpoints = this.debugService.canSetBreakpointsIn(model);
+      const lineNumber = e.target.position.lineNumber;
+      const uri = model.uri;
+      if (e.event.rightButton || env.isMacintosh && e.event.leftButton && e.event.ctrlKey) {
+        return;
+      } else {
+        const breakpoints = this.debugService.getModel().getBreakpoints({ uri, lineNumber });
+        if (breakpoints.length) {
+          const isShiftPressed = e.event.shiftKey;
+          const enabled = breakpoints.some((bp) => bp.enabled);
+          if (isShiftPressed) {
+            breakpoints.forEach((bp) => this.debugService.enableOrDisableBreakpoints(!enabled, bp));
+          } else if (!env.isLinux && breakpoints.some((bp) => !!bp.condition || !!bp.logMessage || !!bp.hitCondition || !!bp.triggeredBy)) {
+            const logPoint = breakpoints.every((bp) => !!bp.logMessage);
+            const breakpointType = logPoint ? nls.localize("logPoint", "Logpoint") : nls.localize("breakpoint", "Breakpoint");
+            const disabledBreakpointDialogMessage = nls.localize("breakpointHasConditionDisabled", "This {0} has a {1} that will get lost on remove. Consider enabling the {0} instead.", breakpointType.toLowerCase(), logPoint ? nls.localize("message", "message") : nls.localize("condition", "condition"));
+            const enabledBreakpointDialogMessage = nls.localize("breakpointHasConditionEnabled", "This {0} has a {1} that will get lost on remove. Consider disabling the {0} instead.", breakpointType.toLowerCase(), logPoint ? nls.localize("message", "message") : nls.localize("condition", "condition"));
+            await this.dialogService.prompt({
+              type: severity.Info,
+              message: enabled ? enabledBreakpointDialogMessage : disabledBreakpointDialogMessage,
+              buttons: [
+                {
+                  label: nls.localize({ key: "removeLogPoint", comment: ["&& denotes a mnemonic"] }, "&&Remove {0}", breakpointType),
+                  run: /* @__PURE__ */ __name(() => breakpoints.forEach((bp) => this.debugService.removeBreakpoints(bp.getId())), "run")
+                },
+                {
+                  label: nls.localize("disableLogPoint", "{0} {1}", enabled ? nls.localize({ key: "disable", comment: ["&& denotes a mnemonic"] }, "&&Disable") : nls.localize({ key: "enable", comment: ["&& denotes a mnemonic"] }, "&&Enable"), breakpointType),
+                  run: /* @__PURE__ */ __name(() => breakpoints.forEach((bp) => this.debugService.enableOrDisableBreakpoints(!enabled, bp)), "run")
+                }
+              ],
+              cancelButton: true
+            });
+          } else {
+            if (!enabled) {
+              breakpoints.forEach((bp) => this.debugService.enableOrDisableBreakpoints(!enabled, bp));
+            } else {
+              breakpoints.forEach((bp) => this.debugService.removeBreakpoints(bp.getId()));
+            }
+          }
+        } else if (canSetBreakpoints) {
+          if (e.event.middleButton) {
+            const action = this.configurationService.getValue("debug").gutterMiddleClickAction;
+            if (action !== "none") {
+              let context;
+              switch (action) {
+                case "logpoint":
+                  context = 2;
+                  break;
+                case "conditionalBreakpoint":
+                  context = 0;
+                  break;
+                case "triggeredBreakpoint":
+                  context = 3;
+              }
+              this.showBreakpointWidget(lineNumber, void 0, context);
+            }
+          } else {
+            this.debugService.addBreakpoints(uri, [{ lineNumber }]);
+          }
+        }
+      }
+    }));
+    if (!(BrowserFeatures.pointerEvents && isSafari)) {
+      this.toDispose.push(this.editor.onMouseMove((e) => {
+        if (!this.debugService.getAdapterManager().hasEnabledDebuggers()) {
+          return;
+        }
+        let showBreakpointHintAtLineNumber = -1;
+        const model = this.editor.getModel();
+        if (model && e.target.position && (e.target.type === 2 || e.target.type === 3) && this.debugService.canSetBreakpointsIn(model) && this.marginFreeFromNonDebugDecorations(e.target.position.lineNumber)) {
+          const data = e.target.detail;
+          if (!data.isAfterLines) {
+            showBreakpointHintAtLineNumber = e.target.position.lineNumber;
+          }
+        }
+        this.ensureBreakpointHintDecoration(showBreakpointHintAtLineNumber);
+      }));
+      this.toDispose.push(this.editor.onMouseLeave(() => {
+        this.ensureBreakpointHintDecoration(-1);
+      }));
+    }
+    this.toDispose.push(this.editor.onDidChangeModel(async () => {
+      this.closeBreakpointWidget();
+      await this.setDecorations();
+    }));
+    this.toDispose.push(this.debugService.getModel().onDidChangeBreakpoints(() => {
+      if (!this.ignoreBreakpointsChangeEvent && !this.setDecorationsScheduler.isScheduled()) {
+        this.setDecorationsScheduler.schedule();
+      }
+    }));
+    this.toDispose.push(this.debugService.onDidChangeState(() => {
+      if (!this.setDecorationsScheduler.isScheduled()) {
+        this.setDecorationsScheduler.schedule();
+      }
+    }));
+    this.toDispose.push(this.editor.onDidChangeModelDecorations(() => this.onModelDecorationsChanged()));
+    this.toDispose.push(this.configurationService.onDidChangeConfiguration(async (e) => {
+      if (e.affectsConfiguration("debug.showBreakpointsInOverviewRuler") || e.affectsConfiguration("debug.showInlineBreakpointCandidates")) {
+        await this.setDecorations();
+      }
+    }));
+  }
+  getContextMenuActions(breakpoints, uri, lineNumber, column) {
+    const actions = [];
+    if (breakpoints.length === 1) {
+      const breakpointType = breakpoints[0].logMessage ? nls.localize("logPoint", "Logpoint") : nls.localize("breakpoint", "Breakpoint");
+      actions.push(new Action("debug.removeBreakpoint", nls.localize("removeBreakpoint", "Remove {0}", breakpointType), void 0, true, async () => {
+        await this.debugService.removeBreakpoints(breakpoints[0].getId());
+      }));
+      actions.push(new Action("workbench.debug.action.editBreakpointAction", nls.localize("editBreakpoint", "Edit {0}...", breakpointType), void 0, true, () => Promise.resolve(this.showBreakpointWidget(breakpoints[0].lineNumber, breakpoints[0].column))));
+      actions.push(new Action(`workbench.debug.viewlet.action.toggleBreakpoint`, breakpoints[0].enabled ? nls.localize("disableBreakpoint", "Disable {0}", breakpointType) : nls.localize("enableBreakpoint", "Enable {0}", breakpointType), void 0, true, () => this.debugService.enableOrDisableBreakpoints(!breakpoints[0].enabled, breakpoints[0])));
+    } else if (breakpoints.length > 1) {
+      const sorted = breakpoints.slice().sort((first, second) => first.column && second.column ? first.column - second.column : 1);
+      actions.push(new SubmenuAction("debug.removeBreakpoints", nls.localize("removeBreakpoints", "Remove Breakpoints"), sorted.map((bp) => new Action("removeInlineBreakpoint", bp.column ? nls.localize("removeInlineBreakpointOnColumn", "Remove Inline Breakpoint on Column {0}", bp.column) : nls.localize("removeLineBreakpoint", "Remove Line Breakpoint"), void 0, true, () => this.debugService.removeBreakpoints(bp.getId())))));
+      actions.push(new SubmenuAction("debug.editBreakpoints", nls.localize("editBreakpoints", "Edit Breakpoints"), sorted.map((bp) => new Action("editBreakpoint", bp.column ? nls.localize("editInlineBreakpointOnColumn", "Edit Inline Breakpoint on Column {0}", bp.column) : nls.localize("editLineBreakpoint", "Edit Line Breakpoint"), void 0, true, () => Promise.resolve(this.showBreakpointWidget(bp.lineNumber, bp.column))))));
+      actions.push(new SubmenuAction("debug.enableDisableBreakpoints", nls.localize("enableDisableBreakpoints", "Enable/Disable Breakpoints"), sorted.map((bp) => new Action(bp.enabled ? "disableColumnBreakpoint" : "enableColumnBreakpoint", bp.enabled ? bp.column ? nls.localize("disableInlineColumnBreakpoint", "Disable Inline Breakpoint on Column {0}", bp.column) : nls.localize("disableBreakpointOnLine", "Disable Line Breakpoint") : bp.column ? nls.localize("enableBreakpoints", "Enable Inline Breakpoint on Column {0}", bp.column) : nls.localize("enableBreakpointOnLine", "Enable Line Breakpoint"), void 0, true, () => this.debugService.enableOrDisableBreakpoints(!bp.enabled, bp)))));
+    } else {
+      actions.push(new Action("addBreakpoint", nls.localize("addBreakpoint", "Add Breakpoint"), void 0, true, () => this.debugService.addBreakpoints(uri, [{ lineNumber, column }])));
+      actions.push(new Action("addConditionalBreakpoint", nls.localize("addConditionalBreakpoint", "Add Conditional Breakpoint..."), void 0, true, () => Promise.resolve(this.showBreakpointWidget(
+        lineNumber,
+        column,
+        0
+        /* BreakpointWidgetContext.CONDITION */
+      ))));
+      actions.push(new Action("addLogPoint", nls.localize("addLogPoint", "Add Logpoint..."), void 0, true, () => Promise.resolve(this.showBreakpointWidget(
+        lineNumber,
+        column,
+        2
+        /* BreakpointWidgetContext.LOG_MESSAGE */
+      ))));
+      actions.push(new Action("addTriggeredBreakpoint", nls.localize("addTriggeredBreakpoint", "Add Triggered Breakpoint..."), void 0, true, () => Promise.resolve(this.showBreakpointWidget(
+        lineNumber,
+        column,
+        3
+        /* BreakpointWidgetContext.TRIGGER_POINT */
+      ))));
+    }
+    if (this.debugService.state === 2) {
+      actions.push(new Separator());
+      actions.push(new Action("runToLine", nls.localize("runToLine", "Run to Line"), void 0, true, () => this.debugService.runTo(uri, lineNumber).catch(onUnexpectedError)));
+    }
+    return actions;
+  }
+  marginFreeFromNonDebugDecorations(line) {
+    const decorations = this.editor.getLineDecorations(line);
+    if (decorations) {
+      for (const { options } of decorations) {
+        const clz = options.glyphMarginClassName;
+        if (!clz) {
+          continue;
+        }
+        const hasSomeActionableCodicon = !(clz.includes("codicon-") || clz.startsWith("coverage-deco-")) || clz.includes("codicon-testing-") || clz.includes("codicon-merge-") || clz.includes("codicon-arrow-") || clz.includes("codicon-loading") || clz.includes("codicon-fold") || clz.includes("codicon-gutter-lightbulb") || clz.includes("codicon-lightbulb-sparkle");
+        if (hasSomeActionableCodicon) {
+          return false;
+        }
+      }
+    }
+    return true;
+  }
+  ensureBreakpointHintDecoration(showBreakpointHintAtLineNumber) {
+    this.editor.changeDecorations((accessor) => {
+      if (this.breakpointHintDecoration) {
+        accessor.removeDecoration(this.breakpointHintDecoration);
+        this.breakpointHintDecoration = null;
+      }
+      if (showBreakpointHintAtLineNumber !== -1) {
+        this.breakpointHintDecoration = accessor.addDecoration({
+          startLineNumber: showBreakpointHintAtLineNumber,
+          startColumn: 1,
+          endLineNumber: showBreakpointHintAtLineNumber,
+          endColumn: 1
+        }, breakpointHelperDecoration);
+      }
+    });
+  }
+  async setDecorations() {
+    if (!this.editor.hasModel()) {
+      return;
+    }
+    const setCandidateDecorations = /* @__PURE__ */ __name((changeAccessor, desiredCandidatePositions2) => {
+      const desiredCandidateDecorations = createCandidateDecorations(model, this.breakpointDecorations, desiredCandidatePositions2);
+      const candidateDecorationIds = changeAccessor.deltaDecorations(this.candidateDecorations.map((c) => c.decorationId), desiredCandidateDecorations);
+      this.candidateDecorations.forEach((candidate) => {
+        candidate.inlineWidget.dispose();
+      });
+      this.candidateDecorations = candidateDecorationIds.map((decorationId, index) => {
+        const candidate = desiredCandidateDecorations[index];
+        const icon = candidate.breakpoint ? getBreakpointMessageAndIcon(this.debugService.state, this.debugService.getModel().areBreakpointsActivated(), candidate.breakpoint, this.labelService, this.debugService.getModel()).icon : icons.breakpoint.disabled;
+        const contextMenuActions = /* @__PURE__ */ __name(() => this.getContextMenuActions(candidate.breakpoint ? [candidate.breakpoint] : [], activeCodeEditor.getModel().uri, candidate.range.startLineNumber, candidate.range.startColumn), "contextMenuActions");
+        const inlineWidget = new InlineBreakpointWidget(activeCodeEditor, decorationId, ThemeIcon.asClassName(icon), candidate.breakpoint, this.debugService, this.contextMenuService, contextMenuActions);
+        return {
+          decorationId,
+          inlineWidget
+        };
+      });
+    }, "setCandidateDecorations");
+    const activeCodeEditor = this.editor;
+    const model = activeCodeEditor.getModel();
+    const breakpoints = this.debugService.getModel().getBreakpoints({ uri: model.uri });
+    const debugSettings = this.configurationService.getValue("debug");
+    const desiredBreakpointDecorations = this.instantiationService.invokeFunction((accessor) => createBreakpointDecorations(accessor, model, breakpoints, this.debugService.state, this.debugService.getModel().areBreakpointsActivated(), debugSettings.showBreakpointsInOverviewRuler));
+    const session = this.debugService.getViewModel().focusedSession;
+    const desiredCandidatePositions = debugSettings.showInlineBreakpointCandidates && session ? requestBreakpointCandidateLocations(this.editor.getModel(), desiredBreakpointDecorations.map((bp) => bp.range.startLineNumber), session) : Promise.resolve([]);
+    const desiredCandidatePositionsRaced = await Promise.race([desiredCandidatePositions, timeout(500).then(() => void 0)]);
+    if (desiredCandidatePositionsRaced === void 0) {
+      desiredCandidatePositions.then((v) => activeCodeEditor.changeDecorations((d) => setCandidateDecorations(d, v)));
+    }
+    try {
+      this.ignoreDecorationsChangedEvent = true;
+      activeCodeEditor.changeDecorations((changeAccessor) => {
+        const decorationIds = changeAccessor.deltaDecorations(this.breakpointDecorations.map((bpd) => bpd.decorationId), desiredBreakpointDecorations);
+        this.breakpointDecorations.forEach((bpd) => {
+          bpd.inlineWidget?.dispose();
+        });
+        this.breakpointDecorations = decorationIds.map((decorationId, index) => {
+          let inlineWidget = void 0;
+          const breakpoint = breakpoints[index];
+          if (desiredBreakpointDecorations[index].options.before) {
+            const contextMenuActions = /* @__PURE__ */ __name(() => this.getContextMenuActions([breakpoint], activeCodeEditor.getModel().uri, breakpoint.lineNumber, breakpoint.column), "contextMenuActions");
+            inlineWidget = new InlineBreakpointWidget(activeCodeEditor, decorationId, desiredBreakpointDecorations[index].options.glyphMarginClassName, breakpoint, this.debugService, this.contextMenuService, contextMenuActions);
+          }
+          return {
+            decorationId,
+            breakpoint,
+            range: desiredBreakpointDecorations[index].range,
+            inlineWidget
+          };
+        });
+        if (desiredCandidatePositionsRaced) {
+          setCandidateDecorations(changeAccessor, desiredCandidatePositionsRaced);
+        }
+      });
+    } finally {
+      this.ignoreDecorationsChangedEvent = false;
+    }
+    for (const d of this.breakpointDecorations) {
+      if (d.inlineWidget) {
+        this.editor.layoutContentWidget(d.inlineWidget);
+      }
+    }
+  }
+  async onModelDecorationsChanged() {
+    if (this.breakpointDecorations.length === 0 || this.ignoreDecorationsChangedEvent || !this.editor.hasModel()) {
+      return;
+    }
+    let somethingChanged = false;
+    const model = this.editor.getModel();
+    this.breakpointDecorations.forEach((breakpointDecoration) => {
+      if (somethingChanged) {
+        return;
+      }
+      const newBreakpointRange = model.getDecorationRange(breakpointDecoration.decorationId);
+      if (newBreakpointRange && !breakpointDecoration.range.equalsRange(newBreakpointRange)) {
+        somethingChanged = true;
+        breakpointDecoration.range = newBreakpointRange;
+      }
+    });
+    if (!somethingChanged) {
+      return;
+    }
+    const data = /* @__PURE__ */ new Map();
+    for (let i = 0, len = this.breakpointDecorations.length; i < len; i++) {
+      const breakpointDecoration = this.breakpointDecorations[i];
+      const decorationRange = model.getDecorationRange(breakpointDecoration.decorationId);
+      if (decorationRange) {
+        if (breakpointDecoration.breakpoint) {
+          data.set(breakpointDecoration.breakpoint.getId(), {
+            lineNumber: decorationRange.startLineNumber,
+            column: breakpointDecoration.breakpoint.column ? decorationRange.startColumn : void 0
+          });
+        }
+      }
+    }
+    try {
+      this.ignoreBreakpointsChangeEvent = true;
+      await this.debugService.updateBreakpoints(model.uri, data, true);
+    } finally {
+      this.ignoreBreakpointsChangeEvent = false;
+    }
+  }
+  // breakpoint widget
+  showBreakpointWidget(lineNumber, column, context) {
+    this.breakpointWidget?.dispose();
+    this.breakpointWidget = this.instantiationService.createInstance(BreakpointWidget, this.editor, lineNumber, column, context);
+    this.breakpointWidget.show({ lineNumber, column: 1 });
+    this.breakpointWidgetVisible.set(true);
+  }
+  closeBreakpointWidget() {
+    if (this.breakpointWidget) {
+      this.breakpointWidget.dispose();
+      this.breakpointWidget = void 0;
+      this.breakpointWidgetVisible.reset();
+      this.editor.focus();
+    }
+  }
+  dispose() {
+    this.breakpointWidget?.dispose();
+    this.editor.removeDecorations(this.breakpointDecorations.map((bpd) => bpd.decorationId));
+    dispose(this.toDispose);
+  }
+};
+BreakpointEditorContribution = __decorate([
+  __param(1, IDebugService),
+  __param(2, IContextMenuService),
+  __param(3, IInstantiationService),
+  __param(4, IContextKeyService),
+  __param(5, IDialogService),
+  __param(6, IConfigurationService),
+  __param(7, ILabelService)
+], BreakpointEditorContribution);
+GutterActionsRegistry.registerGutterActionsGenerator(({ lineNumber, editor, accessor }, result) => {
+  const model = editor.getModel();
+  const debugService = accessor.get(IDebugService);
+  if (!model || !debugService.getAdapterManager().hasEnabledDebuggers() || !debugService.canSetBreakpointsIn(model)) {
+    return;
+  }
+  const breakpointEditorContribution = editor.getContribution(BREAKPOINT_EDITOR_CONTRIBUTION_ID);
+  if (!breakpointEditorContribution) {
+    return;
+  }
+  const actions = breakpointEditorContribution.getContextMenuActionsAtPosition(lineNumber, model);
+  for (const action of actions) {
+    result.push(action, "2_debug");
+  }
+});
+class InlineBreakpointWidget {
+  static {
+    __name(this, "InlineBreakpointWidget");
+  }
+  constructor(editor, decorationId, cssClass, breakpoint, debugService, contextMenuService, getContextMenuActions) {
+    this.editor = editor;
+    this.decorationId = decorationId;
+    this.breakpoint = breakpoint;
+    this.debugService = debugService;
+    this.contextMenuService = contextMenuService;
+    this.getContextMenuActions = getContextMenuActions;
+    this.allowEditorOverflow = false;
+    this.suppressMouseDown = true;
+    this.toDispose = [];
+    this.range = this.editor.getModel().getDecorationRange(decorationId);
+    this.toDispose.push(this.editor.onDidChangeModelDecorations(() => {
+      const model = this.editor.getModel();
+      const range = model.getDecorationRange(this.decorationId);
+      if (this.range && !this.range.equalsRange(range)) {
+        this.range = range;
+        this.editor.layoutContentWidget(this);
+        this.updateSize();
+      }
+    }));
+    this.create(cssClass);
+    this.editor.addContentWidget(this);
+    this.editor.layoutContentWidget(this);
+  }
+  create(cssClass) {
+    this.domNode = $(".inline-breakpoint-widget");
+    if (cssClass) {
+      this.domNode.classList.add(...cssClass.split(" "));
+    }
+    this.toDispose.push(dom.addDisposableListener(this.domNode, dom.EventType.CLICK, async (e) => {
+      switch (this.breakpoint?.enabled) {
+        case void 0:
+          await this.debugService.addBreakpoints(this.editor.getModel().uri, [{ lineNumber: this.range.startLineNumber, column: this.range.startColumn }]);
+          break;
+        case true:
+          await this.debugService.removeBreakpoints(this.breakpoint.getId());
+          break;
+        case false:
+          this.debugService.enableOrDisableBreakpoints(true, this.breakpoint);
+          break;
+      }
+    }));
+    this.toDispose.push(dom.addDisposableListener(this.domNode, dom.EventType.CONTEXT_MENU, (e) => {
+      const event = new StandardMouseEvent(dom.getWindow(this.domNode), e);
+      const actions = this.getContextMenuActions();
+      this.contextMenuService.showContextMenu({
+        getAnchor: /* @__PURE__ */ __name(() => event, "getAnchor"),
+        getActions: /* @__PURE__ */ __name(() => actions, "getActions"),
+        getActionsContext: /* @__PURE__ */ __name(() => this.breakpoint, "getActionsContext"),
+        onHide: /* @__PURE__ */ __name(() => disposeIfDisposable(actions), "onHide")
+      });
+    }));
+    this.updateSize();
+    this.toDispose.push(this.editor.onDidChangeConfiguration((c) => {
+      if (c.hasChanged(
+        57
+        /* EditorOption.fontSize */
+      ) || c.hasChanged(
+        71
+        /* EditorOption.lineHeight */
+      )) {
+        this.updateSize();
+      }
+    }));
+  }
+  updateSize() {
+    const lineHeight = this.range ? this.editor.getLineHeightForPosition(this.range.getStartPosition()) : this.editor.getOption(
+      71
+      /* EditorOption.lineHeight */
+    );
+    this.domNode.style.height = `${lineHeight}px`;
+    this.domNode.style.width = `${Math.ceil(0.8 * lineHeight)}px`;
+    this.domNode.style.marginLeft = `4px`;
+  }
+  getId() {
+    return generateUuid();
+  }
+  getDomNode() {
+    return this.domNode;
+  }
+  getPosition() {
+    if (!this.range) {
+      return null;
+    }
+    this.domNode.classList.toggle("line-start", this.range.startColumn === 1);
+    return {
+      position: { lineNumber: this.range.startLineNumber, column: this.range.startColumn - 1 },
+      preference: [
+        0
+        /* ContentWidgetPositionPreference.EXACT */
+      ]
+    };
+  }
+  dispose() {
+    this.editor.removeContentWidget(this);
+    dispose(this.toDispose);
+  }
+}
+__decorate([
+  memoize
+], InlineBreakpointWidget.prototype, "getId", null);
+registerThemingParticipant((theme, collector) => {
+  const scope = ".monaco-editor .glyph-margin-widgets, .monaco-workbench .debug-breakpoints, .monaco-workbench .disassembly-view, .monaco-editor .contentWidgets";
+  const debugIconBreakpointColor = theme.getColor(debugIconBreakpointForeground);
+  if (debugIconBreakpointColor) {
+    collector.addRule(`${scope} {
+			${icons.allBreakpoints.map((b) => `${ThemeIcon.asCSSSelector(b.regular)}`).join(",\n		")},
+			${ThemeIcon.asCSSSelector(icons.debugBreakpointUnsupported)},
+			${ThemeIcon.asCSSSelector(icons.debugBreakpointHint)}:not([class*='codicon-debug-breakpoint']):not([class*='codicon-debug-stackframe']),
+			${ThemeIcon.asCSSSelector(icons.breakpoint.regular)}${ThemeIcon.asCSSSelector(icons.debugStackframeFocused)}::after,
+			${ThemeIcon.asCSSSelector(icons.breakpoint.regular)}${ThemeIcon.asCSSSelector(icons.debugStackframe)}::after {
+				color: ${debugIconBreakpointColor} !important;
 			}
-		}`),e.addRule(`${t} {
-			${f.asCSSSelector(m.$lBb.pending)} {
-				color: ${o} !important;
+		}`);
+    collector.addRule(`${scope} {
+			${ThemeIcon.asCSSSelector(icons.breakpoint.pending)} {
+				color: ${debugIconBreakpointColor} !important;
 				font-size: 12px !important;
 			}
-		}`));const n=d.getColor(Be);n&&e.addRule(`${t} {
-			${m.$sBb.map(a=>f.asCSSSelector(a.disabled)).join(`,
-		`)} {
-				color: ${n};
+		}`);
+  }
+  const debugIconBreakpointDisabledColor = theme.getColor(debugIconBreakpointDisabledForeground);
+  if (debugIconBreakpointDisabledColor) {
+    collector.addRule(`${scope} {
+			${icons.allBreakpoints.map((b) => ThemeIcon.asCSSSelector(b.disabled)).join(",\n		")} {
+				color: ${debugIconBreakpointDisabledColor};
 			}
-		}`);const r=d.getColor($e);r&&e.addRule(`${t} {
-			${m.$sBb.map(a=>f.asCSSSelector(a.unverified)).join(`,
-		`)} {
-				color: ${r};
+		}`);
+  }
+  const debugIconBreakpointUnverifiedColor = theme.getColor(debugIconBreakpointUnverifiedForeground);
+  if (debugIconBreakpointUnverifiedColor) {
+    collector.addRule(`${scope} {
+			${icons.allBreakpoints.map((b) => ThemeIcon.asCSSSelector(b.unverified)).join(",\n		")} {
+				color: ${debugIconBreakpointUnverifiedColor};
 			}
-		}`);const s=d.getColor(we);s&&e.addRule(`
+		}`);
+  }
+  const debugIconBreakpointCurrentStackframeForegroundColor = theme.getColor(debugIconBreakpointCurrentStackframeForeground);
+  if (debugIconBreakpointCurrentStackframeForegroundColor) {
+    collector.addRule(`
 		.monaco-editor .debug-top-stack-frame-column {
-			color: ${s} !important;
+			color: ${debugIconBreakpointCurrentStackframeForegroundColor} !important;
 		}
-		${t} {
-			${f.asCSSSelector(m.$tBb)} {
-				color: ${s} !important;
+		${scope} {
+			${ThemeIcon.asCSSSelector(icons.debugStackframe)} {
+				color: ${debugIconBreakpointCurrentStackframeForegroundColor} !important;
 			}
 		}
-		`);const i=d.getColor(Me);i&&e.addRule(`${t} {
-			${f.asCSSSelector(m.$uBb)} {
-				color: ${i} !important;
+		`);
+  }
+  const debugIconBreakpointStackframeFocusedColor = theme.getColor(debugIconBreakpointStackframeForeground);
+  if (debugIconBreakpointStackframeFocusedColor) {
+    collector.addRule(`${scope} {
+			${ThemeIcon.asCSSSelector(icons.debugStackframeFocused)} {
+				color: ${debugIconBreakpointStackframeFocusedColor} !important;
 			}
-		}`)});const T=S("debugIcon.breakpointForeground","#E51400",l.localize(6205,null)),Be=S("debugIcon.breakpointDisabledForeground","#848484",l.localize(6206,null)),$e=S("debugIcon.breakpointUnverifiedForeground","#848484",l.localize(6207,null)),we=S("debugIcon.breakpointCurrentStackframeForeground",{dark:"#FFCC00",light:"#BE8700",hcDark:"#FFCC00",hcLight:"#BE8700"},l.localize(6208,null)),Me=S("debugIcon.breakpointStackframeForeground","#89D185",l.localize(6209,null));export{me as $Cdc,A as $Ddc,T as $Edc};
+		}`);
+  }
+});
+const debugIconBreakpointForeground = registerColor("debugIcon.breakpointForeground", "#E51400", nls.localize("debugIcon.breakpointForeground", "Icon color for breakpoints."));
+const debugIconBreakpointDisabledForeground = registerColor("debugIcon.breakpointDisabledForeground", "#848484", nls.localize("debugIcon.breakpointDisabledForeground", "Icon color for disabled breakpoints."));
+const debugIconBreakpointUnverifiedForeground = registerColor("debugIcon.breakpointUnverifiedForeground", "#848484", nls.localize("debugIcon.breakpointUnverifiedForeground", "Icon color for unverified breakpoints."));
+const debugIconBreakpointCurrentStackframeForeground = registerColor("debugIcon.breakpointCurrentStackframeForeground", { dark: "#FFCC00", light: "#BE8700", hcDark: "#FFCC00", hcLight: "#BE8700" }, nls.localize("debugIcon.breakpointCurrentStackframeForeground", "Icon color for the current breakpoint stack frame."));
+const debugIconBreakpointStackframeForeground = registerColor("debugIcon.breakpointStackframeForeground", "#89D185", nls.localize("debugIcon.breakpointStackframeForeground", "Icon color for all breakpoint stack frames."));
+export {
+  BreakpointEditorContribution,
+  createBreakpointDecorations,
+  debugIconBreakpointForeground
+};
+//# sourceMappingURL=breakpointEditorContribution.js.map

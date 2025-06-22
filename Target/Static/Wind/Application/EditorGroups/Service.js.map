@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["../../../Source/Application/EditorGroups/Service.ts"],
+  "sourcesContent": ["/**\n * @module Service (EditorGroups/Application)\n * @description Defines the service interface and Context.Tag for the application-level\n * editor groups service, which conforms to the `IEditorGroupsService` from VS Code.\n */\n\nimport { Context } from \"effect\";\nimport type { IEditorGroupsService } from \"vs/workbench/services/editor/common/editorGroupsService.js\";\n\n/**\n * The service interface for the EditorGroups service.\n * This is an alias for VS Code's `IEditorGroupsService` to ensure API compatibility.\n */\nexport type Interface = IEditorGroupsService;\n\n/**\n * The Context.Tag for the EditorGroups service.\n * This tag is used to specify a dependency on the editor groups service in the Effect\n * ecosystem, and is identified by the string \"vscode/EditorGroupsService\".\n */\nexport class Tag extends Context.Tag(\"vscode/EditorGroupsService\")<\n\tInterface,\n\t{}\n>() {}\n"],
+  "mappings": ";;AAMA,SAAS,eAAe;AAcjB,MAAM,YAAY,QAAQ,IAAI,4BAA4B,EAG/D,EAAE;AAAA,EAvBJ,OAuBI;AAAA;AAAA;AAAC;",
+  "names": []
+}

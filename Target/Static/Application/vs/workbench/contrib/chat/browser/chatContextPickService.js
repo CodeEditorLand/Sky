@@ -1,1 +1,64 @@
-import{$pf as u}from"../../../../base/common/cancellation.js";import{$td as c}from"../../../../base/common/lifecycle.js";import{derived as a,ObservablePromise as m}from"../../../../base/common/observable.js";import{$Xf as p}from"../../../../base/common/strings.js";import{$1c as f}from"../../../../base/common/types.js";import{$nj as l}from"../../../../platform/instantiation/common/instantiation.js";function y(o){return f(o)&&typeof o.asAttachment=="function"}function C(o){return(n,t)=>a(e=>{const r=n.read(e),s=new u(t);return e.store.add(c(()=>s.dispose(!0))),new m(o(r,s.token))}).map((e,r)=>{const s=e.promiseResult.read(r);return{picks:s?.data||[],busy:s===void 0}})}const I=l("IContextPickService");class k{constructor(){this.c=[],this.items=this.c}registerChatContextItem(n){return this.c.push(n),this.c.sort((t,i)=>{const e=t.ordinal??0,r=i.ordinal??0;return e===r?p(t.label,i.label):e<r?1:-1}),c(()=>{const t=this.c.indexOf(n);t>=0&&this.c.splice(t,1)})}}export{y as $Hac,C as $Iac,I as $Jac,k as $Kac};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { CancellationTokenSource } from "../../../../base/common/cancellation.js";
+import { toDisposable } from "../../../../base/common/lifecycle.js";
+import { derived, ObservablePromise } from "../../../../base/common/observable.js";
+import { compare } from "../../../../base/common/strings.js";
+import { isObject } from "../../../../base/common/types.js";
+import { createDecorator } from "../../../../platform/instantiation/common/instantiation.js";
+function isChatContextPickerPickItem(item) {
+  return isObject(item) && typeof item.asAttachment === "function";
+}
+__name(isChatContextPickerPickItem, "isChatContextPickerPickItem");
+function picksWithPromiseFn(fn) {
+  return (query, token) => {
+    const promise = derived((reader) => {
+      const queryValue = query.read(reader);
+      const cts = new CancellationTokenSource(token);
+      reader.store.add(toDisposable(() => cts.dispose(true)));
+      return new ObservablePromise(fn(queryValue, cts.token));
+    });
+    return promise.map((value, reader) => {
+      const result = value.promiseResult.read(reader);
+      return { picks: result?.data || [], busy: result === void 0 };
+    });
+  };
+}
+__name(picksWithPromiseFn, "picksWithPromiseFn");
+const IChatContextPickService = createDecorator("IContextPickService");
+class ChatContextPickService {
+  static {
+    __name(this, "ChatContextPickService");
+  }
+  constructor() {
+    this._picks = [];
+    this.items = this._picks;
+  }
+  registerChatContextItem(pick) {
+    this._picks.push(pick);
+    this._picks.sort((a, b) => {
+      const valueA = a.ordinal ?? 0;
+      const valueB = b.ordinal ?? 0;
+      if (valueA === valueB) {
+        return compare(a.label, b.label);
+      } else if (valueA < valueB) {
+        return 1;
+      } else {
+        return -1;
+      }
+    });
+    return toDisposable(() => {
+      const index = this._picks.indexOf(pick);
+      if (index >= 0) {
+        this._picks.splice(index, 1);
+      }
+    });
+  }
+}
+export {
+  ChatContextPickService,
+  IChatContextPickService,
+  isChatContextPickerPickItem,
+  picksWithPromiseFn
+};
+//# sourceMappingURL=chatContextPickService.js.map

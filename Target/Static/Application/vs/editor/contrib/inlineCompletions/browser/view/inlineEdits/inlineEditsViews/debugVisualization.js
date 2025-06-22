@@ -1,1 +1,103 @@
-import{derived as c}from"../../../../../../../base/common/observable.js";function l(t,e){t.$$visualization=e}function u(t,e){return l(t,new d(t,e)),t}function h(t,e,s){return l(t,new r(t,e,s)),t}class d{constructor(t,e){this.a=t,this.b=e}visualize(){const t=[];for(const e in this.a){const s=new r(this.a[e],this.b,e);t.push(s.visualize())}return{dispose:()=>{t.forEach((t=>t.dispose()))}}}}class r{constructor(t,e,s){this.a=t,this.b=e,this.c=s}visualize(){const t=document.createElement("div");t.style.position="fixed",t.style.border="1px solid red",t.style.pointerEvents="none",t.style.zIndex="100000";const e=document.createElement("div");e.textContent=this.c,e.style.position="absolute",e.style.top="-20px",e.style.left="0",e.style.color="red",e.style.fontSize="12px",e.style.backgroundColor="rgba(255, 255, 255, 0.7)",t.appendChild(e);const s=()=>{const e=this.b.getBoundingClientRect();t.style.left=e.left+this.a.left+"px",t.style.top=e.top+this.a.top+"px",t.style.width=this.a.width+"px",t.style.height=this.a.height+"px"};document.body.appendChild(t),s();const i=new ResizeObserver(s);return i.observe(this.b),{dispose:()=>{i.disconnect(),t.remove()}}}}function y(t,e){if("object"==typeof t&&t&&"$$visualization"in t){a(t.$$visualization.visualize(),e)}}function a(t,e){c((e=>{e.store.add(t)})).read(e)}export{l as $DGc,u as $EGc,h as $FGc,y as $GGc};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { derived } from "../../../../../../../base/common/observable.js";
+function setVisualization(data, visualization) {
+  data["$$visualization"] = visualization;
+}
+__name(setVisualization, "setVisualization");
+function debugLogRects(rects, elem) {
+  setVisualization(rects, new ManyRectVisualizer(rects, elem));
+  return rects;
+}
+__name(debugLogRects, "debugLogRects");
+function debugLogRect(rect, elem, name) {
+  setVisualization(rect, new HtmlRectVisualizer(rect, elem, name));
+  return rect;
+}
+__name(debugLogRect, "debugLogRect");
+class ManyRectVisualizer {
+  static {
+    __name(this, "ManyRectVisualizer");
+  }
+  constructor(_rects, _elem) {
+    this._rects = _rects;
+    this._elem = _elem;
+  }
+  visualize() {
+    const d = [];
+    for (const key in this._rects) {
+      const v = new HtmlRectVisualizer(this._rects[key], this._elem, key);
+      d.push(v.visualize());
+    }
+    return {
+      dispose: /* @__PURE__ */ __name(() => {
+        d.forEach((d2) => d2.dispose());
+      }, "dispose")
+    };
+  }
+}
+class HtmlRectVisualizer {
+  static {
+    __name(this, "HtmlRectVisualizer");
+  }
+  constructor(_rect, _elem, _name) {
+    this._rect = _rect;
+    this._elem = _elem;
+    this._name = _name;
+  }
+  visualize() {
+    const div = document.createElement("div");
+    div.style.position = "fixed";
+    div.style.border = "1px solid red";
+    div.style.pointerEvents = "none";
+    div.style.zIndex = "100000";
+    const label = document.createElement("div");
+    label.textContent = this._name;
+    label.style.position = "absolute";
+    label.style.top = "-20px";
+    label.style.left = "0";
+    label.style.color = "red";
+    label.style.fontSize = "12px";
+    label.style.backgroundColor = "rgba(255, 255, 255, 0.7)";
+    div.appendChild(label);
+    const updatePosition = /* @__PURE__ */ __name(() => {
+      const elemRect = this._elem.getBoundingClientRect();
+      console.log(elemRect);
+      div.style.left = elemRect.left + this._rect.left + "px";
+      div.style.top = elemRect.top + this._rect.top + "px";
+      div.style.width = this._rect.width + "px";
+      div.style.height = this._rect.height + "px";
+    }, "updatePosition");
+    document.body.appendChild(div);
+    updatePosition();
+    const observer = new ResizeObserver(updatePosition);
+    observer.observe(this._elem);
+    return {
+      dispose: /* @__PURE__ */ __name(() => {
+        observer.disconnect();
+        div.remove();
+      }, "dispose")
+    };
+  }
+}
+function debugView(value, reader) {
+  if (typeof value === "object" && value && "$$visualization" in value) {
+    const vis = value["$$visualization"];
+    debugReadDisposable(vis.visualize(), reader);
+  }
+}
+__name(debugView, "debugView");
+function debugReadDisposable(d, reader) {
+  derived((_reader) => {
+    _reader.store.add(d);
+    return void 0;
+  }).read(reader);
+}
+__name(debugReadDisposable, "debugReadDisposable");
+export {
+  debugLogRect,
+  debugLogRects,
+  debugView,
+  setVisualization
+};
+//# sourceMappingURL=debugVisualization.js.map

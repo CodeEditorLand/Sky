@@ -1,1 +1,1338 @@
-import{$j8 as $}from"../list/listView.js";import{$t0 as R,TreeFindMode as j,$x0 as V,$A0 as q}from"./abstractTree.js";import{$r0 as M,$q0 as K}from"./indexTreeModel.js";import{$J0 as J,$I0 as B}from"./objectTree.js";import{ObjectTreeElementCollapseState as D,$o0 as C,$p0 as W}from"./tree.js";import{$wh as z,Promises as G,$Jh as U,$Mh as Q}from"../../../common/async.js";import{$Mj as T}from"../../../common/codicons.js";import{ThemeIcon as P}from"../../../common/themables.js";import{$pb as X,$kb as Y}from"../../../common/errors.js";import{$df as x,Event as g}from"../../../common/event.js";import{Iterable as w}from"../../../common/iterator.js";import{$ud as Z,$qd as _,$td as ee}from"../../../common/lifecycle.js";import{$4c as A}from"../../../common/types.js";import{$pf as te}from"../../../common/cancellation.js";import{FuzzyScore as ie}from"../../../common/filters.js";import{$oc as se,$pc as re}from"../../../common/arrays.js";import{localize as I}from"../../../../nls.js";function F(s){return{...s,children:[],refreshPromise:void 0,stale:!0,slow:!1,forceExpanded:!1}}function E(s,e){return e.parent?e.parent===s?!0:E(s,e.parent):!1}function ne(s,e){return s===e||E(s,e)||E(e,s)}class L{get element(){return this.a.element.element}get children(){return this.a.children.map(e=>new L(e))}get depth(){return this.a.depth}get visibleChildrenCount(){return this.a.visibleChildrenCount}get visibleChildIndex(){return this.a.visibleChildIndex}get collapsible(){return this.a.collapsible}get collapsed(){return this.a.collapsed}get visible(){return this.a.visible}get filterData(){return this.a.filterData}constructor(e){this.a=e}}class le{constructor(e,t,i){this.b=e,this.d=t,this.onDidChangeTwistieState=i,this.a=new Map,this.templateId=e.templateId}renderTemplate(e){return{templateData:this.b.renderTemplate(e)}}renderElement(e,t,i,r){this.b.renderElement(this.d.map(e),t,i.templateData,r)}renderTwistie(e,t){return e.slow?(t.classList.add(...P.asClassNameArray(T.treeItemLoading)),!0):(t.classList.remove(...P.asClassNameArray(T.treeItemLoading)),!1)}disposeElement(e,t,i,r){this.b.disposeElement?.(this.d.map(e),t,i.templateData,r)}disposeTemplate(e){this.b.disposeTemplate(e.templateData)}dispose(){this.a.clear()}}function k(s){return{browserEvent:s.browserEvent,elements:s.elements.map(e=>e.element)}}function v(s){return{browserEvent:s.browserEvent,element:s.element&&s.element.element,target:s.target}}function ae(s){return{browserEvent:s.browserEvent,element:s.element&&s.element.element,anchor:s.anchor,isStickyScroll:s.isStickyScroll}}class he extends ${set context(e){this.f.context=e}get context(){return this.f.context}constructor(e){super(e.elements.map(t=>t.element)),this.f=e}}function S(s){return s instanceof $?new he(s):s}class oe{constructor(e){this.a=e}getDragURI(e){return this.a.getDragURI(e.element)}getDragLabel(e,t){if(this.a.getDragLabel)return this.a.getDragLabel(e.map(i=>i.element),t)}onDragStart(e,t){this.a.onDragStart?.(S(e),t)}onDragOver(e,t,i,r,l,n=!0){return this.a.onDragOver(S(e),t&&t.element,i,r,l)}drop(e,t,i,r,l){this.a.drop(S(e),t&&t.element,i,r,l)}onDragEnd(e){this.a.onDragEnd?.(e)}dispose(){this.a.dispose()}}class de extends V{constructor(e,t,i){super(t,i),this.findProvider=e,this.isFindSessionActive=!1}filter(e,t){const i=super.filter(e,t);if(!this.isFindSessionActive||this.findMode===j.Highlight||!this.findProvider.isVisible)return i;const r=K(i)?i.visibility:i;return M(r)===0?0:this.findProvider.isVisible(e)?i:0}}class ce extends q{constructor(e,t,i,r,l){super(e,i,r,l),this.O=t,this.t=i,this.K=!1,this.L=!1,this.M=new U(250),this.q.add(ee(async()=>{this.K&&await this.O.endSession?.()}))}x(e){this.A(!1),this.I?.cancel(),this.I=new te,this.M.trigger(()=>this.R())}async R(){const e=this.I?.token;if(!e||e.isCancellationRequested)return;const t=this.pattern;if(t===""){this.K&&(this.L=!0,await this.U(),this.L=!1,e.isCancellationRequested||(this.t.reset(),super.x("")));return}this.K||this.S(),this.L=!0,this.J=void 0;const i=await this.O.find(t,{matchType:this.matchType,findMode:this.mode},e);e.isCancellationRequested||i===void 0||(this.L=!1,this.J=i,this.t.reset(),super.x(t),i.warningMessage&&this.A(!0,i.warningMessage))}S(){this.K=!0,this.t.isFindSessionActive=!0,this.O.startSession?.()}async U(){this.K=!1,this.t.isFindSessionActive=!1,await this.O.endSession?.()}H(){if(this.L||!this.J)return;const e=this.J.matchCount===0&&this.pattern.length>0;this.A(e),this.pattern.length&&this.B(this.J.matchCount)}y(e){this.f.set(e.id,e.isChecked),this.t.findMode=this.mode,this.t.findMatchType=this.matchType,this.j=this.mode===j.Filter?I(41,null):I(42,null),this.x(this.pattern)}shouldAllowFocus(e){return this.shouldFocusWhenNavigating(e)}shouldFocusWhenNavigating(e){if(!this.K||!this.J)return!0;const t=e.element?.element;return t&&this.J.isMatch(t)?!0:!ie.isDefault(e.filterData)}}function H(s){return s&&{...s,collapseByDefault:!0,identityProvider:s.identityProvider&&{getId(e){return s.identityProvider.getId(e.element)}},dnd:s.dnd&&new oe(s.dnd),multipleSelectionController:s.multipleSelectionController&&{isSelectionSingleChangeEvent(e){return s.multipleSelectionController.isSelectionSingleChangeEvent({...e,element:e.element})},isSelectionRangeChangeEvent(e){return s.multipleSelectionController.isSelectionRangeChangeEvent({...e,element:e.element})}},accessibilityProvider:s.accessibilityProvider&&{...s.accessibilityProvider,getPosInSet:void 0,getSetSize:void 0,getRole:s.accessibilityProvider.getRole?e=>s.accessibilityProvider.getRole(e.element):()=>"treeitem",isChecked:s.accessibilityProvider.isChecked?e=>!!s.accessibilityProvider?.isChecked(e.element):void 0,getAriaLabel(e){return s.accessibilityProvider.getAriaLabel(e.element)},getWidgetAriaLabel(){return s.accessibilityProvider.getWidgetAriaLabel()},getWidgetRole:s.accessibilityProvider.getWidgetRole?()=>s.accessibilityProvider.getWidgetRole():()=>"tree",getAriaLevel:s.accessibilityProvider.getAriaLevel&&(e=>s.accessibilityProvider.getAriaLevel(e.element)),getActiveDescendantId:s.accessibilityProvider.getActiveDescendantId&&(e=>s.accessibilityProvider.getActiveDescendantId(e.element))},filter:s.filter&&{filter(e,t){return s.filter.filter(e.element,t)}},keyboardNavigationLabelProvider:s.keyboardNavigationLabelProvider&&{...s.keyboardNavigationLabelProvider,getKeyboardNavigationLabel(e){return s.keyboardNavigationLabelProvider.getKeyboardNavigationLabel(e.element)}},sorter:void 0,expandOnlyOnTwistieClick:typeof s.expandOnlyOnTwistieClick>"u"?void 0:typeof s.expandOnlyOnTwistieClick!="function"?s.expandOnlyOnTwistieClick:e=>s.expandOnlyOnTwistieClick(e.element),defaultFindVisibility:e=>e.hasChildren&&e.stale?1:typeof s.defaultFindVisibility=="number"?s.defaultFindVisibility:typeof s.defaultFindVisibility>"u"?2:s.defaultFindVisibility(e.element)}}function N(s,e){e(s),s.children.forEach(t=>N(t,e))}class ue{get onDidScroll(){return this.b.onDidScroll}get onDidChangeFocus(){return g.map(this.b.onDidChangeFocus,k)}get onDidChangeSelection(){return g.map(this.b.onDidChangeSelection,k)}get onKeyDown(){return this.b.onKeyDown}get onMouseClick(){return g.map(this.b.onMouseClick,v)}get onMouseDblClick(){return g.map(this.b.onMouseDblClick,v)}get onContextMenu(){return g.map(this.b.onContextMenu,ae)}get onTap(){return g.map(this.b.onTap,v)}get onPointer(){return g.map(this.b.onPointer,v)}get onDidFocus(){return this.b.onDidFocus}get onDidBlur(){return this.b.onDidBlur}get onDidChangeModel(){return this.b.onDidChangeModel}get onDidChangeCollapseState(){return this.b.onDidChangeCollapseState}get onDidUpdateOptions(){return this.b.onDidUpdateOptions}get onDidChangeStickyScrollFocused(){return this.b.onDidChangeStickyScrollFocused}get findMode(){return this.h?this.h.mode:this.b.findMode}set findMode(e){this.h?this.h.mode=e:this.b.findMode=e}get findMatchType(){return this.h?this.h.matchType:this.b.findMatchType}set findMatchType(e){this.h?this.h.matchType=e:this.b.findMatchType=e}get expandOnlyOnTwistieClick(){if(typeof this.b.expandOnlyOnTwistieClick=="boolean")return this.b.expandOnlyOnTwistieClick;const e=this.b.expandOnlyOnTwistieClick;return t=>e(this.f.get(t===this.d.element?null:t)||null)}get onDidDispose(){return this.b.onDidDispose}constructor(e,t,i,r,l,n={}){this.z=e,this.A=l,this.f=new Map,this.k=new Map,this.m=new Map,this.q=new x,this.t=new x,this.u=new W(c=>new L(c)),this.w=new Z,this.o=n.identityProvider,this.p=typeof n.autoExpandSingleChildren>"u"?!1:n.autoExpandSingleChildren,this.g=n.sorter,this.j=c=>n.collapseByDefault?n.collapseByDefault(c)?D.PreserveOrCollapsed:D.PreserveOrExpanded:void 0;let a=!1,o;if(n.findProvider&&(n.findWidgetEnabled??!0)&&n.keyboardNavigationLabelProvider&&n.contextViewProvider&&(a=!0,o=new de(n.findProvider,n.keyboardNavigationLabelProvider,n.filter)),this.b=this.B(e,t,i,r,{...n,findWidgetEnabled:!a,filter:o??n.filter}),this.d=F({element:void 0,parent:null,hasChildren:!0,defaultCollapseState:void 0}),this.o&&(this.d={...this.d,id:null}),this.f.set(null,this.d),this.b.onDidChangeCollapseState(this.J,this,this.w),a){const c={styles:n.findWidgetStyles,showNotFoundMessage:n.showNotFoundMessage,defaultFindMatchType:n.defaultFindMatchType,defaultFindMode:n.defaultFindMode};this.h=this.w.add(new ce(this.b,n.findProvider,o,this.b.options.contextViewProvider,c)),this.y=h=>this.h.shouldFocusWhenNavigating(h),this.onDidChangeFindOpenState=this.h.onDidChangeOpenState,this.onDidChangeFindMode=this.h.onDidChangeMode,this.onDidChangeFindMatchType=this.h.onDidChangeMatchType}else this.onDidChangeFindOpenState=this.b.onDidChangeFindOpenState,this.onDidChangeFindMode=this.b.onDidChangeFindMode,this.onDidChangeFindMatchType=this.b.onDidChangeFindMatchType}B(e,t,i,r,l){const n=new R(i),a=r.map(c=>new le(c,this.u,this.t.event)),o=H(l)||{};return new B(e,t,n,a,o)}updateOptions(e={}){this.h&&(e.defaultFindMode!==void 0&&(this.h.mode=e.defaultFindMode),e.defaultFindMatchType!==void 0&&(this.h.matchType=e.defaultFindMatchType)),this.b.updateOptions(e)}get options(){return this.b.options}getHTMLElement(){return this.b.getHTMLElement()}get contentHeight(){return this.b.contentHeight}get contentWidth(){return this.b.contentWidth}get onDidChangeContentHeight(){return this.b.onDidChangeContentHeight}get onDidChangeContentWidth(){return this.b.onDidChangeContentWidth}get scrollTop(){return this.b.scrollTop}set scrollTop(e){this.b.scrollTop=e}get scrollLeft(){return this.b.scrollLeft}set scrollLeft(e){this.b.scrollLeft=e}get scrollHeight(){return this.b.scrollHeight}get renderHeight(){return this.b.renderHeight}get lastVisibleElement(){return this.b.lastVisibleElement.element}get ariaLabel(){return this.b.ariaLabel}set ariaLabel(e){this.b.ariaLabel=e}domFocus(){this.b.domFocus()}isDOMFocused(){return this.b.isDOMFocused()}navigate(e){let t;return e&&(t=this.D(e)),new pe(this.b.navigate(t))}layout(e,t){this.b.layout(e,t)}style(e){this.b.style(e)}getInput(){return this.d.element}async setInput(e,t){this.m.forEach(r=>r.cancel()),this.m.clear(),this.d.element=e;const i=t&&{viewState:t,focus:[],selection:[]};await this.C(e,!0,!1,i),i&&(this.b.setFocus(i.focus),this.b.setSelection(i.selection)),t&&typeof t.scrollTop=="number"&&(this.scrollTop=t.scrollTop)}async updateChildren(e=this.d.element,t=!0,i=!1,r){await this.C(e,t,i,void 0,r)}async C(e=this.d.element,t=!0,i=!1,r,l){if(typeof this.d.element>"u")throw new C(this.z,"Tree input not set");this.d.refreshPromise&&(await this.d.refreshPromise,await g.toPromise(this.q.event));const n=this.D(e);if(await this.E(n,t,r,l),i)try{this.b.rerender(n)}catch{}}resort(e=this.d.element,t=!0){this.b.resort(this.D(e),t)}hasNode(e){return e===this.d.element||this.f.has(e)}rerender(e){if(e===void 0||e===this.d.element){this.b.rerender();return}const t=this.D(e);this.b.rerender(t)}updateElementHeight(e,t){const i=this.D(e);this.b.updateElementHeight(i,t)}updateWidth(e){const t=this.D(e);this.b.updateWidth(t)}getNode(e=this.d.element){const t=this.D(e),i=this.b.getNode(t===this.d?null:t);return this.u.map(i)}collapse(e,t=!1){const i=this.D(e);return this.b.collapse(i===this.d?null:i,t)}async expand(e,t=!1){if(typeof this.d.element>"u")throw new C(this.z,"Tree input not set");this.d.refreshPromise&&(await this.d.refreshPromise,await g.toPromise(this.q.event));const i=this.D(e);if(this.b.hasElement(i)&&!this.b.isCollapsible(i)||(i.refreshPromise&&(await this.d.refreshPromise,await g.toPromise(this.q.event)),i!==this.d&&!i.refreshPromise&&!this.b.isCollapsed(i)))return!1;const r=this.b.expand(i===this.d?null:i,t);return i.refreshPromise&&(await this.d.refreshPromise,await g.toPromise(this.q.event)),r}toggleCollapsed(e,t=!1){return this.b.toggleCollapsed(this.D(e),t)}expandAll(){this.b.expandAll()}async expandTo(e){if(!this.A.getParent)throw new Error("Can't expand to element without getParent method");const t=[];for(;!this.hasNode(e);)e=this.A.getParent(e),e!==this.d.element&&t.push(e);for(const i of w.reverse(t))await this.expand(i);this.b.expandTo(this.D(e))}collapseAll(){this.b.collapseAll()}isCollapsible(e){return this.b.isCollapsible(this.D(e))}isCollapsed(e){return this.b.isCollapsed(this.D(e))}triggerTypeNavigation(){this.b.triggerTypeNavigation()}openFind(){this.h?this.h.open():this.b.openFind()}closeFind(){this.h?this.h.close():this.b.closeFind()}refilter(){this.b.refilter()}setAnchor(e){this.b.setAnchor(typeof e>"u"?void 0:this.D(e))}getAnchor(){return this.b.getAnchor()?.element}setSelection(e,t){const i=e.map(r=>this.D(r));this.b.setSelection(i,t)}getSelection(){return this.b.getSelection().map(t=>t.element)}setFocus(e,t){const i=e.map(r=>this.D(r));this.b.setFocus(i,t)}focusNext(e=1,t=!1,i){this.b.focusNext(e,t,i,this.y)}focusPrevious(e=1,t=!1,i){this.b.focusPrevious(e,t,i,this.y)}focusNextPage(e){return this.b.focusNextPage(e,this.y)}focusPreviousPage(e){return this.b.focusPreviousPage(e,this.y)}focusLast(e){this.b.focusLast(e,this.y)}focusFirst(e){this.b.focusFirst(e,this.y)}getFocus(){return this.b.getFocus().map(t=>t.element)}getStickyScrollFocus(){return this.b.getStickyScrollFocus().map(t=>t.element)}getFocusedPart(){return this.b.getFocusedPart()}reveal(e,t){this.b.reveal(this.D(e),t)}getRelativeTop(e){return this.b.getRelativeTop(this.D(e))}getParentElement(e){const t=this.b.getParentElement(this.D(e));return t&&t.element}getFirstElementChild(e=this.d.element){const t=this.D(e),i=this.b.getFirstElementChild(t===this.d?null:t);return i&&i.element}D(e){const t=this.f.get(e===this.d.element?null:e);if(!t){const i=this.o?.getId(e).toString();throw new C(this.z,`Data tree node not found${i?`: ${i}`:""}`)}return t}async E(e,t,i,r){this.w.isDisposed||(await this.F(e,t,i),!this.w.isDisposed&&this.L(e,i,r))}async F(e,t,i){let r;if(this.k.forEach((l,n)=>{!r&&ne(n,e)&&(r=l.then(()=>this.F(e,t,i)))}),r)return r;if(e!==this.d&&this.b.getNode(e).collapsed){e.hasChildren=!!this.A.hasChildren(e.element),e.stale=!0,this.K(e,[],t,i);return}return this.G(e,t,i)}async G(e,t,i){let r;e.refreshPromise=new Promise(l=>r=l),this.k.set(e,e.refreshPromise),e.refreshPromise.finally(()=>{e.refreshPromise=void 0,this.k.delete(e)});try{const l=await this.H(e,t,i);e.stale=!1,await G.settled(l.map(n=>this.G(n,t,i)))}finally{r()}}async H(e,t,i){e.hasChildren=!!this.A.hasChildren(e.element);let r;if(!e.hasChildren)r=Promise.resolve(w.empty());else{const l=this.I(e);if(A(l))r=Promise.resolve(l);else{const n=Q(800);n.then(()=>{e.slow=!0,this.t.fire(e)},a=>null),r=l.finally(()=>n.cancel())}}try{const l=await r;return this.K(e,l,t,i)}catch(l){if(e!==this.d&&this.b.hasElement(e)&&this.b.collapse(e),X(l))return[];throw l}finally{e.slow&&(e.slow=!1,this.t.fire(e))}}I(e){let t=this.m.get(e);if(t)return t;const i=this.A.getChildren(e.element);return A(i)?this.N(i):(t=z(async()=>this.N(await i)),this.m.set(e,t),t.finally(()=>{this.m.delete(e)}))}J({node:e,deep:t}){e.element!==null&&!e.collapsed&&e.element.stale&&(t?this.collapse(e.element.element):this.E(e.element,!1).catch(Y))}K(e,t,i,r){const l=[...t];if(e.children.length===0&&l.length===0)return[];const n=new Map,a=new Map;for(const h of e.children)n.set(h.element,h),this.o&&a.set(h.id,{node:h,collapsed:this.b.hasElement(h)&&this.b.isCollapsed(h)});const o=[],c=l.map(h=>{const f=!!this.A.hasChildren(h);if(!this.o){const d=F({element:h,parent:e,hasChildren:f,defaultCollapseState:this.j(h)});return f&&d.defaultCollapseState===D.PreserveOrExpanded&&o.push(d),d}const p=this.o.getId(h).toString(),m=a.get(p);if(m){const d=m.node;return n.delete(d.element),this.f.delete(d.element),this.f.set(h,d),d.element=h,d.hasChildren=f,i?m.collapsed?(d.children.forEach(y=>N(y,b=>this.f.delete(b.element))),d.children.splice(0,d.children.length),d.stale=!0):o.push(d):f&&!m.collapsed&&o.push(d),d}const u=F({element:h,parent:e,id:p,hasChildren:f,defaultCollapseState:this.j(h)});return r&&r.viewState.focus&&r.viewState.focus.indexOf(p)>-1&&r.focus.push(u),r&&r.viewState.selection&&r.viewState.selection.indexOf(p)>-1&&r.selection.push(u),(r&&r.viewState.expanded&&r.viewState.expanded.indexOf(p)>-1||f&&u.defaultCollapseState===D.PreserveOrExpanded)&&o.push(u),u});for(const h of n.values())N(h,f=>this.f.delete(f.element));for(const h of c)this.f.set(h.element,h);return re(e.children,0,e.children.length,c),e!==this.d&&this.p&&c.length===1&&o.length===0&&(c[0].forceExpanded=!0,o.push(c[0])),o}L(e,t,i){const r=e.children.map(n=>this.M(n,t)),l=i&&{...i,diffIdentityProvider:i.diffIdentityProvider&&{getId(n){return i.diffIdentityProvider.getId(n.element)}}};this.b.setChildren(e===this.d?null:e,r,l),e!==this.d&&this.b.setCollapsible(e,e.hasChildren),this.q.fire()}M(e,t){if(e.stale)return{element:e,collapsible:e.hasChildren,collapsed:!0};let i;return t&&t.viewState.expanded&&e.id&&t.viewState.expanded.indexOf(e.id)>-1?i=!1:e.forceExpanded?(i=!1,e.forceExpanded=!1):i=e.defaultCollapseState,{element:e,children:e.hasChildren?w.map(e.children,r=>this.M(r,t)):[],collapsible:e.hasChildren,collapsed:i}}N(e){return this.g&&(e=[...e].sort(this.g.compare.bind(this.g))),e}getViewState(){if(!this.o)throw new C(this.z,"Can't get tree view state without an identity provider");const e=a=>this.o.getId(a).toString(),t=this.getFocus().map(e),i=this.getSelection().map(e),r=[],l=this.b.getNode(),n=[l];for(;n.length>0;){const a=n.pop();a!==l&&a.collapsible&&!a.collapsed&&r.push(e(a.element.element)),se(n,n.length,a.children)}return{focus:t,selection:i,expanded:r,scrollTop:this.scrollTop}}dispose(){this.w.dispose(),this.b.dispose()}}class O{get element(){return{elements:this.a.element.elements.map(e=>e.element),incompressible:this.a.element.incompressible}}get children(){return this.a.children.map(e=>new O(e))}get depth(){return this.a.depth}get visibleChildrenCount(){return this.a.visibleChildrenCount}get visibleChildIndex(){return this.a.visibleChildIndex}get collapsible(){return this.a.collapsible}get collapsed(){return this.a.collapsed}get visible(){return this.a.visible}get filterData(){return this.a.filterData}constructor(e){this.a=e}}class fe{constructor(e,t,i,r){this.d=e,this.f=t,this.g=i,this.onDidChangeTwistieState=r,this.a=new Map,this.b=[],this.templateId=e.templateId}renderTemplate(e){return{templateData:this.d.renderTemplate(e)}}renderElement(e,t,i,r){this.d.renderElement(this.f.map(e),t,i.templateData,r)}renderCompressedElements(e,t,i,r){this.d.renderCompressedElements(this.g().map(e),t,i.templateData,r)}renderTwistie(e,t){return e.slow?(t.classList.add(...P.asClassNameArray(T.treeItemLoading)),!0):(t.classList.remove(...P.asClassNameArray(T.treeItemLoading)),!1)}disposeElement(e,t,i,r){this.d.disposeElement?.(this.f.map(e),t,i.templateData,r)}disposeCompressedElements(e,t,i,r){this.d.disposeCompressedElements?.(this.g().map(e),t,i.templateData,r)}disposeTemplate(e){this.d.disposeTemplate(e.templateData)}dispose(){this.a.clear(),this.b=_(this.b)}}function me(s){const e=s&&H(s);return e&&{...e,keyboardNavigationLabelProvider:e.keyboardNavigationLabelProvider&&{...e.keyboardNavigationLabelProvider,getCompressedNodeKeyboardNavigationLabel(t){return s.keyboardNavigationLabelProvider.getCompressedNodeKeyboardNavigationLabel(t.map(i=>i.element))}}}}class Ie extends ue{constructor(e,t,i,r,l,n,a={}){super(e,t,i,l,n,a),this.x=r,this.s=new W(o=>new O(o)),this.v=a.filter}getCompressedTreeNode(e){const t=this.D(e);return this.b.getCompressedTreeNode(t).element}B(e,t,i,r,l){const n=new R(i),a=r.map(c=>new fe(c,this.u,()=>this.s,this.t.event)),o=me(l)||{};return new J(e,t,n,a,o)}M(e,t){return{incompressible:this.x.isIncompressible(e.element),...super.M(e,t)}}getViewState(){if(!this.o)throw new C(this.z,"Can't get tree view state without an identity provider");const e=a=>this.o.getId(a).toString(),t=this.getFocus().map(e),i=this.getSelection().map(e),r=[],l=this.b.getCompressedTreeNode(),n=[l];for(;n.length>0;){const a=n.pop();if(a!==l&&a.collapsible&&!a.collapsed)for(const o of a.element.elements)r.push(e(o.element));n.push(...a.children)}return{focus:t,selection:i,expanded:r,scrollTop:this.scrollTop}}L(e,t,i){if(!this.o)return super.L(e,t);const r=m=>this.o.getId(m).toString(),l=m=>{const u=new Set;for(const d of m){const y=this.b.getCompressedTreeNode(d===this.d?null:d);if(y.element)for(const b of y.element.elements)u.add(r(b.element))}return u},n=l(this.b.getSelection()),a=l(this.b.getFocus());super.L(e,t,i);const o=this.getSelection();let c=!1;const h=this.getFocus();let f=!1;const p=m=>{const u=m.element;if(u)for(let d=0;d<u.elements.length;d++){const y=r(u.elements[d].element),b=u.elements[u.elements.length-1].element;n.has(y)&&o.indexOf(b)===-1&&(o.push(b),c=!0),a.has(y)&&h.indexOf(b)===-1&&(h.push(b),f=!0)}m.children.forEach(p)};p(this.b.getCompressedTreeNode(e===this.d?null:e)),c&&this.setSelection(o),f&&this.setFocus(h)}N(e){return this.v&&(e=w.filter(e,t=>{const i=this.v.filter(t,1),r=ge(i);if(r===2)throw new Error("Recursive tree visibility not supported in async data compressed trees");return r===1})),super.N(e)}navigate(e){return super.navigate(e)}}function ge(s){return typeof s=="boolean"?s?1:0:K(s)?M(s.visibility):M(s)}class pe{constructor(e){this.a=e}current(){const e=this.a.current();return e===null?null:e.element}previous(){return this.a.previous(),this.current()}first(){return this.a.first(),this.current()}last(){return this.a.last(),this.current()}next(){return this.a.next(),this.current()}}export{ue as $K0,Ie as $L0};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { ElementsDragAndDropData } from "../list/listView.js";
+import { ComposedTreeDelegate, TreeFindMode, FindFilter, FindController } from "./abstractTree.js";
+import { getVisibleState, isFilterResult } from "./indexTreeModel.js";
+import { CompressibleObjectTree, ObjectTree } from "./objectTree.js";
+import { ObjectTreeElementCollapseState, TreeError, WeakMapper } from "./tree.js";
+import { createCancelablePromise, Promises, ThrottledDelayer, timeout } from "../../../common/async.js";
+import { Codicon } from "../../../common/codicons.js";
+import { ThemeIcon } from "../../../common/themables.js";
+import { isCancellationError, onUnexpectedError } from "../../../common/errors.js";
+import { Emitter, Event } from "../../../common/event.js";
+import { Iterable } from "../../../common/iterator.js";
+import { DisposableStore, dispose, toDisposable } from "../../../common/lifecycle.js";
+import { isIterable } from "../../../common/types.js";
+import { CancellationTokenSource } from "../../../common/cancellation.js";
+import { FuzzyScore } from "../../../common/filters.js";
+import { insertInto, splice } from "../../../common/arrays.js";
+import { localize } from "../../../../nls.js";
+function createAsyncDataTreeNode(props) {
+  return {
+    ...props,
+    children: [],
+    refreshPromise: void 0,
+    stale: true,
+    slow: false,
+    forceExpanded: false
+  };
+}
+__name(createAsyncDataTreeNode, "createAsyncDataTreeNode");
+function isAncestor(ancestor, descendant) {
+  if (!descendant.parent) {
+    return false;
+  } else if (descendant.parent === ancestor) {
+    return true;
+  } else {
+    return isAncestor(ancestor, descendant.parent);
+  }
+}
+__name(isAncestor, "isAncestor");
+function intersects(node, other) {
+  return node === other || isAncestor(node, other) || isAncestor(other, node);
+}
+__name(intersects, "intersects");
+class AsyncDataTreeNodeWrapper {
+  static {
+    __name(this, "AsyncDataTreeNodeWrapper");
+  }
+  get element() {
+    return this.node.element.element;
+  }
+  get children() {
+    return this.node.children.map((node) => new AsyncDataTreeNodeWrapper(node));
+  }
+  get depth() {
+    return this.node.depth;
+  }
+  get visibleChildrenCount() {
+    return this.node.visibleChildrenCount;
+  }
+  get visibleChildIndex() {
+    return this.node.visibleChildIndex;
+  }
+  get collapsible() {
+    return this.node.collapsible;
+  }
+  get collapsed() {
+    return this.node.collapsed;
+  }
+  get visible() {
+    return this.node.visible;
+  }
+  get filterData() {
+    return this.node.filterData;
+  }
+  constructor(node) {
+    this.node = node;
+  }
+}
+class AsyncDataTreeRenderer {
+  static {
+    __name(this, "AsyncDataTreeRenderer");
+  }
+  constructor(renderer, nodeMapper, onDidChangeTwistieState) {
+    this.renderer = renderer;
+    this.nodeMapper = nodeMapper;
+    this.onDidChangeTwistieState = onDidChangeTwistieState;
+    this.renderedNodes = /* @__PURE__ */ new Map();
+    this.templateId = renderer.templateId;
+  }
+  renderTemplate(container) {
+    const templateData = this.renderer.renderTemplate(container);
+    return { templateData };
+  }
+  renderElement(node, index, templateData, details) {
+    this.renderer.renderElement(this.nodeMapper.map(node), index, templateData.templateData, details);
+  }
+  renderTwistie(element, twistieElement) {
+    if (element.slow) {
+      twistieElement.classList.add(...ThemeIcon.asClassNameArray(Codicon.treeItemLoading));
+      return true;
+    } else {
+      twistieElement.classList.remove(...ThemeIcon.asClassNameArray(Codicon.treeItemLoading));
+      return false;
+    }
+  }
+  disposeElement(node, index, templateData, details) {
+    this.renderer.disposeElement?.(this.nodeMapper.map(node), index, templateData.templateData, details);
+  }
+  disposeTemplate(templateData) {
+    this.renderer.disposeTemplate(templateData.templateData);
+  }
+  dispose() {
+    this.renderedNodes.clear();
+  }
+}
+function asTreeEvent(e) {
+  return {
+    browserEvent: e.browserEvent,
+    elements: e.elements.map((e2) => e2.element)
+  };
+}
+__name(asTreeEvent, "asTreeEvent");
+function asTreeMouseEvent(e) {
+  return {
+    browserEvent: e.browserEvent,
+    element: e.element && e.element.element,
+    target: e.target
+  };
+}
+__name(asTreeMouseEvent, "asTreeMouseEvent");
+function asTreeContextMenuEvent(e) {
+  return {
+    browserEvent: e.browserEvent,
+    element: e.element && e.element.element,
+    anchor: e.anchor,
+    isStickyScroll: e.isStickyScroll
+  };
+}
+__name(asTreeContextMenuEvent, "asTreeContextMenuEvent");
+class AsyncDataTreeElementsDragAndDropData extends ElementsDragAndDropData {
+  static {
+    __name(this, "AsyncDataTreeElementsDragAndDropData");
+  }
+  set context(context) {
+    this.data.context = context;
+  }
+  get context() {
+    return this.data.context;
+  }
+  constructor(data) {
+    super(data.elements.map((node) => node.element));
+    this.data = data;
+  }
+}
+function asAsyncDataTreeDragAndDropData(data) {
+  if (data instanceof ElementsDragAndDropData) {
+    return new AsyncDataTreeElementsDragAndDropData(data);
+  }
+  return data;
+}
+__name(asAsyncDataTreeDragAndDropData, "asAsyncDataTreeDragAndDropData");
+class AsyncDataTreeNodeListDragAndDrop {
+  static {
+    __name(this, "AsyncDataTreeNodeListDragAndDrop");
+  }
+  constructor(dnd) {
+    this.dnd = dnd;
+  }
+  getDragURI(node) {
+    return this.dnd.getDragURI(node.element);
+  }
+  getDragLabel(nodes, originalEvent) {
+    if (this.dnd.getDragLabel) {
+      return this.dnd.getDragLabel(nodes.map((node) => node.element), originalEvent);
+    }
+    return void 0;
+  }
+  onDragStart(data, originalEvent) {
+    this.dnd.onDragStart?.(asAsyncDataTreeDragAndDropData(data), originalEvent);
+  }
+  onDragOver(data, targetNode, targetIndex, targetSector, originalEvent, raw = true) {
+    return this.dnd.onDragOver(asAsyncDataTreeDragAndDropData(data), targetNode && targetNode.element, targetIndex, targetSector, originalEvent);
+  }
+  drop(data, targetNode, targetIndex, targetSector, originalEvent) {
+    this.dnd.drop(asAsyncDataTreeDragAndDropData(data), targetNode && targetNode.element, targetIndex, targetSector, originalEvent);
+  }
+  onDragEnd(originalEvent) {
+    this.dnd.onDragEnd?.(originalEvent);
+  }
+  dispose() {
+    this.dnd.dispose();
+  }
+}
+class AsyncFindFilter extends FindFilter {
+  static {
+    __name(this, "AsyncFindFilter");
+  }
+  constructor(findProvider, keyboardNavigationLabelProvider, filter) {
+    super(keyboardNavigationLabelProvider, filter);
+    this.findProvider = findProvider;
+    this.isFindSessionActive = false;
+  }
+  filter(element, parentVisibility) {
+    const filterResult = super.filter(element, parentVisibility);
+    if (!this.isFindSessionActive || this.findMode === TreeFindMode.Highlight || !this.findProvider.isVisible) {
+      return filterResult;
+    }
+    const visibility = isFilterResult(filterResult) ? filterResult.visibility : filterResult;
+    if (getVisibleState(visibility) === 0) {
+      return 0;
+    }
+    return this.findProvider.isVisible(element) ? filterResult : 0;
+  }
+}
+class AsyncFindController extends FindController {
+  static {
+    __name(this, "AsyncFindController");
+  }
+  constructor(tree, findProvider, filter, contextViewProvider, options) {
+    super(tree, filter, contextViewProvider, options);
+    this.findProvider = findProvider;
+    this.filter = filter;
+    this.activeSession = false;
+    this.asyncWorkInProgress = false;
+    this.taskQueue = new ThrottledDelayer(250);
+    this.disposables.add(toDisposable(async () => {
+      if (this.activeSession) {
+        await this.findProvider.endSession?.();
+      }
+    }));
+  }
+  applyPattern(_pattern) {
+    this.renderMessage(false);
+    this.activeTokenSource?.cancel();
+    this.activeTokenSource = new CancellationTokenSource();
+    this.taskQueue.trigger(() => this.applyPatternAsync());
+  }
+  async applyPatternAsync() {
+    const token = this.activeTokenSource?.token;
+    if (!token || token.isCancellationRequested) {
+      return;
+    }
+    const pattern = this.pattern;
+    if (pattern === "") {
+      if (this.activeSession) {
+        this.asyncWorkInProgress = true;
+        await this.deactivateFindSession();
+        this.asyncWorkInProgress = false;
+        if (!token.isCancellationRequested) {
+          this.filter.reset();
+          super.applyPattern("");
+        }
+      }
+      return;
+    }
+    if (!this.activeSession) {
+      this.activateFindSession();
+    }
+    this.asyncWorkInProgress = true;
+    this.activeFindMetadata = void 0;
+    const findMetadata = await this.findProvider.find(pattern, { matchType: this.matchType, findMode: this.mode }, token);
+    if (token.isCancellationRequested || findMetadata === void 0) {
+      return;
+    }
+    this.asyncWorkInProgress = false;
+    this.activeFindMetadata = findMetadata;
+    this.filter.reset();
+    super.applyPattern(pattern);
+    if (findMetadata.warningMessage) {
+      this.renderMessage(true, findMetadata.warningMessage);
+    }
+  }
+  activateFindSession() {
+    this.activeSession = true;
+    this.filter.isFindSessionActive = true;
+    this.findProvider.startSession?.();
+  }
+  async deactivateFindSession() {
+    this.activeSession = false;
+    this.filter.isFindSessionActive = false;
+    await this.findProvider.endSession?.();
+  }
+  render() {
+    if (this.asyncWorkInProgress || !this.activeFindMetadata) {
+      return;
+    }
+    const showNotFound = this.activeFindMetadata.matchCount === 0 && this.pattern.length > 0;
+    this.renderMessage(showNotFound);
+    if (this.pattern.length) {
+      this.alertResults(this.activeFindMetadata.matchCount);
+    }
+  }
+  onDidToggleChange(e) {
+    this.toggles.set(e.id, e.isChecked);
+    this.filter.findMode = this.mode;
+    this.filter.findMatchType = this.matchType;
+    this.placeholder = this.mode === TreeFindMode.Filter ? localize("type to filter", "Type to filter") : localize("type to search", "Type to search");
+    this.applyPattern(this.pattern);
+  }
+  shouldAllowFocus(node) {
+    return this.shouldFocusWhenNavigating(node);
+  }
+  shouldFocusWhenNavigating(node) {
+    if (!this.activeSession || !this.activeFindMetadata) {
+      return true;
+    }
+    const element = node.element?.element;
+    if (element && this.activeFindMetadata.isMatch(element)) {
+      return true;
+    }
+    return !FuzzyScore.isDefault(node.filterData);
+  }
+}
+function asObjectTreeOptions(options) {
+  return options && {
+    ...options,
+    collapseByDefault: true,
+    identityProvider: options.identityProvider && {
+      getId(el) {
+        return options.identityProvider.getId(el.element);
+      }
+    },
+    dnd: options.dnd && new AsyncDataTreeNodeListDragAndDrop(options.dnd),
+    multipleSelectionController: options.multipleSelectionController && {
+      isSelectionSingleChangeEvent(e) {
+        return options.multipleSelectionController.isSelectionSingleChangeEvent({ ...e, element: e.element });
+      },
+      isSelectionRangeChangeEvent(e) {
+        return options.multipleSelectionController.isSelectionRangeChangeEvent({ ...e, element: e.element });
+      }
+    },
+    accessibilityProvider: options.accessibilityProvider && {
+      ...options.accessibilityProvider,
+      getPosInSet: void 0,
+      getSetSize: void 0,
+      getRole: options.accessibilityProvider.getRole ? (el) => {
+        return options.accessibilityProvider.getRole(el.element);
+      } : () => "treeitem",
+      isChecked: options.accessibilityProvider.isChecked ? (e) => {
+        return !!options.accessibilityProvider?.isChecked(e.element);
+      } : void 0,
+      getAriaLabel(e) {
+        return options.accessibilityProvider.getAriaLabel(e.element);
+      },
+      getWidgetAriaLabel() {
+        return options.accessibilityProvider.getWidgetAriaLabel();
+      },
+      getWidgetRole: options.accessibilityProvider.getWidgetRole ? () => options.accessibilityProvider.getWidgetRole() : () => "tree",
+      getAriaLevel: options.accessibilityProvider.getAriaLevel && ((node) => {
+        return options.accessibilityProvider.getAriaLevel(node.element);
+      }),
+      getActiveDescendantId: options.accessibilityProvider.getActiveDescendantId && ((node) => {
+        return options.accessibilityProvider.getActiveDescendantId(node.element);
+      })
+    },
+    filter: options.filter && {
+      filter(e, parentVisibility) {
+        return options.filter.filter(e.element, parentVisibility);
+      }
+    },
+    keyboardNavigationLabelProvider: options.keyboardNavigationLabelProvider && {
+      ...options.keyboardNavigationLabelProvider,
+      getKeyboardNavigationLabel(e) {
+        return options.keyboardNavigationLabelProvider.getKeyboardNavigationLabel(e.element);
+      }
+    },
+    sorter: void 0,
+    expandOnlyOnTwistieClick: typeof options.expandOnlyOnTwistieClick === "undefined" ? void 0 : typeof options.expandOnlyOnTwistieClick !== "function" ? options.expandOnlyOnTwistieClick : (e) => options.expandOnlyOnTwistieClick(e.element),
+    defaultFindVisibility: /* @__PURE__ */ __name((e) => {
+      if (e.hasChildren && e.stale) {
+        return 1;
+      } else if (typeof options.defaultFindVisibility === "number") {
+        return options.defaultFindVisibility;
+      } else if (typeof options.defaultFindVisibility === "undefined") {
+        return 2;
+      } else {
+        return options.defaultFindVisibility(e.element);
+      }
+    }, "defaultFindVisibility")
+  };
+}
+__name(asObjectTreeOptions, "asObjectTreeOptions");
+function dfs(node, fn) {
+  fn(node);
+  node.children.forEach((child) => dfs(child, fn));
+}
+__name(dfs, "dfs");
+class AsyncDataTree {
+  static {
+    __name(this, "AsyncDataTree");
+  }
+  get onDidScroll() {
+    return this.tree.onDidScroll;
+  }
+  get onDidChangeFocus() {
+    return Event.map(this.tree.onDidChangeFocus, asTreeEvent);
+  }
+  get onDidChangeSelection() {
+    return Event.map(this.tree.onDidChangeSelection, asTreeEvent);
+  }
+  get onKeyDown() {
+    return this.tree.onKeyDown;
+  }
+  get onMouseClick() {
+    return Event.map(this.tree.onMouseClick, asTreeMouseEvent);
+  }
+  get onMouseDblClick() {
+    return Event.map(this.tree.onMouseDblClick, asTreeMouseEvent);
+  }
+  get onContextMenu() {
+    return Event.map(this.tree.onContextMenu, asTreeContextMenuEvent);
+  }
+  get onTap() {
+    return Event.map(this.tree.onTap, asTreeMouseEvent);
+  }
+  get onPointer() {
+    return Event.map(this.tree.onPointer, asTreeMouseEvent);
+  }
+  get onDidFocus() {
+    return this.tree.onDidFocus;
+  }
+  get onDidBlur() {
+    return this.tree.onDidBlur;
+  }
+  /**
+   * To be used internally only!
+   * @deprecated
+   */
+  get onDidChangeModel() {
+    return this.tree.onDidChangeModel;
+  }
+  get onDidChangeCollapseState() {
+    return this.tree.onDidChangeCollapseState;
+  }
+  get onDidUpdateOptions() {
+    return this.tree.onDidUpdateOptions;
+  }
+  get onDidChangeStickyScrollFocused() {
+    return this.tree.onDidChangeStickyScrollFocused;
+  }
+  get findMode() {
+    return this.findController ? this.findController.mode : this.tree.findMode;
+  }
+  set findMode(mode) {
+    this.findController ? this.findController.mode = mode : this.tree.findMode = mode;
+  }
+  get findMatchType() {
+    return this.findController ? this.findController.matchType : this.tree.findMatchType;
+  }
+  set findMatchType(matchType) {
+    this.findController ? this.findController.matchType = matchType : this.tree.findMatchType = matchType;
+  }
+  get expandOnlyOnTwistieClick() {
+    if (typeof this.tree.expandOnlyOnTwistieClick === "boolean") {
+      return this.tree.expandOnlyOnTwistieClick;
+    }
+    const fn = this.tree.expandOnlyOnTwistieClick;
+    return (element) => fn(this.nodes.get(element === this.root.element ? null : element) || null);
+  }
+  get onDidDispose() {
+    return this.tree.onDidDispose;
+  }
+  constructor(user, container, delegate, renderers, dataSource, options = {}) {
+    this.user = user;
+    this.dataSource = dataSource;
+    this.nodes = /* @__PURE__ */ new Map();
+    this.subTreeRefreshPromises = /* @__PURE__ */ new Map();
+    this.refreshPromises = /* @__PURE__ */ new Map();
+    this._onDidRender = new Emitter();
+    this._onDidChangeNodeSlowState = new Emitter();
+    this.nodeMapper = new WeakMapper((node) => new AsyncDataTreeNodeWrapper(node));
+    this.disposables = new DisposableStore();
+    this.identityProvider = options.identityProvider;
+    this.autoExpandSingleChildren = typeof options.autoExpandSingleChildren === "undefined" ? false : options.autoExpandSingleChildren;
+    this.sorter = options.sorter;
+    this.getDefaultCollapseState = (e) => options.collapseByDefault ? options.collapseByDefault(e) ? ObjectTreeElementCollapseState.PreserveOrCollapsed : ObjectTreeElementCollapseState.PreserveOrExpanded : void 0;
+    let asyncFindEnabled = false;
+    let findFilter;
+    if (options.findProvider && (options.findWidgetEnabled ?? true) && options.keyboardNavigationLabelProvider && options.contextViewProvider) {
+      asyncFindEnabled = true;
+      findFilter = new AsyncFindFilter(options.findProvider, options.keyboardNavigationLabelProvider, options.filter);
+    }
+    this.tree = this.createTree(user, container, delegate, renderers, { ...options, findWidgetEnabled: !asyncFindEnabled, filter: findFilter ?? options.filter });
+    this.root = createAsyncDataTreeNode({
+      element: void 0,
+      parent: null,
+      hasChildren: true,
+      defaultCollapseState: void 0
+    });
+    if (this.identityProvider) {
+      this.root = {
+        ...this.root,
+        id: null
+      };
+    }
+    this.nodes.set(null, this.root);
+    this.tree.onDidChangeCollapseState(this._onDidChangeCollapseState, this, this.disposables);
+    if (asyncFindEnabled) {
+      const findOptions = {
+        styles: options.findWidgetStyles,
+        showNotFoundMessage: options.showNotFoundMessage,
+        defaultFindMatchType: options.defaultFindMatchType,
+        defaultFindMode: options.defaultFindMode
+      };
+      this.findController = this.disposables.add(new AsyncFindController(this.tree, options.findProvider, findFilter, this.tree.options.contextViewProvider, findOptions));
+      this.focusNavigationFilter = (node) => this.findController.shouldFocusWhenNavigating(node);
+      this.onDidChangeFindOpenState = this.findController.onDidChangeOpenState;
+      this.onDidChangeFindMode = this.findController.onDidChangeMode;
+      this.onDidChangeFindMatchType = this.findController.onDidChangeMatchType;
+    } else {
+      this.onDidChangeFindOpenState = this.tree.onDidChangeFindOpenState;
+      this.onDidChangeFindMode = this.tree.onDidChangeFindMode;
+      this.onDidChangeFindMatchType = this.tree.onDidChangeFindMatchType;
+    }
+  }
+  createTree(user, container, delegate, renderers, options) {
+    const objectTreeDelegate = new ComposedTreeDelegate(delegate);
+    const objectTreeRenderers = renderers.map((r) => new AsyncDataTreeRenderer(r, this.nodeMapper, this._onDidChangeNodeSlowState.event));
+    const objectTreeOptions = asObjectTreeOptions(options) || {};
+    return new ObjectTree(user, container, objectTreeDelegate, objectTreeRenderers, objectTreeOptions);
+  }
+  updateOptions(optionsUpdate = {}) {
+    if (this.findController) {
+      if (optionsUpdate.defaultFindMode !== void 0) {
+        this.findController.mode = optionsUpdate.defaultFindMode;
+      }
+      if (optionsUpdate.defaultFindMatchType !== void 0) {
+        this.findController.matchType = optionsUpdate.defaultFindMatchType;
+      }
+    }
+    this.tree.updateOptions(optionsUpdate);
+  }
+  get options() {
+    return this.tree.options;
+  }
+  // Widget
+  getHTMLElement() {
+    return this.tree.getHTMLElement();
+  }
+  get contentHeight() {
+    return this.tree.contentHeight;
+  }
+  get contentWidth() {
+    return this.tree.contentWidth;
+  }
+  get onDidChangeContentHeight() {
+    return this.tree.onDidChangeContentHeight;
+  }
+  get onDidChangeContentWidth() {
+    return this.tree.onDidChangeContentWidth;
+  }
+  get scrollTop() {
+    return this.tree.scrollTop;
+  }
+  set scrollTop(scrollTop) {
+    this.tree.scrollTop = scrollTop;
+  }
+  get scrollLeft() {
+    return this.tree.scrollLeft;
+  }
+  set scrollLeft(scrollLeft) {
+    this.tree.scrollLeft = scrollLeft;
+  }
+  get scrollHeight() {
+    return this.tree.scrollHeight;
+  }
+  get renderHeight() {
+    return this.tree.renderHeight;
+  }
+  get lastVisibleElement() {
+    return this.tree.lastVisibleElement.element;
+  }
+  get ariaLabel() {
+    return this.tree.ariaLabel;
+  }
+  set ariaLabel(value) {
+    this.tree.ariaLabel = value;
+  }
+  domFocus() {
+    this.tree.domFocus();
+  }
+  isDOMFocused() {
+    return this.tree.isDOMFocused();
+  }
+  navigate(start) {
+    let startNode;
+    if (start) {
+      startNode = this.getDataNode(start);
+    }
+    return new AsyncDataTreeNavigator(this.tree.navigate(startNode));
+  }
+  layout(height, width) {
+    this.tree.layout(height, width);
+  }
+  style(styles) {
+    this.tree.style(styles);
+  }
+  // Model
+  getInput() {
+    return this.root.element;
+  }
+  async setInput(input, viewState) {
+    this.refreshPromises.forEach((promise) => promise.cancel());
+    this.refreshPromises.clear();
+    this.root.element = input;
+    const viewStateContext = viewState && { viewState, focus: [], selection: [] };
+    await this._updateChildren(input, true, false, viewStateContext);
+    if (viewStateContext) {
+      this.tree.setFocus(viewStateContext.focus);
+      this.tree.setSelection(viewStateContext.selection);
+    }
+    if (viewState && typeof viewState.scrollTop === "number") {
+      this.scrollTop = viewState.scrollTop;
+    }
+  }
+  async updateChildren(element = this.root.element, recursive = true, rerender = false, options) {
+    await this._updateChildren(element, recursive, rerender, void 0, options);
+  }
+  async _updateChildren(element = this.root.element, recursive = true, rerender = false, viewStateContext, options) {
+    if (typeof this.root.element === "undefined") {
+      throw new TreeError(this.user, "Tree input not set");
+    }
+    if (this.root.refreshPromise) {
+      await this.root.refreshPromise;
+      await Event.toPromise(this._onDidRender.event);
+    }
+    const node = this.getDataNode(element);
+    await this.refreshAndRenderNode(node, recursive, viewStateContext, options);
+    if (rerender) {
+      try {
+        this.tree.rerender(node);
+      } catch {
+      }
+    }
+  }
+  resort(element = this.root.element, recursive = true) {
+    this.tree.resort(this.getDataNode(element), recursive);
+  }
+  hasNode(element) {
+    return element === this.root.element || this.nodes.has(element);
+  }
+  // View
+  rerender(element) {
+    if (element === void 0 || element === this.root.element) {
+      this.tree.rerender();
+      return;
+    }
+    const node = this.getDataNode(element);
+    this.tree.rerender(node);
+  }
+  updateElementHeight(element, height) {
+    const node = this.getDataNode(element);
+    this.tree.updateElementHeight(node, height);
+  }
+  updateWidth(element) {
+    const node = this.getDataNode(element);
+    this.tree.updateWidth(node);
+  }
+  // Tree
+  getNode(element = this.root.element) {
+    const dataNode = this.getDataNode(element);
+    const node = this.tree.getNode(dataNode === this.root ? null : dataNode);
+    return this.nodeMapper.map(node);
+  }
+  collapse(element, recursive = false) {
+    const node = this.getDataNode(element);
+    return this.tree.collapse(node === this.root ? null : node, recursive);
+  }
+  async expand(element, recursive = false) {
+    if (typeof this.root.element === "undefined") {
+      throw new TreeError(this.user, "Tree input not set");
+    }
+    if (this.root.refreshPromise) {
+      await this.root.refreshPromise;
+      await Event.toPromise(this._onDidRender.event);
+    }
+    const node = this.getDataNode(element);
+    if (this.tree.hasElement(node) && !this.tree.isCollapsible(node)) {
+      return false;
+    }
+    if (node.refreshPromise) {
+      await this.root.refreshPromise;
+      await Event.toPromise(this._onDidRender.event);
+    }
+    if (node !== this.root && !node.refreshPromise && !this.tree.isCollapsed(node)) {
+      return false;
+    }
+    const result = this.tree.expand(node === this.root ? null : node, recursive);
+    if (node.refreshPromise) {
+      await this.root.refreshPromise;
+      await Event.toPromise(this._onDidRender.event);
+    }
+    return result;
+  }
+  toggleCollapsed(element, recursive = false) {
+    return this.tree.toggleCollapsed(this.getDataNode(element), recursive);
+  }
+  expandAll() {
+    this.tree.expandAll();
+  }
+  async expandTo(element) {
+    if (!this.dataSource.getParent) {
+      throw new Error("Can't expand to element without getParent method");
+    }
+    const elements = [];
+    while (!this.hasNode(element)) {
+      element = this.dataSource.getParent(element);
+      if (element !== this.root.element) {
+        elements.push(element);
+      }
+    }
+    for (const element2 of Iterable.reverse(elements)) {
+      await this.expand(element2);
+    }
+    this.tree.expandTo(this.getDataNode(element));
+  }
+  collapseAll() {
+    this.tree.collapseAll();
+  }
+  isCollapsible(element) {
+    return this.tree.isCollapsible(this.getDataNode(element));
+  }
+  isCollapsed(element) {
+    return this.tree.isCollapsed(this.getDataNode(element));
+  }
+  triggerTypeNavigation() {
+    this.tree.triggerTypeNavigation();
+  }
+  openFind() {
+    if (this.findController) {
+      this.findController.open();
+    } else {
+      this.tree.openFind();
+    }
+  }
+  closeFind() {
+    if (this.findController) {
+      this.findController.close();
+    } else {
+      this.tree.closeFind();
+    }
+  }
+  refilter() {
+    this.tree.refilter();
+  }
+  setAnchor(element) {
+    this.tree.setAnchor(typeof element === "undefined" ? void 0 : this.getDataNode(element));
+  }
+  getAnchor() {
+    const node = this.tree.getAnchor();
+    return node?.element;
+  }
+  setSelection(elements, browserEvent) {
+    const nodes = elements.map((e) => this.getDataNode(e));
+    this.tree.setSelection(nodes, browserEvent);
+  }
+  getSelection() {
+    const nodes = this.tree.getSelection();
+    return nodes.map((n) => n.element);
+  }
+  setFocus(elements, browserEvent) {
+    const nodes = elements.map((e) => this.getDataNode(e));
+    this.tree.setFocus(nodes, browserEvent);
+  }
+  focusNext(n = 1, loop = false, browserEvent) {
+    this.tree.focusNext(n, loop, browserEvent, this.focusNavigationFilter);
+  }
+  focusPrevious(n = 1, loop = false, browserEvent) {
+    this.tree.focusPrevious(n, loop, browserEvent, this.focusNavigationFilter);
+  }
+  focusNextPage(browserEvent) {
+    return this.tree.focusNextPage(browserEvent, this.focusNavigationFilter);
+  }
+  focusPreviousPage(browserEvent) {
+    return this.tree.focusPreviousPage(browserEvent, this.focusNavigationFilter);
+  }
+  focusLast(browserEvent) {
+    this.tree.focusLast(browserEvent, this.focusNavigationFilter);
+  }
+  focusFirst(browserEvent) {
+    this.tree.focusFirst(browserEvent, this.focusNavigationFilter);
+  }
+  getFocus() {
+    const nodes = this.tree.getFocus();
+    return nodes.map((n) => n.element);
+  }
+  getStickyScrollFocus() {
+    const nodes = this.tree.getStickyScrollFocus();
+    return nodes.map((n) => n.element);
+  }
+  getFocusedPart() {
+    return this.tree.getFocusedPart();
+  }
+  reveal(element, relativeTop) {
+    this.tree.reveal(this.getDataNode(element), relativeTop);
+  }
+  getRelativeTop(element) {
+    return this.tree.getRelativeTop(this.getDataNode(element));
+  }
+  // Tree navigation
+  getParentElement(element) {
+    const node = this.tree.getParentElement(this.getDataNode(element));
+    return node && node.element;
+  }
+  getFirstElementChild(element = this.root.element) {
+    const dataNode = this.getDataNode(element);
+    const node = this.tree.getFirstElementChild(dataNode === this.root ? null : dataNode);
+    return node && node.element;
+  }
+  // Implementation
+  getDataNode(element) {
+    const node = this.nodes.get(element === this.root.element ? null : element);
+    if (!node) {
+      const nodeIdentity = this.identityProvider?.getId(element).toString();
+      throw new TreeError(this.user, `Data tree node not found${nodeIdentity ? `: ${nodeIdentity}` : ""}`);
+    }
+    return node;
+  }
+  async refreshAndRenderNode(node, recursive, viewStateContext, options) {
+    if (this.disposables.isDisposed) {
+      return;
+    }
+    await this.refreshNode(node, recursive, viewStateContext);
+    if (this.disposables.isDisposed) {
+      return;
+    }
+    this.render(node, viewStateContext, options);
+  }
+  async refreshNode(node, recursive, viewStateContext) {
+    let result;
+    this.subTreeRefreshPromises.forEach((refreshPromise, refreshNode) => {
+      if (!result && intersects(refreshNode, node)) {
+        result = refreshPromise.then(() => this.refreshNode(node, recursive, viewStateContext));
+      }
+    });
+    if (result) {
+      return result;
+    }
+    if (node !== this.root) {
+      const treeNode = this.tree.getNode(node);
+      if (treeNode.collapsed) {
+        node.hasChildren = !!this.dataSource.hasChildren(node.element);
+        node.stale = true;
+        this.setChildren(node, [], recursive, viewStateContext);
+        return;
+      }
+    }
+    return this.doRefreshSubTree(node, recursive, viewStateContext);
+  }
+  async doRefreshSubTree(node, recursive, viewStateContext) {
+    let done;
+    node.refreshPromise = new Promise((c) => done = c);
+    this.subTreeRefreshPromises.set(node, node.refreshPromise);
+    node.refreshPromise.finally(() => {
+      node.refreshPromise = void 0;
+      this.subTreeRefreshPromises.delete(node);
+    });
+    try {
+      const childrenToRefresh = await this.doRefreshNode(node, recursive, viewStateContext);
+      node.stale = false;
+      await Promises.settled(childrenToRefresh.map((child) => this.doRefreshSubTree(child, recursive, viewStateContext)));
+    } finally {
+      done();
+    }
+  }
+  async doRefreshNode(node, recursive, viewStateContext) {
+    node.hasChildren = !!this.dataSource.hasChildren(node.element);
+    let childrenPromise;
+    if (!node.hasChildren) {
+      childrenPromise = Promise.resolve(Iterable.empty());
+    } else {
+      const children = this.doGetChildren(node);
+      if (isIterable(children)) {
+        childrenPromise = Promise.resolve(children);
+      } else {
+        const slowTimeout = timeout(800);
+        slowTimeout.then(() => {
+          node.slow = true;
+          this._onDidChangeNodeSlowState.fire(node);
+        }, (_) => null);
+        childrenPromise = children.finally(() => slowTimeout.cancel());
+      }
+    }
+    try {
+      const children = await childrenPromise;
+      return this.setChildren(node, children, recursive, viewStateContext);
+    } catch (err) {
+      if (node !== this.root && this.tree.hasElement(node)) {
+        this.tree.collapse(node);
+      }
+      if (isCancellationError(err)) {
+        return [];
+      }
+      throw err;
+    } finally {
+      if (node.slow) {
+        node.slow = false;
+        this._onDidChangeNodeSlowState.fire(node);
+      }
+    }
+  }
+  doGetChildren(node) {
+    let result = this.refreshPromises.get(node);
+    if (result) {
+      return result;
+    }
+    const children = this.dataSource.getChildren(node.element);
+    if (isIterable(children)) {
+      return this.processChildren(children);
+    } else {
+      result = createCancelablePromise(async () => this.processChildren(await children));
+      this.refreshPromises.set(node, result);
+      return result.finally(() => {
+        this.refreshPromises.delete(node);
+      });
+    }
+  }
+  _onDidChangeCollapseState({ node, deep }) {
+    if (node.element === null) {
+      return;
+    }
+    if (!node.collapsed && node.element.stale) {
+      if (deep) {
+        this.collapse(node.element.element);
+      } else {
+        this.refreshAndRenderNode(node.element, false).catch(onUnexpectedError);
+      }
+    }
+  }
+  setChildren(node, childrenElementsIterable, recursive, viewStateContext) {
+    const childrenElements = [...childrenElementsIterable];
+    if (node.children.length === 0 && childrenElements.length === 0) {
+      return [];
+    }
+    const nodesToForget = /* @__PURE__ */ new Map();
+    const childrenTreeNodesById = /* @__PURE__ */ new Map();
+    for (const child of node.children) {
+      nodesToForget.set(child.element, child);
+      if (this.identityProvider) {
+        childrenTreeNodesById.set(child.id, { node: child, collapsed: this.tree.hasElement(child) && this.tree.isCollapsed(child) });
+      }
+    }
+    const childrenToRefresh = [];
+    const children = childrenElements.map((element) => {
+      const hasChildren = !!this.dataSource.hasChildren(element);
+      if (!this.identityProvider) {
+        const asyncDataTreeNode = createAsyncDataTreeNode({ element, parent: node, hasChildren, defaultCollapseState: this.getDefaultCollapseState(element) });
+        if (hasChildren && asyncDataTreeNode.defaultCollapseState === ObjectTreeElementCollapseState.PreserveOrExpanded) {
+          childrenToRefresh.push(asyncDataTreeNode);
+        }
+        return asyncDataTreeNode;
+      }
+      const id = this.identityProvider.getId(element).toString();
+      const result = childrenTreeNodesById.get(id);
+      if (result) {
+        const asyncDataTreeNode = result.node;
+        nodesToForget.delete(asyncDataTreeNode.element);
+        this.nodes.delete(asyncDataTreeNode.element);
+        this.nodes.set(element, asyncDataTreeNode);
+        asyncDataTreeNode.element = element;
+        asyncDataTreeNode.hasChildren = hasChildren;
+        if (recursive) {
+          if (result.collapsed) {
+            asyncDataTreeNode.children.forEach((node2) => dfs(node2, (node3) => this.nodes.delete(node3.element)));
+            asyncDataTreeNode.children.splice(0, asyncDataTreeNode.children.length);
+            asyncDataTreeNode.stale = true;
+          } else {
+            childrenToRefresh.push(asyncDataTreeNode);
+          }
+        } else if (hasChildren && !result.collapsed) {
+          childrenToRefresh.push(asyncDataTreeNode);
+        }
+        return asyncDataTreeNode;
+      }
+      const childAsyncDataTreeNode = createAsyncDataTreeNode({ element, parent: node, id, hasChildren, defaultCollapseState: this.getDefaultCollapseState(element) });
+      if (viewStateContext && viewStateContext.viewState.focus && viewStateContext.viewState.focus.indexOf(id) > -1) {
+        viewStateContext.focus.push(childAsyncDataTreeNode);
+      }
+      if (viewStateContext && viewStateContext.viewState.selection && viewStateContext.viewState.selection.indexOf(id) > -1) {
+        viewStateContext.selection.push(childAsyncDataTreeNode);
+      }
+      if (viewStateContext && viewStateContext.viewState.expanded && viewStateContext.viewState.expanded.indexOf(id) > -1) {
+        childrenToRefresh.push(childAsyncDataTreeNode);
+      } else if (hasChildren && childAsyncDataTreeNode.defaultCollapseState === ObjectTreeElementCollapseState.PreserveOrExpanded) {
+        childrenToRefresh.push(childAsyncDataTreeNode);
+      }
+      return childAsyncDataTreeNode;
+    });
+    for (const node2 of nodesToForget.values()) {
+      dfs(node2, (node3) => this.nodes.delete(node3.element));
+    }
+    for (const child of children) {
+      this.nodes.set(child.element, child);
+    }
+    splice(node.children, 0, node.children.length, children);
+    if (node !== this.root && this.autoExpandSingleChildren && children.length === 1 && childrenToRefresh.length === 0) {
+      children[0].forceExpanded = true;
+      childrenToRefresh.push(children[0]);
+    }
+    return childrenToRefresh;
+  }
+  render(node, viewStateContext, options) {
+    const children = node.children.map((node2) => this.asTreeElement(node2, viewStateContext));
+    const objectTreeOptions = options && {
+      ...options,
+      diffIdentityProvider: options.diffIdentityProvider && {
+        getId(node2) {
+          return options.diffIdentityProvider.getId(node2.element);
+        }
+      }
+    };
+    this.tree.setChildren(node === this.root ? null : node, children, objectTreeOptions);
+    if (node !== this.root) {
+      this.tree.setCollapsible(node, node.hasChildren);
+    }
+    this._onDidRender.fire();
+  }
+  asTreeElement(node, viewStateContext) {
+    if (node.stale) {
+      return {
+        element: node,
+        collapsible: node.hasChildren,
+        collapsed: true
+      };
+    }
+    let collapsed;
+    if (viewStateContext && viewStateContext.viewState.expanded && node.id && viewStateContext.viewState.expanded.indexOf(node.id) > -1) {
+      collapsed = false;
+    } else if (node.forceExpanded) {
+      collapsed = false;
+      node.forceExpanded = false;
+    } else {
+      collapsed = node.defaultCollapseState;
+    }
+    return {
+      element: node,
+      children: node.hasChildren ? Iterable.map(node.children, (child) => this.asTreeElement(child, viewStateContext)) : [],
+      collapsible: node.hasChildren,
+      collapsed
+    };
+  }
+  processChildren(children) {
+    if (this.sorter) {
+      children = [...children].sort(this.sorter.compare.bind(this.sorter));
+    }
+    return children;
+  }
+  // view state
+  getViewState() {
+    if (!this.identityProvider) {
+      throw new TreeError(this.user, "Can't get tree view state without an identity provider");
+    }
+    const getId = /* @__PURE__ */ __name((element) => this.identityProvider.getId(element).toString(), "getId");
+    const focus = this.getFocus().map(getId);
+    const selection = this.getSelection().map(getId);
+    const expanded = [];
+    const root = this.tree.getNode();
+    const stack = [root];
+    while (stack.length > 0) {
+      const node = stack.pop();
+      if (node !== root && node.collapsible && !node.collapsed) {
+        expanded.push(getId(node.element.element));
+      }
+      insertInto(stack, stack.length, node.children);
+    }
+    return { focus, selection, expanded, scrollTop: this.scrollTop };
+  }
+  dispose() {
+    this.disposables.dispose();
+    this.tree.dispose();
+  }
+}
+class CompressibleAsyncDataTreeNodeWrapper {
+  static {
+    __name(this, "CompressibleAsyncDataTreeNodeWrapper");
+  }
+  get element() {
+    return {
+      elements: this.node.element.elements.map((e) => e.element),
+      incompressible: this.node.element.incompressible
+    };
+  }
+  get children() {
+    return this.node.children.map((node) => new CompressibleAsyncDataTreeNodeWrapper(node));
+  }
+  get depth() {
+    return this.node.depth;
+  }
+  get visibleChildrenCount() {
+    return this.node.visibleChildrenCount;
+  }
+  get visibleChildIndex() {
+    return this.node.visibleChildIndex;
+  }
+  get collapsible() {
+    return this.node.collapsible;
+  }
+  get collapsed() {
+    return this.node.collapsed;
+  }
+  get visible() {
+    return this.node.visible;
+  }
+  get filterData() {
+    return this.node.filterData;
+  }
+  constructor(node) {
+    this.node = node;
+  }
+}
+class CompressibleAsyncDataTreeRenderer {
+  static {
+    __name(this, "CompressibleAsyncDataTreeRenderer");
+  }
+  constructor(renderer, nodeMapper, compressibleNodeMapperProvider, onDidChangeTwistieState) {
+    this.renderer = renderer;
+    this.nodeMapper = nodeMapper;
+    this.compressibleNodeMapperProvider = compressibleNodeMapperProvider;
+    this.onDidChangeTwistieState = onDidChangeTwistieState;
+    this.renderedNodes = /* @__PURE__ */ new Map();
+    this.disposables = [];
+    this.templateId = renderer.templateId;
+  }
+  renderTemplate(container) {
+    const templateData = this.renderer.renderTemplate(container);
+    return { templateData };
+  }
+  renderElement(node, index, templateData, details) {
+    this.renderer.renderElement(this.nodeMapper.map(node), index, templateData.templateData, details);
+  }
+  renderCompressedElements(node, index, templateData, details) {
+    this.renderer.renderCompressedElements(this.compressibleNodeMapperProvider().map(node), index, templateData.templateData, details);
+  }
+  renderTwistie(element, twistieElement) {
+    if (element.slow) {
+      twistieElement.classList.add(...ThemeIcon.asClassNameArray(Codicon.treeItemLoading));
+      return true;
+    } else {
+      twistieElement.classList.remove(...ThemeIcon.asClassNameArray(Codicon.treeItemLoading));
+      return false;
+    }
+  }
+  disposeElement(node, index, templateData, details) {
+    this.renderer.disposeElement?.(this.nodeMapper.map(node), index, templateData.templateData, details);
+  }
+  disposeCompressedElements(node, index, templateData, details) {
+    this.renderer.disposeCompressedElements?.(this.compressibleNodeMapperProvider().map(node), index, templateData.templateData, details);
+  }
+  disposeTemplate(templateData) {
+    this.renderer.disposeTemplate(templateData.templateData);
+  }
+  dispose() {
+    this.renderedNodes.clear();
+    this.disposables = dispose(this.disposables);
+  }
+}
+function asCompressibleObjectTreeOptions(options) {
+  const objectTreeOptions = options && asObjectTreeOptions(options);
+  return objectTreeOptions && {
+    ...objectTreeOptions,
+    keyboardNavigationLabelProvider: objectTreeOptions.keyboardNavigationLabelProvider && {
+      ...objectTreeOptions.keyboardNavigationLabelProvider,
+      getCompressedNodeKeyboardNavigationLabel(els) {
+        return options.keyboardNavigationLabelProvider.getCompressedNodeKeyboardNavigationLabel(els.map((e) => e.element));
+      }
+    }
+  };
+}
+__name(asCompressibleObjectTreeOptions, "asCompressibleObjectTreeOptions");
+class CompressibleAsyncDataTree extends AsyncDataTree {
+  static {
+    __name(this, "CompressibleAsyncDataTree");
+  }
+  constructor(user, container, virtualDelegate, compressionDelegate, renderers, dataSource, options = {}) {
+    super(user, container, virtualDelegate, renderers, dataSource, options);
+    this.compressionDelegate = compressionDelegate;
+    this.compressibleNodeMapper = new WeakMapper((node) => new CompressibleAsyncDataTreeNodeWrapper(node));
+    this.filter = options.filter;
+  }
+  getCompressedTreeNode(e) {
+    const node = this.getDataNode(e);
+    return this.tree.getCompressedTreeNode(node).element;
+  }
+  createTree(user, container, delegate, renderers, options) {
+    const objectTreeDelegate = new ComposedTreeDelegate(delegate);
+    const objectTreeRenderers = renderers.map((r) => new CompressibleAsyncDataTreeRenderer(r, this.nodeMapper, () => this.compressibleNodeMapper, this._onDidChangeNodeSlowState.event));
+    const objectTreeOptions = asCompressibleObjectTreeOptions(options) || {};
+    return new CompressibleObjectTree(user, container, objectTreeDelegate, objectTreeRenderers, objectTreeOptions);
+  }
+  asTreeElement(node, viewStateContext) {
+    return {
+      incompressible: this.compressionDelegate.isIncompressible(node.element),
+      ...super.asTreeElement(node, viewStateContext)
+    };
+  }
+  getViewState() {
+    if (!this.identityProvider) {
+      throw new TreeError(this.user, "Can't get tree view state without an identity provider");
+    }
+    const getId = /* @__PURE__ */ __name((element) => this.identityProvider.getId(element).toString(), "getId");
+    const focus = this.getFocus().map(getId);
+    const selection = this.getSelection().map(getId);
+    const expanded = [];
+    const root = this.tree.getCompressedTreeNode();
+    const stack = [root];
+    while (stack.length > 0) {
+      const node = stack.pop();
+      if (node !== root && node.collapsible && !node.collapsed) {
+        for (const asyncNode of node.element.elements) {
+          expanded.push(getId(asyncNode.element));
+        }
+      }
+      stack.push(...node.children);
+    }
+    return { focus, selection, expanded, scrollTop: this.scrollTop };
+  }
+  render(node, viewStateContext, options) {
+    if (!this.identityProvider) {
+      return super.render(node, viewStateContext);
+    }
+    const getId = /* @__PURE__ */ __name((element) => this.identityProvider.getId(element).toString(), "getId");
+    const getUncompressedIds = /* @__PURE__ */ __name((nodes) => {
+      const result = /* @__PURE__ */ new Set();
+      for (const node2 of nodes) {
+        const compressedNode = this.tree.getCompressedTreeNode(node2 === this.root ? null : node2);
+        if (!compressedNode.element) {
+          continue;
+        }
+        for (const node3 of compressedNode.element.elements) {
+          result.add(getId(node3.element));
+        }
+      }
+      return result;
+    }, "getUncompressedIds");
+    const oldSelection = getUncompressedIds(this.tree.getSelection());
+    const oldFocus = getUncompressedIds(this.tree.getFocus());
+    super.render(node, viewStateContext, options);
+    const selection = this.getSelection();
+    let didChangeSelection = false;
+    const focus = this.getFocus();
+    let didChangeFocus = false;
+    const visit = /* @__PURE__ */ __name((node2) => {
+      const compressedNode = node2.element;
+      if (compressedNode) {
+        for (let i = 0; i < compressedNode.elements.length; i++) {
+          const id = getId(compressedNode.elements[i].element);
+          const element = compressedNode.elements[compressedNode.elements.length - 1].element;
+          if (oldSelection.has(id) && selection.indexOf(element) === -1) {
+            selection.push(element);
+            didChangeSelection = true;
+          }
+          if (oldFocus.has(id) && focus.indexOf(element) === -1) {
+            focus.push(element);
+            didChangeFocus = true;
+          }
+        }
+      }
+      node2.children.forEach(visit);
+    }, "visit");
+    visit(this.tree.getCompressedTreeNode(node === this.root ? null : node));
+    if (didChangeSelection) {
+      this.setSelection(selection);
+    }
+    if (didChangeFocus) {
+      this.setFocus(focus);
+    }
+  }
+  // For compressed async data trees, `TreeVisibility.Recurse` doesn't currently work
+  // and we have to filter everything beforehand
+  // Related to #85193 and #85835
+  processChildren(children) {
+    if (this.filter) {
+      children = Iterable.filter(children, (e) => {
+        const result = this.filter.filter(
+          e,
+          1
+          /* TreeVisibility.Visible */
+        );
+        const visibility = getVisibility(result);
+        if (visibility === 2) {
+          throw new Error("Recursive tree visibility not supported in async data compressed trees");
+        }
+        return visibility === 1;
+      });
+    }
+    return super.processChildren(children);
+  }
+  navigate(start) {
+    return super.navigate(start);
+  }
+}
+function getVisibility(filterResult) {
+  if (typeof filterResult === "boolean") {
+    return filterResult ? 1 : 0;
+  } else if (isFilterResult(filterResult)) {
+    return getVisibleState(filterResult.visibility);
+  } else {
+    return getVisibleState(filterResult);
+  }
+}
+__name(getVisibility, "getVisibility");
+class AsyncDataTreeNavigator {
+  static {
+    __name(this, "AsyncDataTreeNavigator");
+  }
+  constructor(navigator) {
+    this.navigator = navigator;
+  }
+  current() {
+    const current = this.navigator.current();
+    if (current === null) {
+      return null;
+    }
+    return current.element;
+  }
+  previous() {
+    this.navigator.previous();
+    return this.current();
+  }
+  first() {
+    this.navigator.first();
+    return this.current();
+  }
+  last() {
+    this.navigator.last();
+    return this.current();
+  }
+  next() {
+    this.navigator.next();
+    return this.current();
+  }
+}
+export {
+  AsyncDataTree,
+  CompressibleAsyncDataTree
+};
+//# sourceMappingURL=asyncDataTree.js.map

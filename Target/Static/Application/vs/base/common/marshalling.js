@@ -1,1 +1,62 @@
-import{$Ji as i}from"./buffer.js";import{URI as f}from"./uri.js";function u(r){return JSON.stringify(r,c)}function m(r){let e=JSON.parse(r);return e=n(e),e}function c(r,e){return e instanceof RegExp?{$mid:2,source:e.source,flags:e.flags}:e}function n(r,e=0){if(!r||e>200)return r;if("object"==typeof r){switch(r.$mid){case 1:return f.revive(r);case 2:return new RegExp(r.source,r.flags);case 17:return new Date(r.source)}if(r instanceof i||r instanceof Uint8Array)return r;if(Array.isArray(r))for(let t=0;t<r.length;++t)r[t]=n(r[t],e+1);else for(const t in r)Object.hasOwnProperty.call(r,t)&&(r[t]=n(r[t],e+1))}return r}export{u as $wm,m as $xm,n as $ym};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { VSBuffer } from "./buffer.js";
+import { URI } from "./uri.js";
+function stringify(obj) {
+  return JSON.stringify(obj, replacer);
+}
+__name(stringify, "stringify");
+function parse(text) {
+  let data = JSON.parse(text);
+  data = revive(data);
+  return data;
+}
+__name(parse, "parse");
+function replacer(key, value) {
+  if (value instanceof RegExp) {
+    return {
+      $mid: 2,
+      source: value.source,
+      flags: value.flags
+    };
+  }
+  return value;
+}
+__name(replacer, "replacer");
+function revive(obj, depth = 0) {
+  if (!obj || depth > 200) {
+    return obj;
+  }
+  if (typeof obj === "object") {
+    switch (obj.$mid) {
+      case 1:
+        return URI.revive(obj);
+      case 2:
+        return new RegExp(obj.source, obj.flags);
+      case 17:
+        return new Date(obj.source);
+    }
+    if (obj instanceof VSBuffer || obj instanceof Uint8Array) {
+      return obj;
+    }
+    if (Array.isArray(obj)) {
+      for (let i = 0; i < obj.length; ++i) {
+        obj[i] = revive(obj[i], depth + 1);
+      }
+    } else {
+      for (const key in obj) {
+        if (Object.hasOwnProperty.call(obj, key)) {
+          obj[key] = revive(obj[key], depth + 1);
+        }
+      }
+    }
+  }
+  return obj;
+}
+__name(revive, "revive");
+export {
+  parse,
+  revive,
+  stringify
+};
+//# sourceMappingURL=marshalling.js.map

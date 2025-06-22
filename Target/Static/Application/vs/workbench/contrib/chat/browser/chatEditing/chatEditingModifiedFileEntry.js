@@ -1,1 +1,248 @@
-import{$Yh as j}from"../../../../../base/common/async.js";import{$df as M}from"../../../../../base/common/event.js";import{$vd as U,$Ed as _,$wd as A,$td as C}from"../../../../../base/common/lifecycle.js";import{Schemas as I}from"../../../../../base/common/network.js";import{$nw as O}from"../../../../../base/common/numbers.js";import{autorun as l,derived as $,observableValue as f,observableValueOpts as B,transaction as v}from"../../../../../base/common/observable.js";import{localize as P}from"../../../../../nls.js";import{$El as N}from"../../../../../platform/configuration/common/configuration.js";import{$5j as V}from"../../../../../platform/files/common/files.js";import{$mj as z}from"../../../../../platform/instantiation/common/instantiation.js";import{$3db as H}from"../../../../../platform/observable/common/platformObservableUtils.js";import{$7p as T,$op as F,$tp as L}from"../../../../../platform/theme/common/colorRegistry.js";import{$YE as G}from"../../../../../platform/undoRedo/common/undoRedo.js";import{$7I as Y}from"../../../../services/filesConfiguration/common/filesConfigurationService.js";import{$LS as J}from"../../common/chatService.js";var b=function(r,t,e,s){var d=arguments.length,n=d<3?t:s===null?s=Object.getOwnPropertyDescriptor(t,e):s,o;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")n=Reflect.decorate(r,t,e,s);else for(var c=r.length-1;c>=0;c--)(o=r[c])&&(n=(d<3?o(n):d>3?o(t,e,n):o(t,e))||n);return d>3&&n&&Object.defineProperty(t,e,n),n},a=function(r,t){return function(e,s){t(e,s,r)}},u;class Q{constructor(t,e,s){this.total=t,this.remaining=e,this.cancel=s}}const ft=F("minimap.chatEditHighlight",L(T,.6),P(5291,null));let R=class extends U{static{u=this}static{this.scheme="modified-file-entry"}static{this.c=0}get telemetryInfo(){return this.D}get lastModifyingRequestId(){return this.D.requestId}constructor(t,e,s,d,n,o,c,D,q){super(),this.modifiedURI=t,this.D=e,this.F=n,this.G=o,this.H=c,this.I=D,this.J=q,this.entryId=`${u.scheme}::${++u.c}`,this.f=this.B(new M),this.onDidDelete=this.f.event,this.g=f(this,0),this.state=this.g,this.h=f(this,!1),this.waitsForLastEdits=this.h,this.j=f(this,void 0),this.isCurrentlyBeingModifiedBy=this.j,this.m=B({equalsFn:(i,h)=>i?.requestId===h?.requestId},void 0),this.lastModifyingResponse=this.m,this.n=this.m.map((i,h)=>i?.isInProgress.read(h)??!1),this.t=f(this,0),this.rewriteRatio=this.t,this.u=f(this,void 0),this.w=f(this,void 0),this.autoAcceptController=this.w,this.z=1,this.C=this.B(new j(()=>this.N("userModified"),1e3)),this.O=this.B(new _),s===0&&(this.createdInRequestId=this.D.requestId),this.modifiedURI.scheme!==I.untitled&&this.modifiedURI.scheme!==I.vscodeNotebookCell&&(this.B(this.H.watch(this.modifiedURI)),this.B(this.H.onDidFilesChange(i=>{i.affects(this.modifiedURI)&&s===0&&i.gotDeleted()&&this.f.fire()})));const y=H("chat.editing.autoAcceptDelay",0,d);this.y=$(i=>{const h=y.read(i);return O(h,0,100)}),this.reviewMode=$(i=>{const h=this.y.read(i);return this.u.read(i)??h===0}),this.q.add(C(()=>this.m.set(void 0,void 0)));const p=this.q.add(new A);this.q.add(l(i=>{this.h.read(i)?p.value=n.disableAutoSave(this.modifiedURI):p.clear()})),this.q.add(l(i=>{if(this.n.read(i)===!1&&!this.reviewMode.read(i)){const m=this.y.get()*1e3,S=Date.now()+m,g=()=>{if(this.reviewMode.get()){this.w.set(void 0,void 0);return}const w=Math.round(S-Date.now());if(w<=0)this.accept();else{const E=setTimeout(g,100);this.w.set(new Q(m,w,()=>{clearTimeout(E),this.w.set(void 0,void 0)}),void 0)}};g()}}))}dispose(){--this.z===0&&super.dispose()}acquire(){return this.z++,this}enableReviewModeUntilSettled(){this.u.set(!0,void 0);const t=l(e=>{this.state.read(e)!==0&&(this.q.delete(t),this.u.set(void 0,void 0))});this.q.add(t)}updateTelemetryInfo(t){this.D=t}async accept(){this.g.get()===0&&(await this.L(),v(t=>{this.g.set(1,t),this.w.set(void 0,t)}),this.N("accepted"))}async reject(){this.g.get()===0&&(this.N("rejected"),await this.M(),v(t=>{this.g.set(2,t),this.w.set(void 0,t)}))}N(t){this.G.notifyUserAction({action:{kind:"chatEditingSessionAction",uri:this.modifiedURI,hasRemainingEdits:!1,outcome:t},agentId:this.D.agentId,command:this.D.command,sessionId:this.D.sessionId,requestId:this.D.requestId,result:this.D.result})}getEditorIntegration(t){let e=this.O.get(t);return e||(e=this.P(t),this.O.set(t,e)),e}acceptStreamingEditsStart(t,e){this.S(e),this.j.set(t,e),this.m.set(t,e),this.w.get()?.cancel();const s=this.Q(t);s&&this.I.pushElement(s)}async acceptStreamingEditsEnd(){this.S(void 0),await this.R()&&await this.accept()}S(t){this.j.set(void 0,t),this.t.set(0,t),this.h.set(!1,t)}};R=u=b([a(3,N),a(4,Y),a(5,J),a(6,V),a(7,G),a(8,z)],R);export{ft as $Rfc,R as $Sfc};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { RunOnceScheduler } from "../../../../../base/common/async.js";
+import { Emitter } from "../../../../../base/common/event.js";
+import { Disposable, DisposableMap, MutableDisposable, toDisposable } from "../../../../../base/common/lifecycle.js";
+import { Schemas } from "../../../../../base/common/network.js";
+import { clamp } from "../../../../../base/common/numbers.js";
+import { autorun, derived, observableValue, observableValueOpts, transaction } from "../../../../../base/common/observable.js";
+import { localize } from "../../../../../nls.js";
+import { IConfigurationService } from "../../../../../platform/configuration/common/configuration.js";
+import { IFileService } from "../../../../../platform/files/common/files.js";
+import { IInstantiationService } from "../../../../../platform/instantiation/common/instantiation.js";
+import { observableConfigValue } from "../../../../../platform/observable/common/platformObservableUtils.js";
+import { editorBackground, registerColor, transparent } from "../../../../../platform/theme/common/colorRegistry.js";
+import { IUndoRedoService } from "../../../../../platform/undoRedo/common/undoRedo.js";
+import { IFilesConfigurationService } from "../../../../services/filesConfiguration/common/filesConfigurationService.js";
+import { IChatService } from "../../common/chatService.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+var AbstractChatEditingModifiedFileEntry_1;
+class AutoAcceptControl {
+  static {
+    __name(this, "AutoAcceptControl");
+  }
+  constructor(total, remaining, cancel) {
+    this.total = total;
+    this.remaining = remaining;
+    this.cancel = cancel;
+  }
+}
+const pendingRewriteMinimap = registerColor("minimap.chatEditHighlight", transparent(editorBackground, 0.6), localize("editorSelectionBackground", "Color of pending edit regions in the minimap"));
+let AbstractChatEditingModifiedFileEntry = class AbstractChatEditingModifiedFileEntry2 extends Disposable {
+  static {
+    __name(this, "AbstractChatEditingModifiedFileEntry");
+  }
+  static {
+    AbstractChatEditingModifiedFileEntry_1 = this;
+  }
+  static {
+    this.scheme = "modified-file-entry";
+  }
+  static {
+    this.lastEntryId = 0;
+  }
+  get telemetryInfo() {
+    return this._telemetryInfo;
+  }
+  get lastModifyingRequestId() {
+    return this._telemetryInfo.requestId;
+  }
+  constructor(modifiedURI, _telemetryInfo, kind, configService, _fileConfigService, _chatService, _fileService, _undoRedoService, _instantiationService) {
+    super();
+    this.modifiedURI = modifiedURI;
+    this._telemetryInfo = _telemetryInfo;
+    this._fileConfigService = _fileConfigService;
+    this._chatService = _chatService;
+    this._fileService = _fileService;
+    this._undoRedoService = _undoRedoService;
+    this._instantiationService = _instantiationService;
+    this.entryId = `${AbstractChatEditingModifiedFileEntry_1.scheme}::${++AbstractChatEditingModifiedFileEntry_1.lastEntryId}`;
+    this._onDidDelete = this._register(new Emitter());
+    this.onDidDelete = this._onDidDelete.event;
+    this._stateObs = observableValue(
+      this,
+      0
+      /* ModifiedFileEntryState.Modified */
+    );
+    this.state = this._stateObs;
+    this._waitsForLastEdits = observableValue(this, false);
+    this.waitsForLastEdits = this._waitsForLastEdits;
+    this._isCurrentlyBeingModifiedByObs = observableValue(this, void 0);
+    this.isCurrentlyBeingModifiedBy = this._isCurrentlyBeingModifiedByObs;
+    this._lastModifyingResponseObs = observableValueOpts({ equalsFn: /* @__PURE__ */ __name((a, b) => a?.requestId === b?.requestId, "equalsFn") }, void 0);
+    this.lastModifyingResponse = this._lastModifyingResponseObs;
+    this._lastModifyingResponseInProgressObs = this._lastModifyingResponseObs.map((value, r) => {
+      return value?.isInProgress.read(r) ?? false;
+    });
+    this._rewriteRatioObs = observableValue(this, 0);
+    this.rewriteRatio = this._rewriteRatioObs;
+    this._reviewModeTempObs = observableValue(this, void 0);
+    this._autoAcceptCtrl = observableValue(this, void 0);
+    this.autoAcceptController = this._autoAcceptCtrl;
+    this._refCounter = 1;
+    this._userEditScheduler = this._register(new RunOnceScheduler(() => this._notifyAction("userModified"), 1e3));
+    this._editorIntegrations = this._register(new DisposableMap());
+    if (kind === 0) {
+      this.createdInRequestId = this._telemetryInfo.requestId;
+    }
+    if (this.modifiedURI.scheme !== Schemas.untitled && this.modifiedURI.scheme !== Schemas.vscodeNotebookCell) {
+      this._register(this._fileService.watch(this.modifiedURI));
+      this._register(this._fileService.onDidFilesChange((e) => {
+        if (e.affects(this.modifiedURI) && kind === 0 && e.gotDeleted()) {
+          this._onDidDelete.fire();
+        }
+      }));
+    }
+    const autoAcceptRaw = observableConfigValue("chat.editing.autoAcceptDelay", 0, configService);
+    this._autoAcceptTimeout = derived((r) => {
+      const value = autoAcceptRaw.read(r);
+      return clamp(value, 0, 100);
+    });
+    this.reviewMode = derived((r) => {
+      const configuredValue = this._autoAcceptTimeout.read(r);
+      const tempValue = this._reviewModeTempObs.read(r);
+      return tempValue ?? configuredValue === 0;
+    });
+    this._store.add(toDisposable(() => this._lastModifyingResponseObs.set(void 0, void 0)));
+    const autoSaveOff = this._store.add(new MutableDisposable());
+    this._store.add(autorun((r) => {
+      if (this._waitsForLastEdits.read(r)) {
+        autoSaveOff.value = _fileConfigService.disableAutoSave(this.modifiedURI);
+      } else {
+        autoSaveOff.clear();
+      }
+    }));
+    this._store.add(autorun((r) => {
+      const inProgress = this._lastModifyingResponseInProgressObs.read(r);
+      if (inProgress === false && !this.reviewMode.read(r)) {
+        const acceptTimeout = this._autoAcceptTimeout.get() * 1e3;
+        const future = Date.now() + acceptTimeout;
+        const update = /* @__PURE__ */ __name(() => {
+          const reviewMode = this.reviewMode.get();
+          if (reviewMode) {
+            this._autoAcceptCtrl.set(void 0, void 0);
+            return;
+          }
+          const remain = Math.round(future - Date.now());
+          if (remain <= 0) {
+            this.accept();
+          } else {
+            const handle = setTimeout(update, 100);
+            this._autoAcceptCtrl.set(new AutoAcceptControl(acceptTimeout, remain, () => {
+              clearTimeout(handle);
+              this._autoAcceptCtrl.set(void 0, void 0);
+            }), void 0);
+          }
+        }, "update");
+        update();
+      }
+    }));
+  }
+  dispose() {
+    if (--this._refCounter === 0) {
+      super.dispose();
+    }
+  }
+  acquire() {
+    this._refCounter++;
+    return this;
+  }
+  enableReviewModeUntilSettled() {
+    this._reviewModeTempObs.set(true, void 0);
+    const cleanup = autorun((r) => {
+      const resetConfig = this.state.read(r) !== 0;
+      if (resetConfig) {
+        this._store.delete(cleanup);
+        this._reviewModeTempObs.set(void 0, void 0);
+      }
+    });
+    this._store.add(cleanup);
+  }
+  updateTelemetryInfo(telemetryInfo) {
+    this._telemetryInfo = telemetryInfo;
+  }
+  async accept() {
+    if (this._stateObs.get() !== 0) {
+      return;
+    }
+    await this._doAccept();
+    transaction((tx) => {
+      this._stateObs.set(1, tx);
+      this._autoAcceptCtrl.set(void 0, tx);
+    });
+    this._notifyAction("accepted");
+  }
+  async reject() {
+    if (this._stateObs.get() !== 0) {
+      return;
+    }
+    this._notifyAction("rejected");
+    await this._doReject();
+    transaction((tx) => {
+      this._stateObs.set(2, tx);
+      this._autoAcceptCtrl.set(void 0, tx);
+    });
+  }
+  _notifyAction(outcome) {
+    this._chatService.notifyUserAction({
+      action: { kind: "chatEditingSessionAction", uri: this.modifiedURI, hasRemainingEdits: false, outcome },
+      agentId: this._telemetryInfo.agentId,
+      command: this._telemetryInfo.command,
+      sessionId: this._telemetryInfo.sessionId,
+      requestId: this._telemetryInfo.requestId,
+      result: this._telemetryInfo.result
+    });
+  }
+  getEditorIntegration(pane) {
+    let value = this._editorIntegrations.get(pane);
+    if (!value) {
+      value = this._createEditorIntegration(pane);
+      this._editorIntegrations.set(pane, value);
+    }
+    return value;
+  }
+  acceptStreamingEditsStart(responseModel, tx) {
+    this._resetEditsState(tx);
+    this._isCurrentlyBeingModifiedByObs.set(responseModel, tx);
+    this._lastModifyingResponseObs.set(responseModel, tx);
+    this._autoAcceptCtrl.get()?.cancel();
+    const undoRedoElement = this._createUndoRedoElement(responseModel);
+    if (undoRedoElement) {
+      this._undoRedoService.pushElement(undoRedoElement);
+    }
+  }
+  async acceptStreamingEditsEnd() {
+    this._resetEditsState(void 0);
+    if (await this._areOriginalAndModifiedIdentical()) {
+      await this.accept();
+    }
+  }
+  _resetEditsState(tx) {
+    this._isCurrentlyBeingModifiedByObs.set(void 0, tx);
+    this._rewriteRatioObs.set(0, tx);
+    this._waitsForLastEdits.set(false, tx);
+  }
+};
+AbstractChatEditingModifiedFileEntry = AbstractChatEditingModifiedFileEntry_1 = __decorate([
+  __param(3, IConfigurationService),
+  __param(4, IFilesConfigurationService),
+  __param(5, IChatService),
+  __param(6, IFileService),
+  __param(7, IUndoRedoService),
+  __param(8, IInstantiationService)
+], AbstractChatEditingModifiedFileEntry);
+export {
+  AbstractChatEditingModifiedFileEntry,
+  pendingRewriteMinimap
+};
+//# sourceMappingURL=chatEditingModifiedFileEntry.js.map

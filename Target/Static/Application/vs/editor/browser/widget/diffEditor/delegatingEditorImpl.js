@@ -1,1 +1,119 @@
-import{$df as s}from"../../../../base/common/event.js";import{$vd as o}from"../../../../base/common/lifecycle.js";class r extends o{constructor(){super(...arguments),this.b=++r.a,this.f=this.B(new s),this.onDidDispose=this.f.event}static{this.a=0}getId(){return this.getEditorType()+":v2:"+this.b}getVisibleColumnFromPosition(e){return this.g.getVisibleColumnFromPosition(e)}getStatusbarColumn(e){return this.g.getStatusbarColumn(e)}getPosition(){return this.g.getPosition()}setPosition(e,t="api"){this.g.setPosition(e,t)}revealLine(e,t=0){this.g.revealLine(e,t)}revealLineInCenter(e,t=0){this.g.revealLineInCenter(e,t)}revealLineInCenterIfOutsideViewport(e,t=0){this.g.revealLineInCenterIfOutsideViewport(e,t)}revealLineNearTop(e,t=0){this.g.revealLineNearTop(e,t)}revealPosition(e,t=0){this.g.revealPosition(e,t)}revealPositionInCenter(e,t=0){this.g.revealPositionInCenter(e,t)}revealPositionInCenterIfOutsideViewport(e,t=0){this.g.revealPositionInCenterIfOutsideViewport(e,t)}revealPositionNearTop(e,t=0){this.g.revealPositionNearTop(e,t)}getSelection(){return this.g.getSelection()}getSelections(){return this.g.getSelections()}setSelection(e,t="api"){this.g.setSelection(e,t)}setSelections(e,t="api"){this.g.setSelections(e,t)}revealLines(e,t,i=0){this.g.revealLines(e,t,i)}revealLinesInCenter(e,t,i=0){this.g.revealLinesInCenter(e,t,i)}revealLinesInCenterIfOutsideViewport(e,t,i=0){this.g.revealLinesInCenterIfOutsideViewport(e,t,i)}revealLinesNearTop(e,t,i=0){this.g.revealLinesNearTop(e,t,i)}revealRange(e,t=0,i=!1,r=!0){this.g.revealRange(e,t,i,r)}revealRangeInCenter(e,t=0){this.g.revealRangeInCenter(e,t)}revealRangeInCenterIfOutsideViewport(e,t=0){this.g.revealRangeInCenterIfOutsideViewport(e,t)}revealRangeNearTop(e,t=0){this.g.revealRangeNearTop(e,t)}revealRangeNearTopIfOutsideViewport(e,t=0){this.g.revealRangeNearTopIfOutsideViewport(e,t)}revealRangeAtTop(e,t=0){this.g.revealRangeAtTop(e,t)}getSupportedActions(){return this.g.getSupportedActions()}focus(){this.g.focus()}trigger(e,t,i){this.g.trigger(e,t,i)}createDecorationsCollection(e){return this.g.createDecorationsCollection(e)}changeDecorations(e){return this.g.changeDecorations(e)}}export{r as $Jfb};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { Emitter } from "../../../../base/common/event.js";
+import { Disposable } from "../../../../base/common/lifecycle.js";
+class DelegatingEditor extends Disposable {
+  static {
+    __name(this, "DelegatingEditor");
+  }
+  constructor() {
+    super(...arguments);
+    this._id = ++DelegatingEditor.idCounter;
+    this._onDidDispose = this._register(new Emitter());
+    this.onDidDispose = this._onDidDispose.event;
+  }
+  static {
+    this.idCounter = 0;
+  }
+  getId() {
+    return this.getEditorType() + ":v2:" + this._id;
+  }
+  // #region editorBrowser.IDiffEditor: Delegating to modified Editor
+  getVisibleColumnFromPosition(position) {
+    return this._targetEditor.getVisibleColumnFromPosition(position);
+  }
+  getStatusbarColumn(position) {
+    return this._targetEditor.getStatusbarColumn(position);
+  }
+  getPosition() {
+    return this._targetEditor.getPosition();
+  }
+  setPosition(position, source = "api") {
+    this._targetEditor.setPosition(position, source);
+  }
+  revealLine(lineNumber, scrollType = 0) {
+    this._targetEditor.revealLine(lineNumber, scrollType);
+  }
+  revealLineInCenter(lineNumber, scrollType = 0) {
+    this._targetEditor.revealLineInCenter(lineNumber, scrollType);
+  }
+  revealLineInCenterIfOutsideViewport(lineNumber, scrollType = 0) {
+    this._targetEditor.revealLineInCenterIfOutsideViewport(lineNumber, scrollType);
+  }
+  revealLineNearTop(lineNumber, scrollType = 0) {
+    this._targetEditor.revealLineNearTop(lineNumber, scrollType);
+  }
+  revealPosition(position, scrollType = 0) {
+    this._targetEditor.revealPosition(position, scrollType);
+  }
+  revealPositionInCenter(position, scrollType = 0) {
+    this._targetEditor.revealPositionInCenter(position, scrollType);
+  }
+  revealPositionInCenterIfOutsideViewport(position, scrollType = 0) {
+    this._targetEditor.revealPositionInCenterIfOutsideViewport(position, scrollType);
+  }
+  revealPositionNearTop(position, scrollType = 0) {
+    this._targetEditor.revealPositionNearTop(position, scrollType);
+  }
+  getSelection() {
+    return this._targetEditor.getSelection();
+  }
+  getSelections() {
+    return this._targetEditor.getSelections();
+  }
+  setSelection(something, source = "api") {
+    this._targetEditor.setSelection(something, source);
+  }
+  setSelections(ranges, source = "api") {
+    this._targetEditor.setSelections(ranges, source);
+  }
+  revealLines(startLineNumber, endLineNumber, scrollType = 0) {
+    this._targetEditor.revealLines(startLineNumber, endLineNumber, scrollType);
+  }
+  revealLinesInCenter(startLineNumber, endLineNumber, scrollType = 0) {
+    this._targetEditor.revealLinesInCenter(startLineNumber, endLineNumber, scrollType);
+  }
+  revealLinesInCenterIfOutsideViewport(startLineNumber, endLineNumber, scrollType = 0) {
+    this._targetEditor.revealLinesInCenterIfOutsideViewport(startLineNumber, endLineNumber, scrollType);
+  }
+  revealLinesNearTop(startLineNumber, endLineNumber, scrollType = 0) {
+    this._targetEditor.revealLinesNearTop(startLineNumber, endLineNumber, scrollType);
+  }
+  revealRange(range, scrollType = 0, revealVerticalInCenter = false, revealHorizontal = true) {
+    this._targetEditor.revealRange(range, scrollType, revealVerticalInCenter, revealHorizontal);
+  }
+  revealRangeInCenter(range, scrollType = 0) {
+    this._targetEditor.revealRangeInCenter(range, scrollType);
+  }
+  revealRangeInCenterIfOutsideViewport(range, scrollType = 0) {
+    this._targetEditor.revealRangeInCenterIfOutsideViewport(range, scrollType);
+  }
+  revealRangeNearTop(range, scrollType = 0) {
+    this._targetEditor.revealRangeNearTop(range, scrollType);
+  }
+  revealRangeNearTopIfOutsideViewport(range, scrollType = 0) {
+    this._targetEditor.revealRangeNearTopIfOutsideViewport(range, scrollType);
+  }
+  revealRangeAtTop(range, scrollType = 0) {
+    this._targetEditor.revealRangeAtTop(range, scrollType);
+  }
+  getSupportedActions() {
+    return this._targetEditor.getSupportedActions();
+  }
+  focus() {
+    this._targetEditor.focus();
+  }
+  trigger(source, handlerId, payload) {
+    this._targetEditor.trigger(source, handlerId, payload);
+  }
+  createDecorationsCollection(decorations) {
+    return this._targetEditor.createDecorationsCollection(decorations);
+  }
+  changeDecorations(callback) {
+    return this._targetEditor.changeDecorations(callback);
+  }
+}
+export {
+  DelegatingEditor
+};
+//# sourceMappingURL=delegatingEditorImpl.js.map

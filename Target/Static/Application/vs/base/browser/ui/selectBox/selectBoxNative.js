@@ -1,1 +1,146 @@
-import*as h from"../../dom.js";import{EventType as a,$l7 as r}from"../../touch.js";import*as l from"../../../common/arrays.js";import{$df as o}from"../../../common/event.js";import{$vd as c}from"../../../common/lifecycle.js";import{$n as n}from"../../../common/platform.js";class y extends c{constructor(t,s,i,e){super(),this.f=0,this.b=e||Object.create(null),this.c=[],this.a=document.createElement("select"),this.a.className="monaco-select-box",typeof this.b.ariaLabel=="string"&&this.a.setAttribute("aria-label",this.b.ariaLabel),typeof this.b.ariaDescription=="string"&&this.a.setAttribute("aria-description",this.b.ariaDescription),this.g=this.B(new o),this.h=i,this.j(),this.setOptions(t,s)}j(){this.B(r.addTarget(this.a)),[a.Tap].forEach(t=>{this.B(h.$J5(this.a,t,s=>{this.a.focus()}))}),this.B(h.$K5(this.a,"click",t=>{h.$H6.stop(t,!0)})),this.B(h.$K5(this.a,"change",t=>{this.a.title=t.target.value,this.g.fire({index:t.target.selectedIndex,selected:t.target.value})})),this.B(h.$K5(this.a,"keydown",t=>{let s=!1;n?(t.keyCode===18||t.keyCode===16||t.keyCode===10)&&(s=!0):(t.keyCode===18&&t.altKey||t.keyCode===10||t.keyCode===3)&&(s=!0),s&&t.stopPropagation()}))}get onDidSelect(){return this.g.event}setOptions(t,s){(!this.c||!l.$Sb(this.c,t))&&(this.c=t,this.a.options.length=0,this.c.forEach((i,e)=>{this.a.add(this.m(i.text,e,i.isDisabled))})),s!==void 0&&this.select(s)}select(t){this.c.length===0?this.f=0:t>=0&&t<this.c.length?this.f=t:t>this.c.length-1?this.select(this.c.length-1):this.f<0&&(this.f=0),this.a.selectedIndex=this.f,this.f<this.c.length&&typeof this.c[this.f].text=="string"?this.a.title=this.c[this.f].text:this.a.title=""}setAriaLabel(t){this.b.ariaLabel=t,this.a.setAttribute("aria-label",t)}focus(){this.a&&(this.a.tabIndex=0,this.a.focus())}blur(){this.a&&(this.a.tabIndex=-1,this.a.blur())}setEnabled(t){this.a.disabled=!t}setFocusable(t){this.a.tabIndex=t?0:-1}render(t){t.classList.add("select-container"),t.appendChild(this.a),this.setOptions(this.c,this.f),this.applyStyles()}style(t){this.h=t,this.applyStyles()}applyStyles(){this.a&&(this.a.style.backgroundColor=this.h.selectBackground??"",this.a.style.color=this.h.selectForeground??"",this.a.style.borderColor=this.h.selectBorder??"")}m(t,s,i){const e=document.createElement("option");return e.value=t,e.text=t,e.disabled=!!i,e}}export{y as $O8};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import * as dom from "../../dom.js";
+import { EventType, Gesture } from "../../touch.js";
+import * as arrays from "../../../common/arrays.js";
+import { Emitter } from "../../../common/event.js";
+import { Disposable } from "../../../common/lifecycle.js";
+import { isMacintosh } from "../../../common/platform.js";
+class SelectBoxNative extends Disposable {
+  static {
+    __name(this, "SelectBoxNative");
+  }
+  constructor(options, selected, styles, selectBoxOptions) {
+    super();
+    this.selected = 0;
+    this.selectBoxOptions = selectBoxOptions || /* @__PURE__ */ Object.create(null);
+    this.options = [];
+    this.selectElement = document.createElement("select");
+    this.selectElement.className = "monaco-select-box";
+    if (typeof this.selectBoxOptions.ariaLabel === "string") {
+      this.selectElement.setAttribute("aria-label", this.selectBoxOptions.ariaLabel);
+    }
+    if (typeof this.selectBoxOptions.ariaDescription === "string") {
+      this.selectElement.setAttribute("aria-description", this.selectBoxOptions.ariaDescription);
+    }
+    this._onDidSelect = this._register(new Emitter());
+    this.styles = styles;
+    this.registerListeners();
+    this.setOptions(options, selected);
+  }
+  registerListeners() {
+    this._register(Gesture.addTarget(this.selectElement));
+    [EventType.Tap].forEach((eventType) => {
+      this._register(dom.addDisposableListener(this.selectElement, eventType, (e) => {
+        this.selectElement.focus();
+      }));
+    });
+    this._register(dom.addStandardDisposableListener(this.selectElement, "click", (e) => {
+      dom.EventHelper.stop(e, true);
+    }));
+    this._register(dom.addStandardDisposableListener(this.selectElement, "change", (e) => {
+      this.selectElement.title = e.target.value;
+      this._onDidSelect.fire({
+        index: e.target.selectedIndex,
+        selected: e.target.value
+      });
+    }));
+    this._register(dom.addStandardDisposableListener(this.selectElement, "keydown", (e) => {
+      let showSelect = false;
+      if (isMacintosh) {
+        if (e.keyCode === 18 || e.keyCode === 16 || e.keyCode === 10) {
+          showSelect = true;
+        }
+      } else {
+        if (e.keyCode === 18 && e.altKey || e.keyCode === 10 || e.keyCode === 3) {
+          showSelect = true;
+        }
+      }
+      if (showSelect) {
+        e.stopPropagation();
+      }
+    }));
+  }
+  get onDidSelect() {
+    return this._onDidSelect.event;
+  }
+  setOptions(options, selected) {
+    if (!this.options || !arrays.equals(this.options, options)) {
+      this.options = options;
+      this.selectElement.options.length = 0;
+      this.options.forEach((option, index) => {
+        this.selectElement.add(this.createOption(option.text, index, option.isDisabled));
+      });
+    }
+    if (selected !== void 0) {
+      this.select(selected);
+    }
+  }
+  select(index) {
+    if (this.options.length === 0) {
+      this.selected = 0;
+    } else if (index >= 0 && index < this.options.length) {
+      this.selected = index;
+    } else if (index > this.options.length - 1) {
+      this.select(this.options.length - 1);
+    } else if (this.selected < 0) {
+      this.selected = 0;
+    }
+    this.selectElement.selectedIndex = this.selected;
+    if (this.selected < this.options.length && typeof this.options[this.selected].text === "string") {
+      this.selectElement.title = this.options[this.selected].text;
+    } else {
+      this.selectElement.title = "";
+    }
+  }
+  setAriaLabel(label) {
+    this.selectBoxOptions.ariaLabel = label;
+    this.selectElement.setAttribute("aria-label", label);
+  }
+  focus() {
+    if (this.selectElement) {
+      this.selectElement.tabIndex = 0;
+      this.selectElement.focus();
+    }
+  }
+  blur() {
+    if (this.selectElement) {
+      this.selectElement.tabIndex = -1;
+      this.selectElement.blur();
+    }
+  }
+  setEnabled(enable) {
+    this.selectElement.disabled = !enable;
+  }
+  setFocusable(focusable) {
+    this.selectElement.tabIndex = focusable ? 0 : -1;
+  }
+  render(container) {
+    container.classList.add("select-container");
+    container.appendChild(this.selectElement);
+    this.setOptions(this.options, this.selected);
+    this.applyStyles();
+  }
+  style(styles) {
+    this.styles = styles;
+    this.applyStyles();
+  }
+  applyStyles() {
+    if (this.selectElement) {
+      this.selectElement.style.backgroundColor = this.styles.selectBackground ?? "";
+      this.selectElement.style.color = this.styles.selectForeground ?? "";
+      this.selectElement.style.borderColor = this.styles.selectBorder ?? "";
+    }
+  }
+  createOption(value, index, disabled) {
+    const option = document.createElement("option");
+    option.value = value;
+    option.text = value;
+    option.disabled = !!disabled;
+    return option;
+  }
+}
+export {
+  SelectBoxNative
+};
+//# sourceMappingURL=selectBoxNative.js.map

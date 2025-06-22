@@ -1,1 +1,505 @@
-import{$DM as C}from"./comparers.js";import{$Bj as Y,$Ej as J,$vj as K,$sj as X}from"./filters.js";import{$$m as y}from"./hash.js";import{sep as S}from"./path.js";import{$o as Z,$m as q}from"./platform.js";import{$5f as tt,$Lf as et}from"./strings.js";const x=0,H=[0,[]];function w(t,e,n,r){if(!t||!e)return H;const a=t.length,o=e.length;if(a<o)return H;const s=t.toLowerCase();return nt(e,n,o,t,s,a,r)}function nt(t,e,n,r,a,o,s){const c=[],i=[];for(let l=0;l<n;l++){const n=l*o,h=n-o,u=l>0,f=t[l],d=e[l];for(let t=0;t<o;t++){const o=t>0,l=n+t,g=h+t-1,p=o?c[l-1]:0,m=u&&o?c[g]:0,M=u&&o?i[g]:0;let z;z=!m&&u?0:rt(f,d,r,a,t,M),z&&m+z>=p&&(s||u||a.startsWith(e,t))?(i[l]=M+1,c[l]=m+z):(i[l]=0,c[l]=p)}}const l=[];let h=n-1,u=o-1;for(;h>=0&&u>=0;){0===i[h*o+u]||(l.push(u),h--),u--}return[c[n*o-1],l.reverse()]}function rt(t,e,n,r,a,o){let s=0;if(!ot(e,r[a]))return s;if(s+=1,o>0&&(s+=5*o),t===n[a]&&(s+=1),0===a)s+=8;else{const t=ct(n.charCodeAt(a-1));t?s+=t:K(n.charCodeAt(a))&&0===o&&(s+=2)}return s}function ot(t,e){return t===e||("/"===t||"\\"===t)&&("/"===e||"\\"===e)}function ct(t){switch(t){case 47:case 92:return 5;case 95:case 45:case 46:case 32:case 39:case 34:case 58:return 4;default:return 0}}const W=[void 0,[]];function Lt(t,e,n=0,r=0){const a=e;return a.values&&a.values.length>1?at(t,a.values,n,r):G(t,e,n,r)}function at(t,e,n,r){let a=0;const o=[];for(const s of e){const[e,c]=G(t,s,n,r);if("number"!=typeof e)return W;a+=e,o.push(...c)}return[a,D(o)]}function G(t,e,n,r){const a=J(e.original,e.originalLowercase,n,t,t.toLowerCase(),r,{firstMatchCanBeWeak:!0,boostFullMatch:!0});return a?[a[0],Y(a)]:W}const I=Object.freeze({score:0}),L=1<<18,A=1<<17,$=65536;function it(t,e,n,r){const a=r.values?r.values:[r];return y({[r.normalized]:{values:a.map((t=>({value:t.normalized,expectContiguousMatch:t.expectContiguousMatch}))),label:t,description:e,allowNonContiguousMatches:n}})}function R(t,e,n,r,a){if(!t||!e.normalized)return I;const o=r.getItemLabel(t);if(!o)return I;const s=r.getItemDescription(t),c=it(o,s,n,e),i=a[c];if(i)return i;const l=st(o,s,r.getItemPath(t),e,n);return a[c]=l,l}function st(t,e,n,r,a){const o=!n||!r.containsPathSeparator;return n&&(Z?r.pathNormalized===n:tt(r.pathNormalized,n))?{score:L,labelMatch:[{start:0,end:t.length}],descriptionMatch:e?[{start:0,end:e.length}]:void 0}:r.values&&r.values.length>1?lt(t,e,n,r.values,o,a):Q(t,e,n,r,o,a)}function lt(t,e,n,r,a,o){let s=0;const c=[],i=[];for(const l of r){const{score:r,labelMatch:h,descriptionMatch:u}=Q(t,e,n,l,a,o);if(0===r)return I;s+=r,h&&c.push(...h),u&&i.push(...u)}return{score:s,labelMatch:D(c),descriptionMatch:D(i)}}function Q(t,e,n,r,a,o){if(a||!e){const[e,n]=w(t,r.normalized,r.normalizedLowercase,o&&!r.expectContiguousMatch);if(e){const a=X(r.normalized,t);let o;if(a){o=A;o+=Math.round(r.normalized.length/t.length*100)}else o=$;return{score:o+e,labelMatch:a||F(n)}}}if(e){let a=e;n&&(a=`${e}${S}`);const s=a.length,c=`${a}${t}`,[i,l]=w(c,r.normalized,r.normalizedLowercase,o&&!r.expectContiguousMatch);if(i){const t=F(l),e=[],n=[];return t.forEach((t=>{t.start<s&&t.end>s?(e.push({start:0,end:t.end-s}),n.push({start:t.start,end:s})):t.start>=s?e.push({start:t.start-s,end:t.end-s}):n.push(t)})),{score:i,labelMatch:e,descriptionMatch:n}}}return I}function F(t){const e=[];if(!t)return e;let n;for(const r of t)n&&n.end===r?n.end+=1:(n={start:r,end:r+1},e.push(n));return e}function D(t){const e=t.sort(((t,e)=>t.start-e.start)),n=[];let r;for(const t of e)r&&ft(r,t)?(r.start=Math.min(r.start,t.start),r.end=Math.max(r.end,t.end)):(r=t,n.push(t));return n}function ft(t,e){return!(t.end<e.start||e.end<t.start)}function St(t,e,n,r,a,o){const s=R(t,n,r,a,o),c=R(e,n,r,a,o),i=s.score,l=c.score;if((i===L||l===L)&&i!==l)return i===L?-1:1;if(i>$||l>$){if(i!==l)return i>l?-1:1;if(i<A&&l<A){const t=ht(s.labelMatch,c.labelMatch);if(0!==t)return t}const n=a.getItemLabel(t)||"",r=a.getItemLabel(e)||"";if(n.length!==r.length)return n.length-r.length}if(i!==l)return i>l?-1:1;const h=Array.isArray(s.labelMatch)&&s.labelMatch.length>0,u=Array.isArray(c.labelMatch)&&c.labelMatch.length>0;if(h&&!u)return-1;if(u&&!h)return 1;const f=N(t,s,a),d=N(e,c,a);return f&&d&&f!==d?d>f?-1:1:ut(t,e,n,a)}function N(t,e,n){let r=-1,a=-1;if(e.descriptionMatch&&e.descriptionMatch.length?r=e.descriptionMatch[0].start:e.labelMatch&&e.labelMatch.length&&(r=e.labelMatch[0].start),e.labelMatch&&e.labelMatch.length){if(a=e.labelMatch[e.labelMatch.length-1].end,e.descriptionMatch&&e.descriptionMatch.length){const e=n.getItemDescription(t);e&&(a+=e.length)}}else e.descriptionMatch&&e.descriptionMatch.length&&(a=e.descriptionMatch[e.descriptionMatch.length-1].end);return a-r}function ht(t,e){if(!((t||e)&&(t&&t.length||e&&e.length)))return 0;if(!e||!e.length)return-1;if(!t||!t.length)return 1;const n=t[0].start,r=t[t.length-1].end-n,a=e[0].start,o=e[e.length-1].end-a;return r===o?0:o<r?1:-1}function ut(t,e,n,r){const a=r.getItemLabel(t)||"",o=r.getItemLabel(e)||"",s=r.getItemDescription(t),c=r.getItemDescription(e),i=a.length+(s?s.length:0),l=o.length+(c?c.length:0);if(i!==l)return i-l;const h=r.getItemPath(t),u=r.getItemPath(e);return h&&u&&h.length!==u.length?h.length-u.length:a!==o?C(a,o,n.normalized):s&&c&&s!==c?C(s,c,n.normalized):h&&u&&h!==u?C(h,u,n.normalized):0}function T(t){return t.startsWith('"')&&t.endsWith('"')}const U=" ";function B(t){"string"!=typeof t&&(t="");const e=t.toLowerCase(),{pathNormalized:n,normalized:r,normalizedLowercase:a}=j(t),o=n.indexOf(S)>=0,s=T(t);let c;const i=t.split(U);if(i.length>1)for(const t of i){const e=T(t),{pathNormalized:n,normalized:r,normalizedLowercase:a}=j(t);r&&(c||(c=[]),c.push({original:t,originalLowercase:t.toLowerCase(),pathNormalized:n,normalized:r,normalizedLowercase:a,expectContiguousMatch:e}))}return{original:t,originalLowercase:e,pathNormalized:n,normalized:r,normalizedLowercase:a,values:c,containsPathSeparator:o,expectContiguousMatch:s}}function j(t){let e;e=q?t.replace(/\//g,S):t.replace(/\\/g,S);const n=et(e).replace(/\s|"/g,"");return{pathNormalized:e,normalized:n,normalizedLowercase:n.toLowerCase()}}function xt(t){return Array.isArray(t)?B(t.map((t=>t.original)).join(U)):B(t.original)}export{w as $FM,Lt as $GM,R as $HM,St as $IM,B as $JM,xt as $KM};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { compareAnything } from "./comparers.js";
+import { createMatches as createFuzzyMatches, fuzzyScore, isUpper, matchesPrefix } from "./filters.js";
+import { hash } from "./hash.js";
+import { sep } from "./path.js";
+import { isLinux, isWindows } from "./platform.js";
+import { equalsIgnoreCase, stripWildcards } from "./strings.js";
+const NO_MATCH = 0;
+const NO_SCORE = [NO_MATCH, []];
+function scoreFuzzy(target, query, queryLower, allowNonContiguousMatches) {
+  if (!target || !query) {
+    return NO_SCORE;
+  }
+  const targetLength = target.length;
+  const queryLength = query.length;
+  if (targetLength < queryLength) {
+    return NO_SCORE;
+  }
+  const targetLower = target.toLowerCase();
+  const res = doScoreFuzzy(query, queryLower, queryLength, target, targetLower, targetLength, allowNonContiguousMatches);
+  return res;
+}
+__name(scoreFuzzy, "scoreFuzzy");
+function doScoreFuzzy(query, queryLower, queryLength, target, targetLower, targetLength, allowNonContiguousMatches) {
+  const scores = [];
+  const matches = [];
+  for (let queryIndex2 = 0; queryIndex2 < queryLength; queryIndex2++) {
+    const queryIndexOffset = queryIndex2 * targetLength;
+    const queryIndexPreviousOffset = queryIndexOffset - targetLength;
+    const queryIndexGtNull = queryIndex2 > 0;
+    const queryCharAtIndex = query[queryIndex2];
+    const queryLowerCharAtIndex = queryLower[queryIndex2];
+    for (let targetIndex2 = 0; targetIndex2 < targetLength; targetIndex2++) {
+      const targetIndexGtNull = targetIndex2 > 0;
+      const currentIndex = queryIndexOffset + targetIndex2;
+      const leftIndex = currentIndex - 1;
+      const diagIndex = queryIndexPreviousOffset + targetIndex2 - 1;
+      const leftScore = targetIndexGtNull ? scores[leftIndex] : 0;
+      const diagScore = queryIndexGtNull && targetIndexGtNull ? scores[diagIndex] : 0;
+      const matchesSequenceLength = queryIndexGtNull && targetIndexGtNull ? matches[diagIndex] : 0;
+      let score;
+      if (!diagScore && queryIndexGtNull) {
+        score = 0;
+      } else {
+        score = computeCharScore(queryCharAtIndex, queryLowerCharAtIndex, target, targetLower, targetIndex2, matchesSequenceLength);
+      }
+      const isValidScore = score && diagScore + score >= leftScore;
+      if (isValidScore && // We don't need to check if it's contiguous if we allow non-contiguous matches
+      (allowNonContiguousMatches || // We must be looking for a contiguous match.
+      // Looking at an index higher than 0 in the query means we must have already
+      // found out this is contiguous otherwise there wouldn't have been a score
+      queryIndexGtNull || // lastly check if the query is completely contiguous at this index in the target
+      targetLower.startsWith(queryLower, targetIndex2))) {
+        matches[currentIndex] = matchesSequenceLength + 1;
+        scores[currentIndex] = diagScore + score;
+      } else {
+        matches[currentIndex] = NO_MATCH;
+        scores[currentIndex] = leftScore;
+      }
+    }
+  }
+  const positions = [];
+  let queryIndex = queryLength - 1;
+  let targetIndex = targetLength - 1;
+  while (queryIndex >= 0 && targetIndex >= 0) {
+    const currentIndex = queryIndex * targetLength + targetIndex;
+    const match = matches[currentIndex];
+    if (match === NO_MATCH) {
+      targetIndex--;
+    } else {
+      positions.push(targetIndex);
+      queryIndex--;
+      targetIndex--;
+    }
+  }
+  return [scores[queryLength * targetLength - 1], positions.reverse()];
+}
+__name(doScoreFuzzy, "doScoreFuzzy");
+function computeCharScore(queryCharAtIndex, queryLowerCharAtIndex, target, targetLower, targetIndex, matchesSequenceLength) {
+  let score = 0;
+  if (!considerAsEqual(queryLowerCharAtIndex, targetLower[targetIndex])) {
+    return score;
+  }
+  score += 1;
+  if (matchesSequenceLength > 0) {
+    score += matchesSequenceLength * 5;
+  }
+  if (queryCharAtIndex === target[targetIndex]) {
+    score += 1;
+  }
+  if (targetIndex === 0) {
+    score += 8;
+  } else {
+    const separatorBonus = scoreSeparatorAtPos(target.charCodeAt(targetIndex - 1));
+    if (separatorBonus) {
+      score += separatorBonus;
+    } else if (isUpper(target.charCodeAt(targetIndex)) && matchesSequenceLength === 0) {
+      score += 2;
+    }
+  }
+  return score;
+}
+__name(computeCharScore, "computeCharScore");
+function considerAsEqual(a, b) {
+  if (a === b) {
+    return true;
+  }
+  if (a === "/" || a === "\\") {
+    return b === "/" || b === "\\";
+  }
+  return false;
+}
+__name(considerAsEqual, "considerAsEqual");
+function scoreSeparatorAtPos(charCode) {
+  switch (charCode) {
+    case 47:
+    case 92:
+      return 5;
+    // prefer path separators...
+    case 95:
+    case 45:
+    case 46:
+    case 32:
+    case 39:
+    case 34:
+    case 58:
+      return 4;
+    // ...over other separators
+    default:
+      return 0;
+  }
+}
+__name(scoreSeparatorAtPos, "scoreSeparatorAtPos");
+const NO_SCORE2 = [void 0, []];
+function scoreFuzzy2(target, query, patternStart = 0, wordStart = 0) {
+  const preparedQuery = query;
+  if (preparedQuery.values && preparedQuery.values.length > 1) {
+    return doScoreFuzzy2Multiple(target, preparedQuery.values, patternStart, wordStart);
+  }
+  return doScoreFuzzy2Single(target, query, patternStart, wordStart);
+}
+__name(scoreFuzzy2, "scoreFuzzy2");
+function doScoreFuzzy2Multiple(target, query, patternStart, wordStart) {
+  let totalScore = 0;
+  const totalMatches = [];
+  for (const queryPiece of query) {
+    const [score, matches] = doScoreFuzzy2Single(target, queryPiece, patternStart, wordStart);
+    if (typeof score !== "number") {
+      return NO_SCORE2;
+    }
+    totalScore += score;
+    totalMatches.push(...matches);
+  }
+  return [totalScore, normalizeMatches(totalMatches)];
+}
+__name(doScoreFuzzy2Multiple, "doScoreFuzzy2Multiple");
+function doScoreFuzzy2Single(target, query, patternStart, wordStart) {
+  const score = fuzzyScore(query.original, query.originalLowercase, patternStart, target, target.toLowerCase(), wordStart, { firstMatchCanBeWeak: true, boostFullMatch: true });
+  if (!score) {
+    return NO_SCORE2;
+  }
+  return [score[0], createFuzzyMatches(score)];
+}
+__name(doScoreFuzzy2Single, "doScoreFuzzy2Single");
+const NO_ITEM_SCORE = Object.freeze({ score: 0 });
+const PATH_IDENTITY_SCORE = 1 << 18;
+const LABEL_PREFIX_SCORE_THRESHOLD = 1 << 17;
+const LABEL_SCORE_THRESHOLD = 1 << 16;
+function getCacheHash(label, description, allowNonContiguousMatches, query) {
+  const values = query.values ? query.values : [query];
+  const cacheHash = hash({
+    [query.normalized]: {
+      values: values.map((v) => ({ value: v.normalized, expectContiguousMatch: v.expectContiguousMatch })),
+      label,
+      description,
+      allowNonContiguousMatches
+    }
+  });
+  return cacheHash;
+}
+__name(getCacheHash, "getCacheHash");
+function scoreItemFuzzy(item, query, allowNonContiguousMatches, accessor, cache) {
+  if (!item || !query.normalized) {
+    return NO_ITEM_SCORE;
+  }
+  const label = accessor.getItemLabel(item);
+  if (!label) {
+    return NO_ITEM_SCORE;
+  }
+  const description = accessor.getItemDescription(item);
+  const cacheHash = getCacheHash(label, description, allowNonContiguousMatches, query);
+  const cached = cache[cacheHash];
+  if (cached) {
+    return cached;
+  }
+  const itemScore = doScoreItemFuzzy(label, description, accessor.getItemPath(item), query, allowNonContiguousMatches);
+  cache[cacheHash] = itemScore;
+  return itemScore;
+}
+__name(scoreItemFuzzy, "scoreItemFuzzy");
+function doScoreItemFuzzy(label, description, path, query, allowNonContiguousMatches) {
+  const preferLabelMatches = !path || !query.containsPathSeparator;
+  if (path && (isLinux ? query.pathNormalized === path : equalsIgnoreCase(query.pathNormalized, path))) {
+    return { score: PATH_IDENTITY_SCORE, labelMatch: [{ start: 0, end: label.length }], descriptionMatch: description ? [{ start: 0, end: description.length }] : void 0 };
+  }
+  if (query.values && query.values.length > 1) {
+    return doScoreItemFuzzyMultiple(label, description, path, query.values, preferLabelMatches, allowNonContiguousMatches);
+  }
+  return doScoreItemFuzzySingle(label, description, path, query, preferLabelMatches, allowNonContiguousMatches);
+}
+__name(doScoreItemFuzzy, "doScoreItemFuzzy");
+function doScoreItemFuzzyMultiple(label, description, path, query, preferLabelMatches, allowNonContiguousMatches) {
+  let totalScore = 0;
+  const totalLabelMatches = [];
+  const totalDescriptionMatches = [];
+  for (const queryPiece of query) {
+    const { score, labelMatch, descriptionMatch } = doScoreItemFuzzySingle(label, description, path, queryPiece, preferLabelMatches, allowNonContiguousMatches);
+    if (score === NO_MATCH) {
+      return NO_ITEM_SCORE;
+    }
+    totalScore += score;
+    if (labelMatch) {
+      totalLabelMatches.push(...labelMatch);
+    }
+    if (descriptionMatch) {
+      totalDescriptionMatches.push(...descriptionMatch);
+    }
+  }
+  return {
+    score: totalScore,
+    labelMatch: normalizeMatches(totalLabelMatches),
+    descriptionMatch: normalizeMatches(totalDescriptionMatches)
+  };
+}
+__name(doScoreItemFuzzyMultiple, "doScoreItemFuzzyMultiple");
+function doScoreItemFuzzySingle(label, description, path, query, preferLabelMatches, allowNonContiguousMatches) {
+  if (preferLabelMatches || !description) {
+    const [labelScore, labelPositions] = scoreFuzzy(label, query.normalized, query.normalizedLowercase, allowNonContiguousMatches && !query.expectContiguousMatch);
+    if (labelScore) {
+      const labelPrefixMatch = matchesPrefix(query.normalized, label);
+      let baseScore;
+      if (labelPrefixMatch) {
+        baseScore = LABEL_PREFIX_SCORE_THRESHOLD;
+        const prefixLengthBoost = Math.round(query.normalized.length / label.length * 100);
+        baseScore += prefixLengthBoost;
+      } else {
+        baseScore = LABEL_SCORE_THRESHOLD;
+      }
+      return { score: baseScore + labelScore, labelMatch: labelPrefixMatch || createMatches(labelPositions) };
+    }
+  }
+  if (description) {
+    let descriptionPrefix = description;
+    if (!!path) {
+      descriptionPrefix = `${description}${sep}`;
+    }
+    const descriptionPrefixLength = descriptionPrefix.length;
+    const descriptionAndLabel = `${descriptionPrefix}${label}`;
+    const [labelDescriptionScore, labelDescriptionPositions] = scoreFuzzy(descriptionAndLabel, query.normalized, query.normalizedLowercase, allowNonContiguousMatches && !query.expectContiguousMatch);
+    if (labelDescriptionScore) {
+      const labelDescriptionMatches = createMatches(labelDescriptionPositions);
+      const labelMatch = [];
+      const descriptionMatch = [];
+      labelDescriptionMatches.forEach((h) => {
+        if (h.start < descriptionPrefixLength && h.end > descriptionPrefixLength) {
+          labelMatch.push({ start: 0, end: h.end - descriptionPrefixLength });
+          descriptionMatch.push({ start: h.start, end: descriptionPrefixLength });
+        } else if (h.start >= descriptionPrefixLength) {
+          labelMatch.push({ start: h.start - descriptionPrefixLength, end: h.end - descriptionPrefixLength });
+        } else {
+          descriptionMatch.push(h);
+        }
+      });
+      return { score: labelDescriptionScore, labelMatch, descriptionMatch };
+    }
+  }
+  return NO_ITEM_SCORE;
+}
+__name(doScoreItemFuzzySingle, "doScoreItemFuzzySingle");
+function createMatches(offsets) {
+  const ret = [];
+  if (!offsets) {
+    return ret;
+  }
+  let last;
+  for (const pos of offsets) {
+    if (last && last.end === pos) {
+      last.end += 1;
+    } else {
+      last = { start: pos, end: pos + 1 };
+      ret.push(last);
+    }
+  }
+  return ret;
+}
+__name(createMatches, "createMatches");
+function normalizeMatches(matches) {
+  const sortedMatches = matches.sort((matchA, matchB) => {
+    return matchA.start - matchB.start;
+  });
+  const normalizedMatches = [];
+  let currentMatch = void 0;
+  for (const match of sortedMatches) {
+    if (!currentMatch || !matchOverlaps(currentMatch, match)) {
+      currentMatch = match;
+      normalizedMatches.push(match);
+    } else {
+      currentMatch.start = Math.min(currentMatch.start, match.start);
+      currentMatch.end = Math.max(currentMatch.end, match.end);
+    }
+  }
+  return normalizedMatches;
+}
+__name(normalizeMatches, "normalizeMatches");
+function matchOverlaps(matchA, matchB) {
+  if (matchA.end < matchB.start) {
+    return false;
+  }
+  if (matchB.end < matchA.start) {
+    return false;
+  }
+  return true;
+}
+__name(matchOverlaps, "matchOverlaps");
+function compareItemsByFuzzyScore(itemA, itemB, query, allowNonContiguousMatches, accessor, cache) {
+  const itemScoreA = scoreItemFuzzy(itemA, query, allowNonContiguousMatches, accessor, cache);
+  const itemScoreB = scoreItemFuzzy(itemB, query, allowNonContiguousMatches, accessor, cache);
+  const scoreA = itemScoreA.score;
+  const scoreB = itemScoreB.score;
+  if (scoreA === PATH_IDENTITY_SCORE || scoreB === PATH_IDENTITY_SCORE) {
+    if (scoreA !== scoreB) {
+      return scoreA === PATH_IDENTITY_SCORE ? -1 : 1;
+    }
+  }
+  if (scoreA > LABEL_SCORE_THRESHOLD || scoreB > LABEL_SCORE_THRESHOLD) {
+    if (scoreA !== scoreB) {
+      return scoreA > scoreB ? -1 : 1;
+    }
+    if (scoreA < LABEL_PREFIX_SCORE_THRESHOLD && scoreB < LABEL_PREFIX_SCORE_THRESHOLD) {
+      const comparedByMatchLength = compareByMatchLength(itemScoreA.labelMatch, itemScoreB.labelMatch);
+      if (comparedByMatchLength !== 0) {
+        return comparedByMatchLength;
+      }
+    }
+    const labelA = accessor.getItemLabel(itemA) || "";
+    const labelB = accessor.getItemLabel(itemB) || "";
+    if (labelA.length !== labelB.length) {
+      return labelA.length - labelB.length;
+    }
+  }
+  if (scoreA !== scoreB) {
+    return scoreA > scoreB ? -1 : 1;
+  }
+  const itemAHasLabelMatches = Array.isArray(itemScoreA.labelMatch) && itemScoreA.labelMatch.length > 0;
+  const itemBHasLabelMatches = Array.isArray(itemScoreB.labelMatch) && itemScoreB.labelMatch.length > 0;
+  if (itemAHasLabelMatches && !itemBHasLabelMatches) {
+    return -1;
+  } else if (itemBHasLabelMatches && !itemAHasLabelMatches) {
+    return 1;
+  }
+  const itemAMatchDistance = computeLabelAndDescriptionMatchDistance(itemA, itemScoreA, accessor);
+  const itemBMatchDistance = computeLabelAndDescriptionMatchDistance(itemB, itemScoreB, accessor);
+  if (itemAMatchDistance && itemBMatchDistance && itemAMatchDistance !== itemBMatchDistance) {
+    return itemBMatchDistance > itemAMatchDistance ? -1 : 1;
+  }
+  return fallbackCompare(itemA, itemB, query, accessor);
+}
+__name(compareItemsByFuzzyScore, "compareItemsByFuzzyScore");
+function computeLabelAndDescriptionMatchDistance(item, score, accessor) {
+  let matchStart = -1;
+  let matchEnd = -1;
+  if (score.descriptionMatch && score.descriptionMatch.length) {
+    matchStart = score.descriptionMatch[0].start;
+  } else if (score.labelMatch && score.labelMatch.length) {
+    matchStart = score.labelMatch[0].start;
+  }
+  if (score.labelMatch && score.labelMatch.length) {
+    matchEnd = score.labelMatch[score.labelMatch.length - 1].end;
+    if (score.descriptionMatch && score.descriptionMatch.length) {
+      const itemDescription = accessor.getItemDescription(item);
+      if (itemDescription) {
+        matchEnd += itemDescription.length;
+      }
+    }
+  } else if (score.descriptionMatch && score.descriptionMatch.length) {
+    matchEnd = score.descriptionMatch[score.descriptionMatch.length - 1].end;
+  }
+  return matchEnd - matchStart;
+}
+__name(computeLabelAndDescriptionMatchDistance, "computeLabelAndDescriptionMatchDistance");
+function compareByMatchLength(matchesA, matchesB) {
+  if (!matchesA && !matchesB || (!matchesA || !matchesA.length) && (!matchesB || !matchesB.length)) {
+    return 0;
+  }
+  if (!matchesB || !matchesB.length) {
+    return -1;
+  }
+  if (!matchesA || !matchesA.length) {
+    return 1;
+  }
+  const matchStartA = matchesA[0].start;
+  const matchEndA = matchesA[matchesA.length - 1].end;
+  const matchLengthA = matchEndA - matchStartA;
+  const matchStartB = matchesB[0].start;
+  const matchEndB = matchesB[matchesB.length - 1].end;
+  const matchLengthB = matchEndB - matchStartB;
+  return matchLengthA === matchLengthB ? 0 : matchLengthB < matchLengthA ? 1 : -1;
+}
+__name(compareByMatchLength, "compareByMatchLength");
+function fallbackCompare(itemA, itemB, query, accessor) {
+  const labelA = accessor.getItemLabel(itemA) || "";
+  const labelB = accessor.getItemLabel(itemB) || "";
+  const descriptionA = accessor.getItemDescription(itemA);
+  const descriptionB = accessor.getItemDescription(itemB);
+  const labelDescriptionALength = labelA.length + (descriptionA ? descriptionA.length : 0);
+  const labelDescriptionBLength = labelB.length + (descriptionB ? descriptionB.length : 0);
+  if (labelDescriptionALength !== labelDescriptionBLength) {
+    return labelDescriptionALength - labelDescriptionBLength;
+  }
+  const pathA = accessor.getItemPath(itemA);
+  const pathB = accessor.getItemPath(itemB);
+  if (pathA && pathB && pathA.length !== pathB.length) {
+    return pathA.length - pathB.length;
+  }
+  if (labelA !== labelB) {
+    return compareAnything(labelA, labelB, query.normalized);
+  }
+  if (descriptionA && descriptionB && descriptionA !== descriptionB) {
+    return compareAnything(descriptionA, descriptionB, query.normalized);
+  }
+  if (pathA && pathB && pathA !== pathB) {
+    return compareAnything(pathA, pathB, query.normalized);
+  }
+  return 0;
+}
+__name(fallbackCompare, "fallbackCompare");
+function queryExpectsExactMatch(query) {
+  return query.startsWith('"') && query.endsWith('"');
+}
+__name(queryExpectsExactMatch, "queryExpectsExactMatch");
+const MULTIPLE_QUERY_VALUES_SEPARATOR = " ";
+function prepareQuery(original) {
+  if (typeof original !== "string") {
+    original = "";
+  }
+  const originalLowercase = original.toLowerCase();
+  const { pathNormalized, normalized, normalizedLowercase } = normalizeQuery(original);
+  const containsPathSeparator = pathNormalized.indexOf(sep) >= 0;
+  const expectExactMatch = queryExpectsExactMatch(original);
+  let values = void 0;
+  const originalSplit = original.split(MULTIPLE_QUERY_VALUES_SEPARATOR);
+  if (originalSplit.length > 1) {
+    for (const originalPiece of originalSplit) {
+      const expectExactMatchPiece = queryExpectsExactMatch(originalPiece);
+      const { pathNormalized: pathNormalizedPiece, normalized: normalizedPiece, normalizedLowercase: normalizedLowercasePiece } = normalizeQuery(originalPiece);
+      if (normalizedPiece) {
+        if (!values) {
+          values = [];
+        }
+        values.push({
+          original: originalPiece,
+          originalLowercase: originalPiece.toLowerCase(),
+          pathNormalized: pathNormalizedPiece,
+          normalized: normalizedPiece,
+          normalizedLowercase: normalizedLowercasePiece,
+          expectContiguousMatch: expectExactMatchPiece
+        });
+      }
+    }
+  }
+  return { original, originalLowercase, pathNormalized, normalized, normalizedLowercase, values, containsPathSeparator, expectContiguousMatch: expectExactMatch };
+}
+__name(prepareQuery, "prepareQuery");
+function normalizeQuery(original) {
+  let pathNormalized;
+  if (isWindows) {
+    pathNormalized = original.replace(/\//g, sep);
+  } else {
+    pathNormalized = original.replace(/\\/g, sep);
+  }
+  const normalized = stripWildcards(pathNormalized).replace(/\s|"/g, "");
+  return {
+    pathNormalized,
+    normalized,
+    normalizedLowercase: normalized.toLowerCase()
+  };
+}
+__name(normalizeQuery, "normalizeQuery");
+function pieceToQuery(arg1) {
+  if (Array.isArray(arg1)) {
+    return prepareQuery(arg1.map((piece) => piece.original).join(MULTIPLE_QUERY_VALUES_SEPARATOR));
+  }
+  return prepareQuery(arg1.original);
+}
+__name(pieceToQuery, "pieceToQuery");
+export {
+  compareItemsByFuzzyScore,
+  pieceToQuery,
+  prepareQuery,
+  scoreFuzzy,
+  scoreFuzzy2,
+  scoreItemFuzzy
+};
+//# sourceMappingURL=fuzzyScorer.js.map

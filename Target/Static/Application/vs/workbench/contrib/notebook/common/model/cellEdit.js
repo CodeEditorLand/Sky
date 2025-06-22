@@ -1,1 +1,105 @@
-class a{get label(){return this.b===1?"Move Cell":"Move Cells"}constructor(e,t,s,l,h,o,r){this.resource=e,this.a=t,this.b=s,this.c=l,this.d=h,this.e=o,this.f=r,this.type=0,this.code="undoredo.textBufferEdit"}undo(){if(!this.d.moveCell)throw new Error("Notebook Move Cell not implemented for Undo/Redo");this.d.moveCell(this.c,this.b,this.a,this.f,this.e)}redo(){if(!this.d.moveCell)throw new Error("Notebook Move Cell not implemented for Undo/Redo");this.d.moveCell(this.a,this.b,this.c,this.e,this.f)}}class d{get label(){return this.a.length===1&&this.a[0][1].length===0?this.a[0][2].length>1?"Insert Cells":"Insert Cell":this.a.length===1&&this.a[0][2].length===0?this.a[0][1].length>1?"Delete Cells":"Delete Cell":"Insert Cell"}constructor(e,t,s,l,h){this.resource=e,this.a=t,this.b=s,this.c=l,this.d=h,this.type=0,this.code="undoredo.textBufferEdit"}undo(){if(!this.b.replaceCell)throw new Error("Notebook Replace Cell not implemented for Undo/Redo");this.a.forEach(e=>{this.b.replaceCell(e[0],e[2].length,e[1],this.c)})}redo(){if(!this.b.replaceCell)throw new Error("Notebook Replace Cell not implemented for Undo/Redo");this.a.reverse().forEach(e=>{this.b.replaceCell(e[0],e[1].length,e[2],this.d)})}}class n{constructor(e,t,s,l,h){this.resource=e,this.index=t,this.oldMetadata=s,this.newMetadata=l,this.a=h,this.type=0,this.label="Update Cell Metadata",this.code="undoredo.textBufferEdit"}undo(){this.a.updateCellMetadata&&this.a.updateCellMetadata(this.index,this.oldMetadata)}redo(){this.a.updateCellMetadata&&this.a.updateCellMetadata(this.index,this.newMetadata)}}export{a as $EK,d as $FK,n as $GK};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+class MoveCellEdit {
+  static {
+    __name(this, "MoveCellEdit");
+  }
+  get label() {
+    return this.length === 1 ? "Move Cell" : "Move Cells";
+  }
+  constructor(resource, fromIndex, length, toIndex, editingDelegate, beforedSelections, endSelections) {
+    this.resource = resource;
+    this.fromIndex = fromIndex;
+    this.length = length;
+    this.toIndex = toIndex;
+    this.editingDelegate = editingDelegate;
+    this.beforedSelections = beforedSelections;
+    this.endSelections = endSelections;
+    this.type = 0;
+    this.code = "undoredo.textBufferEdit";
+  }
+  undo() {
+    if (!this.editingDelegate.moveCell) {
+      throw new Error("Notebook Move Cell not implemented for Undo/Redo");
+    }
+    this.editingDelegate.moveCell(this.toIndex, this.length, this.fromIndex, this.endSelections, this.beforedSelections);
+  }
+  redo() {
+    if (!this.editingDelegate.moveCell) {
+      throw new Error("Notebook Move Cell not implemented for Undo/Redo");
+    }
+    this.editingDelegate.moveCell(this.fromIndex, this.length, this.toIndex, this.beforedSelections, this.endSelections);
+  }
+}
+class SpliceCellsEdit {
+  static {
+    __name(this, "SpliceCellsEdit");
+  }
+  get label() {
+    if (this.diffs.length === 1 && this.diffs[0][1].length === 0) {
+      return this.diffs[0][2].length > 1 ? "Insert Cells" : "Insert Cell";
+    }
+    if (this.diffs.length === 1 && this.diffs[0][2].length === 0) {
+      return this.diffs[0][1].length > 1 ? "Delete Cells" : "Delete Cell";
+    }
+    return "Insert Cell";
+  }
+  constructor(resource, diffs, editingDelegate, beforeHandles, endHandles) {
+    this.resource = resource;
+    this.diffs = diffs;
+    this.editingDelegate = editingDelegate;
+    this.beforeHandles = beforeHandles;
+    this.endHandles = endHandles;
+    this.type = 0;
+    this.code = "undoredo.textBufferEdit";
+  }
+  undo() {
+    if (!this.editingDelegate.replaceCell) {
+      throw new Error("Notebook Replace Cell not implemented for Undo/Redo");
+    }
+    this.diffs.forEach((diff) => {
+      this.editingDelegate.replaceCell(diff[0], diff[2].length, diff[1], this.beforeHandles);
+    });
+  }
+  redo() {
+    if (!this.editingDelegate.replaceCell) {
+      throw new Error("Notebook Replace Cell not implemented for Undo/Redo");
+    }
+    this.diffs.reverse().forEach((diff) => {
+      this.editingDelegate.replaceCell(diff[0], diff[1].length, diff[2], this.endHandles);
+    });
+  }
+}
+class CellMetadataEdit {
+  static {
+    __name(this, "CellMetadataEdit");
+  }
+  constructor(resource, index, oldMetadata, newMetadata, editingDelegate) {
+    this.resource = resource;
+    this.index = index;
+    this.oldMetadata = oldMetadata;
+    this.newMetadata = newMetadata;
+    this.editingDelegate = editingDelegate;
+    this.type = 0;
+    this.label = "Update Cell Metadata";
+    this.code = "undoredo.textBufferEdit";
+  }
+  undo() {
+    if (!this.editingDelegate.updateCellMetadata) {
+      return;
+    }
+    this.editingDelegate.updateCellMetadata(this.index, this.oldMetadata);
+  }
+  redo() {
+    if (!this.editingDelegate.updateCellMetadata) {
+      return;
+    }
+    this.editingDelegate.updateCellMetadata(this.index, this.newMetadata);
+  }
+}
+export {
+  CellMetadataEdit,
+  MoveCellEdit,
+  SpliceCellsEdit
+};
+//# sourceMappingURL=cellEdit.js.map

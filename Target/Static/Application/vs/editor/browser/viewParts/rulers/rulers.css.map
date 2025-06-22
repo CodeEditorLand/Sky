@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["../../../../../../../../../../Dependency/Microsoft/Dependency/Editor/out/vs/editor/browser/viewParts/rulers/rulers.css"],
+  "sourcesContent": ["/*---------------------------------------------------------------------------------------------\r\n *  Copyright (c) Microsoft Corporation. All rights reserved.\r\n *  Licensed under the MIT License. See License.txt in the project root for license information.\r\n *--------------------------------------------------------------------------------------------*/\r\n\r\n.monaco-editor .view-ruler {\r\n\tposition: absolute;\r\n\ttop: 0;\r\n\tbox-shadow: 1px 0 0 0 var(--vscode-editorRuler-foreground) inset;\r\n}\r\n"],
+  "mappings": "AAKA,CAAC,cAAc,CAAC;AACf,YAAU;AACV,OAAK;AACL,cAAY,IAAI,EAAE,EAAE,EAAE,IAAI,iCAAiC;AAC5D;",
+  "names": []
+}

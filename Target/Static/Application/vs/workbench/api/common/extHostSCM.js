@@ -1,1 +1,886 @@
-import{URI as l}from"../../../base/common/uri.js";import{Event as U,$df as p}from"../../../base/common/event.js";import{$um as j}from"../../../base/common/decorators.js";import{$ud as m,$wd as v}from"../../../base/common/lifecycle.js";import{$Dh as y}from"../../../base/common/async.js";import{$oY as V}from"./extHost.protocol.js";import{$3b as K,$Sb as N}from"../../../base/common/arrays.js";import{$CM as C}from"../../../base/common/comparers.js";import{$3n as X}from"../../../platform/log/common/log.js";import{$Sy as Z}from"../../../platform/extensions/common/extensions.js";import{ThemeIcon as T}from"../../../base/common/themables.js";import{MarkdownString as b}from"./extHostTypeConverters.js";import{$2O as c,$1O as I}from"../../services/extensions/common/extensions.js";import{Schemas as R}from"../../../base/common/network.js";import{$o as tt}from"../../../base/common/platform.js";import{$Md as et}from"../../../base/common/equals.js";var E=function(i,t,e,r){var n=arguments.length,s=n<3?t:r===null?r=Object.getOwnPropertyDescriptor(t,e):r,o;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")s=Reflect.decorate(i,t,e,r);else for(var u=i.length-1;u>=0;u--)(o=i[u])&&(s=(n<3?o(s):n>3?o(t,e,s):o(t,e))||s);return n>3&&s&&Object.defineProperty(t,e,s),s},J=function(i,t){return function(e,r){t(e,r,i)}},D;function O(i){return i instanceof l}function it(i,t){return i.scheme===R.file&&t.scheme===R.file&&tt?i.toString()===t.toString():i.toString().toLowerCase()===t.toString().toLowerCase()}function $(i){if(i)return typeof i.iconPath=="string"?l.file(i.iconPath):l.isUri(i.iconPath)||T.isThemeIcon(i.iconPath)?i.iconPath:void 0}function f(i){if(i){if(l.isUri(i))return i;if(T.isThemeIcon(i))return i;{const t=i;return{light:t.light,dark:t.dark}}}else return}function rt(i){const t=f(i.authorIcon),e=i.references?.map(r=>({...r,icon:f(r.icon)}));return{...i,authorIcon:t,references:e}}function S(i){return i?{...i,icon:f(i.icon)}:void 0}function x(i,t){if(!i.iconPath&&!t.iconPath)return 0;if(i.iconPath){if(!t.iconPath)return 1}else return-1;const e=typeof i.iconPath=="string"?i.iconPath:l.isUri(i.iconPath)?i.iconPath.fsPath:i.iconPath.id,r=typeof t.iconPath=="string"?t.iconPath:l.isUri(t.iconPath)?t.iconPath.fsPath:t.iconPath.id;return C(e,r)}function st(i,t){let e=0;if(i.strikeThrough!==t.strikeThrough)return i.strikeThrough?1:-1;if(i.faded!==t.faded)return i.faded?1:-1;if(i.tooltip!==t.tooltip)return(i.tooltip||"").localeCompare(t.tooltip||"");if(e=x(i,t),e!==0)return e;if(i.light&&t.light)e=x(i.light,t.light);else{if(i.light)return 1;if(t.light)return-1}if(e!==0)return e;if(i.dark&&t.dark)e=x(i.dark,t.dark);else{if(i.dark)return 1;if(t.dark)return-1}return e}function ot(i,t){if(i.command!==t.command)return i.command<t.command?-1:1;if(i.title!==t.title)return i.title<t.title?-1:1;if(i.tooltip!==t.tooltip){if(i.tooltip!==void 0&&t.tooltip!==void 0)return i.tooltip<t.tooltip?-1:1;if(i.tooltip!==void 0)return 1;if(t.tooltip!==void 0)return-1}if(i.arguments===t.arguments)return 0;if(i.arguments)if(t.arguments){if(i.arguments.length!==t.arguments.length)return i.arguments.length-t.arguments.length}else return 1;else return-1;for(let e=0;e<i.arguments.length;e++){const r=i.arguments[e],n=t.arguments[e];if(r!==n&&!(O(r)&&O(n)&&it(r,n)))return r<n?-1:1}return 0}function q(i,t){let e=C(i.resourceUri.fsPath,t.resourceUri.fsPath,!0);if(e!==0)return e;if(i.command&&t.command)e=ot(i.command,t.command);else{if(i.command)return 1;if(t.command)return-1}if(e!==0)return e;if(i.decorations&&t.decorations)e=st(i.decorations,t.decorations);else{if(i.decorations)return 1;if(t.decorations)return-1}if(e!==0)return e;if(i.multiFileDiffEditorModifiedUri&&t.multiFileDiffEditorModifiedUri)e=C(i.multiFileDiffEditorModifiedUri.fsPath,t.multiFileDiffEditorModifiedUri.fsPath,!0);else{if(i.multiFileDiffEditorModifiedUri)return 1;if(t.multiFileDiffEditorModifiedUri)return-1}if(e!==0)return e;if(i.multiDiffEditorOriginalUri&&t.multiDiffEditorOriginalUri)e=C(i.multiDiffEditorOriginalUri.fsPath,t.multiDiffEditorOriginalUri.fsPath,!0);else{if(i.multiDiffEditorOriginalUri)return 1;if(t.multiDiffEditorOriginalUri)return-1}return e}function nt(i,t){for(let e=0;e<i.length;e++)if(i[e]!==t[e])return!1;return!0}function ht(i,t){return i.command===t.command&&i.title===t.title&&i.tooltip===t.tooltip&&(i.arguments&&t.arguments?nt(i.arguments,t.arguments):i.arguments===t.arguments)}function ut(i,t){return N(i,t,ht)}class ct{#t;#e;get value(){return this.d}set value(t){t=t??"",this.#t.$setInputBoxValue(this.m,t),this.o(t)}get onDidChange(){return this.f.event}get placeholder(){return this.g}set placeholder(t){this.#t.$setInputBoxPlaceholder(this.m,t),this.g=t}get validateInput(){return c(this.l,"scmValidation"),this.h}set validateInput(t){if(c(this.l,"scmValidation"),t&&typeof t!="function")throw new Error(`[${this.l.identifier.value}]: Invalid SCM input box validation function`);this.h=t,this.#t.$setValidationProviderIsEnabled(this.m,!!t)}get enabled(){return this.j}set enabled(t){t=!!t,this.j!==t&&(this.j=t,this.#t.$setInputBoxEnablement(this.m,t))}get visible(){return this.k}set visible(t){t=!!t,this.k!==t&&(this.k=t,this.#t.$setInputBoxVisibility(this.m,t))}get document(){return c(this.l,"scmTextDocument"),this.#e.getDocument(this.n)}constructor(t,e,r,n,s){this.l=t,this.m=n,this.n=s,this.d="",this.f=new p,this.g="",this.j=!0,this.k=!0,this.#e=e,this.#t=r}showValidationMessage(t,e){c(this.l,"scmValidation"),this.#t.$showValidationMessage(this.m,t,e)}$onInputBoxValueChange(t){this.o(t)}o(t){this.d=t,this.f.fire(t)}}class w{static{this.d=0}get disposed(){return this.m}get id(){return this.w}get label(){return this.x}set label(t){this.x=t,this.t.$updateGroupLabel(this.v,this.handle,t)}get contextValue(){return this.q}set contextValue(t){this.q=t,this.t.$updateGroup(this.v,this.handle,this.features)}get hideWhenEmpty(){return this.s}set hideWhenEmpty(t){this.s=t,this.t.$updateGroup(this.v,this.handle,this.features)}get features(){return{contextValue:this.contextValue,hideWhenEmpty:this.hideWhenEmpty}}get resourceStates(){return[...this.g]}set resourceStates(t){this.g=[...t],this.l.fire()}constructor(t,e,r,n,s,o,u){this.t=t,this.u=e,this.v=r,this.w=n,this.x=s,this.multiDiffEditorEnableViewChanges=o,this.y=u,this.f=0,this.g=[],this.h=new Map,this.j=new Map,this.k=new Map,this.l=new p,this.onDidUpdateResourceStates=this.l.event,this.m=!1,this.n=new p,this.onDidDispose=this.n.event,this.o=[],this.p=[],this.q=void 0,this.s=void 0,this.handle=w.d++}getResourceState(t){return this.h.get(t)}$executeResourceCommand(t,e){const r=this.j.get(t);return r?y(()=>this.u.executeCommand(r.command,...r.arguments||[],e)):Promise.resolve(void 0)}_takeResourceStateSnapshot(){const t=[...this.g].sort(q),r=K(this.p,t,q).map(o=>{const u=o.toInsert.map(h=>{const d=this.f++;this.h.set(d,h);const P=h.resourceUri;let a;if(h.command)if(h.command.command==="vscode.open"||h.command.command==="vscode.diff"||h.command.command==="vscode.changes"){const H=new m;a=this.u.converter.toInternal(h.command,H),this.k.set(d,H)}else this.j.set(d,h.command);const M=I(this.y,"scmMultiDiffEditor"),A=M?h.multiDiffEditorOriginalUri:void 0,G=M?h.multiFileDiffEditorModifiedUri:void 0,k=$(h.decorations),L=h.decorations&&$(h.decorations.light)||k,_=h.decorations&&$(h.decorations.dark)||k,F=[L,_],z=h.decorations&&h.decorations.tooltip||"",Q=h.decorations&&!!h.decorations.strikeThrough,W=h.decorations&&!!h.decorations.faded,Y=h.contextValue||"";return{rawResource:[d,P,F,z,Q,W,Y,a,A,G],handle:d}});return{start:o.start,deleteCount:o.deleteCount,toInsert:u}}),n=r.map(({start:o,deleteCount:u,toInsert:h})=>[o,u,h.map(d=>d.rawResource)]),s=r.reverse();for(const{start:o,deleteCount:u,toInsert:h}of s){const d=h.map(a=>a.handle),P=this.o.splice(o,u,...d);for(const a of P)this.h.delete(a),this.j.delete(a),this.k.get(a)?.dispose(),this.k.delete(a)}return this.p=t,n}dispose(){this.m=!0,this.n.fire()}}class g{static{this.d=0}#t;get id(){return this.A}get label(){return this.B}get rootUri(){return this.C}get inputBox(){return this.g}get count(){return this.h}set count(t){this.h!==t&&(this.h=t,this.#t.$updateSourceControl(this.x,{count:t}))}get quickDiffProvider(){return this.j}set quickDiffProvider(t){this.j=t;let e;I(this.y,"quickDiffProvider")&&(e=t?.label),this.#t.$updateSourceControl(this.x,{hasQuickDiffProvider:!!t,quickDiffLabel:e})}get secondaryQuickDiffProvider(){return c(this.y,"quickDiffProvider"),this.k}set secondaryQuickDiffProvider(t){c(this.y,"quickDiffProvider"),this.k=t;const e=t?.label;this.#t.$updateSourceControl(this.x,{hasSecondaryQuickDiffProvider:!!t,secondaryQuickDiffLabel:e})}get historyProvider(){return c(this.y,"scmHistoryProvider"),this.l}set historyProvider(t){c(this.y,"scmHistoryProvider"),this.l=t,this.m.value=new m,this.#t.$updateSourceControl(this.x,{hasHistoryProvider:!!t}),t&&(this.m.value.add(t.onDidChangeCurrentHistoryItemRefs(()=>{const e=S(t?.currentHistoryItemRef),r=S(t?.currentHistoryItemRemoteRef),n=S(t?.currentHistoryItemBaseRef);this.#t.$onDidChangeHistoryProviderCurrentHistoryItemRefs(this.x,e,r,n)})),this.m.value.add(t.onDidChangeHistoryItemRefs(e=>{if(e.added.length===0&&e.modified.length===0&&e.removed.length===0)return;const r=e.added.map(o=>({...o,icon:f(o.icon)})),n=e.modified.map(o=>({...o,icon:f(o.icon)})),s=e.removed.map(o=>({...o,icon:f(o.icon)}));this.#t.$onDidChangeHistoryProviderHistoryItemRefs(this.x,{added:r,modified:n,removed:s,silent:e.silent})})))}get commitTemplate(){return this.n}set commitTemplate(t){t!==this.n&&(this.n=t,this.#t.$updateSourceControl(this.x,{commitTemplate:t}))}get acceptInputCommand(){return this.p}set acceptInputCommand(t){this.o.value=new m,this.p=t;const e=this.z.converter.toInternal(t,this.o.value);this.#t.$updateSourceControl(this.x,{acceptInputCommand:e})}get actionButton(){return c(this.y,"scmActionButton"),this.s}set actionButton(t){if(c(this.y,"scmActionButton"),et(this.s,t))return;this.s=t,this.q.value=new m;const e=t!==void 0?{command:{...this.z.converter.toInternal(t.command,this.q.value),shortTitle:t.command.shortTitle},secondaryCommands:t.secondaryCommands?.map(r=>r.map(n=>this.z.converter.toInternal(n,this.q.value))),enabled:t.enabled}:void 0;this.#t.$updateSourceControl(this.x,{actionButton:e??null})}get statusBarCommands(){return this.u}set statusBarCommands(t){if(this.u&&t&&ut(this.u,t))return;this.t.value=new m,this.u=t;const e=(t||[]).map(r=>this.z.converter.toInternal(r,this.t.value));this.#t.$updateSourceControl(this.x,{statusBarCommands:e})}get selected(){return this.v}constructor(t,e,r,n,s,o,u){this.y=t,this.z=n,this.A=s,this.B=o,this.C=u,this.f=new Map,this.h=void 0,this.j=void 0,this.k=void 0,this.m=new v,this.n=void 0,this.o=new v,this.p=void 0,this.q=new v,this.t=new v,this.u=void 0,this.v=!1,this.w=new p,this.onDidChangeSelection=this.w.event,this.x=g.d++,this.D=new Map,this.E=new Set,this.#t=r;const h=l.from({scheme:R.vscodeSourceControl,path:`${s}/scm${this.x}/input`,query:u?`rootUri=${encodeURIComponent(u.toString())}`:void 0});this.g=new ct(t,e,this.#t,this.x,h),this.#t.$registerSourceControl(this.x,s,o,u,h)}createResourceGroup(t,e,r){const n=I(this.y,"scmMultiDiffEditor")&&r?.multiDiffEditorEnableViewChanges===!0,s=new w(this.#t,this.z,this.x,t,e,n,this.y),o=U.once(s.onDidDispose)(()=>this.D.delete(s));return this.D.set(s,o),this.eventuallyAddResourceGroups(),s}eventuallyAddResourceGroups(){const t=[],e=[];for(const[r,n]of this.D){n.dispose();const s=r.onDidUpdateResourceStates(()=>{this.E.add(r),this.eventuallyUpdateResourceStates()});U.once(r.onDidDispose)(()=>{this.E.delete(r),s.dispose(),this.f.delete(r.handle),this.#t.$unregisterGroup(this.x,r.handle)}),t.push([r.handle,r.id,r.label,r.features,r.multiDiffEditorEnableViewChanges]);const o=r._takeResourceStateSnapshot();o.length>0&&e.push([r.handle,o]),this.f.set(r.handle,r)}this.#t.$registerGroups(this.x,t,e),this.D.clear()}eventuallyUpdateResourceStates(){const t=[];this.E.forEach(e=>{const r=e._takeResourceStateSnapshot();r.length!==0&&t.push([e.handle,r])}),t.length>0&&this.#t.$spliceResourceStates(this.x,t),this.E.clear()}getResourceGroup(t){return this.f.get(t)}setSelectionState(t){this.v=t,this.w.fire(t)}dispose(){this.o.dispose(),this.q.dispose(),this.t.dispose(),this.f.forEach(t=>t.dispose()),this.#t.$unregisterSourceControl(this.x)}}E([j(100)],g.prototype,"eventuallyAddResourceGroups",null);E([j(100)],g.prototype,"eventuallyUpdateResourceStates",null);let B=class{static{D=this}static{this.d=0}get onDidChangeActiveProvider(){return this.k.event}constructor(t,e,r,n){this.m=e,this.n=r,this.o=n,this.h=new Map,this.j=new Z,this.k=new p,this.f=t.getProxy(V.MainThreadSCM),this.g=t.getProxy(V.MainThreadTelemetry),e.registerArgumentProcessor({processArgument:s=>{if(s&&s.$mid===3){const o=this.h.get(s.sourceControlHandle);if(!o)return s;const u=o.getResourceGroup(s.groupHandle);return u?u.getResourceState(s.handle):s}else if(s&&s.$mid===4){const o=this.h.get(s.sourceControlHandle);return o?o.getResourceGroup(s.groupHandle):s}else if(s&&s.$mid===5){const o=this.h.get(s.handle);return o||s}return s}})}createSourceControl(t,e,r,n){this.o.trace("ExtHostSCM#createSourceControl",t.identifier.value,e,r,n),this.g.$publicLog2("api/scm/createSourceControl",{extensionId:t.identifier.value});const s=D.d++,o=new g(t,this.n,this.f,this.m,e,r,n);this.h.set(s,o);const u=this.j.get(t.identifier)||[];return u.push(o),this.j.set(t.identifier,u),o}getLastInputBox(t){this.o.trace("ExtHostSCM#getLastInputBox",t.identifier.value);const e=this.j.get(t.identifier),r=e&&e[e.length-1];return r&&r.inputBox}$provideOriginalResource(t,e,r){const n=l.revive(e);this.o.trace("ExtHostSCM#$provideOriginalResource",t,n.toString());const s=this.h.get(t);return!s||!s.quickDiffProvider||!s.quickDiffProvider.provideOriginalResource?Promise.resolve(null):y(()=>s.quickDiffProvider.provideOriginalResource(n,r)).then(o=>o||null)}$provideSecondaryOriginalResource(t,e,r){const n=l.revive(e);this.o.trace("ExtHostSCM#$provideSecondaryOriginalResource",t,n.toString());const s=this.h.get(t);return!s||!s.secondaryQuickDiffProvider||!s.secondaryQuickDiffProvider.provideOriginalResource?Promise.resolve(null):y(()=>s.secondaryQuickDiffProvider.provideOriginalResource(n,r)).then(o=>o||null)}$onInputBoxValueChange(t,e){this.o.trace("ExtHostSCM#$onInputBoxValueChange",t);const r=this.h.get(t);return r&&r.inputBox.$onInputBoxValueChange(e),Promise.resolve(void 0)}$executeResourceCommand(t,e,r,n){this.o.trace("ExtHostSCM#$executeResourceCommand",t,e,r);const s=this.h.get(t);if(!s)return Promise.resolve(void 0);const o=s.getResourceGroup(e);return o?o.$executeResourceCommand(r,n):Promise.resolve(void 0)}$validateInput(t,e,r){this.o.trace("ExtHostSCM#$validateInput",t);const n=this.h.get(t);return!n||!n.inputBox.validateInput?Promise.resolve(void 0):y(()=>n.inputBox.validateInput(e,r)).then(s=>{if(!s)return Promise.resolve(void 0);const o=b.fromStrict(s.message);return o?Promise.resolve([o,s.type]):Promise.resolve(void 0)})}$setSelectedSourceControl(t){return this.o.trace("ExtHostSCM#$setSelectedSourceControl",t),t!==void 0&&this.h.get(t)?.setSelectionState(!0),this.l!==void 0&&this.h.get(this.l)?.setSelectionState(!1),this.l=t,Promise.resolve(void 0)}async $resolveHistoryItemChatContext(t,e,r){try{return await this.h.get(t)?.historyProvider?.resolveHistoryItemChatContext(e,r)??void 0}catch(n){this.o.error("ExtHostSCM#$resolveHistoryItemChatContext",n);return}}async $resolveHistoryItemRefsCommonAncestor(t,e,r){try{return await this.h.get(t)?.historyProvider?.resolveHistoryItemRefsCommonAncestor(e,r)??void 0}catch(n){this.o.error("ExtHostSCM#$resolveHistoryItemRefsCommonAncestor",n);return}}async $provideHistoryItemRefs(t,e,r){try{return(await this.h.get(t)?.historyProvider?.provideHistoryItemRefs(e,r))?.map(o=>({...o,icon:f(o.icon)}))??void 0}catch(n){this.o.error("ExtHostSCM#$provideHistoryItemRefs",n);return}}async $provideHistoryItems(t,e,r){try{return(await this.h.get(t)?.historyProvider?.provideHistoryItems(e,r))?.map(o=>rt(o))??void 0}catch(n){this.o.error("ExtHostSCM#$provideHistoryItems",n);return}}async $provideHistoryItemChanges(t,e,r,n){try{return await this.h.get(t)?.historyProvider?.provideHistoryItemChanges(e,r,n)??void 0}catch(s){this.o.error("ExtHostSCM#$provideHistoryItemChanges",s);return}}};B=D=E([J(3,X)],B);export{ct as $hMc,B as $iMc};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { URI } from "../../../base/common/uri.js";
+import { Event, Emitter } from "../../../base/common/event.js";
+import { debounce } from "../../../base/common/decorators.js";
+import { DisposableStore, MutableDisposable } from "../../../base/common/lifecycle.js";
+import { asPromise } from "../../../base/common/async.js";
+import { MainContext } from "./extHost.protocol.js";
+import { sortedDiff, equals } from "../../../base/common/arrays.js";
+import { comparePaths } from "../../../base/common/comparers.js";
+import { ILogService } from "../../../platform/log/common/log.js";
+import { ExtensionIdentifierMap } from "../../../platform/extensions/common/extensions.js";
+import { ThemeIcon } from "../../../base/common/themables.js";
+import { MarkdownString } from "./extHostTypeConverters.js";
+import { checkProposedApiEnabled, isProposedApiEnabled } from "../../services/extensions/common/extensions.js";
+import { Schemas } from "../../../base/common/network.js";
+import { isLinux } from "../../../base/common/platform.js";
+import { structuralEquals } from "../../../base/common/equals.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+var ExtHostSCM_1;
+function isUri(thing) {
+  return thing instanceof URI;
+}
+__name(isUri, "isUri");
+function uriEquals(a, b) {
+  if (a.scheme === Schemas.file && b.scheme === Schemas.file && isLinux) {
+    return a.toString() === b.toString();
+  }
+  return a.toString().toLowerCase() === b.toString().toLowerCase();
+}
+__name(uriEquals, "uriEquals");
+function getIconResource(decorations) {
+  if (!decorations) {
+    return void 0;
+  } else if (typeof decorations.iconPath === "string") {
+    return URI.file(decorations.iconPath);
+  } else if (URI.isUri(decorations.iconPath)) {
+    return decorations.iconPath;
+  } else if (ThemeIcon.isThemeIcon(decorations.iconPath)) {
+    return decorations.iconPath;
+  } else {
+    return void 0;
+  }
+}
+__name(getIconResource, "getIconResource");
+function getHistoryItemIconDto(icon) {
+  if (!icon) {
+    return void 0;
+  } else if (URI.isUri(icon)) {
+    return icon;
+  } else if (ThemeIcon.isThemeIcon(icon)) {
+    return icon;
+  } else {
+    const iconDto = icon;
+    return { light: iconDto.light, dark: iconDto.dark };
+  }
+}
+__name(getHistoryItemIconDto, "getHistoryItemIconDto");
+function toSCMHistoryItemDto(historyItem) {
+  const authorIcon = getHistoryItemIconDto(historyItem.authorIcon);
+  const references = historyItem.references?.map((r) => ({
+    ...r,
+    icon: getHistoryItemIconDto(r.icon)
+  }));
+  return { ...historyItem, authorIcon, references };
+}
+__name(toSCMHistoryItemDto, "toSCMHistoryItemDto");
+function toSCMHistoryItemRefDto(historyItemRef) {
+  return historyItemRef ? { ...historyItemRef, icon: getHistoryItemIconDto(historyItemRef.icon) } : void 0;
+}
+__name(toSCMHistoryItemRefDto, "toSCMHistoryItemRefDto");
+function compareResourceThemableDecorations(a, b) {
+  if (!a.iconPath && !b.iconPath) {
+    return 0;
+  } else if (!a.iconPath) {
+    return -1;
+  } else if (!b.iconPath) {
+    return 1;
+  }
+  const aPath = typeof a.iconPath === "string" ? a.iconPath : URI.isUri(a.iconPath) ? a.iconPath.fsPath : a.iconPath.id;
+  const bPath = typeof b.iconPath === "string" ? b.iconPath : URI.isUri(b.iconPath) ? b.iconPath.fsPath : b.iconPath.id;
+  return comparePaths(aPath, bPath);
+}
+__name(compareResourceThemableDecorations, "compareResourceThemableDecorations");
+function compareResourceStatesDecorations(a, b) {
+  let result = 0;
+  if (a.strikeThrough !== b.strikeThrough) {
+    return a.strikeThrough ? 1 : -1;
+  }
+  if (a.faded !== b.faded) {
+    return a.faded ? 1 : -1;
+  }
+  if (a.tooltip !== b.tooltip) {
+    return (a.tooltip || "").localeCompare(b.tooltip || "");
+  }
+  result = compareResourceThemableDecorations(a, b);
+  if (result !== 0) {
+    return result;
+  }
+  if (a.light && b.light) {
+    result = compareResourceThemableDecorations(a.light, b.light);
+  } else if (a.light) {
+    return 1;
+  } else if (b.light) {
+    return -1;
+  }
+  if (result !== 0) {
+    return result;
+  }
+  if (a.dark && b.dark) {
+    result = compareResourceThemableDecorations(a.dark, b.dark);
+  } else if (a.dark) {
+    return 1;
+  } else if (b.dark) {
+    return -1;
+  }
+  return result;
+}
+__name(compareResourceStatesDecorations, "compareResourceStatesDecorations");
+function compareCommands(a, b) {
+  if (a.command !== b.command) {
+    return a.command < b.command ? -1 : 1;
+  }
+  if (a.title !== b.title) {
+    return a.title < b.title ? -1 : 1;
+  }
+  if (a.tooltip !== b.tooltip) {
+    if (a.tooltip !== void 0 && b.tooltip !== void 0) {
+      return a.tooltip < b.tooltip ? -1 : 1;
+    } else if (a.tooltip !== void 0) {
+      return 1;
+    } else if (b.tooltip !== void 0) {
+      return -1;
+    }
+  }
+  if (a.arguments === b.arguments) {
+    return 0;
+  } else if (!a.arguments) {
+    return -1;
+  } else if (!b.arguments) {
+    return 1;
+  } else if (a.arguments.length !== b.arguments.length) {
+    return a.arguments.length - b.arguments.length;
+  }
+  for (let i = 0; i < a.arguments.length; i++) {
+    const aArg = a.arguments[i];
+    const bArg = b.arguments[i];
+    if (aArg === bArg) {
+      continue;
+    }
+    if (isUri(aArg) && isUri(bArg) && uriEquals(aArg, bArg)) {
+      continue;
+    }
+    return aArg < bArg ? -1 : 1;
+  }
+  return 0;
+}
+__name(compareCommands, "compareCommands");
+function compareResourceStates(a, b) {
+  let result = comparePaths(a.resourceUri.fsPath, b.resourceUri.fsPath, true);
+  if (result !== 0) {
+    return result;
+  }
+  if (a.command && b.command) {
+    result = compareCommands(a.command, b.command);
+  } else if (a.command) {
+    return 1;
+  } else if (b.command) {
+    return -1;
+  }
+  if (result !== 0) {
+    return result;
+  }
+  if (a.decorations && b.decorations) {
+    result = compareResourceStatesDecorations(a.decorations, b.decorations);
+  } else if (a.decorations) {
+    return 1;
+  } else if (b.decorations) {
+    return -1;
+  }
+  if (result !== 0) {
+    return result;
+  }
+  if (a.multiFileDiffEditorModifiedUri && b.multiFileDiffEditorModifiedUri) {
+    result = comparePaths(a.multiFileDiffEditorModifiedUri.fsPath, b.multiFileDiffEditorModifiedUri.fsPath, true);
+  } else if (a.multiFileDiffEditorModifiedUri) {
+    return 1;
+  } else if (b.multiFileDiffEditorModifiedUri) {
+    return -1;
+  }
+  if (result !== 0) {
+    return result;
+  }
+  if (a.multiDiffEditorOriginalUri && b.multiDiffEditorOriginalUri) {
+    result = comparePaths(a.multiDiffEditorOriginalUri.fsPath, b.multiDiffEditorOriginalUri.fsPath, true);
+  } else if (a.multiDiffEditorOriginalUri) {
+    return 1;
+  } else if (b.multiDiffEditorOriginalUri) {
+    return -1;
+  }
+  return result;
+}
+__name(compareResourceStates, "compareResourceStates");
+function compareArgs(a, b) {
+  for (let i = 0; i < a.length; i++) {
+    if (a[i] !== b[i]) {
+      return false;
+    }
+  }
+  return true;
+}
+__name(compareArgs, "compareArgs");
+function commandEquals(a, b) {
+  return a.command === b.command && a.title === b.title && a.tooltip === b.tooltip && (a.arguments && b.arguments ? compareArgs(a.arguments, b.arguments) : a.arguments === b.arguments);
+}
+__name(commandEquals, "commandEquals");
+function commandListEquals(a, b) {
+  return equals(a, b, commandEquals);
+}
+__name(commandListEquals, "commandListEquals");
+class ExtHostSCMInputBox {
+  static {
+    __name(this, "ExtHostSCMInputBox");
+  }
+  #proxy;
+  #extHostDocuments;
+  get value() {
+    return this._value;
+  }
+  set value(value) {
+    value = value ?? "";
+    this.#proxy.$setInputBoxValue(this._sourceControlHandle, value);
+    this.updateValue(value);
+  }
+  get onDidChange() {
+    return this._onDidChange.event;
+  }
+  get placeholder() {
+    return this._placeholder;
+  }
+  set placeholder(placeholder) {
+    this.#proxy.$setInputBoxPlaceholder(this._sourceControlHandle, placeholder);
+    this._placeholder = placeholder;
+  }
+  get validateInput() {
+    checkProposedApiEnabled(this._extension, "scmValidation");
+    return this._validateInput;
+  }
+  set validateInput(fn) {
+    checkProposedApiEnabled(this._extension, "scmValidation");
+    if (fn && typeof fn !== "function") {
+      throw new Error(`[${this._extension.identifier.value}]: Invalid SCM input box validation function`);
+    }
+    this._validateInput = fn;
+    this.#proxy.$setValidationProviderIsEnabled(this._sourceControlHandle, !!fn);
+  }
+  get enabled() {
+    return this._enabled;
+  }
+  set enabled(enabled) {
+    enabled = !!enabled;
+    if (this._enabled === enabled) {
+      return;
+    }
+    this._enabled = enabled;
+    this.#proxy.$setInputBoxEnablement(this._sourceControlHandle, enabled);
+  }
+  get visible() {
+    return this._visible;
+  }
+  set visible(visible) {
+    visible = !!visible;
+    if (this._visible === visible) {
+      return;
+    }
+    this._visible = visible;
+    this.#proxy.$setInputBoxVisibility(this._sourceControlHandle, visible);
+  }
+  get document() {
+    checkProposedApiEnabled(this._extension, "scmTextDocument");
+    return this.#extHostDocuments.getDocument(this._documentUri);
+  }
+  constructor(_extension, _extHostDocuments, proxy, _sourceControlHandle, _documentUri) {
+    this._extension = _extension;
+    this._sourceControlHandle = _sourceControlHandle;
+    this._documentUri = _documentUri;
+    this._value = "";
+    this._onDidChange = new Emitter();
+    this._placeholder = "";
+    this._enabled = true;
+    this._visible = true;
+    this.#extHostDocuments = _extHostDocuments;
+    this.#proxy = proxy;
+  }
+  showValidationMessage(message, type) {
+    checkProposedApiEnabled(this._extension, "scmValidation");
+    this.#proxy.$showValidationMessage(this._sourceControlHandle, message, type);
+  }
+  $onInputBoxValueChange(value) {
+    this.updateValue(value);
+  }
+  updateValue(value) {
+    this._value = value;
+    this._onDidChange.fire(value);
+  }
+}
+class ExtHostSourceControlResourceGroup {
+  static {
+    __name(this, "ExtHostSourceControlResourceGroup");
+  }
+  static {
+    this._handlePool = 0;
+  }
+  get disposed() {
+    return this._disposed;
+  }
+  get id() {
+    return this._id;
+  }
+  get label() {
+    return this._label;
+  }
+  set label(label) {
+    this._label = label;
+    this._proxy.$updateGroupLabel(this._sourceControlHandle, this.handle, label);
+  }
+  get contextValue() {
+    return this._contextValue;
+  }
+  set contextValue(contextValue) {
+    this._contextValue = contextValue;
+    this._proxy.$updateGroup(this._sourceControlHandle, this.handle, this.features);
+  }
+  get hideWhenEmpty() {
+    return this._hideWhenEmpty;
+  }
+  set hideWhenEmpty(hideWhenEmpty) {
+    this._hideWhenEmpty = hideWhenEmpty;
+    this._proxy.$updateGroup(this._sourceControlHandle, this.handle, this.features);
+  }
+  get features() {
+    return {
+      contextValue: this.contextValue,
+      hideWhenEmpty: this.hideWhenEmpty
+    };
+  }
+  get resourceStates() {
+    return [...this._resourceStates];
+  }
+  set resourceStates(resources) {
+    this._resourceStates = [...resources];
+    this._onDidUpdateResourceStates.fire();
+  }
+  constructor(_proxy, _commands, _sourceControlHandle, _id, _label, multiDiffEditorEnableViewChanges, _extension) {
+    this._proxy = _proxy;
+    this._commands = _commands;
+    this._sourceControlHandle = _sourceControlHandle;
+    this._id = _id;
+    this._label = _label;
+    this.multiDiffEditorEnableViewChanges = multiDiffEditorEnableViewChanges;
+    this._extension = _extension;
+    this._resourceHandlePool = 0;
+    this._resourceStates = [];
+    this._resourceStatesMap = /* @__PURE__ */ new Map();
+    this._resourceStatesCommandsMap = /* @__PURE__ */ new Map();
+    this._resourceStatesDisposablesMap = /* @__PURE__ */ new Map();
+    this._onDidUpdateResourceStates = new Emitter();
+    this.onDidUpdateResourceStates = this._onDidUpdateResourceStates.event;
+    this._disposed = false;
+    this._onDidDispose = new Emitter();
+    this.onDidDispose = this._onDidDispose.event;
+    this._handlesSnapshot = [];
+    this._resourceSnapshot = [];
+    this._contextValue = void 0;
+    this._hideWhenEmpty = void 0;
+    this.handle = ExtHostSourceControlResourceGroup._handlePool++;
+  }
+  getResourceState(handle) {
+    return this._resourceStatesMap.get(handle);
+  }
+  $executeResourceCommand(handle, preserveFocus) {
+    const command = this._resourceStatesCommandsMap.get(handle);
+    if (!command) {
+      return Promise.resolve(void 0);
+    }
+    return asPromise(() => this._commands.executeCommand(command.command, ...command.arguments || [], preserveFocus));
+  }
+  _takeResourceStateSnapshot() {
+    const snapshot = [...this._resourceStates].sort(compareResourceStates);
+    const diffs = sortedDiff(this._resourceSnapshot, snapshot, compareResourceStates);
+    const splices = diffs.map((diff) => {
+      const toInsert = diff.toInsert.map((r) => {
+        const handle = this._resourceHandlePool++;
+        this._resourceStatesMap.set(handle, r);
+        const sourceUri = r.resourceUri;
+        let command;
+        if (r.command) {
+          if (r.command.command === "vscode.open" || r.command.command === "vscode.diff" || r.command.command === "vscode.changes") {
+            const disposables = new DisposableStore();
+            command = this._commands.converter.toInternal(r.command, disposables);
+            this._resourceStatesDisposablesMap.set(handle, disposables);
+          } else {
+            this._resourceStatesCommandsMap.set(handle, r.command);
+          }
+        }
+        const hasScmMultiDiffEditorProposalEnabled = isProposedApiEnabled(this._extension, "scmMultiDiffEditor");
+        const multiFileDiffEditorOriginalUri = hasScmMultiDiffEditorProposalEnabled ? r.multiDiffEditorOriginalUri : void 0;
+        const multiFileDiffEditorModifiedUri = hasScmMultiDiffEditorProposalEnabled ? r.multiFileDiffEditorModifiedUri : void 0;
+        const icon = getIconResource(r.decorations);
+        const lightIcon = r.decorations && getIconResource(r.decorations.light) || icon;
+        const darkIcon = r.decorations && getIconResource(r.decorations.dark) || icon;
+        const icons = [lightIcon, darkIcon];
+        const tooltip = r.decorations && r.decorations.tooltip || "";
+        const strikeThrough = r.decorations && !!r.decorations.strikeThrough;
+        const faded = r.decorations && !!r.decorations.faded;
+        const contextValue = r.contextValue || "";
+        const rawResource = [handle, sourceUri, icons, tooltip, strikeThrough, faded, contextValue, command, multiFileDiffEditorOriginalUri, multiFileDiffEditorModifiedUri];
+        return { rawResource, handle };
+      });
+      return { start: diff.start, deleteCount: diff.deleteCount, toInsert };
+    });
+    const rawResourceSplices = splices.map(({ start, deleteCount, toInsert }) => [start, deleteCount, toInsert.map((i) => i.rawResource)]);
+    const reverseSplices = splices.reverse();
+    for (const { start, deleteCount, toInsert } of reverseSplices) {
+      const handles = toInsert.map((i) => i.handle);
+      const handlesToDelete = this._handlesSnapshot.splice(start, deleteCount, ...handles);
+      for (const handle of handlesToDelete) {
+        this._resourceStatesMap.delete(handle);
+        this._resourceStatesCommandsMap.delete(handle);
+        this._resourceStatesDisposablesMap.get(handle)?.dispose();
+        this._resourceStatesDisposablesMap.delete(handle);
+      }
+    }
+    this._resourceSnapshot = snapshot;
+    return rawResourceSplices;
+  }
+  dispose() {
+    this._disposed = true;
+    this._onDidDispose.fire();
+  }
+}
+class ExtHostSourceControl {
+  static {
+    __name(this, "ExtHostSourceControl");
+  }
+  static {
+    this._handlePool = 0;
+  }
+  #proxy;
+  get id() {
+    return this._id;
+  }
+  get label() {
+    return this._label;
+  }
+  get rootUri() {
+    return this._rootUri;
+  }
+  get inputBox() {
+    return this._inputBox;
+  }
+  get count() {
+    return this._count;
+  }
+  set count(count) {
+    if (this._count === count) {
+      return;
+    }
+    this._count = count;
+    this.#proxy.$updateSourceControl(this.handle, { count });
+  }
+  get quickDiffProvider() {
+    return this._quickDiffProvider;
+  }
+  set quickDiffProvider(quickDiffProvider) {
+    this._quickDiffProvider = quickDiffProvider;
+    let quickDiffLabel = void 0;
+    if (isProposedApiEnabled(this._extension, "quickDiffProvider")) {
+      quickDiffLabel = quickDiffProvider?.label;
+    }
+    this.#proxy.$updateSourceControl(this.handle, { hasQuickDiffProvider: !!quickDiffProvider, quickDiffLabel });
+  }
+  get secondaryQuickDiffProvider() {
+    checkProposedApiEnabled(this._extension, "quickDiffProvider");
+    return this._secondaryQuickDiffProvider;
+  }
+  set secondaryQuickDiffProvider(secondaryQuickDiffProvider) {
+    checkProposedApiEnabled(this._extension, "quickDiffProvider");
+    this._secondaryQuickDiffProvider = secondaryQuickDiffProvider;
+    const secondaryQuickDiffLabel = secondaryQuickDiffProvider?.label;
+    this.#proxy.$updateSourceControl(this.handle, { hasSecondaryQuickDiffProvider: !!secondaryQuickDiffProvider, secondaryQuickDiffLabel });
+  }
+  get historyProvider() {
+    checkProposedApiEnabled(this._extension, "scmHistoryProvider");
+    return this._historyProvider;
+  }
+  set historyProvider(historyProvider) {
+    checkProposedApiEnabled(this._extension, "scmHistoryProvider");
+    this._historyProvider = historyProvider;
+    this._historyProviderDisposable.value = new DisposableStore();
+    this.#proxy.$updateSourceControl(this.handle, { hasHistoryProvider: !!historyProvider });
+    if (historyProvider) {
+      this._historyProviderDisposable.value.add(historyProvider.onDidChangeCurrentHistoryItemRefs(() => {
+        const historyItemRef = toSCMHistoryItemRefDto(historyProvider?.currentHistoryItemRef);
+        const historyItemRemoteRef = toSCMHistoryItemRefDto(historyProvider?.currentHistoryItemRemoteRef);
+        const historyItemBaseRef = toSCMHistoryItemRefDto(historyProvider?.currentHistoryItemBaseRef);
+        this.#proxy.$onDidChangeHistoryProviderCurrentHistoryItemRefs(this.handle, historyItemRef, historyItemRemoteRef, historyItemBaseRef);
+      }));
+      this._historyProviderDisposable.value.add(historyProvider.onDidChangeHistoryItemRefs((e) => {
+        if (e.added.length === 0 && e.modified.length === 0 && e.removed.length === 0) {
+          return;
+        }
+        const added = e.added.map((ref) => ({ ...ref, icon: getHistoryItemIconDto(ref.icon) }));
+        const modified = e.modified.map((ref) => ({ ...ref, icon: getHistoryItemIconDto(ref.icon) }));
+        const removed = e.removed.map((ref) => ({ ...ref, icon: getHistoryItemIconDto(ref.icon) }));
+        this.#proxy.$onDidChangeHistoryProviderHistoryItemRefs(this.handle, { added, modified, removed, silent: e.silent });
+      }));
+    }
+  }
+  get commitTemplate() {
+    return this._commitTemplate;
+  }
+  set commitTemplate(commitTemplate) {
+    if (commitTemplate === this._commitTemplate) {
+      return;
+    }
+    this._commitTemplate = commitTemplate;
+    this.#proxy.$updateSourceControl(this.handle, { commitTemplate });
+  }
+  get acceptInputCommand() {
+    return this._acceptInputCommand;
+  }
+  set acceptInputCommand(acceptInputCommand) {
+    this._acceptInputDisposables.value = new DisposableStore();
+    this._acceptInputCommand = acceptInputCommand;
+    const internal = this._commands.converter.toInternal(acceptInputCommand, this._acceptInputDisposables.value);
+    this.#proxy.$updateSourceControl(this.handle, { acceptInputCommand: internal });
+  }
+  get actionButton() {
+    checkProposedApiEnabled(this._extension, "scmActionButton");
+    return this._actionButton;
+  }
+  set actionButton(actionButton) {
+    checkProposedApiEnabled(this._extension, "scmActionButton");
+    if (structuralEquals(this._actionButton, actionButton)) {
+      return;
+    }
+    this._actionButton = actionButton;
+    this._actionButtonDisposables.value = new DisposableStore();
+    const actionButtonDto = actionButton !== void 0 ? {
+      command: {
+        ...this._commands.converter.toInternal(actionButton.command, this._actionButtonDisposables.value),
+        shortTitle: actionButton.command.shortTitle
+      },
+      secondaryCommands: actionButton.secondaryCommands?.map((commandGroup) => {
+        return commandGroup.map((command) => this._commands.converter.toInternal(command, this._actionButtonDisposables.value));
+      }),
+      enabled: actionButton.enabled
+    } : void 0;
+    this.#proxy.$updateSourceControl(this.handle, { actionButton: actionButtonDto ?? null });
+  }
+  get statusBarCommands() {
+    return this._statusBarCommands;
+  }
+  set statusBarCommands(statusBarCommands) {
+    if (this._statusBarCommands && statusBarCommands && commandListEquals(this._statusBarCommands, statusBarCommands)) {
+      return;
+    }
+    this._statusBarDisposables.value = new DisposableStore();
+    this._statusBarCommands = statusBarCommands;
+    const internal = (statusBarCommands || []).map((c) => this._commands.converter.toInternal(c, this._statusBarDisposables.value));
+    this.#proxy.$updateSourceControl(this.handle, { statusBarCommands: internal });
+  }
+  get selected() {
+    return this._selected;
+  }
+  constructor(_extension, _extHostDocuments, proxy, _commands, _id, _label, _rootUri) {
+    this._extension = _extension;
+    this._commands = _commands;
+    this._id = _id;
+    this._label = _label;
+    this._rootUri = _rootUri;
+    this._groups = /* @__PURE__ */ new Map();
+    this._count = void 0;
+    this._quickDiffProvider = void 0;
+    this._secondaryQuickDiffProvider = void 0;
+    this._historyProviderDisposable = new MutableDisposable();
+    this._commitTemplate = void 0;
+    this._acceptInputDisposables = new MutableDisposable();
+    this._acceptInputCommand = void 0;
+    this._actionButtonDisposables = new MutableDisposable();
+    this._statusBarDisposables = new MutableDisposable();
+    this._statusBarCommands = void 0;
+    this._selected = false;
+    this._onDidChangeSelection = new Emitter();
+    this.onDidChangeSelection = this._onDidChangeSelection.event;
+    this.handle = ExtHostSourceControl._handlePool++;
+    this.createdResourceGroups = /* @__PURE__ */ new Map();
+    this.updatedResourceGroups = /* @__PURE__ */ new Set();
+    this.#proxy = proxy;
+    const inputBoxDocumentUri = URI.from({
+      scheme: Schemas.vscodeSourceControl,
+      path: `${_id}/scm${this.handle}/input`,
+      query: _rootUri ? `rootUri=${encodeURIComponent(_rootUri.toString())}` : void 0
+    });
+    this._inputBox = new ExtHostSCMInputBox(_extension, _extHostDocuments, this.#proxy, this.handle, inputBoxDocumentUri);
+    this.#proxy.$registerSourceControl(this.handle, _id, _label, _rootUri, inputBoxDocumentUri);
+  }
+  createResourceGroup(id, label, options) {
+    const multiDiffEditorEnableViewChanges = isProposedApiEnabled(this._extension, "scmMultiDiffEditor") && options?.multiDiffEditorEnableViewChanges === true;
+    const group = new ExtHostSourceControlResourceGroup(this.#proxy, this._commands, this.handle, id, label, multiDiffEditorEnableViewChanges, this._extension);
+    const disposable = Event.once(group.onDidDispose)(() => this.createdResourceGroups.delete(group));
+    this.createdResourceGroups.set(group, disposable);
+    this.eventuallyAddResourceGroups();
+    return group;
+  }
+  eventuallyAddResourceGroups() {
+    const groups = [];
+    const splices = [];
+    for (const [group, disposable] of this.createdResourceGroups) {
+      disposable.dispose();
+      const updateListener = group.onDidUpdateResourceStates(() => {
+        this.updatedResourceGroups.add(group);
+        this.eventuallyUpdateResourceStates();
+      });
+      Event.once(group.onDidDispose)(() => {
+        this.updatedResourceGroups.delete(group);
+        updateListener.dispose();
+        this._groups.delete(group.handle);
+        this.#proxy.$unregisterGroup(this.handle, group.handle);
+      });
+      groups.push([group.handle, group.id, group.label, group.features, group.multiDiffEditorEnableViewChanges]);
+      const snapshot = group._takeResourceStateSnapshot();
+      if (snapshot.length > 0) {
+        splices.push([group.handle, snapshot]);
+      }
+      this._groups.set(group.handle, group);
+    }
+    this.#proxy.$registerGroups(this.handle, groups, splices);
+    this.createdResourceGroups.clear();
+  }
+  eventuallyUpdateResourceStates() {
+    const splices = [];
+    this.updatedResourceGroups.forEach((group) => {
+      const snapshot = group._takeResourceStateSnapshot();
+      if (snapshot.length === 0) {
+        return;
+      }
+      splices.push([group.handle, snapshot]);
+    });
+    if (splices.length > 0) {
+      this.#proxy.$spliceResourceStates(this.handle, splices);
+    }
+    this.updatedResourceGroups.clear();
+  }
+  getResourceGroup(handle) {
+    return this._groups.get(handle);
+  }
+  setSelectionState(selected) {
+    this._selected = selected;
+    this._onDidChangeSelection.fire(selected);
+  }
+  dispose() {
+    this._acceptInputDisposables.dispose();
+    this._actionButtonDisposables.dispose();
+    this._statusBarDisposables.dispose();
+    this._groups.forEach((group) => group.dispose());
+    this.#proxy.$unregisterSourceControl(this.handle);
+  }
+}
+__decorate([
+  debounce(100)
+], ExtHostSourceControl.prototype, "eventuallyAddResourceGroups", null);
+__decorate([
+  debounce(100)
+], ExtHostSourceControl.prototype, "eventuallyUpdateResourceStates", null);
+let ExtHostSCM = class ExtHostSCM2 {
+  static {
+    __name(this, "ExtHostSCM");
+  }
+  static {
+    ExtHostSCM_1 = this;
+  }
+  static {
+    this._handlePool = 0;
+  }
+  get onDidChangeActiveProvider() {
+    return this._onDidChangeActiveProvider.event;
+  }
+  constructor(mainContext, _commands, _extHostDocuments, logService) {
+    this._commands = _commands;
+    this._extHostDocuments = _extHostDocuments;
+    this.logService = logService;
+    this._sourceControls = /* @__PURE__ */ new Map();
+    this._sourceControlsByExtension = new ExtensionIdentifierMap();
+    this._onDidChangeActiveProvider = new Emitter();
+    this._proxy = mainContext.getProxy(MainContext.MainThreadSCM);
+    this._telemetry = mainContext.getProxy(MainContext.MainThreadTelemetry);
+    _commands.registerArgumentProcessor({
+      processArgument: /* @__PURE__ */ __name((arg) => {
+        if (arg && arg.$mid === 3) {
+          const sourceControl = this._sourceControls.get(arg.sourceControlHandle);
+          if (!sourceControl) {
+            return arg;
+          }
+          const group = sourceControl.getResourceGroup(arg.groupHandle);
+          if (!group) {
+            return arg;
+          }
+          return group.getResourceState(arg.handle);
+        } else if (arg && arg.$mid === 4) {
+          const sourceControl = this._sourceControls.get(arg.sourceControlHandle);
+          if (!sourceControl) {
+            return arg;
+          }
+          return sourceControl.getResourceGroup(arg.groupHandle);
+        } else if (arg && arg.$mid === 5) {
+          const sourceControl = this._sourceControls.get(arg.handle);
+          if (!sourceControl) {
+            return arg;
+          }
+          return sourceControl;
+        }
+        return arg;
+      }, "processArgument")
+    });
+  }
+  createSourceControl(extension, id, label, rootUri) {
+    this.logService.trace("ExtHostSCM#createSourceControl", extension.identifier.value, id, label, rootUri);
+    this._telemetry.$publicLog2("api/scm/createSourceControl", {
+      extensionId: extension.identifier.value
+    });
+    const handle = ExtHostSCM_1._handlePool++;
+    const sourceControl = new ExtHostSourceControl(extension, this._extHostDocuments, this._proxy, this._commands, id, label, rootUri);
+    this._sourceControls.set(handle, sourceControl);
+    const sourceControls = this._sourceControlsByExtension.get(extension.identifier) || [];
+    sourceControls.push(sourceControl);
+    this._sourceControlsByExtension.set(extension.identifier, sourceControls);
+    return sourceControl;
+  }
+  // Deprecated
+  getLastInputBox(extension) {
+    this.logService.trace("ExtHostSCM#getLastInputBox", extension.identifier.value);
+    const sourceControls = this._sourceControlsByExtension.get(extension.identifier);
+    const sourceControl = sourceControls && sourceControls[sourceControls.length - 1];
+    return sourceControl && sourceControl.inputBox;
+  }
+  $provideOriginalResource(sourceControlHandle, uriComponents, token) {
+    const uri = URI.revive(uriComponents);
+    this.logService.trace("ExtHostSCM#$provideOriginalResource", sourceControlHandle, uri.toString());
+    const sourceControl = this._sourceControls.get(sourceControlHandle);
+    if (!sourceControl || !sourceControl.quickDiffProvider || !sourceControl.quickDiffProvider.provideOriginalResource) {
+      return Promise.resolve(null);
+    }
+    return asPromise(() => sourceControl.quickDiffProvider.provideOriginalResource(uri, token)).then((r) => r || null);
+  }
+  $provideSecondaryOriginalResource(sourceControlHandle, uriComponents, token) {
+    const uri = URI.revive(uriComponents);
+    this.logService.trace("ExtHostSCM#$provideSecondaryOriginalResource", sourceControlHandle, uri.toString());
+    const sourceControl = this._sourceControls.get(sourceControlHandle);
+    if (!sourceControl || !sourceControl.secondaryQuickDiffProvider || !sourceControl.secondaryQuickDiffProvider.provideOriginalResource) {
+      return Promise.resolve(null);
+    }
+    return asPromise(() => sourceControl.secondaryQuickDiffProvider.provideOriginalResource(uri, token)).then((r) => r || null);
+  }
+  $onInputBoxValueChange(sourceControlHandle, value) {
+    this.logService.trace("ExtHostSCM#$onInputBoxValueChange", sourceControlHandle);
+    const sourceControl = this._sourceControls.get(sourceControlHandle);
+    if (!sourceControl) {
+      return Promise.resolve(void 0);
+    }
+    sourceControl.inputBox.$onInputBoxValueChange(value);
+    return Promise.resolve(void 0);
+  }
+  $executeResourceCommand(sourceControlHandle, groupHandle, handle, preserveFocus) {
+    this.logService.trace("ExtHostSCM#$executeResourceCommand", sourceControlHandle, groupHandle, handle);
+    const sourceControl = this._sourceControls.get(sourceControlHandle);
+    if (!sourceControl) {
+      return Promise.resolve(void 0);
+    }
+    const group = sourceControl.getResourceGroup(groupHandle);
+    if (!group) {
+      return Promise.resolve(void 0);
+    }
+    return group.$executeResourceCommand(handle, preserveFocus);
+  }
+  $validateInput(sourceControlHandle, value, cursorPosition) {
+    this.logService.trace("ExtHostSCM#$validateInput", sourceControlHandle);
+    const sourceControl = this._sourceControls.get(sourceControlHandle);
+    if (!sourceControl) {
+      return Promise.resolve(void 0);
+    }
+    if (!sourceControl.inputBox.validateInput) {
+      return Promise.resolve(void 0);
+    }
+    return asPromise(() => sourceControl.inputBox.validateInput(value, cursorPosition)).then((result) => {
+      if (!result) {
+        return Promise.resolve(void 0);
+      }
+      const message = MarkdownString.fromStrict(result.message);
+      if (!message) {
+        return Promise.resolve(void 0);
+      }
+      return Promise.resolve([message, result.type]);
+    });
+  }
+  $setSelectedSourceControl(selectedSourceControlHandle) {
+    this.logService.trace("ExtHostSCM#$setSelectedSourceControl", selectedSourceControlHandle);
+    if (selectedSourceControlHandle !== void 0) {
+      this._sourceControls.get(selectedSourceControlHandle)?.setSelectionState(true);
+    }
+    if (this._selectedSourceControlHandle !== void 0) {
+      this._sourceControls.get(this._selectedSourceControlHandle)?.setSelectionState(false);
+    }
+    this._selectedSourceControlHandle = selectedSourceControlHandle;
+    return Promise.resolve(void 0);
+  }
+  async $resolveHistoryItemChatContext(sourceControlHandle, historyItemId, token) {
+    try {
+      const historyProvider = this._sourceControls.get(sourceControlHandle)?.historyProvider;
+      const chatContext = await historyProvider?.resolveHistoryItemChatContext(historyItemId, token);
+      return chatContext ?? void 0;
+    } catch (err) {
+      this.logService.error("ExtHostSCM#$resolveHistoryItemChatContext", err);
+      return void 0;
+    }
+  }
+  async $resolveHistoryItemRefsCommonAncestor(sourceControlHandle, historyItemRefs, token) {
+    try {
+      const historyProvider = this._sourceControls.get(sourceControlHandle)?.historyProvider;
+      const ancestor = await historyProvider?.resolveHistoryItemRefsCommonAncestor(historyItemRefs, token);
+      return ancestor ?? void 0;
+    } catch (err) {
+      this.logService.error("ExtHostSCM#$resolveHistoryItemRefsCommonAncestor", err);
+      return void 0;
+    }
+  }
+  async $provideHistoryItemRefs(sourceControlHandle, historyItemRefs, token) {
+    try {
+      const historyProvider = this._sourceControls.get(sourceControlHandle)?.historyProvider;
+      const refs = await historyProvider?.provideHistoryItemRefs(historyItemRefs, token);
+      return refs?.map((ref) => ({ ...ref, icon: getHistoryItemIconDto(ref.icon) })) ?? void 0;
+    } catch (err) {
+      this.logService.error("ExtHostSCM#$provideHistoryItemRefs", err);
+      return void 0;
+    }
+  }
+  async $provideHistoryItems(sourceControlHandle, options, token) {
+    try {
+      const historyProvider = this._sourceControls.get(sourceControlHandle)?.historyProvider;
+      const historyItems = await historyProvider?.provideHistoryItems(options, token);
+      return historyItems?.map((item) => toSCMHistoryItemDto(item)) ?? void 0;
+    } catch (err) {
+      this.logService.error("ExtHostSCM#$provideHistoryItems", err);
+      return void 0;
+    }
+  }
+  async $provideHistoryItemChanges(sourceControlHandle, historyItemId, historyItemParentId, token) {
+    try {
+      const historyProvider = this._sourceControls.get(sourceControlHandle)?.historyProvider;
+      const changes = await historyProvider?.provideHistoryItemChanges(historyItemId, historyItemParentId, token);
+      return changes ?? void 0;
+    } catch (err) {
+      this.logService.error("ExtHostSCM#$provideHistoryItemChanges", err);
+      return void 0;
+    }
+  }
+};
+ExtHostSCM = ExtHostSCM_1 = __decorate([
+  __param(3, ILogService)
+], ExtHostSCM);
+export {
+  ExtHostSCM,
+  ExtHostSCMInputBox
+};
+//# sourceMappingURL=extHostSCM.js.map

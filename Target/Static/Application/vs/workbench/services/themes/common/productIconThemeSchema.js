@@ -1,1 +1,83 @@
-import*as e from"../../../../nls.js";import{$Ql as t}from"../../../../platform/registry/common/platform.js";import{$Rl as r}from"../../../../platform/jsonschemas/common/jsonContributionRegistry.js";import{$Bt as o,$vt as i,$wt as n,$xt as s,$Et as l}from"../../../../platform/theme/common/iconRegistry.js";const p="vscode://schemas/product-icon-theme",a={type:"object",allowComments:!0,allowTrailingCommas:!0,properties:{fonts:{type:"array",items:{type:"object",properties:{id:{type:"string",description:e.localize(14599,null),pattern:i.source,patternErrorMessage:o},src:{type:"array",description:e.localize(14600,null),items:{type:"object",properties:{path:{type:"string",description:e.localize(14601,null)},format:{type:"string",description:e.localize(14602,null),enum:["woff","woff2","truetype","opentype","embedded-opentype","svg"]}},required:["path","format"]}},weight:{type:"string",description:e.localize(14603,null),anyOf:[{enum:["normal","bold","lighter","bolder"]},{type:"string",pattern:s.source}]},style:{type:"string",description:e.localize(14604,null),anyOf:[{enum:["normal","italic","oblique"]},{type:"string",pattern:n.source}]}},required:["id","src"]}},iconDefinitions:{description:e.localize(14605,null),$ref:l}}};function d(){t.as(r.JSONContribution).registerSchema(p,a)}export{d as $I5b};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import * as nls from "../../../../nls.js";
+import { Registry } from "../../../../platform/registry/common/platform.js";
+import { Extensions as JSONExtensions } from "../../../../platform/jsonschemas/common/jsonContributionRegistry.js";
+import { fontIdErrorMessage, fontIdRegex, fontStyleRegex, fontWeightRegex, iconsSchemaId } from "../../../../platform/theme/common/iconRegistry.js";
+const schemaId = "vscode://schemas/product-icon-theme";
+const schema = {
+  type: "object",
+  allowComments: true,
+  allowTrailingCommas: true,
+  properties: {
+    fonts: {
+      type: "array",
+      items: {
+        type: "object",
+        properties: {
+          id: {
+            type: "string",
+            description: nls.localize("schema.id", "The ID of the font."),
+            pattern: fontIdRegex.source,
+            patternErrorMessage: fontIdErrorMessage
+          },
+          src: {
+            type: "array",
+            description: nls.localize("schema.src", "The location of the font."),
+            items: {
+              type: "object",
+              properties: {
+                path: {
+                  type: "string",
+                  description: nls.localize("schema.font-path", "The font path, relative to the current product icon theme file.")
+                },
+                format: {
+                  type: "string",
+                  description: nls.localize("schema.font-format", "The format of the font."),
+                  enum: ["woff", "woff2", "truetype", "opentype", "embedded-opentype", "svg"]
+                }
+              },
+              required: [
+                "path",
+                "format"
+              ]
+            }
+          },
+          weight: {
+            type: "string",
+            description: nls.localize("schema.font-weight", "The weight of the font. See https://developer.mozilla.org/en-US/docs/Web/CSS/font-weight for valid values."),
+            anyOf: [
+              { enum: ["normal", "bold", "lighter", "bolder"] },
+              { type: "string", pattern: fontWeightRegex.source }
+            ]
+          },
+          style: {
+            type: "string",
+            description: nls.localize("schema.font-style", "The style of the font. See https://developer.mozilla.org/en-US/docs/Web/CSS/font-style for valid values."),
+            anyOf: [
+              { enum: ["normal", "italic", "oblique"] },
+              { type: "string", pattern: fontStyleRegex.source }
+            ]
+          }
+        },
+        required: [
+          "id",
+          "src"
+        ]
+      }
+    },
+    iconDefinitions: {
+      description: nls.localize("schema.iconDefinitions", "Association of icon name to a font character."),
+      $ref: iconsSchemaId
+    }
+  }
+};
+function registerProductIconThemeSchemas() {
+  const schemaRegistry = Registry.as(JSONExtensions.JSONContribution);
+  schemaRegistry.registerSchema(schemaId, schema);
+}
+__name(registerProductIconThemeSchemas, "registerProductIconThemeSchemas");
+export {
+  registerProductIconThemeSchemas
+};
+//# sourceMappingURL=productIconThemeSchema.js.map

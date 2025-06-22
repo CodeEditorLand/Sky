@@ -1,1 +1,82 @@
-import{$vd as d}from"../../../../base/common/lifecycle.js";import{Event as h}from"../../../../base/common/event.js";import{FilePermission as y,FileSystemProviderErrorCode as l,FileType as F}from"../../../../platform/files/common/files.js";import{ChangeType as w,$gxc as g,$fxc as b,$6wc as v}from"../common/editSessions.js";import{$yb as N}from"../../../../base/common/errors.js";var p=function(i,e,t,r){var s=arguments.length,o=s<3?e:r===null?r=Object.getOwnPropertyDescriptor(e,t):r,n;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")o=Reflect.decorate(i,e,t,r);else for(var a=i.length-1;a>=0;a--)(n=i[a])&&(o=(s<3?n(o):s>3?n(e,t,o):n(e,t))||o);return s>3&&o&&Object.defineProperty(e,t,o),o},u=function(i,e){return function(t,r){e(t,r,i)}};let m=class{static{this.SCHEMA=b}constructor(e){this.a=e,this.capabilities=2050,this.onDidChangeCapabilities=h.None,this.onDidChangeFile=h.None}async readFile(e){const t=/(?<ref>[^/]+)\/(?<folderName>[^/]+)\/(?<filePath>.*)/.exec(e.path.substring(1));if(!t?.groups)throw l.FileNotFound;const{ref:r,folderName:s,filePath:o}=t.groups,n=await this.a.read("editSessions",r);if(!n)throw l.FileNotFound;const a=JSON.parse(n.content),c=a.folders.find(f=>f.name===s)?.workingChanges.find(f=>f.relativeFilePath===o);if(!c||c.type===w.Deletion)throw l.FileNotFound;return g(a.version,c.contents).buffer}async stat(e){const t=await this.readFile(e),r=Date.now();return{type:F.File,permissions:y.Readonly,mtime:r,ctime:r,size:t.byteLength}}watch(e,t){return d.None}async mkdir(e){}async readdir(e){return[]}async rename(e,t,r){}async delete(e,t){}async writeFile(){throw new N}};m=p([u(0,v)],m);export{m as $mxc};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { Disposable } from "../../../../base/common/lifecycle.js";
+import { Event } from "../../../../base/common/event.js";
+import { FilePermission, FileSystemProviderErrorCode, FileType } from "../../../../platform/files/common/files.js";
+import { ChangeType, decodeEditSessionFileContent, EDIT_SESSIONS_SCHEME, IEditSessionsStorageService } from "../common/editSessions.js";
+import { NotSupportedError } from "../../../../base/common/errors.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+let EditSessionsFileSystemProvider = class EditSessionsFileSystemProvider2 {
+  static {
+    __name(this, "EditSessionsFileSystemProvider");
+  }
+  static {
+    this.SCHEMA = EDIT_SESSIONS_SCHEME;
+  }
+  constructor(editSessionsStorageService) {
+    this.editSessionsStorageService = editSessionsStorageService;
+    this.capabilities = 2048 + 2;
+    this.onDidChangeCapabilities = Event.None;
+    this.onDidChangeFile = Event.None;
+  }
+  async readFile(resource) {
+    const match = /(?<ref>[^/]+)\/(?<folderName>[^/]+)\/(?<filePath>.*)/.exec(resource.path.substring(1));
+    if (!match?.groups) {
+      throw FileSystemProviderErrorCode.FileNotFound;
+    }
+    const { ref, folderName, filePath } = match.groups;
+    const data = await this.editSessionsStorageService.read("editSessions", ref);
+    if (!data) {
+      throw FileSystemProviderErrorCode.FileNotFound;
+    }
+    const content = JSON.parse(data.content);
+    const change = content.folders.find((f) => f.name === folderName)?.workingChanges.find((change2) => change2.relativeFilePath === filePath);
+    if (!change || change.type === ChangeType.Deletion) {
+      throw FileSystemProviderErrorCode.FileNotFound;
+    }
+    return decodeEditSessionFileContent(content.version, change.contents).buffer;
+  }
+  async stat(resource) {
+    const content = await this.readFile(resource);
+    const currentTime = Date.now();
+    return {
+      type: FileType.File,
+      permissions: FilePermission.Readonly,
+      mtime: currentTime,
+      ctime: currentTime,
+      size: content.byteLength
+    };
+  }
+  watch(resource, opts) {
+    return Disposable.None;
+  }
+  async mkdir(resource) {
+  }
+  async readdir(resource) {
+    return [];
+  }
+  async rename(from, to, opts) {
+  }
+  async delete(resource, opts) {
+  }
+  async writeFile() {
+    throw new NotSupportedError();
+  }
+};
+EditSessionsFileSystemProvider = __decorate([
+  __param(0, IEditSessionsStorageService)
+], EditSessionsFileSystemProvider);
+export {
+  EditSessionsFileSystemProvider
+};
+//# sourceMappingURL=editSessionsFileSystemProvider.js.map

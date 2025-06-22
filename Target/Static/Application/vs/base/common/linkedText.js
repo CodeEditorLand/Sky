@@ -1,1 +1,51 @@
-import{$tm as p}from"./decorators.js";var f=function(r,e,t,n){var o=arguments.length,i=o<3?e:n===null?n=Object.getOwnPropertyDescriptor(e,t):n,l;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")i=Reflect.decorate(r,e,t,n);else for(var s=r.length-1;s>=0;s--)(l=r[s])&&(i=(o<3?l(i):o>3?l(e,t,i):l(e,t))||i);return o>3&&i&&Object.defineProperty(e,t,i),i};class c{constructor(e){this.nodes=e}toString(){return this.nodes.map(e=>typeof e=="string"?e:e.label).join("")}}f([p],c.prototype,"toString",null);const u=/\[([^\]]+)\]\(((?:https?:\/\/|command:|file:)[^\)\s]+)(?: (["'])(.+?)(\3))?\)/gi;function m(r){const e=[];let t=0,n;for(;n=u.exec(r);){n.index-t>0&&e.push(r.substring(t,n.index));const[,o,i,,l]=n;l?e.push({label:o,href:i,title:l}):e.push({label:o,href:i}),t=n.index+n[0].length}return t<r.length&&e.push(r.substring(t)),new c(e)}export{c as $10,m as $20};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { memoize } from "./decorators.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+class LinkedText {
+  static {
+    __name(this, "LinkedText");
+  }
+  constructor(nodes) {
+    this.nodes = nodes;
+  }
+  toString() {
+    return this.nodes.map((node) => typeof node === "string" ? node : node.label).join("");
+  }
+}
+__decorate([
+  memoize
+], LinkedText.prototype, "toString", null);
+const LINK_REGEX = /\[([^\]]+)\]\(((?:https?:\/\/|command:|file:)[^\)\s]+)(?: (["'])(.+?)(\3))?\)/gi;
+function parseLinkedText(text) {
+  const result = [];
+  let index = 0;
+  let match;
+  while (match = LINK_REGEX.exec(text)) {
+    if (match.index - index > 0) {
+      result.push(text.substring(index, match.index));
+    }
+    const [, label, href, , title] = match;
+    if (title) {
+      result.push({ label, href, title });
+    } else {
+      result.push({ label, href });
+    }
+    index = match.index + match[0].length;
+  }
+  if (index < text.length) {
+    result.push(text.substring(index));
+  }
+  return new LinkedText(result);
+}
+__name(parseLinkedText, "parseLinkedText");
+export {
+  LinkedText,
+  parseLinkedText
+};
+//# sourceMappingURL=linkedText.js.map

@@ -1,3 +1,162 @@
-var f;(function(i){i[i.CR=13]="CR",i[i.LF=10]="LF",i[i.COLON=58]="COLON",i[i.SPACE=32]="SPACE"})(f||(f={}));class d{constructor(t){this.a="",this.b="",this.f=[],this.g=!1,this.h=t,this.i=new TextDecoder("utf-8")}getLastEventId(){return this.d}getReconnectionTime(){return this.e}feed(t){if(t.length===0)return;let s=0;for(this.g&&t[0]===10&&s++,this.g=!1;s<t.length;){const e=t.indexOf(13,s),h=t.indexOf(10,s),n=e===-1?h:h===-1?e:Math.min(e,h);if(n===-1)break;let r="";for(const a of this.f)r+=this.i.decode(a,{stream:!0});r+=this.i.decode(t.subarray(s,n)),this.j(r),this.f.length=0,s=n+(t[n]===13&&t[n+1]===10?2:1)}s<t.length?this.f.push(t.subarray(s)):this.g=t[t.length-1]===13}j(t){if(!t.length){this.l();return}if(t.startsWith(":"))return;let s,e;const h=t.indexOf(":");h===-1?(s=t,e=""):(s=t.substring(0,h),e=t.substring(h+1),e.startsWith(" ")&&(e=e.substring(1))),this.k(s,e)}k(t,s){switch(t){case"event":this.b=s;break;case"data":this.a+=s,this.a+=`
-`;break;case"id":s.includes("\0")?this.c=void 0:this.c=this.d=s;break;case"retry":/^\d+$/.test(s)&&(this.e=parseInt(s,10));break}}l(){if(this.a===""){this.a="",this.b="";return}this.a.endsWith(`
-`)&&(this.a=this.a.substring(0,this.a.length-1));const t={type:this.b||"message",data:this.a};this.c!==void 0&&(t.id=this.c),this.e!==void 0&&(t.retry=this.e),this.h(t),this.reset()}reset(){this.a="",this.b="",this.c=void 0}}export{d as $40};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var Chr;
+(function(Chr2) {
+  Chr2[Chr2["CR"] = 13] = "CR";
+  Chr2[Chr2["LF"] = 10] = "LF";
+  Chr2[Chr2["COLON"] = 58] = "COLON";
+  Chr2[Chr2["SPACE"] = 32] = "SPACE";
+})(Chr || (Chr = {}));
+class SSEParser {
+  static {
+    __name(this, "SSEParser");
+  }
+  /**
+   * Creates a new SSE parser.
+   * @param onEvent The callback to invoke when an event is dispatched.
+   */
+  constructor(onEvent) {
+    this.dataBuffer = "";
+    this.eventTypeBuffer = "";
+    this.buffer = [];
+    this.endedOnCR = false;
+    this.onEventHandler = onEvent;
+    this.decoder = new TextDecoder("utf-8");
+  }
+  /**
+   * Gets the last event ID received by this parser.
+   */
+  getLastEventId() {
+    return this.lastEventIdBuffer;
+  }
+  /**
+   * Gets the reconnection time in milliseconds, if one was specified by the server.
+   */
+  getReconnectionTime() {
+    return this.reconnectionTime;
+  }
+  /**
+   * Feeds a chunk of the SSE stream to the parser.
+   * @param chunk The chunk to parse as a Uint8Array of UTF-8 encoded data.
+   */
+  feed(chunk) {
+    if (chunk.length === 0) {
+      return;
+    }
+    let offset = 0;
+    if (this.endedOnCR && chunk[0] === 10) {
+      offset++;
+    }
+    this.endedOnCR = false;
+    while (offset < chunk.length) {
+      const indexCR = chunk.indexOf(13, offset);
+      const indexLF = chunk.indexOf(10, offset);
+      const index = indexCR === -1 ? indexLF : indexLF === -1 ? indexCR : Math.min(indexCR, indexLF);
+      if (index === -1) {
+        break;
+      }
+      let str = "";
+      for (const buf of this.buffer) {
+        str += this.decoder.decode(buf, { stream: true });
+      }
+      str += this.decoder.decode(chunk.subarray(offset, index));
+      this.processLine(str);
+      this.buffer.length = 0;
+      offset = index + (chunk[index] === 13 && chunk[index + 1] === 10 ? 2 : 1);
+    }
+    if (offset < chunk.length) {
+      this.buffer.push(chunk.subarray(offset));
+    } else {
+      this.endedOnCR = chunk[chunk.length - 1] === 13;
+    }
+  }
+  /**
+   * Processes a single line from the SSE stream.
+   */
+  processLine(line) {
+    if (!line.length) {
+      this.dispatchEvent();
+      return;
+    }
+    if (line.startsWith(":")) {
+      return;
+    }
+    let field;
+    let value;
+    const colonIndex = line.indexOf(":");
+    if (colonIndex === -1) {
+      field = line;
+      value = "";
+    } else {
+      field = line.substring(0, colonIndex);
+      value = line.substring(colonIndex + 1);
+      if (value.startsWith(" ")) {
+        value = value.substring(1);
+      }
+    }
+    this.processField(field, value);
+  }
+  /**
+   * Processes a field with the given name and value.
+   */
+  processField(field, value) {
+    switch (field) {
+      case "event":
+        this.eventTypeBuffer = value;
+        break;
+      case "data":
+        this.dataBuffer += value;
+        this.dataBuffer += "\n";
+        break;
+      case "id":
+        if (!value.includes("\0")) {
+          this.currentEventId = this.lastEventIdBuffer = value;
+        } else {
+          this.currentEventId = void 0;
+        }
+        break;
+      case "retry":
+        if (/^\d+$/.test(value)) {
+          this.reconnectionTime = parseInt(value, 10);
+        }
+        break;
+    }
+  }
+  /**
+   * Dispatches the event based on the current buffer states.
+   */
+  dispatchEvent() {
+    if (this.dataBuffer === "") {
+      this.dataBuffer = "";
+      this.eventTypeBuffer = "";
+      return;
+    }
+    if (this.dataBuffer.endsWith("\n")) {
+      this.dataBuffer = this.dataBuffer.substring(0, this.dataBuffer.length - 1);
+    }
+    const event = {
+      type: this.eventTypeBuffer || "message",
+      data: this.dataBuffer
+    };
+    if (this.currentEventId !== void 0) {
+      event.id = this.currentEventId;
+    }
+    if (this.reconnectionTime !== void 0) {
+      event.retry = this.reconnectionTime;
+    }
+    this.onEventHandler(event);
+    this.reset();
+  }
+  /**
+   * Resets the parser state.
+   */
+  reset() {
+    this.dataBuffer = "";
+    this.eventTypeBuffer = "";
+    this.currentEventId = void 0;
+  }
+}
+export {
+  SSEParser
+};
+//# sourceMappingURL=sseParser.js.map

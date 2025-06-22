@@ -1,1 +1,111 @@
-import{$e_ as d}from"./domFontInfo.js";var h;!function(t){t[t.Regular=0]="Regular",t[t.Italic=1]="Italic",t[t.Bold=2]="Bold"}(h||(h={}));class p{constructor(t,e){this.chr=t,this.type=e,this.width=0}fulfill(t){this.width=t}}class r{constructor(t,e){this.a=t,this.b=e,this.c=null,this.d=null}read(t){this.e(),t.document.body.appendChild(this.c),this.g(),this.c?.remove(),this.c=null,this.d=null}e(){const t=document.createElement("div");t.style.position="absolute",t.style.top="-50000px",t.style.width="50000px";const e=document.createElement("div");d(e,this.a),t.appendChild(e);const s=document.createElement("div");d(s,this.a),s.style.fontWeight="bold",t.appendChild(s);const i=document.createElement("div");d(i,this.a),i.style.fontStyle="italic",t.appendChild(i);const l=[];for(const t of this.b){let n;0===t.type&&(n=e),2===t.type&&(n=s),1===t.type&&(n=i),n.appendChild(document.createElement("br"));const h=document.createElement("span");r.f(h,t),n.appendChild(h),l.push(h)}this.c=t,this.d=l}static f(t,e){if(" "===e.chr){let e=" ";for(let t=0;t<8;t++)e+=e;t.innerText=e}else{let s=e.chr;for(let t=0;t<8;t++)s+=s;t.textContent=s}}g(){for(let t=0,e=this.b.length;t<e;t++){const e=this.b[t],s=this.d[t];e.fulfill(s.offsetWidth/256)}}}function m(t,e,s){new r(e,s).read(t)}export{p as $f_,m as $g_,h as CharWidthRequestType};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { applyFontInfo } from "./domFontInfo.js";
+var CharWidthRequestType;
+(function(CharWidthRequestType2) {
+  CharWidthRequestType2[CharWidthRequestType2["Regular"] = 0] = "Regular";
+  CharWidthRequestType2[CharWidthRequestType2["Italic"] = 1] = "Italic";
+  CharWidthRequestType2[CharWidthRequestType2["Bold"] = 2] = "Bold";
+})(CharWidthRequestType || (CharWidthRequestType = {}));
+class CharWidthRequest {
+  static {
+    __name(this, "CharWidthRequest");
+  }
+  constructor(chr, type) {
+    this.chr = chr;
+    this.type = type;
+    this.width = 0;
+  }
+  fulfill(width) {
+    this.width = width;
+  }
+}
+class DomCharWidthReader {
+  static {
+    __name(this, "DomCharWidthReader");
+  }
+  constructor(bareFontInfo, requests) {
+    this._bareFontInfo = bareFontInfo;
+    this._requests = requests;
+    this._container = null;
+    this._testElements = null;
+  }
+  read(targetWindow) {
+    this._createDomElements();
+    targetWindow.document.body.appendChild(this._container);
+    this._readFromDomElements();
+    this._container?.remove();
+    this._container = null;
+    this._testElements = null;
+  }
+  _createDomElements() {
+    const container = document.createElement("div");
+    container.style.position = "absolute";
+    container.style.top = "-50000px";
+    container.style.width = "50000px";
+    const regularDomNode = document.createElement("div");
+    applyFontInfo(regularDomNode, this._bareFontInfo);
+    container.appendChild(regularDomNode);
+    const boldDomNode = document.createElement("div");
+    applyFontInfo(boldDomNode, this._bareFontInfo);
+    boldDomNode.style.fontWeight = "bold";
+    container.appendChild(boldDomNode);
+    const italicDomNode = document.createElement("div");
+    applyFontInfo(italicDomNode, this._bareFontInfo);
+    italicDomNode.style.fontStyle = "italic";
+    container.appendChild(italicDomNode);
+    const testElements = [];
+    for (const request of this._requests) {
+      let parent;
+      if (request.type === 0) {
+        parent = regularDomNode;
+      }
+      if (request.type === 2) {
+        parent = boldDomNode;
+      }
+      if (request.type === 1) {
+        parent = italicDomNode;
+      }
+      parent.appendChild(document.createElement("br"));
+      const testElement = document.createElement("span");
+      DomCharWidthReader._render(testElement, request);
+      parent.appendChild(testElement);
+      testElements.push(testElement);
+    }
+    this._container = container;
+    this._testElements = testElements;
+  }
+  static _render(testElement, request) {
+    if (request.chr === " ") {
+      let htmlString = "\xA0";
+      for (let i = 0; i < 8; i++) {
+        htmlString += htmlString;
+      }
+      testElement.innerText = htmlString;
+    } else {
+      let testString = request.chr;
+      for (let i = 0; i < 8; i++) {
+        testString += testString;
+      }
+      testElement.textContent = testString;
+    }
+  }
+  _readFromDomElements() {
+    for (let i = 0, len = this._requests.length; i < len; i++) {
+      const request = this._requests[i];
+      const testElement = this._testElements[i];
+      request.fulfill(testElement.offsetWidth / 256);
+    }
+  }
+}
+function readCharWidths(targetWindow, bareFontInfo, requests) {
+  const reader = new DomCharWidthReader(bareFontInfo, requests);
+  reader.read(targetWindow);
+}
+__name(readCharWidths, "readCharWidths");
+export {
+  CharWidthRequest,
+  CharWidthRequestType,
+  readCharWidths
+};
+//# sourceMappingURL=charWidthReader.js.map

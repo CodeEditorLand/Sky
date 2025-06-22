@@ -1,1 +1,134 @@
-import{$df as o}from"../../../base/common/event.js";import{$vd as a,$td as c}from"../../../base/common/lifecycle.js";import{$9j as d,$0j as u}from"../../files/common/files.js";import{$jj as g}from"../../../base/common/ternarySearchTree.js";import{$Jc as l}from"../../../base/common/map.js";class C extends a{constructor(t,i,e,s,r,n){super(),this.f=t,this.g=i,this.h=e,this.j=s,this.m=r,this.n=n,this.capabilities=this.g.capabilities,this.onDidChangeCapabilities=this.g.onDidChangeCapabilities,this.a=this.B(new o),this.onDidChangeFile=this.a.event,this.b=g.forUris(()=>!(this.capabilities&1024)),this.c=new l(h=>this.m.extUri.getComparisonKey(this.t(h))),this.r(),this.B(s.onDidChangeProfiles(()=>this.r())),this.B(this.g.onDidChangeFile(h=>this.s(h)))}r(){this.c.clear();for(const t of this.j.profiles)this.c.add(t.settingsResource),this.c.add(t.keybindingsResource),this.c.add(t.tasksResource),this.c.add(t.extensionsResource)}open(t,i){return this.g.open(this.t(t),i)}close(t){return this.g.close(t)}read(t,i,e,s,r){return this.g.read(t,i,e,s,r)}write(t,i,e,s,r){return this.g.write(t,i,e,s,r)}watch(t,i){this.b.set(t,t);const e=this.g.watch(this.t(t),i);return c(()=>{this.b.delete(t),e.dispose()})}stat(t){return this.g.stat(this.t(t))}mkdir(t){return this.g.mkdir(this.t(t))}rename(t,i,e){return this.g.rename(this.t(t),this.t(i),e)}readFile(t,i){return this.g.readFile(this.t(t),i)}readFileStream(t,i,e){return this.g.readFileStream(this.t(t),i,e)}readdir(t){return this.g.readdir(this.t(t))}enforceAtomicReadFile(t){return this.c.has(t)}writeFile(t,i,e){return this.g.writeFile(this.t(t),i,e)}enforceAtomicWriteFile(t){return this.c.has(t)?{postfix:".vsctmp"}:!1}delete(t,i){return this.g.delete(this.t(t),i)}copy(t,i,e){if(d(this.g))return this.g.copy(this.t(t),this.t(i),e);throw new Error("copy not supported")}cloneFile(t,i){if(u(this.g))return this.g.cloneFile(this.t(t),this.t(i));throw new Error("clone not supported")}s(t){const i=[];for(const e of t){if(e.resource.scheme!==this.f)continue;const s=this.u(e.resource);this.b.findSubstr(s)&&i.push({resource:s,type:e.type,cId:e.cId})}i.length&&(this.n.debug("User data changed"),this.a.fire(i))}t(t){return t.with({scheme:this.f})}u(t){return t.with({scheme:this.h})}}export{C as $2B};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { Emitter } from "../../../base/common/event.js";
+import { Disposable, toDisposable } from "../../../base/common/lifecycle.js";
+import { hasFileFolderCopyCapability, hasFileCloneCapability } from "../../files/common/files.js";
+import { TernarySearchTree } from "../../../base/common/ternarySearchTree.js";
+import { ResourceSet } from "../../../base/common/map.js";
+class FileUserDataProvider extends Disposable {
+  static {
+    __name(this, "FileUserDataProvider");
+  }
+  constructor(fileSystemScheme, fileSystemProvider, userDataScheme, userDataProfilesService, uriIdentityService, logService) {
+    super();
+    this.fileSystemScheme = fileSystemScheme;
+    this.fileSystemProvider = fileSystemProvider;
+    this.userDataScheme = userDataScheme;
+    this.userDataProfilesService = userDataProfilesService;
+    this.uriIdentityService = uriIdentityService;
+    this.logService = logService;
+    this.capabilities = this.fileSystemProvider.capabilities;
+    this.onDidChangeCapabilities = this.fileSystemProvider.onDidChangeCapabilities;
+    this._onDidChangeFile = this._register(new Emitter());
+    this.onDidChangeFile = this._onDidChangeFile.event;
+    this.watchResources = TernarySearchTree.forUris(() => !(this.capabilities & 1024));
+    this.atomicReadWriteResources = new ResourceSet((uri) => this.uriIdentityService.extUri.getComparisonKey(this.toFileSystemResource(uri)));
+    this.updateAtomicReadWritesResources();
+    this._register(userDataProfilesService.onDidChangeProfiles(() => this.updateAtomicReadWritesResources()));
+    this._register(this.fileSystemProvider.onDidChangeFile((e) => this.handleFileChanges(e)));
+  }
+  updateAtomicReadWritesResources() {
+    this.atomicReadWriteResources.clear();
+    for (const profile of this.userDataProfilesService.profiles) {
+      this.atomicReadWriteResources.add(profile.settingsResource);
+      this.atomicReadWriteResources.add(profile.keybindingsResource);
+      this.atomicReadWriteResources.add(profile.tasksResource);
+      this.atomicReadWriteResources.add(profile.extensionsResource);
+    }
+  }
+  open(resource, opts) {
+    return this.fileSystemProvider.open(this.toFileSystemResource(resource), opts);
+  }
+  close(fd) {
+    return this.fileSystemProvider.close(fd);
+  }
+  read(fd, pos, data, offset, length) {
+    return this.fileSystemProvider.read(fd, pos, data, offset, length);
+  }
+  write(fd, pos, data, offset, length) {
+    return this.fileSystemProvider.write(fd, pos, data, offset, length);
+  }
+  watch(resource, opts) {
+    this.watchResources.set(resource, resource);
+    const disposable = this.fileSystemProvider.watch(this.toFileSystemResource(resource), opts);
+    return toDisposable(() => {
+      this.watchResources.delete(resource);
+      disposable.dispose();
+    });
+  }
+  stat(resource) {
+    return this.fileSystemProvider.stat(this.toFileSystemResource(resource));
+  }
+  mkdir(resource) {
+    return this.fileSystemProvider.mkdir(this.toFileSystemResource(resource));
+  }
+  rename(from, to, opts) {
+    return this.fileSystemProvider.rename(this.toFileSystemResource(from), this.toFileSystemResource(to), opts);
+  }
+  readFile(resource, opts) {
+    return this.fileSystemProvider.readFile(this.toFileSystemResource(resource), opts);
+  }
+  readFileStream(resource, opts, token) {
+    return this.fileSystemProvider.readFileStream(this.toFileSystemResource(resource), opts, token);
+  }
+  readdir(resource) {
+    return this.fileSystemProvider.readdir(this.toFileSystemResource(resource));
+  }
+  enforceAtomicReadFile(resource) {
+    return this.atomicReadWriteResources.has(resource);
+  }
+  writeFile(resource, content, opts) {
+    return this.fileSystemProvider.writeFile(this.toFileSystemResource(resource), content, opts);
+  }
+  enforceAtomicWriteFile(resource) {
+    if (this.atomicReadWriteResources.has(resource)) {
+      return { postfix: ".vsctmp" };
+    }
+    return false;
+  }
+  delete(resource, opts) {
+    return this.fileSystemProvider.delete(this.toFileSystemResource(resource), opts);
+  }
+  copy(from, to, opts) {
+    if (hasFileFolderCopyCapability(this.fileSystemProvider)) {
+      return this.fileSystemProvider.copy(this.toFileSystemResource(from), this.toFileSystemResource(to), opts);
+    }
+    throw new Error("copy not supported");
+  }
+  cloneFile(from, to) {
+    if (hasFileCloneCapability(this.fileSystemProvider)) {
+      return this.fileSystemProvider.cloneFile(this.toFileSystemResource(from), this.toFileSystemResource(to));
+    }
+    throw new Error("clone not supported");
+  }
+  handleFileChanges(changes) {
+    const userDataChanges = [];
+    for (const change of changes) {
+      if (change.resource.scheme !== this.fileSystemScheme) {
+        continue;
+      }
+      const userDataResource = this.toUserDataResource(change.resource);
+      if (this.watchResources.findSubstr(userDataResource)) {
+        userDataChanges.push({
+          resource: userDataResource,
+          type: change.type,
+          cId: change.cId
+        });
+      }
+    }
+    if (userDataChanges.length) {
+      this.logService.debug("User data changed");
+      this._onDidChangeFile.fire(userDataChanges);
+    }
+  }
+  toFileSystemResource(userDataResource) {
+    return userDataResource.with({ scheme: this.fileSystemScheme });
+  }
+  toUserDataResource(fileSystemResource) {
+    return fileSystemResource.with({ scheme: this.userDataScheme });
+  }
+}
+export {
+  FileUserDataProvider
+};
+//# sourceMappingURL=fileUserDataProvider.js.map

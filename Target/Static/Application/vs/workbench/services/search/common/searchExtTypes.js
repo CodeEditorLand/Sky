@@ -1,1 +1,123 @@
-class s{constructor(e,r){this.line=e,this.character=r}isBefore(e){return!1}isBeforeOrEqual(e){return!1}isAfter(e){return!1}isAfterOrEqual(e){return!1}isEqual(e){return!1}compareTo(e){return 0}translate(e,r){return new s(0,0)}with(e){return new s(0,0)}}class i{constructor(e,r,t,n){this.isEmpty=!1,this.isSingleLine=!1,this.start=new s(e,r),this.end=new s(t,n)}contains(e){return!1}isEqual(e){return!1}intersection(e){}union(e){return new i(0,0,0,0)}with(e){return new i(0,0,0,0)}}class h{constructor(e,r,s){this.uri=e,this.ranges=r,this.previewText=s}}class l{constructor(e,r,s){this.uri=e,this.text=r,this.lineNumber=s}}class c{constructor(e){this.keyword=e}}var o,a;!function(e){e[e.None=1]="None",e[e.FilesExclude=2]="FilesExclude",e[e.SearchAndFilesExclude=3]="SearchAndFilesExclude"}(o||(o={})),function(e){e[e.Information=1]="Information",e[e.Warning=2]="Warning"}(a||(a={}));export{s as $$O,i as $_O,h as $aP,l as $bP,c as $cP,o as ExcludeSettingOptions,a as TextSearchCompleteMessageType};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+class Position {
+  static {
+    __name(this, "Position");
+  }
+  constructor(line, character) {
+    this.line = line;
+    this.character = character;
+  }
+  isBefore(other) {
+    return false;
+  }
+  isBeforeOrEqual(other) {
+    return false;
+  }
+  isAfter(other) {
+    return false;
+  }
+  isAfterOrEqual(other) {
+    return false;
+  }
+  isEqual(other) {
+    return false;
+  }
+  compareTo(other) {
+    return 0;
+  }
+  translate(_, _2) {
+    return new Position(0, 0);
+  }
+  with(_) {
+    return new Position(0, 0);
+  }
+}
+class Range {
+  static {
+    __name(this, "Range");
+  }
+  constructor(startLine, startCol, endLine, endCol) {
+    this.isEmpty = false;
+    this.isSingleLine = false;
+    this.start = new Position(startLine, startCol);
+    this.end = new Position(endLine, endCol);
+  }
+  contains(positionOrRange) {
+    return false;
+  }
+  isEqual(other) {
+    return false;
+  }
+  intersection(range) {
+    return void 0;
+  }
+  union(other) {
+    return new Range(0, 0, 0, 0);
+  }
+  with(_) {
+    return new Range(0, 0, 0, 0);
+  }
+}
+class TextSearchMatch2 {
+  static {
+    __name(this, "TextSearchMatch2");
+  }
+  /**
+   * @param uri The uri for the matching document.
+   * @param ranges The ranges associated with this match.
+   * @param previewText The text that is used to preview the match. The highlighted range in `previewText` is specified in `ranges`.
+   */
+  constructor(uri, ranges, previewText) {
+    this.uri = uri;
+    this.ranges = ranges;
+    this.previewText = previewText;
+  }
+}
+class TextSearchContext2 {
+  static {
+    __name(this, "TextSearchContext2");
+  }
+  /**
+   * @param uri The uri for the matching document.
+   * @param text The line of context text.
+   * @param lineNumber The line number of this line of context.
+   */
+  constructor(uri, text, lineNumber) {
+    this.uri = uri;
+    this.text = text;
+    this.lineNumber = lineNumber;
+  }
+}
+class AISearchKeyword {
+  static {
+    __name(this, "AISearchKeyword");
+  }
+  /**
+   * @param keyword The keyword associated with the search.
+   */
+  constructor(keyword) {
+    this.keyword = keyword;
+  }
+}
+var ExcludeSettingOptions;
+(function(ExcludeSettingOptions2) {
+  ExcludeSettingOptions2[ExcludeSettingOptions2["None"] = 1] = "None";
+  ExcludeSettingOptions2[ExcludeSettingOptions2["FilesExclude"] = 2] = "FilesExclude";
+  ExcludeSettingOptions2[ExcludeSettingOptions2["SearchAndFilesExclude"] = 3] = "SearchAndFilesExclude";
+})(ExcludeSettingOptions || (ExcludeSettingOptions = {}));
+var TextSearchCompleteMessageType;
+(function(TextSearchCompleteMessageType2) {
+  TextSearchCompleteMessageType2[TextSearchCompleteMessageType2["Information"] = 1] = "Information";
+  TextSearchCompleteMessageType2[TextSearchCompleteMessageType2["Warning"] = 2] = "Warning";
+})(TextSearchCompleteMessageType || (TextSearchCompleteMessageType = {}));
+export {
+  AISearchKeyword,
+  ExcludeSettingOptions,
+  Position,
+  Range,
+  TextSearchCompleteMessageType,
+  TextSearchContext2,
+  TextSearchMatch2
+};
+//# sourceMappingURL=searchExtTypes.js.map

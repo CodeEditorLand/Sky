@@ -1,1 +1,20 @@
-import{$c5 as s}from"../../../browser/window.js";import{Event as r}from"../../../common/event.js";import{$Rm as c}from"../../../common/uuid.js";import{$h$ as p,$g$ as f}from"../../sandbox/electron-browser/globals.js";async function E(e,m,t=c()){p.acquire(m,t),typeof e=="string"&&f.send(e,t);const i=r.fromDOMEventEmitter(s,"message",o=>({nonce:o.data,port:o.ports[0],source:o.source})),{port:n}=await r.toPromise(r.once(r.filter(i,o=>o.nonce===t&&o.source===s)));return n}export{E as $p$};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { mainWindow } from "../../../browser/window.js";
+import { Event } from "../../../common/event.js";
+import { generateUuid } from "../../../common/uuid.js";
+import { ipcMessagePort, ipcRenderer } from "../../sandbox/electron-browser/globals.js";
+async function acquirePort(requestChannel, responseChannel, nonce = generateUuid()) {
+  ipcMessagePort.acquire(responseChannel, nonce);
+  if (typeof requestChannel === "string") {
+    ipcRenderer.send(requestChannel, nonce);
+  }
+  const onMessageChannelResult = Event.fromDOMEventEmitter(mainWindow, "message", (e) => ({ nonce: e.data, port: e.ports[0], source: e.source }));
+  const { port } = await Event.toPromise(Event.once(Event.filter(onMessageChannelResult, (e) => e.nonce === nonce && e.source === mainWindow)));
+  return port;
+}
+__name(acquirePort, "acquirePort");
+export {
+  acquirePort
+};
+//# sourceMappingURL=ipc.mp.js.map

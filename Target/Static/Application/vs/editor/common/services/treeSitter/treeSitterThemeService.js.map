@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["../../../../../../../../../../Dependency/Microsoft/Dependency/Editor/src/vs/editor/common/services/treeSitter/treeSitterThemeService.ts"],
+  "sourcesContent": ["/*---------------------------------------------------------------------------------------------\r\n *  Copyright (c) Microsoft Corporation. All rights reserved.\r\n *  Licensed under the MIT License. See License.txt in the project root for license information.\r\n *--------------------------------------------------------------------------------------------*/\r\n\r\nimport { createDecorator } from '../../../../platform/instantiation/common/instantiation.js';\r\nimport { IObservable, IReader } from '../../../../base/common/observable.js';\r\n\r\nexport const ITreeSitterThemeService = createDecorator<ITreeSitterThemeService>('treeSitterThemeService');\r\n\r\nexport interface ITreeSitterThemeService {\r\n\treadonly _serviceBrand: undefined;\r\n\treadonly onChange: IObservable<void>;\r\n\r\n\tfindMetadata(captureNames: string[], languageId: number, bracket: boolean, reader: IReader | undefined): number;\r\n}\r\n"],
+  "mappings": "AAKA,SAAS,uBAAuB;AAGzB,MAAM,0BAA0B,gBAAyC,wBAAwB;",
+  "names": []
+}

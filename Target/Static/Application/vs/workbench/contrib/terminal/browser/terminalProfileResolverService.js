@@ -1,1 +1,343 @@
-import{Schemas as w}from"../../../../base/common/network.js";import{$Z as x}from"../../../../base/common/process.js";import{$El as I}from"../../../../platform/configuration/common/configuration.js";import{$hl as E}from"../../../../platform/workspace/common/workspace.js";import{$xW as A}from"../../../services/configurationResolver/common/configurationResolver.js";import{$x4 as R}from"../../../services/history/common/history.js";import{OS as g}from"../../../../base/common/platform.js";import{$Iw as k}from"../../../../platform/terminal/common/terminal.js";import{$n4 as W}from"../common/terminal.js";import*as c from"../../../../base/common/path.js";import{$Mj as m}from"../../../../base/common/codicons.js";import{$Dt as _}from"../../../../platform/theme/common/iconRegistry.js";import{$YK as j}from"../../../services/remote/common/remoteAgentService.js";import{$um as B}from"../../../../base/common/decorators.js";import{ThemeIcon as y}from"../../../../base/common/themables.js";import{URI as h}from"../../../../base/common/uri.js";import{$2o as b}from"../../../../base/common/objects.js";import{$qA as p}from"../../../../platform/terminal/common/terminalProfiles.js";import{$IYb as O}from"./terminal.js";import{$vd as N}from"../../../../base/common/lifecycle.js";var D=function(u,t,e,r){var a=arguments.length,i=a<3?t:r===null?r=Object.getOwnPropertyDescriptor(t,e):r,n;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")i=Reflect.decorate(u,t,e,r);else for(var s=u.length-1;s>=0;s--)(n=u[s])&&(i=(a<3?n(i):a>3?n(t,e,i):n(t,e))||i);return a>3&&i&&Object.defineProperty(t,e,i),i},f=function(u,t){return function(e,r){t(e,r,u)}};const P="Generated";class S extends N{get defaultProfileName(){return this.c}constructor(t,e,r,a,i,n,s,l){super(),this.f=t,this.g=e,this.h=r,this.j=a,this.m=i,this.n=n,this.r=s,this.s=l,this.b=_(),this.s.getConnection()?this.s.getEnvironment().then(o=>this.a=o?.os||g):this.a=g,this.B(this.g.onDidChangeConfiguration(o=>{(o.affectsConfiguration("terminal.integrated.defaultProfile.windows")||o.affectsConfiguration("terminal.integrated.defaultProfile.osx")||o.affectsConfiguration("terminal.integrated.defaultProfile.linux"))&&this.t()})),this.B(this.n.onDidChangeAvailableProfiles(()=>this.t()))}async t(){this.a&&(this.c=(await this.getDefaultProfile({remoteAuthority:this.s.getConnection()?.remoteAuthority,os:this.a}))?.profileName)}resolveIcon(t,e){if(t.icon){t.icon=this.u(t.icon)||this.getDefaultIcon();return}if(t.customPtyImplementation){t.icon=this.getDefaultIcon();return}if(t.executable)return;const r=this.z(e);r&&(t.icon=r.icon),t.icon||(t.icon=this.getDefaultIcon())}getDefaultIcon(t){return this.b.getIcon(this.g.getValue("terminal.integrated.tabs.defaultIcon",{resource:t}))||m.terminal}async resolveShellLaunchConfig(t,e){let r;t.executable?r=await this.F({path:t.executable,args:t.args,profileName:P,isDefault:!1},e):r=await this.getDefaultProfile(e),t.executable=r.path,t.args=r.args,r.env&&(t.env?t.env={...t.env,...r.env}:t.env=r.env);const a=t===void 0||typeof t.cwd=="string"?void 0:t.cwd;t.icon=this.u(t.icon)||this.u(r.icon)||this.getDefaultIcon(a),r.overrideName&&(t.name=r.profileName),t.color=t.color||r.color||this.g.getValue("terminal.integrated.tabs.defaultColor",{resource:a}),t.useShellEnvironment===void 0&&(t.useShellEnvironment=this.g.getValue("terminal.integrated.inheritEnv"))}async getDefaultShell(t){return(await this.getDefaultProfile(t)).path}async getDefaultShellArgs(t){return(await this.getDefaultProfile(t)).args||[]}async getDefaultProfile(t){return this.F(await this.w(t),t)}getEnvironment(t){return this.f.getEnvironment(t)}u(t){if(t){if(typeof t=="string")return y.fromId(t);if(y.isThemeIcon(t))return t;if(h.isUri(t)||p(t))return h.revive(t);if(typeof t=="object"&&"light"in t&&"dark"in t){const e=t;if((h.isUri(e.light)||p(e.light))&&(h.isUri(e.dark)||p(e.dark)))return{light:h.revive(e.light),dark:h.revive(e.dark)}}}}async w(t){if(t.allowAutomationShell){const r=this.D(t);if(r)return r}await this.n.profilesReady;const e=this.z(t.os);return e?this.y(t,e):this.y(t,await this.C(t))}y(t,e){if(t.allowAutomationShell){const r=b(e);return r.icon=m.tools,r}return e}z(t){return this.n.getDefaultProfile(t)}async C(t){const e=await this.f.getDefaultSystemShell(t.remoteAuthority,t.os);if(t.os===g){let i=this.n.availableProfiles.find(n=>c.$bb(n.path).name===c.$bb(e).name);if(i)return t.allowAutomationShell&&(i=b(i),i.icon=m.tools),i}let r;t.os===2&&c.$bb(e).name.match(/(zsh|bash)/)?r=["--login"]:r=[];const a=this.I(e);return{profileName:P,path:e,args:r,icon:a,isDefault:!1}}D(t){const e=this.g.getValue(`terminal.integrated.automationProfile.${this.H(t.os)}`);if(this.J(e,t.os))return e.icon=this.u(e.icon)||m.tools,e}async F(t,e){const r=await this.f.getEnvironment(e.remoteAuthority);if(e.os===1){const n=!!r.hasOwnProperty("PROCESSOR_ARCHITEW6432"),s=r.windir;if(!n&&s){const l=c.$7(s,"Sysnative").replace(/\//g,"\\").toLowerCase();t.path&&t.path.toLowerCase().indexOf(l)===0&&(t.path=c.$7(s,"System32",t.path.substr(l.length+1)))}t.path&&(t.path=t.path.replace(/\//g,"\\"))}const a=this.j.getLastActiveWorkspaceRoot(e.remoteAuthority?w.vscodeRemote:w.file),i=a?this.r.getWorkspaceFolder(a)??void 0:void 0;return t.path=await this.G(t.path,r,i),t.args&&(typeof t.args=="string"?t.args=await this.G(t.args,r,i):t.args=await Promise.all(t.args.map(n=>this.G(n,r,i)))),t}async G(t,e,r){try{t=await this.h.resolveWithEnvironment(e,r,t)}catch(a){this.m.error("Could not resolve shell",a)}return t}H(t){switch(t){case 3:return"linux";case 2:return"osx";case 1:return"windows"}}I(t){switch(c.$bb(t).name){case"bash":return m.terminalBash;case"pwsh":case"powershell":return m.terminalPowershell;case"tmux":return m.terminalTmux;case"cmd":return m.terminalCmd;default:return}}J(t,e){return t==null||typeof t!="object"?!1:"path"in t&&typeof t.path=="string"}}D([B(200)],S.prototype,"t",null);let $=class extends S{constructor(t,e,r,a,i,n,s,l){super({getDefaultSystemShell:async(o,d)=>{const v=await i.getBackend(o);return!o||!v?d===1?"pwsh":"bash":v.getDefaultSystemShell(d)},getEnvironment:async o=>{const d=await i.getBackend(o);return!o||!d?x:d.getEnvironment()}},e,t,r,a,n,s,l)}};$=D([f(0,A),f(1,I),f(2,R),f(3,k),f(4,O),f(5,W),f(6,E),f(7,j)],$);export{S as $SBc,$ as $TBc};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { Schemas } from "../../../../base/common/network.js";
+import { env } from "../../../../base/common/process.js";
+import { IConfigurationService } from "../../../../platform/configuration/common/configuration.js";
+import { IWorkspaceContextService } from "../../../../platform/workspace/common/workspace.js";
+import { IConfigurationResolverService } from "../../../services/configurationResolver/common/configurationResolver.js";
+import { IHistoryService } from "../../../services/history/common/history.js";
+import { OS } from "../../../../base/common/platform.js";
+import { ITerminalLogService } from "../../../../platform/terminal/common/terminal.js";
+import { ITerminalProfileService } from "../common/terminal.js";
+import * as path from "../../../../base/common/path.js";
+import { Codicon } from "../../../../base/common/codicons.js";
+import { getIconRegistry } from "../../../../platform/theme/common/iconRegistry.js";
+import { IRemoteAgentService } from "../../../services/remote/common/remoteAgentService.js";
+import { debounce } from "../../../../base/common/decorators.js";
+import { ThemeIcon } from "../../../../base/common/themables.js";
+import { URI } from "../../../../base/common/uri.js";
+import { deepClone } from "../../../../base/common/objects.js";
+import { isUriComponents } from "../../../../platform/terminal/common/terminalProfiles.js";
+import { ITerminalInstanceService } from "./terminal.js";
+import { Disposable } from "../../../../base/common/lifecycle.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+const generatedProfileName = "Generated";
+class BaseTerminalProfileResolverService extends Disposable {
+  static {
+    __name(this, "BaseTerminalProfileResolverService");
+  }
+  get defaultProfileName() {
+    return this._defaultProfileName;
+  }
+  constructor(_context, _configurationService, _configurationResolverService, _historyService, _logService, _terminalProfileService, _workspaceContextService, _remoteAgentService) {
+    super();
+    this._context = _context;
+    this._configurationService = _configurationService;
+    this._configurationResolverService = _configurationResolverService;
+    this._historyService = _historyService;
+    this._logService = _logService;
+    this._terminalProfileService = _terminalProfileService;
+    this._workspaceContextService = _workspaceContextService;
+    this._remoteAgentService = _remoteAgentService;
+    this._iconRegistry = getIconRegistry();
+    if (this._remoteAgentService.getConnection()) {
+      this._remoteAgentService.getEnvironment().then((env2) => this._primaryBackendOs = env2?.os || OS);
+    } else {
+      this._primaryBackendOs = OS;
+    }
+    this._register(this._configurationService.onDidChangeConfiguration((e) => {
+      if (e.affectsConfiguration(
+        "terminal.integrated.defaultProfile.windows"
+        /* TerminalSettingId.DefaultProfileWindows */
+      ) || e.affectsConfiguration(
+        "terminal.integrated.defaultProfile.osx"
+        /* TerminalSettingId.DefaultProfileMacOs */
+      ) || e.affectsConfiguration(
+        "terminal.integrated.defaultProfile.linux"
+        /* TerminalSettingId.DefaultProfileLinux */
+      )) {
+        this._refreshDefaultProfileName();
+      }
+    }));
+    this._register(this._terminalProfileService.onDidChangeAvailableProfiles(() => this._refreshDefaultProfileName()));
+  }
+  async _refreshDefaultProfileName() {
+    if (this._primaryBackendOs) {
+      this._defaultProfileName = (await this.getDefaultProfile({
+        remoteAuthority: this._remoteAgentService.getConnection()?.remoteAuthority,
+        os: this._primaryBackendOs
+      }))?.profileName;
+    }
+  }
+  resolveIcon(shellLaunchConfig, os) {
+    if (shellLaunchConfig.icon) {
+      shellLaunchConfig.icon = this._getCustomIcon(shellLaunchConfig.icon) || this.getDefaultIcon();
+      return;
+    }
+    if (shellLaunchConfig.customPtyImplementation) {
+      shellLaunchConfig.icon = this.getDefaultIcon();
+      return;
+    }
+    if (shellLaunchConfig.executable) {
+      return;
+    }
+    const defaultProfile = this._getUnresolvedRealDefaultProfile(os);
+    if (defaultProfile) {
+      shellLaunchConfig.icon = defaultProfile.icon;
+    }
+    if (!shellLaunchConfig.icon) {
+      shellLaunchConfig.icon = this.getDefaultIcon();
+    }
+  }
+  getDefaultIcon(resource) {
+    return this._iconRegistry.getIcon(this._configurationService.getValue("terminal.integrated.tabs.defaultIcon", { resource })) || Codicon.terminal;
+  }
+  async resolveShellLaunchConfig(shellLaunchConfig, options) {
+    let resolvedProfile;
+    if (shellLaunchConfig.executable) {
+      resolvedProfile = await this._resolveProfile({
+        path: shellLaunchConfig.executable,
+        args: shellLaunchConfig.args,
+        profileName: generatedProfileName,
+        isDefault: false
+      }, options);
+    } else {
+      resolvedProfile = await this.getDefaultProfile(options);
+    }
+    shellLaunchConfig.executable = resolvedProfile.path;
+    shellLaunchConfig.args = resolvedProfile.args;
+    if (resolvedProfile.env) {
+      if (shellLaunchConfig.env) {
+        shellLaunchConfig.env = { ...shellLaunchConfig.env, ...resolvedProfile.env };
+      } else {
+        shellLaunchConfig.env = resolvedProfile.env;
+      }
+    }
+    const resource = shellLaunchConfig === void 0 || typeof shellLaunchConfig.cwd === "string" ? void 0 : shellLaunchConfig.cwd;
+    shellLaunchConfig.icon = this._getCustomIcon(shellLaunchConfig.icon) || this._getCustomIcon(resolvedProfile.icon) || this.getDefaultIcon(resource);
+    if (resolvedProfile.overrideName) {
+      shellLaunchConfig.name = resolvedProfile.profileName;
+    }
+    shellLaunchConfig.color = shellLaunchConfig.color || resolvedProfile.color || this._configurationService.getValue("terminal.integrated.tabs.defaultColor", { resource });
+    if (shellLaunchConfig.useShellEnvironment === void 0) {
+      shellLaunchConfig.useShellEnvironment = this._configurationService.getValue(
+        "terminal.integrated.inheritEnv"
+        /* TerminalSettingId.InheritEnv */
+      );
+    }
+  }
+  async getDefaultShell(options) {
+    return (await this.getDefaultProfile(options)).path;
+  }
+  async getDefaultShellArgs(options) {
+    return (await this.getDefaultProfile(options)).args || [];
+  }
+  async getDefaultProfile(options) {
+    return this._resolveProfile(await this._getUnresolvedDefaultProfile(options), options);
+  }
+  getEnvironment(remoteAuthority) {
+    return this._context.getEnvironment(remoteAuthority);
+  }
+  _getCustomIcon(icon) {
+    if (!icon) {
+      return void 0;
+    }
+    if (typeof icon === "string") {
+      return ThemeIcon.fromId(icon);
+    }
+    if (ThemeIcon.isThemeIcon(icon)) {
+      return icon;
+    }
+    if (URI.isUri(icon) || isUriComponents(icon)) {
+      return URI.revive(icon);
+    }
+    if (typeof icon === "object" && "light" in icon && "dark" in icon) {
+      const castedIcon = icon;
+      if ((URI.isUri(castedIcon.light) || isUriComponents(castedIcon.light)) && (URI.isUri(castedIcon.dark) || isUriComponents(castedIcon.dark))) {
+        return { light: URI.revive(castedIcon.light), dark: URI.revive(castedIcon.dark) };
+      }
+    }
+    return void 0;
+  }
+  async _getUnresolvedDefaultProfile(options) {
+    if (options.allowAutomationShell) {
+      const automationShellProfile = this._getUnresolvedAutomationShellProfile(options);
+      if (automationShellProfile) {
+        return automationShellProfile;
+      }
+    }
+    await this._terminalProfileService.profilesReady;
+    const defaultProfile = this._getUnresolvedRealDefaultProfile(options.os);
+    if (defaultProfile) {
+      return this._setIconForAutomation(options, defaultProfile);
+    }
+    return this._setIconForAutomation(options, await this._getUnresolvedFallbackDefaultProfile(options));
+  }
+  _setIconForAutomation(options, profile) {
+    if (options.allowAutomationShell) {
+      const profileClone = deepClone(profile);
+      profileClone.icon = Codicon.tools;
+      return profileClone;
+    }
+    return profile;
+  }
+  _getUnresolvedRealDefaultProfile(os) {
+    return this._terminalProfileService.getDefaultProfile(os);
+  }
+  async _getUnresolvedFallbackDefaultProfile(options) {
+    const executable = await this._context.getDefaultSystemShell(options.remoteAuthority, options.os);
+    if (options.os === OS) {
+      let existingProfile = this._terminalProfileService.availableProfiles.find((e) => path.parse(e.path).name === path.parse(executable).name);
+      if (existingProfile) {
+        if (options.allowAutomationShell) {
+          existingProfile = deepClone(existingProfile);
+          existingProfile.icon = Codicon.tools;
+        }
+        return existingProfile;
+      }
+    }
+    let args;
+    if (options.os === 2 && path.parse(executable).name.match(/(zsh|bash)/)) {
+      args = ["--login"];
+    } else {
+      args = [];
+    }
+    const icon = this._guessProfileIcon(executable);
+    return {
+      profileName: generatedProfileName,
+      path: executable,
+      args,
+      icon,
+      isDefault: false
+    };
+  }
+  _getUnresolvedAutomationShellProfile(options) {
+    const automationProfile = this._configurationService.getValue(`terminal.integrated.automationProfile.${this._getOsKey(options.os)}`);
+    if (this._isValidAutomationProfile(automationProfile, options.os)) {
+      automationProfile.icon = this._getCustomIcon(automationProfile.icon) || Codicon.tools;
+      return automationProfile;
+    }
+    return void 0;
+  }
+  async _resolveProfile(profile, options) {
+    const env2 = await this._context.getEnvironment(options.remoteAuthority);
+    if (options.os === 1) {
+      const isWoW64 = !!env2.hasOwnProperty("PROCESSOR_ARCHITEW6432");
+      const windir = env2.windir;
+      if (!isWoW64 && windir) {
+        const sysnativePath = path.join(windir, "Sysnative").replace(/\//g, "\\").toLowerCase();
+        if (profile.path && profile.path.toLowerCase().indexOf(sysnativePath) === 0) {
+          profile.path = path.join(windir, "System32", profile.path.substr(sysnativePath.length + 1));
+        }
+      }
+      if (profile.path) {
+        profile.path = profile.path.replace(/\//g, "\\");
+      }
+    }
+    const activeWorkspaceRootUri = this._historyService.getLastActiveWorkspaceRoot(options.remoteAuthority ? Schemas.vscodeRemote : Schemas.file);
+    const lastActiveWorkspace = activeWorkspaceRootUri ? this._workspaceContextService.getWorkspaceFolder(activeWorkspaceRootUri) ?? void 0 : void 0;
+    profile.path = await this._resolveVariables(profile.path, env2, lastActiveWorkspace);
+    if (profile.args) {
+      if (typeof profile.args === "string") {
+        profile.args = await this._resolveVariables(profile.args, env2, lastActiveWorkspace);
+      } else {
+        profile.args = await Promise.all(profile.args.map((arg) => this._resolveVariables(arg, env2, lastActiveWorkspace)));
+      }
+    }
+    return profile;
+  }
+  async _resolveVariables(value, env2, lastActiveWorkspace) {
+    try {
+      value = await this._configurationResolverService.resolveWithEnvironment(env2, lastActiveWorkspace, value);
+    } catch (e) {
+      this._logService.error(`Could not resolve shell`, e);
+    }
+    return value;
+  }
+  _getOsKey(os) {
+    switch (os) {
+      case 3:
+        return "linux";
+      case 2:
+        return "osx";
+      case 1:
+        return "windows";
+    }
+  }
+  _guessProfileIcon(shell) {
+    const file = path.parse(shell).name;
+    switch (file) {
+      case "bash":
+        return Codicon.terminalBash;
+      case "pwsh":
+      case "powershell":
+        return Codicon.terminalPowershell;
+      case "tmux":
+        return Codicon.terminalTmux;
+      case "cmd":
+        return Codicon.terminalCmd;
+      default:
+        return void 0;
+    }
+  }
+  _isValidAutomationProfile(profile, os) {
+    if (profile === null || profile === void 0 || typeof profile !== "object") {
+      return false;
+    }
+    if ("path" in profile && typeof profile.path === "string") {
+      return true;
+    }
+    return false;
+  }
+}
+__decorate([
+  debounce(200)
+], BaseTerminalProfileResolverService.prototype, "_refreshDefaultProfileName", null);
+let BrowserTerminalProfileResolverService = class BrowserTerminalProfileResolverService2 extends BaseTerminalProfileResolverService {
+  static {
+    __name(this, "BrowserTerminalProfileResolverService");
+  }
+  constructor(configurationResolverService, configurationService, historyService, logService, terminalInstanceService, terminalProfileService, workspaceContextService, remoteAgentService) {
+    super({
+      getDefaultSystemShell: /* @__PURE__ */ __name(async (remoteAuthority, os) => {
+        const backend = await terminalInstanceService.getBackend(remoteAuthority);
+        if (!remoteAuthority || !backend) {
+          return os === 1 ? "pwsh" : "bash";
+        }
+        return backend.getDefaultSystemShell(os);
+      }, "getDefaultSystemShell"),
+      getEnvironment: /* @__PURE__ */ __name(async (remoteAuthority) => {
+        const backend = await terminalInstanceService.getBackend(remoteAuthority);
+        if (!remoteAuthority || !backend) {
+          return env;
+        }
+        return backend.getEnvironment();
+      }, "getEnvironment")
+    }, configurationService, configurationResolverService, historyService, logService, terminalProfileService, workspaceContextService, remoteAgentService);
+  }
+};
+BrowserTerminalProfileResolverService = __decorate([
+  __param(0, IConfigurationResolverService),
+  __param(1, IConfigurationService),
+  __param(2, IHistoryService),
+  __param(3, ITerminalLogService),
+  __param(4, ITerminalInstanceService),
+  __param(5, ITerminalProfileService),
+  __param(6, IWorkspaceContextService),
+  __param(7, IRemoteAgentService)
+], BrowserTerminalProfileResolverService);
+export {
+  BaseTerminalProfileResolverService,
+  BrowserTerminalProfileResolverService
+};
+//# sourceMappingURL=terminalProfileResolverService.js.map

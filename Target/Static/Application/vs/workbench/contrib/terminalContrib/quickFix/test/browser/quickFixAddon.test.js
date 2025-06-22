@@ -1,16 +1,212 @@
-import{strictEqual as p}from"assert";import{$uI as T}from"../../../../../../amdX.js";import{Event as S}from"../../../../../../base/common/event.js";import{$m as P}from"../../../../../../base/common/platform.js";import{URI as G}from"../../../../../../base/common/uri.js";import{$x$ as j}from"../../../../../../base/test/common/utils.js";import{$IFc as I}from"../../../../../../editor/test/browser/editorTestServices.js";import{$El as D}from"../../../../../../platform/configuration/common/configuration.js";import{$MFc as E}from"../../../../../../platform/configuration/test/common/testConfigurationService.js";import{$jBc as A}from"../../../../../../platform/contextview/browser/contextMenuService.js";import{$ofb as U}from"../../../../../../platform/contextview/browser/contextView.js";import{$RFc as N}from"../../../../../../platform/instantiation/test/common/instantiationServiceMock.js";import{$2H as O}from"../../../../../../platform/label/common/label.js";import{$3n as _,$eo as q}from"../../../../../../platform/log/common/log.js";import{$4$ as Y}from"../../../../../../platform/opener/common/opener.js";import{$Ho as H}from"../../../../../../platform/storage/common/storage.js";import{$bYb as B}from"../../../../../../platform/terminal/common/capabilities/commandDetectionCapability.js";import{$_Xb as X}from"../../../../../../platform/terminal/common/capabilities/terminalCapabilityStore.js";import{$BZb as Q}from"../../browser/quickFix.js";import{$Usc as c,$Tsc as W}from"../../browser/quickFixAddon.js";import{$9sc as Z,$1sc as M,$$sc as R,$3sc as $,$7sc as V,$Wsc as v,$2sc as y,$0sc as F,$6sc as z,$Zsc as x,$8sc as J,$Ysc as C,$_sc as K,$4sc as L,$atc as tt,$5sc as k}from"../../browser/terminalQuickFixBuiltinActions.js";import{$CNc as et}from"../../../../../test/common/workbenchTestServices.js";suite("QuickFixAddon",()=>{const w=j();let l,f,e,n,r,s,g;setup(async()=>{g=w.add(new N);const t=(await T("@xterm/xterm","lib/xterm.js")).Terminal;s=w.add(new t({allowProposedApi:!0,cols:80,rows:30})),g.stub(H,w.add(new et)),g.stub(Q,{onDidRegisterProvider:S.None,onDidUnregisterProvider:S.None,onDidRegisterCommandSelector:S.None,extensionQuickFixes:Promise.resolve([])}),g.stub(D,new E),r=g.stub(O,{});const a=w.add(new X);g.stub(_,new q),f=w.add(g.createInstance(B,s)),a.add(2,f),g.stub(U,w.add(g.createInstance(A))),n=g.stub(Y,{}),e=new I(g),l=g.createInstance(W,[],a),s.loadAddon(l)}),suite("registerCommandFinishedListener & getMatchActions",()=>{suite("gitSimilarCommand",()=>{const t=new Map,a="git sttatus";let i=`git: 'sttatus' is not a git command. See 'git --help'.
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { strictEqual } from "assert";
+import { importAMDNodeModule } from "../../../../../../amdX.js";
+import { Event } from "../../../../../../base/common/event.js";
+import { isWindows } from "../../../../../../base/common/platform.js";
+import { URI } from "../../../../../../base/common/uri.js";
+import { ensureNoDisposablesAreLeakedInTestSuite } from "../../../../../../base/test/common/utils.js";
+import { TestCommandService } from "../../../../../../editor/test/browser/editorTestServices.js";
+import { IConfigurationService } from "../../../../../../platform/configuration/common/configuration.js";
+import { TestConfigurationService } from "../../../../../../platform/configuration/test/common/testConfigurationService.js";
+import { ContextMenuService } from "../../../../../../platform/contextview/browser/contextMenuService.js";
+import { IContextMenuService } from "../../../../../../platform/contextview/browser/contextView.js";
+import { TestInstantiationService } from "../../../../../../platform/instantiation/test/common/instantiationServiceMock.js";
+import { ILabelService } from "../../../../../../platform/label/common/label.js";
+import { ILogService, NullLogService } from "../../../../../../platform/log/common/log.js";
+import { IOpenerService } from "../../../../../../platform/opener/common/opener.js";
+import { IStorageService } from "../../../../../../platform/storage/common/storage.js";
+import { CommandDetectionCapability } from "../../../../../../platform/terminal/common/capabilities/commandDetectionCapability.js";
+import { TerminalCapabilityStore } from "../../../../../../platform/terminal/common/capabilities/terminalCapabilityStore.js";
+import { ITerminalQuickFixService } from "../../browser/quickFix.js";
+import { getQuickFixesForCommand, TerminalQuickFixAddon } from "../../browser/quickFixAddon.js";
+import { freePort, FreePortOutputRegex, gitCreatePr, GitCreatePrOutputRegex, gitFastForwardPull, GitFastForwardPullOutputRegex, GitPushOutputRegex, gitPushSetUpstream, gitSimilar, GitSimilarOutputRegex, gitTwoDashes, GitTwoDashesRegex, pwshGeneralError, PwshGeneralErrorOutputRegex, pwshUnixCommandNotFoundError, PwshUnixCommandNotFoundErrorOutputRegex } from "../../browser/terminalQuickFixBuiltinActions.js";
+import { TestStorageService } from "../../../../../test/common/workbenchTestServices.js";
+suite("QuickFixAddon", () => {
+  const store = ensureNoDisposablesAreLeakedInTestSuite();
+  let quickFixAddon;
+  let commandDetection;
+  let commandService;
+  let openerService;
+  let labelService;
+  let terminal;
+  let instantiationService;
+  setup(async () => {
+    instantiationService = store.add(new TestInstantiationService());
+    const TerminalCtor = (await importAMDNodeModule("@xterm/xterm", "lib/xterm.js")).Terminal;
+    terminal = store.add(new TerminalCtor({
+      allowProposedApi: true,
+      cols: 80,
+      rows: 30
+    }));
+    instantiationService.stub(IStorageService, store.add(new TestStorageService()));
+    instantiationService.stub(ITerminalQuickFixService, {
+      onDidRegisterProvider: Event.None,
+      onDidUnregisterProvider: Event.None,
+      onDidRegisterCommandSelector: Event.None,
+      extensionQuickFixes: Promise.resolve([])
+    });
+    instantiationService.stub(IConfigurationService, new TestConfigurationService());
+    labelService = instantiationService.stub(ILabelService, {});
+    const capabilities = store.add(new TerminalCapabilityStore());
+    instantiationService.stub(ILogService, new NullLogService());
+    commandDetection = store.add(instantiationService.createInstance(CommandDetectionCapability, terminal));
+    capabilities.add(2, commandDetection);
+    instantiationService.stub(IContextMenuService, store.add(instantiationService.createInstance(ContextMenuService)));
+    openerService = instantiationService.stub(IOpenerService, {});
+    commandService = new TestCommandService(instantiationService);
+    quickFixAddon = instantiationService.createInstance(TerminalQuickFixAddon, [], capabilities);
+    terminal.loadAddon(quickFixAddon);
+  });
+  suite("registerCommandFinishedListener & getMatchActions", () => {
+    suite("gitSimilarCommand", () => {
+      const expectedMap = /* @__PURE__ */ new Map();
+      const command = `git sttatus`;
+      let output = `git: 'sttatus' is not a git command. See 'git --help'.
 
 			The most similar command is
-			status`;const u=1,m=[{id:"Git Similar",enabled:!0,label:"Run: git status",tooltip:"Run: git status",command:"git status"}],o=i.split(`
-`);setup(()=>{const b=z();t.set(b.commandLineMatcher.toString(),[b]),l.registerCommandFinishedListener(b)}),suite("returns undefined when",()=>{test("output does not match",async()=>{p(await c([],s,d(a,"invalid output",x,u,["invalid output"]),t,e,n,r),void 0)}),test("command does not match",async()=>{p(await c([],s,d("gt sttatus",i,x,u,o),t,e,n,r),void 0)})}),suite("returns actions when",()=>{test("expected unix exit code",async()=>{h(await c([],s,d(a,i,x,u,o),t,e,n,r),m)}),test("matching exit status",async()=>{h(await c([],s,d(a,i,x,2,o),t,e,n,r),m)})}),suite("returns match",()=>{test("returns match",async()=>{h(await c([],s,d(a,i,x,u,o),t,e,n,r),m)}),test("returns multiple match",async()=>{i=`git: 'pu' is not a git command. See 'git --help'.
+			status`;
+      const exitCode = 1;
+      const actions = [{
+        id: "Git Similar",
+        enabled: true,
+        label: "Run: git status",
+        tooltip: "Run: git status",
+        command: "git status"
+      }];
+      const outputLines = output.split("\n");
+      setup(() => {
+        const command2 = gitSimilar();
+        expectedMap.set(command2.commandLineMatcher.toString(), [command2]);
+        quickFixAddon.registerCommandFinishedListener(command2);
+      });
+      suite("returns undefined when", () => {
+        test("output does not match", async () => {
+          strictEqual(await getQuickFixesForCommand([], terminal, createCommand(command, `invalid output`, GitSimilarOutputRegex, exitCode, [`invalid output`]), expectedMap, commandService, openerService, labelService), void 0);
+        });
+        test("command does not match", async () => {
+          strictEqual(await getQuickFixesForCommand([], terminal, createCommand(`gt sttatus`, output, GitSimilarOutputRegex, exitCode, outputLines), expectedMap, commandService, openerService, labelService), void 0);
+        });
+      });
+      suite("returns actions when", () => {
+        test("expected unix exit code", async () => {
+          assertMatchOptions(await getQuickFixesForCommand([], terminal, createCommand(command, output, GitSimilarOutputRegex, exitCode, outputLines), expectedMap, commandService, openerService, labelService), actions);
+        });
+        test("matching exit status", async () => {
+          assertMatchOptions(await getQuickFixesForCommand([], terminal, createCommand(command, output, GitSimilarOutputRegex, 2, outputLines), expectedMap, commandService, openerService, labelService), actions);
+        });
+      });
+      suite("returns match", () => {
+        test("returns match", async () => {
+          assertMatchOptions(await getQuickFixesForCommand([], terminal, createCommand(command, output, GitSimilarOutputRegex, exitCode, outputLines), expectedMap, commandService, openerService, labelService), actions);
+        });
+        test("returns multiple match", async () => {
+          output = `git: 'pu' is not a git command. See 'git --help'.
 				The most similar commands are
 						pull
-						push`;const b=[{id:"Git Similar",enabled:!0,label:"Run: git pull",tooltip:"Run: git pull",command:"git pull"},{id:"Git Similar",enabled:!0,label:"Run: git push",tooltip:"Run: git push",command:"git push"}];h(await c([],s,d("git pu",i,x,u,i.split(`
-`)),t,e,n,r),b)}),test("passes any arguments through",async()=>{i=`git: 'checkoutt' is not a git command. See 'git --help'.
+						push`;
+          const actions2 = [{
+            id: "Git Similar",
+            enabled: true,
+            label: "Run: git pull",
+            tooltip: "Run: git pull",
+            command: "git pull"
+          }, {
+            id: "Git Similar",
+            enabled: true,
+            label: "Run: git push",
+            tooltip: "Run: git push",
+            command: "git push"
+          }];
+          assertMatchOptions(await getQuickFixesForCommand([], terminal, createCommand("git pu", output, GitSimilarOutputRegex, exitCode, output.split("\n")), expectedMap, commandService, openerService, labelService), actions2);
+        });
+        test("passes any arguments through", async () => {
+          output = `git: 'checkoutt' is not a git command. See 'git --help'.
 				The most similar commands are
-						checkout`,h(await c([],s,d("git checkoutt .",i,x,u,i.split(`
-`)),t,e,n,r),[{id:"Git Similar",enabled:!0,label:"Run: git checkout .",tooltip:"Run: git checkout .",command:"git checkout ."}])})})}),suite("gitTwoDashes",()=>{const t=new Map,a="git add . -all",i="error: did you mean `--all` (with two dashes)?",u=1,m=[{id:"Git Two Dashes",enabled:!0,label:"Run: git add . --all",tooltip:"Run: git add . --all",command:"git add . --all"}];setup(()=>{const o=J();t.set(o.commandLineMatcher.toString(),[o]),l.registerCommandFinishedListener(o)}),suite("returns undefined when",()=>{test("output does not match",async()=>{p(await c([],s,d(a,"invalid output",C,u),t,e,n,r),void 0)}),test("command does not match",async()=>{p(await c([],s,d("gt sttatus",i,C,u),t,e,n,r),void 0)})}),suite("returns actions when",()=>{test("expected unix exit code",async()=>{h(await c([],s,d(a,i,C,u),t,e,n,r),m)}),test("matching exit status",async()=>{h(await c([],s,d(a,i,C,2),t,e,n,r),m)})})}),suite("gitFastForwardPull",()=>{const t=new Map,a="git checkout vnext",i=`Already on 'vnext' 
- Your branch is behind 'origin/vnext' by 1 commit, and can be fast-forwarded.`,u=0,m=[{id:"Git Fast Forward Pull",enabled:!0,label:"Run: git pull",tooltip:"Run: git pull",command:"git pull"}];setup(()=>{const o=V();t.set(o.commandLineMatcher.toString(),[o]),l.registerCommandFinishedListener(o)}),suite("returns undefined when",()=>{test("output does not match",async()=>{p(await c([],s,d(a,"invalid output",v,u),t,e,n,r),void 0)}),test("command does not match",async()=>{p(await c([],s,d("gt add",i,v,u),t,e,n,r),void 0)}),test("exit code does not match",async()=>{p(await c([],s,d(a,i,v,2),t,e,n,r),void 0)})}),suite("returns actions when",()=>{test("matching exit status, command, ouput",async()=>{h(await c([],s,d(a,i,v,u),t,e,n,r),m)})})}),P||suite("freePort",()=>{const t=new Map,a="yarn start dev",i=`yarn run v1.22.17
+						checkout`;
+          assertMatchOptions(await getQuickFixesForCommand([], terminal, createCommand("git checkoutt .", output, GitSimilarOutputRegex, exitCode, output.split("\n")), expectedMap, commandService, openerService, labelService), [{
+            id: "Git Similar",
+            enabled: true,
+            label: "Run: git checkout .",
+            tooltip: "Run: git checkout .",
+            command: "git checkout ."
+          }]);
+        });
+      });
+    });
+    suite("gitTwoDashes", () => {
+      const expectedMap = /* @__PURE__ */ new Map();
+      const command = `git add . -all`;
+      const output = "error: did you mean `--all` (with two dashes)?";
+      const exitCode = 1;
+      const actions = [{
+        id: "Git Two Dashes",
+        enabled: true,
+        label: "Run: git add . --all",
+        tooltip: "Run: git add . --all",
+        command: "git add . --all"
+      }];
+      setup(() => {
+        const command2 = gitTwoDashes();
+        expectedMap.set(command2.commandLineMatcher.toString(), [command2]);
+        quickFixAddon.registerCommandFinishedListener(command2);
+      });
+      suite("returns undefined when", () => {
+        test("output does not match", async () => {
+          strictEqual(await getQuickFixesForCommand([], terminal, createCommand(command, `invalid output`, GitTwoDashesRegex, exitCode), expectedMap, commandService, openerService, labelService), void 0);
+        });
+        test("command does not match", async () => {
+          strictEqual(await getQuickFixesForCommand([], terminal, createCommand(`gt sttatus`, output, GitTwoDashesRegex, exitCode), expectedMap, commandService, openerService, labelService), void 0);
+        });
+      });
+      suite("returns actions when", () => {
+        test("expected unix exit code", async () => {
+          assertMatchOptions(await getQuickFixesForCommand([], terminal, createCommand(command, output, GitTwoDashesRegex, exitCode), expectedMap, commandService, openerService, labelService), actions);
+        });
+        test("matching exit status", async () => {
+          assertMatchOptions(await getQuickFixesForCommand([], terminal, createCommand(command, output, GitTwoDashesRegex, 2), expectedMap, commandService, openerService, labelService), actions);
+        });
+      });
+    });
+    suite("gitFastForwardPull", () => {
+      const expectedMap = /* @__PURE__ */ new Map();
+      const command = `git checkout vnext`;
+      const output = "Already on 'vnext' \n Your branch is behind 'origin/vnext' by 1 commit, and can be fast-forwarded.";
+      const exitCode = 0;
+      const actions = [{
+        id: "Git Fast Forward Pull",
+        enabled: true,
+        label: "Run: git pull",
+        tooltip: "Run: git pull",
+        command: "git pull"
+      }];
+      setup(() => {
+        const command2 = gitFastForwardPull();
+        expectedMap.set(command2.commandLineMatcher.toString(), [command2]);
+        quickFixAddon.registerCommandFinishedListener(command2);
+      });
+      suite("returns undefined when", () => {
+        test("output does not match", async () => {
+          strictEqual(await getQuickFixesForCommand([], terminal, createCommand(command, `invalid output`, GitFastForwardPullOutputRegex, exitCode), expectedMap, commandService, openerService, labelService), void 0);
+        });
+        test("command does not match", async () => {
+          strictEqual(await getQuickFixesForCommand([], terminal, createCommand(`gt add`, output, GitFastForwardPullOutputRegex, exitCode), expectedMap, commandService, openerService, labelService), void 0);
+        });
+        test("exit code does not match", async () => {
+          strictEqual(await getQuickFixesForCommand([], terminal, createCommand(command, output, GitFastForwardPullOutputRegex, 2), expectedMap, commandService, openerService, labelService), void 0);
+        });
+      });
+      suite("returns actions when", () => {
+        test("matching exit status, command, ouput", async () => {
+          assertMatchOptions(await getQuickFixesForCommand([], terminal, createCommand(command, output, GitFastForwardPullOutputRegex, exitCode), expectedMap, commandService, openerService, labelService), actions);
+        });
+      });
+    });
+    if (!isWindows) {
+      suite("freePort", () => {
+        const expectedMap = /* @__PURE__ */ new Map();
+        const portCommand = `yarn start dev`;
+        const output = `yarn run v1.22.17
 			warning ../../package.json: No license field
 			Error: listen EADDRINUSE: address already in use 0.0.0.0:3000
 				at Server.setupListenHandle [as _listen2] (node:net:1315:16)
@@ -23,19 +219,286 @@ import{strictEqual as p}from"assert";import{$uI as T}from"../../../../../../amdX
 				at processTicksAndRejections (node:internal/process/task_queues:83:21) {
 			}
 			error Command failed with exit code 1.
-			info Visit https://yarnpkg.com/en/docs/cli/run for documentation about this command.`,u=[{id:"Free Port",label:"Free port 3000",run:!0,tooltip:"Free port 3000",enabled:!0}];setup(()=>{const m=Z(()=>Promise.resolve());t.set(m.commandLineMatcher.toString(),[m]),l.registerCommandFinishedListener(m)}),suite("returns undefined when",()=>{test("output does not match",async()=>{p(await c([],s,d(a,"invalid output",M),t,e,n,r),void 0)})}),test("returns actions",async()=>{h(await c([],s,d(a,i,M),t,e,n,r),u)})}),suite("gitPushSetUpstream",()=>{const t=new Map,a="git push",i=`fatal: The current branch test22 has no upstream branch.
+			info Visit https://yarnpkg.com/en/docs/cli/run for documentation about this command.`;
+        const actionOptions = [{
+          id: "Free Port",
+          label: "Free port 3000",
+          run: true,
+          tooltip: "Free port 3000",
+          enabled: true
+        }];
+        setup(() => {
+          const command = freePort(() => Promise.resolve());
+          expectedMap.set(command.commandLineMatcher.toString(), [command]);
+          quickFixAddon.registerCommandFinishedListener(command);
+        });
+        suite("returns undefined when", () => {
+          test("output does not match", async () => {
+            strictEqual(await getQuickFixesForCommand([], terminal, createCommand(portCommand, `invalid output`, FreePortOutputRegex), expectedMap, commandService, openerService, labelService), void 0);
+          });
+        });
+        test("returns actions", async () => {
+          assertMatchOptions(await getQuickFixesForCommand([], terminal, createCommand(portCommand, output, FreePortOutputRegex), expectedMap, commandService, openerService, labelService), actionOptions);
+        });
+      });
+    }
+    suite("gitPushSetUpstream", () => {
+      const expectedMap = /* @__PURE__ */ new Map();
+      const command = `git push`;
+      const output = `fatal: The current branch test22 has no upstream branch.
 			To push the current branch and set the remote as upstream, use
 
-				git push --set-upstream origin test22`,u=128,m=[{id:"Git Push Set Upstream",enabled:!0,label:"Run: git push --set-upstream origin test22",tooltip:"Run: git push --set-upstream origin test22",command:"git push --set-upstream origin test22"}];setup(()=>{const o=F();t.set(o.commandLineMatcher.toString(),[o]),l.registerCommandFinishedListener(o)}),suite("returns undefined when",()=>{test("output does not match",async()=>{p(await c([],s,d(a,"invalid output",y,u),t,e,n,r),void 0)}),test("command does not match",async()=>{p(await c([],s,d("git status",i,y,u),t,e,n,r),void 0)})}),suite("returns actions when",()=>{test("expected unix exit code",async()=>{h(await c([],s,d(a,i,y,u),t,e,n,r),m)}),test("matching exit status",async()=>{h(await c([],s,d(a,i,y,2),t,e,n,r),m)})})}),suite("gitCreatePr",()=>{const t=new Map,a="git push",i=`Total 0 (delta 0), reused 0 (delta 0), pack-reused 0
+				git push --set-upstream origin test22`;
+      const exitCode = 128;
+      const actions = [{
+        id: "Git Push Set Upstream",
+        enabled: true,
+        label: "Run: git push --set-upstream origin test22",
+        tooltip: "Run: git push --set-upstream origin test22",
+        command: "git push --set-upstream origin test22"
+      }];
+      setup(() => {
+        const command2 = gitPushSetUpstream();
+        expectedMap.set(command2.commandLineMatcher.toString(), [command2]);
+        quickFixAddon.registerCommandFinishedListener(command2);
+      });
+      suite("returns undefined when", () => {
+        test("output does not match", async () => {
+          strictEqual(await getQuickFixesForCommand([], terminal, createCommand(command, `invalid output`, GitPushOutputRegex, exitCode), expectedMap, commandService, openerService, labelService), void 0);
+        });
+        test("command does not match", async () => {
+          strictEqual(await getQuickFixesForCommand([], terminal, createCommand(`git status`, output, GitPushOutputRegex, exitCode), expectedMap, commandService, openerService, labelService), void 0);
+        });
+      });
+      suite("returns actions when", () => {
+        test("expected unix exit code", async () => {
+          assertMatchOptions(await getQuickFixesForCommand([], terminal, createCommand(command, output, GitPushOutputRegex, exitCode), expectedMap, commandService, openerService, labelService), actions);
+        });
+        test("matching exit status", async () => {
+          assertMatchOptions(await getQuickFixesForCommand([], terminal, createCommand(command, output, GitPushOutputRegex, 2), expectedMap, commandService, openerService, labelService), actions);
+        });
+      });
+    });
+    suite("gitCreatePr", () => {
+      const expectedMap = /* @__PURE__ */ new Map();
+      const command = `git push`;
+      const output = `Total 0 (delta 0), reused 0 (delta 0), pack-reused 0
 			remote:
 			remote: Create a pull request for 'test22' on GitHub by visiting:
 			remote:      https://github.com/meganrogge/xterm.js/pull/new/test22
 			remote:
 			To https://github.com/meganrogge/xterm.js
 			 * [new branch]        test22 -> test22
-			Branch 'test22' set up to track remote branch 'test22' from 'origin'. `,u=0,m=[{id:"Git Create Pr",enabled:!0,label:"Open: https://github.com/meganrogge/xterm.js/pull/new/test22",tooltip:"Open: https://github.com/meganrogge/xterm.js/pull/new/test22",uri:G.parse("https://github.com/meganrogge/xterm.js/pull/new/test22")}];setup(()=>{const o=R();t.set(o.commandLineMatcher.toString(),[o]),l.registerCommandFinishedListener(o)}),suite("returns undefined when",()=>{test("output does not match",async()=>{p(await c([],s,d(a,"invalid output",$,u),t,e,n,r),void 0)}),test("command does not match",async()=>{p(await c([],s,d("git status",i,$,u),t,e,n,r),void 0)}),test("failure exit status",async()=>{p(await c([],s,d(a,i,$,2),t,e,n,r),void 0)})}),suite("returns actions when",()=>{test("expected unix exit code",async()=>{h(await c([],s,d(a,i,$,u),t,e,n,r),m)})})})}),suite("gitPush - multiple providers",()=>{const t=new Map,a="git push",i=`fatal: The current branch test22 has no upstream branch.
+			Branch 'test22' set up to track remote branch 'test22' from 'origin'. `;
+      const exitCode = 0;
+      const actions = [{
+        id: "Git Create Pr",
+        enabled: true,
+        label: "Open: https://github.com/meganrogge/xterm.js/pull/new/test22",
+        tooltip: "Open: https://github.com/meganrogge/xterm.js/pull/new/test22",
+        uri: URI.parse("https://github.com/meganrogge/xterm.js/pull/new/test22")
+      }];
+      setup(() => {
+        const command2 = gitCreatePr();
+        expectedMap.set(command2.commandLineMatcher.toString(), [command2]);
+        quickFixAddon.registerCommandFinishedListener(command2);
+      });
+      suite("returns undefined when", () => {
+        test("output does not match", async () => {
+          strictEqual(await getQuickFixesForCommand([], terminal, createCommand(command, `invalid output`, GitCreatePrOutputRegex, exitCode), expectedMap, commandService, openerService, labelService), void 0);
+        });
+        test("command does not match", async () => {
+          strictEqual(await getQuickFixesForCommand([], terminal, createCommand(`git status`, output, GitCreatePrOutputRegex, exitCode), expectedMap, commandService, openerService, labelService), void 0);
+        });
+        test("failure exit status", async () => {
+          strictEqual(await getQuickFixesForCommand([], terminal, createCommand(command, output, GitCreatePrOutputRegex, 2), expectedMap, commandService, openerService, labelService), void 0);
+        });
+      });
+      suite("returns actions when", () => {
+        test("expected unix exit code", async () => {
+          assertMatchOptions(await getQuickFixesForCommand([], terminal, createCommand(command, output, GitCreatePrOutputRegex, exitCode), expectedMap, commandService, openerService, labelService), actions);
+        });
+      });
+    });
+  });
+  suite("gitPush - multiple providers", () => {
+    const expectedMap = /* @__PURE__ */ new Map();
+    const command = `git push`;
+    const output = `fatal: The current branch test22 has no upstream branch.
 		To push the current branch and set the remote as upstream, use
 
-			git push --set-upstream origin test22`,u=128,m=[{id:"Git Push Set Upstream",enabled:!0,label:"Run: git push --set-upstream origin test22",tooltip:"Run: git push --set-upstream origin test22",command:"git push --set-upstream origin test22"}];setup(()=>{const o=F(),b=R();l.registerCommandFinishedListener(b),t.set(o.commandLineMatcher.toString(),[o,b])}),suite("returns undefined when",()=>{test("output does not match",async()=>{p(await c([],s,d(a,"invalid output",y,u),t,e,n,r),void 0)}),test("command does not match",async()=>{p(await c([],s,d("git status",i,y,u),t,e,n,r),void 0)})}),suite("returns actions when",()=>{test("expected unix exit code",async()=>{h(await c([],s,d(a,i,y,u),t,e,n,r),m)}),test("matching exit status",async()=>{h(await c([],s,d(a,i,y,2),t,e,n,r),m)})})}),suite("pwsh feedback providers",()=>{suite("General",()=>{const t=new Map,a="not important",i=["...","","Suggestion [General]:","  The most similar commands are: python3, python3m, pamon, python3.6, rtmon, echo, pushd, etsn, pwsh, pwconv.","","Suggestion [cmd-not-found]:","  Command 'python' not found, but can be installed with:","  sudo apt install python3","  sudo apt install python","  sudo apt install python-minimal","  You also have python3 installed, you can run 'python3' instead.'",""].join(`
-`),u=128,m=["python3","python3m","pamon","python3.6","rtmon","echo","pushd","etsn","pwsh","pwconv"].map(o=>({id:"Pwsh General Error",enabled:!0,label:`Run: ${o}`,tooltip:`Run: ${o}`,command:o}));setup(()=>{const o=K();l.registerCommandFinishedListener(o),t.set(o.commandLineMatcher.toString(),[o])}),test("returns undefined when output does not match",async()=>{p(await c([],s,d(a,"invalid output",L,u),t,e,n,r),void 0)}),test("returns actions when output matches",async()=>{h(await c([],s,d(a,i,L,u),t,e,n,r),m)})}),suite("Unix cmd-not-found",()=>{const t=new Map,a="not important",i=["...","","Suggestion [General]","  The most similar commands are: python3, python3m, pamon, python3.6, rtmon, echo, pushd, etsn, pwsh, pwconv.","","Suggestion [cmd-not-found]:","  Command 'python' not found, but can be installed with:","  sudo apt install python3","  sudo apt install python","  sudo apt install python-minimal","  You also have python3 installed, you can run 'python3' instead.'",""].join(`
-`),u=128,m=["sudo apt install python3","sudo apt install python","sudo apt install python-minimal","python3"].map(o=>({id:"Pwsh Unix Command Not Found Error",enabled:!0,label:`Run: ${o}`,tooltip:`Run: ${o}`,command:o}));setup(()=>{const o=tt();l.registerCommandFinishedListener(o),t.set(o.commandLineMatcher.toString(),[o])}),test("returns undefined when output does not match",async()=>{p(await c([],s,d(a,"invalid output",k,u),t,e,n,r),void 0)}),test("returns actions when output matches",async()=>{h(await c([],s,d(a,i,k,u),t,e,n,r),m)})})})});function d(w,l,f,e,n){return{cwd:"",commandStartLineContent:"",markProperties:{},executedX:void 0,startX:void 0,command:w,isTrusted:!0,exitCode:e,getOutput:()=>l,getOutputMatch:r=>{if(f){const s=l.match(f)??void 0;if(s)return n?{regexMatch:s,outputLines:n}:{regexMatch:s,outputLines:[]}}},timestamp:Date.now(),hasOutput:()=>!!l}}function h(w,l){p(w?.length,l.length);for(let f=0;f<l.length;f++){const e=l[f],n=w[f];p(n.id,e.id,"ID"),p(n.enabled,e.enabled,"enabled"),p(n.label,e.label,"label"),p(n.tooltip,e.tooltip,"tooltip"),e.command&&p(n.command,e.command),e.uri&&p(n.uri.toString(),e.uri.toString())}}
+			git push --set-upstream origin test22`;
+    const exitCode = 128;
+    const actions = [{
+      id: "Git Push Set Upstream",
+      enabled: true,
+      label: "Run: git push --set-upstream origin test22",
+      tooltip: "Run: git push --set-upstream origin test22",
+      command: "git push --set-upstream origin test22"
+    }];
+    setup(() => {
+      const pushCommand = gitPushSetUpstream();
+      const prCommand = gitCreatePr();
+      quickFixAddon.registerCommandFinishedListener(prCommand);
+      expectedMap.set(pushCommand.commandLineMatcher.toString(), [pushCommand, prCommand]);
+    });
+    suite("returns undefined when", () => {
+      test("output does not match", async () => {
+        strictEqual(await getQuickFixesForCommand([], terminal, createCommand(command, `invalid output`, GitPushOutputRegex, exitCode), expectedMap, commandService, openerService, labelService), void 0);
+      });
+      test("command does not match", async () => {
+        strictEqual(await getQuickFixesForCommand([], terminal, createCommand(`git status`, output, GitPushOutputRegex, exitCode), expectedMap, commandService, openerService, labelService), void 0);
+      });
+    });
+    suite("returns actions when", () => {
+      test("expected unix exit code", async () => {
+        assertMatchOptions(await getQuickFixesForCommand([], terminal, createCommand(command, output, GitPushOutputRegex, exitCode), expectedMap, commandService, openerService, labelService), actions);
+      });
+      test("matching exit status", async () => {
+        assertMatchOptions(await getQuickFixesForCommand([], terminal, createCommand(command, output, GitPushOutputRegex, 2), expectedMap, commandService, openerService, labelService), actions);
+      });
+    });
+  });
+  suite("pwsh feedback providers", () => {
+    suite("General", () => {
+      const expectedMap = /* @__PURE__ */ new Map();
+      const command = `not important`;
+      const output = [
+        `...`,
+        ``,
+        `Suggestion [General]:`,
+        `  The most similar commands are: python3, python3m, pamon, python3.6, rtmon, echo, pushd, etsn, pwsh, pwconv.`,
+        ``,
+        `Suggestion [cmd-not-found]:`,
+        `  Command 'python' not found, but can be installed with:`,
+        `  sudo apt install python3`,
+        `  sudo apt install python`,
+        `  sudo apt install python-minimal`,
+        `  You also have python3 installed, you can run 'python3' instead.'`,
+        ``
+      ].join("\n");
+      const exitCode = 128;
+      const actions = [
+        "python3",
+        "python3m",
+        "pamon",
+        "python3.6",
+        "rtmon",
+        "echo",
+        "pushd",
+        "etsn",
+        "pwsh",
+        "pwconv"
+      ].map((command2) => {
+        return {
+          id: "Pwsh General Error",
+          enabled: true,
+          label: `Run: ${command2}`,
+          tooltip: `Run: ${command2}`,
+          command: command2
+        };
+      });
+      setup(() => {
+        const pushCommand = pwshGeneralError();
+        quickFixAddon.registerCommandFinishedListener(pushCommand);
+        expectedMap.set(pushCommand.commandLineMatcher.toString(), [pushCommand]);
+      });
+      test("returns undefined when output does not match", async () => {
+        strictEqual(await getQuickFixesForCommand([], terminal, createCommand(command, `invalid output`, PwshGeneralErrorOutputRegex, exitCode), expectedMap, commandService, openerService, labelService), void 0);
+      });
+      test("returns actions when output matches", async () => {
+        assertMatchOptions(await getQuickFixesForCommand([], terminal, createCommand(command, output, PwshGeneralErrorOutputRegex, exitCode), expectedMap, commandService, openerService, labelService), actions);
+      });
+    });
+    suite("Unix cmd-not-found", () => {
+      const expectedMap = /* @__PURE__ */ new Map();
+      const command = `not important`;
+      const output = [
+        `...`,
+        ``,
+        `Suggestion [General]`,
+        `  The most similar commands are: python3, python3m, pamon, python3.6, rtmon, echo, pushd, etsn, pwsh, pwconv.`,
+        ``,
+        `Suggestion [cmd-not-found]:`,
+        `  Command 'python' not found, but can be installed with:`,
+        `  sudo apt install python3`,
+        `  sudo apt install python`,
+        `  sudo apt install python-minimal`,
+        `  You also have python3 installed, you can run 'python3' instead.'`,
+        ``
+      ].join("\n");
+      const exitCode = 128;
+      const actions = [
+        "sudo apt install python3",
+        "sudo apt install python",
+        "sudo apt install python-minimal",
+        "python3"
+      ].map((command2) => {
+        return {
+          id: "Pwsh Unix Command Not Found Error",
+          enabled: true,
+          label: `Run: ${command2}`,
+          tooltip: `Run: ${command2}`,
+          command: command2
+        };
+      });
+      setup(() => {
+        const pushCommand = pwshUnixCommandNotFoundError();
+        quickFixAddon.registerCommandFinishedListener(pushCommand);
+        expectedMap.set(pushCommand.commandLineMatcher.toString(), [pushCommand]);
+      });
+      test("returns undefined when output does not match", async () => {
+        strictEqual(await getQuickFixesForCommand([], terminal, createCommand(command, `invalid output`, PwshUnixCommandNotFoundErrorOutputRegex, exitCode), expectedMap, commandService, openerService, labelService), void 0);
+      });
+      test("returns actions when output matches", async () => {
+        assertMatchOptions(await getQuickFixesForCommand([], terminal, createCommand(command, output, PwshUnixCommandNotFoundErrorOutputRegex, exitCode), expectedMap, commandService, openerService, labelService), actions);
+      });
+    });
+  });
+});
+function createCommand(command, output, outputMatcher, exitCode, outputLines) {
+  return {
+    cwd: "",
+    commandStartLineContent: "",
+    markProperties: {},
+    executedX: void 0,
+    startX: void 0,
+    command,
+    isTrusted: true,
+    exitCode,
+    getOutput: /* @__PURE__ */ __name(() => {
+      return output;
+    }, "getOutput"),
+    getOutputMatch: /* @__PURE__ */ __name((_matcher) => {
+      if (outputMatcher) {
+        const regexMatch = output.match(outputMatcher) ?? void 0;
+        if (regexMatch) {
+          return outputLines ? { regexMatch, outputLines } : { regexMatch, outputLines: [] };
+        }
+      }
+      return void 0;
+    }, "getOutputMatch"),
+    timestamp: Date.now(),
+    hasOutput: /* @__PURE__ */ __name(() => !!output, "hasOutput")
+  };
+}
+__name(createCommand, "createCommand");
+function assertMatchOptions(actual, expected) {
+  strictEqual(actual?.length, expected.length);
+  for (let i = 0; i < expected.length; i++) {
+    const expectedItem = expected[i];
+    const actualItem = actual[i];
+    strictEqual(actualItem.id, expectedItem.id, `ID`);
+    strictEqual(actualItem.enabled, expectedItem.enabled, `enabled`);
+    strictEqual(actualItem.label, expectedItem.label, `label`);
+    strictEqual(actualItem.tooltip, expectedItem.tooltip, `tooltip`);
+    if (expectedItem.command) {
+      strictEqual(actualItem.command, expectedItem.command);
+    }
+    if (expectedItem.uri) {
+      strictEqual(actualItem.uri.toString(), expectedItem.uri.toString());
+    }
+  }
+}
+__name(assertMatchOptions, "assertMatchOptions");
+//# sourceMappingURL=quickFixAddon.test.js.map

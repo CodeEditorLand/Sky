@@ -1,1 +1,56 @@
-import{$Ql as l}from"../../../../platform/registry/common/platform.js";import{$Xn as h}from"../../../../platform/action/common/actionCommonCategories.js";import{$iI as b,$jI as I}from"../../../../platform/actions/common/actions.js";import{$Vmc as i}from"../common/logsActions.js";import{Extensions as _}from"../../../common/contributions.js";import{$vd as $}from"../../../../base/common/lifecycle.js";import{$mj as m}from"../../../../platform/instantiation/common/instantiation.js";import{$ABc as v}from"../common/logsDataCleaner.js";var a=function(o,t,e,r){var n,s=arguments.length,i=s<3?t:null===r?r=Object.getOwnPropertyDescriptor(t,e):r;if("object"==typeof Reflect&&"function"==typeof Reflect.decorate)i=Reflect.decorate(o,t,e,r);else for(var a=o.length-1;a>=0;a--)(n=o[a])&&(i=(s<3?n(i):s>3?n(t,e,i):n(t,e))||i);return s>3&&i&&Object.defineProperty(t,e,i),i},p=function(o,t){return function(e,r){t(e,r,o)}};let u=class extends ${constructor(o){super(),this.a=o,this.b()}b(){this.a.createInstance(v),this.B(I(class extends b{constructor(){super({id:i.ID,title:i.TITLE,category:h.Developer,f1:!0})}run(o){return o.get(m).createInstance(i,i.ID,i.TITLE.value).run()}}))}};u=a([p(0,m)],u),l.as(_.Workbench).registerWorkbenchContribution(u,3);
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { Registry } from "../../../../platform/registry/common/platform.js";
+import { Categories } from "../../../../platform/action/common/actionCommonCategories.js";
+import { Action2, registerAction2 } from "../../../../platform/actions/common/actions.js";
+import { OpenWindowSessionLogFileAction } from "../common/logsActions.js";
+import { Extensions as WorkbenchExtensions } from "../../../common/contributions.js";
+import { Disposable } from "../../../../base/common/lifecycle.js";
+import { IInstantiationService } from "../../../../platform/instantiation/common/instantiation.js";
+import { LogsDataCleaner } from "../common/logsDataCleaner.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+let WebLogOutputChannels = class WebLogOutputChannels2 extends Disposable {
+  static {
+    __name(this, "WebLogOutputChannels");
+  }
+  constructor(instantiationService) {
+    super();
+    this.instantiationService = instantiationService;
+    this.registerWebContributions();
+  }
+  registerWebContributions() {
+    this.instantiationService.createInstance(LogsDataCleaner);
+    this._register(registerAction2(class extends Action2 {
+      constructor() {
+        super({
+          id: OpenWindowSessionLogFileAction.ID,
+          title: OpenWindowSessionLogFileAction.TITLE,
+          category: Categories.Developer,
+          f1: true
+        });
+      }
+      run(servicesAccessor) {
+        return servicesAccessor.get(IInstantiationService).createInstance(OpenWindowSessionLogFileAction, OpenWindowSessionLogFileAction.ID, OpenWindowSessionLogFileAction.TITLE.value).run();
+      }
+    }));
+  }
+};
+WebLogOutputChannels = __decorate([
+  __param(0, IInstantiationService)
+], WebLogOutputChannels);
+Registry.as(WorkbenchExtensions.Workbench).registerWorkbenchContribution(
+  WebLogOutputChannels,
+  3
+  /* LifecyclePhase.Restored */
+);
+//# sourceMappingURL=logs.contribution.js.map

@@ -1,1 +1,124 @@
-import{$Mj as b}from"../../../base/common/codicons.js";import{localize as p}from"../../../nls.js";import{ThemeIcon as B}from"../../../base/common/themables.js";import{$ud as y}from"../../../base/common/lifecycle.js";const c=B.asClassName(b.pin),u=B.asClassName(b.pinned),$=[c,u];function V(n,s,t,i){const o=t.items;let e=I(s,t,n,void 0,i);const a=new y;return a.add(t.onDidTriggerItemButton(async l=>{l.button.iconClass&&$.includes(l.button.iconClass)&&(t.items=o,e=I(s,t,n,l.item,i),t.items=t.value?o:e)})),a.add(t.onDidChangeValue(async l=>{t.items===e&&l?t.items=o:t.items===o&&!l&&(t.items=e)})),t.items=t.value?o:e,t.show(),a}function I(n,s,t,i,o){const e=[];let a;i?a=T(n,i,t):a=w(n,t),a.length&&e.push({type:"separator",label:p(2208,null)});const l=new Set;for(const d of a){const m=s.items.find(f=>N(f,d));if(m){const f=r(m),C={...m};(!o||!l.has(f))&&(l.add(f),h(C,!1),e.push(C))}}for(const d of s.items)h(d,!0),e.push(d);return e}function r(n){return n.type==="separator"?"":n.id||`${n.label}${n.description}${n.detail}`}function h(n,s){if(n.type==="separator")return;const t=n.buttons?.filter(i=>i.iconClass&&!$.includes(i.iconClass))??[];t.unshift({iconClass:s?c:u,tooltip:s?p(2209,null):p(2210,null),alwaysVisible:!1}),n.buttons=t}function N(n,s){return r(n)===r(s)}function T(n,s,t){const i=s.buttons?.find(e=>e.iconClass===u);let o=w(n,t);return i?o=o.filter(e=>r(e)!==r(s)):o.push(s),t.store(n,JSON.stringify(o.map(x)),1,1),o}function w(n,s){const t=s.get(n,1);return t?JSON.parse(t):[]}function x(n){return{label:n.label,description:n.description,detail:n.detail}}export{V as $tsc};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { Codicon } from "../../../base/common/codicons.js";
+import { localize } from "../../../nls.js";
+import { ThemeIcon } from "../../../base/common/themables.js";
+import { DisposableStore } from "../../../base/common/lifecycle.js";
+const pinButtonClass = ThemeIcon.asClassName(Codicon.pin);
+const pinnedButtonClass = ThemeIcon.asClassName(Codicon.pinned);
+const buttonClasses = [pinButtonClass, pinnedButtonClass];
+function showWithPinnedItems(storageService, storageKey, quickPick, filterDuplicates) {
+  const itemsWithoutPinned = quickPick.items;
+  let itemsWithPinned = _formatPinnedItems(storageKey, quickPick, storageService, void 0, filterDuplicates);
+  const disposables = new DisposableStore();
+  disposables.add(quickPick.onDidTriggerItemButton(async (buttonEvent) => {
+    const expectedButton = buttonEvent.button.iconClass && buttonClasses.includes(buttonEvent.button.iconClass);
+    if (expectedButton) {
+      quickPick.items = itemsWithoutPinned;
+      itemsWithPinned = _formatPinnedItems(storageKey, quickPick, storageService, buttonEvent.item, filterDuplicates);
+      quickPick.items = quickPick.value ? itemsWithoutPinned : itemsWithPinned;
+    }
+  }));
+  disposables.add(quickPick.onDidChangeValue(async (value) => {
+    if (quickPick.items === itemsWithPinned && value) {
+      quickPick.items = itemsWithoutPinned;
+    } else if (quickPick.items === itemsWithoutPinned && !value) {
+      quickPick.items = itemsWithPinned;
+    }
+  }));
+  quickPick.items = quickPick.value ? itemsWithoutPinned : itemsWithPinned;
+  quickPick.show();
+  return disposables;
+}
+__name(showWithPinnedItems, "showWithPinnedItems");
+function _formatPinnedItems(storageKey, quickPick, storageService, changedItem, filterDuplicates) {
+  const formattedItems = [];
+  let pinnedItems;
+  if (changedItem) {
+    pinnedItems = updatePinnedItems(storageKey, changedItem, storageService);
+  } else {
+    pinnedItems = getPinnedItems(storageKey, storageService);
+  }
+  if (pinnedItems.length) {
+    formattedItems.push({ type: "separator", label: localize("terminal.commands.pinned", "pinned") });
+  }
+  const pinnedIds = /* @__PURE__ */ new Set();
+  for (const itemToFind of pinnedItems) {
+    const itemToPin = quickPick.items.find((item) => itemsMatch(item, itemToFind));
+    if (itemToPin) {
+      const pinnedItemId = getItemIdentifier(itemToPin);
+      const pinnedItem = { ...itemToPin };
+      if (!filterDuplicates || !pinnedIds.has(pinnedItemId)) {
+        pinnedIds.add(pinnedItemId);
+        updateButtons(pinnedItem, false);
+        formattedItems.push(pinnedItem);
+      }
+    }
+  }
+  for (const item of quickPick.items) {
+    updateButtons(item, true);
+    formattedItems.push(item);
+  }
+  return formattedItems;
+}
+__name(_formatPinnedItems, "_formatPinnedItems");
+function getItemIdentifier(item) {
+  return item.type === "separator" ? "" : item.id || `${item.label}${item.description}${item.detail}`;
+}
+__name(getItemIdentifier, "getItemIdentifier");
+function updateButtons(item, removePin) {
+  if (item.type === "separator") {
+    return;
+  }
+  const newButtons = item.buttons?.filter((button) => button.iconClass && !buttonClasses.includes(button.iconClass)) ?? [];
+  newButtons.unshift({
+    iconClass: removePin ? pinButtonClass : pinnedButtonClass,
+    tooltip: removePin ? localize("pinCommand", "Pin command") : localize("pinnedCommand", "Pinned command"),
+    alwaysVisible: false
+  });
+  item.buttons = newButtons;
+}
+__name(updateButtons, "updateButtons");
+function itemsMatch(itemA, itemB) {
+  return getItemIdentifier(itemA) === getItemIdentifier(itemB);
+}
+__name(itemsMatch, "itemsMatch");
+function updatePinnedItems(storageKey, changedItem, storageService) {
+  const removePin = changedItem.buttons?.find((b) => b.iconClass === pinnedButtonClass);
+  let items = getPinnedItems(storageKey, storageService);
+  if (removePin) {
+    items = items.filter((item) => getItemIdentifier(item) !== getItemIdentifier(changedItem));
+  } else {
+    items.push(changedItem);
+  }
+  storageService.store(
+    storageKey,
+    JSON.stringify(items.map(formatPinnedItemForStorage)),
+    1,
+    1
+    /* StorageTarget.MACHINE */
+  );
+  return items;
+}
+__name(updatePinnedItems, "updatePinnedItems");
+function getPinnedItems(storageKey, storageService) {
+  const items = storageService.get(
+    storageKey,
+    1
+    /* StorageScope.WORKSPACE */
+  );
+  return items ? JSON.parse(items) : [];
+}
+__name(getPinnedItems, "getPinnedItems");
+function formatPinnedItemForStorage(item) {
+  return {
+    label: item.label,
+    description: item.description,
+    detail: item.detail
+  };
+}
+__name(formatPinnedItemForStorage, "formatPinnedItemForStorage");
+export {
+  showWithPinnedItems
+};
+//# sourceMappingURL=quickPickPin.js.map

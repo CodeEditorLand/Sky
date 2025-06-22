@@ -1,1 +1,185 @@
-import{localize as P}from"../../nls.js";import{$sK as m,$6J as R,SideBySideEditor as h,EditorCloseContext as y}from"../common/editor.js";import{$Ql as w}from"../../platform/registry/common/platform.js";import{$td as I}from"../../base/common/lifecycle.js";import{Promises as b}from"../../base/common/async.js";import{$oI as D}from"../services/editor/common/editorService.js";import{$yo as U}from"../../platform/uriIdentity/common/uriIdentity.js";import{$ZH as C}from"../services/workingCopy/common/workingCopyService.js";import{Schemas as S}from"../../base/common/network.js";import{Iterable as $}from"../../base/common/iterator.js";import{$df as A}from"../../base/common/event.js";class a{static{this.a=new Set}static didInstantiateEditorPane(e){return a.a.has(e)}static{this.b=new A}static{this.onWillInstantiateEditorPane=a.b.event}static create(e,t,i){return new a(e,t,i)}constructor(e,t,i){this.c=e,this.typeId=t,this.name=i}instantiate(e,t){a.b.fire({typeId:this.typeId});const i=e.createInstance(this.c,t);return a.a.add(this.typeId),i}describes(e){return e.getId()===this.typeId}}class q{constructor(){this.a=new Map}registerEditorPane(e,t){return this.a.set(e,t),I(()=>{this.a.delete(e)})}getEditorPane(e){const t=this.b(e);if(t.length!==0)return t.length===1?t[0]:e.prefersEditorPane(t)}b(e,t){const i=[];for(const r of this.a.keys()){const p=this.a.get(r)||[];for(const d of p){const u=d.ctor;if(!t&&e.constructor===u){i.push(r);break}else if(t&&e instanceof u){i.push(r);break}}}return!t&&i.length===0?this.b(e,!0):i}getEditorPaneByType(e){return $.find(this.a.keys(),t=>t.typeId===e)}getEditorPanes(){return Array.from(this.a.keys())}getEditors(){const e=[];for(const t of this.a.keys()){const i=this.a.get(t);i&&e.push(...i.map(r=>r.ctor))}return e}}w.add(R.EditorPane,new q);function K(n,e){const t=n.get(D),i=n.get(U),r=n.get(C);return new Promise(p=>{let d=[...e];const u=t.onDidCloseEditor(async c=>{if(c.context===y.MOVE)return;let f=m.getOriginalUri(c.editor,{supportSideBySide:h.PRIMARY}),l=m.getOriginalUri(c.editor,{supportSideBySide:h.SECONDARY});if(c.context===y.REPLACE){const s=m.getOriginalUri(t.activeEditor,{supportSideBySide:h.PRIMARY}),o=m.getOriginalUri(t.activeEditor,{supportSideBySide:h.SECONDARY});i.extUri.isEqual(f,s)&&(f=void 0),i.extUri.isEqual(l,o)&&(l=void 0)}if(d=d.filter(s=>!(i.extUri.isEqual(s,f)||i.extUri.isEqual(s,l)||c.context!==y.REPLACE&&(f?.scheme===S.untitled&&i.extUri.isEqual(s,f.with({scheme:s.scheme}))||l?.scheme===S.untitled&&i.extUri.isEqual(s,l.with({scheme:s.scheme}))))),d.length===0){const s=e.filter(o=>r.isDirty(o));return s.length>0&&await b.settled(s.map(async o=>await new Promise(E=>{if(!r.isDirty(o))return E();const x=r.onDidChangeDirty(g=>{if(!g.isDirty()&&i.extUri.isEqual(o,g.resource))return x.dispose(),E()})}))),u.dispose(),p()}})})}function Q(n,e,t,i){let r=n.getAriaLabel();return t&&!t.isPinned(n)&&(r=P(3209,null,r)),t?.isSticky(e??n)&&(r=P(3210,null,r)),t&&typeof i=="number"&&i>1&&(r=`${r}, ${t.ariaLabel}`),r}export{a as $kGb,q as $lGb,K as $mGb,Q as $nGb};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { localize } from "../../nls.js";
+import { EditorResourceAccessor, EditorExtensions, SideBySideEditor, EditorCloseContext } from "../common/editor.js";
+import { Registry } from "../../platform/registry/common/platform.js";
+import { toDisposable } from "../../base/common/lifecycle.js";
+import { Promises } from "../../base/common/async.js";
+import { IEditorService } from "../services/editor/common/editorService.js";
+import { IUriIdentityService } from "../../platform/uriIdentity/common/uriIdentity.js";
+import { IWorkingCopyService } from "../services/workingCopy/common/workingCopyService.js";
+import { Schemas } from "../../base/common/network.js";
+import { Iterable } from "../../base/common/iterator.js";
+import { Emitter } from "../../base/common/event.js";
+class EditorPaneDescriptor {
+  static {
+    __name(this, "EditorPaneDescriptor");
+  }
+  static {
+    this.instantiatedEditorPanes = /* @__PURE__ */ new Set();
+  }
+  static didInstantiateEditorPane(typeId) {
+    return EditorPaneDescriptor.instantiatedEditorPanes.has(typeId);
+  }
+  static {
+    this._onWillInstantiateEditorPane = new Emitter();
+  }
+  static {
+    this.onWillInstantiateEditorPane = EditorPaneDescriptor._onWillInstantiateEditorPane.event;
+  }
+  static create(ctor, typeId, name) {
+    return new EditorPaneDescriptor(ctor, typeId, name);
+  }
+  constructor(ctor, typeId, name) {
+    this.ctor = ctor;
+    this.typeId = typeId;
+    this.name = name;
+  }
+  instantiate(instantiationService, group) {
+    EditorPaneDescriptor._onWillInstantiateEditorPane.fire({ typeId: this.typeId });
+    const pane = instantiationService.createInstance(this.ctor, group);
+    EditorPaneDescriptor.instantiatedEditorPanes.add(this.typeId);
+    return pane;
+  }
+  describes(editorPane) {
+    return editorPane.getId() === this.typeId;
+  }
+}
+class EditorPaneRegistry {
+  static {
+    __name(this, "EditorPaneRegistry");
+  }
+  constructor() {
+    this.mapEditorPanesToEditors = /* @__PURE__ */ new Map();
+  }
+  registerEditorPane(editorPaneDescriptor, editorDescriptors) {
+    this.mapEditorPanesToEditors.set(editorPaneDescriptor, editorDescriptors);
+    return toDisposable(() => {
+      this.mapEditorPanesToEditors.delete(editorPaneDescriptor);
+    });
+  }
+  getEditorPane(editor) {
+    const descriptors = this.findEditorPaneDescriptors(editor);
+    if (descriptors.length === 0) {
+      return void 0;
+    }
+    if (descriptors.length === 1) {
+      return descriptors[0];
+    }
+    return editor.prefersEditorPane(descriptors);
+  }
+  findEditorPaneDescriptors(editor, byInstanceOf) {
+    const matchingEditorPaneDescriptors = [];
+    for (const editorPane of this.mapEditorPanesToEditors.keys()) {
+      const editorDescriptors = this.mapEditorPanesToEditors.get(editorPane) || [];
+      for (const editorDescriptor of editorDescriptors) {
+        const editorClass = editorDescriptor.ctor;
+        if (!byInstanceOf && editor.constructor === editorClass) {
+          matchingEditorPaneDescriptors.push(editorPane);
+          break;
+        } else if (byInstanceOf && editor instanceof editorClass) {
+          matchingEditorPaneDescriptors.push(editorPane);
+          break;
+        }
+      }
+    }
+    if (!byInstanceOf && matchingEditorPaneDescriptors.length === 0) {
+      return this.findEditorPaneDescriptors(editor, true);
+    }
+    return matchingEditorPaneDescriptors;
+  }
+  //#region Used for tests only
+  getEditorPaneByType(typeId) {
+    return Iterable.find(this.mapEditorPanesToEditors.keys(), (editor) => editor.typeId === typeId);
+  }
+  getEditorPanes() {
+    return Array.from(this.mapEditorPanesToEditors.keys());
+  }
+  getEditors() {
+    const editorClasses = [];
+    for (const editorPane of this.mapEditorPanesToEditors.keys()) {
+      const editorDescriptors = this.mapEditorPanesToEditors.get(editorPane);
+      if (editorDescriptors) {
+        editorClasses.push(...editorDescriptors.map((editorDescriptor) => editorDescriptor.ctor));
+      }
+    }
+    return editorClasses;
+  }
+}
+Registry.add(EditorExtensions.EditorPane, new EditorPaneRegistry());
+function whenEditorClosed(accessor, resources) {
+  const editorService = accessor.get(IEditorService);
+  const uriIdentityService = accessor.get(IUriIdentityService);
+  const workingCopyService = accessor.get(IWorkingCopyService);
+  return new Promise((resolve) => {
+    let remainingResources = [...resources];
+    const listener = editorService.onDidCloseEditor(async (event) => {
+      if (event.context === EditorCloseContext.MOVE) {
+        return;
+      }
+      let primaryResource = EditorResourceAccessor.getOriginalUri(event.editor, { supportSideBySide: SideBySideEditor.PRIMARY });
+      let secondaryResource = EditorResourceAccessor.getOriginalUri(event.editor, { supportSideBySide: SideBySideEditor.SECONDARY });
+      if (event.context === EditorCloseContext.REPLACE) {
+        const newPrimaryResource = EditorResourceAccessor.getOriginalUri(editorService.activeEditor, { supportSideBySide: SideBySideEditor.PRIMARY });
+        const newSecondaryResource = EditorResourceAccessor.getOriginalUri(editorService.activeEditor, { supportSideBySide: SideBySideEditor.SECONDARY });
+        if (uriIdentityService.extUri.isEqual(primaryResource, newPrimaryResource)) {
+          primaryResource = void 0;
+        }
+        if (uriIdentityService.extUri.isEqual(secondaryResource, newSecondaryResource)) {
+          secondaryResource = void 0;
+        }
+      }
+      remainingResources = remainingResources.filter((resource) => {
+        if (uriIdentityService.extUri.isEqual(resource, primaryResource) || uriIdentityService.extUri.isEqual(resource, secondaryResource)) {
+          return false;
+        }
+        if (event.context !== EditorCloseContext.REPLACE) {
+          if (primaryResource?.scheme === Schemas.untitled && uriIdentityService.extUri.isEqual(resource, primaryResource.with({ scheme: resource.scheme })) || secondaryResource?.scheme === Schemas.untitled && uriIdentityService.extUri.isEqual(resource, secondaryResource.with({ scheme: resource.scheme }))) {
+            return false;
+          }
+        }
+        return true;
+      });
+      if (remainingResources.length === 0) {
+        const dirtyResources = resources.filter((resource) => workingCopyService.isDirty(resource));
+        if (dirtyResources.length > 0) {
+          await Promises.settled(dirtyResources.map(async (resource) => await new Promise((resolve2) => {
+            if (!workingCopyService.isDirty(resource)) {
+              return resolve2();
+            }
+            const listener2 = workingCopyService.onDidChangeDirty((workingCopy) => {
+              if (!workingCopy.isDirty() && uriIdentityService.extUri.isEqual(resource, workingCopy.resource)) {
+                listener2.dispose();
+                return resolve2();
+              }
+            });
+          })));
+        }
+        listener.dispose();
+        return resolve();
+      }
+    });
+  });
+}
+__name(whenEditorClosed, "whenEditorClosed");
+function computeEditorAriaLabel(input, index, group, groupCount) {
+  let ariaLabel = input.getAriaLabel();
+  if (group && !group.isPinned(input)) {
+    ariaLabel = localize("preview", "{0}, preview", ariaLabel);
+  }
+  if (group?.isSticky(index ?? input)) {
+    ariaLabel = localize("pinned", "{0}, pinned", ariaLabel);
+  }
+  if (group && typeof groupCount === "number" && groupCount > 1) {
+    ariaLabel = `${ariaLabel}, ${group.ariaLabel}`;
+  }
+  return ariaLabel;
+}
+__name(computeEditorAriaLabel, "computeEditorAriaLabel");
+export {
+  EditorPaneDescriptor,
+  EditorPaneRegistry,
+  computeEditorAriaLabel,
+  whenEditorClosed
+};
+//# sourceMappingURL=editor.js.map

@@ -1,1 +1,99 @@
-import{$Vn as l,$Un as b}from"../../../../platform/contextkey/common/contextkey.js";var r,a=function(t,e,i,s){var h,o=arguments.length,r=o<3?e:null===s?s=Object.getOwnPropertyDescriptor(e,i):s;if("object"==typeof Reflect&&"function"==typeof Reflect.decorate)r=Reflect.decorate(t,e,i,s);else for(var n=t.length-1;n>=0;n--)(h=t[n])&&(r=(o<3?h(r):o>3?h(e,i,r):h(e,i))||r);return o>3&&r&&Object.defineProperty(e,i,r),r},u=function(t,e){return function(i,s){e(i,s,t)}};let o=class{static{r=this}static{this.OtherSuggestions=new b("hasOtherSuggestions",!1)}constructor(t,e){this.g=t,this.b=0,this.a=r.OtherSuggestions.bindTo(e)}dispose(){this.reset()}reset(){this.a.reset(),this.e?.dispose(),this.c=void 0,this.d=void 0,this.f=!1}set({model:t,index:e},i){0!==t.items.length&&r.h(!0,t,e)!==e?(this.d=i,this.c=t,this.b=e,this.e=this.g.onDidChangeCursorPosition((()=>{this.f||this.reset()})),this.a.set(!0)):this.reset()}static h(t,e,i){let s=i;for(let h=e.items.length;h>0&&(s=(s+e.items.length+(t?1:-1))%e.items.length,s!==i&&e.items[s].completion.additionalTextEdits);h--);return s}next(){this.i(!0)}prev(){this.i(!1)}i(t){if(this.c)try{this.f=!0,this.b=r.h(t,this.c,this.b),this.d({index:this.b,item:this.c.items[this.b],model:this.c})}finally{this.f=!1}}};o=r=a([u(1,l)],o);export{o as $clb};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { IContextKeyService, RawContextKey } from "../../../../platform/contextkey/common/contextkey.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+var SuggestAlternatives_1;
+let SuggestAlternatives = class SuggestAlternatives2 {
+  static {
+    __name(this, "SuggestAlternatives");
+  }
+  static {
+    SuggestAlternatives_1 = this;
+  }
+  static {
+    this.OtherSuggestions = new RawContextKey("hasOtherSuggestions", false);
+  }
+  constructor(_editor, contextKeyService) {
+    this._editor = _editor;
+    this._index = 0;
+    this._ckOtherSuggestions = SuggestAlternatives_1.OtherSuggestions.bindTo(contextKeyService);
+  }
+  dispose() {
+    this.reset();
+  }
+  reset() {
+    this._ckOtherSuggestions.reset();
+    this._listener?.dispose();
+    this._model = void 0;
+    this._acceptNext = void 0;
+    this._ignore = false;
+  }
+  set({ model, index }, acceptNext) {
+    if (model.items.length === 0) {
+      this.reset();
+      return;
+    }
+    const nextIndex = SuggestAlternatives_1._moveIndex(true, model, index);
+    if (nextIndex === index) {
+      this.reset();
+      return;
+    }
+    this._acceptNext = acceptNext;
+    this._model = model;
+    this._index = index;
+    this._listener = this._editor.onDidChangeCursorPosition(() => {
+      if (!this._ignore) {
+        this.reset();
+      }
+    });
+    this._ckOtherSuggestions.set(true);
+  }
+  static _moveIndex(fwd, model, index) {
+    let newIndex = index;
+    for (let rounds = model.items.length; rounds > 0; rounds--) {
+      newIndex = (newIndex + model.items.length + (fwd ? 1 : -1)) % model.items.length;
+      if (newIndex === index) {
+        break;
+      }
+      if (!model.items[newIndex].completion.additionalTextEdits) {
+        break;
+      }
+    }
+    return newIndex;
+  }
+  next() {
+    this._move(true);
+  }
+  prev() {
+    this._move(false);
+  }
+  _move(fwd) {
+    if (!this._model) {
+      return;
+    }
+    try {
+      this._ignore = true;
+      this._index = SuggestAlternatives_1._moveIndex(fwd, this._model, this._index);
+      this._acceptNext({ index: this._index, item: this._model.items[this._index], model: this._model });
+    } finally {
+      this._ignore = false;
+    }
+  }
+};
+SuggestAlternatives = SuggestAlternatives_1 = __decorate([
+  __param(1, IContextKeyService)
+], SuggestAlternatives);
+export {
+  SuggestAlternatives
+};
+//# sourceMappingURL=suggestAlternatives.js.map

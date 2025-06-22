@@ -1,1 +1,262 @@
-import{$m8 as u}from"../../../../../base/browser/ui/list/listView.js";import{$lM as l}from"../../../../../editor/common/model/prefixSumComputer.js";class d{get paddingTop(){return this.g}set paddingTop(e){this.f=this.f+e-this.g,this.g=e}get count(){return this.c.length}get size(){return this.f}constructor(e){this.c=[],this.d=[],this.e=new l([]),this.f=0,this.g=0,this.g=e??0,this.f=this.g}getWhitespaces(){return this.d}restoreWhitespace(e){this.d=e,this.f=this.g+this.c.reduce((i,t)=>i+t.size,0)+this.d.reduce((i,t)=>i+t.size,0)}splice(e,i,t){const n=t??[];this.c.splice(e,i,...n),this.f=this.g+this.c.reduce((s,r)=>s+r.size,0)+this.d.reduce((s,r)=>s+r.size,0),this.e.removeValues(e,i);const h=[];for(let s=0;s<n.length;s++){const r=s+e,o=this.d.filter(c=>c.afterPosition===r+1);o.length>0?h.push(n[s].size+o.reduce((c,a)=>c+a.size,0)):h.push(n[s].size)}this.e.insertValues(e,h);for(let s=e;s<this.c.length;s++){const r=this.d.filter(o=>o.afterPosition===s+1);r.length>0?this.e.setValue(s,this.c[s].size+r.reduce((o,c)=>o+c.size,0)):this.e.setValue(s,this.c[s].size)}}insertWhitespace(e,i,t){let n=0;const h=this.d.filter(s=>s.afterPosition===i);if(h.length>0&&(n=Math.max(...h.map(s=>s.priority))+1),this.d.push({id:e,afterPosition:i,size:t,priority:n}),this.f+=t,this.d.sort((s,r)=>s.afterPosition===r.afterPosition?s.priority-r.priority:s.afterPosition-r.afterPosition),i>0){const s=i-1,o=this.c[s].size+t;this.e.setValue(s,o)}}changeOneWhitespace(e,i,t){const n=this.d.findIndex(h=>h.id===e);if(n!==-1){const h=this.d[n],s=h.afterPosition;h.afterPosition=i;const r=h.size,o=t-r;if(h.size=t,this.f+=o,s>0&&s<=this.c.length){const c=s-1,f=this.c[c].size;this.e.setValue(c,f)}if(i>0&&i<=this.c.length){const c=i-1,f=this.c[c].size+t;this.e.setValue(c,f)}}}removeWhitespace(e){const i=this.d.findIndex(t=>t.id===e);if(i!==-1){const t=this.d[i];if(this.d.splice(i,1),this.f-=t.size,t.afterPosition>0){const n=t.afterPosition-1,h=this.c[n].size,s=this.d.filter(o=>o.afterPosition===t.afterPosition),r=h+s.reduce((o,c)=>o+c.size,0);this.e.setValue(n,r)}}}getWhitespacePosition(e){const i=this.d.find(o=>o.id===e);if(!i)throw new Error("Whitespace not found");const t=i.afterPosition;if(t===0)return this.d.filter(c=>c.afterPosition===t&&c.priority<i.priority).reduce((c,a)=>c+a.size,0)+this.paddingTop;const n=this.d.filter(o=>o.afterPosition===0).reduce((o,c)=>o+c.size,0),h=t-1,s=this.e.getPrefixSum(h),r=this.c[h].size;return s+r+n+this.paddingTop}indexAt(e){if(e<0)return-1;const i=this.d.filter(n=>n.afterPosition===0).reduce((n,h)=>n+h.size,0),t=e-(this.g+i);return t<=0?0:t>=this.f-this.g-i?this.count:this.e.getIndexOf(Math.trunc(t)).index}indexAfter(e){const i=this.indexAt(e);return Math.min(i+1,this.c.length)}positionAt(e){if(e<0||this.count===0||e>=this.count)return-1;const i=this.d.filter(t=>t.afterPosition===0).reduce((t,n)=>t+n.size,0);return this.e.getPrefixSum(e)+this.g+i}}class z extends u{constructor(){super(...arguments),this.Fb=0,this.Gb=0}get inRenderingTransaction(){return this.Gb>0}get notebookRangeMap(){return this.g}db(e,i,t,n,h,s){this.Gb++,super.db(e,i,t,n,h,s),this.Gb--}Db(e,i,t){this.Gb++,super.Db(e,i,t),this.Gb--}Y(e){const i=this.g;if(i){const t=new d(e);return t.restoreWhitespace(i.getWhitespaces()),t}else return new d(e)}insertWhitespace(e,i){const t=this.scrollTop,n=`${++this.Fb}`,h=this.Cb(this.k,this.m),s=this.elementTop(e),r=t>s;this.notebookRangeMap.insertWhitespace(n,e,i);const o=r?t+i:t;return this.db(h,o,this.m,void 0,void 0,!1),this.Db(o,this.renderHeight,!1),this.$(),n}changeOneWhitespace(e,i,t){const n=this.scrollTop,h=this.Cb(this.k,this.m);this.notebookRangeMap.getWhitespacePosition(e)>n?(this.notebookRangeMap.changeOneWhitespace(e,i,t),this.db(h,n,this.m,void 0,void 0,!1),this.Db(n,this.renderHeight,!1),this.$()):(this.notebookRangeMap.changeOneWhitespace(e,i,t),this.$())}removeWhitespace(e){const i=this.scrollTop,t=this.Cb(this.k,this.m);this.notebookRangeMap.removeWhitespace(e),this.db(t,i,this.m,void 0,void 0,!1),this.Db(i,this.renderHeight,!1),this.$()}getWhitespacePosition(e){return this.notebookRangeMap.getWhitespacePosition(e)}}export{d as $LSb,z as $MSb};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { ListView } from "../../../../../base/browser/ui/list/listView.js";
+import { ConstantTimePrefixSumComputer } from "../../../../../editor/common/model/prefixSumComputer.js";
+class NotebookCellsLayout {
+  static {
+    __name(this, "NotebookCellsLayout");
+  }
+  get paddingTop() {
+    return this._paddingTop;
+  }
+  set paddingTop(paddingTop) {
+    this._size = this._size + paddingTop - this._paddingTop;
+    this._paddingTop = paddingTop;
+  }
+  get count() {
+    return this._items.length;
+  }
+  /**
+   * Returns the sum of the sizes of all items in the range map.
+   */
+  get size() {
+    return this._size;
+  }
+  constructor(topPadding) {
+    this._items = [];
+    this._whitespace = [];
+    this._prefixSumComputer = new ConstantTimePrefixSumComputer([]);
+    this._size = 0;
+    this._paddingTop = 0;
+    this._paddingTop = topPadding ?? 0;
+    this._size = this._paddingTop;
+  }
+  getWhitespaces() {
+    return this._whitespace;
+  }
+  restoreWhitespace(items) {
+    this._whitespace = items;
+    this._size = this._paddingTop + this._items.reduce((total, item) => total + item.size, 0) + this._whitespace.reduce((total, ws) => total + ws.size, 0);
+  }
+  /**
+   */
+  splice(index, deleteCount, items) {
+    const inserts = items ?? [];
+    this._items.splice(index, deleteCount, ...inserts);
+    this._size = this._paddingTop + this._items.reduce((total, item) => total + item.size, 0) + this._whitespace.reduce((total, ws) => total + ws.size, 0);
+    this._prefixSumComputer.removeValues(index, deleteCount);
+    const newSizes = [];
+    for (let i = 0; i < inserts.length; i++) {
+      const insertIndex = i + index;
+      const existingWhitespaces = this._whitespace.filter((ws) => ws.afterPosition === insertIndex + 1);
+      if (existingWhitespaces.length > 0) {
+        newSizes.push(inserts[i].size + existingWhitespaces.reduce((acc, ws) => acc + ws.size, 0));
+      } else {
+        newSizes.push(inserts[i].size);
+      }
+    }
+    this._prefixSumComputer.insertValues(index, newSizes);
+    for (let i = index; i < this._items.length; i++) {
+      const existingWhitespaces = this._whitespace.filter((ws) => ws.afterPosition === i + 1);
+      if (existingWhitespaces.length > 0) {
+        this._prefixSumComputer.setValue(i, this._items[i].size + existingWhitespaces.reduce((acc, ws) => acc + ws.size, 0));
+      } else {
+        this._prefixSumComputer.setValue(i, this._items[i].size);
+      }
+    }
+  }
+  insertWhitespace(id, afterPosition, size) {
+    let priority = 0;
+    const existingWhitespaces = this._whitespace.filter((ws) => ws.afterPosition === afterPosition);
+    if (existingWhitespaces.length > 0) {
+      priority = Math.max(...existingWhitespaces.map((ws) => ws.priority)) + 1;
+    }
+    this._whitespace.push({ id, afterPosition, size, priority });
+    this._size += size;
+    this._whitespace.sort((a, b) => {
+      if (a.afterPosition === b.afterPosition) {
+        return a.priority - b.priority;
+      }
+      return a.afterPosition - b.afterPosition;
+    });
+    if (afterPosition > 0) {
+      const index = afterPosition - 1;
+      const itemSize = this._items[index].size;
+      const accSize = itemSize + size;
+      this._prefixSumComputer.setValue(index, accSize);
+    }
+  }
+  changeOneWhitespace(id, afterPosition, size) {
+    const whitespaceIndex = this._whitespace.findIndex((ws) => ws.id === id);
+    if (whitespaceIndex !== -1) {
+      const whitespace = this._whitespace[whitespaceIndex];
+      const oldAfterPosition = whitespace.afterPosition;
+      whitespace.afterPosition = afterPosition;
+      const oldSize = whitespace.size;
+      const delta = size - oldSize;
+      whitespace.size = size;
+      this._size += delta;
+      if (oldAfterPosition > 0 && oldAfterPosition <= this._items.length) {
+        const index = oldAfterPosition - 1;
+        const itemSize = this._items[index].size;
+        const accSize = itemSize;
+        this._prefixSumComputer.setValue(index, accSize);
+      }
+      if (afterPosition > 0 && afterPosition <= this._items.length) {
+        const index = afterPosition - 1;
+        const itemSize = this._items[index].size;
+        const accSize = itemSize + size;
+        this._prefixSumComputer.setValue(index, accSize);
+      }
+    }
+  }
+  removeWhitespace(id) {
+    const whitespaceIndex = this._whitespace.findIndex((ws) => ws.id === id);
+    if (whitespaceIndex !== -1) {
+      const whitespace = this._whitespace[whitespaceIndex];
+      this._whitespace.splice(whitespaceIndex, 1);
+      this._size -= whitespace.size;
+      if (whitespace.afterPosition > 0) {
+        const index = whitespace.afterPosition - 1;
+        const itemSize = this._items[index].size;
+        const remainingWhitespaces = this._whitespace.filter((ws) => ws.afterPosition === whitespace.afterPosition);
+        const accSize = itemSize + remainingWhitespaces.reduce((acc, ws) => acc + ws.size, 0);
+        this._prefixSumComputer.setValue(index, accSize);
+      }
+    }
+  }
+  /**
+   * find position of whitespace
+   * @param id: id of the whitespace
+   * @returns: position in the list view
+   */
+  getWhitespacePosition(id) {
+    const whitespace = this._whitespace.find((ws) => ws.id === id);
+    if (!whitespace) {
+      throw new Error("Whitespace not found");
+    }
+    const afterPosition = whitespace.afterPosition;
+    if (afterPosition === 0) {
+      const whitespaces = this._whitespace.filter((ws) => ws.afterPosition === afterPosition && ws.priority < whitespace.priority);
+      return whitespaces.reduce((acc, ws) => acc + ws.size, 0) + this.paddingTop;
+    }
+    const whitespaceBeforeFirstItem = this._whitespace.filter((ws) => ws.afterPosition === 0).reduce((acc, ws) => acc + ws.size, 0);
+    const index = afterPosition - 1;
+    const previousItemPosition = this._prefixSumComputer.getPrefixSum(index);
+    const previousItemSize = this._items[index].size;
+    return previousItemPosition + previousItemSize + whitespaceBeforeFirstItem + this.paddingTop;
+  }
+  indexAt(position) {
+    if (position < 0) {
+      return -1;
+    }
+    const whitespaceBeforeFirstItem = this._whitespace.filter((ws) => ws.afterPosition === 0).reduce((acc, ws) => acc + ws.size, 0);
+    const offset = position - (this._paddingTop + whitespaceBeforeFirstItem);
+    if (offset <= 0) {
+      return 0;
+    }
+    if (offset >= this._size - this._paddingTop - whitespaceBeforeFirstItem) {
+      return this.count;
+    }
+    return this._prefixSumComputer.getIndexOf(Math.trunc(offset)).index;
+  }
+  indexAfter(position) {
+    const index = this.indexAt(position);
+    return Math.min(index + 1, this._items.length);
+  }
+  positionAt(index) {
+    if (index < 0) {
+      return -1;
+    }
+    if (this.count === 0) {
+      return -1;
+    }
+    if (index >= this.count) {
+      return -1;
+    }
+    const whitespaceBeforeFirstItem = this._whitespace.filter((ws) => ws.afterPosition === 0).reduce((acc, ws) => acc + ws.size, 0);
+    return this._prefixSumComputer.getPrefixSum(
+      index
+      /** count */
+    ) + this._paddingTop + whitespaceBeforeFirstItem;
+  }
+}
+class NotebookCellListView extends ListView {
+  static {
+    __name(this, "NotebookCellListView");
+  }
+  constructor() {
+    super(...arguments);
+    this._lastWhitespaceId = 0;
+    this._renderingStack = 0;
+  }
+  get inRenderingTransaction() {
+    return this._renderingStack > 0;
+  }
+  get notebookRangeMap() {
+    return this.rangeMap;
+  }
+  render(previousRenderRange, renderTop, renderHeight, renderLeft, scrollWidth, updateItemsInDOM) {
+    this._renderingStack++;
+    super.render(previousRenderRange, renderTop, renderHeight, renderLeft, scrollWidth, updateItemsInDOM);
+    this._renderingStack--;
+  }
+  _rerender(renderTop, renderHeight, inSmoothScrolling) {
+    this._renderingStack++;
+    super._rerender(renderTop, renderHeight, inSmoothScrolling);
+    this._renderingStack--;
+  }
+  createRangeMap(paddingTop) {
+    const existingMap = this.rangeMap;
+    if (existingMap) {
+      const layout = new NotebookCellsLayout(paddingTop);
+      layout.restoreWhitespace(existingMap.getWhitespaces());
+      return layout;
+    } else {
+      return new NotebookCellsLayout(paddingTop);
+    }
+  }
+  insertWhitespace(afterPosition, size) {
+    const scrollTop = this.scrollTop;
+    const id = `${++this._lastWhitespaceId}`;
+    const previousRenderRange = this.getRenderRange(this.lastRenderTop, this.lastRenderHeight);
+    const elementPosition = this.elementTop(afterPosition);
+    const aboveScrollTop = scrollTop > elementPosition;
+    this.notebookRangeMap.insertWhitespace(id, afterPosition, size);
+    const newScrolltop = aboveScrollTop ? scrollTop + size : scrollTop;
+    this.render(previousRenderRange, newScrolltop, this.lastRenderHeight, void 0, void 0, false);
+    this._rerender(newScrolltop, this.renderHeight, false);
+    this.eventuallyUpdateScrollDimensions();
+    return id;
+  }
+  changeOneWhitespace(id, newAfterPosition, newSize) {
+    const scrollTop = this.scrollTop;
+    const previousRenderRange = this.getRenderRange(this.lastRenderTop, this.lastRenderHeight);
+    const currentPosition = this.notebookRangeMap.getWhitespacePosition(id);
+    if (currentPosition > scrollTop) {
+      this.notebookRangeMap.changeOneWhitespace(id, newAfterPosition, newSize);
+      this.render(previousRenderRange, scrollTop, this.lastRenderHeight, void 0, void 0, false);
+      this._rerender(scrollTop, this.renderHeight, false);
+      this.eventuallyUpdateScrollDimensions();
+    } else {
+      this.notebookRangeMap.changeOneWhitespace(id, newAfterPosition, newSize);
+      this.eventuallyUpdateScrollDimensions();
+    }
+  }
+  removeWhitespace(id) {
+    const scrollTop = this.scrollTop;
+    const previousRenderRange = this.getRenderRange(this.lastRenderTop, this.lastRenderHeight);
+    this.notebookRangeMap.removeWhitespace(id);
+    this.render(previousRenderRange, scrollTop, this.lastRenderHeight, void 0, void 0, false);
+    this._rerender(scrollTop, this.renderHeight, false);
+    this.eventuallyUpdateScrollDimensions();
+  }
+  getWhitespacePosition(id) {
+    return this.notebookRangeMap.getWhitespacePosition(id);
+  }
+}
+export {
+  NotebookCellListView,
+  NotebookCellsLayout
+};
+//# sourceMappingURL=notebookCellListView.js.map

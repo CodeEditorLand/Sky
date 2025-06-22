@@ -1,1 +1,36 @@
-import{$H6 as r}from"../../../base/browser/dom.js";import{$Mfb as a,$Tfb as d,$Wfb as l,$Ufb as s}from"../../theme/browser/defaultStyles.js";const b=["workbench.action.quit","workbench.action.reloadWindow","copy","cut","editor.action.selectAll","editor.action.clipboardCopyAction","editor.action.clipboardCutAction","editor.action.clipboardPasteAction"];function m(o,t,e,c=b){return{keyEventProcessor:o=>{const i=t.softDispatch(o,e.activeContainer);2===i.kind&&i.commandId&&(c.includes(i.commandId)||r.stop(o,!0))},buttonStyles:a,checkboxStyles:d,inputBoxStyles:l,dialogStyles:s,...o}}export{m as $44b};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { EventHelper } from "../../../base/browser/dom.js";
+import { defaultButtonStyles, defaultCheckboxStyles, defaultInputBoxStyles, defaultDialogStyles } from "../../theme/browser/defaultStyles.js";
+const defaultDialogAllowableCommands = [
+  "workbench.action.quit",
+  "workbench.action.reloadWindow",
+  "copy",
+  "cut",
+  "editor.action.selectAll",
+  "editor.action.clipboardCopyAction",
+  "editor.action.clipboardCutAction",
+  "editor.action.clipboardPasteAction"
+];
+function createWorkbenchDialogOptions(options, keybindingService, layoutService, allowableCommands = defaultDialogAllowableCommands) {
+  return {
+    keyEventProcessor: /* @__PURE__ */ __name((event) => {
+      const resolved = keybindingService.softDispatch(event, layoutService.activeContainer);
+      if (resolved.kind === 2 && resolved.commandId) {
+        if (!allowableCommands.includes(resolved.commandId)) {
+          EventHelper.stop(event, true);
+        }
+      }
+    }, "keyEventProcessor"),
+    buttonStyles: defaultButtonStyles,
+    checkboxStyles: defaultCheckboxStyles,
+    inputBoxStyles: defaultInputBoxStyles,
+    dialogStyles: defaultDialogStyles,
+    ...options
+  };
+}
+__name(createWorkbenchDialogOptions, "createWorkbenchDialogOptions");
+export {
+  createWorkbenchDialogOptions
+};
+//# sourceMappingURL=dialog.js.map

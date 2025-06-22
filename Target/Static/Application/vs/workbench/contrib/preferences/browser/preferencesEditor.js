@@ -1,1 +1,167 @@
-import"./media/preferencesEditor.css";import*as o from"../../../../base/browser/dom.js";import{localize as d}from"../../../../nls.js";import{$Vn as $}from"../../../../platform/contextkey/common/contextkey.js";import{$mj as P}from"../../../../platform/instantiation/common/instantiation.js";import{$Ho as g}from"../../../../platform/storage/common/storage.js";import{$Po as j}from"../../../../platform/telemetry/common/telemetry.js";import{Event as x}from"../../../../base/common/event.js";import{$Xfb as D}from"../../../../platform/theme/browser/defaultStyles.js";import{$Mt as y}from"../../../../platform/theme/common/themeService.js";import{$DDb as B}from"../../../browser/parts/editor/editorPane.js";import{$87b as v}from"../common/preferences.js";import{$y9b as E}from"../common/settingsEditorColorRegistry.js";import{$c9b as I}from"./preferencesWidgets.js";import{$M7 as _}from"../../../../base/browser/ui/actionbar/actionbar.js";import{$Ql as w}from"../../../../platform/registry/common/platform.js";import{Extensions as M}from"./preferencesEditorRegistry.js";import{$_l as R}from"../../../../base/common/actions.js";import{$wd as C}from"../../../../base/common/lifecycle.js";var b=function(h,t,e,i){var s=arguments.length,r=s<3?t:i===null?i=Object.getOwnPropertyDescriptor(t,e):i,n;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")r=Reflect.decorate(h,t,e,i);else for(var c=h.length-1;c>=0;c--)(n=h[c])&&(r=(s<3?n(r):s>3?n(t,e,r):n(t,e))||r);return s>3&&r&&Object.defineProperty(t,e,r),r},f=function(h,t){return function(e,i){t(e,i,h)}},p;class H extends R{constructor(t,e){super(t.id,t.title,"",!0,e),this.descriptor=t}}let l=class extends B{static{p=this}static{this.ID="workbench.editor.preferences"}constructor(t,e,i,s,r,n){super(p.ID,t,e,i,s),this.u=r,this.a=w.as(M.PreferencesEditorPane),this.j=[],this.m=this.B(new C),this.r=v.bindTo(n),this.b=o.$(".preferences-editor");const c=o.$M6(this.b,o.$(".preferences-editor-header")),m=o.$M6(c,o.$(".search-container"));this.f=this.B(this.u.createInstance(I,m,{focusKey:this.r,inputBoxStyles:D({inputBorder:E})})),this.B(x.debounce(this.f.onDidChange,()=>{},300)(()=>{this.m.value?.search(this.f.getValue())}));const u=o.$M6(c,o.$(".preferences-tabs-container"));this.g=this.B(new _(u,{orientation:0,focusOnlyEnabledItems:!0,ariaLabel:d(9857,null),ariaRole:"tablist"})),this.db(this.a.getPreferencesEditorPanes(),[]),this.B(this.a.onDidRegisterPreferencesEditorPanes(a=>this.db(a,[]))),this.B(this.a.onDidDeregisterPreferencesEditorPanes(a=>this.db([],a))),this.c=o.$M6(this.b,o.$(".preferences-editor-body"))}Y(t){o.$M6(t,this.b)}layout(t){this.s=t,this.f.layout(t),this.f.inputBox.inputElement.style.paddingRight="12px",this.m.value?.layout(new o.$25(this.c.clientWidth,t.height-87))}async setInput(t,e,i,s){await super.setInput(t,e,i,s),this.j.length&&this.eb(this.j[0].id)}db(t,e){for(const i of e){const s=this.j.findIndex(r=>r.id===i.id);s!==-1&&(this.g.pull(s),this.j[s].dispose(),this.j.splice(s,1))}if(t.length>0){const i=this.a.getPreferencesEditorPanes();for(const s of t){const r=i.findIndex(n=>n.id===s.id);if(r!==-1){const n=new H(s,()=>this.eb(s.id));this.j.splice(r,0,n),this.g.push(n,{index:r})}}}}eb(t){let e;for(const i of this.j)i.id===t?(i.checked=!0,e=i):i.checked=!1;e&&(this.f.inputBox.setPlaceHolder(d(9858,null,e.descriptor.title)),this.f.inputBox.setAriaLabel(d(9859,null,e.descriptor.title))),this.fb(e?.descriptor),this.s&&this.layout(this.s)}fb(t){if(this.m.value=void 0,o.$I5(this.c),t){const e=this.u.createInstance(t.ctorDescriptor.ctor);this.m.value=e,this.c.appendChild(e.getDomNode())}}dispose(){super.dispose(),this.j.forEach(t=>t.dispose())}};l=p=b([f(1,j),f(2,y),f(3,g),f(4,P),f(5,$)],l);export{l as $H9b};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import "./media/preferencesEditor.css";
+import * as DOM from "../../../../base/browser/dom.js";
+import { localize } from "../../../../nls.js";
+import { IContextKeyService } from "../../../../platform/contextkey/common/contextkey.js";
+import { IInstantiationService } from "../../../../platform/instantiation/common/instantiation.js";
+import { IStorageService } from "../../../../platform/storage/common/storage.js";
+import { ITelemetryService } from "../../../../platform/telemetry/common/telemetry.js";
+import { Event } from "../../../../base/common/event.js";
+import { getInputBoxStyle } from "../../../../platform/theme/browser/defaultStyles.js";
+import { IThemeService } from "../../../../platform/theme/common/themeService.js";
+import { EditorPane } from "../../../browser/parts/editor/editorPane.js";
+import { CONTEXT_PREFERENCES_SEARCH_FOCUS } from "../common/preferences.js";
+import { settingsTextInputBorder } from "../common/settingsEditorColorRegistry.js";
+import { SearchWidget } from "./preferencesWidgets.js";
+import { ActionBar } from "../../../../base/browser/ui/actionbar/actionbar.js";
+import { Registry } from "../../../../platform/registry/common/platform.js";
+import { Extensions } from "./preferencesEditorRegistry.js";
+import { Action } from "../../../../base/common/actions.js";
+import { MutableDisposable } from "../../../../base/common/lifecycle.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+var PreferencesEditor_1;
+class PreferenceTabAction extends Action {
+  static {
+    __name(this, "PreferenceTabAction");
+  }
+  constructor(descriptor, actionCallback) {
+    super(descriptor.id, descriptor.title, "", true, actionCallback);
+    this.descriptor = descriptor;
+  }
+}
+let PreferencesEditor = class PreferencesEditor2 extends EditorPane {
+  static {
+    __name(this, "PreferencesEditor");
+  }
+  static {
+    PreferencesEditor_1 = this;
+  }
+  static {
+    this.ID = "workbench.editor.preferences";
+  }
+  constructor(group, telemetryService, themeService, storageService, instantiationService, contextKeyService) {
+    super(PreferencesEditor_1.ID, group, telemetryService, themeService, storageService);
+    this.instantiationService = instantiationService;
+    this.editorPanesRegistry = Registry.as(Extensions.PreferencesEditorPane);
+    this.preferencesTabActions = [];
+    this.preferencesEditorPane = this._register(new MutableDisposable());
+    this.searchFocusContextKey = CONTEXT_PREFERENCES_SEARCH_FOCUS.bindTo(contextKeyService);
+    this.element = DOM.$(".preferences-editor");
+    const headerContainer = DOM.append(this.element, DOM.$(".preferences-editor-header"));
+    const searchContainer = DOM.append(headerContainer, DOM.$(".search-container"));
+    this.searchWidget = this._register(this.instantiationService.createInstance(SearchWidget, searchContainer, {
+      focusKey: this.searchFocusContextKey,
+      inputBoxStyles: getInputBoxStyle({
+        inputBorder: settingsTextInputBorder
+      })
+    }));
+    this._register(Event.debounce(this.searchWidget.onDidChange, () => void 0, 300)(() => {
+      this.preferencesEditorPane.value?.search(this.searchWidget.getValue());
+    }));
+    const preferencesTabsContainer = DOM.append(headerContainer, DOM.$(".preferences-tabs-container"));
+    this.preferencesTabActionBar = this._register(new ActionBar(preferencesTabsContainer, {
+      orientation: 0,
+      focusOnlyEnabledItems: true,
+      ariaLabel: localize("preferencesTabSwitcherBarAriaLabel", "Preferences Tab Switcher"),
+      ariaRole: "tablist"
+    }));
+    this.onDidChangePreferencesEditorPane(this.editorPanesRegistry.getPreferencesEditorPanes(), []);
+    this._register(this.editorPanesRegistry.onDidRegisterPreferencesEditorPanes((descriptors) => this.onDidChangePreferencesEditorPane(descriptors, [])));
+    this._register(this.editorPanesRegistry.onDidDeregisterPreferencesEditorPanes((descriptors) => this.onDidChangePreferencesEditorPane([], descriptors)));
+    this.bodyElement = DOM.append(this.element, DOM.$(".preferences-editor-body"));
+  }
+  createEditor(parent) {
+    DOM.append(parent, this.element);
+  }
+  layout(dimension) {
+    this.dimension = dimension;
+    this.searchWidget.layout(dimension);
+    this.searchWidget.inputBox.inputElement.style.paddingRight = `12px`;
+    this.preferencesEditorPane.value?.layout(new DOM.Dimension(
+      this.bodyElement.clientWidth,
+      dimension.height - 87
+      /* header height */
+    ));
+  }
+  async setInput(input, options, context, token) {
+    await super.setInput(input, options, context, token);
+    if (this.preferencesTabActions.length) {
+      this.onDidSelectPreferencesEditorPane(this.preferencesTabActions[0].id);
+    }
+  }
+  onDidChangePreferencesEditorPane(toAdd, toRemove) {
+    for (const desc of toRemove) {
+      const index = this.preferencesTabActions.findIndex((action) => action.id === desc.id);
+      if (index !== -1) {
+        this.preferencesTabActionBar.pull(index);
+        this.preferencesTabActions[index].dispose();
+        this.preferencesTabActions.splice(index, 1);
+      }
+    }
+    if (toAdd.length > 0) {
+      const all = this.editorPanesRegistry.getPreferencesEditorPanes();
+      for (const desc of toAdd) {
+        const index = all.findIndex((action) => action.id === desc.id);
+        if (index !== -1) {
+          const action = new PreferenceTabAction(desc, () => this.onDidSelectPreferencesEditorPane(desc.id));
+          this.preferencesTabActions.splice(index, 0, action);
+          this.preferencesTabActionBar.push(action, { index });
+        }
+      }
+    }
+  }
+  onDidSelectPreferencesEditorPane(id) {
+    let selectedAction;
+    for (const action of this.preferencesTabActions) {
+      if (action.id === id) {
+        action.checked = true;
+        selectedAction = action;
+      } else {
+        action.checked = false;
+      }
+    }
+    if (selectedAction) {
+      this.searchWidget.inputBox.setPlaceHolder(localize("FullTextSearchPlaceholder", "Search {0}", selectedAction.descriptor.title));
+      this.searchWidget.inputBox.setAriaLabel(localize("FullTextSearchPlaceholder", "Search {0}", selectedAction.descriptor.title));
+    }
+    this.renderBody(selectedAction?.descriptor);
+    if (this.dimension) {
+      this.layout(this.dimension);
+    }
+  }
+  renderBody(descriptor) {
+    this.preferencesEditorPane.value = void 0;
+    DOM.clearNode(this.bodyElement);
+    if (descriptor) {
+      const editorPane = this.instantiationService.createInstance(descriptor.ctorDescriptor.ctor);
+      this.preferencesEditorPane.value = editorPane;
+      this.bodyElement.appendChild(editorPane.getDomNode());
+    }
+  }
+  dispose() {
+    super.dispose();
+    this.preferencesTabActions.forEach((action) => action.dispose());
+  }
+};
+PreferencesEditor = PreferencesEditor_1 = __decorate([
+  __param(1, ITelemetryService),
+  __param(2, IThemeService),
+  __param(3, IStorageService),
+  __param(4, IInstantiationService),
+  __param(5, IContextKeyService)
+], PreferencesEditor);
+export {
+  PreferencesEditor
+};
+//# sourceMappingURL=preferencesEditor.js.map

@@ -1,1 +1,83 @@
-import{$hl as d}from"../../../../platform/workspace/common/workspace.js";import{$Ho as u}from"../../../../platform/storage/common/storage.js";import{$5j as m}from"../../../../platform/files/common/files.js";import{$RM as W}from"../../../../platform/workspace/common/workspaceTrust.js";import{$vec as l}from"../../../services/workspaces/common/workspaceUtils.js";import{$nj as k}from"../../../../platform/instantiation/common/instantiation.js";var h=function(c,r,e,t){var s=arguments.length,o=s<3?r:t===null?t=Object.getOwnPropertyDescriptor(r,e):t,n;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")o=Reflect.decorate(c,r,e,t);else for(var f=c.length-1;f>=0;f--)(n=c[f])&&(o=(s<3?n(o):s>3?n(r,e,o):n(r,e))||o);return s>3&&o&&Object.defineProperty(r,e,o),o},i=function(c,r){return function(e,t){r(e,t,c)}};const v=k("chatTransferService"),a="chat.transferedWorkspaces";let p=class{constructor(r,e,t,s){this.a=r,this.b=e,this.c=t,this.d=s}deleteWorkspaceFromTransferredList(r){const t=this.b.getObject(a,0,[]).filter(s=>s!==r.toString());this.b.store(a,t,0,1)}addWorkspaceToTransferred(r){const e=this.b.getObject(a,0,[]);e.push(r.toString()),this.b.store(a,e,0,1)}async checkAndSetTransferredWorkspaceTrust(){const r=this.a.getWorkspace(),e=r.folders[0]?.uri;e&&this.isChatTransferredWorkspace(e,this.b)&&await l(r,this.c)&&(await this.d.setWorkspaceTrust(!0),this.deleteWorkspaceFromTransferredList(e))}isChatTransferredWorkspace(r,e){return r?e.getObject(a,0,[]).some(s=>s.toString()===r.toString()):!1}};p=h([i(0,d),i(1,u),i(2,m),i(3,W)],p);export{v as $wec,p as $xec};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { IWorkspaceContextService } from "../../../../platform/workspace/common/workspace.js";
+import { IStorageService } from "../../../../platform/storage/common/storage.js";
+import { IFileService } from "../../../../platform/files/common/files.js";
+import { IWorkspaceTrustManagementService } from "../../../../platform/workspace/common/workspaceTrust.js";
+import { areWorkspaceFoldersEmpty } from "../../../services/workspaces/common/workspaceUtils.js";
+import { createDecorator } from "../../../../platform/instantiation/common/instantiation.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+const IChatTransferService = createDecorator("chatTransferService");
+const transferredWorkspacesKey = "chat.transferedWorkspaces";
+let ChatTransferService = class ChatTransferService2 {
+  static {
+    __name(this, "ChatTransferService");
+  }
+  constructor(workspaceService, storageService, fileService, workspaceTrustManagementService) {
+    this.workspaceService = workspaceService;
+    this.storageService = storageService;
+    this.fileService = fileService;
+    this.workspaceTrustManagementService = workspaceTrustManagementService;
+  }
+  deleteWorkspaceFromTransferredList(workspace) {
+    const transferredWorkspaces = this.storageService.getObject(transferredWorkspacesKey, 0, []);
+    const updatedWorkspaces = transferredWorkspaces.filter((uri) => uri !== workspace.toString());
+    this.storageService.store(
+      transferredWorkspacesKey,
+      updatedWorkspaces,
+      0,
+      1
+      /* StorageTarget.MACHINE */
+    );
+  }
+  addWorkspaceToTransferred(workspace) {
+    const transferredWorkspaces = this.storageService.getObject(transferredWorkspacesKey, 0, []);
+    transferredWorkspaces.push(workspace.toString());
+    this.storageService.store(
+      transferredWorkspacesKey,
+      transferredWorkspaces,
+      0,
+      1
+      /* StorageTarget.MACHINE */
+    );
+  }
+  async checkAndSetTransferredWorkspaceTrust() {
+    const workspace = this.workspaceService.getWorkspace();
+    const currentWorkspaceUri = workspace.folders[0]?.uri;
+    if (!currentWorkspaceUri) {
+      return;
+    }
+    if (this.isChatTransferredWorkspace(currentWorkspaceUri, this.storageService) && await areWorkspaceFoldersEmpty(workspace, this.fileService)) {
+      await this.workspaceTrustManagementService.setWorkspaceTrust(true);
+      this.deleteWorkspaceFromTransferredList(currentWorkspaceUri);
+    }
+  }
+  isChatTransferredWorkspace(workspace, storageService) {
+    if (!workspace) {
+      return false;
+    }
+    const chatWorkspaceTransfer = storageService.getObject(transferredWorkspacesKey, 0, []);
+    return chatWorkspaceTransfer.some((item) => item.toString() === workspace.toString());
+  }
+};
+ChatTransferService = __decorate([
+  __param(0, IWorkspaceContextService),
+  __param(1, IStorageService),
+  __param(2, IFileService),
+  __param(3, IWorkspaceTrustManagementService)
+], ChatTransferService);
+export {
+  ChatTransferService,
+  IChatTransferService
+};
+//# sourceMappingURL=chatTransferService.js.map

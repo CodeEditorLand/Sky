@@ -1,1 +1,42 @@
-import{$oY as o}from"./extHost.protocol.js";import{$qY as n}from"./extHostTypes.js";class f{constructor(t){this.a=new Map,this.b=0,this.c=t.getProxy(o.MainThreadAiRelatedInformation)}async $provideAiRelatedInformation(t,r,i){if(this.a.size===0)throw new Error("No related information providers registered");const e=this.a.get(t);if(!e)throw new Error("related information provider not found");return await e.provideRelatedInformation(r,i)??[]}getRelatedInformation(t,r,i){return this.c.$getAiRelatedInformation(r,i)}registerRelatedInformationProvider(t,r,i){const e=this.b;return this.b++,this.a.set(e,i),this.c.$registerAiRelatedInformationProvider(e,r),new n(()=>{this.c.$unregisterAiRelatedInformationProvider(e),this.a.delete(e)})}}export{f as $cKc};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { MainContext } from "./extHost.protocol.js";
+import { Disposable } from "./extHostTypes.js";
+class ExtHostRelatedInformation {
+  static {
+    __name(this, "ExtHostRelatedInformation");
+  }
+  constructor(mainContext) {
+    this._relatedInformationProviders = /* @__PURE__ */ new Map();
+    this._nextHandle = 0;
+    this._proxy = mainContext.getProxy(MainContext.MainThreadAiRelatedInformation);
+  }
+  async $provideAiRelatedInformation(handle, query, token) {
+    if (this._relatedInformationProviders.size === 0) {
+      throw new Error("No related information providers registered");
+    }
+    const provider = this._relatedInformationProviders.get(handle);
+    if (!provider) {
+      throw new Error("related information provider not found");
+    }
+    const result = await provider.provideRelatedInformation(query, token) ?? [];
+    return result;
+  }
+  getRelatedInformation(extension, query, types) {
+    return this._proxy.$getAiRelatedInformation(query, types);
+  }
+  registerRelatedInformationProvider(extension, type, provider) {
+    const handle = this._nextHandle;
+    this._nextHandle++;
+    this._relatedInformationProviders.set(handle, provider);
+    this._proxy.$registerAiRelatedInformationProvider(handle, type);
+    return new Disposable(() => {
+      this._proxy.$unregisterAiRelatedInformationProvider(handle);
+      this._relatedInformationProviders.delete(handle);
+    });
+  }
+}
+export {
+  ExtHostRelatedInformation
+};
+//# sourceMappingURL=extHostAiRelatedInformation.js.map

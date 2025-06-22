@@ -1,4 +1,8 @@
-import{$Xbb as e}from"../atlas/textureAtlas.js";import{$Wbb as t}from"../atlas/textureAtlasPage.js";const i=`
+import { TextureAtlas } from "../atlas/textureAtlas.js";
+import { TextureAtlasPage } from "../atlas/textureAtlasPage.js";
+const fullFileRenderStrategyWgsl = (
+  /*wgsl*/
+  `
 struct GlyphInfo {
 	position: vec2f,
 	size: vec2f,
@@ -33,13 +37,13 @@ struct VSOutput {
 };
 
 // Uniforms
-@group(0) @binding(4)       var<uniform>       layoutInfo:      LayoutInfo;
-@group(0) @binding(5)  var<uniform>       atlasDims:       vec2f;
-@group(0) @binding(6)            var<uniform>       scrollOffset:    ScrollOffset;
+@group(0) @binding(${4})       var<uniform>       layoutInfo:      LayoutInfo;
+@group(0) @binding(${5})  var<uniform>       atlasDims:       vec2f;
+@group(0) @binding(${6})            var<uniform>       scrollOffset:    ScrollOffset;
 
 // Storage buffers
-@group(0) @binding(0)               var<storage, read> glyphInfo:       array<array<GlyphInfo, ${t.maximumGlyphCount}>, ${e.maximumPageCount}>;
-@group(0) @binding(1)                   var<storage, read> cells:           array<Cell>;
+@group(0) @binding(${0})               var<storage, read> glyphInfo:       array<array<GlyphInfo, ${TextureAtlasPage.maximumGlyphCount}>, ${TextureAtlas.maximumPageCount}>;
+@group(0) @binding(${1})                   var<storage, read> cells:           array<Cell>;
 
 @vertex fn vs(
 	vert: Vertex,
@@ -75,10 +79,15 @@ struct VSOutput {
 	return vsOut;
 }
 
-@group(0) @binding(2) var ourSampler: sampler;
-@group(0) @binding(3)        var ourTexture: texture_2d_array<f32>;
+@group(0) @binding(${2}) var ourSampler: sampler;
+@group(0) @binding(${3})        var ourTexture: texture_2d_array<f32>;
 
 @fragment fn fs(vsOut: VSOutput) -> @location(0) vec4f {
 	return textureSample(ourTexture, ourSampler, vsOut.texcoord, u32(vsOut.layerIndex));
 }
-`;export{i as $0bb};
+`
+);
+export {
+  fullFileRenderStrategyWgsl
+};
+//# sourceMappingURL=fullFileRenderStrategy.wgsl.js.map

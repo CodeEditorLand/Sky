@@ -1,1 +1,102 @@
-import*as l from"../../../../nls.js";import{$hp as r,$ep as i}from"../../../../base/common/color.js";import{$op as o,$tp as c,$sp as d,$rp as g}from"../colorUtils.js";import{$Ap as t,$Gp as n,$Fp as h,$Ep as $}from"./baseColors.js";import{$bq as x}from"./editorColors.js";const A=o("input.background",{dark:"#3C3C3C",light:r.white,hcDark:r.black,hcLight:r.white},l.localize(2418,null)),E=o("input.foreground",t,l.localize(2419,null)),V=o("input.border",{dark:null,light:null,hcDark:n,hcLight:n},l.localize(2420,null)),b=o("inputOption.activeBorder",{dark:"#007ACC",light:"#007ACC",hcDark:n,hcLight:n},l.localize(2421,null)),z=o("inputOption.hoverBackground",{dark:"#5a5d5e80",light:"#b8b8b850",hcDark:null,hcLight:null},l.localize(2422,null)),w=o("inputOption.activeBackground",{dark:c(h,.4),light:c(h,.2),hcDark:r.transparent,hcLight:r.transparent},l.localize(2423,null)),D=o("inputOption.activeForeground",{dark:r.white,light:r.black,hcDark:t,hcLight:t},l.localize(2424,null)),y=o("input.placeholderForeground",{light:c(t,.5),dark:c(t,.5),hcDark:c(t,.7),hcLight:c(t,.7)},l.localize(2425,null)),H=o("inputValidation.infoBackground",{dark:"#063B49",light:"#D6ECF2",hcDark:r.black,hcLight:r.white},l.localize(2426,null)),O=o("inputValidation.infoForeground",{dark:null,light:null,hcDark:null,hcLight:t},l.localize(2427,null)),q=o("inputValidation.infoBorder",{dark:"#007acc",light:"#007acc",hcDark:n,hcLight:n},l.localize(2428,null)),j=o("inputValidation.warningBackground",{dark:"#352A05",light:"#F6F5D2",hcDark:r.black,hcLight:r.white},l.localize(2429,null)),G=o("inputValidation.warningForeground",{dark:null,light:null,hcDark:null,hcLight:t},l.localize(2430,null)),U=o("inputValidation.warningBorder",{dark:"#B89500",light:"#B89500",hcDark:n,hcLight:n},l.localize(2431,null)),W=o("inputValidation.errorBackground",{dark:"#5A1D1D",light:"#F2DEDE",hcDark:r.black,hcLight:r.white},l.localize(2432,null)),X=o("inputValidation.errorForeground",{dark:null,light:null,hcDark:null,hcLight:t},l.localize(2433,null)),Y=o("inputValidation.errorBorder",{dark:"#BE1100",light:"#BE1100",hcDark:n,hcLight:n},l.localize(2434,null)),k=o("dropdown.background",{dark:"#3C3C3C",light:r.white,hcDark:r.black,hcLight:r.white},l.localize(2435,null)),Z=o("dropdown.listBackground",{dark:null,light:null,hcDark:r.black,hcLight:r.white},l.localize(2436,null)),L=o("dropdown.foreground",{dark:"#F0F0F0",light:t,hcDark:r.white,hcLight:t},l.localize(2437,null)),B=o("dropdown.border",{dark:k,light:"#CECECE",hcDark:n,hcLight:n},l.localize(2438,null)),C=o("button.foreground",r.white,l.localize(2439,null)),_=o("button.separator",c(C,.4),l.localize(2440,null)),e=o("button.background",{dark:"#0E639C",light:"#007ACC",hcDark:null,hcLight:"#0F4A85"},l.localize(2441,null)),I=o("button.hoverBackground",{dark:d(e,.2),light:g(e,.2),hcDark:e,hcLight:e},l.localize(2442,null)),J=o("button.border",n,l.localize(2443,null)),K=o("button.secondaryForeground",{dark:r.white,light:r.white,hcDark:r.white,hcLight:t},l.localize(2444,null)),u=o("button.secondaryBackground",{dark:"#3A3D41",light:"#5F6A79",hcDark:null,hcLight:r.white},l.localize(2445,null)),M=o("button.secondaryHoverBackground",{dark:d(u,.2),light:g(u,.2),hcDark:null,hcLight:null},l.localize(2446,null)),a=o("radio.activeForeground",D,l.localize(2447,null)),N=o("radio.activeBackground",w,l.localize(2448,null)),P=o("radio.activeBorder",b,l.localize(2449,null)),Q=o("radio.inactiveForeground",null,l.localize(2450,null)),R=o("radio.inactiveBackground",null,l.localize(2451,null)),S=o("radio.inactiveBorder",{light:c(a,.2),dark:c(a,.2),hcDark:c(a,.4),hcLight:c(a,.2)},l.localize(2452,null)),T=o("radio.inactiveHoverBackground",z,l.localize(2453,null)),p=o("checkbox.background",k,l.localize(2454,null)),ll=o("checkbox.selectBackground",x,l.localize(2455,null)),s=o("checkbox.foreground",L,l.localize(2456,null)),ol=o("checkbox.border",B,l.localize(2457,null)),rl=o("checkbox.selectBorder",$,l.localize(2458,null)),tl=o("checkbox.disabled.background",{op:7,color:p,with:s,ratio:.33},l.localize(2459,null)),nl=o("checkbox.disabled.foreground",{op:7,color:s,with:p,ratio:.33},l.localize(2460,null)),cl=o("keybindingLabel.background",{dark:new r(new i(128,128,128,.17)),light:new r(new i(221,221,221,.4)),hcDark:r.transparent,hcLight:r.transparent},l.localize(2461,null)),il=o("keybindingLabel.foreground",{dark:r.fromHex("#CCCCCC"),light:r.fromHex("#555555"),hcDark:r.white,hcLight:t},l.localize(2462,null)),el=o("keybindingLabel.border",{dark:new r(new i(51,51,51,.6)),light:new r(new i(204,204,204,.4)),hcDark:new r(new i(111,195,223)),hcLight:n},l.localize(2463,null)),al=o("keybindingLabel.bottomBorder",{dark:new r(new i(68,68,68,.6)),light:new r(new i(187,187,187,.4)),hcDark:new r(new i(111,195,223)),hcLight:t},l.localize(2464,null));export{Y as $$r,X as $0r,D as $1r,y as $2r,H as $3r,O as $4r,q as $5r,j as $6r,G as $7r,U as $8r,W as $9r,il as $As,el as $Bs,al as $Cs,A as $Ur,E as $Vr,V as $Wr,b as $Xr,z as $Yr,w as $Zr,k as $_r,Z as $as,L as $bs,B as $cs,C as $ds,_ as $es,e as $fs,I as $gs,J as $hs,K as $is,u as $js,M as $ks,a as $ls,N as $ms,P as $ns,Q as $os,R as $ps,S as $qs,T as $rs,p as $ss,ll as $ts,s as $us,ol as $vs,rl as $ws,tl as $xs,nl as $ys,cl as $zs};
+import * as nls from "../../../../nls.js";
+import { Color, RGBA } from "../../../../base/common/color.js";
+import { registerColor, transparent, lighten, darken } from "../colorUtils.js";
+import { foreground, contrastBorder, focusBorder, iconForeground } from "./baseColors.js";
+import { editorWidgetBackground } from "./editorColors.js";
+const inputBackground = registerColor("input.background", { dark: "#3C3C3C", light: Color.white, hcDark: Color.black, hcLight: Color.white }, nls.localize("inputBoxBackground", "Input box background."));
+const inputForeground = registerColor("input.foreground", foreground, nls.localize("inputBoxForeground", "Input box foreground."));
+const inputBorder = registerColor("input.border", { dark: null, light: null, hcDark: contrastBorder, hcLight: contrastBorder }, nls.localize("inputBoxBorder", "Input box border."));
+const inputActiveOptionBorder = registerColor("inputOption.activeBorder", { dark: "#007ACC", light: "#007ACC", hcDark: contrastBorder, hcLight: contrastBorder }, nls.localize("inputBoxActiveOptionBorder", "Border color of activated options in input fields."));
+const inputActiveOptionHoverBackground = registerColor("inputOption.hoverBackground", { dark: "#5a5d5e80", light: "#b8b8b850", hcDark: null, hcLight: null }, nls.localize("inputOption.hoverBackground", "Background color of activated options in input fields."));
+const inputActiveOptionBackground = registerColor("inputOption.activeBackground", { dark: transparent(focusBorder, 0.4), light: transparent(focusBorder, 0.2), hcDark: Color.transparent, hcLight: Color.transparent }, nls.localize("inputOption.activeBackground", "Background hover color of options in input fields."));
+const inputActiveOptionForeground = registerColor("inputOption.activeForeground", { dark: Color.white, light: Color.black, hcDark: foreground, hcLight: foreground }, nls.localize("inputOption.activeForeground", "Foreground color of activated options in input fields."));
+const inputPlaceholderForeground = registerColor("input.placeholderForeground", { light: transparent(foreground, 0.5), dark: transparent(foreground, 0.5), hcDark: transparent(foreground, 0.7), hcLight: transparent(foreground, 0.7) }, nls.localize("inputPlaceholderForeground", "Input box foreground color for placeholder text."));
+const inputValidationInfoBackground = registerColor("inputValidation.infoBackground", { dark: "#063B49", light: "#D6ECF2", hcDark: Color.black, hcLight: Color.white }, nls.localize("inputValidationInfoBackground", "Input validation background color for information severity."));
+const inputValidationInfoForeground = registerColor("inputValidation.infoForeground", { dark: null, light: null, hcDark: null, hcLight: foreground }, nls.localize("inputValidationInfoForeground", "Input validation foreground color for information severity."));
+const inputValidationInfoBorder = registerColor("inputValidation.infoBorder", { dark: "#007acc", light: "#007acc", hcDark: contrastBorder, hcLight: contrastBorder }, nls.localize("inputValidationInfoBorder", "Input validation border color for information severity."));
+const inputValidationWarningBackground = registerColor("inputValidation.warningBackground", { dark: "#352A05", light: "#F6F5D2", hcDark: Color.black, hcLight: Color.white }, nls.localize("inputValidationWarningBackground", "Input validation background color for warning severity."));
+const inputValidationWarningForeground = registerColor("inputValidation.warningForeground", { dark: null, light: null, hcDark: null, hcLight: foreground }, nls.localize("inputValidationWarningForeground", "Input validation foreground color for warning severity."));
+const inputValidationWarningBorder = registerColor("inputValidation.warningBorder", { dark: "#B89500", light: "#B89500", hcDark: contrastBorder, hcLight: contrastBorder }, nls.localize("inputValidationWarningBorder", "Input validation border color for warning severity."));
+const inputValidationErrorBackground = registerColor("inputValidation.errorBackground", { dark: "#5A1D1D", light: "#F2DEDE", hcDark: Color.black, hcLight: Color.white }, nls.localize("inputValidationErrorBackground", "Input validation background color for error severity."));
+const inputValidationErrorForeground = registerColor("inputValidation.errorForeground", { dark: null, light: null, hcDark: null, hcLight: foreground }, nls.localize("inputValidationErrorForeground", "Input validation foreground color for error severity."));
+const inputValidationErrorBorder = registerColor("inputValidation.errorBorder", { dark: "#BE1100", light: "#BE1100", hcDark: contrastBorder, hcLight: contrastBorder }, nls.localize("inputValidationErrorBorder", "Input validation border color for error severity."));
+const selectBackground = registerColor("dropdown.background", { dark: "#3C3C3C", light: Color.white, hcDark: Color.black, hcLight: Color.white }, nls.localize("dropdownBackground", "Dropdown background."));
+const selectListBackground = registerColor("dropdown.listBackground", { dark: null, light: null, hcDark: Color.black, hcLight: Color.white }, nls.localize("dropdownListBackground", "Dropdown list background."));
+const selectForeground = registerColor("dropdown.foreground", { dark: "#F0F0F0", light: foreground, hcDark: Color.white, hcLight: foreground }, nls.localize("dropdownForeground", "Dropdown foreground."));
+const selectBorder = registerColor("dropdown.border", { dark: selectBackground, light: "#CECECE", hcDark: contrastBorder, hcLight: contrastBorder }, nls.localize("dropdownBorder", "Dropdown border."));
+const buttonForeground = registerColor("button.foreground", Color.white, nls.localize("buttonForeground", "Button foreground color."));
+const buttonSeparator = registerColor("button.separator", transparent(buttonForeground, 0.4), nls.localize("buttonSeparator", "Button separator color."));
+const buttonBackground = registerColor("button.background", { dark: "#0E639C", light: "#007ACC", hcDark: null, hcLight: "#0F4A85" }, nls.localize("buttonBackground", "Button background color."));
+const buttonHoverBackground = registerColor("button.hoverBackground", { dark: lighten(buttonBackground, 0.2), light: darken(buttonBackground, 0.2), hcDark: buttonBackground, hcLight: buttonBackground }, nls.localize("buttonHoverBackground", "Button background color when hovering."));
+const buttonBorder = registerColor("button.border", contrastBorder, nls.localize("buttonBorder", "Button border color."));
+const buttonSecondaryForeground = registerColor("button.secondaryForeground", { dark: Color.white, light: Color.white, hcDark: Color.white, hcLight: foreground }, nls.localize("buttonSecondaryForeground", "Secondary button foreground color."));
+const buttonSecondaryBackground = registerColor("button.secondaryBackground", { dark: "#3A3D41", light: "#5F6A79", hcDark: null, hcLight: Color.white }, nls.localize("buttonSecondaryBackground", "Secondary button background color."));
+const buttonSecondaryHoverBackground = registerColor("button.secondaryHoverBackground", { dark: lighten(buttonSecondaryBackground, 0.2), light: darken(buttonSecondaryBackground, 0.2), hcDark: null, hcLight: null }, nls.localize("buttonSecondaryHoverBackground", "Secondary button background color when hovering."));
+const radioActiveForeground = registerColor("radio.activeForeground", inputActiveOptionForeground, nls.localize("radioActiveForeground", "Foreground color of active radio option."));
+const radioActiveBackground = registerColor("radio.activeBackground", inputActiveOptionBackground, nls.localize("radioBackground", "Background color of active radio option."));
+const radioActiveBorder = registerColor("radio.activeBorder", inputActiveOptionBorder, nls.localize("radioActiveBorder", "Border color of the active radio option."));
+const radioInactiveForeground = registerColor("radio.inactiveForeground", null, nls.localize("radioInactiveForeground", "Foreground color of inactive radio option."));
+const radioInactiveBackground = registerColor("radio.inactiveBackground", null, nls.localize("radioInactiveBackground", "Background color of inactive radio option."));
+const radioInactiveBorder = registerColor("radio.inactiveBorder", { light: transparent(radioActiveForeground, 0.2), dark: transparent(radioActiveForeground, 0.2), hcDark: transparent(radioActiveForeground, 0.4), hcLight: transparent(radioActiveForeground, 0.2) }, nls.localize("radioInactiveBorder", "Border color of the inactive radio option."));
+const radioInactiveHoverBackground = registerColor("radio.inactiveHoverBackground", inputActiveOptionHoverBackground, nls.localize("radioHoverBackground", "Background color of inactive active radio option when hovering."));
+const checkboxBackground = registerColor("checkbox.background", selectBackground, nls.localize("checkbox.background", "Background color of checkbox widget."));
+const checkboxSelectBackground = registerColor("checkbox.selectBackground", editorWidgetBackground, nls.localize("checkbox.select.background", "Background color of checkbox widget when the element it's in is selected."));
+const checkboxForeground = registerColor("checkbox.foreground", selectForeground, nls.localize("checkbox.foreground", "Foreground color of checkbox widget."));
+const checkboxBorder = registerColor("checkbox.border", selectBorder, nls.localize("checkbox.border", "Border color of checkbox widget."));
+const checkboxSelectBorder = registerColor("checkbox.selectBorder", iconForeground, nls.localize("checkbox.select.border", "Border color of checkbox widget when the element it's in is selected."));
+const checkboxDisabledBackground = registerColor("checkbox.disabled.background", { op: 7, color: checkboxBackground, with: checkboxForeground, ratio: 0.33 }, nls.localize("checkbox.disabled.background", "Background of a disabled checkbox."));
+const checkboxDisabledForeground = registerColor("checkbox.disabled.foreground", { op: 7, color: checkboxForeground, with: checkboxBackground, ratio: 0.33 }, nls.localize("checkbox.disabled.foreground", "Foreground of a disabled checkbox."));
+const keybindingLabelBackground = registerColor("keybindingLabel.background", { dark: new Color(new RGBA(128, 128, 128, 0.17)), light: new Color(new RGBA(221, 221, 221, 0.4)), hcDark: Color.transparent, hcLight: Color.transparent }, nls.localize("keybindingLabelBackground", "Keybinding label background color. The keybinding label is used to represent a keyboard shortcut."));
+const keybindingLabelForeground = registerColor("keybindingLabel.foreground", { dark: Color.fromHex("#CCCCCC"), light: Color.fromHex("#555555"), hcDark: Color.white, hcLight: foreground }, nls.localize("keybindingLabelForeground", "Keybinding label foreground color. The keybinding label is used to represent a keyboard shortcut."));
+const keybindingLabelBorder = registerColor("keybindingLabel.border", { dark: new Color(new RGBA(51, 51, 51, 0.6)), light: new Color(new RGBA(204, 204, 204, 0.4)), hcDark: new Color(new RGBA(111, 195, 223)), hcLight: contrastBorder }, nls.localize("keybindingLabelBorder", "Keybinding label border color. The keybinding label is used to represent a keyboard shortcut."));
+const keybindingLabelBottomBorder = registerColor("keybindingLabel.bottomBorder", { dark: new Color(new RGBA(68, 68, 68, 0.6)), light: new Color(new RGBA(187, 187, 187, 0.4)), hcDark: new Color(new RGBA(111, 195, 223)), hcLight: foreground }, nls.localize("keybindingLabelBottomBorder", "Keybinding label border bottom color. The keybinding label is used to represent a keyboard shortcut."));
+export {
+  buttonBackground,
+  buttonBorder,
+  buttonForeground,
+  buttonHoverBackground,
+  buttonSecondaryBackground,
+  buttonSecondaryForeground,
+  buttonSecondaryHoverBackground,
+  buttonSeparator,
+  checkboxBackground,
+  checkboxBorder,
+  checkboxDisabledBackground,
+  checkboxDisabledForeground,
+  checkboxForeground,
+  checkboxSelectBackground,
+  checkboxSelectBorder,
+  inputActiveOptionBackground,
+  inputActiveOptionBorder,
+  inputActiveOptionForeground,
+  inputActiveOptionHoverBackground,
+  inputBackground,
+  inputBorder,
+  inputForeground,
+  inputPlaceholderForeground,
+  inputValidationErrorBackground,
+  inputValidationErrorBorder,
+  inputValidationErrorForeground,
+  inputValidationInfoBackground,
+  inputValidationInfoBorder,
+  inputValidationInfoForeground,
+  inputValidationWarningBackground,
+  inputValidationWarningBorder,
+  inputValidationWarningForeground,
+  keybindingLabelBackground,
+  keybindingLabelBorder,
+  keybindingLabelBottomBorder,
+  keybindingLabelForeground,
+  radioActiveBackground,
+  radioActiveBorder,
+  radioActiveForeground,
+  radioInactiveBackground,
+  radioInactiveBorder,
+  radioInactiveForeground,
+  radioInactiveHoverBackground,
+  selectBackground,
+  selectBorder,
+  selectForeground,
+  selectListBackground
+};
+//# sourceMappingURL=inputColors.js.map

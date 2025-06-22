@@ -1,1 +1,155 @@
-import{$qb as g,$lb as m}from"../../../../base/common/errors.js";import{$ud as w}from"../../../../base/common/lifecycle.js";import{$bC as y}from"../../../common/core/position.js";import{$cC as f}from"../../../common/core/range.js";import{Schemas as v}from"../../../../base/common/network.js";import{URI as b}from"../../../../base/common/uri.js";class C{constructor(i,t){this.range=i,this.direction=t}}class u{constructor(i,t,n){this.hint=i,this.anchor=t,this.provider=n,this.c=!1}with(i){const t=new u(this.hint,i.anchor,this.provider);return t.c=this.c,t.d=this.d,t}async resolve(i){if(typeof this.provider.resolveInlayHint=="function"){if(this.d)return await this.d,i.isCancellationRequested?void 0:this.resolve(i);this.c||(this.d=this.e(i).finally(()=>this.d=void 0)),await this.d}}async e(i){try{const t=await Promise.resolve(this.provider.resolveInlayHint(this.hint,i));this.hint.tooltip=t?.tooltip??this.hint.tooltip,this.hint.label=t?.label??this.hint.label,this.hint.textEdits=t?.textEdits??this.hint.textEdits,this.c=!0}catch(t){m(t),this.c=!1}}}class d{static{this.c=Object.freeze({dispose(){},hints:[]})}static async create(i,t,n,h){const e=[],a=i.ordered(t).reverse().map(s=>n.map(async r=>{try{const o=await s.provideInlayHints(t,r,h);(o?.hints.length||s.onDidChangeInlayHints)&&e.push([o??d.c,s])}catch(o){m(o)}}));if(await Promise.all(a.flat()),h.isCancellationRequested||t.isDisposed())throw new g;return new d(n,e,t)}constructor(i,t,n){this.d=new w,this.ranges=i,this.provider=new Set;const h=[];for(const[e,a]of t){this.d.add(e),this.provider.add(a);for(const s of e.hints){const r=n.validatePosition(s.position);let o="before";const l=d.e(n,r);let p;l.getStartPosition().isBefore(r)?(p=f.fromPositions(l.getStartPosition(),r),o="after"):(p=f.fromPositions(r,l.getEndPosition()),o="before"),h.push(new u(s,new C(p,o),a))}}this.items=h.sort((e,a)=>y.compare(e.hint.position,a.hint.position))}dispose(){this.d.dispose()}static e(i,t){const n=t.lineNumber,h=i.getWordAtPosition(t);if(h)return new f(n,h.startColumn,n,h.endColumn);i.tokenization.tokenizeIfCheap(n);const e=i.tokenization.getLineTokens(n),a=t.column-1,s=e.findTokenIndexAtOffset(a);let r=e.getStartOffset(s),o=e.getEndOffset(s);return o-r===1&&(r===a&&s>1?(r=e.getStartOffset(s-1),o=e.getEndOffset(s-1)):o===a&&s<e.getCount()-1&&(r=e.getStartOffset(s+1),o=e.getEndOffset(s+1))),new f(n,r+1,n,o+1)}}function H(c){return b.from({scheme:v.command,path:c.id,query:c.arguments&&encodeURIComponent(JSON.stringify(c.arguments))}).toString()}export{C as $Ulb,u as $Vlb,d as $Wlb,H as $Xlb};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { CancellationError, onUnexpectedExternalError } from "../../../../base/common/errors.js";
+import { DisposableStore } from "../../../../base/common/lifecycle.js";
+import { Position } from "../../../common/core/position.js";
+import { Range } from "../../../common/core/range.js";
+import { Schemas } from "../../../../base/common/network.js";
+import { URI } from "../../../../base/common/uri.js";
+class InlayHintAnchor {
+  static {
+    __name(this, "InlayHintAnchor");
+  }
+  constructor(range, direction) {
+    this.range = range;
+    this.direction = direction;
+  }
+}
+class InlayHintItem {
+  static {
+    __name(this, "InlayHintItem");
+  }
+  constructor(hint, anchor, provider) {
+    this.hint = hint;
+    this.anchor = anchor;
+    this.provider = provider;
+    this._isResolved = false;
+  }
+  with(delta) {
+    const result = new InlayHintItem(this.hint, delta.anchor, this.provider);
+    result._isResolved = this._isResolved;
+    result._currentResolve = this._currentResolve;
+    return result;
+  }
+  async resolve(token) {
+    if (typeof this.provider.resolveInlayHint !== "function") {
+      return;
+    }
+    if (this._currentResolve) {
+      await this._currentResolve;
+      if (token.isCancellationRequested) {
+        return;
+      }
+      return this.resolve(token);
+    }
+    if (!this._isResolved) {
+      this._currentResolve = this._doResolve(token).finally(() => this._currentResolve = void 0);
+    }
+    await this._currentResolve;
+  }
+  async _doResolve(token) {
+    try {
+      const newHint = await Promise.resolve(this.provider.resolveInlayHint(this.hint, token));
+      this.hint.tooltip = newHint?.tooltip ?? this.hint.tooltip;
+      this.hint.label = newHint?.label ?? this.hint.label;
+      this.hint.textEdits = newHint?.textEdits ?? this.hint.textEdits;
+      this._isResolved = true;
+    } catch (err) {
+      onUnexpectedExternalError(err);
+      this._isResolved = false;
+    }
+  }
+}
+class InlayHintsFragments {
+  static {
+    __name(this, "InlayHintsFragments");
+  }
+  static {
+    this._emptyInlayHintList = Object.freeze({ dispose() {
+    }, hints: [] });
+  }
+  static async create(registry, model, ranges, token) {
+    const data = [];
+    const promises = registry.ordered(model).reverse().map((provider) => ranges.map(async (range) => {
+      try {
+        const result = await provider.provideInlayHints(model, range, token);
+        if (result?.hints.length || provider.onDidChangeInlayHints) {
+          data.push([result ?? InlayHintsFragments._emptyInlayHintList, provider]);
+        }
+      } catch (err) {
+        onUnexpectedExternalError(err);
+      }
+    }));
+    await Promise.all(promises.flat());
+    if (token.isCancellationRequested || model.isDisposed()) {
+      throw new CancellationError();
+    }
+    return new InlayHintsFragments(ranges, data, model);
+  }
+  constructor(ranges, data, model) {
+    this._disposables = new DisposableStore();
+    this.ranges = ranges;
+    this.provider = /* @__PURE__ */ new Set();
+    const items = [];
+    for (const [list, provider] of data) {
+      this._disposables.add(list);
+      this.provider.add(provider);
+      for (const hint of list.hints) {
+        const position = model.validatePosition(hint.position);
+        let direction = "before";
+        const wordRange = InlayHintsFragments._getRangeAtPosition(model, position);
+        let range;
+        if (wordRange.getStartPosition().isBefore(position)) {
+          range = Range.fromPositions(wordRange.getStartPosition(), position);
+          direction = "after";
+        } else {
+          range = Range.fromPositions(position, wordRange.getEndPosition());
+          direction = "before";
+        }
+        items.push(new InlayHintItem(hint, new InlayHintAnchor(range, direction), provider));
+      }
+    }
+    this.items = items.sort((a, b) => Position.compare(a.hint.position, b.hint.position));
+  }
+  dispose() {
+    this._disposables.dispose();
+  }
+  static _getRangeAtPosition(model, position) {
+    const line = position.lineNumber;
+    const word = model.getWordAtPosition(position);
+    if (word) {
+      return new Range(line, word.startColumn, line, word.endColumn);
+    }
+    model.tokenization.tokenizeIfCheap(line);
+    const tokens = model.tokenization.getLineTokens(line);
+    const offset = position.column - 1;
+    const idx = tokens.findTokenIndexAtOffset(offset);
+    let start = tokens.getStartOffset(idx);
+    let end = tokens.getEndOffset(idx);
+    if (end - start === 1) {
+      if (start === offset && idx > 1) {
+        start = tokens.getStartOffset(idx - 1);
+        end = tokens.getEndOffset(idx - 1);
+      } else if (end === offset && idx < tokens.getCount() - 1) {
+        start = tokens.getStartOffset(idx + 1);
+        end = tokens.getEndOffset(idx + 1);
+      }
+    }
+    return new Range(line, start + 1, line, end + 1);
+  }
+}
+function asCommandLink(command) {
+  return URI.from({
+    scheme: Schemas.command,
+    path: command.id,
+    query: command.arguments && encodeURIComponent(JSON.stringify(command.arguments))
+  }).toString();
+}
+__name(asCommandLink, "asCommandLink");
+export {
+  InlayHintAnchor,
+  InlayHintItem,
+  InlayHintsFragments,
+  asCommandLink
+};
+//# sourceMappingURL=inlayHints.js.map

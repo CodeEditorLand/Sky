@@ -1,1 +1,53 @@
-import{Schemas as n}from"../../../../base/common/network.js";import{URI as o}from"../../../../base/common/uri.js";import{localize as t}from"../../../../nls.js";import{$bF as i}from"../../../common/editor/editorInput.js";import{$7 as s}from"../../../../base/common/path.js";import{$Mj as m}from"../../../../base/common/codicons.js";import{$Ct as a}from"../../../../platform/theme/common/iconRegistry.js";const c=a("extensions-editor-label-icon",m.extensions,t(8827,null));class r extends i{static{this.ID="workbench.mcpServer.input2"}get typeId(){return r.ID}get capabilities(){return 10}get resource(){return o.from({scheme:n.extension,path:s(this.mcpServer.id,"mcpServer")})}constructor(e){super(),this.a=e}get mcpServer(){return this.a}getName(){return t(8828,null,this.a.label)}getIcon(){return c}matches(e){return!!super.matches(e)||e instanceof r&&this.a.name===e.a.name}}export{r as $vjc};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { Schemas } from "../../../../base/common/network.js";
+import { URI } from "../../../../base/common/uri.js";
+import { localize } from "../../../../nls.js";
+import { EditorInput } from "../../../common/editor/editorInput.js";
+import { join } from "../../../../base/common/path.js";
+import { Codicon } from "../../../../base/common/codicons.js";
+import { registerIcon } from "../../../../platform/theme/common/iconRegistry.js";
+const ExtensionEditorIcon = registerIcon("extensions-editor-label-icon", Codicon.extensions, localize("extensionsEditorLabelIcon", "Icon of the extensions editor label."));
+class McpServerEditorInput extends EditorInput {
+  static {
+    __name(this, "McpServerEditorInput");
+  }
+  static {
+    this.ID = "workbench.mcpServer.input2";
+  }
+  get typeId() {
+    return McpServerEditorInput.ID;
+  }
+  get capabilities() {
+    return 2 | 8;
+  }
+  get resource() {
+    return URI.from({
+      scheme: Schemas.extension,
+      path: join(this.mcpServer.id, "mcpServer")
+    });
+  }
+  constructor(_mcpServer) {
+    super();
+    this._mcpServer = _mcpServer;
+  }
+  get mcpServer() {
+    return this._mcpServer;
+  }
+  getName() {
+    return localize("extensionsInputName", "Extension: {0}", this._mcpServer.label);
+  }
+  getIcon() {
+    return ExtensionEditorIcon;
+  }
+  matches(other) {
+    if (super.matches(other)) {
+      return true;
+    }
+    return other instanceof McpServerEditorInput && this._mcpServer.name === other._mcpServer.name;
+  }
+}
+export {
+  McpServerEditorInput
+};
+//# sourceMappingURL=mcpServerEditorInput.js.map

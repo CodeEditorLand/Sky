@@ -1,1 +1,145 @@
-const u=[];class i{static{this.a=new Array(129)}static b(t,e){if(t<=128&&0===e.length){let s=i.a[t];return s||(s=new i(t,e),i.a[t]=s),s}return new i(t,e)}static{this.c=i.b(0,u)}static getEmpty(){return this.c}constructor(t,e){this.d=t,this.e=e}add(t,e){const s=e.getKey(t);let r=s>>5;if(0===r){const t=1<<s|this.d;return t===this.d?this:i.b(t,this.e)}r--;const h=this.e.slice(0);for(;h.length<r;)h.push(0);return h[r]|=1<<(31&s),i.b(this.d,h)}has(t,e){const s=e.getKey(t);let i=s>>5;return 0===i?!!(this.d&1<<s):(i--,!!((this.e[i]||0)&1<<(31&s)))}merge(t){const e=this.d|t.d;if(this.e===u&&t.e===u)return e===this.d?this:e===t.d?t:i.b(e,u);const s=[];for(let e=0;e<Math.max(this.e.length,t.e.length);e++){const i=this.e[e]||0,r=t.e[e]||0;s.push(i|r)}return i.b(e,s)}intersects(t){if(0!==(this.d&t.d))return!0;for(let e=0;e<Math.min(this.e.length,t.e.length);e++)if(0!==(this.e[e]&t.e[e]))return!0;return!1}equals(t){if(this.d!==t.d||this.e.length!==t.e.length)return!1;for(let e=0;e<this.e.length;e++)if(this.e[e]!==t.e[e])return!1;return!0}}const a={getKey:t=>t};class l{constructor(){this.a=new Map}getKey(t){let e=this.a.get(t);return void 0===e&&(e=this.a.size,this.a.set(t,e)),e}reverseLookup(t){return[...this.a].find((([e,s])=>s===t))?.[0]}reverseLookupSet(t){const e=[];for(const[s]of this.a)t.has(s,this)&&e.push(s);return e}keys(){return this.a.keys()}}export{i as $cE,a as $dE,l as $eE};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+const emptyArr = [];
+class SmallImmutableSet {
+  static {
+    __name(this, "SmallImmutableSet");
+  }
+  static {
+    this.cache = new Array(129);
+  }
+  static create(items, additionalItems) {
+    if (items <= 128 && additionalItems.length === 0) {
+      let cached = SmallImmutableSet.cache[items];
+      if (!cached) {
+        cached = new SmallImmutableSet(items, additionalItems);
+        SmallImmutableSet.cache[items] = cached;
+      }
+      return cached;
+    }
+    return new SmallImmutableSet(items, additionalItems);
+  }
+  static {
+    this.empty = SmallImmutableSet.create(0, emptyArr);
+  }
+  static getEmpty() {
+    return this.empty;
+  }
+  constructor(items, additionalItems) {
+    this.items = items;
+    this.additionalItems = additionalItems;
+  }
+  add(value, keyProvider) {
+    const key = keyProvider.getKey(value);
+    let idx = key >> 5;
+    if (idx === 0) {
+      const newItem = 1 << key | this.items;
+      if (newItem === this.items) {
+        return this;
+      }
+      return SmallImmutableSet.create(newItem, this.additionalItems);
+    }
+    idx--;
+    const newItems = this.additionalItems.slice(0);
+    while (newItems.length < idx) {
+      newItems.push(0);
+    }
+    newItems[idx] |= 1 << (key & 31);
+    return SmallImmutableSet.create(this.items, newItems);
+  }
+  has(value, keyProvider) {
+    const key = keyProvider.getKey(value);
+    let idx = key >> 5;
+    if (idx === 0) {
+      return (this.items & 1 << key) !== 0;
+    }
+    idx--;
+    return ((this.additionalItems[idx] || 0) & 1 << (key & 31)) !== 0;
+  }
+  merge(other) {
+    const merged = this.items | other.items;
+    if (this.additionalItems === emptyArr && other.additionalItems === emptyArr) {
+      if (merged === this.items) {
+        return this;
+      }
+      if (merged === other.items) {
+        return other;
+      }
+      return SmallImmutableSet.create(merged, emptyArr);
+    }
+    const newItems = [];
+    for (let i = 0; i < Math.max(this.additionalItems.length, other.additionalItems.length); i++) {
+      const item1 = this.additionalItems[i] || 0;
+      const item2 = other.additionalItems[i] || 0;
+      newItems.push(item1 | item2);
+    }
+    return SmallImmutableSet.create(merged, newItems);
+  }
+  intersects(other) {
+    if ((this.items & other.items) !== 0) {
+      return true;
+    }
+    for (let i = 0; i < Math.min(this.additionalItems.length, other.additionalItems.length); i++) {
+      if ((this.additionalItems[i] & other.additionalItems[i]) !== 0) {
+        return true;
+      }
+    }
+    return false;
+  }
+  equals(other) {
+    if (this.items !== other.items) {
+      return false;
+    }
+    if (this.additionalItems.length !== other.additionalItems.length) {
+      return false;
+    }
+    for (let i = 0; i < this.additionalItems.length; i++) {
+      if (this.additionalItems[i] !== other.additionalItems[i]) {
+        return false;
+      }
+    }
+    return true;
+  }
+}
+const identityKeyProvider = {
+  getKey(value) {
+    return value;
+  }
+};
+class DenseKeyProvider {
+  static {
+    __name(this, "DenseKeyProvider");
+  }
+  constructor() {
+    this.items = /* @__PURE__ */ new Map();
+  }
+  getKey(value) {
+    let existing = this.items.get(value);
+    if (existing === void 0) {
+      existing = this.items.size;
+      this.items.set(value, existing);
+    }
+    return existing;
+  }
+  reverseLookup(value) {
+    return [...this.items].find(([_key, v]) => v === value)?.[0];
+  }
+  reverseLookupSet(set) {
+    const result = [];
+    for (const [key] of this.items) {
+      if (set.has(key, this)) {
+        result.push(key);
+      }
+    }
+    return result;
+  }
+  keys() {
+    return this.items.keys();
+  }
+}
+export {
+  DenseKeyProvider,
+  SmallImmutableSet,
+  identityKeyProvider
+};
+//# sourceMappingURL=smallImmutableSet.js.map

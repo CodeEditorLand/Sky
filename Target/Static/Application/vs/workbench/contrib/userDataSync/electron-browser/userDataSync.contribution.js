@@ -1,1 +1,101 @@
-import{$WK as S}from"../../../common/contributions.js";import{$_Mb as v}from"../../../../platform/userDataSync/common/userDataSync.js";import{$oCc as y}from"../../../../platform/ipc/electron-browser/services.js";import{$jI as m,$iI as u,$dI as b}from"../../../../platform/actions/common/actions.js";import{localize as l,localize2 as $}from"../../../../nls.js";import{$fl as w}from"../../../../platform/environment/common/environment.js";import{$5j as D}from"../../../../platform/files/common/files.js";import{$fu as p}from"../../../../platform/native/common/native.js";import{$RI as h,Severity as I}from"../../../../platform/notification/common/notification.js";import{$P6b as _,$Z6b as g,$L6b as P,$N6b as C}from"../../../services/userDataSync/common/userDataSync.js";import{Schemas as j}from"../../../../base/common/network.js";import{ProxyChannel as x}from"../../../../base/parts/ipc/common/ipc.js";import{$vd as F}from"../../../../base/common/lifecycle.js";var d=function(o,e,t,r){var s,n=arguments.length,a=n<3?e:null===r?r=Object.getOwnPropertyDescriptor(e,t):r;if("object"==typeof Reflect&&"function"==typeof Reflect.decorate)a=Reflect.decorate(o,e,t,r);else for(var c=o.length-1;c>=0;c--)(s=o[c])&&(a=(n<3?s(a):n>3?s(e,t,a):s(e,t))||a);return n>3&&a&&Object.defineProperty(e,t,a),a},f=function(o,e){return function(t,r){e(t,r,o)}};let a=class extends F{static{this.ID="workbench.contrib.userDataSyncServices"}constructor(o,e){super(),e.registerChannel("userDataSyncUtil",x.fromService(o,this.q))}};a=d([f(0,v),f(1,y)],a),S(a.ID,a,1),m(class extends u{constructor(){super({id:"workbench.userData.actions.openSyncBackupsFolder",title:$(13018,"Open Local Backups Folder"),category:C,menu:{id:b.CommandPalette,when:_.notEqualsTo("uninitialized")}})}async run(o){const e=o.get(w).userDataSyncHome,t=o.get(p),r=o.get(D),s=o.get(h);if(await r.exists(e)){const o=await r.resolve(e),s=o.children&&o.children[0]?o.children[0].resource:e;return t.showItemInFolder(s.with({scheme:j.file}).fsPath)}s.info(l(13015,null))}}),m(class extends u{constructor(){super(g)}async run(o){const e=o.get(P),t=o.get(h),r=o.get(p),s=await e.downloadSyncActivity();s&&t.prompt(I.Info,l(13016,null),[{label:l(13017,null),run:()=>r.showItemInFolder(s.fsPath)}])}});
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { registerWorkbenchContribution2 } from "../../../common/contributions.js";
+import { IUserDataSyncUtilService } from "../../../../platform/userDataSync/common/userDataSync.js";
+import { ISharedProcessService } from "../../../../platform/ipc/electron-browser/services.js";
+import { registerAction2, Action2, MenuId } from "../../../../platform/actions/common/actions.js";
+import { localize, localize2 } from "../../../../nls.js";
+import { IEnvironmentService } from "../../../../platform/environment/common/environment.js";
+import { IFileService } from "../../../../platform/files/common/files.js";
+import { INativeHostService } from "../../../../platform/native/common/native.js";
+import { INotificationService, Severity } from "../../../../platform/notification/common/notification.js";
+import { CONTEXT_SYNC_STATE, DOWNLOAD_ACTIVITY_ACTION_DESCRIPTOR, IUserDataSyncWorkbenchService, SYNC_TITLE } from "../../../services/userDataSync/common/userDataSync.js";
+import { Schemas } from "../../../../base/common/network.js";
+import { ProxyChannel } from "../../../../base/parts/ipc/common/ipc.js";
+import { Disposable } from "../../../../base/common/lifecycle.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+let UserDataSyncServicesContribution = class UserDataSyncServicesContribution2 extends Disposable {
+  static {
+    __name(this, "UserDataSyncServicesContribution");
+  }
+  static {
+    this.ID = "workbench.contrib.userDataSyncServices";
+  }
+  constructor(userDataSyncUtilService, sharedProcessService) {
+    super();
+    sharedProcessService.registerChannel("userDataSyncUtil", ProxyChannel.fromService(userDataSyncUtilService, this._store));
+  }
+};
+UserDataSyncServicesContribution = __decorate([
+  __param(0, IUserDataSyncUtilService),
+  __param(1, ISharedProcessService)
+], UserDataSyncServicesContribution);
+registerWorkbenchContribution2(
+  UserDataSyncServicesContribution.ID,
+  UserDataSyncServicesContribution,
+  1
+  /* WorkbenchPhase.BlockStartup */
+);
+registerAction2(class OpenSyncBackupsFolder extends Action2 {
+  static {
+    __name(this, "OpenSyncBackupsFolder");
+  }
+  constructor() {
+    super({
+      id: "workbench.userData.actions.openSyncBackupsFolder",
+      title: localize2("Open Backup folder", "Open Local Backups Folder"),
+      category: SYNC_TITLE,
+      menu: {
+        id: MenuId.CommandPalette,
+        when: CONTEXT_SYNC_STATE.notEqualsTo(
+          "uninitialized"
+          /* SyncStatus.Uninitialized */
+        )
+      }
+    });
+  }
+  async run(accessor) {
+    const syncHome = accessor.get(IEnvironmentService).userDataSyncHome;
+    const nativeHostService = accessor.get(INativeHostService);
+    const fileService = accessor.get(IFileService);
+    const notificationService = accessor.get(INotificationService);
+    if (await fileService.exists(syncHome)) {
+      const folderStat = await fileService.resolve(syncHome);
+      const item = folderStat.children && folderStat.children[0] ? folderStat.children[0].resource : syncHome;
+      return nativeHostService.showItemInFolder(item.with({ scheme: Schemas.file }).fsPath);
+    } else {
+      notificationService.info(localize("no backups", "Local backups folder does not exist"));
+    }
+  }
+});
+registerAction2(class DownloadSyncActivityAction extends Action2 {
+  static {
+    __name(this, "DownloadSyncActivityAction");
+  }
+  constructor() {
+    super(DOWNLOAD_ACTIVITY_ACTION_DESCRIPTOR);
+  }
+  async run(accessor) {
+    const userDataSyncWorkbenchService = accessor.get(IUserDataSyncWorkbenchService);
+    const notificationService = accessor.get(INotificationService);
+    const hostService = accessor.get(INativeHostService);
+    const folder = await userDataSyncWorkbenchService.downloadSyncActivity();
+    if (folder) {
+      notificationService.prompt(Severity.Info, localize("download sync activity complete", "Successfully downloaded Settings Sync activity."), [{
+        label: localize("open", "Open Folder"),
+        run: /* @__PURE__ */ __name(() => hostService.showItemInFolder(folder.fsPath), "run")
+      }]);
+    }
+  }
+});
+//# sourceMappingURL=userDataSync.contribution.js.map

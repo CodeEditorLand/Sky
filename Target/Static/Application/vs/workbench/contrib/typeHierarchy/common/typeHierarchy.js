@@ -1,1 +1,138 @@
-import{$cC as y}from"../../../../editor/common/core/range.js";import{CancellationToken as m}from"../../../../base/common/cancellation.js";import{$2M as w}from"../../../../editor/common/languageFeatureRegistry.js";import{URI as g}from"../../../../base/common/uri.js";import{$bC as $}from"../../../../editor/common/core/position.js";import{$$b as l}from"../../../../base/common/arrays.js";import{$lb as v}from"../../../../base/common/errors.js";import{$yd as I}from"../../../../base/common/lifecycle.js";import{$Zn as f}from"../../../../platform/commands/common/commands.js";import{$0c as a}from"../../../../base/common/types.js";import{$gF as M}from"../../../../editor/common/services/model.js";import{$cF as _}from"../../../../editor/common/services/resolverService.js";var h;(function(o){o.Subtypes="subtypes",o.Supertypes="supertypes"})(h||(h={}));const C=new w;class u{static async create(t,e,r){const[n]=C.ordered(t);if(!n)return;const s=await n.prepareTypeHierarchy(t,e,r);if(s)return new u(s.roots.reduce((d,i)=>d+i._sessionId,""),n,s.roots,new I(s))}constructor(t,e,r,n){this.id=t,this.provider=e,this.roots=r,this.ref=n,this.root=r[0]}dispose(){this.ref.release()}fork(t){const e=this;return new class extends u{constructor(){super(e.id,e.provider,[t],e.ref.acquire())}}}async provideSupertypes(t,e){try{const r=await this.provider.provideSupertypes(t,e);if(l(r))return r}catch(r){v(r)}return[]}async provideSubtypes(t,e){try{const r=await this.provider.provideSubtypes(t,e);if(l(r))return r}catch(r){v(r)}return[]}}const p=new Map;f.registerCommand("_executePrepareTypeHierarchy",async(o,...t)=>{const[e,r]=t;a(g.isUri(e)),a($.isIPosition(r));let s=o.get(M).getModel(e),d;if(!s){const c=await o.get(_).createModelReference(e);s=c.object.textEditorModel,d=c}try{const i=await u.create(s,r,m.None);if(!i)return[];p.forEach((c,x,b)=>{b.size>10&&(c.dispose(),p.delete(x))});for(const c of i.roots)p.set(c._sessionId,i);return i.roots}finally{d?.dispose()}});function S(o){const t=o;return typeof o=="object"&&typeof t.name=="string"&&typeof t.kind=="number"&&g.isUri(t.uri)&&y.isIRange(t.range)&&y.isIRange(t.selectionRange)}f.registerCommand("_executeProvideSupertypes",async(o,...t)=>{const[e]=t;a(S(e));const r=p.get(e._sessionId);return r?r.provideSupertypes(e,m.None):[]});f.registerCommand("_executeProvideSubtypes",async(o,...t)=>{const[e]=t;a(S(e));const r=p.get(e._sessionId);return r?r.provideSubtypes(e,m.None):[]});export{u as $$W,C as $0W,h as TypeHierarchyDirection};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { Range } from "../../../../editor/common/core/range.js";
+import { CancellationToken } from "../../../../base/common/cancellation.js";
+import { LanguageFeatureRegistry } from "../../../../editor/common/languageFeatureRegistry.js";
+import { URI } from "../../../../base/common/uri.js";
+import { Position } from "../../../../editor/common/core/position.js";
+import { isNonEmptyArray } from "../../../../base/common/arrays.js";
+import { onUnexpectedExternalError } from "../../../../base/common/errors.js";
+import { RefCountedDisposable } from "../../../../base/common/lifecycle.js";
+import { CommandsRegistry } from "../../../../platform/commands/common/commands.js";
+import { assertType } from "../../../../base/common/types.js";
+import { IModelService } from "../../../../editor/common/services/model.js";
+import { ITextModelService } from "../../../../editor/common/services/resolverService.js";
+var TypeHierarchyDirection;
+(function(TypeHierarchyDirection2) {
+  TypeHierarchyDirection2["Subtypes"] = "subtypes";
+  TypeHierarchyDirection2["Supertypes"] = "supertypes";
+})(TypeHierarchyDirection || (TypeHierarchyDirection = {}));
+const TypeHierarchyProviderRegistry = new LanguageFeatureRegistry();
+class TypeHierarchyModel {
+  static {
+    __name(this, "TypeHierarchyModel");
+  }
+  static async create(model, position, token) {
+    const [provider] = TypeHierarchyProviderRegistry.ordered(model);
+    if (!provider) {
+      return void 0;
+    }
+    const session = await provider.prepareTypeHierarchy(model, position, token);
+    if (!session) {
+      return void 0;
+    }
+    return new TypeHierarchyModel(session.roots.reduce((p, c) => p + c._sessionId, ""), provider, session.roots, new RefCountedDisposable(session));
+  }
+  constructor(id, provider, roots, ref) {
+    this.id = id;
+    this.provider = provider;
+    this.roots = roots;
+    this.ref = ref;
+    this.root = roots[0];
+  }
+  dispose() {
+    this.ref.release();
+  }
+  fork(item) {
+    const that = this;
+    return new class extends TypeHierarchyModel {
+      constructor() {
+        super(that.id, that.provider, [item], that.ref.acquire());
+      }
+    }();
+  }
+  async provideSupertypes(item, token) {
+    try {
+      const result = await this.provider.provideSupertypes(item, token);
+      if (isNonEmptyArray(result)) {
+        return result;
+      }
+    } catch (e) {
+      onUnexpectedExternalError(e);
+    }
+    return [];
+  }
+  async provideSubtypes(item, token) {
+    try {
+      const result = await this.provider.provideSubtypes(item, token);
+      if (isNonEmptyArray(result)) {
+        return result;
+      }
+    } catch (e) {
+      onUnexpectedExternalError(e);
+    }
+    return [];
+  }
+}
+const _models = /* @__PURE__ */ new Map();
+CommandsRegistry.registerCommand("_executePrepareTypeHierarchy", async (accessor, ...args) => {
+  const [resource, position] = args;
+  assertType(URI.isUri(resource));
+  assertType(Position.isIPosition(position));
+  const modelService = accessor.get(IModelService);
+  let textModel = modelService.getModel(resource);
+  let textModelReference;
+  if (!textModel) {
+    const textModelService = accessor.get(ITextModelService);
+    const result = await textModelService.createModelReference(resource);
+    textModel = result.object.textEditorModel;
+    textModelReference = result;
+  }
+  try {
+    const model = await TypeHierarchyModel.create(textModel, position, CancellationToken.None);
+    if (!model) {
+      return [];
+    }
+    _models.forEach((value, key, map) => {
+      if (map.size > 10) {
+        value.dispose();
+        _models.delete(key);
+      }
+    });
+    for (const root of model.roots) {
+      _models.set(root._sessionId, model);
+    }
+    return model.roots;
+  } finally {
+    textModelReference?.dispose();
+  }
+});
+function isTypeHierarchyItemDto(obj) {
+  const item = obj;
+  return typeof obj === "object" && typeof item.name === "string" && typeof item.kind === "number" && URI.isUri(item.uri) && Range.isIRange(item.range) && Range.isIRange(item.selectionRange);
+}
+__name(isTypeHierarchyItemDto, "isTypeHierarchyItemDto");
+CommandsRegistry.registerCommand("_executeProvideSupertypes", async (_accessor, ...args) => {
+  const [item] = args;
+  assertType(isTypeHierarchyItemDto(item));
+  const model = _models.get(item._sessionId);
+  if (!model) {
+    return [];
+  }
+  return model.provideSupertypes(item, CancellationToken.None);
+});
+CommandsRegistry.registerCommand("_executeProvideSubtypes", async (_accessor, ...args) => {
+  const [item] = args;
+  assertType(isTypeHierarchyItemDto(item));
+  const model = _models.get(item._sessionId);
+  if (!model) {
+    return [];
+  }
+  return model.provideSubtypes(item, CancellationToken.None);
+});
+export {
+  TypeHierarchyDirection,
+  TypeHierarchyModel,
+  TypeHierarchyProviderRegistry
+};
+//# sourceMappingURL=typeHierarchy.js.map

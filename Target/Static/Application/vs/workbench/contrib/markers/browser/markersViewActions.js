@@ -1,1 +1,163 @@
-import*as a from"../../../../base/browser/dom.js";import{$_l as x}from"../../../../base/common/actions.js";import{$ofb as b}from"../../../../platform/contextview/browser/contextView.js";import d from"./messages.js";import{$vd as p}from"../../../../base/common/lifecycle.js";import{$df as u}from"../../../../base/common/event.js";import{$Mj as F}from"../../../../base/common/codicons.js";import{ThemeIcon as w}from"../../../../base/common/themables.js";import{$X8 as C}from"../../../../base/browser/ui/actionbar/actionViewItems.js";import{MarkersContextKeys as o}from"../common/markers.js";import"./markersViewActions.css";var m=function(t,e,s,i){var o,r=arguments.length,h=r<3?e:null===i?i=Object.getOwnPropertyDescriptor(e,s):i;if("object"==typeof Reflect&&"function"==typeof Reflect.decorate)h=Reflect.decorate(t,e,s,i);else for(var n=t.length-1;n>=0;n--)(o=t[n])&&(h=(r<3?o(h):r>3?o(e,s,h):o(e,s))||h);return r>3&&h&&Object.defineProperty(e,s,h),h},g=function(t,e){return function(s,i){e(s,i,t)}};class P extends p{constructor(t,e){super(),this.a=this.B(new u),this.onDidChange=this.a.event,this.b=o.ShowExcludedFilesFilterContextKey.bindTo(e),this.b.set(t.excludedFiles),this.c=o.ShowActiveFileFilterContextKey.bindTo(e),this.c.set(t.activeFile),this.f=o.ShowWarningsFilterContextKey.bindTo(e),this.f.set(t.showWarnings),this.h=o.ShowInfoFilterContextKey.bindTo(e),this.h.set(t.showInfos),this.g=o.ShowErrorsFilterContextKey.bindTo(e),this.g.set(t.showErrors),this.filterHistory=t.filterHistory}get excludedFiles(){return!!this.b.get()}set excludedFiles(t){this.b.get()!==t&&(this.b.set(t),this.a.fire({excludedFiles:!0}))}get activeFile(){return!!this.c.get()}set activeFile(t){this.c.get()!==t&&(this.c.set(t),this.a.fire({activeFile:!0}))}get showWarnings(){return!!this.f.get()}set showWarnings(t){this.f.get()!==t&&(this.f.set(t),this.a.fire({showWarnings:!0}))}get showErrors(){return!!this.g.get()}set showErrors(t){this.g.get()!==t&&(this.g.set(t),this.a.fire({showErrors:!0}))}get showInfos(){return!!this.h.get()}set showInfos(t){this.h.get()!==t&&(this.h.set(t),this.a.fire({showInfos:!0}))}}class h extends x{static{this.ID="workbench.actions.problems.quickfix"}static{this.a="markers-panel-action-quickfix "+w.asClassName(F.lightBulb)}static{this.b=h.a+" autofixable"}get quickFixes(){return this.f}set quickFixes(t){this.f=t,this.enabled=this.f.length>0}autoFixable(t){this.class=t?h.b:h.a}constructor(t){super(h.ID,d.MARKERS_PANEL_ACTION_TOOLTIP_QUICKFIX,h.a,!1),this.marker=t,this.c=this.B(new u),this.onShowQuickFixes=this.c.event,this.f=[]}run(){return this.c.fire(),Promise.resolve()}}let c=class extends C{constructor(t,e,s){super(null,t,{...e,icon:!0,label:!1}),this.a=s}onClick(t){a.$H6.stop(t,!0),this.showQuickFixes()}showQuickFixes(){if(!this.element||!this.isEnabled())return;const t=a.$65(this.element),e=this.action.quickFixes;e.length&&this.a.showContextMenu({getAnchor:()=>({x:t.left+10,y:t.top+t.height+4}),getActions:()=>e})}};c=m([g(2,b)],c);export{P as $spc,h as $tpc,c as $upc};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import * as DOM from "../../../../base/browser/dom.js";
+import { Action } from "../../../../base/common/actions.js";
+import { IContextMenuService } from "../../../../platform/contextview/browser/contextView.js";
+import Messages from "./messages.js";
+import { Disposable } from "../../../../base/common/lifecycle.js";
+import { Emitter } from "../../../../base/common/event.js";
+import { Codicon } from "../../../../base/common/codicons.js";
+import { ThemeIcon } from "../../../../base/common/themables.js";
+import { ActionViewItem } from "../../../../base/browser/ui/actionbar/actionViewItems.js";
+import { MarkersContextKeys } from "../common/markers.js";
+import "./markersViewActions.css";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+class MarkersFilters extends Disposable {
+  static {
+    __name(this, "MarkersFilters");
+  }
+  constructor(options, contextKeyService) {
+    super();
+    this._onDidChange = this._register(new Emitter());
+    this.onDidChange = this._onDidChange.event;
+    this._excludedFiles = MarkersContextKeys.ShowExcludedFilesFilterContextKey.bindTo(contextKeyService);
+    this._excludedFiles.set(options.excludedFiles);
+    this._activeFile = MarkersContextKeys.ShowActiveFileFilterContextKey.bindTo(contextKeyService);
+    this._activeFile.set(options.activeFile);
+    this._showWarnings = MarkersContextKeys.ShowWarningsFilterContextKey.bindTo(contextKeyService);
+    this._showWarnings.set(options.showWarnings);
+    this._showInfos = MarkersContextKeys.ShowInfoFilterContextKey.bindTo(contextKeyService);
+    this._showInfos.set(options.showInfos);
+    this._showErrors = MarkersContextKeys.ShowErrorsFilterContextKey.bindTo(contextKeyService);
+    this._showErrors.set(options.showErrors);
+    this.filterHistory = options.filterHistory;
+  }
+  get excludedFiles() {
+    return !!this._excludedFiles.get();
+  }
+  set excludedFiles(filesExclude) {
+    if (this._excludedFiles.get() !== filesExclude) {
+      this._excludedFiles.set(filesExclude);
+      this._onDidChange.fire({ excludedFiles: true });
+    }
+  }
+  get activeFile() {
+    return !!this._activeFile.get();
+  }
+  set activeFile(activeFile) {
+    if (this._activeFile.get() !== activeFile) {
+      this._activeFile.set(activeFile);
+      this._onDidChange.fire({ activeFile: true });
+    }
+  }
+  get showWarnings() {
+    return !!this._showWarnings.get();
+  }
+  set showWarnings(showWarnings) {
+    if (this._showWarnings.get() !== showWarnings) {
+      this._showWarnings.set(showWarnings);
+      this._onDidChange.fire({ showWarnings: true });
+    }
+  }
+  get showErrors() {
+    return !!this._showErrors.get();
+  }
+  set showErrors(showErrors) {
+    if (this._showErrors.get() !== showErrors) {
+      this._showErrors.set(showErrors);
+      this._onDidChange.fire({ showErrors: true });
+    }
+  }
+  get showInfos() {
+    return !!this._showInfos.get();
+  }
+  set showInfos(showInfos) {
+    if (this._showInfos.get() !== showInfos) {
+      this._showInfos.set(showInfos);
+      this._onDidChange.fire({ showInfos: true });
+    }
+  }
+}
+class QuickFixAction extends Action {
+  static {
+    __name(this, "QuickFixAction");
+  }
+  static {
+    this.ID = "workbench.actions.problems.quickfix";
+  }
+  static {
+    this.CLASS = "markers-panel-action-quickfix " + ThemeIcon.asClassName(Codicon.lightBulb);
+  }
+  static {
+    this.AUTO_FIX_CLASS = QuickFixAction.CLASS + " autofixable";
+  }
+  get quickFixes() {
+    return this._quickFixes;
+  }
+  set quickFixes(quickFixes) {
+    this._quickFixes = quickFixes;
+    this.enabled = this._quickFixes.length > 0;
+  }
+  autoFixable(autofixable) {
+    this.class = autofixable ? QuickFixAction.AUTO_FIX_CLASS : QuickFixAction.CLASS;
+  }
+  constructor(marker) {
+    super(QuickFixAction.ID, Messages.MARKERS_PANEL_ACTION_TOOLTIP_QUICKFIX, QuickFixAction.CLASS, false);
+    this.marker = marker;
+    this._onShowQuickFixes = this._register(new Emitter());
+    this.onShowQuickFixes = this._onShowQuickFixes.event;
+    this._quickFixes = [];
+  }
+  run() {
+    this._onShowQuickFixes.fire();
+    return Promise.resolve();
+  }
+}
+let QuickFixActionViewItem = class QuickFixActionViewItem2 extends ActionViewItem {
+  static {
+    __name(this, "QuickFixActionViewItem");
+  }
+  constructor(action, options, contextMenuService) {
+    super(null, action, { ...options, icon: true, label: false });
+    this.contextMenuService = contextMenuService;
+  }
+  onClick(event) {
+    DOM.EventHelper.stop(event, true);
+    this.showQuickFixes();
+  }
+  showQuickFixes() {
+    if (!this.element) {
+      return;
+    }
+    if (!this.isEnabled()) {
+      return;
+    }
+    const elementPosition = DOM.getDomNodePagePosition(this.element);
+    const quickFixes = this.action.quickFixes;
+    if (quickFixes.length) {
+      this.contextMenuService.showContextMenu({
+        getAnchor: /* @__PURE__ */ __name(() => ({ x: elementPosition.left + 10, y: elementPosition.top + elementPosition.height + 4 }), "getAnchor"),
+        getActions: /* @__PURE__ */ __name(() => quickFixes, "getActions")
+      });
+    }
+  }
+};
+QuickFixActionViewItem = __decorate([
+  __param(2, IContextMenuService)
+], QuickFixActionViewItem);
+export {
+  MarkersFilters,
+  QuickFixAction,
+  QuickFixActionViewItem
+};
+//# sourceMappingURL=markersViewActions.js.map

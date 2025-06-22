@@ -1,1 +1,63 @@
-import{$R5 as h}from"../../../../base/browser/dom.js";import{$c5 as p}from"../../../../base/browser/window.js";import{$vd as d}from"../../../../base/common/lifecycle.js";import{$mj as l,$nj as $}from"../../../../platform/instantiation/common/instantiation.js";import{$Ho as b}from"../../../../platform/storage/common/storage.js";import{$SZb as D,$XZb as f}from"./trustedDomains.js";import{$ZZb as v}from"../common/trustedDomains.js";import{$df as _}from"../../../../base/common/event.js";var u=function(n,t,i,o){var r=arguments.length,e=r<3?t:o===null?o=Object.getOwnPropertyDescriptor(t,i):o,s;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")e=Reflect.decorate(n,t,i,o);else for(var m=n.length-1;m>=0;m--)(s=n[m])&&(e=(r<3?s(e):r>3?s(t,i,e):s(t,i))||e);return r>3&&e&&Object.defineProperty(t,i,e),e},c=function(n,t){return function(i,o){t(i,o,n)}};const B=$("ITrustedDomainService");let a=class extends d{constructor(t,i){super(),this.c=t,this.f=i,this.b=this.B(new _),this.onDidChangeTrustedDomains=this.b.event;const o=()=>new h(p,()=>{const{defaultTrustedDomains:r,trustedDomains:e}=this.c.invokeFunction(f);return[...r,...e]});this.a=o(),this.B(this.f.onDidChangeValue(-1,D,this.q)(()=>{this.a?.dispose(),this.a=o(),this.b.fire()}))}isValid(t){const{defaultTrustedDomains:i,trustedDomains:o}=this.c.invokeFunction(f),r=[...i,...o];return v(t,r)}};a=u([c(0,l),c(1,b)],a);export{B as $3Zb,a as $4Zb};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { WindowIdleValue } from "../../../../base/browser/dom.js";
+import { mainWindow } from "../../../../base/browser/window.js";
+import { Disposable } from "../../../../base/common/lifecycle.js";
+import { IInstantiationService, createDecorator } from "../../../../platform/instantiation/common/instantiation.js";
+import { IStorageService } from "../../../../platform/storage/common/storage.js";
+import { TRUSTED_DOMAINS_STORAGE_KEY, readStaticTrustedDomains } from "./trustedDomains.js";
+import { isURLDomainTrusted } from "../common/trustedDomains.js";
+import { Emitter } from "../../../../base/common/event.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+const ITrustedDomainService = createDecorator("ITrustedDomainService");
+let TrustedDomainService = class TrustedDomainService2 extends Disposable {
+  static {
+    __name(this, "TrustedDomainService");
+  }
+  constructor(_instantiationService, _storageService) {
+    super();
+    this._instantiationService = _instantiationService;
+    this._storageService = _storageService;
+    this._onDidChangeTrustedDomains = this._register(new Emitter());
+    this.onDidChangeTrustedDomains = this._onDidChangeTrustedDomains.event;
+    const initStaticDomainsResult = /* @__PURE__ */ __name(() => {
+      return new WindowIdleValue(mainWindow, () => {
+        const { defaultTrustedDomains, trustedDomains } = this._instantiationService.invokeFunction(readStaticTrustedDomains);
+        return [
+          ...defaultTrustedDomains,
+          ...trustedDomains
+        ];
+      });
+    }, "initStaticDomainsResult");
+    this._staticTrustedDomainsResult = initStaticDomainsResult();
+    this._register(this._storageService.onDidChangeValue(-1, TRUSTED_DOMAINS_STORAGE_KEY, this._store)(() => {
+      this._staticTrustedDomainsResult?.dispose();
+      this._staticTrustedDomainsResult = initStaticDomainsResult();
+      this._onDidChangeTrustedDomains.fire();
+    }));
+  }
+  isValid(resource) {
+    const { defaultTrustedDomains, trustedDomains } = this._instantiationService.invokeFunction(readStaticTrustedDomains);
+    const allTrustedDomains = [...defaultTrustedDomains, ...trustedDomains];
+    return isURLDomainTrusted(resource, allTrustedDomains);
+  }
+};
+TrustedDomainService = __decorate([
+  __param(0, IInstantiationService),
+  __param(1, IStorageService)
+], TrustedDomainService);
+export {
+  ITrustedDomainService,
+  TrustedDomainService
+};
+//# sourceMappingURL=trustedDomainService.js.map

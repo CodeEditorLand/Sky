@@ -1,1 +1,93 @@
-import{$nz as f}from"../../../../platform/extensionManagement/common/extensionManagement.js";import{$Shc as d}from"./extensionRecommendations.js";import{localize as p}from"../../../../nls.js";import{$hl as l}from"../../../../platform/workspace/common/workspace.js";import{$df as u}from"../../../../base/common/event.js";var m=function(r,t,e,n){var s=arguments.length,i=s<3?t:n===null?n=Object.getOwnPropertyDescriptor(t,e):n,o;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")i=Reflect.decorate(r,t,e,n);else for(var h=r.length-1;h>=0;h--)(o=r[h])&&(i=(s<3?o(i):s>3?o(t,e,i):o(t,e))||i);return s>3&&i&&Object.defineProperty(t,e,i),i},a=function(r,t){return function(e,n){t(e,n,r)}};let c=class extends d{get otherRecommendations(){return this.h}get importantRecommendations(){return this.j}get recommendations(){return[...this.importantRecommendations,...this.otherRecommendations]}constructor(t,e){super(),this.m=t,this.n=e,this.a=[],this.b=[],this.g=this.B(new u),this.onDidChangeRecommendations=this.g.event,this.h=[],this.j=[]}async c(){await this.s(),this.B(this.n.onDidChangeWorkspaceFolders(t=>this.t(t)))}async s(){const t=this.n.getWorkspace(),e=new Map,n=new Map;for(const s of t.folders){const i=await this.m.getConfigBasedTips(s.uri);for(const o of i)o.important?e.set(o.extensionId,o):n.set(o.extensionId,o)}this.a=[...e.values()],this.b=[...n.values()].filter(s=>!e.has(s.extensionId)),this.h=this.b.map(s=>this.u(s)),this.j=this.a.map(s=>this.u(s))}async t(t){if(t.added.length){const e=this.a;await this.s(),this.a.some(n=>e.every(s=>n.extensionId!==s.extensionId))&&this.g.fire()}}u(t){return{extension:t.extensionId,reason:{reasonId:3,reasonText:p(7050,null)},whenNotInstalled:t.whenNotInstalled}}};c=m([a(0,f),a(1,l)],c);export{c as $1hc};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { IExtensionTipsService } from "../../../../platform/extensionManagement/common/extensionManagement.js";
+import { ExtensionRecommendations } from "./extensionRecommendations.js";
+import { localize } from "../../../../nls.js";
+import { IWorkspaceContextService } from "../../../../platform/workspace/common/workspace.js";
+import { Emitter } from "../../../../base/common/event.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+let ConfigBasedRecommendations = class ConfigBasedRecommendations2 extends ExtensionRecommendations {
+  static {
+    __name(this, "ConfigBasedRecommendations");
+  }
+  get otherRecommendations() {
+    return this._otherRecommendations;
+  }
+  get importantRecommendations() {
+    return this._importantRecommendations;
+  }
+  get recommendations() {
+    return [...this.importantRecommendations, ...this.otherRecommendations];
+  }
+  constructor(extensionTipsService, workspaceContextService) {
+    super();
+    this.extensionTipsService = extensionTipsService;
+    this.workspaceContextService = workspaceContextService;
+    this.importantTips = [];
+    this.otherTips = [];
+    this._onDidChangeRecommendations = this._register(new Emitter());
+    this.onDidChangeRecommendations = this._onDidChangeRecommendations.event;
+    this._otherRecommendations = [];
+    this._importantRecommendations = [];
+  }
+  async doActivate() {
+    await this.fetch();
+    this._register(this.workspaceContextService.onDidChangeWorkspaceFolders((e) => this.onWorkspaceFoldersChanged(e)));
+  }
+  async fetch() {
+    const workspace = this.workspaceContextService.getWorkspace();
+    const importantTips = /* @__PURE__ */ new Map();
+    const otherTips = /* @__PURE__ */ new Map();
+    for (const folder of workspace.folders) {
+      const configBasedTips = await this.extensionTipsService.getConfigBasedTips(folder.uri);
+      for (const tip of configBasedTips) {
+        if (tip.important) {
+          importantTips.set(tip.extensionId, tip);
+        } else {
+          otherTips.set(tip.extensionId, tip);
+        }
+      }
+    }
+    this.importantTips = [...importantTips.values()];
+    this.otherTips = [...otherTips.values()].filter((tip) => !importantTips.has(tip.extensionId));
+    this._otherRecommendations = this.otherTips.map((tip) => this.toExtensionRecommendation(tip));
+    this._importantRecommendations = this.importantTips.map((tip) => this.toExtensionRecommendation(tip));
+  }
+  async onWorkspaceFoldersChanged(event) {
+    if (event.added.length) {
+      const oldImportantRecommended = this.importantTips;
+      await this.fetch();
+      if (this.importantTips.some((current) => oldImportantRecommended.every((old) => current.extensionId !== old.extensionId))) {
+        this._onDidChangeRecommendations.fire();
+      }
+    }
+  }
+  toExtensionRecommendation(tip) {
+    return {
+      extension: tip.extensionId,
+      reason: {
+        reasonId: 3,
+        reasonText: localize("exeBasedRecommendation", "This extension is recommended because of the current workspace configuration")
+      },
+      whenNotInstalled: tip.whenNotInstalled
+    };
+  }
+};
+ConfigBasedRecommendations = __decorate([
+  __param(0, IExtensionTipsService),
+  __param(1, IWorkspaceContextService)
+], ConfigBasedRecommendations);
+export {
+  ConfigBasedRecommendations
+};
+//# sourceMappingURL=configBasedRecommendations.js.map

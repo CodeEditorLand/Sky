@@ -1,1 +1,50 @@
-import*as u from"../../../../nls.js";import{$_l as h}from"../../../../base/common/actions.js";import{$wMb as m}from"../../issue/common/issue.js";var c,f=function(t,e,s,o){var i,n=arguments.length,r=n<3?e:null===o?o=Object.getOwnPropertyDescriptor(e,s):o;if("object"==typeof Reflect&&"function"==typeof Reflect.decorate)r=Reflect.decorate(t,e,s,o);else for(var c=t.length-1;c>=0;c--)(i=t[c])&&(r=(n<3?i(r):n>3?i(e,s,r):i(e,s))||r);return n>3&&r&&Object.defineProperty(e,s,r),r},p=function(t,e){return function(s,o){e(s,o,t)}};let l=class extends h{static{c=this}static{this.m="workbench.extensions.action.reportExtensionIssue"}static{this.n=u.localize(7694,null)}constructor(t,e){super(c.m,c.n,"extension-action report-issue"),this.c=t,this.f=e,this.enabled=t.isBuiltin||!!t.repository&&!!t.repository.url}async run(){await this.f.openReporter({extensionId:this.c.identifier.value})}};l=c=f([p(1,m)],l);export{l as $QBc};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import * as nls from "../../../../nls.js";
+import { Action } from "../../../../base/common/actions.js";
+import { IWorkbenchIssueService } from "../../issue/common/issue.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+var ReportExtensionIssueAction_1;
+let ReportExtensionIssueAction = class ReportExtensionIssueAction2 extends Action {
+  static {
+    __name(this, "ReportExtensionIssueAction");
+  }
+  static {
+    ReportExtensionIssueAction_1 = this;
+  }
+  static {
+    this._id = "workbench.extensions.action.reportExtensionIssue";
+  }
+  static {
+    this._label = nls.localize("reportExtensionIssue", "Report Issue");
+  }
+  // TODO: Consider passing in IExtensionStatus or IExtensionHostProfile for additional data
+  constructor(extension, issueService) {
+    super(ReportExtensionIssueAction_1._id, ReportExtensionIssueAction_1._label, "extension-action report-issue");
+    this.extension = extension;
+    this.issueService = issueService;
+    this.enabled = extension.isBuiltin || !!extension.repository && !!extension.repository.url;
+  }
+  async run() {
+    await this.issueService.openReporter({
+      extensionId: this.extension.identifier.value
+    });
+  }
+};
+ReportExtensionIssueAction = ReportExtensionIssueAction_1 = __decorate([
+  __param(1, IWorkbenchIssueService)
+], ReportExtensionIssueAction);
+export {
+  ReportExtensionIssueAction
+};
+//# sourceMappingURL=reportExtensionIssueAction.js.map

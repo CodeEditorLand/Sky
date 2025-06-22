@@ -1,1 +1,463 @@
-import{$sd as T,$ud as f}from"../../../../base/common/lifecycle.js";import*as p from"../../../../base/common/resources.js";import{$yf as g}from"../../../../base/common/strings.js";import{$BD as _}from"../../../../editor/common/languages/language.js";import{$Jjb as E}from"../../../../editor/contrib/suggest/browser/suggest.js";import{localize as c}from"../../../../nls.js";import{$fl as P}from"../../../../platform/environment/common/environment.js";import{$5j as C}from"../../../../platform/files/common/files.js";import{$RK as D}from"../../../services/lifecycle/common/lifecycle.js";import{$3n as R}from"../../../../platform/log/common/log.js";import{$hl as U}from"../../../../platform/workspace/common/workspace.js";import{$YEb as S}from"./snippetsFile.js";import{$UO as x}from"../../../services/extensions/common/extensionsRegistry.js";import{$0Eb as L}from"../../../services/language/common/languageService.js";import{$aFb as N}from"./snippetCompletionProvider.js";import{$2tb as O}from"../../../../platform/extensionResourceLoader/common/extensionResourceLoader.js";import{$Ic as A}from"../../../../base/common/map.js";import{$Ho as F}from"../../../../platform/storage/common/storage.js";import{$Zc as J}from"../../../../base/common/types.js";import{$mj as H}from"../../../../platform/instantiation/common/instantiation.js";import{$fJ as M}from"../../../services/textfile/common/textfiles.js";import{$pE as W}from"../../../../editor/common/languages/languageConfigurationRegistry.js";import{$9X as X}from"../../../services/userDataProfile/common/userDataProfile.js";import{$oc as q}from"../../../../base/common/arrays.js";var y=function(o,t,e,i){var n=arguments.length,s=n<3?t:i===null?i=Object.getOwnPropertyDescriptor(t,e):i,r;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")s=Reflect.decorate(o,t,e,i);else for(var a=o.length-1;a>=0;a--)(r=o[a])&&(s=(n<3?r(s):n>3?r(t,e,s):r(t,e))||s);return n>3&&s&&Object.defineProperty(t,e,s),s},l=function(o,t){return function(e,i){t(e,i,o)}},d,u,m;(function(o){function t(e,i,n){if(g(i.path))return e.collector.error(c(11023,null,e.description.name,String(i.path))),null;if(g(i.language)&&!i.path.endsWith(".code-snippets"))return e.collector.error(c(11024,null,e.description.name,String(i.path))),null;if(!g(i.language)&&!n.isRegisteredLanguageId(i.language))return e.collector.error(c(11025,null,e.description.name,String(i.language))),null;const s=e.description.extensionLocation,r=p.$kh(s,i.path);return p.$eh(r,s)?{language:i.language,location:r}:(e.collector.error(c(11026,null,e.description.name,r.path,s.path)),null)}o.toValidSnippet=t,o.snippetsContribution={description:c(11027,null),type:"array",defaultSnippets:[{body:[{language:"",path:""}]}],items:{type:"object",defaultSnippets:[{body:{language:"${1:id}",path:"./snippets/${2:id}.json."}}],properties:{language:{description:c(11028,null),type:"string"},path:{description:c(11029,null),type:"string"}}}},o.point=x.registerExtensionPoint({extensionPoint:"snippets",deps:[L],jsonSchema:o.snippetsContribution})})(m||(m={}));function V(o,t,e){return T(o.watch(t),o.onDidFilesChange(i=>{i.affects(t)&&e()}))}let w=class{static{d=this}static{this.c="snippets.ignoredSnippets"}constructor(t){this.f=t;const e=t.get(d.c,0,"");let i;try{i=JSON.parse(e)}catch{}this.d=J(i)?new Set(i):new Set}isIgnored(t){return this.d.has(t)}updateIgnored(t,e){let i=!1;this.d.has(t)&&!e?(this.d.delete(t),i=!0):!this.d.has(t)&&e&&(this.d.add(t),i=!0),i&&this.f.store(d.c,JSON.stringify(Array.from(this.d)),0,0)}};w=d=y([l(0,F)],w);let $=class{static{u=this}static{this.c="snippets.usageTimestamps"}constructor(t){this.f=t;const e=t.get(u.c,0,"");let i;try{i=JSON.parse(e)}catch{i=[]}this.d=Array.isArray(i)?new Map(i):new Map}getUsageTimestamp(t){return this.d.get(t)}updateUsageTimestamp(t){this.d.delete(t),this.d.set(t,Date.now());const e=[...this.d].slice(-100);this.f.store(u.c,JSON.stringify(e),0,0)}};$=u=y([l(0,F)],$);let v=class{constructor(t,e,i,n,s,r,a,h,I,b,j){this.i=t,this.j=e,this.k=i,this.l=n,this.m=s,this.n=r,this.o=a,this.p=h,this.c=new f,this.d=[],this.f=new A,this.d.push(Promise.resolve(I.when(3).then(()=>{this.t(),this.w(),this.u()}))),E(new N(this.l,this,j)),this.g=b.createInstance(w),this.h=b.createInstance($)}dispose(){this.c.dispose()}isEnabled(t){return!this.g.isIgnored(t.snippetIdentifier)}updateEnablement(t,e){this.g.updateIgnored(t.snippetIdentifier,!e)}updateUsageTimestamp(t){this.h.updateUsageTimestamp(t.snippetIdentifier)}q(){const t=this.d.slice(0);return this.d.length=0,Promise.all(t)}async getSnippetFiles(){return await this.q(),this.f.values()}async getSnippets(t,e){await this.q();const i=[],n=[];if(t){if(this.l.isRegisteredLanguageId(t))for(const s of this.f.values())n.push(s.load().then(r=>r.select(t,i)).catch(r=>this.m.error(r,s.location.toString())))}else for(const s of this.f.values())n.push(s.load().then(r=>q(i,i.length,r.data)).catch(r=>this.m.error(r,s.location.toString())));return await Promise.all(n),this.r(i,e)}getSnippetsSync(t,e){const i=[];if(this.l.isRegisteredLanguageId(t))for(const n of this.f.values())n.load().catch(s=>{}),n.select(t,i);return this.r(i,e)}r(t,e){const i=[];for(const n of t)!n.prefix&&!e?.includeNoPrefixSnippets||!this.isEnabled(n)&&!e?.includeDisabledSnippets||typeof e?.fileTemplateSnippets=="boolean"&&e.fileTemplateSnippets!==n.isFileTemplate||i.push(n);return i.sort((n,s)=>{let r=0;if(!e?.noRecencySort){const a=this.h.getUsageTimestamp(n.snippetIdentifier)??-1;r=(this.h.getUsageTimestamp(s.snippetIdentifier)??-1)-a}return r===0&&(r=this.s(n,s)),r})}s(t,e){return t.snippetSource<e.snippetSource?-1:t.snippetSource>e.snippetSource?1:t.source<e.source?-1:t.source>e.source||t.name>e.name?1:t.name<e.name?-1:0}t(){m.point.setHandler(t=>{for(const[e,i]of this.f)i.source===3&&this.f.delete(e);for(const e of t)for(const i of e.value){const n=m.toValidSnippet(e,i,this.l);if(!n)continue;const s=this.f.get(n.location);if(s)s.defaultScopes?s.defaultScopes.push(n.language):s.defaultScopes=[];else{const r=new S(3,n.location,n.language?[n.language]:void 0,e.description,this.n,this.p);this.f.set(r.location,r),this.i.isExtensionDevelopment&&r.load().then(a=>{a.data.some(h=>h.isBogous)&&e.collector.warn(c(11030,null,e.description.name))},a=>{e.collector.warn(c(11031,null,r.location.toString()))})}}})}u(){const t=new f,e=()=>{t.clear(),this.d.push(this.v(this.k.getWorkspace(),t))};this.c.add(t),this.c.add(this.k.onDidChangeWorkspaceFolders(e)),this.c.add(this.k.onDidChangeWorkbenchState(e)),e()}async v(t,e){const i=t.folders.map(async n=>{const s=n.toResource(".vscode");await this.n.exists(s)?this.x(2,s,e):e.add(this.n.onDidFilesChange(a=>{a.contains(s,1)&&this.x(2,s,e)}))});await Promise.all(i)}async w(){const t=new f,e=async()=>{t.clear();const i=this.j.currentProfile.snippetsHome;await this.n.createFolder(i),await this.x(1,i,t)};this.c.add(t),this.c.add(this.j.onDidChangeCurrentProfile(i=>i.join((async()=>{this.d.push(e())})()))),await e()}x(t,e,i){const n=new f,s=async()=>{if(n.clear(),!!await this.n.exists(e))try{const r=await this.n.resolve(e);for(const a of r.children||[])n.add(this.y(a.resource,t))}catch(r){this.m.error(`Failed snippets from folder '${e.toString()}'`,r)}};return i.add(this.o.files.onDidSave(r=>{p.$eh(r.model.resource,e)&&s()})),i.add(V(this.n,e,s)),i.add(n),s()}y(t,e){const i=p.$ih(t);if(e===1&&i===".json"){const n=p.$hh(t).replace(/\.json/,"");this.f.set(t,new S(e,t,[n],void 0,this.n,this.p))}else i===".code-snippets"&&this.f.set(t,new S(e,t,void 0,void 0,this.n,this.p));return{dispose:()=>this.f.delete(t)}}};v=y([l(0,P),l(1,X),l(2,U),l(3,_),l(4,R),l(5,C),l(6,M),l(7,O),l(8,D),l(9,H),l(10,W)],v);function wt(o,t){const i=o.getLineContent(t.lineNumber).substr(0,t.column-1),n=Math.max(0,i.length-100);for(let s=i.length-1;s>=n;s--){const r=i.charAt(s);if(/\s/.test(r))return i.substr(s+1)}return n===0?i:""}export{v as $bFb,wt as $cFb};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { combinedDisposable, DisposableStore } from "../../../../base/common/lifecycle.js";
+import * as resources from "../../../../base/common/resources.js";
+import { isFalsyOrWhitespace } from "../../../../base/common/strings.js";
+import { ILanguageService } from "../../../../editor/common/languages/language.js";
+import { setSnippetSuggestSupport } from "../../../../editor/contrib/suggest/browser/suggest.js";
+import { localize } from "../../../../nls.js";
+import { IEnvironmentService } from "../../../../platform/environment/common/environment.js";
+import { IFileService } from "../../../../platform/files/common/files.js";
+import { ILifecycleService } from "../../../services/lifecycle/common/lifecycle.js";
+import { ILogService } from "../../../../platform/log/common/log.js";
+import { IWorkspaceContextService } from "../../../../platform/workspace/common/workspace.js";
+import { SnippetFile } from "./snippetsFile.js";
+import { ExtensionsRegistry } from "../../../services/extensions/common/extensionsRegistry.js";
+import { languagesExtPoint } from "../../../services/language/common/languageService.js";
+import { SnippetCompletionProvider } from "./snippetCompletionProvider.js";
+import { IExtensionResourceLoaderService } from "../../../../platform/extensionResourceLoader/common/extensionResourceLoader.js";
+import { ResourceMap } from "../../../../base/common/map.js";
+import { IStorageService } from "../../../../platform/storage/common/storage.js";
+import { isStringArray } from "../../../../base/common/types.js";
+import { IInstantiationService } from "../../../../platform/instantiation/common/instantiation.js";
+import { ITextFileService } from "../../../services/textfile/common/textfiles.js";
+import { ILanguageConfigurationService } from "../../../../editor/common/languages/languageConfigurationRegistry.js";
+import { IUserDataProfileService } from "../../../services/userDataProfile/common/userDataProfile.js";
+import { insertInto } from "../../../../base/common/arrays.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+var SnippetEnablement_1;
+var SnippetUsageTimestamps_1;
+var snippetExt;
+(function(snippetExt2) {
+  function toValidSnippet(extension, snippet, languageService) {
+    if (isFalsyOrWhitespace(snippet.path)) {
+      extension.collector.error(localize("invalid.path.0", "Expected string in `contributes.{0}.path`. Provided value: {1}", extension.description.name, String(snippet.path)));
+      return null;
+    }
+    if (isFalsyOrWhitespace(snippet.language) && !snippet.path.endsWith(".code-snippets")) {
+      extension.collector.error(localize("invalid.language.0", "When omitting the language, the value of `contributes.{0}.path` must be a `.code-snippets`-file. Provided value: {1}", extension.description.name, String(snippet.path)));
+      return null;
+    }
+    if (!isFalsyOrWhitespace(snippet.language) && !languageService.isRegisteredLanguageId(snippet.language)) {
+      extension.collector.error(localize("invalid.language", "Unknown language in `contributes.{0}.language`. Provided value: {1}", extension.description.name, String(snippet.language)));
+      return null;
+    }
+    const extensionLocation = extension.description.extensionLocation;
+    const snippetLocation = resources.joinPath(extensionLocation, snippet.path);
+    if (!resources.isEqualOrParent(snippetLocation, extensionLocation)) {
+      extension.collector.error(localize("invalid.path.1", "Expected `contributes.{0}.path` ({1}) to be included inside extension's folder ({2}). This might make the extension non-portable.", extension.description.name, snippetLocation.path, extensionLocation.path));
+      return null;
+    }
+    return {
+      language: snippet.language,
+      location: snippetLocation
+    };
+  }
+  __name(toValidSnippet, "toValidSnippet");
+  snippetExt2.toValidSnippet = toValidSnippet;
+  snippetExt2.snippetsContribution = {
+    description: localize("vscode.extension.contributes.snippets", "Contributes snippets."),
+    type: "array",
+    defaultSnippets: [{ body: [{ language: "", path: "" }] }],
+    items: {
+      type: "object",
+      defaultSnippets: [{ body: { language: "${1:id}", path: "./snippets/${2:id}.json." } }],
+      properties: {
+        language: {
+          description: localize("vscode.extension.contributes.snippets-language", "Language identifier for which this snippet is contributed to."),
+          type: "string"
+        },
+        path: {
+          description: localize("vscode.extension.contributes.snippets-path", "Path of the snippets file. The path is relative to the extension folder and typically starts with './snippets/'."),
+          type: "string"
+        }
+      }
+    }
+  };
+  snippetExt2.point = ExtensionsRegistry.registerExtensionPoint({
+    extensionPoint: "snippets",
+    deps: [languagesExtPoint],
+    jsonSchema: snippetExt2.snippetsContribution
+  });
+})(snippetExt || (snippetExt = {}));
+function watch(service, resource, callback) {
+  return combinedDisposable(service.watch(resource), service.onDidFilesChange((e) => {
+    if (e.affects(resource)) {
+      callback();
+    }
+  }));
+}
+__name(watch, "watch");
+let SnippetEnablement = class SnippetEnablement2 {
+  static {
+    __name(this, "SnippetEnablement");
+  }
+  static {
+    SnippetEnablement_1 = this;
+  }
+  static {
+    this._key = "snippets.ignoredSnippets";
+  }
+  constructor(_storageService) {
+    this._storageService = _storageService;
+    const raw = _storageService.get(SnippetEnablement_1._key, 0, "");
+    let data;
+    try {
+      data = JSON.parse(raw);
+    } catch {
+    }
+    this._ignored = isStringArray(data) ? new Set(data) : /* @__PURE__ */ new Set();
+  }
+  isIgnored(id) {
+    return this._ignored.has(id);
+  }
+  updateIgnored(id, value) {
+    let changed = false;
+    if (this._ignored.has(id) && !value) {
+      this._ignored.delete(id);
+      changed = true;
+    } else if (!this._ignored.has(id) && value) {
+      this._ignored.add(id);
+      changed = true;
+    }
+    if (changed) {
+      this._storageService.store(
+        SnippetEnablement_1._key,
+        JSON.stringify(Array.from(this._ignored)),
+        0,
+        0
+        /* StorageTarget.USER */
+      );
+    }
+  }
+};
+SnippetEnablement = SnippetEnablement_1 = __decorate([
+  __param(0, IStorageService)
+], SnippetEnablement);
+let SnippetUsageTimestamps = class SnippetUsageTimestamps2 {
+  static {
+    __name(this, "SnippetUsageTimestamps");
+  }
+  static {
+    SnippetUsageTimestamps_1 = this;
+  }
+  static {
+    this._key = "snippets.usageTimestamps";
+  }
+  constructor(_storageService) {
+    this._storageService = _storageService;
+    const raw = _storageService.get(SnippetUsageTimestamps_1._key, 0, "");
+    let data;
+    try {
+      data = JSON.parse(raw);
+    } catch {
+      data = [];
+    }
+    this._usages = Array.isArray(data) ? new Map(data) : /* @__PURE__ */ new Map();
+  }
+  getUsageTimestamp(id) {
+    return this._usages.get(id);
+  }
+  updateUsageTimestamp(id) {
+    this._usages.delete(id);
+    this._usages.set(id, Date.now());
+    const all = [...this._usages].slice(-100);
+    this._storageService.store(
+      SnippetUsageTimestamps_1._key,
+      JSON.stringify(all),
+      0,
+      0
+      /* StorageTarget.USER */
+    );
+  }
+};
+SnippetUsageTimestamps = SnippetUsageTimestamps_1 = __decorate([
+  __param(0, IStorageService)
+], SnippetUsageTimestamps);
+let SnippetsService = class SnippetsService2 {
+  static {
+    __name(this, "SnippetsService");
+  }
+  constructor(_environmentService, _userDataProfileService, _contextService, _languageService, _logService, _fileService, _textfileService, _extensionResourceLoaderService, lifecycleService, instantiationService, languageConfigurationService) {
+    this._environmentService = _environmentService;
+    this._userDataProfileService = _userDataProfileService;
+    this._contextService = _contextService;
+    this._languageService = _languageService;
+    this._logService = _logService;
+    this._fileService = _fileService;
+    this._textfileService = _textfileService;
+    this._extensionResourceLoaderService = _extensionResourceLoaderService;
+    this._disposables = new DisposableStore();
+    this._pendingWork = [];
+    this._files = new ResourceMap();
+    this._pendingWork.push(Promise.resolve(lifecycleService.when(
+      3
+      /* LifecyclePhase.Restored */
+    ).then(() => {
+      this._initExtensionSnippets();
+      this._initUserSnippets();
+      this._initWorkspaceSnippets();
+    })));
+    setSnippetSuggestSupport(new SnippetCompletionProvider(this._languageService, this, languageConfigurationService));
+    this._enablement = instantiationService.createInstance(SnippetEnablement);
+    this._usageTimestamps = instantiationService.createInstance(SnippetUsageTimestamps);
+  }
+  dispose() {
+    this._disposables.dispose();
+  }
+  isEnabled(snippet) {
+    return !this._enablement.isIgnored(snippet.snippetIdentifier);
+  }
+  updateEnablement(snippet, enabled) {
+    this._enablement.updateIgnored(snippet.snippetIdentifier, !enabled);
+  }
+  updateUsageTimestamp(snippet) {
+    this._usageTimestamps.updateUsageTimestamp(snippet.snippetIdentifier);
+  }
+  _joinSnippets() {
+    const promises = this._pendingWork.slice(0);
+    this._pendingWork.length = 0;
+    return Promise.all(promises);
+  }
+  async getSnippetFiles() {
+    await this._joinSnippets();
+    return this._files.values();
+  }
+  async getSnippets(languageId, opts) {
+    await this._joinSnippets();
+    const result = [];
+    const promises = [];
+    if (languageId) {
+      if (this._languageService.isRegisteredLanguageId(languageId)) {
+        for (const file of this._files.values()) {
+          promises.push(file.load().then((file2) => file2.select(languageId, result)).catch((err) => this._logService.error(err, file.location.toString())));
+        }
+      }
+    } else {
+      for (const file of this._files.values()) {
+        promises.push(file.load().then((file2) => insertInto(result, result.length, file2.data)).catch((err) => this._logService.error(err, file.location.toString())));
+      }
+    }
+    await Promise.all(promises);
+    return this._filterAndSortSnippets(result, opts);
+  }
+  getSnippetsSync(languageId, opts) {
+    const result = [];
+    if (this._languageService.isRegisteredLanguageId(languageId)) {
+      for (const file of this._files.values()) {
+        file.load().catch((_err) => {
+        });
+        file.select(languageId, result);
+      }
+    }
+    return this._filterAndSortSnippets(result, opts);
+  }
+  _filterAndSortSnippets(snippets, opts) {
+    const result = [];
+    for (const snippet of snippets) {
+      if (!snippet.prefix && !opts?.includeNoPrefixSnippets) {
+        continue;
+      }
+      if (!this.isEnabled(snippet) && !opts?.includeDisabledSnippets) {
+        continue;
+      }
+      if (typeof opts?.fileTemplateSnippets === "boolean" && opts.fileTemplateSnippets !== snippet.isFileTemplate) {
+        continue;
+      }
+      result.push(snippet);
+    }
+    return result.sort((a, b) => {
+      let result2 = 0;
+      if (!opts?.noRecencySort) {
+        const val1 = this._usageTimestamps.getUsageTimestamp(a.snippetIdentifier) ?? -1;
+        const val2 = this._usageTimestamps.getUsageTimestamp(b.snippetIdentifier) ?? -1;
+        result2 = val2 - val1;
+      }
+      if (result2 === 0) {
+        result2 = this._compareSnippet(a, b);
+      }
+      return result2;
+    });
+  }
+  _compareSnippet(a, b) {
+    if (a.snippetSource < b.snippetSource) {
+      return -1;
+    } else if (a.snippetSource > b.snippetSource) {
+      return 1;
+    } else if (a.source < b.source) {
+      return -1;
+    } else if (a.source > b.source) {
+      return 1;
+    } else if (a.name > b.name) {
+      return 1;
+    } else if (a.name < b.name) {
+      return -1;
+    } else {
+      return 0;
+    }
+  }
+  // --- loading, watching
+  _initExtensionSnippets() {
+    snippetExt.point.setHandler((extensions) => {
+      for (const [key, value] of this._files) {
+        if (value.source === 3) {
+          this._files.delete(key);
+        }
+      }
+      for (const extension of extensions) {
+        for (const contribution of extension.value) {
+          const validContribution = snippetExt.toValidSnippet(extension, contribution, this._languageService);
+          if (!validContribution) {
+            continue;
+          }
+          const file = this._files.get(validContribution.location);
+          if (file) {
+            if (file.defaultScopes) {
+              file.defaultScopes.push(validContribution.language);
+            } else {
+              file.defaultScopes = [];
+            }
+          } else {
+            const file2 = new SnippetFile(3, validContribution.location, validContribution.language ? [validContribution.language] : void 0, extension.description, this._fileService, this._extensionResourceLoaderService);
+            this._files.set(file2.location, file2);
+            if (this._environmentService.isExtensionDevelopment) {
+              file2.load().then((file3) => {
+                if (file3.data.some((snippet) => snippet.isBogous)) {
+                  extension.collector.warn(localize("badVariableUse", "One or more snippets from the extension '{0}' very likely confuse snippet-variables and snippet-placeholders (see https://code.visualstudio.com/docs/editor/userdefinedsnippets#_snippet-syntax for more details)", extension.description.name));
+                }
+              }, (err) => {
+                extension.collector.warn(localize("badFile", 'The snippet file "{0}" could not be read.', file2.location.toString()));
+              });
+            }
+          }
+        }
+      }
+    });
+  }
+  _initWorkspaceSnippets() {
+    const disposables = new DisposableStore();
+    const updateWorkspaceSnippets = /* @__PURE__ */ __name(() => {
+      disposables.clear();
+      this._pendingWork.push(this._initWorkspaceFolderSnippets(this._contextService.getWorkspace(), disposables));
+    }, "updateWorkspaceSnippets");
+    this._disposables.add(disposables);
+    this._disposables.add(this._contextService.onDidChangeWorkspaceFolders(updateWorkspaceSnippets));
+    this._disposables.add(this._contextService.onDidChangeWorkbenchState(updateWorkspaceSnippets));
+    updateWorkspaceSnippets();
+  }
+  async _initWorkspaceFolderSnippets(workspace, bucket) {
+    const promises = workspace.folders.map(async (folder) => {
+      const snippetFolder = folder.toResource(".vscode");
+      const value = await this._fileService.exists(snippetFolder);
+      if (value) {
+        this._initFolderSnippets(2, snippetFolder, bucket);
+      } else {
+        bucket.add(this._fileService.onDidFilesChange((e) => {
+          if (e.contains(
+            snippetFolder,
+            1
+            /* FileChangeType.ADDED */
+          )) {
+            this._initFolderSnippets(2, snippetFolder, bucket);
+          }
+        }));
+      }
+    });
+    await Promise.all(promises);
+  }
+  async _initUserSnippets() {
+    const disposables = new DisposableStore();
+    const updateUserSnippets = /* @__PURE__ */ __name(async () => {
+      disposables.clear();
+      const userSnippetsFolder = this._userDataProfileService.currentProfile.snippetsHome;
+      await this._fileService.createFolder(userSnippetsFolder);
+      await this._initFolderSnippets(1, userSnippetsFolder, disposables);
+    }, "updateUserSnippets");
+    this._disposables.add(disposables);
+    this._disposables.add(this._userDataProfileService.onDidChangeCurrentProfile((e) => e.join((async () => {
+      this._pendingWork.push(updateUserSnippets());
+    })())));
+    await updateUserSnippets();
+  }
+  _initFolderSnippets(source, folder, bucket) {
+    const disposables = new DisposableStore();
+    const addFolderSnippets = /* @__PURE__ */ __name(async () => {
+      disposables.clear();
+      if (!await this._fileService.exists(folder)) {
+        return;
+      }
+      try {
+        const stat = await this._fileService.resolve(folder);
+        for (const entry of stat.children || []) {
+          disposables.add(this._addSnippetFile(entry.resource, source));
+        }
+      } catch (err) {
+        this._logService.error(`Failed snippets from folder '${folder.toString()}'`, err);
+      }
+    }, "addFolderSnippets");
+    bucket.add(this._textfileService.files.onDidSave((e) => {
+      if (resources.isEqualOrParent(e.model.resource, folder)) {
+        addFolderSnippets();
+      }
+    }));
+    bucket.add(watch(this._fileService, folder, addFolderSnippets));
+    bucket.add(disposables);
+    return addFolderSnippets();
+  }
+  _addSnippetFile(uri, source) {
+    const ext = resources.extname(uri);
+    if (source === 1 && ext === ".json") {
+      const langName = resources.basename(uri).replace(/\.json/, "");
+      this._files.set(uri, new SnippetFile(source, uri, [langName], void 0, this._fileService, this._extensionResourceLoaderService));
+    } else if (ext === ".code-snippets") {
+      this._files.set(uri, new SnippetFile(source, uri, void 0, void 0, this._fileService, this._extensionResourceLoaderService));
+    }
+    return {
+      dispose: /* @__PURE__ */ __name(() => this._files.delete(uri), "dispose")
+    };
+  }
+};
+SnippetsService = __decorate([
+  __param(0, IEnvironmentService),
+  __param(1, IUserDataProfileService),
+  __param(2, IWorkspaceContextService),
+  __param(3, ILanguageService),
+  __param(4, ILogService),
+  __param(5, IFileService),
+  __param(6, ITextFileService),
+  __param(7, IExtensionResourceLoaderService),
+  __param(8, ILifecycleService),
+  __param(9, IInstantiationService),
+  __param(10, ILanguageConfigurationService)
+], SnippetsService);
+function getNonWhitespacePrefix(model, position) {
+  const MAX_PREFIX_LENGTH = 100;
+  const line = model.getLineContent(position.lineNumber).substr(0, position.column - 1);
+  const minChIndex = Math.max(0, line.length - MAX_PREFIX_LENGTH);
+  for (let chIndex = line.length - 1; chIndex >= minChIndex; chIndex--) {
+    const ch = line.charAt(chIndex);
+    if (/\s/.test(ch)) {
+      return line.substr(chIndex + 1);
+    }
+  }
+  if (minChIndex === 0) {
+    return line;
+  }
+  return "";
+}
+__name(getNonWhitespacePrefix, "getNonWhitespacePrefix");
+export {
+  SnippetsService,
+  getNonWhitespacePrefix
+};
+//# sourceMappingURL=snippetsService.js.map

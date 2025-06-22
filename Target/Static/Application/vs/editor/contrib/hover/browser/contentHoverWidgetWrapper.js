@@ -1,1 +1,368 @@
-import*as u from"../../../../base/browser/dom.js";import{$vd as d,$wd as p}from"../../../../base/common/lifecycle.js";import{$AD as v}from"../../../common/languages.js";import{$Yib as m}from"./hoverOperation.js";import{$3ib as C,$Zib as l}from"./hoverTypes.js";import{$mj as b}from"../../../../platform/instantiation/common/instantiation.js";import{$ux as H}from"../../../../platform/keybinding/common/keybinding.js";import{$bnb as A}from"./contentHoverWidget.js";import{$rlb as D}from"./contentHoverComputer.js";import{$slb as P}from"./contentHoverTypes.js";import{$df as w}from"../../../../base/common/event.js";import{$anb as I}from"./contentHoverRendered.js";import{$olb as y}from"./hoverUtils.js";import{$ngb as x}from"../../../../platform/hover/browser/hover.js";var f=function(h,t,e,i){var s=arguments.length,o=s<3?t:i===null?i=Object.getOwnPropertyDescriptor(t,e):i,n;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")o=Reflect.decorate(h,t,e,i);else for(var r=h.length-1;r>=0;r--)(n=h[r])&&(o=(s<3?n(o):s>3?n(t,e,o):n(t,e))||o);return s>3&&o&&Object.defineProperty(t,e,o),o},c=function(h,t){return function(e,i){t(e,i,h)}};let a=class extends d{constructor(t,e,i,s){super(),this.n=t,this.r=e,this.s=i,this.t=s,this.c=null,this.f=this.B(new p),this.m=this.B(new w),this.onContentsChanged=this.m.event,this.g=this.B(this.r.createInstance(A,this.n)),this.h=this.u(),this.j=this.B(new m(this.n,new D(this.n,this.h))),this.w()}u(){const t=[];for(const e of C.getAll()){const i=this.r.createInstance(e,this.n);t.push(i)}return t.sort((e,i)=>e.hoverOrdinal-i.hoverOrdinal),this.B(this.g.onDidResize(()=>{this.h.forEach(e=>e.handleResize?.())})),this.B(this.g.onDidScroll(e=>{this.h.forEach(i=>i.handleScroll?.(e))})),t}w(){this.B(this.j.onResult(e=>{const i=e.hasLoadingMessage?this.F(e):e.value;this.G(new P(i,e.isComplete,e.options))}));const t=this.g.getDomNode();this.B(u.$K5(t,"keydown",e=>{e.equals(9)&&this.hide()})),this.B(u.$K5(t,"mouseleave",e=>{this.M(e)})),this.B(v.onDidChange(()=>{this.g.position&&this.c&&this.D(this.c)}))}z(t,e,i,s,o){if(!(this.g.position&&this.c))return t?(this.C(t,e,i,s,!1),!0):!1;const r=this.n.getOption(65).sticky,g=o&&this.g.isMouseGettingCloser(o.event.posx,o.event.posy);return r&&g?(t&&this.C(t,e,i,s,!0),!0):t?this.c&&this.c.options.anchor.equals(t)?!0:this.c&&t.canAdoptVisibleHover(this.c.options.anchor,this.g.position)?(this.c&&this.D(this.c.filter(t)),this.C(t,e,i,s,!1),!0):(this.D(null),this.C(t,e,i,s,!1),!0):(this.D(null),!1)}C(t,e,i,s,o){if(this.j.options&&this.j.options.anchor.equals(t))return;this.j.cancel();const r={anchor:t,source:i,shouldFocus:s,insistOnKeepingHoverVisible:o};this.j.start(e,r)}D(t){let e=t;if(this.c===e)return;e&&e.hoverParts.length===0&&(e=null),this.c=e,this.c?this.H(this.c):this.I()}F(t){for(const e of this.h){if(!e.createLoadingMessage)continue;const i=e.createLoadingMessage(t.options.anchor);if(i)return t.value.slice(0).concat([i])}return t.value}G(t){if(this.g.position&&this.c&&this.c.isComplete||this.D(t),!t.isComplete)return;const s=t.hoverParts.length===0,o=t.options.insistOnKeepingHoverVisible;s&&o||this.D(t)}H(t){const e=this.J();this.f.value=new I(this.n,t,this.h,e,this.s,this.t),this.f.value.domNodeHasChildren?this.g.show(this.f.value):this.f.clear()}I(){this.g.hide(),this.h.forEach(t=>t.handleHide?.())}J(){return{hide:()=>{this.hide()},onContentsChanged:()=>{this.m.fire(),this.g.onContentsChanged()},setMinimumDimensions:o=>{this.g.setMinimumDimensions(o)},focus:()=>this.focus()}}showsOrWillShow(t){if(this.g.isResizing)return!0;const i=this.L(t);if(!(i.length>0))return this.z(null,0,0,!1,t);const o=i[0];return this.z(o,0,0,!1,t)}L(t){const e=[];for(const s of this.h){if(!s.suggestHoverAnchor)continue;const o=s.suggestHoverAnchor(t);o&&e.push(o)}const i=t.target;switch(i.type){case 6:{e.push(new l(0,i.range,t.event.posx,t.event.posy));break}case 7:{const s=this.n.getOption(55).typicalHalfwidthCharacterWidth/2;if(!(!i.detail.isAfterLines&&typeof i.detail.horizontalDistanceToText=="number"&&i.detail.horizontalDistanceToText<s))break;e.push(new l(0,i.range,t.event.posx,t.event.posy));break}}return e.sort((s,o)=>o.priority-s.priority),e}M(t){const e=this.n.getDomNode();(!e||!y(e,t.x,t.y))&&this.hide()}startShowingAtRange(t,e,i,s){this.z(new l(0,t,void 0,void 0),e,i,s,null)}getWidgetContent(){const t=this.g.getDomNode();if(t.textContent)return t.textContent}async updateHoverVerbosityLevel(t,e,i){this.f.value?.updateHoverVerbosityLevel(t,e,i)}doesHoverAtIndexSupportVerbosityAction(t,e){return this.f.value?.doesHoverAtIndexSupportVerbosityAction(t,e)??!1}getAccessibleWidgetContent(){return this.f.value?.getAccessibleWidgetContent()}getAccessibleWidgetContentAtIndex(t){return this.f.value?.getAccessibleWidgetContentAtIndex(t)}focusedHoverPartIndex(){return this.f.value?.focusedHoverPartIndex??-1}containsNode(t){return t?this.g.getDomNode().contains(t):!1}focus(){if(this.f.value?.hoverPartsCount===1){this.focusHoverPartWithIndex(0);return}this.g.focus()}focusHoverPartWithIndex(t){this.f.value?.focusHoverPartWithIndex(t)}scrollUp(){this.g.scrollUp()}scrollDown(){this.g.scrollDown()}scrollLeft(){this.g.scrollLeft()}scrollRight(){this.g.scrollRight()}pageUp(){this.g.pageUp()}pageDown(){this.g.pageDown()}goToTop(){this.g.goToTop()}goToBottom(){this.g.goToBottom()}hide(){this.j.cancel(),this.D(null)}getDomNode(){return this.g.getDomNode()}get isColorPickerVisible(){return this.f.value?.isColorPickerVisible()??!1}get isVisibleFromKeyboard(){return this.g.isVisibleFromKeyboard}get isVisible(){return this.g.isVisible}get isFocused(){return this.g.isFocused}get isResizing(){return this.g.isResizing}get widget(){return this.g}};a=f([c(1,b),c(2,H),c(3,x)],a);export{a as $cnb};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import * as dom from "../../../../base/browser/dom.js";
+import { Disposable, MutableDisposable } from "../../../../base/common/lifecycle.js";
+import { TokenizationRegistry } from "../../../common/languages.js";
+import { HoverOperation } from "./hoverOperation.js";
+import { HoverParticipantRegistry, HoverRangeAnchor } from "./hoverTypes.js";
+import { IInstantiationService } from "../../../../platform/instantiation/common/instantiation.js";
+import { IKeybindingService } from "../../../../platform/keybinding/common/keybinding.js";
+import { ContentHoverWidget } from "./contentHoverWidget.js";
+import { ContentHoverComputer } from "./contentHoverComputer.js";
+import { ContentHoverResult } from "./contentHoverTypes.js";
+import { Emitter } from "../../../../base/common/event.js";
+import { RenderedContentHover } from "./contentHoverRendered.js";
+import { isMousePositionWithinElement } from "./hoverUtils.js";
+import { IHoverService } from "../../../../platform/hover/browser/hover.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+let ContentHoverWidgetWrapper = class ContentHoverWidgetWrapper2 extends Disposable {
+  static {
+    __name(this, "ContentHoverWidgetWrapper");
+  }
+  constructor(_editor, _instantiationService, _keybindingService, _hoverService) {
+    super();
+    this._editor = _editor;
+    this._instantiationService = _instantiationService;
+    this._keybindingService = _keybindingService;
+    this._hoverService = _hoverService;
+    this._currentResult = null;
+    this._renderedContentHover = this._register(new MutableDisposable());
+    this._onContentsChanged = this._register(new Emitter());
+    this.onContentsChanged = this._onContentsChanged.event;
+    this._contentHoverWidget = this._register(this._instantiationService.createInstance(ContentHoverWidget, this._editor));
+    this._participants = this._initializeHoverParticipants();
+    this._hoverOperation = this._register(new HoverOperation(this._editor, new ContentHoverComputer(this._editor, this._participants)));
+    this._registerListeners();
+  }
+  _initializeHoverParticipants() {
+    const participants = [];
+    for (const participant of HoverParticipantRegistry.getAll()) {
+      const participantInstance = this._instantiationService.createInstance(participant, this._editor);
+      participants.push(participantInstance);
+    }
+    participants.sort((p1, p2) => p1.hoverOrdinal - p2.hoverOrdinal);
+    this._register(this._contentHoverWidget.onDidResize(() => {
+      this._participants.forEach((participant) => participant.handleResize?.());
+    }));
+    this._register(this._contentHoverWidget.onDidScroll((e) => {
+      this._participants.forEach((participant) => participant.handleScroll?.(e));
+    }));
+    return participants;
+  }
+  _registerListeners() {
+    this._register(this._hoverOperation.onResult((result) => {
+      const messages = result.hasLoadingMessage ? this._addLoadingMessage(result) : result.value;
+      this._withResult(new ContentHoverResult(messages, result.isComplete, result.options));
+    }));
+    const contentHoverWidgetNode = this._contentHoverWidget.getDomNode();
+    this._register(dom.addStandardDisposableListener(contentHoverWidgetNode, "keydown", (e) => {
+      if (e.equals(
+        9
+        /* KeyCode.Escape */
+      )) {
+        this.hide();
+      }
+    }));
+    this._register(dom.addStandardDisposableListener(contentHoverWidgetNode, "mouseleave", (e) => {
+      this._onMouseLeave(e);
+    }));
+    this._register(TokenizationRegistry.onDidChange(() => {
+      if (this._contentHoverWidget.position && this._currentResult) {
+        this._setCurrentResult(this._currentResult);
+      }
+    }));
+  }
+  /**
+   * Returns true if the hover shows now or will show.
+   */
+  _startShowingOrUpdateHover(anchor, mode, source, focus, mouseEvent) {
+    const contentHoverIsVisible = this._contentHoverWidget.position && this._currentResult;
+    if (!contentHoverIsVisible) {
+      if (anchor) {
+        this._startHoverOperationIfNecessary(anchor, mode, source, focus, false);
+        return true;
+      }
+      return false;
+    }
+    const isHoverSticky = this._editor.getOption(
+      65
+      /* EditorOption.hover */
+    ).sticky;
+    const isMouseGettingCloser = mouseEvent && this._contentHoverWidget.isMouseGettingCloser(mouseEvent.event.posx, mouseEvent.event.posy);
+    const isHoverStickyAndIsMouseGettingCloser = isHoverSticky && isMouseGettingCloser;
+    if (isHoverStickyAndIsMouseGettingCloser) {
+      if (anchor) {
+        this._startHoverOperationIfNecessary(anchor, mode, source, focus, true);
+      }
+      return true;
+    }
+    if (!anchor) {
+      this._setCurrentResult(null);
+      return false;
+    }
+    const currentAnchorEqualsPreviousAnchor = this._currentResult && this._currentResult.options.anchor.equals(anchor);
+    if (currentAnchorEqualsPreviousAnchor) {
+      return true;
+    }
+    const currentAnchorCompatibleWithPreviousAnchor = this._currentResult && anchor.canAdoptVisibleHover(this._currentResult.options.anchor, this._contentHoverWidget.position);
+    if (!currentAnchorCompatibleWithPreviousAnchor) {
+      this._setCurrentResult(null);
+      this._startHoverOperationIfNecessary(anchor, mode, source, focus, false);
+      return true;
+    }
+    if (this._currentResult) {
+      this._setCurrentResult(this._currentResult.filter(anchor));
+    }
+    this._startHoverOperationIfNecessary(anchor, mode, source, focus, false);
+    return true;
+  }
+  _startHoverOperationIfNecessary(anchor, mode, source, shouldFocus, insistOnKeepingHoverVisible) {
+    const currentAnchorEqualToPreviousHover = this._hoverOperation.options && this._hoverOperation.options.anchor.equals(anchor);
+    if (currentAnchorEqualToPreviousHover) {
+      return;
+    }
+    this._hoverOperation.cancel();
+    const contentHoverComputerOptions = {
+      anchor,
+      source,
+      shouldFocus,
+      insistOnKeepingHoverVisible
+    };
+    this._hoverOperation.start(mode, contentHoverComputerOptions);
+  }
+  _setCurrentResult(hoverResult) {
+    let currentHoverResult = hoverResult;
+    const currentResultEqualToPreviousResult = this._currentResult === currentHoverResult;
+    if (currentResultEqualToPreviousResult) {
+      return;
+    }
+    const currentHoverResultIsEmpty = currentHoverResult && currentHoverResult.hoverParts.length === 0;
+    if (currentHoverResultIsEmpty) {
+      currentHoverResult = null;
+    }
+    this._currentResult = currentHoverResult;
+    if (this._currentResult) {
+      this._showHover(this._currentResult);
+    } else {
+      this._hideHover();
+    }
+  }
+  _addLoadingMessage(hoverResult) {
+    for (const participant of this._participants) {
+      if (!participant.createLoadingMessage) {
+        continue;
+      }
+      const loadingMessage = participant.createLoadingMessage(hoverResult.options.anchor);
+      if (!loadingMessage) {
+        continue;
+      }
+      return hoverResult.value.slice(0).concat([loadingMessage]);
+    }
+    return hoverResult.value;
+  }
+  _withResult(hoverResult) {
+    const previousHoverIsVisibleWithCompleteResult = this._contentHoverWidget.position && this._currentResult && this._currentResult.isComplete;
+    if (!previousHoverIsVisibleWithCompleteResult) {
+      this._setCurrentResult(hoverResult);
+    }
+    const isCurrentHoverResultComplete = hoverResult.isComplete;
+    if (!isCurrentHoverResultComplete) {
+      return;
+    }
+    const currentHoverResultIsEmpty = hoverResult.hoverParts.length === 0;
+    const insistOnKeepingPreviousHoverVisible = hoverResult.options.insistOnKeepingHoverVisible;
+    const shouldKeepPreviousHoverVisible = currentHoverResultIsEmpty && insistOnKeepingPreviousHoverVisible;
+    if (shouldKeepPreviousHoverVisible) {
+      return;
+    }
+    this._setCurrentResult(hoverResult);
+  }
+  _showHover(hoverResult) {
+    const context = this._getHoverContext();
+    this._renderedContentHover.value = new RenderedContentHover(this._editor, hoverResult, this._participants, context, this._keybindingService, this._hoverService);
+    if (this._renderedContentHover.value.domNodeHasChildren) {
+      this._contentHoverWidget.show(this._renderedContentHover.value);
+    } else {
+      this._renderedContentHover.clear();
+    }
+  }
+  _hideHover() {
+    this._contentHoverWidget.hide();
+    this._participants.forEach((participant) => participant.handleHide?.());
+  }
+  _getHoverContext() {
+    const hide = /* @__PURE__ */ __name(() => {
+      this.hide();
+    }, "hide");
+    const onContentsChanged = /* @__PURE__ */ __name(() => {
+      this._onContentsChanged.fire();
+      this._contentHoverWidget.onContentsChanged();
+    }, "onContentsChanged");
+    const setMinimumDimensions = /* @__PURE__ */ __name((dimensions) => {
+      this._contentHoverWidget.setMinimumDimensions(dimensions);
+    }, "setMinimumDimensions");
+    const focus = /* @__PURE__ */ __name(() => this.focus(), "focus");
+    return { hide, onContentsChanged, setMinimumDimensions, focus };
+  }
+  showsOrWillShow(mouseEvent) {
+    const isContentWidgetResizing = this._contentHoverWidget.isResizing;
+    if (isContentWidgetResizing) {
+      return true;
+    }
+    const anchorCandidates = this._findHoverAnchorCandidates(mouseEvent);
+    const anchorCandidatesExist = anchorCandidates.length > 0;
+    if (!anchorCandidatesExist) {
+      return this._startShowingOrUpdateHover(null, 0, 0, false, mouseEvent);
+    }
+    const anchor = anchorCandidates[0];
+    return this._startShowingOrUpdateHover(anchor, 0, 0, false, mouseEvent);
+  }
+  _findHoverAnchorCandidates(mouseEvent) {
+    const anchorCandidates = [];
+    for (const participant of this._participants) {
+      if (!participant.suggestHoverAnchor) {
+        continue;
+      }
+      const anchor = participant.suggestHoverAnchor(mouseEvent);
+      if (!anchor) {
+        continue;
+      }
+      anchorCandidates.push(anchor);
+    }
+    const target = mouseEvent.target;
+    switch (target.type) {
+      case 6: {
+        anchorCandidates.push(new HoverRangeAnchor(0, target.range, mouseEvent.event.posx, mouseEvent.event.posy));
+        break;
+      }
+      case 7: {
+        const epsilon = this._editor.getOption(
+          55
+          /* EditorOption.fontInfo */
+        ).typicalHalfwidthCharacterWidth / 2;
+        const mouseIsWithinLinesAndCloseToHover = !target.detail.isAfterLines && typeof target.detail.horizontalDistanceToText === "number" && target.detail.horizontalDistanceToText < epsilon;
+        if (!mouseIsWithinLinesAndCloseToHover) {
+          break;
+        }
+        anchorCandidates.push(new HoverRangeAnchor(0, target.range, mouseEvent.event.posx, mouseEvent.event.posy));
+        break;
+      }
+    }
+    anchorCandidates.sort((a, b) => b.priority - a.priority);
+    return anchorCandidates;
+  }
+  _onMouseLeave(e) {
+    const editorDomNode = this._editor.getDomNode();
+    const isMousePositionOutsideOfEditor = !editorDomNode || !isMousePositionWithinElement(editorDomNode, e.x, e.y);
+    if (isMousePositionOutsideOfEditor) {
+      this.hide();
+    }
+  }
+  startShowingAtRange(range, mode, source, focus) {
+    this._startShowingOrUpdateHover(new HoverRangeAnchor(0, range, void 0, void 0), mode, source, focus, null);
+  }
+  getWidgetContent() {
+    const node = this._contentHoverWidget.getDomNode();
+    if (!node.textContent) {
+      return void 0;
+    }
+    return node.textContent;
+  }
+  async updateHoverVerbosityLevel(action, index, focus) {
+    this._renderedContentHover.value?.updateHoverVerbosityLevel(action, index, focus);
+  }
+  doesHoverAtIndexSupportVerbosityAction(index, action) {
+    return this._renderedContentHover.value?.doesHoverAtIndexSupportVerbosityAction(index, action) ?? false;
+  }
+  getAccessibleWidgetContent() {
+    return this._renderedContentHover.value?.getAccessibleWidgetContent();
+  }
+  getAccessibleWidgetContentAtIndex(index) {
+    return this._renderedContentHover.value?.getAccessibleWidgetContentAtIndex(index);
+  }
+  focusedHoverPartIndex() {
+    return this._renderedContentHover.value?.focusedHoverPartIndex ?? -1;
+  }
+  containsNode(node) {
+    return node ? this._contentHoverWidget.getDomNode().contains(node) : false;
+  }
+  focus() {
+    const hoverPartsCount = this._renderedContentHover.value?.hoverPartsCount;
+    if (hoverPartsCount === 1) {
+      this.focusHoverPartWithIndex(0);
+      return;
+    }
+    this._contentHoverWidget.focus();
+  }
+  focusHoverPartWithIndex(index) {
+    this._renderedContentHover.value?.focusHoverPartWithIndex(index);
+  }
+  scrollUp() {
+    this._contentHoverWidget.scrollUp();
+  }
+  scrollDown() {
+    this._contentHoverWidget.scrollDown();
+  }
+  scrollLeft() {
+    this._contentHoverWidget.scrollLeft();
+  }
+  scrollRight() {
+    this._contentHoverWidget.scrollRight();
+  }
+  pageUp() {
+    this._contentHoverWidget.pageUp();
+  }
+  pageDown() {
+    this._contentHoverWidget.pageDown();
+  }
+  goToTop() {
+    this._contentHoverWidget.goToTop();
+  }
+  goToBottom() {
+    this._contentHoverWidget.goToBottom();
+  }
+  hide() {
+    this._hoverOperation.cancel();
+    this._setCurrentResult(null);
+  }
+  getDomNode() {
+    return this._contentHoverWidget.getDomNode();
+  }
+  get isColorPickerVisible() {
+    return this._renderedContentHover.value?.isColorPickerVisible() ?? false;
+  }
+  get isVisibleFromKeyboard() {
+    return this._contentHoverWidget.isVisibleFromKeyboard;
+  }
+  get isVisible() {
+    return this._contentHoverWidget.isVisible;
+  }
+  get isFocused() {
+    return this._contentHoverWidget.isFocused;
+  }
+  get isResizing() {
+    return this._contentHoverWidget.isResizing;
+  }
+  get widget() {
+    return this._contentHoverWidget;
+  }
+};
+ContentHoverWidgetWrapper = __decorate([
+  __param(1, IInstantiationService),
+  __param(2, IKeybindingService),
+  __param(3, IHoverService)
+], ContentHoverWidgetWrapper);
+export {
+  ContentHoverWidgetWrapper
+};
+//# sourceMappingURL=contentHoverWidgetWrapper.js.map

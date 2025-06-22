@@ -1,1 +1,288 @@
-class h{constructor(t){this.domNode=t,this.a="",this.b="",this.c="",this.d="",this.e="",this.f="",this.g="",this.h="",this.i="",this.j="",this.k="",this.l="",this.m="",this.n="",this.o="",this.p="",this.q="",this.r="",this.s="",this.t="",this.u="",this.v="",this.w="",this.x="",this.y="",this.z="",this.A=!1,this.B="none",this.C=""}focus(){this.domNode.focus()}setMaxWidth(t){const s=i(t);this.a!==s&&(this.a=s,this.domNode.style.maxWidth=this.a)}setWidth(t){const s=i(t);this.b!==s&&(this.b=s,this.domNode.style.width=this.b)}setHeight(t){const s=i(t);this.c!==s&&(this.c=s,this.domNode.style.height=this.c)}setTop(t){const s=i(t);this.d!==s&&(this.d=s,this.domNode.style.top=this.d)}setLeft(t){const s=i(t);this.e!==s&&(this.e=s,this.domNode.style.left=this.e)}setBottom(t){const s=i(t);this.f!==s&&(this.f=s,this.domNode.style.bottom=this.f)}setRight(t){const s=i(t);this.g!==s&&(this.g=s,this.domNode.style.right=this.g)}setPaddingTop(t){const s=i(t);this.h!==s&&(this.h=s,this.domNode.style.paddingTop=this.h)}setPaddingLeft(t){const s=i(t);this.i!==s&&(this.i=s,this.domNode.style.paddingLeft=this.i)}setPaddingBottom(t){const s=i(t);this.j!==s&&(this.j=s,this.domNode.style.paddingBottom=this.j)}setPaddingRight(t){const s=i(t);this.k!==s&&(this.k=s,this.domNode.style.paddingRight=this.k)}setFontFamily(t){this.l!==t&&(this.l=t,this.domNode.style.fontFamily=this.l)}setFontWeight(t){this.m!==t&&(this.m=t,this.domNode.style.fontWeight=this.m)}setFontSize(t){const s=i(t);this.n!==s&&(this.n=s,this.domNode.style.fontSize=this.n)}setFontStyle(t){this.o!==t&&(this.o=t,this.domNode.style.fontStyle=this.o)}setFontFeatureSettings(t){this.p!==t&&(this.p=t,this.domNode.style.fontFeatureSettings=this.p)}setFontVariationSettings(t){this.q!==t&&(this.q=t,this.domNode.style.fontVariationSettings=this.q)}setTextDecoration(t){this.r!==t&&(this.r=t,this.domNode.style.textDecoration=this.r)}setLineHeight(t){const s=i(t);this.s!==s&&(this.s=s,this.domNode.style.lineHeight=this.s)}setLetterSpacing(t){const s=i(t);this.t!==s&&(this.t=s,this.domNode.style.letterSpacing=this.t)}setClassName(t){this.u!==t&&(this.u=t,this.domNode.className=this.u)}toggleClassName(t,s){this.domNode.classList.toggle(t,s),this.u=this.domNode.className}setDisplay(t){this.v!==t&&(this.v=t,this.domNode.style.display=this.v)}setPosition(t){this.w!==t&&(this.w=t,this.domNode.style.position=this.w)}setVisibility(t){this.x!==t&&(this.x=t,this.domNode.style.visibility=this.x)}setColor(t){this.y!==t&&(this.y=t,this.domNode.style.color=this.y)}setBackgroundColor(t){this.z!==t&&(this.z=t,this.domNode.style.backgroundColor=this.z)}setLayerHinting(t){this.A!==t&&(this.A=t,this.domNode.style.transform=this.A?"translate3d(0px, 0px, 0px)":"")}setBoxShadow(t){this.C!==t&&(this.C=t,this.domNode.style.boxShadow=t)}setContain(t){this.B!==t&&(this.B=t,this.domNode.style.contain=this.B)}setAttribute(t,s){this.domNode.setAttribute(t,s)}removeAttribute(t){this.domNode.removeAttribute(t)}appendChild(t){this.domNode.appendChild(t.domNode)}removeChild(t){this.domNode.removeChild(t.domNode)}}function i(t){return"number"==typeof t?`${t}px`:t}function o(t){return new h(t)}export{h as $m7,o as $n7};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+class FastDomNode {
+  static {
+    __name(this, "FastDomNode");
+  }
+  constructor(domNode) {
+    this.domNode = domNode;
+    this._maxWidth = "";
+    this._width = "";
+    this._height = "";
+    this._top = "";
+    this._left = "";
+    this._bottom = "";
+    this._right = "";
+    this._paddingTop = "";
+    this._paddingLeft = "";
+    this._paddingBottom = "";
+    this._paddingRight = "";
+    this._fontFamily = "";
+    this._fontWeight = "";
+    this._fontSize = "";
+    this._fontStyle = "";
+    this._fontFeatureSettings = "";
+    this._fontVariationSettings = "";
+    this._textDecoration = "";
+    this._lineHeight = "";
+    this._letterSpacing = "";
+    this._className = "";
+    this._display = "";
+    this._position = "";
+    this._visibility = "";
+    this._color = "";
+    this._backgroundColor = "";
+    this._layerHint = false;
+    this._contain = "none";
+    this._boxShadow = "";
+  }
+  focus() {
+    this.domNode.focus();
+  }
+  setMaxWidth(_maxWidth) {
+    const maxWidth = numberAsPixels(_maxWidth);
+    if (this._maxWidth === maxWidth) {
+      return;
+    }
+    this._maxWidth = maxWidth;
+    this.domNode.style.maxWidth = this._maxWidth;
+  }
+  setWidth(_width) {
+    const width = numberAsPixels(_width);
+    if (this._width === width) {
+      return;
+    }
+    this._width = width;
+    this.domNode.style.width = this._width;
+  }
+  setHeight(_height) {
+    const height = numberAsPixels(_height);
+    if (this._height === height) {
+      return;
+    }
+    this._height = height;
+    this.domNode.style.height = this._height;
+  }
+  setTop(_top) {
+    const top = numberAsPixels(_top);
+    if (this._top === top) {
+      return;
+    }
+    this._top = top;
+    this.domNode.style.top = this._top;
+  }
+  setLeft(_left) {
+    const left = numberAsPixels(_left);
+    if (this._left === left) {
+      return;
+    }
+    this._left = left;
+    this.domNode.style.left = this._left;
+  }
+  setBottom(_bottom) {
+    const bottom = numberAsPixels(_bottom);
+    if (this._bottom === bottom) {
+      return;
+    }
+    this._bottom = bottom;
+    this.domNode.style.bottom = this._bottom;
+  }
+  setRight(_right) {
+    const right = numberAsPixels(_right);
+    if (this._right === right) {
+      return;
+    }
+    this._right = right;
+    this.domNode.style.right = this._right;
+  }
+  setPaddingTop(_paddingTop) {
+    const paddingTop = numberAsPixels(_paddingTop);
+    if (this._paddingTop === paddingTop) {
+      return;
+    }
+    this._paddingTop = paddingTop;
+    this.domNode.style.paddingTop = this._paddingTop;
+  }
+  setPaddingLeft(_paddingLeft) {
+    const paddingLeft = numberAsPixels(_paddingLeft);
+    if (this._paddingLeft === paddingLeft) {
+      return;
+    }
+    this._paddingLeft = paddingLeft;
+    this.domNode.style.paddingLeft = this._paddingLeft;
+  }
+  setPaddingBottom(_paddingBottom) {
+    const paddingBottom = numberAsPixels(_paddingBottom);
+    if (this._paddingBottom === paddingBottom) {
+      return;
+    }
+    this._paddingBottom = paddingBottom;
+    this.domNode.style.paddingBottom = this._paddingBottom;
+  }
+  setPaddingRight(_paddingRight) {
+    const paddingRight = numberAsPixels(_paddingRight);
+    if (this._paddingRight === paddingRight) {
+      return;
+    }
+    this._paddingRight = paddingRight;
+    this.domNode.style.paddingRight = this._paddingRight;
+  }
+  setFontFamily(fontFamily) {
+    if (this._fontFamily === fontFamily) {
+      return;
+    }
+    this._fontFamily = fontFamily;
+    this.domNode.style.fontFamily = this._fontFamily;
+  }
+  setFontWeight(fontWeight) {
+    if (this._fontWeight === fontWeight) {
+      return;
+    }
+    this._fontWeight = fontWeight;
+    this.domNode.style.fontWeight = this._fontWeight;
+  }
+  setFontSize(_fontSize) {
+    const fontSize = numberAsPixels(_fontSize);
+    if (this._fontSize === fontSize) {
+      return;
+    }
+    this._fontSize = fontSize;
+    this.domNode.style.fontSize = this._fontSize;
+  }
+  setFontStyle(fontStyle) {
+    if (this._fontStyle === fontStyle) {
+      return;
+    }
+    this._fontStyle = fontStyle;
+    this.domNode.style.fontStyle = this._fontStyle;
+  }
+  setFontFeatureSettings(fontFeatureSettings) {
+    if (this._fontFeatureSettings === fontFeatureSettings) {
+      return;
+    }
+    this._fontFeatureSettings = fontFeatureSettings;
+    this.domNode.style.fontFeatureSettings = this._fontFeatureSettings;
+  }
+  setFontVariationSettings(fontVariationSettings) {
+    if (this._fontVariationSettings === fontVariationSettings) {
+      return;
+    }
+    this._fontVariationSettings = fontVariationSettings;
+    this.domNode.style.fontVariationSettings = this._fontVariationSettings;
+  }
+  setTextDecoration(textDecoration) {
+    if (this._textDecoration === textDecoration) {
+      return;
+    }
+    this._textDecoration = textDecoration;
+    this.domNode.style.textDecoration = this._textDecoration;
+  }
+  setLineHeight(_lineHeight) {
+    const lineHeight = numberAsPixels(_lineHeight);
+    if (this._lineHeight === lineHeight) {
+      return;
+    }
+    this._lineHeight = lineHeight;
+    this.domNode.style.lineHeight = this._lineHeight;
+  }
+  setLetterSpacing(_letterSpacing) {
+    const letterSpacing = numberAsPixels(_letterSpacing);
+    if (this._letterSpacing === letterSpacing) {
+      return;
+    }
+    this._letterSpacing = letterSpacing;
+    this.domNode.style.letterSpacing = this._letterSpacing;
+  }
+  setClassName(className) {
+    if (this._className === className) {
+      return;
+    }
+    this._className = className;
+    this.domNode.className = this._className;
+  }
+  toggleClassName(className, shouldHaveIt) {
+    this.domNode.classList.toggle(className, shouldHaveIt);
+    this._className = this.domNode.className;
+  }
+  setDisplay(display) {
+    if (this._display === display) {
+      return;
+    }
+    this._display = display;
+    this.domNode.style.display = this._display;
+  }
+  setPosition(position) {
+    if (this._position === position) {
+      return;
+    }
+    this._position = position;
+    this.domNode.style.position = this._position;
+  }
+  setVisibility(visibility) {
+    if (this._visibility === visibility) {
+      return;
+    }
+    this._visibility = visibility;
+    this.domNode.style.visibility = this._visibility;
+  }
+  setColor(color) {
+    if (this._color === color) {
+      return;
+    }
+    this._color = color;
+    this.domNode.style.color = this._color;
+  }
+  setBackgroundColor(backgroundColor) {
+    if (this._backgroundColor === backgroundColor) {
+      return;
+    }
+    this._backgroundColor = backgroundColor;
+    this.domNode.style.backgroundColor = this._backgroundColor;
+  }
+  setLayerHinting(layerHint) {
+    if (this._layerHint === layerHint) {
+      return;
+    }
+    this._layerHint = layerHint;
+    this.domNode.style.transform = this._layerHint ? "translate3d(0px, 0px, 0px)" : "";
+  }
+  setBoxShadow(boxShadow) {
+    if (this._boxShadow === boxShadow) {
+      return;
+    }
+    this._boxShadow = boxShadow;
+    this.domNode.style.boxShadow = boxShadow;
+  }
+  setContain(contain) {
+    if (this._contain === contain) {
+      return;
+    }
+    this._contain = contain;
+    this.domNode.style.contain = this._contain;
+  }
+  setAttribute(name, value) {
+    this.domNode.setAttribute(name, value);
+  }
+  removeAttribute(name) {
+    this.domNode.removeAttribute(name);
+  }
+  appendChild(child) {
+    this.domNode.appendChild(child.domNode);
+  }
+  removeChild(child) {
+    this.domNode.removeChild(child.domNode);
+  }
+}
+function numberAsPixels(value) {
+  return typeof value === "number" ? `${value}px` : value;
+}
+__name(numberAsPixels, "numberAsPixels");
+function createFastDomNode(domNode) {
+  return new FastDomNode(domNode);
+}
+__name(createFastDomNode, "createFastDomNode");
+export {
+  FastDomNode,
+  createFastDomNode
+};
+//# sourceMappingURL=fastDomNode.js.map

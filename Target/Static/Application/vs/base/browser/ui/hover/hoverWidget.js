@@ -1,1 +1,119 @@
-import*as n from"../../dom.js";import{$G5 as u}from"../../keyboardEvent.js";import{$B7 as b}from"../scrollbar/scrollableElement.js";import{$vd as i}from"../../../common/lifecycle.js";import"./hoverWidget.css";import{localize as c}from"../../../../nls.js";const r=n.$;var l;!function(t){t[t.LEFT=0]="LEFT",t[t.RIGHT=1]="RIGHT",t[t.BELOW=2]="BELOW",t[t.ABOVE=3]="ABOVE"}(l||(l={}));class E extends i{constructor(t){super(),this.containerDomNode=document.createElement("div"),this.containerDomNode.className="monaco-hover",this.containerDomNode.classList.toggle("fade-in",!!t),this.containerDomNode.tabIndex=0,this.containerDomNode.setAttribute("role","tooltip"),this.contentsDomNode=document.createElement("div"),this.contentsDomNode.className="monaco-hover-content",this.scrollbar=this.B(new b(this.contentsDomNode,{consumeMouseWheelIfScrollbarIsNeeded:!0})),this.containerDomNode.appendChild(this.scrollbar.getDomNode())}onContentsChanged(){this.scrollbar.scanDomNode()}}class d extends i{static render(t,e,n){return new d(t,e,n)}constructor(t,e,o){super(),this.actionLabel=e.label,this.actionKeybindingLabel=o,this.actionContainer=n.$M6(t,r("div.action-container")),this.actionContainer.setAttribute("tabindex","0"),this.a=n.$M6(this.actionContainer,r("a.action")),this.a.setAttribute("role","button"),e.iconClass&&n.$M6(this.a,r(`span.icon.${e.iconClass}`)),this.actionRenderedLabel=o?`${e.label} (${o})`:e.label;n.$M6(this.a,r("span")).textContent=this.actionRenderedLabel,this.q.add(new p(this.actionContainer,e.run)),this.q.add(new $(this.actionContainer,e.run,[3,10])),this.setEnabled(!0)}setEnabled(t){t?(this.actionContainer.classList.remove("disabled"),this.actionContainer.removeAttribute("aria-disabled")):(this.actionContainer.classList.add("disabled"),this.actionContainer.setAttribute("aria-disabled","true"))}}function L(t,e){return t&&e?c(15,null,e):t?c(16,null):""}class p extends i{constructor(t,e){super(),this.B(n.$J5(t,n.$F6.CLICK,(n=>{n.stopPropagation(),n.preventDefault(),e(t)})))}}class $ extends i{constructor(t,e,o){super(),this.B(n.$J5(t,n.$F6.KEY_DOWN,(n=>{const s=new u(n);o.some((t=>s.equals(t)))&&(n.stopPropagation(),n.preventDefault(),e(t))})))}}export{E as $C7,d as $D7,L as $E7,p as $F7,$ as $G7,l as HoverPosition};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import * as dom from "../../dom.js";
+import { StandardKeyboardEvent } from "../../keyboardEvent.js";
+import { DomScrollableElement } from "../scrollbar/scrollableElement.js";
+import { Disposable } from "../../../common/lifecycle.js";
+import "./hoverWidget.css";
+import { localize } from "../../../../nls.js";
+const $ = dom.$;
+var HoverPosition;
+(function(HoverPosition2) {
+  HoverPosition2[HoverPosition2["LEFT"] = 0] = "LEFT";
+  HoverPosition2[HoverPosition2["RIGHT"] = 1] = "RIGHT";
+  HoverPosition2[HoverPosition2["BELOW"] = 2] = "BELOW";
+  HoverPosition2[HoverPosition2["ABOVE"] = 3] = "ABOVE";
+})(HoverPosition || (HoverPosition = {}));
+class HoverWidget extends Disposable {
+  static {
+    __name(this, "HoverWidget");
+  }
+  constructor(fadeIn) {
+    super();
+    this.containerDomNode = document.createElement("div");
+    this.containerDomNode.className = "monaco-hover";
+    this.containerDomNode.classList.toggle("fade-in", !!fadeIn);
+    this.containerDomNode.tabIndex = 0;
+    this.containerDomNode.setAttribute("role", "tooltip");
+    this.contentsDomNode = document.createElement("div");
+    this.contentsDomNode.className = "monaco-hover-content";
+    this.scrollbar = this._register(new DomScrollableElement(this.contentsDomNode, {
+      consumeMouseWheelIfScrollbarIsNeeded: true
+    }));
+    this.containerDomNode.appendChild(this.scrollbar.getDomNode());
+  }
+  onContentsChanged() {
+    this.scrollbar.scanDomNode();
+  }
+}
+class HoverAction extends Disposable {
+  static {
+    __name(this, "HoverAction");
+  }
+  static render(parent, actionOptions, keybindingLabel) {
+    return new HoverAction(parent, actionOptions, keybindingLabel);
+  }
+  constructor(parent, actionOptions, keybindingLabel) {
+    super();
+    this.actionLabel = actionOptions.label;
+    this.actionKeybindingLabel = keybindingLabel;
+    this.actionContainer = dom.append(parent, $("div.action-container"));
+    this.actionContainer.setAttribute("tabindex", "0");
+    this.action = dom.append(this.actionContainer, $("a.action"));
+    this.action.setAttribute("role", "button");
+    if (actionOptions.iconClass) {
+      dom.append(this.action, $(`span.icon.${actionOptions.iconClass}`));
+    }
+    this.actionRenderedLabel = keybindingLabel ? `${actionOptions.label} (${keybindingLabel})` : actionOptions.label;
+    const label = dom.append(this.action, $("span"));
+    label.textContent = this.actionRenderedLabel;
+    this._store.add(new ClickAction(this.actionContainer, actionOptions.run));
+    this._store.add(new KeyDownAction(this.actionContainer, actionOptions.run, [
+      3,
+      10
+      /* KeyCode.Space */
+    ]));
+    this.setEnabled(true);
+  }
+  setEnabled(enabled) {
+    if (enabled) {
+      this.actionContainer.classList.remove("disabled");
+      this.actionContainer.removeAttribute("aria-disabled");
+    } else {
+      this.actionContainer.classList.add("disabled");
+      this.actionContainer.setAttribute("aria-disabled", "true");
+    }
+  }
+}
+function getHoverAccessibleViewHint(shouldHaveHint, keybinding) {
+  return shouldHaveHint && keybinding ? localize("acessibleViewHint", "Inspect this in the accessible view with {0}.", keybinding) : shouldHaveHint ? localize("acessibleViewHintNoKbOpen", "Inspect this in the accessible view via the command Open Accessible View which is currently not triggerable via keybinding.") : "";
+}
+__name(getHoverAccessibleViewHint, "getHoverAccessibleViewHint");
+class ClickAction extends Disposable {
+  static {
+    __name(this, "ClickAction");
+  }
+  constructor(container, run) {
+    super();
+    this._register(dom.addDisposableListener(container, dom.EventType.CLICK, (e) => {
+      e.stopPropagation();
+      e.preventDefault();
+      run(container);
+    }));
+  }
+}
+class KeyDownAction extends Disposable {
+  static {
+    __name(this, "KeyDownAction");
+  }
+  constructor(container, run, keyCodes) {
+    super();
+    this._register(dom.addDisposableListener(container, dom.EventType.KEY_DOWN, (e) => {
+      const event = new StandardKeyboardEvent(e);
+      if (keyCodes.some((keyCode) => event.equals(keyCode))) {
+        e.stopPropagation();
+        e.preventDefault();
+        run(container);
+      }
+    }));
+  }
+}
+export {
+  ClickAction,
+  HoverAction,
+  HoverPosition,
+  HoverWidget,
+  KeyDownAction,
+  getHoverAccessibleViewHint
+};
+//# sourceMappingURL=hoverWidget.js.map

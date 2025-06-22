@@ -1,1 +1,111 @@
-import{$cC as C}from"../../../core/range.js";import{$YD as d,$2D as g,$4D as O,$$D as m,$VD as s,$7D as f,$UD as o}from"./length.js";class u{static fromModelContentChanges(t){return t.map(n=>{const i=C.lift(n.range);return new u(f(i.getStartPosition()),f(i.getEndPosition()),m(n.text))}).reverse()}constructor(t,e,n){this.startOffset=t,this.endOffset=e,this.newLength=n}toString(){return`[${s(this.startOffset)}...${s(this.endOffset)}) -> ${s(this.newLength)}`}}class x{constructor(t){this.a=0,this.b=0,this.d=0,this.e=-1,this.f=t.map(e=>r.from(e))}getOffsetBeforeChange(t){return this.i(t),this.h(t)}getDistanceToNextChange(t){this.i(t);const e=this.f[this.a],n=e?this.g(e.offsetObj):null;return n===null?null:g(t,n)}g(t){return t.lineCount===this.e?o(t.lineCount+this.b,t.columnCount+this.d):o(t.lineCount+this.b,t.columnCount)}h(t){const e=s(t);return e.lineCount-this.b===this.e?o(e.lineCount-this.b,e.columnCount-this.d):o(e.lineCount-this.b,e.columnCount)}i(t){for(;this.a<this.f.length;){const e=this.f[this.a],n=this.g(e.endOffsetAfterObj);if(O(n,t)){this.a++;const i=s(n),h=s(this.g(e.endOffsetBeforeObj)),l=i.lineCount-h.lineCount;this.b+=l;const c=this.e===e.endOffsetBeforeObj.lineCount?this.d:0,a=i.columnCount-h.columnCount;this.d=c+a,this.e=e.endOffsetBeforeObj.lineCount}else break}}}class r{static from(t){return new r(t.startOffset,t.endOffset,t.newLength)}constructor(t,e,n){this.endOffsetBeforeObj=s(e),this.endOffsetAfterObj=s(d(t,n)),this.offsetObj=s(t)}}export{u as $qF,x as $rF};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { Range } from "../../../core/range.js";
+import { lengthAdd, lengthDiffNonNegative, lengthLessThanEqual, lengthOfString, lengthToObj, positionToLength, toLength } from "./length.js";
+class TextEditInfo {
+  static {
+    __name(this, "TextEditInfo");
+  }
+  static fromModelContentChanges(changes) {
+    const edits = changes.map((c) => {
+      const range = Range.lift(c.range);
+      return new TextEditInfo(positionToLength(range.getStartPosition()), positionToLength(range.getEndPosition()), lengthOfString(c.text));
+    }).reverse();
+    return edits;
+  }
+  constructor(startOffset, endOffset, newLength) {
+    this.startOffset = startOffset;
+    this.endOffset = endOffset;
+    this.newLength = newLength;
+  }
+  toString() {
+    return `[${lengthToObj(this.startOffset)}...${lengthToObj(this.endOffset)}) -> ${lengthToObj(this.newLength)}`;
+  }
+}
+class BeforeEditPositionMapper {
+  static {
+    __name(this, "BeforeEditPositionMapper");
+  }
+  /**
+   * @param edits Must be sorted by offset in ascending order.
+  */
+  constructor(edits) {
+    this.nextEditIdx = 0;
+    this.deltaOldToNewLineCount = 0;
+    this.deltaOldToNewColumnCount = 0;
+    this.deltaLineIdxInOld = -1;
+    this.edits = edits.map((edit) => TextEditInfoCache.from(edit));
+  }
+  /**
+   * @param offset Must be equal to or greater than the last offset this method has been called with.
+  */
+  getOffsetBeforeChange(offset) {
+    this.adjustNextEdit(offset);
+    return this.translateCurToOld(offset);
+  }
+  /**
+   * @param offset Must be equal to or greater than the last offset this method has been called with.
+   * Returns null if there is no edit anymore.
+  */
+  getDistanceToNextChange(offset) {
+    this.adjustNextEdit(offset);
+    const nextEdit = this.edits[this.nextEditIdx];
+    const nextChangeOffset = nextEdit ? this.translateOldToCur(nextEdit.offsetObj) : null;
+    if (nextChangeOffset === null) {
+      return null;
+    }
+    return lengthDiffNonNegative(offset, nextChangeOffset);
+  }
+  translateOldToCur(oldOffsetObj) {
+    if (oldOffsetObj.lineCount === this.deltaLineIdxInOld) {
+      return toLength(oldOffsetObj.lineCount + this.deltaOldToNewLineCount, oldOffsetObj.columnCount + this.deltaOldToNewColumnCount);
+    } else {
+      return toLength(oldOffsetObj.lineCount + this.deltaOldToNewLineCount, oldOffsetObj.columnCount);
+    }
+  }
+  translateCurToOld(newOffset) {
+    const offsetObj = lengthToObj(newOffset);
+    if (offsetObj.lineCount - this.deltaOldToNewLineCount === this.deltaLineIdxInOld) {
+      return toLength(offsetObj.lineCount - this.deltaOldToNewLineCount, offsetObj.columnCount - this.deltaOldToNewColumnCount);
+    } else {
+      return toLength(offsetObj.lineCount - this.deltaOldToNewLineCount, offsetObj.columnCount);
+    }
+  }
+  adjustNextEdit(offset) {
+    while (this.nextEditIdx < this.edits.length) {
+      const nextEdit = this.edits[this.nextEditIdx];
+      const nextEditEndOffsetInCur = this.translateOldToCur(nextEdit.endOffsetAfterObj);
+      if (lengthLessThanEqual(nextEditEndOffsetInCur, offset)) {
+        this.nextEditIdx++;
+        const nextEditEndOffsetInCurObj = lengthToObj(nextEditEndOffsetInCur);
+        const nextEditEndOffsetBeforeInCurObj = lengthToObj(this.translateOldToCur(nextEdit.endOffsetBeforeObj));
+        const lineDelta = nextEditEndOffsetInCurObj.lineCount - nextEditEndOffsetBeforeInCurObj.lineCount;
+        this.deltaOldToNewLineCount += lineDelta;
+        const previousColumnDelta = this.deltaLineIdxInOld === nextEdit.endOffsetBeforeObj.lineCount ? this.deltaOldToNewColumnCount : 0;
+        const columnDelta = nextEditEndOffsetInCurObj.columnCount - nextEditEndOffsetBeforeInCurObj.columnCount;
+        this.deltaOldToNewColumnCount = previousColumnDelta + columnDelta;
+        this.deltaLineIdxInOld = nextEdit.endOffsetBeforeObj.lineCount;
+      } else {
+        break;
+      }
+    }
+  }
+}
+class TextEditInfoCache {
+  static {
+    __name(this, "TextEditInfoCache");
+  }
+  static from(edit) {
+    return new TextEditInfoCache(edit.startOffset, edit.endOffset, edit.newLength);
+  }
+  constructor(startOffset, endOffset, textLength) {
+    this.endOffsetBeforeObj = lengthToObj(endOffset);
+    this.endOffsetAfterObj = lengthToObj(lengthAdd(startOffset, textLength));
+    this.offsetObj = lengthToObj(startOffset);
+  }
+}
+export {
+  BeforeEditPositionMapper,
+  TextEditInfo
+};
+//# sourceMappingURL=beforeEditPositionMapper.js.map

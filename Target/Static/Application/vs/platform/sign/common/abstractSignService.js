@@ -1,1 +1,56 @@
-class r{constructor(){this.b=new Map}static{this.a=1}async createNewMessage(t){try{const a=await this.c();if(a){const e=String(r.a++);return this.b.set(e,a),{id:e,data:a.createNewMessage(t)}}}catch{}return{id:"",data:t}}async validate(t,a){if(!t.id)return!0;const e=this.b.get(t.id);if(!e)return!1;this.b.delete(t.id);try{return"ok"===e.validate(a)}catch{return!1}finally{e.dispose?.()}}async sign(t){try{return await this.d(t)}catch{}return t}}export{r as $SB};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+class AbstractSignService {
+  static {
+    __name(this, "AbstractSignService");
+  }
+  constructor() {
+    this.validators = /* @__PURE__ */ new Map();
+  }
+  static {
+    this._nextId = 1;
+  }
+  async createNewMessage(value) {
+    try {
+      const validator = await this.getValidator();
+      if (validator) {
+        const id = String(AbstractSignService._nextId++);
+        this.validators.set(id, validator);
+        return {
+          id,
+          data: validator.createNewMessage(value)
+        };
+      }
+    } catch (e) {
+    }
+    return { id: "", data: value };
+  }
+  async validate(message, value) {
+    if (!message.id) {
+      return true;
+    }
+    const validator = this.validators.get(message.id);
+    if (!validator) {
+      return false;
+    }
+    this.validators.delete(message.id);
+    try {
+      return validator.validate(value) === "ok";
+    } catch (e) {
+      return false;
+    } finally {
+      validator.dispose?.();
+    }
+  }
+  async sign(value) {
+    try {
+      return await this.signValue(value);
+    } catch (e) {
+    }
+    return value;
+  }
+}
+export {
+  AbstractSignService
+};
+//# sourceMappingURL=abstractSignService.js.map

@@ -1,1 +1,159 @@
-import{$9ob as _,TriggerAction as m}from"../../../../platform/quickinput/browser/pickerQuickAccess.js";import{localize as s}from"../../../../nls.js";import{$RI as w}from"../../../../platform/notification/common/notification.js";import{$hW as R}from"../common/debug.js";import{$hl as j}from"../../../../platform/workspace/common/workspace.js";import{$Yn as D}from"../../../../platform/commands/common/commands.js";import{$yj as p}from"../../../../base/common/filters.js";import{$b_b as E,$iac as P}from"./debugCommands.js";import{$JBb as v,$LBb as L}from"./debugIcons.js";import{ThemeIcon as b}from"../../../../base/common/themables.js";var $=function(u,i,e,n){var o=arguments.length,r=o<3?i:n===null?n=Object.getOwnPropertyDescriptor(i,e):n,c;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")r=Reflect.decorate(u,i,e,n);else for(var h=u.length-1;h>=0;h--)(c=u[h])&&(r=(o<3?c(r):o>3?c(i,e,r):c(i,e))||r);return o>3&&r&&Object.defineProperty(i,e,r),r},f=function(u,i){return function(e,n){i(e,n,u)}};let d=class extends _{constructor(i,e,n,o){super(P,{noResultsPick:{label:s(6589,null)}}),this.a=i,this.b=e,this.h=n,this.j=o}async g(i){const e=[];if(!this.a.getAdapterManager().hasEnabledDebuggers())return[];e.push({type:"separator",label:"launch.json"});const n=this.a.getConfigurationManager(),o=n.selectedConfiguration;let r;for(const t of n.getAllConfigurations()){const a=p(i,t.name,!0);if(a){const g={label:t.name,description:this.b.getWorkbenchState()===3?t.launch.name:"",highlights:{label:a},buttons:[{iconClass:b.asClassName(v),tooltip:s(6590,null)}],trigger:()=>(t.launch.openConfigFile({preserveFocus:!1}),m.CLOSE_PICKER),accept:async()=>{await n.selectConfiguration(t.launch,t.name);try{await this.a.startDebugging(t.launch,void 0,{startedByUser:!0})}catch(l){this.j.error(l)}}};if(o.name===t.name&&o.launch===t.launch){const l={type:"separator",label:s(6591,null)};e.unshift(l,g);continue}r!==t.presentation?.group&&(e.push({type:"separator"}),r=t.presentation?.group),e.push(g)}}const c=await n.getDynamicProviders();c.length>0&&e.push({type:"separator",label:s(6592,null)}),n.getRecentDynamicConfigurations().forEach(({name:t,type:a})=>{const g=p(i,t,!0);g&&e.push({label:t,highlights:{label:g},buttons:[{iconClass:b.asClassName(L),tooltip:s(6593,null)}],trigger:()=>(n.removeRecentDynamicConfigurations(t,a),m.CLOSE_PICKER),accept:async()=>{await n.selectConfiguration(void 0,t,void 0,{type:a});try{const{launch:l,getConfig:C}=n.selectedConfiguration,y=await C();await this.a.startDebugging(l,y,{startedByUser:!0})}catch(l){this.j.error(l)}}})}),c.forEach(t=>{e.push({label:`$(folder) ${t.label}...`,ariaLabel:s(6594,null,t.label),accept:async()=>{const a=await t.pick();a&&(await n.selectConfiguration(a.launch,a.config.name,a.config,{type:t.type}),this.a.startDebugging(a.launch,a.config,{startedByUser:!0}))}})});const h=n.getLaunches().filter(t=>!t.hidden);h.length>0&&e.push({type:"separator",label:s(6595,null)});for(const t of h){const a=this.b.getWorkbenchState()===3?s(6596,null,t.name):s(6597,null);e.push({label:a,description:this.b.getWorkbenchState()===3?t.name:"",highlights:{label:p(i,a,!0)??void 0},accept:()=>this.h.executeCommand(E,t.uri.toString())})}return e}};d=$([f(0,R),f(1,j),f(2,D),f(3,w)],d);export{d as $Koc};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { PickerQuickAccessProvider, TriggerAction } from "../../../../platform/quickinput/browser/pickerQuickAccess.js";
+import { localize } from "../../../../nls.js";
+import { INotificationService } from "../../../../platform/notification/common/notification.js";
+import { IDebugService } from "../common/debug.js";
+import { IWorkspaceContextService } from "../../../../platform/workspace/common/workspace.js";
+import { ICommandService } from "../../../../platform/commands/common/commands.js";
+import { matchesFuzzy } from "../../../../base/common/filters.js";
+import { ADD_CONFIGURATION_ID, DEBUG_QUICK_ACCESS_PREFIX } from "./debugCommands.js";
+import { debugConfigure, debugRemoveConfig } from "./debugIcons.js";
+import { ThemeIcon } from "../../../../base/common/themables.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+let StartDebugQuickAccessProvider = class StartDebugQuickAccessProvider2 extends PickerQuickAccessProvider {
+  static {
+    __name(this, "StartDebugQuickAccessProvider");
+  }
+  constructor(debugService, contextService, commandService, notificationService) {
+    super(DEBUG_QUICK_ACCESS_PREFIX, {
+      noResultsPick: {
+        label: localize("noDebugResults", "No matching launch configurations")
+      }
+    });
+    this.debugService = debugService;
+    this.contextService = contextService;
+    this.commandService = commandService;
+    this.notificationService = notificationService;
+  }
+  async _getPicks(filter) {
+    const picks = [];
+    if (!this.debugService.getAdapterManager().hasEnabledDebuggers()) {
+      return [];
+    }
+    picks.push({ type: "separator", label: "launch.json" });
+    const configManager = this.debugService.getConfigurationManager();
+    const selectedConfiguration = configManager.selectedConfiguration;
+    let lastGroup;
+    for (const config of configManager.getAllConfigurations()) {
+      const highlights = matchesFuzzy(filter, config.name, true);
+      if (highlights) {
+        const pick = {
+          label: config.name,
+          description: this.contextService.getWorkbenchState() === 3 ? config.launch.name : "",
+          highlights: { label: highlights },
+          buttons: [{
+            iconClass: ThemeIcon.asClassName(debugConfigure),
+            tooltip: localize("customizeLaunchConfig", "Configure Launch Configuration")
+          }],
+          trigger: /* @__PURE__ */ __name(() => {
+            config.launch.openConfigFile({ preserveFocus: false });
+            return TriggerAction.CLOSE_PICKER;
+          }, "trigger"),
+          accept: /* @__PURE__ */ __name(async () => {
+            await configManager.selectConfiguration(config.launch, config.name);
+            try {
+              await this.debugService.startDebugging(config.launch, void 0, { startedByUser: true });
+            } catch (error) {
+              this.notificationService.error(error);
+            }
+          }, "accept")
+        };
+        if (selectedConfiguration.name === config.name && selectedConfiguration.launch === config.launch) {
+          const separator = { type: "separator", label: localize("mostRecent", "Most Recent") };
+          picks.unshift(separator, pick);
+          continue;
+        }
+        if (lastGroup !== config.presentation?.group) {
+          picks.push({ type: "separator" });
+          lastGroup = config.presentation?.group;
+        }
+        picks.push(pick);
+      }
+    }
+    const dynamicProviders = await configManager.getDynamicProviders();
+    if (dynamicProviders.length > 0) {
+      picks.push({
+        type: "separator",
+        label: localize({
+          key: "contributed",
+          comment: ["contributed is lower case because it looks better like that in UI. Nothing preceeds it. It is a name of the grouping of debug configurations."]
+        }, "contributed")
+      });
+    }
+    configManager.getRecentDynamicConfigurations().forEach(({ name, type }) => {
+      const highlights = matchesFuzzy(filter, name, true);
+      if (highlights) {
+        picks.push({
+          label: name,
+          highlights: { label: highlights },
+          buttons: [{
+            iconClass: ThemeIcon.asClassName(debugRemoveConfig),
+            tooltip: localize("removeLaunchConfig", "Remove Launch Configuration")
+          }],
+          trigger: /* @__PURE__ */ __name(() => {
+            configManager.removeRecentDynamicConfigurations(name, type);
+            return TriggerAction.CLOSE_PICKER;
+          }, "trigger"),
+          accept: /* @__PURE__ */ __name(async () => {
+            await configManager.selectConfiguration(void 0, name, void 0, { type });
+            try {
+              const { launch, getConfig } = configManager.selectedConfiguration;
+              const config = await getConfig();
+              await this.debugService.startDebugging(launch, config, { startedByUser: true });
+            } catch (error) {
+              this.notificationService.error(error);
+            }
+          }, "accept")
+        });
+      }
+    });
+    dynamicProviders.forEach((provider) => {
+      picks.push({
+        label: `$(folder) ${provider.label}...`,
+        ariaLabel: localize({ key: "providerAriaLabel", comment: ['Placeholder stands for the provider label. For example "NodeJS".'] }, "{0} contributed configurations", provider.label),
+        accept: /* @__PURE__ */ __name(async () => {
+          const pick = await provider.pick();
+          if (pick) {
+            await configManager.selectConfiguration(pick.launch, pick.config.name, pick.config, { type: provider.type });
+            this.debugService.startDebugging(pick.launch, pick.config, { startedByUser: true });
+          }
+        }, "accept")
+      });
+    });
+    const visibleLaunches = configManager.getLaunches().filter((launch) => !launch.hidden);
+    if (visibleLaunches.length > 0) {
+      picks.push({ type: "separator", label: localize("configure", "configure") });
+    }
+    for (const launch of visibleLaunches) {
+      const label = this.contextService.getWorkbenchState() === 3 ? localize("addConfigTo", "Add Config ({0})...", launch.name) : localize("addConfiguration", "Add Configuration...");
+      picks.push({
+        label,
+        description: this.contextService.getWorkbenchState() === 3 ? launch.name : "",
+        highlights: { label: matchesFuzzy(filter, label, true) ?? void 0 },
+        accept: /* @__PURE__ */ __name(() => this.commandService.executeCommand(ADD_CONFIGURATION_ID, launch.uri.toString()), "accept")
+      });
+    }
+    return picks;
+  }
+};
+StartDebugQuickAccessProvider = __decorate([
+  __param(0, IDebugService),
+  __param(1, IWorkspaceContextService),
+  __param(2, ICommandService),
+  __param(3, INotificationService)
+], StartDebugQuickAccessProvider);
+export {
+  StartDebugQuickAccessProvider
+};
+//# sourceMappingURL=debugQuickAccess.js.map

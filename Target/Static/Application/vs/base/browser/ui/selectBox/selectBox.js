@@ -1,1 +1,65 @@
-import{$C8 as i}from"../list/listWidget.js";import{$N8 as a}from"./selectBoxCustom.js";import{$O8 as n}from"./selectBoxNative.js";import{$p7 as d}from"../widget.js";import{$n as u}from"../../../common/platform.js";import"./selectBox.css";const C={...i,selectBackground:"#3C3C3C",selectForeground:"#F0F0F0",selectBorder:"#3C3C3C",decoratorRightForeground:void 0,selectListBackground:void 0,selectListBorder:void 0,focusBorder:void 0};class F extends d{constructor(s,e,t,o,r){super(),this.a=u&&!r?.useCustomDrawn?new n(s,e,o,r):new a(s,e,t,o,r),this.B(this.a)}get onDidSelect(){return this.a.onDidSelect}setOptions(s,e){this.a.setOptions(s,e)}select(s){this.a.select(s)}setAriaLabel(s){this.a.setAriaLabel(s)}focus(){this.a.focus()}blur(){this.a.blur()}setFocusable(s){this.a.setFocusable(s)}setEnabled(s){this.a.setEnabled(s)}render(s){this.a.render(s)}}export{C as $P8,F as $Q8};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { unthemedListStyles } from "../list/listWidget.js";
+import { SelectBoxList } from "./selectBoxCustom.js";
+import { SelectBoxNative } from "./selectBoxNative.js";
+import { Widget } from "../widget.js";
+import { isMacintosh } from "../../../common/platform.js";
+import "./selectBox.css";
+const unthemedSelectBoxStyles = {
+  ...unthemedListStyles,
+  selectBackground: "#3C3C3C",
+  selectForeground: "#F0F0F0",
+  selectBorder: "#3C3C3C",
+  decoratorRightForeground: void 0,
+  selectListBackground: void 0,
+  selectListBorder: void 0,
+  focusBorder: void 0
+};
+class SelectBox extends Widget {
+  static {
+    __name(this, "SelectBox");
+  }
+  constructor(options, selected, contextViewProvider, styles, selectBoxOptions) {
+    super();
+    if (isMacintosh && !selectBoxOptions?.useCustomDrawn) {
+      this.selectBoxDelegate = new SelectBoxNative(options, selected, styles, selectBoxOptions);
+    } else {
+      this.selectBoxDelegate = new SelectBoxList(options, selected, contextViewProvider, styles, selectBoxOptions);
+    }
+    this._register(this.selectBoxDelegate);
+  }
+  // Public SelectBox Methods - routed through delegate interface
+  get onDidSelect() {
+    return this.selectBoxDelegate.onDidSelect;
+  }
+  setOptions(options, selected) {
+    this.selectBoxDelegate.setOptions(options, selected);
+  }
+  select(index) {
+    this.selectBoxDelegate.select(index);
+  }
+  setAriaLabel(label) {
+    this.selectBoxDelegate.setAriaLabel(label);
+  }
+  focus() {
+    this.selectBoxDelegate.focus();
+  }
+  blur() {
+    this.selectBoxDelegate.blur();
+  }
+  setFocusable(focusable) {
+    this.selectBoxDelegate.setFocusable(focusable);
+  }
+  setEnabled(enabled) {
+    this.selectBoxDelegate.setEnabled(enabled);
+  }
+  render(container) {
+    this.selectBoxDelegate.render(container);
+  }
+}
+export {
+  SelectBox,
+  unthemedSelectBoxStyles
+};
+//# sourceMappingURL=selectBox.js.map

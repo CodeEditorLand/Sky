@@ -1,1 +1,314 @@
-import"./media/keybindings.css";import*as p from"../../../../nls.js";import{OS as b}from"../../../../base/common/platform.js";import{$vd as x,$td as v,$ud as I}from"../../../../base/common/lifecycle.js";import{$df as l}from"../../../../base/common/event.js";import{$99 as w}from"../../../../base/browser/ui/keybindingLabel/keybindingLabel.js";import{$p7 as N}from"../../../../base/browser/ui/widget.js";import*as s from"../../../../base/browser/dom.js";import*as R from"../../../../base/browser/ui/aria/aria.js";import{$G5 as L}from"../../../../base/browser/keyboardEvent.js";import{$n7 as K}from"../../../../base/browser/fastDomNode.js";import{$ux as C}from"../../../../platform/keybinding/common/keybinding.js";import{$nfb as D}from"../../../../platform/contextview/browser/contextView.js";import{$mj as y}from"../../../../platform/instantiation/common/instantiation.js";import{$jp as u,$bq as M,$cq as S,$cr as _}from"../../../../platform/theme/common/colorRegistry.js";import{$c9b as W}from"./preferencesWidgets.js";import{Promises as O,$Mh as U}from"../../../../base/common/async.js";import{$Vn as E}from"../../../../platform/contextkey/common/contextkey.js";import{$Wfb as j,$Kfb as B}from"../../../../platform/theme/browser/defaultStyles.js";var g=function(r,t,i,e){var h=arguments.length,n=h<3?t:e===null?e=Object.getOwnPropertyDescriptor(t,i):e,o;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")n=Reflect.decorate(r,t,i,e);else for(var c=r.length-1;c>=0;c--)(o=r[c])&&(n=(h<3?o(n):h>3?o(t,i,n):o(t,i))||n);return h>3&&n&&Object.defineProperty(t,i,n),n},d=function(r,t){return function(i,e){t(i,e,r)}},a,f;let m=class extends W{constructor(t,i,e,h,n,o){super(t,i,e,h,n,o),this.R=this.B(new I),this.S=this.B(new l),this.onKeybinding=this.S.event,this.U=this.B(new l),this.onEnter=this.U.event,this.W=this.B(new l),this.onEscape=this.W.event,this.X=this.B(new l),this.onBlur=this.X.event,this.B(v(()=>this.stopRecordingKeys())),this.P=null,this.Q=""}clear(){this.P=null,super.clear()}startRecordingKeys(){this.R.add(s.$J5(this.inputBox.inputElement,s.$F6.KEY_DOWN,t=>this.Y(new L(t)))),this.R.add(s.$J5(this.inputBox.inputElement,s.$F6.BLUR,()=>this.X.fire())),this.R.add(s.$J5(this.inputBox.inputElement,s.$F6.INPUT,()=>{this.setInputValue(this.Q)}))}stopRecordingKeys(){this.P=null,this.R.clear()}setInputValue(t){this.Q=t,this.inputBox.value=this.Q}Y(t){if(t.preventDefault(),t.stopPropagation(),!this.w.recordEnter&&t.equals(3)){this.U.fire();return}if(t.equals(9)){this.W.fire();return}this.Z(t)}Z(t){const i=this.J.resolveKeyboardEvent(t),e=`code: ${t.browserEvent.code}, keyCode: ${t.browserEvent.keyCode}, key: ${t.browserEvent.key} => UI: ${i.getAriaLabel()}, user settings: ${i.getUserSettingsLabel()}, dispatch: ${i.getDispatchChords()[0]}`,h=this.w;this.P||(this.P=[]),this.P.length>0&&this.P[this.P.length-1].getDispatchChords()[0]===null?this.P[this.P.length-1]=i:(this.P.length===2&&(this.P=[]),this.P.push(i));const o=this.P.map(c=>c.getUserSettingsLabel()||"").join(" ");this.setInputValue(h.quoteRecordedKeys?`"${o}"`:o),this.inputBox.inputElement.title=e,this.S.fire(this.P)}};m=g([d(2,D),d(3,y),d(4,E),d(5,C)],m);let $=class extends N{static{a=this}static{this.a=400}static{this.g=110}constructor(t,i){super(),this.M=i,this.w=this.B(new I),this.y=null,this.H=!1,this.I=this.B(new l),this.J=this.B(new l),this.onDidChange=this.J.event,this.L=this.B(new l),this.onShowExistingKeybidings=this.L.event,this.h=K(document.createElement("div")),this.h.setDisplay("none"),this.h.setClassName("defineKeybindingWidget"),this.h.setWidth(a.a),this.h.setHeight(a.g);const e=p.localize(9791,null);s.$M6(this.h.domNode,s.$(".message",void 0,e)),this.h.domNode.style.backgroundColor=u(M),this.h.domNode.style.color=u(S),this.h.domNode.style.boxShadow=`0 2px 8px ${u(_)}`,this.n=this.B(this.M.createInstance(m,this.h.domNode,{ariaLabel:e,history:new Set([]),inputBoxStyles:j})),this.n.startRecordingKeys(),this.B(this.n.onKeybinding(h=>this.N(h))),this.B(this.n.onEnter(()=>this.R())),this.B(this.n.onEscape(()=>this.Q())),this.B(this.n.onBlur(()=>this.P())),this.r=s.$M6(this.h.domNode,s.$(".output")),this.t=s.$M6(this.h.domNode,s.$(".existing")),t&&s.$M6(t,this.h.domNode)}get domNode(){return this.h.domNode}define(){return this.n.clear(),O.withAsyncBody(async t=>{this.H||(this.H=!0,this.h.setDisplay("block"),this.y=null,this.n.setInputValue(""),s.$I5(this.r),s.$I5(this.t),await U(0),this.n.focus());const i=this.I.event(()=>{t(this.O()),i.dispose()})})}layout(t){const i=Math.round((t.height-a.g)/2);this.h.setTop(i);const e=Math.round((t.width-a.a)/2);this.h.setLeft(e)}printExisting(t){if(t>0){const i=s.$("span.existingText"),e=t===1?p.localize(9792,null,t):p.localize(9793,null,t);s.$M6(i,document.createTextNode(e)),R.$a8(e),this.t.appendChild(i),i.onmousedown=h=>{h.preventDefault()},i.onmouseup=h=>{h.preventDefault()},i.onclick=()=>{this.L.fire(this.O())}}}N(t){if(this.w.clear(),this.y=t,s.$I5(this.r),s.$I5(this.t),this.w.add(new w(this.r,b,B)).set(this.y?.[0]??void 0),this.y)for(let h=1;h<this.y.length;h++)this.r.appendChild(document.createTextNode(p.localize(9794,null))),this.w.add(new w(this.r,b,B)).set(this.y[h]);const e=this.O();e&&this.J.fire(e)}O(){let t=null;return this.y&&(t=this.y.map(i=>i.getUserSettingsLabel()).join(" ")),t}P(){this.y=null,this.R()}Q(){this.y===null?this.R():(this.y=null,this.n.clear(),s.$I5(this.r),s.$I5(this.t))}R(){this.h.setDisplay("none"),this.H=!1,this.I.fire()}};$=a=g([d(1,y)],$);let P=class extends x{static{f=this}static{this.a="editor.contrib.defineKeybindingWidget"}constructor(t,i){super(),this.f=t,this.b=this.B(i.createInstance($,null)),this.f.addOverlayWidget(this)}getId(){return f.a}getDomNode(){return this.b.domNode}getPosition(){return{preference:null}}dispose(){this.f.removeOverlayWidget(this),super.dispose()}start(){this.f.hasModel()&&this.f.revealPositionInCenterIfOutsideViewport(this.f.getPosition(),0);const t=this.f.getLayoutInfo();return this.b.layout(new s.$25(t.width,t.height)),this.b.define()}};P=f=g([d(1,y)],P);export{m as $e9b,$ as $f9b,P as $g9b};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import "./media/keybindings.css";
+import * as nls from "../../../../nls.js";
+import { OS } from "../../../../base/common/platform.js";
+import { Disposable, toDisposable, DisposableStore } from "../../../../base/common/lifecycle.js";
+import { Emitter } from "../../../../base/common/event.js";
+import { KeybindingLabel } from "../../../../base/browser/ui/keybindingLabel/keybindingLabel.js";
+import { Widget } from "../../../../base/browser/ui/widget.js";
+import * as dom from "../../../../base/browser/dom.js";
+import * as aria from "../../../../base/browser/ui/aria/aria.js";
+import { StandardKeyboardEvent } from "../../../../base/browser/keyboardEvent.js";
+import { createFastDomNode } from "../../../../base/browser/fastDomNode.js";
+import { IKeybindingService } from "../../../../platform/keybinding/common/keybinding.js";
+import { IContextViewService } from "../../../../platform/contextview/browser/contextView.js";
+import { IInstantiationService } from "../../../../platform/instantiation/common/instantiation.js";
+import { asCssVariable, editorWidgetBackground, editorWidgetForeground, widgetShadow } from "../../../../platform/theme/common/colorRegistry.js";
+import { SearchWidget } from "./preferencesWidgets.js";
+import { Promises, timeout } from "../../../../base/common/async.js";
+import { IContextKeyService } from "../../../../platform/contextkey/common/contextkey.js";
+import { defaultInputBoxStyles, defaultKeybindingLabelStyles } from "../../../../platform/theme/browser/defaultStyles.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+var DefineKeybindingWidget_1;
+var DefineKeybindingOverlayWidget_1;
+let KeybindingsSearchWidget = class KeybindingsSearchWidget2 extends SearchWidget {
+  static {
+    __name(this, "KeybindingsSearchWidget");
+  }
+  constructor(parent, options, contextViewService, instantiationService, contextKeyService, keybindingService) {
+    super(parent, options, contextViewService, instantiationService, contextKeyService, keybindingService);
+    this.recordDisposables = this._register(new DisposableStore());
+    this._onKeybinding = this._register(new Emitter());
+    this.onKeybinding = this._onKeybinding.event;
+    this._onEnter = this._register(new Emitter());
+    this.onEnter = this._onEnter.event;
+    this._onEscape = this._register(new Emitter());
+    this.onEscape = this._onEscape.event;
+    this._onBlur = this._register(new Emitter());
+    this.onBlur = this._onBlur.event;
+    this._register(toDisposable(() => this.stopRecordingKeys()));
+    this._chords = null;
+    this._inputValue = "";
+  }
+  clear() {
+    this._chords = null;
+    super.clear();
+  }
+  startRecordingKeys() {
+    this.recordDisposables.add(dom.addDisposableListener(this.inputBox.inputElement, dom.EventType.KEY_DOWN, (e) => this._onKeyDown(new StandardKeyboardEvent(e))));
+    this.recordDisposables.add(dom.addDisposableListener(this.inputBox.inputElement, dom.EventType.BLUR, () => this._onBlur.fire()));
+    this.recordDisposables.add(dom.addDisposableListener(this.inputBox.inputElement, dom.EventType.INPUT, () => {
+      this.setInputValue(this._inputValue);
+    }));
+  }
+  stopRecordingKeys() {
+    this._chords = null;
+    this.recordDisposables.clear();
+  }
+  setInputValue(value) {
+    this._inputValue = value;
+    this.inputBox.value = this._inputValue;
+  }
+  _onKeyDown(keyboardEvent) {
+    keyboardEvent.preventDefault();
+    keyboardEvent.stopPropagation();
+    const options = this.options;
+    if (!options.recordEnter && keyboardEvent.equals(
+      3
+      /* KeyCode.Enter */
+    )) {
+      this._onEnter.fire();
+      return;
+    }
+    if (keyboardEvent.equals(
+      9
+      /* KeyCode.Escape */
+    )) {
+      this._onEscape.fire();
+      return;
+    }
+    this.printKeybinding(keyboardEvent);
+  }
+  printKeybinding(keyboardEvent) {
+    const keybinding = this.keybindingService.resolveKeyboardEvent(keyboardEvent);
+    const info = `code: ${keyboardEvent.browserEvent.code}, keyCode: ${keyboardEvent.browserEvent.keyCode}, key: ${keyboardEvent.browserEvent.key} => UI: ${keybinding.getAriaLabel()}, user settings: ${keybinding.getUserSettingsLabel()}, dispatch: ${keybinding.getDispatchChords()[0]}`;
+    const options = this.options;
+    if (!this._chords) {
+      this._chords = [];
+    }
+    const hasIncompleteChord = this._chords.length > 0 && this._chords[this._chords.length - 1].getDispatchChords()[0] === null;
+    if (hasIncompleteChord) {
+      this._chords[this._chords.length - 1] = keybinding;
+    } else {
+      if (this._chords.length === 2) {
+        this._chords = [];
+      }
+      this._chords.push(keybinding);
+    }
+    const value = this._chords.map((keybinding2) => keybinding2.getUserSettingsLabel() || "").join(" ");
+    this.setInputValue(options.quoteRecordedKeys ? `"${value}"` : value);
+    this.inputBox.inputElement.title = info;
+    this._onKeybinding.fire(this._chords);
+  }
+};
+KeybindingsSearchWidget = __decorate([
+  __param(2, IContextViewService),
+  __param(3, IInstantiationService),
+  __param(4, IContextKeyService),
+  __param(5, IKeybindingService)
+], KeybindingsSearchWidget);
+let DefineKeybindingWidget = class DefineKeybindingWidget2 extends Widget {
+  static {
+    __name(this, "DefineKeybindingWidget");
+  }
+  static {
+    DefineKeybindingWidget_1 = this;
+  }
+  static {
+    this.WIDTH = 400;
+  }
+  static {
+    this.HEIGHT = 110;
+  }
+  constructor(parent, instantiationService) {
+    super();
+    this.instantiationService = instantiationService;
+    this._keybindingDisposables = this._register(new DisposableStore());
+    this._chords = null;
+    this._isVisible = false;
+    this._onHide = this._register(new Emitter());
+    this._onDidChange = this._register(new Emitter());
+    this.onDidChange = this._onDidChange.event;
+    this._onShowExistingKeybindings = this._register(new Emitter());
+    this.onShowExistingKeybidings = this._onShowExistingKeybindings.event;
+    this._domNode = createFastDomNode(document.createElement("div"));
+    this._domNode.setDisplay("none");
+    this._domNode.setClassName("defineKeybindingWidget");
+    this._domNode.setWidth(DefineKeybindingWidget_1.WIDTH);
+    this._domNode.setHeight(DefineKeybindingWidget_1.HEIGHT);
+    const message = nls.localize("defineKeybinding.initial", "Press desired key combination and then press ENTER.");
+    dom.append(this._domNode.domNode, dom.$(".message", void 0, message));
+    this._domNode.domNode.style.backgroundColor = asCssVariable(editorWidgetBackground);
+    this._domNode.domNode.style.color = asCssVariable(editorWidgetForeground);
+    this._domNode.domNode.style.boxShadow = `0 2px 8px ${asCssVariable(widgetShadow)}`;
+    this._keybindingInputWidget = this._register(this.instantiationService.createInstance(KeybindingsSearchWidget, this._domNode.domNode, { ariaLabel: message, history: /* @__PURE__ */ new Set([]), inputBoxStyles: defaultInputBoxStyles }));
+    this._keybindingInputWidget.startRecordingKeys();
+    this._register(this._keybindingInputWidget.onKeybinding((keybinding) => this.onKeybinding(keybinding)));
+    this._register(this._keybindingInputWidget.onEnter(() => this.hide()));
+    this._register(this._keybindingInputWidget.onEscape(() => this.clearOrHide()));
+    this._register(this._keybindingInputWidget.onBlur(() => this.onCancel()));
+    this._outputNode = dom.append(this._domNode.domNode, dom.$(".output"));
+    this._showExistingKeybindingsNode = dom.append(this._domNode.domNode, dom.$(".existing"));
+    if (parent) {
+      dom.append(parent, this._domNode.domNode);
+    }
+  }
+  get domNode() {
+    return this._domNode.domNode;
+  }
+  define() {
+    this._keybindingInputWidget.clear();
+    return Promises.withAsyncBody(async (c) => {
+      if (!this._isVisible) {
+        this._isVisible = true;
+        this._domNode.setDisplay("block");
+        this._chords = null;
+        this._keybindingInputWidget.setInputValue("");
+        dom.clearNode(this._outputNode);
+        dom.clearNode(this._showExistingKeybindingsNode);
+        await timeout(0);
+        this._keybindingInputWidget.focus();
+      }
+      const disposable = this._onHide.event(() => {
+        c(this.getUserSettingsLabel());
+        disposable.dispose();
+      });
+    });
+  }
+  layout(layout) {
+    const top = Math.round((layout.height - DefineKeybindingWidget_1.HEIGHT) / 2);
+    this._domNode.setTop(top);
+    const left = Math.round((layout.width - DefineKeybindingWidget_1.WIDTH) / 2);
+    this._domNode.setLeft(left);
+  }
+  printExisting(numberOfExisting) {
+    if (numberOfExisting > 0) {
+      const existingElement = dom.$("span.existingText");
+      const text = numberOfExisting === 1 ? nls.localize("defineKeybinding.oneExists", "1 existing command has this keybinding", numberOfExisting) : nls.localize("defineKeybinding.existing", "{0} existing commands have this keybinding", numberOfExisting);
+      dom.append(existingElement, document.createTextNode(text));
+      aria.alert(text);
+      this._showExistingKeybindingsNode.appendChild(existingElement);
+      existingElement.onmousedown = (e) => {
+        e.preventDefault();
+      };
+      existingElement.onmouseup = (e) => {
+        e.preventDefault();
+      };
+      existingElement.onclick = () => {
+        this._onShowExistingKeybindings.fire(this.getUserSettingsLabel());
+      };
+    }
+  }
+  onKeybinding(keybinding) {
+    this._keybindingDisposables.clear();
+    this._chords = keybinding;
+    dom.clearNode(this._outputNode);
+    dom.clearNode(this._showExistingKeybindingsNode);
+    const firstLabel = this._keybindingDisposables.add(new KeybindingLabel(this._outputNode, OS, defaultKeybindingLabelStyles));
+    firstLabel.set(this._chords?.[0] ?? void 0);
+    if (this._chords) {
+      for (let i = 1; i < this._chords.length; i++) {
+        this._outputNode.appendChild(document.createTextNode(nls.localize("defineKeybinding.chordsTo", "chord to")));
+        const chordLabel = this._keybindingDisposables.add(new KeybindingLabel(this._outputNode, OS, defaultKeybindingLabelStyles));
+        chordLabel.set(this._chords[i]);
+      }
+    }
+    const label = this.getUserSettingsLabel();
+    if (label) {
+      this._onDidChange.fire(label);
+    }
+  }
+  getUserSettingsLabel() {
+    let label = null;
+    if (this._chords) {
+      label = this._chords.map((keybinding) => keybinding.getUserSettingsLabel()).join(" ");
+    }
+    return label;
+  }
+  onCancel() {
+    this._chords = null;
+    this.hide();
+  }
+  clearOrHide() {
+    if (this._chords === null) {
+      this.hide();
+    } else {
+      this._chords = null;
+      this._keybindingInputWidget.clear();
+      dom.clearNode(this._outputNode);
+      dom.clearNode(this._showExistingKeybindingsNode);
+    }
+  }
+  hide() {
+    this._domNode.setDisplay("none");
+    this._isVisible = false;
+    this._onHide.fire();
+  }
+};
+DefineKeybindingWidget = DefineKeybindingWidget_1 = __decorate([
+  __param(1, IInstantiationService)
+], DefineKeybindingWidget);
+let DefineKeybindingOverlayWidget = class DefineKeybindingOverlayWidget2 extends Disposable {
+  static {
+    __name(this, "DefineKeybindingOverlayWidget");
+  }
+  static {
+    DefineKeybindingOverlayWidget_1 = this;
+  }
+  static {
+    this.ID = "editor.contrib.defineKeybindingWidget";
+  }
+  constructor(_editor, instantiationService) {
+    super();
+    this._editor = _editor;
+    this._widget = this._register(instantiationService.createInstance(DefineKeybindingWidget, null));
+    this._editor.addOverlayWidget(this);
+  }
+  getId() {
+    return DefineKeybindingOverlayWidget_1.ID;
+  }
+  getDomNode() {
+    return this._widget.domNode;
+  }
+  getPosition() {
+    return {
+      preference: null
+    };
+  }
+  dispose() {
+    this._editor.removeOverlayWidget(this);
+    super.dispose();
+  }
+  start() {
+    if (this._editor.hasModel()) {
+      this._editor.revealPositionInCenterIfOutsideViewport(
+        this._editor.getPosition(),
+        0
+        /* ScrollType.Smooth */
+      );
+    }
+    const layoutInfo = this._editor.getLayoutInfo();
+    this._widget.layout(new dom.Dimension(layoutInfo.width, layoutInfo.height));
+    return this._widget.define();
+  }
+};
+DefineKeybindingOverlayWidget = DefineKeybindingOverlayWidget_1 = __decorate([
+  __param(1, IInstantiationService)
+], DefineKeybindingOverlayWidget);
+export {
+  DefineKeybindingOverlayWidget,
+  DefineKeybindingWidget,
+  KeybindingsSearchWidget
+};
+//# sourceMappingURL=keybindingWidgets.js.map

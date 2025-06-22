@@ -1,1 +1,592 @@
-import*as e from"../../../../nls.js";import*as i from"../../../../base/common/objects.js";import U from"./jsonSchemaCommon.js";import{$fU as M}from"./problemMatcher.js";import{$gU as q}from"./taskDefinitionRegistry.js";import*as K from"../../../services/configurationResolver/common/configurationResolverUtils.js";import{$lW as L}from"../../../services/configurationResolver/common/configurationResolverSchema.js";import{$Kj as k}from"../../../../base/common/codicons.js";function u(n){Array.isArray(n)?n.forEach(u):typeof n=="object"&&(n.$ref&&(n.$ref=n.$ref+"2"),Object.getOwnPropertyNames(n).forEach(l=>{const s=n[l];(Array.isArray(s)||typeof s=="object")&&u(s)}))}const z={anyOf:[{type:"boolean",default:!0,description:e.localize(11283,null)},{$ref:"#/definitions/shellConfiguration"}],deprecationMessage:e.localize(11284,null)},w={type:"boolean",description:e.localize(11285,null),default:!0},O={type:"object",additionalProperties:!0,properties:{type:{type:"string",description:e.localize(11286,null)}}},T={anyOf:[{type:"string",description:e.localize(11287,null)},O,{type:"array",description:e.localize(11288,null),items:{anyOf:[{type:"string"},O]}}],description:e.localize(11289,null)},j={type:"string",enum:["parallel","sequence"],enumDescriptions:[e.localize(11290,null),e.localize(11291,null)],default:"parallel",description:e.localize(11292,null)},v={type:"string",description:e.localize(11293,null)},D={type:"object",description:e.localize(11294,null),properties:{id:{description:e.localize(11295,null),type:["string","null"],enum:Array.from(k(),n=>n.id),markdownEnumDescriptions:Array.from(k(),n=>`$(${n.id})`)},color:{description:e.localize(11296,null),type:["string","null"],enum:["terminal.ansiBlack","terminal.ansiRed","terminal.ansiGreen","terminal.ansiYellow","terminal.ansiBlue","terminal.ansiMagenta","terminal.ansiCyan","terminal.ansiWhite"]}}},d={type:"object",default:{echo:!0,reveal:"always",focus:!1,panel:"shared",showReuseMessage:!0,clear:!1},description:e.localize(11297,null),additionalProperties:!1,properties:{echo:{type:"boolean",default:!0,description:e.localize(11298,null)},focus:{type:"boolean",default:!1,description:e.localize(11299,null)},revealProblems:{type:"string",enum:["always","onProblem","never"],enumDescriptions:[e.localize(11300,null),e.localize(11301,null),e.localize(11302,null)],default:"never",description:e.localize(11303,null)},reveal:{type:"string",enum:["always","silent","never"],enumDescriptions:[e.localize(11304,null),e.localize(11305,null),e.localize(11306,null)],default:"always",description:e.localize(11307,null)},panel:{type:"string",enum:["shared","dedicated","new"],default:"shared",description:e.localize(11308,null)},showReuseMessage:{type:"boolean",default:!0,description:e.localize(11309,null)},clear:{type:"boolean",default:!1,description:e.localize(11310,null)},group:{type:"string",description:e.localize(11311,null)},close:{type:"boolean",description:e.localize(11312,null)}}},R=i.$2o(d);R.deprecationMessage=e.localize(11313,null);const C={type:"string",enum:["build","test","none"],enumDescriptions:[e.localize(11314,null),e.localize(11315,null),e.localize(11316,null)],description:e.localize(11317,null)},g={oneOf:[C,{type:"object",properties:{kind:C,isDefault:{type:["boolean","string"],default:!1,description:e.localize(11318,null)}}}],defaultSnippets:[{body:{kind:"build",isDefault:!0},description:e.localize(11319,null)},{body:{kind:"test",isDefault:!0},description:e.localize(11320,null)}],description:e.localize(11321,null)},P={type:"string",enum:["shell"],default:"process",description:e.localize(11322,null)},W={oneOf:[{oneOf:[{type:"string"},{type:"array",items:{type:"string"},description:e.localize(11323,null)}]},{type:"object",required:["value","quoting"],properties:{value:{oneOf:[{type:"string"},{type:"array",items:{type:"string"},description:e.localize(11324,null)}],description:e.localize(11325,null)},quoting:{type:"string",enum:["escape","strong","weak"],enumDescriptions:[e.localize(11326,null),e.localize(11327,null),e.localize(11328,null)],default:"strong",description:e.localize(11329,null)}}}],description:e.localize(11330,null)},S={type:"array",items:{oneOf:[{type:"string"},{type:"object",required:["value","quoting"],properties:{value:{type:"string",description:e.localize(11331,null)},quoting:{type:"string",enum:["escape","strong","weak"],enumDescriptions:[e.localize(11332,null),e.localize(11333,null),e.localize(11334,null)],default:"strong",description:e.localize(11335,null)}}}]},description:e.localize(11336,null)},G={type:"string",description:e.localize(11337,null)},A={type:"string",enum:["2.0.0"],description:e.localize(11338,null)},N={type:"string",description:e.localize(11339,null),deprecationMessage:e.localize(11340,null)},x={type:"object",additionalProperties:!1,properties:{reevaluateOnRerun:{type:"boolean",description:e.localize(11341,null),default:!0},runOn:{type:"string",enum:["default","folderOpen"],description:e.localize(11342,null),default:"default"},instanceLimit:{type:"number",description:e.localize(11343,null),default:1},instancePolicy:{type:"string",enum:["terminateNewest","terminateOldest","prompt","warn","silent"],enumDescriptions:[e.localize(11344,null),e.localize(11345,null),e.localize(11346,null),e.localize(11347,null),e.localize(11348,null)],description:e.localize(11349,null),default:"prompt"}},description:e.localize(11350,null)},$=U.definitions,E=i.$2o($.options),H=E.properties;H.shell=i.$2o($.shellConfiguration);const B={type:"object",additionalProperties:!1,properties:{label:{type:"string",description:e.localize(11351,null)},taskName:{type:"string",description:e.localize(11352,null),deprecationMessage:e.localize(11353,null)},identifier:i.$2o(N),group:i.$2o(g),isBackground:{type:"boolean",description:e.localize(11354,null),default:!0},promptOnClose:{type:"boolean",description:e.localize(11355,null),default:!1},presentation:i.$2o(d),icon:i.$2o(D),hide:i.$2o(w),options:E,problemMatcher:{$ref:"#/definitions/problemMatcherType",description:e.localize(11356,null)},runOptions:i.$2o(x),dependsOn:i.$2o(T),dependsOrder:i.$2o(j),detail:i.$2o(v)}},c=[];q.onReady().then(()=>{V()});function V(){for(const n of q.all()){if(c.find(a=>a.properties?.type?.enum?.find?a.properties?.type.enum.find(y=>y===n.taskType):void 0))continue;const l=i.$2o(B),s=l.properties;if(s.type={type:"string",description:e.localize(11357,null),enum:[n.taskType]},n.required?l.required=n.required.slice():l.required=[],l.required.push("type"),n.properties)for(const a of Object.keys(n.properties)){const y=n.properties[a];s[a]=i.$2o(y)}u(l),c.push(l)}}const p=i.$2o(B);p.properties.customize={type:"string",deprecationMessage:e.localize(11358,null)};p.required||(p.required=[]);p.required.push("customize");c.push(p);const t=i.$2o($),f=t.taskDescription;f.required=["label"];const o=f.properties;o.label=i.$2o(G);o.command=i.$2o(W);o.args=i.$2o(S);o.isShellCommand=i.$2o(z);o.dependsOn=T;o.hide=i.$2o(w);o.dependsOrder=j;o.identifier=i.$2o(N);o.type=i.$2o(P);o.presentation=i.$2o(d);o.terminal=R;o.icon=i.$2o(D);o.group=i.$2o(g);o.runOptions=i.$2o(x);o.detail=v;o.taskName.deprecationMessage=e.localize(11359,null);const m=i.$2o(f);f.default={label:"My Task",type:"shell",command:"echo Hello",problemMatcher:[]};t.showOutputType.deprecationMessage=e.localize(11360,null);o.echoCommand.deprecationMessage=e.localize(11361,null);o.suppressTaskName.deprecationMessage=e.localize(11362,null);o.isBuildCommand.deprecationMessage=e.localize(11363,null);o.isTestCommand.deprecationMessage=e.localize(11364,null);m.properties.type={type:"string",enum:["process"],default:"process",description:e.localize(11365,null)};m.required.push("command");m.required.push("type");c.push(m);c.push({$ref:"#/definitions/taskDescription"});const r=t.taskRunnerConfiguration.properties,Y=r.tasks;Y.items={oneOf:c};r.inputs=L.definitions.inputs;t.commandConfiguration.properties.isShellCommand=i.$2o(z);t.commandConfiguration.properties.args=i.$2o(S);t.options.properties.shell={$ref:"#/definitions/shellConfiguration"};r.isShellCommand=i.$2o(z);r.type=i.$2o(P);r.group=i.$2o(g);r.presentation=i.$2o(d);r.suppressTaskName.deprecationMessage=e.localize(11366,null);r.taskSelector.deprecationMessage=e.localize(11367,null);const h=i.$2o(t.taskRunnerConfiguration);delete h.properties.tasks;h.additionalProperties=!1;t.osSpecificTaskRunnerConfiguration=h;r.version=i.$2o(A);const b={oneOf:[{allOf:[{type:"object",required:["version"],properties:{version:i.$2o(A),windows:{$ref:"#/definitions/osSpecificTaskRunnerConfiguration",description:e.localize(11368,null)},osx:{$ref:"#/definitions/osSpecificTaskRunnerConfiguration",description:e.localize(11369,null)},linux:{$ref:"#/definitions/osSpecificTaskRunnerConfiguration",description:e.localize(11370,null)}}},{$ref:"#/definitions/taskRunnerConfiguration"}]}]};b.definitions=t;function I(n,l){const s=n[l].properties;s?Object.keys(s).forEach(a=>{I(s,a)}):K.$Loc(n[l])}Object.getOwnPropertyNames(t).forEach(n=>{const l=n+"2";t[l]=t[n],delete t[n],I(t,l)});u(b);function F(){try{const n=M.keys().map(l=>"$"+l);t.problemMatcherType2.oneOf[0].enum=n,t.problemMatcherType2.oneOf[2].items.anyOf[0].enum=n}catch{}}M.onReady().then(()=>{F()});var ee=b;export{F as $0tc,V as $9tc,ee as default};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import * as nls from "../../../../nls.js";
+import * as Objects from "../../../../base/common/objects.js";
+import commonSchema from "./jsonSchemaCommon.js";
+import { ProblemMatcherRegistry } from "./problemMatcher.js";
+import { TaskDefinitionRegistry } from "./taskDefinitionRegistry.js";
+import * as ConfigurationResolverUtils from "../../../services/configurationResolver/common/configurationResolverUtils.js";
+import { inputsSchema } from "../../../services/configurationResolver/common/configurationResolverSchema.js";
+import { getAllCodicons } from "../../../../base/common/codicons.js";
+function fixReferences(literal) {
+  if (Array.isArray(literal)) {
+    literal.forEach(fixReferences);
+  } else if (typeof literal === "object") {
+    if (literal["$ref"]) {
+      literal["$ref"] = literal["$ref"] + "2";
+    }
+    Object.getOwnPropertyNames(literal).forEach((property) => {
+      const value = literal[property];
+      if (Array.isArray(value) || typeof value === "object") {
+        fixReferences(value);
+      }
+    });
+  }
+}
+__name(fixReferences, "fixReferences");
+const shellCommand = {
+  anyOf: [
+    {
+      type: "boolean",
+      default: true,
+      description: nls.localize("JsonSchema.shell", "Specifies whether the command is a shell command or an external program. Defaults to false if omitted.")
+    },
+    {
+      $ref: "#/definitions/shellConfiguration"
+    }
+  ],
+  deprecationMessage: nls.localize("JsonSchema.tasks.isShellCommand.deprecated", "The property isShellCommand is deprecated. Use the type property of the task and the shell property in the options instead. See also the 1.14 release notes.")
+};
+const hide = {
+  type: "boolean",
+  description: nls.localize("JsonSchema.hide", "Hide this task from the run task quick pick"),
+  default: true
+};
+const taskIdentifier = {
+  type: "object",
+  additionalProperties: true,
+  properties: {
+    type: {
+      type: "string",
+      description: nls.localize("JsonSchema.tasks.dependsOn.identifier", "The task identifier.")
+    }
+  }
+};
+const dependsOn = {
+  anyOf: [
+    {
+      type: "string",
+      description: nls.localize("JsonSchema.tasks.dependsOn.string", "Another task this task depends on.")
+    },
+    taskIdentifier,
+    {
+      type: "array",
+      description: nls.localize("JsonSchema.tasks.dependsOn.array", "The other tasks this task depends on."),
+      items: {
+        anyOf: [
+          {
+            type: "string"
+          },
+          taskIdentifier
+        ]
+      }
+    }
+  ],
+  description: nls.localize("JsonSchema.tasks.dependsOn", "Either a string representing another task or an array of other tasks that this task depends on.")
+};
+const dependsOrder = {
+  type: "string",
+  enum: ["parallel", "sequence"],
+  enumDescriptions: [
+    nls.localize("JsonSchema.tasks.dependsOrder.parallel", "Run all dependsOn tasks in parallel."),
+    nls.localize("JsonSchema.tasks.dependsOrder.sequence", "Run all dependsOn tasks in sequence.")
+  ],
+  default: "parallel",
+  description: nls.localize("JsonSchema.tasks.dependsOrder", "Determines the order of the dependsOn tasks for this task. Note that this property is not recursive.")
+};
+const detail = {
+  type: "string",
+  description: nls.localize("JsonSchema.tasks.detail", "An optional description of a task that shows in the Run Task quick pick as a detail.")
+};
+const icon = {
+  type: "object",
+  description: nls.localize("JsonSchema.tasks.icon", "An optional icon for the task"),
+  properties: {
+    id: {
+      description: nls.localize("JsonSchema.tasks.icon.id", "An optional codicon ID to use"),
+      type: ["string", "null"],
+      enum: Array.from(getAllCodicons(), (icon2) => icon2.id),
+      markdownEnumDescriptions: Array.from(getAllCodicons(), (icon2) => `$(${icon2.id})`)
+    },
+    color: {
+      description: nls.localize("JsonSchema.tasks.icon.color", "An optional color of the icon"),
+      type: ["string", "null"],
+      enum: [
+        "terminal.ansiBlack",
+        "terminal.ansiRed",
+        "terminal.ansiGreen",
+        "terminal.ansiYellow",
+        "terminal.ansiBlue",
+        "terminal.ansiMagenta",
+        "terminal.ansiCyan",
+        "terminal.ansiWhite"
+      ]
+    }
+  }
+};
+const presentation = {
+  type: "object",
+  default: {
+    echo: true,
+    reveal: "always",
+    focus: false,
+    panel: "shared",
+    showReuseMessage: true,
+    clear: false
+  },
+  description: nls.localize("JsonSchema.tasks.presentation", "Configures the panel that is used to present the task's output and reads its input."),
+  additionalProperties: false,
+  properties: {
+    echo: {
+      type: "boolean",
+      default: true,
+      description: nls.localize("JsonSchema.tasks.presentation.echo", "Controls whether the executed command is echoed to the panel. Default is true.")
+    },
+    focus: {
+      type: "boolean",
+      default: false,
+      description: nls.localize("JsonSchema.tasks.presentation.focus", "Controls whether the panel takes focus. Default is false. If set to true the panel is revealed as well.")
+    },
+    revealProblems: {
+      type: "string",
+      enum: ["always", "onProblem", "never"],
+      enumDescriptions: [
+        nls.localize("JsonSchema.tasks.presentation.revealProblems.always", "Always reveals the problems panel when this task is executed."),
+        nls.localize("JsonSchema.tasks.presentation.revealProblems.onProblem", "Only reveals the problems panel if a problem is found."),
+        nls.localize("JsonSchema.tasks.presentation.revealProblems.never", "Never reveals the problems panel when this task is executed.")
+      ],
+      default: "never",
+      description: nls.localize("JsonSchema.tasks.presentation.revealProblems", 'Controls whether the problems panel is revealed when running this task or not. Takes precedence over option "reveal". Default is "never".')
+    },
+    reveal: {
+      type: "string",
+      enum: ["always", "silent", "never"],
+      enumDescriptions: [
+        nls.localize("JsonSchema.tasks.presentation.reveal.always", "Always reveals the terminal when this task is executed."),
+        nls.localize("JsonSchema.tasks.presentation.reveal.silent", "Only reveals the terminal if the task exits with an error or the problem matcher finds an error."),
+        nls.localize("JsonSchema.tasks.presentation.reveal.never", "Never reveals the terminal when this task is executed.")
+      ],
+      default: "always",
+      description: nls.localize("JsonSchema.tasks.presentation.reveal", 'Controls whether the terminal running the task is revealed or not. May be overridden by option "revealProblems". Default is "always".')
+    },
+    panel: {
+      type: "string",
+      enum: ["shared", "dedicated", "new"],
+      default: "shared",
+      description: nls.localize("JsonSchema.tasks.presentation.instance", "Controls if the panel is shared between tasks, dedicated to this task or a new one is created on every run.")
+    },
+    showReuseMessage: {
+      type: "boolean",
+      default: true,
+      description: nls.localize("JsonSchema.tasks.presentation.showReuseMessage", "Controls whether to show the `Terminal will be reused by tasks, press any key to close it` message.")
+    },
+    clear: {
+      type: "boolean",
+      default: false,
+      description: nls.localize("JsonSchema.tasks.presentation.clear", "Controls whether the terminal is cleared before executing the task.")
+    },
+    group: {
+      type: "string",
+      description: nls.localize("JsonSchema.tasks.presentation.group", "Controls whether the task is executed in a specific terminal group using split panes.")
+    },
+    close: {
+      type: "boolean",
+      description: nls.localize("JsonSchema.tasks.presentation.close", "Controls whether the terminal the task runs in is closed when the task exits.")
+    }
+  }
+};
+const terminal = Objects.deepClone(presentation);
+terminal.deprecationMessage = nls.localize("JsonSchema.tasks.terminal", "The terminal property is deprecated. Use presentation instead");
+const groupStrings = {
+  type: "string",
+  enum: [
+    "build",
+    "test",
+    "none"
+  ],
+  enumDescriptions: [
+    nls.localize("JsonSchema.tasks.group.build", "Marks the task as a build task accessible through the 'Run Build Task' command."),
+    nls.localize("JsonSchema.tasks.group.test", "Marks the task as a test task accessible through the 'Run Test Task' command."),
+    nls.localize("JsonSchema.tasks.group.none", "Assigns the task to no group")
+  ],
+  description: nls.localize("JsonSchema.tasks.group.kind", "The task's execution group.")
+};
+const group = {
+  oneOf: [
+    groupStrings,
+    {
+      type: "object",
+      properties: {
+        kind: groupStrings,
+        isDefault: {
+          type: ["boolean", "string"],
+          default: false,
+          description: nls.localize("JsonSchema.tasks.group.isDefault", "Defines if this task is the default task in the group, or a glob to match the file which should trigger this task.")
+        }
+      }
+    }
+  ],
+  defaultSnippets: [
+    {
+      body: { kind: "build", isDefault: true },
+      description: nls.localize("JsonSchema.tasks.group.defaultBuild", "Marks the task as the default build task.")
+    },
+    {
+      body: { kind: "test", isDefault: true },
+      description: nls.localize("JsonSchema.tasks.group.defaultTest", "Marks the task as the default test task.")
+    }
+  ],
+  description: nls.localize("JsonSchema.tasks.group", 'Defines to which execution group this task belongs to. It supports "build" to add it to the build group and "test" to add it to the test group.')
+};
+const taskType = {
+  type: "string",
+  enum: ["shell"],
+  default: "process",
+  description: nls.localize("JsonSchema.tasks.type", "Defines whether the task is run as a process or as a command inside a shell.")
+};
+const command = {
+  oneOf: [
+    {
+      oneOf: [
+        {
+          type: "string"
+        },
+        {
+          type: "array",
+          items: {
+            type: "string"
+          },
+          description: nls.localize("JsonSchema.commandArray", "The shell command to be executed. Array items will be joined using a space character")
+        }
+      ]
+    },
+    {
+      type: "object",
+      required: ["value", "quoting"],
+      properties: {
+        value: {
+          oneOf: [
+            {
+              type: "string"
+            },
+            {
+              type: "array",
+              items: {
+                type: "string"
+              },
+              description: nls.localize("JsonSchema.commandArray", "The shell command to be executed. Array items will be joined using a space character")
+            }
+          ],
+          description: nls.localize("JsonSchema.command.quotedString.value", "The actual command value")
+        },
+        quoting: {
+          type: "string",
+          enum: ["escape", "strong", "weak"],
+          enumDescriptions: [
+            nls.localize("JsonSchema.tasks.quoting.escape", "Escapes characters using the shell's escape character (e.g. ` under PowerShell and \\ under bash)."),
+            nls.localize("JsonSchema.tasks.quoting.strong", "Quotes the argument using the shell's strong quote character (e.g. ' under PowerShell and bash)."),
+            nls.localize("JsonSchema.tasks.quoting.weak", `Quotes the argument using the shell's weak quote character (e.g. " under PowerShell and bash).`)
+          ],
+          default: "strong",
+          description: nls.localize("JsonSchema.command.quotesString.quote", "How the command value should be quoted.")
+        }
+      }
+    }
+  ],
+  description: nls.localize("JsonSchema.command", "The command to be executed. Can be an external program or a shell command.")
+};
+const args = {
+  type: "array",
+  items: {
+    oneOf: [
+      {
+        type: "string"
+      },
+      {
+        type: "object",
+        required: ["value", "quoting"],
+        properties: {
+          value: {
+            type: "string",
+            description: nls.localize("JsonSchema.args.quotedString.value", "The actual argument value")
+          },
+          quoting: {
+            type: "string",
+            enum: ["escape", "strong", "weak"],
+            enumDescriptions: [
+              nls.localize("JsonSchema.tasks.quoting.escape", "Escapes characters using the shell's escape character (e.g. ` under PowerShell and \\ under bash)."),
+              nls.localize("JsonSchema.tasks.quoting.strong", "Quotes the argument using the shell's strong quote character (e.g. ' under PowerShell and bash)."),
+              nls.localize("JsonSchema.tasks.quoting.weak", `Quotes the argument using the shell's weak quote character (e.g. " under PowerShell and bash).`)
+            ],
+            default: "strong",
+            description: nls.localize("JsonSchema.args.quotesString.quote", "How the argument value should be quoted.")
+          }
+        }
+      }
+    ]
+  },
+  description: nls.localize("JsonSchema.tasks.args", "Arguments passed to the command when this task is invoked.")
+};
+const label = {
+  type: "string",
+  description: nls.localize("JsonSchema.tasks.label", "The task's user interface label")
+};
+const version = {
+  type: "string",
+  enum: ["2.0.0"],
+  description: nls.localize("JsonSchema.version", "The config's version number.")
+};
+const identifier = {
+  type: "string",
+  description: nls.localize("JsonSchema.tasks.identifier", "A user defined identifier to reference the task in launch.json or a dependsOn clause."),
+  deprecationMessage: nls.localize("JsonSchema.tasks.identifier.deprecated", "User defined identifiers are deprecated. For custom task use the name as a reference and for tasks provided by extensions use their defined task identifier.")
+};
+const runOptions = {
+  type: "object",
+  additionalProperties: false,
+  properties: {
+    reevaluateOnRerun: {
+      type: "boolean",
+      description: nls.localize("JsonSchema.tasks.reevaluateOnRerun", "Whether to reevaluate task variables on rerun."),
+      default: true
+    },
+    runOn: {
+      type: "string",
+      enum: ["default", "folderOpen"],
+      description: nls.localize("JsonSchema.tasks.runOn", "Configures when the task should be run. If set to folderOpen, then the task will be run automatically when the folder is opened."),
+      default: "default"
+    },
+    instanceLimit: {
+      type: "number",
+      description: nls.localize("JsonSchema.tasks.instanceLimit", "The number of instances of the task that are allowed to run simultaneously."),
+      default: 1
+    },
+    instancePolicy: {
+      type: "string",
+      enum: ["terminateNewest", "terminateOldest", "prompt", "warn", "silent"],
+      enumDescriptions: [
+        nls.localize("JsonSchema.tasks.instancePolicy.terminateNewest", "Terminates the newest instance."),
+        nls.localize("JsonSchema.tasks.instancePolicy.terminateOldest", "Terminates the oldest instance."),
+        nls.localize("JsonSchema.tasks.instancePolicy.prompt", "Asks which instance to terminate."),
+        nls.localize("JsonSchema.tasks.instancePolicy.warn", "Does nothing but warns that the instance limit has been reached."),
+        nls.localize("JsonSchema.tasks.instancePolicy.silent", "Does nothing.")
+      ],
+      description: nls.localize("JsonSchema.tasks.instancePolicy", "Policy to apply when instance limit is reached."),
+      default: "prompt"
+    }
+  },
+  description: nls.localize("JsonSchema.tasks.runOptions", "The task's run related options")
+};
+const commonSchemaDefinitions = commonSchema.definitions;
+const options = Objects.deepClone(commonSchemaDefinitions.options);
+const optionsProperties = options.properties;
+optionsProperties.shell = Objects.deepClone(commonSchemaDefinitions.shellConfiguration);
+const taskConfiguration = {
+  type: "object",
+  additionalProperties: false,
+  properties: {
+    label: {
+      type: "string",
+      description: nls.localize("JsonSchema.tasks.taskLabel", "The task's label")
+    },
+    taskName: {
+      type: "string",
+      description: nls.localize("JsonSchema.tasks.taskName", "The task's name"),
+      deprecationMessage: nls.localize("JsonSchema.tasks.taskName.deprecated", "The task's name property is deprecated. Use the label property instead.")
+    },
+    identifier: Objects.deepClone(identifier),
+    group: Objects.deepClone(group),
+    isBackground: {
+      type: "boolean",
+      description: nls.localize("JsonSchema.tasks.background", "Whether the executed task is kept alive and is running in the background."),
+      default: true
+    },
+    promptOnClose: {
+      type: "boolean",
+      description: nls.localize("JsonSchema.tasks.promptOnClose", "Whether the user is prompted when VS Code closes with a running task."),
+      default: false
+    },
+    presentation: Objects.deepClone(presentation),
+    icon: Objects.deepClone(icon),
+    hide: Objects.deepClone(hide),
+    options,
+    problemMatcher: {
+      $ref: "#/definitions/problemMatcherType",
+      description: nls.localize("JsonSchema.tasks.matchers", "The problem matcher(s) to use. Can either be a string or a problem matcher definition or an array of strings and problem matchers.")
+    },
+    runOptions: Objects.deepClone(runOptions),
+    dependsOn: Objects.deepClone(dependsOn),
+    dependsOrder: Objects.deepClone(dependsOrder),
+    detail: Objects.deepClone(detail)
+  }
+};
+const taskDefinitions = [];
+TaskDefinitionRegistry.onReady().then(() => {
+  updateTaskDefinitions();
+});
+function updateTaskDefinitions() {
+  for (const taskType2 of TaskDefinitionRegistry.all()) {
+    if (taskDefinitions.find((schema3) => {
+      return schema3.properties?.type?.enum?.find ? schema3.properties?.type.enum.find((element) => element === taskType2.taskType) : void 0;
+    })) {
+      continue;
+    }
+    const schema2 = Objects.deepClone(taskConfiguration);
+    const schemaProperties = schema2.properties;
+    schemaProperties.type = {
+      type: "string",
+      description: nls.localize("JsonSchema.customizations.customizes.type", "The task type to customize"),
+      enum: [taskType2.taskType]
+    };
+    if (taskType2.required) {
+      schema2.required = taskType2.required.slice();
+    } else {
+      schema2.required = [];
+    }
+    schema2.required.push("type");
+    if (taskType2.properties) {
+      for (const key of Object.keys(taskType2.properties)) {
+        const property = taskType2.properties[key];
+        schemaProperties[key] = Objects.deepClone(property);
+      }
+    }
+    fixReferences(schema2);
+    taskDefinitions.push(schema2);
+  }
+}
+__name(updateTaskDefinitions, "updateTaskDefinitions");
+const customize = Objects.deepClone(taskConfiguration);
+customize.properties.customize = {
+  type: "string",
+  deprecationMessage: nls.localize("JsonSchema.tasks.customize.deprecated", "The customize property is deprecated. See the 1.14 release notes on how to migrate to the new task customization approach")
+};
+if (!customize.required) {
+  customize.required = [];
+}
+customize.required.push("customize");
+taskDefinitions.push(customize);
+const definitions = Objects.deepClone(commonSchemaDefinitions);
+const taskDescription = definitions.taskDescription;
+taskDescription.required = ["label"];
+const taskDescriptionProperties = taskDescription.properties;
+taskDescriptionProperties.label = Objects.deepClone(label);
+taskDescriptionProperties.command = Objects.deepClone(command);
+taskDescriptionProperties.args = Objects.deepClone(args);
+taskDescriptionProperties.isShellCommand = Objects.deepClone(shellCommand);
+taskDescriptionProperties.dependsOn = dependsOn;
+taskDescriptionProperties.hide = Objects.deepClone(hide);
+taskDescriptionProperties.dependsOrder = dependsOrder;
+taskDescriptionProperties.identifier = Objects.deepClone(identifier);
+taskDescriptionProperties.type = Objects.deepClone(taskType);
+taskDescriptionProperties.presentation = Objects.deepClone(presentation);
+taskDescriptionProperties.terminal = terminal;
+taskDescriptionProperties.icon = Objects.deepClone(icon);
+taskDescriptionProperties.group = Objects.deepClone(group);
+taskDescriptionProperties.runOptions = Objects.deepClone(runOptions);
+taskDescriptionProperties.detail = detail;
+taskDescriptionProperties.taskName.deprecationMessage = nls.localize("JsonSchema.tasks.taskName.deprecated", "The task's name property is deprecated. Use the label property instead.");
+const processTask = Objects.deepClone(taskDescription);
+taskDescription.default = {
+  label: "My Task",
+  type: "shell",
+  command: "echo Hello",
+  problemMatcher: []
+};
+definitions.showOutputType.deprecationMessage = nls.localize("JsonSchema.tasks.showOutput.deprecated", "The property showOutput is deprecated. Use the reveal property inside the presentation property instead. See also the 1.14 release notes.");
+taskDescriptionProperties.echoCommand.deprecationMessage = nls.localize("JsonSchema.tasks.echoCommand.deprecated", "The property echoCommand is deprecated. Use the echo property inside the presentation property instead. See also the 1.14 release notes.");
+taskDescriptionProperties.suppressTaskName.deprecationMessage = nls.localize("JsonSchema.tasks.suppressTaskName.deprecated", "The property suppressTaskName is deprecated. Inline the command with its arguments into the task instead. See also the 1.14 release notes.");
+taskDescriptionProperties.isBuildCommand.deprecationMessage = nls.localize("JsonSchema.tasks.isBuildCommand.deprecated", "The property isBuildCommand is deprecated. Use the group property instead. See also the 1.14 release notes.");
+taskDescriptionProperties.isTestCommand.deprecationMessage = nls.localize("JsonSchema.tasks.isTestCommand.deprecated", "The property isTestCommand is deprecated. Use the group property instead. See also the 1.14 release notes.");
+processTask.properties.type = {
+  type: "string",
+  enum: ["process"],
+  default: "process",
+  description: nls.localize("JsonSchema.tasks.type", "Defines whether the task is run as a process or as a command inside a shell.")
+};
+processTask.required.push("command");
+processTask.required.push("type");
+taskDefinitions.push(processTask);
+taskDefinitions.push({
+  $ref: "#/definitions/taskDescription"
+});
+const definitionsTaskRunnerConfigurationProperties = definitions.taskRunnerConfiguration.properties;
+const tasks = definitionsTaskRunnerConfigurationProperties.tasks;
+tasks.items = {
+  oneOf: taskDefinitions
+};
+definitionsTaskRunnerConfigurationProperties.inputs = inputsSchema.definitions.inputs;
+definitions.commandConfiguration.properties.isShellCommand = Objects.deepClone(shellCommand);
+definitions.commandConfiguration.properties.args = Objects.deepClone(args);
+definitions.options.properties.shell = {
+  $ref: "#/definitions/shellConfiguration"
+};
+definitionsTaskRunnerConfigurationProperties.isShellCommand = Objects.deepClone(shellCommand);
+definitionsTaskRunnerConfigurationProperties.type = Objects.deepClone(taskType);
+definitionsTaskRunnerConfigurationProperties.group = Objects.deepClone(group);
+definitionsTaskRunnerConfigurationProperties.presentation = Objects.deepClone(presentation);
+definitionsTaskRunnerConfigurationProperties.suppressTaskName.deprecationMessage = nls.localize("JsonSchema.tasks.suppressTaskName.deprecated", "The property suppressTaskName is deprecated. Inline the command with its arguments into the task instead. See also the 1.14 release notes.");
+definitionsTaskRunnerConfigurationProperties.taskSelector.deprecationMessage = nls.localize("JsonSchema.tasks.taskSelector.deprecated", "The property taskSelector is deprecated. Inline the command with its arguments into the task instead. See also the 1.14 release notes.");
+const osSpecificTaskRunnerConfiguration = Objects.deepClone(definitions.taskRunnerConfiguration);
+delete osSpecificTaskRunnerConfiguration.properties.tasks;
+osSpecificTaskRunnerConfiguration.additionalProperties = false;
+definitions.osSpecificTaskRunnerConfiguration = osSpecificTaskRunnerConfiguration;
+definitionsTaskRunnerConfigurationProperties.version = Objects.deepClone(version);
+const schema = {
+  oneOf: [
+    {
+      "allOf": [
+        {
+          type: "object",
+          required: ["version"],
+          properties: {
+            version: Objects.deepClone(version),
+            windows: {
+              "$ref": "#/definitions/osSpecificTaskRunnerConfiguration",
+              "description": nls.localize("JsonSchema.windows", "Windows specific command configuration")
+            },
+            osx: {
+              "$ref": "#/definitions/osSpecificTaskRunnerConfiguration",
+              "description": nls.localize("JsonSchema.mac", "Mac specific command configuration")
+            },
+            linux: {
+              "$ref": "#/definitions/osSpecificTaskRunnerConfiguration",
+              "description": nls.localize("JsonSchema.linux", "Linux specific command configuration")
+            }
+          }
+        },
+        {
+          $ref: "#/definitions/taskRunnerConfiguration"
+        }
+      ]
+    }
+  ]
+};
+schema.definitions = definitions;
+function deprecatedVariableMessage(schemaMap, property) {
+  const mapAtProperty = schemaMap[property].properties;
+  if (mapAtProperty) {
+    Object.keys(mapAtProperty).forEach((name) => {
+      deprecatedVariableMessage(mapAtProperty, name);
+    });
+  } else {
+    ConfigurationResolverUtils.applyDeprecatedVariableMessage(schemaMap[property]);
+  }
+}
+__name(deprecatedVariableMessage, "deprecatedVariableMessage");
+Object.getOwnPropertyNames(definitions).forEach((key) => {
+  const newKey = key + "2";
+  definitions[newKey] = definitions[key];
+  delete definitions[key];
+  deprecatedVariableMessage(definitions, newKey);
+});
+fixReferences(schema);
+function updateProblemMatchers() {
+  try {
+    const matcherIds = ProblemMatcherRegistry.keys().map((key) => "$" + key);
+    definitions.problemMatcherType2.oneOf[0].enum = matcherIds;
+    definitions.problemMatcherType2.oneOf[2].items.anyOf[0].enum = matcherIds;
+  } catch (err) {
+    console.log("Installing problem matcher ids failed");
+  }
+}
+__name(updateProblemMatchers, "updateProblemMatchers");
+ProblemMatcherRegistry.onReady().then(() => {
+  updateProblemMatchers();
+});
+var jsonSchema_v2_default = schema;
+export {
+  jsonSchema_v2_default as default,
+  updateProblemMatchers,
+  updateTaskDefinitions
+};
+//# sourceMappingURL=jsonSchema_v2.js.map

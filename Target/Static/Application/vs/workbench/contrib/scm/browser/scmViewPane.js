@@ -1,1 +1,2744 @@
-import"./media/scm.css";import{Event as V,$df as Y}from"../../../../base/common/event.js";import{$hh as B,$jh as ge}from"../../../../base/common/resources.js";import{$vd as Dt,$ud as w,$sd as Zt,$qd as be,$td as Xt,$wd as xt,$Ed as Ht}from"../../../../base/common/lifecycle.js";import{$qxb as we,$txb as z}from"../../../browser/parts/views/viewPane.js";import{$M6 as g,$ as b,$25 as ve,$K6 as ye,$I5 as Ce,$D6 as Re,$l6 as Ie}from"../../../../base/browser/dom.js";import{$77 as Se}from"../../../../base/browser/cssValue.js";import{$TP as W,$SP as te,SCMInputChangeReason as Me,$PP as F}from"../common/scm.js";import{$QEb as $e}from"../../../browser/labels.js";import{$J9 as De}from"../../../../base/browser/ui/countBadge/countBadge.js";import{$oI as xe}from"../../../services/editor/common/editorService.js";import{$mj as Tt}from"../../../../platform/instantiation/common/instantiation.js";import{$nfb as Te,$ofb as X}from"../../../../platform/contextview/browser/contextView.js";import{$Vn as U,$Bn as x,$Un as $}from"../../../../platform/contextkey/common/contextkey.js";import{$Yn as j}from"../../../../platform/commands/common/commands.js";import{$ux as J}from"../../../../platform/keybinding/common/keybinding.js";import{$hI as Lt,$eI as rt,$jI as T,$dI as D,$fI as ee,$iI as ie}from"../../../../platform/actions/common/actions.js";import{$am as se,$_l as oe,$bm as Le,$em as Ae}from"../../../../base/common/actions.js";import{$M7 as Ee}from"../../../../base/browser/ui/actionbar/actionbar.js";import{$Mt as re}from"../../../../platform/theme/common/themeService.js";import{$NLb as A,$MLb as v,$JLb as I,$KLb as P,$ULb as Q,$WLb as ht,$LLb as q,$ILb as dt,$OLb as k,$TLb as ne}from"./util.js";import{$Hmb as Ve}from"../../../../platform/list/browser/listService.js";import{$El as nt}from"../../../../platform/configuration/common/configuration.js";import{$Nh as Fe,$Gh as Pe,$Jh as qe,$Fh as kt}from"../../../../base/common/async.js";import{$NP as S}from"../../../../base/common/resourceTree.js";import{Iterable as N}from"../../../../base/common/iterator.js";import{FileKind as at}from"../../../../platform/files/common/files.js";import{$sM as Wt,$CM as Be}from"../../../../base/common/comparers.js";import{$Bj as et}from"../../../../base/common/filters.js";import{$YM as He}from"../../../common/views.js";import{localize as f}from"../../../../nls.js";import{$Ho as At}from"../../../../platform/storage/common/storage.js";import{$sK as ke,SideBySideEditor as We}from"../../../common/editor.js";import{$Zdb as Ne}from"../../../../editor/browser/widget/codeEditor/codeEditorWidget.js";import{$eFb as Ue,$gFb as Ge}from"../../codeEditor/browser/simpleEditorOptions.js";import{$gF as _e}from"../../../../editor/common/services/model.js";import{EditorExtensionsRegistry as Ke}from"../../../../editor/browser/editorExtensions.js";import{$VEb as Oe}from"../../codeEditor/browser/menuPreventer.js";import{$WEb as ze}from"../../codeEditor/browser/selectionClipboard.js";import{$kTb as je}from"../../codeEditor/browser/dictation/editorDictation.js";import{$qnb as Je}from"../../../../editor/contrib/contextmenu/browser/contextmenu.js";import*as Qe from"../../../../base/common/platform.js";import{$Xf as Ye,$zf as Ze}from"../../../../base/common/strings.js";import{$elb as Xe}from"../../../../editor/contrib/suggest/browser/suggestController.js";import{$9jb as ti}from"../../../../editor/contrib/snippet/browser/snippetController2.js";import{$lj as ei}from"../../../../platform/instantiation/common/serviceCollection.js";import{$ajb as ii}from"../../../../editor/contrib/colorPicker/browser/colorDetector.js";import{$4rb as si}from"../../../../editor/contrib/links/browser/links.js";import{$4$ as ce}from"../../../../platform/opener/common/opener.js";import{$Po as ct}from"../../../../platform/telemetry/common/telemetry.js";import{$2H as Et}from"../../../../platform/label/common/label.js";import{$38 as oi}from"../../../../base/browser/fonts.js";import{$Mj as G}from"../../../../base/common/codicons.js";import{ThemeIcon as wt}from"../../../../base/common/themables.js";import{$Vnc as ri,$Wnc as he}from"./scmRepositoryRenderer.js";import{ColorScheme as ni}from"../../../../platform/theme/common/theme.js";import{$qHb as ci,$pHb as hi}from"../../../browser/parts/editor/editorCommands.js";import{$ggb as di,$agb as ai,$$fb as ui}from"../../../../platform/actions/browser/menuEntryActionViewItem.js";import{$dhb as li,$ehb as pi}from"../../../../editor/browser/widget/markdownRenderer/browser/markdownRenderer.js";import{$p9 as Nt,$q9 as fi}from"../../../../base/browser/ui/button/button.js";import{$RI as mi}from"../../../../platform/notification/common/notification.js";import{$1nc as gi}from"./scmViewService.js";import{$vnb as bi}from"../../../../editor/contrib/dnd/browser/dnd.js";import{$Ihb as Ut}from"../../../../editor/contrib/dropOrPasteInto/browser/copyPasteController.js";import{$Cnb as Gt}from"../../../../editor/contrib/dropOrPasteInto/browser/dropIntoEditorController.js";import{$fhb as wi}from"../../../../editor/contrib/message/browser/messageController.js";import{$Mfb as _t,$Zfb as vi}from"../../../../platform/theme/browser/defaultStyles.js";import{$qqb as yi}from"../../../../editor/contrib/inlineCompletions/browser/controller/inlineCompletionsController.js";import{$Gib as Ci}from"../../../../editor/contrib/codeAction/browser/codeActionController.js";import{Schemas as Ri}from"../../../../base/common/network.js";import{$Swb as Ii}from"../../../browser/dnd.js";import{$Qgb as Si}from"../../../../platform/dnd/browser/dnd.js";import{$2ob as Mi}from"../../../../editor/contrib/format/browser/formatActions.js";import{EditorOptions as Kt}from"../../../../editor/common/config/editorOptions.js";import{$yo as $i}from"../../../../platform/uriIdentity/common/uriIdentity.js";import{$SC as Di}from"../../../../editor/common/core/editOperation.js";import{$lgb as Vt}from"../../../../platform/actions/browser/toolbar.js";import{$pf as xi}from"../../../../base/common/cancellation.js";import{$ZCb as Ti}from"../../../../platform/actions/browser/dropdownWithPrimaryActionViewItem.js";import{$nw as ut,rot as lt}from"../../../../base/common/numbers.js";import{$ngb as Li}from"../../../../platform/hover/browser/hover.js";import{$7nc as Ai}from"../../multiDiffEditor/browser/scmMultiDiffSourceResolver.js";import{$enb as Ei}from"../../../../editor/contrib/hover/browser/contentHoverController.js";import{$6qb as Vi}from"../../../../editor/contrib/hover/browser/glyphHoverController.js";import{autorun as vt,runOnChange as Fi}from"../../../../base/common/observable.js";import{$qsb as Pi}from"../../../../editor/contrib/placeholderText/browser/placeholderTextContribution.js";import{$3db as de}from"../../../../platform/observable/common/platformObservableUtils.js";import{$tC as ae}from"../../../../platform/accessibility/common/accessibility.js";import{ChatContextKeys as pt}from"../../chat/common/chatContextKeys.js";import ue from"../../../../platform/product/common/product.js";import{$ZDb as Ot}from"../../chat/browser/actions/chatActions.js";var E=function(c,t,e,i){var s=arguments.length,o=s<3?t:i===null?i=Object.getOwnPropertyDescriptor(t,e):i,r;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")o=Reflect.decorate(c,t,e,i);else for(var n=c.length-1;n>=0;n--)(r=c[n])&&(o=(s<3?r(o):s>3?r(t,e,o):r(t,e))||o);return s>3&&o&&Object.defineProperty(t,e,o),o},d=function(c,t){return function(e,i){t(e,i,c)}},ft,O,mt,gt,bt;function qi(c,t){if(!t)return[void 0,void 0];if(!t.label)return[et(t),void 0];const e=B(c),i=t.label,s=i.length-e.length,o=et(t.score);if(i===e)return[o,void 0];const r=[],n=[];for(const h of o)h.start>s?r.push({start:h.start-s,end:h.end-s}):h.end<s?n.push(h):(r.push({start:0,end:h.end-s}),n.push({start:h.start,end:s}));return[r,n]}let Z=class{static{ft=this}static{this.DEFAULT_HEIGHT=28}static{this.TEMPLATE_ID="actionButton"}get templateId(){return ft.TEMPLATE_ID}constructor(t,e,i){this.c=t,this.d=e,this.f=i,this.b=new Map}renderTemplate(t){t.parentElement.parentElement.querySelector(".monaco-tl-twistie").classList.add("force-no-twistie"),t.parentElement.parentElement.classList.add("cursor-default","force-no-hover");const e=g(t,b(".button-container")),i=new ts(e,this.d,this.c,this.f);return{actionButton:i,disposable:Dt.None,templateDisposable:i}}renderElement(t,e,i){i.disposable.dispose();const s=new w,o=t.element;i.actionButton.setButton(t.element.button),this.b.set(o,i.actionButton),s.add({dispose:()=>this.b.delete(o)}),i.disposable=s}renderCompressedElements(){throw new Error("Should never happen since node is incompressible")}focusActionButton(t){this.b.get(t)?.focus()}disposeElement(t,e,i){i.disposable.dispose()}disposeTemplate(t){t.disposable.dispose(),t.templateDisposable.dispose()}};Z=ft=E([d(0,j),d(1,X),d(2,mi)],Z);class Ft{constructor(t){this.b=t}getDragURI(t){return A(t)?t.sourceUri.toString():null}onDragStart(t,e){const i=Ft.c(t);if(e.dataTransfer&&i?.length){this.b.invokeFunction(o=>Ii(o,i,e));const s=i.filter(o=>o.scheme===Ri.file).map(o=>o.fsPath);s.length&&e.dataTransfer.setData(Si.FILES,JSON.stringify(s))}}getDragLabel(t,e){if(t.length===1){const i=t[0];if(A(i))return B(i.sourceUri)}return String(t.length)}onDragOver(t,e,i,s,o){return!0}drop(t,e,i,s,o){}static c(t){const e=[];for(const i of[...t.context??[],...t.elements])A(i)&&e.push(i.sourceUri);return e}dispose(){}}let it=class{static{O=this}static{this.DEFAULT_HEIGHT=26}static{this.TEMPLATE_ID="input"}get templateId(){return O.TEMPLATE_ID}constructor(t,e,i,s){this.f=t,this.h=e,this.i=i,this.k=s,this.b=new Map,this.c=new WeakMap,this.d=new WeakMap}renderTemplate(t){t.parentElement.parentElement.querySelector(".monaco-tl-twistie").classList.add("force-no-twistie"),t.parentElement.parentElement.classList.add("force-no-hover");const e=new w,i=g(t,b(".scm-input")),s=this.k.createInstance(Mt,i,this.h);return e.add(s),{inputWidget:s,inputWidgetHeight:O.DEFAULT_HEIGHT,elementDisposables:new w,templateDisposable:e}}renderElement(t,e,i){const s=t.element;i.inputWidget.input=s,this.b.set(s,i.inputWidget),i.elementDisposables.add({dispose:()=>this.b.delete(s)});const o=this.d.get(s);o&&(i.inputWidget.selections=o),i.elementDisposables.add(Xt(()=>{const a=i.inputWidget.selections;a&&this.d.set(s,a)})),i.inputWidgetHeight=O.DEFAULT_HEIGHT;const r=()=>{const a=i.inputWidget.getContentHeight();this.c.set(s,a),i.inputWidgetHeight!==a&&(this.i(s,a+10),i.inputWidgetHeight=a,i.inputWidget.layout())};Fe(()=>{i.elementDisposables.add(i.inputWidget.onDidChangeContentHeight(r)),r()},0,i.elementDisposables);const h=()=>i.inputWidget.layout();i.elementDisposables.add(this.f.onDidChange(h)),h()}renderCompressedElements(){throw new Error("Should never happen since node is incompressible")}disposeElement(t,e,i){i.elementDisposables.clear()}disposeTemplate(t){t.templateDisposable.dispose()}getHeight(t){return(this.c.get(t)??O.DEFAULT_HEIGHT)+10}getRenderedInputWidget(t){return this.b.get(t)}getFocusedInput(){for(const[t,e]of this.b)if(e.hasFocus())return t}clearValidation(){for(const[,t]of this.b)t.clearValidation()}};it=O=E([d(3,Tt)],it);let st=class{static{mt=this}static{this.TEMPLATE_ID="resource group"}get templateId(){return mt.TEMPLATE_ID}constructor(t,e,i,s,o,r,n,h,a){this.b=t,this.c=e,this.d=i,this.f=s,this.h=o,this.i=r,this.k=n,this.l=h,this.m=a}renderTemplate(t){t.parentElement.parentElement.querySelector(".monaco-tl-twistie").classList.add("force-twistie");const e=g(t,b(".resource-group")),i=g(e,b(".name")),s=g(e,b(".actions")),o=new Vt(s,{actionViewItemProvider:this.b,actionRunner:this.c},this.k,this.f,this.h,this.i,this.d,this.m),r=g(e,b(".count")),n=new De(r,{},vi),h=Zt(o,n);return{name:i,count:n,actionBar:o,elementDisposables:new w,disposables:h}}renderElement(t,e,i){const s=t.element;i.name.textContent=s.label,i.count.setCount(s.resources.length);const o=this.l.menus.getRepositoryMenus(s.provider);i.elementDisposables.add(ne(o.getResourceGroupMenu(s),r=>{i.actionBar.setActions(r)},"inline")),i.actionBar.context=s}renderCompressedElements(t){throw new Error("Should never happen since node is incompressible")}disposeElement(t,e,i){i.elementDisposables.clear()}disposeTemplate(t){t.elementDisposables.dispose(),t.disposables.dispose()}};st=mt=E([d(2,j),d(3,U),d(4,X),d(5,J),d(6,rt),d(7,W),d(8,ct)],st);class zt extends se{constructor(t){super(),this.b=t}async u(t,e){if(!(t instanceof Lt))return super.u(t,e);const i=v(e),s=this.b().filter(h=>v(h)===i),n=(s.some(h=>h===e)?s:[e]).map(h=>S.isResourceNode(h)?S.collect(h):[h]).flat();await t.run(...n)}}let ot=class{static{gt=this}static{this.TEMPLATE_ID="resource"}get templateId(){return gt.TEMPLATE_ID}constructor(t,e,i,s,o,r,n,h,a,m,y,C,L){this.d=t,this.f=e,this.h=i,this.i=s,this.k=o,this.l=r,this.m=n,this.n=h,this.o=a,this.p=m,this.q=y,this.t=C,this.u=L,this.b=new w,this.c=new Map,L.onDidColorThemeChange(this.w,this,this.b)}renderTemplate(t){const e=g(t,b(".resource")),i=g(e,b(".name")),s=this.f.create(i,{supportDescriptionHighlights:!0,supportHighlights:!0}),o=g(s.element,b(".actions")),r=new Vt(o,{actionViewItemProvider:this.h,actionRunner:this.i},this.p,this.l,this.m,this.n,this.k,this.t),n=g(e,b(".decoration-icon")),h=new xt,a=Zt(r,s,h);return{element:e,name:i,fileLabel:s,decorationIcon:n,actionBar:r,actionBarMenu:void 0,actionBarMenuListener:h,elementDisposables:new w,disposables:a}}renderElement(t,e,i){const s=t.element,o=S.isResourceNode(s)?s.element:s,r=S.isResourceNode(s)?s.uri:s.sourceUri,n=S.isResourceNode(s)?at.FOLDER:at.FILE,h=!S.isResourceNode(s)&&s.decorations.tooltip||"",a=this.d()==="tree";let m,y,C;if(S.isResourceNode(s))if(s.element){const u=this.q.menus.getRepositoryMenus(s.element.resourceGroup.provider);this.v(i,s,u.getResourceMenu(s.element)),i.element.classList.toggle("faded",s.element.decorations.faded),C=s.element.decorations.strikeThrough}else{const u=this.q.menus.getRepositoryMenus(s.context.provider);this.v(i,s,u.getResourceFolderMenu(s.context)),m=et(t.filterData),i.element.classList.remove("faded")}else{const u=this.q.menus.getRepositoryMenus(s.resourceGroup.provider);this.v(i,s,u.getResourceMenu(s)),[m,y]=qi(r,t.filterData),i.element.classList.toggle("faded",s.decorations.faded),C=s.decorations.strikeThrough}const L={tooltip:h,uri:r,fileLabelOptions:{hidePath:a,fileKind:n,matches:m,descriptionMatches:y,strikethrough:C},iconResource:o};this.x(i,L),this.c.set(i,L),i.elementDisposables.add(Xt(()=>this.c.delete(i))),i.element.setAttribute("data-tooltip",h)}disposeElement(t,e,i){i.elementDisposables.clear()}renderCompressedElements(t,e,i){const s=t.element,o=s.elements[s.elements.length-1],r=s.elements.map(m=>m.name),n=at.FOLDER,h=et(t.filterData);i.fileLabel.setResource({resource:o.uri,name:r},{fileDecorations:{colors:!1,badges:!0},fileKind:n,matches:h,separator:this.o.getSeparator(o.uri.scheme)});const a=this.q.menus.getRepositoryMenus(o.context.provider);this.v(i,o,a.getResourceFolderMenu(o.context)),i.name.classList.remove("strike-through"),i.element.classList.remove("faded"),i.decorationIcon.style.display="none",i.decorationIcon.style.backgroundImage="",i.element.setAttribute("data-tooltip","")}disposeCompressedElements(t,e,i){i.elementDisposables.clear()}disposeTemplate(t){t.elementDisposables.dispose(),t.disposables.dispose()}v(t,e,i){(!t.actionBarMenu||t.actionBarMenu!==i)&&(t.actionBarMenu=i,t.actionBarMenuListener.value=ne(i,s=>{t.actionBar.setActions(s)},"inline")),t.actionBar.context=e}w(){for(const[t,e]of this.c)this.x(t,e)}x(t,e){const i=this.u.getColorTheme(),s=i.type===ni.LIGHT?e.iconResource?.decorations.icon:e.iconResource?.decorations.iconDark;t.fileLabel.setFile(e.uri,{...e.fileLabelOptions,fileDecorations:{colors:!1,badges:!s}}),s?(wt.isThemeIcon(s)?(t.decorationIcon.className=`decoration-icon ${wt.asClassName(s)}`,s.color&&(t.decorationIcon.style.color=i.getColor(s.color.id)?.toString()??""),t.decorationIcon.style.display="",t.decorationIcon.style.backgroundImage=""):(t.decorationIcon.className="decoration-icon",t.decorationIcon.style.color="",t.decorationIcon.style.display="",t.decorationIcon.style.backgroundImage=Se(s)),t.decorationIcon.title=e.tooltip):(t.decorationIcon.className="decoration-icon",t.decorationIcon.style.color="",t.decorationIcon.style.display="none",t.decorationIcon.style.backgroundImage="",t.decorationIcon.title="")}dispose(){this.b.dispose()}};ot=gt=E([d(4,j),d(5,U),d(6,X),d(7,J),d(8,Et),d(9,rt),d(10,W),d(11,ct),d(12,re)],ot);class Bi{constructor(t){this.b=t}getHeight(t){return P(t)?this.b.getHeight(t):q(t)?Z.DEFAULT_HEIGHT+8:22}getTemplateId(t){if(I(t))return he.TEMPLATE_ID;if(P(t))return it.TEMPLATE_ID;if(q(t))return Z.TEMPLATE_ID;if(v(t))return st.TEMPLATE_ID;if(A(t)||k(t))return ot.TEMPLATE_ID;throw new Error("Unknown element")}}class Hi{isIncompressible(t){return S.isResourceNode(t)?t.childrenCount===0||!t.parent||!t.parent.parent:!0}}class ki{filter(t){return v(t)?t.resources.length>0||!t.hideWhenEmpty:!0}}class Wi{constructor(t,e){this.b=t,this.c=e}compare(t,e){if(I(t)){if(!I(e))throw new Error("Invalid comparison");return 0}if(P(t))return-1;if(P(e))return 1;if(q(t))return-1;if(q(e))return 1;if(v(t))return v(e)?0:-1;if(this.b()==="list"){if(this.c()==="name"){const a=B(t.sourceUri),m=B(e.sourceUri);return Wt(a,m)}if(this.c()==="status"){const a=t.decorations.tooltip??"",m=e.decorations.tooltip??"";if(a!==m)return Ye(a,m)}const n=t.sourceUri.fsPath,h=e.sourceUri.fsPath;return Be(n,h)}const i=S.isResourceNode(t),s=S.isResourceNode(e);if(i!==s)return i?-1:1;const o=S.isResourceNode(t)?t.name:B(t.sourceUri),r=S.isResourceNode(e)?e.name:B(e.sourceUri);return Wt(o,r)}}let yt=class{constructor(t,e){this.b=t,this.c=e}getKeyboardNavigationLabel(t){if(S.isResourceNode(t))return t.name;if(I(t)||P(t)||q(t))return;if(v(t))return t.label;if(this.b()==="list"){const e=B(t.sourceUri),i=this.c.getUriLabel(t.sourceUri,{relative:!0});return[e,i]}else return B(t.sourceUri)}getCompressedNodeKeyboardNavigationLabel(t){return t.map(i=>i.name).join("/")}};yt=E([d(1,Et)],yt);function le(c){if(I(c))return`repo:${c.provider.id}`;if(P(c))return`input:${c.repository.provider.id}`;if(q(c))return`actionButton:${c.repository.provider.id}`;if(v(c))return`resourceGroup:${c.provider.id}/${c.id}`;if(A(c)){const t=c.resourceGroup;return`resource:${t.provider.id}/${t.id}/${c.sourceUri.toString()}`}else if(k(c)){const t=c.context;return`folder:${t.provider.id}/${t.id}/$FOLDER/${c.uri.toString()}`}else throw new Error("Invalid tree element")}class Ni{getId(t){return le(t)}}let Ct=class{constructor(t,e,i,s){this.b=t,this.c=e,this.d=i,this.f=s}getWidgetAriaLabel(){return f(10607,null)}getAriaLabel(t){if(S.isResourceNode(t))return this.f.getUriLabel(t.uri,{relative:!0,noPrefix:!0})||t.name;if(I(t))return`${t.provider.name} ${t.provider.label}`;if(P(t)){if(!(this.c.getValue("accessibility.verbosity.sourceControl")===!0)||!this.b.isScreenReaderOptimized())return f(10608,null);const i=this.d.lookupKeybinding("editor.action.accessibilityHelp")?.getLabel();return i?f(10609,null,i):f(10610,null)}else{if(q(t))return t.button?.command.title??"";if(v(t))return t.label;{const e=[];e.push(B(t.sourceUri)),t.decorations.tooltip&&e.push(t.decorations.tooltip);const i=this.f.getUriLabel(ge(t.sourceUri),{relative:!0,noPrefix:!0});return i&&e.push(i),e.join(", ")}}}};Ct=E([d(0,ae),d(1,nt),d(2,J),d(3,Et)],Ct);var jt;(function(c){c.Path="path",c.Name="name",c.Status="status"})(jt||(jt={}));const H={ViewSort:new D("SCMViewSort"),Repositories:new D("SCMRepositories"),ChangesSettings:new D("SCMChangesSettings")},l={SCMViewMode:new $("scmViewMode","list"),SCMViewSortKey:new $("scmViewSortKey","path"),SCMViewAreAllRepositoriesCollapsed:new $("scmViewAreAllRepositoriesCollapsed",!1),SCMViewIsAnyRepositoryCollapsible:new $("scmViewIsAnyRepositoryCollapsible",!1),SCMProvider:new $("scmProvider",void 0),SCMProviderRootUri:new $("scmProviderRootUri",void 0),SCMProviderHasRootUri:new $("scmProviderHasRootUri",void 0),SCMHistoryItemCount:new $("scmHistoryItemCount",0),SCMHistoryViewMode:new $("scmHistoryViewMode","list"),SCMCurrentHistoryItemRefHasRemote:new $("scmCurrentHistoryItemRefHasRemote",!1),SCMCurrentHistoryItemRefInFilter:new $("scmCurrentHistoryItemRefInFilter",!1),RepositoryCount:new $("scmRepositoryCount",0),RepositoryVisibilityCount:new $("scmRepositoryVisibleCount",0),RepositoryVisibility(c){return new $(`scmRepositoryVisible:${c.provider.id}`,!1)}};ee.appendMenuItem(D.SCMTitle,{title:f(10611,null),submenu:H.ViewSort,when:x.and(x.equals("view",F),l.RepositoryCount.notEqualsTo(0)),group:"0_view&sort",order:1});ee.appendMenuItem(H.ViewSort,{title:f(10612,null),submenu:H.Repositories,when:x.greater(l.RepositoryCount.key,1),group:"0_repositories"});class Ui extends ie{constructor(t){super({id:`workbench.scm.action.toggleRepositoryVisibility.${t.provider.id}`,title:t.provider.name,f1:!1,precondition:x.or(l.RepositoryVisibilityCount.notEqualsTo(1),l.RepositoryVisibility(t).isEqualTo(!1)),toggled:l.RepositoryVisibility(t).isEqualTo(!0),menu:{id:H.Repositories,group:"0_repositories"}}),this.b=t}run(t){t.get(W).toggleVisibility(this.b)}}let Rt=class{constructor(t,e,i){this.h=t,this.i=e,this.b=new Map,this.f=new w,this.c=l.RepositoryCount.bindTo(t),this.d=l.RepositoryVisibilityCount.bindTo(t),e.onDidChangeVisibleRepositories(this.m,this,this.f),i.onDidAddRepository(this.k,this,this.f),i.onDidRemoveRepository(this.l,this,this.f);for(const s of i.repositories)this.k(s)}k(t){const e=T(class extends Ui{constructor(){super(t)}}),i=l.RepositoryVisibility(t).bindTo(this.h);i.set(this.i.isVisible(t)),this.b.set(t,{contextKey:i,dispose(){i.reset(),e.dispose()}}),this.n()}l(t){this.b.get(t)?.dispose(),this.b.delete(t),this.n()}m(){let t=0;for(const[e,i]of this.b){const s=this.i.isVisible(e);i.contextKey.set(s),s&&t++}this.c.set(this.b.size),this.d.set(t)}n(){this.c.set(this.b.size),this.d.set(N.reduce(this.b.keys(),(t,e)=>t+(this.i.isVisible(e)?1:0),0))}dispose(){this.f.dispose(),be(this.b.values()),this.b.clear()}};Rt=E([d(0,U),d(1,W),d(2,te)],Rt);class pe extends z{constructor(t="workbench.scm.action.setListViewMode",e={}){super({id:t,title:f(10613,null),viewId:F,f1:!1,icon:G.listTree,toggled:l.SCMViewMode.isEqualTo("list"),menu:{id:H.ViewSort,group:"1_viewmode",...e}})}async runInView(t,e){e.viewMode="list"}}class Gi extends pe{constructor(){super("workbench.scm.action.setListViewModeNavigation",{id:D.SCMTitle,when:x.and(x.equals("view",F),l.RepositoryCount.notEqualsTo(0),l.SCMViewMode.isEqualTo("tree")),group:"navigation",order:-1e3})}}class fe extends z{constructor(t="workbench.scm.action.setTreeViewMode",e={}){super({id:t,title:f(10614,null),viewId:F,f1:!1,icon:G.listFlat,toggled:l.SCMViewMode.isEqualTo("tree"),menu:{id:H.ViewSort,group:"1_viewmode",...e}})}async runInView(t,e){e.viewMode="tree"}}class _i extends fe{constructor(){super("workbench.scm.action.setTreeViewModeNavigation",{id:D.SCMTitle,when:x.and(x.equals("view",F),l.RepositoryCount.notEqualsTo(0),l.SCMViewMode.isEqualTo("list")),group:"navigation",order:-1e3})}}T(pe);T(fe);T(Gi);T(_i);class Pt extends z{constructor(t,e){super({id:`workbench.scm.action.repositories.setSortKey.${t}`,title:e,viewId:F,f1:!1,toggled:gi.RepositorySortKey.isEqualTo(t),menu:[{id:H.Repositories,group:"1_sort"},{id:D.SCMSourceControlTitle,group:"1_sort"}]}),this.b=t}runInView(t){t.get(W).toggleSortKey(this.b)}}class Ki extends Pt{constructor(){super("discoveryTime",f(10615,null))}}class Oi extends Pt{constructor(){super("name",f(10616,null))}}class zi extends Pt{constructor(){super("path",f(10617,null))}}T(Ki);T(Oi);T(zi);class qt extends z{constructor(t,e){super({id:`workbench.scm.action.setSortKey.${t}`,title:e,viewId:F,f1:!1,toggled:l.SCMViewSortKey.isEqualTo(t),precondition:l.SCMViewMode.isEqualTo("list"),menu:{id:H.ViewSort,group:"2_sort"}}),this.b=t}async runInView(t,e){e.viewSortKey=this.b}}class ji extends qt{constructor(){super("name",f(10618,null))}}class Ji extends qt{constructor(){super("path",f(10619,null))}}class Qi extends qt{constructor(){super("status",f(10620,null))}}T(ji);T(Ji);T(Qi);class Yi extends z{constructor(){super({id:"workbench.scm.action.collapseAllRepositories",title:f(10621,null),viewId:F,f1:!1,icon:G.collapseAll,menu:{id:D.SCMTitle,group:"navigation",when:x.and(x.equals("view",F),l.SCMViewIsAnyRepositoryCollapsible.isEqualTo(!0),l.SCMViewAreAllRepositoriesCollapsed.isEqualTo(!1))}})}async runInView(t,e){e.collapseAllRepositories()}}class Zi extends z{constructor(){super({id:"workbench.scm.action.expandAllRepositories",title:f(10622,null),viewId:F,f1:!1,icon:G.expandAll,menu:{id:D.SCMTitle,group:"navigation",when:x.and(x.equals("view",F),l.SCMViewIsAnyRepositoryCollapsible.isEqualTo(!0),l.SCMViewAreAllRepositoriesCollapsed.isEqualTo(!0))}})}async runInView(t,e){e.expandAllRepositories()}}T(Yi);T(Zi);var Jt;(function(c){c.CancelAction="scm.input.cancelAction",c.SetupAction="scm.input.triggerSetup"})(Jt||(Jt={}));var Qt;(function(c){c.LastActionId="scm.input.lastActionId"})(Qt||(Qt={}));T(class extends ie{constructor(){super({id:"scm.input.triggerSetup",title:f(10623,null),icon:G.sparkle,f1:!1,menu:{id:D.SCMInputBox,when:x.and(pt.Setup.hidden.negate(),pt.Setup.disabled.negate(),pt.Setup.installed.negate(),x.equals("scmProvider","git"))}})}async run(c,...t){const e=c.get(j);if(c.get(ct).publicLog2("workbenchActionExecuted",{id:Ot,from:"scmInput"}),!await e.executeCommand(Ot))return;const o=ue.defaultChatAgent?.generateCommitMessageCommand;o&&await e.executeCommand(o,...t)}});let It=class extends se{get runningActions(){return this.b}constructor(t,e){super(),this.h=t,this.n=e,this.b=new Set}async u(t){try{if(this.runningActions.size!==0&&(this.c?.cancel(),t.id==="scm.input.cancelAction"))return;const e=[];for(const i of this.h.repository.provider.groups)e.push({resourceGroupId:i.id,resources:[...i.resources.map(s=>s.sourceUri)]});this.b.add(t),this.c=new xi,await t.run(this.h.repository.provider.rootUri,e,this.c.token)}finally{if(this.b.delete(t),this.b.size===0){const e=t.id==="scm.input.triggerSetup"?ue.defaultChatAgent?.generateCommitMessageCommand??t.id:t.id;this.n.store("scm.input.lastActionId",e,0,0)}}}};It=E([d(1,At)],It);let St=class extends Vt{get dropdownActions(){return this.b}get dropdownAction(){return this.c}constructor(t,e,i,s,o,r,n,h,a){super(t,{resetMenu:D.SCMInputBox,...e},i,s,o,n,r,a),this.Q=i,this.R=s,this.S=h,this.b=[],this.n=new Y,this.onDidChange=this.n.event,this.P=this.B(new xt),this.c=new oe("scmInputMoreActions",f(10624,null),"codicon-chevron-down"),this.h=new Lt({id:"scm.input.cancelAction",title:f(10625,null),icon:G.stopCircle},void 0,void 0,void 0,void 0,s,r)}setInput(t){this.P.value=new w;const e=this.R.createOverlay([["scmProvider",t.repository.provider.contextValue],["scmProviderRootUri",t.repository.provider.rootUri?.toString()],["scmProviderHasRootUri",!!t.repository.provider.rootUri]]),i=this.P.value.add(this.Q.createMenu(D.SCMInputBox,e,{emitEventsForSubmenuChanges:!0})),s=()=>t.repository.provider.groups.some(r=>r.resources.length>0),o=()=>{const r=ai(i.getActions({shouldForwardArgs:!0}));for(const h of r)h.enabled=s();this.c.enabled=s();let n;if(this.actionRunner.runningActions.size!==0)n=this.h;else if(r.length===1)n=r[0];else if(r.length>1){const h=this.S.get("scm.input.lastActionId",0,"");n=r.find(a=>a.id===h)??r[0]}this.b=r.length===1?[]:r,super.setActions(n?[n]:[],[]),this.n.fire()};this.P.value.add(i.onDidChange(()=>o())),this.P.value.add(t.repository.provider.onDidChangeResources(()=>o())),this.P.value.add(this.S.onDidChangeValue(0,"scm.input.lastActionId",this.P.value)(()=>o())),this.actionRunner=this.P.value.add(new It(t,this.S)),this.P.value.add(this.actionRunner.onWillRun(r=>{this.actionRunner.runningActions.size===0&&(super.setActions([this.h],[]),this.n.fire())})),this.P.value.add(this.actionRunner.onDidRun(r=>{this.actionRunner.runningActions.size===0&&o()})),o()}};St=E([d(2,rt),d(3,U),d(4,X),d(5,j),d(6,J),d(7,At),d(8,ct)],St);class Xi{constructor(t,e){this.f=t,this.h=e,this.b=new Y,this.onDidChange=this.b.event,this.c=oi,this.d=new w;const i=V.filter(this.h.onDidChangeConfiguration,s=>s.affectsConfiguration("editor.accessibilitySupport")||s.affectsConfiguration("editor.cursorBlinking")||s.affectsConfiguration("editor.cursorStyle")||s.affectsConfiguration("editor.cursorWidth")||s.affectsConfiguration("editor.emptySelectionClipboard")||s.affectsConfiguration("editor.fontFamily")||s.affectsConfiguration("editor.rulers")||s.affectsConfiguration("editor.wordWrap")||s.affectsConfiguration("scm.inputFontFamily")||s.affectsConfiguration("scm.inputFontSize"),this.d);this.d.add(i(()=>this.b.fire()))}getEditorConstructionOptions(){return{...Ue(this.h),...this.getEditorOptions(),allowVariableLineHeights:!1,dragAndDrop:!0,dropIntoEditor:{enabled:!0},formatOnType:!0,lineDecorationsWidth:6,overflowWidgetsDomNode:this.f,padding:{top:2,bottom:2},quickSuggestions:!1,renderWhitespace:"none",scrollbar:{alwaysConsumeMouseWheel:!1,vertical:"hidden"},wrappingIndent:"none",wrappingStrategy:"advanced"}}getEditorOptions(){const t=this.i(),e=this.k(),i=this.m(e),s=this.h.getValue("editor.accessibilitySupport"),o=this.h.getValue("editor.cursorBlinking"),r=this.h.getValue("editor.cursorStyle"),n=this.h.getValue("editor.cursorWidth")??1,h=this.h.getValue("editor.emptySelectionClipboard")===!0;return{...this.l(),accessibilitySupport:s,cursorBlinking:o,cursorStyle:r,cursorWidth:n,fontFamily:t,fontSize:e,lineHeight:i,emptySelectionClipboard:h}}i(){const t=this.h.getValue("scm.inputFontFamily").trim();return t.toLowerCase()==="editor"?this.h.getValue("editor.fontFamily").trim():t.length!==0&&t.toLowerCase()!=="default"?t:this.c}k(){return this.h.getValue("scm.inputFontSize")}l(){const t=this.h.inspect("editor.rulers",{overrideIdentifier:"scminput"}),e=t.overrideIdentifiers?.includes("scminput")?Kt.rulers.validate(t.value):[],i=this.h.inspect("editor.wordWrap",{overrideIdentifier:"scminput"}),s=i.overrideIdentifiers?.includes("scminput")?Kt.wordWrap.validate(i.value):"on";return{rulers:e,wordWrap:s}}m(t){return Math.round(t*1.5)}dispose(){this.d.dispose()}}let Mt=class{static{bt=this}static{this.b={2:5e3,1:8e3,0:1e4}}get input(){return this.n?.input}set input(t){if(t===this.input)return;if(this.clearValidation(),this.d.classList.remove("synthetic-focus"),this.p.clear(),this.o.set(t?.repository.id),!t){this.h.setModel(void 0),this.n=void 0;return}const e=t.repository.provider.inputBoxTextModel;this.h.setModel(e),this.B.getValue("editor.wordBasedSuggestions",{resource:e.uri})!=="off"&&this.B.updateValue("editor.wordBasedSuggestions","off",{resource:e.uri},8);const i=new qe(200),s=async()=>{const u=this.h.getSelection()?.getStartPosition(),p=u&&e.getOffsetAt(u),R=e.getValue();this.y(await t.validateInput(R,p||0))},o=()=>i.trigger(s);this.p.add(i),this.p.add(this.h.onDidChangeCursorPosition(o));const r=this.z.getCreationOptions(e.getLanguageId(),e.uri,e.isForSimpleWidget),n=V.filter(this.h.onKeyDown,u=>u.keyCode===3,this.p);this.p.add(n(()=>e.detectIndentation(r.insertSpaces,r.tabSize))),e.setValue(t.value),this.p.add(t.onDidChange(({value:u,reason:p})=>{const R=e.getValue();if(u===R)return;e.pushStackElement(),e.pushEditOperations(null,[Di.replaceMove(e.getFullModelRange(),u)],()=>[]);const _=p===Me.HistoryPrevious?e.getFullModelRange().getStartPosition():e.getFullModelRange().getEndPosition();this.h.setPosition(_),this.h.revealPositionInCenterIfOutsideViewport(_)})),this.p.add(t.onDidChangeFocus(()=>this.focus())),this.p.add(t.onDidChangeValidationMessage(u=>this.y(u,{focus:!0,timeout:!0}))),this.p.add(t.onDidChangeValidateInput(u=>o())),this.p.add(e.onDidChangeContent(()=>{t.setValue(e.getValue(),!0),o()}));const h=de("accessibility.verbosity.sourceControl",!0,this.B),a=(u,p)=>{if(p=p??h.get(),!p||!this.G.isScreenReaderOptimized())return u;const R=this.A.lookupKeybinding("editor.action.accessibilityHelp")?.getLabel();return R?f(10626,null,u,R):f(10627,null,u)},m=()=>{const u=this.A.lookupKeybinding("scm.acceptInput"),p=u?u.getLabel():Qe.$n?"Cmd+Enter":"Ctrl+Enter";return Ze(t.placeholder,p)},y=()=>{const u=m(),p=a(u);this.h.updateOptions({ariaLabel:p,placeholder:u})};this.p.add(t.onDidChangePlaceholder(y)),this.p.add(this.A.onDidUpdateKeybindings(y)),this.p.add(Fi(h,u=>{const p=m(),R=a(p,u);this.h.updateOptions({ariaLabel:R})})),y();let C="";this.p.add(vt(u=>{if(!t.visible)return;const p=C;C=t.repository.provider.commitTemplate.read(u);const R=e.getValue();R&&R!==p||e.setValue(C)}));const L=u=>{this.h.updateOptions({readOnly:!u})};this.p.add(t.onDidChangeEnablement(u=>L(u))),L(t.enabled),this.l.setInput(t),this.n={input:t,textModel:e}}get selections(){return this.h.getSelections()}set selections(t){t&&this.h.setSelections(t)}y(t,e){this.v&&(clearTimeout(this.v),this.v=void 0),this.q=t,this.I(),e?.focus&&!this.hasFocus()&&this.focus(),t&&e?.timeout&&(this.v=setTimeout(()=>this.y(void 0),bt.b[t.type]))}constructor(t,e,i,s,o,r,n,h,a,m,y){this.z=s,this.A=o,this.B=r,this.C=n,this.D=h,this.E=a,this.F=m,this.G=y,this.m=new w,this.p=new w,this.u=!1,this.w=!1,this.x=!1,this.d=g(t,b(".scm-editor")),this.f=g(this.d,b(".scm-editor-container")),this.k=g(this.d,b(".scm-editor-toolbar")),this.c=i.createScoped(this.d),this.o=this.c.createKey("scmRepository",void 0),this.i=new Xi(e,this.B),this.m.add(this.i.onDidChange(this.H,this)),this.m.add(this.i);const C={contributions:Ke.getSomeEditorContributions([Ci.ID,ii.ID,Je.ID,Ut.ID,bi.ID,Gt.ID,je.ID,Mi.ID,Ei.ID,Vi.ID,yi.ID,si.ID,Oe.ID,wi.ID,Pi.ID,ze,ti.ID,Xe.ID]),isSimpleWidget:!0},L=new ei([U,this.c]),u=n.createChild(L,this.m),p=this.i.getEditorConstructionOptions();this.h=u.createInstance(Ne,this.f,p,C),this.m.add(this.h),this.m.add(this.h.onDidFocusEditorText(()=>{this.input?.repository&&this.D.focus(this.input.repository),this.d.classList.add("synthetic-focus"),this.I()})),this.m.add(this.h.onDidBlurEditorText(()=>{this.d.classList.remove("synthetic-focus"),setTimeout(()=>{(!this.q||!this.u)&&this.clearValidation()},0)})),this.m.add(this.h.onDidBlurEditorWidget(()=>{Ut.get(this.h)?.clearWidgets(),Gt.get(this.h)?.clearWidgets()}));const R=this.c.createKey("scmInputIsInFirstPosition",!1),_=this.c.createKey("scmInputIsInLastPosition",!1);this.m.add(this.h.onDidChangeCursorPosition(({position:M})=>{const K=this.h._getViewModel(),Bt=K.getLineCount(),me=K.getLineLength(Bt)+1,tt=K.coordinatesConverter.convertModelPositionToViewPosition(M);R.set(tt.lineNumber===1&&tt.column===1),_.set(tt.lineNumber===Bt&&tt.column===me)})),this.m.add(this.h.onDidScrollChange(M=>{this.k.classList.toggle("scroll-decoration",M.scrollTop>0)})),V.filter(this.B.onDidChangeConfiguration,M=>M.affectsConfiguration("scm.showInputActionButton"))(()=>this.layout(),this,this.m),this.onDidChangeContentHeight=V.signal(V.filter(this.h.onDidContentSizeChange,M=>M.contentHeightChanged,this.m)),this.l=u.createInstance(St,this.k,{actionViewItemProvider:(M,K)=>M instanceof Lt&&this.l.dropdownActions.length>1?n.createInstance(Ti,M,this.l.dropdownAction,this.l.dropdownActions,"",{actionRunner:this.l.actionRunner,hoverDelegate:K.hoverDelegate}):di(n,M,K),menuOptions:{shouldForwardArgs:!0}}),this.m.add(this.l.onDidChange(()=>this.layout())),this.m.add(this.l)}getContentHeight(){const t=this.h.getOption(71),{top:e,bottom:i}=this.h.getOption(91),s=this.B.getValue("scm.inputMinLineCount"),r=(typeof s=="number"?ut(s,1,50):1)*t+e+i,n=this.B.getValue("scm.inputMaxLineCount"),a=(typeof n=="number"?ut(n,1,50):10)*t+e+i;return ut(this.h.getContentHeight(),r,a)}layout(){const t=this.getContentHeight(),e=this.J(),i=new ve(this.d.clientWidth-e,t);if(i.width<0){this.w=!0;return}this.w=!1,this.h.layout(i),this.I();const s=this.B.getValue("scm.showInputActionButton")===!0;this.k.classList.toggle("hidden",!s||this.l?.isEmpty()===!0),this.x&&(this.x=!1,this.focus())}focus(){if(this.w){this.w=!1,this.x=!0;return}this.h.focus(),this.d.classList.add("synthetic-focus")}hasFocus(){return this.h.hasTextFocus()}H(){this.h.updateOptions(this.i.getEditorOptions())}I(){if(this.clearValidation(),this.d.classList.toggle("validation-info",this.q?.type===2),this.d.classList.toggle("validation-warning",this.q?.type===1),this.d.classList.toggle("validation-error",this.q?.type===0),!this.q||!this.h.hasTextFocus())return;const t=new w;this.t=this.E.showContextView({getAnchor:()=>this.d,render:e=>{this.d.style.borderBottomLeftRadius="0",this.d.style.borderBottomRightRadius="0";const i=g(e,b(".scm-editor-validation-container"));i.classList.toggle("validation-info",this.q.type===2),i.classList.toggle("validation-warning",this.q.type===1),i.classList.toggle("validation-error",this.q.type===0),i.style.width=`${this.d.clientWidth+2}px`;const s=g(i,b(".scm-editor-validation")),o=this.q.message;if(typeof o=="string")s.textContent=o;else{const a=ye(s);t.add(a),t.add(a.onDidFocus(()=>this.u=!0)),t.add(a.onDidBlur(()=>{this.u=!1,this.d.style.borderBottomLeftRadius="2px",this.d.style.borderBottomRightRadius="2px",this.E.hideContextView()}));const y=this.C.createInstance(li,{}).render(o,{actionHandler:{callback:C=>{pi(this.F,C,o.isTrusted),this.d.style.borderBottomLeftRadius="2px",this.d.style.borderBottomRightRadius="2px",this.E.hideContextView()},disposables:t}});t.add(y),s.appendChild(y.element)}const r=g(i,b(".scm-editor-validation-actions")),n=new Ee(r),h=new oe("scmInputWidget.validationMessage.close",f(10628,null),wt.asClassName(G.close),!0,()=>{this.E.hideContextView(),this.d.style.borderBottomLeftRadius="2px",this.d.style.borderBottomRightRadius="2px"});return t.add(n),n.push(h,{icon:!0,label:!1}),Dt.None},onHide:()=>{this.u=!1,this.d.style.borderBottomLeftRadius="2px",this.d.style.borderBottomRightRadius="2px",t.dispose()},anchorAlignment:0})}J(){const t=this.B.getValue("scm.showInputActionButton");return!this.l||!t||this.l?.isEmpty()===!0?0:this.l.dropdownActions.length===0?26:39}clearValidation(){this.t?.close(),this.t=void 0,this.u=!1}dispose(){this.input=void 0,this.p.dispose(),this.clearValidation(),this.m.dispose()}};Mt=bt=E([d(2,U),d(3,_e),d(4,J),d(5,nt),d(6,Tt),d(7,W),d(8,Te),d(9,ce),d(10,ae)],Mt);let Yt=class extends we{get viewMode(){return this.ab}set viewMode(t){this.ab!==t&&(this.ab=t,this.viewSortKey=this.Ic(),this.Lc(),this.Cc(),this.sb.fire(t),this.jc.set(t),this.Mc(this.Hb.getFileIconTheme()),this.wc.store("scm.viewMode",t,1,0))}get viewSortKey(){return this.cc}set viewSortKey(t){this.cc!==t&&(this.cc=t,this.Lc(),this.kc.set(t),this.dc.fire(t),this.ab==="list"&&this.wc.store("scm.viewSortKey",t,1,0))}constructor(t,e,i,s,o,r,n,h,a,m,y,C,L,u,p,R,_){super({...t,titleMenuId:D.SCMTitle},a,y,u,p,L,C,R,m,_),this.rc=e,this.sc=i,this.tc=s,this.uc=o,this.vc=r,this.wc=n,this.xc=h,this.sb=new Y,this.onDidChangeViewMode=this.sb.event,this.dc=new Y,this.onDidChangeViewSortKey=this.dc.event,this.ec=new Ht,this.fc=new w,this.gc=new Pe,this.hc=new kt,this.ic=new kt,this.qc=new w,this.ab=this.Hc(),this.cc=this.Ic(),this.jc=l.SCMViewMode.bindTo(p),this.jc.set(this.ab),this.kc=l.SCMViewSortKey.bindTo(p),this.kc.set(this.viewSortKey),this.lc=l.SCMViewAreAllRepositoriesCollapsed.bindTo(p),this.mc=l.SCMViewIsAnyRepositoryCollapsible.bindTo(p),this.nc=l.SCMProvider.bindTo(p),this.oc=l.SCMProviderRootUri.bindTo(p),this.pc=l.SCMProviderHasRootUri.bindTo(p),this.b=new Y,this.c={height:void 0,width:void 0,onDidChange:this.b.event},this.wc.onDidChangeValue(1,void 0,this.qc)(M=>{switch(M.key){case"scm.viewMode":this.viewMode=this.Hc();break;case"scm.viewSortKey":this.viewSortKey=this.Ic();break}},this,this.qc),this.wc.onWillSaveState(M=>{this.viewMode=this.Hc(),this.viewSortKey=this.Ic(),this.Kc()},this,this.qc),V.any(this.uc.onDidAddRepository,this.uc.onDidRemoveRepository)(()=>this.fb.fire(),this,this.qc),this.qc.add(this.hc),this.qc.add(this.ic)}Y(t=this.c.height,e=this.c.width){t!==void 0&&(e!==void 0&&super.Y(t,e),this.c.height=t,this.c.width=e,this.b.fire(),this.h.style.height=`${t}px`,this.m.layout(t,e))}X(t){super.X(t),this.h=g(t,b(".scm-view.show-file-icons")),this.h.classList.add("file-icon-themable-tree"),this.h.classList.add("show-file-icons");const e=()=>this.h.classList.toggle("show-actions",this.Cb.getValue("scm.alwaysShowActions"));V.filter(this.Cb.onDidChangeConfiguration,o=>o.affectsConfiguration("scm.alwaysShowActions"),this.qc)(e,this,this.qc),e();const i=()=>{const o=this.Cb.getValue("scm.providerCountBadge");this.h.classList.toggle("hide-provider-counts",o==="hidden"),this.h.classList.toggle("auto-provider-counts",o==="auto")};V.filter(this.Cb.onDidChangeConfiguration,o=>o.affectsConfiguration("scm.providerCountBadge"),this.qc)(i,this,this.qc),i();const s=this.Jc();this.Ac(this.h,s),this.onDidChangeBodyVisibility(async o=>{o?this.gc.queue(async()=>{await this.m.setInput(this.vc,s),V.filter(this.Cb.onDidChangeConfiguration,r=>r.affectsConfiguration("scm.alwaysShowRepositories"),this.fc)(()=>{this.bc(),this.Lc()},this,this.fc),V.filter(this.Cb.onDidChangeConfiguration,r=>r.affectsConfiguration("scm.inputMinLineCount")||r.affectsConfiguration("scm.inputMaxLineCount")||r.affectsConfiguration("scm.showActionButton"),this.fc)(()=>this.Lc(),this,this.fc),this.sc.onDidActiveEditorChange(this.Cc,this,this.fc),this.vc.onDidChangeVisibleRepositories(this.Dc,this,this.fc),this.Dc({added:this.vc.visibleRepositories,removed:N.empty()}),typeof this.f=="number"&&(this.m.scrollTop=this.f,this.f=void 0),this.Oc()}):(this.fc.clear(),this.Dc({added:N.empty(),removed:[...this.ec.keys()]}),this.f=this.m.scrollTop,this.Oc())},this,this.qc),this.qc.add(this.Fb.createInstance(Rt)),this.Hb.onDidFileIconThemeChange(this.Mc,this,this.qc),this.Mc(this.Hb.getFileIconTheme())}Ac(t,e){const i=b(".scm-overflow-widgets-container.monaco-editor");this.t=this.Fb.createInstance(it,this.c,i,(n,h)=>{try{this.m.updateElementHeight(n,h)}catch{}}),this.L=this.Fb.createInstance(Z),this.n=this.Fb.createInstance($e,{onDidChangeVisibility:this.onDidChangeBodyVisibility}),this.qc.add(this.n);const s=new zt(()=>this.Gc());s.onWillRun(()=>this.m.domFocus(),this,this.qc),this.qc.add(s);const o=this.Fb.createInstance($t,()=>this.viewMode);this.qc.add(o);const r=de("scm.compactFolders",!0,this.Cb);this.m=this.Fb.createInstance(Ve,"SCM Tree Repo",t,new Bi(this.t),new Hi,[this.t,this.L,this.Fb.createInstance(he,D.SCMTitle,ht(this.Fb)),this.Fb.createInstance(st,ht(this.Fb),s),this.Fb.createInstance(ot,()=>this.viewMode,this.n,ht(this.Fb),s)],o,{horizontalScrolling:!1,setRowLineHeight:!1,transformOptimization:!1,filter:new ki,dnd:new Ft(this.Fb),identityProvider:new Ni,sorter:new Wi(()=>this.viewMode,()=>this.viewSortKey),keyboardNavigationLabelProvider:this.Fb.createInstance(yt,()=>this.viewMode),overrideStyles:this.Zb().listOverrideStyles,compressionEnabled:r.get(),collapseByDefault:n=>I(n)||v(n)||k(n)?!1:(e?.expanded??[]).indexOf(le(n))===-1,accessibilityProvider:this.Fb.createInstance(Ct)}),this.qc.add(this.m),this.m.onDidOpen(this.Bc,this,this.qc),this.m.onContextMenu(this.Ec,this,this.qc),this.m.onDidScroll(this.t.clearValidation,this.t,this.qc),V.filter(this.m.onDidChangeCollapseState,n=>I(n.node.element?.element),this.qc)(this.Oc,this,this.qc),this.qc.add(vt(n=>{this.m.updateOptions({compressionEnabled:r.read(n)})})),g(t,i)}async Bc(t){if(t.element){if(I(t.element)){this.vc.focus(t.element);return}else if(P(t.element)){this.vc.focus(t.element.repository);const e=this.t.getRenderedInputWidget(t.element);if(e){e.focus(),this.m.setFocus([],t.browserEvent);const i=this.m.getSelection();i.length===1&&i[0]===t.element&&setTimeout(()=>this.m.setSelection([]))}return}else if(q(t.element)){this.vc.focus(t.element.repository),this.L.focusActionButton(t.element),this.m.setFocus([],t.browserEvent);return}else if(v(t.element)){const e=t.element.provider,i=N.find(this.uc.repositories,s=>s.provider===e);i&&this.vc.focus(i);return}else if(A(t.element)){if(t.element.command?.id===hi||t.element.command?.id===ci)if(Re(t.browserEvent)&&t.browserEvent.button===1){const s=t.element.resourceGroup,o=`${s.provider.label}: ${s.label}`;await Ai.openMultiFileDiffEditor(this.sc,o,s.provider.rootUri,s.id,{...t.editorOptions,viewState:{revealData:{resource:{original:t.element.multiDiffEditorOriginalUri,modified:t.element.multiDiffEditorModifiedUri}}},preserveFocus:!0})}else await this.rc.executeCommand(t.element.command.id,...t.element.command.arguments||[],t);else if(await t.element.open(!!t.editorOptions.preserveFocus),t.editorOptions.pinned){const s=this.sc.activeEditorPane;s?.group.pinEditor(s.input)}const e=t.element.resourceGroup.provider,i=N.find(this.uc.repositories,s=>s.provider===e);i&&this.vc.focus(i)}else if(k(t.element)){const e=t.element.context.provider,i=N.find(this.uc.repositories,s=>s.provider===e);i&&this.vc.focus(i);return}}else return}Cc(){if(!this.Cb.getValue("scm.autoReveal"))return;const t=ke.getOriginalUri(this.sc.activeEditor,{supportSideBySide:We.PRIMARY});t&&(this.m.getFocus().some(e=>A(e)&&this.xc.extUri.isEqual(e.sourceUri,t))&&this.m.getSelection().some(e=>A(e)&&this.xc.extUri.isEqual(e.sourceUri,t))||this.hc.queue(()=>this.gc.queue(async()=>{for(const e of this.vc.visibleRepositories)if(this.ec.get(e))for(let s=e.provider.groups.length-1;s>=0;s--){const o=e.provider.groups[s],r=this.viewMode==="tree"?o.resourceTree.getNode(t)?.element:o.resources.find(n=>this.xc.extUri.isEqual(n.sourceUri,t));if(r){await this.m.expandTo(r),this.m.reveal(r),this.m.setSelection([r]),this.m.setFocus([r]);return}}})))}Dc({added:t,removed:e}){for(const i of t){const s=new w;s.add(vt(n=>{i.provider.actionButton.read(n),this.Lc(i)})),s.add(i.input.onDidChangeVisibility(()=>this.Lc(i))),s.add(i.provider.onDidChangeResourceGroups(()=>this.Lc(i)));const o=s.add(new Ht),r=()=>{for(const[n]of o)i.provider.groups.includes(n)||o.deleteAndDispose(n);for(const n of i.provider.groups)if(!o.has(n)){const h=new w;h.add(n.onDidChange(()=>this.Lc(i))),h.add(n.onDidChangeResources(()=>this.Lc(i))),o.set(n,h)}};s.add(i.provider.onDidChangeResourceGroups(r)),r(),this.ec.set(i,s)}for(const i of e)this.ec.deleteAndDispose(i);this.Lc(),this.Cc()}Ec(t){if(!t.element){const n=this.tc.getMenuActions(H.ViewSort,this.Db),h=ui(n);return this.Bb.showContextMenu({getAnchor:()=>t.anchor,getActions:()=>h,onHide:()=>{}})}const e=t.element;let i=e,s=[];const o=new w;let r=new zt(()=>this.Gc());if(o.add(r),I(e)){const h=this.vc.menus.getRepositoryMenus(e.provider).repositoryContextMenu;i=e.provider,r=new ri(()=>this.Fc()),o.add(r),s=Q(h)}else if(!(P(e)||q(e))){if(v(e)){const h=this.vc.menus.getRepositoryMenus(e.provider).getResourceGroupMenu(e);s=Q(h)}else if(A(e)){const h=this.vc.menus.getRepositoryMenus(e.resourceGroup.provider).getResourceMenu(e);s=Q(h)}else if(k(e))if(e.element){const h=this.vc.menus.getRepositoryMenus(e.element.resourceGroup.provider).getResourceMenu(e.element);s=Q(h)}else{const h=this.vc.menus.getRepositoryMenus(e.context.provider).getResourceFolderMenu(e.context);s=Q(h)}}o.add(r.onWillRun(()=>this.m.domFocus())),this.Bb.showContextMenu({actionRunner:r,getAnchor:()=>t.anchor,getActions:()=>s,getActionsContext:()=>i,onHide:()=>o.dispose()})}Fc(){const t=this.m.getFocus().filter(i=>!!i&&I(i)),e=this.m.getSelection().filter(i=>!!i&&I(i));return Array.from(new Set([...t,...e]))}Gc(){return this.m.getSelection().filter(t=>v(t)||A(t)||k(t))}Hc(){let t=this.Cb.getValue("scm.defaultViewMode")==="list"?"list":"tree";const e=this.wc.get("scm.viewMode",1);return typeof e=="string"&&(t=e),t}Ic(){if(this.ab==="tree")return"path";let t;switch(this.Cb.getValue("scm.defaultViewSortKey")){case"name":t="name";break;case"status":t="status";break;default:t="path";break}const i=this.wc.get("scm.viewSortKey",1);return typeof i=="string"&&(t=i),t}Jc(){const t=this.wc.get("scm.viewState2",1);if(t)try{return JSON.parse(t)}catch{return}}Kc(){this.m&&this.wc.store("scm.viewState2",JSON.stringify(this.m.getViewState()),1,1)}Lc(t){this.ic.queue(()=>this.gc.queue(async()=>{const e=this.t.getFocusedInput();t&&this.m.hasNode(t)?await this.m.updateChildren(t):await this.m.updateChildren(void 0),e&&this.t.getRenderedInputWidget(e)?.focus(),this.Nc(),this.Oc()}))}Mc(t){this.h.classList.toggle("list-view-mode",this.viewMode==="list"),this.h.classList.toggle("tree-view-mode",this.viewMode==="tree"),this.h.classList.toggle("align-icons-and-twisties",this.viewMode==="list"&&t.hasFileIcons||t.hasFileIcons&&!t.hasFolderIcons),this.h.classList.toggle("hide-arrows",this.viewMode==="tree"&&t.hidesExplorerArrows===!0)}Nc(){if(!this.Cb.getValue("scm.alwaysShowRepositories")&&this.ec.size===1){const e=N.first(this.ec.keys()).provider;this.nc.set(e.contextValue),this.oc.set(e.rootUri?.toString()),this.pc.set(!!e.rootUri)}else this.nc.set(void 0),this.oc.set(void 0),this.pc.set(!1)}Oc(){if(!this.isBodyVisible()||this.ec.size===1){this.mc.set(!1),this.lc.set(!1);return}this.mc.set(this.vc.visibleRepositories.some(t=>this.m.hasNode(t)&&this.m.isCollapsible(t))),this.lc.set(this.vc.visibleRepositories.every(t=>this.m.hasNode(t)&&(!this.m.isCollapsible(t)||this.m.isCollapsed(t))))}collapseAllRepositories(){for(const t of this.vc.visibleRepositories)this.m.isCollapsible(t)&&this.m.collapse(t)}expandAllRepositories(){for(const t of this.vc.visibleRepositories)this.m.isCollapsible(t)&&this.m.expand(t)}focusPreviousInput(){this.gc.queue(()=>this.Pc(-1))}focusNextInput(){this.gc.queue(()=>this.Pc(1))}async Pc(t){if(!this.vc.focusedRepository||this.vc.visibleRepositories.length===0)return;let e=this.vc.focusedRepository.input;const i=this.vc.visibleRepositories;if(!(i.length===1&&this.t.getRenderedInputWidget(e)?.hasFocus()===!0)){if(i.length>1&&this.t.getRenderedInputWidget(e)?.hasFocus()===!0){const s=i.indexOf(this.vc.focusedRepository),o=lt(s+t,i.length);e=i[o].input}await this.m.expandTo(e),this.m.reveal(e),this.t.getRenderedInputWidget(e)?.focus()}}focusPreviousResourceGroup(){this.gc.queue(()=>this.Qc(-1))}focusNextResourceGroup(){this.gc.queue(()=>this.Qc(1))}async Qc(t){if(!this.vc.focusedRepository||this.vc.visibleRepositories.length===0)return;const e=Ie(this.m.getHTMLElement()),i=this.vc.focusedRepository.provider.groups,s=this.m.getFocus().find(n=>v(n)),o=e&&s?i.indexOf(s):-1;let r;if(o===-1){for(const n of i)if(this.m.hasNode(n)){r=n;break}}else{let n=lt(o+t,i.length);for(;n!==o;){if(this.m.hasNode(i[n])){r=i[n];break}n=lt(n+t,i.length)}}r&&(await this.m.expandTo(r),this.m.reveal(r),this.m.setSelection([r]),this.m.setFocus([r]),this.m.domFocus())}shouldShowWelcome(){return this.uc.repositoryCount===0}getActionsContext(){return this.vc.visibleRepositories.length===1?this.vc.visibleRepositories[0].provider:void 0}focus(){super.focus(),this.gc.queue(()=>new Promise(t=>{if(this.isExpanded()){if(this.m.getFocus().length===0)for(const e of this.vc.visibleRepositories){const i=this.t.getRenderedInputWidget(e.input);if(i){i.focus(),t();return}}this.m.domFocus(),t()}}))}dispose(){this.fc.dispose(),this.qc.dispose(),this.ec.dispose(),super.dispose()}};Yt=E([d(1,j),d(2,xe),d(3,rt),d(4,te),d(5,W),d(6,At),d(7,$i),d(8,J),d(9,re),d(10,X),d(11,Tt),d(12,He),d(13,nt),d(14,U),d(15,ce),d(16,Li)],Yt);let $t=class extends Dt{constructor(t,e,i){super(),this.b=t,this.c=e,this.f=i}async getChildren(t){const e=this.f.visibleRepositories.length,i=this.c.getValue("scm.showActionButton")===!0,s=this.c.getValue("scm.alwaysShowRepositories")===!0;if(dt(t)&&(e>1||s))return this.f.visibleRepositories;if(dt(t)&&e===1&&!s||I(t)){const o=[];t=I(t)?t:this.f.visibleRepositories[0];const r=t.provider.actionButton.get(),n=t.provider.groups;return t.input.visible&&o.push(t.input),i&&r&&o.push({type:"actionButton",repository:t,button:r}),(n.some(a=>a.resources.length>0)||e===1&&(!i||!r))&&o.push(...n),o}else if(v(t)){if(this.b()==="list")return t.resources;if(this.b()==="tree"){const o=[];for(const r of t.resourceTree.root.children)o.push(r.element&&r.childrenCount===0?r.element:r);return o}}else if(k(t)){const o=[];for(const r of t.children)o.push(r.element&&r.childrenCount===0?r.element:r);return o}return[]}getParent(t){if(k(t)){if(t.parent===t.context.resourceTree.root)return t.context;if(t.parent)return t.parent;throw new Error("Invalid element passed to getParent")}else if(A(t)){if(this.b()==="list")return t.resourceGroup;const i=t.resourceGroup.resourceTree.getNode(t.sourceUri)?.parent;if(!i)throw new Error("Invalid element passed to getParent");return i===t.resourceGroup.resourceTree.root?t.resourceGroup:i}else{if(P(t))return t.repository;if(v(t)){const e=this.f.visibleRepositories.find(i=>i.provider===t.provider);if(!e)throw new Error("Invalid element passed to getParent");return e}else throw new Error("Unexpected call to getParent")}}hasChildren(t){if(dt(t))return this.f.visibleRepositories.length!==0;if(I(t))return!0;if(P(t))return!1;if(q(t))return!1;if(v(t))return!0;if(A(t))return!1;if(S.isResourceNode(t))return t.childrenCount>0;throw new Error("hasChildren not implemented.")}};$t=E([d(1,nt),d(2,W)],$t);class ts{constructor(t,e,i,s){this.d=t,this.f=e,this.h=i,this.i=s,this.c=new xt}dispose(){this.c?.dispose()}setButton(t){if(this.k(),!!t){if(t.secondaryCommands?.length){const e=[];for(let i=0;i<t.secondaryCommands.length;i++){const s=t.secondaryCommands[i];for(const o of s)e.push(Ae({id:o.id,label:o.title,enabled:!0,run:async()=>{await this.l(o.id,...o.arguments||[])}}));s.length&&e.push(new Le)}e.pop(),this.b=new fi(this.d,{actions:e,addPrimaryActionToDropdown:!1,contextMenuProvider:this.f,title:t.command.tooltip,supportIcons:!0,..._t})}else this.b=new Nt(this.d,{supportIcons:!0,supportShortLabel:!!t.command.shortTitle,title:t.command.tooltip,..._t});this.b.enabled=t.enabled,this.b.label=t.command.title,this.b instanceof Nt&&t.command.shortTitle&&(this.b.labelShort=t.command.shortTitle),this.b.onDidClick(async()=>await this.l(t.command.id,...t.command.arguments||[]),null,this.c.value),this.c.value.add(this.b)}}focus(){this.b?.focus()}k(){this.c.value=new w,this.b=void 0,Ce(this.d)}async l(t,...e){try{await this.h.executeCommand(t,...e)}catch(i){this.i.error(i)}}}Ge(".scm-view .scm-editor-container");export{Ct as $$nc,yt as $0nc,Z as $8nc,Wi as $9nc,l as $_nc,Yt as $aoc,ts as $boc};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import "./media/scm.css";
+import { Event, Emitter } from "../../../../base/common/event.js";
+import { basename, dirname } from "../../../../base/common/resources.js";
+import { Disposable, DisposableStore, combinedDisposable, dispose, toDisposable, MutableDisposable, DisposableMap } from "../../../../base/common/lifecycle.js";
+import { ViewPane, ViewAction } from "../../../browser/parts/views/viewPane.js";
+import { append, $, Dimension, trackFocus, clearNode, isPointerEvent, isActiveElement } from "../../../../base/browser/dom.js";
+import { asCSSUrl } from "../../../../base/browser/cssValue.js";
+import { ISCMViewService, ISCMService, SCMInputChangeReason, VIEW_PANE_ID } from "../common/scm.js";
+import { ResourceLabels } from "../../../browser/labels.js";
+import { CountBadge } from "../../../../base/browser/ui/countBadge/countBadge.js";
+import { IEditorService } from "../../../services/editor/common/editorService.js";
+import { IInstantiationService } from "../../../../platform/instantiation/common/instantiation.js";
+import { IContextViewService, IContextMenuService } from "../../../../platform/contextview/browser/contextView.js";
+import { IContextKeyService, ContextKeyExpr, RawContextKey } from "../../../../platform/contextkey/common/contextkey.js";
+import { ICommandService } from "../../../../platform/commands/common/commands.js";
+import { IKeybindingService } from "../../../../platform/keybinding/common/keybinding.js";
+import { MenuItemAction, IMenuService, registerAction2, MenuId, MenuRegistry, Action2 } from "../../../../platform/actions/common/actions.js";
+import { ActionRunner, Action, Separator, toAction } from "../../../../base/common/actions.js";
+import { ActionBar } from "../../../../base/browser/ui/actionbar/actionbar.js";
+import { IThemeService } from "../../../../platform/theme/common/themeService.js";
+import { isSCMResource, isSCMResourceGroup, isSCMRepository, isSCMInput, collectContextMenuActions, getActionViewItemProvider, isSCMActionButton, isSCMViewService, isSCMResourceNode, connectPrimaryMenu } from "./util.js";
+import { WorkbenchCompressibleAsyncDataTree } from "../../../../platform/list/browser/listService.js";
+import { IConfigurationService } from "../../../../platform/configuration/common/configuration.js";
+import { disposableTimeout, Sequencer, ThrottledDelayer, Throttler } from "../../../../base/common/async.js";
+import { ResourceTree } from "../../../../base/common/resourceTree.js";
+import { Iterable } from "../../../../base/common/iterator.js";
+import { FileKind } from "../../../../platform/files/common/files.js";
+import { compareFileNames, comparePaths } from "../../../../base/common/comparers.js";
+import { createMatches } from "../../../../base/common/filters.js";
+import { IViewDescriptorService } from "../../../common/views.js";
+import { localize } from "../../../../nls.js";
+import { IStorageService } from "../../../../platform/storage/common/storage.js";
+import { EditorResourceAccessor, SideBySideEditor } from "../../../common/editor.js";
+import { CodeEditorWidget } from "../../../../editor/browser/widget/codeEditor/codeEditorWidget.js";
+import { getSimpleEditorOptions, setupSimpleEditorSelectionStyling } from "../../codeEditor/browser/simpleEditorOptions.js";
+import { IModelService } from "../../../../editor/common/services/model.js";
+import { EditorExtensionsRegistry } from "../../../../editor/browser/editorExtensions.js";
+import { MenuPreventer } from "../../codeEditor/browser/menuPreventer.js";
+import { SelectionClipboardContributionID } from "../../codeEditor/browser/selectionClipboard.js";
+import { EditorDictation } from "../../codeEditor/browser/dictation/editorDictation.js";
+import { ContextMenuController } from "../../../../editor/contrib/contextmenu/browser/contextmenu.js";
+import * as platform from "../../../../base/common/platform.js";
+import { compare, format } from "../../../../base/common/strings.js";
+import { SuggestController } from "../../../../editor/contrib/suggest/browser/suggestController.js";
+import { SnippetController2 } from "../../../../editor/contrib/snippet/browser/snippetController2.js";
+import { ServiceCollection } from "../../../../platform/instantiation/common/serviceCollection.js";
+import { ColorDetector } from "../../../../editor/contrib/colorPicker/browser/colorDetector.js";
+import { LinkDetector } from "../../../../editor/contrib/links/browser/links.js";
+import { IOpenerService } from "../../../../platform/opener/common/opener.js";
+import { ITelemetryService } from "../../../../platform/telemetry/common/telemetry.js";
+import { ILabelService } from "../../../../platform/label/common/label.js";
+import { DEFAULT_FONT_FAMILY } from "../../../../base/browser/fonts.js";
+import { Codicon } from "../../../../base/common/codicons.js";
+import { ThemeIcon } from "../../../../base/common/themables.js";
+import { RepositoryActionRunner, RepositoryRenderer } from "./scmRepositoryRenderer.js";
+import { ColorScheme } from "../../../../platform/theme/common/theme.js";
+import { API_OPEN_DIFF_EDITOR_COMMAND_ID, API_OPEN_EDITOR_COMMAND_ID } from "../../../browser/parts/editor/editorCommands.js";
+import { createActionViewItem, getFlatActionBarActions, getFlatContextMenuActions } from "../../../../platform/actions/browser/menuEntryActionViewItem.js";
+import { MarkdownRenderer, openLinkFromMarkdown } from "../../../../editor/browser/widget/markdownRenderer/browser/markdownRenderer.js";
+import { Button, ButtonWithDropdown } from "../../../../base/browser/ui/button/button.js";
+import { INotificationService } from "../../../../platform/notification/common/notification.js";
+import { RepositoryContextKeys } from "./scmViewService.js";
+import { DragAndDropController } from "../../../../editor/contrib/dnd/browser/dnd.js";
+import { CopyPasteController } from "../../../../editor/contrib/dropOrPasteInto/browser/copyPasteController.js";
+import { DropIntoEditorController } from "../../../../editor/contrib/dropOrPasteInto/browser/dropIntoEditorController.js";
+import { MessageController } from "../../../../editor/contrib/message/browser/messageController.js";
+import { defaultButtonStyles, defaultCountBadgeStyles } from "../../../../platform/theme/browser/defaultStyles.js";
+import { InlineCompletionsController } from "../../../../editor/contrib/inlineCompletions/browser/controller/inlineCompletionsController.js";
+import { CodeActionController } from "../../../../editor/contrib/codeAction/browser/codeActionController.js";
+import { Schemas } from "../../../../base/common/network.js";
+import { fillEditorsDragData } from "../../../browser/dnd.js";
+import { CodeDataTransfers } from "../../../../platform/dnd/browser/dnd.js";
+import { FormatOnType } from "../../../../editor/contrib/format/browser/formatActions.js";
+import { EditorOptions } from "../../../../editor/common/config/editorOptions.js";
+import { IUriIdentityService } from "../../../../platform/uriIdentity/common/uriIdentity.js";
+import { EditOperation } from "../../../../editor/common/core/editOperation.js";
+import { WorkbenchToolBar } from "../../../../platform/actions/browser/toolbar.js";
+import { CancellationTokenSource } from "../../../../base/common/cancellation.js";
+import { DropdownWithPrimaryActionViewItem } from "../../../../platform/actions/browser/dropdownWithPrimaryActionViewItem.js";
+import { clamp, rot } from "../../../../base/common/numbers.js";
+import { IHoverService } from "../../../../platform/hover/browser/hover.js";
+import { OpenScmGroupAction } from "../../multiDiffEditor/browser/scmMultiDiffSourceResolver.js";
+import { ContentHoverController } from "../../../../editor/contrib/hover/browser/contentHoverController.js";
+import { GlyphHoverController } from "../../../../editor/contrib/hover/browser/glyphHoverController.js";
+import { autorun, runOnChange } from "../../../../base/common/observable.js";
+import { PlaceholderTextContribution } from "../../../../editor/contrib/placeholderText/browser/placeholderTextContribution.js";
+import { observableConfigValue } from "../../../../platform/observable/common/platformObservableUtils.js";
+import { IAccessibilityService } from "../../../../platform/accessibility/common/accessibility.js";
+import { ChatContextKeys } from "../../chat/common/chatContextKeys.js";
+import product from "../../../../platform/product/common/product.js";
+import { CHAT_SETUP_ACTION_ID } from "../../chat/browser/actions/chatActions.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+var ActionButtonRenderer_1;
+var InputRenderer_1;
+var ResourceGroupRenderer_1;
+var ResourceRenderer_1;
+var SCMInputWidget_1;
+function processResourceFilterData(uri, filterData) {
+  if (!filterData) {
+    return [void 0, void 0];
+  }
+  if (!filterData.label) {
+    const matches2 = createMatches(filterData);
+    return [matches2, void 0];
+  }
+  const fileName = basename(uri);
+  const label = filterData.label;
+  const pathLength = label.length - fileName.length;
+  const matches = createMatches(filterData.score);
+  if (label === fileName) {
+    return [matches, void 0];
+  }
+  const labelMatches = [];
+  const descriptionMatches = [];
+  for (const match of matches) {
+    if (match.start > pathLength) {
+      labelMatches.push({
+        start: match.start - pathLength,
+        end: match.end - pathLength
+      });
+    } else if (match.end < pathLength) {
+      descriptionMatches.push(match);
+    } else {
+      labelMatches.push({
+        start: 0,
+        end: match.end - pathLength
+      });
+      descriptionMatches.push({
+        start: match.start,
+        end: pathLength
+      });
+    }
+  }
+  return [labelMatches, descriptionMatches];
+}
+__name(processResourceFilterData, "processResourceFilterData");
+let ActionButtonRenderer = class ActionButtonRenderer2 {
+  static {
+    __name(this, "ActionButtonRenderer");
+  }
+  static {
+    ActionButtonRenderer_1 = this;
+  }
+  static {
+    this.DEFAULT_HEIGHT = 28;
+  }
+  static {
+    this.TEMPLATE_ID = "actionButton";
+  }
+  get templateId() {
+    return ActionButtonRenderer_1.TEMPLATE_ID;
+  }
+  constructor(commandService, contextMenuService, notificationService) {
+    this.commandService = commandService;
+    this.contextMenuService = contextMenuService;
+    this.notificationService = notificationService;
+    this.actionButtons = /* @__PURE__ */ new Map();
+  }
+  renderTemplate(container) {
+    container.parentElement.parentElement.querySelector(".monaco-tl-twistie").classList.add("force-no-twistie");
+    container.parentElement.parentElement.classList.add("cursor-default", "force-no-hover");
+    const buttonContainer = append(container, $(".button-container"));
+    const actionButton = new SCMActionButton(buttonContainer, this.contextMenuService, this.commandService, this.notificationService);
+    return { actionButton, disposable: Disposable.None, templateDisposable: actionButton };
+  }
+  renderElement(node, index, templateData) {
+    templateData.disposable.dispose();
+    const disposables = new DisposableStore();
+    const actionButton = node.element;
+    templateData.actionButton.setButton(node.element.button);
+    this.actionButtons.set(actionButton, templateData.actionButton);
+    disposables.add({ dispose: /* @__PURE__ */ __name(() => this.actionButtons.delete(actionButton), "dispose") });
+    templateData.disposable = disposables;
+  }
+  renderCompressedElements() {
+    throw new Error("Should never happen since node is incompressible");
+  }
+  focusActionButton(actionButton) {
+    this.actionButtons.get(actionButton)?.focus();
+  }
+  disposeElement(node, index, template) {
+    template.disposable.dispose();
+  }
+  disposeTemplate(templateData) {
+    templateData.disposable.dispose();
+    templateData.templateDisposable.dispose();
+  }
+};
+ActionButtonRenderer = ActionButtonRenderer_1 = __decorate([
+  __param(0, ICommandService),
+  __param(1, IContextMenuService),
+  __param(2, INotificationService)
+], ActionButtonRenderer);
+class SCMTreeDragAndDrop {
+  static {
+    __name(this, "SCMTreeDragAndDrop");
+  }
+  constructor(instantiationService) {
+    this.instantiationService = instantiationService;
+  }
+  getDragURI(element) {
+    if (isSCMResource(element)) {
+      return element.sourceUri.toString();
+    }
+    return null;
+  }
+  onDragStart(data, originalEvent) {
+    const items = SCMTreeDragAndDrop.getResourcesFromDragAndDropData(data);
+    if (originalEvent.dataTransfer && items?.length) {
+      this.instantiationService.invokeFunction((accessor) => fillEditorsDragData(accessor, items, originalEvent));
+      const fileResources = items.filter((s) => s.scheme === Schemas.file).map((r) => r.fsPath);
+      if (fileResources.length) {
+        originalEvent.dataTransfer.setData(CodeDataTransfers.FILES, JSON.stringify(fileResources));
+      }
+    }
+  }
+  getDragLabel(elements, originalEvent) {
+    if (elements.length === 1) {
+      const element = elements[0];
+      if (isSCMResource(element)) {
+        return basename(element.sourceUri);
+      }
+    }
+    return String(elements.length);
+  }
+  onDragOver(data, targetElement, targetIndex, targetSector, originalEvent) {
+    return true;
+  }
+  drop(data, targetElement, targetIndex, targetSector, originalEvent) {
+  }
+  static getResourcesFromDragAndDropData(data) {
+    const uris = [];
+    for (const element of [...data.context ?? [], ...data.elements]) {
+      if (isSCMResource(element)) {
+        uris.push(element.sourceUri);
+      }
+    }
+    return uris;
+  }
+  dispose() {
+  }
+}
+let InputRenderer = class InputRenderer2 {
+  static {
+    __name(this, "InputRenderer");
+  }
+  static {
+    InputRenderer_1 = this;
+  }
+  static {
+    this.DEFAULT_HEIGHT = 26;
+  }
+  static {
+    this.TEMPLATE_ID = "input";
+  }
+  get templateId() {
+    return InputRenderer_1.TEMPLATE_ID;
+  }
+  constructor(outerLayout, overflowWidgetsDomNode, updateHeight, instantiationService) {
+    this.outerLayout = outerLayout;
+    this.overflowWidgetsDomNode = overflowWidgetsDomNode;
+    this.updateHeight = updateHeight;
+    this.instantiationService = instantiationService;
+    this.inputWidgets = /* @__PURE__ */ new Map();
+    this.contentHeights = /* @__PURE__ */ new WeakMap();
+    this.editorSelections = /* @__PURE__ */ new WeakMap();
+  }
+  renderTemplate(container) {
+    container.parentElement.parentElement.querySelector(".monaco-tl-twistie").classList.add("force-no-twistie");
+    container.parentElement.parentElement.classList.add("force-no-hover");
+    const templateDisposable = new DisposableStore();
+    const inputElement = append(container, $(".scm-input"));
+    const inputWidget = this.instantiationService.createInstance(SCMInputWidget, inputElement, this.overflowWidgetsDomNode);
+    templateDisposable.add(inputWidget);
+    return { inputWidget, inputWidgetHeight: InputRenderer_1.DEFAULT_HEIGHT, elementDisposables: new DisposableStore(), templateDisposable };
+  }
+  renderElement(node, index, templateData) {
+    const input = node.element;
+    templateData.inputWidget.input = input;
+    this.inputWidgets.set(input, templateData.inputWidget);
+    templateData.elementDisposables.add({
+      dispose: /* @__PURE__ */ __name(() => this.inputWidgets.delete(input), "dispose")
+    });
+    const selections = this.editorSelections.get(input);
+    if (selections) {
+      templateData.inputWidget.selections = selections;
+    }
+    templateData.elementDisposables.add(toDisposable(() => {
+      const selections2 = templateData.inputWidget.selections;
+      if (selections2) {
+        this.editorSelections.set(input, selections2);
+      }
+    }));
+    templateData.inputWidgetHeight = InputRenderer_1.DEFAULT_HEIGHT;
+    const onDidChangeContentHeight = /* @__PURE__ */ __name(() => {
+      const contentHeight = templateData.inputWidget.getContentHeight();
+      this.contentHeights.set(input, contentHeight);
+      if (templateData.inputWidgetHeight !== contentHeight) {
+        this.updateHeight(input, contentHeight + 10);
+        templateData.inputWidgetHeight = contentHeight;
+        templateData.inputWidget.layout();
+      }
+    }, "onDidChangeContentHeight");
+    const startListeningContentHeightChange = /* @__PURE__ */ __name(() => {
+      templateData.elementDisposables.add(templateData.inputWidget.onDidChangeContentHeight(onDidChangeContentHeight));
+      onDidChangeContentHeight();
+    }, "startListeningContentHeightChange");
+    disposableTimeout(startListeningContentHeightChange, 0, templateData.elementDisposables);
+    const layoutEditor = /* @__PURE__ */ __name(() => templateData.inputWidget.layout(), "layoutEditor");
+    templateData.elementDisposables.add(this.outerLayout.onDidChange(layoutEditor));
+    layoutEditor();
+  }
+  renderCompressedElements() {
+    throw new Error("Should never happen since node is incompressible");
+  }
+  disposeElement(group, index, template) {
+    template.elementDisposables.clear();
+  }
+  disposeTemplate(templateData) {
+    templateData.templateDisposable.dispose();
+  }
+  getHeight(input) {
+    return (this.contentHeights.get(input) ?? InputRenderer_1.DEFAULT_HEIGHT) + 10;
+  }
+  getRenderedInputWidget(input) {
+    return this.inputWidgets.get(input);
+  }
+  getFocusedInput() {
+    for (const [input, inputWidget] of this.inputWidgets) {
+      if (inputWidget.hasFocus()) {
+        return input;
+      }
+    }
+    return void 0;
+  }
+  clearValidation() {
+    for (const [, inputWidget] of this.inputWidgets) {
+      inputWidget.clearValidation();
+    }
+  }
+};
+InputRenderer = InputRenderer_1 = __decorate([
+  __param(3, IInstantiationService)
+], InputRenderer);
+let ResourceGroupRenderer = class ResourceGroupRenderer2 {
+  static {
+    __name(this, "ResourceGroupRenderer");
+  }
+  static {
+    ResourceGroupRenderer_1 = this;
+  }
+  static {
+    this.TEMPLATE_ID = "resource group";
+  }
+  get templateId() {
+    return ResourceGroupRenderer_1.TEMPLATE_ID;
+  }
+  constructor(actionViewItemProvider, actionRunner, commandService, contextKeyService, contextMenuService, keybindingService, menuService, scmViewService, telemetryService) {
+    this.actionViewItemProvider = actionViewItemProvider;
+    this.actionRunner = actionRunner;
+    this.commandService = commandService;
+    this.contextKeyService = contextKeyService;
+    this.contextMenuService = contextMenuService;
+    this.keybindingService = keybindingService;
+    this.menuService = menuService;
+    this.scmViewService = scmViewService;
+    this.telemetryService = telemetryService;
+  }
+  renderTemplate(container) {
+    container.parentElement.parentElement.querySelector(".monaco-tl-twistie").classList.add("force-twistie");
+    const element = append(container, $(".resource-group"));
+    const name = append(element, $(".name"));
+    const actionsContainer = append(element, $(".actions"));
+    const actionBar = new WorkbenchToolBar(actionsContainer, {
+      actionViewItemProvider: this.actionViewItemProvider,
+      actionRunner: this.actionRunner
+    }, this.menuService, this.contextKeyService, this.contextMenuService, this.keybindingService, this.commandService, this.telemetryService);
+    const countContainer = append(element, $(".count"));
+    const count = new CountBadge(countContainer, {}, defaultCountBadgeStyles);
+    const disposables = combinedDisposable(actionBar, count);
+    return { name, count, actionBar, elementDisposables: new DisposableStore(), disposables };
+  }
+  renderElement(node, index, template) {
+    const group = node.element;
+    template.name.textContent = group.label;
+    template.count.setCount(group.resources.length);
+    const menus = this.scmViewService.menus.getRepositoryMenus(group.provider);
+    template.elementDisposables.add(connectPrimaryMenu(menus.getResourceGroupMenu(group), (primary) => {
+      template.actionBar.setActions(primary);
+    }, "inline"));
+    template.actionBar.context = group;
+  }
+  renderCompressedElements(node) {
+    throw new Error("Should never happen since node is incompressible");
+  }
+  disposeElement(group, index, template) {
+    template.elementDisposables.clear();
+  }
+  disposeTemplate(template) {
+    template.elementDisposables.dispose();
+    template.disposables.dispose();
+  }
+};
+ResourceGroupRenderer = ResourceGroupRenderer_1 = __decorate([
+  __param(2, ICommandService),
+  __param(3, IContextKeyService),
+  __param(4, IContextMenuService),
+  __param(5, IKeybindingService),
+  __param(6, IMenuService),
+  __param(7, ISCMViewService),
+  __param(8, ITelemetryService)
+], ResourceGroupRenderer);
+class RepositoryPaneActionRunner extends ActionRunner {
+  static {
+    __name(this, "RepositoryPaneActionRunner");
+  }
+  constructor(getSelectedResources) {
+    super();
+    this.getSelectedResources = getSelectedResources;
+  }
+  async runAction(action, context) {
+    if (!(action instanceof MenuItemAction)) {
+      return super.runAction(action, context);
+    }
+    const isContextResourceGroup = isSCMResourceGroup(context);
+    const selection = this.getSelectedResources().filter((r) => isSCMResourceGroup(r) === isContextResourceGroup);
+    const contextIsSelected = selection.some((s) => s === context);
+    const actualContext = contextIsSelected ? selection : [context];
+    const args = actualContext.map((e) => ResourceTree.isResourceNode(e) ? ResourceTree.collect(e) : [e]).flat();
+    await action.run(...args);
+  }
+}
+let ResourceRenderer = class ResourceRenderer2 {
+  static {
+    __name(this, "ResourceRenderer");
+  }
+  static {
+    ResourceRenderer_1 = this;
+  }
+  static {
+    this.TEMPLATE_ID = "resource";
+  }
+  get templateId() {
+    return ResourceRenderer_1.TEMPLATE_ID;
+  }
+  constructor(viewMode, labels, actionViewItemProvider, actionRunner, commandService, contextKeyService, contextMenuService, keybindingService, labelService, menuService, scmViewService, telemetryService, themeService) {
+    this.viewMode = viewMode;
+    this.labels = labels;
+    this.actionViewItemProvider = actionViewItemProvider;
+    this.actionRunner = actionRunner;
+    this.commandService = commandService;
+    this.contextKeyService = contextKeyService;
+    this.contextMenuService = contextMenuService;
+    this.keybindingService = keybindingService;
+    this.labelService = labelService;
+    this.menuService = menuService;
+    this.scmViewService = scmViewService;
+    this.telemetryService = telemetryService;
+    this.themeService = themeService;
+    this.disposables = new DisposableStore();
+    this.renderedResources = /* @__PURE__ */ new Map();
+    themeService.onDidColorThemeChange(this.onDidColorThemeChange, this, this.disposables);
+  }
+  renderTemplate(container) {
+    const element = append(container, $(".resource"));
+    const name = append(element, $(".name"));
+    const fileLabel = this.labels.create(name, { supportDescriptionHighlights: true, supportHighlights: true });
+    const actionsContainer = append(fileLabel.element, $(".actions"));
+    const actionBar = new WorkbenchToolBar(actionsContainer, {
+      actionViewItemProvider: this.actionViewItemProvider,
+      actionRunner: this.actionRunner
+    }, this.menuService, this.contextKeyService, this.contextMenuService, this.keybindingService, this.commandService, this.telemetryService);
+    const decorationIcon = append(element, $(".decoration-icon"));
+    const actionBarMenuListener = new MutableDisposable();
+    const disposables = combinedDisposable(actionBar, fileLabel, actionBarMenuListener);
+    return { element, name, fileLabel, decorationIcon, actionBar, actionBarMenu: void 0, actionBarMenuListener, elementDisposables: new DisposableStore(), disposables };
+  }
+  renderElement(node, index, template) {
+    const resourceOrFolder = node.element;
+    const iconResource = ResourceTree.isResourceNode(resourceOrFolder) ? resourceOrFolder.element : resourceOrFolder;
+    const uri = ResourceTree.isResourceNode(resourceOrFolder) ? resourceOrFolder.uri : resourceOrFolder.sourceUri;
+    const fileKind = ResourceTree.isResourceNode(resourceOrFolder) ? FileKind.FOLDER : FileKind.FILE;
+    const tooltip = !ResourceTree.isResourceNode(resourceOrFolder) && resourceOrFolder.decorations.tooltip || "";
+    const hidePath = this.viewMode() === "tree";
+    let matches;
+    let descriptionMatches;
+    let strikethrough;
+    if (ResourceTree.isResourceNode(resourceOrFolder)) {
+      if (resourceOrFolder.element) {
+        const menus = this.scmViewService.menus.getRepositoryMenus(resourceOrFolder.element.resourceGroup.provider);
+        this._renderActionBar(template, resourceOrFolder, menus.getResourceMenu(resourceOrFolder.element));
+        template.element.classList.toggle("faded", resourceOrFolder.element.decorations.faded);
+        strikethrough = resourceOrFolder.element.decorations.strikeThrough;
+      } else {
+        const menus = this.scmViewService.menus.getRepositoryMenus(resourceOrFolder.context.provider);
+        this._renderActionBar(template, resourceOrFolder, menus.getResourceFolderMenu(resourceOrFolder.context));
+        matches = createMatches(node.filterData);
+        template.element.classList.remove("faded");
+      }
+    } else {
+      const menus = this.scmViewService.menus.getRepositoryMenus(resourceOrFolder.resourceGroup.provider);
+      this._renderActionBar(template, resourceOrFolder, menus.getResourceMenu(resourceOrFolder));
+      [matches, descriptionMatches] = processResourceFilterData(uri, node.filterData);
+      template.element.classList.toggle("faded", resourceOrFolder.decorations.faded);
+      strikethrough = resourceOrFolder.decorations.strikeThrough;
+    }
+    const renderedData = {
+      tooltip,
+      uri,
+      fileLabelOptions: { hidePath, fileKind, matches, descriptionMatches, strikethrough },
+      iconResource
+    };
+    this.renderIcon(template, renderedData);
+    this.renderedResources.set(template, renderedData);
+    template.elementDisposables.add(toDisposable(() => this.renderedResources.delete(template)));
+    template.element.setAttribute("data-tooltip", tooltip);
+  }
+  disposeElement(resource, index, template) {
+    template.elementDisposables.clear();
+  }
+  renderCompressedElements(node, index, template) {
+    const compressed = node.element;
+    const folder = compressed.elements[compressed.elements.length - 1];
+    const label = compressed.elements.map((e) => e.name);
+    const fileKind = FileKind.FOLDER;
+    const matches = createMatches(node.filterData);
+    template.fileLabel.setResource({ resource: folder.uri, name: label }, {
+      fileDecorations: { colors: false, badges: true },
+      fileKind,
+      matches,
+      separator: this.labelService.getSeparator(folder.uri.scheme)
+    });
+    const menus = this.scmViewService.menus.getRepositoryMenus(folder.context.provider);
+    this._renderActionBar(template, folder, menus.getResourceFolderMenu(folder.context));
+    template.name.classList.remove("strike-through");
+    template.element.classList.remove("faded");
+    template.decorationIcon.style.display = "none";
+    template.decorationIcon.style.backgroundImage = "";
+    template.element.setAttribute("data-tooltip", "");
+  }
+  disposeCompressedElements(node, index, template) {
+    template.elementDisposables.clear();
+  }
+  disposeTemplate(template) {
+    template.elementDisposables.dispose();
+    template.disposables.dispose();
+  }
+  _renderActionBar(template, resourceOrFolder, menu) {
+    if (!template.actionBarMenu || template.actionBarMenu !== menu) {
+      template.actionBarMenu = menu;
+      template.actionBarMenuListener.value = connectPrimaryMenu(menu, (primary) => {
+        template.actionBar.setActions(primary);
+      }, "inline");
+    }
+    template.actionBar.context = resourceOrFolder;
+  }
+  onDidColorThemeChange() {
+    for (const [template, data] of this.renderedResources) {
+      this.renderIcon(template, data);
+    }
+  }
+  renderIcon(template, data) {
+    const theme = this.themeService.getColorTheme();
+    const icon = theme.type === ColorScheme.LIGHT ? data.iconResource?.decorations.icon : data.iconResource?.decorations.iconDark;
+    template.fileLabel.setFile(data.uri, {
+      ...data.fileLabelOptions,
+      fileDecorations: { colors: false, badges: !icon }
+    });
+    if (icon) {
+      if (ThemeIcon.isThemeIcon(icon)) {
+        template.decorationIcon.className = `decoration-icon ${ThemeIcon.asClassName(icon)}`;
+        if (icon.color) {
+          template.decorationIcon.style.color = theme.getColor(icon.color.id)?.toString() ?? "";
+        }
+        template.decorationIcon.style.display = "";
+        template.decorationIcon.style.backgroundImage = "";
+      } else {
+        template.decorationIcon.className = "decoration-icon";
+        template.decorationIcon.style.color = "";
+        template.decorationIcon.style.display = "";
+        template.decorationIcon.style.backgroundImage = asCSSUrl(icon);
+      }
+      template.decorationIcon.title = data.tooltip;
+    } else {
+      template.decorationIcon.className = "decoration-icon";
+      template.decorationIcon.style.color = "";
+      template.decorationIcon.style.display = "none";
+      template.decorationIcon.style.backgroundImage = "";
+      template.decorationIcon.title = "";
+    }
+  }
+  dispose() {
+    this.disposables.dispose();
+  }
+};
+ResourceRenderer = ResourceRenderer_1 = __decorate([
+  __param(4, ICommandService),
+  __param(5, IContextKeyService),
+  __param(6, IContextMenuService),
+  __param(7, IKeybindingService),
+  __param(8, ILabelService),
+  __param(9, IMenuService),
+  __param(10, ISCMViewService),
+  __param(11, ITelemetryService),
+  __param(12, IThemeService)
+], ResourceRenderer);
+class ListDelegate {
+  static {
+    __name(this, "ListDelegate");
+  }
+  constructor(inputRenderer) {
+    this.inputRenderer = inputRenderer;
+  }
+  getHeight(element) {
+    if (isSCMInput(element)) {
+      return this.inputRenderer.getHeight(element);
+    } else if (isSCMActionButton(element)) {
+      return ActionButtonRenderer.DEFAULT_HEIGHT + 8;
+    } else {
+      return 22;
+    }
+  }
+  getTemplateId(element) {
+    if (isSCMRepository(element)) {
+      return RepositoryRenderer.TEMPLATE_ID;
+    } else if (isSCMInput(element)) {
+      return InputRenderer.TEMPLATE_ID;
+    } else if (isSCMActionButton(element)) {
+      return ActionButtonRenderer.TEMPLATE_ID;
+    } else if (isSCMResourceGroup(element)) {
+      return ResourceGroupRenderer.TEMPLATE_ID;
+    } else if (isSCMResource(element) || isSCMResourceNode(element)) {
+      return ResourceRenderer.TEMPLATE_ID;
+    } else {
+      throw new Error("Unknown element");
+    }
+  }
+}
+class SCMTreeCompressionDelegate {
+  static {
+    __name(this, "SCMTreeCompressionDelegate");
+  }
+  isIncompressible(element) {
+    if (ResourceTree.isResourceNode(element)) {
+      return element.childrenCount === 0 || !element.parent || !element.parent.parent;
+    }
+    return true;
+  }
+}
+class SCMTreeFilter {
+  static {
+    __name(this, "SCMTreeFilter");
+  }
+  filter(element) {
+    if (isSCMResourceGroup(element)) {
+      return element.resources.length > 0 || !element.hideWhenEmpty;
+    } else {
+      return true;
+    }
+  }
+}
+class SCMTreeSorter {
+  static {
+    __name(this, "SCMTreeSorter");
+  }
+  constructor(viewMode, viewSortKey) {
+    this.viewMode = viewMode;
+    this.viewSortKey = viewSortKey;
+  }
+  compare(one, other) {
+    if (isSCMRepository(one)) {
+      if (!isSCMRepository(other)) {
+        throw new Error("Invalid comparison");
+      }
+      return 0;
+    }
+    if (isSCMInput(one)) {
+      return -1;
+    } else if (isSCMInput(other)) {
+      return 1;
+    }
+    if (isSCMActionButton(one)) {
+      return -1;
+    } else if (isSCMActionButton(other)) {
+      return 1;
+    }
+    if (isSCMResourceGroup(one)) {
+      return isSCMResourceGroup(other) ? 0 : -1;
+    }
+    if (this.viewMode() === "list") {
+      if (this.viewSortKey() === "name") {
+        const oneName2 = basename(one.sourceUri);
+        const otherName2 = basename(other.sourceUri);
+        return compareFileNames(oneName2, otherName2);
+      }
+      if (this.viewSortKey() === "status") {
+        const oneTooltip = one.decorations.tooltip ?? "";
+        const otherTooltip = other.decorations.tooltip ?? "";
+        if (oneTooltip !== otherTooltip) {
+          return compare(oneTooltip, otherTooltip);
+        }
+      }
+      const onePath = one.sourceUri.fsPath;
+      const otherPath = other.sourceUri.fsPath;
+      return comparePaths(onePath, otherPath);
+    }
+    const oneIsDirectory = ResourceTree.isResourceNode(one);
+    const otherIsDirectory = ResourceTree.isResourceNode(other);
+    if (oneIsDirectory !== otherIsDirectory) {
+      return oneIsDirectory ? -1 : 1;
+    }
+    const oneName = ResourceTree.isResourceNode(one) ? one.name : basename(one.sourceUri);
+    const otherName = ResourceTree.isResourceNode(other) ? other.name : basename(other.sourceUri);
+    return compareFileNames(oneName, otherName);
+  }
+}
+let SCMTreeKeyboardNavigationLabelProvider = class SCMTreeKeyboardNavigationLabelProvider2 {
+  static {
+    __name(this, "SCMTreeKeyboardNavigationLabelProvider");
+  }
+  constructor(viewMode, labelService) {
+    this.viewMode = viewMode;
+    this.labelService = labelService;
+  }
+  getKeyboardNavigationLabel(element) {
+    if (ResourceTree.isResourceNode(element)) {
+      return element.name;
+    } else if (isSCMRepository(element) || isSCMInput(element) || isSCMActionButton(element)) {
+      return void 0;
+    } else if (isSCMResourceGroup(element)) {
+      return element.label;
+    } else {
+      if (this.viewMode() === "list") {
+        const fileName = basename(element.sourceUri);
+        const filePath = this.labelService.getUriLabel(element.sourceUri, { relative: true });
+        return [fileName, filePath];
+      } else {
+        return basename(element.sourceUri);
+      }
+    }
+  }
+  getCompressedNodeKeyboardNavigationLabel(elements) {
+    const folders = elements;
+    return folders.map((e) => e.name).join("/");
+  }
+};
+SCMTreeKeyboardNavigationLabelProvider = __decorate([
+  __param(1, ILabelService)
+], SCMTreeKeyboardNavigationLabelProvider);
+function getSCMResourceId(element) {
+  if (isSCMRepository(element)) {
+    const provider = element.provider;
+    return `repo:${provider.id}`;
+  } else if (isSCMInput(element)) {
+    const provider = element.repository.provider;
+    return `input:${provider.id}`;
+  } else if (isSCMActionButton(element)) {
+    const provider = element.repository.provider;
+    return `actionButton:${provider.id}`;
+  } else if (isSCMResourceGroup(element)) {
+    const provider = element.provider;
+    return `resourceGroup:${provider.id}/${element.id}`;
+  } else if (isSCMResource(element)) {
+    const group = element.resourceGroup;
+    const provider = group.provider;
+    return `resource:${provider.id}/${group.id}/${element.sourceUri.toString()}`;
+  } else if (isSCMResourceNode(element)) {
+    const group = element.context;
+    return `folder:${group.provider.id}/${group.id}/$FOLDER/${element.uri.toString()}`;
+  } else {
+    throw new Error("Invalid tree element");
+  }
+}
+__name(getSCMResourceId, "getSCMResourceId");
+class SCMResourceIdentityProvider {
+  static {
+    __name(this, "SCMResourceIdentityProvider");
+  }
+  getId(element) {
+    return getSCMResourceId(element);
+  }
+}
+let SCMAccessibilityProvider = class SCMAccessibilityProvider2 {
+  static {
+    __name(this, "SCMAccessibilityProvider");
+  }
+  constructor(accessibilityService, configurationService, keybindingService, labelService) {
+    this.accessibilityService = accessibilityService;
+    this.configurationService = configurationService;
+    this.keybindingService = keybindingService;
+    this.labelService = labelService;
+  }
+  getWidgetAriaLabel() {
+    return localize("scm", "Source Control Management");
+  }
+  getAriaLabel(element) {
+    if (ResourceTree.isResourceNode(element)) {
+      return this.labelService.getUriLabel(element.uri, { relative: true, noPrefix: true }) || element.name;
+    } else if (isSCMRepository(element)) {
+      return `${element.provider.name} ${element.provider.label}`;
+    } else if (isSCMInput(element)) {
+      const verbosity = this.configurationService.getValue(
+        "accessibility.verbosity.sourceControl"
+        /* AccessibilityVerbositySettingId.SourceControl */
+      ) === true;
+      if (!verbosity || !this.accessibilityService.isScreenReaderOptimized()) {
+        return localize("scmInput", "Source Control Input");
+      }
+      const kbLabel = this.keybindingService.lookupKeybinding(
+        "editor.action.accessibilityHelp"
+        /* AccessibilityCommandId.OpenAccessibilityHelp */
+      )?.getLabel();
+      return kbLabel ? localize("scmInputRow.accessibilityHelp", "Source Control Input, Use {0} to open Source Control Accessibility Help.", kbLabel) : localize("scmInputRow.accessibilityHelpNoKb", "Source Control Input, Run the Open Accessibility Help command for more information.");
+    } else if (isSCMActionButton(element)) {
+      return element.button?.command.title ?? "";
+    } else if (isSCMResourceGroup(element)) {
+      return element.label;
+    } else {
+      const result = [];
+      result.push(basename(element.sourceUri));
+      if (element.decorations.tooltip) {
+        result.push(element.decorations.tooltip);
+      }
+      const path = this.labelService.getUriLabel(dirname(element.sourceUri), { relative: true, noPrefix: true });
+      if (path) {
+        result.push(path);
+      }
+      return result.join(", ");
+    }
+  }
+};
+SCMAccessibilityProvider = __decorate([
+  __param(0, IAccessibilityService),
+  __param(1, IConfigurationService),
+  __param(2, IKeybindingService),
+  __param(3, ILabelService)
+], SCMAccessibilityProvider);
+var ViewSortKey;
+(function(ViewSortKey2) {
+  ViewSortKey2["Path"] = "path";
+  ViewSortKey2["Name"] = "name";
+  ViewSortKey2["Status"] = "status";
+})(ViewSortKey || (ViewSortKey = {}));
+const Menus = {
+  ViewSort: new MenuId("SCMViewSort"),
+  Repositories: new MenuId("SCMRepositories"),
+  ChangesSettings: new MenuId("SCMChangesSettings")
+};
+const ContextKeys = {
+  SCMViewMode: new RawContextKey(
+    "scmViewMode",
+    "list"
+    /* ViewMode.List */
+  ),
+  SCMViewSortKey: new RawContextKey(
+    "scmViewSortKey",
+    "path"
+    /* ViewSortKey.Path */
+  ),
+  SCMViewAreAllRepositoriesCollapsed: new RawContextKey("scmViewAreAllRepositoriesCollapsed", false),
+  SCMViewIsAnyRepositoryCollapsible: new RawContextKey("scmViewIsAnyRepositoryCollapsible", false),
+  SCMProvider: new RawContextKey("scmProvider", void 0),
+  SCMProviderRootUri: new RawContextKey("scmProviderRootUri", void 0),
+  SCMProviderHasRootUri: new RawContextKey("scmProviderHasRootUri", void 0),
+  SCMHistoryItemCount: new RawContextKey("scmHistoryItemCount", 0),
+  SCMHistoryViewMode: new RawContextKey(
+    "scmHistoryViewMode",
+    "list"
+    /* ViewMode.List */
+  ),
+  SCMCurrentHistoryItemRefHasRemote: new RawContextKey("scmCurrentHistoryItemRefHasRemote", false),
+  SCMCurrentHistoryItemRefInFilter: new RawContextKey("scmCurrentHistoryItemRefInFilter", false),
+  RepositoryCount: new RawContextKey("scmRepositoryCount", 0),
+  RepositoryVisibilityCount: new RawContextKey("scmRepositoryVisibleCount", 0),
+  RepositoryVisibility(repository) {
+    return new RawContextKey(`scmRepositoryVisible:${repository.provider.id}`, false);
+  }
+};
+MenuRegistry.appendMenuItem(MenuId.SCMTitle, {
+  title: localize("sortAction", "View & Sort"),
+  submenu: Menus.ViewSort,
+  when: ContextKeyExpr.and(ContextKeyExpr.equals("view", VIEW_PANE_ID), ContextKeys.RepositoryCount.notEqualsTo(0)),
+  group: "0_view&sort",
+  order: 1
+});
+MenuRegistry.appendMenuItem(Menus.ViewSort, {
+  title: localize("repositories", "Repositories"),
+  submenu: Menus.Repositories,
+  when: ContextKeyExpr.greater(ContextKeys.RepositoryCount.key, 1),
+  group: "0_repositories"
+});
+class RepositoryVisibilityAction extends Action2 {
+  static {
+    __name(this, "RepositoryVisibilityAction");
+  }
+  constructor(repository) {
+    super({
+      id: `workbench.scm.action.toggleRepositoryVisibility.${repository.provider.id}`,
+      title: repository.provider.name,
+      f1: false,
+      precondition: ContextKeyExpr.or(ContextKeys.RepositoryVisibilityCount.notEqualsTo(1), ContextKeys.RepositoryVisibility(repository).isEqualTo(false)),
+      toggled: ContextKeys.RepositoryVisibility(repository).isEqualTo(true),
+      menu: { id: Menus.Repositories, group: "0_repositories" }
+    });
+    this.repository = repository;
+  }
+  run(accessor) {
+    const scmViewService = accessor.get(ISCMViewService);
+    scmViewService.toggleVisibility(this.repository);
+  }
+}
+let RepositoryVisibilityActionController = class RepositoryVisibilityActionController2 {
+  static {
+    __name(this, "RepositoryVisibilityActionController");
+  }
+  constructor(contextKeyService, scmViewService, scmService) {
+    this.contextKeyService = contextKeyService;
+    this.scmViewService = scmViewService;
+    this.items = /* @__PURE__ */ new Map();
+    this.disposables = new DisposableStore();
+    this.repositoryCountContextKey = ContextKeys.RepositoryCount.bindTo(contextKeyService);
+    this.repositoryVisibilityCountContextKey = ContextKeys.RepositoryVisibilityCount.bindTo(contextKeyService);
+    scmViewService.onDidChangeVisibleRepositories(this.onDidChangeVisibleRepositories, this, this.disposables);
+    scmService.onDidAddRepository(this.onDidAddRepository, this, this.disposables);
+    scmService.onDidRemoveRepository(this.onDidRemoveRepository, this, this.disposables);
+    for (const repository of scmService.repositories) {
+      this.onDidAddRepository(repository);
+    }
+  }
+  onDidAddRepository(repository) {
+    const action = registerAction2(class extends RepositoryVisibilityAction {
+      constructor() {
+        super(repository);
+      }
+    });
+    const contextKey = ContextKeys.RepositoryVisibility(repository).bindTo(this.contextKeyService);
+    contextKey.set(this.scmViewService.isVisible(repository));
+    this.items.set(repository, {
+      contextKey,
+      dispose() {
+        contextKey.reset();
+        action.dispose();
+      }
+    });
+    this.updateRepositoryContextKeys();
+  }
+  onDidRemoveRepository(repository) {
+    this.items.get(repository)?.dispose();
+    this.items.delete(repository);
+    this.updateRepositoryContextKeys();
+  }
+  onDidChangeVisibleRepositories() {
+    let count = 0;
+    for (const [repository, item] of this.items) {
+      const isVisible = this.scmViewService.isVisible(repository);
+      item.contextKey.set(isVisible);
+      if (isVisible) {
+        count++;
+      }
+    }
+    this.repositoryCountContextKey.set(this.items.size);
+    this.repositoryVisibilityCountContextKey.set(count);
+  }
+  updateRepositoryContextKeys() {
+    this.repositoryCountContextKey.set(this.items.size);
+    this.repositoryVisibilityCountContextKey.set(Iterable.reduce(this.items.keys(), (r, repository) => r + (this.scmViewService.isVisible(repository) ? 1 : 0), 0));
+  }
+  dispose() {
+    this.disposables.dispose();
+    dispose(this.items.values());
+    this.items.clear();
+  }
+};
+RepositoryVisibilityActionController = __decorate([
+  __param(0, IContextKeyService),
+  __param(1, ISCMViewService),
+  __param(2, ISCMService)
+], RepositoryVisibilityActionController);
+class SetListViewModeAction extends ViewAction {
+  static {
+    __name(this, "SetListViewModeAction");
+  }
+  constructor(id = "workbench.scm.action.setListViewMode", menu = {}) {
+    super({
+      id,
+      title: localize("setListViewMode", "View as List"),
+      viewId: VIEW_PANE_ID,
+      f1: false,
+      icon: Codicon.listTree,
+      toggled: ContextKeys.SCMViewMode.isEqualTo(
+        "list"
+        /* ViewMode.List */
+      ),
+      menu: { id: Menus.ViewSort, group: "1_viewmode", ...menu }
+    });
+  }
+  async runInView(_, view) {
+    view.viewMode = "list";
+  }
+}
+class SetListViewModeNavigationAction extends SetListViewModeAction {
+  static {
+    __name(this, "SetListViewModeNavigationAction");
+  }
+  constructor() {
+    super("workbench.scm.action.setListViewModeNavigation", {
+      id: MenuId.SCMTitle,
+      when: ContextKeyExpr.and(ContextKeyExpr.equals("view", VIEW_PANE_ID), ContextKeys.RepositoryCount.notEqualsTo(0), ContextKeys.SCMViewMode.isEqualTo(
+        "tree"
+        /* ViewMode.Tree */
+      )),
+      group: "navigation",
+      order: -1e3
+    });
+  }
+}
+class SetTreeViewModeAction extends ViewAction {
+  static {
+    __name(this, "SetTreeViewModeAction");
+  }
+  constructor(id = "workbench.scm.action.setTreeViewMode", menu = {}) {
+    super({
+      id,
+      title: localize("setTreeViewMode", "View as Tree"),
+      viewId: VIEW_PANE_ID,
+      f1: false,
+      icon: Codicon.listFlat,
+      toggled: ContextKeys.SCMViewMode.isEqualTo(
+        "tree"
+        /* ViewMode.Tree */
+      ),
+      menu: { id: Menus.ViewSort, group: "1_viewmode", ...menu }
+    });
+  }
+  async runInView(_, view) {
+    view.viewMode = "tree";
+  }
+}
+class SetTreeViewModeNavigationAction extends SetTreeViewModeAction {
+  static {
+    __name(this, "SetTreeViewModeNavigationAction");
+  }
+  constructor() {
+    super("workbench.scm.action.setTreeViewModeNavigation", {
+      id: MenuId.SCMTitle,
+      when: ContextKeyExpr.and(ContextKeyExpr.equals("view", VIEW_PANE_ID), ContextKeys.RepositoryCount.notEqualsTo(0), ContextKeys.SCMViewMode.isEqualTo(
+        "list"
+        /* ViewMode.List */
+      )),
+      group: "navigation",
+      order: -1e3
+    });
+  }
+}
+registerAction2(SetListViewModeAction);
+registerAction2(SetTreeViewModeAction);
+registerAction2(SetListViewModeNavigationAction);
+registerAction2(SetTreeViewModeNavigationAction);
+class RepositorySortAction extends ViewAction {
+  static {
+    __name(this, "RepositorySortAction");
+  }
+  constructor(sortKey, title) {
+    super({
+      id: `workbench.scm.action.repositories.setSortKey.${sortKey}`,
+      title,
+      viewId: VIEW_PANE_ID,
+      f1: false,
+      toggled: RepositoryContextKeys.RepositorySortKey.isEqualTo(sortKey),
+      menu: [
+        {
+          id: Menus.Repositories,
+          group: "1_sort"
+        },
+        {
+          id: MenuId.SCMSourceControlTitle,
+          group: "1_sort"
+        }
+      ]
+    });
+    this.sortKey = sortKey;
+  }
+  runInView(accessor) {
+    accessor.get(ISCMViewService).toggleSortKey(this.sortKey);
+  }
+}
+class RepositorySortByDiscoveryTimeAction extends RepositorySortAction {
+  static {
+    __name(this, "RepositorySortByDiscoveryTimeAction");
+  }
+  constructor() {
+    super("discoveryTime", localize("repositorySortByDiscoveryTime", "Sort by Discovery Time"));
+  }
+}
+class RepositorySortByNameAction extends RepositorySortAction {
+  static {
+    __name(this, "RepositorySortByNameAction");
+  }
+  constructor() {
+    super("name", localize("repositorySortByName", "Sort by Name"));
+  }
+}
+class RepositorySortByPathAction extends RepositorySortAction {
+  static {
+    __name(this, "RepositorySortByPathAction");
+  }
+  constructor() {
+    super("path", localize("repositorySortByPath", "Sort by Path"));
+  }
+}
+registerAction2(RepositorySortByDiscoveryTimeAction);
+registerAction2(RepositorySortByNameAction);
+registerAction2(RepositorySortByPathAction);
+class SetSortKeyAction extends ViewAction {
+  static {
+    __name(this, "SetSortKeyAction");
+  }
+  constructor(sortKey, title) {
+    super({
+      id: `workbench.scm.action.setSortKey.${sortKey}`,
+      title,
+      viewId: VIEW_PANE_ID,
+      f1: false,
+      toggled: ContextKeys.SCMViewSortKey.isEqualTo(sortKey),
+      precondition: ContextKeys.SCMViewMode.isEqualTo(
+        "list"
+        /* ViewMode.List */
+      ),
+      menu: { id: Menus.ViewSort, group: "2_sort" }
+    });
+    this.sortKey = sortKey;
+  }
+  async runInView(_, view) {
+    view.viewSortKey = this.sortKey;
+  }
+}
+class SetSortByNameAction extends SetSortKeyAction {
+  static {
+    __name(this, "SetSortByNameAction");
+  }
+  constructor() {
+    super("name", localize("sortChangesByName", "Sort Changes by Name"));
+  }
+}
+class SetSortByPathAction extends SetSortKeyAction {
+  static {
+    __name(this, "SetSortByPathAction");
+  }
+  constructor() {
+    super("path", localize("sortChangesByPath", "Sort Changes by Path"));
+  }
+}
+class SetSortByStatusAction extends SetSortKeyAction {
+  static {
+    __name(this, "SetSortByStatusAction");
+  }
+  constructor() {
+    super("status", localize("sortChangesByStatus", "Sort Changes by Status"));
+  }
+}
+registerAction2(SetSortByNameAction);
+registerAction2(SetSortByPathAction);
+registerAction2(SetSortByStatusAction);
+class CollapseAllRepositoriesAction extends ViewAction {
+  static {
+    __name(this, "CollapseAllRepositoriesAction");
+  }
+  constructor() {
+    super({
+      id: `workbench.scm.action.collapseAllRepositories`,
+      title: localize("collapse all", "Collapse All Repositories"),
+      viewId: VIEW_PANE_ID,
+      f1: false,
+      icon: Codicon.collapseAll,
+      menu: {
+        id: MenuId.SCMTitle,
+        group: "navigation",
+        when: ContextKeyExpr.and(ContextKeyExpr.equals("view", VIEW_PANE_ID), ContextKeys.SCMViewIsAnyRepositoryCollapsible.isEqualTo(true), ContextKeys.SCMViewAreAllRepositoriesCollapsed.isEqualTo(false))
+      }
+    });
+  }
+  async runInView(_, view) {
+    view.collapseAllRepositories();
+  }
+}
+class ExpandAllRepositoriesAction extends ViewAction {
+  static {
+    __name(this, "ExpandAllRepositoriesAction");
+  }
+  constructor() {
+    super({
+      id: `workbench.scm.action.expandAllRepositories`,
+      title: localize("expand all", "Expand All Repositories"),
+      viewId: VIEW_PANE_ID,
+      f1: false,
+      icon: Codicon.expandAll,
+      menu: {
+        id: MenuId.SCMTitle,
+        group: "navigation",
+        when: ContextKeyExpr.and(ContextKeyExpr.equals("view", VIEW_PANE_ID), ContextKeys.SCMViewIsAnyRepositoryCollapsible.isEqualTo(true), ContextKeys.SCMViewAreAllRepositoriesCollapsed.isEqualTo(true))
+      }
+    });
+  }
+  async runInView(_, view) {
+    view.expandAllRepositories();
+  }
+}
+registerAction2(CollapseAllRepositoriesAction);
+registerAction2(ExpandAllRepositoriesAction);
+var SCMInputWidgetCommandId;
+(function(SCMInputWidgetCommandId2) {
+  SCMInputWidgetCommandId2["CancelAction"] = "scm.input.cancelAction";
+  SCMInputWidgetCommandId2["SetupAction"] = "scm.input.triggerSetup";
+})(SCMInputWidgetCommandId || (SCMInputWidgetCommandId = {}));
+var SCMInputWidgetStorageKey;
+(function(SCMInputWidgetStorageKey2) {
+  SCMInputWidgetStorageKey2["LastActionId"] = "scm.input.lastActionId";
+})(SCMInputWidgetStorageKey || (SCMInputWidgetStorageKey = {}));
+registerAction2(class extends Action2 {
+  constructor() {
+    super({
+      id: "scm.input.triggerSetup",
+      title: localize("scmInputGenerateCommitMessage", "Generate Commit Message with Copilot"),
+      icon: Codicon.sparkle,
+      f1: false,
+      menu: {
+        id: MenuId.SCMInputBox,
+        when: ContextKeyExpr.and(ChatContextKeys.Setup.hidden.negate(), ChatContextKeys.Setup.disabled.negate(), ChatContextKeys.Setup.installed.negate(), ContextKeyExpr.equals("scmProvider", "git"))
+      }
+    });
+  }
+  async run(accessor, ...args) {
+    const commandService = accessor.get(ICommandService);
+    const telemetryService = accessor.get(ITelemetryService);
+    telemetryService.publicLog2("workbenchActionExecuted", { id: CHAT_SETUP_ACTION_ID, from: "scmInput" });
+    const result = await commandService.executeCommand(CHAT_SETUP_ACTION_ID);
+    if (!result) {
+      return;
+    }
+    const command = product.defaultChatAgent?.generateCommitMessageCommand;
+    if (!command) {
+      return;
+    }
+    await commandService.executeCommand(command, ...args);
+  }
+});
+let SCMInputWidgetActionRunner = class SCMInputWidgetActionRunner2 extends ActionRunner {
+  static {
+    __name(this, "SCMInputWidgetActionRunner");
+  }
+  get runningActions() {
+    return this._runningActions;
+  }
+  constructor(input, storageService) {
+    super();
+    this.input = input;
+    this.storageService = storageService;
+    this._runningActions = /* @__PURE__ */ new Set();
+  }
+  async runAction(action) {
+    try {
+      if (this.runningActions.size !== 0) {
+        this._cts?.cancel();
+        if (action.id === "scm.input.cancelAction") {
+          return;
+        }
+      }
+      const context = [];
+      for (const group of this.input.repository.provider.groups) {
+        context.push({
+          resourceGroupId: group.id,
+          resources: [...group.resources.map((r) => r.sourceUri)]
+        });
+      }
+      this._runningActions.add(action);
+      this._cts = new CancellationTokenSource();
+      await action.run(...[this.input.repository.provider.rootUri, context, this._cts.token]);
+    } finally {
+      this._runningActions.delete(action);
+      if (this._runningActions.size === 0) {
+        const actionId = action.id === "scm.input.triggerSetup" ? product.defaultChatAgent?.generateCommitMessageCommand ?? action.id : action.id;
+        this.storageService.store(
+          "scm.input.lastActionId",
+          actionId,
+          0,
+          0
+          /* StorageTarget.USER */
+        );
+      }
+    }
+  }
+};
+SCMInputWidgetActionRunner = __decorate([
+  __param(1, IStorageService)
+], SCMInputWidgetActionRunner);
+let SCMInputWidgetToolbar = class SCMInputWidgetToolbar2 extends WorkbenchToolBar {
+  static {
+    __name(this, "SCMInputWidgetToolbar");
+  }
+  get dropdownActions() {
+    return this._dropdownActions;
+  }
+  get dropdownAction() {
+    return this._dropdownAction;
+  }
+  constructor(container, options, menuService, contextKeyService, contextMenuService, commandService, keybindingService, storageService, telemetryService) {
+    super(container, { resetMenu: MenuId.SCMInputBox, ...options }, menuService, contextKeyService, contextMenuService, keybindingService, commandService, telemetryService);
+    this.menuService = menuService;
+    this.contextKeyService = contextKeyService;
+    this.storageService = storageService;
+    this._dropdownActions = [];
+    this._onDidChange = new Emitter();
+    this.onDidChange = this._onDidChange.event;
+    this._disposables = this._register(new MutableDisposable());
+    this._dropdownAction = new Action("scmInputMoreActions", localize("scmInputMoreActions", "More Actions..."), "codicon-chevron-down");
+    this._cancelAction = new MenuItemAction({
+      id: "scm.input.cancelAction",
+      title: localize("scmInputCancelAction", "Cancel"),
+      icon: Codicon.stopCircle
+    }, void 0, void 0, void 0, void 0, contextKeyService, commandService);
+  }
+  setInput(input) {
+    this._disposables.value = new DisposableStore();
+    const contextKeyService = this.contextKeyService.createOverlay([
+      ["scmProvider", input.repository.provider.contextValue],
+      ["scmProviderRootUri", input.repository.provider.rootUri?.toString()],
+      ["scmProviderHasRootUri", !!input.repository.provider.rootUri]
+    ]);
+    const menu = this._disposables.value.add(this.menuService.createMenu(MenuId.SCMInputBox, contextKeyService, { emitEventsForSubmenuChanges: true }));
+    const isEnabled = /* @__PURE__ */ __name(() => {
+      return input.repository.provider.groups.some((g) => g.resources.length > 0);
+    }, "isEnabled");
+    const updateToolbar = /* @__PURE__ */ __name(() => {
+      const actions = getFlatActionBarActions(menu.getActions({ shouldForwardArgs: true }));
+      for (const action of actions) {
+        action.enabled = isEnabled();
+      }
+      this._dropdownAction.enabled = isEnabled();
+      let primaryAction = void 0;
+      if (this.actionRunner.runningActions.size !== 0) {
+        primaryAction = this._cancelAction;
+      } else if (actions.length === 1) {
+        primaryAction = actions[0];
+      } else if (actions.length > 1) {
+        const lastActionId = this.storageService.get("scm.input.lastActionId", 0, "");
+        primaryAction = actions.find((a) => a.id === lastActionId) ?? actions[0];
+      }
+      this._dropdownActions = actions.length === 1 ? [] : actions;
+      super.setActions(primaryAction ? [primaryAction] : [], []);
+      this._onDidChange.fire();
+    }, "updateToolbar");
+    this._disposables.value.add(menu.onDidChange(() => updateToolbar()));
+    this._disposables.value.add(input.repository.provider.onDidChangeResources(() => updateToolbar()));
+    this._disposables.value.add(this.storageService.onDidChangeValue(0, "scm.input.lastActionId", this._disposables.value)(() => updateToolbar()));
+    this.actionRunner = this._disposables.value.add(new SCMInputWidgetActionRunner(input, this.storageService));
+    this._disposables.value.add(this.actionRunner.onWillRun((e) => {
+      if (this.actionRunner.runningActions.size === 0) {
+        super.setActions([this._cancelAction], []);
+        this._onDidChange.fire();
+      }
+    }));
+    this._disposables.value.add(this.actionRunner.onDidRun((e) => {
+      if (this.actionRunner.runningActions.size === 0) {
+        updateToolbar();
+      }
+    }));
+    updateToolbar();
+  }
+};
+SCMInputWidgetToolbar = __decorate([
+  __param(2, IMenuService),
+  __param(3, IContextKeyService),
+  __param(4, IContextMenuService),
+  __param(5, ICommandService),
+  __param(6, IKeybindingService),
+  __param(7, IStorageService),
+  __param(8, ITelemetryService)
+], SCMInputWidgetToolbar);
+class SCMInputWidgetEditorOptions {
+  static {
+    __name(this, "SCMInputWidgetEditorOptions");
+  }
+  constructor(overflowWidgetsDomNode, configurationService) {
+    this.overflowWidgetsDomNode = overflowWidgetsDomNode;
+    this.configurationService = configurationService;
+    this._onDidChange = new Emitter();
+    this.onDidChange = this._onDidChange.event;
+    this.defaultInputFontFamily = DEFAULT_FONT_FAMILY;
+    this._disposables = new DisposableStore();
+    const onDidChangeConfiguration = Event.filter(this.configurationService.onDidChangeConfiguration, (e) => {
+      return e.affectsConfiguration("editor.accessibilitySupport") || e.affectsConfiguration("editor.cursorBlinking") || e.affectsConfiguration("editor.cursorStyle") || e.affectsConfiguration("editor.cursorWidth") || e.affectsConfiguration("editor.emptySelectionClipboard") || e.affectsConfiguration("editor.fontFamily") || e.affectsConfiguration("editor.rulers") || e.affectsConfiguration("editor.wordWrap") || e.affectsConfiguration("scm.inputFontFamily") || e.affectsConfiguration("scm.inputFontSize");
+    }, this._disposables);
+    this._disposables.add(onDidChangeConfiguration(() => this._onDidChange.fire()));
+  }
+  getEditorConstructionOptions() {
+    return {
+      ...getSimpleEditorOptions(this.configurationService),
+      ...this.getEditorOptions(),
+      allowVariableLineHeights: false,
+      dragAndDrop: true,
+      dropIntoEditor: { enabled: true },
+      formatOnType: true,
+      lineDecorationsWidth: 6,
+      overflowWidgetsDomNode: this.overflowWidgetsDomNode,
+      padding: { top: 2, bottom: 2 },
+      quickSuggestions: false,
+      renderWhitespace: "none",
+      scrollbar: {
+        alwaysConsumeMouseWheel: false,
+        vertical: "hidden"
+      },
+      wrappingIndent: "none",
+      wrappingStrategy: "advanced"
+    };
+  }
+  getEditorOptions() {
+    const fontFamily = this._getEditorFontFamily();
+    const fontSize = this._getEditorFontSize();
+    const lineHeight = this._getEditorLineHeight(fontSize);
+    const accessibilitySupport = this.configurationService.getValue("editor.accessibilitySupport");
+    const cursorBlinking = this.configurationService.getValue("editor.cursorBlinking");
+    const cursorStyle = this.configurationService.getValue("editor.cursorStyle");
+    const cursorWidth = this.configurationService.getValue("editor.cursorWidth") ?? 1;
+    const emptySelectionClipboard = this.configurationService.getValue("editor.emptySelectionClipboard") === true;
+    return { ...this._getEditorLanguageConfiguration(), accessibilitySupport, cursorBlinking, cursorStyle, cursorWidth, fontFamily, fontSize, lineHeight, emptySelectionClipboard };
+  }
+  _getEditorFontFamily() {
+    const inputFontFamily = this.configurationService.getValue("scm.inputFontFamily").trim();
+    if (inputFontFamily.toLowerCase() === "editor") {
+      return this.configurationService.getValue("editor.fontFamily").trim();
+    }
+    if (inputFontFamily.length !== 0 && inputFontFamily.toLowerCase() !== "default") {
+      return inputFontFamily;
+    }
+    return this.defaultInputFontFamily;
+  }
+  _getEditorFontSize() {
+    return this.configurationService.getValue("scm.inputFontSize");
+  }
+  _getEditorLanguageConfiguration() {
+    const rulersConfig = this.configurationService.inspect("editor.rulers", { overrideIdentifier: "scminput" });
+    const rulers = rulersConfig.overrideIdentifiers?.includes("scminput") ? EditorOptions.rulers.validate(rulersConfig.value) : [];
+    const wordWrapConfig = this.configurationService.inspect("editor.wordWrap", { overrideIdentifier: "scminput" });
+    const wordWrap = wordWrapConfig.overrideIdentifiers?.includes("scminput") ? EditorOptions.wordWrap.validate(wordWrapConfig.value) : "on";
+    return { rulers, wordWrap };
+  }
+  _getEditorLineHeight(fontSize) {
+    return Math.round(fontSize * 1.5);
+  }
+  dispose() {
+    this._disposables.dispose();
+  }
+}
+let SCMInputWidget = class SCMInputWidget2 {
+  static {
+    __name(this, "SCMInputWidget");
+  }
+  static {
+    SCMInputWidget_1 = this;
+  }
+  static {
+    this.ValidationTimeouts = {
+      [
+        2
+        /* InputValidationType.Information */
+      ]: 5e3,
+      [
+        1
+        /* InputValidationType.Warning */
+      ]: 8e3,
+      [
+        0
+        /* InputValidationType.Error */
+      ]: 1e4
+    };
+  }
+  get input() {
+    return this.model?.input;
+  }
+  set input(input) {
+    if (input === this.input) {
+      return;
+    }
+    this.clearValidation();
+    this.element.classList.remove("synthetic-focus");
+    this.repositoryDisposables.clear();
+    this.repositoryIdContextKey.set(input?.repository.id);
+    if (!input) {
+      this.inputEditor.setModel(void 0);
+      this.model = void 0;
+      return;
+    }
+    const textModel = input.repository.provider.inputBoxTextModel;
+    this.inputEditor.setModel(textModel);
+    if (this.configurationService.getValue("editor.wordBasedSuggestions", { resource: textModel.uri }) !== "off") {
+      this.configurationService.updateValue(
+        "editor.wordBasedSuggestions",
+        "off",
+        { resource: textModel.uri },
+        8
+        /* ConfigurationTarget.MEMORY */
+      );
+    }
+    const validationDelayer = new ThrottledDelayer(200);
+    const validate = /* @__PURE__ */ __name(async () => {
+      const position = this.inputEditor.getSelection()?.getStartPosition();
+      const offset = position && textModel.getOffsetAt(position);
+      const value = textModel.getValue();
+      this.setValidation(await input.validateInput(value, offset || 0));
+    }, "validate");
+    const triggerValidation = /* @__PURE__ */ __name(() => validationDelayer.trigger(validate), "triggerValidation");
+    this.repositoryDisposables.add(validationDelayer);
+    this.repositoryDisposables.add(this.inputEditor.onDidChangeCursorPosition(triggerValidation));
+    const opts = this.modelService.getCreationOptions(textModel.getLanguageId(), textModel.uri, textModel.isForSimpleWidget);
+    const onEnter = Event.filter(this.inputEditor.onKeyDown, (e) => e.keyCode === 3, this.repositoryDisposables);
+    this.repositoryDisposables.add(onEnter(() => textModel.detectIndentation(opts.insertSpaces, opts.tabSize)));
+    textModel.setValue(input.value);
+    this.repositoryDisposables.add(input.onDidChange(({ value, reason }) => {
+      const currentValue = textModel.getValue();
+      if (value === currentValue) {
+        return;
+      }
+      textModel.pushStackElement();
+      textModel.pushEditOperations(null, [EditOperation.replaceMove(textModel.getFullModelRange(), value)], () => []);
+      const position = reason === SCMInputChangeReason.HistoryPrevious ? textModel.getFullModelRange().getStartPosition() : textModel.getFullModelRange().getEndPosition();
+      this.inputEditor.setPosition(position);
+      this.inputEditor.revealPositionInCenterIfOutsideViewport(position);
+    }));
+    this.repositoryDisposables.add(input.onDidChangeFocus(() => this.focus()));
+    this.repositoryDisposables.add(input.onDidChangeValidationMessage((e) => this.setValidation(e, { focus: true, timeout: true })));
+    this.repositoryDisposables.add(input.onDidChangeValidateInput((e) => triggerValidation()));
+    this.repositoryDisposables.add(textModel.onDidChangeContent(() => {
+      input.setValue(textModel.getValue(), true);
+      triggerValidation();
+    }));
+    const accessibilityVerbosityConfig = observableConfigValue("accessibility.verbosity.sourceControl", true, this.configurationService);
+    const getAriaLabel = /* @__PURE__ */ __name((placeholder, verbosity) => {
+      verbosity = verbosity ?? accessibilityVerbosityConfig.get();
+      if (!verbosity || !this.accessibilityService.isScreenReaderOptimized()) {
+        return placeholder;
+      }
+      const kbLabel = this.keybindingService.lookupKeybinding(
+        "editor.action.accessibilityHelp"
+        /* AccessibilityCommandId.OpenAccessibilityHelp */
+      )?.getLabel();
+      return kbLabel ? localize("scmInput.accessibilityHelp", "{0}, Use {1} to open Source Control Accessibility Help.", placeholder, kbLabel) : localize("scmInput.accessibilityHelpNoKb", "{0}, Run the Open Accessibility Help command for more information.", placeholder);
+    }, "getAriaLabel");
+    const getPlaceholderText = /* @__PURE__ */ __name(() => {
+      const binding = this.keybindingService.lookupKeybinding("scm.acceptInput");
+      const label = binding ? binding.getLabel() : platform.isMacintosh ? "Cmd+Enter" : "Ctrl+Enter";
+      return format(input.placeholder, label);
+    }, "getPlaceholderText");
+    const updatePlaceholderText = /* @__PURE__ */ __name(() => {
+      const placeholder = getPlaceholderText();
+      const ariaLabel = getAriaLabel(placeholder);
+      this.inputEditor.updateOptions({ ariaLabel, placeholder });
+    }, "updatePlaceholderText");
+    this.repositoryDisposables.add(input.onDidChangePlaceholder(updatePlaceholderText));
+    this.repositoryDisposables.add(this.keybindingService.onDidUpdateKeybindings(updatePlaceholderText));
+    this.repositoryDisposables.add(runOnChange(accessibilityVerbosityConfig, (verbosity) => {
+      const placeholder = getPlaceholderText();
+      const ariaLabel = getAriaLabel(placeholder, verbosity);
+      this.inputEditor.updateOptions({ ariaLabel });
+    }));
+    updatePlaceholderText();
+    let commitTemplate = "";
+    this.repositoryDisposables.add(autorun((reader) => {
+      if (!input.visible) {
+        return;
+      }
+      const oldCommitTemplate = commitTemplate;
+      commitTemplate = input.repository.provider.commitTemplate.read(reader);
+      const value = textModel.getValue();
+      if (value && value !== oldCommitTemplate) {
+        return;
+      }
+      textModel.setValue(commitTemplate);
+    }));
+    const updateEnablement = /* @__PURE__ */ __name((enabled) => {
+      this.inputEditor.updateOptions({ readOnly: !enabled });
+    }, "updateEnablement");
+    this.repositoryDisposables.add(input.onDidChangeEnablement((enabled) => updateEnablement(enabled)));
+    updateEnablement(input.enabled);
+    this.toolbar.setInput(input);
+    this.model = { input, textModel };
+  }
+  get selections() {
+    return this.inputEditor.getSelections();
+  }
+  set selections(selections) {
+    if (selections) {
+      this.inputEditor.setSelections(selections);
+    }
+  }
+  setValidation(validation, options) {
+    if (this._validationTimer) {
+      clearTimeout(this._validationTimer);
+      this._validationTimer = void 0;
+    }
+    this.validation = validation;
+    this.renderValidation();
+    if (options?.focus && !this.hasFocus()) {
+      this.focus();
+    }
+    if (validation && options?.timeout) {
+      this._validationTimer = setTimeout(() => this.setValidation(void 0), SCMInputWidget_1.ValidationTimeouts[validation.type]);
+    }
+  }
+  constructor(container, overflowWidgetsDomNode, contextKeyService, modelService, keybindingService, configurationService, instantiationService, scmViewService, contextViewService, openerService, accessibilityService) {
+    this.modelService = modelService;
+    this.keybindingService = keybindingService;
+    this.configurationService = configurationService;
+    this.instantiationService = instantiationService;
+    this.scmViewService = scmViewService;
+    this.contextViewService = contextViewService;
+    this.openerService = openerService;
+    this.accessibilityService = accessibilityService;
+    this.disposables = new DisposableStore();
+    this.repositoryDisposables = new DisposableStore();
+    this.validationHasFocus = false;
+    this.lastLayoutWasTrash = false;
+    this.shouldFocusAfterLayout = false;
+    this.element = append(container, $(".scm-editor"));
+    this.editorContainer = append(this.element, $(".scm-editor-container"));
+    this.toolbarContainer = append(this.element, $(".scm-editor-toolbar"));
+    this.contextKeyService = contextKeyService.createScoped(this.element);
+    this.repositoryIdContextKey = this.contextKeyService.createKey("scmRepository", void 0);
+    this.inputEditorOptions = new SCMInputWidgetEditorOptions(overflowWidgetsDomNode, this.configurationService);
+    this.disposables.add(this.inputEditorOptions.onDidChange(this.onDidChangeEditorOptions, this));
+    this.disposables.add(this.inputEditorOptions);
+    const codeEditorWidgetOptions = {
+      contributions: EditorExtensionsRegistry.getSomeEditorContributions([
+        CodeActionController.ID,
+        ColorDetector.ID,
+        ContextMenuController.ID,
+        CopyPasteController.ID,
+        DragAndDropController.ID,
+        DropIntoEditorController.ID,
+        EditorDictation.ID,
+        FormatOnType.ID,
+        ContentHoverController.ID,
+        GlyphHoverController.ID,
+        InlineCompletionsController.ID,
+        LinkDetector.ID,
+        MenuPreventer.ID,
+        MessageController.ID,
+        PlaceholderTextContribution.ID,
+        SelectionClipboardContributionID,
+        SnippetController2.ID,
+        SuggestController.ID
+      ]),
+      isSimpleWidget: true
+    };
+    const services = new ServiceCollection([IContextKeyService, this.contextKeyService]);
+    const instantiationService2 = instantiationService.createChild(services, this.disposables);
+    const editorConstructionOptions = this.inputEditorOptions.getEditorConstructionOptions();
+    this.inputEditor = instantiationService2.createInstance(CodeEditorWidget, this.editorContainer, editorConstructionOptions, codeEditorWidgetOptions);
+    this.disposables.add(this.inputEditor);
+    this.disposables.add(this.inputEditor.onDidFocusEditorText(() => {
+      if (this.input?.repository) {
+        this.scmViewService.focus(this.input.repository);
+      }
+      this.element.classList.add("synthetic-focus");
+      this.renderValidation();
+    }));
+    this.disposables.add(this.inputEditor.onDidBlurEditorText(() => {
+      this.element.classList.remove("synthetic-focus");
+      setTimeout(() => {
+        if (!this.validation || !this.validationHasFocus) {
+          this.clearValidation();
+        }
+      }, 0);
+    }));
+    this.disposables.add(this.inputEditor.onDidBlurEditorWidget(() => {
+      CopyPasteController.get(this.inputEditor)?.clearWidgets();
+      DropIntoEditorController.get(this.inputEditor)?.clearWidgets();
+    }));
+    const firstLineKey = this.contextKeyService.createKey("scmInputIsInFirstPosition", false);
+    const lastLineKey = this.contextKeyService.createKey("scmInputIsInLastPosition", false);
+    this.disposables.add(this.inputEditor.onDidChangeCursorPosition(({ position }) => {
+      const viewModel = this.inputEditor._getViewModel();
+      const lastLineNumber = viewModel.getLineCount();
+      const lastLineCol = viewModel.getLineLength(lastLineNumber) + 1;
+      const viewPosition = viewModel.coordinatesConverter.convertModelPositionToViewPosition(position);
+      firstLineKey.set(viewPosition.lineNumber === 1 && viewPosition.column === 1);
+      lastLineKey.set(viewPosition.lineNumber === lastLineNumber && viewPosition.column === lastLineCol);
+    }));
+    this.disposables.add(this.inputEditor.onDidScrollChange((e) => {
+      this.toolbarContainer.classList.toggle("scroll-decoration", e.scrollTop > 0);
+    }));
+    Event.filter(this.configurationService.onDidChangeConfiguration, (e) => e.affectsConfiguration("scm.showInputActionButton"))(() => this.layout(), this, this.disposables);
+    this.onDidChangeContentHeight = Event.signal(Event.filter(this.inputEditor.onDidContentSizeChange, (e) => e.contentHeightChanged, this.disposables));
+    this.toolbar = instantiationService2.createInstance(SCMInputWidgetToolbar, this.toolbarContainer, {
+      actionViewItemProvider: /* @__PURE__ */ __name((action, options) => {
+        if (action instanceof MenuItemAction && this.toolbar.dropdownActions.length > 1) {
+          return instantiationService.createInstance(DropdownWithPrimaryActionViewItem, action, this.toolbar.dropdownAction, this.toolbar.dropdownActions, "", { actionRunner: this.toolbar.actionRunner, hoverDelegate: options.hoverDelegate });
+        }
+        return createActionViewItem(instantiationService, action, options);
+      }, "actionViewItemProvider"),
+      menuOptions: {
+        shouldForwardArgs: true
+      }
+    });
+    this.disposables.add(this.toolbar.onDidChange(() => this.layout()));
+    this.disposables.add(this.toolbar);
+  }
+  getContentHeight() {
+    const lineHeight = this.inputEditor.getOption(
+      71
+      /* EditorOption.lineHeight */
+    );
+    const { top, bottom } = this.inputEditor.getOption(
+      91
+      /* EditorOption.padding */
+    );
+    const inputMinLinesConfig = this.configurationService.getValue("scm.inputMinLineCount");
+    const inputMinLines = typeof inputMinLinesConfig === "number" ? clamp(inputMinLinesConfig, 1, 50) : 1;
+    const editorMinHeight = inputMinLines * lineHeight + top + bottom;
+    const inputMaxLinesConfig = this.configurationService.getValue("scm.inputMaxLineCount");
+    const inputMaxLines = typeof inputMaxLinesConfig === "number" ? clamp(inputMaxLinesConfig, 1, 50) : 10;
+    const editorMaxHeight = inputMaxLines * lineHeight + top + bottom;
+    return clamp(this.inputEditor.getContentHeight(), editorMinHeight, editorMaxHeight);
+  }
+  layout() {
+    const editorHeight = this.getContentHeight();
+    const toolbarWidth = this.getToolbarWidth();
+    const dimension = new Dimension(this.element.clientWidth - toolbarWidth, editorHeight);
+    if (dimension.width < 0) {
+      this.lastLayoutWasTrash = true;
+      return;
+    }
+    this.lastLayoutWasTrash = false;
+    this.inputEditor.layout(dimension);
+    this.renderValidation();
+    const showInputActionButton = this.configurationService.getValue("scm.showInputActionButton") === true;
+    this.toolbarContainer.classList.toggle("hidden", !showInputActionButton || this.toolbar?.isEmpty() === true);
+    if (this.shouldFocusAfterLayout) {
+      this.shouldFocusAfterLayout = false;
+      this.focus();
+    }
+  }
+  focus() {
+    if (this.lastLayoutWasTrash) {
+      this.lastLayoutWasTrash = false;
+      this.shouldFocusAfterLayout = true;
+      return;
+    }
+    this.inputEditor.focus();
+    this.element.classList.add("synthetic-focus");
+  }
+  hasFocus() {
+    return this.inputEditor.hasTextFocus();
+  }
+  onDidChangeEditorOptions() {
+    this.inputEditor.updateOptions(this.inputEditorOptions.getEditorOptions());
+  }
+  renderValidation() {
+    this.clearValidation();
+    this.element.classList.toggle(
+      "validation-info",
+      this.validation?.type === 2
+      /* InputValidationType.Information */
+    );
+    this.element.classList.toggle(
+      "validation-warning",
+      this.validation?.type === 1
+      /* InputValidationType.Warning */
+    );
+    this.element.classList.toggle(
+      "validation-error",
+      this.validation?.type === 0
+      /* InputValidationType.Error */
+    );
+    if (!this.validation || !this.inputEditor.hasTextFocus()) {
+      return;
+    }
+    const disposables = new DisposableStore();
+    this.validationContextView = this.contextViewService.showContextView({
+      getAnchor: /* @__PURE__ */ __name(() => this.element, "getAnchor"),
+      render: /* @__PURE__ */ __name((container) => {
+        this.element.style.borderBottomLeftRadius = "0";
+        this.element.style.borderBottomRightRadius = "0";
+        const validationContainer = append(container, $(".scm-editor-validation-container"));
+        validationContainer.classList.toggle(
+          "validation-info",
+          this.validation.type === 2
+          /* InputValidationType.Information */
+        );
+        validationContainer.classList.toggle(
+          "validation-warning",
+          this.validation.type === 1
+          /* InputValidationType.Warning */
+        );
+        validationContainer.classList.toggle(
+          "validation-error",
+          this.validation.type === 0
+          /* InputValidationType.Error */
+        );
+        validationContainer.style.width = `${this.element.clientWidth + 2}px`;
+        const element = append(validationContainer, $(".scm-editor-validation"));
+        const message = this.validation.message;
+        if (typeof message === "string") {
+          element.textContent = message;
+        } else {
+          const tracker = trackFocus(element);
+          disposables.add(tracker);
+          disposables.add(tracker.onDidFocus(() => this.validationHasFocus = true));
+          disposables.add(tracker.onDidBlur(() => {
+            this.validationHasFocus = false;
+            this.element.style.borderBottomLeftRadius = "2px";
+            this.element.style.borderBottomRightRadius = "2px";
+            this.contextViewService.hideContextView();
+          }));
+          const renderer = this.instantiationService.createInstance(MarkdownRenderer, {});
+          const renderedMarkdown = renderer.render(message, {
+            actionHandler: {
+              callback: /* @__PURE__ */ __name((link) => {
+                openLinkFromMarkdown(this.openerService, link, message.isTrusted);
+                this.element.style.borderBottomLeftRadius = "2px";
+                this.element.style.borderBottomRightRadius = "2px";
+                this.contextViewService.hideContextView();
+              }, "callback"),
+              disposables
+            }
+          });
+          disposables.add(renderedMarkdown);
+          element.appendChild(renderedMarkdown.element);
+        }
+        const actionsContainer = append(validationContainer, $(".scm-editor-validation-actions"));
+        const actionbar = new ActionBar(actionsContainer);
+        const action = new Action("scmInputWidget.validationMessage.close", localize("label.close", "Close"), ThemeIcon.asClassName(Codicon.close), true, () => {
+          this.contextViewService.hideContextView();
+          this.element.style.borderBottomLeftRadius = "2px";
+          this.element.style.borderBottomRightRadius = "2px";
+        });
+        disposables.add(actionbar);
+        actionbar.push(action, { icon: true, label: false });
+        return Disposable.None;
+      }, "render"),
+      onHide: /* @__PURE__ */ __name(() => {
+        this.validationHasFocus = false;
+        this.element.style.borderBottomLeftRadius = "2px";
+        this.element.style.borderBottomRightRadius = "2px";
+        disposables.dispose();
+      }, "onHide"),
+      anchorAlignment: 0
+      /* AnchorAlignment.LEFT */
+    });
+  }
+  getToolbarWidth() {
+    const showInputActionButton = this.configurationService.getValue("scm.showInputActionButton");
+    if (!this.toolbar || !showInputActionButton || this.toolbar?.isEmpty() === true) {
+      return 0;
+    }
+    return this.toolbar.dropdownActions.length === 0 ? 26 : 39;
+  }
+  clearValidation() {
+    this.validationContextView?.close();
+    this.validationContextView = void 0;
+    this.validationHasFocus = false;
+  }
+  dispose() {
+    this.input = void 0;
+    this.repositoryDisposables.dispose();
+    this.clearValidation();
+    this.disposables.dispose();
+  }
+};
+SCMInputWidget = SCMInputWidget_1 = __decorate([
+  __param(2, IContextKeyService),
+  __param(3, IModelService),
+  __param(4, IKeybindingService),
+  __param(5, IConfigurationService),
+  __param(6, IInstantiationService),
+  __param(7, ISCMViewService),
+  __param(8, IContextViewService),
+  __param(9, IOpenerService),
+  __param(10, IAccessibilityService)
+], SCMInputWidget);
+let SCMViewPane = class SCMViewPane2 extends ViewPane {
+  static {
+    __name(this, "SCMViewPane");
+  }
+  get viewMode() {
+    return this._viewMode;
+  }
+  set viewMode(mode) {
+    if (this._viewMode === mode) {
+      return;
+    }
+    this._viewMode = mode;
+    this.viewSortKey = this.getViewSortKey();
+    this.updateChildren();
+    this.onDidActiveEditorChange();
+    this._onDidChangeViewMode.fire(mode);
+    this.viewModeContextKey.set(mode);
+    this.updateIndentStyles(this.themeService.getFileIconTheme());
+    this.storageService.store(
+      `scm.viewMode`,
+      mode,
+      1,
+      0
+      /* StorageTarget.USER */
+    );
+  }
+  get viewSortKey() {
+    return this._viewSortKey;
+  }
+  set viewSortKey(sortKey) {
+    if (this._viewSortKey === sortKey) {
+      return;
+    }
+    this._viewSortKey = sortKey;
+    this.updateChildren();
+    this.viewSortKeyContextKey.set(sortKey);
+    this._onDidChangeViewSortKey.fire(sortKey);
+    if (this._viewMode === "list") {
+      this.storageService.store(
+        `scm.viewSortKey`,
+        sortKey,
+        1,
+        0
+        /* StorageTarget.USER */
+      );
+    }
+  }
+  constructor(options, commandService, editorService, menuService, scmService, scmViewService, storageService, uriIdentityService, keybindingService, themeService, contextMenuService, instantiationService, viewDescriptorService, configurationService, contextKeyService, openerService, hoverService) {
+    super({ ...options, titleMenuId: MenuId.SCMTitle }, keybindingService, contextMenuService, configurationService, contextKeyService, viewDescriptorService, instantiationService, openerService, themeService, hoverService);
+    this.commandService = commandService;
+    this.editorService = editorService;
+    this.menuService = menuService;
+    this.scmService = scmService;
+    this.scmViewService = scmViewService;
+    this.storageService = storageService;
+    this.uriIdentityService = uriIdentityService;
+    this._onDidChangeViewMode = new Emitter();
+    this.onDidChangeViewMode = this._onDidChangeViewMode.event;
+    this._onDidChangeViewSortKey = new Emitter();
+    this.onDidChangeViewSortKey = this._onDidChangeViewSortKey.event;
+    this.items = new DisposableMap();
+    this.visibilityDisposables = new DisposableStore();
+    this.treeOperationSequencer = new Sequencer();
+    this.revealResourceThrottler = new Throttler();
+    this.updateChildrenThrottler = new Throttler();
+    this.disposables = new DisposableStore();
+    this._viewMode = this.getViewMode();
+    this._viewSortKey = this.getViewSortKey();
+    this.viewModeContextKey = ContextKeys.SCMViewMode.bindTo(contextKeyService);
+    this.viewModeContextKey.set(this._viewMode);
+    this.viewSortKeyContextKey = ContextKeys.SCMViewSortKey.bindTo(contextKeyService);
+    this.viewSortKeyContextKey.set(this.viewSortKey);
+    this.areAllRepositoriesCollapsedContextKey = ContextKeys.SCMViewAreAllRepositoriesCollapsed.bindTo(contextKeyService);
+    this.isAnyRepositoryCollapsibleContextKey = ContextKeys.SCMViewIsAnyRepositoryCollapsible.bindTo(contextKeyService);
+    this.scmProviderContextKey = ContextKeys.SCMProvider.bindTo(contextKeyService);
+    this.scmProviderRootUriContextKey = ContextKeys.SCMProviderRootUri.bindTo(contextKeyService);
+    this.scmProviderHasRootUriContextKey = ContextKeys.SCMProviderHasRootUri.bindTo(contextKeyService);
+    this._onDidLayout = new Emitter();
+    this.layoutCache = { height: void 0, width: void 0, onDidChange: this._onDidLayout.event };
+    this.storageService.onDidChangeValue(1, void 0, this.disposables)((e) => {
+      switch (e.key) {
+        case "scm.viewMode":
+          this.viewMode = this.getViewMode();
+          break;
+        case "scm.viewSortKey":
+          this.viewSortKey = this.getViewSortKey();
+          break;
+      }
+    }, this, this.disposables);
+    this.storageService.onWillSaveState((e) => {
+      this.viewMode = this.getViewMode();
+      this.viewSortKey = this.getViewSortKey();
+      this.storeTreeViewState();
+    }, this, this.disposables);
+    Event.any(this.scmService.onDidAddRepository, this.scmService.onDidRemoveRepository)(() => this._onDidChangeViewWelcomeState.fire(), this, this.disposables);
+    this.disposables.add(this.revealResourceThrottler);
+    this.disposables.add(this.updateChildrenThrottler);
+  }
+  layoutBody(height = this.layoutCache.height, width = this.layoutCache.width) {
+    if (height === void 0) {
+      return;
+    }
+    if (width !== void 0) {
+      super.layoutBody(height, width);
+    }
+    this.layoutCache.height = height;
+    this.layoutCache.width = width;
+    this._onDidLayout.fire();
+    this.treeContainer.style.height = `${height}px`;
+    this.tree.layout(height, width);
+  }
+  renderBody(container) {
+    super.renderBody(container);
+    this.treeContainer = append(container, $(".scm-view.show-file-icons"));
+    this.treeContainer.classList.add("file-icon-themable-tree");
+    this.treeContainer.classList.add("show-file-icons");
+    const updateActionsVisibility = /* @__PURE__ */ __name(() => this.treeContainer.classList.toggle("show-actions", this.configurationService.getValue("scm.alwaysShowActions")), "updateActionsVisibility");
+    Event.filter(this.configurationService.onDidChangeConfiguration, (e) => e.affectsConfiguration("scm.alwaysShowActions"), this.disposables)(updateActionsVisibility, this, this.disposables);
+    updateActionsVisibility();
+    const updateProviderCountVisibility = /* @__PURE__ */ __name(() => {
+      const value = this.configurationService.getValue("scm.providerCountBadge");
+      this.treeContainer.classList.toggle("hide-provider-counts", value === "hidden");
+      this.treeContainer.classList.toggle("auto-provider-counts", value === "auto");
+    }, "updateProviderCountVisibility");
+    Event.filter(this.configurationService.onDidChangeConfiguration, (e) => e.affectsConfiguration("scm.providerCountBadge"), this.disposables)(updateProviderCountVisibility, this, this.disposables);
+    updateProviderCountVisibility();
+    const viewState = this.loadTreeViewState();
+    this.createTree(this.treeContainer, viewState);
+    this.onDidChangeBodyVisibility(async (visible) => {
+      if (visible) {
+        this.treeOperationSequencer.queue(async () => {
+          await this.tree.setInput(this.scmViewService, viewState);
+          Event.filter(this.configurationService.onDidChangeConfiguration, (e) => e.affectsConfiguration("scm.alwaysShowRepositories"), this.visibilityDisposables)(() => {
+            this.updateActions();
+            this.updateChildren();
+          }, this, this.visibilityDisposables);
+          Event.filter(this.configurationService.onDidChangeConfiguration, (e) => e.affectsConfiguration("scm.inputMinLineCount") || e.affectsConfiguration("scm.inputMaxLineCount") || e.affectsConfiguration("scm.showActionButton"), this.visibilityDisposables)(() => this.updateChildren(), this, this.visibilityDisposables);
+          this.editorService.onDidActiveEditorChange(this.onDidActiveEditorChange, this, this.visibilityDisposables);
+          this.scmViewService.onDidChangeVisibleRepositories(this.onDidChangeVisibleRepositories, this, this.visibilityDisposables);
+          this.onDidChangeVisibleRepositories({ added: this.scmViewService.visibleRepositories, removed: Iterable.empty() });
+          if (typeof this.treeScrollTop === "number") {
+            this.tree.scrollTop = this.treeScrollTop;
+            this.treeScrollTop = void 0;
+          }
+          this.updateRepositoryCollapseAllContextKeys();
+        });
+      } else {
+        this.visibilityDisposables.clear();
+        this.onDidChangeVisibleRepositories({ added: Iterable.empty(), removed: [...this.items.keys()] });
+        this.treeScrollTop = this.tree.scrollTop;
+        this.updateRepositoryCollapseAllContextKeys();
+      }
+    }, this, this.disposables);
+    this.disposables.add(this.instantiationService.createInstance(RepositoryVisibilityActionController));
+    this.themeService.onDidFileIconThemeChange(this.updateIndentStyles, this, this.disposables);
+    this.updateIndentStyles(this.themeService.getFileIconTheme());
+  }
+  createTree(container, viewState) {
+    const overflowWidgetsDomNode = $(".scm-overflow-widgets-container.monaco-editor");
+    this.inputRenderer = this.instantiationService.createInstance(InputRenderer, this.layoutCache, overflowWidgetsDomNode, (input, height) => {
+      try {
+        this.tree.updateElementHeight(input, height);
+      } catch {
+      }
+    });
+    this.actionButtonRenderer = this.instantiationService.createInstance(ActionButtonRenderer);
+    this.listLabels = this.instantiationService.createInstance(ResourceLabels, { onDidChangeVisibility: this.onDidChangeBodyVisibility });
+    this.disposables.add(this.listLabels);
+    const resourceActionRunner = new RepositoryPaneActionRunner(() => this.getSelectedResources());
+    resourceActionRunner.onWillRun(() => this.tree.domFocus(), this, this.disposables);
+    this.disposables.add(resourceActionRunner);
+    const treeDataSource = this.instantiationService.createInstance(SCMTreeDataSource, () => this.viewMode);
+    this.disposables.add(treeDataSource);
+    const compressionEnabled = observableConfigValue("scm.compactFolders", true, this.configurationService);
+    this.tree = this.instantiationService.createInstance(WorkbenchCompressibleAsyncDataTree, "SCM Tree Repo", container, new ListDelegate(this.inputRenderer), new SCMTreeCompressionDelegate(), [
+      this.inputRenderer,
+      this.actionButtonRenderer,
+      this.instantiationService.createInstance(RepositoryRenderer, MenuId.SCMTitle, getActionViewItemProvider(this.instantiationService)),
+      this.instantiationService.createInstance(ResourceGroupRenderer, getActionViewItemProvider(this.instantiationService), resourceActionRunner),
+      this.instantiationService.createInstance(ResourceRenderer, () => this.viewMode, this.listLabels, getActionViewItemProvider(this.instantiationService), resourceActionRunner)
+    ], treeDataSource, {
+      horizontalScrolling: false,
+      setRowLineHeight: false,
+      transformOptimization: false,
+      filter: new SCMTreeFilter(),
+      dnd: new SCMTreeDragAndDrop(this.instantiationService),
+      identityProvider: new SCMResourceIdentityProvider(),
+      sorter: new SCMTreeSorter(() => this.viewMode, () => this.viewSortKey),
+      keyboardNavigationLabelProvider: this.instantiationService.createInstance(SCMTreeKeyboardNavigationLabelProvider, () => this.viewMode),
+      overrideStyles: this.getLocationBasedColors().listOverrideStyles,
+      compressionEnabled: compressionEnabled.get(),
+      collapseByDefault: /* @__PURE__ */ __name((e) => {
+        if (isSCMRepository(e) || isSCMResourceGroup(e) || isSCMResourceNode(e)) {
+          return false;
+        }
+        return (viewState?.expanded ?? []).indexOf(getSCMResourceId(e)) === -1;
+      }, "collapseByDefault"),
+      accessibilityProvider: this.instantiationService.createInstance(SCMAccessibilityProvider)
+    });
+    this.disposables.add(this.tree);
+    this.tree.onDidOpen(this.open, this, this.disposables);
+    this.tree.onContextMenu(this.onListContextMenu, this, this.disposables);
+    this.tree.onDidScroll(this.inputRenderer.clearValidation, this.inputRenderer, this.disposables);
+    Event.filter(this.tree.onDidChangeCollapseState, (e) => isSCMRepository(e.node.element?.element), this.disposables)(this.updateRepositoryCollapseAllContextKeys, this, this.disposables);
+    this.disposables.add(autorun((reader) => {
+      this.tree.updateOptions({
+        compressionEnabled: compressionEnabled.read(reader)
+      });
+    }));
+    append(container, overflowWidgetsDomNode);
+  }
+  async open(e) {
+    if (!e.element) {
+      return;
+    } else if (isSCMRepository(e.element)) {
+      this.scmViewService.focus(e.element);
+      return;
+    } else if (isSCMInput(e.element)) {
+      this.scmViewService.focus(e.element.repository);
+      const widget = this.inputRenderer.getRenderedInputWidget(e.element);
+      if (widget) {
+        widget.focus();
+        this.tree.setFocus([], e.browserEvent);
+        const selection = this.tree.getSelection();
+        if (selection.length === 1 && selection[0] === e.element) {
+          setTimeout(() => this.tree.setSelection([]));
+        }
+      }
+      return;
+    } else if (isSCMActionButton(e.element)) {
+      this.scmViewService.focus(e.element.repository);
+      this.actionButtonRenderer.focusActionButton(e.element);
+      this.tree.setFocus([], e.browserEvent);
+      return;
+    } else if (isSCMResourceGroup(e.element)) {
+      const provider = e.element.provider;
+      const repository = Iterable.find(this.scmService.repositories, (r) => r.provider === provider);
+      if (repository) {
+        this.scmViewService.focus(repository);
+      }
+      return;
+    } else if (isSCMResource(e.element)) {
+      if (e.element.command?.id === API_OPEN_EDITOR_COMMAND_ID || e.element.command?.id === API_OPEN_DIFF_EDITOR_COMMAND_ID) {
+        if (isPointerEvent(e.browserEvent) && e.browserEvent.button === 1) {
+          const resourceGroup = e.element.resourceGroup;
+          const title = `${resourceGroup.provider.label}: ${resourceGroup.label}`;
+          await OpenScmGroupAction.openMultiFileDiffEditor(this.editorService, title, resourceGroup.provider.rootUri, resourceGroup.id, {
+            ...e.editorOptions,
+            viewState: {
+              revealData: {
+                resource: {
+                  original: e.element.multiDiffEditorOriginalUri,
+                  modified: e.element.multiDiffEditorModifiedUri
+                }
+              }
+            },
+            preserveFocus: true
+          });
+        } else {
+          await this.commandService.executeCommand(e.element.command.id, ...e.element.command.arguments || [], e);
+        }
+      } else {
+        await e.element.open(!!e.editorOptions.preserveFocus);
+        if (e.editorOptions.pinned) {
+          const activeEditorPane = this.editorService.activeEditorPane;
+          activeEditorPane?.group.pinEditor(activeEditorPane.input);
+        }
+      }
+      const provider = e.element.resourceGroup.provider;
+      const repository = Iterable.find(this.scmService.repositories, (r) => r.provider === provider);
+      if (repository) {
+        this.scmViewService.focus(repository);
+      }
+    } else if (isSCMResourceNode(e.element)) {
+      const provider = e.element.context.provider;
+      const repository = Iterable.find(this.scmService.repositories, (r) => r.provider === provider);
+      if (repository) {
+        this.scmViewService.focus(repository);
+      }
+      return;
+    }
+  }
+  onDidActiveEditorChange() {
+    if (!this.configurationService.getValue("scm.autoReveal")) {
+      return;
+    }
+    const uri = EditorResourceAccessor.getOriginalUri(this.editorService.activeEditor, { supportSideBySide: SideBySideEditor.PRIMARY });
+    if (!uri) {
+      return;
+    }
+    if (this.tree.getFocus().some((e) => isSCMResource(e) && this.uriIdentityService.extUri.isEqual(e.sourceUri, uri)) && this.tree.getSelection().some((e) => isSCMResource(e) && this.uriIdentityService.extUri.isEqual(e.sourceUri, uri))) {
+      return;
+    }
+    this.revealResourceThrottler.queue(() => this.treeOperationSequencer.queue(async () => {
+      for (const repository of this.scmViewService.visibleRepositories) {
+        const item = this.items.get(repository);
+        if (!item) {
+          continue;
+        }
+        for (let j = repository.provider.groups.length - 1; j >= 0; j--) {
+          const groupItem = repository.provider.groups[j];
+          const resource = this.viewMode === "tree" ? groupItem.resourceTree.getNode(uri)?.element : groupItem.resources.find((r) => this.uriIdentityService.extUri.isEqual(r.sourceUri, uri));
+          if (resource) {
+            await this.tree.expandTo(resource);
+            this.tree.reveal(resource);
+            this.tree.setSelection([resource]);
+            this.tree.setFocus([resource]);
+            return;
+          }
+        }
+      }
+    }));
+  }
+  onDidChangeVisibleRepositories({ added, removed }) {
+    for (const repository of added) {
+      const repositoryDisposables = new DisposableStore();
+      repositoryDisposables.add(autorun((reader) => {
+        repository.provider.actionButton.read(reader);
+        this.updateChildren(repository);
+      }));
+      repositoryDisposables.add(repository.input.onDidChangeVisibility(() => this.updateChildren(repository)));
+      repositoryDisposables.add(repository.provider.onDidChangeResourceGroups(() => this.updateChildren(repository)));
+      const resourceGroupDisposables = repositoryDisposables.add(new DisposableMap());
+      const onDidChangeResourceGroups = /* @__PURE__ */ __name(() => {
+        for (const [resourceGroup] of resourceGroupDisposables) {
+          if (!repository.provider.groups.includes(resourceGroup)) {
+            resourceGroupDisposables.deleteAndDispose(resourceGroup);
+          }
+        }
+        for (const resourceGroup of repository.provider.groups) {
+          if (!resourceGroupDisposables.has(resourceGroup)) {
+            const disposableStore = new DisposableStore();
+            disposableStore.add(resourceGroup.onDidChange(() => this.updateChildren(repository)));
+            disposableStore.add(resourceGroup.onDidChangeResources(() => this.updateChildren(repository)));
+            resourceGroupDisposables.set(resourceGroup, disposableStore);
+          }
+        }
+      }, "onDidChangeResourceGroups");
+      repositoryDisposables.add(repository.provider.onDidChangeResourceGroups(onDidChangeResourceGroups));
+      onDidChangeResourceGroups();
+      this.items.set(repository, repositoryDisposables);
+    }
+    for (const repository of removed) {
+      this.items.deleteAndDispose(repository);
+    }
+    this.updateChildren();
+    this.onDidActiveEditorChange();
+  }
+  onListContextMenu(e) {
+    if (!e.element) {
+      const menu = this.menuService.getMenuActions(Menus.ViewSort, this.contextKeyService);
+      const actions2 = getFlatContextMenuActions(menu);
+      return this.contextMenuService.showContextMenu({
+        getAnchor: /* @__PURE__ */ __name(() => e.anchor, "getAnchor"),
+        getActions: /* @__PURE__ */ __name(() => actions2, "getActions"),
+        onHide: /* @__PURE__ */ __name(() => {
+        }, "onHide")
+      });
+    }
+    const element = e.element;
+    let context = element;
+    let actions = [];
+    const disposables = new DisposableStore();
+    let actionRunner = new RepositoryPaneActionRunner(() => this.getSelectedResources());
+    disposables.add(actionRunner);
+    if (isSCMRepository(element)) {
+      const menus = this.scmViewService.menus.getRepositoryMenus(element.provider);
+      const menu = menus.repositoryContextMenu;
+      context = element.provider;
+      actionRunner = new RepositoryActionRunner(() => this.getSelectedRepositories());
+      disposables.add(actionRunner);
+      actions = collectContextMenuActions(menu);
+    } else if (isSCMInput(element) || isSCMActionButton(element)) {
+    } else if (isSCMResourceGroup(element)) {
+      const menus = this.scmViewService.menus.getRepositoryMenus(element.provider);
+      const menu = menus.getResourceGroupMenu(element);
+      actions = collectContextMenuActions(menu);
+    } else if (isSCMResource(element)) {
+      const menus = this.scmViewService.menus.getRepositoryMenus(element.resourceGroup.provider);
+      const menu = menus.getResourceMenu(element);
+      actions = collectContextMenuActions(menu);
+    } else if (isSCMResourceNode(element)) {
+      if (element.element) {
+        const menus = this.scmViewService.menus.getRepositoryMenus(element.element.resourceGroup.provider);
+        const menu = menus.getResourceMenu(element.element);
+        actions = collectContextMenuActions(menu);
+      } else {
+        const menus = this.scmViewService.menus.getRepositoryMenus(element.context.provider);
+        const menu = menus.getResourceFolderMenu(element.context);
+        actions = collectContextMenuActions(menu);
+      }
+    }
+    disposables.add(actionRunner.onWillRun(() => this.tree.domFocus()));
+    this.contextMenuService.showContextMenu({
+      actionRunner,
+      getAnchor: /* @__PURE__ */ __name(() => e.anchor, "getAnchor"),
+      getActions: /* @__PURE__ */ __name(() => actions, "getActions"),
+      getActionsContext: /* @__PURE__ */ __name(() => context, "getActionsContext"),
+      onHide: /* @__PURE__ */ __name(() => disposables.dispose(), "onHide")
+    });
+  }
+  getSelectedRepositories() {
+    const focusedRepositories = this.tree.getFocus().filter((r) => !!r && isSCMRepository(r));
+    const selectedRepositories = this.tree.getSelection().filter((r) => !!r && isSCMRepository(r));
+    return Array.from(/* @__PURE__ */ new Set([...focusedRepositories, ...selectedRepositories]));
+  }
+  getSelectedResources() {
+    return this.tree.getSelection().filter((r) => isSCMResourceGroup(r) || isSCMResource(r) || isSCMResourceNode(r));
+  }
+  getViewMode() {
+    let mode = this.configurationService.getValue("scm.defaultViewMode") === "list" ? "list" : "tree";
+    const storageMode = this.storageService.get(
+      `scm.viewMode`,
+      1
+      /* StorageScope.WORKSPACE */
+    );
+    if (typeof storageMode === "string") {
+      mode = storageMode;
+    }
+    return mode;
+  }
+  getViewSortKey() {
+    if (this._viewMode === "tree") {
+      return "path";
+    }
+    let viewSortKey;
+    const viewSortKeyString = this.configurationService.getValue("scm.defaultViewSortKey");
+    switch (viewSortKeyString) {
+      case "name":
+        viewSortKey = "name";
+        break;
+      case "status":
+        viewSortKey = "status";
+        break;
+      default:
+        viewSortKey = "path";
+        break;
+    }
+    const storageSortKey = this.storageService.get(
+      `scm.viewSortKey`,
+      1
+      /* StorageScope.WORKSPACE */
+    );
+    if (typeof storageSortKey === "string") {
+      viewSortKey = storageSortKey;
+    }
+    return viewSortKey;
+  }
+  loadTreeViewState() {
+    const storageViewState = this.storageService.get(
+      "scm.viewState2",
+      1
+      /* StorageScope.WORKSPACE */
+    );
+    if (!storageViewState) {
+      return void 0;
+    }
+    try {
+      const treeViewState = JSON.parse(storageViewState);
+      return treeViewState;
+    } catch {
+      return void 0;
+    }
+  }
+  storeTreeViewState() {
+    if (this.tree) {
+      this.storageService.store(
+        "scm.viewState2",
+        JSON.stringify(this.tree.getViewState()),
+        1,
+        1
+        /* StorageTarget.MACHINE */
+      );
+    }
+  }
+  updateChildren(element) {
+    this.updateChildrenThrottler.queue(() => this.treeOperationSequencer.queue(async () => {
+      const focusedInput = this.inputRenderer.getFocusedInput();
+      if (element && this.tree.hasNode(element)) {
+        await this.tree.updateChildren(element);
+      } else {
+        await this.tree.updateChildren(void 0);
+      }
+      if (focusedInput) {
+        this.inputRenderer.getRenderedInputWidget(focusedInput)?.focus();
+      }
+      this.updateScmProviderContextKeys();
+      this.updateRepositoryCollapseAllContextKeys();
+    }));
+  }
+  updateIndentStyles(theme) {
+    this.treeContainer.classList.toggle(
+      "list-view-mode",
+      this.viewMode === "list"
+      /* ViewMode.List */
+    );
+    this.treeContainer.classList.toggle(
+      "tree-view-mode",
+      this.viewMode === "tree"
+      /* ViewMode.Tree */
+    );
+    this.treeContainer.classList.toggle("align-icons-and-twisties", this.viewMode === "list" && theme.hasFileIcons || theme.hasFileIcons && !theme.hasFolderIcons);
+    this.treeContainer.classList.toggle("hide-arrows", this.viewMode === "tree" && theme.hidesExplorerArrows === true);
+  }
+  updateScmProviderContextKeys() {
+    const alwaysShowRepositories = this.configurationService.getValue("scm.alwaysShowRepositories");
+    if (!alwaysShowRepositories && this.items.size === 1) {
+      const provider = Iterable.first(this.items.keys()).provider;
+      this.scmProviderContextKey.set(provider.contextValue);
+      this.scmProviderRootUriContextKey.set(provider.rootUri?.toString());
+      this.scmProviderHasRootUriContextKey.set(!!provider.rootUri);
+    } else {
+      this.scmProviderContextKey.set(void 0);
+      this.scmProviderRootUriContextKey.set(void 0);
+      this.scmProviderHasRootUriContextKey.set(false);
+    }
+  }
+  updateRepositoryCollapseAllContextKeys() {
+    if (!this.isBodyVisible() || this.items.size === 1) {
+      this.isAnyRepositoryCollapsibleContextKey.set(false);
+      this.areAllRepositoriesCollapsedContextKey.set(false);
+      return;
+    }
+    this.isAnyRepositoryCollapsibleContextKey.set(this.scmViewService.visibleRepositories.some((r) => this.tree.hasNode(r) && this.tree.isCollapsible(r)));
+    this.areAllRepositoriesCollapsedContextKey.set(this.scmViewService.visibleRepositories.every((r) => this.tree.hasNode(r) && (!this.tree.isCollapsible(r) || this.tree.isCollapsed(r))));
+  }
+  collapseAllRepositories() {
+    for (const repository of this.scmViewService.visibleRepositories) {
+      if (this.tree.isCollapsible(repository)) {
+        this.tree.collapse(repository);
+      }
+    }
+  }
+  expandAllRepositories() {
+    for (const repository of this.scmViewService.visibleRepositories) {
+      if (this.tree.isCollapsible(repository)) {
+        this.tree.expand(repository);
+      }
+    }
+  }
+  focusPreviousInput() {
+    this.treeOperationSequencer.queue(() => this.focusInput(-1));
+  }
+  focusNextInput() {
+    this.treeOperationSequencer.queue(() => this.focusInput(1));
+  }
+  async focusInput(delta) {
+    if (!this.scmViewService.focusedRepository || this.scmViewService.visibleRepositories.length === 0) {
+      return;
+    }
+    let input = this.scmViewService.focusedRepository.input;
+    const repositories = this.scmViewService.visibleRepositories;
+    if (repositories.length === 1 && this.inputRenderer.getRenderedInputWidget(input)?.hasFocus() === true) {
+      return;
+    }
+    if (repositories.length > 1 && this.inputRenderer.getRenderedInputWidget(input)?.hasFocus() === true) {
+      const focusedRepositoryIndex = repositories.indexOf(this.scmViewService.focusedRepository);
+      const newFocusedRepositoryIndex = rot(focusedRepositoryIndex + delta, repositories.length);
+      input = repositories[newFocusedRepositoryIndex].input;
+    }
+    await this.tree.expandTo(input);
+    this.tree.reveal(input);
+    this.inputRenderer.getRenderedInputWidget(input)?.focus();
+  }
+  focusPreviousResourceGroup() {
+    this.treeOperationSequencer.queue(() => this.focusResourceGroup(-1));
+  }
+  focusNextResourceGroup() {
+    this.treeOperationSequencer.queue(() => this.focusResourceGroup(1));
+  }
+  async focusResourceGroup(delta) {
+    if (!this.scmViewService.focusedRepository || this.scmViewService.visibleRepositories.length === 0) {
+      return;
+    }
+    const treeHasDomFocus = isActiveElement(this.tree.getHTMLElement());
+    const resourceGroups = this.scmViewService.focusedRepository.provider.groups;
+    const focusedResourceGroup = this.tree.getFocus().find((e) => isSCMResourceGroup(e));
+    const focusedResourceGroupIndex = treeHasDomFocus && focusedResourceGroup ? resourceGroups.indexOf(focusedResourceGroup) : -1;
+    let resourceGroupNext;
+    if (focusedResourceGroupIndex === -1) {
+      for (const resourceGroup of resourceGroups) {
+        if (this.tree.hasNode(resourceGroup)) {
+          resourceGroupNext = resourceGroup;
+          break;
+        }
+      }
+    } else {
+      let index = rot(focusedResourceGroupIndex + delta, resourceGroups.length);
+      while (index !== focusedResourceGroupIndex) {
+        if (this.tree.hasNode(resourceGroups[index])) {
+          resourceGroupNext = resourceGroups[index];
+          break;
+        }
+        index = rot(index + delta, resourceGroups.length);
+      }
+    }
+    if (resourceGroupNext) {
+      await this.tree.expandTo(resourceGroupNext);
+      this.tree.reveal(resourceGroupNext);
+      this.tree.setSelection([resourceGroupNext]);
+      this.tree.setFocus([resourceGroupNext]);
+      this.tree.domFocus();
+    }
+  }
+  shouldShowWelcome() {
+    return this.scmService.repositoryCount === 0;
+  }
+  getActionsContext() {
+    return this.scmViewService.visibleRepositories.length === 1 ? this.scmViewService.visibleRepositories[0].provider : void 0;
+  }
+  focus() {
+    super.focus();
+    this.treeOperationSequencer.queue(() => {
+      return new Promise((resolve) => {
+        if (this.isExpanded()) {
+          if (this.tree.getFocus().length === 0) {
+            for (const repository of this.scmViewService.visibleRepositories) {
+              const widget = this.inputRenderer.getRenderedInputWidget(repository.input);
+              if (widget) {
+                widget.focus();
+                resolve();
+                return;
+              }
+            }
+          }
+          this.tree.domFocus();
+          resolve();
+        }
+      });
+    });
+  }
+  dispose() {
+    this.visibilityDisposables.dispose();
+    this.disposables.dispose();
+    this.items.dispose();
+    super.dispose();
+  }
+};
+SCMViewPane = __decorate([
+  __param(1, ICommandService),
+  __param(2, IEditorService),
+  __param(3, IMenuService),
+  __param(4, ISCMService),
+  __param(5, ISCMViewService),
+  __param(6, IStorageService),
+  __param(7, IUriIdentityService),
+  __param(8, IKeybindingService),
+  __param(9, IThemeService),
+  __param(10, IContextMenuService),
+  __param(11, IInstantiationService),
+  __param(12, IViewDescriptorService),
+  __param(13, IConfigurationService),
+  __param(14, IContextKeyService),
+  __param(15, IOpenerService),
+  __param(16, IHoverService)
+], SCMViewPane);
+let SCMTreeDataSource = class SCMTreeDataSource2 extends Disposable {
+  static {
+    __name(this, "SCMTreeDataSource");
+  }
+  constructor(viewMode, configurationService, scmViewService) {
+    super();
+    this.viewMode = viewMode;
+    this.configurationService = configurationService;
+    this.scmViewService = scmViewService;
+  }
+  async getChildren(inputOrElement) {
+    const repositoryCount = this.scmViewService.visibleRepositories.length;
+    const showActionButton = this.configurationService.getValue("scm.showActionButton") === true;
+    const alwaysShowRepositories = this.configurationService.getValue("scm.alwaysShowRepositories") === true;
+    if (isSCMViewService(inputOrElement) && (repositoryCount > 1 || alwaysShowRepositories)) {
+      return this.scmViewService.visibleRepositories;
+    } else if (isSCMViewService(inputOrElement) && repositoryCount === 1 && !alwaysShowRepositories || isSCMRepository(inputOrElement)) {
+      const children = [];
+      inputOrElement = isSCMRepository(inputOrElement) ? inputOrElement : this.scmViewService.visibleRepositories[0];
+      const actionButton = inputOrElement.provider.actionButton.get();
+      const resourceGroups = inputOrElement.provider.groups;
+      if (inputOrElement.input.visible) {
+        children.push(inputOrElement.input);
+      }
+      if (showActionButton && actionButton) {
+        children.push({
+          type: "actionButton",
+          repository: inputOrElement,
+          button: actionButton
+        });
+      }
+      const hasSomeChanges = resourceGroups.some((group) => group.resources.length > 0);
+      if (hasSomeChanges || repositoryCount === 1 && (!showActionButton || !actionButton)) {
+        children.push(...resourceGroups);
+      }
+      return children;
+    } else if (isSCMResourceGroup(inputOrElement)) {
+      if (this.viewMode() === "list") {
+        return inputOrElement.resources;
+      } else if (this.viewMode() === "tree") {
+        const children = [];
+        for (const node of inputOrElement.resourceTree.root.children) {
+          children.push(node.element && node.childrenCount === 0 ? node.element : node);
+        }
+        return children;
+      }
+    } else if (isSCMResourceNode(inputOrElement)) {
+      const children = [];
+      for (const node of inputOrElement.children) {
+        children.push(node.element && node.childrenCount === 0 ? node.element : node);
+      }
+      return children;
+    }
+    return [];
+  }
+  getParent(element) {
+    if (isSCMResourceNode(element)) {
+      if (element.parent === element.context.resourceTree.root) {
+        return element.context;
+      } else if (element.parent) {
+        return element.parent;
+      } else {
+        throw new Error("Invalid element passed to getParent");
+      }
+    } else if (isSCMResource(element)) {
+      if (this.viewMode() === "list") {
+        return element.resourceGroup;
+      }
+      const node = element.resourceGroup.resourceTree.getNode(element.sourceUri);
+      const result = node?.parent;
+      if (!result) {
+        throw new Error("Invalid element passed to getParent");
+      }
+      if (result === element.resourceGroup.resourceTree.root) {
+        return element.resourceGroup;
+      }
+      return result;
+    } else if (isSCMInput(element)) {
+      return element.repository;
+    } else if (isSCMResourceGroup(element)) {
+      const repository = this.scmViewService.visibleRepositories.find((r) => r.provider === element.provider);
+      if (!repository) {
+        throw new Error("Invalid element passed to getParent");
+      }
+      return repository;
+    } else {
+      throw new Error("Unexpected call to getParent");
+    }
+  }
+  hasChildren(inputOrElement) {
+    if (isSCMViewService(inputOrElement)) {
+      return this.scmViewService.visibleRepositories.length !== 0;
+    } else if (isSCMRepository(inputOrElement)) {
+      return true;
+    } else if (isSCMInput(inputOrElement)) {
+      return false;
+    } else if (isSCMActionButton(inputOrElement)) {
+      return false;
+    } else if (isSCMResourceGroup(inputOrElement)) {
+      return true;
+    } else if (isSCMResource(inputOrElement)) {
+      return false;
+    } else if (ResourceTree.isResourceNode(inputOrElement)) {
+      return inputOrElement.childrenCount > 0;
+    } else {
+      throw new Error("hasChildren not implemented.");
+    }
+  }
+};
+SCMTreeDataSource = __decorate([
+  __param(1, IConfigurationService),
+  __param(2, ISCMViewService)
+], SCMTreeDataSource);
+class SCMActionButton {
+  static {
+    __name(this, "SCMActionButton");
+  }
+  constructor(container, contextMenuService, commandService, notificationService) {
+    this.container = container;
+    this.contextMenuService = contextMenuService;
+    this.commandService = commandService;
+    this.notificationService = notificationService;
+    this.disposables = new MutableDisposable();
+  }
+  dispose() {
+    this.disposables?.dispose();
+  }
+  setButton(button) {
+    this.clear();
+    if (!button) {
+      return;
+    }
+    if (button.secondaryCommands?.length) {
+      const actions = [];
+      for (let index = 0; index < button.secondaryCommands.length; index++) {
+        const commands = button.secondaryCommands[index];
+        for (const command of commands) {
+          actions.push(toAction({
+            id: command.id,
+            label: command.title,
+            enabled: true,
+            run: /* @__PURE__ */ __name(async () => {
+              await this.executeCommand(command.id, ...command.arguments || []);
+            }, "run")
+          }));
+        }
+        if (commands.length) {
+          actions.push(new Separator());
+        }
+      }
+      actions.pop();
+      this.button = new ButtonWithDropdown(this.container, {
+        actions,
+        addPrimaryActionToDropdown: false,
+        contextMenuProvider: this.contextMenuService,
+        title: button.command.tooltip,
+        supportIcons: true,
+        ...defaultButtonStyles
+      });
+    } else {
+      this.button = new Button(this.container, { supportIcons: true, supportShortLabel: !!button.command.shortTitle, title: button.command.tooltip, ...defaultButtonStyles });
+    }
+    this.button.enabled = button.enabled;
+    this.button.label = button.command.title;
+    if (this.button instanceof Button && button.command.shortTitle) {
+      this.button.labelShort = button.command.shortTitle;
+    }
+    this.button.onDidClick(async () => await this.executeCommand(button.command.id, ...button.command.arguments || []), null, this.disposables.value);
+    this.disposables.value.add(this.button);
+  }
+  focus() {
+    this.button?.focus();
+  }
+  clear() {
+    this.disposables.value = new DisposableStore();
+    this.button = void 0;
+    clearNode(this.container);
+  }
+  async executeCommand(commandId, ...args) {
+    try {
+      await this.commandService.executeCommand(commandId, ...args);
+    } catch (ex) {
+      this.notificationService.error(ex);
+    }
+  }
+}
+setupSimpleEditorSelectionStyling(".scm-view .scm-editor-container");
+export {
+  ActionButtonRenderer,
+  ContextKeys,
+  SCMAccessibilityProvider,
+  SCMActionButton,
+  SCMTreeKeyboardNavigationLabelProvider,
+  SCMTreeSorter,
+  SCMViewPane
+};
+//# sourceMappingURL=scmViewPane.js.map

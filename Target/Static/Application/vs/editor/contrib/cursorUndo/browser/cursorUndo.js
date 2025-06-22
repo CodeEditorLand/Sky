@@ -1,1 +1,156 @@
-import{$vd as u}from"../../../../base/common/lifecycle.js";import{$cab as l,$hab as h,$kab as d}from"../../../browser/editorExtensions.js";import{EditorContextKeys as f}from"../../../common/editorContextKeys.js";import*as a from"../../../../nls.js";class n{constructor(t){this.selections=t}equals(t){const s=this.selections.length,e=t.selections.length;if(s!==e)return!1;for(let r=0;r<s;r++)if(!this.selections[r].equalsSelection(t.selections[r]))return!1;return!0}}class c{constructor(t,s,e){this.cursorState=t,this.scrollTop=s,this.scrollLeft=e}}class o extends u{static{this.ID="editor.contrib.cursorUndoRedoController"}static get(t){return t.getContribution(o.ID)}constructor(t){super(),this.a=t,this.b=!1,this.c=[],this.f=[],this.B(t.onDidChangeModel(s=>{this.c=[],this.f=[]})),this.B(t.onDidChangeModelContent(s=>{this.c=[],this.f=[]})),this.B(t.onDidChangeCursorSelection(s=>{if(this.b||!s.oldSelections||s.oldModelVersionId!==s.modelVersionId)return;const e=new n(s.oldSelections);this.c.length>0&&this.c[this.c.length-1].cursorState.equals(e)||(this.c.push(new c(e,t.getScrollTop(),t.getScrollLeft())),this.f=[],this.c.length>50&&this.c.shift())}))}cursorUndo(){!this.a.hasModel()||this.c.length===0||(this.f.push(new c(new n(this.a.getSelections()),this.a.getScrollTop(),this.a.getScrollLeft())),this.g(this.c.pop()))}cursorRedo(){!this.a.hasModel()||this.f.length===0||(this.c.push(new c(new n(this.a.getSelections()),this.a.getScrollTop(),this.a.getScrollLeft())),this.g(this.f.pop()))}g(t){this.b=!0,this.a.setSelections(t.cursorState.selections),this.a.setScrollPosition({scrollTop:t.scrollTop,scrollLeft:t.scrollLeft}),this.b=!1}}class p extends l{constructor(){super({id:"cursorUndo",label:a.localize2(1036,"Cursor Undo"),precondition:void 0,kbOpts:{kbExpr:f.textInputFocus,primary:2099,weight:100}})}run(t,s,e){o.get(s)?.cursorUndo()}}class g extends l{constructor(){super({id:"cursorRedo",label:a.localize2(1037,"Cursor Redo"),precondition:void 0})}run(t,s,e){o.get(s)?.cursorRedo()}}d(o.ID,o,0);h(p);h(g);export{o as $rnb,p as $snb,g as $tnb};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { Disposable } from "../../../../base/common/lifecycle.js";
+import { EditorAction, registerEditorAction, registerEditorContribution } from "../../../browser/editorExtensions.js";
+import { EditorContextKeys } from "../../../common/editorContextKeys.js";
+import * as nls from "../../../../nls.js";
+class CursorState {
+  static {
+    __name(this, "CursorState");
+  }
+  constructor(selections) {
+    this.selections = selections;
+  }
+  equals(other) {
+    const thisLen = this.selections.length;
+    const otherLen = other.selections.length;
+    if (thisLen !== otherLen) {
+      return false;
+    }
+    for (let i = 0; i < thisLen; i++) {
+      if (!this.selections[i].equalsSelection(other.selections[i])) {
+        return false;
+      }
+    }
+    return true;
+  }
+}
+class StackElement {
+  static {
+    __name(this, "StackElement");
+  }
+  constructor(cursorState, scrollTop, scrollLeft) {
+    this.cursorState = cursorState;
+    this.scrollTop = scrollTop;
+    this.scrollLeft = scrollLeft;
+  }
+}
+class CursorUndoRedoController extends Disposable {
+  static {
+    __name(this, "CursorUndoRedoController");
+  }
+  static {
+    this.ID = "editor.contrib.cursorUndoRedoController";
+  }
+  static get(editor) {
+    return editor.getContribution(CursorUndoRedoController.ID);
+  }
+  constructor(editor) {
+    super();
+    this._editor = editor;
+    this._isCursorUndoRedo = false;
+    this._undoStack = [];
+    this._redoStack = [];
+    this._register(editor.onDidChangeModel((e) => {
+      this._undoStack = [];
+      this._redoStack = [];
+    }));
+    this._register(editor.onDidChangeModelContent((e) => {
+      this._undoStack = [];
+      this._redoStack = [];
+    }));
+    this._register(editor.onDidChangeCursorSelection((e) => {
+      if (this._isCursorUndoRedo) {
+        return;
+      }
+      if (!e.oldSelections) {
+        return;
+      }
+      if (e.oldModelVersionId !== e.modelVersionId) {
+        return;
+      }
+      const prevState = new CursorState(e.oldSelections);
+      const isEqualToLastUndoStack = this._undoStack.length > 0 && this._undoStack[this._undoStack.length - 1].cursorState.equals(prevState);
+      if (!isEqualToLastUndoStack) {
+        this._undoStack.push(new StackElement(prevState, editor.getScrollTop(), editor.getScrollLeft()));
+        this._redoStack = [];
+        if (this._undoStack.length > 50) {
+          this._undoStack.shift();
+        }
+      }
+    }));
+  }
+  cursorUndo() {
+    if (!this._editor.hasModel() || this._undoStack.length === 0) {
+      return;
+    }
+    this._redoStack.push(new StackElement(new CursorState(this._editor.getSelections()), this._editor.getScrollTop(), this._editor.getScrollLeft()));
+    this._applyState(this._undoStack.pop());
+  }
+  cursorRedo() {
+    if (!this._editor.hasModel() || this._redoStack.length === 0) {
+      return;
+    }
+    this._undoStack.push(new StackElement(new CursorState(this._editor.getSelections()), this._editor.getScrollTop(), this._editor.getScrollLeft()));
+    this._applyState(this._redoStack.pop());
+  }
+  _applyState(stackElement) {
+    this._isCursorUndoRedo = true;
+    this._editor.setSelections(stackElement.cursorState.selections);
+    this._editor.setScrollPosition({
+      scrollTop: stackElement.scrollTop,
+      scrollLeft: stackElement.scrollLeft
+    });
+    this._isCursorUndoRedo = false;
+  }
+}
+class CursorUndo extends EditorAction {
+  static {
+    __name(this, "CursorUndo");
+  }
+  constructor() {
+    super({
+      id: "cursorUndo",
+      label: nls.localize2("cursor.undo", "Cursor Undo"),
+      precondition: void 0,
+      kbOpts: {
+        kbExpr: EditorContextKeys.textInputFocus,
+        primary: 2048 | 51,
+        weight: 100
+        /* KeybindingWeight.EditorContrib */
+      }
+    });
+  }
+  run(accessor, editor, args) {
+    CursorUndoRedoController.get(editor)?.cursorUndo();
+  }
+}
+class CursorRedo extends EditorAction {
+  static {
+    __name(this, "CursorRedo");
+  }
+  constructor() {
+    super({
+      id: "cursorRedo",
+      label: nls.localize2("cursor.redo", "Cursor Redo"),
+      precondition: void 0
+    });
+  }
+  run(accessor, editor, args) {
+    CursorUndoRedoController.get(editor)?.cursorRedo();
+  }
+}
+registerEditorContribution(
+  CursorUndoRedoController.ID,
+  CursorUndoRedoController,
+  0
+  /* EditorContributionInstantiation.Eager */
+);
+registerEditorAction(CursorUndo);
+registerEditorAction(CursorRedo);
+export {
+  CursorRedo,
+  CursorUndo,
+  CursorUndoRedoController
+};
+//# sourceMappingURL=cursorUndo.js.map

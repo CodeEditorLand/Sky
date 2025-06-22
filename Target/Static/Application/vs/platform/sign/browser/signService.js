@@ -1,2 +1,83 @@
-import{$uI as m,$vI as w}from"../../../amdX.js";import{$V5 as v}from"../../../base/browser/dom.js";import{$c5 as h}from"../../../base/browser/window.js";import{$tm as _}from"../../../base/common/decorators.js";import{$nn as y}from"../../product/common/productService.js";import{$SB as b}from"../common/abstractSignService.js";var p=function(o,t,e,r){var n=arguments.length,s=n<3?t:r===null?r=Object.getOwnPropertyDescriptor(t,e):r,a;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")s=Reflect.decorate(o,t,e,r);else for(var c=o.length-1;c>=0;c--)(a=o[c])&&(s=(n<3?a(s):n>3?a(t,e,s):a(t,e))||s);return n>3&&s&&Object.defineProperty(t,e,s),s},u=function(o,t){return function(e,r){t(e,r,o)}};const d=32,i=16,l=d+i;let f=class extends b{constructor(t){super(),this.f=t}c(){return this.j().then(t=>{const e=new t.validator;return{createNewMessage:r=>e.createNewMessage(r),validate:r=>e.validate(r),dispose:()=>e.free()}})}d(t){return this.j().then(e=>e.sign(t))}async j(){const t=new v;let[e]=await Promise.all([this.k(),new Promise((n,s)=>{m("vsda","rust/web/vsda.js").then(()=>n(),s),t.cancelAndSet(()=>{typeof vsda_web<"u"&&n()},50,h)}).finally(()=>t.dispose())]);const r=new TextEncoder().encode(this.f.serverLicense?.join(`
-`)||"");for(let n=0;n+l<r.length;n+=l){const s=await crypto.subtle.importKey("raw",r.slice(n+i,n+i+d),{name:"AES-CBC"},!1,["decrypt"]);e=await crypto.subtle.decrypt({name:"AES-CBC",iv:r.slice(n,n+i)},s,e)}return await vsda_web.default(e),vsda_web}async k(){const t=w("vsda","rust/web/vsda_bg.wasm"),e=await fetch(t);if(!e.ok)throw new Error("error loading vsda");return e.arrayBuffer()}};p([_],f.prototype,"j",null);f=p([u(0,y)],f);export{f as $bzc};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { importAMDNodeModule, resolveAmdNodeModulePath } from "../../../amdX.js";
+import { WindowIntervalTimer } from "../../../base/browser/dom.js";
+import { mainWindow } from "../../../base/browser/window.js";
+import { memoize } from "../../../base/common/decorators.js";
+import { IProductService } from "../../product/common/productService.js";
+import { AbstractSignService } from "../common/abstractSignService.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+const KEY_SIZE = 32;
+const IV_SIZE = 16;
+const STEP_SIZE = KEY_SIZE + IV_SIZE;
+let SignService = class SignService2 extends AbstractSignService {
+  static {
+    __name(this, "SignService");
+  }
+  constructor(productService) {
+    super();
+    this.productService = productService;
+  }
+  getValidator() {
+    return this.vsda().then((vsda) => {
+      const v = new vsda.validator();
+      return {
+        createNewMessage: /* @__PURE__ */ __name((arg) => v.createNewMessage(arg), "createNewMessage"),
+        validate: /* @__PURE__ */ __name((arg) => v.validate(arg), "validate"),
+        dispose: /* @__PURE__ */ __name(() => v.free(), "dispose")
+      };
+    });
+  }
+  signValue(arg) {
+    return this.vsda().then((vsda) => vsda.sign(arg));
+  }
+  async vsda() {
+    const checkInterval = new WindowIntervalTimer();
+    let [wasm] = await Promise.all([
+      this.getWasmBytes(),
+      new Promise((resolve, reject) => {
+        importAMDNodeModule("vsda", "rust/web/vsda.js").then(() => resolve(), reject);
+        checkInterval.cancelAndSet(() => {
+          if (typeof vsda_web !== "undefined") {
+            resolve();
+          }
+        }, 50, mainWindow);
+      }).finally(() => checkInterval.dispose())
+    ]);
+    const keyBytes = new TextEncoder().encode(this.productService.serverLicense?.join("\n") || "");
+    for (let i = 0; i + STEP_SIZE < keyBytes.length; i += STEP_SIZE) {
+      const key = await crypto.subtle.importKey("raw", keyBytes.slice(i + IV_SIZE, i + IV_SIZE + KEY_SIZE), { name: "AES-CBC" }, false, ["decrypt"]);
+      wasm = await crypto.subtle.decrypt({ name: "AES-CBC", iv: keyBytes.slice(i, i + IV_SIZE) }, key, wasm);
+    }
+    await vsda_web.default(wasm);
+    return vsda_web;
+  }
+  async getWasmBytes() {
+    const url = resolveAmdNodeModulePath("vsda", "rust/web/vsda_bg.wasm");
+    const response = await fetch(url);
+    if (!response.ok) {
+      throw new Error("error loading vsda");
+    }
+    return response.arrayBuffer();
+  }
+};
+__decorate([
+  memoize
+], SignService.prototype, "vsda", null);
+SignService = __decorate([
+  __param(0, IProductService)
+], SignService);
+export {
+  SignService
+};
+//# sourceMappingURL=signService.js.map

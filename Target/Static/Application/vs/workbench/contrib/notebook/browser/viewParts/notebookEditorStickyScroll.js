@@ -1,1 +1,425 @@
-import*as h from"../../../../../base/browser/dom.js";import{EventType as $}from"../../../../../base/browser/touch.js";import{CancellationToken as v}from"../../../../../base/common/cancellation.js";import{$B5 as F}from"../../../../../base/browser/mouseEvent.js";import{$df as N}from"../../../../../base/common/event.js";import{$vd as T,$ud as H}from"../../../../../base/common/lifecycle.js";import{$dI as x}from"../../../../../platform/actions/common/actions.js";import{$ofb as O}from"../../../../../platform/contextview/browser/contextView.js";import{CellKind as y}from"../../common/notebookCommon.js";import{$Ih as I}from"../../../../../base/common/async.js";import{ThemeIcon as V}from"../../../../../base/common/themables.js";import{$Hob as B,$Gob as R}from"../../../../../editor/contrib/folding/browser/foldingDecorations.js";import{$AUb as j}from"../controller/foldingController.js";import{$mj as A}from"../../../../../platform/instantiation/common/instantiation.js";import{$7Ub as _}from"../viewModel/notebookOutlineDataSourceFactory.js";var b,D=function(t,e,i,o){var s,n=arguments.length,r=n<3?e:null===o?o=Object.getOwnPropertyDescriptor(e,i):o;if("object"==typeof Reflect&&"function"==typeof Reflect.decorate)r=Reflect.decorate(t,e,i,o);else for(var c=t.length-1;c>=0;c--)(s=t[c])&&(r=(n<3?s(r):n>3?s(e,i,r):s(e,i))||r);return n>3&&r&&Object.defineProperty(e,i,r),r},M=function(t,e){return function(i,o){e(i,o,t)}};class S extends T{constructor(t,e,i,o,s){super(),this.element=t,this.foldingIcon=e,this.header=i,this.entry=o,this.notebookEditor=s,this.B(h.$J5(this.header,h.$F6.CLICK||$.Tap,(()=>{this.b()}))),this.B(h.$J5(this.foldingIcon.domNode,h.$F6.CLICK||$.Tap,(()=>{if(this.entry.cell.cellKind===y.Markup){const t=this.entry.cell.foldingState;this.a(t)}})))}a(t){const e=this.notebookEditor.getContribution(j.id),i=this.entry.index,o=this.entry.level,s=2===t?1:2;e.setFoldingStateDown(i,s,o),this.b()}b(){this.notebookEditor.focusNotebookCell(this.entry.cell,"container");const t=this.notebookEditor.getAbsoluteTopOfElement(this.entry.cell),e=S.getParentCount(this.entry);this.notebookEditor.setScrollTop(t-22*(e+1.1))}static getParentCount(t){let e=0;for(;t.parent;)e++,t=t.parent;return e}}class K{constructor(t,e){this.isCollapsed=t,this.dimension=e,this.domNode=document.createElement("div"),this.domNode.style.width=`${e}px`,this.domNode.style.height=`${e}px`,this.domNode.className=V.asClassName(t?B:R)}setVisible(t){this.domNode.style.cursor=t?"pointer":"default",this.domNode.style.opacity=t?"1":"0"}}let c=b=class extends T{getDomNode(){return this.m}getCurrentStickyHeight(){let t=0;return this.b.forEach((e=>{e.rendered&&(t+=22)})),t}h(t){this.b=t}j(t,e){if(t.size!==e.size)return!1;for(const[i,o]of t){const t=e.get(i);if(!t||o.rendered!==t.rendered)return!1}return!0}constructor(t,e,i,o,s,n){super(),this.m=t,this.n=e,this.r=i,this.s=o,this.t=s,this.u=n,this.a=new H,this.b=new Map,this.c=this.B(new N),this.onDidChangeNotebookStickyScroll=this.c.event,this.g=this.B(new H),this.n.notebookOptions.getDisplayOptions().stickyScrollEnabled&&this.z().catch(console.error),this.B(this.n.notebookOptions.onDidChangeOptions((t=>{(t.stickyScrollEnabled||t.stickyScrollMode)&&this.y(t)}))),this.B(h.$J5(this.m,h.$F6.CONTEXT_MENU,(async t=>{this.w(t)}))),this.B(h.$J5(this.m,h.$F6.WHEEL,(t=>{this.r.triggerScrollFromMouseWheelEvent(t)})))}w(t){const e=new F(h.getWindow(this.m),t),i=e.target.parentElement,o=Array.from(this.b.values()).find((t=>t.line.element.contains(i)))?.line.entry;if(!o)return;const s={outlineEntry:o,notebookEditor:this.n};this.t.showContextMenu({menuId:x.NotebookStickyScrollContext,getAnchor:()=>e,menuActionOptions:{shouldForwardArgs:!0,arg:s}})}y(t){t.stickyScrollEnabled?this.n.notebookOptions.getDisplayOptions().stickyScrollEnabled?this.z().catch(console.error):(this.a.clear(),this.f?.dispose(),this.H(),h.$I5(this.m),this.F()):t.stickyScrollMode&&this.n.notebookOptions.getDisplayOptions().stickyScrollEnabled&&this.f?.object&&this.D(g(this.n,this.r,this.f?.object?.entries,this.getCurrentStickyHeight()))}async z(){const{object:t}=this.f=this.u.invokeFunction((t=>t.get(_).getOrCreate(this.n)));this.B(this.f),await t.computeFullSymbols(v.None);const e=g(this.n,this.r,t.entries,this.getCurrentStickyHeight());this.D(e),this.a.add(t.onDidChange((()=>{const e=g(this.n,this.r,t.entries,this.getCurrentStickyHeight());this.j(e,this.b)?this.C(e):this.D(e)}))),this.a.add(this.n.onDidAttachViewModel((async()=>{await t.computeFullSymbols(v.None);const e=g(this.n,this.r,t.entries,this.getCurrentStickyHeight());this.D(e)}))),this.a.add(this.n.onDidScroll((()=>{const e=new I(100);e.trigger((()=>{e.dispose();const i=g(this.n,this.r,t.entries,this.getCurrentStickyHeight());this.j(i,this.b)?this.C(i):this.D(i)}))})))}C(t){t.forEach((t=>{t.line&&t.line.dispose()}))}static getVisibleOutlineEntry(t,e){let i=0,o=e.length-1;for(;i<=o;){const s=Math.floor((i+o)/2);if(e[s].index===t){const i=[];return e[s].asFlatList(i),i.find((e=>e.index===t))}e[s].index<t?i=s+1:o=s-1}if(o>=0){const i=[];return e[o].asFlatList(i),i.find((e=>e.index===t))}}D(t){h.$I5(this.m),this.H(),this.G(t,this.m);const e=this.getCurrentStickyHeight();this.h(t);const i=this.getCurrentStickyHeight()-e;if(0!==i){this.c.fire(i);const t=this.g.add(h.$T5(h.getWindow(this.getDomNode()),(()=>{this.s(i),this.F(),this.g.delete(t)})))}else this.F()}F(){this.getCurrentStickyHeight()>0?this.m.style.display="block":this.m.style.display="none"}static computeStickyHeight(t){let e=0;for(t.cell.cellKind===y.Markup&&t.level<7&&(e+=22);t.parent;)e+=22,t=t.parent;return e}static checkCollapsedStickyLines(t,e,i){let o=t;const s=new Map,n=[];for(;o;){if(o.level>=7){o=o.parent;continue}const t=b.createStickyElement(o,i);s.set(o,{line:t,rendered:!1}),n.unshift(t),o=o.parent}for(let t=0;t<n.length&&!(t>=e);t++)s.set(n[t].entry,{line:n[t],rendered:!0});return s}G(t,e){const i=Array.from(t.entries()).reverse();for(const[,t]of i)t.rendered&&e.append(t.line.element)}static createStickyElement(t,e){const i=document.createElement("div");i.classList.add("notebook-sticky-scroll-element"),"indented"===e.notebookOptions.getLayoutConfiguration().stickyScrollMode&&(i.style.paddingLeft=10*S.getParentCount(t)+"px");let o=!1;t.cell.cellKind===y.Markup&&(o=2===t.cell.foldingState);const s=new K(o,16);s.domNode.classList.add("notebook-sticky-scroll-folding-icon"),s.setVisible(!0);const n=document.createElement("div");return n.classList.add("notebook-sticky-scroll-header"),n.innerText=t.label,i.append(s.domNode,n),new S(i,s,n,t,e)}H(){this.b.forEach((t=>{t.line.dispose()}))}dispose(){this.a.dispose(),this.H(),this.f?.dispose(),super.dispose()}};function g(t,e,i,o){const s=t.scrollTop-o,n=t.visibleRanges[0];if(!n)return new Map;if(0===n.start){const e=t.cellAt(0),o=c.getVisibleOutlineEntry(0,i);if(e&&o&&e.cellKind===y.Markup&&o.level<7&&t.scrollTop>22)return c.checkCollapsedStickyLines(o,100,t)}let r,l;for(let o=n.start-1;o<n.end;o++){if(r=t.cellAt(o),!r)return new Map;if(l=c.getVisibleOutlineEntry(o,i),!l)continue;const n=t.cellAt(o+1);if(!n){const e=t.getLayoutInfo().scrollHeight,i=Math.floor(e/22);return c.checkCollapsedStickyLines(l,i,t)}const h=c.getVisibleOutlineEntry(o+1,i);if(h&&n.cellKind===y.Markup&&h.level<7){const i=e.getCellViewScrollTop(n),o=c.computeStickyHeight(l),r=c.computeStickyHeight(h);if(s+o<i){const e=Math.floor((i-s)/22);return c.checkCollapsedStickyLines(l,e,t)}if(r>=o)return c.checkCollapsedStickyLines(h,100,t);if(r<o){const e=i-s;if(e>=r){const i=Math.floor(e/22);return c.checkCollapsedStickyLines(l,i,t)}return c.checkCollapsedStickyLines(h,100,t)}}}const h=t.getLayoutInfo().scrollHeight,a=Math.floor((h-s)/22);return c.checkCollapsedStickyLines(l,a,t)}c=b=D([M(4,O),M(5,A)],c);export{S as $jVb,c as $kVb,g as $lVb};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import * as DOM from "../../../../../base/browser/dom.js";
+import { EventType as TouchEventType } from "../../../../../base/browser/touch.js";
+import { CancellationToken } from "../../../../../base/common/cancellation.js";
+import { StandardMouseEvent } from "../../../../../base/browser/mouseEvent.js";
+import { Emitter } from "../../../../../base/common/event.js";
+import { Disposable, DisposableStore } from "../../../../../base/common/lifecycle.js";
+import { MenuId } from "../../../../../platform/actions/common/actions.js";
+import { IContextMenuService } from "../../../../../platform/contextview/browser/contextView.js";
+import { CellKind } from "../../common/notebookCommon.js";
+import { Delayer } from "../../../../../base/common/async.js";
+import { ThemeIcon } from "../../../../../base/common/themables.js";
+import { foldingCollapsedIcon, foldingExpandedIcon } from "../../../../../editor/contrib/folding/browser/foldingDecorations.js";
+import { FoldingController } from "../controller/foldingController.js";
+import { IInstantiationService } from "../../../../../platform/instantiation/common/instantiation.js";
+import { INotebookCellOutlineDataSourceFactory } from "../viewModel/notebookOutlineDataSourceFactory.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+var NotebookStickyScroll_1;
+class NotebookStickyLine extends Disposable {
+  static {
+    __name(this, "NotebookStickyLine");
+  }
+  constructor(element, foldingIcon, header, entry, notebookEditor) {
+    super();
+    this.element = element;
+    this.foldingIcon = foldingIcon;
+    this.header = header;
+    this.entry = entry;
+    this.notebookEditor = notebookEditor;
+    this._register(DOM.addDisposableListener(this.header, DOM.EventType.CLICK || TouchEventType.Tap, () => {
+      this.focusCell();
+    }));
+    this._register(DOM.addDisposableListener(this.foldingIcon.domNode, DOM.EventType.CLICK || TouchEventType.Tap, () => {
+      if (this.entry.cell.cellKind === CellKind.Markup) {
+        const currentFoldingState = this.entry.cell.foldingState;
+        this.toggleFoldRange(currentFoldingState);
+      }
+    }));
+  }
+  toggleFoldRange(currentState) {
+    const foldingController = this.notebookEditor.getContribution(FoldingController.id);
+    const index = this.entry.index;
+    const headerLevel = this.entry.level;
+    const newFoldingState = currentState === 2 ? 1 : 2;
+    foldingController.setFoldingStateDown(index, newFoldingState, headerLevel);
+    this.focusCell();
+  }
+  focusCell() {
+    this.notebookEditor.focusNotebookCell(this.entry.cell, "container");
+    const cellScrollTop = this.notebookEditor.getAbsoluteTopOfElement(this.entry.cell);
+    const parentCount = NotebookStickyLine.getParentCount(this.entry);
+    this.notebookEditor.setScrollTop(cellScrollTop - (parentCount + 1.1) * 22);
+  }
+  static getParentCount(entry) {
+    let count = 0;
+    while (entry.parent) {
+      count++;
+      entry = entry.parent;
+    }
+    return count;
+  }
+}
+class StickyFoldingIcon {
+  static {
+    __name(this, "StickyFoldingIcon");
+  }
+  constructor(isCollapsed, dimension) {
+    this.isCollapsed = isCollapsed;
+    this.dimension = dimension;
+    this.domNode = document.createElement("div");
+    this.domNode.style.width = `${dimension}px`;
+    this.domNode.style.height = `${dimension}px`;
+    this.domNode.className = ThemeIcon.asClassName(isCollapsed ? foldingCollapsedIcon : foldingExpandedIcon);
+  }
+  setVisible(visible) {
+    this.domNode.style.cursor = visible ? "pointer" : "default";
+    this.domNode.style.opacity = visible ? "1" : "0";
+  }
+}
+let NotebookStickyScroll = NotebookStickyScroll_1 = class NotebookStickyScroll2 extends Disposable {
+  static {
+    __name(this, "NotebookStickyScroll");
+  }
+  getDomNode() {
+    return this.domNode;
+  }
+  getCurrentStickyHeight() {
+    let height = 0;
+    this.currentStickyLines.forEach((value) => {
+      if (value.rendered) {
+        height += 22;
+      }
+    });
+    return height;
+  }
+  setCurrentStickyLines(newStickyLines) {
+    this.currentStickyLines = newStickyLines;
+  }
+  compareStickyLineMaps(mapA, mapB) {
+    if (mapA.size !== mapB.size) {
+      return false;
+    }
+    for (const [key, value] of mapA) {
+      const otherValue = mapB.get(key);
+      if (!otherValue || value.rendered !== otherValue.rendered) {
+        return false;
+      }
+    }
+    return true;
+  }
+  constructor(domNode, notebookEditor, notebookCellList, layoutFn, _contextMenuService, instantiationService) {
+    super();
+    this.domNode = domNode;
+    this.notebookEditor = notebookEditor;
+    this.notebookCellList = notebookCellList;
+    this.layoutFn = layoutFn;
+    this._contextMenuService = _contextMenuService;
+    this.instantiationService = instantiationService;
+    this._disposables = new DisposableStore();
+    this.currentStickyLines = /* @__PURE__ */ new Map();
+    this._onDidChangeNotebookStickyScroll = this._register(new Emitter());
+    this.onDidChangeNotebookStickyScroll = this._onDidChangeNotebookStickyScroll.event;
+    this._layoutDisposableStore = this._register(new DisposableStore());
+    if (this.notebookEditor.notebookOptions.getDisplayOptions().stickyScrollEnabled) {
+      this.init().catch(console.error);
+    }
+    this._register(this.notebookEditor.notebookOptions.onDidChangeOptions((e) => {
+      if (e.stickyScrollEnabled || e.stickyScrollMode) {
+        this.updateConfig(e);
+      }
+    }));
+    this._register(DOM.addDisposableListener(this.domNode, DOM.EventType.CONTEXT_MENU, async (event) => {
+      this.onContextMenu(event);
+    }));
+    this._register(DOM.addDisposableListener(this.domNode, DOM.EventType.WHEEL, (event) => {
+      this.notebookCellList.triggerScrollFromMouseWheelEvent(event);
+    }));
+  }
+  onContextMenu(e) {
+    const event = new StandardMouseEvent(DOM.getWindow(this.domNode), e);
+    const selectedElement = event.target.parentElement;
+    const selectedOutlineEntry = Array.from(this.currentStickyLines.values()).find((entry) => entry.line.element.contains(selectedElement))?.line.entry;
+    if (!selectedOutlineEntry) {
+      return;
+    }
+    const args = {
+      outlineEntry: selectedOutlineEntry,
+      notebookEditor: this.notebookEditor
+    };
+    this._contextMenuService.showContextMenu({
+      menuId: MenuId.NotebookStickyScrollContext,
+      getAnchor: /* @__PURE__ */ __name(() => event, "getAnchor"),
+      menuActionOptions: { shouldForwardArgs: true, arg: args }
+    });
+  }
+  updateConfig(e) {
+    if (e.stickyScrollEnabled) {
+      if (this.notebookEditor.notebookOptions.getDisplayOptions().stickyScrollEnabled) {
+        this.init().catch(console.error);
+      } else {
+        this._disposables.clear();
+        this.notebookCellOutlineReference?.dispose();
+        this.disposeCurrentStickyLines();
+        DOM.clearNode(this.domNode);
+        this.updateDisplay();
+      }
+    } else if (e.stickyScrollMode && this.notebookEditor.notebookOptions.getDisplayOptions().stickyScrollEnabled && this.notebookCellOutlineReference?.object) {
+      this.updateContent(computeContent(this.notebookEditor, this.notebookCellList, this.notebookCellOutlineReference?.object?.entries, this.getCurrentStickyHeight()));
+    }
+  }
+  async init() {
+    const { object: notebookCellOutline } = this.notebookCellOutlineReference = this.instantiationService.invokeFunction((accessor) => accessor.get(INotebookCellOutlineDataSourceFactory).getOrCreate(this.notebookEditor));
+    this._register(this.notebookCellOutlineReference);
+    await notebookCellOutline.computeFullSymbols(CancellationToken.None);
+    const computed = computeContent(this.notebookEditor, this.notebookCellList, notebookCellOutline.entries, this.getCurrentStickyHeight());
+    this.updateContent(computed);
+    this._disposables.add(notebookCellOutline.onDidChange(() => {
+      const computed2 = computeContent(this.notebookEditor, this.notebookCellList, notebookCellOutline.entries, this.getCurrentStickyHeight());
+      if (!this.compareStickyLineMaps(computed2, this.currentStickyLines)) {
+        this.updateContent(computed2);
+      } else {
+        this.disposeStickyLineMap(computed2);
+      }
+    }));
+    this._disposables.add(this.notebookEditor.onDidAttachViewModel(async () => {
+      await notebookCellOutline.computeFullSymbols(CancellationToken.None);
+      const computed2 = computeContent(this.notebookEditor, this.notebookCellList, notebookCellOutline.entries, this.getCurrentStickyHeight());
+      this.updateContent(computed2);
+    }));
+    this._disposables.add(this.notebookEditor.onDidScroll(() => {
+      const d = new Delayer(100);
+      d.trigger(() => {
+        d.dispose();
+        const computed2 = computeContent(this.notebookEditor, this.notebookCellList, notebookCellOutline.entries, this.getCurrentStickyHeight());
+        if (!this.compareStickyLineMaps(computed2, this.currentStickyLines)) {
+          this.updateContent(computed2);
+        } else {
+          this.disposeStickyLineMap(computed2);
+        }
+      });
+    }));
+  }
+  // Add helper method to dispose a map of sticky lines
+  disposeStickyLineMap(map) {
+    map.forEach((value) => {
+      if (value.line) {
+        value.line.dispose();
+      }
+    });
+  }
+  // take in an cell index, and get the corresponding outline entry
+  static getVisibleOutlineEntry(visibleIndex, notebookOutlineEntries) {
+    let left = 0;
+    let right = notebookOutlineEntries.length - 1;
+    while (left <= right) {
+      const mid = Math.floor((left + right) / 2);
+      if (notebookOutlineEntries[mid].index === visibleIndex) {
+        const rootEntry = notebookOutlineEntries[mid];
+        const flatList = [];
+        rootEntry.asFlatList(flatList);
+        return flatList.find((entry) => entry.index === visibleIndex);
+      } else if (notebookOutlineEntries[mid].index < visibleIndex) {
+        left = mid + 1;
+      } else {
+        right = mid - 1;
+      }
+    }
+    if (right >= 0) {
+      const rootEntry = notebookOutlineEntries[right];
+      const flatList = [];
+      rootEntry.asFlatList(flatList);
+      return flatList.find((entry) => entry.index === visibleIndex);
+    }
+    return void 0;
+  }
+  updateContent(newMap) {
+    DOM.clearNode(this.domNode);
+    this.disposeCurrentStickyLines();
+    this.renderStickyLines(newMap, this.domNode);
+    const oldStickyHeight = this.getCurrentStickyHeight();
+    this.setCurrentStickyLines(newMap);
+    const sizeDelta = this.getCurrentStickyHeight() - oldStickyHeight;
+    if (sizeDelta !== 0) {
+      this._onDidChangeNotebookStickyScroll.fire(sizeDelta);
+      const d = this._layoutDisposableStore.add(DOM.scheduleAtNextAnimationFrame(DOM.getWindow(this.getDomNode()), () => {
+        this.layoutFn(sizeDelta);
+        this.updateDisplay();
+        this._layoutDisposableStore.delete(d);
+      }));
+    } else {
+      this.updateDisplay();
+    }
+  }
+  updateDisplay() {
+    const hasSticky = this.getCurrentStickyHeight() > 0;
+    if (!hasSticky) {
+      this.domNode.style.display = "none";
+    } else {
+      this.domNode.style.display = "block";
+    }
+  }
+  static computeStickyHeight(entry) {
+    let height = 0;
+    if (entry.cell.cellKind === CellKind.Markup && entry.level < 7) {
+      height += 22;
+    }
+    while (entry.parent) {
+      height += 22;
+      entry = entry.parent;
+    }
+    return height;
+  }
+  static checkCollapsedStickyLines(entry, numLinesToRender, notebookEditor) {
+    let currentEntry = entry;
+    const newMap = /* @__PURE__ */ new Map();
+    const elementsToRender = [];
+    while (currentEntry) {
+      if (currentEntry.level >= 7) {
+        currentEntry = currentEntry.parent;
+        continue;
+      }
+      const lineToRender = NotebookStickyScroll_1.createStickyElement(currentEntry, notebookEditor);
+      newMap.set(currentEntry, { line: lineToRender, rendered: false });
+      elementsToRender.unshift(lineToRender);
+      currentEntry = currentEntry.parent;
+    }
+    for (let i = 0; i < elementsToRender.length; i++) {
+      if (i >= numLinesToRender) {
+        break;
+      }
+      newMap.set(elementsToRender[i].entry, { line: elementsToRender[i], rendered: true });
+    }
+    return newMap;
+  }
+  renderStickyLines(stickyMap, containerElement) {
+    const reversedEntries = Array.from(stickyMap.entries()).reverse();
+    for (const [, value] of reversedEntries) {
+      if (!value.rendered) {
+        continue;
+      }
+      containerElement.append(value.line.element);
+    }
+  }
+  static createStickyElement(entry, notebookEditor) {
+    const stickyElement = document.createElement("div");
+    stickyElement.classList.add("notebook-sticky-scroll-element");
+    const indentMode = notebookEditor.notebookOptions.getLayoutConfiguration().stickyScrollMode;
+    if (indentMode === "indented") {
+      stickyElement.style.paddingLeft = NotebookStickyLine.getParentCount(entry) * 10 + "px";
+    }
+    let isCollapsed = false;
+    if (entry.cell.cellKind === CellKind.Markup) {
+      isCollapsed = entry.cell.foldingState === 2;
+    }
+    const stickyFoldingIcon = new StickyFoldingIcon(isCollapsed, 16);
+    stickyFoldingIcon.domNode.classList.add("notebook-sticky-scroll-folding-icon");
+    stickyFoldingIcon.setVisible(true);
+    const stickyHeader = document.createElement("div");
+    stickyHeader.classList.add("notebook-sticky-scroll-header");
+    stickyHeader.innerText = entry.label;
+    stickyElement.append(stickyFoldingIcon.domNode, stickyHeader);
+    return new NotebookStickyLine(stickyElement, stickyFoldingIcon, stickyHeader, entry, notebookEditor);
+  }
+  disposeCurrentStickyLines() {
+    this.currentStickyLines.forEach((value) => {
+      value.line.dispose();
+    });
+  }
+  dispose() {
+    this._disposables.dispose();
+    this.disposeCurrentStickyLines();
+    this.notebookCellOutlineReference?.dispose();
+    super.dispose();
+  }
+};
+NotebookStickyScroll = NotebookStickyScroll_1 = __decorate([
+  __param(4, IContextMenuService),
+  __param(5, IInstantiationService)
+], NotebookStickyScroll);
+function computeContent(notebookEditor, notebookCellList, notebookOutlineEntries, renderedStickyHeight) {
+  const editorScrollTop = notebookEditor.scrollTop - renderedStickyHeight;
+  const visibleRange = notebookEditor.visibleRanges[0];
+  if (!visibleRange) {
+    return /* @__PURE__ */ new Map();
+  }
+  if (visibleRange.start === 0) {
+    const firstCell = notebookEditor.cellAt(0);
+    const firstCellEntry = NotebookStickyScroll.getVisibleOutlineEntry(0, notebookOutlineEntries);
+    if (firstCell && firstCellEntry && firstCell.cellKind === CellKind.Markup && firstCellEntry.level < 7) {
+      if (notebookEditor.scrollTop > 22) {
+        const newMap2 = NotebookStickyScroll.checkCollapsedStickyLines(firstCellEntry, 100, notebookEditor);
+        return newMap2;
+      }
+    }
+  }
+  let cell;
+  let cellEntry;
+  const startIndex = visibleRange.start - 1;
+  for (let currentIndex = startIndex; currentIndex < visibleRange.end; currentIndex++) {
+    cell = notebookEditor.cellAt(currentIndex);
+    if (!cell) {
+      return /* @__PURE__ */ new Map();
+    }
+    cellEntry = NotebookStickyScroll.getVisibleOutlineEntry(currentIndex, notebookOutlineEntries);
+    if (!cellEntry) {
+      continue;
+    }
+    const nextCell = notebookEditor.cellAt(currentIndex + 1);
+    if (!nextCell) {
+      const sectionBottom2 = notebookEditor.getLayoutInfo().scrollHeight;
+      const linesToRender2 = Math.floor(sectionBottom2 / 22);
+      const newMap2 = NotebookStickyScroll.checkCollapsedStickyLines(cellEntry, linesToRender2, notebookEditor);
+      return newMap2;
+    }
+    const nextCellEntry = NotebookStickyScroll.getVisibleOutlineEntry(currentIndex + 1, notebookOutlineEntries);
+    if (!nextCellEntry) {
+      continue;
+    }
+    if (nextCell.cellKind === CellKind.Markup && nextCellEntry.level < 7) {
+      const sectionBottom2 = notebookCellList.getCellViewScrollTop(nextCell);
+      const currentSectionStickyHeight = NotebookStickyScroll.computeStickyHeight(cellEntry);
+      const nextSectionStickyHeight = NotebookStickyScroll.computeStickyHeight(nextCellEntry);
+      if (editorScrollTop + currentSectionStickyHeight < sectionBottom2) {
+        const linesToRender2 = Math.floor((sectionBottom2 - editorScrollTop) / 22);
+        const newMap2 = NotebookStickyScroll.checkCollapsedStickyLines(cellEntry, linesToRender2, notebookEditor);
+        return newMap2;
+      } else if (nextSectionStickyHeight >= currentSectionStickyHeight) {
+        const newMap2 = NotebookStickyScroll.checkCollapsedStickyLines(nextCellEntry, 100, notebookEditor);
+        return newMap2;
+      } else if (nextSectionStickyHeight < currentSectionStickyHeight) {
+        const availableSpace = sectionBottom2 - editorScrollTop;
+        if (availableSpace >= nextSectionStickyHeight) {
+          const linesToRender2 = Math.floor(availableSpace / 22);
+          const newMap2 = NotebookStickyScroll.checkCollapsedStickyLines(cellEntry, linesToRender2, notebookEditor);
+          return newMap2;
+        } else {
+          const newMap2 = NotebookStickyScroll.checkCollapsedStickyLines(nextCellEntry, 100, notebookEditor);
+          return newMap2;
+        }
+      }
+    }
+  }
+  const sectionBottom = notebookEditor.getLayoutInfo().scrollHeight;
+  const linesToRender = Math.floor((sectionBottom - editorScrollTop) / 22);
+  const newMap = NotebookStickyScroll.checkCollapsedStickyLines(cellEntry, linesToRender, notebookEditor);
+  return newMap;
+}
+__name(computeContent, "computeContent");
+export {
+  NotebookStickyLine,
+  NotebookStickyScroll,
+  computeContent
+};
+//# sourceMappingURL=notebookEditorStickyScroll.js.map

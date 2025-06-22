@@ -1,1 +1,320 @@
-import{localize as S}from"../../../nls.js";import{MarkerSeverity as w}from"../../../platform/markers/common/markers.js";import{URI as D}from"../../../base/common/uri.js";import{$oY as x}from"./extHost.protocol.js";import{DiagnosticSeverity as u}from"./extHostTypes.js";import*as y from"./extHostTypeConverters.js";import{Event as C,$hf as b}from"../../../base/common/event.js";import{$3n as A}from"../../../platform/log/common/log.js";import{$Ic as j}from"../../../base/common/map.js";import{$hKc as E}from"./extHostFileSystemInfo.js";var $=function(g,t,e,i){var n=arguments.length,o=n<3?t:i===null?i=Object.getOwnPropertyDescriptor(t,e):i,r;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")o=Reflect.decorate(g,t,e,i);else for(var s=g.length-1;s>=0;s--)(r=g[s])&&(o=(n<3?r(o):n>3?r(t,e,o):r(t,e))||o);return n>3&&o&&Object.defineProperty(t,e,o),o},_=function(g,t){return function(e,i){t(e,i,g)}},f;class m{#e;#i;#t;constructor(t,e,i,n,o,r,s,h){this.d=t,this.e=e,this.f=i,this.g=n,this.h=o,this.c=!1,this.f=Math.max(n,i),this.#t=new j(a=>r.getComparisonKey(a)),this.#e=s,this.#i=h}dispose(){this.c||(this.#i.fire([...this.#t.keys()]),this.#e?.$clear(this.e),this.#t.clear(),this.c=!0)}get name(){return this.j(),this.d}set(t,e){if(!t){this.clear();return}this.j();let i=[];if(D.isUri(t)){if(!e){this.delete(t);return}this.#t.set(t,e.slice()),i=[t]}else if(Array.isArray(t)){i=[];let r;t=[...t].sort(m.k);for(const s of t){const[h,a]=s;if((!r||h.toString()!==r.toString())&&(r&&this.#t.get(r).length===0&&this.#t.delete(r),r=h,i.push(h),this.#t.set(h,[])),a)this.#t.get(h)?.push(...a);else{const c=this.#t.get(h);c&&(c.length=0)}}}if(this.#i.fire(i),!this.#e)return;const n=[];let o=0;for(const r of i){let s=[];const h=this.#t.get(r);if(h)if(h.length>this.g){s=[];const a=[u.Error,u.Warning,u.Information,u.Hint];t:for(let c=0;c<4;c++)for(const d of h)if(d.severity===a[c]&&s.push({...y.Diagnostic.from(d),modelVersionId:this.h(r)})===this.g)break t;s.push({severity:w.Info,message:S(2907,null,h.length-this.g),startLineNumber:s[s.length-1].startLineNumber,startColumn:s[s.length-1].startColumn,endLineNumber:s[s.length-1].endLineNumber,endColumn:s[s.length-1].endColumn})}else s=h.map(a=>({...y.Diagnostic.from(a),modelVersionId:this.h(r)}));if(n.push([r,s]),o+=s.length,o>this.f)break}this.#e.$changeMany(this.e,n)}delete(t){this.j(),this.#i.fire([t]),this.#t.delete(t),this.#e?.$changeMany(this.e,[[t,void 0]])}clear(){this.j(),this.#i.fire([...this.#t.keys()]),this.#t.clear(),this.#e?.$clear(this.e)}forEach(t,e){this.j();for(const[i,n]of this)t.call(e,i,n,this)}*[Symbol.iterator](){this.j();for(const t of this.#t.keys())yield[t,this.get(t)]}get(t){this.j();const e=this.#t.get(t);return Array.isArray(e)?Object.freeze(e.slice(0)):[]}has(t){return this.j(),Array.isArray(this.#t.get(t))}j(){if(this.c)throw new Error("illegal state - object is disposed")}static k(t,e){return t[0].toString()<e[0].toString()?-1:t[0].toString()>e[0].toString()?1:0}}let v=class{static{f=this}static{this.c=0}static{this.d=1e3}static{this.e=1.1*this.d}static _mapper(t){const e=new j;for(const i of t)e.set(i,i);return{uris:Object.freeze(Array.from(e.values()))}}constructor(t,e,i,n){this.j=e,this.k=i,this.l=n,this.g=new Map,this.h=new b({merge:o=>o.flat(),delay:50}),this.onDidChangeDiagnostics=C.map(this.h.event,f._mapper),this.f=t.getProxy(x.MainThreadDiagnostics)}createDiagnosticCollection(t,e){const{g:i,f:n,h:o,j:r,k:s,l:h}=this,a=new class{$changeMany(l,p){n.$changeMany(l,p),r.trace("[DiagnosticCollection] change many (extension, owner, uris)",t.value,l,p.length===0?"CLEARING":p)}$clear(l){n.$clear(l),r.trace("[DiagnosticCollection] remove all (extension, owner)",t.value,l)}dispose(){n.dispose()}};let c;if(!e)e="_generated_diagnostic_collection_name_#"+f.c++,c=e;else if(!i.has(e))c=e;else{this.j.warn(`DiagnosticCollection with name '${e}' does already exist.`);do c=e+f.c++;while(i.has(c))}return new class extends m{constructor(){super(e,c,f.e,f.d,l=>h.getDocument(l)?.version,s.extUri,a,o),i.set(c,this)}dispose(){super.dispose(),i.delete(c)}}}getDiagnostics(t){if(t)return this.m(t);{const e=new Map,i=[];for(const n of this.g.values())n.forEach((o,r)=>{let s=e.get(o.toString());typeof s>"u"&&(s=i.length,e.set(o.toString(),s),i.push([o,[]])),i[s][1]=i[s][1].concat(...r)});return i}}m(t){let e=[];for(const i of this.g.values())i.has(t)&&(e=e.concat(i.get(t)));return e}$acceptMarkersChange(t){if(!this.n){const e="_generated_mirror",i=new m(e,e,Number.MAX_SAFE_INTEGER,Number.MAX_SAFE_INTEGER,n=>{},this.k.extUri,void 0,this.h);this.g.set(e,i),this.n=i}for(const[e,i]of t)this.n.set(D.revive(e),i.map(y.Diagnostic.to))}};v=f=$([_(1,A),_(2,E)],v);export{m as $iKc,v as $jKc};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { localize } from "../../../nls.js";
+import { MarkerSeverity } from "../../../platform/markers/common/markers.js";
+import { URI } from "../../../base/common/uri.js";
+import { MainContext } from "./extHost.protocol.js";
+import { DiagnosticSeverity } from "./extHostTypes.js";
+import * as converter from "./extHostTypeConverters.js";
+import { Event, DebounceEmitter } from "../../../base/common/event.js";
+import { ILogService } from "../../../platform/log/common/log.js";
+import { ResourceMap } from "../../../base/common/map.js";
+import { IExtHostFileSystemInfo } from "./extHostFileSystemInfo.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+var ExtHostDiagnostics_1;
+class DiagnosticCollection {
+  static {
+    __name(this, "DiagnosticCollection");
+  }
+  #proxy;
+  #onDidChangeDiagnostics;
+  #data;
+  constructor(_name, _owner, _maxDiagnosticsTotal, _maxDiagnosticsPerFile, _modelVersionIdProvider, extUri, proxy, onDidChangeDiagnostics) {
+    this._name = _name;
+    this._owner = _owner;
+    this._maxDiagnosticsTotal = _maxDiagnosticsTotal;
+    this._maxDiagnosticsPerFile = _maxDiagnosticsPerFile;
+    this._modelVersionIdProvider = _modelVersionIdProvider;
+    this._isDisposed = false;
+    this._maxDiagnosticsTotal = Math.max(_maxDiagnosticsPerFile, _maxDiagnosticsTotal);
+    this.#data = new ResourceMap((uri) => extUri.getComparisonKey(uri));
+    this.#proxy = proxy;
+    this.#onDidChangeDiagnostics = onDidChangeDiagnostics;
+  }
+  dispose() {
+    if (!this._isDisposed) {
+      this.#onDidChangeDiagnostics.fire([...this.#data.keys()]);
+      this.#proxy?.$clear(this._owner);
+      this.#data.clear();
+      this._isDisposed = true;
+    }
+  }
+  get name() {
+    this._checkDisposed();
+    return this._name;
+  }
+  set(first, diagnostics) {
+    if (!first) {
+      this.clear();
+      return;
+    }
+    this._checkDisposed();
+    let toSync = [];
+    if (URI.isUri(first)) {
+      if (!diagnostics) {
+        this.delete(first);
+        return;
+      }
+      this.#data.set(first, diagnostics.slice());
+      toSync = [first];
+    } else if (Array.isArray(first)) {
+      toSync = [];
+      let lastUri;
+      first = [...first].sort(DiagnosticCollection._compareIndexedTuplesByUri);
+      for (const tuple of first) {
+        const [uri, diagnostics2] = tuple;
+        if (!lastUri || uri.toString() !== lastUri.toString()) {
+          if (lastUri && this.#data.get(lastUri).length === 0) {
+            this.#data.delete(lastUri);
+          }
+          lastUri = uri;
+          toSync.push(uri);
+          this.#data.set(uri, []);
+        }
+        if (!diagnostics2) {
+          const currentDiagnostics = this.#data.get(uri);
+          if (currentDiagnostics) {
+            currentDiagnostics.length = 0;
+          }
+        } else {
+          const currentDiagnostics = this.#data.get(uri);
+          currentDiagnostics?.push(...diagnostics2);
+        }
+      }
+    }
+    this.#onDidChangeDiagnostics.fire(toSync);
+    if (!this.#proxy) {
+      return;
+    }
+    const entries = [];
+    let totalMarkerCount = 0;
+    for (const uri of toSync) {
+      let marker = [];
+      const diagnostics2 = this.#data.get(uri);
+      if (diagnostics2) {
+        if (diagnostics2.length > this._maxDiagnosticsPerFile) {
+          marker = [];
+          const order = [DiagnosticSeverity.Error, DiagnosticSeverity.Warning, DiagnosticSeverity.Information, DiagnosticSeverity.Hint];
+          orderLoop: for (let i = 0; i < 4; i++) {
+            for (const diagnostic of diagnostics2) {
+              if (diagnostic.severity === order[i]) {
+                const len = marker.push({ ...converter.Diagnostic.from(diagnostic), modelVersionId: this._modelVersionIdProvider(uri) });
+                if (len === this._maxDiagnosticsPerFile) {
+                  break orderLoop;
+                }
+              }
+            }
+          }
+          marker.push({
+            severity: MarkerSeverity.Info,
+            message: localize({ key: "limitHit", comment: ["amount of errors/warning skipped due to limits"] }, "Not showing {0} further errors and warnings.", diagnostics2.length - this._maxDiagnosticsPerFile),
+            startLineNumber: marker[marker.length - 1].startLineNumber,
+            startColumn: marker[marker.length - 1].startColumn,
+            endLineNumber: marker[marker.length - 1].endLineNumber,
+            endColumn: marker[marker.length - 1].endColumn
+          });
+        } else {
+          marker = diagnostics2.map((diag) => ({ ...converter.Diagnostic.from(diag), modelVersionId: this._modelVersionIdProvider(uri) }));
+        }
+      }
+      entries.push([uri, marker]);
+      totalMarkerCount += marker.length;
+      if (totalMarkerCount > this._maxDiagnosticsTotal) {
+        break;
+      }
+    }
+    this.#proxy.$changeMany(this._owner, entries);
+  }
+  delete(uri) {
+    this._checkDisposed();
+    this.#onDidChangeDiagnostics.fire([uri]);
+    this.#data.delete(uri);
+    this.#proxy?.$changeMany(this._owner, [[uri, void 0]]);
+  }
+  clear() {
+    this._checkDisposed();
+    this.#onDidChangeDiagnostics.fire([...this.#data.keys()]);
+    this.#data.clear();
+    this.#proxy?.$clear(this._owner);
+  }
+  forEach(callback, thisArg) {
+    this._checkDisposed();
+    for (const [uri, values] of this) {
+      callback.call(thisArg, uri, values, this);
+    }
+  }
+  *[Symbol.iterator]() {
+    this._checkDisposed();
+    for (const uri of this.#data.keys()) {
+      yield [uri, this.get(uri)];
+    }
+  }
+  get(uri) {
+    this._checkDisposed();
+    const result = this.#data.get(uri);
+    if (Array.isArray(result)) {
+      return Object.freeze(result.slice(0));
+    }
+    return [];
+  }
+  has(uri) {
+    this._checkDisposed();
+    return Array.isArray(this.#data.get(uri));
+  }
+  _checkDisposed() {
+    if (this._isDisposed) {
+      throw new Error("illegal state - object is disposed");
+    }
+  }
+  static _compareIndexedTuplesByUri(a, b) {
+    if (a[0].toString() < b[0].toString()) {
+      return -1;
+    } else if (a[0].toString() > b[0].toString()) {
+      return 1;
+    } else {
+      return 0;
+    }
+  }
+}
+let ExtHostDiagnostics = class ExtHostDiagnostics2 {
+  static {
+    __name(this, "ExtHostDiagnostics");
+  }
+  static {
+    ExtHostDiagnostics_1 = this;
+  }
+  static {
+    this._idPool = 0;
+  }
+  static {
+    this._maxDiagnosticsPerFile = 1e3;
+  }
+  static {
+    this._maxDiagnosticsTotal = 1.1 * this._maxDiagnosticsPerFile;
+  }
+  static _mapper(last) {
+    const map = new ResourceMap();
+    for (const uri of last) {
+      map.set(uri, uri);
+    }
+    return { uris: Object.freeze(Array.from(map.values())) };
+  }
+  constructor(mainContext, _logService, _fileSystemInfoService, _extHostDocumentsAndEditors) {
+    this._logService = _logService;
+    this._fileSystemInfoService = _fileSystemInfoService;
+    this._extHostDocumentsAndEditors = _extHostDocumentsAndEditors;
+    this._collections = /* @__PURE__ */ new Map();
+    this._onDidChangeDiagnostics = new DebounceEmitter({ merge: /* @__PURE__ */ __name((all) => all.flat(), "merge"), delay: 50 });
+    this.onDidChangeDiagnostics = Event.map(this._onDidChangeDiagnostics.event, ExtHostDiagnostics_1._mapper);
+    this._proxy = mainContext.getProxy(MainContext.MainThreadDiagnostics);
+  }
+  createDiagnosticCollection(extensionId, name) {
+    const { _collections, _proxy, _onDidChangeDiagnostics, _logService, _fileSystemInfoService, _extHostDocumentsAndEditors } = this;
+    const loggingProxy = new class {
+      $changeMany(owner2, entries) {
+        _proxy.$changeMany(owner2, entries);
+        _logService.trace("[DiagnosticCollection] change many (extension, owner, uris)", extensionId.value, owner2, entries.length === 0 ? "CLEARING" : entries);
+      }
+      $clear(owner2) {
+        _proxy.$clear(owner2);
+        _logService.trace("[DiagnosticCollection] remove all (extension, owner)", extensionId.value, owner2);
+      }
+      dispose() {
+        _proxy.dispose();
+      }
+    }();
+    let owner;
+    if (!name) {
+      name = "_generated_diagnostic_collection_name_#" + ExtHostDiagnostics_1._idPool++;
+      owner = name;
+    } else if (!_collections.has(name)) {
+      owner = name;
+    } else {
+      this._logService.warn(`DiagnosticCollection with name '${name}' does already exist.`);
+      do {
+        owner = name + ExtHostDiagnostics_1._idPool++;
+      } while (_collections.has(owner));
+    }
+    const result = new class extends DiagnosticCollection {
+      constructor() {
+        super(name, owner, ExtHostDiagnostics_1._maxDiagnosticsTotal, ExtHostDiagnostics_1._maxDiagnosticsPerFile, (uri) => _extHostDocumentsAndEditors.getDocument(uri)?.version, _fileSystemInfoService.extUri, loggingProxy, _onDidChangeDiagnostics);
+        _collections.set(owner, this);
+      }
+      dispose() {
+        super.dispose();
+        _collections.delete(owner);
+      }
+    }();
+    return result;
+  }
+  getDiagnostics(resource) {
+    if (resource) {
+      return this._getDiagnostics(resource);
+    } else {
+      const index = /* @__PURE__ */ new Map();
+      const res = [];
+      for (const collection of this._collections.values()) {
+        collection.forEach((uri, diagnostics) => {
+          let idx = index.get(uri.toString());
+          if (typeof idx === "undefined") {
+            idx = res.length;
+            index.set(uri.toString(), idx);
+            res.push([uri, []]);
+          }
+          res[idx][1] = res[idx][1].concat(...diagnostics);
+        });
+      }
+      return res;
+    }
+  }
+  _getDiagnostics(resource) {
+    let res = [];
+    for (const collection of this._collections.values()) {
+      if (collection.has(resource)) {
+        res = res.concat(collection.get(resource));
+      }
+    }
+    return res;
+  }
+  $acceptMarkersChange(data) {
+    if (!this._mirrorCollection) {
+      const name = "_generated_mirror";
+      const collection = new DiagnosticCollection(
+        name,
+        name,
+        Number.MAX_SAFE_INTEGER,
+        Number.MAX_SAFE_INTEGER,
+        // no limits because this collection is just a mirror of "sanitized" data
+        // no limits because this collection is just a mirror of "sanitized" data
+        (_uri) => void 0,
+        this._fileSystemInfoService.extUri,
+        void 0,
+        this._onDidChangeDiagnostics
+      );
+      this._collections.set(name, collection);
+      this._mirrorCollection = collection;
+    }
+    for (const [uri, markers] of data) {
+      this._mirrorCollection.set(URI.revive(uri), markers.map(converter.Diagnostic.to));
+    }
+  }
+};
+ExtHostDiagnostics = ExtHostDiagnostics_1 = __decorate([
+  __param(1, ILogService),
+  __param(2, IExtHostFileSystemInfo)
+], ExtHostDiagnostics);
+export {
+  DiagnosticCollection,
+  ExtHostDiagnostics
+};
+//# sourceMappingURL=extHostDiagnostics.js.map

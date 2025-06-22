@@ -1,1 +1,46 @@
-import{localize2 as o}from"../../../../nls.js";import{$ux as i}from"../../../../platform/keybinding/common/keybinding.js";import{$oI as r}from"../../../services/editor/common/editorService.js";import{$Xn as p}from"../../../../platform/action/common/actionCommonCategories.js";import{$iI as c,$jI as s}from"../../../../platform/actions/common/actions.js";class u extends c{constructor(){super({id:"workbench.action.inspectKeyMappings",title:o(5881,"Inspect Key Mappings"),category:p.Developer,f1:!0})}run(o,e){const n=o.get(i);o.get(r).openEditor({resource:void 0,contents:n._dumpDebugInfo(),options:{pinned:!0}})}}s(u);class a extends c{constructor(){super({id:"workbench.action.inspectKeyMappingsJSON",title:o(5882,"Inspect Key Mappings (JSON)"),category:p.Developer,f1:!0})}async run(o){const e=o.get(r),n=o.get(i);await e.openEditor({resource:void 0,contents:n._dumpDebugInfoJSON(),options:{pinned:!0}})}}s(a);
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { localize2 } from "../../../../nls.js";
+import { IKeybindingService } from "../../../../platform/keybinding/common/keybinding.js";
+import { IEditorService } from "../../../services/editor/common/editorService.js";
+import { Categories } from "../../../../platform/action/common/actionCommonCategories.js";
+import { Action2, registerAction2 } from "../../../../platform/actions/common/actions.js";
+class InspectKeyMap extends Action2 {
+  static {
+    __name(this, "InspectKeyMap");
+  }
+  constructor() {
+    super({
+      id: "workbench.action.inspectKeyMappings",
+      title: localize2("workbench.action.inspectKeyMap", "Inspect Key Mappings"),
+      category: Categories.Developer,
+      f1: true
+    });
+  }
+  run(accessor, editor) {
+    const keybindingService = accessor.get(IKeybindingService);
+    const editorService = accessor.get(IEditorService);
+    editorService.openEditor({ resource: void 0, contents: keybindingService._dumpDebugInfo(), options: { pinned: true } });
+  }
+}
+registerAction2(InspectKeyMap);
+class InspectKeyMapJSON extends Action2 {
+  static {
+    __name(this, "InspectKeyMapJSON");
+  }
+  constructor() {
+    super({
+      id: "workbench.action.inspectKeyMappingsJSON",
+      title: localize2("workbench.action.inspectKeyMapJSON", "Inspect Key Mappings (JSON)"),
+      category: Categories.Developer,
+      f1: true
+    });
+  }
+  async run(accessor) {
+    const editorService = accessor.get(IEditorService);
+    const keybindingService = accessor.get(IKeybindingService);
+    await editorService.openEditor({ resource: void 0, contents: keybindingService._dumpDebugInfoJSON(), options: { pinned: true } });
+  }
+}
+registerAction2(InspectKeyMapJSON);
+//# sourceMappingURL=inspectKeybindings.js.map

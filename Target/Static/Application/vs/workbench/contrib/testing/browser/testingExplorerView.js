@@ -1,1 +1,1476 @@
-import*as m from"../../../../base/browser/dom.js";import{$M7 as ee}from"../../../../base/browser/ui/actionbar/actionbar.js";import{$p9 as Se}from"../../../../base/browser/ui/button/button.js";import{$K7 as te}from"../../../../base/browser/ui/hover/hoverDelegateFactory.js";import{$E8 as Re}from"../../../../base/browser/ui/iconLabel/iconLabels.js";import{$x8 as ke}from"../../../../base/browser/ui/list/listWidget.js";import{$_l as F,$am as Pe,$bm as he}from"../../../../base/common/actions.js";import{$Pb as Ae}from"../../../../base/common/arraysFind.js";import{$Yh as A,$Nh as Oe}from"../../../../base/common/async.js";import{$a as Ve}from"../../../../base/common/collections.js";import{$hp as ze,$ep as Ne}from"../../../../base/common/color.js";import{$sM as He}from"../../../../base/common/comparers.js";import{$df as Le,Event as Ie}from"../../../../base/common/event.js";import{Iterable as _}from"../../../../base/common/iterator.js";import{$vd as N,$ud as q,$wd as T}from"../../../../base/common/lifecycle.js";import{autorun as ue,observableFromEvent as U}from"../../../../base/common/observable.js";import{$ug as We}from"../../../../base/common/strings.js";import{ThemeIcon as O}from"../../../../base/common/themables.js";import{$8c as j}from"../../../../base/common/types.js";import{$dhb as _e}from"../../../../editor/browser/widget/markdownRenderer/browser/markdownRenderer.js";import{localize as $}from"../../../../nls.js";import{$ZCb as de}from"../../../../platform/actions/browser/dropdownWithPrimaryActionViewItem.js";import{$cgb as Ue,$ggb as Ke,$_fb as Ye,$$fb as qe}from"../../../../platform/actions/browser/menuEntryActionViewItem.js";import{$eI as ie,$dI as xe,$hI as S}from"../../../../platform/actions/common/actions.js";import{$Yn as Ce}from"../../../../platform/commands/common/commands.js";import{$El as se}from"../../../../platform/configuration/common/configuration.js";import{$Vn as ne}from"../../../../platform/contextkey/common/contextkey.js";import{$ofb as ye}from"../../../../platform/contextview/browser/contextView.js";import{$ngb as H}from"../../../../platform/hover/browser/hover.js";import{$mj as k}from"../../../../platform/instantiation/common/instantiation.js";import{$ux as Ge}from"../../../../platform/keybinding/common/keybinding.js";import{$4$ as Xe}from"../../../../platform/opener/common/opener.js";import{$1I as Ze}from"../../../../platform/progress/common/progress.js";import{$Ho as Qe,WillSaveStateReason as Je}from"../../../../platform/storage/common/storage.js";import{$Mfb as et}from"../../../../platform/theme/browser/defaultStyles.js";import{$Ap as tt}from"../../../../platform/theme/common/colorRegistry.js";import{$Jt as it}from"../../../../platform/theme/common/iconRegistry.js";import{$Mt as st,$St as nt}from"../../../../platform/theme/common/themeService.js";import{$yo as rt}from"../../../../platform/uriIdentity/common/uriIdentity.js";import{$HTb as ot}from"../../../browser/actions/widgetNavigationCommands.js";import{$qxb as lt}from"../../../browser/parts/views/viewPane.js";import{$vGb as ct}from"../../../common/editor/diffEditorInput.js";import{$YM as at}from"../../../common/views.js";import{$Dxb as ht,$Fxb as fe,$Exb as me}from"../../../services/activity/common/activity.js";import{$kI as ut}from"../../../services/editor/common/editorGroupsService.js";import{$oI as dt}from"../../../services/editor/common/editorService.js";import{$4jc as P}from"../common/configuration.js";import{$S2b as ft}from"../common/constants.js";import{$H2b as mt}from"../common/storedValue.js";import{$zlc as re}from"../common/testExplorerFilterState.js";import{$vU as oe}from"../common/testId.js";import{$U2b as le,$V2b as G}from"../common/testProfileService.js";import{$1U as pt}from"../common/testResult.js";import{$42b as Te}from"../common/testResultService.js";import{$L2b as L,$M2b as gt}from"../common/testService.js";import{$xU as pe,$wU as bt}from"../common/testTypes.js";import{TestingContextKeys as x}from"../common/testingContextKeys.js";import{$Olc as W}from"../common/testingContinuousRunService.js";import{$9kc as $t}from"../common/testingPeekOpener.js";import{$KU as wt,$HU as De,$IU as vt,$MU as It}from"../common/testingStates.js";import{$Rlc as w,$Slc as C}from"./explorerProjections/index.js";import{$Wlc as xt}from"./explorerProjections/listProjection.js";import{$alc as Ct}from"./explorerProjections/testItemContextOverlay.js";import{$Xlc as yt}from"./explorerProjections/testingObjectTree.js";import{$Ylc as Tt}from"./explorerProjections/treeProjection.js";import*as I from"./icons.js";import"./media/testing.css";import{$Amc as Dt,$zmc as Ft}from"./testExplorerActions.js";import{$Kmc as Mt}from"./testingExplorerFilter.js";import{$Mmc as ge,$Nmc as Et}from"./testingProgressUiService.js";var D=function(o,e,t,i){var r=arguments.length,s=r<3?e:i===null?i=Object.getOwnPropertyDescriptor(e,t):i,n;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")s=Reflect.decorate(o,e,t,i);else for(var l=o.length-1;l>=0;l--)(n=o[l])&&(s=(r<3?n(s):r>3?n(e,t,s):n(e,t))||s);return r>3&&s&&Object.defineProperty(e,t,s),s},u=function(o,e){return function(t,i){e(t,i,o)}},K,Y,be;(function(o){o[o.Input=0]="Input",o[o.Tree=1]="Tree"})(be||(be={}));let $e=class extends lt{get focusedTreeElements(){return this.viewModel.tree.getFocus().filter(j)}constructor(e,t,i,r,s,n,l,h,d,c,f,p,g,v,b){super(e,i,t,r,l,n,s,h,d,f),this.hc=c,this.ic=p,this.jc=g,this.kc=v,this.lc=b,this.f=this.B(new T),this.cc=this.B(new T),this.dc=this.B(new T),this.ec=this.B(new T),this.fc={width:0,height:0},this.gc=0;const M=this.B(new A(()=>this.Y(),1));this.B(this.onDidChangeViewWelcomeState(()=>{this.shouldShowWelcome()||M.schedule()})),this.B(Ie.any(b.onDidChange,p.onDidChange)(()=>{this.bc()})),this.B(c.collection.onBusyProvidersChange(E=>{this.sc(E)})),this.B(p.onDidChange(()=>this.bc()))}shouldShowWelcome(){return this.viewModel?.welcomeExperience===1}focus(){super.focus(),this.gc===1?this.viewModel.tree.domFocus():this.dc.value?.focus()}getTreeIncludeExclude(e,t,i="visible"){const r=this.viewModel.projection.value;if(!r)return{include:[],exclude:[]};const s=new Set,n=[],l=new Map,h=c=>{let f=l.get(c);return f===void 0&&(f=typeof e=="number"?!!this.ic.getDefaultProfileForTest(e,c):G(e,c),l.set(c,f)),f},d=(c,f)=>{if(!(c instanceof w)||!this.viewModel.tree.hasElement(c))return;const p=this.viewModel.tree.getNode(c);if(!p.visible){f&&n.push(c.test);return}const g=p.children.filter(v=>v.visible&&v.element instanceof w&&h(v.element.test)).length;!f&&h(c.test)&&(g===0||g*2>=p.children.length)&&g!==1&&(s.add(c.test),f=!0);for(const v of c.children)d(v,f)};if(i==="selected"){const c=this.viewModel.tree.getSelection().filter(j);if(c.length){e:for(const f of c)if(f instanceof w){for(let p=f;p;p=p.parent)if(s.has(p.test))continue e;s.add(f.test),f.children.forEach(p=>d(p,!0))}return{include:[...s],exclude:n}}}for(const c of t||this.hc.collection.rootItems){const f=r.getElementByTestId(c.item.extId);f&&(typeof e=="object"&&!G(e,c)||(s.add(f.test),f.children.forEach(p=>d(p,!0))))}return{include:[...s],exclude:n}}render(){super.render(),this.B(ot({name:"testingExplorerView",focusNotifiers:[this],focusNextWidget:()=>{this.viewModel.tree.isDOMFocused()||this.viewModel.tree.domFocus()},focusPreviousWidget:()=>{this.viewModel.tree.isDOMFocused()&&this.dc.value?.focus()}}))}X(e){super.X(e),this.j=m.$M6(e,m.$(".test-explorer")),this.m=m.$M6(this.j,m.$(".test-explorer-header")),this.f.value=this.rc();const t=m.$M6(this.m,m.$(".result-summary-container"));this.B(this.Fb.createInstance(X,t));const i=m.$M6(this.j,m.$(".test-explorer-tree"));this.viewModel=this.Fb.createInstance(Z,i,this.onDidChangeBodyVisibility),this.B(this.viewModel.tree.onDidFocus(()=>this.gc=1)),this.B(this.viewModel.onChangeWelcomeVisibility(()=>this.fb.fire())),this.B(this.viewModel),this.fb.fire()}createActionViewItem(e,t){switch(e.id){case"workbench.actions.treeView.testExplorer.filter":return this.dc.value=this.Fb.createInstance(Mt,e,t),this.ec.value=this.dc.value.onDidFocus(()=>this.gc=0),this.dc.value;case"testing.runSelected":return this.oc(2,e,t);case"testing.debugSelected":return this.oc(4,e,t);case"testing.startContinuousRun":case"testing.stopContinuousRun":return this.qc(e,t);default:return super.createActionViewItem(e,t)}}nc(e){const t=[];let i=0,r=0,s=!1;const n=this.ic.getGroupDefaultProfiles(e);for(const{profiles:p,controller:g}of this.ic.all()){let v=!1;for(const b of p)b.group===e&&(v||(v=!0,i++,t.push(new F(`${g.id}.$root`,g.label.get(),void 0,!1))),s=s||b.hasConfigurationHandler,r++,t.push(new F(`${g.id}.${b.profileId}`,n.includes(b)?$(12420,null,b.label):b.label,void 0,void 0,()=>{const{include:M,exclude:E}=this.getTreeIncludeExclude(b);this.hc.runResolvedTests({exclude:E.map(B=>B.item.extId),group:b.group,targets:[{profileId:b.profileId,controllerId:b.controllerId,testIds:M.map(B=>B.item.extId)}]})})))}const l=[];e===2&&l.push(["testing.profile.context.group","run"]),e===4&&l.push(["testing.profile.context.group","debug"]),e===8&&l.push(["testing.profile.context.group","coverage"]);const h=this.Db.createOverlay(l),d=this.kc.getMenuActions(xe.TestProfilesContext,h),c=qe(d),f=[];return r>1&&f.push(new F("selectDefaultTestConfigurations",$(12421,null),void 0,void 0,()=>this.jc.executeCommand("testing.selectDefaultTestProfiles",e))),s&&f.push(new F("configureTestProfiles",$(12422,null),void 0,void 0,()=>this.jc.executeCommand("testing.configureProfile",e))),{numberOfProfiles:r,actions:c.length>0?he.join(t,c,f):he.join(t,f)}}saveState(){this.dc.value?.saveState(),super.saveState()}oc(e,t,i){const r=this.nc(e);if(r.numberOfProfiles<2)return super.createActionViewItem(t,i);const s=this.Fb.createInstance(S,{id:t.id,title:t.label,icon:e===2?I.$Ikc:I.$Jkc},void 0,void 0,void 0,void 0);return this.Fb.createInstance(de,s,this.pc(),r.actions,"",i)}pc(){return new F("selectRunConfig",$(12423,null),"codicon-chevron-down",!0)}qc(e,t){const i=[..._.flatMap(this.ic.all(),h=>this.hc.collection.getNodeById(h.controller.id)?.children.size?_.filter(h.profiles,d=>d.supportsContinuousRun):_.empty())];if(i.length<=1)return super.createActionViewItem(e,t);const r=this.Fb.createInstance(S,{id:e.id,title:e.label,icon:e.id==="testing.startContinuousRun"?I.$Ukc:I.$Vkc},void 0,void 0,void 0,void 0),s=[],n=Ve(i,h=>h.group),l=this.lc;for(const h of[2,4,8]){const d=n[h];if(d){Object.keys(n).length>1&&s.push({id:`${h}.label`,label:pe[h],enabled:!1,class:void 0,tooltip:pe[h],run:()=>{}});for(const c of d)s.push({id:`${h}.${c.profileId}`,label:c.label,enabled:!0,class:void 0,tooltip:c.label,checked:l.isEnabledForProfile(c),run:()=>l.isEnabledForProfile(c)?l.stopProfile(c):l.start([c])})}}return this.Fb.createInstance(de,r,this.pc(),s,"",t)}rc(){const e=new ee(this.m,{actionViewItemProvider:(t,i)=>this.createActionViewItem(t,i),triggerKeys:{keyDown:!1,keys:[]}});return e.push(new F("workbench.actions.treeView.testExplorer.filter")),e.getContainer().classList.add("testing-filter-action-bar"),e}sc(e){!e&&this.cc?this.cc.clear():e&&!this.cc.value&&(this.cc.value=this.Fb.createInstance(Ze,{location:this.Yb()}))}Y(e=this.fc.height,t=this.fc.width){super.Y(e,t),this.fc.height=e,this.fc.width=t,this.j.style.height=`${e}px`,this.viewModel?.layout(e-this.m.clientHeight,t),this.dc.value?.layout(t)}};$e=D([u(1,ye),u(2,Ge),u(3,se),u(4,k),u(5,at),u(6,ne),u(7,Xe),u(8,st),u(9,L),u(10,H),u(11,le),u(12,Ce),u(13,ie),u(14,W)],$e);const Bt=200;let X=class extends N{constructor(e,t,i,r,s,n,l){super(),this.C=e,this.D=t,this.F=i,this.G=r,this.f=!1,this.w=this.B(new T),this.y=this.B(new A(()=>this.H(),Bt)),this.z=m.h("div.result-summary",[m.h("div@status"),m.h("div@count"),m.h("div@count"),m.h("span"),m.h("duration@duration"),m.h("a@rerun")]),this.j=s.getValue("testing.countBadge"),this.B(t.onResultsChanged(this.H,this)),this.B(s.onDidChangeConfiguration(d=>{d.affectsConfiguration("testing.countBadge")&&(this.j=s.getValue("testing.countBadge"),this.H())})),this.u=this.B(l.setupManagedHover(te("mouse"),this.z.count,"")),this.B(new ee(this.z.rerun,{actionViewItemProvider:(d,c)=>Ke(n,d,c)})).push(n.createInstance(S,{...new Ft().desc,icon:I.$Hkc},{...new Dt().desc,icon:I.$Kkc},{},void 0,void 0),{icon:!0,label:!1}),this.H()}H(){const{results:e}=this.D,{count:t,root:i,status:r,duration:s,rerun:n}=this.z;if(!e.length){this.f&&(i.remove(),this.f=!1),this.C.innerText=$(12424,null),this.w.clear();return}const l=e.filter(d=>!d.completedAt);let h;if(l.length){r.className=O.asClassName(it),h=ge(!0,l),this.y.schedule();const d=l[l.length-1];s.textContent=R(Date.now()-d.startedAt),n.style.display="none"}else{const d=e[0],c=Ae(It,f=>d.counts[f]>0?f:void 0);r.className=O.asClassName(I.$2kc.get(c??0)),h=ge(!1,[d]),s.textContent=d instanceof pt?R(d.completedAt-d.startedAt):"",n.style.display="block"}t.textContent=`${h.passed}/${h.totalWillBeRun}`,this.u.update(Et(h)),this.I(h),this.f||(m.$I5(this.C),this.C.appendChild(i),this.f=!0)}I(e){if(e&&this.j!=="off"&&e[this.j]!==0){if(this.m instanceof me&&this.m.number===e[this.j])return;this.m=new me(e[this.j],t=>this.J(this.j,t))}else if(this.G.isEnabled()){if(this.m instanceof fe&&this.m.icon===I.$Wkc)return;this.m=new fe(I.$Wkc,()=>$(12425,null))}else{if(!this.m)return;this.m=void 0}this.w.value=this.m&&this.F.showViewActivity("workbench.view.testing",{badge:this.m})}J(e,t){switch(e){case"passed":return $(12426,null,t);case"skipped":return $(12427,null,t);default:return $(12428,null,t)}}};X=D([u(1,Te),u(2,ht),u(3,W),u(4,se),u(5,k),u(6,H)],X);var we;(function(o){o[o.None=0]="None",o[o.ForWorkspace=1]="ForWorkspace",o[o.ForDocument=2]="ForDocument"})(we||(we={}));let Z=class extends N{get viewMode(){return this.m.get()??"true"}set viewMode(e){e!==this.m.get()&&(this.m.set(e),this.bb(),this.M.store("testing.viewMode",e,1,1))}get viewSorting(){return this.u.get()??"status"}set viewSorting(e){e!==this.u.get()&&(this.u.set(e),this.tree.resort(null),this.M.store("testing.viewSorting",e,1,1))}constructor(e,t,i,r,s,n,l,h,d,c,f,p,g,v,b,M,E){super(),this.F=n,this.G=l,this.H=h,this.I=d,this.J=c,this.M=f,this.N=p,this.O=g,this.P=v,this.Q=b,this.R=M,this.projection=this.B(new T),this.j=new T,this.w=new Le,this.y=this.B(new Rt(()=>this.tree.getSelection().filter(j))),this.D=!1,this.onChangeWelcomeVisibility=this.w.event,this.welcomeExperience=0,this.D=!!d.reveal.get(),this.C=this.B(c.createInstance(J,e)),this.z=this.B(new mt({key:"testing.treeState",scope:1,target:1},this.M)),this.m=x.viewMode.bindTo(p),this.u=x.viewSorting.bindTo(p),this.m.set(this.M.get("testing.viewMode",1,"true")),this.u.set(this.M.get("testing.viewSorting",1,"location")),this.Y(),this.f=this.J.createInstance(Q,h.collection),this.tree=c.createInstance(yt,"Test Explorer List",e,new At,[c.createInstance(z,this.y),c.createInstance(V)],{identityProvider:c.createInstance(Ot),hideTwistiesOfChildlessElements:!1,sorter:c.createInstance(St,this),keyboardNavigationLabelProvider:c.createInstance(Pt),accessibilityProvider:c.createInstance(kt),filter:this.f,findWidgetEnabled:!1});const B=this.B(new A(()=>{const a=this.tree.getOptimizedViewState(this.z.get({})),y=this.projection.value;y&&(y.lastState=a)},3e3));this.B(this.tree.onDidChangeCollapseState(a=>{a.node.element instanceof w&&(a.node.collapsed||this.projection.value?.expandElement(a.node.element,a.deep?1/0:0),B.schedule())})),this.B(this.R.onDidChange(a=>{if(a){const y=this.projection.value?.getElementByTestId(a);this.tree.resort(y?.parent&&this.tree.hasElement(y.parent)?y.parent:null,!1)}})),this.B(t(a=>{a&&this.Z()})),this.B(this.tree.onContextMenu(a=>this.W(a))),this.B(Ie.any(d.text.onDidChange,d.fuzzy.onDidChange,h.excluded.onTestExclusionsChanged)(()=>{if(!d.text.value)return this.tree.refilter();const a=this.f.lastIncludedTests=new Set;this.tree.refilter(),this.f.lastIncludedTests=void 0;for(const y of a)this.tree.expandTo(y)})),this.B(this.tree.onDidOpen(a=>{a.element instanceof w&&(d.didSelectTestInExplorer(a.element.test.item.extId),!a.element.children.size&&a.element.test.item.uri&&(this.U(a.element)||E.executeCommand("vscode.revealTest",a.element.test.item.extId,{openToSide:a.sideBySide,preserveFocus:!0})))})),this.B(this.tree),this.B(this.onChangeWelcomeVisibility(a=>{this.C.setVisible(a===2)})),this.B(m.$K5(this.tree.getHTMLElement(),"keydown",a=>{a.equals(3)?this.X(a):ke.mightProducePrintableCharacter(a)&&(d.text.value=a.browserEvent.key,d.focusInput())})),this.B(ue(a=>{this.S(d.reveal.read(a),void 0,!1)})),this.B(t(a=>{a&&d.focusInput()}));let ce=P(i,"testing.followRunningTest");this.B(i.onDidChangeConfiguration(a=>{a.affectsConfiguration("testing.followRunningTest")&&(ce=P(i,"testing.followRunningTest"))}));let ae=P(i,"testing.alwaysRevealTestOnStateChange");this.B(i.onDidChangeConfiguration(a=>{a.affectsConfiguration("testing.alwaysRevealTestOnStateChange")&&(ae=P(i,"testing.alwaysRevealTestOnStateChange"))})),this.B(g.onTestChanged(a=>{ce&&a.reason===1&&(this.tree.selectionSize>1||a.item.ownComputedState!==2&&!(a.previousState===1&&vt(a.item.ownComputedState))||this.S(a.item.item.extId,ae,!1))})),this.B(g.onResultsChanged(()=>{this.tree.resort(null)})),this.B(this.Q.onDidChange(()=>{this.tree.rerender()}));const Ee=U(this,r.onDidEditorsChange,()=>new Set(s.groups.flatMap(a=>a.editors).map(a=>a.resource).filter(j))),Be=U(this,r.onDidActiveEditorChange,()=>r.activeEditor instanceof ct?r.activeEditor.primary.resource:r.activeEditor?.resource),je=U(this.I.text.onDidChange,()=>this.I.text);this.B(ue(a=>{je.read(a),this.I.isFilteringFor("@openedFiles")?this.f.filterToDocumentUri([...Ee.read(a)]):this.f.filterToDocumentUri([Be.read(a)].filter(j)),(this.I.isFilteringFor("@doc")||this.I.isFilteringFor("@openedFiles"))&&this.tree.refilter()})),this.B(this.M.onWillSaveState(({reason:a})=>{a===Je.SHUTDOWN&&this.z.store(this.tree.getOptimizedViewState())}))}layout(e,t){this.tree.layout(e,t)}S(e,t=!0,i=!0){if(!e){this.D=!1;return}const r=this.Z();let s=0;const n=[...oe.fromString(e).idsFromRoot()];for(let l=n.length-1;l>=s;l--){const h=r.getElementByTestId(n[l].toString());if(!h||!this.tree.hasElement(h))continue;if(l<n.length-1&&t){this.tree.expand(h),s=l+1,l=n.length-1;continue}let d=h;for(let c=h;c instanceof w;c=c.parent){if(c.test&&this.H.excluded.contains(c.test)){this.I.toggleFilteringFor("@hidden",!0);break}!t&&this.tree.hasElement(c)&&this.tree.isCollapsed(c)&&(d=c)}this.I.reveal.set(void 0,void 0),this.D=!1,i&&this.tree.domFocus(),this.tree.getRelativeTop(d)===null&&this.tree.reveal(d,.5),this.j.value=Oe(()=>{this.tree.setFocus([d]),this.tree.setSelection([d])},1);return}this.D=!0}async collapseAll(){this.tree.collapseAll()}U(e){const t=e.test&&this.O.getStateById(e.test.item.extId);return t&&t[1].tasks.some(i=>De(i.state))?this.P.tryPeekFirstError(t[0],t[1],{preserveFocus:!0}):!1}W(e){const t=e.element;if(!(t instanceof w))return;const{actions:i}=Me(this.N,this.F,this.H,this.R,this.Q,t);this.G.showContextMenu({getAnchor:()=>e.anchor,getActions:()=>i.secondary,getActionsContext:()=>t,actionRunner:this.y})}X(e){const t=this.tree.getFocus(),i=this.tree.getSelection();let r;t.length===1&&i.includes(t[0])?(e.browserEvent?.preventDefault(),r=i):r=t;const s=r.filter(n=>n instanceof w);s.length&&this.H.runTests({group:2,tests:s.map(n=>n.test)})}Y(){const t=this.H.collection.busyProviders===0&&gt(this.H.collection)?this.I.isFilteringFor("@doc")?2:1:0;t!==this.welcomeExperience&&(this.welcomeExperience=t,this.w.fire(t))}Z(){return this.projection.value??this.bb()}bb(){this.projection.clear();const e=this.z.get({});this.m.get()==="list"?this.projection.value=this.J.createInstance(xt,e):this.projection.value=this.J.createInstance(Tt,e);const t=this.B(new A(()=>this.cb(),200));return this.projection.value.onUpdate(()=>{t.isScheduled()||t.schedule()}),this.cb(),this.projection.value}cb(){this.Y(),this.projection.value?.applyTo(this.tree),this.tree.refilter(),this.D&&this.S(this.I.reveal.get())}getSelectedTests(){return this.tree.getSelection()}};Z=D([u(2,se),u(3,dt),u(4,ut),u(5,ie),u(6,ye),u(7,L),u(8,re),u(9,k),u(10,Qe),u(11,ne),u(12,Te),u(13,$t),u(14,le),u(15,W),u(16,Ce)],Z);var ve;(function(o){o[o.Exclude=0]="Exclude",o[o.Inherit=1]="Inherit",o[o.Include=2]="Include"})(ve||(ve={}));const jt=(o,e,t,i)=>{const r=[i?[i]:o.rootIds];for(;r.length;)for(const s of r.pop()){const n=o.getNodeById(s);if(n&&!(!n.item.uri||!e.extUri.isEqualOrParent(t,n.item.uri))){if(n.item.range||n.expand===1)return!0;r.push(n.children)}}return!1};let Q=class{constructor(e,t,i,r){this.f=e,this.j=t,this.k=i,this.l=r,this.d=[]}filter(e){if(e instanceof C)return 1;if(e.test&&!this.j.isFilteringFor("@hidden")&&this.k.excluded.contains(e.test))return 0;switch(Math.min(this.u(e),this.q(e),this.o(e),this.m(e))){case 0:return 0;case 2:return this.lastIncludedTests?.add(e),1;default:return 2}}filterToDocumentUri(e){this.d=[...e]}m(e){return!this.j.includeTags.size&&!this.j.excludeTags.size||(!this.j.includeTags.size||e.test.item.tags.some(t=>this.j.includeTags.has(t)))&&e.test.item.tags.every(t=>!this.j.excludeTags.has(t))?2:1}o(e){return this.j.isFilteringFor("@failed")?De(e.state)?2:1:this.j.isFilteringFor("@executed")?e.state!==0?2:1:2}q(e){return this.d.length===0||!this.j.isFilteringFor("@doc")&&!this.j.isFilteringFor("@openedFiles")||!(e instanceof w)||this.d.some(t=>jt(this.f,this.l,t,e.test.item.extId))?2:1}u(e){if(this.j.globList.length===0)return 2;const t=this.j.fuzzy.value;for(let i=e;i;i=i.parent){let r=this.j.globList[0].include===!1?2:1;const s=i.test.item.label.toLowerCase();for(const{include:n,text:l}of this.j.globList)(t?We(s,l):s.includes(l))&&(r=n?2:0);if(r!==1)return r}return 1}};Q=D([u(1,re),u(2,L),u(3,rt)],Q);class St{constructor(e){this.d=e}compare(e,t){if(e instanceof C||t instanceof C)return(e instanceof C?-1:0)+(t instanceof C?1:0);const i=(t.duration||0)-(e.duration||0);if(this.d.viewSorting==="duration"&&i!==0)return i;const r=wt(e.state,t.state);if(this.d.viewSorting==="status"&&r!==0)return r;let s=!1;if(e instanceof w&&t instanceof w&&e.test.item.uri&&t.test.item.uri&&e.test.item.uri.toString()===t.test.item.uri.toString()&&e.test.item.range&&t.test.item.range){s=!0;const h=e.test.item.range.startLineNumber-t.test.item.range.startLineNumber;if(h!==0)return h}const n=e.test.item.sortText,l=t.test.item.sortText;return s&&!n&&!l?0:He(n||e.test.item.label,l||t.test.item.label)}}let J=class extends N{constructor(e,t){super();const i=this.f=m.$M6(e,m.$(".testing-no-test-placeholder")),r=m.$M6(i,m.$("p"));r.innerText=$(12429,null);const s=$(12430,null),n=this.B(new Se(i,{title:s,...et}));n.label=s,this.B(n.onDidClick(()=>t.toggleFilteringFor("@doc",!1)))}setVisible(e){this.f.classList.toggle("visible",e)}};J=D([u(1,re)],J);class Rt extends Pe{constructor(e){super(),this.j=e}async u(e,t){if(!(e instanceof S))return super.u(e,t);const i=this.j(),n=(i.some(l=>l===t)?i:[t]).filter(l=>l instanceof w);await e.run(...n)}}const Fe=o=>{let e=ft(o.description||o.test.item.label,o.state);return o instanceof w&&(o.duration!==void 0&&(e=$(12431,null,e,R(o.duration))),o.retired&&(e=$(12432,null,e))),e};class kt{getWidgetAriaLabel(){return $(12433,null)}getAriaLabel(e){return e instanceof C?e.description:Fe(e)}}class Pt{getKeyboardNavigationLabel(e){return e instanceof C?e.message:e.test.item.label}}class At{getHeight(e){return e instanceof C?27:22}getTemplateId(e){return e instanceof C?V.ID:z.ID}}class Ot{getId(e){return e.treeId}}let V=class{static{K=this}static{this.ID="error"}constructor(e,t){this.f=e,this.d=t.createInstance(_e,{})}get templateId(){return K.ID}renderTemplate(e){return{label:m.$M6(e,m.$(".error")),disposable:new q}}renderElement({element:e},t,i){if(m.$I5(i.label),typeof e.message=="string")i.label.innerText=e.message;else{const r=this.d.render(e.message,{inline:!0});i.label.appendChild(r.element)}i.disposable.add(this.f.setupManagedHover(te("mouse"),i.label,e.description))}disposeTemplate(e){e.disposable.dispose()}};V=K=D([u(0,H),u(1,k)],V);let z=class extends N{static{Y=this}static{this.ID="testItem"}constructor(e,t,i,r,s,n,l,h){super(),this.f=e,this.j=t,this.m=i,this.u=r,this.w=s,this.y=n,this.z=l,this.C=h,this.templateId=Y.ID}renderTemplate(e){e.classList.add("testing-stdtree-container");const t=m.$M6(e,m.$(".computed-state")),i=m.$M6(e,m.$(".label")),r=new q;m.$M6(e,m.$(O.asCSSSelector(I.$Pkc)));const s=r.add(new ee(e,{actionRunner:this.f,actionViewItemProvider:(l,h)=>l instanceof S?this.y.createInstance(Ue,l,{hoverDelegate:h.hoverDelegate}):void 0}));r.add(this.u.onDidChange(()=>{n.current&&this.D(n.current,n)})),r.add(this.z.onDidChange(l=>{const h=n.current?.test.item.extId;h&&(!l||l===h||oe.isChild(h,l))&&this.D(n.current,n)}));const n={wrapper:e,label:i,actionBar:s,icon:t,elementDisposable:new q,templateDisposable:r};return n}disposeTemplate(e){e.templateDisposable.clear()}disposeElement(e,t,i){i.elementDisposable.clear()}D(e,t){const{actions:i,contextOverlay:r}=Me(this.w,this.j,this.m,this.z,this.u,e),s=!!r.getContextKeyValue(x.isContinuousModeOn.key),n=!s&&this.z.isEnabledForAChildOf(e.test.item.extId);t.actionBar.domNode.classList.toggle("testing-is-continuous-run",s||n),t.actionBar.clear(),t.actionBar.context=e,t.actionBar.push(i.primary,{icon:!0,label:!1})}renderElement(e,t,i){i.elementDisposable.clear(),i.current=e.element,i.elementDisposable.add(e.element.onChange(()=>this._renderElement(e,i))),this._renderElement(e,i)}_renderElement(e,t){this.D(e.element,t);const i=this.m.excluded.contains(e.element.test);t.wrapper.classList.toggle("test-is-hidden",i);const r=I.$2kc.get(e.element.test.expand===2||e.element.test.item.busy?2:e.element.state);t.icon.className="computed-state "+(r?O.asClassName(r):""),e.element.retired&&(t.icon.className+=" retired"),t.elementDisposable.add(this.C.setupManagedHover(te("mouse"),t.label,Fe(e.element))),e.element.test.item.label.trim()?m.$O6(t.label,...Re(e.element.test.item.label)):t.label.textContent="\xA0";let s=e.element.description;e.element.duration!==void 0&&(s=s?`${s}: ${R(e.element.duration)}`:R(e.element.duration)),s&&m.$M6(t.label,m.$("span.test-label-description",{},s))}};z=Y=D([u(1,ie),u(2,L),u(3,le),u(4,ne),u(5,k),u(6,W),u(7,H)],z);const R=o=>o<10?`${o.toFixed(1)}ms`:o<1e3?`${o.toFixed(0)}ms`:`${(o/1e3).toFixed(1)}s`,Me=(o,e,t,i,r,s)=>{const n=s instanceof w?s.test:void 0,l=Ct(n,n?r.capabilitiesForTest(n.item):0);if(l.push(["view","workbench.view.testing"]),n){const f=t.getTestController(n.controllerId),p=!!f&&r.getControllerProfiles(f.id).some(g=>g.supportsContinuousRun&&G(g,n));l.push([x.canRefreshTests.key,f&&!!(f.capabilities.get()&2)&&oe.isRoot(n.item.extId)],[x.testItemIsHidden.key,t.excluded.contains(n)],[x.isContinuousModeOn.key,p&&i.isSpecificallyEnabledFor(n.item.extId)],[x.isParentRunningContinuously.key,p&&i.isEnabledForAParentOf(n.item.extId)],[x.supportsContinuousRun.key,p],[x.testResultOutdated.key,s.retired],[x.testResultState.key,bt[s.state]])}const h=o.createOverlay(l),d=e.getMenuActions(xe.TestItem,h,{shouldForwardArgs:!0});return{actions:Ye(d,"inline"),contextOverlay:h}};nt((o,e)=>{if(o.type==="dark"){const t=o.getColor(tt);if(t){const i=new ze(new Ne(t.rgba.r,t.rgba.g,t.rgba.b,.65));e.addRule(`.test-explorer .test-explorer-messages { color: ${i}; }`)}}});export{$e as $Omc};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import * as dom from "../../../../base/browser/dom.js";
+import { ActionBar } from "../../../../base/browser/ui/actionbar/actionbar.js";
+import { Button } from "../../../../base/browser/ui/button/button.js";
+import { getDefaultHoverDelegate } from "../../../../base/browser/ui/hover/hoverDelegateFactory.js";
+import { renderLabelWithIcons } from "../../../../base/browser/ui/iconLabel/iconLabels.js";
+import { DefaultKeyboardNavigationDelegate } from "../../../../base/browser/ui/list/listWidget.js";
+import { Action, ActionRunner, Separator } from "../../../../base/common/actions.js";
+import { mapFindFirst } from "../../../../base/common/arraysFind.js";
+import { RunOnceScheduler, disposableTimeout } from "../../../../base/common/async.js";
+import { groupBy } from "../../../../base/common/collections.js";
+import { Color, RGBA } from "../../../../base/common/color.js";
+import { compareFileNames } from "../../../../base/common/comparers.js";
+import { Emitter, Event } from "../../../../base/common/event.js";
+import { Iterable } from "../../../../base/common/iterator.js";
+import { Disposable, DisposableStore, MutableDisposable } from "../../../../base/common/lifecycle.js";
+import { autorun, observableFromEvent } from "../../../../base/common/observable.js";
+import { fuzzyContains } from "../../../../base/common/strings.js";
+import { ThemeIcon } from "../../../../base/common/themables.js";
+import { isDefined } from "../../../../base/common/types.js";
+import { MarkdownRenderer } from "../../../../editor/browser/widget/markdownRenderer/browser/markdownRenderer.js";
+import { localize } from "../../../../nls.js";
+import { DropdownWithPrimaryActionViewItem } from "../../../../platform/actions/browser/dropdownWithPrimaryActionViewItem.js";
+import { MenuEntryActionViewItem, createActionViewItem, getActionBarActions, getFlatContextMenuActions } from "../../../../platform/actions/browser/menuEntryActionViewItem.js";
+import { IMenuService, MenuId, MenuItemAction } from "../../../../platform/actions/common/actions.js";
+import { ICommandService } from "../../../../platform/commands/common/commands.js";
+import { IConfigurationService } from "../../../../platform/configuration/common/configuration.js";
+import { IContextKeyService } from "../../../../platform/contextkey/common/contextkey.js";
+import { IContextMenuService } from "../../../../platform/contextview/browser/contextView.js";
+import { IHoverService } from "../../../../platform/hover/browser/hover.js";
+import { IInstantiationService } from "../../../../platform/instantiation/common/instantiation.js";
+import { IKeybindingService } from "../../../../platform/keybinding/common/keybinding.js";
+import { IOpenerService } from "../../../../platform/opener/common/opener.js";
+import { UnmanagedProgress } from "../../../../platform/progress/common/progress.js";
+import { IStorageService, WillSaveStateReason } from "../../../../platform/storage/common/storage.js";
+import { defaultButtonStyles } from "../../../../platform/theme/browser/defaultStyles.js";
+import { foreground } from "../../../../platform/theme/common/colorRegistry.js";
+import { spinningLoading } from "../../../../platform/theme/common/iconRegistry.js";
+import { IThemeService, registerThemingParticipant } from "../../../../platform/theme/common/themeService.js";
+import { IUriIdentityService } from "../../../../platform/uriIdentity/common/uriIdentity.js";
+import { registerNavigableContainer } from "../../../browser/actions/widgetNavigationCommands.js";
+import { ViewPane } from "../../../browser/parts/views/viewPane.js";
+import { DiffEditorInput } from "../../../common/editor/diffEditorInput.js";
+import { IViewDescriptorService } from "../../../common/views.js";
+import { IActivityService, IconBadge, NumberBadge } from "../../../services/activity/common/activity.js";
+import { IEditorGroupsService } from "../../../services/editor/common/editorGroupsService.js";
+import { IEditorService } from "../../../services/editor/common/editorService.js";
+import { getTestingConfiguration } from "../common/configuration.js";
+import { labelForTestInState } from "../common/constants.js";
+import { StoredValue } from "../common/storedValue.js";
+import { ITestExplorerFilterState } from "../common/testExplorerFilterState.js";
+import { TestId } from "../common/testId.js";
+import { ITestProfileService, canUseProfileWithTest } from "../common/testProfileService.js";
+import { LiveTestResult } from "../common/testResult.js";
+import { ITestResultService } from "../common/testResultService.js";
+import { ITestService, testCollectionIsEmpty } from "../common/testService.js";
+import { testProfileBitset, testResultStateToContextValues } from "../common/testTypes.js";
+import { TestingContextKeys } from "../common/testingContextKeys.js";
+import { ITestingContinuousRunService } from "../common/testingContinuousRunService.js";
+import { ITestingPeekOpener } from "../common/testingPeekOpener.js";
+import { cmpPriority, isFailedState, isStateWithResult, statesInOrder } from "../common/testingStates.js";
+import { TestItemTreeElement, TestTreeErrorMessage } from "./explorerProjections/index.js";
+import { ListProjection } from "./explorerProjections/listProjection.js";
+import { getTestItemContextOverlay } from "./explorerProjections/testItemContextOverlay.js";
+import { TestingObjectTree } from "./explorerProjections/testingObjectTree.js";
+import { TreeProjection } from "./explorerProjections/treeProjection.js";
+import * as icons from "./icons.js";
+import "./media/testing.css";
+import { DebugLastRun, ReRunLastRun } from "./testExplorerActions.js";
+import { TestingExplorerFilter } from "./testingExplorerFilter.js";
+import { collectTestStateCounts, getTestProgressText } from "./testingProgressUiService.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+var ErrorRenderer_1;
+var TestItemRenderer_1;
+var LastFocusState;
+(function(LastFocusState2) {
+  LastFocusState2[LastFocusState2["Input"] = 0] = "Input";
+  LastFocusState2[LastFocusState2["Tree"] = 1] = "Tree";
+})(LastFocusState || (LastFocusState = {}));
+let TestingExplorerView = class TestingExplorerView2 extends ViewPane {
+  static {
+    __name(this, "TestingExplorerView");
+  }
+  get focusedTreeElements() {
+    return this.viewModel.tree.getFocus().filter(isDefined);
+  }
+  constructor(options, contextMenuService, keybindingService, configurationService, instantiationService, viewDescriptorService, contextKeyService, openerService, themeService, testService, hoverService, testProfileService, commandService, menuService, crService) {
+    super(options, keybindingService, contextMenuService, configurationService, contextKeyService, viewDescriptorService, instantiationService, openerService, themeService, hoverService);
+    this.testService = testService;
+    this.testProfileService = testProfileService;
+    this.commandService = commandService;
+    this.menuService = menuService;
+    this.crService = crService;
+    this.filterActionBar = this._register(new MutableDisposable());
+    this.discoveryProgress = this._register(new MutableDisposable());
+    this.filter = this._register(new MutableDisposable());
+    this.filterFocusListener = this._register(new MutableDisposable());
+    this.dimensions = { width: 0, height: 0 };
+    this.lastFocusState = 0;
+    const relayout = this._register(new RunOnceScheduler(() => this.layoutBody(), 1));
+    this._register(this.onDidChangeViewWelcomeState(() => {
+      if (!this.shouldShowWelcome()) {
+        relayout.schedule();
+      }
+    }));
+    this._register(Event.any(crService.onDidChange, testProfileService.onDidChange)(() => {
+      this.updateActions();
+    }));
+    this._register(testService.collection.onBusyProvidersChange((busy) => {
+      this.updateDiscoveryProgress(busy);
+    }));
+    this._register(testProfileService.onDidChange(() => this.updateActions()));
+  }
+  shouldShowWelcome() {
+    return this.viewModel?.welcomeExperience === 1;
+  }
+  focus() {
+    super.focus();
+    if (this.lastFocusState === 1) {
+      this.viewModel.tree.domFocus();
+    } else {
+      this.filter.value?.focus();
+    }
+  }
+  /**
+   * Gets include/exclude items in the tree, based either on visible tests
+   * or a use selection. If a profile is given, only tests in that profile
+   * are collected. If a bitset is given, any test that can run in that
+   * bitset is collected.
+   */
+  getTreeIncludeExclude(profileOrBitset, withinItems, filterToType = "visible") {
+    const projection = this.viewModel.projection.value;
+    if (!projection) {
+      return { include: [], exclude: [] };
+    }
+    const include = /* @__PURE__ */ new Set();
+    const exclude = [];
+    const runnableWithProfileOrBitset = /* @__PURE__ */ new Map();
+    const isRunnableWithProfileOrBitset = /* @__PURE__ */ __name((item) => {
+      let value = runnableWithProfileOrBitset.get(item);
+      if (value === void 0) {
+        value = typeof profileOrBitset === "number" ? !!this.testProfileService.getDefaultProfileForTest(profileOrBitset, item) : canUseProfileWithTest(profileOrBitset, item);
+        runnableWithProfileOrBitset.set(item, value);
+      }
+      return value;
+    }, "isRunnableWithProfileOrBitset");
+    const attempt = /* @__PURE__ */ __name((element, alreadyIncluded) => {
+      if (!(element instanceof TestItemTreeElement) || !this.viewModel.tree.hasElement(element)) {
+        return;
+      }
+      const inTree = this.viewModel.tree.getNode(element);
+      if (!inTree.visible) {
+        if (alreadyIncluded) {
+          exclude.push(element.test);
+        }
+        return;
+      }
+      const visibleRunnableChildren = inTree.children.filter((c) => c.visible && c.element instanceof TestItemTreeElement && isRunnableWithProfileOrBitset(c.element.test)).length;
+      if (
+        // If it's not already included...
+        !alreadyIncluded && isRunnableWithProfileOrBitset(element.test) && (visibleRunnableChildren === 0 || visibleRunnableChildren * 2 >= inTree.children.length) && visibleRunnableChildren !== 1
+      ) {
+        include.add(element.test);
+        alreadyIncluded = true;
+      }
+      for (const child of element.children) {
+        attempt(child, alreadyIncluded);
+      }
+    }, "attempt");
+    if (filterToType === "selected") {
+      const sel = this.viewModel.tree.getSelection().filter(isDefined);
+      if (sel.length) {
+        L: for (const node of sel) {
+          if (node instanceof TestItemTreeElement) {
+            for (let i = node; i; i = i.parent) {
+              if (include.has(i.test)) {
+                continue L;
+              }
+            }
+            include.add(node.test);
+            node.children.forEach((c) => attempt(c, true));
+          }
+        }
+        return { include: [...include], exclude };
+      }
+    }
+    for (const root of withinItems || this.testService.collection.rootItems) {
+      const element = projection.getElementByTestId(root.item.extId);
+      if (!element) {
+        continue;
+      }
+      if (typeof profileOrBitset === "object" && !canUseProfileWithTest(profileOrBitset, root)) {
+        continue;
+      }
+      include.add(element.test);
+      element.children.forEach((c) => attempt(c, true));
+    }
+    return { include: [...include], exclude };
+  }
+  render() {
+    super.render();
+    this._register(registerNavigableContainer({
+      name: "testingExplorerView",
+      focusNotifiers: [this],
+      focusNextWidget: /* @__PURE__ */ __name(() => {
+        if (!this.viewModel.tree.isDOMFocused()) {
+          this.viewModel.tree.domFocus();
+        }
+      }, "focusNextWidget"),
+      focusPreviousWidget: /* @__PURE__ */ __name(() => {
+        if (this.viewModel.tree.isDOMFocused()) {
+          this.filter.value?.focus();
+        }
+      }, "focusPreviousWidget")
+    }));
+  }
+  /**
+   * @override
+   */
+  renderBody(container) {
+    super.renderBody(container);
+    this.container = dom.append(container, dom.$(".test-explorer"));
+    this.treeHeader = dom.append(this.container, dom.$(".test-explorer-header"));
+    this.filterActionBar.value = this.createFilterActionBar();
+    const messagesContainer = dom.append(this.treeHeader, dom.$(".result-summary-container"));
+    this._register(this.instantiationService.createInstance(ResultSummaryView, messagesContainer));
+    const listContainer = dom.append(this.container, dom.$(".test-explorer-tree"));
+    this.viewModel = this.instantiationService.createInstance(TestingExplorerViewModel, listContainer, this.onDidChangeBodyVisibility);
+    this._register(this.viewModel.tree.onDidFocus(
+      () => this.lastFocusState = 1
+      /* LastFocusState.Tree */
+    ));
+    this._register(this.viewModel.onChangeWelcomeVisibility(() => this._onDidChangeViewWelcomeState.fire()));
+    this._register(this.viewModel);
+    this._onDidChangeViewWelcomeState.fire();
+  }
+  /** @override  */
+  createActionViewItem(action, options) {
+    switch (action.id) {
+      case "workbench.actions.treeView.testExplorer.filter":
+        this.filter.value = this.instantiationService.createInstance(TestingExplorerFilter, action, options);
+        this.filterFocusListener.value = this.filter.value.onDidFocus(
+          () => this.lastFocusState = 0
+          /* LastFocusState.Input */
+        );
+        return this.filter.value;
+      case "testing.runSelected":
+        return this.getRunGroupDropdown(2, action, options);
+      case "testing.debugSelected":
+        return this.getRunGroupDropdown(4, action, options);
+      case "testing.startContinuousRun":
+      case "testing.stopContinuousRun":
+        return this.getContinuousRunDropdown(action, options);
+      default:
+        return super.createActionViewItem(action, options);
+    }
+  }
+  /** @inheritdoc */
+  getTestConfigGroupActions(group) {
+    const profileActions = [];
+    let participatingGroups = 0;
+    let participatingProfiles = 0;
+    let hasConfigurable = false;
+    const defaults = this.testProfileService.getGroupDefaultProfiles(group);
+    for (const { profiles, controller } of this.testProfileService.all()) {
+      let hasAdded = false;
+      for (const profile of profiles) {
+        if (profile.group !== group) {
+          continue;
+        }
+        if (!hasAdded) {
+          hasAdded = true;
+          participatingGroups++;
+          profileActions.push(new Action(`${controller.id}.$root`, controller.label.get(), void 0, false));
+        }
+        hasConfigurable = hasConfigurable || profile.hasConfigurationHandler;
+        participatingProfiles++;
+        profileActions.push(new Action(`${controller.id}.${profile.profileId}`, defaults.includes(profile) ? localize("defaultTestProfile", "{0} (Default)", profile.label) : profile.label, void 0, void 0, () => {
+          const { include, exclude } = this.getTreeIncludeExclude(profile);
+          this.testService.runResolvedTests({
+            exclude: exclude.map((e) => e.item.extId),
+            group: profile.group,
+            targets: [{
+              profileId: profile.profileId,
+              controllerId: profile.controllerId,
+              testIds: include.map((i) => i.item.extId)
+            }]
+          });
+        }));
+      }
+    }
+    const contextKeys = [];
+    if (group === 2) {
+      contextKeys.push(["testing.profile.context.group", "run"]);
+    }
+    if (group === 4) {
+      contextKeys.push(["testing.profile.context.group", "debug"]);
+    }
+    if (group === 8) {
+      contextKeys.push(["testing.profile.context.group", "coverage"]);
+    }
+    const key = this.contextKeyService.createOverlay(contextKeys);
+    const menu = this.menuService.getMenuActions(MenuId.TestProfilesContext, key);
+    const menuActions = getFlatContextMenuActions(menu);
+    const postActions = [];
+    if (participatingProfiles > 1) {
+      postActions.push(new Action("selectDefaultTestConfigurations", localize("selectDefaultConfigs", "Select Default Profile"), void 0, void 0, () => this.commandService.executeCommand("testing.selectDefaultTestProfiles", group)));
+    }
+    if (hasConfigurable) {
+      postActions.push(new Action("configureTestProfiles", localize("configureTestProfiles", "Configure Test Profiles"), void 0, void 0, () => this.commandService.executeCommand("testing.configureProfile", group)));
+    }
+    return {
+      numberOfProfiles: participatingProfiles,
+      actions: menuActions.length > 0 ? Separator.join(profileActions, menuActions, postActions) : Separator.join(profileActions, postActions)
+    };
+  }
+  /**
+   * @override
+   */
+  saveState() {
+    this.filter.value?.saveState();
+    super.saveState();
+  }
+  getRunGroupDropdown(group, defaultAction, options) {
+    const dropdownActions = this.getTestConfigGroupActions(group);
+    if (dropdownActions.numberOfProfiles < 2) {
+      return super.createActionViewItem(defaultAction, options);
+    }
+    const primaryAction = this.instantiationService.createInstance(MenuItemAction, {
+      id: defaultAction.id,
+      title: defaultAction.label,
+      icon: group === 2 ? icons.testingRunAllIcon : icons.testingDebugAllIcon
+    }, void 0, void 0, void 0, void 0);
+    return this.instantiationService.createInstance(DropdownWithPrimaryActionViewItem, primaryAction, this.getDropdownAction(), dropdownActions.actions, "", options);
+  }
+  getDropdownAction() {
+    return new Action("selectRunConfig", localize("testingSelectConfig", "Select Configuration..."), "codicon-chevron-down", true);
+  }
+  getContinuousRunDropdown(defaultAction, options) {
+    const allProfiles = [...Iterable.flatMap(this.testProfileService.all(), (cr) => {
+      if (this.testService.collection.getNodeById(cr.controller.id)?.children.size) {
+        return Iterable.filter(cr.profiles, (p) => p.supportsContinuousRun);
+      }
+      return Iterable.empty();
+    })];
+    if (allProfiles.length <= 1) {
+      return super.createActionViewItem(defaultAction, options);
+    }
+    const primaryAction = this.instantiationService.createInstance(MenuItemAction, {
+      id: defaultAction.id,
+      title: defaultAction.label,
+      icon: defaultAction.id === "testing.startContinuousRun" ? icons.testingTurnContinuousRunOn : icons.testingTurnContinuousRunOff
+    }, void 0, void 0, void 0, void 0);
+    const dropdownActions = [];
+    const groups = groupBy(allProfiles, (p) => p.group);
+    const crService = this.crService;
+    for (const group of [
+      2,
+      4,
+      8
+      /* TestRunProfileBitset.Coverage */
+    ]) {
+      const profiles = groups[group];
+      if (!profiles) {
+        continue;
+      }
+      if (Object.keys(groups).length > 1) {
+        dropdownActions.push({
+          id: `${group}.label`,
+          label: testProfileBitset[group],
+          enabled: false,
+          class: void 0,
+          tooltip: testProfileBitset[group],
+          run: /* @__PURE__ */ __name(() => {
+          }, "run")
+        });
+      }
+      for (const profile of profiles) {
+        dropdownActions.push({
+          id: `${group}.${profile.profileId}`,
+          label: profile.label,
+          enabled: true,
+          class: void 0,
+          tooltip: profile.label,
+          checked: crService.isEnabledForProfile(profile),
+          run: /* @__PURE__ */ __name(() => crService.isEnabledForProfile(profile) ? crService.stopProfile(profile) : crService.start([profile]), "run")
+        });
+      }
+    }
+    return this.instantiationService.createInstance(DropdownWithPrimaryActionViewItem, primaryAction, this.getDropdownAction(), dropdownActions, "", options);
+  }
+  createFilterActionBar() {
+    const bar = new ActionBar(this.treeHeader, {
+      actionViewItemProvider: /* @__PURE__ */ __name((action, options) => this.createActionViewItem(action, options), "actionViewItemProvider"),
+      triggerKeys: { keyDown: false, keys: [] }
+    });
+    bar.push(new Action(
+      "workbench.actions.treeView.testExplorer.filter"
+      /* TestCommandId.FilterAction */
+    ));
+    bar.getContainer().classList.add("testing-filter-action-bar");
+    return bar;
+  }
+  updateDiscoveryProgress(busy) {
+    if (!busy && this.discoveryProgress) {
+      this.discoveryProgress.clear();
+    } else if (busy && !this.discoveryProgress.value) {
+      this.discoveryProgress.value = this.instantiationService.createInstance(UnmanagedProgress, { location: this.getProgressLocation() });
+    }
+  }
+  /**
+   * @override
+   */
+  layoutBody(height = this.dimensions.height, width = this.dimensions.width) {
+    super.layoutBody(height, width);
+    this.dimensions.height = height;
+    this.dimensions.width = width;
+    this.container.style.height = `${height}px`;
+    this.viewModel?.layout(height - this.treeHeader.clientHeight, width);
+    this.filter.value?.layout(width);
+  }
+};
+TestingExplorerView = __decorate([
+  __param(1, IContextMenuService),
+  __param(2, IKeybindingService),
+  __param(3, IConfigurationService),
+  __param(4, IInstantiationService),
+  __param(5, IViewDescriptorService),
+  __param(6, IContextKeyService),
+  __param(7, IOpenerService),
+  __param(8, IThemeService),
+  __param(9, ITestService),
+  __param(10, IHoverService),
+  __param(11, ITestProfileService),
+  __param(12, ICommandService),
+  __param(13, IMenuService),
+  __param(14, ITestingContinuousRunService)
+], TestingExplorerView);
+const SUMMARY_RENDER_INTERVAL = 200;
+let ResultSummaryView = class ResultSummaryView2 extends Disposable {
+  static {
+    __name(this, "ResultSummaryView");
+  }
+  constructor(container, resultService, activityService, crService, configurationService, instantiationService, hoverService) {
+    super();
+    this.container = container;
+    this.resultService = resultService;
+    this.activityService = activityService;
+    this.crService = crService;
+    this.elementsWereAttached = false;
+    this.badgeDisposable = this._register(new MutableDisposable());
+    this.renderLoop = this._register(new RunOnceScheduler(() => this.render(), SUMMARY_RENDER_INTERVAL));
+    this.elements = dom.h("div.result-summary", [
+      dom.h("div@status"),
+      dom.h("div@count"),
+      dom.h("div@count"),
+      dom.h("span"),
+      dom.h("duration@duration"),
+      dom.h("a@rerun")
+    ]);
+    this.badgeType = configurationService.getValue(
+      "testing.countBadge"
+      /* TestingConfigKeys.CountBadge */
+    );
+    this._register(resultService.onResultsChanged(this.render, this));
+    this._register(configurationService.onDidChangeConfiguration((e) => {
+      if (e.affectsConfiguration(
+        "testing.countBadge"
+        /* TestingConfigKeys.CountBadge */
+      )) {
+        this.badgeType = configurationService.getValue(
+          "testing.countBadge"
+          /* TestingConfigKeys.CountBadge */
+        );
+        this.render();
+      }
+    }));
+    this.countHover = this._register(hoverService.setupManagedHover(getDefaultHoverDelegate("mouse"), this.elements.count, ""));
+    const ab = this._register(new ActionBar(this.elements.rerun, {
+      actionViewItemProvider: /* @__PURE__ */ __name((action, options) => createActionViewItem(instantiationService, action, options), "actionViewItemProvider")
+    }));
+    ab.push(instantiationService.createInstance(MenuItemAction, { ...new ReRunLastRun().desc, icon: icons.testingRerunIcon }, { ...new DebugLastRun().desc, icon: icons.testingDebugIcon }, {}, void 0, void 0), { icon: true, label: false });
+    this.render();
+  }
+  render() {
+    const { results } = this.resultService;
+    const { count, root, status, duration, rerun } = this.elements;
+    if (!results.length) {
+      if (this.elementsWereAttached) {
+        root.remove();
+        this.elementsWereAttached = false;
+      }
+      this.container.innerText = localize("noResults", "No test results yet.");
+      this.badgeDisposable.clear();
+      return;
+    }
+    const live = results.filter((r) => !r.completedAt);
+    let counts;
+    if (live.length) {
+      status.className = ThemeIcon.asClassName(spinningLoading);
+      counts = collectTestStateCounts(true, live);
+      this.renderLoop.schedule();
+      const last = live[live.length - 1];
+      duration.textContent = formatDuration(Date.now() - last.startedAt);
+      rerun.style.display = "none";
+    } else {
+      const last = results[0];
+      const dominantState = mapFindFirst(statesInOrder, (s) => last.counts[s] > 0 ? s : void 0);
+      status.className = ThemeIcon.asClassName(icons.testingStatesToIcons.get(
+        dominantState ?? 0
+        /* TestResultState.Unset */
+      ));
+      counts = collectTestStateCounts(false, [last]);
+      duration.textContent = last instanceof LiveTestResult ? formatDuration(last.completedAt - last.startedAt) : "";
+      rerun.style.display = "block";
+    }
+    count.textContent = `${counts.passed}/${counts.totalWillBeRun}`;
+    this.countHover.update(getTestProgressText(counts));
+    this.renderActivityBadge(counts);
+    if (!this.elementsWereAttached) {
+      dom.clearNode(this.container);
+      this.container.appendChild(root);
+      this.elementsWereAttached = true;
+    }
+  }
+  renderActivityBadge(countSummary) {
+    if (countSummary && this.badgeType !== "off" && countSummary[this.badgeType] !== 0) {
+      if (this.lastBadge instanceof NumberBadge && this.lastBadge.number === countSummary[this.badgeType]) {
+        return;
+      }
+      this.lastBadge = new NumberBadge(countSummary[this.badgeType], (num) => this.getLocalizedBadgeString(this.badgeType, num));
+    } else if (this.crService.isEnabled()) {
+      if (this.lastBadge instanceof IconBadge && this.lastBadge.icon === icons.testingContinuousIsOn) {
+        return;
+      }
+      this.lastBadge = new IconBadge(icons.testingContinuousIsOn, () => localize("testingContinuousBadge", "Tests are being watched for changes"));
+    } else {
+      if (!this.lastBadge) {
+        return;
+      }
+      this.lastBadge = void 0;
+    }
+    this.badgeDisposable.value = this.lastBadge && this.activityService.showViewActivity("workbench.view.testing", { badge: this.lastBadge });
+  }
+  getLocalizedBadgeString(countBadgeType, count) {
+    switch (countBadgeType) {
+      case "passed":
+        return localize("testingCountBadgePassed", "{0} passed tests", count);
+      case "skipped":
+        return localize("testingCountBadgeSkipped", "{0} skipped tests", count);
+      default:
+        return localize("testingCountBadgeFailed", "{0} failed tests", count);
+    }
+  }
+};
+ResultSummaryView = __decorate([
+  __param(1, ITestResultService),
+  __param(2, IActivityService),
+  __param(3, ITestingContinuousRunService),
+  __param(4, IConfigurationService),
+  __param(5, IInstantiationService),
+  __param(6, IHoverService)
+], ResultSummaryView);
+var WelcomeExperience;
+(function(WelcomeExperience2) {
+  WelcomeExperience2[WelcomeExperience2["None"] = 0] = "None";
+  WelcomeExperience2[WelcomeExperience2["ForWorkspace"] = 1] = "ForWorkspace";
+  WelcomeExperience2[WelcomeExperience2["ForDocument"] = 2] = "ForDocument";
+})(WelcomeExperience || (WelcomeExperience = {}));
+let TestingExplorerViewModel = class TestingExplorerViewModel2 extends Disposable {
+  static {
+    __name(this, "TestingExplorerViewModel");
+  }
+  get viewMode() {
+    return this._viewMode.get() ?? "true";
+  }
+  set viewMode(newMode) {
+    if (newMode === this._viewMode.get()) {
+      return;
+    }
+    this._viewMode.set(newMode);
+    this.updatePreferredProjection();
+    this.storageService.store(
+      "testing.viewMode",
+      newMode,
+      1,
+      1
+      /* StorageTarget.MACHINE */
+    );
+  }
+  get viewSorting() {
+    return this._viewSorting.get() ?? "status";
+  }
+  set viewSorting(newSorting) {
+    if (newSorting === this._viewSorting.get()) {
+      return;
+    }
+    this._viewSorting.set(newSorting);
+    this.tree.resort(null);
+    this.storageService.store(
+      "testing.viewSorting",
+      newSorting,
+      1,
+      1
+      /* StorageTarget.MACHINE */
+    );
+  }
+  constructor(listContainer, onDidChangeVisibility, configurationService, editorService, editorGroupsService, menuService, contextMenuService, testService, filterState, instantiationService, storageService, contextKeyService, testResults, peekOpener, testProfileService, crService, commandService) {
+    super();
+    this.menuService = menuService;
+    this.contextMenuService = contextMenuService;
+    this.testService = testService;
+    this.filterState = filterState;
+    this.instantiationService = instantiationService;
+    this.storageService = storageService;
+    this.contextKeyService = contextKeyService;
+    this.testResults = testResults;
+    this.peekOpener = peekOpener;
+    this.testProfileService = testProfileService;
+    this.crService = crService;
+    this.projection = this._register(new MutableDisposable());
+    this.revealTimeout = new MutableDisposable();
+    this.welcomeVisibilityEmitter = new Emitter();
+    this.actionRunner = this._register(new TestExplorerActionRunner(() => this.tree.getSelection().filter(isDefined)));
+    this.hasPendingReveal = false;
+    this.onChangeWelcomeVisibility = this.welcomeVisibilityEmitter.event;
+    this.welcomeExperience = 0;
+    this.hasPendingReveal = !!filterState.reveal.get();
+    this.noTestForDocumentWidget = this._register(instantiationService.createInstance(NoTestsForDocumentWidget, listContainer));
+    this.lastViewState = this._register(new StoredValue({
+      key: "testing.treeState",
+      scope: 1,
+      target: 1
+    }, this.storageService));
+    this._viewMode = TestingContextKeys.viewMode.bindTo(contextKeyService);
+    this._viewSorting = TestingContextKeys.viewSorting.bindTo(contextKeyService);
+    this._viewMode.set(this.storageService.get(
+      "testing.viewMode",
+      1,
+      "true"
+      /* TestExplorerViewMode.Tree */
+    ));
+    this._viewSorting.set(this.storageService.get(
+      "testing.viewSorting",
+      1,
+      "location"
+      /* TestExplorerViewSorting.ByLocation */
+    ));
+    this.reevaluateWelcomeState();
+    this.filter = this.instantiationService.createInstance(TestsFilter, testService.collection);
+    this.tree = instantiationService.createInstance(TestingObjectTree, "Test Explorer List", listContainer, new ListDelegate(), [
+      instantiationService.createInstance(TestItemRenderer, this.actionRunner),
+      instantiationService.createInstance(ErrorRenderer)
+    ], {
+      identityProvider: instantiationService.createInstance(IdentityProvider),
+      hideTwistiesOfChildlessElements: false,
+      sorter: instantiationService.createInstance(TreeSorter, this),
+      keyboardNavigationLabelProvider: instantiationService.createInstance(TreeKeyboardNavigationLabelProvider),
+      accessibilityProvider: instantiationService.createInstance(ListAccessibilityProvider),
+      filter: this.filter,
+      findWidgetEnabled: false
+    });
+    const collapseStateSaver = this._register(new RunOnceScheduler(() => {
+      const state = this.tree.getOptimizedViewState(this.lastViewState.get({}));
+      const projection = this.projection.value;
+      if (projection) {
+        projection.lastState = state;
+      }
+    }, 3e3));
+    this._register(this.tree.onDidChangeCollapseState((evt) => {
+      if (evt.node.element instanceof TestItemTreeElement) {
+        if (!evt.node.collapsed) {
+          this.projection.value?.expandElement(evt.node.element, evt.deep ? Infinity : 0);
+        }
+        collapseStateSaver.schedule();
+      }
+    }));
+    this._register(this.crService.onDidChange((testId) => {
+      if (testId) {
+        const elem = this.projection.value?.getElementByTestId(testId);
+        this.tree.resort(elem?.parent && this.tree.hasElement(elem.parent) ? elem.parent : null, false);
+      }
+    }));
+    this._register(onDidChangeVisibility((visible) => {
+      if (visible) {
+        this.ensureProjection();
+      }
+    }));
+    this._register(this.tree.onContextMenu((e) => this.onContextMenu(e)));
+    this._register(Event.any(filterState.text.onDidChange, filterState.fuzzy.onDidChange, testService.excluded.onTestExclusionsChanged)(() => {
+      if (!filterState.text.value) {
+        return this.tree.refilter();
+      }
+      const items = this.filter.lastIncludedTests = /* @__PURE__ */ new Set();
+      this.tree.refilter();
+      this.filter.lastIncludedTests = void 0;
+      for (const test of items) {
+        this.tree.expandTo(test);
+      }
+    }));
+    this._register(this.tree.onDidOpen((e) => {
+      if (!(e.element instanceof TestItemTreeElement)) {
+        return;
+      }
+      filterState.didSelectTestInExplorer(e.element.test.item.extId);
+      if (!e.element.children.size && e.element.test.item.uri) {
+        if (!this.tryPeekError(e.element)) {
+          commandService.executeCommand("vscode.revealTest", e.element.test.item.extId, {
+            openToSide: e.sideBySide,
+            preserveFocus: true
+          });
+        }
+      }
+    }));
+    this._register(this.tree);
+    this._register(this.onChangeWelcomeVisibility((e) => {
+      this.noTestForDocumentWidget.setVisible(
+        e === 2
+        /* WelcomeExperience.ForDocument */
+      );
+    }));
+    this._register(dom.addStandardDisposableListener(this.tree.getHTMLElement(), "keydown", (evt) => {
+      if (evt.equals(
+        3
+        /* KeyCode.Enter */
+      )) {
+        this.handleExecuteKeypress(evt);
+      } else if (DefaultKeyboardNavigationDelegate.mightProducePrintableCharacter(evt)) {
+        filterState.text.value = evt.browserEvent.key;
+        filterState.focusInput();
+      }
+    }));
+    this._register(autorun((reader) => {
+      this.revealById(filterState.reveal.read(reader), void 0, false);
+    }));
+    this._register(onDidChangeVisibility((visible) => {
+      if (visible) {
+        filterState.focusInput();
+      }
+    }));
+    let followRunningTests = getTestingConfiguration(
+      configurationService,
+      "testing.followRunningTest"
+      /* TestingConfigKeys.FollowRunningTest */
+    );
+    this._register(configurationService.onDidChangeConfiguration((e) => {
+      if (e.affectsConfiguration(
+        "testing.followRunningTest"
+        /* TestingConfigKeys.FollowRunningTest */
+      )) {
+        followRunningTests = getTestingConfiguration(
+          configurationService,
+          "testing.followRunningTest"
+          /* TestingConfigKeys.FollowRunningTest */
+        );
+      }
+    }));
+    let alwaysRevealTestAfterStateChange = getTestingConfiguration(
+      configurationService,
+      "testing.alwaysRevealTestOnStateChange"
+      /* TestingConfigKeys.AlwaysRevealTestOnStateChange */
+    );
+    this._register(configurationService.onDidChangeConfiguration((e) => {
+      if (e.affectsConfiguration(
+        "testing.alwaysRevealTestOnStateChange"
+        /* TestingConfigKeys.AlwaysRevealTestOnStateChange */
+      )) {
+        alwaysRevealTestAfterStateChange = getTestingConfiguration(
+          configurationService,
+          "testing.alwaysRevealTestOnStateChange"
+          /* TestingConfigKeys.AlwaysRevealTestOnStateChange */
+        );
+      }
+    }));
+    this._register(testResults.onTestChanged((evt) => {
+      if (!followRunningTests) {
+        return;
+      }
+      if (evt.reason !== 1) {
+        return;
+      }
+      if (this.tree.selectionSize > 1) {
+        return;
+      }
+      if (evt.item.ownComputedState !== 2 && !(evt.previousState === 1 && isStateWithResult(evt.item.ownComputedState))) {
+        return;
+      }
+      this.revealById(evt.item.item.extId, alwaysRevealTestAfterStateChange, false);
+    }));
+    this._register(testResults.onResultsChanged(() => {
+      this.tree.resort(null);
+    }));
+    this._register(this.testProfileService.onDidChange(() => {
+      this.tree.rerender();
+    }));
+    const allOpenEditorInputs = observableFromEvent(this, editorService.onDidEditorsChange, () => new Set(editorGroupsService.groups.flatMap((g) => g.editors).map((e) => e.resource).filter(isDefined)));
+    const activeResource = observableFromEvent(this, editorService.onDidActiveEditorChange, () => {
+      if (editorService.activeEditor instanceof DiffEditorInput) {
+        return editorService.activeEditor.primary.resource;
+      } else {
+        return editorService.activeEditor?.resource;
+      }
+    });
+    const filterText = observableFromEvent(this.filterState.text.onDidChange, () => this.filterState.text);
+    this._register(autorun((reader) => {
+      filterText.read(reader);
+      if (this.filterState.isFilteringFor(
+        "@openedFiles"
+        /* TestFilterTerm.OpenedFiles */
+      )) {
+        this.filter.filterToDocumentUri([...allOpenEditorInputs.read(reader)]);
+      } else {
+        this.filter.filterToDocumentUri([activeResource.read(reader)].filter(isDefined));
+      }
+      if (this.filterState.isFilteringFor(
+        "@doc"
+        /* TestFilterTerm.CurrentDoc */
+      ) || this.filterState.isFilteringFor(
+        "@openedFiles"
+        /* TestFilterTerm.OpenedFiles */
+      )) {
+        this.tree.refilter();
+      }
+    }));
+    this._register(this.storageService.onWillSaveState(({ reason }) => {
+      if (reason === WillSaveStateReason.SHUTDOWN) {
+        this.lastViewState.store(this.tree.getOptimizedViewState());
+      }
+    }));
+  }
+  /**
+   * Re-layout the tree.
+   */
+  layout(height, width) {
+    this.tree.layout(height, width);
+  }
+  /**
+   * Tries to reveal by extension ID. Queues the request if the extension
+   * ID is not currently available.
+   */
+  revealById(id, expand = true, focus = true) {
+    if (!id) {
+      this.hasPendingReveal = false;
+      return;
+    }
+    const projection = this.ensureProjection();
+    let expandToLevel = 0;
+    const idPath = [...TestId.fromString(id).idsFromRoot()];
+    for (let i = idPath.length - 1; i >= expandToLevel; i--) {
+      const element = projection.getElementByTestId(idPath[i].toString());
+      if (!element || !this.tree.hasElement(element)) {
+        continue;
+      }
+      if (i < idPath.length - 1) {
+        if (expand) {
+          this.tree.expand(element);
+          expandToLevel = i + 1;
+          i = idPath.length - 1;
+          continue;
+        }
+      }
+      let focusTarget = element;
+      for (let n = element; n instanceof TestItemTreeElement; n = n.parent) {
+        if (n.test && this.testService.excluded.contains(n.test)) {
+          this.filterState.toggleFilteringFor("@hidden", true);
+          break;
+        }
+        if (!expand && (this.tree.hasElement(n) && this.tree.isCollapsed(n))) {
+          focusTarget = n;
+        }
+      }
+      this.filterState.reveal.set(void 0, void 0);
+      this.hasPendingReveal = false;
+      if (focus) {
+        this.tree.domFocus();
+      }
+      if (this.tree.getRelativeTop(focusTarget) === null) {
+        this.tree.reveal(focusTarget, 0.5);
+      }
+      this.revealTimeout.value = disposableTimeout(() => {
+        this.tree.setFocus([focusTarget]);
+        this.tree.setSelection([focusTarget]);
+      }, 1);
+      return;
+    }
+    this.hasPendingReveal = true;
+  }
+  /**
+   * Collapse all items in the tree.
+   */
+  async collapseAll() {
+    this.tree.collapseAll();
+  }
+  /**
+   * Tries to peek the first test error, if the item is in a failed state.
+   */
+  tryPeekError(item) {
+    const lookup = item.test && this.testResults.getStateById(item.test.item.extId);
+    return lookup && lookup[1].tasks.some((s) => isFailedState(s.state)) ? this.peekOpener.tryPeekFirstError(lookup[0], lookup[1], { preserveFocus: true }) : false;
+  }
+  onContextMenu(evt) {
+    const element = evt.element;
+    if (!(element instanceof TestItemTreeElement)) {
+      return;
+    }
+    const { actions } = getActionableElementActions(this.contextKeyService, this.menuService, this.testService, this.crService, this.testProfileService, element);
+    this.contextMenuService.showContextMenu({
+      getAnchor: /* @__PURE__ */ __name(() => evt.anchor, "getAnchor"),
+      getActions: /* @__PURE__ */ __name(() => actions.secondary, "getActions"),
+      getActionsContext: /* @__PURE__ */ __name(() => element, "getActionsContext"),
+      actionRunner: this.actionRunner
+    });
+  }
+  handleExecuteKeypress(evt) {
+    const focused = this.tree.getFocus();
+    const selected = this.tree.getSelection();
+    let targeted;
+    if (focused.length === 1 && selected.includes(focused[0])) {
+      evt.browserEvent?.preventDefault();
+      targeted = selected;
+    } else {
+      targeted = focused;
+    }
+    const toRun = targeted.filter((e) => e instanceof TestItemTreeElement);
+    if (toRun.length) {
+      this.testService.runTests({
+        group: 2,
+        tests: toRun.map((t) => t.test)
+      });
+    }
+  }
+  reevaluateWelcomeState() {
+    const shouldShowWelcome = this.testService.collection.busyProviders === 0 && testCollectionIsEmpty(this.testService.collection);
+    const welcomeExperience = shouldShowWelcome ? this.filterState.isFilteringFor(
+      "@doc"
+      /* TestFilterTerm.CurrentDoc */
+    ) ? 2 : 1 : 0;
+    if (welcomeExperience !== this.welcomeExperience) {
+      this.welcomeExperience = welcomeExperience;
+      this.welcomeVisibilityEmitter.fire(welcomeExperience);
+    }
+  }
+  ensureProjection() {
+    return this.projection.value ?? this.updatePreferredProjection();
+  }
+  updatePreferredProjection() {
+    this.projection.clear();
+    const lastState = this.lastViewState.get({});
+    if (this._viewMode.get() === "list") {
+      this.projection.value = this.instantiationService.createInstance(ListProjection, lastState);
+    } else {
+      this.projection.value = this.instantiationService.createInstance(TreeProjection, lastState);
+    }
+    const scheduler = this._register(new RunOnceScheduler(() => this.applyProjectionChanges(), 200));
+    this.projection.value.onUpdate(() => {
+      if (!scheduler.isScheduled()) {
+        scheduler.schedule();
+      }
+    });
+    this.applyProjectionChanges();
+    return this.projection.value;
+  }
+  applyProjectionChanges() {
+    this.reevaluateWelcomeState();
+    this.projection.value?.applyTo(this.tree);
+    this.tree.refilter();
+    if (this.hasPendingReveal) {
+      this.revealById(this.filterState.reveal.get());
+    }
+  }
+  /**
+   * Gets the selected tests from the tree.
+   */
+  getSelectedTests() {
+    return this.tree.getSelection();
+  }
+};
+TestingExplorerViewModel = __decorate([
+  __param(2, IConfigurationService),
+  __param(3, IEditorService),
+  __param(4, IEditorGroupsService),
+  __param(5, IMenuService),
+  __param(6, IContextMenuService),
+  __param(7, ITestService),
+  __param(8, ITestExplorerFilterState),
+  __param(9, IInstantiationService),
+  __param(10, IStorageService),
+  __param(11, IContextKeyService),
+  __param(12, ITestResultService),
+  __param(13, ITestingPeekOpener),
+  __param(14, ITestProfileService),
+  __param(15, ITestingContinuousRunService),
+  __param(16, ICommandService)
+], TestingExplorerViewModel);
+var FilterResult;
+(function(FilterResult2) {
+  FilterResult2[FilterResult2["Exclude"] = 0] = "Exclude";
+  FilterResult2[FilterResult2["Inherit"] = 1] = "Inherit";
+  FilterResult2[FilterResult2["Include"] = 2] = "Include";
+})(FilterResult || (FilterResult = {}));
+const hasNodeInOrParentOfUri = /* @__PURE__ */ __name((collection, ident, testUri, fromNode) => {
+  const queue = [fromNode ? [fromNode] : collection.rootIds];
+  while (queue.length) {
+    for (const id of queue.pop()) {
+      const node = collection.getNodeById(id);
+      if (!node) {
+        continue;
+      }
+      if (!node.item.uri || !ident.extUri.isEqualOrParent(testUri, node.item.uri)) {
+        continue;
+      }
+      if (node.item.range || node.expand === 1) {
+        return true;
+      }
+      queue.push(node.children);
+    }
+  }
+  return false;
+}, "hasNodeInOrParentOfUri");
+let TestsFilter = class TestsFilter2 {
+  static {
+    __name(this, "TestsFilter");
+  }
+  constructor(collection, state, testService, uriIdentityService) {
+    this.collection = collection;
+    this.state = state;
+    this.testService = testService;
+    this.uriIdentityService = uriIdentityService;
+    this.documentUris = [];
+  }
+  /**
+   * @inheritdoc
+   */
+  filter(element) {
+    if (element instanceof TestTreeErrorMessage) {
+      return 1;
+    }
+    if (element.test && !this.state.isFilteringFor(
+      "@hidden"
+      /* TestFilterTerm.Hidden */
+    ) && this.testService.excluded.contains(element.test)) {
+      return 0;
+    }
+    switch (Math.min(this.testFilterText(element), this.testLocation(element), this.testState(element), this.testTags(element))) {
+      case 0:
+        return 0;
+      case 2:
+        this.lastIncludedTests?.add(element);
+        return 1;
+      default:
+        return 2;
+    }
+  }
+  filterToDocumentUri(uris) {
+    this.documentUris = [...uris];
+  }
+  testTags(element) {
+    if (!this.state.includeTags.size && !this.state.excludeTags.size) {
+      return 2;
+    }
+    return (this.state.includeTags.size ? element.test.item.tags.some((t) => this.state.includeTags.has(t)) : true) && element.test.item.tags.every((t) => !this.state.excludeTags.has(t)) ? 2 : 1;
+  }
+  testState(element) {
+    if (this.state.isFilteringFor(
+      "@failed"
+      /* TestFilterTerm.Failed */
+    )) {
+      return isFailedState(element.state) ? 2 : 1;
+    }
+    if (this.state.isFilteringFor(
+      "@executed"
+      /* TestFilterTerm.Executed */
+    )) {
+      return element.state !== 0 ? 2 : 1;
+    }
+    return 2;
+  }
+  testLocation(element) {
+    if (this.documentUris.length === 0) {
+      return 2;
+    }
+    if (!this.state.isFilteringFor(
+      "@doc"
+      /* TestFilterTerm.CurrentDoc */
+    ) && !this.state.isFilteringFor(
+      "@openedFiles"
+      /* TestFilterTerm.OpenedFiles */
+    ) || !(element instanceof TestItemTreeElement)) {
+      return 2;
+    }
+    if (this.documentUris.some((uri) => hasNodeInOrParentOfUri(this.collection, this.uriIdentityService, uri, element.test.item.extId))) {
+      return 2;
+    }
+    return 1;
+  }
+  testFilterText(element) {
+    if (this.state.globList.length === 0) {
+      return 2;
+    }
+    const fuzzy = this.state.fuzzy.value;
+    for (let e = element; e; e = e.parent) {
+      let included = this.state.globList[0].include === false ? 2 : 1;
+      const data = e.test.item.label.toLowerCase();
+      for (const { include, text } of this.state.globList) {
+        if (fuzzy ? fuzzyContains(data, text) : data.includes(text)) {
+          included = include ? 2 : 0;
+        }
+      }
+      if (included !== 1) {
+        return included;
+      }
+    }
+    return 1;
+  }
+};
+TestsFilter = __decorate([
+  __param(1, ITestExplorerFilterState),
+  __param(2, ITestService),
+  __param(3, IUriIdentityService)
+], TestsFilter);
+class TreeSorter {
+  static {
+    __name(this, "TreeSorter");
+  }
+  constructor(viewModel) {
+    this.viewModel = viewModel;
+  }
+  compare(a, b) {
+    if (a instanceof TestTreeErrorMessage || b instanceof TestTreeErrorMessage) {
+      return (a instanceof TestTreeErrorMessage ? -1 : 0) + (b instanceof TestTreeErrorMessage ? 1 : 0);
+    }
+    const durationDelta = (b.duration || 0) - (a.duration || 0);
+    if (this.viewModel.viewSorting === "duration" && durationDelta !== 0) {
+      return durationDelta;
+    }
+    const stateDelta = cmpPriority(a.state, b.state);
+    if (this.viewModel.viewSorting === "status" && stateDelta !== 0) {
+      return stateDelta;
+    }
+    let inSameLocation = false;
+    if (a instanceof TestItemTreeElement && b instanceof TestItemTreeElement && a.test.item.uri && b.test.item.uri && a.test.item.uri.toString() === b.test.item.uri.toString() && a.test.item.range && b.test.item.range) {
+      inSameLocation = true;
+      const delta = a.test.item.range.startLineNumber - b.test.item.range.startLineNumber;
+      if (delta !== 0) {
+        return delta;
+      }
+    }
+    const sa = a.test.item.sortText;
+    const sb = b.test.item.sortText;
+    return inSameLocation && !sa && !sb ? 0 : compareFileNames(sa || a.test.item.label, sb || b.test.item.label);
+  }
+}
+let NoTestsForDocumentWidget = class NoTestsForDocumentWidget2 extends Disposable {
+  static {
+    __name(this, "NoTestsForDocumentWidget");
+  }
+  constructor(container, filterState) {
+    super();
+    const el = this.el = dom.append(container, dom.$(".testing-no-test-placeholder"));
+    const emptyParagraph = dom.append(el, dom.$("p"));
+    emptyParagraph.innerText = localize("testingNoTest", "No tests were found in this file.");
+    const buttonLabel = localize("testingFindExtension", "Show Workspace Tests");
+    const button = this._register(new Button(el, { title: buttonLabel, ...defaultButtonStyles }));
+    button.label = buttonLabel;
+    this._register(button.onDidClick(() => filterState.toggleFilteringFor("@doc", false)));
+  }
+  setVisible(isVisible) {
+    this.el.classList.toggle("visible", isVisible);
+  }
+};
+NoTestsForDocumentWidget = __decorate([
+  __param(1, ITestExplorerFilterState)
+], NoTestsForDocumentWidget);
+class TestExplorerActionRunner extends ActionRunner {
+  static {
+    __name(this, "TestExplorerActionRunner");
+  }
+  constructor(getSelectedTests) {
+    super();
+    this.getSelectedTests = getSelectedTests;
+  }
+  async runAction(action, context) {
+    if (!(action instanceof MenuItemAction)) {
+      return super.runAction(action, context);
+    }
+    const selection = this.getSelectedTests();
+    const contextIsSelected = selection.some((s) => s === context);
+    const actualContext = contextIsSelected ? selection : [context];
+    const actionable = actualContext.filter((t) => t instanceof TestItemTreeElement);
+    await action.run(...actionable);
+  }
+}
+const getLabelForTestTreeElement = /* @__PURE__ */ __name((element) => {
+  let label = labelForTestInState(element.description || element.test.item.label, element.state);
+  if (element instanceof TestItemTreeElement) {
+    if (element.duration !== void 0) {
+      label = localize({
+        key: "testing.treeElementLabelDuration",
+        comment: ["{0} is the original label in testing.treeElementLabel, {1} is a duration"]
+      }, "{0}, in {1}", label, formatDuration(element.duration));
+    }
+    if (element.retired) {
+      label = localize({
+        key: "testing.treeElementLabelOutdated",
+        comment: ["{0} is the original label in testing.treeElementLabel"]
+      }, "{0}, outdated result", label);
+    }
+  }
+  return label;
+}, "getLabelForTestTreeElement");
+class ListAccessibilityProvider {
+  static {
+    __name(this, "ListAccessibilityProvider");
+  }
+  getWidgetAriaLabel() {
+    return localize("testExplorer", "Test Explorer");
+  }
+  getAriaLabel(element) {
+    return element instanceof TestTreeErrorMessage ? element.description : getLabelForTestTreeElement(element);
+  }
+}
+class TreeKeyboardNavigationLabelProvider {
+  static {
+    __name(this, "TreeKeyboardNavigationLabelProvider");
+  }
+  getKeyboardNavigationLabel(element) {
+    return element instanceof TestTreeErrorMessage ? element.message : element.test.item.label;
+  }
+}
+class ListDelegate {
+  static {
+    __name(this, "ListDelegate");
+  }
+  getHeight(element) {
+    return element instanceof TestTreeErrorMessage ? 17 + 10 : 22;
+  }
+  getTemplateId(element) {
+    if (element instanceof TestTreeErrorMessage) {
+      return ErrorRenderer.ID;
+    }
+    return TestItemRenderer.ID;
+  }
+}
+class IdentityProvider {
+  static {
+    __name(this, "IdentityProvider");
+  }
+  getId(element) {
+    return element.treeId;
+  }
+}
+let ErrorRenderer = class ErrorRenderer2 {
+  static {
+    __name(this, "ErrorRenderer");
+  }
+  static {
+    ErrorRenderer_1 = this;
+  }
+  static {
+    this.ID = "error";
+  }
+  constructor(hoverService, instantionService) {
+    this.hoverService = hoverService;
+    this.renderer = instantionService.createInstance(MarkdownRenderer, {});
+  }
+  get templateId() {
+    return ErrorRenderer_1.ID;
+  }
+  renderTemplate(container) {
+    const label = dom.append(container, dom.$(".error"));
+    return { label, disposable: new DisposableStore() };
+  }
+  renderElement({ element }, _, data) {
+    dom.clearNode(data.label);
+    if (typeof element.message === "string") {
+      data.label.innerText = element.message;
+    } else {
+      const result = this.renderer.render(element.message, { inline: true });
+      data.label.appendChild(result.element);
+    }
+    data.disposable.add(this.hoverService.setupManagedHover(getDefaultHoverDelegate("mouse"), data.label, element.description));
+  }
+  disposeTemplate(data) {
+    data.disposable.dispose();
+  }
+};
+ErrorRenderer = ErrorRenderer_1 = __decorate([
+  __param(0, IHoverService),
+  __param(1, IInstantiationService)
+], ErrorRenderer);
+let TestItemRenderer = class TestItemRenderer2 extends Disposable {
+  static {
+    __name(this, "TestItemRenderer");
+  }
+  static {
+    TestItemRenderer_1 = this;
+  }
+  static {
+    this.ID = "testItem";
+  }
+  constructor(actionRunner, menuService, testService, profiles, contextKeyService, instantiationService, crService, hoverService) {
+    super();
+    this.actionRunner = actionRunner;
+    this.menuService = menuService;
+    this.testService = testService;
+    this.profiles = profiles;
+    this.contextKeyService = contextKeyService;
+    this.instantiationService = instantiationService;
+    this.crService = crService;
+    this.hoverService = hoverService;
+    this.templateId = TestItemRenderer_1.ID;
+  }
+  /**
+   * @inheritdoc
+   */
+  renderTemplate(wrapper) {
+    wrapper.classList.add("testing-stdtree-container");
+    const icon = dom.append(wrapper, dom.$(".computed-state"));
+    const label = dom.append(wrapper, dom.$(".label"));
+    const disposable = new DisposableStore();
+    dom.append(wrapper, dom.$(ThemeIcon.asCSSSelector(icons.testingHiddenIcon)));
+    const actionBar = disposable.add(new ActionBar(wrapper, {
+      actionRunner: this.actionRunner,
+      actionViewItemProvider: /* @__PURE__ */ __name((action, options) => action instanceof MenuItemAction ? this.instantiationService.createInstance(MenuEntryActionViewItem, action, { hoverDelegate: options.hoverDelegate }) : void 0, "actionViewItemProvider")
+    }));
+    disposable.add(this.profiles.onDidChange(() => {
+      if (templateData.current) {
+        this.fillActionBar(templateData.current, templateData);
+      }
+    }));
+    disposable.add(this.crService.onDidChange((changed) => {
+      const id = templateData.current?.test.item.extId;
+      if (id && (!changed || changed === id || TestId.isChild(id, changed))) {
+        this.fillActionBar(templateData.current, templateData);
+      }
+    }));
+    const templateData = { wrapper, label, actionBar, icon, elementDisposable: new DisposableStore(), templateDisposable: disposable };
+    return templateData;
+  }
+  /**
+   * @inheritdoc
+   */
+  disposeTemplate(templateData) {
+    templateData.templateDisposable.clear();
+  }
+  /**
+   * @inheritdoc
+   */
+  disposeElement(_element, _, templateData) {
+    templateData.elementDisposable.clear();
+  }
+  fillActionBar(element, data) {
+    const { actions, contextOverlay } = getActionableElementActions(this.contextKeyService, this.menuService, this.testService, this.crService, this.profiles, element);
+    const crSelf = !!contextOverlay.getContextKeyValue(TestingContextKeys.isContinuousModeOn.key);
+    const crChild = !crSelf && this.crService.isEnabledForAChildOf(element.test.item.extId);
+    data.actionBar.domNode.classList.toggle("testing-is-continuous-run", crSelf || crChild);
+    data.actionBar.clear();
+    data.actionBar.context = element;
+    data.actionBar.push(actions.primary, { icon: true, label: false });
+  }
+  /**
+   * @inheritdoc
+   */
+  renderElement(node, _depth, data) {
+    data.elementDisposable.clear();
+    data.current = node.element;
+    data.elementDisposable.add(node.element.onChange(() => this._renderElement(node, data)));
+    this._renderElement(node, data);
+  }
+  _renderElement(node, data) {
+    this.fillActionBar(node.element, data);
+    const testHidden = this.testService.excluded.contains(node.element.test);
+    data.wrapper.classList.toggle("test-is-hidden", testHidden);
+    const icon = icons.testingStatesToIcons.get(node.element.test.expand === 2 || node.element.test.item.busy ? 2 : node.element.state);
+    data.icon.className = "computed-state " + (icon ? ThemeIcon.asClassName(icon) : "");
+    if (node.element.retired) {
+      data.icon.className += " retired";
+    }
+    data.elementDisposable.add(this.hoverService.setupManagedHover(getDefaultHoverDelegate("mouse"), data.label, getLabelForTestTreeElement(node.element)));
+    if (node.element.test.item.label.trim()) {
+      dom.reset(data.label, ...renderLabelWithIcons(node.element.test.item.label));
+    } else {
+      data.label.textContent = String.fromCharCode(160);
+    }
+    let description = node.element.description;
+    if (node.element.duration !== void 0) {
+      description = description ? `${description}: ${formatDuration(node.element.duration)}` : formatDuration(node.element.duration);
+    }
+    if (description) {
+      dom.append(data.label, dom.$("span.test-label-description", {}, description));
+    }
+  }
+};
+TestItemRenderer = TestItemRenderer_1 = __decorate([
+  __param(1, IMenuService),
+  __param(2, ITestService),
+  __param(3, ITestProfileService),
+  __param(4, IContextKeyService),
+  __param(5, IInstantiationService),
+  __param(6, ITestingContinuousRunService),
+  __param(7, IHoverService)
+], TestItemRenderer);
+const formatDuration = /* @__PURE__ */ __name((ms) => {
+  if (ms < 10) {
+    return `${ms.toFixed(1)}ms`;
+  }
+  if (ms < 1e3) {
+    return `${ms.toFixed(0)}ms`;
+  }
+  return `${(ms / 1e3).toFixed(1)}s`;
+}, "formatDuration");
+const getActionableElementActions = /* @__PURE__ */ __name((contextKeyService, menuService, testService, crService, profiles, element) => {
+  const test = element instanceof TestItemTreeElement ? element.test : void 0;
+  const contextKeys = getTestItemContextOverlay(test, test ? profiles.capabilitiesForTest(test.item) : 0);
+  contextKeys.push([
+    "view",
+    "workbench.view.testing"
+    /* Testing.ExplorerViewId */
+  ]);
+  if (test) {
+    const ctrl = testService.getTestController(test.controllerId);
+    const supportsCr = !!ctrl && profiles.getControllerProfiles(ctrl.id).some((p) => p.supportsContinuousRun && canUseProfileWithTest(p, test));
+    contextKeys.push([
+      TestingContextKeys.canRefreshTests.key,
+      ctrl && !!(ctrl.capabilities.get() & 2) && TestId.isRoot(test.item.extId)
+    ], [
+      TestingContextKeys.testItemIsHidden.key,
+      testService.excluded.contains(test)
+    ], [
+      TestingContextKeys.isContinuousModeOn.key,
+      supportsCr && crService.isSpecificallyEnabledFor(test.item.extId)
+    ], [
+      TestingContextKeys.isParentRunningContinuously.key,
+      supportsCr && crService.isEnabledForAParentOf(test.item.extId)
+    ], [
+      TestingContextKeys.supportsContinuousRun.key,
+      supportsCr
+    ], [
+      TestingContextKeys.testResultOutdated.key,
+      element.retired
+    ], [
+      TestingContextKeys.testResultState.key,
+      testResultStateToContextValues[element.state]
+    ]);
+  }
+  const contextOverlay = contextKeyService.createOverlay(contextKeys);
+  const menu = menuService.getMenuActions(MenuId.TestItem, contextOverlay, {
+    shouldForwardArgs: true
+  });
+  const actions = getActionBarActions(menu, "inline");
+  return { actions, contextOverlay };
+}, "getActionableElementActions");
+registerThemingParticipant((theme, collector) => {
+  if (theme.type === "dark") {
+    const foregroundColor = theme.getColor(foreground);
+    if (foregroundColor) {
+      const fgWithOpacity = new Color(new RGBA(foregroundColor.rgba.r, foregroundColor.rgba.g, foregroundColor.rgba.b, 0.65));
+      collector.addRule(`.test-explorer .test-explorer-messages { color: ${fgWithOpacity}; }`);
+    }
+  }
+});
+export {
+  TestingExplorerView
+};
+//# sourceMappingURL=testingExplorerView.js.map

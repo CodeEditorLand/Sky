@@ -1,1 +1,28 @@
-function s(t,n){const r=this;let e,i=!1;return function(){if(i)return e;if(i=!0,n)try{e=t.apply(r,arguments)}finally{n()}else e=t.apply(r,arguments);return e}}export{s as $Cb};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+function createSingleCallFunction(fn, fnDidRunCallback) {
+  const _this = this;
+  let didCall = false;
+  let result;
+  return function() {
+    if (didCall) {
+      return result;
+    }
+    didCall = true;
+    if (fnDidRunCallback) {
+      try {
+        result = fn.apply(_this, arguments);
+      } finally {
+        fnDidRunCallback();
+      }
+    } else {
+      result = fn.apply(_this, arguments);
+    }
+    return result;
+  };
+}
+__name(createSingleCallFunction, "createSingleCallFunction");
+export {
+  createSingleCallFunction
+};
+//# sourceMappingURL=functional.js.map

@@ -1,1 +1,92 @@
-import{localize as r}from"../../../../nls.js";import{$$c as s}from"../../../../base/common/types.js";import{applyTextEditorOptions as n}from"../../../common/editor/editorOptions.js";import{$Vn as o}from"../../../../platform/contextkey/common/contextkey.js";import{$dh as u}from"../../../../base/common/resources.js";import{$Zdb as a}from"../../../../editor/browser/widget/codeEditor/codeEditorWidget.js";import{$qGb as h}from"./textEditor.js";class $ extends h{constructor(){super(...arguments),this.a=void 0}get scopedContextKeyService(){return this.a?.invokeWithinContext(t=>t.get(o))}getTitle(){return this.input?this.input.getName():r(3762,null)}Lb(t,e){this.a=this.B(this.m.createInstance(a,t,e,this.Sb()))}Sb(){return Object.create(null)}Mb(t){this.a?.updateOptions(t)}Nb(){return this.a}getControl(){return this.a}mb(t){if(!this.a)return;const e=this.a.getModel();if(!e)return;const i=e.uri;if(i&&u(i,t))return this.a.saveViewState()??void 0}setOptions(t){super.setOptions(t),t&&n(t,s(this.a),0)}focus(){super.focus(),this.a?.focus()}hasFocus(){return this.a?.hasTextFocus()||super.hasFocus()}Z(t){super.Z(t),t?this.a?.onVisible():this.a?.onHide()}layout(t){this.a?.layout(t)}}export{$ as $k4b};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { localize } from "../../../../nls.js";
+import { assertReturnsDefined } from "../../../../base/common/types.js";
+import { applyTextEditorOptions } from "../../../common/editor/editorOptions.js";
+import { IContextKeyService } from "../../../../platform/contextkey/common/contextkey.js";
+import { isEqual } from "../../../../base/common/resources.js";
+import { CodeEditorWidget } from "../../../../editor/browser/widget/codeEditor/codeEditorWidget.js";
+import { AbstractTextEditor } from "./textEditor.js";
+class AbstractTextCodeEditor extends AbstractTextEditor {
+  static {
+    __name(this, "AbstractTextCodeEditor");
+  }
+  constructor() {
+    super(...arguments);
+    this.editorControl = void 0;
+  }
+  get scopedContextKeyService() {
+    return this.editorControl?.invokeWithinContext((accessor) => accessor.get(IContextKeyService));
+  }
+  getTitle() {
+    if (this.input) {
+      return this.input.getName();
+    }
+    return localize("textEditor", "Text Editor");
+  }
+  createEditorControl(parent, initialOptions) {
+    this.editorControl = this._register(this.instantiationService.createInstance(CodeEditorWidget, parent, initialOptions, this.getCodeEditorWidgetOptions()));
+  }
+  getCodeEditorWidgetOptions() {
+    return /* @__PURE__ */ Object.create(null);
+  }
+  updateEditorControlOptions(options) {
+    this.editorControl?.updateOptions(options);
+  }
+  getMainControl() {
+    return this.editorControl;
+  }
+  getControl() {
+    return this.editorControl;
+  }
+  computeEditorViewState(resource) {
+    if (!this.editorControl) {
+      return void 0;
+    }
+    const model = this.editorControl.getModel();
+    if (!model) {
+      return void 0;
+    }
+    const modelUri = model.uri;
+    if (!modelUri) {
+      return void 0;
+    }
+    if (!isEqual(modelUri, resource)) {
+      return void 0;
+    }
+    return this.editorControl.saveViewState() ?? void 0;
+  }
+  setOptions(options) {
+    super.setOptions(options);
+    if (options) {
+      applyTextEditorOptions(
+        options,
+        assertReturnsDefined(this.editorControl),
+        0
+        /* ScrollType.Smooth */
+      );
+    }
+  }
+  focus() {
+    super.focus();
+    this.editorControl?.focus();
+  }
+  hasFocus() {
+    return this.editorControl?.hasTextFocus() || super.hasFocus();
+  }
+  setEditorVisible(visible) {
+    super.setEditorVisible(visible);
+    if (visible) {
+      this.editorControl?.onVisible();
+    } else {
+      this.editorControl?.onHide();
+    }
+  }
+  layout(dimension) {
+    this.editorControl?.layout(dimension);
+  }
+}
+export {
+  AbstractTextCodeEditor
+};
+//# sourceMappingURL=textCodeEditor.js.map

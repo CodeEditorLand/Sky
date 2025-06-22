@@ -1,1 +1,101 @@
-import{$oY as f}from"./extHost.protocol.js";import{$nj as l}from"../../../platform/instantiation/common/instantiation.js";import{$vd as p,$ud as k,$td as u}from"../../../base/common/lifecycle.js";import{$i2 as m}from"./extHostRpcService.js";import{$Ji as $}from"../../../base/common/buffer.js";var d=function(i,e,t,o){var c=arguments.length,s=c<3?e:o===null?o=Object.getOwnPropertyDescriptor(e,t):o,a;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")s=Reflect.decorate(i,e,t,o);else for(var n=i.length-1;n>=0;n--)(a=i[n])&&(s=(c<3?a(s):c>3?a(e,t,s):a(e,t))||s);return c>3&&s&&Object.defineProperty(e,t,s),s},h=function(i,e){return function(t,o){e(t,o,i)}};const _=l("IExtHostManagedSockets");let r=class{constructor(e){this.b=0,this.c=null,this.d=new Map,this.a=e.getProxy(f.MainThreadManagedSockets)}setFactory(e,t){for(const o of this.d.values())o.dispose();this.c&&this.a.$unregisterSocketFactory(this.c.socketFactoryId),this.c=new g(e,t),this.a.$registerSocketFactory(this.c.socketFactoryId)}async $openRemoteSocket(e){if(!this.c||this.c.socketFactoryId!==e)throw new Error(`No socket factory with id ${e}`);const t=++this.b,o=await this.c.makeConnection(),c=new k;return this.d.set(t,new S(t,o,c)),c.add(u(()=>this.d.delete(t))),c.add(o.onDidEnd(()=>{this.a.$onDidManagedSocketEnd(t),c.dispose()})),c.add(o.onDidClose(s=>{this.a.$onDidManagedSocketClose(t,s?.stack??s?.message),c.dispose()})),c.add(o.onDidReceiveMessage(s=>this.a.$onDidManagedSocketHaveData(t,$.wrap(s)))),t}$remoteSocketWrite(e,t){this.d.get(e)?.actual.send(t.buffer)}$remoteSocketEnd(e){const t=this.d.get(e);t&&(t.actual.end(),t.dispose())}async $remoteSocketDrain(e){await this.d.get(e)?.actual.drain?.()}};r=d([h(0,m)],r);class g{constructor(e,t){this.socketFactoryId=e,this.makeConnection=t}}class S extends p{constructor(e,t,o){super(),this.socketId=e,this.actual=t,this.B(o)}}export{_ as $jLc,r as $kLc};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { MainContext } from "./extHost.protocol.js";
+import { createDecorator } from "../../../platform/instantiation/common/instantiation.js";
+import { Disposable, DisposableStore, toDisposable } from "../../../base/common/lifecycle.js";
+import { IExtHostRpcService } from "./extHostRpcService.js";
+import { VSBuffer } from "../../../base/common/buffer.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+const IExtHostManagedSockets = createDecorator("IExtHostManagedSockets");
+let ExtHostManagedSockets = class ExtHostManagedSockets2 {
+  static {
+    __name(this, "ExtHostManagedSockets");
+  }
+  constructor(extHostRpc) {
+    this._remoteSocketIdCounter = 0;
+    this._factory = null;
+    this._managedRemoteSockets = /* @__PURE__ */ new Map();
+    this._proxy = extHostRpc.getProxy(MainContext.MainThreadManagedSockets);
+  }
+  setFactory(socketFactoryId, makeConnection) {
+    for (const socket of this._managedRemoteSockets.values()) {
+      socket.dispose();
+    }
+    if (this._factory) {
+      this._proxy.$unregisterSocketFactory(this._factory.socketFactoryId);
+    }
+    this._factory = new ManagedSocketFactory(socketFactoryId, makeConnection);
+    this._proxy.$registerSocketFactory(this._factory.socketFactoryId);
+  }
+  async $openRemoteSocket(socketFactoryId) {
+    if (!this._factory || this._factory.socketFactoryId !== socketFactoryId) {
+      throw new Error(`No socket factory with id ${socketFactoryId}`);
+    }
+    const id = ++this._remoteSocketIdCounter;
+    const socket = await this._factory.makeConnection();
+    const disposable = new DisposableStore();
+    this._managedRemoteSockets.set(id, new ManagedSocket(id, socket, disposable));
+    disposable.add(toDisposable(() => this._managedRemoteSockets.delete(id)));
+    disposable.add(socket.onDidEnd(() => {
+      this._proxy.$onDidManagedSocketEnd(id);
+      disposable.dispose();
+    }));
+    disposable.add(socket.onDidClose((e) => {
+      this._proxy.$onDidManagedSocketClose(id, e?.stack ?? e?.message);
+      disposable.dispose();
+    }));
+    disposable.add(socket.onDidReceiveMessage((e) => this._proxy.$onDidManagedSocketHaveData(id, VSBuffer.wrap(e))));
+    return id;
+  }
+  $remoteSocketWrite(socketId, buffer) {
+    this._managedRemoteSockets.get(socketId)?.actual.send(buffer.buffer);
+  }
+  $remoteSocketEnd(socketId) {
+    const socket = this._managedRemoteSockets.get(socketId);
+    if (socket) {
+      socket.actual.end();
+      socket.dispose();
+    }
+  }
+  async $remoteSocketDrain(socketId) {
+    await this._managedRemoteSockets.get(socketId)?.actual.drain?.();
+  }
+};
+ExtHostManagedSockets = __decorate([
+  __param(0, IExtHostRpcService)
+], ExtHostManagedSockets);
+class ManagedSocketFactory {
+  static {
+    __name(this, "ManagedSocketFactory");
+  }
+  constructor(socketFactoryId, makeConnection) {
+    this.socketFactoryId = socketFactoryId;
+    this.makeConnection = makeConnection;
+  }
+}
+class ManagedSocket extends Disposable {
+  static {
+    __name(this, "ManagedSocket");
+  }
+  constructor(socketId, actual, disposer) {
+    super();
+    this.socketId = socketId;
+    this.actual = actual;
+    this._register(disposer);
+  }
+}
+export {
+  ExtHostManagedSockets,
+  IExtHostManagedSockets
+};
+//# sourceMappingURL=extHostManagedSockets.js.map

@@ -1,1 +1,522 @@
-import{$0h as X,$vh as W}from"../../../../../base/common/async.js";import{$pf as Y}from"../../../../../base/common/cancellation.js";import{$Mj as G}from"../../../../../base/common/codicons.js";import{$ud as Z,$td as _}from"../../../../../base/common/lifecycle.js";import{Schemas as d}from"../../../../../base/common/network.js";import{autorun as j,observableValue as ee}from"../../../../../base/common/observable.js";import{ThemeIcon as te}from"../../../../../base/common/themables.js";import{$1c as R}from"../../../../../base/common/types.js";import{URI as M}from"../../../../../base/common/uri.js";import{$cC as E}from"../../../../../editor/common/core/range.js";import{$cF as oe}from"../../../../../editor/common/services/resolverService.js";import{$kfc as ne}from"../../../../../editor/contrib/quickAccess/browser/gotoSymbolQuickAccess.js";import{localize as L,localize2 as $}from"../../../../../nls.js";import{$iI as w,$dI as v,$jI as x}from"../../../../../platform/actions/common/actions.js";import{$Yn as re}from"../../../../../platform/commands/common/commands.js";import{$Bn as h,$Vn as ie}from"../../../../../platform/contextkey/common/contextkey.js";import{$5j as ae}from"../../../../../platform/files/common/files.js";import{$mj as I}from"../../../../../platform/instantiation/common/instantiation.js";import{$ux as ce}from"../../../../../platform/keybinding/common/keybinding.js";import{$3n as se}from"../../../../../platform/log/common/log.js";import{$OM as ue}from"../../../../../platform/quickinput/common/quickInput.js";import{$kO as f}from"../../../../common/contextkeys.js";import{$sK as U,SideBySideEditor as O}from"../../../../common/editor.js";import{$oI as B}from"../../../../services/editor/common/editorService.js";import{$Jwb as de}from"../../../../services/views/common/viewsService.js";import{$mFb as V}from"../../../files/common/files.js";import{$pfc as le}from"../../../search/browser/anythingQuickAccess.js";import{$0ac as H,$$ac as me}from"../../../search/browser/searchTreeModel/searchTreeCommon.js";import{$3cc as fe}from"../../../search/browser/symbolsQuickAccess.js";import{$lZb as F}from"../../../search/common/constants.js";import{ChatContextKeys as p}from"../../common/chatContextKeys.js";import{ChatAgentLocation as z}from"../../common/constants.js";import{$lWb as K,$oWb as he,$mWb as pe}from"../chat.js";import{$Jac as ge,$Hac as be}from"../chatContextPickService.js";import{$NQb as Se}from"../chatWidget.js";import{$2zb as ve}from"../imageUtils.js";import{$vfc as ye}from"../promptSyntax/promptFileActions.js";import{$VDb as C}from"./chatActions.js";function ut(){x(Ce),x(q),x(P),x(T),x(N),ye()}async function A(l){const n=l.get(de),t=l.get(K);return t.lastFocusedWidget?t.lastFocusedWidget:pe(n)}class Q extends w{async run(n,...t){const s=n.get(I),e=await s.invokeFunction(A);if(e)return s.invokeFunction(this.runWithWidget.bind(this),e,...t)}a(n,...t){const s=n.get(B),e=Array.isArray(t[1])?t[1]:[t[0]],r=[];for(const i of e){let a;M.isUri(i)?a=i:H(i)?a=i.resource:me(i)?a=i.parent().resource:!i&&s.activeTextEditorControl&&(a=U.getCanonicalUri(s.activeEditor,{supportSideBySide:O.PRIMARY})),a&&[d.file,d.vscodeRemote,d.untitled].includes(a.scheme)&&r.push(a)}return r}}class q extends Q{static{this.ID="workbench.action.chat.attachFile"}constructor(){super({id:q.ID,title:$(4948,"Add File to Chat"),category:C,f1:!0,menu:[{id:v.SearchContext,group:"z_chat",order:1,when:h.and(p.enabled,F.FileMatchOrMatchFocusKey,F.SearchResultHeaderFocused.negate())},{id:v.ChatExplorerMenu,group:"zContext",order:1,when:h.and(p.enabled,V.negate(),h.or(f.Scheme.isEqualTo(d.file),f.Scheme.isEqualTo(d.vscodeRemote)))},{id:v.ChatTextEditorMenu,group:"zContext",order:2,when:h.and(p.enabled,h.or(f.Scheme.isEqualTo(d.file),f.Scheme.isEqualTo(d.vscodeRemote),f.Scheme.isEqualTo(d.untitled),f.Scheme.isEqualTo(d.vscodeUserData)))}]})}async runWithWidget(n,t,...s){const e=this.a(n,...s);if(e.length&&t){t.focusInput();for(const r of e)t.attachmentModel.addFile(r)}}}class P extends Q{static{this.ID="workbench.action.chat.attachFolder"}constructor(){super({id:P.ID,title:$(4949,"Add Folder to Chat"),category:C,f1:!1,menu:{id:v.ChatExplorerMenu,group:"zContext",order:1,when:h.and(p.enabled,V,h.or(f.Scheme.isEqualTo(d.file),f.Scheme.isEqualTo(d.vscodeRemote)))}})}async runWithWidget(n,t,...s){const e=this.a(n,...s);if(e.length&&t){t.focusInput();for(const r of e)t.attachmentModel.addFolder(r)}}}class T extends w{static{this.ID="workbench.action.chat.attachSelection"}constructor(){super({id:T.ID,title:$(4950,"Add Selection to Chat"),category:C,f1:!0,menu:{id:v.ChatTextEditorMenu,group:"zContext",order:1,when:h.and(p.enabled,h.or(f.Scheme.isEqualTo(d.file),f.Scheme.isEqualTo(d.vscodeRemote),f.Scheme.isEqualTo(d.untitled),f.Scheme.isEqualTo(d.vscodeUserData)))}})}async run(n,...t){const s=n.get(B),e=await n.get(I).invokeFunction(A);if(!e)return;const[r,i]=t;if(i&&i.length>0){const a=new Map;for(const u of i)if(H(u))a.set(u.resource,void 0);else{const c={uri:u._parent.resource,range:u._range},o=a.get(c.uri);(!o||o.startLineNumber!==c.range.startLineNumber&&o.endLineNumber!==c.range.endLineNumber)&&(a.set(c.uri,c.range),e.attachmentModel.addFile(c.uri,c.range))}for(const u of a){const[c,o]=u;o||e.attachmentModel.addFile(c)}}else{const a=s.activeTextEditorControl,u=U.getCanonicalUri(s.activeEditor,{supportSideBySide:O.PRIMARY});if(a&&u&&[d.file,d.vscodeRemote,d.untitled].includes(u.scheme)){const c=a.getSelection();if(c){e.focusInput();const o=c.isEmpty()?new E(c.startLineNumber,1,c.startLineNumber+1,1):c;e.attachmentModel.addFile(u,o)}}}}}class N extends w{static{this.a="searchResults"}constructor(){super({id:"workbench.action.chat.insertSearchResults",title:$(4951,"Add Search Results to Chat"),category:C,f1:!1,menu:[{id:v.SearchContext,group:"z_chat",order:3,when:h.and(p.enabled,F.SearchResultHeaderFocused)}]})}async run(n){const t=n.get(se),s=await n.get(I).invokeFunction(A);if(!s){t.trace("InsertSearchResultAction: no chat view available");return}const e=s.inputEditor,r=e.getSelection()??e.getModel()?.getFullModelRange().collapseToEnd();if(!r){t.trace("InsertSearchResultAction: no selection");return}let i=`#${N.a}`;const a=new E(r.startLineNumber,r.startColumn,r.endLineNumber,r.startLineNumber+i.length),u=e.getModel();if(u&&u.getValueInRange(new E(r.startLineNumber,r.startColumn-1,r.startLineNumber,r.startColumn))!==" "&&(i=" "+i),!e.executeEdits("chatInsertSearch",[{range:a,text:i+" "}])){t.trace(`InsertSearchResultAction: failed to insert "${i}"`);return}}}function xe(l){return R(l)&&typeof l.kind=="string"&&l.kind==="contextPick"}function Ie(l){return R(l)&&typeof l.symbolName=="string"&&!!l.uri&&!!l.range}function $e(l){return R(l)&&M.isUri(l.resource)}class Ce extends w{constructor(){super({id:"workbench.action.chat.attachContext",title:$(4952,"Add Context..."),icon:G.attach,category:C,keybinding:{when:h.and(p.inChatInput,p.location.isEqualTo(z.Panel)),primary:2138,weight:100},menu:{when:p.location.isEqualTo(z.Panel),id:v.ChatInputAttachmentToolbar,group:"navigation",order:3}})}async run(n,...t){const s=n.get(I),e=n.get(K),r=n.get(ie),i=n.get(ce),a=n.get(ge),u=t[0],c=u?.widget??e.lastFocusedWidget;if(!c)return;const o=[];for(const m of a.items)m.isEnabled&&!await m.isEnabled(c)||o.push({kind:"contextPick",item:m,label:m.label,iconClass:te.asClassName(m.icon),keybinding:m.commandId?i.lookupKeybinding(m.commandId,r):void 0});s.invokeFunction(this.a.bind(this),c,o,u?.placeholder)}a(n,t,s,e){const r=n.get(ue),i=n.get(he),a=n.get(I),u=n.get(re),c={additionPicks:s,handleAccept:async(o,m)=>{if(xe(o)){let g=!0;if(o.item.type==="valuePick"?this.c(o.item,t):o.item.type==="pickerPick"&&(g=await this.d(r,u,o.item,t)),!g){a.invokeFunction(this.a.bind(this),t,s,e);return}}else a.invokeFunction(this.b.bind(this),t,m,o);Se(t)&&i.open()}};r.quickAccess.show("",{enabledProviderPrefixes:[le.PREFIX,fe.PREFIX,ne.PREFIX],placeholder:e??L(4946,null),providerOptions:c})}async b(n,t,s,e){const r=n.get(ae),i=n.get(oe),a=[];if($e(e)&&e.resource)if(/\.(png|jpg|jpeg|bmp|gif|tiff)$/i.test(e.resource.path)){if(M.isUri(e.resource)){const u=await r.readFile(e.resource),c=await ve(u.value.buffer);a.push({id:e.resource.toString(),name:e.label,fullName:e.label,value:c,kind:"image",references:[{reference:e.resource,kind:"reference"}]})}}else{let u=0;try{(await i.createModelReference(e.resource)).dispose()}catch{u=2}a.push({kind:"file",id:e.resource.toString(),value:e.resource,name:e.label,omittedState:u})}else Ie(e)&&e.uri&&e.range&&a.push({kind:"generic",id:JSON.stringify({uri:e.uri,range:e.range.decoration}),value:{uri:e.uri,range:e.range.decoration},fullName:e.label,name:e.symbolName});t.attachmentModel.addContext(...a),s||t.focusInput()}async c(n,t){const s=await n.asAttachment(t);Array.isArray(s)?t.attachmentModel.addContext(...s):s&&t.attachmentModel.addContext(s)}async d(n,t,s,e){const r=s.asPicker(e),i=new Z,a={label:L(4947,null),alwaysShow:!0},u=r.configure?{label:r.configure.label,commandId:r.configure.commandId,alwaysShow:!0}:void 0,c=[{type:"separator"}];u&&c.push(u),c.push(a);const o=i.add(n.createQuickPick({useSeparators:!0})),m=new Y;if(i.add(o.onDidHide(()=>m.cancel())),i.add(_(()=>m.dispose(!0))),o.placeholder=r.placeholder,o.matchOnDescription=!0,o.matchOnDetail=!0,o.canAcceptInBackground=!0,o.busy=!0,o.show(),W(r.picks)){const b=await r.picks.then(S=>[].concat(S,c));o.items=b,o.busy=!1}else{const b=ee("attachContext.query",o.value);i.add(o.onDidChangeValue(()=>b.set(o.value,void 0)));const S=r.picks(b,m.token);i.add(j(y=>{const{busy:k,picks:J}=S.read(y);o.items=[].concat(J,c),o.busy=k}))}if(m.token.isCancellationRequested)return!0;const g=new X,D=[];i.add(o.onDidAccept(b=>{const[S]=o.selectedItems;if(be(S)){const y=S.asAttachment();W(y)?D.push(y.then(k=>e.attachmentModel.addContext(k))):e.attachmentModel.addContext(y)}S===a&&g.complete(!1),S===u&&(g.complete(!0),t.executeCommand(u.commandId)),b.inBackground||g.complete(!0)})),i.add(o.onDidHide(()=>{g.complete(!0)}));try{const b=await g.p;return o.busy=!0,await Promise.all(D),b}finally{i.dispose()}}}export{ut as $wfc,N as $xfc,Ce as $yfc};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { DeferredPromise, isThenable } from "../../../../../base/common/async.js";
+import { CancellationTokenSource } from "../../../../../base/common/cancellation.js";
+import { Codicon } from "../../../../../base/common/codicons.js";
+import { DisposableStore, toDisposable } from "../../../../../base/common/lifecycle.js";
+import { Schemas } from "../../../../../base/common/network.js";
+import { autorun, observableValue } from "../../../../../base/common/observable.js";
+import { ThemeIcon } from "../../../../../base/common/themables.js";
+import { isObject } from "../../../../../base/common/types.js";
+import { URI } from "../../../../../base/common/uri.js";
+import { Range } from "../../../../../editor/common/core/range.js";
+import { ITextModelService } from "../../../../../editor/common/services/resolverService.js";
+import { AbstractGotoSymbolQuickAccessProvider } from "../../../../../editor/contrib/quickAccess/browser/gotoSymbolQuickAccess.js";
+import { localize, localize2 } from "../../../../../nls.js";
+import { Action2, MenuId, registerAction2 } from "../../../../../platform/actions/common/actions.js";
+import { ICommandService } from "../../../../../platform/commands/common/commands.js";
+import { ContextKeyExpr, IContextKeyService } from "../../../../../platform/contextkey/common/contextkey.js";
+import { IFileService } from "../../../../../platform/files/common/files.js";
+import { IInstantiationService } from "../../../../../platform/instantiation/common/instantiation.js";
+import { IKeybindingService } from "../../../../../platform/keybinding/common/keybinding.js";
+import { ILogService } from "../../../../../platform/log/common/log.js";
+import { IQuickInputService } from "../../../../../platform/quickinput/common/quickInput.js";
+import { ResourceContextKey } from "../../../../common/contextkeys.js";
+import { EditorResourceAccessor, SideBySideEditor } from "../../../../common/editor.js";
+import { IEditorService } from "../../../../services/editor/common/editorService.js";
+import { IViewsService } from "../../../../services/views/common/viewsService.js";
+import { ExplorerFolderContext } from "../../../files/common/files.js";
+import { AnythingQuickAccessProvider } from "../../../search/browser/anythingQuickAccess.js";
+import { isSearchTreeFileMatch, isSearchTreeMatch } from "../../../search/browser/searchTreeModel/searchTreeCommon.js";
+import { SymbolsQuickAccessProvider } from "../../../search/browser/symbolsQuickAccess.js";
+import { SearchContext } from "../../../search/common/constants.js";
+import { ChatContextKeys } from "../../common/chatContextKeys.js";
+import { ChatAgentLocation } from "../../common/constants.js";
+import { IChatWidgetService, IQuickChatService, showChatView } from "../chat.js";
+import { IChatContextPickService, isChatContextPickerPickItem } from "../chatContextPickService.js";
+import { isQuickChat } from "../chatWidget.js";
+import { resizeImage } from "../imageUtils.js";
+import { registerPromptActions } from "../promptSyntax/promptFileActions.js";
+import { CHAT_CATEGORY } from "./chatActions.js";
+function registerChatContextActions() {
+  registerAction2(AttachContextAction);
+  registerAction2(AttachFileToChatAction);
+  registerAction2(AttachFolderToChatAction);
+  registerAction2(AttachSelectionToChatAction);
+  registerAction2(AttachSearchResultAction);
+  registerPromptActions();
+}
+__name(registerChatContextActions, "registerChatContextActions");
+async function withChatView(accessor) {
+  const viewsService = accessor.get(IViewsService);
+  const chatWidgetService = accessor.get(IChatWidgetService);
+  if (chatWidgetService.lastFocusedWidget) {
+    return chatWidgetService.lastFocusedWidget;
+  }
+  return showChatView(viewsService);
+}
+__name(withChatView, "withChatView");
+class AttachResourceAction extends Action2 {
+  static {
+    __name(this, "AttachResourceAction");
+  }
+  async run(accessor, ...args) {
+    const instaService = accessor.get(IInstantiationService);
+    const widget = await instaService.invokeFunction(withChatView);
+    if (!widget) {
+      return;
+    }
+    return instaService.invokeFunction(this.runWithWidget.bind(this), widget, ...args);
+  }
+  _getResources(accessor, ...args) {
+    const editorService = accessor.get(IEditorService);
+    const contexts = Array.isArray(args[1]) ? args[1] : [args[0]];
+    const files = [];
+    for (const context of contexts) {
+      let uri;
+      if (URI.isUri(context)) {
+        uri = context;
+      } else if (isSearchTreeFileMatch(context)) {
+        uri = context.resource;
+      } else if (isSearchTreeMatch(context)) {
+        uri = context.parent().resource;
+      } else if (!context && editorService.activeTextEditorControl) {
+        uri = EditorResourceAccessor.getCanonicalUri(editorService.activeEditor, { supportSideBySide: SideBySideEditor.PRIMARY });
+      }
+      if (uri && [Schemas.file, Schemas.vscodeRemote, Schemas.untitled].includes(uri.scheme)) {
+        files.push(uri);
+      }
+    }
+    return files;
+  }
+}
+class AttachFileToChatAction extends AttachResourceAction {
+  static {
+    __name(this, "AttachFileToChatAction");
+  }
+  static {
+    this.ID = "workbench.action.chat.attachFile";
+  }
+  constructor() {
+    super({
+      id: AttachFileToChatAction.ID,
+      title: localize2("workbench.action.chat.attachFile.label", "Add File to Chat"),
+      category: CHAT_CATEGORY,
+      f1: true,
+      menu: [{
+        id: MenuId.SearchContext,
+        group: "z_chat",
+        order: 1,
+        when: ContextKeyExpr.and(ChatContextKeys.enabled, SearchContext.FileMatchOrMatchFocusKey, SearchContext.SearchResultHeaderFocused.negate())
+      }, {
+        id: MenuId.ChatExplorerMenu,
+        group: "zContext",
+        order: 1,
+        when: ContextKeyExpr.and(ChatContextKeys.enabled, ExplorerFolderContext.negate(), ContextKeyExpr.or(ResourceContextKey.Scheme.isEqualTo(Schemas.file), ResourceContextKey.Scheme.isEqualTo(Schemas.vscodeRemote)))
+      }, {
+        id: MenuId.ChatTextEditorMenu,
+        group: "zContext",
+        order: 2,
+        when: ContextKeyExpr.and(ChatContextKeys.enabled, ContextKeyExpr.or(ResourceContextKey.Scheme.isEqualTo(Schemas.file), ResourceContextKey.Scheme.isEqualTo(Schemas.vscodeRemote), ResourceContextKey.Scheme.isEqualTo(Schemas.untitled), ResourceContextKey.Scheme.isEqualTo(Schemas.vscodeUserData)))
+      }]
+    });
+  }
+  async runWithWidget(accessor, widget, ...args) {
+    const files = this._getResources(accessor, ...args);
+    if (!files.length) {
+      return;
+    }
+    if (widget) {
+      widget.focusInput();
+      for (const file of files) {
+        widget.attachmentModel.addFile(file);
+      }
+    }
+  }
+}
+class AttachFolderToChatAction extends AttachResourceAction {
+  static {
+    __name(this, "AttachFolderToChatAction");
+  }
+  static {
+    this.ID = "workbench.action.chat.attachFolder";
+  }
+  constructor() {
+    super({
+      id: AttachFolderToChatAction.ID,
+      title: localize2("workbench.action.chat.attachFolder.label", "Add Folder to Chat"),
+      category: CHAT_CATEGORY,
+      f1: false,
+      menu: {
+        id: MenuId.ChatExplorerMenu,
+        group: "zContext",
+        order: 1,
+        when: ContextKeyExpr.and(ChatContextKeys.enabled, ExplorerFolderContext, ContextKeyExpr.or(ResourceContextKey.Scheme.isEqualTo(Schemas.file), ResourceContextKey.Scheme.isEqualTo(Schemas.vscodeRemote)))
+      }
+    });
+  }
+  async runWithWidget(accessor, widget, ...args) {
+    const folders = this._getResources(accessor, ...args);
+    if (!folders.length) {
+      return;
+    }
+    if (widget) {
+      widget.focusInput();
+      for (const folder of folders) {
+        widget.attachmentModel.addFolder(folder);
+      }
+    }
+  }
+}
+class AttachSelectionToChatAction extends Action2 {
+  static {
+    __name(this, "AttachSelectionToChatAction");
+  }
+  static {
+    this.ID = "workbench.action.chat.attachSelection";
+  }
+  constructor() {
+    super({
+      id: AttachSelectionToChatAction.ID,
+      title: localize2("workbench.action.chat.attachSelection.label", "Add Selection to Chat"),
+      category: CHAT_CATEGORY,
+      f1: true,
+      menu: {
+        id: MenuId.ChatTextEditorMenu,
+        group: "zContext",
+        order: 1,
+        when: ContextKeyExpr.and(ChatContextKeys.enabled, ContextKeyExpr.or(ResourceContextKey.Scheme.isEqualTo(Schemas.file), ResourceContextKey.Scheme.isEqualTo(Schemas.vscodeRemote), ResourceContextKey.Scheme.isEqualTo(Schemas.untitled), ResourceContextKey.Scheme.isEqualTo(Schemas.vscodeUserData)))
+      }
+    });
+  }
+  async run(accessor, ...args) {
+    const editorService = accessor.get(IEditorService);
+    const widget = await accessor.get(IInstantiationService).invokeFunction(withChatView);
+    if (!widget) {
+      return;
+    }
+    const [_, matches] = args;
+    if (matches && matches.length > 0) {
+      const uris = /* @__PURE__ */ new Map();
+      for (const match of matches) {
+        if (isSearchTreeFileMatch(match)) {
+          uris.set(match.resource, void 0);
+        } else {
+          const context = { uri: match._parent.resource, range: match._range };
+          const range = uris.get(context.uri);
+          if (!range || range.startLineNumber !== context.range.startLineNumber && range.endLineNumber !== context.range.endLineNumber) {
+            uris.set(context.uri, context.range);
+            widget.attachmentModel.addFile(context.uri, context.range);
+          }
+        }
+      }
+      for (const uri of uris) {
+        const [resource, range] = uri;
+        if (!range) {
+          widget.attachmentModel.addFile(resource);
+        }
+      }
+    } else {
+      const activeEditor = editorService.activeTextEditorControl;
+      const activeUri = EditorResourceAccessor.getCanonicalUri(editorService.activeEditor, { supportSideBySide: SideBySideEditor.PRIMARY });
+      if (activeEditor && activeUri && [Schemas.file, Schemas.vscodeRemote, Schemas.untitled].includes(activeUri.scheme)) {
+        const selection = activeEditor.getSelection();
+        if (selection) {
+          widget.focusInput();
+          const range = selection.isEmpty() ? new Range(selection.startLineNumber, 1, selection.startLineNumber + 1, 1) : selection;
+          widget.attachmentModel.addFile(activeUri, range);
+        }
+      }
+    }
+  }
+}
+class AttachSearchResultAction extends Action2 {
+  static {
+    __name(this, "AttachSearchResultAction");
+  }
+  static {
+    this.Name = "searchResults";
+  }
+  constructor() {
+    super({
+      id: "workbench.action.chat.insertSearchResults",
+      title: localize2("chat.insertSearchResults", "Add Search Results to Chat"),
+      category: CHAT_CATEGORY,
+      f1: false,
+      menu: [{
+        id: MenuId.SearchContext,
+        group: "z_chat",
+        order: 3,
+        when: ContextKeyExpr.and(ChatContextKeys.enabled, SearchContext.SearchResultHeaderFocused)
+      }]
+    });
+  }
+  async run(accessor) {
+    const logService = accessor.get(ILogService);
+    const widget = await accessor.get(IInstantiationService).invokeFunction(withChatView);
+    if (!widget) {
+      logService.trace("InsertSearchResultAction: no chat view available");
+      return;
+    }
+    const editor = widget.inputEditor;
+    const originalRange = editor.getSelection() ?? editor.getModel()?.getFullModelRange().collapseToEnd();
+    if (!originalRange) {
+      logService.trace("InsertSearchResultAction: no selection");
+      return;
+    }
+    let insertText = `#${AttachSearchResultAction.Name}`;
+    const varRange = new Range(originalRange.startLineNumber, originalRange.startColumn, originalRange.endLineNumber, originalRange.startLineNumber + insertText.length);
+    const model = editor.getModel();
+    if (model && model.getValueInRange(new Range(originalRange.startLineNumber, originalRange.startColumn - 1, originalRange.startLineNumber, originalRange.startColumn)) !== " ") {
+      insertText = " " + insertText;
+    }
+    const success = editor.executeEdits("chatInsertSearch", [{ range: varRange, text: insertText + " " }]);
+    if (!success) {
+      logService.trace(`InsertSearchResultAction: failed to insert "${insertText}"`);
+      return;
+    }
+  }
+}
+function isIContextPickItemItem(obj) {
+  return isObject(obj) && typeof obj.kind === "string" && obj.kind === "contextPick";
+}
+__name(isIContextPickItemItem, "isIContextPickItemItem");
+function isIGotoSymbolQuickPickItem(obj) {
+  return isObject(obj) && typeof obj.symbolName === "string" && !!obj.uri && !!obj.range;
+}
+__name(isIGotoSymbolQuickPickItem, "isIGotoSymbolQuickPickItem");
+function isIQuickPickItemWithResource(obj) {
+  return isObject(obj) && URI.isUri(obj.resource);
+}
+__name(isIQuickPickItemWithResource, "isIQuickPickItemWithResource");
+class AttachContextAction extends Action2 {
+  static {
+    __name(this, "AttachContextAction");
+  }
+  constructor() {
+    super({
+      id: "workbench.action.chat.attachContext",
+      title: localize2("workbench.action.chat.attachContext.label.2", "Add Context..."),
+      icon: Codicon.attach,
+      category: CHAT_CATEGORY,
+      keybinding: {
+        when: ContextKeyExpr.and(ChatContextKeys.inChatInput, ChatContextKeys.location.isEqualTo(ChatAgentLocation.Panel)),
+        primary: 2048 | 90,
+        weight: 100
+        /* KeybindingWeight.EditorContrib */
+      },
+      menu: {
+        when: ChatContextKeys.location.isEqualTo(ChatAgentLocation.Panel),
+        id: MenuId.ChatInputAttachmentToolbar,
+        group: "navigation",
+        order: 3
+      }
+    });
+  }
+  async run(accessor, ...args) {
+    const instantiationService = accessor.get(IInstantiationService);
+    const widgetService = accessor.get(IChatWidgetService);
+    const contextKeyService = accessor.get(IContextKeyService);
+    const keybindingService = accessor.get(IKeybindingService);
+    const contextPickService = accessor.get(IChatContextPickService);
+    const context = args[0];
+    const widget = context?.widget ?? widgetService.lastFocusedWidget;
+    if (!widget) {
+      return;
+    }
+    const quickPickItems = [];
+    for (const item of contextPickService.items) {
+      if (item.isEnabled && !await item.isEnabled(widget)) {
+        continue;
+      }
+      quickPickItems.push({
+        kind: "contextPick",
+        item,
+        label: item.label,
+        iconClass: ThemeIcon.asClassName(item.icon),
+        keybinding: item.commandId ? keybindingService.lookupKeybinding(item.commandId, contextKeyService) : void 0
+      });
+    }
+    instantiationService.invokeFunction(this._show.bind(this), widget, quickPickItems, context?.placeholder);
+  }
+  _show(accessor, widget, additionPicks, placeholder) {
+    const quickInputService = accessor.get(IQuickInputService);
+    const quickChatService = accessor.get(IQuickChatService);
+    const instantiationService = accessor.get(IInstantiationService);
+    const commandService = accessor.get(ICommandService);
+    const providerOptions = {
+      additionPicks,
+      handleAccept: /* @__PURE__ */ __name(async (item, isBackgroundAccept) => {
+        if (isIContextPickItemItem(item)) {
+          let isDone = true;
+          if (item.item.type === "valuePick") {
+            this._handleContextPick(item.item, widget);
+          } else if (item.item.type === "pickerPick") {
+            isDone = await this._handleContextPickerItem(quickInputService, commandService, item.item, widget);
+          }
+          if (!isDone) {
+            instantiationService.invokeFunction(this._show.bind(this), widget, additionPicks, placeholder);
+            return;
+          }
+        } else {
+          instantiationService.invokeFunction(this._handleQPPick.bind(this), widget, isBackgroundAccept, item);
+        }
+        if (isQuickChat(widget)) {
+          quickChatService.open();
+        }
+      }, "handleAccept")
+    };
+    quickInputService.quickAccess.show("", {
+      enabledProviderPrefixes: [
+        AnythingQuickAccessProvider.PREFIX,
+        SymbolsQuickAccessProvider.PREFIX,
+        AbstractGotoSymbolQuickAccessProvider.PREFIX
+      ],
+      placeholder: placeholder ?? localize("chatContext.attach.placeholder", "Search attachments"),
+      providerOptions
+    });
+  }
+  async _handleQPPick(accessor, widget, isInBackground, pick) {
+    const fileService = accessor.get(IFileService);
+    const textModelService = accessor.get(ITextModelService);
+    const toAttach = [];
+    if (isIQuickPickItemWithResource(pick) && pick.resource) {
+      if (/\.(png|jpg|jpeg|bmp|gif|tiff)$/i.test(pick.resource.path)) {
+        if (URI.isUri(pick.resource)) {
+          const readFile = await fileService.readFile(pick.resource);
+          const resizedImage = await resizeImage(readFile.value.buffer);
+          toAttach.push({
+            id: pick.resource.toString(),
+            name: pick.label,
+            fullName: pick.label,
+            value: resizedImage,
+            kind: "image",
+            references: [{ reference: pick.resource, kind: "reference" }]
+          });
+        }
+      } else {
+        let omittedState = 0;
+        try {
+          const createdModel = await textModelService.createModelReference(pick.resource);
+          createdModel.dispose();
+        } catch {
+          omittedState = 2;
+        }
+        toAttach.push({
+          kind: "file",
+          id: pick.resource.toString(),
+          value: pick.resource,
+          name: pick.label,
+          omittedState
+        });
+      }
+    } else if (isIGotoSymbolQuickPickItem(pick) && pick.uri && pick.range) {
+      toAttach.push({
+        kind: "generic",
+        id: JSON.stringify({ uri: pick.uri, range: pick.range.decoration }),
+        value: { uri: pick.uri, range: pick.range.decoration },
+        fullName: pick.label,
+        name: pick.symbolName
+      });
+    }
+    widget.attachmentModel.addContext(...toAttach);
+    if (!isInBackground) {
+      widget.focusInput();
+    }
+  }
+  async _handleContextPick(item, widget) {
+    const value = await item.asAttachment(widget);
+    if (Array.isArray(value)) {
+      widget.attachmentModel.addContext(...value);
+    } else if (value) {
+      widget.attachmentModel.addContext(value);
+    }
+  }
+  async _handleContextPickerItem(quickInputService, commandService, item, widget) {
+    const pickerConfig = item.asPicker(widget);
+    const store = new DisposableStore();
+    const goBackItem = {
+      label: localize("goBack", "Go back \u21A9"),
+      alwaysShow: true
+    };
+    const configureItem = pickerConfig.configure ? {
+      label: pickerConfig.configure.label,
+      commandId: pickerConfig.configure.commandId,
+      alwaysShow: true
+    } : void 0;
+    const extraPicks = [{ type: "separator" }];
+    if (configureItem) {
+      extraPicks.push(configureItem);
+    }
+    extraPicks.push(goBackItem);
+    const qp = store.add(quickInputService.createQuickPick({ useSeparators: true }));
+    const cts = new CancellationTokenSource();
+    store.add(qp.onDidHide(() => cts.cancel()));
+    store.add(toDisposable(() => cts.dispose(true)));
+    qp.placeholder = pickerConfig.placeholder;
+    qp.matchOnDescription = true;
+    qp.matchOnDetail = true;
+    qp.canAcceptInBackground = true;
+    qp.busy = true;
+    qp.show();
+    if (isThenable(pickerConfig.picks)) {
+      const items = await pickerConfig.picks.then((value) => {
+        return [].concat(value, extraPicks);
+      });
+      qp.items = items;
+      qp.busy = false;
+    } else {
+      const query = observableValue("attachContext.query", qp.value);
+      store.add(qp.onDidChangeValue(() => query.set(qp.value, void 0)));
+      const picksObservable = pickerConfig.picks(query, cts.token);
+      store.add(autorun((reader) => {
+        const { busy, picks } = picksObservable.read(reader);
+        qp.items = [].concat(picks, extraPicks);
+        qp.busy = busy;
+      }));
+    }
+    if (cts.token.isCancellationRequested) {
+      return true;
+    }
+    const defer = new DeferredPromise();
+    const addPromises = [];
+    store.add(qp.onDidAccept((e) => {
+      const [selected] = qp.selectedItems;
+      if (isChatContextPickerPickItem(selected)) {
+        const attachment = selected.asAttachment();
+        if (isThenable(attachment)) {
+          addPromises.push(attachment.then((v) => widget.attachmentModel.addContext(v)));
+        } else {
+          widget.attachmentModel.addContext(attachment);
+        }
+      }
+      if (selected === goBackItem) {
+        defer.complete(false);
+      }
+      if (selected === configureItem) {
+        defer.complete(true);
+        commandService.executeCommand(configureItem.commandId);
+      }
+      if (!e.inBackground) {
+        defer.complete(true);
+      }
+    }));
+    store.add(qp.onDidHide(() => {
+      defer.complete(true);
+    }));
+    try {
+      const result = await defer.p;
+      qp.busy = true;
+      await Promise.all(addPromises);
+      return result;
+    } finally {
+      store.dispose();
+    }
+  }
+}
+export {
+  AttachContextAction,
+  AttachSearchResultAction,
+  registerChatContextActions
+};
+//# sourceMappingURL=chatContextActions.js.map

@@ -1,2 +1,393 @@
-import{$_B as v}from"../../../../../base/common/diff/diff.js";import{$_m as m,$$m as F,$an as V}from"../../../../../base/common/hash.js";import{URI as E}from"../../../../../base/common/uri.js";import{$fH as R}from"../../../../../editor/common/model/pieceTreeTextBuffer/pieceTreeTextBufferBuilder.js";import{CellKind as S,NotebookCellsChangeType as C}from"../notebookCommon.js";import{$cC as _}from"../../../../../editor/common/core/range.js";import{$6G as H}from"../../../../../editor/common/model/textModelSearch.js";import{$3eb as q}from"../../../../../editor/common/services/textModelSync/textModelSync.impl.js";import{$0o as N}from"../../../../../base/common/objects.js";import{$j$b as P}from"./notebookCellMatching.js";import{$Rm as b}from"../../../../../base/common/uuid.js";import{$9B as w}from"../../../../../base/common/diff/diffChange.js";import{$F0b as O}from"../notebookDiff.js";const W="unmatchedOriginalCell";class B{get eol(){return this.d===`\r
-`?2:1}constructor(t,a,n,i,e,o,c,f,p,r){this.handle=t,this.d=i,this.language=o,this.cellKind=c,this.outputs=f,this.metadata=p,this.internalMetadata=r,this.a=new q(a,n,i,e)}onEvents(t){this.a.onEvents(t),this.b=void 0}getValue(){return this.a.getValue()}getLinesContent(){return this.a.getLinesContent()}getComparisonValue(){return this.b??=this.f()}f(){let t=V(104579,0);t=m(this.language,t),t=m(this.getValue(),t),t=m(this.metadata,t),t=m(this.internalMetadata?.internalId||"",t);for(const n of this.outputs){t=m(n.metadata,t);for(const i of n.outputs)t=m(i.mime,t)}const a=this.outputs.flatMap(n=>n.outputs.map(i=>F(Array.from(i.data.buffer))));for(const n of a)t=V(n,t);return t}}class T{constructor(t,a,n,i){this.uri=t,this.cells=a,this.metadata=n,this.transientDocumentMetadata=i}acceptModelChanged(t){t.rawEvents.forEach(a=>{if(a.kind===C.ModelChange)this._spliceNotebookCells(a.changes);else if(a.kind===C.Move){const n=this.cells.splice(a.index,1);this.cells.splice(a.newIdx,0,...n)}else if(a.kind===C.Output){const n=this.cells[a.index];n.outputs=a.outputs}else if(a.kind===C.ChangeCellLanguage){this.a(a.index);const n=this.cells[a.index];n.language=a.language}else if(a.kind===C.ChangeCellMetadata){this.a(a.index);const n=this.cells[a.index];n.metadata=a.metadata}else if(a.kind===C.ChangeCellInternalMetadata){this.a(a.index);const n=this.cells[a.index];n.internalMetadata=a.internalMetadata}else a.kind===C.ChangeDocumentMetadata&&(this.metadata=a.metadata)})}a(t){if(t<0||t>=this.cells.length)throw new Error(`Illegal index ${t}. Cells length: ${this.cells.length}`)}_spliceNotebookCells(t){t.reverse().forEach(a=>{const i=a[2].map(e=>new B(e.handle,E.parse(e.url),e.source,e.eol,e.versionId,e.language,e.cellKind,e.outputs,e.metadata));this.cells.splice(a[0],a[1],...i)})}}class I{static create(t){const a=t.cells.map(n=>n.getComparisonValue());return new I(a)}static createWithCellId(t,a){const n=t.map(i=>a?`${m(i.internalMetadata?.internalId,V(104579,0))}#${i.getComparisonValue()}`:`${m(i.internalMetadata?.internalId,V(104579,0))}}`);return new I(n)}constructor(t){this.hashValue=t}getElements(){return this.hashValue}}class A{constructor(){this.a=Object.create(null)}dispose(){}$acceptNewModel(t,a,n,i){this.a[t]=new T(E.parse(t),i.map(e=>new B(e.handle,E.parse(e.url),e.source,e.eol,e.versionId,e.language,e.cellKind,e.outputs,e.metadata,e.internalMetadata)),a,n)}$acceptModelChanged(t,a){this.a[t]?.acceptModelChanged(a)}$acceptCellModelChanged(t,a,n){this.a[t].cells.find(e=>e.handle===a)?.onEvents(n)}$acceptRemovedModel(t){this.a[t]&&delete this.a[t]}async $computeDiff(t,a){const n=this.b(t),i=this.b(a),e=new K(n),o=new K(i),c=N(n.metadata,s=>!n.transientDocumentMetadata[s]),f=N(i.metadata,s=>!i.transientDocumentMetadata[s]),p=JSON.stringify(c)!==JSON.stringify(f),r=new v(I.create(n),I.create(i)).ComputeDiff(!1);if(r.changes.length===0)return{metadataChanged:p,cellsDiff:r};if(O(e,o,{cellsDiff:{changes:r.changes,quitEarly:!1},metadataChanged:!1}).cellDiffInfo.every(s=>s.type==="modified"))return{metadataChanged:p,cellsDiff:r};let M=this.canComputeDiffWithCellIds(n,i);if(!M){const s=P(i.cells,n.cells);s.some(d=>d.original!==-1)&&(this.updateCellIdsBasedOnMappings(s,n.cells,i.cells),M=!0)}if(!M)return{metadataChanged:p,cellsDiff:r};const D=new v(I.createWithCellId(n.cells),I.createWithCellId(i.cells)).ComputeDiff(!1),u=O(e,o,{cellsDiff:{changes:D.changes,quitEarly:!1},metadataChanged:!1}).cellDiffInfo;let g=0;const h=[];return D.changes.forEach(s=>{if(!s.originalLength&&s.modifiedLength){const d=u.findIndex(l=>l.type==="insert"&&l.modifiedCellIndex===s.modifiedStart);u.slice(g,d).forEach(l=>{if(l.type==="unchanged"||l.type==="modified"){const x=n.cells[l.originalCellIndex],$=i.cells[l.modifiedCellIndex];(l.type==="modified"||x.getComparisonValue()!==$.getComparisonValue())&&h.push(new w(l.originalCellIndex,1,l.modifiedCellIndex,1))}}),h.push(s),g=d+1}else if(s.originalLength&&!s.modifiedLength){const d=u.findIndex(l=>l.type==="delete"&&l.originalCellIndex===s.originalStart);u.slice(g,d).forEach(l=>{if(l.type==="unchanged"||l.type==="modified"){const x=n.cells[l.originalCellIndex],$=i.cells[l.modifiedCellIndex];(l.type==="modified"||x.getComparisonValue()!==$.getComparisonValue())&&h.push(new w(l.originalCellIndex,1,l.modifiedCellIndex,1))}}),h.push(s),g=d+1}else{const d=u.findIndex(l=>l.type==="delete"&&l.originalCellIndex===s.originalStart||l.type==="insert"&&l.modifiedCellIndex===s.modifiedStart);u.slice(g,d).forEach(l=>{if(l.type==="unchanged"||l.type==="modified"){const x=n.cells[l.originalCellIndex],$=i.cells[l.modifiedCellIndex];(l.type==="modified"||x.getComparisonValue()!==$.getComparisonValue())&&h.push(new w(l.originalCellIndex,1,l.modifiedCellIndex,1))}}),h.push(s),g=d+1}}),u.slice(g).forEach(s=>{if(s.type==="unchanged"||s.type==="modified"){const d=n.cells[s.originalCellIndex],l=i.cells[s.modifiedCellIndex];(s.type==="modified"||d.getComparisonValue()!==l.getComparisonValue())&&h.push(new w(s.originalCellIndex,1,s.modifiedCellIndex,1))}}),{metadataChanged:p,cellsDiff:{changes:h,quitEarly:!1}}}canComputeDiffWithCellIds(t,a){return this.canComputeDiffWithCellInternalIds(t,a)||this.canComputeDiffWithCellMetadataIds(t,a)}canComputeDiffWithCellInternalIds(t,a){const n=t.cells.map((e,o)=>({index:o,id:e.internalMetadata?.internalId||""})),i=a.cells.map((e,o)=>({index:o,id:e.internalMetadata?.internalId||""}));return n.some(e=>!e.id)||i.some(e=>!e.id)?!1:n.some(e=>i.find(o=>o.id===e.id))}canComputeDiffWithCellMetadataIds(t,a){const n=t.cells.map((e,o)=>({index:o,id:e.metadata?.id||""})),i=a.cells.map((e,o)=>({index:o,id:e.metadata?.id||""}));return n.some(e=>!e.id)||i.some(e=>!e.id)||n.every(e=>!i.find(o=>o.id===e.id))?!1:(t.cells.map((e,o)=>{e.internalMetadata=e.internalMetadata||{},e.internalMetadata.internalId=e.metadata?.id||""}),a.cells.map((e,o)=>{e.internalMetadata=e.internalMetadata||{},e.internalMetadata.internalId=e.metadata?.id||""}),!0)}isOriginalCellMatchedWithModifiedCell(t){return(t.internalMetadata?.internalId||"").startsWith(W)}updateCellIdsBasedOnMappings(t,a,n){const i=new Map;return a.map((e,o)=>{e.internalMetadata=e.internalMetadata||{internalId:""},e.internalMetadata.internalId=`${W}${b()}`;const c=t.find(f=>f.original===o);c&&(e.internalMetadata.internalId=b(),i.set(c.modified,e.internalMetadata.internalId))}),n.map((e,o)=>{e.internalMetadata=e.internalMetadata||{internalId:""},e.internalMetadata.internalId=i.get(o)??b()}),!0}$canPromptRecommendation(t){const n=this.b(t).cells;for(let i=0;i<n.length;i++){const e=n[i];if(e.cellKind===S.Markup||e.language!=="python")continue;const c=new H("import\\s*pandas|from\\s*pandas",!0,!1,null).parseSearchRequest();if(!c)continue;const f=new R;f.acceptChunk(e.getValue());const r=f.finish(!0).create(e.eol).textBuffer,k=r.getLineCount(),M=Math.min(k,20),D=new _(1,1,M,r.getLineLength(M)+1);if(r.findMatchesLineByLine(D,c,!0,1).length>0)return!0}return!1}b(t){return this.a[t]}}function le(){return new A}class K{constructor(t){this.notebook=t,this.cells=t.cells.map(a=>new j(a))}}class j{get cellKind(){return this.a.cellKind}constructor(t){this.a=t}getHashValue(){return this.a.getComparisonValue()}equal(t){return t.cellKind!==this.cellKind?!1:this.getHashValue()===t.getHashValue()}}export{A as $k$b,le as $l$b};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { LcsDiff } from "../../../../../base/common/diff/diff.js";
+import { doHash, hash, numberHash } from "../../../../../base/common/hash.js";
+import { URI } from "../../../../../base/common/uri.js";
+import { PieceTreeTextBufferBuilder } from "../../../../../editor/common/model/pieceTreeTextBuffer/pieceTreeTextBufferBuilder.js";
+import { CellKind, NotebookCellsChangeType } from "../notebookCommon.js";
+import { Range } from "../../../../../editor/common/core/range.js";
+import { SearchParams } from "../../../../../editor/common/model/textModelSearch.js";
+import { MirrorModel } from "../../../../../editor/common/services/textModelSync/textModelSync.impl.js";
+import { filter } from "../../../../../base/common/objects.js";
+import { matchCellBasedOnSimilarties } from "./notebookCellMatching.js";
+import { generateUuid } from "../../../../../base/common/uuid.js";
+import { DiffChange } from "../../../../../base/common/diff/diffChange.js";
+import { computeDiff } from "../notebookDiff.js";
+const PREFIX_FOR_UNMATCHED_ORIGINAL_CELLS = `unmatchedOriginalCell`;
+class MirrorCell {
+  static {
+    __name(this, "MirrorCell");
+  }
+  get eol() {
+    return this._eol === "\r\n" ? 2 : 1;
+  }
+  constructor(handle, uri, source, _eol, versionId, language, cellKind, outputs, metadata, internalMetadata) {
+    this.handle = handle;
+    this._eol = _eol;
+    this.language = language;
+    this.cellKind = cellKind;
+    this.outputs = outputs;
+    this.metadata = metadata;
+    this.internalMetadata = internalMetadata;
+    this.textModel = new MirrorModel(uri, source, _eol, versionId);
+  }
+  onEvents(e) {
+    this.textModel.onEvents(e);
+    this._hash = void 0;
+  }
+  getValue() {
+    return this.textModel.getValue();
+  }
+  getLinesContent() {
+    return this.textModel.getLinesContent();
+  }
+  getComparisonValue() {
+    return this._hash ??= this._getHash();
+  }
+  _getHash() {
+    let hashValue = numberHash(104579, 0);
+    hashValue = doHash(this.language, hashValue);
+    hashValue = doHash(this.getValue(), hashValue);
+    hashValue = doHash(this.metadata, hashValue);
+    hashValue = doHash(this.internalMetadata?.internalId || "", hashValue);
+    for (const op of this.outputs) {
+      hashValue = doHash(op.metadata, hashValue);
+      for (const output of op.outputs) {
+        hashValue = doHash(output.mime, hashValue);
+      }
+    }
+    const digests = this.outputs.flatMap((op) => op.outputs.map((o) => hash(Array.from(o.data.buffer))));
+    for (const digest of digests) {
+      hashValue = numberHash(digest, hashValue);
+    }
+    return hashValue;
+  }
+}
+class MirrorNotebookDocument {
+  static {
+    __name(this, "MirrorNotebookDocument");
+  }
+  constructor(uri, cells, metadata, transientDocumentMetadata) {
+    this.uri = uri;
+    this.cells = cells;
+    this.metadata = metadata;
+    this.transientDocumentMetadata = transientDocumentMetadata;
+  }
+  acceptModelChanged(event) {
+    event.rawEvents.forEach((e) => {
+      if (e.kind === NotebookCellsChangeType.ModelChange) {
+        this._spliceNotebookCells(e.changes);
+      } else if (e.kind === NotebookCellsChangeType.Move) {
+        const cells = this.cells.splice(e.index, 1);
+        this.cells.splice(e.newIdx, 0, ...cells);
+      } else if (e.kind === NotebookCellsChangeType.Output) {
+        const cell = this.cells[e.index];
+        cell.outputs = e.outputs;
+      } else if (e.kind === NotebookCellsChangeType.ChangeCellLanguage) {
+        this._assertIndex(e.index);
+        const cell = this.cells[e.index];
+        cell.language = e.language;
+      } else if (e.kind === NotebookCellsChangeType.ChangeCellMetadata) {
+        this._assertIndex(e.index);
+        const cell = this.cells[e.index];
+        cell.metadata = e.metadata;
+      } else if (e.kind === NotebookCellsChangeType.ChangeCellInternalMetadata) {
+        this._assertIndex(e.index);
+        const cell = this.cells[e.index];
+        cell.internalMetadata = e.internalMetadata;
+      } else if (e.kind === NotebookCellsChangeType.ChangeDocumentMetadata) {
+        this.metadata = e.metadata;
+      }
+    });
+  }
+  _assertIndex(index) {
+    if (index < 0 || index >= this.cells.length) {
+      throw new Error(`Illegal index ${index}. Cells length: ${this.cells.length}`);
+    }
+  }
+  _spliceNotebookCells(splices) {
+    splices.reverse().forEach((splice) => {
+      const cellDtos = splice[2];
+      const newCells = cellDtos.map((cell) => {
+        return new MirrorCell(cell.handle, URI.parse(cell.url), cell.source, cell.eol, cell.versionId, cell.language, cell.cellKind, cell.outputs, cell.metadata);
+      });
+      this.cells.splice(splice[0], splice[1], ...newCells);
+    });
+  }
+}
+class CellSequence {
+  static {
+    __name(this, "CellSequence");
+  }
+  static create(textModel) {
+    const hashValue = textModel.cells.map((c) => c.getComparisonValue());
+    return new CellSequence(hashValue);
+  }
+  static createWithCellId(cells, includeCellContents) {
+    const hashValue = cells.map((c) => {
+      if (includeCellContents) {
+        return `${doHash(c.internalMetadata?.internalId, numberHash(104579, 0))}#${c.getComparisonValue()}`;
+      } else {
+        return `${doHash(c.internalMetadata?.internalId, numberHash(104579, 0))}}`;
+      }
+    });
+    return new CellSequence(hashValue);
+  }
+  constructor(hashValue) {
+    this.hashValue = hashValue;
+  }
+  getElements() {
+    return this.hashValue;
+  }
+}
+class NotebookWorker {
+  static {
+    __name(this, "NotebookWorker");
+  }
+  constructor() {
+    this._models = /* @__PURE__ */ Object.create(null);
+  }
+  dispose() {
+  }
+  $acceptNewModel(uri, metadata, transientDocumentMetadata, cells) {
+    this._models[uri] = new MirrorNotebookDocument(URI.parse(uri), cells.map((dto) => new MirrorCell(dto.handle, URI.parse(dto.url), dto.source, dto.eol, dto.versionId, dto.language, dto.cellKind, dto.outputs, dto.metadata, dto.internalMetadata)), metadata, transientDocumentMetadata);
+  }
+  $acceptModelChanged(strURL, event) {
+    const model = this._models[strURL];
+    model?.acceptModelChanged(event);
+  }
+  $acceptCellModelChanged(strURL, handle, event) {
+    const model = this._models[strURL];
+    model.cells.find((cell) => cell.handle === handle)?.onEvents(event);
+  }
+  $acceptRemovedModel(strURL) {
+    if (!this._models[strURL]) {
+      return;
+    }
+    delete this._models[strURL];
+  }
+  async $computeDiff(originalUrl, modifiedUrl) {
+    const original = this._getModel(originalUrl);
+    const modified = this._getModel(modifiedUrl);
+    const originalModel = new NotebookTextModelFacade(original);
+    const modifiedModel = new NotebookTextModelFacade(modified);
+    const originalMetadata = filter(original.metadata, (key) => !original.transientDocumentMetadata[key]);
+    const modifiedMetadata = filter(modified.metadata, (key) => !modified.transientDocumentMetadata[key]);
+    const metadataChanged = JSON.stringify(originalMetadata) !== JSON.stringify(modifiedMetadata);
+    const originalDiff = new LcsDiff(CellSequence.create(original), CellSequence.create(modified)).ComputeDiff(false);
+    if (originalDiff.changes.length === 0) {
+      return {
+        metadataChanged,
+        cellsDiff: originalDiff
+      };
+    }
+    const cellMapping = computeDiff(originalModel, modifiedModel, { cellsDiff: { changes: originalDiff.changes, quitEarly: false }, metadataChanged: false }).cellDiffInfo;
+    if (cellMapping.every((c) => c.type === "modified")) {
+      return {
+        metadataChanged,
+        cellsDiff: originalDiff
+      };
+    }
+    let diffUsingCellIds = this.canComputeDiffWithCellIds(original, modified);
+    if (!diffUsingCellIds) {
+      const result = matchCellBasedOnSimilarties(modified.cells, original.cells);
+      if (result.some((c) => c.original !== -1)) {
+        this.updateCellIdsBasedOnMappings(result, original.cells, modified.cells);
+        diffUsingCellIds = true;
+      }
+    }
+    if (!diffUsingCellIds) {
+      return {
+        metadataChanged,
+        cellsDiff: originalDiff
+      };
+    }
+    const cellsInsertedOrDeletedDiff = new LcsDiff(CellSequence.createWithCellId(original.cells), CellSequence.createWithCellId(modified.cells)).ComputeDiff(false);
+    const cellDiffInfo = computeDiff(originalModel, modifiedModel, { cellsDiff: { changes: cellsInsertedOrDeletedDiff.changes, quitEarly: false }, metadataChanged: false }).cellDiffInfo;
+    let processedIndex = 0;
+    const changes = [];
+    cellsInsertedOrDeletedDiff.changes.forEach((change) => {
+      if (!change.originalLength && change.modifiedLength) {
+        const changeIndex = cellDiffInfo.findIndex((c) => c.type === "insert" && c.modifiedCellIndex === change.modifiedStart);
+        cellDiffInfo.slice(processedIndex, changeIndex).forEach((c) => {
+          if (c.type === "unchanged" || c.type === "modified") {
+            const originalCell = original.cells[c.originalCellIndex];
+            const modifiedCell = modified.cells[c.modifiedCellIndex];
+            const changed = c.type === "modified" || originalCell.getComparisonValue() !== modifiedCell.getComparisonValue();
+            if (changed) {
+              changes.push(new DiffChange(c.originalCellIndex, 1, c.modifiedCellIndex, 1));
+            }
+          }
+        });
+        changes.push(change);
+        processedIndex = changeIndex + 1;
+      } else if (change.originalLength && !change.modifiedLength) {
+        const changeIndex = cellDiffInfo.findIndex((c) => c.type === "delete" && c.originalCellIndex === change.originalStart);
+        cellDiffInfo.slice(processedIndex, changeIndex).forEach((c) => {
+          if (c.type === "unchanged" || c.type === "modified") {
+            const originalCell = original.cells[c.originalCellIndex];
+            const modifiedCell = modified.cells[c.modifiedCellIndex];
+            const changed = c.type === "modified" || originalCell.getComparisonValue() !== modifiedCell.getComparisonValue();
+            if (changed) {
+              changes.push(new DiffChange(c.originalCellIndex, 1, c.modifiedCellIndex, 1));
+            }
+          }
+        });
+        changes.push(change);
+        processedIndex = changeIndex + 1;
+      } else {
+        const changeIndex = cellDiffInfo.findIndex((c) => c.type === "delete" && c.originalCellIndex === change.originalStart || c.type === "insert" && c.modifiedCellIndex === change.modifiedStart);
+        cellDiffInfo.slice(processedIndex, changeIndex).forEach((c) => {
+          if (c.type === "unchanged" || c.type === "modified") {
+            const originalCell = original.cells[c.originalCellIndex];
+            const modifiedCell = modified.cells[c.modifiedCellIndex];
+            const changed = c.type === "modified" || originalCell.getComparisonValue() !== modifiedCell.getComparisonValue();
+            if (changed) {
+              changes.push(new DiffChange(c.originalCellIndex, 1, c.modifiedCellIndex, 1));
+            }
+          }
+        });
+        changes.push(change);
+        processedIndex = changeIndex + 1;
+      }
+    });
+    cellDiffInfo.slice(processedIndex).forEach((c) => {
+      if (c.type === "unchanged" || c.type === "modified") {
+        const originalCell = original.cells[c.originalCellIndex];
+        const modifiedCell = modified.cells[c.modifiedCellIndex];
+        const changed = c.type === "modified" || originalCell.getComparisonValue() !== modifiedCell.getComparisonValue();
+        if (changed) {
+          changes.push(new DiffChange(c.originalCellIndex, 1, c.modifiedCellIndex, 1));
+        }
+      }
+    });
+    return {
+      metadataChanged,
+      cellsDiff: {
+        changes,
+        quitEarly: false
+      }
+    };
+  }
+  canComputeDiffWithCellIds(original, modified) {
+    return this.canComputeDiffWithCellInternalIds(original, modified) || this.canComputeDiffWithCellMetadataIds(original, modified);
+  }
+  canComputeDiffWithCellInternalIds(original, modified) {
+    const originalCellIndexIds = original.cells.map((cell, index) => ({ index, id: cell.internalMetadata?.internalId || "" }));
+    const modifiedCellIndexIds = modified.cells.map((cell, index) => ({ index, id: cell.internalMetadata?.internalId || "" }));
+    if (originalCellIndexIds.some((c) => !c.id) || modifiedCellIndexIds.some((c) => !c.id)) {
+      return false;
+    }
+    return originalCellIndexIds.some((c) => modifiedCellIndexIds.find((m) => m.id === c.id));
+  }
+  canComputeDiffWithCellMetadataIds(original, modified) {
+    const originalCellIndexIds = original.cells.map((cell, index) => ({ index, id: cell.metadata?.id || "" }));
+    const modifiedCellIndexIds = modified.cells.map((cell, index) => ({ index, id: cell.metadata?.id || "" }));
+    if (originalCellIndexIds.some((c) => !c.id) || modifiedCellIndexIds.some((c) => !c.id)) {
+      return false;
+    }
+    if (originalCellIndexIds.every((c) => !modifiedCellIndexIds.find((m) => m.id === c.id))) {
+      return false;
+    }
+    original.cells.map((cell, index) => {
+      cell.internalMetadata = cell.internalMetadata || {};
+      cell.internalMetadata.internalId = cell.metadata?.id || "";
+    });
+    modified.cells.map((cell, index) => {
+      cell.internalMetadata = cell.internalMetadata || {};
+      cell.internalMetadata.internalId = cell.metadata?.id || "";
+    });
+    return true;
+  }
+  isOriginalCellMatchedWithModifiedCell(originalCell) {
+    return (originalCell.internalMetadata?.internalId || "").startsWith(PREFIX_FOR_UNMATCHED_ORIGINAL_CELLS);
+  }
+  updateCellIdsBasedOnMappings(mappings, originalCells, modifiedCells) {
+    const uuids = /* @__PURE__ */ new Map();
+    originalCells.map((cell, index) => {
+      cell.internalMetadata = cell.internalMetadata || { internalId: "" };
+      cell.internalMetadata.internalId = `${PREFIX_FOR_UNMATCHED_ORIGINAL_CELLS}${generateUuid()}`;
+      const found = mappings.find((r) => r.original === index);
+      if (found) {
+        cell.internalMetadata.internalId = generateUuid();
+        uuids.set(found.modified, cell.internalMetadata.internalId);
+      }
+    });
+    modifiedCells.map((cell, index) => {
+      cell.internalMetadata = cell.internalMetadata || { internalId: "" };
+      cell.internalMetadata.internalId = uuids.get(index) ?? generateUuid();
+    });
+    return true;
+  }
+  $canPromptRecommendation(modelUrl) {
+    const model = this._getModel(modelUrl);
+    const cells = model.cells;
+    for (let i = 0; i < cells.length; i++) {
+      const cell = cells[i];
+      if (cell.cellKind === CellKind.Markup) {
+        continue;
+      }
+      if (cell.language !== "python") {
+        continue;
+      }
+      const searchParams = new SearchParams("import\\s*pandas|from\\s*pandas", true, false, null);
+      const searchData = searchParams.parseSearchRequest();
+      if (!searchData) {
+        continue;
+      }
+      const builder = new PieceTreeTextBufferBuilder();
+      builder.acceptChunk(cell.getValue());
+      const bufferFactory = builder.finish(true);
+      const textBuffer = bufferFactory.create(cell.eol).textBuffer;
+      const lineCount = textBuffer.getLineCount();
+      const maxLineCount = Math.min(lineCount, 20);
+      const range = new Range(1, 1, maxLineCount, textBuffer.getLineLength(maxLineCount) + 1);
+      const cellMatches = textBuffer.findMatchesLineByLine(range, searchData, true, 1);
+      if (cellMatches.length > 0) {
+        return true;
+      }
+    }
+    return false;
+  }
+  _getModel(uri) {
+    return this._models[uri];
+  }
+}
+function create() {
+  return new NotebookWorker();
+}
+__name(create, "create");
+class NotebookTextModelFacade {
+  static {
+    __name(this, "NotebookTextModelFacade");
+  }
+  constructor(notebook) {
+    this.notebook = notebook;
+    this.cells = notebook.cells.map((cell) => new NotebookCellTextModelFacade(cell));
+  }
+}
+class NotebookCellTextModelFacade {
+  static {
+    __name(this, "NotebookCellTextModelFacade");
+  }
+  get cellKind() {
+    return this.cell.cellKind;
+  }
+  constructor(cell) {
+    this.cell = cell;
+  }
+  getHashValue() {
+    return this.cell.getComparisonValue();
+  }
+  equal(cell) {
+    if (cell.cellKind !== this.cellKind) {
+      return false;
+    }
+    return this.getHashValue() === cell.getHashValue();
+  }
+}
+export {
+  NotebookWorker,
+  create
+};
+//# sourceMappingURL=notebookWebWorker.js.map

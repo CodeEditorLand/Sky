@@ -1,1 +1,289 @@
-import*as c from"../../../../../base/browser/dom.js";import{$t9 as M}from"../../../../../base/browser/ui/button/button.js";import{$Ji as E}from"../../../../../base/common/buffer.js";import{$Mj as g}from"../../../../../base/common/codicons.js";import{$df as H}from"../../../../../base/common/event.js";import{$vd as z}from"../../../../../base/common/lifecycle.js";import{autorun as L,observableValue as N}from"../../../../../base/common/observable.js";import{$hh as C,$kh as B}from"../../../../../base/common/resources.js";import{ThemeIcon as k}from"../../../../../base/common/themables.js";import{$Rm as F}from"../../../../../base/common/uuid.js";import{$dhb as Q}from"../../../../../editor/browser/widget/markdownRenderer/browser/markdownRenderer.js";import{localize as b,localize2 as U}from"../../../../../nls.js";import{$mgb as W}from"../../../../../platform/actions/browser/toolbar.js";import{$iI as K,$dI as T,$jI as V}from"../../../../../platform/actions/common/actions.js";import{$Yn as Y}from"../../../../../platform/commands/common/commands.js";import{$Vn as G}from"../../../../../platform/contextkey/common/contextkey.js";import{$ofb as J}from"../../../../../platform/contextview/browser/contextView.js";import{$bp as X}from"../../../../../platform/dialogs/common/dialogs.js";import{$5j as q}from"../../../../../platform/files/common/files.js";import{$mj as Z}from"../../../../../platform/instantiation/common/instantiation.js";import{$2H as tt}from"../../../../../platform/label/common/label.js";import{$RI as et}from"../../../../../platform/notification/common/notification.js";import{$WI as ot}from"../../../../../platform/progress/common/progress.js";import{$hl as it}from"../../../../../platform/workspace/common/workspace.js";import{$KFb as nt}from"../../../files/browser/fileConstants.js";import{$6S as rt}from"../../common/chatModel.js";import{$QOb as st}from"./chatAttachmentsContentPart.js";import{$TOb as at}from"./chatConfirmationWidget.js";var A=function(t,e,o,i){var s,r=arguments.length,n=r<3?e:null===i?i=Object.getOwnPropertyDescriptor(e,o):i;if("object"==typeof Reflect&&"function"==typeof Reflect.decorate)n=Reflect.decorate(t,e,o,i);else for(var a=t.length-1;a>=0;a--)(s=t[a])&&(n=(r<3?s(n):r>3?s(e,o,n):s(e,o))||n);return r>3&&n&&Object.defineProperty(e,o,n),n},D=function(t,e){return function(o,i){e(o,i,t)}};let P=class extends z{set title(t){this.f.title=t}get title(){return this.f.title}get expanded(){return this.g.get()}constructor(t,e,o,i,s,r,n,a,l,m,h,p){super(),this.j=o,this.m=i,this.n=s,this.t=r,this.u=m,this.w=h,this.z=p,this.a=this.B(new H),this.onDidChangeHeight=this.a.event,this.b=0,this.c=[],this.codeblocks=[],this.b=l;const d=c.h(".chat-confirmation-widget-title-inner"),u=c.h(".chat-confirmation-widget-title-icon"),f=c.h(".chat-confirmation-widget");this.domNode=f.root;const b=this.f=this.B(h.createInstance(at,d.root,t,e,h.createInstance(Q,{})));this.B(b.onDidChangeHeight((()=>this.a.fire())));document.createElement("span").style.flexGrow="1";const w=this.B(new M(f.root,{}));w.element.classList.add("chat-confirmation-widget-title","monaco-text-button"),w.labelElement.append(d.root,u.root);const j=c.h(n?k.asCSSSelector(g.error):r?k.asCSSSelector(g.check):k.asCSSSelector(k.modify(g.loading,"spin")));u.root.appendChild(j.root);const C=this.g=N(this,a);this.B(L((t=>{const e=C.read(t);w.icon=e?g.chevronDown:g.chevronRight,f.root.classList.toggle("collapsed",!e),this.a.fire()})));this.B(w.onDidClick((t=>{if(!t.defaultPrevented){const e=C.get();C.set(!e,void 0),t.preventDefault()}})));const v=c.h(".chat-confirmation-widget-message");v.root.appendChild(this.C()),f.root.appendChild(v.root)}C(){const t=c.h("div",[c.h("h3@inputTitle"),c.h("div@input"),c.h("h3@outputTitle"),c.h("div@output")]),{n:e,t:o}=this;if(t.inputTitle.textContent=b(5190,null),this.F(e,t.input),o){t.outputTitle.textContent=b(5191,null);for(let e=0;e<o.parts.length;e++){const i=o.parts[e];if("code"===i.kind){this.F(i,t.output);continue}const s=[];for(let t=e;t<o.parts.length;t++){const e=o.parts[t];if("data"!==e.kind)break;s.push(e)}this.D(s,t.output),e+=s.length-1}}else t.output.remove(),t.outputTitle.remove();return t.root}D(t,e){const o=c.h(".chat-collapsible-io-resource-group",[c.h(".chat-collapsible-io-resource-items@items"),c.h(".chat-collapsible-io-resource-actions@actions")]),i=t.map((t=>t.mimeType&&rt(t.mimeType)?{kind:"image",id:F(),name:C(t.uri),value:t.value,mimeType:t.mimeType,isURL:!1,references:[{kind:"reference",reference:t.uri}]}:{kind:"file",id:F(),name:C(t.uri),fullName:t.uri.path,value:t.uri})),s=this.B(this.w.createInstance(st,i,void 0,void 0));s.contextMenuHandler=(e,o)=>{const s=i.indexOf(e),r=t[s];r&&(o.preventDefault(),o.stopPropagation(),this.z.showContextMenu({menuId:T.ChatToolOutputResourceContext,menuActionOptions:{shouldForwardArgs:!0},getAnchor:()=>({x:o.pageX,y:o.pageY}),getActionsContext:()=>({parts:[r]})}))},o.items.appendChild(s.domNode);this.B(this.w.createInstance(W,o.actions,T.ChatToolOutputResourceToolbar,{menuOptions:{shouldForwardArgs:!0}})).context={parts:t},e.appendChild(o.root)}F(t,e){const o={languageId:t.languageId,textModel:Promise.resolve(t.textModel),codeBlockIndex:t.codeBlockInfo.codeBlockIndex,codeBlockPartIndex:0,element:this.j.element,parentContextKeyService:this.u,renderOptions:t.options,chatSessionId:this.j.element.sessionId},i=this.B(this.m.get());i.object.render(o,this.b||300),this.B(i.object.onDidChangeContentHeight((()=>this.a.fire()))),e.appendChild(i.object.element),this.c.push(i)}hasSameContent(t,e,o){return!1}layout(t){this.b=t,this.c.forEach((e=>e.object.layout(t)))}};P=A([D(9,G),D(10,Z),D(11,J)],P);class O extends K{static{this.ID="chat.toolOutput.save"}constructor(){super({id:O.ID,title:U(5196,"Save As..."),icon:g.cloudDownload,menu:[{id:T.ChatToolOutputResourceToolbar,group:"navigation",order:1},{id:T.ChatToolOutputResourceContext}]})}async run(t,e){const o=t.get(X),i=t.get(q),s=t.get(et),r=t.get(ot),n=t.get(it),a=t.get(Y),c=t.get(tt),l=await o.defaultFilePath(),m=async(t,e,o)=>{const r=e?B(o,C(t.uri)):o;try{if("data"===t.kind)await i.writeFile(r,E.wrap(t.value));else{const e=await i.readFile(t.uri);await i.writeFile(r,e.value)}}catch(e){s.error(b(5192,null,C(t.uri),e))}},h=async(t,e)=>{await r.withProgress({location:15,delay:5e3,title:b(5193,null)},(async t=>{for(const o of e)await o(),t.report({increment:1,total:e.length})})),n.isInsideWorkspace(t)?a.executeCommand(nt,t):s.info(b(5194,null,c.getUriLabel(t)))};if(1===e.parts.length){const t=e.parts[0],i=await o.pickFileToSave(B(l,C(t.uri)));if(!i)return;await h(i,[()=>m(t,!1,i)])}else{const t=await o.showOpenDialog({title:b(5195,null),canSelectFiles:!1,canSelectFolders:!0,canSelectMany:!1,defaultUri:n.getWorkspace().folders[0]?.uri});if(!t?.length)return;await h(t[0],e.parts.map((e=>()=>m(e,!0,t[0]))))}}}V(O);export{P as $xQb};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import * as dom from "../../../../../base/browser/dom.js";
+import { ButtonWithIcon } from "../../../../../base/browser/ui/button/button.js";
+import { VSBuffer } from "../../../../../base/common/buffer.js";
+import { Codicon } from "../../../../../base/common/codicons.js";
+import { Emitter } from "../../../../../base/common/event.js";
+import { Disposable } from "../../../../../base/common/lifecycle.js";
+import { autorun, observableValue } from "../../../../../base/common/observable.js";
+import { basename, joinPath } from "../../../../../base/common/resources.js";
+import { ThemeIcon } from "../../../../../base/common/themables.js";
+import { generateUuid } from "../../../../../base/common/uuid.js";
+import { MarkdownRenderer } from "../../../../../editor/browser/widget/markdownRenderer/browser/markdownRenderer.js";
+import { localize, localize2 } from "../../../../../nls.js";
+import { MenuWorkbenchToolBar } from "../../../../../platform/actions/browser/toolbar.js";
+import { Action2, MenuId, registerAction2 } from "../../../../../platform/actions/common/actions.js";
+import { ICommandService } from "../../../../../platform/commands/common/commands.js";
+import { IContextKeyService } from "../../../../../platform/contextkey/common/contextkey.js";
+import { IContextMenuService } from "../../../../../platform/contextview/browser/contextView.js";
+import { IFileDialogService } from "../../../../../platform/dialogs/common/dialogs.js";
+import { IFileService } from "../../../../../platform/files/common/files.js";
+import { IInstantiationService } from "../../../../../platform/instantiation/common/instantiation.js";
+import { ILabelService } from "../../../../../platform/label/common/label.js";
+import { INotificationService } from "../../../../../platform/notification/common/notification.js";
+import { IProgressService } from "../../../../../platform/progress/common/progress.js";
+import { IWorkspaceContextService } from "../../../../../platform/workspace/common/workspace.js";
+import { REVEAL_IN_EXPLORER_COMMAND_ID } from "../../../files/browser/fileConstants.js";
+import { getAttachableImageExtension } from "../../common/chatModel.js";
+import { ChatAttachmentsContentPart } from "./chatAttachmentsContentPart.js";
+import { ChatQueryTitlePart } from "./chatConfirmationWidget.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+let ChatCollapsibleInputOutputContentPart = class ChatCollapsibleInputOutputContentPart2 extends Disposable {
+  static {
+    __name(this, "ChatCollapsibleInputOutputContentPart");
+  }
+  set title(s) {
+    this._titlePart.title = s;
+  }
+  get title() {
+    return this._titlePart.title;
+  }
+  get expanded() {
+    return this._expanded.get();
+  }
+  constructor(title, subtitle, context, editorPool, input, output, isError, initiallyExpanded, width, contextKeyService, _instantiationService, _contextMenuService) {
+    super();
+    this.context = context;
+    this.editorPool = editorPool;
+    this.input = input;
+    this.output = output;
+    this.contextKeyService = contextKeyService;
+    this._instantiationService = _instantiationService;
+    this._contextMenuService = _contextMenuService;
+    this._onDidChangeHeight = this._register(new Emitter());
+    this.onDidChangeHeight = this._onDidChangeHeight.event;
+    this._currentWidth = 0;
+    this._editorReferences = [];
+    this.codeblocks = [];
+    this._currentWidth = width;
+    const titleEl = dom.h(".chat-confirmation-widget-title-inner");
+    const iconEl = dom.h(".chat-confirmation-widget-title-icon");
+    const elements = dom.h(".chat-confirmation-widget");
+    this.domNode = elements.root;
+    const titlePart = this._titlePart = this._register(_instantiationService.createInstance(ChatQueryTitlePart, titleEl.root, title, subtitle, _instantiationService.createInstance(MarkdownRenderer, {})));
+    this._register(titlePart.onDidChangeHeight(() => this._onDidChangeHeight.fire()));
+    const spacer = document.createElement("span");
+    spacer.style.flexGrow = "1";
+    const btn = this._register(new ButtonWithIcon(elements.root, {}));
+    btn.element.classList.add("chat-confirmation-widget-title", "monaco-text-button");
+    btn.labelElement.append(titleEl.root, iconEl.root);
+    const check = dom.h(isError ? ThemeIcon.asCSSSelector(Codicon.error) : output ? ThemeIcon.asCSSSelector(Codicon.check) : ThemeIcon.asCSSSelector(ThemeIcon.modify(Codicon.loading, "spin")));
+    iconEl.root.appendChild(check.root);
+    const expanded = this._expanded = observableValue(this, initiallyExpanded);
+    this._register(autorun((r) => {
+      const value = expanded.read(r);
+      btn.icon = value ? Codicon.chevronDown : Codicon.chevronRight;
+      elements.root.classList.toggle("collapsed", !value);
+      this._onDidChangeHeight.fire();
+    }));
+    const toggle = /* @__PURE__ */ __name((e) => {
+      if (!e.defaultPrevented) {
+        const value = expanded.get();
+        expanded.set(!value, void 0);
+        e.preventDefault();
+      }
+    }, "toggle");
+    this._register(btn.onDidClick(toggle));
+    const message = dom.h(".chat-confirmation-widget-message");
+    message.root.appendChild(this.createMessageContents());
+    elements.root.appendChild(message.root);
+  }
+  createMessageContents() {
+    const contents = dom.h("div", [
+      dom.h("h3@inputTitle"),
+      dom.h("div@input"),
+      dom.h("h3@outputTitle"),
+      dom.h("div@output")
+    ]);
+    const { input, output } = this;
+    contents.inputTitle.textContent = localize("chat.input", "Input");
+    this.addCodeBlock(input, contents.input);
+    if (!output) {
+      contents.output.remove();
+      contents.outputTitle.remove();
+    } else {
+      contents.outputTitle.textContent = localize("chat.output", "Output");
+      for (let i = 0; i < output.parts.length; i++) {
+        const part = output.parts[i];
+        if (part.kind === "code") {
+          this.addCodeBlock(part, contents.output);
+          continue;
+        }
+        const group = [];
+        for (let k = i; k < output.parts.length; k++) {
+          const part2 = output.parts[k];
+          if (part2.kind !== "data") {
+            break;
+          }
+          group.push(part2);
+        }
+        this.addResourceGroup(group, contents.output);
+        i += group.length - 1;
+      }
+    }
+    return contents.root;
+  }
+  addResourceGroup(parts, container) {
+    const el = dom.h(".chat-collapsible-io-resource-group", [
+      dom.h(".chat-collapsible-io-resource-items@items"),
+      dom.h(".chat-collapsible-io-resource-actions@actions")
+    ]);
+    const entries = parts.map((part) => {
+      if (part.mimeType && getAttachableImageExtension(part.mimeType)) {
+        return { kind: "image", id: generateUuid(), name: basename(part.uri), value: part.value, mimeType: part.mimeType, isURL: false, references: [{ kind: "reference", reference: part.uri }] };
+      } else {
+        return { kind: "file", id: generateUuid(), name: basename(part.uri), fullName: part.uri.path, value: part.uri };
+      }
+    });
+    const attachments = this._register(this._instantiationService.createInstance(ChatAttachmentsContentPart, entries, void 0, void 0));
+    attachments.contextMenuHandler = (attachment, event) => {
+      const index = entries.indexOf(attachment);
+      const part = parts[index];
+      if (part) {
+        event.preventDefault();
+        event.stopPropagation();
+        this._contextMenuService.showContextMenu({
+          menuId: MenuId.ChatToolOutputResourceContext,
+          menuActionOptions: { shouldForwardArgs: true },
+          getAnchor: /* @__PURE__ */ __name(() => ({ x: event.pageX, y: event.pageY }), "getAnchor"),
+          getActionsContext: /* @__PURE__ */ __name(() => ({ parts: [part] }), "getActionsContext")
+        });
+      }
+    };
+    el.items.appendChild(attachments.domNode);
+    const toolbar = this._register(this._instantiationService.createInstance(MenuWorkbenchToolBar, el.actions, MenuId.ChatToolOutputResourceToolbar, {
+      menuOptions: {
+        shouldForwardArgs: true
+      }
+    }));
+    toolbar.context = { parts };
+    container.appendChild(el.root);
+  }
+  addCodeBlock(part, container) {
+    const data = {
+      languageId: part.languageId,
+      textModel: Promise.resolve(part.textModel),
+      codeBlockIndex: part.codeBlockInfo.codeBlockIndex,
+      codeBlockPartIndex: 0,
+      element: this.context.element,
+      parentContextKeyService: this.contextKeyService,
+      renderOptions: part.options,
+      chatSessionId: this.context.element.sessionId
+    };
+    const editorReference = this._register(this.editorPool.get());
+    editorReference.object.render(data, this._currentWidth || 300);
+    this._register(editorReference.object.onDidChangeContentHeight(() => this._onDidChangeHeight.fire()));
+    container.appendChild(editorReference.object.element);
+    this._editorReferences.push(editorReference);
+  }
+  hasSameContent(other, followingContent, element) {
+    return false;
+  }
+  layout(width) {
+    this._currentWidth = width;
+    this._editorReferences.forEach((r) => r.object.layout(width));
+  }
+};
+ChatCollapsibleInputOutputContentPart = __decorate([
+  __param(9, IContextKeyService),
+  __param(10, IInstantiationService),
+  __param(11, IContextMenuService)
+], ChatCollapsibleInputOutputContentPart);
+class SaveResourcesAction extends Action2 {
+  static {
+    __name(this, "SaveResourcesAction");
+  }
+  static {
+    this.ID = "chat.toolOutput.save";
+  }
+  constructor() {
+    super({
+      id: SaveResourcesAction.ID,
+      title: localize2("chat.saveResources", "Save As..."),
+      icon: Codicon.cloudDownload,
+      menu: [{
+        id: MenuId.ChatToolOutputResourceToolbar,
+        group: "navigation",
+        order: 1
+      }, {
+        id: MenuId.ChatToolOutputResourceContext
+      }]
+    });
+  }
+  async run(accessor, context) {
+    const fileDialog = accessor.get(IFileDialogService);
+    const fileService = accessor.get(IFileService);
+    const notificationService = accessor.get(INotificationService);
+    const progressService = accessor.get(IProgressService);
+    const workspaceContextService = accessor.get(IWorkspaceContextService);
+    const commandService = accessor.get(ICommandService);
+    const labelService = accessor.get(ILabelService);
+    const defaultFilepath = await fileDialog.defaultFilePath();
+    const savePart = /* @__PURE__ */ __name(async (part, isFolder, uri) => {
+      const target = isFolder ? joinPath(uri, basename(part.uri)) : uri;
+      try {
+        if (part.kind === "data") {
+          await fileService.writeFile(target, VSBuffer.wrap(part.value));
+        } else {
+          const contents = await fileService.readFile(part.uri);
+          await fileService.writeFile(target, contents.value);
+        }
+      } catch (e) {
+        notificationService.error(localize("chat.saveResources.error", "Failed to save {0}: {1}", basename(part.uri), e));
+      }
+    }, "savePart");
+    const withProgress = /* @__PURE__ */ __name(async (thenReveal, todo) => {
+      await progressService.withProgress({
+        location: 15,
+        delay: 5e3,
+        title: localize("chat.saveResources.progress", "Saving resources...")
+      }, async (report) => {
+        for (const task of todo) {
+          await task();
+          report.report({ increment: 1, total: todo.length });
+        }
+      });
+      if (workspaceContextService.isInsideWorkspace(thenReveal)) {
+        commandService.executeCommand(REVEAL_IN_EXPLORER_COMMAND_ID, thenReveal);
+      } else {
+        notificationService.info(localize("chat.saveResources.reveal", "Saved resources to {0}", labelService.getUriLabel(thenReveal)));
+      }
+    }, "withProgress");
+    if (context.parts.length === 1) {
+      const part = context.parts[0];
+      const uri = await fileDialog.pickFileToSave(joinPath(defaultFilepath, basename(part.uri)));
+      if (!uri) {
+        return;
+      }
+      await withProgress(uri, [() => savePart(part, false, uri)]);
+    } else {
+      const uris = await fileDialog.showOpenDialog({
+        title: localize("chat.saveResources.title", "Pick folder to save resources"),
+        canSelectFiles: false,
+        canSelectFolders: true,
+        canSelectMany: false,
+        defaultUri: workspaceContextService.getWorkspace().folders[0]?.uri
+      });
+      if (!uris?.length) {
+        return;
+      }
+      await withProgress(uris[0], context.parts.map((part) => () => savePart(part, true, uris[0])));
+    }
+  }
+}
+registerAction2(SaveResourcesAction);
+export {
+  ChatCollapsibleInputOutputContentPart
+};
+//# sourceMappingURL=chatToolInputOutputContentPart.js.map

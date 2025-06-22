@@ -1,1 +1,201 @@
-import{$df as n}from"./event.js";import{$vd as c}from"./lifecycle.js";import*as o from"../../nls.js";class d extends c{constructor(t,s="",i="",e=!0,h){super(),this.j=this.B(new n),this.onDidChange=this.j.event,this.z=!0,this.m=t,this.n=s,this.w=i,this.z=e,this.D=h}get id(){return this.m}get label(){return this.n}set label(t){this.F(t)}F(t){this.n!==t&&(this.n=t,this.j.fire({label:t}))}get tooltip(){return this.u||""}set tooltip(t){this.G(t)}G(t){this.u!==t&&(this.u=t,this.j.fire({tooltip:t}))}get class(){return this.w}set class(t){this.H(t)}H(t){this.w!==t&&(this.w=t,this.j.fire({class:t}))}get enabled(){return this.z}set enabled(t){this.I(t)}I(t){this.z!==t&&(this.z=t,this.j.fire({enabled:t}))}get checked(){return this.C}set checked(t){this.J(t)}J(t){this.C!==t&&(this.C=t,this.j.fire({checked:t}))}async run(t,s){this.D&&await this.D(t)}}class b extends c{constructor(){super(...arguments),this.f=this.B(new n),this.onWillRun=this.f.event,this.m=this.B(new n),this.onDidRun=this.m.event}async run(t,s){if(!t.enabled)return;let i;this.f.fire({action:t});try{await this.u(t,s)}catch(t){i=t}this.m.fire({action:t,error:i})}async u(t,s){await t.run(s)}}class r{constructor(){this.id=r.ID,this.label="",this.tooltip="",this.class="separator",this.enabled=!1,this.checked=!1}static join(...t){let s=[];for(const i of t)i.length&&(s=s.length?[...s,new r,...i]:i);return s}static{this.ID="vs.actions.separator"}async run(){}}class m{get actions(){return this.a}constructor(t,s,i,e){this.tooltip="",this.enabled=!0,this.checked=void 0,this.id=t,this.label=s,this.class=e,this.a=i}async run(){}}class l extends d{static{this.ID="vs.actions.empty"}constructor(){super(l.ID,o.localize(44,null),void 0,!1)}}function g(t){return{id:t.id,label:t.label,tooltip:t.tooltip??t.label,class:t.class,enabled:t.enabled??!0,checked:t.checked,run:async(...s)=>t.run(...s)}}export{d as $_l,b as $am,r as $bm,m as $cm,l as $dm,g as $em};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { Emitter } from "./event.js";
+import { Disposable } from "./lifecycle.js";
+import * as nls from "../../nls.js";
+class Action extends Disposable {
+  static {
+    __name(this, "Action");
+  }
+  constructor(id, label = "", cssClass = "", enabled = true, actionCallback) {
+    super();
+    this._onDidChange = this._register(new Emitter());
+    this.onDidChange = this._onDidChange.event;
+    this._enabled = true;
+    this._id = id;
+    this._label = label;
+    this._cssClass = cssClass;
+    this._enabled = enabled;
+    this._actionCallback = actionCallback;
+  }
+  get id() {
+    return this._id;
+  }
+  get label() {
+    return this._label;
+  }
+  set label(value) {
+    this._setLabel(value);
+  }
+  _setLabel(value) {
+    if (this._label !== value) {
+      this._label = value;
+      this._onDidChange.fire({ label: value });
+    }
+  }
+  get tooltip() {
+    return this._tooltip || "";
+  }
+  set tooltip(value) {
+    this._setTooltip(value);
+  }
+  _setTooltip(value) {
+    if (this._tooltip !== value) {
+      this._tooltip = value;
+      this._onDidChange.fire({ tooltip: value });
+    }
+  }
+  get class() {
+    return this._cssClass;
+  }
+  set class(value) {
+    this._setClass(value);
+  }
+  _setClass(value) {
+    if (this._cssClass !== value) {
+      this._cssClass = value;
+      this._onDidChange.fire({ class: value });
+    }
+  }
+  get enabled() {
+    return this._enabled;
+  }
+  set enabled(value) {
+    this._setEnabled(value);
+  }
+  _setEnabled(value) {
+    if (this._enabled !== value) {
+      this._enabled = value;
+      this._onDidChange.fire({ enabled: value });
+    }
+  }
+  get checked() {
+    return this._checked;
+  }
+  set checked(value) {
+    this._setChecked(value);
+  }
+  _setChecked(value) {
+    if (this._checked !== value) {
+      this._checked = value;
+      this._onDidChange.fire({ checked: value });
+    }
+  }
+  async run(event, data) {
+    if (this._actionCallback) {
+      await this._actionCallback(event);
+    }
+  }
+}
+class ActionRunner extends Disposable {
+  static {
+    __name(this, "ActionRunner");
+  }
+  constructor() {
+    super(...arguments);
+    this._onWillRun = this._register(new Emitter());
+    this.onWillRun = this._onWillRun.event;
+    this._onDidRun = this._register(new Emitter());
+    this.onDidRun = this._onDidRun.event;
+  }
+  async run(action, context) {
+    if (!action.enabled) {
+      return;
+    }
+    this._onWillRun.fire({ action });
+    let error = void 0;
+    try {
+      await this.runAction(action, context);
+    } catch (e) {
+      error = e;
+    }
+    this._onDidRun.fire({ action, error });
+  }
+  async runAction(action, context) {
+    await action.run(context);
+  }
+}
+class Separator {
+  static {
+    __name(this, "Separator");
+  }
+  constructor() {
+    this.id = Separator.ID;
+    this.label = "";
+    this.tooltip = "";
+    this.class = "separator";
+    this.enabled = false;
+    this.checked = false;
+  }
+  /**
+   * Joins all non-empty lists of actions with separators.
+   */
+  static join(...actionLists) {
+    let out = [];
+    for (const list of actionLists) {
+      if (!list.length) {
+      } else if (out.length) {
+        out = [...out, new Separator(), ...list];
+      } else {
+        out = list;
+      }
+    }
+    return out;
+  }
+  static {
+    this.ID = "vs.actions.separator";
+  }
+  async run() {
+  }
+}
+class SubmenuAction {
+  static {
+    __name(this, "SubmenuAction");
+  }
+  get actions() {
+    return this._actions;
+  }
+  constructor(id, label, actions, cssClass) {
+    this.tooltip = "";
+    this.enabled = true;
+    this.checked = void 0;
+    this.id = id;
+    this.label = label;
+    this.class = cssClass;
+    this._actions = actions;
+  }
+  async run() {
+  }
+}
+class EmptySubmenuAction extends Action {
+  static {
+    __name(this, "EmptySubmenuAction");
+  }
+  static {
+    this.ID = "vs.actions.empty";
+  }
+  constructor() {
+    super(EmptySubmenuAction.ID, nls.localize("submenu.empty", "(empty)"), void 0, false);
+  }
+}
+function toAction(props) {
+  return {
+    id: props.id,
+    label: props.label,
+    tooltip: props.tooltip ?? props.label,
+    class: props.class,
+    enabled: props.enabled ?? true,
+    checked: props.checked,
+    run: /* @__PURE__ */ __name(async (...args) => props.run(...args), "run")
+  };
+}
+__name(toAction, "toAction");
+export {
+  Action,
+  ActionRunner,
+  EmptySubmenuAction,
+  Separator,
+  SubmenuAction,
+  toAction
+};
+//# sourceMappingURL=actions.js.map

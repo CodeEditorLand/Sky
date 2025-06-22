@@ -1,1 +1,389 @@
-import{$wh as v,$Yh as y}from"../../../../base/common/async.js";import{CancellationToken as w}from"../../../../base/common/cancellation.js";import{$kb as $}from"../../../../base/common/errors.js";import{$Uj as b}from"../../../../base/common/htmlContent.js";import{$vd as L}from"../../../../base/common/lifecycle.js";import{Schemas as m}from"../../../../base/common/network.js";import*as D from"../../../../base/common/platform.js";import*as k from"../../../../base/common/resources.js";import{$0e as I}from"../../../../base/common/stopwatch.js";import{URI as j}from"../../../../base/common/uri.js";import"./links.css";import{$cab as z,$hab as B,$kab as S}from"../../../browser/editorExtensions.js";import{$YH as M}from"../../../common/model/textModel.js";import{$Uib as R}from"../../../common/services/languageFeatureDebounce.js";import{$sT as x}from"../../../common/services/languageFeatures.js";import{$Tlb as K}from"../../gotoSymbol/browser/link/clickLinkGesture.js";import{$3rb as N}from"./getLinks.js";import*as l from"../../../../nls.js";import{$RI as T}from"../../../../platform/notification/common/notification.js";import{$4$ as P}from"../../../../platform/opener/common/opener.js";var C=function(c,t,e,s){var n=arguments.length,i=n<3?t:s===null?s=Object.getOwnPropertyDescriptor(t,e):s,r;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")i=Reflect.decorate(c,t,e,s);else for(var o=c.length-1;o>=0;o--)(r=c[o])&&(i=(n<3?r(i):n>3?r(t,e,i):r(t,e))||i);return n>3&&i&&Object.defineProperty(t,e,i),i},f=function(c,t){return function(e,s){t(e,s,c)}},p;let d=class extends L{static{p=this}static{this.ID="editor.linkDetector"}static get(t){return t.getContribution(p.ID)}constructor(t,e,s,n,i){super(),this.m=t,this.n=e,this.r=s,this.s=n,this.a=this.s.linkProvider,this.b=i.for(this.a,"Links",{min:1e3,max:4e3}),this.c=this.B(new y(()=>this.t(),1e3)),this.f=null,this.g=null,this.j={},this.h=null;const r=this.B(new K(t));this.B(r.onMouseMoveOrRelevantKeyDown(([o,a])=>{this.w(o,a)})),this.B(r.onExecute(o=>{this.z(o)})),this.B(r.onCancel(o=>{this.y()})),this.B(t.onDidChangeConfiguration(o=>{o.hasChanged(75)&&(this.u([]),this.D(),this.c.schedule(0))})),this.B(t.onDidChangeModelContent(o=>{this.m.hasModel()&&this.c.schedule(this.b.get(this.m.getModel()))})),this.B(t.onDidChangeModel(o=>{this.j={},this.h=null,this.D(),this.c.schedule(0)})),this.B(t.onDidChangeModelLanguage(o=>{this.D(),this.c.schedule(0)})),this.B(this.a.onDidChange(o=>{this.D(),this.c.schedule(0)})),this.c.schedule(0)}async t(){if(!this.m.hasModel()||!this.m.getOption(75))return;const t=this.m.getModel();if(!t.isTooLargeForSyncing()&&this.a.has(t)){this.g&&(this.g.dispose(),this.g=null),this.f=v(e=>N(this.a,t,e));try{const e=new I(!1);if(this.g=await this.f,this.b.update(t,e.elapsed()),t.isDisposed())return;this.u(this.g.links)}catch(e){$(e)}finally{this.f=null}}}u(t){const e=this.m.getOption(82)==="altKey",s=[],n=Object.keys(this.j);for(const r of n){const o=this.j[r];s.push(o.decorationId)}const i=[];if(t)for(const r of t)i.push(u.decoration(r,e));this.m.changeDecorations(r=>{const o=r.deltaDecorations(s,i);this.j={},this.h=null;for(let a=0,h=o.length;a<h;a++){const g=new u(t[a],o[a]);this.j[g.decorationId]=g}})}w(t,e){const s=this.m.getOption(82)==="altKey";if(this.C(t,e)){this.y();const n=this.getLinkOccurrence(t.target.position);n&&this.m.changeDecorations(i=>{n.activate(i,s),this.h=n.decorationId})}else this.y()}y(){const t=this.m.getOption(82)==="altKey";if(this.h){const e=this.j[this.h];e&&this.m.changeDecorations(s=>{e.deactivate(s,t)}),this.h=null}}z(t){if(!this.C(t))return;const e=this.getLinkOccurrence(t.target.position);e&&this.openLinkOccurrence(e,t.hasSideBySideModifier,!0)}openLinkOccurrence(t,e,s=!1){if(!this.n)return;const{link:n}=t;n.resolve(w.None).then(i=>{if(typeof i=="string"&&this.m.hasModel()){const r=this.m.getModel().uri;if(r.scheme===m.file&&i.startsWith(`${m.file}:`)){const o=j.parse(i);if(o.scheme===m.file){const a=k.$$g(o);let h=null;a.startsWith("/./")||a.startsWith("\\.\\")?h=`.${a.substr(1)}`:(a.startsWith("//./")||a.startsWith("\\\\.\\"))&&(h=`.${a.substr(2)}`),h&&(i=k.$kh(r,h))}}}return this.n.open(i,{openToSide:e,fromUserGesture:s,allowContributedOpeners:!0,allowCommands:!0,fromWorkspace:!0})},i=>{const r=i instanceof Error?i.message:i;r==="invalid"?this.r.warn(l.localize(1404,null,n.url.toString())):r==="missing"?this.r.warn(l.localize(1405,null)):$(i)})}getLinkOccurrence(t){if(!this.m.hasModel()||!t)return null;const e=this.m.getModel().getDecorationsInRange({startLineNumber:t.lineNumber,startColumn:t.column,endLineNumber:t.lineNumber,endColumn:t.column},0,!0);for(const s of e){const n=this.j[s.id];if(n)return n}return null}C(t,e){return!!(t.target.type===6&&(t.hasTriggerModifier||e&&e.keyCodeIsTriggerKey))}D(){this.c.cancel(),this.g&&(this.g?.dispose(),this.g=null),this.f&&(this.f.cancel(),this.f=null)}dispose(){super.dispose(),this.D()}};d=p=C([f(1,P),f(2,T),f(3,x),f(4,R)],d);const O={general:M.register({description:"detected-link",stickiness:1,collapseOnReplaceEdit:!0,inlineClassName:"detected-link"}),active:M.register({description:"detected-link-active",stickiness:1,collapseOnReplaceEdit:!0,inlineClassName:"detected-link-active"})};class u{static decoration(t,e){return{range:t.range,options:u.a(t,e,!1)}}static a(t,e,s){const n={...s?O.active:O.general};return n.hoverMessage=W(t,e),n}constructor(t,e){this.link=t,this.decorationId=e}activate(t,e){t.changeDecorationOptions(this.decorationId,u.a(this.link,e,!0))}deactivate(t,e){t.changeDecorationOptions(this.decorationId,u.a(this.link,e,!1))}}function W(c,t){const e=c.url&&/^command:/i.test(c.url.toString()),s=c.tooltip?c.tooltip:e?l.localize(1406,null):l.localize(1407,null),n=t?D.$n?l.localize(1408,null):l.localize(1409,null):D.$n?l.localize(1410,null):l.localize(1411,null);if(c.url){let i="";if(/^command:/i.test(c.url.toString())){const o=c.url.toString().match(/^command:([^?#]+)/);if(o){const a=o[1];i=l.localize(1412,null,a)}}return new b("",!0).appendLink(c.url.toString(!0).replace(/ /g,"%20"),s,i).appendMarkdown(` (${n})`)}else return new b().appendText(`${s} (${n})`)}class _ extends z{constructor(){super({id:"editor.action.openLink",label:l.localize2(1413,"Open Link"),precondition:void 0})}run(t,e){const s=d.get(e);if(!s||!e.hasModel())return;const n=e.getSelections();for(const i of n){const r=s.getLinkOccurrence(i.getEndPosition());r&&s.openLinkOccurrence(r,!1)}}}S(d.ID,d,1);B(_);export{d as $4rb};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { createCancelablePromise, RunOnceScheduler } from "../../../../base/common/async.js";
+import { CancellationToken } from "../../../../base/common/cancellation.js";
+import { onUnexpectedError } from "../../../../base/common/errors.js";
+import { MarkdownString } from "../../../../base/common/htmlContent.js";
+import { Disposable } from "../../../../base/common/lifecycle.js";
+import { Schemas } from "../../../../base/common/network.js";
+import * as platform from "../../../../base/common/platform.js";
+import * as resources from "../../../../base/common/resources.js";
+import { StopWatch } from "../../../../base/common/stopwatch.js";
+import { URI } from "../../../../base/common/uri.js";
+import "./links.css";
+import { EditorAction, registerEditorAction, registerEditorContribution } from "../../../browser/editorExtensions.js";
+import { ModelDecorationOptions } from "../../../common/model/textModel.js";
+import { ILanguageFeatureDebounceService } from "../../../common/services/languageFeatureDebounce.js";
+import { ILanguageFeaturesService } from "../../../common/services/languageFeatures.js";
+import { ClickLinkGesture } from "../../gotoSymbol/browser/link/clickLinkGesture.js";
+import { getLinks } from "./getLinks.js";
+import * as nls from "../../../../nls.js";
+import { INotificationService } from "../../../../platform/notification/common/notification.js";
+import { IOpenerService } from "../../../../platform/opener/common/opener.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+var LinkDetector_1;
+let LinkDetector = class LinkDetector2 extends Disposable {
+  static {
+    __name(this, "LinkDetector");
+  }
+  static {
+    LinkDetector_1 = this;
+  }
+  static {
+    this.ID = "editor.linkDetector";
+  }
+  static get(editor) {
+    return editor.getContribution(LinkDetector_1.ID);
+  }
+  constructor(editor, openerService, notificationService, languageFeaturesService, languageFeatureDebounceService) {
+    super();
+    this.editor = editor;
+    this.openerService = openerService;
+    this.notificationService = notificationService;
+    this.languageFeaturesService = languageFeaturesService;
+    this.providers = this.languageFeaturesService.linkProvider;
+    this.debounceInformation = languageFeatureDebounceService.for(this.providers, "Links", { min: 1e3, max: 4e3 });
+    this.computeLinks = this._register(new RunOnceScheduler(() => this.computeLinksNow(), 1e3));
+    this.computePromise = null;
+    this.activeLinksList = null;
+    this.currentOccurrences = {};
+    this.activeLinkDecorationId = null;
+    const clickLinkGesture = this._register(new ClickLinkGesture(editor));
+    this._register(clickLinkGesture.onMouseMoveOrRelevantKeyDown(([mouseEvent, keyboardEvent]) => {
+      this._onEditorMouseMove(mouseEvent, keyboardEvent);
+    }));
+    this._register(clickLinkGesture.onExecute((e) => {
+      this.onEditorMouseUp(e);
+    }));
+    this._register(clickLinkGesture.onCancel((e) => {
+      this.cleanUpActiveLinkDecoration();
+    }));
+    this._register(editor.onDidChangeConfiguration((e) => {
+      if (!e.hasChanged(
+        75
+        /* EditorOption.links */
+      )) {
+        return;
+      }
+      this.updateDecorations([]);
+      this.stop();
+      this.computeLinks.schedule(0);
+    }));
+    this._register(editor.onDidChangeModelContent((e) => {
+      if (!this.editor.hasModel()) {
+        return;
+      }
+      this.computeLinks.schedule(this.debounceInformation.get(this.editor.getModel()));
+    }));
+    this._register(editor.onDidChangeModel((e) => {
+      this.currentOccurrences = {};
+      this.activeLinkDecorationId = null;
+      this.stop();
+      this.computeLinks.schedule(0);
+    }));
+    this._register(editor.onDidChangeModelLanguage((e) => {
+      this.stop();
+      this.computeLinks.schedule(0);
+    }));
+    this._register(this.providers.onDidChange((e) => {
+      this.stop();
+      this.computeLinks.schedule(0);
+    }));
+    this.computeLinks.schedule(0);
+  }
+  async computeLinksNow() {
+    if (!this.editor.hasModel() || !this.editor.getOption(
+      75
+      /* EditorOption.links */
+    )) {
+      return;
+    }
+    const model = this.editor.getModel();
+    if (model.isTooLargeForSyncing()) {
+      return;
+    }
+    if (!this.providers.has(model)) {
+      return;
+    }
+    if (this.activeLinksList) {
+      this.activeLinksList.dispose();
+      this.activeLinksList = null;
+    }
+    this.computePromise = createCancelablePromise((token) => getLinks(this.providers, model, token));
+    try {
+      const sw = new StopWatch(false);
+      this.activeLinksList = await this.computePromise;
+      this.debounceInformation.update(model, sw.elapsed());
+      if (model.isDisposed()) {
+        return;
+      }
+      this.updateDecorations(this.activeLinksList.links);
+    } catch (err) {
+      onUnexpectedError(err);
+    } finally {
+      this.computePromise = null;
+    }
+  }
+  updateDecorations(links) {
+    const useMetaKey = this.editor.getOption(
+      82
+      /* EditorOption.multiCursorModifier */
+    ) === "altKey";
+    const oldDecorations = [];
+    const keys = Object.keys(this.currentOccurrences);
+    for (const decorationId of keys) {
+      const occurence = this.currentOccurrences[decorationId];
+      oldDecorations.push(occurence.decorationId);
+    }
+    const newDecorations = [];
+    if (links) {
+      for (const link of links) {
+        newDecorations.push(LinkOccurrence.decoration(link, useMetaKey));
+      }
+    }
+    this.editor.changeDecorations((changeAccessor) => {
+      const decorations = changeAccessor.deltaDecorations(oldDecorations, newDecorations);
+      this.currentOccurrences = {};
+      this.activeLinkDecorationId = null;
+      for (let i = 0, len = decorations.length; i < len; i++) {
+        const occurence = new LinkOccurrence(links[i], decorations[i]);
+        this.currentOccurrences[occurence.decorationId] = occurence;
+      }
+    });
+  }
+  _onEditorMouseMove(mouseEvent, withKey) {
+    const useMetaKey = this.editor.getOption(
+      82
+      /* EditorOption.multiCursorModifier */
+    ) === "altKey";
+    if (this.isEnabled(mouseEvent, withKey)) {
+      this.cleanUpActiveLinkDecoration();
+      const occurrence = this.getLinkOccurrence(mouseEvent.target.position);
+      if (occurrence) {
+        this.editor.changeDecorations((changeAccessor) => {
+          occurrence.activate(changeAccessor, useMetaKey);
+          this.activeLinkDecorationId = occurrence.decorationId;
+        });
+      }
+    } else {
+      this.cleanUpActiveLinkDecoration();
+    }
+  }
+  cleanUpActiveLinkDecoration() {
+    const useMetaKey = this.editor.getOption(
+      82
+      /* EditorOption.multiCursorModifier */
+    ) === "altKey";
+    if (this.activeLinkDecorationId) {
+      const occurrence = this.currentOccurrences[this.activeLinkDecorationId];
+      if (occurrence) {
+        this.editor.changeDecorations((changeAccessor) => {
+          occurrence.deactivate(changeAccessor, useMetaKey);
+        });
+      }
+      this.activeLinkDecorationId = null;
+    }
+  }
+  onEditorMouseUp(mouseEvent) {
+    if (!this.isEnabled(mouseEvent)) {
+      return;
+    }
+    const occurrence = this.getLinkOccurrence(mouseEvent.target.position);
+    if (!occurrence) {
+      return;
+    }
+    this.openLinkOccurrence(
+      occurrence,
+      mouseEvent.hasSideBySideModifier,
+      true
+      /* from user gesture */
+    );
+  }
+  openLinkOccurrence(occurrence, openToSide, fromUserGesture = false) {
+    if (!this.openerService) {
+      return;
+    }
+    const { link } = occurrence;
+    link.resolve(CancellationToken.None).then((uri) => {
+      if (typeof uri === "string" && this.editor.hasModel()) {
+        const modelUri = this.editor.getModel().uri;
+        if (modelUri.scheme === Schemas.file && uri.startsWith(`${Schemas.file}:`)) {
+          const parsedUri = URI.parse(uri);
+          if (parsedUri.scheme === Schemas.file) {
+            const fsPath = resources.originalFSPath(parsedUri);
+            let relativePath = null;
+            if (fsPath.startsWith("/./") || fsPath.startsWith("\\.\\")) {
+              relativePath = `.${fsPath.substr(1)}`;
+            } else if (fsPath.startsWith("//./") || fsPath.startsWith("\\\\.\\")) {
+              relativePath = `.${fsPath.substr(2)}`;
+            }
+            if (relativePath) {
+              uri = resources.joinPath(modelUri, relativePath);
+            }
+          }
+        }
+      }
+      return this.openerService.open(uri, { openToSide, fromUserGesture, allowContributedOpeners: true, allowCommands: true, fromWorkspace: true });
+    }, (err) => {
+      const messageOrError = err instanceof Error ? err.message : err;
+      if (messageOrError === "invalid") {
+        this.notificationService.warn(nls.localize("invalid.url", "Failed to open this link because it is not well-formed: {0}", link.url.toString()));
+      } else if (messageOrError === "missing") {
+        this.notificationService.warn(nls.localize("missing.url", "Failed to open this link because its target is missing."));
+      } else {
+        onUnexpectedError(err);
+      }
+    });
+  }
+  getLinkOccurrence(position) {
+    if (!this.editor.hasModel() || !position) {
+      return null;
+    }
+    const decorations = this.editor.getModel().getDecorationsInRange({
+      startLineNumber: position.lineNumber,
+      startColumn: position.column,
+      endLineNumber: position.lineNumber,
+      endColumn: position.column
+    }, 0, true);
+    for (const decoration2 of decorations) {
+      const currentOccurrence = this.currentOccurrences[decoration2.id];
+      if (currentOccurrence) {
+        return currentOccurrence;
+      }
+    }
+    return null;
+  }
+  isEnabled(mouseEvent, withKey) {
+    return Boolean(mouseEvent.target.type === 6 && (mouseEvent.hasTriggerModifier || withKey && withKey.keyCodeIsTriggerKey));
+  }
+  stop() {
+    this.computeLinks.cancel();
+    if (this.activeLinksList) {
+      this.activeLinksList?.dispose();
+      this.activeLinksList = null;
+    }
+    if (this.computePromise) {
+      this.computePromise.cancel();
+      this.computePromise = null;
+    }
+  }
+  dispose() {
+    super.dispose();
+    this.stop();
+  }
+};
+LinkDetector = LinkDetector_1 = __decorate([
+  __param(1, IOpenerService),
+  __param(2, INotificationService),
+  __param(3, ILanguageFeaturesService),
+  __param(4, ILanguageFeatureDebounceService)
+], LinkDetector);
+const decoration = {
+  general: ModelDecorationOptions.register({
+    description: "detected-link",
+    stickiness: 1,
+    collapseOnReplaceEdit: true,
+    inlineClassName: "detected-link"
+  }),
+  active: ModelDecorationOptions.register({
+    description: "detected-link-active",
+    stickiness: 1,
+    collapseOnReplaceEdit: true,
+    inlineClassName: "detected-link-active"
+  })
+};
+class LinkOccurrence {
+  static {
+    __name(this, "LinkOccurrence");
+  }
+  static decoration(link, useMetaKey) {
+    return {
+      range: link.range,
+      options: LinkOccurrence._getOptions(link, useMetaKey, false)
+    };
+  }
+  static _getOptions(link, useMetaKey, isActive) {
+    const options = { ...isActive ? decoration.active : decoration.general };
+    options.hoverMessage = getHoverMessage(link, useMetaKey);
+    return options;
+  }
+  constructor(link, decorationId) {
+    this.link = link;
+    this.decorationId = decorationId;
+  }
+  activate(changeAccessor, useMetaKey) {
+    changeAccessor.changeDecorationOptions(this.decorationId, LinkOccurrence._getOptions(this.link, useMetaKey, true));
+  }
+  deactivate(changeAccessor, useMetaKey) {
+    changeAccessor.changeDecorationOptions(this.decorationId, LinkOccurrence._getOptions(this.link, useMetaKey, false));
+  }
+}
+function getHoverMessage(link, useMetaKey) {
+  const executeCmd = link.url && /^command:/i.test(link.url.toString());
+  const label = link.tooltip ? link.tooltip : executeCmd ? nls.localize("links.navigate.executeCmd", "Execute command") : nls.localize("links.navigate.follow", "Follow link");
+  const kb = useMetaKey ? platform.isMacintosh ? nls.localize("links.navigate.kb.meta.mac", "cmd + click") : nls.localize("links.navigate.kb.meta", "ctrl + click") : platform.isMacintosh ? nls.localize("links.navigate.kb.alt.mac", "option + click") : nls.localize("links.navigate.kb.alt", "alt + click");
+  if (link.url) {
+    let nativeLabel = "";
+    if (/^command:/i.test(link.url.toString())) {
+      const match = link.url.toString().match(/^command:([^?#]+)/);
+      if (match) {
+        const commandId = match[1];
+        nativeLabel = nls.localize("tooltip.explanation", "Execute command {0}", commandId);
+      }
+    }
+    const hoverMessage = new MarkdownString("", true).appendLink(link.url.toString(true).replace(/ /g, "%20"), label, nativeLabel).appendMarkdown(` (${kb})`);
+    return hoverMessage;
+  } else {
+    return new MarkdownString().appendText(`${label} (${kb})`);
+  }
+}
+__name(getHoverMessage, "getHoverMessage");
+class OpenLinkAction extends EditorAction {
+  static {
+    __name(this, "OpenLinkAction");
+  }
+  constructor() {
+    super({
+      id: "editor.action.openLink",
+      label: nls.localize2("label", "Open Link"),
+      precondition: void 0
+    });
+  }
+  run(accessor, editor) {
+    const linkDetector = LinkDetector.get(editor);
+    if (!linkDetector) {
+      return;
+    }
+    if (!editor.hasModel()) {
+      return;
+    }
+    const selections = editor.getSelections();
+    for (const sel of selections) {
+      const link = linkDetector.getLinkOccurrence(sel.getEndPosition());
+      if (link) {
+        linkDetector.openLinkOccurrence(link, false);
+      }
+    }
+  }
+}
+registerEditorContribution(
+  LinkDetector.ID,
+  LinkDetector,
+  1
+  /* EditorContributionInstantiation.AfterFirstRender */
+);
+registerEditorAction(OpenLinkAction);
+export {
+  LinkDetector
+};
+//# sourceMappingURL=links.js.map

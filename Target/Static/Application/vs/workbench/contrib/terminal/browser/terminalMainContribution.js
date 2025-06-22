@@ -1,1 +1,114 @@
-import{$vd as P}from"../../../../base/common/lifecycle.js";import{Schemas as h}from"../../../../base/common/network.js";import{$2H as y}from"../../../../platform/label/common/label.js";import{TerminalLocation as I}from"../../../../platform/terminal/common/terminal.js";import{$GYb as E,$HYb as T,$IYb as _,$EYb as B,$LYb as b}from"./terminal.js";import{$2qc as Y}from"./terminalUri.js";import{$Sqc as D}from"../common/terminalStrings.js";import{$$K as F,RegisteredEditorPriority as G}from"../../../services/editor/common/editorResolverService.js";import{$KX as j}from"../../../services/environment/common/environmentService.js";import{$RK as k}from"../../../services/lifecycle/common/lifecycle.js";import{$0$ as q}from"../../../services/terminal/common/embedderTerminalService.js";var g=function(s,e,o,n){var a=arguments.length,r=a<3?e:n===null?n=Object.getOwnPropertyDescriptor(e,o):n,t;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")r=Reflect.decorate(s,e,o,n);else for(var c=s.length-1;c>=0;c--)(t=s[c])&&(r=(a<3?t(r):a>3?t(e,o,r):t(e,o))||r);return a>3&&r&&Object.defineProperty(e,o,r),r},i=function(s,e){return function(o,n){e(o,n,s)}};let v=class extends P{static{this.ID="terminalMain"}constructor(e,o,n,a,r,t,c,l,u){super(),this.a(e,o,n,a,r,t,c,l,u)}async a(e,o,n,a,r,t,c,l,u){this.B(o.onDidCreateTerminal(async m=>{const d=await t.createTerminal({config:m,location:I.Panel,skipContributedProfileCheck:!0});t.setActiveInstance(d),await t.revealActiveTerminal()})),await r.when(3),this.B(e.registerEditor(`${h.vscodeTerminal}:/**`,{id:b,label:D.terminal,priority:G.exclusive},{canSupportResource:m=>m.scheme===h.vscodeTerminal,singlePerResource:!0},{createEditorInput:async({resource:m,options:d})=>{let p=t.getInstanceFromResource(m);if(p)l.getGroupForInstance(p)?.removeInstance(p);else{const f=Y(m);if(!f.instanceId)throw new Error("Terminal identifier without instanceId");const $=t.getPrimaryBackend();if(!$)throw new Error("No terminal primary backend");const w=await $.requestDetachInstance(f.workspaceId,f.instanceId);if(!w)throw new Error("No terminal persistent process to attach");p=u.createInstance({attachPersistentProcess:w},I.Editor)}const R=c.resolveResource(p);return{editor:c.getInputFromResource(R),options:{...d,pinned:!0,forceReload:!0,override:b}}}})),this.B(a.registerFormatter({scheme:h.vscodeTerminal,formatting:{label:"${path}",separator:""}}))}};v=g([i(0,F),i(1,q),i(2,j),i(3,y),i(4,k),i(5,B),i(6,E),i(7,T),i(8,_)],v);export{v as $Mrc};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { Disposable } from "../../../../base/common/lifecycle.js";
+import { Schemas } from "../../../../base/common/network.js";
+import { ILabelService } from "../../../../platform/label/common/label.js";
+import { TerminalLocation } from "../../../../platform/terminal/common/terminal.js";
+import { ITerminalEditorService, ITerminalGroupService, ITerminalInstanceService, ITerminalService, terminalEditorId } from "./terminal.js";
+import { parseTerminalUri } from "./terminalUri.js";
+import { terminalStrings } from "../common/terminalStrings.js";
+import { IEditorResolverService, RegisteredEditorPriority } from "../../../services/editor/common/editorResolverService.js";
+import { IWorkbenchEnvironmentService } from "../../../services/environment/common/environmentService.js";
+import { ILifecycleService } from "../../../services/lifecycle/common/lifecycle.js";
+import { IEmbedderTerminalService } from "../../../services/terminal/common/embedderTerminalService.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+let TerminalMainContribution = class TerminalMainContribution2 extends Disposable {
+  static {
+    __name(this, "TerminalMainContribution");
+  }
+  static {
+    this.ID = "terminalMain";
+  }
+  constructor(editorResolverService, embedderTerminalService, workbenchEnvironmentService, labelService, lifecycleService, terminalService, terminalEditorService, terminalGroupService, terminalInstanceService) {
+    super();
+    this._init(editorResolverService, embedderTerminalService, workbenchEnvironmentService, labelService, lifecycleService, terminalService, terminalEditorService, terminalGroupService, terminalInstanceService);
+  }
+  async _init(editorResolverService, embedderTerminalService, workbenchEnvironmentService, labelService, lifecycleService, terminalService, terminalEditorService, terminalGroupService, terminalInstanceService) {
+    this._register(embedderTerminalService.onDidCreateTerminal(async (embedderTerminal) => {
+      const terminal = await terminalService.createTerminal({
+        config: embedderTerminal,
+        location: TerminalLocation.Panel,
+        skipContributedProfileCheck: true
+      });
+      terminalService.setActiveInstance(terminal);
+      await terminalService.revealActiveTerminal();
+    }));
+    await lifecycleService.when(
+      3
+      /* LifecyclePhase.Restored */
+    );
+    this._register(editorResolverService.registerEditor(`${Schemas.vscodeTerminal}:/**`, {
+      id: terminalEditorId,
+      label: terminalStrings.terminal,
+      priority: RegisteredEditorPriority.exclusive
+    }, {
+      canSupportResource: /* @__PURE__ */ __name((uri) => uri.scheme === Schemas.vscodeTerminal, "canSupportResource"),
+      singlePerResource: true
+    }, {
+      createEditorInput: /* @__PURE__ */ __name(async ({ resource, options }) => {
+        let instance = terminalService.getInstanceFromResource(resource);
+        if (instance) {
+          const sourceGroup = terminalGroupService.getGroupForInstance(instance);
+          sourceGroup?.removeInstance(instance);
+        } else {
+          const terminalIdentifier = parseTerminalUri(resource);
+          if (!terminalIdentifier.instanceId) {
+            throw new Error("Terminal identifier without instanceId");
+          }
+          const primaryBackend = terminalService.getPrimaryBackend();
+          if (!primaryBackend) {
+            throw new Error("No terminal primary backend");
+          }
+          const attachPersistentProcess = await primaryBackend.requestDetachInstance(terminalIdentifier.workspaceId, terminalIdentifier.instanceId);
+          if (!attachPersistentProcess) {
+            throw new Error("No terminal persistent process to attach");
+          }
+          instance = terminalInstanceService.createInstance({ attachPersistentProcess }, TerminalLocation.Editor);
+        }
+        const resolvedResource = terminalEditorService.resolveResource(instance);
+        const editor = terminalEditorService.getInputFromResource(resolvedResource);
+        return {
+          editor,
+          options: {
+            ...options,
+            pinned: true,
+            forceReload: true,
+            override: terminalEditorId
+          }
+        };
+      }, "createEditorInput")
+    }));
+    this._register(labelService.registerFormatter({
+      scheme: Schemas.vscodeTerminal,
+      formatting: {
+        label: "${path}",
+        separator: ""
+      }
+    }));
+  }
+};
+TerminalMainContribution = __decorate([
+  __param(0, IEditorResolverService),
+  __param(1, IEmbedderTerminalService),
+  __param(2, IWorkbenchEnvironmentService),
+  __param(3, ILabelService),
+  __param(4, ILifecycleService),
+  __param(5, ITerminalService),
+  __param(6, ITerminalEditorService),
+  __param(7, ITerminalGroupService),
+  __param(8, ITerminalInstanceService)
+], TerminalMainContribution);
+export {
+  TerminalMainContribution
+};
+//# sourceMappingURL=terminalMainContribution.js.map

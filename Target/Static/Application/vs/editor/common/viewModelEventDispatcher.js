@@ -1,1 +1,463 @@
-import{$df as p}from"../../base/common/event.js";import{$vd as g}from"../../base/common/lifecycle.js";class H extends g{constructor(){super(),this.c=this.B(new p),this.onEvent=this.c.event,this.f=[],this.g=null,this.h=!1,this.j=null,this.m=0,this.n=[]}emitOutgoingEvent(t){this.r(t),this.s()}r(t){for(let s=0,e=this.n.length;s<e;s++){const e=this.n[s].kind===t.kind?this.n[s].attemptToMerge(t):null;if(e)return void(this.n[s]=e)}this.n.push(t)}s(){for(;this.n.length>0;){if(this.j||this.h)return;const t=this.n.shift();t.isNoOp()||this.c.fire(t)}}addViewEventHandler(t){for(let t=0,s=this.f.length;t<s;t++)this.f[t];this.f.push(t)}removeViewEventHandler(t){for(let s=0;s<this.f.length;s++)if(this.f[s]===t){this.f.splice(s,1);break}}beginEmitViewEvents(){return this.m++,1===this.m&&(this.j=new C),this.j}endEmitViewEvents(){if(this.m--,0===this.m){const t=this.j.outgoingEvents,s=this.j.viewEvents;this.j=null;for(const s of t)this.r(s);s.length>0&&this.t(s)}this.s()}emitSingleViewEvent(t){try{this.beginEmitViewEvents().emitViewEvent(t)}finally{this.endEmitViewEvents()}}t(t){this.g?this.g=this.g.concat(t):this.g=t,this.h||this.u()}u(){try{this.h=!0,this.w()}finally{this.h=!1}}w(){for(;this.g;){const t=this.g;this.g=null;const s=this.f.slice(0);for(const e of s)e.handleEvents(t)}}}class C{constructor(){this.viewEvents=[],this.outgoingEvents=[]}emitViewEvent(t){this.viewEvents.push(t)}emitOutgoingEvent(t){this.outgoingEvents.push(t)}}var a;!function(t){t[t.ContentSizeChanged=0]="ContentSizeChanged",t[t.FocusChanged=1]="FocusChanged",t[t.WidgetFocusChanged=2]="WidgetFocusChanged",t[t.ScrollChanged=3]="ScrollChanged",t[t.ViewZonesChanged=4]="ViewZonesChanged",t[t.HiddenAreasChanged=5]="HiddenAreasChanged",t[t.ReadOnlyEditAttempt=6]="ReadOnlyEditAttempt",t[t.CursorStateChanged=7]="CursorStateChanged",t[t.ModelDecorationsChanged=8]="ModelDecorationsChanged",t[t.ModelLanguageChanged=9]="ModelLanguageChanged",t[t.ModelLanguageConfigurationChanged=10]="ModelLanguageConfigurationChanged",t[t.ModelContentChanged=11]="ModelContentChanged",t[t.ModelOptionsChanged=12]="ModelOptionsChanged",t[t.ModelTokensChanged=13]="ModelTokensChanged",t[t.ModelLineHeightChanged=14]="ModelLineHeightChanged"}(a||(a={}));class d{constructor(t,s,e,i){this.kind=0,this.c=t,this.d=s,this.contentWidth=e,this.contentHeight=i,this.contentWidthChanged=this.c!==this.contentWidth,this.contentHeightChanged=this.d!==this.contentHeight}isNoOp(){return!this.contentWidthChanged&&!this.contentHeightChanged}attemptToMerge(t){return t.kind!==this.kind?null:new d(this.c,this.d,t.contentWidth,t.contentHeight)}}class c{constructor(t,s){this.kind=1,this.oldHasFocus=t,this.hasFocus=s}isNoOp(){return this.oldHasFocus===this.hasFocus}attemptToMerge(t){return t.kind!==this.kind?null:new c(this.oldHasFocus,t.hasFocus)}}class x{constructor(t,s){this.kind=2,this.oldHasFocus=t,this.hasFocus=s}isNoOp(){return this.oldHasFocus===this.hasFocus}attemptToMerge(t){return t.kind!==this.kind?null:new c(this.oldHasFocus,t.hasFocus)}}class u{constructor(t,s,e,i,n,h,o,r){this.kind=3,this.c=t,this.d=s,this.f=e,this.g=i,this.scrollWidth=n,this.scrollLeft=h,this.scrollHeight=o,this.scrollTop=r,this.scrollWidthChanged=this.c!==this.scrollWidth,this.scrollLeftChanged=this.d!==this.scrollLeft,this.scrollHeightChanged=this.f!==this.scrollHeight,this.scrollTopChanged=this.g!==this.scrollTop}isNoOp(){return!(this.scrollWidthChanged||this.scrollLeftChanged||this.scrollHeightChanged||this.scrollTopChanged)}attemptToMerge(t){return t.kind!==this.kind?null:new u(this.c,this.d,this.f,this.g,t.scrollWidth,t.scrollLeft,t.scrollHeight,t.scrollTop)}}class T{constructor(){this.kind=4}isNoOp(){return!1}attemptToMerge(t){return t.kind!==this.kind?null:this}}class v{constructor(){this.kind=5}isNoOp(){return!1}attemptToMerge(t){return t.kind!==this.kind?null:this}}class l{constructor(t,s,e,i,n,h,o){this.kind=7,this.oldSelections=t,this.selections=s,this.oldModelVersionId=e,this.modelVersionId=i,this.source=n,this.reason=h,this.reachedMaxCursorCount=o}static c(t,s){if(!t&&!s)return!0;if(!t||!s)return!1;const e=t.length;if(e!==s.length)return!1;for(let i=0;i<e;i++)if(!t[i].equalsSelection(s[i]))return!1;return!0}isNoOp(){return l.c(this.oldSelections,this.selections)&&this.oldModelVersionId===this.modelVersionId}attemptToMerge(t){return t.kind!==this.kind?null:new l(this.oldSelections,t.selections,this.oldModelVersionId,t.modelVersionId,t.source,t.reason,this.reachedMaxCursorCount||t.reachedMaxCursorCount)}}class F{constructor(){this.kind=6}isNoOp(){return!1}attemptToMerge(t){return t.kind!==this.kind?null:this}}class N{constructor(t){this.event=t,this.kind=8}isNoOp(){return!1}attemptToMerge(t){return null}}class ${constructor(t){this.event=t,this.kind=9}isNoOp(){return!1}attemptToMerge(t){return null}}class b{constructor(t){this.event=t,this.kind=10}isNoOp(){return!1}attemptToMerge(t){return null}}class L{constructor(t){this.event=t,this.kind=11}isNoOp(){return!1}attemptToMerge(t){return null}}class W{constructor(t){this.event=t,this.kind=12}isNoOp(){return!1}attemptToMerge(t){return null}}class S{constructor(t){this.event=t,this.kind=13}isNoOp(){return!1}attemptToMerge(t){return null}}class M{constructor(t){this.event=t,this.kind=14}isNoOp(){return!1}attemptToMerge(t){return null}}export{b as $Adb,L as $Bdb,W as $Cdb,S as $Ddb,M as $Edb,H as $odb,C as $pdb,d as $qdb,c as $rdb,x as $sdb,u as $tdb,T as $udb,v as $vdb,l as $wdb,F as $xdb,N as $ydb,$ as $zdb,a as OutgoingViewModelEventKind};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { Emitter } from "../../base/common/event.js";
+import { Disposable } from "../../base/common/lifecycle.js";
+class ViewModelEventDispatcher extends Disposable {
+  static {
+    __name(this, "ViewModelEventDispatcher");
+  }
+  constructor() {
+    super();
+    this._onEvent = this._register(new Emitter());
+    this.onEvent = this._onEvent.event;
+    this._eventHandlers = [];
+    this._viewEventQueue = null;
+    this._isConsumingViewEventQueue = false;
+    this._collector = null;
+    this._collectorCnt = 0;
+    this._outgoingEvents = [];
+  }
+  emitOutgoingEvent(e) {
+    this._addOutgoingEvent(e);
+    this._emitOutgoingEvents();
+  }
+  _addOutgoingEvent(e) {
+    for (let i = 0, len = this._outgoingEvents.length; i < len; i++) {
+      const mergeResult = this._outgoingEvents[i].kind === e.kind ? this._outgoingEvents[i].attemptToMerge(e) : null;
+      if (mergeResult) {
+        this._outgoingEvents[i] = mergeResult;
+        return;
+      }
+    }
+    this._outgoingEvents.push(e);
+  }
+  _emitOutgoingEvents() {
+    while (this._outgoingEvents.length > 0) {
+      if (this._collector || this._isConsumingViewEventQueue) {
+        return;
+      }
+      const event = this._outgoingEvents.shift();
+      if (event.isNoOp()) {
+        continue;
+      }
+      this._onEvent.fire(event);
+    }
+  }
+  addViewEventHandler(eventHandler) {
+    for (let i = 0, len = this._eventHandlers.length; i < len; i++) {
+      if (this._eventHandlers[i] === eventHandler) {
+        console.warn("Detected duplicate listener in ViewEventDispatcher", eventHandler);
+      }
+    }
+    this._eventHandlers.push(eventHandler);
+  }
+  removeViewEventHandler(eventHandler) {
+    for (let i = 0; i < this._eventHandlers.length; i++) {
+      if (this._eventHandlers[i] === eventHandler) {
+        this._eventHandlers.splice(i, 1);
+        break;
+      }
+    }
+  }
+  beginEmitViewEvents() {
+    this._collectorCnt++;
+    if (this._collectorCnt === 1) {
+      this._collector = new ViewModelEventsCollector();
+    }
+    return this._collector;
+  }
+  endEmitViewEvents() {
+    this._collectorCnt--;
+    if (this._collectorCnt === 0) {
+      const outgoingEvents = this._collector.outgoingEvents;
+      const viewEvents = this._collector.viewEvents;
+      this._collector = null;
+      for (const outgoingEvent of outgoingEvents) {
+        this._addOutgoingEvent(outgoingEvent);
+      }
+      if (viewEvents.length > 0) {
+        this._emitMany(viewEvents);
+      }
+    }
+    this._emitOutgoingEvents();
+  }
+  emitSingleViewEvent(event) {
+    try {
+      const eventsCollector = this.beginEmitViewEvents();
+      eventsCollector.emitViewEvent(event);
+    } finally {
+      this.endEmitViewEvents();
+    }
+  }
+  _emitMany(events) {
+    if (this._viewEventQueue) {
+      this._viewEventQueue = this._viewEventQueue.concat(events);
+    } else {
+      this._viewEventQueue = events;
+    }
+    if (!this._isConsumingViewEventQueue) {
+      this._consumeViewEventQueue();
+    }
+  }
+  _consumeViewEventQueue() {
+    try {
+      this._isConsumingViewEventQueue = true;
+      this._doConsumeQueue();
+    } finally {
+      this._isConsumingViewEventQueue = false;
+    }
+  }
+  _doConsumeQueue() {
+    while (this._viewEventQueue) {
+      const events = this._viewEventQueue;
+      this._viewEventQueue = null;
+      const eventHandlers = this._eventHandlers.slice(0);
+      for (const eventHandler of eventHandlers) {
+        eventHandler.handleEvents(events);
+      }
+    }
+  }
+}
+class ViewModelEventsCollector {
+  static {
+    __name(this, "ViewModelEventsCollector");
+  }
+  constructor() {
+    this.viewEvents = [];
+    this.outgoingEvents = [];
+  }
+  emitViewEvent(event) {
+    this.viewEvents.push(event);
+  }
+  emitOutgoingEvent(e) {
+    this.outgoingEvents.push(e);
+  }
+}
+var OutgoingViewModelEventKind;
+(function(OutgoingViewModelEventKind2) {
+  OutgoingViewModelEventKind2[OutgoingViewModelEventKind2["ContentSizeChanged"] = 0] = "ContentSizeChanged";
+  OutgoingViewModelEventKind2[OutgoingViewModelEventKind2["FocusChanged"] = 1] = "FocusChanged";
+  OutgoingViewModelEventKind2[OutgoingViewModelEventKind2["WidgetFocusChanged"] = 2] = "WidgetFocusChanged";
+  OutgoingViewModelEventKind2[OutgoingViewModelEventKind2["ScrollChanged"] = 3] = "ScrollChanged";
+  OutgoingViewModelEventKind2[OutgoingViewModelEventKind2["ViewZonesChanged"] = 4] = "ViewZonesChanged";
+  OutgoingViewModelEventKind2[OutgoingViewModelEventKind2["HiddenAreasChanged"] = 5] = "HiddenAreasChanged";
+  OutgoingViewModelEventKind2[OutgoingViewModelEventKind2["ReadOnlyEditAttempt"] = 6] = "ReadOnlyEditAttempt";
+  OutgoingViewModelEventKind2[OutgoingViewModelEventKind2["CursorStateChanged"] = 7] = "CursorStateChanged";
+  OutgoingViewModelEventKind2[OutgoingViewModelEventKind2["ModelDecorationsChanged"] = 8] = "ModelDecorationsChanged";
+  OutgoingViewModelEventKind2[OutgoingViewModelEventKind2["ModelLanguageChanged"] = 9] = "ModelLanguageChanged";
+  OutgoingViewModelEventKind2[OutgoingViewModelEventKind2["ModelLanguageConfigurationChanged"] = 10] = "ModelLanguageConfigurationChanged";
+  OutgoingViewModelEventKind2[OutgoingViewModelEventKind2["ModelContentChanged"] = 11] = "ModelContentChanged";
+  OutgoingViewModelEventKind2[OutgoingViewModelEventKind2["ModelOptionsChanged"] = 12] = "ModelOptionsChanged";
+  OutgoingViewModelEventKind2[OutgoingViewModelEventKind2["ModelTokensChanged"] = 13] = "ModelTokensChanged";
+  OutgoingViewModelEventKind2[OutgoingViewModelEventKind2["ModelLineHeightChanged"] = 14] = "ModelLineHeightChanged";
+})(OutgoingViewModelEventKind || (OutgoingViewModelEventKind = {}));
+class ContentSizeChangedEvent {
+  static {
+    __name(this, "ContentSizeChangedEvent");
+  }
+  constructor(oldContentWidth, oldContentHeight, contentWidth, contentHeight) {
+    this.kind = 0;
+    this._oldContentWidth = oldContentWidth;
+    this._oldContentHeight = oldContentHeight;
+    this.contentWidth = contentWidth;
+    this.contentHeight = contentHeight;
+    this.contentWidthChanged = this._oldContentWidth !== this.contentWidth;
+    this.contentHeightChanged = this._oldContentHeight !== this.contentHeight;
+  }
+  isNoOp() {
+    return !this.contentWidthChanged && !this.contentHeightChanged;
+  }
+  attemptToMerge(other) {
+    if (other.kind !== this.kind) {
+      return null;
+    }
+    return new ContentSizeChangedEvent(this._oldContentWidth, this._oldContentHeight, other.contentWidth, other.contentHeight);
+  }
+}
+class FocusChangedEvent {
+  static {
+    __name(this, "FocusChangedEvent");
+  }
+  constructor(oldHasFocus, hasFocus) {
+    this.kind = 1;
+    this.oldHasFocus = oldHasFocus;
+    this.hasFocus = hasFocus;
+  }
+  isNoOp() {
+    return this.oldHasFocus === this.hasFocus;
+  }
+  attemptToMerge(other) {
+    if (other.kind !== this.kind) {
+      return null;
+    }
+    return new FocusChangedEvent(this.oldHasFocus, other.hasFocus);
+  }
+}
+class WidgetFocusChangedEvent {
+  static {
+    __name(this, "WidgetFocusChangedEvent");
+  }
+  constructor(oldHasFocus, hasFocus) {
+    this.kind = 2;
+    this.oldHasFocus = oldHasFocus;
+    this.hasFocus = hasFocus;
+  }
+  isNoOp() {
+    return this.oldHasFocus === this.hasFocus;
+  }
+  attemptToMerge(other) {
+    if (other.kind !== this.kind) {
+      return null;
+    }
+    return new FocusChangedEvent(this.oldHasFocus, other.hasFocus);
+  }
+}
+class ScrollChangedEvent {
+  static {
+    __name(this, "ScrollChangedEvent");
+  }
+  constructor(oldScrollWidth, oldScrollLeft, oldScrollHeight, oldScrollTop, scrollWidth, scrollLeft, scrollHeight, scrollTop) {
+    this.kind = 3;
+    this._oldScrollWidth = oldScrollWidth;
+    this._oldScrollLeft = oldScrollLeft;
+    this._oldScrollHeight = oldScrollHeight;
+    this._oldScrollTop = oldScrollTop;
+    this.scrollWidth = scrollWidth;
+    this.scrollLeft = scrollLeft;
+    this.scrollHeight = scrollHeight;
+    this.scrollTop = scrollTop;
+    this.scrollWidthChanged = this._oldScrollWidth !== this.scrollWidth;
+    this.scrollLeftChanged = this._oldScrollLeft !== this.scrollLeft;
+    this.scrollHeightChanged = this._oldScrollHeight !== this.scrollHeight;
+    this.scrollTopChanged = this._oldScrollTop !== this.scrollTop;
+  }
+  isNoOp() {
+    return !this.scrollWidthChanged && !this.scrollLeftChanged && !this.scrollHeightChanged && !this.scrollTopChanged;
+  }
+  attemptToMerge(other) {
+    if (other.kind !== this.kind) {
+      return null;
+    }
+    return new ScrollChangedEvent(this._oldScrollWidth, this._oldScrollLeft, this._oldScrollHeight, this._oldScrollTop, other.scrollWidth, other.scrollLeft, other.scrollHeight, other.scrollTop);
+  }
+}
+class ViewZonesChangedEvent {
+  static {
+    __name(this, "ViewZonesChangedEvent");
+  }
+  constructor() {
+    this.kind = 4;
+  }
+  isNoOp() {
+    return false;
+  }
+  attemptToMerge(other) {
+    if (other.kind !== this.kind) {
+      return null;
+    }
+    return this;
+  }
+}
+class HiddenAreasChangedEvent {
+  static {
+    __name(this, "HiddenAreasChangedEvent");
+  }
+  constructor() {
+    this.kind = 5;
+  }
+  isNoOp() {
+    return false;
+  }
+  attemptToMerge(other) {
+    if (other.kind !== this.kind) {
+      return null;
+    }
+    return this;
+  }
+}
+class CursorStateChangedEvent {
+  static {
+    __name(this, "CursorStateChangedEvent");
+  }
+  constructor(oldSelections, selections, oldModelVersionId, modelVersionId, source, reason, reachedMaxCursorCount) {
+    this.kind = 7;
+    this.oldSelections = oldSelections;
+    this.selections = selections;
+    this.oldModelVersionId = oldModelVersionId;
+    this.modelVersionId = modelVersionId;
+    this.source = source;
+    this.reason = reason;
+    this.reachedMaxCursorCount = reachedMaxCursorCount;
+  }
+  static _selectionsAreEqual(a, b) {
+    if (!a && !b) {
+      return true;
+    }
+    if (!a || !b) {
+      return false;
+    }
+    const aLen = a.length;
+    const bLen = b.length;
+    if (aLen !== bLen) {
+      return false;
+    }
+    for (let i = 0; i < aLen; i++) {
+      if (!a[i].equalsSelection(b[i])) {
+        return false;
+      }
+    }
+    return true;
+  }
+  isNoOp() {
+    return CursorStateChangedEvent._selectionsAreEqual(this.oldSelections, this.selections) && this.oldModelVersionId === this.modelVersionId;
+  }
+  attemptToMerge(other) {
+    if (other.kind !== this.kind) {
+      return null;
+    }
+    return new CursorStateChangedEvent(this.oldSelections, other.selections, this.oldModelVersionId, other.modelVersionId, other.source, other.reason, this.reachedMaxCursorCount || other.reachedMaxCursorCount);
+  }
+}
+class ReadOnlyEditAttemptEvent {
+  static {
+    __name(this, "ReadOnlyEditAttemptEvent");
+  }
+  constructor() {
+    this.kind = 6;
+  }
+  isNoOp() {
+    return false;
+  }
+  attemptToMerge(other) {
+    if (other.kind !== this.kind) {
+      return null;
+    }
+    return this;
+  }
+}
+class ModelDecorationsChangedEvent {
+  static {
+    __name(this, "ModelDecorationsChangedEvent");
+  }
+  constructor(event) {
+    this.event = event;
+    this.kind = 8;
+  }
+  isNoOp() {
+    return false;
+  }
+  attemptToMerge(other) {
+    return null;
+  }
+}
+class ModelLanguageChangedEvent {
+  static {
+    __name(this, "ModelLanguageChangedEvent");
+  }
+  constructor(event) {
+    this.event = event;
+    this.kind = 9;
+  }
+  isNoOp() {
+    return false;
+  }
+  attemptToMerge(other) {
+    return null;
+  }
+}
+class ModelLanguageConfigurationChangedEvent {
+  static {
+    __name(this, "ModelLanguageConfigurationChangedEvent");
+  }
+  constructor(event) {
+    this.event = event;
+    this.kind = 10;
+  }
+  isNoOp() {
+    return false;
+  }
+  attemptToMerge(other) {
+    return null;
+  }
+}
+class ModelContentChangedEvent {
+  static {
+    __name(this, "ModelContentChangedEvent");
+  }
+  constructor(event) {
+    this.event = event;
+    this.kind = 11;
+  }
+  isNoOp() {
+    return false;
+  }
+  attemptToMerge(other) {
+    return null;
+  }
+}
+class ModelOptionsChangedEvent {
+  static {
+    __name(this, "ModelOptionsChangedEvent");
+  }
+  constructor(event) {
+    this.event = event;
+    this.kind = 12;
+  }
+  isNoOp() {
+    return false;
+  }
+  attemptToMerge(other) {
+    return null;
+  }
+}
+class ModelTokensChangedEvent {
+  static {
+    __name(this, "ModelTokensChangedEvent");
+  }
+  constructor(event) {
+    this.event = event;
+    this.kind = 13;
+  }
+  isNoOp() {
+    return false;
+  }
+  attemptToMerge(other) {
+    return null;
+  }
+}
+class ModelLineHeightChangedEvent {
+  static {
+    __name(this, "ModelLineHeightChangedEvent");
+  }
+  constructor(event) {
+    this.event = event;
+    this.kind = 14;
+  }
+  isNoOp() {
+    return false;
+  }
+  attemptToMerge(other) {
+    return null;
+  }
+}
+export {
+  ContentSizeChangedEvent,
+  CursorStateChangedEvent,
+  FocusChangedEvent,
+  HiddenAreasChangedEvent,
+  ModelContentChangedEvent,
+  ModelDecorationsChangedEvent,
+  ModelLanguageChangedEvent,
+  ModelLanguageConfigurationChangedEvent,
+  ModelLineHeightChangedEvent,
+  ModelOptionsChangedEvent,
+  ModelTokensChangedEvent,
+  OutgoingViewModelEventKind,
+  ReadOnlyEditAttemptEvent,
+  ScrollChangedEvent,
+  ViewModelEventDispatcher,
+  ViewModelEventsCollector,
+  ViewZonesChangedEvent,
+  WidgetFocusChangedEvent
+};
+//# sourceMappingURL=viewModelEventDispatcher.js.map

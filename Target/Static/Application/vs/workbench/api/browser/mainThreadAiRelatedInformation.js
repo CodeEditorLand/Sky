@@ -1,1 +1,51 @@
-import{CancellationToken as l}from"../../../base/common/cancellation.js";import{$vd as c,$Ed as p}from"../../../base/common/lifecycle.js";import{$pY as h,$oY as $}from"../common/extHost.protocol.js";import{$_W as u}from"../../services/aiRelatedInformation/common/aiRelatedInformation.js";import{$Kyb as R}from"../../services/extensions/common/extHostCustomers.js";var m=function(e,t,o,r){var i,n=arguments.length,s=n<3?t:null===r?r=Object.getOwnPropertyDescriptor(t,o):r;if("object"==typeof Reflect&&"function"==typeof Reflect.decorate)s=Reflect.decorate(e,t,o,r);else for(var a=e.length-1;a>=0;a--)(i=e[a])&&(s=(n<3?i(s):n>3?i(t,o,s):i(t,o))||s);return n>3&&s&&Object.defineProperty(t,o,s),s},d=function(e,t){return function(o,r){t(o,r,e)}};let s=class extends c{constructor(e,t){super(),this.c=t,this.b=this.B(new p),this.a=e.getProxy(h.ExtHostAiRelatedInformation)}$getAiRelatedInformation(e,t){return this.c.getRelatedInformation(e,t,l.None)}$registerAiRelatedInformationProvider(e,t){const o={provideAiRelatedInformation:(t,o)=>this.a.$provideAiRelatedInformation(e,t,o)};this.b.set(e,this.c.registerAiRelatedInformationProvider(t,o))}$unregisterAiRelatedInformationProvider(e){this.b.deleteAndDispose(e)}};s=m([R($.MainThreadAiRelatedInformation),d(1,u)],s);export{s as $$2b};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { CancellationToken } from "../../../base/common/cancellation.js";
+import { Disposable, DisposableMap } from "../../../base/common/lifecycle.js";
+import { ExtHostContext, MainContext } from "../common/extHost.protocol.js";
+import { IAiRelatedInformationService } from "../../services/aiRelatedInformation/common/aiRelatedInformation.js";
+import { extHostNamedCustomer } from "../../services/extensions/common/extHostCustomers.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+let MainThreadAiRelatedInformation = class MainThreadAiRelatedInformation2 extends Disposable {
+  static {
+    __name(this, "MainThreadAiRelatedInformation");
+  }
+  constructor(context, _aiRelatedInformationService) {
+    super();
+    this._aiRelatedInformationService = _aiRelatedInformationService;
+    this._registrations = this._register(new DisposableMap());
+    this._proxy = context.getProxy(ExtHostContext.ExtHostAiRelatedInformation);
+  }
+  $getAiRelatedInformation(query, types) {
+    return this._aiRelatedInformationService.getRelatedInformation(query, types, CancellationToken.None);
+  }
+  $registerAiRelatedInformationProvider(handle, type) {
+    const provider = {
+      provideAiRelatedInformation: /* @__PURE__ */ __name((query, token) => {
+        return this._proxy.$provideAiRelatedInformation(handle, query, token);
+      }, "provideAiRelatedInformation")
+    };
+    this._registrations.set(handle, this._aiRelatedInformationService.registerAiRelatedInformationProvider(type, provider));
+  }
+  $unregisterAiRelatedInformationProvider(handle) {
+    this._registrations.deleteAndDispose(handle);
+  }
+};
+MainThreadAiRelatedInformation = __decorate([
+  extHostNamedCustomer(MainContext.MainThreadAiRelatedInformation),
+  __param(1, IAiRelatedInformationService)
+], MainThreadAiRelatedInformation);
+export {
+  MainThreadAiRelatedInformation
+};
+//# sourceMappingURL=mainThreadAiRelatedInformation.js.map

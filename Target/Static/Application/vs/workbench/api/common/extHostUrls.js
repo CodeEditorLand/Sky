@@ -1,1 +1,76 @@
-import{$oY as p}from"./extHost.protocol.js";import{URI as h}from"../../../base/common/uri.js";import{$td as m}from"../../../base/common/lifecycle.js";import{$kb as u}from"../../../base/common/errors.js";import{$Ry as $}from"../../../platform/extensions/common/extensions.js";import{$nj as v}from"../../../platform/instantiation/common/instantiation.js";import{$i2 as U}from"./extHostRpcService.js";var l=function(o,r,t,e){var i=arguments.length,n=i<3?r:e===null?e=Object.getOwnPropertyDescriptor(r,t):e,s;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")n=Reflect.decorate(o,r,t,e);else for(var a=o.length-1;a>=0;a--)(s=o[a])&&(n=(i<3?s(n):i>3?s(r,t,n):s(r,t))||n);return i>3&&n&&Object.defineProperty(r,t,n),n},f=function(o,r){return function(t,e){r(t,e,o)}},c;let d=class{static{c=this}static{this.a=0}constructor(r){this.c=new $,this.d=new Map,this.b=r.getProxy(p.MainThreadUrls)}registerUriHandler(r,t){const e=r.identifier;if(this.c.has(e))throw new Error(`Protocol handler already registered for extension ${e}`);const i=c.a++;return this.c.add(e),this.d.set(i,t),this.b.$registerUriHandler(i,e,r.displayName||r.name),m(()=>{this.c.delete(e),this.d.delete(i),this.b.$unregisterUriHandler(i)})}$handleExternalUri(r,t){const e=this.d.get(r);if(!e)return Promise.resolve(void 0);try{e.handleUri(h.revive(t))}catch(i){u(i)}return Promise.resolve(void 0)}async createAppUri(r){return h.revive(await this.b.$createAppUri(r))}};d=c=l([f(0,U)],d);const j=v("IExtHostUrlsService");export{d as $pKc,j as $qKc};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { MainContext } from "./extHost.protocol.js";
+import { URI } from "../../../base/common/uri.js";
+import { toDisposable } from "../../../base/common/lifecycle.js";
+import { onUnexpectedError } from "../../../base/common/errors.js";
+import { ExtensionIdentifierSet } from "../../../platform/extensions/common/extensions.js";
+import { createDecorator } from "../../../platform/instantiation/common/instantiation.js";
+import { IExtHostRpcService } from "./extHostRpcService.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+var ExtHostUrls_1;
+let ExtHostUrls = class ExtHostUrls2 {
+  static {
+    __name(this, "ExtHostUrls");
+  }
+  static {
+    ExtHostUrls_1 = this;
+  }
+  static {
+    this.HandlePool = 0;
+  }
+  constructor(extHostRpc) {
+    this.handles = new ExtensionIdentifierSet();
+    this.handlers = /* @__PURE__ */ new Map();
+    this._proxy = extHostRpc.getProxy(MainContext.MainThreadUrls);
+  }
+  registerUriHandler(extension, handler) {
+    const extensionId = extension.identifier;
+    if (this.handles.has(extensionId)) {
+      throw new Error(`Protocol handler already registered for extension ${extensionId}`);
+    }
+    const handle = ExtHostUrls_1.HandlePool++;
+    this.handles.add(extensionId);
+    this.handlers.set(handle, handler);
+    this._proxy.$registerUriHandler(handle, extensionId, extension.displayName || extension.name);
+    return toDisposable(() => {
+      this.handles.delete(extensionId);
+      this.handlers.delete(handle);
+      this._proxy.$unregisterUriHandler(handle);
+    });
+  }
+  $handleExternalUri(handle, uri) {
+    const handler = this.handlers.get(handle);
+    if (!handler) {
+      return Promise.resolve(void 0);
+    }
+    try {
+      handler.handleUri(URI.revive(uri));
+    } catch (err) {
+      onUnexpectedError(err);
+    }
+    return Promise.resolve(void 0);
+  }
+  async createAppUri(uri) {
+    return URI.revive(await this._proxy.$createAppUri(uri));
+  }
+};
+ExtHostUrls = ExtHostUrls_1 = __decorate([
+  __param(0, IExtHostRpcService)
+], ExtHostUrls);
+const IExtHostUrlsService = createDecorator("IExtHostUrlsService");
+export {
+  ExtHostUrls,
+  IExtHostUrlsService
+};
+//# sourceMappingURL=extHostUrls.js.map

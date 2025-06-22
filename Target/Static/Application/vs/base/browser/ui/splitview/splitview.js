@@ -1,1 +1,1006 @@
-import{$,$J5 as U,$M6 as P,getWindow as Q,$T5 as Z}from"../../dom.js";import{$$7 as G}from"../../event.js";import{$w9 as j}from"../sash/sash.js";import{$A7 as J}from"../scrollbar/scrollableElement.js";import{$jc as C,$ic as B,$cc as g}from"../../../common/arrays.js";import{$hp as X}from"../../../common/color.js";import{$df as H,Event as L}from"../../../common/event.js";import{$sd as A,$vd as W,$qd as K,$td as k}from"../../../common/lifecycle.js";import{$nw as x}from"../../../common/numbers.js";import{$eC as q}from"../../../common/scrollable.js";import*as tt from"../../../common/types.js";import"./splitview.css";import{Orientation as St}from"../sash/sash.js";const it={separatorBorder:X.transparent};var R;(function(p){p[p.Normal=0]="Normal",p[p.Low=1]="Low",p[p.High=2]="High"})(R||(R={}));class O{set size(t){this.a=t}get size(){return this.a}get cachedVisibleSize(){return this.b}get visible(){return typeof this.b>"u"}setVisible(t,i){if(t!==this.visible){t?(this.size=x(this.b,this.viewMinimumSize,this.viewMaximumSize),this.b=void 0):(this.b=typeof i=="number"?i:this.size,this.size=0),this.c.classList.toggle("visible",t);try{this.view.setVisible?.(t)}catch{}}}get minimumSize(){return this.visible?this.view.minimumSize:0}get viewMinimumSize(){return this.view.minimumSize}get maximumSize(){return this.visible?this.view.maximumSize:0}get viewMaximumSize(){return this.view.maximumSize}get priority(){return this.view.priority}get proportionalLayout(){return this.view.proportionalLayout??!0}get snap(){return!!this.view.snap}set enabled(t){this.c.style.pointerEvents=t?"":"none"}constructor(t,i,e,s){this.c=t,this.view=i,this.d=s,this.b=void 0,typeof e=="number"?(this.a=e,this.b=void 0,t.classList.add("visible")):(this.a=0,this.b=e.cachedVisibleSize)}layout(t,i){this.layoutContainer(t);try{this.view.layout(this.size,t,i)}catch{}}dispose(){this.d.dispose()}}class et extends O{layoutContainer(t){this.c.style.top=`${t}px`,this.c.style.height=`${this.size}px`}}class st extends O{layoutContainer(t){this.c.style.left=`${t}px`,this.c.style.width=`${this.size}px`}}var S;(function(p){p[p.Idle=0]="Idle",p[p.Busy=1]="Busy"})(S||(S={}));var F;(function(p){p.Distribute={type:"distribute"};function t(s){return{type:"split",index:s}}p.Split=t;function i(s){return{type:"auto",index:s}}p.Auto=i;function e(s){return{type:"invisible",cachedVisibleSize:s}}p.Invisible=e})(F||(F={}));class pt extends W{get contentSize(){return this.j}get length(){return this.n.length}get minimumSize(){return this.n.reduce((t,i)=>t+i.minimumSize,0)}get maximumSize(){return this.length===0?Number.POSITIVE_INFINITY:this.n.reduce((t,i)=>t+i.maximumSize,0)}get orthogonalStartSash(){return this.F}get orthogonalEndSash(){return this.G}get startSnappingEnabled(){return this.H}get endSnappingEnabled(){return this.I}set orthogonalStartSash(t){for(const i of this.sashItems)i.sash.orthogonalStartSash=t;this.F=t}set orthogonalEndSash(t){for(const i of this.sashItems)i.sash.orthogonalEndSash=t;this.G=t}get sashes(){return this.sashItems.map(t=>t.sash)}set startSnappingEnabled(t){this.H!==t&&(this.H=t,this.X())}set endSnappingEnabled(t){this.I!==t&&(this.I=t,this.X())}constructor(t,i={}){super(),this.g=0,this.j=0,this.m=void 0,this.n=[],this.sashItems=[],this.u=S.Idle,this.C=this.B(new H),this.D=this.B(new H),this.H=!0,this.I=!0,this.onDidSashChange=this.C.event,this.onDidSashReset=this.D.event,this.orientation=i.orientation??0,this.w=i.inverseAltBehavior??!1,this.y=i.proportionalLayout??!0,this.z=i.getSashOrthogonalSize,this.el=document.createElement("div"),this.el.classList.add("monaco-split-view2"),this.el.classList.add(this.orientation===0?"vertical":"horizontal"),t.appendChild(this.el),this.a=P(this.el,$(".sash-container")),this.b=$(".split-view-container"),this.c=this.B(new q({forceIntegerValues:!0,smoothScrollDuration:125,scheduleAtNextAnimationFrame:s=>Z(Q(this.el),s)})),this.f=this.B(new J(this.b,{vertical:this.orientation===0?i.scrollbarVisibility??1:2,horizontal:this.orientation===1?i.scrollbarVisibility??1:2},this.c));const e=this.B(new G(this.b,"scroll")).event;this.B(e(s=>{const h=this.f.getScrollPosition(),a=Math.abs(this.b.scrollLeft-h.scrollLeft)<=1?void 0:this.b.scrollLeft,n=Math.abs(this.b.scrollTop-h.scrollTop)<=1?void 0:this.b.scrollTop;(a!==void 0||n!==void 0)&&this.f.setScrollPosition({scrollLeft:a,scrollTop:n})})),this.onDidScroll=this.f.onScroll,this.B(this.onDidScroll(s=>{s.scrollTopChanged&&(this.b.scrollTop=s.scrollTop),s.scrollLeftChanged&&(this.b.scrollLeft=s.scrollLeft)})),P(this.el,this.f.getDomNode()),this.style(i.styles||it),i.descriptor&&(this.g=i.descriptor.size,i.descriptor.views.forEach((s,h)=>{const a=tt.$7c(s.visible)||s.visible?s.size:{type:"invisible",cachedVisibleSize:s.size},n=s.view;this.P(n,a,h,!0)}),this.j=this.n.reduce((s,h)=>s+h.size,0),this.J())}style(t){t.separatorBorder.isTransparent()?(this.el.classList.remove("separator-border"),this.el.style.removeProperty("--separator-border")):(this.el.classList.add("separator-border"),this.el.style.setProperty("--separator-border",t.separatorBorder.toString()))}addView(t,i,e=this.n.length,s){this.P(t,i,e,s)}removeView(t,i){if(t<0||t>=this.n.length)throw new Error("Index out of bounds");if(this.u!==S.Idle)throw new Error("Cant modify splitview");this.u=S.Busy;try{i?.type==="auto"&&(this.ab()?i={type:"distribute"}:i={type:"split",index:i.index});const e=i?.type==="split"?this.n[i.index]:void 0,s=this.n.splice(t,1)[0];if(e&&(e.size+=s.size),this.n.length>=1){const a=Math.max(t-1,0);this.sashItems.splice(a,1)[0].disposable.dispose()}this.Q(),i?.type==="distribute"&&this.distributeViewSizes();const h=s.view;return s.dispose(),h}finally{this.u=S.Idle}}removeAllViews(){if(this.u!==S.Idle)throw new Error("Cant modify splitview");this.u=S.Busy;try{const t=this.n.splice(0,this.n.length);for(const e of t)e.dispose();const i=this.sashItems.splice(0,this.sashItems.length);for(const e of i)e.disposable.dispose();return this.Q(),t.map(e=>e.view)}finally{this.u=S.Idle}}moveView(t,i){if(this.u!==S.Idle)throw new Error("Cant modify splitview");const e=this.getViewCachedVisibleSize(t),s=typeof e>"u"?this.getViewSize(t):F.Invisible(e),h=this.removeView(t);this.addView(h,s,i)}swapViews(t,i){if(this.u!==S.Idle)throw new Error("Cant modify splitview");if(t>i)return this.swapViews(i,t);const e=this.getViewSize(t),s=this.getViewSize(i),h=this.removeView(i),a=this.removeView(t);this.addView(h,e,t),this.addView(a,s,i)}isViewVisible(t){if(t<0||t>=this.n.length)throw new Error("Index out of bounds");return this.n[t].visible}setViewVisible(t,i){if(t<0||t>=this.n.length)throw new Error("Index out of bounds");this.n[t].setVisible(i),this.S(t),this.U(),this.J()}getViewCachedVisibleSize(t){if(t<0||t>=this.n.length)throw new Error("Index out of bounds");return this.n[t].cachedVisibleSize}layout(t,i){const e=Math.max(this.g,this.j);if(this.g=t,this.h=i,this.m){let s=0;for(let h=0;h<this.n.length;h++){const a=this.n[h],n=this.m[h];typeof n=="number"?s+=n:t-=a.size}for(let h=0;h<this.n.length;h++){const a=this.n[h],n=this.m[h];typeof n=="number"&&s>0&&(a.size=x(Math.round(n*t/s),a.minimumSize,a.maximumSize))}}else{const s=g(this.n.length),h=s.filter(n=>this.n[n].priority===1),a=s.filter(n=>this.n[n].priority===2);this.R(this.n.length-1,t-e,void 0,h,a)}this.S(),this.U()}J(){this.y&&this.j>0&&(this.m=this.n.map(t=>t.proportionalLayout&&t.visible?t.size/this.j:void 0))}L({sash:t,start:i,alt:e}){for(const n of this.n)n.enabled=!1;const s=this.sashItems.findIndex(n=>n.sash===t),h=A(U(this.el.ownerDocument.body,"keydown",n=>a(this.t.current,n.altKey)),U(this.el.ownerDocument.body,"keyup",()=>a(this.t.current,!1))),a=(n,r)=>{const m=this.n.map(b=>b.size);let d=Number.NEGATIVE_INFINITY,f=Number.POSITIVE_INFINITY;if(this.w&&(r=!r),r)if(s===this.sashItems.length-1){const c=this.n[s];d=(c.minimumSize-c.size)/2,f=(c.maximumSize-c.size)/2}else{const c=this.n[s+1];d=(c.size-c.maximumSize)/2,f=(c.size-c.minimumSize)/2}let I,w;if(!r){const b=g(s,-1),c=g(s+1,this.n.length),z=b.reduce((o,u)=>o+(this.n[u].minimumSize-m[u]),0),V=b.reduce((o,u)=>o+(this.n[u].viewMaximumSize-m[u]),0),y=c.length===0?Number.POSITIVE_INFINITY:c.reduce((o,u)=>o+(m[u]-this.n[u].minimumSize),0),E=c.length===0?Number.NEGATIVE_INFINITY:c.reduce((o,u)=>o+(m[u]-this.n[u].viewMaximumSize),0),N=Math.max(z,E),M=Math.min(y,V),v=this.Z(b),l=this.Z(c);if(typeof v=="number"){const o=this.n[v],u=Math.floor(o.viewMinimumSize/2);I={index:v,limitDelta:o.visible?N-u:N+u,size:o.size}}if(typeof l=="number"){const o=this.n[l],u=Math.floor(o.viewMinimumSize/2);w={index:l,limitDelta:o.visible?M+u:M-u,size:o.size}}}this.t={start:n,current:n,index:s,sizes:m,minDelta:d,maxDelta:f,alt:r,snapBefore:I,snapAfter:w,disposable:h}};a(i,e)}M({current:t}){const{index:i,start:e,sizes:s,alt:h,minDelta:a,maxDelta:n,snapBefore:r,snapAfter:m}=this.t;this.t.current=t;const d=t-e,f=this.R(i,d,s,void 0,void 0,a,n,r,m);if(h){const I=i===this.sashItems.length-1,w=this.n.map(E=>E.size),b=I?i:i+1,c=this.n[b],z=c.size-c.maximumSize,V=c.size-c.minimumSize,y=I?i-1:i+1;this.R(y,-f,w,void 0,void 0,z,V)}this.S(),this.U()}N(t){this.C.fire(t),this.t.disposable.dispose(),this.J();for(const i of this.n)i.enabled=!0}O(t,i){const e=this.n.indexOf(t);e<0||e>=this.n.length||(i=typeof i=="number"?i:t.size,i=x(i,t.minimumSize,t.maximumSize),this.w&&e>0?(this.R(e-1,Math.floor((t.size-i)/2)),this.S(),this.U()):(t.size=i,this.Q([e],void 0)))}resizeView(t,i){if(!(t<0||t>=this.n.length)){if(this.u!==S.Idle)throw new Error("Cant modify splitview");this.u=S.Busy;try{const e=g(this.n.length).filter(n=>n!==t),s=[...e.filter(n=>this.n[n].priority===1),t],h=e.filter(n=>this.n[n].priority===2),a=this.n[t];i=Math.round(i),i=x(i,a.minimumSize,Math.min(a.maximumSize,this.g)),a.size=i,this.Q(s,h)}finally{this.u=S.Idle}}}isViewExpanded(t){if(t<0||t>=this.n.length)return!1;for(const i of this.n)if(i!==this.n[t]&&i.size>i.minimumSize)return!1;return!0}distributeViewSizes(){const t=[];let i=0;for(const n of this.n)n.maximumSize-n.minimumSize>0&&(t.push(n),i+=n.size);const e=Math.floor(i/t.length);for(const n of t)n.size=x(e,n.minimumSize,n.maximumSize);const s=g(this.n.length),h=s.filter(n=>this.n[n].priority===1),a=s.filter(n=>this.n[n].priority===2);this.Q(h,a)}getViewSize(t){return t<0||t>=this.n.length?-1:this.n[t].size}P(t,i,e=this.n.length,s){if(this.u!==S.Idle)throw new Error("Cant modify splitview");this.u=S.Busy;try{const h=$(".split-view-view");e===this.n.length?this.b.appendChild(h):this.b.insertBefore(h,this.b.children.item(e));const a=t.onDidChange(I=>this.O(d,I)),n=k(()=>h.remove()),r=A(a,n);let m;typeof i=="number"?m=i:(i.type==="auto"&&(this.ab()?i={type:"distribute"}:i={type:"split",index:i.index}),i.type==="split"?m=this.getViewSize(i.index)/2:i.type==="invisible"?m={cachedVisibleSize:i.cachedVisibleSize}:m=t.minimumSize);const d=this.orientation===0?new et(h,t,m,r):new st(h,t,m,r);if(this.n.splice(e,0,d),this.n.length>1){const I={orthogonalStartSash:this.orthogonalStartSash,orthogonalEndSash:this.orthogonalEndSash},w=this.orientation===0?new j(this.a,{getHorizontalSashTop:o=>this.Y(o),getHorizontalSashWidth:this.z},{...I,orientation:1}):new j(this.a,{getVerticalSashLeft:o=>this.Y(o),getVerticalSashHeight:this.z},{...I,orientation:0}),b=this.orientation===0?o=>({sash:w,start:o.startY,current:o.currentY,alt:o.altKey}):o=>({sash:w,start:o.startX,current:o.currentX,alt:o.altKey}),z=L.map(w.onDidStart,b)(this.L,this),y=L.map(w.onDidChange,b)(this.M,this),N=L.map(w.onDidEnd,()=>this.sashItems.findIndex(o=>o.sash===w))(this.N,this),M=w.onDidReset(()=>{const o=this.sashItems.findIndex(_=>_.sash===w),u=g(o,-1),D=g(o+1,this.n.length),T=this.Z(u),Y=this.Z(D);typeof T=="number"&&!this.n[T].visible||typeof Y=="number"&&!this.n[Y].visible||this.D.fire(o)}),v=A(z,y,N,M,w),l={sash:w,disposable:v};this.sashItems.splice(e-1,0,l)}h.appendChild(t.element);let f;typeof i!="number"&&i.type==="split"&&(f=[i.index]),s||this.Q([e],f),!s&&typeof i!="number"&&i.type==="distribute"&&this.distributeViewSizes()}finally{this.u=S.Idle}}Q(t,i){const e=this.n.reduce((s,h)=>s+h.size,0);this.R(this.n.length-1,this.g-e,void 0,t,i),this.S(),this.U(),this.J()}R(t,i,e=this.n.map(d=>d.size),s,h,a=Number.NEGATIVE_INFINITY,n=Number.POSITIVE_INFINITY,r,m){if(t<0||t>=this.n.length)return 0;const d=g(t,-1),f=g(t+1,this.n.length);if(h)for(const l of h)B(d,l),B(f,l);if(s)for(const l of s)C(d,l),C(f,l);const I=d.map(l=>this.n[l]),w=d.map(l=>e[l]),b=f.map(l=>this.n[l]),c=f.map(l=>e[l]),z=d.reduce((l,o)=>l+(this.n[o].minimumSize-e[o]),0),V=d.reduce((l,o)=>l+(this.n[o].maximumSize-e[o]),0),y=f.length===0?Number.POSITIVE_INFINITY:f.reduce((l,o)=>l+(e[o]-this.n[o].minimumSize),0),E=f.length===0?Number.NEGATIVE_INFINITY:f.reduce((l,o)=>l+(e[o]-this.n[o].maximumSize),0),N=Math.max(z,E,a),M=Math.min(y,V,n);let v=!1;if(r){const l=this.n[r.index],o=i>=r.limitDelta;v=o!==l.visible,l.setVisible(o,r.size)}if(!v&&m){const l=this.n[m.index],o=i<m.limitDelta;v=o!==l.visible,l.setVisible(o,m.size)}if(v)return this.R(t,i,e,s,h,a,n);i=x(i,N,M);for(let l=0,o=i;l<I.length;l++){const u=I[l],D=x(w[l]+o,u.minimumSize,u.maximumSize),T=D-w[l];o-=T,u.size=D}for(let l=0,o=i;l<b.length;l++){const u=b[l],D=x(c[l]-o,u.minimumSize,u.maximumSize),T=D-c[l];o+=T,u.size=D}return i}S(t){const i=this.n.reduce((n,r)=>n+r.size,0);let e=this.g-i;const s=g(this.n.length-1,-1),h=s.filter(n=>this.n[n].priority===1),a=s.filter(n=>this.n[n].priority===2);for(const n of a)B(s,n);for(const n of h)C(s,n);typeof t=="number"&&C(s,t);for(let n=0;e!==0&&n<s.length;n++){const r=this.n[s[n]],m=x(r.size+e,r.minimumSize,r.maximumSize),d=m-r.size;e-=d,r.size=m}}U(){this.j=this.n.reduce((i,e)=>i+e.size,0);let t=0;for(const i of this.n)i.layout(t,this.h),t+=i.size;this.sashItems.forEach(i=>i.sash.layout()),this.X(),this.W()}W(){this.orientation===0?this.f.setScrollDimensions({height:this.g,scrollHeight:this.j}):this.f.setScrollDimensions({width:this.g,scrollWidth:this.j})}X(){let t=!1;const i=this.n.map(r=>t=r.size-r.minimumSize>0||t);t=!1;const e=this.n.map(r=>t=r.maximumSize-r.size>0||t),s=[...this.n].reverse();t=!1;const h=s.map(r=>t=r.size-r.minimumSize>0||t).reverse();t=!1;const a=s.map(r=>t=r.maximumSize-r.size>0||t).reverse();let n=0;for(let r=0;r<this.sashItems.length;r++){const{sash:m}=this.sashItems[r],d=this.n[r];n+=d.size;const f=!(i[r]&&a[r+1]),I=!(e[r]&&h[r+1]);if(f&&I){const w=g(r,-1),b=g(r+1,this.n.length),c=this.Z(w),z=this.Z(b),V=typeof c=="number"&&!this.n[c].visible,y=typeof z=="number"&&!this.n[z].visible;V&&h[r]&&(n>0||this.startSnappingEnabled)?m.state=1:y&&i[r]&&(n<this.j||this.endSnappingEnabled)?m.state=2:m.state=0}else f&&!I?m.state=1:!f&&I?m.state=2:m.state=3}}Y(t){let i=0;for(let e=0;e<this.sashItems.length;e++)if(i+=this.n[e].size,this.sashItems[e].sash===t)return i;return 0}Z(t){for(const i of t){const e=this.n[i];if(e.visible&&e.snap)return i}for(const i of t){const e=this.n[i];if(e.visible&&e.maximumSize-e.minimumSize>0)return;if(!e.visible&&e.snap)return i}}ab(){let t,i;for(const e of this.n)if(t=t===void 0?e.size:Math.min(t,e.size),i=i===void 0?e.size:Math.max(i,e.size),i-t>2)return!1;return!0}dispose(){this.t?.disposable.dispose(),K(this.n),this.n=[],this.sashItems.forEach(t=>t.disposable.dispose()),this.sashItems=[],super.dispose()}}export{pt as $x9,R as LayoutPriority,St as Orientation,F as Sizing};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { $, addDisposableListener, append, getWindow, scheduleAtNextAnimationFrame } from "../../dom.js";
+import { DomEmitter } from "../../event.js";
+import { Sash } from "../sash/sash.js";
+import { SmoothScrollableElement } from "../scrollbar/scrollableElement.js";
+import { pushToEnd, pushToStart, range } from "../../../common/arrays.js";
+import { Color } from "../../../common/color.js";
+import { Emitter, Event } from "../../../common/event.js";
+import { combinedDisposable, Disposable, dispose, toDisposable } from "../../../common/lifecycle.js";
+import { clamp } from "../../../common/numbers.js";
+import { Scrollable } from "../../../common/scrollable.js";
+import * as types from "../../../common/types.js";
+import "./splitview.css";
+import { Orientation } from "../sash/sash.js";
+const defaultStyles = {
+  separatorBorder: Color.transparent
+};
+var LayoutPriority;
+(function(LayoutPriority2) {
+  LayoutPriority2[LayoutPriority2["Normal"] = 0] = "Normal";
+  LayoutPriority2[LayoutPriority2["Low"] = 1] = "Low";
+  LayoutPriority2[LayoutPriority2["High"] = 2] = "High";
+})(LayoutPriority || (LayoutPriority = {}));
+class ViewItem {
+  static {
+    __name(this, "ViewItem");
+  }
+  set size(size) {
+    this._size = size;
+  }
+  get size() {
+    return this._size;
+  }
+  get cachedVisibleSize() {
+    return this._cachedVisibleSize;
+  }
+  get visible() {
+    return typeof this._cachedVisibleSize === "undefined";
+  }
+  setVisible(visible, size) {
+    if (visible === this.visible) {
+      return;
+    }
+    if (visible) {
+      this.size = clamp(this._cachedVisibleSize, this.viewMinimumSize, this.viewMaximumSize);
+      this._cachedVisibleSize = void 0;
+    } else {
+      this._cachedVisibleSize = typeof size === "number" ? size : this.size;
+      this.size = 0;
+    }
+    this.container.classList.toggle("visible", visible);
+    try {
+      this.view.setVisible?.(visible);
+    } catch (e) {
+      console.error("Splitview: Failed to set visible view");
+      console.error(e);
+    }
+  }
+  get minimumSize() {
+    return this.visible ? this.view.minimumSize : 0;
+  }
+  get viewMinimumSize() {
+    return this.view.minimumSize;
+  }
+  get maximumSize() {
+    return this.visible ? this.view.maximumSize : 0;
+  }
+  get viewMaximumSize() {
+    return this.view.maximumSize;
+  }
+  get priority() {
+    return this.view.priority;
+  }
+  get proportionalLayout() {
+    return this.view.proportionalLayout ?? true;
+  }
+  get snap() {
+    return !!this.view.snap;
+  }
+  set enabled(enabled) {
+    this.container.style.pointerEvents = enabled ? "" : "none";
+  }
+  constructor(container, view, size, disposable) {
+    this.container = container;
+    this.view = view;
+    this.disposable = disposable;
+    this._cachedVisibleSize = void 0;
+    if (typeof size === "number") {
+      this._size = size;
+      this._cachedVisibleSize = void 0;
+      container.classList.add("visible");
+    } else {
+      this._size = 0;
+      this._cachedVisibleSize = size.cachedVisibleSize;
+    }
+  }
+  layout(offset, layoutContext) {
+    this.layoutContainer(offset);
+    try {
+      this.view.layout(this.size, offset, layoutContext);
+    } catch (e) {
+      console.error("Splitview: Failed to layout view");
+      console.error(e);
+    }
+  }
+  dispose() {
+    this.disposable.dispose();
+  }
+}
+class VerticalViewItem extends ViewItem {
+  static {
+    __name(this, "VerticalViewItem");
+  }
+  layoutContainer(offset) {
+    this.container.style.top = `${offset}px`;
+    this.container.style.height = `${this.size}px`;
+  }
+}
+class HorizontalViewItem extends ViewItem {
+  static {
+    __name(this, "HorizontalViewItem");
+  }
+  layoutContainer(offset) {
+    this.container.style.left = `${offset}px`;
+    this.container.style.width = `${this.size}px`;
+  }
+}
+var State;
+(function(State2) {
+  State2[State2["Idle"] = 0] = "Idle";
+  State2[State2["Busy"] = 1] = "Busy";
+})(State || (State = {}));
+var Sizing;
+(function(Sizing2) {
+  Sizing2.Distribute = { type: "distribute" };
+  function Split(index) {
+    return { type: "split", index };
+  }
+  __name(Split, "Split");
+  Sizing2.Split = Split;
+  function Auto(index) {
+    return { type: "auto", index };
+  }
+  __name(Auto, "Auto");
+  Sizing2.Auto = Auto;
+  function Invisible(cachedVisibleSize) {
+    return { type: "invisible", cachedVisibleSize };
+  }
+  __name(Invisible, "Invisible");
+  Sizing2.Invisible = Invisible;
+})(Sizing || (Sizing = {}));
+class SplitView extends Disposable {
+  static {
+    __name(this, "SplitView");
+  }
+  /**
+   * The sum of all views' sizes.
+   */
+  get contentSize() {
+    return this._contentSize;
+  }
+  /**
+   * The amount of views in this {@link SplitView}.
+   */
+  get length() {
+    return this.viewItems.length;
+  }
+  /**
+   * The minimum size of this {@link SplitView}.
+   */
+  get minimumSize() {
+    return this.viewItems.reduce((r, item) => r + item.minimumSize, 0);
+  }
+  /**
+   * The maximum size of this {@link SplitView}.
+   */
+  get maximumSize() {
+    return this.length === 0 ? Number.POSITIVE_INFINITY : this.viewItems.reduce((r, item) => r + item.maximumSize, 0);
+  }
+  get orthogonalStartSash() {
+    return this._orthogonalStartSash;
+  }
+  get orthogonalEndSash() {
+    return this._orthogonalEndSash;
+  }
+  get startSnappingEnabled() {
+    return this._startSnappingEnabled;
+  }
+  get endSnappingEnabled() {
+    return this._endSnappingEnabled;
+  }
+  /**
+   * A reference to a sash, perpendicular to all sashes in this {@link SplitView},
+   * located at the left- or top-most side of the SplitView.
+   * Corner sashes will be created automatically at the intersections.
+   */
+  set orthogonalStartSash(sash) {
+    for (const sashItem of this.sashItems) {
+      sashItem.sash.orthogonalStartSash = sash;
+    }
+    this._orthogonalStartSash = sash;
+  }
+  /**
+   * A reference to a sash, perpendicular to all sashes in this {@link SplitView},
+   * located at the right- or bottom-most side of the SplitView.
+   * Corner sashes will be created automatically at the intersections.
+   */
+  set orthogonalEndSash(sash) {
+    for (const sashItem of this.sashItems) {
+      sashItem.sash.orthogonalEndSash = sash;
+    }
+    this._orthogonalEndSash = sash;
+  }
+  /**
+   * The internal sashes within this {@link SplitView}.
+   */
+  get sashes() {
+    return this.sashItems.map((s) => s.sash);
+  }
+  /**
+   * Enable/disable snapping at the beginning of this {@link SplitView}.
+   */
+  set startSnappingEnabled(startSnappingEnabled) {
+    if (this._startSnappingEnabled === startSnappingEnabled) {
+      return;
+    }
+    this._startSnappingEnabled = startSnappingEnabled;
+    this.updateSashEnablement();
+  }
+  /**
+   * Enable/disable snapping at the end of this {@link SplitView}.
+   */
+  set endSnappingEnabled(endSnappingEnabled) {
+    if (this._endSnappingEnabled === endSnappingEnabled) {
+      return;
+    }
+    this._endSnappingEnabled = endSnappingEnabled;
+    this.updateSashEnablement();
+  }
+  /**
+   * Create a new {@link SplitView} instance.
+   */
+  constructor(container, options = {}) {
+    super();
+    this.size = 0;
+    this._contentSize = 0;
+    this.proportions = void 0;
+    this.viewItems = [];
+    this.sashItems = [];
+    this.state = State.Idle;
+    this._onDidSashChange = this._register(new Emitter());
+    this._onDidSashReset = this._register(new Emitter());
+    this._startSnappingEnabled = true;
+    this._endSnappingEnabled = true;
+    this.onDidSashChange = this._onDidSashChange.event;
+    this.onDidSashReset = this._onDidSashReset.event;
+    this.orientation = options.orientation ?? 0;
+    this.inverseAltBehavior = options.inverseAltBehavior ?? false;
+    this.proportionalLayout = options.proportionalLayout ?? true;
+    this.getSashOrthogonalSize = options.getSashOrthogonalSize;
+    this.el = document.createElement("div");
+    this.el.classList.add("monaco-split-view2");
+    this.el.classList.add(this.orientation === 0 ? "vertical" : "horizontal");
+    container.appendChild(this.el);
+    this.sashContainer = append(this.el, $(".sash-container"));
+    this.viewContainer = $(".split-view-container");
+    this.scrollable = this._register(new Scrollable({
+      forceIntegerValues: true,
+      smoothScrollDuration: 125,
+      scheduleAtNextAnimationFrame: /* @__PURE__ */ __name((callback) => scheduleAtNextAnimationFrame(getWindow(this.el), callback), "scheduleAtNextAnimationFrame")
+    }));
+    this.scrollableElement = this._register(new SmoothScrollableElement(this.viewContainer, {
+      vertical: this.orientation === 0 ? options.scrollbarVisibility ?? 1 : 2,
+      horizontal: this.orientation === 1 ? options.scrollbarVisibility ?? 1 : 2
+      /* ScrollbarVisibility.Hidden */
+    }, this.scrollable));
+    const onDidScrollViewContainer = this._register(new DomEmitter(this.viewContainer, "scroll")).event;
+    this._register(onDidScrollViewContainer((_) => {
+      const position = this.scrollableElement.getScrollPosition();
+      const scrollLeft = Math.abs(this.viewContainer.scrollLeft - position.scrollLeft) <= 1 ? void 0 : this.viewContainer.scrollLeft;
+      const scrollTop = Math.abs(this.viewContainer.scrollTop - position.scrollTop) <= 1 ? void 0 : this.viewContainer.scrollTop;
+      if (scrollLeft !== void 0 || scrollTop !== void 0) {
+        this.scrollableElement.setScrollPosition({ scrollLeft, scrollTop });
+      }
+    }));
+    this.onDidScroll = this.scrollableElement.onScroll;
+    this._register(this.onDidScroll((e) => {
+      if (e.scrollTopChanged) {
+        this.viewContainer.scrollTop = e.scrollTop;
+      }
+      if (e.scrollLeftChanged) {
+        this.viewContainer.scrollLeft = e.scrollLeft;
+      }
+    }));
+    append(this.el, this.scrollableElement.getDomNode());
+    this.style(options.styles || defaultStyles);
+    if (options.descriptor) {
+      this.size = options.descriptor.size;
+      options.descriptor.views.forEach((viewDescriptor, index) => {
+        const sizing = types.isUndefined(viewDescriptor.visible) || viewDescriptor.visible ? viewDescriptor.size : { type: "invisible", cachedVisibleSize: viewDescriptor.size };
+        const view = viewDescriptor.view;
+        this.doAddView(view, sizing, index, true);
+      });
+      this._contentSize = this.viewItems.reduce((r, i) => r + i.size, 0);
+      this.saveProportions();
+    }
+  }
+  style(styles) {
+    if (styles.separatorBorder.isTransparent()) {
+      this.el.classList.remove("separator-border");
+      this.el.style.removeProperty("--separator-border");
+    } else {
+      this.el.classList.add("separator-border");
+      this.el.style.setProperty("--separator-border", styles.separatorBorder.toString());
+    }
+  }
+  /**
+   * Add a {@link IView view} to this {@link SplitView}.
+   *
+   * @param view The view to add.
+   * @param size Either a fixed size, or a dynamic {@link Sizing} strategy.
+   * @param index The index to insert the view on.
+   * @param skipLayout Whether layout should be skipped.
+   */
+  addView(view, size, index = this.viewItems.length, skipLayout) {
+    this.doAddView(view, size, index, skipLayout);
+  }
+  /**
+   * Remove a {@link IView view} from this {@link SplitView}.
+   *
+   * @param index The index where the {@link IView view} is located.
+   * @param sizing Whether to distribute other {@link IView view}'s sizes.
+   */
+  removeView(index, sizing) {
+    if (index < 0 || index >= this.viewItems.length) {
+      throw new Error("Index out of bounds");
+    }
+    if (this.state !== State.Idle) {
+      throw new Error("Cant modify splitview");
+    }
+    this.state = State.Busy;
+    try {
+      if (sizing?.type === "auto") {
+        if (this.areViewsDistributed()) {
+          sizing = { type: "distribute" };
+        } else {
+          sizing = { type: "split", index: sizing.index };
+        }
+      }
+      const referenceViewItem = sizing?.type === "split" ? this.viewItems[sizing.index] : void 0;
+      const viewItemToRemove = this.viewItems.splice(index, 1)[0];
+      if (referenceViewItem) {
+        referenceViewItem.size += viewItemToRemove.size;
+      }
+      if (this.viewItems.length >= 1) {
+        const sashIndex = Math.max(index - 1, 0);
+        const sashItem = this.sashItems.splice(sashIndex, 1)[0];
+        sashItem.disposable.dispose();
+      }
+      this.relayout();
+      if (sizing?.type === "distribute") {
+        this.distributeViewSizes();
+      }
+      const result = viewItemToRemove.view;
+      viewItemToRemove.dispose();
+      return result;
+    } finally {
+      this.state = State.Idle;
+    }
+  }
+  removeAllViews() {
+    if (this.state !== State.Idle) {
+      throw new Error("Cant modify splitview");
+    }
+    this.state = State.Busy;
+    try {
+      const viewItems = this.viewItems.splice(0, this.viewItems.length);
+      for (const viewItem of viewItems) {
+        viewItem.dispose();
+      }
+      const sashItems = this.sashItems.splice(0, this.sashItems.length);
+      for (const sashItem of sashItems) {
+        sashItem.disposable.dispose();
+      }
+      this.relayout();
+      return viewItems.map((i) => i.view);
+    } finally {
+      this.state = State.Idle;
+    }
+  }
+  /**
+   * Move a {@link IView view} to a different index.
+   *
+   * @param from The source index.
+   * @param to The target index.
+   */
+  moveView(from, to) {
+    if (this.state !== State.Idle) {
+      throw new Error("Cant modify splitview");
+    }
+    const cachedVisibleSize = this.getViewCachedVisibleSize(from);
+    const sizing = typeof cachedVisibleSize === "undefined" ? this.getViewSize(from) : Sizing.Invisible(cachedVisibleSize);
+    const view = this.removeView(from);
+    this.addView(view, sizing, to);
+  }
+  /**
+   * Swap two {@link IView views}.
+   *
+   * @param from The source index.
+   * @param to The target index.
+   */
+  swapViews(from, to) {
+    if (this.state !== State.Idle) {
+      throw new Error("Cant modify splitview");
+    }
+    if (from > to) {
+      return this.swapViews(to, from);
+    }
+    const fromSize = this.getViewSize(from);
+    const toSize = this.getViewSize(to);
+    const toView = this.removeView(to);
+    const fromView = this.removeView(from);
+    this.addView(toView, fromSize, from);
+    this.addView(fromView, toSize, to);
+  }
+  /**
+   * Returns whether the {@link IView view} is visible.
+   *
+   * @param index The {@link IView view} index.
+   */
+  isViewVisible(index) {
+    if (index < 0 || index >= this.viewItems.length) {
+      throw new Error("Index out of bounds");
+    }
+    const viewItem = this.viewItems[index];
+    return viewItem.visible;
+  }
+  /**
+   * Set a {@link IView view}'s visibility.
+   *
+   * @param index The {@link IView view} index.
+   * @param visible Whether the {@link IView view} should be visible.
+   */
+  setViewVisible(index, visible) {
+    if (index < 0 || index >= this.viewItems.length) {
+      throw new Error("Index out of bounds");
+    }
+    const viewItem = this.viewItems[index];
+    viewItem.setVisible(visible);
+    this.distributeEmptySpace(index);
+    this.layoutViews();
+    this.saveProportions();
+  }
+  /**
+   * Returns the {@link IView view}'s size previously to being hidden.
+   *
+   * @param index The {@link IView view} index.
+   */
+  getViewCachedVisibleSize(index) {
+    if (index < 0 || index >= this.viewItems.length) {
+      throw new Error("Index out of bounds");
+    }
+    const viewItem = this.viewItems[index];
+    return viewItem.cachedVisibleSize;
+  }
+  /**
+   * Layout the {@link SplitView}.
+   *
+   * @param size The entire size of the {@link SplitView}.
+   * @param layoutContext An optional layout context to pass along to {@link IView views}.
+   */
+  layout(size, layoutContext) {
+    const previousSize = Math.max(this.size, this._contentSize);
+    this.size = size;
+    this.layoutContext = layoutContext;
+    if (!this.proportions) {
+      const indexes = range(this.viewItems.length);
+      const lowPriorityIndexes = indexes.filter(
+        (i) => this.viewItems[i].priority === 1
+        /* LayoutPriority.Low */
+      );
+      const highPriorityIndexes = indexes.filter(
+        (i) => this.viewItems[i].priority === 2
+        /* LayoutPriority.High */
+      );
+      this.resize(this.viewItems.length - 1, size - previousSize, void 0, lowPriorityIndexes, highPriorityIndexes);
+    } else {
+      let total = 0;
+      for (let i = 0; i < this.viewItems.length; i++) {
+        const item = this.viewItems[i];
+        const proportion = this.proportions[i];
+        if (typeof proportion === "number") {
+          total += proportion;
+        } else {
+          size -= item.size;
+        }
+      }
+      for (let i = 0; i < this.viewItems.length; i++) {
+        const item = this.viewItems[i];
+        const proportion = this.proportions[i];
+        if (typeof proportion === "number" && total > 0) {
+          item.size = clamp(Math.round(proportion * size / total), item.minimumSize, item.maximumSize);
+        }
+      }
+    }
+    this.distributeEmptySpace();
+    this.layoutViews();
+  }
+  saveProportions() {
+    if (this.proportionalLayout && this._contentSize > 0) {
+      this.proportions = this.viewItems.map((v) => v.proportionalLayout && v.visible ? v.size / this._contentSize : void 0);
+    }
+  }
+  onSashStart({ sash, start, alt }) {
+    for (const item of this.viewItems) {
+      item.enabled = false;
+    }
+    const index = this.sashItems.findIndex((item) => item.sash === sash);
+    const disposable = combinedDisposable(addDisposableListener(this.el.ownerDocument.body, "keydown", (e) => resetSashDragState(this.sashDragState.current, e.altKey)), addDisposableListener(this.el.ownerDocument.body, "keyup", () => resetSashDragState(this.sashDragState.current, false)));
+    const resetSashDragState = /* @__PURE__ */ __name((start2, alt2) => {
+      const sizes = this.viewItems.map((i) => i.size);
+      let minDelta = Number.NEGATIVE_INFINITY;
+      let maxDelta = Number.POSITIVE_INFINITY;
+      if (this.inverseAltBehavior) {
+        alt2 = !alt2;
+      }
+      if (alt2) {
+        const isLastSash = index === this.sashItems.length - 1;
+        if (isLastSash) {
+          const viewItem = this.viewItems[index];
+          minDelta = (viewItem.minimumSize - viewItem.size) / 2;
+          maxDelta = (viewItem.maximumSize - viewItem.size) / 2;
+        } else {
+          const viewItem = this.viewItems[index + 1];
+          minDelta = (viewItem.size - viewItem.maximumSize) / 2;
+          maxDelta = (viewItem.size - viewItem.minimumSize) / 2;
+        }
+      }
+      let snapBefore;
+      let snapAfter;
+      if (!alt2) {
+        const upIndexes = range(index, -1);
+        const downIndexes = range(index + 1, this.viewItems.length);
+        const minDeltaUp = upIndexes.reduce((r, i) => r + (this.viewItems[i].minimumSize - sizes[i]), 0);
+        const maxDeltaUp = upIndexes.reduce((r, i) => r + (this.viewItems[i].viewMaximumSize - sizes[i]), 0);
+        const maxDeltaDown = downIndexes.length === 0 ? Number.POSITIVE_INFINITY : downIndexes.reduce((r, i) => r + (sizes[i] - this.viewItems[i].minimumSize), 0);
+        const minDeltaDown = downIndexes.length === 0 ? Number.NEGATIVE_INFINITY : downIndexes.reduce((r, i) => r + (sizes[i] - this.viewItems[i].viewMaximumSize), 0);
+        const minDelta2 = Math.max(minDeltaUp, minDeltaDown);
+        const maxDelta2 = Math.min(maxDeltaDown, maxDeltaUp);
+        const snapBeforeIndex = this.findFirstSnapIndex(upIndexes);
+        const snapAfterIndex = this.findFirstSnapIndex(downIndexes);
+        if (typeof snapBeforeIndex === "number") {
+          const viewItem = this.viewItems[snapBeforeIndex];
+          const halfSize = Math.floor(viewItem.viewMinimumSize / 2);
+          snapBefore = {
+            index: snapBeforeIndex,
+            limitDelta: viewItem.visible ? minDelta2 - halfSize : minDelta2 + halfSize,
+            size: viewItem.size
+          };
+        }
+        if (typeof snapAfterIndex === "number") {
+          const viewItem = this.viewItems[snapAfterIndex];
+          const halfSize = Math.floor(viewItem.viewMinimumSize / 2);
+          snapAfter = {
+            index: snapAfterIndex,
+            limitDelta: viewItem.visible ? maxDelta2 + halfSize : maxDelta2 - halfSize,
+            size: viewItem.size
+          };
+        }
+      }
+      this.sashDragState = { start: start2, current: start2, index, sizes, minDelta, maxDelta, alt: alt2, snapBefore, snapAfter, disposable };
+    }, "resetSashDragState");
+    resetSashDragState(start, alt);
+  }
+  onSashChange({ current }) {
+    const { index, start, sizes, alt, minDelta, maxDelta, snapBefore, snapAfter } = this.sashDragState;
+    this.sashDragState.current = current;
+    const delta = current - start;
+    const newDelta = this.resize(index, delta, sizes, void 0, void 0, minDelta, maxDelta, snapBefore, snapAfter);
+    if (alt) {
+      const isLastSash = index === this.sashItems.length - 1;
+      const newSizes = this.viewItems.map((i) => i.size);
+      const viewItemIndex = isLastSash ? index : index + 1;
+      const viewItem = this.viewItems[viewItemIndex];
+      const newMinDelta = viewItem.size - viewItem.maximumSize;
+      const newMaxDelta = viewItem.size - viewItem.minimumSize;
+      const resizeIndex = isLastSash ? index - 1 : index + 1;
+      this.resize(resizeIndex, -newDelta, newSizes, void 0, void 0, newMinDelta, newMaxDelta);
+    }
+    this.distributeEmptySpace();
+    this.layoutViews();
+  }
+  onSashEnd(index) {
+    this._onDidSashChange.fire(index);
+    this.sashDragState.disposable.dispose();
+    this.saveProportions();
+    for (const item of this.viewItems) {
+      item.enabled = true;
+    }
+  }
+  onViewChange(item, size) {
+    const index = this.viewItems.indexOf(item);
+    if (index < 0 || index >= this.viewItems.length) {
+      return;
+    }
+    size = typeof size === "number" ? size : item.size;
+    size = clamp(size, item.minimumSize, item.maximumSize);
+    if (this.inverseAltBehavior && index > 0) {
+      this.resize(index - 1, Math.floor((item.size - size) / 2));
+      this.distributeEmptySpace();
+      this.layoutViews();
+    } else {
+      item.size = size;
+      this.relayout([index], void 0);
+    }
+  }
+  /**
+   * Resize a {@link IView view} within the {@link SplitView}.
+   *
+   * @param index The {@link IView view} index.
+   * @param size The {@link IView view} size.
+   */
+  resizeView(index, size) {
+    if (index < 0 || index >= this.viewItems.length) {
+      return;
+    }
+    if (this.state !== State.Idle) {
+      throw new Error("Cant modify splitview");
+    }
+    this.state = State.Busy;
+    try {
+      const indexes = range(this.viewItems.length).filter((i) => i !== index);
+      const lowPriorityIndexes = [...indexes.filter(
+        (i) => this.viewItems[i].priority === 1
+        /* LayoutPriority.Low */
+      ), index];
+      const highPriorityIndexes = indexes.filter(
+        (i) => this.viewItems[i].priority === 2
+        /* LayoutPriority.High */
+      );
+      const item = this.viewItems[index];
+      size = Math.round(size);
+      size = clamp(size, item.minimumSize, Math.min(item.maximumSize, this.size));
+      item.size = size;
+      this.relayout(lowPriorityIndexes, highPriorityIndexes);
+    } finally {
+      this.state = State.Idle;
+    }
+  }
+  /**
+   * Returns whether all other {@link IView views} are at their minimum size.
+   */
+  isViewExpanded(index) {
+    if (index < 0 || index >= this.viewItems.length) {
+      return false;
+    }
+    for (const item of this.viewItems) {
+      if (item !== this.viewItems[index] && item.size > item.minimumSize) {
+        return false;
+      }
+    }
+    return true;
+  }
+  /**
+   * Distribute the entire {@link SplitView} size among all {@link IView views}.
+   */
+  distributeViewSizes() {
+    const flexibleViewItems = [];
+    let flexibleSize = 0;
+    for (const item of this.viewItems) {
+      if (item.maximumSize - item.minimumSize > 0) {
+        flexibleViewItems.push(item);
+        flexibleSize += item.size;
+      }
+    }
+    const size = Math.floor(flexibleSize / flexibleViewItems.length);
+    for (const item of flexibleViewItems) {
+      item.size = clamp(size, item.minimumSize, item.maximumSize);
+    }
+    const indexes = range(this.viewItems.length);
+    const lowPriorityIndexes = indexes.filter(
+      (i) => this.viewItems[i].priority === 1
+      /* LayoutPriority.Low */
+    );
+    const highPriorityIndexes = indexes.filter(
+      (i) => this.viewItems[i].priority === 2
+      /* LayoutPriority.High */
+    );
+    this.relayout(lowPriorityIndexes, highPriorityIndexes);
+  }
+  /**
+   * Returns the size of a {@link IView view}.
+   */
+  getViewSize(index) {
+    if (index < 0 || index >= this.viewItems.length) {
+      return -1;
+    }
+    return this.viewItems[index].size;
+  }
+  doAddView(view, size, index = this.viewItems.length, skipLayout) {
+    if (this.state !== State.Idle) {
+      throw new Error("Cant modify splitview");
+    }
+    this.state = State.Busy;
+    try {
+      const container = $(".split-view-view");
+      if (index === this.viewItems.length) {
+        this.viewContainer.appendChild(container);
+      } else {
+        this.viewContainer.insertBefore(container, this.viewContainer.children.item(index));
+      }
+      const onChangeDisposable = view.onDidChange((size2) => this.onViewChange(item, size2));
+      const containerDisposable = toDisposable(() => container.remove());
+      const disposable = combinedDisposable(onChangeDisposable, containerDisposable);
+      let viewSize;
+      if (typeof size === "number") {
+        viewSize = size;
+      } else {
+        if (size.type === "auto") {
+          if (this.areViewsDistributed()) {
+            size = { type: "distribute" };
+          } else {
+            size = { type: "split", index: size.index };
+          }
+        }
+        if (size.type === "split") {
+          viewSize = this.getViewSize(size.index) / 2;
+        } else if (size.type === "invisible") {
+          viewSize = { cachedVisibleSize: size.cachedVisibleSize };
+        } else {
+          viewSize = view.minimumSize;
+        }
+      }
+      const item = this.orientation === 0 ? new VerticalViewItem(container, view, viewSize, disposable) : new HorizontalViewItem(container, view, viewSize, disposable);
+      this.viewItems.splice(index, 0, item);
+      if (this.viewItems.length > 1) {
+        const opts = { orthogonalStartSash: this.orthogonalStartSash, orthogonalEndSash: this.orthogonalEndSash };
+        const sash = this.orientation === 0 ? new Sash(this.sashContainer, { getHorizontalSashTop: /* @__PURE__ */ __name((s) => this.getSashPosition(s), "getHorizontalSashTop"), getHorizontalSashWidth: this.getSashOrthogonalSize }, {
+          ...opts,
+          orientation: 1
+          /* Orientation.HORIZONTAL */
+        }) : new Sash(this.sashContainer, { getVerticalSashLeft: /* @__PURE__ */ __name((s) => this.getSashPosition(s), "getVerticalSashLeft"), getVerticalSashHeight: this.getSashOrthogonalSize }, {
+          ...opts,
+          orientation: 0
+          /* Orientation.VERTICAL */
+        });
+        const sashEventMapper = this.orientation === 0 ? (e) => ({ sash, start: e.startY, current: e.currentY, alt: e.altKey }) : (e) => ({ sash, start: e.startX, current: e.currentX, alt: e.altKey });
+        const onStart = Event.map(sash.onDidStart, sashEventMapper);
+        const onStartDisposable = onStart(this.onSashStart, this);
+        const onChange = Event.map(sash.onDidChange, sashEventMapper);
+        const onChangeDisposable2 = onChange(this.onSashChange, this);
+        const onEnd = Event.map(sash.onDidEnd, () => this.sashItems.findIndex((item2) => item2.sash === sash));
+        const onEndDisposable = onEnd(this.onSashEnd, this);
+        const onDidResetDisposable = sash.onDidReset(() => {
+          const index2 = this.sashItems.findIndex((item2) => item2.sash === sash);
+          const upIndexes = range(index2, -1);
+          const downIndexes = range(index2 + 1, this.viewItems.length);
+          const snapBeforeIndex = this.findFirstSnapIndex(upIndexes);
+          const snapAfterIndex = this.findFirstSnapIndex(downIndexes);
+          if (typeof snapBeforeIndex === "number" && !this.viewItems[snapBeforeIndex].visible) {
+            return;
+          }
+          if (typeof snapAfterIndex === "number" && !this.viewItems[snapAfterIndex].visible) {
+            return;
+          }
+          this._onDidSashReset.fire(index2);
+        });
+        const disposable2 = combinedDisposable(onStartDisposable, onChangeDisposable2, onEndDisposable, onDidResetDisposable, sash);
+        const sashItem = { sash, disposable: disposable2 };
+        this.sashItems.splice(index - 1, 0, sashItem);
+      }
+      container.appendChild(view.element);
+      let highPriorityIndexes;
+      if (typeof size !== "number" && size.type === "split") {
+        highPriorityIndexes = [size.index];
+      }
+      if (!skipLayout) {
+        this.relayout([index], highPriorityIndexes);
+      }
+      if (!skipLayout && typeof size !== "number" && size.type === "distribute") {
+        this.distributeViewSizes();
+      }
+    } finally {
+      this.state = State.Idle;
+    }
+  }
+  relayout(lowPriorityIndexes, highPriorityIndexes) {
+    const contentSize = this.viewItems.reduce((r, i) => r + i.size, 0);
+    this.resize(this.viewItems.length - 1, this.size - contentSize, void 0, lowPriorityIndexes, highPriorityIndexes);
+    this.distributeEmptySpace();
+    this.layoutViews();
+    this.saveProportions();
+  }
+  resize(index, delta, sizes = this.viewItems.map((i) => i.size), lowPriorityIndexes, highPriorityIndexes, overloadMinDelta = Number.NEGATIVE_INFINITY, overloadMaxDelta = Number.POSITIVE_INFINITY, snapBefore, snapAfter) {
+    if (index < 0 || index >= this.viewItems.length) {
+      return 0;
+    }
+    const upIndexes = range(index, -1);
+    const downIndexes = range(index + 1, this.viewItems.length);
+    if (highPriorityIndexes) {
+      for (const index2 of highPriorityIndexes) {
+        pushToStart(upIndexes, index2);
+        pushToStart(downIndexes, index2);
+      }
+    }
+    if (lowPriorityIndexes) {
+      for (const index2 of lowPriorityIndexes) {
+        pushToEnd(upIndexes, index2);
+        pushToEnd(downIndexes, index2);
+      }
+    }
+    const upItems = upIndexes.map((i) => this.viewItems[i]);
+    const upSizes = upIndexes.map((i) => sizes[i]);
+    const downItems = downIndexes.map((i) => this.viewItems[i]);
+    const downSizes = downIndexes.map((i) => sizes[i]);
+    const minDeltaUp = upIndexes.reduce((r, i) => r + (this.viewItems[i].minimumSize - sizes[i]), 0);
+    const maxDeltaUp = upIndexes.reduce((r, i) => r + (this.viewItems[i].maximumSize - sizes[i]), 0);
+    const maxDeltaDown = downIndexes.length === 0 ? Number.POSITIVE_INFINITY : downIndexes.reduce((r, i) => r + (sizes[i] - this.viewItems[i].minimumSize), 0);
+    const minDeltaDown = downIndexes.length === 0 ? Number.NEGATIVE_INFINITY : downIndexes.reduce((r, i) => r + (sizes[i] - this.viewItems[i].maximumSize), 0);
+    const minDelta = Math.max(minDeltaUp, minDeltaDown, overloadMinDelta);
+    const maxDelta = Math.min(maxDeltaDown, maxDeltaUp, overloadMaxDelta);
+    let snapped = false;
+    if (snapBefore) {
+      const snapView = this.viewItems[snapBefore.index];
+      const visible = delta >= snapBefore.limitDelta;
+      snapped = visible !== snapView.visible;
+      snapView.setVisible(visible, snapBefore.size);
+    }
+    if (!snapped && snapAfter) {
+      const snapView = this.viewItems[snapAfter.index];
+      const visible = delta < snapAfter.limitDelta;
+      snapped = visible !== snapView.visible;
+      snapView.setVisible(visible, snapAfter.size);
+    }
+    if (snapped) {
+      return this.resize(index, delta, sizes, lowPriorityIndexes, highPriorityIndexes, overloadMinDelta, overloadMaxDelta);
+    }
+    delta = clamp(delta, minDelta, maxDelta);
+    for (let i = 0, deltaUp = delta; i < upItems.length; i++) {
+      const item = upItems[i];
+      const size = clamp(upSizes[i] + deltaUp, item.minimumSize, item.maximumSize);
+      const viewDelta = size - upSizes[i];
+      deltaUp -= viewDelta;
+      item.size = size;
+    }
+    for (let i = 0, deltaDown = delta; i < downItems.length; i++) {
+      const item = downItems[i];
+      const size = clamp(downSizes[i] - deltaDown, item.minimumSize, item.maximumSize);
+      const viewDelta = size - downSizes[i];
+      deltaDown += viewDelta;
+      item.size = size;
+    }
+    return delta;
+  }
+  distributeEmptySpace(lowPriorityIndex) {
+    const contentSize = this.viewItems.reduce((r, i) => r + i.size, 0);
+    let emptyDelta = this.size - contentSize;
+    const indexes = range(this.viewItems.length - 1, -1);
+    const lowPriorityIndexes = indexes.filter(
+      (i) => this.viewItems[i].priority === 1
+      /* LayoutPriority.Low */
+    );
+    const highPriorityIndexes = indexes.filter(
+      (i) => this.viewItems[i].priority === 2
+      /* LayoutPriority.High */
+    );
+    for (const index of highPriorityIndexes) {
+      pushToStart(indexes, index);
+    }
+    for (const index of lowPriorityIndexes) {
+      pushToEnd(indexes, index);
+    }
+    if (typeof lowPriorityIndex === "number") {
+      pushToEnd(indexes, lowPriorityIndex);
+    }
+    for (let i = 0; emptyDelta !== 0 && i < indexes.length; i++) {
+      const item = this.viewItems[indexes[i]];
+      const size = clamp(item.size + emptyDelta, item.minimumSize, item.maximumSize);
+      const viewDelta = size - item.size;
+      emptyDelta -= viewDelta;
+      item.size = size;
+    }
+  }
+  layoutViews() {
+    this._contentSize = this.viewItems.reduce((r, i) => r + i.size, 0);
+    let offset = 0;
+    for (const viewItem of this.viewItems) {
+      viewItem.layout(offset, this.layoutContext);
+      offset += viewItem.size;
+    }
+    this.sashItems.forEach((item) => item.sash.layout());
+    this.updateSashEnablement();
+    this.updateScrollableElement();
+  }
+  updateScrollableElement() {
+    if (this.orientation === 0) {
+      this.scrollableElement.setScrollDimensions({
+        height: this.size,
+        scrollHeight: this._contentSize
+      });
+    } else {
+      this.scrollableElement.setScrollDimensions({
+        width: this.size,
+        scrollWidth: this._contentSize
+      });
+    }
+  }
+  updateSashEnablement() {
+    let previous = false;
+    const collapsesDown = this.viewItems.map((i) => previous = i.size - i.minimumSize > 0 || previous);
+    previous = false;
+    const expandsDown = this.viewItems.map((i) => previous = i.maximumSize - i.size > 0 || previous);
+    const reverseViews = [...this.viewItems].reverse();
+    previous = false;
+    const collapsesUp = reverseViews.map((i) => previous = i.size - i.minimumSize > 0 || previous).reverse();
+    previous = false;
+    const expandsUp = reverseViews.map((i) => previous = i.maximumSize - i.size > 0 || previous).reverse();
+    let position = 0;
+    for (let index = 0; index < this.sashItems.length; index++) {
+      const { sash } = this.sashItems[index];
+      const viewItem = this.viewItems[index];
+      position += viewItem.size;
+      const min = !(collapsesDown[index] && expandsUp[index + 1]);
+      const max = !(expandsDown[index] && collapsesUp[index + 1]);
+      if (min && max) {
+        const upIndexes = range(index, -1);
+        const downIndexes = range(index + 1, this.viewItems.length);
+        const snapBeforeIndex = this.findFirstSnapIndex(upIndexes);
+        const snapAfterIndex = this.findFirstSnapIndex(downIndexes);
+        const snappedBefore = typeof snapBeforeIndex === "number" && !this.viewItems[snapBeforeIndex].visible;
+        const snappedAfter = typeof snapAfterIndex === "number" && !this.viewItems[snapAfterIndex].visible;
+        if (snappedBefore && collapsesUp[index] && (position > 0 || this.startSnappingEnabled)) {
+          sash.state = 1;
+        } else if (snappedAfter && collapsesDown[index] && (position < this._contentSize || this.endSnappingEnabled)) {
+          sash.state = 2;
+        } else {
+          sash.state = 0;
+        }
+      } else if (min && !max) {
+        sash.state = 1;
+      } else if (!min && max) {
+        sash.state = 2;
+      } else {
+        sash.state = 3;
+      }
+    }
+  }
+  getSashPosition(sash) {
+    let position = 0;
+    for (let i = 0; i < this.sashItems.length; i++) {
+      position += this.viewItems[i].size;
+      if (this.sashItems[i].sash === sash) {
+        return position;
+      }
+    }
+    return 0;
+  }
+  findFirstSnapIndex(indexes) {
+    for (const index of indexes) {
+      const viewItem = this.viewItems[index];
+      if (!viewItem.visible) {
+        continue;
+      }
+      if (viewItem.snap) {
+        return index;
+      }
+    }
+    for (const index of indexes) {
+      const viewItem = this.viewItems[index];
+      if (viewItem.visible && viewItem.maximumSize - viewItem.minimumSize > 0) {
+        return void 0;
+      }
+      if (!viewItem.visible && viewItem.snap) {
+        return index;
+      }
+    }
+    return void 0;
+  }
+  areViewsDistributed() {
+    let min = void 0, max = void 0;
+    for (const view of this.viewItems) {
+      min = min === void 0 ? view.size : Math.min(min, view.size);
+      max = max === void 0 ? view.size : Math.max(max, view.size);
+      if (max - min > 2) {
+        return false;
+      }
+    }
+    return true;
+  }
+  dispose() {
+    this.sashDragState?.disposable.dispose();
+    dispose(this.viewItems);
+    this.viewItems = [];
+    this.sashItems.forEach((i) => i.disposable.dispose());
+    this.sashItems = [];
+    super.dispose();
+  }
+}
+export {
+  LayoutPriority,
+  Orientation,
+  Sizing,
+  SplitView
+};
+//# sourceMappingURL=splitview.js.map

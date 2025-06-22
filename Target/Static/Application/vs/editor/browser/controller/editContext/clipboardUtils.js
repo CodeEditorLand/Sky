@@ -1,2 +1,88 @@
-import{$m as y}from"../../../../base/common/platform.js";import{$4B as h}from"../../../../base/common/mime.js";function C(n,e,t,s){const r=n.getPlainTextToCopy(e,t,y),a=n.model.getEOL(),g=t&&e.length===1&&e[0].isEmpty(),u=Array.isArray(r)?r:null,o=Array.isArray(r)?r.join(a):r;let l,c=null;if(x.forceCopyWithSyntaxHighlighting||s&&o.length<65536){const i=n.getRichTextToCopy(e,t);i&&(l=i.html,c=i.mode)}return{isFromEmptySelection:g,multicursorText:u,text:o,html:l,mode:c}}class f{static{this.INSTANCE=new f}constructor(){this.a=null}set(e,t){this.a={lastCopiedValue:e,data:t}}get(e){return this.a&&this.a.lastCopiedValue===e?this.a.data:(this.a=null,null)}}const x={forceCopyWithSyntaxHighlighting:!1},A={getTextData(n){const e=n.getData(h.text);let t=null;const s=n.getData("vscode-editor-data");if(typeof s=="string")try{t=JSON.parse(s),t.version!==1&&(t=null)}catch{}return e.length===0&&t===null&&n.files.length>0?[Array.prototype.slice.call(n.files,0).map(a=>a.name).join(`
-`),null]:[e,t]},setTextData(n,e,t,s){n.setData(h.text,e),typeof t=="string"&&n.setData("text/html",t),n.setData("vscode-editor-data",JSON.stringify(s))}};export{C as $icb,f as $jcb,x as $kcb,A as $lcb};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { isWindows } from "../../../../base/common/platform.js";
+import { Mimes } from "../../../../base/common/mime.js";
+function getDataToCopy(viewModel, modelSelections, emptySelectionClipboard, copyWithSyntaxHighlighting) {
+  const rawTextToCopy = viewModel.getPlainTextToCopy(modelSelections, emptySelectionClipboard, isWindows);
+  const newLineCharacter = viewModel.model.getEOL();
+  const isFromEmptySelection = emptySelectionClipboard && modelSelections.length === 1 && modelSelections[0].isEmpty();
+  const multicursorText = Array.isArray(rawTextToCopy) ? rawTextToCopy : null;
+  const text = Array.isArray(rawTextToCopy) ? rawTextToCopy.join(newLineCharacter) : rawTextToCopy;
+  let html = void 0;
+  let mode = null;
+  if (CopyOptions.forceCopyWithSyntaxHighlighting || copyWithSyntaxHighlighting && text.length < 65536) {
+    const richText = viewModel.getRichTextToCopy(modelSelections, emptySelectionClipboard);
+    if (richText) {
+      html = richText.html;
+      mode = richText.mode;
+    }
+  }
+  const dataToCopy = {
+    isFromEmptySelection,
+    multicursorText,
+    text,
+    html,
+    mode
+  };
+  return dataToCopy;
+}
+__name(getDataToCopy, "getDataToCopy");
+class InMemoryClipboardMetadataManager {
+  static {
+    __name(this, "InMemoryClipboardMetadataManager");
+  }
+  static {
+    this.INSTANCE = new InMemoryClipboardMetadataManager();
+  }
+  constructor() {
+    this._lastState = null;
+  }
+  set(lastCopiedValue, data) {
+    this._lastState = { lastCopiedValue, data };
+  }
+  get(pastedText) {
+    if (this._lastState && this._lastState.lastCopiedValue === pastedText) {
+      return this._lastState.data;
+    }
+    this._lastState = null;
+    return null;
+  }
+}
+const CopyOptions = {
+  forceCopyWithSyntaxHighlighting: false
+};
+const ClipboardEventUtils = {
+  getTextData(clipboardData) {
+    const text = clipboardData.getData(Mimes.text);
+    let metadata = null;
+    const rawmetadata = clipboardData.getData("vscode-editor-data");
+    if (typeof rawmetadata === "string") {
+      try {
+        metadata = JSON.parse(rawmetadata);
+        if (metadata.version !== 1) {
+          metadata = null;
+        }
+      } catch (err) {
+      }
+    }
+    if (text.length === 0 && metadata === null && clipboardData.files.length > 0) {
+      const files = Array.prototype.slice.call(clipboardData.files, 0);
+      return [files.map((file) => file.name).join("\n"), null];
+    }
+    return [text, metadata];
+  },
+  setTextData(clipboardData, text, html, metadata) {
+    clipboardData.setData(Mimes.text, text);
+    if (typeof html === "string") {
+      clipboardData.setData("text/html", html);
+    }
+    clipboardData.setData("vscode-editor-data", JSON.stringify(metadata));
+  }
+};
+export {
+  ClipboardEventUtils,
+  CopyOptions,
+  InMemoryClipboardMetadataManager,
+  getDataToCopy
+};
+//# sourceMappingURL=clipboardUtils.js.map

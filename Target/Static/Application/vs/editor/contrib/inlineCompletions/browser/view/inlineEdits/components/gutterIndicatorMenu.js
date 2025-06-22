@@ -1,1 +1,238 @@
-import{n as a}from"../../../../../../../base/browser/dom.js";import{$M7 as C}from"../../../../../../../base/browser/ui/actionbar/actionbar.js";import{$F8 as y}from"../../../../../../../base/browser/ui/iconLabel/iconLabels.js";import{$99 as j}from"../../../../../../../base/browser/ui/keybindingLabel/keybindingLabel.js";import{$Mj as s}from"../../../../../../../base/common/codicons.js";import{autorun as w,constObservable as B,derived as b,observableFromEvent as E,observableValue as L}from"../../../../../../../base/common/observable.js";import{OS as _}from"../../../../../../../base/common/platform.js";import{ThemeIcon as O}from"../../../../../../../base/common/themables.js";import{localize as u}from"../../../../../../../nls.js";import{$Yn as D}from"../../../../../../../platform/commands/common/commands.js";import{$Vn as S}from"../../../../../../../platform/contextkey/common/contextkey.js";import{$pgb as z}from"../../../../../../../platform/hover/browser/hover.js";import{$ux as H}from"../../../../../../../platform/keybinding/common/keybinding.js";import{$Kfb as R}from"../../../../../../../platform/theme/browser/defaultStyles.js";import{$jp as g,$Dp as q,$$s as F,$Iq as M,$zs as T}from"../../../../../../../platform/theme/common/colorRegistry.js";import{$xjb as K,$tjb as P,$yjb as $}from"../../../controller/commandIds.js";var k=function(t,i,n,o){var r=arguments.length,d=r<3?i:o===null?o=Object.getOwnPropertyDescriptor(i,n):o,m;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")d=Reflect.decorate(t,i,n,o);else for(var l=t.length-1;l>=0;l--)(m=t[l])&&(d=(r<3?m(d):r>3?m(i,n,d):m(i,n))||d);return r>3&&d&&Object.defineProperty(i,n,d),d},h=function(t,i){return function(n,o){i(n,o,t)}};let x=class{constructor(i,n,o,r,d,m){this.b=i,this.d=n,this.f=o,this.g=r,this.h=d,this.i=m,this.a=this.f.getOption(67).map(l=>l.edits.showCollapsed)}toDisposableLiveElement(){return this.j().toDisposableLiveElement()}j(){const i=L("active",void 0),n=e=>({title:e.title,icon:e.icon,keybinding:typeof e.commandId=="string"?this.k(e.commandArgs?void 0:e.commandId):b(c=>typeof e.commandId=="string"?void 0:this.k(e.commandArgs?void 0:e.commandId.read(c)).read(c)),isActive:i.map(c=>c===e.id),onHoverChange:c=>i.set(c?e.id:void 0,void 0),onAction:()=>(this.d(!0),this.i.executeCommand(typeof e.commandId=="string"?e.commandId:e.commandId.get(),...e.commandArgs??[]))}),o=W(this.b.displayName),r=f(n({id:"gotoAndAccept",title:`${u(1338,null)} / ${u(1339,null)}`,icon:s.check,commandId:P})),d=f(n({id:"reject",title:u(1340,null),icon:s.close,commandId:K})),m=this.b.extensionCommands.map((e,c)=>f(n({id:e.command.id+"_"+c,title:e.command.title,icon:e.icon??s.symbolEvent,commandId:e.command.id,commandArgs:e.command.arguments}))),l=this.a.map(e=>f(n(e?{id:"showExpanded",title:u(1341,null),icon:s.expandAll,commandId:$}:{id:"showCollapsed",title:u(1342,null),icon:s.collapseAll,commandId:$}))),I=f(n({id:"settings",title:u(1343,null),icon:s.gear,commandId:"workbench.action.openSettings",commandArgs:["@tag:nextEditSuggestions"]})),p=this.b.action?[this.b.action]:[],v=p.length>0?N(p.map(e=>({id:e.id,label:e.title,enabled:!0,run:()=>this.i.executeCommand(e.id,...e.arguments??[]),class:void 0,tooltip:e.tooltip??e.title})),{hoverDelegate:z}):void 0;return V([o,r,d,l,I,m.length?A():void 0,...m,v?A():void 0,v])}k(i){return i?E(this.g.onDidChangeContext,()=>this.h.lookupKeybinding(i)):B(void 0)}};x=k([h(3,S),h(4,H),h(5,D)],x);function V(t){return a.div({class:"content",style:{margin:4,minWidth:150}},t)}function W(t){return a.div({class:"header",style:{color:g(q),fontSize:"12px",fontWeight:"600",padding:"0 10px",lineHeight:26}},[t])}function f(t){return b(i=>a.div({class:["monaco-menu-option",t.isActive?.map(n=>n&&"active")],onmouseenter:()=>t.onHoverChange?.(!0),onmouseleave:()=>t.onHoverChange?.(!1),onclick:t.onAction,onkeydown:n=>{n.key==="Enter"&&t.onAction?.()},tabIndex:0,style:{borderRadius:3}},[a.elem("span",{style:{fontSize:16,display:"flex"}},[O.isThemeIcon(t.icon)?y(t.icon):t.icon.map(n=>y(n))]),a.elem("span",{},[t.title]),a.div({style:{marginLeft:"auto"},ref:n=>{const o=i.store.add(new j(n,_,{disableTitle:!0,...R,keybindingLabelShadow:void 0,keybindingLabelBackground:g(T),keybindingLabelBorder:"transparent",keybindingLabelBottomBorder:void 0}));i.store.add(w(r=>{o.set(t.keybinding.read(r))}))}})]))}function N(t,i){return b(n=>a.div({class:["action-widget-action-bar"],style:{padding:"0 10px"}},[a.div({ref:o=>{n.store.add(new C(o,i)).push(t,{icon:!1,label:!0})}})]))}function A(){return a.div({id:"inline-edit-gutter-indicator-menu-separator",class:"menu-separator",style:{color:g(F),padding:"4px 0"}},a.div({style:{borderBottom:`1px solid ${g(M)}`}}))}export{x as $cqb};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { n } from "../../../../../../../base/browser/dom.js";
+import { ActionBar } from "../../../../../../../base/browser/ui/actionbar/actionbar.js";
+import { renderIcon } from "../../../../../../../base/browser/ui/iconLabel/iconLabels.js";
+import { KeybindingLabel } from "../../../../../../../base/browser/ui/keybindingLabel/keybindingLabel.js";
+import { Codicon } from "../../../../../../../base/common/codicons.js";
+import { autorun, constObservable, derived, observableFromEvent, observableValue } from "../../../../../../../base/common/observable.js";
+import { OS } from "../../../../../../../base/common/platform.js";
+import { ThemeIcon } from "../../../../../../../base/common/themables.js";
+import { localize } from "../../../../../../../nls.js";
+import { ICommandService } from "../../../../../../../platform/commands/common/commands.js";
+import { IContextKeyService } from "../../../../../../../platform/contextkey/common/contextkey.js";
+import { nativeHoverDelegate } from "../../../../../../../platform/hover/browser/hover.js";
+import { IKeybindingService } from "../../../../../../../platform/keybinding/common/keybinding.js";
+import { defaultKeybindingLabelStyles } from "../../../../../../../platform/theme/browser/defaultStyles.js";
+import { asCssVariable, descriptionForeground, editorActionListForeground, editorHoverBorder, keybindingLabelBackground } from "../../../../../../../platform/theme/common/colorRegistry.js";
+import { hideInlineCompletionId, inlineSuggestCommitId, toggleShowCollapsedId } from "../../../controller/commandIds.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+let GutterIndicatorMenuContent = class GutterIndicatorMenuContent2 {
+  static {
+    __name(this, "GutterIndicatorMenuContent");
+  }
+  constructor(_model, _close, _editorObs, _contextKeyService, _keybindingService, _commandService) {
+    this._model = _model;
+    this._close = _close;
+    this._editorObs = _editorObs;
+    this._contextKeyService = _contextKeyService;
+    this._keybindingService = _keybindingService;
+    this._commandService = _commandService;
+    this._inlineEditsShowCollapsed = this._editorObs.getOption(
+      67
+      /* EditorOption.inlineSuggest */
+    ).map((s) => s.edits.showCollapsed);
+  }
+  toDisposableLiveElement() {
+    return this._createHoverContent().toDisposableLiveElement();
+  }
+  _createHoverContent() {
+    const activeElement = observableValue("active", void 0);
+    const createOptionArgs = /* @__PURE__ */ __name((options) => {
+      return {
+        title: options.title,
+        icon: options.icon,
+        keybinding: typeof options.commandId === "string" ? this._getKeybinding(options.commandArgs ? void 0 : options.commandId) : derived((reader) => typeof options.commandId === "string" ? void 0 : this._getKeybinding(options.commandArgs ? void 0 : options.commandId.read(reader)).read(reader)),
+        isActive: activeElement.map((v) => v === options.id),
+        onHoverChange: /* @__PURE__ */ __name((v) => activeElement.set(v ? options.id : void 0, void 0), "onHoverChange"),
+        onAction: /* @__PURE__ */ __name(() => {
+          this._close(true);
+          return this._commandService.executeCommand(typeof options.commandId === "string" ? options.commandId : options.commandId.get(), ...options.commandArgs ?? []);
+        }, "onAction")
+      };
+    }, "createOptionArgs");
+    const title = header(this._model.displayName);
+    const gotoAndAccept = option(createOptionArgs({
+      id: "gotoAndAccept",
+      title: `${localize("goto", "Go To")} / ${localize("accept", "Accept")}`,
+      icon: Codicon.check,
+      commandId: inlineSuggestCommitId
+    }));
+    const reject = option(createOptionArgs({
+      id: "reject",
+      title: localize("reject", "Reject"),
+      icon: Codicon.close,
+      commandId: hideInlineCompletionId
+    }));
+    const extensionCommands = this._model.extensionCommands.map((c, idx) => option(createOptionArgs({
+      id: c.command.id + "_" + idx,
+      title: c.command.title,
+      icon: c.icon ?? Codicon.symbolEvent,
+      commandId: c.command.id,
+      commandArgs: c.command.arguments
+    })));
+    const toggleCollapsedMode = this._inlineEditsShowCollapsed.map((showCollapsed) => showCollapsed ? option(createOptionArgs({
+      id: "showExpanded",
+      title: localize("showExpanded", "Show Expanded"),
+      icon: Codicon.expandAll,
+      commandId: toggleShowCollapsedId
+    })) : option(createOptionArgs({
+      id: "showCollapsed",
+      title: localize("showCollapsed", "Show Collapsed"),
+      icon: Codicon.collapseAll,
+      commandId: toggleShowCollapsedId
+    })));
+    const settings = option(createOptionArgs({
+      id: "settings",
+      title: localize("settings", "Settings"),
+      icon: Codicon.gear,
+      commandId: "workbench.action.openSettings",
+      commandArgs: ["@tag:nextEditSuggestions"]
+    }));
+    const actions = this._model.action ? [this._model.action] : [];
+    const actionBarFooter = actions.length > 0 ? actionBar(actions.map((action) => ({
+      id: action.id,
+      label: action.title,
+      enabled: true,
+      run: /* @__PURE__ */ __name(() => this._commandService.executeCommand(action.id, ...action.arguments ?? []), "run"),
+      class: void 0,
+      tooltip: action.tooltip ?? action.title
+    })), {
+      hoverDelegate: nativeHoverDelegate
+      /* unable to show hover inside another hover */
+    }) : void 0;
+    return hoverContent([
+      title,
+      gotoAndAccept,
+      reject,
+      toggleCollapsedMode,
+      settings,
+      extensionCommands.length ? separator() : void 0,
+      ...extensionCommands,
+      actionBarFooter ? separator() : void 0,
+      actionBarFooter
+    ]);
+  }
+  _getKeybinding(commandId) {
+    if (!commandId) {
+      return constObservable(void 0);
+    }
+    return observableFromEvent(this._contextKeyService.onDidChangeContext, () => this._keybindingService.lookupKeybinding(commandId));
+  }
+};
+GutterIndicatorMenuContent = __decorate([
+  __param(3, IContextKeyService),
+  __param(4, IKeybindingService),
+  __param(5, ICommandService)
+], GutterIndicatorMenuContent);
+function hoverContent(content) {
+  return n.div({
+    class: "content",
+    style: {
+      margin: 4,
+      minWidth: 150
+    }
+  }, content);
+}
+__name(hoverContent, "hoverContent");
+function header(title) {
+  return n.div({
+    class: "header",
+    style: {
+      color: asCssVariable(descriptionForeground),
+      fontSize: "12px",
+      fontWeight: "600",
+      padding: "0 10px",
+      lineHeight: 26
+    }
+  }, [title]);
+}
+__name(header, "header");
+function option(props) {
+  return derived((_reader) => n.div({
+    class: ["monaco-menu-option", props.isActive?.map((v) => v && "active")],
+    onmouseenter: /* @__PURE__ */ __name(() => props.onHoverChange?.(true), "onmouseenter"),
+    onmouseleave: /* @__PURE__ */ __name(() => props.onHoverChange?.(false), "onmouseleave"),
+    onclick: props.onAction,
+    onkeydown: /* @__PURE__ */ __name((e) => {
+      if (e.key === "Enter") {
+        props.onAction?.();
+      }
+    }, "onkeydown"),
+    tabIndex: 0,
+    style: {
+      borderRadius: 3
+      // same as hover widget border radius
+    }
+  }, [
+    n.elem("span", {
+      style: {
+        fontSize: 16,
+        display: "flex"
+      }
+    }, [ThemeIcon.isThemeIcon(props.icon) ? renderIcon(props.icon) : props.icon.map((icon) => renderIcon(icon))]),
+    n.elem("span", {}, [props.title]),
+    n.div({
+      style: { marginLeft: "auto" },
+      ref: /* @__PURE__ */ __name((elem) => {
+        const keybindingLabel = _reader.store.add(new KeybindingLabel(elem, OS, {
+          disableTitle: true,
+          ...defaultKeybindingLabelStyles,
+          keybindingLabelShadow: void 0,
+          keybindingLabelBackground: asCssVariable(keybindingLabelBackground),
+          keybindingLabelBorder: "transparent",
+          keybindingLabelBottomBorder: void 0
+        }));
+        _reader.store.add(autorun((reader) => {
+          keybindingLabel.set(props.keybinding.read(reader));
+        }));
+      }, "ref")
+    })
+  ]));
+}
+__name(option, "option");
+function actionBar(actions, options) {
+  return derived((_reader) => n.div({
+    class: ["action-widget-action-bar"],
+    style: {
+      padding: "0 10px"
+    }
+  }, [
+    n.div({
+      ref: /* @__PURE__ */ __name((elem) => {
+        const actionBar2 = _reader.store.add(new ActionBar(elem, options));
+        actionBar2.push(actions, { icon: false, label: true });
+      }, "ref")
+    })
+  ]));
+}
+__name(actionBar, "actionBar");
+function separator() {
+  return n.div({
+    id: "inline-edit-gutter-indicator-menu-separator",
+    class: "menu-separator",
+    style: {
+      color: asCssVariable(editorActionListForeground),
+      padding: "4px 0"
+    }
+  }, n.div({
+    style: {
+      borderBottom: `1px solid ${asCssVariable(editorHoverBorder)}`
+    }
+  }));
+}
+__name(separator, "separator");
+export {
+  GutterIndicatorMenuContent
+};
+//# sourceMappingURL=gutterIndicatorMenu.js.map

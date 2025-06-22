@@ -1,1 +1,42 @@
-import{$df as a}from"../../../../../base/common/event.js";import{$vd as c}from"../../../../../base/common/lifecycle.js";import{$PK as n}from"../../common/notebookRange.js";class l extends c{constructor(){super(...arguments),this.a=this.B(new a),this.b={start:0,end:0},this.c=[{start:0,end:0}]}get onDidChangeSelection(){return this.a.event}get selections(){return this.c}get focus(){return this.b}setState(t,s,e,o){const i=t??{start:0,end:0},r=s.length>0?s:[{start:0,end:0}],a=!n([i],[this.b])||!n(this.c,r);this.b=i,this.c=r,(a||e)&&this.a.fire(o)}setSelections(t,s,e){this.setState(this.b,t,s,e)}}export{l as $9Rb};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { Emitter } from "../../../../../base/common/event.js";
+import { Disposable } from "../../../../../base/common/lifecycle.js";
+import { cellRangesEqual } from "../../common/notebookRange.js";
+class NotebookCellSelectionCollection extends Disposable {
+  static {
+    __name(this, "NotebookCellSelectionCollection");
+  }
+  constructor() {
+    super(...arguments);
+    this._onDidChangeSelection = this._register(new Emitter());
+    this._primary = { start: 0, end: 0 };
+    this._selections = [{ start: 0, end: 0 }];
+  }
+  get onDidChangeSelection() {
+    return this._onDidChangeSelection.event;
+  }
+  get selections() {
+    return this._selections;
+  }
+  get focus() {
+    return this._primary;
+  }
+  setState(primary, selections, forceEventEmit, source) {
+    const validPrimary = primary ?? { start: 0, end: 0 };
+    const validSelections = selections.length > 0 ? selections : [{ start: 0, end: 0 }];
+    const changed = !cellRangesEqual([validPrimary], [this._primary]) || !cellRangesEqual(this._selections, validSelections);
+    this._primary = validPrimary;
+    this._selections = validSelections;
+    if (changed || forceEventEmit) {
+      this._onDidChangeSelection.fire(source);
+    }
+  }
+  setSelections(selections, forceEventEmit, source) {
+    this.setState(this._primary, selections, forceEventEmit, source);
+  }
+}
+export {
+  NotebookCellSelectionCollection
+};
+//# sourceMappingURL=cellSelectionCollection.js.map

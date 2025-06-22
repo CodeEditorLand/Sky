@@ -1,1 +1,538 @@
-import{$o0 as x}from"./tree.js";import{$pc as F,$Rb as R}from"../../../common/arrays.js";import{$Ih as q}from"../../../common/async.js";import{$$e as L}from"../../../common/symbols.js";import{$_B as B}from"../../../common/diff/diff.js";import{$df as D,$lf as T}from"../../../common/event.js";import{Iterable as m}from"../../../common/iterator.js";function k(b){return!!b&&b.visibility!==void 0}function $(b){switch(b){case!0:return 1;case!1:return 0;default:return b}}function S(b){return typeof b.collapsible=="boolean"}class P{constructor(e,i,t={}){this.q=e,this.rootRef=[],this.d=new T,this.f=new D,this.onDidSpliceModel=this.f.event,this.g=new D,this.onDidSpliceRenderedNodes=this.g.event,this.h=new D,this.onDidChangeCollapseState=this.d.wrapEvent(this.h.event),this.j=new D,this.onDidChangeRenderNodeCount=this.d.wrapEvent(this.j.event),this.p=new q(L),this.k=typeof t.collapseByDefault>"u"?!1:t.collapseByDefault,this.l=t.allowNonCollapsibleParents??!1,this.m=t.filter,this.o=typeof t.autoExpandSingleChildren>"u"?!1:t.autoExpandSingleChildren,this.c={parent:void 0,element:i,children:[],depth:0,visibleChildrenCount:0,visibleChildIndex:-1,collapsible:!1,collapsed:!1,renderNodeCount:0,visibility:1,visible:!0,filterData:void 0}}splice(e,i,t=m.empty(),l={}){if(e.length===0)throw new x(this.q,"Invalid tree location");l.diffIdentityProvider?this.s(l.diffIdentityProvider,e,i,t,l):this.t(e,i,t,l)}s(e,i,t,l=m.empty(),r,d=r.diffDepth??0){const{parentNode:s}=this.H(i);if(!s.lastDiffIds)return this.t(i,t,l,r);const n=[...l],c=i[i.length-1],I=new B({getElements:()=>s.lastDiffIds},{getElements:()=>[...s.children.slice(0,c),...n,...s.children.slice(c+t)].map(f=>e.getId(f.element).toString())}).ComputeDiff(!1);if(I.quitEarly)return s.lastDiffIds=void 0,this.t(i,t,n,r);const p=i.slice(0,-1),C=(f,g,N)=>{if(d>0)for(let v=0;v<N;v++)f--,g--,this.s(e,[...p,f,0],Number.MAX_SAFE_INTEGER,n[g].children,r,d-1)};let o=Math.min(s.children.length,c+t),u=n.length;for(const f of I.changes.sort((g,N)=>N.originalStart-g.originalStart))C(o,u,o-(f.originalStart+f.originalLength)),o=f.originalStart,u=f.modifiedStart-c,this.t([...p,o],f.originalLength,m.slice(n,u,u+f.modifiedLength),r);C(o,u,o)}t(e,i,t=m.empty(),{onDidCreateNode:l,onDidDeleteNode:r,diffIdentityProvider:d}){const{parentNode:s,listIndex:n,revealed:c,visible:I}=this.H(e),p=[],C=m.map(t,h=>this.x(h,s,s.visible?1:0,c,p,l)),o=e[e.length-1];let u=0;for(let h=o;h>=0&&h<s.children.length;h--){const a=s.children[h];if(a.visible){u=a.visibleChildIndex;break}}const f=[];let g=0,N=0;for(const h of C)f.push(h),N+=h.renderNodeCount,h.visible&&(h.visibleChildIndex=u+g++);const v=F(s.children,o,i,f);d?s.lastDiffIds?F(s.lastDiffIds,o,i,f.map(h=>d.getId(h.element).toString())):s.lastDiffIds=s.children.map(h=>d.getId(h.element).toString()):s.lastDiffIds=void 0;let w=0;for(const h of v)h.visible&&w++;if(w!==0)for(let h=o+f.length;h<s.children.length;h++){const a=s.children[h];a.visible&&(a.visibleChildIndex-=w)}if(s.visibleChildrenCount+=g-w,v.length>0&&r){const h=a=>{r(a),a.children.forEach(h)};v.forEach(h)}if(c&&I){const h=v.reduce((a,E)=>a+(E.visible?E.renderNodeCount:0),0);this.C(s,N-h),this.g.fire({start:n,deleteCount:h,elements:p})}this.f.fire({insertedNodes:f,deletedNodes:v});let y=s;for(;y;){if(y.visibility===2){this.p.trigger(()=>this.refilter());break}y=y.parent}}rerender(e){if(e.length===0)throw new x(this.q,"Invalid tree location");const{node:i,listIndex:t,revealed:l}=this.G(e);i.visible&&l&&this.g.fire({start:t,deleteCount:1,elements:[i]})}has(e){return this.E(e)}getListIndex(e){const{listIndex:i,visible:t,revealed:l}=this.G(e);return t&&l?i:-1}getListRenderCount(e){return this.F(e).renderNodeCount}isCollapsible(e){return this.F(e).collapsible}setCollapsible(e,i){const t=this.F(e);typeof i>"u"&&(i=!t.collapsible);const l={collapsible:i};return this.d.bufferEvents(()=>this.u(e,l))}isCollapsed(e){return this.F(e).collapsed}setCollapsed(e,i,t){const l=this.F(e);typeof i>"u"&&(i=!l.collapsed);const r={collapsed:i,recursive:t||!1};return this.d.bufferEvents(()=>this.u(e,r))}u(e,i){const{node:t,listIndex:l,revealed:r}=this.G(e),d=this.v(t,l,r,i);if(t!==this.c&&this.o&&d&&!S(i)&&t.collapsible&&!t.collapsed&&!i.recursive){let s=-1;for(let n=0;n<t.children.length;n++)if(t.children[n].visible)if(s>-1){s=-1;break}else s=n;s>-1&&this.u([...e,s],i)}return d}v(e,i,t,l){const r=this.w(e,l,!1);if(!t||!e.visible||!r)return r;const d=e.renderNodeCount,s=this.y(e),n=d-(i===-1?0:1);return this.g.fire({start:i+1,deleteCount:n,elements:s.slice(1)}),r}w(e,i,t){let l;if(e===this.c?l=!1:(S(i)?(l=e.collapsible!==i.collapsible,e.collapsible=i.collapsible):e.collapsible?(l=e.collapsed!==i.collapsed,e.collapsed=i.collapsed):l=!1,l&&this.h.fire({node:e,deep:t})),!S(i)&&i.recursive)for(const r of e.children)l=this.w(r,i,!0)||l;return l}expandTo(e){this.d.bufferEvents(()=>{let i=this.F(e);for(;i.parent;)i=i.parent,e=e.slice(0,e.length-1),i.collapsed&&this.u(e,{collapsed:!1,recursive:!1})})}refilter(){const e=this.c.renderNodeCount,i=this.A(this.c);this.g.fire({start:0,deleteCount:e,elements:i}),this.p.cancel()}x(e,i,t,l,r,d){const s={parent:i,element:e.element,children:[],depth:i.depth+1,visibleChildrenCount:0,visibleChildIndex:-1,collapsible:typeof e.collapsible=="boolean"?e.collapsible:typeof e.collapsed<"u",collapsed:typeof e.collapsed>"u"?this.k:e.collapsed,renderNodeCount:1,visibility:1,visible:!0,filterData:void 0},n=this.D(s,t);s.visibility=n,l&&r.push(s);const c=e.children||m.empty(),I=l&&n!==0&&!s.collapsed;let p=0,C=1;for(const o of c){const u=this.x(o,s,n,I,r,d);s.children.push(u),C+=u.renderNodeCount,u.visible&&(u.visibleChildIndex=p++)}return this.l||(s.collapsible=s.collapsible||s.children.length>0),s.visibleChildrenCount=p,s.visible=n===2?p>0:n===1,s.visible?s.collapsed||(s.renderNodeCount=C):(s.renderNodeCount=0,l&&r.pop()),d?.(s),s}y(e){const i=e.renderNodeCount,t=[];return this.z(e,t),this.C(e.parent,t.length-i),t}z(e,i){if(e.visible===!1)return 0;if(i.push(e),e.renderNodeCount=1,!e.collapsed)for(const t of e.children)e.renderNodeCount+=this.z(t,i);return this.j.fire(e),e.renderNodeCount}A(e){const i=e.renderNodeCount,t=[];return this.B(e,e.visible?1:0,t),this.C(e.parent,t.length-i),t}B(e,i,t,l=!0){let r;if(e!==this.c){if(r=this.D(e,i),r===0)return e.visible=!1,e.renderNodeCount=0,!1;l&&t.push(e)}const d=t.length;e.renderNodeCount=e===this.c?0:1;let s=!1;if(!e.collapsed||r!==0){let n=0;for(const c of e.children)s=this.B(c,r,t,l&&!e.collapsed)||s,c.visible&&(c.visibleChildIndex=n++);e.visibleChildrenCount=n}else e.visibleChildrenCount=0;return e!==this.c&&(e.visible=r===2?s:r===1,e.visibility=r),e.visible?e.collapsed||(e.renderNodeCount+=t.length-d):(e.renderNodeCount=0,l&&t.pop()),this.j.fire(e),e.visible}C(e,i){if(i!==0)for(;e;)e.renderNodeCount+=i,this.j.fire(e),e=e.parent}D(e,i){const t=this.m?this.m.filter(e.element,i):1;return typeof t=="boolean"?(e.filterData=void 0,t?1:0):k(t)?(e.filterData=t.data,$(t.visibility)):(e.filterData=void 0,$(t))}E(e,i=this.c){if(!e||e.length===0)return!0;const[t,...l]=e;return t<0||t>i.children.length?!1:this.E(l,i.children[t])}F(e,i=this.c){if(!e||e.length===0)return i;const[t,...l]=e;if(t<0||t>i.children.length)throw new x(this.q,"Invalid tree location");return this.F(l,i.children[t])}G(e){if(e.length===0)return{node:this.c,listIndex:-1,revealed:!0,visible:!1};const{parentNode:i,listIndex:t,revealed:l,visible:r}=this.H(e),d=e[e.length-1];if(d<0||d>i.children.length)throw new x(this.q,"Invalid tree location");const s=i.children[d];return{node:s,listIndex:t,revealed:l,visible:r&&s.visible}}H(e,i=this.c,t=0,l=!0,r=!0){const[d,...s]=e;if(d<0||d>i.children.length)throw new x(this.q,"Invalid tree location");for(let n=0;n<d;n++)t+=i.children[n].renderNodeCount;return l=l&&!i.collapsed,r=r&&i.visible,s.length===0?{parentNode:i,listIndex:t,revealed:l,visible:r}:this.H(s,i.children[d],t+1,l,r)}getNode(e=[]){return this.F(e)}getNodeLocation(e){const i=[];let t=e;for(;t.parent;)i.push(t.parent.children.indexOf(t)),t=t.parent;return i.reverse()}getParentNodeLocation(e){if(e.length!==0)return e.length===1?[]:R(e)[0]}getFirstElementChild(e){const i=this.F(e);if(i.children.length!==0)return i.children[0].element}getLastElementAncestor(e=[]){const i=this.F(e);if(i.children.length!==0)return this.I(i)}I(e){return e.children.length===0?e.element:this.I(e.children[e.children.length-1])}}export{k as $q0,$ as $r0,P as $s0};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { TreeError } from "./tree.js";
+import { splice, tail } from "../../../common/arrays.js";
+import { Delayer } from "../../../common/async.js";
+import { MicrotaskDelay } from "../../../common/symbols.js";
+import { LcsDiff } from "../../../common/diff/diff.js";
+import { Emitter, EventBufferer } from "../../../common/event.js";
+import { Iterable } from "../../../common/iterator.js";
+function isFilterResult(obj) {
+  return !!obj && obj.visibility !== void 0;
+}
+__name(isFilterResult, "isFilterResult");
+function getVisibleState(visibility) {
+  switch (visibility) {
+    case true:
+      return 1;
+    case false:
+      return 0;
+    default:
+      return visibility;
+  }
+}
+__name(getVisibleState, "getVisibleState");
+function isCollapsibleStateUpdate(update) {
+  return typeof update.collapsible === "boolean";
+}
+__name(isCollapsibleStateUpdate, "isCollapsibleStateUpdate");
+class IndexTreeModel {
+  static {
+    __name(this, "IndexTreeModel");
+  }
+  constructor(user, rootElement, options = {}) {
+    this.user = user;
+    this.rootRef = [];
+    this.eventBufferer = new EventBufferer();
+    this._onDidSpliceModel = new Emitter();
+    this.onDidSpliceModel = this._onDidSpliceModel.event;
+    this._onDidSpliceRenderedNodes = new Emitter();
+    this.onDidSpliceRenderedNodes = this._onDidSpliceRenderedNodes.event;
+    this._onDidChangeCollapseState = new Emitter();
+    this.onDidChangeCollapseState = this.eventBufferer.wrapEvent(this._onDidChangeCollapseState.event);
+    this._onDidChangeRenderNodeCount = new Emitter();
+    this.onDidChangeRenderNodeCount = this.eventBufferer.wrapEvent(this._onDidChangeRenderNodeCount.event);
+    this.refilterDelayer = new Delayer(MicrotaskDelay);
+    this.collapseByDefault = typeof options.collapseByDefault === "undefined" ? false : options.collapseByDefault;
+    this.allowNonCollapsibleParents = options.allowNonCollapsibleParents ?? false;
+    this.filter = options.filter;
+    this.autoExpandSingleChildren = typeof options.autoExpandSingleChildren === "undefined" ? false : options.autoExpandSingleChildren;
+    this.root = {
+      parent: void 0,
+      element: rootElement,
+      children: [],
+      depth: 0,
+      visibleChildrenCount: 0,
+      visibleChildIndex: -1,
+      collapsible: false,
+      collapsed: false,
+      renderNodeCount: 0,
+      visibility: 1,
+      visible: true,
+      filterData: void 0
+    };
+  }
+  splice(location, deleteCount, toInsert = Iterable.empty(), options = {}) {
+    if (location.length === 0) {
+      throw new TreeError(this.user, "Invalid tree location");
+    }
+    if (options.diffIdentityProvider) {
+      this.spliceSmart(options.diffIdentityProvider, location, deleteCount, toInsert, options);
+    } else {
+      this.spliceSimple(location, deleteCount, toInsert, options);
+    }
+  }
+  spliceSmart(identity, location, deleteCount, toInsertIterable = Iterable.empty(), options, recurseLevels = options.diffDepth ?? 0) {
+    const { parentNode } = this.getParentNodeWithListIndex(location);
+    if (!parentNode.lastDiffIds) {
+      return this.spliceSimple(location, deleteCount, toInsertIterable, options);
+    }
+    const toInsert = [...toInsertIterable];
+    const index = location[location.length - 1];
+    const diff = new LcsDiff({ getElements: /* @__PURE__ */ __name(() => parentNode.lastDiffIds, "getElements") }, {
+      getElements: /* @__PURE__ */ __name(() => [
+        ...parentNode.children.slice(0, index),
+        ...toInsert,
+        ...parentNode.children.slice(index + deleteCount)
+      ].map((e) => identity.getId(e.element).toString()), "getElements")
+    }).ComputeDiff(false);
+    if (diff.quitEarly) {
+      parentNode.lastDiffIds = void 0;
+      return this.spliceSimple(location, deleteCount, toInsert, options);
+    }
+    const locationPrefix = location.slice(0, -1);
+    const recurseSplice = /* @__PURE__ */ __name((fromOriginal, fromModified, count) => {
+      if (recurseLevels > 0) {
+        for (let i = 0; i < count; i++) {
+          fromOriginal--;
+          fromModified--;
+          this.spliceSmart(identity, [...locationPrefix, fromOriginal, 0], Number.MAX_SAFE_INTEGER, toInsert[fromModified].children, options, recurseLevels - 1);
+        }
+      }
+    }, "recurseSplice");
+    let lastStartO = Math.min(parentNode.children.length, index + deleteCount);
+    let lastStartM = toInsert.length;
+    for (const change of diff.changes.sort((a, b) => b.originalStart - a.originalStart)) {
+      recurseSplice(lastStartO, lastStartM, lastStartO - (change.originalStart + change.originalLength));
+      lastStartO = change.originalStart;
+      lastStartM = change.modifiedStart - index;
+      this.spliceSimple([...locationPrefix, lastStartO], change.originalLength, Iterable.slice(toInsert, lastStartM, lastStartM + change.modifiedLength), options);
+    }
+    recurseSplice(lastStartO, lastStartM, lastStartO);
+  }
+  spliceSimple(location, deleteCount, toInsert = Iterable.empty(), { onDidCreateNode, onDidDeleteNode, diffIdentityProvider }) {
+    const { parentNode, listIndex, revealed, visible } = this.getParentNodeWithListIndex(location);
+    const treeListElementsToInsert = [];
+    const nodesToInsertIterator = Iterable.map(toInsert, (el) => this.createTreeNode(el, parentNode, parentNode.visible ? 1 : 0, revealed, treeListElementsToInsert, onDidCreateNode));
+    const lastIndex = location[location.length - 1];
+    let visibleChildStartIndex = 0;
+    for (let i = lastIndex; i >= 0 && i < parentNode.children.length; i--) {
+      const child = parentNode.children[i];
+      if (child.visible) {
+        visibleChildStartIndex = child.visibleChildIndex;
+        break;
+      }
+    }
+    const nodesToInsert = [];
+    let insertedVisibleChildrenCount = 0;
+    let renderNodeCount = 0;
+    for (const child of nodesToInsertIterator) {
+      nodesToInsert.push(child);
+      renderNodeCount += child.renderNodeCount;
+      if (child.visible) {
+        child.visibleChildIndex = visibleChildStartIndex + insertedVisibleChildrenCount++;
+      }
+    }
+    const deletedNodes = splice(parentNode.children, lastIndex, deleteCount, nodesToInsert);
+    if (!diffIdentityProvider) {
+      parentNode.lastDiffIds = void 0;
+    } else if (parentNode.lastDiffIds) {
+      splice(parentNode.lastDiffIds, lastIndex, deleteCount, nodesToInsert.map((n) => diffIdentityProvider.getId(n.element).toString()));
+    } else {
+      parentNode.lastDiffIds = parentNode.children.map((n) => diffIdentityProvider.getId(n.element).toString());
+    }
+    let deletedVisibleChildrenCount = 0;
+    for (const child of deletedNodes) {
+      if (child.visible) {
+        deletedVisibleChildrenCount++;
+      }
+    }
+    if (deletedVisibleChildrenCount !== 0) {
+      for (let i = lastIndex + nodesToInsert.length; i < parentNode.children.length; i++) {
+        const child = parentNode.children[i];
+        if (child.visible) {
+          child.visibleChildIndex -= deletedVisibleChildrenCount;
+        }
+      }
+    }
+    parentNode.visibleChildrenCount += insertedVisibleChildrenCount - deletedVisibleChildrenCount;
+    if (deletedNodes.length > 0 && onDidDeleteNode) {
+      const visit = /* @__PURE__ */ __name((node2) => {
+        onDidDeleteNode(node2);
+        node2.children.forEach(visit);
+      }, "visit");
+      deletedNodes.forEach(visit);
+    }
+    if (revealed && visible) {
+      const visibleDeleteCount = deletedNodes.reduce((r, node2) => r + (node2.visible ? node2.renderNodeCount : 0), 0);
+      this._updateAncestorsRenderNodeCount(parentNode, renderNodeCount - visibleDeleteCount);
+      this._onDidSpliceRenderedNodes.fire({ start: listIndex, deleteCount: visibleDeleteCount, elements: treeListElementsToInsert });
+    }
+    this._onDidSpliceModel.fire({ insertedNodes: nodesToInsert, deletedNodes });
+    let node = parentNode;
+    while (node) {
+      if (node.visibility === 2) {
+        this.refilterDelayer.trigger(() => this.refilter());
+        break;
+      }
+      node = node.parent;
+    }
+  }
+  rerender(location) {
+    if (location.length === 0) {
+      throw new TreeError(this.user, "Invalid tree location");
+    }
+    const { node, listIndex, revealed } = this.getTreeNodeWithListIndex(location);
+    if (node.visible && revealed) {
+      this._onDidSpliceRenderedNodes.fire({ start: listIndex, deleteCount: 1, elements: [node] });
+    }
+  }
+  has(location) {
+    return this.hasTreeNode(location);
+  }
+  getListIndex(location) {
+    const { listIndex, visible, revealed } = this.getTreeNodeWithListIndex(location);
+    return visible && revealed ? listIndex : -1;
+  }
+  getListRenderCount(location) {
+    return this.getTreeNode(location).renderNodeCount;
+  }
+  isCollapsible(location) {
+    return this.getTreeNode(location).collapsible;
+  }
+  setCollapsible(location, collapsible) {
+    const node = this.getTreeNode(location);
+    if (typeof collapsible === "undefined") {
+      collapsible = !node.collapsible;
+    }
+    const update = { collapsible };
+    return this.eventBufferer.bufferEvents(() => this._setCollapseState(location, update));
+  }
+  isCollapsed(location) {
+    return this.getTreeNode(location).collapsed;
+  }
+  setCollapsed(location, collapsed, recursive) {
+    const node = this.getTreeNode(location);
+    if (typeof collapsed === "undefined") {
+      collapsed = !node.collapsed;
+    }
+    const update = { collapsed, recursive: recursive || false };
+    return this.eventBufferer.bufferEvents(() => this._setCollapseState(location, update));
+  }
+  _setCollapseState(location, update) {
+    const { node, listIndex, revealed } = this.getTreeNodeWithListIndex(location);
+    const result = this._setListNodeCollapseState(node, listIndex, revealed, update);
+    if (node !== this.root && this.autoExpandSingleChildren && result && !isCollapsibleStateUpdate(update) && node.collapsible && !node.collapsed && !update.recursive) {
+      let onlyVisibleChildIndex = -1;
+      for (let i = 0; i < node.children.length; i++) {
+        const child = node.children[i];
+        if (child.visible) {
+          if (onlyVisibleChildIndex > -1) {
+            onlyVisibleChildIndex = -1;
+            break;
+          } else {
+            onlyVisibleChildIndex = i;
+          }
+        }
+      }
+      if (onlyVisibleChildIndex > -1) {
+        this._setCollapseState([...location, onlyVisibleChildIndex], update);
+      }
+    }
+    return result;
+  }
+  _setListNodeCollapseState(node, listIndex, revealed, update) {
+    const result = this._setNodeCollapseState(node, update, false);
+    if (!revealed || !node.visible || !result) {
+      return result;
+    }
+    const previousRenderNodeCount = node.renderNodeCount;
+    const toInsert = this.updateNodeAfterCollapseChange(node);
+    const deleteCount = previousRenderNodeCount - (listIndex === -1 ? 0 : 1);
+    this._onDidSpliceRenderedNodes.fire({ start: listIndex + 1, deleteCount, elements: toInsert.slice(1) });
+    return result;
+  }
+  _setNodeCollapseState(node, update, deep) {
+    let result;
+    if (node === this.root) {
+      result = false;
+    } else {
+      if (isCollapsibleStateUpdate(update)) {
+        result = node.collapsible !== update.collapsible;
+        node.collapsible = update.collapsible;
+      } else if (!node.collapsible) {
+        result = false;
+      } else {
+        result = node.collapsed !== update.collapsed;
+        node.collapsed = update.collapsed;
+      }
+      if (result) {
+        this._onDidChangeCollapseState.fire({ node, deep });
+      }
+    }
+    if (!isCollapsibleStateUpdate(update) && update.recursive) {
+      for (const child of node.children) {
+        result = this._setNodeCollapseState(child, update, true) || result;
+      }
+    }
+    return result;
+  }
+  expandTo(location) {
+    this.eventBufferer.bufferEvents(() => {
+      let node = this.getTreeNode(location);
+      while (node.parent) {
+        node = node.parent;
+        location = location.slice(0, location.length - 1);
+        if (node.collapsed) {
+          this._setCollapseState(location, { collapsed: false, recursive: false });
+        }
+      }
+    });
+  }
+  refilter() {
+    const previousRenderNodeCount = this.root.renderNodeCount;
+    const toInsert = this.updateNodeAfterFilterChange(this.root);
+    this._onDidSpliceRenderedNodes.fire({ start: 0, deleteCount: previousRenderNodeCount, elements: toInsert });
+    this.refilterDelayer.cancel();
+  }
+  createTreeNode(treeElement, parent, parentVisibility, revealed, treeListElements, onDidCreateNode) {
+    const node = {
+      parent,
+      element: treeElement.element,
+      children: [],
+      depth: parent.depth + 1,
+      visibleChildrenCount: 0,
+      visibleChildIndex: -1,
+      collapsible: typeof treeElement.collapsible === "boolean" ? treeElement.collapsible : typeof treeElement.collapsed !== "undefined",
+      collapsed: typeof treeElement.collapsed === "undefined" ? this.collapseByDefault : treeElement.collapsed,
+      renderNodeCount: 1,
+      visibility: 1,
+      visible: true,
+      filterData: void 0
+    };
+    const visibility = this._filterNode(node, parentVisibility);
+    node.visibility = visibility;
+    if (revealed) {
+      treeListElements.push(node);
+    }
+    const childElements = treeElement.children || Iterable.empty();
+    const childRevealed = revealed && visibility !== 0 && !node.collapsed;
+    let visibleChildrenCount = 0;
+    let renderNodeCount = 1;
+    for (const el of childElements) {
+      const child = this.createTreeNode(el, node, visibility, childRevealed, treeListElements, onDidCreateNode);
+      node.children.push(child);
+      renderNodeCount += child.renderNodeCount;
+      if (child.visible) {
+        child.visibleChildIndex = visibleChildrenCount++;
+      }
+    }
+    if (!this.allowNonCollapsibleParents) {
+      node.collapsible = node.collapsible || node.children.length > 0;
+    }
+    node.visibleChildrenCount = visibleChildrenCount;
+    node.visible = visibility === 2 ? visibleChildrenCount > 0 : visibility === 1;
+    if (!node.visible) {
+      node.renderNodeCount = 0;
+      if (revealed) {
+        treeListElements.pop();
+      }
+    } else if (!node.collapsed) {
+      node.renderNodeCount = renderNodeCount;
+    }
+    onDidCreateNode?.(node);
+    return node;
+  }
+  updateNodeAfterCollapseChange(node) {
+    const previousRenderNodeCount = node.renderNodeCount;
+    const result = [];
+    this._updateNodeAfterCollapseChange(node, result);
+    this._updateAncestorsRenderNodeCount(node.parent, result.length - previousRenderNodeCount);
+    return result;
+  }
+  _updateNodeAfterCollapseChange(node, result) {
+    if (node.visible === false) {
+      return 0;
+    }
+    result.push(node);
+    node.renderNodeCount = 1;
+    if (!node.collapsed) {
+      for (const child of node.children) {
+        node.renderNodeCount += this._updateNodeAfterCollapseChange(child, result);
+      }
+    }
+    this._onDidChangeRenderNodeCount.fire(node);
+    return node.renderNodeCount;
+  }
+  updateNodeAfterFilterChange(node) {
+    const previousRenderNodeCount = node.renderNodeCount;
+    const result = [];
+    this._updateNodeAfterFilterChange(node, node.visible ? 1 : 0, result);
+    this._updateAncestorsRenderNodeCount(node.parent, result.length - previousRenderNodeCount);
+    return result;
+  }
+  _updateNodeAfterFilterChange(node, parentVisibility, result, revealed = true) {
+    let visibility;
+    if (node !== this.root) {
+      visibility = this._filterNode(node, parentVisibility);
+      if (visibility === 0) {
+        node.visible = false;
+        node.renderNodeCount = 0;
+        return false;
+      }
+      if (revealed) {
+        result.push(node);
+      }
+    }
+    const resultStartLength = result.length;
+    node.renderNodeCount = node === this.root ? 0 : 1;
+    let hasVisibleDescendants = false;
+    if (!node.collapsed || visibility !== 0) {
+      let visibleChildIndex = 0;
+      for (const child of node.children) {
+        hasVisibleDescendants = this._updateNodeAfterFilterChange(child, visibility, result, revealed && !node.collapsed) || hasVisibleDescendants;
+        if (child.visible) {
+          child.visibleChildIndex = visibleChildIndex++;
+        }
+      }
+      node.visibleChildrenCount = visibleChildIndex;
+    } else {
+      node.visibleChildrenCount = 0;
+    }
+    if (node !== this.root) {
+      node.visible = visibility === 2 ? hasVisibleDescendants : visibility === 1;
+      node.visibility = visibility;
+    }
+    if (!node.visible) {
+      node.renderNodeCount = 0;
+      if (revealed) {
+        result.pop();
+      }
+    } else if (!node.collapsed) {
+      node.renderNodeCount += result.length - resultStartLength;
+    }
+    this._onDidChangeRenderNodeCount.fire(node);
+    return node.visible;
+  }
+  _updateAncestorsRenderNodeCount(node, diff) {
+    if (diff === 0) {
+      return;
+    }
+    while (node) {
+      node.renderNodeCount += diff;
+      this._onDidChangeRenderNodeCount.fire(node);
+      node = node.parent;
+    }
+  }
+  _filterNode(node, parentVisibility) {
+    const result = this.filter ? this.filter.filter(node.element, parentVisibility) : 1;
+    if (typeof result === "boolean") {
+      node.filterData = void 0;
+      return result ? 1 : 0;
+    } else if (isFilterResult(result)) {
+      node.filterData = result.data;
+      return getVisibleState(result.visibility);
+    } else {
+      node.filterData = void 0;
+      return getVisibleState(result);
+    }
+  }
+  // cheap
+  hasTreeNode(location, node = this.root) {
+    if (!location || location.length === 0) {
+      return true;
+    }
+    const [index, ...rest] = location;
+    if (index < 0 || index > node.children.length) {
+      return false;
+    }
+    return this.hasTreeNode(rest, node.children[index]);
+  }
+  // cheap
+  getTreeNode(location, node = this.root) {
+    if (!location || location.length === 0) {
+      return node;
+    }
+    const [index, ...rest] = location;
+    if (index < 0 || index > node.children.length) {
+      throw new TreeError(this.user, "Invalid tree location");
+    }
+    return this.getTreeNode(rest, node.children[index]);
+  }
+  // expensive
+  getTreeNodeWithListIndex(location) {
+    if (location.length === 0) {
+      return { node: this.root, listIndex: -1, revealed: true, visible: false };
+    }
+    const { parentNode, listIndex, revealed, visible } = this.getParentNodeWithListIndex(location);
+    const index = location[location.length - 1];
+    if (index < 0 || index > parentNode.children.length) {
+      throw new TreeError(this.user, "Invalid tree location");
+    }
+    const node = parentNode.children[index];
+    return { node, listIndex, revealed, visible: visible && node.visible };
+  }
+  getParentNodeWithListIndex(location, node = this.root, listIndex = 0, revealed = true, visible = true) {
+    const [index, ...rest] = location;
+    if (index < 0 || index > node.children.length) {
+      throw new TreeError(this.user, "Invalid tree location");
+    }
+    for (let i = 0; i < index; i++) {
+      listIndex += node.children[i].renderNodeCount;
+    }
+    revealed = revealed && !node.collapsed;
+    visible = visible && node.visible;
+    if (rest.length === 0) {
+      return { parentNode: node, listIndex, revealed, visible };
+    }
+    return this.getParentNodeWithListIndex(rest, node.children[index], listIndex + 1, revealed, visible);
+  }
+  getNode(location = []) {
+    return this.getTreeNode(location);
+  }
+  // TODO@joao perf!
+  getNodeLocation(node) {
+    const location = [];
+    let indexTreeNode = node;
+    while (indexTreeNode.parent) {
+      location.push(indexTreeNode.parent.children.indexOf(indexTreeNode));
+      indexTreeNode = indexTreeNode.parent;
+    }
+    return location.reverse();
+  }
+  getParentNodeLocation(location) {
+    if (location.length === 0) {
+      return void 0;
+    } else if (location.length === 1) {
+      return [];
+    } else {
+      return tail(location)[0];
+    }
+  }
+  getFirstElementChild(location) {
+    const node = this.getTreeNode(location);
+    if (node.children.length === 0) {
+      return void 0;
+    }
+    return node.children[0].element;
+  }
+  getLastElementAncestor(location = []) {
+    const node = this.getTreeNode(location);
+    if (node.children.length === 0) {
+      return void 0;
+    }
+    return this._getLastElementAncestor(node);
+  }
+  _getLastElementAncestor(node) {
+    if (node.children.length === 0) {
+      return node.element;
+    }
+    return this._getLastElementAncestor(node.children[node.children.length - 1]);
+  }
+}
+export {
+  IndexTreeModel,
+  getVisibleState,
+  isFilterResult
+};
+//# sourceMappingURL=indexTreeModel.js.map

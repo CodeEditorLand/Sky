@@ -1,1 +1,158 @@
-import{$HS as l}from"../../service/promptsService.js";import{$Bec as p}from"../providerInstanceBase.js";import{$5Oc as m}from"./decorations/frontMatterDecoration.js";import{$td as d}from"../../../../../../../base/common/lifecycle.js";import{$Dec as g}from"../providerInstanceManagerBase.js";import{$St as D}from"../../../../../../../platform/theme/common/themeService.js";import{$ZOc as O}from"./decorations/utils/reactiveDecorationBase.js";var a=function(t,e,s,o){var r,i=arguments.length,n=i<3?e:null===o?o=Object.getOwnPropertyDescriptor(e,s):o;if("object"==typeof Reflect&&"function"==typeof Reflect.decorate)n=Reflect.decorate(t,e,s,o);else for(var c=t.length-1;c>=0;c--)(r=t[c])&&(n=(i<3?r(n):i>3?r(e,s,n):r(e,s))||n);return i>3&&n&&Object.defineProperty(e,s,n),n},u=function(t,e){return function(s,o){e(s,o,t)}};const h=Object.freeze([m]);let f=class extends p{constructor(t,e){super(t,e),this.g=[],this.m()}b(t){return this.isDisposed||this.f.isDisposed()||this.r(),this}get j(){return this.f.isDisposed(),null}m(){const t=setInterval((()=>{const{j:t}=this,e=[];for(const s of this.g)s instanceof O&&!0===s.setCursorPosition(t)&&e.push(s);0!==e.length&&this.n(e)}),25);return this.B(d((()=>{clearInterval(t)}))),this}n(t){return this.f.changeDecorations((e=>{for(const s of t)s.change(e)})),this}r(){return this.f.changeDecorations((t=>{const{tokens:e}=this.c;for(const e of this.g.splice(0))e.remove(t);for(const s of e)for(const e of h)if(!1!==e.handles(s)){this.g.push(new e(t,s));break}})),this}s(){return 0===this.g.length||this.f.changeDecorations((t=>{for(const e of this.g.splice(0))e.remove(t)})),this}dispose(){this.isDisposed||(this.s(),super.dispose())}toString(){return`text-model-prompt-decorator:${this.f.uri.path}`}};f=a([u(1,l)],f),D(((t,e)=>{for(const t of h)for(const[s,o]of Object.entries(t.cssStyles))e.addRule(`.monaco-editor ${s} { ${o.join(" ")} }`)}));class x extends g{get b(){return f}}export{f as $6Oc,x as $7Oc};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { IPromptsService } from "../../service/promptsService.js";
+import { ProviderInstanceBase } from "../providerInstanceBase.js";
+import { FrontMatterDecoration } from "./decorations/frontMatterDecoration.js";
+import { toDisposable } from "../../../../../../../base/common/lifecycle.js";
+import { ProviderInstanceManagerBase } from "../providerInstanceManagerBase.js";
+import { registerThemingParticipant } from "../../../../../../../platform/theme/common/themeService.js";
+import { ReactiveDecorationBase } from "./decorations/utils/reactiveDecorationBase.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+const SUPPORTED_DECORATIONS = Object.freeze([
+  FrontMatterDecoration
+]);
+let PromptDecorator = class PromptDecorator2 extends ProviderInstanceBase {
+  static {
+    __name(this, "PromptDecorator");
+  }
+  constructor(model, promptsService) {
+    super(model, promptsService);
+    this.decorations = [];
+    this.watchCursorPosition();
+  }
+  onPromptSettled(_error) {
+    if (this.isDisposed || this.model.isDisposed()) {
+      return this;
+    }
+    this.addDecorations();
+    return this;
+  }
+  /**
+   * Get the current cursor position inside an active editor.
+   * Note! Currently not implemented because the provider is disabled, and
+   *       we need to do some refactoring to get accurate cursor position.
+   */
+  get cursorPosition() {
+    if (this.model.isDisposed()) {
+      return null;
+    }
+    return null;
+  }
+  /**
+   * Watch editor cursor position and update reactive decorations accordingly.
+   */
+  watchCursorPosition() {
+    const interval = setInterval(() => {
+      const { cursorPosition } = this;
+      const changedDecorations = [];
+      for (const decoration of this.decorations) {
+        if (decoration instanceof ReactiveDecorationBase === false) {
+          continue;
+        }
+        if (decoration.setCursorPosition(cursorPosition) === true) {
+          changedDecorations.push(decoration);
+        }
+      }
+      if (changedDecorations.length === 0) {
+        return;
+      }
+      this.changeModelDecorations(changedDecorations);
+    }, 25);
+    this._register(toDisposable(() => {
+      clearInterval(interval);
+    }));
+    return this;
+  }
+  /**
+   * Update existing decorations.
+   */
+  changeModelDecorations(decorations) {
+    this.model.changeDecorations((accessor) => {
+      for (const decoration of decorations) {
+        decoration.change(accessor);
+      }
+    });
+    return this;
+  }
+  /**
+   * Add decorations for all prompt tokens.
+   */
+  addDecorations() {
+    this.model.changeDecorations((accessor) => {
+      const { tokens } = this.parser;
+      for (const decoration of this.decorations.splice(0)) {
+        decoration.remove(accessor);
+      }
+      for (const token of tokens) {
+        for (const Decoration of SUPPORTED_DECORATIONS) {
+          if (Decoration.handles(token) === false) {
+            continue;
+          }
+          this.decorations.push(new Decoration(accessor, token));
+          break;
+        }
+      }
+    });
+    return this;
+  }
+  /**
+   * Remove all existing decorations.
+   */
+  removeAllDecorations() {
+    if (this.decorations.length === 0) {
+      return this;
+    }
+    this.model.changeDecorations((accessor) => {
+      for (const decoration of this.decorations.splice(0)) {
+        decoration.remove(accessor);
+      }
+    });
+    return this;
+  }
+  dispose() {
+    if (this.isDisposed) {
+      return;
+    }
+    this.removeAllDecorations();
+    super.dispose();
+  }
+  /**
+   * Returns a string representation of this object.
+   */
+  toString() {
+    return `text-model-prompt-decorator:${this.model.uri.path}`;
+  }
+};
+PromptDecorator = __decorate([
+  __param(1, IPromptsService)
+], PromptDecorator);
+registerThemingParticipant((_theme, collector) => {
+  for (const Decoration of SUPPORTED_DECORATIONS) {
+    for (const [className, styles] of Object.entries(Decoration.cssStyles)) {
+      collector.addRule(`.monaco-editor ${className} { ${styles.join(" ")} }`);
+    }
+  }
+});
+class PromptDecorationsProviderInstanceManager extends ProviderInstanceManagerBase {
+  static {
+    __name(this, "PromptDecorationsProviderInstanceManager");
+  }
+  get InstanceClass() {
+    return PromptDecorator;
+  }
+}
+export {
+  PromptDecorationsProviderInstanceManager,
+  PromptDecorator
+};
+//# sourceMappingURL=promptDecorationsProvider.js.map

@@ -1,1 +1,120 @@
-import{$Ji as l}from"./buffer.js";import{URI as e}from"./uri.js";function i(n){return n.toJSON()}class g{constructor(n){this.a=n}transformIncoming(n){const r=this.a.transformIncoming(n);return r===n?n:i(e.from(r))}transformOutgoing(n){const r=this.a.transformOutgoing(n);return r===n?n:i(e.from(r))}transformOutgoingURI(n){const r=this.a.transformOutgoing(n);return r===n?n:e.from(r)}transformOutgoingScheme(n){return this.a.transformOutgoingScheme(n)}}const O=new class{transformIncoming(n){return n}transformOutgoing(n){return n}transformOutgoingURI(n){return n}transformOutgoingScheme(n){return n}};function c(n,r,t){if(!n||t>200)return null;if("object"==typeof n){if(n instanceof e)return r.transformOutgoing(n);for(const o in n)if(Object.hasOwnProperty.call(n,o)){const s=c(n[o],r,t+1);null!==s&&(n[o]=s)}}return null}function I(n,r){const t=c(n,r,0);return null===t?n:t}function s(n,r,t,o){if(!n||o>200)return null;if("object"==typeof n){if(1===n.$mid)return t?e.revive(r.transformIncoming(n)):r.transformIncoming(n);if(n instanceof l)return null;for(const i in n)if(Object.hasOwnProperty.call(n,i)){const u=s(n[i],r,t,o+1);null!==u&&(n[i]=u)}}return null}function p(n,r){const t=s(n,r,!1,0);return null===t?n:t}function h(n,r){const t=s(n,r,!0,0);return null===t?n:t}export{g as $5w,O as $6w,I as $7w,p as $8w,h as $9w};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { VSBuffer } from "./buffer.js";
+import { URI } from "./uri.js";
+function toJSON(uri) {
+  return uri.toJSON();
+}
+__name(toJSON, "toJSON");
+class URITransformer {
+  static {
+    __name(this, "URITransformer");
+  }
+  constructor(uriTransformer) {
+    this._uriTransformer = uriTransformer;
+  }
+  transformIncoming(uri) {
+    const result = this._uriTransformer.transformIncoming(uri);
+    return result === uri ? uri : toJSON(URI.from(result));
+  }
+  transformOutgoing(uri) {
+    const result = this._uriTransformer.transformOutgoing(uri);
+    return result === uri ? uri : toJSON(URI.from(result));
+  }
+  transformOutgoingURI(uri) {
+    const result = this._uriTransformer.transformOutgoing(uri);
+    return result === uri ? uri : URI.from(result);
+  }
+  transformOutgoingScheme(scheme) {
+    return this._uriTransformer.transformOutgoingScheme(scheme);
+  }
+}
+const DefaultURITransformer = new class {
+  transformIncoming(uri) {
+    return uri;
+  }
+  transformOutgoing(uri) {
+    return uri;
+  }
+  transformOutgoingURI(uri) {
+    return uri;
+  }
+  transformOutgoingScheme(scheme) {
+    return scheme;
+  }
+}();
+function _transformOutgoingURIs(obj, transformer, depth) {
+  if (!obj || depth > 200) {
+    return null;
+  }
+  if (typeof obj === "object") {
+    if (obj instanceof URI) {
+      return transformer.transformOutgoing(obj);
+    }
+    for (const key in obj) {
+      if (Object.hasOwnProperty.call(obj, key)) {
+        const r = _transformOutgoingURIs(obj[key], transformer, depth + 1);
+        if (r !== null) {
+          obj[key] = r;
+        }
+      }
+    }
+  }
+  return null;
+}
+__name(_transformOutgoingURIs, "_transformOutgoingURIs");
+function transformOutgoingURIs(obj, transformer) {
+  const result = _transformOutgoingURIs(obj, transformer, 0);
+  if (result === null) {
+    return obj;
+  }
+  return result;
+}
+__name(transformOutgoingURIs, "transformOutgoingURIs");
+function _transformIncomingURIs(obj, transformer, revive, depth) {
+  if (!obj || depth > 200) {
+    return null;
+  }
+  if (typeof obj === "object") {
+    if (obj.$mid === 1) {
+      return revive ? URI.revive(transformer.transformIncoming(obj)) : transformer.transformIncoming(obj);
+    }
+    if (obj instanceof VSBuffer) {
+      return null;
+    }
+    for (const key in obj) {
+      if (Object.hasOwnProperty.call(obj, key)) {
+        const r = _transformIncomingURIs(obj[key], transformer, revive, depth + 1);
+        if (r !== null) {
+          obj[key] = r;
+        }
+      }
+    }
+  }
+  return null;
+}
+__name(_transformIncomingURIs, "_transformIncomingURIs");
+function transformIncomingURIs(obj, transformer) {
+  const result = _transformIncomingURIs(obj, transformer, false, 0);
+  if (result === null) {
+    return obj;
+  }
+  return result;
+}
+__name(transformIncomingURIs, "transformIncomingURIs");
+function transformAndReviveIncomingURIs(obj, transformer) {
+  const result = _transformIncomingURIs(obj, transformer, true, 0);
+  if (result === null) {
+    return obj;
+  }
+  return result;
+}
+__name(transformAndReviveIncomingURIs, "transformAndReviveIncomingURIs");
+export {
+  DefaultURITransformer,
+  URITransformer,
+  transformAndReviveIncomingURIs,
+  transformIncomingURIs,
+  transformOutgoingURIs
+};
+//# sourceMappingURL=uriIpc.js.map

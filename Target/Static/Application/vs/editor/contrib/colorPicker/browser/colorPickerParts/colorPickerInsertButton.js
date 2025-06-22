@@ -1,1 +1,29 @@
-import"../colorPicker.css";import*as t from"../../../../../base/browser/dom.js";import{$df as e}from"../../../../../base/common/event.js";import{$vd as i}from"../../../../../base/common/lifecycle.js";class a extends i{constructor(s){super(),this.b=this.B(new e),this.onClicked=this.b.event,this.a=t.$M6(s,document.createElement("button")),this.a.classList.add("insert-button"),this.a.textContent="Insert",this.B(t.$J5(this.a,t.$F6.CLICK,()=>{this.b.fire()}))}get button(){return this.a}}export{a as $Dlb};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import "../colorPicker.css";
+import * as dom from "../../../../../base/browser/dom.js";
+import { Emitter } from "../../../../../base/common/event.js";
+import { Disposable } from "../../../../../base/common/lifecycle.js";
+class InsertButton extends Disposable {
+  static {
+    __name(this, "InsertButton");
+  }
+  constructor(container) {
+    super();
+    this._onClicked = this._register(new Emitter());
+    this.onClicked = this._onClicked.event;
+    this._button = dom.append(container, document.createElement("button"));
+    this._button.classList.add("insert-button");
+    this._button.textContent = "Insert";
+    this._register(dom.addDisposableListener(this._button, dom.EventType.CLICK, () => {
+      this._onClicked.fire();
+    }));
+  }
+  get button() {
+    return this._button;
+  }
+}
+export {
+  InsertButton
+};
+//# sourceMappingURL=colorPickerInsertButton.js.map

@@ -1,1 +1,59 @@
-import"./media/scm.css";import{$Po as h}from"../../../../platform/telemetry/common/telemetry.js";import{$OP as _}from"../common/scm.js";import{$mj as b}from"../../../../platform/instantiation/common/instantiation.js";import{$ofb as O}from"../../../../platform/contextview/browser/contextView.js";import{$Mt as d}from"../../../../platform/theme/common/themeService.js";import{$Ho as v}from"../../../../platform/storage/common/storage.js";import{$El as w}from"../../../../platform/configuration/common/configuration.js";import{$8tb as j}from"../../../services/layout/browser/layoutService.js";import{$XO as P}from"../../../services/extensions/common/extensions.js";import{$hl as x}from"../../../../platform/workspace/common/workspace.js";import{$YM as R}from"../../../common/views.js";import{$wxb as W}from"../../../browser/parts/views/viewPaneContainer.js";import{$3n as g}from"../../../../platform/log/common/log.js";var s=function(t,o,e,r){var m,s=arguments.length,i=s<3?o:null===r?r=Object.getOwnPropertyDescriptor(o,e):r;if("object"==typeof Reflect&&"function"==typeof Reflect.decorate)i=Reflect.decorate(t,o,e,r);else for(var n=t.length-1;n>=0;n--)(m=t[n])&&(i=(s<3?m(i):s>3?m(o,e,i):m(o,e))||i);return s>3&&i&&Object.defineProperty(o,e,i),i},t=function(t,o){return function(e,r){o(e,r,t)}};let c=class extends W{constructor(t,o,e,r,m,s,i,n,a,c,f){super(_,{mergeViewWithContainerWhenSingleView:!0},e,i,t,r,o,n,m,s,a,c,f)}create(t){super.create(t),t.classList.add("scm-viewlet")}getOptimalWidth(){return 400}};c=s([t(0,j),t(1,h),t(2,b),t(3,O),t(4,d),t(5,v),t(6,w),t(7,P),t(8,x),t(9,R),t(10,g)],c);export{c as $Unc};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import "./media/scm.css";
+import { ITelemetryService } from "../../../../platform/telemetry/common/telemetry.js";
+import { VIEWLET_ID } from "../common/scm.js";
+import { IInstantiationService } from "../../../../platform/instantiation/common/instantiation.js";
+import { IContextMenuService } from "../../../../platform/contextview/browser/contextView.js";
+import { IThemeService } from "../../../../platform/theme/common/themeService.js";
+import { IStorageService } from "../../../../platform/storage/common/storage.js";
+import { IConfigurationService } from "../../../../platform/configuration/common/configuration.js";
+import { IWorkbenchLayoutService } from "../../../services/layout/browser/layoutService.js";
+import { IExtensionService } from "../../../services/extensions/common/extensions.js";
+import { IWorkspaceContextService } from "../../../../platform/workspace/common/workspace.js";
+import { IViewDescriptorService } from "../../../common/views.js";
+import { ViewPaneContainer } from "../../../browser/parts/views/viewPaneContainer.js";
+import { ILogService } from "../../../../platform/log/common/log.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+let SCMViewPaneContainer = class SCMViewPaneContainer2 extends ViewPaneContainer {
+  static {
+    __name(this, "SCMViewPaneContainer");
+  }
+  constructor(layoutService, telemetryService, instantiationService, contextMenuService, themeService, storageService, configurationService, extensionService, contextService, viewDescriptorService, logService) {
+    super(VIEWLET_ID, { mergeViewWithContainerWhenSingleView: true }, instantiationService, configurationService, layoutService, contextMenuService, telemetryService, extensionService, themeService, storageService, contextService, viewDescriptorService, logService);
+  }
+  create(parent) {
+    super.create(parent);
+    parent.classList.add("scm-viewlet");
+  }
+  getOptimalWidth() {
+    return 400;
+  }
+};
+SCMViewPaneContainer = __decorate([
+  __param(0, IWorkbenchLayoutService),
+  __param(1, ITelemetryService),
+  __param(2, IInstantiationService),
+  __param(3, IContextMenuService),
+  __param(4, IThemeService),
+  __param(5, IStorageService),
+  __param(6, IConfigurationService),
+  __param(7, IExtensionService),
+  __param(8, IWorkspaceContextService),
+  __param(9, IViewDescriptorService),
+  __param(10, ILogService)
+], SCMViewPaneContainer);
+export {
+  SCMViewPaneContainer
+};
+//# sourceMappingURL=scmViewPaneContainer.js.map

@@ -1,1 +1,99 @@
-import{$df as t}from"../../../../base/common/event.js";import{$vd as r}from"../../../../base/common/lifecycle.js";import{$T as n}from"../../../../base/common/performance.js";import{URI as h}from"../../../../base/common/uri.js";class f extends r{constructor(i,e){super(),this.id=i,this.shouldPersist=e,this.a={cwd:"",initialCwd:"",fixedDimensions:{cols:void 0,rows:void 0},title:"",shellType:void 0,hasChildProcesses:!0,resolvedShellLaunchConfig:{},overrideDimensions:void 0,failedShellIntegrationActivation:!1,usedShellIntegrationInjection:void 0,shellIntegrationInjectionFailureReason:void 0},this.b={cols:-1,rows:-1},this.c=!1,this.f=this.B(new t),this.onProcessData=this.f.event,this.g=this.B(new t),this.onProcessReplayComplete=this.g.event,this.h=this.B(new t),this.onProcessReady=this.h.event,this.j=this.B(new t),this.onDidChangeProperty=this.j.event,this.m=this.B(new t),this.onProcessExit=this.m.event,this.n=this.B(new t),this.onRestoreCommands=this.n.event}async getInitialCwd(){return this.a.initialCwd}async getCwd(){return this.a.cwd||this.a.initialCwd}handleData(i){this.f.fire(i)}handleExit(i){this.m.fire(i)}handleReady(i){this.h.fire(i)}handleDidChangeProperty({type:i,value:e}){switch(i){case"cwd":this.a.cwd=e;break;case"initialCwd":this.a.initialCwd=e;break;case"resolvedShellLaunchConfig":e.cwd&&"string"!=typeof e.cwd&&(e.cwd=h.revive(e.cwd))}this.j.fire({type:i,value:e})}async handleReplay(i){n(`code/terminal/willHandleReplay/${this.id}`);try{this.c=!0;for(const e of i.events){(0!==e.cols||0!==e.rows)&&this.j.fire({type:"overrideDimensions",value:{cols:e.cols,rows:e.rows,forceExactSize:!0}});const i={data:e.data,trackCommit:!0};this.f.fire(i),await i.writePromise}}finally{this.c=!1}i.commands&&this.n.fire(i.commands),this.j.fire({type:"overrideDimensions",value:void 0}),n(`code/terminal/didHandleReplay/${this.id}`),this.g.fire()}}export{f as $Uqc};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { Emitter } from "../../../../base/common/event.js";
+import { Disposable } from "../../../../base/common/lifecycle.js";
+import { mark } from "../../../../base/common/performance.js";
+import { URI } from "../../../../base/common/uri.js";
+class BasePty extends Disposable {
+  static {
+    __name(this, "BasePty");
+  }
+  constructor(id, shouldPersist) {
+    super();
+    this.id = id;
+    this.shouldPersist = shouldPersist;
+    this._properties = {
+      cwd: "",
+      initialCwd: "",
+      fixedDimensions: { cols: void 0, rows: void 0 },
+      title: "",
+      shellType: void 0,
+      hasChildProcesses: true,
+      resolvedShellLaunchConfig: {},
+      overrideDimensions: void 0,
+      failedShellIntegrationActivation: false,
+      usedShellIntegrationInjection: void 0,
+      shellIntegrationInjectionFailureReason: void 0
+    };
+    this._lastDimensions = { cols: -1, rows: -1 };
+    this._inReplay = false;
+    this._onProcessData = this._register(new Emitter());
+    this.onProcessData = this._onProcessData.event;
+    this._onProcessReplayComplete = this._register(new Emitter());
+    this.onProcessReplayComplete = this._onProcessReplayComplete.event;
+    this._onProcessReady = this._register(new Emitter());
+    this.onProcessReady = this._onProcessReady.event;
+    this._onDidChangeProperty = this._register(new Emitter());
+    this.onDidChangeProperty = this._onDidChangeProperty.event;
+    this._onProcessExit = this._register(new Emitter());
+    this.onProcessExit = this._onProcessExit.event;
+    this._onRestoreCommands = this._register(new Emitter());
+    this.onRestoreCommands = this._onRestoreCommands.event;
+  }
+  async getInitialCwd() {
+    return this._properties.initialCwd;
+  }
+  async getCwd() {
+    return this._properties.cwd || this._properties.initialCwd;
+  }
+  handleData(e) {
+    this._onProcessData.fire(e);
+  }
+  handleExit(e) {
+    this._onProcessExit.fire(e);
+  }
+  handleReady(e) {
+    this._onProcessReady.fire(e);
+  }
+  handleDidChangeProperty({ type, value }) {
+    switch (type) {
+      case "cwd":
+        this._properties.cwd = value;
+        break;
+      case "initialCwd":
+        this._properties.initialCwd = value;
+        break;
+      case "resolvedShellLaunchConfig":
+        if (value.cwd && typeof value.cwd !== "string") {
+          value.cwd = URI.revive(value.cwd);
+        }
+    }
+    this._onDidChangeProperty.fire({ type, value });
+  }
+  async handleReplay(e) {
+    mark(`code/terminal/willHandleReplay/${this.id}`);
+    try {
+      this._inReplay = true;
+      for (const innerEvent of e.events) {
+        if (innerEvent.cols !== 0 || innerEvent.rows !== 0) {
+          this._onDidChangeProperty.fire({ type: "overrideDimensions", value: { cols: innerEvent.cols, rows: innerEvent.rows, forceExactSize: true } });
+        }
+        const e2 = { data: innerEvent.data, trackCommit: true };
+        this._onProcessData.fire(e2);
+        await e2.writePromise;
+      }
+    } finally {
+      this._inReplay = false;
+    }
+    if (e.commands) {
+      this._onRestoreCommands.fire(e.commands);
+    }
+    this._onDidChangeProperty.fire({ type: "overrideDimensions", value: void 0 });
+    mark(`code/terminal/didHandleReplay/${this.id}`);
+    this._onProcessReplayComplete.fire();
+  }
+}
+export {
+  BasePty
+};
+//# sourceMappingURL=basePty.js.map

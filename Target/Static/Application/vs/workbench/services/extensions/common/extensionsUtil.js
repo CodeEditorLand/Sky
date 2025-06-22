@@ -1,1 +1,56 @@
-import{$Sy as c}from"../../../../platform/extensions/common/extensions.js";import{localize as o}from"../../../../nls.js";import*as l from"../../../../base/common/semver/semver.js";function L(a,e,r,h,f){const n=new c;return a.forEach(i=>{const t=n.get(i.identifier);t&&f.warn(o(14209,null,t.extensionLocation.fsPath,i.extensionLocation.fsPath)),n.set(i.identifier,i)}),e.forEach(i=>{const t=n.get(i.identifier);if(t)if(t.isBuiltin){if(l.gte(t.version,i.version)){f.warn(`Skipping extension ${i.extensionLocation.path} in favour of the builtin extension ${t.extensionLocation.path}.`);return}i.isBuiltin=!0}else f.warn(o(14210,null,t.extensionLocation.fsPath,i.extensionLocation.fsPath));else if(i.isBuiltin){f.warn(`Skipping obsolete builtin extension ${i.extensionLocation.path}`);return}n.set(i.identifier,i)}),r.forEach(i=>{const t=n.get(i.identifier);t&&f.warn(o(14211,null,t.extensionLocation.fsPath,i.extensionLocation.fsPath)),n.set(i.identifier,i)}),h.forEach(i=>{f.info(o(14212,null,i.extensionLocation.fsPath));const t=n.get(i.identifier);t&&t.isBuiltin&&(i.isBuiltin=!0),n.set(i.identifier,i)}),Array.from(n.values())}export{L as $Q4};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { ExtensionIdentifierMap } from "../../../../platform/extensions/common/extensions.js";
+import { localize } from "../../../../nls.js";
+import * as semver from "../../../../base/common/semver/semver.js";
+function dedupExtensions(system, user, workspace, development, logService) {
+  const result = new ExtensionIdentifierMap();
+  system.forEach((systemExtension) => {
+    const extension = result.get(systemExtension.identifier);
+    if (extension) {
+      logService.warn(localize("overwritingExtension", "Overwriting extension {0} with {1}.", extension.extensionLocation.fsPath, systemExtension.extensionLocation.fsPath));
+    }
+    result.set(systemExtension.identifier, systemExtension);
+  });
+  user.forEach((userExtension) => {
+    const extension = result.get(userExtension.identifier);
+    if (extension) {
+      if (extension.isBuiltin) {
+        if (semver.gte(extension.version, userExtension.version)) {
+          logService.warn(`Skipping extension ${userExtension.extensionLocation.path} in favour of the builtin extension ${extension.extensionLocation.path}.`);
+          return;
+        }
+        userExtension.isBuiltin = true;
+      } else {
+        logService.warn(localize("overwritingExtension", "Overwriting extension {0} with {1}.", extension.extensionLocation.fsPath, userExtension.extensionLocation.fsPath));
+      }
+    } else if (userExtension.isBuiltin) {
+      logService.warn(`Skipping obsolete builtin extension ${userExtension.extensionLocation.path}`);
+      return;
+    }
+    result.set(userExtension.identifier, userExtension);
+  });
+  workspace.forEach((workspaceExtension) => {
+    const extension = result.get(workspaceExtension.identifier);
+    if (extension) {
+      logService.warn(localize("overwritingWithWorkspaceExtension", "Overwriting {0} with Workspace Extension {1}.", extension.extensionLocation.fsPath, workspaceExtension.extensionLocation.fsPath));
+    }
+    result.set(workspaceExtension.identifier, workspaceExtension);
+  });
+  development.forEach((developedExtension) => {
+    logService.info(localize("extensionUnderDevelopment", "Loading development extension at {0}", developedExtension.extensionLocation.fsPath));
+    const extension = result.get(developedExtension.identifier);
+    if (extension) {
+      if (extension.isBuiltin) {
+        developedExtension.isBuiltin = true;
+      }
+    }
+    result.set(developedExtension.identifier, developedExtension);
+  });
+  return Array.from(result.values());
+}
+__name(dedupExtensions, "dedupExtensions");
+export {
+  dedupExtensions
+};
+//# sourceMappingURL=extensionsUtil.js.map

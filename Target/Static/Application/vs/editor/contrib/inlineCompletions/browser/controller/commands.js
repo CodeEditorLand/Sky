@@ -1,7 +1,387 @@
-import{asyncTransaction as v,transaction as z}from"../../../../../base/common/observable.js";import{$Pf as N}from"../../../../../base/common/strings.js";import*as n from"../../../../../nls.js";import{$uC as O}from"../../../../../platform/accessibility/common/accessibility.js";import{$iI as T,$dI as g}from"../../../../../platform/actions/common/actions.js";import{$mfb as C}from"../../../../../platform/clipboard/common/clipboardService.js";import{$El as x}from"../../../../../platform/configuration/common/configuration.js";import{$Bn as r}from"../../../../../platform/contextkey/common/contextkey.js";import{$_H as y}from"../../../../../platform/keybinding/common/keybindingsRegistry.js";import{$RI as j,Severity as D}from"../../../../../platform/notification/common/notification.js";import{$cab as c,$bab as q}from"../../../../browser/editorExtensions.js";import{EditorContextKeys as l}from"../../../../common/editorContextKeys.js";import{$Ejb as u}from"../../../suggest/browser/suggest.js";import{$xjb as A,$tjb as I,$wjb as k,$vjb as F,$ujb as L,$yjb as P}from"./commandIds.js";import{$Tjb as i}from"./inlineCompletionContextKeys.js";import{$qqb as a}from"./inlineCompletionsController.js";class w extends c{static{this.ID=F}constructor(){super({id:w.ID,label:n.localize2(1309,"Show Next Inline Suggestion"),precondition:r.and(l.writable,i.inlineSuggestionVisible),kbOpts:{weight:100,primary:606}})}async run(o,t){a.get(t)?.model.get()?.next()}}class f extends c{static{this.ID=L}constructor(){super({id:f.ID,label:n.localize2(1310,"Show Previous Inline Suggestion"),precondition:r.and(l.writable,i.inlineSuggestionVisible),kbOpts:{weight:100,primary:604}})}async run(o,t){a.get(t)?.model.get()?.previous()}}class ie extends c{constructor(){super({id:"editor.action.inlineSuggest.trigger",label:n.localize2(1311,"Trigger Inline Suggestion"),precondition:l.writable})}async run(o,t){const e=a.get(t);await v(async s=>{await e?.model.get()?.triggerExplicitly(s),e?.playAccessibilitySignal(s)})}}class ne extends c{constructor(){super({id:"editor.action.inlineSuggest.triggerInlineEditExplicit",label:n.localize2(1312,"Trigger Next Edit Suggestion"),precondition:l.writable})}async run(o,t){const e=o.get(j),s=a.get(t);await s?.model.get()?.triggerExplicitly(void 0,!0),s?.model.get()?.inlineEditAvailable.get()||e.notify({severity:D.Info,message:n.localize(1300,null)})}}class oe extends q{constructor(){super({id:"editor.action.inlineSuggest.triggerInlineEdit",precondition:l.writable})}async runEditorCommand(o,t,e){await a.get(t)?.model.get()?.trigger(void 0,{onlyFetchInlineEdits:!0})}}class re extends c{constructor(){super({id:"editor.action.inlineSuggest.acceptNextWord",label:n.localize2(1313,"Accept Next Word Of Inline Suggestion"),precondition:r.and(l.writable,i.inlineSuggestionVisible),kbOpts:{weight:101,primary:2065,kbExpr:r.and(l.writable,i.inlineSuggestionVisible,O.negate())},menuOpts:[{menuId:g.InlineSuggestionToolbar,title:n.localize(1301,null),group:"primary",order:2}]})}async run(o,t){await a.get(t)?.model.get()?.acceptNextWord()}}class le extends c{constructor(){super({id:"editor.action.inlineSuggest.acceptNextLine",label:n.localize2(1314,"Accept Next Line Of Inline Suggestion"),precondition:r.and(l.writable,i.inlineSuggestionVisible),kbOpts:{weight:101},menuOpts:[{menuId:g.InlineSuggestionToolbar,title:n.localize(1302,null),group:"secondary",order:2}]})}async run(o,t){await a.get(t)?.model.get()?.acceptNextLine()}}class se extends c{constructor(){super({id:I,label:n.localize2(1315,"Accept Inline Suggestion"),precondition:r.or(i.inlineSuggestionVisible,i.inlineEditVisible),menuOpts:[{menuId:g.InlineSuggestionToolbar,title:n.localize(1303,null),group:"primary",order:2},{menuId:g.InlineEditsActions,title:n.localize(1304,null),group:"primary",order:2}],kbOpts:[{primary:2,weight:200,kbExpr:r.or(r.and(i.inlineSuggestionVisible,l.tabMovesFocus.toNegated(),u.Visible.toNegated(),l.hoverFocused.toNegated(),i.inlineSuggestionHasIndentationLessThanTabSize),r.and(i.inlineEditVisible,l.tabMovesFocus.toNegated(),u.Visible.toNegated(),l.hoverFocused.toNegated(),i.tabShouldAcceptInlineEdit))}]})}async run(o,t){const e=a.getInFocusedEditorOrParent(o);e&&(e.model.get()?.accept(e.editor),e.editor.focus())}}y.registerKeybindingRule({id:I,weight:202,primary:2,when:r.and(i.inInlineEditsPreviewEditor)});class ce extends c{constructor(){super({id:k,label:n.localize2(1316,"Jump to next inline edit"),precondition:i.inlineEditVisible,menuOpts:[{menuId:g.InlineEditsActions,title:n.localize(1305,null),group:"primary",order:1,when:i.cursorAtInlineEdit.toNegated()}],kbOpts:{primary:2,weight:201,kbExpr:r.and(i.inlineEditVisible,l.tabMovesFocus.toNegated(),u.Visible.toNegated(),l.hoverFocused.toNegated(),i.tabShouldJumpToInlineEdit)}})}async run(o,t){const e=a.get(t);e&&e.jump()}}class p extends c{static{this.ID=A}constructor(){super({id:p.ID,label:n.localize2(1317,"Hide Inline Suggestion"),precondition:r.or(i.inlineSuggestionVisible,i.inlineEditVisible),kbOpts:{weight:190,primary:9},menuOpts:[{menuId:g.InlineEditsActions,title:n.localize(1306,null),group:"primary",order:3}]})}async run(o,t){const e=a.getInFocusedEditorOrParent(o);z(s=>{e?.model.get()?.stop("explicitCancel",s)}),e?.editor.focus()}}class h extends c{static{this.ID=P}constructor(){super({id:h.ID,label:n.localize2(1318,"Toggle Inline Suggestions Show Collapsed"),precondition:r.true()})}async run(o,t){const e=o.get(x),s=e.getValue("editor.inlineSuggest.edits.showCollapsed");e.updateValue("editor.inlineSuggest.edits.showCollapsed",!s)}}y.registerKeybindingRule({id:p.ID,weight:-1,primary:9,secondary:[1033],when:r.and(i.inInlineEditsPreviewEditor)});class E extends T{static{this.ID="editor.action.inlineSuggest.toggleAlwaysShowToolbar"}constructor(){super({id:E.ID,title:n.localize(1307,null),f1:!1,precondition:void 0,menu:[{id:g.InlineSuggestionToolbar,group:"secondary",order:10}],toggled:r.equals("config.editor.inlineSuggest.showToolbar","always")})}async run(o){const t=o.get(x),s=t.getValue("editor.inlineSuggest.showToolbar")==="always"?"onHover":"always";t.updateValue("editor.inlineSuggest.showToolbar",s)}}class ae extends c{constructor(){super({id:"editor.action.inlineSuggest.dev.extractRepro",label:n.localize(1308,null),alias:"Developer: Inline Suggest Extract Repro",precondition:r.or(i.inlineEditVisible,i.inlineSuggestionVisible)})}async run(o,t){const e=o.get(C),b=a.get(t)?.model.get();if(!b)return;const m=b.extractReproSample(),$=N(JSON.stringify({inlineCompletion:m.inlineCompletion},null,4)).map(V=>"// "+V).join(`
-`),S=`${m.documentValue}
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { asyncTransaction, transaction } from "../../../../../base/common/observable.js";
+import { splitLines } from "../../../../../base/common/strings.js";
+import * as nls from "../../../../../nls.js";
+import { CONTEXT_ACCESSIBILITY_MODE_ENABLED } from "../../../../../platform/accessibility/common/accessibility.js";
+import { Action2, MenuId } from "../../../../../platform/actions/common/actions.js";
+import { IClipboardService } from "../../../../../platform/clipboard/common/clipboardService.js";
+import { IConfigurationService } from "../../../../../platform/configuration/common/configuration.js";
+import { ContextKeyExpr } from "../../../../../platform/contextkey/common/contextkey.js";
+import { KeybindingsRegistry } from "../../../../../platform/keybinding/common/keybindingsRegistry.js";
+import { INotificationService, Severity } from "../../../../../platform/notification/common/notification.js";
+import { EditorAction, EditorCommand } from "../../../../browser/editorExtensions.js";
+import { EditorContextKeys } from "../../../../common/editorContextKeys.js";
+import { Context as SuggestContext } from "../../../suggest/browser/suggest.js";
+import { hideInlineCompletionId, inlineSuggestCommitId, jumpToNextInlineEditId, showNextInlineSuggestionActionId, showPreviousInlineSuggestionActionId, toggleShowCollapsedId } from "./commandIds.js";
+import { InlineCompletionContextKeys } from "./inlineCompletionContextKeys.js";
+import { InlineCompletionsController } from "./inlineCompletionsController.js";
+class ShowNextInlineSuggestionAction extends EditorAction {
+  static {
+    __name(this, "ShowNextInlineSuggestionAction");
+  }
+  static {
+    this.ID = showNextInlineSuggestionActionId;
+  }
+  constructor() {
+    super({
+      id: ShowNextInlineSuggestionAction.ID,
+      label: nls.localize2("action.inlineSuggest.showNext", "Show Next Inline Suggestion"),
+      precondition: ContextKeyExpr.and(EditorContextKeys.writable, InlineCompletionContextKeys.inlineSuggestionVisible),
+      kbOpts: {
+        weight: 100,
+        primary: 512 | 94
+      }
+    });
+  }
+  async run(accessor, editor) {
+    const controller = InlineCompletionsController.get(editor);
+    controller?.model.get()?.next();
+  }
+}
+class ShowPreviousInlineSuggestionAction extends EditorAction {
+  static {
+    __name(this, "ShowPreviousInlineSuggestionAction");
+  }
+  static {
+    this.ID = showPreviousInlineSuggestionActionId;
+  }
+  constructor() {
+    super({
+      id: ShowPreviousInlineSuggestionAction.ID,
+      label: nls.localize2("action.inlineSuggest.showPrevious", "Show Previous Inline Suggestion"),
+      precondition: ContextKeyExpr.and(EditorContextKeys.writable, InlineCompletionContextKeys.inlineSuggestionVisible),
+      kbOpts: {
+        weight: 100,
+        primary: 512 | 92
+      }
+    });
+  }
+  async run(accessor, editor) {
+    const controller = InlineCompletionsController.get(editor);
+    controller?.model.get()?.previous();
+  }
+}
+class TriggerInlineSuggestionAction extends EditorAction {
+  static {
+    __name(this, "TriggerInlineSuggestionAction");
+  }
+  constructor() {
+    super({
+      id: "editor.action.inlineSuggest.trigger",
+      label: nls.localize2("action.inlineSuggest.trigger", "Trigger Inline Suggestion"),
+      precondition: EditorContextKeys.writable
+    });
+  }
+  async run(accessor, editor) {
+    const controller = InlineCompletionsController.get(editor);
+    await asyncTransaction(async (tx) => {
+      await controller?.model.get()?.triggerExplicitly(tx);
+      controller?.playAccessibilitySignal(tx);
+    });
+  }
+}
+class ExplicitTriggerInlineEditAction extends EditorAction {
+  static {
+    __name(this, "ExplicitTriggerInlineEditAction");
+  }
+  constructor() {
+    super({
+      id: "editor.action.inlineSuggest.triggerInlineEditExplicit",
+      label: nls.localize2("action.inlineSuggest.trigger.explicitInlineEdit", "Trigger Next Edit Suggestion"),
+      precondition: EditorContextKeys.writable
+    });
+  }
+  async run(accessor, editor) {
+    const notificationService = accessor.get(INotificationService);
+    const controller = InlineCompletionsController.get(editor);
+    await controller?.model.get()?.triggerExplicitly(void 0, true);
+    if (!controller?.model.get()?.inlineEditAvailable.get()) {
+      notificationService.notify({
+        severity: Severity.Info,
+        message: nls.localize("noInlineEditAvailable", "No inline edit is available.")
+      });
+    }
+  }
+}
+class TriggerInlineEditAction extends EditorCommand {
+  static {
+    __name(this, "TriggerInlineEditAction");
+  }
+  constructor() {
+    super({
+      id: "editor.action.inlineSuggest.triggerInlineEdit",
+      precondition: EditorContextKeys.writable
+    });
+  }
+  async runEditorCommand(accessor, editor, args) {
+    const controller = InlineCompletionsController.get(editor);
+    await controller?.model.get()?.trigger(void 0, { onlyFetchInlineEdits: true });
+  }
+}
+class AcceptNextWordOfInlineCompletion extends EditorAction {
+  static {
+    __name(this, "AcceptNextWordOfInlineCompletion");
+  }
+  constructor() {
+    super({
+      id: "editor.action.inlineSuggest.acceptNextWord",
+      label: nls.localize2("action.inlineSuggest.acceptNextWord", "Accept Next Word Of Inline Suggestion"),
+      precondition: ContextKeyExpr.and(EditorContextKeys.writable, InlineCompletionContextKeys.inlineSuggestionVisible),
+      kbOpts: {
+        weight: 100 + 1,
+        primary: 2048 | 17,
+        kbExpr: ContextKeyExpr.and(EditorContextKeys.writable, InlineCompletionContextKeys.inlineSuggestionVisible, CONTEXT_ACCESSIBILITY_MODE_ENABLED.negate())
+      },
+      menuOpts: [{
+        menuId: MenuId.InlineSuggestionToolbar,
+        title: nls.localize("acceptWord", "Accept Word"),
+        group: "primary",
+        order: 2
+      }]
+    });
+  }
+  async run(accessor, editor) {
+    const controller = InlineCompletionsController.get(editor);
+    await controller?.model.get()?.acceptNextWord();
+  }
+}
+class AcceptNextLineOfInlineCompletion extends EditorAction {
+  static {
+    __name(this, "AcceptNextLineOfInlineCompletion");
+  }
+  constructor() {
+    super({
+      id: "editor.action.inlineSuggest.acceptNextLine",
+      label: nls.localize2("action.inlineSuggest.acceptNextLine", "Accept Next Line Of Inline Suggestion"),
+      precondition: ContextKeyExpr.and(EditorContextKeys.writable, InlineCompletionContextKeys.inlineSuggestionVisible),
+      kbOpts: {
+        weight: 100 + 1
+      },
+      menuOpts: [{
+        menuId: MenuId.InlineSuggestionToolbar,
+        title: nls.localize("acceptLine", "Accept Line"),
+        group: "secondary",
+        order: 2
+      }]
+    });
+  }
+  async run(accessor, editor) {
+    const controller = InlineCompletionsController.get(editor);
+    await controller?.model.get()?.acceptNextLine();
+  }
+}
+class AcceptInlineCompletion extends EditorAction {
+  static {
+    __name(this, "AcceptInlineCompletion");
+  }
+  constructor() {
+    super({
+      id: inlineSuggestCommitId,
+      label: nls.localize2("action.inlineSuggest.accept", "Accept Inline Suggestion"),
+      precondition: ContextKeyExpr.or(InlineCompletionContextKeys.inlineSuggestionVisible, InlineCompletionContextKeys.inlineEditVisible),
+      menuOpts: [{
+        menuId: MenuId.InlineSuggestionToolbar,
+        title: nls.localize("accept", "Accept"),
+        group: "primary",
+        order: 2
+      }, {
+        menuId: MenuId.InlineEditsActions,
+        title: nls.localize("accept", "Accept"),
+        group: "primary",
+        order: 2
+      }],
+      kbOpts: [
+        {
+          primary: 2,
+          weight: 200,
+          kbExpr: ContextKeyExpr.or(ContextKeyExpr.and(InlineCompletionContextKeys.inlineSuggestionVisible, EditorContextKeys.tabMovesFocus.toNegated(), SuggestContext.Visible.toNegated(), EditorContextKeys.hoverFocused.toNegated(), InlineCompletionContextKeys.inlineSuggestionHasIndentationLessThanTabSize), ContextKeyExpr.and(InlineCompletionContextKeys.inlineEditVisible, EditorContextKeys.tabMovesFocus.toNegated(), SuggestContext.Visible.toNegated(), EditorContextKeys.hoverFocused.toNegated(), InlineCompletionContextKeys.tabShouldAcceptInlineEdit))
+        }
+      ]
+    });
+  }
+  async run(accessor, editor) {
+    const controller = InlineCompletionsController.getInFocusedEditorOrParent(accessor);
+    if (controller) {
+      controller.model.get()?.accept(controller.editor);
+      controller.editor.focus();
+    }
+  }
+}
+KeybindingsRegistry.registerKeybindingRule({
+  id: inlineSuggestCommitId,
+  weight: 202,
+  // greater than jump
+  primary: 2,
+  when: ContextKeyExpr.and(InlineCompletionContextKeys.inInlineEditsPreviewEditor)
+});
+class JumpToNextInlineEdit extends EditorAction {
+  static {
+    __name(this, "JumpToNextInlineEdit");
+  }
+  constructor() {
+    super({
+      id: jumpToNextInlineEditId,
+      label: nls.localize2("action.inlineSuggest.jump", "Jump to next inline edit"),
+      precondition: InlineCompletionContextKeys.inlineEditVisible,
+      menuOpts: [{
+        menuId: MenuId.InlineEditsActions,
+        title: nls.localize("jump", "Jump"),
+        group: "primary",
+        order: 1,
+        when: InlineCompletionContextKeys.cursorAtInlineEdit.toNegated()
+      }],
+      kbOpts: {
+        primary: 2,
+        weight: 201,
+        kbExpr: ContextKeyExpr.and(InlineCompletionContextKeys.inlineEditVisible, EditorContextKeys.tabMovesFocus.toNegated(), SuggestContext.Visible.toNegated(), EditorContextKeys.hoverFocused.toNegated(), InlineCompletionContextKeys.tabShouldJumpToInlineEdit)
+      }
+    });
+  }
+  async run(accessor, editor) {
+    const controller = InlineCompletionsController.get(editor);
+    if (controller) {
+      controller.jump();
+    }
+  }
+}
+class HideInlineCompletion extends EditorAction {
+  static {
+    __name(this, "HideInlineCompletion");
+  }
+  static {
+    this.ID = hideInlineCompletionId;
+  }
+  constructor() {
+    super({
+      id: HideInlineCompletion.ID,
+      label: nls.localize2("action.inlineSuggest.hide", "Hide Inline Suggestion"),
+      precondition: ContextKeyExpr.or(InlineCompletionContextKeys.inlineSuggestionVisible, InlineCompletionContextKeys.inlineEditVisible),
+      kbOpts: {
+        weight: 100 + 90,
+        // same as hiding the suggest widget
+        primary: 9
+      },
+      menuOpts: [{
+        menuId: MenuId.InlineEditsActions,
+        title: nls.localize("reject", "Reject"),
+        group: "primary",
+        order: 3
+      }]
+    });
+  }
+  async run(accessor, editor) {
+    const controller = InlineCompletionsController.getInFocusedEditorOrParent(accessor);
+    transaction((tx) => {
+      controller?.model.get()?.stop("explicitCancel", tx);
+    });
+    controller?.editor.focus();
+  }
+}
+class ToggleInlineCompletionShowCollapsed extends EditorAction {
+  static {
+    __name(this, "ToggleInlineCompletionShowCollapsed");
+  }
+  static {
+    this.ID = toggleShowCollapsedId;
+  }
+  constructor() {
+    super({
+      id: ToggleInlineCompletionShowCollapsed.ID,
+      label: nls.localize2("action.inlineSuggest.toggleShowCollapsed", "Toggle Inline Suggestions Show Collapsed"),
+      precondition: ContextKeyExpr.true()
+    });
+  }
+  async run(accessor, editor) {
+    const configurationService = accessor.get(IConfigurationService);
+    const showCollapsed = configurationService.getValue("editor.inlineSuggest.edits.showCollapsed");
+    configurationService.updateValue("editor.inlineSuggest.edits.showCollapsed", !showCollapsed);
+  }
+}
+KeybindingsRegistry.registerKeybindingRule({
+  id: HideInlineCompletion.ID,
+  weight: -1,
+  // very weak
+  primary: 9,
+  secondary: [
+    1024 | 9
+    /* KeyCode.Escape */
+  ],
+  when: ContextKeyExpr.and(InlineCompletionContextKeys.inInlineEditsPreviewEditor)
+});
+class ToggleAlwaysShowInlineSuggestionToolbar extends Action2 {
+  static {
+    __name(this, "ToggleAlwaysShowInlineSuggestionToolbar");
+  }
+  static {
+    this.ID = "editor.action.inlineSuggest.toggleAlwaysShowToolbar";
+  }
+  constructor() {
+    super({
+      id: ToggleAlwaysShowInlineSuggestionToolbar.ID,
+      title: nls.localize("action.inlineSuggest.alwaysShowToolbar", "Always Show Toolbar"),
+      f1: false,
+      precondition: void 0,
+      menu: [{
+        id: MenuId.InlineSuggestionToolbar,
+        group: "secondary",
+        order: 10
+      }],
+      toggled: ContextKeyExpr.equals("config.editor.inlineSuggest.showToolbar", "always")
+    });
+  }
+  async run(accessor) {
+    const configService = accessor.get(IConfigurationService);
+    const currentValue = configService.getValue("editor.inlineSuggest.showToolbar");
+    const newValue = currentValue === "always" ? "onHover" : "always";
+    configService.updateValue("editor.inlineSuggest.showToolbar", newValue);
+  }
+}
+class DevExtractReproSample extends EditorAction {
+  static {
+    __name(this, "DevExtractReproSample");
+  }
+  constructor() {
+    super({
+      id: "editor.action.inlineSuggest.dev.extractRepro",
+      label: nls.localize("action.inlineSuggest.dev.extractRepro", "Developer: Extract Inline Suggest State"),
+      alias: "Developer: Inline Suggest Extract Repro",
+      precondition: ContextKeyExpr.or(InlineCompletionContextKeys.inlineEditVisible, InlineCompletionContextKeys.inlineSuggestionVisible)
+    });
+  }
+  async run(accessor, editor) {
+    const clipboardService = accessor.get(IClipboardService);
+    const controller = InlineCompletionsController.get(editor);
+    const m = controller?.model.get();
+    if (!m) {
+      return;
+    }
+    const repro = m.extractReproSample();
+    const inlineCompletionLines = splitLines(JSON.stringify({ inlineCompletion: repro.inlineCompletion }, null, 4));
+    const json = inlineCompletionLines.map((l) => "// " + l).join("\n");
+    const reproStr = `${repro.documentValue}
 
 // <json>
-${$}
+${json}
 // </json>
-`;return await e.writeText(S),{reproCase:S}}}export{p as $Aqb,h as $Bqb,E as $Cqb,ae as $Dqb,w as $rqb,f as $sqb,ie as $tqb,ne as $uqb,oe as $vqb,re as $wqb,le as $xqb,se as $yqb,ce as $zqb};
+`;
+    await clipboardService.writeText(reproStr);
+    return { reproCase: reproStr };
+  }
+}
+export {
+  AcceptInlineCompletion,
+  AcceptNextLineOfInlineCompletion,
+  AcceptNextWordOfInlineCompletion,
+  DevExtractReproSample,
+  ExplicitTriggerInlineEditAction,
+  HideInlineCompletion,
+  JumpToNextInlineEdit,
+  ShowNextInlineSuggestionAction,
+  ShowPreviousInlineSuggestionAction,
+  ToggleAlwaysShowInlineSuggestionToolbar,
+  ToggleInlineCompletionShowCollapsed,
+  TriggerInlineEditAction,
+  TriggerInlineSuggestionAction
+};
+//# sourceMappingURL=commands.js.map

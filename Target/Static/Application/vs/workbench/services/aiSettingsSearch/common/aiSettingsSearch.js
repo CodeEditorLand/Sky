@@ -1,1 +1,13 @@
-import{$nj as o}from"../../../../platform/instantiation/common/instantiation.js";const C=o("IAiSettingsSearchService");var D;!function(t){t[t.EMBEDDED=1]="EMBEDDED",t[t.LLM_RANKED=2]="LLM_RANKED",t[t.CANCELED=3]="CANCELED"}(D||(D={}));export{C as $aX,D as AiSettingsSearchResultKind};
+import { createDecorator } from "../../../../platform/instantiation/common/instantiation.js";
+const IAiSettingsSearchService = createDecorator("IAiSettingsSearchService");
+var AiSettingsSearchResultKind;
+(function(AiSettingsSearchResultKind2) {
+  AiSettingsSearchResultKind2[AiSettingsSearchResultKind2["EMBEDDED"] = 1] = "EMBEDDED";
+  AiSettingsSearchResultKind2[AiSettingsSearchResultKind2["LLM_RANKED"] = 2] = "LLM_RANKED";
+  AiSettingsSearchResultKind2[AiSettingsSearchResultKind2["CANCELED"] = 3] = "CANCELED";
+})(AiSettingsSearchResultKind || (AiSettingsSearchResultKind = {}));
+export {
+  AiSettingsSearchResultKind,
+  IAiSettingsSearchService
+};
+//# sourceMappingURL=aiSettingsSearch.js.map

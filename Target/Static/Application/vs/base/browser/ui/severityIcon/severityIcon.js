@@ -1,1 +1,29 @@
-import"./media/severityIcon.css";import{$Mj as r}from"../../../common/codicons.js";import{ThemeIcon as e}from"../../../common/themables.js";import a from"../../../common/severity.js";var s;(s||(s={})).className=function(s){switch(s){case a.Ignore:return"severity-ignore "+e.asClassName(r.info);case a.Info:return e.asClassName(r.info);case a.Warning:return e.asClassName(r.warning);case a.Error:return e.asClassName(r.error);default:return""}};export{s as SeverityIcon};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import "./media/severityIcon.css";
+import { Codicon } from "../../../common/codicons.js";
+import { ThemeIcon } from "../../../common/themables.js";
+import Severity from "../../../common/severity.js";
+var SeverityIcon;
+(function(SeverityIcon2) {
+  function className(severity) {
+    switch (severity) {
+      case Severity.Ignore:
+        return "severity-ignore " + ThemeIcon.asClassName(Codicon.info);
+      case Severity.Info:
+        return ThemeIcon.asClassName(Codicon.info);
+      case Severity.Warning:
+        return ThemeIcon.asClassName(Codicon.warning);
+      case Severity.Error:
+        return ThemeIcon.asClassName(Codicon.error);
+      default:
+        return "";
+    }
+  }
+  __name(className, "className");
+  SeverityIcon2.className = className;
+})(SeverityIcon || (SeverityIcon = {}));
+export {
+  SeverityIcon
+};
+//# sourceMappingURL=severityIcon.js.map

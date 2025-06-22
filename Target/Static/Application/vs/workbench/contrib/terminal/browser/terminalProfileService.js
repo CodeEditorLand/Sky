@@ -1,1 +1,245 @@
-import*as u from"../../../../base/common/arrays.js";import*as c from"../../../../base/common/objects.js";import{$Lh as m}from"../../../../base/common/async.js";import{$vm as d}from"../../../../base/common/decorators.js";import{$df as p}from"../../../../base/common/event.js";import{$vd as g,$wd as P,$td as $}from"../../../../base/common/lifecycle.js";import{$n as b,$s as w,$m as y,OS as v}from"../../../../base/common/platform.js";import{$El as C}from"../../../../platform/configuration/common/configuration.js";import{$Vn as x}from"../../../../platform/contextkey/common/contextkey.js";import{$uA as D}from"../../../../platform/terminal/common/terminalPlatformConfiguration.js";import{$pA as A,$oA as K}from"../../../../platform/terminal/common/terminalProfiles.js";import{$IYb as N}from"./terminal.js";import{$hrc as j}from"./terminalActions.js";import{TerminalContextKeys as V}from"../common/terminalContextKey.js";import{$Nrc as E}from"../common/terminalExtensionPoints.js";import{$KX as _}from"../../../services/environment/common/environmentService.js";import{$XO as I}from"../../../services/extensions/common/extensions.js";import{$YK as M}from"../../../services/remote/common/remoteAgentService.js";var h=function(r,t,e,i){var o=arguments.length,s=o<3?t:i===null?i=Object.getOwnPropertyDescriptor(t,e):i,n;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")s=Reflect.decorate(r,t,e,i);else for(var a=r.length-1;a>=0;a--)(n=r[a])&&(s=(o<3?n(s):o>3?n(t,e,s):n(t,e))||s);return o>3&&s&&Object.defineProperty(t,e,s),s},f=function(r,t){return function(e,i){t(e,i,r)}};let l=class extends g{get onDidChangeAvailableProfiles(){return this.s.event}get profilesReady(){return this.c}get availableProfiles(){return this.m||this.refreshAvailableProfiles(),this.f||[]}get contributedProfiles(){const t=this.f?.map(e=>e.profileName)||[];return this.h?.filter(e=>!t.includes(e.title))||[]}constructor(t,e,i,o,s,n,a){super(),this.t=t,this.u=e,this.w=i,this.y=o,this.z=s,this.C=n,this.D=a,this.h=[],this.m=!1,this.n=this.B(new P),this.r=new Map,this.s=this.B(new p),this.B(this.y.onDidChangeExtensions(()=>this.refreshAvailableProfiles())),this.a=V.webExtensionContributedProfile.bindTo(this.t),this.L(),this.c=this.z.getEnvironment().then(()=>(this.b=new m(2e4),this.b.wait().then(()=>{}))),this.refreshAvailableProfiles(),this.F()}async F(){const t=await this.getPlatformKey();this.B(this.u.onDidChangeConfiguration(async e=>{(e.affectsConfiguration("terminal.integrated.automationProfile."+t)||e.affectsConfiguration("terminal.integrated.defaultProfile."+t)||e.affectsConfiguration("terminal.integrated.profiles."+t)||e.affectsConfiguration("terminal.integrated.useWslProfiles"))&&(e.source!==7?(this.refreshAvailableProfiles(),this.m=!1):this.m=!0)}))}getDefaultProfileName(){return this.j}getDefaultProfile(t){let e;if(t){if(e=this.u.getValue(`terminal.integrated.defaultProfile.${this.G(t)}`),!e||typeof e!="string")return}else e=this.j;if(e)return this.availableProfiles.find(i=>i.profileName===e&&!i.isAutoDetected)}G(t){switch(t){case 3:return"linux";case 2:return"osx";case 1:return"windows"}}refreshAvailableProfiles(){this.H()}async H(){const t=await this.J(!0),e=!u.$Sb(t,this.f,B),i=await this.I(),o=await this.getPlatformKey(),s=this.u.getValue(`terminal.integrated.automationProfile.${o}`),n=!c.$6o(s,this.g);(e||i||n)&&(this.f=t,this.g=s,this.s.fire(this.f),this.b.open(),this.L(),await this.M(this.f))}async I(){const t=await this.getPlatformKey(),e=[],i=this.u.getValue("terminal.integrated.profiles."+t);for(const[n,a]of Object.entries(i))a===null&&e.push(n);const o=Array.from(this.w.terminalProfiles.filter(n=>!e.includes(n.title))),s=!u.$Sb(o,this.h,O);return this.h=o,s}getContributedProfileProvider(t,e){return this.r.get(t)?.get(e)}async J(t){const e=await this.D.getBackend(this.C.remoteAuthority);if(!e)return this.f||[];const i=await this.getPlatformKey();return this.j=this.u.getValue(`terminal.integrated.defaultProfile.${i}`)??void 0,e.getProfiles(this.u.getValue(`terminal.integrated.profiles.${i}`),this.j,t)}L(){this.a.set(w&&this.h.length>0)}async M(t){const e=await this.z.getEnvironment();D({os:e?.os||v,profiles:t},this.h),this.n.value=j(t)}async getPlatformKey(){const t=await this.z.getEnvironment();return t?t.os===1?"windows":t.os===2?"osx":"linux":y?"windows":b?"osx":"linux"}registerTerminalProfileProvider(t,e,i){let o=this.r.get(t);return o||(o=new Map,this.r.set(t,o)),o.set(e,i),$(()=>this.r.delete(e))}async registerContributedProfile(t){const e=await this.getPlatformKey(),i=await this.u.getValue(`terminal.integrated.profiles.${e}`);if(typeof i=="object"){const o={extensionIdentifier:t.extensionIdentifier,icon:t.options.icon,id:t.id,title:t.title,color:t.options.color};i[t.title]=o}await this.u.updateValue(`terminal.integrated.profiles.${e}`,i,2)}async getContributedDefaultProfile(t){if(t&&!t.extHostTerminalId&&!("executable"in t)){const e=await this.getPlatformKey(),i=this.u.getValue(`terminal.integrated.defaultProfile.${e}`);return this.contributedProfiles.find(s=>s.title===i)}}};h([d(2e3)],l.prototype,"refreshAvailableProfiles",null);l=h([f(0,x),f(1,C),f(2,E),f(3,I),f(4,M),f(5,_),f(6,N)],l);function B(r,t){return r.profileName===t.profileName&&K(r.args,t.args)&&r.color===t.color&&A(r.icon,t.icon)&&r.isAutoDetected===t.isAutoDetected&&r.isDefault===t.isDefault&&r.overrideName===t.overrideName&&r.path===t.path}function O(r,t){return r.extensionIdentifier===t.extensionIdentifier&&r.color===t.color&&r.icon===t.icon&&r.id===t.id&&r.title===t.title}export{l as $Prc};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import * as arrays from "../../../../base/common/arrays.js";
+import * as objects from "../../../../base/common/objects.js";
+import { AutoOpenBarrier } from "../../../../base/common/async.js";
+import { throttle } from "../../../../base/common/decorators.js";
+import { Emitter } from "../../../../base/common/event.js";
+import { Disposable, MutableDisposable, toDisposable } from "../../../../base/common/lifecycle.js";
+import { isMacintosh, isWeb, isWindows, OS } from "../../../../base/common/platform.js";
+import { IConfigurationService } from "../../../../platform/configuration/common/configuration.js";
+import { IContextKeyService } from "../../../../platform/contextkey/common/contextkey.js";
+import { registerTerminalDefaultProfileConfiguration } from "../../../../platform/terminal/common/terminalPlatformConfiguration.js";
+import { terminalIconsEqual, terminalProfileArgsMatch } from "../../../../platform/terminal/common/terminalProfiles.js";
+import { ITerminalInstanceService } from "./terminal.js";
+import { refreshTerminalActions } from "./terminalActions.js";
+import { TerminalContextKeys } from "../common/terminalContextKey.js";
+import { ITerminalContributionService } from "../common/terminalExtensionPoints.js";
+import { IWorkbenchEnvironmentService } from "../../../services/environment/common/environmentService.js";
+import { IExtensionService } from "../../../services/extensions/common/extensions.js";
+import { IRemoteAgentService } from "../../../services/remote/common/remoteAgentService.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+let TerminalProfileService = class TerminalProfileService2 extends Disposable {
+  static {
+    __name(this, "TerminalProfileService");
+  }
+  get onDidChangeAvailableProfiles() {
+    return this._onDidChangeAvailableProfiles.event;
+  }
+  get profilesReady() {
+    return this._profilesReadyPromise;
+  }
+  get availableProfiles() {
+    if (!this._platformConfigJustRefreshed) {
+      this.refreshAvailableProfiles();
+    }
+    return this._availableProfiles || [];
+  }
+  get contributedProfiles() {
+    const userConfiguredProfileNames = this._availableProfiles?.map((p) => p.profileName) || [];
+    return this._contributedProfiles?.filter((p) => !userConfiguredProfileNames.includes(p.title)) || [];
+  }
+  constructor(_contextKeyService, _configurationService, _terminalContributionService, _extensionService, _remoteAgentService, _environmentService, _terminalInstanceService) {
+    super();
+    this._contextKeyService = _contextKeyService;
+    this._configurationService = _configurationService;
+    this._terminalContributionService = _terminalContributionService;
+    this._extensionService = _extensionService;
+    this._remoteAgentService = _remoteAgentService;
+    this._environmentService = _environmentService;
+    this._terminalInstanceService = _terminalInstanceService;
+    this._contributedProfiles = [];
+    this._platformConfigJustRefreshed = false;
+    this._refreshTerminalActionsDisposable = this._register(new MutableDisposable());
+    this._profileProviders = /* @__PURE__ */ new Map();
+    this._onDidChangeAvailableProfiles = this._register(new Emitter());
+    this._register(this._extensionService.onDidChangeExtensions(() => this.refreshAvailableProfiles()));
+    this._webExtensionContributedProfileContextKey = TerminalContextKeys.webExtensionContributedProfile.bindTo(this._contextKeyService);
+    this._updateWebContextKey();
+    this._profilesReadyPromise = this._remoteAgentService.getEnvironment().then(() => {
+      this._profilesReadyBarrier = new AutoOpenBarrier(2e4);
+      return this._profilesReadyBarrier.wait().then(() => {
+      });
+    });
+    this.refreshAvailableProfiles();
+    this._setupConfigListener();
+  }
+  async _setupConfigListener() {
+    const platformKey = await this.getPlatformKey();
+    this._register(this._configurationService.onDidChangeConfiguration(async (e) => {
+      if (e.affectsConfiguration("terminal.integrated.automationProfile." + platformKey) || e.affectsConfiguration("terminal.integrated.defaultProfile." + platformKey) || e.affectsConfiguration("terminal.integrated.profiles." + platformKey) || e.affectsConfiguration(
+        "terminal.integrated.useWslProfiles"
+        /* TerminalSettingId.UseWslProfiles */
+      )) {
+        if (e.source !== 7) {
+          this.refreshAvailableProfiles();
+          this._platformConfigJustRefreshed = false;
+        } else {
+          this._platformConfigJustRefreshed = true;
+        }
+      }
+    }));
+  }
+  getDefaultProfileName() {
+    return this._defaultProfileName;
+  }
+  getDefaultProfile(os) {
+    let defaultProfileName;
+    if (os) {
+      defaultProfileName = this._configurationService.getValue(`${"terminal.integrated.defaultProfile."}${this._getOsKey(os)}`);
+      if (!defaultProfileName || typeof defaultProfileName !== "string") {
+        return void 0;
+      }
+    } else {
+      defaultProfileName = this._defaultProfileName;
+    }
+    if (!defaultProfileName) {
+      return void 0;
+    }
+    return this.availableProfiles.find((e) => e.profileName === defaultProfileName && !e.isAutoDetected);
+  }
+  _getOsKey(os) {
+    switch (os) {
+      case 3:
+        return "linux";
+      case 2:
+        return "osx";
+      case 1:
+        return "windows";
+    }
+  }
+  refreshAvailableProfiles() {
+    this._refreshAvailableProfilesNow();
+  }
+  async _refreshAvailableProfilesNow() {
+    const profiles = await this._detectProfiles(true);
+    const profilesChanged = !arrays.equals(profiles, this._availableProfiles, profilesEqual);
+    const contributedProfilesChanged = await this._updateContributedProfiles();
+    const platform = await this.getPlatformKey();
+    const automationProfile = this._configurationService.getValue(`${"terminal.integrated.automationProfile."}${platform}`);
+    const automationProfileChanged = !objects.equals(automationProfile, this._automationProfile);
+    if (profilesChanged || contributedProfilesChanged || automationProfileChanged) {
+      this._availableProfiles = profiles;
+      this._automationProfile = automationProfile;
+      this._onDidChangeAvailableProfiles.fire(this._availableProfiles);
+      this._profilesReadyBarrier.open();
+      this._updateWebContextKey();
+      await this._refreshPlatformConfig(this._availableProfiles);
+    }
+  }
+  async _updateContributedProfiles() {
+    const platformKey = await this.getPlatformKey();
+    const excludedContributedProfiles = [];
+    const configProfiles = this._configurationService.getValue("terminal.integrated.profiles." + platformKey);
+    for (const [profileName, value] of Object.entries(configProfiles)) {
+      if (value === null) {
+        excludedContributedProfiles.push(profileName);
+      }
+    }
+    const filteredContributedProfiles = Array.from(this._terminalContributionService.terminalProfiles.filter((p) => !excludedContributedProfiles.includes(p.title)));
+    const contributedProfilesChanged = !arrays.equals(filteredContributedProfiles, this._contributedProfiles, contributedProfilesEqual);
+    this._contributedProfiles = filteredContributedProfiles;
+    return contributedProfilesChanged;
+  }
+  getContributedProfileProvider(extensionIdentifier, id) {
+    const extMap = this._profileProviders.get(extensionIdentifier);
+    return extMap?.get(id);
+  }
+  async _detectProfiles(includeDetectedProfiles) {
+    const primaryBackend = await this._terminalInstanceService.getBackend(this._environmentService.remoteAuthority);
+    if (!primaryBackend) {
+      return this._availableProfiles || [];
+    }
+    const platform = await this.getPlatformKey();
+    this._defaultProfileName = this._configurationService.getValue(`${"terminal.integrated.defaultProfile."}${platform}`) ?? void 0;
+    return primaryBackend.getProfiles(this._configurationService.getValue(`${"terminal.integrated.profiles."}${platform}`), this._defaultProfileName, includeDetectedProfiles);
+  }
+  _updateWebContextKey() {
+    this._webExtensionContributedProfileContextKey.set(isWeb && this._contributedProfiles.length > 0);
+  }
+  async _refreshPlatformConfig(profiles) {
+    const env = await this._remoteAgentService.getEnvironment();
+    registerTerminalDefaultProfileConfiguration({ os: env?.os || OS, profiles }, this._contributedProfiles);
+    this._refreshTerminalActionsDisposable.value = refreshTerminalActions(profiles);
+  }
+  async getPlatformKey() {
+    const env = await this._remoteAgentService.getEnvironment();
+    if (env) {
+      return env.os === 1 ? "windows" : env.os === 2 ? "osx" : "linux";
+    }
+    return isWindows ? "windows" : isMacintosh ? "osx" : "linux";
+  }
+  registerTerminalProfileProvider(extensionIdentifier, id, profileProvider) {
+    let extMap = this._profileProviders.get(extensionIdentifier);
+    if (!extMap) {
+      extMap = /* @__PURE__ */ new Map();
+      this._profileProviders.set(extensionIdentifier, extMap);
+    }
+    extMap.set(id, profileProvider);
+    return toDisposable(() => this._profileProviders.delete(id));
+  }
+  async registerContributedProfile(args) {
+    const platformKey = await this.getPlatformKey();
+    const profilesConfig = await this._configurationService.getValue(`${"terminal.integrated.profiles."}${platformKey}`);
+    if (typeof profilesConfig === "object") {
+      const newProfile = {
+        extensionIdentifier: args.extensionIdentifier,
+        icon: args.options.icon,
+        id: args.id,
+        title: args.title,
+        color: args.options.color
+      };
+      profilesConfig[args.title] = newProfile;
+    }
+    await this._configurationService.updateValue(
+      `${"terminal.integrated.profiles."}${platformKey}`,
+      profilesConfig,
+      2
+      /* ConfigurationTarget.USER */
+    );
+    return;
+  }
+  async getContributedDefaultProfile(shellLaunchConfig) {
+    if (shellLaunchConfig && !shellLaunchConfig.extHostTerminalId && !("executable" in shellLaunchConfig)) {
+      const key = await this.getPlatformKey();
+      const defaultProfileName = this._configurationService.getValue(`${"terminal.integrated.defaultProfile."}${key}`);
+      const contributedDefaultProfile = this.contributedProfiles.find((p) => p.title === defaultProfileName);
+      return contributedDefaultProfile;
+    }
+    return void 0;
+  }
+};
+__decorate([
+  throttle(2e3)
+], TerminalProfileService.prototype, "refreshAvailableProfiles", null);
+TerminalProfileService = __decorate([
+  __param(0, IContextKeyService),
+  __param(1, IConfigurationService),
+  __param(2, ITerminalContributionService),
+  __param(3, IExtensionService),
+  __param(4, IRemoteAgentService),
+  __param(5, IWorkbenchEnvironmentService),
+  __param(6, ITerminalInstanceService)
+], TerminalProfileService);
+function profilesEqual(one, other) {
+  return one.profileName === other.profileName && terminalProfileArgsMatch(one.args, other.args) && one.color === other.color && terminalIconsEqual(one.icon, other.icon) && one.isAutoDetected === other.isAutoDetected && one.isDefault === other.isDefault && one.overrideName === other.overrideName && one.path === other.path;
+}
+__name(profilesEqual, "profilesEqual");
+function contributedProfilesEqual(one, other) {
+  return one.extensionIdentifier === other.extensionIdentifier && one.color === other.color && one.icon === other.icon && one.id === other.id && one.title === other.title;
+}
+__name(contributedProfilesEqual, "contributedProfilesEqual");
+export {
+  TerminalProfileService
+};
+//# sourceMappingURL=terminalProfileService.js.map

@@ -1,1 +1,205 @@
-import{$0_ as u}from"../../../../../editor/browser/services/codeEditorService.js";import{$Hgb as C}from"../../../../../editor/browser/widget/diffEditor/commands.js";import{localize as n}from"../../../../../nls.js";import{$$ob as k}from"../../../../../platform/accessibility/browser/accessibleView.js";import{$Bn as h}from"../../../../../platform/contextkey/common/contextkey.js";import{$ux as f}from"../../../../../platform/keybinding/common/keybinding.js";import{$6Bb as w}from"../../../inlineChat/common/inlineChat.js";import{ChatContextKeyExprs as E,ChatContextKeys as l}from"../../common/chatContextKeys.js";import{ChatAgentLocation as m,ChatMode as p}from"../../common/constants.js";import{$lWb as y}from"../chat.js";class T{constructor(){this.priority=107,this.name="panelChat",this.type="help",this.when=h.and(l.location.isEqualTo(m.Panel),l.inQuickChat.negate(),l.chatMode.isEqualTo(p.Ask),h.or(l.inChatSession,l.isResponse,l.isRequest))}getProvider(n){const i=n.get(u).getActiveCodeEditor()||n.get(u).getFocusedCodeEditor();return r(n,i??void 0,"panelChat")}}class M{constructor(){this.priority=107,this.name="quickChat",this.type="help",this.when=h.and(l.inQuickChat,h.or(l.inChatSession,l.isResponse,l.isRequest))}getProvider(n){const i=n.get(u).getActiveCodeEditor()||n.get(u).getFocusedCodeEditor();return r(n,i??void 0,"quickChat")}}class R{constructor(){this.priority=119,this.name="editsView",this.type="help",this.when=h.and(E.inEditingMode,l.inChatInput)}getProvider(n){const i=n.get(u).getActiveCodeEditor()||n.get(u).getFocusedCodeEditor();return r(n,i??void 0,"editsView")}}class S{constructor(){this.priority=120,this.name="agentView",this.type="help",this.when=h.and(l.chatMode.isEqualTo(p.Agent),l.inChatInput)}getProvider(n){const i=n.get(u).getActiveCodeEditor()||n.get(u).getFocusedCodeEditor();return r(n,i??void 0,"agentView")}}function A(i,t){const e=[];return("panelChat"===i||"quickChat"===i)&&("quickChat"===i&&(e.push(n(4834,null)),e.push(n(4835,null))),"panelChat"===i&&(e.push(n(4836,null)),e.push(n(4837,null))),e.push(n(4838,null)),e.push(n(4839,null,"<keybinding:editor.action.accessibleView>")),e.push(n(4840,null)),e.push(n(4841,null,g(t,i,!1))),e.push(n(4842,null,g(t,i,!0))),e.push(n(4843,null,"<keybinding:workbench.action.chat.nextCodeBlock>")),"panelChat"===i&&e.push(n(4844,null,"<keybinding:workbench.action.chat.new>"))),"editsView"===i||"agentView"===i?("agentView"===i?e.push(n(4845,null)):e.push(n(4846,null)),e.push(n(4847,null)),e.push(n(4848,null)),e.push(n(4849,null)),e.push(n(4850,null,"<keybinding:chatEditor.action.navigatePrevious>","<keybinding:chatEditor.action.navigateNext>")),e.push(n(4851,null,"<keybinding:chatEditor.action.acceptHunk>","<keybinding:chatEditor.action.undoHunk>","<keybinding:chatEditor.action.toggleDiff>")),e.push(n(4852,null)),"agentView"===i&&(e.push(n(4853,null)),e.push(n(4854,null,"<keybinding:workbench.action.chat.acceptTool>"))),e.push(n(4855,null)),e.push(n(4856,null,"<keybinding:workbench.action.chat.undoEdits>")),e.push(n(4857,null,"<keybinding:workbench.action.chat.editing.attachFiles>")),e.push(n(4858,null,"<keybinding:chatEditing.removeFileFromWorkingSet>")),e.push(n(4859,null,"<keybinding:chatEditing.acceptFile>","<keybinding:chatEditing.discardFile>")),e.push(n(4860,null,"<keybinding:chatEditing.saveAllFiles>")),e.push(n(4861,null,"<keybinding:chatEditing.acceptAllFiles>")),e.push(n(4862,null,"<keybinding:chatEditing.discardAllFiles>")),e.push(n(4863,null,"<keybinding:chatEditing.openFileInDiff>")),e.push(n(4864,null,"<keybinding:chatEditing.viewChanges>"))):(e.push(n(4865,null)),e.push(n(4866,null,"<keybinding:inlineChat.start>")),e.push(n(4867,null,"<keybinding:history.showPrevious>","<keybinding:history.showNext>")),e.push(n(4868,null,"<keybinding:editor.action.accessibleView>")),e.push(n(4869,null)),e.push(n(4870,null)),e.push(n(4871,null,C.id)),e.push(n(4872,null))),e.push(n(4873,null)),e.join("\n")}function r(n,i,t){const e=n.get(y),o=n.get(f),s="panelChat"===t||"editsView"===t||"quickChat"===t?e.lastFocusedWidget?.inputEditor:i;if(!s||!s.getDomNode())return;const a=s.getPosition();s.getSupportedActions();const l=A(t,o);return new k("panelChat"===t?"panelChat":"inlineChat"===t?"inlineChat":"agentView"===t?"agentChat":"quickChat",{type:"help"},(()=>l),(()=>{"panelChat"===t&&a?(s.setPosition(a),s.focus()):"inlineChat"===t&&i?.getContribution(w)?.focus()}),"panelChat"===t?"accessibility.verbosity.panelChat":"accessibility.verbosity.inlineChat")}function g(n,i,t){let e;const o=" (unassigned keybinding)";if(e=t?n.lookupKeybindings("workbench.action.chat.focusInput"):n.lookupKeybindings("chat.action.focus"),!e?.length)return o;let s;return s="panelChat"===i?t?e.find((n=>n.getAriaLabel()?.includes("DownArrow")))?.getAriaLabel():e.find((n=>n.getAriaLabel()?.includes("UpArrow")))?.getAriaLabel():t?e.find((n=>n.getAriaLabel()?.includes("UpArrow")))?.getAriaLabel():e.find((n=>n.getAriaLabel()?.includes("DownArrow")))?.getAriaLabel(),s?` (${s})`:o}export{A as $1ec,r as $2ec,T as $Wec,M as $Xec,R as $Yec,S as $Zec};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { ICodeEditorService } from "../../../../../editor/browser/services/codeEditorService.js";
+import { AccessibleDiffViewerNext } from "../../../../../editor/browser/widget/diffEditor/commands.js";
+import { localize } from "../../../../../nls.js";
+import { AccessibleContentProvider } from "../../../../../platform/accessibility/browser/accessibleView.js";
+import { ContextKeyExpr } from "../../../../../platform/contextkey/common/contextkey.js";
+import { IKeybindingService } from "../../../../../platform/keybinding/common/keybinding.js";
+import { INLINE_CHAT_ID } from "../../../inlineChat/common/inlineChat.js";
+import { ChatContextKeyExprs, ChatContextKeys } from "../../common/chatContextKeys.js";
+import { ChatAgentLocation, ChatMode } from "../../common/constants.js";
+import { IChatWidgetService } from "../chat.js";
+class PanelChatAccessibilityHelp {
+  static {
+    __name(this, "PanelChatAccessibilityHelp");
+  }
+  constructor() {
+    this.priority = 107;
+    this.name = "panelChat";
+    this.type = "help";
+    this.when = ContextKeyExpr.and(ChatContextKeys.location.isEqualTo(ChatAgentLocation.Panel), ChatContextKeys.inQuickChat.negate(), ChatContextKeys.chatMode.isEqualTo(ChatMode.Ask), ContextKeyExpr.or(ChatContextKeys.inChatSession, ChatContextKeys.isResponse, ChatContextKeys.isRequest));
+  }
+  getProvider(accessor) {
+    const codeEditor = accessor.get(ICodeEditorService).getActiveCodeEditor() || accessor.get(ICodeEditorService).getFocusedCodeEditor();
+    return getChatAccessibilityHelpProvider(accessor, codeEditor ?? void 0, "panelChat");
+  }
+}
+class QuickChatAccessibilityHelp {
+  static {
+    __name(this, "QuickChatAccessibilityHelp");
+  }
+  constructor() {
+    this.priority = 107;
+    this.name = "quickChat";
+    this.type = "help";
+    this.when = ContextKeyExpr.and(ChatContextKeys.inQuickChat, ContextKeyExpr.or(ChatContextKeys.inChatSession, ChatContextKeys.isResponse, ChatContextKeys.isRequest));
+  }
+  getProvider(accessor) {
+    const codeEditor = accessor.get(ICodeEditorService).getActiveCodeEditor() || accessor.get(ICodeEditorService).getFocusedCodeEditor();
+    return getChatAccessibilityHelpProvider(accessor, codeEditor ?? void 0, "quickChat");
+  }
+}
+class EditsChatAccessibilityHelp {
+  static {
+    __name(this, "EditsChatAccessibilityHelp");
+  }
+  constructor() {
+    this.priority = 119;
+    this.name = "editsView";
+    this.type = "help";
+    this.when = ContextKeyExpr.and(ChatContextKeyExprs.inEditingMode, ChatContextKeys.inChatInput);
+  }
+  getProvider(accessor) {
+    const codeEditor = accessor.get(ICodeEditorService).getActiveCodeEditor() || accessor.get(ICodeEditorService).getFocusedCodeEditor();
+    return getChatAccessibilityHelpProvider(accessor, codeEditor ?? void 0, "editsView");
+  }
+}
+class AgentChatAccessibilityHelp {
+  static {
+    __name(this, "AgentChatAccessibilityHelp");
+  }
+  constructor() {
+    this.priority = 120;
+    this.name = "agentView";
+    this.type = "help";
+    this.when = ContextKeyExpr.and(ChatContextKeys.chatMode.isEqualTo(ChatMode.Agent), ChatContextKeys.inChatInput);
+  }
+  getProvider(accessor) {
+    const codeEditor = accessor.get(ICodeEditorService).getActiveCodeEditor() || accessor.get(ICodeEditorService).getFocusedCodeEditor();
+    return getChatAccessibilityHelpProvider(accessor, codeEditor ?? void 0, "agentView");
+  }
+}
+function getAccessibilityHelpText(type, keybindingService) {
+  const content = [];
+  if (type === "panelChat" || type === "quickChat") {
+    if (type === "quickChat") {
+      content.push(localize("chat.overview", "The quick chat view is comprised of an input box and a request/response list. The input box is used to make requests and the list is used to display responses."));
+      content.push(localize("chat.differenceQuick", "The quick chat view is a transient interface for making and viewing requests, while the panel chat view is a persistent interface that also supports navigating suggested follow-up questions."));
+    }
+    if (type === "panelChat") {
+      content.push(localize("chat.differencePanel", "The panel chat view is a persistent interface that also supports navigating suggested follow-up questions, while the quick chat view is a transient interface for making and viewing requests."));
+      content.push(localize("chat.followUp", "In the input box, navigate to the suggested follow up question (Shift+Tab) and press Enter to run it."));
+    }
+    content.push(localize("chat.requestHistory", "In the input box, use up and down arrows to navigate your request history. Edit input and use enter or the submit button to run a new request."));
+    content.push(localize("chat.inspectResponse", "In the input box, inspect the last response in the accessible view{0}.", "<keybinding:editor.action.accessibleView>"));
+    content.push(localize("chat.announcement", "Chat responses will be announced as they come in. A response will indicate the number of code blocks, if any, and then the rest of the response."));
+    content.push(localize("workbench.action.chat.focus", "To focus the chat request/response list, which can be navigated with up and down arrows, invoke the Focus Chat command{0}.", getChatFocusKeybindingLabel(keybindingService, type, false)));
+    content.push(localize("workbench.action.chat.focusInput", "To focus the input box for chat requests, invoke the Focus Chat Input command{0}.", getChatFocusKeybindingLabel(keybindingService, type, true)));
+    content.push(localize("workbench.action.chat.nextCodeBlock", "To focus the next code block within a response, invoke the Chat: Next Code Block command{0}.", "<keybinding:workbench.action.chat.nextCodeBlock>"));
+    if (type === "panelChat") {
+      content.push(localize("workbench.action.chat.newChat", "To create a new chat session, invoke the New Chat command{0}.", "<keybinding:workbench.action.chat.new>"));
+    }
+  }
+  if (type === "editsView" || type === "agentView") {
+    if (type === "agentView") {
+      content.push(localize("chatAgent.overview", "The chat agent view is used to apply edits across files in your workspace, enable running commands in the terminal, and more."));
+    } else {
+      content.push(localize("chatEditing.overview", "The chat editing view is used to apply edits across files."));
+    }
+    content.push(localize("chatEditing.format", "It is comprised of an input box and a file working set (Shift+Tab)."));
+    content.push(localize("chatEditing.expectation", "When a request is made, a progress indicator will play while the edits are being applied."));
+    content.push(localize("chatEditing.review", "Once the edits are applied, a sound will play to indicate the document has been opened and is ready for review. The sound can be disabled with accessibility.signals.chatEditModifiedFile."));
+    content.push(localize("chatEditing.sections", "Navigate between edits in the editor with navigate previous{0} and next{1}", "<keybinding:chatEditor.action.navigatePrevious>", "<keybinding:chatEditor.action.navigateNext>"));
+    content.push(localize("chatEditing.acceptHunk", "In the editor, Keep{0}, Undo{1}, or Toggle the Diff{2} for the current Change.", "<keybinding:chatEditor.action.acceptHunk>", "<keybinding:chatEditor.action.undoHunk>", "<keybinding:chatEditor.action.toggleDiff>"));
+    content.push(localize("chatEditing.undoKeepSounds", "Sounds will play when a change is accepted or undone. The sounds can be disabled with accessibility.signals.editsKept and accessibility.signals.editsUndone."));
+    if (type === "agentView") {
+      content.push(localize("chatAgent.userActionRequired", "An alert will indicate when user action is required. For example, if the agent wants to run something in the terminal, you will hear Action Required: Run Command in Terminal."));
+      content.push(localize("chatAgent.runCommand", "To take the action, use the accept tool command{0}.", "<keybinding:workbench.action.chat.acceptTool>"));
+    }
+    content.push(localize("chatEditing.helpfulCommands", "Some helpful commands include:"));
+    content.push(localize("workbench.action.chat.undoEdits", "- Undo Edits{0}.", "<keybinding:workbench.action.chat.undoEdits>"));
+    content.push(localize("workbench.action.chat.editing.attachFiles", "- Attach Files{0}.", "<keybinding:workbench.action.chat.editing.attachFiles>"));
+    content.push(localize("chatEditing.removeFileFromWorkingSet", "- Remove File from Working Set{0}.", "<keybinding:chatEditing.removeFileFromWorkingSet>"));
+    content.push(localize("chatEditing.acceptFile", "- Keep{0} and Undo File{1}.", "<keybinding:chatEditing.acceptFile>", "<keybinding:chatEditing.discardFile>"));
+    content.push(localize("chatEditing.saveAllFiles", "- Save All Files{0}.", "<keybinding:chatEditing.saveAllFiles>"));
+    content.push(localize("chatEditing.acceptAllFiles", "- Keep All Edits{0}.", "<keybinding:chatEditing.acceptAllFiles>"));
+    content.push(localize("chatEditing.discardAllFiles", "- Undo All Edits{0}.", "<keybinding:chatEditing.discardAllFiles>"));
+    content.push(localize("chatEditing.openFileInDiff", "- Open File in Diff{0}.", "<keybinding:chatEditing.openFileInDiff>"));
+    content.push(localize("chatEditing.viewChanges", "- View Changes{0}.", "<keybinding:chatEditing.viewChanges>"));
+  } else {
+    content.push(localize("inlineChat.overview", "Inline chat occurs within a code editor and takes into account the current selection. It is useful for making changes to the current editor. For example, fixing diagnostics, documenting or refactoring code. Keep in mind that AI generated code may be incorrect."));
+    content.push(localize("inlineChat.access", "It can be activated via code actions or directly using the command: Inline Chat: Start Inline Chat{0}.", "<keybinding:inlineChat.start>"));
+    content.push(localize("inlineChat.requestHistory", "In the input box, use Show Previous{0} and Show Next{1} to navigate your request history. Edit input and use enter or the submit button to run a new request.", "<keybinding:history.showPrevious>", "<keybinding:history.showNext>"));
+    content.push(localize("inlineChat.inspectResponse", "In the input box, inspect the response in the accessible view{0}.", "<keybinding:editor.action.accessibleView>"));
+    content.push(localize("inlineChat.contextActions", "Context menu actions may run a request prefixed with a /. Type / to discover such ready-made commands."));
+    content.push(localize("inlineChat.fix", "If a fix action is invoked, a response will indicate the problem with the current code. A diff editor will be rendered and can be reached by tabbing."));
+    content.push(localize("inlineChat.diff", "Once in the diff editor, enter review mode with{0}. Use up and down arrows to navigate lines with the proposed changes.", AccessibleDiffViewerNext.id));
+    content.push(localize("inlineChat.toolbar", "Use tab to reach conditional parts like commands, status, message responses and more."));
+  }
+  content.push(localize("chat.signals", "Accessibility Signals can be changed via settings with a prefix of signals.chat. By default, if a request takes more than 4 seconds, you will hear a sound indicating that progress is still occurring."));
+  return content.join("\n");
+}
+__name(getAccessibilityHelpText, "getAccessibilityHelpText");
+function getChatAccessibilityHelpProvider(accessor, editor, type) {
+  const widgetService = accessor.get(IChatWidgetService);
+  const keybindingService = accessor.get(IKeybindingService);
+  const inputEditor = type === "panelChat" || type === "editsView" || type === "quickChat" ? widgetService.lastFocusedWidget?.inputEditor : editor;
+  if (!inputEditor) {
+    return;
+  }
+  const domNode = inputEditor.getDomNode() ?? void 0;
+  if (!domNode) {
+    return;
+  }
+  const cachedPosition = inputEditor.getPosition();
+  inputEditor.getSupportedActions();
+  const helpText = getAccessibilityHelpText(type, keybindingService);
+  return new AccessibleContentProvider(
+    type === "panelChat" ? "panelChat" : type === "inlineChat" ? "inlineChat" : type === "agentView" ? "agentChat" : "quickChat",
+    {
+      type: "help"
+      /* AccessibleViewType.Help */
+    },
+    () => helpText,
+    () => {
+      if (type === "panelChat" && cachedPosition) {
+        inputEditor.setPosition(cachedPosition);
+        inputEditor.focus();
+      } else if (type === "inlineChat") {
+        const ctrl = editor?.getContribution(INLINE_CHAT_ID);
+        ctrl?.focus();
+      }
+    },
+    type === "panelChat" ? "accessibility.verbosity.panelChat" : "accessibility.verbosity.inlineChat"
+    /* AccessibilityVerbositySettingId.InlineChat */
+  );
+}
+__name(getChatAccessibilityHelpProvider, "getChatAccessibilityHelpProvider");
+function getChatFocusKeybindingLabel(keybindingService, type, focusInput) {
+  let kbs;
+  const fallback = " (unassigned keybinding)";
+  if (focusInput) {
+    kbs = keybindingService.lookupKeybindings("workbench.action.chat.focusInput");
+  } else {
+    kbs = keybindingService.lookupKeybindings("chat.action.focus");
+  }
+  if (!kbs?.length) {
+    return fallback;
+  }
+  let kb;
+  if (type === "panelChat") {
+    if (focusInput) {
+      kb = kbs.find((kb2) => kb2.getAriaLabel()?.includes("DownArrow"))?.getAriaLabel();
+    } else {
+      kb = kbs.find((kb2) => kb2.getAriaLabel()?.includes("UpArrow"))?.getAriaLabel();
+    }
+  } else {
+    if (focusInput) {
+      kb = kbs.find((kb2) => kb2.getAriaLabel()?.includes("UpArrow"))?.getAriaLabel();
+    } else {
+      kb = kbs.find((kb2) => kb2.getAriaLabel()?.includes("DownArrow"))?.getAriaLabel();
+    }
+  }
+  return !!kb ? ` (${kb})` : fallback;
+}
+__name(getChatFocusKeybindingLabel, "getChatFocusKeybindingLabel");
+export {
+  AgentChatAccessibilityHelp,
+  EditsChatAccessibilityHelp,
+  PanelChatAccessibilityHelp,
+  QuickChatAccessibilityHelp,
+  getAccessibilityHelpText,
+  getChatAccessibilityHelpProvider
+};
+//# sourceMappingURL=chatAccessibilityHelp.js.map

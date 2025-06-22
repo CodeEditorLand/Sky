@@ -1,1 +1,145 @@
-import{h as n}from"../../../../../../base/browser/dom.js";import{$df as g,Event as v}from"../../../../../../base/common/event.js";import{$vd as p}from"../../../../../../base/common/lifecycle.js";import{autorun as $,derived as w,observableFromEvent as a}from"../../../../../../base/common/observable.js";import{EditorExtensionsRegistry as D}from"../../../../../../editor/browser/editorExtensions.js";import{$Zdb as R}from"../../../../../../editor/browser/widget/codeEditor/codeEditorWidget.js";import{$RC as x}from"../../../../../../editor/common/core/selection.js";import{$Wib as C}from"../../../../../../editor/contrib/codelens/browser/codelensController.js";import{$Nob as E}from"../../../../../../editor/contrib/folding/browser/folding.js";import{$mgb as _}from"../../../../../../platform/actions/browser/toolbar.js";import{$mj as O}from"../../../../../../platform/instantiation/common/instantiation.js";import{$axb as u,$_wb as l}from"../../../../../browser/parts/editor/editor.js";import{$mRb as W}from"../../utils.js";import{$3db as m}from"../../../../../../platform/observable/common/platformObservableUtils.js";var f=function(s,e,r,o){var i=arguments.length,t=i<3?e:o===null?o=Object.getOwnPropertyDescriptor(e,r):o,h;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")t=Reflect.decorate(s,e,r,o);else for(var d=s.length-1;d>=0;d--)(h=s[d])&&(t=(i<3?h(t):i>3?h(e,r,t):h(e,r))||t);return i>3&&t&&Object.defineProperty(e,r,t),t},b=function(s,e){return function(r,o){e(r,o,s)}};class K extends p{updateOptions(e){this.editor.updateOptions(e)}constructor(e,r,o){super(),this.s=e,this.viewModel=r,this.t=o,this.model=this.viewModel.map(i=>i?.model),this.a=n("div.code-view",[n("div.header@header",[n("span.title@title"),n("span.description@description"),n("span.detail@detail"),n("span.toolbar@toolbar")]),n("div.container",[n("div.gutter@gutterDiv"),n("div@editor")])]),this.b=new g,this.view={element:this.a.root,minimumWidth:l.width,maximumWidth:u.width,minimumHeight:l.height,maximumHeight:u.height,onDidChange:this.b.event,layout:(i,t,h,d)=>{W(this.a.root,{width:i,height:t,top:h,left:d}),this.editor.layout({width:i-this.a.gutterDiv.clientWidth,height:t-this.a.header.clientHeight})}},this.f=m("mergeEditor.showCheckboxes",!1,this.t),this.j=m("mergeEditor.showDeletionMarkers",!0,this.t),this.n=m("mergeEditor.useSimplifiedDecorations",!1,this.t),this.editor=this.s.createInstance(R,this.a.editor,{},{contributions:this.u()}),this.isFocused=a(this,v.any(this.editor.onDidBlurEditorWidget,this.editor.onDidFocusEditorWidget),()=>this.editor.hasWidgetFocus()),this.cursorPosition=a(this,this.editor.onDidChangeCursorPosition,()=>this.editor.getPosition()),this.selection=a(this,this.editor.onDidChangeCursorSelection,()=>this.editor.getSelections()),this.cursorLineNumber=this.cursorPosition.map(i=>i?.lineNumber)}u(){return D.getEditorContributions().filter(e=>e.id!==E.ID&&e.id!==C.ID)}}function T(s,e){const r=w(o=>{const i=s.viewModel.read(o);if(!i)return[];const t=i.selectionInBase.read(o);return!t||t.sourceEditor===s?[]:t.rangesInBase.map(h=>e(h,i))});return $(o=>{const i=r.read(o);i.length!==0&&s.editor.setSelections(i.map(t=>new x(t.startLineNumber,t.startColumn,t.endLineNumber,t.endColumn)))})}let c=class extends p{constructor(e,r,o){super();const i=o.createInstance(_,r,e,{menuOptions:{renderShortTitle:!0},toolbarOptions:{primaryGroup:t=>t==="primary"}});this.q.add(i)}};c=f([b(2,O)],c);export{K as $JRb,T as $KRb,c as $LRb};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { h } from "../../../../../../base/browser/dom.js";
+import { Emitter, Event } from "../../../../../../base/common/event.js";
+import { Disposable } from "../../../../../../base/common/lifecycle.js";
+import { autorun, derived, observableFromEvent } from "../../../../../../base/common/observable.js";
+import { EditorExtensionsRegistry } from "../../../../../../editor/browser/editorExtensions.js";
+import { CodeEditorWidget } from "../../../../../../editor/browser/widget/codeEditor/codeEditorWidget.js";
+import { Selection } from "../../../../../../editor/common/core/selection.js";
+import { CodeLensContribution } from "../../../../../../editor/contrib/codelens/browser/codelensController.js";
+import { FoldingController } from "../../../../../../editor/contrib/folding/browser/folding.js";
+import { MenuWorkbenchToolBar } from "../../../../../../platform/actions/browser/toolbar.js";
+import { IInstantiationService } from "../../../../../../platform/instantiation/common/instantiation.js";
+import { DEFAULT_EDITOR_MAX_DIMENSIONS, DEFAULT_EDITOR_MIN_DIMENSIONS } from "../../../../../browser/parts/editor/editor.js";
+import { setStyle } from "../../utils.js";
+import { observableConfigValue } from "../../../../../../platform/observable/common/platformObservableUtils.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+class CodeEditorView extends Disposable {
+  static {
+    __name(this, "CodeEditorView");
+  }
+  updateOptions(newOptions) {
+    this.editor.updateOptions(newOptions);
+  }
+  constructor(instantiationService, viewModel, configurationService) {
+    super();
+    this.instantiationService = instantiationService;
+    this.viewModel = viewModel;
+    this.configurationService = configurationService;
+    this.model = this.viewModel.map((m) => (
+      /** @description model */
+      m?.model
+    ));
+    this.htmlElements = h("div.code-view", [
+      h("div.header@header", [
+        h("span.title@title"),
+        h("span.description@description"),
+        h("span.detail@detail"),
+        h("span.toolbar@toolbar")
+      ]),
+      h("div.container", [
+        h("div.gutter@gutterDiv"),
+        h("div@editor")
+      ])
+    ]);
+    this._onDidViewChange = new Emitter();
+    this.view = {
+      element: this.htmlElements.root,
+      minimumWidth: DEFAULT_EDITOR_MIN_DIMENSIONS.width,
+      maximumWidth: DEFAULT_EDITOR_MAX_DIMENSIONS.width,
+      minimumHeight: DEFAULT_EDITOR_MIN_DIMENSIONS.height,
+      maximumHeight: DEFAULT_EDITOR_MAX_DIMENSIONS.height,
+      onDidChange: this._onDidViewChange.event,
+      layout: /* @__PURE__ */ __name((width, height, top, left) => {
+        setStyle(this.htmlElements.root, { width, height, top, left });
+        this.editor.layout({
+          width: width - this.htmlElements.gutterDiv.clientWidth,
+          height: height - this.htmlElements.header.clientHeight
+        });
+      }, "layout")
+      // preferredWidth?: number | undefined;
+      // preferredHeight?: number | undefined;
+      // priority?: LayoutPriority | undefined;
+      // snap?: boolean | undefined;
+    };
+    this.checkboxesVisible = observableConfigValue("mergeEditor.showCheckboxes", false, this.configurationService);
+    this.showDeletionMarkers = observableConfigValue("mergeEditor.showDeletionMarkers", true, this.configurationService);
+    this.useSimplifiedDecorations = observableConfigValue("mergeEditor.useSimplifiedDecorations", false, this.configurationService);
+    this.editor = this.instantiationService.createInstance(CodeEditorWidget, this.htmlElements.editor, {}, {
+      contributions: this.getEditorContributions()
+    });
+    this.isFocused = observableFromEvent(this, Event.any(this.editor.onDidBlurEditorWidget, this.editor.onDidFocusEditorWidget), () => (
+      /** @description editor.hasWidgetFocus */
+      this.editor.hasWidgetFocus()
+    ));
+    this.cursorPosition = observableFromEvent(this, this.editor.onDidChangeCursorPosition, () => (
+      /** @description editor.getPosition */
+      this.editor.getPosition()
+    ));
+    this.selection = observableFromEvent(this, this.editor.onDidChangeCursorSelection, () => (
+      /** @description editor.getSelections */
+      this.editor.getSelections()
+    ));
+    this.cursorLineNumber = this.cursorPosition.map((p) => (
+      /** @description cursorPosition.lineNumber */
+      p?.lineNumber
+    ));
+  }
+  getEditorContributions() {
+    return EditorExtensionsRegistry.getEditorContributions().filter((c) => c.id !== FoldingController.ID && c.id !== CodeLensContribution.ID);
+  }
+}
+function createSelectionsAutorun(codeEditorView, translateRange) {
+  const selections = derived((reader) => {
+    const viewModel = codeEditorView.viewModel.read(reader);
+    if (!viewModel) {
+      return [];
+    }
+    const baseRange = viewModel.selectionInBase.read(reader);
+    if (!baseRange || baseRange.sourceEditor === codeEditorView) {
+      return [];
+    }
+    return baseRange.rangesInBase.map((r) => translateRange(r, viewModel));
+  });
+  return autorun((reader) => {
+    const ranges = selections.read(reader);
+    if (ranges.length === 0) {
+      return;
+    }
+    codeEditorView.editor.setSelections(ranges.map((r) => new Selection(r.startLineNumber, r.startColumn, r.endLineNumber, r.endColumn)));
+  });
+}
+__name(createSelectionsAutorun, "createSelectionsAutorun");
+let TitleMenu = class TitleMenu2 extends Disposable {
+  static {
+    __name(this, "TitleMenu");
+  }
+  constructor(menuId, targetHtmlElement, instantiationService) {
+    super();
+    const toolbar = instantiationService.createInstance(MenuWorkbenchToolBar, targetHtmlElement, menuId, {
+      menuOptions: { renderShortTitle: true },
+      toolbarOptions: { primaryGroup: /* @__PURE__ */ __name((g) => g === "primary", "primaryGroup") }
+    });
+    this._store.add(toolbar);
+  }
+};
+TitleMenu = __decorate([
+  __param(2, IInstantiationService)
+], TitleMenu);
+export {
+  CodeEditorView,
+  TitleMenu,
+  createSelectionsAutorun
+};
+//# sourceMappingURL=codeEditorView.js.map

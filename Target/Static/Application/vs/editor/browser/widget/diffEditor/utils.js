@@ -1,1 +1,489 @@
-import{$Db as C}from"../../../../base/common/arraysFind.js";import{$pf as R}from"../../../../base/common/cancellation.js";import{$vd as $,$ud as w,$td as v}from"../../../../base/common/lifecycle.js";import{autorun as k,autorunHandleChanges as y,autorunOpts as L,autorunWithStore as V,observableValue as g,transaction as D}from"../../../../base/common/observable.js";import{$d_ as j}from"../../config/elementSizeObserver.js";import{$bC as p}from"../../../common/core/position.js";import{$cC as m}from"../../../common/core/range.js";import{$QD as N}from"../../../common/core/text/textLength.js";function Q(i,e,t,n){if(i.length===0)return e;if(e.length===0)return i;const s=[];let o=0,h=0;for(;o<i.length&&h<e.length;){const f=i[o],c=e[h],d=t(f),l=t(c);d<l?(s.push(f),o++):d>l?(s.push(c),h++):(s.push(n(f,c)),o++,h++)}for(;o<i.length;)s.push(i[o]),o++;for(;h<e.length;)s.push(e[h]),h++;return s}function G(i,e){const t=new w,n=i.createDecorationsCollection();return t.add(L({debugName:()=>`Apply decorations from ${e.debugName}`},s=>{const o=e.read(s);n.set(o)})),t.add({dispose:()=>{n.clear()}}),t}function J(i,e){return i.appendChild(e),v(()=>{e.remove()})}function K(i,e){return i.prepend(e),v(()=>{e.remove()})}class X extends ${get width(){return this.g}get height(){return this.h}get automaticLayout(){return this.n}constructor(e,t){super(),this.n=!1,this.f=this.B(new j(e,t)),this.g=g(this,this.f.getWidth()),this.h=g(this,this.f.getHeight()),this.B(this.f.onDidChange(n=>D(s=>{this.g.set(this.f.getWidth(),s),this.h.set(this.f.getHeight(),s)})))}observe(e){this.f.observe(e)}setAutomaticLayout(e){this.n=e,e?this.f.startObserving():this.f.stopObserving()}}function Y(i,e,t){let n=e.get(),s=n,o=n;const h=g("animatedValue",n);let f=-1;const c=300;let d;t.add(y({changeTracker:{createChangeSummary:()=>({animate:!1}),handleChange:(u,r)=>(u.didChange(e)&&(r.animate=r.animate||u.change),!0)}},(u,r)=>{d!==void 0&&(i.cancelAnimationFrame(d),d=void 0),s=o,n=e.read(u),f=Date.now()-(r.animate?0:c),l()}));function l(){const u=Date.now()-f;o=Math.floor(M(u,s,n-s,c)),u<c?d=i.requestAnimationFrame(l):o=n,h.set(o,void 0)}return h}function M(i,e,t,n){return i===n?e+t:t*(-Math.pow(2,-10*i/n)+1)+e}function B(i,e){const t={};for(const n in i)t[n]=i[n];for(const n in e){const s=e[n];typeof t[n]=="object"&&s&&typeof s=="object"?t[n]=B(t[n],s):t[n]=s}return t}class I extends ${constructor(e,t,n){super(),this.B(new x(e,n)),this.B(E(n,{height:t.actualHeight,top:t.actualTop}))}}class U{get afterLineNumber(){return this.h.get()}constructor(e,t){this.h=e,this.heightInPx=t,this.domNode=document.createElement("div"),this.f=g(this,void 0),this.g=g(this,void 0),this.actualTop=this.f,this.actualHeight=this.g,this.showInHiddenAreas=!0,this.onChange=this.h,this.onDomNodeTop=n=>{this.f.set(n,void 0)},this.onComputedHeight=n=>{this.g.set(n,void 0)}}}class x{static{this.f=0}constructor(e,t){this.k=e,this.n=t,this.g=`managedOverlayWidget-${x.f++}`,this.h={getId:()=>this.g,getDomNode:()=>this.n,getPosition:()=>null},this.k.addOverlayWidget(this.h)}dispose(){this.k.removeOverlayWidget(this.h)}}function E(i,e){return k(t=>{for(let[n,s]of Object.entries(e))s&&typeof s=="object"&&"read"in s&&(s=s.read(t)),typeof s=="number"&&(s=`${s}px`),n=n.replace(/[A-Z]/g,o=>"-"+o.toLowerCase()),i.style[n]=s})}function ee(i,e,t,n){const s=new w,o=[];return s.add(V((h,f)=>{const c=e.read(h),d=new Map,l=new Map;t&&t(!0),i.changeViewZones(u=>{for(const r of o)u.removeZone(r),n?.delete(r);o.length=0;for(const r of c){const a=u.addZone(r);r.setZoneId&&r.setZoneId(a),o.push(a),n?.add(a),d.set(r,a)}}),t&&t(!1),f.add(y({changeTracker:{createChangeSummary(){return{zoneIds:[]}},handleChange(u,r){const a=l.get(u.changedObservable);return a!==void 0&&r.zoneIds.push(a),!0}}},(u,r)=>{for(const a of c)a.onChange&&(l.set(a.onChange,d.get(a)),a.onChange.read(u));t&&t(!0),i.changeViewZones(a=>{for(const Z of r.zoneIds)a.layoutZone(Z)}),t&&t(!1)}))})),s.add({dispose(){t&&t(!0),i.changeViewZones(h=>{for(const f of o)h.removeZone(f)}),n?.clear(),t&&t(!1)}}),s}class te extends R{dispose(){super.dispose(!0)}}function ne(i,e){const t=C(e,s=>s.original.startLineNumber<=i.lineNumber);if(!t)return m.fromPositions(i);if(t.original.endLineNumberExclusive<=i.lineNumber){const s=i.lineNumber-t.original.endLineNumberExclusive+t.modified.endLineNumberExclusive;return m.fromPositions(new p(s,i.column))}if(!t.innerChanges)return m.fromPositions(new p(t.modified.startLineNumber,1));const n=C(t.innerChanges,s=>s.originalRange.getStartPosition().isBeforeOrEqual(i));if(!n){const s=i.lineNumber-t.original.startLineNumber+t.modified.startLineNumber;return m.fromPositions(new p(s,i.column))}if(n.originalRange.containsPosition(i))return n.modifiedRange;{const s=H(n.originalRange.getEndPosition(),i);return m.fromPositions(s.addToPosition(n.modifiedRange.getEndPosition()))}}function H(i,e){return i.lineNumber===e.lineNumber?new N(0,e.column-i.column):new N(e.lineNumber-i.lineNumber,e.column-1)}function ie(i,e){let t;return i.filter(n=>{const s=e(n,t);return t=n,s})}class P{static create(e,t=void 0){return new b(e,e,t)}static createWithDisposable(e,t,n=void 0){const s=new w;return s.add(t),s.add(e),new b(e,s,n)}static createOfNonDisposable(e,t,n=void 0){return new b(e,t,n)}}class b extends P{constructor(e,t,n){super(),this.object=e,this.k=t,this.n=n,this.f=1,this.g=!1,this.h=[],n&&this.o(n)}o(e){e&&this.h.push(e)}createNewRef(e){return this.f++,e&&this.o(e),new A(this,e)}dispose(){this.g||(this.g=!0,this._decreaseRefCount(this.n))}_decreaseRefCount(e){if(this.f--,this.f===0&&this.k.dispose(),e){const t=this.h.indexOf(e);t!==-1&&this.h.splice(t,1)}}}class A extends P{constructor(e,t){super(),this.g=e,this.h=t,this.f=!1}get object(){return this.g.object}createNewRef(e){return this.g.createNewRef(e)}dispose(){this.f||(this.f=!0,this.g._decreaseRefCount(this.h))}}export{Q as $aeb,G as $beb,J as $ceb,K as $deb,X as $eeb,Y as $feb,B as $geb,I as $heb,U as $ieb,x as $jeb,E as $keb,ee as $leb,te as $meb,ne as $neb,ie as $oeb,P as $peb};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { findLast } from "../../../../base/common/arraysFind.js";
+import { CancellationTokenSource } from "../../../../base/common/cancellation.js";
+import { Disposable, DisposableStore, toDisposable } from "../../../../base/common/lifecycle.js";
+import { autorun, autorunHandleChanges, autorunOpts, autorunWithStore, observableValue, transaction } from "../../../../base/common/observable.js";
+import { ElementSizeObserver } from "../../config/elementSizeObserver.js";
+import { Position } from "../../../common/core/position.js";
+import { Range } from "../../../common/core/range.js";
+import { TextLength } from "../../../common/core/text/textLength.js";
+function joinCombine(arr1, arr2, keySelector, combine) {
+  if (arr1.length === 0) {
+    return arr2;
+  }
+  if (arr2.length === 0) {
+    return arr1;
+  }
+  const result = [];
+  let i = 0;
+  let j = 0;
+  while (i < arr1.length && j < arr2.length) {
+    const val1 = arr1[i];
+    const val2 = arr2[j];
+    const key1 = keySelector(val1);
+    const key2 = keySelector(val2);
+    if (key1 < key2) {
+      result.push(val1);
+      i++;
+    } else if (key1 > key2) {
+      result.push(val2);
+      j++;
+    } else {
+      result.push(combine(val1, val2));
+      i++;
+      j++;
+    }
+  }
+  while (i < arr1.length) {
+    result.push(arr1[i]);
+    i++;
+  }
+  while (j < arr2.length) {
+    result.push(arr2[j]);
+    j++;
+  }
+  return result;
+}
+__name(joinCombine, "joinCombine");
+function applyObservableDecorations(editor, decorations) {
+  const d = new DisposableStore();
+  const decorationsCollection = editor.createDecorationsCollection();
+  d.add(autorunOpts({ debugName: /* @__PURE__ */ __name(() => `Apply decorations from ${decorations.debugName}`, "debugName") }, (reader) => {
+    const d2 = decorations.read(reader);
+    decorationsCollection.set(d2);
+  }));
+  d.add({
+    dispose: /* @__PURE__ */ __name(() => {
+      decorationsCollection.clear();
+    }, "dispose")
+  });
+  return d;
+}
+__name(applyObservableDecorations, "applyObservableDecorations");
+function appendRemoveOnDispose(parent, child) {
+  parent.appendChild(child);
+  return toDisposable(() => {
+    child.remove();
+  });
+}
+__name(appendRemoveOnDispose, "appendRemoveOnDispose");
+function prependRemoveOnDispose(parent, child) {
+  parent.prepend(child);
+  return toDisposable(() => {
+    child.remove();
+  });
+}
+__name(prependRemoveOnDispose, "prependRemoveOnDispose");
+class ObservableElementSizeObserver extends Disposable {
+  static {
+    __name(this, "ObservableElementSizeObserver");
+  }
+  get width() {
+    return this._width;
+  }
+  get height() {
+    return this._height;
+  }
+  get automaticLayout() {
+    return this._automaticLayout;
+  }
+  constructor(element, dimension) {
+    super();
+    this._automaticLayout = false;
+    this.elementSizeObserver = this._register(new ElementSizeObserver(element, dimension));
+    this._width = observableValue(this, this.elementSizeObserver.getWidth());
+    this._height = observableValue(this, this.elementSizeObserver.getHeight());
+    this._register(this.elementSizeObserver.onDidChange((e) => transaction((tx) => {
+      this._width.set(this.elementSizeObserver.getWidth(), tx);
+      this._height.set(this.elementSizeObserver.getHeight(), tx);
+    })));
+  }
+  observe(dimension) {
+    this.elementSizeObserver.observe(dimension);
+  }
+  setAutomaticLayout(automaticLayout) {
+    this._automaticLayout = automaticLayout;
+    if (automaticLayout) {
+      this.elementSizeObserver.startObserving();
+    } else {
+      this.elementSizeObserver.stopObserving();
+    }
+  }
+}
+function animatedObservable(targetWindow, base, store) {
+  let targetVal = base.get();
+  let startVal = targetVal;
+  let curVal = targetVal;
+  const result = observableValue("animatedValue", targetVal);
+  let animationStartMs = -1;
+  const durationMs = 300;
+  let animationFrame = void 0;
+  store.add(autorunHandleChanges({
+    changeTracker: {
+      createChangeSummary: /* @__PURE__ */ __name(() => ({ animate: false }), "createChangeSummary"),
+      handleChange: /* @__PURE__ */ __name((ctx, s) => {
+        if (ctx.didChange(base)) {
+          s.animate = s.animate || ctx.change;
+        }
+        return true;
+      }, "handleChange")
+    }
+  }, (reader, s) => {
+    if (animationFrame !== void 0) {
+      targetWindow.cancelAnimationFrame(animationFrame);
+      animationFrame = void 0;
+    }
+    startVal = curVal;
+    targetVal = base.read(reader);
+    animationStartMs = Date.now() - (s.animate ? 0 : durationMs);
+    update();
+  }));
+  function update() {
+    const passedMs = Date.now() - animationStartMs;
+    curVal = Math.floor(easeOutExpo(passedMs, startVal, targetVal - startVal, durationMs));
+    if (passedMs < durationMs) {
+      animationFrame = targetWindow.requestAnimationFrame(update);
+    } else {
+      curVal = targetVal;
+    }
+    result.set(curVal, void 0);
+  }
+  __name(update, "update");
+  return result;
+}
+__name(animatedObservable, "animatedObservable");
+function easeOutExpo(t, b, c, d) {
+  return t === d ? b + c : c * (-Math.pow(2, -10 * t / d) + 1) + b;
+}
+__name(easeOutExpo, "easeOutExpo");
+function deepMerge(source1, source2) {
+  const result = {};
+  for (const key in source1) {
+    result[key] = source1[key];
+  }
+  for (const key in source2) {
+    const source2Value = source2[key];
+    if (typeof result[key] === "object" && source2Value && typeof source2Value === "object") {
+      result[key] = deepMerge(result[key], source2Value);
+    } else {
+      result[key] = source2Value;
+    }
+  }
+  return result;
+}
+__name(deepMerge, "deepMerge");
+class ViewZoneOverlayWidget extends Disposable {
+  static {
+    __name(this, "ViewZoneOverlayWidget");
+  }
+  constructor(editor, viewZone, htmlElement) {
+    super();
+    this._register(new ManagedOverlayWidget(editor, htmlElement));
+    this._register(applyStyle(htmlElement, {
+      height: viewZone.actualHeight,
+      top: viewZone.actualTop
+    }));
+  }
+}
+class PlaceholderViewZone {
+  static {
+    __name(this, "PlaceholderViewZone");
+  }
+  get afterLineNumber() {
+    return this._afterLineNumber.get();
+  }
+  constructor(_afterLineNumber, heightInPx) {
+    this._afterLineNumber = _afterLineNumber;
+    this.heightInPx = heightInPx;
+    this.domNode = document.createElement("div");
+    this._actualTop = observableValue(this, void 0);
+    this._actualHeight = observableValue(this, void 0);
+    this.actualTop = this._actualTop;
+    this.actualHeight = this._actualHeight;
+    this.showInHiddenAreas = true;
+    this.onChange = this._afterLineNumber;
+    this.onDomNodeTop = (top) => {
+      this._actualTop.set(top, void 0);
+    };
+    this.onComputedHeight = (height) => {
+      this._actualHeight.set(height, void 0);
+    };
+  }
+}
+class ManagedOverlayWidget {
+  static {
+    __name(this, "ManagedOverlayWidget");
+  }
+  static {
+    this._counter = 0;
+  }
+  constructor(_editor, _domElement) {
+    this._editor = _editor;
+    this._domElement = _domElement;
+    this._overlayWidgetId = `managedOverlayWidget-${ManagedOverlayWidget._counter++}`;
+    this._overlayWidget = {
+      getId: /* @__PURE__ */ __name(() => this._overlayWidgetId, "getId"),
+      getDomNode: /* @__PURE__ */ __name(() => this._domElement, "getDomNode"),
+      getPosition: /* @__PURE__ */ __name(() => null, "getPosition")
+    };
+    this._editor.addOverlayWidget(this._overlayWidget);
+  }
+  dispose() {
+    this._editor.removeOverlayWidget(this._overlayWidget);
+  }
+}
+function applyStyle(domNode, style) {
+  return autorun((reader) => {
+    for (let [key, val] of Object.entries(style)) {
+      if (val && typeof val === "object" && "read" in val) {
+        val = val.read(reader);
+      }
+      if (typeof val === "number") {
+        val = `${val}px`;
+      }
+      key = key.replace(/[A-Z]/g, (m) => "-" + m.toLowerCase());
+      domNode.style[key] = val;
+    }
+  });
+}
+__name(applyStyle, "applyStyle");
+function applyViewZones(editor, viewZones, setIsUpdating, zoneIds) {
+  const store = new DisposableStore();
+  const lastViewZoneIds = [];
+  store.add(autorunWithStore((reader, store2) => {
+    const curViewZones = viewZones.read(reader);
+    const viewZonIdsPerViewZone = /* @__PURE__ */ new Map();
+    const viewZoneIdPerOnChangeObservable = /* @__PURE__ */ new Map();
+    if (setIsUpdating) {
+      setIsUpdating(true);
+    }
+    editor.changeViewZones((a) => {
+      for (const id of lastViewZoneIds) {
+        a.removeZone(id);
+        zoneIds?.delete(id);
+      }
+      lastViewZoneIds.length = 0;
+      for (const z of curViewZones) {
+        const id = a.addZone(z);
+        if (z.setZoneId) {
+          z.setZoneId(id);
+        }
+        lastViewZoneIds.push(id);
+        zoneIds?.add(id);
+        viewZonIdsPerViewZone.set(z, id);
+      }
+    });
+    if (setIsUpdating) {
+      setIsUpdating(false);
+    }
+    store2.add(autorunHandleChanges({
+      changeTracker: {
+        createChangeSummary() {
+          return { zoneIds: [] };
+        },
+        handleChange(context, changeSummary) {
+          const id = viewZoneIdPerOnChangeObservable.get(context.changedObservable);
+          if (id !== void 0) {
+            changeSummary.zoneIds.push(id);
+          }
+          return true;
+        }
+      }
+    }, (reader2, changeSummary) => {
+      for (const vz of curViewZones) {
+        if (vz.onChange) {
+          viewZoneIdPerOnChangeObservable.set(vz.onChange, viewZonIdsPerViewZone.get(vz));
+          vz.onChange.read(reader2);
+        }
+      }
+      if (setIsUpdating) {
+        setIsUpdating(true);
+      }
+      editor.changeViewZones((a) => {
+        for (const id of changeSummary.zoneIds) {
+          a.layoutZone(id);
+        }
+      });
+      if (setIsUpdating) {
+        setIsUpdating(false);
+      }
+    }));
+  }));
+  store.add({
+    dispose() {
+      if (setIsUpdating) {
+        setIsUpdating(true);
+      }
+      editor.changeViewZones((a) => {
+        for (const id of lastViewZoneIds) {
+          a.removeZone(id);
+        }
+      });
+      zoneIds?.clear();
+      if (setIsUpdating) {
+        setIsUpdating(false);
+      }
+    }
+  });
+  return store;
+}
+__name(applyViewZones, "applyViewZones");
+class DisposableCancellationTokenSource extends CancellationTokenSource {
+  static {
+    __name(this, "DisposableCancellationTokenSource");
+  }
+  dispose() {
+    super.dispose(true);
+  }
+}
+function translatePosition(posInOriginal, mappings) {
+  const mapping = findLast(mappings, (m) => m.original.startLineNumber <= posInOriginal.lineNumber);
+  if (!mapping) {
+    return Range.fromPositions(posInOriginal);
+  }
+  if (mapping.original.endLineNumberExclusive <= posInOriginal.lineNumber) {
+    const newLineNumber = posInOriginal.lineNumber - mapping.original.endLineNumberExclusive + mapping.modified.endLineNumberExclusive;
+    return Range.fromPositions(new Position(newLineNumber, posInOriginal.column));
+  }
+  if (!mapping.innerChanges) {
+    return Range.fromPositions(new Position(mapping.modified.startLineNumber, 1));
+  }
+  const innerMapping = findLast(mapping.innerChanges, (m) => m.originalRange.getStartPosition().isBeforeOrEqual(posInOriginal));
+  if (!innerMapping) {
+    const newLineNumber = posInOriginal.lineNumber - mapping.original.startLineNumber + mapping.modified.startLineNumber;
+    return Range.fromPositions(new Position(newLineNumber, posInOriginal.column));
+  }
+  if (innerMapping.originalRange.containsPosition(posInOriginal)) {
+    return innerMapping.modifiedRange;
+  } else {
+    const l = lengthBetweenPositions(innerMapping.originalRange.getEndPosition(), posInOriginal);
+    return Range.fromPositions(l.addToPosition(innerMapping.modifiedRange.getEndPosition()));
+  }
+}
+__name(translatePosition, "translatePosition");
+function lengthBetweenPositions(position1, position2) {
+  if (position1.lineNumber === position2.lineNumber) {
+    return new TextLength(0, position2.column - position1.column);
+  } else {
+    return new TextLength(position2.lineNumber - position1.lineNumber, position2.column - 1);
+  }
+}
+__name(lengthBetweenPositions, "lengthBetweenPositions");
+function filterWithPrevious(arr, filter) {
+  let prev;
+  return arr.filter((cur) => {
+    const result = filter(cur, prev);
+    prev = cur;
+    return result;
+  });
+}
+__name(filterWithPrevious, "filterWithPrevious");
+class RefCounted {
+  static {
+    __name(this, "RefCounted");
+  }
+  static create(value, debugOwner = void 0) {
+    return new BaseRefCounted(value, value, debugOwner);
+  }
+  static createWithDisposable(value, disposable, debugOwner = void 0) {
+    const store = new DisposableStore();
+    store.add(disposable);
+    store.add(value);
+    return new BaseRefCounted(value, store, debugOwner);
+  }
+  static createOfNonDisposable(value, disposable, debugOwner = void 0) {
+    return new BaseRefCounted(value, disposable, debugOwner);
+  }
+}
+class BaseRefCounted extends RefCounted {
+  static {
+    __name(this, "BaseRefCounted");
+  }
+  constructor(object, _disposable, _debugOwner) {
+    super();
+    this.object = object;
+    this._disposable = _disposable;
+    this._debugOwner = _debugOwner;
+    this._refCount = 1;
+    this._isDisposed = false;
+    this._owners = [];
+    if (_debugOwner) {
+      this._addOwner(_debugOwner);
+    }
+  }
+  _addOwner(debugOwner) {
+    if (debugOwner) {
+      this._owners.push(debugOwner);
+    }
+  }
+  createNewRef(debugOwner) {
+    this._refCount++;
+    if (debugOwner) {
+      this._addOwner(debugOwner);
+    }
+    return new ClonedRefCounted(this, debugOwner);
+  }
+  dispose() {
+    if (this._isDisposed) {
+      return;
+    }
+    this._isDisposed = true;
+    this._decreaseRefCount(this._debugOwner);
+  }
+  _decreaseRefCount(debugOwner) {
+    this._refCount--;
+    if (this._refCount === 0) {
+      this._disposable.dispose();
+    }
+    if (debugOwner) {
+      const idx = this._owners.indexOf(debugOwner);
+      if (idx !== -1) {
+        this._owners.splice(idx, 1);
+      }
+    }
+  }
+}
+class ClonedRefCounted extends RefCounted {
+  static {
+    __name(this, "ClonedRefCounted");
+  }
+  constructor(_base, _debugOwner) {
+    super();
+    this._base = _base;
+    this._debugOwner = _debugOwner;
+    this._isDisposed = false;
+  }
+  get object() {
+    return this._base.object;
+  }
+  createNewRef(debugOwner) {
+    return this._base.createNewRef(debugOwner);
+  }
+  dispose() {
+    if (this._isDisposed) {
+      return;
+    }
+    this._isDisposed = true;
+    this._base._decreaseRefCount(this._debugOwner);
+  }
+}
+export {
+  DisposableCancellationTokenSource,
+  ManagedOverlayWidget,
+  ObservableElementSizeObserver,
+  PlaceholderViewZone,
+  RefCounted,
+  ViewZoneOverlayWidget,
+  animatedObservable,
+  appendRemoveOnDispose,
+  applyObservableDecorations,
+  applyStyle,
+  applyViewZones,
+  deepMerge,
+  filterWithPrevious,
+  joinCombine,
+  prependRemoveOnDispose,
+  translatePosition
+};
+//# sourceMappingURL=utils.js.map

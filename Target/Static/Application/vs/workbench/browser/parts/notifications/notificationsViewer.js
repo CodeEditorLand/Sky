@@ -1,1 +1,446 @@
-import{$I5 as A,$J5 as P,$F6 as y,$H6 as $,$ as h,$G6 as z}from"../../../../base/browser/dom.js";import{$4$ as U}from"../../../../platform/opener/common/opener.js";import{URI as q}from"../../../../base/common/uri.js";import{localize as f}from"../../../../nls.js";import{$s9 as V}from"../../../../base/browser/ui/button/button.js";import{$M7 as X}from"../../../../base/browser/ui/actionbar/actionbar.js";import{$am as Y,$bm as Q,$em as Z}from"../../../../base/common/actions.js";import{$mj as W}from"../../../../platform/instantiation/common/instantiation.js";import{$qd as J,$ud as B,$vd as ee}from"../../../../base/common/lifecycle.js";import{$ofb as G}from"../../../../platform/contextview/browser/contextView.js";import{$35b as te,$45b as F}from"../../../common/notifications.js";import{$zyc as I,$Fyc as v,$Gyc as D,$Hyc as C}from"./notificationsActions.js";import{$ux as se}from"../../../../platform/keybinding/common/keybinding.js";import{$d0 as re}from"../../../../base/browser/ui/progressbar/progressbar.js";import{$RI as oe,NotificationsFilter as E,Severity as u,$SI as ie}from"../../../../platform/notification/common/notification.js";import{$$b as x}from"../../../../base/common/arrays.js";import{$Mj as R}from"../../../../base/common/codicons.js";import{ThemeIcon as K}from"../../../../base/common/themables.js";import{$R9 as ne}from"../../../../base/browser/ui/dropdown/dropdownActionViewItem.js";import{$$7 as L}from"../../../../base/browser/event.js";import{$l7 as ae,EventType as he}from"../../../../base/browser/touch.js";import{Event as _}from"../../../../base/common/event.js";import{$Mfb as de,$Ofb as ce}from"../../../../platform/theme/browser/defaultStyles.js";import{$G5 as le}from"../../../../base/browser/keyboardEvent.js";import{$K7 as j}from"../../../../base/browser/ui/hover/hoverDelegateFactory.js";import{$ngb as pe}from"../../../../platform/hover/browser/hover.js";var T,d,N=function(t,e,s,o){var i,n=arguments.length,a=n<3?e:null===o?o=Object.getOwnPropertyDescriptor(e,s):o;if("object"==typeof Reflect&&"function"==typeof Reflect.decorate)a=Reflect.decorate(t,e,s,o);else for(var r=t.length-1;r>=0;r--)(i=t[r])&&(a=(n<3?i(a):n>3?i(e,s,a):i(e,s))||a);return n>3&&a&&Object.defineProperty(e,s,a),a},l=function(t,e){return function(s,o){e(s,o,t)}};class m{static{this.a=42}static{this.b=22}constructor(t){this.c=this.d(t)}d(t){return t.appendChild(h(".notification-offset-helper"))}getHeight(t){if(!t.expanded)return m.a;let e=m.a;const s=this.f(t);if(m.b<s){e+=s-m.b}return(t.source||x(t.actions&&t.actions.primary))&&(e+=m.a),e===m.a&&t.collapse(!0),e}f(t){let e=0;t.hasProgress||e++,t.canCollapse&&e++,x(t.actions&&t.actions.secondary)&&e++,this.c.style.width=450-(40+30*e-4*Math.max(e-1,0))+"px";const s=H.render(t.message);this.c.appendChild(s);const o=Math.max(this.c.offsetHeight,this.c.scrollHeight);return A(this.c),o}getTemplateId(t){if(t instanceof te)return O.TEMPLATE_ID;throw new Error("unknown element type: "+t)}}class H{static render(t,e){const s=h("span");for(const o of t.linkedText.nodes)if("string"==typeof o)s.appendChild(document.createTextNode(o));else{let t=o.title;!t&&o.href.startsWith("command:")?t=f(3846,null,o.href.substr(8)):t||(t=o.href);const i=h("a",{href:o.href,title:t,tabIndex:0},o.label);if(e){const t=t=>{z(t)&&$.stop(t,!0),e.callback(o.href)},s=e.toDispose.add(new L(i,y.CLICK)).event,n=e.toDispose.add(new L(i,y.KEY_DOWN)).event,a=_.chain(n,(t=>t.filter((t=>{const e=new le(t);return e.equals(10)||e.equals(3)}))));e.toDispose.add(ae.addTarget(i));const r=e.toDispose.add(new L(i,he.Tap)).event;_.any(s,r,a)(t,null,e.toDispose)}s.appendChild(i)}return s}}let O=class{static{T=this}static{this.TEMPLATE_ID="notification"}constructor(t,e,s,o){this.a=t,this.b=e,this.c=s,this.d=o}get templateId(){return T.TEMPLATE_ID}renderTemplate(t){const e=Object.create(null);e.toDispose=new B,e.container=h(".notification-list-item"),e.mainRow=h(".notification-list-item-main-row"),e.icon=h(".notification-list-item-icon.codicon"),e.message=h(".notification-list-item-message");const s=this,o=h(".notification-list-item-toolbar-container");return e.toolbar=new X(o,{ariaLabel:f(3847,null),actionViewItemProvider:(t,o)=>{if(t instanceof C)return e.toDispose.add(new ne(t,{getActions(){const e=[],o={id:t.notification.sourceId,label:t.notification.source};if(ie(o)){const i=s.d.getFilter(o)===E.ERROR;e.push(Z({id:o.id,label:f(i?3848:3849,null,o.label),run:()=>s.d.setFilter({...o,filter:i?E.OFF:E.ERROR})})),t.notification.actions?.secondary?.length&&e.push(new Q)}return Array.isArray(t.notification.actions?.secondary)&&e.push(...t.notification.actions.secondary),e}},this.b,{...o,actionRunner:this.a,classNames:t.class}))},actionRunner:this.a}),e.toDispose.add(e.toolbar),e.detailsRow=h(".notification-list-item-details-row"),e.source=h(".notification-list-item-source"),e.buttonsContainer=h(".notification-list-item-buttons-container"),t.appendChild(e.container),e.container.appendChild(e.detailsRow),e.detailsRow.appendChild(e.source),e.detailsRow.appendChild(e.buttonsContainer),e.container.appendChild(e.mainRow),e.mainRow.appendChild(e.icon),e.mainRow.appendChild(e.message),e.mainRow.appendChild(o),e.progress=new re(t,ce),e.toDispose.add(e.progress),e.renderer=this.c.createInstance(M,e,this.a),e.toDispose.add(e.renderer),e}renderElement(t,e,s){s.renderer.setInput(t)}disposeTemplate(t){J(t.toDispose)}};O=T=N([l(1,G),l(2,W),l(3,oe)],O);let M=class extends ee{static{d=this}static{this.f=[u.Info,u.Warning,u.Error]}constructor(t,e,s,o,i,n,a){super(),this.h=t,this.j=e,this.m=s,this.n=o,this.r=i,this.s=n,this.t=a,this.g=this.B(new B),d.a||(d.a=o.createInstance(I,I.ID,I.LABEL),d.b=o.createInstance(v,v.ID,v.LABEL),d.c=o.createInstance(D,D.ID,D.LABEL))}setInput(t){this.g.clear(),this.u(t)}u(t){this.h.container.classList.toggle("expanded",t.expanded),this.g.add(P(this.h.container,y.MOUSE_UP,(t=>{1===t.button&&$.stop(t,!0)}))),this.g.add(P(this.h.container,y.AUXCLICK,(e=>{!t.hasProgress&&1===e.button&&($.stop(e,!0),t.close())}))),this.w(t);const e=this.g.add(this.t.setupManagedHover(j("mouse"),this.h.message,"")),s=this.y(t,e);this.z(t,s);const o=this.g.add(this.t.setupManagedHover(j("mouse"),this.h.source,""));this.C(t,o),this.D(t),this.F(t),this.g.add(t.onDidChangeContent((s=>{switch(s.kind){case 0:this.w(t);break;case 3:this.F(t);break;case 1:this.y(t,e)}})))}w(t){d.f.forEach((e=>{t.severity!==e&&this.h.icon.classList.remove(...K.asClassNameArray(this.G(e)))})),this.h.icon.classList.add(...K.asClassNameArray(this.G(t.severity)))}y(t,e){A(this.h.message),this.h.message.appendChild(H.render(t.message,{callback:t=>this.m.open(q.parse(t),{allowCommands:!0}),toDispose:this.g}));const s=t.canCollapse&&!t.expanded&&this.h.message.scrollWidth>this.h.message.clientWidth;return e.update(s?this.h.message.textContent+"":""),s}z(t,e){const s=[];if(x(t.actions?.secondary)){const e=this.n.createInstance(C,C.ID,C.LABEL,t);s.push(e),this.g.add(e)}let o=!1;t.canCollapse&&(t.expanded||t.source||e)&&(o=!0),o&&s.push(t.expanded?d.c:d.b),t.hasProgress||s.push(d.a),this.h.toolbar.clear(),this.h.toolbar.context=t,s.forEach((t=>this.h.toolbar.push(t,{icon:!0,label:!1,keybinding:this.H(t)})))}C(t,e){t.expanded&&t.source?(this.h.source.textContent=f(3850,null,t.source),e.update(t.source)):(this.h.source.textContent="",e.update(""))}D(t){A(this.h.buttonsContainer);const e=t.actions?t.actions.primary:void 0;if(t.expanded&&x(e)){const s=this,o=this.g.add(new class extends Y{async u(e){s.j.run(e,t),(!(e instanceof F)||!e.keepOpen)&&t.close()}}),i=this.g.add(new V(this.h.buttonsContainer));for(let t=0;t<e.length;t++){const s=e[t],n={title:!0,secondary:t>0,...de},a=s instanceof F?s.menu:void 0,r=this.g.add(a?i.addButtonWithDropdown({...n,contextMenuProvider:this.s,actions:a,actionRunner:o}):i.addButton(n));r.label=s.label,this.g.add(r.onDidClick((t=>{t&&$.stop(t,!0),o.run(s)})))}}}F(t){if(!t.hasProgress)return void this.h.progress.stop().hide();const e=t.progress.state;e.infinite?this.h.progress.infinite().show():"number"==typeof e.total||"number"==typeof e.worked?("number"==typeof e.total&&!this.h.progress.hasTotal()&&this.h.progress.total(e.total),"number"==typeof e.worked&&this.h.progress.setWorked(e.worked).show()):this.h.progress.done().hide()}G(t){switch(t){case u.Warning:return R.warning;case u.Error:return R.error}return R.info}H(t){const e=this.r.lookupKeybinding(t.id);return e?e.getLabel():null}};M=d=N([l(2,U),l(3,W),l(4,se),l(5,G),l(6,pe)],M);export{m as $Jyc,O as $Kyc,M as $Lyc};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { clearNode, addDisposableListener, EventType, EventHelper, $, isEventLike } from "../../../../base/browser/dom.js";
+import { IOpenerService } from "../../../../platform/opener/common/opener.js";
+import { URI } from "../../../../base/common/uri.js";
+import { localize } from "../../../../nls.js";
+import { ButtonBar } from "../../../../base/browser/ui/button/button.js";
+import { ActionBar } from "../../../../base/browser/ui/actionbar/actionbar.js";
+import { ActionRunner, Separator, toAction } from "../../../../base/common/actions.js";
+import { IInstantiationService } from "../../../../platform/instantiation/common/instantiation.js";
+import { dispose, DisposableStore, Disposable } from "../../../../base/common/lifecycle.js";
+import { IContextMenuService } from "../../../../platform/contextview/browser/contextView.js";
+import { NotificationViewItem, ChoiceAction } from "../../../common/notifications.js";
+import { ClearNotificationAction, ExpandNotificationAction, CollapseNotificationAction, ConfigureNotificationAction } from "./notificationsActions.js";
+import { IKeybindingService } from "../../../../platform/keybinding/common/keybinding.js";
+import { ProgressBar } from "../../../../base/browser/ui/progressbar/progressbar.js";
+import { INotificationService, NotificationsFilter, Severity, isNotificationSource } from "../../../../platform/notification/common/notification.js";
+import { isNonEmptyArray } from "../../../../base/common/arrays.js";
+import { Codicon } from "../../../../base/common/codicons.js";
+import { ThemeIcon } from "../../../../base/common/themables.js";
+import { DropdownMenuActionViewItem } from "../../../../base/browser/ui/dropdown/dropdownActionViewItem.js";
+import { DomEmitter } from "../../../../base/browser/event.js";
+import { Gesture, EventType as GestureEventType } from "../../../../base/browser/touch.js";
+import { Event } from "../../../../base/common/event.js";
+import { defaultButtonStyles, defaultProgressBarStyles } from "../../../../platform/theme/browser/defaultStyles.js";
+import { StandardKeyboardEvent } from "../../../../base/browser/keyboardEvent.js";
+import { getDefaultHoverDelegate } from "../../../../base/browser/ui/hover/hoverDelegateFactory.js";
+import { IHoverService } from "../../../../platform/hover/browser/hover.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+var NotificationRenderer_1;
+var NotificationTemplateRenderer_1;
+class NotificationsListDelegate {
+  static {
+    __name(this, "NotificationsListDelegate");
+  }
+  static {
+    this.ROW_HEIGHT = 42;
+  }
+  static {
+    this.LINE_HEIGHT = 22;
+  }
+  constructor(container) {
+    this.offsetHelper = this.createOffsetHelper(container);
+  }
+  createOffsetHelper(container) {
+    return container.appendChild($(".notification-offset-helper"));
+  }
+  getHeight(notification) {
+    if (!notification.expanded) {
+      return NotificationsListDelegate.ROW_HEIGHT;
+    }
+    let expandedHeight = NotificationsListDelegate.ROW_HEIGHT;
+    const preferredMessageHeight = this.computePreferredHeight(notification);
+    const messageOverflows = NotificationsListDelegate.LINE_HEIGHT < preferredMessageHeight;
+    if (messageOverflows) {
+      const overflow = preferredMessageHeight - NotificationsListDelegate.LINE_HEIGHT;
+      expandedHeight += overflow;
+    }
+    if (notification.source || isNonEmptyArray(notification.actions && notification.actions.primary)) {
+      expandedHeight += NotificationsListDelegate.ROW_HEIGHT;
+    }
+    if (expandedHeight === NotificationsListDelegate.ROW_HEIGHT) {
+      notification.collapse(
+        true
+        /* skip events, no change in height */
+      );
+    }
+    return expandedHeight;
+  }
+  computePreferredHeight(notification) {
+    let actions = 0;
+    if (!notification.hasProgress) {
+      actions++;
+    }
+    if (notification.canCollapse) {
+      actions++;
+    }
+    if (isNonEmptyArray(notification.actions && notification.actions.secondary)) {
+      actions++;
+    }
+    this.offsetHelper.style.width = `${450 - (10 + 30 + actions * 30 - Math.max(actions - 1, 0) * 4)}px`;
+    const renderedMessage = NotificationMessageRenderer.render(notification.message);
+    this.offsetHelper.appendChild(renderedMessage);
+    const preferredHeight = Math.max(this.offsetHelper.offsetHeight, this.offsetHelper.scrollHeight);
+    clearNode(this.offsetHelper);
+    return preferredHeight;
+  }
+  getTemplateId(element) {
+    if (element instanceof NotificationViewItem) {
+      return NotificationRenderer.TEMPLATE_ID;
+    }
+    throw new Error("unknown element type: " + element);
+  }
+}
+class NotificationMessageRenderer {
+  static {
+    __name(this, "NotificationMessageRenderer");
+  }
+  static render(message, actionHandler) {
+    const messageContainer = $("span");
+    for (const node of message.linkedText.nodes) {
+      if (typeof node === "string") {
+        messageContainer.appendChild(document.createTextNode(node));
+      } else {
+        let title = node.title;
+        if (!title && node.href.startsWith("command:")) {
+          title = localize("executeCommand", "Click to execute command '{0}'", node.href.substr("command:".length));
+        } else if (!title) {
+          title = node.href;
+        }
+        const anchor = $("a", { href: node.href, title, tabIndex: 0 }, node.label);
+        if (actionHandler) {
+          const handleOpen = /* @__PURE__ */ __name((e) => {
+            if (isEventLike(e)) {
+              EventHelper.stop(e, true);
+            }
+            actionHandler.callback(node.href);
+          }, "handleOpen");
+          const onClick = actionHandler.toDispose.add(new DomEmitter(anchor, EventType.CLICK)).event;
+          const onKeydown = actionHandler.toDispose.add(new DomEmitter(anchor, EventType.KEY_DOWN)).event;
+          const onSpaceOrEnter = Event.chain(onKeydown, ($2) => $2.filter((e) => {
+            const event = new StandardKeyboardEvent(e);
+            return event.equals(
+              10
+              /* KeyCode.Space */
+            ) || event.equals(
+              3
+              /* KeyCode.Enter */
+            );
+          }));
+          actionHandler.toDispose.add(Gesture.addTarget(anchor));
+          const onTap = actionHandler.toDispose.add(new DomEmitter(anchor, GestureEventType.Tap)).event;
+          Event.any(onClick, onTap, onSpaceOrEnter)(handleOpen, null, actionHandler.toDispose);
+        }
+        messageContainer.appendChild(anchor);
+      }
+    }
+    return messageContainer;
+  }
+}
+let NotificationRenderer = class NotificationRenderer2 {
+  static {
+    __name(this, "NotificationRenderer");
+  }
+  static {
+    NotificationRenderer_1 = this;
+  }
+  static {
+    this.TEMPLATE_ID = "notification";
+  }
+  constructor(actionRunner, contextMenuService, instantiationService, notificationService) {
+    this.actionRunner = actionRunner;
+    this.contextMenuService = contextMenuService;
+    this.instantiationService = instantiationService;
+    this.notificationService = notificationService;
+  }
+  get templateId() {
+    return NotificationRenderer_1.TEMPLATE_ID;
+  }
+  renderTemplate(container) {
+    const data = /* @__PURE__ */ Object.create(null);
+    data.toDispose = new DisposableStore();
+    data.container = $(".notification-list-item");
+    data.mainRow = $(".notification-list-item-main-row");
+    data.icon = $(".notification-list-item-icon.codicon");
+    data.message = $(".notification-list-item-message");
+    const that = this;
+    const toolbarContainer = $(".notification-list-item-toolbar-container");
+    data.toolbar = new ActionBar(toolbarContainer, {
+      ariaLabel: localize("notificationActions", "Notification Actions"),
+      actionViewItemProvider: /* @__PURE__ */ __name((action, options) => {
+        if (action instanceof ConfigureNotificationAction) {
+          return data.toDispose.add(new DropdownMenuActionViewItem(action, {
+            getActions() {
+              const actions = [];
+              const source = { id: action.notification.sourceId, label: action.notification.source };
+              if (isNotificationSource(source)) {
+                const isSourceFiltered = that.notificationService.getFilter(source) === NotificationsFilter.ERROR;
+                actions.push(toAction({
+                  id: source.id,
+                  label: isSourceFiltered ? localize("turnOnNotifications", "Turn On All Notifications from '{0}'", source.label) : localize("turnOffNotifications", "Turn Off Info and Warning Notifications from '{0}'", source.label),
+                  run: /* @__PURE__ */ __name(() => that.notificationService.setFilter({ ...source, filter: isSourceFiltered ? NotificationsFilter.OFF : NotificationsFilter.ERROR }), "run")
+                }));
+                if (action.notification.actions?.secondary?.length) {
+                  actions.push(new Separator());
+                }
+              }
+              if (Array.isArray(action.notification.actions?.secondary)) {
+                actions.push(...action.notification.actions.secondary);
+              }
+              return actions;
+            }
+          }, this.contextMenuService, {
+            ...options,
+            actionRunner: this.actionRunner,
+            classNames: action.class
+          }));
+        }
+        return void 0;
+      }, "actionViewItemProvider"),
+      actionRunner: this.actionRunner
+    });
+    data.toDispose.add(data.toolbar);
+    data.detailsRow = $(".notification-list-item-details-row");
+    data.source = $(".notification-list-item-source");
+    data.buttonsContainer = $(".notification-list-item-buttons-container");
+    container.appendChild(data.container);
+    data.container.appendChild(data.detailsRow);
+    data.detailsRow.appendChild(data.source);
+    data.detailsRow.appendChild(data.buttonsContainer);
+    data.container.appendChild(data.mainRow);
+    data.mainRow.appendChild(data.icon);
+    data.mainRow.appendChild(data.message);
+    data.mainRow.appendChild(toolbarContainer);
+    data.progress = new ProgressBar(container, defaultProgressBarStyles);
+    data.toDispose.add(data.progress);
+    data.renderer = this.instantiationService.createInstance(NotificationTemplateRenderer, data, this.actionRunner);
+    data.toDispose.add(data.renderer);
+    return data;
+  }
+  renderElement(notification, index, data) {
+    data.renderer.setInput(notification);
+  }
+  disposeTemplate(templateData) {
+    dispose(templateData.toDispose);
+  }
+};
+NotificationRenderer = NotificationRenderer_1 = __decorate([
+  __param(1, IContextMenuService),
+  __param(2, IInstantiationService),
+  __param(3, INotificationService)
+], NotificationRenderer);
+let NotificationTemplateRenderer = class NotificationTemplateRenderer2 extends Disposable {
+  static {
+    __name(this, "NotificationTemplateRenderer");
+  }
+  static {
+    NotificationTemplateRenderer_1 = this;
+  }
+  static {
+    this.SEVERITIES = [Severity.Info, Severity.Warning, Severity.Error];
+  }
+  constructor(template, actionRunner, openerService, instantiationService, keybindingService, contextMenuService, hoverService) {
+    super();
+    this.template = template;
+    this.actionRunner = actionRunner;
+    this.openerService = openerService;
+    this.instantiationService = instantiationService;
+    this.keybindingService = keybindingService;
+    this.contextMenuService = contextMenuService;
+    this.hoverService = hoverService;
+    this.inputDisposables = this._register(new DisposableStore());
+    if (!NotificationTemplateRenderer_1.closeNotificationAction) {
+      NotificationTemplateRenderer_1.closeNotificationAction = instantiationService.createInstance(ClearNotificationAction, ClearNotificationAction.ID, ClearNotificationAction.LABEL);
+      NotificationTemplateRenderer_1.expandNotificationAction = instantiationService.createInstance(ExpandNotificationAction, ExpandNotificationAction.ID, ExpandNotificationAction.LABEL);
+      NotificationTemplateRenderer_1.collapseNotificationAction = instantiationService.createInstance(CollapseNotificationAction, CollapseNotificationAction.ID, CollapseNotificationAction.LABEL);
+    }
+  }
+  setInput(notification) {
+    this.inputDisposables.clear();
+    this.render(notification);
+  }
+  render(notification) {
+    this.template.container.classList.toggle("expanded", notification.expanded);
+    this.inputDisposables.add(addDisposableListener(this.template.container, EventType.MOUSE_UP, (e) => {
+      if (e.button === 1) {
+        EventHelper.stop(e, true);
+      }
+    }));
+    this.inputDisposables.add(addDisposableListener(this.template.container, EventType.AUXCLICK, (e) => {
+      if (!notification.hasProgress && e.button === 1) {
+        EventHelper.stop(e, true);
+        notification.close();
+      }
+    }));
+    this.renderSeverity(notification);
+    const messageCustomHover = this.inputDisposables.add(this.hoverService.setupManagedHover(getDefaultHoverDelegate("mouse"), this.template.message, ""));
+    const messageOverflows = this.renderMessage(notification, messageCustomHover);
+    this.renderSecondaryActions(notification, messageOverflows);
+    const sourceCustomHover = this.inputDisposables.add(this.hoverService.setupManagedHover(getDefaultHoverDelegate("mouse"), this.template.source, ""));
+    this.renderSource(notification, sourceCustomHover);
+    this.renderButtons(notification);
+    this.renderProgress(notification);
+    this.inputDisposables.add(notification.onDidChangeContent((event) => {
+      switch (event.kind) {
+        case 0:
+          this.renderSeverity(notification);
+          break;
+        case 3:
+          this.renderProgress(notification);
+          break;
+        case 1:
+          this.renderMessage(notification, messageCustomHover);
+          break;
+      }
+    }));
+  }
+  renderSeverity(notification) {
+    NotificationTemplateRenderer_1.SEVERITIES.forEach((severity) => {
+      if (notification.severity !== severity) {
+        this.template.icon.classList.remove(...ThemeIcon.asClassNameArray(this.toSeverityIcon(severity)));
+      }
+    });
+    this.template.icon.classList.add(...ThemeIcon.asClassNameArray(this.toSeverityIcon(notification.severity)));
+  }
+  renderMessage(notification, customHover) {
+    clearNode(this.template.message);
+    this.template.message.appendChild(NotificationMessageRenderer.render(notification.message, {
+      callback: /* @__PURE__ */ __name((link) => this.openerService.open(URI.parse(link), { allowCommands: true }), "callback"),
+      toDispose: this.inputDisposables
+    }));
+    const messageOverflows = notification.canCollapse && !notification.expanded && this.template.message.scrollWidth > this.template.message.clientWidth;
+    customHover.update(messageOverflows ? this.template.message.textContent + "" : "");
+    return messageOverflows;
+  }
+  renderSecondaryActions(notification, messageOverflows) {
+    const actions = [];
+    if (isNonEmptyArray(notification.actions?.secondary)) {
+      const configureNotificationAction = this.instantiationService.createInstance(ConfigureNotificationAction, ConfigureNotificationAction.ID, ConfigureNotificationAction.LABEL, notification);
+      actions.push(configureNotificationAction);
+      this.inputDisposables.add(configureNotificationAction);
+    }
+    let showExpandCollapseAction = false;
+    if (notification.canCollapse) {
+      if (notification.expanded) {
+        showExpandCollapseAction = true;
+      } else if (notification.source) {
+        showExpandCollapseAction = true;
+      } else if (messageOverflows) {
+        showExpandCollapseAction = true;
+      }
+    }
+    if (showExpandCollapseAction) {
+      actions.push(notification.expanded ? NotificationTemplateRenderer_1.collapseNotificationAction : NotificationTemplateRenderer_1.expandNotificationAction);
+    }
+    if (!notification.hasProgress) {
+      actions.push(NotificationTemplateRenderer_1.closeNotificationAction);
+    }
+    this.template.toolbar.clear();
+    this.template.toolbar.context = notification;
+    actions.forEach((action) => this.template.toolbar.push(action, { icon: true, label: false, keybinding: this.getKeybindingLabel(action) }));
+  }
+  renderSource(notification, sourceCustomHover) {
+    if (notification.expanded && notification.source) {
+      this.template.source.textContent = localize("notificationSource", "Source: {0}", notification.source);
+      sourceCustomHover.update(notification.source);
+    } else {
+      this.template.source.textContent = "";
+      sourceCustomHover.update("");
+    }
+  }
+  renderButtons(notification) {
+    clearNode(this.template.buttonsContainer);
+    const primaryActions = notification.actions ? notification.actions.primary : void 0;
+    if (notification.expanded && isNonEmptyArray(primaryActions)) {
+      const that = this;
+      const actionRunner = this.inputDisposables.add(new class extends ActionRunner {
+        async runAction(action) {
+          that.actionRunner.run(action, notification);
+          if (!(action instanceof ChoiceAction) || !action.keepOpen) {
+            notification.close();
+          }
+        }
+      }());
+      const buttonToolbar = this.inputDisposables.add(new ButtonBar(this.template.buttonsContainer));
+      for (let i = 0; i < primaryActions.length; i++) {
+        const action = primaryActions[i];
+        const options = {
+          title: true,
+          // assign titles to buttons in case they overflow
+          secondary: i > 0,
+          ...defaultButtonStyles
+        };
+        const dropdownActions = action instanceof ChoiceAction ? action.menu : void 0;
+        const button = this.inputDisposables.add(dropdownActions ? buttonToolbar.addButtonWithDropdown({
+          ...options,
+          contextMenuProvider: this.contextMenuService,
+          actions: dropdownActions,
+          actionRunner
+        }) : buttonToolbar.addButton(options));
+        button.label = action.label;
+        this.inputDisposables.add(button.onDidClick((e) => {
+          if (e) {
+            EventHelper.stop(e, true);
+          }
+          actionRunner.run(action);
+        }));
+      }
+    }
+  }
+  renderProgress(notification) {
+    if (!notification.hasProgress) {
+      this.template.progress.stop().hide();
+      return;
+    }
+    const state = notification.progress.state;
+    if (state.infinite) {
+      this.template.progress.infinite().show();
+    } else if (typeof state.total === "number" || typeof state.worked === "number") {
+      if (typeof state.total === "number" && !this.template.progress.hasTotal()) {
+        this.template.progress.total(state.total);
+      }
+      if (typeof state.worked === "number") {
+        this.template.progress.setWorked(state.worked).show();
+      }
+    } else {
+      this.template.progress.done().hide();
+    }
+  }
+  toSeverityIcon(severity) {
+    switch (severity) {
+      case Severity.Warning:
+        return Codicon.warning;
+      case Severity.Error:
+        return Codicon.error;
+    }
+    return Codicon.info;
+  }
+  getKeybindingLabel(action) {
+    const keybinding = this.keybindingService.lookupKeybinding(action.id);
+    return keybinding ? keybinding.getLabel() : null;
+  }
+};
+NotificationTemplateRenderer = NotificationTemplateRenderer_1 = __decorate([
+  __param(2, IOpenerService),
+  __param(3, IInstantiationService),
+  __param(4, IKeybindingService),
+  __param(5, IContextMenuService),
+  __param(6, IHoverService)
+], NotificationTemplateRenderer);
+export {
+  NotificationRenderer,
+  NotificationTemplateRenderer,
+  NotificationsListDelegate
+};
+//# sourceMappingURL=notificationsViewer.js.map

@@ -1,1 +1,44 @@
-import{Effect as o,Layer as f,Runtime as l}from"../effect";import{domContentLoaded as g}from"vs/base/browser/dom.js";import{mainWindow as i}from"vs/base/browser/window.js";import{onUnexpectedError as y}from"vs/base/common/errors.js";import{ServiceCollection as u}from"vs/platform/instantiation/common/serviceCollection.js";import{ILogService as c}from"vs/platform/log/common/log.js";import{IProductService as m}from"vs/platform/product/common/product.js";import{Workbench as v}from"../../workbench/browser/workbench.js";import{NativeHostServiceTag as S}from"./Host/NativeTag.js";import{AppLayer as I}from"./Instantiation/Layer.js";import{InstantiationServiceTag as h}from"./Instantiation/mod.js";const b=o.gen(function*(e){yield*e(o.promise(()=>g(i))),yield*e(o.logInfo("DOM content loaded. Initializing workbench..."));const a=yield*e(f.toRuntime(I)),t=l.context(a),k=t.get(h),n=t.get(c),d=t.get(S),s=t.get(m),p=new u([m,s],[c,n]);try{new v(i.document.body,{},p,n).startup(),yield*e(o.promise(()=>d.notifyReady())),yield*e(o.logInfo("Wind Workbench successfully launched and is operational."))}catch(r){y(r),yield*e(o.die(r))}});o.runFork(b);
+import { Effect, Layer, Runtime } from "../effect";
+import { domContentLoaded } from "vs/base/browser/dom.js";
+import { mainWindow } from "vs/base/browser/window.js";
+import { onUnexpectedError } from "vs/base/common/errors.js";
+import { ServiceCollection } from "vs/platform/instantiation/common/serviceCollection.js";
+import { ILogService } from "vs/platform/log/common/log.js";
+import { IProductService } from "vs/platform/product/common/product.js";
+import { Workbench } from "../../workbench/browser/workbench.js";
+import { NativeHostServiceTag } from "./Host/NativeTag.js";
+import { AppLayer } from "./Instantiation/Layer.js";
+const MainEffect = Effect.gen(function* (_) {
+  yield* _(Effect.promise(() => domContentLoaded(mainWindow)));
+  yield* _(Effect.logInfo("DOM content loaded. Initializing workbench..."));
+  const AppRuntime = yield* _(Layer.toRuntime(AppLayer));
+  const AppContext = Runtime.context(AppRuntime);
+  const InstantiationService = AppContext.get(InstantiationServiceTag);
+  const LogService = AppContext.get(ILogService);
+  const NativeHostService = AppContext.get(NativeHostServiceTag);
+  const ProductService = AppContext.get(IProductService);
+  const ServiceCollectionBridge = new ServiceCollection(
+    [IProductService, ProductService],
+    [ILogService, LogService]
+  );
+  try {
+    const WorkbenchInstance = new Workbench(
+      mainWindow.document.body,
+      {},
+      ServiceCollectionBridge,
+      LogService
+    );
+    WorkbenchInstance.startup();
+    yield* _(Effect.promise(() => NativeHostService.notifyReady()));
+    yield* _(
+      Effect.logInfo(
+        "Wind Workbench successfully launched and is operational."
+      )
+    );
+  } catch (error) {
+    onUnexpectedError(error);
+    yield* _(Effect.die(error));
+  }
+});
+Effect.runFork(MainEffect);
+//# sourceMappingURL=DesktopMain.js.map

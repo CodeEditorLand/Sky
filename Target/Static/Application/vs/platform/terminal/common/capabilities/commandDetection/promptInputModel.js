@@ -1,7 +1,481 @@
-import{$df as c,Event as D}from"../../../../../base/common/event.js";import{$vd as $}from"../../../../../base/common/lifecycle.js";import{$3n as L,LogLevel as p}from"../../../../log/common/log.js";import{$vm as B}from"../../../../../base/common/decorators.js";var x=function(u,t,i,h){var r=arguments.length,e=r<3?t:h===null?h=Object.getOwnPropertyDescriptor(t,i):h,g;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")e=Reflect.decorate(u,t,i,h);else for(var s=u.length-1;s>=0;s--)(g=u[s])&&(e=(r<3?g(e):r>3?g(t,i,e):g(t,i))||e);return r>3&&e&&Object.defineProperty(t,i,e),e},v=function(u,t){return function(i,h){t(i,h,u)}},C;(function(u){u[u.Unknown=0]="Unknown",u[u.Input=1]="Input",u[u.Execute=2]="Execute"})(C||(C={}));let m=class extends ${get value(){return this.r}get prefix(){return this.r.substring(0,this.s)}get suffix(){return this.r.substring(this.s,this.t===-1?void 0:this.t)}get cursorIndex(){return this.s}get ghostTextIndex(){return this.t}constructor(t,i,h,r,e){super(),this.D=t,this.F=e,this.c=0,this.g=0,this.n="",this.r="",this.s=0,this.t=-1,this.u=this.B(new c),this.onDidStartInput=this.u.event,this.w=this.B(new c),this.onDidChangeInput=this.w.event,this.z=this.B(new c),this.onDidFinishInput=this.z.event,this.C=this.B(new c),this.onDidInterrupt=this.C.event,this.B(D.any(this.D.onCursorMove,this.D.onData,this.D.onWriteParsed)(()=>this.L())),this.B(this.D.onData(g=>this.N(g))),this.B(i(g=>this.H(g))),this.B(h(()=>this.I())),this.B(r(()=>this.J())),this.B(this.onDidStartInput(()=>this.G("PromptInputModel#onDidStartInput"))),this.B(this.onDidChangeInput(()=>this.G("PromptInputModel#onDidChangeInput"))),this.B(this.onDidFinishInput(()=>this.G("PromptInputModel#onDidFinishInput"))),this.B(this.onDidInterrupt(()=>this.G("PromptInputModel#onDidInterrupt")))}G(t){this.F.getLevel()===p.Trace&&this.F.trace(t,this.getCombinedString())}setShellType(t){this.m=t}setContinuationPrompt(t){this.j=t,this.L()}setLastPromptLine(t){this.h=t,this.L()}setConfidentCommandLine(t){this.r!==t&&(this.r=t,this.s=-1,this.t=-1,this.w.fire(this.Z()))}getCombinedString(t){const i=this.r.replaceAll(`
-`,"\u23CE");if(this.s===-1)return i;let h=`${i.substring(0,this.cursorIndex)}|`;return this.ghostTextIndex!==-1?(h+=`${i.substring(this.cursorIndex,this.ghostTextIndex)}[`,h+=`${i.substring(this.ghostTextIndex)}]`):h+=i.substring(this.cursorIndex),h==="|"&&t?"":h}serialize(){return{modelState:this.Z(),commandStartX:this.g,lastPromptLine:this.h,continuationPrompt:this.j,lastUserInput:this.n}}deserialize(t){this.r=t.modelState.value,this.s=t.modelState.cursorIndex,this.t=t.modelState.ghostTextIndex,this.g=t.commandStartX,this.h=t.lastPromptLine,this.j=t.continuationPrompt,this.n=t.lastUserInput}H(t){this.c!==1&&(this.c=1,this.f=t.marker,this.g=this.D.buffer.active.cursorX,this.r="",this.s=0,this.u.fire(this.Z()),this.w.fire(this.Z()),this.h&&this.g!==this.h.length&&this.D.buffer.active.getLine(this.f.line)?.translateToString(!0).startsWith(this.h)&&(this.g=this.h.length,this.L()))}I(){this.c===1&&(this.g=this.D.buffer.active.cursorX,this.w.fire(this.Z()),this.L())}J(){if(this.c===2)return;this.s=-1,this.t!==-1&&(this.r=this.r.substring(0,this.t),this.t=-1);const t=this.Z();this.n===""&&(this.n="",this.C.fire(t)),this.c=2,this.z.fire(t),this.w.fire(t)}L(){try{this.M()}catch(t){this.F.error("Error while syncing prompt input model",t)}}M(){if(this.c!==1)return;let t=this.f?.line;if(t===void 0)return;const i=this.D.buffer.active;let h=i.getLine(t);const r=i.baseY+i.cursorY;let e,g=h?.translateToString(!0,this.g);if(this.m==="fish"&&(!h||!g)&&(t+=1,h=i.getLine(t),h&&(g=h.translateToString(!0),e=r===t?i.cursorX:g?.trimEnd().length)),h===void 0||g===void 0){this.F.trace("PromptInputModel#_sync: no line");return}let s=g,f=-1;e===void 0&&(r===t?e=this.X(this.g,i,h):e=g.trimEnd().length);for(let n=t+1;n<=r;n++){const o=i.getLine(n),l=o?.translateToString(!0);if(l&&o){if(o.isWrapped||r===n&&this.j&&!this.U(l)){s+=`${l}`;const a=this.X(0,i,o);r===n?e+=a:e+=l.length}else if(this.m==="fish")s.endsWith("\\")?(s=s.substring(0,s.length-1),s+=`${l.trim()}`,e+=l.trim().length-1):/^ {6,}/.test(l)?(s+=`
-${l.trim()}`,e+=l.trim().length+1):(s+=l,e+=l.length);else if(this.j===void 0||this.U(l)){const a=this.S(l);if(s+=`
-${a}`,r===n){const d=this.W(o,l),I=this.X(d,i,o);e+=I+1}else e+=a.length+1}}}for(let n=r+1;n<i.baseY+this.D.rows;n++){const o=i.getLine(n),l=o?.translateToString(!0);if(l&&o)this.m==="fish"?s+=`${l}`:this.j===void 0||this.U(l)?s+=`
-${this.S(l)}`:s+=l;else break}this.F.getLevel()===p.Trace&&this.F.trace(`PromptInputModel#_sync: ${this.getCombinedString()}`);{let n=this.r.length-this.r.trimEnd().length;this.n==="\x7F"&&(this.n="",e===this.s-1&&(this.r.trimEnd().length>s.trimEnd().length&&s.trimEnd().length<=e?n=Math.max(this.r.length-1-s.trimEnd().length,0):n=Math.max(n-1,0))),this.n==="\x1B[3~"&&(this.n="",e===this.s&&(n=Math.max(n-1,0)));const o=s.split(`
-`),l=o.length>1,a=s.trimEnd();if(!l){a.length<s.length&&(this.n===" "&&(this.n="",e>a.length&&e>this.s&&n++),n=Math.max(e-a.length,n,0));const d=e===0?"":s[e-1];n>0&&e===this.s+1&&this.n!==""&&d!==" "&&(n=this.r.length-this.s)}if(l){o[o.length-1]=o.at(-1)?.trimEnd()??"";const d=(o.length-1)*(this.j?.length??0);n=Math.max(0,e-s.length-d)}s=o.map(d=>d.trimEnd()).join(`
-`)+" ".repeat(n)}f=this.O(i,h,e),(this.r!==s||this.s!==e||this.t!==f)&&(this.r=s,this.s=e,this.t=f,this.w.fire(this.Z()))}N(t){this.n=t}O(t,i,h){if(!this.value.trim().length)return-1;let r=-1,e=!1,g=t.cursorX;for(;g>0;){const s=i.getCell(--g);if(!s)break;if(s.getChars().trim().length>0){e=!this.Y(s);break}}if(e){let s=0,f=t.cursorX;for(;f<i.length;){const n=i.getCell(f++);if(!n||n.getCode()===0)break;if(this.Y(n)){r=h+s;break}s+=n.getChars().length}}return r===-1&&(r=this.P(t,i,h)),r>-1&&this.value.substring(r).endsWith(" ")&&(this.r=this.value.trim(),this.value.substring(r)||(r=-1)),r}P(t,i,h){let r=-1,e=t.cursorX;const g=new Map;let s=i.getCell(e),f=s;for(;f&&e<i.length;){const o=this.Q(f);g.set(o,[...g.get(o)??[],e]),f=i.getCell(++e),f?.getChars().trim().length&&(s=f)}if(!s?.getChars().trim().length||this.R(i.getCell(this.g),s))return-1;const n=g.get(this.Q(s));if(n){for(let o=1;o<n.length;o++)if(n[o]!==n[o-1]+1)return-1;t.baseY+t.cursorY===this.f?.line?r=n[0]-this.g:r=n[0]}if(r!==-1)for(let o=t.cursorX;o>=this.g;o--){const l=i.getCell(o);if(l?.getChars.length&&l&&l.getCode()!==0&&this.R(s,l))return-1}return r>=h?r:-1}Q(t){return`${t.getFgColor()}${t.getBgColor()}${t.isBold()}${t.isItalic()}${t.isDim()}${t.isUnderline()}${t.isBlink()}${t.isInverse()}${t.isInvisible()}${t.isStrikethrough()}${t.isOverline()}${t.getFgColorMode()}${t.getBgColorMode()}`}R(t,i){return!t||!i?!1:t.getFgColor()===i.getFgColor()&&t.getBgColor()===i.getBgColor()&&t.isBold()===i.isBold()&&t.isItalic()===i.isItalic()&&t.isDim()===i.isDim()&&t.isUnderline()===i.isUnderline()&&t.isBlink()===i.isBlink()&&t.isInverse()===i.isInverse()&&t.isInvisible()===i.isInvisible()&&t.isStrikethrough()===i.isStrikethrough()&&t.isOverline()===i.isOverline()&&t?.getBgColorMode()===i?.getBgColorMode()&&t?.getFgColorMode()===i?.getFgColorMode()}S(t){return this.U(t)&&(t=t.substring(this.j.length)),t}U(t){return!!(this.j&&t.startsWith(this.j.trimEnd()))}W(t,i){if(!this.j||!i.startsWith(this.j.trimEnd()))return 0;let h="",r=0,e;for(;h!==this.j&&(e=t.getCell(r++),!!e);)h+=e.getChars();return r}X(t,i,h){return h?.translateToString(!0,t,i.cursorX).length??0}Y(t){return!!(t.isItalic()||t.isDim())}Z(){return Object.freeze({value:this.r,prefix:this.prefix,suffix:this.suffix,cursorIndex:this.s,ghostTextIndex:this.t})}};x([B(0)],m.prototype,"L",null);m=x([v(4,L)],m);export{m as $Aw};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { Emitter, Event } from "../../../../../base/common/event.js";
+import { Disposable } from "../../../../../base/common/lifecycle.js";
+import { ILogService, LogLevel } from "../../../../log/common/log.js";
+import { throttle } from "../../../../../base/common/decorators.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+var PromptInputState;
+(function(PromptInputState2) {
+  PromptInputState2[PromptInputState2["Unknown"] = 0] = "Unknown";
+  PromptInputState2[PromptInputState2["Input"] = 1] = "Input";
+  PromptInputState2[PromptInputState2["Execute"] = 2] = "Execute";
+})(PromptInputState || (PromptInputState = {}));
+let PromptInputModel = class PromptInputModel2 extends Disposable {
+  static {
+    __name(this, "PromptInputModel");
+  }
+  get value() {
+    return this._value;
+  }
+  get prefix() {
+    return this._value.substring(0, this._cursorIndex);
+  }
+  get suffix() {
+    return this._value.substring(this._cursorIndex, this._ghostTextIndex === -1 ? void 0 : this._ghostTextIndex);
+  }
+  get cursorIndex() {
+    return this._cursorIndex;
+  }
+  get ghostTextIndex() {
+    return this._ghostTextIndex;
+  }
+  constructor(_xterm, onCommandStart, onCommandStartChanged, onCommandExecuted, _logService) {
+    super();
+    this._xterm = _xterm;
+    this._logService = _logService;
+    this._state = 0;
+    this._commandStartX = 0;
+    this._lastUserInput = "";
+    this._value = "";
+    this._cursorIndex = 0;
+    this._ghostTextIndex = -1;
+    this._onDidStartInput = this._register(new Emitter());
+    this.onDidStartInput = this._onDidStartInput.event;
+    this._onDidChangeInput = this._register(new Emitter());
+    this.onDidChangeInput = this._onDidChangeInput.event;
+    this._onDidFinishInput = this._register(new Emitter());
+    this.onDidFinishInput = this._onDidFinishInput.event;
+    this._onDidInterrupt = this._register(new Emitter());
+    this.onDidInterrupt = this._onDidInterrupt.event;
+    this._register(Event.any(this._xterm.onCursorMove, this._xterm.onData, this._xterm.onWriteParsed)(() => this._sync()));
+    this._register(this._xterm.onData((e) => this._handleUserInput(e)));
+    this._register(onCommandStart((e) => this._handleCommandStart(e)));
+    this._register(onCommandStartChanged(() => this._handleCommandStartChanged()));
+    this._register(onCommandExecuted(() => this._handleCommandExecuted()));
+    this._register(this.onDidStartInput(() => this._logCombinedStringIfTrace("PromptInputModel#onDidStartInput")));
+    this._register(this.onDidChangeInput(() => this._logCombinedStringIfTrace("PromptInputModel#onDidChangeInput")));
+    this._register(this.onDidFinishInput(() => this._logCombinedStringIfTrace("PromptInputModel#onDidFinishInput")));
+    this._register(this.onDidInterrupt(() => this._logCombinedStringIfTrace("PromptInputModel#onDidInterrupt")));
+  }
+  _logCombinedStringIfTrace(message) {
+    if (this._logService.getLevel() === LogLevel.Trace) {
+      this._logService.trace(message, this.getCombinedString());
+    }
+  }
+  setShellType(shellType) {
+    this._shellType = shellType;
+  }
+  setContinuationPrompt(value) {
+    this._continuationPrompt = value;
+    this._sync();
+  }
+  setLastPromptLine(value) {
+    this._lastPromptLine = value;
+    this._sync();
+  }
+  setConfidentCommandLine(value) {
+    if (this._value !== value) {
+      this._value = value;
+      this._cursorIndex = -1;
+      this._ghostTextIndex = -1;
+      this._onDidChangeInput.fire(this._createStateObject());
+    }
+  }
+  getCombinedString(emptyStringWhenEmpty) {
+    const value = this._value.replaceAll("\n", "\u23CE");
+    if (this._cursorIndex === -1) {
+      return value;
+    }
+    let result = `${value.substring(0, this.cursorIndex)}|`;
+    if (this.ghostTextIndex !== -1) {
+      result += `${value.substring(this.cursorIndex, this.ghostTextIndex)}[`;
+      result += `${value.substring(this.ghostTextIndex)}]`;
+    } else {
+      result += value.substring(this.cursorIndex);
+    }
+    if (result === "|" && emptyStringWhenEmpty) {
+      return "";
+    }
+    return result;
+  }
+  serialize() {
+    return {
+      modelState: this._createStateObject(),
+      commandStartX: this._commandStartX,
+      lastPromptLine: this._lastPromptLine,
+      continuationPrompt: this._continuationPrompt,
+      lastUserInput: this._lastUserInput
+    };
+  }
+  deserialize(serialized) {
+    this._value = serialized.modelState.value;
+    this._cursorIndex = serialized.modelState.cursorIndex;
+    this._ghostTextIndex = serialized.modelState.ghostTextIndex;
+    this._commandStartX = serialized.commandStartX;
+    this._lastPromptLine = serialized.lastPromptLine;
+    this._continuationPrompt = serialized.continuationPrompt;
+    this._lastUserInput = serialized.lastUserInput;
+  }
+  _handleCommandStart(command) {
+    if (this._state === 1) {
+      return;
+    }
+    this._state = 1;
+    this._commandStartMarker = command.marker;
+    this._commandStartX = this._xterm.buffer.active.cursorX;
+    this._value = "";
+    this._cursorIndex = 0;
+    this._onDidStartInput.fire(this._createStateObject());
+    this._onDidChangeInput.fire(this._createStateObject());
+    if (this._lastPromptLine) {
+      if (this._commandStartX !== this._lastPromptLine.length) {
+        const line = this._xterm.buffer.active.getLine(this._commandStartMarker.line);
+        if (line?.translateToString(true).startsWith(this._lastPromptLine)) {
+          this._commandStartX = this._lastPromptLine.length;
+          this._sync();
+        }
+      }
+    }
+  }
+  _handleCommandStartChanged() {
+    if (this._state !== 1) {
+      return;
+    }
+    this._commandStartX = this._xterm.buffer.active.cursorX;
+    this._onDidChangeInput.fire(this._createStateObject());
+    this._sync();
+  }
+  _handleCommandExecuted() {
+    if (this._state === 2) {
+      return;
+    }
+    this._cursorIndex = -1;
+    if (this._ghostTextIndex !== -1) {
+      this._value = this._value.substring(0, this._ghostTextIndex);
+      this._ghostTextIndex = -1;
+    }
+    const event = this._createStateObject();
+    if (this._lastUserInput === "") {
+      this._lastUserInput = "";
+      this._onDidInterrupt.fire(event);
+    }
+    this._state = 2;
+    this._onDidFinishInput.fire(event);
+    this._onDidChangeInput.fire(event);
+  }
+  _sync() {
+    try {
+      this._doSync();
+    } catch (e) {
+      this._logService.error("Error while syncing prompt input model", e);
+    }
+  }
+  _doSync() {
+    if (this._state !== 1) {
+      return;
+    }
+    let commandStartY = this._commandStartMarker?.line;
+    if (commandStartY === void 0) {
+      return;
+    }
+    const buffer = this._xterm.buffer.active;
+    let line = buffer.getLine(commandStartY);
+    const absoluteCursorY = buffer.baseY + buffer.cursorY;
+    let cursorIndex;
+    let commandLine = line?.translateToString(true, this._commandStartX);
+    if (this._shellType === "fish" && (!line || !commandLine)) {
+      commandStartY += 1;
+      line = buffer.getLine(commandStartY);
+      if (line) {
+        commandLine = line.translateToString(true);
+        cursorIndex = absoluteCursorY === commandStartY ? buffer.cursorX : commandLine?.trimEnd().length;
+      }
+    }
+    if (line === void 0 || commandLine === void 0) {
+      this._logService.trace(`PromptInputModel#_sync: no line`);
+      return;
+    }
+    let value = commandLine;
+    let ghostTextIndex = -1;
+    if (cursorIndex === void 0) {
+      if (absoluteCursorY === commandStartY) {
+        cursorIndex = this._getRelativeCursorIndex(this._commandStartX, buffer, line);
+      } else {
+        cursorIndex = commandLine.trimEnd().length;
+      }
+    }
+    for (let y = commandStartY + 1; y <= absoluteCursorY; y++) {
+      const nextLine = buffer.getLine(y);
+      const lineText = nextLine?.translateToString(true);
+      if (lineText && nextLine) {
+        if (nextLine.isWrapped || absoluteCursorY === y && this._continuationPrompt && !this._lineContainsContinuationPrompt(lineText)) {
+          value += `${lineText}`;
+          const relativeCursorIndex = this._getRelativeCursorIndex(0, buffer, nextLine);
+          if (absoluteCursorY === y) {
+            cursorIndex += relativeCursorIndex;
+          } else {
+            cursorIndex += lineText.length;
+          }
+        } else if (this._shellType === "fish") {
+          if (value.endsWith("\\")) {
+            value = value.substring(0, value.length - 1);
+            value += `${lineText.trim()}`;
+            cursorIndex += lineText.trim().length - 1;
+          } else {
+            if (/^ {6,}/.test(lineText)) {
+              value += `
+${lineText.trim()}`;
+              cursorIndex += lineText.trim().length + 1;
+            } else {
+              value += lineText;
+              cursorIndex += lineText.length;
+            }
+          }
+        } else if (this._continuationPrompt === void 0 || this._lineContainsContinuationPrompt(lineText)) {
+          const trimmedLineText = this._trimContinuationPrompt(lineText);
+          value += `
+${trimmedLineText}`;
+          if (absoluteCursorY === y) {
+            const continuationCellWidth = this._getContinuationPromptCellWidth(nextLine, lineText);
+            const relativeCursorIndex = this._getRelativeCursorIndex(continuationCellWidth, buffer, nextLine);
+            cursorIndex += relativeCursorIndex + 1;
+          } else {
+            cursorIndex += trimmedLineText.length + 1;
+          }
+        }
+      }
+    }
+    for (let y = absoluteCursorY + 1; y < buffer.baseY + this._xterm.rows; y++) {
+      const belowCursorLine = buffer.getLine(y);
+      const lineText = belowCursorLine?.translateToString(true);
+      if (lineText && belowCursorLine) {
+        if (this._shellType === "fish") {
+          value += `${lineText}`;
+        } else if (this._continuationPrompt === void 0 || this._lineContainsContinuationPrompt(lineText)) {
+          value += `
+${this._trimContinuationPrompt(lineText)}`;
+        } else {
+          value += lineText;
+        }
+      } else {
+        break;
+      }
+    }
+    if (this._logService.getLevel() === LogLevel.Trace) {
+      this._logService.trace(`PromptInputModel#_sync: ${this.getCombinedString()}`);
+    }
+    {
+      let trailingWhitespace = this._value.length - this._value.trimEnd().length;
+      if (this._lastUserInput === "\x7F") {
+        this._lastUserInput = "";
+        if (cursorIndex === this._cursorIndex - 1) {
+          if (this._value.trimEnd().length > value.trimEnd().length && value.trimEnd().length <= cursorIndex) {
+            trailingWhitespace = Math.max(this._value.length - 1 - value.trimEnd().length, 0);
+          } else {
+            trailingWhitespace = Math.max(trailingWhitespace - 1, 0);
+          }
+        }
+      }
+      if (this._lastUserInput === "\x1B[3~") {
+        this._lastUserInput = "";
+        if (cursorIndex === this._cursorIndex) {
+          trailingWhitespace = Math.max(trailingWhitespace - 1, 0);
+        }
+      }
+      const valueLines = value.split("\n");
+      const isMultiLine = valueLines.length > 1;
+      const valueEndTrimmed = value.trimEnd();
+      if (!isMultiLine) {
+        if (valueEndTrimmed.length < value.length) {
+          if (this._lastUserInput === " ") {
+            this._lastUserInput = "";
+            if (cursorIndex > valueEndTrimmed.length && cursorIndex > this._cursorIndex) {
+              trailingWhitespace++;
+            }
+          }
+          trailingWhitespace = Math.max(cursorIndex - valueEndTrimmed.length, trailingWhitespace, 0);
+        }
+        const charBeforeCursor = cursorIndex === 0 ? "" : value[cursorIndex - 1];
+        if (trailingWhitespace > 0 && cursorIndex === this._cursorIndex + 1 && this._lastUserInput !== "" && charBeforeCursor !== " ") {
+          trailingWhitespace = this._value.length - this._cursorIndex;
+        }
+      }
+      if (isMultiLine) {
+        valueLines[valueLines.length - 1] = valueLines.at(-1)?.trimEnd() ?? "";
+        const continuationOffset = (valueLines.length - 1) * (this._continuationPrompt?.length ?? 0);
+        trailingWhitespace = Math.max(0, cursorIndex - value.length - continuationOffset);
+      }
+      value = valueLines.map((e) => e.trimEnd()).join("\n") + " ".repeat(trailingWhitespace);
+    }
+    ghostTextIndex = this._scanForGhostText(buffer, line, cursorIndex);
+    if (this._value !== value || this._cursorIndex !== cursorIndex || this._ghostTextIndex !== ghostTextIndex) {
+      this._value = value;
+      this._cursorIndex = cursorIndex;
+      this._ghostTextIndex = ghostTextIndex;
+      this._onDidChangeInput.fire(this._createStateObject());
+    }
+  }
+  _handleUserInput(e) {
+    this._lastUserInput = e;
+  }
+  /**
+   * Detect ghost text by looking for italic or dim text in or after the cursor and
+   * non-italic/dim text in the first non-whitespace cell following command start and before the cursor.
+   */
+  _scanForGhostText(buffer, line, cursorIndex) {
+    if (!this.value.trim().length) {
+      return -1;
+    }
+    let ghostTextIndex = -1;
+    let proceedWithGhostTextCheck = false;
+    let x = buffer.cursorX;
+    while (x > 0) {
+      const cell = line.getCell(--x);
+      if (!cell) {
+        break;
+      }
+      if (cell.getChars().trim().length > 0) {
+        proceedWithGhostTextCheck = !this._isCellStyledLikeGhostText(cell);
+        break;
+      }
+    }
+    if (proceedWithGhostTextCheck) {
+      let potentialGhostIndexOffset = 0;
+      let x2 = buffer.cursorX;
+      while (x2 < line.length) {
+        const cell = line.getCell(x2++);
+        if (!cell || cell.getCode() === 0) {
+          break;
+        }
+        if (this._isCellStyledLikeGhostText(cell)) {
+          ghostTextIndex = cursorIndex + potentialGhostIndexOffset;
+          break;
+        }
+        potentialGhostIndexOffset += cell.getChars().length;
+      }
+    }
+    if (ghostTextIndex === -1) {
+      ghostTextIndex = this._scanForGhostTextAdvanced(buffer, line, cursorIndex);
+    }
+    if (ghostTextIndex > -1 && this.value.substring(ghostTextIndex).endsWith(" ")) {
+      this._value = this.value.trim();
+      if (!this.value.substring(ghostTextIndex)) {
+        ghostTextIndex = -1;
+      }
+    }
+    return ghostTextIndex;
+  }
+  _scanForGhostTextAdvanced(buffer, line, cursorIndex) {
+    let ghostTextIndex = -1;
+    let currentPos = buffer.cursorX;
+    const styleMap = /* @__PURE__ */ new Map();
+    let lastNonWhitespaceCell = line.getCell(currentPos);
+    let nextCell = lastNonWhitespaceCell;
+    while (nextCell && currentPos < line.length) {
+      const styleKey = this._getCellStyleAsString(nextCell);
+      styleMap.set(styleKey, [...styleMap.get(styleKey) ?? [], currentPos]);
+      nextCell = line.getCell(++currentPos);
+      if (nextCell?.getChars().trim().length) {
+        lastNonWhitespaceCell = nextCell;
+      }
+    }
+    if (!lastNonWhitespaceCell?.getChars().trim().length || this._cellStylesMatch(line.getCell(this._commandStartX), lastNonWhitespaceCell)) {
+      return -1;
+    }
+    const positionsWithGhostStyle = styleMap.get(this._getCellStyleAsString(lastNonWhitespaceCell));
+    if (positionsWithGhostStyle) {
+      for (let i = 1; i < positionsWithGhostStyle.length; i++) {
+        if (positionsWithGhostStyle[i] !== positionsWithGhostStyle[i - 1] + 1) {
+          return -1;
+        }
+      }
+      if (buffer.baseY + buffer.cursorY === this._commandStartMarker?.line) {
+        ghostTextIndex = positionsWithGhostStyle[0] - this._commandStartX;
+      } else {
+        ghostTextIndex = positionsWithGhostStyle[0];
+      }
+    }
+    if (ghostTextIndex !== -1) {
+      for (let checkPos = buffer.cursorX; checkPos >= this._commandStartX; checkPos--) {
+        const checkCell = line.getCell(checkPos);
+        if (!checkCell?.getChars.length) {
+          continue;
+        }
+        if (checkCell && checkCell.getCode() !== 0 && this._cellStylesMatch(lastNonWhitespaceCell, checkCell)) {
+          return -1;
+        }
+      }
+    }
+    return ghostTextIndex >= cursorIndex ? ghostTextIndex : -1;
+  }
+  _getCellStyleAsString(cell) {
+    return `${cell.getFgColor()}${cell.getBgColor()}${cell.isBold()}${cell.isItalic()}${cell.isDim()}${cell.isUnderline()}${cell.isBlink()}${cell.isInverse()}${cell.isInvisible()}${cell.isStrikethrough()}${cell.isOverline()}${cell.getFgColorMode()}${cell.getBgColorMode()}`;
+  }
+  _cellStylesMatch(a, b) {
+    if (!a || !b) {
+      return false;
+    }
+    return a.getFgColor() === b.getFgColor() && a.getBgColor() === b.getBgColor() && a.isBold() === b.isBold() && a.isItalic() === b.isItalic() && a.isDim() === b.isDim() && a.isUnderline() === b.isUnderline() && a.isBlink() === b.isBlink() && a.isInverse() === b.isInverse() && a.isInvisible() === b.isInvisible() && a.isStrikethrough() === b.isStrikethrough() && a.isOverline() === b.isOverline() && a?.getBgColorMode() === b?.getBgColorMode() && a?.getFgColorMode() === b?.getFgColorMode();
+  }
+  _trimContinuationPrompt(lineText) {
+    if (this._lineContainsContinuationPrompt(lineText)) {
+      lineText = lineText.substring(this._continuationPrompt.length);
+    }
+    return lineText;
+  }
+  _lineContainsContinuationPrompt(lineText) {
+    return !!(this._continuationPrompt && lineText.startsWith(this._continuationPrompt.trimEnd()));
+  }
+  _getContinuationPromptCellWidth(line, lineText) {
+    if (!this._continuationPrompt || !lineText.startsWith(this._continuationPrompt.trimEnd())) {
+      return 0;
+    }
+    let buffer = "";
+    let x = 0;
+    let cell;
+    while (buffer !== this._continuationPrompt) {
+      cell = line.getCell(x++);
+      if (!cell) {
+        break;
+      }
+      buffer += cell.getChars();
+    }
+    return x;
+  }
+  _getRelativeCursorIndex(startCellX, buffer, line) {
+    return line?.translateToString(true, startCellX, buffer.cursorX).length ?? 0;
+  }
+  _isCellStyledLikeGhostText(cell) {
+    return !!(cell.isItalic() || cell.isDim());
+  }
+  _createStateObject() {
+    return Object.freeze({
+      value: this._value,
+      prefix: this.prefix,
+      suffix: this.suffix,
+      cursorIndex: this._cursorIndex,
+      ghostTextIndex: this._ghostTextIndex
+    });
+  }
+};
+__decorate([
+  throttle(0)
+], PromptInputModel.prototype, "_sync", null);
+PromptInputModel = __decorate([
+  __param(4, ILogService)
+], PromptInputModel);
+export {
+  PromptInputModel
+};
+//# sourceMappingURL=promptInputModel.js.map

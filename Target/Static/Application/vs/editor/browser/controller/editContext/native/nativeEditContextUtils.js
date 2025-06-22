@@ -1,1 +1,69 @@
-import{$J5 as r,$k6 as h,$j6 as o}from"../../../../../base/browser/dom.js";import{$vd as c}from"../../../../../base/common/lifecycle.js";class f extends c{constructor(s,t){super(),this.c=s,this.f=t,this.a=!1,this.b=!1,this.B(r(this.c,"focus",()=>{this.b||this.refreshFocusState()})),this.B(r(this.c,"blur",()=>{this.b||this.g(!1)}))}pause(){this.b=!0}resume(){this.b=!1,this.refreshFocusState()}g(s){this.a!==s&&(this.a=s,this.f(this.a))}focus(){this.c.focus(),this.refreshFocusState()}refreshFocusState(){const s=o(this.c),t=s?s.activeElement:h(),i=this.c===t;this.g(i)}get isFocused(){return this.a}}function n(e,s,t,i){return e.addEventListener(s,t,i),{dispose(){e.removeEventListener(s,t)}}}export{f as $_cb,n as $adb};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { addDisposableListener, getActiveElement, getShadowRoot } from "../../../../../base/browser/dom.js";
+import { Disposable } from "../../../../../base/common/lifecycle.js";
+class FocusTracker extends Disposable {
+  static {
+    __name(this, "FocusTracker");
+  }
+  constructor(_domNode, _onFocusChange) {
+    super();
+    this._domNode = _domNode;
+    this._onFocusChange = _onFocusChange;
+    this._isFocused = false;
+    this._isPaused = false;
+    this._register(addDisposableListener(this._domNode, "focus", () => {
+      if (this._isPaused) {
+        return;
+      }
+      this.refreshFocusState();
+    }));
+    this._register(addDisposableListener(this._domNode, "blur", () => {
+      if (this._isPaused) {
+        return;
+      }
+      this._handleFocusedChanged(false);
+    }));
+  }
+  pause() {
+    this._isPaused = true;
+  }
+  resume() {
+    this._isPaused = false;
+    this.refreshFocusState();
+  }
+  _handleFocusedChanged(focused) {
+    if (this._isFocused === focused) {
+      return;
+    }
+    this._isFocused = focused;
+    this._onFocusChange(this._isFocused);
+  }
+  focus() {
+    this._domNode.focus();
+    this.refreshFocusState();
+  }
+  refreshFocusState() {
+    const shadowRoot = getShadowRoot(this._domNode);
+    const activeElement = shadowRoot ? shadowRoot.activeElement : getActiveElement();
+    const focused = this._domNode === activeElement;
+    this._handleFocusedChanged(focused);
+  }
+  get isFocused() {
+    return this._isFocused;
+  }
+}
+function editContextAddDisposableListener(target, type, listener, options) {
+  target.addEventListener(type, listener, options);
+  return {
+    dispose() {
+      target.removeEventListener(type, listener);
+    }
+  };
+}
+__name(editContextAddDisposableListener, "editContextAddDisposableListener");
+export {
+  FocusTracker,
+  editContextAddDisposableListener
+};
+//# sourceMappingURL=nativeEditContextUtils.js.map

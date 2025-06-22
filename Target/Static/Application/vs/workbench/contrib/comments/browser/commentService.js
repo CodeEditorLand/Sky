@@ -1,1 +1,400 @@
-import{$nj as R,$mj as S}from"../../../../platform/instantiation/common/instantiation.js";import{Event as $,$df as r}from"../../../../base/common/event.js";import{$vd as B,$ud as y}from"../../../../base/common/lifecycle.js";import{$cC as w}from"../../../../editor/common/core/range.js";import{CancellationToken as f}from"../../../../base/common/cancellation.js";import{$aTb as M}from"./commentMenus.js";import{$8tb as N}from"../../../services/layout/browser/layoutService.js";import{$El as j}from"../../../../platform/configuration/common/configuration.js";import{$bTb as A}from"../common/commentsConfiguration.js";import{$Vn as E}from"../../../../platform/contextkey/common/contextkey.js";import{$Ho as _}from"../../../../platform/storage/common/storage.js";import{CommentContextKeys as v}from"../common/commentContextKeys.js";import{$3n as P}from"../../../../platform/log/common/log.js";import{$dTb as q}from"./commentsModel.js";import{$gF as I}from"../../../../editor/common/services/model.js";import{Schemas as U}from"../../../../base/common/network.js";var D=function(u,t,e,n){var i=arguments.length,s=i<3?t:n===null?n=Object.getOwnPropertyDescriptor(t,e):n,o;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")s=Reflect.decorate(u,t,e,n);else for(var h=u.length-1;h>=0;h--)(o=u[h])&&(s=(i<3?o(s):i>3?o(t,e,s):o(t,e))||s);return i>3&&s&&Object.defineProperty(t,e,s),s},c=function(u,t){return function(e,n){t(e,n,u)}};const et=R("commentService"),C="comments.continueOnComments";let b=class extends B{constructor(t,e,n,i,s,o,h){super(),this.J=t,this.L=e,this.M=n,this.N=s,this.O=o,this.P=h,this.a=this.B(new r),this.onDidSetDataProvider=this.a.event,this.b=this.B(new r),this.onDidDeleteDataProvider=this.b.event,this.c=this.B(new r),this.onDidSetResourceCommentInfos=this.c.event,this.f=this.B(new r),this.onDidSetAllCommentThreads=this.f.event,this.g=this.B(new r),this.onDidUpdateCommentThreads=this.g.event,this.h=this.B(new r),this.onDidUpdateNotebookCommentThreads=this.h.event,this.j=this.B(new r),this.onDidUpdateCommentingRanges=this.j.event,this.m=this.B(new r),this.onDidChangeActiveEditingCommentThread=this.m.event,this.n=this.B(new r),this.onDidChangeCurrentCommentThread=this.n.event,this.r=this.B(new r),this.onDidChangeCommentingEnabled=this.r.event,this.s=this.B(new r),this.onResourceHasCommentingRanges=this.s.event,this.t=this.B(new r),this.onDidChangeActiveCommentingRange=this.t.event,this.u=new Map,this.w=new Map,this.y=!0,this.D=new Map,this.F=new Set,this.G=this.B(new q),this.commentsModel=this.G,this.H=new Set,this.I=new Set,this.R(),this.S(),this.z=v.WorkspaceHasCommenting.bindTo(i),this.C=v.commentingEnabled.bindTo(i);const p=this.B(new y),T=$.debounce(this.N.onDidChangeValue(1,C,p),(m,a)=>m?.external?m:a,500);p.add(T(m=>{if(!m.external)return;const a=this.N.getObject(C,1);if(!a)return;this.O.debug(`Comments: URIs of continue on comments from storage ${a.map(d=>d.uri.toString()).join(", ")}.`);const l=this.$(a,this.D);for(const d of l){const g=this.u.get(d);if(!g)continue;const O={uniqueOwner:d,owner:g.owner,ownerLabel:g.label,pending:this.D.get(d)||[],added:[],removed:[],changed:[]};this.Y(O)}})),this.B(s.onWillSaveState(()=>{const m=new Map;for(const a of this.F){const l=a.provideContinueOnComments();this.$(l,m)}this.Z(m)})),this.B(this.P.onModelAdded(m=>{m.uri.scheme!==U.vscodeSourceControl&&(this.H.has(m.uri.toString())||this.getDocumentComments(m.uri))}))}Q(t,e){let n=!1;for(const i of e)i&&(i.commentingRanges.ranges.length>0||i.threads.length>0)&&(this.H.add(t.toString()),n=!0);n&&this.s.fire()}R(){this.y=this.U,this.B(this.M.onDidChangeConfiguration(t=>{t.affectsConfiguration("comments.visible")&&this.enableCommenting(this.U)}))}S(){let t=this.y;this.B(this.L.onDidChangeZenMode(e=>{e?(t=this.y,this.enableCommenting(!1)):this.enableCommenting(t)}))}get U(){return!!this.M.getValue(A)?.visible}get isCommentingEnabled(){return this.y}enableCommenting(t){t!==this.y&&(this.y=t,this.C.set(t),this.r.fire(t))}setCurrentCommentThread(t){this.n.fire(t)}setActiveEditingCommentThread(t){this.m.fire(t)}get lastActiveCommentcontroller(){return this.W}async setActiveCommentAndThread(t,e){const n=this.u.get(t);if(n)return n!==this.W&&await this.W?.setActiveCommentAndThread(void 0),this.W=n,n.setActiveCommentAndThread(e)}setDocumentComments(t,e){this.c.fire({resource:t,commentInfos:e})}X(t,e,n,i){this.G.setCommentThreads(t,e,n,i),this.f.fire({ownerId:t,ownerLabel:n,commentThreads:i})}Y(t){this.G.updateCommentThreads(t),this.g.fire(t)}setWorkspaceComments(t,e){e.length&&this.z.set(!0);const n=this.u.get(t);n&&this.X(t,n.owner,n.label,e)}removeWorkspaceComments(t){const e=this.u.get(t);e&&this.X(t,e.owner,e.label,[])}registerCommentController(t,e){this.u.set(t,e),this.a.fire()}unregisterCommentController(t){t?this.u.delete(t):this.u.clear(),this.G.deleteCommentsByOwner(t),this.b.fire(t)}getCommentController(t){return this.u.get(t)}async createCommentThreadTemplate(t,e,n,i){const s=this.u.get(t);if(s)return s.createCommentThreadTemplate(e,n,i)}async updateCommentThreadTemplate(t,e,n){const i=this.u.get(t);i&&await i.updateCommentThreadTemplate(e,n)}disposeCommentThread(t,e){this.getCommentController(t)?.deleteCommentThreadMain(e)}getCommentMenus(t){if(this.w.get(t))return this.w.get(t);const e=this.J.createInstance(M);return this.w.set(t,e),e}updateComments(t,e){const n=this.u.get(t);if(n){const i=Object.assign({},e,{uniqueOwner:t,ownerLabel:n.label,owner:n.owner});this.Y(i)}}updateNotebookComments(t,e){const n=Object.assign({},e,{uniqueOwner:t});this.h.fire(n)}updateCommentingRanges(t,e){if(e?.schemes&&e.schemes.length>0)for(const n of e.schemes)this.I.add(n);this.z.set(!0),this.j.fire({uniqueOwner:t})}async toggleReaction(t,e,n,i,s){const o=this.u.get(t);if(o)return o.toggleReaction(e,n,i,s,f.None);throw new Error("Not supported")}hasReactionHandler(t){const e=this.u.get(t);return e?!!e.features.reactionHandler:!1}async getDocumentComments(t){const e=[];for(const i of this.u.values())e.push(i.getDocumentComments(t,f.None).then(s=>{for(const h of s.threads)h.comments?.length===0&&h.range&&this.removeContinueOnComment({range:h.range,uri:t,uniqueOwner:s.uniqueOwner});const o=this.D.get(s.uniqueOwner);return s.pendingCommentThreads=o?.filter(h=>h.uri.toString()===t.toString()),s}).catch(s=>null));const n=await Promise.all(e);return this.Q(t,n),n}async getNotebookComments(t){const e=[];return this.u.forEach(n=>{e.push(n.getNotebookComments(t,f.None).catch(i=>null))}),Promise.all(e)}registerContinueOnCommentProvider(t){return this.F.add(t),{dispose:()=>{this.F.delete(t)}}}Z(t){const e=[];for(const n of t.values())e.push(...n);this.O.debug(`Comments: URIs of continue on comments to add to storage ${e.map(n=>n.uri.toString()).join(", ")}.`),this.N.store(C,e,1,0)}removeContinueOnComment(t){const e=this.D.get(t.uniqueOwner);if(e){const n=e.findIndex(i=>i.uri.toString()===t.uri.toString()&&w.equalsRange(i.range,t.range)&&(t.isReply===void 0||i.isReply===t.isReply));if(n>-1)return e.splice(n,1)[0]}}$(t,e){const n=new Set;for(const i of t)if(!e.has(i.uniqueOwner))e.set(i.uniqueOwner,[i]),n.add(i.uniqueOwner);else{const s=e.get(i.uniqueOwner);s.every(o=>o.uri.toString()!==i.uri.toString()||!w.equalsRange(o.range,i.range))&&(s.push(i),n.add(i.uniqueOwner))}return n}resourceHasCommentingRanges(t){return this.I.has(t.scheme)||this.H.has(t.toString())}};b=D([c(0,S),c(1,N),c(2,j),c(3,E),c(4,_),c(5,P),c(6,I)],b);export{et as $eTb,b as $fTb};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { createDecorator, IInstantiationService } from "../../../../platform/instantiation/common/instantiation.js";
+import { Event, Emitter } from "../../../../base/common/event.js";
+import { Disposable, DisposableStore } from "../../../../base/common/lifecycle.js";
+import { Range } from "../../../../editor/common/core/range.js";
+import { CancellationToken } from "../../../../base/common/cancellation.js";
+import { CommentMenus } from "./commentMenus.js";
+import { IWorkbenchLayoutService } from "../../../services/layout/browser/layoutService.js";
+import { IConfigurationService } from "../../../../platform/configuration/common/configuration.js";
+import { COMMENTS_SECTION } from "../common/commentsConfiguration.js";
+import { IContextKeyService } from "../../../../platform/contextkey/common/contextkey.js";
+import { IStorageService } from "../../../../platform/storage/common/storage.js";
+import { CommentContextKeys } from "../common/commentContextKeys.js";
+import { ILogService } from "../../../../platform/log/common/log.js";
+import { CommentsModel } from "./commentsModel.js";
+import { IModelService } from "../../../../editor/common/services/model.js";
+import { Schemas } from "../../../../base/common/network.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+const ICommentService = createDecorator("commentService");
+const CONTINUE_ON_COMMENTS = "comments.continueOnComments";
+let CommentService = class CommentService2 extends Disposable {
+  static {
+    __name(this, "CommentService");
+  }
+  constructor(instantiationService, layoutService, configurationService, contextKeyService, storageService, logService, modelService) {
+    super();
+    this.instantiationService = instantiationService;
+    this.layoutService = layoutService;
+    this.configurationService = configurationService;
+    this.storageService = storageService;
+    this.logService = logService;
+    this.modelService = modelService;
+    this._onDidSetDataProvider = this._register(new Emitter());
+    this.onDidSetDataProvider = this._onDidSetDataProvider.event;
+    this._onDidDeleteDataProvider = this._register(new Emitter());
+    this.onDidDeleteDataProvider = this._onDidDeleteDataProvider.event;
+    this._onDidSetResourceCommentInfos = this._register(new Emitter());
+    this.onDidSetResourceCommentInfos = this._onDidSetResourceCommentInfos.event;
+    this._onDidSetAllCommentThreads = this._register(new Emitter());
+    this.onDidSetAllCommentThreads = this._onDidSetAllCommentThreads.event;
+    this._onDidUpdateCommentThreads = this._register(new Emitter());
+    this.onDidUpdateCommentThreads = this._onDidUpdateCommentThreads.event;
+    this._onDidUpdateNotebookCommentThreads = this._register(new Emitter());
+    this.onDidUpdateNotebookCommentThreads = this._onDidUpdateNotebookCommentThreads.event;
+    this._onDidUpdateCommentingRanges = this._register(new Emitter());
+    this.onDidUpdateCommentingRanges = this._onDidUpdateCommentingRanges.event;
+    this._onDidChangeActiveEditingCommentThread = this._register(new Emitter());
+    this.onDidChangeActiveEditingCommentThread = this._onDidChangeActiveEditingCommentThread.event;
+    this._onDidChangeCurrentCommentThread = this._register(new Emitter());
+    this.onDidChangeCurrentCommentThread = this._onDidChangeCurrentCommentThread.event;
+    this._onDidChangeCommentingEnabled = this._register(new Emitter());
+    this.onDidChangeCommentingEnabled = this._onDidChangeCommentingEnabled.event;
+    this._onResourceHasCommentingRanges = this._register(new Emitter());
+    this.onResourceHasCommentingRanges = this._onResourceHasCommentingRanges.event;
+    this._onDidChangeActiveCommentingRange = this._register(new Emitter());
+    this.onDidChangeActiveCommentingRange = this._onDidChangeActiveCommentingRange.event;
+    this._commentControls = /* @__PURE__ */ new Map();
+    this._commentMenus = /* @__PURE__ */ new Map();
+    this._isCommentingEnabled = true;
+    this._continueOnComments = /* @__PURE__ */ new Map();
+    this._continueOnCommentProviders = /* @__PURE__ */ new Set();
+    this._commentsModel = this._register(new CommentsModel());
+    this.commentsModel = this._commentsModel;
+    this._commentingRangeResources = /* @__PURE__ */ new Set();
+    this._commentingRangeResourceHintSchemes = /* @__PURE__ */ new Set();
+    this._handleConfiguration();
+    this._handleZenMode();
+    this._workspaceHasCommenting = CommentContextKeys.WorkspaceHasCommenting.bindTo(contextKeyService);
+    this._commentingEnabled = CommentContextKeys.commentingEnabled.bindTo(contextKeyService);
+    const storageListener = this._register(new DisposableStore());
+    const storageEvent = Event.debounce(this.storageService.onDidChangeValue(1, CONTINUE_ON_COMMENTS, storageListener), (last, event) => last?.external ? last : event, 500);
+    storageListener.add(storageEvent((v) => {
+      if (!v.external) {
+        return;
+      }
+      const commentsToRestore = this.storageService.getObject(
+        CONTINUE_ON_COMMENTS,
+        1
+        /* StorageScope.WORKSPACE */
+      );
+      if (!commentsToRestore) {
+        return;
+      }
+      this.logService.debug(`Comments: URIs of continue on comments from storage ${commentsToRestore.map((thread) => thread.uri.toString()).join(", ")}.`);
+      const changedOwners = this._addContinueOnComments(commentsToRestore, this._continueOnComments);
+      for (const uniqueOwner of changedOwners) {
+        const control = this._commentControls.get(uniqueOwner);
+        if (!control) {
+          continue;
+        }
+        const evt = {
+          uniqueOwner,
+          owner: control.owner,
+          ownerLabel: control.label,
+          pending: this._continueOnComments.get(uniqueOwner) || [],
+          added: [],
+          removed: [],
+          changed: []
+        };
+        this.updateModelThreads(evt);
+      }
+    }));
+    this._register(storageService.onWillSaveState(() => {
+      const map = /* @__PURE__ */ new Map();
+      for (const provider of this._continueOnCommentProviders) {
+        const pendingComments = provider.provideContinueOnComments();
+        this._addContinueOnComments(pendingComments, map);
+      }
+      this._saveContinueOnComments(map);
+    }));
+    this._register(this.modelService.onModelAdded((model) => {
+      if (model.uri.scheme === Schemas.vscodeSourceControl) {
+        return;
+      }
+      if (!this._commentingRangeResources.has(model.uri.toString())) {
+        this.getDocumentComments(model.uri);
+      }
+    }));
+  }
+  _updateResourcesWithCommentingRanges(resource, commentInfos) {
+    let addedResources = false;
+    for (const comments of commentInfos) {
+      if (comments && (comments.commentingRanges.ranges.length > 0 || comments.threads.length > 0)) {
+        this._commentingRangeResources.add(resource.toString());
+        addedResources = true;
+      }
+    }
+    if (addedResources) {
+      this._onResourceHasCommentingRanges.fire();
+    }
+  }
+  _handleConfiguration() {
+    this._isCommentingEnabled = this._defaultCommentingEnablement;
+    this._register(this.configurationService.onDidChangeConfiguration((e) => {
+      if (e.affectsConfiguration("comments.visible")) {
+        this.enableCommenting(this._defaultCommentingEnablement);
+      }
+    }));
+  }
+  _handleZenMode() {
+    let preZenModeValue = this._isCommentingEnabled;
+    this._register(this.layoutService.onDidChangeZenMode((e) => {
+      if (e) {
+        preZenModeValue = this._isCommentingEnabled;
+        this.enableCommenting(false);
+      } else {
+        this.enableCommenting(preZenModeValue);
+      }
+    }));
+  }
+  get _defaultCommentingEnablement() {
+    return !!this.configurationService.getValue(COMMENTS_SECTION)?.visible;
+  }
+  get isCommentingEnabled() {
+    return this._isCommentingEnabled;
+  }
+  enableCommenting(enable) {
+    if (enable !== this._isCommentingEnabled) {
+      this._isCommentingEnabled = enable;
+      this._commentingEnabled.set(enable);
+      this._onDidChangeCommentingEnabled.fire(enable);
+    }
+  }
+  /**
+   * The current comment thread is the thread that has focus or is being hovered.
+   * @param commentThread
+   */
+  setCurrentCommentThread(commentThread) {
+    this._onDidChangeCurrentCommentThread.fire(commentThread);
+  }
+  /**
+   * The active comment thread is the thread that is currently being edited.
+   * @param commentThread
+   */
+  setActiveEditingCommentThread(commentThread) {
+    this._onDidChangeActiveEditingCommentThread.fire(commentThread);
+  }
+  get lastActiveCommentcontroller() {
+    return this._lastActiveCommentController;
+  }
+  async setActiveCommentAndThread(uniqueOwner, commentInfo) {
+    const commentController = this._commentControls.get(uniqueOwner);
+    if (!commentController) {
+      return;
+    }
+    if (commentController !== this._lastActiveCommentController) {
+      await this._lastActiveCommentController?.setActiveCommentAndThread(void 0);
+    }
+    this._lastActiveCommentController = commentController;
+    return commentController.setActiveCommentAndThread(commentInfo);
+  }
+  setDocumentComments(resource, commentInfos) {
+    this._onDidSetResourceCommentInfos.fire({ resource, commentInfos });
+  }
+  setModelThreads(ownerId, owner, ownerLabel, commentThreads) {
+    this._commentsModel.setCommentThreads(ownerId, owner, ownerLabel, commentThreads);
+    this._onDidSetAllCommentThreads.fire({ ownerId, ownerLabel, commentThreads });
+  }
+  updateModelThreads(event) {
+    this._commentsModel.updateCommentThreads(event);
+    this._onDidUpdateCommentThreads.fire(event);
+  }
+  setWorkspaceComments(uniqueOwner, commentsByResource) {
+    if (commentsByResource.length) {
+      this._workspaceHasCommenting.set(true);
+    }
+    const control = this._commentControls.get(uniqueOwner);
+    if (control) {
+      this.setModelThreads(uniqueOwner, control.owner, control.label, commentsByResource);
+    }
+  }
+  removeWorkspaceComments(uniqueOwner) {
+    const control = this._commentControls.get(uniqueOwner);
+    if (control) {
+      this.setModelThreads(uniqueOwner, control.owner, control.label, []);
+    }
+  }
+  registerCommentController(uniqueOwner, commentControl) {
+    this._commentControls.set(uniqueOwner, commentControl);
+    this._onDidSetDataProvider.fire();
+  }
+  unregisterCommentController(uniqueOwner) {
+    if (uniqueOwner) {
+      this._commentControls.delete(uniqueOwner);
+    } else {
+      this._commentControls.clear();
+    }
+    this._commentsModel.deleteCommentsByOwner(uniqueOwner);
+    this._onDidDeleteDataProvider.fire(uniqueOwner);
+  }
+  getCommentController(uniqueOwner) {
+    return this._commentControls.get(uniqueOwner);
+  }
+  async createCommentThreadTemplate(uniqueOwner, resource, range, editorId) {
+    const commentController = this._commentControls.get(uniqueOwner);
+    if (!commentController) {
+      return;
+    }
+    return commentController.createCommentThreadTemplate(resource, range, editorId);
+  }
+  async updateCommentThreadTemplate(uniqueOwner, threadHandle, range) {
+    const commentController = this._commentControls.get(uniqueOwner);
+    if (!commentController) {
+      return;
+    }
+    await commentController.updateCommentThreadTemplate(threadHandle, range);
+  }
+  disposeCommentThread(uniqueOwner, threadId) {
+    const controller = this.getCommentController(uniqueOwner);
+    controller?.deleteCommentThreadMain(threadId);
+  }
+  getCommentMenus(uniqueOwner) {
+    if (this._commentMenus.get(uniqueOwner)) {
+      return this._commentMenus.get(uniqueOwner);
+    }
+    const menu = this.instantiationService.createInstance(CommentMenus);
+    this._commentMenus.set(uniqueOwner, menu);
+    return menu;
+  }
+  updateComments(ownerId, event) {
+    const control = this._commentControls.get(ownerId);
+    if (control) {
+      const evt = Object.assign({}, event, { uniqueOwner: ownerId, ownerLabel: control.label, owner: control.owner });
+      this.updateModelThreads(evt);
+    }
+  }
+  updateNotebookComments(ownerId, event) {
+    const evt = Object.assign({}, event, { uniqueOwner: ownerId });
+    this._onDidUpdateNotebookCommentThreads.fire(evt);
+  }
+  updateCommentingRanges(ownerId, resourceHints) {
+    if (resourceHints?.schemes && resourceHints.schemes.length > 0) {
+      for (const scheme of resourceHints.schemes) {
+        this._commentingRangeResourceHintSchemes.add(scheme);
+      }
+    }
+    this._workspaceHasCommenting.set(true);
+    this._onDidUpdateCommentingRanges.fire({ uniqueOwner: ownerId });
+  }
+  async toggleReaction(uniqueOwner, resource, thread, comment, reaction) {
+    const commentController = this._commentControls.get(uniqueOwner);
+    if (commentController) {
+      return commentController.toggleReaction(resource, thread, comment, reaction, CancellationToken.None);
+    } else {
+      throw new Error("Not supported");
+    }
+  }
+  hasReactionHandler(uniqueOwner) {
+    const commentProvider = this._commentControls.get(uniqueOwner);
+    if (commentProvider) {
+      return !!commentProvider.features.reactionHandler;
+    }
+    return false;
+  }
+  async getDocumentComments(resource) {
+    const commentControlResult = [];
+    for (const control of this._commentControls.values()) {
+      commentControlResult.push(control.getDocumentComments(resource, CancellationToken.None).then((documentComments) => {
+        for (const documentCommentThread of documentComments.threads) {
+          if (documentCommentThread.comments?.length === 0 && documentCommentThread.range) {
+            this.removeContinueOnComment({ range: documentCommentThread.range, uri: resource, uniqueOwner: documentComments.uniqueOwner });
+          }
+        }
+        const pendingComments = this._continueOnComments.get(documentComments.uniqueOwner);
+        documentComments.pendingCommentThreads = pendingComments?.filter((pendingComment) => pendingComment.uri.toString() === resource.toString());
+        return documentComments;
+      }).catch((_) => {
+        return null;
+      }));
+    }
+    const commentInfos = await Promise.all(commentControlResult);
+    this._updateResourcesWithCommentingRanges(resource, commentInfos);
+    return commentInfos;
+  }
+  async getNotebookComments(resource) {
+    const commentControlResult = [];
+    this._commentControls.forEach((control) => {
+      commentControlResult.push(control.getNotebookComments(resource, CancellationToken.None).catch((_) => {
+        return null;
+      }));
+    });
+    return Promise.all(commentControlResult);
+  }
+  registerContinueOnCommentProvider(provider) {
+    this._continueOnCommentProviders.add(provider);
+    return {
+      dispose: /* @__PURE__ */ __name(() => {
+        this._continueOnCommentProviders.delete(provider);
+      }, "dispose")
+    };
+  }
+  _saveContinueOnComments(map) {
+    const commentsToSave = [];
+    for (const pendingComments of map.values()) {
+      commentsToSave.push(...pendingComments);
+    }
+    this.logService.debug(`Comments: URIs of continue on comments to add to storage ${commentsToSave.map((thread) => thread.uri.toString()).join(", ")}.`);
+    this.storageService.store(
+      CONTINUE_ON_COMMENTS,
+      commentsToSave,
+      1,
+      0
+      /* StorageTarget.USER */
+    );
+  }
+  removeContinueOnComment(pendingComment) {
+    const pendingComments = this._continueOnComments.get(pendingComment.uniqueOwner);
+    if (pendingComments) {
+      const commentIndex = pendingComments.findIndex((comment) => comment.uri.toString() === pendingComment.uri.toString() && Range.equalsRange(comment.range, pendingComment.range) && (pendingComment.isReply === void 0 || comment.isReply === pendingComment.isReply));
+      if (commentIndex > -1) {
+        return pendingComments.splice(commentIndex, 1)[0];
+      }
+    }
+    return void 0;
+  }
+  _addContinueOnComments(pendingComments, map) {
+    const changedOwners = /* @__PURE__ */ new Set();
+    for (const pendingComment of pendingComments) {
+      if (!map.has(pendingComment.uniqueOwner)) {
+        map.set(pendingComment.uniqueOwner, [pendingComment]);
+        changedOwners.add(pendingComment.uniqueOwner);
+      } else {
+        const commentsForOwner = map.get(pendingComment.uniqueOwner);
+        if (commentsForOwner.every((comment) => comment.uri.toString() !== pendingComment.uri.toString() || !Range.equalsRange(comment.range, pendingComment.range))) {
+          commentsForOwner.push(pendingComment);
+          changedOwners.add(pendingComment.uniqueOwner);
+        }
+      }
+    }
+    return changedOwners;
+  }
+  resourceHasCommentingRanges(resource) {
+    return this._commentingRangeResourceHintSchemes.has(resource.scheme) || this._commentingRangeResources.has(resource.toString());
+  }
+};
+CommentService = __decorate([
+  __param(0, IInstantiationService),
+  __param(1, IWorkbenchLayoutService),
+  __param(2, IConfigurationService),
+  __param(3, IContextKeyService),
+  __param(4, IStorageService),
+  __param(5, ILogService),
+  __param(6, IModelService)
+], CommentService);
+export {
+  CommentService,
+  ICommentService
+};
+//# sourceMappingURL=commentService.js.map

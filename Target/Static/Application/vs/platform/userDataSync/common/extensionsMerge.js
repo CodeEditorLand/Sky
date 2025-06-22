@@ -1,1 +1,358 @@
-import{$2o as F,$6o as J}from"../../../base/common/objects.js";import*as D from"../../../base/common/semver/semver.js";import{$$c as y}from"../../../base/common/types.js";function X(d,a,u,o,c,v){const h=[],i=[],f=[];if(!a){const e=d.filter(({identifier:r})=>c.every(m=>m.toLowerCase()!==r.id.toLowerCase()));return{local:{added:h,removed:i,updated:f},remote:e.length>0?{added:e,updated:[],removed:[],all:e}:null}}d=d.map(j),a=a.map(j),u=u?u.map(j):null;const s=new Map,p=e=>{e.uuid&&s.set(e.id.toLowerCase(),e.uuid)};d.forEach(({identifier:e})=>p(e)),a.forEach(({identifier:e})=>p(e)),u?.forEach(({identifier:e})=>p(e)),o?.forEach(({identifier:e})=>p(e)),v?.forEach(e=>p(e));const T=e=>{const r=e.identifier.uuid||s.get(e.identifier.id.toLowerCase());return r?`uuid:${r}`:`id:${e.identifier.id.toLowerCase()}`},$=(e,r)=>(e.set(T(r),r),e),k=d.reduce($,new Map),b=a.reduce($,new Map),w=a.reduce((e,r)=>$(e,F(r)),new Map),R=u?u.reduce($,new Map):null,H=o.reduce($,new Map),O=c.reduce((e,r)=>{const m=s.get(r.toLowerCase());return e.add(m?`uuid:${m}`:`id:${r.toLowerCase()}`)},new Set),M=v?v.reduce((e,{id:r,uuid:m})=>(m=m??s.get(r.toLowerCase()),e.add(m?`uuid:${m}`:`id:${r.toLowerCase()}`)),new Set):null,I=K(k,b,O,!1);if(I.added.size>0||I.removed.size>0||I.updated.size>0){const e=K(R,k,O,!1),r=K(R,b,O,!0),m=(t,n,l,g)=>{let S,L,z;return n.installed?(S=g.pinned,z=g.preRelease,S&&(L=g.version)):(S=l.pinned,z=l.preRelease,S&&(L=l.version)),S===void 0&&(S=n.pinned,S&&(L=n.version)),z===void 0&&(z=n.preRelease),{...g,installed:n.installed||l.installed,pinned:S,preRelease:z,version:L??(l.version&&(!n.installed||D.gt(l.version,n.version))?l.version:n.version),state:N(n,l,R?.get(t))}};for(const t of r.removed.values()){const n=k.get(t);if(!n)continue;const l=y(R?.get(t)),g=M&&!M.has(t)&&l.installed;n.installed&&g?i.push(n.identifier):w.set(t,n)}for(const t of r.added.values()){const n=y(b.get(t)),l=k.get(t);if(l){if(I.updated.has(t)){const g=m(t,l,n,n);G(l,n,!1,!1)||f.push(A(g,t)),w.set(t,g)}}else n.installed&&h.push(A(n,t))}for(const t of r.updated.values()){const n=y(b.get(t)),l=y(R?.get(t)),g=k.get(t);if(g)if(M&&!M.has(t)&&l.installed&&g.installed&&!n.installed)i.push(g.identifier);else{const L=m(t,g,n,n);f.push(A(L,t)),w.set(t,L)}else n.installed&&h.push(A(n,t))}for(const t of e.added.values())r.added.has(t)||w.set(t,y(k.get(t)));for(const t of e.updated.values()){if(r.removed.has(t)||r.updated.has(t))continue;const n=y(k.get(t)),l=y(b.get(t));w.set(t,m(t,n,l,n))}for(const t of e.removed.values())r.updated.has(t)||r.removed.has(t)||H.has(t)||y(b.get(t)).installed&&M&&(M.has(t)||!y(R?.get(t)).installed||w.delete(t))}const W=[],C=K(b,w,new Set,!0),q=C.added.size>0||C.updated.size>0||C.removed.size>0;return q&&w.forEach((e,r)=>W.push(A(e,r))),{local:{added:h,removed:i,updated:f},remote:q?{added:[...C.added].map(e=>w.get(e)),updated:[...C.updated].map(e=>w.get(e)),removed:[...C.removed].map(e=>b.get(e)),all:W}:null}}function K(d,a,u,o){const c=d?[...d.keys()].filter(s=>!u.has(s)):[],v=[...a.keys()].filter(s=>!u.has(s)),h=v.filter(s=>!c.includes(s)).reduce((s,p)=>(s.add(p),s),new Set),i=c.filter(s=>!v.includes(s)).reduce((s,p)=>(s.add(p),s),new Set),f=new Set;for(const s of c){if(i.has(s))continue;const p=d.get(s),T=a.get(s);(!T||!G(p,T,o,!0))&&f.add(s)}return{added:h,removed:i,updated:f}}function G(d,a,u,o){return!(d.disabled!==a.disabled||!!d.isApplicationScoped!=!!a.isApplicationScoped||o&&d.installed!==a.installed||d.installed&&a.installed&&(d.preRelease!==a.preRelease||d.pinned!==a.pinned||a.pinned&&d.version!==a.version)||!P(d.state,a.state)||u&&d.version!==a.version)}function N(d,a,u){const o=d.state,c=a.state,v=u?.state;if(!a.version||o&&D.gt(d.version,a.version))return o;if(c&&D.gt(a.version,d.version)||!o)return c;if(!c)return o;const h=F(o),i=v?U(v,c):{added:Object.keys(c).reduce((s,p)=>(s.add(p),s),new Set),removed:new Set,updated:new Set},f=v?U(v,o):{added:Object.keys(o).reduce((s,p)=>(s.add(p),s),new Set),removed:new Set,updated:new Set};for(const s of[...i.added.values(),...i.updated.values()])h[s]=c[s];for(const s of i.removed.values())f.updated.has(s)||delete h[s];return h}function U(d,a){const u=Object.keys(d),o=Object.keys(a),c=o.filter(i=>!u.includes(i)).reduce((i,f)=>(i.add(f),i),new Set),v=u.filter(i=>!o.includes(i)).reduce((i,f)=>(i.add(f),i),new Set),h=new Set;for(const i of u){if(v.has(i))continue;const f=d[i],s=a[i];J(f,s)||h.add(i)}return{added:c,removed:v,updated:h}}function P(d={},a={}){const{added:u,removed:o,updated:c}=U(d,a);return u.size===0&&o.size===0&&c.size===0}function j(d){return{...d,disabled:!!d.disabled,installed:!!d.installed}}function A(d,a){const u={...d,identifier:{id:d.identifier.id,uuid:a.startsWith("uuid:")?a.substring(5):void 0},preRelease:!!d.preRelease,pinned:!!d.pinned};return d.disabled||delete u.disabled,d.installed||delete u.installed,d.state||delete u.state,d.isApplicationScoped||delete u.isApplicationScoped,u}export{X as $mzc};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { deepClone, equals } from "../../../base/common/objects.js";
+import * as semver from "../../../base/common/semver/semver.js";
+import { assertReturnsDefined } from "../../../base/common/types.js";
+function merge(localExtensions, remoteExtensions, lastSyncExtensions, skippedExtensions, ignoredExtensions, lastSyncBuiltinExtensions) {
+  const added = [];
+  const removed = [];
+  const updated = [];
+  if (!remoteExtensions) {
+    const remote2 = localExtensions.filter(({ identifier }) => ignoredExtensions.every((id) => id.toLowerCase() !== identifier.id.toLowerCase()));
+    return {
+      local: {
+        added,
+        removed,
+        updated
+      },
+      remote: remote2.length > 0 ? {
+        added: remote2,
+        updated: [],
+        removed: [],
+        all: remote2
+      } : null
+    };
+  }
+  localExtensions = localExtensions.map(massageIncomingExtension);
+  remoteExtensions = remoteExtensions.map(massageIncomingExtension);
+  lastSyncExtensions = lastSyncExtensions ? lastSyncExtensions.map(massageIncomingExtension) : null;
+  const uuids = /* @__PURE__ */ new Map();
+  const addUUID = /* @__PURE__ */ __name((identifier) => {
+    if (identifier.uuid) {
+      uuids.set(identifier.id.toLowerCase(), identifier.uuid);
+    }
+  }, "addUUID");
+  localExtensions.forEach(({ identifier }) => addUUID(identifier));
+  remoteExtensions.forEach(({ identifier }) => addUUID(identifier));
+  lastSyncExtensions?.forEach(({ identifier }) => addUUID(identifier));
+  skippedExtensions?.forEach(({ identifier }) => addUUID(identifier));
+  lastSyncBuiltinExtensions?.forEach((identifier) => addUUID(identifier));
+  const getKey = /* @__PURE__ */ __name((extension) => {
+    const uuid = extension.identifier.uuid || uuids.get(extension.identifier.id.toLowerCase());
+    return uuid ? `uuid:${uuid}` : `id:${extension.identifier.id.toLowerCase()}`;
+  }, "getKey");
+  const addExtensionToMap = /* @__PURE__ */ __name((map, extension) => {
+    map.set(getKey(extension), extension);
+    return map;
+  }, "addExtensionToMap");
+  const localExtensionsMap = localExtensions.reduce(addExtensionToMap, /* @__PURE__ */ new Map());
+  const remoteExtensionsMap = remoteExtensions.reduce(addExtensionToMap, /* @__PURE__ */ new Map());
+  const newRemoteExtensionsMap = remoteExtensions.reduce((map, extension) => addExtensionToMap(map, deepClone(extension)), /* @__PURE__ */ new Map());
+  const lastSyncExtensionsMap = lastSyncExtensions ? lastSyncExtensions.reduce(addExtensionToMap, /* @__PURE__ */ new Map()) : null;
+  const skippedExtensionsMap = skippedExtensions.reduce(addExtensionToMap, /* @__PURE__ */ new Map());
+  const ignoredExtensionsSet = ignoredExtensions.reduce((set, id) => {
+    const uuid = uuids.get(id.toLowerCase());
+    return set.add(uuid ? `uuid:${uuid}` : `id:${id.toLowerCase()}`);
+  }, /* @__PURE__ */ new Set());
+  const lastSyncBuiltinExtensionsSet = lastSyncBuiltinExtensions ? lastSyncBuiltinExtensions.reduce((set, { id, uuid }) => {
+    uuid = uuid ?? uuids.get(id.toLowerCase());
+    return set.add(uuid ? `uuid:${uuid}` : `id:${id.toLowerCase()}`);
+  }, /* @__PURE__ */ new Set()) : null;
+  const localToRemote = compare(localExtensionsMap, remoteExtensionsMap, ignoredExtensionsSet, false);
+  if (localToRemote.added.size > 0 || localToRemote.removed.size > 0 || localToRemote.updated.size > 0) {
+    const baseToLocal = compare(lastSyncExtensionsMap, localExtensionsMap, ignoredExtensionsSet, false);
+    const baseToRemote = compare(lastSyncExtensionsMap, remoteExtensionsMap, ignoredExtensionsSet, true);
+    const merge2 = /* @__PURE__ */ __name((key, localExtension, remoteExtension, preferred) => {
+      let pinned, version, preRelease;
+      if (localExtension.installed) {
+        pinned = preferred.pinned;
+        preRelease = preferred.preRelease;
+        if (pinned) {
+          version = preferred.version;
+        }
+      } else {
+        pinned = remoteExtension.pinned;
+        preRelease = remoteExtension.preRelease;
+        if (pinned) {
+          version = remoteExtension.version;
+        }
+      }
+      if (pinned === void 0) {
+        pinned = localExtension.pinned;
+        if (pinned) {
+          version = localExtension.version;
+        }
+      }
+      if (preRelease === void 0) {
+        preRelease = localExtension.preRelease;
+      }
+      return {
+        ...preferred,
+        installed: localExtension.installed || remoteExtension.installed,
+        pinned,
+        preRelease,
+        version: version ?? (remoteExtension.version && (!localExtension.installed || semver.gt(remoteExtension.version, localExtension.version)) ? remoteExtension.version : localExtension.version),
+        state: mergeExtensionState(localExtension, remoteExtension, lastSyncExtensionsMap?.get(key))
+      };
+    }, "merge");
+    for (const key of baseToRemote.removed.values()) {
+      const localExtension = localExtensionsMap.get(key);
+      if (!localExtension) {
+        continue;
+      }
+      const baseExtension = assertReturnsDefined(lastSyncExtensionsMap?.get(key));
+      const wasAnInstalledExtensionDuringLastSync = lastSyncBuiltinExtensionsSet && !lastSyncBuiltinExtensionsSet.has(key) && baseExtension.installed;
+      if (localExtension.installed && wasAnInstalledExtensionDuringLastSync) {
+        removed.push(localExtension.identifier);
+      } else {
+        newRemoteExtensionsMap.set(key, localExtension);
+      }
+    }
+    for (const key of baseToRemote.added.values()) {
+      const remoteExtension = assertReturnsDefined(remoteExtensionsMap.get(key));
+      const localExtension = localExtensionsMap.get(key);
+      if (localExtension) {
+        if (localToRemote.updated.has(key)) {
+          const mergedExtension = merge2(key, localExtension, remoteExtension, remoteExtension);
+          if (!areSame(localExtension, remoteExtension, false, false)) {
+            updated.push(massageOutgoingExtension(mergedExtension, key));
+          }
+          newRemoteExtensionsMap.set(key, mergedExtension);
+        }
+      } else {
+        if (remoteExtension.installed) {
+          added.push(massageOutgoingExtension(remoteExtension, key));
+        }
+      }
+    }
+    for (const key of baseToRemote.updated.values()) {
+      const remoteExtension = assertReturnsDefined(remoteExtensionsMap.get(key));
+      const baseExtension = assertReturnsDefined(lastSyncExtensionsMap?.get(key));
+      const localExtension = localExtensionsMap.get(key);
+      if (localExtension) {
+        const wasAnInstalledExtensionDuringLastSync = lastSyncBuiltinExtensionsSet && !lastSyncBuiltinExtensionsSet.has(key) && baseExtension.installed;
+        if (wasAnInstalledExtensionDuringLastSync && localExtension.installed && !remoteExtension.installed) {
+          removed.push(localExtension.identifier);
+        } else {
+          const mergedExtension = merge2(key, localExtension, remoteExtension, remoteExtension);
+          updated.push(massageOutgoingExtension(mergedExtension, key));
+          newRemoteExtensionsMap.set(key, mergedExtension);
+        }
+      } else if (remoteExtension.installed) {
+        added.push(massageOutgoingExtension(remoteExtension, key));
+      }
+    }
+    for (const key of baseToLocal.added.values()) {
+      if (baseToRemote.added.has(key)) {
+        continue;
+      }
+      newRemoteExtensionsMap.set(key, assertReturnsDefined(localExtensionsMap.get(key)));
+    }
+    for (const key of baseToLocal.updated.values()) {
+      if (baseToRemote.removed.has(key)) {
+        continue;
+      }
+      if (baseToRemote.updated.has(key)) {
+        continue;
+      }
+      const localExtension = assertReturnsDefined(localExtensionsMap.get(key));
+      const remoteExtension = assertReturnsDefined(remoteExtensionsMap.get(key));
+      newRemoteExtensionsMap.set(key, merge2(key, localExtension, remoteExtension, localExtension));
+    }
+    for (const key of baseToLocal.removed.values()) {
+      if (baseToRemote.updated.has(key)) {
+        continue;
+      }
+      if (baseToRemote.removed.has(key)) {
+        continue;
+      }
+      if (skippedExtensionsMap.has(key)) {
+        continue;
+      }
+      if (!assertReturnsDefined(remoteExtensionsMap.get(key)).installed) {
+        continue;
+      }
+      if (!lastSyncBuiltinExtensionsSet) {
+        continue;
+      }
+      if (lastSyncBuiltinExtensionsSet.has(key) || !assertReturnsDefined(lastSyncExtensionsMap?.get(key)).installed) {
+        continue;
+      }
+      newRemoteExtensionsMap.delete(key);
+    }
+  }
+  const remote = [];
+  const remoteChanges = compare(remoteExtensionsMap, newRemoteExtensionsMap, /* @__PURE__ */ new Set(), true);
+  const hasRemoteChanges = remoteChanges.added.size > 0 || remoteChanges.updated.size > 0 || remoteChanges.removed.size > 0;
+  if (hasRemoteChanges) {
+    newRemoteExtensionsMap.forEach((value, key) => remote.push(massageOutgoingExtension(value, key)));
+  }
+  return {
+    local: { added, removed, updated },
+    remote: hasRemoteChanges ? {
+      added: [...remoteChanges.added].map((id) => newRemoteExtensionsMap.get(id)),
+      updated: [...remoteChanges.updated].map((id) => newRemoteExtensionsMap.get(id)),
+      removed: [...remoteChanges.removed].map((id) => remoteExtensionsMap.get(id)),
+      all: remote
+    } : null
+  };
+}
+__name(merge, "merge");
+function compare(from, to, ignoredExtensions, checkVersionProperty) {
+  const fromKeys = from ? [...from.keys()].filter((key) => !ignoredExtensions.has(key)) : [];
+  const toKeys = [...to.keys()].filter((key) => !ignoredExtensions.has(key));
+  const added = toKeys.filter((key) => !fromKeys.includes(key)).reduce((r, key) => {
+    r.add(key);
+    return r;
+  }, /* @__PURE__ */ new Set());
+  const removed = fromKeys.filter((key) => !toKeys.includes(key)).reduce((r, key) => {
+    r.add(key);
+    return r;
+  }, /* @__PURE__ */ new Set());
+  const updated = /* @__PURE__ */ new Set();
+  for (const key of fromKeys) {
+    if (removed.has(key)) {
+      continue;
+    }
+    const fromExtension = from.get(key);
+    const toExtension = to.get(key);
+    if (!toExtension || !areSame(fromExtension, toExtension, checkVersionProperty, true)) {
+      updated.add(key);
+    }
+  }
+  return { added, removed, updated };
+}
+__name(compare, "compare");
+function areSame(fromExtension, toExtension, checkVersionProperty, checkInstalledProperty) {
+  if (fromExtension.disabled !== toExtension.disabled) {
+    return false;
+  }
+  if (!!fromExtension.isApplicationScoped !== !!toExtension.isApplicationScoped) {
+    return false;
+  }
+  if (checkInstalledProperty && fromExtension.installed !== toExtension.installed) {
+    return false;
+  }
+  if (fromExtension.installed && toExtension.installed) {
+    if (fromExtension.preRelease !== toExtension.preRelease) {
+      return false;
+    }
+    if (fromExtension.pinned !== toExtension.pinned) {
+      return false;
+    }
+    if (toExtension.pinned && fromExtension.version !== toExtension.version) {
+      return false;
+    }
+  }
+  if (!isSameExtensionState(fromExtension.state, toExtension.state)) {
+    return false;
+  }
+  if (checkVersionProperty && fromExtension.version !== toExtension.version) {
+    return false;
+  }
+  return true;
+}
+__name(areSame, "areSame");
+function mergeExtensionState(localExtension, remoteExtension, lastSyncExtension) {
+  const localState = localExtension.state;
+  const remoteState = remoteExtension.state;
+  const baseState = lastSyncExtension?.state;
+  if (!remoteExtension.version) {
+    return localState;
+  }
+  if (localState && semver.gt(localExtension.version, remoteExtension.version)) {
+    return localState;
+  }
+  if (remoteState && semver.gt(remoteExtension.version, localExtension.version)) {
+    return remoteState;
+  }
+  if (!localState) {
+    return remoteState;
+  }
+  if (!remoteState) {
+    return localState;
+  }
+  const mergedState = deepClone(localState);
+  const baseToRemote = baseState ? compareExtensionState(baseState, remoteState) : { added: Object.keys(remoteState).reduce((r, k) => {
+    r.add(k);
+    return r;
+  }, /* @__PURE__ */ new Set()), removed: /* @__PURE__ */ new Set(), updated: /* @__PURE__ */ new Set() };
+  const baseToLocal = baseState ? compareExtensionState(baseState, localState) : { added: Object.keys(localState).reduce((r, k) => {
+    r.add(k);
+    return r;
+  }, /* @__PURE__ */ new Set()), removed: /* @__PURE__ */ new Set(), updated: /* @__PURE__ */ new Set() };
+  for (const key of [...baseToRemote.added.values(), ...baseToRemote.updated.values()]) {
+    mergedState[key] = remoteState[key];
+  }
+  for (const key of baseToRemote.removed.values()) {
+    if (!baseToLocal.updated.has(key)) {
+      delete mergedState[key];
+    }
+  }
+  return mergedState;
+}
+__name(mergeExtensionState, "mergeExtensionState");
+function compareExtensionState(from, to) {
+  const fromKeys = Object.keys(from);
+  const toKeys = Object.keys(to);
+  const added = toKeys.filter((key) => !fromKeys.includes(key)).reduce((r, key) => {
+    r.add(key);
+    return r;
+  }, /* @__PURE__ */ new Set());
+  const removed = fromKeys.filter((key) => !toKeys.includes(key)).reduce((r, key) => {
+    r.add(key);
+    return r;
+  }, /* @__PURE__ */ new Set());
+  const updated = /* @__PURE__ */ new Set();
+  for (const key of fromKeys) {
+    if (removed.has(key)) {
+      continue;
+    }
+    const value1 = from[key];
+    const value2 = to[key];
+    if (!equals(value1, value2)) {
+      updated.add(key);
+    }
+  }
+  return { added, removed, updated };
+}
+__name(compareExtensionState, "compareExtensionState");
+function isSameExtensionState(a = {}, b = {}) {
+  const { added, removed, updated } = compareExtensionState(a, b);
+  return added.size === 0 && removed.size === 0 && updated.size === 0;
+}
+__name(isSameExtensionState, "isSameExtensionState");
+function massageIncomingExtension(extension) {
+  return { ...extension, ...{ disabled: !!extension.disabled, installed: !!extension.installed } };
+}
+__name(massageIncomingExtension, "massageIncomingExtension");
+function massageOutgoingExtension(extension, key) {
+  const massagedExtension = {
+    ...extension,
+    identifier: {
+      id: extension.identifier.id,
+      uuid: key.startsWith("uuid:") ? key.substring("uuid:".length) : void 0
+    },
+    /* set following always so that to differentiate with older clients */
+    preRelease: !!extension.preRelease,
+    pinned: !!extension.pinned
+  };
+  if (!extension.disabled) {
+    delete massagedExtension.disabled;
+  }
+  if (!extension.installed) {
+    delete massagedExtension.installed;
+  }
+  if (!extension.state) {
+    delete massagedExtension.state;
+  }
+  if (!extension.isApplicationScoped) {
+    delete massagedExtension.isApplicationScoped;
+  }
+  return massagedExtension;
+}
+__name(massageOutgoingExtension, "massageOutgoingExtension");
+export {
+  merge
+};
+//# sourceMappingURL=extensionsMerge.js.map

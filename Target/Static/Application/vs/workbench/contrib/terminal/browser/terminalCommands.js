@@ -1,1 +1,29 @@
-import{$_H as o}from"../../../../platform/keybinding/common/keybindingsRegistry.js";import{$HYb as t}from"./terminal.js";function c(){d()}function d(){for(let n=0;n<9;n++){const e=n,i=n+1;o.registerCommandAndKeybindingRule({id:`workbench.action.terminal.focusAtIndex${i}`,weight:200,when:void 0,primary:0,handler:n=>(n.get(t).setActiveInstanceByIndex(e),n.get(t).showPanel(!0))})}}export{c as $jrc};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { KeybindingsRegistry } from "../../../../platform/keybinding/common/keybindingsRegistry.js";
+import { ITerminalGroupService } from "./terminal.js";
+function setupTerminalCommands() {
+  registerOpenTerminalAtIndexCommands();
+}
+__name(setupTerminalCommands, "setupTerminalCommands");
+function registerOpenTerminalAtIndexCommands() {
+  for (let i = 0; i < 9; i++) {
+    const terminalIndex = i;
+    const visibleIndex = i + 1;
+    KeybindingsRegistry.registerCommandAndKeybindingRule({
+      id: `workbench.action.terminal.focusAtIndex${visibleIndex}`,
+      weight: 200,
+      when: void 0,
+      primary: 0,
+      handler: /* @__PURE__ */ __name((accessor) => {
+        accessor.get(ITerminalGroupService).setActiveInstanceByIndex(terminalIndex);
+        return accessor.get(ITerminalGroupService).showPanel(true);
+      }, "handler")
+    });
+  }
+}
+__name(registerOpenTerminalAtIndexCommands, "registerOpenTerminalAtIndexCommands");
+export {
+  setupTerminalCommands
+};
+//# sourceMappingURL=terminalCommands.js.map

@@ -1,1 +1,251 @@
-import{$F6 as q}from"../../../../../base/browser/dom.js";import{$df as S,Event as $}from"../../../../../base/common/event.js";import{localize as p}from"../../../../../nls.js";import{$OM as E,QuickInputHideReason as j}from"../../../../../platform/quickinput/common/quickInput.js";import{$KYb as T}from"../../../terminal/browser/terminal.js";import{$ud as P}from"../../../../../base/common/lifecycle.js";import{$Gh as _,$Mh as F}from"../../../../../base/common/async.js";import{$gLb as C}from"../../../../browser/quickaccess.js";import{$wZb as D}from"./terminalLinkParsing.js";import{$2H as O}from"../../../../../platform/label/common/label.js";import{$gh as R,$jh as K}from"../../../../../base/common/resources.js";import{$mj as Q}from"../../../../../platform/instantiation/common/instantiation.js";import{$0ob as A}from"../../../../../platform/accessibility/browser/accessibleView.js";var g=function(k,i,e,r){var l=arguments.length,s=l<3?i:r===null?r=Object.getOwnPropertyDescriptor(i,e):r,t;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")s=Reflect.decorate(k,i,e,r);else for(var n=k.length-1;n>=0;n--)(t=k[n])&&(s=(l<3?t(s):l>3?t(i,e,s):t(i,e))||s);return l>3&&s&&Object.defineProperty(i,e,s),s},L=function(k,i){return function(e,r){i(e,r,k)}};let I=class extends P{constructor(i,e,r,l){super(),this.j=i,this.m=r,this.n=l,this.a=new _,this.h=this.add(new S),this.onDidRequestMoreLinks=this.h.event,this.u=!1,this.b=this.add(e.createInstance(C))}async show(i,e){this.c=i;const r=await Promise.race([e.all,F(500)]),l=typeof r=="object",s=l?r:e.viewport,t=s.wordLinks?await this.q(s.wordLinks):void 0,n=s.fileLinks?await this.q(s.fileLinks):void 0,f=s.folderLinks?await this.q(s.folderLinks):void 0,b=s.webLinks?await this.q(s.webLinks):void 0,u=[];b&&(u.push({type:"separator",label:p(12098,null)}),u.push(...b)),n&&(u.push({type:"separator",label:p(12099,null)}),u.push(...n)),f&&(u.push({type:"separator",label:p(12100,null)}),u.push(...f)),t&&(u.push({type:"separator",label:p(12101,null)}),u.push(...t));const a=this.n.createQuickPick({useSeparators:!0}),h=new P;h.add(a),a.items=u,a.placeholder=p(12102,null),a.sortByLabel=!1,a.show(),a.activeItems.length>0&&this.s(a.activeItems[0]);let v=!1;return l||h.add($.once(a.onDidChangeValue)(async()=>{const o=await e.all;if(v)return;const w=[...o.fileLinks??[],...o.folderLinks??[],...o.webLinks??[]],c=o.wordLinks?await this.q(o.wordLinks,w):void 0,m=o.fileLinks?await this.q(o.fileLinks):void 0,y=o.folderLinks?await this.q(o.folderLinks):void 0,x=o.webLinks?await this.q(o.webLinks):void 0,d=[];x&&(d.push({type:"separator",label:p(12103,null)}),d.push(...x)),m&&(d.push({type:"separator",label:p(12104,null)}),d.push(...m)),y&&(d.push({type:"separator",label:p(12105,null)}),d.push(...y)),c&&(d.push({type:"separator",label:p(12106,null)}),d.push(...c)),a.items=d})),h.add(a.onDidChangeActive(async()=>{const[o]=a.activeItems;this.s(o)})),new Promise(o=>{h.add(a.onDidHide(({reason:w})=>{if(this.u){const c=this.c?.xterm?.markTracker;c&&(c.restoreScrollState(),c.clear(),this.u=!1)}w===j.Gesture&&this.b.restore(),h.dispose(),a.selectedItems.length===0&&this.j.showLastProvider("terminal"),o()})),h.add($.once(a.onDidAccept)(()=>{if(this.u){const m=this.c?.xterm?.markTracker;m&&(m.restoreScrollState(),m.clear(),this.u=!1)}v=!0;const w=new T(q.CLICK),c=a.activeItems?.[0];c&&"link"in c&&c.link.activate(w,c.label),h.dispose(),o()}))})}async q(i,e){if(!i)return;const r=new Set,l=new Set,s=[];for(const t of i){let n=t.text;if(!r.has(n)&&(!e||!e.some(f=>f.text===n))){r.add(n);let f;if("uri"in t&&t.uri){if((t.type==="LocalFile"||t.type==="LocalFolderInWorkspace"||t.type==="LocalFolderOutsideWorkspace")&&(n=R(t.uri),f=this.m.getUriLabel(K(t.uri),{relative:!0})),t.type==="LocalFile"&&t.parsedLink?.suffix?.row!==void 0&&(n+=`:${t.parsedLink.suffix.row}`,t.parsedLink?.suffix?.rowEnd!==void 0&&(n+=`-${t.parsedLink.suffix.rowEnd}`),t.parsedLink?.suffix?.col!==void 0&&(n+=`:${t.parsedLink.suffix.col}`,t.parsedLink?.suffix?.colEnd!==void 0&&(n+=`-${t.parsedLink.suffix.colEnd}`))),l.has(n+"|"+(f??"")))continue;l.add(n+"|"+(f??""))}s.push({label:n,link:t,description:f})}}return s.length>0?s:void 0}s(i){if(!i||!("link"in i)||!i.link)return;const e=i.link;this.w(e),!(!("uri"in e)||!e.uri)&&e.type==="LocalFile"&&this.t(e)}t(i){const e=i.parsedLink?i.parsedLink.suffix:D(i.text),r=e?.row===void 0?void 0:{startLineNumber:e.row??1,startColumn:e.col??1,endLineNumber:e.rowEnd,endColumn:e.colEnd};this.b.set(),this.a.queue(async()=>{await this.b.openTransientEditor({resource:i.uri,options:{preserveFocus:!0,revealIfOpened:!0,ignoreError:!0,selection:r}})})}w(i){const e=this.c?.xterm;e&&(this.u||(e.markTracker.saveScrollState(),this.u=!0),e.markTracker.revealRange(i.range))}};I=g([L(0,A),L(1,Q),L(2,O),L(3,E)],I);export{I as $Qsc};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { EventType } from "../../../../../base/browser/dom.js";
+import { Emitter, Event } from "../../../../../base/common/event.js";
+import { localize } from "../../../../../nls.js";
+import { IQuickInputService, QuickInputHideReason } from "../../../../../platform/quickinput/common/quickInput.js";
+import { TerminalLinkQuickPickEvent } from "../../../terminal/browser/terminal.js";
+import { DisposableStore } from "../../../../../base/common/lifecycle.js";
+import { Sequencer, timeout } from "../../../../../base/common/async.js";
+import { PickerEditorState } from "../../../../browser/quickaccess.js";
+import { getLinkSuffix } from "./terminalLinkParsing.js";
+import { ILabelService } from "../../../../../platform/label/common/label.js";
+import { basenameOrAuthority, dirname } from "../../../../../base/common/resources.js";
+import { IInstantiationService } from "../../../../../platform/instantiation/common/instantiation.js";
+import { IAccessibleViewService } from "../../../../../platform/accessibility/browser/accessibleView.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+let TerminalLinkQuickpick = class TerminalLinkQuickpick2 extends DisposableStore {
+  static {
+    __name(this, "TerminalLinkQuickpick");
+  }
+  constructor(_accessibleViewService, instantiationService, _labelService, _quickInputService) {
+    super();
+    this._accessibleViewService = _accessibleViewService;
+    this._labelService = _labelService;
+    this._quickInputService = _quickInputService;
+    this._editorSequencer = new Sequencer();
+    this._onDidRequestMoreLinks = this.add(new Emitter());
+    this.onDidRequestMoreLinks = this._onDidRequestMoreLinks.event;
+    this._terminalScrollStateSaved = false;
+    this._editorViewState = this.add(instantiationService.createInstance(PickerEditorState));
+  }
+  async show(instance, links) {
+    this._instance = instance;
+    const result = await Promise.race([links.all, timeout(500)]);
+    const usingAllLinks = typeof result === "object";
+    const resolvedLinks = usingAllLinks ? result : links.viewport;
+    const wordPicks = resolvedLinks.wordLinks ? await this._generatePicks(resolvedLinks.wordLinks) : void 0;
+    const filePicks = resolvedLinks.fileLinks ? await this._generatePicks(resolvedLinks.fileLinks) : void 0;
+    const folderPicks = resolvedLinks.folderLinks ? await this._generatePicks(resolvedLinks.folderLinks) : void 0;
+    const webPicks = resolvedLinks.webLinks ? await this._generatePicks(resolvedLinks.webLinks) : void 0;
+    const picks = [];
+    if (webPicks) {
+      picks.push({ type: "separator", label: localize("terminal.integrated.urlLinks", "Url") });
+      picks.push(...webPicks);
+    }
+    if (filePicks) {
+      picks.push({ type: "separator", label: localize("terminal.integrated.localFileLinks", "File") });
+      picks.push(...filePicks);
+    }
+    if (folderPicks) {
+      picks.push({ type: "separator", label: localize("terminal.integrated.localFolderLinks", "Folder") });
+      picks.push(...folderPicks);
+    }
+    if (wordPicks) {
+      picks.push({ type: "separator", label: localize("terminal.integrated.searchLinks", "Workspace Search") });
+      picks.push(...wordPicks);
+    }
+    const pick = this._quickInputService.createQuickPick({ useSeparators: true });
+    const disposables = new DisposableStore();
+    disposables.add(pick);
+    pick.items = picks;
+    pick.placeholder = localize("terminal.integrated.openDetectedLink", "Select the link to open, type to filter all links");
+    pick.sortByLabel = false;
+    pick.show();
+    if (pick.activeItems.length > 0) {
+      this._previewItem(pick.activeItems[0]);
+    }
+    let accepted = false;
+    if (!usingAllLinks) {
+      disposables.add(Event.once(pick.onDidChangeValue)(async () => {
+        const allLinks = await links.all;
+        if (accepted) {
+          return;
+        }
+        const wordIgnoreLinks = [...allLinks.fileLinks ?? [], ...allLinks.folderLinks ?? [], ...allLinks.webLinks ?? []];
+        const wordPicks2 = allLinks.wordLinks ? await this._generatePicks(allLinks.wordLinks, wordIgnoreLinks) : void 0;
+        const filePicks2 = allLinks.fileLinks ? await this._generatePicks(allLinks.fileLinks) : void 0;
+        const folderPicks2 = allLinks.folderLinks ? await this._generatePicks(allLinks.folderLinks) : void 0;
+        const webPicks2 = allLinks.webLinks ? await this._generatePicks(allLinks.webLinks) : void 0;
+        const picks2 = [];
+        if (webPicks2) {
+          picks2.push({ type: "separator", label: localize("terminal.integrated.urlLinks", "Url") });
+          picks2.push(...webPicks2);
+        }
+        if (filePicks2) {
+          picks2.push({ type: "separator", label: localize("terminal.integrated.localFileLinks", "File") });
+          picks2.push(...filePicks2);
+        }
+        if (folderPicks2) {
+          picks2.push({ type: "separator", label: localize("terminal.integrated.localFolderLinks", "Folder") });
+          picks2.push(...folderPicks2);
+        }
+        if (wordPicks2) {
+          picks2.push({ type: "separator", label: localize("terminal.integrated.searchLinks", "Workspace Search") });
+          picks2.push(...wordPicks2);
+        }
+        pick.items = picks2;
+      }));
+    }
+    disposables.add(pick.onDidChangeActive(async () => {
+      const [item] = pick.activeItems;
+      this._previewItem(item);
+    }));
+    return new Promise((r) => {
+      disposables.add(pick.onDidHide(({ reason }) => {
+        if (this._terminalScrollStateSaved) {
+          const markTracker = this._instance?.xterm?.markTracker;
+          if (markTracker) {
+            markTracker.restoreScrollState();
+            markTracker.clear();
+            this._terminalScrollStateSaved = false;
+          }
+        }
+        if (reason === QuickInputHideReason.Gesture) {
+          this._editorViewState.restore();
+        }
+        disposables.dispose();
+        if (pick.selectedItems.length === 0) {
+          this._accessibleViewService.showLastProvider(
+            "terminal"
+            /* AccessibleViewProviderId.Terminal */
+          );
+        }
+        r();
+      }));
+      disposables.add(Event.once(pick.onDidAccept)(() => {
+        if (this._terminalScrollStateSaved) {
+          const markTracker = this._instance?.xterm?.markTracker;
+          if (markTracker) {
+            markTracker.restoreScrollState();
+            markTracker.clear();
+            this._terminalScrollStateSaved = false;
+          }
+        }
+        accepted = true;
+        const event = new TerminalLinkQuickPickEvent(EventType.CLICK);
+        const activeItem = pick.activeItems?.[0];
+        if (activeItem && "link" in activeItem) {
+          activeItem.link.activate(event, activeItem.label);
+        }
+        disposables.dispose();
+        r();
+      }));
+    });
+  }
+  /**
+   * @param ignoreLinks Links with labels to not include in the picks.
+   */
+  async _generatePicks(links, ignoreLinks) {
+    if (!links) {
+      return;
+    }
+    const linkTextKeys = /* @__PURE__ */ new Set();
+    const linkUriKeys = /* @__PURE__ */ new Set();
+    const picks = [];
+    for (const link of links) {
+      let label = link.text;
+      if (!linkTextKeys.has(label) && (!ignoreLinks || !ignoreLinks.some((e) => e.text === label))) {
+        linkTextKeys.add(label);
+        let description;
+        if ("uri" in link && link.uri) {
+          if (link.type === "LocalFile" || link.type === "LocalFolderInWorkspace" || link.type === "LocalFolderOutsideWorkspace") {
+            label = basenameOrAuthority(link.uri);
+            description = this._labelService.getUriLabel(dirname(link.uri), { relative: true });
+          }
+          if (link.type === "LocalFile") {
+            if (link.parsedLink?.suffix?.row !== void 0) {
+              label += `:${link.parsedLink.suffix.row}`;
+              if (link.parsedLink?.suffix?.rowEnd !== void 0) {
+                label += `-${link.parsedLink.suffix.rowEnd}`;
+              }
+              if (link.parsedLink?.suffix?.col !== void 0) {
+                label += `:${link.parsedLink.suffix.col}`;
+                if (link.parsedLink?.suffix?.colEnd !== void 0) {
+                  label += `-${link.parsedLink.suffix.colEnd}`;
+                }
+              }
+            }
+          }
+          if (linkUriKeys.has(label + "|" + (description ?? ""))) {
+            continue;
+          }
+          linkUriKeys.add(label + "|" + (description ?? ""));
+        }
+        picks.push({ label, link, description });
+      }
+    }
+    return picks.length > 0 ? picks : void 0;
+  }
+  _previewItem(item) {
+    if (!item || !("link" in item) || !item.link) {
+      return;
+    }
+    const link = item.link;
+    this._previewItemInTerminal(link);
+    if (!("uri" in link) || !link.uri) {
+      return;
+    }
+    if (link.type !== "LocalFile") {
+      return;
+    }
+    this._previewItemInEditor(link);
+  }
+  _previewItemInEditor(link) {
+    const linkSuffix = link.parsedLink ? link.parsedLink.suffix : getLinkSuffix(link.text);
+    const selection = linkSuffix?.row === void 0 ? void 0 : {
+      startLineNumber: linkSuffix.row ?? 1,
+      startColumn: linkSuffix.col ?? 1,
+      endLineNumber: linkSuffix.rowEnd,
+      endColumn: linkSuffix.colEnd
+    };
+    this._editorViewState.set();
+    this._editorSequencer.queue(async () => {
+      await this._editorViewState.openTransientEditor({
+        resource: link.uri,
+        options: { preserveFocus: true, revealIfOpened: true, ignoreError: true, selection }
+      });
+    });
+  }
+  _previewItemInTerminal(link) {
+    const xterm = this._instance?.xterm;
+    if (!xterm) {
+      return;
+    }
+    if (!this._terminalScrollStateSaved) {
+      xterm.markTracker.saveScrollState();
+      this._terminalScrollStateSaved = true;
+    }
+    xterm.markTracker.revealRange(link.range);
+  }
+};
+TerminalLinkQuickpick = __decorate([
+  __param(0, IAccessibleViewService),
+  __param(1, IInstantiationService),
+  __param(2, ILabelService),
+  __param(3, IQuickInputService)
+], TerminalLinkQuickpick);
+export {
+  TerminalLinkQuickpick
+};
+//# sourceMappingURL=terminalLinkQuickpick.js.map

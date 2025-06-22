@@ -1,1 +1,255 @@
-import{$di as R,$0h as M}from"../../../base/common/async.js";import{$Ji as A}from"../../../base/common/buffer.js";import{$fm as m}from"../../../base/common/errorMessage.js";import{$mb as g,$nb as C}from"../../../base/common/errors.js";import{$df as P}from"../../../base/common/event.js";import{$vd as y,$Ed as $,$ud as f,$td as D}from"../../../base/common/lifecycle.js";import{URI as L}from"../../../base/common/uri.js";import{localize as b}from"../../../nls.js";import{$3n as T}from"../../../platform/log/common/log.js";import{$2zb as E}from"../../contrib/chat/browser/imageUtils.js";import{$7zb as _}from"../../contrib/chat/common/ignoredFiles.js";import{$9zb as O}from"../../contrib/chat/common/languageModelStats.js";import{$8O as S}from"../../contrib/chat/common/languageModels.js";import{$$$ as j}from"../../services/authentication/browser/authenticationAccessService.js";import{$cX as k,$bX as H}from"../../services/authentication/common/authentication.js";import{$Kyb as z}from"../../services/extensions/common/extHostCustomers.js";import{$XO as F}from"../../services/extensions/common/extensions.js";import{$kX as x}from"../../services/extensions/common/proxyIdentifier.js";import{$pY as I,$oY as N}from"../common/extHost.protocol.js";import{$51 as X}from"../common/extHostTypes.js";var w=function(c,e,s,t){var o=arguments.length,i=o<3?e:t===null?t=Object.getOwnPropertyDescriptor(e,s):t,a;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")i=Reflect.decorate(c,e,s,t);else for(var n=c.length-1;n>=0;n--)(a=c[n])&&(i=(o<3?a(i):o>3?a(e,s,i):a(e,s))||i);return o>3&&i&&Object.defineProperty(e,s,i),i},l=function(c,e){return function(s,t){e(s,t,c)}};let v=class{constructor(e,s,t,o,i,a,n,h){this.g=s,this.h=t,this.i=o,this.j=i,this.k=a,this.l=n,this.m=h,this.b=new f,this.c=new $,this.d=new Map,this.f=new $,this.a=e.getProxy(I.ExtHostChatProvider),this.a.$acceptChatModelMetadata({added:s.getLanguageModelIds().map(r=>({identifier:r,metadata:s.lookupLanguageModel(r)}))}),this.b.add(s.onDidChangeLanguageModels(this.a.$acceptChatModelMetadata,this.a))}dispose(){this.c.dispose(),this.f.dispose(),this.b.dispose()}$registerLanguageModelProvider(e,s,t){const o=new f;o.add(this.g.registerLanguageModelChat(s,{metadata:t,sendChatRequest:async(i,a,n,h)=>{const r=Math.random()*1e6|0,u=new M,p=new R;try{this.d.set(r,{defer:u,stream:p}),await Promise.all(i.flatMap(d=>d.content).filter(d=>d.type==="image_url").map(async d=>{d.value.data=A.wrap(await E(d.value.data.buffer))})),await this.a.$startChatRequest(e,r,a,new x(i),n,h)}catch(d){throw this.d.delete(r),d}return{result:u.p,stream:p.asyncIterable}},provideTokenCount:(i,a)=>this.a.$provideTokenLength(e,i,a)})),t.auth&&o.add(this.n(t.extension,t.auth)),this.c.set(e,o)}async $reportResponsePart(e,s){const t=this.d.get(e);this.i.trace("[LM] report response PART",!!t,e,s),t&&t.stream.emitOne(s)}async $reportResponseDone(e,s){const t=this.d.get(e);if(this.i.trace("[LM] report response DONE",!!t,e,s),t)if(this.d.delete(e),s){const o=X.tryDeserialize(s)??C(s);t.stream.reject(o),t.defer.error(o)}else t.stream.resolve(),t.defer.complete(void 0)}$unregisterProvider(e){this.c.deleteAndDispose(e)}$selectChatModels(e){return this.g.selectLanguageModels(e)}$whenLanguageModelChatRequestMade(e,s,t,o){this.h.update(e,s,t,o)}async $tryStartChatRequest(e,s,t,o,i,a){this.i.trace("[CHAT] request STARTED",e.value,t);let n;try{n=await this.g.sendChatRequest(s,e,o.value,i,a)}catch(r){throw this.i.error("[CHAT] request FAILED",e.value,t,r),r}const h=(async()=>{try{for await(const r of n.stream)this.i.trace("[CHAT] request PART",e.value,t,r),await this.a.$acceptResponsePart(t,r);this.i.trace("[CHAT] request DONE",e.value,t)}catch(r){this.i.error("[CHAT] extension request ERRORED in STREAM",m(r,!0),e.value,t),this.a.$acceptResponseDone(t,g(r))}})();Promise.allSettled([n.result,h]).then(()=>{this.i.debug("[CHAT] extension request DONE",e.value,t),this.a.$acceptResponseDone(t,void 0)},r=>{this.i.error("[CHAT] extension request ERRORED",m(r,!0),e.value,t),this.a.$acceptResponseDone(t,g(r))})}$countTokens(e,s,t){return this.g.computeTokenLength(e,s,t)}n(e,s){const t=H+e.value;if(this.j.getProviderIds().includes(t))return y.None;const o=s.accountLabel??b(2753,null),i=new f;return this.j.registerAuthenticationProvider(t,new B(t,s.providerLabel,o)),i.add(D(()=>{this.j.unregisterAuthenticationProvider(t)})),i.add(this.k.onDidChangeExtensionSessionAccess(async a=>{const n=this.k.readAllowedExtensions(t,o),h=[];for(const r of n){const u=await this.l.getExtension(r.id);u&&h.push({from:u.identifier,to:e,enabled:r.allowed??!0})}this.a.$updateModelAccesslist(h)})),i}$fileIsIgnored(e,s){return this.m.fileIsIgnored(L.revive(e),s)}$registerFileIgnoreProvider(e){this.f.set(e,this.m.registerIgnoredFileProvider({isFileIgnored:async(s,t)=>this.a.$isFileIgnored(e,s,t)}))}$unregisterFileIgnoreProvider(e){this.f.deleteAndDispose(e)}};v=w([z(N.MainThreadLanguageModels),l(1,S),l(2,O),l(3,T),l(4,k),l(5,j),l(6,F),l(7,_)],v);class B{constructor(e,s,t){this.id=e,this.label=s,this.c=t,this.supportsMultipleAccounts=!1,this.a=new P,this.onDidChangeSessions=this.a.event}async getSessions(e){return e===void 0&&!this.b?[]:this.b?[this.b]:[await this.createSession(e||[])]}async createSession(e){return this.b=this.d(e),this.a.fire({added:[this.b],changed:[],removed:[]}),this.b}removeSession(e){return this.b&&(this.a.fire({added:[],changed:[],removed:[this.b]}),this.b=void 0),Promise.resolve()}confirmation(e,s){return b(2754,null,e,this.label)}d(e){return{id:"fake-session",account:{id:this.id,label:this.c},accessToken:"fake-access-token",scopes:e}}}export{v as $_zb};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { AsyncIterableSource, DeferredPromise } from "../../../base/common/async.js";
+import { VSBuffer } from "../../../base/common/buffer.js";
+import { toErrorMessage } from "../../../base/common/errorMessage.js";
+import { transformErrorForSerialization, transformErrorFromSerialization } from "../../../base/common/errors.js";
+import { Emitter } from "../../../base/common/event.js";
+import { Disposable, DisposableMap, DisposableStore, toDisposable } from "../../../base/common/lifecycle.js";
+import { URI } from "../../../base/common/uri.js";
+import { localize } from "../../../nls.js";
+import { ILogService } from "../../../platform/log/common/log.js";
+import { resizeImage } from "../../contrib/chat/browser/imageUtils.js";
+import { ILanguageModelIgnoredFilesService } from "../../contrib/chat/common/ignoredFiles.js";
+import { ILanguageModelStatsService } from "../../contrib/chat/common/languageModelStats.js";
+import { ILanguageModelsService } from "../../contrib/chat/common/languageModels.js";
+import { IAuthenticationAccessService } from "../../services/authentication/browser/authenticationAccessService.js";
+import { IAuthenticationService, INTERNAL_AUTH_PROVIDER_PREFIX } from "../../services/authentication/common/authentication.js";
+import { extHostNamedCustomer } from "../../services/extensions/common/extHostCustomers.js";
+import { IExtensionService } from "../../services/extensions/common/extensions.js";
+import { SerializableObjectWithBuffers } from "../../services/extensions/common/proxyIdentifier.js";
+import { ExtHostContext, MainContext } from "../common/extHost.protocol.js";
+import { LanguageModelError } from "../common/extHostTypes.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+let MainThreadLanguageModels = class MainThreadLanguageModels2 {
+  static {
+    __name(this, "MainThreadLanguageModels");
+  }
+  constructor(extHostContext, _chatProviderService, _languageModelStatsService, _logService, _authenticationService, _authenticationAccessService, _extensionService, _ignoredFilesService) {
+    this._chatProviderService = _chatProviderService;
+    this._languageModelStatsService = _languageModelStatsService;
+    this._logService = _logService;
+    this._authenticationService = _authenticationService;
+    this._authenticationAccessService = _authenticationAccessService;
+    this._extensionService = _extensionService;
+    this._ignoredFilesService = _ignoredFilesService;
+    this._store = new DisposableStore();
+    this._providerRegistrations = new DisposableMap();
+    this._pendingProgress = /* @__PURE__ */ new Map();
+    this._ignoredFileProviderRegistrations = new DisposableMap();
+    this._proxy = extHostContext.getProxy(ExtHostContext.ExtHostChatProvider);
+    this._proxy.$acceptChatModelMetadata({ added: _chatProviderService.getLanguageModelIds().map((id) => ({ identifier: id, metadata: _chatProviderService.lookupLanguageModel(id) })) });
+    this._store.add(_chatProviderService.onDidChangeLanguageModels(this._proxy.$acceptChatModelMetadata, this._proxy));
+  }
+  dispose() {
+    this._providerRegistrations.dispose();
+    this._ignoredFileProviderRegistrations.dispose();
+    this._store.dispose();
+  }
+  $registerLanguageModelProvider(handle, identifier, metadata) {
+    const dipsosables = new DisposableStore();
+    dipsosables.add(this._chatProviderService.registerLanguageModelChat(identifier, {
+      metadata,
+      sendChatRequest: /* @__PURE__ */ __name(async (messages, from, options, token) => {
+        const requestId = Math.random() * 1e6 | 0;
+        const defer = new DeferredPromise();
+        const stream = new AsyncIterableSource();
+        try {
+          this._pendingProgress.set(requestId, { defer, stream });
+          await Promise.all(messages.flatMap((msg) => msg.content).filter((part) => part.type === "image_url").map(async (part) => {
+            part.value.data = VSBuffer.wrap(await resizeImage(part.value.data.buffer));
+          }));
+          await this._proxy.$startChatRequest(handle, requestId, from, new SerializableObjectWithBuffers(messages), options, token);
+        } catch (err) {
+          this._pendingProgress.delete(requestId);
+          throw err;
+        }
+        return {
+          result: defer.p,
+          stream: stream.asyncIterable
+        };
+      }, "sendChatRequest"),
+      provideTokenCount: /* @__PURE__ */ __name((str, token) => {
+        return this._proxy.$provideTokenLength(handle, str, token);
+      }, "provideTokenCount")
+    }));
+    if (metadata.auth) {
+      dipsosables.add(this._registerAuthenticationProvider(metadata.extension, metadata.auth));
+    }
+    this._providerRegistrations.set(handle, dipsosables);
+  }
+  async $reportResponsePart(requestId, chunk) {
+    const data = this._pendingProgress.get(requestId);
+    this._logService.trace("[LM] report response PART", Boolean(data), requestId, chunk);
+    if (data) {
+      data.stream.emitOne(chunk);
+    }
+  }
+  async $reportResponseDone(requestId, err) {
+    const data = this._pendingProgress.get(requestId);
+    this._logService.trace("[LM] report response DONE", Boolean(data), requestId, err);
+    if (data) {
+      this._pendingProgress.delete(requestId);
+      if (err) {
+        const error = LanguageModelError.tryDeserialize(err) ?? transformErrorFromSerialization(err);
+        data.stream.reject(error);
+        data.defer.error(error);
+      } else {
+        data.stream.resolve();
+        data.defer.complete(void 0);
+      }
+    }
+  }
+  $unregisterProvider(handle) {
+    this._providerRegistrations.deleteAndDispose(handle);
+  }
+  $selectChatModels(selector) {
+    return this._chatProviderService.selectLanguageModels(selector);
+  }
+  $whenLanguageModelChatRequestMade(identifier, extensionId, participant, tokenCount) {
+    this._languageModelStatsService.update(identifier, extensionId, participant, tokenCount);
+  }
+  async $tryStartChatRequest(extension, providerId, requestId, messages, options, token) {
+    this._logService.trace("[CHAT] request STARTED", extension.value, requestId);
+    let response;
+    try {
+      response = await this._chatProviderService.sendChatRequest(providerId, extension, messages.value, options, token);
+    } catch (err) {
+      this._logService.error("[CHAT] request FAILED", extension.value, requestId, err);
+      throw err;
+    }
+    const streaming = (async () => {
+      try {
+        for await (const part of response.stream) {
+          this._logService.trace("[CHAT] request PART", extension.value, requestId, part);
+          await this._proxy.$acceptResponsePart(requestId, part);
+        }
+        this._logService.trace("[CHAT] request DONE", extension.value, requestId);
+      } catch (err) {
+        this._logService.error("[CHAT] extension request ERRORED in STREAM", toErrorMessage(err, true), extension.value, requestId);
+        this._proxy.$acceptResponseDone(requestId, transformErrorForSerialization(err));
+      }
+    })();
+    Promise.allSettled([response.result, streaming]).then(() => {
+      this._logService.debug("[CHAT] extension request DONE", extension.value, requestId);
+      this._proxy.$acceptResponseDone(requestId, void 0);
+    }, (err) => {
+      this._logService.error("[CHAT] extension request ERRORED", toErrorMessage(err, true), extension.value, requestId);
+      this._proxy.$acceptResponseDone(requestId, transformErrorForSerialization(err));
+    });
+  }
+  $countTokens(provider, value, token) {
+    return this._chatProviderService.computeTokenLength(provider, value, token);
+  }
+  _registerAuthenticationProvider(extension, auth) {
+    const authProviderId = INTERNAL_AUTH_PROVIDER_PREFIX + extension.value;
+    if (this._authenticationService.getProviderIds().includes(authProviderId)) {
+      return Disposable.None;
+    }
+    const accountLabel = auth.accountLabel ?? localize("languageModelsAccountId", "Language Models");
+    const disposables = new DisposableStore();
+    this._authenticationService.registerAuthenticationProvider(authProviderId, new LanguageModelAccessAuthProvider(authProviderId, auth.providerLabel, accountLabel));
+    disposables.add(toDisposable(() => {
+      this._authenticationService.unregisterAuthenticationProvider(authProviderId);
+    }));
+    disposables.add(this._authenticationAccessService.onDidChangeExtensionSessionAccess(async (e) => {
+      const allowedExtensions = this._authenticationAccessService.readAllowedExtensions(authProviderId, accountLabel);
+      const accessList = [];
+      for (const allowedExtension of allowedExtensions) {
+        const from = await this._extensionService.getExtension(allowedExtension.id);
+        if (from) {
+          accessList.push({
+            from: from.identifier,
+            to: extension,
+            enabled: allowedExtension.allowed ?? true
+          });
+        }
+      }
+      this._proxy.$updateModelAccesslist(accessList);
+    }));
+    return disposables;
+  }
+  $fileIsIgnored(uri, token) {
+    return this._ignoredFilesService.fileIsIgnored(URI.revive(uri), token);
+  }
+  $registerFileIgnoreProvider(handle) {
+    this._ignoredFileProviderRegistrations.set(handle, this._ignoredFilesService.registerIgnoredFileProvider({
+      isFileIgnored: /* @__PURE__ */ __name(async (uri, token) => this._proxy.$isFileIgnored(handle, uri, token), "isFileIgnored")
+    }));
+  }
+  $unregisterFileIgnoreProvider(handle) {
+    this._ignoredFileProviderRegistrations.deleteAndDispose(handle);
+  }
+};
+MainThreadLanguageModels = __decorate([
+  extHostNamedCustomer(MainContext.MainThreadLanguageModels),
+  __param(1, ILanguageModelsService),
+  __param(2, ILanguageModelStatsService),
+  __param(3, ILogService),
+  __param(4, IAuthenticationService),
+  __param(5, IAuthenticationAccessService),
+  __param(6, IExtensionService),
+  __param(7, ILanguageModelIgnoredFilesService)
+], MainThreadLanguageModels);
+class LanguageModelAccessAuthProvider {
+  static {
+    __name(this, "LanguageModelAccessAuthProvider");
+  }
+  constructor(id, label, _accountLabel) {
+    this.id = id;
+    this.label = label;
+    this._accountLabel = _accountLabel;
+    this.supportsMultipleAccounts = false;
+    this._onDidChangeSessions = new Emitter();
+    this.onDidChangeSessions = this._onDidChangeSessions.event;
+  }
+  async getSessions(scopes) {
+    if (scopes === void 0 && !this._session) {
+      return [];
+    }
+    if (this._session) {
+      return [this._session];
+    }
+    return [await this.createSession(scopes || [])];
+  }
+  async createSession(scopes) {
+    this._session = this._createFakeSession(scopes);
+    this._onDidChangeSessions.fire({ added: [this._session], changed: [], removed: [] });
+    return this._session;
+  }
+  removeSession(sessionId) {
+    if (this._session) {
+      this._onDidChangeSessions.fire({ added: [], changed: [], removed: [this._session] });
+      this._session = void 0;
+    }
+    return Promise.resolve();
+  }
+  confirmation(extensionName, _recreatingSession) {
+    return localize("confirmLanguageModelAccess", "The extension '{0}' wants to access the language models provided by {1}.", extensionName, this.label);
+  }
+  _createFakeSession(scopes) {
+    return {
+      id: "fake-session",
+      account: {
+        id: this.id,
+        label: this._accountLabel
+      },
+      accessToken: "fake-access-token",
+      scopes
+    };
+  }
+}
+export {
+  MainThreadLanguageModels
+};
+//# sourceMappingURL=mainThreadLanguageModels.js.map

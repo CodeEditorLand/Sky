@@ -1,1 +1,133 @@
-import{$Uc as u}from"../../../../../../../../../base/common/assert.js";import{$1Q as p}from"../tokens/frontMatterArray.js";import{$_c as m}from"../../../../../../../../../base/common/types.js";import{$wR as d}from"../constants.js";import{$ZQ as h}from"../tokens/frontMatterToken.js";import{$XQ as T}from"../tokens/frontMatterSequence.js";import{Comma as a,RightBracket as f}from"../../simpleCodec/tokens/tokens.js";import{$yR as R,$xR as x}from"../../simpleCodec/parserBase.js";var l=function(i,e,t,r){var n=arguments.length,s=n<3?e:r===null?r=Object.getOwnPropertyDescriptor(e,t):r,o;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")s=Reflect.decorate(i,e,t,r);else for(var c=i.length-1;c>=0;c--)(o=i[c])&&(s=(n<3?o(s):n>3?o(e,t,s):o(e,t))||s);return n>3&&s&&Object.defineProperty(e,t,s),s};const $=Object.freeze([...d,a]);class w extends x{constructor(e,t){super([t]),this.g=e,this.h=t,this.f=!0}accept(e){if(this.e!==void 0){const t=this.e.accept(e),{result:r,wasTokenConsumed:n}=t;if(r==="failure")return this.a=!0,{result:"failure",wasTokenConsumed:n};const{nextParser:s}=t;return s instanceof h?(this.c.push(s),delete this.e,n===!1?this.accept(e):{result:"success",nextParser:this,wasTokenConsumed:n}):(this.e=s,{result:"success",nextParser:this,wasTokenConsumed:n})}if(e instanceof f)return u(this.e===void 0,"Unexpected end of array. Last value is not finished."),this.c.push(e),this.a=!0,{result:"success",nextParser:this.asArrayToken(),wasTokenConsumed:!0};for(const t of $)if(e instanceof t)return this.c.push(e),this.f===!1&&e instanceof a&&(this.f=!0),{result:"success",nextParser:this,wasTokenConsumed:!0};return this.f===!0?(this.e=this.g.createValue(t=>t instanceof f||t instanceof a),this.f=!1,this.accept(e)):(this.a=!0,{result:"failure",wasTokenConsumed:!1})}asArrayToken(){const e=this.c[this.c.length-1];m(e,"No tokens found."),u(e instanceof f,"Cannot find a closing bracket of the array.");const t=[];for(const r of this.c)r instanceof h&&(r instanceof T&&r.trimEnd(),t.push(r));return this.a=!0,new p([this.h,...t,e])}}l([R],w.prototype,"accept",null);export{w as $DR};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { assert } from "../../../../../../../../../base/common/assert.js";
+import { FrontMatterArray } from "../tokens/frontMatterArray.js";
+import { assertDefined } from "../../../../../../../../../base/common/types.js";
+import { VALID_INTER_RECORD_SPACING_TOKENS } from "../constants.js";
+import { FrontMatterValueToken } from "../tokens/frontMatterToken.js";
+import { FrontMatterSequence } from "../tokens/frontMatterSequence.js";
+import { Comma, RightBracket } from "../../simpleCodec/tokens/tokens.js";
+import { assertNotConsumed, ParserBase } from "../../simpleCodec/parserBase.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+const VALID_DELIMITER_TOKENS = Object.freeze([
+  ...VALID_INTER_RECORD_SPACING_TOKENS,
+  Comma
+]);
+class PartialFrontMatterArray extends ParserBase {
+  static {
+    __name(this, "PartialFrontMatterArray");
+  }
+  constructor(factory, startToken) {
+    super([startToken]);
+    this.factory = factory;
+    this.startToken = startToken;
+    this.arrayItemAllowed = true;
+  }
+  accept(token) {
+    if (this.currentValueParser !== void 0) {
+      const acceptResult = this.currentValueParser.accept(token);
+      const { result, wasTokenConsumed } = acceptResult;
+      if (result === "failure") {
+        this.isConsumed = true;
+        return {
+          result: "failure",
+          wasTokenConsumed
+        };
+      }
+      const { nextParser } = acceptResult;
+      if (nextParser instanceof FrontMatterValueToken) {
+        this.currentTokens.push(nextParser);
+        delete this.currentValueParser;
+        if (wasTokenConsumed === false) {
+          return this.accept(token);
+        }
+        return {
+          result: "success",
+          nextParser: this,
+          wasTokenConsumed
+        };
+      }
+      this.currentValueParser = nextParser;
+      return {
+        result: "success",
+        nextParser: this,
+        wasTokenConsumed
+      };
+    }
+    if (token instanceof RightBracket) {
+      assert(this.currentValueParser === void 0, `Unexpected end of array. Last value is not finished.`);
+      this.currentTokens.push(token);
+      this.isConsumed = true;
+      return {
+        result: "success",
+        nextParser: this.asArrayToken(),
+        wasTokenConsumed: true
+      };
+    }
+    for (const ValidToken of VALID_DELIMITER_TOKENS) {
+      if (token instanceof ValidToken) {
+        this.currentTokens.push(token);
+        if (this.arrayItemAllowed === false && token instanceof Comma) {
+          this.arrayItemAllowed = true;
+        }
+        return {
+          result: "success",
+          nextParser: this,
+          wasTokenConsumed: true
+        };
+      }
+    }
+    if (this.arrayItemAllowed === true) {
+      this.currentValueParser = this.factory.createValue((currentToken) => {
+        return currentToken instanceof RightBracket || currentToken instanceof Comma;
+      });
+      this.arrayItemAllowed = false;
+      return this.accept(token);
+    }
+    this.isConsumed = true;
+    return {
+      result: "failure",
+      wasTokenConsumed: false
+    };
+  }
+  /**
+   * Convert current parser into a {@link FrontMatterArray} token,
+   * if possible.
+   *
+   * @throws if the last token in the accumulated token list
+   * 		   is not a closing bracket ({@link RightBracket}).
+   */
+  asArrayToken() {
+    const endToken = this.currentTokens[this.currentTokens.length - 1];
+    assertDefined(endToken, "No tokens found.");
+    assert(endToken instanceof RightBracket, "Cannot find a closing bracket of the array.");
+    const valueTokens = [];
+    for (const currentToken of this.currentTokens) {
+      if (currentToken instanceof FrontMatterValueToken === false) {
+        continue;
+      }
+      if (currentToken instanceof FrontMatterSequence) {
+        currentToken.trimEnd();
+      }
+      valueTokens.push(currentToken);
+    }
+    this.isConsumed = true;
+    return new FrontMatterArray([
+      this.startToken,
+      ...valueTokens,
+      endToken
+    ]);
+  }
+}
+__decorate([
+  assertNotConsumed
+], PartialFrontMatterArray.prototype, "accept", null);
+export {
+  PartialFrontMatterArray
+};
+//# sourceMappingURL=frontMatterArray.js.map

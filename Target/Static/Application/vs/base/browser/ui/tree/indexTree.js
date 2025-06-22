@@ -1,1 +1,44 @@
-import{$B0 as o}from"./abstractTree.js";import{$s0 as h}from"./indexTreeModel.js";import{$o0 as m}from"./tree.js";import{Iterable as d}from"../../../common/iterator.js";import"./media/tree.css";class g extends o{constructor(e,t,r,s,i,o={}){super(e,t,r,s,o),this.b=e,this.c=i}splice(e,t,r=d.empty()){this.o.splice(e,t,r)}rerender(e){void 0!==e?this.o.rerender(e):this.j.rerender()}updateElementHeight(e,t){if(0===e.length)throw new m(this.b,"Update element height failed: invalid location");const r=this.o.getListIndex(e);-1!==r&&this.j.updateElementHeight(r,t)}V(e,t){return new h(e,this.c,t)}}export{g as $N0};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { AbstractTree } from "./abstractTree.js";
+import { IndexTreeModel } from "./indexTreeModel.js";
+import { TreeError } from "./tree.js";
+import { Iterable } from "../../../common/iterator.js";
+import "./media/tree.css";
+class IndexTree extends AbstractTree {
+  static {
+    __name(this, "IndexTree");
+  }
+  constructor(user, container, delegate, renderers, rootElement, options = {}) {
+    super(user, container, delegate, renderers, options);
+    this.user = user;
+    this.rootElement = rootElement;
+  }
+  splice(location, deleteCount, toInsert = Iterable.empty()) {
+    this.model.splice(location, deleteCount, toInsert);
+  }
+  rerender(location) {
+    if (location === void 0) {
+      this.view.rerender();
+      return;
+    }
+    this.model.rerender(location);
+  }
+  updateElementHeight(location, height) {
+    if (location.length === 0) {
+      throw new TreeError(this.user, `Update element height failed: invalid location`);
+    }
+    const elementIndex = this.model.getListIndex(location);
+    if (elementIndex === -1) {
+      return;
+    }
+    this.view.updateElementHeight(elementIndex, height);
+  }
+  createModel(user, options) {
+    return new IndexTreeModel(user, this.rootElement, options);
+  }
+}
+export {
+  IndexTree
+};
+//# sourceMappingURL=indexTree.js.map

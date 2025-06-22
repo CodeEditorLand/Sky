@@ -1,1 +1,42 @@
-import{$nj as r}from"../../../../platform/instantiation/common/instantiation.js";const o="__",f=r("IAuthenticationService");function i(t){if("object"!=typeof t||!t)return!1;const o=t;return!("string"!=typeof o.id||"string"!=typeof o.accessToken||"object"!=typeof o.account||!o.account||"string"!=typeof o.account.label||"string"!=typeof o.account.id||!Array.isArray(o.scopes)||o.idToken&&"string"!=typeof o.idToken)}const s=r("IAuthenticationExtensionsService");export{o as $bX,f as $cX,i as $dX,s as $eX};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { createDecorator } from "../../../../platform/instantiation/common/instantiation.js";
+const INTERNAL_AUTH_PROVIDER_PREFIX = "__";
+const IAuthenticationService = createDecorator("IAuthenticationService");
+function isAuthenticationSession(thing) {
+  if (typeof thing !== "object" || !thing) {
+    return false;
+  }
+  const maybe = thing;
+  if (typeof maybe.id !== "string") {
+    return false;
+  }
+  if (typeof maybe.accessToken !== "string") {
+    return false;
+  }
+  if (typeof maybe.account !== "object" || !maybe.account) {
+    return false;
+  }
+  if (typeof maybe.account.label !== "string") {
+    return false;
+  }
+  if (typeof maybe.account.id !== "string") {
+    return false;
+  }
+  if (!Array.isArray(maybe.scopes)) {
+    return false;
+  }
+  if (maybe.idToken && typeof maybe.idToken !== "string") {
+    return false;
+  }
+  return true;
+}
+__name(isAuthenticationSession, "isAuthenticationSession");
+const IAuthenticationExtensionsService = createDecorator("IAuthenticationExtensionsService");
+export {
+  IAuthenticationExtensionsService,
+  IAuthenticationService,
+  INTERNAL_AUTH_PROVIDER_PREFIX,
+  isAuthenticationSession
+};
+//# sourceMappingURL=authentication.js.map

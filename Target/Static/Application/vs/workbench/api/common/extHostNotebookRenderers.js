@@ -1,1 +1,55 @@
-import{$df as a}from"../../../base/common/event.js";import{$oY as c}from"./extHost.protocol.js";import{$NLc as n}from"./extHostNotebookEditor.js";class f{constructor(o,t){this.c=t,this.a=new Map,this.b=o.getProxy(c.MainThreadNotebookRenderers)}$postRendererMessage(o,t,r){const e=this.c.getEditorById(o);this.a.get(t)?.fire({editor:e.apiEditor,message:r})}createRendererMessaging(o,t){if(!o.contributes?.notebookRenderer?.some(e=>e.id===t))throw new Error(`Extensions may only call createRendererMessaging() for renderers they contribute (got ${t})`);return{onDidReceiveMessage:(e,s,i)=>this.d(t).event(e,s,i),postMessage:(e,s)=>{n.apiEditorsToExtHost.has(e)&&([e,s]=[s,e]);const i=s&&n.apiEditorsToExtHost.get(s);return this.b.$postMessage(i?.id,t,e)}}}d(o){let t=this.a.get(o);return t||(t=new a({onDidRemoveLastListener:()=>{t?.dispose(),this.a.delete(o)}}),this.a.set(o,t),t)}}export{f as $bMc};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { Emitter } from "../../../base/common/event.js";
+import { MainContext } from "./extHost.protocol.js";
+import { ExtHostNotebookEditor } from "./extHostNotebookEditor.js";
+class ExtHostNotebookRenderers {
+  static {
+    __name(this, "ExtHostNotebookRenderers");
+  }
+  constructor(mainContext, _extHostNotebook) {
+    this._extHostNotebook = _extHostNotebook;
+    this._rendererMessageEmitters = /* @__PURE__ */ new Map();
+    this.proxy = mainContext.getProxy(MainContext.MainThreadNotebookRenderers);
+  }
+  $postRendererMessage(editorId, rendererId, message) {
+    const editor = this._extHostNotebook.getEditorById(editorId);
+    this._rendererMessageEmitters.get(rendererId)?.fire({ editor: editor.apiEditor, message });
+  }
+  createRendererMessaging(manifest, rendererId) {
+    if (!manifest.contributes?.notebookRenderer?.some((r) => r.id === rendererId)) {
+      throw new Error(`Extensions may only call createRendererMessaging() for renderers they contribute (got ${rendererId})`);
+    }
+    const messaging = {
+      onDidReceiveMessage: /* @__PURE__ */ __name((listener, thisArg, disposables) => {
+        return this.getOrCreateEmitterFor(rendererId).event(listener, thisArg, disposables);
+      }, "onDidReceiveMessage"),
+      postMessage: /* @__PURE__ */ __name((message, editorOrAlias) => {
+        if (ExtHostNotebookEditor.apiEditorsToExtHost.has(message)) {
+          [message, editorOrAlias] = [editorOrAlias, message];
+        }
+        const extHostEditor = editorOrAlias && ExtHostNotebookEditor.apiEditorsToExtHost.get(editorOrAlias);
+        return this.proxy.$postMessage(extHostEditor?.id, rendererId, message);
+      }, "postMessage")
+    };
+    return messaging;
+  }
+  getOrCreateEmitterFor(rendererId) {
+    let emitter = this._rendererMessageEmitters.get(rendererId);
+    if (emitter) {
+      return emitter;
+    }
+    emitter = new Emitter({
+      onDidRemoveLastListener: /* @__PURE__ */ __name(() => {
+        emitter?.dispose();
+        this._rendererMessageEmitters.delete(rendererId);
+      }, "onDidRemoveLastListener")
+    });
+    this._rendererMessageEmitters.set(rendererId, emitter);
+    return emitter;
+  }
+}
+export {
+  ExtHostNotebookRenderers
+};
+//# sourceMappingURL=extHostNotebookRenderers.js.map

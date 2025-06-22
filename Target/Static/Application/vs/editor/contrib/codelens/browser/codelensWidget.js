@@ -1,1 +1,266 @@
-import*as r from"../../../../base/browser/dom.js";import{$E8 as p}from"../../../../base/browser/ui/iconLabel/iconLabels.js";import"./codelensWidget.css";import{$cC as c}from"../../../common/core/range.js";import{$YH as b}from"../../../common/model/textModel.js";class y{constructor(t,s,e){this.afterColumn=1073741824,this.afterLineNumber=t,this.heightInPx=s,this.b=e,this.suppressMouseDown=!0,this.domNode=document.createElement("div")}onComputedHeight(t){void 0===this.a?this.a=t:this.a!==t&&(this.a=t,this.b())}isVisible(){return 0!==this.a&&this.domNode.hasAttribute("monaco-visible-view-zone")}}class m{static{this.a=0}constructor(t,s){this.allowEditorOverflow=!1,this.suppressMouseDown=!0,this.e=new Map,this.g=!0,this.d=t,this.b="codelens.widget-"+m.a++,this.updatePosition(s),this.c=document.createElement("span"),this.c.className="codelens-decoration"}withCommands(t,s){this.e.clear();const e=[];let i=!1;for(let s=0;s<t.length;s++){const o=t[s];if(o&&(i=!0,o.command)){const i=p(o.command.title.trim());if(o.command.id){const t="c"+m.a++;e.push(r.$("a",{id:t,title:o.command.tooltip,role:"button"},...i)),this.e.set(t,o.command)}else e.push(r.$("span",{title:o.command.tooltip},...i));s+1<t.length&&e.push(r.$("span",void 0," | "))}}i?(r.$O6(this.c,...e),this.g&&s&&this.c.classList.add("fadein"),this.g=!1):r.$O6(this.c,r.$("span",void 0,"no commands"))}getCommand(t){return t.parentElement===this.c?this.e.get(t.id):void 0}getId(){return this.b}getDomNode(){return this.c}updatePosition(t){const s=this.d.getModel().getLineFirstNonWhitespaceColumn(t);this.f={position:{lineNumber:t,column:s},preference:[1]}}getPosition(){return this.f||null}}class ${constructor(){this.a=[],this.b=[],this.c=[]}addDecoration(t,s){this.b.push(t),this.c.push(s)}removeDecoration(t){this.a.push(t)}commit(t){const s=t.deltaDecorations(this.a,this.b);for(let t=0,e=s.length;t<e;t++)this.c[t](s[t])}}const u=b.register({collapseOnReplaceEdit:!0,description:"codelens"});class E{constructor(t,s,e,i,o,n){let h;this.g=!1,this.a=s,this.f=t,this.e=[];const a=[];this.f.forEach(((t,s)=>{t.symbol.command&&a.push(t.symbol),e.addDecoration({range:t.symbol.range,options:u},(t=>this.e[s]=t)),h=h?c.plusRange(h,t.symbol.range):c.lift(t.symbol.range)})),this.b=new y(h.startLineNumber-1,o,n),this.c=i.addZone(this.b),a.length>0&&(this.h(),this.d.withCommands(a,!1))}h(){this.d?this.a.layoutContentWidget(this.d):(this.d=new m(this.a,this.b.afterLineNumber+1),this.a.addContentWidget(this.d))}dispose(t,s){this.e.forEach(t.removeDecoration,t),this.e=[],s?.removeZone(this.c),this.d&&(this.a.removeContentWidget(this.d),this.d=void 0),this.g=!0}isDisposed(){return this.g}isValid(){return this.e.some(((t,s)=>{const e=this.a.getModel().getDecorationRange(t),i=this.f[s].symbol;return!(!e||c.isEmpty(i.range)!==e.isEmpty())}))}updateCodeLensSymbols(t,s){this.e.forEach(s.removeDecoration,s),this.e=[],this.f=t,this.f.forEach(((t,e)=>{s.addDecoration({range:t.symbol.range,options:u},(t=>this.e[e]=t))}))}updateHeight(t,s){this.b.heightInPx=t,s.layoutZone(this.c),this.d&&this.a.layoutContentWidget(this.d)}computeIfNecessary(t){if(!this.b.isVisible())return null;for(let s=0;s<this.e.length;s++){const e=t.getDecorationRange(this.e[s]);e&&(this.f[s].symbol.range=e)}return this.f}updateCommands(t){this.h(),this.d.withCommands(t,!0);for(let s=0;s<this.f.length;s++){const e=t[s];if(e){const{symbol:t}=this.f[s];t.command=e.command||t.command}}}getCommand(t){return this.d?.getCommand(t)}getLineNumber(){const t=this.a.getModel().getDecorationRange(this.e[0]);return t?t.startLineNumber:-1}update(t){if(this.isValid()){const s=this.a.getModel().getDecorationRange(this.e[0]);s&&(this.b.afterLineNumber=s.startLineNumber-1,t.layoutZone(this.c),this.d&&(this.d.updatePosition(s.startLineNumber),this.a.layoutContentWidget(this.d)))}}getItems(){return this.f}}export{$ as $Sib,E as $Tib};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import * as dom from "../../../../base/browser/dom.js";
+import { renderLabelWithIcons } from "../../../../base/browser/ui/iconLabel/iconLabels.js";
+import "./codelensWidget.css";
+import { Range } from "../../../common/core/range.js";
+import { ModelDecorationOptions } from "../../../common/model/textModel.js";
+class CodeLensViewZone {
+  static {
+    __name(this, "CodeLensViewZone");
+  }
+  constructor(afterLineNumber, heightInPx, onHeight) {
+    this.afterColumn = 1073741824;
+    this.afterLineNumber = afterLineNumber;
+    this.heightInPx = heightInPx;
+    this._onHeight = onHeight;
+    this.suppressMouseDown = true;
+    this.domNode = document.createElement("div");
+  }
+  onComputedHeight(height) {
+    if (this._lastHeight === void 0) {
+      this._lastHeight = height;
+    } else if (this._lastHeight !== height) {
+      this._lastHeight = height;
+      this._onHeight();
+    }
+  }
+  isVisible() {
+    return this._lastHeight !== 0 && this.domNode.hasAttribute("monaco-visible-view-zone");
+  }
+}
+class CodeLensContentWidget {
+  static {
+    __name(this, "CodeLensContentWidget");
+  }
+  static {
+    this._idPool = 0;
+  }
+  constructor(editor, line) {
+    this.allowEditorOverflow = false;
+    this.suppressMouseDown = true;
+    this._commands = /* @__PURE__ */ new Map();
+    this._isEmpty = true;
+    this._editor = editor;
+    this._id = `codelens.widget-${CodeLensContentWidget._idPool++}`;
+    this.updatePosition(line);
+    this._domNode = document.createElement("span");
+    this._domNode.className = `codelens-decoration`;
+  }
+  withCommands(lenses, animate) {
+    this._commands.clear();
+    const children = [];
+    let hasSymbol = false;
+    for (let i = 0; i < lenses.length; i++) {
+      const lens = lenses[i];
+      if (!lens) {
+        continue;
+      }
+      hasSymbol = true;
+      if (lens.command) {
+        const title = renderLabelWithIcons(lens.command.title.trim());
+        if (lens.command.id) {
+          const id = `c${CodeLensContentWidget._idPool++}`;
+          children.push(dom.$("a", { id, title: lens.command.tooltip, role: "button" }, ...title));
+          this._commands.set(id, lens.command);
+        } else {
+          children.push(dom.$("span", { title: lens.command.tooltip }, ...title));
+        }
+        if (i + 1 < lenses.length) {
+          children.push(dom.$("span", void 0, "\xA0|\xA0"));
+        }
+      }
+    }
+    if (!hasSymbol) {
+      dom.reset(this._domNode, dom.$("span", void 0, "no commands"));
+    } else {
+      dom.reset(this._domNode, ...children);
+      if (this._isEmpty && animate) {
+        this._domNode.classList.add("fadein");
+      }
+      this._isEmpty = false;
+    }
+  }
+  getCommand(link) {
+    return link.parentElement === this._domNode ? this._commands.get(link.id) : void 0;
+  }
+  getId() {
+    return this._id;
+  }
+  getDomNode() {
+    return this._domNode;
+  }
+  updatePosition(line) {
+    const column = this._editor.getModel().getLineFirstNonWhitespaceColumn(line);
+    this._widgetPosition = {
+      position: { lineNumber: line, column },
+      preference: [
+        1
+        /* ContentWidgetPositionPreference.ABOVE */
+      ]
+    };
+  }
+  getPosition() {
+    return this._widgetPosition || null;
+  }
+}
+class CodeLensHelper {
+  static {
+    __name(this, "CodeLensHelper");
+  }
+  constructor() {
+    this._removeDecorations = [];
+    this._addDecorations = [];
+    this._addDecorationsCallbacks = [];
+  }
+  addDecoration(decoration, callback) {
+    this._addDecorations.push(decoration);
+    this._addDecorationsCallbacks.push(callback);
+  }
+  removeDecoration(decorationId) {
+    this._removeDecorations.push(decorationId);
+  }
+  commit(changeAccessor) {
+    const resultingDecorations = changeAccessor.deltaDecorations(this._removeDecorations, this._addDecorations);
+    for (let i = 0, len = resultingDecorations.length; i < len; i++) {
+      this._addDecorationsCallbacks[i](resultingDecorations[i]);
+    }
+  }
+}
+const codeLensDecorationOptions = ModelDecorationOptions.register({
+  collapseOnReplaceEdit: true,
+  description: "codelens"
+});
+class CodeLensWidget {
+  static {
+    __name(this, "CodeLensWidget");
+  }
+  constructor(data, editor, helper, viewZoneChangeAccessor, heightInPx, updateCallback) {
+    this._isDisposed = false;
+    this._editor = editor;
+    this._data = data;
+    this._decorationIds = [];
+    let range;
+    const lenses = [];
+    this._data.forEach((codeLensData, i) => {
+      if (codeLensData.symbol.command) {
+        lenses.push(codeLensData.symbol);
+      }
+      helper.addDecoration({
+        range: codeLensData.symbol.range,
+        options: codeLensDecorationOptions
+      }, (id) => this._decorationIds[i] = id);
+      if (!range) {
+        range = Range.lift(codeLensData.symbol.range);
+      } else {
+        range = Range.plusRange(range, codeLensData.symbol.range);
+      }
+    });
+    this._viewZone = new CodeLensViewZone(range.startLineNumber - 1, heightInPx, updateCallback);
+    this._viewZoneId = viewZoneChangeAccessor.addZone(this._viewZone);
+    if (lenses.length > 0) {
+      this._createContentWidgetIfNecessary();
+      this._contentWidget.withCommands(lenses, false);
+    }
+  }
+  _createContentWidgetIfNecessary() {
+    if (!this._contentWidget) {
+      this._contentWidget = new CodeLensContentWidget(this._editor, this._viewZone.afterLineNumber + 1);
+      this._editor.addContentWidget(this._contentWidget);
+    } else {
+      this._editor.layoutContentWidget(this._contentWidget);
+    }
+  }
+  dispose(helper, viewZoneChangeAccessor) {
+    this._decorationIds.forEach(helper.removeDecoration, helper);
+    this._decorationIds = [];
+    viewZoneChangeAccessor?.removeZone(this._viewZoneId);
+    if (this._contentWidget) {
+      this._editor.removeContentWidget(this._contentWidget);
+      this._contentWidget = void 0;
+    }
+    this._isDisposed = true;
+  }
+  isDisposed() {
+    return this._isDisposed;
+  }
+  isValid() {
+    return this._decorationIds.some((id, i) => {
+      const range = this._editor.getModel().getDecorationRange(id);
+      const symbol = this._data[i].symbol;
+      return !!(range && Range.isEmpty(symbol.range) === range.isEmpty());
+    });
+  }
+  updateCodeLensSymbols(data, helper) {
+    this._decorationIds.forEach(helper.removeDecoration, helper);
+    this._decorationIds = [];
+    this._data = data;
+    this._data.forEach((codeLensData, i) => {
+      helper.addDecoration({
+        range: codeLensData.symbol.range,
+        options: codeLensDecorationOptions
+      }, (id) => this._decorationIds[i] = id);
+    });
+  }
+  updateHeight(height, viewZoneChangeAccessor) {
+    this._viewZone.heightInPx = height;
+    viewZoneChangeAccessor.layoutZone(this._viewZoneId);
+    if (this._contentWidget) {
+      this._editor.layoutContentWidget(this._contentWidget);
+    }
+  }
+  computeIfNecessary(model) {
+    if (!this._viewZone.isVisible()) {
+      return null;
+    }
+    for (let i = 0; i < this._decorationIds.length; i++) {
+      const range = model.getDecorationRange(this._decorationIds[i]);
+      if (range) {
+        this._data[i].symbol.range = range;
+      }
+    }
+    return this._data;
+  }
+  updateCommands(symbols) {
+    this._createContentWidgetIfNecessary();
+    this._contentWidget.withCommands(symbols, true);
+    for (let i = 0; i < this._data.length; i++) {
+      const resolved = symbols[i];
+      if (resolved) {
+        const { symbol } = this._data[i];
+        symbol.command = resolved.command || symbol.command;
+      }
+    }
+  }
+  getCommand(link) {
+    return this._contentWidget?.getCommand(link);
+  }
+  getLineNumber() {
+    const range = this._editor.getModel().getDecorationRange(this._decorationIds[0]);
+    if (range) {
+      return range.startLineNumber;
+    }
+    return -1;
+  }
+  update(viewZoneChangeAccessor) {
+    if (this.isValid()) {
+      const range = this._editor.getModel().getDecorationRange(this._decorationIds[0]);
+      if (range) {
+        this._viewZone.afterLineNumber = range.startLineNumber - 1;
+        viewZoneChangeAccessor.layoutZone(this._viewZoneId);
+        if (this._contentWidget) {
+          this._contentWidget.updatePosition(range.startLineNumber);
+          this._editor.layoutContentWidget(this._contentWidget);
+        }
+      }
+    }
+  }
+  getItems() {
+    return this._data;
+  }
+}
+export {
+  CodeLensHelper,
+  CodeLensWidget
+};
+//# sourceMappingURL=codelensWidget.js.map

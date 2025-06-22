@@ -1,4 +1,14 @@
-import{$76 as b,$66 as x}from"../../../../base/browser/dom.js";import y from"../../../../base/browser/dompurify/dompurify.js";import{$H8 as w}from"../../../../base/browser/markdownRenderer.js";import*as v from"../../../../base/common/marked/marked.js";import{Schemas as l}from"../../../../base/common/network.js";import{$Cf as k}from"../../../../base/common/strings.js";import{$Idb as L}from"../../../../editor/common/languages/textToHtmlTokenizer.js";import{$ghc as $}from"./markedGfmHeadingIdPlugin.js";const C=`
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { basicMarkupHtmlTags, hookDomPurifyHrefAndSrcSanitizer } from "../../../../base/browser/dom.js";
+import dompurify from "../../../../base/browser/dompurify/dompurify.js";
+import { allowedMarkdownAttr } from "../../../../base/browser/markdownRenderer.js";
+import * as marked from "../../../../base/common/marked/marked.js";
+import { Schemas } from "../../../../base/common/network.js";
+import { escape } from "../../../../base/common/strings.js";
+import { tokenizeToString } from "../../../../editor/common/languages/textToHtmlTokenizer.js";
+import { markedGfmHeadingIdPlugin } from "./markedGfmHeadingIdPlugin.js";
+const DEFAULT_MARKDOWN_STYLES = `
 body {
 	padding: 10px 20px;
 	line-height: 22px;
@@ -138,5 +148,138 @@ pre code {
 		forced-color-adjust: none;
 	}
 }
-`,E=[l.http,l.https,l.command];function R(i,a){const t=x(E,!0);try{return y.sanitize(i,{ALLOWED_TAGS:[...b,"checkbox","checklist"],ALLOWED_ATTR:[...w,"data-command","name","id","role","tabindex","x-dispatch","required","checked","placeholder","when-checked","checked-on"],...a?{ALLOW_UNKNOWN_PROTOCOLS:!0}:{}})}finally{t.dispose()}}async function I(i,a,t,r){const n=await new v.Marked(g.markedHighlight({async:!0,async highlight(s,c){if(typeof c!="string")return k(s);if(await a.whenInstalledExtensionsRegistered(),r?.token?.isCancellationRequested)return"";const h=t.getLanguageIdByLanguageName(c)??t.getLanguageIdByLanguageName(c.split(/\s+|:|,|(?!^)\{|\?]/,1)[0]);return L(t,s,h)}}),$(),...r?.markedExtensions??[]).parse(i,{async:!0});return r?.shouldSanitize??!0?R(n,r?.allowUnknownProtocols??!1):n}var g;(function(i){function a(e){if(typeof e=="function"&&(e={highlight:e}),!e||typeof e.highlight!="function")throw new Error("Must provide highlight function");return{async:!!e.async,walkTokens(o){if(o.type!=="code")return;if(e.async)return Promise.resolve(e.highlight(o.text,o.lang)).then(t(o));const d=e.highlight(o.text,o.lang);if(d instanceof Promise)throw new Error("markedHighlight is not set to async but the highlight function is async. Set the async option to true on markedHighlight to await the async highlight function.");t(o)(d)},renderer:{code({text:o,lang:d,escaped:u}){const m=d?` class="language-${f(d)}"`:"";return o=o.replace(/\n$/,""),`<pre><code${m}>${u?o:f(o,!0)}
-</code></pre>`}}}}i.markedHighlight=a;function t(e){return o=>{typeof o=="string"&&o!==e.text&&(e.escaped=!0,e.text=o)}}const r=/[&<>"']/,p=new RegExp(r.source,"g"),n=/[<>"']|&(?!(#\d{1,7}|#[Xx][a-fA-F0-9]{1,6}|\w+);)/,s=new RegExp(n.source,"g"),c={"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"},h=e=>c[e];function f(e,o){if(o){if(r.test(e))return e.replace(p,h)}else if(n.test(e))return e.replace(s,h);return e}})(g||(g={}));export{C as $hhc,I as $ihc};
+`;
+const allowedProtocols = [Schemas.http, Schemas.https, Schemas.command];
+function sanitize(documentContent, allowUnknownProtocols) {
+  const hook = hookDomPurifyHrefAndSrcSanitizer(allowedProtocols, true);
+  try {
+    return dompurify.sanitize(documentContent, {
+      ...{
+        ALLOWED_TAGS: [
+          ...basicMarkupHtmlTags,
+          "checkbox",
+          "checklist"
+        ],
+        ALLOWED_ATTR: [
+          ...allowedMarkdownAttr,
+          "data-command",
+          "name",
+          "id",
+          "role",
+          "tabindex",
+          "x-dispatch",
+          "required",
+          "checked",
+          "placeholder",
+          "when-checked",
+          "checked-on"
+        ]
+      },
+      ...allowUnknownProtocols ? { ALLOW_UNKNOWN_PROTOCOLS: true } : {}
+    });
+  } finally {
+    hook.dispose();
+  }
+}
+__name(sanitize, "sanitize");
+async function renderMarkdownDocument(text, extensionService, languageService, options) {
+  const m = new marked.Marked(MarkedHighlight.markedHighlight({
+    async: true,
+    async highlight(code, lang) {
+      if (typeof lang !== "string") {
+        return escape(code);
+      }
+      await extensionService.whenInstalledExtensionsRegistered();
+      if (options?.token?.isCancellationRequested) {
+        return "";
+      }
+      const languageId = languageService.getLanguageIdByLanguageName(lang) ?? languageService.getLanguageIdByLanguageName(lang.split(/\s+|:|,|(?!^)\{|\?]/, 1)[0]);
+      return tokenizeToString(languageService, code, languageId);
+    }
+  }), markedGfmHeadingIdPlugin(), ...options?.markedExtensions ?? []);
+  const raw = await m.parse(text, { async: true });
+  if (options?.shouldSanitize ?? true) {
+    return sanitize(raw, options?.allowUnknownProtocols ?? false);
+  } else {
+    return raw;
+  }
+}
+__name(renderMarkdownDocument, "renderMarkdownDocument");
+var MarkedHighlight;
+(function(MarkedHighlight2) {
+  function markedHighlight(options) {
+    if (typeof options === "function") {
+      options = {
+        highlight: options
+      };
+    }
+    if (!options || typeof options.highlight !== "function") {
+      throw new Error("Must provide highlight function");
+    }
+    return {
+      async: !!options.async,
+      walkTokens(token) {
+        if (token.type !== "code") {
+          return;
+        }
+        if (options.async) {
+          return Promise.resolve(options.highlight(token.text, token.lang)).then(updateToken(token));
+        }
+        const code = options.highlight(token.text, token.lang);
+        if (code instanceof Promise) {
+          throw new Error("markedHighlight is not set to async but the highlight function is async. Set the async option to true on markedHighlight to await the async highlight function.");
+        }
+        updateToken(token)(code);
+      },
+      renderer: {
+        code({ text, lang, escaped }) {
+          const classAttr = lang ? ` class="language-${escape2(lang)}"` : "";
+          text = text.replace(/\n$/, "");
+          return `<pre><code${classAttr}>${escaped ? text : escape2(text, true)}
+</code></pre>`;
+        }
+      }
+    };
+  }
+  __name(markedHighlight, "markedHighlight");
+  MarkedHighlight2.markedHighlight = markedHighlight;
+  function updateToken(token) {
+    return (code) => {
+      if (typeof code === "string" && code !== token.text) {
+        token.escaped = true;
+        token.text = code;
+      }
+    };
+  }
+  __name(updateToken, "updateToken");
+  const escapeTest = /[&<>"']/;
+  const escapeReplace = new RegExp(escapeTest.source, "g");
+  const escapeTestNoEncode = /[<>"']|&(?!(#\d{1,7}|#[Xx][a-fA-F0-9]{1,6}|\w+);)/;
+  const escapeReplaceNoEncode = new RegExp(escapeTestNoEncode.source, "g");
+  const escapeReplacement = {
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    [`'`]: "&#39;"
+  };
+  const getEscapeReplacement = /* @__PURE__ */ __name((ch) => escapeReplacement[ch], "getEscapeReplacement");
+  function escape2(html, encode) {
+    if (encode) {
+      if (escapeTest.test(html)) {
+        return html.replace(escapeReplace, getEscapeReplacement);
+      }
+    } else {
+      if (escapeTestNoEncode.test(html)) {
+        return html.replace(escapeReplaceNoEncode, getEscapeReplacement);
+      }
+    }
+    return html;
+  }
+  __name(escape2, "escape");
+})(MarkedHighlight || (MarkedHighlight = {}));
+export {
+  DEFAULT_MARKDOWN_STYLES,
+  renderMarkdownDocument
+};
+//# sourceMappingURL=markdownDocumentRenderer.js.map

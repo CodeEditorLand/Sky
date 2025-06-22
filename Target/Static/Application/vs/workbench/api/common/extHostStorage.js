@@ -1,1 +1,50 @@
-import{$oY as s}from"./extHost.protocol.js";import{$df as n}from"../../../base/common/event.js";import{$nj as a}from"../../../platform/instantiation/common/instantiation.js";class l{constructor(t,e){this.c=e,this.b=new n,this.onDidChangeStorage=this.b.event,this.a=t.getProxy(s.MainThreadStorage)}registerExtensionStorageKeysToSync(t,e){this.a.$registerExtensionStorageKeysToSync(t,e)}async initializeExtensionStorage(t,e,s){const o=await this.a.$initializeExtensionStorage(t,e);let a;return o&&(a=this.d(t,e,o)),a||s}setValue(t,e,s){return this.a.$setValue(t,e,s)}$acceptValue(t,e,s){const o=this.d(t,e,s);o&&this.b.fire({shared:t,key:e,value:o})}d(t,e,s){try{return JSON.parse(s)}catch(s){this.c.error(`[extHostStorage] unexpected error parsing storage contents (extensionId: ${e}, global: ${t}): ${s}`)}}}const $=a("IExtHostStorage");export{$ as $0Kc,l as $9Kc};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { MainContext } from "./extHost.protocol.js";
+import { Emitter } from "../../../base/common/event.js";
+import { createDecorator } from "../../../platform/instantiation/common/instantiation.js";
+class ExtHostStorage {
+  static {
+    __name(this, "ExtHostStorage");
+  }
+  constructor(mainContext, _logService) {
+    this._logService = _logService;
+    this._onDidChangeStorage = new Emitter();
+    this.onDidChangeStorage = this._onDidChangeStorage.event;
+    this._proxy = mainContext.getProxy(MainContext.MainThreadStorage);
+  }
+  registerExtensionStorageKeysToSync(extension, keys) {
+    this._proxy.$registerExtensionStorageKeysToSync(extension, keys);
+  }
+  async initializeExtensionStorage(shared, key, defaultValue) {
+    const value = await this._proxy.$initializeExtensionStorage(shared, key);
+    let parsedValue;
+    if (value) {
+      parsedValue = this.safeParseValue(shared, key, value);
+    }
+    return parsedValue || defaultValue;
+  }
+  setValue(shared, key, value) {
+    return this._proxy.$setValue(shared, key, value);
+  }
+  $acceptValue(shared, key, value) {
+    const parsedValue = this.safeParseValue(shared, key, value);
+    if (parsedValue) {
+      this._onDidChangeStorage.fire({ shared, key, value: parsedValue });
+    }
+  }
+  safeParseValue(shared, key, value) {
+    try {
+      return JSON.parse(value);
+    } catch (error) {
+      this._logService.error(`[extHostStorage] unexpected error parsing storage contents (extensionId: ${key}, global: ${shared}): ${error}`);
+    }
+    return void 0;
+  }
+}
+const IExtHostStorage = createDecorator("IExtHostStorage");
+export {
+  ExtHostStorage,
+  IExtHostStorage
+};
+//# sourceMappingURL=extHostStorage.js.map

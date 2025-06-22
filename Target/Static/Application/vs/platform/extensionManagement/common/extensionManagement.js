@@ -1,1 +1,434 @@
-import{localize as t,localize2 as v}from"../../../nls.js";import{$Sl as m}from"../../configuration/common/configurationRegistry.js";import{$nj as i}from"../../instantiation/common/instantiation.js";import{$Ql as g}from"../../registry/common/platform.js";const x="^([a-z0-9A-Z][a-z0-9-A-Z]*)\\.([a-z0-9A-Z][a-z0-9-A-Z]*)$",R=new RegExp(x),D="__web_extension",S="skipWalkthrough",N="skipPublisherTrust",P="extensionInstallSource",F="dependecyOrPackExtensionInstall",Z="clientTargetPlatform";var s,u,c,p,d,o;function T(e){switch(e){case"win32-x64":return"Windows 64 bit";case"win32-arm64":return"Windows ARM";case"linux-x64":return"Linux 64 bit";case"linux-arm64":return"Linux ARM 64";case"linux-armhf":return"Linux ARM";case"alpine-x64":return"Alpine Linux 64 bit";case"alpine-arm64":return"Alpine ARM 64";case"darwin-x64":return"Mac";case"darwin-arm64":return"Mac Silicon";case"web":return"Web";case"universal":return"universal";case"unknown":return"unknown";case"undefined":return"undefined"}}function W(e){switch(e){case"win32-x64":return"win32-x64";case"win32-arm64":return"win32-arm64";case"linux-x64":return"linux-x64";case"linux-arm64":return"linux-arm64";case"linux-armhf":return"linux-armhf";case"alpine-x64":return"alpine-x64";case"alpine-arm64":return"alpine-arm64";case"darwin-x64":return"darwin-x64";case"darwin-arm64":return"darwin-arm64";case"web":return"web";case"universal":return"universal";default:return"unknown"}}function L(e,n){switch(e){case 3:return"x64"===n?"win32-x64":"arm64"===n?"win32-arm64":"unknown";case 2:return"x64"===n?"linux-x64":"arm64"===n?"linux-arm64":"arm"===n?"linux-armhf":"unknown";case"alpine":return"x64"===n?"alpine-x64":"arm64"===n?"alpine-arm64":"unknown";case 1:return"x64"===n?"darwin-x64":"arm64"===n?"darwin-arm64":"unknown";case 0:return"web"}}function A(e,n){return"web"===n&&!e.includes("web")}function j(e,n,a){return!A(n,a)&&("undefined"===e||"universal"===e||"unknown"!==e&&e===a)}function _(e){return e&&"object"==typeof e&&"string"==typeof e.id&&(!e.uuid||"string"==typeof e.uuid)}!function(e){e.COMMAND="command",e.SETTINGS_SYNC="settingsSync"}(s||(s={})),function(e){e.NoneOrRelevance="NoneOrRelevance",e.LastUpdatedDate="LastUpdatedDate",e.Title="Title",e.PublisherName="PublisherName",e.InstallCount="InstallCount",e.PublishedDate="PublishedDate",e.AverageRating="AverageRating",e.WeightedRating="WeightedRating"}(u||(u={})),function(e){e[e.Default=0]="Default",e[e.Ascending=1]="Ascending",e[e.Descending=2]="Descending"}(c||(c={})),function(e){e.Category="Category",e.ExtensionId="ExtensionId",e.ExtensionName="ExtensionName",e.ExcludeWithFlags="ExcludeWithFlags",e.Featured="Featured",e.SearchText="SearchText",e.Tag="Tag",e.Target="Target"}(p||(p={})),function(e){e.Install="install",e.Uninstall="uninstall"}(d||(d={})),function(e){e[e.None=1]="None",e[e.Install=2]="Install",e[e.Update=3]="Update",e[e.Migrate=4]="Migrate"}(o||(o={}));const H=i("extensionGalleryService");var I,f,w;!function(e){e.Timeout="Timeout",e.Cancelled="Cancelled",e.Failed="Failed",e.DownloadFailedWriting="DownloadFailedWriting",e.Offline="Offline"}(I||(I={}));class q extends Error{constructor(e,n){super(e),this.code=n,this.name=n}}!function(e){e.NotFound="NotFound",e.Unsupported="Unsupported",e.Deprecated="Deprecated",e.Malicious="Malicious",e.Incompatible="Incompatible",e.IncompatibleApi="IncompatibleApi",e.IncompatibleTargetPlatform="IncompatibleTargetPlatform",e.ReleaseVersionNotFound="ReleaseVersionNotFound",e.Invalid="Invalid",e.Download="Download",e.DownloadSignature="DownloadSignature",e.DownloadFailedWriting="DownloadFailedWriting",e.UpdateMetadata="UpdateMetadata",e.Extract="Extract",e.Scanning="Scanning",e.ScanningExtension="ScanningExtension",e.ReadRemoved="ReadRemoved",e.UnsetRemoved="UnsetRemoved",e.Delete="Delete",e.Rename="Rename",e.IntializeDefaultProfile="IntializeDefaultProfile",e.AddToProfile="AddToProfile",e.InstalledExtensionNotFound="InstalledExtensionNotFound",e.PostInstall="PostInstall",e.CorruptZip="CorruptZip",e.IncompleteZip="IncompleteZip",e.PackageNotSigned="PackageNotSigned",e.SignatureVerificationInternal="SignatureVerificationInternal",e.SignatureVerificationFailed="SignatureVerificationFailed",e.NotAllowed="NotAllowed",e.Gallery="Gallery",e.Cancelled="Cancelled",e.Unknown="Unknown",e.Internal="Internal"}(f||(f={})),function(e){e.NotSigned="NotSigned",e.Success="Success",e.RequiredArgumentMissing="RequiredArgumentMissing",e.InvalidArgument="InvalidArgument",e.PackageIsUnreadable="PackageIsUnreadable",e.UnhandledException="UnhandledException",e.SignatureManifestIsMissing="SignatureManifestIsMissing",e.SignatureManifestIsUnreadable="SignatureManifestIsUnreadable",e.SignatureIsMissing="SignatureIsMissing",e.SignatureIsUnreadable="SignatureIsUnreadable",e.CertificateIsUnreadable="CertificateIsUnreadable",e.SignatureArchiveIsUnreadable="SignatureArchiveIsUnreadable",e.FileAlreadyExists="FileAlreadyExists",e.SignatureArchiveIsInvalidZip="SignatureArchiveIsInvalidZip",e.SignatureArchiveHasSameSignatureFile="SignatureArchiveHasSameSignatureFile",e.PackageIntegrityCheckFailed="PackageIntegrityCheckFailed",e.SignatureIsInvalid="SignatureIsInvalid",e.SignatureManifestIsInvalid="SignatureManifestIsInvalid",e.SignatureIntegrityCheckFailed="SignatureIntegrityCheckFailed",e.EntryIsMissing="EntryIsMissing",e.EntryIsTampered="EntryIsTampered",e.Untrusted="Untrusted",e.CertificateRevoked="CertificateRevoked",e.SignatureIsNotValid="SignatureIsNotValid",e.UnknownError="UnknownError",e.PackageIsInvalidZip="PackageIsInvalidZip",e.SignatureArchiveHasTooManyEntries="SignatureArchiveHasTooManyEntries"}(w||(w={}));class G extends Error{constructor(e,n){super(e),this.code=n,this.name=n}}const Q=i("extensionManagementService"),Y="extensionsIdentifiers/disabled",J="extensionsIdentifiers/enabled",K=i("IGlobalExtensionEnablementService"),X=i("IExtensionTipsService"),M=i("IAllowedExtensionsService");async function z(e,n){let a;try{a=await n.resolve(e)}catch(e){if(1===e.fileOperationResult)return 0;throw e}return a.children?(await Promise.all(a.children.map((e=>z(e.resource,n))))).reduce(((e,n)=>e+n),0):a.size??0}const O=v(1937,"Extensions"),B=v(1938,"Preferences"),$="extensions.allowed",V="extensions.verifySignature";function C(e,n){return e?!0===n?.capabilities.signing?.allPrivateRepositorySigned:!0===n?.capabilities.signing?.allPublicRepositorySigned}g.as(m.Configuration).registerConfiguration({id:"extensions",order:30,title:t(1920,null),type:"object",properties:{[$]:{type:"object",markdownDescription:t(1921,null),default:"*",defaultSnippets:[{body:{},description:t(1922,null)},{body:{"*":!0},description:t(1923,null)}],scope:1,policy:{name:"AllowedExtensions",minimumVersion:"1.96",description:t(1924,null)},additionalProperties:!1,patternProperties:{"([a-z0-9A-Z][a-z0-9-A-Z]*)\\.([a-z0-9A-Z][a-z0-9-A-Z]*)$":{anyOf:[{type:["boolean","string"],enum:[!0,!1,"stable"],description:t(1925,null),enumDescriptions:[t(1926,null),t(1927,null),t(1928,null)]},{type:"array",items:{type:"string"},description:t(1929,null)}]},"([a-z0-9A-Z][a-z0-9-A-Z]*)$":{type:["boolean","string"],enum:[!0,!1,"stable"],description:t(1930,null),enumDescriptions:[t(1931,null),t(1932,null),t(1933,null)]},"\\*":{type:"boolean",enum:[!0,!1],description:t(1934,null),enumDescriptions:[t(1935,null),t(1936,null)]}}}}});export{F as $$y,P as $0y,x as $5y,R as $6y,D as $7y,S as $8y,N as $9y,Z as $_y,T as $az,W as $bz,L as $cz,A as $dz,j as $ez,_ as $fz,H as $gz,q as $hz,G as $iz,Q as $jz,Y as $kz,J as $lz,K as $mz,X as $nz,M as $oz,z as $pz,O as $qz,B as $rz,$ as $sz,V as $tz,C as $uz,I as ExtensionGalleryErrorCode,s as ExtensionInstallSource,f as ExtensionManagementErrorCode,w as ExtensionSignatureVerificationCode,p as FilterType,o as InstallOperation,u as SortBy,c as SortOrder,d as StatisticType};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { localize, localize2 } from "../../../nls.js";
+import { Extensions } from "../../configuration/common/configurationRegistry.js";
+import { createDecorator } from "../../instantiation/common/instantiation.js";
+import { Registry } from "../../registry/common/platform.js";
+const EXTENSION_IDENTIFIER_PATTERN = "^([a-z0-9A-Z][a-z0-9-A-Z]*)\\.([a-z0-9A-Z][a-z0-9-A-Z]*)$";
+const EXTENSION_IDENTIFIER_REGEX = new RegExp(EXTENSION_IDENTIFIER_PATTERN);
+const WEB_EXTENSION_TAG = "__web_extension";
+const EXTENSION_INSTALL_SKIP_WALKTHROUGH_CONTEXT = "skipWalkthrough";
+const EXTENSION_INSTALL_SKIP_PUBLISHER_TRUST_CONTEXT = "skipPublisherTrust";
+const EXTENSION_INSTALL_SOURCE_CONTEXT = "extensionInstallSource";
+const EXTENSION_INSTALL_DEP_PACK_CONTEXT = "dependecyOrPackExtensionInstall";
+const EXTENSION_INSTALL_CLIENT_TARGET_PLATFORM_CONTEXT = "clientTargetPlatform";
+var ExtensionInstallSource;
+(function(ExtensionInstallSource2) {
+  ExtensionInstallSource2["COMMAND"] = "command";
+  ExtensionInstallSource2["SETTINGS_SYNC"] = "settingsSync";
+})(ExtensionInstallSource || (ExtensionInstallSource = {}));
+function TargetPlatformToString(targetPlatform) {
+  switch (targetPlatform) {
+    case "win32-x64":
+      return "Windows 64 bit";
+    case "win32-arm64":
+      return "Windows ARM";
+    case "linux-x64":
+      return "Linux 64 bit";
+    case "linux-arm64":
+      return "Linux ARM 64";
+    case "linux-armhf":
+      return "Linux ARM";
+    case "alpine-x64":
+      return "Alpine Linux 64 bit";
+    case "alpine-arm64":
+      return "Alpine ARM 64";
+    case "darwin-x64":
+      return "Mac";
+    case "darwin-arm64":
+      return "Mac Silicon";
+    case "web":
+      return "Web";
+    case "universal":
+      return "universal";
+    case "unknown":
+      return "unknown";
+    case "undefined":
+      return "undefined";
+  }
+}
+__name(TargetPlatformToString, "TargetPlatformToString");
+function toTargetPlatform(targetPlatform) {
+  switch (targetPlatform) {
+    case "win32-x64":
+      return "win32-x64";
+    case "win32-arm64":
+      return "win32-arm64";
+    case "linux-x64":
+      return "linux-x64";
+    case "linux-arm64":
+      return "linux-arm64";
+    case "linux-armhf":
+      return "linux-armhf";
+    case "alpine-x64":
+      return "alpine-x64";
+    case "alpine-arm64":
+      return "alpine-arm64";
+    case "darwin-x64":
+      return "darwin-x64";
+    case "darwin-arm64":
+      return "darwin-arm64";
+    case "web":
+      return "web";
+    case "universal":
+      return "universal";
+    default:
+      return "unknown";
+  }
+}
+__name(toTargetPlatform, "toTargetPlatform");
+function getTargetPlatform(platform, arch) {
+  switch (platform) {
+    case 3:
+      if (arch === "x64") {
+        return "win32-x64";
+      }
+      if (arch === "arm64") {
+        return "win32-arm64";
+      }
+      return "unknown";
+    case 2:
+      if (arch === "x64") {
+        return "linux-x64";
+      }
+      if (arch === "arm64") {
+        return "linux-arm64";
+      }
+      if (arch === "arm") {
+        return "linux-armhf";
+      }
+      return "unknown";
+    case "alpine":
+      if (arch === "x64") {
+        return "alpine-x64";
+      }
+      if (arch === "arm64") {
+        return "alpine-arm64";
+      }
+      return "unknown";
+    case 1:
+      if (arch === "x64") {
+        return "darwin-x64";
+      }
+      if (arch === "arm64") {
+        return "darwin-arm64";
+      }
+      return "unknown";
+    case 0:
+      return "web";
+  }
+}
+__name(getTargetPlatform, "getTargetPlatform");
+function isNotWebExtensionInWebTargetPlatform(allTargetPlatforms, productTargetPlatform) {
+  return productTargetPlatform === "web" && !allTargetPlatforms.includes(
+    "web"
+    /* TargetPlatform.WEB */
+  );
+}
+__name(isNotWebExtensionInWebTargetPlatform, "isNotWebExtensionInWebTargetPlatform");
+function isTargetPlatformCompatible(extensionTargetPlatform, allTargetPlatforms, productTargetPlatform) {
+  if (isNotWebExtensionInWebTargetPlatform(allTargetPlatforms, productTargetPlatform)) {
+    return false;
+  }
+  if (extensionTargetPlatform === "undefined") {
+    return true;
+  }
+  if (extensionTargetPlatform === "universal") {
+    return true;
+  }
+  if (extensionTargetPlatform === "unknown") {
+    return false;
+  }
+  if (extensionTargetPlatform === productTargetPlatform) {
+    return true;
+  }
+  return false;
+}
+__name(isTargetPlatformCompatible, "isTargetPlatformCompatible");
+function isIExtensionIdentifier(thing) {
+  return thing && typeof thing === "object" && typeof thing.id === "string" && (!thing.uuid || typeof thing.uuid === "string");
+}
+__name(isIExtensionIdentifier, "isIExtensionIdentifier");
+var SortBy;
+(function(SortBy2) {
+  SortBy2["NoneOrRelevance"] = "NoneOrRelevance";
+  SortBy2["LastUpdatedDate"] = "LastUpdatedDate";
+  SortBy2["Title"] = "Title";
+  SortBy2["PublisherName"] = "PublisherName";
+  SortBy2["InstallCount"] = "InstallCount";
+  SortBy2["PublishedDate"] = "PublishedDate";
+  SortBy2["AverageRating"] = "AverageRating";
+  SortBy2["WeightedRating"] = "WeightedRating";
+})(SortBy || (SortBy = {}));
+var SortOrder;
+(function(SortOrder2) {
+  SortOrder2[SortOrder2["Default"] = 0] = "Default";
+  SortOrder2[SortOrder2["Ascending"] = 1] = "Ascending";
+  SortOrder2[SortOrder2["Descending"] = 2] = "Descending";
+})(SortOrder || (SortOrder = {}));
+var FilterType;
+(function(FilterType2) {
+  FilterType2["Category"] = "Category";
+  FilterType2["ExtensionId"] = "ExtensionId";
+  FilterType2["ExtensionName"] = "ExtensionName";
+  FilterType2["ExcludeWithFlags"] = "ExcludeWithFlags";
+  FilterType2["Featured"] = "Featured";
+  FilterType2["SearchText"] = "SearchText";
+  FilterType2["Tag"] = "Tag";
+  FilterType2["Target"] = "Target";
+})(FilterType || (FilterType = {}));
+var StatisticType;
+(function(StatisticType2) {
+  StatisticType2["Install"] = "install";
+  StatisticType2["Uninstall"] = "uninstall";
+})(StatisticType || (StatisticType = {}));
+var InstallOperation;
+(function(InstallOperation2) {
+  InstallOperation2[InstallOperation2["None"] = 1] = "None";
+  InstallOperation2[InstallOperation2["Install"] = 2] = "Install";
+  InstallOperation2[InstallOperation2["Update"] = 3] = "Update";
+  InstallOperation2[InstallOperation2["Migrate"] = 4] = "Migrate";
+})(InstallOperation || (InstallOperation = {}));
+const IExtensionGalleryService = createDecorator("extensionGalleryService");
+var ExtensionGalleryErrorCode;
+(function(ExtensionGalleryErrorCode2) {
+  ExtensionGalleryErrorCode2["Timeout"] = "Timeout";
+  ExtensionGalleryErrorCode2["Cancelled"] = "Cancelled";
+  ExtensionGalleryErrorCode2["Failed"] = "Failed";
+  ExtensionGalleryErrorCode2["DownloadFailedWriting"] = "DownloadFailedWriting";
+  ExtensionGalleryErrorCode2["Offline"] = "Offline";
+})(ExtensionGalleryErrorCode || (ExtensionGalleryErrorCode = {}));
+class ExtensionGalleryError extends Error {
+  static {
+    __name(this, "ExtensionGalleryError");
+  }
+  constructor(message, code) {
+    super(message);
+    this.code = code;
+    this.name = code;
+  }
+}
+var ExtensionManagementErrorCode;
+(function(ExtensionManagementErrorCode2) {
+  ExtensionManagementErrorCode2["NotFound"] = "NotFound";
+  ExtensionManagementErrorCode2["Unsupported"] = "Unsupported";
+  ExtensionManagementErrorCode2["Deprecated"] = "Deprecated";
+  ExtensionManagementErrorCode2["Malicious"] = "Malicious";
+  ExtensionManagementErrorCode2["Incompatible"] = "Incompatible";
+  ExtensionManagementErrorCode2["IncompatibleApi"] = "IncompatibleApi";
+  ExtensionManagementErrorCode2["IncompatibleTargetPlatform"] = "IncompatibleTargetPlatform";
+  ExtensionManagementErrorCode2["ReleaseVersionNotFound"] = "ReleaseVersionNotFound";
+  ExtensionManagementErrorCode2["Invalid"] = "Invalid";
+  ExtensionManagementErrorCode2["Download"] = "Download";
+  ExtensionManagementErrorCode2["DownloadSignature"] = "DownloadSignature";
+  ExtensionManagementErrorCode2["DownloadFailedWriting"] = "DownloadFailedWriting";
+  ExtensionManagementErrorCode2["UpdateMetadata"] = "UpdateMetadata";
+  ExtensionManagementErrorCode2["Extract"] = "Extract";
+  ExtensionManagementErrorCode2["Scanning"] = "Scanning";
+  ExtensionManagementErrorCode2["ScanningExtension"] = "ScanningExtension";
+  ExtensionManagementErrorCode2["ReadRemoved"] = "ReadRemoved";
+  ExtensionManagementErrorCode2["UnsetRemoved"] = "UnsetRemoved";
+  ExtensionManagementErrorCode2["Delete"] = "Delete";
+  ExtensionManagementErrorCode2["Rename"] = "Rename";
+  ExtensionManagementErrorCode2["IntializeDefaultProfile"] = "IntializeDefaultProfile";
+  ExtensionManagementErrorCode2["AddToProfile"] = "AddToProfile";
+  ExtensionManagementErrorCode2["InstalledExtensionNotFound"] = "InstalledExtensionNotFound";
+  ExtensionManagementErrorCode2["PostInstall"] = "PostInstall";
+  ExtensionManagementErrorCode2["CorruptZip"] = "CorruptZip";
+  ExtensionManagementErrorCode2["IncompleteZip"] = "IncompleteZip";
+  ExtensionManagementErrorCode2["PackageNotSigned"] = "PackageNotSigned";
+  ExtensionManagementErrorCode2["SignatureVerificationInternal"] = "SignatureVerificationInternal";
+  ExtensionManagementErrorCode2["SignatureVerificationFailed"] = "SignatureVerificationFailed";
+  ExtensionManagementErrorCode2["NotAllowed"] = "NotAllowed";
+  ExtensionManagementErrorCode2["Gallery"] = "Gallery";
+  ExtensionManagementErrorCode2["Cancelled"] = "Cancelled";
+  ExtensionManagementErrorCode2["Unknown"] = "Unknown";
+  ExtensionManagementErrorCode2["Internal"] = "Internal";
+})(ExtensionManagementErrorCode || (ExtensionManagementErrorCode = {}));
+var ExtensionSignatureVerificationCode;
+(function(ExtensionSignatureVerificationCode2) {
+  ExtensionSignatureVerificationCode2["NotSigned"] = "NotSigned";
+  ExtensionSignatureVerificationCode2["Success"] = "Success";
+  ExtensionSignatureVerificationCode2["RequiredArgumentMissing"] = "RequiredArgumentMissing";
+  ExtensionSignatureVerificationCode2["InvalidArgument"] = "InvalidArgument";
+  ExtensionSignatureVerificationCode2["PackageIsUnreadable"] = "PackageIsUnreadable";
+  ExtensionSignatureVerificationCode2["UnhandledException"] = "UnhandledException";
+  ExtensionSignatureVerificationCode2["SignatureManifestIsMissing"] = "SignatureManifestIsMissing";
+  ExtensionSignatureVerificationCode2["SignatureManifestIsUnreadable"] = "SignatureManifestIsUnreadable";
+  ExtensionSignatureVerificationCode2["SignatureIsMissing"] = "SignatureIsMissing";
+  ExtensionSignatureVerificationCode2["SignatureIsUnreadable"] = "SignatureIsUnreadable";
+  ExtensionSignatureVerificationCode2["CertificateIsUnreadable"] = "CertificateIsUnreadable";
+  ExtensionSignatureVerificationCode2["SignatureArchiveIsUnreadable"] = "SignatureArchiveIsUnreadable";
+  ExtensionSignatureVerificationCode2["FileAlreadyExists"] = "FileAlreadyExists";
+  ExtensionSignatureVerificationCode2["SignatureArchiveIsInvalidZip"] = "SignatureArchiveIsInvalidZip";
+  ExtensionSignatureVerificationCode2["SignatureArchiveHasSameSignatureFile"] = "SignatureArchiveHasSameSignatureFile";
+  ExtensionSignatureVerificationCode2["PackageIntegrityCheckFailed"] = "PackageIntegrityCheckFailed";
+  ExtensionSignatureVerificationCode2["SignatureIsInvalid"] = "SignatureIsInvalid";
+  ExtensionSignatureVerificationCode2["SignatureManifestIsInvalid"] = "SignatureManifestIsInvalid";
+  ExtensionSignatureVerificationCode2["SignatureIntegrityCheckFailed"] = "SignatureIntegrityCheckFailed";
+  ExtensionSignatureVerificationCode2["EntryIsMissing"] = "EntryIsMissing";
+  ExtensionSignatureVerificationCode2["EntryIsTampered"] = "EntryIsTampered";
+  ExtensionSignatureVerificationCode2["Untrusted"] = "Untrusted";
+  ExtensionSignatureVerificationCode2["CertificateRevoked"] = "CertificateRevoked";
+  ExtensionSignatureVerificationCode2["SignatureIsNotValid"] = "SignatureIsNotValid";
+  ExtensionSignatureVerificationCode2["UnknownError"] = "UnknownError";
+  ExtensionSignatureVerificationCode2["PackageIsInvalidZip"] = "PackageIsInvalidZip";
+  ExtensionSignatureVerificationCode2["SignatureArchiveHasTooManyEntries"] = "SignatureArchiveHasTooManyEntries";
+})(ExtensionSignatureVerificationCode || (ExtensionSignatureVerificationCode = {}));
+class ExtensionManagementError extends Error {
+  static {
+    __name(this, "ExtensionManagementError");
+  }
+  constructor(message, code) {
+    super(message);
+    this.code = code;
+    this.name = code;
+  }
+}
+const IExtensionManagementService = createDecorator("extensionManagementService");
+const DISABLED_EXTENSIONS_STORAGE_PATH = "extensionsIdentifiers/disabled";
+const ENABLED_EXTENSIONS_STORAGE_PATH = "extensionsIdentifiers/enabled";
+const IGlobalExtensionEnablementService = createDecorator("IGlobalExtensionEnablementService");
+const IExtensionTipsService = createDecorator("IExtensionTipsService");
+const IAllowedExtensionsService = createDecorator("IAllowedExtensionsService");
+async function computeSize(location, fileService) {
+  let stat;
+  try {
+    stat = await fileService.resolve(location);
+  } catch (e) {
+    if (e.fileOperationResult === 1) {
+      return 0;
+    }
+    throw e;
+  }
+  if (stat.children) {
+    const sizes = await Promise.all(stat.children.map((c) => computeSize(c.resource, fileService)));
+    return sizes.reduce((r, s) => r + s, 0);
+  }
+  return stat.size ?? 0;
+}
+__name(computeSize, "computeSize");
+const ExtensionsLocalizedLabel = localize2("extensions", "Extensions");
+const PreferencesLocalizedLabel = localize2("preferences", "Preferences");
+const AllowedExtensionsConfigKey = "extensions.allowed";
+const VerifyExtensionSignatureConfigKey = "extensions.verifySignature";
+Registry.as(Extensions.Configuration).registerConfiguration({
+  id: "extensions",
+  order: 30,
+  title: localize("extensionsConfigurationTitle", "Extensions"),
+  type: "object",
+  properties: {
+    [AllowedExtensionsConfigKey]: {
+      // Note: Type is set only to object because to support policies generation during build time, where single type is expected.
+      type: "object",
+      markdownDescription: localize("extensions.allowed", "Specify a list of extensions that are allowed to use. This helps maintain a secure and consistent development environment by restricting the use of unauthorized extensions. For more information on how to configure this setting, please visit the [Configure Allowed Extensions](https://code.visualstudio.com/docs/setup/enterprise#_configure-allowed-extensions) section."),
+      default: "*",
+      defaultSnippets: [{
+        body: {},
+        description: localize("extensions.allowed.none", "No extensions are allowed.")
+      }, {
+        body: {
+          "*": true
+        },
+        description: localize("extensions.allowed.all", "All extensions are allowed.")
+      }],
+      scope: 1,
+      policy: {
+        name: "AllowedExtensions",
+        minimumVersion: "1.96",
+        description: localize("extensions.allowed.policy", "Specify a list of extensions that are allowed to use. This helps maintain a secure and consistent development environment by restricting the use of unauthorized extensions. More information: https://code.visualstudio.com/docs/setup/enterprise#_configure-allowed-extensions")
+      },
+      additionalProperties: false,
+      patternProperties: {
+        "([a-z0-9A-Z][a-z0-9-A-Z]*)\\.([a-z0-9A-Z][a-z0-9-A-Z]*)$": {
+          anyOf: [
+            {
+              type: ["boolean", "string"],
+              enum: [true, false, "stable"],
+              description: localize("extensions.allow.description", "Allow or disallow the extension."),
+              enumDescriptions: [
+                localize("extensions.allowed.enable.desc", "Extension is allowed."),
+                localize("extensions.allowed.disable.desc", "Extension is not allowed."),
+                localize("extensions.allowed.disable.stable.desc", "Allow only stable versions of the extension.")
+              ]
+            },
+            {
+              type: "array",
+              items: {
+                type: "string"
+              },
+              description: localize("extensions.allow.version.description", "Allow or disallow specific versions of the extension. To specifcy a platform specific version, use the format `platform@1.2.3`, e.g. `win32-x64@1.2.3`. Supported platforms are `win32-x64`, `win32-arm64`, `linux-x64`, `linux-arm64`, `linux-armhf`, `alpine-x64`, `alpine-arm64`, `darwin-x64`, `darwin-arm64`")
+            }
+          ]
+        },
+        "([a-z0-9A-Z][a-z0-9-A-Z]*)$": {
+          type: ["boolean", "string"],
+          enum: [true, false, "stable"],
+          description: localize("extension.publisher.allow.description", "Allow or disallow all extensions from the publisher."),
+          enumDescriptions: [
+            localize("extensions.publisher.allowed.enable.desc", "All extensions from the publisher are allowed."),
+            localize("extensions.publisher.allowed.disable.desc", "All extensions from the publisher are not allowed."),
+            localize("extensions.publisher.allowed.disable.stable.desc", "Allow only stable versions of the extensions from the publisher.")
+          ]
+        },
+        "\\*": {
+          type: "boolean",
+          enum: [true, false],
+          description: localize("extensions.allow.all.description", "Allow or disallow all extensions."),
+          enumDescriptions: [
+            localize("extensions.allow.all.enable", "Allow all extensions."),
+            localize("extensions.allow.all.disable", "Disallow all extensions.")
+          ]
+        }
+      }
+    }
+  }
+});
+function shouldRequireRepositorySignatureFor(isPrivate, galleryManifest) {
+  if (isPrivate) {
+    return galleryManifest?.capabilities.signing?.allPrivateRepositorySigned === true;
+  }
+  return galleryManifest?.capabilities.signing?.allPublicRepositorySigned === true;
+}
+__name(shouldRequireRepositorySignatureFor, "shouldRequireRepositorySignatureFor");
+export {
+  AllowedExtensionsConfigKey,
+  DISABLED_EXTENSIONS_STORAGE_PATH,
+  ENABLED_EXTENSIONS_STORAGE_PATH,
+  EXTENSION_IDENTIFIER_PATTERN,
+  EXTENSION_IDENTIFIER_REGEX,
+  EXTENSION_INSTALL_CLIENT_TARGET_PLATFORM_CONTEXT,
+  EXTENSION_INSTALL_DEP_PACK_CONTEXT,
+  EXTENSION_INSTALL_SKIP_PUBLISHER_TRUST_CONTEXT,
+  EXTENSION_INSTALL_SKIP_WALKTHROUGH_CONTEXT,
+  EXTENSION_INSTALL_SOURCE_CONTEXT,
+  ExtensionGalleryError,
+  ExtensionGalleryErrorCode,
+  ExtensionInstallSource,
+  ExtensionManagementError,
+  ExtensionManagementErrorCode,
+  ExtensionSignatureVerificationCode,
+  ExtensionsLocalizedLabel,
+  FilterType,
+  IAllowedExtensionsService,
+  IExtensionGalleryService,
+  IExtensionManagementService,
+  IExtensionTipsService,
+  IGlobalExtensionEnablementService,
+  InstallOperation,
+  PreferencesLocalizedLabel,
+  SortBy,
+  SortOrder,
+  StatisticType,
+  TargetPlatformToString,
+  VerifyExtensionSignatureConfigKey,
+  WEB_EXTENSION_TAG,
+  computeSize,
+  getTargetPlatform,
+  isIExtensionIdentifier,
+  isNotWebExtensionInWebTargetPlatform,
+  isTargetPlatformCompatible,
+  shouldRequireRepositorySignatureFor,
+  toTargetPlatform
+};
+//# sourceMappingURL=extensionManagement.js.map

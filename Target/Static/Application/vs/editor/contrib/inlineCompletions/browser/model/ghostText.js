@@ -1,7 +1,131 @@
-import{$Sb as g}from"../../../../../base/common/arrays.js";import{$Pf as f}from"../../../../../base/common/strings.js";import{$bC as h}from"../../../../common/core/position.js";import{$cC as o}from"../../../../common/core/range.js";import{$_L as l,$$L as a}from"../../../../common/core/edits/textEdit.js";import{$Bbb as m}from"../../../../common/viewLayout/lineDecorations.js";class p{constructor(e,n){this.lineNumber=e,this.parts=n}equals(e){return this.lineNumber===e.lineNumber&&this.parts.length===e.parts.length&&this.parts.every((n,t)=>n.equals(e.parts[t]))}render(e,n=!1){return new a([...this.parts.map(t=>new l(o.fromPositions(new h(this.lineNumber,t.column)),n?`[${t.lines.map(s=>s.line).join(`
-`)}]`:t.lines.map(s=>s.line).join(`
-`)))]).applyToString(e)}renderForScreenReader(e){if(this.parts.length===0)return"";const n=this.parts[this.parts.length-1],t=e.substr(0,n.column-1);return new a([...this.parts.map(r=>new l(o.fromPositions(new h(1,r.column)),r.lines.map(u=>u.line).join(`
-`)))]).applyToString(t).substring(this.parts[0].column-1)}isEmpty(){return this.parts.every(e=>e.lines.length===0)}get lineCount(){return 1+this.parts.reduce((e,n)=>e+n.lines.length-1,0)}}class w{constructor(e,n,t,s=[]){this.column=e,this.text=n,this.preview=t,this.c=s,this.lines=f(this.text).map((r,u)=>({line:r,lineDecorations:m.filter(this.c,u+1,1,r.length+1)}))}equals(e){return this.column===e.column&&this.lines.length===e.lines.length&&this.lines.every((n,t)=>n.line===e.lines[t].line&&m.equalsArr(n.lineDecorations,e.lines[t].lineDecorations))}}class c{constructor(e,n,t,s=0){this.lineNumber=e,this.columnRange=n,this.text=t,this.additionalReservedLineCount=s,this.parts=[new w(this.columnRange.endColumnExclusive,this.text,!1)],this.newLines=f(this.text)}renderForScreenReader(e){return this.newLines.join(`
-`)}render(e,n=!1){const t=this.columnRange.toRange(this.lineNumber);return n?new a([new l(o.fromPositions(t.getStartPosition()),"("),new l(o.fromPositions(t.getEndPosition()),`)[${this.newLines.join(`
-`)}]`)]).applyToString(e):new a([new l(t,this.newLines.join(`
-`))]).applyToString(e)}get lineCount(){return this.newLines.length}isEmpty(){return this.parts.every(e=>e.lines.length===0)}equals(e){return this.lineNumber===e.lineNumber&&this.columnRange.equals(e.columnRange)&&this.newLines.length===e.newLines.length&&this.newLines.every((n,t)=>n===e.newLines[t])&&this.additionalReservedLineCount===e.additionalReservedLineCount}}function v(i,e){return g(i,e,d)}function d(i,e){return i===e?!0:!i||!e?!1:i instanceof p&&e instanceof p||i instanceof c&&e instanceof c?i.equals(e):!1}export{p as $pkb,w as $qkb,c as $rkb,v as $skb,d as $tkb};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { equals } from "../../../../../base/common/arrays.js";
+import { splitLines } from "../../../../../base/common/strings.js";
+import { Position } from "../../../../common/core/position.js";
+import { Range } from "../../../../common/core/range.js";
+import { TextReplacement, TextEdit } from "../../../../common/core/edits/textEdit.js";
+import { LineDecoration } from "../../../../common/viewLayout/lineDecorations.js";
+class GhostText {
+  static {
+    __name(this, "GhostText");
+  }
+  constructor(lineNumber, parts) {
+    this.lineNumber = lineNumber;
+    this.parts = parts;
+  }
+  equals(other) {
+    return this.lineNumber === other.lineNumber && this.parts.length === other.parts.length && this.parts.every((part, index) => part.equals(other.parts[index]));
+  }
+  /**
+   * Only used for testing/debugging.
+  */
+  render(documentText, debug = false) {
+    return new TextEdit([
+      ...this.parts.map((p) => new TextReplacement(Range.fromPositions(new Position(this.lineNumber, p.column)), debug ? `[${p.lines.map((line) => line.line).join("\n")}]` : p.lines.map((line) => line.line).join("\n")))
+    ]).applyToString(documentText);
+  }
+  renderForScreenReader(lineText) {
+    if (this.parts.length === 0) {
+      return "";
+    }
+    const lastPart = this.parts[this.parts.length - 1];
+    const cappedLineText = lineText.substr(0, lastPart.column - 1);
+    const text = new TextEdit([
+      ...this.parts.map((p) => new TextReplacement(Range.fromPositions(new Position(1, p.column)), p.lines.map((line) => line.line).join("\n")))
+    ]).applyToString(cappedLineText);
+    return text.substring(this.parts[0].column - 1);
+  }
+  isEmpty() {
+    return this.parts.every((p) => p.lines.length === 0);
+  }
+  get lineCount() {
+    return 1 + this.parts.reduce((r, p) => r + p.lines.length - 1, 0);
+  }
+}
+class GhostTextPart {
+  static {
+    __name(this, "GhostTextPart");
+  }
+  constructor(column, text, preview, _inlineDecorations = []) {
+    this.column = column;
+    this.text = text;
+    this.preview = preview;
+    this._inlineDecorations = _inlineDecorations;
+    this.lines = splitLines(this.text).map((line, i) => ({
+      line,
+      lineDecorations: LineDecoration.filter(this._inlineDecorations, i + 1, 1, line.length + 1)
+    }));
+  }
+  equals(other) {
+    return this.column === other.column && this.lines.length === other.lines.length && this.lines.every((line, index) => line.line === other.lines[index].line && LineDecoration.equalsArr(line.lineDecorations, other.lines[index].lineDecorations));
+  }
+}
+class GhostTextReplacement {
+  static {
+    __name(this, "GhostTextReplacement");
+  }
+  constructor(lineNumber, columnRange, text, additionalReservedLineCount = 0) {
+    this.lineNumber = lineNumber;
+    this.columnRange = columnRange;
+    this.text = text;
+    this.additionalReservedLineCount = additionalReservedLineCount;
+    this.parts = [
+      new GhostTextPart(this.columnRange.endColumnExclusive, this.text, false)
+    ];
+    this.newLines = splitLines(this.text);
+  }
+  renderForScreenReader(_lineText) {
+    return this.newLines.join("\n");
+  }
+  render(documentText, debug = false) {
+    const replaceRange = this.columnRange.toRange(this.lineNumber);
+    if (debug) {
+      return new TextEdit([
+        new TextReplacement(Range.fromPositions(replaceRange.getStartPosition()), "("),
+        new TextReplacement(Range.fromPositions(replaceRange.getEndPosition()), `)[${this.newLines.join("\n")}]`)
+      ]).applyToString(documentText);
+    } else {
+      return new TextEdit([
+        new TextReplacement(replaceRange, this.newLines.join("\n"))
+      ]).applyToString(documentText);
+    }
+  }
+  get lineCount() {
+    return this.newLines.length;
+  }
+  isEmpty() {
+    return this.parts.every((p) => p.lines.length === 0);
+  }
+  equals(other) {
+    return this.lineNumber === other.lineNumber && this.columnRange.equals(other.columnRange) && this.newLines.length === other.newLines.length && this.newLines.every((line, index) => line === other.newLines[index]) && this.additionalReservedLineCount === other.additionalReservedLineCount;
+  }
+}
+function ghostTextsOrReplacementsEqual(a, b) {
+  return equals(a, b, ghostTextOrReplacementEquals);
+}
+__name(ghostTextsOrReplacementsEqual, "ghostTextsOrReplacementsEqual");
+function ghostTextOrReplacementEquals(a, b) {
+  if (a === b) {
+    return true;
+  }
+  if (!a || !b) {
+    return false;
+  }
+  if (a instanceof GhostText && b instanceof GhostText) {
+    return a.equals(b);
+  }
+  if (a instanceof GhostTextReplacement && b instanceof GhostTextReplacement) {
+    return a.equals(b);
+  }
+  return false;
+}
+__name(ghostTextOrReplacementEquals, "ghostTextOrReplacementEquals");
+export {
+  GhostText,
+  GhostTextPart,
+  GhostTextReplacement,
+  ghostTextOrReplacementEquals,
+  ghostTextsOrReplacementsEqual
+};
+//# sourceMappingURL=ghostText.js.map

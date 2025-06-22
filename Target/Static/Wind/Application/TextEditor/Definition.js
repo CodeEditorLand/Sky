@@ -1,1 +1,18 @@
-import{Effect as r}from"../../effect";import"vs/platform/files/common/files.js";import"vs/platform/instantiation/common/instantiation.js";import{TextEditorService as o}from"vs/workbench/services/textfile/common/textEditorService.js";import"vs/workbench/services/untitled/common/untitledTextEditorService.js";import{File as n}from"../File/mod.js";import{Instantiation as c}from"../Instantiation/mod.js";const m=r.gen(function*(t){const e=yield*t(c.Tag),i=yield*t(n.Tag);return new o(e,i,{})});var E=m;export{E as default};
+import { Effect } from "../../effect";
+import { TextEditorService } from "vs/workbench/services/textfile/common/textEditorService.js";
+const Definition = Effect.gen(function* (_) {
+  const InstantiationService = yield* _(Instantiation.Tag);
+  const FileService = yield* _(File.Tag);
+  const ServiceInstance = new TextEditorService(
+    InstantiationService,
+    FileService,
+    {}
+    // Stubbed dependency
+  );
+  return ServiceInstance;
+});
+var Definition_default = Definition;
+export {
+  Definition_default as default
+};
+//# sourceMappingURL=Definition.js.map

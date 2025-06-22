@@ -1,1 +1,99 @@
-import{$Od as a}from"./base.js";import{$Sd as f}from"./debugName.js";import{$te as o}from"./logging/logging.js";function h(n,t){const e=new r(n,t);try{n(e)}finally{e.finish()}}let i;function p(n){if(i)n(i);else{const t=new r(n,void 0);i=t;try{n(t)}finally{t.finish(),i=void 0}}}async function y(n,t){const e=new r(n,t);try{await n(e)}finally{e.finish()}}function b(n,t,e){n?t(n):h(t,e)}class r{constructor(t,e){this._fn=t,this.b=e,this.a=[],o()?.handleBeginTransaction(this)}getDebugName(){return this.b?this.b():f(this._fn)}updateObserver(t,e){if(!this.a){a("Transaction already finished!"),h(s=>{s.updateObserver(t,e)});return}this.a.push({observer:t,observable:e}),t.beginUpdate(e)}finish(){const t=this.a;if(!t){a("transaction.finish() has already been called!");return}for(let e=0;e<t.length;e++){const{observer:s,observable:d}=t[e];s.endUpdate(d)}this.a=null,o()?.handleEndTransaction(this)}debugGetUpdatingObservers(){return this.a}}export{r as $Ae,h as $we,p as $xe,y as $ye,b as $ze};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { handleBugIndicatingErrorRecovery } from "./base.js";
+import { getFunctionName } from "./debugName.js";
+import { getLogger } from "./logging/logging.js";
+function transaction(fn, getDebugName) {
+  const tx = new TransactionImpl(fn, getDebugName);
+  try {
+    fn(tx);
+  } finally {
+    tx.finish();
+  }
+}
+__name(transaction, "transaction");
+let _globalTransaction = void 0;
+function globalTransaction(fn) {
+  if (_globalTransaction) {
+    fn(_globalTransaction);
+  } else {
+    const tx = new TransactionImpl(fn, void 0);
+    _globalTransaction = tx;
+    try {
+      fn(tx);
+    } finally {
+      tx.finish();
+      _globalTransaction = void 0;
+    }
+  }
+}
+__name(globalTransaction, "globalTransaction");
+async function asyncTransaction(fn, getDebugName) {
+  const tx = new TransactionImpl(fn, getDebugName);
+  try {
+    await fn(tx);
+  } finally {
+    tx.finish();
+  }
+}
+__name(asyncTransaction, "asyncTransaction");
+function subtransaction(tx, fn, getDebugName) {
+  if (!tx) {
+    transaction(fn, getDebugName);
+  } else {
+    fn(tx);
+  }
+}
+__name(subtransaction, "subtransaction");
+class TransactionImpl {
+  static {
+    __name(this, "TransactionImpl");
+  }
+  constructor(_fn, _getDebugName) {
+    this._fn = _fn;
+    this._getDebugName = _getDebugName;
+    this._updatingObservers = [];
+    getLogger()?.handleBeginTransaction(this);
+  }
+  getDebugName() {
+    if (this._getDebugName) {
+      return this._getDebugName();
+    }
+    return getFunctionName(this._fn);
+  }
+  updateObserver(observer, observable) {
+    if (!this._updatingObservers) {
+      handleBugIndicatingErrorRecovery("Transaction already finished!");
+      transaction((tx) => {
+        tx.updateObserver(observer, observable);
+      });
+      return;
+    }
+    this._updatingObservers.push({ observer, observable });
+    observer.beginUpdate(observable);
+  }
+  finish() {
+    const updatingObservers = this._updatingObservers;
+    if (!updatingObservers) {
+      handleBugIndicatingErrorRecovery("transaction.finish() has already been called!");
+      return;
+    }
+    for (let i = 0; i < updatingObservers.length; i++) {
+      const { observer, observable } = updatingObservers[i];
+      observer.endUpdate(observable);
+    }
+    this._updatingObservers = null;
+    getLogger()?.handleEndTransaction(this);
+  }
+  debugGetUpdatingObservers() {
+    return this._updatingObservers;
+  }
+}
+export {
+  TransactionImpl,
+  asyncTransaction,
+  globalTransaction,
+  subtransaction,
+  transaction
+};
+//# sourceMappingURL=transaction.js.map

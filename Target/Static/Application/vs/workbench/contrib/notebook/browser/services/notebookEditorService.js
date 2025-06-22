@@ -1,1 +1,6 @@
-import{$nj as o}from"../../../../../platform/instantiation/common/instantiation.js";const e=o("INotebookEditorWidgetService");export{e as $QVb};
+import { createDecorator } from "../../../../../platform/instantiation/common/instantiation.js";
+const INotebookEditorService = createDecorator("INotebookEditorWidgetService");
+export {
+  INotebookEditorService
+};
+//# sourceMappingURL=notebookEditorService.js.map

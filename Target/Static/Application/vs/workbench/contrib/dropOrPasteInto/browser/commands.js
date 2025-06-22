@@ -1,1 +1,58 @@
-import{$em as u}from"../../../../base/common/actions.js";import{$Ihb as p,$Ghb as b}from"../../../../editor/contrib/dropOrPasteInto/browser/copyPasteController.js";import{$Cnb as m,$znb as d}from"../../../../editor/contrib/dropOrPasteInto/browser/dropIntoEditorController.js";import{localize as l}from"../../../../nls.js";import{$ZJ as _}from"../../../services/preferences/common/preferences.js";var s=function(e,r,t,o){var n,s=arguments.length,i=s<3?r:null===o?o=Object.getOwnPropertyDescriptor(r,t):o;if("object"==typeof Reflect&&"function"==typeof Reflect.decorate)i=Reflect.decorate(e,r,t,o);else for(var c=e.length-1;c>=0;c--)(n=e[c])&&(i=(s<3?n(i):s>3?n(r,t,i):n(r,t))||i);return s>3&&i&&Object.defineProperty(r,t,i),i},h=function(e,r){return function(t,o){r(t,o,e)}};let a=class{static{this.ID="workbench.contrib.dropOrPasteInto"}constructor(e){this.a=e,p.setConfigureDefaultAction(u({id:"workbench.action.configurePreferredPasteAction",label:l(6943,null),run:()=>this.b()})),m.setConfigureDefaultAction(u({id:"workbench.action.configurePreferredDropAction",label:l(6944,null),run:()=>this.c()}))}b(){return this.a.openUserSettings({jsonEditor:!0,revealSetting:{key:b,edit:!0}})}c(){return this.a.openUserSettings({jsonEditor:!0,revealSetting:{key:d,edit:!0}})}};a=s([h(0,_)],a);export{a as $hyc};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { toAction } from "../../../../base/common/actions.js";
+import { CopyPasteController, pasteAsPreferenceConfig } from "../../../../editor/contrib/dropOrPasteInto/browser/copyPasteController.js";
+import { DropIntoEditorController, dropAsPreferenceConfig } from "../../../../editor/contrib/dropOrPasteInto/browser/dropIntoEditorController.js";
+import { localize } from "../../../../nls.js";
+import { IPreferencesService } from "../../../services/preferences/common/preferences.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+let DropOrPasteIntoCommands = class DropOrPasteIntoCommands2 {
+  static {
+    __name(this, "DropOrPasteIntoCommands");
+  }
+  static {
+    this.ID = "workbench.contrib.dropOrPasteInto";
+  }
+  constructor(_preferencesService) {
+    this._preferencesService = _preferencesService;
+    CopyPasteController.setConfigureDefaultAction(toAction({
+      id: "workbench.action.configurePreferredPasteAction",
+      label: localize("configureDefaultPaste.label", "Configure preferred paste action..."),
+      run: /* @__PURE__ */ __name(() => this.configurePreferredPasteAction(), "run")
+    }));
+    DropIntoEditorController.setConfigureDefaultAction(toAction({
+      id: "workbench.action.configurePreferredDropAction",
+      label: localize("configureDefaultDrop.label", "Configure preferred drop action..."),
+      run: /* @__PURE__ */ __name(() => this.configurePreferredDropAction(), "run")
+    }));
+  }
+  configurePreferredPasteAction() {
+    return this._preferencesService.openUserSettings({
+      jsonEditor: true,
+      revealSetting: { key: pasteAsPreferenceConfig, edit: true }
+    });
+  }
+  configurePreferredDropAction() {
+    return this._preferencesService.openUserSettings({
+      jsonEditor: true,
+      revealSetting: { key: dropAsPreferenceConfig, edit: true }
+    });
+  }
+};
+DropOrPasteIntoCommands = __decorate([
+  __param(0, IPreferencesService)
+], DropOrPasteIntoCommands);
+export {
+  DropOrPasteIntoCommands
+};
+//# sourceMappingURL=commands.js.map

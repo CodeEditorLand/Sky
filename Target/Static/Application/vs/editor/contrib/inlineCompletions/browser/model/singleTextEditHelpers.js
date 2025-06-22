@@ -1,3 +1,37 @@
-import{$7f as u}from"../../../../../base/common/strings.js";import{$cC as f}from"../../../../common/core/range.js";import{$QD as m}from"../../../../common/core/text/textLength.js";import{$_L as P}from"../../../../common/core/edits/textEdit.js";function b(t,n,o){const r=o?t.range.intersectRanges(o):t.range;if(!r)return t;const e=t.text.replaceAll(`\r
-`,`
-`),s=n.getValueInRange(r,1),i=u(s,e),a=m.ofText(s.substring(0,i)).addToPosition(t.range.getStartPosition()),g=e.substring(i),c=f.fromPositions(a,t.range.getEndPosition());return new P(c,g)}function S(t,n){return t.text.startsWith(n.text)&&l(t.range,n.range)}function l(t,n){return n.getStartPosition().equals(t.getStartPosition())&&n.getEndPosition().isBeforeOrEqual(t.getEndPosition())}export{b as $ukb,S as $vkb};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { commonPrefixLength } from "../../../../../base/common/strings.js";
+import { Range } from "../../../../common/core/range.js";
+import { TextLength } from "../../../../common/core/text/textLength.js";
+import { TextReplacement } from "../../../../common/core/edits/textEdit.js";
+function singleTextRemoveCommonPrefix(edit, model, validModelRange) {
+  const modelRange = validModelRange ? edit.range.intersectRanges(validModelRange) : edit.range;
+  if (!modelRange) {
+    return edit;
+  }
+  const normalizedText = edit.text.replaceAll("\r\n", "\n");
+  const valueToReplace = model.getValueInRange(
+    modelRange,
+    1
+    /* EndOfLinePreference.LF */
+  );
+  const commonPrefixLen = commonPrefixLength(valueToReplace, normalizedText);
+  const start = TextLength.ofText(valueToReplace.substring(0, commonPrefixLen)).addToPosition(edit.range.getStartPosition());
+  const text = normalizedText.substring(commonPrefixLen);
+  const range = Range.fromPositions(start, edit.range.getEndPosition());
+  return new TextReplacement(range, text);
+}
+__name(singleTextRemoveCommonPrefix, "singleTextRemoveCommonPrefix");
+function singleTextEditAugments(edit, base) {
+  return edit.text.startsWith(base.text) && rangeExtends(edit.range, base.range);
+}
+__name(singleTextEditAugments, "singleTextEditAugments");
+function rangeExtends(extendingRange, rangeToExtend) {
+  return rangeToExtend.getStartPosition().equals(extendingRange.getStartPosition()) && rangeToExtend.getEndPosition().isBeforeOrEqual(extendingRange.getEndPosition());
+}
+__name(rangeExtends, "rangeExtends");
+export {
+  singleTextEditAugments,
+  singleTextRemoveCommonPrefix
+};
+//# sourceMappingURL=singleTextEditHelpers.js.map

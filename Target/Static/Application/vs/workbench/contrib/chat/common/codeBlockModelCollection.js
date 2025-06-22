@@ -1,2 +1,213 @@
-import{Iterable as y}from"../../../../base/common/iterator.js";import{$vd as j}from"../../../../base/common/lifecycle.js";import{Schemas as w}from"../../../../base/common/network.js";import{URI as g}from"../../../../base/common/uri.js";import{$cC as O}from"../../../../editor/common/core/range.js";import{$BD as x}from"../../../../editor/common/languages/language.js";import{$cF as E}from"../../../../editor/common/services/resolverService.js";import{$dAb as d,$eAb as b}from"./annotations.js";import{$jAb as L}from"./chatViewModel.js";var v=function(a,t,e,r){var i=arguments.length,n=i<3?t:r===null?r=Object.getOwnPropertyDescriptor(t,e):r,s;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")n=Reflect.decorate(a,t,e,r);else for(var o=a.length-1;o>=0;o--)(s=a[o])&&(n=(i<3?s(n):i>3?s(t,e,n):s(t,e))||n);return i>3&&n&&Object.defineProperty(t,e,n),n},p=function(a,t){return function(e,r){t(e,r,a)}};let C=class extends j{constructor(t,e,r){super(),this.c=t,this.f=e,this.g=r,this.a=new Map,this.b=100}dispose(){super.dispose(),this.clear()}get(t,e,r){const i=this.a.get(this.n(t,e,r));if(i)return{model:i.model.then(n=>n.object.textEditorModel),vulns:i.vulns,codemapperUri:i.codemapperUri,isEdit:i.isEdit}}getOrCreate(t,e,r){const i=this.get(t,e,r);if(i)return i;const n=this.r(t,e,r),s=this.g.createModelReference(n);for(this.a.set(this.n(t,e,r),{model:s,vulns:[],codemapperUri:void 0});this.a.size>this.b;){const o=y.first(this.a.keys());if(!o)break;this.h(o)}return{model:s.then(o=>o.object.textEditorModel),vulns:[],codemapperUri:void 0}}h(t){const e=this.a.get(t);e&&(e.model.then(r=>r.object.dispose()),this.a.delete(t))}clear(){this.a.forEach(async t=>(await t.model).dispose()),this.a.clear()}updateSync(t,e,r,i){const n=this.getOrCreate(t,e,r),s=b(i.text),o=$(s.newText,i.languageId);this.m(t,e,r,s.vulnerabilities);const u=d(o);return u&&this.j(t,e,r,u.uri,u.isEdit),i.isComplete&&this.markCodeBlockCompleted(t,e,r),this.get(t,e,r)??n}markCodeBlockCompleted(t,e,r){this.a.get(this.n(t,e,r))}async update(t,e,r,i){const n=this.getOrCreate(t,e,r),s=b(i.text);let o=$(s.newText,i.languageId);this.m(t,e,r,s.vulnerabilities);const u=d(o);u&&(this.j(t,e,r,u.uri,u.isEdit),o=u.textWithoutResult),i.isComplete&&this.markCodeBlockCompleted(t,e,r);const f=await n.model;if(f.isDisposed())return n;if(i.languageId){const l=this.f.getLanguageIdByLanguageName(i.languageId);l&&l!==f.getLanguageId()&&f.setLanguage(l)}const h=f.getValue(1);if(o===h)return n;if(o.startsWith(h)){const l=o.slice(h.length),m=f.getLineCount(),c=f.getLineMaxColumn(m);f.applyEdits([{range:new O(m,c,m,c),text:l}])}else f.setValue(o);return n}j(t,e,r,i,n){const s=this.a.get(this.n(t,e,r));s&&(s.codemapperUri=i,s.isEdit=n)}m(t,e,r,i){const n=this.a.get(this.n(t,e,r));n&&(n.vulns=i)}n(t,e,r){return`${t}/${e.id}/${r}`}r(t,e,r){const i=this.s(e),n=this.c?`${this.c}-${r}`:`${r}`;return g.from({scheme:w.vscodeChatCodeBlock,authority:t,path:`/${e.id}/${n}`,fragment:i?JSON.stringify(i):void 0})}s(t){if(L(t))return{references:t.contentReferences.map(e=>{if(typeof e.reference=="string")return;const r="variableName"in e.reference?e.reference.value:e.reference;if(r)return g.isUri(r)?{uri:r.toJSON()}:{uri:r.uri.toJSON(),range:r.range}})}}};C=v([p(1,x),p(2,E)],C);function $(a,t){return t==="php"&&!a.trim().startsWith("<?")?`<?php
-${a}`:a}export{C as $hAb};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { Iterable } from "../../../../base/common/iterator.js";
+import { Disposable } from "../../../../base/common/lifecycle.js";
+import { Schemas } from "../../../../base/common/network.js";
+import { URI } from "../../../../base/common/uri.js";
+import { Range } from "../../../../editor/common/core/range.js";
+import { ILanguageService } from "../../../../editor/common/languages/language.js";
+import { ITextModelService } from "../../../../editor/common/services/resolverService.js";
+import { extractCodeblockUrisFromText, extractVulnerabilitiesFromText } from "./annotations.js";
+import { isResponseVM } from "./chatViewModel.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+let CodeBlockModelCollection = class CodeBlockModelCollection2 extends Disposable {
+  static {
+    __name(this, "CodeBlockModelCollection");
+  }
+  constructor(tag, languageService, textModelService) {
+    super();
+    this.tag = tag;
+    this.languageService = languageService;
+    this.textModelService = textModelService;
+    this._models = /* @__PURE__ */ new Map();
+    this.maxModelCount = 100;
+  }
+  dispose() {
+    super.dispose();
+    this.clear();
+  }
+  get(sessionId, chat, codeBlockIndex) {
+    const entry = this._models.get(this.getKey(sessionId, chat, codeBlockIndex));
+    if (!entry) {
+      return;
+    }
+    return {
+      model: entry.model.then((ref) => ref.object.textEditorModel),
+      vulns: entry.vulns,
+      codemapperUri: entry.codemapperUri,
+      isEdit: entry.isEdit
+    };
+  }
+  getOrCreate(sessionId, chat, codeBlockIndex) {
+    const existing = this.get(sessionId, chat, codeBlockIndex);
+    if (existing) {
+      return existing;
+    }
+    const uri = this.getCodeBlockUri(sessionId, chat, codeBlockIndex);
+    const model = this.textModelService.createModelReference(uri);
+    this._models.set(this.getKey(sessionId, chat, codeBlockIndex), {
+      model,
+      vulns: [],
+      codemapperUri: void 0
+    });
+    while (this._models.size > this.maxModelCount) {
+      const first = Iterable.first(this._models.keys());
+      if (!first) {
+        break;
+      }
+      this.delete(first);
+    }
+    return { model: model.then((x) => x.object.textEditorModel), vulns: [], codemapperUri: void 0 };
+  }
+  delete(key) {
+    const entry = this._models.get(key);
+    if (!entry) {
+      return;
+    }
+    entry.model.then((ref) => ref.object.dispose());
+    this._models.delete(key);
+  }
+  clear() {
+    this._models.forEach(async (entry) => (await entry.model).dispose());
+    this._models.clear();
+  }
+  updateSync(sessionId, chat, codeBlockIndex, content) {
+    const entry = this.getOrCreate(sessionId, chat, codeBlockIndex);
+    const extractedVulns = extractVulnerabilitiesFromText(content.text);
+    const newText = fixCodeText(extractedVulns.newText, content.languageId);
+    this.setVulns(sessionId, chat, codeBlockIndex, extractedVulns.vulnerabilities);
+    const codeblockUri = extractCodeblockUrisFromText(newText);
+    if (codeblockUri) {
+      this.setCodemapperUri(sessionId, chat, codeBlockIndex, codeblockUri.uri, codeblockUri.isEdit);
+    }
+    if (content.isComplete) {
+      this.markCodeBlockCompleted(sessionId, chat, codeBlockIndex);
+    }
+    return this.get(sessionId, chat, codeBlockIndex) ?? entry;
+  }
+  markCodeBlockCompleted(sessionId, chat, codeBlockIndex) {
+    const entry = this._models.get(this.getKey(sessionId, chat, codeBlockIndex));
+    if (!entry) {
+      return;
+    }
+  }
+  async update(sessionId, chat, codeBlockIndex, content) {
+    const entry = this.getOrCreate(sessionId, chat, codeBlockIndex);
+    const extractedVulns = extractVulnerabilitiesFromText(content.text);
+    let newText = fixCodeText(extractedVulns.newText, content.languageId);
+    this.setVulns(sessionId, chat, codeBlockIndex, extractedVulns.vulnerabilities);
+    const codeblockUri = extractCodeblockUrisFromText(newText);
+    if (codeblockUri) {
+      this.setCodemapperUri(sessionId, chat, codeBlockIndex, codeblockUri.uri, codeblockUri.isEdit);
+      newText = codeblockUri.textWithoutResult;
+    }
+    if (content.isComplete) {
+      this.markCodeBlockCompleted(sessionId, chat, codeBlockIndex);
+    }
+    const textModel = await entry.model;
+    if (textModel.isDisposed()) {
+      return entry;
+    }
+    if (content.languageId) {
+      const vscodeLanguageId = this.languageService.getLanguageIdByLanguageName(content.languageId);
+      if (vscodeLanguageId && vscodeLanguageId !== textModel.getLanguageId()) {
+        textModel.setLanguage(vscodeLanguageId);
+      }
+    }
+    const currentText = textModel.getValue(
+      1
+      /* EndOfLinePreference.LF */
+    );
+    if (newText === currentText) {
+      return entry;
+    }
+    if (newText.startsWith(currentText)) {
+      const text = newText.slice(currentText.length);
+      const lastLine = textModel.getLineCount();
+      const lastCol = textModel.getLineMaxColumn(lastLine);
+      textModel.applyEdits([{ range: new Range(lastLine, lastCol, lastLine, lastCol), text }]);
+    } else {
+      textModel.setValue(newText);
+    }
+    return entry;
+  }
+  setCodemapperUri(sessionId, chat, codeBlockIndex, codemapperUri, isEdit) {
+    const entry = this._models.get(this.getKey(sessionId, chat, codeBlockIndex));
+    if (entry) {
+      entry.codemapperUri = codemapperUri;
+      entry.isEdit = isEdit;
+    }
+  }
+  setVulns(sessionId, chat, codeBlockIndex, vulnerabilities) {
+    const entry = this._models.get(this.getKey(sessionId, chat, codeBlockIndex));
+    if (entry) {
+      entry.vulns = vulnerabilities;
+    }
+  }
+  getKey(sessionId, chat, index) {
+    return `${sessionId}/${chat.id}/${index}`;
+  }
+  getCodeBlockUri(sessionId, chat, index) {
+    const metadata = this.getUriMetaData(chat);
+    const indexPart = this.tag ? `${this.tag}-${index}` : `${index}`;
+    return URI.from({
+      scheme: Schemas.vscodeChatCodeBlock,
+      authority: sessionId,
+      path: `/${chat.id}/${indexPart}`,
+      fragment: metadata ? JSON.stringify(metadata) : void 0
+    });
+  }
+  getUriMetaData(chat) {
+    if (!isResponseVM(chat)) {
+      return void 0;
+    }
+    return {
+      references: chat.contentReferences.map((ref) => {
+        if (typeof ref.reference === "string") {
+          return;
+        }
+        const uriOrLocation = "variableName" in ref.reference ? ref.reference.value : ref.reference;
+        if (!uriOrLocation) {
+          return;
+        }
+        if (URI.isUri(uriOrLocation)) {
+          return {
+            uri: uriOrLocation.toJSON()
+          };
+        }
+        return {
+          uri: uriOrLocation.uri.toJSON(),
+          range: uriOrLocation.range
+        };
+      })
+    };
+  }
+};
+CodeBlockModelCollection = __decorate([
+  __param(1, ILanguageService),
+  __param(2, ITextModelService)
+], CodeBlockModelCollection);
+function fixCodeText(text, languageId) {
+  if (languageId === "php") {
+    if (!text.trim().startsWith("<?")) {
+      return `<?php
+${text}`;
+    }
+  }
+  return text;
+}
+__name(fixCodeText, "fixCodeText");
+export {
+  CodeBlockModelCollection
+};
+//# sourceMappingURL=codeBlockModelCollection.js.map

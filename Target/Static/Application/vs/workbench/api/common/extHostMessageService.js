@@ -1,1 +1,79 @@
-import{$oY as g}from"./extHost.protocol.js";import{$3n as v}from"../../../platform/log/common/log.js";import{$2O as C}from"../../services/extensions/common/extensions.js";var p=function(o,e,t,a){var f=arguments.length,s=f<3?e:a===null?a=Object.getOwnPropertyDescriptor(e,t):a,i;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")s=Reflect.decorate(o,e,t,a);else for(var r=o.length-1;r>=0;r--)(i=o[r])&&(s=(f<3?i(s):f>3?i(e,t,s):i(e,t))||s);return f>3&&s&&Object.defineProperty(e,t,s),s},b=function(o,e){return function(t,a){e(t,a,o)}};function _(o){return o&&o.title}let m=class{constructor(e,t){this.b=t,this.a=e.getProxy(g.MainThreadMessageService)}showMessage(e,t,a,f,s){const i={source:{identifier:e.identifier,label:e.displayName||e.name}};let r;typeof f=="string"||_(f)?r=[f,...s]:(i.modal=f?.modal,i.useCustom=f?.useCustom,i.detail=f?.detail,r=s),i.useCustom&&C(e,"resolvers");const c=[];let u=!1;for(let n=0;n<r.length;n++){const l=r[n];if(typeof l=="string")c.push({title:l,handle:n,isCloseAffordance:!1});else if(typeof l=="object"){const{title:h,isCloseAffordance:d}=l;c.push({title:h,isCloseAffordance:!!d,handle:n}),d&&(u?this.b.warn(`[${e.identifier}] Only one message item can have 'isCloseAffordance':`,l):u=!0)}else this.b.warn(`[${e.identifier}] Invalid message item:`,l)}return this.a.$showMessage(t,a,i,c).then(n=>{if(typeof n=="number")return r[n]})}};m=p([b(1,v)],m);export{m as $8Lc};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { MainContext } from "./extHost.protocol.js";
+import { ILogService } from "../../../platform/log/common/log.js";
+import { checkProposedApiEnabled } from "../../services/extensions/common/extensions.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+function isMessageItem(item) {
+  return item && item.title;
+}
+__name(isMessageItem, "isMessageItem");
+let ExtHostMessageService = class ExtHostMessageService2 {
+  static {
+    __name(this, "ExtHostMessageService");
+  }
+  constructor(mainContext, _logService) {
+    this._logService = _logService;
+    this._proxy = mainContext.getProxy(MainContext.MainThreadMessageService);
+  }
+  showMessage(extension, severity, message, optionsOrFirstItem, rest) {
+    const options = {
+      source: { identifier: extension.identifier, label: extension.displayName || extension.name }
+    };
+    let items;
+    if (typeof optionsOrFirstItem === "string" || isMessageItem(optionsOrFirstItem)) {
+      items = [optionsOrFirstItem, ...rest];
+    } else {
+      options.modal = optionsOrFirstItem?.modal;
+      options.useCustom = optionsOrFirstItem?.useCustom;
+      options.detail = optionsOrFirstItem?.detail;
+      items = rest;
+    }
+    if (options.useCustom) {
+      checkProposedApiEnabled(extension, "resolvers");
+    }
+    const commands = [];
+    let hasCloseAffordance = false;
+    for (let handle = 0; handle < items.length; handle++) {
+      const command = items[handle];
+      if (typeof command === "string") {
+        commands.push({ title: command, handle, isCloseAffordance: false });
+      } else if (typeof command === "object") {
+        const { title, isCloseAffordance } = command;
+        commands.push({ title, isCloseAffordance: !!isCloseAffordance, handle });
+        if (isCloseAffordance) {
+          if (hasCloseAffordance) {
+            this._logService.warn(`[${extension.identifier}] Only one message item can have 'isCloseAffordance':`, command);
+          } else {
+            hasCloseAffordance = true;
+          }
+        }
+      } else {
+        this._logService.warn(`[${extension.identifier}] Invalid message item:`, command);
+      }
+    }
+    return this._proxy.$showMessage(severity, message, options, commands).then((handle) => {
+      if (typeof handle === "number") {
+        return items[handle];
+      }
+      return void 0;
+    });
+  }
+};
+ExtHostMessageService = __decorate([
+  __param(1, ILogService)
+], ExtHostMessageService);
+export {
+  ExtHostMessageService
+};
+//# sourceMappingURL=extHostMessageService.js.map

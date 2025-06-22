@@ -1,1 +1,51 @@
-import{$cC as i}from"../../../common/core/range.js";class h{constructor(s,n,e){this.a=s,this.c=n,this.d=e,this.b=null}getEditOperations(s,n){if(this.c.length>0){const e=[];for(let t=0;t<this.c.length;t++)e.push({range:this.c[t],text:this.d[t]});e.sort((t,a)=>i.compareRangesUsingStarts(t.range,a.range));const o=[];let r=e[0];for(let t=1;t<e.length;t++)r.range.endLineNumber===e[t].range.startLineNumber&&r.range.endColumn===e[t].range.startColumn?(r.range=r.range.plusRange(e[t].range),r.text=r.text+e[t].text):(o.push(r),r=e[t]);o.push(r);for(const t of o)n.addEditOperation(t.range,t.text)}this.b=n.trackSelection(this.a)}computeCursorState(s,n){return n.getTrackedSelection(this.b)}}export{h as $Fnb};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { Range } from "../../../common/core/range.js";
+class ReplaceAllCommand {
+  static {
+    __name(this, "ReplaceAllCommand");
+  }
+  constructor(editorSelection, ranges, replaceStrings) {
+    this._editorSelection = editorSelection;
+    this._ranges = ranges;
+    this._replaceStrings = replaceStrings;
+    this._trackedEditorSelectionId = null;
+  }
+  getEditOperations(model, builder) {
+    if (this._ranges.length > 0) {
+      const ops = [];
+      for (let i = 0; i < this._ranges.length; i++) {
+        ops.push({
+          range: this._ranges[i],
+          text: this._replaceStrings[i]
+        });
+      }
+      ops.sort((o1, o2) => {
+        return Range.compareRangesUsingStarts(o1.range, o2.range);
+      });
+      const resultOps = [];
+      let previousOp = ops[0];
+      for (let i = 1; i < ops.length; i++) {
+        if (previousOp.range.endLineNumber === ops[i].range.startLineNumber && previousOp.range.endColumn === ops[i].range.startColumn) {
+          previousOp.range = previousOp.range.plusRange(ops[i].range);
+          previousOp.text = previousOp.text + ops[i].text;
+        } else {
+          resultOps.push(previousOp);
+          previousOp = ops[i];
+        }
+      }
+      resultOps.push(previousOp);
+      for (const op of resultOps) {
+        builder.addEditOperation(op.range, op.text);
+      }
+    }
+    this._trackedEditorSelectionId = builder.trackSelection(this._editorSelection);
+  }
+  computeCursorState(model, helper) {
+    return helper.getTrackedSelection(this._trackedEditorSelectionId);
+  }
+}
+export {
+  ReplaceAllCommand
+};
+//# sourceMappingURL=replaceAllCommand.js.map

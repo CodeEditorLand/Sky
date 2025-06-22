@@ -1,1 +1,165 @@
-import{$98 as M}from"../../../../../../base/browser/trustedTypes.js";import{$e_ as O}from"../../../../config/domFontInfo.js";import{EditorFontLigatures as A}from"../../../../../common/config/editorOptions.js";import{$VC as y}from"../../../../../common/core/stringBuilder.js";import{$Bbb as W}from"../../../../../common/viewLayout/lineDecorations.js";import{$Ebb as T,$Ibb as x}from"../../../../../common/viewLayout/viewLineRenderer.js";import{$W_ as S}from"../../../../../common/viewModel.js";const w=M("diffEditorWidget",{createHTML:t=>t});function N(t,i,e,n,o=!1){O(n,i.fontInfo);const s=e.length>0,r=new y(1e4);let a=0,h=0;const c=[];for(let n=0;n<t.lineTokens.length;n++){const d=n+1,l=t.lineTokens[n],p=t.lineBreakData[n],f=W.filter(e,d,1,Number.MAX_SAFE_INTEGER);if(p){let e=0;for(const n of p.breakOffsets){const c=l.sliceAndInflate(e,n,0);a=Math.max(a,b(h,c,W.extractWrapped(f,e,n),s,t.mightContainNonBasicASCII,t.mightContainRTL,i,r,o)),h++,e=n}c.push(p.breakOffsets.length)}else c.push(1),a=Math.max(a,b(h,l,f,s,t.mightContainNonBasicASCII,t.mightContainRTL,i,r,o)),h++}a+=i.scrollBeyondLastColumn;const d=r.build(),l=w?w.createHTML(d):d;n.innerHTML=l;return{heightInLines:h,minWidthInPx:a*i.typicalHalfwidthCharacterWidth,viewLineCounts:c}}class F{constructor(t,i=t.map((t=>null)),e=!0,n=!0){this.lineTokens=t,this.lineBreakData=i,this.mightContainNonBasicASCII=e,this.mightContainRTL=n}}class p{static fromEditor(t){const i=t.getOptions(),e=i.get(55),n=i.get(154);return new p(t.getModel()?.getOptions().tabSize||0,e,i.get(36),e.typicalHalfwidthCharacterWidth,i.get(112),i.get(71),n.decorationsWidth,i.get(125),i.get(107),i.get(102),i.get(56))}constructor(t,i,e,n,o,s,r,a,h,c,d,l=!0){this.tabSize=t,this.fontInfo=i,this.disableMonospaceOptimizations=e,this.typicalHalfwidthCharacterWidth=n,this.scrollBeyondLastColumn=o,this.lineHeight=s,this.lineDecorationsWidth=r,this.stopRenderingLineAfter=a,this.renderWhitespace=h,this.renderControlCharacters=c,this.fontLigatures=d,this.setWidth=l}withSetWidth(t){return new p(this.tabSize,this.fontInfo,this.disableMonospaceOptimizations,this.typicalHalfwidthCharacterWidth,this.scrollBeyondLastColumn,this.lineHeight,this.lineDecorationsWidth,this.stopRenderingLineAfter,this.renderWhitespace,this.renderControlCharacters,this.fontLigatures,t)}withScrollBeyondLastColumn(t){return new p(this.tabSize,this.fontInfo,this.disableMonospaceOptimizations,this.typicalHalfwidthCharacterWidth,t,this.lineHeight,this.lineDecorationsWidth,this.stopRenderingLineAfter,this.renderWhitespace,this.renderControlCharacters,this.fontLigatures,this.setWidth)}}function b(t,i,e,n,o,s,r,a,h){a.appendString('<div class="view-line'),!h&&!n&&a.appendString(" char-delete"),a.appendString('" style="top:'),a.appendString(String(t*r.lineHeight)),r.setWidth?a.appendString('px;width:1000000px;">'):a.appendString('px;">');const c=i.getLineContent(),d=S.isBasicASCII(c,o),l=S.containsRTL(c,d,s),p=x(new T(r.fontInfo.isMonospace&&!r.disableMonospaceOptimizations,r.fontInfo.canUseHalfwidthRightwardsArrow,c,!1,d,l,0,i,e,r.tabSize,0,r.fontInfo.spaceWidth,r.fontInfo.middotWidth,r.fontInfo.wsmiddotWidth,r.stopRenderingLineAfter,r.renderWhitespace,r.renderControlCharacters,r.fontLigatures!==A.OFF,null),a);return a.appendString("</div>"),p.characterMapping.getHorizontalOffset(p.characterMapping.length)}export{N as $qfb,F as $rfb,p as $sfb};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { createTrustedTypesPolicy } from "../../../../../../base/browser/trustedTypes.js";
+import { applyFontInfo } from "../../../../config/domFontInfo.js";
+import { EditorFontLigatures } from "../../../../../common/config/editorOptions.js";
+import { StringBuilder } from "../../../../../common/core/stringBuilder.js";
+import { LineDecoration } from "../../../../../common/viewLayout/lineDecorations.js";
+import { RenderLineInput, renderViewLine } from "../../../../../common/viewLayout/viewLineRenderer.js";
+import { ViewLineRenderingData } from "../../../../../common/viewModel.js";
+const ttPolicy = createTrustedTypesPolicy("diffEditorWidget", { createHTML: /* @__PURE__ */ __name((value) => value, "createHTML") });
+function renderLines(source, options, decorations, domNode, noExtra = false) {
+  applyFontInfo(domNode, options.fontInfo);
+  const hasCharChanges = decorations.length > 0;
+  const sb = new StringBuilder(1e4);
+  let maxCharsPerLine = 0;
+  let renderedLineCount = 0;
+  const viewLineCounts = [];
+  for (let lineIndex = 0; lineIndex < source.lineTokens.length; lineIndex++) {
+    const lineNumber = lineIndex + 1;
+    const lineTokens = source.lineTokens[lineIndex];
+    const lineBreakData = source.lineBreakData[lineIndex];
+    const actualDecorations = LineDecoration.filter(decorations, lineNumber, 1, Number.MAX_SAFE_INTEGER);
+    if (lineBreakData) {
+      let lastBreakOffset = 0;
+      for (const breakOffset of lineBreakData.breakOffsets) {
+        const viewLineTokens = lineTokens.sliceAndInflate(lastBreakOffset, breakOffset, 0);
+        maxCharsPerLine = Math.max(maxCharsPerLine, renderOriginalLine(renderedLineCount, viewLineTokens, LineDecoration.extractWrapped(actualDecorations, lastBreakOffset, breakOffset), hasCharChanges, source.mightContainNonBasicASCII, source.mightContainRTL, options, sb, noExtra));
+        renderedLineCount++;
+        lastBreakOffset = breakOffset;
+      }
+      viewLineCounts.push(lineBreakData.breakOffsets.length);
+    } else {
+      viewLineCounts.push(1);
+      maxCharsPerLine = Math.max(maxCharsPerLine, renderOriginalLine(renderedLineCount, lineTokens, actualDecorations, hasCharChanges, source.mightContainNonBasicASCII, source.mightContainRTL, options, sb, noExtra));
+      renderedLineCount++;
+    }
+  }
+  maxCharsPerLine += options.scrollBeyondLastColumn;
+  const html = sb.build();
+  const trustedhtml = ttPolicy ? ttPolicy.createHTML(html) : html;
+  domNode.innerHTML = trustedhtml;
+  const minWidthInPx = maxCharsPerLine * options.typicalHalfwidthCharacterWidth;
+  return {
+    heightInLines: renderedLineCount,
+    minWidthInPx,
+    viewLineCounts
+  };
+}
+__name(renderLines, "renderLines");
+class LineSource {
+  static {
+    __name(this, "LineSource");
+  }
+  constructor(lineTokens, lineBreakData = lineTokens.map((t) => null), mightContainNonBasicASCII = true, mightContainRTL = true) {
+    this.lineTokens = lineTokens;
+    this.lineBreakData = lineBreakData;
+    this.mightContainNonBasicASCII = mightContainNonBasicASCII;
+    this.mightContainRTL = mightContainRTL;
+  }
+}
+class RenderOptions {
+  static {
+    __name(this, "RenderOptions");
+  }
+  static fromEditor(editor) {
+    const modifiedEditorOptions = editor.getOptions();
+    const fontInfo = modifiedEditorOptions.get(
+      55
+      /* EditorOption.fontInfo */
+    );
+    const layoutInfo = modifiedEditorOptions.get(
+      154
+      /* EditorOption.layoutInfo */
+    );
+    return new RenderOptions(editor.getModel()?.getOptions().tabSize || 0, fontInfo, modifiedEditorOptions.get(
+      36
+      /* EditorOption.disableMonospaceOptimizations */
+    ), fontInfo.typicalHalfwidthCharacterWidth, modifiedEditorOptions.get(
+      112
+      /* EditorOption.scrollBeyondLastColumn */
+    ), modifiedEditorOptions.get(
+      71
+      /* EditorOption.lineHeight */
+    ), layoutInfo.decorationsWidth, modifiedEditorOptions.get(
+      125
+      /* EditorOption.stopRenderingLineAfter */
+    ), modifiedEditorOptions.get(
+      107
+      /* EditorOption.renderWhitespace */
+    ), modifiedEditorOptions.get(
+      102
+      /* EditorOption.renderControlCharacters */
+    ), modifiedEditorOptions.get(
+      56
+      /* EditorOption.fontLigatures */
+    ));
+  }
+  constructor(tabSize, fontInfo, disableMonospaceOptimizations, typicalHalfwidthCharacterWidth, scrollBeyondLastColumn, lineHeight, lineDecorationsWidth, stopRenderingLineAfter, renderWhitespace, renderControlCharacters, fontLigatures, setWidth = true) {
+    this.tabSize = tabSize;
+    this.fontInfo = fontInfo;
+    this.disableMonospaceOptimizations = disableMonospaceOptimizations;
+    this.typicalHalfwidthCharacterWidth = typicalHalfwidthCharacterWidth;
+    this.scrollBeyondLastColumn = scrollBeyondLastColumn;
+    this.lineHeight = lineHeight;
+    this.lineDecorationsWidth = lineDecorationsWidth;
+    this.stopRenderingLineAfter = stopRenderingLineAfter;
+    this.renderWhitespace = renderWhitespace;
+    this.renderControlCharacters = renderControlCharacters;
+    this.fontLigatures = fontLigatures;
+    this.setWidth = setWidth;
+  }
+  withSetWidth(setWidth) {
+    return new RenderOptions(this.tabSize, this.fontInfo, this.disableMonospaceOptimizations, this.typicalHalfwidthCharacterWidth, this.scrollBeyondLastColumn, this.lineHeight, this.lineDecorationsWidth, this.stopRenderingLineAfter, this.renderWhitespace, this.renderControlCharacters, this.fontLigatures, setWidth);
+  }
+  withScrollBeyondLastColumn(scrollBeyondLastColumn) {
+    return new RenderOptions(this.tabSize, this.fontInfo, this.disableMonospaceOptimizations, this.typicalHalfwidthCharacterWidth, scrollBeyondLastColumn, this.lineHeight, this.lineDecorationsWidth, this.stopRenderingLineAfter, this.renderWhitespace, this.renderControlCharacters, this.fontLigatures, this.setWidth);
+  }
+}
+function renderOriginalLine(viewLineIdx, lineTokens, decorations, hasCharChanges, mightContainNonBasicASCII, mightContainRTL, options, sb, noExtra) {
+  sb.appendString('<div class="view-line');
+  if (!noExtra && !hasCharChanges) {
+    sb.appendString(" char-delete");
+  }
+  sb.appendString('" style="top:');
+  sb.appendString(String(viewLineIdx * options.lineHeight));
+  if (options.setWidth) {
+    sb.appendString('px;width:1000000px;">');
+  } else {
+    sb.appendString('px;">');
+  }
+  const lineContent = lineTokens.getLineContent();
+  const isBasicASCII = ViewLineRenderingData.isBasicASCII(lineContent, mightContainNonBasicASCII);
+  const containsRTL = ViewLineRenderingData.containsRTL(lineContent, isBasicASCII, mightContainRTL);
+  const output = renderViewLine(new RenderLineInput(
+    options.fontInfo.isMonospace && !options.disableMonospaceOptimizations,
+    options.fontInfo.canUseHalfwidthRightwardsArrow,
+    lineContent,
+    false,
+    isBasicASCII,
+    containsRTL,
+    0,
+    lineTokens,
+    decorations,
+    options.tabSize,
+    0,
+    options.fontInfo.spaceWidth,
+    options.fontInfo.middotWidth,
+    options.fontInfo.wsmiddotWidth,
+    options.stopRenderingLineAfter,
+    options.renderWhitespace,
+    options.renderControlCharacters,
+    options.fontLigatures !== EditorFontLigatures.OFF,
+    null
+    // Send no selections, original line cannot be selected
+  ), sb);
+  sb.appendString("</div>");
+  return output.characterMapping.getHorizontalOffset(output.characterMapping.length);
+}
+__name(renderOriginalLine, "renderOriginalLine");
+export {
+  LineSource,
+  RenderOptions,
+  renderLines
+};
+//# sourceMappingURL=renderLines.js.map

@@ -1,1 +1,52 @@
-import{$vd as s}from"../../../../base/common/lifecycle.js";import{$8Db as c}from"./accessibilityConfiguration.js";import{$S1b as n,$T1b as m}from"./accessibleViewActions.js";import{$0ob as i}from"../../../../platform/accessibility/browser/accessibleView.js";import{$bpb as p}from"../../../../platform/accessibility/browser/accessibleViewRegistry.js";class $ extends s{constructor(){super(),this.B(n.addImplementation(115,"accessible-view-help",e=>(e.get(i).showAccessibleViewHelp(),!0),c))}}class l extends s{constructor(){super(),p.getImplementations().forEach(e=>{const r=o=>{const t=e.getProvider(o);if(!t)return!1;try{return o.get(i).show(t),!0}catch{return t.dispose(),!1}};e.type==="view"?this.B(m.addImplementation(e.priority,e.name,r,e.when)):this.B(n.addImplementation(e.priority,e.name,r,e.when))})}}export{$ as $ayc,l as $byc};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { Disposable } from "../../../../base/common/lifecycle.js";
+import { accessibleViewIsShown } from "./accessibilityConfiguration.js";
+import { AccessibilityHelpAction, AccessibleViewAction } from "./accessibleViewActions.js";
+import { IAccessibleViewService } from "../../../../platform/accessibility/browser/accessibleView.js";
+import { AccessibleViewRegistry } from "../../../../platform/accessibility/browser/accessibleViewRegistry.js";
+class AccesibleViewHelpContribution extends Disposable {
+  static {
+    __name(this, "AccesibleViewHelpContribution");
+  }
+  constructor() {
+    super();
+    this._register(AccessibilityHelpAction.addImplementation(115, "accessible-view-help", (accessor) => {
+      accessor.get(IAccessibleViewService).showAccessibleViewHelp();
+      return true;
+    }, accessibleViewIsShown));
+  }
+}
+class AccesibleViewContributions extends Disposable {
+  static {
+    __name(this, "AccesibleViewContributions");
+  }
+  constructor() {
+    super();
+    AccessibleViewRegistry.getImplementations().forEach((impl) => {
+      const implementation = /* @__PURE__ */ __name((accessor) => {
+        const provider = impl.getProvider(accessor);
+        if (!provider) {
+          return false;
+        }
+        try {
+          accessor.get(IAccessibleViewService).show(provider);
+          return true;
+        } catch {
+          provider.dispose();
+          return false;
+        }
+      }, "implementation");
+      if (impl.type === "view") {
+        this._register(AccessibleViewAction.addImplementation(impl.priority, impl.name, implementation, impl.when));
+      } else {
+        this._register(AccessibilityHelpAction.addImplementation(impl.priority, impl.name, implementation, impl.when));
+      }
+    });
+  }
+}
+export {
+  AccesibleViewContributions,
+  AccesibleViewHelpContribution
+};
+//# sourceMappingURL=accessibleViewContributions.js.map

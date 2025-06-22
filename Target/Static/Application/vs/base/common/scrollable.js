@@ -1,1 +1,323 @@
-import{$df as u}from"./event.js";import{$vd as S}from"./lifecycle.js";var f;!function(t){t[t.Auto=1]="Auto",t[t.Hidden=2]="Hidden",t[t.Visible=3]="Visible"}(f||(f={}));class c{constructor(t,i,s,o,h,l,r){this.c=t,this._scrollStateBrand=void 0,this.c&&(i|=0,s|=0,o|=0,h|=0,l|=0,r|=0),this.rawScrollLeft=o,this.rawScrollTop=r,i<0&&(i=0),o+i>s&&(o=s-i),o<0&&(o=0),h<0&&(h=0),r+h>l&&(r=l-h),r<0&&(r=0),this.width=i,this.scrollWidth=s,this.scrollLeft=o,this.height=h,this.scrollHeight=l,this.scrollTop=r}equals(t){return this.rawScrollLeft===t.rawScrollLeft&&this.rawScrollTop===t.rawScrollTop&&this.width===t.width&&this.scrollWidth===t.scrollWidth&&this.scrollLeft===t.scrollLeft&&this.height===t.height&&this.scrollHeight===t.scrollHeight&&this.scrollTop===t.scrollTop}withScrollDimensions(t,i){return new c(this.c,typeof t.width<"u"?t.width:this.width,typeof t.scrollWidth<"u"?t.scrollWidth:this.scrollWidth,i?this.rawScrollLeft:this.scrollLeft,typeof t.height<"u"?t.height:this.height,typeof t.scrollHeight<"u"?t.scrollHeight:this.scrollHeight,i?this.rawScrollTop:this.scrollTop)}withScrollPosition(t){return new c(this.c,this.width,this.scrollWidth,typeof t.scrollLeft<"u"?t.scrollLeft:this.rawScrollLeft,this.height,this.scrollHeight,typeof t.scrollTop<"u"?t.scrollTop:this.rawScrollTop)}createScrollEvent(t,i){const s=this.width!==t.width,o=this.scrollWidth!==t.scrollWidth,h=this.scrollLeft!==t.scrollLeft,l=this.height!==t.height,r=this.scrollHeight!==t.scrollHeight,e=this.scrollTop!==t.scrollTop;return{inSmoothScrolling:i,oldWidth:t.width,oldScrollWidth:t.scrollWidth,oldScrollLeft:t.scrollLeft,width:this.width,scrollWidth:this.scrollWidth,scrollLeft:this.scrollLeft,oldHeight:t.height,oldScrollHeight:t.scrollHeight,oldScrollTop:t.scrollTop,height:this.height,scrollHeight:this.scrollHeight,scrollTop:this.scrollTop,widthChanged:s,scrollWidthChanged:o,scrollLeftChanged:h,heightChanged:l,scrollHeightChanged:r,scrollTopChanged:e}}}class D extends S{constructor(t){super(),this._scrollableBrand=void 0,this.j=this.B(new u),this.onScroll=this.j.event,this.c=t.smoothScrollDuration,this.f=t.scheduleAtNextAnimationFrame,this.g=new c(t.forceIntegerValues,0,0,0,0,0,0),this.h=null}dispose(){this.h&&(this.h.dispose(),this.h=null),super.dispose()}setSmoothScrollDuration(t){this.c=t}validateScrollPosition(t){return this.g.withScrollPosition(t)}getScrollDimensions(){return this.g}setScrollDimensions(t,i){const s=this.g.withScrollDimensions(t,i);this.n(s,!!this.h),this.h?.acceptScrollDimensions(this.g)}getFutureScrollPosition(){return this.h?this.h.to:this.g}getCurrentScrollPosition(){return this.g}setScrollPositionNow(t){const i=this.g.withScrollPosition(t);this.h&&(this.h.dispose(),this.h=null),this.n(i,!1)}setScrollPositionSmooth(t,i){if(0===this.c)return this.setScrollPositionNow(t);if(this.h){t={scrollLeft:typeof t.scrollLeft>"u"?this.h.to.scrollLeft:t.scrollLeft,scrollTop:typeof t.scrollTop>"u"?this.h.to.scrollTop:t.scrollTop};const s=this.g.withScrollPosition(t);if(this.h.to.scrollLeft===s.scrollLeft&&this.h.to.scrollTop===s.scrollTop)return;let o;o=i?new r(this.h.from,s,this.h.startTime,this.h.duration):this.h.combine(this.g,s,this.c),this.h.dispose(),this.h=o}else{const i=this.g.withScrollPosition(t);this.h=r.start(this.g,i,this.c)}this.h.animationFrameDisposable=this.f((()=>{this.h&&(this.h.animationFrameDisposable=null,this.m())}))}hasPendingScrollAnimation(){return!!this.h}m(){if(!this.h)return;const t=this.h.tick(),i=this.g.withScrollPosition(t);if(this.n(i,!0),this.h){if(t.isDone)return this.h.dispose(),void(this.h=null);this.h.animationFrameDisposable=this.f((()=>{this.h&&(this.h.animationFrameDisposable=null,this.m())}))}}n(t,i){const s=this.g;s.equals(t)||(this.g=t,this.j.fire(this.g.createScrollEvent(s,i)))}}class d{constructor(t,i,s){this.scrollLeft=t,this.scrollTop=i,this.isDone=s}}function a(t,i){const s=i-t;return function(i){return t+s*T(i)}}function m(t,i,s){return function(o){return o<s?t(o/s):i((o-s)/(1-s))}}class r{constructor(t,i,s,o){this.from=t,this.to=i,this.duration=o,this.startTime=s,this.animationFrameDisposable=null,this.e()}e(){this.c=this.f(this.from.scrollLeft,this.to.scrollLeft,this.to.width),this.d=this.f(this.from.scrollTop,this.to.scrollTop,this.to.height)}f(t,i,s){if(Math.abs(t-i)>2.5*s){let o,h;return t<i?(o=t+.75*s,h=i-.75*s):(o=t-.75*s,h=i+.75*s),m(a(t,o),a(h,i),.33)}return a(t,i)}dispose(){null!==this.animationFrameDisposable&&(this.animationFrameDisposable.dispose(),this.animationFrameDisposable=null)}acceptScrollDimensions(t){this.to=t.withScrollPosition(this.to),this.e()}tick(){return this.g(Date.now())}g(t){const i=(t-this.startTime)/this.duration;if(i<1){const t=this.c(i),s=this.d(i);return new d(t,s,!1)}return new d(this.to.scrollLeft,this.to.scrollTop,!0)}combine(t,i,s){return r.start(t,i,s)}static start(t,i,s){s+=10;const o=Date.now()-10;return new r(t,i,o,s)}}function w(t){return Math.pow(t,3)}function T(t){return 1-w(1-t)}export{c as $dC,D as $eC,d as $fC,r as $gC,f as ScrollbarVisibility};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { Emitter } from "./event.js";
+import { Disposable } from "./lifecycle.js";
+var ScrollbarVisibility;
+(function(ScrollbarVisibility2) {
+  ScrollbarVisibility2[ScrollbarVisibility2["Auto"] = 1] = "Auto";
+  ScrollbarVisibility2[ScrollbarVisibility2["Hidden"] = 2] = "Hidden";
+  ScrollbarVisibility2[ScrollbarVisibility2["Visible"] = 3] = "Visible";
+})(ScrollbarVisibility || (ScrollbarVisibility = {}));
+class ScrollState {
+  static {
+    __name(this, "ScrollState");
+  }
+  constructor(_forceIntegerValues, width, scrollWidth, scrollLeft, height, scrollHeight, scrollTop) {
+    this._forceIntegerValues = _forceIntegerValues;
+    this._scrollStateBrand = void 0;
+    if (this._forceIntegerValues) {
+      width = width | 0;
+      scrollWidth = scrollWidth | 0;
+      scrollLeft = scrollLeft | 0;
+      height = height | 0;
+      scrollHeight = scrollHeight | 0;
+      scrollTop = scrollTop | 0;
+    }
+    this.rawScrollLeft = scrollLeft;
+    this.rawScrollTop = scrollTop;
+    if (width < 0) {
+      width = 0;
+    }
+    if (scrollLeft + width > scrollWidth) {
+      scrollLeft = scrollWidth - width;
+    }
+    if (scrollLeft < 0) {
+      scrollLeft = 0;
+    }
+    if (height < 0) {
+      height = 0;
+    }
+    if (scrollTop + height > scrollHeight) {
+      scrollTop = scrollHeight - height;
+    }
+    if (scrollTop < 0) {
+      scrollTop = 0;
+    }
+    this.width = width;
+    this.scrollWidth = scrollWidth;
+    this.scrollLeft = scrollLeft;
+    this.height = height;
+    this.scrollHeight = scrollHeight;
+    this.scrollTop = scrollTop;
+  }
+  equals(other) {
+    return this.rawScrollLeft === other.rawScrollLeft && this.rawScrollTop === other.rawScrollTop && this.width === other.width && this.scrollWidth === other.scrollWidth && this.scrollLeft === other.scrollLeft && this.height === other.height && this.scrollHeight === other.scrollHeight && this.scrollTop === other.scrollTop;
+  }
+  withScrollDimensions(update, useRawScrollPositions) {
+    return new ScrollState(this._forceIntegerValues, typeof update.width !== "undefined" ? update.width : this.width, typeof update.scrollWidth !== "undefined" ? update.scrollWidth : this.scrollWidth, useRawScrollPositions ? this.rawScrollLeft : this.scrollLeft, typeof update.height !== "undefined" ? update.height : this.height, typeof update.scrollHeight !== "undefined" ? update.scrollHeight : this.scrollHeight, useRawScrollPositions ? this.rawScrollTop : this.scrollTop);
+  }
+  withScrollPosition(update) {
+    return new ScrollState(this._forceIntegerValues, this.width, this.scrollWidth, typeof update.scrollLeft !== "undefined" ? update.scrollLeft : this.rawScrollLeft, this.height, this.scrollHeight, typeof update.scrollTop !== "undefined" ? update.scrollTop : this.rawScrollTop);
+  }
+  createScrollEvent(previous, inSmoothScrolling) {
+    const widthChanged = this.width !== previous.width;
+    const scrollWidthChanged = this.scrollWidth !== previous.scrollWidth;
+    const scrollLeftChanged = this.scrollLeft !== previous.scrollLeft;
+    const heightChanged = this.height !== previous.height;
+    const scrollHeightChanged = this.scrollHeight !== previous.scrollHeight;
+    const scrollTopChanged = this.scrollTop !== previous.scrollTop;
+    return {
+      inSmoothScrolling,
+      oldWidth: previous.width,
+      oldScrollWidth: previous.scrollWidth,
+      oldScrollLeft: previous.scrollLeft,
+      width: this.width,
+      scrollWidth: this.scrollWidth,
+      scrollLeft: this.scrollLeft,
+      oldHeight: previous.height,
+      oldScrollHeight: previous.scrollHeight,
+      oldScrollTop: previous.scrollTop,
+      height: this.height,
+      scrollHeight: this.scrollHeight,
+      scrollTop: this.scrollTop,
+      widthChanged,
+      scrollWidthChanged,
+      scrollLeftChanged,
+      heightChanged,
+      scrollHeightChanged,
+      scrollTopChanged
+    };
+  }
+}
+class Scrollable extends Disposable {
+  static {
+    __name(this, "Scrollable");
+  }
+  constructor(options) {
+    super();
+    this._scrollableBrand = void 0;
+    this._onScroll = this._register(new Emitter());
+    this.onScroll = this._onScroll.event;
+    this._smoothScrollDuration = options.smoothScrollDuration;
+    this._scheduleAtNextAnimationFrame = options.scheduleAtNextAnimationFrame;
+    this._state = new ScrollState(options.forceIntegerValues, 0, 0, 0, 0, 0, 0);
+    this._smoothScrolling = null;
+  }
+  dispose() {
+    if (this._smoothScrolling) {
+      this._smoothScrolling.dispose();
+      this._smoothScrolling = null;
+    }
+    super.dispose();
+  }
+  setSmoothScrollDuration(smoothScrollDuration) {
+    this._smoothScrollDuration = smoothScrollDuration;
+  }
+  validateScrollPosition(scrollPosition) {
+    return this._state.withScrollPosition(scrollPosition);
+  }
+  getScrollDimensions() {
+    return this._state;
+  }
+  setScrollDimensions(dimensions, useRawScrollPositions) {
+    const newState = this._state.withScrollDimensions(dimensions, useRawScrollPositions);
+    this._setState(newState, Boolean(this._smoothScrolling));
+    this._smoothScrolling?.acceptScrollDimensions(this._state);
+  }
+  /**
+   * Returns the final scroll position that the instance will have once the smooth scroll animation concludes.
+   * If no scroll animation is occurring, it will return the current scroll position instead.
+   */
+  getFutureScrollPosition() {
+    if (this._smoothScrolling) {
+      return this._smoothScrolling.to;
+    }
+    return this._state;
+  }
+  /**
+   * Returns the current scroll position.
+   * Note: This result might be an intermediate scroll position, as there might be an ongoing smooth scroll animation.
+   */
+  getCurrentScrollPosition() {
+    return this._state;
+  }
+  setScrollPositionNow(update) {
+    const newState = this._state.withScrollPosition(update);
+    if (this._smoothScrolling) {
+      this._smoothScrolling.dispose();
+      this._smoothScrolling = null;
+    }
+    this._setState(newState, false);
+  }
+  setScrollPositionSmooth(update, reuseAnimation) {
+    if (this._smoothScrollDuration === 0) {
+      return this.setScrollPositionNow(update);
+    }
+    if (this._smoothScrolling) {
+      update = {
+        scrollLeft: typeof update.scrollLeft === "undefined" ? this._smoothScrolling.to.scrollLeft : update.scrollLeft,
+        scrollTop: typeof update.scrollTop === "undefined" ? this._smoothScrolling.to.scrollTop : update.scrollTop
+      };
+      const validTarget = this._state.withScrollPosition(update);
+      if (this._smoothScrolling.to.scrollLeft === validTarget.scrollLeft && this._smoothScrolling.to.scrollTop === validTarget.scrollTop) {
+        return;
+      }
+      let newSmoothScrolling;
+      if (reuseAnimation) {
+        newSmoothScrolling = new SmoothScrollingOperation(this._smoothScrolling.from, validTarget, this._smoothScrolling.startTime, this._smoothScrolling.duration);
+      } else {
+        newSmoothScrolling = this._smoothScrolling.combine(this._state, validTarget, this._smoothScrollDuration);
+      }
+      this._smoothScrolling.dispose();
+      this._smoothScrolling = newSmoothScrolling;
+    } else {
+      const validTarget = this._state.withScrollPosition(update);
+      this._smoothScrolling = SmoothScrollingOperation.start(this._state, validTarget, this._smoothScrollDuration);
+    }
+    this._smoothScrolling.animationFrameDisposable = this._scheduleAtNextAnimationFrame(() => {
+      if (!this._smoothScrolling) {
+        return;
+      }
+      this._smoothScrolling.animationFrameDisposable = null;
+      this._performSmoothScrolling();
+    });
+  }
+  hasPendingScrollAnimation() {
+    return Boolean(this._smoothScrolling);
+  }
+  _performSmoothScrolling() {
+    if (!this._smoothScrolling) {
+      return;
+    }
+    const update = this._smoothScrolling.tick();
+    const newState = this._state.withScrollPosition(update);
+    this._setState(newState, true);
+    if (!this._smoothScrolling) {
+      return;
+    }
+    if (update.isDone) {
+      this._smoothScrolling.dispose();
+      this._smoothScrolling = null;
+      return;
+    }
+    this._smoothScrolling.animationFrameDisposable = this._scheduleAtNextAnimationFrame(() => {
+      if (!this._smoothScrolling) {
+        return;
+      }
+      this._smoothScrolling.animationFrameDisposable = null;
+      this._performSmoothScrolling();
+    });
+  }
+  _setState(newState, inSmoothScrolling) {
+    const oldState = this._state;
+    if (oldState.equals(newState)) {
+      return;
+    }
+    this._state = newState;
+    this._onScroll.fire(this._state.createScrollEvent(oldState, inSmoothScrolling));
+  }
+}
+class SmoothScrollingUpdate {
+  static {
+    __name(this, "SmoothScrollingUpdate");
+  }
+  constructor(scrollLeft, scrollTop, isDone) {
+    this.scrollLeft = scrollLeft;
+    this.scrollTop = scrollTop;
+    this.isDone = isDone;
+  }
+}
+function createEaseOutCubic(from, to) {
+  const delta = to - from;
+  return function(completion) {
+    return from + delta * easeOutCubic(completion);
+  };
+}
+__name(createEaseOutCubic, "createEaseOutCubic");
+function createComposed(a, b, cut) {
+  return function(completion) {
+    if (completion < cut) {
+      return a(completion / cut);
+    }
+    return b((completion - cut) / (1 - cut));
+  };
+}
+__name(createComposed, "createComposed");
+class SmoothScrollingOperation {
+  static {
+    __name(this, "SmoothScrollingOperation");
+  }
+  constructor(from, to, startTime, duration) {
+    this.from = from;
+    this.to = to;
+    this.duration = duration;
+    this.startTime = startTime;
+    this.animationFrameDisposable = null;
+    this._initAnimations();
+  }
+  _initAnimations() {
+    this.scrollLeft = this._initAnimation(this.from.scrollLeft, this.to.scrollLeft, this.to.width);
+    this.scrollTop = this._initAnimation(this.from.scrollTop, this.to.scrollTop, this.to.height);
+  }
+  _initAnimation(from, to, viewportSize) {
+    const delta = Math.abs(from - to);
+    if (delta > 2.5 * viewportSize) {
+      let stop1, stop2;
+      if (from < to) {
+        stop1 = from + 0.75 * viewportSize;
+        stop2 = to - 0.75 * viewportSize;
+      } else {
+        stop1 = from - 0.75 * viewportSize;
+        stop2 = to + 0.75 * viewportSize;
+      }
+      return createComposed(createEaseOutCubic(from, stop1), createEaseOutCubic(stop2, to), 0.33);
+    }
+    return createEaseOutCubic(from, to);
+  }
+  dispose() {
+    if (this.animationFrameDisposable !== null) {
+      this.animationFrameDisposable.dispose();
+      this.animationFrameDisposable = null;
+    }
+  }
+  acceptScrollDimensions(state) {
+    this.to = state.withScrollPosition(this.to);
+    this._initAnimations();
+  }
+  tick() {
+    return this._tick(Date.now());
+  }
+  _tick(now) {
+    const completion = (now - this.startTime) / this.duration;
+    if (completion < 1) {
+      const newScrollLeft = this.scrollLeft(completion);
+      const newScrollTop = this.scrollTop(completion);
+      return new SmoothScrollingUpdate(newScrollLeft, newScrollTop, false);
+    }
+    return new SmoothScrollingUpdate(this.to.scrollLeft, this.to.scrollTop, true);
+  }
+  combine(from, to, duration) {
+    return SmoothScrollingOperation.start(from, to, duration);
+  }
+  static start(from, to, duration) {
+    duration = duration + 10;
+    const startTime = Date.now() - 10;
+    return new SmoothScrollingOperation(from, to, startTime, duration);
+  }
+}
+function easeInCubic(t) {
+  return Math.pow(t, 3);
+}
+__name(easeInCubic, "easeInCubic");
+function easeOutCubic(t) {
+  return 1 - easeInCubic(1 - t);
+}
+__name(easeOutCubic, "easeOutCubic");
+export {
+  ScrollState,
+  Scrollable,
+  ScrollbarVisibility,
+  SmoothScrollingOperation,
+  SmoothScrollingUpdate
+};
+//# sourceMappingURL=scrollable.js.map

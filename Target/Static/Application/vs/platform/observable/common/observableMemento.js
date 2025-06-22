@@ -1,1 +1,81 @@
-import{$Hd as m}from"../../../base/common/equals.js";import{$ud as c}from"../../../base/common/lifecycle.js";import{$Pd as s}from"../../../base/common/observableInternal/debugName.js";import{$Ce as j}from"../../../base/common/observableInternal/observables/observableValue.js";import{$Ho as k}from"../../storage/common/storage.js";var o=function(u,e,t,n){var f=arguments.length,i=f<3?e:n===null?n=Object.getOwnPropertyDescriptor(e,t):n,a;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")i=Reflect.decorate(u,e,t,n);else for(var l=u.length-1;l>=0;l--)(a=u[l])&&(i=(f<3?a(i):f>3?a(e,t,i):a(e,t))||i);return f>3&&i&&Object.defineProperty(e,t,i),i},h=function(u,e){return function(t,n){e(t,n,u)}};function O(u){return(e,t,n)=>new d(u,e,t,n)}let d=class extends j{constructor(e,t,n,f){e.defaultValue&&typeof e.defaultValue=="object"&&(e.toStorage??=r=>JSON.stringify(r),e.fromStorage??=r=>JSON.parse(r));let i=e.defaultValue;const a=f.get(e.key,t);if(a!==void 0&&e.fromStorage)try{i=e.fromStorage(a)}catch{i=e.defaultValue}super(new s(void 0,`storage/${e.key}`,void 0),i,m),this.j=new c,this.k=!1;const l=f.onDidChangeValue(t,e.key,this.j);this.j.add(l(r=>{r.external&&r.key===e.key&&!this.k&&this.set(e.defaultValue,void 0)})),this.j.add(f.onWillSaveState(()=>{if(this.k){this.k=!1;const r=this.get();e.toStorage?f.store(e.key,e.toStorage(r),t,n):f.store(e.key,String(r),t,n)}}))}i(e){super.i(e),this.k=!0}dispose(){this.j.dispose()}};d=o([h(3,k)],d);export{O as $jMb,d as $kMb};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { strictEquals } from "../../../base/common/equals.js";
+import { DisposableStore } from "../../../base/common/lifecycle.js";
+import { DebugNameData } from "../../../base/common/observableInternal/debugName.js";
+import { ObservableValue } from "../../../base/common/observableInternal/observables/observableValue.js";
+import { IStorageService } from "../../storage/common/storage.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+function observableMemento(opts) {
+  return (scope, target, storageService) => {
+    return new ObservableMemento(opts, scope, target, storageService);
+  };
+}
+__name(observableMemento, "observableMemento");
+let ObservableMemento = class ObservableMemento2 extends ObservableValue {
+  static {
+    __name(this, "ObservableMemento");
+  }
+  constructor(opts, storageScope, storageTarget, storageService) {
+    if (opts.defaultValue && typeof opts.defaultValue === "object") {
+      opts.toStorage ??= (value) => JSON.stringify(value);
+      opts.fromStorage ??= (value) => JSON.parse(value);
+    }
+    let initialValue = opts.defaultValue;
+    const fromStorage = storageService.get(opts.key, storageScope);
+    if (fromStorage !== void 0) {
+      if (opts.fromStorage) {
+        try {
+          initialValue = opts.fromStorage(fromStorage);
+        } catch {
+          initialValue = opts.defaultValue;
+        }
+      }
+    }
+    super(new DebugNameData(void 0, `storage/${opts.key}`, void 0), initialValue, strictEquals);
+    this._store = new DisposableStore();
+    this._didChange = false;
+    const didChange = storageService.onDidChangeValue(storageScope, opts.key, this._store);
+    this._store.add(didChange((e) => {
+      if (e.external && e.key === opts.key && !this._didChange) {
+        this.set(opts.defaultValue, void 0);
+      }
+    }));
+    this._store.add(storageService.onWillSaveState(() => {
+      if (this._didChange) {
+        this._didChange = false;
+        const value = this.get();
+        if (opts.toStorage) {
+          storageService.store(opts.key, opts.toStorage(value), storageScope, storageTarget);
+        } else {
+          storageService.store(opts.key, String(value), storageScope, storageTarget);
+        }
+      }
+    }));
+  }
+  _setValue(newValue) {
+    super._setValue(newValue);
+    this._didChange = true;
+  }
+  dispose() {
+    this._store.dispose();
+  }
+};
+ObservableMemento = __decorate([
+  __param(3, IStorageService)
+], ObservableMemento);
+export {
+  ObservableMemento,
+  observableMemento
+};
+//# sourceMappingURL=observableMemento.js.map

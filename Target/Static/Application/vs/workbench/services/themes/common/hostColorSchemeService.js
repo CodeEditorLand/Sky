@@ -1,1 +1,6 @@
-import{$nj as o}from"../../../../platform/instantiation/common/instantiation.js";const r=o("hostColorSchemeService");export{r as $WPb};
+import { createDecorator } from "../../../../platform/instantiation/common/instantiation.js";
+const IHostColorSchemeService = createDecorator("hostColorSchemeService");
+export {
+  IHostColorSchemeService
+};
+//# sourceMappingURL=hostColorSchemeService.js.map

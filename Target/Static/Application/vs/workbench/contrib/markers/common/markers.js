@@ -1,1 +1,48 @@
-import{$Un as o}from"../../../../platform/contextkey/common/contextkey.js";var i,l,n;!function(e){e.Table="table",e.Tree="tree"}(i||(i={})),function(e){e.MARKERS_CONTAINER_ID="workbench.panel.markers",e.MARKERS_VIEW_ID="workbench.panel.markers.view",e.MARKERS_VIEW_STORAGE_ID="workbench.panel.markers",e.MARKER_COPY_ACTION_ID="problems.action.copy",e.MARKER_COPY_MESSAGE_ACTION_ID="problems.action.copyMessage",e.RELATED_INFORMATION_COPY_MESSAGE_ACTION_ID="problems.action.copyRelatedInformationMessage",e.FOCUS_PROBLEMS_FROM_FILTER="problems.action.focusProblemsFromFilter",e.MARKERS_VIEW_FOCUS_FILTER="problems.action.focusFilter",e.MARKERS_VIEW_CLEAR_FILTER_TEXT="problems.action.clearFilterText",e.MARKERS_VIEW_SHOW_MULTILINE_MESSAGE="problems.action.showMultilineMessage",e.MARKERS_VIEW_SHOW_SINGLELINE_MESSAGE="problems.action.showSinglelineMessage",e.MARKER_OPEN_ACTION_ID="problems.action.open",e.MARKER_OPEN_SIDE_ACTION_ID="problems.action.openToSide",e.MARKER_SHOW_PANEL_ID="workbench.action.showErrorsWarnings",e.MARKER_SHOW_QUICK_FIX="problems.action.showQuickFixes",e.TOGGLE_MARKERS_VIEW_ACTION_ID="workbench.actions.view.toggleProblems"}(l||(l={})),function(e){e.MarkersViewModeContextKey=new o("problemsViewMode","tree"),e.MarkersTreeVisibilityContextKey=new o("problemsVisibility",!1),e.MarkerFocusContextKey=new o("problemFocus",!1),e.MarkerViewFilterFocusContextKey=new o("problemsFilterFocus",!1),e.RelatedInformationFocusContextKey=new o("relatedInformationFocus",!1),e.ShowErrorsFilterContextKey=new o("problems.filter.errors",!0),e.ShowWarningsFilterContextKey=new o("problems.filter.warnings",!0),e.ShowInfoFilterContextKey=new o("problems.filter.info",!0),e.ShowActiveFileFilterContextKey=new o("problems.filter.activeFile",!1),e.ShowExcludedFilesFilterContextKey=new o("problems.filter.excludedFiles",!0)}(n||(n={}));export{l as Markers,n as MarkersContextKeys,i as MarkersViewMode};
+import { RawContextKey } from "../../../../platform/contextkey/common/contextkey.js";
+var MarkersViewMode;
+(function(MarkersViewMode2) {
+  MarkersViewMode2["Table"] = "table";
+  MarkersViewMode2["Tree"] = "tree";
+})(MarkersViewMode || (MarkersViewMode = {}));
+var Markers;
+(function(Markers2) {
+  Markers2.MARKERS_CONTAINER_ID = "workbench.panel.markers";
+  Markers2.MARKERS_VIEW_ID = "workbench.panel.markers.view";
+  Markers2.MARKERS_VIEW_STORAGE_ID = "workbench.panel.markers";
+  Markers2.MARKER_COPY_ACTION_ID = "problems.action.copy";
+  Markers2.MARKER_COPY_MESSAGE_ACTION_ID = "problems.action.copyMessage";
+  Markers2.RELATED_INFORMATION_COPY_MESSAGE_ACTION_ID = "problems.action.copyRelatedInformationMessage";
+  Markers2.FOCUS_PROBLEMS_FROM_FILTER = "problems.action.focusProblemsFromFilter";
+  Markers2.MARKERS_VIEW_FOCUS_FILTER = "problems.action.focusFilter";
+  Markers2.MARKERS_VIEW_CLEAR_FILTER_TEXT = "problems.action.clearFilterText";
+  Markers2.MARKERS_VIEW_SHOW_MULTILINE_MESSAGE = "problems.action.showMultilineMessage";
+  Markers2.MARKERS_VIEW_SHOW_SINGLELINE_MESSAGE = "problems.action.showSinglelineMessage";
+  Markers2.MARKER_OPEN_ACTION_ID = "problems.action.open";
+  Markers2.MARKER_OPEN_SIDE_ACTION_ID = "problems.action.openToSide";
+  Markers2.MARKER_SHOW_PANEL_ID = "workbench.action.showErrorsWarnings";
+  Markers2.MARKER_SHOW_QUICK_FIX = "problems.action.showQuickFixes";
+  Markers2.TOGGLE_MARKERS_VIEW_ACTION_ID = "workbench.actions.view.toggleProblems";
+})(Markers || (Markers = {}));
+var MarkersContextKeys;
+(function(MarkersContextKeys2) {
+  MarkersContextKeys2.MarkersViewModeContextKey = new RawContextKey(
+    "problemsViewMode",
+    "tree"
+    /* MarkersViewMode.Tree */
+  );
+  MarkersContextKeys2.MarkersTreeVisibilityContextKey = new RawContextKey("problemsVisibility", false);
+  MarkersContextKeys2.MarkerFocusContextKey = new RawContextKey("problemFocus", false);
+  MarkersContextKeys2.MarkerViewFilterFocusContextKey = new RawContextKey("problemsFilterFocus", false);
+  MarkersContextKeys2.RelatedInformationFocusContextKey = new RawContextKey("relatedInformationFocus", false);
+  MarkersContextKeys2.ShowErrorsFilterContextKey = new RawContextKey("problems.filter.errors", true);
+  MarkersContextKeys2.ShowWarningsFilterContextKey = new RawContextKey("problems.filter.warnings", true);
+  MarkersContextKeys2.ShowInfoFilterContextKey = new RawContextKey("problems.filter.info", true);
+  MarkersContextKeys2.ShowActiveFileFilterContextKey = new RawContextKey("problems.filter.activeFile", false);
+  MarkersContextKeys2.ShowExcludedFilesFilterContextKey = new RawContextKey("problems.filter.excludedFiles", true);
+})(MarkersContextKeys || (MarkersContextKeys = {}));
+export {
+  Markers,
+  MarkersContextKeys,
+  MarkersViewMode
+};
+//# sourceMappingURL=markers.js.map

@@ -1,1 +1,73 @@
-import{$El as l}from"../../configuration/common/configuration.js";import{$oj as h}from"../../instantiation/common/instantiation.js";import{$nn as m}from"../../product/common/productService.js";import{$Po as a}from"./telemetry.js";import{$dy as d}from"./telemetryService.js";import{$zu as b}from"./telemetryUtils.js";var f=function(e,t,o,r){var i,n=arguments.length,s=n<3?t:null===r?r=Object.getOwnPropertyDescriptor(t,o):r;if("object"==typeof Reflect&&"function"==typeof Reflect.decorate)s=Reflect.decorate(e,t,o,r);else for(var c=e.length-1;c>=0;c--)(i=e[c])&&(s=(n<3?i(s):n>3?i(t,o,s):i(t,o))||s);return n>3&&s&&Object.defineProperty(t,o,s),s},c=function(e,t){return function(o,r){t(o,r,e)}};let p=class extends d{constructor(e,t,o,r){super(e,o,r),this.o=t}publicLog(e,t){if(!(this.o<3))return super.publicLog(e,t)}publicLog2(e,t){return this.publicLog(e,t)}publicLogError(e,t){return this.o<2?Promise.resolve(void 0):super.publicLogError(e,t)}publicLogError2(e,t){return this.publicLogError(e,t)}async updateInjectedTelemetryLevel(e){if(void 0===e)throw this.o=0,new Error("Telemetry level cannot be undefined. This will cause infinite looping!");this.o=this.o?Math.min(this.o,e):e,0===this.o&&this.dispose()}};p=f([c(2,l),c(3,m)],p);const w=new class extends b{async updateInjectedTelemetryLevel(){}},x=h(a);export{p as $O3,w as $P3,x as $Q3};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { IConfigurationService } from "../../configuration/common/configuration.js";
+import { refineServiceDecorator } from "../../instantiation/common/instantiation.js";
+import { IProductService } from "../../product/common/productService.js";
+import { ITelemetryService } from "./telemetry.js";
+import { TelemetryService } from "./telemetryService.js";
+import { NullTelemetryServiceShape } from "./telemetryUtils.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+let ServerTelemetryService = class ServerTelemetryService2 extends TelemetryService {
+  static {
+    __name(this, "ServerTelemetryService");
+  }
+  constructor(config, injectedTelemetryLevel, _configurationService, _productService) {
+    super(config, _configurationService, _productService);
+    this._injectedTelemetryLevel = injectedTelemetryLevel;
+  }
+  publicLog(eventName, data) {
+    if (this._injectedTelemetryLevel < 3) {
+      return;
+    }
+    return super.publicLog(eventName, data);
+  }
+  publicLog2(eventName, data) {
+    return this.publicLog(eventName, data);
+  }
+  publicLogError(errorEventName, data) {
+    if (this._injectedTelemetryLevel < 2) {
+      return Promise.resolve(void 0);
+    }
+    return super.publicLogError(errorEventName, data);
+  }
+  publicLogError2(eventName, data) {
+    return this.publicLogError(eventName, data);
+  }
+  async updateInjectedTelemetryLevel(telemetryLevel) {
+    if (telemetryLevel === void 0) {
+      this._injectedTelemetryLevel = 0;
+      throw new Error("Telemetry level cannot be undefined. This will cause infinite looping!");
+    }
+    this._injectedTelemetryLevel = this._injectedTelemetryLevel ? Math.min(this._injectedTelemetryLevel, telemetryLevel) : telemetryLevel;
+    if (this._injectedTelemetryLevel === 0) {
+      this.dispose();
+    }
+  }
+};
+ServerTelemetryService = __decorate([
+  __param(2, IConfigurationService),
+  __param(3, IProductService)
+], ServerTelemetryService);
+const ServerNullTelemetryService = new class extends NullTelemetryServiceShape {
+  async updateInjectedTelemetryLevel() {
+    return;
+  }
+  // No-op, telemetry is already disabled
+}();
+const IServerTelemetryService = refineServiceDecorator(ITelemetryService);
+export {
+  IServerTelemetryService,
+  ServerNullTelemetryService,
+  ServerTelemetryService
+};
+//# sourceMappingURL=serverTelemetryService.js.map

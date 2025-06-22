@@ -1,1 +1,106 @@
-import{$Ae as o}from"../transaction.js";import{$pe as l}from"./baseObservable.js";import{strictEquals as u}from"../commonFacade/deps.js";import{$Pd as d}from"../debugName.js";import{$te as r}from"../logging/logging.js";function N(e,t){let s;return s="string"==typeof e?new d(void 0,e,void 0):new d(e,void 0,void 0),new h(s,t,u)}class h extends l{get debugName(){return this.c.getDebugName(this)??"ObservableValue"}constructor(e,t,s){super(),this.c=e,this.d=s,this.a=t,r()?.handleObservableUpdated(this,{hadValue:!1,newValue:t,change:void 0,didChange:!0,oldValue:void 0})}get(){return this.a}set(e,t,s){if(void 0===s&&this.d(this.a,e))return;let i;t||(t=i=new o((()=>{}),(()=>`Setting ${this.debugName}`)));try{const i=this.a;this.i(e),r()?.handleObservableUpdated(this,{oldValue:i,newValue:e,change:s,didChange:!0,hadValue:!0});for(const e of this.f)t.updateObserver(e,this),e.handleChange(this,s)}finally{i&&i.finish()}}toString(){return`${this.debugName}: ${this.a}`}i(e){this.a=e}debugGetState(){return{value:this.a}}debugSetValue(e){this.a=e}}function V(e,t){let s;return s="string"==typeof e?new d(void 0,e,void 0):new d(e,void 0,void 0),new p(s,t,u)}class p extends h{i(e){this.a!==e&&(this.a&&this.a.dispose(),this.a=e)}dispose(){this.a?.dispose()}}export{N as $Be,h as $Ce,V as $De,p as $Ee};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { TransactionImpl } from "../transaction.js";
+import { BaseObservable } from "./baseObservable.js";
+import { strictEquals } from "../commonFacade/deps.js";
+import { DebugNameData } from "../debugName.js";
+import { getLogger } from "../logging/logging.js";
+function observableValue(nameOrOwner, initialValue) {
+  let debugNameData;
+  if (typeof nameOrOwner === "string") {
+    debugNameData = new DebugNameData(void 0, nameOrOwner, void 0);
+  } else {
+    debugNameData = new DebugNameData(nameOrOwner, void 0, void 0);
+  }
+  return new ObservableValue(debugNameData, initialValue, strictEquals);
+}
+__name(observableValue, "observableValue");
+class ObservableValue extends BaseObservable {
+  static {
+    __name(this, "ObservableValue");
+  }
+  get debugName() {
+    return this._debugNameData.getDebugName(this) ?? "ObservableValue";
+  }
+  constructor(_debugNameData, initialValue, _equalityComparator) {
+    super();
+    this._debugNameData = _debugNameData;
+    this._equalityComparator = _equalityComparator;
+    this._value = initialValue;
+    getLogger()?.handleObservableUpdated(this, { hadValue: false, newValue: initialValue, change: void 0, didChange: true, oldValue: void 0 });
+  }
+  get() {
+    return this._value;
+  }
+  set(value, tx, change) {
+    if (change === void 0 && this._equalityComparator(this._value, value)) {
+      return;
+    }
+    let _tx;
+    if (!tx) {
+      tx = _tx = new TransactionImpl(() => {
+      }, () => `Setting ${this.debugName}`);
+    }
+    try {
+      const oldValue = this._value;
+      this._setValue(value);
+      getLogger()?.handleObservableUpdated(this, { oldValue, newValue: value, change, didChange: true, hadValue: true });
+      for (const observer of this._observers) {
+        tx.updateObserver(observer, this);
+        observer.handleChange(this, change);
+      }
+    } finally {
+      if (_tx) {
+        _tx.finish();
+      }
+    }
+  }
+  toString() {
+    return `${this.debugName}: ${this._value}`;
+  }
+  _setValue(newValue) {
+    this._value = newValue;
+  }
+  debugGetState() {
+    return {
+      value: this._value
+    };
+  }
+  debugSetValue(value) {
+    this._value = value;
+  }
+}
+function disposableObservableValue(nameOrOwner, initialValue) {
+  let debugNameData;
+  if (typeof nameOrOwner === "string") {
+    debugNameData = new DebugNameData(void 0, nameOrOwner, void 0);
+  } else {
+    debugNameData = new DebugNameData(nameOrOwner, void 0, void 0);
+  }
+  return new DisposableObservableValue(debugNameData, initialValue, strictEquals);
+}
+__name(disposableObservableValue, "disposableObservableValue");
+class DisposableObservableValue extends ObservableValue {
+  static {
+    __name(this, "DisposableObservableValue");
+  }
+  _setValue(newValue) {
+    if (this._value === newValue) {
+      return;
+    }
+    if (this._value) {
+      this._value.dispose();
+    }
+    this._value = newValue;
+  }
+  dispose() {
+    this._value?.dispose();
+  }
+}
+export {
+  DisposableObservableValue,
+  ObservableValue,
+  disposableObservableValue,
+  observableValue
+};
+//# sourceMappingURL=observableValue.js.map

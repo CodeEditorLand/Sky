@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["../../../../../../../../../../Dependency/Microsoft/Dependency/Editor/src/vs/workbench/contrib/issue/common/issueReporterUtil.ts"],
+  "sourcesContent": ["/*---------------------------------------------------------------------------------------------\r\n *  Copyright (c) Microsoft Corporation. All rights reserved.\r\n *  Licensed under the MIT License. See License.txt in the project root for license information.\r\n *--------------------------------------------------------------------------------------------*/\r\n\r\nimport { rtrim } from '../../../../base/common/strings.js';\r\n\r\nexport function normalizeGitHubUrl(url: string): string {\r\n\t// If the url has a .git suffix, remove it\r\n\tif (url.endsWith('.git')) {\r\n\t\turl = url.substr(0, url.length - 4);\r\n\t}\r\n\r\n\t// Remove trailing slash\r\n\turl = rtrim(url, '/');\r\n\r\n\tif (url.endsWith('/new')) {\r\n\t\turl = rtrim(url, '/new');\r\n\t}\r\n\r\n\tif (url.endsWith('/issues')) {\r\n\t\turl = rtrim(url, '/issues');\r\n\t}\r\n\r\n\treturn url;\r\n}\r\n"],
+  "mappings": ";;AAKA,SAAS,aAAa;AAEhB,SAAU,mBAAmB,KAAW;AAE7C,MAAI,IAAI,SAAS,MAAM,GAAG;AACzB,UAAM,IAAI,OAAO,GAAG,IAAI,SAAS,CAAC;EACnC;AAGA,QAAM,MAAM,KAAK,GAAG;AAEpB,MAAI,IAAI,SAAS,MAAM,GAAG;AACzB,UAAM,MAAM,KAAK,MAAM;EACxB;AAEA,MAAI,IAAI,SAAS,SAAS,GAAG;AAC5B,UAAM,MAAM,KAAK,SAAS;EAC3B;AAEA,SAAO;AACR;AAlBgB;",
+  "names": []
+}

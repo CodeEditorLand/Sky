@@ -1,1 +1,68 @@
-import{$Fb as a}from"../../../../base/common/arraysFind.js";import{$cC as g}from"../range.js";import{$QD as p}from"../text/textLength.js";class r{constructor(i){this.mappings=i}mapPosition(i){const t=a(this.mappings,e=>e.original.getStartPosition().isBeforeOrEqual(i));if(!t)return o.position(i);if(t.original.containsPosition(i))return o.range(t.modified);const n=p.betweenPositions(t.original.getEndPosition(),i);return o.position(n.addToPosition(t.modified.getEndPosition()))}mapRange(i){const t=this.mapPosition(i.getStartPosition()),n=this.mapPosition(i.getEndPosition());return g.fromPositions(t.range?.getStartPosition()??t.position,n.range?.getEndPosition()??n.position)}reverse(){return new r(this.mappings.map(i=>i.reverse()))}}class s{constructor(i,t){this.original=i,this.modified=t}reverse(){return new s(this.modified,this.original)}toString(){return`${this.original.toString()} -> ${this.modified.toString()}`}}class o{static position(i){return new o(i,void 0)}static range(i){return new o(void 0,i)}constructor(i,t){this.position=i,this.range=t}}export{r as $BFc,s as $CFc,o as $DFc};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { findLastMonotonous } from "../../../../base/common/arraysFind.js";
+import { Range } from "../range.js";
+import { TextLength } from "../text/textLength.js";
+class RangeMapping {
+  static {
+    __name(this, "RangeMapping");
+  }
+  constructor(mappings) {
+    this.mappings = mappings;
+  }
+  mapPosition(position) {
+    const mapping = findLastMonotonous(this.mappings, (m) => m.original.getStartPosition().isBeforeOrEqual(position));
+    if (!mapping) {
+      return PositionOrRange.position(position);
+    }
+    if (mapping.original.containsPosition(position)) {
+      return PositionOrRange.range(mapping.modified);
+    }
+    const l = TextLength.betweenPositions(mapping.original.getEndPosition(), position);
+    return PositionOrRange.position(l.addToPosition(mapping.modified.getEndPosition()));
+  }
+  mapRange(range) {
+    const start = this.mapPosition(range.getStartPosition());
+    const end = this.mapPosition(range.getEndPosition());
+    return Range.fromPositions(start.range?.getStartPosition() ?? start.position, end.range?.getEndPosition() ?? end.position);
+  }
+  reverse() {
+    return new RangeMapping(this.mappings.map((mapping) => mapping.reverse()));
+  }
+}
+class SingleRangeMapping {
+  static {
+    __name(this, "SingleRangeMapping");
+  }
+  constructor(original, modified) {
+    this.original = original;
+    this.modified = modified;
+  }
+  reverse() {
+    return new SingleRangeMapping(this.modified, this.original);
+  }
+  toString() {
+    return `${this.original.toString()} -> ${this.modified.toString()}`;
+  }
+}
+class PositionOrRange {
+  static {
+    __name(this, "PositionOrRange");
+  }
+  static position(position) {
+    return new PositionOrRange(position, void 0);
+  }
+  static range(range) {
+    return new PositionOrRange(void 0, range);
+  }
+  constructor(position, range) {
+    this.position = position;
+    this.range = range;
+  }
+}
+export {
+  PositionOrRange,
+  RangeMapping,
+  SingleRangeMapping
+};
+//# sourceMappingURL=rangeMapping.js.map

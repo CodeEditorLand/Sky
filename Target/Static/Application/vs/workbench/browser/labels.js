@@ -1,1 +1,517 @@
-import{localize as C}from"../../nls.js";import{URI as y}from"../../base/common/uri.js";import{$jh as Z,$dh as w,$gh as j}from"../../base/common/resources.js";import{$Z9 as G}from"../../base/browser/ui/iconLabel/iconLabel.js";import{$BD as $}from"../../editor/common/languages/language.js";import{$hl as L}from"../../platform/workspace/common/workspace.js";import{$El as U}from"../../platform/configuration/common/configuration.js";import{$gF as I}from"../../editor/common/services/model.js";import{$fJ as k}from"../services/textfile/common/textfiles.js";import{$OEb as R}from"../services/decorations/common/decorations.js";import{Schemas as p}from"../../base/common/network.js";import{FileKind as N,$tk as K}from"../../platform/files/common/files.js";import{$Mt as v}from"../../platform/theme/common/themeService.js";import{Event as P,$df as M}from"../../base/common/event.js";import{$2H as x}from"../../platform/label/common/label.js";import{$8kb as _}from"../../editor/common/services/getIconClasses.js";import{$vd as W,$qd as B,$wd as T}from"../../base/common/lifecycle.js";import{$mj as S}from"../../platform/instantiation/common/instantiation.js";import{$jm as A}from"../../base/common/labels.js";import{$cL as H,$hL as J}from"../services/notebook/common/notebookDocumentService.js";var F=function(h,t,e,i){var s=arguments.length,n=s<3?t:i===null?i=Object.getOwnPropertyDescriptor(t,e):i,o;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")n=Reflect.decorate(h,t,e,i);else for(var f=h.length-1;f>=0;f--)(o=h[f])&&(n=(s<3?o(n):s>3?o(t,e,n):o(t,e))||n);return s>3&&n&&Object.defineProperty(t,e,n),n},r=function(h,t){return function(e,i){t(e,i,h)}};function c(h){if(!(!h||!h.resource))return y.isUri(h.resource)?h.resource:h.resource.primary}const z={onDidChangeVisibility:P.None};let b=class extends W{constructor(t,e,i,s,n,o,f,u,a,d){super(),this.f=e,this.g=i,this.h=s,this.j=n,this.m=o,this.n=f,this.r=u,this.s=a,this.t=d,this.a=this.B(new M),this.onDidChangeDecorations=this.a.event,this.b=[],this.c=[],this.u(t)}u(t){this.B(t.onDidChangeVisibility(e=>{this.b.forEach(i=>i.notifyVisibilityChanged(e))})),this.B(this.m.onDidChange(()=>this.b.forEach(e=>e.notifyExtensionsRegistered()))),this.B(this.h.onModelLanguageChanged(e=>{e.model.uri&&this.b.forEach(i=>i.notifyModelLanguageChanged(e.model))})),this.B(this.h.onModelAdded(e=>{e.uri&&this.b.forEach(i=>i.notifyModelAdded(e))})),this.B(this.j.onDidChangeWorkspaceFolders(()=>{this.b.forEach(e=>e.notifyWorkspaceFoldersChange())})),this.B(this.n.onDidChangeDecorations(e=>{let i=!1;this.b.forEach(s=>{s.notifyFileDecorationsChanges(e)&&(i=!0)}),i&&this.a.fire()})),this.B(this.r.onDidColorThemeChange(()=>this.b.forEach(e=>e.notifyThemeChange()))),this.B(this.g.onDidChangeConfiguration(e=>{e.affectsConfiguration(K)&&this.b.forEach(i=>i.notifyFileAssociationsChange())})),this.B(this.s.onDidChangeFormatters(e=>{this.b.forEach(i=>i.notifyFormattersChange(e.scheme))})),this.B(this.t.untitled.onDidChangeLabel(e=>{this.b.forEach(i=>i.notifyUntitledLabelChange(e.resource))}))}get(t){return this.c[t]}create(t,e){const i=this.f.createInstance(D,t,e),s={element:i.element,onDidRender:i.onDidRender,setLabel:(n,o,f)=>i.setLabel(n,o,f),setResource:(n,o)=>i.setResource(n,o),setFile:(n,o)=>i.setFile(n,o),clear:()=>i.clear(),dispose:()=>this.w(i)};return this.c.push(s),this.b.push(i),s}w(t){const e=this.b.indexOf(t);e>-1&&(this.b.splice(e,1),this.c.splice(e,1)),B(t)}clear(){this.b=B(this.b),this.c=[]}dispose(){super.dispose(),this.clear()}};b=F([r(1,S),r(2,U),r(3,I),r(4,L),r(5,$),r(6,R),r(7,v),r(8,x),r(9,k)],b);let O=class extends b{get element(){return this.y}constructor(t,e,i,s,n,o,f,u,a,d,m){super(z,i,s,n,o,f,u,a,d,m),this.y=this.B(this.create(t,e))}};O=F([r(2,S),r(3,U),r(4,I),r(5,L),r(6,$),r(7,R),r(8,v),r(9,x),r(10,k)],O);var l;(function(h){h[h.Basic=1]="Basic",h[h.Full=2]="Full"})(l||(l={}));let D=class extends G{constructor(t,e,i,s,n,o,f,u,a){super(t,e),this.L=i,this.M=s,this.N=n,this.O=o,this.P=f,this.Q=u,this.R=a,this.w=this.B(new M),this.onDidRender=this.w.event,this.y=void 0,this.z=this.B(new T),this.C=void 0,this.D=void 0,this.F=void 0,this.G=void 0,this.H=void 0,this.I=void 0,this.J=!1}notifyVisibilityChanged(t){t===this.J&&(this.J=!t,t&&this.I&&(this.Z({updateIcon:this.I===l.Full,updateDecoration:this.I===l.Full}),this.I=void 0))}notifyModelLanguageChanged(t){this.S(t)}notifyModelAdded(t){this.S(t)}S(t){const e=c(this.y);e&&w(t.uri,e)&&this.F!==t.getLanguageId()&&(this.F=t.getLanguageId(),this.Z({updateIcon:!0,updateDecoration:!1}))}notifyFileDecorationsChanges(t){if(!this.C)return!1;const e=c(this.y);return e&&this.C.fileDecorations&&t.affectsResource(e)?this.Z({updateIcon:!1,updateDecoration:!0}):!1}notifyExtensionsRegistered(){this.Z({updateIcon:!0,updateDecoration:!1})}notifyThemeChange(){this.Z({updateIcon:!1,updateDecoration:!1})}notifyFileAssociationsChange(){this.Z({updateIcon:!0,updateDecoration:!1})}notifyFormattersChange(t){c(this.y)?.scheme===t&&this.Z({updateIcon:!1,updateDecoration:!1})}notifyUntitledLabelChange(t){w(t,c(this.y))&&this.Z({updateIcon:!1,updateDecoration:!1})}notifyWorkspaceFoldersChange(){if(typeof this.H=="string"){const t=c(this.y);y.isUri(t)&&this.y?.name===this.H&&this.setFile(t,this.C)}}setFile(t,e){const i=e?.hideLabel;let s;if(!i){if(e?.fileKind===N.ROOT_FOLDER){const o=this.Q.getWorkspaceFolder(t);o&&(s=o.name,this.H=s)}s||(s=A(j(t)))}let n;if(!e?.hidePath){const o=this.O.getUriLabel(Z(t),{relative:!0});o&&o!=="."&&(n=o)}this.setResource({resource:t,name:s,description:n,range:e?.range},e)}setResource(t,e=Object.create(null)){const i=c(t),s=t?.resource&&!y.isUri(t.resource);if(!e.forceLabel&&!s&&i?.scheme===p.untitled){const a=this.P.untitled.get(i);if(a&&!a.hasAssociatedFilePath){if(typeof t.name=="string"&&(t.name=a.name),typeof t.description=="string"){const m=a.resource.path;t.name!==m?t.description=m:t.description=void 0}const d=a.resource.path;a.name!==d?e.title=`${a.name} \u2022 ${d}`:e.title=d}}if(!e.forceLabel&&!s&&i?.scheme===p.vscodeNotebookCell){const a=this.R.getNotebook(i),d=a?.getCellIndex(i);a&&d!==void 0&&typeof t.name=="string"&&(e.title=C(3211,null,t.name,`${d+1}`)),typeof t.name=="string"&&a&&d!==void 0&&typeof t.name=="string"&&(t.name=C(3212,null,t.name,`${d+1}`))}if(!e.forceLabel&&!s&&i?.scheme===p.vscodeNotebookCellOutput){const a=this.R.getNotebook(i),d=J(i);if(d?.cellFragment){if(!d.notebook)return;const m=d.notebook.with({scheme:p.vscodeNotebookCell,fragment:d.cellFragment}),g=a?.getCellIndex(m),E=d.outputIndex;g!==void 0&&E!==void 0&&typeof t.name=="string"?t.name=C(3213,null,t.name,`${g+1}`,`${E+1}`):g!==void 0&&typeof t.name=="string"&&(t.name=C(3214,null,t.name,`${g+1}`))}}const n=this.W(t),o=n||this.X(t),f=this.U(e),u=this.Y(e);this.y=t,this.C=e,n&&(this.F=void 0),o&&(this.G=void 0),this.Z({updateIcon:n||f||u,updateDecoration:n||f})}U(t){const e=t?.fileKind,i=this.C?.fileKind;return e!==i}W(t){const e=c(t),i=c(this.y);return e&&i?e.toString()!==i.toString():!(!e&&!i)}X(t){const e=c(t);return!!e&&this.G!==this.O.getUriLabel(e)}Y(t){return this.C?.icon!==t?.icon}clear(){this.y=void 0,this.C=void 0,this.F=void 0,this.D=void 0,this.G=void 0,this.setLabel("")}Z(t){if(this.J)return this.I!==l.Full&&(this.I=t.updateIcon||t.updateDecoration?l.Full:l.Basic),!1;if(t.updateIcon&&(this.D=void 0),!this.y)return!1;const e={title:"",italic:this.C?.italic,strikethrough:this.C?.strikethrough,matches:this.C?.matches,descriptionMatches:this.C?.descriptionMatches,extraClasses:[],separator:this.C?.separator,domId:this.C?.domId,disabledCommand:this.C?.disabledCommand,labelEscapeNewLines:this.C?.labelEscapeNewLines,descriptionTitle:this.C?.descriptionTitle},i=c(this.y);if(this.C?.title!==void 0&&(e.title=this.C.title),i&&i.scheme!==p.data&&(!this.C?.title||typeof this.C.title!="string"&&!this.C.title.markdownNotSupportedFallback)&&(this.G||(this.G=this.O.getUriLabel(i)),!e.title||typeof e.title=="string"?e.title=this.G:e.title.markdownNotSupportedFallback||(e.title.markdownNotSupportedFallback=this.G)),this.C&&!this.C.hideIcon&&(this.D||(this.D=_(this.M,this.L,i,this.C.fileKind,this.C.icon)),y.isUri(this.C.icon)&&(e.iconPath=this.C.icon),e.extraClasses=this.D.slice(0)),this.C?.extraClasses&&e.extraClasses.push(...this.C.extraClasses),this.C?.fileDecorations&&i){t.updateDecoration&&(this.z.value=this.N.getDecoration(i,this.C.fileKind!==N.FILE));const s=this.z.value;if(s){if(s.tooltip){if(typeof e.title=="string")e.title=`${e.title} \u2022 ${s.tooltip}`;else if(typeof e.title?.markdown=="string"){const n=`${e.title.markdown} \u2022 ${s.tooltip}`;e.title={markdown:n,markdownNotSupportedFallback:n}}}s.strikethrough&&(e.strikethrough=!0),this.C.fileDecorations.colors&&e.extraClasses.push(s.labelClassName),this.C.fileDecorations.badges&&(e.extraClasses.push(s.badgeClassName),e.extraClasses.push(s.iconClassName))}}return this.y.range&&(e.suffix=this.y.range.startLineNumber!==this.y.range.endLineNumber?`:${this.y.range.startLineNumber}-${this.y.range.endLineNumber}`:`:${this.y.range.startLineNumber}`),this.setLabel(this.y.name??"",this.y.description,e),this.w.fire(),!0}dispose(){super.dispose(),this.y=void 0,this.C=void 0,this.F=void 0,this.D=void 0,this.G=void 0,this.H=void 0}};D=F([r(2,$),r(3,I),r(4,R),r(5,x),r(6,k),r(7,L),r(8,H)],D);export{z as $PEb,b as $QEb,O as $REb};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { localize } from "../../nls.js";
+import { URI } from "../../base/common/uri.js";
+import { dirname, isEqual, basenameOrAuthority } from "../../base/common/resources.js";
+import { IconLabel } from "../../base/browser/ui/iconLabel/iconLabel.js";
+import { ILanguageService } from "../../editor/common/languages/language.js";
+import { IWorkspaceContextService } from "../../platform/workspace/common/workspace.js";
+import { IConfigurationService } from "../../platform/configuration/common/configuration.js";
+import { IModelService } from "../../editor/common/services/model.js";
+import { ITextFileService } from "../services/textfile/common/textfiles.js";
+import { IDecorationsService } from "../services/decorations/common/decorations.js";
+import { Schemas } from "../../base/common/network.js";
+import { FileKind, FILES_ASSOCIATIONS_CONFIG } from "../../platform/files/common/files.js";
+import { IThemeService } from "../../platform/theme/common/themeService.js";
+import { Event, Emitter } from "../../base/common/event.js";
+import { ILabelService } from "../../platform/label/common/label.js";
+import { getIconClasses } from "../../editor/common/services/getIconClasses.js";
+import { Disposable, dispose, MutableDisposable } from "../../base/common/lifecycle.js";
+import { IInstantiationService } from "../../platform/instantiation/common/instantiation.js";
+import { normalizeDriveLetter } from "../../base/common/labels.js";
+import { INotebookDocumentService, extractCellOutputDetails } from "../services/notebook/common/notebookDocumentService.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+function toResource(props) {
+  if (!props || !props.resource) {
+    return void 0;
+  }
+  if (URI.isUri(props.resource)) {
+    return props.resource;
+  }
+  return props.resource.primary;
+}
+__name(toResource, "toResource");
+const DEFAULT_LABELS_CONTAINER = {
+  onDidChangeVisibility: Event.None
+};
+let ResourceLabels = class ResourceLabels2 extends Disposable {
+  static {
+    __name(this, "ResourceLabels");
+  }
+  constructor(container, instantiationService, configurationService, modelService, workspaceService, languageService, decorationsService, themeService, labelService, textFileService) {
+    super();
+    this.instantiationService = instantiationService;
+    this.configurationService = configurationService;
+    this.modelService = modelService;
+    this.workspaceService = workspaceService;
+    this.languageService = languageService;
+    this.decorationsService = decorationsService;
+    this.themeService = themeService;
+    this.labelService = labelService;
+    this.textFileService = textFileService;
+    this._onDidChangeDecorations = this._register(new Emitter());
+    this.onDidChangeDecorations = this._onDidChangeDecorations.event;
+    this.widgets = [];
+    this.labels = [];
+    this.registerListeners(container);
+  }
+  registerListeners(container) {
+    this._register(container.onDidChangeVisibility((visible) => {
+      this.widgets.forEach((widget) => widget.notifyVisibilityChanged(visible));
+    }));
+    this._register(this.languageService.onDidChange(() => this.widgets.forEach((widget) => widget.notifyExtensionsRegistered())));
+    this._register(this.modelService.onModelLanguageChanged((e) => {
+      if (!e.model.uri) {
+        return;
+      }
+      this.widgets.forEach((widget) => widget.notifyModelLanguageChanged(e.model));
+    }));
+    this._register(this.modelService.onModelAdded((model) => {
+      if (!model.uri) {
+        return;
+      }
+      this.widgets.forEach((widget) => widget.notifyModelAdded(model));
+    }));
+    this._register(this.workspaceService.onDidChangeWorkspaceFolders(() => {
+      this.widgets.forEach((widget) => widget.notifyWorkspaceFoldersChange());
+    }));
+    this._register(this.decorationsService.onDidChangeDecorations((e) => {
+      let notifyDidChangeDecorations = false;
+      this.widgets.forEach((widget) => {
+        if (widget.notifyFileDecorationsChanges(e)) {
+          notifyDidChangeDecorations = true;
+        }
+      });
+      if (notifyDidChangeDecorations) {
+        this._onDidChangeDecorations.fire();
+      }
+    }));
+    this._register(this.themeService.onDidColorThemeChange(() => this.widgets.forEach((widget) => widget.notifyThemeChange())));
+    this._register(this.configurationService.onDidChangeConfiguration((e) => {
+      if (e.affectsConfiguration(FILES_ASSOCIATIONS_CONFIG)) {
+        this.widgets.forEach((widget) => widget.notifyFileAssociationsChange());
+      }
+    }));
+    this._register(this.labelService.onDidChangeFormatters((e) => {
+      this.widgets.forEach((widget) => widget.notifyFormattersChange(e.scheme));
+    }));
+    this._register(this.textFileService.untitled.onDidChangeLabel((model) => {
+      this.widgets.forEach((widget) => widget.notifyUntitledLabelChange(model.resource));
+    }));
+  }
+  get(index) {
+    return this.labels[index];
+  }
+  create(container, options) {
+    const widget = this.instantiationService.createInstance(ResourceLabelWidget, container, options);
+    const label = {
+      element: widget.element,
+      onDidRender: widget.onDidRender,
+      setLabel: /* @__PURE__ */ __name((label2, description, options2) => widget.setLabel(label2, description, options2), "setLabel"),
+      setResource: /* @__PURE__ */ __name((label2, options2) => widget.setResource(label2, options2), "setResource"),
+      setFile: /* @__PURE__ */ __name((resource, options2) => widget.setFile(resource, options2), "setFile"),
+      clear: /* @__PURE__ */ __name(() => widget.clear(), "clear"),
+      dispose: /* @__PURE__ */ __name(() => this.disposeWidget(widget), "dispose")
+    };
+    this.labels.push(label);
+    this.widgets.push(widget);
+    return label;
+  }
+  disposeWidget(widget) {
+    const index = this.widgets.indexOf(widget);
+    if (index > -1) {
+      this.widgets.splice(index, 1);
+      this.labels.splice(index, 1);
+    }
+    dispose(widget);
+  }
+  clear() {
+    this.widgets = dispose(this.widgets);
+    this.labels = [];
+  }
+  dispose() {
+    super.dispose();
+    this.clear();
+  }
+};
+ResourceLabels = __decorate([
+  __param(1, IInstantiationService),
+  __param(2, IConfigurationService),
+  __param(3, IModelService),
+  __param(4, IWorkspaceContextService),
+  __param(5, ILanguageService),
+  __param(6, IDecorationsService),
+  __param(7, IThemeService),
+  __param(8, ILabelService),
+  __param(9, ITextFileService)
+], ResourceLabels);
+let ResourceLabel = class ResourceLabel2 extends ResourceLabels {
+  static {
+    __name(this, "ResourceLabel");
+  }
+  get element() {
+    return this.label;
+  }
+  constructor(container, options, instantiationService, configurationService, modelService, workspaceService, languageService, decorationsService, themeService, labelService, textFileService) {
+    super(DEFAULT_LABELS_CONTAINER, instantiationService, configurationService, modelService, workspaceService, languageService, decorationsService, themeService, labelService, textFileService);
+    this.label = this._register(this.create(container, options));
+  }
+};
+ResourceLabel = __decorate([
+  __param(2, IInstantiationService),
+  __param(3, IConfigurationService),
+  __param(4, IModelService),
+  __param(5, IWorkspaceContextService),
+  __param(6, ILanguageService),
+  __param(7, IDecorationsService),
+  __param(8, IThemeService),
+  __param(9, ILabelService),
+  __param(10, ITextFileService)
+], ResourceLabel);
+var Redraw;
+(function(Redraw2) {
+  Redraw2[Redraw2["Basic"] = 1] = "Basic";
+  Redraw2[Redraw2["Full"] = 2] = "Full";
+})(Redraw || (Redraw = {}));
+let ResourceLabelWidget = class ResourceLabelWidget2 extends IconLabel {
+  static {
+    __name(this, "ResourceLabelWidget");
+  }
+  constructor(container, options, languageService, modelService, decorationsService, labelService, textFileService, contextService, notebookDocumentService) {
+    super(container, options);
+    this.languageService = languageService;
+    this.modelService = modelService;
+    this.decorationsService = decorationsService;
+    this.labelService = labelService;
+    this.textFileService = textFileService;
+    this.contextService = contextService;
+    this.notebookDocumentService = notebookDocumentService;
+    this._onDidRender = this._register(new Emitter());
+    this.onDidRender = this._onDidRender.event;
+    this.label = void 0;
+    this.decoration = this._register(new MutableDisposable());
+    this.options = void 0;
+    this.computedIconClasses = void 0;
+    this.computedLanguageId = void 0;
+    this.computedPathLabel = void 0;
+    this.computedWorkspaceFolderLabel = void 0;
+    this.needsRedraw = void 0;
+    this.isHidden = false;
+  }
+  notifyVisibilityChanged(visible) {
+    if (visible === this.isHidden) {
+      this.isHidden = !visible;
+      if (visible && this.needsRedraw) {
+        this.render({
+          updateIcon: this.needsRedraw === Redraw.Full,
+          updateDecoration: this.needsRedraw === Redraw.Full
+        });
+        this.needsRedraw = void 0;
+      }
+    }
+  }
+  notifyModelLanguageChanged(model) {
+    this.handleModelEvent(model);
+  }
+  notifyModelAdded(model) {
+    this.handleModelEvent(model);
+  }
+  handleModelEvent(model) {
+    const resource = toResource(this.label);
+    if (!resource) {
+      return;
+    }
+    if (isEqual(model.uri, resource)) {
+      if (this.computedLanguageId !== model.getLanguageId()) {
+        this.computedLanguageId = model.getLanguageId();
+        this.render({ updateIcon: true, updateDecoration: false });
+      }
+    }
+  }
+  notifyFileDecorationsChanges(e) {
+    if (!this.options) {
+      return false;
+    }
+    const resource = toResource(this.label);
+    if (!resource) {
+      return false;
+    }
+    if (this.options.fileDecorations && e.affectsResource(resource)) {
+      return this.render({ updateIcon: false, updateDecoration: true });
+    }
+    return false;
+  }
+  notifyExtensionsRegistered() {
+    this.render({ updateIcon: true, updateDecoration: false });
+  }
+  notifyThemeChange() {
+    this.render({ updateIcon: false, updateDecoration: false });
+  }
+  notifyFileAssociationsChange() {
+    this.render({ updateIcon: true, updateDecoration: false });
+  }
+  notifyFormattersChange(scheme) {
+    if (toResource(this.label)?.scheme === scheme) {
+      this.render({ updateIcon: false, updateDecoration: false });
+    }
+  }
+  notifyUntitledLabelChange(resource) {
+    if (isEqual(resource, toResource(this.label))) {
+      this.render({ updateIcon: false, updateDecoration: false });
+    }
+  }
+  notifyWorkspaceFoldersChange() {
+    if (typeof this.computedWorkspaceFolderLabel === "string") {
+      const resource = toResource(this.label);
+      if (URI.isUri(resource) && this.label?.name === this.computedWorkspaceFolderLabel) {
+        this.setFile(resource, this.options);
+      }
+    }
+  }
+  setFile(resource, options) {
+    const hideLabel = options?.hideLabel;
+    let name;
+    if (!hideLabel) {
+      if (options?.fileKind === FileKind.ROOT_FOLDER) {
+        const workspaceFolder = this.contextService.getWorkspaceFolder(resource);
+        if (workspaceFolder) {
+          name = workspaceFolder.name;
+          this.computedWorkspaceFolderLabel = name;
+        }
+      }
+      if (!name) {
+        name = normalizeDriveLetter(basenameOrAuthority(resource));
+      }
+    }
+    let description;
+    if (!options?.hidePath) {
+      const descriptionCandidate = this.labelService.getUriLabel(dirname(resource), { relative: true });
+      if (descriptionCandidate && descriptionCandidate !== ".") {
+        description = descriptionCandidate;
+      }
+    }
+    this.setResource({ resource, name, description, range: options?.range }, options);
+  }
+  setResource(label, options = /* @__PURE__ */ Object.create(null)) {
+    const resource = toResource(label);
+    const isSideBySideEditor = label?.resource && !URI.isUri(label.resource);
+    if (!options.forceLabel && !isSideBySideEditor && resource?.scheme === Schemas.untitled) {
+      const untitledModel = this.textFileService.untitled.get(resource);
+      if (untitledModel && !untitledModel.hasAssociatedFilePath) {
+        if (typeof label.name === "string") {
+          label.name = untitledModel.name;
+        }
+        if (typeof label.description === "string") {
+          const untitledDescription = untitledModel.resource.path;
+          if (label.name !== untitledDescription) {
+            label.description = untitledDescription;
+          } else {
+            label.description = void 0;
+          }
+        }
+        const untitledTitle = untitledModel.resource.path;
+        if (untitledModel.name !== untitledTitle) {
+          options.title = `${untitledModel.name} \u2022 ${untitledTitle}`;
+        } else {
+          options.title = untitledTitle;
+        }
+      }
+    }
+    if (!options.forceLabel && !isSideBySideEditor && resource?.scheme === Schemas.vscodeNotebookCell) {
+      const notebookDocument = this.notebookDocumentService.getNotebook(resource);
+      const cellIndex = notebookDocument?.getCellIndex(resource);
+      if (notebookDocument && cellIndex !== void 0 && typeof label.name === "string") {
+        options.title = localize("notebookCellLabel", "{0} \u2022 Cell {1}", label.name, `${cellIndex + 1}`);
+      }
+      if (typeof label.name === "string" && notebookDocument && cellIndex !== void 0 && typeof label.name === "string") {
+        label.name = localize("notebookCellLabel", "{0} \u2022 Cell {1}", label.name, `${cellIndex + 1}`);
+      }
+    }
+    if (!options.forceLabel && !isSideBySideEditor && resource?.scheme === Schemas.vscodeNotebookCellOutput) {
+      const notebookDocument = this.notebookDocumentService.getNotebook(resource);
+      const outputUriData = extractCellOutputDetails(resource);
+      if (outputUriData?.cellFragment) {
+        if (!outputUriData.notebook) {
+          return;
+        }
+        const cellUri = outputUriData.notebook.with({
+          scheme: Schemas.vscodeNotebookCell,
+          fragment: outputUriData.cellFragment
+        });
+        const cellIndex = notebookDocument?.getCellIndex(cellUri);
+        const outputIndex = outputUriData.outputIndex;
+        if (cellIndex !== void 0 && outputIndex !== void 0 && typeof label.name === "string") {
+          label.name = localize("notebookCellOutputLabel", "{0} \u2022 Cell {1} \u2022 Output {2}", label.name, `${cellIndex + 1}`, `${outputIndex + 1}`);
+        } else if (cellIndex !== void 0 && typeof label.name === "string") {
+          label.name = localize("notebookCellOutputLabelSimple", "{0} \u2022 Cell {1} \u2022 Output", label.name, `${cellIndex + 1}`);
+        }
+      }
+    }
+    const hasResourceChanged = this.hasResourceChanged(label);
+    const hasPathLabelChanged = hasResourceChanged || this.hasPathLabelChanged(label);
+    const hasFileKindChanged = this.hasFileKindChanged(options);
+    const hasIconChanged = this.hasIconChanged(options);
+    this.label = label;
+    this.options = options;
+    if (hasResourceChanged) {
+      this.computedLanguageId = void 0;
+    }
+    if (hasPathLabelChanged) {
+      this.computedPathLabel = void 0;
+    }
+    this.render({
+      updateIcon: hasResourceChanged || hasFileKindChanged || hasIconChanged,
+      updateDecoration: hasResourceChanged || hasFileKindChanged
+    });
+  }
+  hasFileKindChanged(newOptions) {
+    const newFileKind = newOptions?.fileKind;
+    const oldFileKind = this.options?.fileKind;
+    return newFileKind !== oldFileKind;
+  }
+  hasResourceChanged(newLabel) {
+    const newResource = toResource(newLabel);
+    const oldResource = toResource(this.label);
+    if (newResource && oldResource) {
+      return newResource.toString() !== oldResource.toString();
+    }
+    if (!newResource && !oldResource) {
+      return false;
+    }
+    return true;
+  }
+  hasPathLabelChanged(newLabel) {
+    const newResource = toResource(newLabel);
+    return !!newResource && this.computedPathLabel !== this.labelService.getUriLabel(newResource);
+  }
+  hasIconChanged(newOptions) {
+    return this.options?.icon !== newOptions?.icon;
+  }
+  clear() {
+    this.label = void 0;
+    this.options = void 0;
+    this.computedLanguageId = void 0;
+    this.computedIconClasses = void 0;
+    this.computedPathLabel = void 0;
+    this.setLabel("");
+  }
+  render(options) {
+    if (this.isHidden) {
+      if (this.needsRedraw !== Redraw.Full) {
+        this.needsRedraw = options.updateIcon || options.updateDecoration ? Redraw.Full : Redraw.Basic;
+      }
+      return false;
+    }
+    if (options.updateIcon) {
+      this.computedIconClasses = void 0;
+    }
+    if (!this.label) {
+      return false;
+    }
+    const iconLabelOptions = {
+      title: "",
+      italic: this.options?.italic,
+      strikethrough: this.options?.strikethrough,
+      matches: this.options?.matches,
+      descriptionMatches: this.options?.descriptionMatches,
+      extraClasses: [],
+      separator: this.options?.separator,
+      domId: this.options?.domId,
+      disabledCommand: this.options?.disabledCommand,
+      labelEscapeNewLines: this.options?.labelEscapeNewLines,
+      descriptionTitle: this.options?.descriptionTitle
+    };
+    const resource = toResource(this.label);
+    if (this.options?.title !== void 0) {
+      iconLabelOptions.title = this.options.title;
+    }
+    if (resource && resource.scheme !== Schemas.data && (!this.options?.title || typeof this.options.title !== "string" && !this.options.title.markdownNotSupportedFallback)) {
+      if (!this.computedPathLabel) {
+        this.computedPathLabel = this.labelService.getUriLabel(resource);
+      }
+      if (!iconLabelOptions.title || typeof iconLabelOptions.title === "string") {
+        iconLabelOptions.title = this.computedPathLabel;
+      } else if (!iconLabelOptions.title.markdownNotSupportedFallback) {
+        iconLabelOptions.title.markdownNotSupportedFallback = this.computedPathLabel;
+      }
+    }
+    if (this.options && !this.options.hideIcon) {
+      if (!this.computedIconClasses) {
+        this.computedIconClasses = getIconClasses(this.modelService, this.languageService, resource, this.options.fileKind, this.options.icon);
+      }
+      if (URI.isUri(this.options.icon)) {
+        iconLabelOptions.iconPath = this.options.icon;
+      }
+      iconLabelOptions.extraClasses = this.computedIconClasses.slice(0);
+    }
+    if (this.options?.extraClasses) {
+      iconLabelOptions.extraClasses.push(...this.options.extraClasses);
+    }
+    if (this.options?.fileDecorations && resource) {
+      if (options.updateDecoration) {
+        this.decoration.value = this.decorationsService.getDecoration(resource, this.options.fileKind !== FileKind.FILE);
+      }
+      const decoration = this.decoration.value;
+      if (decoration) {
+        if (decoration.tooltip) {
+          if (typeof iconLabelOptions.title === "string") {
+            iconLabelOptions.title = `${iconLabelOptions.title} \u2022 ${decoration.tooltip}`;
+          } else if (typeof iconLabelOptions.title?.markdown === "string") {
+            const title = `${iconLabelOptions.title.markdown} \u2022 ${decoration.tooltip}`;
+            iconLabelOptions.title = { markdown: title, markdownNotSupportedFallback: title };
+          }
+        }
+        if (decoration.strikethrough) {
+          iconLabelOptions.strikethrough = true;
+        }
+        if (this.options.fileDecorations.colors) {
+          iconLabelOptions.extraClasses.push(decoration.labelClassName);
+        }
+        if (this.options.fileDecorations.badges) {
+          iconLabelOptions.extraClasses.push(decoration.badgeClassName);
+          iconLabelOptions.extraClasses.push(decoration.iconClassName);
+        }
+      }
+    }
+    if (this.label.range) {
+      iconLabelOptions.suffix = this.label.range.startLineNumber !== this.label.range.endLineNumber ? `:${this.label.range.startLineNumber}-${this.label.range.endLineNumber}` : `:${this.label.range.startLineNumber}`;
+    }
+    this.setLabel(this.label.name ?? "", this.label.description, iconLabelOptions);
+    this._onDidRender.fire();
+    return true;
+  }
+  dispose() {
+    super.dispose();
+    this.label = void 0;
+    this.options = void 0;
+    this.computedLanguageId = void 0;
+    this.computedIconClasses = void 0;
+    this.computedPathLabel = void 0;
+    this.computedWorkspaceFolderLabel = void 0;
+  }
+};
+ResourceLabelWidget = __decorate([
+  __param(2, ILanguageService),
+  __param(3, IModelService),
+  __param(4, IDecorationsService),
+  __param(5, ILabelService),
+  __param(6, ITextFileService),
+  __param(7, IWorkspaceContextService),
+  __param(8, INotebookDocumentService)
+], ResourceLabelWidget);
+export {
+  DEFAULT_LABELS_CONTAINER,
+  ResourceLabel,
+  ResourceLabels
+};
+//# sourceMappingURL=labels.js.map

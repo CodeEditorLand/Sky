@@ -1,1 +1,79 @@
-import{$Uj as m}from"../../../../base/common/htmlContent.js";import{localize as s}from"../../../../nls.js";import{$vz as d}from"../../../../platform/extensionManagement/common/extensionManagementUtil.js";import{ToolDataSource as h}from"../../chat/common/languageModelToolsService.js";import{$bDb as x}from"./extensions.js";var f=function(l,e,n,o){var c=arguments.length,t=c<3?e:o===null?o=Object.getOwnPropertyDescriptor(e,n):o,i;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")t=Reflect.decorate(l,e,n,o);else for(var r=l.length-1;r>=0;r--)(i=l[r])&&(t=(c<3?i(t):c>3?i(e,n,t):i(e,n))||t);return c>3&&t&&Object.defineProperty(e,n,t),t},u=function(l,e){return function(n,o){e(n,o,l)}};const _="vscode_installExtensions",j={id:_,toolReferenceName:"installExtensions",canBeReferencedInPrompt:!0,displayName:s(7687,null),modelDescription:s(7688,null),userDescription:s(7689,null),source:h.Internal,inputSchema:{type:"object",properties:{ids:{type:"array",items:{type:"string"},description:"The ids of the extensions to search for. The identifier of an extension is '${ publisher }.${ name }' for example: 'vscode.csharp'."}}}};let a=class{constructor(e){this.a=e}async prepareToolInvocation(e,n){return{confirmationMessages:{title:s(7690,null),message:new m(s(7691,null))},toolSpecificData:{kind:"extensions",extensions:e.ids}}}async invoke(e,n,o,c){const t=e.parameters,i=this.a.local.filter(r=>t.ids.some(p=>d({id:p},r.identifier)));return{content:[{kind:"text",value:i.length?s(7692,null,i.map(r=>r.identifier.id).join(", ")):s(7693,null)}]}}};a=f([u(0,x)],a);export{_ as $HPc,j as $IPc,a as $JPc};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { MarkdownString } from "../../../../base/common/htmlContent.js";
+import { localize } from "../../../../nls.js";
+import { areSameExtensions } from "../../../../platform/extensionManagement/common/extensionManagementUtil.js";
+import { ToolDataSource } from "../../chat/common/languageModelToolsService.js";
+import { IExtensionsWorkbenchService } from "./extensions.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+const InstallExtensionsToolId = "vscode_installExtensions";
+const InstallExtensionsToolData = {
+  id: InstallExtensionsToolId,
+  toolReferenceName: "installExtensions",
+  canBeReferencedInPrompt: true,
+  displayName: localize("installExtensionsTool.displayName", "Install Extensions"),
+  modelDescription: localize("installExtensionsTool.modelDescription", "This is a tool for installing extensions in Visual Studio Code. You should provide the list of extension ids to install. The identifier of an extension is '${ publisher }.${ name }' for example: 'vscode.csharp'."),
+  userDescription: localize("installExtensionsTool.userDescription", "Tool for installing extensions"),
+  source: ToolDataSource.Internal,
+  inputSchema: {
+    type: "object",
+    properties: {
+      ids: {
+        type: "array",
+        items: {
+          type: "string"
+        },
+        description: "The ids of the extensions to search for. The identifier of an extension is '${ publisher }.${ name }' for example: 'vscode.csharp'."
+      }
+    }
+  }
+};
+let InstallExtensionsTool = class InstallExtensionsTool2 {
+  static {
+    __name(this, "InstallExtensionsTool");
+  }
+  constructor(extensionsWorkbenchService) {
+    this.extensionsWorkbenchService = extensionsWorkbenchService;
+  }
+  async prepareToolInvocation(parameters, token) {
+    return {
+      confirmationMessages: {
+        title: localize("installExtensionsTool.confirmationTitle", "Install Extensions"),
+        message: new MarkdownString(localize("installExtensionsTool.confirmationMessage", "Review the suggested extensions and click the **Install** button for each extension you wish to add. Once you have finished installing the selected extensions, click **Continue** to proceed."))
+      },
+      toolSpecificData: {
+        kind: "extensions",
+        extensions: parameters.ids
+      }
+    };
+  }
+  async invoke(invocation, _countTokens, _progress, token) {
+    const input = invocation.parameters;
+    const installed = this.extensionsWorkbenchService.local.filter((e) => input.ids.some((id) => areSameExtensions({ id }, e.identifier)));
+    return {
+      content: [{
+        kind: "text",
+        value: installed.length ? localize("installExtensionsTool.resultMessage", "Following extensions are installed: {0}", installed.map((e) => e.identifier.id).join(", ")) : localize("installExtensionsTool.noResultMessage", "No extensions were installed.")
+      }]
+    };
+  }
+};
+InstallExtensionsTool = __decorate([
+  __param(0, IExtensionsWorkbenchService)
+], InstallExtensionsTool);
+export {
+  InstallExtensionsTool,
+  InstallExtensionsToolData,
+  InstallExtensionsToolId
+};
+//# sourceMappingURL=installExtensionsTool.js.map

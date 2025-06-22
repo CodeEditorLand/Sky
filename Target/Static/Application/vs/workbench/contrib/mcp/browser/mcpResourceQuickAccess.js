@@ -1,1 +1,428 @@
-import{$0h as A,$Nh as M,$Yh as W}from"../../../../base/common/async.js";import{CancellationToken as _,$pf as I}from"../../../../base/common/cancellation.js";import{$Mj as F}from"../../../../base/common/codicons.js";import{Event as T}from"../../../../base/common/event.js";import{$ud as v,$td as O}from"../../../../base/common/lifecycle.js";import{autorun as q,derived as Q}from"../../../../base/common/observable.js";import{ThemeIcon as V}from"../../../../base/common/themables.js";import{$Rm as z}from"../../../../base/common/uuid.js";import{localize as b}from"../../../../nls.js";import{$Bk as E,$5j as H}from"../../../../platform/files/common/files.js";import{$mj as k}from"../../../../platform/instantiation/common/instantiation.js";import{$RI as N}from"../../../../platform/notification/common/notification.js";import{DefaultQuickAccessFilterValue as G}from"../../../../platform/quickinput/common/quickAccess.js";import{$OM as B}from"../../../../platform/quickinput/common/quickInput.js";import{$oI as x}from"../../../services/editor/common/editorService.js";import{$Jwb as C}from"../../../services/views/common/viewsService.js";import{$lWb as j}from"../../chat/browser/chat.js";import{$iWb as J}from"../../chat/browser/chatAttachmentResolveService.js";import{$GW as L,$HW as P,McpResourceURI as X}from"../common/mcpTypes.js";import{$Nic as Y}from"./openPanelChatAndGetWidget.js";var S=function(h,e,t,s){var n=arguments.length,i=n<3?e:s===null?s=Object.getOwnPropertyDescriptor(e,t):s,l;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")i=Reflect.decorate(h,e,t,s);else for(var o=h.length-1;o>=0;o--)(l=h[o])&&(i=(n<3?l(i):n>3?l(e,t,i):l(e,t))||i);return n>3&&i&&Object.defineProperty(e,t,i),i},d=function(h,e){return function(t,s){e(t,s,h)}};let $=class{static sep(e){return{id:e.definition.id,type:"separator",label:e.definition.label}}static item(e){return P(e)?{id:e.template.template,label:e.name,description:e.description,detail:b(8791,null,e.template.template)}:{id:e.uri.toString(),label:e.name,description:e.description,detail:e.mcpUri+(e.sizeInBytes!==void 0?" ("+E.formatSize(e.sizeInBytes)+")":"")}}constructor(e,t,s,n,i){this.b=e,this.d=t,this.e=s,this.f=n,this.g=i,this.hasServersWithResources=Q(l=>{let o=!1;for(const a of this.b.servers.read(l)){const r=a.capabilities.get();if(r===void 0)o=!0;else if(r&16){o=!0;break}}return o})}async toAttachment(e){return P(e)?this.j(e):this.h(e)}async toURI(e){if(P(e)){const t=await this.l(e);return t&&await this.k(t)}else return e.uri}async h(e){const t=await this.g.resolveImageEditorAttachContext(e.uri,void 0,e.mimeType);return t||{id:e.uri.toString(),kind:"file",name:e.name,value:e.uri}}async j(e){const t=await this.l(e),s=t&&await this.k(t);return s&&this.h({uri:s,name:e.name,mimeType:e.mimeType})}async k({uri:e,needsVerification:t}){if(!t||await this.d.exists(e))return e;this.f.warn(b(8792,null,X.toServer(e).resourceURI.toString()))}async l(e){const t=e.template.components.flatMap(o=>typeof o=="object"?o.variables:[]),s=this.e.createQuickPick(),n=new I,i={};s.totalSteps=t.length,s.ignoreFocusOut=!0;let l=!1;try{for(let o=0;o<t.length;o++){const a=t[o],r=await this.m(s,a,i,e);if(r===void 0)return;l||=!r.completed,i[t[o].name]=a.repeatable?r.value.split("/"):r.value}return{uri:e.resolveURI(i),needsVerification:l}}finally{n.dispose(!0),s.dispose()}}m(e,t,s,n){const i=new v,l=new Map([]),o={...s};for(const f of n.template.components.flatMap(u=>typeof u=="object"?u.variables:[]))o.hasOwnProperty(f.name)||(o[f.name]=`$${f.name.toUpperCase()}`);let a=b(8793,null,t.name.toUpperCase(),n.template.resolve(o).replaceAll("%24","$"));t.optional&&(a+=" ("+b(8794,null)+")"),e.placeholder=a,e.value="",e.items=[],e.show();const r=z(),m=(f,u=[])=>{const y=u.filter(g=>g!==f).map(g=>({id:g,label:g}));f?y.unshift({id:r,label:f}):t.optional&&y.unshift({id:r,label:b(8795,null)}),e.items=y};let c=i.add(new I);const p=()=>{const f=e.value;let u=l.get(f);u||(u=n.complete(t.name,f,s,c.token),l.set(f,u)),u.then(y=>{c.token.isCancellationRequested||m(f,y)}).catch(()=>{l.delete(f)}).finally(()=>{c.token.isCancellationRequested||(e.busy=!1)})},w=i.add(new W(p,300));return new Promise(f=>{i.add(e.onDidHide(()=>f(void 0))),i.add(e.onDidAccept(()=>{const u=e.selectedItems[0];u.id===r?f({value:e.value,completed:!1}):t.explodable&&u.label.endsWith("/")&&u.label!==e.value?e.value=u.label:f({value:u.label,completed:!0})})),i.add(e.onDidChangeValue(u=>{e.busy=!0,c.dispose(!0),i.delete(c),c=i.add(new I),w.cancel(),m(u),l.has(e.value)?p():w.schedule()})),p()}).finally(()=>i.dispose())}getPicks(e,t){const s=new I(t),n=new v;n.add(O(()=>s.dispose(!0)));let i=!0;n.add(M(()=>{i=!1,l()},5e3));const l=()=>{const a=new Map;for(const[r,m]of o){const c=[];if(a.set(r,c),m.templates.isResolved)c.push(...m.templates.value);else if(i)break;if(c.push(...m.resourcesSoFar),!m.resources.isSettled&&i)break}e(a)},o=new Map;return Promise.all((this.explicitServers||this.b.servers.get()).map(async a=>{let r=a.capabilities.get();const m={templates:new A,resourcesSoFar:[],resources:new A};o.set(a,m),r===void 0&&(r=await new Promise(c=>{a.start().then(p=>{(p.state===3||p.state===0)&&c(void 0)}),n.add(s.token.onCancellationRequested(()=>c(void 0))),n.add(q(p=>{const w=a.capabilities.read(p);w!==void 0&&c(w)}))})),r&&r&16?await Promise.all([m.templates.settleWith(a.resourceTemplates(s.token).catch(()=>[])).finally(l),m.resources.settleWith((async()=>{for await(const c of a.resources(s.token))m.resourcesSoFar=m.resourcesSoFar.concat(c),l()})())]):(m.templates.complete([]),m.resources.complete([])),l()})).finally(()=>{n.dispose()})}};$=S([d(0,L),d(1,H),d(2,B),d(3,N),d(4,J)],$);let R=class{constructor(e,t,s,n,i){this.b=e,this.d=t,this.e=s,this.f=n,this.g=i}h(e,t,s){e.canAcceptInBackground=!0,e.busy=!0,e.keepScrollPosition=!0;const n=b(8796,null),i=this.d.createInstance($);this.b&&(i.explicitServers=[this.b]),i.getPicks(o=>{const a=[];for(const[r,m]of o){a.push($.sep(r));for(const c of m){const p=$.item(c);p.buttons=[{iconClass:V.asClassName(F.attach),tooltip:n}],a.push({...p,resource:c})}}e.items=a},t).finally(()=>{e.busy=!1});const l=new v;return l.add(e.onDidTriggerItemButton(o=>{o.button.tooltip===n&&(e.busy=!0,i.toAttachment(o.item.resource).then(async a=>{a&&(await Y(this.g,this.f))?.attachmentModel.addContext(a),e.hide()}))})),l.add(e.onDidAccept(async o=>{if(o.inBackground||e.hide(),s?.handleAccept)s.handleAccept?.(e.activeItems[0],o.inBackground);else{const[a]=e.selectedItems,r=await i.toURI(a.resource);r&&this.e.openEditor({resource:r,options:{preserveFocus:o.inBackground}})}})),l}};R=S([d(1,k),d(2,x),d(3,j),d(4,C)],R);let D=class extends R{constructor(e,t,s,n,i,l){super(e,t,s,n,i),this.j=l}async pick(e=_.None){const t=new v,s=t.add(this.j.createQuickPick({useSeparators:!0}));s.placeholder=b(8797,null),t.add(this.h(s,e)),t.add(s.onDidHide(()=>t.dispose())),s.show(),await T.toPromise(s.onDidHide)}};D=S([d(1,k),d(2,x),d(3,j),d(4,C),d(5,B)],D);let U=class extends R{static{this.PREFIX="mcpr "}constructor(e,t,s,n){super(void 0,e,t,s,n),this.defaultFilterValue=G.LAST}provide(e,t,s){return this.h(e,t,s)}};U=S([d(0,k),d(1,x),d(2,j),d(3,C)],U);export{$ as $Oic,R as $Pic,D as $Qic,U as $Ric};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { DeferredPromise, disposableTimeout, RunOnceScheduler } from "../../../../base/common/async.js";
+import { CancellationToken, CancellationTokenSource } from "../../../../base/common/cancellation.js";
+import { Codicon } from "../../../../base/common/codicons.js";
+import { Event } from "../../../../base/common/event.js";
+import { DisposableStore, toDisposable } from "../../../../base/common/lifecycle.js";
+import { autorun, derived } from "../../../../base/common/observable.js";
+import { ThemeIcon } from "../../../../base/common/themables.js";
+import { generateUuid } from "../../../../base/common/uuid.js";
+import { localize } from "../../../../nls.js";
+import { ByteSize, IFileService } from "../../../../platform/files/common/files.js";
+import { IInstantiationService } from "../../../../platform/instantiation/common/instantiation.js";
+import { INotificationService } from "../../../../platform/notification/common/notification.js";
+import { DefaultQuickAccessFilterValue } from "../../../../platform/quickinput/common/quickAccess.js";
+import { IQuickInputService } from "../../../../platform/quickinput/common/quickInput.js";
+import { IEditorService } from "../../../services/editor/common/editorService.js";
+import { IViewsService } from "../../../services/views/common/viewsService.js";
+import { IChatWidgetService } from "../../chat/browser/chat.js";
+import { IChatAttachmentResolveService } from "../../chat/browser/chatAttachmentResolveService.js";
+import { IMcpService, isMcpResourceTemplate, McpResourceURI } from "../common/mcpTypes.js";
+import { openPanelChatAndGetWidget } from "./openPanelChatAndGetWidget.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+let McpResourcePickHelper = class McpResourcePickHelper2 {
+  static {
+    __name(this, "McpResourcePickHelper");
+  }
+  static sep(server) {
+    return {
+      id: server.definition.id,
+      type: "separator",
+      label: server.definition.label
+    };
+  }
+  static item(resource) {
+    if (isMcpResourceTemplate(resource)) {
+      return {
+        id: resource.template.template,
+        label: resource.name,
+        description: resource.description,
+        detail: localize("mcp.resource.template", "Resource template: {0}", resource.template.template)
+      };
+    }
+    return {
+      id: resource.uri.toString(),
+      label: resource.name,
+      description: resource.description,
+      detail: resource.mcpUri + (resource.sizeInBytes !== void 0 ? " (" + ByteSize.formatSize(resource.sizeInBytes) + ")" : "")
+    };
+  }
+  constructor(_mcpService, _fileService, _quickInputService, _notificationService, _chatAttachmentResolveService) {
+    this._mcpService = _mcpService;
+    this._fileService = _fileService;
+    this._quickInputService = _quickInputService;
+    this._notificationService = _notificationService;
+    this._chatAttachmentResolveService = _chatAttachmentResolveService;
+    this.hasServersWithResources = derived((reader) => {
+      let enabled = false;
+      for (const server of this._mcpService.servers.read(reader)) {
+        const cap = server.capabilities.get();
+        if (cap === void 0) {
+          enabled = true;
+        } else if (cap & 16) {
+          enabled = true;
+          break;
+        }
+      }
+      return enabled;
+    });
+  }
+  async toAttachment(resource) {
+    if (isMcpResourceTemplate(resource)) {
+      return this._resourceTemplateToAttachment(resource);
+    } else {
+      return this._resourceToAttachment(resource);
+    }
+  }
+  async toURI(resource) {
+    if (isMcpResourceTemplate(resource)) {
+      const maybeUri = await this._resourceTemplateToURI(resource);
+      return maybeUri && await this._verifyUriIfNeeded(maybeUri);
+    } else {
+      return resource.uri;
+    }
+  }
+  async _resourceToAttachment(resource) {
+    const asImage = await this._chatAttachmentResolveService.resolveImageEditorAttachContext(resource.uri, void 0, resource.mimeType);
+    if (asImage) {
+      return asImage;
+    }
+    return {
+      id: resource.uri.toString(),
+      kind: "file",
+      name: resource.name,
+      value: resource.uri
+    };
+  }
+  async _resourceTemplateToAttachment(rt) {
+    const maybeUri = await this._resourceTemplateToURI(rt);
+    const uri = maybeUri && await this._verifyUriIfNeeded(maybeUri);
+    return uri && this._resourceToAttachment({
+      uri,
+      name: rt.name,
+      mimeType: rt.mimeType
+    });
+  }
+  async _verifyUriIfNeeded({ uri, needsVerification }) {
+    if (!needsVerification) {
+      return uri;
+    }
+    const exists = await this._fileService.exists(uri);
+    if (exists) {
+      return uri;
+    }
+    this._notificationService.warn(localize("mcp.resource.template.notFound", "The resource {0} was not found.", McpResourceURI.toServer(uri).resourceURI.toString()));
+    return void 0;
+  }
+  async _resourceTemplateToURI(rt) {
+    const todo = rt.template.components.flatMap((c) => typeof c === "object" ? c.variables : []);
+    const quickInput = this._quickInputService.createQuickPick();
+    const cts = new CancellationTokenSource();
+    const vars = {};
+    quickInput.totalSteps = todo.length;
+    quickInput.ignoreFocusOut = true;
+    let needsVerification = false;
+    try {
+      for (let i = 0; i < todo.length; i++) {
+        const variable = todo[i];
+        const resolved = await this._promptForTemplateValue(quickInput, variable, vars, rt);
+        if (resolved === void 0) {
+          return void 0;
+        }
+        needsVerification ||= !resolved.completed;
+        vars[todo[i].name] = variable.repeatable ? resolved.value.split("/") : resolved.value;
+      }
+      return { uri: rt.resolveURI(vars), needsVerification };
+    } finally {
+      cts.dispose(true);
+      quickInput.dispose();
+    }
+  }
+  _promptForTemplateValue(input, variable, variablesSoFar, rt) {
+    const store = new DisposableStore();
+    const completions = /* @__PURE__ */ new Map([]);
+    const variablesWithPlaceholders = { ...variablesSoFar };
+    for (const variable2 of rt.template.components.flatMap((c) => typeof c === "object" ? c.variables : [])) {
+      if (!variablesWithPlaceholders.hasOwnProperty(variable2.name)) {
+        variablesWithPlaceholders[variable2.name] = `$${variable2.name.toUpperCase()}`;
+      }
+    }
+    let placeholder = localize("mcp.resource.template.placeholder", "Value for ${0} in {1}", variable.name.toUpperCase(), rt.template.resolve(variablesWithPlaceholders).replaceAll("%24", "$"));
+    if (variable.optional) {
+      placeholder += " (" + localize("mcp.resource.template.optional", "Optional") + ")";
+    }
+    input.placeholder = placeholder;
+    input.value = "";
+    input.items = [];
+    input.show();
+    const currentID = generateUuid();
+    const setItems = /* @__PURE__ */ __name((value, completed = []) => {
+      const items = completed.filter((c) => c !== value).map((c) => ({ id: c, label: c }));
+      if (value) {
+        items.unshift({ id: currentID, label: value });
+      } else if (variable.optional) {
+        items.unshift({ id: currentID, label: localize("mcp.resource.template.empty", "<Empty>") });
+      }
+      input.items = items;
+    }, "setItems");
+    let changeCancellation = store.add(new CancellationTokenSource());
+    const getCompletionItems = /* @__PURE__ */ __name(() => {
+      const inputValue = input.value;
+      let promise = completions.get(inputValue);
+      if (!promise) {
+        promise = rt.complete(variable.name, inputValue, variablesSoFar, changeCancellation.token);
+        completions.set(inputValue, promise);
+      }
+      promise.then((values) => {
+        if (!changeCancellation.token.isCancellationRequested) {
+          setItems(inputValue, values);
+        }
+      }).catch(() => {
+        completions.delete(inputValue);
+      }).finally(() => {
+        if (!changeCancellation.token.isCancellationRequested) {
+          input.busy = false;
+        }
+      });
+    }, "getCompletionItems");
+    const getCompletionItemsScheduler = store.add(new RunOnceScheduler(getCompletionItems, 300));
+    return new Promise((resolve) => {
+      store.add(input.onDidHide(() => resolve(void 0)));
+      store.add(input.onDidAccept(() => {
+        const item = input.selectedItems[0];
+        if (item.id === currentID) {
+          resolve({ value: input.value, completed: false });
+        } else if (variable.explodable && item.label.endsWith("/") && item.label !== input.value) {
+          input.value = item.label;
+        } else {
+          resolve({ value: item.label, completed: true });
+        }
+      }));
+      store.add(input.onDidChangeValue((value) => {
+        input.busy = true;
+        changeCancellation.dispose(true);
+        store.delete(changeCancellation);
+        changeCancellation = store.add(new CancellationTokenSource());
+        getCompletionItemsScheduler.cancel();
+        setItems(value);
+        if (completions.has(input.value)) {
+          getCompletionItems();
+        } else {
+          getCompletionItemsScheduler.schedule();
+        }
+      }));
+      getCompletionItems();
+    }).finally(() => store.dispose());
+  }
+  getPicks(onChange, token) {
+    const cts = new CancellationTokenSource(token);
+    const store = new DisposableStore();
+    store.add(toDisposable(() => cts.dispose(true)));
+    let showInSequence = true;
+    store.add(disposableTimeout(() => {
+      showInSequence = false;
+      publish();
+    }, 5e3));
+    const publish = /* @__PURE__ */ __name(() => {
+      const output = /* @__PURE__ */ new Map();
+      for (const [server, rec] of servers) {
+        const r = [];
+        output.set(server, r);
+        if (rec.templates.isResolved) {
+          r.push(...rec.templates.value);
+        } else if (showInSequence) {
+          break;
+        }
+        r.push(...rec.resourcesSoFar);
+        if (!rec.resources.isSettled && showInSequence) {
+          break;
+        }
+      }
+      onChange(output);
+    }, "publish");
+    const servers = /* @__PURE__ */ new Map();
+    return Promise.all((this.explicitServers || this._mcpService.servers.get()).map(async (server) => {
+      let cap = server.capabilities.get();
+      const rec = {
+        templates: new DeferredPromise(),
+        resourcesSoFar: [],
+        resources: new DeferredPromise()
+      };
+      servers.set(server, rec);
+      if (cap === void 0) {
+        cap = await new Promise((resolve) => {
+          server.start().then((state) => {
+            if (state.state === 3 || state.state === 0) {
+              resolve(void 0);
+            }
+          });
+          store.add(cts.token.onCancellationRequested(() => resolve(void 0)));
+          store.add(autorun((reader) => {
+            const cap2 = server.capabilities.read(reader);
+            if (cap2 !== void 0) {
+              resolve(cap2);
+            }
+          }));
+        });
+      }
+      if (cap && cap & 16) {
+        await Promise.all([
+          rec.templates.settleWith(server.resourceTemplates(cts.token).catch(() => [])).finally(publish),
+          rec.resources.settleWith((async () => {
+            for await (const page of server.resources(cts.token)) {
+              rec.resourcesSoFar = rec.resourcesSoFar.concat(page);
+              publish();
+            }
+          })())
+        ]);
+      } else {
+        rec.templates.complete([]);
+        rec.resources.complete([]);
+      }
+      publish();
+    })).finally(() => {
+      store.dispose();
+    });
+  }
+};
+McpResourcePickHelper = __decorate([
+  __param(0, IMcpService),
+  __param(1, IFileService),
+  __param(2, IQuickInputService),
+  __param(3, INotificationService),
+  __param(4, IChatAttachmentResolveService)
+], McpResourcePickHelper);
+let AbstractMcpResourceAccessPick = class AbstractMcpResourceAccessPick2 {
+  static {
+    __name(this, "AbstractMcpResourceAccessPick");
+  }
+  constructor(_scopeTo, _instantiationService, _editorService, _chatWidgetService, _viewsService) {
+    this._scopeTo = _scopeTo;
+    this._instantiationService = _instantiationService;
+    this._editorService = _editorService;
+    this._chatWidgetService = _chatWidgetService;
+    this._viewsService = _viewsService;
+  }
+  applyToPick(picker, token, runOptions) {
+    picker.canAcceptInBackground = true;
+    picker.busy = true;
+    picker.keepScrollPosition = true;
+    const attachButton = localize("mcp.quickaccess.attach", "Attach to chat");
+    const helper = this._instantiationService.createInstance(McpResourcePickHelper);
+    if (this._scopeTo) {
+      helper.explicitServers = [this._scopeTo];
+    }
+    helper.getPicks((servers) => {
+      const items = [];
+      for (const [server, resources] of servers) {
+        items.push(McpResourcePickHelper.sep(server));
+        for (const resource of resources) {
+          const pickItem = McpResourcePickHelper.item(resource);
+          pickItem.buttons = [{ iconClass: ThemeIcon.asClassName(Codicon.attach), tooltip: attachButton }];
+          items.push({ ...pickItem, resource });
+        }
+      }
+      picker.items = items;
+    }, token).finally(() => {
+      picker.busy = false;
+    });
+    const store = new DisposableStore();
+    store.add(picker.onDidTriggerItemButton((event) => {
+      if (event.button.tooltip === attachButton) {
+        picker.busy = true;
+        helper.toAttachment(event.item.resource).then(async (a) => {
+          if (a) {
+            const widget = await openPanelChatAndGetWidget(this._viewsService, this._chatWidgetService);
+            widget?.attachmentModel.addContext(a);
+          }
+          picker.hide();
+        });
+      }
+    }));
+    store.add(picker.onDidAccept(async (event) => {
+      if (!event.inBackground) {
+        picker.hide();
+      }
+      if (runOptions?.handleAccept) {
+        runOptions.handleAccept?.(picker.activeItems[0], event.inBackground);
+      } else {
+        const [item] = picker.selectedItems;
+        const uri = await helper.toURI(item.resource);
+        if (uri) {
+          this._editorService.openEditor({ resource: uri, options: { preserveFocus: event.inBackground } });
+        }
+      }
+    }));
+    return store;
+  }
+};
+AbstractMcpResourceAccessPick = __decorate([
+  __param(1, IInstantiationService),
+  __param(2, IEditorService),
+  __param(3, IChatWidgetService),
+  __param(4, IViewsService)
+], AbstractMcpResourceAccessPick);
+let McpResourceQuickPick = class McpResourceQuickPick2 extends AbstractMcpResourceAccessPick {
+  static {
+    __name(this, "McpResourceQuickPick");
+  }
+  constructor(scopeTo, instantiationService, editorService, chatWidgetService, viewsService, _quickInputService) {
+    super(scopeTo, instantiationService, editorService, chatWidgetService, viewsService);
+    this._quickInputService = _quickInputService;
+  }
+  async pick(token = CancellationToken.None) {
+    const store = new DisposableStore();
+    const qp = store.add(this._quickInputService.createQuickPick({ useSeparators: true }));
+    qp.placeholder = localize("mcp.quickaccess.placeholder", "Search for resources");
+    store.add(this.applyToPick(qp, token));
+    store.add(qp.onDidHide(() => store.dispose()));
+    qp.show();
+    await Event.toPromise(qp.onDidHide);
+  }
+};
+McpResourceQuickPick = __decorate([
+  __param(1, IInstantiationService),
+  __param(2, IEditorService),
+  __param(3, IChatWidgetService),
+  __param(4, IViewsService),
+  __param(5, IQuickInputService)
+], McpResourceQuickPick);
+let McpResourceQuickAccess = class McpResourceQuickAccess2 extends AbstractMcpResourceAccessPick {
+  static {
+    __name(this, "McpResourceQuickAccess");
+  }
+  static {
+    this.PREFIX = "mcpr ";
+  }
+  constructor(instantiationService, editorService, chatWidgetService, viewsService) {
+    super(void 0, instantiationService, editorService, chatWidgetService, viewsService);
+    this.defaultFilterValue = DefaultQuickAccessFilterValue.LAST;
+  }
+  provide(picker, token, runOptions) {
+    return this.applyToPick(picker, token, runOptions);
+  }
+};
+McpResourceQuickAccess = __decorate([
+  __param(0, IInstantiationService),
+  __param(1, IEditorService),
+  __param(2, IChatWidgetService),
+  __param(3, IViewsService)
+], McpResourceQuickAccess);
+export {
+  AbstractMcpResourceAccessPick,
+  McpResourcePickHelper,
+  McpResourceQuickAccess,
+  McpResourceQuickPick
+};
+//# sourceMappingURL=mcpResourceQuickAccess.js.map

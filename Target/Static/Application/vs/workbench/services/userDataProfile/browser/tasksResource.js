@@ -1,1 +1,136 @@
-import{$Ji as p}from"../../../../base/common/buffer.js";import{localize as g}from"../../../../nls.js";import{$ok as y,$5j as b}from"../../../../platform/files/common/files.js";import{$mj as C}from"../../../../platform/instantiation/common/instantiation.js";import{$3n as k}from"../../../../platform/log/common/log.js";import{$yo as $}from"../../../../platform/uriIdentity/common/uriIdentity.js";import{$pHb as R}from"../../../browser/parts/editor/editorCommands.js";import{TreeItemCollapsibleState as h}from"../../../common/views.js";import{$9X as d}from"../common/userDataProfile.js";var u=function(t,s,e,a){var i,o=arguments.length,r=o<3?s:null===a?a=Object.getOwnPropertyDescriptor(s,e):a;if("object"==typeof Reflect&&"function"==typeof Reflect.decorate)r=Reflect.decorate(t,s,e,a);else for(var n=t.length-1;n>=0;n--)(i=t[n])&&(r=(o<3?i(r):o>3?i(s,e,r):i(s,e))||r);return o>3&&r&&Object.defineProperty(s,e,r),r},i=function(t,s){return function(e,a){s(e,a,t)}};let f=class{constructor(t,s,e){this.a=t,this.b=s,this.c=e}async initialize(t){const s=JSON.parse(t);s.tasks?await this.b.writeFile(this.a.currentProfile.tasksResource,p.fromString(s.tasks)):this.c.info("Initializing Profile: No tasks to apply...")}};f=u([i(0,d),i(1,b),i(2,k)],f);let c=class{constructor(t,s){this.a=t,this.b=s}async getContent(t){const s=await this.getTasksResourceContent(t);return JSON.stringify(s)}async getTasksResourceContent(t){return{tasks:await this.c(t)}}async apply(t,s){const e=JSON.parse(t);e.tasks?await this.a.writeFile(s.tasksResource,p.fromString(e.tasks)):this.b.info(`Importing Profile (${s.name}): No tasks to apply...`)}async c(t){try{return(await this.a.readFile(t.tasksResource)).value.toString()}catch(t){if(t instanceof y&&1===t.fileOperationResult)return null;throw t}}};c=u([i(0,b),i(1,k)],c);let m=class{constructor(t,s,e){this.a=t,this.b=s,this.c=e,this.type="tasks",this.handle="tasks",this.label={label:g(14702,null)},this.collapsibleState=h.Expanded}async getChildren(){return[{handle:this.a.tasksResource.toString(),resourceUri:this.a.tasksResource,collapsibleState:h.None,parent:this,accessibilityInformation:{label:this.b.extUri.basename(this.a.settingsResource)},command:{id:R,title:"",arguments:[this.a.tasksResource,void 0,void 0]}}]}async hasContent(){return null!==(await this.c.createInstance(c).getTasksResourceContent(this.a)).tasks}async getContent(){return this.c.createInstance(c).getContent(this.a)}isFromDefaultProfile(){return!this.a.isDefault&&!!this.a.useDefaultFlags?.tasks}};m=u([i(1,$),i(2,C)],m);export{f as $l6b,c as $m6b,m as $n6b};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { VSBuffer } from "../../../../base/common/buffer.js";
+import { localize } from "../../../../nls.js";
+import { FileOperationError, IFileService } from "../../../../platform/files/common/files.js";
+import { IInstantiationService } from "../../../../platform/instantiation/common/instantiation.js";
+import { ILogService } from "../../../../platform/log/common/log.js";
+import { IUriIdentityService } from "../../../../platform/uriIdentity/common/uriIdentity.js";
+import { API_OPEN_EDITOR_COMMAND_ID } from "../../../browser/parts/editor/editorCommands.js";
+import { TreeItemCollapsibleState } from "../../../common/views.js";
+import { IUserDataProfileService } from "../common/userDataProfile.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+let TasksResourceInitializer = class TasksResourceInitializer2 {
+  static {
+    __name(this, "TasksResourceInitializer");
+  }
+  constructor(userDataProfileService, fileService, logService) {
+    this.userDataProfileService = userDataProfileService;
+    this.fileService = fileService;
+    this.logService = logService;
+  }
+  async initialize(content) {
+    const tasksContent = JSON.parse(content);
+    if (!tasksContent.tasks) {
+      this.logService.info(`Initializing Profile: No tasks to apply...`);
+      return;
+    }
+    await this.fileService.writeFile(this.userDataProfileService.currentProfile.tasksResource, VSBuffer.fromString(tasksContent.tasks));
+  }
+};
+TasksResourceInitializer = __decorate([
+  __param(0, IUserDataProfileService),
+  __param(1, IFileService),
+  __param(2, ILogService)
+], TasksResourceInitializer);
+let TasksResource = class TasksResource2 {
+  static {
+    __name(this, "TasksResource");
+  }
+  constructor(fileService, logService) {
+    this.fileService = fileService;
+    this.logService = logService;
+  }
+  async getContent(profile) {
+    const tasksContent = await this.getTasksResourceContent(profile);
+    return JSON.stringify(tasksContent);
+  }
+  async getTasksResourceContent(profile) {
+    const tasksContent = await this.getTasksContent(profile);
+    return { tasks: tasksContent };
+  }
+  async apply(content, profile) {
+    const tasksContent = JSON.parse(content);
+    if (!tasksContent.tasks) {
+      this.logService.info(`Importing Profile (${profile.name}): No tasks to apply...`);
+      return;
+    }
+    await this.fileService.writeFile(profile.tasksResource, VSBuffer.fromString(tasksContent.tasks));
+  }
+  async getTasksContent(profile) {
+    try {
+      const content = await this.fileService.readFile(profile.tasksResource);
+      return content.value.toString();
+    } catch (error) {
+      if (error instanceof FileOperationError && error.fileOperationResult === 1) {
+        return null;
+      } else {
+        throw error;
+      }
+    }
+  }
+};
+TasksResource = __decorate([
+  __param(0, IFileService),
+  __param(1, ILogService)
+], TasksResource);
+let TasksResourceTreeItem = class TasksResourceTreeItem2 {
+  static {
+    __name(this, "TasksResourceTreeItem");
+  }
+  constructor(profile, uriIdentityService, instantiationService) {
+    this.profile = profile;
+    this.uriIdentityService = uriIdentityService;
+    this.instantiationService = instantiationService;
+    this.type = "tasks";
+    this.handle = "tasks";
+    this.label = { label: localize("tasks", "Tasks") };
+    this.collapsibleState = TreeItemCollapsibleState.Expanded;
+  }
+  async getChildren() {
+    return [{
+      handle: this.profile.tasksResource.toString(),
+      resourceUri: this.profile.tasksResource,
+      collapsibleState: TreeItemCollapsibleState.None,
+      parent: this,
+      accessibilityInformation: {
+        label: this.uriIdentityService.extUri.basename(this.profile.settingsResource)
+      },
+      command: {
+        id: API_OPEN_EDITOR_COMMAND_ID,
+        title: "",
+        arguments: [this.profile.tasksResource, void 0, void 0]
+      }
+    }];
+  }
+  async hasContent() {
+    const tasksContent = await this.instantiationService.createInstance(TasksResource).getTasksResourceContent(this.profile);
+    return tasksContent.tasks !== null;
+  }
+  async getContent() {
+    return this.instantiationService.createInstance(TasksResource).getContent(this.profile);
+  }
+  isFromDefaultProfile() {
+    return !this.profile.isDefault && !!this.profile.useDefaultFlags?.tasks;
+  }
+};
+TasksResourceTreeItem = __decorate([
+  __param(1, IUriIdentityService),
+  __param(2, IInstantiationService)
+], TasksResourceTreeItem);
+export {
+  TasksResource,
+  TasksResourceInitializer,
+  TasksResourceTreeItem
+};
+//# sourceMappingURL=tasksResource.js.map

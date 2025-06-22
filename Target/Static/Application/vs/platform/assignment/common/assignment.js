@@ -1,1 +1,86 @@
-import*as u from"../../../base/common/platform.js";const c="VSCode.ABExp.FeatureData",l=0;var s,t;!function(t){t.Insiders="insider",t.Public="public",t.Exploration="exploration"}(s||(s={})),function(t){t.Market="X-MSEdge-Market",t.CorpNet="X-FD-Corpnet",t.ApplicationVersion="X-VSCode-AppVersion",t.Build="X-VSCode-Build",t.ClientId="X-MSEdge-ClientId",t.ExtensionName="X-VSCode-ExtensionName",t.ExtensionVersion="X-VSCode-ExtensionVersion",t.Language="X-VSCode-Language",t.TargetPopulation="X-VSCode-TargetPopulation"}(t||(t={}));class a{constructor(t,e,s,a){this.a=t,this.b=e,this.c=s,this.d=a}static e(t){return t.split(/\-[a-zA-Z0-9]+$/)[0]}getFilterValue(e){switch(e){case t.ApplicationVersion:return a.e(this.a);case t.Build:return this.b;case t.ClientId:return this.c;case t.Language:return u.$A;case t.ExtensionName:return"vscode-core";case t.ExtensionVersion:return"999999.0";case t.TargetPopulation:return this.d;default:return""}}getFilters(){const e=new Map,s=Object.values(t);for(const t of s)e.set(t,this.getFilterValue(t));return e}}export{c as $$2,l as $_2,a as $a3,t as Filters,s as TargetPopulation};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import * as platform from "../../../base/common/platform.js";
+const ASSIGNMENT_STORAGE_KEY = "VSCode.ABExp.FeatureData";
+const ASSIGNMENT_REFETCH_INTERVAL = 0;
+var TargetPopulation;
+(function(TargetPopulation2) {
+  TargetPopulation2["Insiders"] = "insider";
+  TargetPopulation2["Public"] = "public";
+  TargetPopulation2["Exploration"] = "exploration";
+})(TargetPopulation || (TargetPopulation = {}));
+var Filters;
+(function(Filters2) {
+  Filters2["Market"] = "X-MSEdge-Market";
+  Filters2["CorpNet"] = "X-FD-Corpnet";
+  Filters2["ApplicationVersion"] = "X-VSCode-AppVersion";
+  Filters2["Build"] = "X-VSCode-Build";
+  Filters2["ClientId"] = "X-MSEdge-ClientId";
+  Filters2["ExtensionName"] = "X-VSCode-ExtensionName";
+  Filters2["ExtensionVersion"] = "X-VSCode-ExtensionVersion";
+  Filters2["Language"] = "X-VSCode-Language";
+  Filters2["TargetPopulation"] = "X-VSCode-TargetPopulation";
+})(Filters || (Filters = {}));
+class AssignmentFilterProvider {
+  static {
+    __name(this, "AssignmentFilterProvider");
+  }
+  constructor(version, appName, machineId, targetPopulation) {
+    this.version = version;
+    this.appName = appName;
+    this.machineId = machineId;
+    this.targetPopulation = targetPopulation;
+  }
+  /**
+   * Returns a version string that can be parsed by the TAS client.
+   * The tas client cannot handle suffixes lke "-insider"
+   * Ref: https://github.com/microsoft/tas-client/blob/30340d5e1da37c2789049fcf45928b954680606f/vscode-tas-client/src/vscode-tas-client/VSCodeFilterProvider.ts#L35
+   *
+   * @param version Version string to be trimmed.
+  */
+  static trimVersionSuffix(version) {
+    const regex = /\-[a-zA-Z0-9]+$/;
+    const result = version.split(regex);
+    return result[0];
+  }
+  getFilterValue(filter) {
+    switch (filter) {
+      case Filters.ApplicationVersion:
+        return AssignmentFilterProvider.trimVersionSuffix(this.version);
+      // productService.version
+      case Filters.Build:
+        return this.appName;
+      // productService.nameLong
+      case Filters.ClientId:
+        return this.machineId;
+      case Filters.Language:
+        return platform.language;
+      case Filters.ExtensionName:
+        return "vscode-core";
+      // always return vscode-core for exp service
+      case Filters.ExtensionVersion:
+        return "999999.0";
+      // always return a very large number for cross-extension experimentation
+      case Filters.TargetPopulation:
+        return this.targetPopulation;
+      default:
+        return "";
+    }
+  }
+  getFilters() {
+    const filters = /* @__PURE__ */ new Map();
+    const filterValues = Object.values(Filters);
+    for (const value of filterValues) {
+      filters.set(value, this.getFilterValue(value));
+    }
+    return filters;
+  }
+}
+export {
+  ASSIGNMENT_REFETCH_INTERVAL,
+  ASSIGNMENT_STORAGE_KEY,
+  AssignmentFilterProvider,
+  Filters,
+  TargetPopulation
+};
+//# sourceMappingURL=assignment.js.map

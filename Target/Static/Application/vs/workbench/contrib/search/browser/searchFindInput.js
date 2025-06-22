@@ -1,1 +1,49 @@
-import{$Cjb as b}from"../../../../platform/history/browser/contextScopedHistoryWidget.js";import{$Xbc as o}from"../../notebook/browser/contrib/find/notebookFindReplaceWidget.js";import*as n from"../../../../nls.js";import{$df as d}from"../../../../base/common/event.js";class f extends b{constructor(t,i,s,e,h,l,r,a){super(t,i,s,e),this.contextMenuService=h,this.instantiationService=l,this.filters=r,this.$=!1,this.ab=this.B(new d),this.onDidChangeAIToggle=this.ab.event,this.g=this.B(new o(r,h,l,s,n.localize(10813,null))),this.bb(),this.I.appendChild(this.g.container),this.g.container.classList.add("monaco-custom-toggle"),this.filterVisible=a}bb(){this.inputBox.paddingRight=(this.M?.visible?this.M.width():0)+(this.L?.visible?this.L.width():0)+(this.J?.visible?this.J.width():0)+(this.g.visible?this.g.width():0)}set filterVisible(t){this.g.visible=t,this.updateFilterStyles(),this.bb()}setEnabled(t){super.setEnabled(t),!t||this.$&&this.g.visible?this.J?.disable():this.J?.enable()}updateFilterStyles(){this.$=!(this.filters.markupInput&&this.filters.markupPreview&&this.filters.codeInput&&this.filters.codeOutput),this.g.applyStyles(this.$)}}export{f as $1bc};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { ContextScopedFindInput } from "../../../../platform/history/browser/contextScopedHistoryWidget.js";
+import { NotebookFindInputFilterButton } from "../../notebook/browser/contrib/find/notebookFindReplaceWidget.js";
+import * as nls from "../../../../nls.js";
+import { Emitter } from "../../../../base/common/event.js";
+class SearchFindInput extends ContextScopedFindInput {
+  static {
+    __name(this, "SearchFindInput");
+  }
+  constructor(container, contextViewProvider, options, contextKeyService, contextMenuService, instantiationService, filters, filterStartVisiblitity) {
+    super(container, contextViewProvider, options, contextKeyService);
+    this.contextMenuService = contextMenuService;
+    this.instantiationService = instantiationService;
+    this.filters = filters;
+    this._filterChecked = false;
+    this._onDidChangeAIToggle = this._register(new Emitter());
+    this.onDidChangeAIToggle = this._onDidChangeAIToggle.event;
+    this._findFilter = this._register(new NotebookFindInputFilterButton(filters, contextMenuService, instantiationService, options, nls.localize("searchFindInputNotebookFilter.label", "Notebook Find Filters")));
+    this._updatePadding();
+    this.controls.appendChild(this._findFilter.container);
+    this._findFilter.container.classList.add("monaco-custom-toggle");
+    this.filterVisible = filterStartVisiblitity;
+  }
+  _updatePadding() {
+    this.inputBox.paddingRight = (this.caseSensitive?.visible ? this.caseSensitive.width() : 0) + (this.wholeWords?.visible ? this.wholeWords.width() : 0) + (this.regex?.visible ? this.regex.width() : 0) + (this._findFilter.visible ? this._findFilter.width() : 0);
+  }
+  set filterVisible(visible) {
+    this._findFilter.visible = visible;
+    this.updateFilterStyles();
+    this._updatePadding();
+  }
+  setEnabled(enabled) {
+    super.setEnabled(enabled);
+    if (enabled && (!this._filterChecked || !this._findFilter.visible)) {
+      this.regex?.enable();
+    } else {
+      this.regex?.disable();
+    }
+  }
+  updateFilterStyles() {
+    this._filterChecked = !this.filters.markupInput || !this.filters.markupPreview || !this.filters.codeInput || !this.filters.codeOutput;
+    this._findFilter.applyStyles(this._filterChecked);
+  }
+}
+export {
+  SearchFindInput
+};
+//# sourceMappingURL=searchFindInput.js.map

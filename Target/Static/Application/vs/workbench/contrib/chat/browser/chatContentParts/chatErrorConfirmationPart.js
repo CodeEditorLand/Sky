@@ -1,1 +1,74 @@
-import*as b from"../../../../../base/browser/dom.js";import{$p9 as O}from"../../../../../base/browser/ui/button/button.js";import{$df as w}from"../../../../../base/common/event.js";import{$vd as B}from"../../../../../base/common/lifecycle.js";import{$mj as j}from"../../../../../platform/instantiation/common/instantiation.js";import{$Mfb as I}from"../../../../../platform/theme/browser/defaultStyles.js";import{$LS as M}from"../../common/chatService.js";import{$kAb as L}from"../../common/chatViewModel.js";import{$lWb as N}from"../chat.js";import{$YOb as R}from"./chatErrorContentPart.js";var v=function(s,e,o,n){var r=arguments.length,t=r<3?e:n===null?n=Object.getOwnPropertyDescriptor(e,o):n,a;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")t=Reflect.decorate(s,e,o,n);else for(var c=s.length-1;c>=0;c--)(a=s[c])&&(t=(r<3?a(t):r>3?a(e,o,t):a(e,o))||t);return r>3&&t&&Object.defineProperty(e,o,t),t},l=function(s,e){return function(o,n){e(o,n,s)}};const h=b.$;let u=class extends B{constructor(e,o,n,r,t,a,c,$,g){super(),this.b=n,this.a=this.B(new w),this.onDidChangeHeight=this.a.event;const m=a.element;L(m),this.domNode=h(".chat-error-confirmation"),this.domNode.append(this.B(new R(e,o,t)).domNode);const C={...I},S=b.$M6(this.domNode,h(".chat-buttons-container"));r.forEach(d=>{const p=this.B(new O(S,C));p.label=d.label,this.B(p.onDidClick(async()=>{const _=d.label,i=d.isSecondary?{rejectedConfirmationData:[d.data]}:{acceptedConfirmationData:[d.data]};i.agentId=m.agent?.id,i.slashCommand=m.slashCommand?.name,i.confirmation=d.label;const f=$.getWidgetBySessionId(m.sessionId);i.userSelectedModelId=f?.input.currentLanguageModel,i.userSelectedTools=f?.getUserSelectedTools(),i.mode=f?.input.currentMode,await g.sendRequest(m.sessionId,_,i)&&this.a.fire()}))})}hasSameContent(e){return e.kind===this.b.kind&&e.isLast===this.b.isLast}addDisposable(e){this.B(e)}};u=v([l(6,j),l(7,N),l(8,M)],u);export{u as $ZOb};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import * as dom from "../../../../../base/browser/dom.js";
+import { Button } from "../../../../../base/browser/ui/button/button.js";
+import { Emitter } from "../../../../../base/common/event.js";
+import { Disposable } from "../../../../../base/common/lifecycle.js";
+import { IInstantiationService } from "../../../../../platform/instantiation/common/instantiation.js";
+import { defaultButtonStyles } from "../../../../../platform/theme/browser/defaultStyles.js";
+import { IChatService } from "../../common/chatService.js";
+import { assertIsResponseVM } from "../../common/chatViewModel.js";
+import { IChatWidgetService } from "../chat.js";
+import { ChatErrorWidget } from "./chatErrorContentPart.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+const $ = dom.$;
+let ChatErrorConfirmationContentPart = class ChatErrorConfirmationContentPart2 extends Disposable {
+  static {
+    __name(this, "ChatErrorConfirmationContentPart");
+  }
+  constructor(kind, content, errorDetails, confirmationButtons, renderer, context, instantiationService, chatWidgetService, chatService) {
+    super();
+    this.errorDetails = errorDetails;
+    this._onDidChangeHeight = this._register(new Emitter());
+    this.onDidChangeHeight = this._onDidChangeHeight.event;
+    const element = context.element;
+    assertIsResponseVM(element);
+    this.domNode = $(".chat-error-confirmation");
+    this.domNode.append(this._register(new ChatErrorWidget(kind, content, renderer)).domNode);
+    const buttonOptions = { ...defaultButtonStyles };
+    const buttonContainer = dom.append(this.domNode, $(".chat-buttons-container"));
+    confirmationButtons.forEach((buttonData) => {
+      const button = this._register(new Button(buttonContainer, buttonOptions));
+      button.label = buttonData.label;
+      this._register(button.onDidClick(async () => {
+        const prompt = buttonData.label;
+        const options = buttonData.isSecondary ? { rejectedConfirmationData: [buttonData.data] } : { acceptedConfirmationData: [buttonData.data] };
+        options.agentId = element.agent?.id;
+        options.slashCommand = element.slashCommand?.name;
+        options.confirmation = buttonData.label;
+        const widget = chatWidgetService.getWidgetBySessionId(element.sessionId);
+        options.userSelectedModelId = widget?.input.currentLanguageModel;
+        options.userSelectedTools = widget?.getUserSelectedTools();
+        options.mode = widget?.input.currentMode;
+        if (await chatService.sendRequest(element.sessionId, prompt, options)) {
+          this._onDidChangeHeight.fire();
+        }
+      }));
+    });
+  }
+  hasSameContent(other) {
+    return other.kind === this.errorDetails.kind && other.isLast === this.errorDetails.isLast;
+  }
+  addDisposable(disposable) {
+    this._register(disposable);
+  }
+};
+ChatErrorConfirmationContentPart = __decorate([
+  __param(6, IInstantiationService),
+  __param(7, IChatWidgetService),
+  __param(8, IChatService)
+], ChatErrorConfirmationContentPart);
+export {
+  ChatErrorConfirmationContentPart
+};
+//# sourceMappingURL=chatErrorConfirmationPart.js.map

@@ -1,1 +1,1158 @@
-var V,F,$,r,S;function R(e,r=!1){let n=0;const t=e.length;let a="",o=0,c=16,i=0;function s(r){let t=0,a=0;for(;t<r;){const r=e.charCodeAt(n);if(r>=48&&r<=57)a=16*a+r-48;else if(r>=65&&r<=70)a=16*a+r-65+10;else{if(!(r>=97&&r<=102))break;a=16*a+r-97+10}n++,t++}return t<r&&(a=-1),a}function l(){if(a="",i=0,o=n,n>=t)return o=t,c=17;let r=e.charCodeAt(n);if(U(r)){do{n++,a+=String.fromCharCode(r),r=e.charCodeAt(n)}while(U(r));return c=15}if(j(r))return n++,a+=String.fromCharCode(r),13===r&&10===e.charCodeAt(n)&&(n++,a+="\n"),c=14;switch(r){case 123:return n++,c=1;case 125:return n++,c=2;case 91:return n++,c=3;case 93:return n++,c=4;case 58:return n++,c=6;case 44:return n++,c=5;case 34:return n++,a=function(){let r="",a=n;for(;;){if(n>=t){r+=e.substring(a,n),i=2;break}const o=e.charCodeAt(n);if(34===o){r+=e.substring(a,n),n++;break}if(92!==o){if(o>=0&&o<=31){if(j(o)){r+=e.substring(a,n),i=2;break}i=6}n++}else{if(r+=e.substring(a,n),n++,n>=t){i=2;break}switch(e.charCodeAt(n++)){case 34:r+='"';break;case 92:r+="\\";break;case 47:r+="/";break;case 98:r+="\b";break;case 102:r+="\f";break;case 110:r+="\n";break;case 114:r+="\r";break;case 116:r+="\t";break;case 117:{const e=s(4);e>=0?r+=String.fromCharCode(e):i=4;break}default:i=5}a=n}}return r}(),c=10;case 47:{const o=n-1;if(47===e.charCodeAt(n+1)){for(n+=2;n<t&&!j(e.charCodeAt(n));)n++;return a=e.substring(o,n),c=12}if(42===e.charCodeAt(n+1)){n+=2;const r=t-1;let s=!1;for(;n<r;){if(42===e.charCodeAt(n)&&47===e.charCodeAt(n+1)){n+=2,s=!0;break}n++}return s||(n++,i=1),a=e.substring(o,n),c=13}return a+=String.fromCharCode(r),n++,c=16}case 45:if(a+=String.fromCharCode(r),n++,n===t||!v(e.charCodeAt(n)))return c=16;case 48:case 49:case 50:case 51:case 52:case 53:case 54:case 55:case 56:case 57:return a+=function(){const r=n;if(48===e.charCodeAt(n))n++;else for(n++;n<e.length&&v(e.charCodeAt(n));)n++;if(n<e.length&&46===e.charCodeAt(n)){if(n++,!(n<e.length&&v(e.charCodeAt(n))))return i=3,e.substring(r,n);for(n++;n<e.length&&v(e.charCodeAt(n));)n++}let t=n;if(n<e.length&&(69===e.charCodeAt(n)||101===e.charCodeAt(n)))if(n++,(n<e.length&&43===e.charCodeAt(n)||45===e.charCodeAt(n))&&n++,n<e.length&&v(e.charCodeAt(n))){for(n++;n<e.length&&v(e.charCodeAt(n));)n++;t=n}else i=3;return e.substring(r,t)}(),c=11;default:for(;n<t&&u(r);)n++,r=e.charCodeAt(n);if(o!==n){switch(a=e.substring(o,n),a){case"true":return c=8;case"false":return c=9;case"null":return c=7}return c=16}return a+=String.fromCharCode(r),n++,c=16}}function u(e){if(U(e)||j(e))return!1;switch(e){case 125:case 93:case 123:case 91:case 34:case 58:case 44:case 47:return!1}return!0}return{setPosition:function(e){n=e,a="",o=0,c=16,i=0},getPosition:()=>n,scan:r?function(){let e;do{e=l()}while(e>=12&&e<=15);return e}:l,getToken:()=>c,getTokenValue:()=>a,getTokenOffset:()=>o,getTokenLength:()=>n-o,getTokenError:()=>i}}function U(e){return 32===e||9===e||11===e||12===e||160===e||5760===e||e>=8192&&e<=8203||8239===e||8287===e||12288===e||65279===e}function j(e){return 10===e||13===e||8232===e||8233===e}function v(e){return e>=48&&e<=57}function Y(e,r){const n=[],t=new Object;let a;const o={value:{},offset:0,length:0,type:"object",parent:void 0};let c=!1;function i(e,r,n,t){o.value=e,o.offset=r,o.length=n,o.type=t,o.colonOffset=void 0,a=o}try{_(e,{onObjectBegin:(e,o)=>{if(r<=e)throw t;a=void 0,c=r>e,n.push("")},onObjectProperty:(e,a,o)=>{if(r<a||(i(e,a,o,"property"),n[n.length-1]=e,r<=a+o))throw t},onObjectEnd:(e,o)=>{if(r<=e)throw t;a=void 0,n.pop()},onArrayBegin:(e,o)=>{if(r<=e)throw t;a=void 0,n.push(0)},onArrayEnd:(e,o)=>{if(r<=e)throw t;a=void 0,n.pop()},onLiteralValue:(e,n,a)=>{if(r<n||(i(e,n,a,D(e)),r<=n+a))throw t},onSeparator:(e,o,i)=>{if(r<=o)throw t;if(":"===e&&a&&"property"===a.type)a.colonOffset=o,c=!1,a=void 0;else if(","===e){const e=n[n.length-1];"number"==typeof e?n[n.length-1]=e+1:(c=!0,n[n.length-1]=""),a=void 0}}})}catch(e){if(e!==t)throw e}return{path:n,previousNode:a,isAtPropertyKey:c,matches:e=>{let r=0;for(let t=0;r<e.length&&t<n.length;t++)if(e[r]===n[t]||"*"===e[r])r++;else if("**"!==e[r])return!1;return r===e.length}}}function Z(e,n=[],t=r.DEFAULT){let a=null,o=[];const c=[];function i(e){Array.isArray(o)?o.push(e):null!==a&&(o[a]=e)}return _(e,{onObjectBegin:()=>{const e={};i(e),c.push(o),o=e,a=null},onObjectProperty:e=>{a=e},onObjectEnd:()=>{o=c.pop()},onArrayBegin:()=>{const e=[];i(e),c.push(o),o=e,a=null},onArrayEnd:()=>{o=c.pop()},onLiteralValue:i,onError:(e,r,t)=>{n.push({error:e,offset:r,length:t})}},t),o[0]}function G(e,n=[],t=r.DEFAULT){let a={type:"array",offset:-1,length:-1,children:[],parent:void 0};function o(e){"property"===a.type&&(a.length=e-a.offset,a=a.parent)}function c(e){return a.children.push(e),e}_(e,{onObjectBegin:e=>{a=c({type:"object",offset:e,length:-1,parent:a,children:[]})},onObjectProperty:(e,r,n)=>{a=c({type:"property",offset:r,length:-1,parent:a,children:[]}),a.children.push({type:"string",value:e,offset:r,length:n,parent:a})},onObjectEnd:(e,r)=>{a.length=e+r-a.offset,a=a.parent,o(e+r)},onArrayBegin:(e,r)=>{a=c({type:"array",offset:e,length:-1,parent:a,children:[]})},onArrayEnd:(e,r)=>{a.length=e+r-a.offset,a=a.parent,o(e+r)},onLiteralValue:(e,r,n)=>{c({type:D(e),offset:r,length:n,parent:a,value:e}),o(r+n)},onSeparator:(e,r,n)=>{"property"===a.type&&(":"===e?a.colonOffset=r:","===e&&o(r))},onError:(e,r,t)=>{n.push({error:e,offset:r,length:t})}},t);const i=a.children[0];return i&&delete i.parent,i}function P(e,r){if(!e)return;let n=e;for(const e of r)if("string"==typeof e){if("object"!==n.type||!Array.isArray(n.children))return;let r=!1;for(const t of n.children)if(Array.isArray(t.children)&&t.children[0].value===e){n=t.children[1],r=!0;break}if(!r)return}else{const r=e;if("array"!==n.type||r<0||!Array.isArray(n.children)||r>=n.children.length)return;n=n.children[r]}return n}function H(e){if(!e.parent||!e.parent.children)return[];const r=H(e.parent);if("property"===e.parent.type){const n=e.parent.children[0].value;r.push(n)}else if("array"===e.parent.type){const n=e.parent.children.indexOf(e);-1!==n&&r.push(n)}return r}function Q(e){switch(e.type){case"array":return e.children.map(Q);case"object":{const r=Object.create(null);for(const n of e.children){const e=n.children[1];e&&(r[n.children[0].value]=Q(e))}return r}case"null":case"string":case"number":case"boolean":return e.value;default:return}}function J(e,r,n=!1){return r>=e.offset&&r<e.offset+e.length||n&&r===e.offset+e.length}function X(e,r,n=!1){if(J(e,r,n)){const t=e.children;if(Array.isArray(t))for(let e=0;e<t.length&&t[e].offset<=r;e++){const a=X(t[e],r,n);if(a)return a}return e}}function _(e,n,t=r.DEFAULT){const a=R(e,!1);function o(e){return e?()=>e(a.getTokenOffset(),a.getTokenLength()):()=>!0}function c(e){return e?r=>e(r,a.getTokenOffset(),a.getTokenLength()):()=>!0}const i=o(n.onObjectBegin),s=c(n.onObjectProperty),l=o(n.onObjectEnd),u=o(n.onArrayBegin),f=o(n.onArrayEnd),d=c(n.onLiteralValue),p=c(n.onSeparator),h=o(n.onComment),g=c(n.onError),k=t&&t.disallowComments,m=t&&t.allowTrailingComma;function b(){for(;;){const e=a.scan();switch(a.getTokenError()){case 4:C(14);break;case 5:C(15);break;case 3:C(13);break;case 1:k||C(11);break;case 2:C(12);break;case 6:C(16)}switch(e){case 12:case 13:k?C(10):h();break;case 16:C(1);break;case 15:case 14:break;default:return e}}}function C(e,r=[],n=[]){if(g(e),r.length+n.length>0){let e=a.getToken();for(;17!==e;){if(-1!==r.indexOf(e)){b();break}if(-1!==n.indexOf(e))break;e=b()}}}function y(e){const r=a.getTokenValue();return e?d(r):s(r),b(),!0}function T(){switch(a.getToken()){case 3:return function(){u(),b();let e=!1;for(;4!==a.getToken()&&17!==a.getToken();){if(5===a.getToken()){if(e||C(4,[],[]),p(","),b(),4===a.getToken()&&m)break}else e&&C(6,[],[]);T()||C(4,[],[4,5]),e=!0}return f(),4!==a.getToken()?C(8,[4],[]):b(),!0}();case 1:return function(){i(),b();let e=!1;for(;2!==a.getToken()&&17!==a.getToken();){if(5===a.getToken()){if(e||C(4,[],[]),p(","),b(),2===a.getToken()&&m)break}else e&&C(6,[],[]);(10!==a.getToken()?(C(3,[],[2,5]),!1):(y(!1),6===a.getToken()?(p(":"),b(),T()||C(4,[],[2,5])):C(5,[],[2,5]),!0))||C(4,[],[2,5]),e=!0}return l(),2!==a.getToken()?C(7,[2],[]):b(),!0}();case 10:return y(!0);default:return function(){switch(a.getToken()){case 11:{let e=0;try{e=JSON.parse(a.getTokenValue()),"number"!=typeof e&&(C(2),e=0)}catch{C(2)}d(e);break}case 7:d(null);break;case 8:d(!0);break;case 9:d(!1);break;default:return!1}return b(),!0}()}}return b(),17===a.getToken()?!!t.allowEmptyContent||(C(4,[],[]),!1):T()?(17!==a.getToken()&&C(9,[],[]),!0):(C(4,[],[]),!1)}function D(e){switch(typeof e){case"boolean":return"boolean";case"number":return"number";case"string":return"string";case"object":return e?Array.isArray(e)?"array":"object":"null";default:return"null"}}!function(e){e[e.None=0]="None",e[e.UnexpectedEndOfComment=1]="UnexpectedEndOfComment",e[e.UnexpectedEndOfString=2]="UnexpectedEndOfString",e[e.UnexpectedEndOfNumber=3]="UnexpectedEndOfNumber",e[e.InvalidUnicode=4]="InvalidUnicode",e[e.InvalidEscapeCharacter=5]="InvalidEscapeCharacter",e[e.InvalidCharacter=6]="InvalidCharacter"}(V||(V={})),function(e){e[e.OpenBraceToken=1]="OpenBraceToken",e[e.CloseBraceToken=2]="CloseBraceToken",e[e.OpenBracketToken=3]="OpenBracketToken",e[e.CloseBracketToken=4]="CloseBracketToken",e[e.CommaToken=5]="CommaToken",e[e.ColonToken=6]="ColonToken",e[e.NullKeyword=7]="NullKeyword",e[e.TrueKeyword=8]="TrueKeyword",e[e.FalseKeyword=9]="FalseKeyword",e[e.StringLiteral=10]="StringLiteral",e[e.NumericLiteral=11]="NumericLiteral",e[e.LineCommentTrivia=12]="LineCommentTrivia",e[e.BlockCommentTrivia=13]="BlockCommentTrivia",e[e.LineBreakTrivia=14]="LineBreakTrivia",e[e.Trivia=15]="Trivia",e[e.Unknown=16]="Unknown",e[e.EOF=17]="EOF"}(F||(F={})),function(e){e[e.InvalidSymbol=1]="InvalidSymbol",e[e.InvalidNumberFormat=2]="InvalidNumberFormat",e[e.PropertyNameExpected=3]="PropertyNameExpected",e[e.ValueExpected=4]="ValueExpected",e[e.ColonExpected=5]="ColonExpected",e[e.CommaExpected=6]="CommaExpected",e[e.CloseBraceExpected=7]="CloseBraceExpected",e[e.CloseBracketExpected=8]="CloseBracketExpected",e[e.EndOfFileExpected=9]="EndOfFileExpected",e[e.InvalidCommentToken=10]="InvalidCommentToken",e[e.UnexpectedEndOfComment=11]="UnexpectedEndOfComment",e[e.UnexpectedEndOfString=12]="UnexpectedEndOfString",e[e.UnexpectedEndOfNumber=13]="UnexpectedEndOfNumber",e[e.InvalidUnicode=14]="InvalidUnicode",e[e.InvalidEscapeCharacter=15]="InvalidEscapeCharacter",e[e.InvalidCharacter=16]="InvalidCharacter"}($||($={})),(r||(r={})).DEFAULT={allowTrailingComma:!0},function(e){e[e.nullCharacter=0]="nullCharacter",e[e.maxAsciiCharacter=127]="maxAsciiCharacter",e[e.lineFeed=10]="lineFeed",e[e.carriageReturn=13]="carriageReturn",e[e.lineSeparator=8232]="lineSeparator",e[e.paragraphSeparator=8233]="paragraphSeparator",e[e.nextLine=133]="nextLine",e[e.space=32]="space",e[e.nonBreakingSpace=160]="nonBreakingSpace",e[e.enQuad=8192]="enQuad",e[e.emQuad=8193]="emQuad",e[e.enSpace=8194]="enSpace",e[e.emSpace=8195]="emSpace",e[e.threePerEmSpace=8196]="threePerEmSpace",e[e.fourPerEmSpace=8197]="fourPerEmSpace",e[e.sixPerEmSpace=8198]="sixPerEmSpace",e[e.figureSpace=8199]="figureSpace",e[e.punctuationSpace=8200]="punctuationSpace",e[e.thinSpace=8201]="thinSpace",e[e.hairSpace=8202]="hairSpace",e[e.zeroWidthSpace=8203]="zeroWidthSpace",e[e.narrowNoBreakSpace=8239]="narrowNoBreakSpace",e[e.ideographicSpace=12288]="ideographicSpace",e[e.mathematicalSpace=8287]="mathematicalSpace",e[e.ogham=5760]="ogham",e[e._=95]="_",e[e.$=36]="$",e[e._0=48]="_0",e[e._1=49]="_1",e[e._2=50]="_2",e[e._3=51]="_3",e[e._4=52]="_4",e[e._5=53]="_5",e[e._6=54]="_6",e[e._7=55]="_7",e[e._8=56]="_8",e[e._9=57]="_9",e[e.a=97]="a",e[e.b=98]="b",e[e.c=99]="c",e[e.d=100]="d",e[e.e=101]="e",e[e.f=102]="f",e[e.g=103]="g",e[e.h=104]="h",e[e.i=105]="i",e[e.j=106]="j",e[e.k=107]="k",e[e.l=108]="l",e[e.m=109]="m",e[e.n=110]="n",e[e.o=111]="o",e[e.p=112]="p",e[e.q=113]="q",e[e.r=114]="r",e[e.s=115]="s",e[e.t=116]="t",e[e.u=117]="u",e[e.v=118]="v",e[e.w=119]="w",e[e.x=120]="x",e[e.y=121]="y",e[e.z=122]="z",e[e.A=65]="A",e[e.B=66]="B",e[e.C=67]="C",e[e.D=68]="D",e[e.E=69]="E",e[e.F=70]="F",e[e.G=71]="G",e[e.H=72]="H",e[e.I=73]="I",e[e.J=74]="J",e[e.K=75]="K",e[e.L=76]="L",e[e.M=77]="M",e[e.N=78]="N",e[e.O=79]="O",e[e.P=80]="P",e[e.Q=81]="Q",e[e.R=82]="R",e[e.S=83]="S",e[e.T=84]="T",e[e.U=85]="U",e[e.V=86]="V",e[e.W=87]="W",e[e.X=88]="X",e[e.Y=89]="Y",e[e.Z=90]="Z",e[e.ampersand=38]="ampersand",e[e.asterisk=42]="asterisk",e[e.at=64]="at",e[e.backslash=92]="backslash",e[e.bar=124]="bar",e[e.caret=94]="caret",e[e.closeBrace=125]="closeBrace",e[e.closeBracket=93]="closeBracket",e[e.closeParen=41]="closeParen",e[e.colon=58]="colon",e[e.comma=44]="comma",e[e.dot=46]="dot",e[e.doubleQuote=34]="doubleQuote",e[e.equals=61]="equals",e[e.exclamation=33]="exclamation",e[e.greaterThan=62]="greaterThan",e[e.lessThan=60]="lessThan",e[e.minus=45]="minus",e[e.openBrace=123]="openBrace",e[e.openBracket=91]="openBracket",e[e.openParen=40]="openParen",e[e.percent=37]="percent",e[e.plus=43]="plus",e[e.question=63]="question",e[e.semicolon=59]="semicolon",e[e.singleQuote=39]="singleQuote",e[e.slash=47]="slash",e[e.tilde=126]="tilde",e[e.backspace=8]="backspace",e[e.formFeed=12]="formFeed",e[e.byteOrderMark=65279]="byteOrderMark",e[e.tab=9]="tab",e[e.verticalTab=11]="verticalTab"}(S||(S={}));export{J as $1u,X as $2u,_ as $3u,D as $4u,R as $Tu,Y as $Uu,Z as $Vu,G as $Wu,P as $Xu,H as $Yu,Q as $Zu,$ as ParseErrorCode,r as ParseOptions,V as ScanError,F as SyntaxKind};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var ScanError;
+(function(ScanError2) {
+  ScanError2[ScanError2["None"] = 0] = "None";
+  ScanError2[ScanError2["UnexpectedEndOfComment"] = 1] = "UnexpectedEndOfComment";
+  ScanError2[ScanError2["UnexpectedEndOfString"] = 2] = "UnexpectedEndOfString";
+  ScanError2[ScanError2["UnexpectedEndOfNumber"] = 3] = "UnexpectedEndOfNumber";
+  ScanError2[ScanError2["InvalidUnicode"] = 4] = "InvalidUnicode";
+  ScanError2[ScanError2["InvalidEscapeCharacter"] = 5] = "InvalidEscapeCharacter";
+  ScanError2[ScanError2["InvalidCharacter"] = 6] = "InvalidCharacter";
+})(ScanError || (ScanError = {}));
+var SyntaxKind;
+(function(SyntaxKind2) {
+  SyntaxKind2[SyntaxKind2["OpenBraceToken"] = 1] = "OpenBraceToken";
+  SyntaxKind2[SyntaxKind2["CloseBraceToken"] = 2] = "CloseBraceToken";
+  SyntaxKind2[SyntaxKind2["OpenBracketToken"] = 3] = "OpenBracketToken";
+  SyntaxKind2[SyntaxKind2["CloseBracketToken"] = 4] = "CloseBracketToken";
+  SyntaxKind2[SyntaxKind2["CommaToken"] = 5] = "CommaToken";
+  SyntaxKind2[SyntaxKind2["ColonToken"] = 6] = "ColonToken";
+  SyntaxKind2[SyntaxKind2["NullKeyword"] = 7] = "NullKeyword";
+  SyntaxKind2[SyntaxKind2["TrueKeyword"] = 8] = "TrueKeyword";
+  SyntaxKind2[SyntaxKind2["FalseKeyword"] = 9] = "FalseKeyword";
+  SyntaxKind2[SyntaxKind2["StringLiteral"] = 10] = "StringLiteral";
+  SyntaxKind2[SyntaxKind2["NumericLiteral"] = 11] = "NumericLiteral";
+  SyntaxKind2[SyntaxKind2["LineCommentTrivia"] = 12] = "LineCommentTrivia";
+  SyntaxKind2[SyntaxKind2["BlockCommentTrivia"] = 13] = "BlockCommentTrivia";
+  SyntaxKind2[SyntaxKind2["LineBreakTrivia"] = 14] = "LineBreakTrivia";
+  SyntaxKind2[SyntaxKind2["Trivia"] = 15] = "Trivia";
+  SyntaxKind2[SyntaxKind2["Unknown"] = 16] = "Unknown";
+  SyntaxKind2[SyntaxKind2["EOF"] = 17] = "EOF";
+})(SyntaxKind || (SyntaxKind = {}));
+var ParseErrorCode;
+(function(ParseErrorCode2) {
+  ParseErrorCode2[ParseErrorCode2["InvalidSymbol"] = 1] = "InvalidSymbol";
+  ParseErrorCode2[ParseErrorCode2["InvalidNumberFormat"] = 2] = "InvalidNumberFormat";
+  ParseErrorCode2[ParseErrorCode2["PropertyNameExpected"] = 3] = "PropertyNameExpected";
+  ParseErrorCode2[ParseErrorCode2["ValueExpected"] = 4] = "ValueExpected";
+  ParseErrorCode2[ParseErrorCode2["ColonExpected"] = 5] = "ColonExpected";
+  ParseErrorCode2[ParseErrorCode2["CommaExpected"] = 6] = "CommaExpected";
+  ParseErrorCode2[ParseErrorCode2["CloseBraceExpected"] = 7] = "CloseBraceExpected";
+  ParseErrorCode2[ParseErrorCode2["CloseBracketExpected"] = 8] = "CloseBracketExpected";
+  ParseErrorCode2[ParseErrorCode2["EndOfFileExpected"] = 9] = "EndOfFileExpected";
+  ParseErrorCode2[ParseErrorCode2["InvalidCommentToken"] = 10] = "InvalidCommentToken";
+  ParseErrorCode2[ParseErrorCode2["UnexpectedEndOfComment"] = 11] = "UnexpectedEndOfComment";
+  ParseErrorCode2[ParseErrorCode2["UnexpectedEndOfString"] = 12] = "UnexpectedEndOfString";
+  ParseErrorCode2[ParseErrorCode2["UnexpectedEndOfNumber"] = 13] = "UnexpectedEndOfNumber";
+  ParseErrorCode2[ParseErrorCode2["InvalidUnicode"] = 14] = "InvalidUnicode";
+  ParseErrorCode2[ParseErrorCode2["InvalidEscapeCharacter"] = 15] = "InvalidEscapeCharacter";
+  ParseErrorCode2[ParseErrorCode2["InvalidCharacter"] = 16] = "InvalidCharacter";
+})(ParseErrorCode || (ParseErrorCode = {}));
+var ParseOptions;
+(function(ParseOptions2) {
+  ParseOptions2.DEFAULT = {
+    allowTrailingComma: true
+  };
+})(ParseOptions || (ParseOptions = {}));
+function createScanner(text, ignoreTrivia = false) {
+  let pos = 0;
+  const len = text.length;
+  let value = "";
+  let tokenOffset = 0;
+  let token = 16;
+  let scanError = 0;
+  function scanHexDigits(count) {
+    let digits = 0;
+    let hexValue = 0;
+    while (digits < count) {
+      const ch = text.charCodeAt(pos);
+      if (ch >= 48 && ch <= 57) {
+        hexValue = hexValue * 16 + ch - 48;
+      } else if (ch >= 65 && ch <= 70) {
+        hexValue = hexValue * 16 + ch - 65 + 10;
+      } else if (ch >= 97 && ch <= 102) {
+        hexValue = hexValue * 16 + ch - 97 + 10;
+      } else {
+        break;
+      }
+      pos++;
+      digits++;
+    }
+    if (digits < count) {
+      hexValue = -1;
+    }
+    return hexValue;
+  }
+  __name(scanHexDigits, "scanHexDigits");
+  function setPosition(newPosition) {
+    pos = newPosition;
+    value = "";
+    tokenOffset = 0;
+    token = 16;
+    scanError = 0;
+  }
+  __name(setPosition, "setPosition");
+  function scanNumber() {
+    const start = pos;
+    if (text.charCodeAt(pos) === 48) {
+      pos++;
+    } else {
+      pos++;
+      while (pos < text.length && isDigit(text.charCodeAt(pos))) {
+        pos++;
+      }
+    }
+    if (pos < text.length && text.charCodeAt(pos) === 46) {
+      pos++;
+      if (pos < text.length && isDigit(text.charCodeAt(pos))) {
+        pos++;
+        while (pos < text.length && isDigit(text.charCodeAt(pos))) {
+          pos++;
+        }
+      } else {
+        scanError = 3;
+        return text.substring(start, pos);
+      }
+    }
+    let end = pos;
+    if (pos < text.length && (text.charCodeAt(pos) === 69 || text.charCodeAt(pos) === 101)) {
+      pos++;
+      if (pos < text.length && text.charCodeAt(pos) === 43 || text.charCodeAt(pos) === 45) {
+        pos++;
+      }
+      if (pos < text.length && isDigit(text.charCodeAt(pos))) {
+        pos++;
+        while (pos < text.length && isDigit(text.charCodeAt(pos))) {
+          pos++;
+        }
+        end = pos;
+      } else {
+        scanError = 3;
+      }
+    }
+    return text.substring(start, end);
+  }
+  __name(scanNumber, "scanNumber");
+  function scanString() {
+    let result = "", start = pos;
+    while (true) {
+      if (pos >= len) {
+        result += text.substring(start, pos);
+        scanError = 2;
+        break;
+      }
+      const ch = text.charCodeAt(pos);
+      if (ch === 34) {
+        result += text.substring(start, pos);
+        pos++;
+        break;
+      }
+      if (ch === 92) {
+        result += text.substring(start, pos);
+        pos++;
+        if (pos >= len) {
+          scanError = 2;
+          break;
+        }
+        const ch2 = text.charCodeAt(pos++);
+        switch (ch2) {
+          case 34:
+            result += '"';
+            break;
+          case 92:
+            result += "\\";
+            break;
+          case 47:
+            result += "/";
+            break;
+          case 98:
+            result += "\b";
+            break;
+          case 102:
+            result += "\f";
+            break;
+          case 110:
+            result += "\n";
+            break;
+          case 114:
+            result += "\r";
+            break;
+          case 116:
+            result += "	";
+            break;
+          case 117: {
+            const ch3 = scanHexDigits(4);
+            if (ch3 >= 0) {
+              result += String.fromCharCode(ch3);
+            } else {
+              scanError = 4;
+            }
+            break;
+          }
+          default:
+            scanError = 5;
+        }
+        start = pos;
+        continue;
+      }
+      if (ch >= 0 && ch <= 31) {
+        if (isLineBreak(ch)) {
+          result += text.substring(start, pos);
+          scanError = 2;
+          break;
+        } else {
+          scanError = 6;
+        }
+      }
+      pos++;
+    }
+    return result;
+  }
+  __name(scanString, "scanString");
+  function scanNext() {
+    value = "";
+    scanError = 0;
+    tokenOffset = pos;
+    if (pos >= len) {
+      tokenOffset = len;
+      return token = 17;
+    }
+    let code = text.charCodeAt(pos);
+    if (isWhitespace(code)) {
+      do {
+        pos++;
+        value += String.fromCharCode(code);
+        code = text.charCodeAt(pos);
+      } while (isWhitespace(code));
+      return token = 15;
+    }
+    if (isLineBreak(code)) {
+      pos++;
+      value += String.fromCharCode(code);
+      if (code === 13 && text.charCodeAt(pos) === 10) {
+        pos++;
+        value += "\n";
+      }
+      return token = 14;
+    }
+    switch (code) {
+      // tokens: []{}:,
+      case 123:
+        pos++;
+        return token = 1;
+      case 125:
+        pos++;
+        return token = 2;
+      case 91:
+        pos++;
+        return token = 3;
+      case 93:
+        pos++;
+        return token = 4;
+      case 58:
+        pos++;
+        return token = 6;
+      case 44:
+        pos++;
+        return token = 5;
+      // strings
+      case 34:
+        pos++;
+        value = scanString();
+        return token = 10;
+      // comments
+      case 47: {
+        const start = pos - 1;
+        if (text.charCodeAt(pos + 1) === 47) {
+          pos += 2;
+          while (pos < len) {
+            if (isLineBreak(text.charCodeAt(pos))) {
+              break;
+            }
+            pos++;
+          }
+          value = text.substring(start, pos);
+          return token = 12;
+        }
+        if (text.charCodeAt(pos + 1) === 42) {
+          pos += 2;
+          const safeLength = len - 1;
+          let commentClosed = false;
+          while (pos < safeLength) {
+            const ch = text.charCodeAt(pos);
+            if (ch === 42 && text.charCodeAt(pos + 1) === 47) {
+              pos += 2;
+              commentClosed = true;
+              break;
+            }
+            pos++;
+          }
+          if (!commentClosed) {
+            pos++;
+            scanError = 1;
+          }
+          value = text.substring(start, pos);
+          return token = 13;
+        }
+        value += String.fromCharCode(code);
+        pos++;
+        return token = 16;
+      }
+      // numbers
+      case 45:
+        value += String.fromCharCode(code);
+        pos++;
+        if (pos === len || !isDigit(text.charCodeAt(pos))) {
+          return token = 16;
+        }
+      // found a minus, followed by a number so
+      // we fall through to proceed with scanning
+      // numbers
+      case 48:
+      case 49:
+      case 50:
+      case 51:
+      case 52:
+      case 53:
+      case 54:
+      case 55:
+      case 56:
+      case 57:
+        value += scanNumber();
+        return token = 11;
+      // literals and unknown symbols
+      default:
+        while (pos < len && isUnknownContentCharacter(code)) {
+          pos++;
+          code = text.charCodeAt(pos);
+        }
+        if (tokenOffset !== pos) {
+          value = text.substring(tokenOffset, pos);
+          switch (value) {
+            case "true":
+              return token = 8;
+            case "false":
+              return token = 9;
+            case "null":
+              return token = 7;
+          }
+          return token = 16;
+        }
+        value += String.fromCharCode(code);
+        pos++;
+        return token = 16;
+    }
+  }
+  __name(scanNext, "scanNext");
+  function isUnknownContentCharacter(code) {
+    if (isWhitespace(code) || isLineBreak(code)) {
+      return false;
+    }
+    switch (code) {
+      case 125:
+      case 93:
+      case 123:
+      case 91:
+      case 34:
+      case 58:
+      case 44:
+      case 47:
+        return false;
+    }
+    return true;
+  }
+  __name(isUnknownContentCharacter, "isUnknownContentCharacter");
+  function scanNextNonTrivia() {
+    let result;
+    do {
+      result = scanNext();
+    } while (result >= 12 && result <= 15);
+    return result;
+  }
+  __name(scanNextNonTrivia, "scanNextNonTrivia");
+  return {
+    setPosition,
+    getPosition: /* @__PURE__ */ __name(() => pos, "getPosition"),
+    scan: ignoreTrivia ? scanNextNonTrivia : scanNext,
+    getToken: /* @__PURE__ */ __name(() => token, "getToken"),
+    getTokenValue: /* @__PURE__ */ __name(() => value, "getTokenValue"),
+    getTokenOffset: /* @__PURE__ */ __name(() => tokenOffset, "getTokenOffset"),
+    getTokenLength: /* @__PURE__ */ __name(() => pos - tokenOffset, "getTokenLength"),
+    getTokenError: /* @__PURE__ */ __name(() => scanError, "getTokenError")
+  };
+}
+__name(createScanner, "createScanner");
+function isWhitespace(ch) {
+  return ch === 32 || ch === 9 || ch === 11 || ch === 12 || ch === 160 || ch === 5760 || ch >= 8192 && ch <= 8203 || ch === 8239 || ch === 8287 || ch === 12288 || ch === 65279;
+}
+__name(isWhitespace, "isWhitespace");
+function isLineBreak(ch) {
+  return ch === 10 || ch === 13 || ch === 8232 || ch === 8233;
+}
+__name(isLineBreak, "isLineBreak");
+function isDigit(ch) {
+  return ch >= 48 && ch <= 57;
+}
+__name(isDigit, "isDigit");
+var CharacterCodes;
+(function(CharacterCodes2) {
+  CharacterCodes2[CharacterCodes2["nullCharacter"] = 0] = "nullCharacter";
+  CharacterCodes2[CharacterCodes2["maxAsciiCharacter"] = 127] = "maxAsciiCharacter";
+  CharacterCodes2[CharacterCodes2["lineFeed"] = 10] = "lineFeed";
+  CharacterCodes2[CharacterCodes2["carriageReturn"] = 13] = "carriageReturn";
+  CharacterCodes2[CharacterCodes2["lineSeparator"] = 8232] = "lineSeparator";
+  CharacterCodes2[CharacterCodes2["paragraphSeparator"] = 8233] = "paragraphSeparator";
+  CharacterCodes2[CharacterCodes2["nextLine"] = 133] = "nextLine";
+  CharacterCodes2[CharacterCodes2["space"] = 32] = "space";
+  CharacterCodes2[CharacterCodes2["nonBreakingSpace"] = 160] = "nonBreakingSpace";
+  CharacterCodes2[CharacterCodes2["enQuad"] = 8192] = "enQuad";
+  CharacterCodes2[CharacterCodes2["emQuad"] = 8193] = "emQuad";
+  CharacterCodes2[CharacterCodes2["enSpace"] = 8194] = "enSpace";
+  CharacterCodes2[CharacterCodes2["emSpace"] = 8195] = "emSpace";
+  CharacterCodes2[CharacterCodes2["threePerEmSpace"] = 8196] = "threePerEmSpace";
+  CharacterCodes2[CharacterCodes2["fourPerEmSpace"] = 8197] = "fourPerEmSpace";
+  CharacterCodes2[CharacterCodes2["sixPerEmSpace"] = 8198] = "sixPerEmSpace";
+  CharacterCodes2[CharacterCodes2["figureSpace"] = 8199] = "figureSpace";
+  CharacterCodes2[CharacterCodes2["punctuationSpace"] = 8200] = "punctuationSpace";
+  CharacterCodes2[CharacterCodes2["thinSpace"] = 8201] = "thinSpace";
+  CharacterCodes2[CharacterCodes2["hairSpace"] = 8202] = "hairSpace";
+  CharacterCodes2[CharacterCodes2["zeroWidthSpace"] = 8203] = "zeroWidthSpace";
+  CharacterCodes2[CharacterCodes2["narrowNoBreakSpace"] = 8239] = "narrowNoBreakSpace";
+  CharacterCodes2[CharacterCodes2["ideographicSpace"] = 12288] = "ideographicSpace";
+  CharacterCodes2[CharacterCodes2["mathematicalSpace"] = 8287] = "mathematicalSpace";
+  CharacterCodes2[CharacterCodes2["ogham"] = 5760] = "ogham";
+  CharacterCodes2[CharacterCodes2["_"] = 95] = "_";
+  CharacterCodes2[CharacterCodes2["$"] = 36] = "$";
+  CharacterCodes2[CharacterCodes2["_0"] = 48] = "_0";
+  CharacterCodes2[CharacterCodes2["_1"] = 49] = "_1";
+  CharacterCodes2[CharacterCodes2["_2"] = 50] = "_2";
+  CharacterCodes2[CharacterCodes2["_3"] = 51] = "_3";
+  CharacterCodes2[CharacterCodes2["_4"] = 52] = "_4";
+  CharacterCodes2[CharacterCodes2["_5"] = 53] = "_5";
+  CharacterCodes2[CharacterCodes2["_6"] = 54] = "_6";
+  CharacterCodes2[CharacterCodes2["_7"] = 55] = "_7";
+  CharacterCodes2[CharacterCodes2["_8"] = 56] = "_8";
+  CharacterCodes2[CharacterCodes2["_9"] = 57] = "_9";
+  CharacterCodes2[CharacterCodes2["a"] = 97] = "a";
+  CharacterCodes2[CharacterCodes2["b"] = 98] = "b";
+  CharacterCodes2[CharacterCodes2["c"] = 99] = "c";
+  CharacterCodes2[CharacterCodes2["d"] = 100] = "d";
+  CharacterCodes2[CharacterCodes2["e"] = 101] = "e";
+  CharacterCodes2[CharacterCodes2["f"] = 102] = "f";
+  CharacterCodes2[CharacterCodes2["g"] = 103] = "g";
+  CharacterCodes2[CharacterCodes2["h"] = 104] = "h";
+  CharacterCodes2[CharacterCodes2["i"] = 105] = "i";
+  CharacterCodes2[CharacterCodes2["j"] = 106] = "j";
+  CharacterCodes2[CharacterCodes2["k"] = 107] = "k";
+  CharacterCodes2[CharacterCodes2["l"] = 108] = "l";
+  CharacterCodes2[CharacterCodes2["m"] = 109] = "m";
+  CharacterCodes2[CharacterCodes2["n"] = 110] = "n";
+  CharacterCodes2[CharacterCodes2["o"] = 111] = "o";
+  CharacterCodes2[CharacterCodes2["p"] = 112] = "p";
+  CharacterCodes2[CharacterCodes2["q"] = 113] = "q";
+  CharacterCodes2[CharacterCodes2["r"] = 114] = "r";
+  CharacterCodes2[CharacterCodes2["s"] = 115] = "s";
+  CharacterCodes2[CharacterCodes2["t"] = 116] = "t";
+  CharacterCodes2[CharacterCodes2["u"] = 117] = "u";
+  CharacterCodes2[CharacterCodes2["v"] = 118] = "v";
+  CharacterCodes2[CharacterCodes2["w"] = 119] = "w";
+  CharacterCodes2[CharacterCodes2["x"] = 120] = "x";
+  CharacterCodes2[CharacterCodes2["y"] = 121] = "y";
+  CharacterCodes2[CharacterCodes2["z"] = 122] = "z";
+  CharacterCodes2[CharacterCodes2["A"] = 65] = "A";
+  CharacterCodes2[CharacterCodes2["B"] = 66] = "B";
+  CharacterCodes2[CharacterCodes2["C"] = 67] = "C";
+  CharacterCodes2[CharacterCodes2["D"] = 68] = "D";
+  CharacterCodes2[CharacterCodes2["E"] = 69] = "E";
+  CharacterCodes2[CharacterCodes2["F"] = 70] = "F";
+  CharacterCodes2[CharacterCodes2["G"] = 71] = "G";
+  CharacterCodes2[CharacterCodes2["H"] = 72] = "H";
+  CharacterCodes2[CharacterCodes2["I"] = 73] = "I";
+  CharacterCodes2[CharacterCodes2["J"] = 74] = "J";
+  CharacterCodes2[CharacterCodes2["K"] = 75] = "K";
+  CharacterCodes2[CharacterCodes2["L"] = 76] = "L";
+  CharacterCodes2[CharacterCodes2["M"] = 77] = "M";
+  CharacterCodes2[CharacterCodes2["N"] = 78] = "N";
+  CharacterCodes2[CharacterCodes2["O"] = 79] = "O";
+  CharacterCodes2[CharacterCodes2["P"] = 80] = "P";
+  CharacterCodes2[CharacterCodes2["Q"] = 81] = "Q";
+  CharacterCodes2[CharacterCodes2["R"] = 82] = "R";
+  CharacterCodes2[CharacterCodes2["S"] = 83] = "S";
+  CharacterCodes2[CharacterCodes2["T"] = 84] = "T";
+  CharacterCodes2[CharacterCodes2["U"] = 85] = "U";
+  CharacterCodes2[CharacterCodes2["V"] = 86] = "V";
+  CharacterCodes2[CharacterCodes2["W"] = 87] = "W";
+  CharacterCodes2[CharacterCodes2["X"] = 88] = "X";
+  CharacterCodes2[CharacterCodes2["Y"] = 89] = "Y";
+  CharacterCodes2[CharacterCodes2["Z"] = 90] = "Z";
+  CharacterCodes2[CharacterCodes2["ampersand"] = 38] = "ampersand";
+  CharacterCodes2[CharacterCodes2["asterisk"] = 42] = "asterisk";
+  CharacterCodes2[CharacterCodes2["at"] = 64] = "at";
+  CharacterCodes2[CharacterCodes2["backslash"] = 92] = "backslash";
+  CharacterCodes2[CharacterCodes2["bar"] = 124] = "bar";
+  CharacterCodes2[CharacterCodes2["caret"] = 94] = "caret";
+  CharacterCodes2[CharacterCodes2["closeBrace"] = 125] = "closeBrace";
+  CharacterCodes2[CharacterCodes2["closeBracket"] = 93] = "closeBracket";
+  CharacterCodes2[CharacterCodes2["closeParen"] = 41] = "closeParen";
+  CharacterCodes2[CharacterCodes2["colon"] = 58] = "colon";
+  CharacterCodes2[CharacterCodes2["comma"] = 44] = "comma";
+  CharacterCodes2[CharacterCodes2["dot"] = 46] = "dot";
+  CharacterCodes2[CharacterCodes2["doubleQuote"] = 34] = "doubleQuote";
+  CharacterCodes2[CharacterCodes2["equals"] = 61] = "equals";
+  CharacterCodes2[CharacterCodes2["exclamation"] = 33] = "exclamation";
+  CharacterCodes2[CharacterCodes2["greaterThan"] = 62] = "greaterThan";
+  CharacterCodes2[CharacterCodes2["lessThan"] = 60] = "lessThan";
+  CharacterCodes2[CharacterCodes2["minus"] = 45] = "minus";
+  CharacterCodes2[CharacterCodes2["openBrace"] = 123] = "openBrace";
+  CharacterCodes2[CharacterCodes2["openBracket"] = 91] = "openBracket";
+  CharacterCodes2[CharacterCodes2["openParen"] = 40] = "openParen";
+  CharacterCodes2[CharacterCodes2["percent"] = 37] = "percent";
+  CharacterCodes2[CharacterCodes2["plus"] = 43] = "plus";
+  CharacterCodes2[CharacterCodes2["question"] = 63] = "question";
+  CharacterCodes2[CharacterCodes2["semicolon"] = 59] = "semicolon";
+  CharacterCodes2[CharacterCodes2["singleQuote"] = 39] = "singleQuote";
+  CharacterCodes2[CharacterCodes2["slash"] = 47] = "slash";
+  CharacterCodes2[CharacterCodes2["tilde"] = 126] = "tilde";
+  CharacterCodes2[CharacterCodes2["backspace"] = 8] = "backspace";
+  CharacterCodes2[CharacterCodes2["formFeed"] = 12] = "formFeed";
+  CharacterCodes2[CharacterCodes2["byteOrderMark"] = 65279] = "byteOrderMark";
+  CharacterCodes2[CharacterCodes2["tab"] = 9] = "tab";
+  CharacterCodes2[CharacterCodes2["verticalTab"] = 11] = "verticalTab";
+})(CharacterCodes || (CharacterCodes = {}));
+function getLocation(text, position) {
+  const segments = [];
+  const earlyReturnException = new Object();
+  let previousNode = void 0;
+  const previousNodeInst = {
+    value: {},
+    offset: 0,
+    length: 0,
+    type: "object",
+    parent: void 0
+  };
+  let isAtPropertyKey = false;
+  function setPreviousNode(value, offset, length, type) {
+    previousNodeInst.value = value;
+    previousNodeInst.offset = offset;
+    previousNodeInst.length = length;
+    previousNodeInst.type = type;
+    previousNodeInst.colonOffset = void 0;
+    previousNode = previousNodeInst;
+  }
+  __name(setPreviousNode, "setPreviousNode");
+  try {
+    visit(text, {
+      onObjectBegin: /* @__PURE__ */ __name((offset, length) => {
+        if (position <= offset) {
+          throw earlyReturnException;
+        }
+        previousNode = void 0;
+        isAtPropertyKey = position > offset;
+        segments.push("");
+      }, "onObjectBegin"),
+      onObjectProperty: /* @__PURE__ */ __name((name, offset, length) => {
+        if (position < offset) {
+          throw earlyReturnException;
+        }
+        setPreviousNode(name, offset, length, "property");
+        segments[segments.length - 1] = name;
+        if (position <= offset + length) {
+          throw earlyReturnException;
+        }
+      }, "onObjectProperty"),
+      onObjectEnd: /* @__PURE__ */ __name((offset, length) => {
+        if (position <= offset) {
+          throw earlyReturnException;
+        }
+        previousNode = void 0;
+        segments.pop();
+      }, "onObjectEnd"),
+      onArrayBegin: /* @__PURE__ */ __name((offset, length) => {
+        if (position <= offset) {
+          throw earlyReturnException;
+        }
+        previousNode = void 0;
+        segments.push(0);
+      }, "onArrayBegin"),
+      onArrayEnd: /* @__PURE__ */ __name((offset, length) => {
+        if (position <= offset) {
+          throw earlyReturnException;
+        }
+        previousNode = void 0;
+        segments.pop();
+      }, "onArrayEnd"),
+      onLiteralValue: /* @__PURE__ */ __name((value, offset, length) => {
+        if (position < offset) {
+          throw earlyReturnException;
+        }
+        setPreviousNode(value, offset, length, getNodeType(value));
+        if (position <= offset + length) {
+          throw earlyReturnException;
+        }
+      }, "onLiteralValue"),
+      onSeparator: /* @__PURE__ */ __name((sep, offset, length) => {
+        if (position <= offset) {
+          throw earlyReturnException;
+        }
+        if (sep === ":" && previousNode && previousNode.type === "property") {
+          previousNode.colonOffset = offset;
+          isAtPropertyKey = false;
+          previousNode = void 0;
+        } else if (sep === ",") {
+          const last = segments[segments.length - 1];
+          if (typeof last === "number") {
+            segments[segments.length - 1] = last + 1;
+          } else {
+            isAtPropertyKey = true;
+            segments[segments.length - 1] = "";
+          }
+          previousNode = void 0;
+        }
+      }, "onSeparator")
+    });
+  } catch (e) {
+    if (e !== earlyReturnException) {
+      throw e;
+    }
+  }
+  return {
+    path: segments,
+    previousNode,
+    isAtPropertyKey,
+    matches: /* @__PURE__ */ __name((pattern) => {
+      let k = 0;
+      for (let i = 0; k < pattern.length && i < segments.length; i++) {
+        if (pattern[k] === segments[i] || pattern[k] === "*") {
+          k++;
+        } else if (pattern[k] !== "**") {
+          return false;
+        }
+      }
+      return k === pattern.length;
+    }, "matches")
+  };
+}
+__name(getLocation, "getLocation");
+function parse(text, errors = [], options = ParseOptions.DEFAULT) {
+  let currentProperty = null;
+  let currentParent = [];
+  const previousParents = [];
+  function onValue(value) {
+    if (Array.isArray(currentParent)) {
+      currentParent.push(value);
+    } else if (currentProperty !== null) {
+      currentParent[currentProperty] = value;
+    }
+  }
+  __name(onValue, "onValue");
+  const visitor = {
+    onObjectBegin: /* @__PURE__ */ __name(() => {
+      const object = {};
+      onValue(object);
+      previousParents.push(currentParent);
+      currentParent = object;
+      currentProperty = null;
+    }, "onObjectBegin"),
+    onObjectProperty: /* @__PURE__ */ __name((name) => {
+      currentProperty = name;
+    }, "onObjectProperty"),
+    onObjectEnd: /* @__PURE__ */ __name(() => {
+      currentParent = previousParents.pop();
+    }, "onObjectEnd"),
+    onArrayBegin: /* @__PURE__ */ __name(() => {
+      const array = [];
+      onValue(array);
+      previousParents.push(currentParent);
+      currentParent = array;
+      currentProperty = null;
+    }, "onArrayBegin"),
+    onArrayEnd: /* @__PURE__ */ __name(() => {
+      currentParent = previousParents.pop();
+    }, "onArrayEnd"),
+    onLiteralValue: onValue,
+    onError: /* @__PURE__ */ __name((error, offset, length) => {
+      errors.push({ error, offset, length });
+    }, "onError")
+  };
+  visit(text, visitor, options);
+  return currentParent[0];
+}
+__name(parse, "parse");
+function parseTree(text, errors = [], options = ParseOptions.DEFAULT) {
+  let currentParent = { type: "array", offset: -1, length: -1, children: [], parent: void 0 };
+  function ensurePropertyComplete(endOffset) {
+    if (currentParent.type === "property") {
+      currentParent.length = endOffset - currentParent.offset;
+      currentParent = currentParent.parent;
+    }
+  }
+  __name(ensurePropertyComplete, "ensurePropertyComplete");
+  function onValue(valueNode) {
+    currentParent.children.push(valueNode);
+    return valueNode;
+  }
+  __name(onValue, "onValue");
+  const visitor = {
+    onObjectBegin: /* @__PURE__ */ __name((offset) => {
+      currentParent = onValue({ type: "object", offset, length: -1, parent: currentParent, children: [] });
+    }, "onObjectBegin"),
+    onObjectProperty: /* @__PURE__ */ __name((name, offset, length) => {
+      currentParent = onValue({ type: "property", offset, length: -1, parent: currentParent, children: [] });
+      currentParent.children.push({ type: "string", value: name, offset, length, parent: currentParent });
+    }, "onObjectProperty"),
+    onObjectEnd: /* @__PURE__ */ __name((offset, length) => {
+      currentParent.length = offset + length - currentParent.offset;
+      currentParent = currentParent.parent;
+      ensurePropertyComplete(offset + length);
+    }, "onObjectEnd"),
+    onArrayBegin: /* @__PURE__ */ __name((offset, length) => {
+      currentParent = onValue({ type: "array", offset, length: -1, parent: currentParent, children: [] });
+    }, "onArrayBegin"),
+    onArrayEnd: /* @__PURE__ */ __name((offset, length) => {
+      currentParent.length = offset + length - currentParent.offset;
+      currentParent = currentParent.parent;
+      ensurePropertyComplete(offset + length);
+    }, "onArrayEnd"),
+    onLiteralValue: /* @__PURE__ */ __name((value, offset, length) => {
+      onValue({ type: getNodeType(value), offset, length, parent: currentParent, value });
+      ensurePropertyComplete(offset + length);
+    }, "onLiteralValue"),
+    onSeparator: /* @__PURE__ */ __name((sep, offset, length) => {
+      if (currentParent.type === "property") {
+        if (sep === ":") {
+          currentParent.colonOffset = offset;
+        } else if (sep === ",") {
+          ensurePropertyComplete(offset);
+        }
+      }
+    }, "onSeparator"),
+    onError: /* @__PURE__ */ __name((error, offset, length) => {
+      errors.push({ error, offset, length });
+    }, "onError")
+  };
+  visit(text, visitor, options);
+  const result = currentParent.children[0];
+  if (result) {
+    delete result.parent;
+  }
+  return result;
+}
+__name(parseTree, "parseTree");
+function findNodeAtLocation(root, path) {
+  if (!root) {
+    return void 0;
+  }
+  let node = root;
+  for (const segment of path) {
+    if (typeof segment === "string") {
+      if (node.type !== "object" || !Array.isArray(node.children)) {
+        return void 0;
+      }
+      let found = false;
+      for (const propertyNode of node.children) {
+        if (Array.isArray(propertyNode.children) && propertyNode.children[0].value === segment) {
+          node = propertyNode.children[1];
+          found = true;
+          break;
+        }
+      }
+      if (!found) {
+        return void 0;
+      }
+    } else {
+      const index = segment;
+      if (node.type !== "array" || index < 0 || !Array.isArray(node.children) || index >= node.children.length) {
+        return void 0;
+      }
+      node = node.children[index];
+    }
+  }
+  return node;
+}
+__name(findNodeAtLocation, "findNodeAtLocation");
+function getNodePath(node) {
+  if (!node.parent || !node.parent.children) {
+    return [];
+  }
+  const path = getNodePath(node.parent);
+  if (node.parent.type === "property") {
+    const key = node.parent.children[0].value;
+    path.push(key);
+  } else if (node.parent.type === "array") {
+    const index = node.parent.children.indexOf(node);
+    if (index !== -1) {
+      path.push(index);
+    }
+  }
+  return path;
+}
+__name(getNodePath, "getNodePath");
+function getNodeValue(node) {
+  switch (node.type) {
+    case "array":
+      return node.children.map(getNodeValue);
+    case "object": {
+      const obj = /* @__PURE__ */ Object.create(null);
+      for (const prop of node.children) {
+        const valueNode = prop.children[1];
+        if (valueNode) {
+          obj[prop.children[0].value] = getNodeValue(valueNode);
+        }
+      }
+      return obj;
+    }
+    case "null":
+    case "string":
+    case "number":
+    case "boolean":
+      return node.value;
+    default:
+      return void 0;
+  }
+}
+__name(getNodeValue, "getNodeValue");
+function contains(node, offset, includeRightBound = false) {
+  return offset >= node.offset && offset < node.offset + node.length || includeRightBound && offset === node.offset + node.length;
+}
+__name(contains, "contains");
+function findNodeAtOffset(node, offset, includeRightBound = false) {
+  if (contains(node, offset, includeRightBound)) {
+    const children = node.children;
+    if (Array.isArray(children)) {
+      for (let i = 0; i < children.length && children[i].offset <= offset; i++) {
+        const item = findNodeAtOffset(children[i], offset, includeRightBound);
+        if (item) {
+          return item;
+        }
+      }
+    }
+    return node;
+  }
+  return void 0;
+}
+__name(findNodeAtOffset, "findNodeAtOffset");
+function visit(text, visitor, options = ParseOptions.DEFAULT) {
+  const _scanner = createScanner(text, false);
+  function toNoArgVisit(visitFunction) {
+    return visitFunction ? () => visitFunction(_scanner.getTokenOffset(), _scanner.getTokenLength()) : () => true;
+  }
+  __name(toNoArgVisit, "toNoArgVisit");
+  function toOneArgVisit(visitFunction) {
+    return visitFunction ? (arg) => visitFunction(arg, _scanner.getTokenOffset(), _scanner.getTokenLength()) : () => true;
+  }
+  __name(toOneArgVisit, "toOneArgVisit");
+  const onObjectBegin = toNoArgVisit(visitor.onObjectBegin), onObjectProperty = toOneArgVisit(visitor.onObjectProperty), onObjectEnd = toNoArgVisit(visitor.onObjectEnd), onArrayBegin = toNoArgVisit(visitor.onArrayBegin), onArrayEnd = toNoArgVisit(visitor.onArrayEnd), onLiteralValue = toOneArgVisit(visitor.onLiteralValue), onSeparator = toOneArgVisit(visitor.onSeparator), onComment = toNoArgVisit(visitor.onComment), onError = toOneArgVisit(visitor.onError);
+  const disallowComments = options && options.disallowComments;
+  const allowTrailingComma = options && options.allowTrailingComma;
+  function scanNext() {
+    while (true) {
+      const token = _scanner.scan();
+      switch (_scanner.getTokenError()) {
+        case 4:
+          handleError(
+            14
+            /* ParseErrorCode.InvalidUnicode */
+          );
+          break;
+        case 5:
+          handleError(
+            15
+            /* ParseErrorCode.InvalidEscapeCharacter */
+          );
+          break;
+        case 3:
+          handleError(
+            13
+            /* ParseErrorCode.UnexpectedEndOfNumber */
+          );
+          break;
+        case 1:
+          if (!disallowComments) {
+            handleError(
+              11
+              /* ParseErrorCode.UnexpectedEndOfComment */
+            );
+          }
+          break;
+        case 2:
+          handleError(
+            12
+            /* ParseErrorCode.UnexpectedEndOfString */
+          );
+          break;
+        case 6:
+          handleError(
+            16
+            /* ParseErrorCode.InvalidCharacter */
+          );
+          break;
+      }
+      switch (token) {
+        case 12:
+        case 13:
+          if (disallowComments) {
+            handleError(
+              10
+              /* ParseErrorCode.InvalidCommentToken */
+            );
+          } else {
+            onComment();
+          }
+          break;
+        case 16:
+          handleError(
+            1
+            /* ParseErrorCode.InvalidSymbol */
+          );
+          break;
+        case 15:
+        case 14:
+          break;
+        default:
+          return token;
+      }
+    }
+  }
+  __name(scanNext, "scanNext");
+  function handleError(error, skipUntilAfter = [], skipUntil = []) {
+    onError(error);
+    if (skipUntilAfter.length + skipUntil.length > 0) {
+      let token = _scanner.getToken();
+      while (token !== 17) {
+        if (skipUntilAfter.indexOf(token) !== -1) {
+          scanNext();
+          break;
+        } else if (skipUntil.indexOf(token) !== -1) {
+          break;
+        }
+        token = scanNext();
+      }
+    }
+  }
+  __name(handleError, "handleError");
+  function parseString(isValue) {
+    const value = _scanner.getTokenValue();
+    if (isValue) {
+      onLiteralValue(value);
+    } else {
+      onObjectProperty(value);
+    }
+    scanNext();
+    return true;
+  }
+  __name(parseString, "parseString");
+  function parseLiteral() {
+    switch (_scanner.getToken()) {
+      case 11: {
+        let value = 0;
+        try {
+          value = JSON.parse(_scanner.getTokenValue());
+          if (typeof value !== "number") {
+            handleError(
+              2
+              /* ParseErrorCode.InvalidNumberFormat */
+            );
+            value = 0;
+          }
+        } catch (e) {
+          handleError(
+            2
+            /* ParseErrorCode.InvalidNumberFormat */
+          );
+        }
+        onLiteralValue(value);
+        break;
+      }
+      case 7:
+        onLiteralValue(null);
+        break;
+      case 8:
+        onLiteralValue(true);
+        break;
+      case 9:
+        onLiteralValue(false);
+        break;
+      default:
+        return false;
+    }
+    scanNext();
+    return true;
+  }
+  __name(parseLiteral, "parseLiteral");
+  function parseProperty() {
+    if (_scanner.getToken() !== 10) {
+      handleError(3, [], [
+        2,
+        5
+        /* SyntaxKind.CommaToken */
+      ]);
+      return false;
+    }
+    parseString(false);
+    if (_scanner.getToken() === 6) {
+      onSeparator(":");
+      scanNext();
+      if (!parseValue()) {
+        handleError(4, [], [
+          2,
+          5
+          /* SyntaxKind.CommaToken */
+        ]);
+      }
+    } else {
+      handleError(5, [], [
+        2,
+        5
+        /* SyntaxKind.CommaToken */
+      ]);
+    }
+    return true;
+  }
+  __name(parseProperty, "parseProperty");
+  function parseObject() {
+    onObjectBegin();
+    scanNext();
+    let needsComma = false;
+    while (_scanner.getToken() !== 2 && _scanner.getToken() !== 17) {
+      if (_scanner.getToken() === 5) {
+        if (!needsComma) {
+          handleError(4, [], []);
+        }
+        onSeparator(",");
+        scanNext();
+        if (_scanner.getToken() === 2 && allowTrailingComma) {
+          break;
+        }
+      } else if (needsComma) {
+        handleError(6, [], []);
+      }
+      if (!parseProperty()) {
+        handleError(4, [], [
+          2,
+          5
+          /* SyntaxKind.CommaToken */
+        ]);
+      }
+      needsComma = true;
+    }
+    onObjectEnd();
+    if (_scanner.getToken() !== 2) {
+      handleError(7, [
+        2
+        /* SyntaxKind.CloseBraceToken */
+      ], []);
+    } else {
+      scanNext();
+    }
+    return true;
+  }
+  __name(parseObject, "parseObject");
+  function parseArray() {
+    onArrayBegin();
+    scanNext();
+    let needsComma = false;
+    while (_scanner.getToken() !== 4 && _scanner.getToken() !== 17) {
+      if (_scanner.getToken() === 5) {
+        if (!needsComma) {
+          handleError(4, [], []);
+        }
+        onSeparator(",");
+        scanNext();
+        if (_scanner.getToken() === 4 && allowTrailingComma) {
+          break;
+        }
+      } else if (needsComma) {
+        handleError(6, [], []);
+      }
+      if (!parseValue()) {
+        handleError(4, [], [
+          4,
+          5
+          /* SyntaxKind.CommaToken */
+        ]);
+      }
+      needsComma = true;
+    }
+    onArrayEnd();
+    if (_scanner.getToken() !== 4) {
+      handleError(8, [
+        4
+        /* SyntaxKind.CloseBracketToken */
+      ], []);
+    } else {
+      scanNext();
+    }
+    return true;
+  }
+  __name(parseArray, "parseArray");
+  function parseValue() {
+    switch (_scanner.getToken()) {
+      case 3:
+        return parseArray();
+      case 1:
+        return parseObject();
+      case 10:
+        return parseString(true);
+      default:
+        return parseLiteral();
+    }
+  }
+  __name(parseValue, "parseValue");
+  scanNext();
+  if (_scanner.getToken() === 17) {
+    if (options.allowEmptyContent) {
+      return true;
+    }
+    handleError(4, [], []);
+    return false;
+  }
+  if (!parseValue()) {
+    handleError(4, [], []);
+    return false;
+  }
+  if (_scanner.getToken() !== 17) {
+    handleError(9, [], []);
+  }
+  return true;
+}
+__name(visit, "visit");
+function getNodeType(value) {
+  switch (typeof value) {
+    case "boolean":
+      return "boolean";
+    case "number":
+      return "number";
+    case "string":
+      return "string";
+    case "object": {
+      if (!value) {
+        return "null";
+      } else if (Array.isArray(value)) {
+        return "array";
+      }
+      return "object";
+    }
+    default:
+      return "null";
+  }
+}
+__name(getNodeType, "getNodeType");
+export {
+  ParseErrorCode,
+  ParseOptions,
+  ScanError,
+  SyntaxKind,
+  contains,
+  createScanner,
+  findNodeAtLocation,
+  findNodeAtOffset,
+  getLocation,
+  getNodePath,
+  getNodeType,
+  getNodeValue,
+  parse,
+  parseTree,
+  visit
+};
+//# sourceMappingURL=json.js.map

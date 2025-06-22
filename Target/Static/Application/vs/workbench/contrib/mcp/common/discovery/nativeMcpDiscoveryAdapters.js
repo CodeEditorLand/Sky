@@ -1,1 +1,88 @@
-import{URI as r}from"../../../../../base/common/uri.js";function u(t,e,o){let i;try{i=JSON.parse(e.toString())}catch{return}return Object.entries(i.mcpServers).map((([e,i])=>({id:`${t}.${e}`,label:e,launch:i.url?{type:2,uri:r.parse(i.url),headers:[]}:{type:1,args:i.args||[],command:i.command,env:i.env||{},envFile:void 0,cwd:o?.fsPath}})))}class c{constructor(r){this.remoteAuthority=r,this.order=400,this.discoverySource="claude-desktop",this.id=`claude-desktop.${this.remoteAuthority}`}getFilePath({platform:t,winAppData:e,xdgHome:o,homedir:i}){if(3===t){const t=e||r.joinPath(i,"AppData","Roaming");return r.joinPath(t,"Claude","claude_desktop_config.json")}if(1===t)return r.joinPath(i,"Library","Application Support","Claude","claude_desktop_config.json");{const t=o||r.joinPath(i,".config");return r.joinPath(t,"Claude","claude_desktop_config.json")}}adaptFile(r,{homedir:t}){return u(this.id,r,t)}}class d extends c{constructor(r){super(r),this.discoverySource="windsurf",this.id=`windsurf.${this.remoteAuthority}`}getFilePath({homedir:t}){return r.joinPath(t,".codeium","windsurf","mcp_config.json")}}class p extends c{constructor(r){super(r),this.discoverySource="cursor-global",this.id=`cursor.${this.remoteAuthority}`}getFilePath({homedir:t}){return r.joinPath(t,".cursor","mcp.json")}}export{u as $ric,c as $sic,d as $tic,p as $uic};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { URI } from "../../../../../base/common/uri.js";
+function claudeConfigToServerDefinition(idPrefix, contents, cwd) {
+  let parsed;
+  try {
+    parsed = JSON.parse(contents.toString());
+  } catch {
+    return;
+  }
+  return Object.entries(parsed.mcpServers).map(([name, server]) => {
+    return {
+      id: `${idPrefix}.${name}`,
+      label: name,
+      launch: server.url ? {
+        type: 2,
+        uri: URI.parse(server.url),
+        headers: []
+      } : {
+        type: 1,
+        args: server.args || [],
+        command: server.command,
+        env: server.env || {},
+        envFile: void 0,
+        cwd: cwd?.fsPath
+      }
+    };
+  });
+}
+__name(claudeConfigToServerDefinition, "claudeConfigToServerDefinition");
+class ClaudeDesktopMpcDiscoveryAdapter {
+  static {
+    __name(this, "ClaudeDesktopMpcDiscoveryAdapter");
+  }
+  constructor(remoteAuthority) {
+    this.remoteAuthority = remoteAuthority;
+    this.order = 400;
+    this.discoverySource = "claude-desktop";
+    this.id = `claude-desktop.${this.remoteAuthority}`;
+  }
+  getFilePath({ platform, winAppData, xdgHome, homedir }) {
+    if (platform === 3) {
+      const appData = winAppData || URI.joinPath(homedir, "AppData", "Roaming");
+      return URI.joinPath(appData, "Claude", "claude_desktop_config.json");
+    } else if (platform === 1) {
+      return URI.joinPath(homedir, "Library", "Application Support", "Claude", "claude_desktop_config.json");
+    } else {
+      const configDir = xdgHome || URI.joinPath(homedir, ".config");
+      return URI.joinPath(configDir, "Claude", "claude_desktop_config.json");
+    }
+  }
+  adaptFile(contents, { homedir }) {
+    return claudeConfigToServerDefinition(this.id, contents, homedir);
+  }
+}
+class WindsurfDesktopMpcDiscoveryAdapter extends ClaudeDesktopMpcDiscoveryAdapter {
+  static {
+    __name(this, "WindsurfDesktopMpcDiscoveryAdapter");
+  }
+  constructor(remoteAuthority) {
+    super(remoteAuthority);
+    this.discoverySource = "windsurf";
+    this.id = `windsurf.${this.remoteAuthority}`;
+  }
+  getFilePath({ homedir }) {
+    return URI.joinPath(homedir, ".codeium", "windsurf", "mcp_config.json");
+  }
+}
+class CursorDesktopMpcDiscoveryAdapter extends ClaudeDesktopMpcDiscoveryAdapter {
+  static {
+    __name(this, "CursorDesktopMpcDiscoveryAdapter");
+  }
+  constructor(remoteAuthority) {
+    super(remoteAuthority);
+    this.discoverySource = "cursor-global";
+    this.id = `cursor.${this.remoteAuthority}`;
+  }
+  getFilePath({ homedir }) {
+    return URI.joinPath(homedir, ".cursor", "mcp.json");
+  }
+}
+export {
+  ClaudeDesktopMpcDiscoveryAdapter,
+  CursorDesktopMpcDiscoveryAdapter,
+  WindsurfDesktopMpcDiscoveryAdapter,
+  claudeConfigToServerDefinition
+};
+//# sourceMappingURL=nativeMcpDiscoveryAdapters.js.map

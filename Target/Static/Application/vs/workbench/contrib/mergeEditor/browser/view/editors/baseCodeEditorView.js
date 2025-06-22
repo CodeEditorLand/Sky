@@ -1,1 +1,150 @@
-import{h as _,$O6 as $}from"../../../../../../base/browser/dom.js";import{$E8 as N}from"../../../../../../base/browser/ui/iconLabel/iconLabels.js";import{$Bb as j}from"../../../../../../base/common/errors.js";import{autorun as O,autorunWithStore as A,derived as L}from"../../../../../../base/common/observable.js";import{OverviewRulerLane as y}from"../../../../../../editor/common/model.js";import{localize as g}from"../../../../../../nls.js";import{$dI as x}from"../../../../../../platform/actions/common/actions.js";import{$El as P}from"../../../../../../platform/configuration/common/configuration.js";import{$mj as S}from"../../../../../../platform/instantiation/common/instantiation.js";import{$nRb as k}from"../../utils.js";import{$DRb as C,$ERb as B}from"../colors.js";import{$IRb as H}from"../editorGutter.js";import{$JRb as T,$LRb as W,$KRb as z}from"./codeEditorView.js";var D=function(a,n,s,r){var t=arguments.length,e=t<3?n:r===null?r=Object.getOwnPropertyDescriptor(n,s):r,i;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")e=Reflect.decorate(a,n,s,r);else for(var o=a.length-1;o>=0;o--)(i=a[o])&&(e=(t<3?i(e):t>3?i(n,s,e):i(n,s))||e);return t>3&&e&&Object.defineProperty(n,s,e),e},M=function(a,n){return function(s,r){n(s,r,a)}};let I=class extends T{constructor(n,s,r){super(s,n,r),this.w=L(this,t=>{const e=this.viewModel.read(t);if(!e)return[];const i=e.model,o=i.base,p=e.activeModifiedBaseRange.read(t),m=e.showNonConflictingChanges.read(t),E=this.j.read(t),d=[];for(const f of i.modifiedBaseRanges.read(t)){const u=f.baseRange;if(!u)continue;const l=i.isHandled(f).read(t);if(!f.isConflicting&&l&&!m)continue;const c=["merge-editor-block"];let b=[0,0,0,0];l&&c.push("handled"),f===p&&(c.push("focused"),b=[0,2,0,2]),c.push("base");const R=e.baseShowDiffAgainst.read(t);if(R)for(const w of f.getInputDiffs(R)){const v=w.inputRange.toInclusiveRange();v&&d.push({range:v,options:{className:"merge-editor-diff base",description:"Merge Editor",isWholeLine:!0}});for(const h of w.rangeMappings)(E||!h.inputRange.isEmpty())&&d.push({range:h.inputRange,options:{className:h.inputRange.isEmpty()?"merge-editor-diff-empty-word base":"merge-editor-diff-word base",description:"Merge Editor",showIfCollapsed:!0}})}d.push({range:u.toInclusiveRangeOrEmpty(),options:{showIfCollapsed:!0,blockClassName:c.join(" "),blockPadding:b,blockIsAfterEnd:u.startLineNumber>o.getLineCount(),description:"Merge Editor",minimap:{position:2,color:{id:l?C:B}},overviewRuler:f.isConflicting?{position:y.Center,color:{id:l?C:B}}:void 0}})}return d}),this.B(z(this,(t,e)=>t)),this.B(s.createInstance(W,x.MergeBaseToolbar,this.a.title)),this.B(A((t,e)=>{this.f.read(t)&&e.add(new H(this.editor,this.a.gutterDiv,{getIntersectingGutterItems:(i,o)=>[],createView:(i,o)=>{throw new j}}))})),this.B(O(t=>{const e=this.viewModel.read(t);if(!e)return;this.editor.setModel(e.model.base),$(this.a.title,...N(g(9032,null)));const i=e.baseShowDiffAgainst.read(t);let o;if(i){const p=g(9033,null,i===1?e.model.input1.title:e.model.input2.title),m=g(9034,null);o=_("span",{title:m},[p]).root}$(this.a.description,...o?[o]:[])})),this.B(k(this.editor,this.w))}};I=D([M(1,S),M(2,P)],I);export{I as $MRb};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { h, reset } from "../../../../../../base/browser/dom.js";
+import { renderLabelWithIcons } from "../../../../../../base/browser/ui/iconLabel/iconLabels.js";
+import { BugIndicatingError } from "../../../../../../base/common/errors.js";
+import { autorun, autorunWithStore, derived } from "../../../../../../base/common/observable.js";
+import { OverviewRulerLane } from "../../../../../../editor/common/model.js";
+import { localize } from "../../../../../../nls.js";
+import { MenuId } from "../../../../../../platform/actions/common/actions.js";
+import { IConfigurationService } from "../../../../../../platform/configuration/common/configuration.js";
+import { IInstantiationService } from "../../../../../../platform/instantiation/common/instantiation.js";
+import { applyObservableDecorations } from "../../utils.js";
+import { handledConflictMinimapOverViewRulerColor, unhandledConflictMinimapOverViewRulerColor } from "../colors.js";
+import { EditorGutter } from "../editorGutter.js";
+import { CodeEditorView, TitleMenu, createSelectionsAutorun } from "./codeEditorView.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+let BaseCodeEditorView = class BaseCodeEditorView2 extends CodeEditorView {
+  static {
+    __name(this, "BaseCodeEditorView");
+  }
+  constructor(viewModel, instantiationService, configurationService) {
+    super(instantiationService, viewModel, configurationService);
+    this.decorations = derived(this, (reader) => {
+      const viewModel2 = this.viewModel.read(reader);
+      if (!viewModel2) {
+        return [];
+      }
+      const model = viewModel2.model;
+      const textModel = model.base;
+      const activeModifiedBaseRange = viewModel2.activeModifiedBaseRange.read(reader);
+      const showNonConflictingChanges = viewModel2.showNonConflictingChanges.read(reader);
+      const showDeletionMarkers = this.showDeletionMarkers.read(reader);
+      const result = [];
+      for (const modifiedBaseRange of model.modifiedBaseRanges.read(reader)) {
+        const range = modifiedBaseRange.baseRange;
+        if (!range) {
+          continue;
+        }
+        const isHandled = model.isHandled(modifiedBaseRange).read(reader);
+        if (!modifiedBaseRange.isConflicting && isHandled && !showNonConflictingChanges) {
+          continue;
+        }
+        const blockClassNames = ["merge-editor-block"];
+        let blockPadding = [0, 0, 0, 0];
+        if (isHandled) {
+          blockClassNames.push("handled");
+        }
+        if (modifiedBaseRange === activeModifiedBaseRange) {
+          blockClassNames.push("focused");
+          blockPadding = [0, 2, 0, 2];
+        }
+        blockClassNames.push("base");
+        const inputToDiffAgainst = viewModel2.baseShowDiffAgainst.read(reader);
+        if (inputToDiffAgainst) {
+          for (const diff of modifiedBaseRange.getInputDiffs(inputToDiffAgainst)) {
+            const range2 = diff.inputRange.toInclusiveRange();
+            if (range2) {
+              result.push({
+                range: range2,
+                options: {
+                  className: `merge-editor-diff base`,
+                  description: "Merge Editor",
+                  isWholeLine: true
+                }
+              });
+            }
+            for (const diff2 of diff.rangeMappings) {
+              if (showDeletionMarkers || !diff2.inputRange.isEmpty()) {
+                result.push({
+                  range: diff2.inputRange,
+                  options: {
+                    className: diff2.inputRange.isEmpty() ? `merge-editor-diff-empty-word base` : `merge-editor-diff-word base`,
+                    description: "Merge Editor",
+                    showIfCollapsed: true
+                  }
+                });
+              }
+            }
+          }
+        }
+        result.push({
+          range: range.toInclusiveRangeOrEmpty(),
+          options: {
+            showIfCollapsed: true,
+            blockClassName: blockClassNames.join(" "),
+            blockPadding,
+            blockIsAfterEnd: range.startLineNumber > textModel.getLineCount(),
+            description: "Merge Editor",
+            minimap: {
+              position: 2,
+              color: { id: isHandled ? handledConflictMinimapOverViewRulerColor : unhandledConflictMinimapOverViewRulerColor }
+            },
+            overviewRuler: modifiedBaseRange.isConflicting ? {
+              position: OverviewRulerLane.Center,
+              color: { id: isHandled ? handledConflictMinimapOverViewRulerColor : unhandledConflictMinimapOverViewRulerColor }
+            } : void 0
+          }
+        });
+      }
+      return result;
+    });
+    this._register(createSelectionsAutorun(this, (baseRange, viewModel2) => baseRange));
+    this._register(instantiationService.createInstance(TitleMenu, MenuId.MergeBaseToolbar, this.htmlElements.title));
+    this._register(autorunWithStore((reader, store) => {
+      if (this.checkboxesVisible.read(reader)) {
+        store.add(new EditorGutter(this.editor, this.htmlElements.gutterDiv, {
+          getIntersectingGutterItems: /* @__PURE__ */ __name((range, reader2) => [], "getIntersectingGutterItems"),
+          createView: /* @__PURE__ */ __name((item, target) => {
+            throw new BugIndicatingError();
+          }, "createView")
+        }));
+      }
+    }));
+    this._register(autorun((reader) => {
+      const vm = this.viewModel.read(reader);
+      if (!vm) {
+        return;
+      }
+      this.editor.setModel(vm.model.base);
+      reset(this.htmlElements.title, ...renderLabelWithIcons(localize("base", "Base")));
+      const baseShowDiffAgainst = vm.baseShowDiffAgainst.read(reader);
+      let node = void 0;
+      if (baseShowDiffAgainst) {
+        const label = localize("compareWith", "Comparing with {0}", baseShowDiffAgainst === 1 ? vm.model.input1.title : vm.model.input2.title);
+        const tooltip = localize("compareWithTooltip", "Differences are highlighted with a background color.");
+        node = h("span", { title: tooltip }, [label]).root;
+      }
+      reset(this.htmlElements.description, ...node ? [node] : []);
+    }));
+    this._register(applyObservableDecorations(this.editor, this.decorations));
+  }
+};
+BaseCodeEditorView = __decorate([
+  __param(1, IInstantiationService),
+  __param(2, IConfigurationService)
+], BaseCodeEditorView);
+export {
+  BaseCodeEditorView
+};
+//# sourceMappingURL=baseCodeEditorView.js.map

@@ -1,1 +1,480 @@
-import{$vd as P}from"../../../../../base/common/lifecycle.js";import{$Lc as C}from"../../../../../base/common/map.js";import{Schemas as H}from"../../../../../base/common/network.js";import{$7 as M}from"../../../../../base/common/path.js";import{$m as _}from"../../../../../base/common/platform.js";import{$Z as m}from"../../../../../base/common/process.js";import{URI as x}from"../../../../../base/common/uri.js";import{$El as z}from"../../../../../platform/configuration/common/configuration.js";import{$ok as F,$5j as p}from"../../../../../platform/files/common/files.js";import{$mj as D}from"../../../../../platform/instantiation/common/instantiation.js";import{$Ho as j}from"../../../../../platform/storage/common/storage.js";import{$YK as y}from"../../../../services/remote/common/remoteAgentService.js";var L,R,O=function(t,e,s,r){var o,i=arguments.length,n=i<3?e:null===r?r=Object.getOwnPropertyDescriptor(e,s):r;if("object"==typeof Reflect&&"function"==typeof Reflect.decorate)n=Reflect.decorate(t,e,s,r);else for(var a=t.length-1;a>=0;a--)(o=t[a])&&(n=(i<3?o(n):i>3?o(e,s,n):o(e,s))||n);return i>3&&n&&Object.defineProperty(e,s,n),n},E=function(t,e){return function(s,r){e(s,r,t)}};let S,A;function ie(t){return S||(S=t.get(D).createInstance($,"dirs")),S}function re(t){return A||(A=t.get(D).createInstance($,"commands")),A}!function(t){t[t.DefaultHistoryLimit=100]="DefaultHistoryLimit"}(L||(L={})),function(t){t.Entries="terminal.history.entries",t.Timestamp="terminal.history.timestamp"}(R||(R={}));let $=class extends P{get entries(){return this.n(),this.a.entries()}constructor(t,e,s){super(),this.h=t,this.j=e,this.m=s,this.b=0,this.f=!1,this.g=!0,this.a=new C(this.u()),this.B(this.j.onDidChangeConfiguration((t=>{t.affectsConfiguration("terminal.integrated.shellIntegration.history")&&(this.a.limit=this.u())}))),this.B(this.m.onDidChangeValue(-1,this.w(),this.q)((()=>{this.g||(this.g=this.m.getNumber(this.w(),-1,0)!==this.b)})))}add(t,e){this.n(),this.a.set(t,e),this.t()}remove(t){this.n(),this.a.delete(t),this.t()}clear(){this.n(),this.a.clear(),this.t()}n(){this.f||(this.r(),this.f=!0),this.g&&(this.a.clear(),this.r(),this.g=!1)}r(){this.b=this.m.getNumber(this.w(),-1,0);const t=this.s();if(t)for(const e of t.entries)this.a.set(e.key,e.value)}s(){const t=this.m.get(this.y(),-1);if(void 0===t||0===t.length)return;let e;try{e=JSON.parse(t)}catch{return}return e}t(){const t={entries:[]};this.a.forEach(((e,s)=>t.entries.push({key:s,value:e}))),this.m.store(this.y(),JSON.stringify(t),-1,1),this.b=Date.now(),this.m.store(this.w(),this.b,-1,1)}u(){const t=this.j.getValue("terminal.integrated.shellIntegration.history");return"number"==typeof t?t:100}w(){return`terminal.history.timestamp.${this.h}`}y(){return`terminal.history.entries.${this.h}`}};$=O([E(1,z),E(2,j)],$);const v=new Map;async function oe(t,e){const s=v.get(e);if(null===s)return;if(void 0!==s)return s;let r;switch(e){case"bash":r=await W(t);break;case"pwsh":r=await N(t);break;case"zsh":r=await k(t);break;case"fish":r=await G(t);break;case"python":r=await I(t);break;default:return}if(void 0!==r)return v.set(e,r),r;v.set(e,null)}function fe(){v.clear()}async function W(t){const e=t.get(p),s=t.get(y),r=await s.getEnvironment();if(1===r?.os||!r&&_)return;const o=await w(m.HOME,".bash_history",!1,e,s);if(void 0===o)return;const i=o.content.split("\n"),n=new Set;let a,c,h;for(let t=0;t<i.length;t++){a=i[t],void 0===c?c=a:c+=`\n${a}`;for(let t=0;t<a.length;t++)h?a[t]===h&&(h=void 0):a[t].match(/['"]/)&&(h=a[t]);void 0===h&&(c.length>0&&n.add(c.trim()),c=void 0)}return{sourceLabel:"~/.bash_history",sourceResource:o.resource,commands:Array.from(n.values())}}async function k(t){const e=t.get(p),s=t.get(y),r=await s.getEnvironment();if(1===r?.os||!r&&_)return;const o=await w(m.HOME,".zsh_history",!1,e,s);if(void 0===o)return;const i=/^:\s\d+:\d+;/.test(o.content),n=o.content.split(i?/\:\s\d+\:\d+;/:/(?<!\\)\n/),a=new Set;for(let t=0;t<n.length;t++){const e=n[t].replace(/\\\n/g,"\n").trim();e.length>0&&a.add(e)}return{sourceLabel:"~/.zsh_history",sourceResource:o.resource,commands:Array.from(a.values())}}async function I(t){const e=t.get(p),s=t.get(y),r=await w(m.HOME,".python_history",!1,e,s);if(void 0===r)return;const o=r.content.split("\n"),i=new Set;return o.forEach((t=>{t.trim().length>0&&i.add(t.trim())})),{sourceLabel:"~/.python_history",sourceResource:r.resource,commands:Array.from(i.values())}}async function N(t){const e=t.get(p),s=t.get(y);let r,o;const i=await s.getEnvironment(),n=1===i?.os||!i&&_;let a;n?(r=m.APPDATA,o="Microsoft\\Windows\\PowerShell\\PSReadLine\\ConsoleHost_history.txt",a="$APPDATA\\Microsoft\\Windows\\PowerShell\\PSReadLine\\ConsoleHost_history.txt"):(r=m.HOME,o=".local/share/powershell/PSReadline/ConsoleHost_history.txt",a=`~/${o}`);const c=await w(r,o,n,e,s);if(void 0===c)return;const h=c.content.split("\n"),l=new Set;let f,u,d;for(let t=0;t<h.length;t++)if(f=h[t],void 0===u?u=f:u+=`\n${f}`,f.endsWith("`")){for(let t=0;t<f.length;t++)d?f[t]===d&&(d=void 0):f[t].match(/`/)&&(d=f[t]);if(d)u=u.replace(/`$/,""),d=void 0;else{const t=u.trim();t.length>0&&l.add(t),u=void 0}}else{const t=u.trim();t.length>0&&l.add(t),u=void 0}return{sourceLabel:a,sourceResource:c.resource,commands:Array.from(l.values())}}async function G(t){const e=t.get(p),s=t.get(y),r=await s.getEnvironment();if(1===r?.os||!r&&_)return;let o,i,n;m.XDG_DATA_HOME?(n="$XDG_DATA_HOME/fish/fish_history",o=m.XDG_DATA_HOME,i="fish/fish_history"):(n="~/.local/share/fish/fish_history",o=m.HOME,i=".local/share/fish/fish_history");const a=await w(o,i,!1,e,s);if(void 0===a)return;const c=new Set,h=a.content.split("\n").filter((t=>t.startsWith("- cmd:"))).map((t=>t.substring(6).trimStart()));for(let t=0;t<h.length;t++){const e=T(h[t]).trim();e.length>0&&c.add(e)}return{sourceLabel:n,sourceResource:a.resource,commands:Array.from(c.values())}}function T(t){return X(/(^|[^\\])((?:\\\\)*)(\\n)/g,t,"$1$2\n")}function X(t,e,s){let r,o=e;for(;;)if(r=o,o=o.replace(t,s),o===r)return o}async function w(t,e,s,r,o){if(!t)return;const i=o.getConnection(),n=!!i?.remoteAuthority,a=x.from({scheme:n?H.vscodeRemote:H.file,authority:n?i.remoteAuthority:void 0,path:x.file(M(t,e)).path});let c;try{c=await r.readFile(a)}catch(t){if(t instanceof F&&1===t.fileOperationResult)return;throw t}return void 0!==c?{resource:a,content:c.value.toString()}:void 0}export{ie as $isc,re as $jsc,$ as $ksc,oe as $lsc,fe as $msc,W as $nsc,k as $osc,I as $psc,N as $qsc,G as $rsc,T as $ssc};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { Disposable } from "../../../../../base/common/lifecycle.js";
+import { LRUCache } from "../../../../../base/common/map.js";
+import { Schemas } from "../../../../../base/common/network.js";
+import { join } from "../../../../../base/common/path.js";
+import { isWindows } from "../../../../../base/common/platform.js";
+import { env } from "../../../../../base/common/process.js";
+import { URI } from "../../../../../base/common/uri.js";
+import { IConfigurationService } from "../../../../../platform/configuration/common/configuration.js";
+import { FileOperationError, IFileService } from "../../../../../platform/files/common/files.js";
+import { IInstantiationService } from "../../../../../platform/instantiation/common/instantiation.js";
+import { IStorageService } from "../../../../../platform/storage/common/storage.js";
+import { IRemoteAgentService } from "../../../../services/remote/common/remoteAgentService.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+var Constants;
+(function(Constants2) {
+  Constants2[Constants2["DefaultHistoryLimit"] = 100] = "DefaultHistoryLimit";
+})(Constants || (Constants = {}));
+var StorageKeys;
+(function(StorageKeys2) {
+  StorageKeys2["Entries"] = "terminal.history.entries";
+  StorageKeys2["Timestamp"] = "terminal.history.timestamp";
+})(StorageKeys || (StorageKeys = {}));
+let directoryHistory = void 0;
+function getDirectoryHistory(accessor) {
+  if (!directoryHistory) {
+    directoryHistory = accessor.get(IInstantiationService).createInstance(TerminalPersistedHistory, "dirs");
+  }
+  return directoryHistory;
+}
+__name(getDirectoryHistory, "getDirectoryHistory");
+let commandHistory = void 0;
+function getCommandHistory(accessor) {
+  if (!commandHistory) {
+    commandHistory = accessor.get(IInstantiationService).createInstance(TerminalPersistedHistory, "commands");
+  }
+  return commandHistory;
+}
+__name(getCommandHistory, "getCommandHistory");
+let TerminalPersistedHistory = class TerminalPersistedHistory2 extends Disposable {
+  static {
+    __name(this, "TerminalPersistedHistory");
+  }
+  get entries() {
+    this._ensureUpToDate();
+    return this._entries.entries();
+  }
+  constructor(_storageDataKey, _configurationService, _storageService) {
+    super();
+    this._storageDataKey = _storageDataKey;
+    this._configurationService = _configurationService;
+    this._storageService = _storageService;
+    this._timestamp = 0;
+    this._isReady = false;
+    this._isStale = true;
+    this._entries = new LRUCache(this._getHistoryLimit());
+    this._register(this._configurationService.onDidChangeConfiguration((e) => {
+      if (e.affectsConfiguration(
+        "terminal.integrated.shellIntegration.history"
+        /* TerminalHistorySettingId.ShellIntegrationCommandHistory */
+      )) {
+        this._entries.limit = this._getHistoryLimit();
+      }
+    }));
+    this._register(this._storageService.onDidChangeValue(-1, this._getTimestampStorageKey(), this._store)(() => {
+      if (!this._isStale) {
+        this._isStale = this._storageService.getNumber(this._getTimestampStorageKey(), -1, 0) !== this._timestamp;
+      }
+    }));
+  }
+  add(key, value) {
+    this._ensureUpToDate();
+    this._entries.set(key, value);
+    this._saveState();
+  }
+  remove(key) {
+    this._ensureUpToDate();
+    this._entries.delete(key);
+    this._saveState();
+  }
+  clear() {
+    this._ensureUpToDate();
+    this._entries.clear();
+    this._saveState();
+  }
+  _ensureUpToDate() {
+    if (!this._isReady) {
+      this._loadState();
+      this._isReady = true;
+    }
+    if (this._isStale) {
+      this._entries.clear();
+      this._loadState();
+      this._isStale = false;
+    }
+  }
+  _loadState() {
+    this._timestamp = this._storageService.getNumber(this._getTimestampStorageKey(), -1, 0);
+    const serialized = this._loadPersistedState();
+    if (serialized) {
+      for (const entry of serialized.entries) {
+        this._entries.set(entry.key, entry.value);
+      }
+    }
+  }
+  _loadPersistedState() {
+    const raw = this._storageService.get(
+      this._getEntriesStorageKey(),
+      -1
+      /* StorageScope.APPLICATION */
+    );
+    if (raw === void 0 || raw.length === 0) {
+      return void 0;
+    }
+    let serialized = void 0;
+    try {
+      serialized = JSON.parse(raw);
+    } catch {
+      return void 0;
+    }
+    return serialized;
+  }
+  _saveState() {
+    const serialized = { entries: [] };
+    this._entries.forEach((value, key) => serialized.entries.push({ key, value }));
+    this._storageService.store(
+      this._getEntriesStorageKey(),
+      JSON.stringify(serialized),
+      -1,
+      1
+      /* StorageTarget.MACHINE */
+    );
+    this._timestamp = Date.now();
+    this._storageService.store(
+      this._getTimestampStorageKey(),
+      this._timestamp,
+      -1,
+      1
+      /* StorageTarget.MACHINE */
+    );
+  }
+  _getHistoryLimit() {
+    const historyLimit = this._configurationService.getValue(
+      "terminal.integrated.shellIntegration.history"
+      /* TerminalHistorySettingId.ShellIntegrationCommandHistory */
+    );
+    return typeof historyLimit === "number" ? historyLimit : 100;
+  }
+  _getTimestampStorageKey() {
+    return `${"terminal.history.timestamp"}.${this._storageDataKey}`;
+  }
+  _getEntriesStorageKey() {
+    return `${"terminal.history.entries"}.${this._storageDataKey}`;
+  }
+};
+TerminalPersistedHistory = __decorate([
+  __param(1, IConfigurationService),
+  __param(2, IStorageService)
+], TerminalPersistedHistory);
+const shellFileHistory = /* @__PURE__ */ new Map();
+async function getShellFileHistory(accessor, shellType) {
+  const cached = shellFileHistory.get(shellType);
+  if (cached === null) {
+    return void 0;
+  }
+  if (cached !== void 0) {
+    return cached;
+  }
+  let result;
+  switch (shellType) {
+    case "bash":
+      result = await fetchBashHistory(accessor);
+      break;
+    case "pwsh":
+      result = await fetchPwshHistory(accessor);
+      break;
+    case "zsh":
+      result = await fetchZshHistory(accessor);
+      break;
+    case "fish":
+      result = await fetchFishHistory(accessor);
+      break;
+    case "python":
+      result = await fetchPythonHistory(accessor);
+      break;
+    default:
+      return void 0;
+  }
+  if (result === void 0) {
+    shellFileHistory.set(shellType, null);
+    return void 0;
+  }
+  shellFileHistory.set(shellType, result);
+  return result;
+}
+__name(getShellFileHistory, "getShellFileHistory");
+function clearShellFileHistory() {
+  shellFileHistory.clear();
+}
+__name(clearShellFileHistory, "clearShellFileHistory");
+async function fetchBashHistory(accessor) {
+  const fileService = accessor.get(IFileService);
+  const remoteAgentService = accessor.get(IRemoteAgentService);
+  const remoteEnvironment = await remoteAgentService.getEnvironment();
+  if (remoteEnvironment?.os === 1 || !remoteEnvironment && isWindows) {
+    return void 0;
+  }
+  const sourceLabel = "~/.bash_history";
+  const resolvedFile = await fetchFileContents(env["HOME"], ".bash_history", false, fileService, remoteAgentService);
+  if (resolvedFile === void 0) {
+    return void 0;
+  }
+  const fileLines = resolvedFile.content.split("\n");
+  const result = /* @__PURE__ */ new Set();
+  let currentLine;
+  let currentCommand = void 0;
+  let wrapChar = void 0;
+  for (let i = 0; i < fileLines.length; i++) {
+    currentLine = fileLines[i];
+    if (currentCommand === void 0) {
+      currentCommand = currentLine;
+    } else {
+      currentCommand += `
+${currentLine}`;
+    }
+    for (let c = 0; c < currentLine.length; c++) {
+      if (wrapChar) {
+        if (currentLine[c] === wrapChar) {
+          wrapChar = void 0;
+        }
+      } else {
+        if (currentLine[c].match(/['"]/)) {
+          wrapChar = currentLine[c];
+        }
+      }
+    }
+    if (wrapChar === void 0) {
+      if (currentCommand.length > 0) {
+        result.add(currentCommand.trim());
+      }
+      currentCommand = void 0;
+    }
+  }
+  return {
+    sourceLabel,
+    sourceResource: resolvedFile.resource,
+    commands: Array.from(result.values())
+  };
+}
+__name(fetchBashHistory, "fetchBashHistory");
+async function fetchZshHistory(accessor) {
+  const fileService = accessor.get(IFileService);
+  const remoteAgentService = accessor.get(IRemoteAgentService);
+  const remoteEnvironment = await remoteAgentService.getEnvironment();
+  if (remoteEnvironment?.os === 1 || !remoteEnvironment && isWindows) {
+    return void 0;
+  }
+  const sourceLabel = "~/.zsh_history";
+  const resolvedFile = await fetchFileContents(env["HOME"], ".zsh_history", false, fileService, remoteAgentService);
+  if (resolvedFile === void 0) {
+    return void 0;
+  }
+  const isExtendedHistory = /^:\s\d+:\d+;/.test(resolvedFile.content);
+  const fileLines = resolvedFile.content.split(isExtendedHistory ? /\:\s\d+\:\d+;/ : /(?<!\\)\n/);
+  const result = /* @__PURE__ */ new Set();
+  for (let i = 0; i < fileLines.length; i++) {
+    const sanitized = fileLines[i].replace(/\\\n/g, "\n").trim();
+    if (sanitized.length > 0) {
+      result.add(sanitized);
+    }
+  }
+  return {
+    sourceLabel,
+    sourceResource: resolvedFile.resource,
+    commands: Array.from(result.values())
+  };
+}
+__name(fetchZshHistory, "fetchZshHistory");
+async function fetchPythonHistory(accessor) {
+  const fileService = accessor.get(IFileService);
+  const remoteAgentService = accessor.get(IRemoteAgentService);
+  const sourceLabel = "~/.python_history";
+  const resolvedFile = await fetchFileContents(env["HOME"], ".python_history", false, fileService, remoteAgentService);
+  if (resolvedFile === void 0) {
+    return void 0;
+  }
+  const fileLines = resolvedFile.content.split("\n");
+  const result = /* @__PURE__ */ new Set();
+  fileLines.forEach((line) => {
+    if (line.trim().length > 0) {
+      result.add(line.trim());
+    }
+  });
+  return {
+    sourceLabel,
+    sourceResource: resolvedFile.resource,
+    commands: Array.from(result.values())
+  };
+}
+__name(fetchPythonHistory, "fetchPythonHistory");
+async function fetchPwshHistory(accessor) {
+  const fileService = accessor.get(IFileService);
+  const remoteAgentService = accessor.get(IRemoteAgentService);
+  let folderPrefix;
+  let filePath;
+  const remoteEnvironment = await remoteAgentService.getEnvironment();
+  const isFileWindows = remoteEnvironment?.os === 1 || !remoteEnvironment && isWindows;
+  let sourceLabel;
+  if (isFileWindows) {
+    folderPrefix = env["APPDATA"];
+    filePath = "Microsoft\\Windows\\PowerShell\\PSReadLine\\ConsoleHost_history.txt";
+    sourceLabel = `$APPDATA\\Microsoft\\Windows\\PowerShell\\PSReadLine\\ConsoleHost_history.txt`;
+  } else {
+    folderPrefix = env["HOME"];
+    filePath = ".local/share/powershell/PSReadline/ConsoleHost_history.txt";
+    sourceLabel = `~/${filePath}`;
+  }
+  const resolvedFile = await fetchFileContents(folderPrefix, filePath, isFileWindows, fileService, remoteAgentService);
+  if (resolvedFile === void 0) {
+    return void 0;
+  }
+  const fileLines = resolvedFile.content.split("\n");
+  const result = /* @__PURE__ */ new Set();
+  let currentLine;
+  let currentCommand = void 0;
+  let wrapChar = void 0;
+  for (let i = 0; i < fileLines.length; i++) {
+    currentLine = fileLines[i];
+    if (currentCommand === void 0) {
+      currentCommand = currentLine;
+    } else {
+      currentCommand += `
+${currentLine}`;
+    }
+    if (!currentLine.endsWith("`")) {
+      const sanitized = currentCommand.trim();
+      if (sanitized.length > 0) {
+        result.add(sanitized);
+      }
+      currentCommand = void 0;
+      continue;
+    }
+    for (let c = 0; c < currentLine.length; c++) {
+      if (wrapChar) {
+        if (currentLine[c] === wrapChar) {
+          wrapChar = void 0;
+        }
+      } else {
+        if (currentLine[c].match(/`/)) {
+          wrapChar = currentLine[c];
+        }
+      }
+    }
+    if (!wrapChar) {
+      const sanitized = currentCommand.trim();
+      if (sanitized.length > 0) {
+        result.add(sanitized);
+      }
+      currentCommand = void 0;
+    } else {
+      currentCommand = currentCommand.replace(/`$/, "");
+      wrapChar = void 0;
+    }
+  }
+  return {
+    sourceLabel,
+    sourceResource: resolvedFile.resource,
+    commands: Array.from(result.values())
+  };
+}
+__name(fetchPwshHistory, "fetchPwshHistory");
+async function fetchFishHistory(accessor) {
+  const fileService = accessor.get(IFileService);
+  const remoteAgentService = accessor.get(IRemoteAgentService);
+  const remoteEnvironment = await remoteAgentService.getEnvironment();
+  if (remoteEnvironment?.os === 1 || !remoteEnvironment && isWindows) {
+    return void 0;
+  }
+  const overridenDataHome = env["XDG_DATA_HOME"];
+  let folderPrefix;
+  let filePath;
+  let sourceLabel;
+  if (overridenDataHome) {
+    sourceLabel = "$XDG_DATA_HOME/fish/fish_history";
+    folderPrefix = env["XDG_DATA_HOME"];
+    filePath = "fish/fish_history";
+  } else {
+    sourceLabel = "~/.local/share/fish/fish_history";
+    folderPrefix = env["HOME"];
+    filePath = ".local/share/fish/fish_history";
+  }
+  const resolvedFile = await fetchFileContents(folderPrefix, filePath, false, fileService, remoteAgentService);
+  if (resolvedFile === void 0) {
+    return void 0;
+  }
+  const result = /* @__PURE__ */ new Set();
+  const cmds = resolvedFile.content.split("\n").filter((x) => x.startsWith("- cmd:")).map((x) => x.substring(6).trimStart());
+  for (let i = 0; i < cmds.length; i++) {
+    const sanitized = sanitizeFishHistoryCmd(cmds[i]).trim();
+    if (sanitized.length > 0) {
+      result.add(sanitized);
+    }
+  }
+  return {
+    sourceLabel,
+    sourceResource: resolvedFile.resource,
+    commands: Array.from(result.values())
+  };
+}
+__name(fetchFishHistory, "fetchFishHistory");
+function sanitizeFishHistoryCmd(cmd) {
+  return repeatedReplace(/(^|[^\\])((?:\\\\)*)(\\n)/g, cmd, "$1$2\n");
+}
+__name(sanitizeFishHistoryCmd, "sanitizeFishHistoryCmd");
+function repeatedReplace(pattern, value, replaceValue) {
+  let last;
+  let current = value;
+  while (true) {
+    last = current;
+    current = current.replace(pattern, replaceValue);
+    if (current === last) {
+      return current;
+    }
+  }
+}
+__name(repeatedReplace, "repeatedReplace");
+async function fetchFileContents(folderPrefix, filePath, isFileWindows, fileService, remoteAgentService) {
+  if (!folderPrefix) {
+    return void 0;
+  }
+  const connection = remoteAgentService.getConnection();
+  const isRemote = !!connection?.remoteAuthority;
+  const resource = URI.from({
+    scheme: isRemote ? Schemas.vscodeRemote : Schemas.file,
+    authority: isRemote ? connection.remoteAuthority : void 0,
+    path: URI.file(join(folderPrefix, filePath)).path
+  });
+  let content;
+  try {
+    content = await fileService.readFile(resource);
+  } catch (e) {
+    if (e instanceof FileOperationError && e.fileOperationResult === 1) {
+      return void 0;
+    }
+    throw e;
+  }
+  if (content === void 0) {
+    return void 0;
+  }
+  return {
+    resource,
+    content: content.value.toString()
+  };
+}
+__name(fetchFileContents, "fetchFileContents");
+export {
+  TerminalPersistedHistory,
+  clearShellFileHistory,
+  fetchBashHistory,
+  fetchFishHistory,
+  fetchPwshHistory,
+  fetchPythonHistory,
+  fetchZshHistory,
+  getCommandHistory,
+  getDirectoryHistory,
+  getShellFileHistory,
+  sanitizeFishHistoryCmd
+};
+//# sourceMappingURL=history.js.map

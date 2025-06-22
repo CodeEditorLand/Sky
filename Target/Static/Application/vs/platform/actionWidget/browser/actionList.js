@@ -1,1 +1,316 @@
-import*as w from"../../../base/browser/dom.js";import{$99 as $}from"../../../base/browser/ui/keybindingLabel/keybindingLabel.js";import{$D8 as E}from"../../../base/browser/ui/list/listWidget.js";import{$pf as k}from"../../../base/common/cancellation.js";import{$Mj as I}from"../../../base/common/codicons.js";import{$vd as S}from"../../../base/common/lifecycle.js";import{OS as L}from"../../../base/common/platform.js";import{ThemeIcon as g}from"../../../base/common/themables.js";import"./actionWidget.css";import{localize as p}from"../../../nls.js";import{$nfb as P}from"../../contextview/browser/contextView.js";import{$ux as N}from"../../keybinding/common/keybinding.js";import{$4fb as _}from"../../theme/browser/defaultStyles.js";import{$jp as A}from"../../theme/common/colorRegistry.js";import{$zhb as B}from"../../layout/browser/layoutService.js";var y=function(r,e,i,t){var s=arguments.length,n=s<3?e:t===null?t=Object.getOwnPropertyDescriptor(e,i):t,a;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")n=Reflect.decorate(r,e,i,t);else for(var c=r.length-1;c>=0;c--)(a=r[c])&&(n=(s<3?a(n):s>3?a(e,i,n):a(e,i))||n);return s>3&&n&&Object.defineProperty(e,i,n),n},d=function(r,e){return function(i,t){e(i,t,r)}};const H="acceptSelectedCodeAction",R="previewSelectedCodeAction";var b;(function(r){r.Action="action",r.Header="header"})(b||(b={}));class D{get templateId(){return"header"}renderTemplate(e){e.classList.add("group-header");const i=document.createElement("span");return e.append(i),{container:e,text:i}}renderElement(e,i,t){t.text.textContent=e.group?.title??e.label??""}disposeTemplate(e){}}let u=class{get templateId(){return"action"}constructor(e,i){this.a=e,this.b=i}renderTemplate(e){e.classList.add(this.templateId);const i=document.createElement("div");i.className="icon",e.append(i);const t=document.createElement("span");t.className="title",e.append(t);const s=document.createElement("span");s.className="description",e.append(s);const n=new $(e,L);return{container:e,icon:i,text:t,description:s,keybinding:n}}renderElement(e,i,t){if(e.group?.icon?(t.icon.className=g.asClassName(e.group.icon),e.group.icon.color&&(t.icon.style.color=A(e.group.icon.color.id))):(t.icon.className=g.asClassName(I.lightBulb),t.icon.style.color="var(--vscode-editorLightBulb-foreground)"),!e.item||!e.label)return;w.$R6(!e.hideIcon,t.icon),t.text.textContent=f(e.label),e.keybinding?(t.description.textContent=e.keybinding.getLabel(),t.description.style.display="inline",t.description.style.letterSpacing="0.5px"):e.description?(t.description.textContent=f(e.description),t.description.style.display="inline"):(t.description.textContent="",t.description.style.display="none");const s=this.b.lookupKeybinding(H)?.getLabel(),n=this.b.lookupKeybinding(R)?.getLabel();t.container.classList.toggle("option-disabled",e.disabled),e.tooltip?t.container.title=e.tooltip:e.disabled?t.container.title=e.label:s&&n?this.a&&e.canPreview?t.container.title=p(1780,null,s,n):t.container.title=p(1781,null,s):t.container.title=""}disposeTemplate(e){e.keybinding.dispose()}};u=y([d(1,N)],u);class T extends UIEvent{constructor(){super("acceptSelectedAction")}}class x extends UIEvent{constructor(){super("previewSelectedAction")}}function j(r){if(r.kind==="action")return r.label}let v=class extends S{constructor(e,i,t,s,n,a,c,h){super(),this.h=s,this.j=a,this.m=c,this.n=h,this.b=24,this.c=26,this.g=this.B(new k),this.domNode=document.createElement("div"),this.domNode.classList.add("actionList");const m={getHeight:o=>o.kind==="header"?this.c:this.b,getTemplateId:o=>o.kind};this.a=this.B(new E(e,this.domNode,m,[new u(i,this.m),new D],{keyboardSupport:!1,typeNavigationEnabled:!0,keyboardNavigationLabelProvider:{getKeyboardNavigationLabel:j},accessibilityProvider:{getAriaLabel:o=>{if(o.kind==="action"){let l=o.label?f(o?.label):"";return o.disabled&&(l=p(1782,null,l,o.disabled)),l}return null},getWidgetAriaLabel:()=>p(1783,null),getRole:o=>o.kind==="action"?"option":"separator",getWidgetRole:()=>"listbox",...n}})),this.a.style(_),this.B(this.a.onMouseClick(o=>this.w(o))),this.B(this.a.onMouseOver(o=>this.u(o))),this.B(this.a.onDidChangeFocus(()=>this.t())),this.B(this.a.onDidChangeSelection(o=>this.s(o))),this.f=t,this.a.splice(0,this.a.length,this.f),this.a.length&&this.focusNext()}r(e){return!e.disabled&&e.kind==="action"}hide(e){this.h.onHide(e),this.g.cancel(),this.j.hideContextView()}layout(e){const i=this.f.filter(h=>h.kind==="header").length,s=this.f.length*this.b+i*this.c-i*this.b;this.a.layout(s);let n=e;if(this.f.length>=50)n=380;else{const h=this.f.map((m,o)=>{const l=this.domNode.ownerDocument.getElementById(this.a.getElementID(o));if(l){l.style.width="auto";const C=l.getBoundingClientRect().width;return l.style.width="",C}return 0});n=Math.max(...h,e)}const c=Math.min(s,this.n.getContainer(w.getWindow(this.domNode)).clientHeight*.7);return this.a.layout(c,n),this.domNode.style.height=`${c}px`,this.a.domFocus(),n}focusPrevious(){this.a.focusPrevious(1,!0,void 0,this.r)}focusNext(){this.a.focusNext(1,!0,void 0,this.r)}acceptSelected(e){const i=this.a.getFocus();if(i.length===0)return;const t=i[0],s=this.a.element(t);if(!this.r(s))return;const n=e?new x:new T;this.a.setSelection([t],n)}s(e){if(!e.elements.length)return;const i=e.elements[0];i.item&&this.r(i)?this.h.onSelect(i.item,e.browserEvent instanceof x):this.a.setSelection([])}t(){const e=this.a.getFocus();if(e.length===0)return;const i=e[0],t=this.a.element(i);this.h.onFocus?.(t.item)}async u(e){const i=e.element;if(i&&i.item&&this.r(i)){if(this.h.onHover&&!i.disabled&&i.kind==="action"){const t=await this.h.onHover(i.item,this.g.token);i.canPreview=t?t.canPreview:void 0}e.index&&this.a.splice(e.index,1,[i])}this.a.setFocus(typeof e.index=="number"?[e.index]:[])}w(e){e.element&&this.r(e.element)&&this.a.setFocus([])}};v=y([d(5,P),d(6,N),d(7,B)],v);function f(r){return r.replace(/\r\n|\r|\n/g," ")}export{H as $Ahb,R as $Bhb,v as $Chb,b as ActionListItemKind};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import * as dom from "../../../base/browser/dom.js";
+import { KeybindingLabel } from "../../../base/browser/ui/keybindingLabel/keybindingLabel.js";
+import { List } from "../../../base/browser/ui/list/listWidget.js";
+import { CancellationTokenSource } from "../../../base/common/cancellation.js";
+import { Codicon } from "../../../base/common/codicons.js";
+import { Disposable } from "../../../base/common/lifecycle.js";
+import { OS } from "../../../base/common/platform.js";
+import { ThemeIcon } from "../../../base/common/themables.js";
+import "./actionWidget.css";
+import { localize } from "../../../nls.js";
+import { IContextViewService } from "../../contextview/browser/contextView.js";
+import { IKeybindingService } from "../../keybinding/common/keybinding.js";
+import { defaultListStyles } from "../../theme/browser/defaultStyles.js";
+import { asCssVariable } from "../../theme/common/colorRegistry.js";
+import { ILayoutService } from "../../layout/browser/layoutService.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+const acceptSelectedActionCommand = "acceptSelectedCodeAction";
+const previewSelectedActionCommand = "previewSelectedCodeAction";
+var ActionListItemKind;
+(function(ActionListItemKind2) {
+  ActionListItemKind2["Action"] = "action";
+  ActionListItemKind2["Header"] = "header";
+})(ActionListItemKind || (ActionListItemKind = {}));
+class HeaderRenderer {
+  static {
+    __name(this, "HeaderRenderer");
+  }
+  get templateId() {
+    return "header";
+  }
+  renderTemplate(container) {
+    container.classList.add("group-header");
+    const text = document.createElement("span");
+    container.append(text);
+    return { container, text };
+  }
+  renderElement(element, _index, templateData) {
+    templateData.text.textContent = element.group?.title ?? element.label ?? "";
+  }
+  disposeTemplate(_templateData) {
+  }
+}
+let ActionItemRenderer = class ActionItemRenderer2 {
+  static {
+    __name(this, "ActionItemRenderer");
+  }
+  get templateId() {
+    return "action";
+  }
+  constructor(_supportsPreview, _keybindingService) {
+    this._supportsPreview = _supportsPreview;
+    this._keybindingService = _keybindingService;
+  }
+  renderTemplate(container) {
+    container.classList.add(this.templateId);
+    const icon = document.createElement("div");
+    icon.className = "icon";
+    container.append(icon);
+    const text = document.createElement("span");
+    text.className = "title";
+    container.append(text);
+    const description = document.createElement("span");
+    description.className = "description";
+    container.append(description);
+    const keybinding = new KeybindingLabel(container, OS);
+    return { container, icon, text, description, keybinding };
+  }
+  renderElement(element, _index, data) {
+    if (element.group?.icon) {
+      data.icon.className = ThemeIcon.asClassName(element.group.icon);
+      if (element.group.icon.color) {
+        data.icon.style.color = asCssVariable(element.group.icon.color.id);
+      }
+    } else {
+      data.icon.className = ThemeIcon.asClassName(Codicon.lightBulb);
+      data.icon.style.color = "var(--vscode-editorLightBulb-foreground)";
+    }
+    if (!element.item || !element.label) {
+      return;
+    }
+    dom.setVisibility(!element.hideIcon, data.icon);
+    data.text.textContent = stripNewlines(element.label);
+    if (element.keybinding) {
+      data.description.textContent = element.keybinding.getLabel();
+      data.description.style.display = "inline";
+      data.description.style.letterSpacing = "0.5px";
+    } else if (element.description) {
+      data.description.textContent = stripNewlines(element.description);
+      data.description.style.display = "inline";
+    } else {
+      data.description.textContent = "";
+      data.description.style.display = "none";
+    }
+    const actionTitle = this._keybindingService.lookupKeybinding(acceptSelectedActionCommand)?.getLabel();
+    const previewTitle = this._keybindingService.lookupKeybinding(previewSelectedActionCommand)?.getLabel();
+    data.container.classList.toggle("option-disabled", element.disabled);
+    if (element.tooltip) {
+      data.container.title = element.tooltip;
+    } else if (element.disabled) {
+      data.container.title = element.label;
+    } else if (actionTitle && previewTitle) {
+      if (this._supportsPreview && element.canPreview) {
+        data.container.title = localize({ key: "label-preview", comment: ['placeholders are keybindings, e.g "F2 to Apply, Shift+F2 to Preview"'] }, "{0} to Apply, {1} to Preview", actionTitle, previewTitle);
+      } else {
+        data.container.title = localize({ key: "label", comment: ['placeholder is a keybinding, e.g "F2 to Apply"'] }, "{0} to Apply", actionTitle);
+      }
+    } else {
+      data.container.title = "";
+    }
+  }
+  disposeTemplate(templateData) {
+    templateData.keybinding.dispose();
+  }
+};
+ActionItemRenderer = __decorate([
+  __param(1, IKeybindingService)
+], ActionItemRenderer);
+class AcceptSelectedEvent extends UIEvent {
+  static {
+    __name(this, "AcceptSelectedEvent");
+  }
+  constructor() {
+    super("acceptSelectedAction");
+  }
+}
+class PreviewSelectedEvent extends UIEvent {
+  static {
+    __name(this, "PreviewSelectedEvent");
+  }
+  constructor() {
+    super("previewSelectedAction");
+  }
+}
+function getKeyboardNavigationLabel(item) {
+  if (item.kind === "action") {
+    return item.label;
+  }
+  return void 0;
+}
+__name(getKeyboardNavigationLabel, "getKeyboardNavigationLabel");
+let ActionList = class ActionList2 extends Disposable {
+  static {
+    __name(this, "ActionList");
+  }
+  constructor(user, preview, items, _delegate, accessibilityProvider, _contextViewService, _keybindingService, _layoutService) {
+    super();
+    this._delegate = _delegate;
+    this._contextViewService = _contextViewService;
+    this._keybindingService = _keybindingService;
+    this._layoutService = _layoutService;
+    this._actionLineHeight = 24;
+    this._headerLineHeight = 26;
+    this.cts = this._register(new CancellationTokenSource());
+    this.domNode = document.createElement("div");
+    this.domNode.classList.add("actionList");
+    const virtualDelegate = {
+      getHeight: /* @__PURE__ */ __name((element) => element.kind === "header" ? this._headerLineHeight : this._actionLineHeight, "getHeight"),
+      getTemplateId: /* @__PURE__ */ __name((element) => element.kind, "getTemplateId")
+    };
+    this._list = this._register(new List(user, this.domNode, virtualDelegate, [
+      new ActionItemRenderer(preview, this._keybindingService),
+      new HeaderRenderer()
+    ], {
+      keyboardSupport: false,
+      typeNavigationEnabled: true,
+      keyboardNavigationLabelProvider: { getKeyboardNavigationLabel },
+      accessibilityProvider: {
+        getAriaLabel: /* @__PURE__ */ __name((element) => {
+          if (element.kind === "action") {
+            let label = element.label ? stripNewlines(element?.label) : "";
+            if (element.disabled) {
+              label = localize({ key: "customQuickFixWidget.labels", comment: [`Action widget labels for accessibility.`] }, "{0}, Disabled Reason: {1}", label, element.disabled);
+            }
+            return label;
+          }
+          return null;
+        }, "getAriaLabel"),
+        getWidgetAriaLabel: /* @__PURE__ */ __name(() => localize({ key: "customQuickFixWidget", comment: [`An action widget option`] }, "Action Widget"), "getWidgetAriaLabel"),
+        getRole: /* @__PURE__ */ __name((e) => e.kind === "action" ? "option" : "separator", "getRole"),
+        getWidgetRole: /* @__PURE__ */ __name(() => "listbox", "getWidgetRole"),
+        ...accessibilityProvider
+      }
+    }));
+    this._list.style(defaultListStyles);
+    this._register(this._list.onMouseClick((e) => this.onListClick(e)));
+    this._register(this._list.onMouseOver((e) => this.onListHover(e)));
+    this._register(this._list.onDidChangeFocus(() => this.onFocus()));
+    this._register(this._list.onDidChangeSelection((e) => this.onListSelection(e)));
+    this._allMenuItems = items;
+    this._list.splice(0, this._list.length, this._allMenuItems);
+    if (this._list.length) {
+      this.focusNext();
+    }
+  }
+  focusCondition(element) {
+    return !element.disabled && element.kind === "action";
+  }
+  hide(didCancel) {
+    this._delegate.onHide(didCancel);
+    this.cts.cancel();
+    this._contextViewService.hideContextView();
+  }
+  layout(minWidth) {
+    const numHeaders = this._allMenuItems.filter((item) => item.kind === "header").length;
+    const itemsHeight = this._allMenuItems.length * this._actionLineHeight;
+    const heightWithHeaders = itemsHeight + numHeaders * this._headerLineHeight - numHeaders * this._actionLineHeight;
+    this._list.layout(heightWithHeaders);
+    let maxWidth = minWidth;
+    if (this._allMenuItems.length >= 50) {
+      maxWidth = 380;
+    } else {
+      const itemWidths = this._allMenuItems.map((_, index) => {
+        const element = this.domNode.ownerDocument.getElementById(this._list.getElementID(index));
+        if (element) {
+          element.style.width = "auto";
+          const width = element.getBoundingClientRect().width;
+          element.style.width = "";
+          return width;
+        }
+        return 0;
+      });
+      maxWidth = Math.max(...itemWidths, minWidth);
+    }
+    const maxVhPrecentage = 0.7;
+    const height = Math.min(heightWithHeaders, this._layoutService.getContainer(dom.getWindow(this.domNode)).clientHeight * maxVhPrecentage);
+    this._list.layout(height, maxWidth);
+    this.domNode.style.height = `${height}px`;
+    this._list.domFocus();
+    return maxWidth;
+  }
+  focusPrevious() {
+    this._list.focusPrevious(1, true, void 0, this.focusCondition);
+  }
+  focusNext() {
+    this._list.focusNext(1, true, void 0, this.focusCondition);
+  }
+  acceptSelected(preview) {
+    const focused = this._list.getFocus();
+    if (focused.length === 0) {
+      return;
+    }
+    const focusIndex = focused[0];
+    const element = this._list.element(focusIndex);
+    if (!this.focusCondition(element)) {
+      return;
+    }
+    const event = preview ? new PreviewSelectedEvent() : new AcceptSelectedEvent();
+    this._list.setSelection([focusIndex], event);
+  }
+  onListSelection(e) {
+    if (!e.elements.length) {
+      return;
+    }
+    const element = e.elements[0];
+    if (element.item && this.focusCondition(element)) {
+      this._delegate.onSelect(element.item, e.browserEvent instanceof PreviewSelectedEvent);
+    } else {
+      this._list.setSelection([]);
+    }
+  }
+  onFocus() {
+    const focused = this._list.getFocus();
+    if (focused.length === 0) {
+      return;
+    }
+    const focusIndex = focused[0];
+    const element = this._list.element(focusIndex);
+    this._delegate.onFocus?.(element.item);
+  }
+  async onListHover(e) {
+    const element = e.element;
+    if (element && element.item && this.focusCondition(element)) {
+      if (this._delegate.onHover && !element.disabled && element.kind === "action") {
+        const result = await this._delegate.onHover(element.item, this.cts.token);
+        element.canPreview = result ? result.canPreview : void 0;
+      }
+      if (e.index) {
+        this._list.splice(e.index, 1, [element]);
+      }
+    }
+    this._list.setFocus(typeof e.index === "number" ? [e.index] : []);
+  }
+  onListClick(e) {
+    if (e.element && this.focusCondition(e.element)) {
+      this._list.setFocus([]);
+    }
+  }
+};
+ActionList = __decorate([
+  __param(5, IContextViewService),
+  __param(6, IKeybindingService),
+  __param(7, ILayoutService)
+], ActionList);
+function stripNewlines(str) {
+  return str.replace(/\r\n|\r|\n/g, " ");
+}
+__name(stripNewlines, "stripNewlines");
+export {
+  ActionList,
+  ActionListItemKind,
+  acceptSelectedActionCommand,
+  previewSelectedActionCommand
+};
+//# sourceMappingURL=actionList.js.map

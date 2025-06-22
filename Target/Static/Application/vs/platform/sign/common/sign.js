@@ -1,1 +1,8 @@
-import{$nj as o}from"../../instantiation/common/instantiation.js";const r="signService",e=o(r);export{r as $7x,e as $8x};
+import { createDecorator } from "../../instantiation/common/instantiation.js";
+const SIGN_SERVICE_ID = "signService";
+const ISignService = createDecorator(SIGN_SERVICE_ID);
+export {
+  ISignService,
+  SIGN_SERVICE_ID
+};
+//# sourceMappingURL=sign.js.map

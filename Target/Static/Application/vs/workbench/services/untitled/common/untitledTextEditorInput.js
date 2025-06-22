@@ -1,1 +1,182 @@
-import{$7J as b,$aK as X,$fK as y}from"../../../common/editor.js";import{$pAb as D}from"../../../common/editor/textResourceEditorInput.js";import{$fJ as v}from"../../textfile/common/textfiles.js";import{$2H as A}from"../../../../platform/label/common/label.js";import{$oI as I}from"../../editor/common/editorService.js";import{$5j as E}from"../../../../platform/files/common/files.js";import{$dh as d,$uh as _}from"../../../../base/common/resources.js";import{$KX as w}from"../../environment/common/environmentService.js";import{$3X as F}from"../../path/common/pathService.js";import{$7I as P}from"../../filesConfiguration/common/filesConfigurationService.js";import{$cF as U}from"../../../../editor/common/services/resolverService.js";import{$ud as L,$qd as R}from"../../../../base/common/lifecycle.js";import{$nF as S}from"../../../../editor/common/services/textResourceConfiguration.js";import{$Vyb as x}from"../../editor/common/customEditorLabelService.js";var $=function(n,t,e,i){var o=arguments.length,r=o<3?t:i===null?i=Object.getOwnPropertyDescriptor(t,e):i,h;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")r=Reflect.decorate(n,t,e,i);else for(var a=n.length-1;a>=0;a--)(h=n[a])&&(r=(o<3?h(r):o>3?h(t,e,r):h(t,e))||r);return o>3&&r&&Object.defineProperty(t,e,r),r},s=function(n,t){return function(e,i){t(e,i,n)}},c;let u=class extends D{static{c=this}static{this.ID="workbench.editors.untitledEditorInput"}get typeId(){return c.ID}get editorId(){return b.id}constructor(t,e,i,o,r,h,a,f,p,g,m){super(t.resource,void 0,o,e,i,r,f,g,m),this.X=t,this.Y=h,this.Z=a,this.$=p,this.c=void 0,this.U=this.B(new L),this.W=void 0,this.ab(t),this.B(this.R.untitled.onDidCreate(l=>this.bb(l)))}ab(t){this.U.clear(),this.U.add(t.onDidChangeDirty(()=>this.f.fire())),this.U.add(t.onDidChangeName(()=>this.g.fire())),this.U.add(t.onDidRevert(()=>this.dispose()))}bb(t){d(t.resource,this.X.resource)&&t!==this.X&&(this.X=t,this.ab(t))}getName(){return this.X.name}getDescription(t=1){if(!this.X.hasAssociatedFilePath){const e=this.resource.path;return e!==this.getName()?e:void 0}return super.getDescription(t)}getTitle(t){if(!this.X.hasAssociatedFilePath){const e=this.getName(),i=this.getDescription();return i&&i!==e?`${e} \u2022 ${i}`:e}return super.getTitle(t)}isDirty(){return this.X.isDirty()}getEncoding(){return this.X.getEncoding()}setEncoding(t,e){return this.X.setEncoding(t)}get hasLanguageSetExplicitly(){return this.X.hasLanguageSetExplicitly}get hasAssociatedFilePath(){return this.X.hasAssociatedFilePath}setLanguageId(t,e){this.X.setLanguageId(t,e)}getLanguageId(){return this.X.getLanguageId()}async resolve(){return this.c||(this.c=(async()=>{this.W=await this.$.createModelReference(this.resource)})()),await this.c,this.isDisposed()&&this.cb(),this.X}toUntyped(t){const e={resource:this.X.hasAssociatedFilePath?_(this.X.resource,this.Y.remoteAuthority,this.Z.defaultUriScheme):this.resource,forceUntitled:!0,options:{override:this.editorId}};return typeof t?.preserveViewState=="number"&&(e.encoding=this.getEncoding(),e.languageId=this.getLanguageId(),e.contents=this.X.isModified()?this.X.textEditorModel?.getValue():void 0,e.options.viewState=X(this,t.preserveViewState,this.Q),typeof e.contents=="string"&&!this.X.hasAssociatedFilePath&&!t.preserveResource&&(e.resource=void 0)),e}matches(t){return this===t?!0:t instanceof c?d(t.resource,this.resource):y(t)?super.matches(t):!1}dispose(){this.c=void 0,this.cb(),super.dispose()}cb(){R(this.W),this.W=void 0}};u=c=$([s(1,v),s(2,A),s(3,I),s(4,E),s(5,w),s(6,F),s(7,P),s(8,U),s(9,S),s(10,x)],u);export{u as $rAb};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { DEFAULT_EDITOR_ASSOCIATION, findViewStateForEditor, isUntitledResourceEditorInput } from "../../../common/editor.js";
+import { AbstractTextResourceEditorInput } from "../../../common/editor/textResourceEditorInput.js";
+import { ITextFileService } from "../../textfile/common/textfiles.js";
+import { ILabelService } from "../../../../platform/label/common/label.js";
+import { IEditorService } from "../../editor/common/editorService.js";
+import { IFileService } from "../../../../platform/files/common/files.js";
+import { isEqual, toLocalResource } from "../../../../base/common/resources.js";
+import { IWorkbenchEnvironmentService } from "../../environment/common/environmentService.js";
+import { IPathService } from "../../path/common/pathService.js";
+import { IFilesConfigurationService } from "../../filesConfiguration/common/filesConfigurationService.js";
+import { ITextModelService } from "../../../../editor/common/services/resolverService.js";
+import { DisposableStore, dispose } from "../../../../base/common/lifecycle.js";
+import { ITextResourceConfigurationService } from "../../../../editor/common/services/textResourceConfiguration.js";
+import { ICustomEditorLabelService } from "../../editor/common/customEditorLabelService.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+var UntitledTextEditorInput_1;
+let UntitledTextEditorInput = class UntitledTextEditorInput2 extends AbstractTextResourceEditorInput {
+  static {
+    __name(this, "UntitledTextEditorInput");
+  }
+  static {
+    UntitledTextEditorInput_1 = this;
+  }
+  static {
+    this.ID = "workbench.editors.untitledEditorInput";
+  }
+  get typeId() {
+    return UntitledTextEditorInput_1.ID;
+  }
+  get editorId() {
+    return DEFAULT_EDITOR_ASSOCIATION.id;
+  }
+  constructor(model, textFileService, labelService, editorService, fileService, environmentService, pathService, filesConfigurationService, textModelService, textResourceConfigurationService, customEditorLabelService) {
+    super(model.resource, void 0, editorService, textFileService, labelService, fileService, filesConfigurationService, textResourceConfigurationService, customEditorLabelService);
+    this.model = model;
+    this.environmentService = environmentService;
+    this.pathService = pathService;
+    this.textModelService = textModelService;
+    this.modelResolve = void 0;
+    this.modelDisposables = this._register(new DisposableStore());
+    this.cachedUntitledTextEditorModelReference = void 0;
+    this.registerModelListeners(model);
+    this._register(this.textFileService.untitled.onDidCreate((model2) => this.onDidCreateUntitledModel(model2)));
+  }
+  registerModelListeners(model) {
+    this.modelDisposables.clear();
+    this.modelDisposables.add(model.onDidChangeDirty(() => this._onDidChangeDirty.fire()));
+    this.modelDisposables.add(model.onDidChangeName(() => this._onDidChangeLabel.fire()));
+    this.modelDisposables.add(model.onDidRevert(() => this.dispose()));
+  }
+  onDidCreateUntitledModel(model) {
+    if (isEqual(model.resource, this.model.resource) && model !== this.model) {
+      this.model = model;
+      this.registerModelListeners(model);
+    }
+  }
+  getName() {
+    return this.model.name;
+  }
+  getDescription(verbosity = 1) {
+    if (!this.model.hasAssociatedFilePath) {
+      const descriptionCandidate = this.resource.path;
+      if (descriptionCandidate !== this.getName()) {
+        return descriptionCandidate;
+      }
+      return void 0;
+    }
+    return super.getDescription(verbosity);
+  }
+  getTitle(verbosity) {
+    if (!this.model.hasAssociatedFilePath) {
+      const name = this.getName();
+      const description = this.getDescription();
+      if (description && description !== name) {
+        return `${name} \u2022 ${description}`;
+      }
+      return name;
+    }
+    return super.getTitle(verbosity);
+  }
+  isDirty() {
+    return this.model.isDirty();
+  }
+  getEncoding() {
+    return this.model.getEncoding();
+  }
+  setEncoding(encoding, mode) {
+    return this.model.setEncoding(encoding);
+  }
+  get hasLanguageSetExplicitly() {
+    return this.model.hasLanguageSetExplicitly;
+  }
+  get hasAssociatedFilePath() {
+    return this.model.hasAssociatedFilePath;
+  }
+  setLanguageId(languageId, source) {
+    this.model.setLanguageId(languageId, source);
+  }
+  getLanguageId() {
+    return this.model.getLanguageId();
+  }
+  async resolve() {
+    if (!this.modelResolve) {
+      this.modelResolve = (async () => {
+        this.cachedUntitledTextEditorModelReference = await this.textModelService.createModelReference(this.resource);
+      })();
+    }
+    await this.modelResolve;
+    if (this.isDisposed()) {
+      this.disposeModelReference();
+    }
+    return this.model;
+  }
+  toUntyped(options) {
+    const untypedInput = {
+      resource: this.model.hasAssociatedFilePath ? toLocalResource(this.model.resource, this.environmentService.remoteAuthority, this.pathService.defaultUriScheme) : this.resource,
+      forceUntitled: true,
+      options: {
+        override: this.editorId
+      }
+    };
+    if (typeof options?.preserveViewState === "number") {
+      untypedInput.encoding = this.getEncoding();
+      untypedInput.languageId = this.getLanguageId();
+      untypedInput.contents = this.model.isModified() ? this.model.textEditorModel?.getValue() : void 0;
+      untypedInput.options.viewState = findViewStateForEditor(this, options.preserveViewState, this.editorService);
+      if (typeof untypedInput.contents === "string" && !this.model.hasAssociatedFilePath && !options.preserveResource) {
+        untypedInput.resource = void 0;
+      }
+    }
+    return untypedInput;
+  }
+  matches(otherInput) {
+    if (this === otherInput) {
+      return true;
+    }
+    if (otherInput instanceof UntitledTextEditorInput_1) {
+      return isEqual(otherInput.resource, this.resource);
+    }
+    if (isUntitledResourceEditorInput(otherInput)) {
+      return super.matches(otherInput);
+    }
+    return false;
+  }
+  dispose() {
+    this.modelResolve = void 0;
+    this.disposeModelReference();
+    super.dispose();
+  }
+  disposeModelReference() {
+    dispose(this.cachedUntitledTextEditorModelReference);
+    this.cachedUntitledTextEditorModelReference = void 0;
+  }
+};
+UntitledTextEditorInput = UntitledTextEditorInput_1 = __decorate([
+  __param(1, ITextFileService),
+  __param(2, ILabelService),
+  __param(3, IEditorService),
+  __param(4, IFileService),
+  __param(5, IWorkbenchEnvironmentService),
+  __param(6, IPathService),
+  __param(7, IFilesConfigurationService),
+  __param(8, ITextModelService),
+  __param(9, ITextResourceConfigurationService),
+  __param(10, ICustomEditorLabelService)
+], UntitledTextEditorInput);
+export {
+  UntitledTextEditorInput
+};
+//# sourceMappingURL=untitledTextEditorInput.js.map

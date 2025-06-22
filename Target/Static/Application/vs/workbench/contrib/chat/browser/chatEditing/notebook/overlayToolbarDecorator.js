@@ -1,1 +1,142 @@
-import{$vd as y,$ud as v}from"../../../../../../base/common/lifecycle.js";import{$0db as p,$5db as b}from"../../../../../../platform/accessibilitySignal/browser/accessibilitySignalService.js";import{$mgb as C}from"../../../../../../platform/actions/browser/toolbar.js";import{$dI as S}from"../../../../../../platform/actions/common/actions.js";import{$Vn as w}from"../../../../../../platform/contextkey/common/contextkey.js";import{$mj as I}from"../../../../../../platform/instantiation/common/instantiation.js";import{$lj as $}from"../../../../../../platform/instantiation/common/serviceCollection.js";import{CellEditState as m}from"../../../../notebook/browser/notebookBrowser.js";import{CellKind as E}from"../../../../notebook/common/notebookCommon.js";var g=function(d,e,i,o){var n=arguments.length,t=n<3?e:o===null?o=Object.getOwnPropertyDescriptor(e,i):o,s;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")t=Reflect.decorate(d,e,i,o);else for(var a=d.length-1;a>=0;a--)(s=d[a])&&(t=(n<3?s(t):n>3?s(e,i,t):s(e,i))||t);return n>3&&t&&Object.defineProperty(e,i,t),t},h=function(d,e){return function(i,o){e(i,o,d)}};let u=class extends y{constructor(e,i,o,n){super(),this.f=e,this.g=i,this.h=o,this.j=n,this.a=void 0,this.b=this.B(new v)}decorate(e){this.a!==void 0&&clearTimeout(this.a),this.a=setTimeout(()=>{this.a=void 0,this.m(e)},100)}m(e){this.b.clear();const i=this.j,o=this.f;for(const n of e){const t=this.n(n);if(!t||t.cellKind!==E.Markup)continue;const s=document.createElement("div");let a;o.changeCellOverlays(r=>{s.style.right="44px",a=r.addOverlay({cell:t,domNode:s})});const c=()=>{o.changeCellOverlays(r=>{a&&r.removeOverlay(a)})};this.b.add({dispose:c});const l=document.createElement("div");s.appendChild(l),l.className="chat-diff-change-content-widget",l.classList.add("hover"),l.style.position="relative",l.style.top="18px",l.style.zIndex="10",l.style.display=t.getEditState()===m.Editing?"none":"block",this.b.add(t.onDidChangeState(r=>{r.editStateChanged&&(t.getEditState()===m.Editing?l.style.display="none":l.style.display="block")}));const f=this.B(this.h.createChild(new $([w,this.f.scopedContextKeyService]))).createInstance(C,l,S.ChatEditingEditorHunk,{telemetrySource:"chatEditingNotebookHunk",hiddenItemStrategy:-1,toolbarOptions:{primaryGroup:()=>!0},menuOptions:{renderShortTitle:!0,arg:{async accept(){i.playSignal(p.editsKept,{allowManyInParallel:!0}),c(),f.dispose();for(const r of n.diff.get().changes)await n.keep(r);return!0},async reject(){i.playSignal(p.editsUndone,{allowManyInParallel:!0}),c(),f.dispose();for(const r of n.diff.get().changes)await n.undo(r);return!0}}}});this.b.add(f)}}n(e){if(e.type==="delete"||e.modifiedCellIndex===void 0)return;const i=this.g.cells[e.modifiedCellIndex];return this.f.getViewModel()?.viewCells.find(n=>n.handle===i.handle)}dispose(){super.dispose(),this.a!==void 0&&clearTimeout(this.a)}};u=g([h(2,I),h(3,b)],u);export{u as $agc};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { Disposable, DisposableStore } from "../../../../../../base/common/lifecycle.js";
+import { AccessibilitySignal, IAccessibilitySignalService } from "../../../../../../platform/accessibilitySignal/browser/accessibilitySignalService.js";
+import { MenuWorkbenchToolBar } from "../../../../../../platform/actions/browser/toolbar.js";
+import { MenuId } from "../../../../../../platform/actions/common/actions.js";
+import { IContextKeyService } from "../../../../../../platform/contextkey/common/contextkey.js";
+import { IInstantiationService } from "../../../../../../platform/instantiation/common/instantiation.js";
+import { ServiceCollection } from "../../../../../../platform/instantiation/common/serviceCollection.js";
+import { CellEditState } from "../../../../notebook/browser/notebookBrowser.js";
+import { CellKind } from "../../../../notebook/common/notebookCommon.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+let OverlayToolbarDecorator = class OverlayToolbarDecorator2 extends Disposable {
+  static {
+    __name(this, "OverlayToolbarDecorator");
+  }
+  constructor(notebookEditor, notebookModel, instantiationService, accessibilitySignalService) {
+    super();
+    this.notebookEditor = notebookEditor;
+    this.notebookModel = notebookModel;
+    this.instantiationService = instantiationService;
+    this.accessibilitySignalService = accessibilitySignalService;
+    this._timeout = void 0;
+    this.overlayDisposables = this._register(new DisposableStore());
+  }
+  decorate(changes) {
+    if (this._timeout !== void 0) {
+      clearTimeout(this._timeout);
+    }
+    this._timeout = setTimeout(() => {
+      this._timeout = void 0;
+      this.createMarkdownPreviewToolbars(changes);
+    }, 100);
+  }
+  createMarkdownPreviewToolbars(changes) {
+    this.overlayDisposables.clear();
+    const accessibilitySignalService = this.accessibilitySignalService;
+    const editor = this.notebookEditor;
+    for (const change of changes) {
+      const cellViewModel = this.getCellViewModel(change);
+      if (!cellViewModel || cellViewModel.cellKind !== CellKind.Markup) {
+        continue;
+      }
+      const toolbarContainer = document.createElement("div");
+      let overlayId = void 0;
+      editor.changeCellOverlays((accessor) => {
+        toolbarContainer.style.right = "44px";
+        overlayId = accessor.addOverlay({
+          cell: cellViewModel,
+          domNode: toolbarContainer
+        });
+      });
+      const removeOverlay = /* @__PURE__ */ __name(() => {
+        editor.changeCellOverlays((accessor) => {
+          if (overlayId) {
+            accessor.removeOverlay(overlayId);
+          }
+        });
+      }, "removeOverlay");
+      this.overlayDisposables.add({ dispose: removeOverlay });
+      const toolbar = document.createElement("div");
+      toolbarContainer.appendChild(toolbar);
+      toolbar.className = "chat-diff-change-content-widget";
+      toolbar.classList.add("hover");
+      toolbar.style.position = "relative";
+      toolbar.style.top = "18px";
+      toolbar.style.zIndex = "10";
+      toolbar.style.display = cellViewModel.getEditState() === CellEditState.Editing ? "none" : "block";
+      this.overlayDisposables.add(cellViewModel.onDidChangeState((e) => {
+        if (e.editStateChanged) {
+          if (cellViewModel.getEditState() === CellEditState.Editing) {
+            toolbar.style.display = "none";
+          } else {
+            toolbar.style.display = "block";
+          }
+        }
+      }));
+      const scopedInstaService = this._register(this.instantiationService.createChild(new ServiceCollection([IContextKeyService, this.notebookEditor.scopedContextKeyService])));
+      const toolbarWidget = scopedInstaService.createInstance(MenuWorkbenchToolBar, toolbar, MenuId.ChatEditingEditorHunk, {
+        telemetrySource: "chatEditingNotebookHunk",
+        hiddenItemStrategy: -1,
+        toolbarOptions: { primaryGroup: /* @__PURE__ */ __name(() => true, "primaryGroup") },
+        menuOptions: {
+          renderShortTitle: true,
+          arg: {
+            async accept() {
+              accessibilitySignalService.playSignal(AccessibilitySignal.editsKept, { allowManyInParallel: true });
+              removeOverlay();
+              toolbarWidget.dispose();
+              for (const singleChange of change.diff.get().changes) {
+                await change.keep(singleChange);
+              }
+              return true;
+            },
+            async reject() {
+              accessibilitySignalService.playSignal(AccessibilitySignal.editsUndone, { allowManyInParallel: true });
+              removeOverlay();
+              toolbarWidget.dispose();
+              for (const singleChange of change.diff.get().changes) {
+                await change.undo(singleChange);
+              }
+              return true;
+            }
+          }
+        }
+      });
+      this.overlayDisposables.add(toolbarWidget);
+    }
+  }
+  getCellViewModel(change) {
+    if (change.type === "delete" || change.modifiedCellIndex === void 0) {
+      return void 0;
+    }
+    const cell = this.notebookModel.cells[change.modifiedCellIndex];
+    const cellViewModel = this.notebookEditor.getViewModel()?.viewCells.find((c) => c.handle === cell.handle);
+    return cellViewModel;
+  }
+  dispose() {
+    super.dispose();
+    if (this._timeout !== void 0) {
+      clearTimeout(this._timeout);
+    }
+  }
+};
+OverlayToolbarDecorator = __decorate([
+  __param(2, IInstantiationService),
+  __param(3, IAccessibilitySignalService)
+], OverlayToolbarDecorator);
+export {
+  OverlayToolbarDecorator
+};
+//# sourceMappingURL=overlayToolbarDecorator.js.map

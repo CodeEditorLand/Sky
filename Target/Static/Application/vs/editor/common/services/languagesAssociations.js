@@ -1,1 +1,190 @@
-import{$aj as $}from"../../../base/common/glob.js";import{$4B as m}from"../../../base/common/mime.js";import{Schemas as l}from"../../../base/common/network.js";import{$$ as b,$4 as A}from"../../../base/common/path.js";import{DataUri as d}from"../../../base/common/resources.js";import{$sg as L}from"../../../base/common/strings.js";import{$mE as u}from"../languages/modesRegistry.js";let a=[],c=[],p=[];function D(e,n=!1){h(e,!1,n)}function _(e){h(e,!0,!1)}function h(e,n,t){const i=C(e,n);a.push(i),i.userConfigured?p.push(i):c.push(i),t&&!i.userConfigured&&a.forEach((e=>{e.mime===i.mime||e.userConfigured||(i.extension&&(e.extension,i.extension),i.filename&&(e.filename,i.filename),i.filepattern&&(e.filepattern,i.filepattern),i.firstline&&(e.firstline,i.firstline))}))}function C(e,n){return{id:e.id,mime:e.mime,filename:e.filename,extension:e.extension,filepattern:e.filepattern,firstline:e.firstline,userConfigured:n,filenameLowercase:e.filename?e.filename.toLowerCase():void 0,extensionLowercase:e.extension?e.extension.toLowerCase():void 0,filepatternLowercase:e.filepattern?$(e.filepattern.toLowerCase()):void 0,filepatternOnPath:!!e.filepattern&&e.filepattern.indexOf(A.sep)>=0}}function y(){a=a.filter((e=>e.userConfigured)),c=[]}function R(){a=a.filter((e=>!e.userConfigured)),p=[]}function T(e,n){return w(e,n).map((e=>e.mime))}function U(e,n){return w(e,n).map((e=>e.id))}function w(e,n){let t;if(e)switch(e.scheme){case l.file:t=e.fsPath;break;case l.data:t=d.parseMetaData(e).get(d.META_DATA_LABEL);break;case l.vscodeNotebookCell:t=void 0;break;default:t=e.path}if(!t)return[{id:"unknown",mime:m.unknown}];t=t.toLowerCase();const i=b(t),o=g(t,i,p);if(o)return[o,{id:u,mime:m.text}];const r=g(t,i,c);if(r)return[r,{id:u,mime:m.text}];if(n){const e=E(n);if(e)return[e,{id:u,mime:m.text}]}return[{id:"unknown",mime:m.unknown}]}function g(e,n,t){let i,o,r;for(let s=t.length-1;s>=0;s--){const a=t[s];if(n===a.filenameLowercase){i=a;break}if(a.filepattern&&(!o||a.filepattern.length>o.filepattern.length)){const t=a.filepatternOnPath?e:n;a.filepatternLowercase?.(t)&&(o=a)}a.extension&&(!r||a.extension.length>r.extension.length)&&n.endsWith(a.extensionLowercase)&&(r=a)}return i||(o||(r||void 0))}function E(e){if(L(e)&&(e=e.substr(1)),e.length>0)for(let n=a.length-1;n>=0;n--){const t=a[n];if(!t.firstline)continue;const i=e.match(t.firstline);if(i&&i.length>0)return t}}export{D as $1Eb,_ as $2Eb,y as $3Eb,R as $4Eb,T as $5Eb,U as $6Eb};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { parse } from "../../../base/common/glob.js";
+import { Mimes } from "../../../base/common/mime.js";
+import { Schemas } from "../../../base/common/network.js";
+import { basename, posix } from "../../../base/common/path.js";
+import { DataUri } from "../../../base/common/resources.js";
+import { startsWithUTF8BOM } from "../../../base/common/strings.js";
+import { PLAINTEXT_LANGUAGE_ID } from "../languages/modesRegistry.js";
+let registeredAssociations = [];
+let nonUserRegisteredAssociations = [];
+let userRegisteredAssociations = [];
+function registerPlatformLanguageAssociation(association, warnOnOverwrite = false) {
+  _registerLanguageAssociation(association, false, warnOnOverwrite);
+}
+__name(registerPlatformLanguageAssociation, "registerPlatformLanguageAssociation");
+function registerConfiguredLanguageAssociation(association) {
+  _registerLanguageAssociation(association, true, false);
+}
+__name(registerConfiguredLanguageAssociation, "registerConfiguredLanguageAssociation");
+function _registerLanguageAssociation(association, userConfigured, warnOnOverwrite) {
+  const associationItem = toLanguageAssociationItem(association, userConfigured);
+  registeredAssociations.push(associationItem);
+  if (!associationItem.userConfigured) {
+    nonUserRegisteredAssociations.push(associationItem);
+  } else {
+    userRegisteredAssociations.push(associationItem);
+  }
+  if (warnOnOverwrite && !associationItem.userConfigured) {
+    registeredAssociations.forEach((a) => {
+      if (a.mime === associationItem.mime || a.userConfigured) {
+        return;
+      }
+      if (associationItem.extension && a.extension === associationItem.extension) {
+        console.warn(`Overwriting extension <<${associationItem.extension}>> to now point to mime <<${associationItem.mime}>>`);
+      }
+      if (associationItem.filename && a.filename === associationItem.filename) {
+        console.warn(`Overwriting filename <<${associationItem.filename}>> to now point to mime <<${associationItem.mime}>>`);
+      }
+      if (associationItem.filepattern && a.filepattern === associationItem.filepattern) {
+        console.warn(`Overwriting filepattern <<${associationItem.filepattern}>> to now point to mime <<${associationItem.mime}>>`);
+      }
+      if (associationItem.firstline && a.firstline === associationItem.firstline) {
+        console.warn(`Overwriting firstline <<${associationItem.firstline}>> to now point to mime <<${associationItem.mime}>>`);
+      }
+    });
+  }
+}
+__name(_registerLanguageAssociation, "_registerLanguageAssociation");
+function toLanguageAssociationItem(association, userConfigured) {
+  return {
+    id: association.id,
+    mime: association.mime,
+    filename: association.filename,
+    extension: association.extension,
+    filepattern: association.filepattern,
+    firstline: association.firstline,
+    userConfigured,
+    filenameLowercase: association.filename ? association.filename.toLowerCase() : void 0,
+    extensionLowercase: association.extension ? association.extension.toLowerCase() : void 0,
+    filepatternLowercase: association.filepattern ? parse(association.filepattern.toLowerCase()) : void 0,
+    filepatternOnPath: association.filepattern ? association.filepattern.indexOf(posix.sep) >= 0 : false
+  };
+}
+__name(toLanguageAssociationItem, "toLanguageAssociationItem");
+function clearPlatformLanguageAssociations() {
+  registeredAssociations = registeredAssociations.filter((a) => a.userConfigured);
+  nonUserRegisteredAssociations = [];
+}
+__name(clearPlatformLanguageAssociations, "clearPlatformLanguageAssociations");
+function clearConfiguredLanguageAssociations() {
+  registeredAssociations = registeredAssociations.filter((a) => !a.userConfigured);
+  userRegisteredAssociations = [];
+}
+__name(clearConfiguredLanguageAssociations, "clearConfiguredLanguageAssociations");
+function getMimeTypes(resource, firstLine) {
+  return getAssociations(resource, firstLine).map((item) => item.mime);
+}
+__name(getMimeTypes, "getMimeTypes");
+function getLanguageIds(resource, firstLine) {
+  return getAssociations(resource, firstLine).map((item) => item.id);
+}
+__name(getLanguageIds, "getLanguageIds");
+function getAssociations(resource, firstLine) {
+  let path;
+  if (resource) {
+    switch (resource.scheme) {
+      case Schemas.file:
+        path = resource.fsPath;
+        break;
+      case Schemas.data: {
+        const metadata = DataUri.parseMetaData(resource);
+        path = metadata.get(DataUri.META_DATA_LABEL);
+        break;
+      }
+      case Schemas.vscodeNotebookCell:
+        path = void 0;
+        break;
+      default:
+        path = resource.path;
+    }
+  }
+  if (!path) {
+    return [{ id: "unknown", mime: Mimes.unknown }];
+  }
+  path = path.toLowerCase();
+  const filename = basename(path);
+  const configuredLanguage = getAssociationByPath(path, filename, userRegisteredAssociations);
+  if (configuredLanguage) {
+    return [configuredLanguage, { id: PLAINTEXT_LANGUAGE_ID, mime: Mimes.text }];
+  }
+  const registeredLanguage = getAssociationByPath(path, filename, nonUserRegisteredAssociations);
+  if (registeredLanguage) {
+    return [registeredLanguage, { id: PLAINTEXT_LANGUAGE_ID, mime: Mimes.text }];
+  }
+  if (firstLine) {
+    const firstlineLanguage = getAssociationByFirstline(firstLine);
+    if (firstlineLanguage) {
+      return [firstlineLanguage, { id: PLAINTEXT_LANGUAGE_ID, mime: Mimes.text }];
+    }
+  }
+  return [{ id: "unknown", mime: Mimes.unknown }];
+}
+__name(getAssociations, "getAssociations");
+function getAssociationByPath(path, filename, associations) {
+  let filenameMatch = void 0;
+  let patternMatch = void 0;
+  let extensionMatch = void 0;
+  for (let i = associations.length - 1; i >= 0; i--) {
+    const association = associations[i];
+    if (filename === association.filenameLowercase) {
+      filenameMatch = association;
+      break;
+    }
+    if (association.filepattern) {
+      if (!patternMatch || association.filepattern.length > patternMatch.filepattern.length) {
+        const target = association.filepatternOnPath ? path : filename;
+        if (association.filepatternLowercase?.(target)) {
+          patternMatch = association;
+        }
+      }
+    }
+    if (association.extension) {
+      if (!extensionMatch || association.extension.length > extensionMatch.extension.length) {
+        if (filename.endsWith(association.extensionLowercase)) {
+          extensionMatch = association;
+        }
+      }
+    }
+  }
+  if (filenameMatch) {
+    return filenameMatch;
+  }
+  if (patternMatch) {
+    return patternMatch;
+  }
+  if (extensionMatch) {
+    return extensionMatch;
+  }
+  return void 0;
+}
+__name(getAssociationByPath, "getAssociationByPath");
+function getAssociationByFirstline(firstLine) {
+  if (startsWithUTF8BOM(firstLine)) {
+    firstLine = firstLine.substr(1);
+  }
+  if (firstLine.length > 0) {
+    for (let i = registeredAssociations.length - 1; i >= 0; i--) {
+      const association = registeredAssociations[i];
+      if (!association.firstline) {
+        continue;
+      }
+      const matches = firstLine.match(association.firstline);
+      if (matches && matches.length > 0) {
+        return association;
+      }
+    }
+  }
+  return void 0;
+}
+__name(getAssociationByFirstline, "getAssociationByFirstline");
+export {
+  clearConfiguredLanguageAssociations,
+  clearPlatformLanguageAssociations,
+  getLanguageIds,
+  getMimeTypes,
+  registerConfiguredLanguageAssociation,
+  registerPlatformLanguageAssociation
+};
+//# sourceMappingURL=languagesAssociations.js.map

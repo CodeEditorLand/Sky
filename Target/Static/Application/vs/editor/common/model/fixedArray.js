@@ -1,1 +1,68 @@
-import{$gc as c}from"../../../base/common/arrays.js";class o{constructor(t){this.b=t,this.a=[]}get(t){return t<this.a.length?this.a[t]:this.b}set(t,s){for(;t>=this.a.length;)this.a[this.a.length]=this.b;this.a[t]=s}replace(t,s,r){if(t>=this.a.length)return;if(s===0){this.insert(t,r);return}else if(r===0){this.delete(t,s);return}const i=this.a.slice(0,t),a=this.a.slice(t+s),e=l(r,this.b);this.a=i.concat(e,a)}delete(t,s){s===0||t>=this.a.length||this.a.splice(t,s)}insert(t,s){if(s===0||t>=this.a.length)return;const r=[];for(let i=0;i<s;i++)r[i]=this.b;this.a=c(this.a,t,r)}}function l(h,t){const s=[];for(let r=0;r<h;r++)s[r]=t;return s}export{o as $vH};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { arrayInsert } from "../../../base/common/arrays.js";
+class FixedArray {
+  static {
+    __name(this, "FixedArray");
+  }
+  constructor(_default) {
+    this._default = _default;
+    this._store = [];
+  }
+  get(index) {
+    if (index < this._store.length) {
+      return this._store[index];
+    }
+    return this._default;
+  }
+  set(index, value) {
+    while (index >= this._store.length) {
+      this._store[this._store.length] = this._default;
+    }
+    this._store[index] = value;
+  }
+  replace(index, oldLength, newLength) {
+    if (index >= this._store.length) {
+      return;
+    }
+    if (oldLength === 0) {
+      this.insert(index, newLength);
+      return;
+    } else if (newLength === 0) {
+      this.delete(index, oldLength);
+      return;
+    }
+    const before = this._store.slice(0, index);
+    const after = this._store.slice(index + oldLength);
+    const insertArr = arrayFill(newLength, this._default);
+    this._store = before.concat(insertArr, after);
+  }
+  delete(deleteIndex, deleteCount) {
+    if (deleteCount === 0 || deleteIndex >= this._store.length) {
+      return;
+    }
+    this._store.splice(deleteIndex, deleteCount);
+  }
+  insert(insertIndex, insertCount) {
+    if (insertCount === 0 || insertIndex >= this._store.length) {
+      return;
+    }
+    const arr = [];
+    for (let i = 0; i < insertCount; i++) {
+      arr[i] = this._default;
+    }
+    this._store = arrayInsert(this._store, insertIndex, arr);
+  }
+}
+function arrayFill(length, value) {
+  const arr = [];
+  for (let i = 0; i < length; i++) {
+    arr[i] = value;
+  }
+  return arr;
+}
+__name(arrayFill, "arrayFill");
+export {
+  FixedArray
+};
+//# sourceMappingURL=fixedArray.js.map

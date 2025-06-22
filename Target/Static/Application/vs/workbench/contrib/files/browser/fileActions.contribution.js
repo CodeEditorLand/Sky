@@ -1,1 +1,720 @@
-import*as n from"../../../../nls.js";import{$1Hb as Q,$4Hb as he,$ZHb as Ie,$5Hb as Fe,$9Hb as Ce,$KHb as U,$LHb as W,$MHb as V,$NHb as Z,$OHb as we,$PHb as Me,$QHb as xe,$RHb as ye,$SHb as Ee,$0Hb as _e,$$Hb as fe,$aIb as Ne,$cIb as Re,$_Hb as j,$bIb as ze,$THb as ve,$dIb as He,$UHb as Se,$6Hb as Oe,$VHb as Te,$WHb as Ae,$8Hb as qe,$eIb as Ke,$fIb as Le,$gIb as ke,$hIb as Pe}from"./fileActions.js";import{$oIb as Ge,$nIb as De,$kIb as Be}from"./editors/textFileSaveErrorHandler.js";import{$dI as o,$fI as e,$jI as p}from"../../../../platform/actions/common/actions.js";import{$nLb as Qe,$oLb as Ue}from"./fileCommands.js";import{$SFb as H,$KFb as We,$MFb as Ve,$LFb as S,$WFb as O,$XFb as X,$UFb as Y,$VFb as Ze,$3Fb as J,$5Fb as h,$RFb as ee,$QFb as je,$OFb as Xe,$9Fb as oe,$6Fb as T,$PFb as Ye,$0Fb as Je,$$Fb as eo,$4Fb as oo,$TFb as A,$YFb as to,$ZFb as no,$7Fb as te,$NFb as ro,$dGb as q,$eGb as ao,$1Fb as io,$8Fb as lo}from"./fileConstants.js";import{$Zn as _}from"../../../../platform/commands/common/commands.js";import{$Bn as t}from"../../../../platform/contextkey/common/contextkey.js";import{$_H as c}from"../../../../platform/keybinding/common/keybindingsRegistry.js";import{$CFb as u,$rFb as m,$mFb as i,$oFb as s,$sFb as po,$tFb as f,$qFb as mo,$lFb as N}from"../common/files.js";import{$3Kb as co,$4Kb as uo}from"../../../browser/actions/workspaceCommands.js";import{$JGb as so,$KGb as go,$NGb as ne,$QGb as bo,$1Gb as $o}from"../../../browser/parts/editor/editorCommands.js";import{$6I as K}from"../../../services/filesConfiguration/common/filesConfigurationService.js";import{$qmb as b}from"../../../../platform/list/browser/listService.js";import{Schemas as w}from"../../../../base/common/network.js";import{$iN as re,$gN as ae,$mN as ho,$dN as ie,$eN as L,$2N as R,$AN as Io,$CN as k,$kO as r,$DN as Fo,$ON as Co,$PN as wo,$QN as Mo}from"../../../common/contextkeys.js";import{$8M as y}from"../../../../platform/contextkey/common/contextkeys.js";import{$BHb as xo}from"./files.js";import{$Mj as de}from"../../../../base/common/codicons.js";import{$Xn as d}from"../../../../platform/action/common/actionCommonCategories.js";p(Ie),p(he),p(Fe),p(Ce),p(qe),p(Q),p(Oe),p(Ke),p(Le),p(ke),p(Pe),_.registerCommand("_files.windowOpen",Qe),_.registerCommand("_files.newWindow",Ue);const g=10,le="renameFile";c.registerCommandAndKeybindingRule({id:le,weight:210,when:t.and(u,m.toNegated(),s),primary:60,mac:{primary:3},handler:_e});const pe="moveFileToTrash";c.registerCommandAndKeybindingRule({id:pe,weight:210,when:t.and(u,f),primary:20,mac:{primary:2049,secondary:[20]},handler:fe});const z="deleteFile";c.registerCommandAndKeybindingRule({id:z,weight:210,when:u,primary:1044,mac:{primary:2561},handler:j}),c.registerCommandAndKeybindingRule({id:z,weight:210,when:t.and(u,f.toNegated()),primary:20,mac:{primary:2049},handler:j});const me="filesExplorer.cut";c.registerCommandAndKeybindingRule({id:me,weight:210,when:t.and(u,m.toNegated(),s),primary:2102,handler:ze});const ce="filesExplorer.copy";c.registerCommandAndKeybindingRule({id:ce,weight:210,when:t.and(u,m.toNegated()),primary:2081,handler:Ne});const P="filesExplorer.paste";_.registerCommand(P,Re),c.registerKeybindingRule({id:`^${P}`,weight:210,when:t.and(u,s),primary:2100}),c.registerCommandAndKeybindingRule({id:"filesExplorer.cancelCut",weight:210,when:t.and(u,po),primary:9,handler:async e=>{await e.get(xo).setToCopy([],!0)}}),c.registerCommandAndKeybindingRule({id:"filesExplorer.openFilePreserveFocus",weight:210,when:t.and(u,i.toNegated()),primary:10,handler:He});const M={id:H,title:n.localize(7797,null)},x={id:A,title:n.localize(7798,null)},E={id:We,title:n.localize(7799,null)};function G(t,n,a,r,i,d){const l=!0!==i?Co.negate():void 0;e.appendMenuItem(o.EditorTitleContext,{command:{id:t,title:n,precondition:l},when:a,group:r,order:d})}function ue(n,a,r,i,d){_.registerCommand(n,d),e.appendMenuItem(o.EditorTitle,{command:{id:n,title:a,icon:r},when:t.equals(Be,!0),group:"navigation",order:i})}function l({id:t,title:n,category:a,metadata:r},i){e.appendMenuItem(o.CommandPalette,{command:{id:t,title:n,category:a,metadata:r},when:i})}G(H,M.title,r.IsFileSystemResource,"1_cutcopypaste",!0),G(A,x.title,r.IsFileSystemResource,"1_cutcopypaste",!0),G(E.id,E.title,r.IsFileSystemResource,"2_files",!1,1),ue("workbench.files.action.acceptLocalChanges",n.localize(7800,null),de.check,-10,De),ue("workbench.files.action.revertLocalChanges",n.localize(7801,null),de.discard,-9,Ge),l({id:H,title:n.localize2(7828,"Copy Path of Active File"),category:d.File}),l({id:A,title:n.localize2(7829,"Copy Relative Path of Active File"),category:d.File}),l({id:O,title:X,category:d.File}),l({id:to,title:no,category:d.File}),l({id:J,title:n.localize2(7830,"Save All in Group"),category:d.File}),l({id:oo,title:n.localize2(7831,"Save All Files"),category:d.File}),l({id:S,title:n.localize2(7832,"Revert File"),category:d.File}),l({id:ee,title:n.localize2(7833,"Compare Active File with Saved"),category:d.File,metadata:{description:n.localize2(7834,"Opens a new diff editor to compare the active file with the version on disk.")}}),l({id:Y,title:Ze,category:d.File}),l({id:U,title:W,category:d.File},L.notEqualsTo("0")),l({id:V,title:Z,category:d.File,metadata:{description:n.localize2(7835,"Create a new folder or directory")}},L.notEqualsTo("0")),l({id:q,title:ao,category:d.File});const D=t.or(r.IsFileSystemResource,r.Scheme.isEqualTo(w.untitled)),v={id:Ve,title:n.localize(7802,null)};e.appendMenuItem(o.OpenEditorsContext,{group:"navigation",order:10,command:v,when:D}),e.appendMenuItem(o.OpenEditorsContext,{group:"1_open",order:10,command:{id:$o,title:n.localize(7803,null)},when:t.and(Fo,h.toNegated())}),e.appendMenuItem(o.OpenEditorsContext,{group:"1_cutcopypaste",order:10,command:M,when:r.IsFileSystemResource}),e.appendMenuItem(o.OpenEditorsContext,{group:"1_cutcopypaste",order:20,command:x,when:r.IsFileSystemResource}),e.appendMenuItem(o.OpenEditorsContext,{group:"2_save",order:10,command:{id:O,title:X,precondition:T},when:t.or(r.Scheme.isEqualTo(w.untitled),t.and(h.toNegated(),te.toNegated(),K.toNegated()))}),e.appendMenuItem(o.OpenEditorsContext,{group:"2_save",order:20,command:{id:S,title:n.localize(7804,null),precondition:T},when:t.and(h.toNegated(),te.toNegated(),r.Scheme.notEqualsTo(w.untitled),K.toNegated())}),e.appendMenuItem(o.OpenEditorsContext,{group:"2_save",order:30,command:{id:J,title:n.localize(7805,null),precondition:re},when:h}),e.appendMenuItem(o.OpenEditorsContext,{group:"3_compare",order:10,command:{id:ee,title:n.localize(7806,null),precondition:T},when:t.and(r.IsFileSystemResource,K.toNegated(),b.toNegated())});const se={id:je,title:n.localize(7807,null)};e.appendMenuItem(o.OpenEditorsContext,{group:"3_compare",order:20,command:se,when:t.and(r.HasResource,oe,D,b.toNegated())});const ge={id:Xe,title:n.localize(7808,null)};e.appendMenuItem(o.OpenEditorsContext,{group:"3_compare",order:30,command:ge,when:t.and(r.HasResource,D,b.toNegated())});const B={id:Ye,title:n.localize(7809,null)};e.appendMenuItem(o.OpenEditorsContext,{group:"3_compare",order:30,command:B,when:t.and(r.HasResource,b,lo)}),e.appendMenuItem(o.EditorTitleContext,{group:"1_compare",order:30,command:B,when:t.and(r.HasResource,wo,Mo)}),e.appendMenuItem(o.OpenEditorsContext,{group:"4_close",order:10,command:{id:ne,title:n.localize(7810,null)},when:h.toNegated()}),e.appendMenuItem(o.OpenEditorsContext,{group:"4_close",order:20,command:{id:bo,title:n.localize(7811,null)},when:h.toNegated()}),e.appendMenuItem(o.OpenEditorsContext,{group:"4_close",order:30,command:{id:so,title:n.localize(7812,null)}}),e.appendMenuItem(o.OpenEditorsContext,{group:"4_close",order:40,command:{id:go,title:n.localize(7813,null)}}),e.appendMenuItem(o.ExplorerContext,{group:"navigation",order:4,command:{id:U,title:W,precondition:s},when:i}),e.appendMenuItem(o.ExplorerContext,{group:"navigation",order:6,command:{id:V,title:Z,precondition:s},when:i}),e.appendMenuItem(o.ExplorerContext,{group:"navigation",order:10,command:v,when:t.and(i.toNegated(),r.HasResource)}),e.appendMenuItem(o.ExplorerContext,{group:"navigation",order:20,command:{id:ro,title:n.localize(7814,null)},when:t.and(i.toNegated(),mo)}),e.appendMenuItem(o.ExplorerContext,{group:"3_compare",order:20,command:se,when:t.and(i.toNegated(),r.HasResource,oe,b.toNegated())}),e.appendMenuItem(o.ExplorerContext,{group:"3_compare",order:30,command:ge,when:t.and(i.toNegated(),r.HasResource,b.toNegated())}),e.appendMenuItem(o.ExplorerContext,{group:"3_compare",order:30,command:B,when:t.and(i.toNegated(),r.HasResource,b)}),e.appendMenuItem(o.ExplorerContext,{group:"5_cutcopypaste",order:8,command:{id:me,title:n.localize(7815,null)},when:t.and(m.toNegated(),s)}),e.appendMenuItem(o.ExplorerContext,{group:"5_cutcopypaste",order:10,command:{id:ce,title:xe},when:m.toNegated()}),e.appendMenuItem(o.ExplorerContext,{group:"5_cutcopypaste",order:20,command:{id:P,title:ye,precondition:t.and(s,Ee)},when:i}),e.appendMenuItem(o.ExplorerContext,{group:"5b_importexport",order:10,command:{id:ve,title:Se},when:t.or(t.and(y.toNegated(),r.Scheme.notEqualsTo(w.file)),t.and(y,i.toNegated(),m.toNegated()),t.and(y,ho))}),e.appendMenuItem(o.ExplorerContext,{group:"5b_importexport",order:20,command:{id:Te,title:Ae},when:t.and(y,i,s)}),e.appendMenuItem(o.ExplorerContext,{group:"6_copypath",order:10,command:M,when:r.IsFileSystemResource}),e.appendMenuItem(o.ExplorerContext,{group:"6_copypath",order:20,command:x,when:r.IsFileSystemResource}),e.appendMenuItem(o.ExplorerContext,{group:"2_workspace",order:10,command:{id:co,title:uo},when:t.and(m,t.or(ae,ie.isEqualTo("workspace")))}),e.appendMenuItem(o.ExplorerContext,{group:"2_workspace",order:30,command:{id:Je,title:eo},when:t.and(m,i,t.and(L.notEqualsTo("0"),t.or(ae,ie.isEqualTo("workspace"))))}),e.appendMenuItem(o.ExplorerContext,{group:"7_modification",order:10,command:{id:le,title:we,precondition:s},when:m.toNegated()}),e.appendMenuItem(o.ExplorerContext,{group:"7_modification",order:20,command:{id:pe,title:Me},alt:{id:z,title:n.localize(7816,null)},when:t.and(m.toNegated(),f)}),e.appendMenuItem(o.ExplorerContext,{group:"7_modification",order:20,command:{id:z,title:n.localize(7817,null)},when:t.and(m.toNegated(),f.toNegated())});for(const t of[o.EmptyEditorGroupContext,o.EditorTabsBarContext])e.appendMenuItem(t,{command:{id:q,title:n.localize(7818,null)},group:"1_file",order:10}),e.appendMenuItem(t,{command:{id:"workbench.action.quickOpen",title:n.localize(7819,null)},group:"1_file",order:20});e.appendMenuItem(o.MenubarFileMenu,{group:"1_new",command:{id:q,title:n.localize(7820,null)},order:1}),e.appendMenuItem(o.MenubarFileMenu,{group:"4_save",command:{id:O,title:n.localize(7821,null),precondition:t.or(k,t.and(N,R))},order:1}),e.appendMenuItem(o.MenubarFileMenu,{group:"4_save",command:{id:Y,title:n.localize(7822,null),precondition:t.or(k,t.and(N,R))},order:2}),e.appendMenuItem(o.MenubarFileMenu,{group:"4_save",command:{id:io,title:n.localize(7823,null),precondition:re},order:3}),e.appendMenuItem(o.MenubarFileMenu,{group:"5_autosave",command:{id:Q.ID,title:n.localize(7824,null),toggled:t.notEquals("config.files.autoSave","off")},order:1}),e.appendMenuItem(o.MenubarFileMenu,{group:"6_close",command:{id:S,title:n.localize(7825,null),precondition:t.or(t.and(Io),t.and(r.Scheme.notEqualsTo(w.untitled),N,R))},order:1}),e.appendMenuItem(o.MenubarFileMenu,{group:"6_close",command:{id:ne,title:n.localize(7826,null),precondition:t.or(k,t.and(N,R))},order:2}),e.appendMenuItem(o.MenubarGoMenu,{group:"3_global_nav",command:{id:"workbench.action.quickOpen",title:n.localize(7827,null)},order:1}),e.appendMenuItem(o.ChatAttachmentsContext,{group:"navigation",order:10,command:v,when:t.and(r.IsFileSystemResource,i.toNegated())}),e.appendMenuItem(o.ChatAttachmentsContext,{group:"navigation",order:20,command:E,when:r.IsFileSystemResource}),e.appendMenuItem(o.ChatAttachmentsContext,{group:"1_cutcopypaste",order:10,command:M,when:r.IsFileSystemResource}),e.appendMenuItem(o.ChatAttachmentsContext,{group:"1_cutcopypaste",order:20,command:x,when:r.IsFileSystemResource});for(const n of[o.ChatInlineResourceAnchorContext,o.ChatInputResourceAttachmentContext])e.appendMenuItem(n,{group:"navigation",order:10,command:v,when:t.and(r.HasResource,i.toNegated())}),e.appendMenuItem(n,{group:"navigation",order:20,command:E,when:r.IsFileSystemResource}),e.appendMenuItem(n,{group:"1_cutcopypaste",order:10,command:M,when:r.IsFileSystemResource}),e.appendMenuItem(n,{group:"1_cutcopypaste",order:20,command:x,when:r.IsFileSystemResource});export{E as $pLb,G as $qLb,l as $rLb};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import * as nls from "../../../../nls.js";
+import { ToggleAutoSaveAction, FocusFilesExplorer, GlobalCompareResourcesAction, ShowActiveFileInExplorer, CompareWithClipboardAction, NEW_FILE_COMMAND_ID, NEW_FILE_LABEL, NEW_FOLDER_COMMAND_ID, NEW_FOLDER_LABEL, TRIGGER_RENAME_LABEL, MOVE_FILE_TO_TRASH_LABEL, COPY_FILE_LABEL, PASTE_FILE_LABEL, FileCopiedContext, renameHandler, moveFileToTrashHandler, copyFileHandler, pasteFileHandler, deleteFileHandler, cutFileHandler, DOWNLOAD_COMMAND_ID, openFilePreserveFocusHandler, DOWNLOAD_LABEL, OpenActiveFileInEmptyWorkspace, UPLOAD_COMMAND_ID, UPLOAD_LABEL, CompareNewUntitledTextFilesAction, SetActiveEditorReadonlyInSession, SetActiveEditorWriteableInSession, ToggleActiveEditorReadonlyInSession, ResetActiveEditorReadonlyInSession } from "./fileActions.js";
+import { revertLocalChangesCommand, acceptLocalChangesCommand, CONFLICT_RESOLUTION_CONTEXT } from "./editors/textFileSaveErrorHandler.js";
+import { MenuId, MenuRegistry, registerAction2 } from "../../../../platform/actions/common/actions.js";
+import { openWindowCommand, newWindowCommand } from "./fileCommands.js";
+import { COPY_PATH_COMMAND_ID, REVEAL_IN_EXPLORER_COMMAND_ID, OPEN_TO_SIDE_COMMAND_ID, REVERT_FILE_COMMAND_ID, SAVE_FILE_COMMAND_ID, SAVE_FILE_LABEL, SAVE_FILE_AS_COMMAND_ID, SAVE_FILE_AS_LABEL, SAVE_ALL_IN_GROUP_COMMAND_ID, OpenEditorsGroupContext, COMPARE_WITH_SAVED_COMMAND_ID, COMPARE_RESOURCE_COMMAND_ID, SELECT_FOR_COMPARE_COMMAND_ID, ResourceSelectedForCompareContext, OpenEditorsDirtyEditorContext, COMPARE_SELECTED_COMMAND_ID, REMOVE_ROOT_FOLDER_COMMAND_ID, REMOVE_ROOT_FOLDER_LABEL, SAVE_FILES_COMMAND_ID, COPY_RELATIVE_PATH_COMMAND_ID, SAVE_FILE_WITHOUT_FORMATTING_COMMAND_ID, SAVE_FILE_WITHOUT_FORMATTING_LABEL, OpenEditorsReadonlyEditorContext, OPEN_WITH_EXPLORER_COMMAND_ID, NEW_UNTITLED_FILE_COMMAND_ID, NEW_UNTITLED_FILE_LABEL, SAVE_ALL_COMMAND_ID, OpenEditorsSelectedFileOrUntitledContext } from "./fileConstants.js";
+import { CommandsRegistry } from "../../../../platform/commands/common/commands.js";
+import { ContextKeyExpr } from "../../../../platform/contextkey/common/contextkey.js";
+import { KeybindingsRegistry } from "../../../../platform/keybinding/common/keybindingsRegistry.js";
+import { FilesExplorerFocusCondition, ExplorerRootContext, ExplorerFolderContext, ExplorerResourceWritableContext, ExplorerResourceCut, ExplorerResourceMoveableToTrash, ExplorerResourceAvailableEditorIdsContext, FoldersViewVisibleContext } from "../common/files.js";
+import { ADD_ROOT_FOLDER_COMMAND_ID, ADD_ROOT_FOLDER_LABEL } from "../../../browser/actions/workspaceCommands.js";
+import { CLOSE_SAVED_EDITORS_COMMAND_ID, CLOSE_EDITORS_IN_GROUP_COMMAND_ID, CLOSE_EDITOR_COMMAND_ID, CLOSE_OTHER_EDITORS_IN_GROUP_COMMAND_ID, REOPEN_WITH_COMMAND_ID } from "../../../browser/parts/editor/editorCommands.js";
+import { AutoSaveAfterShortDelayContext } from "../../../services/filesConfiguration/common/filesConfigurationService.js";
+import { WorkbenchListDoubleSelection } from "../../../../platform/list/browser/listService.js";
+import { Schemas } from "../../../../base/common/network.js";
+import { DirtyWorkingCopiesContext, EnterMultiRootWorkspaceSupportContext, HasWebFileSystemAccess, WorkbenchStateContext, WorkspaceFolderCountContext, SidebarFocusContext, ActiveEditorCanRevertContext, ActiveEditorContext, ResourceContextKey, ActiveEditorAvailableEditorIdsContext, MultipleEditorsSelectedInGroupContext, TwoEditorsSelectedInGroupContext, SelectedEditorsInGroupFileOrUntitledResourceContextKey } from "../../../common/contextkeys.js";
+import { IsWebContext } from "../../../../platform/contextkey/common/contextkeys.js";
+import { IExplorerService } from "./files.js";
+import { Codicon } from "../../../../base/common/codicons.js";
+import { Categories } from "../../../../platform/action/common/actionCommonCategories.js";
+registerAction2(GlobalCompareResourcesAction);
+registerAction2(FocusFilesExplorer);
+registerAction2(ShowActiveFileInExplorer);
+registerAction2(CompareWithClipboardAction);
+registerAction2(CompareNewUntitledTextFilesAction);
+registerAction2(ToggleAutoSaveAction);
+registerAction2(OpenActiveFileInEmptyWorkspace);
+registerAction2(SetActiveEditorReadonlyInSession);
+registerAction2(SetActiveEditorWriteableInSession);
+registerAction2(ToggleActiveEditorReadonlyInSession);
+registerAction2(ResetActiveEditorReadonlyInSession);
+CommandsRegistry.registerCommand("_files.windowOpen", openWindowCommand);
+CommandsRegistry.registerCommand("_files.newWindow", newWindowCommand);
+const explorerCommandsWeightBonus = 10;
+const RENAME_ID = "renameFile";
+KeybindingsRegistry.registerCommandAndKeybindingRule({
+  id: RENAME_ID,
+  weight: 200 + explorerCommandsWeightBonus,
+  when: ContextKeyExpr.and(FilesExplorerFocusCondition, ExplorerRootContext.toNegated(), ExplorerResourceWritableContext),
+  primary: 60,
+  mac: {
+    primary: 3
+    /* KeyCode.Enter */
+  },
+  handler: renameHandler
+});
+const MOVE_FILE_TO_TRASH_ID = "moveFileToTrash";
+KeybindingsRegistry.registerCommandAndKeybindingRule({
+  id: MOVE_FILE_TO_TRASH_ID,
+  weight: 200 + explorerCommandsWeightBonus,
+  when: ContextKeyExpr.and(FilesExplorerFocusCondition, ExplorerResourceMoveableToTrash),
+  primary: 20,
+  mac: {
+    primary: 2048 | 1,
+    secondary: [
+      20
+      /* KeyCode.Delete */
+    ]
+  },
+  handler: moveFileToTrashHandler
+});
+const DELETE_FILE_ID = "deleteFile";
+KeybindingsRegistry.registerCommandAndKeybindingRule({
+  id: DELETE_FILE_ID,
+  weight: 200 + explorerCommandsWeightBonus,
+  when: FilesExplorerFocusCondition,
+  primary: 1024 | 20,
+  mac: {
+    primary: 2048 | 512 | 1
+    /* KeyCode.Backspace */
+  },
+  handler: deleteFileHandler
+});
+KeybindingsRegistry.registerCommandAndKeybindingRule({
+  id: DELETE_FILE_ID,
+  weight: 200 + explorerCommandsWeightBonus,
+  when: ContextKeyExpr.and(FilesExplorerFocusCondition, ExplorerResourceMoveableToTrash.toNegated()),
+  primary: 20,
+  mac: {
+    primary: 2048 | 1
+    /* KeyCode.Backspace */
+  },
+  handler: deleteFileHandler
+});
+const CUT_FILE_ID = "filesExplorer.cut";
+KeybindingsRegistry.registerCommandAndKeybindingRule({
+  id: CUT_FILE_ID,
+  weight: 200 + explorerCommandsWeightBonus,
+  when: ContextKeyExpr.and(FilesExplorerFocusCondition, ExplorerRootContext.toNegated(), ExplorerResourceWritableContext),
+  primary: 2048 | 54,
+  handler: cutFileHandler
+});
+const COPY_FILE_ID = "filesExplorer.copy";
+KeybindingsRegistry.registerCommandAndKeybindingRule({
+  id: COPY_FILE_ID,
+  weight: 200 + explorerCommandsWeightBonus,
+  when: ContextKeyExpr.and(FilesExplorerFocusCondition, ExplorerRootContext.toNegated()),
+  primary: 2048 | 33,
+  handler: copyFileHandler
+});
+const PASTE_FILE_ID = "filesExplorer.paste";
+CommandsRegistry.registerCommand(PASTE_FILE_ID, pasteFileHandler);
+KeybindingsRegistry.registerKeybindingRule({
+  id: `^${PASTE_FILE_ID}`,
+  // the `^` enables pasting files into the explorer by preventing default bubble up
+  weight: 200 + explorerCommandsWeightBonus,
+  when: ContextKeyExpr.and(FilesExplorerFocusCondition, ExplorerResourceWritableContext),
+  primary: 2048 | 52
+});
+KeybindingsRegistry.registerCommandAndKeybindingRule({
+  id: "filesExplorer.cancelCut",
+  weight: 200 + explorerCommandsWeightBonus,
+  when: ContextKeyExpr.and(FilesExplorerFocusCondition, ExplorerResourceCut),
+  primary: 9,
+  handler: /* @__PURE__ */ __name(async (accessor) => {
+    const explorerService = accessor.get(IExplorerService);
+    await explorerService.setToCopy([], true);
+  }, "handler")
+});
+KeybindingsRegistry.registerCommandAndKeybindingRule({
+  id: "filesExplorer.openFilePreserveFocus",
+  weight: 200 + explorerCommandsWeightBonus,
+  when: ContextKeyExpr.and(FilesExplorerFocusCondition, ExplorerFolderContext.toNegated()),
+  primary: 10,
+  handler: openFilePreserveFocusHandler
+});
+const copyPathCommand = {
+  id: COPY_PATH_COMMAND_ID,
+  title: nls.localize("copyPath", "Copy Path")
+};
+const copyRelativePathCommand = {
+  id: COPY_RELATIVE_PATH_COMMAND_ID,
+  title: nls.localize("copyRelativePath", "Copy Relative Path")
+};
+const revealInSideBarCommand = {
+  id: REVEAL_IN_EXPLORER_COMMAND_ID,
+  title: nls.localize("revealInSideBar", "Reveal in Explorer View")
+};
+appendEditorTitleContextMenuItem(COPY_PATH_COMMAND_ID, copyPathCommand.title, ResourceContextKey.IsFileSystemResource, "1_cutcopypaste", true);
+appendEditorTitleContextMenuItem(COPY_RELATIVE_PATH_COMMAND_ID, copyRelativePathCommand.title, ResourceContextKey.IsFileSystemResource, "1_cutcopypaste", true);
+appendEditorTitleContextMenuItem(revealInSideBarCommand.id, revealInSideBarCommand.title, ResourceContextKey.IsFileSystemResource, "2_files", false, 1);
+function appendEditorTitleContextMenuItem(id, title, when, group, supportsMultiSelect, order) {
+  const precondition = supportsMultiSelect !== true ? MultipleEditorsSelectedInGroupContext.negate() : void 0;
+  MenuRegistry.appendMenuItem(MenuId.EditorTitleContext, {
+    command: { id, title, precondition },
+    when,
+    group,
+    order
+  });
+}
+__name(appendEditorTitleContextMenuItem, "appendEditorTitleContextMenuItem");
+appendSaveConflictEditorTitleAction("workbench.files.action.acceptLocalChanges", nls.localize("acceptLocalChanges", "Use your changes and overwrite file contents"), Codicon.check, -10, acceptLocalChangesCommand);
+appendSaveConflictEditorTitleAction("workbench.files.action.revertLocalChanges", nls.localize("revertLocalChanges", "Discard your changes and revert to file contents"), Codicon.discard, -9, revertLocalChangesCommand);
+function appendSaveConflictEditorTitleAction(id, title, icon, order, command) {
+  CommandsRegistry.registerCommand(id, command);
+  MenuRegistry.appendMenuItem(MenuId.EditorTitle, {
+    command: { id, title, icon },
+    when: ContextKeyExpr.equals(CONFLICT_RESOLUTION_CONTEXT, true),
+    group: "navigation",
+    order
+  });
+}
+__name(appendSaveConflictEditorTitleAction, "appendSaveConflictEditorTitleAction");
+function appendToCommandPalette({ id, title, category, metadata }, when) {
+  MenuRegistry.appendMenuItem(MenuId.CommandPalette, {
+    command: {
+      id,
+      title,
+      category,
+      metadata
+    },
+    when
+  });
+}
+__name(appendToCommandPalette, "appendToCommandPalette");
+appendToCommandPalette({
+  id: COPY_PATH_COMMAND_ID,
+  title: nls.localize2("copyPathOfActive", "Copy Path of Active File"),
+  category: Categories.File
+});
+appendToCommandPalette({
+  id: COPY_RELATIVE_PATH_COMMAND_ID,
+  title: nls.localize2("copyRelativePathOfActive", "Copy Relative Path of Active File"),
+  category: Categories.File
+});
+appendToCommandPalette({
+  id: SAVE_FILE_COMMAND_ID,
+  title: SAVE_FILE_LABEL,
+  category: Categories.File
+});
+appendToCommandPalette({
+  id: SAVE_FILE_WITHOUT_FORMATTING_COMMAND_ID,
+  title: SAVE_FILE_WITHOUT_FORMATTING_LABEL,
+  category: Categories.File
+});
+appendToCommandPalette({
+  id: SAVE_ALL_IN_GROUP_COMMAND_ID,
+  title: nls.localize2("saveAllInGroup", "Save All in Group"),
+  category: Categories.File
+});
+appendToCommandPalette({
+  id: SAVE_FILES_COMMAND_ID,
+  title: nls.localize2("saveFiles", "Save All Files"),
+  category: Categories.File
+});
+appendToCommandPalette({
+  id: REVERT_FILE_COMMAND_ID,
+  title: nls.localize2("revert", "Revert File"),
+  category: Categories.File
+});
+appendToCommandPalette({
+  id: COMPARE_WITH_SAVED_COMMAND_ID,
+  title: nls.localize2("compareActiveWithSaved", "Compare Active File with Saved"),
+  category: Categories.File,
+  metadata: {
+    description: nls.localize2("compareActiveWithSavedMeta", "Opens a new diff editor to compare the active file with the version on disk.")
+  }
+});
+appendToCommandPalette({
+  id: SAVE_FILE_AS_COMMAND_ID,
+  title: SAVE_FILE_AS_LABEL,
+  category: Categories.File
+});
+appendToCommandPalette({
+  id: NEW_FILE_COMMAND_ID,
+  title: NEW_FILE_LABEL,
+  category: Categories.File
+}, WorkspaceFolderCountContext.notEqualsTo("0"));
+appendToCommandPalette({
+  id: NEW_FOLDER_COMMAND_ID,
+  title: NEW_FOLDER_LABEL,
+  category: Categories.File,
+  metadata: { description: nls.localize2("newFolderDescription", "Create a new folder or directory") }
+}, WorkspaceFolderCountContext.notEqualsTo("0"));
+appendToCommandPalette({
+  id: NEW_UNTITLED_FILE_COMMAND_ID,
+  title: NEW_UNTITLED_FILE_LABEL,
+  category: Categories.File
+});
+const isFileOrUntitledResourceContextKey = ContextKeyExpr.or(ResourceContextKey.IsFileSystemResource, ResourceContextKey.Scheme.isEqualTo(Schemas.untitled));
+const openToSideCommand = {
+  id: OPEN_TO_SIDE_COMMAND_ID,
+  title: nls.localize("openToSide", "Open to the Side")
+};
+MenuRegistry.appendMenuItem(MenuId.OpenEditorsContext, {
+  group: "navigation",
+  order: 10,
+  command: openToSideCommand,
+  when: isFileOrUntitledResourceContextKey
+});
+MenuRegistry.appendMenuItem(MenuId.OpenEditorsContext, {
+  group: "1_open",
+  order: 10,
+  command: {
+    id: REOPEN_WITH_COMMAND_ID,
+    title: nls.localize("reopenWith", "Reopen Editor With...")
+  },
+  when: ContextKeyExpr.and(
+    // Editors with Available Choices to Open With
+    ActiveEditorAvailableEditorIdsContext,
+    // Not: editor groups
+    OpenEditorsGroupContext.toNegated()
+  )
+});
+MenuRegistry.appendMenuItem(MenuId.OpenEditorsContext, {
+  group: "1_cutcopypaste",
+  order: 10,
+  command: copyPathCommand,
+  when: ResourceContextKey.IsFileSystemResource
+});
+MenuRegistry.appendMenuItem(MenuId.OpenEditorsContext, {
+  group: "1_cutcopypaste",
+  order: 20,
+  command: copyRelativePathCommand,
+  when: ResourceContextKey.IsFileSystemResource
+});
+MenuRegistry.appendMenuItem(MenuId.OpenEditorsContext, {
+  group: "2_save",
+  order: 10,
+  command: {
+    id: SAVE_FILE_COMMAND_ID,
+    title: SAVE_FILE_LABEL,
+    precondition: OpenEditorsDirtyEditorContext
+  },
+  when: ContextKeyExpr.or(
+    // Untitled Editors
+    ResourceContextKey.Scheme.isEqualTo(Schemas.untitled),
+    // Or:
+    ContextKeyExpr.and(
+      // Not: editor groups
+      OpenEditorsGroupContext.toNegated(),
+      // Not: readonly editors
+      OpenEditorsReadonlyEditorContext.toNegated(),
+      // Not: auto save after short delay
+      AutoSaveAfterShortDelayContext.toNegated()
+    )
+  )
+});
+MenuRegistry.appendMenuItem(MenuId.OpenEditorsContext, {
+  group: "2_save",
+  order: 20,
+  command: {
+    id: REVERT_FILE_COMMAND_ID,
+    title: nls.localize("revert", "Revert File"),
+    precondition: OpenEditorsDirtyEditorContext
+  },
+  when: ContextKeyExpr.and(
+    // Not: editor groups
+    OpenEditorsGroupContext.toNegated(),
+    // Not: readonly editors
+    OpenEditorsReadonlyEditorContext.toNegated(),
+    // Not: untitled editors (revert closes them)
+    ResourceContextKey.Scheme.notEqualsTo(Schemas.untitled),
+    // Not: auto save after short delay
+    AutoSaveAfterShortDelayContext.toNegated()
+  )
+});
+MenuRegistry.appendMenuItem(MenuId.OpenEditorsContext, {
+  group: "2_save",
+  order: 30,
+  command: {
+    id: SAVE_ALL_IN_GROUP_COMMAND_ID,
+    title: nls.localize("saveAll", "Save All"),
+    precondition: DirtyWorkingCopiesContext
+  },
+  // Editor Group
+  when: OpenEditorsGroupContext
+});
+MenuRegistry.appendMenuItem(MenuId.OpenEditorsContext, {
+  group: "3_compare",
+  order: 10,
+  command: {
+    id: COMPARE_WITH_SAVED_COMMAND_ID,
+    title: nls.localize("compareWithSaved", "Compare with Saved"),
+    precondition: OpenEditorsDirtyEditorContext
+  },
+  when: ContextKeyExpr.and(ResourceContextKey.IsFileSystemResource, AutoSaveAfterShortDelayContext.toNegated(), WorkbenchListDoubleSelection.toNegated())
+});
+const compareResourceCommand = {
+  id: COMPARE_RESOURCE_COMMAND_ID,
+  title: nls.localize("compareWithSelected", "Compare with Selected")
+};
+MenuRegistry.appendMenuItem(MenuId.OpenEditorsContext, {
+  group: "3_compare",
+  order: 20,
+  command: compareResourceCommand,
+  when: ContextKeyExpr.and(ResourceContextKey.HasResource, ResourceSelectedForCompareContext, isFileOrUntitledResourceContextKey, WorkbenchListDoubleSelection.toNegated())
+});
+const selectForCompareCommand = {
+  id: SELECT_FOR_COMPARE_COMMAND_ID,
+  title: nls.localize("compareSource", "Select for Compare")
+};
+MenuRegistry.appendMenuItem(MenuId.OpenEditorsContext, {
+  group: "3_compare",
+  order: 30,
+  command: selectForCompareCommand,
+  when: ContextKeyExpr.and(ResourceContextKey.HasResource, isFileOrUntitledResourceContextKey, WorkbenchListDoubleSelection.toNegated())
+});
+const compareSelectedCommand = {
+  id: COMPARE_SELECTED_COMMAND_ID,
+  title: nls.localize("compareSelected", "Compare Selected")
+};
+MenuRegistry.appendMenuItem(MenuId.OpenEditorsContext, {
+  group: "3_compare",
+  order: 30,
+  command: compareSelectedCommand,
+  when: ContextKeyExpr.and(ResourceContextKey.HasResource, WorkbenchListDoubleSelection, OpenEditorsSelectedFileOrUntitledContext)
+});
+MenuRegistry.appendMenuItem(MenuId.EditorTitleContext, {
+  group: "1_compare",
+  order: 30,
+  command: compareSelectedCommand,
+  when: ContextKeyExpr.and(ResourceContextKey.HasResource, TwoEditorsSelectedInGroupContext, SelectedEditorsInGroupFileOrUntitledResourceContextKey)
+});
+MenuRegistry.appendMenuItem(MenuId.OpenEditorsContext, {
+  group: "4_close",
+  order: 10,
+  command: {
+    id: CLOSE_EDITOR_COMMAND_ID,
+    title: nls.localize("close", "Close")
+  },
+  when: OpenEditorsGroupContext.toNegated()
+});
+MenuRegistry.appendMenuItem(MenuId.OpenEditorsContext, {
+  group: "4_close",
+  order: 20,
+  command: {
+    id: CLOSE_OTHER_EDITORS_IN_GROUP_COMMAND_ID,
+    title: nls.localize("closeOthers", "Close Others")
+  },
+  when: OpenEditorsGroupContext.toNegated()
+});
+MenuRegistry.appendMenuItem(MenuId.OpenEditorsContext, {
+  group: "4_close",
+  order: 30,
+  command: {
+    id: CLOSE_SAVED_EDITORS_COMMAND_ID,
+    title: nls.localize("closeSaved", "Close Saved")
+  }
+});
+MenuRegistry.appendMenuItem(MenuId.OpenEditorsContext, {
+  group: "4_close",
+  order: 40,
+  command: {
+    id: CLOSE_EDITORS_IN_GROUP_COMMAND_ID,
+    title: nls.localize("closeAll", "Close All")
+  }
+});
+MenuRegistry.appendMenuItem(MenuId.ExplorerContext, {
+  group: "navigation",
+  order: 4,
+  command: {
+    id: NEW_FILE_COMMAND_ID,
+    title: NEW_FILE_LABEL,
+    precondition: ExplorerResourceWritableContext
+  },
+  when: ExplorerFolderContext
+});
+MenuRegistry.appendMenuItem(MenuId.ExplorerContext, {
+  group: "navigation",
+  order: 6,
+  command: {
+    id: NEW_FOLDER_COMMAND_ID,
+    title: NEW_FOLDER_LABEL,
+    precondition: ExplorerResourceWritableContext
+  },
+  when: ExplorerFolderContext
+});
+MenuRegistry.appendMenuItem(MenuId.ExplorerContext, {
+  group: "navigation",
+  order: 10,
+  command: openToSideCommand,
+  when: ContextKeyExpr.and(ExplorerFolderContext.toNegated(), ResourceContextKey.HasResource)
+});
+MenuRegistry.appendMenuItem(MenuId.ExplorerContext, {
+  group: "navigation",
+  order: 20,
+  command: {
+    id: OPEN_WITH_EXPLORER_COMMAND_ID,
+    title: nls.localize("explorerOpenWith", "Open With...")
+  },
+  when: ContextKeyExpr.and(ExplorerFolderContext.toNegated(), ExplorerResourceAvailableEditorIdsContext)
+});
+MenuRegistry.appendMenuItem(MenuId.ExplorerContext, {
+  group: "3_compare",
+  order: 20,
+  command: compareResourceCommand,
+  when: ContextKeyExpr.and(ExplorerFolderContext.toNegated(), ResourceContextKey.HasResource, ResourceSelectedForCompareContext, WorkbenchListDoubleSelection.toNegated())
+});
+MenuRegistry.appendMenuItem(MenuId.ExplorerContext, {
+  group: "3_compare",
+  order: 30,
+  command: selectForCompareCommand,
+  when: ContextKeyExpr.and(ExplorerFolderContext.toNegated(), ResourceContextKey.HasResource, WorkbenchListDoubleSelection.toNegated())
+});
+MenuRegistry.appendMenuItem(MenuId.ExplorerContext, {
+  group: "3_compare",
+  order: 30,
+  command: compareSelectedCommand,
+  when: ContextKeyExpr.and(ExplorerFolderContext.toNegated(), ResourceContextKey.HasResource, WorkbenchListDoubleSelection)
+});
+MenuRegistry.appendMenuItem(MenuId.ExplorerContext, {
+  group: "5_cutcopypaste",
+  order: 8,
+  command: {
+    id: CUT_FILE_ID,
+    title: nls.localize("cut", "Cut")
+  },
+  when: ContextKeyExpr.and(ExplorerRootContext.toNegated(), ExplorerResourceWritableContext)
+});
+MenuRegistry.appendMenuItem(MenuId.ExplorerContext, {
+  group: "5_cutcopypaste",
+  order: 10,
+  command: {
+    id: COPY_FILE_ID,
+    title: COPY_FILE_LABEL
+  },
+  when: ExplorerRootContext.toNegated()
+});
+MenuRegistry.appendMenuItem(MenuId.ExplorerContext, {
+  group: "5_cutcopypaste",
+  order: 20,
+  command: {
+    id: PASTE_FILE_ID,
+    title: PASTE_FILE_LABEL,
+    precondition: ContextKeyExpr.and(ExplorerResourceWritableContext, FileCopiedContext)
+  },
+  when: ExplorerFolderContext
+});
+MenuRegistry.appendMenuItem(MenuId.ExplorerContext, {
+  group: "5b_importexport",
+  order: 10,
+  command: {
+    id: DOWNLOAD_COMMAND_ID,
+    title: DOWNLOAD_LABEL
+  },
+  when: ContextKeyExpr.or(
+    // native: for any remote resource
+    ContextKeyExpr.and(IsWebContext.toNegated(), ResourceContextKey.Scheme.notEqualsTo(Schemas.file)),
+    // web: for any files
+    ContextKeyExpr.and(IsWebContext, ExplorerFolderContext.toNegated(), ExplorerRootContext.toNegated()),
+    // web: for any folders if file system API support is provided
+    ContextKeyExpr.and(IsWebContext, HasWebFileSystemAccess)
+  )
+});
+MenuRegistry.appendMenuItem(MenuId.ExplorerContext, {
+  group: "5b_importexport",
+  order: 20,
+  command: {
+    id: UPLOAD_COMMAND_ID,
+    title: UPLOAD_LABEL
+  },
+  when: ContextKeyExpr.and(
+    // only in web
+    IsWebContext,
+    // only on folders
+    ExplorerFolderContext,
+    // only on writable folders
+    ExplorerResourceWritableContext
+  )
+});
+MenuRegistry.appendMenuItem(MenuId.ExplorerContext, {
+  group: "6_copypath",
+  order: 10,
+  command: copyPathCommand,
+  when: ResourceContextKey.IsFileSystemResource
+});
+MenuRegistry.appendMenuItem(MenuId.ExplorerContext, {
+  group: "6_copypath",
+  order: 20,
+  command: copyRelativePathCommand,
+  when: ResourceContextKey.IsFileSystemResource
+});
+MenuRegistry.appendMenuItem(MenuId.ExplorerContext, {
+  group: "2_workspace",
+  order: 10,
+  command: {
+    id: ADD_ROOT_FOLDER_COMMAND_ID,
+    title: ADD_ROOT_FOLDER_LABEL
+  },
+  when: ContextKeyExpr.and(ExplorerRootContext, ContextKeyExpr.or(EnterMultiRootWorkspaceSupportContext, WorkbenchStateContext.isEqualTo("workspace")))
+});
+MenuRegistry.appendMenuItem(MenuId.ExplorerContext, {
+  group: "2_workspace",
+  order: 30,
+  command: {
+    id: REMOVE_ROOT_FOLDER_COMMAND_ID,
+    title: REMOVE_ROOT_FOLDER_LABEL
+  },
+  when: ContextKeyExpr.and(ExplorerRootContext, ExplorerFolderContext, ContextKeyExpr.and(WorkspaceFolderCountContext.notEqualsTo("0"), ContextKeyExpr.or(EnterMultiRootWorkspaceSupportContext, WorkbenchStateContext.isEqualTo("workspace"))))
+});
+MenuRegistry.appendMenuItem(MenuId.ExplorerContext, {
+  group: "7_modification",
+  order: 10,
+  command: {
+    id: RENAME_ID,
+    title: TRIGGER_RENAME_LABEL,
+    precondition: ExplorerResourceWritableContext
+  },
+  when: ExplorerRootContext.toNegated()
+});
+MenuRegistry.appendMenuItem(MenuId.ExplorerContext, {
+  group: "7_modification",
+  order: 20,
+  command: {
+    id: MOVE_FILE_TO_TRASH_ID,
+    title: MOVE_FILE_TO_TRASH_LABEL
+  },
+  alt: {
+    id: DELETE_FILE_ID,
+    title: nls.localize("deleteFile", "Delete Permanently")
+  },
+  when: ContextKeyExpr.and(ExplorerRootContext.toNegated(), ExplorerResourceMoveableToTrash)
+});
+MenuRegistry.appendMenuItem(MenuId.ExplorerContext, {
+  group: "7_modification",
+  order: 20,
+  command: {
+    id: DELETE_FILE_ID,
+    title: nls.localize("deleteFile", "Delete Permanently")
+  },
+  when: ContextKeyExpr.and(ExplorerRootContext.toNegated(), ExplorerResourceMoveableToTrash.toNegated())
+});
+for (const menuId of [MenuId.EmptyEditorGroupContext, MenuId.EditorTabsBarContext]) {
+  MenuRegistry.appendMenuItem(menuId, { command: { id: NEW_UNTITLED_FILE_COMMAND_ID, title: nls.localize("newFile", "New Text File") }, group: "1_file", order: 10 });
+  MenuRegistry.appendMenuItem(menuId, { command: { id: "workbench.action.quickOpen", title: nls.localize("openFile", "Open File...") }, group: "1_file", order: 20 });
+}
+MenuRegistry.appendMenuItem(MenuId.MenubarFileMenu, {
+  group: "1_new",
+  command: {
+    id: NEW_UNTITLED_FILE_COMMAND_ID,
+    title: nls.localize({ key: "miNewFile", comment: ["&& denotes a mnemonic"] }, "&&New Text File")
+  },
+  order: 1
+});
+MenuRegistry.appendMenuItem(MenuId.MenubarFileMenu, {
+  group: "4_save",
+  command: {
+    id: SAVE_FILE_COMMAND_ID,
+    title: nls.localize({ key: "miSave", comment: ["&& denotes a mnemonic"] }, "&&Save"),
+    precondition: ContextKeyExpr.or(ActiveEditorContext, ContextKeyExpr.and(FoldersViewVisibleContext, SidebarFocusContext))
+  },
+  order: 1
+});
+MenuRegistry.appendMenuItem(MenuId.MenubarFileMenu, {
+  group: "4_save",
+  command: {
+    id: SAVE_FILE_AS_COMMAND_ID,
+    title: nls.localize({ key: "miSaveAs", comment: ["&& denotes a mnemonic"] }, "Save &&As..."),
+    precondition: ContextKeyExpr.or(ActiveEditorContext, ContextKeyExpr.and(FoldersViewVisibleContext, SidebarFocusContext))
+  },
+  order: 2
+});
+MenuRegistry.appendMenuItem(MenuId.MenubarFileMenu, {
+  group: "4_save",
+  command: {
+    id: SAVE_ALL_COMMAND_ID,
+    title: nls.localize({ key: "miSaveAll", comment: ["&& denotes a mnemonic"] }, "Save A&&ll"),
+    precondition: DirtyWorkingCopiesContext
+  },
+  order: 3
+});
+MenuRegistry.appendMenuItem(MenuId.MenubarFileMenu, {
+  group: "5_autosave",
+  command: {
+    id: ToggleAutoSaveAction.ID,
+    title: nls.localize({ key: "miAutoSave", comment: ["&& denotes a mnemonic"] }, "A&&uto Save"),
+    toggled: ContextKeyExpr.notEquals("config.files.autoSave", "off")
+  },
+  order: 1
+});
+MenuRegistry.appendMenuItem(MenuId.MenubarFileMenu, {
+  group: "6_close",
+  command: {
+    id: REVERT_FILE_COMMAND_ID,
+    title: nls.localize({ key: "miRevert", comment: ["&& denotes a mnemonic"] }, "Re&&vert File"),
+    precondition: ContextKeyExpr.or(
+      // Active editor can revert
+      ContextKeyExpr.and(ActiveEditorCanRevertContext),
+      // Explorer focused but not on untitled
+      ContextKeyExpr.and(ResourceContextKey.Scheme.notEqualsTo(Schemas.untitled), FoldersViewVisibleContext, SidebarFocusContext)
+    )
+  },
+  order: 1
+});
+MenuRegistry.appendMenuItem(MenuId.MenubarFileMenu, {
+  group: "6_close",
+  command: {
+    id: CLOSE_EDITOR_COMMAND_ID,
+    title: nls.localize({ key: "miCloseEditor", comment: ["&& denotes a mnemonic"] }, "&&Close Editor"),
+    precondition: ContextKeyExpr.or(ActiveEditorContext, ContextKeyExpr.and(FoldersViewVisibleContext, SidebarFocusContext))
+  },
+  order: 2
+});
+MenuRegistry.appendMenuItem(MenuId.MenubarGoMenu, {
+  group: "3_global_nav",
+  command: {
+    id: "workbench.action.quickOpen",
+    title: nls.localize({ key: "miGotoFile", comment: ["&& denotes a mnemonic"] }, "Go to &&File...")
+  },
+  order: 1
+});
+MenuRegistry.appendMenuItem(MenuId.ChatAttachmentsContext, {
+  group: "navigation",
+  order: 10,
+  command: openToSideCommand,
+  when: ContextKeyExpr.and(ResourceContextKey.IsFileSystemResource, ExplorerFolderContext.toNegated())
+});
+MenuRegistry.appendMenuItem(MenuId.ChatAttachmentsContext, {
+  group: "navigation",
+  order: 20,
+  command: revealInSideBarCommand,
+  when: ResourceContextKey.IsFileSystemResource
+});
+MenuRegistry.appendMenuItem(MenuId.ChatAttachmentsContext, {
+  group: "1_cutcopypaste",
+  order: 10,
+  command: copyPathCommand,
+  when: ResourceContextKey.IsFileSystemResource
+});
+MenuRegistry.appendMenuItem(MenuId.ChatAttachmentsContext, {
+  group: "1_cutcopypaste",
+  order: 20,
+  command: copyRelativePathCommand,
+  when: ResourceContextKey.IsFileSystemResource
+});
+for (const menuId of [MenuId.ChatInlineResourceAnchorContext, MenuId.ChatInputResourceAttachmentContext]) {
+  MenuRegistry.appendMenuItem(menuId, {
+    group: "navigation",
+    order: 10,
+    command: openToSideCommand,
+    when: ContextKeyExpr.and(ResourceContextKey.HasResource, ExplorerFolderContext.toNegated())
+  });
+  MenuRegistry.appendMenuItem(menuId, {
+    group: "navigation",
+    order: 20,
+    command: revealInSideBarCommand,
+    when: ResourceContextKey.IsFileSystemResource
+  });
+  MenuRegistry.appendMenuItem(menuId, {
+    group: "1_cutcopypaste",
+    order: 10,
+    command: copyPathCommand,
+    when: ResourceContextKey.IsFileSystemResource
+  });
+  MenuRegistry.appendMenuItem(menuId, {
+    group: "1_cutcopypaste",
+    order: 20,
+    command: copyRelativePathCommand,
+    when: ResourceContextKey.IsFileSystemResource
+  });
+}
+export {
+  appendEditorTitleContextMenuItem,
+  appendToCommandPalette,
+  revealInSideBarCommand
+};
+//# sourceMappingURL=fileActions.contribution.js.map

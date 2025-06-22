@@ -1,1 +1,46 @@
-import{$lb as o}from"../../../../../base/common/errors.js";import{$df as a}from"../../../../../base/common/event.js";import{$vd as m,$td as c}from"../../../../../base/common/lifecycle.js";class p extends m{constructor(){super(...arguments),this.a=this.B(new a),this.onDidChangeProviders=this.a.event,this.b=this.B(new a),this.onDidChangeItems=this.b.event,this.c=[]}registerCellStatusBarItemProvider(t){this.c.push(t);let e;return t.onDidChangeStatusBarItems&&(e=t.onDidChangeStatusBarItems(()=>this.b.fire())),this.a.fire(),c(()=>{e?.dispose();const i=this.c.findIndex(r=>r===t);this.c.splice(i,1)})}async getStatusBarItemsForCell(t,e,i,r){const n=this.c.filter(s=>s.viewType===i||s.viewType==="*");return await Promise.all(n.map(async s=>{try{return await s.provideCellStatusBarItems(t,e,r)??{items:[]}}catch(h){return o(h),{items:[]}}}))}}export{p as $n$b};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { onUnexpectedExternalError } from "../../../../../base/common/errors.js";
+import { Emitter } from "../../../../../base/common/event.js";
+import { Disposable, toDisposable } from "../../../../../base/common/lifecycle.js";
+class NotebookCellStatusBarService extends Disposable {
+  static {
+    __name(this, "NotebookCellStatusBarService");
+  }
+  constructor() {
+    super(...arguments);
+    this._onDidChangeProviders = this._register(new Emitter());
+    this.onDidChangeProviders = this._onDidChangeProviders.event;
+    this._onDidChangeItems = this._register(new Emitter());
+    this.onDidChangeItems = this._onDidChangeItems.event;
+    this._providers = [];
+  }
+  registerCellStatusBarItemProvider(provider) {
+    this._providers.push(provider);
+    let changeListener;
+    if (provider.onDidChangeStatusBarItems) {
+      changeListener = provider.onDidChangeStatusBarItems(() => this._onDidChangeItems.fire());
+    }
+    this._onDidChangeProviders.fire();
+    return toDisposable(() => {
+      changeListener?.dispose();
+      const idx = this._providers.findIndex((p) => p === provider);
+      this._providers.splice(idx, 1);
+    });
+  }
+  async getStatusBarItemsForCell(docUri, cellIndex, viewType, token) {
+    const providers = this._providers.filter((p) => p.viewType === viewType || p.viewType === "*");
+    return await Promise.all(providers.map(async (p) => {
+      try {
+        return await p.provideCellStatusBarItems(docUri, cellIndex, token) ?? { items: [] };
+      } catch (e) {
+        onUnexpectedExternalError(e);
+        return { items: [] };
+      }
+    }));
+  }
+}
+export {
+  NotebookCellStatusBarService
+};
+//# sourceMappingURL=notebookCellStatusBarServiceImpl.js.map

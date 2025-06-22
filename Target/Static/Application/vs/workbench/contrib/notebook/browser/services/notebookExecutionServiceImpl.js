@@ -1,1 +1,117 @@
-import{$td as p}from"../../../../../base/common/lifecycle.js";import*as g from"../../../../../nls.js";import{$Yn as x}from"../../../../../platform/commands/common/commands.js";import{$SM as C}from"../../../../../platform/workspace/common/workspaceTrust.js";import{$GUb as E}from"../viewParts/notebookKernelQuickPickStrategy.js";import{CellKind as b,NotebookCellExecutionState as $}from"../../common/notebookCommon.js";import{$DK as N}from"../../common/notebookExecutionStateService.js";import{$KK as y,$JK as K}from"../../common/notebookKernelService.js";import{$VSb as S}from"../../common/notebookLoggingService.js";var m=function(a,e,t,l){var o=arguments.length,r=o<3?e:l===null?l=Object.getOwnPropertyDescriptor(e,t):l,c;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")r=Reflect.decorate(a,e,t,l);else for(var s=a.length-1;s>=0;s--)(c=a[s])&&(r=(o<3?c(r):o>3?c(e,t,r):c(e,t))||r);return o>3&&r&&Object.defineProperty(e,t,r),r},f=function(a,e){return function(t,l){e(t,l,a)}};let d=class{constructor(e,t,l,o,r,c){this.b=e,this.d=t,this.e=l,this.f=o,this.g=r,this.h=c,this.i=new Set}async executeNotebookCells(e,t,l){const o=Array.from(t).filter(i=>i.cellKind===b.Code);if(!o.length)return;this.g.debug("Execution",`${JSON.stringify(o.map(i=>i.handle))}`);const r=g.localize(9586,null);if(!await this.f.requestWorkspaceTrust({message:r}))return;const s=[];for(const i of o)this.h.getCellExecution(i.uri)||s.push([i,this.h.createCellExecution(e.uri,i.handle)]);const h=await E.resolveKernel(e,this.d,this.e,this.b);if(!h){s.forEach(i=>i[1].complete({}));return}this.e.addMostRecentKernel(h);const u=[];for(const[i,n]of s)h.supportedLanguages.includes(i.language)?u.push(n):n.complete({});if(u.length>0){await this.j(u),this.d.selectKernelForNotebook(h,e),await h.executeNotebookCellsRequest(e.uri,u.map(n=>n.cellHandle));const i=u.filter(n=>n.state===$.Unconfirmed);i.length&&(this.g.debug("Execution",`Completing unconfirmed executions ${JSON.stringify(i.map(n=>n.cellHandle))}`),i.forEach(n=>n.complete({}))),this.g.debug("Execution",`Completed executions ${JSON.stringify(u.map(n=>n.cellHandle))}`)}}async cancelNotebookCellHandles(e,t){const l=Array.from(t);this.g.debug("Execution",`CancelNotebookCellHandles ${JSON.stringify(l)}`);const o=this.d.getSelectedOrSuggestedKernel(e);o&&await o.cancelNotebookCellExecution(e.uri,l)}async cancelNotebookCells(e,t){this.cancelNotebookCellHandles(e,Array.from(t,l=>l.handle))}registerExecutionParticipant(e){return this.i.add(e),p(()=>this.i.delete(e))}async j(e){for(const t of this.i)await t.onWillExecuteCell(e)}dispose(){this.a?.dispose(!0)}};d=m([f(0,x),f(1,K),f(2,y),f(3,C),f(4,S),f(5,N)],d);export{d as $5dc};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { toDisposable } from "../../../../../base/common/lifecycle.js";
+import * as nls from "../../../../../nls.js";
+import { ICommandService } from "../../../../../platform/commands/common/commands.js";
+import { IWorkspaceTrustRequestService } from "../../../../../platform/workspace/common/workspaceTrust.js";
+import { KernelPickerMRUStrategy } from "../viewParts/notebookKernelQuickPickStrategy.js";
+import { CellKind, NotebookCellExecutionState } from "../../common/notebookCommon.js";
+import { INotebookExecutionStateService } from "../../common/notebookExecutionStateService.js";
+import { INotebookKernelHistoryService, INotebookKernelService } from "../../common/notebookKernelService.js";
+import { INotebookLoggingService } from "../../common/notebookLoggingService.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+let NotebookExecutionService = class NotebookExecutionService2 {
+  static {
+    __name(this, "NotebookExecutionService");
+  }
+  constructor(_commandService, _notebookKernelService, _notebookKernelHistoryService, _workspaceTrustRequestService, _logService, _notebookExecutionStateService) {
+    this._commandService = _commandService;
+    this._notebookKernelService = _notebookKernelService;
+    this._notebookKernelHistoryService = _notebookKernelHistoryService;
+    this._workspaceTrustRequestService = _workspaceTrustRequestService;
+    this._logService = _logService;
+    this._notebookExecutionStateService = _notebookExecutionStateService;
+    this.cellExecutionParticipants = /* @__PURE__ */ new Set();
+  }
+  async executeNotebookCells(notebook, cells, contextKeyService) {
+    const cellsArr = Array.from(cells).filter((c) => c.cellKind === CellKind.Code);
+    if (!cellsArr.length) {
+      return;
+    }
+    this._logService.debug(`Execution`, `${JSON.stringify(cellsArr.map((c) => c.handle))}`);
+    const message = nls.localize("notebookRunTrust", "Executing a notebook cell will run code from this workspace.");
+    const trust = await this._workspaceTrustRequestService.requestWorkspaceTrust({ message });
+    if (!trust) {
+      return;
+    }
+    const cellExecutions = [];
+    for (const cell of cellsArr) {
+      const cellExe = this._notebookExecutionStateService.getCellExecution(cell.uri);
+      if (!!cellExe) {
+        continue;
+      }
+      cellExecutions.push([cell, this._notebookExecutionStateService.createCellExecution(notebook.uri, cell.handle)]);
+    }
+    const kernel = await KernelPickerMRUStrategy.resolveKernel(notebook, this._notebookKernelService, this._notebookKernelHistoryService, this._commandService);
+    if (!kernel) {
+      cellExecutions.forEach((cellExe) => cellExe[1].complete({}));
+      return;
+    }
+    this._notebookKernelHistoryService.addMostRecentKernel(kernel);
+    const validCellExecutions = [];
+    for (const [cell, cellExecution] of cellExecutions) {
+      if (!kernel.supportedLanguages.includes(cell.language)) {
+        cellExecution.complete({});
+      } else {
+        validCellExecutions.push(cellExecution);
+      }
+    }
+    if (validCellExecutions.length > 0) {
+      await this.runExecutionParticipants(validCellExecutions);
+      this._notebookKernelService.selectKernelForNotebook(kernel, notebook);
+      await kernel.executeNotebookCellsRequest(notebook.uri, validCellExecutions.map((c) => c.cellHandle));
+      const unconfirmed = validCellExecutions.filter((exe) => exe.state === NotebookCellExecutionState.Unconfirmed);
+      if (unconfirmed.length) {
+        this._logService.debug(`Execution`, `Completing unconfirmed executions ${JSON.stringify(unconfirmed.map((exe) => exe.cellHandle))}`);
+        unconfirmed.forEach((exe) => exe.complete({}));
+      }
+      this._logService.debug(`Execution`, `Completed executions ${JSON.stringify(validCellExecutions.map((exe) => exe.cellHandle))}`);
+    }
+  }
+  async cancelNotebookCellHandles(notebook, cells) {
+    const cellsArr = Array.from(cells);
+    this._logService.debug(`Execution`, `CancelNotebookCellHandles ${JSON.stringify(cellsArr)}`);
+    const kernel = this._notebookKernelService.getSelectedOrSuggestedKernel(notebook);
+    if (kernel) {
+      await kernel.cancelNotebookCellExecution(notebook.uri, cellsArr);
+    }
+  }
+  async cancelNotebookCells(notebook, cells) {
+    this.cancelNotebookCellHandles(notebook, Array.from(cells, (cell) => cell.handle));
+  }
+  registerExecutionParticipant(participant) {
+    this.cellExecutionParticipants.add(participant);
+    return toDisposable(() => this.cellExecutionParticipants.delete(participant));
+  }
+  async runExecutionParticipants(executions) {
+    for (const participant of this.cellExecutionParticipants) {
+      await participant.onWillExecuteCell(executions);
+    }
+    return;
+  }
+  dispose() {
+    this._activeProxyKernelExecutionToken?.dispose(true);
+  }
+};
+NotebookExecutionService = __decorate([
+  __param(0, ICommandService),
+  __param(1, INotebookKernelService),
+  __param(2, INotebookKernelHistoryService),
+  __param(3, IWorkspaceTrustRequestService),
+  __param(4, INotebookLoggingService),
+  __param(5, INotebookExecutionStateService)
+], NotebookExecutionService);
+export {
+  NotebookExecutionService
+};
+//# sourceMappingURL=notebookExecutionServiceImpl.js.map

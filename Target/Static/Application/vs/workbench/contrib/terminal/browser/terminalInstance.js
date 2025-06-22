@@ -1,3 +1,2477 @@
-import{$o5 as Tt}from"../../../../base/browser/browser.js";import{$y5 as vt}from"../../../../base/browser/canIUse.js";import{$k7 as N}from"../../../../base/browser/dnd.js";import*as u from"../../../../base/browser/dom.js";import{$G5 as G}from"../../../../base/browser/keyboardEvent.js";import{$B7 as Bt}from"../../../../base/browser/ui/scrollbar/scrollableElement.js";import{$Lh as Q,Promises as kt,$Nh as Et,$Mh as tt}from"../../../../base/common/async.js";import{$Mj as F}from"../../../../base/common/codicons.js";import{$um as X}from"../../../../base/common/decorators.js";import{$Bb as Ft,$kb as et}from"../../../../base/common/errors.js";import{$df as d,Event as it}from"../../../../base/common/event.js";import{$nm as Mt}from"../../../../base/common/labels.js";import{$vd as _,$Ed as Rt,$ud as st,$Cd as Wt,$wd as q,$qd as rt,$td as V}from"../../../../base/common/lifecycle.js";import{Schemas as K}from"../../../../base/common/network.js";import*as P from"../../../../base/common/path.js";import{OS as At,$n as zt,$m as nt}from"../../../../base/common/platform.js";import{URI as B}from"../../../../base/common/uri.js";import{$l_ as jt}from"../../../../editor/browser/config/tabFocus.js";import*as f from"../../../../nls.js";import{$tC as Nt}from"../../../../platform/accessibility/common/accessibility.js";import{$0db as qt,$5db as Ut}from"../../../../platform/accessibilitySignal/browser/accessibilitySignalService.js";import{$Yn as Ot}from"../../../../platform/commands/common/commands.js";import{$El as Vt}from"../../../../platform/configuration/common/configuration.js";import{$Vn as dt}from"../../../../platform/contextkey/common/contextkey.js";import{$Qgb as ht,$Vgb as U,$4gb as ot}from"../../../../platform/dnd/browser/dnd.js";import{$5j as Kt}from"../../../../platform/files/common/files.js";import{$mj as Ht}from"../../../../platform/instantiation/common/instantiation.js";import{$lj as Yt}from"../../../../platform/instantiation/common/serviceCollection.js";import{$ux as Jt}from"../../../../platform/keybinding/common/keybinding.js";import{$RI as Xt,Severity as $}from"../../../../platform/notification/common/notification.js";import{$4$ as _t}from"../../../../platform/opener/common/opener.js";import{$nn as Zt}from"../../../../platform/product/common/productService.js";import{$OM as Gt}from"../../../../platform/quickinput/common/quickInput.js";import{$Ho as Qt}from"../../../../platform/storage/common/storage.js";import{$Po as te}from"../../../../platform/telemetry/common/telemetry.js";import{$aYb as ee}from"../../../../platform/terminal/common/capabilities/terminalCapabilityStore.js";import{$AA as ie}from"../../../../platform/terminal/common/environmentVariableShared.js";import{$Iw as se,TerminalExitReason as T,TerminalLocation as re,TitleEventSource as b}from"../../../../platform/terminal/common/terminal.js";import{$qlc as O}from"../../../../platform/terminal/common/terminalStrings.js";import{$7p as ne}from"../../../../platform/theme/common/colorRegistry.js";import{$Dt as he}from"../../../../platform/theme/common/iconRegistry.js";import{$Mt as oe}from"../../../../platform/theme/common/themeService.js";import{$hl as ft}from"../../../../platform/workspace/common/workspace.js";import{$SM as ae}from"../../../../platform/workspace/common/workspaceTrust.js";import{$Avb as ce,$5vb as le}from"../../../common/theme.js";import{$YM as Z}from"../../../common/views.js";import{$Jwb as de}from"../../../services/views/common/viewsService.js";import{$FYb as ut}from"./terminal.js";import{$arc as fe}from"./terminalActions.js";import{$SYb as ue}from"./terminalEditorInput.js";import{TerminalExtensionsRegistry as me}from"./terminalExtensions.js";import{$MYb as pe,$OYb as ge,$NYb as be}from"./terminalIcon.js";import{$zrc as we}from"./terminalProcessManager.js";import{$HXb as ye}from"./terminalStatusList.js";import{$4qc as xe,$3qc as Ce}from"./terminalUri.js";import{$rlc as $e}from"./widgets/widgetManager.js";import{$Arc as Pe}from"./xterm/lineDataEventAddon.js";import{$CYb as Le,$DYb as Ie}from"./xterm/xtermTerminal.js";import{$q4 as De,$l4 as Se,$b4 as Te,$a4 as R}from"../common/terminal.js";import{$KXb as ve}from"../common/terminalColorRegistry.js";import{TerminalContextKeys as v}from"../common/terminalContextKey.js";import{$G4 as Be,$F4 as ke}from"../common/terminalEnvironment.js";import{$oI as Ee}from"../../../services/editor/common/editorService.js";import{$KX as Fe}from"../../../services/environment/common/environmentService.js";import{$x4 as Me}from"../../../services/history/common/history.js";import{$9tb as Re,$8tb as We}from"../../../services/layout/browser/layoutService.js";import{$3X as Ae}from"../../../services/path/common/pathService.js";import{$ZJ as ze}from"../../../services/preferences/common/preferences.js";import{$uI as je}from"../../../../amdX.js";import{$Sqc as W}from"../common/terminalStrings.js";import{$Frc as Ne}from"./terminalIconPicker.js";import{$Grc as qe}from"./terminalResizeDebouncer.js";import{$Zqc as Ue}from"./terminalContextMenu.js";import{$ofb as Oe}from"../../../../platform/contextview/browser/contextView.js";import{$8qc as at}from"./terminalTooltip.js";var L=function(a,t,e,i){var s=arguments.length,n=s<3?t:i===null?i=Object.getOwnPropertyDescriptor(t,e):i,r;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")n=Reflect.decorate(a,t,e,i);else for(var o=a.length-1;o>=0;o--)(r=a[o])&&(n=(s<3?r(n):s>3?r(t,e,n):r(t,e))||n);return s>3&&n&&Object.defineProperty(t,e,n),n},c=function(a,t){return function(e,i){t(e,i,a)}},y,ct;(function(a){a[a.WaitForContainerThreshold=100]="WaitForContainerThreshold",a[a.DefaultCols=80]="DefaultCols",a[a.DefaultRows=30]="DefaultRows",a[a.MaxCanvasWidth=4096]="MaxCanvasWidth"})(ct||(ct={}));let M;const Ve=["bash","zsh","pwsh","python"];let k=class extends _{static{y=this}static{this.f=1}get domElement(){return this.M}get usedShellIntegrationInjection(){return this.xb}get shellIntegrationInjectionFailureReason(){return this.yb}pauseInputEvents(t){this.Cb=t}get store(){return this.q}get extEnvironmentVariableCollection(){return this.h.extEnvironmentVariableCollection}get waitOnExit(){return this.dc.attachPersistentProcess?.waitOnExit||this.dc.waitOnExit}set waitOnExit(t){this.dc.waitOnExit=t}get targetRef(){return this.Db}get target(){return this.Db.object}set target(t){this.Db.object=t,this.Yb.fire(t)}get instanceId(){return this.t}get resource(){return this.m}get cols(){return this.X!==void 0?this.X:this.db&&this.db.cols?this.db.forceExactSize?this.db.cols:Math.min(Math.max(this.db.cols,2),this.U):this.U}get rows(){return this.Y!==void 0?this.Y:this.db&&this.db.rows?this.db.forceExactSize?this.db.rows:Math.min(Math.max(this.db.rows,2),this.W):this.W}get isDisposed(){return this.q.isDisposed}get fixedCols(){return this.X}get fixedRows(){return this.Y}get maxCols(){return this.U}get maxRows(){return this.W}get processId(){return this.h.shellProcessId}get processReady(){return this.h.ptyProcessReady}get hasChildProcesses(){return this.shellLaunchConfig.attachPersistentProcess?.hasChildProcesses||this.h.hasChildProcesses}get reconnectionProperties(){return this.shellLaunchConfig.attachPersistentProcess?.reconnectionProperties||this.shellLaunchConfig.reconnectionProperties}get areLinksReady(){return this.eb}get initialDataEvents(){return this.gb}get exitCode(){return this.D}get exitReason(){return this.F}get hadFocusOnExit(){return this.z}get isTitleSetByProcess(){return!!this.kb.value}get shellLaunchConfig(){return this.dc}get shellType(){return this.H}get os(){return this.h.os}get isRemote(){return this.h.remoteAuthority!==void 0}get remoteAuthority(){return this.h.remoteAuthority}get hasFocus(){return u.$m6(this.M)}get title(){return this.I}get titleSource(){return this.J}get icon(){return this.Dc()}get color(){return this.Ec()}get processName(){return this.qb}get sequence(){return this.rb}get staticTitle(){return this.sb}get progressState(){return this.xterm?.progressState}get workspaceFolder(){return this.tb}get cwd(){return this.Z}get initialCwd(){return this.$}get description(){if(this.pb)return this.pb;switch(this.shellLaunchConfig.attachPersistentProcess?.type||this.shellLaunchConfig.type){case"Task":return W.typeTask;case"Local":return W.typeLocal;default:return}}get userHome(){return this.vb}get shellIntegrationNonce(){return this.h.shellIntegrationNonce}get injectedArgs(){return this.ab}constructor(t,e,i,s,n,r,o,g,m,p,I,w,D,A,S,z,mt,pt,gt,bt,wt,yt,xt,Ct,$t,Pt,Lt,It,Dt){if(super(),this.cc=t,this.dc=e,this.ec=i,this.fc=s,this.gc=r,this.hc=o,this.ic=g,this.jc=m,this.kc=p,this.lc=I,this.mc=w,this.nc=D,this.oc=A,this.pc=S,this.qc=z,this.rc=mt,this.sc=pt,this.tc=gt,this.uc=wt,this.vc=yt,this.wc=xt,this.xc=Ct,this.yc=$t,this.zc=Pt,this.Ac=Lt,this.Bc=It,this.Cc=Dt,this.j=new Map,this.u=0,this.w=0,this.I="",this.J=b.Process,this.U=0,this.W=0,this.Z=void 0,this.$=void 0,this.ab=void 0,this.bb=!0,this.eb=!1,this.fb=this.B(new q),this.gb=[],this.kb=this.B(new q),this.mb=this.B(new q),this.qb="",this.xb=!1,this.capabilities=this.B(new ee),this.disableLayout=!1,this.Db=new Wt(void 0),this.Eb=new d,this.onExit=this.Eb.event,this.Fb=this.B(new d),this.onDisposed=this.Fb.event,this.Gb=this.B(new d),this.onProcessIdReady=this.Gb.event,this.Hb=this.B(new d),this.onProcessReplayComplete=this.Hb.event,this.Ib=this.B(new d),this.onTitleChanged=this.Ib.event,this.Jb=this.B(new d),this.onIconChanged=this.Jb.event,this.Kb=this.B(new d),this.onWillData=this.Kb.event,this.Lb=this.B(new d),this.onData=this.Lb.event,this.Mb=this.B(new d),this.onBinary=this.Mb.event,this.Nb=this.B(new d),this.onRequestExtHostProcess=this.Nb.event,this.Ob=this.B(new d),this.onDimensionsChanged=this.Ob.event,this.Pb=this.B(new d),this.onMaximumDimensionsChanged=this.Pb.event,this.Qb=this.B(new d),this.onDidFocus=this.Qb.event,this.Rb=this.B(new d),this.onDidRequestFocus=this.Rb.event,this.Sb=this.B(new d),this.onDidBlur=this.Sb.event,this.Tb=this.B(new d),this.onDidInputData=this.Tb.event,this.Ub=this.B(new d),this.onDidChangeSelection=this.Ub.event,this.Vb=this.B(new d),this.onRequestAddInstanceToGroup=this.Vb.event,this.Wb=this.B(new d),this.onDidChangeHasChildProcesses=this.Wb.event,this.Xb=this.B(new d),this.onDidExecuteText=this.Xb.event,this.Yb=this.B(new d),this.onDidChangeTarget=this.Yb.event,this.Zb=this.B(new d),this.onDidSendText=this.Zb.event,this.$b=this.B(new d),this.onDidChangeShellType=this.$b.event,this.ac=this.B(new d),this.onDidChangeVisibility=this.ac.event,this.bc=this.B(new d({onDidAddFirstListener:async()=>(this.xterm??await this.n)?.raw.loadAddon(this.zb)})),this.onLineData=this.bc.event,this.M=document.createElement("div"),this.M.classList.add("terminal-wrapper"),this.lb=this.B(n.createInstance($e)),this.G=[],this.y=!1,this.z=!1,this.C=!1,this.t=y.f++,this.ob=!1,this.Y=e.attachPersistentProcess?.fixedDimensions?.rows,this.X=e.attachPersistentProcess?.fixedDimensions?.cols,this.dc.shellIntegrationEnvironmentReporting=this.oc.getValue("terminal.integrated.shellIntegration.environmentReporting"),this.m=Ce(this.uc.getWorkspace().id,this.instanceId,this.title),this.dc.attachPersistentProcess?.hideFromUser&&(this.dc.hideFromUser=this.dc.attachPersistentProcess.hideFromUser),this.dc.attachPersistentProcess?.isFeatureTerminal&&(this.dc.isFeatureTerminal=this.dc.attachPersistentProcess.isFeatureTerminal),this.dc.attachPersistentProcess?.type&&(this.dc.type=this.dc.attachPersistentProcess.type),this.dc.attachPersistentProcess?.tabActions&&(this.dc.tabActions=this.dc.attachPersistentProcess.tabActions),this.shellLaunchConfig.cwd){const h=typeof this.dc.cwd=="string"?B.from({scheme:K.file,path:this.dc.cwd}):this.dc.cwd;h&&(this.tb=this.uc.getWorkspaceFolder(h)??void 0)}if(!this.tb){const h=this.xc.getLastActiveWorkspaceRoot();this.tb=h?this.uc.getWorkspaceFolder(h)??void 0:void 0}const C=this.B(i.createScoped(this.M));this.Ab=C,this.g=this.B(n.createChild(new Yt([dt,C]))),this.O=v.focus.bindTo(C),this.P=v.terminalHasFixedWidth.bindTo(C),this.Q=v.textSelected.bindTo(C),this.R=v.altBufferActive.bindTo(C),this.S=v.terminalShellIntegrationEnabled.bindTo(C),this.pc.trace(`terminalInstance#ctor (instanceId: ${this.instanceId})`,this.dc),this.B(this.capabilities.onDidAddCapabilityType(h=>this.pc.debug("terminalInstance added capability",h))),this.B(this.capabilities.onDidRemoveCapabilityType(h=>this.pc.debug("terminalInstance removed capability",h)));const E=this.B(new Rt);this.B(this.capabilities.onDidAddCapabilityType(h=>{if(E.get(h)?.dispose(),h===0){const l=this.capabilities.get(h);l&&E.set(h,l.onDidChangeCwd(x=>{this.Z=x,this.sd(this.title,b.Config)}))}if(h===2){const l=this.capabilities.get(h);l&&(l.promptInputModel.setShellType(this.shellType),E.set(h,it.any(l.onPromptTypeChanged,l.promptInputModel.onDidStartInput,l.promptInputModel.onDidChangeInput,l.promptInputModel.onDidFinishInput)(()=>{this.ub?.refreshLabel(this),at(this)})))}})),this.B(this.capabilities.onDidRemoveCapabilityType(h=>{E.get(h)?.dispose()})),!this.shellLaunchConfig.executable&&!bt.remoteAuthority&&this.hc.resolveIcon(this.dc,At),this.jb=e.attachPersistentProcess?.icon||e.icon,this.shellLaunchConfig.customPtyImplementation&&this.sd(this.dc.name,b.Api),this.statusList=this.B(this.g.createInstance(ye)),this.Fc(),this.h=this.Rc(),this.hb=new Q(100),this.ib=new Q(1e3),this.n=this.Kc(),this.n.then(async()=>{await this.hb.wait();let h;if(!this.shellLaunchConfig.customPtyImplementation&&this.gc.config.shellIntegration?.enabled&&!this.shellLaunchConfig.executable){h=await this.h.getBackendOS();const l=await this.hc.getDefaultProfile({remoteAuthority:this.remoteAuthority,os:h});this.shellLaunchConfig.executable=l.path,this.shellLaunchConfig.args=l.args,this.shellLaunchConfig.isExtensionOwnedTerminal?(this.shellLaunchConfig.icon??=l.icon,this.shellLaunchConfig.color??=l.color,this.shellLaunchConfig.env??=l.env):(this.shellLaunchConfig.icon=l.icon,this.shellLaunchConfig.color=l.color,this.shellLaunchConfig.env=l.env)}h&&this.shellLaunchConfig.executable&&this.setShellType(He(h,this.shellLaunchConfig.executable)),await this.Sc(),this.shellLaunchConfig.attachPersistentProcess&&(this.Z=this.shellLaunchConfig.attachPersistentProcess.cwd,this.sd(this.shellLaunchConfig.attachPersistentProcess.title,this.shellLaunchConfig.attachPersistentProcess.titleSource),this.setShellType(this.shellType)),this.X&&await this.ld()}).catch(h=>{if(!this.isDisposed)throw h}),this.B(this.oc.onDidChangeConfiguration(async h=>{h.affectsConfiguration("accessibility.verbosity.terminal")&&this.gd(this.xterm?.raw,this.t,this.title),h.affectsConfiguration("terminal.integrated")&&(this.updateConfig(),this.setVisible(this.C)),["terminal.integrated.fontSize","terminal.integrated.fontFamily","terminal.integrated.fontWeight","terminal.integrated.fontWeightBold","terminal.integrated.letterSpacing","terminal.integrated.lineHeight","editor.fontFamily"].some(x=>h.affectsConfiguration(x))&&(this.bb=!0,await this.ed()),h.affectsConfiguration("terminal.integrated.unicodeVersion")&&this.cd(),h.affectsConfiguration("editor.accessibilitySupport")&&this.updateAccessibilitySupport(),(h.affectsConfiguration("terminal.integrated.tabs.title")||h.affectsConfiguration("terminal.integrated.tabs.separator")||h.affectsConfiguration("terminal.integrated.tabs.description"))&&this.ub?.refreshLabel(this)})),this.B(this.uc.onDidChangeWorkspaceFolders(()=>this.ub?.refreshLabel(this)));let j=u.getWindow(this.L).setTimeout(()=>{j=void 0,this.gb=void 0,this.fb.clear()},1e4);this.B(V(()=>{j&&u.getWindow(this.L).clearTimeout(j)}));const St=me.getTerminalContributions();for(const h of St){if(this.j.has(h.id)){et(new Error(`Cannot have two terminal contributions with the same id ${h.id}`));continue}let l;try{l=this.B(this.g.createInstance(h.ctor,{instance:this,processManager:this.h,widgetManager:this.lb})),this.j.set(h.id,l)}catch(x){et(x)}this.n.then(x=>{x&&l.xtermReady?.(x)}),this.B(this.onDisposed(()=>{l.dispose(),this.j.delete(h.id),"instance"in l&&delete l.instance,"_instance"in l&&delete l._instance}))}}getContribution(t){return this.j.get(t)}Dc(){return this.jb||(this.jb=this.h.processState>=2?he().getIcon(this.oc.getValue("terminal.integrated.tabs.defaultIcon")):void 0),this.jb}Ec(){if(this.shellLaunchConfig.color)return this.shellLaunchConfig.color;if(this.shellLaunchConfig?.attachPersistentProcess?.color)return this.shellLaunchConfig.attachPersistentProcess.color;this.h.processState>=2}Fc(){if(!this.L){this.U=80,this.W=30;return}const t=u.getWindow(this.L).getComputedStyle(this.L),e=parseInt(t.width),i=parseInt(t.height);this.Gc(e,i)}Gc(t,e){if(!t||!e)return this.Hc(),null;const i=this.Jc(t,e);if(!i)return this.Hc(),null;const s=this.xterm?this.xterm.getFont():this.gc.getFont(u.getWindow(this.domElement)),n=Ie(u.getWindow(this.domElement),s,i.width,i.height);return n?((this.U!==n.cols||this.W!==n.rows)&&(this.U=n.cols,this.W=n.rows,this.Ic()),i.width):(this.Hc(),null)}Hc(){y.c&&(this.U=y.c.cols,this.W=y.c.rows)}Ic(){this.Pb.fire()}Jc(t,e){const i=this.xterm?this.xterm.getFont():this.gc.getFont(u.getWindow(this.domElement));if(!i||!i.charWidth||!i.charHeight||!this.xterm?.raw.element)return;const s=u.getWindow(this.xterm.raw.element).getComputedStyle(this.xterm.raw.element),n=parseInt(s.paddingLeft)+parseInt(s.paddingRight)+14,r=parseInt(s.paddingTop)+parseInt(s.paddingBottom);return y.b=new u.$25(Math.min(4096,t-n),e-r+(this.wb&&this.N?-5:0)),y.b}get persistentProcessId(){return this.h.persistentProcessId}get shouldPersist(){return this.h.shouldPersist&&!this.shellLaunchConfig.isTransient&&(!this.reconnectionProperties||this.oc.getValue("task.reconnection")===!0)}static getXtermConstructor(t,e){const i=t.lookupKeybinding("workbench.action.terminal.focusAccessibleBuffer",e);return M||(M=kt.withAsyncBody(async s=>{const n=(await je("@xterm/xterm","lib/xterm.js")).Terminal;n.strings.promptLabel=f.localize(11611,null),n.strings.tooMuchOutput=i?f.localize(11612,null,i.getLabel()):f.localize(11613,null),s(n)}),M)}async Kc(){const t=await y.getXtermConstructor(this.jc,this.ec);if(this.isDisposed)return;const e=this.shellLaunchConfig.executable===void 0||this.shellType===void 0||!Ve.includes(this.shellType),i=this.g.createInstance(Le,t,{cols:this.U,rows:this.W,xtermColorProvider:this.g.createInstance(J,this.Db),capabilities:this.capabilities,shellIntegrationNonce:this.h.shellIntegrationNonce,disableShellIntegrationReporting:e},this.onDidExecuteText);this.xterm=i,this.Bb=this.B(new qe(()=>this.C,()=>i,async(r,o)=>{i.raw.resize(r,o),await this.fd(i.raw)},async r=>{i.raw.resize(r,i.raw.rows),await this.fd(i.raw)},async r=>{i.raw.resize(i.raw.cols,r),await this.fd(i.raw)})),this.B(V(()=>this.Bb=void 0)),this.updateAccessibilitySupport(),this.B(this.xterm.onDidRequestRunCommand(r=>{this.sendText(r.command.command,!r.noNewLine)})),this.B(this.xterm.onDidRequestRefreshDimensions(()=>{this.nb&&this.layout(this.nb)}));const s=this.dc.initialText?new Promise(r=>this.Zc(i,r)):void 0,n=this.B(new Pe(s));if(this.B(n.onLineData(r=>this.bc.fire(r))),this.zb=n,Et(()=>{this.B(i.raw.onBell(()=>{(this.oc.getValue("terminal.integrated.enableBell")||this.oc.getValue("terminal.integrated.enableVisualBell"))&&this.statusList.add({id:"bell",severity:$.Warning,icon:F.bell,tooltip:f.localize(11614,null)},this.gc.config.bellDuration),this.Bc.playSignal(qt.terminalBell)}))},1e3,this.q),this.B(i.raw.onSelectionChange(()=>this.Ub.fire(this))),this.B(i.raw.buffer.onBufferChange(()=>this.Pc())),this.B(this.h.onProcessData(r=>this.Tc(r))),this.B(i.raw.onData(async r=>{await this.Cb?.wait(),await this.h.write(r),this.Tb.fire(r)})),this.B(i.raw.onBinary(r=>this.h.processBinary(r))),this.B(this.h.onProcessReady(async r=>{r?.windowsPty?.backend==="conpty"&&this.B(i.raw.parser.registerCsiHandler({final:"c"},o=>o.length===0||o.length===1&&o[0]===0?(this.h.write("\x1B[?61;4c"),!0):!1)),this.h.os&&n.setOperatingSystem(this.h.os),i.raw.options.windowsPty=r.windowsPty})),this.B(this.h.onRestoreCommands(r=>this.xterm?.shellIntegration.deserialize(r))),this.B(this.Cc.onDidChangeLocation(({views:r})=>{r.some(o=>o.id===R)&&i.refresh()})),this.B(i.onDidChangeProgress(()=>this.ub?.refreshLabel(this))),this.B(it.runAndSubscribe(i.shellIntegration.onDidChangeSeenSequences,()=>{i.shellIntegration.seenSequences.size>0&&at(this)})),!this.capabilities.has(0)){let r=i.raw.onKey(o=>{new G(o.domEvent).equals(3)&&this.bd()});this.B(this.capabilities.onDidAddCapabilityType(o=>{o===0&&(r?.dispose(),r=void 0)}))}return this.ic.userHome().then(r=>{this.vb=r.fsPath}),this.C&&this.Lc(),i}async runCommand(t,e){let i=this.capabilities.get(2);if(!i&&(this.h.processState===1||this.h.processState===2)){const s=new st;await Promise.race([new Promise(n=>{s.add(this.capabilities.onDidAddCapabilityType(r=>{r===2&&(i=this.capabilities.get(2),n())}))}),tt(2e3)]),s.dispose()}(!i||i.promptInputModel.value.length>0)&&(await this.sendText("",!1),await tt(100)),await this.sendText(t,e,!e)}detachFromElement(){this.M.remove(),this.L=void 0}attachToElement(t){this.L!==t&&(this.ib.isOpen()||this.ib.open(),this.L=t,this.L.appendChild(this.M),this.xterm?.raw.element&&this.xterm.raw.open(this.xterm.raw.element),this.xterm?.refresh(),setTimeout(()=>{this.q.isDisposed||this.Oc(t)},0))}Lc(){if(!this.xterm||this.xterm.raw.element)return;if(!this.L||!this.L.isConnected)throw new Error("A container element needs to be set with `attachToElement` and be part of the DOM before calling `_open`");const t=document.createElement("div");this.M.appendChild(t),this.L.appendChild(this.M);const e=this.xterm;this.M.xterm=e.raw;const i=e.attachToElement(t);for(const s of this.j.values())this.xterm?s.xtermOpen?.(this.xterm):this.n.then(n=>{n&&s.xtermOpen?.(n)});if(this.B(e.shellIntegration.onDidChangeStatus(()=>{this.hasFocus?this.Nc():this.S.reset()})),!e.raw.element||!e.raw.textarea)throw new Error("xterm elements not set after open");this.gd(e.raw,this.t,this.I),e.raw.attachCustomKeyEventHandler(s=>{if(this.y)return!1;const n=new G(s),r=this.jc.softDispatch(n,n.target),o=r.kind===1&&this.gc.config.allowChords&&s.key!=="Escape";if(this.jc.inChordMode||o)return s.preventDefault(),!1;const g="terminal.integrated.showTerminalConfigPrompt",m=["RightArrow","LeftArrow","UpArrow","DownArrow","Space","Meta","Control","Shift","Alt","","Delete","Backspace","Tab"];return this.qc.getBoolean(g,-1,!0)&&!m.includes(s.key)&&!s.ctrlKey&&!s.shiftKey&&!s.altKey&&(this.ob=!0),r.kind===2&&r.commandId&&this.G.some(p=>p===r.commandId)&&!this.gc.config.sendKeybindingsToShell?(this.qc.getBoolean(g,-1,!0)&&this.ob&&!Te.includes(r.commandId)&&(this.kc.prompt($.Info,f.localize(11615,null,this.sc.nameLong),[{label:f.localize(11616,null),run:()=>{this.lc.openSettings({jsonEditor:!1,query:"@id:terminal.integrated.commandsToSkipShell,terminal.integrated.sendKeybindingsToShell,terminal.integrated.allowChords"})}}]),this.qc.store(g,!1,-1,0)),s.preventDefault(),!1):this.gc.config.allowMnemonics&&!zt&&s.altKey||jt.getTabFocusMode()&&s.key==="Tab"?!1:s.key==="Tab"&&s.shiftKey?(s.preventDefault(),!0):!(nt&&s.altKey&&s.key==="F4"&&!s.ctrlKey||!vt.clipboard.readText&&s.key==="v"&&s.ctrlKey)}),this.B(u.$J5(e.raw.element,"mousedown",()=>{const s=u.$J5(e.raw.element.ownerDocument,"mouseup",()=>{setTimeout(()=>this.Qc(),0),s.dispose()})})),this.B(u.$J5(e.raw.element,"touchstart",()=>{e.raw.focus()})),this.B(u.$J5(e.raw.element,"keyup",()=>{setTimeout(()=>this.Qc(),0)})),this.B(u.$J5(e.raw.textarea,"focus",()=>this.Mc(!0))),this.B(u.$J5(e.raw.textarea,"blur",()=>this.Mc(!1))),this.B(u.$J5(e.raw.textarea,"focusout",()=>this.Mc(!1))),this.Oc(this.L),this.lb.attachToElement(i),this.nb&&this.layout(this.nb),this.updateConfig(),e.raw.options.disableStdin&&this.Yc(e.raw)}Mc(t){t?(this.O.set(!0),this.Nc(),this.Qb.fire(this)):(this.resetFocusContextKey(),this.Sb.fire(this),this.Qc())}Nc(){this.xterm&&this.S.set(this.xterm.shellIntegration.status===2)}resetFocusContextKey(){this.O.reset(),this.S.reset()}Oc(t){const e=new st,i=e.add(this.g.createInstance(H,t));e.add(i.onDropTerminal(s=>this.Vb.fire(s))),e.add(i.onDropFile(async s=>{this.focus(),await this.sendPath(s,!1)})),e.add(new u.$_6(t,i)),this.mb.value=e}hasSelection(){return this.xterm?this.xterm.raw.hasSelection():!1}get selection(){return this.xterm&&this.hasSelection()?this.xterm.raw.getSelection():void 0}clearSelection(){this.xterm?.raw.clearSelection()}Pc(){this.R.set(!!(this.xterm&&this.xterm.raw.buffer.active===this.xterm.raw.buffer.alternate))}dispose(t){if(!(this.shellLaunchConfig.type==="Task"&&t===T.Process&&this.D!==0&&!this.shellLaunchConfig.waitOnExit)&&!this.isDisposed){this.pc.trace(`terminalInstance#dispose (instanceId: ${this.instanceId})`),rt(this.lb),this.xterm?.raw.element&&(this.z=this.hasFocus),this.M.xterm&&(this.M.xterm=void 0),this.N&&(this.N.dispose(),this.N=void 0);try{this.xterm?.dispose()}catch(e){this.pc.error("Exception occurred during xterm disposal",e)}Tt&&(this.resetFocusContextKey(),this.Q.reset(),this.Sb.fire(this)),this.s&&(this.s.dispose(),this.s=void 0),this.F===void 0&&(this.F=t??T.Unknown),this.h.dispose(),this.Vc(void 0),this.Fb.fire(this),super.dispose()}}async detachProcessAndDispose(t){await this.h.detachFromProcess(t===T.User),this.dispose(t)}focus(t){this.Pc(),this.xterm&&(t||!u.$p6().getSelection()?.toString())&&(this.xterm.raw.focus(),this.Rb.fire())}async focusWhenReady(t){await this.n,await this.ib.wait(),this.focus(t)}async sendText(t,e,i){i&&this.xterm?.raw.modes.bracketedPasteMode&&(t=`\x1B[200~${t}\x1B[201~`),t=t.replace(/\r?\n/g,"\r"),e&&!t.endsWith("\r")&&(t+="\r"),this.pc.debug("sending data (vscode)",t),await this.h.write(t),this.Tb.fire(t),this.Zb.fire(t),this.xterm?.scrollToBottom(),e&&this.Xb.fire()}async sendSignal(t){this.pc.debug("sending signal (vscode)",t),await this.h.sendSignal(t)}async sendPath(t,e){return this.sendText(await this.preparePathForShell(t),e)}async preparePathForShell(t){return await this.processReady,ke(t,this.shellLaunchConfig.executable,this.title,this.shellType,this.h.backend,this.h.os)}setVisible(t){const e=this.C!==t;this.C=t,this.M.classList.toggle("active",t),t&&this.xterm&&(this.Lc(),this.Bb?.flush(),this.ed()),e&&this.ac.fire(t)}scrollDownLine(){this.xterm?.scrollDownLine()}scrollDownPage(){this.xterm?.scrollDownPage()}scrollToBottom(){this.xterm?.scrollToBottom()}scrollUpLine(){this.xterm?.scrollUpLine()}scrollUpPage(){this.xterm?.scrollUpPage()}scrollToTop(){this.xterm?.scrollToTop()}clearBuffer(){this.h.clearBuffer(),this.xterm?.clearBuffer()}Qc(){const t=!!this.mc.getActiveViewWithId(R);let e=!1;const i=this.vc.activeEditor;i&&(e=i instanceof ue),this.Q.set((t||e)&&this.hasSelection())}Rc(){let t;this.shellLaunchConfig.attachPersistentProcess?.environmentVariableCollections&&(t=ie(this.shellLaunchConfig.attachPersistentProcess.environmentVariableCollections));const e=this.g.createInstance(we,this.t,this.shellLaunchConfig?.cwd,t,this.shellLaunchConfig.attachPersistentProcess?.shellIntegrationNonce);return this.capabilities.add(e.capabilities),this.B(e.onProcessReady(async i=>{this.Gb.fire(this),this.$=await this.getInitialCwd(),this.ub||(this.ub=this.B(this.g.createInstance(Y)),this.B(this.ub.onDidChangeLabel(s=>{(this.I!==s.title||this.pb!==s.description)&&(this.I=s.title,this.pb=s.description,this.Ib.fire(this))}))),this.dc.name?this.sd(this.dc.name,b.Api):(setTimeout(()=>{this.n.then(s=>{s&&(this.kb.value=s.raw.onTitleChange(n=>this.$c(n)))})}),this.sd(this.dc.executable,b.Process))})),this.B(e.onProcessExit(i=>this.Vc(i))),this.B(e.onDidChangeProperty(({type:i,value:s})=>{switch(i){case"cwd":this.Z=s,this.ub?.refreshLabel(this);break;case"initialCwd":this.$=s,this.Z=this.$,this.sd(this.title,b.Config),this.jb=this.dc.attachPersistentProcess?.icon||this.dc.icon,this.Jb.fire({instance:this,userInitiated:!1});break;case"title":this.sd(s??"",b.Process);break;case"overrideDimensions":this.setOverrideDimensions(s,!0);break;case"resolvedShellLaunchConfig":this.nd(s);break;case"shellType":this.setShellType(s);break;case"hasChildProcesses":this.Wb.fire(s);break;case"usedShellIntegrationInjection":this.xb=!0;break;case"shellIntegrationInjectionFailureReason":this.yb=s;break}})),this.fb.value=e.onProcessData(i=>this.gb?.push(i.data)),this.B(e.onProcessReplayComplete(()=>this.Hb.fire())),this.B(e.onEnvironmentVariableInfoChanged(i=>this.od(i))),this.B(e.onPtyDisconnect(()=>{this.xterm&&(this.xterm.raw.options.disableStdin=!0),this.statusList.add({id:"disconnected",severity:$.Error,icon:F.debugDisconnect,tooltip:f.localize(11617,null)})})),this.B(e.onPtyReconnect(()=>{this.xterm&&(this.xterm.raw.options.disableStdin=!1),this.statusList.remove("disconnected")})),e}async Sc(){if(this.isDisposed)return;this.xc.getLastActiveWorkspaceRoot(K.file)?await this.ad()||this.Vc({message:f.localize(11618,null)}):this.Z&&this.vb&&this.Z!==this.vb&&this.Vc({message:f.localize(11619,null,this.Z,this.vb)}),this.L&&this.U===0&&this.W===0&&(this.Fc(),this.xterm?.raw.resize(this.U||80,this.W||30));const e=this.shellLaunchConfig.icon;await this.h.createProcess(this.dc,this.U||80,this.W||30).then(i=>{i&&("message"in i?this.Vc(i):"injectedArgs"in i&&(this.ab=i.injectedArgs))}),!this.isDisposed&&(this.xterm?.shellIntegration&&this.capabilities.add(this.xterm.shellIntegration.capabilities),(e!==this.shellLaunchConfig.icon||this.shellLaunchConfig.color)&&(this.jb=this.dc.attachPersistentProcess?.icon||this.dc.icon,this.Jb.fire({instance:this,userInitiated:!1})))}registerMarker(t){return this.xterm?.raw.registerMarker(t)}addBufferMarker(t){this.capabilities.get(4)?.addMark(t)}scrollToMark(t,e,i){this.xterm?.markTracker.scrollToClosestMarker(t,e,i)}async freePortKillProcess(t,e){await this.h?.freePortKillProcess(t),this.runCommand(e,!1)}Tc(t){const e=[],i=t.data.matchAll(/(?<seq>\x1b\][16]33;(?:C|D(?:;\d+)?)\x07)/g);let s=0;for(const r of i){if(r.groups?.seq===void 0)throw new Ft("seq must be defined");e.push(t.data.substring(s,r.index)),e.push(r.groups?.seq??""),s=r.index+r[0].length}const n=t.data.substring(s);for(let r=0;r<e.length;r++)this.Uc(e[r]);t.trackCommit?t.writePromise=new Promise(r=>this.Uc(n,r)):this.Uc(n)}Uc(t,e){this.Kb.fire(t);const i=++this.u;this.xterm?.raw.write(t,()=>{this.w=i,this.h.acknowledgeDataEvent(t.length),e?.(),this.Lb.fire(t)})}async Vc(t){if(this.y)return;const e=Ke(t,this.shellLaunchConfig,this.h.processState,this.$);if(this.xb&&this.h.processState===4&&e?.code!==0){this.Wc(e?.message),this.Eb.fire(t);return}this.y=!0,await this.Xc(),this.D=e?.code;const i=e?.message;this.pc.debug("Terminal process exit","instanceId",this.instanceId,"code",this.D,"processState",this.h.processState);const s=this.waitOnExit;s&&this.h.processState!==5?this.n.then(n=>{if(n){switch(i&&n.raw.write(O(i)),typeof s){case"string":n.raw.write(O(s,{excludeLeadingNewLine:!0}));break;case"function":this.exitCode!==void 0&&n.raw.write(O(s(this.exitCode),{excludeLeadingNewLine:!0}));break}n.raw.options.disableStdin=!0,n.raw.textarea&&this.Yc(n.raw)}}):(i&&(this.h.processState===4||this.gc.config.showExitAlert&&this.xterm?.lastInputEvent!==""?this.kc.notify({message:i,severity:$.Error,actions:{primary:[this.g.createInstance(fe)]}}):this.pc.warn(i)),this.dispose(T.Process)),this.Eb.fire(t),this.isDisposed&&this.Eb.dispose()}Wc(t){this.dc.ignoreShellIntegration=!0,this.relaunch(),this.statusList.add({id:"shell-integration-attention-needed",severity:$.Warning,icon:F.warning,tooltip:`${t} `+f.localize(11620,null),hoverActions:[{commandId:"workbench.action.terminal.learnMore",label:f.localize(11621,null),run:()=>{this.zc.open("https://code.visualstudio.com/docs/editor/integrated-terminal#_shell-integration")}},{commandId:"workbench.action.openSettings",label:f.localize(11622,null),run:()=>{this.Ac.executeCommand("workbench.action.openSettings","terminal.integrated.shellIntegration.enabled")}}]}),this.yc.publicLog2("terminal/shellIntegrationFailureProcessExit")}Xc(){if(this.u===this.w)return Promise.resolve();let t=0;return new Promise(e=>{const i=u.$U5(u.$p6().window,()=>{(this.u===this.w||++t===5)&&(i.dispose(),e())},20)})}Yc(t){t.textarea&&!this.s&&(this.s=u.$J5(t.textarea,"keypress",e=>{this.s&&(this.s.dispose(),this.s=void 0,this.dispose(T.Process),e.preventDefault())}))}Zc(t,e){if(!this.dc.initialText){e?.();return}const i=typeof this.dc.initialText=="string"?this.dc.initialText:this.dc.initialText?.text;typeof this.dc.initialText=="string"||this.dc.initialText.trailingNewLine?t.raw.writeln(i,e):t.raw.write(i,e)}async reuseTerminal(t,e=!1){this.s?.dispose(),this.s=void 0;const i=this.xterm;i&&(e||await new Promise(s=>i.raw.write(`
-\x1B[G`,s)),t.initialText&&(this.dc.initialText=t.initialText,await new Promise(s=>this.Zc(i,s))),this.y&&this.dc.waitOnExit&&(i.raw.options.disableStdin=!1,this.y=!1),e&&i.clearDecorations()),this.statusList.remove("relaunch-needed"),e||(t.initialText=" "),this.dc=t,await this.h.relaunch(this.dc,this.U||80,this.W||30,e).then(s=>{s&&("message"in s?this.Vc(s):"injectedArgs"in s&&(this.ab=s.injectedArgs))})}relaunch(){this.reuseTerminal(this.dc,!0)}$c(t){this.isTitleSetByProcess&&this.sd(t,b.Sequence)}async ad(){return await this.wc.requestWorkspaceTrust({message:f.localize(11623,null)})===!0}async bd(){if(!(this.isDisposed||this.shellLaunchConfig.customPtyImplementation))try{const t=await this.qd("cwd");if(typeof t!="string")throw new Error(`cwd is not a string ${t}`)}catch(t){if(t instanceof Error&&t.message==="Cannot refresh property when process is not set")return;throw t}}updateConfig(){this.dd(this.gc.config.commandsToSkipShell),this.pd(this.h.environmentVariableInfo)}async cd(){this.h.setUnicodeVersion(this.gc.config.unicodeVersion)}updateAccessibilitySupport(){this.xterm.raw.options.screenReaderMode=this.rc.isScreenReaderOptimized()}dd(t){const e=t.filter(i=>i[0]==="-").map(i=>i.slice(1));this.G=De.filter(i=>!e.includes(i)).concat(t)}layout(t){if(this.nb=t,!(this.disableLayout||t.width<=0||t.height<=0||!this.Gc(t.width,t.height))){this.ed(),this.hb.isOpen()||this.hb.open();for(const i of this.j.values())this.xterm?i.layout?.(this.xterm,t):this.n.then(s=>{s&&i.layout?.(s,t)})}}async ed(t){if(!this.xterm)return;let e=this.cols,i=this.rows;if(this.C&&this.bb){const s=this.xterm.getFont(),n=this.gc.config;this.xterm.raw.options.letterSpacing=s.letterSpacing,this.xterm.raw.options.lineHeight=s.lineHeight,this.xterm.raw.options.fontSize=s.fontSize,this.xterm.raw.options.fontFamily=s.fontFamily,this.xterm.raw.options.fontWeight=n.fontWeight,this.xterm.raw.options.fontWeightBold=n.fontWeightBold,this.Fc(),e=this.cols,i=this.rows,this.bb=!1}isNaN(e)||isNaN(i)||((e!==this.xterm.raw.cols||i!==this.xterm.raw.rows)&&((this.Y||this.X)&&await this.rd("fixedDimensions",{cols:this.X,rows:this.Y}),this.Ob.fire()),y.c={cols:e,rows:i},this.Bb.resize(e,i,t??!1))}async fd(t){await this.h.setDimensions(t.cols,t.rows)}setShellType(t){this.H!==t&&t&&(this.H=t,this.cc.set(t?.toString()),this.$b.fire(t))}gd(t,e,i){const s=[];if(t&&t.textarea){i&&i.length>0?s.push(f.localize(11624,null,e,i)):s.push(f.localize(11625,null,e)),this.rc.isScreenReaderOptimized()||s.push(f.localize(11626,null));const r=this.jc.lookupKeybinding("editor.action.accessibilityHelp")?.getLabel();this.oc.getValue("accessibility.verbosity.terminal")&&r&&s.push(f.localize(11627,null,r)),t.textarea.setAttribute("aria-label",s.join(`
-`))}}hd(t,e){if(!t)return this.qb;switch(e){case b.Process:if(this.h.os===1)t=P.$3.parse(t).name;else{const i=t.indexOf(" ");t.startsWith("/")?t=P.$$(t):i>-1&&(t=t.substring(0,i))}this.qb=t;break;case b.Api:this.sb=t,this.kb.value=void 0;break;case b.Sequence:this.rb=t,this.h.os===1&&t.match(/^[a-zA-Z]:\\.+\.[a-zA-Z]{1,3}/)&&(this.rb=P.$3.parse(t).name);break}return this.J=e,t}setOverrideDimensions(t,e=!1){this.db&&this.db.forceExactSize&&!t&&this.W===0&&this.U===0&&(this.U=this.db.cols,this.W=this.db.rows),this.db=t,e?this.ed(!0):this.ed()}async setFixedDimensions(){const t=await this.tc.input({title:f.localize(11628,null),placeHolder:"Enter a number of columns or leave empty for automatic width",validateInput:async i=>i.length>0&&!i.match(/^\d+$/)?{content:"Enter a number or leave empty size automatically",severity:$.Error}:void 0});if(t===void 0)return;this.X=this.jd(t),this.ub?.refreshLabel(this),this.P.set(!!this.X);const e=await this.tc.input({title:f.localize(11629,null),placeHolder:"Enter a number of rows or leave empty for automatic height",validateInput:async i=>i.length>0&&!i.match(/^\d+$/)?{content:"Enter a number or leave empty size automatically",severity:$.Error}:void 0});e!==void 0&&(this.Y=this.jd(e),this.ub?.refreshLabel(this),await this.kd(),this.ed(),this.focus())}jd(t){if(t==="")return;const e=parseInt(t);if(e<=0)throw new Error(`Could not parse dimension "${t}"`);return e}async toggleSizeToContentWidth(){if(this.xterm?.raw.buffer.active){if(this.wb)this.P.set(!1),this.X=void 0,this.Y=void 0,this.wb=!1,this.Fc(),await this.ed();else{const t=this.xterm?this.xterm.getFont():this.gc.getFont(u.getWindow(this.domElement)),e=Math.floor(4096/(t.charWidth??20)),i=Math.max(this.maxCols,Math.min(this.xterm.getLongestViewportWrappedLineLength(),e));i>this.xterm.raw.cols&&(this.X=i)}await this.kd(),this.ub?.refreshLabel(this),this.focus()}}kd(){return this.X||this.Y?this.ld():this.md()}async ld(){const t=(this.xterm?this.xterm.getFont():this.gc.getFont(u.getWindow(this.domElement))).charWidth;if(!(!this.xterm?.raw.element||!this.L||!t||!this.X)&&(this.M.classList.add("fixed-dims"),this.wb=!0,this.Fc(),await this.ed(),this.P.set(!0),this.N||(this.N=this.B(new Bt(this.M,{vertical:2,horizontal:1,useShadows:!1,scrollYToX:!1,consumeMouseWheelIfScrollbarIsNeeded:!1})),this.L.appendChild(this.N.getDomNode())),this.N.setScrollDimensions({width:this.xterm.raw.element.clientWidth,scrollWidth:this.X*t+40}),this.N.getDomNode().style.paddingBottom="16px",nt))for(let e=this.xterm.raw.buffer.active.viewportY;e<this.xterm.raw.buffer.active.length;e++){const i=this.xterm.raw.buffer.active.getLine(e);i._line.isWrapped=!1}}async md(){!this.L||!this.N||(this.N.getDomNode().remove(),this.N.dispose(),this.N=void 0,this.M.remove(),this.M.classList.remove("fixed-dims"),this.L.appendChild(this.M))}nd(t){this.dc.args=t.args,this.dc.cwd=t.cwd,this.dc.executable=t.executable,this.dc.env=t.env}od(t){t.requiresAction&&this.xterm?.raw.textarea?.setAttribute("aria-label",f.localize(11630,null,this.t)),this.pd(t)}async pd(t){if(!t){this.statusList.remove("relaunch-needed"),this.statusList.remove("env-var-info-changes-active");return}if(t.requiresAction&&this.gc.config.environmentChangesRelaunch&&!this.h.hasWrittenData&&(!this.dc.isFeatureTerminal||this.reconnectionProperties&&this.oc.getValue("task.reconnection")===!0)&&!this.dc.customPtyImplementation&&!this.dc.isExtensionOwnedTerminal&&!this.dc.attachPersistentProcess&&!(this.h.remoteAuthority&&this.gc.config.windowsEnableConpty&&await this.h.getBackendOS()===1)){this.relaunch();return}const e=Be(this.shellLaunchConfig.cwd,this.uc,this.xc);this.statusList.add(t.getStatus({workspaceFolder:e}))}async getInitialCwd(){return this.$||(this.$=this.h.initialCwd),this.$}async getCwd(){return this.capabilities.has(0)?this.capabilities.get(0).getCwd():this.capabilities.has(1)?this.capabilities.get(1).getCwd():this.h.initialCwd}async qd(t){return await this.processReady,this.h.refreshProperty(t)}async rd(t,e){return this.h.updateProperty(t,e)}async rename(t){this.sd(t,b.Api)}sd(t,e){const i=!t;t=this.hd(t,e);const s=t!==this.I;this.I=t,this.ub?.refreshLabel(this,i),this.gd(this.xterm?.raw,this.t,this.I),s&&this.Ib.fire(this)}async changeIcon(t){if(t)return this.jb=t,this.Jb.fire({instance:this,userInitiated:!0}),t;const e=this.g.createInstance(Ne),i=await e.pickIcons();if(e.dispose(),!!i)return this.jb=i,this.Jb.fire({instance:this,userInitiated:!0}),i}async changeColor(t,e){if(t)return this.shellLaunchConfig.color=t,this.Jb.fire({instance:this,userInitiated:!0}),t;if(e){this.shellLaunchConfig.color="",this.Jb.fire({instance:this,userInitiated:!0});return}if(!this.Dc())return;const s=this.nc.getColorTheme(),n=be(s),r=ge(s),o=[];for(const w of n){const D=pe(w);o.push({label:`$(${F.circleFilled.id}) ${w.replace("terminal.ansi","")}`,id:w,description:w,iconClasses:[D]})}o.push({type:"separator"});const g={label:"Reset to default"};o.push(g);const m=[],p=this.tc.createQuickPick({useSeparators:!0});m.push(p),p.items=o,p.matchOnDescription=!0,p.placeholder=f.localize(11631,null),p.show();const I=await new Promise(w=>{m.push(p.onDidHide(()=>w(void 0))),m.push(p.onDidAccept(()=>w(p.selectedItems[0])))});return rt(m),I&&(this.shellLaunchConfig.color=I.id,this.Jb.fire({instance:this,userInitiated:!0})),p.hide(),r.dispose(),I?.id}forceScrollbarVisibility(){this.M.classList.add("force-scrollbar")}resetScrollbarVisibility(){this.M.classList.remove("force-scrollbar")}setParentContextKeyService(t){this.Ab.updateParent(t)}async handleMouseEvent(t,e){if(u.$t6(t.target)&&(t.target.classList.contains("scrollbar")||t.target.classList.contains("slider")))return{cancelContextMenu:!0};for(const i of this.j.values())if((await i.handleMouseEvent?.(t))?.handled)return{cancelContextMenu:!0};if(t.which===2){switch(this.gc.config.middleClickBehavior){case"default":default:this.focus();break}return}if(t.which===3){if(t.shiftKey){Ue(u.$p6(),t,this,e,this.fc);return}if(this.gc.config.rightClickBehavior==="nothing")return t.shiftKey?void 0:{cancelContextMenu:!0}}}};L([X(50)],k.prototype,"Ic",null);L([X(1e3)],k.prototype,"relaunch",null);L([X(2e3)],k.prototype,"bd",null);k=y=L([c(2,dt),c(3,Oe),c(4,Ht),c(5,ut),c(6,Se),c(7,Ae),c(8,Jt),c(9,Xt),c(10,ze),c(11,de),c(12,oe),c(13,Vt),c(14,se),c(15,Qt),c(16,Nt),c(17,Zt),c(18,Gt),c(19,Fe),c(20,ft),c(21,Ee),c(22,ae),c(23,Me),c(24,te),c(25,_t),c(26,Ot),c(27,Ut),c(28,Z)],k);let H=class extends _{get onDropFile(){return this.c.event}get onDropTerminal(){return this.f.event}constructor(t,e,i){super(),this.g=t,this.h=e,this.j=i,this.c=this.B(new d),this.f=this.B(new d),this.B(V(()=>this.m()))}m(){this.b?.remove(),this.b=void 0}onDragEnter(t){if(U(t,N.FILES,N.RESOURCES,"Terminals",ht.FILES)){if(this.b||(this.b=document.createElement("div"),this.b.classList.add("terminal-drop-overlay")),U(t,"Terminals")){const e=this.n(t);this.b.classList.toggle("drop-before",e==="before"),this.b.classList.toggle("drop-after",e==="after")}this.b.parentElement||this.g.appendChild(this.b)}}onDragLeave(t){this.m()}onDragEnd(t){this.m()}onDragOver(t){if(!(!t.dataTransfer||!this.b)){if(U(t,"Terminals")){const e=this.n(t);this.b.classList.toggle("drop-before",e==="before"),this.b.classList.toggle("drop-after",e==="after")}this.b.style.opacity="1"}}async onDrop(t){if(this.m(),!t.dataTransfer)return;const e=xe(t);if(e){for(const r of e){const o=this.n(t);this.f.fire({uri:r,side:o})}return}let i;const s=t.dataTransfer.getData(N.RESOURCES);s&&(i=B.parse(JSON.parse(s)[0]));const n=t.dataTransfer.getData(ht.FILES);!i&&n&&(i=B.file(JSON.parse(n)[0])),!i&&t.dataTransfer.files.length>0&&ot(t.dataTransfer.files[0])&&(i=B.file(ot(t.dataTransfer.files[0]))),i&&this.c.fire(i)}n(t){const e=this.g;if(!e)return"after";const i=e.getBoundingClientRect();return this.s()===1?t.clientX-i.left<i.width/2?"before":"after":t.clientY-i.top<i.height/2?"before":"after"}s(){const t=this.h.getPanelPosition();return this.j.getViewLocationById(R)===1&&Re(t)?1:0}};H=L([c(1,We),c(2,Z)],H);var lt;(function(a){a.Title="title",a.Description="description"})(lt||(lt={}));let Y=class extends _{get title(){return this.b}get description(){return this.c}constructor(t,e,i){super(),this.g=t,this.h=e,this.j=i,this.b="",this.c="",this.f=this.B(new d),this.onDidChangeLabel=this.f.event}refreshLabel(t,e){this.b=this.computeLabel(t,this.h.config.tabs.title,"title",e),this.c=this.computeLabel(t,this.h.config.tabs.description,"description"),(this.b!==t.title||this.c!==t.description||e)&&this.f.fire({title:this.b,description:this.c})}computeLabel(t,e,i,s){const n=t.shellLaunchConfig.attachPersistentProcess?.type||t.shellLaunchConfig.type,r=t.capabilities.get(2),o=r?.promptInputModel,g=n==="Task"?"":" $(loading~spin)",m={cwd:t.cwd||t.initialCwd||"",cwdFolder:"",workspaceFolderName:t.workspaceFolder?.name,workspaceFolder:t.workspaceFolder?P.$$(t.workspaceFolder.uri.fsPath):void 0,local:n==="Local"?W.typeLocal:void 0,process:t.processName,sequence:t.sequence,task:n==="Task"?W.typeTask:void 0,fixedDimensions:t.fixedCols?t.fixedRows?`\u2194${t.fixedCols} \u2195${t.fixedRows}`:`\u2194${t.fixedCols}`:t.fixedRows?`\u2195${t.fixedRows}`:"",separator:{label:this.h.config.tabs.separator},shellType:t.shellType,shellCommand:r?.executingCommand&&r.executingCommandConfidence==="high"&&o?o.value+g:void 0,shellPromptInput:r?.executingCommand&&o?o.getCombinedString(!0)+g:o?.getCombinedString(!0),progress:this.m(t.progressState)};if(m.workspaceFolderName=t.workspaceFolder?.name??m.workspaceFolder,e=e.trim(),!e)return i==="title"&&t.processName||"";if(!s&&t.staticTitle&&i==="title")return t.staticTitle.replace(/[\n\r\t]/g,"")||m.process?.replace(/[\n\r\t]/g,"")||"";const p=t.capabilities.has(0)||t.capabilities.has(1),w=this.j.getWorkspace().folders.length>1;if(m.cwd&&p&&(!t.shellLaunchConfig.isFeatureTerminal||i==="title")){const A=B.from({scheme:t.workspaceFolder?.uri.scheme||K.file,path:t.cwd?P.$8(t.cwd):void 0});let S=!1;if(w)S=!0;else if(t.workspaceFolder?.uri){const z=this.g.hasCapability(t.workspaceFolder.uri,1024);S=A.fsPath.localeCompare(t.workspaceFolder.uri.fsPath,void 0,{sensitivity:z?"case":"base"})!==0}S&&(m.cwdFolder=P.$$(m.cwd))}const D=Mt(e,m).replace(/[\n\r\t]/g,"").trim();return D===""&&i==="title"?t.processName||"":D}m(t){if(!t)return"";switch(t.state){case 0:return"";case 1:return`${Math.round(t.value)}%`;case 2:return"$(error)";case 3:return"$(loading~spin)";case 4:return"$(alert)"}}};Y=L([c(0,Kt),c(1,ut),c(2,ft)],Y);function Ke(a,t,e,i){if(a===void 0||a===0)return{code:a,message:void 0};const s=typeof a=="number"?a:a.code;let n;switch(typeof a){case"number":{let r;t.executable&&(r=t.executable,typeof t.args=="string"?r+=` ${t.args}`:t.args&&t.args.length&&(r+=t.args.map(o=>` '${o}'`).join())),e===4?r?n=f.localize(11632,null,r,s):n=f.localize(11633,null,s):r?n=f.localize(11634,null,r,s):n=f.localize(11635,null,s);break}case"object":{if(a.message.toString().includes("Could not find pty with id"))break;let r=a.message;const o=a.message.match(/.*error code:\s*(\d+).*$/);if(o)switch(o.length>1?parseInt(o[1]):void 0){case 5:r=`Access was denied to the path containing your executable "${t.executable}". Manage and change your permissions to get this to work`;break;case 267:r=`Invalid starting directory "${i}", review your terminal.integrated.cwd setting`;break;case 1260:r="Windows cannot open this program because it has been prevented by a software restriction policy. For more information, open Event Viewer or contact your system Administrator";break}n=f.localize(11636,null,r);break}}return{code:s,message:n}}let J=class{constructor(t,e){this.b=t,this.c=e}getBackgroundColor(t){const e=t.getColor(ve);return e||(this.b.object===re.Editor?t.getColor(ne):this.c.getViewLocationById(R)===1?t.getColor(ce):t.getColor(le))}};J=L([c(1,Z)],J);function He(a,t){const e=P.$$(t),i=new Map([["julia",/^julia$/],["node",/^node$/],["nu",/^nu$/],["pwsh",/^pwsh(-preview)?|powershell$/],["python",/^py(?:thon)?$/]]);for(const[s,n]of i)if(e.match(n))return s;if(a===1){const s=new Map([["cmd",/^cmd$/],["gitbash",/^bash$/],["wsl",/^wsl$/]]);for(const[n,r]of s)if(e.match(r))return n}else{const s=["bash","csh","fish","ksh","sh","zsh"];for(const n of s)if(e===n)return n}}export{k as $Hrc,Y as $Irc,Ke as $Jrc,J as $Krc};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { isFirefox } from "../../../../base/browser/browser.js";
+import { BrowserFeatures } from "../../../../base/browser/canIUse.js";
+import { DataTransfers } from "../../../../base/browser/dnd.js";
+import * as dom from "../../../../base/browser/dom.js";
+import { StandardKeyboardEvent } from "../../../../base/browser/keyboardEvent.js";
+import { DomScrollableElement } from "../../../../base/browser/ui/scrollbar/scrollableElement.js";
+import { AutoOpenBarrier, Promises, disposableTimeout, timeout } from "../../../../base/common/async.js";
+import { Codicon } from "../../../../base/common/codicons.js";
+import { debounce } from "../../../../base/common/decorators.js";
+import { BugIndicatingError, onUnexpectedError } from "../../../../base/common/errors.js";
+import { Emitter, Event } from "../../../../base/common/event.js";
+import { template } from "../../../../base/common/labels.js";
+import { Disposable, DisposableMap, DisposableStore, ImmortalReference, MutableDisposable, dispose, toDisposable } from "../../../../base/common/lifecycle.js";
+import { Schemas } from "../../../../base/common/network.js";
+import * as path from "../../../../base/common/path.js";
+import { OS, isMacintosh, isWindows } from "../../../../base/common/platform.js";
+import { URI } from "../../../../base/common/uri.js";
+import { TabFocus } from "../../../../editor/browser/config/tabFocus.js";
+import * as nls from "../../../../nls.js";
+import { IAccessibilityService } from "../../../../platform/accessibility/common/accessibility.js";
+import { AccessibilitySignal, IAccessibilitySignalService } from "../../../../platform/accessibilitySignal/browser/accessibilitySignalService.js";
+import { ICommandService } from "../../../../platform/commands/common/commands.js";
+import { IConfigurationService } from "../../../../platform/configuration/common/configuration.js";
+import { IContextKeyService } from "../../../../platform/contextkey/common/contextkey.js";
+import { CodeDataTransfers, containsDragType, getPathForFile } from "../../../../platform/dnd/browser/dnd.js";
+import { IFileService } from "../../../../platform/files/common/files.js";
+import { IInstantiationService } from "../../../../platform/instantiation/common/instantiation.js";
+import { ServiceCollection } from "../../../../platform/instantiation/common/serviceCollection.js";
+import { IKeybindingService } from "../../../../platform/keybinding/common/keybinding.js";
+import { INotificationService, Severity } from "../../../../platform/notification/common/notification.js";
+import { IOpenerService } from "../../../../platform/opener/common/opener.js";
+import { IProductService } from "../../../../platform/product/common/productService.js";
+import { IQuickInputService } from "../../../../platform/quickinput/common/quickInput.js";
+import { IStorageService } from "../../../../platform/storage/common/storage.js";
+import { ITelemetryService } from "../../../../platform/telemetry/common/telemetry.js";
+import { TerminalCapabilityStoreMultiplexer } from "../../../../platform/terminal/common/capabilities/terminalCapabilityStore.js";
+import { deserializeEnvironmentVariableCollections } from "../../../../platform/terminal/common/environmentVariableShared.js";
+import { ITerminalLogService, TerminalExitReason, TerminalLocation, TitleEventSource } from "../../../../platform/terminal/common/terminal.js";
+import { formatMessageForTerminal } from "../../../../platform/terminal/common/terminalStrings.js";
+import { editorBackground } from "../../../../platform/theme/common/colorRegistry.js";
+import { getIconRegistry } from "../../../../platform/theme/common/iconRegistry.js";
+import { IThemeService } from "../../../../platform/theme/common/themeService.js";
+import { IWorkspaceContextService } from "../../../../platform/workspace/common/workspace.js";
+import { IWorkspaceTrustRequestService } from "../../../../platform/workspace/common/workspaceTrust.js";
+import { PANEL_BACKGROUND, SIDE_BAR_BACKGROUND } from "../../../common/theme.js";
+import { IViewDescriptorService } from "../../../common/views.js";
+import { IViewsService } from "../../../services/views/common/viewsService.js";
+import { ITerminalConfigurationService } from "./terminal.js";
+import { TerminalLaunchHelpAction } from "./terminalActions.js";
+import { TerminalEditorInput } from "./terminalEditorInput.js";
+import { TerminalExtensionsRegistry } from "./terminalExtensions.js";
+import { getColorClass, createColorStyleElement, getStandardColors } from "./terminalIcon.js";
+import { TerminalProcessManager } from "./terminalProcessManager.js";
+import { TerminalStatusList } from "./terminalStatusList.js";
+import { getTerminalResourcesFromDragEvent, getTerminalUri } from "./terminalUri.js";
+import { TerminalWidgetManager } from "./widgets/widgetManager.js";
+import { LineDataEventAddon } from "./xterm/lineDataEventAddon.js";
+import { XtermTerminal, getXtermScaledDimensions } from "./xterm/xtermTerminal.js";
+import { DEFAULT_COMMANDS_TO_SKIP_SHELL, ITerminalProfileResolverService, TERMINAL_CREATION_COMMANDS, TERMINAL_VIEW_ID } from "../common/terminal.js";
+import { TERMINAL_BACKGROUND_COLOR } from "../common/terminalColorRegistry.js";
+import { TerminalContextKeys } from "../common/terminalContextKey.js";
+import { getWorkspaceForTerminal, preparePathForShell } from "../common/terminalEnvironment.js";
+import { IEditorService } from "../../../services/editor/common/editorService.js";
+import { IWorkbenchEnvironmentService } from "../../../services/environment/common/environmentService.js";
+import { IHistoryService } from "../../../services/history/common/history.js";
+import { isHorizontal, IWorkbenchLayoutService } from "../../../services/layout/browser/layoutService.js";
+import { IPathService } from "../../../services/path/common/pathService.js";
+import { IPreferencesService } from "../../../services/preferences/common/preferences.js";
+import { importAMDNodeModule } from "../../../../amdX.js";
+import { terminalStrings } from "../common/terminalStrings.js";
+import { TerminalIconPicker } from "./terminalIconPicker.js";
+import { TerminalResizeDebouncer } from "./terminalResizeDebouncer.js";
+import { openContextMenu } from "./terminalContextMenu.js";
+import { IContextMenuService } from "../../../../platform/contextview/browser/contextView.js";
+import { refreshShellIntegrationInfoStatus } from "./terminalTooltip.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+var TerminalInstance_1;
+var Constants;
+(function(Constants2) {
+  Constants2[Constants2["WaitForContainerThreshold"] = 100] = "WaitForContainerThreshold";
+  Constants2[Constants2["DefaultCols"] = 80] = "DefaultCols";
+  Constants2[Constants2["DefaultRows"] = 30] = "DefaultRows";
+  Constants2[Constants2["MaxCanvasWidth"] = 4096] = "MaxCanvasWidth";
+})(Constants || (Constants = {}));
+let xtermConstructor;
+const shellIntegrationSupportedShellTypes = [
+  "bash",
+  "zsh",
+  "pwsh",
+  "python"
+];
+let TerminalInstance = class TerminalInstance2 extends Disposable {
+  static {
+    __name(this, "TerminalInstance");
+  }
+  static {
+    TerminalInstance_1 = this;
+  }
+  static {
+    this._instanceIdCounter = 1;
+  }
+  get domElement() {
+    return this._wrapperElement;
+  }
+  get usedShellIntegrationInjection() {
+    return this._usedShellIntegrationInjection;
+  }
+  get shellIntegrationInjectionFailureReason() {
+    return this._shellIntegrationInjectionInfo;
+  }
+  pauseInputEvents(barrier) {
+    this._pauseInputEventBarrier = barrier;
+  }
+  get store() {
+    return this._store;
+  }
+  get extEnvironmentVariableCollection() {
+    return this._processManager.extEnvironmentVariableCollection;
+  }
+  get waitOnExit() {
+    return this._shellLaunchConfig.attachPersistentProcess?.waitOnExit || this._shellLaunchConfig.waitOnExit;
+  }
+  set waitOnExit(value) {
+    this._shellLaunchConfig.waitOnExit = value;
+  }
+  get targetRef() {
+    return this._targetRef;
+  }
+  get target() {
+    return this._targetRef.object;
+  }
+  set target(value) {
+    this._targetRef.object = value;
+    this._onDidChangeTarget.fire(value);
+  }
+  get instanceId() {
+    return this._instanceId;
+  }
+  get resource() {
+    return this._resource;
+  }
+  get cols() {
+    if (this._fixedCols !== void 0) {
+      return this._fixedCols;
+    }
+    if (this._dimensionsOverride && this._dimensionsOverride.cols) {
+      if (this._dimensionsOverride.forceExactSize) {
+        return this._dimensionsOverride.cols;
+      }
+      return Math.min(Math.max(this._dimensionsOverride.cols, 2), this._cols);
+    }
+    return this._cols;
+  }
+  get rows() {
+    if (this._fixedRows !== void 0) {
+      return this._fixedRows;
+    }
+    if (this._dimensionsOverride && this._dimensionsOverride.rows) {
+      if (this._dimensionsOverride.forceExactSize) {
+        return this._dimensionsOverride.rows;
+      }
+      return Math.min(Math.max(this._dimensionsOverride.rows, 2), this._rows);
+    }
+    return this._rows;
+  }
+  get isDisposed() {
+    return this._store.isDisposed;
+  }
+  get fixedCols() {
+    return this._fixedCols;
+  }
+  get fixedRows() {
+    return this._fixedRows;
+  }
+  get maxCols() {
+    return this._cols;
+  }
+  get maxRows() {
+    return this._rows;
+  }
+  // TODO: Ideally processId would be merged into processReady
+  get processId() {
+    return this._processManager.shellProcessId;
+  }
+  // TODO: How does this work with detached processes?
+  // TODO: Should this be an event as it can fire twice?
+  get processReady() {
+    return this._processManager.ptyProcessReady;
+  }
+  get hasChildProcesses() {
+    return this.shellLaunchConfig.attachPersistentProcess?.hasChildProcesses || this._processManager.hasChildProcesses;
+  }
+  get reconnectionProperties() {
+    return this.shellLaunchConfig.attachPersistentProcess?.reconnectionProperties || this.shellLaunchConfig.reconnectionProperties;
+  }
+  get areLinksReady() {
+    return this._areLinksReady;
+  }
+  get initialDataEvents() {
+    return this._initialDataEvents;
+  }
+  get exitCode() {
+    return this._exitCode;
+  }
+  get exitReason() {
+    return this._exitReason;
+  }
+  get hadFocusOnExit() {
+    return this._hadFocusOnExit;
+  }
+  get isTitleSetByProcess() {
+    return !!this._messageTitleDisposable.value;
+  }
+  get shellLaunchConfig() {
+    return this._shellLaunchConfig;
+  }
+  get shellType() {
+    return this._shellType;
+  }
+  get os() {
+    return this._processManager.os;
+  }
+  get isRemote() {
+    return this._processManager.remoteAuthority !== void 0;
+  }
+  get remoteAuthority() {
+    return this._processManager.remoteAuthority;
+  }
+  get hasFocus() {
+    return dom.isAncestorOfActiveElement(this._wrapperElement);
+  }
+  get title() {
+    return this._title;
+  }
+  get titleSource() {
+    return this._titleSource;
+  }
+  get icon() {
+    return this._getIcon();
+  }
+  get color() {
+    return this._getColor();
+  }
+  get processName() {
+    return this._processName;
+  }
+  get sequence() {
+    return this._sequence;
+  }
+  get staticTitle() {
+    return this._staticTitle;
+  }
+  get progressState() {
+    return this.xterm?.progressState;
+  }
+  get workspaceFolder() {
+    return this._workspaceFolder;
+  }
+  get cwd() {
+    return this._cwd;
+  }
+  get initialCwd() {
+    return this._initialCwd;
+  }
+  get description() {
+    if (this._description) {
+      return this._description;
+    }
+    const type = this.shellLaunchConfig.attachPersistentProcess?.type || this.shellLaunchConfig.type;
+    switch (type) {
+      case "Task":
+        return terminalStrings.typeTask;
+      case "Local":
+        return terminalStrings.typeLocal;
+      default:
+        return void 0;
+    }
+  }
+  get userHome() {
+    return this._userHome;
+  }
+  get shellIntegrationNonce() {
+    return this._processManager.shellIntegrationNonce;
+  }
+  get injectedArgs() {
+    return this._injectedArgs;
+  }
+  constructor(_terminalShellTypeContextKey, _shellLaunchConfig, _contextKeyService, _contextMenuService, instantiationService, _terminalConfigurationService, _terminalProfileResolverService, _pathService, _keybindingService, _notificationService, _preferencesService, _viewsService, _themeService, _configurationService, _logService, _storageService, _accessibilityService, _productService, _quickInputService, workbenchEnvironmentService, _workspaceContextService, _editorService, _workspaceTrustRequestService, _historyService, _telemetryService, _openerService, _commandService, _accessibilitySignalService, _viewDescriptorService) {
+    super();
+    this._terminalShellTypeContextKey = _terminalShellTypeContextKey;
+    this._shellLaunchConfig = _shellLaunchConfig;
+    this._contextKeyService = _contextKeyService;
+    this._contextMenuService = _contextMenuService;
+    this._terminalConfigurationService = _terminalConfigurationService;
+    this._terminalProfileResolverService = _terminalProfileResolverService;
+    this._pathService = _pathService;
+    this._keybindingService = _keybindingService;
+    this._notificationService = _notificationService;
+    this._preferencesService = _preferencesService;
+    this._viewsService = _viewsService;
+    this._themeService = _themeService;
+    this._configurationService = _configurationService;
+    this._logService = _logService;
+    this._storageService = _storageService;
+    this._accessibilityService = _accessibilityService;
+    this._productService = _productService;
+    this._quickInputService = _quickInputService;
+    this._workspaceContextService = _workspaceContextService;
+    this._editorService = _editorService;
+    this._workspaceTrustRequestService = _workspaceTrustRequestService;
+    this._historyService = _historyService;
+    this._telemetryService = _telemetryService;
+    this._openerService = _openerService;
+    this._commandService = _commandService;
+    this._accessibilitySignalService = _accessibilitySignalService;
+    this._viewDescriptorService = _viewDescriptorService;
+    this._contributions = /* @__PURE__ */ new Map();
+    this._latestXtermWriteData = 0;
+    this._latestXtermParseData = 0;
+    this._title = "";
+    this._titleSource = TitleEventSource.Process;
+    this._cols = 0;
+    this._rows = 0;
+    this._cwd = void 0;
+    this._initialCwd = void 0;
+    this._injectedArgs = void 0;
+    this._layoutSettingsChanged = true;
+    this._areLinksReady = false;
+    this._initialDataEventsListener = this._register(new MutableDisposable());
+    this._initialDataEvents = [];
+    this._messageTitleDisposable = this._register(new MutableDisposable());
+    this._dndObserver = this._register(new MutableDisposable());
+    this._processName = "";
+    this._usedShellIntegrationInjection = false;
+    this.capabilities = this._register(new TerminalCapabilityStoreMultiplexer());
+    this.disableLayout = false;
+    this._targetRef = new ImmortalReference(void 0);
+    this._onExit = new Emitter();
+    this.onExit = this._onExit.event;
+    this._onDisposed = this._register(new Emitter());
+    this.onDisposed = this._onDisposed.event;
+    this._onProcessIdReady = this._register(new Emitter());
+    this.onProcessIdReady = this._onProcessIdReady.event;
+    this._onProcessReplayComplete = this._register(new Emitter());
+    this.onProcessReplayComplete = this._onProcessReplayComplete.event;
+    this._onTitleChanged = this._register(new Emitter());
+    this.onTitleChanged = this._onTitleChanged.event;
+    this._onIconChanged = this._register(new Emitter());
+    this.onIconChanged = this._onIconChanged.event;
+    this._onWillData = this._register(new Emitter());
+    this.onWillData = this._onWillData.event;
+    this._onData = this._register(new Emitter());
+    this.onData = this._onData.event;
+    this._onBinary = this._register(new Emitter());
+    this.onBinary = this._onBinary.event;
+    this._onRequestExtHostProcess = this._register(new Emitter());
+    this.onRequestExtHostProcess = this._onRequestExtHostProcess.event;
+    this._onDimensionsChanged = this._register(new Emitter());
+    this.onDimensionsChanged = this._onDimensionsChanged.event;
+    this._onMaximumDimensionsChanged = this._register(new Emitter());
+    this.onMaximumDimensionsChanged = this._onMaximumDimensionsChanged.event;
+    this._onDidFocus = this._register(new Emitter());
+    this.onDidFocus = this._onDidFocus.event;
+    this._onDidRequestFocus = this._register(new Emitter());
+    this.onDidRequestFocus = this._onDidRequestFocus.event;
+    this._onDidBlur = this._register(new Emitter());
+    this.onDidBlur = this._onDidBlur.event;
+    this._onDidInputData = this._register(new Emitter());
+    this.onDidInputData = this._onDidInputData.event;
+    this._onDidChangeSelection = this._register(new Emitter());
+    this.onDidChangeSelection = this._onDidChangeSelection.event;
+    this._onRequestAddInstanceToGroup = this._register(new Emitter());
+    this.onRequestAddInstanceToGroup = this._onRequestAddInstanceToGroup.event;
+    this._onDidChangeHasChildProcesses = this._register(new Emitter());
+    this.onDidChangeHasChildProcesses = this._onDidChangeHasChildProcesses.event;
+    this._onDidExecuteText = this._register(new Emitter());
+    this.onDidExecuteText = this._onDidExecuteText.event;
+    this._onDidChangeTarget = this._register(new Emitter());
+    this.onDidChangeTarget = this._onDidChangeTarget.event;
+    this._onDidSendText = this._register(new Emitter());
+    this.onDidSendText = this._onDidSendText.event;
+    this._onDidChangeShellType = this._register(new Emitter());
+    this.onDidChangeShellType = this._onDidChangeShellType.event;
+    this._onDidChangeVisibility = this._register(new Emitter());
+    this.onDidChangeVisibility = this._onDidChangeVisibility.event;
+    this._onLineData = this._register(new Emitter({
+      onDidAddFirstListener: /* @__PURE__ */ __name(async () => (this.xterm ?? await this._xtermReadyPromise)?.raw.loadAddon(this._lineDataEventAddon), "onDidAddFirstListener")
+    }));
+    this.onLineData = this._onLineData.event;
+    this._wrapperElement = document.createElement("div");
+    this._wrapperElement.classList.add("terminal-wrapper");
+    this._widgetManager = this._register(instantiationService.createInstance(TerminalWidgetManager));
+    this._skipTerminalCommands = [];
+    this._isExiting = false;
+    this._hadFocusOnExit = false;
+    this._isVisible = false;
+    this._instanceId = TerminalInstance_1._instanceIdCounter++;
+    this._hasHadInput = false;
+    this._fixedRows = _shellLaunchConfig.attachPersistentProcess?.fixedDimensions?.rows;
+    this._fixedCols = _shellLaunchConfig.attachPersistentProcess?.fixedDimensions?.cols;
+    this._shellLaunchConfig.shellIntegrationEnvironmentReporting = this._configurationService.getValue(
+      "terminal.integrated.shellIntegration.environmentReporting"
+      /* TerminalSettingId.ShellIntegrationEnvironmentReporting */
+    );
+    this._resource = getTerminalUri(this._workspaceContextService.getWorkspace().id, this.instanceId, this.title);
+    if (this._shellLaunchConfig.attachPersistentProcess?.hideFromUser) {
+      this._shellLaunchConfig.hideFromUser = this._shellLaunchConfig.attachPersistentProcess.hideFromUser;
+    }
+    if (this._shellLaunchConfig.attachPersistentProcess?.isFeatureTerminal) {
+      this._shellLaunchConfig.isFeatureTerminal = this._shellLaunchConfig.attachPersistentProcess.isFeatureTerminal;
+    }
+    if (this._shellLaunchConfig.attachPersistentProcess?.type) {
+      this._shellLaunchConfig.type = this._shellLaunchConfig.attachPersistentProcess.type;
+    }
+    if (this._shellLaunchConfig.attachPersistentProcess?.tabActions) {
+      this._shellLaunchConfig.tabActions = this._shellLaunchConfig.attachPersistentProcess.tabActions;
+    }
+    if (this.shellLaunchConfig.cwd) {
+      const cwdUri = typeof this._shellLaunchConfig.cwd === "string" ? URI.from({
+        scheme: Schemas.file,
+        path: this._shellLaunchConfig.cwd
+      }) : this._shellLaunchConfig.cwd;
+      if (cwdUri) {
+        this._workspaceFolder = this._workspaceContextService.getWorkspaceFolder(cwdUri) ?? void 0;
+      }
+    }
+    if (!this._workspaceFolder) {
+      const activeWorkspaceRootUri = this._historyService.getLastActiveWorkspaceRoot();
+      this._workspaceFolder = activeWorkspaceRootUri ? this._workspaceContextService.getWorkspaceFolder(activeWorkspaceRootUri) ?? void 0 : void 0;
+    }
+    const scopedContextKeyService = this._register(_contextKeyService.createScoped(this._wrapperElement));
+    this._scopedContextKeyService = scopedContextKeyService;
+    this._scopedInstantiationService = this._register(instantiationService.createChild(new ServiceCollection([IContextKeyService, scopedContextKeyService])));
+    this._terminalFocusContextKey = TerminalContextKeys.focus.bindTo(scopedContextKeyService);
+    this._terminalHasFixedWidth = TerminalContextKeys.terminalHasFixedWidth.bindTo(scopedContextKeyService);
+    this._terminalHasTextContextKey = TerminalContextKeys.textSelected.bindTo(scopedContextKeyService);
+    this._terminalAltBufferActiveContextKey = TerminalContextKeys.altBufferActive.bindTo(scopedContextKeyService);
+    this._terminalShellIntegrationEnabledContextKey = TerminalContextKeys.terminalShellIntegrationEnabled.bindTo(scopedContextKeyService);
+    this._logService.trace(`terminalInstance#ctor (instanceId: ${this.instanceId})`, this._shellLaunchConfig);
+    this._register(this.capabilities.onDidAddCapabilityType((e) => this._logService.debug("terminalInstance added capability", e)));
+    this._register(this.capabilities.onDidRemoveCapabilityType((e) => this._logService.debug("terminalInstance removed capability", e)));
+    const capabilityListeners = this._register(new DisposableMap());
+    this._register(this.capabilities.onDidAddCapabilityType((capability) => {
+      capabilityListeners.get(capability)?.dispose();
+      if (capability === 0) {
+        const cwdDetection = this.capabilities.get(capability);
+        if (cwdDetection) {
+          capabilityListeners.set(capability, cwdDetection.onDidChangeCwd((e) => {
+            this._cwd = e;
+            this._setTitle(this.title, TitleEventSource.Config);
+          }));
+        }
+      }
+      if (capability === 2) {
+        const commandDetection = this.capabilities.get(capability);
+        if (commandDetection) {
+          commandDetection.promptInputModel.setShellType(this.shellType);
+          capabilityListeners.set(capability, Event.any(commandDetection.onPromptTypeChanged, commandDetection.promptInputModel.onDidStartInput, commandDetection.promptInputModel.onDidChangeInput, commandDetection.promptInputModel.onDidFinishInput)(() => {
+            this._labelComputer?.refreshLabel(this);
+            refreshShellIntegrationInfoStatus(this);
+          }));
+        }
+      }
+    }));
+    this._register(this.capabilities.onDidRemoveCapabilityType((capability) => {
+      capabilityListeners.get(capability)?.dispose();
+    }));
+    if (!this.shellLaunchConfig.executable && !workbenchEnvironmentService.remoteAuthority) {
+      this._terminalProfileResolverService.resolveIcon(this._shellLaunchConfig, OS);
+    }
+    this._icon = _shellLaunchConfig.attachPersistentProcess?.icon || _shellLaunchConfig.icon;
+    if (this.shellLaunchConfig.customPtyImplementation) {
+      this._setTitle(this._shellLaunchConfig.name, TitleEventSource.Api);
+    }
+    this.statusList = this._register(this._scopedInstantiationService.createInstance(TerminalStatusList));
+    this._initDimensions();
+    this._processManager = this._createProcessManager();
+    this._containerReadyBarrier = new AutoOpenBarrier(
+      100
+      /* Constants.WaitForContainerThreshold */
+    );
+    this._attachBarrier = new AutoOpenBarrier(1e3);
+    this._xtermReadyPromise = this._createXterm();
+    this._xtermReadyPromise.then(async () => {
+      await this._containerReadyBarrier.wait();
+      let os;
+      if (!this.shellLaunchConfig.customPtyImplementation && this._terminalConfigurationService.config.shellIntegration?.enabled && !this.shellLaunchConfig.executable) {
+        os = await this._processManager.getBackendOS();
+        const defaultProfile = await this._terminalProfileResolverService.getDefaultProfile({ remoteAuthority: this.remoteAuthority, os });
+        this.shellLaunchConfig.executable = defaultProfile.path;
+        this.shellLaunchConfig.args = defaultProfile.args;
+        if (this.shellLaunchConfig.isExtensionOwnedTerminal) {
+          this.shellLaunchConfig.icon ??= defaultProfile.icon;
+          this.shellLaunchConfig.color ??= defaultProfile.color;
+          this.shellLaunchConfig.env ??= defaultProfile.env;
+        } else {
+          this.shellLaunchConfig.icon = defaultProfile.icon;
+          this.shellLaunchConfig.color = defaultProfile.color;
+          this.shellLaunchConfig.env = defaultProfile.env;
+        }
+      }
+      if (os && this.shellLaunchConfig.executable) {
+        this.setShellType(guessShellTypeFromExecutable(os, this.shellLaunchConfig.executable));
+      }
+      await this._createProcess();
+      if (this.shellLaunchConfig.attachPersistentProcess) {
+        this._cwd = this.shellLaunchConfig.attachPersistentProcess.cwd;
+        this._setTitle(this.shellLaunchConfig.attachPersistentProcess.title, this.shellLaunchConfig.attachPersistentProcess.titleSource);
+        this.setShellType(this.shellType);
+      }
+      if (this._fixedCols) {
+        await this._addScrollbar();
+      }
+    }).catch((err) => {
+      if (!this.isDisposed) {
+        throw err;
+      }
+    });
+    this._register(this._configurationService.onDidChangeConfiguration(async (e) => {
+      if (e.affectsConfiguration(
+        "accessibility.verbosity.terminal"
+        /* AccessibilityVerbositySettingId.Terminal */
+      )) {
+        this._setAriaLabel(this.xterm?.raw, this._instanceId, this.title);
+      }
+      if (e.affectsConfiguration("terminal.integrated")) {
+        this.updateConfig();
+        this.setVisible(this._isVisible);
+      }
+      const layoutSettings = [
+        "terminal.integrated.fontSize",
+        "terminal.integrated.fontFamily",
+        "terminal.integrated.fontWeight",
+        "terminal.integrated.fontWeightBold",
+        "terminal.integrated.letterSpacing",
+        "terminal.integrated.lineHeight",
+        "editor.fontFamily"
+      ];
+      if (layoutSettings.some((id) => e.affectsConfiguration(id))) {
+        this._layoutSettingsChanged = true;
+        await this._resize();
+      }
+      if (e.affectsConfiguration(
+        "terminal.integrated.unicodeVersion"
+        /* TerminalSettingId.UnicodeVersion */
+      )) {
+        this._updateUnicodeVersion();
+      }
+      if (e.affectsConfiguration("editor.accessibilitySupport")) {
+        this.updateAccessibilitySupport();
+      }
+      if (e.affectsConfiguration(
+        "terminal.integrated.tabs.title"
+        /* TerminalSettingId.TerminalTitle */
+      ) || e.affectsConfiguration(
+        "terminal.integrated.tabs.separator"
+        /* TerminalSettingId.TerminalTitleSeparator */
+      ) || e.affectsConfiguration(
+        "terminal.integrated.tabs.description"
+        /* TerminalSettingId.TerminalDescription */
+      )) {
+        this._labelComputer?.refreshLabel(this);
+      }
+    }));
+    this._register(this._workspaceContextService.onDidChangeWorkspaceFolders(() => this._labelComputer?.refreshLabel(this)));
+    let initialDataEventsTimeout = dom.getWindow(this._container).setTimeout(() => {
+      initialDataEventsTimeout = void 0;
+      this._initialDataEvents = void 0;
+      this._initialDataEventsListener.clear();
+    }, 1e4);
+    this._register(toDisposable(() => {
+      if (initialDataEventsTimeout) {
+        dom.getWindow(this._container).clearTimeout(initialDataEventsTimeout);
+      }
+    }));
+    const contributionDescs = TerminalExtensionsRegistry.getTerminalContributions();
+    for (const desc of contributionDescs) {
+      if (this._contributions.has(desc.id)) {
+        onUnexpectedError(new Error(`Cannot have two terminal contributions with the same id ${desc.id}`));
+        continue;
+      }
+      let contribution;
+      try {
+        contribution = this._register(this._scopedInstantiationService.createInstance(desc.ctor, {
+          instance: this,
+          processManager: this._processManager,
+          widgetManager: this._widgetManager
+        }));
+        this._contributions.set(desc.id, contribution);
+      } catch (err) {
+        onUnexpectedError(err);
+      }
+      this._xtermReadyPromise.then((xterm) => {
+        if (xterm) {
+          contribution.xtermReady?.(xterm);
+        }
+      });
+      this._register(this.onDisposed(() => {
+        contribution.dispose();
+        this._contributions.delete(desc.id);
+        if ("instance" in contribution) {
+          delete contribution.instance;
+        }
+        if ("_instance" in contribution) {
+          delete contribution._instance;
+        }
+      }));
+    }
+  }
+  getContribution(id) {
+    return this._contributions.get(id);
+  }
+  _getIcon() {
+    if (!this._icon) {
+      this._icon = this._processManager.processState >= 2 ? getIconRegistry().getIcon(this._configurationService.getValue(
+        "terminal.integrated.tabs.defaultIcon"
+        /* TerminalSettingId.TabsDefaultIcon */
+      )) : void 0;
+    }
+    return this._icon;
+  }
+  _getColor() {
+    if (this.shellLaunchConfig.color) {
+      return this.shellLaunchConfig.color;
+    }
+    if (this.shellLaunchConfig?.attachPersistentProcess?.color) {
+      return this.shellLaunchConfig.attachPersistentProcess.color;
+    }
+    if (this._processManager.processState >= 2) {
+      return void 0;
+    }
+    return void 0;
+  }
+  _initDimensions() {
+    if (!this._container) {
+      this._cols = 80;
+      this._rows = 30;
+      return;
+    }
+    const computedStyle = dom.getWindow(this._container).getComputedStyle(this._container);
+    const width = parseInt(computedStyle.width);
+    const height = parseInt(computedStyle.height);
+    this._evaluateColsAndRows(width, height);
+  }
+  /**
+   * Evaluates and sets the cols and rows of the terminal if possible.
+   * @param width The width of the container.
+   * @param height The height of the container.
+   * @return The terminal's width if it requires a layout.
+   */
+  _evaluateColsAndRows(width, height) {
+    if (!width || !height) {
+      this._setLastKnownColsAndRows();
+      return null;
+    }
+    const dimension = this._getDimension(width, height);
+    if (!dimension) {
+      this._setLastKnownColsAndRows();
+      return null;
+    }
+    const font = this.xterm ? this.xterm.getFont() : this._terminalConfigurationService.getFont(dom.getWindow(this.domElement));
+    const newRC = getXtermScaledDimensions(dom.getWindow(this.domElement), font, dimension.width, dimension.height);
+    if (!newRC) {
+      this._setLastKnownColsAndRows();
+      return null;
+    }
+    if (this._cols !== newRC.cols || this._rows !== newRC.rows) {
+      this._cols = newRC.cols;
+      this._rows = newRC.rows;
+      this._fireMaximumDimensionsChanged();
+    }
+    return dimension.width;
+  }
+  _setLastKnownColsAndRows() {
+    if (TerminalInstance_1._lastKnownGridDimensions) {
+      this._cols = TerminalInstance_1._lastKnownGridDimensions.cols;
+      this._rows = TerminalInstance_1._lastKnownGridDimensions.rows;
+    }
+  }
+  _fireMaximumDimensionsChanged() {
+    this._onMaximumDimensionsChanged.fire();
+  }
+  _getDimension(width, height) {
+    const font = this.xterm ? this.xterm.getFont() : this._terminalConfigurationService.getFont(dom.getWindow(this.domElement));
+    if (!font || !font.charWidth || !font.charHeight) {
+      return void 0;
+    }
+    if (!this.xterm?.raw.element) {
+      return void 0;
+    }
+    const computedStyle = dom.getWindow(this.xterm.raw.element).getComputedStyle(this.xterm.raw.element);
+    const horizontalPadding = parseInt(computedStyle.paddingLeft) + parseInt(computedStyle.paddingRight) + 14;
+    const verticalPadding = parseInt(computedStyle.paddingTop) + parseInt(computedStyle.paddingBottom);
+    TerminalInstance_1._lastKnownCanvasDimensions = new dom.Dimension(Math.min(4096, width - horizontalPadding), height - verticalPadding + (this._hasScrollBar && this._horizontalScrollbar ? -5 : 0));
+    return TerminalInstance_1._lastKnownCanvasDimensions;
+  }
+  get persistentProcessId() {
+    return this._processManager.persistentProcessId;
+  }
+  get shouldPersist() {
+    return this._processManager.shouldPersist && !this.shellLaunchConfig.isTransient && (!this.reconnectionProperties || this._configurationService.getValue("task.reconnection") === true);
+  }
+  static getXtermConstructor(keybindingService, contextKeyService) {
+    const keybinding = keybindingService.lookupKeybinding("workbench.action.terminal.focusAccessibleBuffer", contextKeyService);
+    if (xtermConstructor) {
+      return xtermConstructor;
+    }
+    xtermConstructor = Promises.withAsyncBody(async (resolve) => {
+      const Terminal = (await importAMDNodeModule("@xterm/xterm", "lib/xterm.js")).Terminal;
+      Terminal.strings.promptLabel = nls.localize("terminal.integrated.a11yPromptLabel", "Terminal input");
+      Terminal.strings.tooMuchOutput = keybinding ? nls.localize("terminal.integrated.useAccessibleBuffer", "Use the accessible buffer {0} to manually review output", keybinding.getLabel()) : nls.localize("terminal.integrated.useAccessibleBufferNoKb", "Use the Terminal: Focus Accessible Buffer command to manually review output");
+      resolve(Terminal);
+    });
+    return xtermConstructor;
+  }
+  /**
+   * Create xterm.js instance and attach data listeners.
+   */
+  async _createXterm() {
+    const Terminal = await TerminalInstance_1.getXtermConstructor(this._keybindingService, this._contextKeyService);
+    if (this.isDisposed) {
+      return void 0;
+    }
+    const disableShellIntegrationReporting = this.shellLaunchConfig.executable === void 0 || this.shellType === void 0 || !shellIntegrationSupportedShellTypes.includes(this.shellType);
+    const xterm = this._scopedInstantiationService.createInstance(XtermTerminal, Terminal, {
+      cols: this._cols,
+      rows: this._rows,
+      xtermColorProvider: this._scopedInstantiationService.createInstance(TerminalInstanceColorProvider, this._targetRef),
+      capabilities: this.capabilities,
+      shellIntegrationNonce: this._processManager.shellIntegrationNonce,
+      disableShellIntegrationReporting
+    }, this.onDidExecuteText);
+    this.xterm = xterm;
+    this._resizeDebouncer = this._register(new TerminalResizeDebouncer(() => this._isVisible, () => xterm, async (cols, rows) => {
+      xterm.raw.resize(cols, rows);
+      await this._updatePtyDimensions(xterm.raw);
+    }, async (cols) => {
+      xterm.raw.resize(cols, xterm.raw.rows);
+      await this._updatePtyDimensions(xterm.raw);
+    }, async (rows) => {
+      xterm.raw.resize(xterm.raw.cols, rows);
+      await this._updatePtyDimensions(xterm.raw);
+    }));
+    this._register(toDisposable(() => this._resizeDebouncer = void 0));
+    this.updateAccessibilitySupport();
+    this._register(this.xterm.onDidRequestRunCommand((e) => {
+      this.sendText(e.command.command, e.noNewLine ? false : true);
+    }));
+    this._register(this.xterm.onDidRequestRefreshDimensions(() => {
+      if (this._lastLayoutDimensions) {
+        this.layout(this._lastLayoutDimensions);
+      }
+    }));
+    const initialTextWrittenPromise = this._shellLaunchConfig.initialText ? new Promise((r) => this._writeInitialText(xterm, r)) : void 0;
+    const lineDataEventAddon = this._register(new LineDataEventAddon(initialTextWrittenPromise));
+    this._register(lineDataEventAddon.onLineData((e) => this._onLineData.fire(e)));
+    this._lineDataEventAddon = lineDataEventAddon;
+    disposableTimeout(() => {
+      this._register(xterm.raw.onBell(() => {
+        if (this._configurationService.getValue(
+          "terminal.integrated.enableBell"
+          /* TerminalSettingId.EnableBell */
+        ) || this._configurationService.getValue(
+          "terminal.integrated.enableVisualBell"
+          /* TerminalSettingId.EnableVisualBell */
+        )) {
+          this.statusList.add({
+            id: "bell",
+            severity: Severity.Warning,
+            icon: Codicon.bell,
+            tooltip: nls.localize("bellStatus", "Bell")
+          }, this._terminalConfigurationService.config.bellDuration);
+        }
+        this._accessibilitySignalService.playSignal(AccessibilitySignal.terminalBell);
+      }));
+    }, 1e3, this._store);
+    this._register(xterm.raw.onSelectionChange(() => this._onDidChangeSelection.fire(this)));
+    this._register(xterm.raw.buffer.onBufferChange(() => this._refreshAltBufferContextKey()));
+    this._register(this._processManager.onProcessData((e) => this._onProcessData(e)));
+    this._register(xterm.raw.onData(async (data) => {
+      await this._pauseInputEventBarrier?.wait();
+      await this._processManager.write(data);
+      this._onDidInputData.fire(data);
+    }));
+    this._register(xterm.raw.onBinary((data) => this._processManager.processBinary(data)));
+    this._register(this._processManager.onProcessReady(async (processTraits) => {
+      if (processTraits?.windowsPty?.backend === "conpty") {
+        this._register(xterm.raw.parser.registerCsiHandler({ final: "c" }, (params) => {
+          if (params.length === 0 || params.length === 1 && params[0] === 0) {
+            this._processManager.write("\x1B[?61;4c");
+            return true;
+          }
+          return false;
+        }));
+      }
+      if (this._processManager.os) {
+        lineDataEventAddon.setOperatingSystem(this._processManager.os);
+      }
+      xterm.raw.options.windowsPty = processTraits.windowsPty;
+    }));
+    this._register(this._processManager.onRestoreCommands((e) => this.xterm?.shellIntegration.deserialize(e)));
+    this._register(this._viewDescriptorService.onDidChangeLocation(({ views }) => {
+      if (views.some((v) => v.id === TERMINAL_VIEW_ID)) {
+        xterm.refresh();
+      }
+    }));
+    this._register(xterm.onDidChangeProgress(() => this._labelComputer?.refreshLabel(this)));
+    this._register(Event.runAndSubscribe(xterm.shellIntegration.onDidChangeSeenSequences, () => {
+      if (xterm.shellIntegration.seenSequences.size > 0) {
+        refreshShellIntegrationInfoStatus(this);
+      }
+    }));
+    if (!this.capabilities.has(
+      0
+      /* TerminalCapability.CwdDetection */
+    )) {
+      let onKeyListener = xterm.raw.onKey((e) => {
+        const event = new StandardKeyboardEvent(e.domEvent);
+        if (event.equals(
+          3
+          /* KeyCode.Enter */
+        )) {
+          this._updateProcessCwd();
+        }
+      });
+      this._register(this.capabilities.onDidAddCapabilityType((e) => {
+        if (e === 0) {
+          onKeyListener?.dispose();
+          onKeyListener = void 0;
+        }
+      }));
+    }
+    this._pathService.userHome().then((userHome) => {
+      this._userHome = userHome.fsPath;
+    });
+    if (this._isVisible) {
+      this._open();
+    }
+    return xterm;
+  }
+  async runCommand(commandLine, shouldExecute) {
+    let commandDetection = this.capabilities.get(
+      2
+      /* TerminalCapability.CommandDetection */
+    );
+    if (!commandDetection && (this._processManager.processState === 1 || this._processManager.processState === 2)) {
+      const store = new DisposableStore();
+      await Promise.race([
+        new Promise((r) => {
+          store.add(this.capabilities.onDidAddCapabilityType((e) => {
+            if (e === 2) {
+              commandDetection = this.capabilities.get(
+                2
+                /* TerminalCapability.CommandDetection */
+              );
+              r();
+            }
+          }));
+        }),
+        timeout(2e3)
+      ]);
+      store.dispose();
+    }
+    if (!commandDetection || commandDetection.promptInputModel.value.length > 0) {
+      await this.sendText("", false);
+      await timeout(100);
+    }
+    await this.sendText(commandLine, shouldExecute, !shouldExecute);
+  }
+  detachFromElement() {
+    this._wrapperElement.remove();
+    this._container = void 0;
+  }
+  attachToElement(container) {
+    if (this._container === container) {
+      return;
+    }
+    if (!this._attachBarrier.isOpen()) {
+      this._attachBarrier.open();
+    }
+    this._container = container;
+    this._container.appendChild(this._wrapperElement);
+    if (this.xterm?.raw.element) {
+      this.xterm.raw.open(this.xterm.raw.element);
+    }
+    this.xterm?.refresh();
+    setTimeout(() => {
+      if (this._store.isDisposed) {
+        return;
+      }
+      this._initDragAndDrop(container);
+    }, 0);
+  }
+  /**
+   * Opens the terminal instance inside the parent DOM element previously set with
+   * `attachToElement`, you must ensure the parent DOM element is explicitly visible before
+   * invoking this function as it performs some DOM calculations internally
+   */
+  _open() {
+    if (!this.xterm || this.xterm.raw.element) {
+      return;
+    }
+    if (!this._container || !this._container.isConnected) {
+      throw new Error("A container element needs to be set with `attachToElement` and be part of the DOM before calling `_open`");
+    }
+    const xtermElement = document.createElement("div");
+    this._wrapperElement.appendChild(xtermElement);
+    this._container.appendChild(this._wrapperElement);
+    const xterm = this.xterm;
+    this._wrapperElement.xterm = xterm.raw;
+    const screenElement = xterm.attachToElement(xtermElement);
+    for (const contribution of this._contributions.values()) {
+      if (!this.xterm) {
+        this._xtermReadyPromise.then((xterm2) => {
+          if (xterm2) {
+            contribution.xtermOpen?.(xterm2);
+          }
+        });
+      } else {
+        contribution.xtermOpen?.(this.xterm);
+      }
+    }
+    this._register(xterm.shellIntegration.onDidChangeStatus(() => {
+      if (this.hasFocus) {
+        this._setShellIntegrationContextKey();
+      } else {
+        this._terminalShellIntegrationEnabledContextKey.reset();
+      }
+    }));
+    if (!xterm.raw.element || !xterm.raw.textarea) {
+      throw new Error("xterm elements not set after open");
+    }
+    this._setAriaLabel(xterm.raw, this._instanceId, this._title);
+    xterm.raw.attachCustomKeyEventHandler((event) => {
+      if (this._isExiting) {
+        return false;
+      }
+      const standardKeyboardEvent = new StandardKeyboardEvent(event);
+      const resolveResult = this._keybindingService.softDispatch(standardKeyboardEvent, standardKeyboardEvent.target);
+      const isValidChord = resolveResult.kind === 1 && this._terminalConfigurationService.config.allowChords && event.key !== "Escape";
+      if (this._keybindingService.inChordMode || isValidChord) {
+        event.preventDefault();
+        return false;
+      }
+      const SHOW_TERMINAL_CONFIG_PROMPT_KEY = "terminal.integrated.showTerminalConfigPrompt";
+      const EXCLUDED_KEYS = ["RightArrow", "LeftArrow", "UpArrow", "DownArrow", "Space", "Meta", "Control", "Shift", "Alt", "", "Delete", "Backspace", "Tab"];
+      if (this._storageService.getBoolean(SHOW_TERMINAL_CONFIG_PROMPT_KEY, -1, true) && !EXCLUDED_KEYS.includes(event.key) && !event.ctrlKey && !event.shiftKey && !event.altKey) {
+        this._hasHadInput = true;
+      }
+      if (resolveResult.kind === 2 && resolveResult.commandId && this._skipTerminalCommands.some((k) => k === resolveResult.commandId) && !this._terminalConfigurationService.config.sendKeybindingsToShell) {
+        if (this._storageService.getBoolean(SHOW_TERMINAL_CONFIG_PROMPT_KEY, -1, true) && this._hasHadInput && !TERMINAL_CREATION_COMMANDS.includes(resolveResult.commandId)) {
+          this._notificationService.prompt(Severity.Info, nls.localize("keybindingHandling", "Some keybindings don't go to the terminal by default and are handled by {0} instead.", this._productService.nameLong), [
+            {
+              label: nls.localize("configureTerminalSettings", "Configure Terminal Settings"),
+              run: /* @__PURE__ */ __name(() => {
+                this._preferencesService.openSettings({ jsonEditor: false, query: `@id:${"terminal.integrated.commandsToSkipShell"},${"terminal.integrated.sendKeybindingsToShell"},${"terminal.integrated.allowChords"}` });
+              }, "run")
+            }
+          ]);
+          this._storageService.store(
+            SHOW_TERMINAL_CONFIG_PROMPT_KEY,
+            false,
+            -1,
+            0
+            /* StorageTarget.USER */
+          );
+        }
+        event.preventDefault();
+        return false;
+      }
+      if (this._terminalConfigurationService.config.allowMnemonics && !isMacintosh && event.altKey) {
+        return false;
+      }
+      if (TabFocus.getTabFocusMode() && event.key === "Tab") {
+        return false;
+      }
+      if (event.key === "Tab" && event.shiftKey) {
+        event.preventDefault();
+        return true;
+      }
+      if (isWindows && event.altKey && event.key === "F4" && !event.ctrlKey) {
+        return false;
+      }
+      if (!BrowserFeatures.clipboard.readText && event.key === "v" && event.ctrlKey) {
+        return false;
+      }
+      return true;
+    });
+    this._register(dom.addDisposableListener(xterm.raw.element, "mousedown", () => {
+      const listener = dom.addDisposableListener(xterm.raw.element.ownerDocument, "mouseup", () => {
+        setTimeout(() => this._refreshSelectionContextKey(), 0);
+        listener.dispose();
+      });
+    }));
+    this._register(dom.addDisposableListener(xterm.raw.element, "touchstart", () => {
+      xterm.raw.focus();
+    }));
+    this._register(dom.addDisposableListener(xterm.raw.element, "keyup", () => {
+      setTimeout(() => this._refreshSelectionContextKey(), 0);
+    }));
+    this._register(dom.addDisposableListener(xterm.raw.textarea, "focus", () => this._setFocus(true)));
+    this._register(dom.addDisposableListener(xterm.raw.textarea, "blur", () => this._setFocus(false)));
+    this._register(dom.addDisposableListener(xterm.raw.textarea, "focusout", () => this._setFocus(false)));
+    this._initDragAndDrop(this._container);
+    this._widgetManager.attachToElement(screenElement);
+    if (this._lastLayoutDimensions) {
+      this.layout(this._lastLayoutDimensions);
+    }
+    this.updateConfig();
+    if (xterm.raw.options.disableStdin) {
+      this._attachPressAnyKeyToCloseListener(xterm.raw);
+    }
+  }
+  _setFocus(focused) {
+    if (focused) {
+      this._terminalFocusContextKey.set(true);
+      this._setShellIntegrationContextKey();
+      this._onDidFocus.fire(this);
+    } else {
+      this.resetFocusContextKey();
+      this._onDidBlur.fire(this);
+      this._refreshSelectionContextKey();
+    }
+  }
+  _setShellIntegrationContextKey() {
+    if (this.xterm) {
+      this._terminalShellIntegrationEnabledContextKey.set(
+        this.xterm.shellIntegration.status === 2
+        /* ShellIntegrationStatus.VSCode */
+      );
+    }
+  }
+  resetFocusContextKey() {
+    this._terminalFocusContextKey.reset();
+    this._terminalShellIntegrationEnabledContextKey.reset();
+  }
+  _initDragAndDrop(container) {
+    const store = new DisposableStore();
+    const dndController = store.add(this._scopedInstantiationService.createInstance(TerminalInstanceDragAndDropController, container));
+    store.add(dndController.onDropTerminal((e) => this._onRequestAddInstanceToGroup.fire(e)));
+    store.add(dndController.onDropFile(async (path2) => {
+      this.focus();
+      await this.sendPath(path2, false);
+    }));
+    store.add(new dom.DragAndDropObserver(container, dndController));
+    this._dndObserver.value = store;
+  }
+  hasSelection() {
+    return this.xterm ? this.xterm.raw.hasSelection() : false;
+  }
+  get selection() {
+    return this.xterm && this.hasSelection() ? this.xterm.raw.getSelection() : void 0;
+  }
+  clearSelection() {
+    this.xterm?.raw.clearSelection();
+  }
+  _refreshAltBufferContextKey() {
+    this._terminalAltBufferActiveContextKey.set(!!(this.xterm && this.xterm.raw.buffer.active === this.xterm.raw.buffer.alternate));
+  }
+  dispose(reason) {
+    if (this.shellLaunchConfig.type === "Task" && reason === TerminalExitReason.Process && this._exitCode !== 0 && !this.shellLaunchConfig.waitOnExit) {
+      return;
+    }
+    if (this.isDisposed) {
+      return;
+    }
+    this._logService.trace(`terminalInstance#dispose (instanceId: ${this.instanceId})`);
+    dispose(this._widgetManager);
+    if (this.xterm?.raw.element) {
+      this._hadFocusOnExit = this.hasFocus;
+    }
+    if (this._wrapperElement.xterm) {
+      this._wrapperElement.xterm = void 0;
+    }
+    if (this._horizontalScrollbar) {
+      this._horizontalScrollbar.dispose();
+      this._horizontalScrollbar = void 0;
+    }
+    try {
+      this.xterm?.dispose();
+    } catch (err) {
+      this._logService.error("Exception occurred during xterm disposal", err);
+    }
+    if (isFirefox) {
+      this.resetFocusContextKey();
+      this._terminalHasTextContextKey.reset();
+      this._onDidBlur.fire(this);
+    }
+    if (this._pressAnyKeyToCloseListener) {
+      this._pressAnyKeyToCloseListener.dispose();
+      this._pressAnyKeyToCloseListener = void 0;
+    }
+    if (this._exitReason === void 0) {
+      this._exitReason = reason ?? TerminalExitReason.Unknown;
+    }
+    this._processManager.dispose();
+    this._onProcessExit(void 0);
+    this._onDisposed.fire(this);
+    super.dispose();
+  }
+  async detachProcessAndDispose(reason) {
+    await this._processManager.detachFromProcess(reason === TerminalExitReason.User);
+    this.dispose(reason);
+  }
+  focus(force) {
+    this._refreshAltBufferContextKey();
+    if (!this.xterm) {
+      return;
+    }
+    if (force || !dom.getActiveWindow().getSelection()?.toString()) {
+      this.xterm.raw.focus();
+      this._onDidRequestFocus.fire();
+    }
+  }
+  async focusWhenReady(force) {
+    await this._xtermReadyPromise;
+    await this._attachBarrier.wait();
+    this.focus(force);
+  }
+  async sendText(text, shouldExecute, bracketedPasteMode) {
+    if (bracketedPasteMode && this.xterm?.raw.modes.bracketedPasteMode) {
+      text = `\x1B[200~${text}\x1B[201~`;
+    }
+    text = text.replace(/\r?\n/g, "\r");
+    if (shouldExecute && !text.endsWith("\r")) {
+      text += "\r";
+    }
+    this._logService.debug("sending data (vscode)", text);
+    await this._processManager.write(text);
+    this._onDidInputData.fire(text);
+    this._onDidSendText.fire(text);
+    this.xterm?.scrollToBottom();
+    if (shouldExecute) {
+      this._onDidExecuteText.fire();
+    }
+  }
+  async sendSignal(signal) {
+    this._logService.debug("sending signal (vscode)", signal);
+    await this._processManager.sendSignal(signal);
+  }
+  async sendPath(originalPath, shouldExecute) {
+    return this.sendText(await this.preparePathForShell(originalPath), shouldExecute);
+  }
+  async preparePathForShell(originalPath) {
+    await this.processReady;
+    return preparePathForShell(originalPath, this.shellLaunchConfig.executable, this.title, this.shellType, this._processManager.backend, this._processManager.os);
+  }
+  setVisible(visible) {
+    const didChange = this._isVisible !== visible;
+    this._isVisible = visible;
+    this._wrapperElement.classList.toggle("active", visible);
+    if (visible && this.xterm) {
+      this._open();
+      this._resizeDebouncer?.flush();
+      this._resize();
+    }
+    if (didChange) {
+      this._onDidChangeVisibility.fire(visible);
+    }
+  }
+  scrollDownLine() {
+    this.xterm?.scrollDownLine();
+  }
+  scrollDownPage() {
+    this.xterm?.scrollDownPage();
+  }
+  scrollToBottom() {
+    this.xterm?.scrollToBottom();
+  }
+  scrollUpLine() {
+    this.xterm?.scrollUpLine();
+  }
+  scrollUpPage() {
+    this.xterm?.scrollUpPage();
+  }
+  scrollToTop() {
+    this.xterm?.scrollToTop();
+  }
+  clearBuffer() {
+    this._processManager.clearBuffer();
+    this.xterm?.clearBuffer();
+  }
+  _refreshSelectionContextKey() {
+    const isActive = !!this._viewsService.getActiveViewWithId(TERMINAL_VIEW_ID);
+    let isEditorActive = false;
+    const editor = this._editorService.activeEditor;
+    if (editor) {
+      isEditorActive = editor instanceof TerminalEditorInput;
+    }
+    this._terminalHasTextContextKey.set((isActive || isEditorActive) && this.hasSelection());
+  }
+  _createProcessManager() {
+    let deserializedCollections;
+    if (this.shellLaunchConfig.attachPersistentProcess?.environmentVariableCollections) {
+      deserializedCollections = deserializeEnvironmentVariableCollections(this.shellLaunchConfig.attachPersistentProcess.environmentVariableCollections);
+    }
+    const processManager = this._scopedInstantiationService.createInstance(TerminalProcessManager, this._instanceId, this.shellLaunchConfig?.cwd, deserializedCollections, this.shellLaunchConfig.attachPersistentProcess?.shellIntegrationNonce);
+    this.capabilities.add(processManager.capabilities);
+    this._register(processManager.onProcessReady(async (e) => {
+      this._onProcessIdReady.fire(this);
+      this._initialCwd = await this.getInitialCwd();
+      if (!this._labelComputer) {
+        this._labelComputer = this._register(this._scopedInstantiationService.createInstance(TerminalLabelComputer));
+        this._register(this._labelComputer.onDidChangeLabel((e2) => {
+          const wasChanged = this._title !== e2.title || this._description !== e2.description;
+          if (wasChanged) {
+            this._title = e2.title;
+            this._description = e2.description;
+            this._onTitleChanged.fire(this);
+          }
+        }));
+      }
+      if (this._shellLaunchConfig.name) {
+        this._setTitle(this._shellLaunchConfig.name, TitleEventSource.Api);
+      } else {
+        setTimeout(() => {
+          this._xtermReadyPromise.then((xterm) => {
+            if (xterm) {
+              this._messageTitleDisposable.value = xterm.raw.onTitleChange((e2) => this._onTitleChange(e2));
+            }
+          });
+        });
+        this._setTitle(this._shellLaunchConfig.executable, TitleEventSource.Process);
+      }
+    }));
+    this._register(processManager.onProcessExit((exitCode) => this._onProcessExit(exitCode)));
+    this._register(processManager.onDidChangeProperty(({ type, value }) => {
+      switch (type) {
+        case "cwd":
+          this._cwd = value;
+          this._labelComputer?.refreshLabel(this);
+          break;
+        case "initialCwd":
+          this._initialCwd = value;
+          this._cwd = this._initialCwd;
+          this._setTitle(this.title, TitleEventSource.Config);
+          this._icon = this._shellLaunchConfig.attachPersistentProcess?.icon || this._shellLaunchConfig.icon;
+          this._onIconChanged.fire({ instance: this, userInitiated: false });
+          break;
+        case "title":
+          this._setTitle(value ?? "", TitleEventSource.Process);
+          break;
+        case "overrideDimensions":
+          this.setOverrideDimensions(value, true);
+          break;
+        case "resolvedShellLaunchConfig":
+          this._setResolvedShellLaunchConfig(value);
+          break;
+        case "shellType":
+          this.setShellType(value);
+          break;
+        case "hasChildProcesses":
+          this._onDidChangeHasChildProcesses.fire(value);
+          break;
+        case "usedShellIntegrationInjection":
+          this._usedShellIntegrationInjection = true;
+          break;
+        case "shellIntegrationInjectionFailureReason":
+          this._shellIntegrationInjectionInfo = value;
+          break;
+      }
+    }));
+    this._initialDataEventsListener.value = processManager.onProcessData((ev) => this._initialDataEvents?.push(ev.data));
+    this._register(processManager.onProcessReplayComplete(() => this._onProcessReplayComplete.fire()));
+    this._register(processManager.onEnvironmentVariableInfoChanged((e) => this._onEnvironmentVariableInfoChanged(e)));
+    this._register(processManager.onPtyDisconnect(() => {
+      if (this.xterm) {
+        this.xterm.raw.options.disableStdin = true;
+      }
+      this.statusList.add({
+        id: "disconnected",
+        severity: Severity.Error,
+        icon: Codicon.debugDisconnect,
+        tooltip: nls.localize("disconnectStatus", "Lost connection to process")
+      });
+    }));
+    this._register(processManager.onPtyReconnect(() => {
+      if (this.xterm) {
+        this.xterm.raw.options.disableStdin = false;
+      }
+      this.statusList.remove(
+        "disconnected"
+        /* TerminalStatus.Disconnected */
+      );
+    }));
+    return processManager;
+  }
+  async _createProcess() {
+    if (this.isDisposed) {
+      return;
+    }
+    const activeWorkspaceRootUri = this._historyService.getLastActiveWorkspaceRoot(Schemas.file);
+    if (activeWorkspaceRootUri) {
+      const trusted = await this._trust();
+      if (!trusted) {
+        this._onProcessExit({ message: nls.localize("workspaceNotTrustedCreateTerminal", "Cannot launch a terminal process in an untrusted workspace") });
+      }
+    } else if (this._cwd && this._userHome && this._cwd !== this._userHome) {
+      this._onProcessExit({
+        message: nls.localize("workspaceNotTrustedCreateTerminalCwd", "Cannot launch a terminal process in an untrusted workspace with cwd {0} and userHome {1}", this._cwd, this._userHome)
+      });
+    }
+    if (this._container && this._cols === 0 && this._rows === 0) {
+      this._initDimensions();
+      this.xterm?.raw.resize(
+        this._cols || 80,
+        this._rows || 30
+        /* Constants.DefaultRows */
+      );
+    }
+    const originalIcon = this.shellLaunchConfig.icon;
+    await this._processManager.createProcess(
+      this._shellLaunchConfig,
+      this._cols || 80,
+      this._rows || 30
+      /* Constants.DefaultRows */
+    ).then((result) => {
+      if (result) {
+        if ("message" in result) {
+          this._onProcessExit(result);
+        } else if ("injectedArgs" in result) {
+          this._injectedArgs = result.injectedArgs;
+        }
+      }
+    });
+    if (this.isDisposed) {
+      return;
+    }
+    if (this.xterm?.shellIntegration) {
+      this.capabilities.add(this.xterm.shellIntegration.capabilities);
+    }
+    if (originalIcon !== this.shellLaunchConfig.icon || this.shellLaunchConfig.color) {
+      this._icon = this._shellLaunchConfig.attachPersistentProcess?.icon || this._shellLaunchConfig.icon;
+      this._onIconChanged.fire({ instance: this, userInitiated: false });
+    }
+  }
+  registerMarker(offset) {
+    return this.xterm?.raw.registerMarker(offset);
+  }
+  addBufferMarker(properties) {
+    this.capabilities.get(
+      4
+      /* TerminalCapability.BufferMarkDetection */
+    )?.addMark(properties);
+  }
+  scrollToMark(startMarkId, endMarkId, highlight) {
+    this.xterm?.markTracker.scrollToClosestMarker(startMarkId, endMarkId, highlight);
+  }
+  async freePortKillProcess(port, command) {
+    await this._processManager?.freePortKillProcess(port);
+    this.runCommand(command, false);
+  }
+  _onProcessData(ev) {
+    const leadingSegmentedData = [];
+    const matches = ev.data.matchAll(/(?<seq>\x1b\][16]33;(?:C|D(?:;\d+)?)\x07)/g);
+    let i = 0;
+    for (const match of matches) {
+      if (match.groups?.seq === void 0) {
+        throw new BugIndicatingError("seq must be defined");
+      }
+      leadingSegmentedData.push(ev.data.substring(i, match.index));
+      leadingSegmentedData.push(match.groups?.seq ?? "");
+      i = match.index + match[0].length;
+    }
+    const lastData = ev.data.substring(i);
+    for (let i2 = 0; i2 < leadingSegmentedData.length; i2++) {
+      this._writeProcessData(leadingSegmentedData[i2]);
+    }
+    if (ev.trackCommit) {
+      ev.writePromise = new Promise((r) => this._writeProcessData(lastData, r));
+    } else {
+      this._writeProcessData(lastData);
+    }
+  }
+  _writeProcessData(data, cb) {
+    this._onWillData.fire(data);
+    const messageId = ++this._latestXtermWriteData;
+    this.xterm?.raw.write(data, () => {
+      this._latestXtermParseData = messageId;
+      this._processManager.acknowledgeDataEvent(data.length);
+      cb?.();
+      this._onData.fire(data);
+    });
+  }
+  /**
+   * Called when either a process tied to a terminal has exited or when a terminal renderer
+   * simulates a process exiting (e.g. custom execution task).
+   * @param exitCode The exit code of the process, this is undefined when the terminal was exited
+   * through user action.
+   */
+  async _onProcessExit(exitCodeOrError) {
+    if (this._isExiting) {
+      return;
+    }
+    const parsedExitResult = parseExitResult(exitCodeOrError, this.shellLaunchConfig, this._processManager.processState, this._initialCwd);
+    if (this._usedShellIntegrationInjection && this._processManager.processState === 4 && parsedExitResult?.code !== 0) {
+      this._relaunchWithShellIntegrationDisabled(parsedExitResult?.message);
+      this._onExit.fire(exitCodeOrError);
+      return;
+    }
+    this._isExiting = true;
+    await this._flushXtermData();
+    this._exitCode = parsedExitResult?.code;
+    const exitMessage = parsedExitResult?.message;
+    this._logService.debug("Terminal process exit", "instanceId", this.instanceId, "code", this._exitCode, "processState", this._processManager.processState);
+    const waitOnExit = this.waitOnExit;
+    if (waitOnExit && this._processManager.processState !== 5) {
+      this._xtermReadyPromise.then((xterm) => {
+        if (!xterm) {
+          return;
+        }
+        if (exitMessage) {
+          xterm.raw.write(formatMessageForTerminal(exitMessage));
+        }
+        switch (typeof waitOnExit) {
+          case "string":
+            xterm.raw.write(formatMessageForTerminal(waitOnExit, { excludeLeadingNewLine: true }));
+            break;
+          case "function":
+            if (this.exitCode !== void 0) {
+              xterm.raw.write(formatMessageForTerminal(waitOnExit(this.exitCode), { excludeLeadingNewLine: true }));
+            }
+            break;
+        }
+        xterm.raw.options.disableStdin = true;
+        if (xterm.raw.textarea) {
+          this._attachPressAnyKeyToCloseListener(xterm.raw);
+        }
+      });
+    } else {
+      if (exitMessage) {
+        const failedDuringLaunch = this._processManager.processState === 4;
+        if (failedDuringLaunch || this._terminalConfigurationService.config.showExitAlert && this.xterm?.lastInputEvent !== /*Ctrl+D*/
+        "") {
+          this._notificationService.notify({
+            message: exitMessage,
+            severity: Severity.Error,
+            actions: { primary: [this._scopedInstantiationService.createInstance(TerminalLaunchHelpAction)] }
+          });
+        } else {
+          this._logService.warn(exitMessage);
+        }
+      }
+      this.dispose(TerminalExitReason.Process);
+    }
+    this._onExit.fire(exitCodeOrError);
+    if (this.isDisposed) {
+      this._onExit.dispose();
+    }
+  }
+  _relaunchWithShellIntegrationDisabled(exitMessage) {
+    this._shellLaunchConfig.ignoreShellIntegration = true;
+    this.relaunch();
+    this.statusList.add({
+      id: "shell-integration-attention-needed",
+      severity: Severity.Warning,
+      icon: Codicon.warning,
+      tooltip: `${exitMessage} ` + nls.localize("launchFailed.exitCodeOnlyShellIntegration", "Disabling shell integration in user settings might help."),
+      hoverActions: [{
+        commandId: "workbench.action.terminal.learnMore",
+        label: nls.localize("shellIntegration.learnMore", "Learn more about shell integration"),
+        run: /* @__PURE__ */ __name(() => {
+          this._openerService.open("https://code.visualstudio.com/docs/editor/integrated-terminal#_shell-integration");
+        }, "run")
+      }, {
+        commandId: "workbench.action.openSettings",
+        label: nls.localize("shellIntegration.openSettings", "Open user settings"),
+        run: /* @__PURE__ */ __name(() => {
+          this._commandService.executeCommand("workbench.action.openSettings", "terminal.integrated.shellIntegration.enabled");
+        }, "run")
+      }]
+    });
+    this._telemetryService.publicLog2("terminal/shellIntegrationFailureProcessExit");
+  }
+  /**
+   * Ensure write calls to xterm.js have finished before resolving.
+   */
+  _flushXtermData() {
+    if (this._latestXtermWriteData === this._latestXtermParseData) {
+      return Promise.resolve();
+    }
+    let retries = 0;
+    return new Promise((r) => {
+      const interval = dom.disposableWindowInterval(dom.getActiveWindow().window, () => {
+        if (this._latestXtermWriteData === this._latestXtermParseData || ++retries === 5) {
+          interval.dispose();
+          r();
+        }
+      }, 20);
+    });
+  }
+  _attachPressAnyKeyToCloseListener(xterm) {
+    if (xterm.textarea && !this._pressAnyKeyToCloseListener) {
+      this._pressAnyKeyToCloseListener = dom.addDisposableListener(xterm.textarea, "keypress", (event) => {
+        if (this._pressAnyKeyToCloseListener) {
+          this._pressAnyKeyToCloseListener.dispose();
+          this._pressAnyKeyToCloseListener = void 0;
+          this.dispose(TerminalExitReason.Process);
+          event.preventDefault();
+        }
+      });
+    }
+  }
+  _writeInitialText(xterm, callback) {
+    if (!this._shellLaunchConfig.initialText) {
+      callback?.();
+      return;
+    }
+    const text = typeof this._shellLaunchConfig.initialText === "string" ? this._shellLaunchConfig.initialText : this._shellLaunchConfig.initialText?.text;
+    if (typeof this._shellLaunchConfig.initialText === "string") {
+      xterm.raw.writeln(text, callback);
+    } else {
+      if (this._shellLaunchConfig.initialText.trailingNewLine) {
+        xterm.raw.writeln(text, callback);
+      } else {
+        xterm.raw.write(text, callback);
+      }
+    }
+  }
+  async reuseTerminal(shell, reset = false) {
+    this._pressAnyKeyToCloseListener?.dispose();
+    this._pressAnyKeyToCloseListener = void 0;
+    const xterm = this.xterm;
+    if (xterm) {
+      if (!reset) {
+        await new Promise((r) => xterm.raw.write("\n\x1B[G", r));
+      }
+      if (shell.initialText) {
+        this._shellLaunchConfig.initialText = shell.initialText;
+        await new Promise((r) => this._writeInitialText(xterm, r));
+      }
+      if (this._isExiting && this._shellLaunchConfig.waitOnExit) {
+        xterm.raw.options.disableStdin = false;
+        this._isExiting = false;
+      }
+      if (reset) {
+        xterm.clearDecorations();
+      }
+    }
+    this.statusList.remove(
+      "relaunch-needed"
+      /* TerminalStatus.RelaunchNeeded */
+    );
+    if (!reset) {
+      shell.initialText = " ";
+    }
+    this._shellLaunchConfig = shell;
+    await this._processManager.relaunch(this._shellLaunchConfig, this._cols || 80, this._rows || 30, reset).then((result) => {
+      if (result) {
+        if ("message" in result) {
+          this._onProcessExit(result);
+        } else if ("injectedArgs" in result) {
+          this._injectedArgs = result.injectedArgs;
+        }
+      }
+    });
+  }
+  relaunch() {
+    this.reuseTerminal(this._shellLaunchConfig, true);
+  }
+  _onTitleChange(title) {
+    if (this.isTitleSetByProcess) {
+      this._setTitle(title, TitleEventSource.Sequence);
+    }
+  }
+  async _trust() {
+    return await this._workspaceTrustRequestService.requestWorkspaceTrust({
+      message: nls.localize("terminal.requestTrust", "Creating a terminal process requires executing code")
+    }) === true;
+  }
+  async _updateProcessCwd() {
+    if (this.isDisposed || this.shellLaunchConfig.customPtyImplementation) {
+      return;
+    }
+    try {
+      const cwd = await this._refreshProperty(
+        "cwd"
+        /* ProcessPropertyType.Cwd */
+      );
+      if (typeof cwd !== "string") {
+        throw new Error(`cwd is not a string ${cwd}`);
+      }
+    } catch (e) {
+      if (e instanceof Error && e.message === "Cannot refresh property when process is not set") {
+        return;
+      }
+      throw e;
+    }
+  }
+  updateConfig() {
+    this._setCommandsToSkipShell(this._terminalConfigurationService.config.commandsToSkipShell);
+    this._refreshEnvironmentVariableInfoWidgetState(this._processManager.environmentVariableInfo);
+  }
+  async _updateUnicodeVersion() {
+    this._processManager.setUnicodeVersion(this._terminalConfigurationService.config.unicodeVersion);
+  }
+  updateAccessibilitySupport() {
+    this.xterm.raw.options.screenReaderMode = this._accessibilityService.isScreenReaderOptimized();
+  }
+  _setCommandsToSkipShell(commands) {
+    const excludeCommands = commands.filter((command) => command[0] === "-").map((command) => command.slice(1));
+    this._skipTerminalCommands = DEFAULT_COMMANDS_TO_SKIP_SHELL.filter((defaultCommand) => {
+      return !excludeCommands.includes(defaultCommand);
+    }).concat(commands);
+  }
+  layout(dimension) {
+    this._lastLayoutDimensions = dimension;
+    if (this.disableLayout) {
+      return;
+    }
+    if (dimension.width <= 0 || dimension.height <= 0) {
+      return;
+    }
+    const terminalWidth = this._evaluateColsAndRows(dimension.width, dimension.height);
+    if (!terminalWidth) {
+      return;
+    }
+    this._resize();
+    if (!this._containerReadyBarrier.isOpen()) {
+      this._containerReadyBarrier.open();
+    }
+    for (const contribution of this._contributions.values()) {
+      if (!this.xterm) {
+        this._xtermReadyPromise.then((xterm) => {
+          if (xterm) {
+            contribution.layout?.(xterm, dimension);
+          }
+        });
+      } else {
+        contribution.layout?.(this.xterm, dimension);
+      }
+    }
+  }
+  async _resize(immediate) {
+    if (!this.xterm) {
+      return;
+    }
+    let cols = this.cols;
+    let rows = this.rows;
+    if (this._isVisible && this._layoutSettingsChanged) {
+      const font = this.xterm.getFont();
+      const config = this._terminalConfigurationService.config;
+      this.xterm.raw.options.letterSpacing = font.letterSpacing;
+      this.xterm.raw.options.lineHeight = font.lineHeight;
+      this.xterm.raw.options.fontSize = font.fontSize;
+      this.xterm.raw.options.fontFamily = font.fontFamily;
+      this.xterm.raw.options.fontWeight = config.fontWeight;
+      this.xterm.raw.options.fontWeightBold = config.fontWeightBold;
+      this._initDimensions();
+      cols = this.cols;
+      rows = this.rows;
+      this._layoutSettingsChanged = false;
+    }
+    if (isNaN(cols) || isNaN(rows)) {
+      return;
+    }
+    if (cols !== this.xterm.raw.cols || rows !== this.xterm.raw.rows) {
+      if (this._fixedRows || this._fixedCols) {
+        await this._updateProperty("fixedDimensions", { cols: this._fixedCols, rows: this._fixedRows });
+      }
+      this._onDimensionsChanged.fire();
+    }
+    TerminalInstance_1._lastKnownGridDimensions = { cols, rows };
+    this._resizeDebouncer.resize(cols, rows, immediate ?? false);
+  }
+  async _updatePtyDimensions(rawXterm) {
+    await this._processManager.setDimensions(rawXterm.cols, rawXterm.rows);
+  }
+  setShellType(shellType) {
+    if (this._shellType === shellType) {
+      return;
+    }
+    if (shellType) {
+      this._shellType = shellType;
+      this._terminalShellTypeContextKey.set(shellType?.toString());
+      this._onDidChangeShellType.fire(shellType);
+    }
+  }
+  _setAriaLabel(xterm, terminalId, title) {
+    const labelParts = [];
+    if (xterm && xterm.textarea) {
+      if (title && title.length > 0) {
+        labelParts.push(nls.localize("terminalTextBoxAriaLabelNumberAndTitle", "Terminal {0}, {1}", terminalId, title));
+      } else {
+        labelParts.push(nls.localize("terminalTextBoxAriaLabel", "Terminal {0}", terminalId));
+      }
+      const screenReaderOptimized = this._accessibilityService.isScreenReaderOptimized();
+      if (!screenReaderOptimized) {
+        labelParts.push(nls.localize("terminalScreenReaderMode", "Run the command: Toggle Screen Reader Accessibility Mode for an optimized screen reader experience"));
+      }
+      const accessibilityHelpKeybinding = this._keybindingService.lookupKeybinding(
+        "editor.action.accessibilityHelp"
+        /* AccessibilityCommandId.OpenAccessibilityHelp */
+      )?.getLabel();
+      if (this._configurationService.getValue(
+        "accessibility.verbosity.terminal"
+        /* AccessibilityVerbositySettingId.Terminal */
+      ) && accessibilityHelpKeybinding) {
+        labelParts.push(nls.localize("terminalHelpAriaLabel", "Use {0} for terminal accessibility help", accessibilityHelpKeybinding));
+      }
+      xterm.textarea.setAttribute("aria-label", labelParts.join("\n"));
+    }
+  }
+  _updateTitleProperties(title, eventSource) {
+    if (!title) {
+      return this._processName;
+    }
+    switch (eventSource) {
+      case TitleEventSource.Process:
+        if (this._processManager.os === 1) {
+          title = path.win32.parse(title).name;
+        } else {
+          const firstSpaceIndex = title.indexOf(" ");
+          if (title.startsWith("/")) {
+            title = path.basename(title);
+          } else if (firstSpaceIndex > -1) {
+            title = title.substring(0, firstSpaceIndex);
+          }
+        }
+        this._processName = title;
+        break;
+      case TitleEventSource.Api:
+        this._staticTitle = title;
+        this._messageTitleDisposable.value = void 0;
+        break;
+      case TitleEventSource.Sequence:
+        this._sequence = title;
+        if (this._processManager.os === 1 && title.match(/^[a-zA-Z]:\\.+\.[a-zA-Z]{1,3}/)) {
+          this._sequence = path.win32.parse(title).name;
+        }
+        break;
+    }
+    this._titleSource = eventSource;
+    return title;
+  }
+  setOverrideDimensions(dimensions, immediate = false) {
+    if (this._dimensionsOverride && this._dimensionsOverride.forceExactSize && !dimensions && this._rows === 0 && this._cols === 0) {
+      this._cols = this._dimensionsOverride.cols;
+      this._rows = this._dimensionsOverride.rows;
+    }
+    this._dimensionsOverride = dimensions;
+    if (immediate) {
+      this._resize(true);
+    } else {
+      this._resize();
+    }
+  }
+  async setFixedDimensions() {
+    const cols = await this._quickInputService.input({
+      title: nls.localize("setTerminalDimensionsColumn", "Set Fixed Dimensions: Column"),
+      placeHolder: "Enter a number of columns or leave empty for automatic width",
+      validateInput: /* @__PURE__ */ __name(async (text) => text.length > 0 && !text.match(/^\d+$/) ? { content: "Enter a number or leave empty size automatically", severity: Severity.Error } : void 0, "validateInput")
+    });
+    if (cols === void 0) {
+      return;
+    }
+    this._fixedCols = this._parseFixedDimension(cols);
+    this._labelComputer?.refreshLabel(this);
+    this._terminalHasFixedWidth.set(!!this._fixedCols);
+    const rows = await this._quickInputService.input({
+      title: nls.localize("setTerminalDimensionsRow", "Set Fixed Dimensions: Row"),
+      placeHolder: "Enter a number of rows or leave empty for automatic height",
+      validateInput: /* @__PURE__ */ __name(async (text) => text.length > 0 && !text.match(/^\d+$/) ? { content: "Enter a number or leave empty size automatically", severity: Severity.Error } : void 0, "validateInput")
+    });
+    if (rows === void 0) {
+      return;
+    }
+    this._fixedRows = this._parseFixedDimension(rows);
+    this._labelComputer?.refreshLabel(this);
+    await this._refreshScrollbar();
+    this._resize();
+    this.focus();
+  }
+  _parseFixedDimension(value) {
+    if (value === "") {
+      return void 0;
+    }
+    const parsed = parseInt(value);
+    if (parsed <= 0) {
+      throw new Error(`Could not parse dimension "${value}"`);
+    }
+    return parsed;
+  }
+  async toggleSizeToContentWidth() {
+    if (!this.xterm?.raw.buffer.active) {
+      return;
+    }
+    if (this._hasScrollBar) {
+      this._terminalHasFixedWidth.set(false);
+      this._fixedCols = void 0;
+      this._fixedRows = void 0;
+      this._hasScrollBar = false;
+      this._initDimensions();
+      await this._resize();
+    } else {
+      const font = this.xterm ? this.xterm.getFont() : this._terminalConfigurationService.getFont(dom.getWindow(this.domElement));
+      const maxColsForTexture = Math.floor(4096 / (font.charWidth ?? 20));
+      const proposedCols = Math.max(this.maxCols, Math.min(this.xterm.getLongestViewportWrappedLineLength(), maxColsForTexture));
+      if (proposedCols > this.xterm.raw.cols) {
+        this._fixedCols = proposedCols;
+      }
+    }
+    await this._refreshScrollbar();
+    this._labelComputer?.refreshLabel(this);
+    this.focus();
+  }
+  _refreshScrollbar() {
+    if (this._fixedCols || this._fixedRows) {
+      return this._addScrollbar();
+    }
+    return this._removeScrollbar();
+  }
+  async _addScrollbar() {
+    const charWidth = (this.xterm ? this.xterm.getFont() : this._terminalConfigurationService.getFont(dom.getWindow(this.domElement))).charWidth;
+    if (!this.xterm?.raw.element || !this._container || !charWidth || !this._fixedCols) {
+      return;
+    }
+    this._wrapperElement.classList.add("fixed-dims");
+    this._hasScrollBar = true;
+    this._initDimensions();
+    await this._resize();
+    this._terminalHasFixedWidth.set(true);
+    if (!this._horizontalScrollbar) {
+      this._horizontalScrollbar = this._register(new DomScrollableElement(this._wrapperElement, {
+        vertical: 2,
+        horizontal: 1,
+        useShadows: false,
+        scrollYToX: false,
+        consumeMouseWheelIfScrollbarIsNeeded: false
+      }));
+      this._container.appendChild(this._horizontalScrollbar.getDomNode());
+    }
+    this._horizontalScrollbar.setScrollDimensions({
+      width: this.xterm.raw.element.clientWidth,
+      scrollWidth: this._fixedCols * charWidth + 40
+      // Padding + scroll bar
+    });
+    this._horizontalScrollbar.getDomNode().style.paddingBottom = "16px";
+    if (isWindows) {
+      for (let i = this.xterm.raw.buffer.active.viewportY; i < this.xterm.raw.buffer.active.length; i++) {
+        const line = this.xterm.raw.buffer.active.getLine(i);
+        line._line.isWrapped = false;
+      }
+    }
+  }
+  async _removeScrollbar() {
+    if (!this._container || !this._horizontalScrollbar) {
+      return;
+    }
+    this._horizontalScrollbar.getDomNode().remove();
+    this._horizontalScrollbar.dispose();
+    this._horizontalScrollbar = void 0;
+    this._wrapperElement.remove();
+    this._wrapperElement.classList.remove("fixed-dims");
+    this._container.appendChild(this._wrapperElement);
+  }
+  _setResolvedShellLaunchConfig(shellLaunchConfig) {
+    this._shellLaunchConfig.args = shellLaunchConfig.args;
+    this._shellLaunchConfig.cwd = shellLaunchConfig.cwd;
+    this._shellLaunchConfig.executable = shellLaunchConfig.executable;
+    this._shellLaunchConfig.env = shellLaunchConfig.env;
+  }
+  _onEnvironmentVariableInfoChanged(info) {
+    if (info.requiresAction) {
+      this.xterm?.raw.textarea?.setAttribute("aria-label", nls.localize("terminalStaleTextBoxAriaLabel", "Terminal {0} environment is stale, run the 'Show Environment Information' command for more information", this._instanceId));
+    }
+    this._refreshEnvironmentVariableInfoWidgetState(info);
+  }
+  async _refreshEnvironmentVariableInfoWidgetState(info) {
+    if (!info) {
+      this.statusList.remove(
+        "relaunch-needed"
+        /* TerminalStatus.RelaunchNeeded */
+      );
+      this.statusList.remove(
+        "env-var-info-changes-active"
+        /* TerminalStatus.EnvironmentVariableInfoChangesActive */
+      );
+      return;
+    }
+    if (
+      // The change requires a relaunch
+      info.requiresAction && // The feature is enabled
+      this._terminalConfigurationService.config.environmentChangesRelaunch && // Has not been interacted with
+      !this._processManager.hasWrittenData && // Not a feature terminal or is a reconnecting task terminal (TODO: Need to explain the latter case)
+      (!this._shellLaunchConfig.isFeatureTerminal || this.reconnectionProperties && this._configurationService.getValue("task.reconnection") === true) && // Not a custom pty
+      !this._shellLaunchConfig.customPtyImplementation && // Not an extension owned terminal
+      !this._shellLaunchConfig.isExtensionOwnedTerminal && // Not a reconnected or revived terminal
+      !this._shellLaunchConfig.attachPersistentProcess && // Not a Windows remote using ConPTY (#187084)
+      !(this._processManager.remoteAuthority && this._terminalConfigurationService.config.windowsEnableConpty && await this._processManager.getBackendOS() === 1)
+    ) {
+      this.relaunch();
+      return;
+    }
+    const workspaceFolder = getWorkspaceForTerminal(this.shellLaunchConfig.cwd, this._workspaceContextService, this._historyService);
+    this.statusList.add(info.getStatus({ workspaceFolder }));
+  }
+  async getInitialCwd() {
+    if (!this._initialCwd) {
+      this._initialCwd = this._processManager.initialCwd;
+    }
+    return this._initialCwd;
+  }
+  async getCwd() {
+    if (this.capabilities.has(
+      0
+      /* TerminalCapability.CwdDetection */
+    )) {
+      return this.capabilities.get(
+        0
+        /* TerminalCapability.CwdDetection */
+      ).getCwd();
+    } else if (this.capabilities.has(
+      1
+      /* TerminalCapability.NaiveCwdDetection */
+    )) {
+      return this.capabilities.get(
+        1
+        /* TerminalCapability.NaiveCwdDetection */
+      ).getCwd();
+    }
+    return this._processManager.initialCwd;
+  }
+  async _refreshProperty(type) {
+    await this.processReady;
+    return this._processManager.refreshProperty(type);
+  }
+  async _updateProperty(type, value) {
+    return this._processManager.updateProperty(type, value);
+  }
+  async rename(title) {
+    this._setTitle(title, TitleEventSource.Api);
+  }
+  _setTitle(title, eventSource) {
+    const reset = !title;
+    title = this._updateTitleProperties(title, eventSource);
+    const titleChanged = title !== this._title;
+    this._title = title;
+    this._labelComputer?.refreshLabel(this, reset);
+    this._setAriaLabel(this.xterm?.raw, this._instanceId, this._title);
+    if (titleChanged) {
+      this._onTitleChanged.fire(this);
+    }
+  }
+  async changeIcon(icon) {
+    if (icon) {
+      this._icon = icon;
+      this._onIconChanged.fire({ instance: this, userInitiated: true });
+      return icon;
+    }
+    const iconPicker = this._scopedInstantiationService.createInstance(TerminalIconPicker);
+    const pickedIcon = await iconPicker.pickIcons();
+    iconPicker.dispose();
+    if (!pickedIcon) {
+      return void 0;
+    }
+    this._icon = pickedIcon;
+    this._onIconChanged.fire({ instance: this, userInitiated: true });
+    return pickedIcon;
+  }
+  async changeColor(color, skipQuickPick) {
+    if (color) {
+      this.shellLaunchConfig.color = color;
+      this._onIconChanged.fire({ instance: this, userInitiated: true });
+      return color;
+    } else if (skipQuickPick) {
+      this.shellLaunchConfig.color = "";
+      this._onIconChanged.fire({ instance: this, userInitiated: true });
+      return;
+    }
+    const icon = this._getIcon();
+    if (!icon) {
+      return;
+    }
+    const colorTheme = this._themeService.getColorTheme();
+    const standardColors = getStandardColors(colorTheme);
+    const colorStyleDisposable = createColorStyleElement(colorTheme);
+    const items = [];
+    for (const colorKey of standardColors) {
+      const colorClass = getColorClass(colorKey);
+      items.push({
+        label: `$(${Codicon.circleFilled.id}) ${colorKey.replace("terminal.ansi", "")}`,
+        id: colorKey,
+        description: colorKey,
+        iconClasses: [colorClass]
+      });
+    }
+    items.push({ type: "separator" });
+    const showAllColorsItem = { label: "Reset to default" };
+    items.push(showAllColorsItem);
+    const disposables = [];
+    const quickPick = this._quickInputService.createQuickPick({ useSeparators: true });
+    disposables.push(quickPick);
+    quickPick.items = items;
+    quickPick.matchOnDescription = true;
+    quickPick.placeholder = nls.localize("changeColor", "Select a color for the terminal");
+    quickPick.show();
+    const result = await new Promise((r) => {
+      disposables.push(quickPick.onDidHide(() => r(void 0)));
+      disposables.push(quickPick.onDidAccept(() => r(quickPick.selectedItems[0])));
+    });
+    dispose(disposables);
+    if (result) {
+      this.shellLaunchConfig.color = result.id;
+      this._onIconChanged.fire({ instance: this, userInitiated: true });
+    }
+    quickPick.hide();
+    colorStyleDisposable.dispose();
+    return result?.id;
+  }
+  forceScrollbarVisibility() {
+    this._wrapperElement.classList.add("force-scrollbar");
+  }
+  resetScrollbarVisibility() {
+    this._wrapperElement.classList.remove("force-scrollbar");
+  }
+  setParentContextKeyService(parentContextKeyService) {
+    this._scopedContextKeyService.updateParent(parentContextKeyService);
+  }
+  async handleMouseEvent(event, contextMenu) {
+    if (dom.isHTMLElement(event.target) && (event.target.classList.contains("scrollbar") || event.target.classList.contains("slider"))) {
+      return { cancelContextMenu: true };
+    }
+    for (const contrib of this._contributions.values()) {
+      const result = await contrib.handleMouseEvent?.(event);
+      if (result?.handled) {
+        return { cancelContextMenu: true };
+      }
+    }
+    if (event.which === 2) {
+      switch (this._terminalConfigurationService.config.middleClickBehavior) {
+        case "default":
+        default:
+          this.focus();
+          break;
+      }
+      return;
+    }
+    if (event.which === 3) {
+      if (event.shiftKey) {
+        openContextMenu(dom.getActiveWindow(), event, this, contextMenu, this._contextMenuService);
+        return;
+      }
+      const rightClickBehavior = this._terminalConfigurationService.config.rightClickBehavior;
+      if (rightClickBehavior === "nothing") {
+        if (!event.shiftKey) {
+          return { cancelContextMenu: true };
+        }
+        return;
+      }
+    }
+  }
+};
+__decorate([
+  debounce(50)
+], TerminalInstance.prototype, "_fireMaximumDimensionsChanged", null);
+__decorate([
+  debounce(1e3)
+], TerminalInstance.prototype, "relaunch", null);
+__decorate([
+  debounce(2e3)
+], TerminalInstance.prototype, "_updateProcessCwd", null);
+TerminalInstance = TerminalInstance_1 = __decorate([
+  __param(2, IContextKeyService),
+  __param(3, IContextMenuService),
+  __param(4, IInstantiationService),
+  __param(5, ITerminalConfigurationService),
+  __param(6, ITerminalProfileResolverService),
+  __param(7, IPathService),
+  __param(8, IKeybindingService),
+  __param(9, INotificationService),
+  __param(10, IPreferencesService),
+  __param(11, IViewsService),
+  __param(12, IThemeService),
+  __param(13, IConfigurationService),
+  __param(14, ITerminalLogService),
+  __param(15, IStorageService),
+  __param(16, IAccessibilityService),
+  __param(17, IProductService),
+  __param(18, IQuickInputService),
+  __param(19, IWorkbenchEnvironmentService),
+  __param(20, IWorkspaceContextService),
+  __param(21, IEditorService),
+  __param(22, IWorkspaceTrustRequestService),
+  __param(23, IHistoryService),
+  __param(24, ITelemetryService),
+  __param(25, IOpenerService),
+  __param(26, ICommandService),
+  __param(27, IAccessibilitySignalService),
+  __param(28, IViewDescriptorService)
+], TerminalInstance);
+let TerminalInstanceDragAndDropController = class TerminalInstanceDragAndDropController2 extends Disposable {
+  static {
+    __name(this, "TerminalInstanceDragAndDropController");
+  }
+  get onDropFile() {
+    return this._onDropFile.event;
+  }
+  get onDropTerminal() {
+    return this._onDropTerminal.event;
+  }
+  constructor(_container, _layoutService, _viewDescriptorService) {
+    super();
+    this._container = _container;
+    this._layoutService = _layoutService;
+    this._viewDescriptorService = _viewDescriptorService;
+    this._onDropFile = this._register(new Emitter());
+    this._onDropTerminal = this._register(new Emitter());
+    this._register(toDisposable(() => this._clearDropOverlay()));
+  }
+  _clearDropOverlay() {
+    this._dropOverlay?.remove();
+    this._dropOverlay = void 0;
+  }
+  onDragEnter(e) {
+    if (!containsDragType(e, DataTransfers.FILES, DataTransfers.RESOURCES, "Terminals", CodeDataTransfers.FILES)) {
+      return;
+    }
+    if (!this._dropOverlay) {
+      this._dropOverlay = document.createElement("div");
+      this._dropOverlay.classList.add("terminal-drop-overlay");
+    }
+    if (containsDragType(
+      e,
+      "Terminals"
+      /* TerminalDataTransfers.Terminals */
+    )) {
+      const side = this._getDropSide(e);
+      this._dropOverlay.classList.toggle("drop-before", side === "before");
+      this._dropOverlay.classList.toggle("drop-after", side === "after");
+    }
+    if (!this._dropOverlay.parentElement) {
+      this._container.appendChild(this._dropOverlay);
+    }
+  }
+  onDragLeave(e) {
+    this._clearDropOverlay();
+  }
+  onDragEnd(e) {
+    this._clearDropOverlay();
+  }
+  onDragOver(e) {
+    if (!e.dataTransfer || !this._dropOverlay) {
+      return;
+    }
+    if (containsDragType(
+      e,
+      "Terminals"
+      /* TerminalDataTransfers.Terminals */
+    )) {
+      const side = this._getDropSide(e);
+      this._dropOverlay.classList.toggle("drop-before", side === "before");
+      this._dropOverlay.classList.toggle("drop-after", side === "after");
+    }
+    this._dropOverlay.style.opacity = "1";
+  }
+  async onDrop(e) {
+    this._clearDropOverlay();
+    if (!e.dataTransfer) {
+      return;
+    }
+    const terminalResources = getTerminalResourcesFromDragEvent(e);
+    if (terminalResources) {
+      for (const uri of terminalResources) {
+        const side = this._getDropSide(e);
+        this._onDropTerminal.fire({ uri, side });
+      }
+      return;
+    }
+    let path2;
+    const rawResources = e.dataTransfer.getData(DataTransfers.RESOURCES);
+    if (rawResources) {
+      path2 = URI.parse(JSON.parse(rawResources)[0]);
+    }
+    const rawCodeFiles = e.dataTransfer.getData(CodeDataTransfers.FILES);
+    if (!path2 && rawCodeFiles) {
+      path2 = URI.file(JSON.parse(rawCodeFiles)[0]);
+    }
+    if (!path2 && e.dataTransfer.files.length > 0 && getPathForFile(e.dataTransfer.files[0])) {
+      path2 = URI.file(getPathForFile(e.dataTransfer.files[0]));
+    }
+    if (!path2) {
+      return;
+    }
+    this._onDropFile.fire(path2);
+  }
+  _getDropSide(e) {
+    const target = this._container;
+    if (!target) {
+      return "after";
+    }
+    const rect = target.getBoundingClientRect();
+    return this._getViewOrientation() === 1 ? e.clientX - rect.left < rect.width / 2 ? "before" : "after" : e.clientY - rect.top < rect.height / 2 ? "before" : "after";
+  }
+  _getViewOrientation() {
+    const panelPosition = this._layoutService.getPanelPosition();
+    const terminalLocation = this._viewDescriptorService.getViewLocationById(TERMINAL_VIEW_ID);
+    return terminalLocation === 1 && isHorizontal(panelPosition) ? 1 : 0;
+  }
+};
+TerminalInstanceDragAndDropController = __decorate([
+  __param(1, IWorkbenchLayoutService),
+  __param(2, IViewDescriptorService)
+], TerminalInstanceDragAndDropController);
+var TerminalLabelType;
+(function(TerminalLabelType2) {
+  TerminalLabelType2["Title"] = "title";
+  TerminalLabelType2["Description"] = "description";
+})(TerminalLabelType || (TerminalLabelType = {}));
+let TerminalLabelComputer = class TerminalLabelComputer2 extends Disposable {
+  static {
+    __name(this, "TerminalLabelComputer");
+  }
+  get title() {
+    return this._title;
+  }
+  get description() {
+    return this._description;
+  }
+  constructor(_fileService, _terminalConfigurationService, _workspaceContextService) {
+    super();
+    this._fileService = _fileService;
+    this._terminalConfigurationService = _terminalConfigurationService;
+    this._workspaceContextService = _workspaceContextService;
+    this._title = "";
+    this._description = "";
+    this._onDidChangeLabel = this._register(new Emitter());
+    this.onDidChangeLabel = this._onDidChangeLabel.event;
+  }
+  refreshLabel(instance, reset) {
+    this._title = this.computeLabel(instance, this._terminalConfigurationService.config.tabs.title, "title", reset);
+    this._description = this.computeLabel(
+      instance,
+      this._terminalConfigurationService.config.tabs.description,
+      "description"
+      /* TerminalLabelType.Description */
+    );
+    if (this._title !== instance.title || this._description !== instance.description || reset) {
+      this._onDidChangeLabel.fire({ title: this._title, description: this._description });
+    }
+  }
+  computeLabel(instance, labelTemplate, labelType, reset) {
+    const type = instance.shellLaunchConfig.attachPersistentProcess?.type || instance.shellLaunchConfig.type;
+    const commandDetection = instance.capabilities.get(
+      2
+      /* TerminalCapability.CommandDetection */
+    );
+    const promptInputModel = commandDetection?.promptInputModel;
+    const nonTaskSpinner = type === "Task" ? "" : " $(loading~spin)";
+    const templateProperties = {
+      cwd: instance.cwd || instance.initialCwd || "",
+      cwdFolder: "",
+      workspaceFolderName: instance.workspaceFolder?.name,
+      workspaceFolder: instance.workspaceFolder ? path.basename(instance.workspaceFolder.uri.fsPath) : void 0,
+      local: type === "Local" ? terminalStrings.typeLocal : void 0,
+      process: instance.processName,
+      sequence: instance.sequence,
+      task: type === "Task" ? terminalStrings.typeTask : void 0,
+      fixedDimensions: instance.fixedCols ? instance.fixedRows ? `\u2194${instance.fixedCols} \u2195${instance.fixedRows}` : `\u2194${instance.fixedCols}` : instance.fixedRows ? `\u2195${instance.fixedRows}` : "",
+      separator: { label: this._terminalConfigurationService.config.tabs.separator },
+      shellType: instance.shellType,
+      // Shell command requires high confidence
+      shellCommand: commandDetection?.executingCommand && commandDetection.executingCommandConfidence === "high" && promptInputModel ? promptInputModel.value + nonTaskSpinner : void 0,
+      // Shell prompt input does not require high confidence as it's largely for VS Code developers
+      shellPromptInput: commandDetection?.executingCommand && promptInputModel ? promptInputModel.getCombinedString(true) + nonTaskSpinner : promptInputModel?.getCombinedString(true),
+      progress: this._getProgressStateString(instance.progressState)
+    };
+    templateProperties.workspaceFolderName = instance.workspaceFolder?.name ?? templateProperties.workspaceFolder;
+    labelTemplate = labelTemplate.trim();
+    if (!labelTemplate) {
+      return labelType === "title" ? instance.processName || "" : "";
+    }
+    if (!reset && instance.staticTitle && labelType === "title") {
+      return instance.staticTitle.replace(/[\n\r\t]/g, "") || templateProperties.process?.replace(/[\n\r\t]/g, "") || "";
+    }
+    const detection = instance.capabilities.has(
+      0
+      /* TerminalCapability.CwdDetection */
+    ) || instance.capabilities.has(
+      1
+      /* TerminalCapability.NaiveCwdDetection */
+    );
+    const folders = this._workspaceContextService.getWorkspace().folders;
+    const multiRootWorkspace = folders.length > 1;
+    if (templateProperties.cwd && detection && (!instance.shellLaunchConfig.isFeatureTerminal || labelType === "title")) {
+      const cwdUri = URI.from({
+        scheme: instance.workspaceFolder?.uri.scheme || Schemas.file,
+        path: instance.cwd ? path.resolve(instance.cwd) : void 0
+      });
+      let showCwd = false;
+      if (multiRootWorkspace) {
+        showCwd = true;
+      } else if (instance.workspaceFolder?.uri) {
+        const caseSensitive = this._fileService.hasCapability(
+          instance.workspaceFolder.uri,
+          1024
+          /* FileSystemProviderCapabilities.PathCaseSensitive */
+        );
+        showCwd = cwdUri.fsPath.localeCompare(instance.workspaceFolder.uri.fsPath, void 0, { sensitivity: caseSensitive ? "case" : "base" }) !== 0;
+      }
+      if (showCwd) {
+        templateProperties.cwdFolder = path.basename(templateProperties.cwd);
+      }
+    }
+    const label = template(labelTemplate, templateProperties).replace(/[\n\r\t]/g, "").trim();
+    return label === "" && labelType === "title" ? instance.processName || "" : label;
+  }
+  _getProgressStateString(progressState) {
+    if (!progressState) {
+      return "";
+    }
+    switch (progressState.state) {
+      case 0:
+        return "";
+      case 1:
+        return `${Math.round(progressState.value)}%`;
+      case 2:
+        return "$(error)";
+      case 3:
+        return "$(loading~spin)";
+      case 4:
+        return "$(alert)";
+    }
+  }
+};
+TerminalLabelComputer = __decorate([
+  __param(0, IFileService),
+  __param(1, ITerminalConfigurationService),
+  __param(2, IWorkspaceContextService)
+], TerminalLabelComputer);
+function parseExitResult(exitCodeOrError, shellLaunchConfig, processState, initialCwd) {
+  if (exitCodeOrError === void 0 || exitCodeOrError === 0) {
+    return { code: exitCodeOrError, message: void 0 };
+  }
+  const code = typeof exitCodeOrError === "number" ? exitCodeOrError : exitCodeOrError.code;
+  let message = void 0;
+  switch (typeof exitCodeOrError) {
+    case "number": {
+      let commandLine = void 0;
+      if (shellLaunchConfig.executable) {
+        commandLine = shellLaunchConfig.executable;
+        if (typeof shellLaunchConfig.args === "string") {
+          commandLine += ` ${shellLaunchConfig.args}`;
+        } else if (shellLaunchConfig.args && shellLaunchConfig.args.length) {
+          commandLine += shellLaunchConfig.args.map((a) => ` '${a}'`).join();
+        }
+      }
+      if (processState === 4) {
+        if (commandLine) {
+          message = nls.localize("launchFailed.exitCodeAndCommandLine", 'The terminal process "{0}" failed to launch (exit code: {1}).', commandLine, code);
+        } else {
+          message = nls.localize("launchFailed.exitCodeOnly", "The terminal process failed to launch (exit code: {0}).", code);
+        }
+      } else {
+        if (commandLine) {
+          message = nls.localize("terminated.exitCodeAndCommandLine", 'The terminal process "{0}" terminated with exit code: {1}.', commandLine, code);
+        } else {
+          message = nls.localize("terminated.exitCodeOnly", "The terminal process terminated with exit code: {0}.", code);
+        }
+      }
+      break;
+    }
+    case "object": {
+      if (exitCodeOrError.message.toString().includes("Could not find pty with id")) {
+        break;
+      }
+      let innerMessage = exitCodeOrError.message;
+      const conptyError = exitCodeOrError.message.match(/.*error code:\s*(\d+).*$/);
+      if (conptyError) {
+        const errorCode = conptyError.length > 1 ? parseInt(conptyError[1]) : void 0;
+        switch (errorCode) {
+          case 5:
+            innerMessage = `Access was denied to the path containing your executable "${shellLaunchConfig.executable}". Manage and change your permissions to get this to work`;
+            break;
+          case 267:
+            innerMessage = `Invalid starting directory "${initialCwd}", review your terminal.integrated.cwd setting`;
+            break;
+          case 1260:
+            innerMessage = `Windows cannot open this program because it has been prevented by a software restriction policy. For more information, open Event Viewer or contact your system Administrator`;
+            break;
+        }
+      }
+      message = nls.localize("launchFailed.errorMessage", "The terminal process failed to launch: {0}.", innerMessage);
+      break;
+    }
+  }
+  return { code, message };
+}
+__name(parseExitResult, "parseExitResult");
+let TerminalInstanceColorProvider = class TerminalInstanceColorProvider2 {
+  static {
+    __name(this, "TerminalInstanceColorProvider");
+  }
+  constructor(_target, _viewDescriptorService) {
+    this._target = _target;
+    this._viewDescriptorService = _viewDescriptorService;
+  }
+  getBackgroundColor(theme) {
+    const terminalBackground = theme.getColor(TERMINAL_BACKGROUND_COLOR);
+    if (terminalBackground) {
+      return terminalBackground;
+    }
+    if (this._target.object === TerminalLocation.Editor) {
+      return theme.getColor(editorBackground);
+    }
+    const location = this._viewDescriptorService.getViewLocationById(TERMINAL_VIEW_ID);
+    if (location === 1) {
+      return theme.getColor(PANEL_BACKGROUND);
+    }
+    return theme.getColor(SIDE_BAR_BACKGROUND);
+  }
+};
+TerminalInstanceColorProvider = __decorate([
+  __param(1, IViewDescriptorService)
+], TerminalInstanceColorProvider);
+function guessShellTypeFromExecutable(os, executable) {
+  const exeBasename = path.basename(executable);
+  const generalShellTypeMap = /* @__PURE__ */ new Map([
+    ["julia", /^julia$/],
+    ["node", /^node$/],
+    ["nu", /^nu$/],
+    ["pwsh", /^pwsh(-preview)?|powershell$/],
+    ["python", /^py(?:thon)?$/]
+  ]);
+  for (const [shellType, pattern] of generalShellTypeMap) {
+    if (exeBasename.match(pattern)) {
+      return shellType;
+    }
+  }
+  if (os === 1) {
+    const windowsShellTypeMap = /* @__PURE__ */ new Map([
+      ["cmd", /^cmd$/],
+      ["gitbash", /^bash$/],
+      ["wsl", /^wsl$/]
+    ]);
+    for (const [shellType, pattern] of windowsShellTypeMap) {
+      if (exeBasename.match(pattern)) {
+        return shellType;
+      }
+    }
+  } else {
+    const posixShellTypes = [
+      "bash",
+      "csh",
+      "fish",
+      "ksh",
+      "sh",
+      "zsh"
+    ];
+    for (const type of posixShellTypes) {
+      if (exeBasename === type) {
+        return type;
+      }
+    }
+  }
+  return void 0;
+}
+__name(guessShellTypeFromExecutable, "guessShellTypeFromExecutable");
+export {
+  TerminalInstance,
+  TerminalInstanceColorProvider,
+  TerminalLabelComputer,
+  parseExitResult
+};
+//# sourceMappingURL=terminalInstance.js.map

@@ -1,1 +1,320 @@
-import{$Yh as T}from"../../../../base/common/async.js";import{$3i as $}from"../../../../base/common/buffer.js";import{$Mj as I}from"../../../../base/common/codicons.js";import{$4j as j,$Uj as b}from"../../../../base/common/htmlContent.js";import{$vd as R,$ud as v,$td as M}from"../../../../base/common/lifecycle.js";import{$6o as P}from"../../../../base/common/objects.js";import{autorun as w,observableValue as _,transaction as C}from"../../../../base/common/observable.js";import{$hh as q}from"../../../../base/common/resources.js";import{localize as m}from"../../../../nls.js";import{$mj as k}from"../../../../platform/instantiation/common/instantiation.js";import{$3n as O}from"../../../../platform/log/common/log.js";import{$nn as z}from"../../../../platform/product/common/productService.js";import{ChatResponseResource as B,$6S as E}from"../../chat/common/chatModel.js";import{$eQ as N}from"../../chat/common/languageModelToolsService.js";import{$BW as U}from"./mcpRegistryTypes.js";import{$Hic as W,$Gic as y}from"./mcpServer.js";import{McpResourceURI as A,McpServerDefinition as G}from"./mcpTypes.js";var S=function(u,t,s,n){var c=arguments.length,i=c<3?t:n===null?n=Object.getOwnPropertyDescriptor(t,s):n,a;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")i=Reflect.decorate(u,t,s,n);else for(var o=u.length-1;o>=0;o--)(a=u[o])&&(i=(c<3?a(i):c>3?a(t,s,i):a(t,s))||i);return c>3&&i&&Object.defineProperty(t,s,i),i},g=function(u,t){return function(s,n){t(s,n,u)}};let D=class extends R{get lazyCollectionState(){return this.h.lazyCollectionState}constructor(t,s,n,c){super(),this.g=t,this.h=s,this.j=n,this.m=c,this.a=_(this,[]),this.servers=this.a.map(a=>a.map(o=>o.object)),this.b=this.B(t.createInstance(y,0)),this.f=this.B(t.createInstance(y,1));const i=this.q.add(new T(()=>this.updateCollectedServers(),500));this.B(w(a=>{for(const o of this.h.collections.read(a))o.serverDefinitions.read(a);i.schedule(500)}))}resetCaches(){this.b.reset(),this.f.reset()}async activateCollections(){const t=await this.h.discoverCollections(),s=new Set(t.map(c=>c.id));this.updateCollectedServers();const n=[];for(const{object:c}of this.a.get())s.has(c.collection.id)&&c.cacheState.get()===0&&n.push(c.start());await Promise.all(n)}n(t,s,n,c){const i=new Map;c.add(w(a=>{const o=new Set(i.keys()),e=[],l=(r,d,f)=>{f.add(this.j.registerToolData(d)),f.add(this.j.registerToolImplementation(r.id,this.g.createInstance(x,r,t))),f.add(s.addTool(d))};for(const r of t.tools.read(a)){const d=i.get(r.id),f=this.h.collections.get().find(h=>h.id===t.collection.id),p={id:r.id,source:n,icon:I.tools,displayName:r.definition.annotations?.title||r.definition.name,toolReferenceName:r.referenceName,modelDescription:r.definition.description??"",userDescription:r.definition.description??"",inputSchema:r.definition.inputSchema,canBeReferencedInPrompt:!0,alwaysDisplayInputOutput:!0,runsInWorkspace:f?.scope===1||!!f?.remoteAuthority,tags:["mcp"]};if(d)P(d.toolData,p)||(d.toolData=p,d.store.clear(),l(r,p,c)),o.delete(r.id);else{const h=new v;e.push(()=>l(r,p,h)),i.set(r.id,{toolData:p,store:h})}}for(const r of o){const d=i.get(r);d&&(d.store.dispose(),i.delete(r))}for(const r of e)r()})),c.add(M(()=>{for(const a of i.values())a.store.dispose()}))}updateCollectedServers(){const t=new F,s=this.h.collections.get().flatMap(o=>o.serverDefinitions.get().map(e=>{const l=t.generate(e.label);return{serverDefinition:e,collectionDefinition:o,toolPrefix:l}})),n=new Set(s),c=this.a.get(),i=[],a=(o,e)=>{n.delete(o),i.push(e);const l=e.object.connection.get();l&&!G.equals(l.definition,o.serverDefinition)&&(e.object.stop(),this.m.debug(`MCP server ${e.object.definition.id} stopped because the definition changed`))};for(const o of c){const e=s.find(l=>H(o.object,l)&&o.toolPrefix===l.toolPrefix);e?a(e,o):o.dispose()}for(const o of n){const e=new v,l=this.g.createInstance(W,o.collectionDefinition,o.serverDefinition,o.serverDefinition.roots,!!o.collectionDefinition.lazy,o.collectionDefinition.scope===1?this.f:this.b,o.toolPrefix),r={type:"mcp",label:l.definition.label,collectionId:l.collection.id,definitionId:l.definition.id},d=this.j.createToolSet(r,o.serverDefinition.id,o.serverDefinition.label,{icon:I.mcp,description:m(8899,null,o.serverDefinition.label)});e.add(d),e.add(l),this.n(l,d,r,e),i.push({object:l,dispose:()=>e.dispose(),toolPrefix:o.toolPrefix})}C(o=>{this.a.set(i,o)})}dispose(){this.a.get().forEach(t=>t.dispose()),super.dispose()}};D=S([g(0,k),g(1,U),g(2,N),g(3,O)],D);function H(u,t){return u.collection.id===t.collectionDefinition.id&&u.definition.id===t.serverDefinition.id}let x=class{constructor(t,s,n){this.a=t,this.b=s,this.e=n}async prepareToolInvocation(t){const s=this.a,n=this.b,c=m(8900,null,this.e.nameShort),i=!s.definition.annotations?.readOnlyHint,a=s.definition.annotations?.title||"`"+s.definition.name+"`",o=m(8901,null,n.definition.label);return{confirmationMessages:i?{title:new b(m(8902,null,a)),message:new b(s.definition.description,{supportThemeIcons:!0}),disclaimer:c,allowAutoConfirm:!0}:void 0,invocationMessage:new b(m(8903,null,a)),pastTenseMessage:new b(m(8904,null,a)),originMessage:new b(j({id:"workbench.mcp.showConfiguration",title:o,arguments:[n.collection.id,n.definition.id]}),{isTrusted:!0}),toolSpecificData:{kind:"input",rawInput:t}}}async invoke(t,s,n,c){const i={content:[]},a=await this.a.callWithProgress(t.parameters,n,{chatRequestId:t.chatRequestId,chatSessionId:t.context?.sessionId},c),o={input:JSON.stringify(t.parameters,void 0,2),output:[],isError:a.isError===!0};for(const e of a.content){const l=e.annotations?.audience||["assistant"];l.includes("user")&&e.type==="text"&&n.report({message:e.text});const r=(f,p,h)=>{o.output.push({mimeType:f,value:p,uri:h}),d&&i.content.push({kind:"data",value:{mimeType:f,data:$(p)}})},d=l.includes("assistant");if(e.type==="text")o.output.push({isText:!0,value:e.text}),d&&i.content.push({kind:"text",value:e.text});else if(e.type==="image"||e.type==="audio")r(e.mimeType||"image/png",e.data);else if(e.type==="resource"){const f=A.fromServer(this.b.definition,e.resource.uri);if(e.resource.mimeType&&E(e.resource.mimeType)&&"blob"in e.resource)r(e.resource.mimeType,e.resource.blob,f);else if(o.output.push({uri:f,isText:"text"in e.resource,mimeType:e.resource.mimeType,value:"blob"in e.resource?e.resource.blob:e.resource.text,asResource:!0}),d){const p=t.chatRequestId&&t.context&&B.createUri(t.context.sessionId,t.chatRequestId,t.callId,i.content.length,q(f));i.content.push({kind:"text",value:"text"in e.resource?e.resource.text:`The tool returns a resource which can be read from the URI ${p||f}`})}}}return i.toolResultDetails=o,i}};x=S([g(2,z)],x);class F{constructor(){this.a=new Set}generate(t){const s="mcp_"+t.toLowerCase().replace(/[^a-z0-9_.-]+/g,"_").slice(0,13);let n=s+"_";for(let c=2;this.a.has(n);c++)n=s+c+"_";return this.a.add(n),n}}export{D as $Mic};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { RunOnceScheduler } from "../../../../base/common/async.js";
+import { decodeBase64 } from "../../../../base/common/buffer.js";
+import { Codicon } from "../../../../base/common/codicons.js";
+import { markdownCommandLink, MarkdownString } from "../../../../base/common/htmlContent.js";
+import { Disposable, DisposableStore, toDisposable } from "../../../../base/common/lifecycle.js";
+import { equals } from "../../../../base/common/objects.js";
+import { autorun, observableValue, transaction } from "../../../../base/common/observable.js";
+import { basename } from "../../../../base/common/resources.js";
+import { localize } from "../../../../nls.js";
+import { IInstantiationService } from "../../../../platform/instantiation/common/instantiation.js";
+import { ILogService } from "../../../../platform/log/common/log.js";
+import { IProductService } from "../../../../platform/product/common/productService.js";
+import { ChatResponseResource, getAttachableImageExtension } from "../../chat/common/chatModel.js";
+import { ILanguageModelToolsService } from "../../chat/common/languageModelToolsService.js";
+import { IMcpRegistry } from "./mcpRegistryTypes.js";
+import { McpServer, McpServerMetadataCache } from "./mcpServer.js";
+import { McpResourceURI, McpServerDefinition } from "./mcpTypes.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+let McpService = class McpService2 extends Disposable {
+  static {
+    __name(this, "McpService");
+  }
+  get lazyCollectionState() {
+    return this._mcpRegistry.lazyCollectionState;
+  }
+  constructor(_instantiationService, _mcpRegistry, _toolsService, _logService) {
+    super();
+    this._instantiationService = _instantiationService;
+    this._mcpRegistry = _mcpRegistry;
+    this._toolsService = _toolsService;
+    this._logService = _logService;
+    this._servers = observableValue(this, []);
+    this.servers = this._servers.map((servers) => servers.map((s) => s.object));
+    this.userCache = this._register(_instantiationService.createInstance(
+      McpServerMetadataCache,
+      0
+      /* StorageScope.PROFILE */
+    ));
+    this.workspaceCache = this._register(_instantiationService.createInstance(
+      McpServerMetadataCache,
+      1
+      /* StorageScope.WORKSPACE */
+    ));
+    const updateThrottle = this._store.add(new RunOnceScheduler(() => this.updateCollectedServers(), 500));
+    this._register(autorun((reader) => {
+      for (const collection of this._mcpRegistry.collections.read(reader)) {
+        collection.serverDefinitions.read(reader);
+      }
+      updateThrottle.schedule(500);
+    }));
+  }
+  resetCaches() {
+    this.userCache.reset();
+    this.workspaceCache.reset();
+  }
+  async activateCollections() {
+    const collections = await this._mcpRegistry.discoverCollections();
+    const collectionIds = new Set(collections.map((c) => c.id));
+    this.updateCollectedServers();
+    const todo = [];
+    for (const { object: server } of this._servers.get()) {
+      if (collectionIds.has(server.collection.id)) {
+        const state = server.cacheState.get();
+        if (state === 0) {
+          todo.push(server.start());
+        }
+      }
+    }
+    await Promise.all(todo);
+  }
+  _syncTools(server, toolSet, source, store) {
+    const tools = /* @__PURE__ */ new Map();
+    store.add(autorun((reader) => {
+      const toDelete = new Set(tools.keys());
+      const toRegister = [];
+      const registerTool = /* @__PURE__ */ __name((tool, toolData, store2) => {
+        store2.add(this._toolsService.registerToolData(toolData));
+        store2.add(this._toolsService.registerToolImplementation(tool.id, this._instantiationService.createInstance(McpToolImplementation, tool, server)));
+        store2.add(toolSet.addTool(toolData));
+      }, "registerTool");
+      for (const tool of server.tools.read(reader)) {
+        const existing = tools.get(tool.id);
+        const collection = this._mcpRegistry.collections.get().find((c) => c.id === server.collection.id);
+        const toolData = {
+          id: tool.id,
+          source,
+          icon: Codicon.tools,
+          displayName: tool.definition.annotations?.title || tool.definition.name,
+          toolReferenceName: tool.referenceName,
+          modelDescription: tool.definition.description ?? "",
+          userDescription: tool.definition.description ?? "",
+          inputSchema: tool.definition.inputSchema,
+          canBeReferencedInPrompt: true,
+          alwaysDisplayInputOutput: true,
+          runsInWorkspace: collection?.scope === 1 || !!collection?.remoteAuthority,
+          tags: ["mcp"]
+        };
+        if (existing) {
+          if (!equals(existing.toolData, toolData)) {
+            existing.toolData = toolData;
+            existing.store.clear();
+            registerTool(tool, toolData, store);
+          }
+          toDelete.delete(tool.id);
+        } else {
+          const store2 = new DisposableStore();
+          toRegister.push(() => registerTool(tool, toolData, store2));
+          tools.set(tool.id, { toolData, store: store2 });
+        }
+      }
+      for (const id of toDelete) {
+        const tool = tools.get(id);
+        if (tool) {
+          tool.store.dispose();
+          tools.delete(id);
+        }
+      }
+      for (const fn of toRegister) {
+        fn();
+      }
+    }));
+    store.add(toDisposable(() => {
+      for (const tool of tools.values()) {
+        tool.store.dispose();
+      }
+    }));
+  }
+  updateCollectedServers() {
+    const prefixGenerator = new McpPrefixGenerator();
+    const definitions = this._mcpRegistry.collections.get().flatMap((collectionDefinition) => collectionDefinition.serverDefinitions.get().map((serverDefinition) => {
+      const toolPrefix = prefixGenerator.generate(serverDefinition.label);
+      return { serverDefinition, collectionDefinition, toolPrefix };
+    }));
+    const nextDefinitions = new Set(definitions);
+    const currentServers = this._servers.get();
+    const nextServers = [];
+    const pushMatch = /* @__PURE__ */ __name((match, rec) => {
+      nextDefinitions.delete(match);
+      nextServers.push(rec);
+      const connection = rec.object.connection.get();
+      if (connection && !McpServerDefinition.equals(connection.definition, match.serverDefinition)) {
+        rec.object.stop();
+        this._logService.debug(`MCP server ${rec.object.definition.id} stopped because the definition changed`);
+      }
+    }, "pushMatch");
+    for (const server of currentServers) {
+      const match = definitions.find((d) => defsEqual(server.object, d) && server.toolPrefix === d.toolPrefix);
+      if (match) {
+        pushMatch(match, server);
+      } else {
+        server.dispose();
+      }
+    }
+    for (const def of nextDefinitions) {
+      const store = new DisposableStore();
+      const object = this._instantiationService.createInstance(McpServer, def.collectionDefinition, def.serverDefinition, def.serverDefinition.roots, !!def.collectionDefinition.lazy, def.collectionDefinition.scope === 1 ? this.workspaceCache : this.userCache, def.toolPrefix);
+      const source = { type: "mcp", label: object.definition.label, collectionId: object.collection.id, definitionId: object.definition.id };
+      const toolSet = this._toolsService.createToolSet(source, def.serverDefinition.id, def.serverDefinition.label, {
+        icon: Codicon.mcp,
+        description: localize("mcp.toolset", "{0}: All Tools", def.serverDefinition.label)
+      });
+      store.add(toolSet);
+      store.add(object);
+      this._syncTools(object, toolSet, source, store);
+      nextServers.push({ object, dispose: /* @__PURE__ */ __name(() => store.dispose(), "dispose"), toolPrefix: def.toolPrefix });
+    }
+    transaction((tx) => {
+      this._servers.set(nextServers, tx);
+    });
+  }
+  dispose() {
+    this._servers.get().forEach((s) => s.dispose());
+    super.dispose();
+  }
+};
+McpService = __decorate([
+  __param(0, IInstantiationService),
+  __param(1, IMcpRegistry),
+  __param(2, ILanguageModelToolsService),
+  __param(3, ILogService)
+], McpService);
+function defsEqual(server, def) {
+  return server.collection.id === def.collectionDefinition.id && server.definition.id === def.serverDefinition.id;
+}
+__name(defsEqual, "defsEqual");
+let McpToolImplementation = class McpToolImplementation2 {
+  static {
+    __name(this, "McpToolImplementation");
+  }
+  constructor(_tool, _server, _productService) {
+    this._tool = _tool;
+    this._server = _server;
+    this._productService = _productService;
+  }
+  async prepareToolInvocation(parameters) {
+    const tool = this._tool;
+    const server = this._server;
+    const mcpToolWarning = localize("mcp.tool.warning", "Note that MCP servers or malicious conversation content may attempt to misuse '{0}' through tools.", this._productService.nameShort);
+    const needsConfirmation = !tool.definition.annotations?.readOnlyHint;
+    const title = tool.definition.annotations?.title || "`" + tool.definition.name + "`";
+    const subtitle = localize("msg.subtitle", "{0} (MCP Server)", server.definition.label);
+    return {
+      confirmationMessages: needsConfirmation ? {
+        title: new MarkdownString(localize("msg.title", "Run {0}", title)),
+        message: new MarkdownString(tool.definition.description, { supportThemeIcons: true }),
+        disclaimer: mcpToolWarning,
+        allowAutoConfirm: true
+      } : void 0,
+      invocationMessage: new MarkdownString(localize("msg.run", "Running {0}", title)),
+      pastTenseMessage: new MarkdownString(localize("msg.ran", "Ran {0} ", title)),
+      originMessage: new MarkdownString(markdownCommandLink({
+        id: "workbench.mcp.showConfiguration",
+        title: subtitle,
+        arguments: [server.collection.id, server.definition.id]
+      }), { isTrusted: true }),
+      toolSpecificData: {
+        kind: "input",
+        rawInput: parameters
+      }
+    };
+  }
+  async invoke(invocation, _countTokens, progress, token) {
+    const result = {
+      content: []
+    };
+    const callResult = await this._tool.callWithProgress(invocation.parameters, progress, { chatRequestId: invocation.chatRequestId, chatSessionId: invocation.context?.sessionId }, token);
+    const details = {
+      input: JSON.stringify(invocation.parameters, void 0, 2),
+      output: [],
+      isError: callResult.isError === true
+    };
+    for (const item of callResult.content) {
+      const audience = item.annotations?.audience || ["assistant"];
+      if (audience.includes("user")) {
+        if (item.type === "text") {
+          progress.report({ message: item.text });
+        }
+      }
+      const addAsInlineData = /* @__PURE__ */ __name((mimeType, value, uri) => {
+        details.output.push({ mimeType, value, uri });
+        if (isForModel) {
+          result.content.push({
+            kind: "data",
+            value: { mimeType, data: decodeBase64(value) }
+          });
+        }
+      }, "addAsInlineData");
+      const isForModel = audience.includes("assistant");
+      if (item.type === "text") {
+        details.output.push({ isText: true, value: item.text });
+        if (isForModel) {
+          result.content.push({
+            kind: "text",
+            value: item.text
+          });
+        }
+      } else if (item.type === "image" || item.type === "audio") {
+        addAsInlineData(item.mimeType || "image/png", item.data);
+      } else if (item.type === "resource") {
+        const uri = McpResourceURI.fromServer(this._server.definition, item.resource.uri);
+        if (item.resource.mimeType && getAttachableImageExtension(item.resource.mimeType) && "blob" in item.resource) {
+          addAsInlineData(item.resource.mimeType, item.resource.blob, uri);
+        } else {
+          details.output.push({
+            uri,
+            isText: "text" in item.resource,
+            mimeType: item.resource.mimeType,
+            value: "blob" in item.resource ? item.resource.blob : item.resource.text,
+            asResource: true
+          });
+          if (isForModel) {
+            const permalink = invocation.chatRequestId && invocation.context && ChatResponseResource.createUri(invocation.context.sessionId, invocation.chatRequestId, invocation.callId, result.content.length, basename(uri));
+            result.content.push({
+              kind: "text",
+              value: "text" in item.resource ? item.resource.text : `The tool returns a resource which can be read from the URI ${permalink || uri}`
+            });
+          }
+        }
+      }
+    }
+    result.toolResultDetails = details;
+    return result;
+  }
+};
+McpToolImplementation = __decorate([
+  __param(2, IProductService)
+], McpToolImplementation);
+class McpPrefixGenerator {
+  static {
+    __name(this, "McpPrefixGenerator");
+  }
+  constructor() {
+    this.seenPrefixes = /* @__PURE__ */ new Set();
+  }
+  generate(label) {
+    const baseToolPrefix = "mcp_" + label.toLowerCase().replace(/[^a-z0-9_.-]+/g, "_").slice(0, 18 - "mcp_".length - 1);
+    let toolPrefix = baseToolPrefix + "_";
+    for (let i = 2; this.seenPrefixes.has(toolPrefix); i++) {
+      toolPrefix = baseToolPrefix + i + "_";
+    }
+    this.seenPrefixes.add(toolPrefix);
+    return toolPrefix;
+  }
+}
+export {
+  McpService
+};
+//# sourceMappingURL=mcpService.js.map

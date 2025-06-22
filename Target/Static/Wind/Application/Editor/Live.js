@@ -1,1 +1,9 @@
-import{Layer as r}from"../../effect";import"../EditorGroups/mod.js";import"../Instantiation/mod.js";import"../TextEditor/mod.js";import{Definition as e}from"./Definition.js";import{Tag as t}from"./Service.js";const o=r.effect(t,e);var s=o;export{s as default};
+import { Layer } from "../../effect";
+import { Definition } from "./Definition.js";
+import { Tag } from "./Service.js";
+const Live = Layer.effect(Tag, Definition);
+var Live_default = Live;
+export {
+  Live_default as default
+};
+//# sourceMappingURL=Live.js.map

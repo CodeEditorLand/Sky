@@ -1,1 +1,29 @@
-import{$eab as c}from"../../../../../editor/browser/editorExtensions.js";import{localize2 as e}from"../../../../../nls.js";import{$iI as s}from"../../../../../platform/actions/common/actions.js";const t={category:e(10973,"Snippets")};class a extends s{constructor(s){super({...t,...s})}}class m extends c{constructor(s){super({...t,...s})}}export{a as $$cc,m as $_cc};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { EditorAction2 } from "../../../../../editor/browser/editorExtensions.js";
+import { localize2 } from "../../../../../nls.js";
+import { Action2 } from "../../../../../platform/actions/common/actions.js";
+const defaultOptions = {
+  category: localize2("snippets", "Snippets")
+};
+class SnippetsAction extends Action2 {
+  static {
+    __name(this, "SnippetsAction");
+  }
+  constructor(desc) {
+    super({ ...defaultOptions, ...desc });
+  }
+}
+class SnippetEditorAction extends EditorAction2 {
+  static {
+    __name(this, "SnippetEditorAction");
+  }
+  constructor(desc) {
+    super({ ...defaultOptions, ...desc });
+  }
+}
+export {
+  SnippetEditorAction,
+  SnippetsAction
+};
+//# sourceMappingURL=abstractSnippetsActions.js.map

@@ -1,1 +1,56 @@
-import{localize as m}from"../../../nls.js";import{$mj as h}from"../../../platform/instantiation/common/instantiation.js";import{$Lyb as l}from"../../services/extensions/common/extHostCustomers.js";import{$yh as u}from"../../../base/common/async.js";import{$PM as b}from"../../../platform/workspace/common/editSessions.js";import{$pY as d}from"../common/extHost.protocol.js";var f=function(o,t,i,e){var n=arguments.length,r=n<3?t:e===null?e=Object.getOwnPropertyDescriptor(t,i):e,s;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")r=Reflect.decorate(o,t,i,e);else for(var a=o.length-1;a>=0;a--)(s=o[a])&&(r=(n<3?s(r):n>3?s(t,i,r):s(t,i))||r);return n>3&&r&&Object.defineProperty(t,i,r),r},c=function(o,t){return function(i,e){t(i,e,o)}};class _{constructor(t){this.b=2e4,this.a=t.getProxy(d.ExtHostWorkspace)}async participate(t,i){const e=new Promise((n,r)=>{setTimeout(()=>r(new Error(m(2721,null))),this.b),this.a.$onWillCreateEditSessionIdentity(t.uri,i,this.b).then(n,r)});return u(e,i)}}let p=class{constructor(t,i,e){this.b=e,this.a=this.b.addEditSessionIdentityCreateParticipant(i.createInstance(_,t))}dispose(){this.a.dispose()}};p=f([l,c(1,h),c(2,b)],p);export{p as $jZb};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { localize } from "../../../nls.js";
+import { IInstantiationService } from "../../../platform/instantiation/common/instantiation.js";
+import { extHostCustomer } from "../../services/extensions/common/extHostCustomers.js";
+import { raceCancellationError } from "../../../base/common/async.js";
+import { IEditSessionIdentityService } from "../../../platform/workspace/common/editSessions.js";
+import { ExtHostContext } from "../common/extHost.protocol.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+class ExtHostEditSessionIdentityCreateParticipant {
+  static {
+    __name(this, "ExtHostEditSessionIdentityCreateParticipant");
+  }
+  constructor(extHostContext) {
+    this.timeout = 2e4;
+    this._proxy = extHostContext.getProxy(ExtHostContext.ExtHostWorkspace);
+  }
+  async participate(workspaceFolder, token) {
+    const p = new Promise((resolve, reject) => {
+      setTimeout(() => reject(new Error(localize("timeout.onWillCreateEditSessionIdentity", "Aborted onWillCreateEditSessionIdentity-event after 10000ms"))), this.timeout);
+      this._proxy.$onWillCreateEditSessionIdentity(workspaceFolder.uri, token, this.timeout).then(resolve, reject);
+    });
+    return raceCancellationError(p, token);
+  }
+}
+let EditSessionIdentityCreateParticipant = class EditSessionIdentityCreateParticipant2 {
+  static {
+    __name(this, "EditSessionIdentityCreateParticipant");
+  }
+  constructor(extHostContext, instantiationService, _editSessionIdentityService) {
+    this._editSessionIdentityService = _editSessionIdentityService;
+    this._saveParticipantDisposable = this._editSessionIdentityService.addEditSessionIdentityCreateParticipant(instantiationService.createInstance(ExtHostEditSessionIdentityCreateParticipant, extHostContext));
+  }
+  dispose() {
+    this._saveParticipantDisposable.dispose();
+  }
+};
+EditSessionIdentityCreateParticipant = __decorate([
+  extHostCustomer,
+  __param(1, IInstantiationService),
+  __param(2, IEditSessionIdentityService)
+], EditSessionIdentityCreateParticipant);
+export {
+  EditSessionIdentityCreateParticipant
+};
+//# sourceMappingURL=mainThreadEditSessionIdentityParticipant.js.map

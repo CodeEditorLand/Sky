@@ -1,1 +1,818 @@
-import{h as j}from"../../../../base/browser/dom.js";import{$Tc as V}from"../../../../base/common/assert.js";import{$Mj as P}from"../../../../base/common/codicons.js";import{$a as Y}from"../../../../base/common/collections.js";import{Event as Z}from"../../../../base/common/event.js";import{$vd as ee,$ud as te}from"../../../../base/common/lifecycle.js";import{autorun as H,derived as ne}from"../../../../base/common/observable.js";import{ThemeIcon as O}from"../../../../base/common/themables.js";import{$8c as re}from"../../../../base/common/types.js";import{URI as _}from"../../../../base/common/uri.js";import{$cC as oe}from"../../../../editor/common/core/range.js";import{$elb as ie}from"../../../../editor/contrib/suggest/browser/suggestController.js";import{localize as p,localize2 as h}from"../../../../nls.js";import{$jgb as se}from"../../../../platform/actions/browser/actionViewItemService.js";import{$cgb as ce}from"../../../../platform/actions/browser/menuEntryActionViewItem.js";import{$iI as w,$dI as E,$hI as ae}from"../../../../platform/actions/common/actions.js";import{$Yn as W}from"../../../../platform/commands/common/commands.js";import{$Bn as A}from"../../../../platform/contextkey/common/contextkey.js";import{$qz as le}from"../../../../platform/extensionManagement/common/extensionManagement.js";import{$mj as R}from"../../../../platform/instantiation/common/instantiation.js";import{$iW as de}from"../../../../platform/mcp/common/mcpManagement.js";import{$nn as ue}from"../../../../platform/product/common/productService.js";import{$OM as T}from"../../../../platform/quickinput/common/quickInput.js";import{$Jt as pe}from"../../../../platform/theme/common/iconRegistry.js";import{$hl as fe}from"../../../../platform/workspace/common/workspace.js";import{$CN as me,$kO as ge}from"../../../common/contextkeys.js";import{$$$ as he}from"../../../services/authentication/browser/authenticationAccessService.js";import{$d3b as we}from"../../../services/authentication/browser/authenticationMcpAccessService.js";import{$h3b as be}from"../../../services/authentication/browser/authenticationMcpService.js";import{$cX as $e}from"../../../services/authentication/common/authentication.js";import{$oI as z}from"../../../services/editor/common/editorService.js";import{$Jwb as B}from"../../../services/views/common/viewsService.js";import{$lWb as Se}from"../../chat/browser/chat.js";import{ChatContextKeys as ve}from"../../chat/common/chatContextKeys.js";import{ChatMode as xe}from"../../chat/common/constants.js";import{$8O as ke}from"../../chat/common/languageModels.js";import{$xDb as Ce,$bDb as D}from"../../extensions/common/extensions.js";import{$EFb as Ae}from"../../files/common/files.js";import{McpContextKeys as y}from"../common/mcpContextKeys.js";import{$BW as I}from"../common/mcpRegistryTypes.js";import{$TW as G,$GW as v,$NW as ye,$RW as Ee,McpConnectionState as X,$KW as Ie,$PW as q}from"../common/mcpTypes.js";import{$Tic as K}from"./mcpCommandsAddConfiguration.js";import{$Ric as Me,$Qic as Oe}from"./mcpResourceQuickAccess.js";import{$Uic as Pe}from"./mcpUrlHandler.js";import{$Nic as Re}from"./openPanelChatAndGetWidget.js";var Q=function(f,e,n,r){var i=arguments.length,o=i<3?e:r===null?r=Object.getOwnPropertyDescriptor(e,n):r,a;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")o=Reflect.decorate(f,e,n,r);else for(var t=f.length-1;t>=0;t--)(a=f[t])&&(o=(i<3?a(o):i>3?a(e,n,o):a(e,n))||o);return i>3&&o&&Object.defineProperty(e,n,o),o},M=function(f,e){return function(n,r){e(n,r,f)}};const b={original:"MCP",value:"MCP"};class Ct extends w{constructor(){super({id:"workbench.mcp.listServer",title:h(8676,"List Servers"),icon:P.server,category:b,f1:!0,menu:{when:A.and(A.or(y.hasUnknownTools,y.hasServersWithErrors),ve.chatMode.isEqualTo(xe.Agent)),id:E.ChatExecute,group:"navigation",order:2}})}async run(e){const n=e.get(v),r=e.get(W),i=e.get(T),o=e.get(ye),a=e.get(D),t=e.get(B);if(e.get(de).isEnabled())return o.local.length?t.openView(Ee,!0):a.openSearch("@mcp");const c=new te,s=i.createQuickPick({useSeparators:!0});s.placeholder=p(8652,null),c.add(s),c.add(H(l=>{const g=Y(n.servers.read(l).slice().sort(($,x)=>($.collection.presentation?.order||0)-(x.collection.presentation?.order||0)),$=>$.collection.id),d=s.items.length===0;s.items=[{id:"$add",label:p(8653,null),description:p(8654,null),alwaysShow:!0,iconClass:O.asClassName(P.add)},...Object.values(g).filter($=>$.length).flatMap($=>[{type:"separator",label:$[0].collection.label,id:$[0].collection.id},...$.map(x=>({id:x.definition.id,label:x.definition.label,description:X.toString(x.connectionState.read(l))}))])],d&&s.items.length>3&&(s.activeItems=s.items.slice(2,3))}));const m=await new Promise(l=>{c.add(s.onDidAccept(()=>{l(s.activeItems[0])})),c.add(s.onDidHide(()=>{l(void 0)})),s.show()});c.dispose(),m&&(m.id==="$add"?r.executeCommand("workbench.mcp.addConfiguration"):r.executeCommand("workbench.mcp.serverOptions",m.id))}}class At extends w{constructor(){super({id:"workbench.mcp.serverOptions",title:h(8677,"Server Options"),category:b,f1:!1})}async run(e,n){const r=e.get(v),i=e.get(T),o=e.get(I),a=e.get(z),t=e.get(W),u=e.get(G),c=e.get(be),s=e.get(we),m=e.get(he),l=e.get($e),g=e.get(ue),d=r.servers.get().find(C=>C.definition.id===n);if(!d)return;const $=o.collections.get().find(C=>C.id===d.collection.id),x=$?.serverDefinitions.get().find(C=>C.id===d.definition.id),S=[],J=d.connectionState.get();S.push({type:"separator",label:p(8655,null)}),X.canBeStarted(J.state)?S.push({label:p(8656,null),action:"start"}):(S.push({label:p(8657,null),action:"stop"}),S.push({label:p(8658,null),action:"restart"}));const F=this.d(o,c,s,m,g,d.definition.id);F&&S.push(F);const k=x?.presentation?.origin||$?.presentation?.origin;k&&S.push({label:p(8659,null),action:"config"}),S.push({label:p(8660,null),action:"showOutput"}),S.push({type:"separator",label:p(8661,null)},{label:p(8662,null),description:p(8663,null),action:"configSampling"}),u.hasLogs(d)&&S.push({label:p(8664,null),description:p(8665,null),action:"samplingLog"});const N=d.capabilities.get();(N===void 0||N&16)&&(S.push({type:"separator",label:p(8666,null)}),S.push({label:p(8667,null),action:"resources"}));const L=await i.pick(S,{placeHolder:p(8668,null,d.definition.label)});if(L)switch(L.action){case"start":await d.start({isFromInteraction:!0}),d.showOutput();break;case"stop":await d.stop();break;case"restart":await d.stop(),await d.start({isFromInteraction:!0});break;case"disconnect":await this.g(o,c,s,l,d,!1);break;case"signout":await this.g(o,c,s,l,d,!0);break;case"showOutput":d.showOutput();break;case"config":a.openEditor({resource:_.isUri(k)?k:k.uri,options:{selection:_.isUri(k)?void 0:k.range}});break;case"configSampling":return t.executeCommand("workbench.mcp.configureSamplingModels",d);case"resources":return t.executeCommand("workbench.mcp.browseResources",d);case"samplingLog":a.openEditor({resource:void 0,contents:u.getLogText(d),label:p(8669,null,d.definition.label)});break;default:V(L.action)}}d(e,n,r,i,o,a){const t=e.getAuthenticationUsage(a);if(!t)return;const u=n.getAccountPreference(a,t);return!u||!r.isAccessAllowed(t,u,a)?void 0:this.f(r,i,o,t,u).length>1?{action:"disconnect",label:p(8670,null),description:`(${u})`}:{action:"signout",label:p(8671,null),description:`(${u})`}}f(e,n,r,i,o){const a=Array.isArray(r.trustedExtensionAuthAccess)||!r.trustedExtensionAuthAccess?[]:r.trustedExtensionAuthAccess[i]??[],t=Array.isArray(r.trustedMcpAuthAccess)||!r.trustedMcpAuthAccess?[]:r.trustedMcpAuthAccess[i]??[];return[...e.readAllowedMcpServers(i,o).filter(u=>!u.trusted),...n.readAllowedExtensions(i,o).filter(u=>!u.trusted),...a,...t]}async g(e,n,r,i,o,a){const t=e.getAuthenticationUsage(o.definition.id);if(!t)return;const u=n.getAccountPreference(o.definition.id,t);if(u&&(r.updateAllowedMcpServers(t,u,[{id:o.definition.id,name:o.definition.label,allowed:!1}]),a)){const s=(await i.getAccounts(t)).find(m=>m.label===u);if(s){const m=await i.getSessions(t,void 0,{account:s});for(const l of m)await i.removeSession(t,l.id)}}}}let U=class extends ee{constructor(e,n,r,i){super();let o;(function(t){t[t.None=0]="None",t[t.NewTools=1]="NewTools",t[t.Error=2]="Error",t[t.Refreshing=3]="Refreshing"})(o||(o={}));const a=ne(t=>{const u=n.servers.read(t),c=[];for(const l of u){let g=0;switch(l.cacheState.read(t)){case 0:case 2:l.trusted.read(t)===!1?g=0:g=l.connectionState.read(t).state===3?2:1;break;case 3:g=3;break;default:g=l.connectionState.read(t).state===3?2:0;break}c[g]??=[],c[g].push(l)}const s=n.lazyCollectionState.read(t);s===1?c[3]??=[]:s===0&&(c[1]??=[]);const m=c.length-1;return{state:m,servers:c[m]||[]}});this.q.add(e.register(E.ChatExecute,"workbench.mcp.listServer",(t,u)=>{if(t instanceof ae)return r.createInstance(class extends ce{render(c){super.render(c),c.classList.add("chat-mcp");const s=j("button.chat-mcp-action",[j("span@icon")]);this.B(H(m=>{const{state:l}=a.read(m),{root:g,icon:d}=s;this.G(),c.classList.toggle("chat-mcp-has-action",l!==0),g.parentElement||c.appendChild(g),g.ariaLabel=this.m(a.read(m)),g.className="chat-mcp-action",d.className="",l===1?(g.classList.add("chat-mcp-action-new"),d.classList.add(...O.asClassNameArray(P.refresh))):l===2?(g.classList.add("chat-mcp-action-error"),d.classList.add(...O.asClassNameArray(P.warning))):l===3?(g.classList.add("chat-mcp-action-refreshing"),d.classList.add(...O.asClassNameArray(pe))):g.remove()}))}async onClick(c){c.preventDefault(),c.stopPropagation();const{state:s,servers:m}=a.get();if(s===1)m.forEach(l=>l.stop().then(()=>l.start())),n.activateCollections();else if(s===3)m.at(-1)?.showOutput();else if(s===2){const l=m.at(-1);l&&i.executeCommand("workbench.mcp.serverOptions",l.definition.id)}else i.executeCommand("workbench.mcp.listServer")}F(){return this.m()||super.F()}m({state:c,servers:s}=a.get()){return c===1?p(8672,null,s.length||1):c===2?p(8673,null,s.length||1):c===3?p(8674,null):null}},t,{...u,keybindingNotRenderedWithLabel:!0})},Z.fromObservable(a)))}};U=Q([M(0,se),M(1,v),M(2,R),M(3,W)],U);class Et extends w{constructor(){super({id:"workbench.mcp.resetTrust",title:h(8678,"Reset Trust"),category:b,f1:!0,precondition:y.toolsCount.greater(0)})}run(e){e.get(I).resetTrust()}}class It extends w{constructor(){super({id:"workbench.mcp.resetCachedTools",title:h(8679,"Reset Cached Tools"),category:b,f1:!0,precondition:y.toolsCount.greater(0)})}run(e){e.get(v).resetCaches()}}class Mt extends w{constructor(){super({id:"workbench.mcp.addConfiguration",title:h(8680,"Add Server..."),metadata:{description:h(8681,"Installs a new Model Context protocol to the mcp.json settings")},category:b,f1:!0,menu:{id:E.EditorContent,when:A.and(A.regex(ge.Path.key,/\.vscode[/\\]mcp\.json$/),me.isEqualTo(Ae))}})}async run(e,n){return e.get(R).createInstance(K,n).run()}}class Ot extends w{constructor(){super({id:"workbench.mcp.removeStoredInput",title:h(8682,"Reset Cached Tools"),category:b,f1:!1})}run(e,n,r){e.get(I).clearSavedInputs(n,r)}}class Pt extends w{constructor(){super({id:"workbench.mcp.editStoredInput",title:h(8683,"Edit Stored Input"),category:b,f1:!1})}run(e,n,r,i,o){const a=r&&e.get(fe).getWorkspaceFolder(r);e.get(I).editSavedInput(n,a||void 0,i,o)}}class Rt extends w{constructor(){super({id:"workbench.mcp.showConfiguration",title:h(8684,"Show Configuration"),category:b,f1:!1})}run(e,n,r){const i=e.get(I).collections.get().find(t=>t.id===n);if(!i)return;const o=i?.serverDefinitions.get().find(t=>t.id===r),a=e.get(z);o?.presentation?.origin?a.openEditor({resource:o.presentation.origin.uri,options:{selection:o.presentation.origin.range}}):i.presentation?.origin&&a.openEditor({resource:i.presentation.origin})}}class Tt extends w{constructor(){super({id:"workbench.mcp.showOutput",title:h(8685,"Show Output"),category:b,f1:!1})}run(e,n){e.get(v).servers.get().find(r=>r.definition.id===n)?.showOutput()}}class Lt extends w{constructor(){super({id:"workbench.mcp.restartServer",title:h(8686,"Restart Server"),category:b,f1:!1})}async run(e,n,r){const i=e.get(v).servers.get().find(o=>o.definition.id===n);i?.showOutput(),await i?.stop(),await i?.start({isFromInteraction:!0,...r})}}class Wt extends w{constructor(){super({id:"workbench.mcp.startServer",title:h(8687,"Start Server"),category:b,f1:!1})}async run(e,n,r){await e.get(v).servers.get().find(o=>o.definition.id===n)?.start({isFromInteraction:!0,...r})}}class Ft extends w{constructor(){super({id:"workbench.mcp.stopServer",title:h(8688,"Stop Server"),category:b,f1:!1})}async run(e,n){await e.get(v).servers.get().find(i=>i.definition.id===n)?.stop()}}class Nt extends w{constructor(){super({id:"workbench.mcp.installFromActivation",title:h(8689,"Install..."),category:b,f1:!1,menu:{id:E.EditorContent,when:A.equals("resourceScheme",Pe.scheme)}})}async run(e,n){e.get(R).createInstance(K,void 0).pickForUrlHandler(n)}}class jt extends w{constructor(){super({id:"workbench.mcp.browseServers",title:h(8690,"MCP Servers"),category:le,menu:[{id:E.CommandPalette,when:q},{id:Ce,when:q,group:"1_predefined",order:1}]})}async run(e){e.get(D).openSearch("@mcp ")}}class _t extends w{constructor(){super({id:"workbench.mcp.browseResources",title:h(8691,"Browse Resources..."),category:b,precondition:y.serverCount.greater(0),f1:!0})}run(e,n){n?e.get(R).createInstance(Oe,n).pick():e.get(T).quickAccess.show(Me.PREFIX)}}class qt extends w{constructor(){super({id:"workbench.mcp.configureSamplingModels",title:h(8692,"Configure SamplingModel"),category:b})}async run(e,n){const r=e.get(T),i=e.get(ke),o=e.get(G),a=new Set(o.getConfig(n).allowedModels),t=i.getLanguageModelIds().map(c=>{const s=i.lookupLanguageModel(c);if(s.isUserSelectable)return{label:s.name,description:s.description,id:c,picked:a.size?a.has(c):s.isDefault}}).filter(re);t.sort((c,s)=>(s.picked?1:0)-(c.picked?1:0)||c.label.localeCompare(s.label));const u=await r.pick(t,{placeHolder:p(8675,null,n.definition.label),canPickMany:!0});return u&&await o.updateConfig(n,c=>c.allowedModels=u.map(s=>s.id)),u?.length||0}}class Ut extends w{constructor(){super({id:"workbench.mcp.startPromptForServer",title:h(8693,"Start Prompting Server"),category:b,f1:!1})}async run(e,n){const r=await Re(e.get(B),e.get(Se));if(!r)return;const i=r.inputEditor,o=i.getModel();if(!o)return;const a=(i.getSelection()||o.getFullModelRange()).collapseToEnd(),t=Ie(n.definition)+".";o.applyEdits([{range:a,text:t}]),i.setSelection(oe.fromPositions(a.getEndPosition().delta(0,t.length))),r.focusInput(),ie.get(i)?.triggerSuggest()}}export{_t as $$ic,jt as $0ic,Mt as $1ic,Ot as $2ic,Pt as $3ic,Rt as $4ic,Tt as $5ic,Lt as $6ic,Wt as $7ic,Ft as $8ic,Nt as $9ic,Ct as $Vic,At as $Wic,U as $Xic,Et as $Yic,It as $Zic,qt as $_ic,Ut as $ajc};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { h } from "../../../../base/browser/dom.js";
+import { assertNever } from "../../../../base/common/assert.js";
+import { Codicon } from "../../../../base/common/codicons.js";
+import { groupBy } from "../../../../base/common/collections.js";
+import { Event } from "../../../../base/common/event.js";
+import { Disposable, DisposableStore } from "../../../../base/common/lifecycle.js";
+import { autorun, derived } from "../../../../base/common/observable.js";
+import { ThemeIcon } from "../../../../base/common/themables.js";
+import { isDefined } from "../../../../base/common/types.js";
+import { URI } from "../../../../base/common/uri.js";
+import { Range } from "../../../../editor/common/core/range.js";
+import { SuggestController } from "../../../../editor/contrib/suggest/browser/suggestController.js";
+import { localize, localize2 } from "../../../../nls.js";
+import { IActionViewItemService } from "../../../../platform/actions/browser/actionViewItemService.js";
+import { MenuEntryActionViewItem } from "../../../../platform/actions/browser/menuEntryActionViewItem.js";
+import { Action2, MenuId, MenuItemAction } from "../../../../platform/actions/common/actions.js";
+import { ICommandService } from "../../../../platform/commands/common/commands.js";
+import { ContextKeyExpr } from "../../../../platform/contextkey/common/contextkey.js";
+import { ExtensionsLocalizedLabel } from "../../../../platform/extensionManagement/common/extensionManagement.js";
+import { IInstantiationService } from "../../../../platform/instantiation/common/instantiation.js";
+import { IMcpGalleryService } from "../../../../platform/mcp/common/mcpManagement.js";
+import { IProductService } from "../../../../platform/product/common/productService.js";
+import { IQuickInputService } from "../../../../platform/quickinput/common/quickInput.js";
+import { spinningLoading } from "../../../../platform/theme/common/iconRegistry.js";
+import { IWorkspaceContextService } from "../../../../platform/workspace/common/workspace.js";
+import { ActiveEditorContext, ResourceContextKey } from "../../../common/contextkeys.js";
+import { IAuthenticationAccessService } from "../../../services/authentication/browser/authenticationAccessService.js";
+import { IAuthenticationMcpAccessService } from "../../../services/authentication/browser/authenticationMcpAccessService.js";
+import { IAuthenticationMcpService } from "../../../services/authentication/browser/authenticationMcpService.js";
+import { IAuthenticationService } from "../../../services/authentication/common/authentication.js";
+import { IEditorService } from "../../../services/editor/common/editorService.js";
+import { IViewsService } from "../../../services/views/common/viewsService.js";
+import { IChatWidgetService } from "../../chat/browser/chat.js";
+import { ChatContextKeys } from "../../chat/common/chatContextKeys.js";
+import { ChatMode } from "../../chat/common/constants.js";
+import { ILanguageModelsService } from "../../chat/common/languageModels.js";
+import { extensionsFilterSubMenu, IExtensionsWorkbenchService } from "../../extensions/common/extensions.js";
+import { TEXT_FILE_EDITOR_ID } from "../../files/common/files.js";
+import { McpContextKeys } from "../common/mcpContextKeys.js";
+import { IMcpRegistry } from "../common/mcpRegistryTypes.js";
+import { IMcpSamplingService, IMcpService, IMcpWorkbenchService, InstalledMcpServersViewId, McpConnectionState, mcpPromptPrefix, McpServersGalleryEnabledContext } from "../common/mcpTypes.js";
+import { McpAddConfigurationCommand } from "./mcpCommandsAddConfiguration.js";
+import { McpResourceQuickAccess, McpResourceQuickPick } from "./mcpResourceQuickAccess.js";
+import { McpUrlHandler } from "./mcpUrlHandler.js";
+import { openPanelChatAndGetWidget } from "./openPanelChatAndGetWidget.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+const category = {
+  original: "MCP",
+  value: "MCP"
+};
+class ListMcpServerCommand extends Action2 {
+  static {
+    __name(this, "ListMcpServerCommand");
+  }
+  constructor() {
+    super({
+      id: "workbench.mcp.listServer",
+      title: localize2("mcp.list", "List Servers"),
+      icon: Codicon.server,
+      category,
+      f1: true,
+      menu: {
+        when: ContextKeyExpr.and(ContextKeyExpr.or(McpContextKeys.hasUnknownTools, McpContextKeys.hasServersWithErrors), ChatContextKeys.chatMode.isEqualTo(ChatMode.Agent)),
+        id: MenuId.ChatExecute,
+        group: "navigation",
+        order: 2
+      }
+    });
+  }
+  async run(accessor) {
+    const mcpService = accessor.get(IMcpService);
+    const commandService = accessor.get(ICommandService);
+    const quickInput = accessor.get(IQuickInputService);
+    const mcpWorkbenchService = accessor.get(IMcpWorkbenchService);
+    const extensionWorkbenchService = accessor.get(IExtensionsWorkbenchService);
+    const viewsService = accessor.get(IViewsService);
+    const mcpGalleryService = accessor.get(IMcpGalleryService);
+    if (mcpGalleryService.isEnabled()) {
+      if (mcpWorkbenchService.local.length) {
+        return viewsService.openView(InstalledMcpServersViewId, true);
+      } else {
+        return extensionWorkbenchService.openSearch("@mcp");
+      }
+    }
+    const store = new DisposableStore();
+    const pick = quickInput.createQuickPick({ useSeparators: true });
+    pick.placeholder = localize("mcp.selectServer", "Select an MCP Server");
+    store.add(pick);
+    store.add(autorun((reader) => {
+      const servers = groupBy(mcpService.servers.read(reader).slice().sort((a, b) => (a.collection.presentation?.order || 0) - (b.collection.presentation?.order || 0)), (s) => s.collection.id);
+      const firstRun = pick.items.length === 0;
+      pick.items = [
+        { id: "$add", label: localize("mcp.addServer", "Add Server"), description: localize("mcp.addServer.description", "Add a new server configuration"), alwaysShow: true, iconClass: ThemeIcon.asClassName(Codicon.add) },
+        ...Object.values(servers).filter((s) => s.length).flatMap((servers2) => [
+          { type: "separator", label: servers2[0].collection.label, id: servers2[0].collection.id },
+          ...servers2.map((server) => ({
+            id: server.definition.id,
+            label: server.definition.label,
+            description: McpConnectionState.toString(server.connectionState.read(reader))
+          }))
+        ])
+      ];
+      if (firstRun && pick.items.length > 3) {
+        pick.activeItems = pick.items.slice(2, 3);
+      }
+    }));
+    const picked = await new Promise((resolve) => {
+      store.add(pick.onDidAccept(() => {
+        resolve(pick.activeItems[0]);
+      }));
+      store.add(pick.onDidHide(() => {
+        resolve(void 0);
+      }));
+      pick.show();
+    });
+    store.dispose();
+    if (!picked) {
+    } else if (picked.id === "$add") {
+      commandService.executeCommand(
+        "workbench.mcp.addConfiguration"
+        /* McpCommandIds.AddConfiguration */
+      );
+    } else {
+      commandService.executeCommand("workbench.mcp.serverOptions", picked.id);
+    }
+  }
+}
+class McpServerOptionsCommand extends Action2 {
+  static {
+    __name(this, "McpServerOptionsCommand");
+  }
+  constructor() {
+    super({
+      id: "workbench.mcp.serverOptions",
+      title: localize2("mcp.options", "Server Options"),
+      category,
+      f1: false
+    });
+  }
+  async run(accessor, id) {
+    const mcpService = accessor.get(IMcpService);
+    const quickInputService = accessor.get(IQuickInputService);
+    const mcpRegistry = accessor.get(IMcpRegistry);
+    const editorService = accessor.get(IEditorService);
+    const commandService = accessor.get(ICommandService);
+    const samplingService = accessor.get(IMcpSamplingService);
+    const authenticationMcpService = accessor.get(IAuthenticationMcpService);
+    const authenticationMcpAccessService = accessor.get(IAuthenticationMcpAccessService);
+    const authenticationExtensionAccessService = accessor.get(IAuthenticationAccessService);
+    const authenticationService = accessor.get(IAuthenticationService);
+    const productService = accessor.get(IProductService);
+    const server = mcpService.servers.get().find((s) => s.definition.id === id);
+    if (!server) {
+      return;
+    }
+    const collection = mcpRegistry.collections.get().find((c) => c.id === server.collection.id);
+    const serverDefinition = collection?.serverDefinitions.get().find((s) => s.id === server.definition.id);
+    const items = [];
+    const serverState = server.connectionState.get();
+    items.push({ type: "separator", label: localize("mcp.actions.status", "Status") });
+    if (McpConnectionState.canBeStarted(serverState.state)) {
+      items.push({
+        label: localize("mcp.start", "Start Server"),
+        action: "start"
+      });
+    } else {
+      items.push({
+        label: localize("mcp.stop", "Stop Server"),
+        action: "stop"
+      });
+      items.push({
+        label: localize("mcp.restart", "Restart Server"),
+        action: "restart"
+      });
+    }
+    const item = this._getAuthAction(mcpRegistry, authenticationMcpService, authenticationMcpAccessService, authenticationExtensionAccessService, productService, server.definition.id);
+    if (item) {
+      items.push(item);
+    }
+    const configTarget = serverDefinition?.presentation?.origin || collection?.presentation?.origin;
+    if (configTarget) {
+      items.push({
+        label: localize("mcp.config", "Show Configuration"),
+        action: "config"
+      });
+    }
+    items.push({
+      label: localize("mcp.showOutput", "Show Output"),
+      action: "showOutput"
+    });
+    items.push({ type: "separator", label: localize("mcp.actions.sampling", "Sampling") }, {
+      label: localize("mcp.configAccess", "Configure Model Access"),
+      description: localize("mcp.showOutput.description", "Set the models the server can use via MCP sampling"),
+      action: "configSampling"
+    });
+    if (samplingService.hasLogs(server)) {
+      items.push({
+        label: localize("mcp.samplingLog", "Show Sampling Requests"),
+        description: localize("mcp.samplingLog.description", "Show the sampling requests for this server"),
+        action: "samplingLog"
+      });
+    }
+    const capabilities = server.capabilities.get();
+    if (capabilities === void 0 || capabilities & 16) {
+      items.push({ type: "separator", label: localize("mcp.actions.resources", "Resources") });
+      items.push({
+        label: localize("mcp.resources", "Browse Resources"),
+        action: "resources"
+      });
+    }
+    const pick = await quickInputService.pick(items, {
+      placeHolder: localize("mcp.selectAction", "Select action for '{0}'", server.definition.label)
+    });
+    if (!pick) {
+      return;
+    }
+    switch (pick.action) {
+      case "start":
+        await server.start({ isFromInteraction: true });
+        server.showOutput();
+        break;
+      case "stop":
+        await server.stop();
+        break;
+      case "restart":
+        await server.stop();
+        await server.start({ isFromInteraction: true });
+        break;
+      case "disconnect":
+        await this._handleAuth(mcpRegistry, authenticationMcpService, authenticationMcpAccessService, authenticationService, server, false);
+        break;
+      case "signout":
+        await this._handleAuth(mcpRegistry, authenticationMcpService, authenticationMcpAccessService, authenticationService, server, true);
+        break;
+      case "showOutput":
+        server.showOutput();
+        break;
+      case "config":
+        editorService.openEditor({
+          resource: URI.isUri(configTarget) ? configTarget : configTarget.uri,
+          options: { selection: URI.isUri(configTarget) ? void 0 : configTarget.range }
+        });
+        break;
+      case "configSampling":
+        return commandService.executeCommand("workbench.mcp.configureSamplingModels", server);
+      case "resources":
+        return commandService.executeCommand("workbench.mcp.browseResources", server);
+      case "samplingLog":
+        editorService.openEditor({
+          resource: void 0,
+          contents: samplingService.getLogText(server),
+          label: localize("mcp.samplingLog.title", "MCP Sampling: {0}", server.definition.label)
+        });
+        break;
+      default:
+        assertNever(pick.action);
+    }
+  }
+  _getAuthAction(mcpRegistry, authenticationMcpService, authenticationMcpAccessService, authenticationAccessService, productService, serverId) {
+    const providerId = mcpRegistry.getAuthenticationUsage(serverId);
+    if (!providerId) {
+      return void 0;
+    }
+    const preference = authenticationMcpService.getAccountPreference(serverId, providerId);
+    if (!preference) {
+      return void 0;
+    }
+    if (!authenticationMcpAccessService.isAccessAllowed(providerId, preference, serverId)) {
+      return void 0;
+    }
+    const allowedServers = this._getAllAllowedItems(authenticationMcpAccessService, authenticationAccessService, productService, providerId, preference);
+    if (allowedServers.length > 1) {
+      return {
+        action: "disconnect",
+        label: localize("mcp.disconnect", "Disconnect Account"),
+        description: `(${preference})`
+      };
+    }
+    return {
+      action: "signout",
+      label: localize("mcp.signOut", "Sign Out"),
+      description: `(${preference})`
+    };
+  }
+  // TODO@TylerLeonhardt: The fact that this function exists means that these classes could really use some refactoring...
+  _getAllAllowedItems(authenticationMcpAccessService, authenticationAccessService, productService, providerId, preference) {
+    const trustedExtensionAuth = Array.isArray(productService.trustedExtensionAuthAccess) || !productService.trustedExtensionAuthAccess ? [] : productService.trustedExtensionAuthAccess[providerId] ?? [];
+    const trustedMcpAuth = Array.isArray(productService.trustedMcpAuthAccess) || !productService.trustedMcpAuthAccess ? [] : productService.trustedMcpAuthAccess[providerId] ?? [];
+    return [
+      ...authenticationMcpAccessService.readAllowedMcpServers(providerId, preference).filter((s) => !s.trusted),
+      ...authenticationAccessService.readAllowedExtensions(providerId, preference).filter((e) => !e.trusted),
+      ...trustedExtensionAuth,
+      ...trustedMcpAuth
+    ];
+  }
+  async _handleAuth(mcpRegistry, authenticationMcpService, authenticationMcpAccessService, authenticationService, server, signOut) {
+    const providerId = mcpRegistry.getAuthenticationUsage(server.definition.id);
+    if (!providerId) {
+      return;
+    }
+    const preference = authenticationMcpService.getAccountPreference(server.definition.id, providerId);
+    if (!preference) {
+      return;
+    }
+    authenticationMcpAccessService.updateAllowedMcpServers(providerId, preference, [
+      {
+        id: server.definition.id,
+        name: server.definition.label,
+        allowed: false
+      }
+    ]);
+    if (signOut) {
+      const accounts = await authenticationService.getAccounts(providerId);
+      const account = accounts.find((a) => a.label === preference);
+      if (account) {
+        const sessions = await authenticationService.getSessions(providerId, void 0, { account });
+        for (const session of sessions) {
+          await authenticationService.removeSession(providerId, session.id);
+        }
+      }
+    }
+  }
+}
+let MCPServerActionRendering = class MCPServerActionRendering2 extends Disposable {
+  static {
+    __name(this, "MCPServerActionRendering");
+  }
+  constructor(actionViewItemService, mcpService, instaService, commandService) {
+    super();
+    let DisplayedState;
+    (function(DisplayedState2) {
+      DisplayedState2[DisplayedState2["None"] = 0] = "None";
+      DisplayedState2[DisplayedState2["NewTools"] = 1] = "NewTools";
+      DisplayedState2[DisplayedState2["Error"] = 2] = "Error";
+      DisplayedState2[DisplayedState2["Refreshing"] = 3] = "Refreshing";
+    })(DisplayedState || (DisplayedState = {}));
+    const displayedState = derived((reader) => {
+      const servers = mcpService.servers.read(reader);
+      const serversPerState = [];
+      for (const server of servers) {
+        let thisState = 0;
+        switch (server.cacheState.read(reader)) {
+          case 0:
+          case 2:
+            if (server.trusted.read(reader) === false) {
+              thisState = 0;
+            } else {
+              thisState = server.connectionState.read(reader).state === 3 ? 2 : 1;
+            }
+            break;
+          case 3:
+            thisState = 3;
+            break;
+          default:
+            thisState = server.connectionState.read(reader).state === 3 ? 2 : 0;
+            break;
+        }
+        serversPerState[thisState] ??= [];
+        serversPerState[thisState].push(server);
+      }
+      const unknownServerStates = mcpService.lazyCollectionState.read(reader);
+      if (unknownServerStates === 1) {
+        serversPerState[
+          3
+          /* DisplayedState.Refreshing */
+        ] ??= [];
+      } else if (unknownServerStates === 0) {
+        serversPerState[
+          1
+          /* DisplayedState.NewTools */
+        ] ??= [];
+      }
+      const maxState = serversPerState.length - 1;
+      return { state: maxState, servers: serversPerState[maxState] || [] };
+    });
+    this._store.add(actionViewItemService.register(MenuId.ChatExecute, "workbench.mcp.listServer", (action, options) => {
+      if (!(action instanceof MenuItemAction)) {
+        return void 0;
+      }
+      return instaService.createInstance(class extends MenuEntryActionViewItem {
+        render(container) {
+          super.render(container);
+          container.classList.add("chat-mcp");
+          const action2 = h("button.chat-mcp-action", [h("span@icon")]);
+          this._register(autorun((r) => {
+            const { state } = displayedState.read(r);
+            const { root, icon } = action2;
+            this.updateTooltip();
+            container.classList.toggle(
+              "chat-mcp-has-action",
+              state !== 0
+              /* DisplayedState.None */
+            );
+            if (!root.parentElement) {
+              container.appendChild(root);
+            }
+            root.ariaLabel = this.getLabelForState(displayedState.read(r));
+            root.className = "chat-mcp-action";
+            icon.className = "";
+            if (state === 1) {
+              root.classList.add("chat-mcp-action-new");
+              icon.classList.add(...ThemeIcon.asClassNameArray(Codicon.refresh));
+            } else if (state === 2) {
+              root.classList.add("chat-mcp-action-error");
+              icon.classList.add(...ThemeIcon.asClassNameArray(Codicon.warning));
+            } else if (state === 3) {
+              root.classList.add("chat-mcp-action-refreshing");
+              icon.classList.add(...ThemeIcon.asClassNameArray(spinningLoading));
+            } else {
+              root.remove();
+            }
+          }));
+        }
+        async onClick(e) {
+          e.preventDefault();
+          e.stopPropagation();
+          const { state, servers } = displayedState.get();
+          if (state === 1) {
+            servers.forEach((server) => server.stop().then(() => server.start()));
+            mcpService.activateCollections();
+          } else if (state === 3) {
+            servers.at(-1)?.showOutput();
+          } else if (state === 2) {
+            const server = servers.at(-1);
+            if (server) {
+              commandService.executeCommand("workbench.mcp.serverOptions", server.definition.id);
+            }
+          } else {
+            commandService.executeCommand(
+              "workbench.mcp.listServer"
+              /* McpCommandIds.ListServer */
+            );
+          }
+        }
+        getTooltip() {
+          return this.getLabelForState() || super.getTooltip();
+        }
+        getLabelForState({ state, servers } = displayedState.get()) {
+          if (state === 1) {
+            return localize("mcp.newTools", "New tools available ({0})", servers.length || 1);
+          } else if (state === 2) {
+            return localize("mcp.toolError", "Error loading {0} tool(s)", servers.length || 1);
+          } else if (state === 3) {
+            return localize("mcp.toolRefresh", "Discovering tools...");
+          } else {
+            return null;
+          }
+        }
+      }, action, { ...options, keybindingNotRenderedWithLabel: true });
+    }, Event.fromObservable(displayedState)));
+  }
+};
+MCPServerActionRendering = __decorate([
+  __param(0, IActionViewItemService),
+  __param(1, IMcpService),
+  __param(2, IInstantiationService),
+  __param(3, ICommandService)
+], MCPServerActionRendering);
+class ResetMcpTrustCommand extends Action2 {
+  static {
+    __name(this, "ResetMcpTrustCommand");
+  }
+  constructor() {
+    super({
+      id: "workbench.mcp.resetTrust",
+      title: localize2("mcp.resetTrust", "Reset Trust"),
+      category,
+      f1: true,
+      precondition: McpContextKeys.toolsCount.greater(0)
+    });
+  }
+  run(accessor) {
+    const mcpService = accessor.get(IMcpRegistry);
+    mcpService.resetTrust();
+  }
+}
+class ResetMcpCachedTools extends Action2 {
+  static {
+    __name(this, "ResetMcpCachedTools");
+  }
+  constructor() {
+    super({
+      id: "workbench.mcp.resetCachedTools",
+      title: localize2("mcp.resetCachedTools", "Reset Cached Tools"),
+      category,
+      f1: true,
+      precondition: McpContextKeys.toolsCount.greater(0)
+    });
+  }
+  run(accessor) {
+    const mcpService = accessor.get(IMcpService);
+    mcpService.resetCaches();
+  }
+}
+class AddConfigurationAction extends Action2 {
+  static {
+    __name(this, "AddConfigurationAction");
+  }
+  constructor() {
+    super({
+      id: "workbench.mcp.addConfiguration",
+      title: localize2("mcp.addConfiguration", "Add Server..."),
+      metadata: {
+        description: localize2("mcp.addConfiguration.description", "Installs a new Model Context protocol to the mcp.json settings")
+      },
+      category,
+      f1: true,
+      menu: {
+        id: MenuId.EditorContent,
+        when: ContextKeyExpr.and(ContextKeyExpr.regex(ResourceContextKey.Path.key, /\.vscode[/\\]mcp\.json$/), ActiveEditorContext.isEqualTo(TEXT_FILE_EDITOR_ID))
+      }
+    });
+  }
+  async run(accessor, configUri) {
+    return accessor.get(IInstantiationService).createInstance(McpAddConfigurationCommand, configUri).run();
+  }
+}
+class RemoveStoredInput extends Action2 {
+  static {
+    __name(this, "RemoveStoredInput");
+  }
+  constructor() {
+    super({
+      id: "workbench.mcp.removeStoredInput",
+      title: localize2("mcp.resetCachedTools", "Reset Cached Tools"),
+      category,
+      f1: false
+    });
+  }
+  run(accessor, scope, id) {
+    accessor.get(IMcpRegistry).clearSavedInputs(scope, id);
+  }
+}
+class EditStoredInput extends Action2 {
+  static {
+    __name(this, "EditStoredInput");
+  }
+  constructor() {
+    super({
+      id: "workbench.mcp.editStoredInput",
+      title: localize2("mcp.editStoredInput", "Edit Stored Input"),
+      category,
+      f1: false
+    });
+  }
+  run(accessor, inputId, uri, configSection, target) {
+    const workspaceFolder = uri && accessor.get(IWorkspaceContextService).getWorkspaceFolder(uri);
+    accessor.get(IMcpRegistry).editSavedInput(inputId, workspaceFolder || void 0, configSection, target);
+  }
+}
+class ShowConfiguration extends Action2 {
+  static {
+    __name(this, "ShowConfiguration");
+  }
+  constructor() {
+    super({
+      id: "workbench.mcp.showConfiguration",
+      title: localize2("mcp.command.showConfiguration", "Show Configuration"),
+      category,
+      f1: false
+    });
+  }
+  run(accessor, collectionId, serverId) {
+    const collection = accessor.get(IMcpRegistry).collections.get().find((c) => c.id === collectionId);
+    if (!collection) {
+      return;
+    }
+    const server = collection?.serverDefinitions.get().find((s) => s.id === serverId);
+    const editorService = accessor.get(IEditorService);
+    if (server?.presentation?.origin) {
+      editorService.openEditor({
+        resource: server.presentation.origin.uri,
+        options: { selection: server.presentation.origin.range }
+      });
+    } else if (collection.presentation?.origin) {
+      editorService.openEditor({
+        resource: collection.presentation.origin
+      });
+    }
+  }
+}
+class ShowOutput extends Action2 {
+  static {
+    __name(this, "ShowOutput");
+  }
+  constructor() {
+    super({
+      id: "workbench.mcp.showOutput",
+      title: localize2("mcp.command.showOutput", "Show Output"),
+      category,
+      f1: false
+    });
+  }
+  run(accessor, serverId) {
+    accessor.get(IMcpService).servers.get().find((s) => s.definition.id === serverId)?.showOutput();
+  }
+}
+class RestartServer extends Action2 {
+  static {
+    __name(this, "RestartServer");
+  }
+  constructor() {
+    super({
+      id: "workbench.mcp.restartServer",
+      title: localize2("mcp.command.restartServer", "Restart Server"),
+      category,
+      f1: false
+    });
+  }
+  async run(accessor, serverId, opts) {
+    const s = accessor.get(IMcpService).servers.get().find((s2) => s2.definition.id === serverId);
+    s?.showOutput();
+    await s?.stop();
+    await s?.start({ isFromInteraction: true, ...opts });
+  }
+}
+class StartServer extends Action2 {
+  static {
+    __name(this, "StartServer");
+  }
+  constructor() {
+    super({
+      id: "workbench.mcp.startServer",
+      title: localize2("mcp.command.startServer", "Start Server"),
+      category,
+      f1: false
+    });
+  }
+  async run(accessor, serverId, opts) {
+    const s = accessor.get(IMcpService).servers.get().find((s2) => s2.definition.id === serverId);
+    await s?.start({ isFromInteraction: true, ...opts });
+  }
+}
+class StopServer extends Action2 {
+  static {
+    __name(this, "StopServer");
+  }
+  constructor() {
+    super({
+      id: "workbench.mcp.stopServer",
+      title: localize2("mcp.command.stopServer", "Stop Server"),
+      category,
+      f1: false
+    });
+  }
+  async run(accessor, serverId) {
+    const s = accessor.get(IMcpService).servers.get().find((s2) => s2.definition.id === serverId);
+    await s?.stop();
+  }
+}
+class InstallFromActivation extends Action2 {
+  static {
+    __name(this, "InstallFromActivation");
+  }
+  constructor() {
+    super({
+      id: "workbench.mcp.installFromActivation",
+      title: localize2("mcp.command.installFromActivation", "Install..."),
+      category,
+      f1: false,
+      menu: {
+        id: MenuId.EditorContent,
+        when: ContextKeyExpr.equals("resourceScheme", McpUrlHandler.scheme)
+      }
+    });
+  }
+  async run(accessor, uri) {
+    const addConfigHelper = accessor.get(IInstantiationService).createInstance(McpAddConfigurationCommand, void 0);
+    addConfigHelper.pickForUrlHandler(uri);
+  }
+}
+class McpBrowseCommand extends Action2 {
+  static {
+    __name(this, "McpBrowseCommand");
+  }
+  constructor() {
+    super({
+      id: "workbench.mcp.browseServers",
+      title: localize2("mcp.command.browse", "MCP Servers"),
+      category: ExtensionsLocalizedLabel,
+      menu: [{
+        id: MenuId.CommandPalette,
+        when: McpServersGalleryEnabledContext
+      }, {
+        id: extensionsFilterSubMenu,
+        when: McpServersGalleryEnabledContext,
+        group: "1_predefined",
+        order: 1
+      }]
+    });
+  }
+  async run(accessor) {
+    accessor.get(IExtensionsWorkbenchService).openSearch("@mcp ");
+  }
+}
+class McpBrowseResourcesCommand extends Action2 {
+  static {
+    __name(this, "McpBrowseResourcesCommand");
+  }
+  constructor() {
+    super({
+      id: "workbench.mcp.browseResources",
+      title: localize2("mcp.browseResources", "Browse Resources..."),
+      category,
+      precondition: McpContextKeys.serverCount.greater(0),
+      f1: true
+    });
+  }
+  run(accessor, server) {
+    if (server) {
+      accessor.get(IInstantiationService).createInstance(McpResourceQuickPick, server).pick();
+    } else {
+      accessor.get(IQuickInputService).quickAccess.show(McpResourceQuickAccess.PREFIX);
+    }
+  }
+}
+class McpConfigureSamplingModels extends Action2 {
+  static {
+    __name(this, "McpConfigureSamplingModels");
+  }
+  constructor() {
+    super({
+      id: "workbench.mcp.configureSamplingModels",
+      title: localize2("mcp.configureSamplingModels", "Configure SamplingModel"),
+      category
+    });
+  }
+  async run(accessor, server) {
+    const quickInputService = accessor.get(IQuickInputService);
+    const lmService = accessor.get(ILanguageModelsService);
+    const mcpSampling = accessor.get(IMcpSamplingService);
+    const existingIds = new Set(mcpSampling.getConfig(server).allowedModels);
+    const allItems = lmService.getLanguageModelIds().map((id) => {
+      const model = lmService.lookupLanguageModel(id);
+      if (!model.isUserSelectable) {
+        return void 0;
+      }
+      return {
+        label: model.name,
+        description: model.description,
+        id,
+        picked: existingIds.size ? existingIds.has(id) : model.isDefault
+      };
+    }).filter(isDefined);
+    allItems.sort((a, b) => (b.picked ? 1 : 0) - (a.picked ? 1 : 0) || a.label.localeCompare(b.label));
+    const picked = await quickInputService.pick(allItems, {
+      placeHolder: localize("mcp.configureSamplingModels.ph", "Pick the models {0} can access via MCP sampling", server.definition.label),
+      canPickMany: true
+    });
+    if (picked) {
+      await mcpSampling.updateConfig(server, (c) => c.allowedModels = picked.map((p) => p.id));
+    }
+    return picked?.length || 0;
+  }
+}
+class McpStartPromptingServerCommand extends Action2 {
+  static {
+    __name(this, "McpStartPromptingServerCommand");
+  }
+  constructor() {
+    super({
+      id: "workbench.mcp.startPromptForServer",
+      title: localize2("mcp.startPromptingServer", "Start Prompting Server"),
+      category,
+      f1: false
+    });
+  }
+  async run(accessor, server) {
+    const widget = await openPanelChatAndGetWidget(accessor.get(IViewsService), accessor.get(IChatWidgetService));
+    if (!widget) {
+      return;
+    }
+    const editor = widget.inputEditor;
+    const model = editor.getModel();
+    if (!model) {
+      return;
+    }
+    const range = (editor.getSelection() || model.getFullModelRange()).collapseToEnd();
+    const text = mcpPromptPrefix(server.definition) + ".";
+    model.applyEdits([{ range, text }]);
+    editor.setSelection(Range.fromPositions(range.getEndPosition().delta(0, text.length)));
+    widget.focusInput();
+    SuggestController.get(editor)?.triggerSuggest();
+  }
+}
+export {
+  AddConfigurationAction,
+  EditStoredInput,
+  InstallFromActivation,
+  ListMcpServerCommand,
+  MCPServerActionRendering,
+  McpBrowseCommand,
+  McpBrowseResourcesCommand,
+  McpConfigureSamplingModels,
+  McpServerOptionsCommand,
+  McpStartPromptingServerCommand,
+  RemoveStoredInput,
+  ResetMcpCachedTools,
+  ResetMcpTrustCommand,
+  RestartServer,
+  ShowConfiguration,
+  ShowOutput,
+  StartServer,
+  StopServer
+};
+//# sourceMappingURL=mcpCommands.js.map

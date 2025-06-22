@@ -1,1 +1,713 @@
-import*as r from"../../../../base/browser/dom.js";import*as B from"../../../../base/common/path.js";import{$J9 as z}from"../../../../base/browser/ui/countBadge/countBadge.js";import{$Y9 as f}from"../../../../base/browser/ui/highlightedlabel/highlightedLabel.js";import{MarkerSeverity as p}from"../../../../platform/markers/common/markers.js";import{$mpc as I,$npc as w,$ppc as G,$opc as Q}from"./markersModel.js";import g from"./messages.js";import{$mj as L}from"../../../../platform/instantiation/common/instantiation.js";import{ThemeIcon as O}from"../../../../base/common/themables.js";import{$qd as A,$vd as _,$td as D,$ud as H}from"../../../../base/common/lifecycle.js";import{$M7 as R}from"../../../../base/browser/ui/actionbar/actionbar.js";import{$tpc as P,$upc as J}from"./markersViewActions.js";import{$2H as V}from"../../../../platform/label/common/label.js";import{$hh as x,$dh as Y}from"../../../../base/common/resources.js";import{$wpc as d}from"./markersFilterOptions.js";import{$df as E}from"../../../../base/common/event.js";import{$9c as X}from"../../../../base/common/types.js";import{$_l as Z,$em as tt}from"../../../../base/common/actions.js";import{localize as $}from"../../../../nls.js";import{$wh as F,$Ih as et}from"../../../../base/common/async.js";import{$gF as st}from"../../../../editor/common/services/model.js";import{$cC as it}from"../../../../editor/common/core/range.js";import{$5hb as rt,ApplyCodeActionReason as ot,$4hb as nt}from"../../../../editor/contrib/codeAction/browser/codeAction.js";import{$Qhb as ht,CodeActionTriggerSource as ct}from"../../../../editor/contrib/codeAction/common/types.js";import{$oI as at,$pI as lt}from"../../../services/editor/common/editorService.js";import{SeverityIcon as ut}from"../../../../base/browser/ui/severityIcon/severityIcon.js";import{$4$ as dt}from"../../../../platform/opener/common/opener.js";import{$YI as ft}from"../../../../platform/progress/common/progress.js";import{$X8 as mt}from"../../../../base/browser/ui/actionbar/actionViewItems.js";import{$Mj as q}from"../../../../base/common/codicons.js";import{$Ct as K}from"../../../../platform/theme/common/iconRegistry.js";import{Link as pt}from"../../../../platform/opener/browser/link.js";import{$sT as gt}from"../../../../editor/common/services/languageFeatures.js";import{$Vn as $t}from"../../../../platform/contextkey/common/contextkey.js";import{MarkersContextKeys as Mt}from"../common/markers.js";import{$U7b as wt}from"../../../../platform/markers/common/markerService.js";import{$Zfb as bt}from"../../../../platform/theme/browser/defaultStyles.js";import xt from"../../../../base/common/severity.js";import{$K7 as Et}from"../../../../base/browser/ui/hover/hoverDelegateFactory.js";import{$ngb as vt}from"../../../../platform/hover/browser/hover.js";var M=function(n,t,e,s){var i=arguments.length,o=i<3?t:s===null?s=Object.getOwnPropertyDescriptor(t,e):s,h;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")o=Reflect.decorate(n,t,e,s);else for(var c=n.length-1;c>=0;c--)(h=n[c])&&(o=(i<3?h(o):i>3?h(t,e,o):h(t,e))||o);return i>3&&o&&Object.defineProperty(t,e,o),o},u=function(n,t){return function(e,s){t(e,s,n)}};let C=class{constructor(t){this.a=t}getWidgetAriaLabel(){return $(8589,null)}getAriaLabel(t){if(t instanceof I){const e=this.a.getUriLabel(t.resource,{relative:!0})||t.resource.fsPath;return g.MARKERS_TREE_ARIA_LABEL_RESOURCE(t.markers.length,t.name,B.$0(e))}return t instanceof w||t instanceof Q?g.MARKERS_TREE_ARIA_LABEL_MARKER(t):t instanceof G?g.MARKERS_TREE_ARIA_LABEL_RELATED_INFORMATION(t.raw):null}};C=M([u(0,V)],C);var k;(function(n){n.ResourceMarkers="rm",n.Marker="m",n.RelatedInformation="ri"})(k||(k={}));class b{static{this.LINE_HEIGHT=22}constructor(t){this.a=t}getHeight(t){if(t instanceof w){const e=this.a.getViewModel(t);return(!e||e.multiline?t.lines.length:1)*b.LINE_HEIGHT}return b.LINE_HEIGHT}getTemplateId(t){return t instanceof I?"rm":t instanceof w?"m":"ri"}}var j;(function(n){n[n.ResourceMarkers=0]="ResourceMarkers",n[n.Marker=1]="Marker",n[n.RelatedInformation=2]="RelatedInformation"})(j||(j={}));class It{constructor(t,e){this.d=t,this.a=new Map,this.b=new H,this.templateId="rm",e(this.e,this,this.b)}renderTemplate(t){const e=r.$M6(t,r.$(".resource-label-container")),s=this.d.create(e,{supportHighlights:!0}),i=r.$M6(t,r.$(".count-badge-wrapper"));return{count:new z(i,{},bt),resourceLabel:s}}renderElement(t,e,s){const i=t.element,o=t.filterData&&t.filterData.uriMatches||[];s.resourceLabel.setFile(i.resource,{matches:o}),this.f(t,s);const h=this.a.get(i)??[];this.a.set(i,[...h,s])}disposeElement(t,e,s){const i=this.a.get(t.element)??[],o=i.findIndex(h=>s===h);if(o<0)throw new Error("Disposing unknown resource marker");i.length===1?this.a.delete(t.element):i.splice(o,1)}disposeTemplate(t){t.resourceLabel.dispose(),t.count.dispose()}e(t){const e=this.a.get(t.element);e&&e.forEach(s=>this.f(t,s))}f(t,e){e.count.setCount(t.children.reduce((s,i)=>s+(i.visible?1:0),0))}dispose(){this.b.dispose()}}class me extends It{}let y=class{constructor(t,e,s,i){this.a=t,this.b=e,this.d=s,this.e=i,this.templateId="m"}renderTemplate(t){const e=Object.create(null);return e.markerWidget=new At(t,this.a,this.b,this.e,this.d),e}renderElement(t,e,s){s.markerWidget.render(t.element,t.filterData)}disposeTemplate(t){t.markerWidget.dispose()}};y=M([u(1,vt),u(2,L),u(3,dt)],y);const U=K("markers-view-multi-line-expanded",q.chevronUp,$(8590,null)),Lt=K("markers-view-multi-line-collapsed",q.chevronDown,$(8591,null)),S="problems.action.toggleMultiline";class _t extends mt{render(t){super.render(t),this.b()}I(){super.I(),this.b()}b(){this.element?.setAttribute("aria-expanded",`${this._action.class===O.asClassName(U)}`)}}class At extends _{constructor(t,e,s,i,o){super(),this.m=t,this.s=e,this.t=s,this.u=i,this.j=this.B(new H),this.a=this.B(new R(r.$M6(t,r.$(".actions")),{actionViewItemProvider:(h,c)=>h.id===P.ID?o.createInstance(J,h,c):void 0})),this.f=r.$M6(t,r.$("")),this.b=r.$M6(this.f,r.$("")),this.g=r.$M6(t,r.$(".marker-message-details-container")),this.h=this.B(this.t.setupManagedHover(Et("mouse"),this.g,""))}render(t,e){this.a.clear(),this.j.clear(),r.$I5(this.g),this.f.className=`marker-icon ${xt.toString(p.toSeverity(t.marker.severity))}`,this.b.className=`codicon ${ut.className(p.toSeverity(t.marker.severity))}`,this.w(t),this.z(t,e),this.j.add(r.$J5(this.m,r.$F6.MOUSE_OVER,()=>this.s.onMarkerMouseHover(t))),this.j.add(r.$J5(this.m,r.$F6.MOUSE_LEAVE,()=>this.s.onMarkerMouseLeave(t)))}w(t){const e=this.s.getViewModel(t);if(e){const s=e.quickFixAction;this.a.push([s],{icon:!0,label:!1}),this.f.classList.toggle("quickFix",s.enabled),s.onDidChange(({enabled:i})=>{X(i)||this.f.classList.toggle("quickFix",i)},this,this.j),s.onShowQuickFixes(()=>{const i=this.a.viewItems[0];i&&i.showQuickFixes()},this,this.j)}}y(t,e){const s=this.j.add(new R(r.$M6(e,r.$(".multiline-actions")),{actionViewItemProvider:(c,a)=>{if(c.id===S)return new _t(void 0,c,{...a,icon:!0})}}));this.j.add(s);const i=this.s.getViewModel(t),o=i&&i.multiline,h=this.j.add(new Z(S));h.enabled=!!i&&t.lines.length>1,h.tooltip=o?$(8592,null):$(8593,null),h.class=O.asClassName(o?U:Lt),h.run=()=>(i&&(i.multiline=!i.multiline),Promise.resolve()),s.push([h],{icon:!0,label:!1})}z(t,e){const{marker:s,lines:i}=t,o=this.s.getViewModel(t),h=!o||o.multiline,c=e&&e.lineMatches||[];this.h.update(t.marker.message);const a=[];for(let l=0;l<(h?i.length:1);l++){const m=r.$M6(this.g,r.$(".marker-message-line")),W=r.$M6(m,r.$(".marker-message"));this.j.add(new f(W)).set(i[l].length>1e3?`${i[l].substring(0,1e3)}...`:i[l],c[l]),i[l]===""&&(m.style.height=`${b.LINE_HEIGHT}px`),a.push(m)}this.C(s,e,a[0]),this.y(t,a[0])}C(t,e,s){if(s.classList.add("details-container"),t.source||t.code){const o=this.j.add(new f(r.$M6(s,r.$(".marker-source")))),h=e&&e.sourceMatches||[];if(o.set(t.source,h),t.code)if(typeof t.code=="string"){const c=this.j.add(new f(r.$M6(s,r.$(".marker-code")))),a=e&&e.codeMatches||[];c.set(t.code,a)}else{const c=r.$(".marker-code"),a=this.j.add(new f(c)),l=t.code.target.toString(!0);this.j.add(new pt(s,{href:l,label:c,title:l},void 0,this.t,this.u));const m=e&&e.codeMatches||[];a.set(t.code.value,m)}}const i=r.$M6(s,r.$("span.marker-line"));i.textContent=g.MARKERS_PANEL_AT_LINE_COL_NUMBER(t.startLineNumber,t.startColumn)}}let N=class{constructor(t){this.a=t,this.templateId="ri"}renderTemplate(t){const e=Object.create(null);r.$M6(t,r.$(".actions")),r.$M6(t,r.$(".icon")),e.resourceLabel=new f(r.$M6(t,r.$(".related-info-resource"))),e.lnCol=r.$M6(t,r.$("span.marker-line"));const s=r.$M6(t,r.$("span.related-info-resource-separator"));return s.textContent=":",s.style.paddingRight="4px",e.description=new f(r.$M6(t,r.$(".marker-description"))),e}renderElement(t,e,s){const i=t.element.raw,o=t.filterData&&t.filterData.uriMatches||[],h=t.filterData&&t.filterData.messageMatches||[],c=this.a.getUriLabel(i.resource,{relative:!0});s.resourceLabel.set(x(i.resource),o,c),s.lnCol.textContent=g.MARKERS_PANEL_AT_LINE_COL_NUMBER(i.startLineNumber,i.startColumn),s.description.set(i.message,h,i.message)}disposeTemplate(t){t.resourceLabel.dispose(),t.description.dispose()}};N=M([u(0,V)],N);class $e{constructor(t){this.options=t}filter(t,e){return t instanceof I?this.a(t):t instanceof w?this.b(t,e):this.d(t,e)}a(t){if(wt.has(t.resource.scheme)||this.options.excludesMatcher.matches(t.resource))return!1;if(this.options.includesMatcher.matches(t.resource))return!0;if(this.options.textFilter.text&&!this.options.textFilter.negate){const e=d._filter(this.options.textFilter.text,x(t.resource));if(e)return{visibility:!0,data:{type:0,uriMatches:e||[]}}}return 2}b(t,e){if(!(this.options.showErrors&&p.Error===t.marker.severity||this.options.showWarnings&&p.Warning===t.marker.severity||this.options.showInfos&&p.Info===t.marker.severity))return!1;if(!this.options.textFilter.text)return!0;const i=[];for(const a of t.lines){const l=d._messageFilter(this.options.textFilter.text,a);i.push(l||[])}const o=t.marker.source?d._filter(this.options.textFilter.text,t.marker.source):void 0,h=t.marker.code?d._filter(this.options.textFilter.text,typeof t.marker.code=="string"?t.marker.code:t.marker.code.value):void 0,c=o||h||i.some(a=>a.length>0);return c&&!this.options.textFilter.negate?{visibility:!0,data:{type:1,lineMatches:i,sourceMatches:o||[],codeMatches:h||[]}}:c&&this.options.textFilter.negate&&e===2?!1:!c&&this.options.textFilter.negate&&e===2?!0:e}d(t,e){if(!this.options.textFilter.text)return!0;const s=d._filter(this.options.textFilter.text,x(t.raw.resource)),i=d._messageFilter(this.options.textFilter.text,B.$$(t.raw.message)),o=s||i;return o&&!this.options.textFilter.negate?{visibility:!0,data:{type:2,uriMatches:s||[],messageMatches:i||[]}}:o&&this.options.textFilter.negate&&e===2?!1:!o&&this.options.textFilter.negate&&e===2?!0:e}}let v=class extends _{constructor(t,e,s,i,o){super(),this.g=t,this.h=e,this.j=s,this.m=i,this.s=o,this.a=this.B(new E),this.onDidChange=this.a.event,this.b=null,this.f=null,this.t=!0,this.u=null,this.B(D(()=>{this.b&&this.b.cancel(),this.f&&this.f.cancel()}))}get multiline(){return this.t}set multiline(t){this.t!==t&&(this.t=t,this.a.fire())}get quickFixAction(){return this.u||(this.u=this.B(this.j.createInstance(P,this.g))),this.u}showLightBulb(){this.w(!0)}async w(t){const e=await this.y(t);this.quickFixAction.quickFixes=e?this.z(e):[],this.quickFixAction.autoFixable(!!e&&e.hasAutoFix)}y(t){return this.f!==null?this.f:this.D(t).then(e=>e?(this.f||(this.f=F(s=>nt(this.s.codeActionProvider,e,new it(this.g.range.startLineNumber,this.g.range.startColumn,this.g.range.endLineNumber,this.g.range.endColumn),{type:1,triggerAction:ct.ProblemsView,filter:{include:ht.QuickFix}},ft.None,s).then(i=>this.B(i)))),this.f):null)}z(t){return t.validActions.map(e=>tt({id:e.action.command?e.action.command.id:e.action.title,label:e.action.title,run:async()=>(await this.C(this.g),await this.j.invokeFunction(rt,e,ot.FromProblemsView))}))}C(t){const{resource:e,selection:s}={resource:t.resource,selection:t.range};return this.m.openEditor({resource:e,options:{selection:s,preserveFocus:!0,pinned:!1,revealIfVisible:!0}},lt).then(()=>{})}D(t){const e=this.h.getModel(this.g.resource);return e?Promise.resolve(e):t?(this.b||(this.b=F(s=>new Promise(i=>{this.B(this.h.onModelAdded(o=>{Y(o.uri,this.g.resource)&&i(o)}))}))),this.b):Promise.resolve(null)}};v=M([u(1,st),u(2,L),u(3,at),u(4,gt)],v);let T=class extends _{constructor(t=!0,e="tree",s,i){super(),this.t=s,this.u=i,this.a=this.B(new E),this.onDidChange=this.a.event,this.b=this.B(new E),this.onDidChangeViewMode=this.b.event,this.f=new Map,this.g=new Map,this.h=!1,this.j=null,this.m=new et(300),this.w=!0,this.y="tree",this.w=t,this.y=e,this.s=Mt.MarkersViewModeContextKey.bindTo(this.t),this.s.set(e)}add(t){if(!this.f.has(t.id)){const e=this.u.createInstance(v,t),s=[e];e.multiline=this.multiline,e.onDidChange(()=>{this.h||this.a.fire(t)},this,s),this.f.set(t.id,{viewModel:e,disposables:s});const i=this.g.get(t.resource.toString())||[];i.push(t),this.g.set(t.resource.toString(),i)}}remove(t){const e=this.g.get(t.toString())||[];for(const s of e){const i=this.f.get(s.id);i&&A(i.disposables),this.f.delete(s.id),this.j===s&&(this.j=null)}this.g.delete(t.toString())}getViewModel(t){const e=this.f.get(t.id);return e?e.viewModel:null}onMarkerMouseHover(t){this.j=t,this.m.trigger(()=>{if(this.j){const e=this.getViewModel(this.j);e&&e.showLightBulb()}})}onMarkerMouseLeave(t){this.j===t&&(this.j=null)}get multiline(){return this.w}set multiline(t){let e=!1;this.w!==t&&(this.w=t,e=!0),this.h=!0,this.f.forEach(({viewModel:s})=>{s.multiline!==t&&(s.multiline=t,e=!0)}),this.h=!1,e&&this.a.fire(void 0)}get viewMode(){return this.y}set viewMode(t){this.y!==t&&(this.y=t,this.b.fire(t),this.s.set(t))}dispose(){this.f.forEach(({disposables:t})=>A(t)),this.f.clear(),this.g.clear(),super.dispose()}};T=M([u(2,$t),u(3,L)],T);export{me as $Apc,y as $Bpc,N as $Cpc,$e as $Dpc,v as $Epc,T as $Fpc,C as $xpc,b as $ypc,It as $zpc};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import * as dom from "../../../../base/browser/dom.js";
+import * as paths from "../../../../base/common/path.js";
+import { CountBadge } from "../../../../base/browser/ui/countBadge/countBadge.js";
+import { HighlightedLabel } from "../../../../base/browser/ui/highlightedlabel/highlightedLabel.js";
+import { MarkerSeverity } from "../../../../platform/markers/common/markers.js";
+import { ResourceMarkers, Marker, RelatedInformation, MarkerTableItem } from "./markersModel.js";
+import Messages from "./messages.js";
+import { IInstantiationService } from "../../../../platform/instantiation/common/instantiation.js";
+import { ThemeIcon } from "../../../../base/common/themables.js";
+import { dispose, Disposable, toDisposable, DisposableStore } from "../../../../base/common/lifecycle.js";
+import { ActionBar } from "../../../../base/browser/ui/actionbar/actionbar.js";
+import { QuickFixAction, QuickFixActionViewItem } from "./markersViewActions.js";
+import { ILabelService } from "../../../../platform/label/common/label.js";
+import { basename, isEqual } from "../../../../base/common/resources.js";
+import { FilterOptions } from "./markersFilterOptions.js";
+import { Emitter } from "../../../../base/common/event.js";
+import { isUndefinedOrNull } from "../../../../base/common/types.js";
+import { Action, toAction } from "../../../../base/common/actions.js";
+import { localize } from "../../../../nls.js";
+import { createCancelablePromise, Delayer } from "../../../../base/common/async.js";
+import { IModelService } from "../../../../editor/common/services/model.js";
+import { Range } from "../../../../editor/common/core/range.js";
+import { applyCodeAction, ApplyCodeActionReason, getCodeActions } from "../../../../editor/contrib/codeAction/browser/codeAction.js";
+import { CodeActionKind, CodeActionTriggerSource } from "../../../../editor/contrib/codeAction/common/types.js";
+import { IEditorService, ACTIVE_GROUP } from "../../../services/editor/common/editorService.js";
+import { SeverityIcon } from "../../../../base/browser/ui/severityIcon/severityIcon.js";
+import { IOpenerService } from "../../../../platform/opener/common/opener.js";
+import { Progress } from "../../../../platform/progress/common/progress.js";
+import { ActionViewItem } from "../../../../base/browser/ui/actionbar/actionViewItems.js";
+import { Codicon } from "../../../../base/common/codicons.js";
+import { registerIcon } from "../../../../platform/theme/common/iconRegistry.js";
+import { Link } from "../../../../platform/opener/browser/link.js";
+import { ILanguageFeaturesService } from "../../../../editor/common/services/languageFeatures.js";
+import { IContextKeyService } from "../../../../platform/contextkey/common/contextkey.js";
+import { MarkersContextKeys } from "../common/markers.js";
+import { unsupportedSchemas } from "../../../../platform/markers/common/markerService.js";
+import { defaultCountBadgeStyles } from "../../../../platform/theme/browser/defaultStyles.js";
+import Severity from "../../../../base/common/severity.js";
+import { getDefaultHoverDelegate } from "../../../../base/browser/ui/hover/hoverDelegateFactory.js";
+import { IHoverService } from "../../../../platform/hover/browser/hover.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+let MarkersWidgetAccessibilityProvider = class MarkersWidgetAccessibilityProvider2 {
+  static {
+    __name(this, "MarkersWidgetAccessibilityProvider");
+  }
+  constructor(labelService) {
+    this.labelService = labelService;
+  }
+  getWidgetAriaLabel() {
+    return localize("problemsView", "Problems View");
+  }
+  getAriaLabel(element) {
+    if (element instanceof ResourceMarkers) {
+      const path = this.labelService.getUriLabel(element.resource, { relative: true }) || element.resource.fsPath;
+      return Messages.MARKERS_TREE_ARIA_LABEL_RESOURCE(element.markers.length, element.name, paths.dirname(path));
+    }
+    if (element instanceof Marker || element instanceof MarkerTableItem) {
+      return Messages.MARKERS_TREE_ARIA_LABEL_MARKER(element);
+    }
+    if (element instanceof RelatedInformation) {
+      return Messages.MARKERS_TREE_ARIA_LABEL_RELATED_INFORMATION(element.raw);
+    }
+    return null;
+  }
+};
+MarkersWidgetAccessibilityProvider = __decorate([
+  __param(0, ILabelService)
+], MarkersWidgetAccessibilityProvider);
+var TemplateId;
+(function(TemplateId2) {
+  TemplateId2["ResourceMarkers"] = "rm";
+  TemplateId2["Marker"] = "m";
+  TemplateId2["RelatedInformation"] = "ri";
+})(TemplateId || (TemplateId = {}));
+class VirtualDelegate {
+  static {
+    __name(this, "VirtualDelegate");
+  }
+  static {
+    this.LINE_HEIGHT = 22;
+  }
+  constructor(markersViewState) {
+    this.markersViewState = markersViewState;
+  }
+  getHeight(element) {
+    if (element instanceof Marker) {
+      const viewModel = this.markersViewState.getViewModel(element);
+      const noOfLines = !viewModel || viewModel.multiline ? element.lines.length : 1;
+      return noOfLines * VirtualDelegate.LINE_HEIGHT;
+    }
+    return VirtualDelegate.LINE_HEIGHT;
+  }
+  getTemplateId(element) {
+    if (element instanceof ResourceMarkers) {
+      return "rm";
+    } else if (element instanceof Marker) {
+      return "m";
+    } else {
+      return "ri";
+    }
+  }
+}
+var FilterDataType;
+(function(FilterDataType2) {
+  FilterDataType2[FilterDataType2["ResourceMarkers"] = 0] = "ResourceMarkers";
+  FilterDataType2[FilterDataType2["Marker"] = 1] = "Marker";
+  FilterDataType2[FilterDataType2["RelatedInformation"] = 2] = "RelatedInformation";
+})(FilterDataType || (FilterDataType = {}));
+class ResourceMarkersRenderer {
+  static {
+    __name(this, "ResourceMarkersRenderer");
+  }
+  constructor(labels, onDidChangeRenderNodeCount) {
+    this.labels = labels;
+    this.renderedNodes = /* @__PURE__ */ new Map();
+    this.disposables = new DisposableStore();
+    this.templateId = "rm";
+    onDidChangeRenderNodeCount(this.onDidChangeRenderNodeCount, this, this.disposables);
+  }
+  renderTemplate(container) {
+    const resourceLabelContainer = dom.append(container, dom.$(".resource-label-container"));
+    const resourceLabel = this.labels.create(resourceLabelContainer, { supportHighlights: true });
+    const badgeWrapper = dom.append(container, dom.$(".count-badge-wrapper"));
+    const count = new CountBadge(badgeWrapper, {}, defaultCountBadgeStyles);
+    return { count, resourceLabel };
+  }
+  renderElement(node, _, templateData) {
+    const resourceMarkers = node.element;
+    const uriMatches = node.filterData && node.filterData.uriMatches || [];
+    templateData.resourceLabel.setFile(resourceMarkers.resource, { matches: uriMatches });
+    this.updateCount(node, templateData);
+    const nodeRenders = this.renderedNodes.get(resourceMarkers) ?? [];
+    this.renderedNodes.set(resourceMarkers, [...nodeRenders, templateData]);
+  }
+  disposeElement(node, index, templateData) {
+    const nodeRenders = this.renderedNodes.get(node.element) ?? [];
+    const nodeRenderIndex = nodeRenders.findIndex((nodeRender) => templateData === nodeRender);
+    if (nodeRenderIndex < 0) {
+      throw new Error("Disposing unknown resource marker");
+    }
+    if (nodeRenders.length === 1) {
+      this.renderedNodes.delete(node.element);
+    } else {
+      nodeRenders.splice(nodeRenderIndex, 1);
+    }
+  }
+  disposeTemplate(templateData) {
+    templateData.resourceLabel.dispose();
+    templateData.count.dispose();
+  }
+  onDidChangeRenderNodeCount(node) {
+    const nodeRenders = this.renderedNodes.get(node.element);
+    if (!nodeRenders) {
+      return;
+    }
+    nodeRenders.forEach((nodeRender) => this.updateCount(node, nodeRender));
+  }
+  updateCount(node, templateData) {
+    templateData.count.setCount(node.children.reduce((r, n) => r + (n.visible ? 1 : 0), 0));
+  }
+  dispose() {
+    this.disposables.dispose();
+  }
+}
+class FileResourceMarkersRenderer extends ResourceMarkersRenderer {
+  static {
+    __name(this, "FileResourceMarkersRenderer");
+  }
+}
+let MarkerRenderer = class MarkerRenderer2 {
+  static {
+    __name(this, "MarkerRenderer");
+  }
+  constructor(markersViewState, hoverService, instantiationService, openerService) {
+    this.markersViewState = markersViewState;
+    this.hoverService = hoverService;
+    this.instantiationService = instantiationService;
+    this.openerService = openerService;
+    this.templateId = "m";
+  }
+  renderTemplate(container) {
+    const data = /* @__PURE__ */ Object.create(null);
+    data.markerWidget = new MarkerWidget(container, this.markersViewState, this.hoverService, this.openerService, this.instantiationService);
+    return data;
+  }
+  renderElement(node, _, templateData) {
+    templateData.markerWidget.render(node.element, node.filterData);
+  }
+  disposeTemplate(templateData) {
+    templateData.markerWidget.dispose();
+  }
+};
+MarkerRenderer = __decorate([
+  __param(1, IHoverService),
+  __param(2, IInstantiationService),
+  __param(3, IOpenerService)
+], MarkerRenderer);
+const expandedIcon = registerIcon("markers-view-multi-line-expanded", Codicon.chevronUp, localize("expandedIcon", "Icon indicating that multiple lines are shown in the markers view."));
+const collapsedIcon = registerIcon("markers-view-multi-line-collapsed", Codicon.chevronDown, localize("collapsedIcon", "Icon indicating that multiple lines are collapsed in the markers view."));
+const toggleMultilineAction = "problems.action.toggleMultiline";
+class ToggleMultilineActionViewItem extends ActionViewItem {
+  static {
+    __name(this, "ToggleMultilineActionViewItem");
+  }
+  render(container) {
+    super.render(container);
+    this.updateExpandedAttribute();
+  }
+  updateClass() {
+    super.updateClass();
+    this.updateExpandedAttribute();
+  }
+  updateExpandedAttribute() {
+    this.element?.setAttribute("aria-expanded", `${this._action.class === ThemeIcon.asClassName(expandedIcon)}`);
+  }
+}
+class MarkerWidget extends Disposable {
+  static {
+    __name(this, "MarkerWidget");
+  }
+  constructor(parent, markersViewModel, _hoverService, _openerService, _instantiationService) {
+    super();
+    this.parent = parent;
+    this.markersViewModel = markersViewModel;
+    this._hoverService = _hoverService;
+    this._openerService = _openerService;
+    this.disposables = this._register(new DisposableStore());
+    this.actionBar = this._register(new ActionBar(dom.append(parent, dom.$(".actions")), {
+      actionViewItemProvider: /* @__PURE__ */ __name((action, options) => action.id === QuickFixAction.ID ? _instantiationService.createInstance(QuickFixActionViewItem, action, options) : void 0, "actionViewItemProvider")
+    }));
+    this.iconContainer = dom.append(parent, dom.$(""));
+    this.icon = dom.append(this.iconContainer, dom.$(""));
+    this.messageAndDetailsContainer = dom.append(parent, dom.$(".marker-message-details-container"));
+    this.messageAndDetailsContainerHover = this._register(this._hoverService.setupManagedHover(getDefaultHoverDelegate("mouse"), this.messageAndDetailsContainer, ""));
+  }
+  render(element, filterData) {
+    this.actionBar.clear();
+    this.disposables.clear();
+    dom.clearNode(this.messageAndDetailsContainer);
+    this.iconContainer.className = `marker-icon ${Severity.toString(MarkerSeverity.toSeverity(element.marker.severity))}`;
+    this.icon.className = `codicon ${SeverityIcon.className(MarkerSeverity.toSeverity(element.marker.severity))}`;
+    this.renderQuickfixActionbar(element);
+    this.renderMessageAndDetails(element, filterData);
+    this.disposables.add(dom.addDisposableListener(this.parent, dom.EventType.MOUSE_OVER, () => this.markersViewModel.onMarkerMouseHover(element)));
+    this.disposables.add(dom.addDisposableListener(this.parent, dom.EventType.MOUSE_LEAVE, () => this.markersViewModel.onMarkerMouseLeave(element)));
+  }
+  renderQuickfixActionbar(marker) {
+    const viewModel = this.markersViewModel.getViewModel(marker);
+    if (viewModel) {
+      const quickFixAction = viewModel.quickFixAction;
+      this.actionBar.push([quickFixAction], { icon: true, label: false });
+      this.iconContainer.classList.toggle("quickFix", quickFixAction.enabled);
+      quickFixAction.onDidChange(({ enabled }) => {
+        if (!isUndefinedOrNull(enabled)) {
+          this.iconContainer.classList.toggle("quickFix", enabled);
+        }
+      }, this, this.disposables);
+      quickFixAction.onShowQuickFixes(() => {
+        const quickFixActionViewItem = this.actionBar.viewItems[0];
+        if (quickFixActionViewItem) {
+          quickFixActionViewItem.showQuickFixes();
+        }
+      }, this, this.disposables);
+    }
+  }
+  renderMultilineActionbar(marker, parent) {
+    const multilineActionbar = this.disposables.add(new ActionBar(dom.append(parent, dom.$(".multiline-actions")), {
+      actionViewItemProvider: /* @__PURE__ */ __name((action2, options) => {
+        if (action2.id === toggleMultilineAction) {
+          return new ToggleMultilineActionViewItem(void 0, action2, { ...options, icon: true });
+        }
+        return void 0;
+      }, "actionViewItemProvider")
+    }));
+    this.disposables.add(multilineActionbar);
+    const viewModel = this.markersViewModel.getViewModel(marker);
+    const multiline = viewModel && viewModel.multiline;
+    const action = this.disposables.add(new Action(toggleMultilineAction));
+    action.enabled = !!viewModel && marker.lines.length > 1;
+    action.tooltip = multiline ? localize("single line", "Show message in single line") : localize("multi line", "Show message in multiple lines");
+    action.class = ThemeIcon.asClassName(multiline ? expandedIcon : collapsedIcon);
+    action.run = () => {
+      if (viewModel) {
+        viewModel.multiline = !viewModel.multiline;
+      }
+      return Promise.resolve();
+    };
+    multilineActionbar.push([action], { icon: true, label: false });
+  }
+  renderMessageAndDetails(element, filterData) {
+    const { marker, lines } = element;
+    const viewState = this.markersViewModel.getViewModel(element);
+    const multiline = !viewState || viewState.multiline;
+    const lineMatches = filterData && filterData.lineMatches || [];
+    this.messageAndDetailsContainerHover.update(element.marker.message);
+    const lineElements = [];
+    for (let index = 0; index < (multiline ? lines.length : 1); index++) {
+      const lineElement = dom.append(this.messageAndDetailsContainer, dom.$(".marker-message-line"));
+      const messageElement = dom.append(lineElement, dom.$(".marker-message"));
+      const highlightedLabel = this.disposables.add(new HighlightedLabel(messageElement));
+      highlightedLabel.set(lines[index].length > 1e3 ? `${lines[index].substring(0, 1e3)}...` : lines[index], lineMatches[index]);
+      if (lines[index] === "") {
+        lineElement.style.height = `${VirtualDelegate.LINE_HEIGHT}px`;
+      }
+      lineElements.push(lineElement);
+    }
+    this.renderDetails(marker, filterData, lineElements[0]);
+    this.renderMultilineActionbar(element, lineElements[0]);
+  }
+  renderDetails(marker, filterData, parent) {
+    parent.classList.add("details-container");
+    if (marker.source || marker.code) {
+      const source = this.disposables.add(new HighlightedLabel(dom.append(parent, dom.$(".marker-source"))));
+      const sourceMatches = filterData && filterData.sourceMatches || [];
+      source.set(marker.source, sourceMatches);
+      if (marker.code) {
+        if (typeof marker.code === "string") {
+          const code = this.disposables.add(new HighlightedLabel(dom.append(parent, dom.$(".marker-code"))));
+          const codeMatches = filterData && filterData.codeMatches || [];
+          code.set(marker.code, codeMatches);
+        } else {
+          const container = dom.$(".marker-code");
+          const code = this.disposables.add(new HighlightedLabel(container));
+          const link = marker.code.target.toString(true);
+          this.disposables.add(new Link(parent, { href: link, label: container, title: link }, void 0, this._hoverService, this._openerService));
+          const codeMatches = filterData && filterData.codeMatches || [];
+          code.set(marker.code.value, codeMatches);
+        }
+      }
+    }
+    const lnCol = dom.append(parent, dom.$("span.marker-line"));
+    lnCol.textContent = Messages.MARKERS_PANEL_AT_LINE_COL_NUMBER(marker.startLineNumber, marker.startColumn);
+  }
+}
+let RelatedInformationRenderer = class RelatedInformationRenderer2 {
+  static {
+    __name(this, "RelatedInformationRenderer");
+  }
+  constructor(labelService) {
+    this.labelService = labelService;
+    this.templateId = "ri";
+  }
+  renderTemplate(container) {
+    const data = /* @__PURE__ */ Object.create(null);
+    dom.append(container, dom.$(".actions"));
+    dom.append(container, dom.$(".icon"));
+    data.resourceLabel = new HighlightedLabel(dom.append(container, dom.$(".related-info-resource")));
+    data.lnCol = dom.append(container, dom.$("span.marker-line"));
+    const separator = dom.append(container, dom.$("span.related-info-resource-separator"));
+    separator.textContent = ":";
+    separator.style.paddingRight = "4px";
+    data.description = new HighlightedLabel(dom.append(container, dom.$(".marker-description")));
+    return data;
+  }
+  renderElement(node, _, templateData) {
+    const relatedInformation = node.element.raw;
+    const uriMatches = node.filterData && node.filterData.uriMatches || [];
+    const messageMatches = node.filterData && node.filterData.messageMatches || [];
+    const resourceLabelTitle = this.labelService.getUriLabel(relatedInformation.resource, { relative: true });
+    templateData.resourceLabel.set(basename(relatedInformation.resource), uriMatches, resourceLabelTitle);
+    templateData.lnCol.textContent = Messages.MARKERS_PANEL_AT_LINE_COL_NUMBER(relatedInformation.startLineNumber, relatedInformation.startColumn);
+    templateData.description.set(relatedInformation.message, messageMatches, relatedInformation.message);
+  }
+  disposeTemplate(templateData) {
+    templateData.resourceLabel.dispose();
+    templateData.description.dispose();
+  }
+};
+RelatedInformationRenderer = __decorate([
+  __param(0, ILabelService)
+], RelatedInformationRenderer);
+class Filter {
+  static {
+    __name(this, "Filter");
+  }
+  constructor(options) {
+    this.options = options;
+  }
+  filter(element, parentVisibility) {
+    if (element instanceof ResourceMarkers) {
+      return this.filterResourceMarkers(element);
+    } else if (element instanceof Marker) {
+      return this.filterMarker(element, parentVisibility);
+    } else {
+      return this.filterRelatedInformation(element, parentVisibility);
+    }
+  }
+  filterResourceMarkers(resourceMarkers) {
+    if (unsupportedSchemas.has(resourceMarkers.resource.scheme)) {
+      return false;
+    }
+    if (this.options.excludesMatcher.matches(resourceMarkers.resource)) {
+      return false;
+    }
+    if (this.options.includesMatcher.matches(resourceMarkers.resource)) {
+      return true;
+    }
+    if (this.options.textFilter.text && !this.options.textFilter.negate) {
+      const uriMatches = FilterOptions._filter(this.options.textFilter.text, basename(resourceMarkers.resource));
+      if (uriMatches) {
+        return { visibility: true, data: { type: 0, uriMatches: uriMatches || [] } };
+      }
+    }
+    return 2;
+  }
+  filterMarker(marker, parentVisibility) {
+    const matchesSeverity = this.options.showErrors && MarkerSeverity.Error === marker.marker.severity || this.options.showWarnings && MarkerSeverity.Warning === marker.marker.severity || this.options.showInfos && MarkerSeverity.Info === marker.marker.severity;
+    if (!matchesSeverity) {
+      return false;
+    }
+    if (!this.options.textFilter.text) {
+      return true;
+    }
+    const lineMatches = [];
+    for (const line of marker.lines) {
+      const lineMatch = FilterOptions._messageFilter(this.options.textFilter.text, line);
+      lineMatches.push(lineMatch || []);
+    }
+    const sourceMatches = marker.marker.source ? FilterOptions._filter(this.options.textFilter.text, marker.marker.source) : void 0;
+    const codeMatches = marker.marker.code ? FilterOptions._filter(this.options.textFilter.text, typeof marker.marker.code === "string" ? marker.marker.code : marker.marker.code.value) : void 0;
+    const matched = sourceMatches || codeMatches || lineMatches.some((lineMatch) => lineMatch.length > 0);
+    if (matched && !this.options.textFilter.negate) {
+      return { visibility: true, data: { type: 1, lineMatches, sourceMatches: sourceMatches || [], codeMatches: codeMatches || [] } };
+    }
+    if (matched && this.options.textFilter.negate && parentVisibility === 2) {
+      return false;
+    }
+    if (!matched && this.options.textFilter.negate && parentVisibility === 2) {
+      return true;
+    }
+    return parentVisibility;
+  }
+  filterRelatedInformation(relatedInformation, parentVisibility) {
+    if (!this.options.textFilter.text) {
+      return true;
+    }
+    const uriMatches = FilterOptions._filter(this.options.textFilter.text, basename(relatedInformation.raw.resource));
+    const messageMatches = FilterOptions._messageFilter(this.options.textFilter.text, paths.basename(relatedInformation.raw.message));
+    const matched = uriMatches || messageMatches;
+    if (matched && !this.options.textFilter.negate) {
+      return { visibility: true, data: { type: 2, uriMatches: uriMatches || [], messageMatches: messageMatches || [] } };
+    }
+    if (matched && this.options.textFilter.negate && parentVisibility === 2) {
+      return false;
+    }
+    if (!matched && this.options.textFilter.negate && parentVisibility === 2) {
+      return true;
+    }
+    return parentVisibility;
+  }
+}
+let MarkerViewModel = class MarkerViewModel2 extends Disposable {
+  static {
+    __name(this, "MarkerViewModel");
+  }
+  constructor(marker, modelService, instantiationService, editorService, languageFeaturesService) {
+    super();
+    this.marker = marker;
+    this.modelService = modelService;
+    this.instantiationService = instantiationService;
+    this.editorService = editorService;
+    this.languageFeaturesService = languageFeaturesService;
+    this._onDidChange = this._register(new Emitter());
+    this.onDidChange = this._onDidChange.event;
+    this.modelPromise = null;
+    this.codeActionsPromise = null;
+    this._multiline = true;
+    this._quickFixAction = null;
+    this._register(toDisposable(() => {
+      if (this.modelPromise) {
+        this.modelPromise.cancel();
+      }
+      if (this.codeActionsPromise) {
+        this.codeActionsPromise.cancel();
+      }
+    }));
+  }
+  get multiline() {
+    return this._multiline;
+  }
+  set multiline(value) {
+    if (this._multiline !== value) {
+      this._multiline = value;
+      this._onDidChange.fire();
+    }
+  }
+  get quickFixAction() {
+    if (!this._quickFixAction) {
+      this._quickFixAction = this._register(this.instantiationService.createInstance(QuickFixAction, this.marker));
+    }
+    return this._quickFixAction;
+  }
+  showLightBulb() {
+    this.setQuickFixes(true);
+  }
+  async setQuickFixes(waitForModel) {
+    const codeActions = await this.getCodeActions(waitForModel);
+    this.quickFixAction.quickFixes = codeActions ? this.toActions(codeActions) : [];
+    this.quickFixAction.autoFixable(!!codeActions && codeActions.hasAutoFix);
+  }
+  getCodeActions(waitForModel) {
+    if (this.codeActionsPromise !== null) {
+      return this.codeActionsPromise;
+    }
+    return this.getModel(waitForModel).then((model) => {
+      if (model) {
+        if (!this.codeActionsPromise) {
+          this.codeActionsPromise = createCancelablePromise((cancellationToken) => {
+            return getCodeActions(this.languageFeaturesService.codeActionProvider, model, new Range(this.marker.range.startLineNumber, this.marker.range.startColumn, this.marker.range.endLineNumber, this.marker.range.endColumn), {
+              type: 1,
+              triggerAction: CodeActionTriggerSource.ProblemsView,
+              filter: { include: CodeActionKind.QuickFix }
+            }, Progress.None, cancellationToken).then((actions) => {
+              return this._register(actions);
+            });
+          });
+        }
+        return this.codeActionsPromise;
+      }
+      return null;
+    });
+  }
+  toActions(codeActions) {
+    return codeActions.validActions.map((item) => toAction({
+      id: item.action.command ? item.action.command.id : item.action.title,
+      label: item.action.title,
+      run: /* @__PURE__ */ __name(async () => {
+        await this.openFileAtMarker(this.marker);
+        return await this.instantiationService.invokeFunction(applyCodeAction, item, ApplyCodeActionReason.FromProblemsView);
+      }, "run")
+    }));
+  }
+  openFileAtMarker(element) {
+    const { resource, selection } = { resource: element.resource, selection: element.range };
+    return this.editorService.openEditor({
+      resource,
+      options: {
+        selection,
+        preserveFocus: true,
+        pinned: false,
+        revealIfVisible: true
+      }
+    }, ACTIVE_GROUP).then(() => void 0);
+  }
+  getModel(waitForModel) {
+    const model = this.modelService.getModel(this.marker.resource);
+    if (model) {
+      return Promise.resolve(model);
+    }
+    if (waitForModel) {
+      if (!this.modelPromise) {
+        this.modelPromise = createCancelablePromise((cancellationToken) => {
+          return new Promise((c) => {
+            this._register(this.modelService.onModelAdded((model2) => {
+              if (isEqual(model2.uri, this.marker.resource)) {
+                c(model2);
+              }
+            }));
+          });
+        });
+      }
+      return this.modelPromise;
+    }
+    return Promise.resolve(null);
+  }
+};
+MarkerViewModel = __decorate([
+  __param(1, IModelService),
+  __param(2, IInstantiationService),
+  __param(3, IEditorService),
+  __param(4, ILanguageFeaturesService)
+], MarkerViewModel);
+let MarkersViewModel = class MarkersViewModel2 extends Disposable {
+  static {
+    __name(this, "MarkersViewModel");
+  }
+  constructor(multiline = true, viewMode = "tree", contextKeyService, instantiationService) {
+    super();
+    this.contextKeyService = contextKeyService;
+    this.instantiationService = instantiationService;
+    this._onDidChange = this._register(new Emitter());
+    this.onDidChange = this._onDidChange.event;
+    this._onDidChangeViewMode = this._register(new Emitter());
+    this.onDidChangeViewMode = this._onDidChangeViewMode.event;
+    this.markersViewStates = /* @__PURE__ */ new Map();
+    this.markersPerResource = /* @__PURE__ */ new Map();
+    this.bulkUpdate = false;
+    this.hoveredMarker = null;
+    this.hoverDelayer = new Delayer(300);
+    this._multiline = true;
+    this._viewMode = "tree";
+    this._multiline = multiline;
+    this._viewMode = viewMode;
+    this.viewModeContextKey = MarkersContextKeys.MarkersViewModeContextKey.bindTo(this.contextKeyService);
+    this.viewModeContextKey.set(viewMode);
+  }
+  add(marker) {
+    if (!this.markersViewStates.has(marker.id)) {
+      const viewModel = this.instantiationService.createInstance(MarkerViewModel, marker);
+      const disposables = [viewModel];
+      viewModel.multiline = this.multiline;
+      viewModel.onDidChange(() => {
+        if (!this.bulkUpdate) {
+          this._onDidChange.fire(marker);
+        }
+      }, this, disposables);
+      this.markersViewStates.set(marker.id, { viewModel, disposables });
+      const markers = this.markersPerResource.get(marker.resource.toString()) || [];
+      markers.push(marker);
+      this.markersPerResource.set(marker.resource.toString(), markers);
+    }
+  }
+  remove(resource) {
+    const markers = this.markersPerResource.get(resource.toString()) || [];
+    for (const marker of markers) {
+      const value = this.markersViewStates.get(marker.id);
+      if (value) {
+        dispose(value.disposables);
+      }
+      this.markersViewStates.delete(marker.id);
+      if (this.hoveredMarker === marker) {
+        this.hoveredMarker = null;
+      }
+    }
+    this.markersPerResource.delete(resource.toString());
+  }
+  getViewModel(marker) {
+    const value = this.markersViewStates.get(marker.id);
+    return value ? value.viewModel : null;
+  }
+  onMarkerMouseHover(marker) {
+    this.hoveredMarker = marker;
+    this.hoverDelayer.trigger(() => {
+      if (this.hoveredMarker) {
+        const model = this.getViewModel(this.hoveredMarker);
+        if (model) {
+          model.showLightBulb();
+        }
+      }
+    });
+  }
+  onMarkerMouseLeave(marker) {
+    if (this.hoveredMarker === marker) {
+      this.hoveredMarker = null;
+    }
+  }
+  get multiline() {
+    return this._multiline;
+  }
+  set multiline(value) {
+    let changed = false;
+    if (this._multiline !== value) {
+      this._multiline = value;
+      changed = true;
+    }
+    this.bulkUpdate = true;
+    this.markersViewStates.forEach(({ viewModel }) => {
+      if (viewModel.multiline !== value) {
+        viewModel.multiline = value;
+        changed = true;
+      }
+    });
+    this.bulkUpdate = false;
+    if (changed) {
+      this._onDidChange.fire(void 0);
+    }
+  }
+  get viewMode() {
+    return this._viewMode;
+  }
+  set viewMode(value) {
+    if (this._viewMode === value) {
+      return;
+    }
+    this._viewMode = value;
+    this._onDidChangeViewMode.fire(value);
+    this.viewModeContextKey.set(value);
+  }
+  dispose() {
+    this.markersViewStates.forEach(({ disposables }) => dispose(disposables));
+    this.markersViewStates.clear();
+    this.markersPerResource.clear();
+    super.dispose();
+  }
+};
+MarkersViewModel = __decorate([
+  __param(2, IContextKeyService),
+  __param(3, IInstantiationService)
+], MarkersViewModel);
+export {
+  FileResourceMarkersRenderer,
+  Filter,
+  MarkerRenderer,
+  MarkerViewModel,
+  MarkersViewModel,
+  MarkersWidgetAccessibilityProvider,
+  RelatedInformationRenderer,
+  ResourceMarkersRenderer,
+  VirtualDelegate
+};
+//# sourceMappingURL=markersTreeViewer.js.map

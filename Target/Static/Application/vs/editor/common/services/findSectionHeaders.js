@@ -1,1 +1,104 @@
-import{$7G as k}from"../model/textModelSearch.js";const E=/^-+|-+$/g,x=100,$=5;function w(e,n){let t=[];if(n.findRegionSectionHeaders&&n.foldingRules?.markers){const r=M(e,n);t=t.concat(r)}if(n.findMarkSectionHeaders){const r=O(e,n);t=t.concat(r)}return t}function M(e,n){const t=[],r=e.getLineCount();for(let o=1;o<=r;o++){const r=e.getLineContent(o),s=r.match(n.foldingRules.markers.start);if(s){const e={startLineNumber:o,startColumn:s[0].length+1,endLineNumber:o,endColumn:r.length+1};if(e.endColumn>e.startColumn){const n={range:e,...T(r.substring(s[0].length)),shouldBeInComments:!1};(n.text||n.hasSeparatorLine)&&t.push(n)}}}return t}function O(e,n){const t=[],r=e.getLineCount(),o=k(n.markSectionHeaderRegex),s=new RegExp(n.markSectionHeaderRegex,"gdm"+(o?"s":""));for(let n=1;n<=r;n+=95){const o=Math.min(n+x-1,r),a=[];for(let t=n;t<=o;t++)a.push(e.getLineContent(t));const i=a.join("\n");let l;for(s.lastIndex=0;null!==(l=s.exec(i));){const e=i.substring(0,l.index),r=n+(e.match(/\n/g)||[]).length,o=l[0].split("\n"),a=o.length,u=r+a-1,g=e.lastIndexOf("\n")+1,c=l.index-g+1,m=o[o.length-1],d={range:{startLineNumber:r,startColumn:c,endLineNumber:u,endColumn:1===a?c+l[0].length:m.length+1},text:(l.groups??{}).label??"",hasSeparatorLine:""!==((l.groups??{}).separator??""),shouldBeInComments:!0};(d.text||d.hasSeparatorLine)&&(0===t.length||t[t.length-1].range.endLineNumber<d.range.startLineNumber)&&t.push(d),s.lastIndex=l.index+l[0].length}}return t}function T(e){const n=(e=e.trim()).startsWith("-");return{text:e=e.replace(E,""),hasSeparatorLine:n}}export{w as $Web,O as $Xeb};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { isMultilineRegexSource } from "../model/textModelSearch.js";
+const trimDashesRegex = /^-+|-+$/g;
+const CHUNK_SIZE = 100;
+const MAX_SECTION_LINES = 5;
+function findSectionHeaders(model, options) {
+  let headers = [];
+  if (options.findRegionSectionHeaders && options.foldingRules?.markers) {
+    const regionHeaders = collectRegionHeaders(model, options);
+    headers = headers.concat(regionHeaders);
+  }
+  if (options.findMarkSectionHeaders) {
+    const markHeaders = collectMarkHeaders(model, options);
+    headers = headers.concat(markHeaders);
+  }
+  return headers;
+}
+__name(findSectionHeaders, "findSectionHeaders");
+function collectRegionHeaders(model, options) {
+  const regionHeaders = [];
+  const endLineNumber = model.getLineCount();
+  for (let lineNumber = 1; lineNumber <= endLineNumber; lineNumber++) {
+    const lineContent = model.getLineContent(lineNumber);
+    const match = lineContent.match(options.foldingRules.markers.start);
+    if (match) {
+      const range = { startLineNumber: lineNumber, startColumn: match[0].length + 1, endLineNumber: lineNumber, endColumn: lineContent.length + 1 };
+      if (range.endColumn > range.startColumn) {
+        const sectionHeader = {
+          range,
+          ...getHeaderText(lineContent.substring(match[0].length)),
+          shouldBeInComments: false
+        };
+        if (sectionHeader.text || sectionHeader.hasSeparatorLine) {
+          regionHeaders.push(sectionHeader);
+        }
+      }
+    }
+  }
+  return regionHeaders;
+}
+__name(collectRegionHeaders, "collectRegionHeaders");
+function collectMarkHeaders(model, options) {
+  const markHeaders = [];
+  const endLineNumber = model.getLineCount();
+  const multiline = isMultilineRegexSource(options.markSectionHeaderRegex);
+  const regex = new RegExp(options.markSectionHeaderRegex, `gdm${multiline ? "s" : ""}`);
+  for (let startLine = 1; startLine <= endLineNumber; startLine += CHUNK_SIZE - MAX_SECTION_LINES) {
+    const endLine = Math.min(startLine + CHUNK_SIZE - 1, endLineNumber);
+    const lines = [];
+    for (let i = startLine; i <= endLine; i++) {
+      lines.push(model.getLineContent(i));
+    }
+    const text = lines.join("\n");
+    regex.lastIndex = 0;
+    let match;
+    while ((match = regex.exec(text)) !== null) {
+      const precedingText = text.substring(0, match.index);
+      const lineOffset = (precedingText.match(/\n/g) || []).length;
+      const lineNumber = startLine + lineOffset;
+      const matchLines = match[0].split("\n");
+      const matchHeight = matchLines.length;
+      const matchEndLine = lineNumber + matchHeight - 1;
+      const lineStartIndex = precedingText.lastIndexOf("\n") + 1;
+      const startColumn = match.index - lineStartIndex + 1;
+      const lastMatchLine = matchLines[matchLines.length - 1];
+      const endColumn = matchHeight === 1 ? startColumn + match[0].length : lastMatchLine.length + 1;
+      const range = {
+        startLineNumber: lineNumber,
+        startColumn,
+        endLineNumber: matchEndLine,
+        endColumn
+      };
+      const text2 = (match.groups ?? {})["label"] ?? "";
+      const hasSeparatorLine = ((match.groups ?? {})["separator"] ?? "") !== "";
+      const sectionHeader = {
+        range,
+        text: text2,
+        hasSeparatorLine,
+        shouldBeInComments: true
+      };
+      if (sectionHeader.text || sectionHeader.hasSeparatorLine) {
+        if (markHeaders.length === 0 || markHeaders[markHeaders.length - 1].range.endLineNumber < sectionHeader.range.startLineNumber) {
+          markHeaders.push(sectionHeader);
+        }
+      }
+      regex.lastIndex = match.index + match[0].length;
+    }
+  }
+  return markHeaders;
+}
+__name(collectMarkHeaders, "collectMarkHeaders");
+function getHeaderText(text) {
+  text = text.trim();
+  const hasSeparatorLine = text.startsWith("-");
+  text = text.replace(trimDashesRegex, "");
+  return { text, hasSeparatorLine };
+}
+__name(getHeaderText, "getHeaderText");
+export {
+  collectMarkHeaders,
+  findSectionHeaders
+};
+//# sourceMappingURL=findSectionHeaders.js.map

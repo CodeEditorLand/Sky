@@ -1,1 +1,176 @@
-import{$ as d,$J5 as r,$M6 as m,$H6 as a,$F6 as n,$B6 as p}from"../../dom.js";import{$G5 as c}from"../../keyboardEvent.js";import{EventType as l,$l7 as f}from"../../touch.js";import{$M8 as g}from"../hover/hoverDelegate2.js";import{$K7 as v}from"../hover/hoverDelegateFactory.js";import{$am as w}from"../../../common/actions.js";import{$df as O}from"../../../common/event.js";import"./dropdown.css";class $ extends w{constructor(t,e){super(),this.r=this.B(new O),this.onDidChangeVisibility=this.r.event,this.c=m(t,d(".monaco-dropdown")),this.h=m(this.c,d(".dropdown-label"));let o=e.labelRenderer;o||(o=i=>(i.textContent=e.label||"",null));for(const i of[n.CLICK,n.MOUSE_DOWN,l.Tap])this.B(r(this.element,i,s=>a.stop(s,!0)));for(const i of[n.MOUSE_DOWN,l.Tap])this.B(r(this.h,i,s=>{p(s)&&(s.detail>1||s.button!==0)||(this.n?this.hide():this.show())}));this.B(r(this.h,n.KEY_DOWN,i=>{const s=new c(i);(s.equals(3)||s.equals(10))&&(a.stop(i,!0),this.n?this.hide():this.show())}));const u=o(this.h);u&&this.B(u),this.B(f.addTarget(this.h))}get element(){return this.c}get label(){return this.h}set tooltip(t){this.h&&(!this.s&&t!==""?this.s=this.B(g().setupManagedHover(v("mouse"),this.h,t)):this.s&&this.s.update(t))}show(){this.n||(this.n=!0,this.r.fire(!0))}hide(){this.n&&(this.n=!1,this.r.fire(!1))}isVisible(){return!!this.n}t(t,e){this.hide()}dispose(){super.dispose(),this.hide(),this.g&&(this.g.remove(),this.g=void 0),this.j&&(this.j.remove(),this.j=void 0),this.h&&(this.h.remove(),this.h=void 0)}}function E(h){return typeof h?.getActions=="function"}class K extends ${constructor(t,e){super(t,e),this.w=e,this.b=[],this.y=e.actions||[]}set menuOptions(t){this.a=t}get menuOptions(){return this.a}get y(){return this.w.actionProvider?this.w.actionProvider.getActions():this.b}set y(t){this.b=t}show(){super.show(),this.element.classList.add("active"),this.w.contextMenuProvider.showContextMenu({getAnchor:()=>this.element,getActions:()=>this.y,getActionsContext:()=>this.menuOptions?this.menuOptions.context:null,getActionViewItem:(t,e)=>this.menuOptions&&this.menuOptions.actionViewItemProvider?this.menuOptions.actionViewItemProvider(t,e):void 0,getKeyBinding:t=>this.menuOptions&&this.menuOptions.getKeyBinding?this.menuOptions.getKeyBinding(t):void 0,getMenuClassName:()=>this.w.menuClassName||"",onHide:()=>this.z(),actionRunner:this.menuOptions?this.menuOptions.actionRunner:void 0,anchorAlignment:this.menuOptions?this.menuOptions.anchorAlignment:0,domForShadowRoot:this.w.menuAsChild?this.element:void 0,skipTelemetry:this.w.skipTelemetry})}hide(){super.hide()}z(){this.hide(),this.element.classList.remove("active")}}export{$ as $l9,E as $m9,K as $n9};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { $, addDisposableListener, append, EventHelper, EventType, isMouseEvent } from "../../dom.js";
+import { StandardKeyboardEvent } from "../../keyboardEvent.js";
+import { EventType as GestureEventType, Gesture } from "../../touch.js";
+import { getBaseLayerHoverDelegate } from "../hover/hoverDelegate2.js";
+import { getDefaultHoverDelegate } from "../hover/hoverDelegateFactory.js";
+import { ActionRunner } from "../../../common/actions.js";
+import { Emitter } from "../../../common/event.js";
+import "./dropdown.css";
+class BaseDropdown extends ActionRunner {
+  static {
+    __name(this, "BaseDropdown");
+  }
+  constructor(container, options) {
+    super();
+    this._onDidChangeVisibility = this._register(new Emitter());
+    this.onDidChangeVisibility = this._onDidChangeVisibility.event;
+    this._element = append(container, $(".monaco-dropdown"));
+    this._label = append(this._element, $(".dropdown-label"));
+    let labelRenderer = options.labelRenderer;
+    if (!labelRenderer) {
+      labelRenderer = /* @__PURE__ */ __name((container2) => {
+        container2.textContent = options.label || "";
+        return null;
+      }, "labelRenderer");
+    }
+    for (const event of [EventType.CLICK, EventType.MOUSE_DOWN, GestureEventType.Tap]) {
+      this._register(addDisposableListener(this.element, event, (e) => EventHelper.stop(e, true)));
+    }
+    for (const event of [EventType.MOUSE_DOWN, GestureEventType.Tap]) {
+      this._register(addDisposableListener(this._label, event, (e) => {
+        if (isMouseEvent(e) && (e.detail > 1 || e.button !== 0)) {
+          return;
+        }
+        if (this.visible) {
+          this.hide();
+        } else {
+          this.show();
+        }
+      }));
+    }
+    this._register(addDisposableListener(this._label, EventType.KEY_DOWN, (e) => {
+      const event = new StandardKeyboardEvent(e);
+      if (event.equals(
+        3
+        /* KeyCode.Enter */
+      ) || event.equals(
+        10
+        /* KeyCode.Space */
+      )) {
+        EventHelper.stop(e, true);
+        if (this.visible) {
+          this.hide();
+        } else {
+          this.show();
+        }
+      }
+    }));
+    const cleanupFn = labelRenderer(this._label);
+    if (cleanupFn) {
+      this._register(cleanupFn);
+    }
+    this._register(Gesture.addTarget(this._label));
+  }
+  get element() {
+    return this._element;
+  }
+  get label() {
+    return this._label;
+  }
+  set tooltip(tooltip) {
+    if (this._label) {
+      if (!this.hover && tooltip !== "") {
+        this.hover = this._register(getBaseLayerHoverDelegate().setupManagedHover(getDefaultHoverDelegate("mouse"), this._label, tooltip));
+      } else if (this.hover) {
+        this.hover.update(tooltip);
+      }
+    }
+  }
+  show() {
+    if (!this.visible) {
+      this.visible = true;
+      this._onDidChangeVisibility.fire(true);
+    }
+  }
+  hide() {
+    if (this.visible) {
+      this.visible = false;
+      this._onDidChangeVisibility.fire(false);
+    }
+  }
+  isVisible() {
+    return !!this.visible;
+  }
+  onEvent(_e, activeElement) {
+    this.hide();
+  }
+  dispose() {
+    super.dispose();
+    this.hide();
+    if (this.boxContainer) {
+      this.boxContainer.remove();
+      this.boxContainer = void 0;
+    }
+    if (this.contents) {
+      this.contents.remove();
+      this.contents = void 0;
+    }
+    if (this._label) {
+      this._label.remove();
+      this._label = void 0;
+    }
+  }
+}
+function isActionProvider(obj) {
+  const candidate = obj;
+  return typeof candidate?.getActions === "function";
+}
+__name(isActionProvider, "isActionProvider");
+class DropdownMenu extends BaseDropdown {
+  static {
+    __name(this, "DropdownMenu");
+  }
+  constructor(container, _options) {
+    super(container, _options);
+    this._options = _options;
+    this._actions = [];
+    this.actions = _options.actions || [];
+  }
+  set menuOptions(options) {
+    this._menuOptions = options;
+  }
+  get menuOptions() {
+    return this._menuOptions;
+  }
+  get actions() {
+    if (this._options.actionProvider) {
+      return this._options.actionProvider.getActions();
+    }
+    return this._actions;
+  }
+  set actions(actions) {
+    this._actions = actions;
+  }
+  show() {
+    super.show();
+    this.element.classList.add("active");
+    this._options.contextMenuProvider.showContextMenu({
+      getAnchor: /* @__PURE__ */ __name(() => this.element, "getAnchor"),
+      getActions: /* @__PURE__ */ __name(() => this.actions, "getActions"),
+      getActionsContext: /* @__PURE__ */ __name(() => this.menuOptions ? this.menuOptions.context : null, "getActionsContext"),
+      getActionViewItem: /* @__PURE__ */ __name((action, options) => this.menuOptions && this.menuOptions.actionViewItemProvider ? this.menuOptions.actionViewItemProvider(action, options) : void 0, "getActionViewItem"),
+      getKeyBinding: /* @__PURE__ */ __name((action) => this.menuOptions && this.menuOptions.getKeyBinding ? this.menuOptions.getKeyBinding(action) : void 0, "getKeyBinding"),
+      getMenuClassName: /* @__PURE__ */ __name(() => this._options.menuClassName || "", "getMenuClassName"),
+      onHide: /* @__PURE__ */ __name(() => this.onHide(), "onHide"),
+      actionRunner: this.menuOptions ? this.menuOptions.actionRunner : void 0,
+      anchorAlignment: this.menuOptions ? this.menuOptions.anchorAlignment : 0,
+      domForShadowRoot: this._options.menuAsChild ? this.element : void 0,
+      skipTelemetry: this._options.skipTelemetry
+    });
+  }
+  hide() {
+    super.hide();
+  }
+  onHide() {
+    this.hide();
+    this.element.classList.remove("active");
+  }
+}
+export {
+  BaseDropdown,
+  DropdownMenu,
+  isActionProvider
+};
+//# sourceMappingURL=dropdown.js.map

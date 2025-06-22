@@ -1,1 +1,62 @@
-import{localize2 as i}from"../../../../nls.js";import{$5j as a}from"../../../../platform/files/common/files.js";import{URI as f}from"../../../../base/common/uri.js";import{$jCc as p}from"../../../services/environment/electron-browser/environmentService.js";import{$fu as x}from"../../../../platform/native/common/native.js";import{Schemas as d}from"../../../../base/common/network.js";import{$iI as s}from"../../../../platform/actions/common/actions.js";import{$qz as u,$jz as h}from"../../../../platform/extensionManagement/common/extensionManagement.js";import{$Xn as g}from"../../../../platform/action/common/actionCommonCategories.js";class z extends s{constructor(){super({id:"workbench.extensions.action.openExtensionsFolder",title:i(7716,"Open Extensions Folder"),category:u,f1:!0})}async run(e){const o=e.get(x),n=e.get(a),s=e.get(p),t=f.file(s.extensionsPath),r=await n.resolve(t);let i;if(i=r.children&&r.children.length>0?r.children[0].resource:t,i.scheme===d.file)return o.showItemInFolder(i.fsPath)}}class U extends s{constructor(){super({id:"_workbench.extensions.action.cleanUpExtensionsFolder",title:i(7717,"Cleanup Extensions Folder"),category:g.Developer,f1:!0})}async run(e){return e.get(h).cleanUp()}}export{z as $cJc,U as $dJc};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { localize2 } from "../../../../nls.js";
+import { IFileService } from "../../../../platform/files/common/files.js";
+import { URI } from "../../../../base/common/uri.js";
+import { INativeWorkbenchEnvironmentService } from "../../../services/environment/electron-browser/environmentService.js";
+import { INativeHostService } from "../../../../platform/native/common/native.js";
+import { Schemas } from "../../../../base/common/network.js";
+import { Action2 } from "../../../../platform/actions/common/actions.js";
+import { ExtensionsLocalizedLabel, IExtensionManagementService } from "../../../../platform/extensionManagement/common/extensionManagement.js";
+import { Categories } from "../../../../platform/action/common/actionCommonCategories.js";
+class OpenExtensionsFolderAction extends Action2 {
+  static {
+    __name(this, "OpenExtensionsFolderAction");
+  }
+  constructor() {
+    super({
+      id: "workbench.extensions.action.openExtensionsFolder",
+      title: localize2("openExtensionsFolder", "Open Extensions Folder"),
+      category: ExtensionsLocalizedLabel,
+      f1: true
+    });
+  }
+  async run(accessor) {
+    const nativeHostService = accessor.get(INativeHostService);
+    const fileService = accessor.get(IFileService);
+    const environmentService = accessor.get(INativeWorkbenchEnvironmentService);
+    const extensionsHome = URI.file(environmentService.extensionsPath);
+    const file = await fileService.resolve(extensionsHome);
+    let itemToShow;
+    if (file.children && file.children.length > 0) {
+      itemToShow = file.children[0].resource;
+    } else {
+      itemToShow = extensionsHome;
+    }
+    if (itemToShow.scheme === Schemas.file) {
+      return nativeHostService.showItemInFolder(itemToShow.fsPath);
+    }
+  }
+}
+class CleanUpExtensionsFolderAction extends Action2 {
+  static {
+    __name(this, "CleanUpExtensionsFolderAction");
+  }
+  constructor() {
+    super({
+      id: "_workbench.extensions.action.cleanUpExtensionsFolder",
+      title: localize2("cleanUpExtensionsFolder", "Cleanup Extensions Folder"),
+      category: Categories.Developer,
+      f1: true
+    });
+  }
+  async run(accessor) {
+    const extensionManagementService = accessor.get(IExtensionManagementService);
+    return extensionManagementService.cleanUp();
+  }
+}
+export {
+  CleanUpExtensionsFolderAction,
+  OpenExtensionsFolderAction
+};
+//# sourceMappingURL=extensionsActions.js.map

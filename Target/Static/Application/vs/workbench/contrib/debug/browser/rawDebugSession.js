@@ -1,1 +1,710 @@
-import*as d from"../../../../nls.js";import{$df as u}from"../../../../base/common/event.js";import*as P from"../../../../base/common/objects.js";import{$em as y}from"../../../../base/common/actions.js";import*as f from"../../../../base/common/errors.js";import{$hm as k}from"../../../../base/common/errorMessage.js";import{$tT as D,$AT as m}from"../common/debugUtils.js";import{$Xv as E}from"../../../../platform/debug/common/extensionHostDebug.js";import{URI as b}from"../../../../base/common/uri.js";import{$4$ as B}from"../../../../platform/opener/common/opener.js";import{$qd as I}from"../../../../base/common/lifecycle.js";import{$RI as T,Severity as j}from"../../../../platform/notification/common/notification.js";import{$_o as C}from"../../../../platform/dialogs/common/dialogs.js";import{Schemas as S}from"../../../../base/common/network.js";var w=function(p,e,t,s){var i=arguments.length,r=i<3?e:s===null?s=Object.getOwnPropertyDescriptor(e,t):s,o;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")r=Reflect.decorate(p,e,t,s);else for(var a=p.length-1;a>=0;a--)(o=p[a])&&(r=(i<3?o(r):i>3?o(e,t,r):o(e,t))||r);return i>3&&r&&Object.defineProperty(e,t,r),r},l=function(p,e){return function(t,s){e(t,s,p)}};let g=class{constructor(e,t,s,i,r,o,a,h){this.dbgr=t,this.E=s,this.F=i,this.G=r,this.H=o,this.I=a,this.J=h,this.a=!0,this.b=!1,this.d=!1,this.f=!1,this.g=!1,this.h=!1,this.i=0,this.j=!1,this.k=new u,this.l=new u,this.m=new u,this.n=new u,this.o=new u,this.p=new u,this.q=new u,this.r=new u,this.s=new u,this.t=new u,this.u=new u,this.v=new u,this.w=new u,this.x=new u,this.y=new u,this.z=new u,this.A=new u,this.C=!1,this.D=[],this.B=e,this.c=Object.create(null),this.D.push(this.B.onError(n=>{this.K(n)})),this.D.push(this.B.onExit(n=>{n!==0?this.K(new Error(`exit code: ${n}`)):this.K()})),this.B.onEvent(n=>{switch(n.event){case"initialized":this.b=!0,this.k.fire(n);break;case"loadedSource":this.s.fire(n);break;case"capabilities":if(n.body){const c=n.body.capabilities;this.S(c)}break;case"stopped":this.j=!0,this.C=!0,this.l.fire(n);break;case"continued":this.a=n.body.allThreadsContinued!==!1,this.m.fire(n);break;case"thread":this.p.fire(n);break;case"output":this.q.fire(n);break;case"breakpoint":this.r.fire(n);break;case"terminated":this.n.fire(n);break;case"exited":this.o.fire(n);break;case"progressStart":this.t.fire(n);break;case"progressUpdate":this.u.fire(n);break;case"progressEnd":this.v.fire(n);break;case"invalidated":this.w.fire(n);break;case"memory":this.x.fire(n);break;case"process":break;case"module":break;default:this.y.fire(n);break}this.z.fire(n)}),this.B.onRequest(n=>this.N(n))}get isInShutdown(){return this.f}get onDidExitAdapter(){return this.A.event}get capabilities(){return this.c}get readyForBreakpoints(){return this.b}get onDidInitialize(){return this.k.event}get onDidStop(){return this.l.event}get onDidContinued(){return this.m.event}get onDidTerminateDebugee(){return this.n.event}get onDidExitDebugee(){return this.o.event}get onDidThread(){return this.p.event}get onDidOutput(){return this.q.event}get onDidBreakpoint(){return this.r.event}get onDidLoadedSource(){return this.s.event}get onDidCustomEvent(){return this.y.event}get onDidProgressStart(){return this.t.event}get onDidProgressUpdate(){return this.u.event}get onDidProgressEnd(){return this.v.event}get onDidInvalidated(){return this.w.event}get onDidInvalidateMemory(){return this.x.event}get onDidEvent(){return this.z.event}async start(){if(!this.B)return Promise.reject(new Error(d.localize(6719,null)));await this.B.startSession(),this.i=new Date().getTime()}async initialize(e){const t=await this.P("initialize",e,void 0,void 0,!1);return t&&this.S(t.body),t}disconnect(e){const t=this.capabilities.supportTerminateDebuggee?e.terminateDebuggee:void 0,s=this.capabilities.supportTerminateDebuggee&&this.capabilities.supportSuspendDebuggee?e.suspendDebuggee:void 0;return this.K(void 0,e.restart,t,s)}async launchOrAttach(e){const t=await this.P(e.request,e,void 0,void 0,!1);return t&&this.S(t.body),t}terminate(e=!1){return this.capabilities.supportsTerminateRequest?this.g?this.disconnect({terminateDebuggee:!0,restart:e}):(this.g=!0,this.P("terminate",{restart:e},void 0)):Promise.reject(new Error("terminated not supported"))}restart(e){return this.capabilities.supportsRestartRequest?this.P("restart",e):Promise.reject(new Error("restart not supported"))}async next(e){this.C=!1;const t=await this.P("next",e);return this.C||this.T(e.threadId),t}async stepIn(e){this.C=!1;const t=await this.P("stepIn",e);return this.C||this.T(e.threadId),t}async stepOut(e){this.C=!1;const t=await this.P("stepOut",e);return this.C||this.T(e.threadId),t}async continue(e){this.C=!1;const t=await this.P("continue",e);return t&&t.body&&t.body.allThreadsContinued!==void 0&&(this.a=t.body.allThreadsContinued),this.C||this.T(e.threadId,this.a),t}pause(e){return this.P("pause",e)}terminateThreads(e){return this.capabilities.supportsTerminateThreadsRequest?this.P("terminateThreads",e):Promise.reject(new Error("terminateThreads not supported"))}setVariable(e){return this.capabilities.supportsSetVariable?this.P("setVariable",e):Promise.reject(new Error("setVariable not supported"))}setExpression(e){return this.capabilities.supportsSetExpression?this.P("setExpression",e):Promise.reject(new Error("setExpression not supported"))}async restartFrame(e,t){if(this.capabilities.supportsRestartFrame){this.C=!1;const s=await this.P("restartFrame",e);return this.C||this.T(t),s}return Promise.reject(new Error("restartFrame not supported"))}stepInTargets(e){return this.capabilities.supportsStepInTargetsRequest?this.P("stepInTargets",e):Promise.reject(new Error("stepInTargets not supported"))}completions(e,t){return this.capabilities.supportsCompletionsRequest?this.P("completions",e,t):Promise.reject(new Error("completions not supported"))}setBreakpoints(e){return this.P("setBreakpoints",e)}setFunctionBreakpoints(e){return this.capabilities.supportsFunctionBreakpoints?this.P("setFunctionBreakpoints",e):Promise.reject(new Error("setFunctionBreakpoints not supported"))}dataBreakpointInfo(e){return this.capabilities.supportsDataBreakpoints?this.P("dataBreakpointInfo",e):Promise.reject(new Error("dataBreakpointInfo not supported"))}setDataBreakpoints(e){return this.capabilities.supportsDataBreakpoints?this.P("setDataBreakpoints",e):Promise.reject(new Error("setDataBreakpoints not supported"))}setExceptionBreakpoints(e){return this.P("setExceptionBreakpoints",e)}breakpointLocations(e){return this.capabilities.supportsBreakpointLocationsRequest?this.P("breakpointLocations",e):Promise.reject(new Error("breakpointLocations is not supported"))}configurationDone(){return this.capabilities.supportsConfigurationDoneRequest?this.P("configurationDone",null):Promise.reject(new Error("configurationDone not supported"))}stackTrace(e,t){return this.P("stackTrace",e,t)}exceptionInfo(e){return this.capabilities.supportsExceptionInfoRequest?this.P("exceptionInfo",e):Promise.reject(new Error("exceptionInfo not supported"))}scopes(e,t){return this.P("scopes",e,t)}variables(e,t){return this.P("variables",e,t)}source(e){return this.P("source",e)}locations(e){return this.P("locations",e)}loadedSources(e){return this.capabilities.supportsLoadedSourcesRequest?this.P("loadedSources",e):Promise.reject(new Error("loadedSources not supported"))}threads(){return this.P("threads",null)}evaluate(e){return this.P("evaluate",e)}async stepBack(e){if(this.capabilities.supportsStepBack){this.C=!1;const t=await this.P("stepBack",e);return this.C||this.T(e.threadId),t}return Promise.reject(new Error("stepBack not supported"))}async reverseContinue(e){if(this.capabilities.supportsStepBack){this.C=!1;const t=await this.P("reverseContinue",e);return this.C||this.T(e.threadId),t}return Promise.reject(new Error("reverseContinue not supported"))}gotoTargets(e){return this.capabilities.supportsGotoTargetsRequest?this.P("gotoTargets",e):Promise.reject(new Error("gotoTargets is not supported"))}async goto(e){if(this.capabilities.supportsGotoTargetsRequest){this.C=!1;const t=await this.P("goto",e);return this.C||this.T(e.threadId),t}return Promise.reject(new Error("goto is not supported"))}async setInstructionBreakpoints(e){return this.capabilities.supportsInstructionBreakpoints?await this.P("setInstructionBreakpoints",e):Promise.reject(new Error("setInstructionBreakpoints is not supported"))}async disassemble(e){return this.capabilities.supportsDisassembleRequest?await this.P("disassemble",e):Promise.reject(new Error("disassemble is not supported"))}async readMemory(e){return this.capabilities.supportsReadMemoryRequest?await this.P("readMemory",e):Promise.reject(new Error("readMemory is not supported"))}async writeMemory(e){return this.capabilities.supportsWriteMemoryRequest?await this.P("writeMemory",e):Promise.reject(new Error("writeMemory is not supported"))}cancel(e){return this.P("cancel",e)}custom(e,t){return this.P(e,t)}async K(e,t=!1,s=void 0,i=void 0){if(!this.f)if(this.f=!0,this.B)try{const r={restart:t};typeof s=="boolean"&&(r.terminateDebuggee=s),typeof i=="boolean"&&(r.suspendDebuggee=i),await this.P("disconnect",r,void 0,e?200:2e3)}catch{}finally{await this.L(e)}else return this.L(e)}async L(e){try{if(this.B){const t=this.B;this.B=null,await t.stopSession(),this.d=!0}}finally{this.M(e)}}M(e){if(!this.h){this.h=!0;const t={emittedStopped:this.j,sessionLengthInSeconds:(new Date().getTime()-this.i)/1e3};e&&!this.d&&(t.error=e),this.A.fire(t)}}async N(e){const t={type:"response",seq:0,command:e.command,request_seq:e.seq,success:!0},s=i=>this.B&&this.B.sendResponse(i);if(e.command==="launchVSCode")try{let i=await this.O(e.arguments);if(!i.success){const{confirmed:r}=await this.J.confirm({type:j.Warning,message:d.localize(6720,null),primaryButton:d.localize(6721,null)});r?i=await this.O(e.arguments):(t.success=!1,s(t),await this.K())}t.body={rendererDebugPort:i.rendererDebugPort},s(t)}catch(i){t.success=!1,t.message=i.message,s(t)}else if(e.command==="runInTerminal")try{const i=await this.dbgr.runInTerminal(e.arguments,this.E),r=t;r.body={},typeof i=="number"&&(r.body.shellProcessId=i),s(r)}catch(i){t.success=!1,t.message=i.message,s(t)}else if(e.command==="startDebugging")try{const i=e.arguments,r={...i.configuration,request:i.request,type:this.dbgr.type,name:i.configuration.name||this.F};await this.dbgr.startDebugging(r,this.E)||(t.success=!1,t.message="Failed to start debugging"),s(t)}catch(i){t.success=!1,t.message=i.message,s(t)}else t.success=!1,t.message=`unknown request '${e.command}'`,s(t)}O(e){const t=[];for(const s of e.args){const i=(s.prefix||"")+(s.path||""),r=/^--(.+)=(.+)$/.exec(i);if(r&&r.length===3){const o=r[1];let a=r[2];(o==="file-uri"||o==="folder-uri")&&!m(s.path)&&(a=m(a)?a:b.file(a).toString()),t.push(`--${o}=${a}`)}else t.push(i)}return e.env&&t.push(`--extensionEnvironment=${JSON.stringify(e.env)}`),this.G.openExtensionDevelopmentHostWindow(t,!!e.debugRenderer)}P(e,t,s,i,r=!0){return new Promise((o,a)=>{if(!this.B){this.f?o(void 0):a(new Error(d.localize(6722,null,e)));return}let h;const n=this.B.sendRequest(e,t,c=>{h?.dispose(),c.success?o(c):a(c)},i);s&&(h=s.onCancellationRequested(()=>{h.dispose(),this.capabilities.supportsCancelRequest&&this.cancel({requestId:n})}))}).then(void 0,o=>Promise.reject(this.Q(o,r)))}Q(e,t){if(e.command==="canceled"&&e.message==="canceled")return new f.$qb;const s=e?.body?.error,i=e?.message||"",r=s?D(s.format,!1,s.variables):i,o=s?.url;if(s&&o){const h=s.urlLabel?s.urlLabel:d.localize(6723,null),n=b.parse(o),c=n.scheme===S.command?"debug.moreInfo.command":"debug.moreInfo";return k(r,[y({id:c,label:h,run:()=>this.H.open(n,{allowCommands:!0})})])}t&&s&&s.format&&s.showUser&&this.I.error(r);const a=new f.$Ab(r);return a.showUser=s?.showUser,a}S(e){e&&(this.c=P.$5o(this.c,e))}T(e,t=!1){this.m.fire({type:"event",event:"continued",body:{threadId:e,allThreadsContinued:t},seq:void 0})}dispose(){I(this.D)}};g=w([l(4,E),l(5,B),l(6,T),l(7,C)],g);export{g as $Xoc};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import * as nls from "../../../../nls.js";
+import { Emitter } from "../../../../base/common/event.js";
+import * as objects from "../../../../base/common/objects.js";
+import { toAction } from "../../../../base/common/actions.js";
+import * as errors from "../../../../base/common/errors.js";
+import { createErrorWithActions } from "../../../../base/common/errorMessage.js";
+import { formatPII, isUri } from "../common/debugUtils.js";
+import { IExtensionHostDebugService } from "../../../../platform/debug/common/extensionHostDebug.js";
+import { URI } from "../../../../base/common/uri.js";
+import { IOpenerService } from "../../../../platform/opener/common/opener.js";
+import { dispose } from "../../../../base/common/lifecycle.js";
+import { INotificationService, Severity } from "../../../../platform/notification/common/notification.js";
+import { IDialogService } from "../../../../platform/dialogs/common/dialogs.js";
+import { Schemas } from "../../../../base/common/network.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+let RawDebugSession = class RawDebugSession2 {
+  static {
+    __name(this, "RawDebugSession");
+  }
+  constructor(debugAdapter, dbgr, sessionId, name, extensionHostDebugService, openerService, notificationService, dialogSerivce) {
+    this.dbgr = dbgr;
+    this.sessionId = sessionId;
+    this.name = name;
+    this.extensionHostDebugService = extensionHostDebugService;
+    this.openerService = openerService;
+    this.notificationService = notificationService;
+    this.dialogSerivce = dialogSerivce;
+    this.allThreadsContinued = true;
+    this._readyForBreakpoints = false;
+    this.debugAdapterStopped = false;
+    this.inShutdown = false;
+    this.terminated = false;
+    this.firedAdapterExitEvent = false;
+    this.startTime = 0;
+    this.didReceiveStoppedEvent = false;
+    this._onDidInitialize = new Emitter();
+    this._onDidStop = new Emitter();
+    this._onDidContinued = new Emitter();
+    this._onDidTerminateDebugee = new Emitter();
+    this._onDidExitDebugee = new Emitter();
+    this._onDidThread = new Emitter();
+    this._onDidOutput = new Emitter();
+    this._onDidBreakpoint = new Emitter();
+    this._onDidLoadedSource = new Emitter();
+    this._onDidProgressStart = new Emitter();
+    this._onDidProgressUpdate = new Emitter();
+    this._onDidProgressEnd = new Emitter();
+    this._onDidInvalidated = new Emitter();
+    this._onDidInvalidateMemory = new Emitter();
+    this._onDidCustomEvent = new Emitter();
+    this._onDidEvent = new Emitter();
+    this._onDidExitAdapter = new Emitter();
+    this.stoppedSinceLastStep = false;
+    this.toDispose = [];
+    this.debugAdapter = debugAdapter;
+    this._capabilities = /* @__PURE__ */ Object.create(null);
+    this.toDispose.push(this.debugAdapter.onError((err) => {
+      this.shutdown(err);
+    }));
+    this.toDispose.push(this.debugAdapter.onExit((code) => {
+      if (code !== 0) {
+        this.shutdown(new Error(`exit code: ${code}`));
+      } else {
+        this.shutdown();
+      }
+    }));
+    this.debugAdapter.onEvent((event) => {
+      switch (event.event) {
+        case "initialized":
+          this._readyForBreakpoints = true;
+          this._onDidInitialize.fire(event);
+          break;
+        case "loadedSource":
+          this._onDidLoadedSource.fire(event);
+          break;
+        case "capabilities":
+          if (event.body) {
+            const capabilities = event.body.capabilities;
+            this.mergeCapabilities(capabilities);
+          }
+          break;
+        case "stopped":
+          this.didReceiveStoppedEvent = true;
+          this.stoppedSinceLastStep = true;
+          this._onDidStop.fire(event);
+          break;
+        case "continued":
+          this.allThreadsContinued = event.body.allThreadsContinued === false ? false : true;
+          this._onDidContinued.fire(event);
+          break;
+        case "thread":
+          this._onDidThread.fire(event);
+          break;
+        case "output":
+          this._onDidOutput.fire(event);
+          break;
+        case "breakpoint":
+          this._onDidBreakpoint.fire(event);
+          break;
+        case "terminated":
+          this._onDidTerminateDebugee.fire(event);
+          break;
+        case "exited":
+          this._onDidExitDebugee.fire(event);
+          break;
+        case "progressStart":
+          this._onDidProgressStart.fire(event);
+          break;
+        case "progressUpdate":
+          this._onDidProgressUpdate.fire(event);
+          break;
+        case "progressEnd":
+          this._onDidProgressEnd.fire(event);
+          break;
+        case "invalidated":
+          this._onDidInvalidated.fire(event);
+          break;
+        case "memory":
+          this._onDidInvalidateMemory.fire(event);
+          break;
+        case "process":
+          break;
+        case "module":
+          break;
+        default:
+          this._onDidCustomEvent.fire(event);
+          break;
+      }
+      this._onDidEvent.fire(event);
+    });
+    this.debugAdapter.onRequest((request) => this.dispatchRequest(request));
+  }
+  get isInShutdown() {
+    return this.inShutdown;
+  }
+  get onDidExitAdapter() {
+    return this._onDidExitAdapter.event;
+  }
+  get capabilities() {
+    return this._capabilities;
+  }
+  /**
+   * DA is ready to accepts setBreakpoint requests.
+   * Becomes true after "initialized" events has been received.
+   */
+  get readyForBreakpoints() {
+    return this._readyForBreakpoints;
+  }
+  //---- DAP events
+  get onDidInitialize() {
+    return this._onDidInitialize.event;
+  }
+  get onDidStop() {
+    return this._onDidStop.event;
+  }
+  get onDidContinued() {
+    return this._onDidContinued.event;
+  }
+  get onDidTerminateDebugee() {
+    return this._onDidTerminateDebugee.event;
+  }
+  get onDidExitDebugee() {
+    return this._onDidExitDebugee.event;
+  }
+  get onDidThread() {
+    return this._onDidThread.event;
+  }
+  get onDidOutput() {
+    return this._onDidOutput.event;
+  }
+  get onDidBreakpoint() {
+    return this._onDidBreakpoint.event;
+  }
+  get onDidLoadedSource() {
+    return this._onDidLoadedSource.event;
+  }
+  get onDidCustomEvent() {
+    return this._onDidCustomEvent.event;
+  }
+  get onDidProgressStart() {
+    return this._onDidProgressStart.event;
+  }
+  get onDidProgressUpdate() {
+    return this._onDidProgressUpdate.event;
+  }
+  get onDidProgressEnd() {
+    return this._onDidProgressEnd.event;
+  }
+  get onDidInvalidated() {
+    return this._onDidInvalidated.event;
+  }
+  get onDidInvalidateMemory() {
+    return this._onDidInvalidateMemory.event;
+  }
+  get onDidEvent() {
+    return this._onDidEvent.event;
+  }
+  //---- DebugAdapter lifecycle
+  /**
+   * Starts the underlying debug adapter and tracks the session time for telemetry.
+   */
+  async start() {
+    if (!this.debugAdapter) {
+      return Promise.reject(new Error(nls.localize("noDebugAdapterStart", "No debug adapter, can not start debug session.")));
+    }
+    await this.debugAdapter.startSession();
+    this.startTime = (/* @__PURE__ */ new Date()).getTime();
+  }
+  /**
+   * Send client capabilities to the debug adapter and receive DA capabilities in return.
+   */
+  async initialize(args) {
+    const response = await this.send("initialize", args, void 0, void 0, false);
+    if (response) {
+      this.mergeCapabilities(response.body);
+    }
+    return response;
+  }
+  /**
+   * Terminate the debuggee and shutdown the adapter
+   */
+  disconnect(args) {
+    const terminateDebuggee = this.capabilities.supportTerminateDebuggee ? args.terminateDebuggee : void 0;
+    const suspendDebuggee = this.capabilities.supportTerminateDebuggee && this.capabilities.supportSuspendDebuggee ? args.suspendDebuggee : void 0;
+    return this.shutdown(void 0, args.restart, terminateDebuggee, suspendDebuggee);
+  }
+  //---- DAP requests
+  async launchOrAttach(config) {
+    const response = await this.send(config.request, config, void 0, void 0, false);
+    if (response) {
+      this.mergeCapabilities(response.body);
+    }
+    return response;
+  }
+  /**
+   * Try killing the debuggee softly...
+   */
+  terminate(restart = false) {
+    if (this.capabilities.supportsTerminateRequest) {
+      if (!this.terminated) {
+        this.terminated = true;
+        return this.send("terminate", { restart }, void 0);
+      }
+      return this.disconnect({ terminateDebuggee: true, restart });
+    }
+    return Promise.reject(new Error("terminated not supported"));
+  }
+  restart(args) {
+    if (this.capabilities.supportsRestartRequest) {
+      return this.send("restart", args);
+    }
+    return Promise.reject(new Error("restart not supported"));
+  }
+  async next(args) {
+    this.stoppedSinceLastStep = false;
+    const response = await this.send("next", args);
+    if (!this.stoppedSinceLastStep) {
+      this.fireSimulatedContinuedEvent(args.threadId);
+    }
+    return response;
+  }
+  async stepIn(args) {
+    this.stoppedSinceLastStep = false;
+    const response = await this.send("stepIn", args);
+    if (!this.stoppedSinceLastStep) {
+      this.fireSimulatedContinuedEvent(args.threadId);
+    }
+    return response;
+  }
+  async stepOut(args) {
+    this.stoppedSinceLastStep = false;
+    const response = await this.send("stepOut", args);
+    if (!this.stoppedSinceLastStep) {
+      this.fireSimulatedContinuedEvent(args.threadId);
+    }
+    return response;
+  }
+  async continue(args) {
+    this.stoppedSinceLastStep = false;
+    const response = await this.send("continue", args);
+    if (response && response.body && response.body.allThreadsContinued !== void 0) {
+      this.allThreadsContinued = response.body.allThreadsContinued;
+    }
+    if (!this.stoppedSinceLastStep) {
+      this.fireSimulatedContinuedEvent(args.threadId, this.allThreadsContinued);
+    }
+    return response;
+  }
+  pause(args) {
+    return this.send("pause", args);
+  }
+  terminateThreads(args) {
+    if (this.capabilities.supportsTerminateThreadsRequest) {
+      return this.send("terminateThreads", args);
+    }
+    return Promise.reject(new Error("terminateThreads not supported"));
+  }
+  setVariable(args) {
+    if (this.capabilities.supportsSetVariable) {
+      return this.send("setVariable", args);
+    }
+    return Promise.reject(new Error("setVariable not supported"));
+  }
+  setExpression(args) {
+    if (this.capabilities.supportsSetExpression) {
+      return this.send("setExpression", args);
+    }
+    return Promise.reject(new Error("setExpression not supported"));
+  }
+  async restartFrame(args, threadId) {
+    if (this.capabilities.supportsRestartFrame) {
+      this.stoppedSinceLastStep = false;
+      const response = await this.send("restartFrame", args);
+      if (!this.stoppedSinceLastStep) {
+        this.fireSimulatedContinuedEvent(threadId);
+      }
+      return response;
+    }
+    return Promise.reject(new Error("restartFrame not supported"));
+  }
+  stepInTargets(args) {
+    if (this.capabilities.supportsStepInTargetsRequest) {
+      return this.send("stepInTargets", args);
+    }
+    return Promise.reject(new Error("stepInTargets not supported"));
+  }
+  completions(args, token) {
+    if (this.capabilities.supportsCompletionsRequest) {
+      return this.send("completions", args, token);
+    }
+    return Promise.reject(new Error("completions not supported"));
+  }
+  setBreakpoints(args) {
+    return this.send("setBreakpoints", args);
+  }
+  setFunctionBreakpoints(args) {
+    if (this.capabilities.supportsFunctionBreakpoints) {
+      return this.send("setFunctionBreakpoints", args);
+    }
+    return Promise.reject(new Error("setFunctionBreakpoints not supported"));
+  }
+  dataBreakpointInfo(args) {
+    if (this.capabilities.supportsDataBreakpoints) {
+      return this.send("dataBreakpointInfo", args);
+    }
+    return Promise.reject(new Error("dataBreakpointInfo not supported"));
+  }
+  setDataBreakpoints(args) {
+    if (this.capabilities.supportsDataBreakpoints) {
+      return this.send("setDataBreakpoints", args);
+    }
+    return Promise.reject(new Error("setDataBreakpoints not supported"));
+  }
+  setExceptionBreakpoints(args) {
+    return this.send("setExceptionBreakpoints", args);
+  }
+  breakpointLocations(args) {
+    if (this.capabilities.supportsBreakpointLocationsRequest) {
+      return this.send("breakpointLocations", args);
+    }
+    return Promise.reject(new Error("breakpointLocations is not supported"));
+  }
+  configurationDone() {
+    if (this.capabilities.supportsConfigurationDoneRequest) {
+      return this.send("configurationDone", null);
+    }
+    return Promise.reject(new Error("configurationDone not supported"));
+  }
+  stackTrace(args, token) {
+    return this.send("stackTrace", args, token);
+  }
+  exceptionInfo(args) {
+    if (this.capabilities.supportsExceptionInfoRequest) {
+      return this.send("exceptionInfo", args);
+    }
+    return Promise.reject(new Error("exceptionInfo not supported"));
+  }
+  scopes(args, token) {
+    return this.send("scopes", args, token);
+  }
+  variables(args, token) {
+    return this.send("variables", args, token);
+  }
+  source(args) {
+    return this.send("source", args);
+  }
+  locations(args) {
+    return this.send("locations", args);
+  }
+  loadedSources(args) {
+    if (this.capabilities.supportsLoadedSourcesRequest) {
+      return this.send("loadedSources", args);
+    }
+    return Promise.reject(new Error("loadedSources not supported"));
+  }
+  threads() {
+    return this.send("threads", null);
+  }
+  evaluate(args) {
+    return this.send("evaluate", args);
+  }
+  async stepBack(args) {
+    if (this.capabilities.supportsStepBack) {
+      this.stoppedSinceLastStep = false;
+      const response = await this.send("stepBack", args);
+      if (!this.stoppedSinceLastStep) {
+        this.fireSimulatedContinuedEvent(args.threadId);
+      }
+      return response;
+    }
+    return Promise.reject(new Error("stepBack not supported"));
+  }
+  async reverseContinue(args) {
+    if (this.capabilities.supportsStepBack) {
+      this.stoppedSinceLastStep = false;
+      const response = await this.send("reverseContinue", args);
+      if (!this.stoppedSinceLastStep) {
+        this.fireSimulatedContinuedEvent(args.threadId);
+      }
+      return response;
+    }
+    return Promise.reject(new Error("reverseContinue not supported"));
+  }
+  gotoTargets(args) {
+    if (this.capabilities.supportsGotoTargetsRequest) {
+      return this.send("gotoTargets", args);
+    }
+    return Promise.reject(new Error("gotoTargets is not supported"));
+  }
+  async goto(args) {
+    if (this.capabilities.supportsGotoTargetsRequest) {
+      this.stoppedSinceLastStep = false;
+      const response = await this.send("goto", args);
+      if (!this.stoppedSinceLastStep) {
+        this.fireSimulatedContinuedEvent(args.threadId);
+      }
+      return response;
+    }
+    return Promise.reject(new Error("goto is not supported"));
+  }
+  async setInstructionBreakpoints(args) {
+    if (this.capabilities.supportsInstructionBreakpoints) {
+      return await this.send("setInstructionBreakpoints", args);
+    }
+    return Promise.reject(new Error("setInstructionBreakpoints is not supported"));
+  }
+  async disassemble(args) {
+    if (this.capabilities.supportsDisassembleRequest) {
+      return await this.send("disassemble", args);
+    }
+    return Promise.reject(new Error("disassemble is not supported"));
+  }
+  async readMemory(args) {
+    if (this.capabilities.supportsReadMemoryRequest) {
+      return await this.send("readMemory", args);
+    }
+    return Promise.reject(new Error("readMemory is not supported"));
+  }
+  async writeMemory(args) {
+    if (this.capabilities.supportsWriteMemoryRequest) {
+      return await this.send("writeMemory", args);
+    }
+    return Promise.reject(new Error("writeMemory is not supported"));
+  }
+  cancel(args) {
+    return this.send("cancel", args);
+  }
+  custom(request, args) {
+    return this.send(request, args);
+  }
+  //---- private
+  async shutdown(error, restart = false, terminateDebuggee = void 0, suspendDebuggee = void 0) {
+    if (!this.inShutdown) {
+      this.inShutdown = true;
+      if (this.debugAdapter) {
+        try {
+          const args = { restart };
+          if (typeof terminateDebuggee === "boolean") {
+            args.terminateDebuggee = terminateDebuggee;
+          }
+          if (typeof suspendDebuggee === "boolean") {
+            args.suspendDebuggee = suspendDebuggee;
+          }
+          await this.send("disconnect", args, void 0, error ? 200 : 2e3);
+        } catch (e) {
+        } finally {
+          await this.stopAdapter(error);
+        }
+      } else {
+        return this.stopAdapter(error);
+      }
+    }
+  }
+  async stopAdapter(error) {
+    try {
+      if (this.debugAdapter) {
+        const da = this.debugAdapter;
+        this.debugAdapter = null;
+        await da.stopSession();
+        this.debugAdapterStopped = true;
+      }
+    } finally {
+      this.fireAdapterExitEvent(error);
+    }
+  }
+  fireAdapterExitEvent(error) {
+    if (!this.firedAdapterExitEvent) {
+      this.firedAdapterExitEvent = true;
+      const e = {
+        emittedStopped: this.didReceiveStoppedEvent,
+        sessionLengthInSeconds: ((/* @__PURE__ */ new Date()).getTime() - this.startTime) / 1e3
+      };
+      if (error && !this.debugAdapterStopped) {
+        e.error = error;
+      }
+      this._onDidExitAdapter.fire(e);
+    }
+  }
+  async dispatchRequest(request) {
+    const response = {
+      type: "response",
+      seq: 0,
+      command: request.command,
+      request_seq: request.seq,
+      success: true
+    };
+    const safeSendResponse = /* @__PURE__ */ __name((response2) => this.debugAdapter && this.debugAdapter.sendResponse(response2), "safeSendResponse");
+    if (request.command === "launchVSCode") {
+      try {
+        let result = await this.launchVsCode(request.arguments);
+        if (!result.success) {
+          const { confirmed } = await this.dialogSerivce.confirm({
+            type: Severity.Warning,
+            message: nls.localize("canNotStart", "The debugger needs to open a new tab or window for the debuggee but the browser prevented this. You must give permission to continue."),
+            primaryButton: nls.localize({ key: "continue", comment: ["&& denotes a mnemonic"] }, "&&Continue")
+          });
+          if (confirmed) {
+            result = await this.launchVsCode(request.arguments);
+          } else {
+            response.success = false;
+            safeSendResponse(response);
+            await this.shutdown();
+          }
+        }
+        response.body = {
+          rendererDebugPort: result.rendererDebugPort
+        };
+        safeSendResponse(response);
+      } catch (err) {
+        response.success = false;
+        response.message = err.message;
+        safeSendResponse(response);
+      }
+    } else if (request.command === "runInTerminal") {
+      try {
+        const shellProcessId = await this.dbgr.runInTerminal(request.arguments, this.sessionId);
+        const resp = response;
+        resp.body = {};
+        if (typeof shellProcessId === "number") {
+          resp.body.shellProcessId = shellProcessId;
+        }
+        safeSendResponse(resp);
+      } catch (err) {
+        response.success = false;
+        response.message = err.message;
+        safeSendResponse(response);
+      }
+    } else if (request.command === "startDebugging") {
+      try {
+        const args = request.arguments;
+        const config = {
+          ...args.configuration,
+          ...{
+            request: args.request,
+            type: this.dbgr.type,
+            name: args.configuration.name || this.name
+          }
+        };
+        const success = await this.dbgr.startDebugging(config, this.sessionId);
+        if (success) {
+          safeSendResponse(response);
+        } else {
+          response.success = false;
+          response.message = "Failed to start debugging";
+          safeSendResponse(response);
+        }
+      } catch (err) {
+        response.success = false;
+        response.message = err.message;
+        safeSendResponse(response);
+      }
+    } else {
+      response.success = false;
+      response.message = `unknown request '${request.command}'`;
+      safeSendResponse(response);
+    }
+  }
+  launchVsCode(vscodeArgs) {
+    const args = [];
+    for (const arg of vscodeArgs.args) {
+      const a2 = (arg.prefix || "") + (arg.path || "");
+      const match = /^--(.+)=(.+)$/.exec(a2);
+      if (match && match.length === 3) {
+        const key = match[1];
+        let value = match[2];
+        if ((key === "file-uri" || key === "folder-uri") && !isUri(arg.path)) {
+          value = isUri(value) ? value : URI.file(value).toString();
+        }
+        args.push(`--${key}=${value}`);
+      } else {
+        args.push(a2);
+      }
+    }
+    if (vscodeArgs.env) {
+      args.push(`--extensionEnvironment=${JSON.stringify(vscodeArgs.env)}`);
+    }
+    return this.extensionHostDebugService.openExtensionDevelopmentHostWindow(args, !!vscodeArgs.debugRenderer);
+  }
+  send(command, args, token, timeout, showErrors = true) {
+    return new Promise((completeDispatch, errorDispatch) => {
+      if (!this.debugAdapter) {
+        if (this.inShutdown) {
+          completeDispatch(void 0);
+        } else {
+          errorDispatch(new Error(nls.localize("noDebugAdapter", "No debugger available found. Can not send '{0}'.", command)));
+        }
+        return;
+      }
+      let cancelationListener;
+      const requestId = this.debugAdapter.sendRequest(command, args, (response) => {
+        cancelationListener?.dispose();
+        if (response.success) {
+          completeDispatch(response);
+        } else {
+          errorDispatch(response);
+        }
+      }, timeout);
+      if (token) {
+        cancelationListener = token.onCancellationRequested(() => {
+          cancelationListener.dispose();
+          if (this.capabilities.supportsCancelRequest) {
+            this.cancel({ requestId });
+          }
+        });
+      }
+    }).then(void 0, (err) => Promise.reject(this.handleErrorResponse(err, showErrors)));
+  }
+  handleErrorResponse(errorResponse, showErrors) {
+    if (errorResponse.command === "canceled" && errorResponse.message === "canceled") {
+      return new errors.CancellationError();
+    }
+    const error = errorResponse?.body?.error;
+    const errorMessage = errorResponse?.message || "";
+    const userMessage = error ? formatPII(error.format, false, error.variables) : errorMessage;
+    const url = error?.url;
+    if (error && url) {
+      const label = error.urlLabel ? error.urlLabel : nls.localize("moreInfo", "More Info");
+      const uri = URI.parse(url);
+      const actionId = uri.scheme === Schemas.command ? "debug.moreInfo.command" : "debug.moreInfo";
+      return createErrorWithActions(userMessage, [toAction({ id: actionId, label, run: /* @__PURE__ */ __name(() => this.openerService.open(uri, { allowCommands: true }), "run") })]);
+    }
+    if (showErrors && error && error.format && error.showUser) {
+      this.notificationService.error(userMessage);
+    }
+    const result = new errors.ErrorNoTelemetry(userMessage);
+    result.showUser = error?.showUser;
+    return result;
+  }
+  mergeCapabilities(capabilities) {
+    if (capabilities) {
+      this._capabilities = objects.mixin(this._capabilities, capabilities);
+    }
+  }
+  fireSimulatedContinuedEvent(threadId, allThreadsContinued = false) {
+    this._onDidContinued.fire({
+      type: "event",
+      event: "continued",
+      body: {
+        threadId,
+        allThreadsContinued
+      },
+      seq: void 0
+    });
+  }
+  dispose() {
+    dispose(this.toDispose);
+  }
+};
+RawDebugSession = __decorate([
+  __param(4, IExtensionHostDebugService),
+  __param(5, IOpenerService),
+  __param(6, INotificationService),
+  __param(7, IDialogService)
+], RawDebugSession);
+export {
+  RawDebugSession
+};
+//# sourceMappingURL=rawDebugSession.js.map

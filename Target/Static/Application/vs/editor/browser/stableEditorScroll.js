@@ -1,1 +1,95 @@
-class n{static capture(t){if(0===t.getScrollTop()||t.hasPendingScrollAnimation())return new n(t.getScrollTop(),t.getContentHeight(),null,0,null);let e=null,o=0;const i=t.getVisibleRanges();if(i.length>0){e=i[0].getStartPosition();const n=t.getTopForPosition(e.lineNumber,e.column);o=t.getScrollTop()-n}return new n(t.getScrollTop(),t.getContentHeight(),e,o,t.getPosition())}constructor(t,e,o,i,n){this.a=t,this.b=e,this.c=o,this.d=i,this.e=n}restore(t){if((this.b!==t.getContentHeight()||this.a!==t.getScrollTop())&&this.c){const e=t.getTopForPosition(this.c.lineNumber,this.c.column);t.setScrollTop(e+this.d)}}restoreRelativeVerticalPositionOfCursor(t){if(this.b===t.getContentHeight()&&this.a===t.getScrollTop())return;const e=t.getPosition();if(!this.e||!e)return;const o=t.getTopForLineNumber(e.lineNumber)-t.getTopForLineNumber(this.e.lineNumber);t.setScrollTop(t.getScrollTop()+o,1)}}class s{static capture(t){if(t.hasPendingScrollAnimation())return new s(t.getScrollTop(),t.getContentHeight(),null,0);let e=null,o=0;const i=t.getVisibleRanges();return i.length>0&&(e=i.at(-1).getEndPosition(),o=t.getBottomForLineNumber(e.lineNumber)-t.getScrollTop()),new s(t.getScrollTop(),t.getContentHeight(),e,o)}constructor(t,e,o,i){this.a=t,this.b=e,this.c=o,this.d=i}restore(t){if((this.b!==t.getContentHeight()||this.a!==t.getScrollTop())&&this.c){const e=t.getBottomForLineNumber(this.c.lineNumber);t.setScrollTop(e-this.d,1)}}}export{n as $$db,s as $_db};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+class StableEditorScrollState {
+  static {
+    __name(this, "StableEditorScrollState");
+  }
+  static capture(editor) {
+    if (editor.getScrollTop() === 0 || editor.hasPendingScrollAnimation()) {
+      return new StableEditorScrollState(editor.getScrollTop(), editor.getContentHeight(), null, 0, null);
+    }
+    let visiblePosition = null;
+    let visiblePositionScrollDelta = 0;
+    const visibleRanges = editor.getVisibleRanges();
+    if (visibleRanges.length > 0) {
+      visiblePosition = visibleRanges[0].getStartPosition();
+      const visiblePositionScrollTop = editor.getTopForPosition(visiblePosition.lineNumber, visiblePosition.column);
+      visiblePositionScrollDelta = editor.getScrollTop() - visiblePositionScrollTop;
+    }
+    return new StableEditorScrollState(editor.getScrollTop(), editor.getContentHeight(), visiblePosition, visiblePositionScrollDelta, editor.getPosition());
+  }
+  constructor(_initialScrollTop, _initialContentHeight, _visiblePosition, _visiblePositionScrollDelta, _cursorPosition) {
+    this._initialScrollTop = _initialScrollTop;
+    this._initialContentHeight = _initialContentHeight;
+    this._visiblePosition = _visiblePosition;
+    this._visiblePositionScrollDelta = _visiblePositionScrollDelta;
+    this._cursorPosition = _cursorPosition;
+  }
+  restore(editor) {
+    if (this._initialContentHeight === editor.getContentHeight() && this._initialScrollTop === editor.getScrollTop()) {
+      return;
+    }
+    if (this._visiblePosition) {
+      const visiblePositionScrollTop = editor.getTopForPosition(this._visiblePosition.lineNumber, this._visiblePosition.column);
+      editor.setScrollTop(visiblePositionScrollTop + this._visiblePositionScrollDelta);
+    }
+  }
+  restoreRelativeVerticalPositionOfCursor(editor) {
+    if (this._initialContentHeight === editor.getContentHeight() && this._initialScrollTop === editor.getScrollTop()) {
+      return;
+    }
+    const currentCursorPosition = editor.getPosition();
+    if (!this._cursorPosition || !currentCursorPosition) {
+      return;
+    }
+    const offset = editor.getTopForLineNumber(currentCursorPosition.lineNumber) - editor.getTopForLineNumber(this._cursorPosition.lineNumber);
+    editor.setScrollTop(
+      editor.getScrollTop() + offset,
+      1
+      /* ScrollType.Immediate */
+    );
+  }
+}
+class StableEditorBottomScrollState {
+  static {
+    __name(this, "StableEditorBottomScrollState");
+  }
+  static capture(editor) {
+    if (editor.hasPendingScrollAnimation()) {
+      return new StableEditorBottomScrollState(editor.getScrollTop(), editor.getContentHeight(), null, 0);
+    }
+    let visiblePosition = null;
+    let visiblePositionScrollDelta = 0;
+    const visibleRanges = editor.getVisibleRanges();
+    if (visibleRanges.length > 0) {
+      visiblePosition = visibleRanges.at(-1).getEndPosition();
+      const visiblePositionScrollBottom = editor.getBottomForLineNumber(visiblePosition.lineNumber);
+      visiblePositionScrollDelta = visiblePositionScrollBottom - editor.getScrollTop();
+    }
+    return new StableEditorBottomScrollState(editor.getScrollTop(), editor.getContentHeight(), visiblePosition, visiblePositionScrollDelta);
+  }
+  constructor(_initialScrollTop, _initialContentHeight, _visiblePosition, _visiblePositionScrollDelta) {
+    this._initialScrollTop = _initialScrollTop;
+    this._initialContentHeight = _initialContentHeight;
+    this._visiblePosition = _visiblePosition;
+    this._visiblePositionScrollDelta = _visiblePositionScrollDelta;
+  }
+  restore(editor) {
+    if (this._initialContentHeight === editor.getContentHeight() && this._initialScrollTop === editor.getScrollTop()) {
+      return;
+    }
+    if (this._visiblePosition) {
+      const visiblePositionScrollBottom = editor.getBottomForLineNumber(this._visiblePosition.lineNumber);
+      editor.setScrollTop(
+        visiblePositionScrollBottom - this._visiblePositionScrollDelta,
+        1
+        /* ScrollType.Immediate */
+      );
+    }
+  }
+}
+export {
+  StableEditorBottomScrollState,
+  StableEditorScrollState
+};
+//# sourceMappingURL=stableEditorScroll.js.map

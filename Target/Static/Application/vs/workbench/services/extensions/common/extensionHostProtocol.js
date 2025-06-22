@@ -1,1 +1,65 @@
-import{$Ji as i}from"../../../../base/common/buffer.js";var e,n,a,c;function u(e){const t=i.alloc(1);switch(e){case 0:t.writeUInt8(1,0);break;case 1:t.writeUInt8(2,0);break;case 2:t.writeUInt8(3,0)}return t}function f(e,t){if(1!==e.byteLength)return!1;switch(e.readUInt8(0)){case 1:return 0===t;case 2:return 1===t;case 3:return 2===t;default:return!1}}!function(e){e[e.Desktop=1]="Desktop",e[e.Web=2]="Web"}(e||(e={})),function(e){e[e.VersionMismatch=55]="VersionMismatch",e[e.UnexpectedError=81]="UnexpectedError"}(n||(n={})),function(e){e[e.Initialized=0]="Initialized",e[e.Ready=1]="Ready",e[e.Terminate=2]="Terminate"}(a||(a={})),function(e){e.Start="START_NATIVE_LOG",e.End="END_NATIVE_LOG"}(c||(c={}));export{u as $KO,f as $LO,n as ExtensionHostExitCode,a as MessageType,c as NativeLogMarkers,e as UIKind};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { VSBuffer } from "../../../../base/common/buffer.js";
+var UIKind;
+(function(UIKind2) {
+  UIKind2[UIKind2["Desktop"] = 1] = "Desktop";
+  UIKind2[UIKind2["Web"] = 2] = "Web";
+})(UIKind || (UIKind = {}));
+var ExtensionHostExitCode;
+(function(ExtensionHostExitCode2) {
+  ExtensionHostExitCode2[ExtensionHostExitCode2["VersionMismatch"] = 55] = "VersionMismatch";
+  ExtensionHostExitCode2[ExtensionHostExitCode2["UnexpectedError"] = 81] = "UnexpectedError";
+})(ExtensionHostExitCode || (ExtensionHostExitCode = {}));
+var MessageType;
+(function(MessageType2) {
+  MessageType2[MessageType2["Initialized"] = 0] = "Initialized";
+  MessageType2[MessageType2["Ready"] = 1] = "Ready";
+  MessageType2[MessageType2["Terminate"] = 2] = "Terminate";
+})(MessageType || (MessageType = {}));
+function createMessageOfType(type) {
+  const result = VSBuffer.alloc(1);
+  switch (type) {
+    case 0:
+      result.writeUInt8(1, 0);
+      break;
+    case 1:
+      result.writeUInt8(2, 0);
+      break;
+    case 2:
+      result.writeUInt8(3, 0);
+      break;
+  }
+  return result;
+}
+__name(createMessageOfType, "createMessageOfType");
+function isMessageOfType(message, type) {
+  if (message.byteLength !== 1) {
+    return false;
+  }
+  switch (message.readUInt8(0)) {
+    case 1:
+      return type === 0;
+    case 2:
+      return type === 1;
+    case 3:
+      return type === 2;
+    default:
+      return false;
+  }
+}
+__name(isMessageOfType, "isMessageOfType");
+var NativeLogMarkers;
+(function(NativeLogMarkers2) {
+  NativeLogMarkers2["Start"] = "START_NATIVE_LOG";
+  NativeLogMarkers2["End"] = "END_NATIVE_LOG";
+})(NativeLogMarkers || (NativeLogMarkers = {}));
+export {
+  ExtensionHostExitCode,
+  MessageType,
+  NativeLogMarkers,
+  UIKind,
+  createMessageOfType,
+  isMessageOfType
+};
+//# sourceMappingURL=extensionHostProtocol.js.map

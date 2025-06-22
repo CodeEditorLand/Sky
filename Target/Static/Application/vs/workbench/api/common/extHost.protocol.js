@@ -1,1 +1,293 @@
-import{$iX as t}from"../../services/extensions/common/proxyIdentifier.js";var o,n,r,i,s,h,d,E,x,T,M;!function(t){t[t.Default=0]="Default",t[t.InCenter=1]="InCenter",t[t.InCenterIfOutsideViewport=2]="InCenterIfOutsideViewport",t[t.AtTop=3]="AtTop"}(o||(o={})),function(t){t[t.UnknownInput=0]="UnknownInput",t[t.TextInput=1]="TextInput",t[t.TextDiffInput=2]="TextDiffInput",t[t.TextMergeInput=3]="TextMergeInput",t[t.NotebookInput=4]="NotebookInput",t[t.NotebookDiffInput=5]="NotebookDiffInput",t[t.CustomEditorInput=6]="CustomEditorInput",t[t.WebviewEditorInput=7]="WebviewEditorInput",t[t.TerminalEditorInput=8]="TerminalEditorInput",t[t.InteractiveEditorInput=9]="InteractiveEditorInput",t[t.ChatEditorInput=10]="ChatEditorInput",t[t.MultiDiffEditorInput=11]="MultiDiffEditorInput"}(n||(n={})),function(t){t[t.TAB_OPEN=0]="TAB_OPEN",t[t.TAB_CLOSE=1]="TAB_CLOSE",t[t.TAB_UPDATE=2]="TAB_UPDATE",t[t.TAB_MOVE=3]="TAB_MOVE"}(r||(r={})),function(t){t[t.Editable=0]="Editable",t[t.SupportsHotExit=1]="SupportsHotExit"}(i||(i={})),function(t){t[t.Int8Array=1]="Int8Array",t[t.Uint8Array=2]="Uint8Array",t[t.Uint8ClampedArray=3]="Uint8ClampedArray",t[t.Int16Array=4]="Int16Array",t[t.Uint16Array=5]="Uint16Array",t[t.Int32Array=6]="Int32Array",t[t.Uint32Array=7]="Uint32Array",t[t.Float32Array=8]="Float32Array",t[t.Float64Array=9]="Float64Array",t[t.BigInt64Array=10]="BigInt64Array",t[t.BigUint64Array=11]="BigUint64Array"}(s||(s={})),function(t){t[t.Text=1]="Text",t[t.Error=2]="Error",t[t.Rich=3]="Rich"}(h||(h={})),function(t){t[t.Default=0]="Default",t[t.InCenter=1]="InCenter",t[t.InCenterIfOutsideViewport=2]="InCenterIfOutsideViewport",t[t.AtTop=3]="AtTop"}(d||(d={})),function(t){t[t.None=0]="None",t[t.Process=1]="Process",t[t.Output=2]="Output",t[t.Hybrid=3]="Hybrid"}(E||(E={}));class c{static{this.a=0}static mixin(t){return t._id=c.a++,t}}!function(t){t.label="a",t.kind="b",t.detail="c",t.documentation="d",t.sortText="e",t.filterText="f",t.preselect="g",t.insertText="h",t.insertTextRules="i",t.range="j",t.commitCharacters="k",t.additionalTextEdits="l",t.kindModifier="m",t.commandIdent="n",t.commandId="o",t.commandArguments="p"}(x||(x={})),function(t){t.defaultRanges="a",t.completions="b",t.isIncomplete="c",t.duration="d"}(T||(T={}));class S{constructor(t,e){this.items=t??[],this.resourceRequestConfig=e}}!function(t){t[t.Workspace=0]="Workspace",t[t.TextDocument=1]="TextDocument"}(M||(M={}));const l={MainThreadAuthentication:t("MainThreadAuthentication"),MainThreadBulkEdits:t("MainThreadBulkEdits"),MainThreadLanguageModels:t("MainThreadLanguageModels"),MainThreadEmbeddings:t("MainThreadEmbeddings"),MainThreadChatAgents2:t("MainThreadChatAgents2"),MainThreadCodeMapper:t("MainThreadCodeMapper"),MainThreadLanguageModelTools:t("MainThreadChatSkills"),MainThreadClipboard:t("MainThreadClipboard"),MainThreadCommands:t("MainThreadCommands"),MainThreadComments:t("MainThreadComments"),MainThreadConfiguration:t("MainThreadConfiguration"),MainThreadConsole:t("MainThreadConsole"),MainThreadDebugService:t("MainThreadDebugService"),MainThreadDecorations:t("MainThreadDecorations"),MainThreadDiagnostics:t("MainThreadDiagnostics"),MainThreadDialogs:t("MainThreadDiaglogs"),MainThreadDocuments:t("MainThreadDocuments"),MainThreadDocumentContentProviders:t("MainThreadDocumentContentProviders"),MainThreadTextEditors:t("MainThreadTextEditors"),MainThreadEditorInsets:t("MainThreadEditorInsets"),MainThreadEditorTabs:t("MainThreadEditorTabs"),MainThreadErrors:t("MainThreadErrors"),MainThreadTreeViews:t("MainThreadTreeViews"),MainThreadDownloadService:t("MainThreadDownloadService"),MainThreadLanguageFeatures:t("MainThreadLanguageFeatures"),MainThreadLanguages:t("MainThreadLanguages"),MainThreadLogger:t("MainThreadLogger"),MainThreadMessageService:t("MainThreadMessageService"),MainThreadOutputService:t("MainThreadOutputService"),MainThreadProgress:t("MainThreadProgress"),MainThreadQuickDiff:t("MainThreadQuickDiff"),MainThreadQuickOpen:t("MainThreadQuickOpen"),MainThreadStatusBar:t("MainThreadStatusBar"),MainThreadSecretState:t("MainThreadSecretState"),MainThreadStorage:t("MainThreadStorage"),MainThreadSpeech:t("MainThreadSpeechProvider"),MainThreadTelemetry:t("MainThreadTelemetry"),MainThreadTerminalService:t("MainThreadTerminalService"),MainThreadTerminalShellIntegration:t("MainThreadTerminalShellIntegration"),MainThreadWebviews:t("MainThreadWebviews"),MainThreadWebviewPanels:t("MainThreadWebviewPanels"),MainThreadWebviewViews:t("MainThreadWebviewViews"),MainThreadCustomEditors:t("MainThreadCustomEditors"),MainThreadUrls:t("MainThreadUrls"),MainThreadUriOpeners:t("MainThreadUriOpeners"),MainThreadProfileContentHandlers:t("MainThreadProfileContentHandlers"),MainThreadWorkspace:t("MainThreadWorkspace"),MainThreadFileSystem:t("MainThreadFileSystem"),MainThreadFileSystemEventService:t("MainThreadFileSystemEventService"),MainThreadExtensionService:t("MainThreadExtensionService"),MainThreadSCM:t("MainThreadSCM"),MainThreadSearch:t("MainThreadSearch"),MainThreadShare:t("MainThreadShare"),MainThreadTask:t("MainThreadTask"),MainThreadWindow:t("MainThreadWindow"),MainThreadLabelService:t("MainThreadLabelService"),MainThreadNotebook:t("MainThreadNotebook"),MainThreadNotebookDocuments:t("MainThreadNotebookDocumentsShape"),MainThreadNotebookEditors:t("MainThreadNotebookEditorsShape"),MainThreadNotebookKernels:t("MainThreadNotebookKernels"),MainThreadNotebookRenderers:t("MainThreadNotebookRenderers"),MainThreadInteractive:t("MainThreadInteractive"),MainThreadTheming:t("MainThreadTheming"),MainThreadTunnelService:t("MainThreadTunnelService"),MainThreadManagedSockets:t("MainThreadManagedSockets"),MainThreadTimeline:t("MainThreadTimeline"),MainThreadTesting:t("MainThreadTesting"),MainThreadLocalization:t("MainThreadLocalizationShape"),MainThreadMcp:t("MainThreadMcpShape"),MainThreadAiRelatedInformation:t("MainThreadAiRelatedInformation"),MainThreadAiEmbeddingVector:t("MainThreadAiEmbeddingVector"),MainThreadChatStatus:t("MainThreadChatStatus"),MainThreadAiSettingsSearch:t("MainThreadAiSettingsSearch")},u={ExtHostCodeMapper:t("ExtHostCodeMapper"),ExtHostCommands:t("ExtHostCommands"),ExtHostConfiguration:t("ExtHostConfiguration"),ExtHostDiagnostics:t("ExtHostDiagnostics"),ExtHostDebugService:t("ExtHostDebugService"),ExtHostDecorations:t("ExtHostDecorations"),ExtHostDocumentsAndEditors:t("ExtHostDocumentsAndEditors"),ExtHostDocuments:t("ExtHostDocuments"),ExtHostDocumentContentProviders:t("ExtHostDocumentContentProviders"),ExtHostDocumentSaveParticipant:t("ExtHostDocumentSaveParticipant"),ExtHostEditors:t("ExtHostEditors"),ExtHostTreeViews:t("ExtHostTreeViews"),ExtHostFileSystem:t("ExtHostFileSystem"),ExtHostFileSystemInfo:t("ExtHostFileSystemInfo"),ExtHostFileSystemEventService:t("ExtHostFileSystemEventService"),ExtHostLanguages:t("ExtHostLanguages"),ExtHostLanguageFeatures:t("ExtHostLanguageFeatures"),ExtHostQuickOpen:t("ExtHostQuickOpen"),ExtHostQuickDiff:t("ExtHostQuickDiff"),ExtHostStatusBar:t("ExtHostStatusBar"),ExtHostShare:t("ExtHostShare"),ExtHostExtensionService:t("ExtHostExtensionService"),ExtHostLogLevelServiceShape:t("ExtHostLogLevelServiceShape"),ExtHostTerminalService:t("ExtHostTerminalService"),ExtHostTerminalShellIntegration:t("ExtHostTerminalShellIntegration"),ExtHostSCM:t("ExtHostSCM"),ExtHostSearch:t("ExtHostSearch"),ExtHostTask:t("ExtHostTask"),ExtHostWorkspace:t("ExtHostWorkspace"),ExtHostWindow:t("ExtHostWindow"),ExtHostWebviews:t("ExtHostWebviews"),ExtHostWebviewPanels:t("ExtHostWebviewPanels"),ExtHostCustomEditors:t("ExtHostCustomEditors"),ExtHostWebviewViews:t("ExtHostWebviewViews"),ExtHostEditorInsets:t("ExtHostEditorInsets"),ExtHostEditorTabs:t("ExtHostEditorTabs"),ExtHostProgress:t("ExtHostProgress"),ExtHostComments:t("ExtHostComments"),ExtHostSecretState:t("ExtHostSecretState"),ExtHostStorage:t("ExtHostStorage"),ExtHostUrls:t("ExtHostUrls"),ExtHostUriOpeners:t("ExtHostUriOpeners"),ExtHostProfileContentHandlers:t("ExtHostProfileContentHandlers"),ExtHostOutputService:t("ExtHostOutputService"),ExtHostLabelService:t("ExtHostLabelService"),ExtHostNotebook:t("ExtHostNotebook"),ExtHostNotebookDocuments:t("ExtHostNotebookDocuments"),ExtHostNotebookEditors:t("ExtHostNotebookEditors"),ExtHostNotebookKernels:t("ExtHostNotebookKernels"),ExtHostNotebookRenderers:t("ExtHostNotebookRenderers"),ExtHostNotebookDocumentSaveParticipant:t("ExtHostNotebookDocumentSaveParticipant"),ExtHostInteractive:t("ExtHostInteractive"),ExtHostChatAgents2:t("ExtHostChatAgents"),ExtHostLanguageModelTools:t("ExtHostChatSkills"),ExtHostChatProvider:t("ExtHostChatProvider"),ExtHostSpeech:t("ExtHostSpeech"),ExtHostEmbeddings:t("ExtHostEmbeddings"),ExtHostAiRelatedInformation:t("ExtHostAiRelatedInformation"),ExtHostAiEmbeddingVector:t("ExtHostAiEmbeddingVector"),ExtHostAiSettingsSearch:t("ExtHostAiSettingsSearch"),ExtHostTheming:t("ExtHostTheming"),ExtHostTunnelService:t("ExtHostTunnelService"),ExtHostManagedSockets:t("ExtHostManagedSockets"),ExtHostAuthentication:t("ExtHostAuthentication"),ExtHostTimeline:t("ExtHostTimeline"),ExtHostTesting:t("ExtHostTesting"),ExtHostTelemetry:t("ExtHostTelemetry"),ExtHostLocalization:t("ExtHostLocalization"),ExtHostMcp:t("ExtHostMcp")};export{c as $mY,S as $nY,l as $oY,u as $pY,E as CandidatePortSource,h as CellOutputKind,M as ExtHostTestingResource,x as ISuggestDataDtoField,T as ISuggestResultDtoField,d as NotebookEditorRevealType,n as TabInputKind,r as TabModelOperationKind,o as TextEditorRevealType,i as WebviewEditorCapabilities,s as WebviewMessageArrayBufferViewType};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { createProxyIdentifier } from "../../services/extensions/common/proxyIdentifier.js";
+var TextEditorRevealType;
+(function(TextEditorRevealType2) {
+  TextEditorRevealType2[TextEditorRevealType2["Default"] = 0] = "Default";
+  TextEditorRevealType2[TextEditorRevealType2["InCenter"] = 1] = "InCenter";
+  TextEditorRevealType2[TextEditorRevealType2["InCenterIfOutsideViewport"] = 2] = "InCenterIfOutsideViewport";
+  TextEditorRevealType2[TextEditorRevealType2["AtTop"] = 3] = "AtTop";
+})(TextEditorRevealType || (TextEditorRevealType = {}));
+var TabInputKind;
+(function(TabInputKind2) {
+  TabInputKind2[TabInputKind2["UnknownInput"] = 0] = "UnknownInput";
+  TabInputKind2[TabInputKind2["TextInput"] = 1] = "TextInput";
+  TabInputKind2[TabInputKind2["TextDiffInput"] = 2] = "TextDiffInput";
+  TabInputKind2[TabInputKind2["TextMergeInput"] = 3] = "TextMergeInput";
+  TabInputKind2[TabInputKind2["NotebookInput"] = 4] = "NotebookInput";
+  TabInputKind2[TabInputKind2["NotebookDiffInput"] = 5] = "NotebookDiffInput";
+  TabInputKind2[TabInputKind2["CustomEditorInput"] = 6] = "CustomEditorInput";
+  TabInputKind2[TabInputKind2["WebviewEditorInput"] = 7] = "WebviewEditorInput";
+  TabInputKind2[TabInputKind2["TerminalEditorInput"] = 8] = "TerminalEditorInput";
+  TabInputKind2[TabInputKind2["InteractiveEditorInput"] = 9] = "InteractiveEditorInput";
+  TabInputKind2[TabInputKind2["ChatEditorInput"] = 10] = "ChatEditorInput";
+  TabInputKind2[TabInputKind2["MultiDiffEditorInput"] = 11] = "MultiDiffEditorInput";
+})(TabInputKind || (TabInputKind = {}));
+var TabModelOperationKind;
+(function(TabModelOperationKind2) {
+  TabModelOperationKind2[TabModelOperationKind2["TAB_OPEN"] = 0] = "TAB_OPEN";
+  TabModelOperationKind2[TabModelOperationKind2["TAB_CLOSE"] = 1] = "TAB_CLOSE";
+  TabModelOperationKind2[TabModelOperationKind2["TAB_UPDATE"] = 2] = "TAB_UPDATE";
+  TabModelOperationKind2[TabModelOperationKind2["TAB_MOVE"] = 3] = "TAB_MOVE";
+})(TabModelOperationKind || (TabModelOperationKind = {}));
+var WebviewEditorCapabilities;
+(function(WebviewEditorCapabilities2) {
+  WebviewEditorCapabilities2[WebviewEditorCapabilities2["Editable"] = 0] = "Editable";
+  WebviewEditorCapabilities2[WebviewEditorCapabilities2["SupportsHotExit"] = 1] = "SupportsHotExit";
+})(WebviewEditorCapabilities || (WebviewEditorCapabilities = {}));
+var WebviewMessageArrayBufferViewType;
+(function(WebviewMessageArrayBufferViewType2) {
+  WebviewMessageArrayBufferViewType2[WebviewMessageArrayBufferViewType2["Int8Array"] = 1] = "Int8Array";
+  WebviewMessageArrayBufferViewType2[WebviewMessageArrayBufferViewType2["Uint8Array"] = 2] = "Uint8Array";
+  WebviewMessageArrayBufferViewType2[WebviewMessageArrayBufferViewType2["Uint8ClampedArray"] = 3] = "Uint8ClampedArray";
+  WebviewMessageArrayBufferViewType2[WebviewMessageArrayBufferViewType2["Int16Array"] = 4] = "Int16Array";
+  WebviewMessageArrayBufferViewType2[WebviewMessageArrayBufferViewType2["Uint16Array"] = 5] = "Uint16Array";
+  WebviewMessageArrayBufferViewType2[WebviewMessageArrayBufferViewType2["Int32Array"] = 6] = "Int32Array";
+  WebviewMessageArrayBufferViewType2[WebviewMessageArrayBufferViewType2["Uint32Array"] = 7] = "Uint32Array";
+  WebviewMessageArrayBufferViewType2[WebviewMessageArrayBufferViewType2["Float32Array"] = 8] = "Float32Array";
+  WebviewMessageArrayBufferViewType2[WebviewMessageArrayBufferViewType2["Float64Array"] = 9] = "Float64Array";
+  WebviewMessageArrayBufferViewType2[WebviewMessageArrayBufferViewType2["BigInt64Array"] = 10] = "BigInt64Array";
+  WebviewMessageArrayBufferViewType2[WebviewMessageArrayBufferViewType2["BigUint64Array"] = 11] = "BigUint64Array";
+})(WebviewMessageArrayBufferViewType || (WebviewMessageArrayBufferViewType = {}));
+var CellOutputKind;
+(function(CellOutputKind2) {
+  CellOutputKind2[CellOutputKind2["Text"] = 1] = "Text";
+  CellOutputKind2[CellOutputKind2["Error"] = 2] = "Error";
+  CellOutputKind2[CellOutputKind2["Rich"] = 3] = "Rich";
+})(CellOutputKind || (CellOutputKind = {}));
+var NotebookEditorRevealType;
+(function(NotebookEditorRevealType2) {
+  NotebookEditorRevealType2[NotebookEditorRevealType2["Default"] = 0] = "Default";
+  NotebookEditorRevealType2[NotebookEditorRevealType2["InCenter"] = 1] = "InCenter";
+  NotebookEditorRevealType2[NotebookEditorRevealType2["InCenterIfOutsideViewport"] = 2] = "InCenterIfOutsideViewport";
+  NotebookEditorRevealType2[NotebookEditorRevealType2["AtTop"] = 3] = "AtTop";
+})(NotebookEditorRevealType || (NotebookEditorRevealType = {}));
+var CandidatePortSource;
+(function(CandidatePortSource2) {
+  CandidatePortSource2[CandidatePortSource2["None"] = 0] = "None";
+  CandidatePortSource2[CandidatePortSource2["Process"] = 1] = "Process";
+  CandidatePortSource2[CandidatePortSource2["Output"] = 2] = "Output";
+  CandidatePortSource2[CandidatePortSource2["Hybrid"] = 3] = "Hybrid";
+})(CandidatePortSource || (CandidatePortSource = {}));
+class IdObject {
+  static {
+    __name(this, "IdObject");
+  }
+  static {
+    this._n = 0;
+  }
+  static mixin(object) {
+    object._id = IdObject._n++;
+    return object;
+  }
+}
+var ISuggestDataDtoField;
+(function(ISuggestDataDtoField2) {
+  ISuggestDataDtoField2["label"] = "a";
+  ISuggestDataDtoField2["kind"] = "b";
+  ISuggestDataDtoField2["detail"] = "c";
+  ISuggestDataDtoField2["documentation"] = "d";
+  ISuggestDataDtoField2["sortText"] = "e";
+  ISuggestDataDtoField2["filterText"] = "f";
+  ISuggestDataDtoField2["preselect"] = "g";
+  ISuggestDataDtoField2["insertText"] = "h";
+  ISuggestDataDtoField2["insertTextRules"] = "i";
+  ISuggestDataDtoField2["range"] = "j";
+  ISuggestDataDtoField2["commitCharacters"] = "k";
+  ISuggestDataDtoField2["additionalTextEdits"] = "l";
+  ISuggestDataDtoField2["kindModifier"] = "m";
+  ISuggestDataDtoField2["commandIdent"] = "n";
+  ISuggestDataDtoField2["commandId"] = "o";
+  ISuggestDataDtoField2["commandArguments"] = "p";
+})(ISuggestDataDtoField || (ISuggestDataDtoField = {}));
+var ISuggestResultDtoField;
+(function(ISuggestResultDtoField2) {
+  ISuggestResultDtoField2["defaultRanges"] = "a";
+  ISuggestResultDtoField2["completions"] = "b";
+  ISuggestResultDtoField2["isIncomplete"] = "c";
+  ISuggestResultDtoField2["duration"] = "d";
+})(ISuggestResultDtoField || (ISuggestResultDtoField = {}));
+class TerminalCompletionListDto {
+  static {
+    __name(this, "TerminalCompletionListDto");
+  }
+  /**
+   * Creates a new completion list.
+   *
+   * @param items The completion items.
+   * @param isIncomplete The list is not complete.
+   */
+  constructor(items, resourceRequestConfig) {
+    this.items = items ?? [];
+    this.resourceRequestConfig = resourceRequestConfig;
+  }
+}
+var ExtHostTestingResource;
+(function(ExtHostTestingResource2) {
+  ExtHostTestingResource2[ExtHostTestingResource2["Workspace"] = 0] = "Workspace";
+  ExtHostTestingResource2[ExtHostTestingResource2["TextDocument"] = 1] = "TextDocument";
+})(ExtHostTestingResource || (ExtHostTestingResource = {}));
+const MainContext = {
+  MainThreadAuthentication: createProxyIdentifier("MainThreadAuthentication"),
+  MainThreadBulkEdits: createProxyIdentifier("MainThreadBulkEdits"),
+  MainThreadLanguageModels: createProxyIdentifier("MainThreadLanguageModels"),
+  MainThreadEmbeddings: createProxyIdentifier("MainThreadEmbeddings"),
+  MainThreadChatAgents2: createProxyIdentifier("MainThreadChatAgents2"),
+  MainThreadCodeMapper: createProxyIdentifier("MainThreadCodeMapper"),
+  MainThreadLanguageModelTools: createProxyIdentifier("MainThreadChatSkills"),
+  MainThreadClipboard: createProxyIdentifier("MainThreadClipboard"),
+  MainThreadCommands: createProxyIdentifier("MainThreadCommands"),
+  MainThreadComments: createProxyIdentifier("MainThreadComments"),
+  MainThreadConfiguration: createProxyIdentifier("MainThreadConfiguration"),
+  MainThreadConsole: createProxyIdentifier("MainThreadConsole"),
+  MainThreadDebugService: createProxyIdentifier("MainThreadDebugService"),
+  MainThreadDecorations: createProxyIdentifier("MainThreadDecorations"),
+  MainThreadDiagnostics: createProxyIdentifier("MainThreadDiagnostics"),
+  MainThreadDialogs: createProxyIdentifier("MainThreadDiaglogs"),
+  MainThreadDocuments: createProxyIdentifier("MainThreadDocuments"),
+  MainThreadDocumentContentProviders: createProxyIdentifier("MainThreadDocumentContentProviders"),
+  MainThreadTextEditors: createProxyIdentifier("MainThreadTextEditors"),
+  MainThreadEditorInsets: createProxyIdentifier("MainThreadEditorInsets"),
+  MainThreadEditorTabs: createProxyIdentifier("MainThreadEditorTabs"),
+  MainThreadErrors: createProxyIdentifier("MainThreadErrors"),
+  MainThreadTreeViews: createProxyIdentifier("MainThreadTreeViews"),
+  MainThreadDownloadService: createProxyIdentifier("MainThreadDownloadService"),
+  MainThreadLanguageFeatures: createProxyIdentifier("MainThreadLanguageFeatures"),
+  MainThreadLanguages: createProxyIdentifier("MainThreadLanguages"),
+  MainThreadLogger: createProxyIdentifier("MainThreadLogger"),
+  MainThreadMessageService: createProxyIdentifier("MainThreadMessageService"),
+  MainThreadOutputService: createProxyIdentifier("MainThreadOutputService"),
+  MainThreadProgress: createProxyIdentifier("MainThreadProgress"),
+  MainThreadQuickDiff: createProxyIdentifier("MainThreadQuickDiff"),
+  MainThreadQuickOpen: createProxyIdentifier("MainThreadQuickOpen"),
+  MainThreadStatusBar: createProxyIdentifier("MainThreadStatusBar"),
+  MainThreadSecretState: createProxyIdentifier("MainThreadSecretState"),
+  MainThreadStorage: createProxyIdentifier("MainThreadStorage"),
+  MainThreadSpeech: createProxyIdentifier("MainThreadSpeechProvider"),
+  MainThreadTelemetry: createProxyIdentifier("MainThreadTelemetry"),
+  MainThreadTerminalService: createProxyIdentifier("MainThreadTerminalService"),
+  MainThreadTerminalShellIntegration: createProxyIdentifier("MainThreadTerminalShellIntegration"),
+  MainThreadWebviews: createProxyIdentifier("MainThreadWebviews"),
+  MainThreadWebviewPanels: createProxyIdentifier("MainThreadWebviewPanels"),
+  MainThreadWebviewViews: createProxyIdentifier("MainThreadWebviewViews"),
+  MainThreadCustomEditors: createProxyIdentifier("MainThreadCustomEditors"),
+  MainThreadUrls: createProxyIdentifier("MainThreadUrls"),
+  MainThreadUriOpeners: createProxyIdentifier("MainThreadUriOpeners"),
+  MainThreadProfileContentHandlers: createProxyIdentifier("MainThreadProfileContentHandlers"),
+  MainThreadWorkspace: createProxyIdentifier("MainThreadWorkspace"),
+  MainThreadFileSystem: createProxyIdentifier("MainThreadFileSystem"),
+  MainThreadFileSystemEventService: createProxyIdentifier("MainThreadFileSystemEventService"),
+  MainThreadExtensionService: createProxyIdentifier("MainThreadExtensionService"),
+  MainThreadSCM: createProxyIdentifier("MainThreadSCM"),
+  MainThreadSearch: createProxyIdentifier("MainThreadSearch"),
+  MainThreadShare: createProxyIdentifier("MainThreadShare"),
+  MainThreadTask: createProxyIdentifier("MainThreadTask"),
+  MainThreadWindow: createProxyIdentifier("MainThreadWindow"),
+  MainThreadLabelService: createProxyIdentifier("MainThreadLabelService"),
+  MainThreadNotebook: createProxyIdentifier("MainThreadNotebook"),
+  MainThreadNotebookDocuments: createProxyIdentifier("MainThreadNotebookDocumentsShape"),
+  MainThreadNotebookEditors: createProxyIdentifier("MainThreadNotebookEditorsShape"),
+  MainThreadNotebookKernels: createProxyIdentifier("MainThreadNotebookKernels"),
+  MainThreadNotebookRenderers: createProxyIdentifier("MainThreadNotebookRenderers"),
+  MainThreadInteractive: createProxyIdentifier("MainThreadInteractive"),
+  MainThreadTheming: createProxyIdentifier("MainThreadTheming"),
+  MainThreadTunnelService: createProxyIdentifier("MainThreadTunnelService"),
+  MainThreadManagedSockets: createProxyIdentifier("MainThreadManagedSockets"),
+  MainThreadTimeline: createProxyIdentifier("MainThreadTimeline"),
+  MainThreadTesting: createProxyIdentifier("MainThreadTesting"),
+  MainThreadLocalization: createProxyIdentifier("MainThreadLocalizationShape"),
+  MainThreadMcp: createProxyIdentifier("MainThreadMcpShape"),
+  MainThreadAiRelatedInformation: createProxyIdentifier("MainThreadAiRelatedInformation"),
+  MainThreadAiEmbeddingVector: createProxyIdentifier("MainThreadAiEmbeddingVector"),
+  MainThreadChatStatus: createProxyIdentifier("MainThreadChatStatus"),
+  MainThreadAiSettingsSearch: createProxyIdentifier("MainThreadAiSettingsSearch")
+};
+const ExtHostContext = {
+  ExtHostCodeMapper: createProxyIdentifier("ExtHostCodeMapper"),
+  ExtHostCommands: createProxyIdentifier("ExtHostCommands"),
+  ExtHostConfiguration: createProxyIdentifier("ExtHostConfiguration"),
+  ExtHostDiagnostics: createProxyIdentifier("ExtHostDiagnostics"),
+  ExtHostDebugService: createProxyIdentifier("ExtHostDebugService"),
+  ExtHostDecorations: createProxyIdentifier("ExtHostDecorations"),
+  ExtHostDocumentsAndEditors: createProxyIdentifier("ExtHostDocumentsAndEditors"),
+  ExtHostDocuments: createProxyIdentifier("ExtHostDocuments"),
+  ExtHostDocumentContentProviders: createProxyIdentifier("ExtHostDocumentContentProviders"),
+  ExtHostDocumentSaveParticipant: createProxyIdentifier("ExtHostDocumentSaveParticipant"),
+  ExtHostEditors: createProxyIdentifier("ExtHostEditors"),
+  ExtHostTreeViews: createProxyIdentifier("ExtHostTreeViews"),
+  ExtHostFileSystem: createProxyIdentifier("ExtHostFileSystem"),
+  ExtHostFileSystemInfo: createProxyIdentifier("ExtHostFileSystemInfo"),
+  ExtHostFileSystemEventService: createProxyIdentifier("ExtHostFileSystemEventService"),
+  ExtHostLanguages: createProxyIdentifier("ExtHostLanguages"),
+  ExtHostLanguageFeatures: createProxyIdentifier("ExtHostLanguageFeatures"),
+  ExtHostQuickOpen: createProxyIdentifier("ExtHostQuickOpen"),
+  ExtHostQuickDiff: createProxyIdentifier("ExtHostQuickDiff"),
+  ExtHostStatusBar: createProxyIdentifier("ExtHostStatusBar"),
+  ExtHostShare: createProxyIdentifier("ExtHostShare"),
+  ExtHostExtensionService: createProxyIdentifier("ExtHostExtensionService"),
+  ExtHostLogLevelServiceShape: createProxyIdentifier("ExtHostLogLevelServiceShape"),
+  ExtHostTerminalService: createProxyIdentifier("ExtHostTerminalService"),
+  ExtHostTerminalShellIntegration: createProxyIdentifier("ExtHostTerminalShellIntegration"),
+  ExtHostSCM: createProxyIdentifier("ExtHostSCM"),
+  ExtHostSearch: createProxyIdentifier("ExtHostSearch"),
+  ExtHostTask: createProxyIdentifier("ExtHostTask"),
+  ExtHostWorkspace: createProxyIdentifier("ExtHostWorkspace"),
+  ExtHostWindow: createProxyIdentifier("ExtHostWindow"),
+  ExtHostWebviews: createProxyIdentifier("ExtHostWebviews"),
+  ExtHostWebviewPanels: createProxyIdentifier("ExtHostWebviewPanels"),
+  ExtHostCustomEditors: createProxyIdentifier("ExtHostCustomEditors"),
+  ExtHostWebviewViews: createProxyIdentifier("ExtHostWebviewViews"),
+  ExtHostEditorInsets: createProxyIdentifier("ExtHostEditorInsets"),
+  ExtHostEditorTabs: createProxyIdentifier("ExtHostEditorTabs"),
+  ExtHostProgress: createProxyIdentifier("ExtHostProgress"),
+  ExtHostComments: createProxyIdentifier("ExtHostComments"),
+  ExtHostSecretState: createProxyIdentifier("ExtHostSecretState"),
+  ExtHostStorage: createProxyIdentifier("ExtHostStorage"),
+  ExtHostUrls: createProxyIdentifier("ExtHostUrls"),
+  ExtHostUriOpeners: createProxyIdentifier("ExtHostUriOpeners"),
+  ExtHostProfileContentHandlers: createProxyIdentifier("ExtHostProfileContentHandlers"),
+  ExtHostOutputService: createProxyIdentifier("ExtHostOutputService"),
+  ExtHostLabelService: createProxyIdentifier("ExtHostLabelService"),
+  ExtHostNotebook: createProxyIdentifier("ExtHostNotebook"),
+  ExtHostNotebookDocuments: createProxyIdentifier("ExtHostNotebookDocuments"),
+  ExtHostNotebookEditors: createProxyIdentifier("ExtHostNotebookEditors"),
+  ExtHostNotebookKernels: createProxyIdentifier("ExtHostNotebookKernels"),
+  ExtHostNotebookRenderers: createProxyIdentifier("ExtHostNotebookRenderers"),
+  ExtHostNotebookDocumentSaveParticipant: createProxyIdentifier("ExtHostNotebookDocumentSaveParticipant"),
+  ExtHostInteractive: createProxyIdentifier("ExtHostInteractive"),
+  ExtHostChatAgents2: createProxyIdentifier("ExtHostChatAgents"),
+  ExtHostLanguageModelTools: createProxyIdentifier("ExtHostChatSkills"),
+  ExtHostChatProvider: createProxyIdentifier("ExtHostChatProvider"),
+  ExtHostSpeech: createProxyIdentifier("ExtHostSpeech"),
+  ExtHostEmbeddings: createProxyIdentifier("ExtHostEmbeddings"),
+  ExtHostAiRelatedInformation: createProxyIdentifier("ExtHostAiRelatedInformation"),
+  ExtHostAiEmbeddingVector: createProxyIdentifier("ExtHostAiEmbeddingVector"),
+  ExtHostAiSettingsSearch: createProxyIdentifier("ExtHostAiSettingsSearch"),
+  ExtHostTheming: createProxyIdentifier("ExtHostTheming"),
+  ExtHostTunnelService: createProxyIdentifier("ExtHostTunnelService"),
+  ExtHostManagedSockets: createProxyIdentifier("ExtHostManagedSockets"),
+  ExtHostAuthentication: createProxyIdentifier("ExtHostAuthentication"),
+  ExtHostTimeline: createProxyIdentifier("ExtHostTimeline"),
+  ExtHostTesting: createProxyIdentifier("ExtHostTesting"),
+  ExtHostTelemetry: createProxyIdentifier("ExtHostTelemetry"),
+  ExtHostLocalization: createProxyIdentifier("ExtHostLocalization"),
+  ExtHostMcp: createProxyIdentifier("ExtHostMcp")
+};
+export {
+  CandidatePortSource,
+  CellOutputKind,
+  ExtHostContext,
+  ExtHostTestingResource,
+  ISuggestDataDtoField,
+  ISuggestResultDtoField,
+  IdObject,
+  MainContext,
+  NotebookEditorRevealType,
+  TabInputKind,
+  TabModelOperationKind,
+  TerminalCompletionListDto,
+  TextEditorRevealType,
+  WebviewEditorCapabilities,
+  WebviewMessageArrayBufferViewType
+};
+//# sourceMappingURL=extHost.protocol.js.map

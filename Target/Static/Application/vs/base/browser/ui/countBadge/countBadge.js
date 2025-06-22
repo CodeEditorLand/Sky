@@ -1,1 +1,63 @@
-import{$ as o,$M6 as h}from"../../dom.js";import{$zf as s}from"../../../common/strings.js";import"./countBadge.css";import{$vd as r,$wd as a,$td as d}from"../../../common/lifecycle.js";import{$M8 as n}from"../hover/hoverDelegate2.js";const b={badgeBackground:"#4D4D4D",badgeForeground:"#FFFFFF",badgeBorder:void 0};class p extends r{constructor(t,i,e){super(),this.h=i,this.j=e,this.b=0,this.g=this.B(new a),this.a=h(t,o(".monaco-count-badge")),this.B(d(()=>t.removeChild(this.a))),this.c=this.h.countFormat||"{0}",this.f=this.h.titleFormat||"",this.setCount(this.h.count||0),this.m()}setCount(t){this.b=t,this.n()}setCountFormat(t){this.c=t,this.n()}setTitleFormat(t){this.f=t,this.m(),this.n()}m(){this.f!==""&&!this.g.value?this.g.value=n().setupDelayedHoverAtMouse(this.a,()=>({content:s(this.f,this.b),appearance:{compact:!0}})):this.f===""&&this.g.value&&(this.g.value=void 0)}n(){this.a.textContent=s(this.c,this.b),this.a.style.backgroundColor=this.j.badgeBackground??"",this.a.style.color=this.j.badgeForeground??"",this.j.badgeBorder&&(this.a.style.border=`1px solid ${this.j.badgeBorder}`)}}export{b as $I9,p as $J9};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { $, append } from "../../dom.js";
+import { format } from "../../../common/strings.js";
+import "./countBadge.css";
+import { Disposable, MutableDisposable, toDisposable } from "../../../common/lifecycle.js";
+import { getBaseLayerHoverDelegate } from "../hover/hoverDelegate2.js";
+const unthemedCountStyles = {
+  badgeBackground: "#4D4D4D",
+  badgeForeground: "#FFFFFF",
+  badgeBorder: void 0
+};
+class CountBadge extends Disposable {
+  static {
+    __name(this, "CountBadge");
+  }
+  constructor(container, options, styles) {
+    super();
+    this.options = options;
+    this.styles = styles;
+    this.count = 0;
+    this.hover = this._register(new MutableDisposable());
+    this.element = append(container, $(".monaco-count-badge"));
+    this._register(toDisposable(() => container.removeChild(this.element)));
+    this.countFormat = this.options.countFormat || "{0}";
+    this.titleFormat = this.options.titleFormat || "";
+    this.setCount(this.options.count || 0);
+    this.updateHover();
+  }
+  setCount(count) {
+    this.count = count;
+    this.render();
+  }
+  setCountFormat(countFormat) {
+    this.countFormat = countFormat;
+    this.render();
+  }
+  setTitleFormat(titleFormat) {
+    this.titleFormat = titleFormat;
+    this.updateHover();
+    this.render();
+  }
+  updateHover() {
+    if (this.titleFormat !== "" && !this.hover.value) {
+      this.hover.value = getBaseLayerHoverDelegate().setupDelayedHoverAtMouse(this.element, () => ({ content: format(this.titleFormat, this.count), appearance: { compact: true } }));
+    } else if (this.titleFormat === "" && this.hover.value) {
+      this.hover.value = void 0;
+    }
+  }
+  render() {
+    this.element.textContent = format(this.countFormat, this.count);
+    this.element.style.backgroundColor = this.styles.badgeBackground ?? "";
+    this.element.style.color = this.styles.badgeForeground ?? "";
+    if (this.styles.badgeBorder) {
+      this.element.style.border = `1px solid ${this.styles.badgeBorder}`;
+    }
+  }
+}
+export {
+  CountBadge,
+  unthemedCountStyles
+};
+//# sourceMappingURL=countBadge.js.map

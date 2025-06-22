@@ -1,1 +1,114 @@
-import*as p from"../../../../../nls.js";import{$bF as a}from"../../../../common/editor/editorInput.js";import{$Tyb as f}from"../../common/notebookEditorModelResolverService.js";import{$dh as b}from"../../../../../base/common/resources.js";var h=function(s,t,e,o){var i=arguments.length,r=i<3?t:o===null?o=Object.getOwnPropertyDescriptor(t,e):o,n;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")r=Reflect.decorate(s,t,e,o);else for(var u=s.length-1;u>=0;u--)(n=s[u])&&(r=(i<3?n(r):i>3?n(t,e,r):n(t,e))||r);return i>3&&r&&Object.defineProperty(t,e,r),r},d=function(s,t){return function(e,o){t(e,o,s)}},l;class I{constructor(t,e,o,i){this.resolvedNotebookEditorModel=t,this.notebookUri=e,this.cell=o,this.outputId=i}dispose(){this.resolvedNotebookEditorModel.dispose()}}let c=class extends a{static{l=this}static{this.ID="workbench.input.notebookOutputEditorInput"}constructor(t,e,o,i,r){super(),this.m=r,this.b=t,this.cellUri=void 0,this.cellIndex=e,this.h=o,this.outputIndex=i}get typeId(){return l.ID}async resolve(){this.a||(this.a=await this.m.resolve(this.b));const t=this.a.object.notebook.cells[this.cellIndex];if(!t)throw new Error("Cell not found");this.cellUri=t.uri;const e=t.outputs[this.outputIndex]?.outputId;if(!e)throw new Error("Output not found");return this.h||(this.h=e),new I(this.a.object,this.b,t,e)}getSerializedData(){if(!this.a)return;const t=this.a.object.notebook.cells.findIndex(i=>b(i.uri,this.cellUri)),e=this.a.object.notebook.cells[t];if(!e)return;const o=e.outputs.findIndex(i=>i.outputId===this.h);if(o!==-1)return{notebookUri:this.b,cellIndex:t,outputIndex:o}}getName(){return p.localize(9585,null)}get editorId(){return"notebookOutputEditor"}get resource(){}get capabilities(){return 2}dispose(){super.dispose()}};c=l=h([d(4,f)],c);export{c as $nec};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import * as nls from "../../../../../nls.js";
+import { EditorInput } from "../../../../common/editor/editorInput.js";
+import { INotebookEditorModelResolverService } from "../../common/notebookEditorModelResolverService.js";
+import { isEqual } from "../../../../../base/common/resources.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+var NotebookOutputEditorInput_1;
+class ResolvedNotebookOutputEditorInputModel {
+  static {
+    __name(this, "ResolvedNotebookOutputEditorInputModel");
+  }
+  constructor(resolvedNotebookEditorModel, notebookUri, cell, outputId) {
+    this.resolvedNotebookEditorModel = resolvedNotebookEditorModel;
+    this.notebookUri = notebookUri;
+    this.cell = cell;
+    this.outputId = outputId;
+  }
+  dispose() {
+    this.resolvedNotebookEditorModel.dispose();
+  }
+}
+let NotebookOutputEditorInput = class NotebookOutputEditorInput2 extends EditorInput {
+  static {
+    __name(this, "NotebookOutputEditorInput");
+  }
+  static {
+    NotebookOutputEditorInput_1 = this;
+  }
+  static {
+    this.ID = "workbench.input.notebookOutputEditorInput";
+  }
+  constructor(notebookUri, cellIndex, outputId, outputIndex, notebookEditorModelResolverService) {
+    super();
+    this.notebookEditorModelResolverService = notebookEditorModelResolverService;
+    this._notebookUri = notebookUri;
+    this.cellUri = void 0;
+    this.cellIndex = cellIndex;
+    this.outputId = outputId;
+    this.outputIndex = outputIndex;
+  }
+  get typeId() {
+    return NotebookOutputEditorInput_1.ID;
+  }
+  async resolve() {
+    if (!this._notebookRef) {
+      this._notebookRef = await this.notebookEditorModelResolverService.resolve(this._notebookUri);
+    }
+    const cell = this._notebookRef.object.notebook.cells[this.cellIndex];
+    if (!cell) {
+      throw new Error("Cell not found");
+    }
+    this.cellUri = cell.uri;
+    const resolvedOutputId = cell.outputs[this.outputIndex]?.outputId;
+    if (!resolvedOutputId) {
+      throw new Error("Output not found");
+    }
+    if (!this.outputId) {
+      this.outputId = resolvedOutputId;
+    }
+    return new ResolvedNotebookOutputEditorInputModel(this._notebookRef.object, this._notebookUri, cell, resolvedOutputId);
+  }
+  getSerializedData() {
+    if (!this._notebookRef) {
+      return;
+    }
+    const cellIndex = this._notebookRef.object.notebook.cells.findIndex((c) => isEqual(c.uri, this.cellUri));
+    const cell = this._notebookRef.object.notebook.cells[cellIndex];
+    if (!cell) {
+      return;
+    }
+    const outputIndex = cell.outputs.findIndex((o) => o.outputId === this.outputId);
+    if (outputIndex === -1) {
+      return;
+    }
+    return {
+      notebookUri: this._notebookUri,
+      cellIndex,
+      outputIndex
+    };
+  }
+  getName() {
+    return nls.localize("notebookOutputEditorInput", "Notebook Output Preview");
+  }
+  get editorId() {
+    return "notebookOutputEditor";
+  }
+  get resource() {
+    return;
+  }
+  get capabilities() {
+    return 2;
+  }
+  dispose() {
+    super.dispose();
+  }
+};
+NotebookOutputEditorInput = NotebookOutputEditorInput_1 = __decorate([
+  __param(4, INotebookEditorModelResolverService)
+], NotebookOutputEditorInput);
+export {
+  NotebookOutputEditorInput
+};
+//# sourceMappingURL=notebookOutputEditorInput.js.map

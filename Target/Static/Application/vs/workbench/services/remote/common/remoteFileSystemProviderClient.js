@@ -1,1 +1,48 @@
-import{$wb as a}from"../../../../base/common/errors.js";import{$vd as d,$ud as p}from"../../../../base/common/lifecycle.js";import{Schemas as i}from"../../../../base/common/network.js";import{$Qw as v}from"../../../../platform/files/common/diskFileSystemProviderClient.js";const f="remoteFilesystem";class m extends v{static register(t,r,n){const s=t.getConnection();if(!s)return d.None;const o=new p,c=(async()=>{try{const e=await t.getRawEnvironment();e?r.registerProvider(i.vscodeRemote,o.add(new m(e,s))):n.error("Cannot register remote filesystem provider. Remote environment doesnot exist.")}catch(e){n.error("Cannot register remote filesystem provider. Error while fetching remote environment.",a(e))}})();return o.add(r.onWillActivateFileSystemProvider(e=>{e.scheme===i.vscodeRemote&&e.join(c)})),o}constructor(t,r){super(r.getChannel(f),{pathCaseSensitive:t.os===3})}}export{f as $L4,m as $M4};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { getErrorMessage } from "../../../../base/common/errors.js";
+import { Disposable, DisposableStore } from "../../../../base/common/lifecycle.js";
+import { Schemas } from "../../../../base/common/network.js";
+import { DiskFileSystemProviderClient } from "../../../../platform/files/common/diskFileSystemProviderClient.js";
+const REMOTE_FILE_SYSTEM_CHANNEL_NAME = "remoteFilesystem";
+class RemoteFileSystemProviderClient extends DiskFileSystemProviderClient {
+  static {
+    __name(this, "RemoteFileSystemProviderClient");
+  }
+  static register(remoteAgentService, fileService, logService) {
+    const connection = remoteAgentService.getConnection();
+    if (!connection) {
+      return Disposable.None;
+    }
+    const disposables = new DisposableStore();
+    const environmentPromise = (async () => {
+      try {
+        const environment = await remoteAgentService.getRawEnvironment();
+        if (environment) {
+          fileService.registerProvider(Schemas.vscodeRemote, disposables.add(new RemoteFileSystemProviderClient(environment, connection)));
+        } else {
+          logService.error("Cannot register remote filesystem provider. Remote environment doesnot exist.");
+        }
+      } catch (error) {
+        logService.error("Cannot register remote filesystem provider. Error while fetching remote environment.", getErrorMessage(error));
+      }
+    })();
+    disposables.add(fileService.onWillActivateFileSystemProvider((e) => {
+      if (e.scheme === Schemas.vscodeRemote) {
+        e.join(environmentPromise);
+      }
+    }));
+    return disposables;
+  }
+  constructor(remoteAgentEnvironment, connection) {
+    super(connection.getChannel(REMOTE_FILE_SYSTEM_CHANNEL_NAME), {
+      pathCaseSensitive: remoteAgentEnvironment.os === 3
+      /* OperatingSystem.Linux */
+    });
+  }
+}
+export {
+  REMOTE_FILE_SYSTEM_CHANNEL_NAME,
+  RemoteFileSystemProviderClient
+};
+//# sourceMappingURL=remoteFileSystemProviderClient.js.map

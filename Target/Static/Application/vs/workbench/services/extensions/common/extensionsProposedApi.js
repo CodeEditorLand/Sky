@@ -1,4 +1,137 @@
-import{$$b as c}from"../../../../base/common/arrays.js";import{localize as b}from"../../../../nls.js";import{$vd as m}from"../../../../base/common/lifecycle.js";import{$Qy as l}from"../../../../platform/extensions/common/extensions.js";import{allApiProposals as f}from"../../../../platform/extensions/common/extensionsApiProposals.js";import{$kj as A}from"../../../../platform/instantiation/common/descriptors.js";import{$3n as P}from"../../../../platform/log/common/log.js";import{$nn as E}from"../../../../platform/product/common/productService.js";import{$Ql as $}from"../../../../platform/registry/common/platform.js";import{$KX as w}from"../../environment/common/environmentService.js";import{Extensions as S}from"../../extensionManagement/common/extensionFeatures.js";import{$Uj as g}from"../../../../base/common/htmlContent.js";var u=function(i,e,o,s){var r=arguments.length,t=r<3?e:s===null?s=Object.getOwnPropertyDescriptor(e,o):s,n;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")t=Reflect.decorate(i,e,o,s);else for(var a=i.length-1;a>=0;a--)(n=i[a])&&(t=(r<3?n(t):r>3?n(e,o,t):n(e,o))||t);return r>3&&t&&Object.defineProperty(e,o,t),t},p=function(i,e){return function(o,s){e(o,s,i)}};let h=class{constructor(e,o,s){if(this.e=e,this.f=o,this.c=new Set((o.extensionEnabledProposedApi??[]).map(r=>l.toKey(r))),this.b=!o.isBuilt||o.isExtensionDevelopment&&s.quality!=="stable"||this.c.size===0&&Array.isArray(o.extensionEnabledProposedApi),this.d=new Map,s.extensionEnabledApiProposals)for(const[r,t]of Object.entries(s.extensionEnabledApiProposals)){const n=l.toKey(r),a=t.filter(d=>f[d]?!0:(e.warn(`Via 'product.json#extensionEnabledApiProposals' extension '${n}' wants API proposal '${d}' but that proposal DOES NOT EXIST. Likely, the proposal has been finalized (check 'vscode.d.ts') or was abandoned.`),!1));this.d.set(n,a)}}updateEnabledApiProposals(e){for(const o of e)this.g(o)}g(e){const o=l.toKey(e.identifier);if(c(e.enabledApiProposals)&&(e.enabledApiProposals=e.enabledApiProposals.filter(s=>{const r=!!f[s];return r||this.e.error(`Extension '${o}' wants API proposal '${s}' but that proposal DOES NOT EXIST. Likely, the proposal has been finalized (check 'vscode.d.ts') or was abandoned.`),r})),this.d.has(o)){const s=this.d.get(o),r=new Set(s),t=new Set(e.enabledApiProposals),n=new Set([...t].filter(a=>!r.has(a)));n.size>0&&(this.e.error(`Extension '${o}' appears in product.json but enables LESS API proposals than the extension wants.
-package.json (LOSES): ${[...t].join(", ")}
-product.json (WINS): ${[...r].join(", ")}`),this.f.isExtensionDevelopment&&(this.e.error(`Proceeding with EXTRA proposals (${[...n].join(", ")}) because extension is in development mode. Still, this EXTENSION WILL BE BROKEN unless product.json is updated.`),s.push(...n))),e.enabledApiProposals=s;return}this.b||this.c.has(o)||!e.isBuiltin&&c(e.enabledApiProposals)&&(this.e.error(`Extension '${e.identifier.value} CANNOT USE these API proposals '${e.enabledApiProposals?.join(", ")||"*"}'. You MUST start in extension development mode or use the --enable-proposed-api command line flag`),e.enabledApiProposals=[])}};h=u([p(0,P),p(1,w),p(2,E)],h);class j extends m{constructor(){super(...arguments),this.type="markdown"}shouldRender(e){return!!e.originalEnabledApiProposals?.length||!!e.enabledApiProposals?.length}render(e){const o=e.originalEnabledApiProposals??e.enabledApiProposals??[],s=new g;if(o.length)for(const r of o)s.appendMarkdown(`- \`${r}\`
-`);return{data:s,dispose:()=>{}}}}$.as(S.ExtensionFeaturesRegistry).registerExtensionFeature({id:"enabledApiProposals",label:b(14124,null),access:{canToggle:!1},renderer:new A(j)});export{h as $nAc};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { isNonEmptyArray } from "../../../../base/common/arrays.js";
+import { localize } from "../../../../nls.js";
+import { Disposable } from "../../../../base/common/lifecycle.js";
+import { ExtensionIdentifier } from "../../../../platform/extensions/common/extensions.js";
+import { allApiProposals } from "../../../../platform/extensions/common/extensionsApiProposals.js";
+import { SyncDescriptor } from "../../../../platform/instantiation/common/descriptors.js";
+import { ILogService } from "../../../../platform/log/common/log.js";
+import { IProductService } from "../../../../platform/product/common/productService.js";
+import { Registry } from "../../../../platform/registry/common/platform.js";
+import { IWorkbenchEnvironmentService } from "../../environment/common/environmentService.js";
+import { Extensions } from "../../extensionManagement/common/extensionFeatures.js";
+import { MarkdownString } from "../../../../base/common/htmlContent.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+let ExtensionsProposedApi = class ExtensionsProposedApi2 {
+  static {
+    __name(this, "ExtensionsProposedApi");
+  }
+  constructor(_logService, _environmentService, productService) {
+    this._logService = _logService;
+    this._environmentService = _environmentService;
+    this._envEnabledExtensions = new Set((_environmentService.extensionEnabledProposedApi ?? []).map((id) => ExtensionIdentifier.toKey(id)));
+    this._envEnablesProposedApiForAll = !_environmentService.isBuilt || // always allow proposed API when running out of sources
+    _environmentService.isExtensionDevelopment && productService.quality !== "stable" || // do not allow proposed API against stable builds when developing an extension
+    this._envEnabledExtensions.size === 0 && Array.isArray(_environmentService.extensionEnabledProposedApi);
+    this._productEnabledExtensions = /* @__PURE__ */ new Map();
+    if (productService.extensionEnabledApiProposals) {
+      for (const [k, value] of Object.entries(productService.extensionEnabledApiProposals)) {
+        const key = ExtensionIdentifier.toKey(k);
+        const proposalNames = value.filter((name) => {
+          if (!allApiProposals[name]) {
+            _logService.warn(`Via 'product.json#extensionEnabledApiProposals' extension '${key}' wants API proposal '${name}' but that proposal DOES NOT EXIST. Likely, the proposal has been finalized (check 'vscode.d.ts') or was abandoned.`);
+            return false;
+          }
+          return true;
+        });
+        this._productEnabledExtensions.set(key, proposalNames);
+      }
+    }
+  }
+  updateEnabledApiProposals(extensions) {
+    for (const extension of extensions) {
+      this.doUpdateEnabledApiProposals(extension);
+    }
+  }
+  doUpdateEnabledApiProposals(extension) {
+    const key = ExtensionIdentifier.toKey(extension.identifier);
+    if (isNonEmptyArray(extension.enabledApiProposals)) {
+      extension.enabledApiProposals = extension.enabledApiProposals.filter((name) => {
+        const result = Boolean(allApiProposals[name]);
+        if (!result) {
+          this._logService.error(`Extension '${key}' wants API proposal '${name}' but that proposal DOES NOT EXIST. Likely, the proposal has been finalized (check 'vscode.d.ts') or was abandoned.`);
+        }
+        return result;
+      });
+    }
+    if (this._productEnabledExtensions.has(key)) {
+      const productEnabledProposals = this._productEnabledExtensions.get(key);
+      const productSet = new Set(productEnabledProposals);
+      const extensionSet = new Set(extension.enabledApiProposals);
+      const diff = new Set([...extensionSet].filter((a) => !productSet.has(a)));
+      if (diff.size > 0) {
+        this._logService.error(`Extension '${key}' appears in product.json but enables LESS API proposals than the extension wants.
+package.json (LOSES): ${[...extensionSet].join(", ")}
+product.json (WINS): ${[...productSet].join(", ")}`);
+        if (this._environmentService.isExtensionDevelopment) {
+          this._logService.error(`Proceeding with EXTRA proposals (${[...diff].join(", ")}) because extension is in development mode. Still, this EXTENSION WILL BE BROKEN unless product.json is updated.`);
+          productEnabledProposals.push(...diff);
+        }
+      }
+      extension.enabledApiProposals = productEnabledProposals;
+      return;
+    }
+    if (this._envEnablesProposedApiForAll || this._envEnabledExtensions.has(key)) {
+      return;
+    }
+    if (!extension.isBuiltin && isNonEmptyArray(extension.enabledApiProposals)) {
+      this._logService.error(`Extension '${extension.identifier.value} CANNOT USE these API proposals '${extension.enabledApiProposals?.join(", ") || "*"}'. You MUST start in extension development mode or use the --enable-proposed-api command line flag`);
+      extension.enabledApiProposals = [];
+    }
+  }
+};
+ExtensionsProposedApi = __decorate([
+  __param(0, ILogService),
+  __param(1, IWorkbenchEnvironmentService),
+  __param(2, IProductService)
+], ExtensionsProposedApi);
+class ApiProposalsMarkdowneRenderer extends Disposable {
+  static {
+    __name(this, "ApiProposalsMarkdowneRenderer");
+  }
+  constructor() {
+    super(...arguments);
+    this.type = "markdown";
+  }
+  shouldRender(manifest) {
+    return !!manifest.originalEnabledApiProposals?.length || !!manifest.enabledApiProposals?.length;
+  }
+  render(manifest) {
+    const enabledApiProposals = manifest.originalEnabledApiProposals ?? manifest.enabledApiProposals ?? [];
+    const data = new MarkdownString();
+    if (enabledApiProposals.length) {
+      for (const proposal of enabledApiProposals) {
+        data.appendMarkdown(`- \`${proposal}\`
+`);
+      }
+    }
+    return {
+      data,
+      dispose: /* @__PURE__ */ __name(() => {
+      }, "dispose")
+    };
+  }
+}
+Registry.as(Extensions.ExtensionFeaturesRegistry).registerExtensionFeature({
+  id: "enabledApiProposals",
+  label: localize("enabledProposedAPIs", "API Proposals"),
+  access: {
+    canToggle: false
+  },
+  renderer: new SyncDescriptor(ApiProposalsMarkdowneRenderer)
+});
+export {
+  ExtensionsProposedApi
+};
+//# sourceMappingURL=extensionsProposedApi.js.map

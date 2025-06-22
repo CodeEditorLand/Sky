@@ -1,1 +1,192 @@
-import*as r from"../../../../../base/browser/dom.js";import{$n7 as f}from"../../../../../base/browser/fastDomNode.js";import{$88 as u}from"../../../../../base/browser/pixelRatio.js";import{$hp as m}from"../../../../../base/common/color.js";import{$ud as b}from"../../../../../base/common/lifecycle.js";import{$Xq as y,$Yq as S,$Zq as $,$6q as w,$7q as H,$1q as I}from"../../../../../platform/theme/common/colorRegistry.js";import{$Mt as M,$Tt as D}from"../../../../../platform/theme/common/themeService.js";var p=function(l,t,i,o){var e=arguments.length,s=e<3?t:o===null?o=Object.getOwnPropertyDescriptor(t,i):o,h;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")s=Reflect.decorate(l,t,i,o);else for(var n=l.length-1;n>=0;n--)(h=l[n])&&(s=(e<3?h(s):e>3?h(t,i,s):h(t,i))||s);return e>3&&s&&Object.defineProperty(t,i,s),s},C=function(l,t){return function(i,o){t(i,o,l)}};const R=20;let g=class extends D{constructor(t,i,o,e){super(e),this.notebookEditor=t,this.width=i,this.g=[],this.j=2,this.m=null,this.s=null,this.r=null,this.t=null,this.u=this.B(new b),this.y=null,this.c=f(document.createElement("canvas")),this.c.setPosition("relative"),this.c.setLayerHinting(!0),this.c.setContain("strict"),o.appendChild(this.c.domNode),this.f=f(document.createElement("div")),this.f.setClassName("diffViewport"),this.f.setPosition("absolute"),this.f.setWidth(i),o.appendChild(this.f.domNode),this.B(u.getInstance(r.getWindow(this.c.domNode)).onDidChange(()=>{this.D()})),this.B(this.n.onDidColorThemeChange(s=>{this.C(s)&&this.D()})),this.C(this.n.getColorTheme()),this.B(this.notebookEditor.onDidScroll(()=>{this.H()})),this.B(r.$K5(o,r.$F6.POINTER_DOWN,s=>{this.notebookEditor.delegateVerticalScrollbarPointerDown(s)}))}C(t){const i=t.getColor(w)||(t.getColor($)||y).transparent(2),o=t.getColor(H)||(t.getColor(I)||S).transparent(2),e=!i.equals(this.m)||!o.equals(this.s);return this.m=i,this.s=o,this.m&&(this.r=m.Format.CSS.formatHexA(this.m)),this.s&&(this.t=m.Format.CSS.formatHexA(this.s)),e}layout(){this.G()}updateViewModels(t,i){this.u.clear(),this.g=t,i&&(this.u.add(i.onDidChangeLayout(()=>{this.D()})),this.u.add(i.onDidChangeCellLayout(()=>{this.D()}))),this.D()}D(){this.y===null&&(this.y=r.$S5(r.getWindow(this.c.domNode),this.F.bind(this),16))}F(){this.y=null,this.G()}G(){const i=this.notebookEditor.getLayoutInfo().height,o=this.g.map(h=>h.totalHeight).reduce((h,n)=>h+n,0),e=u.getInstance(r.getWindow(this.c.domNode)).value;this.c.setWidth(this.width),this.c.setHeight(i),this.c.domNode.width=this.width*e,this.c.domNode.height=i*e;const s=this.c.domNode.getContext("2d");s.clearRect(0,0,this.width*e,i*e),this.J(s,this.width*e,i*e,o*e,e),this.H()}H(){const t=this.I();t?(this.f.setTop(t.top),this.f.setHeight(t.height)):(this.f.setTop(0),this.f.setHeight(0))}I(){const t=this.notebookEditor.getLayoutInfo();if(!t)return null;const i=this.notebookEditor.getScrollTop(),o=this.notebookEditor.getScrollHeight(),e=Math.max(0,t.height),s=Math.max(0,e-2*0),h=t.height,n=Math.round(Math.max(R,Math.floor(h*s/o))),a=(s-n)/(o-h),c=Math.round(i*a);return{height:n,top:c}}J(t,i,o,e,s){if(!this.r||!this.t)return;const h=i/this.j;let n=0;for(let a=0;a<this.g.length;a++){const c=this.g[a],d=Math.round(c.totalHeight/e*s*o);switch(c.type){case"insert":t.fillStyle=this.r,t.fillRect(h,n,h,d);break;case"delete":t.fillStyle=this.t,t.fillRect(0,n,h,d);break;case"unchanged":case"unchangedMetadata":break;case"modified":case"modifiedMetadata":t.fillStyle=this.t,t.fillRect(0,n,h,d),t.fillStyle=this.r,t.fillRect(h,n,h,d);break}n+=d}}dispose(){this.y!==null&&(this.y.dispose(),this.y=null),super.dispose()}};g=p([C(3,M)],g);export{g as $80b};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import * as DOM from "../../../../../base/browser/dom.js";
+import { createFastDomNode } from "../../../../../base/browser/fastDomNode.js";
+import { PixelRatio } from "../../../../../base/browser/pixelRatio.js";
+import { Color } from "../../../../../base/common/color.js";
+import { DisposableStore } from "../../../../../base/common/lifecycle.js";
+import { defaultInsertColor, defaultRemoveColor, diffInserted, diffOverviewRulerInserted, diffOverviewRulerRemoved, diffRemoved } from "../../../../../platform/theme/common/colorRegistry.js";
+import { IThemeService, Themable } from "../../../../../platform/theme/common/themeService.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+const MINIMUM_SLIDER_SIZE = 20;
+let NotebookDiffOverviewRuler = class NotebookDiffOverviewRuler2 extends Themable {
+  static {
+    __name(this, "NotebookDiffOverviewRuler");
+  }
+  constructor(notebookEditor, width, container, themeService) {
+    super(themeService);
+    this.notebookEditor = notebookEditor;
+    this.width = width;
+    this._diffElementViewModels = [];
+    this._lanes = 2;
+    this._insertColor = null;
+    this._removeColor = null;
+    this._insertColorHex = null;
+    this._removeColorHex = null;
+    this._disposables = this._register(new DisposableStore());
+    this._renderAnimationFrame = null;
+    this._domNode = createFastDomNode(document.createElement("canvas"));
+    this._domNode.setPosition("relative");
+    this._domNode.setLayerHinting(true);
+    this._domNode.setContain("strict");
+    container.appendChild(this._domNode.domNode);
+    this._overviewViewportDomElement = createFastDomNode(document.createElement("div"));
+    this._overviewViewportDomElement.setClassName("diffViewport");
+    this._overviewViewportDomElement.setPosition("absolute");
+    this._overviewViewportDomElement.setWidth(width);
+    container.appendChild(this._overviewViewportDomElement.domNode);
+    this._register(PixelRatio.getInstance(DOM.getWindow(this._domNode.domNode)).onDidChange(() => {
+      this._scheduleRender();
+    }));
+    this._register(this.themeService.onDidColorThemeChange((e) => {
+      const colorChanged = this.applyColors(e);
+      if (colorChanged) {
+        this._scheduleRender();
+      }
+    }));
+    this.applyColors(this.themeService.getColorTheme());
+    this._register(this.notebookEditor.onDidScroll(() => {
+      this._renderOverviewViewport();
+    }));
+    this._register(DOM.addStandardDisposableListener(container, DOM.EventType.POINTER_DOWN, (e) => {
+      this.notebookEditor.delegateVerticalScrollbarPointerDown(e);
+    }));
+  }
+  applyColors(theme) {
+    const newInsertColor = theme.getColor(diffOverviewRulerInserted) || (theme.getColor(diffInserted) || defaultInsertColor).transparent(2);
+    const newRemoveColor = theme.getColor(diffOverviewRulerRemoved) || (theme.getColor(diffRemoved) || defaultRemoveColor).transparent(2);
+    const hasChanges = !newInsertColor.equals(this._insertColor) || !newRemoveColor.equals(this._removeColor);
+    this._insertColor = newInsertColor;
+    this._removeColor = newRemoveColor;
+    if (this._insertColor) {
+      this._insertColorHex = Color.Format.CSS.formatHexA(this._insertColor);
+    }
+    if (this._removeColor) {
+      this._removeColorHex = Color.Format.CSS.formatHexA(this._removeColor);
+    }
+    return hasChanges;
+  }
+  layout() {
+    this._layoutNow();
+  }
+  updateViewModels(elements, eventDispatcher) {
+    this._disposables.clear();
+    this._diffElementViewModels = elements;
+    if (eventDispatcher) {
+      this._disposables.add(eventDispatcher.onDidChangeLayout(() => {
+        this._scheduleRender();
+      }));
+      this._disposables.add(eventDispatcher.onDidChangeCellLayout(() => {
+        this._scheduleRender();
+      }));
+    }
+    this._scheduleRender();
+  }
+  _scheduleRender() {
+    if (this._renderAnimationFrame === null) {
+      this._renderAnimationFrame = DOM.runAtThisOrScheduleAtNextAnimationFrame(DOM.getWindow(this._domNode.domNode), this._onRenderScheduled.bind(this), 16);
+    }
+  }
+  _onRenderScheduled() {
+    this._renderAnimationFrame = null;
+    this._layoutNow();
+  }
+  _layoutNow() {
+    const layoutInfo = this.notebookEditor.getLayoutInfo();
+    const height = layoutInfo.height;
+    const contentHeight = this._diffElementViewModels.map((view) => view.totalHeight).reduce((a, b) => a + b, 0);
+    const ratio = PixelRatio.getInstance(DOM.getWindow(this._domNode.domNode)).value;
+    this._domNode.setWidth(this.width);
+    this._domNode.setHeight(height);
+    this._domNode.domNode.width = this.width * ratio;
+    this._domNode.domNode.height = height * ratio;
+    const ctx = this._domNode.domNode.getContext("2d");
+    ctx.clearRect(0, 0, this.width * ratio, height * ratio);
+    this._renderCanvas(ctx, this.width * ratio, height * ratio, contentHeight * ratio, ratio);
+    this._renderOverviewViewport();
+  }
+  _renderOverviewViewport() {
+    const layout = this._computeOverviewViewport();
+    if (!layout) {
+      this._overviewViewportDomElement.setTop(0);
+      this._overviewViewportDomElement.setHeight(0);
+    } else {
+      this._overviewViewportDomElement.setTop(layout.top);
+      this._overviewViewportDomElement.setHeight(layout.height);
+    }
+  }
+  _computeOverviewViewport() {
+    const layoutInfo = this.notebookEditor.getLayoutInfo();
+    if (!layoutInfo) {
+      return null;
+    }
+    const scrollTop = this.notebookEditor.getScrollTop();
+    const scrollHeight = this.notebookEditor.getScrollHeight();
+    const computedAvailableSize = Math.max(0, layoutInfo.height);
+    const computedRepresentableSize = Math.max(0, computedAvailableSize - 2 * 0);
+    const visibleSize = layoutInfo.height;
+    const computedSliderSize = Math.round(Math.max(MINIMUM_SLIDER_SIZE, Math.floor(visibleSize * computedRepresentableSize / scrollHeight)));
+    const computedSliderRatio = (computedRepresentableSize - computedSliderSize) / (scrollHeight - visibleSize);
+    const computedSliderPosition = Math.round(scrollTop * computedSliderRatio);
+    return {
+      height: computedSliderSize,
+      top: computedSliderPosition
+    };
+  }
+  _renderCanvas(ctx, width, height, scrollHeight, ratio) {
+    if (!this._insertColorHex || !this._removeColorHex) {
+      return;
+    }
+    const laneWidth = width / this._lanes;
+    let currentFrom = 0;
+    for (let i = 0; i < this._diffElementViewModels.length; i++) {
+      const element = this._diffElementViewModels[i];
+      const cellHeight = Math.round(element.totalHeight / scrollHeight * ratio * height);
+      switch (element.type) {
+        case "insert":
+          ctx.fillStyle = this._insertColorHex;
+          ctx.fillRect(laneWidth, currentFrom, laneWidth, cellHeight);
+          break;
+        case "delete":
+          ctx.fillStyle = this._removeColorHex;
+          ctx.fillRect(0, currentFrom, laneWidth, cellHeight);
+          break;
+        case "unchanged":
+        case "unchangedMetadata":
+          break;
+        case "modified":
+        case "modifiedMetadata":
+          ctx.fillStyle = this._removeColorHex;
+          ctx.fillRect(0, currentFrom, laneWidth, cellHeight);
+          ctx.fillStyle = this._insertColorHex;
+          ctx.fillRect(laneWidth, currentFrom, laneWidth, cellHeight);
+          break;
+      }
+      currentFrom += cellHeight;
+    }
+  }
+  dispose() {
+    if (this._renderAnimationFrame !== null) {
+      this._renderAnimationFrame.dispose();
+      this._renderAnimationFrame = null;
+    }
+    super.dispose();
+  }
+};
+NotebookDiffOverviewRuler = __decorate([
+  __param(3, IThemeService)
+], NotebookDiffOverviewRuler);
+export {
+  NotebookDiffOverviewRuler
+};
+//# sourceMappingURL=notebookDiffOverviewRuler.js.map

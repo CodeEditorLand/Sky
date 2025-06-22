@@ -1,1 +1,184 @@
-import{$7b as I}from"../../../../base/common/arrays.js";import{$wh as T,$xh as C}from"../../../../base/common/async.js";import{$5C as v}from"../../../../base/common/dataTransfer.js";import{$pb as x}from"../../../../base/common/errors.js";import{$8C as E}from"../../../../base/common/hierarchicalKind.js";import{$vd as _,$ud as $}from"../../../../base/common/lifecycle.js";import{localize as b}from"../../../../nls.js";import{$El as A}from"../../../../platform/configuration/common/configuration.js";import{$Un as P}from"../../../../platform/contextkey/common/contextkey.js";import{$Xgb as j}from"../../../../platform/dnd/browser/dnd.js";import{$mj as S}from"../../../../platform/instantiation/common/instantiation.js";import{$6gb as O}from"../../../browser/dataTransfer.js";import{$cC as R}from"../../../common/core/range.js";import{$sT as B}from"../../../common/services/languageFeatures.js";import{$xnb as y}from"../../../common/services/treeViewsDnd.js";import{$ynb as M}from"../../../common/services/treeViewsDndService.js";import{$ahb as W}from"../../editorState/browser/editorState.js";import{$chb as z}from"../../inlineProgress/browser/inlineProgress.js";import{$yhb as q}from"./edit.js";import{$Ehb as V}from"./postEditWidget.js";var D=function(d,t,r,o){var i=arguments.length,e=i<3?t:o===null?o=Object.getOwnPropertyDescriptor(t,r):o,n;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")e=Reflect.decorate(d,t,r,o);else for(var s=d.length-1;s>=0;s--)(n=d[s])&&(e=(i<3?n(e):i>3?n(t,r,e):n(t,r))||e);return i>3&&e&&Object.defineProperty(t,r,e),e},h=function(d,t){return function(r,o){t(r,o,d)}},a;const K="editor.dropIntoEditor.preferences",N="editor.changeDropType",U=new P("dropWidgetVisible",!1,b(1059,null));let w=class extends _{static{a=this}static{this.ID="editor.contrib.dropIntoEditorController"}static get(t){return t.getContribution(a.ID)}static setConfigureDefaultAction(t){this.a=t}constructor(t,r,o,i,e){super(),this.h=o,this.j=i,this.m=e,this.g=j.getInstance(),this.c=this.B(r.createInstance(z,"dropIntoEditor",t)),this.f=this.B(r.createInstance(V,"dropIntoEditor",t,U,{id:N,label:b(1060,null)},()=>a.a?[a.a]:[])),this.B(t.onDropIntoEditor(n=>this.n(t,n.position,n.event)))}clearWidgets(){this.f.clear()}changeDropType(){this.f.tryShowSelector()}async n(t,r,o){if(!o.dataTransfer||!t.hasModel())return;a.b?.cancel(),t.focus(),t.setPosition(r);const i=T(async e=>{const n=new $,s=n.add(new W(t,1,void 0,e));try{const p=await this.t(o);if(p.size===0||s.token.isCancellationRequested)return;const c=t.getModel();if(!c)return;const f=this.j.documentDropEditProvider.ordered(c).filter(m=>m.dropMimeTypes?m.dropMimeTypes.some(u=>p.matches(u)):!0),l=n.add(await this.r(f,c,r,p,s.token));if(s.token.isCancellationRequested)return;if(l.edits.length){const m=this.s(c,l.edits),u=t.getOption(39).showDropSelector==="afterDrop";await this.f.applyEditAndShowIfNeeded([R.fromPositions(r)],{activeEditIndex:m,allEdits:l.edits},u,async g=>g,e)}}finally{n.dispose(),a.b===i&&(a.b=void 0)}});this.c.showWhile(r,b(1061,null),i,{cancel:()=>i.cancel()}),a.b=i}async r(t,r,o,i,e){const n=new $,s=await C(Promise.all(t.map(async c=>{try{const f=await c.provideDocumentDropEdits(r,o,i,e);return f&&n.add(f),f?.edits.map(l=>({...l,providerId:c.id}))}catch(f){x(f)}})),e),p=I(s??[]).flat();return{edits:q(p),dispose:()=>n.dispose()}}s(t,r){const o=this.h.getValue(K,{resource:t.uri});for(const i of Array.isArray(o)?o:[]){const e=new E(i),n=r.findIndex(s=>s.kind&&e.contains(s.kind));if(n>=0)return n}return 0}async t(t){if(!t.dataTransfer)return new v;const r=O(t.dataTransfer);if(this.g.hasData(y.prototype)){const o=this.g.getData(y.prototype);if(Array.isArray(o))for(const i of o){const e=await this.m.removeDragOperationTransfer(i.identifier);if(e)for(const[n,s]of e)r.replace(n,s)}}return r}};w=a=D([h(1,S),h(2,A),h(3,B),h(4,M)],w);export{N as $Anb,U as $Bnb,w as $Cnb,K as $znb};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { coalesce } from "../../../../base/common/arrays.js";
+import { createCancelablePromise, raceCancellation } from "../../../../base/common/async.js";
+import { VSDataTransfer } from "../../../../base/common/dataTransfer.js";
+import { isCancellationError } from "../../../../base/common/errors.js";
+import { HierarchicalKind } from "../../../../base/common/hierarchicalKind.js";
+import { Disposable, DisposableStore } from "../../../../base/common/lifecycle.js";
+import { localize } from "../../../../nls.js";
+import { IConfigurationService } from "../../../../platform/configuration/common/configuration.js";
+import { RawContextKey } from "../../../../platform/contextkey/common/contextkey.js";
+import { LocalSelectionTransfer } from "../../../../platform/dnd/browser/dnd.js";
+import { IInstantiationService } from "../../../../platform/instantiation/common/instantiation.js";
+import { toExternalVSDataTransfer } from "../../../browser/dataTransfer.js";
+import { Range } from "../../../common/core/range.js";
+import { ILanguageFeaturesService } from "../../../common/services/languageFeatures.js";
+import { DraggedTreeItemsIdentifier } from "../../../common/services/treeViewsDnd.js";
+import { ITreeViewsDnDService } from "../../../common/services/treeViewsDndService.js";
+import { EditorStateCancellationTokenSource } from "../../editorState/browser/editorState.js";
+import { InlineProgressManager } from "../../inlineProgress/browser/inlineProgress.js";
+import { sortEditsByYieldTo } from "./edit.js";
+import { PostEditWidgetManager } from "./postEditWidget.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+var DropIntoEditorController_1;
+const dropAsPreferenceConfig = "editor.dropIntoEditor.preferences";
+const changeDropTypeCommandId = "editor.changeDropType";
+const dropWidgetVisibleCtx = new RawContextKey("dropWidgetVisible", false, localize("dropWidgetVisible", "Whether the drop widget is showing"));
+let DropIntoEditorController = class DropIntoEditorController2 extends Disposable {
+  static {
+    __name(this, "DropIntoEditorController");
+  }
+  static {
+    DropIntoEditorController_1 = this;
+  }
+  static {
+    this.ID = "editor.contrib.dropIntoEditorController";
+  }
+  static get(editor) {
+    return editor.getContribution(DropIntoEditorController_1.ID);
+  }
+  static setConfigureDefaultAction(action) {
+    this._configureDefaultAction = action;
+  }
+  constructor(editor, instantiationService, _configService, _languageFeaturesService, _treeViewsDragAndDropService) {
+    super();
+    this._configService = _configService;
+    this._languageFeaturesService = _languageFeaturesService;
+    this._treeViewsDragAndDropService = _treeViewsDragAndDropService;
+    this.treeItemsTransfer = LocalSelectionTransfer.getInstance();
+    this._dropProgressManager = this._register(instantiationService.createInstance(InlineProgressManager, "dropIntoEditor", editor));
+    this._postDropWidgetManager = this._register(instantiationService.createInstance(PostEditWidgetManager, "dropIntoEditor", editor, dropWidgetVisibleCtx, { id: changeDropTypeCommandId, label: localize("postDropWidgetTitle", "Show drop options...") }, () => DropIntoEditorController_1._configureDefaultAction ? [DropIntoEditorController_1._configureDefaultAction] : []));
+    this._register(editor.onDropIntoEditor((e) => this.onDropIntoEditor(editor, e.position, e.event)));
+  }
+  clearWidgets() {
+    this._postDropWidgetManager.clear();
+  }
+  changeDropType() {
+    this._postDropWidgetManager.tryShowSelector();
+  }
+  async onDropIntoEditor(editor, position, dragEvent) {
+    if (!dragEvent.dataTransfer || !editor.hasModel()) {
+      return;
+    }
+    DropIntoEditorController_1._currentDropOperation?.cancel();
+    editor.focus();
+    editor.setPosition(position);
+    const p = createCancelablePromise(async (token) => {
+      const disposables = new DisposableStore();
+      const tokenSource = disposables.add(new EditorStateCancellationTokenSource(editor, 1, void 0, token));
+      try {
+        const ourDataTransfer = await this.extractDataTransferData(dragEvent);
+        if (ourDataTransfer.size === 0 || tokenSource.token.isCancellationRequested) {
+          return;
+        }
+        const model = editor.getModel();
+        if (!model) {
+          return;
+        }
+        const providers = this._languageFeaturesService.documentDropEditProvider.ordered(model).filter((provider) => {
+          if (!provider.dropMimeTypes) {
+            return true;
+          }
+          return provider.dropMimeTypes.some((mime) => ourDataTransfer.matches(mime));
+        });
+        const editSession = disposables.add(await this.getDropEdits(providers, model, position, ourDataTransfer, tokenSource.token));
+        if (tokenSource.token.isCancellationRequested) {
+          return;
+        }
+        if (editSession.edits.length) {
+          const activeEditIndex = this.getInitialActiveEditIndex(model, editSession.edits);
+          const canShowWidget = editor.getOption(
+            39
+            /* EditorOption.dropIntoEditor */
+          ).showDropSelector === "afterDrop";
+          await this._postDropWidgetManager.applyEditAndShowIfNeeded([Range.fromPositions(position)], { activeEditIndex, allEdits: editSession.edits }, canShowWidget, async (edit) => edit, token);
+        }
+      } finally {
+        disposables.dispose();
+        if (DropIntoEditorController_1._currentDropOperation === p) {
+          DropIntoEditorController_1._currentDropOperation = void 0;
+        }
+      }
+    });
+    this._dropProgressManager.showWhile(position, localize("dropIntoEditorProgress", "Running drop handlers. Click to cancel"), p, { cancel: /* @__PURE__ */ __name(() => p.cancel(), "cancel") });
+    DropIntoEditorController_1._currentDropOperation = p;
+  }
+  async getDropEdits(providers, model, position, dataTransfer, token) {
+    const disposables = new DisposableStore();
+    const results = await raceCancellation(Promise.all(providers.map(async (provider) => {
+      try {
+        const edits2 = await provider.provideDocumentDropEdits(model, position, dataTransfer, token);
+        if (edits2) {
+          disposables.add(edits2);
+        }
+        return edits2?.edits.map((edit) => ({ ...edit, providerId: provider.id }));
+      } catch (err) {
+        if (!isCancellationError(err)) {
+          console.error(err);
+        }
+        console.error(err);
+      }
+      return void 0;
+    })), token);
+    const edits = coalesce(results ?? []).flat();
+    return {
+      edits: sortEditsByYieldTo(edits),
+      dispose: /* @__PURE__ */ __name(() => disposables.dispose(), "dispose")
+    };
+  }
+  getInitialActiveEditIndex(model, edits) {
+    const preferredProviders = this._configService.getValue(dropAsPreferenceConfig, { resource: model.uri });
+    for (const config of Array.isArray(preferredProviders) ? preferredProviders : []) {
+      const desiredKind = new HierarchicalKind(config);
+      const editIndex = edits.findIndex((edit) => edit.kind && desiredKind.contains(edit.kind));
+      if (editIndex >= 0) {
+        return editIndex;
+      }
+    }
+    return 0;
+  }
+  async extractDataTransferData(dragEvent) {
+    if (!dragEvent.dataTransfer) {
+      return new VSDataTransfer();
+    }
+    const dataTransfer = toExternalVSDataTransfer(dragEvent.dataTransfer);
+    if (this.treeItemsTransfer.hasData(DraggedTreeItemsIdentifier.prototype)) {
+      const data = this.treeItemsTransfer.getData(DraggedTreeItemsIdentifier.prototype);
+      if (Array.isArray(data)) {
+        for (const id of data) {
+          const treeDataTransfer = await this._treeViewsDragAndDropService.removeDragOperationTransfer(id.identifier);
+          if (treeDataTransfer) {
+            for (const [type, value] of treeDataTransfer) {
+              dataTransfer.replace(type, value);
+            }
+          }
+        }
+      }
+    }
+    return dataTransfer;
+  }
+};
+DropIntoEditorController = DropIntoEditorController_1 = __decorate([
+  __param(1, IInstantiationService),
+  __param(2, IConfigurationService),
+  __param(3, ILanguageFeaturesService),
+  __param(4, ITreeViewsDnDService)
+], DropIntoEditorController);
+export {
+  DropIntoEditorController,
+  changeDropTypeCommandId,
+  dropAsPreferenceConfig,
+  dropWidgetVisibleCtx
+};
+//# sourceMappingURL=dropIntoEditorController.js.map

@@ -1,1 +1,124 @@
-import*as u from"../../../base/common/strings.js";import*as a from"../../../base/common/platform.js";import*as l from"../../../base/common/buffer.js";let n,s,h;function c(){return n||(n=new TextDecoder("UTF-16LE")),n}function p(){return s||(s=new TextDecoder("UTF-16BE")),s}function T(){return h||(h=a.$H()?c():p()),h}function m(t,s,i){const n=new Uint16Array(t.buffer,s,i);return i>0&&(65279===n[0]||65534===n[0])?x(t,s,i):c().decode(n)}function x(t,s,i){const n=[];let e=0;for(let r=0;r<i;r++){const i=l.$Li(t,s);s+=2,n[e++]=String.fromCharCode(i)}return n.join("")}class C{constructor(t){this.a=0|t,this.b=new Uint16Array(this.a),this.c=null,this.d=0}reset(){this.c=null,this.d=0}build(){return null!==this.c?(this.f(),this.c.join("")):this.e()}e(){if(0===this.d)return"";const t=new Uint16Array(this.b.buffer,0,this.d);return T().decode(t)}f(){const t=this.e();this.d=0,null===this.c?this.c=[t]:this.c[this.c.length]=t}appendCharCode(t){const s=this.a-this.d;s<=1&&(0===s||u.$9f(t))&&this.f(),this.b[this.d++]=t}appendASCIICharCode(t){this.d===this.a&&this.f(),this.b[this.d++]=t}appendString(t){const s=t.length;if(this.d+s>=this.a)return this.f(),void(this.c[this.c.length]=t);for(let i=0;i<s;i++)this.b[this.d++]=t.charCodeAt(i)}}export{T as $TC,m as $UC,C as $VC};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import * as strings from "../../../base/common/strings.js";
+import * as platform from "../../../base/common/platform.js";
+import * as buffer from "../../../base/common/buffer.js";
+let _utf16LE_TextDecoder;
+function getUTF16LE_TextDecoder() {
+  if (!_utf16LE_TextDecoder) {
+    _utf16LE_TextDecoder = new TextDecoder("UTF-16LE");
+  }
+  return _utf16LE_TextDecoder;
+}
+__name(getUTF16LE_TextDecoder, "getUTF16LE_TextDecoder");
+let _utf16BE_TextDecoder;
+function getUTF16BE_TextDecoder() {
+  if (!_utf16BE_TextDecoder) {
+    _utf16BE_TextDecoder = new TextDecoder("UTF-16BE");
+  }
+  return _utf16BE_TextDecoder;
+}
+__name(getUTF16BE_TextDecoder, "getUTF16BE_TextDecoder");
+let _platformTextDecoder;
+function getPlatformTextDecoder() {
+  if (!_platformTextDecoder) {
+    _platformTextDecoder = platform.isLittleEndian() ? getUTF16LE_TextDecoder() : getUTF16BE_TextDecoder();
+  }
+  return _platformTextDecoder;
+}
+__name(getPlatformTextDecoder, "getPlatformTextDecoder");
+function decodeUTF16LE(source, offset, len) {
+  const view = new Uint16Array(source.buffer, offset, len);
+  if (len > 0 && (view[0] === 65279 || view[0] === 65534)) {
+    return compatDecodeUTF16LE(source, offset, len);
+  }
+  return getUTF16LE_TextDecoder().decode(view);
+}
+__name(decodeUTF16LE, "decodeUTF16LE");
+function compatDecodeUTF16LE(source, offset, len) {
+  const result = [];
+  let resultLen = 0;
+  for (let i = 0; i < len; i++) {
+    const charCode = buffer.readUInt16LE(source, offset);
+    offset += 2;
+    result[resultLen++] = String.fromCharCode(charCode);
+  }
+  return result.join("");
+}
+__name(compatDecodeUTF16LE, "compatDecodeUTF16LE");
+class StringBuilder {
+  static {
+    __name(this, "StringBuilder");
+  }
+  constructor(capacity) {
+    this._capacity = capacity | 0;
+    this._buffer = new Uint16Array(this._capacity);
+    this._completedStrings = null;
+    this._bufferLength = 0;
+  }
+  reset() {
+    this._completedStrings = null;
+    this._bufferLength = 0;
+  }
+  build() {
+    if (this._completedStrings !== null) {
+      this._flushBuffer();
+      return this._completedStrings.join("");
+    }
+    return this._buildBuffer();
+  }
+  _buildBuffer() {
+    if (this._bufferLength === 0) {
+      return "";
+    }
+    const view = new Uint16Array(this._buffer.buffer, 0, this._bufferLength);
+    return getPlatformTextDecoder().decode(view);
+  }
+  _flushBuffer() {
+    const bufferString = this._buildBuffer();
+    this._bufferLength = 0;
+    if (this._completedStrings === null) {
+      this._completedStrings = [bufferString];
+    } else {
+      this._completedStrings[this._completedStrings.length] = bufferString;
+    }
+  }
+  /**
+   * Append a char code (<2^16)
+   */
+  appendCharCode(charCode) {
+    const remainingSpace = this._capacity - this._bufferLength;
+    if (remainingSpace <= 1) {
+      if (remainingSpace === 0 || strings.isHighSurrogate(charCode)) {
+        this._flushBuffer();
+      }
+    }
+    this._buffer[this._bufferLength++] = charCode;
+  }
+  /**
+   * Append an ASCII char code (<2^8)
+   */
+  appendASCIICharCode(charCode) {
+    if (this._bufferLength === this._capacity) {
+      this._flushBuffer();
+    }
+    this._buffer[this._bufferLength++] = charCode;
+  }
+  appendString(str) {
+    const strLen = str.length;
+    if (this._bufferLength + strLen >= this._capacity) {
+      this._flushBuffer();
+      this._completedStrings[this._completedStrings.length] = str;
+      return;
+    }
+    for (let i = 0; i < strLen; i++) {
+      this._buffer[this._bufferLength++] = str.charCodeAt(i);
+    }
+  }
+}
+export {
+  StringBuilder,
+  decodeUTF16LE,
+  getPlatformTextDecoder
+};
+//# sourceMappingURL=stringBuilder.js.map

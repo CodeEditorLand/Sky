@@ -1,1 +1,82 @@
-import{$m as u}from"../../../../../base/common/platform.js";import{$1c as S,$Yc as m}from"../../../../../base/common/types.js";import{localize as n,localize2 as g}from"../../../../../nls.js";import{$OM as b}from"../../../../../platform/quickinput/common/quickInput.js";import{$brc as f}from"../../../terminal/browser/terminalActions.js";var c;function I(n){return m(n)?n:void 0}(c||(c={})).SendSignal="workbench.action.terminal.sendSignal";const s=g(12142,"Send Signal");f({id:"workbench.action.terminal.sendSignal",title:s,f1:!u,metadata:{description:s.value,args:[{name:"args",schema:{type:"object",required:["signal"],properties:{signal:{description:n(12128,null),type:"string"}}}}]},run:async(l,e,i)=>{const a=e.get(b),t=l.service.activeInstance;if(!t)return;let r=S(i)&&"signal"in i?I(i.signal):void 0;if(!r){const l=[{label:"SIGINT",description:n(12129,null)},{label:"SIGTERM",description:n(12130,null)},{label:"SIGKILL",description:n(12131,null)},{label:"SIGSTOP",description:n(12132,null)},{label:"SIGCONT",description:n(12133,null)},{label:"SIGHUP",description:n(12134,null)},{label:"SIGQUIT",description:n(12135,null)},{label:"SIGUSR1",description:n(12136,null)},{label:"SIGUSR2",description:n(12137,null)},{type:"separator"},{label:n(12138,null)}],e=await a.pick(l,{placeHolder:n(12139,null)});if(!e)return;if(e.label===n(12140,null)){const l=await a.input({prompt:n(12141,null)});if(!l)return;r=l}else r=e.label}await t.sendSignal(r)}});export{c as TerminalSendSignalCommandId};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { isWindows } from "../../../../../base/common/platform.js";
+import { isObject, isString } from "../../../../../base/common/types.js";
+import { localize, localize2 } from "../../../../../nls.js";
+import { IQuickInputService } from "../../../../../platform/quickinput/common/quickInput.js";
+import { registerTerminalAction } from "../../../terminal/browser/terminalActions.js";
+var TerminalSendSignalCommandId;
+(function(TerminalSendSignalCommandId2) {
+  TerminalSendSignalCommandId2["SendSignal"] = "workbench.action.terminal.sendSignal";
+})(TerminalSendSignalCommandId || (TerminalSendSignalCommandId = {}));
+function toOptionalString(obj) {
+  return isString(obj) ? obj : void 0;
+}
+__name(toOptionalString, "toOptionalString");
+const sendSignalString = localize2("sendSignal", "Send Signal");
+registerTerminalAction({
+  id: "workbench.action.terminal.sendSignal",
+  title: sendSignalString,
+  f1: !isWindows,
+  metadata: {
+    description: sendSignalString.value,
+    args: [{
+      name: "args",
+      schema: {
+        type: "object",
+        required: ["signal"],
+        properties: {
+          signal: {
+            description: localize("sendSignal.signal.desc", "The signal to send to the terminal process (e.g., 'SIGTERM', 'SIGINT', 'SIGKILL')"),
+            type: "string"
+          }
+        }
+      }
+    }]
+  },
+  run: /* @__PURE__ */ __name(async (c, accessor, args) => {
+    const quickInputService = accessor.get(IQuickInputService);
+    const instance = c.service.activeInstance;
+    if (!instance) {
+      return;
+    }
+    let signal = isObject(args) && "signal" in args ? toOptionalString(args.signal) : void 0;
+    if (!signal) {
+      const signalOptions = [
+        { label: "SIGINT", description: localize("SIGINT", "Interrupt process (Ctrl+C)") },
+        { label: "SIGTERM", description: localize("SIGTERM", "Terminate process gracefully") },
+        { label: "SIGKILL", description: localize("SIGKILL", "Force kill process") },
+        { label: "SIGSTOP", description: localize("SIGSTOP", "Stop process") },
+        { label: "SIGCONT", description: localize("SIGCONT", "Continue process") },
+        { label: "SIGHUP", description: localize("SIGHUP", "Hangup") },
+        { label: "SIGQUIT", description: localize("SIGQUIT", "Quit process") },
+        { label: "SIGUSR1", description: localize("SIGUSR1", "User-defined signal 1") },
+        { label: "SIGUSR2", description: localize("SIGUSR2", "User-defined signal 2") },
+        { type: "separator" },
+        { label: localize("manualSignal", "Manually enter signal") }
+      ];
+      const selected = await quickInputService.pick(signalOptions, {
+        placeHolder: localize("selectSignal", "Select signal to send to terminal process")
+      });
+      if (!selected) {
+        return;
+      }
+      if (selected.label === localize("manualSignal", "Manually enter signal")) {
+        const inputSignal = await quickInputService.input({
+          prompt: localize("enterSignal", "Enter signal name (e.g., SIGTERM, SIGKILL)")
+        });
+        if (!inputSignal) {
+          return;
+        }
+        signal = inputSignal;
+      } else {
+        signal = selected.label;
+      }
+    }
+    await instance.sendSignal(signal);
+  }, "run")
+});
+export {
+  TerminalSendSignalCommandId
+};
+//# sourceMappingURL=terminal.sendSignal.contribution.js.map

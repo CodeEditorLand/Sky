@@ -1,1 +1,442 @@
-import{$df as S}from"../../../base/common/event.js";import{$ud as c}from"../../../base/common/lifecycle.js";import{TextEditorCursorStyle as k,cursorStyleToString as m}from"../../../editor/common/config/editorOptions.js";import{$cC as u}from"../../../editor/common/core/range.js";import{$RC as p}from"../../../editor/common/core/selection.js";import{$9jb as g}from"../../../editor/contrib/snippet/browser/snippetController2.js";import{TextEditorRevealType as h}from"../common/extHost.protocol.js";import{$Sb as f}from"../../../base/common/arrays.js";import{$_gb as b}from"../../../editor/contrib/editorState/browser/editorState.js";import{$whb as y}from"../../../editor/contrib/snippet/browser/snippetParser.js";class o{static readFromEditor(e,t,i){const s=o.c(e,i),n=o.d(e,t,i),r=o.f(e,i);return new o(s,n,r)}static c(e,t){let i=null;return t&&(i=t.getSelections()),!i&&e&&(i=e.selections),i||(i=[new p(1,1,1,1)]),i}static d(e,t,i){if(t.isDisposed()){if(e)return e.options;throw new Error("No valid properties")}let s,n;if(i){const l=i.getOptions(),a=l.get(72);s=l.get(31),n=a.renderType}else e?(s=e.options.cursorStyle,n=e.options.lineNumbers):(s=k.Line,n=1);const r=t.getOptions();return{insertSpaces:r.insertSpaces,tabSize:r.tabSize,indentSize:r.indentSize,originalIndentSize:r.originalIndentSize,cursorStyle:s,lineNumbers:n}}static f(e,t){return t?t.getVisibleRanges():[]}constructor(e,t,i){this.selections=e,this.options=t,this.visibleRanges=i}generateDelta(e,t){const i={options:null,selections:null,visibleRanges:null};return(!e||!o.g(e.selections,this.selections))&&(i.selections={selections:this.selections,source:t??void 0}),(!e||!o.j(e.options,this.options))&&(i.options=this.options),(!e||!o.h(e.visibleRanges,this.visibleRanges))&&(i.visibleRanges=this.visibleRanges),i.selections||i.options||i.visibleRanges?i:null}static g(e,t){return f(e,t,(i,s)=>i.equalsSelection(s))}static h(e,t){return f(e,t,(i,s)=>i.equalsRange(s))}static j(e,t){return e&&!t||!e&&t?!1:!e&&!t?!0:e.tabSize===t.tabSize&&e.indentSize===t.indentSize&&e.insertSpaces===t.insertSpaces&&e.cursorStyle===t.cursorStyle&&e.lineNumbers===t.lineNumbers}}class M{constructor(e,t,i,s,n,r,l){this.j=new c,this.m=new c,this.c=e,this.d=t,this.k=null,this.n=null,this.l=s,this.f=n,this.g=r,this.h=l,this.o=new S,this.j.add(this.d.onDidChangeOptions(a=>{this.p(null)})),this.setCodeEditor(i),this.p(null)}dispose(){this.j.dispose(),this.k=null,this.m.dispose()}p(e){this.q(o.readFromEditor(this.n,this.d,this.k),e)}q(e,t){const i=e.generateDelta(this.n,t);this.n=e,i&&this.o.fire(i)}getId(){return this.c}getModel(){return this.d}getCodeEditor(){return this.k}hasCodeEditor(e){return this.k===e}setCodeEditor(e){if(!this.hasCodeEditor(e)&&(this.m.clear(),this.k=e,this.k)){this.m.add(this.k.onDidChangeModel(()=>{this.setCodeEditor(null)})),this.m.add(this.k.onDidFocusEditorWidget(()=>{this.l.onGainedFocus()})),this.m.add(this.k.onDidBlurEditorWidget(()=>{this.l.onLostFocus()}));let t=null;this.m.add(this.f.onIsCaughtUpWithContentChanges(n=>{if(n.toString()===this.d.uri.toString()){const r=t;t=null,this.p(r)}}));const i=()=>this.k&&this.k.getModel()===this.d,s=n=>{this.f.isCaughtUpWithContentChanges(this.d.uri)?(t=null,this.p(n)):t=n};this.m.add(this.k.onDidChangeCursorSelection(n=>{i()&&s(n.source)})),this.m.add(this.k.onDidChangeConfiguration(n=>{i()&&s(null)})),this.m.add(this.k.onDidLayoutChange(()=>{i()&&s(null)})),this.m.add(this.k.onDidScrollChange(()=>{i()&&s(null)})),this.p(null)}}isVisible(){return!!this.k}getProperties(){return this.n}get onPropertiesChanged(){return this.o.event}setSelections(e){if(this.k){this.k.setSelections(e);return}const t=e.map(p.liftSelection);this.q(new o(t,this.n.options,this.n.visibleRanges),null)}r(e){const t=this.g.getCreationOptions(this.d.getLanguageId(),this.d.uri,this.d.isForSimpleWidget);if(e.tabSize==="auto"||e.insertSpaces==="auto"){let s=t.insertSpaces,n=t.tabSize;e.insertSpaces!=="auto"&&typeof e.insertSpaces<"u"&&(s=e.insertSpaces),e.tabSize!=="auto"&&typeof e.tabSize<"u"&&(n=e.tabSize),this.d.detectIndentation(s,n);return}const i={};typeof e.insertSpaces<"u"&&(i.insertSpaces=e.insertSpaces),typeof e.tabSize<"u"&&(i.tabSize=e.tabSize),typeof e.indentSize<"u"&&(i.indentSize=e.indentSize),this.d.updateOptions(i)}setConfiguration(e){if(this.r(e),!!this.k){if(e.cursorStyle){const t=m(e.cursorStyle);this.k.updateOptions({cursorStyle:t})}if(typeof e.lineNumbers<"u"){let t;switch(e.lineNumbers){case 1:t="on";break;case 2:t="relative";break;case 3:t="interval";break;default:t="off"}this.k.updateOptions({lineNumbers:t})}}}setDecorations(e,t){this.k&&this.k.setDecorationsByType("exthost-api",e,t)}setDecorationsFast(e,t){if(!this.k)return;const i=[];for(let s=0,n=Math.floor(t.length/4);s<n;s++)i[s]=new u(t[4*s],t[4*s+1],t[4*s+2],t[4*s+3]);this.k.setDecorationsByTypeFast(e,i)}revealRange(e,t){if(this.k)switch(t){case h.Default:this.k.revealRange(e,0);break;case h.InCenter:this.k.revealRangeInCenter(e,0);break;case h.InCenterIfOutsideViewport:this.k.revealRangeInCenterIfOutsideViewport(e,0);break;case h.AtTop:this.k.revealRangeAtTop(e,0);break;default:break}}isFocused(){return this.k?this.k.hasTextFocus():!1}matches(e){return e?e.getControl()===this.k:!1}applyEdits(e,t,i){if(this.d.getVersionId()!==e||!this.k)return!1;typeof i.setEndOfLine<"u"&&this.d.pushEOL(i.setEndOfLine);const s=t.map(n=>({range:u.lift(n.range),text:n.text,forceMoveMarkers:n.forceMoveMarkers}));return i.undoStopBefore&&this.k.pushUndoStop(),this.k.executeEdits("MainThreadTextEditor",s),i.undoStopAfter&&this.k.pushUndoStop(),!0}async insertSnippet(e,t,i,s){if(!this.k||!this.k.hasModel())return!1;let n;if(y.guessNeedsClipboard(t)){const d=new b(this.k,5);if(n=await this.h.readText(),!d.validate(this.k))return!1}if(this.k.getModel().getVersionId()!==e)return!1;const l=g.get(this.k);if(!l)return!1;this.k.focus();const a=i.map(d=>({range:u.lift(d),template:t}));return l.apply(a,{overwriteBefore:0,overwriteAfter:0,undoStopBefore:s.undoStopBefore,undoStopAfter:s.undoStopAfter,adjustWhitespace:!s.keepWhitespace,clipboardText:n}),!0}}export{o as $SWb,M as $TWb};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { Emitter } from "../../../base/common/event.js";
+import { DisposableStore } from "../../../base/common/lifecycle.js";
+import { TextEditorCursorStyle, cursorStyleToString } from "../../../editor/common/config/editorOptions.js";
+import { Range } from "../../../editor/common/core/range.js";
+import { Selection } from "../../../editor/common/core/selection.js";
+import { SnippetController2 } from "../../../editor/contrib/snippet/browser/snippetController2.js";
+import { TextEditorRevealType } from "../common/extHost.protocol.js";
+import { equals } from "../../../base/common/arrays.js";
+import { EditorState } from "../../../editor/contrib/editorState/browser/editorState.js";
+import { SnippetParser } from "../../../editor/contrib/snippet/browser/snippetParser.js";
+class MainThreadTextEditorProperties {
+  static {
+    __name(this, "MainThreadTextEditorProperties");
+  }
+  static readFromEditor(previousProperties, model, codeEditor) {
+    const selections = MainThreadTextEditorProperties._readSelectionsFromCodeEditor(previousProperties, codeEditor);
+    const options = MainThreadTextEditorProperties._readOptionsFromCodeEditor(previousProperties, model, codeEditor);
+    const visibleRanges = MainThreadTextEditorProperties._readVisibleRangesFromCodeEditor(previousProperties, codeEditor);
+    return new MainThreadTextEditorProperties(selections, options, visibleRanges);
+  }
+  static _readSelectionsFromCodeEditor(previousProperties, codeEditor) {
+    let result = null;
+    if (codeEditor) {
+      result = codeEditor.getSelections();
+    }
+    if (!result && previousProperties) {
+      result = previousProperties.selections;
+    }
+    if (!result) {
+      result = [new Selection(1, 1, 1, 1)];
+    }
+    return result;
+  }
+  static _readOptionsFromCodeEditor(previousProperties, model, codeEditor) {
+    if (model.isDisposed()) {
+      if (previousProperties) {
+        return previousProperties.options;
+      } else {
+        throw new Error("No valid properties");
+      }
+    }
+    let cursorStyle;
+    let lineNumbers;
+    if (codeEditor) {
+      const options = codeEditor.getOptions();
+      const lineNumbersOpts = options.get(
+        72
+        /* EditorOption.lineNumbers */
+      );
+      cursorStyle = options.get(
+        31
+        /* EditorOption.cursorStyle */
+      );
+      lineNumbers = lineNumbersOpts.renderType;
+    } else if (previousProperties) {
+      cursorStyle = previousProperties.options.cursorStyle;
+      lineNumbers = previousProperties.options.lineNumbers;
+    } else {
+      cursorStyle = TextEditorCursorStyle.Line;
+      lineNumbers = 1;
+    }
+    const modelOptions = model.getOptions();
+    return {
+      insertSpaces: modelOptions.insertSpaces,
+      tabSize: modelOptions.tabSize,
+      indentSize: modelOptions.indentSize,
+      originalIndentSize: modelOptions.originalIndentSize,
+      cursorStyle,
+      lineNumbers
+    };
+  }
+  static _readVisibleRangesFromCodeEditor(previousProperties, codeEditor) {
+    if (codeEditor) {
+      return codeEditor.getVisibleRanges();
+    }
+    return [];
+  }
+  constructor(selections, options, visibleRanges) {
+    this.selections = selections;
+    this.options = options;
+    this.visibleRanges = visibleRanges;
+  }
+  generateDelta(oldProps, selectionChangeSource) {
+    const delta = {
+      options: null,
+      selections: null,
+      visibleRanges: null
+    };
+    if (!oldProps || !MainThreadTextEditorProperties._selectionsEqual(oldProps.selections, this.selections)) {
+      delta.selections = {
+        selections: this.selections,
+        source: selectionChangeSource ?? void 0
+      };
+    }
+    if (!oldProps || !MainThreadTextEditorProperties._optionsEqual(oldProps.options, this.options)) {
+      delta.options = this.options;
+    }
+    if (!oldProps || !MainThreadTextEditorProperties._rangesEqual(oldProps.visibleRanges, this.visibleRanges)) {
+      delta.visibleRanges = this.visibleRanges;
+    }
+    if (delta.selections || delta.options || delta.visibleRanges) {
+      return delta;
+    }
+    return null;
+  }
+  static _selectionsEqual(a, b) {
+    return equals(a, b, (aValue, bValue) => aValue.equalsSelection(bValue));
+  }
+  static _rangesEqual(a, b) {
+    return equals(a, b, (aValue, bValue) => aValue.equalsRange(bValue));
+  }
+  static _optionsEqual(a, b) {
+    if (a && !b || !a && b) {
+      return false;
+    }
+    if (!a && !b) {
+      return true;
+    }
+    return a.tabSize === b.tabSize && a.indentSize === b.indentSize && a.insertSpaces === b.insertSpaces && a.cursorStyle === b.cursorStyle && a.lineNumbers === b.lineNumbers;
+  }
+}
+class MainThreadTextEditor {
+  static {
+    __name(this, "MainThreadTextEditor");
+  }
+  constructor(id, model, codeEditor, focusTracker, mainThreadDocuments, modelService, clipboardService) {
+    this._modelListeners = new DisposableStore();
+    this._codeEditorListeners = new DisposableStore();
+    this._id = id;
+    this._model = model;
+    this._codeEditor = null;
+    this._properties = null;
+    this._focusTracker = focusTracker;
+    this._mainThreadDocuments = mainThreadDocuments;
+    this._modelService = modelService;
+    this._clipboardService = clipboardService;
+    this._onPropertiesChanged = new Emitter();
+    this._modelListeners.add(this._model.onDidChangeOptions((e) => {
+      this._updatePropertiesNow(null);
+    }));
+    this.setCodeEditor(codeEditor);
+    this._updatePropertiesNow(null);
+  }
+  dispose() {
+    this._modelListeners.dispose();
+    this._codeEditor = null;
+    this._codeEditorListeners.dispose();
+  }
+  _updatePropertiesNow(selectionChangeSource) {
+    this._setProperties(MainThreadTextEditorProperties.readFromEditor(this._properties, this._model, this._codeEditor), selectionChangeSource);
+  }
+  _setProperties(newProperties, selectionChangeSource) {
+    const delta = newProperties.generateDelta(this._properties, selectionChangeSource);
+    this._properties = newProperties;
+    if (delta) {
+      this._onPropertiesChanged.fire(delta);
+    }
+  }
+  getId() {
+    return this._id;
+  }
+  getModel() {
+    return this._model;
+  }
+  getCodeEditor() {
+    return this._codeEditor;
+  }
+  hasCodeEditor(codeEditor) {
+    return this._codeEditor === codeEditor;
+  }
+  setCodeEditor(codeEditor) {
+    if (this.hasCodeEditor(codeEditor)) {
+      return;
+    }
+    this._codeEditorListeners.clear();
+    this._codeEditor = codeEditor;
+    if (this._codeEditor) {
+      this._codeEditorListeners.add(this._codeEditor.onDidChangeModel(() => {
+        this.setCodeEditor(null);
+      }));
+      this._codeEditorListeners.add(this._codeEditor.onDidFocusEditorWidget(() => {
+        this._focusTracker.onGainedFocus();
+      }));
+      this._codeEditorListeners.add(this._codeEditor.onDidBlurEditorWidget(() => {
+        this._focusTracker.onLostFocus();
+      }));
+      let nextSelectionChangeSource = null;
+      this._codeEditorListeners.add(this._mainThreadDocuments.onIsCaughtUpWithContentChanges((uri) => {
+        if (uri.toString() === this._model.uri.toString()) {
+          const selectionChangeSource = nextSelectionChangeSource;
+          nextSelectionChangeSource = null;
+          this._updatePropertiesNow(selectionChangeSource);
+        }
+      }));
+      const isValidCodeEditor = /* @__PURE__ */ __name(() => {
+        return this._codeEditor && this._codeEditor.getModel() === this._model;
+      }, "isValidCodeEditor");
+      const updateProperties = /* @__PURE__ */ __name((selectionChangeSource) => {
+        if (this._mainThreadDocuments.isCaughtUpWithContentChanges(this._model.uri)) {
+          nextSelectionChangeSource = null;
+          this._updatePropertiesNow(selectionChangeSource);
+        } else {
+          nextSelectionChangeSource = selectionChangeSource;
+        }
+      }, "updateProperties");
+      this._codeEditorListeners.add(this._codeEditor.onDidChangeCursorSelection((e) => {
+        if (!isValidCodeEditor()) {
+          return;
+        }
+        updateProperties(e.source);
+      }));
+      this._codeEditorListeners.add(this._codeEditor.onDidChangeConfiguration((e) => {
+        if (!isValidCodeEditor()) {
+          return;
+        }
+        updateProperties(null);
+      }));
+      this._codeEditorListeners.add(this._codeEditor.onDidLayoutChange(() => {
+        if (!isValidCodeEditor()) {
+          return;
+        }
+        updateProperties(null);
+      }));
+      this._codeEditorListeners.add(this._codeEditor.onDidScrollChange(() => {
+        if (!isValidCodeEditor()) {
+          return;
+        }
+        updateProperties(null);
+      }));
+      this._updatePropertiesNow(null);
+    }
+  }
+  isVisible() {
+    return !!this._codeEditor;
+  }
+  getProperties() {
+    return this._properties;
+  }
+  get onPropertiesChanged() {
+    return this._onPropertiesChanged.event;
+  }
+  setSelections(selections) {
+    if (this._codeEditor) {
+      this._codeEditor.setSelections(selections);
+      return;
+    }
+    const newSelections = selections.map(Selection.liftSelection);
+    this._setProperties(new MainThreadTextEditorProperties(newSelections, this._properties.options, this._properties.visibleRanges), null);
+  }
+  _setIndentConfiguration(newConfiguration) {
+    const creationOpts = this._modelService.getCreationOptions(this._model.getLanguageId(), this._model.uri, this._model.isForSimpleWidget);
+    if (newConfiguration.tabSize === "auto" || newConfiguration.insertSpaces === "auto") {
+      let insertSpaces = creationOpts.insertSpaces;
+      let tabSize = creationOpts.tabSize;
+      if (newConfiguration.insertSpaces !== "auto" && typeof newConfiguration.insertSpaces !== "undefined") {
+        insertSpaces = newConfiguration.insertSpaces;
+      }
+      if (newConfiguration.tabSize !== "auto" && typeof newConfiguration.tabSize !== "undefined") {
+        tabSize = newConfiguration.tabSize;
+      }
+      this._model.detectIndentation(insertSpaces, tabSize);
+      return;
+    }
+    const newOpts = {};
+    if (typeof newConfiguration.insertSpaces !== "undefined") {
+      newOpts.insertSpaces = newConfiguration.insertSpaces;
+    }
+    if (typeof newConfiguration.tabSize !== "undefined") {
+      newOpts.tabSize = newConfiguration.tabSize;
+    }
+    if (typeof newConfiguration.indentSize !== "undefined") {
+      newOpts.indentSize = newConfiguration.indentSize;
+    }
+    this._model.updateOptions(newOpts);
+  }
+  setConfiguration(newConfiguration) {
+    this._setIndentConfiguration(newConfiguration);
+    if (!this._codeEditor) {
+      return;
+    }
+    if (newConfiguration.cursorStyle) {
+      const newCursorStyle = cursorStyleToString(newConfiguration.cursorStyle);
+      this._codeEditor.updateOptions({
+        cursorStyle: newCursorStyle
+      });
+    }
+    if (typeof newConfiguration.lineNumbers !== "undefined") {
+      let lineNumbers;
+      switch (newConfiguration.lineNumbers) {
+        case 1:
+          lineNumbers = "on";
+          break;
+        case 2:
+          lineNumbers = "relative";
+          break;
+        case 3:
+          lineNumbers = "interval";
+          break;
+        default:
+          lineNumbers = "off";
+      }
+      this._codeEditor.updateOptions({
+        lineNumbers
+      });
+    }
+  }
+  setDecorations(key, ranges) {
+    if (!this._codeEditor) {
+      return;
+    }
+    this._codeEditor.setDecorationsByType("exthost-api", key, ranges);
+  }
+  setDecorationsFast(key, _ranges) {
+    if (!this._codeEditor) {
+      return;
+    }
+    const ranges = [];
+    for (let i = 0, len = Math.floor(_ranges.length / 4); i < len; i++) {
+      ranges[i] = new Range(_ranges[4 * i], _ranges[4 * i + 1], _ranges[4 * i + 2], _ranges[4 * i + 3]);
+    }
+    this._codeEditor.setDecorationsByTypeFast(key, ranges);
+  }
+  revealRange(range, revealType) {
+    if (!this._codeEditor) {
+      return;
+    }
+    switch (revealType) {
+      case TextEditorRevealType.Default:
+        this._codeEditor.revealRange(
+          range,
+          0
+          /* ScrollType.Smooth */
+        );
+        break;
+      case TextEditorRevealType.InCenter:
+        this._codeEditor.revealRangeInCenter(
+          range,
+          0
+          /* ScrollType.Smooth */
+        );
+        break;
+      case TextEditorRevealType.InCenterIfOutsideViewport:
+        this._codeEditor.revealRangeInCenterIfOutsideViewport(
+          range,
+          0
+          /* ScrollType.Smooth */
+        );
+        break;
+      case TextEditorRevealType.AtTop:
+        this._codeEditor.revealRangeAtTop(
+          range,
+          0
+          /* ScrollType.Smooth */
+        );
+        break;
+      default:
+        console.warn(`Unknown revealType: ${revealType}`);
+        break;
+    }
+  }
+  isFocused() {
+    if (this._codeEditor) {
+      return this._codeEditor.hasTextFocus();
+    }
+    return false;
+  }
+  matches(editor) {
+    if (!editor) {
+      return false;
+    }
+    return editor.getControl() === this._codeEditor;
+  }
+  applyEdits(versionIdCheck, edits, opts) {
+    if (this._model.getVersionId() !== versionIdCheck) {
+      return false;
+    }
+    if (!this._codeEditor) {
+      return false;
+    }
+    if (typeof opts.setEndOfLine !== "undefined") {
+      this._model.pushEOL(opts.setEndOfLine);
+    }
+    const transformedEdits = edits.map((edit) => {
+      return {
+        range: Range.lift(edit.range),
+        text: edit.text,
+        forceMoveMarkers: edit.forceMoveMarkers
+      };
+    });
+    if (opts.undoStopBefore) {
+      this._codeEditor.pushUndoStop();
+    }
+    this._codeEditor.executeEdits("MainThreadTextEditor", transformedEdits);
+    if (opts.undoStopAfter) {
+      this._codeEditor.pushUndoStop();
+    }
+    return true;
+  }
+  async insertSnippet(modelVersionId, template, ranges, opts) {
+    if (!this._codeEditor || !this._codeEditor.hasModel()) {
+      return false;
+    }
+    let clipboardText;
+    const needsTemplate = SnippetParser.guessNeedsClipboard(template);
+    if (needsTemplate) {
+      const state = new EditorState(
+        this._codeEditor,
+        1 | 4
+        /* CodeEditorStateFlag.Position */
+      );
+      clipboardText = await this._clipboardService.readText();
+      if (!state.validate(this._codeEditor)) {
+        return false;
+      }
+    }
+    if (this._codeEditor.getModel().getVersionId() !== modelVersionId) {
+      return false;
+    }
+    const snippetController = SnippetController2.get(this._codeEditor);
+    if (!snippetController) {
+      return false;
+    }
+    this._codeEditor.focus();
+    const edits = ranges.map((range) => ({ range: Range.lift(range), template }));
+    snippetController.apply(edits, {
+      overwriteBefore: 0,
+      overwriteAfter: 0,
+      undoStopBefore: opts.undoStopBefore,
+      undoStopAfter: opts.undoStopAfter,
+      adjustWhitespace: !opts.keepWhitespace,
+      clipboardText
+    });
+    return true;
+  }
+}
+export {
+  MainThreadTextEditor,
+  MainThreadTextEditorProperties
+};
+//# sourceMappingURL=mainThreadEditor.js.map

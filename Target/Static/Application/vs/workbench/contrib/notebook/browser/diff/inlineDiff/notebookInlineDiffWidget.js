@@ -1,1 +1,105 @@
-import*as c from"../../../../../../base/browser/dom.js";import{$vd as b}from"../../../../../../base/common/lifecycle.js";import{EditorExtensionsRegistry as m}from"../../../../../../editor/browser/editorExtensions.js";import{$dI as a}from"../../../../../../platform/actions/common/actions.js";import{$mj as p}from"../../../../../../platform/instantiation/common/instantiation.js";import{$g$b as v}from"./notebookInlineDiff.js";import{NotebookEditorExtensionsRegistry as g}from"../../notebookEditorExtensions.js";import{$QVb as C}from"../../services/notebookEditorService.js";var f=function(l,t,e,i){var r=arguments.length,o=r<3?t:i===null?i=Object.getOwnPropertyDescriptor(t,e):i,s;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")o=Reflect.decorate(l,t,e,i);else for(var n=l.length-1;n>=0;n--)(s=l[n])&&(o=(r<3?s(o):r>3?s(t,e,o):s(t,e))||o);return r>3&&o&&Object.defineProperty(t,e,o),o},h=function(l,t){return function(e,i){t(e,i,l)}};let u=class extends b{get editorWidget(){return this.a.value}constructor(t,e,i,r,o,s,n){super(),this.f=t,this.g=e,this.h=i,this.j=r,this.m=o,this.n=s,this.r=n,this.a={value:void 0}}async show(t,e,i,r){this.a.value||this.s(t,this.g,this.f),this.m&&this.a.value?.layout(this.m,this.f,this.b),e&&(await this.a.value?.setOptions({...r}),this.a.value?.notebookOptions.previousModelToCompare.set(i,void 0),await this.a.value.setModel(e,r?.viewState))}hide(){this.a.value&&(this.a.value.notebookOptions.previousModelToCompare.set(void 0,void 0),this.a.value.onWillHide())}setLayout(t,e){this.m=t,this.b=e}s(t,e,i){const r=g.getSomeEditorContributions([v.ID]),o={notebookToolbar:a.NotebookToolbar,cellTitleToolbar:a.NotebookCellTitle,cellDeleteToolbar:a.NotebookCellDelete,cellInsertToolbar:a.NotebookCellBetween,cellTopInsertToolbar:a.NotebookCellListTop,cellExecuteToolbar:a.NotebookCellExecute,cellExecutePrimary:void 0},s=["editor.contrib.review","editor.contrib.floatingClickMenu","editor.contrib.dirtydiff","editor.contrib.testingOutputPeek","editor.contrib.testingDecorations","store.contrib.stickyScrollController","editor.contrib.findController","editor.contrib.emptyTextEditorHint"],n=m.getEditorContributions().filter(d=>s.indexOf(d.id)===-1);this.a=this.n.invokeFunction(this.r.retrieveWidget,e,t,{contributions:r,menuIds:o,cellEditorContributions:n,options:this.j},this.m,this.h),this.f&&this.a.value.getDomNode()&&(this.f.setAttribute("aria-flowto",this.a.value.getDomNode().id||""),c.$d6(this.a.value.getDomNode(),this.f))}dispose(){super.dispose(),this.a.value&&this.a.value.dispose()}};u=f([h(5,p),h(6,C)],u);export{u as $h$b};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import * as DOM from "../../../../../../base/browser/dom.js";
+import { Disposable } from "../../../../../../base/common/lifecycle.js";
+import { EditorExtensionsRegistry } from "../../../../../../editor/browser/editorExtensions.js";
+import { MenuId } from "../../../../../../platform/actions/common/actions.js";
+import { IInstantiationService } from "../../../../../../platform/instantiation/common/instantiation.js";
+import { NotebookInlineDiffDecorationContribution } from "./notebookInlineDiff.js";
+import { NotebookEditorExtensionsRegistry } from "../../notebookEditorExtensions.js";
+import { INotebookEditorService } from "../../services/notebookEditorService.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+let NotebookInlineDiffWidget = class NotebookInlineDiffWidget2 extends Disposable {
+  static {
+    __name(this, "NotebookInlineDiffWidget");
+  }
+  get editorWidget() {
+    return this.widget.value;
+  }
+  constructor(rootElement, groupId, window, options, dimension, instantiationService, widgetService) {
+    super();
+    this.rootElement = rootElement;
+    this.groupId = groupId;
+    this.window = window;
+    this.options = options;
+    this.dimension = dimension;
+    this.instantiationService = instantiationService;
+    this.widgetService = widgetService;
+    this.widget = { value: void 0 };
+  }
+  async show(input, model, previousModel, options) {
+    if (!this.widget.value) {
+      this.createNotebookWidget(input, this.groupId, this.rootElement);
+    }
+    if (this.dimension) {
+      this.widget.value?.layout(this.dimension, this.rootElement, this.position);
+    }
+    if (model) {
+      await this.widget.value?.setOptions({ ...options });
+      this.widget.value?.notebookOptions.previousModelToCompare.set(previousModel, void 0);
+      await this.widget.value.setModel(model, options?.viewState);
+    }
+  }
+  hide() {
+    if (this.widget.value) {
+      this.widget.value.notebookOptions.previousModelToCompare.set(void 0, void 0);
+      this.widget.value.onWillHide();
+    }
+  }
+  setLayout(dimension, position) {
+    this.dimension = dimension;
+    this.position = position;
+  }
+  createNotebookWidget(input, groupId, rootElement) {
+    const contributions = NotebookEditorExtensionsRegistry.getSomeEditorContributions([NotebookInlineDiffDecorationContribution.ID]);
+    const menuIds = {
+      notebookToolbar: MenuId.NotebookToolbar,
+      cellTitleToolbar: MenuId.NotebookCellTitle,
+      cellDeleteToolbar: MenuId.NotebookCellDelete,
+      cellInsertToolbar: MenuId.NotebookCellBetween,
+      cellTopInsertToolbar: MenuId.NotebookCellListTop,
+      cellExecuteToolbar: MenuId.NotebookCellExecute,
+      cellExecutePrimary: void 0
+    };
+    const skipContributions = [
+      "editor.contrib.review",
+      "editor.contrib.floatingClickMenu",
+      "editor.contrib.dirtydiff",
+      "editor.contrib.testingOutputPeek",
+      "editor.contrib.testingDecorations",
+      "store.contrib.stickyScrollController",
+      "editor.contrib.findController",
+      "editor.contrib.emptyTextEditorHint"
+    ];
+    const cellEditorContributions = EditorExtensionsRegistry.getEditorContributions().filter((c) => skipContributions.indexOf(c.id) === -1);
+    this.widget = this.instantiationService.invokeFunction(this.widgetService.retrieveWidget, groupId, input, { contributions, menuIds, cellEditorContributions, options: this.options }, this.dimension, this.window);
+    if (this.rootElement && this.widget.value.getDomNode()) {
+      this.rootElement.setAttribute("aria-flowto", this.widget.value.getDomNode().id || "");
+      DOM.setParentFlowTo(this.widget.value.getDomNode(), this.rootElement);
+    }
+  }
+  dispose() {
+    super.dispose();
+    if (this.widget.value) {
+      this.widget.value.dispose();
+    }
+  }
+};
+NotebookInlineDiffWidget = __decorate([
+  __param(5, IInstantiationService),
+  __param(6, INotebookEditorService)
+], NotebookInlineDiffWidget);
+export {
+  NotebookInlineDiffWidget
+};
+//# sourceMappingURL=notebookInlineDiffWidget.js.map

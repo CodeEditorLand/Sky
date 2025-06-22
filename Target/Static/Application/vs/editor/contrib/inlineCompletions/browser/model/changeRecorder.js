@@ -1,1 +1,75 @@
-import{$vd as l}from"../../../../../base/common/lifecycle.js";import{autorunWithStore as p}from"../../../../../base/common/observable.js";import{$mj as b}from"../../../../../platform/instantiation/common/instantiation.js";import{$Zdb as g}from"../../../../browser/widget/codeEditor/codeEditorWidget.js";import{$3E as _}from"../../../../common/textModelEditReason.js";import{$Fkb as $}from"../structuredLogger.js";var d=function(a,e,o,r){var i=arguments.length,t=i<3?e:r===null?r=Object.getOwnPropertyDescriptor(e,o):r,n;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")t=Reflect.decorate(a,e,o,r);else for(var s=a.length-1;s>=0;s--)(n=a[s])&&(t=(i<3?n(t):i>3?n(e,o,t):n(e,o))||t);return i>3&&t&&Object.defineProperty(e,o,t),t},m=function(a,e){return function(o,r){e(o,r,a)}};let f=class extends l{constructor(e,o){super(),this.b=e,this.c=o,this.a=this.B(this.c.createInstance($.cast(),"editor.inlineSuggest.logChangeReason.commandId")),this.B(p((r,i)=>{if(!(this.b instanceof g)||!this.a.isEnabled.read(r))return;const t=[];i.add(this.b.onBeforeExecuteEdit(({source:n})=>{n&&t.push(n)})),i.add(this.b.onDidChangeModelContent(n=>{const s=this.b.getModel();if(!s)return;const c=_._getCurrentMetadata();t.length===0&&c.source&&t.push(c.source);for(const u of t){const h={...c,sourceId:"TextModel.setChangeReason",source:u,time:Date.now(),modelUri:s.uri,modelVersion:s.getVersionId()};setTimeout(()=>{this.a.log(h)},0)}t.length=0}))}))}};f=d([m(1,b)],f);export{f as $fpb};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { Disposable } from "../../../../../base/common/lifecycle.js";
+import { autorunWithStore } from "../../../../../base/common/observable.js";
+import { IInstantiationService } from "../../../../../platform/instantiation/common/instantiation.js";
+import { CodeEditorWidget } from "../../../../browser/widget/codeEditor/codeEditorWidget.js";
+import { TextModelEditReason } from "../../../../common/textModelEditReason.js";
+import { StructuredLogger } from "../structuredLogger.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+let TextModelChangeRecorder = class TextModelChangeRecorder2 extends Disposable {
+  static {
+    __name(this, "TextModelChangeRecorder");
+  }
+  constructor(_editor, _instantiationService) {
+    super();
+    this._editor = _editor;
+    this._instantiationService = _instantiationService;
+    this._structuredLogger = this._register(this._instantiationService.createInstance(StructuredLogger.cast(), "editor.inlineSuggest.logChangeReason.commandId"));
+    this._register(autorunWithStore((reader, store) => {
+      if (!(this._editor instanceof CodeEditorWidget)) {
+        return;
+      }
+      if (!this._structuredLogger.isEnabled.read(reader)) {
+        return;
+      }
+      const sources = [];
+      store.add(this._editor.onBeforeExecuteEdit(({ source }) => {
+        if (source) {
+          sources.push(source);
+        }
+      }));
+      store.add(this._editor.onDidChangeModelContent((e) => {
+        const tm = this._editor.getModel();
+        if (!tm) {
+          return;
+        }
+        const metadata = TextModelEditReason._getCurrentMetadata();
+        if (sources.length === 0 && metadata.source) {
+          sources.push(metadata.source);
+        }
+        for (const source of sources) {
+          const data = {
+            ...metadata,
+            sourceId: "TextModel.setChangeReason",
+            source,
+            time: Date.now(),
+            modelUri: tm.uri,
+            modelVersion: tm.getVersionId()
+          };
+          setTimeout(() => {
+            this._structuredLogger.log(data);
+          }, 0);
+        }
+        sources.length = 0;
+      }));
+    }));
+  }
+};
+TextModelChangeRecorder = __decorate([
+  __param(1, IInstantiationService)
+], TextModelChangeRecorder);
+export {
+  TextModelChangeRecorder
+};
+//# sourceMappingURL=changeRecorder.js.map

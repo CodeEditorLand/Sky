@@ -1,1 +1,793 @@
-import{$9Mb as V,$SMb as W,$$Mb as q,$WMb as L,$8Mb as Y,$cNb as X,$bNb as Q}from"../../../../platform/userDataSync/common/userDataSync.js";import{$WB as Z}from"../../../../platform/instantiation/common/extensions.js";import{$L6b as K,$Q6b as tt,$P6b as it,$R6b as st,$W6b as et,$S6b as nt,$X6b as $,$N6b as g,$Y6b as ot,$T6b as rt,$U6b as at,$M6b as v}from"../common/userDataSync.js";import{$vd as P,$ud as D}from"../../../../base/common/lifecycle.js";import{$df as I,Event as d}from"../../../../base/common/event.js";import{$b_ as ht}from"../../authentication/browser/authenticationService.js";import{$cX as ct}from"../../authentication/common/authentication.js";import{$S5b as lt}from"../../../../platform/userDataSync/common/userDataSyncAccount.js";import{$OM as ut}from"../../../../platform/quickinput/common/quickInput.js";import{$Ho as ft}from"../../../../platform/storage/common/storage.js";import{$3n as dt}from"../../../../platform/log/common/log.js";import{$nn as bt}from"../../../../platform/product/common/productService.js";import{$XO as mt}from"../../extensions/common/extensions.js";import{localize as a}from"../../../../nls.js";import{$RI as pt,Severity as yt}from"../../../../platform/notification/common/notification.js";import{$_o as gt,$bp as wt}from"../../../../platform/dialogs/common/dialogs.js";import{$Vn as St}from"../../../../platform/contextkey/common/contextkey.js";import{$WI as $t}from"../../../../platform/progress/common/progress.js";import{URI as p}from"../../../../base/common/uri.js";import{$YM as vt}from"../../../common/views.js";import{$Jwb as Pt}from"../../views/common/viewsService.js";import{$RK as Dt}from"../../lifecycle/common/lifecycle.js";import{$s as w}from"../../../../base/common/platform.js";import{$mj as It}from"../../../../platform/instantiation/common/instantiation.js";import{$36b as Ct}from"../../../../platform/userDataSync/common/userDataSyncStoreService.js";import{$f7b as Ut}from"../../../../platform/userDataSync/common/globalStateSync.js";import{$qb as C}from"../../../../base/common/errors.js";import{$yh as Gt}from"../../../../base/common/async.js";import{$pf as Rt}from"../../../../base/common/cancellation.js";import{$oI as Et}from"../../editor/common/editorService.js";import{$yo as Mt}from"../../../../platform/uriIdentity/common/uriIdentity.js";import{$lK as kt}from"../../../common/editor.js";import{$2$ as Bt}from"../../environment/browser/environmentService.js";import{$J5b as Ht}from"../../userData/browser/userDataInit.js";import{$Y$ as Tt}from"../../../../platform/secrets/common/secrets.js";import{$5j as Ft}from"../../../../platform/files/common/files.js";import{$Df as jt}from"../../../../base/common/strings.js";import{$JMb as Ot}from"../../../../platform/userDataSync/common/userDataSyncMachines.js";import{$Sb as xt}from"../../../../base/common/arrays.js";var J=function(u,t,i,s){var e=arguments.length,n=e<3?t:s===null?s=Object.getOwnPropertyDescriptor(t,i):s,r;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")n=Reflect.decorate(u,t,i,s);else for(var o=u.length-1;o>=0;o--)(r=u[o])&&(n=(e<3?r(n):e>3?r(t,i,n):r(t,i))||n);return e>3&&n&&Object.defineProperty(t,i,n),n},h=function(u,t){return function(i,s){t(i,s,u)}},l;class U{constructor(t,i){this.authenticationProviderId=t,this.f=i}get sessionId(){return this.f.id}get accountName(){return this.f.account.label}get accountId(){return this.f.account.id}get token(){return this.f.idToken||this.f.accessToken}}function At(u){const t=u;return p.isUri(t?.base)&&p.isUri(t?.input1?.uri)&&p.isUri(t?.input2?.uri)&&p.isUri(t?.result)}let S=class extends P{static{l=this}static{this.f="userDataSyncAccount.donotUseWorkbenchSession"}static{this.g="userDataSyncAccountProvider"}static{this.h="userDataSyncAccountPreference"}get enabled(){return!!this.ab.userDataSyncStore}get authenticationProviders(){return this.j}get accountStatus(){return this.n}get current(){return this.t}constructor(t,i,s,e,n,r,o,b,c,f,G,R,E,M,k,B,m,H,T,F,j,O,x,A,N,z,_){super(),this.G=t,this.H=i,this.I=s,this.J=e,this.L=n,this.M=r,this.N=o,this.O=b,this.P=c,this.Q=f,this.R=G,this.S=R,this.U=E,this.W=M,this.X=k,this.Y=B,this.Z=H,this.$=T,this.ab=F,this.bb=j,this.cb=O,this.db=x,this.eb=A,this.fb=N,this.gb=z,this.hb=_,this.j=[],this.n="uninitialized",this.r=this.B(new I),this.onDidChangeAccountStatus=this.r.event,this.s=this.B(new I),this.onDidTurnOnSync=this.s.event,this.F=void 0,this.Db=null,this.Fb=null,this.u=tt.bindTo(m),this.w=it.bindTo(m),this.y=st.bindTo(m),this.D=nt.bindTo(m),this.C=at.bindTo(m),this.z=rt.bindTo(m),this.ab.userDataSyncStore&&(this.w.set(this.G.status),this.B(t.onDidChangeStatus(y=>this.w.set(y))),this.u.set(o.isEnabled()),this.B(o.onDidChangeEnablement(y=>this.u.set(y))),this.kb())}ib(){const t=this.j;return this.j=(this.ab.userDataSyncStore?.authenticationProviders||[]).filter(({id:i})=>this.I.declaredProviders.some(s=>s.id===i)),this.P.trace("Settings Sync: Authentication providers updated",this.j.map(({id:i})=>i)),xt(t,this.j,(i,s)=>i.id===s.id)}jb(t){return this.authenticationProviders.some(({id:i})=>i===t)}async kb(){try{await Promise.all([this.R.whenInstalledExtensionsRegistered(),this.eb.whenInitializationFinished()]),await this.lb()}catch(t){this.S.extensionTestsLocationURI||this.P.error(t)}}async lb(){if(w){const i=await ht(this.U,this.Q);this.Gb===void 0&&i?.id&&(this.S.options?.settingsSyncOptions?.authenticationProvider&&this.S.options.settingsSyncOptions.enabled?this.Gb=i.id:this.Ib&&(this.Gb=i.id),this.Ib=!1)}const t=this.mb("initialize");this.B(this.I.onDidChangeDeclaredProviders(()=>{this.ib()&&t.finally(()=>this.mb("declared authentication providers changed"))})),await t,this.B(d.filter(d.any(this.I.onDidRegisterAuthenticationProvider,this.I.onDidUnregisterAuthenticationProvider),i=>this.jb(i.id))(()=>this.mb("authentication provider change"))),this.B(d.filter(this.J.onTokenFailed,i=>!i)(()=>this.mb("token failure"))),this.B(d.filter(this.I.onDidChangeSessions,i=>this.jb(i.providerId))(({event:i})=>this.Bb(i))),this.B(this.M.onDidChangeValue(-1,l.h,this.q)(()=>this.Cb())),this.B(d.filter(this.J.onTokenFailed,i=>i)(()=>this.Ab())),this.C.set(this.G.conflicts.length>0),this.B(this.G.onDidChangeConflicts(i=>{this.C.set(i.length>0),i.length||this.z.reset(),this.db.editors.filter(s=>(kt(s)?s.original.resource:At(s)?s.input1.uri:void 0)?.scheme!==X?!1:!this.G.conflicts.some(({conflicts:n})=>n.some(({previewResource:r})=>this.H.extUri.isEqual(r,s.resource)))).forEach(s=>s.dispose())}))}async mb(t){this.P.trace(`Settings Sync: Updating due to ${t}`),this.ib(),await this.nb(),this.t&&(this.Eb=this.t.authenticationProviderId),await this.ob(this.t),this.qb(this.t?"available":"unavailable")}async nb(){this.P.trace("Settings Sync: Updating the current account");const t=this.Gb,i=this.Eb;if(t){const s=i?this.authenticationProviders.filter(({id:e})=>e===i):this.authenticationProviders;for(const{id:e,scopes:n}of s){const r=await this.I.getSessions(e,n)||[];for(const o of r)if(o.id===t){this.t=new U(e,o),this.P.trace("Settings Sync: Updated the current account",this.t.accountName);return}}}this.t=void 0}async ob(t){let i;if(t)try{this.P.trace("Settings Sync: Updating the token for the account",t.accountName);const s=t.token;this.pb("Settings Sync: Token updated for the account",t.accountName),i={token:s,authenticationProviderId:t.authenticationProviderId}}catch(s){this.P.error(s)}await this.J.updateAccount(i)}pb(t,...i){this.S.isBuilt?this.P.info(t,...i):this.P.trace(t,...i)}qb(t){if(this.P.trace(`Settings Sync: Updating the account status to ${t}`),this.n!==t){const i=this.n;this.pb(`Settings Sync: Account status changed from ${i} to ${t}`),this.n=t,this.y.set(t),this.r.fire(t)}}async turnOn(){if(!this.authenticationProviders.length)throw new Error(a(14755,null));if(this.N.isEnabled())return;if(this.G.status!=="idle")throw new Error("Cannot turn on sync while syncing");if(!await this.vb())throw new C;if(this.accountStatus!=="available")throw new Error(a(14756,null));const i=this.F=new Rt,s=w?P.None:this.bb.onBeforeShutdown(e=>e.veto((async()=>{const{confirmed:n}=await this.Y.confirm({type:"warning",message:a(14757,null),title:a(14758,null),primaryButton:a(14759,null),cancelButton:a(14760,null)});return n&&i.cancel(),!n})(),"veto.settingsSync"));try{await this.rb(i.token)}finally{s.dispose(),this.F=void 0}await this.O.turnOn(),this.ab.userDataSyncStore?.canSwitch&&await this.synchroniseUserDataSyncStoreType(),this.Eb=this.current?.authenticationProviderId,this.S.options?.settingsSyncOptions?.enablementHandler&&this.Eb&&this.S.options.settingsSyncOptions.enablementHandler(!0,this.Eb),this.W.info(a(14761,null,g.value)),this.s.fire()}async turnoff(t){this.N.isEnabled()&&(await this.O.turnOff(t),this.S.options?.settingsSyncOptions?.enablementHandler&&this.Eb&&this.S.options.settingsSyncOptions.enablementHandler(!1,this.Eb)),this.F&&this.F.cancel()}async synchroniseUserDataSyncStoreType(){if(!this.J.account)throw new Error("Cannot update because you are signed out from settings sync. Please sign in and try again.");if(!w||!this.ab.userDataSyncStore)return;const t=this.ab.userDataSyncStore.type==="insiders"?this.ab.userDataSyncStore.stableUrl:this.ab.userDataSyncStore.insidersUrl,i=this.cb.createInstance(Ct,t);i.setAuthToken(this.J.account.token,this.J.account.authenticationProviderId),await this.cb.createInstance(Ut,i).sync(this.ab.userDataSyncStore.type)}syncNow(){return this.O.triggerSync(["Sync Now"],{immediately:!0,disableCache:!0})}async rb(t){const i=new D,s=await this.G.createManualSyncTask();try{await this.X.withProgress({location:10,title:g.value,command:et,delay:500},async e=>{e.report({message:a(14762,null)}),i.add(this.G.onDidChangeStatus(n=>{n==="hasConflicts"?e.report({message:a(14763,null)}):e.report({message:a(14764,null)})})),await s.merge(),this.G.status==="hasConflicts"&&await this.sb(t),await s.apply()})}catch(e){throw await s.stop(),e}finally{i.dispose()}}async sb(t){const i=this.G.conflicts,s=a(14765,null);let e="";for(let r=0;r<i.length;r++)r===i.length-1&&r!==0?e+=s:r!==0&&(e+=", "),e+=v(i[r].syncResource);const n=i.length===1?v(i[0].syncResource):void 0;await this.Y.prompt({type:yt.Warning,message:a(14766,null,e),detail:a(14767,null),buttons:[{label:a(14768,null),run:async()=>{const r=Gt(d.toPromise(d.filter(this.G.onDidChangeConflicts,o=>o.length===0)),t);await this.showConflicts(this.G.conflicts[0]?.conflicts[0]),await r}},{label:n?a(14769,null,n):a(14770,null),run:async()=>this.tb(!0)},{label:n?a(14771,null,n):a(14772,null),run:()=>this.tb(!1)}],cancelButton:{run:()=>{throw new C}}})}async tb(t){for(const i of this.G.conflicts)for(const s of i.conflicts)await this.accept({syncResource:i.syncResource,profile:i.profile},t?s.remoteResource:s.localResource,void 0,{force:!0})}async accept(t,i,s,e){return this.G.accept(t,i,s,e)}async showConflicts(t){if(!this.G.conflicts.length)return;this.z.set(!0);const i=await this.Z.openView(ot);i&&t&&await i.open(t)}async resetSyncedData(){const{confirmed:t}=await this.Y.confirm({type:"info",message:a(14773,null),title:a(14774,null),primaryButton:a(14775,null)});t&&await this.G.resetRemote()}async getAllLogResources(){const t=[],i=await this.fb.resolve(this.H.extUri.dirname(this.S.logsHome));i.children&&t.push(...i.children.filter(e=>e.isDirectory&&/^\d{8}T\d{6}$/.test(e.name)).sort().reverse().map(e=>e.resource));const s=[];for(const e of t){const r=(await this.fb.resolve(e)).children?.find(o=>this.H.extUri.basename(o.resource).startsWith(`${Q}.`));r&&s.push(r.resource)}return s}async showSyncActivity(){this.D.set(!0),await this.ub(),await this.Z.openViewContainer($)}async downloadSyncActivity(){const t=await this.gb.showOpenDialog({title:a(14776,null),canSelectFiles:!1,canSelectFolders:!0,canSelectMany:!1,openLabel:a(14777,null)});if(t?.[0])return this.X.withProgress({location:10},async()=>{const s=(await this.hb.getMachines()).find(c=>c.isCurrent),e=(s?s.name+" - ":"")+"Settings Sync Activity",n=await this.fb.resolve(t[0]),r=new RegExp(`${jt(e)}\\s(\\d+)`),o=[];for(const c of n.children??[])if(c.name===e)o.push(0);else{const f=r.exec(c.name);f&&o.push(parseInt(f[1]))}o.sort((c,f)=>c-f);const b=this.H.extUri.joinPath(t[0],o[0]!==0?e:`${e} ${o[o.length-1]+1}`);return await Promise.all([this.G.saveRemoteActivityData(this.H.extUri.joinPath(b,"remoteActivity.json")),(async()=>{const c=await this.getAllLogResources();await Promise.all(c.map(async f=>this.fb.copy(f,this.H.extUri.joinPath(b,"logs",`${this.H.extUri.basename(this.H.extUri.dirname(f))}.log`))))})(),this.fb.copy(this.S.userDataSyncHome,this.H.extUri.joinPath(b,"localActivity"))]),b})}async ub(){const t=this.$.getViewContainerById($);if(t){const i=this.$.getViewContainerModel(t);i.activeViewDescriptors.length||await d.toPromise(d.filter(i.onDidChangeActiveViewDescriptors,s=>i.activeViewDescriptors.length>0))}}async signIn(){const t=this.Eb,i=t?this.authenticationProviders.find(s=>s.id===t):void 0;if(i)await this.zb(i);else{if(!this.authenticationProviders.length)throw new Error(a(14778,null));await this.vb()}}async vb(){const t=await this.wb();return t?(await this.zb(t),!0):!1}async wb(){if(this.authenticationProviders.length===0)return;const t=[...this.authenticationProviders].sort(({id:o})=>o===this.Eb?-1:1),i=new Map;if(t.length===1){const o=await this.xb(t[0].id,t[0].scopes);if(o.length)i.set(t[0].id,o);else return t[0]}let s;const e=new D,n=e.add(this.L.createQuickPick({useSeparators:!0})),r=new Promise(o=>{e.add(n.onDidHide(()=>{e.dispose(),o(s)}))});if(n.title=g.value,n.ok=!1,n.ignoreFocusOut=!0,n.placeholder=a(14779,null),n.show(),t.length>1){n.busy=!0;for(const{id:o,scopes:b}of t){const c=await this.xb(o,b);c.length&&i.set(o,c)}n.busy=!1}return n.items=this.yb(t,i),e.add(n.onDidAccept(()=>{s=n.selectedItems[0]?.account?n.selectedItems[0]?.account:n.selectedItems[0]?.authenticationProvider,n.hide()})),r}async xb(t,i){const s=new Map;let e=null;const n=await this.I.getSessions(t,i)||[];for(const r of n){const o=new U(t,r);s.set(o.accountId,o),o.sessionId===this.Gb&&(e=o)}return e&&s.set(e.accountId,e),e?[...s.values()]:[...s.values()].sort(({sessionId:r})=>r===this.Gb?-1:1)}yb(t,i){const s=[];if(i.size){s.push({type:"separator",label:a(14780,null)});for(const e of t){const n=(i.get(e.id)||[]).sort(({sessionId:o})=>o===this.Gb?-1:1),r=this.I.getProvider(e.id).label;for(const o of n)s.push({label:`${o.accountName} (${r})`,description:o.sessionId===this.current?.sessionId?a(14781,null):void 0,account:o,authenticationProvider:e})}s.push({type:"separator",label:a(14782,null)})}for(const e of t){const n=this.I.getProvider(e.id);if(!i.has(e.id)||n.supportsMultipleAccounts){const r=n.label;s.push({label:a(14783,null,r),authenticationProvider:e})}}return s}async zb(t){let i;W(t)?(this.S.options?.settingsSyncOptions?.authenticationProvider?.id===t.id?i=await this.S.options?.settingsSyncOptions?.authenticationProvider?.signIn():i=(await this.I.createSession(t.id,t.scopes)).id,this.Eb=t.id):(this.S.options?.settingsSyncOptions?.authenticationProvider?.id===t.authenticationProviderId?i=await this.S.options?.settingsSyncOptions?.authenticationProvider?.signIn():i=t.sessionId,this.Eb=t.authenticationProviderId),this.Gb=i,await this.mb("sign in")}async Ab(){this.Gb=void 0,await this.mb("auth failure")}Bb(t){this.Gb&&t.removed?.find(i=>i.id===this.Gb)&&(this.Gb=void 0),this.mb("change in sessions")}Cb(){this.Gb!==this.Hb()&&(this.Fb=null,this.mb("change in storage"))}get Eb(){return this.Db===null&&(this.Db=this.M.get(l.g,-1)),this.Db}set Eb(t){this.Db!==t&&(this.Db=t,t===void 0?this.M.remove(l.g,-1):this.M.store(l.g,t,-1,1))}get Gb(){return this.Fb===null&&(this.Fb=this.Hb()),this.Fb}set Gb(t){this.Fb!==t&&(this.Fb=t,t===void 0?(this.P.info("Settings Sync: Reset current session"),this.M.remove(l.h,-1)):(this.P.info("Settings Sync: Updated current session",t),this.M.store(l.h,t,-1,1)))}Hb(){return this.M.get(l.h,-1)}get Ib(){return!this.M.getBoolean(l.f,-1,!1)}set Ib(t){this.M.store(l.f,!t,-1,1)}};S=l=J([h(0,V),h(1,Mt),h(2,ct),h(3,lt),h(4,ut),h(5,ft),h(6,Y),h(7,q),h(8,dt),h(9,bt),h(10,mt),h(11,Bt),h(12,Tt),h(13,pt),h(14,$t),h(15,gt),h(16,St),h(17,Pt),h(18,vt),h(19,L),h(20,Dt),h(21,It),h(22,Et),h(23,Ht),h(24,Ft),h(25,wt),h(26,Ot)],S);Z(K,S,0);export{At as $g7b,S as $h7b};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { IUserDataSyncService, isAuthenticationProvider, IUserDataAutoSyncService, IUserDataSyncStoreManagementService, IUserDataSyncEnablementService, USER_DATA_SYNC_SCHEME, USER_DATA_SYNC_LOG_ID } from "../../../../platform/userDataSync/common/userDataSync.js";
+import { registerSingleton } from "../../../../platform/instantiation/common/extensions.js";
+import { IUserDataSyncWorkbenchService, CONTEXT_SYNC_ENABLEMENT, CONTEXT_SYNC_STATE, CONTEXT_ACCOUNT_STATE, SHOW_SYNC_LOG_COMMAND_ID, CONTEXT_ENABLE_ACTIVITY_VIEWS, SYNC_VIEW_CONTAINER_ID, SYNC_TITLE, SYNC_CONFLICTS_VIEW_ID, CONTEXT_ENABLE_SYNC_CONFLICTS_VIEW, CONTEXT_HAS_CONFLICTS, getSyncAreaLabel } from "../common/userDataSync.js";
+import { Disposable, DisposableStore } from "../../../../base/common/lifecycle.js";
+import { Emitter, Event } from "../../../../base/common/event.js";
+import { getCurrentAuthenticationSessionInfo } from "../../authentication/browser/authenticationService.js";
+import { IAuthenticationService } from "../../authentication/common/authentication.js";
+import { IUserDataSyncAccountService } from "../../../../platform/userDataSync/common/userDataSyncAccount.js";
+import { IQuickInputService } from "../../../../platform/quickinput/common/quickInput.js";
+import { IStorageService } from "../../../../platform/storage/common/storage.js";
+import { ILogService } from "../../../../platform/log/common/log.js";
+import { IProductService } from "../../../../platform/product/common/productService.js";
+import { IExtensionService } from "../../extensions/common/extensions.js";
+import { localize } from "../../../../nls.js";
+import { INotificationService, Severity } from "../../../../platform/notification/common/notification.js";
+import { IDialogService, IFileDialogService } from "../../../../platform/dialogs/common/dialogs.js";
+import { IContextKeyService } from "../../../../platform/contextkey/common/contextkey.js";
+import { IProgressService } from "../../../../platform/progress/common/progress.js";
+import { URI } from "../../../../base/common/uri.js";
+import { IViewDescriptorService } from "../../../common/views.js";
+import { IViewsService } from "../../views/common/viewsService.js";
+import { ILifecycleService } from "../../lifecycle/common/lifecycle.js";
+import { isWeb } from "../../../../base/common/platform.js";
+import { IInstantiationService } from "../../../../platform/instantiation/common/instantiation.js";
+import { UserDataSyncStoreClient } from "../../../../platform/userDataSync/common/userDataSyncStoreService.js";
+import { UserDataSyncStoreTypeSynchronizer } from "../../../../platform/userDataSync/common/globalStateSync.js";
+import { CancellationError } from "../../../../base/common/errors.js";
+import { raceCancellationError } from "../../../../base/common/async.js";
+import { CancellationTokenSource } from "../../../../base/common/cancellation.js";
+import { IEditorService } from "../../editor/common/editorService.js";
+import { IUriIdentityService } from "../../../../platform/uriIdentity/common/uriIdentity.js";
+import { isDiffEditorInput } from "../../../common/editor.js";
+import { IBrowserWorkbenchEnvironmentService } from "../../environment/browser/environmentService.js";
+import { IUserDataInitializationService } from "../../userData/browser/userDataInit.js";
+import { ISecretStorageService } from "../../../../platform/secrets/common/secrets.js";
+import { IFileService } from "../../../../platform/files/common/files.js";
+import { escapeRegExpCharacters } from "../../../../base/common/strings.js";
+import { IUserDataSyncMachinesService } from "../../../../platform/userDataSync/common/userDataSyncMachines.js";
+import { equals } from "../../../../base/common/arrays.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+var UserDataSyncWorkbenchService_1;
+class UserDataSyncAccount {
+  static {
+    __name(this, "UserDataSyncAccount");
+  }
+  constructor(authenticationProviderId, session) {
+    this.authenticationProviderId = authenticationProviderId;
+    this.session = session;
+  }
+  get sessionId() {
+    return this.session.id;
+  }
+  get accountName() {
+    return this.session.account.label;
+  }
+  get accountId() {
+    return this.session.account.id;
+  }
+  get token() {
+    return this.session.idToken || this.session.accessToken;
+  }
+}
+function isMergeEditorInput(editor) {
+  const candidate = editor;
+  return URI.isUri(candidate?.base) && URI.isUri(candidate?.input1?.uri) && URI.isUri(candidate?.input2?.uri) && URI.isUri(candidate?.result);
+}
+__name(isMergeEditorInput, "isMergeEditorInput");
+let UserDataSyncWorkbenchService = class UserDataSyncWorkbenchService2 extends Disposable {
+  static {
+    __name(this, "UserDataSyncWorkbenchService");
+  }
+  static {
+    UserDataSyncWorkbenchService_1 = this;
+  }
+  static {
+    this.DONOT_USE_WORKBENCH_SESSION_STORAGE_KEY = "userDataSyncAccount.donotUseWorkbenchSession";
+  }
+  static {
+    this.CACHED_AUTHENTICATION_PROVIDER_KEY = "userDataSyncAccountProvider";
+  }
+  static {
+    this.CACHED_SESSION_STORAGE_KEY = "userDataSyncAccountPreference";
+  }
+  get enabled() {
+    return !!this.userDataSyncStoreManagementService.userDataSyncStore;
+  }
+  get authenticationProviders() {
+    return this._authenticationProviders;
+  }
+  get accountStatus() {
+    return this._accountStatus;
+  }
+  get current() {
+    return this._current;
+  }
+  constructor(userDataSyncService, uriIdentityService, authenticationService, userDataSyncAccountService, quickInputService, storageService, userDataSyncEnablementService, userDataAutoSyncService, logService, productService, extensionService, environmentService, secretStorageService, notificationService, progressService, dialogService, contextKeyService, viewsService, viewDescriptorService, userDataSyncStoreManagementService, lifecycleService, instantiationService, editorService, userDataInitializationService, fileService, fileDialogService, userDataSyncMachinesService) {
+    super();
+    this.userDataSyncService = userDataSyncService;
+    this.uriIdentityService = uriIdentityService;
+    this.authenticationService = authenticationService;
+    this.userDataSyncAccountService = userDataSyncAccountService;
+    this.quickInputService = quickInputService;
+    this.storageService = storageService;
+    this.userDataSyncEnablementService = userDataSyncEnablementService;
+    this.userDataAutoSyncService = userDataAutoSyncService;
+    this.logService = logService;
+    this.productService = productService;
+    this.extensionService = extensionService;
+    this.environmentService = environmentService;
+    this.secretStorageService = secretStorageService;
+    this.notificationService = notificationService;
+    this.progressService = progressService;
+    this.dialogService = dialogService;
+    this.viewsService = viewsService;
+    this.viewDescriptorService = viewDescriptorService;
+    this.userDataSyncStoreManagementService = userDataSyncStoreManagementService;
+    this.lifecycleService = lifecycleService;
+    this.instantiationService = instantiationService;
+    this.editorService = editorService;
+    this.userDataInitializationService = userDataInitializationService;
+    this.fileService = fileService;
+    this.fileDialogService = fileDialogService;
+    this.userDataSyncMachinesService = userDataSyncMachinesService;
+    this._authenticationProviders = [];
+    this._accountStatus = "uninitialized";
+    this._onDidChangeAccountStatus = this._register(new Emitter());
+    this.onDidChangeAccountStatus = this._onDidChangeAccountStatus.event;
+    this._onDidTurnOnSync = this._register(new Emitter());
+    this.onDidTurnOnSync = this._onDidTurnOnSync.event;
+    this.turnOnSyncCancellationToken = void 0;
+    this._cachedCurrentAuthenticationProviderId = null;
+    this._cachedCurrentSessionId = null;
+    this.syncEnablementContext = CONTEXT_SYNC_ENABLEMENT.bindTo(contextKeyService);
+    this.syncStatusContext = CONTEXT_SYNC_STATE.bindTo(contextKeyService);
+    this.accountStatusContext = CONTEXT_ACCOUNT_STATE.bindTo(contextKeyService);
+    this.activityViewsEnablementContext = CONTEXT_ENABLE_ACTIVITY_VIEWS.bindTo(contextKeyService);
+    this.hasConflicts = CONTEXT_HAS_CONFLICTS.bindTo(contextKeyService);
+    this.enableConflictsViewContext = CONTEXT_ENABLE_SYNC_CONFLICTS_VIEW.bindTo(contextKeyService);
+    if (this.userDataSyncStoreManagementService.userDataSyncStore) {
+      this.syncStatusContext.set(this.userDataSyncService.status);
+      this._register(userDataSyncService.onDidChangeStatus((status) => this.syncStatusContext.set(status)));
+      this.syncEnablementContext.set(userDataSyncEnablementService.isEnabled());
+      this._register(userDataSyncEnablementService.onDidChangeEnablement((enabled) => this.syncEnablementContext.set(enabled)));
+      this.waitAndInitialize();
+    }
+  }
+  updateAuthenticationProviders() {
+    const oldValue = this._authenticationProviders;
+    this._authenticationProviders = (this.userDataSyncStoreManagementService.userDataSyncStore?.authenticationProviders || []).filter(({ id }) => this.authenticationService.declaredProviders.some((provider) => provider.id === id));
+    this.logService.trace("Settings Sync: Authentication providers updated", this._authenticationProviders.map(({ id }) => id));
+    return equals(oldValue, this._authenticationProviders, (a, b) => a.id === b.id);
+  }
+  isSupportedAuthenticationProviderId(authenticationProviderId) {
+    return this.authenticationProviders.some(({ id }) => id === authenticationProviderId);
+  }
+  async waitAndInitialize() {
+    try {
+      await Promise.all([this.extensionService.whenInstalledExtensionsRegistered(), this.userDataInitializationService.whenInitializationFinished()]);
+      await this.initialize();
+    } catch (error) {
+      if (!this.environmentService.extensionTestsLocationURI) {
+        this.logService.error(error);
+      }
+    }
+  }
+  async initialize() {
+    if (isWeb) {
+      const authenticationSession = await getCurrentAuthenticationSessionInfo(this.secretStorageService, this.productService);
+      if (this.currentSessionId === void 0 && authenticationSession?.id) {
+        if (this.environmentService.options?.settingsSyncOptions?.authenticationProvider && this.environmentService.options.settingsSyncOptions.enabled) {
+          this.currentSessionId = authenticationSession.id;
+        } else if (this.useWorkbenchSessionId) {
+          this.currentSessionId = authenticationSession.id;
+        }
+        this.useWorkbenchSessionId = false;
+      }
+    }
+    const initPromise = this.update("initialize");
+    this._register(this.authenticationService.onDidChangeDeclaredProviders(() => {
+      if (this.updateAuthenticationProviders()) {
+        initPromise.finally(() => this.update("declared authentication providers changed"));
+      }
+    }));
+    await initPromise;
+    this._register(Event.filter(Event.any(this.authenticationService.onDidRegisterAuthenticationProvider, this.authenticationService.onDidUnregisterAuthenticationProvider), (info) => this.isSupportedAuthenticationProviderId(info.id))(() => this.update("authentication provider change")));
+    this._register(Event.filter(this.userDataSyncAccountService.onTokenFailed, (isSuccessive) => !isSuccessive)(() => this.update("token failure")));
+    this._register(Event.filter(this.authenticationService.onDidChangeSessions, (e) => this.isSupportedAuthenticationProviderId(e.providerId))(({ event }) => this.onDidChangeSessions(event)));
+    this._register(this.storageService.onDidChangeValue(-1, UserDataSyncWorkbenchService_1.CACHED_SESSION_STORAGE_KEY, this._store)(() => this.onDidChangeStorage()));
+    this._register(Event.filter(this.userDataSyncAccountService.onTokenFailed, (bailout) => bailout)(() => this.onDidAuthFailure()));
+    this.hasConflicts.set(this.userDataSyncService.conflicts.length > 0);
+    this._register(this.userDataSyncService.onDidChangeConflicts((conflicts) => {
+      this.hasConflicts.set(conflicts.length > 0);
+      if (!conflicts.length) {
+        this.enableConflictsViewContext.reset();
+      }
+      this.editorService.editors.filter((input) => {
+        const remoteResource = isDiffEditorInput(input) ? input.original.resource : isMergeEditorInput(input) ? input.input1.uri : void 0;
+        if (remoteResource?.scheme !== USER_DATA_SYNC_SCHEME) {
+          return false;
+        }
+        return !this.userDataSyncService.conflicts.some(({ conflicts: conflicts2 }) => conflicts2.some(({ previewResource }) => this.uriIdentityService.extUri.isEqual(previewResource, input.resource)));
+      }).forEach((input) => input.dispose());
+    }));
+  }
+  async update(reason) {
+    this.logService.trace(`Settings Sync: Updating due to ${reason}`);
+    this.updateAuthenticationProviders();
+    await this.updateCurrentAccount();
+    if (this._current) {
+      this.currentAuthenticationProviderId = this._current.authenticationProviderId;
+    }
+    await this.updateToken(this._current);
+    this.updateAccountStatus(
+      this._current ? "available" : "unavailable"
+      /* AccountStatus.Unavailable */
+    );
+  }
+  async updateCurrentAccount() {
+    this.logService.trace("Settings Sync: Updating the current account");
+    const currentSessionId = this.currentSessionId;
+    const currentAuthenticationProviderId = this.currentAuthenticationProviderId;
+    if (currentSessionId) {
+      const authenticationProviders = currentAuthenticationProviderId ? this.authenticationProviders.filter(({ id }) => id === currentAuthenticationProviderId) : this.authenticationProviders;
+      for (const { id, scopes } of authenticationProviders) {
+        const sessions = await this.authenticationService.getSessions(id, scopes) || [];
+        for (const session of sessions) {
+          if (session.id === currentSessionId) {
+            this._current = new UserDataSyncAccount(id, session);
+            this.logService.trace("Settings Sync: Updated the current account", this._current.accountName);
+            return;
+          }
+        }
+      }
+    }
+    this._current = void 0;
+  }
+  async updateToken(current) {
+    let value = void 0;
+    if (current) {
+      try {
+        this.logService.trace("Settings Sync: Updating the token for the account", current.accountName);
+        const token = current.token;
+        this.traceOrInfo("Settings Sync: Token updated for the account", current.accountName);
+        value = { token, authenticationProviderId: current.authenticationProviderId };
+      } catch (e) {
+        this.logService.error(e);
+      }
+    }
+    await this.userDataSyncAccountService.updateAccount(value);
+  }
+  traceOrInfo(msg, ...args) {
+    if (this.environmentService.isBuilt) {
+      this.logService.info(msg, ...args);
+    } else {
+      this.logService.trace(msg, ...args);
+    }
+  }
+  updateAccountStatus(accountStatus) {
+    this.logService.trace(`Settings Sync: Updating the account status to ${accountStatus}`);
+    if (this._accountStatus !== accountStatus) {
+      const previous = this._accountStatus;
+      this.traceOrInfo(`Settings Sync: Account status changed from ${previous} to ${accountStatus}`);
+      this._accountStatus = accountStatus;
+      this.accountStatusContext.set(accountStatus);
+      this._onDidChangeAccountStatus.fire(accountStatus);
+    }
+  }
+  async turnOn() {
+    if (!this.authenticationProviders.length) {
+      throw new Error(localize("no authentication providers", "Settings sync cannot be turned on because there are no authentication providers available."));
+    }
+    if (this.userDataSyncEnablementService.isEnabled()) {
+      return;
+    }
+    if (this.userDataSyncService.status !== "idle") {
+      throw new Error("Cannot turn on sync while syncing");
+    }
+    const picked = await this.pick();
+    if (!picked) {
+      throw new CancellationError();
+    }
+    if (this.accountStatus !== "available") {
+      throw new Error(localize("no account", "No account available"));
+    }
+    const turnOnSyncCancellationToken = this.turnOnSyncCancellationToken = new CancellationTokenSource();
+    const disposable = isWeb ? Disposable.None : this.lifecycleService.onBeforeShutdown((e) => e.veto((async () => {
+      const { confirmed } = await this.dialogService.confirm({
+        type: "warning",
+        message: localize("sync in progress", "Settings Sync is being turned on. Would you like to cancel it?"),
+        title: localize("settings sync", "Settings Sync"),
+        primaryButton: localize({ key: "yes", comment: ["&& denotes a mnemonic"] }, "&&Yes"),
+        cancelButton: localize("no", "No")
+      });
+      if (confirmed) {
+        turnOnSyncCancellationToken.cancel();
+      }
+      return !confirmed;
+    })(), "veto.settingsSync"));
+    try {
+      await this.doTurnOnSync(turnOnSyncCancellationToken.token);
+    } finally {
+      disposable.dispose();
+      this.turnOnSyncCancellationToken = void 0;
+    }
+    await this.userDataAutoSyncService.turnOn();
+    if (this.userDataSyncStoreManagementService.userDataSyncStore?.canSwitch) {
+      await this.synchroniseUserDataSyncStoreType();
+    }
+    this.currentAuthenticationProviderId = this.current?.authenticationProviderId;
+    if (this.environmentService.options?.settingsSyncOptions?.enablementHandler && this.currentAuthenticationProviderId) {
+      this.environmentService.options.settingsSyncOptions.enablementHandler(true, this.currentAuthenticationProviderId);
+    }
+    this.notificationService.info(localize("sync turned on", "{0} is turned on", SYNC_TITLE.value));
+    this._onDidTurnOnSync.fire();
+  }
+  async turnoff(everywhere) {
+    if (this.userDataSyncEnablementService.isEnabled()) {
+      await this.userDataAutoSyncService.turnOff(everywhere);
+      if (this.environmentService.options?.settingsSyncOptions?.enablementHandler && this.currentAuthenticationProviderId) {
+        this.environmentService.options.settingsSyncOptions.enablementHandler(false, this.currentAuthenticationProviderId);
+      }
+    }
+    if (this.turnOnSyncCancellationToken) {
+      this.turnOnSyncCancellationToken.cancel();
+    }
+  }
+  async synchroniseUserDataSyncStoreType() {
+    if (!this.userDataSyncAccountService.account) {
+      throw new Error("Cannot update because you are signed out from settings sync. Please sign in and try again.");
+    }
+    if (!isWeb || !this.userDataSyncStoreManagementService.userDataSyncStore) {
+      return;
+    }
+    const userDataSyncStoreUrl = this.userDataSyncStoreManagementService.userDataSyncStore.type === "insiders" ? this.userDataSyncStoreManagementService.userDataSyncStore.stableUrl : this.userDataSyncStoreManagementService.userDataSyncStore.insidersUrl;
+    const userDataSyncStoreClient = this.instantiationService.createInstance(UserDataSyncStoreClient, userDataSyncStoreUrl);
+    userDataSyncStoreClient.setAuthToken(this.userDataSyncAccountService.account.token, this.userDataSyncAccountService.account.authenticationProviderId);
+    await this.instantiationService.createInstance(UserDataSyncStoreTypeSynchronizer, userDataSyncStoreClient).sync(this.userDataSyncStoreManagementService.userDataSyncStore.type);
+  }
+  syncNow() {
+    return this.userDataAutoSyncService.triggerSync(["Sync Now"], { immediately: true, disableCache: true });
+  }
+  async doTurnOnSync(token) {
+    const disposables = new DisposableStore();
+    const manualSyncTask = await this.userDataSyncService.createManualSyncTask();
+    try {
+      await this.progressService.withProgress({
+        location: 10,
+        title: SYNC_TITLE.value,
+        command: SHOW_SYNC_LOG_COMMAND_ID,
+        delay: 500
+      }, async (progress) => {
+        progress.report({ message: localize("turning on", "Turning on...") });
+        disposables.add(this.userDataSyncService.onDidChangeStatus((status) => {
+          if (status === "hasConflicts") {
+            progress.report({ message: localize("resolving conflicts", "Resolving conflicts...") });
+          } else {
+            progress.report({ message: localize("syncing...", "Turning on...") });
+          }
+        }));
+        await manualSyncTask.merge();
+        if (this.userDataSyncService.status === "hasConflicts") {
+          await this.handleConflictsWhileTurningOn(token);
+        }
+        await manualSyncTask.apply();
+      });
+    } catch (error) {
+      await manualSyncTask.stop();
+      throw error;
+    } finally {
+      disposables.dispose();
+    }
+  }
+  async handleConflictsWhileTurningOn(token) {
+    const conflicts = this.userDataSyncService.conflicts;
+    const andSeparator = localize("and", " and ");
+    let conflictsText = "";
+    for (let i = 0; i < conflicts.length; i++) {
+      if (i === conflicts.length - 1 && i !== 0) {
+        conflictsText += andSeparator;
+      } else if (i !== 0) {
+        conflictsText += ", ";
+      }
+      conflictsText += getSyncAreaLabel(conflicts[i].syncResource);
+    }
+    const singleConflictResource = conflicts.length === 1 ? getSyncAreaLabel(conflicts[0].syncResource) : void 0;
+    await this.dialogService.prompt({
+      type: Severity.Warning,
+      message: localize("conflicts detected", "Conflicts Detected in {0}", conflictsText),
+      detail: localize("resolve", "Please resolve conflicts to turn on..."),
+      buttons: [
+        {
+          label: localize({ key: "show conflicts", comment: ["&& denotes a mnemonic"] }, "&&Show Conflicts"),
+          run: /* @__PURE__ */ __name(async () => {
+            const waitUntilConflictsAreResolvedPromise = raceCancellationError(Event.toPromise(Event.filter(this.userDataSyncService.onDidChangeConflicts, (conficts) => conficts.length === 0)), token);
+            await this.showConflicts(this.userDataSyncService.conflicts[0]?.conflicts[0]);
+            await waitUntilConflictsAreResolvedPromise;
+          }, "run")
+        },
+        {
+          label: singleConflictResource ? localize({ key: "replace local single", comment: ["&& denotes a mnemonic"] }, "Accept &&Remote {0}", singleConflictResource) : localize({ key: "replace local", comment: ["&& denotes a mnemonic"] }, "Accept &&Remote"),
+          run: /* @__PURE__ */ __name(async () => this.replace(true), "run")
+        },
+        {
+          label: singleConflictResource ? localize({ key: "replace remote single", comment: ["&& denotes a mnemonic"] }, "Accept &&Local {0}", singleConflictResource) : localize({ key: "replace remote", comment: ["&& denotes a mnemonic"] }, "Accept &&Local"),
+          run: /* @__PURE__ */ __name(() => this.replace(false), "run")
+        }
+      ],
+      cancelButton: {
+        run: /* @__PURE__ */ __name(() => {
+          throw new CancellationError();
+        }, "run")
+      }
+    });
+  }
+  async replace(local) {
+    for (const conflict of this.userDataSyncService.conflicts) {
+      for (const preview of conflict.conflicts) {
+        await this.accept({ syncResource: conflict.syncResource, profile: conflict.profile }, local ? preview.remoteResource : preview.localResource, void 0, { force: true });
+      }
+    }
+  }
+  async accept(resource, conflictResource, content, apply) {
+    return this.userDataSyncService.accept(resource, conflictResource, content, apply);
+  }
+  async showConflicts(conflictToOpen) {
+    if (!this.userDataSyncService.conflicts.length) {
+      return;
+    }
+    this.enableConflictsViewContext.set(true);
+    const view = await this.viewsService.openView(SYNC_CONFLICTS_VIEW_ID);
+    if (view && conflictToOpen) {
+      await view.open(conflictToOpen);
+    }
+  }
+  async resetSyncedData() {
+    const { confirmed } = await this.dialogService.confirm({
+      type: "info",
+      message: localize("reset", "This will clear your data in the cloud and stop sync on all your devices."),
+      title: localize("reset title", "Clear"),
+      primaryButton: localize({ key: "resetButton", comment: ["&& denotes a mnemonic"] }, "&&Reset")
+    });
+    if (confirmed) {
+      await this.userDataSyncService.resetRemote();
+    }
+  }
+  async getAllLogResources() {
+    const logsFolders = [];
+    const stat = await this.fileService.resolve(this.uriIdentityService.extUri.dirname(this.environmentService.logsHome));
+    if (stat.children) {
+      logsFolders.push(...stat.children.filter((stat2) => stat2.isDirectory && /^\d{8}T\d{6}$/.test(stat2.name)).sort().reverse().map((d) => d.resource));
+    }
+    const result = [];
+    for (const logFolder of logsFolders) {
+      const folderStat = await this.fileService.resolve(logFolder);
+      const childStat = folderStat.children?.find((stat2) => this.uriIdentityService.extUri.basename(stat2.resource).startsWith(`${USER_DATA_SYNC_LOG_ID}.`));
+      if (childStat) {
+        result.push(childStat.resource);
+      }
+    }
+    return result;
+  }
+  async showSyncActivity() {
+    this.activityViewsEnablementContext.set(true);
+    await this.waitForActiveSyncViews();
+    await this.viewsService.openViewContainer(SYNC_VIEW_CONTAINER_ID);
+  }
+  async downloadSyncActivity() {
+    const result = await this.fileDialogService.showOpenDialog({
+      title: localize("download sync activity dialog title", "Select folder to download Settings Sync activity"),
+      canSelectFiles: false,
+      canSelectFolders: true,
+      canSelectMany: false,
+      openLabel: localize("download sync activity dialog open label", "Save")
+    });
+    if (!result?.[0]) {
+      return;
+    }
+    return this.progressService.withProgress({
+      location: 10
+      /* ProgressLocation.Window */
+    }, async () => {
+      const machines = await this.userDataSyncMachinesService.getMachines();
+      const currentMachine = machines.find((m) => m.isCurrent);
+      const name = (currentMachine ? currentMachine.name + " - " : "") + "Settings Sync Activity";
+      const stat = await this.fileService.resolve(result[0]);
+      const nameRegEx = new RegExp(`${escapeRegExpCharacters(name)}\\s(\\d+)`);
+      const indexes = [];
+      for (const child of stat.children ?? []) {
+        if (child.name === name) {
+          indexes.push(0);
+        } else {
+          const matches = nameRegEx.exec(child.name);
+          if (matches) {
+            indexes.push(parseInt(matches[1]));
+          }
+        }
+      }
+      indexes.sort((a, b) => a - b);
+      const folder = this.uriIdentityService.extUri.joinPath(result[0], indexes[0] !== 0 ? name : `${name} ${indexes[indexes.length - 1] + 1}`);
+      await Promise.all([
+        this.userDataSyncService.saveRemoteActivityData(this.uriIdentityService.extUri.joinPath(folder, "remoteActivity.json")),
+        (async () => {
+          const logResources = await this.getAllLogResources();
+          await Promise.all(logResources.map(async (logResource) => this.fileService.copy(logResource, this.uriIdentityService.extUri.joinPath(folder, "logs", `${this.uriIdentityService.extUri.basename(this.uriIdentityService.extUri.dirname(logResource))}.log`))));
+        })(),
+        this.fileService.copy(this.environmentService.userDataSyncHome, this.uriIdentityService.extUri.joinPath(folder, "localActivity"))
+      ]);
+      return folder;
+    });
+  }
+  async waitForActiveSyncViews() {
+    const viewContainer = this.viewDescriptorService.getViewContainerById(SYNC_VIEW_CONTAINER_ID);
+    if (viewContainer) {
+      const model = this.viewDescriptorService.getViewContainerModel(viewContainer);
+      if (!model.activeViewDescriptors.length) {
+        await Event.toPromise(Event.filter(model.onDidChangeActiveViewDescriptors, (e) => model.activeViewDescriptors.length > 0));
+      }
+    }
+  }
+  async signIn() {
+    const currentAuthenticationProviderId = this.currentAuthenticationProviderId;
+    const authenticationProvider = currentAuthenticationProviderId ? this.authenticationProviders.find((p) => p.id === currentAuthenticationProviderId) : void 0;
+    if (authenticationProvider) {
+      await this.doSignIn(authenticationProvider);
+    } else {
+      if (!this.authenticationProviders.length) {
+        throw new Error(localize("no authentication providers during signin", "Cannot sign in because there are no authentication providers available."));
+      }
+      await this.pick();
+    }
+  }
+  async pick() {
+    const result = await this.doPick();
+    if (!result) {
+      return false;
+    }
+    await this.doSignIn(result);
+    return true;
+  }
+  async doPick() {
+    if (this.authenticationProviders.length === 0) {
+      return void 0;
+    }
+    const authenticationProviders = [...this.authenticationProviders].sort(({ id }) => id === this.currentAuthenticationProviderId ? -1 : 1);
+    const allAccounts = /* @__PURE__ */ new Map();
+    if (authenticationProviders.length === 1) {
+      const accounts = await this.getAccounts(authenticationProviders[0].id, authenticationProviders[0].scopes);
+      if (accounts.length) {
+        allAccounts.set(authenticationProviders[0].id, accounts);
+      } else {
+        return authenticationProviders[0];
+      }
+    }
+    let result;
+    const disposables = new DisposableStore();
+    const quickPick = disposables.add(this.quickInputService.createQuickPick({ useSeparators: true }));
+    const promise = new Promise((c) => {
+      disposables.add(quickPick.onDidHide(() => {
+        disposables.dispose();
+        c(result);
+      }));
+    });
+    quickPick.title = SYNC_TITLE.value;
+    quickPick.ok = false;
+    quickPick.ignoreFocusOut = true;
+    quickPick.placeholder = localize("choose account placeholder", "Select an account to sign in");
+    quickPick.show();
+    if (authenticationProviders.length > 1) {
+      quickPick.busy = true;
+      for (const { id, scopes } of authenticationProviders) {
+        const accounts = await this.getAccounts(id, scopes);
+        if (accounts.length) {
+          allAccounts.set(id, accounts);
+        }
+      }
+      quickPick.busy = false;
+    }
+    quickPick.items = this.createQuickpickItems(authenticationProviders, allAccounts);
+    disposables.add(quickPick.onDidAccept(() => {
+      result = quickPick.selectedItems[0]?.account ? quickPick.selectedItems[0]?.account : quickPick.selectedItems[0]?.authenticationProvider;
+      quickPick.hide();
+    }));
+    return promise;
+  }
+  async getAccounts(authenticationProviderId, scopes) {
+    const accounts = /* @__PURE__ */ new Map();
+    let currentAccount = null;
+    const sessions = await this.authenticationService.getSessions(authenticationProviderId, scopes) || [];
+    for (const session of sessions) {
+      const account = new UserDataSyncAccount(authenticationProviderId, session);
+      accounts.set(account.accountId, account);
+      if (account.sessionId === this.currentSessionId) {
+        currentAccount = account;
+      }
+    }
+    if (currentAccount) {
+      accounts.set(currentAccount.accountId, currentAccount);
+    }
+    return currentAccount ? [...accounts.values()] : [...accounts.values()].sort(({ sessionId }) => sessionId === this.currentSessionId ? -1 : 1);
+  }
+  createQuickpickItems(authenticationProviders, allAccounts) {
+    const quickPickItems = [];
+    if (allAccounts.size) {
+      quickPickItems.push({ type: "separator", label: localize("signed in", "Signed in") });
+      for (const authenticationProvider of authenticationProviders) {
+        const accounts = (allAccounts.get(authenticationProvider.id) || []).sort(({ sessionId }) => sessionId === this.currentSessionId ? -1 : 1);
+        const providerName = this.authenticationService.getProvider(authenticationProvider.id).label;
+        for (const account of accounts) {
+          quickPickItems.push({
+            label: `${account.accountName} (${providerName})`,
+            description: account.sessionId === this.current?.sessionId ? localize("last used", "Last Used with Sync") : void 0,
+            account,
+            authenticationProvider
+          });
+        }
+      }
+      quickPickItems.push({ type: "separator", label: localize("others", "Others") });
+    }
+    for (const authenticationProvider of authenticationProviders) {
+      const provider = this.authenticationService.getProvider(authenticationProvider.id);
+      if (!allAccounts.has(authenticationProvider.id) || provider.supportsMultipleAccounts) {
+        const providerName = provider.label;
+        quickPickItems.push({ label: localize("sign in using account", "Sign in with {0}", providerName), authenticationProvider });
+      }
+    }
+    return quickPickItems;
+  }
+  async doSignIn(accountOrAuthProvider) {
+    let sessionId;
+    if (isAuthenticationProvider(accountOrAuthProvider)) {
+      if (this.environmentService.options?.settingsSyncOptions?.authenticationProvider?.id === accountOrAuthProvider.id) {
+        sessionId = await this.environmentService.options?.settingsSyncOptions?.authenticationProvider?.signIn();
+      } else {
+        sessionId = (await this.authenticationService.createSession(accountOrAuthProvider.id, accountOrAuthProvider.scopes)).id;
+      }
+      this.currentAuthenticationProviderId = accountOrAuthProvider.id;
+    } else {
+      if (this.environmentService.options?.settingsSyncOptions?.authenticationProvider?.id === accountOrAuthProvider.authenticationProviderId) {
+        sessionId = await this.environmentService.options?.settingsSyncOptions?.authenticationProvider?.signIn();
+      } else {
+        sessionId = accountOrAuthProvider.sessionId;
+      }
+      this.currentAuthenticationProviderId = accountOrAuthProvider.authenticationProviderId;
+    }
+    this.currentSessionId = sessionId;
+    await this.update("sign in");
+  }
+  async onDidAuthFailure() {
+    this.currentSessionId = void 0;
+    await this.update("auth failure");
+  }
+  onDidChangeSessions(e) {
+    if (this.currentSessionId && e.removed?.find((session) => session.id === this.currentSessionId)) {
+      this.currentSessionId = void 0;
+    }
+    this.update("change in sessions");
+  }
+  onDidChangeStorage() {
+    if (this.currentSessionId !== this.getStoredCachedSessionId()) {
+      this._cachedCurrentSessionId = null;
+      this.update("change in storage");
+    }
+  }
+  get currentAuthenticationProviderId() {
+    if (this._cachedCurrentAuthenticationProviderId === null) {
+      this._cachedCurrentAuthenticationProviderId = this.storageService.get(
+        UserDataSyncWorkbenchService_1.CACHED_AUTHENTICATION_PROVIDER_KEY,
+        -1
+        /* StorageScope.APPLICATION */
+      );
+    }
+    return this._cachedCurrentAuthenticationProviderId;
+  }
+  set currentAuthenticationProviderId(currentAuthenticationProviderId) {
+    if (this._cachedCurrentAuthenticationProviderId !== currentAuthenticationProviderId) {
+      this._cachedCurrentAuthenticationProviderId = currentAuthenticationProviderId;
+      if (currentAuthenticationProviderId === void 0) {
+        this.storageService.remove(
+          UserDataSyncWorkbenchService_1.CACHED_AUTHENTICATION_PROVIDER_KEY,
+          -1
+          /* StorageScope.APPLICATION */
+        );
+      } else {
+        this.storageService.store(
+          UserDataSyncWorkbenchService_1.CACHED_AUTHENTICATION_PROVIDER_KEY,
+          currentAuthenticationProviderId,
+          -1,
+          1
+          /* StorageTarget.MACHINE */
+        );
+      }
+    }
+  }
+  get currentSessionId() {
+    if (this._cachedCurrentSessionId === null) {
+      this._cachedCurrentSessionId = this.getStoredCachedSessionId();
+    }
+    return this._cachedCurrentSessionId;
+  }
+  set currentSessionId(cachedSessionId) {
+    if (this._cachedCurrentSessionId !== cachedSessionId) {
+      this._cachedCurrentSessionId = cachedSessionId;
+      if (cachedSessionId === void 0) {
+        this.logService.info("Settings Sync: Reset current session");
+        this.storageService.remove(
+          UserDataSyncWorkbenchService_1.CACHED_SESSION_STORAGE_KEY,
+          -1
+          /* StorageScope.APPLICATION */
+        );
+      } else {
+        this.logService.info("Settings Sync: Updated current session", cachedSessionId);
+        this.storageService.store(
+          UserDataSyncWorkbenchService_1.CACHED_SESSION_STORAGE_KEY,
+          cachedSessionId,
+          -1,
+          1
+          /* StorageTarget.MACHINE */
+        );
+      }
+    }
+  }
+  getStoredCachedSessionId() {
+    return this.storageService.get(
+      UserDataSyncWorkbenchService_1.CACHED_SESSION_STORAGE_KEY,
+      -1
+      /* StorageScope.APPLICATION */
+    );
+  }
+  get useWorkbenchSessionId() {
+    return !this.storageService.getBoolean(UserDataSyncWorkbenchService_1.DONOT_USE_WORKBENCH_SESSION_STORAGE_KEY, -1, false);
+  }
+  set useWorkbenchSessionId(useWorkbenchSession) {
+    this.storageService.store(
+      UserDataSyncWorkbenchService_1.DONOT_USE_WORKBENCH_SESSION_STORAGE_KEY,
+      !useWorkbenchSession,
+      -1,
+      1
+      /* StorageTarget.MACHINE */
+    );
+  }
+};
+UserDataSyncWorkbenchService = UserDataSyncWorkbenchService_1 = __decorate([
+  __param(0, IUserDataSyncService),
+  __param(1, IUriIdentityService),
+  __param(2, IAuthenticationService),
+  __param(3, IUserDataSyncAccountService),
+  __param(4, IQuickInputService),
+  __param(5, IStorageService),
+  __param(6, IUserDataSyncEnablementService),
+  __param(7, IUserDataAutoSyncService),
+  __param(8, ILogService),
+  __param(9, IProductService),
+  __param(10, IExtensionService),
+  __param(11, IBrowserWorkbenchEnvironmentService),
+  __param(12, ISecretStorageService),
+  __param(13, INotificationService),
+  __param(14, IProgressService),
+  __param(15, IDialogService),
+  __param(16, IContextKeyService),
+  __param(17, IViewsService),
+  __param(18, IViewDescriptorService),
+  __param(19, IUserDataSyncStoreManagementService),
+  __param(20, ILifecycleService),
+  __param(21, IInstantiationService),
+  __param(22, IEditorService),
+  __param(23, IUserDataInitializationService),
+  __param(24, IFileService),
+  __param(25, IFileDialogService),
+  __param(26, IUserDataSyncMachinesService)
+], UserDataSyncWorkbenchService);
+registerSingleton(
+  IUserDataSyncWorkbenchService,
+  UserDataSyncWorkbenchService,
+  0
+  /* InstantiationType.Eager */
+);
+export {
+  UserDataSyncWorkbenchService,
+  isMergeEditorInput
+};
+//# sourceMappingURL=userDataSyncWorkbenchService.js.map

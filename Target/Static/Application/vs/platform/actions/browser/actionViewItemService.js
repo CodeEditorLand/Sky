@@ -1,1 +1,66 @@
-import{$df as d,Event as h}from"../../../base/common/event.js";import{$vd as c,$td as a}from"../../../base/common/lifecycle.js";import{$WB as p}from"../../instantiation/common/extensions.js";import{$nj as m}from"../../instantiation/common/instantiation.js";import{$dI as $}from"../common/actions.js";const f=m("IActionViewItemService");class k{constructor(){this.onDidChange=h.None}register(t,e,r,o){return c.None}lookUp(t,e){}}class g{constructor(){this.a=new Map,this.b=new d,this.onDidChange=this.b.event}dispose(){this.b.dispose()}register(t,e,r,o){const i=this.c(t,e);if(this.a.has(i))throw new Error(`A provider for the command ${e} and menu ${t} is already registered.`);this.a.set(i,r);const n=o?.(()=>{this.b.fire(t)});return a(()=>{n?.dispose(),this.a.delete(i)})}lookUp(t,e){return this.a.get(this.c(t,e))}c(t,e){return`${t.id}/${e instanceof $?e.id:e}`}}p(f,g,1);export{f as $jgb,k as $kgb};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { Emitter, Event } from "../../../base/common/event.js";
+import { Disposable, toDisposable } from "../../../base/common/lifecycle.js";
+import { registerSingleton } from "../../instantiation/common/extensions.js";
+import { createDecorator } from "../../instantiation/common/instantiation.js";
+import { MenuId } from "../common/actions.js";
+const IActionViewItemService = createDecorator("IActionViewItemService");
+class NullActionViewItemService {
+  static {
+    __name(this, "NullActionViewItemService");
+  }
+  constructor() {
+    this.onDidChange = Event.None;
+  }
+  register(menu, commandId, provider, event) {
+    return Disposable.None;
+  }
+  lookUp(menu, commandId) {
+    return void 0;
+  }
+}
+class ActionViewItemService {
+  static {
+    __name(this, "ActionViewItemService");
+  }
+  constructor() {
+    this._providers = /* @__PURE__ */ new Map();
+    this._onDidChange = new Emitter();
+    this.onDidChange = this._onDidChange.event;
+  }
+  dispose() {
+    this._onDidChange.dispose();
+  }
+  register(menu, commandOrSubmenuId, provider, event) {
+    const id = this._makeKey(menu, commandOrSubmenuId);
+    if (this._providers.has(id)) {
+      throw new Error(`A provider for the command ${commandOrSubmenuId} and menu ${menu} is already registered.`);
+    }
+    this._providers.set(id, provider);
+    const listener = event?.(() => {
+      this._onDidChange.fire(menu);
+    });
+    return toDisposable(() => {
+      listener?.dispose();
+      this._providers.delete(id);
+    });
+  }
+  lookUp(menu, commandOrMenuId) {
+    return this._providers.get(this._makeKey(menu, commandOrMenuId));
+  }
+  _makeKey(menu, commandOrMenuId) {
+    return `${menu.id}/${commandOrMenuId instanceof MenuId ? commandOrMenuId.id : commandOrMenuId}`;
+  }
+}
+registerSingleton(
+  IActionViewItemService,
+  ActionViewItemService,
+  1
+  /* InstantiationType.Delayed */
+);
+export {
+  IActionViewItemService,
+  NullActionViewItemService
+};
+//# sourceMappingURL=actionViewItemService.js.map

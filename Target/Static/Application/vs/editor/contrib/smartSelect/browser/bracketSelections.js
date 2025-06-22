@@ -1,1 +1,142 @@
-import{$Gd as x}from"../../../../base/common/linkedList.js";import{$bC as k}from"../../../common/core/position.js";import{$cC as h}from"../../../common/core/range.js";class g{async provideSelectionRanges(i,n){const r=[];for(const e of n){const o=[];r.push(o);const t=new Map;await new Promise(s=>g.b(s,0,i,e,t)),await new Promise(s=>g.c(s,0,i,e,t,o))}return r}static{this._maxDuration=30}static{this.a=2}static b(i,n,r,e,o){const t=new Map,s=Date.now();for(;;){if(n>=g.a){i();break}if(!e){i();break}const m=r.bracketPairs.findNextBracket(e);if(!m){i();break}if(Date.now()-s>g._maxDuration){setTimeout(()=>g.b(i,n+1,r,e,o));break}if(m.bracketInfo.isOpeningBracket){const c=m.bracketInfo.bracketText,a=t.has(c)?t.get(c):0;t.set(c,a+1)}else{const c=m.bracketInfo.getOpeningBrackets()[0].bracketText;let a=t.has(c)?t.get(c):0;if(a-=1,t.set(c,Math.max(0,a)),a<0){let f=o.get(c);f||(f=new x,o.set(c,f)),f.push(m.range)}}e=m.range.getEndPosition()}}static c(i,n,r,e,o,t){const s=new Map,m=Date.now();for(;;){if(n>=g.a&&o.size===0){i();break}if(!e){i();break}const u=r.bracketPairs.findPrevBracket(e);if(!u){i();break}if(Date.now()-m>g._maxDuration){setTimeout(()=>g.c(i,n+1,r,e,o,t));break}if(u.bracketInfo.isOpeningBracket){const a=u.bracketInfo.bracketText;let f=s.has(a)?s.get(a):0;if(f-=1,s.set(a,Math.max(0,f)),f<0){const p=o.get(a);if(p){const w=p.shift();p.size===0&&o.delete(a);const P=h.fromPositions(u.range.getEndPosition(),w.getStartPosition()),l=h.fromPositions(u.range.getStartPosition(),w.getEndPosition());t.push({range:P}),t.push({range:l}),g.e(r,l,t)}}}else{const a=u.bracketInfo.getOpeningBrackets()[0].bracketText,f=s.has(a)?s.get(a):0;s.set(a,f+1)}e=u.range.getStartPosition()}}static e(i,n,r){if(n.startLineNumber===n.endLineNumber)return;const e=n.startLineNumber,o=i.getLineFirstNonWhitespaceColumn(e);o!==0&&o!==n.startColumn&&(r.push({range:h.fromPositions(new k(e,o),n.getEndPosition())}),r.push({range:h.fromPositions(new k(e,1),n.getEndPosition())}));const t=e-1;if(t>0){const s=i.getLineFirstNonWhitespaceColumn(t);s===n.startColumn&&s!==i.getLineLastNonWhitespaceColumn(t)&&(r.push({range:h.fromPositions(new k(t,s),n.getEndPosition())}),r.push({range:h.fromPositions(new k(t,1),n.getEndPosition())}))}}}export{g as $Pjb};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { LinkedList } from "../../../../base/common/linkedList.js";
+import { Position } from "../../../common/core/position.js";
+import { Range } from "../../../common/core/range.js";
+class BracketSelectionRangeProvider {
+  static {
+    __name(this, "BracketSelectionRangeProvider");
+  }
+  async provideSelectionRanges(model, positions) {
+    const result = [];
+    for (const position of positions) {
+      const bucket = [];
+      result.push(bucket);
+      const ranges = /* @__PURE__ */ new Map();
+      await new Promise((resolve) => BracketSelectionRangeProvider._bracketsRightYield(resolve, 0, model, position, ranges));
+      await new Promise((resolve) => BracketSelectionRangeProvider._bracketsLeftYield(resolve, 0, model, position, ranges, bucket));
+    }
+    return result;
+  }
+  static {
+    this._maxDuration = 30;
+  }
+  static {
+    this._maxRounds = 2;
+  }
+  static _bracketsRightYield(resolve, round, model, pos, ranges) {
+    const counts = /* @__PURE__ */ new Map();
+    const t1 = Date.now();
+    while (true) {
+      if (round >= BracketSelectionRangeProvider._maxRounds) {
+        resolve();
+        break;
+      }
+      if (!pos) {
+        resolve();
+        break;
+      }
+      const bracket = model.bracketPairs.findNextBracket(pos);
+      if (!bracket) {
+        resolve();
+        break;
+      }
+      const d = Date.now() - t1;
+      if (d > BracketSelectionRangeProvider._maxDuration) {
+        setTimeout(() => BracketSelectionRangeProvider._bracketsRightYield(resolve, round + 1, model, pos, ranges));
+        break;
+      }
+      if (bracket.bracketInfo.isOpeningBracket) {
+        const key = bracket.bracketInfo.bracketText;
+        const val = counts.has(key) ? counts.get(key) : 0;
+        counts.set(key, val + 1);
+      } else {
+        const key = bracket.bracketInfo.getOpeningBrackets()[0].bracketText;
+        let val = counts.has(key) ? counts.get(key) : 0;
+        val -= 1;
+        counts.set(key, Math.max(0, val));
+        if (val < 0) {
+          let list = ranges.get(key);
+          if (!list) {
+            list = new LinkedList();
+            ranges.set(key, list);
+          }
+          list.push(bracket.range);
+        }
+      }
+      pos = bracket.range.getEndPosition();
+    }
+  }
+  static _bracketsLeftYield(resolve, round, model, pos, ranges, bucket) {
+    const counts = /* @__PURE__ */ new Map();
+    const t1 = Date.now();
+    while (true) {
+      if (round >= BracketSelectionRangeProvider._maxRounds && ranges.size === 0) {
+        resolve();
+        break;
+      }
+      if (!pos) {
+        resolve();
+        break;
+      }
+      const bracket = model.bracketPairs.findPrevBracket(pos);
+      if (!bracket) {
+        resolve();
+        break;
+      }
+      const d = Date.now() - t1;
+      if (d > BracketSelectionRangeProvider._maxDuration) {
+        setTimeout(() => BracketSelectionRangeProvider._bracketsLeftYield(resolve, round + 1, model, pos, ranges, bucket));
+        break;
+      }
+      if (!bracket.bracketInfo.isOpeningBracket) {
+        const key = bracket.bracketInfo.getOpeningBrackets()[0].bracketText;
+        const val = counts.has(key) ? counts.get(key) : 0;
+        counts.set(key, val + 1);
+      } else {
+        const key = bracket.bracketInfo.bracketText;
+        let val = counts.has(key) ? counts.get(key) : 0;
+        val -= 1;
+        counts.set(key, Math.max(0, val));
+        if (val < 0) {
+          const list = ranges.get(key);
+          if (list) {
+            const closing = list.shift();
+            if (list.size === 0) {
+              ranges.delete(key);
+            }
+            const innerBracket = Range.fromPositions(bracket.range.getEndPosition(), closing.getStartPosition());
+            const outerBracket = Range.fromPositions(bracket.range.getStartPosition(), closing.getEndPosition());
+            bucket.push({ range: innerBracket });
+            bucket.push({ range: outerBracket });
+            BracketSelectionRangeProvider._addBracketLeading(model, outerBracket, bucket);
+          }
+        }
+      }
+      pos = bracket.range.getStartPosition();
+    }
+  }
+  static _addBracketLeading(model, bracket, bucket) {
+    if (bracket.startLineNumber === bracket.endLineNumber) {
+      return;
+    }
+    const startLine = bracket.startLineNumber;
+    const column = model.getLineFirstNonWhitespaceColumn(startLine);
+    if (column !== 0 && column !== bracket.startColumn) {
+      bucket.push({ range: Range.fromPositions(new Position(startLine, column), bracket.getEndPosition()) });
+      bucket.push({ range: Range.fromPositions(new Position(startLine, 1), bracket.getEndPosition()) });
+    }
+    const aboveLine = startLine - 1;
+    if (aboveLine > 0) {
+      const column2 = model.getLineFirstNonWhitespaceColumn(aboveLine);
+      if (column2 === bracket.startColumn && column2 !== model.getLineLastNonWhitespaceColumn(aboveLine)) {
+        bucket.push({ range: Range.fromPositions(new Position(aboveLine, column2), bracket.getEndPosition()) });
+        bucket.push({ range: Range.fromPositions(new Position(aboveLine, 1), bracket.getEndPosition()) });
+      }
+    }
+  }
+}
+export {
+  BracketSelectionRangeProvider
+};
+//# sourceMappingURL=bracketSelections.js.map

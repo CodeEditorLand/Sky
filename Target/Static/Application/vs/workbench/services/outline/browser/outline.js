@@ -1,1 +1,28 @@
-import{$nj as r}from"../../../../platform/instantiation/common/instantiation.js";const p=r("IOutlineService");var e,l,s;!function(e){e[e.OutlinePane=1]="OutlinePane",e[e.Breadcrumbs=2]="Breadcrumbs",e[e.QuickPick=4]="QuickPick"}(e||(e={})),function(e){e.icons="outline.icons",e.collapseItems="outline.collapseItems",e.problemsEnabled="outline.problems.enabled",e.problemsColors="outline.problems.colors",e.problemsBadges="outline.problems.badges"}(l||(l={})),function(e){e.Collapsed="alwaysCollapse",e.Expanded="alwaysExpand"}(s||(s={}));export{p as $EKb,s as OutlineConfigCollapseItemsValues,l as OutlineConfigKeys,e as OutlineTarget};
+import { createDecorator } from "../../../../platform/instantiation/common/instantiation.js";
+const IOutlineService = createDecorator("IOutlineService");
+var OutlineTarget;
+(function(OutlineTarget2) {
+  OutlineTarget2[OutlineTarget2["OutlinePane"] = 1] = "OutlinePane";
+  OutlineTarget2[OutlineTarget2["Breadcrumbs"] = 2] = "Breadcrumbs";
+  OutlineTarget2[OutlineTarget2["QuickPick"] = 4] = "QuickPick";
+})(OutlineTarget || (OutlineTarget = {}));
+var OutlineConfigKeys;
+(function(OutlineConfigKeys2) {
+  OutlineConfigKeys2["icons"] = "outline.icons";
+  OutlineConfigKeys2["collapseItems"] = "outline.collapseItems";
+  OutlineConfigKeys2["problemsEnabled"] = "outline.problems.enabled";
+  OutlineConfigKeys2["problemsColors"] = "outline.problems.colors";
+  OutlineConfigKeys2["problemsBadges"] = "outline.problems.badges";
+})(OutlineConfigKeys || (OutlineConfigKeys = {}));
+var OutlineConfigCollapseItemsValues;
+(function(OutlineConfigCollapseItemsValues2) {
+  OutlineConfigCollapseItemsValues2["Collapsed"] = "alwaysCollapse";
+  OutlineConfigCollapseItemsValues2["Expanded"] = "alwaysExpand";
+})(OutlineConfigCollapseItemsValues || (OutlineConfigCollapseItemsValues = {}));
+export {
+  IOutlineService,
+  OutlineConfigCollapseItemsValues,
+  OutlineConfigKeys,
+  OutlineTarget
+};
+//# sourceMappingURL=outline.js.map

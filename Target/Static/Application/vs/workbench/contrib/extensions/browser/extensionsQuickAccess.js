@@ -1,1 +1,120 @@
-import{$9ob as R}from"../../../../platform/quickinput/browser/pickerQuickAccess.js";import{localize as o}from"../../../../nls.js";import{$gz as b,$jz as _}from"../../../../platform/extensionManagement/common/extensionManagement.js";import{$RI as d}from"../../../../platform/notification/common/notification.js";import{$3n as x}from"../../../../platform/log/common/log.js";import{$bDb as $}from"../common/extensions.js";var l,u,f=function(t,e,s,o){var r,n=arguments.length,a=n<3?e:null===o?o=Object.getOwnPropertyDescriptor(e,s):o;if("object"==typeof Reflect&&"function"==typeof Reflect.decorate)a=Reflect.decorate(t,e,s,o);else for(var c=t.length-1;c>=0;c--)(r=t[c])&&(a=(n<3?r(a):n>3?r(e,s,a):r(e,s))||a);return n>3&&a&&Object.defineProperty(e,s,a),a},c=function(t,e){return function(s,o){e(s,o,t)}};let p=class extends R{static{l=this}static{this.PREFIX="ext install "}constructor(t,e,s,o,r){super(l.PREFIX),this.a=t,this.b=e,this.h=s,this.j=o,this.m=r}g(t,e,s){if(!t)return[{label:o(7498,null)}];const r={label:o(7499,null,t),accept:()=>this.a.openSearch(t)};return/\./.test(t)?this.r(t,r,s):[r]}async r(t,e,s){try{const[r]=await this.b.getExtensions([{id:t}],s);return s.isCancellationRequested?[]:r?[{label:o(7500,null,t),accept:()=>this.s(r,t)}]:[e]}catch(t){return s.isCancellationRequested?[]:(this.m.error(t),[e])}}async s(t,e){try{await this.a.openSearch(`@id:${e}`),await this.h.installFromGallery(t)}catch(t){this.j.error(t)}}};p=l=f([c(0,$),c(1,b),c(2,_),c(3,d),c(4,x)],p);let m=class extends R{static{u=this}static{this.PREFIX="ext "}constructor(t){super(u.PREFIX),this.a=t}g(){return[{label:o(7501,null),accept:()=>this.a.openSearch("")}]}};m=u=f([c(0,$)],m);export{p as $Qhc,m as $Rhc};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { PickerQuickAccessProvider } from "../../../../platform/quickinput/browser/pickerQuickAccess.js";
+import { localize } from "../../../../nls.js";
+import { IExtensionGalleryService, IExtensionManagementService } from "../../../../platform/extensionManagement/common/extensionManagement.js";
+import { INotificationService } from "../../../../platform/notification/common/notification.js";
+import { ILogService } from "../../../../platform/log/common/log.js";
+import { IExtensionsWorkbenchService } from "../common/extensions.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+var InstallExtensionQuickAccessProvider_1;
+var ManageExtensionsQuickAccessProvider_1;
+let InstallExtensionQuickAccessProvider = class InstallExtensionQuickAccessProvider2 extends PickerQuickAccessProvider {
+  static {
+    __name(this, "InstallExtensionQuickAccessProvider");
+  }
+  static {
+    InstallExtensionQuickAccessProvider_1 = this;
+  }
+  static {
+    this.PREFIX = "ext install ";
+  }
+  constructor(extensionsWorkbenchService, galleryService, extensionsService, notificationService, logService) {
+    super(InstallExtensionQuickAccessProvider_1.PREFIX);
+    this.extensionsWorkbenchService = extensionsWorkbenchService;
+    this.galleryService = galleryService;
+    this.extensionsService = extensionsService;
+    this.notificationService = notificationService;
+    this.logService = logService;
+  }
+  _getPicks(filter, disposables, token) {
+    if (!filter) {
+      return [{
+        label: localize("type", "Type an extension name to install or search.")
+      }];
+    }
+    const genericSearchPickItem = {
+      label: localize("searchFor", "Press Enter to search for extension '{0}'.", filter),
+      accept: /* @__PURE__ */ __name(() => this.extensionsWorkbenchService.openSearch(filter), "accept")
+    };
+    if (/\./.test(filter)) {
+      return this.getPicksForExtensionId(filter, genericSearchPickItem, token);
+    }
+    return [genericSearchPickItem];
+  }
+  async getPicksForExtensionId(filter, fallback, token) {
+    try {
+      const [galleryExtension] = await this.galleryService.getExtensions([{ id: filter }], token);
+      if (token.isCancellationRequested) {
+        return [];
+      }
+      if (!galleryExtension) {
+        return [fallback];
+      }
+      return [{
+        label: localize("install", "Press Enter to install extension '{0}'.", filter),
+        accept: /* @__PURE__ */ __name(() => this.installExtension(galleryExtension, filter), "accept")
+      }];
+    } catch (error) {
+      if (token.isCancellationRequested) {
+        return [];
+      }
+      this.logService.error(error);
+      return [fallback];
+    }
+  }
+  async installExtension(extension, name) {
+    try {
+      await this.extensionsWorkbenchService.openSearch(`@id:${name}`);
+      await this.extensionsService.installFromGallery(extension);
+    } catch (error) {
+      this.notificationService.error(error);
+    }
+  }
+};
+InstallExtensionQuickAccessProvider = InstallExtensionQuickAccessProvider_1 = __decorate([
+  __param(0, IExtensionsWorkbenchService),
+  __param(1, IExtensionGalleryService),
+  __param(2, IExtensionManagementService),
+  __param(3, INotificationService),
+  __param(4, ILogService)
+], InstallExtensionQuickAccessProvider);
+let ManageExtensionsQuickAccessProvider = class ManageExtensionsQuickAccessProvider2 extends PickerQuickAccessProvider {
+  static {
+    __name(this, "ManageExtensionsQuickAccessProvider");
+  }
+  static {
+    ManageExtensionsQuickAccessProvider_1 = this;
+  }
+  static {
+    this.PREFIX = "ext ";
+  }
+  constructor(extensionsWorkbenchService) {
+    super(ManageExtensionsQuickAccessProvider_1.PREFIX);
+    this.extensionsWorkbenchService = extensionsWorkbenchService;
+  }
+  _getPicks() {
+    return [{
+      label: localize("manage", "Press Enter to manage your extensions."),
+      accept: /* @__PURE__ */ __name(() => this.extensionsWorkbenchService.openSearch(""), "accept")
+    }];
+  }
+};
+ManageExtensionsQuickAccessProvider = ManageExtensionsQuickAccessProvider_1 = __decorate([
+  __param(0, IExtensionsWorkbenchService)
+], ManageExtensionsQuickAccessProvider);
+export {
+  InstallExtensionQuickAccessProvider,
+  ManageExtensionsQuickAccessProvider
+};
+//# sourceMappingURL=extensionsQuickAccess.js.map

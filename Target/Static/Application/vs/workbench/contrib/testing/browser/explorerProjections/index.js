@@ -1,1 +1,83 @@
-import{ObjectTreeElementCollapseState as o}from"../../../../../base/browser/ui/tree/tree.js";import{$df as d}from"../../../../../base/common/event.js";import{Iterable as a}from"../../../../../base/common/iterator.js";import{$Qlc as l}from"./testingViewState.js";import{InternalTestItem as n}from"../../common/testTypes.js";let f=0;const c=()=>String(f++);class ${constructor(s,t=null){this.test=s,this.parent=t,this.e=new d,this.onChange=this.e.event,this.children=new Set,this.treeId=c(),this.retired=!1,this.state=0,this.depth=t?t.depth+1:0}toJSON(){if(this.depth===0)return{controllerId:this.test.controllerId};const s={$mid:16,tests:[n.serialize(this.test)]};for(let t=this.parent;t&&t.depth>0;t=t.parent)s.tests.unshift(n.serialize(t.test));return s}}class p{get description(){return typeof this.message=="string"?this.message:this.message.value}constructor(s,t){this.message=s,this.parent=t,this.treeId=c(),this.children=new Set}}const S={getId(r){const s=r instanceof p?"error":r.test.expand===0?!!r.children.size:r.test.expand;return r.treeId+"\0"+s}},h=(r,s,t)=>{let i;if(t===null){const e=[...s];if(e.length===1)return h(r,e,e[0]);i=e}else i=t.children;return a.map(i,e=>e instanceof p?{element:e}:{element:e,collapsible:e.test.expand!==0,collapsed:e.test.item.error?o.PreserveOrExpanded:l(r,e.test.item.extId)??e.depth>0?o.PreserveOrCollapsed:o.PreserveOrExpanded,children:h(r,s,e)})};export{$ as $Rlc,p as $Slc,S as $Tlc,h as $Ulc};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { ObjectTreeElementCollapseState } from "../../../../../base/browser/ui/tree/tree.js";
+import { Emitter } from "../../../../../base/common/event.js";
+import { Iterable } from "../../../../../base/common/iterator.js";
+import { isCollapsedInSerializedTestTree } from "./testingViewState.js";
+import { InternalTestItem } from "../../common/testTypes.js";
+let idCounter = 0;
+const getId = /* @__PURE__ */ __name(() => String(idCounter++), "getId");
+class TestItemTreeElement {
+  static {
+    __name(this, "TestItemTreeElement");
+  }
+  constructor(test, parent = null) {
+    this.test = test;
+    this.parent = parent;
+    this.changeEmitter = new Emitter();
+    this.onChange = this.changeEmitter.event;
+    this.children = /* @__PURE__ */ new Set();
+    this.treeId = getId();
+    this.retired = false;
+    this.state = 0;
+    this.depth = parent ? parent.depth + 1 : 0;
+  }
+  toJSON() {
+    if (this.depth === 0) {
+      return { controllerId: this.test.controllerId };
+    }
+    const context = {
+      $mid: 16,
+      tests: [InternalTestItem.serialize(this.test)]
+    };
+    for (let p = this.parent; p && p.depth > 0; p = p.parent) {
+      context.tests.unshift(InternalTestItem.serialize(p.test));
+    }
+    return context;
+  }
+}
+class TestTreeErrorMessage {
+  static {
+    __name(this, "TestTreeErrorMessage");
+  }
+  get description() {
+    return typeof this.message === "string" ? this.message : this.message.value;
+  }
+  constructor(message, parent) {
+    this.message = message;
+    this.parent = parent;
+    this.treeId = getId();
+    this.children = /* @__PURE__ */ new Set();
+  }
+}
+const testIdentityProvider = {
+  getId(element) {
+    const expandComponent = element instanceof TestTreeErrorMessage ? "error" : element.test.expand === 0 ? !!element.children.size : element.test.expand;
+    return element.treeId + "\0" + expandComponent;
+  }
+};
+const getChildrenForParent = /* @__PURE__ */ __name((serialized, rootsWithChildren, node) => {
+  let it;
+  if (node === null) {
+    const rootsWithChildrenArr = [...rootsWithChildren];
+    if (rootsWithChildrenArr.length === 1) {
+      return getChildrenForParent(serialized, rootsWithChildrenArr, rootsWithChildrenArr[0]);
+    }
+    it = rootsWithChildrenArr;
+  } else {
+    it = node.children;
+  }
+  return Iterable.map(it, (element) => element instanceof TestTreeErrorMessage ? { element } : {
+    element,
+    collapsible: element.test.expand !== 0,
+    collapsed: element.test.item.error ? ObjectTreeElementCollapseState.PreserveOrExpanded : isCollapsedInSerializedTestTree(serialized, element.test.item.extId) ?? element.depth > 0 ? ObjectTreeElementCollapseState.PreserveOrCollapsed : ObjectTreeElementCollapseState.PreserveOrExpanded,
+    children: getChildrenForParent(serialized, rootsWithChildren, element)
+  });
+}, "getChildrenForParent");
+export {
+  TestItemTreeElement,
+  TestTreeErrorMessage,
+  getChildrenForParent,
+  testIdentityProvider
+};
+//# sourceMappingURL=index.js.map

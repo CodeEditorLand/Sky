@@ -1,1 +1,97 @@
-import{$vd as h}from"../../../../../base/common/lifecycle.js";import{$Po as p}from"../../../../../platform/telemetry/common/telemetry.js";import{TerminalCompletionItemKind as s}from"./terminalCompletionItem.js";var u=function(e,t,i,n){var o,s=arguments.length,l=s<3?t:null===n?n=Object.getOwnPropertyDescriptor(t,i):n;if("object"==typeof Reflect&&"function"==typeof Reflect.decorate)l=Reflect.decorate(e,t,i,n);else for(var c=e.length-1;c>=0;c--)(o=e[c])&&(l=(s<3?o(l):s>3?o(t,i,l):o(t,i))||l);return s>3&&l&&Object.defineProperty(t,i,l),l},f=function(e,t){return function(i,n){t(i,n,e)}};let c=class extends h{constructor(e,t,i){super(),this.c=t,this.f=i,this.b=new Map([[s.File,"File"],[s.Folder,"Folder"],[s.Method,"Method"],[s.Alias,"Alias"],[s.Argument,"Argument"],[s.Option,"Option"],[s.OptionValue,"Option Value"],[s.Flag,"Flag"],[s.InlineSuggestion,"Inline Suggestion"],[s.InlineSuggestionAlwaysOnTop,"Inline Suggestion"]]),this.B(e.onCommandFinished((e=>{this.g(!1,e.exitCode),this.a=void 0}))),this.B(this.c.onDidInterrupt((()=>{this.g(!0),this.a=void 0})))}acceptCompletion(e,t){e&&t?(this.a=this.a||[],this.a.push({label:"string"==typeof e.label?e.label:e.label.label,kind:this.b.get(e.kind)})):this.a=void 0}g(e,t){const i=this.c?.value;for(const n of this.a||[]){const o=n?.label,s=n?.kind;if(void 0===o||void 0===i||void 0===s)return;let l;l=e?"Interrupted":i.trim()&&i.includes(o)?"Accepted":g(i,o)?"AcceptedWithEdit":"Deleted",this.f.publicLog2("terminal.suggest.acceptedCompletion",{kind:s,outcome:l,exitCode:t})}}};var a;function g(e,t){return e.includes(t.substring(0,Math.ceil(t.length/2)))}c=u([f(2,p)],c),function(e){e.Accepted="Accepted",e.Deleted="Deleted",e.AcceptedWithEdit="AcceptedWithEdit",e.Interrupted="Interrupted"}(a||(a={}));export{c as $stc};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { Disposable } from "../../../../../base/common/lifecycle.js";
+import { ITelemetryService } from "../../../../../platform/telemetry/common/telemetry.js";
+import { TerminalCompletionItemKind } from "./terminalCompletionItem.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+let TerminalSuggestTelemetry = class TerminalSuggestTelemetry2 extends Disposable {
+  static {
+    __name(this, "TerminalSuggestTelemetry");
+  }
+  constructor(commandDetection, _promptInputModel, _telemetryService) {
+    super();
+    this._promptInputModel = _promptInputModel;
+    this._telemetryService = _telemetryService;
+    this._kindMap = /* @__PURE__ */ new Map([
+      [TerminalCompletionItemKind.File, "File"],
+      [TerminalCompletionItemKind.Folder, "Folder"],
+      [TerminalCompletionItemKind.Method, "Method"],
+      [TerminalCompletionItemKind.Alias, "Alias"],
+      [TerminalCompletionItemKind.Argument, "Argument"],
+      [TerminalCompletionItemKind.Option, "Option"],
+      [TerminalCompletionItemKind.OptionValue, "Option Value"],
+      [TerminalCompletionItemKind.Flag, "Flag"],
+      [TerminalCompletionItemKind.InlineSuggestion, "Inline Suggestion"],
+      [TerminalCompletionItemKind.InlineSuggestionAlwaysOnTop, "Inline Suggestion"]
+    ]);
+    this._register(commandDetection.onCommandFinished((e) => {
+      this._sendTelemetryInfo(false, e.exitCode);
+      this._acceptedCompletions = void 0;
+    }));
+    this._register(this._promptInputModel.onDidInterrupt(() => {
+      this._sendTelemetryInfo(true);
+      this._acceptedCompletions = void 0;
+    }));
+  }
+  acceptCompletion(completion, commandLine) {
+    if (!completion || !commandLine) {
+      this._acceptedCompletions = void 0;
+      return;
+    }
+    this._acceptedCompletions = this._acceptedCompletions || [];
+    this._acceptedCompletions.push({ label: typeof completion.label === "string" ? completion.label : completion.label.label, kind: this._kindMap.get(completion.kind) });
+  }
+  _sendTelemetryInfo(fromInterrupt, exitCode) {
+    const commandLine = this._promptInputModel?.value;
+    for (const completion of this._acceptedCompletions || []) {
+      const label = completion?.label;
+      const kind = completion?.kind;
+      if (label === void 0 || commandLine === void 0 || kind === void 0) {
+        return;
+      }
+      let outcome;
+      if (fromInterrupt) {
+        outcome = "Interrupted";
+      } else if (commandLine.trim() && commandLine.includes(label)) {
+        outcome = "Accepted";
+      } else if (inputContainsFirstHalfOfLabel(commandLine, label)) {
+        outcome = "AcceptedWithEdit";
+      } else {
+        outcome = "Deleted";
+      }
+      this._telemetryService.publicLog2("terminal.suggest.acceptedCompletion", {
+        kind,
+        outcome,
+        exitCode
+      });
+    }
+  }
+};
+TerminalSuggestTelemetry = __decorate([
+  __param(2, ITelemetryService)
+], TerminalSuggestTelemetry);
+var CompletionOutcome;
+(function(CompletionOutcome2) {
+  CompletionOutcome2["Accepted"] = "Accepted";
+  CompletionOutcome2["Deleted"] = "Deleted";
+  CompletionOutcome2["AcceptedWithEdit"] = "AcceptedWithEdit";
+  CompletionOutcome2["Interrupted"] = "Interrupted";
+})(CompletionOutcome || (CompletionOutcome = {}));
+function inputContainsFirstHalfOfLabel(commandLine, label) {
+  return commandLine.includes(label.substring(0, Math.ceil(label.length / 2)));
+}
+__name(inputContainsFirstHalfOfLabel, "inputContainsFirstHalfOfLabel");
+export {
+  TerminalSuggestTelemetry
+};
+//# sourceMappingURL=terminalSuggestTelemetry.js.map

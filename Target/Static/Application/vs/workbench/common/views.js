@@ -1,1 +1,332 @@
-import{$df as o}from"../../base/common/event.js";import{localize as l}from"../../nls.js";import{$nj as w}from"../../platform/instantiation/common/instantiation.js";import{$vd as p,$td as f}from"../../base/common/lifecycle.js";import{$Fc as x,$Pc as v}from"../../base/common/map.js";import{$Ql as m}from"../../platform/registry/common/platform.js";import{$5o as V}from"../../base/common/objects.js";import{$Mj as D}from"../../base/common/codicons.js";import{$Ct as $}from"../../platform/theme/common/iconRegistry.js";const O="views",_=l(4477,null),I=$("default-view-icon",D.window,l(4478,null));var c;(function(s){s.ViewContainersRegistry="workbench.registry.view.containers",s.ViewsRegistry="workbench.registry.view"})(c||(c={}));var u;(function(s){s[s.Sidebar=0]="Sidebar",s[s.Panel=1]="Panel",s[s.AuxiliaryBar=2]="AuxiliaryBar"})(u||(u={}));const P=[0,1,2];function U(s){switch(s){case 0:return"sidebar";case 1:return"panel";case 2:return"auxiliarybar"}}class y extends p{constructor(){super(...arguments),this.c=this.B(new o),this.onDidRegister=this.c.event,this.f=this.B(new o),this.onDidDeregister=this.f.event,this.g=new Map,this.h=[]}get all(){return[...this.g.values()].flat()}registerViewContainer(e,t,i){const r=this.get(e.id);if(r)return r;const n=e;return n.openCommandActionDescriptor=i?.doNotRegisterOpenCommand?void 0:n.openCommandActionDescriptor??{id:n.id},x(this.g,t,[]).push(n),i?.isDefault&&this.h.push(n),this.c.fire({viewContainer:n,viewContainerLocation:t}),n}deregisterViewContainer(e){for(const t of this.g.keys()){const i=this.g.get(t),r=i?.indexOf(e);if(r!==-1){i?.splice(r,1),i.length===0&&this.g.delete(t),this.f.fire({viewContainer:e,viewContainerLocation:t});return}}}get(e){return this.all.filter(t=>t.id===e)[0]}getViewContainers(e){return[...this.g.get(e)||[]]}getViewContainerLocation(e){return[...this.g.keys()].filter(t=>this.getViewContainers(t).filter(i=>i?.id===e.id).length>0)[0]}getDefaultViewContainer(e){return this.h.find(t=>this.getViewContainerLocation(t)===e)}}m.add(c.ViewContainersRegistry,new y);var a;(function(s){s.Open="2_open",s.Debug="4_debug",s.SCM="5_scm",s.More="9_more"})(a||(a={}));function M(s,e){const t=s.group??a.More,i=e.group??a.More;return t!==i?t.localeCompare(i):(s.order??5)-(e.order??5)}class C extends p{constructor(){super(...arguments),this.c=this.B(new o),this.onViewsRegistered=this.c.event,this.f=this.B(new o),this.onViewsDeregistered=this.f.event,this.g=this.B(new o),this.onDidChangeContainer=this.g.event,this.h=this.B(new o),this.onDidChangeViewWelcomeContent=this.h.event,this.j=[],this.m=new Map,this.n=new v}registerViews(e,t){this.registerViews2([{views:e,viewContainer:t}])}registerViews2(e){e.forEach(({views:t,viewContainer:i})=>this.r(t,i)),this.c.fire(e)}deregisterViews(e,t){const i=this.s(e,t);i.length&&this.f.fire({views:i,viewContainer:t})}moveViews(e,t){for(const i of this.m.keys())if(i!==t){const r=this.s(e,i);r.length&&(this.r(r,t),this.g.fire({views:r,from:i,to:t}))}}getViews(e){return this.m.get(e)||[]}getView(e){for(const t of this.j){const i=(this.m.get(t)||[]).filter(r=>r.id===e)[0];if(i)return i}return null}getViewContainer(e){for(const t of this.j)if((this.m.get(t)||[]).filter(r=>r.id===e)[0])return t;return null}registerViewWelcomeContent(e,t){return this.n.add(e,t),this.h.fire(e),f(()=>{this.n.delete(e,t),this.h.fire(e)})}registerViewWelcomeContent2(e,t){const i=new Map;for(const[r,n]of t)this.n.add(e,n),i.set(r,f(()=>{this.n.delete(e,n),this.h.fire(e)}));return this.h.fire(e),i}getViewWelcomeContent(e){const t=[];return this.n.forEach(e,i=>t.push(i)),t.sort(M)}r(e,t){let i=this.m.get(t);i||(i=[],this.m.set(t,i),this.j.push(t));for(const r of e){if(this.getView(r.id)!==null)throw new Error(l(4479,null,r.id));i.push(r)}}s(e,t){const i=this.m.get(t);if(!i)return[];const r=[],n=[];for(const h of i)e.includes(h)?r.push(h):n.push(h);return r.length&&(n.length?this.m.set(t,n):(this.m.delete(t),this.j.splice(this.j.indexOf(t),1))),r}}m.add(c.ViewsRegistry,new C);const H=w("viewDescriptorService");var d;(function(s){s[s.Default=0]="Default",s[s.Expand=1]="Expand"})(d||(d={}));var g;(function(s){s[s.None=0]="None",s[s.Collapsed=1]="Collapsed",s[s.Expanded=2]="Expanded"})(g||(g={}));class q{constructor(e,t){this.c=!1,this.d=!1,V(this,e),this.d=!!t,this.resolve=async i=>{if(t&&!this.c){const r=await t(i);r&&(this.tooltip=this.tooltip??r.tooltip,this.command=this.command??r.command)}i.isCancellationRequested||(this.c=!0)}}get hasResolve(){return this.d}resetResolve(){this.c=!1}asTreeItem(){return{handle:this.handle,parentHandle:this.parentHandle,collapsibleState:this.collapsibleState,label:this.label,description:this.description,icon:this.icon,iconDark:this.iconDark,themeIcon:this.themeIcon,resourceUri:this.resourceUri,tooltip:this.tooltip,contextValue:this.contextValue,command:this.command,children:this.children,accessibilityInformation:this.accessibilityInformation}}}class z extends Error{constructor(e){super(l(4480,null,e)),this.name="NoTreeViewError"}static is(e){return!!e&&e.name==="NoTreeViewError"}}export{z as $1M,O as $TM,_ as $UM,I as $VM,P as $WM,U as $XM,H as $YM,q as $ZM,c as Extensions,g as TreeItemCollapsibleState,u as ViewContainerLocation,a as ViewContentGroups,d as ViewVisibilityState};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { Emitter } from "../../base/common/event.js";
+import { localize } from "../../nls.js";
+import { createDecorator } from "../../platform/instantiation/common/instantiation.js";
+import { Disposable, toDisposable } from "../../base/common/lifecycle.js";
+import { getOrSet, SetMap } from "../../base/common/map.js";
+import { Registry } from "../../platform/registry/common/platform.js";
+import { mixin } from "../../base/common/objects.js";
+import { Codicon } from "../../base/common/codicons.js";
+import { registerIcon } from "../../platform/theme/common/iconRegistry.js";
+const VIEWS_LOG_ID = "views";
+const VIEWS_LOG_NAME = localize("views log", "Views");
+const defaultViewIcon = registerIcon("default-view-icon", Codicon.window, localize("defaultViewIcon", "Default view icon."));
+var Extensions;
+(function(Extensions2) {
+  Extensions2.ViewContainersRegistry = "workbench.registry.view.containers";
+  Extensions2.ViewsRegistry = "workbench.registry.view";
+})(Extensions || (Extensions = {}));
+var ViewContainerLocation;
+(function(ViewContainerLocation2) {
+  ViewContainerLocation2[ViewContainerLocation2["Sidebar"] = 0] = "Sidebar";
+  ViewContainerLocation2[ViewContainerLocation2["Panel"] = 1] = "Panel";
+  ViewContainerLocation2[ViewContainerLocation2["AuxiliaryBar"] = 2] = "AuxiliaryBar";
+})(ViewContainerLocation || (ViewContainerLocation = {}));
+const ViewContainerLocations = [
+  0,
+  1,
+  2
+  /* ViewContainerLocation.AuxiliaryBar */
+];
+function ViewContainerLocationToString(viewContainerLocation) {
+  switch (viewContainerLocation) {
+    case 0:
+      return "sidebar";
+    case 1:
+      return "panel";
+    case 2:
+      return "auxiliarybar";
+  }
+}
+__name(ViewContainerLocationToString, "ViewContainerLocationToString");
+class ViewContainersRegistryImpl extends Disposable {
+  static {
+    __name(this, "ViewContainersRegistryImpl");
+  }
+  constructor() {
+    super(...arguments);
+    this._onDidRegister = this._register(new Emitter());
+    this.onDidRegister = this._onDidRegister.event;
+    this._onDidDeregister = this._register(new Emitter());
+    this.onDidDeregister = this._onDidDeregister.event;
+    this.viewContainers = /* @__PURE__ */ new Map();
+    this.defaultViewContainers = [];
+  }
+  get all() {
+    return [...this.viewContainers.values()].flat();
+  }
+  registerViewContainer(viewContainerDescriptor, viewContainerLocation, options) {
+    const existing = this.get(viewContainerDescriptor.id);
+    if (existing) {
+      return existing;
+    }
+    const viewContainer = viewContainerDescriptor;
+    viewContainer.openCommandActionDescriptor = options?.doNotRegisterOpenCommand ? void 0 : viewContainer.openCommandActionDescriptor ?? { id: viewContainer.id };
+    const viewContainers = getOrSet(this.viewContainers, viewContainerLocation, []);
+    viewContainers.push(viewContainer);
+    if (options?.isDefault) {
+      this.defaultViewContainers.push(viewContainer);
+    }
+    this._onDidRegister.fire({ viewContainer, viewContainerLocation });
+    return viewContainer;
+  }
+  deregisterViewContainer(viewContainer) {
+    for (const viewContainerLocation of this.viewContainers.keys()) {
+      const viewContainers = this.viewContainers.get(viewContainerLocation);
+      const index = viewContainers?.indexOf(viewContainer);
+      if (index !== -1) {
+        viewContainers?.splice(index, 1);
+        if (viewContainers.length === 0) {
+          this.viewContainers.delete(viewContainerLocation);
+        }
+        this._onDidDeregister.fire({ viewContainer, viewContainerLocation });
+        return;
+      }
+    }
+  }
+  get(id) {
+    return this.all.filter((viewContainer) => viewContainer.id === id)[0];
+  }
+  getViewContainers(location) {
+    return [...this.viewContainers.get(location) || []];
+  }
+  getViewContainerLocation(container) {
+    return [...this.viewContainers.keys()].filter((location) => this.getViewContainers(location).filter((viewContainer) => viewContainer?.id === container.id).length > 0)[0];
+  }
+  getDefaultViewContainer(location) {
+    return this.defaultViewContainers.find((viewContainer) => this.getViewContainerLocation(viewContainer) === location);
+  }
+}
+Registry.add(Extensions.ViewContainersRegistry, new ViewContainersRegistryImpl());
+var ViewContentGroups;
+(function(ViewContentGroups2) {
+  ViewContentGroups2["Open"] = "2_open";
+  ViewContentGroups2["Debug"] = "4_debug";
+  ViewContentGroups2["SCM"] = "5_scm";
+  ViewContentGroups2["More"] = "9_more";
+})(ViewContentGroups || (ViewContentGroups = {}));
+function compareViewContentDescriptors(a, b) {
+  const aGroup = a.group ?? ViewContentGroups.More;
+  const bGroup = b.group ?? ViewContentGroups.More;
+  if (aGroup !== bGroup) {
+    return aGroup.localeCompare(bGroup);
+  }
+  return (a.order ?? 5) - (b.order ?? 5);
+}
+__name(compareViewContentDescriptors, "compareViewContentDescriptors");
+class ViewsRegistry extends Disposable {
+  static {
+    __name(this, "ViewsRegistry");
+  }
+  constructor() {
+    super(...arguments);
+    this._onViewsRegistered = this._register(new Emitter());
+    this.onViewsRegistered = this._onViewsRegistered.event;
+    this._onViewsDeregistered = this._register(new Emitter());
+    this.onViewsDeregistered = this._onViewsDeregistered.event;
+    this._onDidChangeContainer = this._register(new Emitter());
+    this.onDidChangeContainer = this._onDidChangeContainer.event;
+    this._onDidChangeViewWelcomeContent = this._register(new Emitter());
+    this.onDidChangeViewWelcomeContent = this._onDidChangeViewWelcomeContent.event;
+    this._viewContainers = [];
+    this._views = /* @__PURE__ */ new Map();
+    this._viewWelcomeContents = new SetMap();
+  }
+  registerViews(views, viewContainer) {
+    this.registerViews2([{ views, viewContainer }]);
+  }
+  registerViews2(views) {
+    views.forEach(({ views: views2, viewContainer }) => this.addViews(views2, viewContainer));
+    this._onViewsRegistered.fire(views);
+  }
+  deregisterViews(viewDescriptors, viewContainer) {
+    const views = this.removeViews(viewDescriptors, viewContainer);
+    if (views.length) {
+      this._onViewsDeregistered.fire({ views, viewContainer });
+    }
+  }
+  moveViews(viewsToMove, viewContainer) {
+    for (const container of this._views.keys()) {
+      if (container !== viewContainer) {
+        const views = this.removeViews(viewsToMove, container);
+        if (views.length) {
+          this.addViews(views, viewContainer);
+          this._onDidChangeContainer.fire({ views, from: container, to: viewContainer });
+        }
+      }
+    }
+  }
+  getViews(loc) {
+    return this._views.get(loc) || [];
+  }
+  getView(id) {
+    for (const viewContainer of this._viewContainers) {
+      const viewDescriptor = (this._views.get(viewContainer) || []).filter((v) => v.id === id)[0];
+      if (viewDescriptor) {
+        return viewDescriptor;
+      }
+    }
+    return null;
+  }
+  getViewContainer(viewId) {
+    for (const viewContainer of this._viewContainers) {
+      const viewDescriptor = (this._views.get(viewContainer) || []).filter((v) => v.id === viewId)[0];
+      if (viewDescriptor) {
+        return viewContainer;
+      }
+    }
+    return null;
+  }
+  registerViewWelcomeContent(id, viewContent) {
+    this._viewWelcomeContents.add(id, viewContent);
+    this._onDidChangeViewWelcomeContent.fire(id);
+    return toDisposable(() => {
+      this._viewWelcomeContents.delete(id, viewContent);
+      this._onDidChangeViewWelcomeContent.fire(id);
+    });
+  }
+  registerViewWelcomeContent2(id, viewContentMap) {
+    const disposables = /* @__PURE__ */ new Map();
+    for (const [key, content] of viewContentMap) {
+      this._viewWelcomeContents.add(id, content);
+      disposables.set(key, toDisposable(() => {
+        this._viewWelcomeContents.delete(id, content);
+        this._onDidChangeViewWelcomeContent.fire(id);
+      }));
+    }
+    this._onDidChangeViewWelcomeContent.fire(id);
+    return disposables;
+  }
+  getViewWelcomeContent(id) {
+    const result = [];
+    this._viewWelcomeContents.forEach(id, (descriptor) => result.push(descriptor));
+    return result.sort(compareViewContentDescriptors);
+  }
+  addViews(viewDescriptors, viewContainer) {
+    let views = this._views.get(viewContainer);
+    if (!views) {
+      views = [];
+      this._views.set(viewContainer, views);
+      this._viewContainers.push(viewContainer);
+    }
+    for (const viewDescriptor of viewDescriptors) {
+      if (this.getView(viewDescriptor.id) !== null) {
+        throw new Error(localize("duplicateId", "A view with id '{0}' is already registered", viewDescriptor.id));
+      }
+      views.push(viewDescriptor);
+    }
+  }
+  removeViews(viewDescriptors, viewContainer) {
+    const views = this._views.get(viewContainer);
+    if (!views) {
+      return [];
+    }
+    const viewsToDeregister = [];
+    const remaningViews = [];
+    for (const view of views) {
+      if (!viewDescriptors.includes(view)) {
+        remaningViews.push(view);
+      } else {
+        viewsToDeregister.push(view);
+      }
+    }
+    if (viewsToDeregister.length) {
+      if (remaningViews.length) {
+        this._views.set(viewContainer, remaningViews);
+      } else {
+        this._views.delete(viewContainer);
+        this._viewContainers.splice(this._viewContainers.indexOf(viewContainer), 1);
+      }
+    }
+    return viewsToDeregister;
+  }
+}
+Registry.add(Extensions.ViewsRegistry, new ViewsRegistry());
+const IViewDescriptorService = createDecorator("viewDescriptorService");
+var ViewVisibilityState;
+(function(ViewVisibilityState2) {
+  ViewVisibilityState2[ViewVisibilityState2["Default"] = 0] = "Default";
+  ViewVisibilityState2[ViewVisibilityState2["Expand"] = 1] = "Expand";
+})(ViewVisibilityState || (ViewVisibilityState = {}));
+var TreeItemCollapsibleState;
+(function(TreeItemCollapsibleState2) {
+  TreeItemCollapsibleState2[TreeItemCollapsibleState2["None"] = 0] = "None";
+  TreeItemCollapsibleState2[TreeItemCollapsibleState2["Collapsed"] = 1] = "Collapsed";
+  TreeItemCollapsibleState2[TreeItemCollapsibleState2["Expanded"] = 2] = "Expanded";
+})(TreeItemCollapsibleState || (TreeItemCollapsibleState = {}));
+class ResolvableTreeItem {
+  static {
+    __name(this, "ResolvableTreeItem");
+  }
+  constructor(treeItem, resolve) {
+    this.resolved = false;
+    this._hasResolve = false;
+    mixin(this, treeItem);
+    this._hasResolve = !!resolve;
+    this.resolve = async (token) => {
+      if (resolve && !this.resolved) {
+        const resolvedItem = await resolve(token);
+        if (resolvedItem) {
+          this.tooltip = this.tooltip ?? resolvedItem.tooltip;
+          this.command = this.command ?? resolvedItem.command;
+        }
+      }
+      if (!token.isCancellationRequested) {
+        this.resolved = true;
+      }
+    };
+  }
+  get hasResolve() {
+    return this._hasResolve;
+  }
+  resetResolve() {
+    this.resolved = false;
+  }
+  asTreeItem() {
+    return {
+      handle: this.handle,
+      parentHandle: this.parentHandle,
+      collapsibleState: this.collapsibleState,
+      label: this.label,
+      description: this.description,
+      icon: this.icon,
+      iconDark: this.iconDark,
+      themeIcon: this.themeIcon,
+      resourceUri: this.resourceUri,
+      tooltip: this.tooltip,
+      contextValue: this.contextValue,
+      command: this.command,
+      children: this.children,
+      accessibilityInformation: this.accessibilityInformation
+    };
+  }
+}
+class NoTreeViewError extends Error {
+  static {
+    __name(this, "NoTreeViewError");
+  }
+  constructor(treeViewId) {
+    super(localize("treeView.notRegistered", "No tree view with id '{0}' registered.", treeViewId));
+    this.name = "NoTreeViewError";
+  }
+  static is(err) {
+    return !!err && err.name === "NoTreeViewError";
+  }
+}
+export {
+  Extensions,
+  IViewDescriptorService,
+  NoTreeViewError,
+  ResolvableTreeItem,
+  TreeItemCollapsibleState,
+  VIEWS_LOG_ID,
+  VIEWS_LOG_NAME,
+  ViewContainerLocation,
+  ViewContainerLocationToString,
+  ViewContainerLocations,
+  ViewContentGroups,
+  ViewVisibilityState,
+  defaultViewIcon
+};
+//# sourceMappingURL=views.js.map

@@ -1,1 +1,149 @@
-var O,T,u,K,U;!function(t){t[t.Null=0]="Null",t[t.PlainText=1]="PlainText"}(O||(O={})),function(t){t[t.NotSet=-1]="NotSet",t[t.None=0]="None",t[t.Italic=1]="Italic",t[t.Bold=2]="Bold",t[t.Underline=4]="Underline",t[t.Strikethrough=8]="Strikethrough"}(T||(T={})),function(t){t[t.None=0]="None",t[t.DefaultForeground=1]="DefaultForeground",t[t.DefaultBackground=2]="DefaultBackground"}(u||(u={})),function(t){t[t.Other=0]="Other",t[t.Comment=1]="Comment",t[t.String=2]="String",t[t.RegEx=3]="RegEx"}(K||(K={})),function(t){t[t.LANGUAGEID_MASK=255]="LANGUAGEID_MASK",t[t.TOKEN_TYPE_MASK=768]="TOKEN_TYPE_MASK",t[t.BALANCED_BRACKETS_MASK=1024]="BALANCED_BRACKETS_MASK",t[t.FONT_STYLE_MASK=30720]="FONT_STYLE_MASK",t[t.FOREGROUND_MASK=16744448]="FOREGROUND_MASK",t[t.BACKGROUND_MASK=4278190080]="BACKGROUND_MASK",t[t.ITALIC_MASK=2048]="ITALIC_MASK",t[t.BOLD_MASK=4096]="BOLD_MASK",t[t.UNDERLINE_MASK=8192]="UNDERLINE_MASK",t[t.STRIKETHROUGH_MASK=16384]="STRIKETHROUGH_MASK",t[t.SEMANTIC_USE_ITALIC=1]="SEMANTIC_USE_ITALIC",t[t.SEMANTIC_USE_BOLD=2]="SEMANTIC_USE_BOLD",t[t.SEMANTIC_USE_UNDERLINE=4]="SEMANTIC_USE_UNDERLINE",t[t.SEMANTIC_USE_STRIKETHROUGH=8]="SEMANTIC_USE_STRIKETHROUGH",t[t.SEMANTIC_USE_FOREGROUND=16]="SEMANTIC_USE_FOREGROUND",t[t.SEMANTIC_USE_BACKGROUND=32]="SEMANTIC_USE_BACKGROUND",t[t.LANGUAGEID_OFFSET=0]="LANGUAGEID_OFFSET",t[t.TOKEN_TYPE_OFFSET=8]="TOKEN_TYPE_OFFSET",t[t.BALANCED_BRACKETS_OFFSET=10]="BALANCED_BRACKETS_OFFSET",t[t.FONT_STYLE_OFFSET=11]="FONT_STYLE_OFFSET",t[t.FOREGROUND_OFFSET=15]="FOREGROUND_OFFSET",t[t.BACKGROUND_OFFSET=24]="BACKGROUND_OFFSET"}(U||(U={}));class F{static getLanguageId(t){return(255&t)>>>0}static getTokenType(t){return(768&t)>>>8}static containsBalancedBrackets(t){return!!(1024&t)}static getFontStyle(t){return(30720&t)>>>11}static getForeground(t){return(16744448&t)>>>15}static getBackground(t){return(4278190080&t)>>>24}static getClassNameFromMetadata(t){let e="mtk"+this.getForeground(t);const S=this.getFontStyle(t);return 1&S&&(e+=" mtki"),2&S&&(e+=" mtkb"),4&S&&(e+=" mtku"),8&S&&(e+=" mtks"),e}static getInlineStyleFromMetadata(t,e){const S=this.getForeground(t),E=this.getFontStyle(t);let n=`color: ${e[S]};`;1&E&&(n+="font-style: italic;"),2&E&&(n+="font-weight: bold;");let _="";return 4&E&&(_+=" underline"),8&E&&(_+=" line-through"),_&&(n+=`text-decoration:${_};`),n}static getPresentationFromMetadata(t){const e=this.getForeground(t),S=this.getFontStyle(t);return{foreground:e,italic:!!(1&S),bold:!!(2&S),underline:!!(4&S),strikethrough:!!(8&S)}}}export{F as $9C,u as ColorId,T as FontStyle,O as LanguageId,U as MetadataConsts,K as StandardTokenType};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var LanguageId;
+(function(LanguageId2) {
+  LanguageId2[LanguageId2["Null"] = 0] = "Null";
+  LanguageId2[LanguageId2["PlainText"] = 1] = "PlainText";
+})(LanguageId || (LanguageId = {}));
+var FontStyle;
+(function(FontStyle2) {
+  FontStyle2[FontStyle2["NotSet"] = -1] = "NotSet";
+  FontStyle2[FontStyle2["None"] = 0] = "None";
+  FontStyle2[FontStyle2["Italic"] = 1] = "Italic";
+  FontStyle2[FontStyle2["Bold"] = 2] = "Bold";
+  FontStyle2[FontStyle2["Underline"] = 4] = "Underline";
+  FontStyle2[FontStyle2["Strikethrough"] = 8] = "Strikethrough";
+})(FontStyle || (FontStyle = {}));
+var ColorId;
+(function(ColorId2) {
+  ColorId2[ColorId2["None"] = 0] = "None";
+  ColorId2[ColorId2["DefaultForeground"] = 1] = "DefaultForeground";
+  ColorId2[ColorId2["DefaultBackground"] = 2] = "DefaultBackground";
+})(ColorId || (ColorId = {}));
+var StandardTokenType;
+(function(StandardTokenType2) {
+  StandardTokenType2[StandardTokenType2["Other"] = 0] = "Other";
+  StandardTokenType2[StandardTokenType2["Comment"] = 1] = "Comment";
+  StandardTokenType2[StandardTokenType2["String"] = 2] = "String";
+  StandardTokenType2[StandardTokenType2["RegEx"] = 3] = "RegEx";
+})(StandardTokenType || (StandardTokenType = {}));
+var MetadataConsts;
+(function(MetadataConsts2) {
+  MetadataConsts2[MetadataConsts2["LANGUAGEID_MASK"] = 255] = "LANGUAGEID_MASK";
+  MetadataConsts2[MetadataConsts2["TOKEN_TYPE_MASK"] = 768] = "TOKEN_TYPE_MASK";
+  MetadataConsts2[MetadataConsts2["BALANCED_BRACKETS_MASK"] = 1024] = "BALANCED_BRACKETS_MASK";
+  MetadataConsts2[MetadataConsts2["FONT_STYLE_MASK"] = 30720] = "FONT_STYLE_MASK";
+  MetadataConsts2[MetadataConsts2["FOREGROUND_MASK"] = 16744448] = "FOREGROUND_MASK";
+  MetadataConsts2[MetadataConsts2["BACKGROUND_MASK"] = 4278190080] = "BACKGROUND_MASK";
+  MetadataConsts2[MetadataConsts2["ITALIC_MASK"] = 2048] = "ITALIC_MASK";
+  MetadataConsts2[MetadataConsts2["BOLD_MASK"] = 4096] = "BOLD_MASK";
+  MetadataConsts2[MetadataConsts2["UNDERLINE_MASK"] = 8192] = "UNDERLINE_MASK";
+  MetadataConsts2[MetadataConsts2["STRIKETHROUGH_MASK"] = 16384] = "STRIKETHROUGH_MASK";
+  MetadataConsts2[MetadataConsts2["SEMANTIC_USE_ITALIC"] = 1] = "SEMANTIC_USE_ITALIC";
+  MetadataConsts2[MetadataConsts2["SEMANTIC_USE_BOLD"] = 2] = "SEMANTIC_USE_BOLD";
+  MetadataConsts2[MetadataConsts2["SEMANTIC_USE_UNDERLINE"] = 4] = "SEMANTIC_USE_UNDERLINE";
+  MetadataConsts2[MetadataConsts2["SEMANTIC_USE_STRIKETHROUGH"] = 8] = "SEMANTIC_USE_STRIKETHROUGH";
+  MetadataConsts2[MetadataConsts2["SEMANTIC_USE_FOREGROUND"] = 16] = "SEMANTIC_USE_FOREGROUND";
+  MetadataConsts2[MetadataConsts2["SEMANTIC_USE_BACKGROUND"] = 32] = "SEMANTIC_USE_BACKGROUND";
+  MetadataConsts2[MetadataConsts2["LANGUAGEID_OFFSET"] = 0] = "LANGUAGEID_OFFSET";
+  MetadataConsts2[MetadataConsts2["TOKEN_TYPE_OFFSET"] = 8] = "TOKEN_TYPE_OFFSET";
+  MetadataConsts2[MetadataConsts2["BALANCED_BRACKETS_OFFSET"] = 10] = "BALANCED_BRACKETS_OFFSET";
+  MetadataConsts2[MetadataConsts2["FONT_STYLE_OFFSET"] = 11] = "FONT_STYLE_OFFSET";
+  MetadataConsts2[MetadataConsts2["FOREGROUND_OFFSET"] = 15] = "FOREGROUND_OFFSET";
+  MetadataConsts2[MetadataConsts2["BACKGROUND_OFFSET"] = 24] = "BACKGROUND_OFFSET";
+})(MetadataConsts || (MetadataConsts = {}));
+class TokenMetadata {
+  static {
+    __name(this, "TokenMetadata");
+  }
+  static getLanguageId(metadata) {
+    return (metadata & 255) >>> 0;
+  }
+  static getTokenType(metadata) {
+    return (metadata & 768) >>> 8;
+  }
+  static containsBalancedBrackets(metadata) {
+    return (metadata & 1024) !== 0;
+  }
+  static getFontStyle(metadata) {
+    return (metadata & 30720) >>> 11;
+  }
+  static getForeground(metadata) {
+    return (metadata & 16744448) >>> 15;
+  }
+  static getBackground(metadata) {
+    return (metadata & 4278190080) >>> 24;
+  }
+  static getClassNameFromMetadata(metadata) {
+    const foreground = this.getForeground(metadata);
+    let className = "mtk" + foreground;
+    const fontStyle = this.getFontStyle(metadata);
+    if (fontStyle & 1) {
+      className += " mtki";
+    }
+    if (fontStyle & 2) {
+      className += " mtkb";
+    }
+    if (fontStyle & 4) {
+      className += " mtku";
+    }
+    if (fontStyle & 8) {
+      className += " mtks";
+    }
+    return className;
+  }
+  static getInlineStyleFromMetadata(metadata, colorMap) {
+    const foreground = this.getForeground(metadata);
+    const fontStyle = this.getFontStyle(metadata);
+    let result = `color: ${colorMap[foreground]};`;
+    if (fontStyle & 1) {
+      result += "font-style: italic;";
+    }
+    if (fontStyle & 2) {
+      result += "font-weight: bold;";
+    }
+    let textDecoration = "";
+    if (fontStyle & 4) {
+      textDecoration += " underline";
+    }
+    if (fontStyle & 8) {
+      textDecoration += " line-through";
+    }
+    if (textDecoration) {
+      result += `text-decoration:${textDecoration};`;
+    }
+    return result;
+  }
+  static getPresentationFromMetadata(metadata) {
+    const foreground = this.getForeground(metadata);
+    const fontStyle = this.getFontStyle(metadata);
+    return {
+      foreground,
+      italic: Boolean(
+        fontStyle & 1
+        /* FontStyle.Italic */
+      ),
+      bold: Boolean(
+        fontStyle & 2
+        /* FontStyle.Bold */
+      ),
+      underline: Boolean(
+        fontStyle & 4
+        /* FontStyle.Underline */
+      ),
+      strikethrough: Boolean(
+        fontStyle & 8
+        /* FontStyle.Strikethrough */
+      )
+    };
+  }
+}
+export {
+  ColorId,
+  FontStyle,
+  LanguageId,
+  MetadataConsts,
+  StandardTokenType,
+  TokenMetadata
+};
+//# sourceMappingURL=encodedTokenAttributes.js.map

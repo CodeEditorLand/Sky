@@ -1,1 +1,18 @@
-import{$dh as r}from"../../../../../base/common/resources.js";import{$Lgb as n}from"../../../../../editor/browser/widget/diffEditor/commands.js";function m(o,i,e){const t=n(o,e);if(!t)return!1;const d=t.getOriginalEditor().getModel(),s=t.getModifiedEditor().getModel();return r(d?.uri,i.originalURI)&&r(s?.uri,i.modifiedURI)}export{m as $Ufc};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { isEqual } from "../../../../../base/common/resources.js";
+import { findDiffEditorContainingCodeEditor } from "../../../../../editor/browser/widget/diffEditor/commands.js";
+function isTextDiffEditorForEntry(accessor, entry, editor) {
+  const diffEditor = findDiffEditorContainingCodeEditor(accessor, editor);
+  if (!diffEditor) {
+    return false;
+  }
+  const originalModel = diffEditor.getOriginalEditor().getModel();
+  const modifiedModel = diffEditor.getModifiedEditor().getModel();
+  return isEqual(originalModel?.uri, entry.originalURI) && isEqual(modifiedModel?.uri, entry.modifiedURI);
+}
+__name(isTextDiffEditorForEntry, "isTextDiffEditorForEntry");
+export {
+  isTextDiffEditorForEntry
+};
+//# sourceMappingURL=chatEditing.js.map

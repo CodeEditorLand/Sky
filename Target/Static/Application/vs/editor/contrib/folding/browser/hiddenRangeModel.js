@@ -1,1 +1,131 @@
-import{$Ib as f}from"../../../../base/common/arraysFind.js";import{$df as b}from"../../../../base/common/event.js";import{$cC as g}from"../../../common/core/range.js";import{$aD as m}from"../../../common/core/misc/eolCounter.js";class M{get onDidChange(){return this.d.event}get hiddenRanges(){return this.b}constructor(t){this.d=new b,this.f=!1,this.a=t,this.c=t.onDidChange(e=>this.g()),this.b=[],t.regions.length&&this.g()}notifyChangeModelContent(t){this.b.length&&!this.f&&(this.f=t.changes.some(e=>e.range.endLineNumber!==e.range.startLineNumber||m(e.text)[0]!==0))}g(){let t=!1;const e=[];let s=0,i=0,a=Number.MAX_VALUE,r=-1;const o=this.a.regions;for(;s<o.length;s++){if(!o.isCollapsed(s))continue;const n=o.getStartLineNumber(s)+1,h=o.getEndLineNumber(s);a<=n&&h<=r||(!t&&i<this.b.length&&this.b[i].startLineNumber===n&&this.b[i].endLineNumber===h?(e.push(this.b[i]),i++):(t=!0,e.push(new g(n,1,h,1))),a=n,r=h)}(this.f||t||i<this.b.length)&&this.h(e)}h(t){this.b=t,this.f=!1,this.d.fire(t)}hasRanges(){return this.b.length>0}isHidden(t){return d(this.b,t)!==null}adjustSelections(t){let e=!1;const s=this.a.textModel;let i=null;const a=r=>((!i||!L(r,i))&&(i=d(this.b,r)),i?i.startLineNumber-1:null);for(let r=0,o=t.length;r<o;r++){let n=t[r];const h=a(n.startLineNumber);h&&(n=n.setStartPosition(h,s.getLineMaxColumn(h)),e=!0);const l=a(n.endLineNumber);l&&(n=n.setEndPosition(l,s.getLineMaxColumn(l)),e=!0),t[r]=n}return e}dispose(){this.hiddenRanges.length>0&&(this.b=[],this.d.fire(this.b)),this.c&&(this.c.dispose(),this.c=null)}}function L(u,t){return u>=t.startLineNumber&&u<=t.endLineNumber}function d(u,t){const e=f(u,s=>t<s.startLineNumber)-1;return e>=0&&u[e].endLineNumber>=t?u[e]:null}export{M as $Cob};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { findFirstIdxMonotonousOrArrLen } from "../../../../base/common/arraysFind.js";
+import { Emitter } from "../../../../base/common/event.js";
+import { Range } from "../../../common/core/range.js";
+import { countEOL } from "../../../common/core/misc/eolCounter.js";
+class HiddenRangeModel {
+  static {
+    __name(this, "HiddenRangeModel");
+  }
+  get onDidChange() {
+    return this._updateEventEmitter.event;
+  }
+  get hiddenRanges() {
+    return this._hiddenRanges;
+  }
+  constructor(model) {
+    this._updateEventEmitter = new Emitter();
+    this._hasLineChanges = false;
+    this._foldingModel = model;
+    this._foldingModelListener = model.onDidChange((_) => this.updateHiddenRanges());
+    this._hiddenRanges = [];
+    if (model.regions.length) {
+      this.updateHiddenRanges();
+    }
+  }
+  notifyChangeModelContent(e) {
+    if (this._hiddenRanges.length && !this._hasLineChanges) {
+      this._hasLineChanges = e.changes.some((change) => {
+        return change.range.endLineNumber !== change.range.startLineNumber || countEOL(change.text)[0] !== 0;
+      });
+    }
+  }
+  updateHiddenRanges() {
+    let updateHiddenAreas = false;
+    const newHiddenAreas = [];
+    let i = 0;
+    let k = 0;
+    let lastCollapsedStart = Number.MAX_VALUE;
+    let lastCollapsedEnd = -1;
+    const ranges = this._foldingModel.regions;
+    for (; i < ranges.length; i++) {
+      if (!ranges.isCollapsed(i)) {
+        continue;
+      }
+      const startLineNumber = ranges.getStartLineNumber(i) + 1;
+      const endLineNumber = ranges.getEndLineNumber(i);
+      if (lastCollapsedStart <= startLineNumber && endLineNumber <= lastCollapsedEnd) {
+        continue;
+      }
+      if (!updateHiddenAreas && k < this._hiddenRanges.length && this._hiddenRanges[k].startLineNumber === startLineNumber && this._hiddenRanges[k].endLineNumber === endLineNumber) {
+        newHiddenAreas.push(this._hiddenRanges[k]);
+        k++;
+      } else {
+        updateHiddenAreas = true;
+        newHiddenAreas.push(new Range(startLineNumber, 1, endLineNumber, 1));
+      }
+      lastCollapsedStart = startLineNumber;
+      lastCollapsedEnd = endLineNumber;
+    }
+    if (this._hasLineChanges || updateHiddenAreas || k < this._hiddenRanges.length) {
+      this.applyHiddenRanges(newHiddenAreas);
+    }
+  }
+  applyHiddenRanges(newHiddenAreas) {
+    this._hiddenRanges = newHiddenAreas;
+    this._hasLineChanges = false;
+    this._updateEventEmitter.fire(newHiddenAreas);
+  }
+  hasRanges() {
+    return this._hiddenRanges.length > 0;
+  }
+  isHidden(line) {
+    return findRange(this._hiddenRanges, line) !== null;
+  }
+  adjustSelections(selections) {
+    let hasChanges = false;
+    const editorModel = this._foldingModel.textModel;
+    let lastRange = null;
+    const adjustLine = /* @__PURE__ */ __name((line) => {
+      if (!lastRange || !isInside(line, lastRange)) {
+        lastRange = findRange(this._hiddenRanges, line);
+      }
+      if (lastRange) {
+        return lastRange.startLineNumber - 1;
+      }
+      return null;
+    }, "adjustLine");
+    for (let i = 0, len = selections.length; i < len; i++) {
+      let selection = selections[i];
+      const adjustedStartLine = adjustLine(selection.startLineNumber);
+      if (adjustedStartLine) {
+        selection = selection.setStartPosition(adjustedStartLine, editorModel.getLineMaxColumn(adjustedStartLine));
+        hasChanges = true;
+      }
+      const adjustedEndLine = adjustLine(selection.endLineNumber);
+      if (adjustedEndLine) {
+        selection = selection.setEndPosition(adjustedEndLine, editorModel.getLineMaxColumn(adjustedEndLine));
+        hasChanges = true;
+      }
+      selections[i] = selection;
+    }
+    return hasChanges;
+  }
+  dispose() {
+    if (this.hiddenRanges.length > 0) {
+      this._hiddenRanges = [];
+      this._updateEventEmitter.fire(this._hiddenRanges);
+    }
+    if (this._foldingModelListener) {
+      this._foldingModelListener.dispose();
+      this._foldingModelListener = null;
+    }
+  }
+}
+function isInside(line, range) {
+  return line >= range.startLineNumber && line <= range.endLineNumber;
+}
+__name(isInside, "isInside");
+function findRange(ranges, line) {
+  const i = findFirstIdxMonotonousOrArrLen(ranges, (r) => line < r.startLineNumber) - 1;
+  if (i >= 0 && ranges[i].endLineNumber >= line) {
+    return ranges[i];
+  }
+  return null;
+}
+__name(findRange, "findRange");
+export {
+  HiddenRangeModel
+};
+//# sourceMappingURL=hiddenRangeModel.js.map

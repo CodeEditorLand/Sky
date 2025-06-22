@@ -1,1 +1,6 @@
-import{$nj as r}from"../../../../platform/instantiation/common/instantiation.js";const e=r("integrityService");export{e as $Nzc};
+import { createDecorator } from "../../../../platform/instantiation/common/instantiation.js";
+const IIntegrityService = createDecorator("integrityService");
+export {
+  IIntegrityService
+};
+//# sourceMappingURL=integrity.js.map

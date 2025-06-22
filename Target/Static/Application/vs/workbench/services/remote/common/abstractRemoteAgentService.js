@@ -1,1 +1,197 @@
-import{$vd as m}from"../../../../base/common/lifecycle.js";import{$Hm as d}from"../../../../base/parts/ipc/common/ipc.js";import{$KX as g}from"../../environment/common/environmentService.js";import{$mB as p}from"../../../../platform/remote/common/remoteAgentConnection.js";import{$fB as y}from"../../../../platform/remote/common/remoteAuthorityResolver.js";import{$L3 as a}from"./remoteAgentEnvironmentChannel.js";import{$df as l}from"../../../../base/common/event.js";import{$8x as v}from"../../../../platform/sign/common/sign.js";import{$3n as w}from"../../../../platform/log/common/log.js";import{$nn as C}from"../../../../platform/product/common/productService.js";import{$9X as $}from"../../userDataProfile/common/userDataProfile.js";import{$kB as T}from"../../../../platform/remote/common/remoteSocketFactoryService.js";var f=function(s,t,n,e){var r=arguments.length,i=r<3?t:e===null?e=Object.getOwnPropertyDescriptor(t,n):e,o;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")i=Reflect.decorate(s,t,n,e);else for(var h=s.length-1;h>=0;h--)(o=s[h])&&(i=(r<3?o(i):r>3?o(t,n,i):o(t,n))||i);return r>3&&i&&Object.defineProperty(t,n,i),i},c=function(s,t){return function(n,e){t(n,e,s)}};let u=class extends m{constructor(t,n,e,r,i,o,h){super(),this.f=t,this.g=n,this.h=e,this.j=i,this.h.remoteAuthority?this.a=this.B(new D(this.h.remoteAuthority,r.commit,r.quality,this.f,this.j,o,h)):this.a=null,this.b=null}getConnection(){return this.a}getEnvironment(){return this.getRawEnvironment().then(void 0,()=>null)}getRawEnvironment(){return this.b||(this.b=this.m(async(t,n)=>{const e=await a.getEnvironmentData(t,n.remoteAuthority,this.g.currentProfile.isDefault?void 0:this.g.currentProfile.id);return this.j._setAuthorityConnectionToken(n.remoteAuthority,e.connectionToken),e},null)),this.b}getExtensionHostExitInfo(t){return this.m((n,e)=>a.getExtensionHostExitInfo(n,e.remoteAuthority,t),null)}getDiagnosticInfo(t){return this.m(n=>a.getDiagnosticInfo(n,t),void 0)}updateTelemetryLevel(t){return this.n(n=>a.updateTelemetryLevel(n,t),void 0)}logTelemetry(t,n){return this.n(e=>a.logTelemetry(e,t,n),void 0)}flushTelemetry(){return this.n(t=>a.flushTelemetry(t),void 0)}getRoundTripTime(){return this.n(async t=>{const n=Date.now();return await a.ping(t),Date.now()-n},void 0)}async endConnection(){this.a&&(await this.a.end(),this.a.dispose())}m(t,n){const e=this.getConnection();return e?e.withChannel("remoteextensionsenvironment",r=>t(r,e)):Promise.resolve(n)}n(t,n){const e=this.getConnection();return e?e.withChannel("telemetry",r=>t(r,e)):Promise.resolve(n)}};u=f([c(0,T),c(1,$),c(2,g),c(3,C),c(4,y),c(5,v),c(6,w)],u);class D extends m{constructor(t,n,e,r,i,o,h){super(),this.h=n,this.j=e,this.m=r,this.n=i,this.r=o,this.s=h,this.a=this.B(new l),this.onReconnecting=this.a.event,this.b=this.B(new l),this.onDidStateChange=this.b.event,this.end=()=>Promise.resolve(),this.remoteAuthority=t,this.f=null}getChannel(t){return d(this.t().then(n=>n.getChannel(t)))}withChannel(t,n){const e=this.getChannel(t);return n(e)}registerChannel(t,n){this.t().then(e=>e.registerChannel(t,n))}async getInitialConnectionTimeMs(){try{await this.t()}catch{}return this.g}t(){return this.f||(this.f=this.u()),this.f}async u(){let t=!0;const n={commit:this.h,quality:this.j,addressProvider:{getAddress:async()=>{t?t=!1:this.a.fire(void 0);const{authority:i}=await this.n.resolveAuthority(this.remoteAuthority);return{connectTo:i.connectTo,connectionToken:i.connectionToken}}},remoteSocketFactoryService:this.m,signService:this.r,logService:this.s,ipcLogger:null};let e;const r=Date.now();try{e=this.B(await p(n,this.remoteAuthority,"renderer"))}finally{this.g=Date.now()-r}return e.protocol.onDidDispose(()=>{e.dispose()}),this.end=()=>(e.protocol.sendDisconnect(),e.protocol.drain()),this.B(e.onDidStateChange(i=>this.b.fire(i))),e.client}}export{u as $Xyc};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { Disposable } from "../../../../base/common/lifecycle.js";
+import { getDelayedChannel, IPCLogger } from "../../../../base/parts/ipc/common/ipc.js";
+import { IWorkbenchEnvironmentService } from "../../environment/common/environmentService.js";
+import { connectRemoteAgentManagement } from "../../../../platform/remote/common/remoteAgentConnection.js";
+import { IRemoteAuthorityResolverService } from "../../../../platform/remote/common/remoteAuthorityResolver.js";
+import { RemoteExtensionEnvironmentChannelClient } from "./remoteAgentEnvironmentChannel.js";
+import { Emitter } from "../../../../base/common/event.js";
+import { ISignService } from "../../../../platform/sign/common/sign.js";
+import { ILogService } from "../../../../platform/log/common/log.js";
+import { IProductService } from "../../../../platform/product/common/productService.js";
+import { IUserDataProfileService } from "../../userDataProfile/common/userDataProfile.js";
+import { IRemoteSocketFactoryService } from "../../../../platform/remote/common/remoteSocketFactoryService.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+let AbstractRemoteAgentService = class AbstractRemoteAgentService2 extends Disposable {
+  static {
+    __name(this, "AbstractRemoteAgentService");
+  }
+  constructor(remoteSocketFactoryService, userDataProfileService, _environmentService, productService, _remoteAuthorityResolverService, signService, logService) {
+    super();
+    this.remoteSocketFactoryService = remoteSocketFactoryService;
+    this.userDataProfileService = userDataProfileService;
+    this._environmentService = _environmentService;
+    this._remoteAuthorityResolverService = _remoteAuthorityResolverService;
+    if (this._environmentService.remoteAuthority) {
+      this._connection = this._register(new RemoteAgentConnection(this._environmentService.remoteAuthority, productService.commit, productService.quality, this.remoteSocketFactoryService, this._remoteAuthorityResolverService, signService, logService));
+    } else {
+      this._connection = null;
+    }
+    this._environment = null;
+  }
+  getConnection() {
+    return this._connection;
+  }
+  getEnvironment() {
+    return this.getRawEnvironment().then(void 0, () => null);
+  }
+  getRawEnvironment() {
+    if (!this._environment) {
+      this._environment = this._withChannel(async (channel, connection) => {
+        const env = await RemoteExtensionEnvironmentChannelClient.getEnvironmentData(channel, connection.remoteAuthority, this.userDataProfileService.currentProfile.isDefault ? void 0 : this.userDataProfileService.currentProfile.id);
+        this._remoteAuthorityResolverService._setAuthorityConnectionToken(connection.remoteAuthority, env.connectionToken);
+        return env;
+      }, null);
+    }
+    return this._environment;
+  }
+  getExtensionHostExitInfo(reconnectionToken) {
+    return this._withChannel((channel, connection) => RemoteExtensionEnvironmentChannelClient.getExtensionHostExitInfo(channel, connection.remoteAuthority, reconnectionToken), null);
+  }
+  getDiagnosticInfo(options) {
+    return this._withChannel((channel) => RemoteExtensionEnvironmentChannelClient.getDiagnosticInfo(channel, options), void 0);
+  }
+  updateTelemetryLevel(telemetryLevel) {
+    return this._withTelemetryChannel((channel) => RemoteExtensionEnvironmentChannelClient.updateTelemetryLevel(channel, telemetryLevel), void 0);
+  }
+  logTelemetry(eventName, data) {
+    return this._withTelemetryChannel((channel) => RemoteExtensionEnvironmentChannelClient.logTelemetry(channel, eventName, data), void 0);
+  }
+  flushTelemetry() {
+    return this._withTelemetryChannel((channel) => RemoteExtensionEnvironmentChannelClient.flushTelemetry(channel), void 0);
+  }
+  getRoundTripTime() {
+    return this._withTelemetryChannel(async (channel) => {
+      const start = Date.now();
+      await RemoteExtensionEnvironmentChannelClient.ping(channel);
+      return Date.now() - start;
+    }, void 0);
+  }
+  async endConnection() {
+    if (this._connection) {
+      await this._connection.end();
+      this._connection.dispose();
+    }
+  }
+  _withChannel(callback, fallback) {
+    const connection = this.getConnection();
+    if (!connection) {
+      return Promise.resolve(fallback);
+    }
+    return connection.withChannel("remoteextensionsenvironment", (channel) => callback(channel, connection));
+  }
+  _withTelemetryChannel(callback, fallback) {
+    const connection = this.getConnection();
+    if (!connection) {
+      return Promise.resolve(fallback);
+    }
+    return connection.withChannel("telemetry", (channel) => callback(channel, connection));
+  }
+};
+AbstractRemoteAgentService = __decorate([
+  __param(0, IRemoteSocketFactoryService),
+  __param(1, IUserDataProfileService),
+  __param(2, IWorkbenchEnvironmentService),
+  __param(3, IProductService),
+  __param(4, IRemoteAuthorityResolverService),
+  __param(5, ISignService),
+  __param(6, ILogService)
+], AbstractRemoteAgentService);
+class RemoteAgentConnection extends Disposable {
+  static {
+    __name(this, "RemoteAgentConnection");
+  }
+  constructor(remoteAuthority, _commit, _quality, _remoteSocketFactoryService, _remoteAuthorityResolverService, _signService, _logService) {
+    super();
+    this._commit = _commit;
+    this._quality = _quality;
+    this._remoteSocketFactoryService = _remoteSocketFactoryService;
+    this._remoteAuthorityResolverService = _remoteAuthorityResolverService;
+    this._signService = _signService;
+    this._logService = _logService;
+    this._onReconnecting = this._register(new Emitter());
+    this.onReconnecting = this._onReconnecting.event;
+    this._onDidStateChange = this._register(new Emitter());
+    this.onDidStateChange = this._onDidStateChange.event;
+    this.end = () => Promise.resolve();
+    this.remoteAuthority = remoteAuthority;
+    this._connection = null;
+  }
+  getChannel(channelName) {
+    return getDelayedChannel(this._getOrCreateConnection().then((c) => c.getChannel(channelName)));
+  }
+  withChannel(channelName, callback) {
+    const channel = this.getChannel(channelName);
+    const result = callback(channel);
+    return result;
+  }
+  registerChannel(channelName, channel) {
+    this._getOrCreateConnection().then((client) => client.registerChannel(channelName, channel));
+  }
+  async getInitialConnectionTimeMs() {
+    try {
+      await this._getOrCreateConnection();
+    } catch {
+    }
+    return this._initialConnectionMs;
+  }
+  _getOrCreateConnection() {
+    if (!this._connection) {
+      this._connection = this._createConnection();
+    }
+    return this._connection;
+  }
+  async _createConnection() {
+    let firstCall = true;
+    const options = {
+      commit: this._commit,
+      quality: this._quality,
+      addressProvider: {
+        getAddress: /* @__PURE__ */ __name(async () => {
+          if (firstCall) {
+            firstCall = false;
+          } else {
+            this._onReconnecting.fire(void 0);
+          }
+          const { authority } = await this._remoteAuthorityResolverService.resolveAuthority(this.remoteAuthority);
+          return { connectTo: authority.connectTo, connectionToken: authority.connectionToken };
+        }, "getAddress")
+      },
+      remoteSocketFactoryService: this._remoteSocketFactoryService,
+      signService: this._signService,
+      logService: this._logService,
+      ipcLogger: false ? new IPCLogger(`Local \u2192 Remote`, `Remote \u2192 Local`) : null
+    };
+    let connection;
+    const start = Date.now();
+    try {
+      connection = this._register(await connectRemoteAgentManagement(options, this.remoteAuthority, `renderer`));
+    } finally {
+      this._initialConnectionMs = Date.now() - start;
+    }
+    connection.protocol.onDidDispose(() => {
+      connection.dispose();
+    });
+    this.end = () => {
+      connection.protocol.sendDisconnect();
+      return connection.protocol.drain();
+    };
+    this._register(connection.onDidStateChange((e) => this._onDidStateChange.fire(e)));
+    return connection.client;
+  }
+}
+export {
+  AbstractRemoteAgentService
+};
+//# sourceMappingURL=abstractRemoteAgentService.js.map

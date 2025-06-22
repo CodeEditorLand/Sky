@@ -1,1 +1,94 @@
-import{$bD as h}from"../core/ranges/offsetRange.js";import{$dD as x}from"./lineTokens.js";class o{static fromLineTokens(t){const e=[];for(let a=0;a<t.getCount();a++)e.push(new s(t.getTokenText(a),t.getMetadata(a)));return o.create(e)}static create(t){return new o(t)}constructor(t){this.a=t}toLineTokens(t){return x.createFromTextAndMetadata(this.map(((t,e)=>({text:e.text,metadata:e.metadata}))),t)}forEach(t){let e=0;for(const s of this.a){t(new h(e,e+s.text.length),s),e+=s.text.length}}map(t){const e=[];let s=0;for(const a of this.a){const n=new h(s,s+a.text.length);e.push(t(n,a)),s+=a.text.length}return e}slice(t){const e=[];let a=0;for(const n of this.a){const o=a,r=o+n.text.length;if(r>t.start){if(o>=t.endExclusive)break;const a=Math.max(0,t.start-o),c=Math.max(0,r-t.endExclusive);e.push(new s(n.text.slice(a,n.text.length-c),n.metadata))}a+=n.text.length}return o.create(e)}append(t){const e=this.a.concat(t.a);return o.create(e)}}class s{constructor(t,e){this.text=t,this.metadata=e}}class m{constructor(){this.a=[]}add(t,e){this.a.push(new s(t,e))}build(){return o.create(this.a)}}export{o as $hpb,s as $ipb,m as $jpb};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { OffsetRange } from "../core/ranges/offsetRange.js";
+import { LineTokens } from "./lineTokens.js";
+class TokenWithTextArray {
+  static {
+    __name(this, "TokenWithTextArray");
+  }
+  static fromLineTokens(lineTokens) {
+    const tokenInfo = [];
+    for (let i = 0; i < lineTokens.getCount(); i++) {
+      tokenInfo.push(new TokenWithTextInfo(lineTokens.getTokenText(i), lineTokens.getMetadata(i)));
+    }
+    return TokenWithTextArray.create(tokenInfo);
+  }
+  static create(tokenInfo) {
+    return new TokenWithTextArray(tokenInfo);
+  }
+  constructor(_tokenInfo) {
+    this._tokenInfo = _tokenInfo;
+  }
+  toLineTokens(decoder) {
+    return LineTokens.createFromTextAndMetadata(this.map((_r, t) => ({ text: t.text, metadata: t.metadata })), decoder);
+  }
+  forEach(cb) {
+    let lengthSum = 0;
+    for (const tokenInfo of this._tokenInfo) {
+      const range = new OffsetRange(lengthSum, lengthSum + tokenInfo.text.length);
+      cb(range, tokenInfo);
+      lengthSum += tokenInfo.text.length;
+    }
+  }
+  map(cb) {
+    const result = [];
+    let lengthSum = 0;
+    for (const tokenInfo of this._tokenInfo) {
+      const range = new OffsetRange(lengthSum, lengthSum + tokenInfo.text.length);
+      result.push(cb(range, tokenInfo));
+      lengthSum += tokenInfo.text.length;
+    }
+    return result;
+  }
+  slice(range) {
+    const result = [];
+    let lengthSum = 0;
+    for (const tokenInfo of this._tokenInfo) {
+      const tokenStart = lengthSum;
+      const tokenEndEx = tokenStart + tokenInfo.text.length;
+      if (tokenEndEx > range.start) {
+        if (tokenStart >= range.endExclusive) {
+          break;
+        }
+        const deltaBefore = Math.max(0, range.start - tokenStart);
+        const deltaAfter = Math.max(0, tokenEndEx - range.endExclusive);
+        result.push(new TokenWithTextInfo(tokenInfo.text.slice(deltaBefore, tokenInfo.text.length - deltaAfter), tokenInfo.metadata));
+      }
+      lengthSum += tokenInfo.text.length;
+    }
+    return TokenWithTextArray.create(result);
+  }
+  append(other) {
+    const result = this._tokenInfo.concat(other._tokenInfo);
+    return TokenWithTextArray.create(result);
+  }
+}
+class TokenWithTextInfo {
+  static {
+    __name(this, "TokenWithTextInfo");
+  }
+  constructor(text, metadata) {
+    this.text = text;
+    this.metadata = metadata;
+  }
+}
+class TokenWithTextArrayBuilder {
+  static {
+    __name(this, "TokenWithTextArrayBuilder");
+  }
+  constructor() {
+    this._tokens = [];
+  }
+  add(text, metadata) {
+    this._tokens.push(new TokenWithTextInfo(text, metadata));
+  }
+  build() {
+    return TokenWithTextArray.create(this._tokens);
+  }
+}
+export {
+  TokenWithTextArray,
+  TokenWithTextArrayBuilder,
+  TokenWithTextInfo
+};
+//# sourceMappingURL=tokenWithTextArray.js.map

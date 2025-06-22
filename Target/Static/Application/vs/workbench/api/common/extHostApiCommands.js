@@ -1,1 +1,321 @@
-import{$0b as v}from"../../../base/common/arrays.js";import{Schemas as p,$Xg as h}from"../../../base/common/network.js";import{URI as l}from"../../../base/common/uri.js";import*as w from"../../../editor/common/languages.js";import{$Dsb as f}from"../../../editor/common/services/semanticTokensDto.js";import{$Cn as g}from"../../../platform/contextkey/common/contextkey.js";import{$I2 as t,$G2 as o,$H2 as n}from"./extHostCommands.js";import*as r from"./extHostTypeConverters.js";import*as c from"./extHostTypes.js";const x=[new t("vscode.executeDocumentHighlights","_executeDocumentHighlights","Execute document highlight provider.",[o.Uri,o.Position],new n("A promise that resolves to an array of DocumentHighlight-instances.",d(r.DocumentHighlight.to))),new t("vscode.executeDocumentSymbolProvider","_executeDocumentSymbolProvider","Execute document symbol provider.",[o.Uri],new n("A promise that resolves to an array of SymbolInformation and DocumentSymbol instances.",(e,i)=>{if(v(e))return;function s(a){return new c.$NY(a.name,r.SymbolKind.to(a.kind),a.detail,a.containerName||"",i[0],r.Range.to(a.range),r.Range.to(a.selectionRange),a.children?a.children.map(s):[])}return e.map(s)})),new t("vscode.executeFormatDocumentProvider","_executeFormatDocumentProvider","Execute document format provider.",[o.Uri,new o("options","Formatting options",e=>!0,e=>e)],new n("A promise that resolves to an array of TextEdits.",d(r.TextEdit.to))),new t("vscode.executeFormatRangeProvider","_executeFormatRangeProvider","Execute range format provider.",[o.Uri,o.Range,new o("options","Formatting options",e=>!0,e=>e)],new n("A promise that resolves to an array of TextEdits.",d(r.TextEdit.to))),new t("vscode.executeFormatOnTypeProvider","_executeFormatOnTypeProvider","Execute format on type provider.",[o.Uri,o.Position,new o("ch","Trigger character",e=>typeof e=="string",e=>e),new o("options","Formatting options",e=>!0,e=>e)],new n("A promise that resolves to an array of TextEdits.",d(r.TextEdit.to))),new t("vscode.executeDefinitionProvider","_executeDefinitionProvider","Execute all definition providers.",[o.Uri,o.Position],new n("A promise that resolves to an array of Location or LocationLink instances.",m)),new t("vscode.experimental.executeDefinitionProvider_recursive","_executeDefinitionProvider_recursive","Execute all definition providers.",[o.Uri,o.Position],new n("A promise that resolves to an array of Location or LocationLink instances.",m)),new t("vscode.executeTypeDefinitionProvider","_executeTypeDefinitionProvider","Execute all type definition providers.",[o.Uri,o.Position],new n("A promise that resolves to an array of Location or LocationLink instances.",m)),new t("vscode.experimental.executeTypeDefinitionProvider_recursive","_executeTypeDefinitionProvider_recursive","Execute all type definition providers.",[o.Uri,o.Position],new n("A promise that resolves to an array of Location or LocationLink instances.",m)),new t("vscode.executeDeclarationProvider","_executeDeclarationProvider","Execute all declaration providers.",[o.Uri,o.Position],new n("A promise that resolves to an array of Location or LocationLink instances.",m)),new t("vscode.experimental.executeDeclarationProvider_recursive","_executeDeclarationProvider_recursive","Execute all declaration providers.",[o.Uri,o.Position],new n("A promise that resolves to an array of Location or LocationLink instances.",m)),new t("vscode.executeImplementationProvider","_executeImplementationProvider","Execute all implementation providers.",[o.Uri,o.Position],new n("A promise that resolves to an array of Location or LocationLink instances.",m)),new t("vscode.experimental.executeImplementationProvider_recursive","_executeImplementationProvider_recursive","Execute all implementation providers.",[o.Uri,o.Position],new n("A promise that resolves to an array of Location or LocationLink instances.",m)),new t("vscode.executeReferenceProvider","_executeReferenceProvider","Execute all reference providers.",[o.Uri,o.Position],new n("A promise that resolves to an array of Location-instances.",d(r.location.to))),new t("vscode.experimental.executeReferenceProvider","_executeReferenceProvider_recursive","Execute all reference providers.",[o.Uri,o.Position],new n("A promise that resolves to an array of Location-instances.",d(r.location.to))),new t("vscode.executeHoverProvider","_executeHoverProvider","Execute all hover providers.",[o.Uri,o.Position],new n("A promise that resolves to an array of Hover-instances.",d(r.Hover.to))),new t("vscode.experimental.executeHoverProvider_recursive","_executeHoverProvider_recursive","Execute all hover providers.",[o.Uri,o.Position],new n("A promise that resolves to an array of Hover-instances.",d(r.Hover.to))),new t("vscode.executeSelectionRangeProvider","_executeSelectionRangeProvider","Execute selection range provider.",[o.Uri,new o("position","A position in a text document",e=>Array.isArray(e)&&e.every(i=>c.$rY.isPosition(i)),e=>e.map(r.Position.from))],new n("A promise that resolves to an array of ranges.",e=>e.map(i=>{let s;for(const a of i.reverse())s=new c.$QY(r.Range.to(a),s);return s}))),new t("vscode.executeWorkspaceSymbolProvider","_executeWorkspaceSymbolProvider","Execute all workspace symbol providers.",[o.String.with("query","Search string")],new n("A promise that resolves to an array of SymbolInformation-instances.",e=>e.map(r.WorkspaceSymbol.to))),new t("vscode.prepareCallHierarchy","_executePrepareCallHierarchy","Prepare call hierarchy at a position inside a document",[o.Uri,o.Position],new n("A promise that resolves to an array of CallHierarchyItem-instances",e=>e.map(r.CallHierarchyItem.to))),new t("vscode.provideIncomingCalls","_executeProvideIncomingCalls","Compute incoming calls for an item",[o.CallHierarchyItem],new n("A promise that resolves to an array of CallHierarchyIncomingCall-instances",e=>e.map(r.CallHierarchyIncomingCall.to))),new t("vscode.provideOutgoingCalls","_executeProvideOutgoingCalls","Compute outgoing calls for an item",[o.CallHierarchyItem],new n("A promise that resolves to an array of CallHierarchyOutgoingCall-instances",e=>e.map(r.CallHierarchyOutgoingCall.to))),new t("vscode.prepareRename","_executePrepareRename","Execute the prepareRename of rename provider.",[o.Uri,o.Position],new n("A promise that resolves to a range and placeholder text.",e=>{if(e)return{range:r.Range.to(e.range),placeholder:e.text}})),new t("vscode.executeDocumentRenameProvider","_executeDocumentRenameProvider","Execute rename provider.",[o.Uri,o.Position,o.String.with("newName","The new symbol name")],new n("A promise that resolves to a WorkspaceEdit.",e=>{if(e){if(e.rejectReason)throw new Error(e.rejectReason);return r.WorkspaceEdit.to(e)}})),new t("vscode.executeLinkProvider","_executeLinkProvider","Execute document link provider.",[o.Uri,o.Number.with("linkResolveCount","Number of links that should be resolved, only when links are unresolved.").optional()],new n("A promise that resolves to an array of DocumentLink-instances.",e=>e.map(r.DocumentLink.to))),new t("vscode.provideDocumentSemanticTokensLegend","_provideDocumentSemanticTokensLegend","Provide semantic tokens legend for a document",[o.Uri],new n("A promise that resolves to SemanticTokensLegend.",e=>{if(e)return new c.$OZ(e.tokenTypes,e.tokenModifiers)})),new t("vscode.provideDocumentSemanticTokens","_provideDocumentSemanticTokens","Provide semantic tokens for a document",[o.Uri],new n("A promise that resolves to SemanticTokens.",e=>{if(!e)return;const i=f(e);if(i.type==="full")return new c.$QZ(i.data,void 0)})),new t("vscode.provideDocumentRangeSemanticTokensLegend","_provideDocumentRangeSemanticTokensLegend","Provide semantic tokens legend for a document range",[o.Uri,o.Range.optional()],new n("A promise that resolves to SemanticTokensLegend.",e=>{if(e)return new c.$OZ(e.tokenTypes,e.tokenModifiers)})),new t("vscode.provideDocumentRangeSemanticTokens","_provideDocumentRangeSemanticTokens","Provide semantic tokens for a document range",[o.Uri,o.Range],new n("A promise that resolves to SemanticTokens.",e=>{if(!e)return;const i=f(e);if(i.type==="full")return new c.$QZ(i.data,void 0)})),new t("vscode.executeCompletionItemProvider","_executeCompletionItemProvider","Execute completion item provider.",[o.Uri,o.Position,o.String.with("triggerCharacter","Trigger completion when the user types the character, like `,` or `(`").optional(),o.Number.with("itemResolveCount","Number of completions to resolve (too large numbers slow down completions)").optional()],new n("A promise that resolves to a CompletionList-instance.",(e,i,s)=>{if(!e)return new c.$3Y([]);const a=e.suggestions.map(u=>r.CompletionItem.to(u,s));return new c.$3Y(a,e.incomplete)})),new t("vscode.executeSignatureHelpProvider","_executeSignatureHelpProvider","Execute signature help provider.",[o.Uri,o.Position,o.String.with("triggerCharacter","Trigger signature help when the user types the character, like `,` or `(`").optional()],new n("A promise that resolves to SignatureHelp.",e=>{if(e)return r.SignatureHelp.to(e)})),new t("vscode.executeCodeLensProvider","_executeCodeLensProvider","Execute code lens provider.",[o.Uri,o.Number.with("itemResolveCount","Number of lenses that should be resolved and returned. Will only return resolved lenses, will impact performance)").optional()],new n("A promise that resolves to an array of CodeLens-instances.",(e,i,s)=>d(a=>new c.$UY(r.Range.to(a.range),a.command&&s.fromInternal(a.command)))(e))),new t("vscode.executeCodeActionProvider","_executeCodeActionProvider","Execute code action provider.",[o.Uri,new o("rangeOrSelection","Range in a text document. Some refactoring provider requires Selection object.",e=>c.$sY.isRange(e),e=>c.$tY.isSelection(e)?r.Selection.from(e):r.Range.from(e)),o.String.with("kind","Code action kind to return code actions for").optional(),o.Number.with("itemResolveCount","Number of code actions to resolve (too large numbers slow down code actions)").optional()],new n("A promise that resolves to an array of Command-instances.",(e,i,s)=>d(a=>{if(a._isSynthetic){if(!a.command)throw new Error("Synthetic code actions must have a command");return s.fromInternal(a.command)}else{const u=new c.$OY(a.title,a.kind?new c.$PY(a.kind):void 0);return a.edit&&(u.edit=r.WorkspaceEdit.to(a.edit)),a.command&&(u.command=s.fromInternal(a.command)),u.isPreferred=a.isPreferred,u}})(e))),new t("vscode.executeDocumentColorProvider","_executeDocumentColorProvider","Execute document color provider.",[o.Uri],new n("A promise that resolves to an array of ColorInformation objects.",e=>e?e.map(i=>new c.$9Y(r.Range.to(i.range),r.Color.to(i.color))):[])),new t("vscode.executeColorPresentationProvider","_executeColorPresentationProvider","Execute color presentation provider.",[new o("color","The color to show and insert",e=>e instanceof c.$8Y,r.Color.from),new o("context","Context object with uri and range",e=>!0,e=>({uri:e.uri,range:r.Range.from(e.range)}))],new n("A promise that resolves to an array of ColorPresentation objects.",e=>e?e.map(r.ColorPresentation.to):[])),new t("vscode.executeInlayHintProvider","_executeInlayHintProvider","Execute inlay hints provider",[o.Uri,o.Range],new n("A promise that resolves to an array of Inlay objects",(e,i,s)=>e.map(r.InlayHint.to.bind(void 0,s)))),new t("vscode.executeFoldingRangeProvider","_executeFoldingRangeProvider","Execute folding range provider",[o.Uri],new n("A promise that resolves to an array of FoldingRange objects",(e,i)=>{if(e)return e.map(r.FoldingRange.to)})),new t("vscode.resolveNotebookContentProviders","_resolveNotebookContentProvider","Resolve Notebook Content Providers",[],new n("A promise that resolves to an array of NotebookContentProvider static info objects.",d(e=>({viewType:e.viewType,displayName:e.displayName,options:{transientOutputs:e.options.transientOutputs,transientCellMetadata:e.options.transientCellMetadata,transientDocumentMetadata:e.options.transientDocumentMetadata},filenamePattern:e.filenamePattern.map(i=>r.NotebookExclusiveDocumentPattern.to(i))})))),new t("vscode.executeInlineValueProvider","_executeInlineValueProvider","Execute inline value provider",[o.Uri,o.Range,new o("context","An InlineValueContext",e=>e&&typeof e.frameId=="number"&&e.stoppedLocation instanceof c.$sY,e=>r.InlineValueContext.from(e))],new n("A promise that resolves to an array of InlineValue objects",e=>e.map(r.InlineValue.to))),new t("vscode.open","_workbench.open","Opens the provided resource in the editor. Can be a text or binary file, or an http(s) URL. If you need more control over the options for opening a text file, use vscode.window.showTextDocument instead.",[new o("uriOrString","Uri-instance or string (only http/https)",e=>l.isUri(e)||typeof e=="string"&&h(e,p.http,p.https),e=>e),new o("columnOrOptions","Either the column in which to open or editor options, see vscode.TextDocumentShowOptions",e=>e===void 0||typeof e=="number"||typeof e=="object",e=>e&&(typeof e=="number"?[r.ViewColumn.from(e),void 0]:[r.ViewColumn.from(e.viewColumn),r.TextEditorOpenOptions.from(e)])).optional(),o.String.with("label","").optional()],n.Void),new t("vscode.openWith","_workbench.openWith","Opens the provided resource with a specific editor.",[o.Uri.with("resource","Resource to open"),o.String.with("viewId","Custom editor view id. This should be the viewType string for custom editors or the notebookType string for notebooks. Use 'default' to use VS Code's default text editor"),new o("columnOrOptions","Either the column in which to open or editor options, see vscode.TextDocumentShowOptions",e=>e===void 0||typeof e=="number"||typeof e=="object",e=>e&&(typeof e=="number"?[r.ViewColumn.from(e),void 0]:[r.ViewColumn.from(e.viewColumn),r.TextEditorOpenOptions.from(e)])).optional()],n.Void),new t("vscode.diff","_workbench.diff","Opens the provided resources in the diff editor to compare their contents.",[o.Uri.with("left","Left-hand side resource of the diff editor"),o.Uri.with("right","Right-hand side resource of the diff editor"),o.String.with("title","Human readable title for the diff editor").optional(),new o("columnOrOptions","Either the column in which to open or editor options, see vscode.TextDocumentShowOptions",e=>e===void 0||typeof e=="object",e=>e&&[r.ViewColumn.from(e.viewColumn),r.TextEditorOpenOptions.from(e)]).optional()],n.Void),new t("vscode.changes","_workbench.changes","Opens a list of resources in the changes editor to compare their contents.",[o.String.with("title","Human readable title for the changes editor"),new o("resourceList","List of resources to compare",e=>{for(const i of e){if(i.length!==3)return!1;const[s,a,u]=i;if(!l.isUri(s)||!l.isUri(a)&&a!==void 0&&a!==null||!l.isUri(u)&&u!==void 0&&u!==null)return!1}return!0},e=>e)],n.Void),new t("vscode.prepareTypeHierarchy","_executePrepareTypeHierarchy","Prepare type hierarchy at a position inside a document",[o.Uri,o.Position],new n("A promise that resolves to an array of TypeHierarchyItem-instances",e=>e.map(r.TypeHierarchyItem.to))),new t("vscode.provideSupertypes","_executeProvideSupertypes","Compute supertypes for an item",[o.TypeHierarchyItem],new n("A promise that resolves to an array of TypeHierarchyItem-instances",e=>e.map(r.TypeHierarchyItem.to))),new t("vscode.provideSubtypes","_executeProvideSubtypes","Compute subtypes for an item",[o.TypeHierarchyItem],new n("A promise that resolves to an array of TypeHierarchyItem-instances",e=>e.map(r.TypeHierarchyItem.to))),new t("vscode.revealTestInExplorer","_revealTestInExplorer","Reveals a test instance in the explorer",[o.TestItem],n.Void),new t("vscode.startContinuousTestRun","testing.startContinuousRunFromExtension","Starts running the given tests with continuous run mode.",[o.TestProfile,o.Arr(o.TestItem)],n.Void),new t("vscode.stopContinuousTestRun","testing.stopContinuousRunFromExtension","Stops running the given tests with continuous run mode.",[o.Arr(o.TestItem)],n.Void),new t("vscode.experimental.editSession.continue","_workbench.editSessions.actions.continueEditSession","Continue the current edit session in a different workspace",[o.Uri.with("workspaceUri","The target workspace to continue the current edit session in")],n.Void),new t("setContext","_setContext","Set a custom context key value that can be used in when clauses.",[o.String.with("name","The context key name"),new o("value","The context key value",()=>!0,e=>e)],n.Void),new t("vscode.editorChat.start","inlineChat.start","Invoke a new editor chat session",[new o("Run arguments","",e=>!0,e=>{if(e)return{initialRange:e.initialRange?r.Range.from(e.initialRange):void 0,initialSelection:c.$tY.isSelection(e.initialSelection)?r.Selection.from(e.initialSelection):void 0,message:e.message,attachments:e.attachments,autoSend:e.autoSend,position:e.position?r.Position.from(e.position):void 0}})],n.Void)];class T{static register(i){x.forEach(i.registerApiCommand,i),this.a(i)}static a(i){i.registerCommand(!1,"_validateWhenClauses",g)}}function d(e){return i=>{if(Array.isArray(i))return i.map(e)}}function m(e){if(!Array.isArray(e))return;const i=[];for(const s of e)w.$tD(s)?i.push(r.DefinitionLink.to(s)):i.push(r.location.to(s));return i}export{T as $mKc};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { isFalsyOrEmpty } from "../../../base/common/arrays.js";
+import { Schemas, matchesSomeScheme } from "../../../base/common/network.js";
+import { URI } from "../../../base/common/uri.js";
+import * as languages from "../../../editor/common/languages.js";
+import { decodeSemanticTokensDto } from "../../../editor/common/services/semanticTokensDto.js";
+import { validateWhenClauses } from "../../../platform/contextkey/common/contextkey.js";
+import { ApiCommand, ApiCommandArgument, ApiCommandResult } from "./extHostCommands.js";
+import * as typeConverters from "./extHostTypeConverters.js";
+import * as types from "./extHostTypes.js";
+const newCommands = [
+  // -- document highlights
+  new ApiCommand("vscode.executeDocumentHighlights", "_executeDocumentHighlights", "Execute document highlight provider.", [ApiCommandArgument.Uri, ApiCommandArgument.Position], new ApiCommandResult("A promise that resolves to an array of DocumentHighlight-instances.", tryMapWith(typeConverters.DocumentHighlight.to))),
+  // -- document symbols
+  new ApiCommand("vscode.executeDocumentSymbolProvider", "_executeDocumentSymbolProvider", "Execute document symbol provider.", [ApiCommandArgument.Uri], new ApiCommandResult("A promise that resolves to an array of SymbolInformation and DocumentSymbol instances.", (value, apiArgs) => {
+    if (isFalsyOrEmpty(value)) {
+      return void 0;
+    }
+    function wrap(symbol) {
+      return new types.SymbolInformationAndDocumentSymbol(symbol.name, typeConverters.SymbolKind.to(symbol.kind), symbol.detail, symbol.containerName || "", apiArgs[0], typeConverters.Range.to(symbol.range), typeConverters.Range.to(symbol.selectionRange), symbol.children ? symbol.children.map(wrap) : []);
+    }
+    __name(wrap, "wrap");
+    return value.map(wrap);
+  })),
+  // -- formatting
+  new ApiCommand("vscode.executeFormatDocumentProvider", "_executeFormatDocumentProvider", "Execute document format provider.", [ApiCommandArgument.Uri, new ApiCommandArgument("options", "Formatting options", (_) => true, (v) => v)], new ApiCommandResult("A promise that resolves to an array of TextEdits.", tryMapWith(typeConverters.TextEdit.to))),
+  new ApiCommand("vscode.executeFormatRangeProvider", "_executeFormatRangeProvider", "Execute range format provider.", [ApiCommandArgument.Uri, ApiCommandArgument.Range, new ApiCommandArgument("options", "Formatting options", (_) => true, (v) => v)], new ApiCommandResult("A promise that resolves to an array of TextEdits.", tryMapWith(typeConverters.TextEdit.to))),
+  new ApiCommand("vscode.executeFormatOnTypeProvider", "_executeFormatOnTypeProvider", "Execute format on type provider.", [ApiCommandArgument.Uri, ApiCommandArgument.Position, new ApiCommandArgument("ch", "Trigger character", (v) => typeof v === "string", (v) => v), new ApiCommandArgument("options", "Formatting options", (_) => true, (v) => v)], new ApiCommandResult("A promise that resolves to an array of TextEdits.", tryMapWith(typeConverters.TextEdit.to))),
+  // -- go to symbol (definition, type definition, declaration, impl, references)
+  new ApiCommand("vscode.executeDefinitionProvider", "_executeDefinitionProvider", "Execute all definition providers.", [ApiCommandArgument.Uri, ApiCommandArgument.Position], new ApiCommandResult("A promise that resolves to an array of Location or LocationLink instances.", mapLocationOrLocationLink)),
+  new ApiCommand("vscode.experimental.executeDefinitionProvider_recursive", "_executeDefinitionProvider_recursive", "Execute all definition providers.", [ApiCommandArgument.Uri, ApiCommandArgument.Position], new ApiCommandResult("A promise that resolves to an array of Location or LocationLink instances.", mapLocationOrLocationLink)),
+  new ApiCommand("vscode.executeTypeDefinitionProvider", "_executeTypeDefinitionProvider", "Execute all type definition providers.", [ApiCommandArgument.Uri, ApiCommandArgument.Position], new ApiCommandResult("A promise that resolves to an array of Location or LocationLink instances.", mapLocationOrLocationLink)),
+  new ApiCommand("vscode.experimental.executeTypeDefinitionProvider_recursive", "_executeTypeDefinitionProvider_recursive", "Execute all type definition providers.", [ApiCommandArgument.Uri, ApiCommandArgument.Position], new ApiCommandResult("A promise that resolves to an array of Location or LocationLink instances.", mapLocationOrLocationLink)),
+  new ApiCommand("vscode.executeDeclarationProvider", "_executeDeclarationProvider", "Execute all declaration providers.", [ApiCommandArgument.Uri, ApiCommandArgument.Position], new ApiCommandResult("A promise that resolves to an array of Location or LocationLink instances.", mapLocationOrLocationLink)),
+  new ApiCommand("vscode.experimental.executeDeclarationProvider_recursive", "_executeDeclarationProvider_recursive", "Execute all declaration providers.", [ApiCommandArgument.Uri, ApiCommandArgument.Position], new ApiCommandResult("A promise that resolves to an array of Location or LocationLink instances.", mapLocationOrLocationLink)),
+  new ApiCommand("vscode.executeImplementationProvider", "_executeImplementationProvider", "Execute all implementation providers.", [ApiCommandArgument.Uri, ApiCommandArgument.Position], new ApiCommandResult("A promise that resolves to an array of Location or LocationLink instances.", mapLocationOrLocationLink)),
+  new ApiCommand("vscode.experimental.executeImplementationProvider_recursive", "_executeImplementationProvider_recursive", "Execute all implementation providers.", [ApiCommandArgument.Uri, ApiCommandArgument.Position], new ApiCommandResult("A promise that resolves to an array of Location or LocationLink instances.", mapLocationOrLocationLink)),
+  new ApiCommand("vscode.executeReferenceProvider", "_executeReferenceProvider", "Execute all reference providers.", [ApiCommandArgument.Uri, ApiCommandArgument.Position], new ApiCommandResult("A promise that resolves to an array of Location-instances.", tryMapWith(typeConverters.location.to))),
+  new ApiCommand("vscode.experimental.executeReferenceProvider", "_executeReferenceProvider_recursive", "Execute all reference providers.", [ApiCommandArgument.Uri, ApiCommandArgument.Position], new ApiCommandResult("A promise that resolves to an array of Location-instances.", tryMapWith(typeConverters.location.to))),
+  // -- hover
+  new ApiCommand("vscode.executeHoverProvider", "_executeHoverProvider", "Execute all hover providers.", [ApiCommandArgument.Uri, ApiCommandArgument.Position], new ApiCommandResult("A promise that resolves to an array of Hover-instances.", tryMapWith(typeConverters.Hover.to))),
+  new ApiCommand("vscode.experimental.executeHoverProvider_recursive", "_executeHoverProvider_recursive", "Execute all hover providers.", [ApiCommandArgument.Uri, ApiCommandArgument.Position], new ApiCommandResult("A promise that resolves to an array of Hover-instances.", tryMapWith(typeConverters.Hover.to))),
+  // -- selection range
+  new ApiCommand("vscode.executeSelectionRangeProvider", "_executeSelectionRangeProvider", "Execute selection range provider.", [ApiCommandArgument.Uri, new ApiCommandArgument("position", "A position in a text document", (v) => Array.isArray(v) && v.every((v2) => types.Position.isPosition(v2)), (v) => v.map(typeConverters.Position.from))], new ApiCommandResult("A promise that resolves to an array of ranges.", (result) => {
+    return result.map((ranges) => {
+      let node;
+      for (const range of ranges.reverse()) {
+        node = new types.SelectionRange(typeConverters.Range.to(range), node);
+      }
+      return node;
+    });
+  })),
+  // -- symbol search
+  new ApiCommand("vscode.executeWorkspaceSymbolProvider", "_executeWorkspaceSymbolProvider", "Execute all workspace symbol providers.", [ApiCommandArgument.String.with("query", "Search string")], new ApiCommandResult("A promise that resolves to an array of SymbolInformation-instances.", (value) => {
+    return value.map(typeConverters.WorkspaceSymbol.to);
+  })),
+  // --- call hierarchy
+  new ApiCommand("vscode.prepareCallHierarchy", "_executePrepareCallHierarchy", "Prepare call hierarchy at a position inside a document", [ApiCommandArgument.Uri, ApiCommandArgument.Position], new ApiCommandResult("A promise that resolves to an array of CallHierarchyItem-instances", (v) => v.map(typeConverters.CallHierarchyItem.to))),
+  new ApiCommand("vscode.provideIncomingCalls", "_executeProvideIncomingCalls", "Compute incoming calls for an item", [ApiCommandArgument.CallHierarchyItem], new ApiCommandResult("A promise that resolves to an array of CallHierarchyIncomingCall-instances", (v) => v.map(typeConverters.CallHierarchyIncomingCall.to))),
+  new ApiCommand("vscode.provideOutgoingCalls", "_executeProvideOutgoingCalls", "Compute outgoing calls for an item", [ApiCommandArgument.CallHierarchyItem], new ApiCommandResult("A promise that resolves to an array of CallHierarchyOutgoingCall-instances", (v) => v.map(typeConverters.CallHierarchyOutgoingCall.to))),
+  // --- rename
+  new ApiCommand("vscode.prepareRename", "_executePrepareRename", "Execute the prepareRename of rename provider.", [ApiCommandArgument.Uri, ApiCommandArgument.Position], new ApiCommandResult("A promise that resolves to a range and placeholder text.", (value) => {
+    if (!value) {
+      return void 0;
+    }
+    return {
+      range: typeConverters.Range.to(value.range),
+      placeholder: value.text
+    };
+  })),
+  new ApiCommand("vscode.executeDocumentRenameProvider", "_executeDocumentRenameProvider", "Execute rename provider.", [ApiCommandArgument.Uri, ApiCommandArgument.Position, ApiCommandArgument.String.with("newName", "The new symbol name")], new ApiCommandResult("A promise that resolves to a WorkspaceEdit.", (value) => {
+    if (!value) {
+      return void 0;
+    }
+    if (value.rejectReason) {
+      throw new Error(value.rejectReason);
+    }
+    return typeConverters.WorkspaceEdit.to(value);
+  })),
+  // --- links
+  new ApiCommand("vscode.executeLinkProvider", "_executeLinkProvider", "Execute document link provider.", [ApiCommandArgument.Uri, ApiCommandArgument.Number.with("linkResolveCount", "Number of links that should be resolved, only when links are unresolved.").optional()], new ApiCommandResult("A promise that resolves to an array of DocumentLink-instances.", (value) => value.map(typeConverters.DocumentLink.to))),
+  // --- semantic tokens
+  new ApiCommand("vscode.provideDocumentSemanticTokensLegend", "_provideDocumentSemanticTokensLegend", "Provide semantic tokens legend for a document", [ApiCommandArgument.Uri], new ApiCommandResult("A promise that resolves to SemanticTokensLegend.", (value) => {
+    if (!value) {
+      return void 0;
+    }
+    return new types.SemanticTokensLegend(value.tokenTypes, value.tokenModifiers);
+  })),
+  new ApiCommand("vscode.provideDocumentSemanticTokens", "_provideDocumentSemanticTokens", "Provide semantic tokens for a document", [ApiCommandArgument.Uri], new ApiCommandResult("A promise that resolves to SemanticTokens.", (value) => {
+    if (!value) {
+      return void 0;
+    }
+    const semanticTokensDto = decodeSemanticTokensDto(value);
+    if (semanticTokensDto.type !== "full") {
+      return void 0;
+    }
+    return new types.SemanticTokens(semanticTokensDto.data, void 0);
+  })),
+  new ApiCommand("vscode.provideDocumentRangeSemanticTokensLegend", "_provideDocumentRangeSemanticTokensLegend", "Provide semantic tokens legend for a document range", [ApiCommandArgument.Uri, ApiCommandArgument.Range.optional()], new ApiCommandResult("A promise that resolves to SemanticTokensLegend.", (value) => {
+    if (!value) {
+      return void 0;
+    }
+    return new types.SemanticTokensLegend(value.tokenTypes, value.tokenModifiers);
+  })),
+  new ApiCommand("vscode.provideDocumentRangeSemanticTokens", "_provideDocumentRangeSemanticTokens", "Provide semantic tokens for a document range", [ApiCommandArgument.Uri, ApiCommandArgument.Range], new ApiCommandResult("A promise that resolves to SemanticTokens.", (value) => {
+    if (!value) {
+      return void 0;
+    }
+    const semanticTokensDto = decodeSemanticTokensDto(value);
+    if (semanticTokensDto.type !== "full") {
+      return void 0;
+    }
+    return new types.SemanticTokens(semanticTokensDto.data, void 0);
+  })),
+  // --- completions
+  new ApiCommand("vscode.executeCompletionItemProvider", "_executeCompletionItemProvider", "Execute completion item provider.", [
+    ApiCommandArgument.Uri,
+    ApiCommandArgument.Position,
+    ApiCommandArgument.String.with("triggerCharacter", "Trigger completion when the user types the character, like `,` or `(`").optional(),
+    ApiCommandArgument.Number.with("itemResolveCount", "Number of completions to resolve (too large numbers slow down completions)").optional()
+  ], new ApiCommandResult("A promise that resolves to a CompletionList-instance.", (value, _args, converter) => {
+    if (!value) {
+      return new types.CompletionList([]);
+    }
+    const items = value.suggestions.map((suggestion) => typeConverters.CompletionItem.to(suggestion, converter));
+    return new types.CompletionList(items, value.incomplete);
+  })),
+  // --- signature help
+  new ApiCommand("vscode.executeSignatureHelpProvider", "_executeSignatureHelpProvider", "Execute signature help provider.", [ApiCommandArgument.Uri, ApiCommandArgument.Position, ApiCommandArgument.String.with("triggerCharacter", "Trigger signature help when the user types the character, like `,` or `(`").optional()], new ApiCommandResult("A promise that resolves to SignatureHelp.", (value) => {
+    if (value) {
+      return typeConverters.SignatureHelp.to(value);
+    }
+    return void 0;
+  })),
+  // --- code lens
+  new ApiCommand("vscode.executeCodeLensProvider", "_executeCodeLensProvider", "Execute code lens provider.", [ApiCommandArgument.Uri, ApiCommandArgument.Number.with("itemResolveCount", "Number of lenses that should be resolved and returned. Will only return resolved lenses, will impact performance)").optional()], new ApiCommandResult("A promise that resolves to an array of CodeLens-instances.", (value, _args, converter) => {
+    return tryMapWith((item) => {
+      return new types.CodeLens(typeConverters.Range.to(item.range), item.command && converter.fromInternal(item.command));
+    })(value);
+  })),
+  // --- code actions
+  new ApiCommand("vscode.executeCodeActionProvider", "_executeCodeActionProvider", "Execute code action provider.", [
+    ApiCommandArgument.Uri,
+    new ApiCommandArgument("rangeOrSelection", "Range in a text document. Some refactoring provider requires Selection object.", (v) => types.Range.isRange(v), (v) => types.Selection.isSelection(v) ? typeConverters.Selection.from(v) : typeConverters.Range.from(v)),
+    ApiCommandArgument.String.with("kind", "Code action kind to return code actions for").optional(),
+    ApiCommandArgument.Number.with("itemResolveCount", "Number of code actions to resolve (too large numbers slow down code actions)").optional()
+  ], new ApiCommandResult("A promise that resolves to an array of Command-instances.", (value, _args, converter) => {
+    return tryMapWith((codeAction) => {
+      if (codeAction._isSynthetic) {
+        if (!codeAction.command) {
+          throw new Error("Synthetic code actions must have a command");
+        }
+        return converter.fromInternal(codeAction.command);
+      } else {
+        const ret = new types.CodeAction(codeAction.title, codeAction.kind ? new types.CodeActionKind(codeAction.kind) : void 0);
+        if (codeAction.edit) {
+          ret.edit = typeConverters.WorkspaceEdit.to(codeAction.edit);
+        }
+        if (codeAction.command) {
+          ret.command = converter.fromInternal(codeAction.command);
+        }
+        ret.isPreferred = codeAction.isPreferred;
+        return ret;
+      }
+    })(value);
+  })),
+  // --- colors
+  new ApiCommand("vscode.executeDocumentColorProvider", "_executeDocumentColorProvider", "Execute document color provider.", [ApiCommandArgument.Uri], new ApiCommandResult("A promise that resolves to an array of ColorInformation objects.", (result) => {
+    if (result) {
+      return result.map((ci) => new types.ColorInformation(typeConverters.Range.to(ci.range), typeConverters.Color.to(ci.color)));
+    }
+    return [];
+  })),
+  new ApiCommand("vscode.executeColorPresentationProvider", "_executeColorPresentationProvider", "Execute color presentation provider.", [
+    new ApiCommandArgument("color", "The color to show and insert", (v) => v instanceof types.Color, typeConverters.Color.from),
+    new ApiCommandArgument("context", "Context object with uri and range", (_v) => true, (v) => ({ uri: v.uri, range: typeConverters.Range.from(v.range) }))
+  ], new ApiCommandResult("A promise that resolves to an array of ColorPresentation objects.", (result) => {
+    if (result) {
+      return result.map(typeConverters.ColorPresentation.to);
+    }
+    return [];
+  })),
+  // --- inline hints
+  new ApiCommand("vscode.executeInlayHintProvider", "_executeInlayHintProvider", "Execute inlay hints provider", [ApiCommandArgument.Uri, ApiCommandArgument.Range], new ApiCommandResult("A promise that resolves to an array of Inlay objects", (result, args, converter) => {
+    return result.map(typeConverters.InlayHint.to.bind(void 0, converter));
+  })),
+  // --- folding
+  new ApiCommand("vscode.executeFoldingRangeProvider", "_executeFoldingRangeProvider", "Execute folding range provider", [ApiCommandArgument.Uri], new ApiCommandResult("A promise that resolves to an array of FoldingRange objects", (result, args) => {
+    if (result) {
+      return result.map(typeConverters.FoldingRange.to);
+    }
+    return void 0;
+  })),
+  // --- notebooks
+  new ApiCommand("vscode.resolveNotebookContentProviders", "_resolveNotebookContentProvider", "Resolve Notebook Content Providers", [
+    // new ApiCommandArgument<string, string>('viewType', '', v => typeof v === 'string', v => v),
+    // new ApiCommandArgument<string, string>('displayName', '', v => typeof v === 'string', v => v),
+    // new ApiCommandArgument<object, object>('options', '', v => typeof v === 'object', v => v),
+  ], new ApiCommandResult("A promise that resolves to an array of NotebookContentProvider static info objects.", tryMapWith((item) => {
+    return {
+      viewType: item.viewType,
+      displayName: item.displayName,
+      options: {
+        transientOutputs: item.options.transientOutputs,
+        transientCellMetadata: item.options.transientCellMetadata,
+        transientDocumentMetadata: item.options.transientDocumentMetadata
+      },
+      filenamePattern: item.filenamePattern.map((pattern) => typeConverters.NotebookExclusiveDocumentPattern.to(pattern))
+    };
+  }))),
+  // --- debug support
+  new ApiCommand("vscode.executeInlineValueProvider", "_executeInlineValueProvider", "Execute inline value provider", [
+    ApiCommandArgument.Uri,
+    ApiCommandArgument.Range,
+    new ApiCommandArgument("context", "An InlineValueContext", (v) => v && typeof v.frameId === "number" && v.stoppedLocation instanceof types.Range, (v) => typeConverters.InlineValueContext.from(v))
+  ], new ApiCommandResult("A promise that resolves to an array of InlineValue objects", (result) => {
+    return result.map(typeConverters.InlineValue.to);
+  })),
+  // --- open'ish commands
+  new ApiCommand("vscode.open", "_workbench.open", "Opens the provided resource in the editor. Can be a text or binary file, or an http(s) URL. If you need more control over the options for opening a text file, use vscode.window.showTextDocument instead.", [
+    new ApiCommandArgument("uriOrString", "Uri-instance or string (only http/https)", (v) => URI.isUri(v) || typeof v === "string" && matchesSomeScheme(v, Schemas.http, Schemas.https), (v) => v),
+    new ApiCommandArgument("columnOrOptions", "Either the column in which to open or editor options, see vscode.TextDocumentShowOptions", (v) => v === void 0 || typeof v === "number" || typeof v === "object", (v) => !v ? v : typeof v === "number" ? [typeConverters.ViewColumn.from(v), void 0] : [typeConverters.ViewColumn.from(v.viewColumn), typeConverters.TextEditorOpenOptions.from(v)]).optional(),
+    ApiCommandArgument.String.with("label", "").optional()
+  ], ApiCommandResult.Void),
+  new ApiCommand("vscode.openWith", "_workbench.openWith", "Opens the provided resource with a specific editor.", [
+    ApiCommandArgument.Uri.with("resource", "Resource to open"),
+    ApiCommandArgument.String.with("viewId", "Custom editor view id. This should be the viewType string for custom editors or the notebookType string for notebooks. Use 'default' to use VS Code's default text editor"),
+    new ApiCommandArgument("columnOrOptions", "Either the column in which to open or editor options, see vscode.TextDocumentShowOptions", (v) => v === void 0 || typeof v === "number" || typeof v === "object", (v) => !v ? v : typeof v === "number" ? [typeConverters.ViewColumn.from(v), void 0] : [typeConverters.ViewColumn.from(v.viewColumn), typeConverters.TextEditorOpenOptions.from(v)]).optional()
+  ], ApiCommandResult.Void),
+  new ApiCommand("vscode.diff", "_workbench.diff", "Opens the provided resources in the diff editor to compare their contents.", [
+    ApiCommandArgument.Uri.with("left", "Left-hand side resource of the diff editor"),
+    ApiCommandArgument.Uri.with("right", "Right-hand side resource of the diff editor"),
+    ApiCommandArgument.String.with("title", "Human readable title for the diff editor").optional(),
+    new ApiCommandArgument("columnOrOptions", "Either the column in which to open or editor options, see vscode.TextDocumentShowOptions", (v) => v === void 0 || typeof v === "object", (v) => v && [typeConverters.ViewColumn.from(v.viewColumn), typeConverters.TextEditorOpenOptions.from(v)]).optional()
+  ], ApiCommandResult.Void),
+  new ApiCommand("vscode.changes", "_workbench.changes", "Opens a list of resources in the changes editor to compare their contents.", [
+    ApiCommandArgument.String.with("title", "Human readable title for the changes editor"),
+    new ApiCommandArgument("resourceList", "List of resources to compare", (resources) => {
+      for (const resource of resources) {
+        if (resource.length !== 3) {
+          return false;
+        }
+        const [label, left, right] = resource;
+        if (!URI.isUri(label) || !URI.isUri(left) && left !== void 0 && left !== null || !URI.isUri(right) && right !== void 0 && right !== null) {
+          return false;
+        }
+      }
+      return true;
+    }, (v) => v)
+  ], ApiCommandResult.Void),
+  // --- type hierarchy
+  new ApiCommand("vscode.prepareTypeHierarchy", "_executePrepareTypeHierarchy", "Prepare type hierarchy at a position inside a document", [ApiCommandArgument.Uri, ApiCommandArgument.Position], new ApiCommandResult("A promise that resolves to an array of TypeHierarchyItem-instances", (v) => v.map(typeConverters.TypeHierarchyItem.to))),
+  new ApiCommand("vscode.provideSupertypes", "_executeProvideSupertypes", "Compute supertypes for an item", [ApiCommandArgument.TypeHierarchyItem], new ApiCommandResult("A promise that resolves to an array of TypeHierarchyItem-instances", (v) => v.map(typeConverters.TypeHierarchyItem.to))),
+  new ApiCommand("vscode.provideSubtypes", "_executeProvideSubtypes", "Compute subtypes for an item", [ApiCommandArgument.TypeHierarchyItem], new ApiCommandResult("A promise that resolves to an array of TypeHierarchyItem-instances", (v) => v.map(typeConverters.TypeHierarchyItem.to))),
+  // --- testing
+  new ApiCommand("vscode.revealTestInExplorer", "_revealTestInExplorer", "Reveals a test instance in the explorer", [ApiCommandArgument.TestItem], ApiCommandResult.Void),
+  new ApiCommand("vscode.startContinuousTestRun", "testing.startContinuousRunFromExtension", "Starts running the given tests with continuous run mode.", [ApiCommandArgument.TestProfile, ApiCommandArgument.Arr(ApiCommandArgument.TestItem)], ApiCommandResult.Void),
+  new ApiCommand("vscode.stopContinuousTestRun", "testing.stopContinuousRunFromExtension", "Stops running the given tests with continuous run mode.", [ApiCommandArgument.Arr(ApiCommandArgument.TestItem)], ApiCommandResult.Void),
+  // --- continue edit session
+  new ApiCommand("vscode.experimental.editSession.continue", "_workbench.editSessions.actions.continueEditSession", "Continue the current edit session in a different workspace", [ApiCommandArgument.Uri.with("workspaceUri", "The target workspace to continue the current edit session in")], ApiCommandResult.Void),
+  // --- context keys
+  new ApiCommand("setContext", "_setContext", "Set a custom context key value that can be used in when clauses.", [
+    ApiCommandArgument.String.with("name", "The context key name"),
+    new ApiCommandArgument("value", "The context key value", () => true, (v) => v)
+  ], ApiCommandResult.Void),
+  // --- inline chat
+  new ApiCommand("vscode.editorChat.start", "inlineChat.start", "Invoke a new editor chat session", [new ApiCommandArgument("Run arguments", "", (_v) => true, (v) => {
+    if (!v) {
+      return void 0;
+    }
+    return {
+      initialRange: v.initialRange ? typeConverters.Range.from(v.initialRange) : void 0,
+      initialSelection: types.Selection.isSelection(v.initialSelection) ? typeConverters.Selection.from(v.initialSelection) : void 0,
+      message: v.message,
+      attachments: v.attachments,
+      autoSend: v.autoSend,
+      position: v.position ? typeConverters.Position.from(v.position) : void 0
+    };
+  })], ApiCommandResult.Void)
+];
+class ExtHostApiCommands {
+  static {
+    __name(this, "ExtHostApiCommands");
+  }
+  static register(commands) {
+    newCommands.forEach(commands.registerApiCommand, commands);
+    this._registerValidateWhenClausesCommand(commands);
+  }
+  static _registerValidateWhenClausesCommand(commands) {
+    commands.registerCommand(false, "_validateWhenClauses", validateWhenClauses);
+  }
+}
+function tryMapWith(f) {
+  return (value) => {
+    if (Array.isArray(value)) {
+      return value.map(f);
+    }
+    return void 0;
+  };
+}
+__name(tryMapWith, "tryMapWith");
+function mapLocationOrLocationLink(values) {
+  if (!Array.isArray(values)) {
+    return void 0;
+  }
+  const result = [];
+  for (const item of values) {
+    if (languages.isLocationLink(item)) {
+      result.push(typeConverters.DefinitionLink.to(item));
+    } else {
+      result.push(typeConverters.location.to(item));
+    }
+  }
+  return result;
+}
+__name(mapLocationOrLocationLink, "mapLocationOrLocationLink");
+export {
+  ExtHostApiCommands
+};
+//# sourceMappingURL=extHostApiCommands.js.map

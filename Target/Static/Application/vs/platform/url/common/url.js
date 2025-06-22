@@ -1,1 +1,6 @@
-import{$nj as r}from"../../instantiation/common/instantiation.js";const e=r("urlService");export{e as $Ex};
+import { createDecorator } from "../../instantiation/common/instantiation.js";
+const IURLService = createDecorator("urlService");
+export {
+  IURLService
+};
+//# sourceMappingURL=url.js.map

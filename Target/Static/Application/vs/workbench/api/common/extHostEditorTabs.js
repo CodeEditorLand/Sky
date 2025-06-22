@@ -1,1 +1,355 @@
-import{$c as I}from"../../../base/common/collections.js";import{$df as h}from"../../../base/common/event.js";import{$$c as p}from"../../../base/common/types.js";import{URI as n}from"../../../base/common/uri.js";import{$nj as m}from"../../../platform/instantiation/common/instantiation.js";import{$oY as j}from"./extHost.protocol.js";import{$i2 as T}from"./extHostRpcService.js";import*as O from"./extHostTypeConverters.js";import{$s1 as $,$m1 as x,$r1 as D,$p1 as E,$o1 as G,$q1 as y,$k1 as f,$l1 as A,$j1 as z,$n1 as P,$t1 as U}from"./extHostTypes.js";var g=function(o,t,i,e){var s=arguments.length,r=s<3?t:e===null?e=Object.getOwnPropertyDescriptor(t,i):e,a;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")r=Reflect.decorate(o,t,i,e);else for(var d=o.length-1;d>=0;d--)(a=o[d])&&(r=(s<3?a(r):s>3?a(t,i,r):a(t,i))||r);return s>3&&r&&Object.defineProperty(t,i,r),r},w=function(o,t){return function(i,e){t(i,e,o)}};const q=m("IExtHostEditorTabs");class v{constructor(t,i,e){this.e=e,this.d=i,this.acceptDtoUpdate(t)}get apiObject(){if(!this.a){const t=this,i={get isActive(){return t.b.id===t.e()},get label(){return t.b.label},get input(){return t.c},get isDirty(){return t.b.isDirty},get isPinned(){return t.b.isPinned},get isPreview(){return t.b.isPreview},get group(){return t.d.apiObject}};this.a=Object.freeze(i)}return this.a}get tabId(){return this.b.id}acceptDtoUpdate(t){this.b=t,this.c=this.f()}f(){switch(this.b.input.kind){case 1:return new z(n.revive(this.b.input.uri));case 2:return new f(n.revive(this.b.input.original),n.revive(this.b.input.modified));case 3:return new A(n.revive(this.b.input.base),n.revive(this.b.input.input1),n.revive(this.b.input.input2),n.revive(this.b.input.result));case 6:return new x(n.revive(this.b.input.uri),this.b.input.viewType);case 7:return new P(this.b.input.viewType);case 4:return new G(n.revive(this.b.input.uri),this.b.input.notebookType);case 5:return new E(n.revive(this.b.input.original),n.revive(this.b.input.modified),this.b.input.notebookType);case 8:return new y;case 9:return new D(n.revive(this.b.input.uri),n.revive(this.b.input.inputBoxUri));case 10:return new $;case 11:return new U(this.b.input.diffEditors.map(t=>new f(n.revive(t.original),n.revive(t.modified))));default:return}}}class C{constructor(t,i){this.c=[],this.d="",this.b=t,this.e=i;for(const e of t.tabs)e.isActive&&(this.d=e.id),this.c.push(new v(e,this,()=>this.activeTabId()))}get apiObject(){if(!this.a){const t=this,i={get isActive(){return t.b.groupId===t.e()},get viewColumn(){return O.ViewColumn.to(t.b.viewColumn)},get activeTab(){return t.c.find(e=>e.tabId===t.d)?.apiObject},get tabs(){return Object.freeze(t.c.map(e=>e.apiObject))}};this.a=Object.freeze(i)}return this.a}get groupId(){return this.b.groupId}get tabs(){return this.c}acceptGroupDtoUpdate(t){this.b=t}acceptTabOperation(t){if(t.kind===0){const e=new v(t.tabDto,this,()=>this.activeTabId());return this.c.splice(t.index,0,e),t.tabDto.isActive&&(this.d=e.tabId),e}else if(t.kind===1){const e=this.c.splice(t.index,1)[0];if(!e)throw new Error(`Tab close updated received for index ${t.index} which does not exist`);return e.tabId===this.d&&(this.d=""),e}else if(t.kind===3){if(t.oldIndex===void 0)throw new Error("Invalid old index on move IPC");const e=this.c.splice(t.oldIndex,1)[0];if(!e)throw new Error(`Tab move updated received for index ${t.oldIndex} which does not exist`);return this.c.splice(t.index,0,e),e}const i=this.c.find(e=>e.tabId===t.tabDto.id);if(!i)throw new Error("INVALID tab");return t.tabDto.isActive?this.d=t.tabDto.id:this.d===t.tabDto.id&&!t.tabDto.isActive&&(this.d=""),i.acceptDtoUpdate(t.tabDto),i}activeTabId(){return this.d}}let l=class{constructor(t){this.b=new h,this.c=new h,this.e=[],this.a=t.getProxy(j.MainThreadEditorTabs)}get tabGroups(){if(!this.f){const t=this,i={onDidChangeTabGroups:t.c.event,onDidChangeTabs:t.b.event,get all(){return Object.freeze(t.e.map(e=>e.apiObject))},get activeTabGroup(){const e=t.d;return p(t.e.find(r=>r.groupId===e)?.apiObject)},close:async(e,s)=>{const r=Array.isArray(e)?e:[e];return r.length?_(r[0])?this.j(r,s):this.i(r,s):!0}};this.f=Object.freeze(i)}return this.f}$acceptEditorTabModel(t){const i=new Set(this.e.map(c=>c.groupId)),e=new Set(t.map(c=>c.groupId)),s=I(i,e),r=this.e.filter(c=>s.removed.includes(c.groupId)).map(c=>c.apiObject),a=[],d=[];this.e=t.map(c=>{const u=new C(c,()=>this.d);return s.added.includes(u.groupId)?a.push(u.apiObject):d.push(u.apiObject),u});const b=p(t.find(c=>c.isActive===!0)?.groupId);b!==void 0&&this.d!==b&&(this.d=b),this.c.fire(Object.freeze({opened:a,closed:r,changed:d}))}$acceptTabGroupUpdate(t){const i=this.e.find(e=>e.groupId===t.groupId);if(!i)throw new Error("Update Group IPC call received before group creation.");i.acceptGroupDtoUpdate(t),t.isActive&&(this.d=t.groupId),this.c.fire(Object.freeze({changed:[i.apiObject],opened:[],closed:[]}))}$acceptTabOperation(t){const i=this.e.find(s=>s.groupId===t.groupId);if(!i)throw new Error("Update Tabs IPC call received before group creation.");const e=i.acceptTabOperation(t);switch(t.kind){case 0:this.b.fire(Object.freeze({opened:[e.apiObject],closed:[],changed:[]}));return;case 1:this.b.fire(Object.freeze({opened:[],closed:[e.apiObject],changed:[]}));return;case 3:case 2:this.b.fire(Object.freeze({opened:[],closed:[],changed:[e.apiObject]}));return}}g(t){for(const i of this.e)for(const e of i.tabs)if(e.apiObject===t)return e}h(t){return this.e.find(i=>i.apiObject===t)}async i(t,i){const e=[];for(const s of t){const r=this.g(s);if(!r)throw new Error("Tab close: Invalid tab not found!");e.push(r.tabId)}return this.a.$closeTab(e,i)}async j(t,i){const e=[];for(const s of t){const r=this.h(s);if(!r)throw new Error("Group close: Invalid group not found!");e.push(r.groupId)}return this.a.$closeGroup(e,i)}};l=g([w(0,T)],l);function _(o){return o.tabs!==void 0}export{q as $1Kc,l as $2Kc};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { diffSets } from "../../../base/common/collections.js";
+import { Emitter } from "../../../base/common/event.js";
+import { assertReturnsDefined } from "../../../base/common/types.js";
+import { URI } from "../../../base/common/uri.js";
+import { createDecorator } from "../../../platform/instantiation/common/instantiation.js";
+import { MainContext } from "./extHost.protocol.js";
+import { IExtHostRpcService } from "./extHostRpcService.js";
+import * as typeConverters from "./extHostTypeConverters.js";
+import { ChatEditorTabInput, CustomEditorTabInput, InteractiveWindowInput, NotebookDiffEditorTabInput, NotebookEditorTabInput, TerminalEditorTabInput, TextDiffTabInput, TextMergeTabInput, TextTabInput, WebviewEditorTabInput, TextMultiDiffTabInput } from "./extHostTypes.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+const IExtHostEditorTabs = createDecorator("IExtHostEditorTabs");
+class ExtHostEditorTab {
+  static {
+    __name(this, "ExtHostEditorTab");
+  }
+  constructor(dto, parentGroup, activeTabIdGetter) {
+    this._activeTabIdGetter = activeTabIdGetter;
+    this._parentGroup = parentGroup;
+    this.acceptDtoUpdate(dto);
+  }
+  get apiObject() {
+    if (!this._apiObject) {
+      const that = this;
+      const obj = {
+        get isActive() {
+          return that._dto.id === that._activeTabIdGetter();
+        },
+        get label() {
+          return that._dto.label;
+        },
+        get input() {
+          return that._input;
+        },
+        get isDirty() {
+          return that._dto.isDirty;
+        },
+        get isPinned() {
+          return that._dto.isPinned;
+        },
+        get isPreview() {
+          return that._dto.isPreview;
+        },
+        get group() {
+          return that._parentGroup.apiObject;
+        }
+      };
+      this._apiObject = Object.freeze(obj);
+    }
+    return this._apiObject;
+  }
+  get tabId() {
+    return this._dto.id;
+  }
+  acceptDtoUpdate(dto) {
+    this._dto = dto;
+    this._input = this._initInput();
+  }
+  _initInput() {
+    switch (this._dto.input.kind) {
+      case 1:
+        return new TextTabInput(URI.revive(this._dto.input.uri));
+      case 2:
+        return new TextDiffTabInput(URI.revive(this._dto.input.original), URI.revive(this._dto.input.modified));
+      case 3:
+        return new TextMergeTabInput(URI.revive(this._dto.input.base), URI.revive(this._dto.input.input1), URI.revive(this._dto.input.input2), URI.revive(this._dto.input.result));
+      case 6:
+        return new CustomEditorTabInput(URI.revive(this._dto.input.uri), this._dto.input.viewType);
+      case 7:
+        return new WebviewEditorTabInput(this._dto.input.viewType);
+      case 4:
+        return new NotebookEditorTabInput(URI.revive(this._dto.input.uri), this._dto.input.notebookType);
+      case 5:
+        return new NotebookDiffEditorTabInput(URI.revive(this._dto.input.original), URI.revive(this._dto.input.modified), this._dto.input.notebookType);
+      case 8:
+        return new TerminalEditorTabInput();
+      case 9:
+        return new InteractiveWindowInput(URI.revive(this._dto.input.uri), URI.revive(this._dto.input.inputBoxUri));
+      case 10:
+        return new ChatEditorTabInput();
+      case 11:
+        return new TextMultiDiffTabInput(this._dto.input.diffEditors.map((diff) => new TextDiffTabInput(URI.revive(diff.original), URI.revive(diff.modified))));
+      default:
+        return void 0;
+    }
+  }
+}
+class ExtHostEditorTabGroup {
+  static {
+    __name(this, "ExtHostEditorTabGroup");
+  }
+  constructor(dto, activeGroupIdGetter) {
+    this._tabs = [];
+    this._activeTabId = "";
+    this._dto = dto;
+    this._activeGroupIdGetter = activeGroupIdGetter;
+    for (const tabDto of dto.tabs) {
+      if (tabDto.isActive) {
+        this._activeTabId = tabDto.id;
+      }
+      this._tabs.push(new ExtHostEditorTab(tabDto, this, () => this.activeTabId()));
+    }
+  }
+  get apiObject() {
+    if (!this._apiObject) {
+      const that = this;
+      const obj = {
+        get isActive() {
+          return that._dto.groupId === that._activeGroupIdGetter();
+        },
+        get viewColumn() {
+          return typeConverters.ViewColumn.to(that._dto.viewColumn);
+        },
+        get activeTab() {
+          return that._tabs.find((tab) => tab.tabId === that._activeTabId)?.apiObject;
+        },
+        get tabs() {
+          return Object.freeze(that._tabs.map((tab) => tab.apiObject));
+        }
+      };
+      this._apiObject = Object.freeze(obj);
+    }
+    return this._apiObject;
+  }
+  get groupId() {
+    return this._dto.groupId;
+  }
+  get tabs() {
+    return this._tabs;
+  }
+  acceptGroupDtoUpdate(dto) {
+    this._dto = dto;
+  }
+  acceptTabOperation(operation) {
+    if (operation.kind === 0) {
+      const tab2 = new ExtHostEditorTab(operation.tabDto, this, () => this.activeTabId());
+      this._tabs.splice(operation.index, 0, tab2);
+      if (operation.tabDto.isActive) {
+        this._activeTabId = tab2.tabId;
+      }
+      return tab2;
+    } else if (operation.kind === 1) {
+      const tab2 = this._tabs.splice(operation.index, 1)[0];
+      if (!tab2) {
+        throw new Error(`Tab close updated received for index ${operation.index} which does not exist`);
+      }
+      if (tab2.tabId === this._activeTabId) {
+        this._activeTabId = "";
+      }
+      return tab2;
+    } else if (operation.kind === 3) {
+      if (operation.oldIndex === void 0) {
+        throw new Error("Invalid old index on move IPC");
+      }
+      const tab2 = this._tabs.splice(operation.oldIndex, 1)[0];
+      if (!tab2) {
+        throw new Error(`Tab move updated received for index ${operation.oldIndex} which does not exist`);
+      }
+      this._tabs.splice(operation.index, 0, tab2);
+      return tab2;
+    }
+    const tab = this._tabs.find((extHostTab) => extHostTab.tabId === operation.tabDto.id);
+    if (!tab) {
+      throw new Error("INVALID tab");
+    }
+    if (operation.tabDto.isActive) {
+      this._activeTabId = operation.tabDto.id;
+    } else if (this._activeTabId === operation.tabDto.id && !operation.tabDto.isActive) {
+      this._activeTabId = "";
+    }
+    tab.acceptDtoUpdate(operation.tabDto);
+    return tab;
+  }
+  // Not a getter since it must be a function to be used as a callback for the tabs
+  activeTabId() {
+    return this._activeTabId;
+  }
+}
+let ExtHostEditorTabs = class ExtHostEditorTabs2 {
+  static {
+    __name(this, "ExtHostEditorTabs");
+  }
+  constructor(extHostRpc) {
+    this._onDidChangeTabs = new Emitter();
+    this._onDidChangeTabGroups = new Emitter();
+    this._extHostTabGroups = [];
+    this._proxy = extHostRpc.getProxy(MainContext.MainThreadEditorTabs);
+  }
+  get tabGroups() {
+    if (!this._apiObject) {
+      const that = this;
+      const obj = {
+        // never changes -> simple value
+        onDidChangeTabGroups: that._onDidChangeTabGroups.event,
+        onDidChangeTabs: that._onDidChangeTabs.event,
+        // dynamic -> getters
+        get all() {
+          return Object.freeze(that._extHostTabGroups.map((group) => group.apiObject));
+        },
+        get activeTabGroup() {
+          const activeTabGroupId = that._activeGroupId;
+          const activeTabGroup = assertReturnsDefined(that._extHostTabGroups.find((candidate) => candidate.groupId === activeTabGroupId)?.apiObject);
+          return activeTabGroup;
+        },
+        close: /* @__PURE__ */ __name(async (tabOrTabGroup, preserveFocus) => {
+          const tabsOrTabGroups = Array.isArray(tabOrTabGroup) ? tabOrTabGroup : [tabOrTabGroup];
+          if (!tabsOrTabGroups.length) {
+            return true;
+          }
+          if (isTabGroup(tabsOrTabGroups[0])) {
+            return this._closeGroups(tabsOrTabGroups, preserveFocus);
+          } else {
+            return this._closeTabs(tabsOrTabGroups, preserveFocus);
+          }
+        }, "close")
+        // move: async (tab: vscode.Tab, viewColumn: ViewColumn, index: number, preserveFocus?: boolean) => {
+        // 	const extHostTab = this._findExtHostTabFromApi(tab);
+        // 	if (!extHostTab) {
+        // 		throw new Error('Invalid tab');
+        // 	}
+        // 	this._proxy.$moveTab(extHostTab.tabId, index, typeConverters.ViewColumn.from(viewColumn), preserveFocus);
+        // 	return;
+        // }
+      };
+      this._apiObject = Object.freeze(obj);
+    }
+    return this._apiObject;
+  }
+  $acceptEditorTabModel(tabGroups) {
+    const groupIdsBefore = new Set(this._extHostTabGroups.map((group) => group.groupId));
+    const groupIdsAfter = new Set(tabGroups.map((dto) => dto.groupId));
+    const diff = diffSets(groupIdsBefore, groupIdsAfter);
+    const closed = this._extHostTabGroups.filter((group) => diff.removed.includes(group.groupId)).map((group) => group.apiObject);
+    const opened = [];
+    const changed = [];
+    this._extHostTabGroups = tabGroups.map((tabGroup) => {
+      const group = new ExtHostEditorTabGroup(tabGroup, () => this._activeGroupId);
+      if (diff.added.includes(group.groupId)) {
+        opened.push(group.apiObject);
+      } else {
+        changed.push(group.apiObject);
+      }
+      return group;
+    });
+    const activeTabGroupId = assertReturnsDefined(tabGroups.find((group) => group.isActive === true)?.groupId);
+    if (activeTabGroupId !== void 0 && this._activeGroupId !== activeTabGroupId) {
+      this._activeGroupId = activeTabGroupId;
+    }
+    this._onDidChangeTabGroups.fire(Object.freeze({ opened, closed, changed }));
+  }
+  $acceptTabGroupUpdate(groupDto) {
+    const group = this._extHostTabGroups.find((group2) => group2.groupId === groupDto.groupId);
+    if (!group) {
+      throw new Error("Update Group IPC call received before group creation.");
+    }
+    group.acceptGroupDtoUpdate(groupDto);
+    if (groupDto.isActive) {
+      this._activeGroupId = groupDto.groupId;
+    }
+    this._onDidChangeTabGroups.fire(Object.freeze({ changed: [group.apiObject], opened: [], closed: [] }));
+  }
+  $acceptTabOperation(operation) {
+    const group = this._extHostTabGroups.find((group2) => group2.groupId === operation.groupId);
+    if (!group) {
+      throw new Error("Update Tabs IPC call received before group creation.");
+    }
+    const tab = group.acceptTabOperation(operation);
+    switch (operation.kind) {
+      case 0:
+        this._onDidChangeTabs.fire(Object.freeze({
+          opened: [tab.apiObject],
+          closed: [],
+          changed: []
+        }));
+        return;
+      case 1:
+        this._onDidChangeTabs.fire(Object.freeze({
+          opened: [],
+          closed: [tab.apiObject],
+          changed: []
+        }));
+        return;
+      case 3:
+      case 2:
+        this._onDidChangeTabs.fire(Object.freeze({
+          opened: [],
+          closed: [],
+          changed: [tab.apiObject]
+        }));
+        return;
+    }
+  }
+  _findExtHostTabFromApi(apiTab) {
+    for (const group of this._extHostTabGroups) {
+      for (const tab of group.tabs) {
+        if (tab.apiObject === apiTab) {
+          return tab;
+        }
+      }
+    }
+    return;
+  }
+  _findExtHostTabGroupFromApi(apiTabGroup) {
+    return this._extHostTabGroups.find((candidate) => candidate.apiObject === apiTabGroup);
+  }
+  async _closeTabs(tabs, preserveFocus) {
+    const extHostTabIds = [];
+    for (const tab of tabs) {
+      const extHostTab = this._findExtHostTabFromApi(tab);
+      if (!extHostTab) {
+        throw new Error("Tab close: Invalid tab not found!");
+      }
+      extHostTabIds.push(extHostTab.tabId);
+    }
+    return this._proxy.$closeTab(extHostTabIds, preserveFocus);
+  }
+  async _closeGroups(groups, preserverFoucs) {
+    const extHostGroupIds = [];
+    for (const group of groups) {
+      const extHostGroup = this._findExtHostTabGroupFromApi(group);
+      if (!extHostGroup) {
+        throw new Error("Group close: Invalid group not found!");
+      }
+      extHostGroupIds.push(extHostGroup.groupId);
+    }
+    return this._proxy.$closeGroup(extHostGroupIds, preserverFoucs);
+  }
+};
+ExtHostEditorTabs = __decorate([
+  __param(0, IExtHostRpcService)
+], ExtHostEditorTabs);
+function isTabGroup(obj) {
+  const tabGroup = obj;
+  if (tabGroup.tabs !== void 0) {
+    return true;
+  }
+  return false;
+}
+__name(isTabGroup, "isTabGroup");
+export {
+  ExtHostEditorTabs,
+  IExtHostEditorTabs
+};
+//# sourceMappingURL=extHostEditorTabs.js.map

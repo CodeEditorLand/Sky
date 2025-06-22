@@ -1,1 +1,87 @@
-import{$Ho as m}from"../../../platform/storage/common/storage.js";import{$oY as u,$pY as $}from"../common/extHost.protocol.js";import{$Kyb as g}from"../../services/extensions/common/extHostCustomers.js";import{$ud as l}from"../../../base/common/lifecycle.js";import{$s as h}from"../../../base/common/platform.js";import{$oM as y}from"../../../platform/extensionManagement/common/extensionStorage.js";import{$oZb as w}from"../../services/extensions/common/extensionStorageMigration.js";import{$mj as S}from"../../../platform/instantiation/common/instantiation.js";import{$3n as b}from"../../../platform/log/common/log.js";var p=function(s,t,i,e){var a=arguments.length,o=a<3?t:e===null?e=Object.getOwnPropertyDescriptor(t,i):e,r;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")o=Reflect.decorate(s,t,i,e);else for(var n=s.length-1;n>=0;n--)(r=s[n])&&(o=(a<3?r(o):a>3?r(t,i,o):r(t,i))||o);return a>3&&o&&Object.defineProperty(t,i,o),o},f=function(s,t){return function(i,e){t(i,e,s)}};let c=class{constructor(t,i,e,a,o){this.d=i,this.f=e,this.g=a,this.h=o,this.b=new l,this.c=new Map,this.a=t.getProxy($.ExtHostStorage),this.b.add(this.f.onDidChangeValue(0,void 0,this.b)(r=>{if(this.c.has(r.key)){const n=this.d.getExtensionStateRaw(r.key,!0);typeof n=="string"&&this.a.$acceptValue(!0,r.key,n)}}))}dispose(){this.b.dispose()}async $initializeExtensionStorage(t,i){return await this.i(i,t),t&&this.c.set(i,!0),this.d.getExtensionStateRaw(i,t)}async $setValue(t,i,e){this.d.setExtensionState(i,e,t)}$registerExtensionStorageKeysToSync(t,i){this.d.setKeysForSync(t,i)}async i(t,i){try{let e=this.d.getSourceExtensionToMigrate(t);!e&&h&&t!==t.toLowerCase()&&(e=t.toLowerCase()),e&&(h&&e!==e.toLowerCase()&&this.d.getExtensionState(e.toLowerCase(),i)&&!this.d.getExtensionState(e,i)&&(e=e.toLowerCase()),await w(e,t,i,this.g))}catch(e){this.h.error(e)}}};c=p([g(u.MainThreadStorage),f(1,y),f(2,m),f(3,S),f(4,b)],c);export{c as $pZb};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { IStorageService } from "../../../platform/storage/common/storage.js";
+import { MainContext, ExtHostContext } from "../common/extHost.protocol.js";
+import { extHostNamedCustomer } from "../../services/extensions/common/extHostCustomers.js";
+import { DisposableStore } from "../../../base/common/lifecycle.js";
+import { isWeb } from "../../../base/common/platform.js";
+import { IExtensionStorageService } from "../../../platform/extensionManagement/common/extensionStorage.js";
+import { migrateExtensionStorage } from "../../services/extensions/common/extensionStorageMigration.js";
+import { IInstantiationService } from "../../../platform/instantiation/common/instantiation.js";
+import { ILogService } from "../../../platform/log/common/log.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+let MainThreadStorage = class MainThreadStorage2 {
+  static {
+    __name(this, "MainThreadStorage");
+  }
+  constructor(extHostContext, _extensionStorageService, _storageService, _instantiationService, _logService) {
+    this._extensionStorageService = _extensionStorageService;
+    this._storageService = _storageService;
+    this._instantiationService = _instantiationService;
+    this._logService = _logService;
+    this._storageListener = new DisposableStore();
+    this._sharedStorageKeysToWatch = /* @__PURE__ */ new Map();
+    this._proxy = extHostContext.getProxy(ExtHostContext.ExtHostStorage);
+    this._storageListener.add(this._storageService.onDidChangeValue(0, void 0, this._storageListener)((e) => {
+      if (this._sharedStorageKeysToWatch.has(e.key)) {
+        const rawState = this._extensionStorageService.getExtensionStateRaw(e.key, true);
+        if (typeof rawState === "string") {
+          this._proxy.$acceptValue(true, e.key, rawState);
+        }
+      }
+    }));
+  }
+  dispose() {
+    this._storageListener.dispose();
+  }
+  async $initializeExtensionStorage(shared, extensionId) {
+    await this.checkAndMigrateExtensionStorage(extensionId, shared);
+    if (shared) {
+      this._sharedStorageKeysToWatch.set(extensionId, true);
+    }
+    return this._extensionStorageService.getExtensionStateRaw(extensionId, shared);
+  }
+  async $setValue(shared, key, value) {
+    this._extensionStorageService.setExtensionState(key, value, shared);
+  }
+  $registerExtensionStorageKeysToSync(extension, keys) {
+    this._extensionStorageService.setKeysForSync(extension, keys);
+  }
+  async checkAndMigrateExtensionStorage(extensionId, shared) {
+    try {
+      let sourceExtensionId = this._extensionStorageService.getSourceExtensionToMigrate(extensionId);
+      if (!sourceExtensionId && isWeb && extensionId !== extensionId.toLowerCase()) {
+        sourceExtensionId = extensionId.toLowerCase();
+      }
+      if (sourceExtensionId) {
+        if (isWeb && sourceExtensionId !== sourceExtensionId.toLowerCase() && this._extensionStorageService.getExtensionState(sourceExtensionId.toLowerCase(), shared) && !this._extensionStorageService.getExtensionState(sourceExtensionId, shared)) {
+          sourceExtensionId = sourceExtensionId.toLowerCase();
+        }
+        await migrateExtensionStorage(sourceExtensionId, extensionId, shared, this._instantiationService);
+      }
+    } catch (error) {
+      this._logService.error(error);
+    }
+  }
+};
+MainThreadStorage = __decorate([
+  extHostNamedCustomer(MainContext.MainThreadStorage),
+  __param(1, IExtensionStorageService),
+  __param(2, IStorageService),
+  __param(3, IInstantiationService),
+  __param(4, ILogService)
+], MainThreadStorage);
+export {
+  MainThreadStorage
+};
+//# sourceMappingURL=mainThreadStorage.js.map

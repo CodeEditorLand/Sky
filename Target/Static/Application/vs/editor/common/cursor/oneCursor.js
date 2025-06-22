@@ -1,1 +1,125 @@
-import{$t_ as f,$w_ as l}from"../cursorCommon.js";import{$bC as c}from"../core/position.js";import{$cC as a}from"../core/range.js";import{$RC as d}from"../core/selection.js";class m{constructor(e){this.a=null,this.b=!0,this.g(e,new l(new a(1,1,1,1),0,0,new c(1,1),0),new l(new a(1,1,1,1),0,0,new c(1,1),0))}dispose(e){this.d(e)}startTrackingSelection(e){this.b=!0,this.c(e)}stopTrackingSelection(e){this.b=!1,this.d(e)}c(e){this.b&&(this.a=e.model._setTrackedRange(this.a,this.modelState.selection,0))}d(e){this.a=e.model._setTrackedRange(this.a,null,0)}asCursorState(){return new f(this.modelState,this.viewState)}readSelectionFromMarkers(e){const t=e.model._getTrackedRange(this.a);return this.modelState.selection.isEmpty()&&!t.isEmpty()?d.fromRange(t.collapseToEnd(),this.modelState.selection.getDirection()):d.fromRange(t,this.modelState.selection.getDirection())}ensureValidState(e){this.g(e,this.modelState,this.viewState)}setState(e,t,o){this.g(e,t,o)}static e(e,t,o,i){return t.equals(o)?i:e.normalizePosition(t,2)}static f(e,t){const o=t.position,i=t.selectionStart.getStartPosition(),s=t.selectionStart.getEndPosition(),n=e.normalizePosition(o,2),r=this.e(e,i,o,n),c=this.e(e,s,i,r);return o.equals(n)&&i.equals(r)&&s.equals(c)?t:new l(a.fromPositions(r,c),t.selectionStartKind,t.selectionStartLeftoverVisibleColumns+i.column-r.column,n,t.leftoverVisibleColumns+o.column-n.column)}g(e,t,o){if(o&&(o=m.f(e.viewModel,o)),t){const o=e.model.validateRange(t.selectionStart),i=t.selectionStart.equalsRange(o)?t.selectionStartLeftoverVisibleColumns:0,s=e.model.validatePosition(t.position),n=t.position.equals(s)?t.leftoverVisibleColumns:0;t=new l(o,t.selectionStartKind,i,s,n)}else{if(!o)return;const i=e.model.validateRange(e.coordinatesConverter.convertViewRangeToModelRange(o.selectionStart)),s=e.model.validatePosition(e.coordinatesConverter.convertViewPositionToModelPosition(o.position));t=new l(i,o.selectionStartKind,o.selectionStartLeftoverVisibleColumns,s,o.leftoverVisibleColumns)}if(o){const i=e.coordinatesConverter.validateViewRange(o.selectionStart,t.selectionStart),s=e.coordinatesConverter.validateViewPosition(o.position,t.position);o=new l(i,t.selectionStartKind,t.selectionStartLeftoverVisibleColumns,s,t.leftoverVisibleColumns)}else{const i=e.coordinatesConverter.convertModelPositionToViewPosition(new c(t.selectionStart.startLineNumber,t.selectionStart.startColumn)),s=e.coordinatesConverter.convertModelPositionToViewPosition(new c(t.selectionStart.endLineNumber,t.selectionStart.endColumn)),n=new a(i.lineNumber,i.column,s.lineNumber,s.column),r=e.coordinatesConverter.convertModelPositionToViewPosition(t.position);o=new l(n,t.selectionStartKind,t.selectionStartLeftoverVisibleColumns,r,t.leftoverVisibleColumns)}this.modelState=t,this.viewState=o,this.c(e)}}export{m as $mdb};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { CursorState, SingleCursorState } from "../cursorCommon.js";
+import { Position } from "../core/position.js";
+import { Range } from "../core/range.js";
+import { Selection } from "../core/selection.js";
+class Cursor {
+  static {
+    __name(this, "Cursor");
+  }
+  constructor(context) {
+    this._selTrackedRange = null;
+    this._trackSelection = true;
+    this._setState(context, new SingleCursorState(new Range(1, 1, 1, 1), 0, 0, new Position(1, 1), 0), new SingleCursorState(new Range(1, 1, 1, 1), 0, 0, new Position(1, 1), 0));
+  }
+  dispose(context) {
+    this._removeTrackedRange(context);
+  }
+  startTrackingSelection(context) {
+    this._trackSelection = true;
+    this._updateTrackedRange(context);
+  }
+  stopTrackingSelection(context) {
+    this._trackSelection = false;
+    this._removeTrackedRange(context);
+  }
+  _updateTrackedRange(context) {
+    if (!this._trackSelection) {
+      return;
+    }
+    this._selTrackedRange = context.model._setTrackedRange(
+      this._selTrackedRange,
+      this.modelState.selection,
+      0
+      /* TrackedRangeStickiness.AlwaysGrowsWhenTypingAtEdges */
+    );
+  }
+  _removeTrackedRange(context) {
+    this._selTrackedRange = context.model._setTrackedRange(
+      this._selTrackedRange,
+      null,
+      0
+      /* TrackedRangeStickiness.AlwaysGrowsWhenTypingAtEdges */
+    );
+  }
+  asCursorState() {
+    return new CursorState(this.modelState, this.viewState);
+  }
+  readSelectionFromMarkers(context) {
+    const range = context.model._getTrackedRange(this._selTrackedRange);
+    if (this.modelState.selection.isEmpty() && !range.isEmpty()) {
+      return Selection.fromRange(range.collapseToEnd(), this.modelState.selection.getDirection());
+    }
+    return Selection.fromRange(range, this.modelState.selection.getDirection());
+  }
+  ensureValidState(context) {
+    this._setState(context, this.modelState, this.viewState);
+  }
+  setState(context, modelState, viewState) {
+    this._setState(context, modelState, viewState);
+  }
+  static _validatePositionWithCache(viewModel, position, cacheInput, cacheOutput) {
+    if (position.equals(cacheInput)) {
+      return cacheOutput;
+    }
+    return viewModel.normalizePosition(
+      position,
+      2
+      /* PositionAffinity.None */
+    );
+  }
+  static _validateViewState(viewModel, viewState) {
+    const position = viewState.position;
+    const sStartPosition = viewState.selectionStart.getStartPosition();
+    const sEndPosition = viewState.selectionStart.getEndPosition();
+    const validPosition = viewModel.normalizePosition(
+      position,
+      2
+      /* PositionAffinity.None */
+    );
+    const validSStartPosition = this._validatePositionWithCache(viewModel, sStartPosition, position, validPosition);
+    const validSEndPosition = this._validatePositionWithCache(viewModel, sEndPosition, sStartPosition, validSStartPosition);
+    if (position.equals(validPosition) && sStartPosition.equals(validSStartPosition) && sEndPosition.equals(validSEndPosition)) {
+      return viewState;
+    }
+    return new SingleCursorState(Range.fromPositions(validSStartPosition, validSEndPosition), viewState.selectionStartKind, viewState.selectionStartLeftoverVisibleColumns + sStartPosition.column - validSStartPosition.column, validPosition, viewState.leftoverVisibleColumns + position.column - validPosition.column);
+  }
+  _setState(context, modelState, viewState) {
+    if (viewState) {
+      viewState = Cursor._validateViewState(context.viewModel, viewState);
+    }
+    if (!modelState) {
+      if (!viewState) {
+        return;
+      }
+      const selectionStart = context.model.validateRange(context.coordinatesConverter.convertViewRangeToModelRange(viewState.selectionStart));
+      const position = context.model.validatePosition(context.coordinatesConverter.convertViewPositionToModelPosition(viewState.position));
+      modelState = new SingleCursorState(selectionStart, viewState.selectionStartKind, viewState.selectionStartLeftoverVisibleColumns, position, viewState.leftoverVisibleColumns);
+    } else {
+      const selectionStart = context.model.validateRange(modelState.selectionStart);
+      const selectionStartLeftoverVisibleColumns = modelState.selectionStart.equalsRange(selectionStart) ? modelState.selectionStartLeftoverVisibleColumns : 0;
+      const position = context.model.validatePosition(modelState.position);
+      const leftoverVisibleColumns = modelState.position.equals(position) ? modelState.leftoverVisibleColumns : 0;
+      modelState = new SingleCursorState(selectionStart, modelState.selectionStartKind, selectionStartLeftoverVisibleColumns, position, leftoverVisibleColumns);
+    }
+    if (!viewState) {
+      const viewSelectionStart1 = context.coordinatesConverter.convertModelPositionToViewPosition(new Position(modelState.selectionStart.startLineNumber, modelState.selectionStart.startColumn));
+      const viewSelectionStart2 = context.coordinatesConverter.convertModelPositionToViewPosition(new Position(modelState.selectionStart.endLineNumber, modelState.selectionStart.endColumn));
+      const viewSelectionStart = new Range(viewSelectionStart1.lineNumber, viewSelectionStart1.column, viewSelectionStart2.lineNumber, viewSelectionStart2.column);
+      const viewPosition = context.coordinatesConverter.convertModelPositionToViewPosition(modelState.position);
+      viewState = new SingleCursorState(viewSelectionStart, modelState.selectionStartKind, modelState.selectionStartLeftoverVisibleColumns, viewPosition, modelState.leftoverVisibleColumns);
+    } else {
+      const viewSelectionStart = context.coordinatesConverter.validateViewRange(viewState.selectionStart, modelState.selectionStart);
+      const viewPosition = context.coordinatesConverter.validateViewPosition(viewState.position, modelState.position);
+      viewState = new SingleCursorState(viewSelectionStart, modelState.selectionStartKind, modelState.selectionStartLeftoverVisibleColumns, viewPosition, modelState.leftoverVisibleColumns);
+    }
+    this.modelState = modelState;
+    this.viewState = viewState;
+    this._updateTrackedRange(context);
+  }
+}
+export {
+  Cursor
+};
+//# sourceMappingURL=oneCursor.js.map

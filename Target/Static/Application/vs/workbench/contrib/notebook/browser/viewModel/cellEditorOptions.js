@@ -1,1 +1,97 @@
-import{$df as r}from"../../../../../base/common/event.js";import{$vd as a,$ud as h}from"../../../../../base/common/lifecycle.js";import{$2o as d}from"../../../../../base/common/objects.js";class n extends a{static{this.a={scrollBeyondLastLine:!1,scrollbar:{verticalScrollbarSize:14,horizontal:"auto",useShadows:!0,verticalHasArrows:!1,horizontalHasArrows:!1,alwaysConsumeMouseWheel:!1},renderLineHighlightOnlyWhenFocus:!0,overviewRulerLanes:0,lineDecorationsWidth:0,folding:!0,fixedOverflowWidgets:!0,minimap:{enabled:!1},renderValidationDecorations:"on",lineNumbersMinChars:3}}get value(){return this.f}constructor(e,t,o,s){super(),this.notebookEditor=e,this.notebookOptions=t,this.configurationService=o,this.language=s,this.b=this.B(new h),this.c=this.B(new r),this.onDidChange=this.c.event,this.B(o.onDidChangeConfiguration(i=>{(i.affectsConfiguration("editor")||i.affectsConfiguration("notebook"))&&this.g()})),this.B(t.onDidChangeOptions(i=>{(i.cellStatusBarVisibility||i.editorTopPadding||i.editorOptionsCustomizations)&&this.g()})),this.B(this.notebookEditor.onDidChangeModel(()=>{this.b.clear(),this.notebookEditor.hasModel()&&(this.b.add(this.notebookEditor.onDidChangeOptions(()=>{this.g()})),this.g())})),this.notebookEditor.hasModel()&&this.b.add(this.notebookEditor.onDidChangeOptions(()=>{this.g()})),this.f=this.h()}g(){this.f=this.h(),this.c.fire()}h(){const e=d(this.configurationService.getValue("editor",{overrideIdentifier:this.language})),t=this.notebookOptions.getDisplayOptions().editorOptionsCustomizations,o={};if(t)for(const i in t)i.indexOf("editor.")===0&&(o[i.substring(7)]=t[i]);return Object.freeze({...e,...n.a,...o,padding:{top:12,bottom:12},readOnly:this.notebookEditor.isReadOnly})}}export{n as $PUb};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { Emitter } from "../../../../../base/common/event.js";
+import { Disposable, DisposableStore } from "../../../../../base/common/lifecycle.js";
+import { deepClone } from "../../../../../base/common/objects.js";
+class BaseCellEditorOptions extends Disposable {
+  static {
+    __name(this, "BaseCellEditorOptions");
+  }
+  static {
+    this.fixedEditorOptions = {
+      scrollBeyondLastLine: false,
+      scrollbar: {
+        verticalScrollbarSize: 14,
+        horizontal: "auto",
+        useShadows: true,
+        verticalHasArrows: false,
+        horizontalHasArrows: false,
+        alwaysConsumeMouseWheel: false
+      },
+      renderLineHighlightOnlyWhenFocus: true,
+      overviewRulerLanes: 0,
+      lineDecorationsWidth: 0,
+      folding: true,
+      fixedOverflowWidgets: true,
+      minimap: { enabled: false },
+      renderValidationDecorations: "on",
+      lineNumbersMinChars: 3
+    };
+  }
+  get value() {
+    return this._value;
+  }
+  constructor(notebookEditor, notebookOptions, configurationService, language) {
+    super();
+    this.notebookEditor = notebookEditor;
+    this.notebookOptions = notebookOptions;
+    this.configurationService = configurationService;
+    this.language = language;
+    this._localDisposableStore = this._register(new DisposableStore());
+    this._onDidChange = this._register(new Emitter());
+    this.onDidChange = this._onDidChange.event;
+    this._register(configurationService.onDidChangeConfiguration((e) => {
+      if (e.affectsConfiguration("editor") || e.affectsConfiguration("notebook")) {
+        this._recomputeOptions();
+      }
+    }));
+    this._register(notebookOptions.onDidChangeOptions((e) => {
+      if (e.cellStatusBarVisibility || e.editorTopPadding || e.editorOptionsCustomizations) {
+        this._recomputeOptions();
+      }
+    }));
+    this._register(this.notebookEditor.onDidChangeModel(() => {
+      this._localDisposableStore.clear();
+      if (this.notebookEditor.hasModel()) {
+        this._localDisposableStore.add(this.notebookEditor.onDidChangeOptions(() => {
+          this._recomputeOptions();
+        }));
+        this._recomputeOptions();
+      }
+    }));
+    if (this.notebookEditor.hasModel()) {
+      this._localDisposableStore.add(this.notebookEditor.onDidChangeOptions(() => {
+        this._recomputeOptions();
+      }));
+    }
+    this._value = this._computeEditorOptions();
+  }
+  _recomputeOptions() {
+    this._value = this._computeEditorOptions();
+    this._onDidChange.fire();
+  }
+  _computeEditorOptions() {
+    const editorOptions = deepClone(this.configurationService.getValue("editor", { overrideIdentifier: this.language }));
+    const editorOptionsOverrideRaw = this.notebookOptions.getDisplayOptions().editorOptionsCustomizations;
+    const editorOptionsOverride = {};
+    if (editorOptionsOverrideRaw) {
+      for (const key in editorOptionsOverrideRaw) {
+        if (key.indexOf("editor.") === 0) {
+          editorOptionsOverride[key.substring(7)] = editorOptionsOverrideRaw[key];
+        }
+      }
+    }
+    const computed = Object.freeze({
+      ...editorOptions,
+      ...BaseCellEditorOptions.fixedEditorOptions,
+      ...editorOptionsOverride,
+      ...{ padding: { top: 12, bottom: 12 } },
+      readOnly: this.notebookEditor.isReadOnly
+    });
+    return computed;
+  }
+}
+export {
+  BaseCellEditorOptions
+};
+//# sourceMappingURL=cellEditorOptions.js.map

@@ -1,1 +1,154 @@
-import{$dh as P}from"../../../../../base/common/resources.js";import{URI as b}from"../../../../../base/common/uri.js";import{$8_ as A}from"../../../../../editor/browser/editorBrowser.js";import{$9jb as E}from"../../../../../editor/contrib/snippet/browser/snippetController2.js";import{localize as t}from"../../../../../nls.js";import{$iI as N,$dI as R,$jI as s}from"../../../../../platform/actions/common/actions.js";import{$Yn as M}from"../../../../../platform/commands/common/commands.js";import{$Bn as w}from"../../../../../platform/contextkey/common/contextkey.js";import{$5j as j}from"../../../../../platform/files/common/files.js";import{$mj as T}from"../../../../../platform/instantiation/common/instantiation.js";import{$3n as D}from"../../../../../platform/log/common/log.js";import{$RI as U,NeverShowAgainScope as V,Severity as _}from"../../../../../platform/notification/common/notification.js";import{$4$ as z}from"../../../../../platform/opener/common/opener.js";import{PromptsConfig as h}from"../../common/promptSyntax/config/config.js";import{$iR as B,PromptsType as a}from"../../common/promptSyntax/promptTypes.js";import{$8Mb as K}from"../../../../../platform/userDataSync/common/userDataSync.js";import{$oI as L}from"../../../../services/editor/common/editorService.js";import{$V6b as S}from"../../../../services/userDataSync/common/userDataSync.js";import{$ZEb as O}from"../../../snippets/browser/snippets.js";import{ChatContextKeys as v}from"../../common/chatContextKeys.js";import{$VDb as Y}from"../actions/chatActions.js";import{$_ec as Z}from"./pickers/askForPromptName.js";import{$afc as q}from"./pickers/askForPromptSourceFolder.js";class l extends N{constructor(e,m,r){super({id:e,title:m,f1:!1,precondition:w.and(h.enabledCtx,v.enabled),category:Y,keybinding:{weight:200},menu:{id:R.CommandPalette,when:w.and(h.enabledCtx,v.enabled)}}),this.a=r}async run(e){const m=e.get(D),r=e.get(z),x=e.get(M),y=e.get(U),f=e.get(K),F=e.get(O),C=e.get(L),d=e.get(j),u=e.get(T),o=await u.invokeFunction(q,this.a);if(!o)return;const g=await u.invokeFunction(Z,this.a,o.uri);if(!g)return;await d.createFolder(o.uri);const c=b.joinPath(o.uri,g);await d.createFile(c),await r.open(c);const n=A(C.activeTextEditorControl);if(n&&n.hasModel()&&P(n.getModel().uri,c)){const p=B(this.a),$=await F.getSnippets(p,{fileTemplateSnippets:!0,noRecencySort:!0,includeNoPrefixSnippets:!0});$.length>0&&E.get(n)?.apply([{range:n.getModel().getFullModelRange(),template:$[0].body}])}if(o.storage!=="user")return;const I=f.isResourceEnablementConfigured("prompts"),k=f.isEnabled();I===!0||k===!1||y.prompt(_.Info,t(5578,null),[{label:t(5579,null),run:()=>{x.executeCommand(S).catch(p=>{m.error(`Failed to run '${S}' command: ${p}.`)})}},{label:t(5580,null),run:()=>{r.open(b.parse("https://aka.ms/vscode-settings-sync-help"))}}],{neverShowAgain:{id:"workbench.command.prompts.create.user.enable-sync-notification",scope:V.PROFILE}})}}const G="workbench.command.new.prompt",H="workbench.command.new.instructions",J="workbench.command.new.mode";class Q extends l{constructor(){super(G,t(5581,null),a.prompt)}}class W extends l{constructor(){super(H,t(5582,null),a.instructions)}}class X extends l{constructor(){super(J,t(5583,null),a.mode)}}function ye(){s(Q),s(W),s(X)}export{G as $bfc,H as $cfc,J as $dfc,ye as $efc};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { isEqual } from "../../../../../base/common/resources.js";
+import { URI } from "../../../../../base/common/uri.js";
+import { getCodeEditor } from "../../../../../editor/browser/editorBrowser.js";
+import { SnippetController2 } from "../../../../../editor/contrib/snippet/browser/snippetController2.js";
+import { localize } from "../../../../../nls.js";
+import { Action2, MenuId, registerAction2 } from "../../../../../platform/actions/common/actions.js";
+import { ICommandService } from "../../../../../platform/commands/common/commands.js";
+import { ContextKeyExpr } from "../../../../../platform/contextkey/common/contextkey.js";
+import { IFileService } from "../../../../../platform/files/common/files.js";
+import { IInstantiationService } from "../../../../../platform/instantiation/common/instantiation.js";
+import { ILogService } from "../../../../../platform/log/common/log.js";
+import { INotificationService, NeverShowAgainScope, Severity } from "../../../../../platform/notification/common/notification.js";
+import { IOpenerService } from "../../../../../platform/opener/common/opener.js";
+import { PromptsConfig } from "../../common/promptSyntax/config/config.js";
+import { getLanguageIdForPromptsType, PromptsType } from "../../common/promptSyntax/promptTypes.js";
+import { IUserDataSyncEnablementService } from "../../../../../platform/userDataSync/common/userDataSync.js";
+import { IEditorService } from "../../../../services/editor/common/editorService.js";
+import { CONFIGURE_SYNC_COMMAND_ID } from "../../../../services/userDataSync/common/userDataSync.js";
+import { ISnippetsService } from "../../../snippets/browser/snippets.js";
+import { ChatContextKeys } from "../../common/chatContextKeys.js";
+import { CHAT_CATEGORY } from "../actions/chatActions.js";
+import { askForPromptFileName } from "./pickers/askForPromptName.js";
+import { askForPromptSourceFolder } from "./pickers/askForPromptSourceFolder.js";
+class AbstractNewPromptFileAction extends Action2 {
+  static {
+    __name(this, "AbstractNewPromptFileAction");
+  }
+  constructor(id, title, type) {
+    super({
+      id,
+      title,
+      f1: false,
+      precondition: ContextKeyExpr.and(PromptsConfig.enabledCtx, ChatContextKeys.enabled),
+      category: CHAT_CATEGORY,
+      keybinding: {
+        weight: 200
+        /* KeybindingWeight.WorkbenchContrib */
+      },
+      menu: {
+        id: MenuId.CommandPalette,
+        when: ContextKeyExpr.and(PromptsConfig.enabledCtx, ChatContextKeys.enabled)
+      }
+    });
+    this.type = type;
+  }
+  async run(accessor) {
+    const logService = accessor.get(ILogService);
+    const openerService = accessor.get(IOpenerService);
+    const commandService = accessor.get(ICommandService);
+    const notificationService = accessor.get(INotificationService);
+    const userDataSyncEnablementService = accessor.get(IUserDataSyncEnablementService);
+    const snippetService = accessor.get(ISnippetsService);
+    const editorService = accessor.get(IEditorService);
+    const fileService = accessor.get(IFileService);
+    const instaService = accessor.get(IInstantiationService);
+    const selectedFolder = await instaService.invokeFunction(askForPromptSourceFolder, this.type);
+    if (!selectedFolder) {
+      return;
+    }
+    const fileName = await instaService.invokeFunction(askForPromptFileName, this.type, selectedFolder.uri);
+    if (!fileName) {
+      return;
+    }
+    await fileService.createFolder(selectedFolder.uri);
+    const promptUri = URI.joinPath(selectedFolder.uri, fileName);
+    await fileService.createFile(promptUri);
+    await openerService.open(promptUri);
+    const editor = getCodeEditor(editorService.activeTextEditorControl);
+    if (editor && editor.hasModel() && isEqual(editor.getModel().uri, promptUri)) {
+      const languageId = getLanguageIdForPromptsType(this.type);
+      const snippets = await snippetService.getSnippets(languageId, { fileTemplateSnippets: true, noRecencySort: true, includeNoPrefixSnippets: true });
+      if (snippets.length > 0) {
+        SnippetController2.get(editor)?.apply([{
+          range: editor.getModel().getFullModelRange(),
+          template: snippets[0].body
+        }]);
+      }
+    }
+    if (selectedFolder.storage !== "user") {
+      return;
+    }
+    const isConfigured = userDataSyncEnablementService.isResourceEnablementConfigured(
+      "prompts"
+      /* SyncResource.Prompts */
+    );
+    const isSettingsSyncEnabled = userDataSyncEnablementService.isEnabled();
+    if (isConfigured === true || isSettingsSyncEnabled === false) {
+      return;
+    }
+    notificationService.prompt(Severity.Info, localize("workbench.command.prompts.create.user.enable-sync-notification", "Do you want to backup and sync your user prompt, instruction and mode files with Setting Sync?'"), [
+      {
+        label: localize("enable.capitalized", "Enable"),
+        run: /* @__PURE__ */ __name(() => {
+          commandService.executeCommand(CONFIGURE_SYNC_COMMAND_ID).catch((error) => {
+            logService.error(`Failed to run '${CONFIGURE_SYNC_COMMAND_ID}' command: ${error}.`);
+          });
+        }, "run")
+      },
+      {
+        label: localize("learnMore.capitalized", "Learn More"),
+        run: /* @__PURE__ */ __name(() => {
+          openerService.open(URI.parse("https://aka.ms/vscode-settings-sync-help"));
+        }, "run")
+      }
+    ], {
+      neverShowAgain: {
+        id: "workbench.command.prompts.create.user.enable-sync-notification",
+        scope: NeverShowAgainScope.PROFILE
+      }
+    });
+  }
+}
+const NEW_PROMPT_COMMAND_ID = "workbench.command.new.prompt";
+const NEW_INSTRUCTIONS_COMMAND_ID = "workbench.command.new.instructions";
+const NEW_MODE_COMMAND_ID = "workbench.command.new.mode";
+class NewPromptFileAction extends AbstractNewPromptFileAction {
+  static {
+    __name(this, "NewPromptFileAction");
+  }
+  constructor() {
+    super(NEW_PROMPT_COMMAND_ID, localize("commands.new.prompt.local.title", "New Prompt File..."), PromptsType.prompt);
+  }
+}
+class NewInstructionsFileAction extends AbstractNewPromptFileAction {
+  static {
+    __name(this, "NewInstructionsFileAction");
+  }
+  constructor() {
+    super(NEW_INSTRUCTIONS_COMMAND_ID, localize("commands.new.instructions.local.title", "New Instructions File..."), PromptsType.instructions);
+  }
+}
+class NewModeFileAction extends AbstractNewPromptFileAction {
+  static {
+    __name(this, "NewModeFileAction");
+  }
+  constructor() {
+    super(NEW_MODE_COMMAND_ID, localize("commands.new.mode.local.title", "New Mode File..."), PromptsType.mode);
+  }
+}
+function registerNewPromptFileActions() {
+  registerAction2(NewPromptFileAction);
+  registerAction2(NewInstructionsFileAction);
+  registerAction2(NewModeFileAction);
+}
+__name(registerNewPromptFileActions, "registerNewPromptFileActions");
+export {
+  NEW_INSTRUCTIONS_COMMAND_ID,
+  NEW_MODE_COMMAND_ID,
+  NEW_PROMPT_COMMAND_ID,
+  registerNewPromptFileActions
+};
+//# sourceMappingURL=newPromptFileActions.js.map

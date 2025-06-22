@@ -1,1 +1,5 @@
-const o="editor.contrib.selectionClipboard";export{o as $WEb};
+const SelectionClipboardContributionID = "editor.contrib.selectionClipboard";
+export {
+  SelectionClipboardContributionID
+};
+//# sourceMappingURL=selectionClipboard.js.map

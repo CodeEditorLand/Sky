@@ -1,1 +1,790 @@
-import{Iterable as pe}from"../../../../base/common/iterator.js";import{$vd as ie}from"../../../../base/common/lifecycle.js";import{$xm as fe}from"../../../../base/common/marshalling.js";import{Schemas as C}from"../../../../base/common/network.js";import{$ih as L,$dh as me}from"../../../../base/common/resources.js";import{$yf as ve}from"../../../../base/common/strings.js";import{URI as b}from"../../../../base/common/uri.js";import{$7gb as ge}from"../../../../editor/browser/services/bulkEditService.js";import{$SC as be}from"../../../../editor/common/core/editOperation.js";import{$mE as he}from"../../../../editor/common/languages/modesRegistry.js";import{$gF as Ee}from"../../../../editor/common/services/model.js";import{$cF as Ie}from"../../../../editor/common/services/resolverService.js";import{$6lb as M}from"../../../../editor/contrib/peekView/browser/peekView.js";import{$Ejb as re}from"../../../../editor/contrib/suggest/browser/suggest.js";import{localize as h,localize2 as $}from"../../../../nls.js";import{$iI as I,$dI as X,$jI as y}from"../../../../platform/actions/common/actions.js";import{$El as ye}from"../../../../platform/configuration/common/configuration.js";import{$Sl as we}from"../../../../platform/configuration/common/configurationRegistry.js";import{$Bn as s}from"../../../../platform/contextkey/common/contextkey.js";import{EditorActivation as ke}from"../../../../platform/editor/common/editor.js";import{$kj as Ce}from"../../../../platform/instantiation/common/descriptors.js";import{$WB as ne}from"../../../../platform/instantiation/common/extensions.js";import{$mj as ce}from"../../../../platform/instantiation/common/instantiation.js";import{$3n as $e}from"../../../../platform/log/common/log.js";import{$Ql as A}from"../../../../platform/registry/common/platform.js";import{$Gp as Z,$wp as j,$Ks as V,$op as ae}from"../../../../platform/theme/common/colorRegistry.js";import{$kGb as Se}from"../../../browser/editor.js";import{$WK as G}from"../../../common/contributions.js";import{$6J as de}from"../../../common/editor.js";import{$Bvb as ee}from"../../../common/theme.js";import{$Xzb as xe}from"../../bulkEdit/browser/bulkCellEdits.js";import{$Bjc as K,$Ajc as O}from"./interactiveCommon.js";import{$nXb as Pe,$oXb as De}from"./interactiveDocumentService.js";import{$Gjc as Re}from"./interactiveEditor.js";import{$rXb as p}from"./interactiveEditorInput.js";import{$pXb as W,$qXb as Te}from"./interactiveHistoryService.js";import{$VVb as B}from"../../notebook/browser/controller/coreActions.js";import*as Oe from"../../notebook/browser/notebookIcons.js";import{$QVb as Ne}from"../../notebook/browser/services/notebookEditorService.js";import{CellKind as We,CellUri as te,$mL as J,$AL as Me,$BL as Ve}from"../../notebook/common/notebookCommon.js";import{$wAb as je,$BAb as T,$CAb as Q}from"../../notebook/common/notebookContextKeys.js";import{$JK as Ue}from"../../notebook/common/notebookKernelService.js";import{$Ryb as qe}from"../../notebook/common/notebookService.js";import{$fX as Fe}from"../../../services/editor/common/editorGroupColumn.js";import{$kI as Ke}from"../../../services/editor/common/editorGroupsService.js";import{$$K as Be,RegisteredEditorPriority as H}from"../../../services/editor/common/editorResolverService.js";import{$oI as m}from"../../../services/editor/common/editorService.js";import{$XO as He}from"../../../services/extensions/common/extensions.js";import{$9I as Le}from"../../../services/workingCopy/common/workingCopyEditorService.js";import{$Fjc as E}from"../../replNotebook/browser/replEditor.js";import{$y$b as _e}from"../../inlineChat/browser/inlineChatController.js";import{$6M as ze,$7M as Xe}from"../../../../platform/contextkey/common/contextkeys.js";var z=function(e,t,o,r){var i,n=arguments.length,s=n<3?t:null===r?r=Object.getOwnPropertyDescriptor(t,o):r;if("object"==typeof Reflect&&"function"==typeof Reflect.decorate)s=Reflect.decorate(e,t,o,r);else for(var a=e.length-1;a>=0;a--)(i=e[a])&&(s=(n<3?i(s):n>3?i(t,o,s):i(t,o))||s);return n>3&&s&&Object.defineProperty(t,o,s),s},g=function(e,t){return function(o,r){t(o,r,e)}};const w=$(8285,"Interactive Window");A.as(de.EditorPane).registerEditorPane(Se.create(Re,J,"Interactive Window"),[new Ce(p)]);let U=class extends ie{static{this.ID="workbench.contrib.interactiveDocument"}constructor(e,t,o,r){super(),this.a=r,e.getContributedNotebookType("interactive")||this.B(e.registerContributedNotebookType("interactive",{providerDisplayName:"Interactive Notebook",displayName:"Interactive",filenamePattern:["*.interactive"],priority:H.builtin})),t.registerEditor(`${C.vscodeInteractiveInput}:/**`,{id:"vscode-interactive-input",label:"Interactive Editor",priority:H.exclusive},{canSupportResource:e=>e.scheme===C.vscodeInteractiveInput,singlePerResource:!0},{createEditorInput:({resource:e})=>o.findEditors({resource:e,editorId:"interactive",typeId:p.ID},{order:1}).at(0)}),t.registerEditor("*.interactive",{id:"interactive",label:"Interactive Editor",priority:H.exclusive},{canSupportResource:e=>e.scheme===C.untitled&&".interactive"===L(e)||e.scheme===C.vscodeNotebookCell&&".interactive"===L(e),singlePerResource:!0},{createEditorInput:({resource:e,options:t})=>{const o=te.parse(e);let r,i=e;o&&(r={resource:e,options:t},i=o.notebook);const n={...t,cellOptions:r,cellRevealType:void 0,cellSelections:void 0,isReadOnly:void 0,viewState:void 0,indexedCellOptions:void 0};return{editor:_(i,this.a),options:n}},createUntitledEditorInput:({resource:e,options:t})=>{if(!e)throw new Error("Interactive window editors must have a resource name");let o;te.parse(e)&&(o={resource:e,options:t});const r={...t,cellOptions:o,cellRevealType:void 0,cellSelections:void 0,isReadOnly:void 0,viewState:void 0,indexedCellOptions:void 0};return{editor:_(e,this.a),options:r}}})}};U=z([g(0,qe),g(1,Be),g(2,m),g(3,ce)],U);let q=class{static{this.ID="workbench.contrib.interactiveInputContentProvider"}constructor(e,t){this.b=t,this.a=e.registerTextModelContentProvider(C.vscodeInteractiveInput,this)}dispose(){this.a.dispose()}async provideTextContent(e){return this.b.getModel(e)||this.b.createModel("",null,e,!1)}};function _(e,t){const o=/\/Interactive-(\d+)/.exec(e.path),r=o&&o[1]?`/InteractiveInput-${o[1]}`:"InteractiveInput",i=b.from({scheme:C.vscodeInteractiveInput,path:r});return p.create(t,e,i)}q=z([g(0,Ie),g(1,Ee)],q);let F=class extends ie{static{this.ID="workbench.contrib.interactiveWindowWorkingCopyEditorHandler"}constructor(e,t,o){super(),this.a=e,this.b=t,this.c=o,this.f()}handles(e){const t=this.g(e);return!!t&&"interactive"===t}isOpen(e,t){return!!this.handles(e)&&(t instanceof p&&me(e.resource,t.resource))}createEditor(e){return _(e.resource,this.a)}async f(){await this.c.whenInstalledExtensionsRegistered(),this.B(this.b.registerHandler(this))}g(e){return Ve.parse(e.typeId)?.viewType}};F=z([g(0,ce),g(1,Le),g(2,He)],F),G(U.ID,U,2),G(q.ID,q,{editorTypeId:J}),G(F.ID,F,{editorTypeId:J});class oe{static{this.ID=p.ID}canSerialize(e){return e instanceof p&&(b.isUri(e.primary.resource)&&b.isUri(e.inputResource))}serialize(e){if(this.canSerialize(e))return JSON.stringify({resource:e.primary.resource,inputResource:e.inputResource,name:e.getName(),language:e.language})}deserialize(e,t){const o=fe(t);if(!o)return;const{resource:r,inputResource:i,name:n,language:s}=o;return b.isUri(r)&&b.isUri(i)?p.create(e,r,i,n,s):void 0}}A.as(de.EditorFactory).registerEditorSerializer(oe.ID,oe),ne(W,Te,1),ne(Pe,De,1),y(class extends I{constructor(){super({id:"_interactive.open",title:$(8286,"Open Interactive Window"),f1:!1,category:w,metadata:{description:h(8276,null),args:[{name:"showOptions",description:"Show Options",schema:{type:"object",properties:{viewColumn:{type:"number",default:-1},preserveFocus:{type:"boolean",default:!0}}}},{name:"resource",description:"Interactive resource Uri",isOptional:!0},{name:"controllerId",description:"Notebook controller Id",isOptional:!0},{name:"title",description:"Notebook editor title",isOptional:!0}]}})}async run(e,t,o,r,i){const n=e.get(m),s=e.get(Ke),a=e.get(W),c=e.get(Ue),d=e.get($e),l=e.get(ye),u=Fe(s,l,"number"==typeof t?t:t?.viewColumn),g={activation:ke.PRESERVE,preserveFocus:"number"!=typeof t&&(t?.preserveFocus??!1)};if(o&&".interactive"===L(o)){d.debug("Open interactive window from resource:",o.toString());const e=b.revive(o),t=n.findEditors(e).filter((t=>t.editor instanceof p&&t.editor.resource?.toString()===e.toString()));if(t.length){d.debug("Find existing interactive window:",o.toString());const e=t[0].editor,r=t[0].groupId,i=(await n.openEditor(e,g,r))?.getControl();return{notebookUri:e.resource,inputUri:e.inputResource,notebookEditorId:i?.notebookEditor?.getId()}}}const v=new Set;n.getEditors(1).forEach((e=>{e.editor.resource&&v.add(e.editor.resource.toString())}));let f,h,E=1;do{f=b.from({scheme:C.untitled,path:`/Interactive-${E}.interactive`}),h=b.from({scheme:C.vscodeInteractiveInput,path:`/InteractiveInput-${E}`}),E++}while(v.has(f.toString()));if(p.setName(f,i),d.debug("Open new interactive window:",f.toString(),h.toString()),r){const e=c.getMatchingKernel({uri:f,notebookType:"interactive"}).all.find((e=>e.id===r));e&&c.preselectKernelForNotebook(e,{uri:f,notebookType:"interactive"})}a.clearHistory(f);const y={resource:f,options:g},w=(await n.openEditor(y,u))?.getControl();return d.debug("New interactive window opened. Notebook editor id",w?.notebookEditor?.getId()),{notebookUri:f,inputUri:h,notebookEditorId:w?.notebookEditor?.getId()}}}),y(class extends I{constructor(){super({id:"interactive.execute",title:$(8287,"Execute Code"),category:w,keybinding:[{when:s.and(T,s.equals("activeEditor","workbench.editor.interactive")),primary:2051,weight:B},{when:s.and(T,s.equals("activeEditor","workbench.editor.interactive"),s.equals("config.interactiveWindow.executeWithShiftEnter",!0)),primary:1027,weight:B},{when:s.and(T,s.equals("activeEditor","workbench.editor.interactive"),s.equals("config.interactiveWindow.executeWithShiftEnter",!1)),primary:3,weight:B}],menu:[{id:X.InteractiveInputExecute}],icon:Oe.$PTb,f1:!1,metadata:{description:"Execute the Contents of the Input Box",args:[{name:"resource",description:"Interactive resource Uri",isOptional:!0}]}})}async run(e,t){const o=e.get(m),r=e.get(ge),i=e.get(W),n=e.get(Ne);let s;if(t){const e=b.revive(t),r=o.findEditors(e);for(const e of r)if(e.editor.typeId===p.ID){s=(await o.openEditor(e.editor,e.groupId))?.getControl();break}}else s=o.activeEditorPane?.getControl();if(s&&E(s)&&s.notebookEditor){const e=s.notebookEditor.textModel,t=s.activeCodeEditor?.getModel(),o=s.notebookEditor.activeKernel?.supportedLanguages[0]??he;if(e&&t&&s.activeCodeEditor){const a=e.length,c=t.getValue();if(ve(c))return;const d=_e.get(s.activeCodeEditor);d&&d.acceptSession(),i.replaceLast(e.uri,c),i.addToHistory(e.uri,""),t.setValue("");const l="fromEditor"===s.notebookEditor.notebookOptions.getDisplayOptions().interactiveWindowCollapseCodeCells?{inputCollapsed:!1,outputCollapsed:!1}:void 0;await r.apply([new xe(e.uri,{editType:1,index:a,count:0,cells:[{cellKind:We.Code,mime:void 0,language:o,source:c,outputs:[],metadata:{},collapseState:l}]})]);const m={start:a,end:a+1};s.notebookEditor.revealCellRangeInView(m),await s.notebookEditor.executeNotebookCells(s.notebookEditor.getCellsInRange({start:a,end:a+1}));const p=n.getNotebookEditor(s.notebookEditor.getId());p&&(p.setSelections([m]),p.setFocus(m))}}}}),y(class extends I{constructor(){super({id:"interactive.input.clear",title:$(8288,"Clear the interactive window input editor contents"),category:w,f1:!1})}async run(e){const t=e.get(m).activeEditorPane?.getControl();if(t&&E(t)&&t.notebookEditor){const e=t.notebookEditor.textModel,o=t.activeCodeEditor,r=o?.getModel()?.getFullModelRange();e&&o&&r&&o.executeEdits("",[be.replace(r,null)])}}}),y(class extends I{constructor(){super({id:"interactive.history.previous",title:$(8289,"Previous value in history"),category:w,f1:!1,keybinding:{when:s.and(O.notEqualsTo("bottom"),O.notEqualsTo("none"),re.Visible.toNegated()),primary:16,weight:200},precondition:s.and(T,Q.negate())})}async run(e){const t=e.get(m),o=e.get(W),r=t.activeEditorPane?.getControl();if(r&&E(r)&&r.notebookEditor){const e=r.notebookEditor.textModel,t=r.activeCodeEditor?.getModel();if(e&&t){const r=o.getPreviousValue(e.uri);r&&t.setValue(r)}}}}),y(class extends I{constructor(){super({id:"interactive.history.next",title:$(8290,"Next value in history"),category:w,f1:!1,keybinding:{when:s.and(O.notEqualsTo("top"),O.notEqualsTo("none"),re.Visible.toNegated()),primary:18,weight:200},precondition:s.and(T,Q.negate())})}async run(e){const t=e.get(m),o=e.get(W),r=t.activeEditorPane?.getControl();if(r&&E(r)&&r.notebookEditor){const e=r.notebookEditor.textModel,t=r.activeCodeEditor?.getModel();if(e&&t){const r=o.getNextValue(e.uri);null!==r&&t.setValue(r)}}}}),y(class extends I{constructor(){super({id:"interactive.scrollToTop",title:h(8277,null),keybinding:{when:s.equals("activeEditor","workbench.editor.interactive"),primary:2062,mac:{primary:2064},weight:200},category:w})}async run(e){const t=e.get(m).activeEditorPane?.getControl();if(t&&E(t)&&t.notebookEditor){if(0===t.notebookEditor.getLength())return;t.notebookEditor.revealCellRangeInView({start:0,end:1})}}}),y(class extends I{constructor(){super({id:"interactive.scrollToBottom",title:h(8278,null),keybinding:{when:s.equals("activeEditor","workbench.editor.interactive"),primary:2061,mac:{primary:2066},weight:200},category:w})}async run(e){const t=e.get(m).activeEditorPane?.getControl();if(t&&E(t)&&t.notebookEditor){if(0===t.notebookEditor.getLength())return;const e=t.notebookEditor.getLength();t.notebookEditor.revealCellRangeInView({start:e-1,end:e})}}}),y(class extends I{constructor(){super({id:"interactive.input.focus",title:$(8291,"Focus Input Editor"),category:w,menu:{id:X.CommandPalette,when:je}})}async run(e){const t=e.get(m),o=t.activeEditorPane?.getControl();if(o&&E(o)&&o.notebookEditor)t.activeEditorPane?.focus();else{const e=t.getEditors(0),o=pe.find(e,(e=>e.editor.typeId===p.ID));if(o){const e=o.editor,r=o.groupId,i=(await t.openEditor(e,r))?.getControl();i&&E(i)&&i.notebookEditor&&t.activeEditorPane?.focus()}}}}),y(class extends I{constructor(){super({id:"interactive.history.focus",title:$(8292,"Focus History"),category:w,menu:{id:X.CommandPalette,when:s.equals("activeEditor","workbench.editor.interactive")},keybinding:[{when:s.and(O.notEqualsTo("bottom"),O.notEqualsTo("none")),weight:205,primary:2064},{when:s.or(Xe,ze),weight:200,primary:2064}],precondition:s.and(T,Q.negate())})}async run(e){const t=e.get(m).activeEditorPane?.getControl();t&&E(t)&&t.notebookEditor&&t.notebookEditor.focus()}}),ae("interactive.activeCodeBorder",{dark:j(M,M,"#007acc"),light:j(M,M,"#007acc"),hcDark:Z,hcLight:Z},h(8279,null)),ae("interactive.inactiveCodeBorder",{dark:j(V,V,"#37373D"),light:j(V,V,"#E4E6F1"),hcDark:ee,hcLight:ee},h(8280,null)),A.as(we.Configuration).registerConfiguration({id:"interactiveWindow",order:100,type:"object",properties:{[K.interactiveWindowAlwaysScrollOnNewCell]:{type:"boolean",default:!0,markdownDescription:h(8281,null)},[Me.InteractiveWindowPromptToSave]:{type:"boolean",default:!1,markdownDescription:h(8282,null)},[K.executeWithShiftEnter]:{type:"boolean",default:!1,markdownDescription:h(8283,null),tags:["replExecute"]},[K.showExecutionHint]:{type:"boolean",default:!0,markdownDescription:h(8284,null),tags:["replExecute"]}}});export{U as $Hjc,oe as $Ijc};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { Iterable } from "../../../../base/common/iterator.js";
+import { Disposable } from "../../../../base/common/lifecycle.js";
+import { parse } from "../../../../base/common/marshalling.js";
+import { Schemas } from "../../../../base/common/network.js";
+import { extname, isEqual } from "../../../../base/common/resources.js";
+import { isFalsyOrWhitespace } from "../../../../base/common/strings.js";
+import { URI } from "../../../../base/common/uri.js";
+import { IBulkEditService } from "../../../../editor/browser/services/bulkEditService.js";
+import { EditOperation } from "../../../../editor/common/core/editOperation.js";
+import { PLAINTEXT_LANGUAGE_ID } from "../../../../editor/common/languages/modesRegistry.js";
+import { IModelService } from "../../../../editor/common/services/model.js";
+import { ITextModelService } from "../../../../editor/common/services/resolverService.js";
+import { peekViewBorder } from "../../../../editor/contrib/peekView/browser/peekView.js";
+import { Context as SuggestContext } from "../../../../editor/contrib/suggest/browser/suggest.js";
+import { localize, localize2 } from "../../../../nls.js";
+import { Action2, MenuId, registerAction2 } from "../../../../platform/actions/common/actions.js";
+import { IConfigurationService } from "../../../../platform/configuration/common/configuration.js";
+import { Extensions as ConfigurationExtensions } from "../../../../platform/configuration/common/configurationRegistry.js";
+import { ContextKeyExpr } from "../../../../platform/contextkey/common/contextkey.js";
+import { EditorActivation } from "../../../../platform/editor/common/editor.js";
+import { SyncDescriptor } from "../../../../platform/instantiation/common/descriptors.js";
+import { registerSingleton } from "../../../../platform/instantiation/common/extensions.js";
+import { IInstantiationService } from "../../../../platform/instantiation/common/instantiation.js";
+import { ILogService } from "../../../../platform/log/common/log.js";
+import { Registry } from "../../../../platform/registry/common/platform.js";
+import { contrastBorder, ifDefinedThenElse, listInactiveSelectionBackground, registerColor } from "../../../../platform/theme/common/colorRegistry.js";
+import { EditorPaneDescriptor } from "../../../browser/editor.js";
+import { registerWorkbenchContribution2 } from "../../../common/contributions.js";
+import { EditorExtensions } from "../../../common/editor.js";
+import { PANEL_BORDER } from "../../../common/theme.js";
+import { ResourceNotebookCellEdit } from "../../bulkEdit/browser/bulkCellEdits.js";
+import { ReplEditorSettings, INTERACTIVE_INPUT_CURSOR_BOUNDARY } from "./interactiveCommon.js";
+import { IInteractiveDocumentService, InteractiveDocumentService } from "./interactiveDocumentService.js";
+import { InteractiveEditor } from "./interactiveEditor.js";
+import { InteractiveEditorInput } from "./interactiveEditorInput.js";
+import { IInteractiveHistoryService, InteractiveHistoryService } from "./interactiveHistoryService.js";
+import { NOTEBOOK_EDITOR_WIDGET_ACTION_WEIGHT } from "../../notebook/browser/controller/coreActions.js";
+import * as icons from "../../notebook/browser/notebookIcons.js";
+import { INotebookEditorService } from "../../notebook/browser/services/notebookEditorService.js";
+import { CellKind, CellUri, INTERACTIVE_WINDOW_EDITOR_ID, NotebookSetting, NotebookWorkingCopyTypeIdentifier } from "../../notebook/common/notebookCommon.js";
+import { InteractiveWindowOpen, IS_COMPOSITE_NOTEBOOK, NOTEBOOK_EDITOR_FOCUSED } from "../../notebook/common/notebookContextKeys.js";
+import { INotebookKernelService } from "../../notebook/common/notebookKernelService.js";
+import { INotebookService } from "../../notebook/common/notebookService.js";
+import { columnToEditorGroup } from "../../../services/editor/common/editorGroupColumn.js";
+import { IEditorGroupsService } from "../../../services/editor/common/editorGroupsService.js";
+import { IEditorResolverService, RegisteredEditorPriority } from "../../../services/editor/common/editorResolverService.js";
+import { IEditorService } from "../../../services/editor/common/editorService.js";
+import { IExtensionService } from "../../../services/extensions/common/extensions.js";
+import { IWorkingCopyEditorService } from "../../../services/workingCopy/common/workingCopyEditorService.js";
+import { isReplEditorControl } from "../../replNotebook/browser/replEditor.js";
+import { InlineChatController } from "../../inlineChat/browser/inlineChatController.js";
+import { IsLinuxContext, IsWindowsContext } from "../../../../platform/contextkey/common/contextkeys.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+const interactiveWindowCategory = localize2("interactiveWindow", "Interactive Window");
+Registry.as(EditorExtensions.EditorPane).registerEditorPane(EditorPaneDescriptor.create(InteractiveEditor, INTERACTIVE_WINDOW_EDITOR_ID, "Interactive Window"), [
+  new SyncDescriptor(InteractiveEditorInput)
+]);
+let InteractiveDocumentContribution = class InteractiveDocumentContribution2 extends Disposable {
+  static {
+    __name(this, "InteractiveDocumentContribution");
+  }
+  static {
+    this.ID = "workbench.contrib.interactiveDocument";
+  }
+  constructor(notebookService, editorResolverService, editorService, instantiationService) {
+    super();
+    this.instantiationService = instantiationService;
+    const info = notebookService.getContributedNotebookType("interactive");
+    if (!info) {
+      this._register(notebookService.registerContributedNotebookType("interactive", {
+        providerDisplayName: "Interactive Notebook",
+        displayName: "Interactive",
+        filenamePattern: ["*.interactive"],
+        priority: RegisteredEditorPriority.builtin
+      }));
+    }
+    editorResolverService.registerEditor(`${Schemas.vscodeInteractiveInput}:/**`, {
+      id: "vscode-interactive-input",
+      label: "Interactive Editor",
+      priority: RegisteredEditorPriority.exclusive
+    }, {
+      canSupportResource: /* @__PURE__ */ __name((uri) => uri.scheme === Schemas.vscodeInteractiveInput, "canSupportResource"),
+      singlePerResource: true
+    }, {
+      createEditorInput: /* @__PURE__ */ __name(({ resource }) => {
+        const editorInput = editorService.findEditors({
+          resource,
+          editorId: "interactive",
+          typeId: InteractiveEditorInput.ID
+        }, {
+          order: 1
+          /* EditorsOrder.SEQUENTIAL */
+        }).at(0);
+        return editorInput;
+      }, "createEditorInput")
+    });
+    editorResolverService.registerEditor(`*.interactive`, {
+      id: "interactive",
+      label: "Interactive Editor",
+      priority: RegisteredEditorPriority.exclusive
+    }, {
+      canSupportResource: /* @__PURE__ */ __name((uri) => uri.scheme === Schemas.untitled && extname(uri) === ".interactive" || uri.scheme === Schemas.vscodeNotebookCell && extname(uri) === ".interactive", "canSupportResource"),
+      singlePerResource: true
+    }, {
+      createEditorInput: /* @__PURE__ */ __name(({ resource, options }) => {
+        const data = CellUri.parse(resource);
+        let cellOptions;
+        let iwResource = resource;
+        if (data) {
+          cellOptions = { resource, options };
+          iwResource = data.notebook;
+        }
+        const notebookOptions = {
+          ...options,
+          cellOptions,
+          cellRevealType: void 0,
+          cellSelections: void 0,
+          isReadOnly: void 0,
+          viewState: void 0,
+          indexedCellOptions: void 0
+        };
+        const editorInput = createEditor(iwResource, this.instantiationService);
+        return {
+          editor: editorInput,
+          options: notebookOptions
+        };
+      }, "createEditorInput"),
+      createUntitledEditorInput: /* @__PURE__ */ __name(({ resource, options }) => {
+        if (!resource) {
+          throw new Error("Interactive window editors must have a resource name");
+        }
+        const data = CellUri.parse(resource);
+        let cellOptions;
+        if (data) {
+          cellOptions = { resource, options };
+        }
+        const notebookOptions = {
+          ...options,
+          cellOptions,
+          cellRevealType: void 0,
+          cellSelections: void 0,
+          isReadOnly: void 0,
+          viewState: void 0,
+          indexedCellOptions: void 0
+        };
+        const editorInput = createEditor(resource, this.instantiationService);
+        return {
+          editor: editorInput,
+          options: notebookOptions
+        };
+      }, "createUntitledEditorInput")
+    });
+  }
+};
+InteractiveDocumentContribution = __decorate([
+  __param(0, INotebookService),
+  __param(1, IEditorResolverService),
+  __param(2, IEditorService),
+  __param(3, IInstantiationService)
+], InteractiveDocumentContribution);
+let InteractiveInputContentProvider = class InteractiveInputContentProvider2 {
+  static {
+    __name(this, "InteractiveInputContentProvider");
+  }
+  static {
+    this.ID = "workbench.contrib.interactiveInputContentProvider";
+  }
+  constructor(textModelService, _modelService) {
+    this._modelService = _modelService;
+    this._registration = textModelService.registerTextModelContentProvider(Schemas.vscodeInteractiveInput, this);
+  }
+  dispose() {
+    this._registration.dispose();
+  }
+  async provideTextContent(resource) {
+    const existing = this._modelService.getModel(resource);
+    if (existing) {
+      return existing;
+    }
+    const result = this._modelService.createModel("", null, resource, false);
+    return result;
+  }
+};
+InteractiveInputContentProvider = __decorate([
+  __param(0, ITextModelService),
+  __param(1, IModelService)
+], InteractiveInputContentProvider);
+function createEditor(resource, instantiationService) {
+  const counter = /\/Interactive-(\d+)/.exec(resource.path);
+  const inputBoxPath = counter && counter[1] ? `/InteractiveInput-${counter[1]}` : "InteractiveInput";
+  const inputUri = URI.from({ scheme: Schemas.vscodeInteractiveInput, path: inputBoxPath });
+  const editorInput = InteractiveEditorInput.create(instantiationService, resource, inputUri);
+  return editorInput;
+}
+__name(createEditor, "createEditor");
+let InteractiveWindowWorkingCopyEditorHandler = class InteractiveWindowWorkingCopyEditorHandler2 extends Disposable {
+  static {
+    __name(this, "InteractiveWindowWorkingCopyEditorHandler");
+  }
+  static {
+    this.ID = "workbench.contrib.interactiveWindowWorkingCopyEditorHandler";
+  }
+  constructor(_instantiationService, _workingCopyEditorService, _extensionService) {
+    super();
+    this._instantiationService = _instantiationService;
+    this._workingCopyEditorService = _workingCopyEditorService;
+    this._extensionService = _extensionService;
+    this._installHandler();
+  }
+  handles(workingCopy) {
+    const viewType = this._getViewType(workingCopy);
+    return !!viewType && viewType === "interactive";
+  }
+  isOpen(workingCopy, editor) {
+    if (!this.handles(workingCopy)) {
+      return false;
+    }
+    return editor instanceof InteractiveEditorInput && isEqual(workingCopy.resource, editor.resource);
+  }
+  createEditor(workingCopy) {
+    return createEditor(workingCopy.resource, this._instantiationService);
+  }
+  async _installHandler() {
+    await this._extensionService.whenInstalledExtensionsRegistered();
+    this._register(this._workingCopyEditorService.registerHandler(this));
+  }
+  _getViewType(workingCopy) {
+    return NotebookWorkingCopyTypeIdentifier.parse(workingCopy.typeId)?.viewType;
+  }
+};
+InteractiveWindowWorkingCopyEditorHandler = __decorate([
+  __param(0, IInstantiationService),
+  __param(1, IWorkingCopyEditorService),
+  __param(2, IExtensionService)
+], InteractiveWindowWorkingCopyEditorHandler);
+registerWorkbenchContribution2(
+  InteractiveDocumentContribution.ID,
+  InteractiveDocumentContribution,
+  2
+  /* WorkbenchPhase.BlockRestore */
+);
+registerWorkbenchContribution2(InteractiveInputContentProvider.ID, InteractiveInputContentProvider, {
+  editorTypeId: INTERACTIVE_WINDOW_EDITOR_ID
+});
+registerWorkbenchContribution2(InteractiveWindowWorkingCopyEditorHandler.ID, InteractiveWindowWorkingCopyEditorHandler, {
+  editorTypeId: INTERACTIVE_WINDOW_EDITOR_ID
+});
+class InteractiveEditorSerializer {
+  static {
+    __name(this, "InteractiveEditorSerializer");
+  }
+  static {
+    this.ID = InteractiveEditorInput.ID;
+  }
+  canSerialize(editor) {
+    if (!(editor instanceof InteractiveEditorInput)) {
+      return false;
+    }
+    return URI.isUri(editor.primary.resource) && URI.isUri(editor.inputResource);
+  }
+  serialize(input) {
+    if (!this.canSerialize(input)) {
+      return void 0;
+    }
+    return JSON.stringify({
+      resource: input.primary.resource,
+      inputResource: input.inputResource,
+      name: input.getName(),
+      language: input.language
+    });
+  }
+  deserialize(instantiationService, raw) {
+    const data = parse(raw);
+    if (!data) {
+      return void 0;
+    }
+    const { resource, inputResource, name, language } = data;
+    if (!URI.isUri(resource) || !URI.isUri(inputResource)) {
+      return void 0;
+    }
+    const input = InteractiveEditorInput.create(instantiationService, resource, inputResource, name, language);
+    return input;
+  }
+}
+Registry.as(EditorExtensions.EditorFactory).registerEditorSerializer(InteractiveEditorSerializer.ID, InteractiveEditorSerializer);
+registerSingleton(
+  IInteractiveHistoryService,
+  InteractiveHistoryService,
+  1
+  /* InstantiationType.Delayed */
+);
+registerSingleton(
+  IInteractiveDocumentService,
+  InteractiveDocumentService,
+  1
+  /* InstantiationType.Delayed */
+);
+registerAction2(class extends Action2 {
+  constructor() {
+    super({
+      id: "_interactive.open",
+      title: localize2("interactive.open", "Open Interactive Window"),
+      f1: false,
+      category: interactiveWindowCategory,
+      metadata: {
+        description: localize("interactive.open", "Open Interactive Window"),
+        args: [
+          {
+            name: "showOptions",
+            description: "Show Options",
+            schema: {
+              type: "object",
+              properties: {
+                "viewColumn": {
+                  type: "number",
+                  default: -1
+                },
+                "preserveFocus": {
+                  type: "boolean",
+                  default: true
+                }
+              }
+            }
+          },
+          {
+            name: "resource",
+            description: "Interactive resource Uri",
+            isOptional: true
+          },
+          {
+            name: "controllerId",
+            description: "Notebook controller Id",
+            isOptional: true
+          },
+          {
+            name: "title",
+            description: "Notebook editor title",
+            isOptional: true
+          }
+        ]
+      }
+    });
+  }
+  async run(accessor, showOptions, resource, id, title) {
+    const editorService = accessor.get(IEditorService);
+    const editorGroupService = accessor.get(IEditorGroupsService);
+    const historyService = accessor.get(IInteractiveHistoryService);
+    const kernelService = accessor.get(INotebookKernelService);
+    const logService = accessor.get(ILogService);
+    const configurationService = accessor.get(IConfigurationService);
+    const group = columnToEditorGroup(editorGroupService, configurationService, typeof showOptions === "number" ? showOptions : showOptions?.viewColumn);
+    const editorOptions = {
+      activation: EditorActivation.PRESERVE,
+      preserveFocus: typeof showOptions !== "number" ? showOptions?.preserveFocus ?? false : false
+    };
+    if (resource && extname(resource) === ".interactive") {
+      logService.debug("Open interactive window from resource:", resource.toString());
+      const resourceUri = URI.revive(resource);
+      const editors = editorService.findEditors(resourceUri).filter((id2) => id2.editor instanceof InteractiveEditorInput && id2.editor.resource?.toString() === resourceUri.toString());
+      if (editors.length) {
+        logService.debug("Find existing interactive window:", resource.toString());
+        const editorInput2 = editors[0].editor;
+        const currentGroup = editors[0].groupId;
+        const editor = await editorService.openEditor(editorInput2, editorOptions, currentGroup);
+        const editorControl2 = editor?.getControl();
+        return {
+          notebookUri: editorInput2.resource,
+          inputUri: editorInput2.inputResource,
+          notebookEditorId: editorControl2?.notebookEditor?.getId()
+        };
+      }
+    }
+    const existingNotebookDocument = /* @__PURE__ */ new Set();
+    editorService.getEditors(
+      1
+      /* EditorsOrder.SEQUENTIAL */
+    ).forEach((editor) => {
+      if (editor.editor.resource) {
+        existingNotebookDocument.add(editor.editor.resource.toString());
+      }
+    });
+    let notebookUri = void 0;
+    let inputUri = void 0;
+    let counter = 1;
+    do {
+      notebookUri = URI.from({ scheme: Schemas.untitled, path: `/Interactive-${counter}.interactive` });
+      inputUri = URI.from({ scheme: Schemas.vscodeInteractiveInput, path: `/InteractiveInput-${counter}` });
+      counter++;
+    } while (existingNotebookDocument.has(notebookUri.toString()));
+    InteractiveEditorInput.setName(notebookUri, title);
+    logService.debug("Open new interactive window:", notebookUri.toString(), inputUri.toString());
+    if (id) {
+      const allKernels = kernelService.getMatchingKernel({ uri: notebookUri, notebookType: "interactive" }).all;
+      const preferredKernel = allKernels.find((kernel) => kernel.id === id);
+      if (preferredKernel) {
+        kernelService.preselectKernelForNotebook(preferredKernel, { uri: notebookUri, notebookType: "interactive" });
+      }
+    }
+    historyService.clearHistory(notebookUri);
+    const editorInput = { resource: notebookUri, options: editorOptions };
+    const editorPane = await editorService.openEditor(editorInput, group);
+    const editorControl = editorPane?.getControl();
+    logService.debug("New interactive window opened. Notebook editor id", editorControl?.notebookEditor?.getId());
+    return { notebookUri, inputUri, notebookEditorId: editorControl?.notebookEditor?.getId() };
+  }
+});
+registerAction2(class extends Action2 {
+  constructor() {
+    super({
+      id: "interactive.execute",
+      title: localize2("interactive.execute", "Execute Code"),
+      category: interactiveWindowCategory,
+      keybinding: [{
+        // when: NOTEBOOK_CELL_LIST_FOCUSED,
+        when: ContextKeyExpr.and(IS_COMPOSITE_NOTEBOOK, ContextKeyExpr.equals("activeEditor", "workbench.editor.interactive")),
+        primary: 2048 | 3,
+        weight: NOTEBOOK_EDITOR_WIDGET_ACTION_WEIGHT
+      }, {
+        when: ContextKeyExpr.and(IS_COMPOSITE_NOTEBOOK, ContextKeyExpr.equals("activeEditor", "workbench.editor.interactive"), ContextKeyExpr.equals("config.interactiveWindow.executeWithShiftEnter", true)),
+        primary: 1024 | 3,
+        weight: NOTEBOOK_EDITOR_WIDGET_ACTION_WEIGHT
+      }, {
+        when: ContextKeyExpr.and(IS_COMPOSITE_NOTEBOOK, ContextKeyExpr.equals("activeEditor", "workbench.editor.interactive"), ContextKeyExpr.equals("config.interactiveWindow.executeWithShiftEnter", false)),
+        primary: 3,
+        weight: NOTEBOOK_EDITOR_WIDGET_ACTION_WEIGHT
+      }],
+      menu: [
+        {
+          id: MenuId.InteractiveInputExecute
+        }
+      ],
+      icon: icons.executeIcon,
+      f1: false,
+      metadata: {
+        description: "Execute the Contents of the Input Box",
+        args: [
+          {
+            name: "resource",
+            description: "Interactive resource Uri",
+            isOptional: true
+          }
+        ]
+      }
+    });
+  }
+  async run(accessor, context) {
+    const editorService = accessor.get(IEditorService);
+    const bulkEditService = accessor.get(IBulkEditService);
+    const historyService = accessor.get(IInteractiveHistoryService);
+    const notebookEditorService = accessor.get(INotebookEditorService);
+    let editorControl;
+    if (context) {
+      const resourceUri = URI.revive(context);
+      const editors = editorService.findEditors(resourceUri);
+      for (const found of editors) {
+        if (found.editor.typeId === InteractiveEditorInput.ID) {
+          const editor = await editorService.openEditor(found.editor, found.groupId);
+          editorControl = editor?.getControl();
+          break;
+        }
+      }
+    } else {
+      editorControl = editorService.activeEditorPane?.getControl();
+    }
+    if (editorControl && isReplEditorControl(editorControl) && editorControl.notebookEditor) {
+      const notebookDocument = editorControl.notebookEditor.textModel;
+      const textModel = editorControl.activeCodeEditor?.getModel();
+      const activeKernel = editorControl.notebookEditor.activeKernel;
+      const language = activeKernel?.supportedLanguages[0] ?? PLAINTEXT_LANGUAGE_ID;
+      if (notebookDocument && textModel && editorControl.activeCodeEditor) {
+        const index = notebookDocument.length;
+        const value = textModel.getValue();
+        if (isFalsyOrWhitespace(value)) {
+          return;
+        }
+        const ctrl = InlineChatController.get(editorControl.activeCodeEditor);
+        if (ctrl) {
+          ctrl.acceptSession();
+        }
+        historyService.replaceLast(notebookDocument.uri, value);
+        historyService.addToHistory(notebookDocument.uri, "");
+        textModel.setValue("");
+        const collapseState = editorControl.notebookEditor.notebookOptions.getDisplayOptions().interactiveWindowCollapseCodeCells === "fromEditor" ? {
+          inputCollapsed: false,
+          outputCollapsed: false
+        } : void 0;
+        await bulkEditService.apply([
+          new ResourceNotebookCellEdit(notebookDocument.uri, {
+            editType: 1,
+            index,
+            count: 0,
+            cells: [{
+              cellKind: CellKind.Code,
+              mime: void 0,
+              language,
+              source: value,
+              outputs: [],
+              metadata: {},
+              collapseState
+            }]
+          })
+        ]);
+        const range = { start: index, end: index + 1 };
+        editorControl.notebookEditor.revealCellRangeInView(range);
+        await editorControl.notebookEditor.executeNotebookCells(editorControl.notebookEditor.getCellsInRange({ start: index, end: index + 1 }));
+        const editor = notebookEditorService.getNotebookEditor(editorControl.notebookEditor.getId());
+        if (editor) {
+          editor.setSelections([range]);
+          editor.setFocus(range);
+        }
+      }
+    }
+  }
+});
+registerAction2(class extends Action2 {
+  constructor() {
+    super({
+      id: "interactive.input.clear",
+      title: localize2("interactive.input.clear", "Clear the interactive window input editor contents"),
+      category: interactiveWindowCategory,
+      f1: false
+    });
+  }
+  async run(accessor) {
+    const editorService = accessor.get(IEditorService);
+    const editorControl = editorService.activeEditorPane?.getControl();
+    if (editorControl && isReplEditorControl(editorControl) && editorControl.notebookEditor) {
+      const notebookDocument = editorControl.notebookEditor.textModel;
+      const editor = editorControl.activeCodeEditor;
+      const range = editor?.getModel()?.getFullModelRange();
+      if (notebookDocument && editor && range) {
+        editor.executeEdits("", [EditOperation.replace(range, null)]);
+      }
+    }
+  }
+});
+registerAction2(class extends Action2 {
+  constructor() {
+    super({
+      id: "interactive.history.previous",
+      title: localize2("interactive.history.previous", "Previous value in history"),
+      category: interactiveWindowCategory,
+      f1: false,
+      keybinding: {
+        when: ContextKeyExpr.and(INTERACTIVE_INPUT_CURSOR_BOUNDARY.notEqualsTo("bottom"), INTERACTIVE_INPUT_CURSOR_BOUNDARY.notEqualsTo("none"), SuggestContext.Visible.toNegated()),
+        primary: 16,
+        weight: 200
+        /* KeybindingWeight.WorkbenchContrib */
+      },
+      precondition: ContextKeyExpr.and(IS_COMPOSITE_NOTEBOOK, NOTEBOOK_EDITOR_FOCUSED.negate())
+    });
+  }
+  async run(accessor) {
+    const editorService = accessor.get(IEditorService);
+    const historyService = accessor.get(IInteractiveHistoryService);
+    const editorControl = editorService.activeEditorPane?.getControl();
+    if (editorControl && isReplEditorControl(editorControl) && editorControl.notebookEditor) {
+      const notebookDocument = editorControl.notebookEditor.textModel;
+      const textModel = editorControl.activeCodeEditor?.getModel();
+      if (notebookDocument && textModel) {
+        const previousValue = historyService.getPreviousValue(notebookDocument.uri);
+        if (previousValue) {
+          textModel.setValue(previousValue);
+        }
+      }
+    }
+  }
+});
+registerAction2(class extends Action2 {
+  constructor() {
+    super({
+      id: "interactive.history.next",
+      title: localize2("interactive.history.next", "Next value in history"),
+      category: interactiveWindowCategory,
+      f1: false,
+      keybinding: {
+        when: ContextKeyExpr.and(INTERACTIVE_INPUT_CURSOR_BOUNDARY.notEqualsTo("top"), INTERACTIVE_INPUT_CURSOR_BOUNDARY.notEqualsTo("none"), SuggestContext.Visible.toNegated()),
+        primary: 18,
+        weight: 200
+        /* KeybindingWeight.WorkbenchContrib */
+      },
+      precondition: ContextKeyExpr.and(IS_COMPOSITE_NOTEBOOK, NOTEBOOK_EDITOR_FOCUSED.negate())
+    });
+  }
+  async run(accessor) {
+    const editorService = accessor.get(IEditorService);
+    const historyService = accessor.get(IInteractiveHistoryService);
+    const editorControl = editorService.activeEditorPane?.getControl();
+    if (editorControl && isReplEditorControl(editorControl) && editorControl.notebookEditor) {
+      const notebookDocument = editorControl.notebookEditor.textModel;
+      const textModel = editorControl.activeCodeEditor?.getModel();
+      if (notebookDocument && textModel) {
+        const nextValue = historyService.getNextValue(notebookDocument.uri);
+        if (nextValue !== null) {
+          textModel.setValue(nextValue);
+        }
+      }
+    }
+  }
+});
+registerAction2(class extends Action2 {
+  constructor() {
+    super({
+      id: "interactive.scrollToTop",
+      title: localize("interactiveScrollToTop", "Scroll to Top"),
+      keybinding: {
+        when: ContextKeyExpr.equals("activeEditor", "workbench.editor.interactive"),
+        primary: 2048 | 14,
+        mac: {
+          primary: 2048 | 16
+          /* KeyCode.UpArrow */
+        },
+        weight: 200
+        /* KeybindingWeight.WorkbenchContrib */
+      },
+      category: interactiveWindowCategory
+    });
+  }
+  async run(accessor) {
+    const editorService = accessor.get(IEditorService);
+    const editorControl = editorService.activeEditorPane?.getControl();
+    if (editorControl && isReplEditorControl(editorControl) && editorControl.notebookEditor) {
+      if (editorControl.notebookEditor.getLength() === 0) {
+        return;
+      }
+      editorControl.notebookEditor.revealCellRangeInView({ start: 0, end: 1 });
+    }
+  }
+});
+registerAction2(class extends Action2 {
+  constructor() {
+    super({
+      id: "interactive.scrollToBottom",
+      title: localize("interactiveScrollToBottom", "Scroll to Bottom"),
+      keybinding: {
+        when: ContextKeyExpr.equals("activeEditor", "workbench.editor.interactive"),
+        primary: 2048 | 13,
+        mac: {
+          primary: 2048 | 18
+          /* KeyCode.DownArrow */
+        },
+        weight: 200
+        /* KeybindingWeight.WorkbenchContrib */
+      },
+      category: interactiveWindowCategory
+    });
+  }
+  async run(accessor) {
+    const editorService = accessor.get(IEditorService);
+    const editorControl = editorService.activeEditorPane?.getControl();
+    if (editorControl && isReplEditorControl(editorControl) && editorControl.notebookEditor) {
+      if (editorControl.notebookEditor.getLength() === 0) {
+        return;
+      }
+      const len = editorControl.notebookEditor.getLength();
+      editorControl.notebookEditor.revealCellRangeInView({ start: len - 1, end: len });
+    }
+  }
+});
+registerAction2(class extends Action2 {
+  constructor() {
+    super({
+      id: "interactive.input.focus",
+      title: localize2("interactive.input.focus", "Focus Input Editor"),
+      category: interactiveWindowCategory,
+      menu: {
+        id: MenuId.CommandPalette,
+        when: InteractiveWindowOpen
+      }
+    });
+  }
+  async run(accessor) {
+    const editorService = accessor.get(IEditorService);
+    const editorControl = editorService.activeEditorPane?.getControl();
+    if (editorControl && isReplEditorControl(editorControl) && editorControl.notebookEditor) {
+      editorService.activeEditorPane?.focus();
+    } else {
+      const openEditors = editorService.getEditors(
+        0
+        /* EditorsOrder.MOST_RECENTLY_ACTIVE */
+      );
+      const interactiveWindow = Iterable.find(openEditors, (identifier) => {
+        return identifier.editor.typeId === InteractiveEditorInput.ID;
+      });
+      if (interactiveWindow) {
+        const editorInput = interactiveWindow.editor;
+        const currentGroup = interactiveWindow.groupId;
+        const editor = await editorService.openEditor(editorInput, currentGroup);
+        const editorControl2 = editor?.getControl();
+        if (editorControl2 && isReplEditorControl(editorControl2) && editorControl2.notebookEditor) {
+          editorService.activeEditorPane?.focus();
+        }
+      }
+    }
+  }
+});
+registerAction2(class extends Action2 {
+  constructor() {
+    super({
+      id: "interactive.history.focus",
+      title: localize2("interactive.history.focus", "Focus History"),
+      category: interactiveWindowCategory,
+      menu: {
+        id: MenuId.CommandPalette,
+        when: ContextKeyExpr.equals("activeEditor", "workbench.editor.interactive")
+      },
+      keybinding: [
+        {
+          // On mac, require that the cursor is at the top of the input, to avoid stealing cmd+up to move the cursor to the top
+          when: ContextKeyExpr.and(INTERACTIVE_INPUT_CURSOR_BOUNDARY.notEqualsTo("bottom"), INTERACTIVE_INPUT_CURSOR_BOUNDARY.notEqualsTo("none")),
+          weight: 200 + 5,
+          primary: 2048 | 16
+          /* KeyCode.UpArrow */
+        },
+        {
+          when: ContextKeyExpr.or(IsWindowsContext, IsLinuxContext),
+          weight: 200,
+          primary: 2048 | 16
+        }
+      ],
+      precondition: ContextKeyExpr.and(IS_COMPOSITE_NOTEBOOK, NOTEBOOK_EDITOR_FOCUSED.negate())
+    });
+  }
+  async run(accessor) {
+    const editorService = accessor.get(IEditorService);
+    const editorControl = editorService.activeEditorPane?.getControl();
+    if (editorControl && isReplEditorControl(editorControl) && editorControl.notebookEditor) {
+      editorControl.notebookEditor.focus();
+    }
+  }
+});
+registerColor("interactive.activeCodeBorder", {
+  dark: ifDefinedThenElse(peekViewBorder, peekViewBorder, "#007acc"),
+  light: ifDefinedThenElse(peekViewBorder, peekViewBorder, "#007acc"),
+  hcDark: contrastBorder,
+  hcLight: contrastBorder
+}, localize("interactive.activeCodeBorder", "The border color for the current interactive code cell when the editor has focus."));
+registerColor("interactive.inactiveCodeBorder", {
+  //dark: theme.getColor(listInactiveSelectionBackground) ?? transparent(listInactiveSelectionBackground, 1),
+  dark: ifDefinedThenElse(listInactiveSelectionBackground, listInactiveSelectionBackground, "#37373D"),
+  light: ifDefinedThenElse(listInactiveSelectionBackground, listInactiveSelectionBackground, "#E4E6F1"),
+  hcDark: PANEL_BORDER,
+  hcLight: PANEL_BORDER
+}, localize("interactive.inactiveCodeBorder", "The border color for the current interactive code cell when the editor does not have focus."));
+Registry.as(ConfigurationExtensions.Configuration).registerConfiguration({
+  id: "interactiveWindow",
+  order: 100,
+  type: "object",
+  "properties": {
+    [ReplEditorSettings.interactiveWindowAlwaysScrollOnNewCell]: {
+      type: "boolean",
+      default: true,
+      markdownDescription: localize("interactiveWindow.alwaysScrollOnNewCell", "Automatically scroll the interactive window to show the output of the last statement executed. If this value is false, the window will only scroll if the last cell was already the one scrolled to.")
+    },
+    [NotebookSetting.InteractiveWindowPromptToSave]: {
+      type: "boolean",
+      default: false,
+      markdownDescription: localize("interactiveWindow.promptToSaveOnClose", "Prompt to save the interactive window when it is closed. Only new interactive windows will be affected by this setting change.")
+    },
+    [ReplEditorSettings.executeWithShiftEnter]: {
+      type: "boolean",
+      default: false,
+      markdownDescription: localize("interactiveWindow.executeWithShiftEnter", "Execute the Interactive Window (REPL) input box with shift+enter, so that enter can be used to create a newline."),
+      tags: ["replExecute"]
+    },
+    [ReplEditorSettings.showExecutionHint]: {
+      type: "boolean",
+      default: true,
+      markdownDescription: localize("interactiveWindow.showExecutionHint", "Display a hint in the Interactive Window (REPL) input box to indicate how to execute code."),
+      tags: ["replExecute"]
+    }
+  }
+});
+export {
+  InteractiveDocumentContribution,
+  InteractiveEditorSerializer
+};
+//# sourceMappingURL=interactive.contribution.js.map

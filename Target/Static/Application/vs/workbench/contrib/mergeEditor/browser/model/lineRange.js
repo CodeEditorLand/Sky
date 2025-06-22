@@ -1,1 +1,56 @@
-import{$cC as i}from"../../../../../editor/common/core/range.js";import{$lD as s}from"../../../../../editor/common/core/ranges/lineRange.js";class t extends s{static fromLineNumbers(e,r){return t.fromLength(e,r-e)}static fromLength(e,r){return new t(e,e+r)}join(e){return t.fromLineNumbers(Math.min(this.startLineNumber,e.startLineNumber),Math.max(this.endLineNumberExclusive,e.endLineNumberExclusive))}isAfter(e){return this.startLineNumber>=e.endLineNumberExclusive}isBefore(e){return e.startLineNumber>=this.endLineNumberExclusive}delta(e){return t.fromLength(this.startLineNumber+e,this.length)}deltaEnd(e){return t.fromLength(this.startLineNumber,this.length+e)}deltaStart(e){return t.fromLength(this.startLineNumber+e,this.length-e)}getLines(e){const t=new Array(this.length);for(let r=0;r<this.length;r++)t[r]=e.getLineContent(this.startLineNumber+r);return t}toInclusiveRangeOrEmpty(){return this.isEmpty?new i(this.startLineNumber,1,this.startLineNumber,1):new i(this.startLineNumber,1,this.endLineNumberExclusive-1,1073741824)}}export{t as $VQb};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { Range } from "../../../../../editor/common/core/range.js";
+import { LineRange } from "../../../../../editor/common/core/ranges/lineRange.js";
+class MergeEditorLineRange extends LineRange {
+  static {
+    __name(this, "MergeEditorLineRange");
+  }
+  static fromLineNumbers(startLineNumber, endExclusiveLineNumber) {
+    return MergeEditorLineRange.fromLength(startLineNumber, endExclusiveLineNumber - startLineNumber);
+  }
+  static fromLength(startLineNumber, length) {
+    return new MergeEditorLineRange(startLineNumber, startLineNumber + length);
+  }
+  join(other) {
+    return MergeEditorLineRange.fromLineNumbers(Math.min(this.startLineNumber, other.startLineNumber), Math.max(this.endLineNumberExclusive, other.endLineNumberExclusive));
+  }
+  isAfter(range) {
+    return this.startLineNumber >= range.endLineNumberExclusive;
+  }
+  isBefore(range) {
+    return range.startLineNumber >= this.endLineNumberExclusive;
+  }
+  delta(lineDelta) {
+    return MergeEditorLineRange.fromLength(this.startLineNumber + lineDelta, this.length);
+  }
+  deltaEnd(delta) {
+    return MergeEditorLineRange.fromLength(this.startLineNumber, this.length + delta);
+  }
+  deltaStart(lineDelta) {
+    return MergeEditorLineRange.fromLength(this.startLineNumber + lineDelta, this.length - lineDelta);
+  }
+  getLines(model) {
+    const result = new Array(this.length);
+    for (let i = 0; i < this.length; i++) {
+      result[i] = model.getLineContent(this.startLineNumber + i);
+    }
+    return result;
+  }
+  toInclusiveRangeOrEmpty() {
+    if (this.isEmpty) {
+      return new Range(this.startLineNumber, 1, this.startLineNumber, 1);
+    }
+    return new Range(
+      this.startLineNumber,
+      1,
+      this.endLineNumberExclusive - 1,
+      1073741824
+      /* Constants.MAX_SAFE_SMALL_INTEGER */
+    );
+  }
+}
+export {
+  MergeEditorLineRange
+};
+//# sourceMappingURL=lineRange.js.map

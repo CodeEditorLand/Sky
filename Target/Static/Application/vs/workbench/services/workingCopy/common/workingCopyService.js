@@ -1,4 +1,195 @@
-import{$nj as c}from"../../../../platform/instantiation/common/instantiation.js";import{$WB as m}from"../../../../platform/instantiation/common/extensions.js";import{$df as n}from"../../../../base/common/event.js";import{URI as l}from"../../../../base/common/uri.js";import{$vd as g,$td as D,$ud as p,$Ed as $}from"../../../../base/common/lifecycle.js";import{$Ic as j}from"../../../../base/common/map.js";import{$kb as w}from"../../../../base/common/errors.js";const y=c("workingCopyService");class v extends Error{constructor(t,e){super(t),this.name="WorkingCopyLeakError",this.stack=e}}class i extends g{constructor(){super(...arguments),this.a=this.B(new n),this.onDidRegister=this.a.event,this.b=this.B(new n),this.onDidUnregister=this.b.event,this.f=this.B(new n),this.onDidChangeDirty=this.f.event,this.g=this.B(new n),this.onDidChangeContent=this.g.event,this.h=this.B(new n),this.onDidSave=this.h.event,this.j=new Set,this.m=new j,this.n=this.B(new $),this.w=new Map}get workingCopies(){return Array.from(this.j.values())}registerWorkingCopy(t){let e=this.m.get(t.resource);if(e?.has(t.typeId))throw new Error(`Cannot register more than one working copy with the same resource ${t.resource.toString()} and type ${t.typeId}.`);this.j.add(t),e||(e=new Map,this.m.set(t.resource,e)),e.set(t.typeId,t);const s=new p;s.add(t.onDidChangeContent(()=>this.g.fire(t))),s.add(t.onDidChangeDirty(()=>this.f.fire(t))),s.add(t.onDidSave(h=>this.h.fire({workingCopy:t,...h}))),this.n.set(t,s),this.a.fire(t),t.isDirty()&&this.f.fire(t);const r=this.y(t);return D(()=>{r&&this.z(r),this.r(t),this.b.fire(t)})}r(t){this.j.delete(t);const e=this.m.get(t.resource);e?.delete(t.typeId)&&e.size===0&&this.m.delete(t.resource),t.isDirty()&&this.f.fire(t),this.n.deleteAndDispose(t)}has(t){return l.isUri(t)?this.m.has(t):this.m.get(t.resource)?.has(t.typeId)??!1}get(t){return this.m.get(t.resource)?.get(t.typeId)}getAll(t){const e=this.m.get(t);if(e)return Array.from(e.values())}static{this.s=256}static{this.t=2*i.s}static{this.u=!1}y(t){if(i.u||this.j.size<i.s)return;const e=`${t.resource.scheme}#${t.typeId||"<no typeId>"}
-${new Error().stack?.split(`
-`).slice(2).join(`
-`)??""}`,s=(this.w.get(e)??0)+1;if(this.w.set(e,s),this.j.size>i.t){i.u=!0;const[r,h]=Array.from(this.w.entries()).reduce(([d,o],[u,f])=>f>o?[u,f]:[d,o]),a=`Potential working copy LEAK detected, having ${this.j.size} working copies already. Most frequent owner (${h})`;w(new v(a,r))}return e}z(t){const e=(this.w.get(t)??1)-1;this.w.set(t,e),e===0&&this.w.delete(t)}get hasDirty(){for(const t of this.j)if(t.isDirty())return!0;return!1}get dirtyCount(){let t=0;for(const e of this.j)e.isDirty()&&t++;return t}get dirtyWorkingCopies(){return this.workingCopies.filter(t=>t.isDirty())}get modifiedCount(){let t=0;for(const e of this.j)e.isModified()&&t++;return t}get modifiedWorkingCopies(){return this.workingCopies.filter(t=>t.isModified())}isDirty(t,e){const s=this.m.get(t);if(s){if(typeof e=="string")return s.get(e)?.isDirty()??!1;for(const[,r]of s)if(r.isDirty())return!0}return!1}}m(y,i,1);export{i as $1H,y as $ZH};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { createDecorator } from "../../../../platform/instantiation/common/instantiation.js";
+import { registerSingleton } from "../../../../platform/instantiation/common/extensions.js";
+import { Emitter } from "../../../../base/common/event.js";
+import { URI } from "../../../../base/common/uri.js";
+import { Disposable, toDisposable, DisposableStore, DisposableMap } from "../../../../base/common/lifecycle.js";
+import { ResourceMap } from "../../../../base/common/map.js";
+import { onUnexpectedError } from "../../../../base/common/errors.js";
+const IWorkingCopyService = createDecorator("workingCopyService");
+class WorkingCopyLeakError extends Error {
+  static {
+    __name(this, "WorkingCopyLeakError");
+  }
+  constructor(message, stack) {
+    super(message);
+    this.name = "WorkingCopyLeakError";
+    this.stack = stack;
+  }
+}
+class WorkingCopyService extends Disposable {
+  static {
+    __name(this, "WorkingCopyService");
+  }
+  constructor() {
+    super(...arguments);
+    this._onDidRegister = this._register(new Emitter());
+    this.onDidRegister = this._onDidRegister.event;
+    this._onDidUnregister = this._register(new Emitter());
+    this.onDidUnregister = this._onDidUnregister.event;
+    this._onDidChangeDirty = this._register(new Emitter());
+    this.onDidChangeDirty = this._onDidChangeDirty.event;
+    this._onDidChangeContent = this._register(new Emitter());
+    this.onDidChangeContent = this._onDidChangeContent.event;
+    this._onDidSave = this._register(new Emitter());
+    this.onDidSave = this._onDidSave.event;
+    this._workingCopies = /* @__PURE__ */ new Set();
+    this.mapResourceToWorkingCopies = new ResourceMap();
+    this.mapWorkingCopyToListeners = this._register(new DisposableMap());
+    this.mapLeakToCounter = /* @__PURE__ */ new Map();
+  }
+  //#endregion
+  //#region Registry
+  get workingCopies() {
+    return Array.from(this._workingCopies.values());
+  }
+  registerWorkingCopy(workingCopy) {
+    let workingCopiesForResource = this.mapResourceToWorkingCopies.get(workingCopy.resource);
+    if (workingCopiesForResource?.has(workingCopy.typeId)) {
+      throw new Error(`Cannot register more than one working copy with the same resource ${workingCopy.resource.toString()} and type ${workingCopy.typeId}.`);
+    }
+    this._workingCopies.add(workingCopy);
+    if (!workingCopiesForResource) {
+      workingCopiesForResource = /* @__PURE__ */ new Map();
+      this.mapResourceToWorkingCopies.set(workingCopy.resource, workingCopiesForResource);
+    }
+    workingCopiesForResource.set(workingCopy.typeId, workingCopy);
+    const disposables = new DisposableStore();
+    disposables.add(workingCopy.onDidChangeContent(() => this._onDidChangeContent.fire(workingCopy)));
+    disposables.add(workingCopy.onDidChangeDirty(() => this._onDidChangeDirty.fire(workingCopy)));
+    disposables.add(workingCopy.onDidSave((e) => this._onDidSave.fire({ workingCopy, ...e })));
+    this.mapWorkingCopyToListeners.set(workingCopy, disposables);
+    this._onDidRegister.fire(workingCopy);
+    if (workingCopy.isDirty()) {
+      this._onDidChangeDirty.fire(workingCopy);
+    }
+    const leakId = this.trackLeaks(workingCopy);
+    return toDisposable(() => {
+      if (leakId) {
+        this.untrackLeaks(leakId);
+      }
+      this.unregisterWorkingCopy(workingCopy);
+      this._onDidUnregister.fire(workingCopy);
+    });
+  }
+  unregisterWorkingCopy(workingCopy) {
+    this._workingCopies.delete(workingCopy);
+    const workingCopiesForResource = this.mapResourceToWorkingCopies.get(workingCopy.resource);
+    if (workingCopiesForResource?.delete(workingCopy.typeId) && workingCopiesForResource.size === 0) {
+      this.mapResourceToWorkingCopies.delete(workingCopy.resource);
+    }
+    if (workingCopy.isDirty()) {
+      this._onDidChangeDirty.fire(workingCopy);
+    }
+    this.mapWorkingCopyToListeners.deleteAndDispose(workingCopy);
+  }
+  has(resourceOrIdentifier) {
+    if (URI.isUri(resourceOrIdentifier)) {
+      return this.mapResourceToWorkingCopies.has(resourceOrIdentifier);
+    }
+    return this.mapResourceToWorkingCopies.get(resourceOrIdentifier.resource)?.has(resourceOrIdentifier.typeId) ?? false;
+  }
+  get(identifier) {
+    return this.mapResourceToWorkingCopies.get(identifier.resource)?.get(identifier.typeId);
+  }
+  getAll(resource) {
+    const workingCopies = this.mapResourceToWorkingCopies.get(resource);
+    if (!workingCopies) {
+      return void 0;
+    }
+    return Array.from(workingCopies.values());
+  }
+  static {
+    this.LEAK_TRACKING_THRESHOLD = 256;
+  }
+  static {
+    this.LEAK_REPORTING_THRESHOLD = 2 * WorkingCopyService.LEAK_TRACKING_THRESHOLD;
+  }
+  static {
+    this.LEAK_REPORTED = false;
+  }
+  trackLeaks(workingCopy) {
+    if (WorkingCopyService.LEAK_REPORTED || this._workingCopies.size < WorkingCopyService.LEAK_TRACKING_THRESHOLD) {
+      return void 0;
+    }
+    const leakId = `${workingCopy.resource.scheme}#${workingCopy.typeId || "<no typeId>"}
+${new Error().stack?.split("\n").slice(2).join("\n") ?? ""}`;
+    const leakCounter = (this.mapLeakToCounter.get(leakId) ?? 0) + 1;
+    this.mapLeakToCounter.set(leakId, leakCounter);
+    if (this._workingCopies.size > WorkingCopyService.LEAK_REPORTING_THRESHOLD) {
+      WorkingCopyService.LEAK_REPORTED = true;
+      const [topLeak, topCount] = Array.from(this.mapLeakToCounter.entries()).reduce(([topLeak2, topCount2], [key, val]) => val > topCount2 ? [key, val] : [topLeak2, topCount2]);
+      const message = `Potential working copy LEAK detected, having ${this._workingCopies.size} working copies already. Most frequent owner (${topCount})`;
+      onUnexpectedError(new WorkingCopyLeakError(message, topLeak));
+    }
+    return leakId;
+  }
+  untrackLeaks(leakId) {
+    const stackCounter = (this.mapLeakToCounter.get(leakId) ?? 1) - 1;
+    this.mapLeakToCounter.set(leakId, stackCounter);
+    if (stackCounter === 0) {
+      this.mapLeakToCounter.delete(leakId);
+    }
+  }
+  //#endregion
+  //#region Dirty Tracking
+  get hasDirty() {
+    for (const workingCopy of this._workingCopies) {
+      if (workingCopy.isDirty()) {
+        return true;
+      }
+    }
+    return false;
+  }
+  get dirtyCount() {
+    let totalDirtyCount = 0;
+    for (const workingCopy of this._workingCopies) {
+      if (workingCopy.isDirty()) {
+        totalDirtyCount++;
+      }
+    }
+    return totalDirtyCount;
+  }
+  get dirtyWorkingCopies() {
+    return this.workingCopies.filter((workingCopy) => workingCopy.isDirty());
+  }
+  get modifiedCount() {
+    let totalModifiedCount = 0;
+    for (const workingCopy of this._workingCopies) {
+      if (workingCopy.isModified()) {
+        totalModifiedCount++;
+      }
+    }
+    return totalModifiedCount;
+  }
+  get modifiedWorkingCopies() {
+    return this.workingCopies.filter((workingCopy) => workingCopy.isModified());
+  }
+  isDirty(resource, typeId) {
+    const workingCopies = this.mapResourceToWorkingCopies.get(resource);
+    if (workingCopies) {
+      if (typeof typeId === "string") {
+        return workingCopies.get(typeId)?.isDirty() ?? false;
+      } else {
+        for (const [, workingCopy] of workingCopies) {
+          if (workingCopy.isDirty()) {
+            return true;
+          }
+        }
+      }
+    }
+    return false;
+  }
+}
+registerSingleton(
+  IWorkingCopyService,
+  WorkingCopyService,
+  1
+  /* InstantiationType.Delayed */
+);
+export {
+  IWorkingCopyService,
+  WorkingCopyService
+};
+//# sourceMappingURL=workingCopyService.js.map

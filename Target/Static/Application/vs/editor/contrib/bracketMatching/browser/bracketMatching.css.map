@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["../../../../../../../../../../Dependency/Microsoft/Dependency/Editor/out/vs/editor/contrib/bracketMatching/browser/bracketMatching.css"],
+  "sourcesContent": ["/*---------------------------------------------------------------------------------------------\r\n *  Copyright (c) Microsoft Corporation. All rights reserved.\r\n *  Licensed under the MIT License. See License.txt in the project root for license information.\r\n *--------------------------------------------------------------------------------------------*/\r\n\r\n.monaco-editor .bracket-match {\r\n\tbox-sizing: border-box;\r\n\tbackground-color: var(--vscode-editorBracketMatch-background);\r\n\tborder: 1px solid var(--vscode-editorBracketMatch-border);\r\n}\r\n"],
+  "mappings": "AAKA,CAAC,cAAc,CAAC;AACf,cAAY;AACZ,oBAAkB,IAAI;AACtB,UAAQ,IAAI,MAAM,IAAI;AACvB;",
+  "names": []
+}

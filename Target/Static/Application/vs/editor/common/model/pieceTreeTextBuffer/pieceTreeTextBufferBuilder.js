@@ -1,7 +1,136 @@
-import*as f from"../../../../base/common/strings.js";import{$cH as l,$aH as u,$_G as o}from"./pieceTreeBase.js";import{$eH as b}from"./pieceTreeTextBuffer.js";class d{constructor(t,s,i,e,h,n,r,a,g){this.a=t,this.b=s,this.c=i,this.d=e,this.e=h,this.f=n,this.g=r,this.h=a,this.j=g}k(t){const s=this.c+this.d+this.e,i=this.c+this.e;return s===0?t===1?`
-`:`\r
-`:i>s/2?`\r
-`:`
-`}create(t){const s=this.k(t),i=this.a;if(this.j&&(s===`\r
-`&&(this.c>0||this.d>0)||s===`
-`&&(this.c>0||this.e>0)))for(let h=0,n=i.length;h<n;h++){const r=i[h].buffer.replace(/\r\n|\r|\n/g,s),a=o(r);i[h]=new l(r,a)}const e=new b(i,this.b,s,this.f,this.g,this.h,this.j);return{textBuffer:e,disposable:e}}getFirstLineText(t){return this.a[0].buffer.substr(0,t).split(/\r\n|\r|\n/)[0]}}class p{constructor(){this.a=[],this.b="",this.c=!1,this.d=0,this.e=[],this.f=0,this.g=0,this.h=0,this.j=!1,this.k=!1,this.l=!0}acceptChunk(t){if(t.length===0)return;this.a.length===0&&f.$sg(t)&&(this.b=f.$rg,t=t.substr(1));const s=t.charCodeAt(t.length-1);s===13||s>=55296&&s<=56319?(this.m(t.substr(0,t.length-1),!1),this.c=!0,this.d=s):(this.m(t,!1),this.c=!1,this.d=s)}m(t,s){!s&&t.length===0||(this.c?this.n(String.fromCharCode(this.d)+t):this.n(t))}n(t){const s=u(this.e,t);this.a.push(new l(t,s.lineStarts)),this.f+=s.cr,this.g+=s.lf,this.h+=s.crlf,s.isBasicASCII||(this.l=!1,this.j||(this.j=f.$gg(t)),this.k||(this.k=f.$jg(t)))}finish(t=!0){return this.o(),new d(this.a,this.b,this.f,this.g,this.h,this.j,this.k,this.l,t)}o(){if(this.a.length===0&&this.m("",!0),this.c){this.c=!1;const t=this.a[this.a.length-1];t.buffer+=String.fromCharCode(this.d);const s=o(t.buffer);t.lineStarts=s,this.d===13&&this.f++}}}export{p as $fH};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import * as strings from "../../../../base/common/strings.js";
+import { StringBuffer, createLineStarts, createLineStartsFast } from "./pieceTreeBase.js";
+import { PieceTreeTextBuffer } from "./pieceTreeTextBuffer.js";
+class PieceTreeTextBufferFactory {
+  static {
+    __name(this, "PieceTreeTextBufferFactory");
+  }
+  constructor(_chunks, _bom, _cr, _lf, _crlf, _containsRTL, _containsUnusualLineTerminators, _isBasicASCII, _normalizeEOL) {
+    this._chunks = _chunks;
+    this._bom = _bom;
+    this._cr = _cr;
+    this._lf = _lf;
+    this._crlf = _crlf;
+    this._containsRTL = _containsRTL;
+    this._containsUnusualLineTerminators = _containsUnusualLineTerminators;
+    this._isBasicASCII = _isBasicASCII;
+    this._normalizeEOL = _normalizeEOL;
+  }
+  _getEOL(defaultEOL) {
+    const totalEOLCount = this._cr + this._lf + this._crlf;
+    const totalCRCount = this._cr + this._crlf;
+    if (totalEOLCount === 0) {
+      return defaultEOL === 1 ? "\n" : "\r\n";
+    }
+    if (totalCRCount > totalEOLCount / 2) {
+      return "\r\n";
+    }
+    return "\n";
+  }
+  create(defaultEOL) {
+    const eol = this._getEOL(defaultEOL);
+    const chunks = this._chunks;
+    if (this._normalizeEOL && (eol === "\r\n" && (this._cr > 0 || this._lf > 0) || eol === "\n" && (this._cr > 0 || this._crlf > 0))) {
+      for (let i = 0, len = chunks.length; i < len; i++) {
+        const str = chunks[i].buffer.replace(/\r\n|\r|\n/g, eol);
+        const newLineStart = createLineStartsFast(str);
+        chunks[i] = new StringBuffer(str, newLineStart);
+      }
+    }
+    const textBuffer = new PieceTreeTextBuffer(chunks, this._bom, eol, this._containsRTL, this._containsUnusualLineTerminators, this._isBasicASCII, this._normalizeEOL);
+    return { textBuffer, disposable: textBuffer };
+  }
+  getFirstLineText(lengthLimit) {
+    return this._chunks[0].buffer.substr(0, lengthLimit).split(/\r\n|\r|\n/)[0];
+  }
+}
+class PieceTreeTextBufferBuilder {
+  static {
+    __name(this, "PieceTreeTextBufferBuilder");
+  }
+  constructor() {
+    this.chunks = [];
+    this.BOM = "";
+    this._hasPreviousChar = false;
+    this._previousChar = 0;
+    this._tmpLineStarts = [];
+    this.cr = 0;
+    this.lf = 0;
+    this.crlf = 0;
+    this.containsRTL = false;
+    this.containsUnusualLineTerminators = false;
+    this.isBasicASCII = true;
+  }
+  acceptChunk(chunk) {
+    if (chunk.length === 0) {
+      return;
+    }
+    if (this.chunks.length === 0) {
+      if (strings.startsWithUTF8BOM(chunk)) {
+        this.BOM = strings.UTF8_BOM_CHARACTER;
+        chunk = chunk.substr(1);
+      }
+    }
+    const lastChar = chunk.charCodeAt(chunk.length - 1);
+    if (lastChar === 13 || lastChar >= 55296 && lastChar <= 56319) {
+      this._acceptChunk1(chunk.substr(0, chunk.length - 1), false);
+      this._hasPreviousChar = true;
+      this._previousChar = lastChar;
+    } else {
+      this._acceptChunk1(chunk, false);
+      this._hasPreviousChar = false;
+      this._previousChar = lastChar;
+    }
+  }
+  _acceptChunk1(chunk, allowEmptyStrings) {
+    if (!allowEmptyStrings && chunk.length === 0) {
+      return;
+    }
+    if (this._hasPreviousChar) {
+      this._acceptChunk2(String.fromCharCode(this._previousChar) + chunk);
+    } else {
+      this._acceptChunk2(chunk);
+    }
+  }
+  _acceptChunk2(chunk) {
+    const lineStarts = createLineStarts(this._tmpLineStarts, chunk);
+    this.chunks.push(new StringBuffer(chunk, lineStarts.lineStarts));
+    this.cr += lineStarts.cr;
+    this.lf += lineStarts.lf;
+    this.crlf += lineStarts.crlf;
+    if (!lineStarts.isBasicASCII) {
+      this.isBasicASCII = false;
+      if (!this.containsRTL) {
+        this.containsRTL = strings.containsRTL(chunk);
+      }
+      if (!this.containsUnusualLineTerminators) {
+        this.containsUnusualLineTerminators = strings.containsUnusualLineTerminators(chunk);
+      }
+    }
+  }
+  finish(normalizeEOL = true) {
+    this._finish();
+    return new PieceTreeTextBufferFactory(this.chunks, this.BOM, this.cr, this.lf, this.crlf, this.containsRTL, this.containsUnusualLineTerminators, this.isBasicASCII, normalizeEOL);
+  }
+  _finish() {
+    if (this.chunks.length === 0) {
+      this._acceptChunk1("", true);
+    }
+    if (this._hasPreviousChar) {
+      this._hasPreviousChar = false;
+      const lastChunk = this.chunks[this.chunks.length - 1];
+      lastChunk.buffer += String.fromCharCode(this._previousChar);
+      const newLineStarts = createLineStartsFast(lastChunk.buffer);
+      lastChunk.lineStarts = newLineStarts;
+      if (this._previousChar === 13) {
+        this.cr++;
+      }
+    }
+  }
+}
+export {
+  PieceTreeTextBufferBuilder
+};
+//# sourceMappingURL=pieceTreeTextBufferBuilder.js.map

@@ -1,1 +1,109 @@
-import{$pf as r}from"../../../base/common/cancellation.js";import{$ud as a,$td as p}from"../../../base/common/lifecycle.js";import{$oY as l}from"./extHost.protocol.js";class h{static{this.a=1}constructor(e){this.c=new Map,this.d=new Map,this.f=new Map,this.b=e.getProxy(l.MainThreadSpeech)}async $createSpeechToTextSession(e,i,o){const t=this.c.get(e);if(!t)return;const s=new a,n=new r;this.d.set(i,n);const d=await t.provideSpeechToTextSession(n.token,o?{language:o}:void 0);d&&(s.add(d.onDidChange(c=>{n.token.isCancellationRequested||this.b.$emitSpeechToTextEvent(i,c)})),s.add(n.token.onCancellationRequested(()=>s.dispose())))}async $cancelSpeechToTextSession(e){this.d.get(e)?.dispose(!0),this.d.delete(e)}async $createTextToSpeechSession(e,i,o){const t=this.c.get(e);if(!t)return;const s=new a,n=new r;this.d.set(i,n);const d=await t.provideTextToSpeechSession(n.token,o?{language:o}:void 0);d&&(this.f.set(i,d),s.add(d.onDidChange(c=>{n.token.isCancellationRequested||this.b.$emitTextToSpeechEvent(i,c)})),s.add(n.token.onCancellationRequested(()=>s.dispose())))}async $synthesizeSpeech(e,i){this.f.get(e)?.synthesize(i)}async $cancelTextToSpeechSession(e){this.d.get(e)?.dispose(!0),this.d.delete(e),this.f.delete(e)}async $createKeywordRecognitionSession(e,i){const o=this.c.get(e);if(!o)return;const t=new a,s=new r;this.d.set(i,s);const n=await o.provideKeywordRecognitionSession(s.token);n&&(t.add(n.onDidChange(d=>{s.token.isCancellationRequested||this.b.$emitKeywordRecognitionEvent(i,d)})),t.add(s.token.onCancellationRequested(()=>t.dispose())))}async $cancelKeywordRecognitionSession(e){this.d.get(e)?.dispose(!0),this.d.delete(e)}registerProvider(e,i,o){const t=h.a++;return this.c.set(t,o),this.b.$registerProvider(t,i,{extension:e,displayName:e.value}),p(()=>{this.b.$unregisterProvider(t),this.c.delete(t)})}}export{h as $kMc};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { CancellationTokenSource } from "../../../base/common/cancellation.js";
+import { DisposableStore, toDisposable } from "../../../base/common/lifecycle.js";
+import { MainContext } from "./extHost.protocol.js";
+class ExtHostSpeech {
+  static {
+    __name(this, "ExtHostSpeech");
+  }
+  static {
+    this.ID_POOL = 1;
+  }
+  constructor(mainContext) {
+    this.providers = /* @__PURE__ */ new Map();
+    this.sessions = /* @__PURE__ */ new Map();
+    this.synthesizers = /* @__PURE__ */ new Map();
+    this.proxy = mainContext.getProxy(MainContext.MainThreadSpeech);
+  }
+  async $createSpeechToTextSession(handle, session, language) {
+    const provider = this.providers.get(handle);
+    if (!provider) {
+      return;
+    }
+    const disposables = new DisposableStore();
+    const cts = new CancellationTokenSource();
+    this.sessions.set(session, cts);
+    const speechToTextSession = await provider.provideSpeechToTextSession(cts.token, language ? { language } : void 0);
+    if (!speechToTextSession) {
+      return;
+    }
+    disposables.add(speechToTextSession.onDidChange((e) => {
+      if (cts.token.isCancellationRequested) {
+        return;
+      }
+      this.proxy.$emitSpeechToTextEvent(session, e);
+    }));
+    disposables.add(cts.token.onCancellationRequested(() => disposables.dispose()));
+  }
+  async $cancelSpeechToTextSession(session) {
+    this.sessions.get(session)?.dispose(true);
+    this.sessions.delete(session);
+  }
+  async $createTextToSpeechSession(handle, session, language) {
+    const provider = this.providers.get(handle);
+    if (!provider) {
+      return;
+    }
+    const disposables = new DisposableStore();
+    const cts = new CancellationTokenSource();
+    this.sessions.set(session, cts);
+    const textToSpeech = await provider.provideTextToSpeechSession(cts.token, language ? { language } : void 0);
+    if (!textToSpeech) {
+      return;
+    }
+    this.synthesizers.set(session, textToSpeech);
+    disposables.add(textToSpeech.onDidChange((e) => {
+      if (cts.token.isCancellationRequested) {
+        return;
+      }
+      this.proxy.$emitTextToSpeechEvent(session, e);
+    }));
+    disposables.add(cts.token.onCancellationRequested(() => disposables.dispose()));
+  }
+  async $synthesizeSpeech(session, text) {
+    this.synthesizers.get(session)?.synthesize(text);
+  }
+  async $cancelTextToSpeechSession(session) {
+    this.sessions.get(session)?.dispose(true);
+    this.sessions.delete(session);
+    this.synthesizers.delete(session);
+  }
+  async $createKeywordRecognitionSession(handle, session) {
+    const provider = this.providers.get(handle);
+    if (!provider) {
+      return;
+    }
+    const disposables = new DisposableStore();
+    const cts = new CancellationTokenSource();
+    this.sessions.set(session, cts);
+    const keywordRecognitionSession = await provider.provideKeywordRecognitionSession(cts.token);
+    if (!keywordRecognitionSession) {
+      return;
+    }
+    disposables.add(keywordRecognitionSession.onDidChange((e) => {
+      if (cts.token.isCancellationRequested) {
+        return;
+      }
+      this.proxy.$emitKeywordRecognitionEvent(session, e);
+    }));
+    disposables.add(cts.token.onCancellationRequested(() => disposables.dispose()));
+  }
+  async $cancelKeywordRecognitionSession(session) {
+    this.sessions.get(session)?.dispose(true);
+    this.sessions.delete(session);
+  }
+  registerProvider(extension, identifier, provider) {
+    const handle = ExtHostSpeech.ID_POOL++;
+    this.providers.set(handle, provider);
+    this.proxy.$registerProvider(handle, identifier, { extension, displayName: extension.value });
+    return toDisposable(() => {
+      this.proxy.$unregisterProvider(handle);
+      this.providers.delete(handle);
+    });
+  }
+}
+export {
+  ExtHostSpeech
+};
+//# sourceMappingURL=extHostSpeech.js.map

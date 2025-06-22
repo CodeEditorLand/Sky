@@ -1,1 +1,335 @@
-import{$1b as O}from"../../../../base/common/arrays.js";import{$bD as E}from"../../core/ranges/offsetRange.js";import{$Deb as b,$Ceb as v}from"./algorithms/diffAlgorithm.js";function F(e,n,t){let s=t;return s=M(e,n,s),s=M(e,n,s),s=W(e,n,s),s}function M(e,n,t){if(0===t.length)return t;const s=[];s.push(t[0]);for(let g=1;g<t.length;g++){const a=s[s.length-1];let l=t[g];if(l.seq1Range.isEmpty||l.seq2Range.isEmpty){const t=l.seq1Range.start-a.seq1Range.endExclusive;let g;for(g=1;g<=t&&e.getElement(l.seq1Range.start-g)===e.getElement(l.seq1Range.endExclusive-g)&&n.getElement(l.seq2Range.start-g)===n.getElement(l.seq2Range.endExclusive-g);g++);if(g--,g===t){s[s.length-1]=new v(new E(a.seq1Range.start,l.seq1Range.endExclusive-t),new E(a.seq2Range.start,l.seq2Range.endExclusive-t));continue}l=l.delta(-g)}s.push(l)}const g=[];for(let t=0;t<s.length-1;t++){const a=s[t+1];let l=s[t];if(l.seq1Range.isEmpty||l.seq2Range.isEmpty){const g=a.seq1Range.start-l.seq1Range.endExclusive;let r;for(r=0;r<g&&e.isStronglyEqual(l.seq1Range.start+r,l.seq1Range.endExclusive+r)&&n.isStronglyEqual(l.seq2Range.start+r,l.seq2Range.endExclusive+r);r++);if(r===g){s[t+1]=new v(new E(l.seq1Range.start+g,a.seq1Range.endExclusive),new E(l.seq2Range.start+g,a.seq2Range.endExclusive));continue}r>0&&(l=l.delta(r))}g.push(l)}return s.length>0&&g.push(s[s.length-1]),g}function W(e,n,t){if(!e.getBoundaryScore||!n.getBoundaryScore)return t;for(let s=0;s<t.length;s++){const g=s>0?t[s-1]:void 0,a=t[s],l=s+1<t.length?t[s+1]:void 0,r=new E(g?g.seq1Range.endExclusive+1:0,l?l.seq1Range.start-1:e.length),o=new E(g?g.seq2Range.endExclusive+1:0,l?l.seq2Range.start-1:n.length);a.seq1Range.isEmpty?t[s]=$(a,e,n,r,o):a.seq2Range.isEmpty&&(t[s]=$(a.swap(),n,e,o,r).swap())}return t}function $(e,n,t,s,g){let a=1;for(;e.seq1Range.start-a>=s.start&&e.seq2Range.start-a>=g.start&&t.isStronglyEqual(e.seq2Range.start-a,e.seq2Range.endExclusive-a)&&a<100;)a++;a--;let l=0;for(;e.seq1Range.start+l<s.endExclusive&&e.seq2Range.endExclusive+l<g.endExclusive&&t.isStronglyEqual(e.seq2Range.start+l,e.seq2Range.endExclusive+l)&&l<100;)l++;if(0===a&&0===l)return e;let r=0,o=-1;for(let s=-a;s<=l;s++){const g=e.seq2Range.start+s,a=e.seq2Range.endExclusive+s,l=e.seq1Range.start+s,i=n.getBoundaryScore(l)+t.getBoundaryScore(g)+t.getBoundaryScore(a);i>o&&(o=i,r=s)}return e.delta(r)}function Q(e,n,t){const s=[];for(const e of t){const n=s[s.length-1];n?e.seq1Range.start-n.seq1Range.endExclusive<=2||e.seq2Range.start-n.seq2Range.endExclusive<=2?s[s.length-1]=new v(n.seq1Range.join(e.seq1Range),n.seq2Range.join(e.seq2Range)):s.push(e):s.push(e)}return s}function _(e,n,t,s,g=!1){const a=v.invert(t,e.length),l=[];let r=new b(0,0);function o(t,o){if(t.offset1<r.offset1||t.offset2<r.offset2)return;const i=s(e,t.offset1),c=s(n,t.offset2);if(!i||!c)return;let q=new v(i,c);const u=q.intersect(o);let R=u.seq1Range.length,h=u.seq2Range.length;for(;a.length>0;){const t=a[0];if(!t.seq1Range.intersects(q.seq1Range)&&!t.seq2Range.intersects(q.seq2Range))break;const g=s(e,t.seq1Range.start),l=s(n,t.seq2Range.start),r=new v(g,l),o=r.intersect(t);if(R+=o.seq1Range.length,h+=o.seq2Range.length,q=q.join(r),!(q.seq1Range.endExclusive>=t.seq1Range.endExclusive))break;a.shift()}(g&&R+h<q.seq1Range.length+q.seq2Range.length||R+h<2*(q.seq1Range.length+q.seq2Range.length)/3)&&l.push(q),r=q.getEndExclusives()}for(;a.length>0;){const e=a.shift();e.seq1Range.isEmpty||(o(e.getStarts(),e),o(e.getEndExclusives().delta(-1),e))}return J(t,l)}function J(e,n){const t=[];for(;e.length>0||n.length>0;){const s=e[0],g=n[0];let a;a=s&&(!g||s.seq1Range.start<g.seq1Range.start)?e.shift():n.shift(),t.length>0&&t[t.length-1].seq1Range.endExclusive>=a.seq1Range.start?t[t.length-1]=t[t.length-1].join(a):t.push(a)}return t}function G(e,n,t){let s=t;if(0===s.length)return s;let g,a=0;do{g=!1;const n=[s[0]];for(let t=1;t<s.length;t++){let a=function(n,t){const s=new E(r.seq1Range.endExclusive,l.seq1Range.start);return e.getText(s).replace(/\s/g,"").length<=4&&(n.seq1Range.length+n.seq2Range.length>5||t.seq1Range.length+t.seq2Range.length>5)};const l=s[t],r=n[n.length-1];a(r,l)?(g=!0,n[n.length-1]=n[n.length-1].join(l)):n.push(l)}s=n}while(a++<10&&g);return s}function H(e,n,t){let s=t;if(0===s.length)return s;let g,a=0;do{g=!1;const t=[s[0]];for(let a=1;a<s.length;a++){let l=function(t,s){const g=new E(o.seq1Range.endExclusive,r.seq1Range.start);if(e.countLinesIn(g)>5||g.length>500)return!1;const a=e.getText(g).trim();if(a.length>20||a.split(/\r\n|\r|\n/).length>1)return!1;const l=e.countLinesIn(t.seq1Range),i=t.seq1Range.length,c=n.countLinesIn(t.seq2Range),q=t.seq2Range.length,u=e.countLinesIn(s.seq1Range),R=s.seq1Range.length,h=n.countLinesIn(s.seq2Range),f=s.seq2Range.length;function d(e){return Math.min(e,130)}return Math.pow(Math.pow(d(40*l+i),1.5)+Math.pow(d(40*c+q),1.5),1.5)+Math.pow(Math.pow(d(40*u+R),1.5)+Math.pow(d(40*h+f),1.5),1.5)>74184.96480721243};const r=s[a],o=t[t.length-1];l(o,r)?(g=!0,t[t.length-1]=t[t.length-1].join(r)):t.push(r)}s=t}while(a++<10&&g);const l=[];return O(s,((n,t,s)=>{let g=t;function a(e){return e.length>0&&e.trim().length<=3&&t.seq1Range.length+t.seq2Range.length>100}const r=e.extendToFullLines(t.seq1Range),o=e.getText(new E(r.start,t.seq1Range.start));a(o)&&(g=g.deltaStart(-o.length));const i=e.getText(new E(t.seq1Range.endExclusive,r.endExclusive));a(i)&&(g=g.deltaEnd(i.length));const c=v.fromOffsetPairs(n?n.getEndExclusives():b.zero,s?s.getStarts():b.max),q=g.intersect(c);l.length>0&&q.getStarts().equals(l[l.length-1].getEndExclusives())?l[l.length-1]=l[l.length-1].join(q):l.push(q)})),l}export{F as $Oeb,Q as $Peb,_ as $Qeb,G as $Reb,H as $Seb};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { forEachWithNeighbors } from "../../../../base/common/arrays.js";
+import { OffsetRange } from "../../core/ranges/offsetRange.js";
+import { OffsetPair, SequenceDiff } from "./algorithms/diffAlgorithm.js";
+function optimizeSequenceDiffs(sequence1, sequence2, sequenceDiffs) {
+  let result = sequenceDiffs;
+  result = joinSequenceDiffsByShifting(sequence1, sequence2, result);
+  result = joinSequenceDiffsByShifting(sequence1, sequence2, result);
+  result = shiftSequenceDiffs(sequence1, sequence2, result);
+  return result;
+}
+__name(optimizeSequenceDiffs, "optimizeSequenceDiffs");
+function joinSequenceDiffsByShifting(sequence1, sequence2, sequenceDiffs) {
+  if (sequenceDiffs.length === 0) {
+    return sequenceDiffs;
+  }
+  const result = [];
+  result.push(sequenceDiffs[0]);
+  for (let i = 1; i < sequenceDiffs.length; i++) {
+    const prevResult = result[result.length - 1];
+    let cur = sequenceDiffs[i];
+    if (cur.seq1Range.isEmpty || cur.seq2Range.isEmpty) {
+      const length = cur.seq1Range.start - prevResult.seq1Range.endExclusive;
+      let d;
+      for (d = 1; d <= length; d++) {
+        if (sequence1.getElement(cur.seq1Range.start - d) !== sequence1.getElement(cur.seq1Range.endExclusive - d) || sequence2.getElement(cur.seq2Range.start - d) !== sequence2.getElement(cur.seq2Range.endExclusive - d)) {
+          break;
+        }
+      }
+      d--;
+      if (d === length) {
+        result[result.length - 1] = new SequenceDiff(new OffsetRange(prevResult.seq1Range.start, cur.seq1Range.endExclusive - length), new OffsetRange(prevResult.seq2Range.start, cur.seq2Range.endExclusive - length));
+        continue;
+      }
+      cur = cur.delta(-d);
+    }
+    result.push(cur);
+  }
+  const result2 = [];
+  for (let i = 0; i < result.length - 1; i++) {
+    const nextResult = result[i + 1];
+    let cur = result[i];
+    if (cur.seq1Range.isEmpty || cur.seq2Range.isEmpty) {
+      const length = nextResult.seq1Range.start - cur.seq1Range.endExclusive;
+      let d;
+      for (d = 0; d < length; d++) {
+        if (!sequence1.isStronglyEqual(cur.seq1Range.start + d, cur.seq1Range.endExclusive + d) || !sequence2.isStronglyEqual(cur.seq2Range.start + d, cur.seq2Range.endExclusive + d)) {
+          break;
+        }
+      }
+      if (d === length) {
+        result[i + 1] = new SequenceDiff(new OffsetRange(cur.seq1Range.start + length, nextResult.seq1Range.endExclusive), new OffsetRange(cur.seq2Range.start + length, nextResult.seq2Range.endExclusive));
+        continue;
+      }
+      if (d > 0) {
+        cur = cur.delta(d);
+      }
+    }
+    result2.push(cur);
+  }
+  if (result.length > 0) {
+    result2.push(result[result.length - 1]);
+  }
+  return result2;
+}
+__name(joinSequenceDiffsByShifting, "joinSequenceDiffsByShifting");
+function shiftSequenceDiffs(sequence1, sequence2, sequenceDiffs) {
+  if (!sequence1.getBoundaryScore || !sequence2.getBoundaryScore) {
+    return sequenceDiffs;
+  }
+  for (let i = 0; i < sequenceDiffs.length; i++) {
+    const prevDiff = i > 0 ? sequenceDiffs[i - 1] : void 0;
+    const diff = sequenceDiffs[i];
+    const nextDiff = i + 1 < sequenceDiffs.length ? sequenceDiffs[i + 1] : void 0;
+    const seq1ValidRange = new OffsetRange(prevDiff ? prevDiff.seq1Range.endExclusive + 1 : 0, nextDiff ? nextDiff.seq1Range.start - 1 : sequence1.length);
+    const seq2ValidRange = new OffsetRange(prevDiff ? prevDiff.seq2Range.endExclusive + 1 : 0, nextDiff ? nextDiff.seq2Range.start - 1 : sequence2.length);
+    if (diff.seq1Range.isEmpty) {
+      sequenceDiffs[i] = shiftDiffToBetterPosition(diff, sequence1, sequence2, seq1ValidRange, seq2ValidRange);
+    } else if (diff.seq2Range.isEmpty) {
+      sequenceDiffs[i] = shiftDiffToBetterPosition(diff.swap(), sequence2, sequence1, seq2ValidRange, seq1ValidRange).swap();
+    }
+  }
+  return sequenceDiffs;
+}
+__name(shiftSequenceDiffs, "shiftSequenceDiffs");
+function shiftDiffToBetterPosition(diff, sequence1, sequence2, seq1ValidRange, seq2ValidRange) {
+  const maxShiftLimit = 100;
+  let deltaBefore = 1;
+  while (diff.seq1Range.start - deltaBefore >= seq1ValidRange.start && diff.seq2Range.start - deltaBefore >= seq2ValidRange.start && sequence2.isStronglyEqual(diff.seq2Range.start - deltaBefore, diff.seq2Range.endExclusive - deltaBefore) && deltaBefore < maxShiftLimit) {
+    deltaBefore++;
+  }
+  deltaBefore--;
+  let deltaAfter = 0;
+  while (diff.seq1Range.start + deltaAfter < seq1ValidRange.endExclusive && diff.seq2Range.endExclusive + deltaAfter < seq2ValidRange.endExclusive && sequence2.isStronglyEqual(diff.seq2Range.start + deltaAfter, diff.seq2Range.endExclusive + deltaAfter) && deltaAfter < maxShiftLimit) {
+    deltaAfter++;
+  }
+  if (deltaBefore === 0 && deltaAfter === 0) {
+    return diff;
+  }
+  let bestDelta = 0;
+  let bestScore = -1;
+  for (let delta = -deltaBefore; delta <= deltaAfter; delta++) {
+    const seq2OffsetStart = diff.seq2Range.start + delta;
+    const seq2OffsetEndExclusive = diff.seq2Range.endExclusive + delta;
+    const seq1Offset = diff.seq1Range.start + delta;
+    const score = sequence1.getBoundaryScore(seq1Offset) + sequence2.getBoundaryScore(seq2OffsetStart) + sequence2.getBoundaryScore(seq2OffsetEndExclusive);
+    if (score > bestScore) {
+      bestScore = score;
+      bestDelta = delta;
+    }
+  }
+  return diff.delta(bestDelta);
+}
+__name(shiftDiffToBetterPosition, "shiftDiffToBetterPosition");
+function removeShortMatches(sequence1, sequence2, sequenceDiffs) {
+  const result = [];
+  for (const s of sequenceDiffs) {
+    const last = result[result.length - 1];
+    if (!last) {
+      result.push(s);
+      continue;
+    }
+    if (s.seq1Range.start - last.seq1Range.endExclusive <= 2 || s.seq2Range.start - last.seq2Range.endExclusive <= 2) {
+      result[result.length - 1] = new SequenceDiff(last.seq1Range.join(s.seq1Range), last.seq2Range.join(s.seq2Range));
+    } else {
+      result.push(s);
+    }
+  }
+  return result;
+}
+__name(removeShortMatches, "removeShortMatches");
+function extendDiffsToEntireWordIfAppropriate(sequence1, sequence2, sequenceDiffs, findParent, force = false) {
+  const equalMappings = SequenceDiff.invert(sequenceDiffs, sequence1.length);
+  const additional = [];
+  let lastPoint = new OffsetPair(0, 0);
+  function scanWord(pair, equalMapping) {
+    if (pair.offset1 < lastPoint.offset1 || pair.offset2 < lastPoint.offset2) {
+      return;
+    }
+    const w1 = findParent(sequence1, pair.offset1);
+    const w2 = findParent(sequence2, pair.offset2);
+    if (!w1 || !w2) {
+      return;
+    }
+    let w = new SequenceDiff(w1, w2);
+    const equalPart = w.intersect(equalMapping);
+    let equalChars1 = equalPart.seq1Range.length;
+    let equalChars2 = equalPart.seq2Range.length;
+    while (equalMappings.length > 0) {
+      const next = equalMappings[0];
+      const intersects = next.seq1Range.intersects(w.seq1Range) || next.seq2Range.intersects(w.seq2Range);
+      if (!intersects) {
+        break;
+      }
+      const v1 = findParent(sequence1, next.seq1Range.start);
+      const v2 = findParent(sequence2, next.seq2Range.start);
+      const v = new SequenceDiff(v1, v2);
+      const equalPart2 = v.intersect(next);
+      equalChars1 += equalPart2.seq1Range.length;
+      equalChars2 += equalPart2.seq2Range.length;
+      w = w.join(v);
+      if (w.seq1Range.endExclusive >= next.seq1Range.endExclusive) {
+        equalMappings.shift();
+      } else {
+        break;
+      }
+    }
+    if (force && equalChars1 + equalChars2 < w.seq1Range.length + w.seq2Range.length || equalChars1 + equalChars2 < (w.seq1Range.length + w.seq2Range.length) * 2 / 3) {
+      additional.push(w);
+    }
+    lastPoint = w.getEndExclusives();
+  }
+  __name(scanWord, "scanWord");
+  while (equalMappings.length > 0) {
+    const next = equalMappings.shift();
+    if (next.seq1Range.isEmpty) {
+      continue;
+    }
+    scanWord(next.getStarts(), next);
+    scanWord(next.getEndExclusives().delta(-1), next);
+  }
+  const merged = mergeSequenceDiffs(sequenceDiffs, additional);
+  return merged;
+}
+__name(extendDiffsToEntireWordIfAppropriate, "extendDiffsToEntireWordIfAppropriate");
+function mergeSequenceDiffs(sequenceDiffs1, sequenceDiffs2) {
+  const result = [];
+  while (sequenceDiffs1.length > 0 || sequenceDiffs2.length > 0) {
+    const sd1 = sequenceDiffs1[0];
+    const sd2 = sequenceDiffs2[0];
+    let next;
+    if (sd1 && (!sd2 || sd1.seq1Range.start < sd2.seq1Range.start)) {
+      next = sequenceDiffs1.shift();
+    } else {
+      next = sequenceDiffs2.shift();
+    }
+    if (result.length > 0 && result[result.length - 1].seq1Range.endExclusive >= next.seq1Range.start) {
+      result[result.length - 1] = result[result.length - 1].join(next);
+    } else {
+      result.push(next);
+    }
+  }
+  return result;
+}
+__name(mergeSequenceDiffs, "mergeSequenceDiffs");
+function removeVeryShortMatchingLinesBetweenDiffs(sequence1, _sequence2, sequenceDiffs) {
+  let diffs = sequenceDiffs;
+  if (diffs.length === 0) {
+    return diffs;
+  }
+  let counter = 0;
+  let shouldRepeat;
+  do {
+    shouldRepeat = false;
+    const result = [
+      diffs[0]
+    ];
+    for (let i = 1; i < diffs.length; i++) {
+      let shouldJoinDiffs2 = function(before, after) {
+        const unchangedRange = new OffsetRange(lastResult.seq1Range.endExclusive, cur.seq1Range.start);
+        const unchangedText = sequence1.getText(unchangedRange);
+        const unchangedTextWithoutWs = unchangedText.replace(/\s/g, "");
+        if (unchangedTextWithoutWs.length <= 4 && (before.seq1Range.length + before.seq2Range.length > 5 || after.seq1Range.length + after.seq2Range.length > 5)) {
+          return true;
+        }
+        return false;
+      };
+      var shouldJoinDiffs = shouldJoinDiffs2;
+      __name(shouldJoinDiffs2, "shouldJoinDiffs");
+      const cur = diffs[i];
+      const lastResult = result[result.length - 1];
+      const shouldJoin = shouldJoinDiffs2(lastResult, cur);
+      if (shouldJoin) {
+        shouldRepeat = true;
+        result[result.length - 1] = result[result.length - 1].join(cur);
+      } else {
+        result.push(cur);
+      }
+    }
+    diffs = result;
+  } while (counter++ < 10 && shouldRepeat);
+  return diffs;
+}
+__name(removeVeryShortMatchingLinesBetweenDiffs, "removeVeryShortMatchingLinesBetweenDiffs");
+function removeVeryShortMatchingTextBetweenLongDiffs(sequence1, sequence2, sequenceDiffs) {
+  let diffs = sequenceDiffs;
+  if (diffs.length === 0) {
+    return diffs;
+  }
+  let counter = 0;
+  let shouldRepeat;
+  do {
+    shouldRepeat = false;
+    const result = [
+      diffs[0]
+    ];
+    for (let i = 1; i < diffs.length; i++) {
+      let shouldJoinDiffs2 = function(before, after) {
+        const unchangedRange = new OffsetRange(lastResult.seq1Range.endExclusive, cur.seq1Range.start);
+        const unchangedLineCount = sequence1.countLinesIn(unchangedRange);
+        if (unchangedLineCount > 5 || unchangedRange.length > 500) {
+          return false;
+        }
+        const unchangedText = sequence1.getText(unchangedRange).trim();
+        if (unchangedText.length > 20 || unchangedText.split(/\r\n|\r|\n/).length > 1) {
+          return false;
+        }
+        const beforeLineCount1 = sequence1.countLinesIn(before.seq1Range);
+        const beforeSeq1Length = before.seq1Range.length;
+        const beforeLineCount2 = sequence2.countLinesIn(before.seq2Range);
+        const beforeSeq2Length = before.seq2Range.length;
+        const afterLineCount1 = sequence1.countLinesIn(after.seq1Range);
+        const afterSeq1Length = after.seq1Range.length;
+        const afterLineCount2 = sequence2.countLinesIn(after.seq2Range);
+        const afterSeq2Length = after.seq2Range.length;
+        const max = 2 * 40 + 50;
+        function cap(v) {
+          return Math.min(v, max);
+        }
+        __name(cap, "cap");
+        if (Math.pow(Math.pow(cap(beforeLineCount1 * 40 + beforeSeq1Length), 1.5) + Math.pow(cap(beforeLineCount2 * 40 + beforeSeq2Length), 1.5), 1.5) + Math.pow(Math.pow(cap(afterLineCount1 * 40 + afterSeq1Length), 1.5) + Math.pow(cap(afterLineCount2 * 40 + afterSeq2Length), 1.5), 1.5) > (max ** 1.5) ** 1.5 * 1.3) {
+          return true;
+        }
+        return false;
+      };
+      var shouldJoinDiffs = shouldJoinDiffs2;
+      __name(shouldJoinDiffs2, "shouldJoinDiffs");
+      const cur = diffs[i];
+      const lastResult = result[result.length - 1];
+      const shouldJoin = shouldJoinDiffs2(lastResult, cur);
+      if (shouldJoin) {
+        shouldRepeat = true;
+        result[result.length - 1] = result[result.length - 1].join(cur);
+      } else {
+        result.push(cur);
+      }
+    }
+    diffs = result;
+  } while (counter++ < 10 && shouldRepeat);
+  const newDiffs = [];
+  forEachWithNeighbors(diffs, (prev, cur, next) => {
+    let newDiff = cur;
+    function shouldMarkAsChanged(text) {
+      return text.length > 0 && text.trim().length <= 3 && cur.seq1Range.length + cur.seq2Range.length > 100;
+    }
+    __name(shouldMarkAsChanged, "shouldMarkAsChanged");
+    const fullRange1 = sequence1.extendToFullLines(cur.seq1Range);
+    const prefix = sequence1.getText(new OffsetRange(fullRange1.start, cur.seq1Range.start));
+    if (shouldMarkAsChanged(prefix)) {
+      newDiff = newDiff.deltaStart(-prefix.length);
+    }
+    const suffix = sequence1.getText(new OffsetRange(cur.seq1Range.endExclusive, fullRange1.endExclusive));
+    if (shouldMarkAsChanged(suffix)) {
+      newDiff = newDiff.deltaEnd(suffix.length);
+    }
+    const availableSpace = SequenceDiff.fromOffsetPairs(prev ? prev.getEndExclusives() : OffsetPair.zero, next ? next.getStarts() : OffsetPair.max);
+    const result = newDiff.intersect(availableSpace);
+    if (newDiffs.length > 0 && result.getStarts().equals(newDiffs[newDiffs.length - 1].getEndExclusives())) {
+      newDiffs[newDiffs.length - 1] = newDiffs[newDiffs.length - 1].join(result);
+    } else {
+      newDiffs.push(result);
+    }
+  });
+  return newDiffs;
+}
+__name(removeVeryShortMatchingTextBetweenLongDiffs, "removeVeryShortMatchingTextBetweenLongDiffs");
+export {
+  extendDiffsToEntireWordIfAppropriate,
+  optimizeSequenceDiffs,
+  removeShortMatches,
+  removeVeryShortMatchingLinesBetweenDiffs,
+  removeVeryShortMatchingTextBetweenLongDiffs
+};
+//# sourceMappingURL=heuristicSequenceOptimizations.js.map

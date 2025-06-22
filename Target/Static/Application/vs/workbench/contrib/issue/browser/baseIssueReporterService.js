@@ -1,4 +1,1128 @@
-import{$ as u,$x6 as j,$w6 as W,$O6 as x,$Y6 as U}from"../../../../base/browser/dom.js";import{$W7 as z}from"../../../../base/browser/domStylesheets.js";import{$p9 as X,$o9 as Y}from"../../../../base/browser/ui/button/button.js";import{$F8 as J}from"../../../../base/browser/ui/iconLabel/iconLabels.js";import{$c5 as K}from"../../../../base/browser/window.js";import{$Ih as Q,$Yh as Z}from"../../../../base/common/async.js";import{$Ji as ee}from"../../../../base/common/buffer.js";import{$Mj as M}from"../../../../base/common/codicons.js";import{$a as te}from"../../../../base/common/collections.js";import{$um as q}from"../../../../base/common/decorators.js";import{$qb as se}from"../../../../base/common/errors.js";import{$vd as ie}from"../../../../base/common/lifecycle.js";import{Schemas as _}from"../../../../base/common/network.js";import{$p as ne,$n as H}from"../../../../base/common/platform.js";import{$kh as oe}from"../../../../base/common/resources.js";import{$Cf as re}from"../../../../base/common/strings.js";import{ThemeIcon as N}from"../../../../base/common/themables.js";import{URI as C}from"../../../../base/common/uri.js";import{localize as l}from"../../../../nls.js";import{$bp as le}from"../../../../platform/dialogs/common/dialogs.js";import{$5j as ae}from"../../../../platform/files/common/files.js";import{$L5b as de}from"../../../../platform/theme/browser/iconsStyleSheet.js";import{$Mt as ce}from"../../../../platform/theme/common/themeService.js";import{$vMb as ue}from"../common/issue.js";import{$WBc as P}from"../common/issueReporterUtil.js";import{$XBc as he}from"./issueReporterModel.js";var L=function(g,t,e,s){var i=arguments.length,n=i<3?t:s===null?s=Object.getOwnPropertyDescriptor(t,e):s,o;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")n=Reflect.decorate(g,t,e,s);else for(var r=g.length-1;r>=0;r--)(o=g[r])&&(n=(i<3?o(n):i>3?o(t,e,n):o(t,e))||n);return i>3&&n&&Object.defineProperty(t,e,n),n},R=function(g,t){return function(e,s){t(e,s,g)}};const A=7500,pe=6e4;var E;(function(g){g.VSCode="vscode",g.Extension="extension",g.Marketplace="marketplace",g.Unknown="unknown"})(E||(E={}));let T=class extends ie{constructor(t,e,s,i,n,o,r,d,h,c){super(),this.disableExtensions=t,this.data=e,this.os=s,this.product=i,this.window=n,this.isWeb=o,this.issueFormService=r,this.themeService=d,this.fileService=h,this.fileDialogService=c,this.receivedSystemInfo=!1,this.numberOfSearchResultsDisplayed=0,this.receivedPerformanceInfo=!1,this.shouldQueueSearch=!1,this.hasBeenSubmitted=!1,this.openReporter=!1,this.loadingExtensionData=!1,this.selectedExtension="",this.delayedSubmit=new Q(300),this.nonGitHubIssueUrl=!1,this.needsUpdate=!1,this.acknowledged=!1;const f=e.extensionId?e.enabledExtensions.find(m=>m.id.toLocaleLowerCase()===e.extensionId?.toLocaleLowerCase()):void 0;this.issueReporterModel=new he({...e,issueType:e.issueType||0,versionInfo:{vscodeVersion:`${i.nameShort} ${i.darwinUniversalAssetId?`${i.version} (Universal)`:i.version} (${i.commit||"Commit unknown"}, ${i.date||"Date unknown"})`,os:`${this.os.type} ${this.os.arch} ${this.os.release}${ne?" snap":""}`},extensionsDisabled:!!this.disableExtensions,fileOnExtension:e.extensionId?!f?.isBuiltin:void 0,selectedExtension:f});const w=e.issueSource===E.Marketplace,b=e.issueSource===E.VSCode;this.issueReporterModel.update({fileOnMarketplace:w,fileOnProduct:b});const y=this.getElementById("issue-reporter");if(y){this.previewButton=this.B(new X(y,Y));const m=document.createElement("a");y.appendChild(m),m.id="show-repo-name",m.classList.add("hidden"),this.updatePreviewButtonState()}const I=e.issueTitle;if(I){const m=this.getElementById("issue-title");m&&(m.value=I)}const v=e.issueBody;if(v){const m=this.getElementById("description");m&&(m.value=v,this.issueReporterModel.update({issueDescription:v}))}this.window.document.documentElement.lang!=="en"&&a(this.getElementById("english"));const k=z();k.id="codiconStyles";const D=this.B(de(this.themeService));function B(){k.textContent=D.getCSS()}const S=new Z(B,0);this.B(D.onDidChange(()=>S.schedule())),S.schedule(),this.f(e.enabledExtensions),this.y(),(e.data||e.uri)&&f&&this.updateExtensionStatus(f)}render(){this.renderBlocks()}setInitialFocus(){const{fileOnExtension:t}=this.issueReporterModel.getData();t?this.window.document.getElementById("issue-title")?.focus():this.window.document.getElementById("issue-type")?.focus()}async c(t){try{if(t.uri){const e=C.revive(t.uri);t.bugsUrl=e.toString()}}catch{this.renderBlocks()}}f(t){const e=t.filter(o=>!o.isBuiltin),{nonThemes:s,themes:i}=te(e,o=>o.isTheme?"themes":"nonThemes"),n=i&&i.length;this.issueReporterModel.update({numberOfThemeExtesions:n,enabledNonThemeExtesions:s,allExtensions:e}),this.updateExtensionTable(s,n),(this.disableExtensions||e.length===0)&&(this.getElementById("disableExtensions").disabled=!0),this.g(e)}g(t){const e=t.map(n=>({name:n.displayName||n.name||"",id:n.id}));e.sort((n,o)=>{const r=n.name.toLowerCase(),d=o.name.toLowerCase();return r>d?1:r<d?-1:0});const s=(n,o)=>{const r=o&&n.id===o.id;return u("option",{value:n.id,selected:r||""},n.name)},i=this.getElementById("extension-selector");if(i){const{selectedExtension:n}=this.issueReporterModel.getData();x(i,this.makeOption("",l(8297,null),!0),...e.map(o=>s(o,n))),n||(i.selectedIndex=0),this.addEventListener("extension-selector","change",async o=>{this.clearExtensionData();const r=o.target.value;this.selectedExtension=r;const h=this.issueReporterModel.getData().allExtensions.filter(c=>c.id===r);if(h.length){this.issueReporterModel.update({selectedExtension:h[0]});const c=this.issueReporterModel.getData().selectedExtension;if(c){const f=document.createElement("span");f.classList.add(...N.asClassNameArray(M.loading),"codicon-modifier-spin"),this.setLoading(f);const w=await this.h(c);w?this.selectedExtension===r&&(this.removeLoading(f,!0),this.data=w):(this.loadingExtensionData||f.classList.remove(...N.asClassNameArray(M.loading),"codicon-modifier-spin"),this.removeLoading(f),this.clearExtensionData(),c.data=void 0,c.uri=void 0),this.selectedExtension===r&&(this.updateExtensionStatus(h[0]),this.openReporter=!1)}else this.issueReporterModel.update({selectedExtension:void 0}),this.clearSearchResults(),this.clearExtensionData(),this.validateSelectedExtension(),this.updateExtensionStatus(h[0])}})}this.addEventListener("problem-source","change",n=>{this.clearExtensionData(),this.validateSelectedExtension()})}async h(t){try{return await this.issueFormService.sendReporterMenu(t.id)}catch{return}}j(){const t=this.getElementById("includeAcknowledgement");t&&(this.acknowledged=t.checked,this.updatePreviewButtonState())}setEventHandlers(){["includeSystemInfo","includeProcessInfo","includeWorkspaceInfo","includeExtensions","includeExperiments","includeExtensionData"].forEach(e=>{this.addEventListener(e,"click",s=>{s.stopPropagation(),this.issueReporterModel.update({[e]:!this.issueReporterModel.getData()[e]})})}),this.addEventListener("includeAcknowledgement","click",e=>{e.stopPropagation(),this.j()});const t=this.window.document.getElementsByClassName("showInfo");for(let e=0;e<t.length;e++)t.item(e).addEventListener("click",i=>{i.preventDefault();const n=i.target;if(n){const o=n.parentElement&&n.parentElement.parentElement,r=o&&o.lastElementChild;r&&r.classList.contains("hidden")?(a(r),n.textContent=l(8298,null)):(p(r),n.textContent=l(8299,null))}});this.addEventListener("issue-source","change",e=>{const s=e.target.value,i=this.getElementById("problem-source-help-text");if(s===""){this.issueReporterModel.update({fileOnExtension:void 0}),a(i),this.clearSearchResults(),this.render();return}else p(i);const n=this.getElementById("issue-title");s===E.VSCode?n.placeholder=l(8300,null):s===E.Extension?n.placeholder=l(8301,null):s===E.Marketplace?n.placeholder=l(8302,null):n.placeholder=l(8303,null);let o,r,d=!1;s===E.Extension?o=!0:s===E.Marketplace?r=!0:s===E.VSCode&&(d=!0),this.issueReporterModel.update({fileOnExtension:o,fileOnMarketplace:r,fileOnProduct:d}),this.render();const h=this.getElementById("issue-title").value;this.searchIssues(h,o,r)}),this.addEventListener("description","input",e=>{const s=e.target.value;if(this.issueReporterModel.update({issueDescription:s}),this.issueReporterModel.fileOnExtension()===!1){const i=this.getElementById("issue-title").value;this.searchVSCodeIssues(i,s)}}),this.addEventListener("issue-title","input",e=>{const s=this.getElementById("issue-title");if(s){const i=s.value;this.issueReporterModel.update({issueTitle:i})}}),this.addEventListener("issue-title","input",e=>{const s=e.target.value,i=this.getElementById("issue-title-length-validation-error"),n=this.getIssueUrl();s&&this.getIssueUrlWithTitle(s,n).length>A?a(i):p(i);const o=this.getElementById("issue-source");if(!o||o.value==="")return;const{fileOnExtension:r,fileOnMarketplace:d}=this.issueReporterModel.getData();this.searchIssues(s,r,d)}),this.B(this.previewButton.onDidClick(async()=>{this.delayedSubmit.trigger(async()=>{this.createIssue()})})),this.addEventListener("disableExtensions","click",()=>{this.issueFormService.reloadWithExtensionsDisabled()}),this.addEventListener("extensionBugsLink","click",e=>{const s=e.target.innerText;U(s)}),this.addEventListener("disableExtensions","keydown",e=>{e.stopPropagation(),(e.key==="Enter"||e.key===" ")&&this.issueFormService.reloadWithExtensionsDisabled()}),this.window.document.onkeydown=async e=>{const s=H?e.metaKey:e.ctrlKey;if(s&&e.key==="Enter"&&this.delayedSubmit.trigger(async()=>{await this.createIssue()&&this.close()}),s&&e.key==="w"){e.stopPropagation(),e.preventDefault();const i=this.getElementById("issue-title").value,{issueDescription:n}=this.issueReporterModel.getData();!this.hasBeenSubmitted&&(i||n)?this.issueFormService.showConfirmCloseDialog():this.close()}H&&s&&e.key==="a"&&e.target&&(j(e.target)||W(e.target))&&e.target.select()}}updatePerformanceInfo(t){this.issueReporterModel.update(t),this.receivedPerformanceInfo=!0;const e=this.issueReporterModel.getData();this.D(e),this.F(e),this.updatePreviewButtonState()}updatePreviewButtonState(){!this.acknowledged&&this.needsUpdate?(this.previewButton.label=l(8304,null),this.previewButton.enabled=!1):this.m()?(this.data.githubAccessToken?this.previewButton.label=l(8305,null):this.previewButton.label=l(8306,null),this.previewButton.enabled=!0):(this.previewButton.enabled=!1,this.previewButton.label=l(8307,null));const t=this.getElementById("show-repo-name"),e=this.issueReporterModel.getData().selectedExtension;if(e&&e.uri){const s=C.revive(e.uri).toString();t.href=s,t.addEventListener("click",n=>this.H(n)),t.addEventListener("auxclick",n=>this.H(n));const i=this.parseGitHubUrl(s);t.textContent=i?i.owner+"/"+i.repositoryName:s,Object.assign(t.style,{alignSelf:"flex-end",display:"block",fontSize:"13px",marginBottom:"10px",padding:"4px 0px",textDecoration:"none",width:"auto"}),a(t)}else t.removeAttribute("style"),p(t);this.z()}m(){const t=this.issueReporterModel.getData().issueType;if(this.loadingExtensionData)return!1;if(this.isWeb){if(t===2||t===1||t===0)return!0}else if(t===0&&this.receivedSystemInfo||t===1&&this.receivedSystemInfo&&this.receivedPerformanceInfo||t===2)return!0;return!1}n(){const t=this.issueReporterModel.getData().selectedExtension;return t&&t.repositoryUrl}getExtensionBugsUrl(){const t=this.issueReporterModel.getData().selectedExtension;return t&&t.bugsUrl}searchVSCodeIssues(t,e){t?this.u(t,e):this.clearSearchResults()}searchIssues(t,e,s){if(e)return this.r(t);if(s)return this.s(t);const i=this.issueReporterModel.getData().issueDescription;this.searchVSCodeIssues(t,i)}r(t){const e=this.z();if(t){const s=/^https?:\/\/github\.com\/(.*)/.exec(e);if(s&&s.length){const i=s[1];return this.t(i,t)}if(this.issueReporterModel.getData().selectedExtension)return this.clearSearchResults(),this.w([])}this.clearSearchResults()}s(t){if(t){const e=this.parseGitHubUrl(this.product.reportMarketplaceIssueUrl);if(e)return this.t(`${e.owner}/${e.repositoryName}`,t)}}async close(){await this.issueFormService.closeReporter()}clearSearchResults(){const t=this.getElementById("similar-issues");t.innerText="",this.numberOfSearchResultsDisplayed=0}t(t,e){const s=`is:issue+repo:${t}+${e}`,i=this.getElementById("similar-issues");fetch(`https://api.github.com/search/issues?q=${s}`).then(n=>{n.json().then(o=>{i.innerText="",o&&o.items&&this.w(o.items)}).catch(o=>{})}).catch(n=>{})}u(t,e){const s="https://vscode-probot.westus.cloudapp.azure.com:7890/duplicate_candidates",i={method:"POST",body:JSON.stringify({title:t,body:e}),headers:new Headers({"Content-Type":"application/json"})};fetch(s,i).then(n=>{n.json().then(o=>{if(this.clearSearchResults(),o&&o.candidates)this.w(o.candidates);else throw new Error("Unexpected response, no candidates property")}).catch(o=>{})}).catch(n=>{})}w(t){const e=this.getElementById("similar-issues");if(t.length){const s=u("div.issues-container"),i=u("div.list-title");i.textContent=l(8308,null),this.numberOfSearchResultsDisplayed=t.length<5?t.length:5;for(let n=0;n<this.numberOfSearchResultsDisplayed;n++){const o=t[n],r=u("a.issue-link",{href:o.html_url});r.textContent=o.title,r.title=o.title,r.addEventListener("click",c=>this.H(c)),r.addEventListener("auxclick",c=>this.H(c));let d,h;if(o.state){d=u("span.issue-state");const c=u("span.issue-icon");c.appendChild(J(o.state==="open"?M.issueOpened:M.issueClosed));const f=u("span.issue-state.label");f.textContent=o.state==="open"?l(8309,null):l(8310,null),d.title=o.state==="open"?l(8311,null):l(8312,null),d.appendChild(c),d.appendChild(f),h=u("div.issue",void 0,d,r)}else h=u("div.issue",void 0,r);s.appendChild(h)}e.appendChild(i),e.appendChild(s)}}y(){const t=(i,n)=>u("option",{value:i.valueOf()},re(n)),e=this.getElementById("issue-type"),{issueType:s}=this.issueReporterModel.getData();x(e,t(0,l(8313,null)),t(2,l(8314,null)),t(1,l(8315,null))),e.value=s.toString(),this.setSourceOptions()}makeOption(t,e,s){const i=document.createElement("option");return i.disabled=s,i.value=t,i.textContent=e,i}setSourceOptions(){const t=this.getElementById("issue-source"),{issueType:e,fileOnExtension:s,selectedExtension:i,fileOnMarketplace:n,fileOnProduct:o}=this.issueReporterModel.getData();let r=t.selectedIndex;r===-1&&(s!==void 0?r=s?2:1:i?.isBuiltin?r=1:n?r=3:o&&(r=1)),t.innerText="",t.append(this.makeOption("",l(8316,null),!0)),t.append(this.makeOption(E.VSCode,l(8317,null),!1)),t.append(this.makeOption(E.Extension,l(8318,null),!1)),this.product.reportMarketplaceIssueUrl&&t.append(this.makeOption(E.Marketplace,l(8319,null),!1)),e!==2&&t.append(this.makeOption(E.Unknown,l(8320,null),!1)),r!==-1&&r<t.options.length?t.selectedIndex=r:(t.selectedIndex=0,p(this.getElementById("problem-source-help-text")))}async renderBlocks(){const{issueType:t,fileOnExtension:e,fileOnMarketplace:s,selectedExtension:i}=this.issueReporterModel.getData(),n=this.getElementById("block-container"),o=this.window.document.querySelector(".block-system"),r=this.window.document.querySelector(".block-process"),d=this.window.document.querySelector(".block-workspace"),h=this.window.document.querySelector(".block-extensions"),c=this.window.document.querySelector(".block-experiments"),f=this.window.document.querySelector(".block-extension-data"),w=this.getElementById("problem-source"),b=this.getElementById("issue-description-label"),y=this.getElementById("issue-description-subtitle"),I=this.getElementById("extension-selection"),v=this.getElementById("extension-data-download"),k=this.getElementById("issue-title-container"),D=this.getElementById("description"),B=this.getElementById("extension-data");p(n),p(o),p(r),p(d),p(h),p(c),p(I),p(B),p(f),p(v),a(w),a(k),a(D),e&&a(I);const S=this.issueReporterModel.getData().extensionData;if(S&&S.length>pe){a(v);const m=new Date,G=m.toISOString().split("T")[0],V=m.toTimeString().split(" ")[0].replace(/:/g,"-"),F=`extensionData_${G}_${V}.md`,$=async()=>{const O=await this.fileDialogService.showSaveDialog({title:l(8321,null),availableFileSystems:[_.file],defaultUri:oe(await this.fileDialogService.defaultFilePath(_.file),F)});O&&await this.fileService.writeFile(O,ee.fromString(S))};v.addEventListener("click",$),this.B({dispose:()=>v.removeEventListener("click",$)})}if(i&&this.nonGitHubIssueUrl){p(k),p(D),x(b,l(8322,null)),x(y,l(8323,null,i.displayName)),this.previewButton.label=l(8324,null);return}if(e&&i?.data){const m=i?.data;B.innerText=m.toString(),B.readOnly=!0,a(f)}e&&this.openReporter&&(B.readOnly=!0,setTimeout(()=>{this.openReporter&&a(f)},100),a(f)),t===0?(s||(a(n),a(o),a(c),e||a(h)),x(b,l(8325,null)+" ",u("span.required-input",void 0,"*")),x(y,l(8326,null))):t===1?(s||(a(n),a(o),a(r),a(d),a(c)),e?a(I):s||a(h),x(b,l(8327,null)+" ",u("span.required-input",void 0,"*")),x(y,l(8328,null))):t===2&&(x(b,l(8329,null)+" ",u("span.required-input",void 0,"*")),x(y,l(8330,null)))}validateInput(t){const e=this.getElementById(t),s=this.getElementById(`${t}-empty-error`),i=this.getElementById("description-short-error");return t==="description"&&this.nonGitHubIssueUrl&&this.data.extensionId?!0:e.value?t==="description"&&e.value.length<10?(e.classList.add("invalid-input"),i?.classList.remove("hidden"),s?.classList.add("hidden"),!1):(e.classList.remove("invalid-input"),s?.classList.add("hidden"),t==="description"&&i?.classList.add("hidden"),!0):(e.classList.add("invalid-input"),s?.classList.remove("hidden"),i?.classList.add("hidden"),!1)}validateInputs(){let t=!0;return["issue-title","description","issue-source"].forEach(e=>{t=this.validateInput(e)&&t}),this.issueReporterModel.fileOnExtension()&&(t=this.validateInput("extension-selector")&&t),t}async submitToGitHub(t,e,s){const i=`https://api.github.com/repos/${s.owner}/${s.repositoryName}/issues`,n={method:"POST",body:JSON.stringify({title:t,body:e}),headers:new Headers({"Content-Type":"application/json",Authorization:`Bearer ${this.data.githubAccessToken}`,"User-Agent":"request"})},o=await fetch(i,n);if(!o.ok)return!1;const r=await o.json();return K.open(r.html_url,"_blank"),this.close(),!0}async createIssue(){const t=this.issueReporterModel.getData().selectedExtension;if(this.nonGitHubIssueUrl&&this.getExtensionBugsUrl())return this.hasBeenSubmitted=!0,!0;if(!this.validateInputs()){const h=this.window.document.getElementsByClassName("invalid-input");return h.length&&h[0].focus(),this.addEventListener("issue-title","input",c=>{this.validateInput("issue-title")}),this.addEventListener("description","input",c=>{this.validateInput("description")}),this.addEventListener("issue-source","change",c=>{this.validateInput("issue-source")}),this.issueReporterModel.fileOnExtension()&&this.addEventListener("extension-selector","change",c=>{this.validateInput("extension-selector")}),!1}this.hasBeenSubmitted=!0;const s=this.getElementById("issue-title").value,i=this.issueReporterModel.serialize();let n=this.getIssueUrl();if(!n)return!1;t?.uri&&(n=C.revive(t.uri).toString());const o=this.parseGitHubUrl(n);if(this.data.githubAccessToken&&o)return this.submitToGitHub(s,i,o);const r=this.getIssueUrlWithTitle(this.getElementById("issue-title").value,n);let d=r+`&body=${encodeURIComponent(i)}`;if(d+=this.addTemplateToUrl(o?.owner,o?.repositoryName),d.length>A)try{d=await this.writeToClipboard(r,i)+this.addTemplateToUrl(o?.owner,o?.repositoryName)}catch{return!1}return this.window.open(d,"_blank"),!0}async writeToClipboard(t,e){if(!await this.issueFormService.showClipboardDialog())throw new se;return t+`&body=${encodeURIComponent(l(8331,null))}`}addTemplateToUrl(t,e){const s=this.issueReporterModel.getData().fileOnProduct,i=t?.toLowerCase()==="microsoft"&&e==="vscode-copilot-release",n=t?.toLowerCase()==="microsoft"&&e==="vscode-python";return s?"&template=bug_report.md":i?"&template=bug_report_chat.md":n?"&template=bug_report.md":""}getIssueUrl(){return this.issueReporterModel.fileOnExtension()?this.z():this.issueReporterModel.getData().fileOnMarketplace?this.product.reportMarketplaceIssueUrl:this.product.reportIssueUrl}parseGitHubUrl(t){const e=/^https?:\/\/github\.com\/([^\/]*)\/([^\/]*).*/.exec(t);if(e&&e.length)return{owner:e[1],repositoryName:e[2]}}z(){let t="";const e=this.getExtensionBugsUrl(),s=this.n();return e&&e.match(/^https?:\/\/github\.com\/([^\/]*)\/([^\/]*)\/?(\/issues)?$/)?t=P(e):s&&s.match(/^https?:\/\/github\.com\/([^\/]*)\/([^\/]*)$/)?t=P(s):(this.nonGitHubIssueUrl=!0,t=e||s||""),t}getIssueUrlWithTitle(t,e){this.issueReporterModel.fileOnExtension()&&(e=e+"/issues/new");const s=e.indexOf("?")===-1?"?":"&";return`${e}${s}title=${encodeURIComponent(t)}`}clearExtensionData(){this.nonGitHubIssueUrl=!1,this.issueReporterModel.update({extensionData:void 0}),this.data.issueBody=this.data.issueBody||"",this.data.data=void 0,this.data.uri=void 0}async updateExtensionStatus(t){this.issueReporterModel.update({selectedExtension:t});const e=this.data.issueBody;if(e){const o=this.getElementById("description"),r=o.value;if(r===""||!r.includes(e.toString())){const d=r+(r===""?"":`
-`)+e.toString();o.value=d,this.issueReporterModel.update({issueDescription:d})}}const s=this.data.data;if(s){this.issueReporterModel.update({extensionData:s}),t.data=s;const o=this.window.document.querySelector(".block-extension-data");a(o),this.renderBlocks()}const i=this.data.uri;i&&(t.uri=i,this.c(t)),this.validateSelectedExtension();const n=this.getElementById("issue-title").value;this.r(n),this.updatePreviewButtonState(),this.renderBlocks()}validateSelectedExtension(){const t=this.getElementById("extension-selection-validation-error"),e=this.getElementById("extension-selection-validation-error-no-url");if(p(t),p(e),!this.issueReporterModel.getData().selectedExtension){this.previewButton.enabled=!0;return}if(this.loadingExtensionData)return;this.z()?this.previewButton.enabled=!0:(this.C(),this.previewButton.enabled=!1)}setLoading(t){this.openReporter=!0,this.loadingExtensionData=!0,this.updatePreviewButtonState();const e=this.getElementById("extension-id");p(e),Array.from(this.window.document.querySelectorAll(".ext-parens")).forEach(n=>p(n));const i=this.getElementById("ext-loading");for(a(i);i.firstChild;)i.firstChild.remove();i.append(t),this.renderBlocks()}removeLoading(t,e=!1){this.openReporter=e,this.loadingExtensionData=!1,this.updatePreviewButtonState();const s=this.getElementById("extension-id");a(s),Array.from(this.window.document.querySelectorAll(".ext-parens")).forEach(o=>a(o));const n=this.getElementById("ext-loading");p(n),n.firstChild&&t.remove(),this.renderBlocks()}C(){const t=this.getElementById("extension-selection-validation-error"),e=this.getElementById("extension-selection-validation-error-no-url"),s=this.getExtensionBugsUrl();if(s){a(t);const n=this.getElementById("extensionBugsLink");n.textContent=s;return}const i=this.n();if(i){a(t);const n=this.getElementById("extensionBugsLink");n.textContent=i;return}a(e)}D(t){const e=this.window.document.querySelector(".block-process .block-info");e&&x(e,u("code",void 0,t.processInfo??""))}F(t){this.window.document.querySelector(".block-workspace .block-info code").textContent=`
-`+t.workspaceInfo}updateExtensionTable(t,e){const s=this.window.document.querySelector(".block-extensions .block-info");if(s){if(this.disableExtensions){x(s,l(8332,null));return}const i=e?`
-(${e} theme extensions excluded)`:"";if(t=t||[],!t.length){s.innerText="Extensions: none"+i;return}x(s,this.G(t),document.createTextNode(i))}}G(t){return u("table",void 0,u("tr",void 0,u("th",void 0,"Extension"),u("th",void 0,"Author (truncated)"),u("th",void 0,"Version")),...t.map(e=>u("tr",void 0,u("td",void 0,e.name),u("td",void 0,e.publisher?.substr(0,3)??"N/A"),u("td",void 0,e.version))))}H(t){t.preventDefault(),t.stopPropagation(),t.which<3&&U(t.target.href)}getElementById(t){const e=this.window.document.getElementById(t);if(e)return e}addEventListener(t,e,s){this.getElementById(t)?.addEventListener(e,s)}};L([q(300)],T.prototype,"t",null);L([q(300)],T.prototype,"u",null);T=L([R(6,ue),R(7,ce),R(8,ae),R(9,le)],T);function p(g){g?.classList.add("hidden")}function a(g){g?.classList.remove("hidden")}export{T as $YBc,p as hide,a as show};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { $, isHTMLInputElement, isHTMLTextAreaElement, reset, windowOpenNoOpener } from "../../../../base/browser/dom.js";
+import { createStyleSheet } from "../../../../base/browser/domStylesheets.js";
+import { Button, unthemedButtonStyles } from "../../../../base/browser/ui/button/button.js";
+import { renderIcon } from "../../../../base/browser/ui/iconLabel/iconLabels.js";
+import { mainWindow } from "../../../../base/browser/window.js";
+import { Delayer, RunOnceScheduler } from "../../../../base/common/async.js";
+import { VSBuffer } from "../../../../base/common/buffer.js";
+import { Codicon } from "../../../../base/common/codicons.js";
+import { groupBy } from "../../../../base/common/collections.js";
+import { debounce } from "../../../../base/common/decorators.js";
+import { CancellationError } from "../../../../base/common/errors.js";
+import { Disposable } from "../../../../base/common/lifecycle.js";
+import { Schemas } from "../../../../base/common/network.js";
+import { isLinuxSnap, isMacintosh } from "../../../../base/common/platform.js";
+import { joinPath } from "../../../../base/common/resources.js";
+import { escape } from "../../../../base/common/strings.js";
+import { ThemeIcon } from "../../../../base/common/themables.js";
+import { URI } from "../../../../base/common/uri.js";
+import { localize } from "../../../../nls.js";
+import { IFileDialogService } from "../../../../platform/dialogs/common/dialogs.js";
+import { IFileService } from "../../../../platform/files/common/files.js";
+import { getIconsStyleSheet } from "../../../../platform/theme/browser/iconsStyleSheet.js";
+import { IThemeService } from "../../../../platform/theme/common/themeService.js";
+import { IIssueFormService } from "../common/issue.js";
+import { normalizeGitHubUrl } from "../common/issueReporterUtil.js";
+import { IssueReporterModel } from "./issueReporterModel.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+const MAX_URL_LENGTH = 7500;
+const MAX_EXTENSION_DATA_LENGTH = 6e4;
+var IssueSource;
+(function(IssueSource2) {
+  IssueSource2["VSCode"] = "vscode";
+  IssueSource2["Extension"] = "extension";
+  IssueSource2["Marketplace"] = "marketplace";
+  IssueSource2["Unknown"] = "unknown";
+})(IssueSource || (IssueSource = {}));
+let BaseIssueReporterService = class BaseIssueReporterService2 extends Disposable {
+  static {
+    __name(this, "BaseIssueReporterService");
+  }
+  constructor(disableExtensions, data, os, product, window, isWeb, issueFormService, themeService, fileService, fileDialogService) {
+    super();
+    this.disableExtensions = disableExtensions;
+    this.data = data;
+    this.os = os;
+    this.product = product;
+    this.window = window;
+    this.isWeb = isWeb;
+    this.issueFormService = issueFormService;
+    this.themeService = themeService;
+    this.fileService = fileService;
+    this.fileDialogService = fileDialogService;
+    this.receivedSystemInfo = false;
+    this.numberOfSearchResultsDisplayed = 0;
+    this.receivedPerformanceInfo = false;
+    this.shouldQueueSearch = false;
+    this.hasBeenSubmitted = false;
+    this.openReporter = false;
+    this.loadingExtensionData = false;
+    this.selectedExtension = "";
+    this.delayedSubmit = new Delayer(300);
+    this.nonGitHubIssueUrl = false;
+    this.needsUpdate = false;
+    this.acknowledged = false;
+    const targetExtension = data.extensionId ? data.enabledExtensions.find((extension) => extension.id.toLocaleLowerCase() === data.extensionId?.toLocaleLowerCase()) : void 0;
+    this.issueReporterModel = new IssueReporterModel({
+      ...data,
+      issueType: data.issueType || 0,
+      versionInfo: {
+        vscodeVersion: `${product.nameShort} ${!!product.darwinUniversalAssetId ? `${product.version} (Universal)` : product.version} (${product.commit || "Commit unknown"}, ${product.date || "Date unknown"})`,
+        os: `${this.os.type} ${this.os.arch} ${this.os.release}${isLinuxSnap ? " snap" : ""}`
+      },
+      extensionsDisabled: !!this.disableExtensions,
+      fileOnExtension: data.extensionId ? !targetExtension?.isBuiltin : void 0,
+      selectedExtension: targetExtension
+    });
+    const fileOnMarketplace = data.issueSource === IssueSource.Marketplace;
+    const fileOnProduct = data.issueSource === IssueSource.VSCode;
+    this.issueReporterModel.update({ fileOnMarketplace, fileOnProduct });
+    const issueReporterElement = this.getElementById("issue-reporter");
+    if (issueReporterElement) {
+      this.previewButton = this._register(new Button(issueReporterElement, unthemedButtonStyles));
+      const issueRepoName = document.createElement("a");
+      issueReporterElement.appendChild(issueRepoName);
+      issueRepoName.id = "show-repo-name";
+      issueRepoName.classList.add("hidden");
+      this.updatePreviewButtonState();
+    }
+    const issueTitle = data.issueTitle;
+    if (issueTitle) {
+      const issueTitleElement = this.getElementById("issue-title");
+      if (issueTitleElement) {
+        issueTitleElement.value = issueTitle;
+      }
+    }
+    const issueBody = data.issueBody;
+    if (issueBody) {
+      const description = this.getElementById("description");
+      if (description) {
+        description.value = issueBody;
+        this.issueReporterModel.update({ issueDescription: issueBody });
+      }
+    }
+    if (this.window.document.documentElement.lang !== "en") {
+      show(this.getElementById("english"));
+    }
+    const codiconStyleSheet = createStyleSheet();
+    codiconStyleSheet.id = "codiconStyles";
+    const iconsStyleSheet = this._register(getIconsStyleSheet(this.themeService));
+    function updateAll() {
+      codiconStyleSheet.textContent = iconsStyleSheet.getCSS();
+    }
+    __name(updateAll, "updateAll");
+    const delayer = new RunOnceScheduler(updateAll, 0);
+    this._register(iconsStyleSheet.onDidChange(() => delayer.schedule()));
+    delayer.schedule();
+    this.handleExtensionData(data.enabledExtensions);
+    this.setUpTypes();
+    if ((data.data || data.uri) && targetExtension) {
+      this.updateExtensionStatus(targetExtension);
+    }
+  }
+  render() {
+    this.renderBlocks();
+  }
+  setInitialFocus() {
+    const { fileOnExtension } = this.issueReporterModel.getData();
+    if (fileOnExtension) {
+      const issueTitle = this.window.document.getElementById("issue-title");
+      issueTitle?.focus();
+    } else {
+      const issueType = this.window.document.getElementById("issue-type");
+      issueType?.focus();
+    }
+  }
+  async updateIssueReporterUri(extension) {
+    try {
+      if (extension.uri) {
+        const uri = URI.revive(extension.uri);
+        extension.bugsUrl = uri.toString();
+      }
+    } catch (e) {
+      this.renderBlocks();
+    }
+  }
+  handleExtensionData(extensions) {
+    const installedExtensions = extensions.filter((x) => !x.isBuiltin);
+    const { nonThemes, themes } = groupBy(installedExtensions, (ext) => {
+      return ext.isTheme ? "themes" : "nonThemes";
+    });
+    const numberOfThemeExtesions = themes && themes.length;
+    this.issueReporterModel.update({ numberOfThemeExtesions, enabledNonThemeExtesions: nonThemes, allExtensions: installedExtensions });
+    this.updateExtensionTable(nonThemes, numberOfThemeExtesions);
+    if (this.disableExtensions || installedExtensions.length === 0) {
+      this.getElementById("disableExtensions").disabled = true;
+    }
+    this.updateExtensionSelector(installedExtensions);
+  }
+  updateExtensionSelector(extensions) {
+    const extensionOptions = extensions.map((extension) => {
+      return {
+        name: extension.displayName || extension.name || "",
+        id: extension.id
+      };
+    });
+    extensionOptions.sort((a, b) => {
+      const aName = a.name.toLowerCase();
+      const bName = b.name.toLowerCase();
+      if (aName > bName) {
+        return 1;
+      }
+      if (aName < bName) {
+        return -1;
+      }
+      return 0;
+    });
+    const makeOption = /* @__PURE__ */ __name((extension, selectedExtension) => {
+      const selected = selectedExtension && extension.id === selectedExtension.id;
+      return $("option", {
+        "value": extension.id,
+        "selected": selected || ""
+      }, extension.name);
+    }, "makeOption");
+    const extensionsSelector = this.getElementById("extension-selector");
+    if (extensionsSelector) {
+      const { selectedExtension } = this.issueReporterModel.getData();
+      reset(extensionsSelector, this.makeOption("", localize("selectExtension", "Select extension"), true), ...extensionOptions.map((extension) => makeOption(extension, selectedExtension)));
+      if (!selectedExtension) {
+        extensionsSelector.selectedIndex = 0;
+      }
+      this.addEventListener("extension-selector", "change", async (e) => {
+        this.clearExtensionData();
+        const selectedExtensionId = e.target.value;
+        this.selectedExtension = selectedExtensionId;
+        const extensions2 = this.issueReporterModel.getData().allExtensions;
+        const matches = extensions2.filter((extension) => extension.id === selectedExtensionId);
+        if (matches.length) {
+          this.issueReporterModel.update({ selectedExtension: matches[0] });
+          const selectedExtension2 = this.issueReporterModel.getData().selectedExtension;
+          if (selectedExtension2) {
+            const iconElement = document.createElement("span");
+            iconElement.classList.add(...ThemeIcon.asClassNameArray(Codicon.loading), "codicon-modifier-spin");
+            this.setLoading(iconElement);
+            const openReporterData = await this.sendReporterMenu(selectedExtension2);
+            if (openReporterData) {
+              if (this.selectedExtension === selectedExtensionId) {
+                this.removeLoading(iconElement, true);
+                this.data = openReporterData;
+              }
+            } else {
+              if (!this.loadingExtensionData) {
+                iconElement.classList.remove(...ThemeIcon.asClassNameArray(Codicon.loading), "codicon-modifier-spin");
+              }
+              this.removeLoading(iconElement);
+              this.clearExtensionData();
+              selectedExtension2.data = void 0;
+              selectedExtension2.uri = void 0;
+            }
+            if (this.selectedExtension === selectedExtensionId) {
+              this.updateExtensionStatus(matches[0]);
+              this.openReporter = false;
+            }
+          } else {
+            this.issueReporterModel.update({ selectedExtension: void 0 });
+            this.clearSearchResults();
+            this.clearExtensionData();
+            this.validateSelectedExtension();
+            this.updateExtensionStatus(matches[0]);
+          }
+        }
+      });
+    }
+    this.addEventListener("problem-source", "change", (_) => {
+      this.clearExtensionData();
+      this.validateSelectedExtension();
+    });
+  }
+  async sendReporterMenu(extension) {
+    try {
+      const data = await this.issueFormService.sendReporterMenu(extension.id);
+      return data;
+    } catch (e) {
+      console.error(e);
+      return void 0;
+    }
+  }
+  updateAcknowledgementState() {
+    const acknowledgementCheckbox = this.getElementById("includeAcknowledgement");
+    if (acknowledgementCheckbox) {
+      this.acknowledged = acknowledgementCheckbox.checked;
+      this.updatePreviewButtonState();
+    }
+  }
+  setEventHandlers() {
+    ["includeSystemInfo", "includeProcessInfo", "includeWorkspaceInfo", "includeExtensions", "includeExperiments", "includeExtensionData"].forEach((elementId) => {
+      this.addEventListener(elementId, "click", (event) => {
+        event.stopPropagation();
+        this.issueReporterModel.update({ [elementId]: !this.issueReporterModel.getData()[elementId] });
+      });
+    });
+    this.addEventListener("includeAcknowledgement", "click", (event) => {
+      event.stopPropagation();
+      this.updateAcknowledgementState();
+    });
+    const showInfoElements = this.window.document.getElementsByClassName("showInfo");
+    for (let i = 0; i < showInfoElements.length; i++) {
+      const showInfo = showInfoElements.item(i);
+      showInfo.addEventListener("click", (e) => {
+        e.preventDefault();
+        const label = e.target;
+        if (label) {
+          const containingElement = label.parentElement && label.parentElement.parentElement;
+          const info = containingElement && containingElement.lastElementChild;
+          if (info && info.classList.contains("hidden")) {
+            show(info);
+            label.textContent = localize("hide", "hide");
+          } else {
+            hide(info);
+            label.textContent = localize("show", "show");
+          }
+        }
+      });
+    }
+    this.addEventListener("issue-source", "change", (e) => {
+      const value = e.target.value;
+      const problemSourceHelpText = this.getElementById("problem-source-help-text");
+      if (value === "") {
+        this.issueReporterModel.update({ fileOnExtension: void 0 });
+        show(problemSourceHelpText);
+        this.clearSearchResults();
+        this.render();
+        return;
+      } else {
+        hide(problemSourceHelpText);
+      }
+      const descriptionTextArea = this.getElementById("issue-title");
+      if (value === IssueSource.VSCode) {
+        descriptionTextArea.placeholder = localize("vscodePlaceholder", "E.g Workbench is missing problems panel");
+      } else if (value === IssueSource.Extension) {
+        descriptionTextArea.placeholder = localize("extensionPlaceholder", "E.g. Missing alt text on extension readme image");
+      } else if (value === IssueSource.Marketplace) {
+        descriptionTextArea.placeholder = localize("marketplacePlaceholder", "E.g Cannot disable installed extension");
+      } else {
+        descriptionTextArea.placeholder = localize("undefinedPlaceholder", "Please enter a title");
+      }
+      let fileOnExtension, fileOnMarketplace, fileOnProduct = false;
+      if (value === IssueSource.Extension) {
+        fileOnExtension = true;
+      } else if (value === IssueSource.Marketplace) {
+        fileOnMarketplace = true;
+      } else if (value === IssueSource.VSCode) {
+        fileOnProduct = true;
+      }
+      this.issueReporterModel.update({ fileOnExtension, fileOnMarketplace, fileOnProduct });
+      this.render();
+      const title = this.getElementById("issue-title").value;
+      this.searchIssues(title, fileOnExtension, fileOnMarketplace);
+    });
+    this.addEventListener("description", "input", (e) => {
+      const issueDescription = e.target.value;
+      this.issueReporterModel.update({ issueDescription });
+      if (this.issueReporterModel.fileOnExtension() === false) {
+        const title = this.getElementById("issue-title").value;
+        this.searchVSCodeIssues(title, issueDescription);
+      }
+    });
+    this.addEventListener("issue-title", "input", (_) => {
+      const titleElement = this.getElementById("issue-title");
+      if (titleElement) {
+        const title = titleElement.value;
+        this.issueReporterModel.update({ issueTitle: title });
+      }
+    });
+    this.addEventListener("issue-title", "input", (e) => {
+      const title = e.target.value;
+      const lengthValidationMessage = this.getElementById("issue-title-length-validation-error");
+      const issueUrl = this.getIssueUrl();
+      if (title && this.getIssueUrlWithTitle(title, issueUrl).length > MAX_URL_LENGTH) {
+        show(lengthValidationMessage);
+      } else {
+        hide(lengthValidationMessage);
+      }
+      const issueSource = this.getElementById("issue-source");
+      if (!issueSource || issueSource.value === "") {
+        return;
+      }
+      const { fileOnExtension, fileOnMarketplace } = this.issueReporterModel.getData();
+      this.searchIssues(title, fileOnExtension, fileOnMarketplace);
+    });
+    this._register(this.previewButton.onDidClick(async () => {
+      this.delayedSubmit.trigger(async () => {
+        this.createIssue();
+      });
+    }));
+    this.addEventListener("disableExtensions", "click", () => {
+      this.issueFormService.reloadWithExtensionsDisabled();
+    });
+    this.addEventListener("extensionBugsLink", "click", (e) => {
+      const url = e.target.innerText;
+      windowOpenNoOpener(url);
+    });
+    this.addEventListener("disableExtensions", "keydown", (e) => {
+      e.stopPropagation();
+      if (e.key === "Enter" || e.key === " ") {
+        this.issueFormService.reloadWithExtensionsDisabled();
+      }
+    });
+    this.window.document.onkeydown = async (e) => {
+      const cmdOrCtrlKey = isMacintosh ? e.metaKey : e.ctrlKey;
+      if (cmdOrCtrlKey && e.key === "Enter") {
+        this.delayedSubmit.trigger(async () => {
+          if (await this.createIssue()) {
+            this.close();
+          }
+        });
+      }
+      if (cmdOrCtrlKey && e.key === "w") {
+        e.stopPropagation();
+        e.preventDefault();
+        const issueTitle = this.getElementById("issue-title").value;
+        const { issueDescription } = this.issueReporterModel.getData();
+        if (!this.hasBeenSubmitted && (issueTitle || issueDescription)) {
+          this.issueFormService.showConfirmCloseDialog();
+        } else {
+          this.close();
+        }
+      }
+      if (isMacintosh) {
+        if (cmdOrCtrlKey && e.key === "a" && e.target) {
+          if (isHTMLInputElement(e.target) || isHTMLTextAreaElement(e.target)) {
+            e.target.select();
+          }
+        }
+      }
+    };
+  }
+  updatePerformanceInfo(info) {
+    this.issueReporterModel.update(info);
+    this.receivedPerformanceInfo = true;
+    const state = this.issueReporterModel.getData();
+    this.updateProcessInfo(state);
+    this.updateWorkspaceInfo(state);
+    this.updatePreviewButtonState();
+  }
+  updatePreviewButtonState() {
+    if (!this.acknowledged && this.needsUpdate) {
+      this.previewButton.label = localize("acknowledge", "Confirm Version Acknowledgement");
+      this.previewButton.enabled = false;
+    } else if (this.isPreviewEnabled()) {
+      if (this.data.githubAccessToken) {
+        this.previewButton.label = localize("createOnGitHub", "Create on GitHub");
+      } else {
+        this.previewButton.label = localize("previewOnGitHub", "Preview on GitHub");
+      }
+      this.previewButton.enabled = true;
+    } else {
+      this.previewButton.enabled = false;
+      this.previewButton.label = localize("loadingData", "Loading data...");
+    }
+    const issueRepoName = this.getElementById("show-repo-name");
+    const selectedExtension = this.issueReporterModel.getData().selectedExtension;
+    if (selectedExtension && selectedExtension.uri) {
+      const urlString = URI.revive(selectedExtension.uri).toString();
+      issueRepoName.href = urlString;
+      issueRepoName.addEventListener("click", (e) => this.openLink(e));
+      issueRepoName.addEventListener("auxclick", (e) => this.openLink(e));
+      const gitHubInfo = this.parseGitHubUrl(urlString);
+      issueRepoName.textContent = gitHubInfo ? gitHubInfo.owner + "/" + gitHubInfo.repositoryName : urlString;
+      Object.assign(issueRepoName.style, {
+        alignSelf: "flex-end",
+        display: "block",
+        fontSize: "13px",
+        marginBottom: "10px",
+        padding: "4px 0px",
+        textDecoration: "none",
+        width: "auto"
+      });
+      show(issueRepoName);
+    } else {
+      issueRepoName.removeAttribute("style");
+      hide(issueRepoName);
+    }
+    this.getExtensionGitHubUrl();
+  }
+  isPreviewEnabled() {
+    const issueType = this.issueReporterModel.getData().issueType;
+    if (this.loadingExtensionData) {
+      return false;
+    }
+    if (this.isWeb) {
+      if (issueType === 2 || issueType === 1 || issueType === 0) {
+        return true;
+      }
+    } else {
+      if (issueType === 0 && this.receivedSystemInfo) {
+        return true;
+      }
+      if (issueType === 1 && this.receivedSystemInfo && this.receivedPerformanceInfo) {
+        return true;
+      }
+      if (issueType === 2) {
+        return true;
+      }
+    }
+    return false;
+  }
+  getExtensionRepositoryUrl() {
+    const selectedExtension = this.issueReporterModel.getData().selectedExtension;
+    return selectedExtension && selectedExtension.repositoryUrl;
+  }
+  getExtensionBugsUrl() {
+    const selectedExtension = this.issueReporterModel.getData().selectedExtension;
+    return selectedExtension && selectedExtension.bugsUrl;
+  }
+  searchVSCodeIssues(title, issueDescription) {
+    if (title) {
+      this.searchDuplicates(title, issueDescription);
+    } else {
+      this.clearSearchResults();
+    }
+  }
+  searchIssues(title, fileOnExtension, fileOnMarketplace) {
+    if (fileOnExtension) {
+      return this.searchExtensionIssues(title);
+    }
+    if (fileOnMarketplace) {
+      return this.searchMarketplaceIssues(title);
+    }
+    const description = this.issueReporterModel.getData().issueDescription;
+    this.searchVSCodeIssues(title, description);
+  }
+  searchExtensionIssues(title) {
+    const url = this.getExtensionGitHubUrl();
+    if (title) {
+      const matches = /^https?:\/\/github\.com\/(.*)/.exec(url);
+      if (matches && matches.length) {
+        const repo = matches[1];
+        return this.searchGitHub(repo, title);
+      }
+      if (this.issueReporterModel.getData().selectedExtension) {
+        this.clearSearchResults();
+        return this.displaySearchResults([]);
+      }
+    }
+    this.clearSearchResults();
+  }
+  searchMarketplaceIssues(title) {
+    if (title) {
+      const gitHubInfo = this.parseGitHubUrl(this.product.reportMarketplaceIssueUrl);
+      if (gitHubInfo) {
+        return this.searchGitHub(`${gitHubInfo.owner}/${gitHubInfo.repositoryName}`, title);
+      }
+    }
+  }
+  async close() {
+    await this.issueFormService.closeReporter();
+  }
+  clearSearchResults() {
+    const similarIssues = this.getElementById("similar-issues");
+    similarIssues.innerText = "";
+    this.numberOfSearchResultsDisplayed = 0;
+  }
+  searchGitHub(repo, title) {
+    const query = `is:issue+repo:${repo}+${title}`;
+    const similarIssues = this.getElementById("similar-issues");
+    fetch(`https://api.github.com/search/issues?q=${query}`).then((response) => {
+      response.json().then((result) => {
+        similarIssues.innerText = "";
+        if (result && result.items) {
+          this.displaySearchResults(result.items);
+        }
+      }).catch((_) => {
+        console.warn("Timeout or query limit exceeded");
+      });
+    }).catch((_) => {
+      console.warn("Error fetching GitHub issues");
+    });
+  }
+  searchDuplicates(title, body) {
+    const url = "https://vscode-probot.westus.cloudapp.azure.com:7890/duplicate_candidates";
+    const init = {
+      method: "POST",
+      body: JSON.stringify({
+        title,
+        body
+      }),
+      headers: new Headers({
+        "Content-Type": "application/json"
+      })
+    };
+    fetch(url, init).then((response) => {
+      response.json().then((result) => {
+        this.clearSearchResults();
+        if (result && result.candidates) {
+          this.displaySearchResults(result.candidates);
+        } else {
+          throw new Error("Unexpected response, no candidates property");
+        }
+      }).catch((_) => {
+      });
+    }).catch((_) => {
+    });
+  }
+  displaySearchResults(results) {
+    const similarIssues = this.getElementById("similar-issues");
+    if (results.length) {
+      const issues = $("div.issues-container");
+      const issuesText = $("div.list-title");
+      issuesText.textContent = localize("similarIssues", "Similar issues");
+      this.numberOfSearchResultsDisplayed = results.length < 5 ? results.length : 5;
+      for (let i = 0; i < this.numberOfSearchResultsDisplayed; i++) {
+        const issue = results[i];
+        const link = $("a.issue-link", { href: issue.html_url });
+        link.textContent = issue.title;
+        link.title = issue.title;
+        link.addEventListener("click", (e) => this.openLink(e));
+        link.addEventListener("auxclick", (e) => this.openLink(e));
+        let issueState;
+        let item;
+        if (issue.state) {
+          issueState = $("span.issue-state");
+          const issueIcon = $("span.issue-icon");
+          issueIcon.appendChild(renderIcon(issue.state === "open" ? Codicon.issueOpened : Codicon.issueClosed));
+          const issueStateLabel = $("span.issue-state.label");
+          issueStateLabel.textContent = issue.state === "open" ? localize("open", "Open") : localize("closed", "Closed");
+          issueState.title = issue.state === "open" ? localize("open", "Open") : localize("closed", "Closed");
+          issueState.appendChild(issueIcon);
+          issueState.appendChild(issueStateLabel);
+          item = $("div.issue", void 0, issueState, link);
+        } else {
+          item = $("div.issue", void 0, link);
+        }
+        issues.appendChild(item);
+      }
+      similarIssues.appendChild(issuesText);
+      similarIssues.appendChild(issues);
+    }
+  }
+  setUpTypes() {
+    const makeOption = /* @__PURE__ */ __name((issueType2, description) => $("option", { "value": issueType2.valueOf() }, escape(description)), "makeOption");
+    const typeSelect = this.getElementById("issue-type");
+    const { issueType } = this.issueReporterModel.getData();
+    reset(typeSelect, makeOption(0, localize("bugReporter", "Bug Report")), makeOption(2, localize("featureRequest", "Feature Request")), makeOption(1, localize("performanceIssue", "Performance Issue (freeze, slow, crash)")));
+    typeSelect.value = issueType.toString();
+    this.setSourceOptions();
+  }
+  makeOption(value, description, disabled) {
+    const option = document.createElement("option");
+    option.disabled = disabled;
+    option.value = value;
+    option.textContent = description;
+    return option;
+  }
+  setSourceOptions() {
+    const sourceSelect = this.getElementById("issue-source");
+    const { issueType, fileOnExtension, selectedExtension, fileOnMarketplace, fileOnProduct } = this.issueReporterModel.getData();
+    let selected = sourceSelect.selectedIndex;
+    if (selected === -1) {
+      if (fileOnExtension !== void 0) {
+        selected = fileOnExtension ? 2 : 1;
+      } else if (selectedExtension?.isBuiltin) {
+        selected = 1;
+      } else if (fileOnMarketplace) {
+        selected = 3;
+      } else if (fileOnProduct) {
+        selected = 1;
+      }
+    }
+    sourceSelect.innerText = "";
+    sourceSelect.append(this.makeOption("", localize("selectSource", "Select source"), true));
+    sourceSelect.append(this.makeOption(IssueSource.VSCode, localize("vscode", "Visual Studio Code"), false));
+    sourceSelect.append(this.makeOption(IssueSource.Extension, localize("extension", "A VS Code extension"), false));
+    if (this.product.reportMarketplaceIssueUrl) {
+      sourceSelect.append(this.makeOption(IssueSource.Marketplace, localize("marketplace", "Extensions Marketplace"), false));
+    }
+    if (issueType !== 2) {
+      sourceSelect.append(this.makeOption(IssueSource.Unknown, localize("unknown", "Don't know"), false));
+    }
+    if (selected !== -1 && selected < sourceSelect.options.length) {
+      sourceSelect.selectedIndex = selected;
+    } else {
+      sourceSelect.selectedIndex = 0;
+      hide(this.getElementById("problem-source-help-text"));
+    }
+  }
+  async renderBlocks() {
+    const { issueType, fileOnExtension, fileOnMarketplace, selectedExtension } = this.issueReporterModel.getData();
+    const blockContainer = this.getElementById("block-container");
+    const systemBlock = this.window.document.querySelector(".block-system");
+    const processBlock = this.window.document.querySelector(".block-process");
+    const workspaceBlock = this.window.document.querySelector(".block-workspace");
+    const extensionsBlock = this.window.document.querySelector(".block-extensions");
+    const experimentsBlock = this.window.document.querySelector(".block-experiments");
+    const extensionDataBlock = this.window.document.querySelector(".block-extension-data");
+    const problemSource = this.getElementById("problem-source");
+    const descriptionTitle = this.getElementById("issue-description-label");
+    const descriptionSubtitle = this.getElementById("issue-description-subtitle");
+    const extensionSelector = this.getElementById("extension-selection");
+    const downloadExtensionDataLink = this.getElementById("extension-data-download");
+    const titleTextArea = this.getElementById("issue-title-container");
+    const descriptionTextArea = this.getElementById("description");
+    const extensionDataTextArea = this.getElementById("extension-data");
+    hide(blockContainer);
+    hide(systemBlock);
+    hide(processBlock);
+    hide(workspaceBlock);
+    hide(extensionsBlock);
+    hide(experimentsBlock);
+    hide(extensionSelector);
+    hide(extensionDataTextArea);
+    hide(extensionDataBlock);
+    hide(downloadExtensionDataLink);
+    show(problemSource);
+    show(titleTextArea);
+    show(descriptionTextArea);
+    if (fileOnExtension) {
+      show(extensionSelector);
+    }
+    const extensionData = this.issueReporterModel.getData().extensionData;
+    if (extensionData && extensionData.length > MAX_EXTENSION_DATA_LENGTH) {
+      show(downloadExtensionDataLink);
+      const date = /* @__PURE__ */ new Date();
+      const formattedDate = date.toISOString().split("T")[0];
+      const formattedTime = date.toTimeString().split(" ")[0].replace(/:/g, "-");
+      const fileName = `extensionData_${formattedDate}_${formattedTime}.md`;
+      const handleLinkClick = /* @__PURE__ */ __name(async () => {
+        const downloadPath = await this.fileDialogService.showSaveDialog({
+          title: localize("saveExtensionData", "Save Extension Data"),
+          availableFileSystems: [Schemas.file],
+          defaultUri: joinPath(await this.fileDialogService.defaultFilePath(Schemas.file), fileName)
+        });
+        if (downloadPath) {
+          await this.fileService.writeFile(downloadPath, VSBuffer.fromString(extensionData));
+        }
+      }, "handleLinkClick");
+      downloadExtensionDataLink.addEventListener("click", handleLinkClick);
+      this._register({
+        dispose: /* @__PURE__ */ __name(() => downloadExtensionDataLink.removeEventListener("click", handleLinkClick), "dispose")
+      });
+    }
+    if (selectedExtension && this.nonGitHubIssueUrl) {
+      hide(titleTextArea);
+      hide(descriptionTextArea);
+      reset(descriptionTitle, localize("handlesIssuesElsewhere", "This extension handles issues outside of VS Code"));
+      reset(descriptionSubtitle, localize("elsewhereDescription", "The '{0}' extension prefers to use an external issue reporter. To be taken to that issue reporting experience, click the button below.", selectedExtension.displayName));
+      this.previewButton.label = localize("openIssueReporter", "Open External Issue Reporter");
+      return;
+    }
+    if (fileOnExtension && selectedExtension?.data) {
+      const data = selectedExtension?.data;
+      extensionDataTextArea.innerText = data.toString();
+      extensionDataTextArea.readOnly = true;
+      show(extensionDataBlock);
+    }
+    if (fileOnExtension && this.openReporter) {
+      extensionDataTextArea.readOnly = true;
+      setTimeout(() => {
+        if (this.openReporter) {
+          show(extensionDataBlock);
+        }
+      }, 100);
+      show(extensionDataBlock);
+    }
+    if (issueType === 0) {
+      if (!fileOnMarketplace) {
+        show(blockContainer);
+        show(systemBlock);
+        show(experimentsBlock);
+        if (!fileOnExtension) {
+          show(extensionsBlock);
+        }
+      }
+      reset(descriptionTitle, localize("stepsToReproduce", "Steps to Reproduce") + " ", $("span.required-input", void 0, "*"));
+      reset(descriptionSubtitle, localize("bugDescription", "Share the steps needed to reliably reproduce the problem. Please include actual and expected results. We support GitHub-flavored Markdown. You will be able to edit your issue and add screenshots when we preview it on GitHub."));
+    } else if (issueType === 1) {
+      if (!fileOnMarketplace) {
+        show(blockContainer);
+        show(systemBlock);
+        show(processBlock);
+        show(workspaceBlock);
+        show(experimentsBlock);
+      }
+      if (fileOnExtension) {
+        show(extensionSelector);
+      } else if (!fileOnMarketplace) {
+        show(extensionsBlock);
+      }
+      reset(descriptionTitle, localize("stepsToReproduce", "Steps to Reproduce") + " ", $("span.required-input", void 0, "*"));
+      reset(descriptionSubtitle, localize("performanceIssueDesciption", "When did this performance issue happen? Does it occur on startup or after a specific series of actions? We support GitHub-flavored Markdown. You will be able to edit your issue and add screenshots when we preview it on GitHub."));
+    } else if (issueType === 2) {
+      reset(descriptionTitle, localize("description", "Description") + " ", $("span.required-input", void 0, "*"));
+      reset(descriptionSubtitle, localize("featureRequestDescription", "Please describe the feature you would like to see. We support GitHub-flavored Markdown. You will be able to edit your issue and add screenshots when we preview it on GitHub."));
+    }
+  }
+  validateInput(inputId) {
+    const inputElement = this.getElementById(inputId);
+    const inputValidationMessage = this.getElementById(`${inputId}-empty-error`);
+    const descriptionShortMessage = this.getElementById(`description-short-error`);
+    if (inputId === "description" && this.nonGitHubIssueUrl && this.data.extensionId) {
+      return true;
+    } else if (!inputElement.value) {
+      inputElement.classList.add("invalid-input");
+      inputValidationMessage?.classList.remove("hidden");
+      descriptionShortMessage?.classList.add("hidden");
+      return false;
+    } else if (inputId === "description" && inputElement.value.length < 10) {
+      inputElement.classList.add("invalid-input");
+      descriptionShortMessage?.classList.remove("hidden");
+      inputValidationMessage?.classList.add("hidden");
+      return false;
+    } else {
+      inputElement.classList.remove("invalid-input");
+      inputValidationMessage?.classList.add("hidden");
+      if (inputId === "description") {
+        descriptionShortMessage?.classList.add("hidden");
+      }
+      return true;
+    }
+  }
+  validateInputs() {
+    let isValid = true;
+    ["issue-title", "description", "issue-source"].forEach((elementId) => {
+      isValid = this.validateInput(elementId) && isValid;
+    });
+    if (this.issueReporterModel.fileOnExtension()) {
+      isValid = this.validateInput("extension-selector") && isValid;
+    }
+    return isValid;
+  }
+  async submitToGitHub(issueTitle, issueBody, gitHubDetails) {
+    const url = `https://api.github.com/repos/${gitHubDetails.owner}/${gitHubDetails.repositoryName}/issues`;
+    const init = {
+      method: "POST",
+      body: JSON.stringify({
+        title: issueTitle,
+        body: issueBody
+      }),
+      headers: new Headers({
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${this.data.githubAccessToken}`,
+        "User-Agent": "request"
+      })
+    };
+    const response = await fetch(url, init);
+    if (!response.ok) {
+      console.error("Invalid GitHub URL provided.");
+      return false;
+    }
+    const result = await response.json();
+    mainWindow.open(result.html_url, "_blank");
+    this.close();
+    return true;
+  }
+  async createIssue() {
+    const selectedExtension = this.issueReporterModel.getData().selectedExtension;
+    const hasUri = this.nonGitHubIssueUrl;
+    if (hasUri) {
+      const url2 = this.getExtensionBugsUrl();
+      if (url2) {
+        this.hasBeenSubmitted = true;
+        return true;
+      }
+    }
+    if (!this.validateInputs()) {
+      const invalidInput = this.window.document.getElementsByClassName("invalid-input");
+      if (invalidInput.length) {
+        invalidInput[0].focus();
+      }
+      this.addEventListener("issue-title", "input", (_) => {
+        this.validateInput("issue-title");
+      });
+      this.addEventListener("description", "input", (_) => {
+        this.validateInput("description");
+      });
+      this.addEventListener("issue-source", "change", (_) => {
+        this.validateInput("issue-source");
+      });
+      if (this.issueReporterModel.fileOnExtension()) {
+        this.addEventListener("extension-selector", "change", (_) => {
+          this.validateInput("extension-selector");
+        });
+      }
+      return false;
+    }
+    this.hasBeenSubmitted = true;
+    const issueTitle = this.getElementById("issue-title").value;
+    const issueBody = this.issueReporterModel.serialize();
+    let issueUrl = this.getIssueUrl();
+    if (!issueUrl) {
+      console.error("No issue url found");
+      return false;
+    }
+    if (selectedExtension?.uri) {
+      const uri = URI.revive(selectedExtension.uri);
+      issueUrl = uri.toString();
+    }
+    const gitHubDetails = this.parseGitHubUrl(issueUrl);
+    if (this.data.githubAccessToken && gitHubDetails) {
+      return this.submitToGitHub(issueTitle, issueBody, gitHubDetails);
+    }
+    const baseUrl = this.getIssueUrlWithTitle(this.getElementById("issue-title").value, issueUrl);
+    let url = baseUrl + `&body=${encodeURIComponent(issueBody)}`;
+    url += this.addTemplateToUrl(gitHubDetails?.owner, gitHubDetails?.repositoryName);
+    if (url.length > MAX_URL_LENGTH) {
+      try {
+        url = await this.writeToClipboard(baseUrl, issueBody) + this.addTemplateToUrl(gitHubDetails?.owner, gitHubDetails?.repositoryName);
+      } catch (_) {
+        console.error("Writing to clipboard failed");
+        return false;
+      }
+    }
+    this.window.open(url, "_blank");
+    return true;
+  }
+  async writeToClipboard(baseUrl, issueBody) {
+    const shouldWrite = await this.issueFormService.showClipboardDialog();
+    if (!shouldWrite) {
+      throw new CancellationError();
+    }
+    return baseUrl + `&body=${encodeURIComponent(localize("pasteData", "We have written the needed data into your clipboard because it was too large to send. Please paste."))}`;
+  }
+  addTemplateToUrl(owner, repositoryName) {
+    const isVscode = this.issueReporterModel.getData().fileOnProduct;
+    const isCopilot = owner?.toLowerCase() === "microsoft" && repositoryName === "vscode-copilot-release";
+    const isPython = owner?.toLowerCase() === "microsoft" && repositoryName === "vscode-python";
+    if (isVscode) {
+      return `&template=bug_report.md`;
+    }
+    if (isCopilot) {
+      return `&template=bug_report_chat.md`;
+    }
+    if (isPython) {
+      return `&template=bug_report.md`;
+    }
+    return "";
+  }
+  getIssueUrl() {
+    return this.issueReporterModel.fileOnExtension() ? this.getExtensionGitHubUrl() : this.issueReporterModel.getData().fileOnMarketplace ? this.product.reportMarketplaceIssueUrl : this.product.reportIssueUrl;
+  }
+  parseGitHubUrl(url) {
+    const match = /^https?:\/\/github\.com\/([^\/]*)\/([^\/]*).*/.exec(url);
+    if (match && match.length) {
+      return {
+        owner: match[1],
+        repositoryName: match[2]
+      };
+    } else {
+      console.error("No GitHub issues match");
+    }
+    return void 0;
+  }
+  getExtensionGitHubUrl() {
+    let repositoryUrl = "";
+    const bugsUrl = this.getExtensionBugsUrl();
+    const extensionUrl = this.getExtensionRepositoryUrl();
+    if (bugsUrl && bugsUrl.match(/^https?:\/\/github\.com\/([^\/]*)\/([^\/]*)\/?(\/issues)?$/)) {
+      repositoryUrl = normalizeGitHubUrl(bugsUrl);
+    } else if (extensionUrl && extensionUrl.match(/^https?:\/\/github\.com\/([^\/]*)\/([^\/]*)$/)) {
+      repositoryUrl = normalizeGitHubUrl(extensionUrl);
+    } else {
+      this.nonGitHubIssueUrl = true;
+      repositoryUrl = bugsUrl || extensionUrl || "";
+    }
+    return repositoryUrl;
+  }
+  getIssueUrlWithTitle(issueTitle, repositoryUrl) {
+    if (this.issueReporterModel.fileOnExtension()) {
+      repositoryUrl = repositoryUrl + "/issues/new";
+    }
+    const queryStringPrefix = repositoryUrl.indexOf("?") === -1 ? "?" : "&";
+    return `${repositoryUrl}${queryStringPrefix}title=${encodeURIComponent(issueTitle)}`;
+  }
+  clearExtensionData() {
+    this.nonGitHubIssueUrl = false;
+    this.issueReporterModel.update({ extensionData: void 0 });
+    this.data.issueBody = this.data.issueBody || "";
+    this.data.data = void 0;
+    this.data.uri = void 0;
+  }
+  async updateExtensionStatus(extension) {
+    this.issueReporterModel.update({ selectedExtension: extension });
+    const template = this.data.issueBody;
+    if (template) {
+      const descriptionTextArea = this.getElementById("description");
+      const descriptionText = descriptionTextArea.value;
+      if (descriptionText === "" || !descriptionText.includes(template.toString())) {
+        const fullTextArea = descriptionText + (descriptionText === "" ? "" : "\n") + template.toString();
+        descriptionTextArea.value = fullTextArea;
+        this.issueReporterModel.update({ issueDescription: fullTextArea });
+      }
+    }
+    const data = this.data.data;
+    if (data) {
+      this.issueReporterModel.update({ extensionData: data });
+      extension.data = data;
+      const extensionDataBlock = this.window.document.querySelector(".block-extension-data");
+      show(extensionDataBlock);
+      this.renderBlocks();
+    }
+    const uri = this.data.uri;
+    if (uri) {
+      extension.uri = uri;
+      this.updateIssueReporterUri(extension);
+    }
+    this.validateSelectedExtension();
+    const title = this.getElementById("issue-title").value;
+    this.searchExtensionIssues(title);
+    this.updatePreviewButtonState();
+    this.renderBlocks();
+  }
+  validateSelectedExtension() {
+    const extensionValidationMessage = this.getElementById("extension-selection-validation-error");
+    const extensionValidationNoUrlsMessage = this.getElementById("extension-selection-validation-error-no-url");
+    hide(extensionValidationMessage);
+    hide(extensionValidationNoUrlsMessage);
+    const extension = this.issueReporterModel.getData().selectedExtension;
+    if (!extension) {
+      this.previewButton.enabled = true;
+      return;
+    }
+    if (this.loadingExtensionData) {
+      return;
+    }
+    const hasValidGitHubUrl = this.getExtensionGitHubUrl();
+    if (hasValidGitHubUrl) {
+      this.previewButton.enabled = true;
+    } else {
+      this.setExtensionValidationMessage();
+      this.previewButton.enabled = false;
+    }
+  }
+  setLoading(element) {
+    this.openReporter = true;
+    this.loadingExtensionData = true;
+    this.updatePreviewButtonState();
+    const extensionDataCaption = this.getElementById("extension-id");
+    hide(extensionDataCaption);
+    const extensionDataCaption2 = Array.from(this.window.document.querySelectorAll(".ext-parens"));
+    extensionDataCaption2.forEach((extensionDataCaption22) => hide(extensionDataCaption22));
+    const showLoading = this.getElementById("ext-loading");
+    show(showLoading);
+    while (showLoading.firstChild) {
+      showLoading.firstChild.remove();
+    }
+    showLoading.append(element);
+    this.renderBlocks();
+  }
+  removeLoading(element, fromReporter = false) {
+    this.openReporter = fromReporter;
+    this.loadingExtensionData = false;
+    this.updatePreviewButtonState();
+    const extensionDataCaption = this.getElementById("extension-id");
+    show(extensionDataCaption);
+    const extensionDataCaption2 = Array.from(this.window.document.querySelectorAll(".ext-parens"));
+    extensionDataCaption2.forEach((extensionDataCaption22) => show(extensionDataCaption22));
+    const hideLoading = this.getElementById("ext-loading");
+    hide(hideLoading);
+    if (hideLoading.firstChild) {
+      element.remove();
+    }
+    this.renderBlocks();
+  }
+  setExtensionValidationMessage() {
+    const extensionValidationMessage = this.getElementById("extension-selection-validation-error");
+    const extensionValidationNoUrlsMessage = this.getElementById("extension-selection-validation-error-no-url");
+    const bugsUrl = this.getExtensionBugsUrl();
+    if (bugsUrl) {
+      show(extensionValidationMessage);
+      const link = this.getElementById("extensionBugsLink");
+      link.textContent = bugsUrl;
+      return;
+    }
+    const extensionUrl = this.getExtensionRepositoryUrl();
+    if (extensionUrl) {
+      show(extensionValidationMessage);
+      const link = this.getElementById("extensionBugsLink");
+      link.textContent = extensionUrl;
+      return;
+    }
+    show(extensionValidationNoUrlsMessage);
+  }
+  updateProcessInfo(state) {
+    const target = this.window.document.querySelector(".block-process .block-info");
+    if (target) {
+      reset(target, $("code", void 0, state.processInfo ?? ""));
+    }
+  }
+  updateWorkspaceInfo(state) {
+    this.window.document.querySelector(".block-workspace .block-info code").textContent = "\n" + state.workspaceInfo;
+  }
+  updateExtensionTable(extensions, numThemeExtensions) {
+    const target = this.window.document.querySelector(".block-extensions .block-info");
+    if (target) {
+      if (this.disableExtensions) {
+        reset(target, localize("disabledExtensions", "Extensions are disabled"));
+        return;
+      }
+      const themeExclusionStr = numThemeExtensions ? `
+(${numThemeExtensions} theme extensions excluded)` : "";
+      extensions = extensions || [];
+      if (!extensions.length) {
+        target.innerText = "Extensions: none" + themeExclusionStr;
+        return;
+      }
+      reset(target, this.getExtensionTableHtml(extensions), document.createTextNode(themeExclusionStr));
+    }
+  }
+  getExtensionTableHtml(extensions) {
+    return $("table", void 0, $("tr", void 0, $("th", void 0, "Extension"), $("th", void 0, "Author (truncated)"), $("th", void 0, "Version")), ...extensions.map((extension) => $("tr", void 0, $("td", void 0, extension.name), $("td", void 0, extension.publisher?.substr(0, 3) ?? "N/A"), $("td", void 0, extension.version))));
+  }
+  openLink(event) {
+    event.preventDefault();
+    event.stopPropagation();
+    if (event.which < 3) {
+      windowOpenNoOpener(event.target.href);
+    }
+  }
+  getElementById(elementId) {
+    const element = this.window.document.getElementById(elementId);
+    if (element) {
+      return element;
+    } else {
+      return void 0;
+    }
+  }
+  addEventListener(elementId, eventType, handler) {
+    const element = this.getElementById(elementId);
+    element?.addEventListener(eventType, handler);
+  }
+};
+__decorate([
+  debounce(300)
+], BaseIssueReporterService.prototype, "searchGitHub", null);
+__decorate([
+  debounce(300)
+], BaseIssueReporterService.prototype, "searchDuplicates", null);
+BaseIssueReporterService = __decorate([
+  __param(6, IIssueFormService),
+  __param(7, IThemeService),
+  __param(8, IFileService),
+  __param(9, IFileDialogService)
+], BaseIssueReporterService);
+function hide(el) {
+  el?.classList.add("hidden");
+}
+__name(hide, "hide");
+function show(el) {
+  el?.classList.remove("hidden");
+}
+__name(show, "show");
+export {
+  BaseIssueReporterService,
+  hide,
+  show
+};
+//# sourceMappingURL=baseIssueReporterService.js.map

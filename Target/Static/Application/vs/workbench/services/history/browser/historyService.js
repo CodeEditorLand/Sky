@@ -1,4 +1,1617 @@
-import{localize as u}from"../../../../nls.js";import{URI as I}from"../../../../base/common/uri.js";import{$sK as m,SideBySideEditor as Q,$bK as D,$jK as h,$kK as P,EditorCloseContext as B,$$J as G}from"../../../common/editor.js";import{$oI as z}from"../../editor/common/editorService.js";import{$x4 as X}from"../common/history.js";import{$mk as y,$5j as W,$uk as Y,$lk as C}from"../../../../platform/files/common/files.js";import{$hl as Z}from"../../../../platform/workspace/common/workspace.js";import{$qd as w,$vd as O,$ud as p}from"../../../../base/common/lifecycle.js";import{$Ho as tt}from"../../../../platform/storage/common/storage.js";import{$df as q,Event as S}from"../../../../base/common/event.js";import{$El as it}from"../../../../platform/configuration/common/configuration.js";import{$kI as K}from"../../editor/common/editorGroupsService.js";import{$sP as st,$hP as et}from"../../search/common/search.js";import{$mj as F}from"../../../../platform/instantiation/common/instantiation.js";import{$8tb as rt}from"../../layout/browser/layoutService.js";import{$Vn as ot,$Un as d}from"../../../../platform/contextkey/common/contextkey.js";import{$7b as nt,$fc as ht}from"../../../../base/common/arrays.js";import{$WB as at}from"../../../../platform/instantiation/common/extensions.js";import{$J5 as R,$F6 as x,$H6 as U,$R5 as ct}from"../../../../base/browser/dom.js";import{$mv as ft}from"../../../../platform/workspaces/common/workspaces.js";import{Schemas as N}from"../../../../base/common/network.js";import{$kb as A}from"../../../../base/common/errors.js";import{$5I as ut}from"../../../common/resources.js";import{$3X as dt}from"../../path/common/pathService.js";import{$yo as lt}from"../../../../platform/uriIdentity/common/uriIdentity.js";import{$RK as bt}from"../../lifecycle/common/lifecycle.js";import{$3n as _,LogLevel as M}from"../../../../platform/log/common/log.js";import{$c5 as pt}from"../../../../base/browser/window.js";var $=function(a,t,i,s){var e=arguments.length,r=e<3?t:s===null?s=Object.getOwnPropertyDescriptor(t,i):s,o;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")r=Reflect.decorate(a,t,i,s);else for(var c=a.length-1;c>=0;c--)(o=a[c])&&(r=(e<3?o(r):e>3?o(t,i,r):o(t,i))||r);return e>3&&r&&Object.defineProperty(t,i,r),r},n=function(a,t){return function(i,s){t(i,s,a)}},f,j;let L=class extends O{static{f=this}static{this.a="workbench.editor.mouseBackForwardToNavigate"}static{this.b="workbench.editor.navigationScope"}constructor(t,i,s,e,r,o,c,b,l,J,V){super(),this.h=t,this.j=i,this.m=s,this.n=e,this.r=r,this.s=o,this.t=c,this.u=b,this.w=l,this.y=J,this.z=V,this.c=this.B(new p),this.f=void 0,this.ab=this.B(new q),this.onDidChangeEditorNavigationStack=this.ab.event,this.bb=void 0,this.cb=new Map,this.db=new Map,this.eb=0,this.qb=void 0,this.rb=0,this.sb=void 0,this.tb=0,this.ub=!1,this.vb=!1,this.Ab=[],this.Bb=!1,this.Hb=void 0,this.Ib=new Map,this.Jb=this.B(new ct(pt,()=>{const H=this.B(this.u.createInstance(ut,g=>st(g?this.r.getValue({resource:g}):this.r.getValue())||Object.create(null),g=>g.affectsConfiguration(Y)||g.affectsConfiguration(et)));return this.B(H.onExpressionChange(()=>this.Ob())),H})),this.g=this.u.createInstance(k),this.Q=new d("canNavigateBack",!1,u(14246,null)).bindTo(this.y),this.R=new d("canNavigateForward",!1,u(14247,null)).bindTo(this.y),this.S=new d("canNavigateBackInNavigationLocations",!1,u(14248,null)).bindTo(this.y),this.U=new d("canNavigateForwardInNavigationLocations",!1,u(14249,null)).bindTo(this.y),this.W=new d("canNavigateToLastNavigationLocation",!1,u(14250,null)).bindTo(this.y),this.X=new d("canNavigateBackInEditLocations",!1,u(14251,null)).bindTo(this.y),this.Y=new d("canNavigateForwardInEditLocations",!1,u(14252,null)).bindTo(this.y),this.Z=new d("canNavigateToLastEditLocation",!1,u(14253,null)).bindTo(this.y),this.$=new d("canReopenClosedEditor",!1,u(14254,null)).bindTo(this.y),this.C(),this.h.activeEditorPane&&this.I()}C(){this.F(),this.B(this.h.onDidActiveEditorChange(()=>this.I())),this.B(this.h.onDidOpenEditorFail(t=>this.O(t.editor))),this.B(this.h.onDidCloseEditor(t=>this.D(t))),this.B(this.h.onDidMostRecentlyActiveEditorsChange(()=>this.yb())),this.B(this.j.onDidRemoveGroup(t=>this.H(t))),this.B(this.s.onDidFilesChange(t=>this.J(t))),this.B(this.s.onDidRunOperation(t=>this.J(t))),this.B(this.n.onWillSaveState(()=>this.Ub())),this.fb(),this.B(this.onDidChangeEditorNavigationStack(()=>this.updateContextKeys())),this.B(this.j.onDidChangeActiveGroup(()=>this.updateContextKeys()))}D(t){this.jb(t),this.Cb(t)}F(){const t=this.B(new p),i=()=>{t.clear(),this.r.getValue(f.a)&&this.B(S.runAndSubscribe(this.w.onDidAddContainer,({container:s,disposables:e})=>{const r=e.add(new p);r.add(R(s,x.MOUSE_DOWN,o=>this.G(o,!0))),r.add(R(s,x.MOUSE_UP,o=>this.G(o,!1))),t.add(r)},{container:this.w.mainContainer,disposables:this.q}))};this.B(this.r.onDidChangeConfiguration(s=>{s.affectsConfiguration(f.a)&&i()})),i()}G(t,i){switch(t.button){case 3:U.stop(t),i&&this.goBack();break;case 4:U.stop(t),i&&this.goForward();break}}H(t){this.kb(t)}I(){const t=this.j.activeGroup,i=t.activeEditorPane;if(!(this.f&&this.g.matchesEditorIdentifier(this.f,i))){if(this.f=i?.input?{editor:i.input,groupId:i.group.id}:void 0,this.c.clear(),!i?.group.isTransient(i.input))this.L(t,i);else{this.z.trace(`[History]: ignoring transient editor change until becoming non-transient (editor: ${i.input?.resource?.toString()}})`);const s=t.onDidModelChange(e=>{e.kind===12&&e.editor===i.input&&!i.group.isTransient(i.input)&&(s.dispose(),this.L(t,i))});this.c.add(s)}G(i)&&this.c.add(i.onDidChangeSelection(s=>{i.group.isTransient(i.input)?this.z.trace(`[History]: ignoring transient editor selection change (editor: ${i.input?.resource?.toString()}})`):this.M(t,i,s)})),this.updateContextKeys()}}J(t){t instanceof y?t.gotDeleted()&&this.O(t):t.isOperation(1)?this.O(t):t.isOperation(2)&&t.target.isFile&&this.N(t)}L(t,i){this.Kb(i),this.hb(t,i)}M(t,i,s){this.ib(t,i,s)}N(t){this.Pb(t),this.nb(t)}O(t){this.removeFromHistory(t),this.mb(t),this.Eb(t),this.P(t)}P(t){let i;h(t)?i=m.getOriginalUri(t):t instanceof y||(i=t.resource),i&&this.t.removeRecentlyOpened([i])}clear(){this.clearRecentlyOpened(),this.lb(),this.Ab=[],this.updateContextKeys()}updateContextKeys(){this.y.bufferChangeEvents(()=>{const t=this.gb();this.Q.set(t.canGoBack(0)),this.R.set(t.canGoForward(0)),this.S.set(t.canGoBack(2)),this.U.set(t.canGoForward(2)),this.W.set(t.canGoLast(2)),this.X.set(t.canGoBack(1)),this.Y.set(t.canGoForward(1)),this.Z.set(t.canGoLast(1)),this.$.set(this.Ab.length>0)})}fb(){const t=()=>{this.pb();const i=this.r.getValue(f.b);i==="editorGroup"?this.eb=1:i==="editor"?this.eb=2:this.eb=0};this.B(this.r.onDidChangeConfiguration(i=>{i.affectsConfiguration(f.b)&&t()})),t()}gb(t=this.j.activeGroup,i=t.activeEditor){switch(this.eb){case 2:{if(!i)return new gt;let s=this.db.get(t.id);s||(s=new Map,this.db.set(t.id,s));let e=s.get(i)?.stack;if(!e){const r=new p;e=r.add(this.u.createInstance(v,2)),r.add(e.onDidChange(()=>this.ab.fire())),s.set(i,{stack:e,disposable:r})}return e}case 1:{let s=this.cb.get(t.id)?.stack;if(!s){const e=new p;s=e.add(this.u.createInstance(v,1)),e.add(s.onDidChange(()=>this.ab.fire())),this.cb.set(t.id,{stack:s,disposable:e})}return s}case 0:return this.bb||(this.bb=this.B(this.u.createInstance(v,0)),this.B(this.bb.onDidChange(()=>this.ab.fire()))),this.bb}}goForward(t){return this.gb().goForward(t)}goBack(t){return this.gb().goBack(t)}goPrevious(t){return this.gb().goPrevious(t)}goLast(t){return this.gb().goLast(t)}hb(t,i){this.gb(t,i?.input).handleActiveEditorChange(i)}ib(t,i,s){this.gb(t,i.input).handleActiveEditorSelectionChange(i,s)}jb(t){const i=this.db.get(t.groupId);if(i){const s=i.get(t.editor);s&&(s.disposable.dispose(),i.delete(t.editor)),i.size===0&&this.db.delete(t.groupId)}}kb(t){this.bb?.remove(t.id);const i=this.cb.get(t.id);i&&(i.disposable.dispose(),this.cb.delete(t.id))}lb(){this.ob(t=>t.clear())}mb(t){this.ob(i=>i.remove(t))}nb(t){this.ob(i=>i.move(t))}ob(t){this.bb&&t(this.bb);for(const[,i]of this.cb)t(i.stack);for(const[,i]of this.db)for(const[,s]of i)t(s.stack)}pb(){this.bb?.dispose(),this.bb=void 0;for(const[,t]of this.cb)t.disposable.dispose();this.cb.clear();for(const[,t]of this.db)for(const[,i]of t)i.disposable.dispose();this.db.clear()}openNextRecentlyUsedEditor(t){const[i,s]=this.xb(e=>e-1,t);return this.wb(i[s],t)}openPreviouslyUsedEditor(t){const[i,s]=this.xb(e=>e+1,t);return this.wb(i[s],t)}async wb(t,i){if(t){const s=typeof i!="number"||!this.j.getGroup(i);s?this.ub=!0:this.vb=!0;const e=this.j.getGroup(t.groupId)??this.j.activeGroup;try{await e.openEditor(t.editor)}finally{s?this.ub=!1:this.vb=!1}}}xb(t,i){let s,e;const r=typeof i=="number"?this.j.getGroup(i):void 0;r?(s=this.sb||r.getEditors(0).map(c=>({groupId:r.id,editor:c})),e=this.tb):(s=this.qb||this.h.getEditors(0),e=this.rb);let o=t(e);return o<0?o=0:o>s.length-1&&(o=s.length-1),r?(this.sb=s,this.tb=o):(this.qb=s,this.rb=o),[s,o]}yb(){this.ub||(this.qb=void 0,this.rb=0),this.vb||(this.sb=void 0,this.tb=0)}static{this.zb=20}Cb(t){if(this.Bb)return;const{editor:i,context:s}=t;if(s===B.REPLACE||s===B.MOVE)return;const e=i.toUntyped();if(!e)return;const r=[],o=m.getOriginalUri(i,{supportSideBySide:Q.BOTH});I.isUri(o)?r.push(o):o&&r.push(...nt([o.primary,o.secondary])),this.Eb(i),this.Ab.push({editorId:i.editorId,editor:e,resource:m.getOriginalUri(i),associatedResources:r,index:t.index,sticky:t.sticky}),this.Ab.length>f.zb&&this.Ab.shift(),this.$.set(!0)}async reopenLastClosedEditor(){const t=this.Ab.pop();let i;return t&&(i=this.Db(t)),this.$.set(this.Ab.length>0),i}async Db(t){const i={pinned:!0,sticky:t.sticky,index:t.index,ignoreError:!0};(t.sticky&&!this.j.activeGroup.isSticky(t.index)||!t.sticky&&this.j.activeGroup.isSticky(t.index))&&(i.index=void 0);let s;if(!this.j.activeGroup.contains(t.editor)){this.Bb=!0;try{s=await this.h.openEditor({...t.editor,options:{...t.editor.options,...i}})}finally{this.Bb=!1}}s||(ht(this.Ab,t),this.reopenLastClosedEditor())}Eb(t){this.Ab=this.Ab.filter(i=>h(t)&&i.editorId!==t.editorId?!0:!(i.resource&&this.g.matchesFile(i.resource,t)||i.associatedResources.some(s=>this.g.matchesFile(s,t)))),this.$.set(this.Ab.length>0)}static{this.Fb=200}static{this.Gb="history.entries"}Kb(t){const i=t?.input;!i||i.isDisposed()||!this.Nb(i)||(this.removeFromHistory(i),this.Lb(i))}Lb(t,i=!0){this.Rb(this.Hb);const s=this.g.preferResourceEditorInput(t);s&&(i?this.Hb.unshift(s):this.Hb.push(s),this.Hb.length>f.Fb&&this.g.clearOnEditorDispose(this.Hb.pop(),this.Ib),h(t)&&this.g.onEditorDispose(t,()=>this.Mb(s),this.Ib))}Mb(t){if(h(t))if(!P(t))this.removeFromHistory(t);else{const i=[],s=t.primary.matches(t.secondary)?[t.primary]:[t.primary,t.secondary];for(const e of s){const r=this.g.preferResourceEditorInput(e);D(r)&&this.Nb(r)&&i.push(r)}this.Qb(t,...i)}else this.Nb(t)||this.removeFromHistory(t)}Nb(t){return h(t)?!0:!this.Jb.value.matches(t.resource)}Ob(){this.Rb(this.Hb),this.Hb=this.Hb.filter(t=>{const i=this.Nb(t);return i||this.g.clearOnEditorDispose(t,this.Ib),i})}Pb(t){t.isOperation(2)&&this.removeFromHistory(t)&&this.Lb({resource:t.target.resource})}removeFromHistory(t){let i=!1;return this.Rb(this.Hb),this.Hb=this.Hb.filter(s=>{const e=this.g.matchesEditor(t,s);return e&&(this.g.clearOnEditorDispose(t,this.Ib),i=!0),!e}),i}Qb(t,...i){this.Rb(this.Hb);let s=!1;const e=[];for(const r of this.Hb)this.g.matchesEditor(t,r)?(this.g.clearOnEditorDispose(t,this.Ib),s||(e.push(...i),s=!0)):i.some(o=>this.g.matchesEditor(o,r))||e.push(r);s||e.push(...i),this.Hb=e}clearRecentlyOpened(){this.Hb=[];for(const[,t]of this.Ib)w(t);this.Ib.clear()}getHistory(){return this.Rb(this.Hb),this.Hb}Rb(t){this.Hb||(this.Hb=[],this.j.isReady?this.Sb():(async()=>(await this.j.whenReady,this.Sb()))())}Sb(){this.Hb=[];const t=this.Tb(),i=[...this.h.getEditors(0)].reverse(),s=new Set;for(const{editor:e}of i)if(this.Nb(e)){if(e.resource){const r=`${e.resource.toString()}/${e.editorId}`;if(s.has(r))continue;s.add(r)}this.Lb(e)}for(const e of t){const r=`${e.resource.toString()}/${e.options?.override}`;!s.has(r)&&this.Nb(e)&&(s.add(r),this.Lb(e,!1))}}Tb(){const t=[],i=this.n.get(f.Gb,1);if(i)try{const s=JSON.parse(i);for(const e of s)if(!(!e.editor||!e.editor.resource))try{t.push({...e.editor,resource:typeof e.editor.resource=="string"?I.parse(e.editor.resource):I.from(e.editor.resource)})}catch(r){A(r)}}catch(s){A(s)}return t}Ub(){if(!this.Hb)return;const t=[];for(const i of this.Hb)h(i)||!D(i)||t.push({editor:{...i,resource:i.resource.toString()}});this.n.store(f.Gb,JSON.stringify(t),1,1)}getLastActiveWorkspaceRoot(t,i){const s=this.m.getWorkspace().folders;if(s.length!==0){if(s.length===1){const e=s[0].uri;return(!t||e.scheme===t)&&(!i||e.authority===i)?e:void 0}for(const e of this.getHistory()){if(h(e)||t&&e.resource.scheme!==t||i&&e.resource.authority!==i)continue;const r=this.m.getWorkspaceFolder(e.resource);if(r)return r.uri}for(const e of s){const r=e.uri;if((!t||r.scheme===t)&&(!i||r.authority===i))return r}}}getLastActiveFile(t,i){for(const s of this.getHistory()){let e;if(h(s)?e=m.getOriginalUri(s,{filterByScheme:t}):e=s.resource,e&&e.scheme===t&&(!i||e.authority===i))return e}}dispose(){super.dispose();for(const[,t]of this.cb)t.disposable.dispose();for(const[,t]of this.db)for(const[,i]of t)i.disposable.dispose();for(const[,t]of this.Ib)t.dispose()}};L=f=$([n(0,z),n(1,K),n(2,Z),n(3,tt),n(4,it),n(5,W),n(6,ft),n(7,F),n(8,rt),n(9,ot),n(10,_)],L);at(X,L,0);class T{constructor(t,i,s){this.a=t,this.selection=i,this.b=s}justifiesNewNavigationEntry(t){if(this.a.groupId!==t.a.groupId||!this.a.editor.matches(t.a.editor)||!this.selection||!t.selection)return!0;const i=this.selection.compare(t.selection);return i===2&&(t.b===4||t.b===5)?!0:i===3}}let v=class extends O{constructor(t,i){super(),this.g=t,this.h=i,this.a=this.B(this.h.createInstance(E,0,this.g)),this.b=this.B(this.h.createInstance(E,1,this.g)),this.c=this.B(this.h.createInstance(E,2,this.g)),this.f=[this.a,this.b,this.c],this.onDidChange=S.any(this.a.onDidChange,this.b.onDidChange,this.c.onDidChange)}canGoForward(t){return this.j(t).canGoForward()}goForward(t){return this.j(t).goForward()}canGoBack(t){return this.j(t).canGoBack()}goBack(t){return this.j(t).goBack()}goPrevious(t){return this.j(t).goPrevious()}canGoLast(t){return this.j(t).canGoLast()}goLast(t){return this.j(t).goLast()}j(t=0){switch(t){case 0:return this.a;case 1:return this.b;case 2:return this.c}}handleActiveEditorChange(t){this.a.notifyNavigation(t)}handleActiveEditorSelectionChange(t,i){const s=this.a.s;this.a.notifyNavigation(t,i),i.reason===3?this.b.notifyNavigation(t,i):(i.reason===4||i.reason===5)&&!this.a.isNavigating()&&(i.reason===5&&!this.c.isNavigating()&&s&&this.c.addOrReplace(s.groupId,s.editor,s.selection),this.c.notifyNavigation(t,i))}clear(){for(const t of this.f)t.clear()}remove(t){for(const i of this.f)i.remove(t)}move(t){for(const i of this.f)i.move(t)}};v=$([n(1,F)],v);class gt{constructor(){this.onDidChange=S.None}canGoForward(){return!1}async goForward(){}canGoBack(){return!1}async goBack(){}async goPrevious(){}canGoLast(){return!1}async goLast(){}handleActiveEditorChange(){}handleActiveEditorSelectionChange(){}clear(){}remove(){}move(){}dispose(){}}let E=class extends O{static{j=this}static{this.a=50}get s(){return this.h[this.j]}set s(t){t&&(this.h[this.j]=t)}constructor(t,i,s,e,r,o){super(),this.t=t,this.u=i,this.w=e,this.y=r,this.z=o,this.b=this.B(new q),this.onDidChange=this.b.event,this.c=new Map,this.f=new Map,this.h=[],this.j=-1,this.m=-1,this.n=!1,this.r=void 0,this.g=s.createInstance(k),this.C()}C(){this.B(this.onDidChange(()=>this.D())),this.B(this.z.onDidChangeLogLevel(()=>this.D()))}D(){if(this.z.getLevel()!==M.Trace)return;const t=[];for(const i of this.h)typeof i.selection?.log=="function"?t.push(`- group: ${i.groupId}, editor: ${i.editor.resource?.toString()}, selection: ${i.selection.log()}`):t.push(`- group: ${i.groupId}, editor: ${i.editor.resource?.toString()}, selection: <none>`);t.length===0?this.F(`index: ${this.j}, navigating: ${this.isNavigating()}: <empty>`):this.F(`index: ${this.j}, navigating: ${this.isNavigating()}
-${t.join(`
-`)}
-			`)}F(t,i=null,s){if(this.z.getLevel()!==M.Trace)return;let e;switch(this.t){case 0:e="global";break;case 1:e="edits";break;case 2:e="navigation";break}let r;switch(this.u){case 0:r="default";break;case 1:r="editorGroup";break;case 2:r="editor";break}i!==null?this.z.trace(`[History stack ${e}-${r}]: ${t} (editor: ${i?.resource?.toString()}, event: ${this.G(s)})`):this.z.trace(`[History stack ${e}-${r}]: ${t}`)}G(t){if(!t)return"<none>";switch(t.reason){case 3:return"edit";case 4:return"navigation";case 5:return"jump";case 1:return"programmatic";case 2:return"user"}}H(t){if(!this.f.has(t)){const i=this.y.getGroup(t);i&&this.f.set(t,i.onWillMoveEditor(s=>this.I(s)))}}I(t){if(this.F("onWillMoveEditor()",t.editor),this.u!==1)for(const i of this.h)i.groupId===t.groupId&&this.g.matchesEditor(t.editor,i.editor)&&(i.groupId=t.target)}notifyNavigation(t,i){this.F("notifyNavigation()",t?.input,i);const s=G(t),e=t?.input&&!t.input.isDisposed();this.n?(this.F("notifyNavigation() ignoring (navigating)",t?.input,i),s&&e?(this.F("notifyNavigation() updating current selection state",t?.input,i),this.r=new T({groupId:t.group.id,editor:t.input},t.getSelection(),i?.reason)):(this.F("notifyNavigation() dropping current selection state",t?.input,i),this.r=void 0)):(this.F("notifyNavigation() not ignoring",t?.input,i),s&&e?this.J(t.group.id,t.input,t.getSelection(),i):(this.r=void 0,e&&this.L(t.group.id,t.input)))}J(t,i,s,e){if(this.s?.groupId===t&&!s&&this.g.matchesEditor(this.s.editor,i))return;this.F("onSelectionAwareEditorNavigation()",i,e);const r=new T({groupId:t,editor:i},s,e?.reason);!this.r||this.r.justifiesNewNavigationEntry(r)?this.M(t,i,r.selection):this.N(t,i,r.selection),this.r=r}L(t,i){this.s?.groupId===t&&this.g.matchesEditor(this.s.editor,i)||(this.F("onNonSelectionAwareEditorNavigation()",i),this.M(t,i))}M(t,i,s){this.n||this.addOrReplace(t,i,s)}N(t,i,s){this.n||this.addOrReplace(t,i,s,!0)}addOrReplace(t,i,s,e){this.H(t);let r=!1;this.s&&(e||this.O(this.s,{groupId:t,editor:i,selection:s}))&&(r=!0);const o=this.g.preferResourceEditorInput(i);if(!o)return;r?this.F("replace()",o):this.F("add()",o);const c={groupId:t,editor:o,selection:s},b=[];if(r)this.s&&b.push(this.s),this.s=c;else{if(this.h.length>this.j+1){for(let l=this.j+1;l<this.h.length;l++)b.push(this.h[l]);this.h=this.h.slice(0,this.j+1)}this.h.splice(this.j+1,0,c),this.h.length>j.a?(b.push(this.h.shift()),this.m>=0&&this.m--):this.S(this.j+1,!0)}for(const l of b)this.g.clearOnEditorDispose(l.editor,this.c);h(o)&&this.g.onEditorDispose(o,()=>this.remove(o),this.c),this.b.fire()}O(t,i){return t.groupId!==i.groupId||!this.g.matchesEditor(t.editor,i.editor)?!1:t.selection?i.selection?t.selection.compare(i.selection)===1:!1:!0}move(t){if(t.isOperation(2))for(const i of this.h)this.g.matchesEditor(t,i.editor)&&(i.editor={resource:t.target.resource})}remove(t){const i=this.h.length;this.h=this.h.filter(s=>{const e=typeof t=="number"?s.groupId===t:this.g.matchesEditor(t,s.editor);return e&&this.g.clearOnEditorDispose(s.editor,this.c),!e}),i!==this.h.length&&(this.P(),this.j=this.h.length-1,this.m=-1,typeof t=="number"&&(this.f.get(t)?.dispose(),this.f.delete(t)),this.b.fire())}P(){const t=[];let i;for(const s of this.h)i&&this.O(s,i)||(i=s,t.push(s));this.h=t}clear(){this.j=-1,this.m=-1,this.h.splice(0);for(const[,t]of this.c)w(t);this.c.clear();for(const[,t]of this.f)w(t);this.f.clear()}dispose(){super.dispose(),this.clear()}canGoForward(){return this.h.length>this.j+1}async goForward(){if(!await this.Q()&&this.canGoForward())return this.S(this.j+1),this.U()}canGoBack(){return this.j>0}async goBack(){if(!await this.Q()&&this.canGoBack())return this.S(this.j-1),this.U()}async goPrevious(){if(!await this.Q())return this.m===-1?this.goBack():(this.S(this.m),this.U())}canGoLast(){return this.h.length>0}async goLast(){if(this.canGoLast())return this.S(this.h.length-1),this.U()}async Q(){return this.t===0||this.R()?!1:(await this.U(),!0)}R(){if(!this.s?.selection)return!1;const t=this.w.activeEditorPane;if(!G(t)||t.group.id!==this.s.groupId||!t.input||!this.g.matchesEditor(t.input,this.s.editor))return!1;const i=t.getSelection();return i?i.compare(this.s.selection)===1:!1}S(t,i){this.m=this.j,this.j=t,i||this.b.fire()}async U(){this.n=!0;try{this.s&&await this.W(this.s)}finally{this.n=!1}}W(t){let i=Object.create(null);return t.selection&&(i=t.selection.restore(i)),h(t.editor)?this.w.openEditor(t.editor,i,t.groupId):this.w.openEditor({...t.editor,options:{...t.editor.options,...i}},t.groupId)}isNavigating(){return this.n}};E=j=$([n(2,F),n(3,z),n(4,K),n(5,_)],E);let k=class{constructor(t,i,s,e){this.a=t,this.b=i,this.c=s,this.d=e}preferResourceEditorInput(t){const i=m.getOriginalUri(t);if(i?.scheme===N.file||i?.scheme===N.vscodeRemote||i?.scheme===N.vscodeUserData||i?.scheme===this.d.defaultUriScheme){if(h(t)){const e=t.toUntyped();if(D(e))return e}return t}else return h(t)?t:void 0}matchesEditor(t,i){return t instanceof y||t instanceof C?h(i)?!1:t instanceof y?t.contains(i.resource,2):this.matchesFile(i.resource,t):h(t)?h(i)?t.matches(i):this.matchesFile(i.resource,t):h(i)?this.matchesFile(t.resource,i):t&&i&&this.a.extUri.isEqual(t.resource,i.resource)}matchesFile(t,i){if(i instanceof y)return i.contains(t,2);if(i instanceof C)return this.a.extUri.isEqualOrParent(t,i.resource);if(h(i)){const s=i.resource;return!s||this.b.phase>=3&&!this.c.hasProvider(s)?!1:this.a.extUri.isEqual(s,t)}return this.a.extUri.isEqual(i?.resource,t)}matchesEditorIdentifier(t,i){return!i?.group||t.groupId!==i.group.id?!1:i.input?t.editor.matches(i.input):!1}onEditorDispose(t,i,s){const e=S.once(t.onWillDispose)(()=>i());let r=s.get(t);r||(r=new p,s.set(t,r)),r.add(e)}clearOnEditorDispose(t,i){if(!h(t))return;const s=i.get(t);s&&(w(s),i.delete(t))}};k=$([n(0,lt),n(1,bt),n(2,W),n(3,dt)],k);export{L as $p5b,E as $q5b};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { localize } from "../../../../nls.js";
+import { URI } from "../../../../base/common/uri.js";
+import { EditorResourceAccessor, SideBySideEditor, isResourceEditorInput, isEditorInput, isSideBySideEditorInput, EditorCloseContext, isEditorPaneWithSelection } from "../../../common/editor.js";
+import { IEditorService } from "../../editor/common/editorService.js";
+import { IHistoryService } from "../common/history.js";
+import { FileChangesEvent, IFileService, FILES_EXCLUDE_CONFIG, FileOperationEvent } from "../../../../platform/files/common/files.js";
+import { IWorkspaceContextService } from "../../../../platform/workspace/common/workspace.js";
+import { dispose, Disposable, DisposableStore } from "../../../../base/common/lifecycle.js";
+import { IStorageService } from "../../../../platform/storage/common/storage.js";
+import { Emitter, Event } from "../../../../base/common/event.js";
+import { IConfigurationService } from "../../../../platform/configuration/common/configuration.js";
+import { IEditorGroupsService } from "../../editor/common/editorGroupsService.js";
+import { getExcludes, SEARCH_EXCLUDE_CONFIG } from "../../search/common/search.js";
+import { IInstantiationService } from "../../../../platform/instantiation/common/instantiation.js";
+import { IWorkbenchLayoutService } from "../../layout/browser/layoutService.js";
+import { IContextKeyService, RawContextKey } from "../../../../platform/contextkey/common/contextkey.js";
+import { coalesce, remove } from "../../../../base/common/arrays.js";
+import { registerSingleton } from "../../../../platform/instantiation/common/extensions.js";
+import { addDisposableListener, EventType, EventHelper, WindowIdleValue } from "../../../../base/browser/dom.js";
+import { IWorkspacesService } from "../../../../platform/workspaces/common/workspaces.js";
+import { Schemas } from "../../../../base/common/network.js";
+import { onUnexpectedError } from "../../../../base/common/errors.js";
+import { ResourceGlobMatcher } from "../../../common/resources.js";
+import { IPathService } from "../../path/common/pathService.js";
+import { IUriIdentityService } from "../../../../platform/uriIdentity/common/uriIdentity.js";
+import { ILifecycleService } from "../../lifecycle/common/lifecycle.js";
+import { ILogService, LogLevel } from "../../../../platform/log/common/log.js";
+import { mainWindow } from "../../../../base/browser/window.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+var HistoryService_1;
+var EditorNavigationStack_1;
+let HistoryService = class HistoryService2 extends Disposable {
+  static {
+    __name(this, "HistoryService");
+  }
+  static {
+    HistoryService_1 = this;
+  }
+  static {
+    this.MOUSE_NAVIGATION_SETTING = "workbench.editor.mouseBackForwardToNavigate";
+  }
+  static {
+    this.NAVIGATION_SCOPE_SETTING = "workbench.editor.navigationScope";
+  }
+  constructor(editorService, editorGroupService, contextService, storageService, configurationService, fileService, workspacesService, instantiationService, layoutService, contextKeyService, logService) {
+    super();
+    this.editorService = editorService;
+    this.editorGroupService = editorGroupService;
+    this.contextService = contextService;
+    this.storageService = storageService;
+    this.configurationService = configurationService;
+    this.fileService = fileService;
+    this.workspacesService = workspacesService;
+    this.instantiationService = instantiationService;
+    this.layoutService = layoutService;
+    this.contextKeyService = contextKeyService;
+    this.logService = logService;
+    this.activeEditorListeners = this._register(new DisposableStore());
+    this.lastActiveEditor = void 0;
+    this._onDidChangeEditorNavigationStack = this._register(new Emitter());
+    this.onDidChangeEditorNavigationStack = this._onDidChangeEditorNavigationStack.event;
+    this.defaultScopedEditorNavigationStack = void 0;
+    this.editorGroupScopedNavigationStacks = /* @__PURE__ */ new Map();
+    this.editorScopedNavigationStacks = /* @__PURE__ */ new Map();
+    this.editorNavigationScope = 0;
+    this.recentlyUsedEditorsStack = void 0;
+    this.recentlyUsedEditorsStackIndex = 0;
+    this.recentlyUsedEditorsInGroupStack = void 0;
+    this.recentlyUsedEditorsInGroupStackIndex = 0;
+    this.navigatingInRecentlyUsedEditorsStack = false;
+    this.navigatingInRecentlyUsedEditorsInGroupStack = false;
+    this.recentlyClosedEditors = [];
+    this.ignoreEditorCloseEvent = false;
+    this.history = void 0;
+    this.editorHistoryListeners = /* @__PURE__ */ new Map();
+    this.resourceExcludeMatcher = this._register(new WindowIdleValue(mainWindow, () => {
+      const matcher = this._register(this.instantiationService.createInstance(ResourceGlobMatcher, (root) => getExcludes(root ? this.configurationService.getValue({ resource: root }) : this.configurationService.getValue()) || /* @__PURE__ */ Object.create(null), (event) => event.affectsConfiguration(FILES_EXCLUDE_CONFIG) || event.affectsConfiguration(SEARCH_EXCLUDE_CONFIG)));
+      this._register(matcher.onExpressionChange(() => this.removeExcludedFromHistory()));
+      return matcher;
+    }));
+    this.editorHelper = this.instantiationService.createInstance(EditorHelper);
+    this.canNavigateBackContextKey = new RawContextKey("canNavigateBack", false, localize("canNavigateBack", "Whether it is possible to navigate back in editor history")).bindTo(this.contextKeyService);
+    this.canNavigateForwardContextKey = new RawContextKey("canNavigateForward", false, localize("canNavigateForward", "Whether it is possible to navigate forward in editor history")).bindTo(this.contextKeyService);
+    this.canNavigateBackInNavigationsContextKey = new RawContextKey("canNavigateBackInNavigationLocations", false, localize("canNavigateBackInNavigationLocations", "Whether it is possible to navigate back in editor navigation locations history")).bindTo(this.contextKeyService);
+    this.canNavigateForwardInNavigationsContextKey = new RawContextKey("canNavigateForwardInNavigationLocations", false, localize("canNavigateForwardInNavigationLocations", "Whether it is possible to navigate forward in editor navigation locations history")).bindTo(this.contextKeyService);
+    this.canNavigateToLastNavigationLocationContextKey = new RawContextKey("canNavigateToLastNavigationLocation", false, localize("canNavigateToLastNavigationLocation", "Whether it is possible to navigate to the last editor navigation location")).bindTo(this.contextKeyService);
+    this.canNavigateBackInEditsContextKey = new RawContextKey("canNavigateBackInEditLocations", false, localize("canNavigateBackInEditLocations", "Whether it is possible to navigate back in editor edit locations history")).bindTo(this.contextKeyService);
+    this.canNavigateForwardInEditsContextKey = new RawContextKey("canNavigateForwardInEditLocations", false, localize("canNavigateForwardInEditLocations", "Whether it is possible to navigate forward in editor edit locations history")).bindTo(this.contextKeyService);
+    this.canNavigateToLastEditLocationContextKey = new RawContextKey("canNavigateToLastEditLocation", false, localize("canNavigateToLastEditLocation", "Whether it is possible to navigate to the last editor edit location")).bindTo(this.contextKeyService);
+    this.canReopenClosedEditorContextKey = new RawContextKey("canReopenClosedEditor", false, localize("canReopenClosedEditor", "Whether it is possible to reopen the last closed editor")).bindTo(this.contextKeyService);
+    this.registerListeners();
+    if (this.editorService.activeEditorPane) {
+      this.onDidActiveEditorChange();
+    }
+  }
+  registerListeners() {
+    this.registerMouseNavigationListener();
+    this._register(this.editorService.onDidActiveEditorChange(() => this.onDidActiveEditorChange()));
+    this._register(this.editorService.onDidOpenEditorFail((event) => this.remove(event.editor)));
+    this._register(this.editorService.onDidCloseEditor((event) => this.onDidCloseEditor(event)));
+    this._register(this.editorService.onDidMostRecentlyActiveEditorsChange(() => this.handleEditorEventInRecentEditorsStack()));
+    this._register(this.editorGroupService.onDidRemoveGroup((e) => this.onDidRemoveGroup(e)));
+    this._register(this.fileService.onDidFilesChange((event) => this.onDidFilesChange(event)));
+    this._register(this.fileService.onDidRunOperation((event) => this.onDidFilesChange(event)));
+    this._register(this.storageService.onWillSaveState(() => this.saveState()));
+    this.registerEditorNavigationScopeChangeListener();
+    this._register(this.onDidChangeEditorNavigationStack(() => this.updateContextKeys()));
+    this._register(this.editorGroupService.onDidChangeActiveGroup(() => this.updateContextKeys()));
+  }
+  onDidCloseEditor(e) {
+    this.handleEditorCloseEventInHistory(e);
+    this.handleEditorCloseEventInReopen(e);
+  }
+  registerMouseNavigationListener() {
+    const mouseBackForwardSupportListener = this._register(new DisposableStore());
+    const handleMouseBackForwardSupport = /* @__PURE__ */ __name(() => {
+      mouseBackForwardSupportListener.clear();
+      if (this.configurationService.getValue(HistoryService_1.MOUSE_NAVIGATION_SETTING)) {
+        this._register(Event.runAndSubscribe(this.layoutService.onDidAddContainer, ({ container, disposables }) => {
+          const eventDisposables = disposables.add(new DisposableStore());
+          eventDisposables.add(addDisposableListener(container, EventType.MOUSE_DOWN, (e) => this.onMouseDownOrUp(e, true)));
+          eventDisposables.add(addDisposableListener(container, EventType.MOUSE_UP, (e) => this.onMouseDownOrUp(e, false)));
+          mouseBackForwardSupportListener.add(eventDisposables);
+        }, { container: this.layoutService.mainContainer, disposables: this._store }));
+      }
+    }, "handleMouseBackForwardSupport");
+    this._register(this.configurationService.onDidChangeConfiguration((event) => {
+      if (event.affectsConfiguration(HistoryService_1.MOUSE_NAVIGATION_SETTING)) {
+        handleMouseBackForwardSupport();
+      }
+    }));
+    handleMouseBackForwardSupport();
+  }
+  onMouseDownOrUp(event, isMouseDown) {
+    switch (event.button) {
+      case 3:
+        EventHelper.stop(event);
+        if (isMouseDown) {
+          this.goBack();
+        }
+        break;
+      case 4:
+        EventHelper.stop(event);
+        if (isMouseDown) {
+          this.goForward();
+        }
+        break;
+    }
+  }
+  onDidRemoveGroup(group) {
+    this.handleEditorGroupRemoveInNavigationStacks(group);
+  }
+  onDidActiveEditorChange() {
+    const activeEditorGroup = this.editorGroupService.activeGroup;
+    const activeEditorPane = activeEditorGroup.activeEditorPane;
+    if (this.lastActiveEditor && this.editorHelper.matchesEditorIdentifier(this.lastActiveEditor, activeEditorPane)) {
+      return;
+    }
+    this.lastActiveEditor = activeEditorPane?.input ? { editor: activeEditorPane.input, groupId: activeEditorPane.group.id } : void 0;
+    this.activeEditorListeners.clear();
+    if (!activeEditorPane?.group.isTransient(activeEditorPane.input)) {
+      this.handleActiveEditorChange(activeEditorGroup, activeEditorPane);
+    } else {
+      this.logService.trace(`[History]: ignoring transient editor change until becoming non-transient (editor: ${activeEditorPane.input?.resource?.toString()}})`);
+      const transientListener = activeEditorGroup.onDidModelChange((e) => {
+        if (e.kind === 12 && e.editor === activeEditorPane.input && !activeEditorPane.group.isTransient(activeEditorPane.input)) {
+          transientListener.dispose();
+          this.handleActiveEditorChange(activeEditorGroup, activeEditorPane);
+        }
+      });
+      this.activeEditorListeners.add(transientListener);
+    }
+    if (isEditorPaneWithSelection(activeEditorPane)) {
+      this.activeEditorListeners.add(activeEditorPane.onDidChangeSelection((e) => {
+        if (!activeEditorPane.group.isTransient(activeEditorPane.input)) {
+          this.handleActiveEditorSelectionChangeEvent(activeEditorGroup, activeEditorPane, e);
+        } else {
+          this.logService.trace(`[History]: ignoring transient editor selection change (editor: ${activeEditorPane.input?.resource?.toString()}})`);
+        }
+      }));
+    }
+    this.updateContextKeys();
+  }
+  onDidFilesChange(event) {
+    if (event instanceof FileChangesEvent) {
+      if (event.gotDeleted()) {
+        this.remove(event);
+      }
+    } else {
+      if (event.isOperation(
+        1
+        /* FileOperation.DELETE */
+      )) {
+        this.remove(event);
+      } else if (event.isOperation(
+        2
+        /* FileOperation.MOVE */
+      ) && event.target.isFile) {
+        this.move(event);
+      }
+    }
+  }
+  handleActiveEditorChange(group, editorPane) {
+    this.handleActiveEditorChangeInHistory(editorPane);
+    this.handleActiveEditorChangeInNavigationStacks(group, editorPane);
+  }
+  handleActiveEditorSelectionChangeEvent(group, editorPane, event) {
+    this.handleActiveEditorSelectionChangeInNavigationStacks(group, editorPane, event);
+  }
+  move(event) {
+    this.moveInHistory(event);
+    this.moveInEditorNavigationStacks(event);
+  }
+  remove(arg1) {
+    this.removeFromHistory(arg1);
+    this.removeFromEditorNavigationStacks(arg1);
+    this.removeFromRecentlyClosedEditors(arg1);
+    this.removeFromRecentlyOpened(arg1);
+  }
+  removeFromRecentlyOpened(arg1) {
+    let resource = void 0;
+    if (isEditorInput(arg1)) {
+      resource = EditorResourceAccessor.getOriginalUri(arg1);
+    } else if (arg1 instanceof FileChangesEvent) {
+    } else {
+      resource = arg1.resource;
+    }
+    if (resource) {
+      this.workspacesService.removeRecentlyOpened([resource]);
+    }
+  }
+  clear() {
+    this.clearRecentlyOpened();
+    this.clearEditorNavigationStacks();
+    this.recentlyClosedEditors = [];
+    this.updateContextKeys();
+  }
+  updateContextKeys() {
+    this.contextKeyService.bufferChangeEvents(() => {
+      const activeStack = this.getStack();
+      this.canNavigateBackContextKey.set(activeStack.canGoBack(
+        0
+        /* GoFilter.NONE */
+      ));
+      this.canNavigateForwardContextKey.set(activeStack.canGoForward(
+        0
+        /* GoFilter.NONE */
+      ));
+      this.canNavigateBackInNavigationsContextKey.set(activeStack.canGoBack(
+        2
+        /* GoFilter.NAVIGATION */
+      ));
+      this.canNavigateForwardInNavigationsContextKey.set(activeStack.canGoForward(
+        2
+        /* GoFilter.NAVIGATION */
+      ));
+      this.canNavigateToLastNavigationLocationContextKey.set(activeStack.canGoLast(
+        2
+        /* GoFilter.NAVIGATION */
+      ));
+      this.canNavigateBackInEditsContextKey.set(activeStack.canGoBack(
+        1
+        /* GoFilter.EDITS */
+      ));
+      this.canNavigateForwardInEditsContextKey.set(activeStack.canGoForward(
+        1
+        /* GoFilter.EDITS */
+      ));
+      this.canNavigateToLastEditLocationContextKey.set(activeStack.canGoLast(
+        1
+        /* GoFilter.EDITS */
+      ));
+      this.canReopenClosedEditorContextKey.set(this.recentlyClosedEditors.length > 0);
+    });
+  }
+  registerEditorNavigationScopeChangeListener() {
+    const handleEditorNavigationScopeChange = /* @__PURE__ */ __name(() => {
+      this.disposeEditorNavigationStacks();
+      const configuredScope = this.configurationService.getValue(HistoryService_1.NAVIGATION_SCOPE_SETTING);
+      if (configuredScope === "editorGroup") {
+        this.editorNavigationScope = 1;
+      } else if (configuredScope === "editor") {
+        this.editorNavigationScope = 2;
+      } else {
+        this.editorNavigationScope = 0;
+      }
+    }, "handleEditorNavigationScopeChange");
+    this._register(this.configurationService.onDidChangeConfiguration((event) => {
+      if (event.affectsConfiguration(HistoryService_1.NAVIGATION_SCOPE_SETTING)) {
+        handleEditorNavigationScopeChange();
+      }
+    }));
+    handleEditorNavigationScopeChange();
+  }
+  getStack(group = this.editorGroupService.activeGroup, editor = group.activeEditor) {
+    switch (this.editorNavigationScope) {
+      // Per Editor
+      case 2: {
+        if (!editor) {
+          return new NoOpEditorNavigationStacks();
+        }
+        let stacksForGroup = this.editorScopedNavigationStacks.get(group.id);
+        if (!stacksForGroup) {
+          stacksForGroup = /* @__PURE__ */ new Map();
+          this.editorScopedNavigationStacks.set(group.id, stacksForGroup);
+        }
+        let stack = stacksForGroup.get(editor)?.stack;
+        if (!stack) {
+          const disposable = new DisposableStore();
+          stack = disposable.add(this.instantiationService.createInstance(
+            EditorNavigationStacks,
+            2
+            /* GoScope.EDITOR */
+          ));
+          disposable.add(stack.onDidChange(() => this._onDidChangeEditorNavigationStack.fire()));
+          stacksForGroup.set(editor, { stack, disposable });
+        }
+        return stack;
+      }
+      // Per Editor Group
+      case 1: {
+        let stack = this.editorGroupScopedNavigationStacks.get(group.id)?.stack;
+        if (!stack) {
+          const disposable = new DisposableStore();
+          stack = disposable.add(this.instantiationService.createInstance(
+            EditorNavigationStacks,
+            1
+            /* GoScope.EDITOR_GROUP */
+          ));
+          disposable.add(stack.onDidChange(() => this._onDidChangeEditorNavigationStack.fire()));
+          this.editorGroupScopedNavigationStacks.set(group.id, { stack, disposable });
+        }
+        return stack;
+      }
+      // Global
+      case 0: {
+        if (!this.defaultScopedEditorNavigationStack) {
+          this.defaultScopedEditorNavigationStack = this._register(this.instantiationService.createInstance(
+            EditorNavigationStacks,
+            0
+            /* GoScope.DEFAULT */
+          ));
+          this._register(this.defaultScopedEditorNavigationStack.onDidChange(() => this._onDidChangeEditorNavigationStack.fire()));
+        }
+        return this.defaultScopedEditorNavigationStack;
+      }
+    }
+  }
+  goForward(filter) {
+    return this.getStack().goForward(filter);
+  }
+  goBack(filter) {
+    return this.getStack().goBack(filter);
+  }
+  goPrevious(filter) {
+    return this.getStack().goPrevious(filter);
+  }
+  goLast(filter) {
+    return this.getStack().goLast(filter);
+  }
+  handleActiveEditorChangeInNavigationStacks(group, editorPane) {
+    this.getStack(group, editorPane?.input).handleActiveEditorChange(editorPane);
+  }
+  handleActiveEditorSelectionChangeInNavigationStacks(group, editorPane, event) {
+    this.getStack(group, editorPane.input).handleActiveEditorSelectionChange(editorPane, event);
+  }
+  handleEditorCloseEventInHistory(e) {
+    const editors = this.editorScopedNavigationStacks.get(e.groupId);
+    if (editors) {
+      const editorStack = editors.get(e.editor);
+      if (editorStack) {
+        editorStack.disposable.dispose();
+        editors.delete(e.editor);
+      }
+      if (editors.size === 0) {
+        this.editorScopedNavigationStacks.delete(e.groupId);
+      }
+    }
+  }
+  handleEditorGroupRemoveInNavigationStacks(group) {
+    this.defaultScopedEditorNavigationStack?.remove(group.id);
+    const editorGroupStack = this.editorGroupScopedNavigationStacks.get(group.id);
+    if (editorGroupStack) {
+      editorGroupStack.disposable.dispose();
+      this.editorGroupScopedNavigationStacks.delete(group.id);
+    }
+  }
+  clearEditorNavigationStacks() {
+    this.withEachEditorNavigationStack((stack) => stack.clear());
+  }
+  removeFromEditorNavigationStacks(arg1) {
+    this.withEachEditorNavigationStack((stack) => stack.remove(arg1));
+  }
+  moveInEditorNavigationStacks(event) {
+    this.withEachEditorNavigationStack((stack) => stack.move(event));
+  }
+  withEachEditorNavigationStack(fn) {
+    if (this.defaultScopedEditorNavigationStack) {
+      fn(this.defaultScopedEditorNavigationStack);
+    }
+    for (const [, entry] of this.editorGroupScopedNavigationStacks) {
+      fn(entry.stack);
+    }
+    for (const [, entries] of this.editorScopedNavigationStacks) {
+      for (const [, entry] of entries) {
+        fn(entry.stack);
+      }
+    }
+  }
+  disposeEditorNavigationStacks() {
+    this.defaultScopedEditorNavigationStack?.dispose();
+    this.defaultScopedEditorNavigationStack = void 0;
+    for (const [, stack] of this.editorGroupScopedNavigationStacks) {
+      stack.disposable.dispose();
+    }
+    this.editorGroupScopedNavigationStacks.clear();
+    for (const [, stacks] of this.editorScopedNavigationStacks) {
+      for (const [, stack] of stacks) {
+        stack.disposable.dispose();
+      }
+    }
+    this.editorScopedNavigationStacks.clear();
+  }
+  openNextRecentlyUsedEditor(groupId) {
+    const [stack, index] = this.ensureRecentlyUsedStack((index2) => index2 - 1, groupId);
+    return this.doNavigateInRecentlyUsedEditorsStack(stack[index], groupId);
+  }
+  openPreviouslyUsedEditor(groupId) {
+    const [stack, index] = this.ensureRecentlyUsedStack((index2) => index2 + 1, groupId);
+    return this.doNavigateInRecentlyUsedEditorsStack(stack[index], groupId);
+  }
+  async doNavigateInRecentlyUsedEditorsStack(editorIdentifier, groupId) {
+    if (editorIdentifier) {
+      const acrossGroups = typeof groupId !== "number" || !this.editorGroupService.getGroup(groupId);
+      if (acrossGroups) {
+        this.navigatingInRecentlyUsedEditorsStack = true;
+      } else {
+        this.navigatingInRecentlyUsedEditorsInGroupStack = true;
+      }
+      const group = this.editorGroupService.getGroup(editorIdentifier.groupId) ?? this.editorGroupService.activeGroup;
+      try {
+        await group.openEditor(editorIdentifier.editor);
+      } finally {
+        if (acrossGroups) {
+          this.navigatingInRecentlyUsedEditorsStack = false;
+        } else {
+          this.navigatingInRecentlyUsedEditorsInGroupStack = false;
+        }
+      }
+    }
+  }
+  ensureRecentlyUsedStack(indexModifier, groupId) {
+    let editors;
+    let index;
+    const group = typeof groupId === "number" ? this.editorGroupService.getGroup(groupId) : void 0;
+    if (!group) {
+      editors = this.recentlyUsedEditorsStack || this.editorService.getEditors(
+        0
+        /* EditorsOrder.MOST_RECENTLY_ACTIVE */
+      );
+      index = this.recentlyUsedEditorsStackIndex;
+    } else {
+      editors = this.recentlyUsedEditorsInGroupStack || group.getEditors(
+        0
+        /* EditorsOrder.MOST_RECENTLY_ACTIVE */
+      ).map((editor) => ({ groupId: group.id, editor }));
+      index = this.recentlyUsedEditorsInGroupStackIndex;
+    }
+    let newIndex = indexModifier(index);
+    if (newIndex < 0) {
+      newIndex = 0;
+    } else if (newIndex > editors.length - 1) {
+      newIndex = editors.length - 1;
+    }
+    if (!group) {
+      this.recentlyUsedEditorsStack = editors;
+      this.recentlyUsedEditorsStackIndex = newIndex;
+    } else {
+      this.recentlyUsedEditorsInGroupStack = editors;
+      this.recentlyUsedEditorsInGroupStackIndex = newIndex;
+    }
+    return [editors, newIndex];
+  }
+  handleEditorEventInRecentEditorsStack() {
+    if (!this.navigatingInRecentlyUsedEditorsStack) {
+      this.recentlyUsedEditorsStack = void 0;
+      this.recentlyUsedEditorsStackIndex = 0;
+    }
+    if (!this.navigatingInRecentlyUsedEditorsInGroupStack) {
+      this.recentlyUsedEditorsInGroupStack = void 0;
+      this.recentlyUsedEditorsInGroupStackIndex = 0;
+    }
+  }
+  static {
+    this.MAX_RECENTLY_CLOSED_EDITORS = 20;
+  }
+  handleEditorCloseEventInReopen(event) {
+    if (this.ignoreEditorCloseEvent) {
+      return;
+    }
+    const { editor, context } = event;
+    if (context === EditorCloseContext.REPLACE || context === EditorCloseContext.MOVE) {
+      return;
+    }
+    const untypedEditor = editor.toUntyped();
+    if (!untypedEditor) {
+      return;
+    }
+    const associatedResources = [];
+    const editorResource = EditorResourceAccessor.getOriginalUri(editor, { supportSideBySide: SideBySideEditor.BOTH });
+    if (URI.isUri(editorResource)) {
+      associatedResources.push(editorResource);
+    } else if (editorResource) {
+      associatedResources.push(...coalesce([editorResource.primary, editorResource.secondary]));
+    }
+    this.removeFromRecentlyClosedEditors(editor);
+    this.recentlyClosedEditors.push({
+      editorId: editor.editorId,
+      editor: untypedEditor,
+      resource: EditorResourceAccessor.getOriginalUri(editor),
+      associatedResources,
+      index: event.index,
+      sticky: event.sticky
+    });
+    if (this.recentlyClosedEditors.length > HistoryService_1.MAX_RECENTLY_CLOSED_EDITORS) {
+      this.recentlyClosedEditors.shift();
+    }
+    this.canReopenClosedEditorContextKey.set(true);
+  }
+  async reopenLastClosedEditor() {
+    const lastClosedEditor = this.recentlyClosedEditors.pop();
+    let reopenClosedEditorPromise = void 0;
+    if (lastClosedEditor) {
+      reopenClosedEditorPromise = this.doReopenLastClosedEditor(lastClosedEditor);
+    }
+    this.canReopenClosedEditorContextKey.set(this.recentlyClosedEditors.length > 0);
+    return reopenClosedEditorPromise;
+  }
+  async doReopenLastClosedEditor(lastClosedEditor) {
+    const options = { pinned: true, sticky: lastClosedEditor.sticky, index: lastClosedEditor.index, ignoreError: true };
+    if (lastClosedEditor.sticky && !this.editorGroupService.activeGroup.isSticky(lastClosedEditor.index) || !lastClosedEditor.sticky && this.editorGroupService.activeGroup.isSticky(lastClosedEditor.index)) {
+      options.index = void 0;
+    }
+    let editorPane = void 0;
+    if (!this.editorGroupService.activeGroup.contains(lastClosedEditor.editor)) {
+      this.ignoreEditorCloseEvent = true;
+      try {
+        editorPane = await this.editorService.openEditor({
+          ...lastClosedEditor.editor,
+          options: {
+            ...lastClosedEditor.editor.options,
+            ...options
+          }
+        });
+      } finally {
+        this.ignoreEditorCloseEvent = false;
+      }
+    }
+    if (!editorPane) {
+      remove(this.recentlyClosedEditors, lastClosedEditor);
+      this.reopenLastClosedEditor();
+    }
+  }
+  removeFromRecentlyClosedEditors(arg1) {
+    this.recentlyClosedEditors = this.recentlyClosedEditors.filter((recentlyClosedEditor) => {
+      if (isEditorInput(arg1) && recentlyClosedEditor.editorId !== arg1.editorId) {
+        return true;
+      }
+      if (recentlyClosedEditor.resource && this.editorHelper.matchesFile(recentlyClosedEditor.resource, arg1)) {
+        return false;
+      }
+      if (recentlyClosedEditor.associatedResources.some((associatedResource) => this.editorHelper.matchesFile(associatedResource, arg1))) {
+        return false;
+      }
+      return true;
+    });
+    this.canReopenClosedEditorContextKey.set(this.recentlyClosedEditors.length > 0);
+  }
+  static {
+    this.MAX_HISTORY_ITEMS = 200;
+  }
+  static {
+    this.HISTORY_STORAGE_KEY = "history.entries";
+  }
+  handleActiveEditorChangeInHistory(editorPane) {
+    const editor = editorPane?.input;
+    if (!editor || editor.isDisposed() || !this.includeInHistory(editor)) {
+      return;
+    }
+    this.removeFromHistory(editor);
+    this.addToHistory(editor);
+  }
+  addToHistory(editor, insertFirst = true) {
+    this.ensureHistoryLoaded(this.history);
+    const historyInput = this.editorHelper.preferResourceEditorInput(editor);
+    if (!historyInput) {
+      return;
+    }
+    if (insertFirst) {
+      this.history.unshift(historyInput);
+    } else {
+      this.history.push(historyInput);
+    }
+    if (this.history.length > HistoryService_1.MAX_HISTORY_ITEMS) {
+      this.editorHelper.clearOnEditorDispose(this.history.pop(), this.editorHistoryListeners);
+    }
+    if (isEditorInput(editor)) {
+      this.editorHelper.onEditorDispose(editor, () => this.updateHistoryOnEditorDispose(historyInput), this.editorHistoryListeners);
+    }
+  }
+  updateHistoryOnEditorDispose(editor) {
+    if (isEditorInput(editor)) {
+      if (!isSideBySideEditorInput(editor)) {
+        this.removeFromHistory(editor);
+      } else {
+        const resourceInputs = [];
+        const sideInputs = editor.primary.matches(editor.secondary) ? [editor.primary] : [editor.primary, editor.secondary];
+        for (const sideInput of sideInputs) {
+          const candidateResourceInput = this.editorHelper.preferResourceEditorInput(sideInput);
+          if (isResourceEditorInput(candidateResourceInput) && this.includeInHistory(candidateResourceInput)) {
+            resourceInputs.push(candidateResourceInput);
+          }
+        }
+        this.replaceInHistory(editor, ...resourceInputs);
+      }
+    } else {
+      if (!this.includeInHistory(editor)) {
+        this.removeFromHistory(editor);
+      }
+    }
+  }
+  includeInHistory(editor) {
+    if (isEditorInput(editor)) {
+      return true;
+    }
+    return !this.resourceExcludeMatcher.value.matches(editor.resource);
+  }
+  removeExcludedFromHistory() {
+    this.ensureHistoryLoaded(this.history);
+    this.history = this.history.filter((entry) => {
+      const include = this.includeInHistory(entry);
+      if (!include) {
+        this.editorHelper.clearOnEditorDispose(entry, this.editorHistoryListeners);
+      }
+      return include;
+    });
+  }
+  moveInHistory(event) {
+    if (event.isOperation(
+      2
+      /* FileOperation.MOVE */
+    )) {
+      const removed = this.removeFromHistory(event);
+      if (removed) {
+        this.addToHistory({ resource: event.target.resource });
+      }
+    }
+  }
+  removeFromHistory(arg1) {
+    let removed = false;
+    this.ensureHistoryLoaded(this.history);
+    this.history = this.history.filter((entry) => {
+      const matches = this.editorHelper.matchesEditor(arg1, entry);
+      if (matches) {
+        this.editorHelper.clearOnEditorDispose(arg1, this.editorHistoryListeners);
+        removed = true;
+      }
+      return !matches;
+    });
+    return removed;
+  }
+  replaceInHistory(editor, ...replacements) {
+    this.ensureHistoryLoaded(this.history);
+    let replaced = false;
+    const newHistory = [];
+    for (const entry of this.history) {
+      if (this.editorHelper.matchesEditor(editor, entry)) {
+        this.editorHelper.clearOnEditorDispose(editor, this.editorHistoryListeners);
+        if (!replaced) {
+          newHistory.push(...replacements);
+          replaced = true;
+        }
+      } else if (!replacements.some((replacement) => this.editorHelper.matchesEditor(replacement, entry))) {
+        newHistory.push(entry);
+      }
+    }
+    if (!replaced) {
+      newHistory.push(...replacements);
+    }
+    this.history = newHistory;
+  }
+  clearRecentlyOpened() {
+    this.history = [];
+    for (const [, disposable] of this.editorHistoryListeners) {
+      dispose(disposable);
+    }
+    this.editorHistoryListeners.clear();
+  }
+  getHistory() {
+    this.ensureHistoryLoaded(this.history);
+    return this.history;
+  }
+  ensureHistoryLoaded(history) {
+    if (!this.history) {
+      this.history = [];
+      if (this.editorGroupService.isReady) {
+        this.loadHistory();
+      } else {
+        (async () => {
+          await this.editorGroupService.whenReady;
+          this.loadHistory();
+        })();
+      }
+    }
+  }
+  loadHistory() {
+    this.history = [];
+    const storedEditorHistory = this.loadHistoryFromStorage();
+    const openedEditorsLru = [...this.editorService.getEditors(
+      0
+      /* EditorsOrder.MOST_RECENTLY_ACTIVE */
+    )].reverse();
+    const handledEditors = /* @__PURE__ */ new Set();
+    for (const { editor } of openedEditorsLru) {
+      if (!this.includeInHistory(editor)) {
+        continue;
+      }
+      if (editor.resource) {
+        const historyEntryId = `${editor.resource.toString()}/${editor.editorId}`;
+        if (handledEditors.has(historyEntryId)) {
+          continue;
+        }
+        handledEditors.add(historyEntryId);
+      }
+      this.addToHistory(editor);
+    }
+    for (const editor of storedEditorHistory) {
+      const historyEntryId = `${editor.resource.toString()}/${editor.options?.override}`;
+      if (!handledEditors.has(historyEntryId) && this.includeInHistory(editor)) {
+        handledEditors.add(historyEntryId);
+        this.addToHistory(
+          editor,
+          false
+          /* at the end */
+        );
+      }
+    }
+  }
+  loadHistoryFromStorage() {
+    const entries = [];
+    const entriesRaw = this.storageService.get(
+      HistoryService_1.HISTORY_STORAGE_KEY,
+      1
+      /* StorageScope.WORKSPACE */
+    );
+    if (entriesRaw) {
+      try {
+        const entriesParsed = JSON.parse(entriesRaw);
+        for (const entryParsed of entriesParsed) {
+          if (!entryParsed.editor || !entryParsed.editor.resource) {
+            continue;
+          }
+          try {
+            entries.push({
+              ...entryParsed.editor,
+              resource: typeof entryParsed.editor.resource === "string" ? URI.parse(entryParsed.editor.resource) : (
+                //  from 1.67.x: URI is stored efficiently as URI.toString()
+                URI.from(entryParsed.editor.resource)
+              )
+              // until 1.66.x: URI was stored very verbose as URI.toJSON()
+            });
+          } catch (error) {
+            onUnexpectedError(error);
+          }
+        }
+      } catch (error) {
+        onUnexpectedError(error);
+      }
+    }
+    return entries;
+  }
+  saveState() {
+    if (!this.history) {
+      return;
+    }
+    const entries = [];
+    for (const editor of this.history) {
+      if (isEditorInput(editor) || !isResourceEditorInput(editor)) {
+        continue;
+      }
+      entries.push({
+        editor: {
+          ...editor,
+          resource: editor.resource.toString()
+        }
+      });
+    }
+    this.storageService.store(
+      HistoryService_1.HISTORY_STORAGE_KEY,
+      JSON.stringify(entries),
+      1,
+      1
+      /* StorageTarget.MACHINE */
+    );
+  }
+  //#endregion
+  //#region Last Active Workspace/File
+  getLastActiveWorkspaceRoot(schemeFilter, authorityFilter) {
+    const folders = this.contextService.getWorkspace().folders;
+    if (folders.length === 0) {
+      return void 0;
+    }
+    if (folders.length === 1) {
+      const resource = folders[0].uri;
+      if ((!schemeFilter || resource.scheme === schemeFilter) && (!authorityFilter || resource.authority === authorityFilter)) {
+        return resource;
+      }
+      return void 0;
+    }
+    for (const input of this.getHistory()) {
+      if (isEditorInput(input)) {
+        continue;
+      }
+      if (schemeFilter && input.resource.scheme !== schemeFilter) {
+        continue;
+      }
+      if (authorityFilter && input.resource.authority !== authorityFilter) {
+        continue;
+      }
+      const resourceWorkspace = this.contextService.getWorkspaceFolder(input.resource);
+      if (resourceWorkspace) {
+        return resourceWorkspace.uri;
+      }
+    }
+    for (const folder of folders) {
+      const resource = folder.uri;
+      if ((!schemeFilter || resource.scheme === schemeFilter) && (!authorityFilter || resource.authority === authorityFilter)) {
+        return resource;
+      }
+    }
+    return void 0;
+  }
+  getLastActiveFile(filterByScheme, filterByAuthority) {
+    for (const input of this.getHistory()) {
+      let resource;
+      if (isEditorInput(input)) {
+        resource = EditorResourceAccessor.getOriginalUri(input, { filterByScheme });
+      } else {
+        resource = input.resource;
+      }
+      if (resource && resource.scheme === filterByScheme && (!filterByAuthority || resource.authority === filterByAuthority)) {
+        return resource;
+      }
+    }
+    return void 0;
+  }
+  //#endregion
+  dispose() {
+    super.dispose();
+    for (const [, stack] of this.editorGroupScopedNavigationStacks) {
+      stack.disposable.dispose();
+    }
+    for (const [, editors] of this.editorScopedNavigationStacks) {
+      for (const [, stack] of editors) {
+        stack.disposable.dispose();
+      }
+    }
+    for (const [, listener] of this.editorHistoryListeners) {
+      listener.dispose();
+    }
+  }
+};
+HistoryService = HistoryService_1 = __decorate([
+  __param(0, IEditorService),
+  __param(1, IEditorGroupsService),
+  __param(2, IWorkspaceContextService),
+  __param(3, IStorageService),
+  __param(4, IConfigurationService),
+  __param(5, IFileService),
+  __param(6, IWorkspacesService),
+  __param(7, IInstantiationService),
+  __param(8, IWorkbenchLayoutService),
+  __param(9, IContextKeyService),
+  __param(10, ILogService)
+], HistoryService);
+registerSingleton(
+  IHistoryService,
+  HistoryService,
+  0
+  /* InstantiationType.Eager */
+);
+class EditorSelectionState {
+  static {
+    __name(this, "EditorSelectionState");
+  }
+  constructor(editorIdentifier, selection, reason) {
+    this.editorIdentifier = editorIdentifier;
+    this.selection = selection;
+    this.reason = reason;
+  }
+  justifiesNewNavigationEntry(other) {
+    if (this.editorIdentifier.groupId !== other.editorIdentifier.groupId) {
+      return true;
+    }
+    if (!this.editorIdentifier.editor.matches(other.editorIdentifier.editor)) {
+      return true;
+    }
+    if (!this.selection || !other.selection) {
+      return true;
+    }
+    const result = this.selection.compare(other.selection);
+    if (result === 2 && (other.reason === 4 || other.reason === 5)) {
+      return true;
+    }
+    return result === 3;
+  }
+}
+let EditorNavigationStacks = class EditorNavigationStacks2 extends Disposable {
+  static {
+    __name(this, "EditorNavigationStacks");
+  }
+  constructor(scope, instantiationService) {
+    super();
+    this.scope = scope;
+    this.instantiationService = instantiationService;
+    this.selectionsStack = this._register(this.instantiationService.createInstance(EditorNavigationStack, 0, this.scope));
+    this.editsStack = this._register(this.instantiationService.createInstance(EditorNavigationStack, 1, this.scope));
+    this.navigationsStack = this._register(this.instantiationService.createInstance(EditorNavigationStack, 2, this.scope));
+    this.stacks = [
+      this.selectionsStack,
+      this.editsStack,
+      this.navigationsStack
+    ];
+    this.onDidChange = Event.any(this.selectionsStack.onDidChange, this.editsStack.onDidChange, this.navigationsStack.onDidChange);
+  }
+  canGoForward(filter) {
+    return this.getStack(filter).canGoForward();
+  }
+  goForward(filter) {
+    return this.getStack(filter).goForward();
+  }
+  canGoBack(filter) {
+    return this.getStack(filter).canGoBack();
+  }
+  goBack(filter) {
+    return this.getStack(filter).goBack();
+  }
+  goPrevious(filter) {
+    return this.getStack(filter).goPrevious();
+  }
+  canGoLast(filter) {
+    return this.getStack(filter).canGoLast();
+  }
+  goLast(filter) {
+    return this.getStack(filter).goLast();
+  }
+  getStack(filter = 0) {
+    switch (filter) {
+      case 0:
+        return this.selectionsStack;
+      case 1:
+        return this.editsStack;
+      case 2:
+        return this.navigationsStack;
+    }
+  }
+  handleActiveEditorChange(editorPane) {
+    this.selectionsStack.notifyNavigation(editorPane);
+  }
+  handleActiveEditorSelectionChange(editorPane, event) {
+    const previous = this.selectionsStack.current;
+    this.selectionsStack.notifyNavigation(editorPane, event);
+    if (event.reason === 3) {
+      this.editsStack.notifyNavigation(editorPane, event);
+    } else if ((event.reason === 4 || event.reason === 5) && !this.selectionsStack.isNavigating()) {
+      if (event.reason === 5 && !this.navigationsStack.isNavigating()) {
+        if (previous) {
+          this.navigationsStack.addOrReplace(previous.groupId, previous.editor, previous.selection);
+        }
+      }
+      this.navigationsStack.notifyNavigation(editorPane, event);
+    }
+  }
+  clear() {
+    for (const stack of this.stacks) {
+      stack.clear();
+    }
+  }
+  remove(arg1) {
+    for (const stack of this.stacks) {
+      stack.remove(arg1);
+    }
+  }
+  move(event) {
+    for (const stack of this.stacks) {
+      stack.move(event);
+    }
+  }
+};
+EditorNavigationStacks = __decorate([
+  __param(1, IInstantiationService)
+], EditorNavigationStacks);
+class NoOpEditorNavigationStacks {
+  static {
+    __name(this, "NoOpEditorNavigationStacks");
+  }
+  constructor() {
+    this.onDidChange = Event.None;
+  }
+  canGoForward() {
+    return false;
+  }
+  async goForward() {
+  }
+  canGoBack() {
+    return false;
+  }
+  async goBack() {
+  }
+  async goPrevious() {
+  }
+  canGoLast() {
+    return false;
+  }
+  async goLast() {
+  }
+  handleActiveEditorChange() {
+  }
+  handleActiveEditorSelectionChange() {
+  }
+  clear() {
+  }
+  remove() {
+  }
+  move() {
+  }
+  dispose() {
+  }
+}
+let EditorNavigationStack = class EditorNavigationStack2 extends Disposable {
+  static {
+    __name(this, "EditorNavigationStack");
+  }
+  static {
+    EditorNavigationStack_1 = this;
+  }
+  static {
+    this.MAX_STACK_SIZE = 50;
+  }
+  get current() {
+    return this.stack[this.index];
+  }
+  set current(entry) {
+    if (entry) {
+      this.stack[this.index] = entry;
+    }
+  }
+  constructor(filter, scope, instantiationService, editorService, editorGroupService, logService) {
+    super();
+    this.filter = filter;
+    this.scope = scope;
+    this.editorService = editorService;
+    this.editorGroupService = editorGroupService;
+    this.logService = logService;
+    this._onDidChange = this._register(new Emitter());
+    this.onDidChange = this._onDidChange.event;
+    this.mapEditorToDisposable = /* @__PURE__ */ new Map();
+    this.mapGroupToDisposable = /* @__PURE__ */ new Map();
+    this.stack = [];
+    this.index = -1;
+    this.previousIndex = -1;
+    this.navigating = false;
+    this.currentSelectionState = void 0;
+    this.editorHelper = instantiationService.createInstance(EditorHelper);
+    this.registerListeners();
+  }
+  registerListeners() {
+    this._register(this.onDidChange(() => this.traceStack()));
+    this._register(this.logService.onDidChangeLogLevel(() => this.traceStack()));
+  }
+  traceStack() {
+    if (this.logService.getLevel() !== LogLevel.Trace) {
+      return;
+    }
+    const entryLabels = [];
+    for (const entry of this.stack) {
+      if (typeof entry.selection?.log === "function") {
+        entryLabels.push(`- group: ${entry.groupId}, editor: ${entry.editor.resource?.toString()}, selection: ${entry.selection.log()}`);
+      } else {
+        entryLabels.push(`- group: ${entry.groupId}, editor: ${entry.editor.resource?.toString()}, selection: <none>`);
+      }
+    }
+    if (entryLabels.length === 0) {
+      this.trace(`index: ${this.index}, navigating: ${this.isNavigating()}: <empty>`);
+    } else {
+      this.trace(`index: ${this.index}, navigating: ${this.isNavigating()}
+${entryLabels.join("\n")}
+			`);
+    }
+  }
+  trace(msg, editor = null, event) {
+    if (this.logService.getLevel() !== LogLevel.Trace) {
+      return;
+    }
+    let filterLabel;
+    switch (this.filter) {
+      case 0:
+        filterLabel = "global";
+        break;
+      case 1:
+        filterLabel = "edits";
+        break;
+      case 2:
+        filterLabel = "navigation";
+        break;
+    }
+    let scopeLabel;
+    switch (this.scope) {
+      case 0:
+        scopeLabel = "default";
+        break;
+      case 1:
+        scopeLabel = "editorGroup";
+        break;
+      case 2:
+        scopeLabel = "editor";
+        break;
+    }
+    if (editor !== null) {
+      this.logService.trace(`[History stack ${filterLabel}-${scopeLabel}]: ${msg} (editor: ${editor?.resource?.toString()}, event: ${this.traceEvent(event)})`);
+    } else {
+      this.logService.trace(`[History stack ${filterLabel}-${scopeLabel}]: ${msg}`);
+    }
+  }
+  traceEvent(event) {
+    if (!event) {
+      return "<none>";
+    }
+    switch (event.reason) {
+      case 3:
+        return "edit";
+      case 4:
+        return "navigation";
+      case 5:
+        return "jump";
+      case 1:
+        return "programmatic";
+      case 2:
+        return "user";
+    }
+  }
+  registerGroupListeners(groupId) {
+    if (!this.mapGroupToDisposable.has(groupId)) {
+      const group = this.editorGroupService.getGroup(groupId);
+      if (group) {
+        this.mapGroupToDisposable.set(groupId, group.onWillMoveEditor((e) => this.onWillMoveEditor(e)));
+      }
+    }
+  }
+  onWillMoveEditor(e) {
+    this.trace("onWillMoveEditor()", e.editor);
+    if (this.scope === 1) {
+      return;
+    }
+    for (const entry of this.stack) {
+      if (entry.groupId !== e.groupId) {
+        continue;
+      }
+      if (!this.editorHelper.matchesEditor(e.editor, entry.editor)) {
+        continue;
+      }
+      entry.groupId = e.target;
+    }
+  }
+  //#region Stack Mutation
+  notifyNavigation(editorPane, event) {
+    this.trace("notifyNavigation()", editorPane?.input, event);
+    const isSelectionAwareEditorPane = isEditorPaneWithSelection(editorPane);
+    const hasValidEditor = editorPane?.input && !editorPane.input.isDisposed();
+    if (this.navigating) {
+      this.trace(`notifyNavigation() ignoring (navigating)`, editorPane?.input, event);
+      if (isSelectionAwareEditorPane && hasValidEditor) {
+        this.trace("notifyNavigation() updating current selection state", editorPane?.input, event);
+        this.currentSelectionState = new EditorSelectionState({ groupId: editorPane.group.id, editor: editorPane.input }, editorPane.getSelection(), event?.reason);
+      } else {
+        this.trace("notifyNavigation() dropping current selection state", editorPane?.input, event);
+        this.currentSelectionState = void 0;
+      }
+    } else {
+      this.trace(`notifyNavigation() not ignoring`, editorPane?.input, event);
+      if (isSelectionAwareEditorPane && hasValidEditor) {
+        this.onSelectionAwareEditorNavigation(editorPane.group.id, editorPane.input, editorPane.getSelection(), event);
+      } else {
+        this.currentSelectionState = void 0;
+        if (hasValidEditor) {
+          this.onNonSelectionAwareEditorNavigation(editorPane.group.id, editorPane.input);
+        }
+      }
+    }
+  }
+  onSelectionAwareEditorNavigation(groupId, editor, selection, event) {
+    if (this.current?.groupId === groupId && !selection && this.editorHelper.matchesEditor(this.current.editor, editor)) {
+      return;
+    }
+    this.trace("onSelectionAwareEditorNavigation()", editor, event);
+    const stateCandidate = new EditorSelectionState({ groupId, editor }, selection, event?.reason);
+    if (!this.currentSelectionState || this.currentSelectionState.justifiesNewNavigationEntry(stateCandidate)) {
+      this.doAdd(groupId, editor, stateCandidate.selection);
+    } else {
+      this.doReplace(groupId, editor, stateCandidate.selection);
+    }
+    this.currentSelectionState = stateCandidate;
+  }
+  onNonSelectionAwareEditorNavigation(groupId, editor) {
+    if (this.current?.groupId === groupId && this.editorHelper.matchesEditor(this.current.editor, editor)) {
+      return;
+    }
+    this.trace("onNonSelectionAwareEditorNavigation()", editor);
+    this.doAdd(groupId, editor);
+  }
+  doAdd(groupId, editor, selection) {
+    if (!this.navigating) {
+      this.addOrReplace(groupId, editor, selection);
+    }
+  }
+  doReplace(groupId, editor, selection) {
+    if (!this.navigating) {
+      this.addOrReplace(
+        groupId,
+        editor,
+        selection,
+        true
+        /* force replace */
+      );
+    }
+  }
+  addOrReplace(groupId, editorCandidate, selection, forceReplace) {
+    this.registerGroupListeners(groupId);
+    let replace = false;
+    if (this.current) {
+      if (forceReplace) {
+        replace = true;
+      } else if (this.shouldReplaceStackEntry(this.current, { groupId, editor: editorCandidate, selection })) {
+        replace = true;
+      }
+    }
+    const editor = this.editorHelper.preferResourceEditorInput(editorCandidate);
+    if (!editor) {
+      return;
+    }
+    if (replace) {
+      this.trace("replace()", editor);
+    } else {
+      this.trace("add()", editor);
+    }
+    const newStackEntry = { groupId, editor, selection };
+    const removedEntries = [];
+    if (replace) {
+      if (this.current) {
+        removedEntries.push(this.current);
+      }
+      this.current = newStackEntry;
+    } else {
+      if (this.stack.length > this.index + 1) {
+        for (let i = this.index + 1; i < this.stack.length; i++) {
+          removedEntries.push(this.stack[i]);
+        }
+        this.stack = this.stack.slice(0, this.index + 1);
+      }
+      this.stack.splice(this.index + 1, 0, newStackEntry);
+      if (this.stack.length > EditorNavigationStack_1.MAX_STACK_SIZE) {
+        removedEntries.push(this.stack.shift());
+        if (this.previousIndex >= 0) {
+          this.previousIndex--;
+        }
+      } else {
+        this.setIndex(
+          this.index + 1,
+          true
+          /* skip event, we fire it later */
+        );
+      }
+    }
+    for (const removedEntry of removedEntries) {
+      this.editorHelper.clearOnEditorDispose(removedEntry.editor, this.mapEditorToDisposable);
+    }
+    if (isEditorInput(editor)) {
+      this.editorHelper.onEditorDispose(editor, () => this.remove(editor), this.mapEditorToDisposable);
+    }
+    this._onDidChange.fire();
+  }
+  shouldReplaceStackEntry(entry, candidate) {
+    if (entry.groupId !== candidate.groupId) {
+      return false;
+    }
+    if (!this.editorHelper.matchesEditor(entry.editor, candidate.editor)) {
+      return false;
+    }
+    if (!entry.selection) {
+      return true;
+    }
+    if (!candidate.selection) {
+      return false;
+    }
+    return entry.selection.compare(candidate.selection) === 1;
+  }
+  move(event) {
+    if (event.isOperation(
+      2
+      /* FileOperation.MOVE */
+    )) {
+      for (const entry of this.stack) {
+        if (this.editorHelper.matchesEditor(event, entry.editor)) {
+          entry.editor = { resource: event.target.resource };
+        }
+      }
+    }
+  }
+  remove(arg1) {
+    const previousStackSize = this.stack.length;
+    this.stack = this.stack.filter((entry) => {
+      const matches = typeof arg1 === "number" ? entry.groupId === arg1 : this.editorHelper.matchesEditor(arg1, entry.editor);
+      if (matches) {
+        this.editorHelper.clearOnEditorDispose(entry.editor, this.mapEditorToDisposable);
+      }
+      return !matches;
+    });
+    if (previousStackSize === this.stack.length) {
+      return;
+    }
+    this.flatten();
+    this.index = this.stack.length - 1;
+    this.previousIndex = -1;
+    if (typeof arg1 === "number") {
+      this.mapGroupToDisposable.get(arg1)?.dispose();
+      this.mapGroupToDisposable.delete(arg1);
+    }
+    this._onDidChange.fire();
+  }
+  flatten() {
+    const flattenedStack = [];
+    let previousEntry = void 0;
+    for (const entry of this.stack) {
+      if (previousEntry && this.shouldReplaceStackEntry(entry, previousEntry)) {
+        continue;
+      }
+      previousEntry = entry;
+      flattenedStack.push(entry);
+    }
+    this.stack = flattenedStack;
+  }
+  clear() {
+    this.index = -1;
+    this.previousIndex = -1;
+    this.stack.splice(0);
+    for (const [, disposable] of this.mapEditorToDisposable) {
+      dispose(disposable);
+    }
+    this.mapEditorToDisposable.clear();
+    for (const [, disposable] of this.mapGroupToDisposable) {
+      dispose(disposable);
+    }
+    this.mapGroupToDisposable.clear();
+  }
+  dispose() {
+    super.dispose();
+    this.clear();
+  }
+  //#endregion
+  //#region Navigation
+  canGoForward() {
+    return this.stack.length > this.index + 1;
+  }
+  async goForward() {
+    const navigated = await this.maybeGoCurrent();
+    if (navigated) {
+      return;
+    }
+    if (!this.canGoForward()) {
+      return;
+    }
+    this.setIndex(this.index + 1);
+    return this.navigate();
+  }
+  canGoBack() {
+    return this.index > 0;
+  }
+  async goBack() {
+    const navigated = await this.maybeGoCurrent();
+    if (navigated) {
+      return;
+    }
+    if (!this.canGoBack()) {
+      return;
+    }
+    this.setIndex(this.index - 1);
+    return this.navigate();
+  }
+  async goPrevious() {
+    const navigated = await this.maybeGoCurrent();
+    if (navigated) {
+      return;
+    }
+    if (this.previousIndex === -1) {
+      return this.goBack();
+    }
+    this.setIndex(this.previousIndex);
+    return this.navigate();
+  }
+  canGoLast() {
+    return this.stack.length > 0;
+  }
+  async goLast() {
+    if (!this.canGoLast()) {
+      return;
+    }
+    this.setIndex(this.stack.length - 1);
+    return this.navigate();
+  }
+  async maybeGoCurrent() {
+    if (this.filter === 0) {
+      return false;
+    }
+    if (this.isCurrentSelectionActive()) {
+      return false;
+    }
+    await this.navigate();
+    return true;
+  }
+  isCurrentSelectionActive() {
+    if (!this.current?.selection) {
+      return false;
+    }
+    const pane = this.editorService.activeEditorPane;
+    if (!isEditorPaneWithSelection(pane)) {
+      return false;
+    }
+    if (pane.group.id !== this.current.groupId) {
+      return false;
+    }
+    if (!pane.input || !this.editorHelper.matchesEditor(pane.input, this.current.editor)) {
+      return false;
+    }
+    const paneSelection = pane.getSelection();
+    if (!paneSelection) {
+      return false;
+    }
+    return paneSelection.compare(this.current.selection) === 1;
+  }
+  setIndex(newIndex, skipEvent) {
+    this.previousIndex = this.index;
+    this.index = newIndex;
+    if (!skipEvent) {
+      this._onDidChange.fire();
+    }
+  }
+  async navigate() {
+    this.navigating = true;
+    try {
+      if (this.current) {
+        await this.doNavigate(this.current);
+      }
+    } finally {
+      this.navigating = false;
+    }
+  }
+  doNavigate(location) {
+    let options = /* @__PURE__ */ Object.create(null);
+    if (location.selection) {
+      options = location.selection.restore(options);
+    }
+    if (isEditorInput(location.editor)) {
+      return this.editorService.openEditor(location.editor, options, location.groupId);
+    }
+    return this.editorService.openEditor({
+      ...location.editor,
+      options: {
+        ...location.editor.options,
+        ...options
+      }
+    }, location.groupId);
+  }
+  isNavigating() {
+    return this.navigating;
+  }
+};
+EditorNavigationStack = EditorNavigationStack_1 = __decorate([
+  __param(2, IInstantiationService),
+  __param(3, IEditorService),
+  __param(4, IEditorGroupsService),
+  __param(5, ILogService)
+], EditorNavigationStack);
+let EditorHelper = class EditorHelper2 {
+  static {
+    __name(this, "EditorHelper");
+  }
+  constructor(uriIdentityService, lifecycleService, fileService, pathService) {
+    this.uriIdentityService = uriIdentityService;
+    this.lifecycleService = lifecycleService;
+    this.fileService = fileService;
+    this.pathService = pathService;
+  }
+  preferResourceEditorInput(editor) {
+    const resource = EditorResourceAccessor.getOriginalUri(editor);
+    const hasValidResourceEditorInputScheme = resource?.scheme === Schemas.file || resource?.scheme === Schemas.vscodeRemote || resource?.scheme === Schemas.vscodeUserData || resource?.scheme === this.pathService.defaultUriScheme;
+    if (hasValidResourceEditorInputScheme) {
+      if (isEditorInput(editor)) {
+        const untypedInput = editor.toUntyped();
+        if (isResourceEditorInput(untypedInput)) {
+          return untypedInput;
+        }
+      }
+      return editor;
+    } else {
+      return isEditorInput(editor) ? editor : void 0;
+    }
+  }
+  matchesEditor(arg1, inputB) {
+    if (arg1 instanceof FileChangesEvent || arg1 instanceof FileOperationEvent) {
+      if (isEditorInput(inputB)) {
+        return false;
+      }
+      if (arg1 instanceof FileChangesEvent) {
+        return arg1.contains(
+          inputB.resource,
+          2
+          /* FileChangeType.DELETED */
+        );
+      }
+      return this.matchesFile(inputB.resource, arg1);
+    }
+    if (isEditorInput(arg1)) {
+      if (isEditorInput(inputB)) {
+        return arg1.matches(inputB);
+      }
+      return this.matchesFile(inputB.resource, arg1);
+    }
+    if (isEditorInput(inputB)) {
+      return this.matchesFile(arg1.resource, inputB);
+    }
+    return arg1 && inputB && this.uriIdentityService.extUri.isEqual(arg1.resource, inputB.resource);
+  }
+  matchesFile(resource, arg2) {
+    if (arg2 instanceof FileChangesEvent) {
+      return arg2.contains(
+        resource,
+        2
+        /* FileChangeType.DELETED */
+      );
+    }
+    if (arg2 instanceof FileOperationEvent) {
+      return this.uriIdentityService.extUri.isEqualOrParent(resource, arg2.resource);
+    }
+    if (isEditorInput(arg2)) {
+      const inputResource = arg2.resource;
+      if (!inputResource) {
+        return false;
+      }
+      if (this.lifecycleService.phase >= 3 && !this.fileService.hasProvider(inputResource)) {
+        return false;
+      }
+      return this.uriIdentityService.extUri.isEqual(inputResource, resource);
+    }
+    return this.uriIdentityService.extUri.isEqual(arg2?.resource, resource);
+  }
+  matchesEditorIdentifier(identifier, editorPane) {
+    if (!editorPane?.group) {
+      return false;
+    }
+    if (identifier.groupId !== editorPane.group.id) {
+      return false;
+    }
+    return editorPane.input ? identifier.editor.matches(editorPane.input) : false;
+  }
+  onEditorDispose(editor, listener, mapEditorToDispose) {
+    const toDispose = Event.once(editor.onWillDispose)(() => listener());
+    let disposables = mapEditorToDispose.get(editor);
+    if (!disposables) {
+      disposables = new DisposableStore();
+      mapEditorToDispose.set(editor, disposables);
+    }
+    disposables.add(toDispose);
+  }
+  clearOnEditorDispose(editor, mapEditorToDispose) {
+    if (!isEditorInput(editor)) {
+      return;
+    }
+    const disposables = mapEditorToDispose.get(editor);
+    if (disposables) {
+      dispose(disposables);
+      mapEditorToDispose.delete(editor);
+    }
+  }
+};
+EditorHelper = __decorate([
+  __param(0, IUriIdentityService),
+  __param(1, ILifecycleService),
+  __param(2, IFileService),
+  __param(3, IPathService)
+], EditorHelper);
+export {
+  EditorNavigationStack,
+  HistoryService
+};
+//# sourceMappingURL=historyService.js.map

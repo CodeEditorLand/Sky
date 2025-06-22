@@ -1,1 +1,62 @@
-import{GlyphMarginLane as n}from"../model.js";const h=n.Right;class l{constructor(t){this.b=0,this.c=1,this.a=new Uint8Array(Math.ceil((t+1)*h/8))}reset(t){const e=Math.ceil((t+1)*h/8);this.a.length<e?this.a=new Uint8Array(e):this.a.fill(0),this.c=1}get requiredLanes(){return this.c}push(t,e,s){s&&(this.b|=1<<t-1);for(let s=e.startLineNumber;s<=e.endLineNumber;s++){const e=h*s+(t-1);this.a[e>>>3]|=1<<e%8,this.c=Math.max(this.c,this.d(s))}}getLanesAtLine(t){const e=[];let s=h*t;for(let t=0;t<h;t++)(this.b&1<<t||this.a[s>>>3]&1<<s%8)&&e.push(t+1),s++;return e.length?e:[n.Center]}d(t){let e=h*t,s=0;for(let t=0;t<h;t++)(this.b&1<<t||this.a[e>>>3]&1<<e%8)&&s++,e++;return s}}export{l as $Xdb};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { GlyphMarginLane } from "../model.js";
+const MAX_LANE = GlyphMarginLane.Right;
+class GlyphMarginLanesModel {
+  static {
+    __name(this, "GlyphMarginLanesModel");
+  }
+  constructor(maxLine) {
+    this.persist = 0;
+    this._requiredLanes = 1;
+    this.lanes = new Uint8Array(Math.ceil((maxLine + 1) * MAX_LANE / 8));
+  }
+  reset(maxLine) {
+    const bytes = Math.ceil((maxLine + 1) * MAX_LANE / 8);
+    if (this.lanes.length < bytes) {
+      this.lanes = new Uint8Array(bytes);
+    } else {
+      this.lanes.fill(0);
+    }
+    this._requiredLanes = 1;
+  }
+  get requiredLanes() {
+    return this._requiredLanes;
+  }
+  push(lane, range, persist) {
+    if (persist) {
+      this.persist |= 1 << lane - 1;
+    }
+    for (let i = range.startLineNumber; i <= range.endLineNumber; i++) {
+      const bit = MAX_LANE * i + (lane - 1);
+      this.lanes[bit >>> 3] |= 1 << bit % 8;
+      this._requiredLanes = Math.max(this._requiredLanes, this.countAtLine(i));
+    }
+  }
+  getLanesAtLine(lineNumber) {
+    const lanes = [];
+    let bit = MAX_LANE * lineNumber;
+    for (let i = 0; i < MAX_LANE; i++) {
+      if (this.persist & 1 << i || this.lanes[bit >>> 3] & 1 << bit % 8) {
+        lanes.push(i + 1);
+      }
+      bit++;
+    }
+    return lanes.length ? lanes : [GlyphMarginLane.Center];
+  }
+  countAtLine(lineNumber) {
+    let bit = MAX_LANE * lineNumber;
+    let count = 0;
+    for (let i = 0; i < MAX_LANE; i++) {
+      if (this.persist & 1 << i || this.lanes[bit >>> 3] & 1 << bit % 8) {
+        count++;
+      }
+      bit++;
+    }
+    return count;
+  }
+}
+export {
+  GlyphMarginLanesModel
+};
+//# sourceMappingURL=glyphLanesModel.js.map

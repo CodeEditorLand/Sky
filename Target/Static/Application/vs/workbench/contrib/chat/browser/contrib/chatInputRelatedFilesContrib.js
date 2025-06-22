@@ -1,1 +1,155 @@
-import{CancellationToken as m}from"../../../../../base/common/cancellation.js";import{$df as b,Event as v}from"../../../../../base/common/event.js";import{$vd as d,$ud as D}from"../../../../../base/common/lifecycle.js";import{$Ic as I,$Jc as p}from"../../../../../base/common/map.js";import{autorun as M}from"../../../../../base/common/observable.js";import{$dh as $}from"../../../../../base/common/resources.js";import{localize as g}from"../../../../../nls.js";import{$pO as F}from"../../common/chatEditingService.js";import{$lWb as _}from"../chat.js";var u=function(r,t,e,s){var n=arguments.length,i=n<3?t:s===null?s=Object.getOwnPropertyDescriptor(t,e):s,o;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")i=Reflect.decorate(r,t,e,s);else for(var a=r.length-1;a>=0;a--)(o=r[a])&&(i=(n<3?o(i):n>3?o(t,e,i):o(t,e))||i);return n>3&&i&&Object.defineProperty(t,e,i),i},c=function(r,t){return function(e,s){t(e,s,r)}};let f=class extends d{static{this.ID="chat.relatedFilesWorkingSet"}constructor(t,e){super(),this.c=t,this.f=e,this.a=new Map,this.B(M(s=>{this.c.editingSessionsObs.read(s).forEach(i=>{const o=this.f.getWidgetBySessionId(i.chatSessionId);o&&!this.a.has(i.chatSessionId)&&this.h(i,o)})}))}g(t,e){this.b||t.entries.get().length>0||e.attachmentModel.fileAttachments.length===0||(this.b=this.c.getRelatedFiles(t.chatSessionId,e.getInput(),e.attachmentModel.fileAttachments,m.None).then(n=>{if(!n?.length||!e.viewModel?.sessionId||!e.input.relatedFiles)return;const i=this.c.getEditingSession(e.viewModel.sessionId);if(!i||i.entries.get().length)return;const o=new p([...e.attachmentModel.fileAttachments,...e.input.relatedFiles.removedFiles]);if(!o.size)return;const a=new I;for(const l of n)for(const h of l.files){if(a.size>=2)break;o.has(h.uri)||(a.set(h.uri,g(5560,null,h.description)),o.add(h.uri))}e.input.relatedFiles.value=[...a.entries()].map(([l,h])=>({uri:l,description:h}))}).finally(()=>{this.b=void 0}))}h(t,e){const s=new D;s.add(t.onDidDispose(()=>{s.clear()})),this.g(t,e);const n=v.debounce(e.inputEditor.onDidChangeModelContent,()=>null,3e3);s.add(n(()=>{this.g(t,e)})),s.add(e.attachmentModel.onDidChange(()=>{this.g(t,e)})),s.add(t.onDidDispose(()=>{s.dispose()})),s.add(e.onDidAcceptInput(()=>{e.input.relatedFiles?.clear(),this.g(t,e)})),this.a.set(t.chatSessionId,s)}dispose(){for(const t of this.a.values())t.dispose();super.dispose()}};f=u([c(0,F),c(1,_)],f);class W extends d{constructor(){super(...arguments),this.a=this.B(new b),this.onDidChange=this.a.event,this.b=new p,this.c=[]}get removedFiles(){return this.b}get value(){return this.c}set value(t){this.c=t,this.a.fire()}remove(t){this.c=this.c.filter(e=>!$(e.uri,t)),this.b.add(t),this.a.fire()}clearRemovedFiles(){this.b.clear()}clear(){this.c=[],this.b.clear(),this.a.fire()}}export{f as $oMb,W as $pMb};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { CancellationToken } from "../../../../../base/common/cancellation.js";
+import { Emitter, Event } from "../../../../../base/common/event.js";
+import { Disposable, DisposableStore } from "../../../../../base/common/lifecycle.js";
+import { ResourceMap, ResourceSet } from "../../../../../base/common/map.js";
+import { autorun } from "../../../../../base/common/observable.js";
+import { isEqual } from "../../../../../base/common/resources.js";
+import { localize } from "../../../../../nls.js";
+import { IChatEditingService } from "../../common/chatEditingService.js";
+import { IChatWidgetService } from "../chat.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+let ChatRelatedFilesContribution = class ChatRelatedFilesContribution2 extends Disposable {
+  static {
+    __name(this, "ChatRelatedFilesContribution");
+  }
+  static {
+    this.ID = "chat.relatedFilesWorkingSet";
+  }
+  constructor(chatEditingService, chatWidgetService) {
+    super();
+    this.chatEditingService = chatEditingService;
+    this.chatWidgetService = chatWidgetService;
+    this.chatEditingSessionDisposables = /* @__PURE__ */ new Map();
+    this._register(autorun((reader) => {
+      const sessions = this.chatEditingService.editingSessionsObs.read(reader);
+      sessions.forEach((session) => {
+        const widget = this.chatWidgetService.getWidgetBySessionId(session.chatSessionId);
+        if (widget && !this.chatEditingSessionDisposables.has(session.chatSessionId)) {
+          this._handleNewEditingSession(session, widget);
+        }
+      });
+    }));
+  }
+  _updateRelatedFileSuggestions(currentEditingSession, widget) {
+    if (this._currentRelatedFilesRetrievalOperation) {
+      return;
+    }
+    const workingSetEntries = currentEditingSession.entries.get();
+    if (workingSetEntries.length > 0 || widget.attachmentModel.fileAttachments.length === 0) {
+      return;
+    }
+    this._currentRelatedFilesRetrievalOperation = this.chatEditingService.getRelatedFiles(currentEditingSession.chatSessionId, widget.getInput(), widget.attachmentModel.fileAttachments, CancellationToken.None).then((files) => {
+      if (!files?.length || !widget.viewModel?.sessionId || !widget.input.relatedFiles) {
+        return;
+      }
+      const currentEditingSession2 = this.chatEditingService.getEditingSession(widget.viewModel.sessionId);
+      if (!currentEditingSession2 || currentEditingSession2.entries.get().length) {
+        return;
+      }
+      const existingFiles = new ResourceSet([...widget.attachmentModel.fileAttachments, ...widget.input.relatedFiles.removedFiles]);
+      if (!existingFiles.size) {
+        return;
+      }
+      const newSuggestions = new ResourceMap();
+      for (const group of files) {
+        for (const file of group.files) {
+          if (newSuggestions.size >= 2) {
+            break;
+          }
+          if (existingFiles.has(file.uri)) {
+            continue;
+          }
+          newSuggestions.set(file.uri, localize("relatedFile", "{0} (Suggested)", file.description));
+          existingFiles.add(file.uri);
+        }
+      }
+      widget.input.relatedFiles.value = [...newSuggestions.entries()].map(([uri, description]) => ({ uri, description }));
+    }).finally(() => {
+      this._currentRelatedFilesRetrievalOperation = void 0;
+    });
+  }
+  _handleNewEditingSession(currentEditingSession, widget) {
+    const disposableStore = new DisposableStore();
+    disposableStore.add(currentEditingSession.onDidDispose(() => {
+      disposableStore.clear();
+    }));
+    this._updateRelatedFileSuggestions(currentEditingSession, widget);
+    const onDebouncedType = Event.debounce(widget.inputEditor.onDidChangeModelContent, () => null, 3e3);
+    disposableStore.add(onDebouncedType(() => {
+      this._updateRelatedFileSuggestions(currentEditingSession, widget);
+    }));
+    disposableStore.add(widget.attachmentModel.onDidChange(() => {
+      this._updateRelatedFileSuggestions(currentEditingSession, widget);
+    }));
+    disposableStore.add(currentEditingSession.onDidDispose(() => {
+      disposableStore.dispose();
+    }));
+    disposableStore.add(widget.onDidAcceptInput(() => {
+      widget.input.relatedFiles?.clear();
+      this._updateRelatedFileSuggestions(currentEditingSession, widget);
+    }));
+    this.chatEditingSessionDisposables.set(currentEditingSession.chatSessionId, disposableStore);
+  }
+  dispose() {
+    for (const store of this.chatEditingSessionDisposables.values()) {
+      store.dispose();
+    }
+    super.dispose();
+  }
+};
+ChatRelatedFilesContribution = __decorate([
+  __param(0, IChatEditingService),
+  __param(1, IChatWidgetService)
+], ChatRelatedFilesContribution);
+class ChatRelatedFiles extends Disposable {
+  static {
+    __name(this, "ChatRelatedFiles");
+  }
+  constructor() {
+    super(...arguments);
+    this._onDidChange = this._register(new Emitter());
+    this.onDidChange = this._onDidChange.event;
+    this._removedFiles = new ResourceSet();
+    this._value = [];
+  }
+  get removedFiles() {
+    return this._removedFiles;
+  }
+  get value() {
+    return this._value;
+  }
+  set value(value) {
+    this._value = value;
+    this._onDidChange.fire();
+  }
+  remove(uri) {
+    this._value = this._value.filter((file) => !isEqual(file.uri, uri));
+    this._removedFiles.add(uri);
+    this._onDidChange.fire();
+  }
+  clearRemovedFiles() {
+    this._removedFiles.clear();
+  }
+  clear() {
+    this._value = [];
+    this._removedFiles.clear();
+    this._onDidChange.fire();
+  }
+}
+export {
+  ChatRelatedFiles,
+  ChatRelatedFilesContribution
+};
+//# sourceMappingURL=chatInputRelatedFilesContrib.js.map

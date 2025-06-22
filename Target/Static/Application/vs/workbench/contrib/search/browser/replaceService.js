@@ -1,1 +1,247 @@
-import*as v from"../../../../nls.js";import*as u from"../../../../base/common/network.js";import{$vd as y}from"../../../../base/common/lifecycle.js";import{$5bc as P}from"./replace.js";import{$oI as E}from"../../../services/editor/common/editorService.js";import{$gF as j}from"../../../../editor/common/services/model.js";import{$BD as S}from"../../../../editor/common/languages/language.js";import{$mcc as C}from"./searchTreeModel/searchViewModelWorkbenchService.js";import{$cF as d}from"../../../../editor/common/services/resolverService.js";import{$mj as x}from"../../../../platform/instantiation/common/instantiation.js";import{$QH as _}from"../../../../editor/common/model/textModel.js";import{$fJ as B}from"../../../services/textfile/common/textfiles.js";import{$7gb as D,$9gb as I}from"../../../../editor/browser/services/bulkEditService.js";import{$cC as $}from"../../../../editor/common/core/range.js";import{$SC as F}from"../../../../editor/common/core/editOperation.js";import{$2H as L}from"../../../../platform/label/common/label.js";import{$jh as O}from"../../../../base/common/resources.js";import{Promises as T}from"../../../../base/common/async.js";import{$hK as N}from"../../../common/editor.js";import{CellUri as V}from"../../notebook/common/notebookCommon.js";import{$Tyb as k}from"../../notebook/common/notebookEditorModelResolverService.js";import{$0ac as q,$$ac as p}from"./searchTreeModel/searchTreeCommon.js";import{$hbc as J}from"./notebookSearch/notebookSearchModelBase.js";var m=function(n,e,o,s){var r=arguments.length,t=r<3?e:s===null?s=Object.getOwnPropertyDescriptor(e,o):s,i;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")t=Reflect.decorate(n,e,o,s);else for(var c=n.length-1;c>=0;c--)(i=n[c])&&(t=(r<3?i(t):r>3?i(e,o,t):i(e,o))||t);return r>3&&t&&Object.defineProperty(e,o,t),t},a=function(n,e){return function(o,s){e(o,s,n)}},h;const M="replacePreview",R=n=>n.with({scheme:u.Schemas.internal,fragment:M,query:JSON.stringify({scheme:n.scheme})}),U=n=>n.with({scheme:JSON.parse(n.query).scheme,fragment:"",query:""});let w=class{static{this.ID="workbench.contrib.replacePreviewContentProvider"}constructor(e,o){this.c=e,this.d=o,this.d.registerTextModelContentProvider(u.Schemas.internal,this)}provideTextContent(e){return e.fragment===M?this.c.createInstance(f).resolve(e):null}};w=m([a(0,x),a(1,d)],w);let f=class extends y{constructor(e,o,s,r,t){super(),this.c=e,this.f=o,this.g=s,this.h=r,this.j=t}async resolve(e){const o=U(e),s=this.j.searchModel.searchResult.matches(!1).filter(l=>l.resource.toString()===o.toString())[0],t=this.B(await this.g.createModelReference(o)).object.textEditorModel,i=t.getLanguageId(),c=this.c.createModel(_(t.createSnapshot()),this.f.createById(i),e);return this.B(s.onChange(({forceUpdateModel:l})=>this.m(t,c,s,l))),this.B(this.j.searchModel.onReplaceTermChanged(()=>this.m(t,c,s))),this.B(s.onDispose(()=>c.dispose())),this.B(c.onWillDispose(()=>this.dispose())),this.B(t.onWillDispose(()=>this.dispose())),c}m(e,o,s,r=!1){!e.isDisposed()&&!o.isDisposed()&&this.h.updateReplacePreview(s,r)}};f=m([a(0,j),a(1,S),a(2,d),a(3,P),a(4,C)],f);let b=class{static{h=this}static{this.c=N.registerSource("searchReplace.source",v.localize(10684,null))}constructor(e,o,s,r,t,i){this.d=e,this.f=o,this.g=s,this.h=r,this.i=t,this.j=i}async replace(e,o=void 0,s=null){const r=this.l(e,s);await this.h.apply(r,{progress:o});const t=r.map(async i=>{if(i.resource.scheme===u.Schemas.vscodeNotebookCell){const c=V.parse(i.resource)?.notebook;if(c){let l;try{l=await this.j.resolve(c),await l.object.save({source:h.c})}finally{l?.dispose()}}return}else return this.d.files.get(i.resource)?.save({source:h.c})});return T.settled(t)}async openReplacePreview(e,o,s,r){const t=p(e)?e.parent():e,i=await this.f.openEditor({original:{resource:t.resource},modified:{resource:R(t.resource)},label:v.localize(10685,null,t.name(),t.name()),description:this.i.getUriLabel(O(t.resource),{relative:!0}),options:{preserveFocus:o,pinned:r,revealIfVisible:!0}}),c=i?.input,l=t.onDispose(()=>{c?.dispose(),l.dispose()});if(await this.updateReplacePreview(t),i){const g=i.getControl();p(e)&&g&&g.revealLineInCenter(e.range().startLineNumber,1)}}async updateReplacePreview(e,o=!1){const s=R(e.resource),[r,t]=await Promise.all([this.g.createModelReference(e.resource),this.g.createModelReference(s)]),i=r.object.textEditorModel,c=t.object.textEditorModel;try{i&&c&&(o?c.setValue(i.getValue()):c.undo(),this.k(e,c))}finally{r.dispose(),t.dispose()}}k(e,o){const s=this.l(e,o.uri),r=[];for(const t of s)r.push(F.replaceMove($.lift(t.textEdit.range),t.textEdit.text));o.pushEditOperations([],r.sort((t,i)=>$.compareRangesUsingStarts(t.range,i.range)),()=>[])}l(e,o=null){const s=[];if(p(e)&&!e.isReadonly)if(J(e)){const r=e;s.push(this.m(r,r.replaceString,r.cell?.uri))}else{const r=e;s.push(this.m(r,r.replaceString,o))}return q(e)&&(e=[e]),e instanceof Array&&e.forEach(r=>{const t=r;t.count()>0&&s.push(...t.matches().flatMap(i=>this.l(i,o)))}),s}m(e,o,s=null){const r=e.parent();return new I(s??r.resource,{range:e.range(),text:o},void 0,void 0)}};b=h=m([a(0,B),a(1,E),a(2,d),a(3,D),a(4,L),a(5,k)],b);export{w as $Enc,b as $Fnc};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import * as nls from "../../../../nls.js";
+import * as network from "../../../../base/common/network.js";
+import { Disposable } from "../../../../base/common/lifecycle.js";
+import { IReplaceService } from "./replace.js";
+import { IEditorService } from "../../../services/editor/common/editorService.js";
+import { IModelService } from "../../../../editor/common/services/model.js";
+import { ILanguageService } from "../../../../editor/common/languages/language.js";
+import { ISearchViewModelWorkbenchService } from "./searchTreeModel/searchViewModelWorkbenchService.js";
+import { ITextModelService } from "../../../../editor/common/services/resolverService.js";
+import { IInstantiationService } from "../../../../platform/instantiation/common/instantiation.js";
+import { createTextBufferFactoryFromSnapshot } from "../../../../editor/common/model/textModel.js";
+import { ITextFileService } from "../../../services/textfile/common/textfiles.js";
+import { IBulkEditService, ResourceTextEdit } from "../../../../editor/browser/services/bulkEditService.js";
+import { Range } from "../../../../editor/common/core/range.js";
+import { EditOperation } from "../../../../editor/common/core/editOperation.js";
+import { ILabelService } from "../../../../platform/label/common/label.js";
+import { dirname } from "../../../../base/common/resources.js";
+import { Promises } from "../../../../base/common/async.js";
+import { SaveSourceRegistry } from "../../../common/editor.js";
+import { CellUri } from "../../notebook/common/notebookCommon.js";
+import { INotebookEditorModelResolverService } from "../../notebook/common/notebookEditorModelResolverService.js";
+import { isSearchTreeFileMatch, isSearchTreeMatch } from "./searchTreeModel/searchTreeCommon.js";
+import { isIMatchInNotebook } from "./notebookSearch/notebookSearchModelBase.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+var ReplaceService_1;
+const REPLACE_PREVIEW = "replacePreview";
+const toReplaceResource = /* @__PURE__ */ __name((fileResource) => {
+  return fileResource.with({ scheme: network.Schemas.internal, fragment: REPLACE_PREVIEW, query: JSON.stringify({ scheme: fileResource.scheme }) });
+}, "toReplaceResource");
+const toFileResource = /* @__PURE__ */ __name((replaceResource) => {
+  return replaceResource.with({ scheme: JSON.parse(replaceResource.query)["scheme"], fragment: "", query: "" });
+}, "toFileResource");
+let ReplacePreviewContentProvider = class ReplacePreviewContentProvider2 {
+  static {
+    __name(this, "ReplacePreviewContentProvider");
+  }
+  static {
+    this.ID = "workbench.contrib.replacePreviewContentProvider";
+  }
+  constructor(instantiationService, textModelResolverService) {
+    this.instantiationService = instantiationService;
+    this.textModelResolverService = textModelResolverService;
+    this.textModelResolverService.registerTextModelContentProvider(network.Schemas.internal, this);
+  }
+  provideTextContent(uri) {
+    if (uri.fragment === REPLACE_PREVIEW) {
+      return this.instantiationService.createInstance(ReplacePreviewModel).resolve(uri);
+    }
+    return null;
+  }
+};
+ReplacePreviewContentProvider = __decorate([
+  __param(0, IInstantiationService),
+  __param(1, ITextModelService)
+], ReplacePreviewContentProvider);
+let ReplacePreviewModel = class ReplacePreviewModel2 extends Disposable {
+  static {
+    __name(this, "ReplacePreviewModel");
+  }
+  constructor(modelService, languageService, textModelResolverService, replaceService, searchWorkbenchService) {
+    super();
+    this.modelService = modelService;
+    this.languageService = languageService;
+    this.textModelResolverService = textModelResolverService;
+    this.replaceService = replaceService;
+    this.searchWorkbenchService = searchWorkbenchService;
+  }
+  async resolve(replacePreviewUri) {
+    const fileResource = toFileResource(replacePreviewUri);
+    const fileMatch = this.searchWorkbenchService.searchModel.searchResult.matches(false).filter((match) => match.resource.toString() === fileResource.toString())[0];
+    const ref = this._register(await this.textModelResolverService.createModelReference(fileResource));
+    const sourceModel = ref.object.textEditorModel;
+    const sourceModelLanguageId = sourceModel.getLanguageId();
+    const replacePreviewModel = this.modelService.createModel(createTextBufferFactoryFromSnapshot(sourceModel.createSnapshot()), this.languageService.createById(sourceModelLanguageId), replacePreviewUri);
+    this._register(fileMatch.onChange(({ forceUpdateModel }) => this.update(sourceModel, replacePreviewModel, fileMatch, forceUpdateModel)));
+    this._register(this.searchWorkbenchService.searchModel.onReplaceTermChanged(() => this.update(sourceModel, replacePreviewModel, fileMatch)));
+    this._register(fileMatch.onDispose(() => replacePreviewModel.dispose()));
+    this._register(replacePreviewModel.onWillDispose(() => this.dispose()));
+    this._register(sourceModel.onWillDispose(() => this.dispose()));
+    return replacePreviewModel;
+  }
+  update(sourceModel, replacePreviewModel, fileMatch, override = false) {
+    if (!sourceModel.isDisposed() && !replacePreviewModel.isDisposed()) {
+      this.replaceService.updateReplacePreview(fileMatch, override);
+    }
+  }
+};
+ReplacePreviewModel = __decorate([
+  __param(0, IModelService),
+  __param(1, ILanguageService),
+  __param(2, ITextModelService),
+  __param(3, IReplaceService),
+  __param(4, ISearchViewModelWorkbenchService)
+], ReplacePreviewModel);
+let ReplaceService = class ReplaceService2 {
+  static {
+    __name(this, "ReplaceService");
+  }
+  static {
+    ReplaceService_1 = this;
+  }
+  static {
+    this.REPLACE_SAVE_SOURCE = SaveSourceRegistry.registerSource("searchReplace.source", nls.localize("searchReplace.source", "Search and Replace"));
+  }
+  constructor(textFileService, editorService, textModelResolverService, bulkEditorService, labelService, notebookEditorModelResolverService) {
+    this.textFileService = textFileService;
+    this.editorService = editorService;
+    this.textModelResolverService = textModelResolverService;
+    this.bulkEditorService = bulkEditorService;
+    this.labelService = labelService;
+    this.notebookEditorModelResolverService = notebookEditorModelResolverService;
+  }
+  async replace(arg, progress = void 0, resource = null) {
+    const edits = this.createEdits(arg, resource);
+    await this.bulkEditorService.apply(edits, { progress });
+    const rawTextPromises = edits.map(async (e) => {
+      if (e.resource.scheme === network.Schemas.vscodeNotebookCell) {
+        const notebookResource = CellUri.parse(e.resource)?.notebook;
+        if (notebookResource) {
+          let ref;
+          try {
+            ref = await this.notebookEditorModelResolverService.resolve(notebookResource);
+            await ref.object.save({ source: ReplaceService_1.REPLACE_SAVE_SOURCE });
+          } finally {
+            ref?.dispose();
+          }
+        }
+        return;
+      } else {
+        return this.textFileService.files.get(e.resource)?.save({ source: ReplaceService_1.REPLACE_SAVE_SOURCE });
+      }
+    });
+    return Promises.settled(rawTextPromises);
+  }
+  async openReplacePreview(element, preserveFocus, sideBySide, pinned) {
+    const fileMatch = isSearchTreeMatch(element) ? element.parent() : element;
+    const editor = await this.editorService.openEditor({
+      original: { resource: fileMatch.resource },
+      modified: { resource: toReplaceResource(fileMatch.resource) },
+      label: nls.localize("fileReplaceChanges", "{0} \u2194 {1} (Replace Preview)", fileMatch.name(), fileMatch.name()),
+      description: this.labelService.getUriLabel(dirname(fileMatch.resource), { relative: true }),
+      options: {
+        preserveFocus,
+        pinned,
+        revealIfVisible: true
+      }
+    });
+    const input = editor?.input;
+    const disposable = fileMatch.onDispose(() => {
+      input?.dispose();
+      disposable.dispose();
+    });
+    await this.updateReplacePreview(fileMatch);
+    if (editor) {
+      const editorControl = editor.getControl();
+      if (isSearchTreeMatch(element) && editorControl) {
+        editorControl.revealLineInCenter(
+          element.range().startLineNumber,
+          1
+          /* ScrollType.Immediate */
+        );
+      }
+    }
+  }
+  async updateReplacePreview(fileMatch, override = false) {
+    const replacePreviewUri = toReplaceResource(fileMatch.resource);
+    const [sourceModelRef, replaceModelRef] = await Promise.all([this.textModelResolverService.createModelReference(fileMatch.resource), this.textModelResolverService.createModelReference(replacePreviewUri)]);
+    const sourceModel = sourceModelRef.object.textEditorModel;
+    const replaceModel = replaceModelRef.object.textEditorModel;
+    try {
+      if (sourceModel && replaceModel) {
+        if (override) {
+          replaceModel.setValue(sourceModel.getValue());
+        } else {
+          replaceModel.undo();
+        }
+        this.applyEditsToPreview(fileMatch, replaceModel);
+      }
+    } finally {
+      sourceModelRef.dispose();
+      replaceModelRef.dispose();
+    }
+  }
+  applyEditsToPreview(fileMatch, replaceModel) {
+    const resourceEdits = this.createEdits(fileMatch, replaceModel.uri);
+    const modelEdits = [];
+    for (const resourceEdit of resourceEdits) {
+      modelEdits.push(EditOperation.replaceMove(Range.lift(resourceEdit.textEdit.range), resourceEdit.textEdit.text));
+    }
+    replaceModel.pushEditOperations([], modelEdits.sort((a, b) => Range.compareRangesUsingStarts(a.range, b.range)), () => []);
+  }
+  createEdits(arg, resource = null) {
+    const edits = [];
+    if (isSearchTreeMatch(arg)) {
+      if (!arg.isReadonly) {
+        if (isIMatchInNotebook(arg)) {
+          const match = arg;
+          edits.push(this.createEdit(match, match.replaceString, match.cell?.uri));
+        } else {
+          const match = arg;
+          edits.push(this.createEdit(match, match.replaceString, resource));
+        }
+      }
+    }
+    if (isSearchTreeFileMatch(arg)) {
+      arg = [arg];
+    }
+    if (arg instanceof Array) {
+      arg.forEach((element) => {
+        const fileMatch = element;
+        if (fileMatch.count() > 0) {
+          edits.push(...fileMatch.matches().flatMap((match) => this.createEdits(match, resource)));
+        }
+      });
+    }
+    return edits;
+  }
+  createEdit(match, text, resource = null) {
+    const fileMatch = match.parent();
+    return new ResourceTextEdit(resource ?? fileMatch.resource, { range: match.range(), text }, void 0, void 0);
+  }
+};
+ReplaceService = ReplaceService_1 = __decorate([
+  __param(0, ITextFileService),
+  __param(1, IEditorService),
+  __param(2, ITextModelService),
+  __param(3, IBulkEditService),
+  __param(4, ILabelService),
+  __param(5, INotebookEditorModelResolverService)
+], ReplaceService);
+export {
+  ReplacePreviewContentProvider,
+  ReplaceService
+};
+//# sourceMappingURL=replaceService.js.map

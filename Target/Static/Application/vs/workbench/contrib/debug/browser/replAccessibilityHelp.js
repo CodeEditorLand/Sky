@@ -1,2 +1,65 @@
-import{$Bn as r}from"../../../../platform/contextkey/common/contextkey.js";import{$vd as l}from"../../../../base/common/lifecycle.js";import{$Wjc as s}from"./repl.js";import{$Jwb as c}from"../../../services/views/common/viewsService.js";import{localize as e}from"../../../../nls.js";class g{constructor(){this.priority=120,this.name="replHelp",this.when=r.equals("focusedView","workbench.panel.repl.view"),this.type="help"}getProvider(i){const o=i.get(c),t=s(o);if(t)return new p(t)}}class p extends l{constructor(i){super(),this.b=i,this.id="replHelp",this.verbositySettingKey="accessibility.verbosity.debug",this.options={type:"help"},this.a=!1,this.a=!!i.getFocusedElement()}onClose(){if(this.a)return this.b.focusTree();this.b.getReplInput().focus()}provideContent(){return[e(6742,null,"<keybinding:workbench.panel.repl.view.focus>"),e(6743,null,"<keybinding:widgetNavigation.focusPrevious>"),e(6744,null,"<keybinding:widgetNavigation.focusNext>"),e(6745,null),e(6746,null,"<keybinding:editor.action.accessibleView>"),e(6747,null,"<keybinding:workbench.view.debug>"),e(6748,null,"<keybinding:workbench.debug.panel.action.clearReplAction>"),e(6749,null)].join(`
-`)}}export{g as $9oc};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { ContextKeyExpr } from "../../../../platform/contextkey/common/contextkey.js";
+import { Disposable } from "../../../../base/common/lifecycle.js";
+import { getReplView } from "./repl.js";
+import { IViewsService } from "../../../services/views/common/viewsService.js";
+import { localize } from "../../../../nls.js";
+class ReplAccessibilityHelp {
+  static {
+    __name(this, "ReplAccessibilityHelp");
+  }
+  constructor() {
+    this.priority = 120;
+    this.name = "replHelp";
+    this.when = ContextKeyExpr.equals("focusedView", "workbench.panel.repl.view");
+    this.type = "help";
+  }
+  getProvider(accessor) {
+    const viewsService = accessor.get(IViewsService);
+    const replView = getReplView(viewsService);
+    if (!replView) {
+      return void 0;
+    }
+    return new ReplAccessibilityHelpProvider(replView);
+  }
+}
+class ReplAccessibilityHelpProvider extends Disposable {
+  static {
+    __name(this, "ReplAccessibilityHelpProvider");
+  }
+  constructor(_replView) {
+    super();
+    this._replView = _replView;
+    this.id = "replHelp";
+    this.verbositySettingKey = "accessibility.verbosity.debug";
+    this.options = {
+      type: "help"
+      /* AccessibleViewType.Help */
+    };
+    this._treeHadFocus = false;
+    this._treeHadFocus = !!_replView.getFocusedElement();
+  }
+  onClose() {
+    if (this._treeHadFocus) {
+      return this._replView.focusTree();
+    }
+    this._replView.getReplInput().focus();
+  }
+  provideContent() {
+    return [
+      localize("repl.help", "The debug console is a Read-Eval-Print-Loop that allows you to evaluate expressions and run commands and can be focused with{0}.", "<keybinding:workbench.panel.repl.view.focus>"),
+      localize("repl.output", "The debug console output can be navigated to from the input field with the Focus Previous Widget command{0}.", "<keybinding:widgetNavigation.focusPrevious>"),
+      localize("repl.input", "The debug console input can be navigated to from the output with the Focus Next Widget command{0}.", "<keybinding:widgetNavigation.focusNext>"),
+      localize("repl.history", "The debug console output history can be navigated with the up and down arrow keys."),
+      localize("repl.accessibleView", "The Open Accessible View command{0} will allow character by character navigation of the console output.", "<keybinding:editor.action.accessibleView>"),
+      localize("repl.showRunAndDebug", "The Show Run and Debug view command{0} will open the Run and Debug view and provides more information about debugging.", "<keybinding:workbench.view.debug>"),
+      localize("repl.clear", "The Debug: Clear Console command{0} will clear the console output.", "<keybinding:workbench.debug.panel.action.clearReplAction>"),
+      localize("repl.lazyVariables", "The setting `debug.expandLazyVariables` controls whether variables are evaluated automatically. This is enabled by default when using a screen reader.")
+    ].join("\n");
+  }
+}
+export {
+  ReplAccessibilityHelp
+};
+//# sourceMappingURL=replAccessibilityHelp.js.map

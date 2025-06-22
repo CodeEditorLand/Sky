@@ -1,1 +1,201 @@
-import*as a from"../../../../../base/browser/dom.js";import{$kb as u}from"../../../../../base/common/errors.js";import{$vd as d,$ud as h,$wd as s}from"../../../../../base/common/lifecycle.js";class c extends d{constructor(){super(),this.f=this.B(new h)}prepareRenderCell(e){}renderCell(e){this.c=e,r(()=>this.didRenderCell(e))}didRenderCell(e){}unrenderCell(e){this.c=void 0,this.f.clear()}prepareLayout(){}updateInternalLayoutNow(e){}updateState(e,t){}updateForExecutionState(e,t){}}class f extends d{constructor(){super(),this.b=this.B(new h)}prepareRenderCell(e){}renderCell(e){this.a=e,this.didRenderCell(e)}didRenderCell(e){}unrenderCell(e){this.a=void 0,this.b.clear()}updateInternalLayoutNow(e){}updateState(e,t){}updateForExecutionState(e,t){}}function r(o){try{return o()}catch(e){return u(e),null}}class i extends d{constructor(e,t,n){super(),this.f=e,this.g=t,this.h=n,this.a=this.B(new s),this.b=this.B(new s),this.c=this.B(new s)}concatContentPart(e,t){return new i(t,this.g.concat(e),this.h)}concatOverlayPart(e,t){return new i(t,this.g,this.h.concat(e))}scheduleRenderCell(e){for(const t of this.g)r(()=>t.prepareRenderCell(e));for(const t of this.h)r(()=>t.prepareRenderCell(e));for(const t of this.g)r(()=>t.renderCell(e));this.a.value=a.$X5(this.f,()=>{for(const t of this.h)r(()=>t.renderCell(e))})}unrenderCell(e){for(const t of this.g)r(()=>t.unrenderCell(e));this.a.value=void 0,this.b.value=void 0,this.c.value=void 0;for(const t of this.h)r(()=>t.unrenderCell(e))}updateInternalLayoutNow(e){for(const t of this.g)r(()=>t.updateInternalLayoutNow(e));for(const t of this.h)r(()=>t.updateInternalLayoutNow(e))}prepareLayout(){for(const e of this.g)r(()=>e.prepareLayout())}updateState(e,t){for(const n of this.g)r(()=>n.updateState(e,t));this.b.value=a.$X5(this.f,()=>{for(const n of this.h)r(()=>n.updateState(e,t))})}updateForExecutionState(e,t){for(const n of this.g)r(()=>n.updateForExecutionState(e,t));this.c.value=a.$X5(this.f,()=>{for(const n of this.h)r(()=>n.updateForExecutionState(e,t))})}}export{c as $DSb,f as $ESb,i as $FSb};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import * as DOM from "../../../../../base/browser/dom.js";
+import { onUnexpectedError } from "../../../../../base/common/errors.js";
+import { Disposable, DisposableStore, MutableDisposable } from "../../../../../base/common/lifecycle.js";
+class CellContentPart extends Disposable {
+  static {
+    __name(this, "CellContentPart");
+  }
+  constructor() {
+    super();
+    this.cellDisposables = this._register(new DisposableStore());
+  }
+  /**
+   * Prepare model for cell part rendering
+   * No DOM operations recommended within this operation
+   */
+  prepareRenderCell(element) {
+  }
+  /**
+   * Update the DOM for the cell `element`
+   */
+  renderCell(element) {
+    this.currentCell = element;
+    safeInvokeNoArg(() => this.didRenderCell(element));
+  }
+  didRenderCell(element) {
+  }
+  /**
+   * Dispose any disposables generated from `didRenderCell`
+   */
+  unrenderCell(element) {
+    this.currentCell = void 0;
+    this.cellDisposables.clear();
+  }
+  /**
+   * Perform DOM read operations to prepare for the list/cell layout update.
+   */
+  prepareLayout() {
+  }
+  /**
+   * Update internal DOM (top positions) per cell layout info change
+   * Note that a cell part doesn't need to call `DOM.scheduleNextFrame`,
+   * the list view will ensure that layout call is invoked in the right frame
+   */
+  updateInternalLayoutNow(element) {
+  }
+  /**
+   * Update per cell state change
+   */
+  updateState(element, e) {
+  }
+  /**
+   * Update per execution state change.
+   */
+  updateForExecutionState(element, e) {
+  }
+}
+class CellOverlayPart extends Disposable {
+  static {
+    __name(this, "CellOverlayPart");
+  }
+  constructor() {
+    super();
+    this.cellDisposables = this._register(new DisposableStore());
+  }
+  /**
+   * Prepare model for cell part rendering
+   * No DOM operations recommended within this operation
+   */
+  prepareRenderCell(element) {
+  }
+  /**
+   * Update the DOM for the cell `element`
+   */
+  renderCell(element) {
+    this.currentCell = element;
+    this.didRenderCell(element);
+  }
+  didRenderCell(element) {
+  }
+  /**
+   * Dispose any disposables generated from `didRenderCell`
+   */
+  unrenderCell(element) {
+    this.currentCell = void 0;
+    this.cellDisposables.clear();
+  }
+  /**
+   * Update internal DOM (top positions) per cell layout info change
+   * Note that a cell part doesn't need to call `DOM.scheduleNextFrame`,
+   * the list view will ensure that layout call is invoked in the right frame
+   */
+  updateInternalLayoutNow(element) {
+  }
+  /**
+   * Update per cell state change
+   */
+  updateState(element, e) {
+  }
+  /**
+   * Update per execution state change.
+   */
+  updateForExecutionState(element, e) {
+  }
+}
+function safeInvokeNoArg(func) {
+  try {
+    return func();
+  } catch (e) {
+    onUnexpectedError(e);
+    return null;
+  }
+}
+__name(safeInvokeNoArg, "safeInvokeNoArg");
+class CellPartsCollection extends Disposable {
+  static {
+    __name(this, "CellPartsCollection");
+  }
+  constructor(targetWindow, contentParts, overlayParts) {
+    super();
+    this.targetWindow = targetWindow;
+    this.contentParts = contentParts;
+    this.overlayParts = overlayParts;
+    this._scheduledOverlayRendering = this._register(new MutableDisposable());
+    this._scheduledOverlayUpdateState = this._register(new MutableDisposable());
+    this._scheduledOverlayUpdateExecutionState = this._register(new MutableDisposable());
+  }
+  concatContentPart(other, targetWindow) {
+    return new CellPartsCollection(targetWindow, this.contentParts.concat(other), this.overlayParts);
+  }
+  concatOverlayPart(other, targetWindow) {
+    return new CellPartsCollection(targetWindow, this.contentParts, this.overlayParts.concat(other));
+  }
+  scheduleRenderCell(element) {
+    for (const part of this.contentParts) {
+      safeInvokeNoArg(() => part.prepareRenderCell(element));
+    }
+    for (const part of this.overlayParts) {
+      safeInvokeNoArg(() => part.prepareRenderCell(element));
+    }
+    for (const part of this.contentParts) {
+      safeInvokeNoArg(() => part.renderCell(element));
+    }
+    this._scheduledOverlayRendering.value = DOM.modify(this.targetWindow, () => {
+      for (const part of this.overlayParts) {
+        safeInvokeNoArg(() => part.renderCell(element));
+      }
+    });
+  }
+  unrenderCell(element) {
+    for (const part of this.contentParts) {
+      safeInvokeNoArg(() => part.unrenderCell(element));
+    }
+    this._scheduledOverlayRendering.value = void 0;
+    this._scheduledOverlayUpdateState.value = void 0;
+    this._scheduledOverlayUpdateExecutionState.value = void 0;
+    for (const part of this.overlayParts) {
+      safeInvokeNoArg(() => part.unrenderCell(element));
+    }
+  }
+  updateInternalLayoutNow(viewCell) {
+    for (const part of this.contentParts) {
+      safeInvokeNoArg(() => part.updateInternalLayoutNow(viewCell));
+    }
+    for (const part of this.overlayParts) {
+      safeInvokeNoArg(() => part.updateInternalLayoutNow(viewCell));
+    }
+  }
+  prepareLayout() {
+    for (const part of this.contentParts) {
+      safeInvokeNoArg(() => part.prepareLayout());
+    }
+  }
+  updateState(viewCell, e) {
+    for (const part of this.contentParts) {
+      safeInvokeNoArg(() => part.updateState(viewCell, e));
+    }
+    this._scheduledOverlayUpdateState.value = DOM.modify(this.targetWindow, () => {
+      for (const part of this.overlayParts) {
+        safeInvokeNoArg(() => part.updateState(viewCell, e));
+      }
+    });
+  }
+  updateForExecutionState(viewCell, e) {
+    for (const part of this.contentParts) {
+      safeInvokeNoArg(() => part.updateForExecutionState(viewCell, e));
+    }
+    this._scheduledOverlayUpdateExecutionState.value = DOM.modify(this.targetWindow, () => {
+      for (const part of this.overlayParts) {
+        safeInvokeNoArg(() => part.updateForExecutionState(viewCell, e));
+      }
+    });
+  }
+}
+export {
+  CellContentPart,
+  CellOverlayPart,
+  CellPartsCollection
+};
+//# sourceMappingURL=cellPart.js.map

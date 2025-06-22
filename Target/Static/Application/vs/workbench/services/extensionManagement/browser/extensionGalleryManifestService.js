@@ -1,1 +1,45 @@
-import{$2y as m}from"../../../../platform/extensionManagement/common/extensionGalleryManifest.js";import{$24 as h}from"../../../../platform/extensionManagement/common/extensionGalleryManifestService.js";import{$WB as p}from"../../../../platform/instantiation/common/extensions.js";import{$nn as u}from"../../../../platform/product/common/productService.js";import{$YK as x}from"../../remote/common/remoteAgentService.js";var c=function(r,e,t,i){var o=arguments.length,n=o<3?e:i===null?i=Object.getOwnPropertyDescriptor(e,t):i,l;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")n=Reflect.decorate(r,e,t,i);else for(var s=r.length-1;s>=0;s--)(l=r[s])&&(n=(o<3?l(n):o>3?l(e,t,n):l(e,t))||n);return o>3&&n&&Object.defineProperty(e,t,n),n},f=function(r,e){return function(t,i){e(t,i,r)}};let a=class extends h{constructor(e,t){super(e);const i=t.getConnection();if(i){const o=i.getChannel("extensionGalleryManifest");this.getExtensionGalleryManifest().then(n=>{o.call("setExtensionGalleryManifest",[n]),this.B(this.onDidChangeExtensionGalleryManifest(l=>o.call("setExtensionGalleryManifest",[l])))})}}};a=c([f(0,u),f(1,x)],a);p(m,a,1);
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { IExtensionGalleryManifestService } from "../../../../platform/extensionManagement/common/extensionGalleryManifest.js";
+import { ExtensionGalleryManifestService } from "../../../../platform/extensionManagement/common/extensionGalleryManifestService.js";
+import { registerSingleton } from "../../../../platform/instantiation/common/extensions.js";
+import { IProductService } from "../../../../platform/product/common/productService.js";
+import { IRemoteAgentService } from "../../remote/common/remoteAgentService.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+let WebExtensionGalleryManifestService = class WebExtensionGalleryManifestService2 extends ExtensionGalleryManifestService {
+  static {
+    __name(this, "WebExtensionGalleryManifestService");
+  }
+  constructor(productService, remoteAgentService) {
+    super(productService);
+    const remoteConnection = remoteAgentService.getConnection();
+    if (remoteConnection) {
+      const channel = remoteConnection.getChannel("extensionGalleryManifest");
+      this.getExtensionGalleryManifest().then((manifest) => {
+        channel.call("setExtensionGalleryManifest", [manifest]);
+        this._register(this.onDidChangeExtensionGalleryManifest((manifest2) => channel.call("setExtensionGalleryManifest", [manifest2])));
+      });
+    }
+  }
+};
+WebExtensionGalleryManifestService = __decorate([
+  __param(0, IProductService),
+  __param(1, IRemoteAgentService)
+], WebExtensionGalleryManifestService);
+registerSingleton(
+  IExtensionGalleryManifestService,
+  WebExtensionGalleryManifestService,
+  1
+  /* InstantiationType.Delayed */
+);
+//# sourceMappingURL=extensionGalleryManifestService.js.map

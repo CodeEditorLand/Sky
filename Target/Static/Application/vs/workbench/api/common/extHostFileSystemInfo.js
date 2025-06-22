@@ -1,1 +1,43 @@
-import{Schemas as s}from"../../../base/common/network.js";import{$_g as r}from"../../../base/common/resources.js";import{$nj as i}from"../../../platform/instantiation/common/instantiation.js";class a{constructor(){this.a=new Set(Object.keys(s)),this.b=new Map,this.extUri=new r(e=>{const t=this.b.get(e.scheme);return!(t===void 0||t&1024)})}$acceptProviderInfos(e,t){t===null?this.b.delete(e.scheme):this.b.set(e.scheme,t)}isFreeScheme(e){return!this.b.has(e)&&!this.a.has(e)}getCapabilities(e){return this.b.get(e)}}const f=i("IExtHostFileSystemInfo");export{a as $gKc,f as $hKc};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { Schemas } from "../../../base/common/network.js";
+import { ExtUri } from "../../../base/common/resources.js";
+import { createDecorator } from "../../../platform/instantiation/common/instantiation.js";
+class ExtHostFileSystemInfo {
+  static {
+    __name(this, "ExtHostFileSystemInfo");
+  }
+  constructor() {
+    this._systemSchemes = new Set(Object.keys(Schemas));
+    this._providerInfo = /* @__PURE__ */ new Map();
+    this.extUri = new ExtUri((uri) => {
+      const capabilities = this._providerInfo.get(uri.scheme);
+      if (capabilities === void 0) {
+        return false;
+      }
+      if (capabilities & 1024) {
+        return false;
+      }
+      return true;
+    });
+  }
+  $acceptProviderInfos(uri, capabilities) {
+    if (capabilities === null) {
+      this._providerInfo.delete(uri.scheme);
+    } else {
+      this._providerInfo.set(uri.scheme, capabilities);
+    }
+  }
+  isFreeScheme(scheme) {
+    return !this._providerInfo.has(scheme) && !this._systemSchemes.has(scheme);
+  }
+  getCapabilities(scheme) {
+    return this._providerInfo.get(scheme);
+  }
+}
+const IExtHostFileSystemInfo = createDecorator("IExtHostFileSystemInfo");
+export {
+  ExtHostFileSystemInfo,
+  IExtHostFileSystemInfo
+};
+//# sourceMappingURL=extHostFileSystemInfo.js.map

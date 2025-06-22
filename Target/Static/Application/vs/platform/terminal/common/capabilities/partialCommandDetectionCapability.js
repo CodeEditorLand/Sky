@@ -1,1 +1,66 @@
-import{$df as r}from"../../../../base/common/event.js";import{$ud as n}from"../../../../base/common/lifecycle.js";var e;(function(h){h[h.MinimumPromptLength=2]="MinimumPromptLength"})(e||(e={}));class c extends n{get commands(){return this.a}constructor(t,i){super(),this.c=t,this.h=i,this.type=3,this.a=[],this.b=this.add(new r),this.onCommandFinished=this.b.event,this.add(this.c.onData(s=>this.j(s))),this.add(this.c.parser.registerCsiHandler({final:"J"},s=>(s.length>=1&&(s[0]===2||s[0]===3)&&this.n(),!1))),this.h&&this.add(this.h(()=>this.m()))}j(t){t==="\r"&&this.m()}m(){if(this.c&&this.c.buffer.active.cursorX>=2){const t=this.c.registerMarker(0);t&&(this.a.push(t),this.b.fire(t))}}n(){let t=0;for(let i=this.a.length-1;i>=0&&!(this.a[i].line<this.c.buffer.active.baseY);i--)t++;this.a.splice(this.a.length-t,t)}}export{c as $eYb};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { Emitter } from "../../../../base/common/event.js";
+import { DisposableStore } from "../../../../base/common/lifecycle.js";
+var Constants;
+(function(Constants2) {
+  Constants2[Constants2["MinimumPromptLength"] = 2] = "MinimumPromptLength";
+})(Constants || (Constants = {}));
+class PartialCommandDetectionCapability extends DisposableStore {
+  static {
+    __name(this, "PartialCommandDetectionCapability");
+  }
+  get commands() {
+    return this._commands;
+  }
+  constructor(_terminal, _onDidExecuteText) {
+    super();
+    this._terminal = _terminal;
+    this._onDidExecuteText = _onDidExecuteText;
+    this.type = 3;
+    this._commands = [];
+    this._onCommandFinished = this.add(new Emitter());
+    this.onCommandFinished = this._onCommandFinished.event;
+    this.add(this._terminal.onData((e) => this._onData(e)));
+    this.add(this._terminal.parser.registerCsiHandler({ final: "J" }, (params) => {
+      if (params.length >= 1 && (params[0] === 2 || params[0] === 3)) {
+        this._clearCommandsInViewport();
+      }
+      return false;
+    }));
+    if (this._onDidExecuteText) {
+      this.add(this._onDidExecuteText(() => this._onEnter()));
+    }
+  }
+  _onData(data) {
+    if (data === "\r") {
+      this._onEnter();
+    }
+  }
+  _onEnter() {
+    if (!this._terminal) {
+      return;
+    }
+    if (this._terminal.buffer.active.cursorX >= 2) {
+      const marker = this._terminal.registerMarker(0);
+      if (marker) {
+        this._commands.push(marker);
+        this._onCommandFinished.fire(marker);
+      }
+    }
+  }
+  _clearCommandsInViewport() {
+    let count = 0;
+    for (let i = this._commands.length - 1; i >= 0; i--) {
+      if (this._commands[i].line < this._terminal.buffer.active.baseY) {
+        break;
+      }
+      count++;
+    }
+    this._commands.splice(this._commands.length - count, count);
+  }
+}
+export {
+  PartialCommandDetectionCapability
+};
+//# sourceMappingURL=partialCommandDetectionCapability.js.map

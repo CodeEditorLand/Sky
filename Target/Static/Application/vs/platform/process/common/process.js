@@ -1,1 +1,13 @@
-import{$nj as t}from"../../instantiation/common/instantiation.js";var o;!function(o){o.VSCode="vscode",o.Extension="extension",o.Marketplace="marketplace"}(o||(o={}));const r=t("processService");export{r as $bx,o as IssueSource};
+import { createDecorator } from "../../instantiation/common/instantiation.js";
+var IssueSource;
+(function(IssueSource2) {
+  IssueSource2["VSCode"] = "vscode";
+  IssueSource2["Extension"] = "extension";
+  IssueSource2["Marketplace"] = "marketplace";
+})(IssueSource || (IssueSource = {}));
+const IProcessService = createDecorator("processService");
+export {
+  IProcessService,
+  IssueSource
+};
+//# sourceMappingURL=process.js.map

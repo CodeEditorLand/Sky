@@ -1,1 +1,156 @@
-import{$7b as c}from"../../../../../../base/common/arrays.js";import{$Ed as m,$ud as u}from"../../../../../../base/common/lifecycle.js";import{EDITOR_FONT_DEFAULTS as l}from"../../../../../../editor/common/config/editorOptions.js";import{$El as p}from"../../../../../../platform/configuration/common/configuration.js";import{$Vn as g}from"../../../../../../platform/contextkey/common/contextkey.js";import{$mj as y}from"../../../../../../platform/instantiation/common/instantiation.js";import{$Mt as w}from"../../../../../../platform/theme/common/themeService.js";import{$eTb as b}from"../../../../comments/browser/commentService.js";import{$JTb as I}from"../../../../comments/browser/commentThreadWidget.js";import{$DSb as D}from"../cellPart.js";var d=function(t,e,o,s){var i,n=arguments.length,a=n<3?e:null===s?s=Object.getOwnPropertyDescriptor(e,o):s;if("object"==typeof Reflect&&"function"==typeof Reflect.decorate)a=Reflect.decorate(t,e,o,s);else for(var r=t.length-1;r>=0;r--)(i=t[r])&&(a=(n<3?i(a):n>3?i(e,o,a):i(e,o))||a);return n>3&&a&&Object.defineProperty(e,o,a),a},a=function(t,e){return function(o,s){e(o,s,t)}};let f=class extends D{constructor(t,e,o,s,i,n,a){super(),this.g=t,this.h=e,this.j=o,this.m=s,this.n=i,this.r=n,this.s=a,this.h.classList.add("review-widget"),this.B(this.a=new m),this.B(this.m.onDidColorThemeChange(this.F,this)),this.F()}async t(t){this.b!==t&&(this.b=t,await this.y())}async u(t,e){const o=new u,s=this.s.createInstance(I,this.h,this.g,t,this.g.textModel.uri,this.j,this.s,e,void 0,void 0,{codeBlockFontFamily:this.r.getValue("editor").fontFamily||l.fontFamily},void 0,{actionRunner:()=>{},collapse:async()=>!0});o.add(s),this.a.set(e.threadId,{widget:s,dispose:()=>o.dispose()});const i=this.g.getLayoutInfo();await s.display(i.fontInfo.lineHeight,!0),this.F(),o.add(s.onDidResize((()=>{this.b&&(this.b.commentHeight=this.z(s.getDimensions().height))})))}w(){this.f.add(this.n.onDidUpdateCommentThreads((async()=>this.y())))}async y(){if(!this.b)return;const t=await this.D(this.b),e=new Set(this.a.keys()),o=this.b.layoutInfo;this.h.style.top=`${o.commentOffset}px`;for(const o of t)if(o)for(const t of o.threads){e.delete(t.threadId);const s=this.a.get(t.threadId)?.widget;s?await s.updateCommentThread(t):await this.u(o.uniqueOwner,t)}for(const t of e)this.a.deleteAndDispose(t);this.C()}z(t){const e=this.g.getLayoutInfo(),o=Math.ceil(1.2*e.fontInfo.lineHeight),s=e.fontInfo.lineHeight;return o+t+Math.round(s/3)+2*Math.round(s/9)+8}C(){if(!this.b)return;let t=0;for(const{widget:e}of this.a.values())t+=this.z(e.getDimensions().height);this.b.commentHeight=t}async D(t){return this.g.hasModel()?c(await this.n.getNotebookComments(t.uri)):[]}F(){const t=this.m.getColorTheme(),e=this.g.getLayoutInfo().fontInfo;for(const{widget:o}of this.a.values())o.applyTheme(t,e)}didRenderCell(t){this.t(t),this.w()}prepareLayout(){this.C()}updateInternalLayoutNow(t){this.b&&(this.h.style.top=`${t.layoutInfo.commentOffset}px`)}};f=d([a(2,g),a(3,w),a(4,b),a(5,p),a(6,y)],f);export{f as $KTb};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { coalesce } from "../../../../../../base/common/arrays.js";
+import { DisposableMap, DisposableStore } from "../../../../../../base/common/lifecycle.js";
+import { EDITOR_FONT_DEFAULTS } from "../../../../../../editor/common/config/editorOptions.js";
+import { IConfigurationService } from "../../../../../../platform/configuration/common/configuration.js";
+import { IContextKeyService } from "../../../../../../platform/contextkey/common/contextkey.js";
+import { IInstantiationService } from "../../../../../../platform/instantiation/common/instantiation.js";
+import { IThemeService } from "../../../../../../platform/theme/common/themeService.js";
+import { ICommentService } from "../../../../comments/browser/commentService.js";
+import { CommentThreadWidget } from "../../../../comments/browser/commentThreadWidget.js";
+import { CellContentPart } from "../cellPart.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+let CellComments = class CellComments2 extends CellContentPart {
+  static {
+    __name(this, "CellComments");
+  }
+  constructor(notebookEditor, container, contextKeyService, themeService, commentService, configurationService, instantiationService) {
+    super();
+    this.notebookEditor = notebookEditor;
+    this.container = container;
+    this.contextKeyService = contextKeyService;
+    this.themeService = themeService;
+    this.commentService = commentService;
+    this.configurationService = configurationService;
+    this.instantiationService = instantiationService;
+    this.container.classList.add("review-widget");
+    this._register(this._commentThreadWidgets = new DisposableMap());
+    this._register(this.themeService.onDidColorThemeChange(this._applyTheme, this));
+    this._applyTheme();
+  }
+  async initialize(element) {
+    if (this.currentElement === element) {
+      return;
+    }
+    this.currentElement = element;
+    await this._updateThread();
+  }
+  async _createCommentTheadWidget(owner, commentThread) {
+    const widgetDisposables = new DisposableStore();
+    const widget = this.instantiationService.createInstance(CommentThreadWidget, this.container, this.notebookEditor, owner, this.notebookEditor.textModel.uri, this.contextKeyService, this.instantiationService, commentThread, void 0, void 0, {
+      codeBlockFontFamily: this.configurationService.getValue("editor").fontFamily || EDITOR_FONT_DEFAULTS.fontFamily
+    }, void 0, {
+      actionRunner: /* @__PURE__ */ __name(() => {
+      }, "actionRunner"),
+      collapse: /* @__PURE__ */ __name(async () => {
+        return true;
+      }, "collapse")
+    });
+    widgetDisposables.add(widget);
+    this._commentThreadWidgets.set(commentThread.threadId, { widget, dispose: /* @__PURE__ */ __name(() => widgetDisposables.dispose(), "dispose") });
+    const layoutInfo = this.notebookEditor.getLayoutInfo();
+    await widget.display(layoutInfo.fontInfo.lineHeight, true);
+    this._applyTheme();
+    widgetDisposables.add(widget.onDidResize(() => {
+      if (this.currentElement) {
+        this.currentElement.commentHeight = this._calculateCommentThreadHeight(widget.getDimensions().height);
+      }
+    }));
+  }
+  _bindListeners() {
+    this.cellDisposables.add(this.commentService.onDidUpdateCommentThreads(async () => this._updateThread()));
+  }
+  async _updateThread() {
+    if (!this.currentElement) {
+      return;
+    }
+    const infos = await this._getCommentThreadsForCell(this.currentElement);
+    const widgetsToDelete = new Set(this._commentThreadWidgets.keys());
+    const layoutInfo = this.currentElement.layoutInfo;
+    this.container.style.top = `${layoutInfo.commentOffset}px`;
+    for (const info of infos) {
+      if (!info) {
+        continue;
+      }
+      for (const thread of info.threads) {
+        widgetsToDelete.delete(thread.threadId);
+        const widget = this._commentThreadWidgets.get(thread.threadId)?.widget;
+        if (widget) {
+          await widget.updateCommentThread(thread);
+        } else {
+          await this._createCommentTheadWidget(info.uniqueOwner, thread);
+        }
+      }
+    }
+    for (const threadId of widgetsToDelete) {
+      this._commentThreadWidgets.deleteAndDispose(threadId);
+    }
+    this._updateHeight();
+  }
+  _calculateCommentThreadHeight(bodyHeight) {
+    const layoutInfo = this.notebookEditor.getLayoutInfo();
+    const headHeight = Math.ceil(layoutInfo.fontInfo.lineHeight * 1.2);
+    const lineHeight = layoutInfo.fontInfo.lineHeight;
+    const arrowHeight = Math.round(lineHeight / 3);
+    const frameThickness = Math.round(lineHeight / 9) * 2;
+    const computedHeight = headHeight + bodyHeight + arrowHeight + frameThickness + 8;
+    return computedHeight;
+  }
+  _updateHeight() {
+    if (!this.currentElement) {
+      return;
+    }
+    let height = 0;
+    for (const { widget } of this._commentThreadWidgets.values()) {
+      height += this._calculateCommentThreadHeight(widget.getDimensions().height);
+    }
+    this.currentElement.commentHeight = height;
+  }
+  async _getCommentThreadsForCell(element) {
+    if (this.notebookEditor.hasModel()) {
+      return coalesce(await this.commentService.getNotebookComments(element.uri));
+    }
+    return [];
+  }
+  _applyTheme() {
+    const theme = this.themeService.getColorTheme();
+    const fontInfo = this.notebookEditor.getLayoutInfo().fontInfo;
+    for (const { widget } of this._commentThreadWidgets.values()) {
+      widget.applyTheme(theme, fontInfo);
+    }
+  }
+  didRenderCell(element) {
+    this.initialize(element);
+    this._bindListeners();
+  }
+  prepareLayout() {
+    this._updateHeight();
+  }
+  updateInternalLayoutNow(element) {
+    if (this.currentElement) {
+      this.container.style.top = `${element.layoutInfo.commentOffset}px`;
+    }
+  }
+};
+CellComments = __decorate([
+  __param(2, IContextKeyService),
+  __param(3, IThemeService),
+  __param(4, ICommentService),
+  __param(5, IConfigurationService),
+  __param(6, IInstantiationService)
+], CellComments);
+export {
+  CellComments
+};
+//# sourceMappingURL=cellComments.js.map

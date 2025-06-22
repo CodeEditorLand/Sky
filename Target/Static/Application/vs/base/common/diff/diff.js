@@ -1,1 +1,893 @@
-import{$9B as O}from"./diffChange.js";import{$bn as G}from"../hash.js";class K{constructor(t){this.a=t}getElements(){const t=this.a,i=new Int32Array(t.length);for(let e=0,n=t.length;e<n;e++)i[e]=t.charCodeAt(e);return i}}function T(t,i,e){return new F(new K(t),new K(i)).ComputeDiff(e).changes}class B{static Assert(t,i){if(!t)throw new Error(i)}}class q{static Copy(t,i,e,n,r){for(let h=0;h<r;h++)e[n+h]=t[i+h]}static Copy2(t,i,e,n,r){for(let h=0;h<r;h++)e[n+h]=t[i+h]}}var J;!function(t){t[t.MaxDifferencesHistory=1447]="MaxDifferencesHistory"}(J||(J={}));class ${constructor(){this.a=[],this.b=1073741824,this.c=1073741824,this.d=0,this.e=0}MarkNextChange(){(this.d>0||this.e>0)&&this.a.push(new O(this.b,this.d,this.c,this.e)),this.d=0,this.e=0,this.b=1073741824,this.c=1073741824}AddOriginalElement(t,i){this.b=Math.min(this.b,t),this.c=Math.min(this.c,i),this.d++}AddModifiedElement(t,i){this.b=Math.min(this.b,t),this.c=Math.min(this.c,i),this.e++}getChanges(){return(this.d>0||this.e>0)&&this.MarkNextChange(),this.a}getReverseChanges(){return(this.d>0||this.e>0)&&this.MarkNextChange(),this.a.reverse(),this.a}}class F{constructor(t,i,e=null){this.a=e,this.b=t,this.c=i;const[n,r,h]=F.p(t),[s,o,a]=F.p(i);this.d=h&&a,this.e=n,this.f=r,this.g=s,this.h=o,this.m=[],this.n=[]}static o(t){return t.length>0&&"string"==typeof t[0]}static p(t){const i=t.getElements();if(F.o(i)){const t=new Int32Array(i.length);for(let e=0,n=i.length;e<n;e++)t[e]=G(i[e],0);return[i,t,!0]}return i instanceof Int32Array?[[],i,!1]:[[],new Int32Array(i),!1]}q(t,i){return this.f[t]===this.h[i]&&(!this.d||this.e[t]===this.g[i])}r(t,i){if(!this.q(t,i))return!1;return F.s(this.b,t)===F.s(this.c,i)}static s(t,i){return"function"==typeof t.getStrictElement?t.getStrictElement(i):null}u(t,i){return this.f[t]===this.f[i]&&(!this.d||this.e[t]===this.e[i])}v(t,i){return this.h[t]===this.h[i]&&(!this.d||this.g[t]===this.g[i])}ComputeDiff(t){return this.w(0,this.f.length-1,0,this.h.length-1,t)}w(t,i,e,n,r){const h=[!1];let s=this.x(t,i,e,n,h);return r&&(s=this.A(s)),{quitEarly:h[0],changes:s}}x(t,i,e,n,r){for(r[0]=!1;t<=i&&e<=n&&this.q(t,e);)t++,e++;for(;i>=t&&n>=e&&this.q(i,n);)i--,n--;if(t>i||e>n){let r;return e<=n?(B.Assert(t===i+1,"originalStart should only be one more than originalEnd"),r=[new O(t,0,e,n-e+1)]):t<=i?(B.Assert(e===n+1,"modifiedStart should only be one more than modifiedEnd"),r=[new O(t,i-t+1,e,0)]):(B.Assert(t===i+1,"originalStart should only be one more than originalEnd"),B.Assert(e===n+1,"modifiedStart should only be one more than modifiedEnd"),r=[]),r}const h=[0],s=[0],o=this.z(t,i,e,n,h,s,r),a=h[0],l=s[0];if(null!==o)return o;if(!r[0]){const h=this.x(t,a,e,l,r);let s=[];return s=r[0]?[new O(a+1,i-(a+1)+1,l+1,n-(l+1)+1)]:this.x(a+1,i,l+1,n,r),this.I(h,s)}return[new O(t,i-t+1,e,n-e+1)]}y(t,i,e,n,r,h,s,o,a,l,g,d,f,c,u,m,S,L){let A=null,C=null,y=new $,w=i,M=e,p=f[0]-m[0]-n,E=-1073741824,b=this.m.length-1;do{const i=p+t;i===w||i<M&&a[i-1]<a[i+1]?(c=(g=a[i+1])-p-n,g<E&&y.MarkNextChange(),E=g,y.AddModifiedElement(g+1,c),p=i+1-t):(c=(g=a[i-1]+1)-p-n,g<E&&y.MarkNextChange(),E=g-1,y.AddOriginalElement(g,c+1),p=i-1-t),b>=0&&(t=(a=this.m[b])[0],w=1,M=a.length-1)}while(--b>=-1);if(A=y.getReverseChanges(),L[0]){let t=f[0]+1,i=m[0]+1;if(null!==A&&A.length>0){const e=A[A.length-1];t=Math.max(t,e.getOriginalEnd()),i=Math.max(i,e.getModifiedEnd())}C=[new O(t,d-t+1,i,u-i+1)]}else{y=new $,w=h,M=s,p=f[0]-m[0]-o,E=1073741824,b=S?this.n.length-1:this.n.length-2;do{const t=p+r;t===w||t<M&&l[t-1]>=l[t+1]?(c=(g=l[t+1]-1)-p-o,g>E&&y.MarkNextChange(),E=g+1,y.AddOriginalElement(g+1,c+1),p=t+1-r):(c=(g=l[t-1])-p-o,g>E&&y.MarkNextChange(),E=g,y.AddModifiedElement(g+1,c+1),p=t-1-r),b>=0&&(r=(l=this.n[b])[0],w=1,M=l.length-1)}while(--b>=-1);C=y.getChanges()}return this.I(A,C)}z(t,i,e,n,r,h,s){let o=0,a=0,l=0,g=0,d=0,f=0;t--,e--,r[0]=0,h[0]=0,this.m=[],this.n=[];const c=i-t+(n-e),u=c+1,m=new Int32Array(u),S=new Int32Array(u),L=n-e,A=i-t,C=t-e,y=i-n,w=(A-L)%2==0;m[L]=t,S[A]=i,s[0]=!1;for(let M=1;M<=c/2+1;M++){let c=0,p=0;l=this.K(L-M,M,L,u),g=this.K(L+M,M,L,u);for(let t=l;t<=g;t+=2){o=t===l||t<g&&m[t-1]<m[t+1]?m[t+1]:m[t-1]+1,a=o-(t-L)-C;const e=o;for(;o<i&&a<n&&this.q(o+1,a+1);)o++,a++;if(m[t]=o,o+a>c+p&&(c=o,p=a),!w&&Math.abs(t-A)<=M-1&&o>=S[t])return r[0]=o,h[0]=a,e<=S[t]&&M<=1448?this.y(L,l,g,C,A,d,f,y,m,S,o,i,r,a,n,h,w,s):null}const E=(c-t+(p-e)-M)/2;if(null!==this.a&&!this.a(c,E))return s[0]=!0,r[0]=c,h[0]=p,E>0&&M<=1448?this.y(L,l,g,C,A,d,f,y,m,S,o,i,r,a,n,h,w,s):(t++,e++,[new O(t,i-t+1,e,n-e+1)]);d=this.K(A-M,M,A,u),f=this.K(A+M,M,A,u);for(let c=d;c<=f;c+=2){o=c===d||c<f&&S[c-1]>=S[c+1]?S[c+1]-1:S[c-1],a=o-(c-A)-y;const u=o;for(;o>t&&a>e&&this.q(o,a);)o--,a--;if(S[c]=o,w&&Math.abs(c-L)<=M&&o<=m[c])return r[0]=o,h[0]=a,u>=m[c]&&M<=1448?this.y(L,l,g,C,A,d,f,y,m,S,o,i,r,a,n,h,w,s):null}if(M<=1447){let t=new Int32Array(g-l+2);t[0]=L-l+1,q.Copy2(m,l,t,1,g-l+1),this.m.push(t),t=new Int32Array(f-d+2),t[0]=A-d+1,q.Copy2(S,d,t,1,f-d+1),this.n.push(t)}}return this.y(L,l,g,C,A,d,f,y,m,S,o,i,r,a,n,h,w,s)}A(t){for(let i=0;i<t.length;i++){const e=t[i],n=i<t.length-1?t[i+1].originalStart:this.f.length,r=i<t.length-1?t[i+1].modifiedStart:this.h.length,h=e.originalLength>0,s=e.modifiedLength>0;for(;e.originalStart+e.originalLength<n&&e.modifiedStart+e.modifiedLength<r&&(!h||this.u(e.originalStart,e.originalStart+e.originalLength))&&(!s||this.v(e.modifiedStart,e.modifiedStart+e.modifiedLength));){const t=this.r(e.originalStart,e.modifiedStart);if(this.r(e.originalStart+e.originalLength,e.modifiedStart+e.modifiedLength)&&!t)break;e.originalStart++,e.modifiedStart++}const o=[null];i<t.length-1&&this.J(t[i],t[i+1],o)&&(t[i]=o[0],t.splice(i+1,1),i--)}for(let i=t.length-1;i>=0;i--){const e=t[i];let n=0,r=0;if(i>0){const e=t[i-1];n=e.originalStart+e.originalLength,r=e.modifiedStart+e.modifiedLength}const h=e.originalLength>0,s=e.modifiedLength>0;let o=0,a=this.H(e.originalStart,e.originalLength,e.modifiedStart,e.modifiedLength);for(let t=1;;t++){const i=e.originalStart-t,l=e.modifiedStart-t;if(i<n||l<r||h&&!this.u(i,i+e.originalLength)||s&&!this.v(l,l+e.modifiedLength))break;const g=(i===n&&l===r?5:0)+this.H(i,e.originalLength,l,e.modifiedLength);g>a&&(a=g,o=t)}e.originalStart-=o,e.modifiedStart-=o;const l=[null];i>0&&this.J(t[i-1],t[i],l)&&(t[i-1]=l[0],t.splice(i,1),i++)}if(this.d)for(let i=1,e=t.length;i<e;i++){const e=t[i-1],n=t[i],r=n.originalStart-e.originalStart-e.originalLength,h=e.originalStart,s=n.originalStart+n.originalLength,o=s-h,a=e.modifiedStart,l=n.modifiedStart+n.modifiedLength,g=l-a;if(r<5&&o<20&&g<20){const t=this.B(h,o,a,g,r);if(t){const[i,h]=t;(i!==e.originalStart+e.originalLength||h!==e.modifiedStart+e.modifiedLength)&&(e.originalLength=i-e.originalStart,e.modifiedLength=h-e.modifiedStart,n.originalStart=i+r,n.modifiedStart=h+r,n.originalLength=s-n.originalStart,n.modifiedLength=l-n.modifiedStart)}}}return t}B(t,i,e,n,r){if(i<r||n<r)return null;const h=t+i-r+1,s=e+n-r+1;let o=0,a=0,l=0;for(let i=t;i<h;i++)for(let t=e;t<s;t++){const e=this.C(i,t,r);e>0&&e>o&&(o=e,a=i,l=t)}return o>0?[a,l]:null}C(t,i,e){let n=0;for(let r=0;r<e;r++){if(!this.q(t+r,i+r))return 0;n+=this.e[t+r].length}return n}D(t){return t<=0||t>=this.f.length-1||this.d&&/^\s*$/.test(this.e[t])}E(t,i){if(this.D(t)||this.D(t-1))return!0;if(i>0){const e=t+i;if(this.D(e-1)||this.D(e))return!0}return!1}F(t){return t<=0||t>=this.h.length-1||this.d&&/^\s*$/.test(this.g[t])}G(t,i){if(this.F(t)||this.F(t-1))return!0;if(i>0){const e=t+i;if(this.F(e-1)||this.F(e))return!0}return!1}H(t,i,e,n){return(this.E(t,i)?1:0)+(this.G(e,n)?1:0)}I(t,i){const e=[];if(0===t.length||0===i.length)return i.length>0?i:t;if(this.J(t[t.length-1],i[0],e)){const n=new Array(t.length+i.length-1);return q.Copy(t,0,n,0,t.length-1),n[t.length-1]=e[0],q.Copy(i,1,n,t.length,i.length-1),n}{const e=new Array(t.length+i.length);return q.Copy(t,0,e,0,t.length),q.Copy(i,0,e,t.length,i.length),e}}J(t,i,e){if(B.Assert(t.originalStart<=i.originalStart,"Left change is not less than or equal to right change"),B.Assert(t.modifiedStart<=i.modifiedStart,"Left change is not less than or equal to right change"),t.originalStart+t.originalLength>=i.originalStart||t.modifiedStart+t.modifiedLength>=i.modifiedStart){const n=t.originalStart;let r=t.originalLength;const h=t.modifiedStart;let s=t.modifiedLength;return t.originalStart+t.originalLength>=i.originalStart&&(r=i.originalStart+i.originalLength-t.originalStart),t.modifiedStart+t.modifiedLength>=i.modifiedStart&&(s=i.modifiedStart+i.modifiedLength-t.modifiedStart),e[0]=new O(n,r,h,s),!0}return e[0]=null,!1}K(t,i,e,n){if(t>=0&&t<n)return t;const r=i%2==0;if(t<0){return r===(e%2==0)?0:1}return r===((n-e-1)%2==0)?n-1:n-2}}const z=new Uint32Array(65536),R=(t,i)=>{const e=t.length,n=i.length,r=1<<e-1;let h=-1,s=0,o=e,a=e;for(;a--;)z[t.charCodeAt(a)]|=1<<a;for(a=0;a<n;a++){let t=z[i.charCodeAt(a)];const e=t|s;t|=(t&h)+h^h,s|=~(t|h),h&=t,s&r&&o++,h&r&&o--,s=s<<1|1,h=h<<1|~(e|s),s&=e}for(a=e;a--;)z[t.charCodeAt(a)]=0;return o};function j(t,i){const e=t.length,n=i.length,r=[],h=[],s=Math.ceil(e/32),o=Math.ceil(n/32);for(let t=0;t<s;t++)r[t]=-1,h[t]=0;let a=0;for(;a<o-1;a++){let s=0,o=-1;const l=32*a,g=Math.min(32,n)+l;for(let t=l;t<g;t++)z[i.charCodeAt(t)]|=1<<t;for(let i=0;i<e;i++){const e=z[t.charCodeAt(i)],n=r[i/32|0]>>>i&1,a=h[i/32|0]>>>i&1,l=e|s,g=((e|a)&o)+o^o|e|a;let d=s|~(g|o),f=o&g;d>>>31^n&&(r[i/32|0]^=1<<i),f>>>31^a&&(h[i/32|0]^=1<<i),d=d<<1|n,f=f<<1|a,o=f|~(l|d),s=d&l}for(let t=l;t<g;t++)z[i.charCodeAt(t)]=0}let l=0,g=-1;const d=32*a,f=Math.min(32,n-d)+d;for(let t=d;t<f;t++)z[i.charCodeAt(t)]|=1<<t;let c=n;for(let i=0;i<e;i++){const e=z[t.charCodeAt(i)],s=r[i/32|0]>>>i&1,o=h[i/32|0]>>>i&1,a=e|l,d=((e|o)&g)+g^g|e|o;let f=l|~(d|g),u=g&d;c+=f>>>n-1&1,c-=u>>>n-1&1,f>>>31^s&&(r[i/32|0]^=1<<i),u>>>31^o&&(h[i/32|0]^=1<<i),f=f<<1|s,u=u<<1|o,g=u|~(a|f),l=f&a}for(let t=d;t<f;t++)z[i.charCodeAt(t)]=0;return c}function W(t,i){if(t.length<i.length){const e=i;i=t,t=e}return 0===i.length?t.length:t.length<=32?R(t,i):j(t,i)}export{T as $$B,K as $0B,F as $_B,W as $aC};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { DiffChange } from "./diffChange.js";
+import { stringHash } from "../hash.js";
+class StringDiffSequence {
+  static {
+    __name(this, "StringDiffSequence");
+  }
+  constructor(source) {
+    this.source = source;
+  }
+  getElements() {
+    const source = this.source;
+    const characters = new Int32Array(source.length);
+    for (let i = 0, len = source.length; i < len; i++) {
+      characters[i] = source.charCodeAt(i);
+    }
+    return characters;
+  }
+}
+function stringDiff(original, modified, pretty) {
+  return new LcsDiff(new StringDiffSequence(original), new StringDiffSequence(modified)).ComputeDiff(pretty).changes;
+}
+__name(stringDiff, "stringDiff");
+class Debug {
+  static {
+    __name(this, "Debug");
+  }
+  static Assert(condition, message) {
+    if (!condition) {
+      throw new Error(message);
+    }
+  }
+}
+class MyArray {
+  static {
+    __name(this, "MyArray");
+  }
+  /**
+   * Copies a range of elements from an Array starting at the specified source index and pastes
+   * them to another Array starting at the specified destination index. The length and the indexes
+   * are specified as 64-bit integers.
+   * sourceArray:
+   *		The Array that contains the data to copy.
+   * sourceIndex:
+   *		A 64-bit integer that represents the index in the sourceArray at which copying begins.
+   * destinationArray:
+   *		The Array that receives the data.
+   * destinationIndex:
+   *		A 64-bit integer that represents the index in the destinationArray at which storing begins.
+   * length:
+   *		A 64-bit integer that represents the number of elements to copy.
+   */
+  static Copy(sourceArray, sourceIndex, destinationArray, destinationIndex, length) {
+    for (let i = 0; i < length; i++) {
+      destinationArray[destinationIndex + i] = sourceArray[sourceIndex + i];
+    }
+  }
+  static Copy2(sourceArray, sourceIndex, destinationArray, destinationIndex, length) {
+    for (let i = 0; i < length; i++) {
+      destinationArray[destinationIndex + i] = sourceArray[sourceIndex + i];
+    }
+  }
+}
+var LocalConstants;
+(function(LocalConstants2) {
+  LocalConstants2[LocalConstants2["MaxDifferencesHistory"] = 1447] = "MaxDifferencesHistory";
+})(LocalConstants || (LocalConstants = {}));
+class DiffChangeHelper {
+  static {
+    __name(this, "DiffChangeHelper");
+  }
+  /**
+   * Constructs a new DiffChangeHelper for the given DiffSequences.
+   */
+  constructor() {
+    this.m_changes = [];
+    this.m_originalStart = 1073741824;
+    this.m_modifiedStart = 1073741824;
+    this.m_originalCount = 0;
+    this.m_modifiedCount = 0;
+  }
+  /**
+   * Marks the beginning of the next change in the set of differences.
+   */
+  MarkNextChange() {
+    if (this.m_originalCount > 0 || this.m_modifiedCount > 0) {
+      this.m_changes.push(new DiffChange(this.m_originalStart, this.m_originalCount, this.m_modifiedStart, this.m_modifiedCount));
+    }
+    this.m_originalCount = 0;
+    this.m_modifiedCount = 0;
+    this.m_originalStart = 1073741824;
+    this.m_modifiedStart = 1073741824;
+  }
+  /**
+   * Adds the original element at the given position to the elements
+   * affected by the current change. The modified index gives context
+   * to the change position with respect to the original sequence.
+   * @param originalIndex The index of the original element to add.
+   * @param modifiedIndex The index of the modified element that provides corresponding position in the modified sequence.
+   */
+  AddOriginalElement(originalIndex, modifiedIndex) {
+    this.m_originalStart = Math.min(this.m_originalStart, originalIndex);
+    this.m_modifiedStart = Math.min(this.m_modifiedStart, modifiedIndex);
+    this.m_originalCount++;
+  }
+  /**
+   * Adds the modified element at the given position to the elements
+   * affected by the current change. The original index gives context
+   * to the change position with respect to the modified sequence.
+   * @param originalIndex The index of the original element that provides corresponding position in the original sequence.
+   * @param modifiedIndex The index of the modified element to add.
+   */
+  AddModifiedElement(originalIndex, modifiedIndex) {
+    this.m_originalStart = Math.min(this.m_originalStart, originalIndex);
+    this.m_modifiedStart = Math.min(this.m_modifiedStart, modifiedIndex);
+    this.m_modifiedCount++;
+  }
+  /**
+   * Retrieves all of the changes marked by the class.
+   */
+  getChanges() {
+    if (this.m_originalCount > 0 || this.m_modifiedCount > 0) {
+      this.MarkNextChange();
+    }
+    return this.m_changes;
+  }
+  /**
+   * Retrieves all of the changes marked by the class in the reverse order
+   */
+  getReverseChanges() {
+    if (this.m_originalCount > 0 || this.m_modifiedCount > 0) {
+      this.MarkNextChange();
+    }
+    this.m_changes.reverse();
+    return this.m_changes;
+  }
+}
+class LcsDiff {
+  static {
+    __name(this, "LcsDiff");
+  }
+  /**
+   * Constructs the DiffFinder
+   */
+  constructor(originalSequence, modifiedSequence, continueProcessingPredicate = null) {
+    this.ContinueProcessingPredicate = continueProcessingPredicate;
+    this._originalSequence = originalSequence;
+    this._modifiedSequence = modifiedSequence;
+    const [originalStringElements, originalElementsOrHash, originalHasStrings] = LcsDiff._getElements(originalSequence);
+    const [modifiedStringElements, modifiedElementsOrHash, modifiedHasStrings] = LcsDiff._getElements(modifiedSequence);
+    this._hasStrings = originalHasStrings && modifiedHasStrings;
+    this._originalStringElements = originalStringElements;
+    this._originalElementsOrHash = originalElementsOrHash;
+    this._modifiedStringElements = modifiedStringElements;
+    this._modifiedElementsOrHash = modifiedElementsOrHash;
+    this.m_forwardHistory = [];
+    this.m_reverseHistory = [];
+  }
+  static _isStringArray(arr) {
+    return arr.length > 0 && typeof arr[0] === "string";
+  }
+  static _getElements(sequence) {
+    const elements = sequence.getElements();
+    if (LcsDiff._isStringArray(elements)) {
+      const hashes = new Int32Array(elements.length);
+      for (let i = 0, len = elements.length; i < len; i++) {
+        hashes[i] = stringHash(elements[i], 0);
+      }
+      return [elements, hashes, true];
+    }
+    if (elements instanceof Int32Array) {
+      return [[], elements, false];
+    }
+    return [[], new Int32Array(elements), false];
+  }
+  ElementsAreEqual(originalIndex, newIndex) {
+    if (this._originalElementsOrHash[originalIndex] !== this._modifiedElementsOrHash[newIndex]) {
+      return false;
+    }
+    return this._hasStrings ? this._originalStringElements[originalIndex] === this._modifiedStringElements[newIndex] : true;
+  }
+  ElementsAreStrictEqual(originalIndex, newIndex) {
+    if (!this.ElementsAreEqual(originalIndex, newIndex)) {
+      return false;
+    }
+    const originalElement = LcsDiff._getStrictElement(this._originalSequence, originalIndex);
+    const modifiedElement = LcsDiff._getStrictElement(this._modifiedSequence, newIndex);
+    return originalElement === modifiedElement;
+  }
+  static _getStrictElement(sequence, index) {
+    if (typeof sequence.getStrictElement === "function") {
+      return sequence.getStrictElement(index);
+    }
+    return null;
+  }
+  OriginalElementsAreEqual(index1, index2) {
+    if (this._originalElementsOrHash[index1] !== this._originalElementsOrHash[index2]) {
+      return false;
+    }
+    return this._hasStrings ? this._originalStringElements[index1] === this._originalStringElements[index2] : true;
+  }
+  ModifiedElementsAreEqual(index1, index2) {
+    if (this._modifiedElementsOrHash[index1] !== this._modifiedElementsOrHash[index2]) {
+      return false;
+    }
+    return this._hasStrings ? this._modifiedStringElements[index1] === this._modifiedStringElements[index2] : true;
+  }
+  ComputeDiff(pretty) {
+    return this._ComputeDiff(0, this._originalElementsOrHash.length - 1, 0, this._modifiedElementsOrHash.length - 1, pretty);
+  }
+  /**
+   * Computes the differences between the original and modified input
+   * sequences on the bounded range.
+   * @returns An array of the differences between the two input sequences.
+   */
+  _ComputeDiff(originalStart, originalEnd, modifiedStart, modifiedEnd, pretty) {
+    const quitEarlyArr = [false];
+    let changes = this.ComputeDiffRecursive(originalStart, originalEnd, modifiedStart, modifiedEnd, quitEarlyArr);
+    if (pretty) {
+      changes = this.PrettifyChanges(changes);
+    }
+    return {
+      quitEarly: quitEarlyArr[0],
+      changes
+    };
+  }
+  /**
+   * Private helper method which computes the differences on the bounded range
+   * recursively.
+   * @returns An array of the differences between the two input sequences.
+   */
+  ComputeDiffRecursive(originalStart, originalEnd, modifiedStart, modifiedEnd, quitEarlyArr) {
+    quitEarlyArr[0] = false;
+    while (originalStart <= originalEnd && modifiedStart <= modifiedEnd && this.ElementsAreEqual(originalStart, modifiedStart)) {
+      originalStart++;
+      modifiedStart++;
+    }
+    while (originalEnd >= originalStart && modifiedEnd >= modifiedStart && this.ElementsAreEqual(originalEnd, modifiedEnd)) {
+      originalEnd--;
+      modifiedEnd--;
+    }
+    if (originalStart > originalEnd || modifiedStart > modifiedEnd) {
+      let changes;
+      if (modifiedStart <= modifiedEnd) {
+        Debug.Assert(originalStart === originalEnd + 1, "originalStart should only be one more than originalEnd");
+        changes = [
+          new DiffChange(originalStart, 0, modifiedStart, modifiedEnd - modifiedStart + 1)
+        ];
+      } else if (originalStart <= originalEnd) {
+        Debug.Assert(modifiedStart === modifiedEnd + 1, "modifiedStart should only be one more than modifiedEnd");
+        changes = [
+          new DiffChange(originalStart, originalEnd - originalStart + 1, modifiedStart, 0)
+        ];
+      } else {
+        Debug.Assert(originalStart === originalEnd + 1, "originalStart should only be one more than originalEnd");
+        Debug.Assert(modifiedStart === modifiedEnd + 1, "modifiedStart should only be one more than modifiedEnd");
+        changes = [];
+      }
+      return changes;
+    }
+    const midOriginalArr = [0];
+    const midModifiedArr = [0];
+    const result = this.ComputeRecursionPoint(originalStart, originalEnd, modifiedStart, modifiedEnd, midOriginalArr, midModifiedArr, quitEarlyArr);
+    const midOriginal = midOriginalArr[0];
+    const midModified = midModifiedArr[0];
+    if (result !== null) {
+      return result;
+    } else if (!quitEarlyArr[0]) {
+      const leftChanges = this.ComputeDiffRecursive(originalStart, midOriginal, modifiedStart, midModified, quitEarlyArr);
+      let rightChanges = [];
+      if (!quitEarlyArr[0]) {
+        rightChanges = this.ComputeDiffRecursive(midOriginal + 1, originalEnd, midModified + 1, modifiedEnd, quitEarlyArr);
+      } else {
+        rightChanges = [
+          new DiffChange(midOriginal + 1, originalEnd - (midOriginal + 1) + 1, midModified + 1, modifiedEnd - (midModified + 1) + 1)
+        ];
+      }
+      return this.ConcatenateChanges(leftChanges, rightChanges);
+    }
+    return [
+      new DiffChange(originalStart, originalEnd - originalStart + 1, modifiedStart, modifiedEnd - modifiedStart + 1)
+    ];
+  }
+  WALKTRACE(diagonalForwardBase, diagonalForwardStart, diagonalForwardEnd, diagonalForwardOffset, diagonalReverseBase, diagonalReverseStart, diagonalReverseEnd, diagonalReverseOffset, forwardPoints, reversePoints, originalIndex, originalEnd, midOriginalArr, modifiedIndex, modifiedEnd, midModifiedArr, deltaIsEven, quitEarlyArr) {
+    let forwardChanges = null;
+    let reverseChanges = null;
+    let changeHelper = new DiffChangeHelper();
+    let diagonalMin = diagonalForwardStart;
+    let diagonalMax = diagonalForwardEnd;
+    let diagonalRelative = midOriginalArr[0] - midModifiedArr[0] - diagonalForwardOffset;
+    let lastOriginalIndex = -1073741824;
+    let historyIndex = this.m_forwardHistory.length - 1;
+    do {
+      const diagonal = diagonalRelative + diagonalForwardBase;
+      if (diagonal === diagonalMin || diagonal < diagonalMax && forwardPoints[diagonal - 1] < forwardPoints[diagonal + 1]) {
+        originalIndex = forwardPoints[diagonal + 1];
+        modifiedIndex = originalIndex - diagonalRelative - diagonalForwardOffset;
+        if (originalIndex < lastOriginalIndex) {
+          changeHelper.MarkNextChange();
+        }
+        lastOriginalIndex = originalIndex;
+        changeHelper.AddModifiedElement(originalIndex + 1, modifiedIndex);
+        diagonalRelative = diagonal + 1 - diagonalForwardBase;
+      } else {
+        originalIndex = forwardPoints[diagonal - 1] + 1;
+        modifiedIndex = originalIndex - diagonalRelative - diagonalForwardOffset;
+        if (originalIndex < lastOriginalIndex) {
+          changeHelper.MarkNextChange();
+        }
+        lastOriginalIndex = originalIndex - 1;
+        changeHelper.AddOriginalElement(originalIndex, modifiedIndex + 1);
+        diagonalRelative = diagonal - 1 - diagonalForwardBase;
+      }
+      if (historyIndex >= 0) {
+        forwardPoints = this.m_forwardHistory[historyIndex];
+        diagonalForwardBase = forwardPoints[0];
+        diagonalMin = 1;
+        diagonalMax = forwardPoints.length - 1;
+      }
+    } while (--historyIndex >= -1);
+    forwardChanges = changeHelper.getReverseChanges();
+    if (quitEarlyArr[0]) {
+      let originalStartPoint = midOriginalArr[0] + 1;
+      let modifiedStartPoint = midModifiedArr[0] + 1;
+      if (forwardChanges !== null && forwardChanges.length > 0) {
+        const lastForwardChange = forwardChanges[forwardChanges.length - 1];
+        originalStartPoint = Math.max(originalStartPoint, lastForwardChange.getOriginalEnd());
+        modifiedStartPoint = Math.max(modifiedStartPoint, lastForwardChange.getModifiedEnd());
+      }
+      reverseChanges = [
+        new DiffChange(originalStartPoint, originalEnd - originalStartPoint + 1, modifiedStartPoint, modifiedEnd - modifiedStartPoint + 1)
+      ];
+    } else {
+      changeHelper = new DiffChangeHelper();
+      diagonalMin = diagonalReverseStart;
+      diagonalMax = diagonalReverseEnd;
+      diagonalRelative = midOriginalArr[0] - midModifiedArr[0] - diagonalReverseOffset;
+      lastOriginalIndex = 1073741824;
+      historyIndex = deltaIsEven ? this.m_reverseHistory.length - 1 : this.m_reverseHistory.length - 2;
+      do {
+        const diagonal = diagonalRelative + diagonalReverseBase;
+        if (diagonal === diagonalMin || diagonal < diagonalMax && reversePoints[diagonal - 1] >= reversePoints[diagonal + 1]) {
+          originalIndex = reversePoints[diagonal + 1] - 1;
+          modifiedIndex = originalIndex - diagonalRelative - diagonalReverseOffset;
+          if (originalIndex > lastOriginalIndex) {
+            changeHelper.MarkNextChange();
+          }
+          lastOriginalIndex = originalIndex + 1;
+          changeHelper.AddOriginalElement(originalIndex + 1, modifiedIndex + 1);
+          diagonalRelative = diagonal + 1 - diagonalReverseBase;
+        } else {
+          originalIndex = reversePoints[diagonal - 1];
+          modifiedIndex = originalIndex - diagonalRelative - diagonalReverseOffset;
+          if (originalIndex > lastOriginalIndex) {
+            changeHelper.MarkNextChange();
+          }
+          lastOriginalIndex = originalIndex;
+          changeHelper.AddModifiedElement(originalIndex + 1, modifiedIndex + 1);
+          diagonalRelative = diagonal - 1 - diagonalReverseBase;
+        }
+        if (historyIndex >= 0) {
+          reversePoints = this.m_reverseHistory[historyIndex];
+          diagonalReverseBase = reversePoints[0];
+          diagonalMin = 1;
+          diagonalMax = reversePoints.length - 1;
+        }
+      } while (--historyIndex >= -1);
+      reverseChanges = changeHelper.getChanges();
+    }
+    return this.ConcatenateChanges(forwardChanges, reverseChanges);
+  }
+  /**
+   * Given the range to compute the diff on, this method finds the point:
+   * (midOriginal, midModified)
+   * that exists in the middle of the LCS of the two sequences and
+   * is the point at which the LCS problem may be broken down recursively.
+   * This method will try to keep the LCS trace in memory. If the LCS recursion
+   * point is calculated and the full trace is available in memory, then this method
+   * will return the change list.
+   * @param originalStart The start bound of the original sequence range
+   * @param originalEnd The end bound of the original sequence range
+   * @param modifiedStart The start bound of the modified sequence range
+   * @param modifiedEnd The end bound of the modified sequence range
+   * @param midOriginal The middle point of the original sequence range
+   * @param midModified The middle point of the modified sequence range
+   * @returns The diff changes, if available, otherwise null
+   */
+  ComputeRecursionPoint(originalStart, originalEnd, modifiedStart, modifiedEnd, midOriginalArr, midModifiedArr, quitEarlyArr) {
+    let originalIndex = 0, modifiedIndex = 0;
+    let diagonalForwardStart = 0, diagonalForwardEnd = 0;
+    let diagonalReverseStart = 0, diagonalReverseEnd = 0;
+    originalStart--;
+    modifiedStart--;
+    midOriginalArr[0] = 0;
+    midModifiedArr[0] = 0;
+    this.m_forwardHistory = [];
+    this.m_reverseHistory = [];
+    const maxDifferences = originalEnd - originalStart + (modifiedEnd - modifiedStart);
+    const numDiagonals = maxDifferences + 1;
+    const forwardPoints = new Int32Array(numDiagonals);
+    const reversePoints = new Int32Array(numDiagonals);
+    const diagonalForwardBase = modifiedEnd - modifiedStart;
+    const diagonalReverseBase = originalEnd - originalStart;
+    const diagonalForwardOffset = originalStart - modifiedStart;
+    const diagonalReverseOffset = originalEnd - modifiedEnd;
+    const delta = diagonalReverseBase - diagonalForwardBase;
+    const deltaIsEven = delta % 2 === 0;
+    forwardPoints[diagonalForwardBase] = originalStart;
+    reversePoints[diagonalReverseBase] = originalEnd;
+    quitEarlyArr[0] = false;
+    for (let numDifferences = 1; numDifferences <= maxDifferences / 2 + 1; numDifferences++) {
+      let furthestOriginalIndex = 0;
+      let furthestModifiedIndex = 0;
+      diagonalForwardStart = this.ClipDiagonalBound(diagonalForwardBase - numDifferences, numDifferences, diagonalForwardBase, numDiagonals);
+      diagonalForwardEnd = this.ClipDiagonalBound(diagonalForwardBase + numDifferences, numDifferences, diagonalForwardBase, numDiagonals);
+      for (let diagonal = diagonalForwardStart; diagonal <= diagonalForwardEnd; diagonal += 2) {
+        if (diagonal === diagonalForwardStart || diagonal < diagonalForwardEnd && forwardPoints[diagonal - 1] < forwardPoints[diagonal + 1]) {
+          originalIndex = forwardPoints[diagonal + 1];
+        } else {
+          originalIndex = forwardPoints[diagonal - 1] + 1;
+        }
+        modifiedIndex = originalIndex - (diagonal - diagonalForwardBase) - diagonalForwardOffset;
+        const tempOriginalIndex = originalIndex;
+        while (originalIndex < originalEnd && modifiedIndex < modifiedEnd && this.ElementsAreEqual(originalIndex + 1, modifiedIndex + 1)) {
+          originalIndex++;
+          modifiedIndex++;
+        }
+        forwardPoints[diagonal] = originalIndex;
+        if (originalIndex + modifiedIndex > furthestOriginalIndex + furthestModifiedIndex) {
+          furthestOriginalIndex = originalIndex;
+          furthestModifiedIndex = modifiedIndex;
+        }
+        if (!deltaIsEven && Math.abs(diagonal - diagonalReverseBase) <= numDifferences - 1) {
+          if (originalIndex >= reversePoints[diagonal]) {
+            midOriginalArr[0] = originalIndex;
+            midModifiedArr[0] = modifiedIndex;
+            if (tempOriginalIndex <= reversePoints[diagonal] && 1447 > 0 && numDifferences <= 1447 + 1) {
+              return this.WALKTRACE(diagonalForwardBase, diagonalForwardStart, diagonalForwardEnd, diagonalForwardOffset, diagonalReverseBase, diagonalReverseStart, diagonalReverseEnd, diagonalReverseOffset, forwardPoints, reversePoints, originalIndex, originalEnd, midOriginalArr, modifiedIndex, modifiedEnd, midModifiedArr, deltaIsEven, quitEarlyArr);
+            } else {
+              return null;
+            }
+          }
+        }
+      }
+      const matchLengthOfLongest = (furthestOriginalIndex - originalStart + (furthestModifiedIndex - modifiedStart) - numDifferences) / 2;
+      if (this.ContinueProcessingPredicate !== null && !this.ContinueProcessingPredicate(furthestOriginalIndex, matchLengthOfLongest)) {
+        quitEarlyArr[0] = true;
+        midOriginalArr[0] = furthestOriginalIndex;
+        midModifiedArr[0] = furthestModifiedIndex;
+        if (matchLengthOfLongest > 0 && 1447 > 0 && numDifferences <= 1447 + 1) {
+          return this.WALKTRACE(diagonalForwardBase, diagonalForwardStart, diagonalForwardEnd, diagonalForwardOffset, diagonalReverseBase, diagonalReverseStart, diagonalReverseEnd, diagonalReverseOffset, forwardPoints, reversePoints, originalIndex, originalEnd, midOriginalArr, modifiedIndex, modifiedEnd, midModifiedArr, deltaIsEven, quitEarlyArr);
+        } else {
+          originalStart++;
+          modifiedStart++;
+          return [
+            new DiffChange(originalStart, originalEnd - originalStart + 1, modifiedStart, modifiedEnd - modifiedStart + 1)
+          ];
+        }
+      }
+      diagonalReverseStart = this.ClipDiagonalBound(diagonalReverseBase - numDifferences, numDifferences, diagonalReverseBase, numDiagonals);
+      diagonalReverseEnd = this.ClipDiagonalBound(diagonalReverseBase + numDifferences, numDifferences, diagonalReverseBase, numDiagonals);
+      for (let diagonal = diagonalReverseStart; diagonal <= diagonalReverseEnd; diagonal += 2) {
+        if (diagonal === diagonalReverseStart || diagonal < diagonalReverseEnd && reversePoints[diagonal - 1] >= reversePoints[diagonal + 1]) {
+          originalIndex = reversePoints[diagonal + 1] - 1;
+        } else {
+          originalIndex = reversePoints[diagonal - 1];
+        }
+        modifiedIndex = originalIndex - (diagonal - diagonalReverseBase) - diagonalReverseOffset;
+        const tempOriginalIndex = originalIndex;
+        while (originalIndex > originalStart && modifiedIndex > modifiedStart && this.ElementsAreEqual(originalIndex, modifiedIndex)) {
+          originalIndex--;
+          modifiedIndex--;
+        }
+        reversePoints[diagonal] = originalIndex;
+        if (deltaIsEven && Math.abs(diagonal - diagonalForwardBase) <= numDifferences) {
+          if (originalIndex <= forwardPoints[diagonal]) {
+            midOriginalArr[0] = originalIndex;
+            midModifiedArr[0] = modifiedIndex;
+            if (tempOriginalIndex >= forwardPoints[diagonal] && 1447 > 0 && numDifferences <= 1447 + 1) {
+              return this.WALKTRACE(diagonalForwardBase, diagonalForwardStart, diagonalForwardEnd, diagonalForwardOffset, diagonalReverseBase, diagonalReverseStart, diagonalReverseEnd, diagonalReverseOffset, forwardPoints, reversePoints, originalIndex, originalEnd, midOriginalArr, modifiedIndex, modifiedEnd, midModifiedArr, deltaIsEven, quitEarlyArr);
+            } else {
+              return null;
+            }
+          }
+        }
+      }
+      if (numDifferences <= 1447) {
+        let temp = new Int32Array(diagonalForwardEnd - diagonalForwardStart + 2);
+        temp[0] = diagonalForwardBase - diagonalForwardStart + 1;
+        MyArray.Copy2(forwardPoints, diagonalForwardStart, temp, 1, diagonalForwardEnd - diagonalForwardStart + 1);
+        this.m_forwardHistory.push(temp);
+        temp = new Int32Array(diagonalReverseEnd - diagonalReverseStart + 2);
+        temp[0] = diagonalReverseBase - diagonalReverseStart + 1;
+        MyArray.Copy2(reversePoints, diagonalReverseStart, temp, 1, diagonalReverseEnd - diagonalReverseStart + 1);
+        this.m_reverseHistory.push(temp);
+      }
+    }
+    return this.WALKTRACE(diagonalForwardBase, diagonalForwardStart, diagonalForwardEnd, diagonalForwardOffset, diagonalReverseBase, diagonalReverseStart, diagonalReverseEnd, diagonalReverseOffset, forwardPoints, reversePoints, originalIndex, originalEnd, midOriginalArr, modifiedIndex, modifiedEnd, midModifiedArr, deltaIsEven, quitEarlyArr);
+  }
+  /**
+   * Shifts the given changes to provide a more intuitive diff.
+   * While the first element in a diff matches the first element after the diff,
+   * we shift the diff down.
+   *
+   * @param changes The list of changes to shift
+   * @returns The shifted changes
+   */
+  PrettifyChanges(changes) {
+    for (let i = 0; i < changes.length; i++) {
+      const change = changes[i];
+      const originalStop = i < changes.length - 1 ? changes[i + 1].originalStart : this._originalElementsOrHash.length;
+      const modifiedStop = i < changes.length - 1 ? changes[i + 1].modifiedStart : this._modifiedElementsOrHash.length;
+      const checkOriginal = change.originalLength > 0;
+      const checkModified = change.modifiedLength > 0;
+      while (change.originalStart + change.originalLength < originalStop && change.modifiedStart + change.modifiedLength < modifiedStop && (!checkOriginal || this.OriginalElementsAreEqual(change.originalStart, change.originalStart + change.originalLength)) && (!checkModified || this.ModifiedElementsAreEqual(change.modifiedStart, change.modifiedStart + change.modifiedLength))) {
+        const startStrictEqual = this.ElementsAreStrictEqual(change.originalStart, change.modifiedStart);
+        const endStrictEqual = this.ElementsAreStrictEqual(change.originalStart + change.originalLength, change.modifiedStart + change.modifiedLength);
+        if (endStrictEqual && !startStrictEqual) {
+          break;
+        }
+        change.originalStart++;
+        change.modifiedStart++;
+      }
+      const mergedChangeArr = [null];
+      if (i < changes.length - 1 && this.ChangesOverlap(changes[i], changes[i + 1], mergedChangeArr)) {
+        changes[i] = mergedChangeArr[0];
+        changes.splice(i + 1, 1);
+        i--;
+        continue;
+      }
+    }
+    for (let i = changes.length - 1; i >= 0; i--) {
+      const change = changes[i];
+      let originalStop = 0;
+      let modifiedStop = 0;
+      if (i > 0) {
+        const prevChange = changes[i - 1];
+        originalStop = prevChange.originalStart + prevChange.originalLength;
+        modifiedStop = prevChange.modifiedStart + prevChange.modifiedLength;
+      }
+      const checkOriginal = change.originalLength > 0;
+      const checkModified = change.modifiedLength > 0;
+      let bestDelta = 0;
+      let bestScore = this._boundaryScore(change.originalStart, change.originalLength, change.modifiedStart, change.modifiedLength);
+      for (let delta = 1; ; delta++) {
+        const originalStart = change.originalStart - delta;
+        const modifiedStart = change.modifiedStart - delta;
+        if (originalStart < originalStop || modifiedStart < modifiedStop) {
+          break;
+        }
+        if (checkOriginal && !this.OriginalElementsAreEqual(originalStart, originalStart + change.originalLength)) {
+          break;
+        }
+        if (checkModified && !this.ModifiedElementsAreEqual(modifiedStart, modifiedStart + change.modifiedLength)) {
+          break;
+        }
+        const touchingPreviousChange = originalStart === originalStop && modifiedStart === modifiedStop;
+        const score = (touchingPreviousChange ? 5 : 0) + this._boundaryScore(originalStart, change.originalLength, modifiedStart, change.modifiedLength);
+        if (score > bestScore) {
+          bestScore = score;
+          bestDelta = delta;
+        }
+      }
+      change.originalStart -= bestDelta;
+      change.modifiedStart -= bestDelta;
+      const mergedChangeArr = [null];
+      if (i > 0 && this.ChangesOverlap(changes[i - 1], changes[i], mergedChangeArr)) {
+        changes[i - 1] = mergedChangeArr[0];
+        changes.splice(i, 1);
+        i++;
+        continue;
+      }
+    }
+    if (this._hasStrings) {
+      for (let i = 1, len = changes.length; i < len; i++) {
+        const aChange = changes[i - 1];
+        const bChange = changes[i];
+        const matchedLength = bChange.originalStart - aChange.originalStart - aChange.originalLength;
+        const aOriginalStart = aChange.originalStart;
+        const bOriginalEnd = bChange.originalStart + bChange.originalLength;
+        const abOriginalLength = bOriginalEnd - aOriginalStart;
+        const aModifiedStart = aChange.modifiedStart;
+        const bModifiedEnd = bChange.modifiedStart + bChange.modifiedLength;
+        const abModifiedLength = bModifiedEnd - aModifiedStart;
+        if (matchedLength < 5 && abOriginalLength < 20 && abModifiedLength < 20) {
+          const t = this._findBetterContiguousSequence(aOriginalStart, abOriginalLength, aModifiedStart, abModifiedLength, matchedLength);
+          if (t) {
+            const [originalMatchStart, modifiedMatchStart] = t;
+            if (originalMatchStart !== aChange.originalStart + aChange.originalLength || modifiedMatchStart !== aChange.modifiedStart + aChange.modifiedLength) {
+              aChange.originalLength = originalMatchStart - aChange.originalStart;
+              aChange.modifiedLength = modifiedMatchStart - aChange.modifiedStart;
+              bChange.originalStart = originalMatchStart + matchedLength;
+              bChange.modifiedStart = modifiedMatchStart + matchedLength;
+              bChange.originalLength = bOriginalEnd - bChange.originalStart;
+              bChange.modifiedLength = bModifiedEnd - bChange.modifiedStart;
+            }
+          }
+        }
+      }
+    }
+    return changes;
+  }
+  _findBetterContiguousSequence(originalStart, originalLength, modifiedStart, modifiedLength, desiredLength) {
+    if (originalLength < desiredLength || modifiedLength < desiredLength) {
+      return null;
+    }
+    const originalMax = originalStart + originalLength - desiredLength + 1;
+    const modifiedMax = modifiedStart + modifiedLength - desiredLength + 1;
+    let bestScore = 0;
+    let bestOriginalStart = 0;
+    let bestModifiedStart = 0;
+    for (let i = originalStart; i < originalMax; i++) {
+      for (let j = modifiedStart; j < modifiedMax; j++) {
+        const score = this._contiguousSequenceScore(i, j, desiredLength);
+        if (score > 0 && score > bestScore) {
+          bestScore = score;
+          bestOriginalStart = i;
+          bestModifiedStart = j;
+        }
+      }
+    }
+    if (bestScore > 0) {
+      return [bestOriginalStart, bestModifiedStart];
+    }
+    return null;
+  }
+  _contiguousSequenceScore(originalStart, modifiedStart, length) {
+    let score = 0;
+    for (let l = 0; l < length; l++) {
+      if (!this.ElementsAreEqual(originalStart + l, modifiedStart + l)) {
+        return 0;
+      }
+      score += this._originalStringElements[originalStart + l].length;
+    }
+    return score;
+  }
+  _OriginalIsBoundary(index) {
+    if (index <= 0 || index >= this._originalElementsOrHash.length - 1) {
+      return true;
+    }
+    return this._hasStrings && /^\s*$/.test(this._originalStringElements[index]);
+  }
+  _OriginalRegionIsBoundary(originalStart, originalLength) {
+    if (this._OriginalIsBoundary(originalStart) || this._OriginalIsBoundary(originalStart - 1)) {
+      return true;
+    }
+    if (originalLength > 0) {
+      const originalEnd = originalStart + originalLength;
+      if (this._OriginalIsBoundary(originalEnd - 1) || this._OriginalIsBoundary(originalEnd)) {
+        return true;
+      }
+    }
+    return false;
+  }
+  _ModifiedIsBoundary(index) {
+    if (index <= 0 || index >= this._modifiedElementsOrHash.length - 1) {
+      return true;
+    }
+    return this._hasStrings && /^\s*$/.test(this._modifiedStringElements[index]);
+  }
+  _ModifiedRegionIsBoundary(modifiedStart, modifiedLength) {
+    if (this._ModifiedIsBoundary(modifiedStart) || this._ModifiedIsBoundary(modifiedStart - 1)) {
+      return true;
+    }
+    if (modifiedLength > 0) {
+      const modifiedEnd = modifiedStart + modifiedLength;
+      if (this._ModifiedIsBoundary(modifiedEnd - 1) || this._ModifiedIsBoundary(modifiedEnd)) {
+        return true;
+      }
+    }
+    return false;
+  }
+  _boundaryScore(originalStart, originalLength, modifiedStart, modifiedLength) {
+    const originalScore = this._OriginalRegionIsBoundary(originalStart, originalLength) ? 1 : 0;
+    const modifiedScore = this._ModifiedRegionIsBoundary(modifiedStart, modifiedLength) ? 1 : 0;
+    return originalScore + modifiedScore;
+  }
+  /**
+   * Concatenates the two input DiffChange lists and returns the resulting
+   * list.
+   * @param The left changes
+   * @param The right changes
+   * @returns The concatenated list
+   */
+  ConcatenateChanges(left, right) {
+    const mergedChangeArr = [];
+    if (left.length === 0 || right.length === 0) {
+      return right.length > 0 ? right : left;
+    } else if (this.ChangesOverlap(left[left.length - 1], right[0], mergedChangeArr)) {
+      const result = new Array(left.length + right.length - 1);
+      MyArray.Copy(left, 0, result, 0, left.length - 1);
+      result[left.length - 1] = mergedChangeArr[0];
+      MyArray.Copy(right, 1, result, left.length, right.length - 1);
+      return result;
+    } else {
+      const result = new Array(left.length + right.length);
+      MyArray.Copy(left, 0, result, 0, left.length);
+      MyArray.Copy(right, 0, result, left.length, right.length);
+      return result;
+    }
+  }
+  /**
+   * Returns true if the two changes overlap and can be merged into a single
+   * change
+   * @param left The left change
+   * @param right The right change
+   * @param mergedChange The merged change if the two overlap, null otherwise
+   * @returns True if the two changes overlap
+   */
+  ChangesOverlap(left, right, mergedChangeArr) {
+    Debug.Assert(left.originalStart <= right.originalStart, "Left change is not less than or equal to right change");
+    Debug.Assert(left.modifiedStart <= right.modifiedStart, "Left change is not less than or equal to right change");
+    if (left.originalStart + left.originalLength >= right.originalStart || left.modifiedStart + left.modifiedLength >= right.modifiedStart) {
+      const originalStart = left.originalStart;
+      let originalLength = left.originalLength;
+      const modifiedStart = left.modifiedStart;
+      let modifiedLength = left.modifiedLength;
+      if (left.originalStart + left.originalLength >= right.originalStart) {
+        originalLength = right.originalStart + right.originalLength - left.originalStart;
+      }
+      if (left.modifiedStart + left.modifiedLength >= right.modifiedStart) {
+        modifiedLength = right.modifiedStart + right.modifiedLength - left.modifiedStart;
+      }
+      mergedChangeArr[0] = new DiffChange(originalStart, originalLength, modifiedStart, modifiedLength);
+      return true;
+    } else {
+      mergedChangeArr[0] = null;
+      return false;
+    }
+  }
+  /**
+   * Helper method used to clip a diagonal index to the range of valid
+   * diagonals. This also decides whether or not the diagonal index,
+   * if it exceeds the boundary, should be clipped to the boundary or clipped
+   * one inside the boundary depending on the Even/Odd status of the boundary
+   * and numDifferences.
+   * @param diagonal The index of the diagonal to clip.
+   * @param numDifferences The current number of differences being iterated upon.
+   * @param diagonalBaseIndex The base reference diagonal.
+   * @param numDiagonals The total number of diagonals.
+   * @returns The clipped diagonal index.
+   */
+  ClipDiagonalBound(diagonal, numDifferences, diagonalBaseIndex, numDiagonals) {
+    if (diagonal >= 0 && diagonal < numDiagonals) {
+      return diagonal;
+    }
+    const diagonalsBelow = diagonalBaseIndex;
+    const diagonalsAbove = numDiagonals - diagonalBaseIndex - 1;
+    const diffEven = numDifferences % 2 === 0;
+    if (diagonal < 0) {
+      const lowerBoundEven = diagonalsBelow % 2 === 0;
+      return diffEven === lowerBoundEven ? 0 : 1;
+    } else {
+      const upperBoundEven = diagonalsAbove % 2 === 0;
+      return diffEven === upperBoundEven ? numDiagonals - 1 : numDiagonals - 2;
+    }
+  }
+}
+const precomputedEqualityArray = new Uint32Array(65536);
+const computeLevenshteinDistanceForShortStrings = /* @__PURE__ */ __name((firstString, secondString) => {
+  const firstStringLength = firstString.length;
+  const secondStringLength = secondString.length;
+  const lastBitMask = 1 << firstStringLength - 1;
+  let positiveVector = -1;
+  let negativeVector = 0;
+  let distance = firstStringLength;
+  let index = firstStringLength;
+  while (index--) {
+    precomputedEqualityArray[firstString.charCodeAt(index)] |= 1 << index;
+  }
+  for (index = 0; index < secondStringLength; index++) {
+    let equalityMask = precomputedEqualityArray[secondString.charCodeAt(index)];
+    const combinedVector = equalityMask | negativeVector;
+    equalityMask |= (equalityMask & positiveVector) + positiveVector ^ positiveVector;
+    negativeVector |= ~(equalityMask | positiveVector);
+    positiveVector &= equalityMask;
+    if (negativeVector & lastBitMask) {
+      distance++;
+    }
+    if (positiveVector & lastBitMask) {
+      distance--;
+    }
+    negativeVector = negativeVector << 1 | 1;
+    positiveVector = positiveVector << 1 | ~(combinedVector | negativeVector);
+    negativeVector &= combinedVector;
+  }
+  index = firstStringLength;
+  while (index--) {
+    precomputedEqualityArray[firstString.charCodeAt(index)] = 0;
+  }
+  return distance;
+}, "computeLevenshteinDistanceForShortStrings");
+function computeLevenshteinDistanceForLongStrings(firstString, secondString) {
+  const firstStringLength = firstString.length;
+  const secondStringLength = secondString.length;
+  const horizontalBitArray = [];
+  const verticalBitArray = [];
+  const horizontalSize = Math.ceil(firstStringLength / 32);
+  const verticalSize = Math.ceil(secondStringLength / 32);
+  for (let i = 0; i < horizontalSize; i++) {
+    horizontalBitArray[i] = -1;
+    verticalBitArray[i] = 0;
+  }
+  let verticalIndex = 0;
+  for (; verticalIndex < verticalSize - 1; verticalIndex++) {
+    let negativeVector2 = 0;
+    let positiveVector2 = -1;
+    const start2 = verticalIndex * 32;
+    const verticalLength2 = Math.min(32, secondStringLength) + start2;
+    for (let k = start2; k < verticalLength2; k++) {
+      precomputedEqualityArray[secondString.charCodeAt(k)] |= 1 << k;
+    }
+    for (let i = 0; i < firstStringLength; i++) {
+      const equalityMask = precomputedEqualityArray[firstString.charCodeAt(i)];
+      const previousBit = horizontalBitArray[i / 32 | 0] >>> i & 1;
+      const matchBit = verticalBitArray[i / 32 | 0] >>> i & 1;
+      const combinedVector = equalityMask | negativeVector2;
+      const combinedHorizontalVector = ((equalityMask | matchBit) & positiveVector2) + positiveVector2 ^ positiveVector2 | equalityMask | matchBit;
+      let positiveHorizontalVector = negativeVector2 | ~(combinedHorizontalVector | positiveVector2);
+      let negativeHorizontalVector = positiveVector2 & combinedHorizontalVector;
+      if (positiveHorizontalVector >>> 31 ^ previousBit) {
+        horizontalBitArray[i / 32 | 0] ^= 1 << i;
+      }
+      if (negativeHorizontalVector >>> 31 ^ matchBit) {
+        verticalBitArray[i / 32 | 0] ^= 1 << i;
+      }
+      positiveHorizontalVector = positiveHorizontalVector << 1 | previousBit;
+      negativeHorizontalVector = negativeHorizontalVector << 1 | matchBit;
+      positiveVector2 = negativeHorizontalVector | ~(combinedVector | positiveHorizontalVector);
+      negativeVector2 = positiveHorizontalVector & combinedVector;
+    }
+    for (let k = start2; k < verticalLength2; k++) {
+      precomputedEqualityArray[secondString.charCodeAt(k)] = 0;
+    }
+  }
+  let negativeVector = 0;
+  let positiveVector = -1;
+  const start = verticalIndex * 32;
+  const verticalLength = Math.min(32, secondStringLength - start) + start;
+  for (let k = start; k < verticalLength; k++) {
+    precomputedEqualityArray[secondString.charCodeAt(k)] |= 1 << k;
+  }
+  let distance = secondStringLength;
+  for (let i = 0; i < firstStringLength; i++) {
+    const equalityMask = precomputedEqualityArray[firstString.charCodeAt(i)];
+    const previousBit = horizontalBitArray[i / 32 | 0] >>> i & 1;
+    const matchBit = verticalBitArray[i / 32 | 0] >>> i & 1;
+    const combinedVector = equalityMask | negativeVector;
+    const combinedHorizontalVector = ((equalityMask | matchBit) & positiveVector) + positiveVector ^ positiveVector | equalityMask | matchBit;
+    let positiveHorizontalVector = negativeVector | ~(combinedHorizontalVector | positiveVector);
+    let negativeHorizontalVector = positiveVector & combinedHorizontalVector;
+    distance += positiveHorizontalVector >>> secondStringLength - 1 & 1;
+    distance -= negativeHorizontalVector >>> secondStringLength - 1 & 1;
+    if (positiveHorizontalVector >>> 31 ^ previousBit) {
+      horizontalBitArray[i / 32 | 0] ^= 1 << i;
+    }
+    if (negativeHorizontalVector >>> 31 ^ matchBit) {
+      verticalBitArray[i / 32 | 0] ^= 1 << i;
+    }
+    positiveHorizontalVector = positiveHorizontalVector << 1 | previousBit;
+    negativeHorizontalVector = negativeHorizontalVector << 1 | matchBit;
+    positiveVector = negativeHorizontalVector | ~(combinedVector | positiveHorizontalVector);
+    negativeVector = positiveHorizontalVector & combinedVector;
+  }
+  for (let k = start; k < verticalLength; k++) {
+    precomputedEqualityArray[secondString.charCodeAt(k)] = 0;
+  }
+  return distance;
+}
+__name(computeLevenshteinDistanceForLongStrings, "computeLevenshteinDistanceForLongStrings");
+function computeLevenshteinDistance(firstString, secondString) {
+  if (firstString.length < secondString.length) {
+    const temp = secondString;
+    secondString = firstString;
+    firstString = temp;
+  }
+  if (secondString.length === 0) {
+    return firstString.length;
+  }
+  if (firstString.length <= 32) {
+    return computeLevenshteinDistanceForShortStrings(firstString, secondString);
+  }
+  return computeLevenshteinDistanceForLongStrings(firstString, secondString);
+}
+__name(computeLevenshteinDistance, "computeLevenshteinDistance");
+export {
+  LcsDiff,
+  StringDiffSequence,
+  computeLevenshteinDistance,
+  stringDiff
+};
+//# sourceMappingURL=diff.js.map

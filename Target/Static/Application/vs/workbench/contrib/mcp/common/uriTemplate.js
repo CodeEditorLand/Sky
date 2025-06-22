@@ -1,1 +1,274 @@
-class u{constructor(i,o){this.template=i,this.template=i,this.components=o}static parse(i){const o=[],e=/\{([^{}]+)\}/g;let m,s=0;for(;m=e.exec(i);){const[b,j]=m;if(o.push(i.slice(s,m.index)),s=m.index+b.length,i[m.index-1]==="{"||i[s]==="}"){o.push(j);continue}let S="",c=j;c.length>0&&u.b(c[0])&&(S=c[0],c=c.slice(1));const x=c.split(",").map(d=>{let r=d,a=!1,p=!1,f,t=!1;r.endsWith("*")&&(a=!0,p=!0,r=r.slice(0,-1));const n=r.match(/^(.*?):(\d+)$/);return n&&(r=n[1],f=parseInt(n[2],10)),r.endsWith("?")&&(t=!0,r=r.slice(0,-1)),{explodable:a,name:r,optional:t,prefixLength:f,repeatable:p}});o.push({expression:b,operator:S,variables:x})}return o.push(i.slice(s)),new u(i,o)}static{this.a=["+","#",".","/",";","?","&"]}static b(i){return u.a.includes(i)}resolve(i){let o="";for(const e of this.components)typeof e=="string"?o+=e:o+=this.c(e,i);return o}c(i,o){const e=i.operator,m=i.variables;if(m.length===0)return i.expression;const s=[],b=e===";"||e==="?"||e==="&",j=e==="+"||e==="#",S=e==="#",c=e===".",x=e==="/",d=e==="?",r=e==="&",a=e===";";let p="";e==="+"?p="":e==="#"?p="#":e==="."?p=".":e==="/"?p="":e===";"?p=";":e==="?"?p="?":e==="&"&&(p="&");for(const t of m){const n=o[t.name],O=Object.prototype.hasOwnProperty.call(o,t.name);if(n==null||Array.isArray(n)&&n.length===0){if(a){O&&n==null&&s.push(t.name);continue}if(d||r){O&&s.push(u.e(t.name,"",b));continue}continue}if(typeof n=="object"&&!Array.isArray(n)){if(t.explodable){const l=[];for(const h in n)if(Object.prototype.hasOwnProperty.call(n,h)){const g=String(n[h]);a||d||r||c?l.push(h+"="+g):x?l.push("/"+h+"="+u.d(g,j)):l.push(h+"="+u.d(g,j))}c?s.push(l.join(".")):x?s.push(l.join("")):a?s.push(l.join(";")):d||r?s.push(l.join("&")):s.push(l.join(","))}else{const l=[];for(const g in n)Object.prototype.hasOwnProperty.call(n,g)&&(l.push(g),l.push(String(n[g])));const h=l.join(",");c?s.push(h):a||d||r?s.push(t.name+"="+h):s.push(h)}continue}if(Array.isArray(n)){t.explodable?c?s.push(n.join(".")):x?s.push(n.map(l=>"/"+u.d(l,j)).join("")):a?s.push(n.map(l=>t.name+"="+String(l)).join(";")):d||r?s.push(n.map(l=>t.name+"="+String(l)).join("&")):s.push(n.map(l=>u.d(l,j)).join(",")):c?s.push(n.join(",")):a||d||r?s.push(t.name+"="+n.join(",")):s.push(n.map(l=>u.d(l,j)).join(","));continue}let v=String(n);t.prefixLength!==void 0&&(v=v.substring(0,t.prefixLength));const y=u.d(v,e==="+"||e==="#");a||d||r?s.push(t.name+"="+y):c?s.push(y):x?s.push("/"+y):s.push(y)}let f="";if(c){const t=s.filter(n=>n!=="");f=t.length?p+t.join("."):""}else if(x){const t=s.filter(n=>n!=="");f=t.length?t.join(""):"",f&&!f.startsWith("/")&&(f="/"+f)}else a?f=s.length?p+s.map(t=>t.replace(/=\s*$/,"")).join(";"):"":d||r?f=s.length?p+s.join("&"):"":S?f=p+s.join(","):f=s.join(",");return f}static d(i,o){return o?encodeURI(i):P(i)}static e(i,o,e){return e?i+"="+encodeURIComponent(String(o)):encodeURIComponent(String(o))}}function P(A){let i="";for(let o=0;o<A.length;o++){const e=A.charCodeAt(o);e>=48&&e<=57||e>=65&&e<=90||e>=97&&e<=122||e===45||e===46||e===95||e===126?i+=A[o]:i+="%"+e.toString(16).toUpperCase()}return i}export{u as $DW};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+class UriTemplate {
+  static {
+    __name(this, "UriTemplate");
+  }
+  constructor(template, components) {
+    this.template = template;
+    this.template = template;
+    this.components = components;
+  }
+  /**
+   * Parses a URI template string into a UriTemplate instance.
+   */
+  static parse(template) {
+    const components = [];
+    const regex = /\{([^{}]+)\}/g;
+    let match;
+    let lastPos = 0;
+    while (match = regex.exec(template)) {
+      const [expression, inner] = match;
+      components.push(template.slice(lastPos, match.index));
+      lastPos = match.index + expression.length;
+      if (template[match.index - 1] === "{" || template[lastPos] === "}") {
+        components.push(inner);
+        continue;
+      }
+      let operator = "";
+      let rest = inner;
+      if (rest.length > 0 && UriTemplate._isOperator(rest[0])) {
+        operator = rest[0];
+        rest = rest.slice(1);
+      }
+      const variables = rest.split(",").map((v) => {
+        let name = v;
+        let explodable = false;
+        let repeatable = false;
+        let prefixLength = void 0;
+        let optional = false;
+        if (name.endsWith("*")) {
+          explodable = true;
+          repeatable = true;
+          name = name.slice(0, -1);
+        }
+        const prefixMatch = name.match(/^(.*?):(\d+)$/);
+        if (prefixMatch) {
+          name = prefixMatch[1];
+          prefixLength = parseInt(prefixMatch[2], 10);
+        }
+        if (name.endsWith("?")) {
+          optional = true;
+          name = name.slice(0, -1);
+        }
+        return { explodable, name, optional, prefixLength, repeatable };
+      });
+      components.push({ expression, operator, variables });
+    }
+    components.push(template.slice(lastPos));
+    return new UriTemplate(template, components);
+  }
+  static {
+    this._operators = ["+", "#", ".", "/", ";", "?", "&"];
+  }
+  static _isOperator(ch) {
+    return UriTemplate._operators.includes(ch);
+  }
+  /**
+   * Resolves the template with the given variables.
+   */
+  resolve(variables) {
+    let result = "";
+    for (const comp of this.components) {
+      if (typeof comp === "string") {
+        result += comp;
+      } else {
+        result += this._expand(comp, variables);
+      }
+    }
+    return result;
+  }
+  _expand(comp, variables) {
+    const op = comp.operator;
+    const varSpecs = comp.variables;
+    if (varSpecs.length === 0) {
+      return comp.expression;
+    }
+    const vals = [];
+    const isNamed = op === ";" || op === "?" || op === "&";
+    const isReserved = op === "+" || op === "#";
+    const isFragment = op === "#";
+    const isLabel = op === ".";
+    const isPath = op === "/";
+    const isForm = op === "?";
+    const isFormCont = op === "&";
+    const isParam = op === ";";
+    let prefix = "";
+    if (op === "+") {
+      prefix = "";
+    } else if (op === "#") {
+      prefix = "#";
+    } else if (op === ".") {
+      prefix = ".";
+    } else if (op === "/") {
+      prefix = "";
+    } else if (op === ";") {
+      prefix = ";";
+    } else if (op === "?") {
+      prefix = "?";
+    } else if (op === "&") {
+      prefix = "&";
+    }
+    for (const v of varSpecs) {
+      const value = variables[v.name];
+      const defined = Object.prototype.hasOwnProperty.call(variables, v.name);
+      if (value === void 0 || value === null || Array.isArray(value) && value.length === 0) {
+        if (isParam) {
+          if (defined && (value === null || value === void 0)) {
+            vals.push(v.name);
+          }
+          continue;
+        }
+        if (isForm || isFormCont) {
+          if (defined) {
+            vals.push(UriTemplate._formPair(v.name, "", isNamed));
+          }
+          continue;
+        }
+        continue;
+      }
+      if (typeof value === "object" && !Array.isArray(value)) {
+        if (v.explodable) {
+          const pairs = [];
+          for (const k in value) {
+            if (Object.prototype.hasOwnProperty.call(value, k)) {
+              const thisVal = String(value[k]);
+              if (isParam) {
+                pairs.push(k + "=" + thisVal);
+              } else if (isForm || isFormCont) {
+                pairs.push(k + "=" + thisVal);
+              } else if (isLabel) {
+                pairs.push(k + "=" + thisVal);
+              } else if (isPath) {
+                pairs.push("/" + k + "=" + UriTemplate._encode(thisVal, isReserved));
+              } else {
+                pairs.push(k + "=" + UriTemplate._encode(thisVal, isReserved));
+              }
+            }
+          }
+          if (isLabel) {
+            vals.push(pairs.join("."));
+          } else if (isPath) {
+            vals.push(pairs.join(""));
+          } else if (isParam) {
+            vals.push(pairs.join(";"));
+          } else if (isForm || isFormCont) {
+            vals.push(pairs.join("&"));
+          } else {
+            vals.push(pairs.join(","));
+          }
+        } else {
+          const pairs = [];
+          for (const k in value) {
+            if (Object.prototype.hasOwnProperty.call(value, k)) {
+              pairs.push(k);
+              pairs.push(String(value[k]));
+            }
+          }
+          const joined2 = pairs.join(",");
+          if (isLabel) {
+            vals.push(joined2);
+          } else if (isParam || isForm || isFormCont) {
+            vals.push(v.name + "=" + joined2);
+          } else {
+            vals.push(joined2);
+          }
+        }
+        continue;
+      }
+      if (Array.isArray(value)) {
+        if (v.explodable) {
+          if (isLabel) {
+            vals.push(value.join("."));
+          } else if (isPath) {
+            vals.push(value.map((x) => "/" + UriTemplate._encode(x, isReserved)).join(""));
+          } else if (isParam) {
+            vals.push(value.map((x) => v.name + "=" + String(x)).join(";"));
+          } else if (isForm || isFormCont) {
+            vals.push(value.map((x) => v.name + "=" + String(x)).join("&"));
+          } else {
+            vals.push(value.map((x) => UriTemplate._encode(x, isReserved)).join(","));
+          }
+        } else {
+          if (isLabel) {
+            vals.push(value.join(","));
+          } else if (isParam) {
+            vals.push(v.name + "=" + value.join(","));
+          } else if (isForm || isFormCont) {
+            vals.push(v.name + "=" + value.join(","));
+          } else {
+            vals.push(value.map((x) => UriTemplate._encode(x, isReserved)).join(","));
+          }
+        }
+        continue;
+      }
+      let str = String(value);
+      if (v.prefixLength !== void 0) {
+        str = str.substring(0, v.prefixLength);
+      }
+      const enc = UriTemplate._encode(str, op === "+" || op === "#");
+      if (isParam) {
+        vals.push(v.name + "=" + enc);
+      } else if (isForm || isFormCont) {
+        vals.push(v.name + "=" + enc);
+      } else if (isLabel) {
+        vals.push(enc);
+      } else if (isPath) {
+        vals.push("/" + enc);
+      } else {
+        vals.push(enc);
+      }
+    }
+    let joined = "";
+    if (isLabel) {
+      const filtered = vals.filter((v) => v !== "");
+      joined = filtered.length ? prefix + filtered.join(".") : "";
+    } else if (isPath) {
+      const filtered = vals.filter((v) => v !== "");
+      joined = filtered.length ? filtered.join("") : "";
+      if (joined && !joined.startsWith("/")) {
+        joined = "/" + joined;
+      }
+    } else if (isParam) {
+      joined = vals.length ? prefix + vals.map((v) => v.replace(/=\s*$/, "")).join(";") : "";
+    } else if (isForm) {
+      joined = vals.length ? prefix + vals.join("&") : "";
+    } else if (isFormCont) {
+      joined = vals.length ? prefix + vals.join("&") : "";
+    } else if (isFragment) {
+      joined = prefix + vals.join(",");
+    } else if (isReserved) {
+      joined = vals.join(",");
+    } else {
+      joined = vals.join(",");
+    }
+    return joined;
+  }
+  static _encode(str, reserved) {
+    return reserved ? encodeURI(str) : pctEncode(str);
+  }
+  static _formPair(k, v, named) {
+    return named ? k + "=" + encodeURIComponent(String(v)) : encodeURIComponent(String(v));
+  }
+}
+function pctEncode(str) {
+  let out = "";
+  for (let i = 0; i < str.length; i++) {
+    const chr = str.charCodeAt(i);
+    if (
+      // alphanum ranges:
+      chr >= 48 && chr <= 57 || chr >= 65 && chr <= 90 || chr >= 97 && chr <= 122 || // unreserved characters:
+      (chr === 45 || chr === 46 || chr === 95 || chr === 126)
+    ) {
+      out += str[i];
+    } else {
+      out += "%" + chr.toString(16).toUpperCase();
+    }
+  }
+  return out;
+}
+__name(pctEncode, "pctEncode");
+export {
+  UriTemplate
+};
+//# sourceMappingURL=uriTemplate.js.map

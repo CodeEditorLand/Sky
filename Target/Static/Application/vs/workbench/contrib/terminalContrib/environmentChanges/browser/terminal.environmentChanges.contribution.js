@@ -1,1 +1,130 @@
-import{URI as g}from"../../../../../base/common/uri.js";import{Event as w}from"../../../../../base/common/event.js";import{$gF as C}from"../../../../../editor/common/services/model.js";import{$cF as E}from"../../../../../editor/common/services/resolverService.js";import{localize as f,localize2 as D}from"../../../../../nls.js";import{$mj as _}from"../../../../../platform/instantiation/common/instantiation.js";import{EnvironmentVariableMutatorType as v}from"../../../../../platform/terminal/common/environmentVariable.js";import{$drc as x}from"../../../terminal/browser/terminalActions.js";import{$oI as b}from"../../../../services/editor/common/editorService.js";var m,h=function(e,o,t,n){var r,i=arguments.length,s=i<3?o:null===n?n=Object.getOwnPropertyDescriptor(o,t):n;if("object"==typeof Reflect&&"function"==typeof Reflect.decorate)s=Reflect.decorate(e,o,t,n);else for(var a=e.length-1;a>=0;a--)(r=e[a])&&(s=(i<3?r(s):i>3?r(o,t,s):r(o,t))||s);return i>3&&s&&Object.defineProperty(o,t,s),s},d=function(e,o){return function(t,n){o(t,n,e)}};function F(e,o){let t=`# ${f(12055,null)}`;const n=e.getDescriptionMap(void 0),r=e.getDescriptionMap(o);for(const[i,s]of e.collections){t+=`\n\n## ${f(12056,null,i)}`,t+="\n";const e=n.get(i);e&&(t+=`\n${e}\n`);const a=r.get(i);if(a){t+=`\n${a}${e?` (${f(12057,null)})`:""}\n`}for(const e of s.map.values())!1!==P(e,o)&&(t+=`\n- \`${T(e.type,e.value,e.variable)}\``)}return t}function P(e,o){return!!(!e.scope||e.scope.workspaceFolder&&o?.workspaceFolder&&e.scope.workspaceFolder.index===o.workspaceFolder.index)}function T(e,o,t){switch(e){case v.Prepend:return`${t}=${o}\${env:${t}}`;case v.Append:return`${t}=\${env:${t}}${o}`;default:return`${t}=${o}`}}x({id:"workbench.action.terminal.showEnvironmentContributions",title:D(12058,"Show Environment Contributions"),run:async(e,o,t,n)=>{const r=e.extEnvironmentVariableCollection;if(r){const e=n,o=t.get(_).createInstance(p),i=t.get(b),s=(new Date).getTime(),a=e?.workspaceFolder?` - ${e.workspaceFolder.name}`:"",c=await o.provideTextContent(g.from({scheme:p.scheme,path:`Environment changes${a}`,fragment:F(r,e),query:`environment-collection-${s}`}));c&&await i.openEditor({resource:c.uri})}}});let p=class{static{m=this}static{this.scheme="ENVIRONMENT_CHANGES_COLLECTION"}constructor(e,o){this.a=o,e.registerTextModelContentProvider(m.scheme,this)}async provideTextContent(e){const o=this.a.getModel(e);return o&&!o.isDisposed()?o:this.a.createModel(e.fragment,{languageId:"markdown",onDidChange:w.None},e,!1)}};p=m=h([d(0,E),d(1,C)],p);
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { URI } from "../../../../../base/common/uri.js";
+import { Event } from "../../../../../base/common/event.js";
+import { IModelService } from "../../../../../editor/common/services/model.js";
+import { ITextModelService } from "../../../../../editor/common/services/resolverService.js";
+import { localize, localize2 } from "../../../../../nls.js";
+import { IInstantiationService } from "../../../../../platform/instantiation/common/instantiation.js";
+import { EnvironmentVariableMutatorType } from "../../../../../platform/terminal/common/environmentVariable.js";
+import { registerActiveInstanceAction } from "../../../terminal/browser/terminalActions.js";
+import { IEditorService } from "../../../../services/editor/common/editorService.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+var EnvironmentCollectionProvider_1;
+registerActiveInstanceAction({
+  id: "workbench.action.terminal.showEnvironmentContributions",
+  title: localize2("workbench.action.terminal.showEnvironmentContributions", "Show Environment Contributions"),
+  run: /* @__PURE__ */ __name(async (activeInstance, c, accessor, arg) => {
+    const collection = activeInstance.extEnvironmentVariableCollection;
+    if (collection) {
+      const scope = arg;
+      const instantiationService = accessor.get(IInstantiationService);
+      const outputProvider = instantiationService.createInstance(EnvironmentCollectionProvider);
+      const editorService = accessor.get(IEditorService);
+      const timestamp = (/* @__PURE__ */ new Date()).getTime();
+      const scopeDesc = scope?.workspaceFolder ? ` - ${scope.workspaceFolder.name}` : "";
+      const textContent = await outputProvider.provideTextContent(URI.from({
+        scheme: EnvironmentCollectionProvider.scheme,
+        path: `Environment changes${scopeDesc}`,
+        fragment: describeEnvironmentChanges(collection, scope),
+        query: `environment-collection-${timestamp}`
+      }));
+      if (textContent) {
+        await editorService.openEditor({
+          resource: textContent.uri
+        });
+      }
+    }
+  }, "run")
+});
+function describeEnvironmentChanges(collection, scope) {
+  let content = `# ${localize("envChanges", "Terminal Environment Changes")}`;
+  const globalDescriptions = collection.getDescriptionMap(void 0);
+  const workspaceDescriptions = collection.getDescriptionMap(scope);
+  for (const [ext, coll] of collection.collections) {
+    content += `
+
+## ${localize("extension", "Extension: {0}", ext)}`;
+    content += "\n";
+    const globalDescription = globalDescriptions.get(ext);
+    if (globalDescription) {
+      content += `
+${globalDescription}
+`;
+    }
+    const workspaceDescription = workspaceDescriptions.get(ext);
+    if (workspaceDescription) {
+      const workspaceSuffix = globalDescription ? ` (${localize("ScopedEnvironmentContributionInfo", "workspace")})` : "";
+      content += `
+${workspaceDescription}${workspaceSuffix}
+`;
+    }
+    for (const mutator of coll.map.values()) {
+      if (filterScope(mutator, scope) === false) {
+        continue;
+      }
+      content += `
+- \`${mutatorTypeLabel(mutator.type, mutator.value, mutator.variable)}\``;
+    }
+  }
+  return content;
+}
+__name(describeEnvironmentChanges, "describeEnvironmentChanges");
+function filterScope(mutator, scope) {
+  if (!mutator.scope) {
+    return true;
+  }
+  if (mutator.scope.workspaceFolder && scope?.workspaceFolder && mutator.scope.workspaceFolder.index === scope.workspaceFolder.index) {
+    return true;
+  }
+  return false;
+}
+__name(filterScope, "filterScope");
+function mutatorTypeLabel(type, value, variable) {
+  switch (type) {
+    case EnvironmentVariableMutatorType.Prepend:
+      return `${variable}=${value}\${env:${variable}}`;
+    case EnvironmentVariableMutatorType.Append:
+      return `${variable}=\${env:${variable}}${value}`;
+    default:
+      return `${variable}=${value}`;
+  }
+}
+__name(mutatorTypeLabel, "mutatorTypeLabel");
+let EnvironmentCollectionProvider = class EnvironmentCollectionProvider2 {
+  static {
+    __name(this, "EnvironmentCollectionProvider");
+  }
+  static {
+    EnvironmentCollectionProvider_1 = this;
+  }
+  static {
+    this.scheme = "ENVIRONMENT_CHANGES_COLLECTION";
+  }
+  constructor(textModelResolverService, _modelService) {
+    this._modelService = _modelService;
+    textModelResolverService.registerTextModelContentProvider(EnvironmentCollectionProvider_1.scheme, this);
+  }
+  async provideTextContent(resource) {
+    const existing = this._modelService.getModel(resource);
+    if (existing && !existing.isDisposed()) {
+      return existing;
+    }
+    return this._modelService.createModel(resource.fragment, { languageId: "markdown", onDidChange: Event.None }, resource, false);
+  }
+};
+EnvironmentCollectionProvider = EnvironmentCollectionProvider_1 = __decorate([
+  __param(0, ITextModelService),
+  __param(1, IModelService)
+], EnvironmentCollectionProvider);
+//# sourceMappingURL=terminal.environmentChanges.contribution.js.map

@@ -1,1 +1,71 @@
-import{$1c as $,$Yc as d}from"../../../base/common/types.js";import{localize as w}from"../../../nls.js";function O(s,t,e,o){try{z(s,t,e,o)}catch(t){s.error(t?.message??t)}return t}function z(s,t,e,o){const r=(n,i,a)=>{const c=n[i];if(d(c)){const r=c,f=r.length;if(f>1&&"%"===r[0]&&"%"===r[f-1]){const c=r.substr(1,f-2);let l=e[c];void 0===l&&o&&(l=o[c]);const m="string"==typeof l?l:l?.message,g=o?.[c],y="string"==typeof g?g:g?.message;if(!m)return void(y||s.warn(`[${t.name}]: ${w(1971,null,c)}`));if(a&&("title"===i||"category"===i)&&y&&y!==m){const s={value:m,original:y};n[i]=s}else n[i]=m}}else if($(c))for(const s in c)c.hasOwnProperty(s)&&r(c,s,"commands"===s||a);else if(Array.isArray(c))for(let s=0;s<c.length;s++)r(c,s,a)};for(const s in t)t.hasOwnProperty(s)&&r(t,s)}export{O as $Wz};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { isObject, isString } from "../../../base/common/types.js";
+import { localize } from "../../../nls.js";
+function localizeManifest(logger, extensionManifest, translations, fallbackTranslations) {
+  try {
+    replaceNLStrings(logger, extensionManifest, translations, fallbackTranslations);
+  } catch (error) {
+    logger.error(error?.message ?? error);
+  }
+  return extensionManifest;
+}
+__name(localizeManifest, "localizeManifest");
+function replaceNLStrings(logger, extensionManifest, messages, originalMessages) {
+  const processEntry = /* @__PURE__ */ __name((obj, key, command) => {
+    const value = obj[key];
+    if (isString(value)) {
+      const str = value;
+      const length = str.length;
+      if (length > 1 && str[0] === "%" && str[length - 1] === "%") {
+        const messageKey = str.substr(1, length - 2);
+        let translated = messages[messageKey];
+        if (translated === void 0 && originalMessages) {
+          translated = originalMessages[messageKey];
+        }
+        const message = typeof translated === "string" ? translated : translated?.message;
+        const original = originalMessages?.[messageKey];
+        const originalMessage = typeof original === "string" ? original : original?.message;
+        if (!message) {
+          if (!originalMessage) {
+            logger.warn(`[${extensionManifest.name}]: ${localize("missingNLSKey", "Couldn't find message for key {0}.", messageKey)}`);
+          }
+          return;
+        }
+        if (
+          // if we are translating the title or category of a command
+          command && (key === "title" || key === "category") && // and the original value is not the same as the translated value
+          originalMessage && originalMessage !== message
+        ) {
+          const localizedString = {
+            value: message,
+            original: originalMessage
+          };
+          obj[key] = localizedString;
+        } else {
+          obj[key] = message;
+        }
+      }
+    } else if (isObject(value)) {
+      for (const k in value) {
+        if (value.hasOwnProperty(k)) {
+          k === "commands" ? processEntry(value, k, true) : processEntry(value, k, command);
+        }
+      }
+    } else if (Array.isArray(value)) {
+      for (let i = 0; i < value.length; i++) {
+        processEntry(value, i, command);
+      }
+    }
+  }, "processEntry");
+  for (const key in extensionManifest) {
+    if (extensionManifest.hasOwnProperty(key)) {
+      processEntry(extensionManifest, key);
+    }
+  }
+}
+__name(replaceNLStrings, "replaceNLStrings");
+export {
+  localizeManifest
+};
+//# sourceMappingURL=extensionNls.js.map

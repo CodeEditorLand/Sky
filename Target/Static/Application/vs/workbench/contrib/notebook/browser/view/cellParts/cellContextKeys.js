@@ -1,1 +1,215 @@
-import{$vd as p,$ud as g}from"../../../../../../base/common/lifecycle.js";import{autorun as m}from"../../../../../../base/common/observable.js";import{$Vn as D}from"../../../../../../platform/contextkey/common/contextkey.js";import{$mj as $}from"../../../../../../platform/instantiation/common/instantiation.js";import{$BSb as c}from"../../controller/chat/notebookChatController.js";import{CellEditState as S,CellFocusMode as A}from"../../notebookBrowser.js";import{$DSb as E}from"../cellPart.js";import{$dSb as a}from"../../viewModel/codeCellViewModel.js";import{$eSb as f}from"../../viewModel/markupCellViewModel.js";import{NotebookCellExecutionState as l}from"../../../common/notebookCommon.js";import{$QAb as T,$SAb as v,$WAb as x,$VAb as y,$RAb as M,$XAb as N,$2Ab as R,$UAb as _,$TAb as j,$3Ab as z,$4Ab as F,$PAb as O,$5Ab as w,$6Ab as H}from"../../../common/notebookContextKeys.js";import{$DK as I,NotebookExecutionType as B}from"../../../common/notebookExecutionStateService.js";var b=function(h,t,i,s){var n=arguments.length,e=n<3?t:s===null?s=Object.getOwnPropertyDescriptor(t,i):s,o;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")e=Reflect.decorate(h,t,i,s);else for(var r=h.length-1;r>=0;r--)(o=h[r])&&(e=(n<3?o(e):n>3?o(t,i,e):o(t,i))||e);return n>3&&e&&Object.defineProperty(t,i,e),e},d=function(h,t){return function(i,s){t(i,s,h)}};let C=class extends E{constructor(t,i){super(),this.b=i,this.a=this.B(this.b.createInstance(u,t,void 0))}didRenderCell(t){this.a.updateForElement(t)}};C=b([d(1,$)],C);let u=class extends p{constructor(t,i,s,n){super(),this.z=t,this.C=i,this.D=s,this.F=n,this.y=this.B(new g),this.D.bufferChangeEvents(()=>{this.a=O.bindTo(this.D),this.b=T.bindTo(this.D),this.c=M.bindTo(this.D),this.f=v.bindTo(this.D),this.w=j.bindTo(this.D),this.g=y.bindTo(this.D),this.h=x.bindTo(this.D),this.j=N.bindTo(this.D),this.m=R.bindTo(this.D),this.n=z.bindTo(this.D),this.r=_.bindTo(this.D),this.t=w.bindTo(this.D),this.s=F.bindTo(this.D),this.u=H.bindTo(this.D),i&&this.updateForElement(i)}),this.B(this.F.onDidChangeExecution(e=>{e.type===B.cell&&this.C&&e.affectsCell(this.C.uri)&&this.I()}))}updateForElement(t){if(this.y.clear(),this.C=t,!t)return;this.y.add(t.onDidChangeState(s=>this.G(s))),t instanceof a&&(this.y.add(t.onDidChangeOutputs(()=>this.M())),this.y.add(m(s=>{this.u.set(!!s.readObservable(t.executionErrorDiagnostic))}))),this.y.add(this.z.onDidChangeActiveCell(()=>this.H())),this.C instanceof f?this.a.set("markup"):this.C instanceof a&&this.a.set("code"),this.D.bufferChangeEvents(()=>{this.H(),this.I(),this.J(),this.L(),this.M(),this.N(),this.r.set(this.C.lineNumbers),this.s.set(this.C.uri.toString())});const i=c.get(this.z);i&&this.y.add(i.onDidChangePromptCache(s=>{s.cell.toString()===this.C.uri.toString()&&this.N()}))}G(t){this.D.bufferChangeEvents(()=>{t.internalMetadataChanged&&this.I(),t.editStateChanged&&this.J(),t.focusModeChanged&&this.H(),t.cellLineNumberChanged&&this.r.set(this.C.lineNumbers),(t.inputCollapsedChanged||t.outputCollapsedChanged)&&this.L()})}H(){if(!this.C)return;const t=this.z.getActiveCell();this.c.set(this.z.getActiveCell()===this.C),t===this.C?this.f.set(this.C.focusMode===A.Editor):this.f.set(!1)}I(){if(!this.C)return;const t=this.C.internalMetadata;this.b.set(!this.z.isReadOnly);const i=this.F.getCellExecution(this.C.uri);this.C instanceof f?(this.g.reset(),this.h.reset()):i?.state===l.Executing?(this.g.set("executing"),this.h.set(!0)):i?.state===l.Pending||i?.state===l.Unconfirmed?(this.g.set("pending"),this.h.set(!0)):t.lastRunSuccess===!0?(this.g.set("succeeded"),this.h.set(!1)):t.lastRunSuccess===!1?(this.g.set("failed"),this.h.set(!1)):(this.g.set("idle"),this.h.set(!1))}J(){this.C&&(this.C instanceof f?this.w.set(this.C.getEditState()===S.Editing):this.w.set(!1))}L(){this.C&&(this.m.set(!!this.C.isInputCollapsed),this.n.set(!!this.C.isOutputCollapsed))}M(){this.C instanceof a?this.j.set(this.C.outputsViewModels.length>0):this.j.set(!1)}N(){const t=c.get(this.z);if(!t||!this.C){this.t.set(!1);return}this.t.set(t.isCellGeneratedByChat(this.C))}};u=b([d(2,D),d(3,I)],u);export{C as $GSb,u as $HSb};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { Disposable, DisposableStore } from "../../../../../../base/common/lifecycle.js";
+import { autorun } from "../../../../../../base/common/observable.js";
+import { IContextKeyService } from "../../../../../../platform/contextkey/common/contextkey.js";
+import { IInstantiationService } from "../../../../../../platform/instantiation/common/instantiation.js";
+import { NotebookChatController } from "../../controller/chat/notebookChatController.js";
+import { CellEditState, CellFocusMode } from "../../notebookBrowser.js";
+import { CellContentPart } from "../cellPart.js";
+import { CodeCellViewModel } from "../../viewModel/codeCellViewModel.js";
+import { MarkupCellViewModel } from "../../viewModel/markupCellViewModel.js";
+import { NotebookCellExecutionState } from "../../../common/notebookCommon.js";
+import { NOTEBOOK_CELL_EDITABLE, NOTEBOOK_CELL_EDITOR_FOCUSED, NOTEBOOK_CELL_EXECUTING, NOTEBOOK_CELL_EXECUTION_STATE, NOTEBOOK_CELL_FOCUSED, NOTEBOOK_CELL_HAS_OUTPUTS, NOTEBOOK_CELL_INPUT_COLLAPSED, NOTEBOOK_CELL_LINE_NUMBERS, NOTEBOOK_CELL_MARKDOWN_EDIT_MODE, NOTEBOOK_CELL_OUTPUT_COLLAPSED, NOTEBOOK_CELL_RESOURCE, NOTEBOOK_CELL_TYPE, NOTEBOOK_CELL_GENERATED_BY_CHAT, NOTEBOOK_CELL_HAS_ERROR_DIAGNOSTICS } from "../../../common/notebookContextKeys.js";
+import { INotebookExecutionStateService, NotebookExecutionType } from "../../../common/notebookExecutionStateService.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+let CellContextKeyPart = class CellContextKeyPart2 extends CellContentPart {
+  static {
+    __name(this, "CellContextKeyPart");
+  }
+  constructor(notebookEditor, instantiationService) {
+    super();
+    this.instantiationService = instantiationService;
+    this.cellContextKeyManager = this._register(this.instantiationService.createInstance(CellContextKeyManager, notebookEditor, void 0));
+  }
+  didRenderCell(element) {
+    this.cellContextKeyManager.updateForElement(element);
+  }
+};
+CellContextKeyPart = __decorate([
+  __param(1, IInstantiationService)
+], CellContextKeyPart);
+let CellContextKeyManager = class CellContextKeyManager2 extends Disposable {
+  static {
+    __name(this, "CellContextKeyManager");
+  }
+  constructor(notebookEditor, element, _contextKeyService, _notebookExecutionStateService) {
+    super();
+    this.notebookEditor = notebookEditor;
+    this.element = element;
+    this._contextKeyService = _contextKeyService;
+    this._notebookExecutionStateService = _notebookExecutionStateService;
+    this.elementDisposables = this._register(new DisposableStore());
+    this._contextKeyService.bufferChangeEvents(() => {
+      this.cellType = NOTEBOOK_CELL_TYPE.bindTo(this._contextKeyService);
+      this.cellEditable = NOTEBOOK_CELL_EDITABLE.bindTo(this._contextKeyService);
+      this.cellFocused = NOTEBOOK_CELL_FOCUSED.bindTo(this._contextKeyService);
+      this.cellEditorFocused = NOTEBOOK_CELL_EDITOR_FOCUSED.bindTo(this._contextKeyService);
+      this.markdownEditMode = NOTEBOOK_CELL_MARKDOWN_EDIT_MODE.bindTo(this._contextKeyService);
+      this.cellRunState = NOTEBOOK_CELL_EXECUTION_STATE.bindTo(this._contextKeyService);
+      this.cellExecuting = NOTEBOOK_CELL_EXECUTING.bindTo(this._contextKeyService);
+      this.cellHasOutputs = NOTEBOOK_CELL_HAS_OUTPUTS.bindTo(this._contextKeyService);
+      this.cellContentCollapsed = NOTEBOOK_CELL_INPUT_COLLAPSED.bindTo(this._contextKeyService);
+      this.cellOutputCollapsed = NOTEBOOK_CELL_OUTPUT_COLLAPSED.bindTo(this._contextKeyService);
+      this.cellLineNumbers = NOTEBOOK_CELL_LINE_NUMBERS.bindTo(this._contextKeyService);
+      this.cellGeneratedByChat = NOTEBOOK_CELL_GENERATED_BY_CHAT.bindTo(this._contextKeyService);
+      this.cellResource = NOTEBOOK_CELL_RESOURCE.bindTo(this._contextKeyService);
+      this.cellHasErrorDiagnostics = NOTEBOOK_CELL_HAS_ERROR_DIAGNOSTICS.bindTo(this._contextKeyService);
+      if (element) {
+        this.updateForElement(element);
+      }
+    });
+    this._register(this._notebookExecutionStateService.onDidChangeExecution((e) => {
+      if (e.type === NotebookExecutionType.cell && this.element && e.affectsCell(this.element.uri)) {
+        this.updateForExecutionState();
+      }
+    }));
+  }
+  updateForElement(element) {
+    this.elementDisposables.clear();
+    this.element = element;
+    if (!element) {
+      return;
+    }
+    this.elementDisposables.add(element.onDidChangeState((e) => this.onDidChangeState(e)));
+    if (element instanceof CodeCellViewModel) {
+      this.elementDisposables.add(element.onDidChangeOutputs(() => this.updateForOutputs()));
+      this.elementDisposables.add(autorun((reader) => {
+        this.cellHasErrorDiagnostics.set(!!reader.readObservable(element.executionErrorDiagnostic));
+      }));
+    }
+    this.elementDisposables.add(this.notebookEditor.onDidChangeActiveCell(() => this.updateForFocusState()));
+    if (this.element instanceof MarkupCellViewModel) {
+      this.cellType.set("markup");
+    } else if (this.element instanceof CodeCellViewModel) {
+      this.cellType.set("code");
+    }
+    this._contextKeyService.bufferChangeEvents(() => {
+      this.updateForFocusState();
+      this.updateForExecutionState();
+      this.updateForEditState();
+      this.updateForCollapseState();
+      this.updateForOutputs();
+      this.updateForChat();
+      this.cellLineNumbers.set(this.element.lineNumbers);
+      this.cellResource.set(this.element.uri.toString());
+    });
+    const chatController = NotebookChatController.get(this.notebookEditor);
+    if (chatController) {
+      this.elementDisposables.add(chatController.onDidChangePromptCache((e) => {
+        if (e.cell.toString() === this.element.uri.toString()) {
+          this.updateForChat();
+        }
+      }));
+    }
+  }
+  onDidChangeState(e) {
+    this._contextKeyService.bufferChangeEvents(() => {
+      if (e.internalMetadataChanged) {
+        this.updateForExecutionState();
+      }
+      if (e.editStateChanged) {
+        this.updateForEditState();
+      }
+      if (e.focusModeChanged) {
+        this.updateForFocusState();
+      }
+      if (e.cellLineNumberChanged) {
+        this.cellLineNumbers.set(this.element.lineNumbers);
+      }
+      if (e.inputCollapsedChanged || e.outputCollapsedChanged) {
+        this.updateForCollapseState();
+      }
+    });
+  }
+  updateForFocusState() {
+    if (!this.element) {
+      return;
+    }
+    const activeCell = this.notebookEditor.getActiveCell();
+    this.cellFocused.set(this.notebookEditor.getActiveCell() === this.element);
+    if (activeCell === this.element) {
+      this.cellEditorFocused.set(this.element.focusMode === CellFocusMode.Editor);
+    } else {
+      this.cellEditorFocused.set(false);
+    }
+  }
+  updateForExecutionState() {
+    if (!this.element) {
+      return;
+    }
+    const internalMetadata = this.element.internalMetadata;
+    this.cellEditable.set(!this.notebookEditor.isReadOnly);
+    const exeState = this._notebookExecutionStateService.getCellExecution(this.element.uri);
+    if (this.element instanceof MarkupCellViewModel) {
+      this.cellRunState.reset();
+      this.cellExecuting.reset();
+    } else if (exeState?.state === NotebookCellExecutionState.Executing) {
+      this.cellRunState.set("executing");
+      this.cellExecuting.set(true);
+    } else if (exeState?.state === NotebookCellExecutionState.Pending || exeState?.state === NotebookCellExecutionState.Unconfirmed) {
+      this.cellRunState.set("pending");
+      this.cellExecuting.set(true);
+    } else if (internalMetadata.lastRunSuccess === true) {
+      this.cellRunState.set("succeeded");
+      this.cellExecuting.set(false);
+    } else if (internalMetadata.lastRunSuccess === false) {
+      this.cellRunState.set("failed");
+      this.cellExecuting.set(false);
+    } else {
+      this.cellRunState.set("idle");
+      this.cellExecuting.set(false);
+    }
+  }
+  updateForEditState() {
+    if (!this.element) {
+      return;
+    }
+    if (this.element instanceof MarkupCellViewModel) {
+      this.markdownEditMode.set(this.element.getEditState() === CellEditState.Editing);
+    } else {
+      this.markdownEditMode.set(false);
+    }
+  }
+  updateForCollapseState() {
+    if (!this.element) {
+      return;
+    }
+    this.cellContentCollapsed.set(!!this.element.isInputCollapsed);
+    this.cellOutputCollapsed.set(!!this.element.isOutputCollapsed);
+  }
+  updateForOutputs() {
+    if (this.element instanceof CodeCellViewModel) {
+      this.cellHasOutputs.set(this.element.outputsViewModels.length > 0);
+    } else {
+      this.cellHasOutputs.set(false);
+    }
+  }
+  updateForChat() {
+    const chatController = NotebookChatController.get(this.notebookEditor);
+    if (!chatController || !this.element) {
+      this.cellGeneratedByChat.set(false);
+      return;
+    }
+    this.cellGeneratedByChat.set(chatController.isCellGeneratedByChat(this.element));
+  }
+};
+CellContextKeyManager = __decorate([
+  __param(2, IContextKeyService),
+  __param(3, INotebookExecutionStateService)
+], CellContextKeyManager);
+export {
+  CellContextKeyManager,
+  CellContextKeyPart
+};
+//# sourceMappingURL=cellContextKeys.js.map

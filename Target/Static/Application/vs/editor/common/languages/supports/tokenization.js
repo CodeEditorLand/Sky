@@ -1,1 +1,328 @@
-import{$hp as m}from"../../../../base/common/color.js";class p{constructor(t,e,n,r,s){this._parsedThemeRuleBrand=void 0,this.token=t,this.index=e,this.fontStyle=n,this.foreground=r,this.background=s}}function x(t){if(!t||!Array.isArray(t))return[];const e=[];let n=0;for(let r=0,s=t.length;r<s;r++){const s=t[r];let o=-1;if("string"==typeof s.fontStyle){o=0;const t=s.fontStyle.split(" ");for(let e=0,n=t.length;e<n;e++)switch(t[e]){case"italic":o|=1;break;case"bold":o|=2;break;case"underline":o|=4;break;case"strikethrough":o|=8}}let i=null;"string"==typeof s.foreground&&(i=s.foreground);let c=null;"string"==typeof s.background&&(c=s.background),e[n++]=new p(s.token||"",r,o,i,c)}return e}function b(t,e){t.sort(((t,e)=>{const n=$(t.token,e.token);return 0!==n?n:t.index-e.index}));let n=0,r="000000",s="ffffff";for(;t.length>=1&&""===t[0].token;){const e=t.shift();-1!==e.fontStyle&&(n=e.fontStyle),null!==e.foreground&&(r=e.foreground),null!==e.background&&(s=e.background)}const o=new k;for(const t of e)o.getId(t);const i=o.getId(r),c=o.getId(s),h=new f(n,i,c),a=new g(h);for(let e=0,n=t.length;e<n;e++){const n=t[e];a.insert(n.token,n.fontStyle,o.getId(n.foreground),o.getId(n.background))}return new y(o,a)}const w=/^#?([0-9A-Fa-f]{6})([0-9A-Fa-f]{2})?$/;class k{constructor(){this.c=0,this.d=[],this.e=new Map}getId(t){if(null===t)return 0;const e=t.match(w);if(!e)throw new Error("Illegal value for token color: "+t);t=e[1].toUpperCase();let n=this.e.get(t);return n||(n=++this.c,this.e.set(t,n),this.d[n]=m.fromHex("#"+t),n)}getColorMap(){return this.d.slice(0)}}class y{static createFromRawTokenTheme(t,e){return this.createFromParsedTokenTheme(x(t),e)}static createFromParsedTokenTheme(t,e){return b(t,e)}constructor(t,e){this.c=t,this.d=e,this.e=new Map}getColorMap(){return this.c.getColorMap()}getThemeTrieElement(){return this.d.toExternalThemeTrieElement()}_match(t){return this.d.match(t)}match(t,e){let n=this.e.get(e);if(typeof n>"u"){const t=this._match(e),r=E(e);n=(t.metadata|r<<8)>>>0,this.e.set(e,n)}return(n|t|0)>>>0}}const T=/\b(comment|string|regex|regexp)\b/;function E(t){const e=t.match(T);if(!e)return 0;switch(e[1]){case"comment":return 1;case"string":return 2;case"regex":case"regexp":return 3}throw new Error("Unexpected match for standard token type!")}function $(t,e){return t<e?-1:t>e?1:0}class f{constructor(t,e,n){this._themeTrieElementRuleBrand=void 0,this.c=t,this.d=e,this.e=n,this.metadata=(this.c<<11|this.d<<15|this.e<<24)>>>0}clone(){return new f(this.c,this.d,this.e)}acceptOverwrite(t,e,n){-1!==t&&(this.c=t),0!==e&&(this.d=e),0!==n&&(this.e=n),this.metadata=(this.c<<11|this.d<<15|this.e<<24)>>>0}}class P{constructor(t,e=new Map){if(this.mainRule=t,e instanceof Map)this.children=e;else{this.children=new Map;for(const t in e)this.children.set(t,e[t])}}}class g{constructor(t){this._themeTrieElementBrand=void 0,this.c=t,this.d=new Map}toExternalThemeTrieElement(){const t=new Map;return this.d.forEach(((e,n)=>{t.set(n,e.toExternalThemeTrieElement())})),new P(this.c,t)}match(t){if(""===t)return this.c;const e=t.indexOf(".");let n,r;-1===e?(n=t,r=""):(n=t.substring(0,e),r=t.substring(e+1));const s=this.d.get(n);return typeof s<"u"?s.match(r):this.c}insert(t,e,n,r){if(""===t)return void this.c.acceptOverwrite(e,n,r);const s=t.indexOf(".");let o,i;-1===s?(o=t,i=""):(o=t.substring(0,s),i=t.substring(s+1));let c=this.d.get(o);typeof c>"u"&&(c=new g(this.c.clone()),this.d.set(o,c)),c.insert(i,e,n,r)}}function M(t){const e=[];for(let n=1,r=t.length;n<r;n++){const r=t[n];e[n]=`.mtk${n} { color: ${r}; }`}return e.push(".mtki { font-style: italic; }"),e.push(".mtkb { font-weight: bold; }"),e.push(".mtku { text-decoration: underline; text-underline-position: under; }"),e.push(".mtks { text-decoration: line-through; }"),e.push(".mtks.mtku { text-decoration: underline line-through; text-underline-position: under; }"),e.join("\n")}export{P as $$Pb,f as $0Pb,p as $4Pb,x as $5Pb,k as $6Pb,y as $7Pb,E as $8Pb,$ as $9Pb,g as $_Pb,M as $aQb};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { Color } from "../../../../base/common/color.js";
+class ParsedTokenThemeRule {
+  static {
+    __name(this, "ParsedTokenThemeRule");
+  }
+  constructor(token, index, fontStyle, foreground, background) {
+    this._parsedThemeRuleBrand = void 0;
+    this.token = token;
+    this.index = index;
+    this.fontStyle = fontStyle;
+    this.foreground = foreground;
+    this.background = background;
+  }
+}
+function parseTokenTheme(source) {
+  if (!source || !Array.isArray(source)) {
+    return [];
+  }
+  const result = [];
+  let resultLen = 0;
+  for (let i = 0, len = source.length; i < len; i++) {
+    const entry = source[i];
+    let fontStyle = -1;
+    if (typeof entry.fontStyle === "string") {
+      fontStyle = 0;
+      const segments = entry.fontStyle.split(" ");
+      for (let j = 0, lenJ = segments.length; j < lenJ; j++) {
+        const segment = segments[j];
+        switch (segment) {
+          case "italic":
+            fontStyle = fontStyle | 1;
+            break;
+          case "bold":
+            fontStyle = fontStyle | 2;
+            break;
+          case "underline":
+            fontStyle = fontStyle | 4;
+            break;
+          case "strikethrough":
+            fontStyle = fontStyle | 8;
+            break;
+        }
+      }
+    }
+    let foreground = null;
+    if (typeof entry.foreground === "string") {
+      foreground = entry.foreground;
+    }
+    let background = null;
+    if (typeof entry.background === "string") {
+      background = entry.background;
+    }
+    result[resultLen++] = new ParsedTokenThemeRule(entry.token || "", i, fontStyle, foreground, background);
+  }
+  return result;
+}
+__name(parseTokenTheme, "parseTokenTheme");
+function resolveParsedTokenThemeRules(parsedThemeRules, customTokenColors) {
+  parsedThemeRules.sort((a, b) => {
+    const r = strcmp(a.token, b.token);
+    if (r !== 0) {
+      return r;
+    }
+    return a.index - b.index;
+  });
+  let defaultFontStyle = 0;
+  let defaultForeground = "000000";
+  let defaultBackground = "ffffff";
+  while (parsedThemeRules.length >= 1 && parsedThemeRules[0].token === "") {
+    const incomingDefaults = parsedThemeRules.shift();
+    if (incomingDefaults.fontStyle !== -1) {
+      defaultFontStyle = incomingDefaults.fontStyle;
+    }
+    if (incomingDefaults.foreground !== null) {
+      defaultForeground = incomingDefaults.foreground;
+    }
+    if (incomingDefaults.background !== null) {
+      defaultBackground = incomingDefaults.background;
+    }
+  }
+  const colorMap = new ColorMap();
+  for (const color of customTokenColors) {
+    colorMap.getId(color);
+  }
+  const foregroundColorId = colorMap.getId(defaultForeground);
+  const backgroundColorId = colorMap.getId(defaultBackground);
+  const defaults = new ThemeTrieElementRule(defaultFontStyle, foregroundColorId, backgroundColorId);
+  const root = new ThemeTrieElement(defaults);
+  for (let i = 0, len = parsedThemeRules.length; i < len; i++) {
+    const rule = parsedThemeRules[i];
+    root.insert(rule.token, rule.fontStyle, colorMap.getId(rule.foreground), colorMap.getId(rule.background));
+  }
+  return new TokenTheme(colorMap, root);
+}
+__name(resolveParsedTokenThemeRules, "resolveParsedTokenThemeRules");
+const colorRegExp = /^#?([0-9A-Fa-f]{6})([0-9A-Fa-f]{2})?$/;
+class ColorMap {
+  static {
+    __name(this, "ColorMap");
+  }
+  constructor() {
+    this._lastColorId = 0;
+    this._id2color = [];
+    this._color2id = /* @__PURE__ */ new Map();
+  }
+  getId(color) {
+    if (color === null) {
+      return 0;
+    }
+    const match = color.match(colorRegExp);
+    if (!match) {
+      throw new Error("Illegal value for token color: " + color);
+    }
+    color = match[1].toUpperCase();
+    let value = this._color2id.get(color);
+    if (value) {
+      return value;
+    }
+    value = ++this._lastColorId;
+    this._color2id.set(color, value);
+    this._id2color[value] = Color.fromHex("#" + color);
+    return value;
+  }
+  getColorMap() {
+    return this._id2color.slice(0);
+  }
+}
+class TokenTheme {
+  static {
+    __name(this, "TokenTheme");
+  }
+  static createFromRawTokenTheme(source, customTokenColors) {
+    return this.createFromParsedTokenTheme(parseTokenTheme(source), customTokenColors);
+  }
+  static createFromParsedTokenTheme(source, customTokenColors) {
+    return resolveParsedTokenThemeRules(source, customTokenColors);
+  }
+  constructor(colorMap, root) {
+    this._colorMap = colorMap;
+    this._root = root;
+    this._cache = /* @__PURE__ */ new Map();
+  }
+  getColorMap() {
+    return this._colorMap.getColorMap();
+  }
+  /**
+   * used for testing purposes
+   */
+  getThemeTrieElement() {
+    return this._root.toExternalThemeTrieElement();
+  }
+  _match(token) {
+    return this._root.match(token);
+  }
+  match(languageId, token) {
+    let result = this._cache.get(token);
+    if (typeof result === "undefined") {
+      const rule = this._match(token);
+      const standardToken = toStandardTokenType(token);
+      result = (rule.metadata | standardToken << 8) >>> 0;
+      this._cache.set(token, result);
+    }
+    return (result | languageId << 0) >>> 0;
+  }
+}
+const STANDARD_TOKEN_TYPE_REGEXP = /\b(comment|string|regex|regexp)\b/;
+function toStandardTokenType(tokenType) {
+  const m = tokenType.match(STANDARD_TOKEN_TYPE_REGEXP);
+  if (!m) {
+    return 0;
+  }
+  switch (m[1]) {
+    case "comment":
+      return 1;
+    case "string":
+      return 2;
+    case "regex":
+      return 3;
+    case "regexp":
+      return 3;
+  }
+  throw new Error("Unexpected match for standard token type!");
+}
+__name(toStandardTokenType, "toStandardTokenType");
+function strcmp(a, b) {
+  if (a < b) {
+    return -1;
+  }
+  if (a > b) {
+    return 1;
+  }
+  return 0;
+}
+__name(strcmp, "strcmp");
+class ThemeTrieElementRule {
+  static {
+    __name(this, "ThemeTrieElementRule");
+  }
+  constructor(fontStyle, foreground, background) {
+    this._themeTrieElementRuleBrand = void 0;
+    this._fontStyle = fontStyle;
+    this._foreground = foreground;
+    this._background = background;
+    this.metadata = (this._fontStyle << 11 | this._foreground << 15 | this._background << 24) >>> 0;
+  }
+  clone() {
+    return new ThemeTrieElementRule(this._fontStyle, this._foreground, this._background);
+  }
+  acceptOverwrite(fontStyle, foreground, background) {
+    if (fontStyle !== -1) {
+      this._fontStyle = fontStyle;
+    }
+    if (foreground !== 0) {
+      this._foreground = foreground;
+    }
+    if (background !== 0) {
+      this._background = background;
+    }
+    this.metadata = (this._fontStyle << 11 | this._foreground << 15 | this._background << 24) >>> 0;
+  }
+}
+class ExternalThemeTrieElement {
+  static {
+    __name(this, "ExternalThemeTrieElement");
+  }
+  constructor(mainRule, children = /* @__PURE__ */ new Map()) {
+    this.mainRule = mainRule;
+    if (children instanceof Map) {
+      this.children = children;
+    } else {
+      this.children = /* @__PURE__ */ new Map();
+      for (const key in children) {
+        this.children.set(key, children[key]);
+      }
+    }
+  }
+}
+class ThemeTrieElement {
+  static {
+    __name(this, "ThemeTrieElement");
+  }
+  constructor(mainRule) {
+    this._themeTrieElementBrand = void 0;
+    this._mainRule = mainRule;
+    this._children = /* @__PURE__ */ new Map();
+  }
+  /**
+   * used for testing purposes
+   */
+  toExternalThemeTrieElement() {
+    const children = /* @__PURE__ */ new Map();
+    this._children.forEach((element, index) => {
+      children.set(index, element.toExternalThemeTrieElement());
+    });
+    return new ExternalThemeTrieElement(this._mainRule, children);
+  }
+  match(token) {
+    if (token === "") {
+      return this._mainRule;
+    }
+    const dotIndex = token.indexOf(".");
+    let head;
+    let tail;
+    if (dotIndex === -1) {
+      head = token;
+      tail = "";
+    } else {
+      head = token.substring(0, dotIndex);
+      tail = token.substring(dotIndex + 1);
+    }
+    const child = this._children.get(head);
+    if (typeof child !== "undefined") {
+      return child.match(tail);
+    }
+    return this._mainRule;
+  }
+  insert(token, fontStyle, foreground, background) {
+    if (token === "") {
+      this._mainRule.acceptOverwrite(fontStyle, foreground, background);
+      return;
+    }
+    const dotIndex = token.indexOf(".");
+    let head;
+    let tail;
+    if (dotIndex === -1) {
+      head = token;
+      tail = "";
+    } else {
+      head = token.substring(0, dotIndex);
+      tail = token.substring(dotIndex + 1);
+    }
+    let child = this._children.get(head);
+    if (typeof child === "undefined") {
+      child = new ThemeTrieElement(this._mainRule.clone());
+      this._children.set(head, child);
+    }
+    child.insert(tail, fontStyle, foreground, background);
+  }
+}
+function generateTokensCSSForColorMap(colorMap) {
+  const rules = [];
+  for (let i = 1, len = colorMap.length; i < len; i++) {
+    const color = colorMap[i];
+    rules[i] = `.mtk${i} { color: ${color}; }`;
+  }
+  rules.push(".mtki { font-style: italic; }");
+  rules.push(".mtkb { font-weight: bold; }");
+  rules.push(".mtku { text-decoration: underline; text-underline-position: under; }");
+  rules.push(".mtks { text-decoration: line-through; }");
+  rules.push(".mtks.mtku { text-decoration: underline line-through; text-underline-position: under; }");
+  return rules.join("\n");
+}
+__name(generateTokensCSSForColorMap, "generateTokensCSSForColorMap");
+export {
+  ColorMap,
+  ExternalThemeTrieElement,
+  ParsedTokenThemeRule,
+  ThemeTrieElement,
+  ThemeTrieElementRule,
+  TokenTheme,
+  generateTokensCSSForColorMap,
+  parseTokenTheme,
+  strcmp,
+  toStandardTokenType
+};
+//# sourceMappingURL=tokenization.js.map

@@ -1,1 +1,63 @@
-import{$HS as d}from"../service/promptsService.js";import{$Uc as f}from"../../../../../../base/common/assert.js";import{$_c as R}from"../../../../../../base/common/types.js";import{$qb as l}from"../../../../../../base/common/errors.js";import{$PR as _,$OR as h}from"../../promptFileReferenceErrors.js";var p=function(s,e,r,t){var a=arguments.length,n=a<3?e:t===null?t=Object.getOwnPropertyDescriptor(e,r):t,o;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")n=Reflect.decorate(s,e,r,t);else for(var i=s.length-1;i>=0;i--)(o=s[i])&&(n=(a<3?o(n):a>3?o(e,r,n):o(e,r))||n);return a>3&&n&&Object.defineProperty(e,r,n),n},m=function(s,e){return function(r,t){e(r,t,s)}};let u=class{constructor(e){this.a=e}async provideLinks(e,r){f(!r.isCancellationRequested,new l);const t=this.a.getSyntaxParserFor(e);f(t.isDisposed===!1,"Prompt parser must not be disposed.");const{references:a}=await t.start(r).settled();return f(!r.isCancellationRequested,new l),{links:a.filter(o=>{const{errorCondition:i,linkRange:c}=o;return!i&&c?!0:i instanceof _?!1:i instanceof h}).map(o=>{const{uri:i,linkRange:c}=o;return R(c,"Link range must be defined."),{range:c,url:i}})}}};u=p([m(0,d)],u);export{u as $Aec};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { IPromptsService } from "../service/promptsService.js";
+import { assert } from "../../../../../../base/common/assert.js";
+import { assertDefined } from "../../../../../../base/common/types.js";
+import { CancellationError } from "../../../../../../base/common/errors.js";
+import { FolderReference, NotPromptFile } from "../../promptFileReferenceErrors.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+let PromptLinkProvider = class PromptLinkProvider2 {
+  static {
+    __name(this, "PromptLinkProvider");
+  }
+  constructor(promptsService) {
+    this.promptsService = promptsService;
+  }
+  /**
+   * Provide list of links for the provided text model.
+   */
+  async provideLinks(model, token) {
+    assert(!token.isCancellationRequested, new CancellationError());
+    const parser = this.promptsService.getSyntaxParserFor(model);
+    assert(parser.isDisposed === false, "Prompt parser must not be disposed.");
+    const { references } = await parser.start(token).settled();
+    assert(!token.isCancellationRequested, new CancellationError());
+    const links = references.filter((reference) => {
+      const { errorCondition, linkRange } = reference;
+      if (!errorCondition && linkRange) {
+        return true;
+      }
+      if (errorCondition instanceof FolderReference) {
+        return false;
+      }
+      return errorCondition instanceof NotPromptFile;
+    }).map((reference) => {
+      const { uri, linkRange } = reference;
+      assertDefined(linkRange, "Link range must be defined.");
+      return {
+        range: linkRange,
+        url: uri
+      };
+    });
+    return {
+      links
+    };
+  }
+};
+PromptLinkProvider = __decorate([
+  __param(0, IPromptsService)
+], PromptLinkProvider);
+export {
+  PromptLinkProvider
+};
+//# sourceMappingURL=promptLinkProvider.js.map

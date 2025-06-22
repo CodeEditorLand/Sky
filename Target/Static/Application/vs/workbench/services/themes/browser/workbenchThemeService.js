@@ -1,3 +1,685 @@
-import*as X from"../../../../nls.js";import*as u from"../../../../base/common/types.js";import{$XO as Q}from"../../extensions/common/extensions.js";import{$FIb as tt,ExtensionData as $,ThemeSettings as a,ThemeSettingDefaults as C,$KIb as et,$LIb as it}from"../common/workbenchThemeService.js";import{$Ho as st}from"../../../../platform/storage/common/storage.js";import{$Po as ot}from"../../../../platform/telemetry/common/telemetry.js";import{$Ql as nt}from"../../../../platform/registry/common/platform.js";import*as ht from"../../../../base/common/errors.js";import{$El as rt}from"../../../../platform/configuration/common/configuration.js";import{$bQb as T}from"../common/colorThemeData.js";import{$Rt as at}from"../../../../platform/theme/common/themeService.js";import{$df as w}from"../../../../base/common/event.js";import{$z5b as ct}from"../common/fileIconThemeSchema.js";import{$vd as dt,$ud as ft}from"../../../../base/common/lifecycle.js";import{$A5b as g,$B5b as mt}from"./fileIconThemeData.js";import{$W7 as Y}from"../../../../base/browser/domStylesheets.js";import{$2$ as lt}from"../../environment/browser/environmentService.js";import{$5j as ut}from"../../../../platform/files/common/files.js";import*as p from"../../../../base/common/resources.js";import{$VPb as Ct}from"../common/colorThemeSchema.js";import{$WB as Tt}from"../../../../platform/instantiation/common/extensions.js";import{$su as A}from"../../../../platform/remote/common/remoteHosts.js";import{$8tb as gt}from"../../layout/browser/layoutService.js";import{$2tb as It}from"../../../../platform/extensionResourceLoader/common/extensionResourceLoader.js";import{$F5b as _,$C5b as bt,$D5b as pt,$E5b as yt}from"../common/themeExtensionPoints.js";import{$ZPb as U,$1Pb as G,$3Pb as Et,$2Pb as j}from"../common/themeConfiguration.js";import{$H5b as I,$G5b as S}from"./productIconThemeData.js";import{$I5b as $t}from"../common/productIconThemeSchema.js";import{$3n as wt}from"../../../../platform/log/common/log.js";import{$s as _t}from"../../../../base/common/platform.js";import{ColorScheme as R,ThemeTypeSelector as m}from"../../../../platform/theme/common/theme.js";import{$WPb as St}from"../common/hostColorSchemeService.js";import{$Yh as Rt,$Gh as L}from"../../../../base/common/async.js";import{$J5b as Lt}from"../../userData/browser/userDataInit.js";import{$L5b as Pt}from"../../../../platform/theme/browser/iconsStyleSheet.js";import{$ip as Bt,$pp as K}from"../../../../platform/theme/common/colorRegistry.js";import{$BD as xt}from"../../../../editor/common/languages/language.js";import{$c5 as Dt}from"../../../../base/browser/window.js";var V=function(r,t,e,o){var s=arguments.length,i=s<3?t:o===null?o=Object.getOwnPropertyDescriptor(t,e):o,n;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")i=Reflect.decorate(r,t,e,o);else for(var h=r.length-1;h>=0;h--)(n=r[h])&&(i=(s<3?n(i):s>3?n(t,e,i):n(t,e))||i);return s>3&&i&&Object.defineProperty(t,e,i),i},c=function(r,t){return function(e,o){t(e,o,r)}};const b="vscode-theme-defaults",P="vscode.vscode-theme-seti-vs-seti",q="file-icons-enabled",Ht="contributedColorTheme",Mt="contributedFileIconTheme",Ft="contributedProductIconTheme",W=nt.as(at.ThemingContribution);function Nt(r){switch(r){case m.VS:return`vs ${b}-themes-light_vs-json`;case m.VS_DARK:return`vs-dark ${b}-themes-dark_vs-json`;case m.HC_BLACK:return`hc-black ${b}-themes-hc_black-json`;case m.HC_LIGHT:return`hc-light ${b}-themes-hc_light-json`}return r}const vt=bt(),Ot=pt(),kt=yt();let D=class extends dt{constructor(t,e,o,s,i,n,h,l,y,H,Z,M){super(),this.H=e,this.I=o,this.J=s,this.L=i,this.M=h,this.N=y,this.O=H,this.P=Z,this.Q=M,this.ab=new Map,this.a=l.mainContainer,this.b=new Et(o,H),this.c=this.B(new _(vt,T.fromExtensionTheme)),this.h=this.B(new B(n,i,this.Y.bind(this))),this.g=new w({leakWarningThreshold:400}),this.f=T.createUnloadedTheme(""),this.m=new L,this.w=this.B(new B(n,i,this.db.bind(this))),this.n=this.B(new _(Ot,g.fromExtensionTheme,!0,g.noIconTheme)),this.u=new mt(h,M),this.s=new w({leakWarningThreshold:400}),this.r=g.createUnloadedTheme(""),this.y=new L,this.F=this.B(new B(n,i,this.gb.bind(this))),this.z=this.B(new _(kt,I.fromExtensionTheme,!0,I.defaultTheme)),this.D=new w,this.C=I.createUnloadedTheme(""),this.G=new L,this.B(this.onDidColorThemeChange(f=>K().notifyThemeUpdate(f)));let d=T.fromStorageData(this.H);const E=this.b.colorTheme;d&&E!==d.settingsId&&(d=void 0);const F=E===C.COLOR_THEME_LIGHT?it:E===C.COLOR_THEME_DARK?et:void 0;if(!d){const f=i.options?.initialColorTheme;f&&(d=T.createUnloadedThemeForThemeType(f.themeType,f.colors??F))}if(!d){const f=this.b.getPreferredColorScheme()??(_t?R.LIGHT:R.DARK);d=T.createUnloadedThemeForThemeType(f,F)}d.setCustomizations(this.b),this.$(d,void 0,!0);const N=g.fromStorageData(this.H);N&&this.eb(N,!0);const v=I.fromStorageData(this.H);v&&this.hb(v,!0),t.whenInstalledExtensionsRegistered().then(f=>{this.S(),this.W(),this.U(),this.R().catch(ht.$kb)});const O=Y();O.id="codiconStyles";const k=this.B(Pt(this));function J(){O.textContent=k.getCSS()}const z=this.B(new Rt(J,0));this.B(k.onDidChange(()=>z.schedule())),z.schedule()}R(){const t=this.L.extensionDevelopmentLocationURI,e=t&&t.length===1?t[0]:void 0,o=async()=>{const n=this.c.findThemeByExtensionLocation(e);if(n.length){const l=n.find(y=>y.type===this.f.type);return this.setColorTheme(l?l.id:n[0].id,void 0)}let h=this.c.findThemeBySettingsId(this.b.colorTheme,void 0);if(!h){await this.P.whenInitializationFinished();const l=this.f.type===R.LIGHT?C.COLOR_THEME_LIGHT:C.COLOR_THEME_DARK;h=this.c.findThemeBySettingsId(this.b.colorTheme,l)}return this.setColorTheme(h&&h.id,void 0)},s=async()=>{const n=this.n.findThemeByExtensionLocation(e);if(n.length)return this.setFileIconTheme(n[0].id,8);let h=this.n.findThemeBySettingsId(this.b.fileIconTheme);return h||(await this.P.whenInitializationFinished(),h=this.n.findThemeBySettingsId(this.b.fileIconTheme)),this.setFileIconTheme(h?h.id:P,void 0)},i=async()=>{const n=this.z.findThemeByExtensionLocation(e);if(n.length)return this.setProductIconTheme(n[0].id,8);let h=this.z.findThemeBySettingsId(this.b.productIconTheme);return h||(await this.P.whenInitializationFinished(),h=this.z.findThemeBySettingsId(this.b.productIconTheme)),this.setProductIconTheme(h?h.id:S,void 0)};return Promise.all([o(),s(),i()])}S(){this.B(this.I.onDidChangeConfiguration(t=>{if((t.affectsConfiguration(a.COLOR_THEME)||t.affectsConfiguration(a.PREFERRED_DARK_THEME)||t.affectsConfiguration(a.PREFERRED_LIGHT_THEME)||t.affectsConfiguration(a.PREFERRED_HC_DARK_THEME)||t.affectsConfiguration(a.PREFERRED_HC_LIGHT_THEME)||t.affectsConfiguration(a.DETECT_COLOR_SCHEME)||t.affectsConfiguration(a.DETECT_HC)||t.affectsConfiguration(a.SYSTEM_COLOR_THEME))&&this.restoreColorTheme(),t.affectsConfiguration(a.FILE_ICON_THEME)&&this.restoreFileIconTheme(),t.affectsConfiguration(a.PRODUCT_ICON_THEME)&&this.restoreProductIconTheme(),this.f){let e=!1;t.affectsConfiguration(a.COLOR_CUSTOMIZATIONS)&&(this.f.setCustomColors(this.b.colorCustomizations),e=!0),t.affectsConfiguration(a.TOKEN_COLOR_CUSTOMIZATIONS)&&(this.f.setCustomTokenColors(this.b.tokenColorCustomizations),e=!0),t.affectsConfiguration(a.SEMANTIC_TOKEN_COLOR_CUSTOMIZATIONS)&&(this.f.setCustomSemanticTokenColors(this.b.semanticTokenColorCustomizations),e=!0),e&&(this.Z(this.f),this.g.fire(this.f))}}))}U(){let t;this.B(this.c.onDidChange(async s=>{if(U(s.themes),await this.restoreColorTheme())this.f.settingsId===C.COLOR_THEME_DARK&&!u.$7c(t)&&await this.c.findThemeById(t)?(await this.setColorTheme(t,"auto"),t=void 0):s.added.some(i=>i.settingsId===this.f.settingsId)&&await this.Y();else if(s.removed.some(i=>i.settingsId===this.f.settingsId)){t=this.f.id;const i=this.c.findThemeBySettingsId(C.COLOR_THEME_DARK);await this.setColorTheme(i,"auto")}}));let e;this.B(this.B(this.n.onDidChange(async s=>{G(s.themes),await this.restoreFileIconTheme()?this.r.id===P&&!u.$7c(e)&&this.n.findThemeById(e)?(await this.setFileIconTheme(e,"auto"),e=void 0):s.added.some(i=>i.settingsId===this.r.settingsId)&&await this.db():s.removed.some(i=>i.settingsId===this.r.settingsId)&&(e=this.r.id,await this.setFileIconTheme(P,"auto"))})));let o;return this.B(this.z.onDidChange(async s=>{j(s.themes),await this.restoreProductIconTheme()?this.C.id===S&&!u.$7c(o)&&this.z.findThemeById(o)?(await this.setProductIconTheme(o,"auto"),o=void 0):s.added.some(i=>i.settingsId===this.C.settingsId)&&await this.gb():s.removed.some(i=>i.settingsId===this.C.settingsId)&&(o=this.C.id,await this.setProductIconTheme(S,"auto"))})),this.B(this.Q.onDidChange(()=>this.db())),Promise.all([this.getColorThemes(),this.getFileIconThemes(),this.getProductIconThemes()]).then(([s,i,n])=>{U(s),G(i),j(n)})}W(){this.B(this.O.onDidChangeColorScheme(()=>{this.b.isDetectingColorScheme()&&this.restoreColorTheme()}))}getColorTheme(){return this.f}async getColorThemes(){return this.c.getThemes()}getPreferredColorScheme(){return this.b.getPreferredColorScheme()}async getMarketplaceColorThemes(t,e,o){const s=await this.M.getExtensionGalleryResourceURL({publisher:t,name:e,version:o},"extension");if(s)try{const i=await this.M.readExtensionResource(p.$kh(s,"package.json"));return this.c.getMarketplaceThemes(JSON.parse(i),s,$.fromName(t,e))}catch(i){this.N.error("Problem loading themes from marketplace",i)}return[]}get onDidColorThemeChange(){return this.g.event}setColorTheme(t,e){return this.m.queue(async()=>this.X(t,e))}async X(t,e){if(!t)return null;const o=u.$Yc(t)?Nt(t):t.id;if(this.f.isLoaded&&o===this.f.id)return e!=="preview"&&this.f.toStorage(this.H),this.b.setColorTheme(this.f,e);let s=this.c.findThemeById(o);if(!s)if(t instanceof T)s=t;else return null;try{return await s.ensureLoaded(this.M),s.setCustomizations(this.b),this.$(s,e)}catch(i){throw new Error(X.localize(14504,null,s.location?.toString(),i.message))}}Y(){return this.m.queue(async()=>{try{const t=this.c.findThemeBySettingsId(this.f.settingsId)||this.f;await t.reload(this.M),t.setCustomizations(this.b),await this.$(t,void 0,!1)}catch{this.N.info("Unable to reload {0}: {1}",this.f.location?.toString())}})}async restoreColorTheme(){return this.m.queue(async()=>{const t=this.b.colorTheme,e=this.c.findThemeBySettingsId(t);return e?(t!==this.f.settingsId?await this.X(e.id,void 0):e!==this.f&&(await e.ensureLoaded(this.M),e.setCustomizations(this.b),await this.$(e,void 0,!0)),!0):!1})}Z(t){const e=new Set,o={addRule:i=>{e.has(i)||e.add(i)}};o.addRule(".monaco-workbench { forced-color-adjust: none; }"),W.getThemingParticipants().forEach(i=>i(t,o,this.L));const s=[];for(const i of K().getColors()){const n=t.getColor(i.id,!0);n&&s.push(`${Bt(i.id)}: ${n.toString()};`)}o.addRule(`.monaco-workbench { ${s.join(`
-`)} }`),x([...e].join(`
-`),Ht)}$(t,e,o=!1){return this.Z(t),this.f.id?this.a.classList.remove(...this.f.classNames):this.a.classList.remove(m.VS,m.VS_DARK,m.HC_BLACK,m.HC_LIGHT),this.a.classList.add(...t.classNames),this.f.clearCaches(),this.f=t,this.j||(this.j=W.onThemingParticipantAdded(s=>this.Z(this.f))),this.h.update(t),this.bb(t.id,t.extensionData,"color"),o?Promise.resolve(null):(this.g.fire(this.f),t.isLoaded&&e!=="preview"&&t.toStorage(this.H),this.b.setColorTheme(this.f,e))}bb(t,e,o){if(e){const s=o+e.extensionId;this.ab.get(s)||(this.J.publicLog2("activatePlugin",{id:e.extensionId,name:e.extensionName,isBuiltin:e.extensionIsBuiltin,publisherDisplayName:e.extensionPublisher,themeId:t}),this.ab.set(s,!0))}}async getFileIconThemes(){return this.n.getThemes()}getFileIconTheme(){return this.r}get onDidFileIconThemeChange(){return this.s.event}async setFileIconTheme(t,e){return this.y.queue(async()=>this.cb(t,e))}async cb(t,e){t===void 0&&(t="");const o=u.$Yc(t)?t:t.id;if(o!==this.r.id||!this.r.isLoaded){let i=this.n.findThemeById(o);!i&&t instanceof g&&(i=t),i||(i=g.noIconTheme),await i.ensureLoaded(this.u),this.eb(i)}const s=this.r;return s.isLoaded&&e!=="preview"&&(!s.location||!A(s.location))&&s.toStorage(this.H),await this.b.setFileIconTheme(this.r,e),s}async getMarketplaceFileIconThemes(t,e,o){const s=await this.M.getExtensionGalleryResourceURL({publisher:t,name:e,version:o},"extension");if(s)try{const i=await this.M.readExtensionResource(p.$kh(s,"package.json"));return this.n.getMarketplaceThemes(JSON.parse(i),s,$.fromName(t,e))}catch(i){this.N.error("Problem loading themes from marketplace",i)}return[]}async db(){return this.y.queue(async()=>{await this.r.reload(this.u),this.eb(this.r)})}async restoreFileIconTheme(){return this.y.queue(async()=>{const t=this.b.fileIconTheme,e=this.n.findThemeBySettingsId(t);return e?(t!==this.r.settingsId?await this.cb(e.id,void 0):e!==this.r&&(await e.ensureLoaded(this.u),this.eb(e,!0)),!0):!1})}eb(t,e=!1){this.r=t,x(t.styleSheetContent,Mt),t.id?this.a.classList.add(q):this.a.classList.remove(q),this.w.update(t),t.id&&this.bb(t.id,t.extensionData,"fileIcon"),e||this.s.fire(this.r)}async getProductIconThemes(){return this.z.getThemes()}getProductIconTheme(){return this.C}get onDidProductIconThemeChange(){return this.D.event}async setProductIconTheme(t,e){return this.G.queue(async()=>this.fb(t,e))}async fb(t,e){t===void 0&&(t="");const o=u.$Yc(t)?t:t.id;if(o!==this.C.id||!this.C.isLoaded){let i=this.z.findThemeById(o);!i&&t instanceof I&&(i=t),i||(i=I.defaultTheme),await i.ensureLoaded(this.M,this.N),this.hb(i)}const s=this.C;return s.isLoaded&&e!=="preview"&&(!s.location||!A(s.location))&&s.toStorage(this.H),await this.b.setProductIconTheme(this.C,e),s}async getMarketplaceProductIconThemes(t,e,o){const s=await this.M.getExtensionGalleryResourceURL({publisher:t,name:e,version:o},"extension");if(s)try{const i=await this.M.readExtensionResource(p.$kh(s,"package.json"));return this.z.getMarketplaceThemes(JSON.parse(i),s,$.fromName(t,e))}catch(i){this.N.error("Problem loading themes from marketplace",i)}return[]}async gb(){return this.G.queue(async()=>{await this.C.reload(this.M,this.N),this.hb(this.C)})}async restoreProductIconTheme(){return this.G.queue(async()=>{const t=this.b.productIconTheme,e=this.z.findThemeBySettingsId(t);return e?(t!==this.C.settingsId?await this.fb(e.id,void 0):e!==this.C&&(await e.ensureLoaded(this.M,this.N),this.hb(e,!0)),!0):!1})}hb(t,e=!1){this.C=t,x(t.styleSheetContent,Ft),this.F.update(t),t.id&&this.bb(t.id,t.extensionData,"productIcon"),e||this.D.fire(this.C)}};D=V([c(0,Q),c(1,st),c(2,rt),c(3,ot),c(4,lt),c(5,ut),c(6,It),c(7,gt),c(8,wt),c(9,St),c(10,Lt),c(11,xt)],D);class B{constructor(t,e,o){this.c=t,this.d=e,this.f=o,this.b=new ft}update(t){p.$dh(t.location,this.a)||(this.a=void 0,this.b.clear(),t.location&&(t.watch||this.d.isExtensionDevelopment)&&(this.a=t.location,this.b.add(this.c.watch(t.location)),this.b.add(this.c.onDidFilesChange(e=>{this.a&&e.contains(this.a,0)&&this.f()}))))}dispose(){this.b.dispose(),this.a=void 0}}function x(r,t){const e=Dt.document.head.getElementsByClassName(t);if(e.length===0){const o=Y();o.className=t,o.textContent=r}else e[0].textContent=r}Ct();ct();$t();Tt(tt,D,0);export{D as $N5b};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import * as nls from "../../../../nls.js";
+import * as types from "../../../../base/common/types.js";
+import { IExtensionService } from "../../extensions/common/extensions.js";
+import { IWorkbenchThemeService, ExtensionData, ThemeSettings, ThemeSettingDefaults, COLOR_THEME_DARK_INITIAL_COLORS, COLOR_THEME_LIGHT_INITIAL_COLORS } from "../common/workbenchThemeService.js";
+import { IStorageService } from "../../../../platform/storage/common/storage.js";
+import { ITelemetryService } from "../../../../platform/telemetry/common/telemetry.js";
+import { Registry } from "../../../../platform/registry/common/platform.js";
+import * as errors from "../../../../base/common/errors.js";
+import { IConfigurationService } from "../../../../platform/configuration/common/configuration.js";
+import { ColorThemeData } from "../common/colorThemeData.js";
+import { Extensions as ThemingExtensions } from "../../../../platform/theme/common/themeService.js";
+import { Emitter } from "../../../../base/common/event.js";
+import { registerFileIconThemeSchemas } from "../common/fileIconThemeSchema.js";
+import { Disposable, DisposableStore } from "../../../../base/common/lifecycle.js";
+import { FileIconThemeData, FileIconThemeLoader } from "./fileIconThemeData.js";
+import { createStyleSheet } from "../../../../base/browser/domStylesheets.js";
+import { IBrowserWorkbenchEnvironmentService } from "../../environment/browser/environmentService.js";
+import { IFileService } from "../../../../platform/files/common/files.js";
+import * as resources from "../../../../base/common/resources.js";
+import { registerColorThemeSchemas } from "../common/colorThemeSchema.js";
+import { registerSingleton } from "../../../../platform/instantiation/common/extensions.js";
+import { getRemoteAuthority } from "../../../../platform/remote/common/remoteHosts.js";
+import { IWorkbenchLayoutService } from "../../layout/browser/layoutService.js";
+import { IExtensionResourceLoaderService } from "../../../../platform/extensionResourceLoader/common/extensionResourceLoader.js";
+import { ThemeRegistry, registerColorThemeExtensionPoint, registerFileIconThemeExtensionPoint, registerProductIconThemeExtensionPoint } from "../common/themeExtensionPoints.js";
+import { updateColorThemeConfigurationSchemas, updateFileIconThemeConfigurationSchemas, ThemeConfiguration, updateProductIconThemeConfigurationSchemas } from "../common/themeConfiguration.js";
+import { ProductIconThemeData, DEFAULT_PRODUCT_ICON_THEME_ID } from "./productIconThemeData.js";
+import { registerProductIconThemeSchemas } from "../common/productIconThemeSchema.js";
+import { ILogService } from "../../../../platform/log/common/log.js";
+import { isWeb } from "../../../../base/common/platform.js";
+import { ColorScheme, ThemeTypeSelector } from "../../../../platform/theme/common/theme.js";
+import { IHostColorSchemeService } from "../common/hostColorSchemeService.js";
+import { RunOnceScheduler, Sequencer } from "../../../../base/common/async.js";
+import { IUserDataInitializationService } from "../../userData/browser/userDataInit.js";
+import { getIconsStyleSheet } from "../../../../platform/theme/browser/iconsStyleSheet.js";
+import { asCssVariableName, getColorRegistry } from "../../../../platform/theme/common/colorRegistry.js";
+import { ILanguageService } from "../../../../editor/common/languages/language.js";
+import { mainWindow } from "../../../../base/browser/window.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+const defaultThemeExtensionId = "vscode-theme-defaults";
+const DEFAULT_FILE_ICON_THEME_ID = "vscode.vscode-theme-seti-vs-seti";
+const fileIconsEnabledClass = "file-icons-enabled";
+const colorThemeRulesClassName = "contributedColorTheme";
+const fileIconThemeRulesClassName = "contributedFileIconTheme";
+const productIconThemeRulesClassName = "contributedProductIconTheme";
+const themingRegistry = Registry.as(ThemingExtensions.ThemingContribution);
+function validateThemeId(theme) {
+  switch (theme) {
+    case ThemeTypeSelector.VS:
+      return `vs ${defaultThemeExtensionId}-themes-light_vs-json`;
+    case ThemeTypeSelector.VS_DARK:
+      return `vs-dark ${defaultThemeExtensionId}-themes-dark_vs-json`;
+    case ThemeTypeSelector.HC_BLACK:
+      return `hc-black ${defaultThemeExtensionId}-themes-hc_black-json`;
+    case ThemeTypeSelector.HC_LIGHT:
+      return `hc-light ${defaultThemeExtensionId}-themes-hc_light-json`;
+  }
+  return theme;
+}
+__name(validateThemeId, "validateThemeId");
+const colorThemesExtPoint = registerColorThemeExtensionPoint();
+const fileIconThemesExtPoint = registerFileIconThemeExtensionPoint();
+const productIconThemesExtPoint = registerProductIconThemeExtensionPoint();
+let WorkbenchThemeService = class WorkbenchThemeService2 extends Disposable {
+  static {
+    __name(this, "WorkbenchThemeService");
+  }
+  constructor(extensionService, storageService, configurationService, telemetryService, environmentService, fileService, extensionResourceLoaderService, layoutService, logService, hostColorService, userDataInitializationService, languageService) {
+    super();
+    this.storageService = storageService;
+    this.configurationService = configurationService;
+    this.telemetryService = telemetryService;
+    this.environmentService = environmentService;
+    this.extensionResourceLoaderService = extensionResourceLoaderService;
+    this.logService = logService;
+    this.hostColorService = hostColorService;
+    this.userDataInitializationService = userDataInitializationService;
+    this.languageService = languageService;
+    this.themeExtensionsActivated = /* @__PURE__ */ new Map();
+    this.container = layoutService.mainContainer;
+    this.settings = new ThemeConfiguration(configurationService, hostColorService);
+    this.colorThemeRegistry = this._register(new ThemeRegistry(colorThemesExtPoint, ColorThemeData.fromExtensionTheme));
+    this.colorThemeWatcher = this._register(new ThemeFileWatcher(fileService, environmentService, this.reloadCurrentColorTheme.bind(this)));
+    this.onColorThemeChange = new Emitter({ leakWarningThreshold: 400 });
+    this.currentColorTheme = ColorThemeData.createUnloadedTheme("");
+    this.colorThemeSequencer = new Sequencer();
+    this.fileIconThemeWatcher = this._register(new ThemeFileWatcher(fileService, environmentService, this.reloadCurrentFileIconTheme.bind(this)));
+    this.fileIconThemeRegistry = this._register(new ThemeRegistry(fileIconThemesExtPoint, FileIconThemeData.fromExtensionTheme, true, FileIconThemeData.noIconTheme));
+    this.fileIconThemeLoader = new FileIconThemeLoader(extensionResourceLoaderService, languageService);
+    this.onFileIconThemeChange = new Emitter({ leakWarningThreshold: 400 });
+    this.currentFileIconTheme = FileIconThemeData.createUnloadedTheme("");
+    this.fileIconThemeSequencer = new Sequencer();
+    this.productIconThemeWatcher = this._register(new ThemeFileWatcher(fileService, environmentService, this.reloadCurrentProductIconTheme.bind(this)));
+    this.productIconThemeRegistry = this._register(new ThemeRegistry(productIconThemesExtPoint, ProductIconThemeData.fromExtensionTheme, true, ProductIconThemeData.defaultTheme));
+    this.onProductIconThemeChange = new Emitter();
+    this.currentProductIconTheme = ProductIconThemeData.createUnloadedTheme("");
+    this.productIconThemeSequencer = new Sequencer();
+    this._register(this.onDidColorThemeChange((theme) => getColorRegistry().notifyThemeUpdate(theme)));
+    let themeData = ColorThemeData.fromStorageData(this.storageService);
+    const colorThemeSetting = this.settings.colorTheme;
+    if (themeData && colorThemeSetting !== themeData.settingsId) {
+      themeData = void 0;
+    }
+    const defaultColorMap = colorThemeSetting === ThemeSettingDefaults.COLOR_THEME_LIGHT ? COLOR_THEME_LIGHT_INITIAL_COLORS : colorThemeSetting === ThemeSettingDefaults.COLOR_THEME_DARK ? COLOR_THEME_DARK_INITIAL_COLORS : void 0;
+    if (!themeData) {
+      const initialColorTheme = environmentService.options?.initialColorTheme;
+      if (initialColorTheme) {
+        themeData = ColorThemeData.createUnloadedThemeForThemeType(initialColorTheme.themeType, initialColorTheme.colors ?? defaultColorMap);
+      }
+    }
+    if (!themeData) {
+      const colorScheme = this.settings.getPreferredColorScheme() ?? (isWeb ? ColorScheme.LIGHT : ColorScheme.DARK);
+      themeData = ColorThemeData.createUnloadedThemeForThemeType(colorScheme, defaultColorMap);
+    }
+    themeData.setCustomizations(this.settings);
+    this.applyTheme(themeData, void 0, true);
+    const fileIconData = FileIconThemeData.fromStorageData(this.storageService);
+    if (fileIconData) {
+      this.applyAndSetFileIconTheme(fileIconData, true);
+    }
+    const productIconData = ProductIconThemeData.fromStorageData(this.storageService);
+    if (productIconData) {
+      this.applyAndSetProductIconTheme(productIconData, true);
+    }
+    extensionService.whenInstalledExtensionsRegistered().then((_) => {
+      this.installConfigurationListener();
+      this.installPreferredSchemeListener();
+      this.installRegistryListeners();
+      this.initialize().catch(errors.onUnexpectedError);
+    });
+    const codiconStyleSheet = createStyleSheet();
+    codiconStyleSheet.id = "codiconStyles";
+    const iconsStyleSheet = this._register(getIconsStyleSheet(this));
+    function updateAll() {
+      codiconStyleSheet.textContent = iconsStyleSheet.getCSS();
+    }
+    __name(updateAll, "updateAll");
+    const delayer = this._register(new RunOnceScheduler(updateAll, 0));
+    this._register(iconsStyleSheet.onDidChange(() => delayer.schedule()));
+    delayer.schedule();
+  }
+  initialize() {
+    const extDevLocs = this.environmentService.extensionDevelopmentLocationURI;
+    const extDevLoc = extDevLocs && extDevLocs.length === 1 ? extDevLocs[0] : void 0;
+    const initializeColorTheme = /* @__PURE__ */ __name(async () => {
+      const devThemes = this.colorThemeRegistry.findThemeByExtensionLocation(extDevLoc);
+      if (devThemes.length) {
+        const matchedColorTheme = devThemes.find((theme2) => theme2.type === this.currentColorTheme.type);
+        return this.setColorTheme(matchedColorTheme ? matchedColorTheme.id : devThemes[0].id, void 0);
+      }
+      let theme = this.colorThemeRegistry.findThemeBySettingsId(this.settings.colorTheme, void 0);
+      if (!theme) {
+        await this.userDataInitializationService.whenInitializationFinished();
+        const fallbackTheme = this.currentColorTheme.type === ColorScheme.LIGHT ? ThemeSettingDefaults.COLOR_THEME_LIGHT : ThemeSettingDefaults.COLOR_THEME_DARK;
+        theme = this.colorThemeRegistry.findThemeBySettingsId(this.settings.colorTheme, fallbackTheme);
+      }
+      return this.setColorTheme(theme && theme.id, void 0);
+    }, "initializeColorTheme");
+    const initializeFileIconTheme = /* @__PURE__ */ __name(async () => {
+      const devThemes = this.fileIconThemeRegistry.findThemeByExtensionLocation(extDevLoc);
+      if (devThemes.length) {
+        return this.setFileIconTheme(
+          devThemes[0].id,
+          8
+          /* ConfigurationTarget.MEMORY */
+        );
+      }
+      let theme = this.fileIconThemeRegistry.findThemeBySettingsId(this.settings.fileIconTheme);
+      if (!theme) {
+        await this.userDataInitializationService.whenInitializationFinished();
+        theme = this.fileIconThemeRegistry.findThemeBySettingsId(this.settings.fileIconTheme);
+      }
+      return this.setFileIconTheme(theme ? theme.id : DEFAULT_FILE_ICON_THEME_ID, void 0);
+    }, "initializeFileIconTheme");
+    const initializeProductIconTheme = /* @__PURE__ */ __name(async () => {
+      const devThemes = this.productIconThemeRegistry.findThemeByExtensionLocation(extDevLoc);
+      if (devThemes.length) {
+        return this.setProductIconTheme(
+          devThemes[0].id,
+          8
+          /* ConfigurationTarget.MEMORY */
+        );
+      }
+      let theme = this.productIconThemeRegistry.findThemeBySettingsId(this.settings.productIconTheme);
+      if (!theme) {
+        await this.userDataInitializationService.whenInitializationFinished();
+        theme = this.productIconThemeRegistry.findThemeBySettingsId(this.settings.productIconTheme);
+      }
+      return this.setProductIconTheme(theme ? theme.id : DEFAULT_PRODUCT_ICON_THEME_ID, void 0);
+    }, "initializeProductIconTheme");
+    return Promise.all([initializeColorTheme(), initializeFileIconTheme(), initializeProductIconTheme()]);
+  }
+  installConfigurationListener() {
+    this._register(this.configurationService.onDidChangeConfiguration((e) => {
+      if (e.affectsConfiguration(ThemeSettings.COLOR_THEME) || e.affectsConfiguration(ThemeSettings.PREFERRED_DARK_THEME) || e.affectsConfiguration(ThemeSettings.PREFERRED_LIGHT_THEME) || e.affectsConfiguration(ThemeSettings.PREFERRED_HC_DARK_THEME) || e.affectsConfiguration(ThemeSettings.PREFERRED_HC_LIGHT_THEME) || e.affectsConfiguration(ThemeSettings.DETECT_COLOR_SCHEME) || e.affectsConfiguration(ThemeSettings.DETECT_HC) || e.affectsConfiguration(ThemeSettings.SYSTEM_COLOR_THEME)) {
+        this.restoreColorTheme();
+      }
+      if (e.affectsConfiguration(ThemeSettings.FILE_ICON_THEME)) {
+        this.restoreFileIconTheme();
+      }
+      if (e.affectsConfiguration(ThemeSettings.PRODUCT_ICON_THEME)) {
+        this.restoreProductIconTheme();
+      }
+      if (this.currentColorTheme) {
+        let hasColorChanges = false;
+        if (e.affectsConfiguration(ThemeSettings.COLOR_CUSTOMIZATIONS)) {
+          this.currentColorTheme.setCustomColors(this.settings.colorCustomizations);
+          hasColorChanges = true;
+        }
+        if (e.affectsConfiguration(ThemeSettings.TOKEN_COLOR_CUSTOMIZATIONS)) {
+          this.currentColorTheme.setCustomTokenColors(this.settings.tokenColorCustomizations);
+          hasColorChanges = true;
+        }
+        if (e.affectsConfiguration(ThemeSettings.SEMANTIC_TOKEN_COLOR_CUSTOMIZATIONS)) {
+          this.currentColorTheme.setCustomSemanticTokenColors(this.settings.semanticTokenColorCustomizations);
+          hasColorChanges = true;
+        }
+        if (hasColorChanges) {
+          this.updateDynamicCSSRules(this.currentColorTheme);
+          this.onColorThemeChange.fire(this.currentColorTheme);
+        }
+      }
+    }));
+  }
+  installRegistryListeners() {
+    let prevColorId = void 0;
+    this._register(this.colorThemeRegistry.onDidChange(async (event) => {
+      updateColorThemeConfigurationSchemas(event.themes);
+      if (await this.restoreColorTheme()) {
+        if (this.currentColorTheme.settingsId === ThemeSettingDefaults.COLOR_THEME_DARK && !types.isUndefined(prevColorId) && await this.colorThemeRegistry.findThemeById(prevColorId)) {
+          await this.setColorTheme(prevColorId, "auto");
+          prevColorId = void 0;
+        } else if (event.added.some((t) => t.settingsId === this.currentColorTheme.settingsId)) {
+          await this.reloadCurrentColorTheme();
+        }
+      } else if (event.removed.some((t) => t.settingsId === this.currentColorTheme.settingsId)) {
+        prevColorId = this.currentColorTheme.id;
+        const defaultTheme = this.colorThemeRegistry.findThemeBySettingsId(ThemeSettingDefaults.COLOR_THEME_DARK);
+        await this.setColorTheme(defaultTheme, "auto");
+      }
+    }));
+    let prevFileIconId = void 0;
+    this._register(this._register(this.fileIconThemeRegistry.onDidChange(async (event) => {
+      updateFileIconThemeConfigurationSchemas(event.themes);
+      if (await this.restoreFileIconTheme()) {
+        if (this.currentFileIconTheme.id === DEFAULT_FILE_ICON_THEME_ID && !types.isUndefined(prevFileIconId) && this.fileIconThemeRegistry.findThemeById(prevFileIconId)) {
+          await this.setFileIconTheme(prevFileIconId, "auto");
+          prevFileIconId = void 0;
+        } else if (event.added.some((t) => t.settingsId === this.currentFileIconTheme.settingsId)) {
+          await this.reloadCurrentFileIconTheme();
+        }
+      } else if (event.removed.some((t) => t.settingsId === this.currentFileIconTheme.settingsId)) {
+        prevFileIconId = this.currentFileIconTheme.id;
+        await this.setFileIconTheme(DEFAULT_FILE_ICON_THEME_ID, "auto");
+      }
+    })));
+    let prevProductIconId = void 0;
+    this._register(this.productIconThemeRegistry.onDidChange(async (event) => {
+      updateProductIconThemeConfigurationSchemas(event.themes);
+      if (await this.restoreProductIconTheme()) {
+        if (this.currentProductIconTheme.id === DEFAULT_PRODUCT_ICON_THEME_ID && !types.isUndefined(prevProductIconId) && this.productIconThemeRegistry.findThemeById(prevProductIconId)) {
+          await this.setProductIconTheme(prevProductIconId, "auto");
+          prevProductIconId = void 0;
+        } else if (event.added.some((t) => t.settingsId === this.currentProductIconTheme.settingsId)) {
+          await this.reloadCurrentProductIconTheme();
+        }
+      } else if (event.removed.some((t) => t.settingsId === this.currentProductIconTheme.settingsId)) {
+        prevProductIconId = this.currentProductIconTheme.id;
+        await this.setProductIconTheme(DEFAULT_PRODUCT_ICON_THEME_ID, "auto");
+      }
+    }));
+    this._register(this.languageService.onDidChange(() => this.reloadCurrentFileIconTheme()));
+    return Promise.all([this.getColorThemes(), this.getFileIconThemes(), this.getProductIconThemes()]).then(([ct, fit, pit]) => {
+      updateColorThemeConfigurationSchemas(ct);
+      updateFileIconThemeConfigurationSchemas(fit);
+      updateProductIconThemeConfigurationSchemas(pit);
+    });
+  }
+  // preferred scheme handling
+  installPreferredSchemeListener() {
+    this._register(this.hostColorService.onDidChangeColorScheme(() => {
+      if (this.settings.isDetectingColorScheme()) {
+        this.restoreColorTheme();
+      }
+    }));
+  }
+  getColorTheme() {
+    return this.currentColorTheme;
+  }
+  async getColorThemes() {
+    return this.colorThemeRegistry.getThemes();
+  }
+  getPreferredColorScheme() {
+    return this.settings.getPreferredColorScheme();
+  }
+  async getMarketplaceColorThemes(publisher, name, version) {
+    const extensionLocation = await this.extensionResourceLoaderService.getExtensionGalleryResourceURL({ publisher, name, version }, "extension");
+    if (extensionLocation) {
+      try {
+        const manifestContent = await this.extensionResourceLoaderService.readExtensionResource(resources.joinPath(extensionLocation, "package.json"));
+        return this.colorThemeRegistry.getMarketplaceThemes(JSON.parse(manifestContent), extensionLocation, ExtensionData.fromName(publisher, name));
+      } catch (e) {
+        this.logService.error("Problem loading themes from marketplace", e);
+      }
+    }
+    return [];
+  }
+  get onDidColorThemeChange() {
+    return this.onColorThemeChange.event;
+  }
+  setColorTheme(themeIdOrTheme, settingsTarget) {
+    return this.colorThemeSequencer.queue(async () => {
+      return this.internalSetColorTheme(themeIdOrTheme, settingsTarget);
+    });
+  }
+  async internalSetColorTheme(themeIdOrTheme, settingsTarget) {
+    if (!themeIdOrTheme) {
+      return null;
+    }
+    const themeId = types.isString(themeIdOrTheme) ? validateThemeId(themeIdOrTheme) : themeIdOrTheme.id;
+    if (this.currentColorTheme.isLoaded && themeId === this.currentColorTheme.id) {
+      if (settingsTarget !== "preview") {
+        this.currentColorTheme.toStorage(this.storageService);
+      }
+      return this.settings.setColorTheme(this.currentColorTheme, settingsTarget);
+    }
+    let themeData = this.colorThemeRegistry.findThemeById(themeId);
+    if (!themeData) {
+      if (themeIdOrTheme instanceof ColorThemeData) {
+        themeData = themeIdOrTheme;
+      } else {
+        return null;
+      }
+    }
+    try {
+      await themeData.ensureLoaded(this.extensionResourceLoaderService);
+      themeData.setCustomizations(this.settings);
+      return this.applyTheme(themeData, settingsTarget);
+    } catch (error) {
+      throw new Error(nls.localize("error.cannotloadtheme", "Unable to load {0}: {1}", themeData.location?.toString(), error.message));
+    }
+  }
+  reloadCurrentColorTheme() {
+    return this.colorThemeSequencer.queue(async () => {
+      try {
+        const theme = this.colorThemeRegistry.findThemeBySettingsId(this.currentColorTheme.settingsId) || this.currentColorTheme;
+        await theme.reload(this.extensionResourceLoaderService);
+        theme.setCustomizations(this.settings);
+        await this.applyTheme(theme, void 0, false);
+      } catch (error) {
+        this.logService.info("Unable to reload {0}: {1}", this.currentColorTheme.location?.toString());
+      }
+    });
+  }
+  async restoreColorTheme() {
+    return this.colorThemeSequencer.queue(async () => {
+      const settingId = this.settings.colorTheme;
+      const theme = this.colorThemeRegistry.findThemeBySettingsId(settingId);
+      if (theme) {
+        if (settingId !== this.currentColorTheme.settingsId) {
+          await this.internalSetColorTheme(theme.id, void 0);
+        } else if (theme !== this.currentColorTheme) {
+          await theme.ensureLoaded(this.extensionResourceLoaderService);
+          theme.setCustomizations(this.settings);
+          await this.applyTheme(theme, void 0, true);
+        }
+        return true;
+      }
+      return false;
+    });
+  }
+  updateDynamicCSSRules(themeData) {
+    const cssRules = /* @__PURE__ */ new Set();
+    const ruleCollector = {
+      addRule: /* @__PURE__ */ __name((rule) => {
+        if (!cssRules.has(rule)) {
+          cssRules.add(rule);
+        }
+      }, "addRule")
+    };
+    ruleCollector.addRule(`.monaco-workbench { forced-color-adjust: none; }`);
+    themingRegistry.getThemingParticipants().forEach((p) => p(themeData, ruleCollector, this.environmentService));
+    const colorVariables = [];
+    for (const item of getColorRegistry().getColors()) {
+      const color = themeData.getColor(item.id, true);
+      if (color) {
+        colorVariables.push(`${asCssVariableName(item.id)}: ${color.toString()};`);
+      }
+    }
+    ruleCollector.addRule(`.monaco-workbench { ${colorVariables.join("\n")} }`);
+    _applyRules([...cssRules].join("\n"), colorThemeRulesClassName);
+  }
+  applyTheme(newTheme, settingsTarget, silent = false) {
+    this.updateDynamicCSSRules(newTheme);
+    if (this.currentColorTheme.id) {
+      this.container.classList.remove(...this.currentColorTheme.classNames);
+    } else {
+      this.container.classList.remove(ThemeTypeSelector.VS, ThemeTypeSelector.VS_DARK, ThemeTypeSelector.HC_BLACK, ThemeTypeSelector.HC_LIGHT);
+    }
+    this.container.classList.add(...newTheme.classNames);
+    this.currentColorTheme.clearCaches();
+    this.currentColorTheme = newTheme;
+    if (!this.colorThemingParticipantChangeListener) {
+      this.colorThemingParticipantChangeListener = themingRegistry.onThemingParticipantAdded((_) => this.updateDynamicCSSRules(this.currentColorTheme));
+    }
+    this.colorThemeWatcher.update(newTheme);
+    this.sendTelemetry(newTheme.id, newTheme.extensionData, "color");
+    if (silent) {
+      return Promise.resolve(null);
+    }
+    this.onColorThemeChange.fire(this.currentColorTheme);
+    if (newTheme.isLoaded && settingsTarget !== "preview") {
+      newTheme.toStorage(this.storageService);
+    }
+    return this.settings.setColorTheme(this.currentColorTheme, settingsTarget);
+  }
+  sendTelemetry(themeId, themeData, themeType) {
+    if (themeData) {
+      const key = themeType + themeData.extensionId;
+      if (!this.themeExtensionsActivated.get(key)) {
+        this.telemetryService.publicLog2("activatePlugin", {
+          id: themeData.extensionId,
+          name: themeData.extensionName,
+          isBuiltin: themeData.extensionIsBuiltin,
+          publisherDisplayName: themeData.extensionPublisher,
+          themeId
+        });
+        this.themeExtensionsActivated.set(key, true);
+      }
+    }
+  }
+  async getFileIconThemes() {
+    return this.fileIconThemeRegistry.getThemes();
+  }
+  getFileIconTheme() {
+    return this.currentFileIconTheme;
+  }
+  get onDidFileIconThemeChange() {
+    return this.onFileIconThemeChange.event;
+  }
+  async setFileIconTheme(iconThemeOrId, settingsTarget) {
+    return this.fileIconThemeSequencer.queue(async () => {
+      return this.internalSetFileIconTheme(iconThemeOrId, settingsTarget);
+    });
+  }
+  async internalSetFileIconTheme(iconThemeOrId, settingsTarget) {
+    if (iconThemeOrId === void 0) {
+      iconThemeOrId = "";
+    }
+    const themeId = types.isString(iconThemeOrId) ? iconThemeOrId : iconThemeOrId.id;
+    if (themeId !== this.currentFileIconTheme.id || !this.currentFileIconTheme.isLoaded) {
+      let newThemeData = this.fileIconThemeRegistry.findThemeById(themeId);
+      if (!newThemeData && iconThemeOrId instanceof FileIconThemeData) {
+        newThemeData = iconThemeOrId;
+      }
+      if (!newThemeData) {
+        newThemeData = FileIconThemeData.noIconTheme;
+      }
+      await newThemeData.ensureLoaded(this.fileIconThemeLoader);
+      this.applyAndSetFileIconTheme(newThemeData);
+    }
+    const themeData = this.currentFileIconTheme;
+    if (themeData.isLoaded && settingsTarget !== "preview" && (!themeData.location || !getRemoteAuthority(themeData.location))) {
+      themeData.toStorage(this.storageService);
+    }
+    await this.settings.setFileIconTheme(this.currentFileIconTheme, settingsTarget);
+    return themeData;
+  }
+  async getMarketplaceFileIconThemes(publisher, name, version) {
+    const extensionLocation = await this.extensionResourceLoaderService.getExtensionGalleryResourceURL({ publisher, name, version }, "extension");
+    if (extensionLocation) {
+      try {
+        const manifestContent = await this.extensionResourceLoaderService.readExtensionResource(resources.joinPath(extensionLocation, "package.json"));
+        return this.fileIconThemeRegistry.getMarketplaceThemes(JSON.parse(manifestContent), extensionLocation, ExtensionData.fromName(publisher, name));
+      } catch (e) {
+        this.logService.error("Problem loading themes from marketplace", e);
+      }
+    }
+    return [];
+  }
+  async reloadCurrentFileIconTheme() {
+    return this.fileIconThemeSequencer.queue(async () => {
+      await this.currentFileIconTheme.reload(this.fileIconThemeLoader);
+      this.applyAndSetFileIconTheme(this.currentFileIconTheme);
+    });
+  }
+  async restoreFileIconTheme() {
+    return this.fileIconThemeSequencer.queue(async () => {
+      const settingId = this.settings.fileIconTheme;
+      const theme = this.fileIconThemeRegistry.findThemeBySettingsId(settingId);
+      if (theme) {
+        if (settingId !== this.currentFileIconTheme.settingsId) {
+          await this.internalSetFileIconTheme(theme.id, void 0);
+        } else if (theme !== this.currentFileIconTheme) {
+          await theme.ensureLoaded(this.fileIconThemeLoader);
+          this.applyAndSetFileIconTheme(theme, true);
+        }
+        return true;
+      }
+      return false;
+    });
+  }
+  applyAndSetFileIconTheme(iconThemeData, silent = false) {
+    this.currentFileIconTheme = iconThemeData;
+    _applyRules(iconThemeData.styleSheetContent, fileIconThemeRulesClassName);
+    if (iconThemeData.id) {
+      this.container.classList.add(fileIconsEnabledClass);
+    } else {
+      this.container.classList.remove(fileIconsEnabledClass);
+    }
+    this.fileIconThemeWatcher.update(iconThemeData);
+    if (iconThemeData.id) {
+      this.sendTelemetry(iconThemeData.id, iconThemeData.extensionData, "fileIcon");
+    }
+    if (!silent) {
+      this.onFileIconThemeChange.fire(this.currentFileIconTheme);
+    }
+  }
+  async getProductIconThemes() {
+    return this.productIconThemeRegistry.getThemes();
+  }
+  getProductIconTheme() {
+    return this.currentProductIconTheme;
+  }
+  get onDidProductIconThemeChange() {
+    return this.onProductIconThemeChange.event;
+  }
+  async setProductIconTheme(iconThemeOrId, settingsTarget) {
+    return this.productIconThemeSequencer.queue(async () => {
+      return this.internalSetProductIconTheme(iconThemeOrId, settingsTarget);
+    });
+  }
+  async internalSetProductIconTheme(iconThemeOrId, settingsTarget) {
+    if (iconThemeOrId === void 0) {
+      iconThemeOrId = "";
+    }
+    const themeId = types.isString(iconThemeOrId) ? iconThemeOrId : iconThemeOrId.id;
+    if (themeId !== this.currentProductIconTheme.id || !this.currentProductIconTheme.isLoaded) {
+      let newThemeData = this.productIconThemeRegistry.findThemeById(themeId);
+      if (!newThemeData && iconThemeOrId instanceof ProductIconThemeData) {
+        newThemeData = iconThemeOrId;
+      }
+      if (!newThemeData) {
+        newThemeData = ProductIconThemeData.defaultTheme;
+      }
+      await newThemeData.ensureLoaded(this.extensionResourceLoaderService, this.logService);
+      this.applyAndSetProductIconTheme(newThemeData);
+    }
+    const themeData = this.currentProductIconTheme;
+    if (themeData.isLoaded && settingsTarget !== "preview" && (!themeData.location || !getRemoteAuthority(themeData.location))) {
+      themeData.toStorage(this.storageService);
+    }
+    await this.settings.setProductIconTheme(this.currentProductIconTheme, settingsTarget);
+    return themeData;
+  }
+  async getMarketplaceProductIconThemes(publisher, name, version) {
+    const extensionLocation = await this.extensionResourceLoaderService.getExtensionGalleryResourceURL({ publisher, name, version }, "extension");
+    if (extensionLocation) {
+      try {
+        const manifestContent = await this.extensionResourceLoaderService.readExtensionResource(resources.joinPath(extensionLocation, "package.json"));
+        return this.productIconThemeRegistry.getMarketplaceThemes(JSON.parse(manifestContent), extensionLocation, ExtensionData.fromName(publisher, name));
+      } catch (e) {
+        this.logService.error("Problem loading themes from marketplace", e);
+      }
+    }
+    return [];
+  }
+  async reloadCurrentProductIconTheme() {
+    return this.productIconThemeSequencer.queue(async () => {
+      await this.currentProductIconTheme.reload(this.extensionResourceLoaderService, this.logService);
+      this.applyAndSetProductIconTheme(this.currentProductIconTheme);
+    });
+  }
+  async restoreProductIconTheme() {
+    return this.productIconThemeSequencer.queue(async () => {
+      const settingId = this.settings.productIconTheme;
+      const theme = this.productIconThemeRegistry.findThemeBySettingsId(settingId);
+      if (theme) {
+        if (settingId !== this.currentProductIconTheme.settingsId) {
+          await this.internalSetProductIconTheme(theme.id, void 0);
+        } else if (theme !== this.currentProductIconTheme) {
+          await theme.ensureLoaded(this.extensionResourceLoaderService, this.logService);
+          this.applyAndSetProductIconTheme(theme, true);
+        }
+        return true;
+      }
+      return false;
+    });
+  }
+  applyAndSetProductIconTheme(iconThemeData, silent = false) {
+    this.currentProductIconTheme = iconThemeData;
+    _applyRules(iconThemeData.styleSheetContent, productIconThemeRulesClassName);
+    this.productIconThemeWatcher.update(iconThemeData);
+    if (iconThemeData.id) {
+      this.sendTelemetry(iconThemeData.id, iconThemeData.extensionData, "productIcon");
+    }
+    if (!silent) {
+      this.onProductIconThemeChange.fire(this.currentProductIconTheme);
+    }
+  }
+};
+WorkbenchThemeService = __decorate([
+  __param(0, IExtensionService),
+  __param(1, IStorageService),
+  __param(2, IConfigurationService),
+  __param(3, ITelemetryService),
+  __param(4, IBrowserWorkbenchEnvironmentService),
+  __param(5, IFileService),
+  __param(6, IExtensionResourceLoaderService),
+  __param(7, IWorkbenchLayoutService),
+  __param(8, ILogService),
+  __param(9, IHostColorSchemeService),
+  __param(10, IUserDataInitializationService),
+  __param(11, ILanguageService)
+], WorkbenchThemeService);
+class ThemeFileWatcher {
+  static {
+    __name(this, "ThemeFileWatcher");
+  }
+  constructor(fileService, environmentService, onUpdate) {
+    this.fileService = fileService;
+    this.environmentService = environmentService;
+    this.onUpdate = onUpdate;
+    this.watcherDisposables = new DisposableStore();
+  }
+  update(theme) {
+    if (!resources.isEqual(theme.location, this.watchedLocation)) {
+      this.watchedLocation = void 0;
+      this.watcherDisposables.clear();
+      if (theme.location && (theme.watch || this.environmentService.isExtensionDevelopment)) {
+        this.watchedLocation = theme.location;
+        this.watcherDisposables.add(this.fileService.watch(theme.location));
+        this.watcherDisposables.add(this.fileService.onDidFilesChange((e) => {
+          if (this.watchedLocation && e.contains(
+            this.watchedLocation,
+            0
+            /* FileChangeType.UPDATED */
+          )) {
+            this.onUpdate();
+          }
+        }));
+      }
+    }
+  }
+  dispose() {
+    this.watcherDisposables.dispose();
+    this.watchedLocation = void 0;
+  }
+}
+function _applyRules(styleSheetContent, rulesClassName) {
+  const themeStyles = mainWindow.document.head.getElementsByClassName(rulesClassName);
+  if (themeStyles.length === 0) {
+    const elStyle = createStyleSheet();
+    elStyle.className = rulesClassName;
+    elStyle.textContent = styleSheetContent;
+  } else {
+    themeStyles[0].textContent = styleSheetContent;
+  }
+}
+__name(_applyRules, "_applyRules");
+registerColorThemeSchemas();
+registerFileIconThemeSchemas();
+registerProductIconThemeSchemas();
+registerSingleton(
+  IWorkbenchThemeService,
+  WorkbenchThemeService,
+  0
+  /* InstantiationType.Eager */
+);
+export {
+  WorkbenchThemeService
+};
+//# sourceMappingURL=workbenchThemeService.js.map

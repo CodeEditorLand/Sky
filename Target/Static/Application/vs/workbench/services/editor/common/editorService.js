@@ -1,1 +1,21 @@
-import{$nj as o}from"../../../../platform/instantiation/common/instantiation.js";import{$mI as r}from"./editorGroupsService.js";const p=o("editorService"),i=-1,$=-2,m=-3;function s(o){return"number"==typeof o||r(o)}export{p as $oI,i as $pI,$ as $qI,m as $rI,s as $sI};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { createDecorator } from "../../../../platform/instantiation/common/instantiation.js";
+import { isEditorGroup } from "./editorGroupsService.js";
+const IEditorService = createDecorator("editorService");
+const ACTIVE_GROUP = -1;
+const SIDE_GROUP = -2;
+const AUX_WINDOW_GROUP = -3;
+function isPreferredGroup(obj) {
+  const candidate = obj;
+  return typeof obj === "number" || isEditorGroup(candidate);
+}
+__name(isPreferredGroup, "isPreferredGroup");
+export {
+  ACTIVE_GROUP,
+  AUX_WINDOW_GROUP,
+  IEditorService,
+  SIDE_GROUP,
+  isPreferredGroup
+};
+//# sourceMappingURL=editorService.js.map

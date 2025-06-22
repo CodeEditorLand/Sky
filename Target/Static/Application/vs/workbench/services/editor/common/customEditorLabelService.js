@@ -1,1 +1,214 @@
-import{$df as g}from"../../../../base/common/event.js";import{$aj as b}from"../../../../base/common/glob.js";import{$vd as _}from"../../../../base/common/lifecycle.js";import{$6 as E,$bb as N,$0 as T}from"../../../../base/common/path.js";import{$jh as $,$mh as D}from"../../../../base/common/resources.js";import{$El as I}from"../../../../platform/configuration/common/configuration.js";import{$WB as P}from"../../../../platform/instantiation/common/extensions.js";import{$nj as x}from"../../../../platform/instantiation/common/instantiation.js";import{$hl as j}from"../../../../platform/workspace/common/workspace.js";import{$Mc as w}from"../../../../base/common/map.js";var d=function(o,e,t,i){var s=arguments.length,n=s<3?e:i===null?i=Object.getOwnPropertyDescriptor(e,t):i,r;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")n=Reflect.decorate(o,e,t,i);else for(var f=o.length-1;f>=0;f--)(r=o[f])&&(n=(s<3?r(n):s>3?r(e,t,n):r(e,t))||n);return s>3&&n&&Object.defineProperty(e,t,n),n},m=function(o,e){return function(t,i){e(t,i,o)}},a;let c=class extends _{static{a=this}static{this.SETTING_ID_PATTERNS="workbench.editor.customLabels.patterns"}static{this.SETTING_ID_ENABLED="workbench.editor.customLabels.enabled"}constructor(e,t){super(),this.j=e,this.m=t,this.c=this.B(new g),this.onDidChange=this.c.event,this.f=[],this.g=!0,this.h=new w(1e3),this.t=/[a-zA-Z0-9]/,this.z=/\$\{(dirname|filename|extname|extname\((?<extnameN>[-+]?\d+)\)|dirname\((?<dirnameN>[-+]?\d+)\))\}/g,this.C=/(?<filename>^\.*[^.]*)/,this.s(),this.u(),this.r()}r(){this.B(this.j.onDidChangeConfiguration(e=>{if(e.affectsConfiguration(a.SETTING_ID_ENABLED)){const t=this.g;this.s(),t!==this.g&&this.f.length>0&&this.c.fire()}else e.affectsConfiguration(a.SETTING_ID_PATTERNS)&&(this.h.clear(),this.u(),this.c.fire())}))}s(){this.g=this.j.getValue(a.SETTING_ID_ENABLED)}u(){this.f=[];const e=this.j.getValue(a.SETTING_ID_PATTERNS);for(const t in e){const i=e[t];if(!this.t.test(i))continue;const s=E(t),n=b(t);this.f.push({pattern:t,template:i,isAbsolutePath:s,parsedPattern:n})}this.f.sort((t,i)=>this.w(i.pattern)-this.w(t.pattern))}w(e){let t=0;for(const i of e.split("/"))i==="**"?t+=1:i==="*"?t+=10:i.includes("*")||i.includes("?")?t+=50:i!==""&&(t+=100);return t}getName(e){if(!this.g||this.f.length===0)return;const t=e.toString(),i=this.h.get(t);if(i!==void 0)return i??void 0;const s=this.y(e);return this.h.set(t,s??null),s}y(e){const t=this.m.getWorkspaceFolder(e);let i;for(const s of this.f){let n;if(t&&!s.isAbsolutePath?(i||(i=D($(t.uri),e)??e.path),n=i):n=e.path,s.parsedPattern(n))return this.D(s.template,e,n)}}D(e,t,i){let s;return e.replace(this.z,(n,r,...f)=>{s=s??N(t.path);const{dirnameN:u="0",extnameN:p="0"}=f.pop();if(r==="filename"){const{filename:h}=this.C.exec(s.base)?.groups??{};if(h)return h}else if(r==="extname"){const h=this.H(s.base);if(h)return h}else if(r.startsWith("extname")){const h=parseInt(p),l=this.I(s.base,h);if(l)return l}else if(r.startsWith("dirname")){const h=parseInt(u),l=this.G(T(i),h);if(l)return l}return n})}F(e){let t=e;for(;t.startsWith(".");)t=t.slice(1);return t}G(e,t){e=e.startsWith("/")?e.slice(1):e;const i=e.split("/");return this.J(i,t)}H(e){return this.F(e).split(".").slice(1).join(".")}I(e,t){const i=this.F(e).split(".");return i.shift(),this.J(i,t)}J(e,t){const i=e.length;let s;t<0?s=Math.abs(t)-1:s=i-t-1;const n=e[s];if(!(n===void 0||n===""))return n}};c=a=d([m(0,I),m(1,j)],c);const S=x("ICustomEditorLabelService");P(S,c,1);export{c as $Uyb,S as $Vyb};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { Emitter } from "../../../../base/common/event.js";
+import { parse as parseGlob } from "../../../../base/common/glob.js";
+import { Disposable } from "../../../../base/common/lifecycle.js";
+import { isAbsolute, parse as parsePath, dirname } from "../../../../base/common/path.js";
+import { dirname as resourceDirname, relativePath as getRelativePath } from "../../../../base/common/resources.js";
+import { IConfigurationService } from "../../../../platform/configuration/common/configuration.js";
+import { registerSingleton } from "../../../../platform/instantiation/common/extensions.js";
+import { createDecorator } from "../../../../platform/instantiation/common/instantiation.js";
+import { IWorkspaceContextService } from "../../../../platform/workspace/common/workspace.js";
+import { MRUCache } from "../../../../base/common/map.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+var CustomEditorLabelService_1;
+let CustomEditorLabelService = class CustomEditorLabelService2 extends Disposable {
+  static {
+    __name(this, "CustomEditorLabelService");
+  }
+  static {
+    CustomEditorLabelService_1 = this;
+  }
+  static {
+    this.SETTING_ID_PATTERNS = "workbench.editor.customLabels.patterns";
+  }
+  static {
+    this.SETTING_ID_ENABLED = "workbench.editor.customLabels.enabled";
+  }
+  constructor(configurationService, workspaceContextService) {
+    super();
+    this.configurationService = configurationService;
+    this.workspaceContextService = workspaceContextService;
+    this._onDidChange = this._register(new Emitter());
+    this.onDidChange = this._onDidChange.event;
+    this.patterns = [];
+    this.enabled = true;
+    this.cache = new MRUCache(1e3);
+    this._templateRegexValidation = /[a-zA-Z0-9]/;
+    this._parsedTemplateExpression = /\$\{(dirname|filename|extname|extname\((?<extnameN>[-+]?\d+)\)|dirname\((?<dirnameN>[-+]?\d+)\))\}/g;
+    this._filenameCaptureExpression = /(?<filename>^\.*[^.]*)/;
+    this.storeEnablementState();
+    this.storeCustomPatterns();
+    this.registerListeners();
+  }
+  registerListeners() {
+    this._register(this.configurationService.onDidChangeConfiguration((e) => {
+      if (e.affectsConfiguration(CustomEditorLabelService_1.SETTING_ID_ENABLED)) {
+        const oldEnablement = this.enabled;
+        this.storeEnablementState();
+        if (oldEnablement !== this.enabled && this.patterns.length > 0) {
+          this._onDidChange.fire();
+        }
+      } else if (e.affectsConfiguration(CustomEditorLabelService_1.SETTING_ID_PATTERNS)) {
+        this.cache.clear();
+        this.storeCustomPatterns();
+        this._onDidChange.fire();
+      }
+    }));
+  }
+  storeEnablementState() {
+    this.enabled = this.configurationService.getValue(CustomEditorLabelService_1.SETTING_ID_ENABLED);
+  }
+  storeCustomPatterns() {
+    this.patterns = [];
+    const customLabelPatterns = this.configurationService.getValue(CustomEditorLabelService_1.SETTING_ID_PATTERNS);
+    for (const pattern in customLabelPatterns) {
+      const template = customLabelPatterns[pattern];
+      if (!this._templateRegexValidation.test(template)) {
+        continue;
+      }
+      const isAbsolutePath = isAbsolute(pattern);
+      const parsedPattern = parseGlob(pattern);
+      this.patterns.push({ pattern, template, isAbsolutePath, parsedPattern });
+    }
+    this.patterns.sort((a, b) => this.patternWeight(b.pattern) - this.patternWeight(a.pattern));
+  }
+  patternWeight(pattern) {
+    let weight = 0;
+    for (const fragment of pattern.split("/")) {
+      if (fragment === "**") {
+        weight += 1;
+      } else if (fragment === "*") {
+        weight += 10;
+      } else if (fragment.includes("*") || fragment.includes("?")) {
+        weight += 50;
+      } else if (fragment !== "") {
+        weight += 100;
+      }
+    }
+    return weight;
+  }
+  getName(resource) {
+    if (!this.enabled || this.patterns.length === 0) {
+      return void 0;
+    }
+    const key = resource.toString();
+    const cached = this.cache.get(key);
+    if (cached !== void 0) {
+      return cached ?? void 0;
+    }
+    const result = this.applyPatterns(resource);
+    this.cache.set(key, result ?? null);
+    return result;
+  }
+  applyPatterns(resource) {
+    const root = this.workspaceContextService.getWorkspaceFolder(resource);
+    let relativePath;
+    for (const pattern of this.patterns) {
+      let relevantPath;
+      if (root && !pattern.isAbsolutePath) {
+        if (!relativePath) {
+          relativePath = getRelativePath(resourceDirname(root.uri), resource) ?? resource.path;
+        }
+        relevantPath = relativePath;
+      } else {
+        relevantPath = resource.path;
+      }
+      if (pattern.parsedPattern(relevantPath)) {
+        return this.applyTemplate(pattern.template, resource, relevantPath);
+      }
+    }
+    return void 0;
+  }
+  applyTemplate(template, resource, relevantPath) {
+    let parsedPath;
+    return template.replace(this._parsedTemplateExpression, (match, variable, ...args) => {
+      parsedPath = parsedPath ?? parsePath(resource.path);
+      const { dirnameN = "0", extnameN = "0" } = args.pop();
+      if (variable === "filename") {
+        const { filename } = this._filenameCaptureExpression.exec(parsedPath.base)?.groups ?? {};
+        if (filename) {
+          return filename;
+        }
+      } else if (variable === "extname") {
+        const extension = this.getExtnames(parsedPath.base);
+        if (extension) {
+          return extension;
+        }
+      } else if (variable.startsWith("extname")) {
+        const n = parseInt(extnameN);
+        const nthExtname = this.getNthExtname(parsedPath.base, n);
+        if (nthExtname) {
+          return nthExtname;
+        }
+      } else if (variable.startsWith("dirname")) {
+        const n = parseInt(dirnameN);
+        const nthDir = this.getNthDirname(dirname(relevantPath), n);
+        if (nthDir) {
+          return nthDir;
+        }
+      }
+      return match;
+    });
+  }
+  removeLeadingDot(path) {
+    let withoutLeadingDot = path;
+    while (withoutLeadingDot.startsWith(".")) {
+      withoutLeadingDot = withoutLeadingDot.slice(1);
+    }
+    return withoutLeadingDot;
+  }
+  getNthDirname(path, n) {
+    path = path.startsWith("/") ? path.slice(1) : path;
+    const pathFragments = path.split("/");
+    return this.getNthFragment(pathFragments, n);
+  }
+  getExtnames(fullFileName) {
+    return this.removeLeadingDot(fullFileName).split(".").slice(1).join(".");
+  }
+  getNthExtname(fullFileName, n) {
+    const extensionNameFragments = this.removeLeadingDot(fullFileName).split(".");
+    extensionNameFragments.shift();
+    return this.getNthFragment(extensionNameFragments, n);
+  }
+  getNthFragment(fragments, n) {
+    const length = fragments.length;
+    let nth;
+    if (n < 0) {
+      nth = Math.abs(n) - 1;
+    } else {
+      nth = length - n - 1;
+    }
+    const nthFragment = fragments[nth];
+    if (nthFragment === void 0 || nthFragment === "") {
+      return void 0;
+    }
+    return nthFragment;
+  }
+};
+CustomEditorLabelService = CustomEditorLabelService_1 = __decorate([
+  __param(0, IConfigurationService),
+  __param(1, IWorkspaceContextService)
+], CustomEditorLabelService);
+const ICustomEditorLabelService = createDecorator("ICustomEditorLabelService");
+registerSingleton(
+  ICustomEditorLabelService,
+  CustomEditorLabelService,
+  1
+  /* InstantiationType.Delayed */
+);
+export {
+  CustomEditorLabelService,
+  ICustomEditorLabelService
+};
+//# sourceMappingURL=customEditorLabelService.js.map

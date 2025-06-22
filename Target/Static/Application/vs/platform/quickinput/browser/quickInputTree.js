@@ -1,1 +1,1281 @@
-import*as P from"../../../base/browser/cssValue.js";import*as h from"../../../base/browser/dom.js";import{$G5 as V}from"../../../base/browser/keyboardEvent.js";import{$M7 as _}from"../../../base/browser/ui/actionbar/actionbar.js";import{$Z9 as M}from"../../../base/browser/ui/iconLabel/iconLabel.js";import{$99 as q}from"../../../base/browser/ui/keybindingLabel/keybindingLabel.js";import{$U8 as R}from"../../../base/browser/ui/toggle/toggle.js";import{RenderIndentGuides as j}from"../../../base/browser/ui/tree/abstractTree.js";import{$Sb as W}from"../../../base/common/arrays.js";import{$Jh as J}from"../../../base/common/async.js";import{$DM as U}from"../../../base/common/comparers.js";import{$tm as F}from"../../../base/common/decorators.js";import{$pb as Q}from"../../../base/common/errors.js";import{$df as z,Event as g,$lf as G}from"../../../base/common/event.js";import{$Rj as X,$Tj as I,$Sj as L}from"../../../base/common/iconLabels.js";import{$vf as K}from"../../../base/common/lazy.js";import{$vd as Y,$ud as w,$wd as Z}from"../../../base/common/lifecycle.js";import{observableValue as H,observableValueOpts as ee,transaction as te}from"../../../base/common/observable.js";import{OS as se}from"../../../base/common/platform.js";import{$Cf as O,$If as ie}from"../../../base/common/strings.js";import{URI as ne}from"../../../base/common/uri.js";import{localize as re}from"../../../nls.js";import{$tC as oe}from"../../accessibility/common/accessibility.js";import{$mj as le}from"../../instantiation/common/instantiation.js";import{$Dmb as ae}from"../../list/browser/listService.js";import{$Tfb as he}from"../../theme/browser/defaultStyles.js";import{$Lt as ce}from"../../theme/common/theme.js";import{$Mt as ue}from"../../theme/common/themeService.js";import{QuickPickFocus as f}from"../common/quickInput.js";import{$Xxb as B}from"./quickInputUtils.js";var D=function(l,e,t,s){var i=arguments.length,n=i<3?e:s===null?s=Object.getOwnPropertyDescriptor(e,t):s,o;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")n=Reflect.decorate(l,e,t,s);else for(var r=l.length-1;r>=0;r--)(o=l[r])&&(n=(i<3?o(n):i>3?o(e,t,n):o(e,t))||n);return i>3&&n&&Object.defineProperty(e,t,n),n},T=function(l,e){return function(t,s){e(t,s,l)}},$;const p=h.$;class A{constructor(e,t,s){this.index=e,this.hasCheckbox=t,this.c=!1,this.a=new K(()=>{const i=s.label??"",n=L(i).text.trim(),o=s.ariaLabel||[i,this.saneDescription,this.saneDetail].map(r=>X(r)).filter(r=>!!r).join(", ");return{saneLabel:i,saneSortLabel:n,saneAriaLabel:o}}),this.d=s.description,this.g=s.tooltip}get saneLabel(){return this.a.value.saneLabel}get saneSortLabel(){return this.a.value.saneSortLabel}get saneAriaLabel(){return this.a.value.saneAriaLabel}get element(){return this.b}set element(e){this.b=e}get hidden(){return this.c}set hidden(e){this.c=e}get saneDescription(){return this.d}set saneDescription(e){this.d=e}get saneDetail(){return this.f}set saneDetail(e){this.f=e}get saneTooltip(){return this.g}set saneTooltip(e){this.g=e}get labelHighlights(){return this.h}set labelHighlights(e){this.h=e}get descriptionHighlights(){return this.j}set descriptionHighlights(e){this.j=e}get detailHighlights(){return this.k}set detailHighlights(e){this.k=e}}class c extends A{constructor(e,t,s,i,n,o,r){super(e,s,o),this.childIndex=t,this.fireButtonTriggered=i,this.l=n,this.item=o,this.m=r,this.o=!1,this.onChecked=s?g.map(g.filter(this.l.event,a=>a.element===this),a=>a.checked):g.None,this.f=o.detail,this.h=o.highlights?.label,this.j=o.highlights?.description,this.k=o.highlights?.detail}get separator(){return this.m}set separator(e){this.m=e}get checked(){return this.o}set checked(e){e!==this.o&&(this.o=e,this.l.fire({element:this,checked:e}))}get checkboxDisabled(){return!!this.item.disabled}}var m;(function(l){l[l.NONE=0]="NONE",l[l.MOUSE_HOVER=1]="MOUSE_HOVER",l[l.ACTIVE_ITEM=2]="ACTIVE_ITEM"})(m||(m={}));class k extends A{constructor(e,t,s){super(e,!1,s),this.fireSeparatorButtonTriggered=t,this.separator=s,this.children=new Array,this.focusInsideSeparator=m.NONE}}class de{getHeight(e){return e instanceof k?30:e.saneDetail?44:22}getTemplateId(e){return e instanceof c?y.ID:C.ID}}class fe{getWidgetAriaLabel(){return re(2206,null)}getAriaLabel(e){return e.separator?.label?`${e.saneAriaLabel}, ${e.separator.label}`:e.saneAriaLabel}getWidgetRole(){return"listbox"}getRole(e){return e.hasCheckbox?"checkbox":"option"}isChecked(e){if(!(!e.hasCheckbox||!(e instanceof c)))return{get value(){return e.checked},onDidChange:t=>e.onChecked(()=>t())}}}class N{constructor(e){this.a=e}renderTemplate(e){const t=Object.create(null);t.toDisposeElement=new w,t.toDisposeTemplate=new w,t.entry=h.$M6(e,p(".quick-input-list-entry"));const s=h.$M6(t.entry,p("label.quick-input-list-label"));t.outerLabel=s,t.checkbox=t.toDisposeTemplate.add(new Z),t.toDisposeTemplate.add(h.$K5(s,h.$F6.CLICK,d=>{if(t.checkbox.value&&!d.defaultPrevented&&t.checkbox.value.enabled){const u=!t.checkbox.value.checked;t.checkbox.value.checked=u,t.element.checked=u}}));const i=h.$M6(s,p(".quick-input-list-rows")),n=h.$M6(i,p(".quick-input-list-row")),o=h.$M6(i,p(".quick-input-list-row"));t.label=new M(n,{supportHighlights:!0,supportDescriptionHighlights:!0,supportIcons:!0,hoverDelegate:this.a}),t.toDisposeTemplate.add(t.label),t.icon=h.$N6(t.label.element,p(".quick-input-list-icon"));const r=h.$M6(n,p(".quick-input-list-entry-keybinding"));t.keybinding=new q(r,se),t.toDisposeTemplate.add(t.keybinding);const a=h.$M6(o,p(".quick-input-list-label-meta"));return t.detail=new M(a,{supportHighlights:!0,supportIcons:!0,hoverDelegate:this.a}),t.toDisposeTemplate.add(t.detail),t.separator=h.$M6(t.entry,p(".quick-input-list-separator")),t.actionBar=new _(t.entry,this.a?{hoverDelegate:this.a}:void 0),t.actionBar.domNode.classList.add("quick-input-list-entry-action-bar"),t.toDisposeTemplate.add(t.actionBar),t}disposeTemplate(e){e.toDisposeElement.dispose(),e.toDisposeTemplate.dispose()}disposeElement(e,t,s){s.toDisposeElement.clear(),s.actionBar.clear()}}let y=class extends N{static{$=this}static{this.ID="quickpickitem"}constructor(e,t){super(e),this.c=t,this.b=new Map}get templateId(){return $.ID}d(e,t){if(!e.hasCheckbox){t.checkbox.value?.domNode.remove(),t.checkbox.clear();return}let s=t.checkbox.value;s?s.setTitle(e.saneLabel):(s=new R(e.saneLabel,e.checked,{...he,size:15}),t.checkbox.value=s,t.outerLabel.prepend(s.domNode)),e.checkboxDisabled?s.disable():s.enable(),s.checked=e.checked,t.toDisposeElement.add(e.onChecked(i=>s.checked=i)),t.toDisposeElement.add(s.onChange(()=>e.checked=s.checked))}renderElement(e,t,s){const i=e.element;s.element=i,i.element=s.entry??void 0;const n=i.item;i.element.classList.toggle("indented",!!n.indented),i.element.classList.toggle("not-pickable",i.item.pickable===!1),this.d(i,s);const{labelHighlights:o,descriptionHighlights:r,detailHighlights:a}=i;if(n.iconPath){const b=ce(this.c.getColorTheme().type)?n.iconPath.dark:n.iconPath.light??n.iconPath.dark,S=ne.revive(b);s.icon.className="quick-input-list-icon",s.icon.style.backgroundImage=P.$77(S)}else s.icon.style.backgroundImage="",s.icon.className=n.iconClass?`quick-input-list-icon ${n.iconClass}`:"";let d;!i.saneTooltip&&i.saneDescription&&(d={markdown:{value:O(i.saneDescription),supportThemeIcons:!0},markdownNotSupportedFallback:i.saneDescription});const u={matches:o||[],descriptionTitle:d,descriptionMatches:r||[],labelEscapeNewLines:!0};if(u.extraClasses=n.iconClasses,u.italic=n.italic,u.strikethrough=n.strikethrough,s.entry.classList.remove("quick-input-list-separator-as-item"),s.label.setLabel(i.saneLabel,i.saneDescription,u),s.keybinding.set(n.keybinding),i.saneDetail){let b;i.saneTooltip||(b={markdown:{value:O(i.saneDetail),supportThemeIcons:!0},markdownNotSupportedFallback:i.saneDetail}),s.detail.element.style.display="",s.detail.setLabel(i.saneDetail,void 0,{matches:a,title:b,labelEscapeNewLines:!0})}else s.detail.element.style.display="none";i.separator?.label?(s.separator.textContent=i.separator.label,s.separator.style.display="",this.f(i)):s.separator.style.display="none",s.entry.classList.toggle("quick-input-list-separator-border",!!i.separator&&i.childIndex!==0);const v=n.buttons;v&&v.length?(s.actionBar.push(v.map((b,S)=>B(b,`id-${S}`,()=>i.fireButtonTriggered({button:b,item:i.item}))),{icon:!0,label:!1}),s.entry.classList.add("has-actions")):s.entry.classList.remove("has-actions")}disposeElement(e,t,s){this.g(e.element),super.disposeElement(e,t,s)}isItemWithSeparatorVisible(e){return this.b.has(e)}f(e){this.b.set(e,(this.b.get(e)||0)+1)}g(e){const t=this.b.get(e)||0;t>1?this.b.set(e,t-1):this.b.delete(e)}};y=$=D([T(1,ue)],y);class C extends N{constructor(){super(...arguments),this.b=new Map}static{this.ID="quickpickseparator"}get templateId(){return C.ID}get visibleSeparators(){return[...this.b.keys()]}isSeparatorVisible(e){return this.b.has(e)}renderElement(e,t,s){const i=e.element;s.element=i,i.element=s.entry??void 0,i.element.classList.toggle("focus-inside",!!i.focusInsideSeparator);const n=i.separator,{labelHighlights:o,descriptionHighlights:r}=i;s.icon.style.backgroundImage="",s.icon.className="";let a;!i.saneTooltip&&i.saneDescription&&(a={markdown:{value:O(i.saneDescription),supportThemeIcons:!0},markdownNotSupportedFallback:i.saneDescription});const d={matches:o||[],descriptionTitle:a,descriptionMatches:r||[],labelEscapeNewLines:!0};s.entry.classList.add("quick-input-list-separator-as-item"),s.label.setLabel(i.saneLabel,i.saneDescription,d),s.separator.style.display="none",s.entry.classList.add("quick-input-list-separator-border");const u=n.buttons;u&&u.length?(s.actionBar.push(u.map((v,b)=>B(v,`id-${b}`,()=>i.fireSeparatorButtonTriggered({button:v,separator:i.separator}))),{icon:!0,label:!1}),s.entry.classList.add("has-actions")):s.entry.classList.remove("has-actions"),this.c(i)}disposeElement(e,t,s){this.d(e.element),this.isSeparatorVisible(e.element)||e.element.element?.classList.remove("focus-inside"),super.disposeElement(e,t,s)}c(e){this.b.set(e,(this.b.get(e)||0)+1)}d(e){const t=this.b.get(e)||0;t>1?this.b.set(e,t-1):this.b.delete(e)}}let E=class extends Y{constructor(e,t,s,i,n,o){super(),this.M=e,this.N=t,this.O=s,this.P=o,this.a=new z,this.onKeyDown=this.a.event,this.b=new z,this.onLeave=this.b.event,this.c=H("VisibleCount",0),this.onChangedVisibleCount=g.fromObservable(this.c,this.q),this.f=H("AllVisibleChecked",!1),this.onChangedAllVisibleChecked=g.fromObservable(this.f,this.q),this.g=H("CheckedCount",0),this.onChangedCheckedCount=g.fromObservable(this.g,this.q),this.h=ee({equalsFn:W},new Array),this.onChangedCheckedElements=g.fromObservable(this.h,this.q),this.j=new z,this.onButtonTriggered=this.j.event,this.m=new z,this.onSeparatorButtonTriggered=this.m.event,this.r=new z,this.t=new G,this.u=!1,this.F=new Array,this.G=new Array,this.H=new Array,this.I=this.B(new w),this.Q=!1,this.R=!1,this.S=!0,this.U="fuzzy",this.W=!0,this.X=!0,this.Y=!0,this.w=h.$M6(this.M,p(".quick-input-list")),this.C=new C(t),this.D=n.createInstance(y,t),this.z=this.B(n.createInstance(ae,"QuickInput",this.w,new de,[this.D,this.C],{filter:{filter(r){return r.hidden?0:r instanceof k?2:1}},sorter:{compare:(r,a)=>{if(!this.sortByLabel||!this.L)return 0;const d=this.L.toLowerCase();return me(r,a,d)}},accessibilityProvider:new fe,setRowLineHeight:!1,multipleSelectionSupport:!1,hideTwistiesOfChildlessElements:!0,renderIndentGuides:j.None,findWidgetEnabled:!1,indent:0,horizontalScrolling:!1,allowNonCollapsibleParents:!0,alwaysConsumeMouseWheel:!0})),this.z.getHTMLElement().id=i,this.Z()}get onDidChangeFocus(){return g.map(this.z.onDidChangeFocus,e=>e.elements.filter(t=>t instanceof c).map(t=>t.item),this.q)}get onDidChangeSelection(){return g.map(this.z.onDidChangeSelection,e=>({items:e.elements.filter(t=>t instanceof c).map(t=>t.item),event:e.browserEvent}),this.q)}get displayed(){return this.w.style.display!=="none"}set displayed(e){this.w.style.display=e?"":"none"}get scrollTop(){return this.z.scrollTop}set scrollTop(e){this.z.scrollTop=e}get ariaLabel(){return this.z.ariaLabel}set ariaLabel(e){this.z.ariaLabel=e??""}set enabled(e){this.z.getHTMLElement().style.pointerEvents=e?"":"none"}get matchOnDescription(){return this.Q}set matchOnDescription(e){this.Q=e}get matchOnDetail(){return this.R}set matchOnDetail(e){this.R=e}get matchOnLabel(){return this.S}set matchOnLabel(e){this.S=e}get matchOnLabelMode(){return this.U}set matchOnLabelMode(e){this.U=e}get matchOnMeta(){return this.W}set matchOnMeta(e){this.W=e}get sortByLabel(){return this.X}set sortByLabel(e){this.X=e}get shouldLoop(){return this.Y}set shouldLoop(e){this.Y=e}Z(){this.ab(),this.bb(),this.cb(),this.db(),this.eb(),this.fb(),this.gb(),this.ib(),this.hb()}ab(){this.B(this.z.onKeyDown(e=>{const t=new V(e);switch(t.keyCode){case 10:this.toggleCheckbox();break}this.a.fire(t)}))}bb(){this.B(h.$J5(this.w,h.$F6.CLICK,e=>{(e.x||e.y)&&this.b.fire()}))}cb(){this.B(h.$J5(this.w,h.$F6.AUXCLICK,e=>{e.button===1&&this.b.fire()}))}db(){this.B(this.z.onDidChangeModel(()=>{const e=this.H.filter(t=>!t.hidden).length;this.c.set(e,void 0),this.u&&this.lb()}))}eb(){this.B(this.t.wrapEvent(this.r.event,(e,t)=>t)(e=>this.lb()))}fb(){this.B(this.z.onContextMenu(e=>{e.element&&(e.browserEvent.preventDefault(),this.z.setSelection([e.element]))}))}gb(){const e=this.B(new J(typeof this.N.delay=="function"?this.N.delay():this.N.delay));this.B(this.z.onMouseOver(async t=>{if(h.$u6(t.browserEvent.target)){e.cancel();return}if(!(!h.$u6(t.browserEvent.relatedTarget)&&h.$c6(t.browserEvent.relatedTarget,t.element?.element)))try{await e.trigger(async()=>{t.element instanceof c&&this.mb(t.element)})}catch(s){if(!Q(s))throw s}})),this.B(this.z.onMouseOut(t=>{h.$c6(t.browserEvent.relatedTarget,t.element?.element)||e.cancel()}))}hb(){this.B(this.z.onDidChangeFocus(e=>{const t=e.elements[0]?this.z.getParentElement(e.elements[0]):null;for(const s of this.C.visibleSeparators){const i=s===t;!!(s.focusInsideSeparator&m.ACTIVE_ITEM)!==i&&(i?s.focusInsideSeparator|=m.ACTIVE_ITEM:s.focusInsideSeparator&=~m.ACTIVE_ITEM,this.z.rerender(s))}})),this.B(this.z.onMouseOver(e=>{const t=e.element?this.z.getParentElement(e.element):null;for(const s of this.C.visibleSeparators){if(s!==t)continue;!!(s.focusInsideSeparator&m.MOUSE_HOVER)||(s.focusInsideSeparator|=m.MOUSE_HOVER,this.z.rerender(s))}})),this.B(this.z.onMouseOut(e=>{const t=e.element?this.z.getParentElement(e.element):null;for(const s of this.C.visibleSeparators){if(s!==t)continue;!!(s.focusInsideSeparator&m.MOUSE_HOVER)&&(s.focusInsideSeparator&=~m.MOUSE_HOVER,this.z.rerender(s))}}))}ib(){this.B(this.z.onDidChangeSelection(e=>{const t=e.elements.filter(s=>s instanceof c);t.length!==e.elements.length&&(e.elements.length===1&&e.elements[0]instanceof k&&(this.z.setFocus([e.elements[0].children[0]]),this.z.reveal(e.elements[0],0)),this.z.setSelection(t))}))}setAllVisibleChecked(e){this.t.bufferEvents(()=>{this.H.forEach(t=>{!t.hidden&&!t.checkboxDisabled&&t.item.pickable!==!1&&(t.checked=e)})})}setElements(e){this.I.clear(),this.L=void 0,this.F=e,this.u=this.M.classList.contains("show-checkboxes");let t;this.H=new Array,this.G=e.reduce((s,i,n)=>{let o;if(i.type==="separator"){if(!i.buttons)return s;t=new k(n,r=>this.m.fire(r),i),o=t}else{const r=n>0?e[n-1]:void 0;let a;r&&r.type==="separator"&&!r.buttons&&(a=r);const d=new c(n,t?.children?t.children.length:n,this.u&&i.pickable!==!1,u=>this.j.fire(u),this.r,i,a);if(this.H.push(d),t)return t.children.push(d),s;o=d}return s.push(o),s},new Array),this.jb(this.G),this.P.isScreenReaderOptimized()&&setTimeout(()=>{const s=this.z.getHTMLElement().querySelector(".monaco-list-row.focused"),i=s?.parentNode;if(s&&i){const n=s.nextSibling;s.remove(),i.insertBefore(s,n)}},0)}setFocusedElements(e){const t=e.map(s=>this.H.find(i=>i.item===s)).filter(s=>!!s).filter(s=>!s.hidden);if(this.z.setFocus(t),e.length>0){const s=this.z.getFocus()[0];s&&this.z.reveal(s)}}getActiveDescendant(){return this.z.getHTMLElement().getAttribute("aria-activedescendant")}setSelectedElements(e){const t=e.map(s=>this.H.find(i=>i.item===s)).filter(s=>!!s);this.z.setSelection(t)}getCheckedElements(){return this.H.filter(e=>e.checked).map(e=>e.item)}setCheckedElements(e){this.t.bufferEvents(()=>{const t=new Set;for(const s of e)t.add(s);for(const s of this.H)s.checked=t.has(s.item)})}focus(e){if(this.H.length)switch(e===f.Second&&this.H.length<2&&(e=f.First),e){case f.First:this.z.scrollTop=0,this.z.focusFirst(void 0,t=>t.element instanceof c);break;case f.Second:{this.z.scrollTop=0;let t=!1;this.z.focusFirst(void 0,s=>s.element instanceof c?t?!0:(t=!t,!1):!1);break}case f.Last:this.z.scrollTop=this.z.scrollHeight,this.z.focusLast(void 0,t=>t.element instanceof c);break;case f.Next:{const t=this.z.getFocus();this.z.focusNext(void 0,this.Y,void 0,i=>i.element instanceof c?(this.z.reveal(i.element),!0):!1);const s=this.z.getFocus();t.length&&t[0]===s[0]&&this.b.fire();break}case f.Previous:{const t=this.z.getFocus();this.z.focusPrevious(void 0,this.Y,void 0,i=>{if(!(i.element instanceof c))return!1;const n=this.z.getParentElement(i.element);return n===null||n.children[0]!==i.element?this.z.reveal(i.element):this.z.reveal(n),!0});const s=this.z.getFocus();t.length&&t[0]===s[0]&&this.b.fire();break}case f.NextPage:this.z.focusNextPage(void 0,t=>t.element instanceof c?(this.z.reveal(t.element),!0):!1);break;case f.PreviousPage:this.z.focusPreviousPage(void 0,t=>{if(!(t.element instanceof c))return!1;const s=this.z.getParentElement(t.element);return s===null||s.children[0]!==t.element?this.z.reveal(t.element):this.z.reveal(s),!0});break;case f.NextSeparator:{let t=!1;const s=this.z.getFocus()[0];this.z.focusNext(void 0,!0,void 0,n=>{if(t)return!0;if(n.element instanceof k)t=!0,this.C.isSeparatorVisible(n.element)?this.z.reveal(n.element.children[0]):this.z.reveal(n.element,0);else if(n.element instanceof c){if(n.element.separator)return this.D.isItemWithSeparatorVisible(n.element)?this.z.reveal(n.element):this.z.reveal(n.element,0),!0;if(n.element===this.G[0])return this.z.reveal(n.element,0),!0}return!1});const i=this.z.getFocus()[0];s===i&&(this.z.scrollTop=this.z.scrollHeight,this.z.focusLast(void 0,n=>n.element instanceof c));break}case f.PreviousSeparator:{let t,s=!!this.z.getFocus()[0]?.separator;this.z.focusPrevious(void 0,!0,void 0,i=>{if(i.element instanceof k)s?t||(this.C.isSeparatorVisible(i.element)?this.z.reveal(i.element):this.z.reveal(i.element,0),t=i.element.children[0]):s=!0;else if(i.element instanceof c&&!t){if(i.element.separator)this.D.isItemWithSeparatorVisible(i.element)?this.z.reveal(i.element):this.z.reveal(i.element,0),t=i.element;else if(i.element===this.G[0])return this.z.reveal(i.element,0),!0}return!1}),t&&this.z.setFocus([t]);break}}}clearFocus(){this.z.setFocus([])}domFocus(){this.z.domFocus()}layout(e){this.z.getHTMLElement().style.maxHeight=e?`${Math.floor(e/44)*44+6}px`:"",this.z.layout()}filter(e){if(this.L=e,!(this.X||this.S||this.Q||this.R))return this.z.layout(),!1;const t=e;if(e=e.trim(),!e||!(this.matchOnLabel||this.matchOnDescription||this.matchOnDetail))this.H.forEach(s=>{s.labelHighlights=void 0,s.descriptionHighlights=void 0,s.detailHighlights=void 0,s.hidden=!1;const i=s.index&&this.F[s.index-1];s.item&&(s.separator=i&&i.type==="separator"&&!i.buttons?i:void 0)});else{let s;this.H.forEach(i=>{let n;this.matchOnLabelMode==="fuzzy"?n=this.matchOnLabel?I(e,L(i.saneLabel))??void 0:void 0:n=this.matchOnLabel?pe(t,L(i.saneLabel))??void 0:void 0;const o=this.matchOnDescription?I(e,L(i.saneDescription||""))??void 0:void 0,r=this.matchOnDetail?I(e,L(i.saneDetail||""))??void 0:void 0;if(n||o||r?(i.labelHighlights=n,i.descriptionHighlights=o,i.detailHighlights=r,i.hidden=!1):(i.labelHighlights=void 0,i.descriptionHighlights=void 0,i.detailHighlights=void 0,i.hidden=i.item?!i.item.alwaysShow:!0),i.item?i.separator=void 0:i.separator&&(i.hidden=!0),!this.sortByLabel){const a=i.index&&this.F[i.index-1]||void 0;a?.type==="separator"&&!a.buttons&&(s=a),s&&!i.hidden&&(i.separator=s,s=void 0)}})}return this.jb(this.X&&e?this.H:this.G),this.z.layout(),!0}toggleCheckbox(){this.t.bufferEvents(()=>{const e=this.z.getFocus().filter(s=>s instanceof c),t=this.kb(e);for(const s of e)s.checkboxDisabled||(s.checked=!t)})}style(e){this.z.style(e)}toggleHover(){const e=this.z.getFocus()[0];if(!e?.saneTooltip||!(e instanceof c))return;if(this.J&&!this.J.isDisposed){this.J.dispose();return}this.mb(e);const t=new w;t.add(this.z.onDidChangeFocus(s=>{s.elements[0]instanceof c&&this.mb(s.elements[0])})),this.J&&t.add(this.J),this.I.add(t)}jb(e){const t=new Array;for(const s of e)s instanceof k?t.push({element:s,collapsible:!1,collapsed:!1,children:s.children.map(i=>({element:i,collapsible:!1,collapsed:!1}))}):t.push({element:s,collapsible:!1,collapsed:!1});this.z.setChildren(null,t)}kb(e,t=!0){for(let s=0,i=e.length;s<i;s++){const n=e[s];if(!n.hidden&&n.item.pickable!==!1)if(n.checked)t=!0;else return!1}return t}lb(){te(e=>{this.f.set(this.kb(this.H,!1),e);const t=this.H.filter(s=>s.checked).length;this.g.set(t,e),this.h.set(this.getCheckedElements(),e)})}mb(e){this.J&&!this.J.isDisposed&&(this.N.onDidHideHover?.(),this.J?.dispose()),!(!e.element||!e.saneTooltip)&&(this.J=this.N.showHover({content:e.saneTooltip,target:e.element,linkHandler:t=>{this.O(t)},appearance:{showPointer:!0},container:this.w,position:{hoverPosition:1}},!1))}};D([F],E.prototype,"onDidChangeFocus",null);D([F],E.prototype,"onDidChangeSelection",null);E=D([T(4,le),T(5,oe)],E);function pe(l,e){const{text:t,iconOffsets:s}=e;if(!s||s.length===0)return x(l,t);const i=ie(t," "),n=t.length-i.length,o=x(l,i);if(o)for(const r of o){const a=s[r.start+n]+n;r.start+=a,r.end+=a}return o}function x(l,e){const t=e.toLowerCase().indexOf(l.toLowerCase());return t!==-1?[{start:t,end:t+l.length}]:null}function me(l,e,t){const s=l.labelHighlights||[],i=e.labelHighlights||[];return s.length&&!i.length?-1:!s.length&&i.length?1:s.length===0&&i.length===0?0:U(l.saneSortLabel,e.saneSortLabel,t)}export{E as $Zxb};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import * as cssJs from "../../../base/browser/cssValue.js";
+import * as dom from "../../../base/browser/dom.js";
+import { StandardKeyboardEvent } from "../../../base/browser/keyboardEvent.js";
+import { ActionBar } from "../../../base/browser/ui/actionbar/actionbar.js";
+import { IconLabel } from "../../../base/browser/ui/iconLabel/iconLabel.js";
+import { KeybindingLabel } from "../../../base/browser/ui/keybindingLabel/keybindingLabel.js";
+import { Checkbox } from "../../../base/browser/ui/toggle/toggle.js";
+import { RenderIndentGuides } from "../../../base/browser/ui/tree/abstractTree.js";
+import { equals } from "../../../base/common/arrays.js";
+import { ThrottledDelayer } from "../../../base/common/async.js";
+import { compareAnything } from "../../../base/common/comparers.js";
+import { memoize } from "../../../base/common/decorators.js";
+import { isCancellationError } from "../../../base/common/errors.js";
+import { Emitter, Event, EventBufferer } from "../../../base/common/event.js";
+import { getCodiconAriaLabel, matchesFuzzyIconAware, parseLabelWithIcons } from "../../../base/common/iconLabels.js";
+import { Lazy } from "../../../base/common/lazy.js";
+import { Disposable, DisposableStore, MutableDisposable } from "../../../base/common/lifecycle.js";
+import { observableValue, observableValueOpts, transaction } from "../../../base/common/observable.js";
+import { OS } from "../../../base/common/platform.js";
+import { escape, ltrim } from "../../../base/common/strings.js";
+import { URI } from "../../../base/common/uri.js";
+import { localize } from "../../../nls.js";
+import { IAccessibilityService } from "../../accessibility/common/accessibility.js";
+import { IInstantiationService } from "../../instantiation/common/instantiation.js";
+import { WorkbenchObjectTree } from "../../list/browser/listService.js";
+import { defaultCheckboxStyles } from "../../theme/browser/defaultStyles.js";
+import { isDark } from "../../theme/common/theme.js";
+import { IThemeService } from "../../theme/common/themeService.js";
+import { QuickPickFocus } from "../common/quickInput.js";
+import { quickInputButtonToAction } from "./quickInputUtils.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+var QuickPickItemElementRenderer_1;
+const $ = dom.$;
+class BaseQuickPickItemElement {
+  static {
+    __name(this, "BaseQuickPickItemElement");
+  }
+  constructor(index, hasCheckbox, mainItem) {
+    this.index = index;
+    this.hasCheckbox = hasCheckbox;
+    this._hidden = false;
+    this._init = new Lazy(() => {
+      const saneLabel = mainItem.label ?? "";
+      const saneSortLabel = parseLabelWithIcons(saneLabel).text.trim();
+      const saneAriaLabel = mainItem.ariaLabel || [saneLabel, this.saneDescription, this.saneDetail].map((s) => getCodiconAriaLabel(s)).filter((s) => !!s).join(", ");
+      return {
+        saneLabel,
+        saneSortLabel,
+        saneAriaLabel
+      };
+    });
+    this._saneDescription = mainItem.description;
+    this._saneTooltip = mainItem.tooltip;
+  }
+  // #region Lazy Getters
+  get saneLabel() {
+    return this._init.value.saneLabel;
+  }
+  get saneSortLabel() {
+    return this._init.value.saneSortLabel;
+  }
+  get saneAriaLabel() {
+    return this._init.value.saneAriaLabel;
+  }
+  get element() {
+    return this._element;
+  }
+  set element(value) {
+    this._element = value;
+  }
+  get hidden() {
+    return this._hidden;
+  }
+  set hidden(value) {
+    this._hidden = value;
+  }
+  get saneDescription() {
+    return this._saneDescription;
+  }
+  set saneDescription(value) {
+    this._saneDescription = value;
+  }
+  get saneDetail() {
+    return this._saneDetail;
+  }
+  set saneDetail(value) {
+    this._saneDetail = value;
+  }
+  get saneTooltip() {
+    return this._saneTooltip;
+  }
+  set saneTooltip(value) {
+    this._saneTooltip = value;
+  }
+  get labelHighlights() {
+    return this._labelHighlights;
+  }
+  set labelHighlights(value) {
+    this._labelHighlights = value;
+  }
+  get descriptionHighlights() {
+    return this._descriptionHighlights;
+  }
+  set descriptionHighlights(value) {
+    this._descriptionHighlights = value;
+  }
+  get detailHighlights() {
+    return this._detailHighlights;
+  }
+  set detailHighlights(value) {
+    this._detailHighlights = value;
+  }
+}
+class QuickPickItemElement extends BaseQuickPickItemElement {
+  static {
+    __name(this, "QuickPickItemElement");
+  }
+  constructor(index, childIndex, hasCheckbox, fireButtonTriggered, _onChecked, item, _separator) {
+    super(index, hasCheckbox, item);
+    this.childIndex = childIndex;
+    this.fireButtonTriggered = fireButtonTriggered;
+    this._onChecked = _onChecked;
+    this.item = item;
+    this._separator = _separator;
+    this._checked = false;
+    this.onChecked = hasCheckbox ? Event.map(Event.filter(this._onChecked.event, (e) => e.element === this), (e) => e.checked) : Event.None;
+    this._saneDetail = item.detail;
+    this._labelHighlights = item.highlights?.label;
+    this._descriptionHighlights = item.highlights?.description;
+    this._detailHighlights = item.highlights?.detail;
+  }
+  get separator() {
+    return this._separator;
+  }
+  set separator(value) {
+    this._separator = value;
+  }
+  get checked() {
+    return this._checked;
+  }
+  set checked(value) {
+    if (value !== this._checked) {
+      this._checked = value;
+      this._onChecked.fire({ element: this, checked: value });
+    }
+  }
+  get checkboxDisabled() {
+    return !!this.item.disabled;
+  }
+}
+var QuickPickSeparatorFocusReason;
+(function(QuickPickSeparatorFocusReason2) {
+  QuickPickSeparatorFocusReason2[QuickPickSeparatorFocusReason2["NONE"] = 0] = "NONE";
+  QuickPickSeparatorFocusReason2[QuickPickSeparatorFocusReason2["MOUSE_HOVER"] = 1] = "MOUSE_HOVER";
+  QuickPickSeparatorFocusReason2[QuickPickSeparatorFocusReason2["ACTIVE_ITEM"] = 2] = "ACTIVE_ITEM";
+})(QuickPickSeparatorFocusReason || (QuickPickSeparatorFocusReason = {}));
+class QuickPickSeparatorElement extends BaseQuickPickItemElement {
+  static {
+    __name(this, "QuickPickSeparatorElement");
+  }
+  constructor(index, fireSeparatorButtonTriggered, separator) {
+    super(index, false, separator);
+    this.fireSeparatorButtonTriggered = fireSeparatorButtonTriggered;
+    this.separator = separator;
+    this.children = new Array();
+    this.focusInsideSeparator = QuickPickSeparatorFocusReason.NONE;
+  }
+}
+class QuickInputItemDelegate {
+  static {
+    __name(this, "QuickInputItemDelegate");
+  }
+  getHeight(element) {
+    if (element instanceof QuickPickSeparatorElement) {
+      return 30;
+    }
+    return element.saneDetail ? 44 : 22;
+  }
+  getTemplateId(element) {
+    if (element instanceof QuickPickItemElement) {
+      return QuickPickItemElementRenderer.ID;
+    } else {
+      return QuickPickSeparatorElementRenderer.ID;
+    }
+  }
+}
+class QuickInputAccessibilityProvider {
+  static {
+    __name(this, "QuickInputAccessibilityProvider");
+  }
+  getWidgetAriaLabel() {
+    return localize("quickInput", "Quick Input");
+  }
+  getAriaLabel(element) {
+    return element.separator?.label ? `${element.saneAriaLabel}, ${element.separator.label}` : element.saneAriaLabel;
+  }
+  getWidgetRole() {
+    return "listbox";
+  }
+  getRole(element) {
+    return element.hasCheckbox ? "checkbox" : "option";
+  }
+  isChecked(element) {
+    if (!element.hasCheckbox || !(element instanceof QuickPickItemElement)) {
+      return void 0;
+    }
+    return {
+      get value() {
+        return element.checked;
+      },
+      onDidChange: /* @__PURE__ */ __name((e) => element.onChecked(() => e()), "onDidChange")
+    };
+  }
+}
+class BaseQuickInputListRenderer {
+  static {
+    __name(this, "BaseQuickInputListRenderer");
+  }
+  constructor(hoverDelegate) {
+    this.hoverDelegate = hoverDelegate;
+  }
+  // TODO: only do the common stuff here and have a subclass handle their specific stuff
+  renderTemplate(container) {
+    const data = /* @__PURE__ */ Object.create(null);
+    data.toDisposeElement = new DisposableStore();
+    data.toDisposeTemplate = new DisposableStore();
+    data.entry = dom.append(container, $(".quick-input-list-entry"));
+    const label = dom.append(data.entry, $("label.quick-input-list-label"));
+    data.outerLabel = label;
+    data.checkbox = data.toDisposeTemplate.add(new MutableDisposable());
+    data.toDisposeTemplate.add(dom.addStandardDisposableListener(label, dom.EventType.CLICK, (e) => {
+      if (data.checkbox.value && !e.defaultPrevented && data.checkbox.value.enabled) {
+        const checked = !data.checkbox.value.checked;
+        data.checkbox.value.checked = checked;
+        data.element.checked = checked;
+      }
+    }));
+    const rows = dom.append(label, $(".quick-input-list-rows"));
+    const row1 = dom.append(rows, $(".quick-input-list-row"));
+    const row2 = dom.append(rows, $(".quick-input-list-row"));
+    data.label = new IconLabel(row1, { supportHighlights: true, supportDescriptionHighlights: true, supportIcons: true, hoverDelegate: this.hoverDelegate });
+    data.toDisposeTemplate.add(data.label);
+    data.icon = dom.prepend(data.label.element, $(".quick-input-list-icon"));
+    const keybindingContainer = dom.append(row1, $(".quick-input-list-entry-keybinding"));
+    data.keybinding = new KeybindingLabel(keybindingContainer, OS);
+    data.toDisposeTemplate.add(data.keybinding);
+    const detailContainer = dom.append(row2, $(".quick-input-list-label-meta"));
+    data.detail = new IconLabel(detailContainer, { supportHighlights: true, supportIcons: true, hoverDelegate: this.hoverDelegate });
+    data.toDisposeTemplate.add(data.detail);
+    data.separator = dom.append(data.entry, $(".quick-input-list-separator"));
+    data.actionBar = new ActionBar(data.entry, this.hoverDelegate ? { hoverDelegate: this.hoverDelegate } : void 0);
+    data.actionBar.domNode.classList.add("quick-input-list-entry-action-bar");
+    data.toDisposeTemplate.add(data.actionBar);
+    return data;
+  }
+  disposeTemplate(data) {
+    data.toDisposeElement.dispose();
+    data.toDisposeTemplate.dispose();
+  }
+  disposeElement(_element, _index, data) {
+    data.toDisposeElement.clear();
+    data.actionBar.clear();
+  }
+}
+let QuickPickItemElementRenderer = class QuickPickItemElementRenderer2 extends BaseQuickInputListRenderer {
+  static {
+    __name(this, "QuickPickItemElementRenderer");
+  }
+  static {
+    QuickPickItemElementRenderer_1 = this;
+  }
+  static {
+    this.ID = "quickpickitem";
+  }
+  constructor(hoverDelegate, themeService) {
+    super(hoverDelegate);
+    this.themeService = themeService;
+    this._itemsWithSeparatorsFrequency = /* @__PURE__ */ new Map();
+  }
+  get templateId() {
+    return QuickPickItemElementRenderer_1.ID;
+  }
+  ensureCheckbox(element, data) {
+    if (!element.hasCheckbox) {
+      data.checkbox.value?.domNode.remove();
+      data.checkbox.clear();
+      return;
+    }
+    let checkbox = data.checkbox.value;
+    if (!checkbox) {
+      checkbox = new Checkbox(element.saneLabel, element.checked, { ...defaultCheckboxStyles, size: 15 });
+      data.checkbox.value = checkbox;
+      data.outerLabel.prepend(checkbox.domNode);
+    } else {
+      checkbox.setTitle(element.saneLabel);
+    }
+    if (element.checkboxDisabled) {
+      checkbox.disable();
+    } else {
+      checkbox.enable();
+    }
+    checkbox.checked = element.checked;
+    data.toDisposeElement.add(element.onChecked((checked) => checkbox.checked = checked));
+    data.toDisposeElement.add(checkbox.onChange(() => element.checked = checkbox.checked));
+  }
+  renderElement(node, index, data) {
+    const element = node.element;
+    data.element = element;
+    element.element = data.entry ?? void 0;
+    const mainItem = element.item;
+    element.element.classList.toggle("indented", Boolean(mainItem.indented));
+    element.element.classList.toggle("not-pickable", element.item.pickable === false);
+    this.ensureCheckbox(element, data);
+    const { labelHighlights, descriptionHighlights, detailHighlights } = element;
+    if (mainItem.iconPath) {
+      const icon = isDark(this.themeService.getColorTheme().type) ? mainItem.iconPath.dark : mainItem.iconPath.light ?? mainItem.iconPath.dark;
+      const iconUrl = URI.revive(icon);
+      data.icon.className = "quick-input-list-icon";
+      data.icon.style.backgroundImage = cssJs.asCSSUrl(iconUrl);
+    } else {
+      data.icon.style.backgroundImage = "";
+      data.icon.className = mainItem.iconClass ? `quick-input-list-icon ${mainItem.iconClass}` : "";
+    }
+    let descriptionTitle;
+    if (!element.saneTooltip && element.saneDescription) {
+      descriptionTitle = {
+        markdown: {
+          value: escape(element.saneDescription),
+          supportThemeIcons: true
+        },
+        markdownNotSupportedFallback: element.saneDescription
+      };
+    }
+    const options = {
+      matches: labelHighlights || [],
+      // If we have a tooltip, we want that to be shown and not any other hover
+      descriptionTitle,
+      descriptionMatches: descriptionHighlights || [],
+      labelEscapeNewLines: true
+    };
+    options.extraClasses = mainItem.iconClasses;
+    options.italic = mainItem.italic;
+    options.strikethrough = mainItem.strikethrough;
+    data.entry.classList.remove("quick-input-list-separator-as-item");
+    data.label.setLabel(element.saneLabel, element.saneDescription, options);
+    data.keybinding.set(mainItem.keybinding);
+    if (element.saneDetail) {
+      let title;
+      if (!element.saneTooltip) {
+        title = {
+          markdown: {
+            value: escape(element.saneDetail),
+            supportThemeIcons: true
+          },
+          markdownNotSupportedFallback: element.saneDetail
+        };
+      }
+      data.detail.element.style.display = "";
+      data.detail.setLabel(element.saneDetail, void 0, {
+        matches: detailHighlights,
+        title,
+        labelEscapeNewLines: true
+      });
+    } else {
+      data.detail.element.style.display = "none";
+    }
+    if (element.separator?.label) {
+      data.separator.textContent = element.separator.label;
+      data.separator.style.display = "";
+      this.addItemWithSeparator(element);
+    } else {
+      data.separator.style.display = "none";
+    }
+    data.entry.classList.toggle("quick-input-list-separator-border", !!element.separator && element.childIndex !== 0);
+    const buttons = mainItem.buttons;
+    if (buttons && buttons.length) {
+      data.actionBar.push(buttons.map((button, index2) => quickInputButtonToAction(button, `id-${index2}`, () => element.fireButtonTriggered({ button, item: element.item }))), { icon: true, label: false });
+      data.entry.classList.add("has-actions");
+    } else {
+      data.entry.classList.remove("has-actions");
+    }
+  }
+  disposeElement(element, _index, data) {
+    this.removeItemWithSeparator(element.element);
+    super.disposeElement(element, _index, data);
+  }
+  isItemWithSeparatorVisible(item) {
+    return this._itemsWithSeparatorsFrequency.has(item);
+  }
+  addItemWithSeparator(item) {
+    this._itemsWithSeparatorsFrequency.set(item, (this._itemsWithSeparatorsFrequency.get(item) || 0) + 1);
+  }
+  removeItemWithSeparator(item) {
+    const frequency = this._itemsWithSeparatorsFrequency.get(item) || 0;
+    if (frequency > 1) {
+      this._itemsWithSeparatorsFrequency.set(item, frequency - 1);
+    } else {
+      this._itemsWithSeparatorsFrequency.delete(item);
+    }
+  }
+};
+QuickPickItemElementRenderer = QuickPickItemElementRenderer_1 = __decorate([
+  __param(1, IThemeService)
+], QuickPickItemElementRenderer);
+class QuickPickSeparatorElementRenderer extends BaseQuickInputListRenderer {
+  static {
+    __name(this, "QuickPickSeparatorElementRenderer");
+  }
+  constructor() {
+    super(...arguments);
+    this._visibleSeparatorsFrequency = /* @__PURE__ */ new Map();
+  }
+  static {
+    this.ID = "quickpickseparator";
+  }
+  get templateId() {
+    return QuickPickSeparatorElementRenderer.ID;
+  }
+  get visibleSeparators() {
+    return [...this._visibleSeparatorsFrequency.keys()];
+  }
+  isSeparatorVisible(separator) {
+    return this._visibleSeparatorsFrequency.has(separator);
+  }
+  renderElement(node, index, data) {
+    const element = node.element;
+    data.element = element;
+    element.element = data.entry ?? void 0;
+    element.element.classList.toggle("focus-inside", !!element.focusInsideSeparator);
+    const mainItem = element.separator;
+    const { labelHighlights, descriptionHighlights } = element;
+    data.icon.style.backgroundImage = "";
+    data.icon.className = "";
+    let descriptionTitle;
+    if (!element.saneTooltip && element.saneDescription) {
+      descriptionTitle = {
+        markdown: {
+          value: escape(element.saneDescription),
+          supportThemeIcons: true
+        },
+        markdownNotSupportedFallback: element.saneDescription
+      };
+    }
+    const options = {
+      matches: labelHighlights || [],
+      // If we have a tooltip, we want that to be shown and not any other hover
+      descriptionTitle,
+      descriptionMatches: descriptionHighlights || [],
+      labelEscapeNewLines: true
+    };
+    data.entry.classList.add("quick-input-list-separator-as-item");
+    data.label.setLabel(element.saneLabel, element.saneDescription, options);
+    data.separator.style.display = "none";
+    data.entry.classList.add("quick-input-list-separator-border");
+    const buttons = mainItem.buttons;
+    if (buttons && buttons.length) {
+      data.actionBar.push(buttons.map((button, index2) => quickInputButtonToAction(button, `id-${index2}`, () => element.fireSeparatorButtonTriggered({ button, separator: element.separator }))), { icon: true, label: false });
+      data.entry.classList.add("has-actions");
+    } else {
+      data.entry.classList.remove("has-actions");
+    }
+    this.addSeparator(element);
+  }
+  disposeElement(element, _index, data) {
+    this.removeSeparator(element.element);
+    if (!this.isSeparatorVisible(element.element)) {
+      element.element.element?.classList.remove("focus-inside");
+    }
+    super.disposeElement(element, _index, data);
+  }
+  addSeparator(separator) {
+    this._visibleSeparatorsFrequency.set(separator, (this._visibleSeparatorsFrequency.get(separator) || 0) + 1);
+  }
+  removeSeparator(separator) {
+    const frequency = this._visibleSeparatorsFrequency.get(separator) || 0;
+    if (frequency > 1) {
+      this._visibleSeparatorsFrequency.set(separator, frequency - 1);
+    } else {
+      this._visibleSeparatorsFrequency.delete(separator);
+    }
+  }
+}
+let QuickInputTree = class QuickInputTree2 extends Disposable {
+  static {
+    __name(this, "QuickInputTree");
+  }
+  constructor(parent, hoverDelegate, linkOpenerDelegate, id, instantiationService, accessibilityService) {
+    super();
+    this.parent = parent;
+    this.hoverDelegate = hoverDelegate;
+    this.linkOpenerDelegate = linkOpenerDelegate;
+    this.accessibilityService = accessibilityService;
+    this._onKeyDown = new Emitter();
+    this.onKeyDown = this._onKeyDown.event;
+    this._onLeave = new Emitter();
+    this.onLeave = this._onLeave.event;
+    this._visibleCountObservable = observableValue("VisibleCount", 0);
+    this.onChangedVisibleCount = Event.fromObservable(this._visibleCountObservable, this._store);
+    this._allVisibleCheckedObservable = observableValue("AllVisibleChecked", false);
+    this.onChangedAllVisibleChecked = Event.fromObservable(this._allVisibleCheckedObservable, this._store);
+    this._checkedCountObservable = observableValue("CheckedCount", 0);
+    this.onChangedCheckedCount = Event.fromObservable(this._checkedCountObservable, this._store);
+    this._checkedElementsObservable = observableValueOpts({ equalsFn: equals }, new Array());
+    this.onChangedCheckedElements = Event.fromObservable(this._checkedElementsObservable, this._store);
+    this._onButtonTriggered = new Emitter();
+    this.onButtonTriggered = this._onButtonTriggered.event;
+    this._onSeparatorButtonTriggered = new Emitter();
+    this.onSeparatorButtonTriggered = this._onSeparatorButtonTriggered.event;
+    this._elementChecked = new Emitter();
+    this._elementCheckedEventBufferer = new EventBufferer();
+    this._hasCheckboxes = false;
+    this._inputElements = new Array();
+    this._elementTree = new Array();
+    this._itemElements = new Array();
+    this._elementDisposable = this._register(new DisposableStore());
+    this._matchOnDescription = false;
+    this._matchOnDetail = false;
+    this._matchOnLabel = true;
+    this._matchOnLabelMode = "fuzzy";
+    this._matchOnMeta = true;
+    this._sortByLabel = true;
+    this._shouldLoop = true;
+    this._container = dom.append(this.parent, $(".quick-input-list"));
+    this._separatorRenderer = new QuickPickSeparatorElementRenderer(hoverDelegate);
+    this._itemRenderer = instantiationService.createInstance(QuickPickItemElementRenderer, hoverDelegate);
+    this._tree = this._register(instantiationService.createInstance(WorkbenchObjectTree, "QuickInput", this._container, new QuickInputItemDelegate(), [this._itemRenderer, this._separatorRenderer], {
+      filter: {
+        filter(element) {
+          return element.hidden ? 0 : element instanceof QuickPickSeparatorElement ? 2 : 1;
+        }
+      },
+      sorter: {
+        compare: /* @__PURE__ */ __name((element, otherElement) => {
+          if (!this.sortByLabel || !this._lastQueryString) {
+            return 0;
+          }
+          const normalizedSearchValue = this._lastQueryString.toLowerCase();
+          return compareEntries(element, otherElement, normalizedSearchValue);
+        }, "compare")
+      },
+      accessibilityProvider: new QuickInputAccessibilityProvider(),
+      setRowLineHeight: false,
+      multipleSelectionSupport: false,
+      hideTwistiesOfChildlessElements: true,
+      renderIndentGuides: RenderIndentGuides.None,
+      findWidgetEnabled: false,
+      indent: 0,
+      horizontalScrolling: false,
+      allowNonCollapsibleParents: true,
+      alwaysConsumeMouseWheel: true
+    }));
+    this._tree.getHTMLElement().id = id;
+    this._registerListeners();
+  }
+  //#region public getters/setters
+  get onDidChangeFocus() {
+    return Event.map(this._tree.onDidChangeFocus, (e) => e.elements.filter((e2) => e2 instanceof QuickPickItemElement).map((e2) => e2.item), this._store);
+  }
+  get onDidChangeSelection() {
+    return Event.map(this._tree.onDidChangeSelection, (e) => ({
+      items: e.elements.filter((e2) => e2 instanceof QuickPickItemElement).map((e2) => e2.item),
+      event: e.browserEvent
+    }), this._store);
+  }
+  get displayed() {
+    return this._container.style.display !== "none";
+  }
+  set displayed(value) {
+    this._container.style.display = value ? "" : "none";
+  }
+  get scrollTop() {
+    return this._tree.scrollTop;
+  }
+  set scrollTop(scrollTop) {
+    this._tree.scrollTop = scrollTop;
+  }
+  get ariaLabel() {
+    return this._tree.ariaLabel;
+  }
+  set ariaLabel(label) {
+    this._tree.ariaLabel = label ?? "";
+  }
+  set enabled(value) {
+    this._tree.getHTMLElement().style.pointerEvents = value ? "" : "none";
+  }
+  get matchOnDescription() {
+    return this._matchOnDescription;
+  }
+  set matchOnDescription(value) {
+    this._matchOnDescription = value;
+  }
+  get matchOnDetail() {
+    return this._matchOnDetail;
+  }
+  set matchOnDetail(value) {
+    this._matchOnDetail = value;
+  }
+  get matchOnLabel() {
+    return this._matchOnLabel;
+  }
+  set matchOnLabel(value) {
+    this._matchOnLabel = value;
+  }
+  get matchOnLabelMode() {
+    return this._matchOnLabelMode;
+  }
+  set matchOnLabelMode(value) {
+    this._matchOnLabelMode = value;
+  }
+  get matchOnMeta() {
+    return this._matchOnMeta;
+  }
+  set matchOnMeta(value) {
+    this._matchOnMeta = value;
+  }
+  get sortByLabel() {
+    return this._sortByLabel;
+  }
+  set sortByLabel(value) {
+    this._sortByLabel = value;
+  }
+  get shouldLoop() {
+    return this._shouldLoop;
+  }
+  set shouldLoop(value) {
+    this._shouldLoop = value;
+  }
+  //#endregion
+  //#region register listeners
+  _registerListeners() {
+    this._registerOnKeyDown();
+    this._registerOnContainerClick();
+    this._registerOnMouseMiddleClick();
+    this._registerOnTreeModelChanged();
+    this._registerOnElementChecked();
+    this._registerOnContextMenu();
+    this._registerHoverListeners();
+    this._registerSelectionChangeListener();
+    this._registerSeparatorActionShowingListeners();
+  }
+  _registerOnKeyDown() {
+    this._register(this._tree.onKeyDown((e) => {
+      const event = new StandardKeyboardEvent(e);
+      switch (event.keyCode) {
+        case 10:
+          this.toggleCheckbox();
+          break;
+      }
+      this._onKeyDown.fire(event);
+    }));
+  }
+  _registerOnContainerClick() {
+    this._register(dom.addDisposableListener(this._container, dom.EventType.CLICK, (e) => {
+      if (e.x || e.y) {
+        this._onLeave.fire();
+      }
+    }));
+  }
+  _registerOnMouseMiddleClick() {
+    this._register(dom.addDisposableListener(this._container, dom.EventType.AUXCLICK, (e) => {
+      if (e.button === 1) {
+        this._onLeave.fire();
+      }
+    }));
+  }
+  _registerOnTreeModelChanged() {
+    this._register(this._tree.onDidChangeModel(() => {
+      const visibleCount = this._itemElements.filter((e) => !e.hidden).length;
+      this._visibleCountObservable.set(visibleCount, void 0);
+      if (this._hasCheckboxes) {
+        this._updateCheckedObservables();
+      }
+    }));
+  }
+  _registerOnElementChecked() {
+    this._register(this._elementCheckedEventBufferer.wrapEvent(this._elementChecked.event, (_, e) => e)((_) => this._updateCheckedObservables()));
+  }
+  _registerOnContextMenu() {
+    this._register(this._tree.onContextMenu((e) => {
+      if (e.element) {
+        e.browserEvent.preventDefault();
+        this._tree.setSelection([e.element]);
+      }
+    }));
+  }
+  _registerHoverListeners() {
+    const delayer = this._register(new ThrottledDelayer(typeof this.hoverDelegate.delay === "function" ? this.hoverDelegate.delay() : this.hoverDelegate.delay));
+    this._register(this._tree.onMouseOver(async (e) => {
+      if (dom.isHTMLAnchorElement(e.browserEvent.target)) {
+        delayer.cancel();
+        return;
+      }
+      if (
+        // anchors are an exception as called out above so we skip them here
+        !dom.isHTMLAnchorElement(e.browserEvent.relatedTarget) && // check if the mouse is still over the same element
+        dom.isAncestor(e.browserEvent.relatedTarget, e.element?.element)
+      ) {
+        return;
+      }
+      try {
+        await delayer.trigger(async () => {
+          if (e.element instanceof QuickPickItemElement) {
+            this.showHover(e.element);
+          }
+        });
+      } catch (e2) {
+        if (!isCancellationError(e2)) {
+          throw e2;
+        }
+      }
+    }));
+    this._register(this._tree.onMouseOut((e) => {
+      if (dom.isAncestor(e.browserEvent.relatedTarget, e.element?.element)) {
+        return;
+      }
+      delayer.cancel();
+    }));
+  }
+  /**
+   * Register's focus change and mouse events so that we can track when items inside of a
+   * separator's section are focused or hovered so that we can display the separator's actions
+   */
+  _registerSeparatorActionShowingListeners() {
+    this._register(this._tree.onDidChangeFocus((e) => {
+      const parent = e.elements[0] ? this._tree.getParentElement(e.elements[0]) : null;
+      for (const separator of this._separatorRenderer.visibleSeparators) {
+        const value = separator === parent;
+        const currentActive = !!(separator.focusInsideSeparator & QuickPickSeparatorFocusReason.ACTIVE_ITEM);
+        if (currentActive !== value) {
+          if (value) {
+            separator.focusInsideSeparator |= QuickPickSeparatorFocusReason.ACTIVE_ITEM;
+          } else {
+            separator.focusInsideSeparator &= ~QuickPickSeparatorFocusReason.ACTIVE_ITEM;
+          }
+          this._tree.rerender(separator);
+        }
+      }
+    }));
+    this._register(this._tree.onMouseOver((e) => {
+      const parent = e.element ? this._tree.getParentElement(e.element) : null;
+      for (const separator of this._separatorRenderer.visibleSeparators) {
+        if (separator !== parent) {
+          continue;
+        }
+        const currentMouse = !!(separator.focusInsideSeparator & QuickPickSeparatorFocusReason.MOUSE_HOVER);
+        if (!currentMouse) {
+          separator.focusInsideSeparator |= QuickPickSeparatorFocusReason.MOUSE_HOVER;
+          this._tree.rerender(separator);
+        }
+      }
+    }));
+    this._register(this._tree.onMouseOut((e) => {
+      const parent = e.element ? this._tree.getParentElement(e.element) : null;
+      for (const separator of this._separatorRenderer.visibleSeparators) {
+        if (separator !== parent) {
+          continue;
+        }
+        const currentMouse = !!(separator.focusInsideSeparator & QuickPickSeparatorFocusReason.MOUSE_HOVER);
+        if (currentMouse) {
+          separator.focusInsideSeparator &= ~QuickPickSeparatorFocusReason.MOUSE_HOVER;
+          this._tree.rerender(separator);
+        }
+      }
+    }));
+  }
+  _registerSelectionChangeListener() {
+    this._register(this._tree.onDidChangeSelection((e) => {
+      const elementsWithoutSeparators = e.elements.filter((e2) => e2 instanceof QuickPickItemElement);
+      if (elementsWithoutSeparators.length !== e.elements.length) {
+        if (e.elements.length === 1 && e.elements[0] instanceof QuickPickSeparatorElement) {
+          this._tree.setFocus([e.elements[0].children[0]]);
+          this._tree.reveal(e.elements[0], 0);
+        }
+        this._tree.setSelection(elementsWithoutSeparators);
+      }
+    }));
+  }
+  //#endregion
+  //#region public methods
+  setAllVisibleChecked(checked) {
+    this._elementCheckedEventBufferer.bufferEvents(() => {
+      this._itemElements.forEach((element) => {
+        if (!element.hidden && !element.checkboxDisabled && element.item.pickable !== false) {
+          element.checked = checked;
+        }
+      });
+    });
+  }
+  setElements(inputElements) {
+    this._elementDisposable.clear();
+    this._lastQueryString = void 0;
+    this._inputElements = inputElements;
+    this._hasCheckboxes = this.parent.classList.contains("show-checkboxes");
+    let currentSeparatorElement;
+    this._itemElements = new Array();
+    this._elementTree = inputElements.reduce((result, item, index) => {
+      let element;
+      if (item.type === "separator") {
+        if (!item.buttons) {
+          return result;
+        }
+        currentSeparatorElement = new QuickPickSeparatorElement(index, (e) => this._onSeparatorButtonTriggered.fire(e), item);
+        element = currentSeparatorElement;
+      } else {
+        const previous = index > 0 ? inputElements[index - 1] : void 0;
+        let separator;
+        if (previous && previous.type === "separator" && !previous.buttons) {
+          separator = previous;
+        }
+        const qpi = new QuickPickItemElement(index, currentSeparatorElement?.children ? currentSeparatorElement.children.length : index, this._hasCheckboxes && item.pickable !== false, (e) => this._onButtonTriggered.fire(e), this._elementChecked, item, separator);
+        this._itemElements.push(qpi);
+        if (currentSeparatorElement) {
+          currentSeparatorElement.children.push(qpi);
+          return result;
+        }
+        element = qpi;
+      }
+      result.push(element);
+      return result;
+    }, new Array());
+    this._setElementsToTree(this._elementTree);
+    if (this.accessibilityService.isScreenReaderOptimized()) {
+      setTimeout(() => {
+        const focusedElement = this._tree.getHTMLElement().querySelector(`.monaco-list-row.focused`);
+        const parent = focusedElement?.parentNode;
+        if (focusedElement && parent) {
+          const nextSibling = focusedElement.nextSibling;
+          focusedElement.remove();
+          parent.insertBefore(focusedElement, nextSibling);
+        }
+      }, 0);
+    }
+  }
+  setFocusedElements(items) {
+    const elements = items.map((item) => this._itemElements.find((e) => e.item === item)).filter((e) => !!e).filter((e) => !e.hidden);
+    this._tree.setFocus(elements);
+    if (items.length > 0) {
+      const focused = this._tree.getFocus()[0];
+      if (focused) {
+        this._tree.reveal(focused);
+      }
+    }
+  }
+  getActiveDescendant() {
+    return this._tree.getHTMLElement().getAttribute("aria-activedescendant");
+  }
+  setSelectedElements(items) {
+    const elements = items.map((item) => this._itemElements.find((e) => e.item === item)).filter((e) => !!e);
+    this._tree.setSelection(elements);
+  }
+  getCheckedElements() {
+    return this._itemElements.filter((e) => e.checked).map((e) => e.item);
+  }
+  setCheckedElements(items) {
+    this._elementCheckedEventBufferer.bufferEvents(() => {
+      const checked = /* @__PURE__ */ new Set();
+      for (const item of items) {
+        checked.add(item);
+      }
+      for (const element of this._itemElements) {
+        element.checked = checked.has(element.item);
+      }
+    });
+  }
+  focus(what) {
+    if (!this._itemElements.length) {
+      return;
+    }
+    if (what === QuickPickFocus.Second && this._itemElements.length < 2) {
+      what = QuickPickFocus.First;
+    }
+    switch (what) {
+      case QuickPickFocus.First:
+        this._tree.scrollTop = 0;
+        this._tree.focusFirst(void 0, (e) => e.element instanceof QuickPickItemElement);
+        break;
+      case QuickPickFocus.Second: {
+        this._tree.scrollTop = 0;
+        let isSecondItem = false;
+        this._tree.focusFirst(void 0, (e) => {
+          if (!(e.element instanceof QuickPickItemElement)) {
+            return false;
+          }
+          if (isSecondItem) {
+            return true;
+          }
+          isSecondItem = !isSecondItem;
+          return false;
+        });
+        break;
+      }
+      case QuickPickFocus.Last:
+        this._tree.scrollTop = this._tree.scrollHeight;
+        this._tree.focusLast(void 0, (e) => e.element instanceof QuickPickItemElement);
+        break;
+      case QuickPickFocus.Next: {
+        const prevFocus = this._tree.getFocus();
+        this._tree.focusNext(void 0, this._shouldLoop, void 0, (e) => {
+          if (!(e.element instanceof QuickPickItemElement)) {
+            return false;
+          }
+          this._tree.reveal(e.element);
+          return true;
+        });
+        const currentFocus = this._tree.getFocus();
+        if (prevFocus.length && prevFocus[0] === currentFocus[0]) {
+          this._onLeave.fire();
+        }
+        break;
+      }
+      case QuickPickFocus.Previous: {
+        const prevFocus = this._tree.getFocus();
+        this._tree.focusPrevious(void 0, this._shouldLoop, void 0, (e) => {
+          if (!(e.element instanceof QuickPickItemElement)) {
+            return false;
+          }
+          const parent = this._tree.getParentElement(e.element);
+          if (parent === null || parent.children[0] !== e.element) {
+            this._tree.reveal(e.element);
+          } else {
+            this._tree.reveal(parent);
+          }
+          return true;
+        });
+        const currentFocus = this._tree.getFocus();
+        if (prevFocus.length && prevFocus[0] === currentFocus[0]) {
+          this._onLeave.fire();
+        }
+        break;
+      }
+      case QuickPickFocus.NextPage:
+        this._tree.focusNextPage(void 0, (e) => {
+          if (!(e.element instanceof QuickPickItemElement)) {
+            return false;
+          }
+          this._tree.reveal(e.element);
+          return true;
+        });
+        break;
+      case QuickPickFocus.PreviousPage:
+        this._tree.focusPreviousPage(void 0, (e) => {
+          if (!(e.element instanceof QuickPickItemElement)) {
+            return false;
+          }
+          const parent = this._tree.getParentElement(e.element);
+          if (parent === null || parent.children[0] !== e.element) {
+            this._tree.reveal(e.element);
+          } else {
+            this._tree.reveal(parent);
+          }
+          return true;
+        });
+        break;
+      case QuickPickFocus.NextSeparator: {
+        let foundSeparatorAsItem = false;
+        const before = this._tree.getFocus()[0];
+        this._tree.focusNext(void 0, true, void 0, (e) => {
+          if (foundSeparatorAsItem) {
+            return true;
+          }
+          if (e.element instanceof QuickPickSeparatorElement) {
+            foundSeparatorAsItem = true;
+            if (this._separatorRenderer.isSeparatorVisible(e.element)) {
+              this._tree.reveal(e.element.children[0]);
+            } else {
+              this._tree.reveal(e.element, 0);
+            }
+          } else if (e.element instanceof QuickPickItemElement) {
+            if (e.element.separator) {
+              if (this._itemRenderer.isItemWithSeparatorVisible(e.element)) {
+                this._tree.reveal(e.element);
+              } else {
+                this._tree.reveal(e.element, 0);
+              }
+              return true;
+            } else if (e.element === this._elementTree[0]) {
+              this._tree.reveal(e.element, 0);
+              return true;
+            }
+          }
+          return false;
+        });
+        const after = this._tree.getFocus()[0];
+        if (before === after) {
+          this._tree.scrollTop = this._tree.scrollHeight;
+          this._tree.focusLast(void 0, (e) => e.element instanceof QuickPickItemElement);
+        }
+        break;
+      }
+      case QuickPickFocus.PreviousSeparator: {
+        let focusElement;
+        let foundSeparator = !!this._tree.getFocus()[0]?.separator;
+        this._tree.focusPrevious(void 0, true, void 0, (e) => {
+          if (e.element instanceof QuickPickSeparatorElement) {
+            if (foundSeparator) {
+              if (!focusElement) {
+                if (this._separatorRenderer.isSeparatorVisible(e.element)) {
+                  this._tree.reveal(e.element);
+                } else {
+                  this._tree.reveal(e.element, 0);
+                }
+                focusElement = e.element.children[0];
+              }
+            } else {
+              foundSeparator = true;
+            }
+          } else if (e.element instanceof QuickPickItemElement) {
+            if (!focusElement) {
+              if (e.element.separator) {
+                if (this._itemRenderer.isItemWithSeparatorVisible(e.element)) {
+                  this._tree.reveal(e.element);
+                } else {
+                  this._tree.reveal(e.element, 0);
+                }
+                focusElement = e.element;
+              } else if (e.element === this._elementTree[0]) {
+                this._tree.reveal(e.element, 0);
+                return true;
+              }
+            }
+          }
+          return false;
+        });
+        if (focusElement) {
+          this._tree.setFocus([focusElement]);
+        }
+        break;
+      }
+    }
+  }
+  clearFocus() {
+    this._tree.setFocus([]);
+  }
+  domFocus() {
+    this._tree.domFocus();
+  }
+  layout(maxHeight) {
+    this._tree.getHTMLElement().style.maxHeight = maxHeight ? `${// Make sure height aligns with list item heights
+    Math.floor(maxHeight / 44) * 44 + 6}px` : "";
+    this._tree.layout();
+  }
+  filter(query) {
+    this._lastQueryString = query;
+    if (!(this._sortByLabel || this._matchOnLabel || this._matchOnDescription || this._matchOnDetail)) {
+      this._tree.layout();
+      return false;
+    }
+    const queryWithWhitespace = query;
+    query = query.trim();
+    if (!query || !(this.matchOnLabel || this.matchOnDescription || this.matchOnDetail)) {
+      this._itemElements.forEach((element) => {
+        element.labelHighlights = void 0;
+        element.descriptionHighlights = void 0;
+        element.detailHighlights = void 0;
+        element.hidden = false;
+        const previous = element.index && this._inputElements[element.index - 1];
+        if (element.item) {
+          element.separator = previous && previous.type === "separator" && !previous.buttons ? previous : void 0;
+        }
+      });
+    } else {
+      let currentSeparator;
+      this._itemElements.forEach((element) => {
+        let labelHighlights;
+        if (this.matchOnLabelMode === "fuzzy") {
+          labelHighlights = this.matchOnLabel ? matchesFuzzyIconAware(query, parseLabelWithIcons(element.saneLabel)) ?? void 0 : void 0;
+        } else {
+          labelHighlights = this.matchOnLabel ? matchesContiguousIconAware(queryWithWhitespace, parseLabelWithIcons(element.saneLabel)) ?? void 0 : void 0;
+        }
+        const descriptionHighlights = this.matchOnDescription ? matchesFuzzyIconAware(query, parseLabelWithIcons(element.saneDescription || "")) ?? void 0 : void 0;
+        const detailHighlights = this.matchOnDetail ? matchesFuzzyIconAware(query, parseLabelWithIcons(element.saneDetail || "")) ?? void 0 : void 0;
+        if (labelHighlights || descriptionHighlights || detailHighlights) {
+          element.labelHighlights = labelHighlights;
+          element.descriptionHighlights = descriptionHighlights;
+          element.detailHighlights = detailHighlights;
+          element.hidden = false;
+        } else {
+          element.labelHighlights = void 0;
+          element.descriptionHighlights = void 0;
+          element.detailHighlights = void 0;
+          element.hidden = element.item ? !element.item.alwaysShow : true;
+        }
+        if (element.item) {
+          element.separator = void 0;
+        } else if (element.separator) {
+          element.hidden = true;
+        }
+        if (!this.sortByLabel) {
+          const previous = element.index && this._inputElements[element.index - 1] || void 0;
+          if (previous?.type === "separator" && !previous.buttons) {
+            currentSeparator = previous;
+          }
+          if (currentSeparator && !element.hidden) {
+            element.separator = currentSeparator;
+            currentSeparator = void 0;
+          }
+        }
+      });
+    }
+    this._setElementsToTree(this._sortByLabel && query ? this._itemElements : this._elementTree);
+    this._tree.layout();
+    return true;
+  }
+  toggleCheckbox() {
+    this._elementCheckedEventBufferer.bufferEvents(() => {
+      const elements = this._tree.getFocus().filter((e) => e instanceof QuickPickItemElement);
+      const allChecked = this._allVisibleChecked(elements);
+      for (const element of elements) {
+        if (!element.checkboxDisabled) {
+          element.checked = !allChecked;
+        }
+      }
+    });
+  }
+  style(styles) {
+    this._tree.style(styles);
+  }
+  toggleHover() {
+    const focused = this._tree.getFocus()[0];
+    if (!focused?.saneTooltip || !(focused instanceof QuickPickItemElement)) {
+      return;
+    }
+    if (this._lastHover && !this._lastHover.isDisposed) {
+      this._lastHover.dispose();
+      return;
+    }
+    this.showHover(focused);
+    const store = new DisposableStore();
+    store.add(this._tree.onDidChangeFocus((e) => {
+      if (e.elements[0] instanceof QuickPickItemElement) {
+        this.showHover(e.elements[0]);
+      }
+    }));
+    if (this._lastHover) {
+      store.add(this._lastHover);
+    }
+    this._elementDisposable.add(store);
+  }
+  //#endregion
+  //#region private methods
+  _setElementsToTree(elements) {
+    const treeElements = new Array();
+    for (const element of elements) {
+      if (element instanceof QuickPickSeparatorElement) {
+        treeElements.push({
+          element,
+          collapsible: false,
+          collapsed: false,
+          children: element.children.map((e) => ({
+            element: e,
+            collapsible: false,
+            collapsed: false
+          }))
+        });
+      } else {
+        treeElements.push({
+          element,
+          collapsible: false,
+          collapsed: false
+        });
+      }
+    }
+    this._tree.setChildren(null, treeElements);
+  }
+  _allVisibleChecked(elements, whenNoneVisible = true) {
+    for (let i = 0, n = elements.length; i < n; i++) {
+      const element = elements[i];
+      if (!element.hidden && element.item.pickable !== false) {
+        if (!element.checked) {
+          return false;
+        } else {
+          whenNoneVisible = true;
+        }
+      }
+    }
+    return whenNoneVisible;
+  }
+  _updateCheckedObservables() {
+    transaction((tx) => {
+      this._allVisibleCheckedObservable.set(this._allVisibleChecked(this._itemElements, false), tx);
+      const checkedCount = this._itemElements.filter((element) => element.checked).length;
+      this._checkedCountObservable.set(checkedCount, tx);
+      this._checkedElementsObservable.set(this.getCheckedElements(), tx);
+    });
+  }
+  /**
+   * Disposes of the hover and shows a new one for the given index if it has a tooltip.
+   * @param element The element to show the hover for
+   */
+  showHover(element) {
+    if (this._lastHover && !this._lastHover.isDisposed) {
+      this.hoverDelegate.onDidHideHover?.();
+      this._lastHover?.dispose();
+    }
+    if (!element.element || !element.saneTooltip) {
+      return;
+    }
+    this._lastHover = this.hoverDelegate.showHover({
+      content: element.saneTooltip,
+      target: element.element,
+      linkHandler: /* @__PURE__ */ __name((url) => {
+        this.linkOpenerDelegate(url);
+      }, "linkHandler"),
+      appearance: {
+        showPointer: true
+      },
+      container: this._container,
+      position: {
+        hoverPosition: 1
+        /* HoverPosition.RIGHT */
+      }
+    }, false);
+  }
+};
+__decorate([
+  memoize
+], QuickInputTree.prototype, "onDidChangeFocus", null);
+__decorate([
+  memoize
+], QuickInputTree.prototype, "onDidChangeSelection", null);
+QuickInputTree = __decorate([
+  __param(4, IInstantiationService),
+  __param(5, IAccessibilityService)
+], QuickInputTree);
+function matchesContiguousIconAware(query, target) {
+  const { text, iconOffsets } = target;
+  if (!iconOffsets || iconOffsets.length === 0) {
+    return matchesContiguous(query, text);
+  }
+  const wordToMatchAgainstWithoutIconsTrimmed = ltrim(text, " ");
+  const leadingWhitespaceOffset = text.length - wordToMatchAgainstWithoutIconsTrimmed.length;
+  const matches = matchesContiguous(query, wordToMatchAgainstWithoutIconsTrimmed);
+  if (matches) {
+    for (const match of matches) {
+      const iconOffset = iconOffsets[match.start + leadingWhitespaceOffset] + leadingWhitespaceOffset;
+      match.start += iconOffset;
+      match.end += iconOffset;
+    }
+  }
+  return matches;
+}
+__name(matchesContiguousIconAware, "matchesContiguousIconAware");
+function matchesContiguous(word, wordToMatchAgainst) {
+  const matchIndex = wordToMatchAgainst.toLowerCase().indexOf(word.toLowerCase());
+  if (matchIndex !== -1) {
+    return [{ start: matchIndex, end: matchIndex + word.length }];
+  }
+  return null;
+}
+__name(matchesContiguous, "matchesContiguous");
+function compareEntries(elementA, elementB, lookFor) {
+  const labelHighlightsA = elementA.labelHighlights || [];
+  const labelHighlightsB = elementB.labelHighlights || [];
+  if (labelHighlightsA.length && !labelHighlightsB.length) {
+    return -1;
+  }
+  if (!labelHighlightsA.length && labelHighlightsB.length) {
+    return 1;
+  }
+  if (labelHighlightsA.length === 0 && labelHighlightsB.length === 0) {
+    return 0;
+  }
+  return compareAnything(elementA.saneSortLabel, elementB.saneSortLabel, lookFor);
+}
+__name(compareEntries, "compareEntries");
+export {
+  QuickInputTree
+};
+//# sourceMappingURL=quickInputTree.js.map

@@ -1,1 +1,39 @@
-import{$vd as a}from"../../../../base/common/lifecycle.js";import{$ofb as m}from"../../../../platform/contextview/browser/contextView.js";import{$zhb as p}from"../../../../platform/layout/browser/layoutService.js";import{$Ql as h}from"../../../../platform/registry/common/platform.js";import{Extensions as b}from"../../../common/contributions.js";var l=function(r,t,o,n){var i=arguments.length,e=i<3?t:n===null?n=Object.getOwnPropertyDescriptor(t,o):n,s;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")e=Reflect.decorate(r,t,o,n);else for(var f=r.length-1;f>=0;f--)(s=r[f])&&(e=(i<3?s(e):i>3?s(t,o,e):s(t,o))||e);return i>3&&e&&Object.defineProperty(t,o,e),e},u=function(r,t){return function(o,n){t(o,n,r)}};let c=class extends a{constructor(t,o){super();const n=i=>t.activeContainer.classList.toggle("context-menu-visible",i);this.B(o.onDidShowContextMenu(()=>n(!0))),this.B(o.onDidHideContextMenu(()=>n(!1)))}};c=l([u(0,p),u(1,m)],c);h.as(b.Workbench).registerWorkbenchContribution(c,4);
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { Disposable } from "../../../../base/common/lifecycle.js";
+import { IContextMenuService } from "../../../../platform/contextview/browser/contextView.js";
+import { ILayoutService } from "../../../../platform/layout/browser/layoutService.js";
+import { Registry } from "../../../../platform/registry/common/platform.js";
+import { Extensions as WorkbenchExtensions } from "../../../common/contributions.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+let ContextMenuContribution = class ContextMenuContribution2 extends Disposable {
+  static {
+    __name(this, "ContextMenuContribution");
+  }
+  constructor(layoutService, contextMenuService) {
+    super();
+    const update = /* @__PURE__ */ __name((visible) => layoutService.activeContainer.classList.toggle("context-menu-visible", visible), "update");
+    this._register(contextMenuService.onDidShowContextMenu(() => update(true)));
+    this._register(contextMenuService.onDidHideContextMenu(() => update(false)));
+  }
+};
+ContextMenuContribution = __decorate([
+  __param(0, ILayoutService),
+  __param(1, IContextMenuService)
+], ContextMenuContribution);
+Registry.as(WorkbenchExtensions.Workbench).registerWorkbenchContribution(
+  ContextMenuContribution,
+  4
+  /* LifecyclePhase.Eventually */
+);
+//# sourceMappingURL=contextmenu.contribution.js.map

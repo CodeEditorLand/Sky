@@ -1,1 +1,70 @@
-import{$7b as m}from"../../../../base/common/arrays.js";import{$ai as u}from"../../../../base/common/async.js";class i{constructor(n,e){this.a=n,this.b=e}static c(n,e){if(e.type!==1&&!e.supportsMarkerHover)return[];const r=n.getModel(),t=e.range.startLineNumber;if(t>r.getLineCount())return[];const o=r.getLineMaxColumn(t);return n.getLineDecorations(t).filter(s=>{if(s.options.isWholeLine)return!0;const a=s.range.startLineNumber===t?s.range.startColumn:1,c=s.range.endLineNumber===t?s.range.endColumn:o;if(s.options.showIfCollapsed){if(a>e.range.startColumn+1||e.range.endColumn-1>c)return!1}else if(a>e.range.startColumn||e.range.endColumn>c)return!1;return!0})}computeAsync(n,e){const r=n.anchor;if(!this.a.hasModel()||!r)return u.EMPTY;const t=i.c(this.a,r);return u.merge(this.b.map(o=>o.computeAsync?o.computeAsync(r,t,n.source,e):u.EMPTY))}computeSync(n){if(!this.a.hasModel())return[];const e=n.anchor,r=i.c(this.a,e);let t=[];for(const o of this.b)t=t.concat(o.computeSync(e,r,n.source));return m(t)}}export{i as $rlb};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { coalesce } from "../../../../base/common/arrays.js";
+import { AsyncIterableObject } from "../../../../base/common/async.js";
+class ContentHoverComputer {
+  static {
+    __name(this, "ContentHoverComputer");
+  }
+  constructor(_editor, _participants) {
+    this._editor = _editor;
+    this._participants = _participants;
+  }
+  static _getLineDecorations(editor, anchor) {
+    if (anchor.type !== 1 && !anchor.supportsMarkerHover) {
+      return [];
+    }
+    const model = editor.getModel();
+    const lineNumber = anchor.range.startLineNumber;
+    if (lineNumber > model.getLineCount()) {
+      return [];
+    }
+    const maxColumn = model.getLineMaxColumn(lineNumber);
+    return editor.getLineDecorations(lineNumber).filter((d) => {
+      if (d.options.isWholeLine) {
+        return true;
+      }
+      const startColumn = d.range.startLineNumber === lineNumber ? d.range.startColumn : 1;
+      const endColumn = d.range.endLineNumber === lineNumber ? d.range.endColumn : maxColumn;
+      if (d.options.showIfCollapsed) {
+        if (startColumn > anchor.range.startColumn + 1 || anchor.range.endColumn - 1 > endColumn) {
+          return false;
+        }
+      } else {
+        if (startColumn > anchor.range.startColumn || anchor.range.endColumn > endColumn) {
+          return false;
+        }
+      }
+      return true;
+    });
+  }
+  computeAsync(options, token) {
+    const anchor = options.anchor;
+    if (!this._editor.hasModel() || !anchor) {
+      return AsyncIterableObject.EMPTY;
+    }
+    const lineDecorations = ContentHoverComputer._getLineDecorations(this._editor, anchor);
+    return AsyncIterableObject.merge(this._participants.map((participant) => {
+      if (!participant.computeAsync) {
+        return AsyncIterableObject.EMPTY;
+      }
+      return participant.computeAsync(anchor, lineDecorations, options.source, token);
+    }));
+  }
+  computeSync(options) {
+    if (!this._editor.hasModel()) {
+      return [];
+    }
+    const anchor = options.anchor;
+    const lineDecorations = ContentHoverComputer._getLineDecorations(this._editor, anchor);
+    let result = [];
+    for (const participant of this._participants) {
+      result = result.concat(participant.computeSync(anchor, lineDecorations, options.source));
+    }
+    return coalesce(result);
+  }
+}
+export {
+  ContentHoverComputer
+};
+//# sourceMappingURL=contentHoverComputer.js.map

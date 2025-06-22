@@ -1,1 +1,9 @@
-var t;!function(t){t.PROMPT="promptString",t.PICK="pickString"}(t||(t={}));export{t as McpServerVariableType};
+var McpServerVariableType;
+(function(McpServerVariableType2) {
+  McpServerVariableType2["PROMPT"] = "promptString";
+  McpServerVariableType2["PICK"] = "pickString";
+})(McpServerVariableType || (McpServerVariableType = {}));
+export {
+  McpServerVariableType
+};
+//# sourceMappingURL=mcpPlatformTypes.js.map

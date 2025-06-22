@@ -1,1 +1,335 @@
-import*as e from"../../../../base/browser/dom.js";import{$K7 as T}from"../../../../base/browser/ui/hover/hoverDelegateFactory.js";import{$_9 as B}from"../../../../base/browser/ui/mouseCursor/mouseCursor.js";import{$vd as A,$qd as L}from"../../../../base/common/lifecycle.js";import{$8g as R,Schemas as V}from"../../../../base/common/network.js";import{URI as l}from"../../../../base/common/uri.js";import{$Rm as j}from"../../../../base/common/uuid.js";import{$cF as _}from"../../../../editor/common/services/resolverService.js";import*as a from"../../../../nls.js";import{$El as P}from"../../../../platform/configuration/common/configuration.js";import{$ux as W}from"../../../../platform/keybinding/common/keybinding.js";import{$gTb as f}from"./commentFormActions.js";import{$eTb as O}from"./commentService.js";import{CommentContextKeys as H}from"../common/commentContextKeys.js";import{$mTb as N,$oTb as p,$pTb as z}from"./simpleCommentEditor.js";import{$ngb as F}from"../../../../platform/hover/browser/hover.js";import{$ofb as J}from"../../../../platform/contextview/browser/contextView.js";import{$bC as u}from"../../../../editor/common/core/position.js";var I=function(m,t,s,i){var o=arguments.length,h=o<3?t:i===null?i=Object.getOwnPropertyDescriptor(t,s):i,r;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")h=Reflect.decorate(m,t,s,i);else for(var n=m.length-1;n>=0;n--)(r=m[n])&&(h=(o<3?r(h):o>3?r(t,s,h):r(t,s))||h);return o>3&&h&&Object.defineProperty(t,s,h),h},c=function(m,t){return function(s,i){t(s,i,m)}};let S=0;const rt="commenteditordecoration";let g=class extends A{constructor(t,s,i,o,h,r,n,d,E,y,$,C,b,x,M,D,v,w){super(),this.owner=t,this.t=i,this.u=o,this.w=h,this.y=r,this.z=n,this.C=d,this.D=E,this.F=y,this.G=C,this.H=b,this.I=M,this.J=D,this.L=v,this.M=w,this.j=[],this.s=N,this.a=e.$M6(s,e.$(".comment-form-container")),this.b=e.$M6(this.a,e.$(".comment-form")),this.commentEditor=this.B(this.w.createInstance(p,this.b,p.getEditorOptions(x),r,this.F)),this.commentEditorIsEmpty=H.commentIsEmpty.bindTo(this.y),this.commentEditorIsEmpty.set(!this.D),this.N($)}async N(t){this.c=e.$M6(this.b,e.$(".avatar-container")),this.P();const s=this.u.comments&&this.u.comments.length>0,i=j()+"-"+(s?this.u.threadId:++S),o=JSON.stringify({extensionId:this.u.extensionId,commentThreadId:this.u.threadId});let h=l.from({scheme:V.commentsInput,path:`/${this.u.extensionId}/commentinput-${i}.md?${o}`});const r=this.H.getCommentController(this.owner);r&&(h=h.with({authority:r.id}));const n=await this.M.createModelReference(h);n.object.textEditorModel.setValue(this.D?.body||""),this.B(n),this.commentEditor.setModel(n.object.textEditorModel),this.D&&this.commentEditor.setPosition(this.D.cursor),this.O(),this.B(n.object.textEditorModel.onDidChangeContent(()=>{this.setCommentEditorDecorations(),this.commentEditorIsEmpty?.set(!this.commentEditor.getValue()),this.O()&&(this.commentEditor.layout({height:this.s,width:this.commentEditor.getLayoutInfo().width}),this.commentEditor.render(!0))})),this.Q(this.commentEditor,this.b),this.setCommentEditorDecorations(),this.D?this.W():s?this.Z(this.commentEditor,this.b):t&&this.u.comments&&this.u.comments.length===0&&this.W(),this.f=e.$M6(this.a,e.$(".validation-error.hidden"));const d=e.$M6(this.a,e.$(".form-actions"));this.g=e.$M6(d,e.$(".other-actions")),this.R(this.g,n.object.textEditorModel),this.h=e.$M6(d,e.$(".editor-actions")),this.S(this.h,n.object.textEditorModel)}O(){const t=z(this.t,this.commentEditor,this.s);return t!==this.s?(this.s=t,!0):!1}updateCommentThread(t){const s=this.commentEditor.hasTextFocus(),i=!this.u.comments?.length&&!t.comments?.length;this.r||this.Z(this.commentEditor,this.b),this.u.comments&&this.u.comments.length===0&&!i&&this.W(),s&&this.commentEditor.focus()}getPendingComment(){const t=this.commentEditor.getModel();if(t&&t.getValueLength()>0)return{body:t.getValue(),cursor:this.commentEditor.getPosition()??new u(1,1)}}setPendingComment(t){this.D=t,this.W(),this.commentEditor.setValue(t.body),this.commentEditor.setPosition(t.cursor)}layout(t){this.commentEditor.layout({height:this.s,width:t-54})}focusIfNeeded(){!this.u.comments||!this.u.comments.length?this.commentEditor.focus():(this.commentEditor.getModel()?.getValueLength()??0)>0&&this.W()}focusCommentEditor(){this.commentEditor.focus()}expandReplyAreaAndFocusCommentEditor(){this.W(),this.commentEditor.focus()}isCommentEditorFocused(){return this.commentEditor.hasWidgetFocus()}P(){if(this.c.textContent="",typeof this.u.canReply!="boolean"&&this.u.canReply.iconPath){this.c.style.display="block";const t=e.$M6(this.c,e.$("img.avatar"));t.src=R.uriToBrowserUri(l.revive(this.u.canReply.iconPath)).toString(!0)}else this.c.style.display="none"}updateCanReply(){this.P(),this.u.canReply?this.a.style.display="block":this.a.style.display="none"}async submitComment(){await this.m?.triggerDefaultAction(),this.D=void 0}setCommentEditorDecorations(){const s=this.u.comments&&this.u.comments.length>0?this.C?.placeHolder||a.localize(6015,null):this.C?.placeHolder||a.localize(6016,null);this.commentEditor.updateOptions({placeholder:s})}Q(t,s){this.j.push(t.onDidFocusEditorWidget(()=>{this.u.input={uri:t.getModel().uri,value:t.getValue()},this.H.setActiveEditingCommentThread(this.u),this.H.setActiveCommentAndThread(this.owner,{thread:this.u})})),this.j.push(t.getModel().onDidChangeContent(()=>{const i=t.getValue();if(this.u.input&&this.u.input.uri===t.getModel().uri&&this.u.input.value!==i){const o=this.u.input;o.value=i,this.u.input=o}this.H.setActiveEditingCommentThread(this.u)})),this.j.push(this.u.onDidChangeInput(i=>{const o=this.u,h=t.getModel();o.input&&h&&o.input.uri!==h.uri||i&&t.getValue()!==i.value&&(t.setValue(i.value),i.value===""&&(this.D={body:"",cursor:new u(1,1)},s.classList.remove("expand"),t.getDomNode().style.outline="",this.f.textContent="",this.f.classList.add("hidden")))}))}R(t,s){const i=this.z.getCommentThreadActions(this.y);this.B(i),this.B(i.onDidChange(()=>{this.m.setActions(i)})),this.m=new f(this.I,this.y,this.J,t,async o=>{await this.G?.(),await o.run({thread:this.u,text:this.commentEditor.getValue(),$mid:9}),this.Y()}),this.B(this.m),this.m.setActions(i)}S(t,s){const i=this.z.getCommentEditorActions(this.y);this.B(i),this.B(i.onDidChange(()=>{this.n.setActions(i,!0)})),this.n=new f(this.I,this.y,this.J,t,async o=>{this.G?.(),o.run({thread:this.u,text:this.commentEditor.getValue(),$mid:9}),this.focusCommentEditor()}),this.B(this.n),this.n.setActions(i,!0)}get U(){return this.a.classList.contains("expand")}W(){this.U||(this.a.classList.add("expand"),this.commentEditor.focus(),this.commentEditor.layout())}X(){this.U||(this.commentEditor.setValue(""),this.W())}Y(){const t=this.commentEditor.getDomNode();t&&(t.style.outline=""),this.commentEditor.setValue(""),this.D={body:"",cursor:new u(1,1)},this.a.classList.remove("expand"),this.f.textContent="",this.f.classList.add("hidden")}Z(t,s){this.r=e.$M6(s,e.$(`button.review-thread-reply-button.${B}`)),this.B(this.L.setupManagedHover(T("mouse"),this.r,this.C?.prompt||a.localize(6017,null))),this.r.textContent=this.C?.prompt||a.localize(6018,null),this.B(e.$J5(this.r,"click",i=>this.X())),this.B(e.$J5(this.r,"focus",i=>this.X())),this.B(t.onDidBlurEditorWidget(()=>{t.getModel().getValueLength()===0&&s.classList.contains("expand")&&s.classList.remove("expand")}))}dispose(){super.dispose(),L(this.j)}};g=I([c(12,O),c(13,P),c(14,W),c(15,J),c(16,F),c(17,_)],g);export{rt as $qTb,g as $rTb};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import * as dom from "../../../../base/browser/dom.js";
+import { getDefaultHoverDelegate } from "../../../../base/browser/ui/hover/hoverDelegateFactory.js";
+import { MOUSE_CURSOR_TEXT_CSS_CLASS_NAME } from "../../../../base/browser/ui/mouseCursor/mouseCursor.js";
+import { Disposable, dispose } from "../../../../base/common/lifecycle.js";
+import { FileAccess, Schemas } from "../../../../base/common/network.js";
+import { URI } from "../../../../base/common/uri.js";
+import { generateUuid } from "../../../../base/common/uuid.js";
+import { ITextModelService } from "../../../../editor/common/services/resolverService.js";
+import * as nls from "../../../../nls.js";
+import { IConfigurationService } from "../../../../platform/configuration/common/configuration.js";
+import { IKeybindingService } from "../../../../platform/keybinding/common/keybinding.js";
+import { CommentFormActions } from "./commentFormActions.js";
+import { ICommentService } from "./commentService.js";
+import { CommentContextKeys } from "../common/commentContextKeys.js";
+import { MIN_EDITOR_HEIGHT, SimpleCommentEditor, calculateEditorHeight } from "./simpleCommentEditor.js";
+import { IHoverService } from "../../../../platform/hover/browser/hover.js";
+import { IContextMenuService } from "../../../../platform/contextview/browser/contextView.js";
+import { Position } from "../../../../editor/common/core/position.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+let INMEM_MODEL_ID = 0;
+const COMMENTEDITOR_DECORATION_KEY = "commenteditordecoration";
+let CommentReply = class CommentReply2 extends Disposable {
+  static {
+    __name(this, "CommentReply");
+  }
+  constructor(owner, container, _parentEditor, _commentThread, _scopedInstatiationService, _contextKeyService, _commentMenus, _commentOptions, _pendingComment, _parentThread, focus, _actionRunDelegate, commentService, configurationService, keybindingService, contextMenuService, hoverService, textModelService) {
+    super();
+    this.owner = owner;
+    this._parentEditor = _parentEditor;
+    this._commentThread = _commentThread;
+    this._scopedInstatiationService = _scopedInstatiationService;
+    this._contextKeyService = _contextKeyService;
+    this._commentMenus = _commentMenus;
+    this._commentOptions = _commentOptions;
+    this._pendingComment = _pendingComment;
+    this._parentThread = _parentThread;
+    this._actionRunDelegate = _actionRunDelegate;
+    this.commentService = commentService;
+    this.keybindingService = keybindingService;
+    this.contextMenuService = contextMenuService;
+    this.hoverService = hoverService;
+    this.textModelService = textModelService;
+    this._commentThreadDisposables = [];
+    this._editorHeight = MIN_EDITOR_HEIGHT;
+    this._container = dom.append(container, dom.$(".comment-form-container"));
+    this._form = dom.append(this._container, dom.$(".comment-form"));
+    this.commentEditor = this._register(this._scopedInstatiationService.createInstance(SimpleCommentEditor, this._form, SimpleCommentEditor.getEditorOptions(configurationService), _contextKeyService, this._parentThread));
+    this.commentEditorIsEmpty = CommentContextKeys.commentIsEmpty.bindTo(this._contextKeyService);
+    this.commentEditorIsEmpty.set(!this._pendingComment);
+    this.initialize(focus);
+  }
+  async initialize(focus) {
+    this.avatar = dom.append(this._form, dom.$(".avatar-container"));
+    this.updateAuthorInfo();
+    const hasExistingComments = this._commentThread.comments && this._commentThread.comments.length > 0;
+    const modeId = generateUuid() + "-" + (hasExistingComments ? this._commentThread.threadId : ++INMEM_MODEL_ID);
+    const params = JSON.stringify({
+      extensionId: this._commentThread.extensionId,
+      commentThreadId: this._commentThread.threadId
+    });
+    let resource = URI.from({
+      scheme: Schemas.commentsInput,
+      path: `/${this._commentThread.extensionId}/commentinput-${modeId}.md?${params}`
+      // TODO. Remove params once extensions adopt authority.
+    });
+    const commentController = this.commentService.getCommentController(this.owner);
+    if (commentController) {
+      resource = resource.with({ authority: commentController.id });
+    }
+    const model = await this.textModelService.createModelReference(resource);
+    model.object.textEditorModel.setValue(this._pendingComment?.body || "");
+    this._register(model);
+    this.commentEditor.setModel(model.object.textEditorModel);
+    if (this._pendingComment) {
+      this.commentEditor.setPosition(this._pendingComment.cursor);
+    }
+    this.calculateEditorHeight();
+    this._register(model.object.textEditorModel.onDidChangeContent(() => {
+      this.setCommentEditorDecorations();
+      this.commentEditorIsEmpty?.set(!this.commentEditor.getValue());
+      if (this.calculateEditorHeight()) {
+        this.commentEditor.layout({ height: this._editorHeight, width: this.commentEditor.getLayoutInfo().width });
+        this.commentEditor.render(true);
+      }
+    }));
+    this.createTextModelListener(this.commentEditor, this._form);
+    this.setCommentEditorDecorations();
+    if (this._pendingComment) {
+      this.expandReplyArea();
+    } else if (hasExistingComments) {
+      this.createReplyButton(this.commentEditor, this._form);
+    } else if (focus && (this._commentThread.comments && this._commentThread.comments.length === 0)) {
+      this.expandReplyArea();
+    }
+    this._error = dom.append(this._container, dom.$(".validation-error.hidden"));
+    const formActions = dom.append(this._container, dom.$(".form-actions"));
+    this._formActions = dom.append(formActions, dom.$(".other-actions"));
+    this.createCommentWidgetFormActions(this._formActions, model.object.textEditorModel);
+    this._editorActions = dom.append(formActions, dom.$(".editor-actions"));
+    this.createCommentWidgetEditorActions(this._editorActions, model.object.textEditorModel);
+  }
+  calculateEditorHeight() {
+    const newEditorHeight = calculateEditorHeight(this._parentEditor, this.commentEditor, this._editorHeight);
+    if (newEditorHeight !== this._editorHeight) {
+      this._editorHeight = newEditorHeight;
+      return true;
+    }
+    return false;
+  }
+  updateCommentThread(commentThread) {
+    const isReplying = this.commentEditor.hasTextFocus();
+    const oldAndNewBothEmpty = !this._commentThread.comments?.length && !commentThread.comments?.length;
+    if (!this._reviewThreadReplyButton) {
+      this.createReplyButton(this.commentEditor, this._form);
+    }
+    if (this._commentThread.comments && this._commentThread.comments.length === 0 && !oldAndNewBothEmpty) {
+      this.expandReplyArea();
+    }
+    if (isReplying) {
+      this.commentEditor.focus();
+    }
+  }
+  getPendingComment() {
+    const model = this.commentEditor.getModel();
+    if (model && model.getValueLength() > 0) {
+      return { body: model.getValue(), cursor: this.commentEditor.getPosition() ?? new Position(1, 1) };
+    }
+    return void 0;
+  }
+  setPendingComment(pending) {
+    this._pendingComment = pending;
+    this.expandReplyArea();
+    this.commentEditor.setValue(pending.body);
+    this.commentEditor.setPosition(pending.cursor);
+  }
+  layout(widthInPixel) {
+    this.commentEditor.layout({
+      height: this._editorHeight,
+      width: widthInPixel - 54
+      /* margin 20px * 10 + scrollbar 14px*/
+    });
+  }
+  focusIfNeeded() {
+    if (!this._commentThread.comments || !this._commentThread.comments.length) {
+      this.commentEditor.focus();
+    } else if ((this.commentEditor.getModel()?.getValueLength() ?? 0) > 0) {
+      this.expandReplyArea();
+    }
+  }
+  focusCommentEditor() {
+    this.commentEditor.focus();
+  }
+  expandReplyAreaAndFocusCommentEditor() {
+    this.expandReplyArea();
+    this.commentEditor.focus();
+  }
+  isCommentEditorFocused() {
+    return this.commentEditor.hasWidgetFocus();
+  }
+  updateAuthorInfo() {
+    this.avatar.textContent = "";
+    if (typeof this._commentThread.canReply !== "boolean" && this._commentThread.canReply.iconPath) {
+      this.avatar.style.display = "block";
+      const img = dom.append(this.avatar, dom.$("img.avatar"));
+      img.src = FileAccess.uriToBrowserUri(URI.revive(this._commentThread.canReply.iconPath)).toString(true);
+    } else {
+      this.avatar.style.display = "none";
+    }
+  }
+  updateCanReply() {
+    this.updateAuthorInfo();
+    if (!this._commentThread.canReply) {
+      this._container.style.display = "none";
+    } else {
+      this._container.style.display = "block";
+    }
+  }
+  async submitComment() {
+    await this._commentFormActions?.triggerDefaultAction();
+    this._pendingComment = void 0;
+  }
+  setCommentEditorDecorations() {
+    const hasExistingComments = this._commentThread.comments && this._commentThread.comments.length > 0;
+    const placeholder = hasExistingComments ? this._commentOptions?.placeHolder || nls.localize("reply", "Reply...") : this._commentOptions?.placeHolder || nls.localize("newComment", "Type a new comment");
+    this.commentEditor.updateOptions({ placeholder });
+  }
+  createTextModelListener(commentEditor, commentForm) {
+    this._commentThreadDisposables.push(commentEditor.onDidFocusEditorWidget(() => {
+      this._commentThread.input = {
+        uri: commentEditor.getModel().uri,
+        value: commentEditor.getValue()
+      };
+      this.commentService.setActiveEditingCommentThread(this._commentThread);
+      this.commentService.setActiveCommentAndThread(this.owner, { thread: this._commentThread });
+    }));
+    this._commentThreadDisposables.push(commentEditor.getModel().onDidChangeContent(() => {
+      const modelContent = commentEditor.getValue();
+      if (this._commentThread.input && this._commentThread.input.uri === commentEditor.getModel().uri && this._commentThread.input.value !== modelContent) {
+        const newInput = this._commentThread.input;
+        newInput.value = modelContent;
+        this._commentThread.input = newInput;
+      }
+      this.commentService.setActiveEditingCommentThread(this._commentThread);
+    }));
+    this._commentThreadDisposables.push(this._commentThread.onDidChangeInput((input) => {
+      const thread = this._commentThread;
+      const model = commentEditor.getModel();
+      if (thread.input && model && thread.input.uri !== model.uri) {
+        return;
+      }
+      if (!input) {
+        return;
+      }
+      if (commentEditor.getValue() !== input.value) {
+        commentEditor.setValue(input.value);
+        if (input.value === "") {
+          this._pendingComment = { body: "", cursor: new Position(1, 1) };
+          commentForm.classList.remove("expand");
+          commentEditor.getDomNode().style.outline = "";
+          this._error.textContent = "";
+          this._error.classList.add("hidden");
+        }
+      }
+    }));
+  }
+  /**
+   * Command based actions.
+   */
+  createCommentWidgetFormActions(container, model) {
+    const menu = this._commentMenus.getCommentThreadActions(this._contextKeyService);
+    this._register(menu);
+    this._register(menu.onDidChange(() => {
+      this._commentFormActions.setActions(menu);
+    }));
+    this._commentFormActions = new CommentFormActions(this.keybindingService, this._contextKeyService, this.contextMenuService, container, async (action) => {
+      await this._actionRunDelegate?.();
+      await action.run({
+        thread: this._commentThread,
+        text: this.commentEditor.getValue(),
+        $mid: 9
+        /* MarshalledId.CommentThreadReply */
+      });
+      this.hideReplyArea();
+    });
+    this._register(this._commentFormActions);
+    this._commentFormActions.setActions(menu);
+  }
+  createCommentWidgetEditorActions(container, model) {
+    const editorMenu = this._commentMenus.getCommentEditorActions(this._contextKeyService);
+    this._register(editorMenu);
+    this._register(editorMenu.onDidChange(() => {
+      this._commentEditorActions.setActions(editorMenu, true);
+    }));
+    this._commentEditorActions = new CommentFormActions(this.keybindingService, this._contextKeyService, this.contextMenuService, container, async (action) => {
+      this._actionRunDelegate?.();
+      action.run({
+        thread: this._commentThread,
+        text: this.commentEditor.getValue(),
+        $mid: 9
+        /* MarshalledId.CommentThreadReply */
+      });
+      this.focusCommentEditor();
+    });
+    this._register(this._commentEditorActions);
+    this._commentEditorActions.setActions(editorMenu, true);
+  }
+  get isReplyExpanded() {
+    return this._container.classList.contains("expand");
+  }
+  expandReplyArea() {
+    if (!this.isReplyExpanded) {
+      this._container.classList.add("expand");
+      this.commentEditor.focus();
+      this.commentEditor.layout();
+    }
+  }
+  clearAndExpandReplyArea() {
+    if (!this.isReplyExpanded) {
+      this.commentEditor.setValue("");
+      this.expandReplyArea();
+    }
+  }
+  hideReplyArea() {
+    const domNode = this.commentEditor.getDomNode();
+    if (domNode) {
+      domNode.style.outline = "";
+    }
+    this.commentEditor.setValue("");
+    this._pendingComment = { body: "", cursor: new Position(1, 1) };
+    this._container.classList.remove("expand");
+    this._error.textContent = "";
+    this._error.classList.add("hidden");
+  }
+  createReplyButton(commentEditor, commentForm) {
+    this._reviewThreadReplyButton = dom.append(commentForm, dom.$(`button.review-thread-reply-button.${MOUSE_CURSOR_TEXT_CSS_CLASS_NAME}`));
+    this._register(this.hoverService.setupManagedHover(getDefaultHoverDelegate("mouse"), this._reviewThreadReplyButton, this._commentOptions?.prompt || nls.localize("reply", "Reply...")));
+    this._reviewThreadReplyButton.textContent = this._commentOptions?.prompt || nls.localize("reply", "Reply...");
+    this._register(dom.addDisposableListener(this._reviewThreadReplyButton, "click", (_) => this.clearAndExpandReplyArea()));
+    this._register(dom.addDisposableListener(this._reviewThreadReplyButton, "focus", (_) => this.clearAndExpandReplyArea()));
+    this._register(commentEditor.onDidBlurEditorWidget(() => {
+      if (commentEditor.getModel().getValueLength() === 0 && commentForm.classList.contains("expand")) {
+        commentForm.classList.remove("expand");
+      }
+    }));
+  }
+  dispose() {
+    super.dispose();
+    dispose(this._commentThreadDisposables);
+  }
+};
+CommentReply = __decorate([
+  __param(12, ICommentService),
+  __param(13, IConfigurationService),
+  __param(14, IKeybindingService),
+  __param(15, IContextMenuService),
+  __param(16, IHoverService),
+  __param(17, ITextModelService)
+], CommentReply);
+export {
+  COMMENTEDITOR_DECORATION_KEY,
+  CommentReply
+};
+//# sourceMappingURL=commentReply.js.map

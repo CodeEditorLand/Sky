@@ -1,1 +1,658 @@
-import{$df as d}from"../../../base/common/event.js";import{$vd as $,$Ed as I,$ud as y,$wd as p}from"../../../base/common/lifecycle.js";import{URI as S}from"../../../base/common/uri.js";import{$cC as V}from"../../../editor/common/core/range.js";import*as D from"../../../editor/common/languages.js";import{$Ql as f}from"../../../platform/registry/common/platform.js";import{$Kyb as x}from"../../services/extensions/common/extHostCustomers.js";import{$eTb as j}from"../../contrib/comments/browser/commentService.js";import{$X1b as k}from"../../contrib/comments/browser/commentsView.js";import{$pY as H,$oY as E}from"../common/extHost.protocol.js";import{$x1b as c,$y1b as A,$z1b as g}from"../../contrib/comments/browser/commentsTreeViewer.js";import{Extensions as C,$YM as O}from"../../common/views.js";import{$kj as b}from"../../../platform/instantiation/common/descriptors.js";import{$wxb as B}from"../../browser/parts/views/viewPaneContainer.js";import{$Mj as N}from"../../../base/common/codicons.js";import{$Ct as P}from"../../../platform/theme/common/iconRegistry.js";import{localize as q}from"../../../nls.js";import{Schemas as v}from"../../../base/common/network.js";import{$Jwb as _}from"../../services/views/common/viewsService.js";import{$Q1b as M}from"../../contrib/comments/browser/commentsController.js";import{$oI as W}from"../../services/editor/common/editorService.js";import{$yo as z}from"../../../platform/uriIdentity/common/uriIdentity.js";var R=function(m,t,e,i){var n=arguments.length,s=n<3?t:i===null?i=Object.getOwnPropertyDescriptor(t,e):i,r;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")s=Reflect.decorate(m,t,e,i);else for(var o=m.length-1;o>=0;o--)(r=m[o])&&(s=(n<3?r(s):n>3?r(t,e,s):r(t,e))||s);return n>3&&s&&Object.defineProperty(t,e,s),s},u=function(m,t){return function(e,i){t(e,i,m)}};class U{get input(){return this.a}set input(t){this.a=t,this.b.fire(t)}get onDidChangeInput(){return this.b.event}get label(){return this.c}set label(t){this.c=t,this.f.fire(this.c)}get contextValue(){return this.d}set contextValue(t){this.d=t}get comments(){return this.g}set comments(t){this.g=t,this.h.fire(this.g)}get onDidChangeComments(){return this.h.event}set range(t){this.t=t}get range(){return this.t}get onDidChangeCanReply(){return this.i.event}set canReply(t){this.u=t,this.i.fire(!!this.u)}get canReply(){return this.u}get collapsibleState(){return this.j}set collapsibleState(t){this.l===void 0&&(this.l=t),t!==this.j&&(this.j=t,this.m.fire(this.j))}get l(){return this.k}set l(t){this.k=t,this.n.fire(t)}get isDisposed(){return this.o}isDocumentCommentThread(){return this.t===void 0||V.isIRange(this.t)}get state(){return this.p}set state(t){this.p=t,this.s.fire(this.p)}get applicability(){return this.q}set applicability(t){this.q=t,this.r.fire(t)}get isTemplate(){return this.v}constructor(t,e,i,n,s,r,o,a,h,l){this.commentThreadHandle=t,this.controllerHandle=e,this.extensionId=i,this.threadId=n,this.resource=s,this.t=r,this.u=a,this.v=h,this.editorId=l,this.b=new d,this.f=new d,this.onDidChangeLabel=this.f.event,this.h=new d,this.i=new d,this.j=D.CommentThreadCollapsibleState.Collapsed,this.m=new d,this.onDidChangeCollapsibleState=this.m.event,this.n=new d,this.onDidChangeInitialCollapsibleState=this.n.event,this.r=new d,this.onDidChangeApplicability=this.r.event,this.s=new d,this.onDidChangeState=this.s.event,this.o=!1,h?this.comments=[]:o&&(this.g=o)}batchUpdate(t){const e=i=>Object.prototype.hasOwnProperty.call(t,i);e("range")&&(this.t=t.range),e("label")&&(this.c=t.label),e("contextValue")&&(this.d=t.contextValue===null?void 0:t.contextValue),e("comments")&&(this.comments=t.comments),e("collapseState")&&(this.collapsibleState=t.collapseState),e("canReply")&&(this.canReply=t.canReply),e("state")&&(this.state=t.state),e("applicability")&&(this.applicability=t.applicability),e("isTemplate")&&(this.v=t.isTemplate)}hasComments(){return!!this.comments&&this.comments.length>0}dispose(){this.o=!0,this.m.dispose(),this.h.dispose(),this.b.dispose(),this.f.dispose(),this.s.dispose()}toJSON(){return{$mid:7,commentControlHandle:this.controllerHandle,commentThreadHandle:this.commentThreadHandle}}}class F{constructor(t){this.thread=t,this.disposableStore=new y}dispose(){this.disposableStore.dispose()}}class Y extends ${get handle(){return this.g}get id(){return this.j}get contextValue(){return this.j}get proxy(){return this.c}get label(){return this.m}get reactions(){return this.a}set reactions(t){this.a=t}get options(){return this.n.options}get features(){return this.n}get owner(){return this.j}constructor(t,e,i,n,s,r,o){super(),this.c=t,this.f=e,this.g=i,this.h=n,this.j=s,this.m=r,this.n=o,this.b=this.B(new I)}get activeComment(){return this.r}async setActiveCommentAndThread(t){return this.r=t,this.c.$setActiveComment(this.g,t?{commentThreadHandle:t.thread.commentThreadHandle,uniqueIdInThread:t.comment?.uniqueIdInThread}:void 0)}updateFeatures(t){this.n=t}createCommentThread(t,e,i,n,s,r,o,a){const h=new U(e,this.handle,t,i,S.revive(n).toString(),s,r,!0,o,a),l=new F(h);return this.b.set(e,l),l.disposableStore.add(h.onDidChangeCollapsibleState(()=>{this.proxy.$updateCommentThread(this.handle,h.commentThreadHandle,{collapseState:h.collapsibleState})})),h.isDocumentCommentThread()?this.f.updateComments(this.h,{added:[h],removed:[],changed:[],pending:[]}):this.f.updateNotebookComments(this.h,{added:[h],removed:[],changed:[],pending:[]}),h}updateCommentThread(t,e,i,n){const s=this.s(t);s.batchUpdate(n),s.isDocumentCommentThread()?this.f.updateComments(this.h,{added:[],removed:[],changed:[s],pending:[]}):this.f.updateNotebookComments(this.h,{added:[],removed:[],changed:[s],pending:[]})}deleteCommentThread(t){const e=this.s(t);this.b.deleteAndDispose(t),e.dispose(),e.isDocumentCommentThread()?this.f.updateComments(this.h,{added:[],removed:[e],changed:[],pending:[]}):this.f.updateNotebookComments(this.h,{added:[],removed:[e],changed:[],pending:[]})}deleteCommentThreadMain(t){for(const{thread:e}of this.b.values())e.threadId===t&&this.c.$deleteCommentThread(this.g,e.commentThreadHandle)}updateInput(t){const e=this.activeEditingCommentThread;if(e&&e.input){const i=e.input;i.value=t,e.input=i}}updateCommentingRanges(t){this.f.updateCommentingRanges(this.h,t)}s(t){const e=this.b.get(t);if(!e)throw new Error("unknown thread");return e.thread}async getDocumentComments(t,e){if(t.scheme===v.vscodeNotebookCell)return{uniqueOwner:this.h,label:this.label,threads:[],commentingRanges:{resource:t,ranges:[],fileComments:!1}};const i=[];for(const s of[...this.b.keys()]){const r=this.b.get(s);r.thread.resource===t.toString()&&r.thread.isDocumentCommentThread()&&i.push(r.thread)}const n=await this.c.$provideCommentingRanges(this.handle,t,e);return{uniqueOwner:this.h,label:this.label,threads:i,commentingRanges:{resource:t,ranges:n?.ranges||[],fileComments:!!n?.fileComments}}}async getNotebookComments(t,e){if(t.scheme!==v.vscodeNotebookCell)return{uniqueOwner:this.h,label:this.label,threads:[]};const i=[];for(const n of[...this.b.keys()]){const s=this.b.get(n);s.thread.resource===t.toString()&&(s.thread.isDocumentCommentThread()||i.push(s.thread))}return{uniqueOwner:this.h,label:this.label,threads:i}}async toggleReaction(t,e,i,n,s){return this.c.$toggleReaction(this.g,e.commentThreadHandle,t,i,n)}getAllComments(){const t=[];for(const e of[...this.b.keys()])t.push(this.b.get(e).thread);return t}createCommentThreadTemplate(t,e,i){return this.c.$createCommentThreadTemplate(this.handle,t,e,i)}async updateCommentThreadTemplate(t,e){await this.c.$updateCommentThreadTemplate(this.handle,t,e)}toJSON(){return{$mid:6,handle:this.handle}}}const T=P("comments-view-icon",N.commentDiscussion,q(2718,null));let w=class extends ${constructor(t,e,i,n,s,r){super(),this.n=e,this.r=i,this.s=n,this.t=s,this.u=r,this.b=new Map,this.c=new Map,this.g=this.B(new y),this.h=this.B(new p),this.j=this.B(new p),this.m=this.B(new p),this.a=t.getProxy(H.ExtHostComments),this.n.unregisterCommentController(),this.B(this.n.onDidChangeActiveEditingCommentThread(async o=>{const a=o.controllerHandle,h=this.c.get(a);h&&(this.g.clear(),this.f=o,h.activeEditingCommentThread=this.f)}))}$registerCommentController(t,e,i,n){const s=`${e}-${n}`;this.b.set(t,s);const r=new Y(this.a,this.n,t,s,e,i,{});this.n.registerCommentController(s,r),this.c.set(t,r),this.B(this.n.onResourceHasCommentingRanges(o=>{this.w()})),this.B(this.n.onDidUpdateCommentThreads(o=>{this.w()})),this.n.setWorkspaceComments(String(t),[])}$unregisterCommentController(t){const e=this.b.get(t);this.b.delete(t),this.c.get(t)?.dispose(),this.c.delete(t),typeof e=="string"&&this.n.unregisterCommentController(e)}$updateCommentControllerFeatures(t,e){const i=this.c.get(t);i&&i.updateFeatures(e)}$createCommentThread(t,e,i,n,s,r,o,a,h){const l=this.c.get(t);if(l)return l.createCommentThread(o.value,e,i,n,s,r,a,h)}$updateCommentThread(t,e,i,n,s){const r=this.c.get(t);if(r)return r.updateCommentThread(e,i,n,s)}$deleteCommentThread(t,e){const i=this.c.get(t);if(i)return i.deleteCommentThread(e)}$updateCommentingRanges(t,e){const i=this.c.get(t);i&&i.updateCommentingRanges(e)}async $revealCommentThread(t,e,i,n){const s=this.c.get(t);if(!s)return Promise.resolve();const r=s.getAllComments().find(a=>a.commentThreadHandle===e);if(!r||!r.isDocumentCommentThread())return Promise.resolve();const o=r.comments?.find(a=>a.uniqueIdInThread===i);M(this.n,this.u,this.t,r,o,n.focusReply,void 0,n.preserveFocus)}async $hideCommentThread(t,e){const i=this.c.get(t);if(!i)return Promise.resolve();const n=i.getAllComments().find(s=>s.commentThreadHandle===e);if(!n||!n.isDocumentCommentThread())return Promise.resolve();n.collapsibleState=D.CommentThreadCollapsibleState.Collapsed}w(){const t=!!this.s.getViewDescriptorById(c);if(!t){const e=f.as(C.ViewContainersRegistry).registerViewContainer({id:c,title:g,ctorDescriptor:new b(B,[c,{mergeViewWithContainerWhenSingleView:!0}]),storageId:A,hideIfEmpty:!0,icon:T,order:10},1);f.as(C.ViewsRegistry).registerViews([{id:c,name:g,canToggleVisibility:!1,ctorDescriptor:new b(k),canMoveView:!0,containerIcon:T,focusCommand:{id:"workbench.action.focusCommentsPanel"}}],e)}this.C(t)}y(){[...this.c.keys()].forEach(t=>{const e=this.c.get(t).getAllComments();if(e.length){const i=this.D(t);this.n.setWorkspaceComments(i,e)}})}z(){this.h.value||(this.h.value=this.r.onDidChangeViewVisibility(t=>{t.id===c&&t.visible&&(this.y(),this.h&&this.h.dispose())}))}C(t){t||this.z(),this.j.value||(this.j.value=this.s.onDidChangeContainer(e=>{e.views.find(i=>i.id===c)&&(this.y(),this.z())})),this.m.value||(this.m.value=this.s.onDidChangeContainerLocation(e=>{const i=this.s.getViewContainerByViewId(c);e.viewContainer.id===i?.id&&(this.y(),this.z())}))}D(t){if(!this.b.has(t))throw new Error("Unknown handler");return this.b.get(t)}};w=R([x(E.MainThreadComments),u(1,j),u(2,_),u(3,O),u(4,z),u(5,W)],w);export{w as $11b,U as $Y1b,Y as $Z1b};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { Emitter } from "../../../base/common/event.js";
+import { Disposable, DisposableMap, DisposableStore, MutableDisposable } from "../../../base/common/lifecycle.js";
+import { URI } from "../../../base/common/uri.js";
+import { Range } from "../../../editor/common/core/range.js";
+import * as languages from "../../../editor/common/languages.js";
+import { Registry } from "../../../platform/registry/common/platform.js";
+import { extHostNamedCustomer } from "../../services/extensions/common/extHostCustomers.js";
+import { ICommentService } from "../../contrib/comments/browser/commentService.js";
+import { CommentsPanel } from "../../contrib/comments/browser/commentsView.js";
+import { ExtHostContext, MainContext } from "../common/extHost.protocol.js";
+import { COMMENTS_VIEW_ID, COMMENTS_VIEW_STORAGE_ID, COMMENTS_VIEW_TITLE } from "../../contrib/comments/browser/commentsTreeViewer.js";
+import { Extensions as ViewExtensions, IViewDescriptorService } from "../../common/views.js";
+import { SyncDescriptor } from "../../../platform/instantiation/common/descriptors.js";
+import { ViewPaneContainer } from "../../browser/parts/views/viewPaneContainer.js";
+import { Codicon } from "../../../base/common/codicons.js";
+import { registerIcon } from "../../../platform/theme/common/iconRegistry.js";
+import { localize } from "../../../nls.js";
+import { Schemas } from "../../../base/common/network.js";
+import { IViewsService } from "../../services/views/common/viewsService.js";
+import { revealCommentThread } from "../../contrib/comments/browser/commentsController.js";
+import { IEditorService } from "../../services/editor/common/editorService.js";
+import { IUriIdentityService } from "../../../platform/uriIdentity/common/uriIdentity.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+class MainThreadCommentThread {
+  static {
+    __name(this, "MainThreadCommentThread");
+  }
+  get input() {
+    return this._input;
+  }
+  set input(value) {
+    this._input = value;
+    this._onDidChangeInput.fire(value);
+  }
+  get onDidChangeInput() {
+    return this._onDidChangeInput.event;
+  }
+  get label() {
+    return this._label;
+  }
+  set label(label) {
+    this._label = label;
+    this._onDidChangeLabel.fire(this._label);
+  }
+  get contextValue() {
+    return this._contextValue;
+  }
+  set contextValue(context) {
+    this._contextValue = context;
+  }
+  get comments() {
+    return this._comments;
+  }
+  set comments(newComments) {
+    this._comments = newComments;
+    this._onDidChangeComments.fire(this._comments);
+  }
+  get onDidChangeComments() {
+    return this._onDidChangeComments.event;
+  }
+  set range(range) {
+    this._range = range;
+  }
+  get range() {
+    return this._range;
+  }
+  get onDidChangeCanReply() {
+    return this._onDidChangeCanReply.event;
+  }
+  set canReply(state) {
+    this._canReply = state;
+    this._onDidChangeCanReply.fire(!!this._canReply);
+  }
+  get canReply() {
+    return this._canReply;
+  }
+  get collapsibleState() {
+    return this._collapsibleState;
+  }
+  set collapsibleState(newState) {
+    if (this.initialCollapsibleState === void 0) {
+      this.initialCollapsibleState = newState;
+    }
+    if (newState !== this._collapsibleState) {
+      this._collapsibleState = newState;
+      this._onDidChangeCollapsibleState.fire(this._collapsibleState);
+    }
+  }
+  get initialCollapsibleState() {
+    return this._initialCollapsibleState;
+  }
+  set initialCollapsibleState(initialCollapsibleState) {
+    this._initialCollapsibleState = initialCollapsibleState;
+    this._onDidChangeInitialCollapsibleState.fire(initialCollapsibleState);
+  }
+  get isDisposed() {
+    return this._isDisposed;
+  }
+  isDocumentCommentThread() {
+    return this._range === void 0 || Range.isIRange(this._range);
+  }
+  get state() {
+    return this._state;
+  }
+  set state(newState) {
+    this._state = newState;
+    this._onDidChangeState.fire(this._state);
+  }
+  get applicability() {
+    return this._applicability;
+  }
+  set applicability(value) {
+    this._applicability = value;
+    this._onDidChangeApplicability.fire(value);
+  }
+  get isTemplate() {
+    return this._isTemplate;
+  }
+  constructor(commentThreadHandle, controllerHandle, extensionId, threadId, resource, _range, comments, _canReply, _isTemplate, editorId) {
+    this.commentThreadHandle = commentThreadHandle;
+    this.controllerHandle = controllerHandle;
+    this.extensionId = extensionId;
+    this.threadId = threadId;
+    this.resource = resource;
+    this._range = _range;
+    this._canReply = _canReply;
+    this._isTemplate = _isTemplate;
+    this.editorId = editorId;
+    this._onDidChangeInput = new Emitter();
+    this._onDidChangeLabel = new Emitter();
+    this.onDidChangeLabel = this._onDidChangeLabel.event;
+    this._onDidChangeComments = new Emitter();
+    this._onDidChangeCanReply = new Emitter();
+    this._collapsibleState = languages.CommentThreadCollapsibleState.Collapsed;
+    this._onDidChangeCollapsibleState = new Emitter();
+    this.onDidChangeCollapsibleState = this._onDidChangeCollapsibleState.event;
+    this._onDidChangeInitialCollapsibleState = new Emitter();
+    this.onDidChangeInitialCollapsibleState = this._onDidChangeInitialCollapsibleState.event;
+    this._onDidChangeApplicability = new Emitter();
+    this.onDidChangeApplicability = this._onDidChangeApplicability.event;
+    this._onDidChangeState = new Emitter();
+    this.onDidChangeState = this._onDidChangeState.event;
+    this._isDisposed = false;
+    if (_isTemplate) {
+      this.comments = [];
+    } else if (comments) {
+      this._comments = comments;
+    }
+  }
+  batchUpdate(changes) {
+    const modified = /* @__PURE__ */ __name((value) => Object.prototype.hasOwnProperty.call(changes, value), "modified");
+    if (modified("range")) {
+      this._range = changes.range;
+    }
+    if (modified("label")) {
+      this._label = changes.label;
+    }
+    if (modified("contextValue")) {
+      this._contextValue = changes.contextValue === null ? void 0 : changes.contextValue;
+    }
+    if (modified("comments")) {
+      this.comments = changes.comments;
+    }
+    if (modified("collapseState")) {
+      this.collapsibleState = changes.collapseState;
+    }
+    if (modified("canReply")) {
+      this.canReply = changes.canReply;
+    }
+    if (modified("state")) {
+      this.state = changes.state;
+    }
+    if (modified("applicability")) {
+      this.applicability = changes.applicability;
+    }
+    if (modified("isTemplate")) {
+      this._isTemplate = changes.isTemplate;
+    }
+  }
+  hasComments() {
+    return !!this.comments && this.comments.length > 0;
+  }
+  dispose() {
+    this._isDisposed = true;
+    this._onDidChangeCollapsibleState.dispose();
+    this._onDidChangeComments.dispose();
+    this._onDidChangeInput.dispose();
+    this._onDidChangeLabel.dispose();
+    this._onDidChangeState.dispose();
+  }
+  toJSON() {
+    return {
+      $mid: 7,
+      commentControlHandle: this.controllerHandle,
+      commentThreadHandle: this.commentThreadHandle
+    };
+  }
+}
+class CommentThreadWithDisposable {
+  static {
+    __name(this, "CommentThreadWithDisposable");
+  }
+  constructor(thread) {
+    this.thread = thread;
+    this.disposableStore = new DisposableStore();
+  }
+  dispose() {
+    this.disposableStore.dispose();
+  }
+}
+class MainThreadCommentController extends Disposable {
+  static {
+    __name(this, "MainThreadCommentController");
+  }
+  get handle() {
+    return this._handle;
+  }
+  get id() {
+    return this._id;
+  }
+  get contextValue() {
+    return this._id;
+  }
+  get proxy() {
+    return this._proxy;
+  }
+  get label() {
+    return this._label;
+  }
+  get reactions() {
+    return this._reactions;
+  }
+  set reactions(reactions) {
+    this._reactions = reactions;
+  }
+  get options() {
+    return this._features.options;
+  }
+  get features() {
+    return this._features;
+  }
+  get owner() {
+    return this._id;
+  }
+  constructor(_proxy, _commentService, _handle, _uniqueId, _id, _label, _features) {
+    super();
+    this._proxy = _proxy;
+    this._commentService = _commentService;
+    this._handle = _handle;
+    this._uniqueId = _uniqueId;
+    this._id = _id;
+    this._label = _label;
+    this._features = _features;
+    this._threads = this._register(new DisposableMap());
+  }
+  get activeComment() {
+    return this._activeComment;
+  }
+  async setActiveCommentAndThread(commentInfo) {
+    this._activeComment = commentInfo;
+    return this._proxy.$setActiveComment(this._handle, commentInfo ? { commentThreadHandle: commentInfo.thread.commentThreadHandle, uniqueIdInThread: commentInfo.comment?.uniqueIdInThread } : void 0);
+  }
+  updateFeatures(features) {
+    this._features = features;
+  }
+  createCommentThread(extensionId, commentThreadHandle, threadId, resource, range, comments, isTemplate, editorId) {
+    const thread = new MainThreadCommentThread(commentThreadHandle, this.handle, extensionId, threadId, URI.revive(resource).toString(), range, comments, true, isTemplate, editorId);
+    const threadWithDisposable = new CommentThreadWithDisposable(thread);
+    this._threads.set(commentThreadHandle, threadWithDisposable);
+    threadWithDisposable.disposableStore.add(thread.onDidChangeCollapsibleState(() => {
+      this.proxy.$updateCommentThread(this.handle, thread.commentThreadHandle, { collapseState: thread.collapsibleState });
+    }));
+    if (thread.isDocumentCommentThread()) {
+      this._commentService.updateComments(this._uniqueId, {
+        added: [thread],
+        removed: [],
+        changed: [],
+        pending: []
+      });
+    } else {
+      this._commentService.updateNotebookComments(this._uniqueId, {
+        added: [thread],
+        removed: [],
+        changed: [],
+        pending: []
+      });
+    }
+    return thread;
+  }
+  updateCommentThread(commentThreadHandle, threadId, resource, changes) {
+    const thread = this.getKnownThread(commentThreadHandle);
+    thread.batchUpdate(changes);
+    if (thread.isDocumentCommentThread()) {
+      this._commentService.updateComments(this._uniqueId, {
+        added: [],
+        removed: [],
+        changed: [thread],
+        pending: []
+      });
+    } else {
+      this._commentService.updateNotebookComments(this._uniqueId, {
+        added: [],
+        removed: [],
+        changed: [thread],
+        pending: []
+      });
+    }
+  }
+  deleteCommentThread(commentThreadHandle) {
+    const thread = this.getKnownThread(commentThreadHandle);
+    this._threads.deleteAndDispose(commentThreadHandle);
+    thread.dispose();
+    if (thread.isDocumentCommentThread()) {
+      this._commentService.updateComments(this._uniqueId, {
+        added: [],
+        removed: [thread],
+        changed: [],
+        pending: []
+      });
+    } else {
+      this._commentService.updateNotebookComments(this._uniqueId, {
+        added: [],
+        removed: [thread],
+        changed: [],
+        pending: []
+      });
+    }
+  }
+  deleteCommentThreadMain(commentThreadId) {
+    for (const { thread } of this._threads.values()) {
+      if (thread.threadId === commentThreadId) {
+        this._proxy.$deleteCommentThread(this._handle, thread.commentThreadHandle);
+      }
+    }
+  }
+  updateInput(input) {
+    const thread = this.activeEditingCommentThread;
+    if (thread && thread.input) {
+      const commentInput = thread.input;
+      commentInput.value = input;
+      thread.input = commentInput;
+    }
+  }
+  updateCommentingRanges(resourceHints) {
+    this._commentService.updateCommentingRanges(this._uniqueId, resourceHints);
+  }
+  getKnownThread(commentThreadHandle) {
+    const thread = this._threads.get(commentThreadHandle);
+    if (!thread) {
+      throw new Error("unknown thread");
+    }
+    return thread.thread;
+  }
+  async getDocumentComments(resource, token) {
+    if (resource.scheme === Schemas.vscodeNotebookCell) {
+      return {
+        uniqueOwner: this._uniqueId,
+        label: this.label,
+        threads: [],
+        commentingRanges: {
+          resource,
+          ranges: [],
+          fileComments: false
+        }
+      };
+    }
+    const ret = [];
+    for (const thread of [...this._threads.keys()]) {
+      const commentThread = this._threads.get(thread);
+      if (commentThread.thread.resource === resource.toString()) {
+        if (commentThread.thread.isDocumentCommentThread()) {
+          ret.push(commentThread.thread);
+        }
+      }
+    }
+    const commentingRanges = await this._proxy.$provideCommentingRanges(this.handle, resource, token);
+    return {
+      uniqueOwner: this._uniqueId,
+      label: this.label,
+      threads: ret,
+      commentingRanges: {
+        resource,
+        ranges: commentingRanges?.ranges || [],
+        fileComments: !!commentingRanges?.fileComments
+      }
+    };
+  }
+  async getNotebookComments(resource, token) {
+    if (resource.scheme !== Schemas.vscodeNotebookCell) {
+      return {
+        uniqueOwner: this._uniqueId,
+        label: this.label,
+        threads: []
+      };
+    }
+    const ret = [];
+    for (const thread of [...this._threads.keys()]) {
+      const commentThread = this._threads.get(thread);
+      if (commentThread.thread.resource === resource.toString()) {
+        if (!commentThread.thread.isDocumentCommentThread()) {
+          ret.push(commentThread.thread);
+        }
+      }
+    }
+    return {
+      uniqueOwner: this._uniqueId,
+      label: this.label,
+      threads: ret
+    };
+  }
+  async toggleReaction(uri, thread, comment, reaction, token) {
+    return this._proxy.$toggleReaction(this._handle, thread.commentThreadHandle, uri, comment, reaction);
+  }
+  getAllComments() {
+    const ret = [];
+    for (const thread of [...this._threads.keys()]) {
+      ret.push(this._threads.get(thread).thread);
+    }
+    return ret;
+  }
+  createCommentThreadTemplate(resource, range, editorId) {
+    return this._proxy.$createCommentThreadTemplate(this.handle, resource, range, editorId);
+  }
+  async updateCommentThreadTemplate(threadHandle, range) {
+    await this._proxy.$updateCommentThreadTemplate(this.handle, threadHandle, range);
+  }
+  toJSON() {
+    return {
+      $mid: 6,
+      handle: this.handle
+    };
+  }
+}
+const commentsViewIcon = registerIcon("comments-view-icon", Codicon.commentDiscussion, localize("commentsViewIcon", "View icon of the comments view."));
+let MainThreadComments = class MainThreadComments2 extends Disposable {
+  static {
+    __name(this, "MainThreadComments");
+  }
+  constructor(extHostContext, _commentService, _viewsService, _viewDescriptorService, _uriIdentityService, _editorService) {
+    super();
+    this._commentService = _commentService;
+    this._viewsService = _viewsService;
+    this._viewDescriptorService = _viewDescriptorService;
+    this._uriIdentityService = _uriIdentityService;
+    this._editorService = _editorService;
+    this._handlers = /* @__PURE__ */ new Map();
+    this._commentControllers = /* @__PURE__ */ new Map();
+    this._activeEditingCommentThreadDisposables = this._register(new DisposableStore());
+    this._openViewListener = this._register(new MutableDisposable());
+    this._onChangeContainerListener = this._register(new MutableDisposable());
+    this._onChangeContainerLocationListener = this._register(new MutableDisposable());
+    this._proxy = extHostContext.getProxy(ExtHostContext.ExtHostComments);
+    this._commentService.unregisterCommentController();
+    this._register(this._commentService.onDidChangeActiveEditingCommentThread(async (thread) => {
+      const handle = thread.controllerHandle;
+      const controller = this._commentControllers.get(handle);
+      if (!controller) {
+        return;
+      }
+      this._activeEditingCommentThreadDisposables.clear();
+      this._activeEditingCommentThread = thread;
+      controller.activeEditingCommentThread = this._activeEditingCommentThread;
+    }));
+  }
+  $registerCommentController(handle, id, label, extensionId) {
+    const providerId = `${id}-${extensionId}`;
+    this._handlers.set(handle, providerId);
+    const provider = new MainThreadCommentController(this._proxy, this._commentService, handle, providerId, id, label, {});
+    this._commentService.registerCommentController(providerId, provider);
+    this._commentControllers.set(handle, provider);
+    this._register(this._commentService.onResourceHasCommentingRanges((e) => {
+      this.registerView();
+    }));
+    this._register(this._commentService.onDidUpdateCommentThreads((e) => {
+      this.registerView();
+    }));
+    this._commentService.setWorkspaceComments(String(handle), []);
+  }
+  $unregisterCommentController(handle) {
+    const providerId = this._handlers.get(handle);
+    this._handlers.delete(handle);
+    this._commentControllers.get(handle)?.dispose();
+    this._commentControllers.delete(handle);
+    if (typeof providerId !== "string") {
+      return;
+    } else {
+      this._commentService.unregisterCommentController(providerId);
+    }
+  }
+  $updateCommentControllerFeatures(handle, features) {
+    const provider = this._commentControllers.get(handle);
+    if (!provider) {
+      return void 0;
+    }
+    provider.updateFeatures(features);
+  }
+  $createCommentThread(handle, commentThreadHandle, threadId, resource, range, comments, extensionId, isTemplate, editorId) {
+    const provider = this._commentControllers.get(handle);
+    if (!provider) {
+      return void 0;
+    }
+    return provider.createCommentThread(extensionId.value, commentThreadHandle, threadId, resource, range, comments, isTemplate, editorId);
+  }
+  $updateCommentThread(handle, commentThreadHandle, threadId, resource, changes) {
+    const provider = this._commentControllers.get(handle);
+    if (!provider) {
+      return void 0;
+    }
+    return provider.updateCommentThread(commentThreadHandle, threadId, resource, changes);
+  }
+  $deleteCommentThread(handle, commentThreadHandle) {
+    const provider = this._commentControllers.get(handle);
+    if (!provider) {
+      return;
+    }
+    return provider.deleteCommentThread(commentThreadHandle);
+  }
+  $updateCommentingRanges(handle, resourceHints) {
+    const provider = this._commentControllers.get(handle);
+    if (!provider) {
+      return;
+    }
+    provider.updateCommentingRanges(resourceHints);
+  }
+  async $revealCommentThread(handle, commentThreadHandle, commentUniqueIdInThread, options) {
+    const provider = this._commentControllers.get(handle);
+    if (!provider) {
+      return Promise.resolve();
+    }
+    const thread = provider.getAllComments().find((thread2) => thread2.commentThreadHandle === commentThreadHandle);
+    if (!thread || !thread.isDocumentCommentThread()) {
+      return Promise.resolve();
+    }
+    const comment = thread.comments?.find((comment2) => comment2.uniqueIdInThread === commentUniqueIdInThread);
+    revealCommentThread(this._commentService, this._editorService, this._uriIdentityService, thread, comment, options.focusReply, void 0, options.preserveFocus);
+  }
+  async $hideCommentThread(handle, commentThreadHandle) {
+    const provider = this._commentControllers.get(handle);
+    if (!provider) {
+      return Promise.resolve();
+    }
+    const thread = provider.getAllComments().find((thread2) => thread2.commentThreadHandle === commentThreadHandle);
+    if (!thread || !thread.isDocumentCommentThread()) {
+      return Promise.resolve();
+    }
+    thread.collapsibleState = languages.CommentThreadCollapsibleState.Collapsed;
+  }
+  registerView() {
+    const commentsPanelAlreadyConstructed = !!this._viewDescriptorService.getViewDescriptorById(COMMENTS_VIEW_ID);
+    if (!commentsPanelAlreadyConstructed) {
+      const VIEW_CONTAINER = Registry.as(ViewExtensions.ViewContainersRegistry).registerViewContainer(
+        {
+          id: COMMENTS_VIEW_ID,
+          title: COMMENTS_VIEW_TITLE,
+          ctorDescriptor: new SyncDescriptor(ViewPaneContainer, [COMMENTS_VIEW_ID, { mergeViewWithContainerWhenSingleView: true }]),
+          storageId: COMMENTS_VIEW_STORAGE_ID,
+          hideIfEmpty: true,
+          icon: commentsViewIcon,
+          order: 10
+        },
+        1
+        /* ViewContainerLocation.Panel */
+      );
+      Registry.as(ViewExtensions.ViewsRegistry).registerViews([{
+        id: COMMENTS_VIEW_ID,
+        name: COMMENTS_VIEW_TITLE,
+        canToggleVisibility: false,
+        ctorDescriptor: new SyncDescriptor(CommentsPanel),
+        canMoveView: true,
+        containerIcon: commentsViewIcon,
+        focusCommand: {
+          id: "workbench.action.focusCommentsPanel"
+        }
+      }], VIEW_CONTAINER);
+    }
+    this.registerViewListeners(commentsPanelAlreadyConstructed);
+  }
+  setComments() {
+    [...this._commentControllers.keys()].forEach((handle) => {
+      const threads = this._commentControllers.get(handle).getAllComments();
+      if (threads.length) {
+        const providerId = this.getHandler(handle);
+        this._commentService.setWorkspaceComments(providerId, threads);
+      }
+    });
+  }
+  registerViewOpenedListener() {
+    if (!this._openViewListener.value) {
+      this._openViewListener.value = this._viewsService.onDidChangeViewVisibility((e) => {
+        if (e.id === COMMENTS_VIEW_ID && e.visible) {
+          this.setComments();
+          if (this._openViewListener) {
+            this._openViewListener.dispose();
+          }
+        }
+      });
+    }
+  }
+  /**
+   * If the comments view has never been opened, the constructor for it has not yet run so it has
+   * no listeners for comment threads being set or updated. Listen for the view opening for the
+   * first time and send it comments then.
+   */
+  registerViewListeners(commentsPanelAlreadyConstructed) {
+    if (!commentsPanelAlreadyConstructed) {
+      this.registerViewOpenedListener();
+    }
+    if (!this._onChangeContainerListener.value) {
+      this._onChangeContainerListener.value = this._viewDescriptorService.onDidChangeContainer((e) => {
+        if (e.views.find((view) => view.id === COMMENTS_VIEW_ID)) {
+          this.setComments();
+          this.registerViewOpenedListener();
+        }
+      });
+    }
+    if (!this._onChangeContainerLocationListener.value) {
+      this._onChangeContainerLocationListener.value = this._viewDescriptorService.onDidChangeContainerLocation((e) => {
+        const commentsContainer = this._viewDescriptorService.getViewContainerByViewId(COMMENTS_VIEW_ID);
+        if (e.viewContainer.id === commentsContainer?.id) {
+          this.setComments();
+          this.registerViewOpenedListener();
+        }
+      });
+    }
+  }
+  getHandler(handle) {
+    if (!this._handlers.has(handle)) {
+      throw new Error("Unknown handler");
+    }
+    return this._handlers.get(handle);
+  }
+};
+MainThreadComments = __decorate([
+  extHostNamedCustomer(MainContext.MainThreadComments),
+  __param(1, ICommentService),
+  __param(2, IViewsService),
+  __param(3, IViewDescriptorService),
+  __param(4, IUriIdentityService),
+  __param(5, IEditorService)
+], MainThreadComments);
+export {
+  MainThreadCommentController,
+  MainThreadCommentThread,
+  MainThreadComments
+};
+//# sourceMappingURL=mainThreadComments.js.map

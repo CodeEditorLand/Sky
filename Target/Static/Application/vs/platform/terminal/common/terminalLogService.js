@@ -1,1 +1,79 @@
-import{$vd as c}from"../../../base/common/lifecycle.js";import{Event as u}from"../../../base/common/event.js";import{localize as m}from"../../../nls.js";import{$4n as p,LogLevel as g}from"../../log/common/log.js";import{$hl as v}from"../../workspace/common/workspace.js";import{$fl as d}from"../../environment/common/environment.js";import{$kh as L}from"../../../base/common/resources.js";var a=function(e,t,r,o){var s,n=arguments.length,i=n<3?t:null===o?o=Object.getOwnPropertyDescriptor(t,r):o;if("object"==typeof Reflect&&"function"==typeof Reflect.decorate)i=Reflect.decorate(e,t,r,o);else for(var a=e.length-1;a>=0;a--)(s=e[a])&&(i=(n<3?s(i):n>3?s(t,r,i):s(t,r))||i);return n>3&&i&&Object.defineProperty(t,r,i),i},s=function(e,t){return function(r,o){t(r,o,e)}};let l=class extends c{get onDidChangeLogLevel(){return this.a.onDidChangeLogLevel}constructor(e,t,r){super(),this.c=e,this.a=this.c.createLogger(L(r.logsHome,"terminal.log"),{id:"terminal",name:m(2259,null)}),this.B(u.runAndSubscribe(t.onDidChangeWorkspaceFolders,(()=>{this.b=t.getWorkspace().id.substring(0,7)})))}getLevel(){return this.a.getLevel()}setLevel(e){this.a.setLevel(e)}flush(){this.a.flush()}trace(e,...t){this.a.trace(this.f(e),t)}debug(e,...t){this.a.debug(this.f(e),t)}info(e,...t){this.a.info(this.f(e),t)}warn(e,...t){this.a.warn(this.f(e),t)}error(e,...t){e instanceof Error?this.a.error(this.f(""),e,t):this.a.error(this.f(e),t)}f(e){return this.a.getLevel()===g.Trace?`[${this.b}] ${e}`:e}};l=a([s(0,p),s(1,v),s(2,d)],l);export{l as $Pqc};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { Disposable } from "../../../base/common/lifecycle.js";
+import { Event } from "../../../base/common/event.js";
+import { localize } from "../../../nls.js";
+import { ILoggerService, LogLevel } from "../../log/common/log.js";
+import { IWorkspaceContextService } from "../../workspace/common/workspace.js";
+import { IEnvironmentService } from "../../environment/common/environment.js";
+import { joinPath } from "../../../base/common/resources.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+let TerminalLogService = class TerminalLogService2 extends Disposable {
+  static {
+    __name(this, "TerminalLogService");
+  }
+  get onDidChangeLogLevel() {
+    return this._logger.onDidChangeLogLevel;
+  }
+  constructor(_loggerService, workspaceContextService, environmentService) {
+    super();
+    this._loggerService = _loggerService;
+    this._logger = this._loggerService.createLogger(joinPath(environmentService.logsHome, "terminal.log"), { id: "terminal", name: localize("terminalLoggerName", "Terminal") });
+    this._register(Event.runAndSubscribe(workspaceContextService.onDidChangeWorkspaceFolders, () => {
+      this._workspaceId = workspaceContextService.getWorkspace().id.substring(0, 7);
+    }));
+  }
+  getLevel() {
+    return this._logger.getLevel();
+  }
+  setLevel(level) {
+    this._logger.setLevel(level);
+  }
+  flush() {
+    this._logger.flush();
+  }
+  trace(message, ...args) {
+    this._logger.trace(this._formatMessage(message), args);
+  }
+  debug(message, ...args) {
+    this._logger.debug(this._formatMessage(message), args);
+  }
+  info(message, ...args) {
+    this._logger.info(this._formatMessage(message), args);
+  }
+  warn(message, ...args) {
+    this._logger.warn(this._formatMessage(message), args);
+  }
+  error(message, ...args) {
+    if (message instanceof Error) {
+      this._logger.error(this._formatMessage(""), message, args);
+      return;
+    }
+    this._logger.error(this._formatMessage(message), args);
+  }
+  _formatMessage(message) {
+    if (this._logger.getLevel() === LogLevel.Trace) {
+      return `[${this._workspaceId}] ${message}`;
+    }
+    return message;
+  }
+};
+TerminalLogService = __decorate([
+  __param(0, ILoggerService),
+  __param(1, IWorkspaceContextService),
+  __param(2, IEnvironmentService)
+], TerminalLogService);
+export {
+  TerminalLogService
+};
+//# sourceMappingURL=terminalLogService.js.map

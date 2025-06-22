@@ -1,1 +1,255 @@
-import{$Mh as g}from"../../../../base/common/async.js";import{Event as h}from"../../../../base/common/event.js";import{$vd as f,$ud as b}from"../../../../base/common/lifecycle.js";import{$$ as P}from"../../../../base/common/path.js";import{$Po as p}from"../../../../platform/telemetry/common/telemetry.js";import{$RK as $}from"../../../services/lifecycle/common/lifecycle.js";import{$EYb as v}from"./terminal.js";var x=function(s,i,t,n){var a=arguments.length,r=a<3?i:n===null?n=Object.getOwnPropertyDescriptor(i,t):n,c;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")r=Reflect.decorate(s,i,t,n);else for(var o=s.length-1;o>=0;o--)(c=s[o])&&(r=(a<3?c(r):a>3?c(i,t,r):c(i,t))||r);return a>3&&r&&Object.defineProperty(i,t,r),r},e=function(s,i){return function(t,n){i(t,n,s)}};let m=class extends f{static{this.ID="terminalTelemetry"}constructor(i,t,n){super(),this.a=n,this.B(t.onDidCreateInstance(async a=>{const r=new b;this.q.add(r),await Promise.race([a.processReady.then(()=>g(1e4)),h.toPromise(a.onDisposed,r),h.toPromise(i.onWillShutdown,r)]),this.b(a),this.q.delete(r)}))}b(i){const t=i.shellLaunchConfig,n=i.capabilities.get(2);this.a.publicLog2("terminal/createInstance",{shellType:k(t),promptType:n?.promptType,isCustomPtyImplementation:!!t.customPtyImplementation,isExtensionOwnedTerminal:!!t.isExtensionOwnedTerminal,isLoginShell:(typeof t.args=="string"?t.args.split(" "):t.args)?.some(a=>a==="-l"||a==="--login")??!1,isReconnect:!!t.attachPersistentProcess,shellIntegrationQuality:n?.hasRichCommandDetection?2:n?1:0,shellIntegrationInjected:i.usedShellIntegrationInjection,shellIntegrationInjectionFailureReason:i.shellIntegrationInjectionFailureReason})}};m=x([e(0,$),e(1,v),e(2,p)],m);var u;(function(s){s.Unknown="unknown",s.CommandPrompt="cmd",s.Cygwin="cygwin-bash",s.GitBash="git-bash",s.Msys2="msys2-bash",s.WindowsPowerShell="windows-powershell",s.Wsl="wsl",s.Bash="bash",s.Fish="fish",s.Pwsh="pwsh",s.PwshPreview="pwsh-preview",s.Sh="sh",s.Ssh="ssh",s.Tmux="tmux",s.Zsh="zsh",s.Amm="amm",s.Ash="ash",s.Csh="csh",s.Dash="dash",s.Elvish="elvish",s.Ion="ion",s.Ksh="ksh",s.Mksh="mksh",s.Msh="msh",s.NuShell="nu",s.Plan9Shell="rc",s.SchemeShell="scsh",s.Tcsh="tcsh",s.Termux="termux",s.Xonsh="xonsh",s.Clojure="clj",s.CommonLispSbcl="sbcl",s.Crystal="crystal",s.Deno="deno",s.Elixir="iex",s.Erlang="erl",s.FSharp="fsi",s.Go="go",s.HaskellGhci="ghci",s.Java="jshell",s.Julia="julia",s.Lua="lua",s.Node="node",s.Ocaml="ocaml",s.Perl="perl",s.Php="php",s.PrologSwipl="swipl",s.Python="python",s.R="R",s.RubyIrb="irb",s.Scala="scala",s.SchemeRacket="racket",s.SmalltalkGnu="gst",s.SmalltalkPharo="pharo",s.Tcl="tclsh",s.TsNode="ts-node"})(u||(u={}));const I=new Set(["cmd","wsl","bash","fish","pwsh","sh","ssh","tmux","zsh","amm","ash","csh","dash","elvish","ion","ksh","mksh","msh","nu","rc","scsh","tcsh","termux","xonsh","clj","sbcl","crystal","deno","iex","erl","fsi","go","ghci","jshell","julia","lua","node","ocaml","perl","php","swipl","python","R","irb","scala","racket","gst","pharo","tclsh","ts-node"]),R=[{regex:/^(?:pwsh|powershell)-preview$/i,type:"pwsh-preview"},{regex:/^python(?:\d+(?:\.\d+)?)?$/i,type:"python"}],j=[{regex:/\\Cygwin(?:64)?\\.+\\bash\.exe$/i,type:"cygwin-bash"},{regex:/\\Git\\.+\\bash\.exe$/i,type:"git-bash"},{regex:/\\msys(?:32|64)\\.+\\(?:bash|msys2)\.exe$/i,type:"msys2-bash"},{regex:/\\WindowsPowerShell\\v1.0\\powershell.exe$/i,type:"windows-powershell"},{regex:/\\Windows\\(?:System32|SysWOW64|Sysnative)\\(?:bash|wsl)\.exe$/i,type:"wsl"}];function k(s){if(!s.executable)return"unknown";const t=P(s.executable).replace(/\.[^\.]+$/,"");for(const n of j)if(n.regex.test(s.executable))return n.type;for(const n of R)if(n.regex.test(t))return n.type;return I.has(t)?t:"unknown"}export{m as $Src};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { timeout } from "../../../../base/common/async.js";
+import { Event } from "../../../../base/common/event.js";
+import { Disposable, DisposableStore } from "../../../../base/common/lifecycle.js";
+import { basename } from "../../../../base/common/path.js";
+import { ITelemetryService } from "../../../../platform/telemetry/common/telemetry.js";
+import { ILifecycleService } from "../../../services/lifecycle/common/lifecycle.js";
+import { ITerminalService } from "./terminal.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+let TerminalTelemetryContribution = class TerminalTelemetryContribution2 extends Disposable {
+  static {
+    __name(this, "TerminalTelemetryContribution");
+  }
+  static {
+    this.ID = "terminalTelemetry";
+  }
+  constructor(lifecycleService, terminalService, _telemetryService) {
+    super();
+    this._telemetryService = _telemetryService;
+    this._register(terminalService.onDidCreateInstance(async (instance) => {
+      const store = new DisposableStore();
+      this._store.add(store);
+      await Promise.race([
+        // Wait for process ready so the shell launch config is fully resolved, then
+        // allow another 10 seconds for the shell integration to be fully initialized
+        instance.processReady.then(() => {
+          return timeout(1e4);
+        }),
+        // If the terminal is disposed, it's ready to report on immediately
+        Event.toPromise(instance.onDisposed, store),
+        // If the app is shutting down, flush
+        Event.toPromise(lifecycleService.onWillShutdown, store)
+      ]);
+      this._logCreateInstance(instance);
+      this._store.delete(store);
+    }));
+  }
+  _logCreateInstance(instance) {
+    const slc = instance.shellLaunchConfig;
+    const commandDetection = instance.capabilities.get(
+      2
+      /* TerminalCapability.CommandDetection */
+    );
+    this._telemetryService.publicLog2("terminal/createInstance", {
+      shellType: getSanitizedShellType(slc),
+      promptType: commandDetection?.promptType,
+      isCustomPtyImplementation: !!slc.customPtyImplementation,
+      isExtensionOwnedTerminal: !!slc.isExtensionOwnedTerminal,
+      isLoginShell: (typeof slc.args === "string" ? slc.args.split(" ") : slc.args)?.some((arg) => arg === "-l" || arg === "--login") ?? false,
+      isReconnect: !!slc.attachPersistentProcess,
+      shellIntegrationQuality: commandDetection?.hasRichCommandDetection ? 2 : commandDetection ? 1 : 0,
+      shellIntegrationInjected: instance.usedShellIntegrationInjection,
+      shellIntegrationInjectionFailureReason: instance.shellIntegrationInjectionFailureReason
+    });
+  }
+};
+TerminalTelemetryContribution = __decorate([
+  __param(0, ILifecycleService),
+  __param(1, ITerminalService),
+  __param(2, ITelemetryService)
+], TerminalTelemetryContribution);
+var AllowedShellType;
+(function(AllowedShellType2) {
+  AllowedShellType2["Unknown"] = "unknown";
+  AllowedShellType2["CommandPrompt"] = "cmd";
+  AllowedShellType2["Cygwin"] = "cygwin-bash";
+  AllowedShellType2["GitBash"] = "git-bash";
+  AllowedShellType2["Msys2"] = "msys2-bash";
+  AllowedShellType2["WindowsPowerShell"] = "windows-powershell";
+  AllowedShellType2["Wsl"] = "wsl";
+  AllowedShellType2["Bash"] = "bash";
+  AllowedShellType2["Fish"] = "fish";
+  AllowedShellType2["Pwsh"] = "pwsh";
+  AllowedShellType2["PwshPreview"] = "pwsh-preview";
+  AllowedShellType2["Sh"] = "sh";
+  AllowedShellType2["Ssh"] = "ssh";
+  AllowedShellType2["Tmux"] = "tmux";
+  AllowedShellType2["Zsh"] = "zsh";
+  AllowedShellType2["Amm"] = "amm";
+  AllowedShellType2["Ash"] = "ash";
+  AllowedShellType2["Csh"] = "csh";
+  AllowedShellType2["Dash"] = "dash";
+  AllowedShellType2["Elvish"] = "elvish";
+  AllowedShellType2["Ion"] = "ion";
+  AllowedShellType2["Ksh"] = "ksh";
+  AllowedShellType2["Mksh"] = "mksh";
+  AllowedShellType2["Msh"] = "msh";
+  AllowedShellType2["NuShell"] = "nu";
+  AllowedShellType2["Plan9Shell"] = "rc";
+  AllowedShellType2["SchemeShell"] = "scsh";
+  AllowedShellType2["Tcsh"] = "tcsh";
+  AllowedShellType2["Termux"] = "termux";
+  AllowedShellType2["Xonsh"] = "xonsh";
+  AllowedShellType2["Clojure"] = "clj";
+  AllowedShellType2["CommonLispSbcl"] = "sbcl";
+  AllowedShellType2["Crystal"] = "crystal";
+  AllowedShellType2["Deno"] = "deno";
+  AllowedShellType2["Elixir"] = "iex";
+  AllowedShellType2["Erlang"] = "erl";
+  AllowedShellType2["FSharp"] = "fsi";
+  AllowedShellType2["Go"] = "go";
+  AllowedShellType2["HaskellGhci"] = "ghci";
+  AllowedShellType2["Java"] = "jshell";
+  AllowedShellType2["Julia"] = "julia";
+  AllowedShellType2["Lua"] = "lua";
+  AllowedShellType2["Node"] = "node";
+  AllowedShellType2["Ocaml"] = "ocaml";
+  AllowedShellType2["Perl"] = "perl";
+  AllowedShellType2["Php"] = "php";
+  AllowedShellType2["PrologSwipl"] = "swipl";
+  AllowedShellType2["Python"] = "python";
+  AllowedShellType2["R"] = "R";
+  AllowedShellType2["RubyIrb"] = "irb";
+  AllowedShellType2["Scala"] = "scala";
+  AllowedShellType2["SchemeRacket"] = "racket";
+  AllowedShellType2["SmalltalkGnu"] = "gst";
+  AllowedShellType2["SmalltalkPharo"] = "pharo";
+  AllowedShellType2["Tcl"] = "tclsh";
+  AllowedShellType2["TsNode"] = "ts-node";
+})(AllowedShellType || (AllowedShellType = {}));
+const shellTypeExecutableAllowList = /* @__PURE__ */ new Set([
+  "cmd",
+  "wsl",
+  "bash",
+  "fish",
+  "pwsh",
+  "sh",
+  "ssh",
+  "tmux",
+  "zsh",
+  "amm",
+  "ash",
+  "csh",
+  "dash",
+  "elvish",
+  "ion",
+  "ksh",
+  "mksh",
+  "msh",
+  "nu",
+  "rc",
+  "scsh",
+  "tcsh",
+  "termux",
+  "xonsh",
+  "clj",
+  "sbcl",
+  "crystal",
+  "deno",
+  "iex",
+  "erl",
+  "fsi",
+  "go",
+  "ghci",
+  "jshell",
+  "julia",
+  "lua",
+  "node",
+  "ocaml",
+  "perl",
+  "php",
+  "swipl",
+  "python",
+  "R",
+  "irb",
+  "scala",
+  "racket",
+  "gst",
+  "pharo",
+  "tclsh",
+  "ts-node"
+]);
+const shellTypeExecutableRegexAllowList = [
+  {
+    regex: /^(?:pwsh|powershell)-preview$/i,
+    type: "pwsh-preview"
+    /* AllowedShellType.PwshPreview */
+  },
+  {
+    regex: /^python(?:\d+(?:\.\d+)?)?$/i,
+    type: "python"
+    /* AllowedShellType.Python */
+  }
+];
+const shellTypePathRegexAllowList = [
+  // Cygwin uses bash.exe, so look up based on the path
+  {
+    regex: /\\Cygwin(?:64)?\\.+\\bash\.exe$/i,
+    type: "cygwin-bash"
+    /* AllowedShellType.Cygwin */
+  },
+  // Git bash uses bash.exe, so look up based on the path
+  {
+    regex: /\\Git\\.+\\bash\.exe$/i,
+    type: "git-bash"
+    /* AllowedShellType.GitBash */
+  },
+  // Msys2 uses bash.exe, so look up based on the path
+  {
+    regex: /\\msys(?:32|64)\\.+\\(?:bash|msys2)\.exe$/i,
+    type: "msys2-bash"
+    /* AllowedShellType.Msys2 */
+  },
+  // WindowsPowerShell should always be installed on this path, we cannot just look at the
+  // executable name since powershell is the CLI on other platforms sometimes (eg. snap package)
+  {
+    regex: /\\WindowsPowerShell\\v1.0\\powershell.exe$/i,
+    type: "windows-powershell"
+    /* AllowedShellType.WindowsPowerShell */
+  },
+  // WSL executables will represent some other shell in the end, but it's difficult to determine
+  // when we log
+  {
+    regex: /\\Windows\\(?:System32|SysWOW64|Sysnative)\\(?:bash|wsl)\.exe$/i,
+    type: "wsl"
+    /* AllowedShellType.Wsl */
+  }
+];
+function getSanitizedShellType(slc) {
+  if (!slc.executable) {
+    return "unknown";
+  }
+  const executableFile = basename(slc.executable);
+  const executableFileWithoutExt = executableFile.replace(/\.[^\.]+$/, "");
+  for (const entry of shellTypePathRegexAllowList) {
+    if (entry.regex.test(slc.executable)) {
+      return entry.type;
+    }
+  }
+  for (const entry of shellTypeExecutableRegexAllowList) {
+    if (entry.regex.test(executableFileWithoutExt)) {
+      return entry.type;
+    }
+  }
+  if (shellTypeExecutableAllowList.has(executableFileWithoutExt)) {
+    return executableFileWithoutExt;
+  }
+  return "unknown";
+}
+__name(getSanitizedShellType, "getSanitizedShellType");
+export {
+  TerminalTelemetryContribution
+};
+//# sourceMappingURL=terminalTelemetry.js.map

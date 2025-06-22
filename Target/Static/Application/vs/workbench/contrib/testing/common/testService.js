@@ -1,1 +1,171 @@
-import{$Uc as h}from"../../../../base/common/assert.js";import{CancellationToken as g}from"../../../../base/common/cancellation.js";import{Iterable as x}from"../../../../base/common/iterator.js";import{$Gd as y}from"../../../../base/common/linkedList.js";import{$uU as I}from"../../../../base/common/prefixTree.js";import{$nj as $}from"../../../../platform/instantiation/common/instantiation.js";import{$vU as u}from"./testId.js";const R=$("testService"),z=t=>!x.some(t.rootItems,(t=>t.children.size>0)),E=(t,e)=>{if("string"==typeof e&&(e=u.fromString(e)),e.isRoot)return{controller:e.toString()};const o={$mid:16,tests:[]};for(const i of e.idsFromRoot())if(!i.isRoot){const e=t.getNodeById(i.toString());e&&o.tests.push(e)}return o},O=async(t,e,o=g.None)=>{const i=[...u.fromString(e).idsFromRoot()];let n=0;for(let e=i.length-1;!o.isCancellationRequested&&e>=n;){const o=i[e].toString(),s=t.getNodeById(o);if(s){if(e===i.length-1)return s;s.children.has(i[e+1].toString())||await t.expand(o,0),n=e+1,e=i.length-1}else e--}},p=(t,e)=>{if(e.item.busy)return new Promise((o=>{const i=t.onDidProcessDiff((()=>{!0!==t.collection.getNodeById(e.item.extId)?.item.busy&&(o(),i.dispose())}))}))},T=async function*(t,e,o,i=!0,n=!0){const s=new y,r=[...t.collection.getNodeByUrl(o)];s.push(r.length?r.map((t=>t.item.extId)):t.collection.rootIds);for(;s.size>0;)for(const r of s.pop()){0;const c=t.collection.getNodeById(r);if(c){if(!c.item.uri){s.push(c.children);continue}e.extUri.isEqual(o,c.item.uri)&&(yield c,!n)||e.extUri.isEqualOrParent(o,c.item.uri)&&(1===c.expand&&await t.collection.expand(c.item.extId,1),i&&await p(t,c),c.children.size&&s.push(c.children))}}},C=async function*(t,e,o,i=!0){const n=[t.collection.rootIds];for(;n.length;)for(const s of n.pop()){const r=t.collection.getNodeById(s);r&&(r.item.uri&&e.extUri.isEqualOrParent(r.item.uri,o)?yield r:(!r.item.uri||e.extUri.isEqualOrParent(o,r.item.uri))&&(1===r.expand&&await t.collection.expand(r.item.extId,1),i&&await p(t,r),n.push(r.children.values())))}},F=(t,e)=>{if(e.length<2)return e;const o=new I;for(const t of e)o.insert(u.fromString(t.item.extId).path,t);const i=[],n=(e,o)=>{if(o.value)return o.value;h(!!o.children,"expect to have children");const s=[];for(const[t,i]of o.children){e.push(t);const o=n(e,i);o&&s.push(o),e.pop()}if(!s.length)return;const r=new u(e),c=t.getNodeById(r.toString());if(c?.children.size===s.length)return c;i.push(...s)};for(const[t,e]of o.entries){const o=n([t],e);o&&i.push(o)}return i};export{R as $L2b,z as $M2b,E as $N2b,O as $O2b,T as $P2b,C as $Q2b,F as $R2b};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { assert } from "../../../../base/common/assert.js";
+import { CancellationToken } from "../../../../base/common/cancellation.js";
+import { Iterable } from "../../../../base/common/iterator.js";
+import { LinkedList } from "../../../../base/common/linkedList.js";
+import { WellDefinedPrefixTree } from "../../../../base/common/prefixTree.js";
+import { createDecorator } from "../../../../platform/instantiation/common/instantiation.js";
+import { TestId } from "./testId.js";
+const ITestService = createDecorator("testService");
+const testCollectionIsEmpty = /* @__PURE__ */ __name((collection) => !Iterable.some(collection.rootItems, (r) => r.children.size > 0), "testCollectionIsEmpty");
+const getContextForTestItem = /* @__PURE__ */ __name((collection, id) => {
+  if (typeof id === "string") {
+    id = TestId.fromString(id);
+  }
+  if (id.isRoot) {
+    return { controller: id.toString() };
+  }
+  const context = { $mid: 16, tests: [] };
+  for (const i of id.idsFromRoot()) {
+    if (!i.isRoot) {
+      const test = collection.getNodeById(i.toString());
+      if (test) {
+        context.tests.push(test);
+      }
+    }
+  }
+  return context;
+}, "getContextForTestItem");
+const expandAndGetTestById = /* @__PURE__ */ __name(async (collection, id, ct = CancellationToken.None) => {
+  const idPath = [...TestId.fromString(id).idsFromRoot()];
+  let expandToLevel = 0;
+  for (let i = idPath.length - 1; !ct.isCancellationRequested && i >= expandToLevel; ) {
+    const id2 = idPath[i].toString();
+    const existing = collection.getNodeById(id2);
+    if (!existing) {
+      i--;
+      continue;
+    }
+    if (i === idPath.length - 1) {
+      return existing;
+    }
+    if (!existing.children.has(idPath[i + 1].toString())) {
+      await collection.expand(id2, 0);
+    }
+    expandToLevel = i + 1;
+    i = idPath.length - 1;
+  }
+  return void 0;
+}, "expandAndGetTestById");
+const waitForTestToBeIdle = /* @__PURE__ */ __name((testService, test) => {
+  if (!test.item.busy) {
+    return;
+  }
+  return new Promise((resolve) => {
+    const l = testService.onDidProcessDiff(() => {
+      if (testService.collection.getNodeById(test.item.extId)?.item.busy !== true) {
+        resolve();
+        l.dispose();
+      }
+    });
+  });
+}, "waitForTestToBeIdle");
+const testsInFile = /* @__PURE__ */ __name(async function* (testService, ident, uri, waitForIdle = true, descendInFile = true) {
+  const queue = new LinkedList();
+  const existing = [...testService.collection.getNodeByUrl(uri)];
+  queue.push(existing.length ? existing.map((e) => e.item.extId) : testService.collection.rootIds);
+  let n = 0;
+  while (queue.size > 0) {
+    for (const id of queue.pop()) {
+      n++;
+      const test = testService.collection.getNodeById(id);
+      if (!test) {
+        continue;
+      }
+      if (!test.item.uri) {
+        queue.push(test.children);
+        continue;
+      }
+      if (ident.extUri.isEqual(uri, test.item.uri)) {
+        yield test;
+        if (!descendInFile) {
+          continue;
+        }
+      }
+      if (ident.extUri.isEqualOrParent(uri, test.item.uri)) {
+        if (test.expand === 1) {
+          await testService.collection.expand(test.item.extId, 1);
+        }
+        if (waitForIdle) {
+          await waitForTestToBeIdle(testService, test);
+        }
+        if (test.children.size) {
+          queue.push(test.children);
+        }
+      }
+    }
+  }
+}, "testsInFile");
+const testsUnderUri = /* @__PURE__ */ __name(async function* (testService, ident, uri, waitForIdle = true) {
+  const queue = [testService.collection.rootIds];
+  while (queue.length) {
+    for (const testId of queue.pop()) {
+      const test = testService.collection.getNodeById(testId);
+      if (!test) {
+      } else if (test.item.uri && ident.extUri.isEqualOrParent(test.item.uri, uri)) {
+        yield test;
+      } else if (!test.item.uri || ident.extUri.isEqualOrParent(uri, test.item.uri)) {
+        if (test.expand === 1) {
+          await testService.collection.expand(test.item.extId, 1);
+        }
+        if (waitForIdle) {
+          await waitForTestToBeIdle(testService, test);
+        }
+        queue.push(test.children.values());
+      }
+    }
+  }
+}, "testsUnderUri");
+const simplifyTestsToExecute = /* @__PURE__ */ __name((collection, tests) => {
+  if (tests.length < 2) {
+    return tests;
+  }
+  const tree = new WellDefinedPrefixTree();
+  for (const test of tests) {
+    tree.insert(TestId.fromString(test.item.extId).path, test);
+  }
+  const out = [];
+  const process = /* @__PURE__ */ __name((currentId, node) => {
+    if (node.value) {
+      return node.value;
+    }
+    assert(!!node.children, "expect to have children");
+    const thisChildren = [];
+    for (const [part, child] of node.children) {
+      currentId.push(part);
+      const c = process(currentId, child);
+      if (c) {
+        thisChildren.push(c);
+      }
+      currentId.pop();
+    }
+    if (!thisChildren.length) {
+      return;
+    }
+    const id = new TestId(currentId);
+    const test = collection.getNodeById(id.toString());
+    if (test?.children.size === thisChildren.length) {
+      return test;
+    }
+    out.push(...thisChildren);
+    return;
+  }, "process");
+  for (const [id, node] of tree.entries) {
+    const n = process([id], node);
+    if (n) {
+      out.push(n);
+    }
+  }
+  return out;
+}, "simplifyTestsToExecute");
+export {
+  ITestService,
+  expandAndGetTestById,
+  getContextForTestItem,
+  simplifyTestsToExecute,
+  testCollectionIsEmpty,
+  testsInFile,
+  testsUnderUri
+};
+//# sourceMappingURL=testService.js.map

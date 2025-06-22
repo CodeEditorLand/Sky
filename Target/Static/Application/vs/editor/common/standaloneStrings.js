@@ -1,1 +1,87 @@
-import*as n from"../../nls.js";var l,e,a,t,i,u,d,g,c;!function(l){l.accessibilityHelpTitle=n.localize(874,null),l.openingDocs=n.localize(875,null),l.readonlyDiffEditor=n.localize(876,null),l.editableDiffEditor=n.localize(877,null),l.readonlyEditor=n.localize(878,null),l.editableEditor=n.localize(879,null),l.defaultWindowTitleIncludesEditorState=n.localize(880,null),l.defaultWindowTitleExcludingEditorState=n.localize(881,null),l.toolbar=n.localize(882,null),l.changeConfigToOnMac=n.localize(883,null),l.changeConfigToOnWinLinux=n.localize(884,null),l.auto_on=n.localize(885,null),l.auto_off=n.localize(886,null),l.screenReaderModeEnabled=n.localize(887,null),l.screenReaderModeDisabled=n.localize(888,null),l.tabFocusModeOnMsg=n.localize(889,null,"<keybinding:editor.action.toggleTabFocusMode>"),l.tabFocusModeOffMsg=n.localize(890,null,"<keybinding:editor.action.toggleTabFocusMode>"),l.stickScroll=n.localize(891,null,"<keybinding:editor.action.focusStickyDebugConsole>"),l.suggestActions=n.localize(892,null,"<keybinding:editor.action.triggerSuggest>"),l.acceptSuggestAction=n.localize(893,null,"<keybinding:acceptSelectedSuggestion>"),l.toggleSuggestionFocus=n.localize(894,null,"<keybinding:focusSuggestion>","<keybinding:toggleSuggestionFocus>"),l.codeFolding=n.localize(895,null,"<keybinding:editor.toggleFold>"),l.intellisense=n.localize(896,null,"<keybinding:editor.action.triggerSuggest>"),l.showOrFocusHover=n.localize(897,null,"<keybinding:editor.action.showHover>"),l.goToSymbol=n.localize(898,null,"<keybinding:workbench.action.gotoSymbol>"),l.showAccessibilityHelpAction=n.localize(899,null),l.listSignalSounds=n.localize(900,null),l.listAlerts=n.localize(901,null),l.quickChat=n.localize(902,null,"<keybinding:workbench.action.quickchat.toggle>"),l.startInlineChat=n.localize(903,null,"<keybinding:inlineChat.start>"),l.startDebugging=n.localize(904,null,"<keybinding:workbench.action.debug.start>"),l.setBreakpoint=n.localize(905,null,"<keybinding:editor.debug.action.toggleInlineBreakpoint>"),l.addToWatch=n.localize(906,null,"<keybinding:editor.debug.action.selectionToWatch>"),l.debugExecuteSelection=n.localize(907,null,"<keybinding:editor.debug.action.selectionToRepl>"),l.chatEditorModification=n.localize(908,null),l.chatEditorRequestInProgress=n.localize(909,null),l.chatEditActions=n.localize(910,null,"<keybinding:chatEditor.action.navigatePrevious>","<keybinding:chatEditor.action.navigateNext>","<keybinding:chatEditor.action.acceptHunk>","<keybinding:chatEditor.action.undoHunk>","<keybinding:chatEditor.action.toggleDiff>","<keybinding:chatEditor.action.acceptAllEdits>")}(l||(l={})),(e||(e={})).inspectTokensAction=n.localize(911,null),(a||(a={})).gotoLineActionLabel=n.localize(912,null),(t||(t={})).helpQuickAccessActionLabel=n.localize(913,null),function(l){l.quickCommandActionLabel=n.localize(914,null),l.quickCommandHelp=n.localize(915,null)}(i||(i={})),function(l){l.quickOutlineActionLabel=n.localize(916,null),l.quickOutlineByCategoryActionLabel=n.localize(917,null)}(u||(u={})),(d||(d={})).editorViewAccessibleLabel=n.localize(918,null),(g||(g={})).toggleHighContrast=n.localize(919,null),(c||(c={})).bulkEditServiceSummary=n.localize(920,null);export{l as AccessibilityHelpNLS,a as GoToLineNLS,e as InspectTokensNLS,i as QuickCommandNLS,t as QuickHelpNLS,u as QuickOutlineNLS,d as StandaloneCodeEditorNLS,c as StandaloneServicesNLS,g as ToggleHighContrastNLS};
+import * as nls from "../../nls.js";
+var AccessibilityHelpNLS;
+(function(AccessibilityHelpNLS2) {
+  AccessibilityHelpNLS2.accessibilityHelpTitle = nls.localize("accessibilityHelpTitle", "Accessibility Help");
+  AccessibilityHelpNLS2.openingDocs = nls.localize("openingDocs", "Opening the Accessibility documentation page.");
+  AccessibilityHelpNLS2.readonlyDiffEditor = nls.localize("readonlyDiffEditor", "You are in a read-only pane of a diff editor.");
+  AccessibilityHelpNLS2.editableDiffEditor = nls.localize("editableDiffEditor", "You are in a pane of a diff editor.");
+  AccessibilityHelpNLS2.readonlyEditor = nls.localize("readonlyEditor", "You are in a read-only code editor.");
+  AccessibilityHelpNLS2.editableEditor = nls.localize("editableEditor", "You are in a code editor.");
+  AccessibilityHelpNLS2.defaultWindowTitleIncludesEditorState = nls.localize("defaultWindowTitleIncludesEditorState", "activeEditorState - such as modified, problems, and more, is included as a part of the window.title setting by default. Disable it with accessibility.windowTitleOptimized.");
+  AccessibilityHelpNLS2.defaultWindowTitleExcludingEditorState = nls.localize("defaultWindowTitleExcludingEditorState", "activeEditorState - such as modified, problems, and more, is currently not included as a part of the window.title setting by default. Enable it with accessibility.windowTitleOptimized.");
+  AccessibilityHelpNLS2.toolbar = nls.localize("toolbar", "Around the workbench, when the screen reader announces you've landed in a toolbar, use narrow keys to navigate between the toolbar's actions.");
+  AccessibilityHelpNLS2.changeConfigToOnMac = nls.localize("changeConfigToOnMac", "Configure the application to be optimized for usage with a Screen Reader (Command+E).");
+  AccessibilityHelpNLS2.changeConfigToOnWinLinux = nls.localize("changeConfigToOnWinLinux", "Configure the application to be optimized for usage with a Screen Reader (Control+E).");
+  AccessibilityHelpNLS2.auto_on = nls.localize("auto_on", "The application is configured to be optimized for usage with a Screen Reader.");
+  AccessibilityHelpNLS2.auto_off = nls.localize("auto_off", "The application is configured to never be optimized for usage with a Screen Reader.");
+  AccessibilityHelpNLS2.screenReaderModeEnabled = nls.localize("screenReaderModeEnabled", "Screen Reader Optimized Mode enabled.");
+  AccessibilityHelpNLS2.screenReaderModeDisabled = nls.localize("screenReaderModeDisabled", "Screen Reader Optimized Mode disabled.");
+  AccessibilityHelpNLS2.tabFocusModeOnMsg = nls.localize("tabFocusModeOnMsg", "Pressing Tab in the current editor will move focus to the next focusable element. Toggle this behavior{0}.", "<keybinding:editor.action.toggleTabFocusMode>");
+  AccessibilityHelpNLS2.tabFocusModeOffMsg = nls.localize("tabFocusModeOffMsg", "Pressing Tab in the current editor will insert the tab character. Toggle this behavior{0}.", "<keybinding:editor.action.toggleTabFocusMode>");
+  AccessibilityHelpNLS2.stickScroll = nls.localize("stickScrollKb", "Focus Sticky Scroll{0} to focus the currently nested scopes.", "<keybinding:editor.action.focusStickyDebugConsole>");
+  AccessibilityHelpNLS2.suggestActions = nls.localize("suggestActionsKb", "Trigger the suggest widget{0} to show possible code completions.", "<keybinding:editor.action.triggerSuggest>");
+  AccessibilityHelpNLS2.acceptSuggestAction = nls.localize("acceptSuggestAction", "Accept suggestion{0} to accept the currently selected suggestion.", "<keybinding:acceptSelectedSuggestion>");
+  AccessibilityHelpNLS2.toggleSuggestionFocus = nls.localize("toggleSuggestionFocus", "Toggle focus between the suggest widget and the editor{0} and toggle details focus with{1} to learn more about the suggestion.", "<keybinding:focusSuggestion>", "<keybinding:toggleSuggestionFocus>");
+  AccessibilityHelpNLS2.codeFolding = nls.localize("codeFolding", "Use code folding to collapse blocks of code and focus on the code you're interested in via the Toggle Folding Command{0}.", "<keybinding:editor.toggleFold>");
+  AccessibilityHelpNLS2.intellisense = nls.localize("intellisense", "Use Intellisense to improve coding efficiency and reduce errors. Trigger suggestions{0}.", "<keybinding:editor.action.triggerSuggest>");
+  AccessibilityHelpNLS2.showOrFocusHover = nls.localize("showOrFocusHover", "Show or focus the hover{0} to read information about the current symbol.", "<keybinding:editor.action.showHover>");
+  AccessibilityHelpNLS2.goToSymbol = nls.localize("goToSymbol", "Go to Symbol{0} to quickly navigate between symbols in the current file.", "<keybinding:workbench.action.gotoSymbol>");
+  AccessibilityHelpNLS2.showAccessibilityHelpAction = nls.localize("showAccessibilityHelpAction", "Show Accessibility Help");
+  AccessibilityHelpNLS2.listSignalSounds = nls.localize("listSignalSoundsCommand", "Run the command: List Signal Sounds for an overview of all sounds and their current status.");
+  AccessibilityHelpNLS2.listAlerts = nls.localize("listAnnouncementsCommand", "Run the command: List Signal Announcements for an overview of announcements and their current status.");
+  AccessibilityHelpNLS2.quickChat = nls.localize("quickChatCommand", "Toggle quick chat{0} to open or close a chat session.", "<keybinding:workbench.action.quickchat.toggle>");
+  AccessibilityHelpNLS2.startInlineChat = nls.localize("startInlineChatCommand", "Start inline chat{0} to create an in editor chat session.", "<keybinding:inlineChat.start>");
+  AccessibilityHelpNLS2.startDebugging = nls.localize("debug.startDebugging", "The Debug: Start Debugging command{0} will start a debug session.", "<keybinding:workbench.action.debug.start>");
+  AccessibilityHelpNLS2.setBreakpoint = nls.localize("debugConsole.setBreakpoint", "The Debug: Inline Breakpoint command{0} will set or unset a breakpoint at the current cursor position in the active editor.", "<keybinding:editor.debug.action.toggleInlineBreakpoint>");
+  AccessibilityHelpNLS2.addToWatch = nls.localize("debugConsole.addToWatch", "The Debug: Add to Watch command{0} will add the selected text to the watch view.", "<keybinding:editor.debug.action.selectionToWatch>");
+  AccessibilityHelpNLS2.debugExecuteSelection = nls.localize("debugConsole.executeSelection", "The Debug: Execute Selection command{0} will execute the selected text in the debug console.", "<keybinding:editor.debug.action.selectionToRepl>");
+  AccessibilityHelpNLS2.chatEditorModification = nls.localize("chatEditorModification", "The editor contains pending modifications that have been made by chat.");
+  AccessibilityHelpNLS2.chatEditorRequestInProgress = nls.localize("chatEditorRequestInProgress", "The editor is currently waiting for modifications to be made by chat.");
+  AccessibilityHelpNLS2.chatEditActions = nls.localize("chatEditing.navigation", "Navigate between edits in the editor with navigate previous{0} and next{1} and accept{2}, reject{3} or view the diff{4} for the current change. Accept edits across all files{5}.", "<keybinding:chatEditor.action.navigatePrevious>", "<keybinding:chatEditor.action.navigateNext>", "<keybinding:chatEditor.action.acceptHunk>", "<keybinding:chatEditor.action.undoHunk>", "<keybinding:chatEditor.action.toggleDiff>", "<keybinding:chatEditor.action.acceptAllEdits>");
+})(AccessibilityHelpNLS || (AccessibilityHelpNLS = {}));
+var InspectTokensNLS;
+(function(InspectTokensNLS2) {
+  InspectTokensNLS2.inspectTokensAction = nls.localize("inspectTokens", "Developer: Inspect Tokens");
+})(InspectTokensNLS || (InspectTokensNLS = {}));
+var GoToLineNLS;
+(function(GoToLineNLS2) {
+  GoToLineNLS2.gotoLineActionLabel = nls.localize("gotoLineActionLabel", "Go to Line/Column...");
+})(GoToLineNLS || (GoToLineNLS = {}));
+var QuickHelpNLS;
+(function(QuickHelpNLS2) {
+  QuickHelpNLS2.helpQuickAccessActionLabel = nls.localize("helpQuickAccess", "Show all Quick Access Providers");
+})(QuickHelpNLS || (QuickHelpNLS = {}));
+var QuickCommandNLS;
+(function(QuickCommandNLS2) {
+  QuickCommandNLS2.quickCommandActionLabel = nls.localize("quickCommandActionLabel", "Command Palette");
+  QuickCommandNLS2.quickCommandHelp = nls.localize("quickCommandActionHelp", "Show And Run Commands");
+})(QuickCommandNLS || (QuickCommandNLS = {}));
+var QuickOutlineNLS;
+(function(QuickOutlineNLS2) {
+  QuickOutlineNLS2.quickOutlineActionLabel = nls.localize("quickOutlineActionLabel", "Go to Symbol...");
+  QuickOutlineNLS2.quickOutlineByCategoryActionLabel = nls.localize("quickOutlineByCategoryActionLabel", "Go to Symbol by Category...");
+})(QuickOutlineNLS || (QuickOutlineNLS = {}));
+var StandaloneCodeEditorNLS;
+(function(StandaloneCodeEditorNLS2) {
+  StandaloneCodeEditorNLS2.editorViewAccessibleLabel = nls.localize("editorViewAccessibleLabel", "Editor content");
+})(StandaloneCodeEditorNLS || (StandaloneCodeEditorNLS = {}));
+var ToggleHighContrastNLS;
+(function(ToggleHighContrastNLS2) {
+  ToggleHighContrastNLS2.toggleHighContrast = nls.localize("toggleHighContrast", "Toggle High Contrast Theme");
+})(ToggleHighContrastNLS || (ToggleHighContrastNLS = {}));
+var StandaloneServicesNLS;
+(function(StandaloneServicesNLS2) {
+  StandaloneServicesNLS2.bulkEditServiceSummary = nls.localize("bulkEditServiceSummary", "Made {0} edits in {1} files");
+})(StandaloneServicesNLS || (StandaloneServicesNLS = {}));
+export {
+  AccessibilityHelpNLS,
+  GoToLineNLS,
+  InspectTokensNLS,
+  QuickCommandNLS,
+  QuickHelpNLS,
+  QuickOutlineNLS,
+  StandaloneCodeEditorNLS,
+  StandaloneServicesNLS,
+  ToggleHighContrastNLS
+};
+//# sourceMappingURL=standaloneStrings.js.map

@@ -1,8 +1,352 @@
-import{$df as w,$hf as S}from"../../../../base/common/event.js";import{$OEb as j}from"../common/decorations.js";import{$jj as C}from"../../../../base/common/ternarySearchTree.js";import{$td as D,$ud as b}from"../../../../base/common/lifecycle.js";import{$vh as O}from"../../../../base/common/async.js";import{$Gd as k}from"../../../../base/common/linkedList.js";import{$W7 as x,$Y7 as m,$Z7 as d}from"../../../../base/browser/domStylesheets.js";import*as I from"../../../../base/browser/cssValue.js";import{$Mt as R}from"../../../../platform/theme/common/themeService.js";import{ThemeIcon as u}from"../../../../base/common/themables.js";import{$yf as v}from"../../../../base/common/strings.js";import{localize as P}from"../../../../nls.js";import{$pb as T}from"../../../../base/common/errors.js";import{$pf as q}from"../../../../base/common/cancellation.js";import{$WB as A}from"../../../../platform/instantiation/common/extensions.js";import{$$m as _}from"../../../../base/common/hash.js";import{$yo as M}from"../../../../platform/uriIdentity/common/uriIdentity.js";import{$mc as z,$_b as E}from"../../../../base/common/arrays.js";import{$jp as U}from"../../../../platform/theme/common/colorRegistry.js";import{$Dt as W}from"../../../../platform/theme/common/iconRegistry.js";var B=function(c,t,s,e){var i=arguments.length,o=i<3?t:e===null?e=Object.getOwnPropertyDescriptor(t,s):e,r;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")o=Reflect.decorate(c,t,s,e);else for(var n=c.length-1;n>=0;n--)(r=c[n])&&(o=(i<3?r(o):i>3?r(t,s,o):r(t,s))||o);return i>3&&o&&Object.defineProperty(t,s,o),o},p=function(c,t){return function(s,e){t(s,e,c)}};class a{static keyOf(t){if(Array.isArray(t))return t.map(a.keyOf).join(",");{const{color:s,letter:e}=t;return u.isThemeIcon(e)?`${s}+${e.id}`:`${s}/${e}`}}static{this.c="monaco-decoration"}constructor(t,s,e){this.themeService=t,this.e=0,this.data=s;const i=_(e).toString(36);this.itemColorClassName=`${a.c}-itemColor-${i}`,this.itemBadgeClassName=`${a.c}-itemBadge-${i}`,this.bubbleBadgeClassName=`${a.c}-bubbleBadge-${i}`,this.iconBadgeClassName=`${a.c}-iconBadge-${i}`}acquire(){this.e+=1}release(){return--this.e===0}appendCSSRules(t){Array.isArray(this.data)?this.g(this.data,t):this.f(this.data,t)}f(t,s){const{color:e,letter:i}=t;m(`.${this.itemColorClassName}`,`color: ${h(e)};`,s),u.isThemeIcon(i)?this.h(i,e,s):i&&m(`.${this.itemBadgeClassName}::after`,`content: "${i}"; color: ${h(e)};`,s)}g(t,s){const{color:e}=t.find(r=>!!r.color)??t[0];m(`.${this.itemColorClassName}`,`color: ${h(e)};`,s);const i=[];let o;for(const r of t)if(u.isThemeIcon(r.letter)){o=r.letter;break}else r.letter&&i.push(r.letter);o?this.h(o,e,s):(i.length&&m(`.${this.itemBadgeClassName}::after`,`content: "${i.join(", ")}"; color: ${h(e)};`,s),m(`.${this.bubbleBadgeClassName}::after`,`content: "\uEA71"; color: ${h(e)}; font-family: codicon; font-size: 14px; margin-right: 14px; opacity: 0.4;`,s))}h(t,s,e){const i=u.getModifier(t);i&&(t=u.modify(t,void 0));const o=W().getIcon(t.id);if(!o)return;const r=this.themeService.getProductIconTheme().getIcon(o);r&&m(`.${this.iconBadgeClassName}::after`,`content: '${r.fontCharacter}';
-			color: ${t.color?h(t.color.id):h(s)};
-			font-family: ${I.$67(r.font?.id??"codicon")};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { Emitter, DebounceEmitter } from "../../../../base/common/event.js";
+import { IDecorationsService } from "../common/decorations.js";
+import { TernarySearchTree } from "../../../../base/common/ternarySearchTree.js";
+import { toDisposable, DisposableStore } from "../../../../base/common/lifecycle.js";
+import { isThenable } from "../../../../base/common/async.js";
+import { LinkedList } from "../../../../base/common/linkedList.js";
+import { createStyleSheet, createCSSRule, removeCSSRulesContainingSelector } from "../../../../base/browser/domStylesheets.js";
+import * as cssValue from "../../../../base/browser/cssValue.js";
+import { IThemeService } from "../../../../platform/theme/common/themeService.js";
+import { ThemeIcon } from "../../../../base/common/themables.js";
+import { isFalsyOrWhitespace } from "../../../../base/common/strings.js";
+import { localize } from "../../../../nls.js";
+import { isCancellationError } from "../../../../base/common/errors.js";
+import { CancellationTokenSource } from "../../../../base/common/cancellation.js";
+import { registerSingleton } from "../../../../platform/instantiation/common/extensions.js";
+import { hash } from "../../../../base/common/hash.js";
+import { IUriIdentityService } from "../../../../platform/uriIdentity/common/uriIdentity.js";
+import { asArray, distinct } from "../../../../base/common/arrays.js";
+import { asCssVariable } from "../../../../platform/theme/common/colorRegistry.js";
+import { getIconRegistry } from "../../../../platform/theme/common/iconRegistry.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+class DecorationRule {
+  static {
+    __name(this, "DecorationRule");
+  }
+  static keyOf(data) {
+    if (Array.isArray(data)) {
+      return data.map(DecorationRule.keyOf).join(",");
+    } else {
+      const { color, letter } = data;
+      if (ThemeIcon.isThemeIcon(letter)) {
+        return `${color}+${letter.id}`;
+      } else {
+        return `${color}/${letter}`;
+      }
+    }
+  }
+  static {
+    this._classNamesPrefix = "monaco-decoration";
+  }
+  constructor(themeService, data, key) {
+    this.themeService = themeService;
+    this._refCounter = 0;
+    this.data = data;
+    const suffix = hash(key).toString(36);
+    this.itemColorClassName = `${DecorationRule._classNamesPrefix}-itemColor-${suffix}`;
+    this.itemBadgeClassName = `${DecorationRule._classNamesPrefix}-itemBadge-${suffix}`;
+    this.bubbleBadgeClassName = `${DecorationRule._classNamesPrefix}-bubbleBadge-${suffix}`;
+    this.iconBadgeClassName = `${DecorationRule._classNamesPrefix}-iconBadge-${suffix}`;
+  }
+  acquire() {
+    this._refCounter += 1;
+  }
+  release() {
+    return --this._refCounter === 0;
+  }
+  appendCSSRules(element) {
+    if (!Array.isArray(this.data)) {
+      this._appendForOne(this.data, element);
+    } else {
+      this._appendForMany(this.data, element);
+    }
+  }
+  _appendForOne(data, element) {
+    const { color, letter } = data;
+    createCSSRule(`.${this.itemColorClassName}`, `color: ${getColor(color)};`, element);
+    if (ThemeIcon.isThemeIcon(letter)) {
+      this._createIconCSSRule(letter, color, element);
+    } else if (letter) {
+      createCSSRule(`.${this.itemBadgeClassName}::after`, `content: "${letter}"; color: ${getColor(color)};`, element);
+    }
+  }
+  _appendForMany(data, element) {
+    const { color } = data.find((d) => !!d.color) ?? data[0];
+    createCSSRule(`.${this.itemColorClassName}`, `color: ${getColor(color)};`, element);
+    const letters = [];
+    let icon;
+    for (const d of data) {
+      if (ThemeIcon.isThemeIcon(d.letter)) {
+        icon = d.letter;
+        break;
+      } else if (d.letter) {
+        letters.push(d.letter);
+      }
+    }
+    if (icon) {
+      this._createIconCSSRule(icon, color, element);
+    } else {
+      if (letters.length) {
+        createCSSRule(`.${this.itemBadgeClassName}::after`, `content: "${letters.join(", ")}"; color: ${getColor(color)};`, element);
+      }
+      createCSSRule(`.${this.bubbleBadgeClassName}::after`, `content: "\uEA71"; color: ${getColor(color)}; font-family: codicon; font-size: 14px; margin-right: 14px; opacity: 0.4;`, element);
+    }
+  }
+  _createIconCSSRule(icon, color, element) {
+    const modifier = ThemeIcon.getModifier(icon);
+    if (modifier) {
+      icon = ThemeIcon.modify(icon, void 0);
+    }
+    const iconContribution = getIconRegistry().getIcon(icon.id);
+    if (!iconContribution) {
+      return;
+    }
+    const definition = this.themeService.getProductIconTheme().getIcon(iconContribution);
+    if (!definition) {
+      return;
+    }
+    createCSSRule(`.${this.iconBadgeClassName}::after`, `content: '${definition.fontCharacter}';
+			color: ${icon.color ? getColor(icon.color.id) : getColor(color)};
+			font-family: ${cssValue.stringValue(definition.font?.id ?? "codicon")};
 			font-size: 16px;
 			margin-right: 14px;
 			font-weight: normal;
-			${i==="spin"?"animation: codicon-spin 1.5s steps(30) infinite; font-style: normal !important;":""};
-			`,e)}removeCSSRules(t){d(this.itemColorClassName,t),d(this.itemBadgeClassName,t),d(this.bubbleBadgeClassName,t),d(this.iconBadgeClassName,t)}}class F{constructor(t){this.g=t,this.c=new b,this.e=x(void 0,void 0,this.c),this.f=new Map}dispose(){this.c.dispose()}asDecoration(t,s){t.sort((l,y)=>(y.weight||0)-(l.weight||0));const e=a.keyOf(t);let i=this.f.get(e);i||(i=new a(this.g,t,e),this.f.set(e,i),i.appendCSSRules(this.e)),i.acquire();const o=i.itemColorClassName;let r=i.itemBadgeClassName;const n=i.iconBadgeClassName;let f=E(t.filter(l=>!v(l.tooltip)).map(l=>l.tooltip)).join(" \u2022 ");const N=t.some(l=>l.strikethrough);return s&&(r=i.bubbleBadgeClassName,f=P(13937,null)),{labelClassName:o,badgeClassName:r,iconClassName:n,strikethrough:N,tooltip:f,dispose:()=>{i?.release()&&(this.f.delete(e),i.removeCSSRules(this.e),i=void 0)}}}}class G{constructor(t){this.c=C.forUris(s=>!0),this.c.fill(!0,z(t))}affectsResource(t){return this.c.hasElementOrSubtree(t)}}class g{constructor(t,s){this.source=t,this.thenable=s}}function h(c){return c?U(c):"inherit"}let $=class{constructor(t,s){this.c=new b,this.e=this.c.add(new S({merge:e=>e.flat()})),this.f=this.c.add(new w),this.onDidChangeDecorations=this.f.event,this.g=new k,this.h=new F(s),this.i=C.forUris(e=>t.extUri.ignorePathCasing(e)),this.c.add(this.e.event(e=>{this.f.fire(new G(e))}))}dispose(){this.c.dispose(),this.i.clear()}registerDecorationsProvider(t){const s=this.g.unshift(t);this.f.fire({affectsResource(){return!0}});const e=()=>{const o=[];for(const[r,n]of this.i)n.delete(t)&&o.push(r);o.length>0&&this.e.fire(o)},i=t.onDidChange(o=>{if(!o)e();else for(const r of o){const n=this.j(r);this.k(n,r,t)}});return D(()=>{s(),i.dispose(),e()})}j(t){let s=this.i.get(t);return s||(s=new Map,this.i.set(t,s)),s}getDecoration(t,s){const e=[];let i=!1;const o=this.j(t);for(const r of this.g){let n=o.get(r);n===void 0&&(n=this.k(o,t,r)),n&&!(n instanceof g)&&e.push(n)}if(s){const r=this.i.findSuperstr(t);if(r)for(const n of r)for(const f of n[1].values())f&&!(f instanceof g)&&f.bubble&&(e.push(f),i=!0)}return e.length===0?void 0:this.h.asDecoration(e,i)}k(t,s,e){const i=t.get(e);i instanceof g&&(i.source.cancel(),t.delete(e));const o=new q,r=e.provideDecorations(s,o.token);if(O(r)){const n=new g(o,Promise.resolve(r).then(f=>{t.get(e)===n&&this.l(t,e,s,f)}).catch(f=>{!T(f)&&t.get(e)===n&&t.delete(e)}).finally(()=>{o.dispose()}));return t.set(e,n),null}else return o.dispose(),this.l(t,e,s,r)}l(t,s,e,i){const o=i||null,r=t.get(s);return t.set(s,o),(o||r)&&this.e.fire(e),o}};$=B([p(0,M),p(1,R)],$);A(j,$,1);export{$ as $14b};
+			${modifier === "spin" ? "animation: codicon-spin 1.5s steps(30) infinite; font-style: normal !important;" : ""};
+			`, element);
+  }
+  removeCSSRules(element) {
+    removeCSSRulesContainingSelector(this.itemColorClassName, element);
+    removeCSSRulesContainingSelector(this.itemBadgeClassName, element);
+    removeCSSRulesContainingSelector(this.bubbleBadgeClassName, element);
+    removeCSSRulesContainingSelector(this.iconBadgeClassName, element);
+  }
+}
+class DecorationStyles {
+  static {
+    __name(this, "DecorationStyles");
+  }
+  constructor(_themeService) {
+    this._themeService = _themeService;
+    this._dispoables = new DisposableStore();
+    this._styleElement = createStyleSheet(void 0, void 0, this._dispoables);
+    this._decorationRules = /* @__PURE__ */ new Map();
+  }
+  dispose() {
+    this._dispoables.dispose();
+  }
+  asDecoration(data, onlyChildren) {
+    data.sort((a, b) => (b.weight || 0) - (a.weight || 0));
+    const key = DecorationRule.keyOf(data);
+    let rule = this._decorationRules.get(key);
+    if (!rule) {
+      rule = new DecorationRule(this._themeService, data, key);
+      this._decorationRules.set(key, rule);
+      rule.appendCSSRules(this._styleElement);
+    }
+    rule.acquire();
+    const labelClassName = rule.itemColorClassName;
+    let badgeClassName = rule.itemBadgeClassName;
+    const iconClassName = rule.iconBadgeClassName;
+    let tooltip = distinct(data.filter((d) => !isFalsyOrWhitespace(d.tooltip)).map((d) => d.tooltip)).join(" \u2022 ");
+    const strikethrough = data.some((d) => d.strikethrough);
+    if (onlyChildren) {
+      badgeClassName = rule.bubbleBadgeClassName;
+      tooltip = localize("bubbleTitle", "Contains emphasized items");
+    }
+    return {
+      labelClassName,
+      badgeClassName,
+      iconClassName,
+      strikethrough,
+      tooltip,
+      dispose: /* @__PURE__ */ __name(() => {
+        if (rule?.release()) {
+          this._decorationRules.delete(key);
+          rule.removeCSSRules(this._styleElement);
+          rule = void 0;
+        }
+      }, "dispose")
+    };
+  }
+}
+class FileDecorationChangeEvent {
+  static {
+    __name(this, "FileDecorationChangeEvent");
+  }
+  constructor(all) {
+    this._data = TernarySearchTree.forUris((_uri) => true);
+    this._data.fill(true, asArray(all));
+  }
+  affectsResource(uri) {
+    return this._data.hasElementOrSubtree(uri);
+  }
+}
+class DecorationDataRequest {
+  static {
+    __name(this, "DecorationDataRequest");
+  }
+  constructor(source, thenable) {
+    this.source = source;
+    this.thenable = thenable;
+  }
+}
+function getColor(color) {
+  return color ? asCssVariable(color) : "inherit";
+}
+__name(getColor, "getColor");
+let DecorationsService = class DecorationsService2 {
+  static {
+    __name(this, "DecorationsService");
+  }
+  constructor(uriIdentityService, themeService) {
+    this._store = new DisposableStore();
+    this._onDidChangeDecorationsDelayed = this._store.add(new DebounceEmitter({ merge: /* @__PURE__ */ __name((all) => all.flat(), "merge") }));
+    this._onDidChangeDecorations = this._store.add(new Emitter());
+    this.onDidChangeDecorations = this._onDidChangeDecorations.event;
+    this._provider = new LinkedList();
+    this._decorationStyles = new DecorationStyles(themeService);
+    this._data = TernarySearchTree.forUris((key) => uriIdentityService.extUri.ignorePathCasing(key));
+    this._store.add(this._onDidChangeDecorationsDelayed.event((event) => {
+      this._onDidChangeDecorations.fire(new FileDecorationChangeEvent(event));
+    }));
+  }
+  dispose() {
+    this._store.dispose();
+    this._data.clear();
+  }
+  registerDecorationsProvider(provider) {
+    const rm = this._provider.unshift(provider);
+    this._onDidChangeDecorations.fire({
+      // everything might have changed
+      affectsResource() {
+        return true;
+      }
+    });
+    const removeAll = /* @__PURE__ */ __name(() => {
+      const uris = [];
+      for (const [uri, map] of this._data) {
+        if (map.delete(provider)) {
+          uris.push(uri);
+        }
+      }
+      if (uris.length > 0) {
+        this._onDidChangeDecorationsDelayed.fire(uris);
+      }
+    }, "removeAll");
+    const listener = provider.onDidChange((uris) => {
+      if (!uris) {
+        removeAll();
+      } else {
+        for (const uri of uris) {
+          const map = this._ensureEntry(uri);
+          this._fetchData(map, uri, provider);
+        }
+      }
+    });
+    return toDisposable(() => {
+      rm();
+      listener.dispose();
+      removeAll();
+    });
+  }
+  _ensureEntry(uri) {
+    let map = this._data.get(uri);
+    if (!map) {
+      map = /* @__PURE__ */ new Map();
+      this._data.set(uri, map);
+    }
+    return map;
+  }
+  getDecoration(uri, includeChildren) {
+    const all = [];
+    let containsChildren = false;
+    const map = this._ensureEntry(uri);
+    for (const provider of this._provider) {
+      let data = map.get(provider);
+      if (data === void 0) {
+        data = this._fetchData(map, uri, provider);
+      }
+      if (data && !(data instanceof DecorationDataRequest)) {
+        all.push(data);
+      }
+    }
+    if (includeChildren) {
+      const iter = this._data.findSuperstr(uri);
+      if (iter) {
+        for (const tuple of iter) {
+          for (const data of tuple[1].values()) {
+            if (data && !(data instanceof DecorationDataRequest)) {
+              if (data.bubble) {
+                all.push(data);
+                containsChildren = true;
+              }
+            }
+          }
+        }
+      }
+    }
+    return all.length === 0 ? void 0 : this._decorationStyles.asDecoration(all, containsChildren);
+  }
+  _fetchData(map, uri, provider) {
+    const pendingRequest = map.get(provider);
+    if (pendingRequest instanceof DecorationDataRequest) {
+      pendingRequest.source.cancel();
+      map.delete(provider);
+    }
+    const cts = new CancellationTokenSource();
+    const dataOrThenable = provider.provideDecorations(uri, cts.token);
+    if (!isThenable(dataOrThenable)) {
+      cts.dispose();
+      return this._keepItem(map, provider, uri, dataOrThenable);
+    } else {
+      const request = new DecorationDataRequest(cts, Promise.resolve(dataOrThenable).then((data) => {
+        if (map.get(provider) === request) {
+          this._keepItem(map, provider, uri, data);
+        }
+      }).catch((err) => {
+        if (!isCancellationError(err) && map.get(provider) === request) {
+          map.delete(provider);
+        }
+      }).finally(() => {
+        cts.dispose();
+      }));
+      map.set(provider, request);
+      return null;
+    }
+  }
+  _keepItem(map, provider, uri, data) {
+    const deco = data ? data : null;
+    const old = map.get(provider);
+    map.set(provider, deco);
+    if (deco || old) {
+      this._onDidChangeDecorationsDelayed.fire(uri);
+    }
+    return deco;
+  }
+};
+DecorationsService = __decorate([
+  __param(0, IUriIdentityService),
+  __param(1, IThemeService)
+], DecorationsService);
+registerSingleton(
+  IDecorationsService,
+  DecorationsService,
+  1
+  /* InstantiationType.Delayed */
+);
+export {
+  DecorationsService
+};
+//# sourceMappingURL=decorationsService.js.map

@@ -1,1 +1,472 @@
-import{$df as m}from"../../../../base/common/event.js";import{$oob as g}from"./foldingRanges.js";import{$$m as p}from"../../../../base/common/hash.js";class f{get regions(){return this.c}get textModel(){return this.a}get decorationProvider(){return this.b}constructor(t,e){this.e=new m,this.onDidChange=this.e.event,this.a=t,this.b=e,this.c=new g(new Uint32Array(0),new Uint32Array(0)),this.d=[]}toggleCollapseState(t){if(!t.length)return;t=t.sort((s,n)=>s.regionIndex-n.regionIndex);const e={};this.b.changeDecorations(s=>{let n=0,r=-1,i=-1;const u=a=>{for(;n<a;){const l=this.c.getEndLineNumber(n),c=this.c.isCollapsed(n);if(l<=r){const h=this.regions.getSource(n)!==0;s.changeDecorationOptions(this.d[n],this.b.getDecorationOption(c,l<=i,h))}c&&l>i&&(i=l),n++}};for(const a of t){const l=a.regionIndex,c=this.d[l];if(c&&!e[c]){e[c]=!0,u(l);const h=!this.c.isCollapsed(l);this.c.setCollapsed(l,h),r=Math.max(r,this.c.getEndLineNumber(l))}}u(this.c.length)}),this.e.fire({model:this,collapseStateChanged:t})}removeManualRanges(t){const e=new Array,s=n=>{for(const r of t)if(!(r.startLineNumber>n.endLineNumber||n.startLineNumber>r.endLineNumber))return!0;return!1};for(let n=0;n<this.c.length;n++){const r=this.c.toFoldRange(n);(r.source===0||!s(r))&&e.push(r)}this.updatePost(g.fromFoldRanges(e))}update(t,e){const s=this.f(e),n=g.sanitizeAndMerge(t,s,this.a.getLineCount(),e);this.updatePost(g.fromFoldRanges(n))}updatePost(t){const e=[];let s=-1;for(let n=0,r=t.length;n<r;n++){const i=t.getStartLineNumber(n),u=t.getEndLineNumber(n),a=t.isCollapsed(n),l=t.getSource(n)!==0,c={startLineNumber:i,startColumn:this.a.getLineMaxColumn(i),endLineNumber:u,endColumn:this.a.getLineMaxColumn(u)+1};e.push({range:c,options:this.b.getDecorationOption(a,u<=s,l)}),a&&u>s&&(s=u)}this.b.changeDecorations(n=>this.d=n.deltaDecorations(this.d,e)),this.c=t,this.e.fire({model:this})}f(t){const e=[];for(let s=0,n=this.c.length;s<n;s++){let r=this.regions.isCollapsed(s);const i=this.regions.getSource(s);if(r||i!==0){const u=this.c.toFoldRange(s),a=this.a.getDecorationRange(this.d[s]);a&&(r&&t?.startsInside(a.startLineNumber+1,a.endLineNumber)&&(r=!1),e.push({startLineNumber:a.startLineNumber,endLineNumber:a.endLineNumber,type:u.type,isCollapsed:r,source:i}))}}return e}getMemento(){const t=this.f(),e=[],s=this.a.getLineCount();for(let n=0,r=t.length;n<r;n++){const i=t[n];if(i.startLineNumber>=i.endLineNumber||i.startLineNumber<1||i.endLineNumber>s)continue;const u=this.g(i.startLineNumber+1,i.endLineNumber);e.push({startLineNumber:i.startLineNumber,endLineNumber:i.endLineNumber,isCollapsed:i.isCollapsed,source:i.source,checksum:u})}return e.length>0?e:void 0}applyMemento(t){if(!Array.isArray(t))return;const e=[],s=this.a.getLineCount();for(const r of t){if(r.startLineNumber>=r.endLineNumber||r.startLineNumber<1||r.endLineNumber>s)continue;const i=this.g(r.startLineNumber+1,r.endLineNumber);(!r.checksum||i===r.checksum)&&e.push({startLineNumber:r.startLineNumber,endLineNumber:r.endLineNumber,type:void 0,isCollapsed:r.isCollapsed??!0,source:r.source??0})}const n=g.sanitizeAndMerge(this.c,e,s);this.updatePost(g.fromFoldRanges(n))}g(t,e){return p(this.a.getLineContent(t)+this.a.getLineContent(e))%1e6}dispose(){this.b.removeDecorations(this.d)}getAllRegionsAtLine(t,e){const s=[];if(this.c){let n=this.c.findRange(t),r=1;for(;n>=0;){const i=this.c.toRegion(n);(!e||e(i,r))&&s.push(i),r++,n=i.parentIndex}}return s}getRegionAtLine(t){if(this.c){const e=this.c.findRange(t);if(e>=0)return this.c.toRegion(e)}return null}getRegionsInside(t,e){const s=[],n=t?t.regionIndex+1:0,r=t?t.endLineNumber:Number.MAX_VALUE;if(e&&e.length===2){const i=[];for(let u=n,a=this.c.length;u<a;u++){const l=this.c.toRegion(u);if(this.c.getStartLineNumber(u)<r){for(;i.length>0&&!l.containedBy(i[i.length-1]);)i.pop();i.push(l),e(l,i.length)&&s.push(l)}else break}}else for(let i=n,u=this.c.length;i<u;i++){const a=this.c.toRegion(i);if(this.c.getStartLineNumber(i)<r)(!e||e(a))&&s.push(a);else break}return s}}function N(o,t,e){const s=[];for(const n of e){const r=o.getRegionAtLine(n);if(r){const i=!r.isCollapsed;if(s.push(r),t>1){const u=o.getRegionsInside(r,(a,l)=>a.isCollapsed!==i&&l<t);s.push(...u)}}}o.toggleCollapseState(s)}function x(o,t,e=Number.MAX_VALUE,s){const n=[];if(s&&s.length>0)for(const r of s){const i=o.getRegionAtLine(r);if(i&&(i.isCollapsed!==t&&n.push(i),e>1)){const u=o.getRegionsInside(i,(a,l)=>a.isCollapsed!==t&&l<e);n.push(...u)}}else{const r=o.getRegionsInside(null,(i,u)=>i.isCollapsed!==t&&u<e);n.push(...r)}o.toggleCollapseState(n)}function C(o,t,e,s){const n=[];for(const r of s){const i=o.getAllRegionsAtLine(r,(u,a)=>u.isCollapsed!==t&&a<=e);n.push(...i)}o.toggleCollapseState(n)}function R(o,t,e){const s=[];for(const n of e){const r=o.getAllRegionsAtLine(n,i=>i.isCollapsed!==t);r.length>0&&s.push(r[0])}o.toggleCollapseState(s)}function I(o,t,e,s){const n=(i,u)=>u===t&&i.isCollapsed!==e&&!s.some(a=>i.containsLine(a)),r=o.getRegionsInside(null,n);o.toggleCollapseState(r)}function A(o,t,e){const s=[];for(const i of e){const u=o.getAllRegionsAtLine(i,void 0);u.length>0&&s.push(u[0])}const n=i=>s.every(u=>!u.containedBy(i)&&!i.containedBy(u))&&i.isCollapsed!==t,r=o.getRegionsInside(null,n);o.toggleCollapseState(r)}function S(o,t,e){const s=o.textModel,n=o.regions,r=[];for(let i=n.length-1;i>=0;i--)if(e!==n.isCollapsed(i)){const u=n.getStartLineNumber(i);t.test(s.getLineContent(u))&&r.push(n.toRegion(i))}o.toggleCollapseState(r)}function y(o,t,e){const s=o.regions,n=[];for(let r=s.length-1;r>=0;r--)e!==s.isCollapsed(r)&&t===s.getType(r)&&n.push(s.toRegion(r));o.toggleCollapseState(n)}function $(o,t){let e=null;const s=t.getRegionAtLine(o);if(s!==null&&(e=s.startLineNumber,o===e)){const n=s.parentIndex;n!==-1?e=t.regions.getStartLineNumber(n):e=null}return e}function w(o,t){let e=t.getRegionAtLine(o);if(e!==null&&e.startLineNumber===o){if(o!==e.startLineNumber)return e.startLineNumber;{const s=e.parentIndex;let n=0;for(s!==-1&&(n=t.regions.getStartLineNumber(e.parentIndex));e!==null;)if(e.regionIndex>0){if(e=t.regions.toRegion(e.regionIndex-1),e.startLineNumber<=n)return null;if(e.parentIndex===s)return e.startLineNumber}else return null}}else if(t.regions.length>0)for(e=t.regions.toRegion(t.regions.length-1);e!==null;){if(e.startLineNumber<o)return e.startLineNumber;e.regionIndex>0?e=t.regions.toRegion(e.regionIndex-1):e=null}return null}function D(o,t){let e=t.getRegionAtLine(o);if(e!==null&&e.startLineNumber===o){const s=e.parentIndex;let n=0;if(s!==-1)n=t.regions.getEndLineNumber(e.parentIndex);else{if(t.regions.length===0)return null;n=t.regions.getEndLineNumber(t.regions.length-1)}for(;e!==null;)if(e.regionIndex<t.regions.length){if(e=t.regions.toRegion(e.regionIndex+1),e.startLineNumber>=n)return null;if(e.parentIndex===s)return e.startLineNumber}else return null}else if(t.regions.length>0)for(e=t.regions.toRegion(0);e!==null;){if(e.startLineNumber>o)return e.startLineNumber;e.regionIndex<t.regions.length?e=t.regions.toRegion(e.regionIndex+1):e=null}return null}export{w as $Aob,D as $Bob,f as $qob,N as $rob,x as $sob,C as $tob,R as $uob,I as $vob,A as $wob,S as $xob,y as $yob,$ as $zob};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { Emitter } from "../../../../base/common/event.js";
+import { FoldingRegions } from "./foldingRanges.js";
+import { hash } from "../../../../base/common/hash.js";
+class FoldingModel {
+  static {
+    __name(this, "FoldingModel");
+  }
+  get regions() {
+    return this._regions;
+  }
+  get textModel() {
+    return this._textModel;
+  }
+  get decorationProvider() {
+    return this._decorationProvider;
+  }
+  constructor(textModel, decorationProvider) {
+    this._updateEventEmitter = new Emitter();
+    this.onDidChange = this._updateEventEmitter.event;
+    this._textModel = textModel;
+    this._decorationProvider = decorationProvider;
+    this._regions = new FoldingRegions(new Uint32Array(0), new Uint32Array(0));
+    this._editorDecorationIds = [];
+  }
+  toggleCollapseState(toggledRegions) {
+    if (!toggledRegions.length) {
+      return;
+    }
+    toggledRegions = toggledRegions.sort((r1, r2) => r1.regionIndex - r2.regionIndex);
+    const processed = {};
+    this._decorationProvider.changeDecorations((accessor) => {
+      let k = 0;
+      let dirtyRegionEndLine = -1;
+      let lastHiddenLine = -1;
+      const updateDecorationsUntil = /* @__PURE__ */ __name((index) => {
+        while (k < index) {
+          const endLineNumber = this._regions.getEndLineNumber(k);
+          const isCollapsed = this._regions.isCollapsed(k);
+          if (endLineNumber <= dirtyRegionEndLine) {
+            const isManual = this.regions.getSource(k) !== 0;
+            accessor.changeDecorationOptions(this._editorDecorationIds[k], this._decorationProvider.getDecorationOption(isCollapsed, endLineNumber <= lastHiddenLine, isManual));
+          }
+          if (isCollapsed && endLineNumber > lastHiddenLine) {
+            lastHiddenLine = endLineNumber;
+          }
+          k++;
+        }
+      }, "updateDecorationsUntil");
+      for (const region of toggledRegions) {
+        const index = region.regionIndex;
+        const editorDecorationId = this._editorDecorationIds[index];
+        if (editorDecorationId && !processed[editorDecorationId]) {
+          processed[editorDecorationId] = true;
+          updateDecorationsUntil(index);
+          const newCollapseState = !this._regions.isCollapsed(index);
+          this._regions.setCollapsed(index, newCollapseState);
+          dirtyRegionEndLine = Math.max(dirtyRegionEndLine, this._regions.getEndLineNumber(index));
+        }
+      }
+      updateDecorationsUntil(this._regions.length);
+    });
+    this._updateEventEmitter.fire({ model: this, collapseStateChanged: toggledRegions });
+  }
+  removeManualRanges(ranges) {
+    const newFoldingRanges = new Array();
+    const intersects = /* @__PURE__ */ __name((foldRange) => {
+      for (const range of ranges) {
+        if (!(range.startLineNumber > foldRange.endLineNumber || foldRange.startLineNumber > range.endLineNumber)) {
+          return true;
+        }
+      }
+      return false;
+    }, "intersects");
+    for (let i = 0; i < this._regions.length; i++) {
+      const foldRange = this._regions.toFoldRange(i);
+      if (foldRange.source === 0 || !intersects(foldRange)) {
+        newFoldingRanges.push(foldRange);
+      }
+    }
+    this.updatePost(FoldingRegions.fromFoldRanges(newFoldingRanges));
+  }
+  update(newRegions, selection) {
+    const foldedOrManualRanges = this._currentFoldedOrManualRanges(selection);
+    const newRanges = FoldingRegions.sanitizeAndMerge(newRegions, foldedOrManualRanges, this._textModel.getLineCount(), selection);
+    this.updatePost(FoldingRegions.fromFoldRanges(newRanges));
+  }
+  updatePost(newRegions) {
+    const newEditorDecorations = [];
+    let lastHiddenLine = -1;
+    for (let index = 0, limit = newRegions.length; index < limit; index++) {
+      const startLineNumber = newRegions.getStartLineNumber(index);
+      const endLineNumber = newRegions.getEndLineNumber(index);
+      const isCollapsed = newRegions.isCollapsed(index);
+      const isManual = newRegions.getSource(index) !== 0;
+      const decorationRange = {
+        startLineNumber,
+        startColumn: this._textModel.getLineMaxColumn(startLineNumber),
+        endLineNumber,
+        endColumn: this._textModel.getLineMaxColumn(endLineNumber) + 1
+      };
+      newEditorDecorations.push({ range: decorationRange, options: this._decorationProvider.getDecorationOption(isCollapsed, endLineNumber <= lastHiddenLine, isManual) });
+      if (isCollapsed && endLineNumber > lastHiddenLine) {
+        lastHiddenLine = endLineNumber;
+      }
+    }
+    this._decorationProvider.changeDecorations((accessor) => this._editorDecorationIds = accessor.deltaDecorations(this._editorDecorationIds, newEditorDecorations));
+    this._regions = newRegions;
+    this._updateEventEmitter.fire({ model: this });
+  }
+  _currentFoldedOrManualRanges(selection) {
+    const foldedRanges = [];
+    for (let i = 0, limit = this._regions.length; i < limit; i++) {
+      let isCollapsed = this.regions.isCollapsed(i);
+      const source = this.regions.getSource(i);
+      if (isCollapsed || source !== 0) {
+        const foldRange = this._regions.toFoldRange(i);
+        const decRange = this._textModel.getDecorationRange(this._editorDecorationIds[i]);
+        if (decRange) {
+          if (isCollapsed && selection?.startsInside(decRange.startLineNumber + 1, decRange.endLineNumber)) {
+            isCollapsed = false;
+          }
+          foldedRanges.push({
+            startLineNumber: decRange.startLineNumber,
+            endLineNumber: decRange.endLineNumber,
+            type: foldRange.type,
+            isCollapsed,
+            source
+          });
+        }
+      }
+    }
+    return foldedRanges;
+  }
+  /**
+   * Collapse state memento, for persistence only
+   */
+  getMemento() {
+    const foldedOrManualRanges = this._currentFoldedOrManualRanges();
+    const result = [];
+    const maxLineNumber = this._textModel.getLineCount();
+    for (let i = 0, limit = foldedOrManualRanges.length; i < limit; i++) {
+      const range = foldedOrManualRanges[i];
+      if (range.startLineNumber >= range.endLineNumber || range.startLineNumber < 1 || range.endLineNumber > maxLineNumber) {
+        continue;
+      }
+      const checksum = this._getLinesChecksum(range.startLineNumber + 1, range.endLineNumber);
+      result.push({
+        startLineNumber: range.startLineNumber,
+        endLineNumber: range.endLineNumber,
+        isCollapsed: range.isCollapsed,
+        source: range.source,
+        checksum
+      });
+    }
+    return result.length > 0 ? result : void 0;
+  }
+  /**
+   * Apply persisted state, for persistence only
+   */
+  applyMemento(state) {
+    if (!Array.isArray(state)) {
+      return;
+    }
+    const rangesToRestore = [];
+    const maxLineNumber = this._textModel.getLineCount();
+    for (const range of state) {
+      if (range.startLineNumber >= range.endLineNumber || range.startLineNumber < 1 || range.endLineNumber > maxLineNumber) {
+        continue;
+      }
+      const checksum = this._getLinesChecksum(range.startLineNumber + 1, range.endLineNumber);
+      if (!range.checksum || checksum === range.checksum) {
+        rangesToRestore.push({
+          startLineNumber: range.startLineNumber,
+          endLineNumber: range.endLineNumber,
+          type: void 0,
+          isCollapsed: range.isCollapsed ?? true,
+          source: range.source ?? 0
+          /* FoldSource.provider */
+        });
+      }
+    }
+    const newRanges = FoldingRegions.sanitizeAndMerge(this._regions, rangesToRestore, maxLineNumber);
+    this.updatePost(FoldingRegions.fromFoldRanges(newRanges));
+  }
+  _getLinesChecksum(lineNumber1, lineNumber2) {
+    const h = hash(this._textModel.getLineContent(lineNumber1) + this._textModel.getLineContent(lineNumber2));
+    return h % 1e6;
+  }
+  dispose() {
+    this._decorationProvider.removeDecorations(this._editorDecorationIds);
+  }
+  getAllRegionsAtLine(lineNumber, filter) {
+    const result = [];
+    if (this._regions) {
+      let index = this._regions.findRange(lineNumber);
+      let level = 1;
+      while (index >= 0) {
+        const current = this._regions.toRegion(index);
+        if (!filter || filter(current, level)) {
+          result.push(current);
+        }
+        level++;
+        index = current.parentIndex;
+      }
+    }
+    return result;
+  }
+  getRegionAtLine(lineNumber) {
+    if (this._regions) {
+      const index = this._regions.findRange(lineNumber);
+      if (index >= 0) {
+        return this._regions.toRegion(index);
+      }
+    }
+    return null;
+  }
+  getRegionsInside(region, filter) {
+    const result = [];
+    const index = region ? region.regionIndex + 1 : 0;
+    const endLineNumber = region ? region.endLineNumber : Number.MAX_VALUE;
+    if (filter && filter.length === 2) {
+      const levelStack = [];
+      for (let i = index, len = this._regions.length; i < len; i++) {
+        const current = this._regions.toRegion(i);
+        if (this._regions.getStartLineNumber(i) < endLineNumber) {
+          while (levelStack.length > 0 && !current.containedBy(levelStack[levelStack.length - 1])) {
+            levelStack.pop();
+          }
+          levelStack.push(current);
+          if (filter(current, levelStack.length)) {
+            result.push(current);
+          }
+        } else {
+          break;
+        }
+      }
+    } else {
+      for (let i = index, len = this._regions.length; i < len; i++) {
+        const current = this._regions.toRegion(i);
+        if (this._regions.getStartLineNumber(i) < endLineNumber) {
+          if (!filter || filter(current)) {
+            result.push(current);
+          }
+        } else {
+          break;
+        }
+      }
+    }
+    return result;
+  }
+}
+function toggleCollapseState(foldingModel, levels, lineNumbers) {
+  const toToggle = [];
+  for (const lineNumber of lineNumbers) {
+    const region = foldingModel.getRegionAtLine(lineNumber);
+    if (region) {
+      const doCollapse = !region.isCollapsed;
+      toToggle.push(region);
+      if (levels > 1) {
+        const regionsInside = foldingModel.getRegionsInside(region, (r, level) => r.isCollapsed !== doCollapse && level < levels);
+        toToggle.push(...regionsInside);
+      }
+    }
+  }
+  foldingModel.toggleCollapseState(toToggle);
+}
+__name(toggleCollapseState, "toggleCollapseState");
+function setCollapseStateLevelsDown(foldingModel, doCollapse, levels = Number.MAX_VALUE, lineNumbers) {
+  const toToggle = [];
+  if (lineNumbers && lineNumbers.length > 0) {
+    for (const lineNumber of lineNumbers) {
+      const region = foldingModel.getRegionAtLine(lineNumber);
+      if (region) {
+        if (region.isCollapsed !== doCollapse) {
+          toToggle.push(region);
+        }
+        if (levels > 1) {
+          const regionsInside = foldingModel.getRegionsInside(region, (r, level) => r.isCollapsed !== doCollapse && level < levels);
+          toToggle.push(...regionsInside);
+        }
+      }
+    }
+  } else {
+    const regionsInside = foldingModel.getRegionsInside(null, (r, level) => r.isCollapsed !== doCollapse && level < levels);
+    toToggle.push(...regionsInside);
+  }
+  foldingModel.toggleCollapseState(toToggle);
+}
+__name(setCollapseStateLevelsDown, "setCollapseStateLevelsDown");
+function setCollapseStateLevelsUp(foldingModel, doCollapse, levels, lineNumbers) {
+  const toToggle = [];
+  for (const lineNumber of lineNumbers) {
+    const regions = foldingModel.getAllRegionsAtLine(lineNumber, (region, level) => region.isCollapsed !== doCollapse && level <= levels);
+    toToggle.push(...regions);
+  }
+  foldingModel.toggleCollapseState(toToggle);
+}
+__name(setCollapseStateLevelsUp, "setCollapseStateLevelsUp");
+function setCollapseStateUp(foldingModel, doCollapse, lineNumbers) {
+  const toToggle = [];
+  for (const lineNumber of lineNumbers) {
+    const regions = foldingModel.getAllRegionsAtLine(lineNumber, (region) => region.isCollapsed !== doCollapse);
+    if (regions.length > 0) {
+      toToggle.push(regions[0]);
+    }
+  }
+  foldingModel.toggleCollapseState(toToggle);
+}
+__name(setCollapseStateUp, "setCollapseStateUp");
+function setCollapseStateAtLevel(foldingModel, foldLevel, doCollapse, blockedLineNumbers) {
+  const filter = /* @__PURE__ */ __name((region, level) => level === foldLevel && region.isCollapsed !== doCollapse && !blockedLineNumbers.some((line) => region.containsLine(line)), "filter");
+  const toToggle = foldingModel.getRegionsInside(null, filter);
+  foldingModel.toggleCollapseState(toToggle);
+}
+__name(setCollapseStateAtLevel, "setCollapseStateAtLevel");
+function setCollapseStateForRest(foldingModel, doCollapse, blockedLineNumbers) {
+  const filteredRegions = [];
+  for (const lineNumber of blockedLineNumbers) {
+    const regions = foldingModel.getAllRegionsAtLine(lineNumber, void 0);
+    if (regions.length > 0) {
+      filteredRegions.push(regions[0]);
+    }
+  }
+  const filter = /* @__PURE__ */ __name((region) => filteredRegions.every((filteredRegion) => !filteredRegion.containedBy(region) && !region.containedBy(filteredRegion)) && region.isCollapsed !== doCollapse, "filter");
+  const toToggle = foldingModel.getRegionsInside(null, filter);
+  foldingModel.toggleCollapseState(toToggle);
+}
+__name(setCollapseStateForRest, "setCollapseStateForRest");
+function setCollapseStateForMatchingLines(foldingModel, regExp, doCollapse) {
+  const editorModel = foldingModel.textModel;
+  const regions = foldingModel.regions;
+  const toToggle = [];
+  for (let i = regions.length - 1; i >= 0; i--) {
+    if (doCollapse !== regions.isCollapsed(i)) {
+      const startLineNumber = regions.getStartLineNumber(i);
+      if (regExp.test(editorModel.getLineContent(startLineNumber))) {
+        toToggle.push(regions.toRegion(i));
+      }
+    }
+  }
+  foldingModel.toggleCollapseState(toToggle);
+}
+__name(setCollapseStateForMatchingLines, "setCollapseStateForMatchingLines");
+function setCollapseStateForType(foldingModel, type, doCollapse) {
+  const regions = foldingModel.regions;
+  const toToggle = [];
+  for (let i = regions.length - 1; i >= 0; i--) {
+    if (doCollapse !== regions.isCollapsed(i) && type === regions.getType(i)) {
+      toToggle.push(regions.toRegion(i));
+    }
+  }
+  foldingModel.toggleCollapseState(toToggle);
+}
+__name(setCollapseStateForType, "setCollapseStateForType");
+function getParentFoldLine(lineNumber, foldingModel) {
+  let startLineNumber = null;
+  const foldingRegion = foldingModel.getRegionAtLine(lineNumber);
+  if (foldingRegion !== null) {
+    startLineNumber = foldingRegion.startLineNumber;
+    if (lineNumber === startLineNumber) {
+      const parentFoldingIdx = foldingRegion.parentIndex;
+      if (parentFoldingIdx !== -1) {
+        startLineNumber = foldingModel.regions.getStartLineNumber(parentFoldingIdx);
+      } else {
+        startLineNumber = null;
+      }
+    }
+  }
+  return startLineNumber;
+}
+__name(getParentFoldLine, "getParentFoldLine");
+function getPreviousFoldLine(lineNumber, foldingModel) {
+  let foldingRegion = foldingModel.getRegionAtLine(lineNumber);
+  if (foldingRegion !== null && foldingRegion.startLineNumber === lineNumber) {
+    if (lineNumber !== foldingRegion.startLineNumber) {
+      return foldingRegion.startLineNumber;
+    } else {
+      const expectedParentIndex = foldingRegion.parentIndex;
+      let minLineNumber = 0;
+      if (expectedParentIndex !== -1) {
+        minLineNumber = foldingModel.regions.getStartLineNumber(foldingRegion.parentIndex);
+      }
+      while (foldingRegion !== null) {
+        if (foldingRegion.regionIndex > 0) {
+          foldingRegion = foldingModel.regions.toRegion(foldingRegion.regionIndex - 1);
+          if (foldingRegion.startLineNumber <= minLineNumber) {
+            return null;
+          } else if (foldingRegion.parentIndex === expectedParentIndex) {
+            return foldingRegion.startLineNumber;
+          }
+        } else {
+          return null;
+        }
+      }
+    }
+  } else {
+    if (foldingModel.regions.length > 0) {
+      foldingRegion = foldingModel.regions.toRegion(foldingModel.regions.length - 1);
+      while (foldingRegion !== null) {
+        if (foldingRegion.startLineNumber < lineNumber) {
+          return foldingRegion.startLineNumber;
+        }
+        if (foldingRegion.regionIndex > 0) {
+          foldingRegion = foldingModel.regions.toRegion(foldingRegion.regionIndex - 1);
+        } else {
+          foldingRegion = null;
+        }
+      }
+    }
+  }
+  return null;
+}
+__name(getPreviousFoldLine, "getPreviousFoldLine");
+function getNextFoldLine(lineNumber, foldingModel) {
+  let foldingRegion = foldingModel.getRegionAtLine(lineNumber);
+  if (foldingRegion !== null && foldingRegion.startLineNumber === lineNumber) {
+    const expectedParentIndex = foldingRegion.parentIndex;
+    let maxLineNumber = 0;
+    if (expectedParentIndex !== -1) {
+      maxLineNumber = foldingModel.regions.getEndLineNumber(foldingRegion.parentIndex);
+    } else if (foldingModel.regions.length === 0) {
+      return null;
+    } else {
+      maxLineNumber = foldingModel.regions.getEndLineNumber(foldingModel.regions.length - 1);
+    }
+    while (foldingRegion !== null) {
+      if (foldingRegion.regionIndex < foldingModel.regions.length) {
+        foldingRegion = foldingModel.regions.toRegion(foldingRegion.regionIndex + 1);
+        if (foldingRegion.startLineNumber >= maxLineNumber) {
+          return null;
+        } else if (foldingRegion.parentIndex === expectedParentIndex) {
+          return foldingRegion.startLineNumber;
+        }
+      } else {
+        return null;
+      }
+    }
+  } else {
+    if (foldingModel.regions.length > 0) {
+      foldingRegion = foldingModel.regions.toRegion(0);
+      while (foldingRegion !== null) {
+        if (foldingRegion.startLineNumber > lineNumber) {
+          return foldingRegion.startLineNumber;
+        }
+        if (foldingRegion.regionIndex < foldingModel.regions.length) {
+          foldingRegion = foldingModel.regions.toRegion(foldingRegion.regionIndex + 1);
+        } else {
+          foldingRegion = null;
+        }
+      }
+    }
+  }
+  return null;
+}
+__name(getNextFoldLine, "getNextFoldLine");
+export {
+  FoldingModel,
+  getNextFoldLine,
+  getParentFoldLine,
+  getPreviousFoldLine,
+  setCollapseStateAtLevel,
+  setCollapseStateForMatchingLines,
+  setCollapseStateForRest,
+  setCollapseStateForType,
+  setCollapseStateLevelsDown,
+  setCollapseStateLevelsUp,
+  setCollapseStateUp,
+  toggleCollapseState
+};
+//# sourceMappingURL=foldingModel.js.map

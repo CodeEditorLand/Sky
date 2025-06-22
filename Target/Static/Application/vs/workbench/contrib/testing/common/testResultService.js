@@ -1,1 +1,207 @@
-import{$Ib as m}from"../../../../base/common/arraysFind.js";import{$Yh as a}from"../../../../base/common/async.js";import{$df as p}from"../../../../base/common/event.js";import{$Cb as g}from"../../../../base/common/functional.js";import{$vd as $,$ud as b,$qd as C,$td as w}from"../../../../base/common/lifecycle.js";import{$Rm as I}from"../../../../base/common/uuid.js";import{$Vn as R}from"../../../../platform/contextkey/common/contextkey.js";import{$nj as v}from"../../../../platform/instantiation/common/instantiation.js";import{$Po as A}from"../../../../platform/telemetry/common/telemetry.js";import{TestingContextKeys as u}from"./testingContextKeys.js";import{$U2b as j}from"./testProfileService.js";import{$1U as h}from"./testResult.js";import{$Z2b as y,$Y2b as _}from"./testResultStorage.js";var c=function(n,t,e,s){var i=arguments.length,o=i<3?t:s===null?s=Object.getOwnPropertyDescriptor(t,e):s,r;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")o=Reflect.decorate(n,t,e,s);else for(var d=n.length-1;d>=0;d--)(r=n[d])&&(o=(i<3?r(o):i>3?r(t,e,o):r(t,e))||o);return i>3&&o&&Object.defineProperty(t,e,o),o},f=function(n,t){return function(e,s){t(e,s,n)}};const x=n=>n.results.length>0&&n.results[0].completedAt===void 0,V=v("testResultService");let l=class extends ${get results(){return this.u(),this.g}constructor(t,e,s,i){super(),this.y=e,this.z=s,this.C=i,this.f=this.B(new p),this.g=[],this.h=[],this.j=this.B(new p),this.m=0,this.onResultsChanged=this.f.event,this.onTestChanged=this.j.event,this.u=g(()=>this.y.read().then(o=>{for(let r=o.length-1;r>=0;r--)this.push(o[r])})),this.w=new a(()=>this.H(),500),this.B(w(()=>C(this.h))),this.n=u.isRunning.bindTo(t),this.s=u.hasAnyResults.bindTo(t)}getStateById(t){for(const e of this.results){const s=e.getStateById(t);if(s&&s.computedState!==0)return[e,s]}}createLiveResult(t){if("targets"in t){const i=I();return this.push(new h(i,!0,t,this.m++,this.C))}let e;t.profile&&(e=this.z.getControllerProfiles(t.controllerId).find(o=>o.profileId===t.profile.id));const s={preserveFocus:t.preserveFocus,targets:[],exclude:t.exclude,continuous:t.continuous,group:e?.group??2};return e&&s.targets.push({profileId:e.profileId,controllerId:t.controllerId,testIds:t.include}),this.push(new h(t.id,t.persist,s,this.m++,this.C))}push(t){if(t.completedAt===void 0)this.results.unshift(t);else{const s=m(this.results,i=>i.completedAt!==void 0&&i.completedAt<=t.completedAt);this.results.splice(s,0,t),this.w.schedule()}this.s.set(!0),this.results.length>_&&(this.results.pop(),this.h.pop()?.dispose());const e=new b;if(this.h.push(e),t instanceof h)e.add(t),e.add(t.onComplete(()=>this.D(t))),e.add(t.onChange(this.j.fire,this.j)),this.n.set(!0),this.f.fire({started:t});else{this.f.fire({inserted:t});for(const s of t.tests)for(const i of this.results)if(i===t){this.j.fire({item:s,result:t,reason:0});break}else if(i.getStateById(s.item.extId)!==void 0)break}return t}getResult(t){return this.results.find(e=>e.id===t)}clear(){const t=[],e=[];for(const s of this.results)s.completedAt!==void 0?e.push(s):t.push(s);this.g=t,this.w.schedule(),t.length===0&&this.s.set(!1),this.f.fire({removed:e})}D(t){this.F(),this.G(),this.w.schedule(),this.f.fire({completed:t})}F(){this.results.sort((t,e)=>{if(!!t.completedAt!=!!e.completedAt)return t.completedAt===void 0?-1:1;const s=t instanceof h?t.insertOrder:-1;return(e instanceof h?e.insertOrder:-1)-s})}G(){this.n.set(x(this))}async H(){await this.u(),this.y.persist(this.results)}};l=c([f(0,R),f(1,y),f(2,j),f(3,A)],l);export{V as $42b,l as $52b};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { findFirstIdxMonotonousOrArrLen } from "../../../../base/common/arraysFind.js";
+import { RunOnceScheduler } from "../../../../base/common/async.js";
+import { Emitter } from "../../../../base/common/event.js";
+import { createSingleCallFunction } from "../../../../base/common/functional.js";
+import { Disposable, DisposableStore, dispose, toDisposable } from "../../../../base/common/lifecycle.js";
+import { generateUuid } from "../../../../base/common/uuid.js";
+import { IContextKeyService } from "../../../../platform/contextkey/common/contextkey.js";
+import { createDecorator } from "../../../../platform/instantiation/common/instantiation.js";
+import { ITelemetryService } from "../../../../platform/telemetry/common/telemetry.js";
+import { TestingContextKeys } from "./testingContextKeys.js";
+import { ITestProfileService } from "./testProfileService.js";
+import { LiveTestResult } from "./testResult.js";
+import { ITestResultStorage, RETAIN_MAX_RESULTS } from "./testResultStorage.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+const isRunningTests = /* @__PURE__ */ __name((service) => service.results.length > 0 && service.results[0].completedAt === void 0, "isRunningTests");
+const ITestResultService = createDecorator("testResultService");
+let TestResultService = class TestResultService2 extends Disposable {
+  static {
+    __name(this, "TestResultService");
+  }
+  /**
+   * @inheritdoc
+   */
+  get results() {
+    this.loadResults();
+    return this._results;
+  }
+  constructor(contextKeyService, storage, testProfiles, telemetryService) {
+    super();
+    this.storage = storage;
+    this.testProfiles = testProfiles;
+    this.telemetryService = telemetryService;
+    this.changeResultEmitter = this._register(new Emitter());
+    this._results = [];
+    this._resultsDisposables = [];
+    this.testChangeEmitter = this._register(new Emitter());
+    this.insertOrderCounter = 0;
+    this.onResultsChanged = this.changeResultEmitter.event;
+    this.onTestChanged = this.testChangeEmitter.event;
+    this.loadResults = createSingleCallFunction(() => this.storage.read().then((loaded) => {
+      for (let i = loaded.length - 1; i >= 0; i--) {
+        this.push(loaded[i]);
+      }
+    }));
+    this.persistScheduler = new RunOnceScheduler(() => this.persistImmediately(), 500);
+    this._register(toDisposable(() => dispose(this._resultsDisposables)));
+    this.isRunning = TestingContextKeys.isRunning.bindTo(contextKeyService);
+    this.hasAnyResults = TestingContextKeys.hasAnyResults.bindTo(contextKeyService);
+  }
+  /**
+   * @inheritdoc
+   */
+  getStateById(extId) {
+    for (const result of this.results) {
+      const lookup = result.getStateById(extId);
+      if (lookup && lookup.computedState !== 0) {
+        return [result, lookup];
+      }
+    }
+    return void 0;
+  }
+  /**
+   * @inheritdoc
+   */
+  createLiveResult(req) {
+    if ("targets" in req) {
+      const id = generateUuid();
+      return this.push(new LiveTestResult(id, true, req, this.insertOrderCounter++, this.telemetryService));
+    }
+    let profile;
+    if (req.profile) {
+      const profiles = this.testProfiles.getControllerProfiles(req.controllerId);
+      profile = profiles.find((c) => c.profileId === req.profile.id);
+    }
+    const resolved = {
+      preserveFocus: req.preserveFocus,
+      targets: [],
+      exclude: req.exclude,
+      continuous: req.continuous,
+      group: profile?.group ?? 2
+    };
+    if (profile) {
+      resolved.targets.push({
+        profileId: profile.profileId,
+        controllerId: req.controllerId,
+        testIds: req.include
+      });
+    }
+    return this.push(new LiveTestResult(req.id, req.persist, resolved, this.insertOrderCounter++, this.telemetryService));
+  }
+  /**
+   * @inheritdoc
+   */
+  push(result) {
+    if (result.completedAt === void 0) {
+      this.results.unshift(result);
+    } else {
+      const index = findFirstIdxMonotonousOrArrLen(this.results, (r) => r.completedAt !== void 0 && r.completedAt <= result.completedAt);
+      this.results.splice(index, 0, result);
+      this.persistScheduler.schedule();
+    }
+    this.hasAnyResults.set(true);
+    if (this.results.length > RETAIN_MAX_RESULTS) {
+      this.results.pop();
+      this._resultsDisposables.pop()?.dispose();
+    }
+    const ds = new DisposableStore();
+    this._resultsDisposables.push(ds);
+    if (result instanceof LiveTestResult) {
+      ds.add(result);
+      ds.add(result.onComplete(() => this.onComplete(result)));
+      ds.add(result.onChange(this.testChangeEmitter.fire, this.testChangeEmitter));
+      this.isRunning.set(true);
+      this.changeResultEmitter.fire({ started: result });
+    } else {
+      this.changeResultEmitter.fire({ inserted: result });
+      for (const item of result.tests) {
+        for (const otherResult of this.results) {
+          if (otherResult === result) {
+            this.testChangeEmitter.fire({
+              item,
+              result,
+              reason: 0
+              /* TestResultItemChangeReason.ComputedStateChange */
+            });
+            break;
+          } else if (otherResult.getStateById(item.item.extId) !== void 0) {
+            break;
+          }
+        }
+      }
+    }
+    return result;
+  }
+  /**
+   * @inheritdoc
+   */
+  getResult(id) {
+    return this.results.find((r) => r.id === id);
+  }
+  /**
+   * @inheritdoc
+   */
+  clear() {
+    const keep = [];
+    const removed = [];
+    for (const result of this.results) {
+      if (result.completedAt !== void 0) {
+        removed.push(result);
+      } else {
+        keep.push(result);
+      }
+    }
+    this._results = keep;
+    this.persistScheduler.schedule();
+    if (keep.length === 0) {
+      this.hasAnyResults.set(false);
+    }
+    this.changeResultEmitter.fire({ removed });
+  }
+  onComplete(result) {
+    this.resort();
+    this.updateIsRunning();
+    this.persistScheduler.schedule();
+    this.changeResultEmitter.fire({ completed: result });
+  }
+  resort() {
+    this.results.sort((a, b) => {
+      if (!!a.completedAt !== !!b.completedAt) {
+        return a.completedAt === void 0 ? -1 : 1;
+      }
+      const aComp = a instanceof LiveTestResult ? a.insertOrder : -1;
+      const bComp = b instanceof LiveTestResult ? b.insertOrder : -1;
+      return bComp - aComp;
+    });
+  }
+  updateIsRunning() {
+    this.isRunning.set(isRunningTests(this));
+  }
+  async persistImmediately() {
+    await this.loadResults();
+    this.storage.persist(this.results);
+  }
+};
+TestResultService = __decorate([
+  __param(0, IContextKeyService),
+  __param(1, ITestResultStorage),
+  __param(2, ITestProfileService),
+  __param(3, ITelemetryService)
+], TestResultService);
+export {
+  ITestResultService,
+  TestResultService
+};
+//# sourceMappingURL=testResultService.js.map

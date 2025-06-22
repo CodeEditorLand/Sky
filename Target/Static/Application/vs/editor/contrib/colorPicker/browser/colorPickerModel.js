@@ -1,1 +1,77 @@
-import{$df as r}from"../../../../base/common/event.js";class l{get color(){return this.a}set color(t){this.a.equals(t)||(this.a=t,this.d.fire(t))}get presentation(){return this.colorPresentations[this.f]}get colorPresentations(){return this.b}set colorPresentations(t){this.b=t,this.f>t.length-1&&(this.f=0),this.e.fire(this.presentation)}constructor(t,s,e){this.f=e,this.c=new r,this.onColorFlushed=this.c.event,this.d=new r,this.onDidChangeColor=this.d.event,this.e=new r,this.onDidChangePresentation=this.e.event,this.originalColor=t,this.a=t,this.b=s}selectNextColorPresentation(){this.f=(this.f+1)%this.colorPresentations.length,this.flushColor(),this.e.fire(this.presentation)}guessColorPresentation(t,s){let e=-1;for(let t=0;t<this.colorPresentations.length;t++)if(s.toLowerCase()===this.colorPresentations[t].label){e=t;break}if(-1===e){const t=s.split("(")[0].toLowerCase();for(let s=0;s<this.colorPresentations.length;s++)if(this.colorPresentations[s].label.toLowerCase().startsWith(t)){e=s;break}}-1!==e&&e!==this.f&&(this.f=e,this.e.fire(this.presentation))}flushColor(){this.c.fire(this.a)}}export{l as $Blb};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { Emitter } from "../../../../base/common/event.js";
+class ColorPickerModel {
+  static {
+    __name(this, "ColorPickerModel");
+  }
+  get color() {
+    return this._color;
+  }
+  set color(color) {
+    if (this._color.equals(color)) {
+      return;
+    }
+    this._color = color;
+    this._onDidChangeColor.fire(color);
+  }
+  get presentation() {
+    return this.colorPresentations[this.presentationIndex];
+  }
+  get colorPresentations() {
+    return this._colorPresentations;
+  }
+  set colorPresentations(colorPresentations) {
+    this._colorPresentations = colorPresentations;
+    if (this.presentationIndex > colorPresentations.length - 1) {
+      this.presentationIndex = 0;
+    }
+    this._onDidChangePresentation.fire(this.presentation);
+  }
+  constructor(color, availableColorPresentations, presentationIndex) {
+    this.presentationIndex = presentationIndex;
+    this._onColorFlushed = new Emitter();
+    this.onColorFlushed = this._onColorFlushed.event;
+    this._onDidChangeColor = new Emitter();
+    this.onDidChangeColor = this._onDidChangeColor.event;
+    this._onDidChangePresentation = new Emitter();
+    this.onDidChangePresentation = this._onDidChangePresentation.event;
+    this.originalColor = color;
+    this._color = color;
+    this._colorPresentations = availableColorPresentations;
+  }
+  selectNextColorPresentation() {
+    this.presentationIndex = (this.presentationIndex + 1) % this.colorPresentations.length;
+    this.flushColor();
+    this._onDidChangePresentation.fire(this.presentation);
+  }
+  guessColorPresentation(color, originalText) {
+    let presentationIndex = -1;
+    for (let i = 0; i < this.colorPresentations.length; i++) {
+      if (originalText.toLowerCase() === this.colorPresentations[i].label) {
+        presentationIndex = i;
+        break;
+      }
+    }
+    if (presentationIndex === -1) {
+      const originalTextPrefix = originalText.split("(")[0].toLowerCase();
+      for (let i = 0; i < this.colorPresentations.length; i++) {
+        if (this.colorPresentations[i].label.toLowerCase().startsWith(originalTextPrefix)) {
+          presentationIndex = i;
+          break;
+        }
+      }
+    }
+    if (presentationIndex !== -1 && presentationIndex !== this.presentationIndex) {
+      this.presentationIndex = presentationIndex;
+      this._onDidChangePresentation.fire(this.presentation);
+    }
+  }
+  flushColor() {
+    this._onColorFlushed.fire(this._color);
+  }
+}
+export {
+  ColorPickerModel
+};
+//# sourceMappingURL=colorPickerModel.js.map

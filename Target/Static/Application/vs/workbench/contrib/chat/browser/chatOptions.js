@@ -1,1 +1,105 @@
-import{$df as u}from"../../../../base/common/event.js";import{$vd as m}from"../../../../base/common/lifecycle.js";import{$El as p}from"../../../../platform/configuration/common/configuration.js";import{$Mt as C}from"../../../../platform/theme/common/themeService.js";import{$YM as b}from"../../../common/views.js";var g=function(r,i,t,o){var n=arguments.length,e=n<3?i:o===null?o=Object.getOwnPropertyDescriptor(i,t):o,a;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")e=Reflect.decorate(r,i,t,o);else for(var s=r.length-1;s>=0;s--)(a=r[s])&&(e=(n<3?a(e):n>3?a(i,t,e):a(i,t))||e);return n>3&&e&&Object.defineProperty(i,t,e),e},f=function(r,i){return function(t,o){i(t,o,r)}},l;let d=class extends m{static{l=this}static{this.a=1.4}get configuration(){return this.c}static{this.f=["chat.editor.lineHeight","chat.editor.fontSize","chat.editor.fontFamily","chat.editor.fontWeight","chat.editor.wordWrap","editor.cursorBlinking","editor.fontLigatures","editor.accessibilitySupport","editor.bracketPairColorization.enabled","editor.bracketPairColorization.independentColorPoolPerBracketType"]}constructor(i,t,o,n,e,a,s){super(),this.g=t,this.h=o,this.j=n,this.m=e,this.n=a,this.r=s,this.b=this.B(new u),this.onDidChange=this.b.event,this.B(this.n.onDidColorThemeChange(h=>this.s())),this.B(this.r.onDidChangeLocation(h=>{h.views.some(c=>c.id===i)&&this.s()})),this.B(this.m.onDidChangeConfiguration(h=>{l.f.some(c=>h.affectsConfiguration(c))&&this.s()})),this.s()}s(){const i=this.m.getValue("editor"),t=this.m.getValue("chat")?.editor,o=this.m.getValue("editor.accessibilitySupport");this.c={foreground:this.n.getColorTheme().getColor(this.g),inputEditor:{backgroundColor:this.n.getColorTheme().getColor(this.h),accessibilitySupport:o},resultEditor:{backgroundColor:this.n.getColorTheme().getColor(this.j),fontSize:t.fontSize,fontFamily:t.fontFamily==="default"?i.fontFamily:t.fontFamily,fontWeight:t.fontWeight,lineHeight:t.lineHeight?t.lineHeight:l.a*t.fontSize,bracketPairColorization:{enabled:this.m.getValue("editor.bracketPairColorization.enabled"),independentColorPoolPerBracketType:this.m.getValue("editor.bracketPairColorization.independentColorPoolPerBracketType")},wordWrap:t.wordWrap,fontLigatures:i.fontLigatures}},this.b.fire()}};d=l=g([f(4,p),f(5,C),f(6,b)],d);export{d as $JPb};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { Emitter } from "../../../../base/common/event.js";
+import { Disposable } from "../../../../base/common/lifecycle.js";
+import { IConfigurationService } from "../../../../platform/configuration/common/configuration.js";
+import { IThemeService } from "../../../../platform/theme/common/themeService.js";
+import { IViewDescriptorService } from "../../../common/views.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+var ChatEditorOptions_1;
+let ChatEditorOptions = class ChatEditorOptions2 extends Disposable {
+  static {
+    __name(this, "ChatEditorOptions");
+  }
+  static {
+    ChatEditorOptions_1 = this;
+  }
+  static {
+    this.lineHeightEm = 1.4;
+  }
+  get configuration() {
+    return this._config;
+  }
+  static {
+    this.relevantSettingIds = [
+      "chat.editor.lineHeight",
+      "chat.editor.fontSize",
+      "chat.editor.fontFamily",
+      "chat.editor.fontWeight",
+      "chat.editor.wordWrap",
+      "editor.cursorBlinking",
+      "editor.fontLigatures",
+      "editor.accessibilitySupport",
+      "editor.bracketPairColorization.enabled",
+      "editor.bracketPairColorization.independentColorPoolPerBracketType"
+    ];
+  }
+  constructor(viewId, foreground, inputEditorBackgroundColor, resultEditorBackgroundColor, configurationService, themeService, viewDescriptorService) {
+    super();
+    this.foreground = foreground;
+    this.inputEditorBackgroundColor = inputEditorBackgroundColor;
+    this.resultEditorBackgroundColor = resultEditorBackgroundColor;
+    this.configurationService = configurationService;
+    this.themeService = themeService;
+    this.viewDescriptorService = viewDescriptorService;
+    this._onDidChange = this._register(new Emitter());
+    this.onDidChange = this._onDidChange.event;
+    this._register(this.themeService.onDidColorThemeChange((e) => this.update()));
+    this._register(this.viewDescriptorService.onDidChangeLocation((e) => {
+      if (e.views.some((v) => v.id === viewId)) {
+        this.update();
+      }
+    }));
+    this._register(this.configurationService.onDidChangeConfiguration((e) => {
+      if (ChatEditorOptions_1.relevantSettingIds.some((id) => e.affectsConfiguration(id))) {
+        this.update();
+      }
+    }));
+    this.update();
+  }
+  update() {
+    const editorConfig = this.configurationService.getValue("editor");
+    const chatEditorConfig = this.configurationService.getValue("chat")?.editor;
+    const accessibilitySupport = this.configurationService.getValue("editor.accessibilitySupport");
+    this._config = {
+      foreground: this.themeService.getColorTheme().getColor(this.foreground),
+      inputEditor: {
+        backgroundColor: this.themeService.getColorTheme().getColor(this.inputEditorBackgroundColor),
+        accessibilitySupport
+      },
+      resultEditor: {
+        backgroundColor: this.themeService.getColorTheme().getColor(this.resultEditorBackgroundColor),
+        fontSize: chatEditorConfig.fontSize,
+        fontFamily: chatEditorConfig.fontFamily === "default" ? editorConfig.fontFamily : chatEditorConfig.fontFamily,
+        fontWeight: chatEditorConfig.fontWeight,
+        lineHeight: chatEditorConfig.lineHeight ? chatEditorConfig.lineHeight : ChatEditorOptions_1.lineHeightEm * chatEditorConfig.fontSize,
+        bracketPairColorization: {
+          enabled: this.configurationService.getValue("editor.bracketPairColorization.enabled"),
+          independentColorPoolPerBracketType: this.configurationService.getValue("editor.bracketPairColorization.independentColorPoolPerBracketType")
+        },
+        wordWrap: chatEditorConfig.wordWrap,
+        fontLigatures: editorConfig.fontLigatures
+      }
+    };
+    this._onDidChange.fire();
+  }
+};
+ChatEditorOptions = ChatEditorOptions_1 = __decorate([
+  __param(4, IConfigurationService),
+  __param(5, IThemeService),
+  __param(6, IViewDescriptorService)
+], ChatEditorOptions);
+export {
+  ChatEditorOptions
+};
+//# sourceMappingURL=chatOptions.js.map

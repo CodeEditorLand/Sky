@@ -1,1 +1,120 @@
-import{$cF as y}from"../../../../editor/common/services/resolverService.js";import{$gF as I}from"../../../../editor/common/services/model.js";import{$BD as k}from"../../../../editor/common/languages/language.js";import*as d from"../../../../base/common/marked/marked.js";import{Schemas as P}from"../../../../base/common/network.js";import{$cC as S}from"../../../../editor/common/core/range.js";import{$OH as _}from"../../../../editor/common/model/textModel.js";import{$$c as b}from"../../../../base/common/types.js";import{$mj as x}from"../../../../platform/instantiation/common/instantiation.js";var $=function(n,t,e,r){var i=arguments.length,o=i<3?t:r===null?r=Object.getOwnPropertyDescriptor(t,e):r,a;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")o=Reflect.decorate(n,t,e,r);else for(var c=n.length-1;c>=0;c--)(a=n[c])&&(o=(i<3?a(o):i>3?a(t,e,o):a(t,e))||o);return i>3&&o&&Object.defineProperty(t,e,o),o},s=function(n,t){return function(e,r){t(e,r,n)}};class C{constructor(){this.a=new Map}registerProvider(t,e){this.a.set(t,e)}getProvider(t){return this.a.get(t)}}const M=new C;async function R(n,t){if(!t.query)throw new Error("Walkthrough: invalid resource");const e=JSON.parse(t.query);if(!e.moduleId)throw new Error("Walkthrough: invalid resource");const r=M.getProvider(e.moduleId);if(!r)throw new Error(`Walkthrough: no provider registered for ${e.moduleId}`);return n.invokeFunction(r)}let g=class{static{this.ID="workbench.contrib.walkThroughSnippetContentProvider"}constructor(t,e,r,i){this.b=t,this.c=e,this.d=r,this.e=i,this.a=new Map,this.b.registerTextModelContentProvider(P.walkThroughSnippet,this)}async f(t){let e=this.a.get(t.toString());return e||(e=R(this.e,t).then(r=>_(r)).finally(()=>this.a.delete(t.toString())),this.a.set(t.toString(),e)),e}async provideTextContent(t){const e=await this.f(t.with({fragment:""}));let r=this.d.getModel(t);if(!r){const i=parseInt(t.fragment);let o=0;const a=new d.marked.Renderer;a.code=({text:u,lang:h})=>{o++;const p=typeof h=="string"&&this.c.getLanguageIdByLanguageName(h)||"",v=this.c.createById(p),w=this.d.createModel(u,v,t.with({fragment:`${o}.${h}`}));return o===i&&(r=w),""};const c=e.create(1).textBuffer,f=c.getLineCount(),l=new S(1,1,f,c.getLineLength(f)+1),m=c.getValueInRange(l,0);d.marked(m,{renderer:a})}return b(r)}};g=$([s(0,y),s(1,k),s(2,I),s(3,x)],g);export{M as $Uvc,R as $Vvc,g as $Wvc};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { ITextModelService } from "../../../../editor/common/services/resolverService.js";
+import { IModelService } from "../../../../editor/common/services/model.js";
+import { ILanguageService } from "../../../../editor/common/languages/language.js";
+import * as marked from "../../../../base/common/marked/marked.js";
+import { Schemas } from "../../../../base/common/network.js";
+import { Range } from "../../../../editor/common/core/range.js";
+import { createTextBufferFactory } from "../../../../editor/common/model/textModel.js";
+import { assertReturnsDefined } from "../../../../base/common/types.js";
+import { IInstantiationService } from "../../../../platform/instantiation/common/instantiation.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+class WalkThroughContentProviderRegistry {
+  static {
+    __name(this, "WalkThroughContentProviderRegistry");
+  }
+  constructor() {
+    this.providers = /* @__PURE__ */ new Map();
+  }
+  registerProvider(moduleId, provider) {
+    this.providers.set(moduleId, provider);
+  }
+  getProvider(moduleId) {
+    return this.providers.get(moduleId);
+  }
+}
+const walkThroughContentRegistry = new WalkThroughContentProviderRegistry();
+async function moduleToContent(instantiationService, resource) {
+  if (!resource.query) {
+    throw new Error("Walkthrough: invalid resource");
+  }
+  const query = JSON.parse(resource.query);
+  if (!query.moduleId) {
+    throw new Error("Walkthrough: invalid resource");
+  }
+  const provider = walkThroughContentRegistry.getProvider(query.moduleId);
+  if (!provider) {
+    throw new Error(`Walkthrough: no provider registered for ${query.moduleId}`);
+  }
+  return instantiationService.invokeFunction(provider);
+}
+__name(moduleToContent, "moduleToContent");
+let WalkThroughSnippetContentProvider = class WalkThroughSnippetContentProvider2 {
+  static {
+    __name(this, "WalkThroughSnippetContentProvider");
+  }
+  static {
+    this.ID = "workbench.contrib.walkThroughSnippetContentProvider";
+  }
+  constructor(textModelResolverService, languageService, modelService, instantiationService) {
+    this.textModelResolverService = textModelResolverService;
+    this.languageService = languageService;
+    this.modelService = modelService;
+    this.instantiationService = instantiationService;
+    this.loads = /* @__PURE__ */ new Map();
+    this.textModelResolverService.registerTextModelContentProvider(Schemas.walkThroughSnippet, this);
+  }
+  async textBufferFactoryFromResource(resource) {
+    let ongoing = this.loads.get(resource.toString());
+    if (!ongoing) {
+      ongoing = moduleToContent(this.instantiationService, resource).then((content) => createTextBufferFactory(content)).finally(() => this.loads.delete(resource.toString()));
+      this.loads.set(resource.toString(), ongoing);
+    }
+    return ongoing;
+  }
+  async provideTextContent(resource) {
+    const factory = await this.textBufferFactoryFromResource(resource.with({ fragment: "" }));
+    let codeEditorModel = this.modelService.getModel(resource);
+    if (!codeEditorModel) {
+      const j = parseInt(resource.fragment);
+      let i = 0;
+      const renderer = new marked.marked.Renderer();
+      renderer.code = ({ text, lang }) => {
+        i++;
+        const languageId = typeof lang === "string" ? this.languageService.getLanguageIdByLanguageName(lang) || "" : "";
+        const languageSelection = this.languageService.createById(languageId);
+        const model = this.modelService.createModel(text, languageSelection, resource.with({ fragment: `${i}.${lang}` }));
+        if (i === j) {
+          codeEditorModel = model;
+        }
+        return "";
+      };
+      const textBuffer = factory.create(
+        1
+        /* DefaultEndOfLine.LF */
+      ).textBuffer;
+      const lineCount = textBuffer.getLineCount();
+      const range = new Range(1, 1, lineCount, textBuffer.getLineLength(lineCount) + 1);
+      const markdown = textBuffer.getValueInRange(
+        range,
+        0
+        /* EndOfLinePreference.TextDefined */
+      );
+      marked.marked(markdown, { renderer });
+    }
+    return assertReturnsDefined(codeEditorModel);
+  }
+};
+WalkThroughSnippetContentProvider = __decorate([
+  __param(0, ITextModelService),
+  __param(1, ILanguageService),
+  __param(2, IModelService),
+  __param(3, IInstantiationService)
+], WalkThroughSnippetContentProvider);
+export {
+  WalkThroughSnippetContentProvider,
+  moduleToContent,
+  walkThroughContentRegistry
+};
+//# sourceMappingURL=walkThroughContentProvider.js.map

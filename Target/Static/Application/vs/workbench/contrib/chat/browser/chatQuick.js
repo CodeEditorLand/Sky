@@ -1,1 +1,322 @@
-import*as d from"../../../../base/browser/dom.js";import{$w9 as w}from"../../../../base/browser/ui/sash/sash.js";import{$Nh as C}from"../../../../base/common/async.js";import{CancellationToken as I}from"../../../../base/common/cancellation.js";import{$df as E,Event as $}from"../../../../base/common/event.js";import{$vd as m,$ud as D,$wd as v}from"../../../../base/common/lifecycle.js";import{$dI as V}from"../../../../platform/actions/common/actions.js";import{$Vn as b}from"../../../../platform/contextkey/common/contextkey.js";import{$mj as g}from"../../../../platform/instantiation/common/instantiation.js";import{$lj as B}from"../../../../platform/instantiation/common/serviceCollection.js";import{$zhb as T}from"../../../../platform/layout/browser/layoutService.js";import{$OM as k}from"../../../../platform/quickinput/common/quickInput.js";import{$7p as S,$Ur as _,$it as j,$jt as L}from"../../../../platform/theme/common/colorRegistry.js";import{$mWb as q}from"./chat.js";import{$OQb as M}from"./chatWidget.js";import{$7S as P}from"../common/chatModel.js";import{$LS as y}from"../common/chatService.js";import{$Jwb as Q}from"../../../services/views/common/viewsService.js";import{$Pub as x}from"../../../common/theme.js";import{ChatAgentLocation as c}from"../common/constants.js";var p=function(n,t,e,i){var r=arguments.length,s=r<3?t:i===null?i=Object.getOwnPropertyDescriptor(t,e):i,o;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")s=Reflect.decorate(n,t,e,i);else for(var u=n.length-1;u>=0;u--)(o=n[u])&&(s=(r<3?o(s):r>3?o(t,e,s):o(t,e))||s);return r>3&&s&&Object.defineProperty(t,e,s),s},h=function(n,t){return function(e,i){t(e,i,n)}},a;let f=class extends m{constructor(t,e,i){super(),this.g=t,this.h=e,this.j=i,this.a=this.B(new E),this.onDidClose=this.a.event}get enabled(){return!!this.h.isEnabled(c.Panel)}get focused(){const t=this.b?.widget;return t?d.$m6(t):!1}toggle(t){if(this.focused&&!t?.query)this.close();else if(this.open(t),t?.isPartialQuery){const e=this.q.add($.once(this.onDidClose)(()=>{this.c?.clearValue(),this.q.delete(e)}))}}open(t){if(this.b){if(this.c&&t?.query){this.c.focus(),this.c.setValue(t.query,t.selection),t.isPartialQuery||this.c.acceptInput();return}return this.focus()}const e=new D;this.b=this.g.createQuickWidget(),this.b.contextKey="chatInputVisible",this.b.ignoreFocusOut=!0,e.add(this.b),this.f??=d.$(".interactive-session"),this.b.widget=this.f,this.b.show(),this.c?this.c.show():(this.c=this.j.createInstance(l),this.c.render(this.f)),e.add(this.b.onDidHide(()=>{e.dispose(),this.c.hide(),this.b=void 0,this.a.fire()})),this.c.focus(),t?.query&&(this.c.setValue(t.query,t.selection),t.isPartialQuery||this.c.acceptInput())}focus(){this.c?.focus()}close(){this.b?.dispose(),this.b=void 0}async openInChatView(){await this.c?.openChatView(),this.close()}};f=p([h(0,k),h(1,y),h(2,g)],f);let l=class extends m{static{a=this}static{this.DEFAULT_MIN_HEIGHT=200}static{this.a=100}constructor(t,e,i,r,s){super(),this.m=t,this.n=e,this.r=i,this.s=r,this.t=s,this.h=this.B(new v),this.j=!1}clear(){this.f?.dispose(),this.f=void 0,this.y(),this.b.inputEditor.setValue("")}focus(t){if(this.b){this.b.focusInput();const e=this.b.inputEditor.getValue();e&&this.b.inputEditor.setSelection(t??{startLineNumber:1,startColumn:1,endLineNumber:1,endColumn:e.length+1})}}hide(){this.b.setVisible(!1),this.h.value=C(()=>{this.h.clear()},30*1e3)}show(){this.b.setVisible(!0),this.j&&(this.j=!1,this.b.updateDynamicChatTreeItemLayout(2,this.u)),this.h.value||this.b.layoutDynamicChatTreeItemMode()}render(t){if(this.b)throw new Error("Cannot render quick chat twice");const e=this.B(this.m.createChild(new B([b,this.B(this.n.createScoped(t))])));this.b=this.B(e.createInstance(M,c.Panel,{isQuickChat:!0},{autoScroll:!0,renderInputOnTop:!0,renderStyle:"compact",menus:{inputSideToolbar:V.ChatInputSide},enableImplicitContext:!0},{listForeground:L,listBackground:j,overlayBackground:x,inputEditorBackground:_,resultEditorBackground:S})),this.b.render(t),this.b.setVisible(!0),this.b.setDynamicChatTreeItemLayout(2,this.u),this.y(),this.c=this.B(new w(t,{getHorizontalSashTop:()=>t.offsetHeight},{orientation:1})),this.w(t)}get u(){return this.s.mainContainerDimension.height-a.a}w(t){this.B(this.s.onDidLayoutMainContainer(()=>{this.b.visible?this.b.updateDynamicChatTreeItemLayout(2,this.u):this.j=!0})),this.B(this.b.inputEditor.onDidChangeModelContent(i=>{this.g=this.b.inputEditor.getValue()})),this.B(this.b.onDidClear(()=>this.clear())),this.B(this.b.onDidChangeHeight(i=>this.c.layout()));const e=t.offsetWidth;this.B(this.c.onDidStart(()=>{this.b.isDynamicChatTreeItemLayoutEnabled=!1})),this.B(this.c.onDidChange(i=>{i.currentY<a.DEFAULT_MIN_HEIGHT||i.currentY>this.u||(this.b.layout(i.currentY,e),this.c.layout())})),this.B(this.c.onDidReset(()=>{this.b.isDynamicChatTreeItemLayoutEnabled=!0,this.b.layoutDynamicChatTreeItemMode()}))}async acceptInput(){return this.b.acceptInput()}async openChatView(){const t=await q(this.t);if(!t?.viewModel||!this.f)return;for(const i of this.f.getRequests())if(i.response?.response.value||i.response?.result){const r=[];for(const s of i.response.response.value)if(s.kind==="textEditGroup")for(const o of s.edits)r.push({kind:"textEdit",edits:o,uri:s.uri});else if(s.kind==="notebookEditGroup")for(const o of s.edits)P(o)?r.push({kind:"textEdit",edits:[o.edit],uri:o.uri}):r.push({kind:"notebookEdit",edits:[o],uri:s.uri});else r.push(s);this.r.addCompleteRequest(t.viewModel.sessionId,i.message,i.variableData,i.attempt,{message:r,result:i.response.result,followups:i.response.followups})}else i.message;const e=this.b.inputEditor.getValue();e&&t.inputEditor.setValue(e),t.focusInput()}setValue(t,e){this.b.inputEditor.setValue(t),this.focus(e)}clearValue(){this.b.inputEditor.setValue("")}y(){if(this.f??=this.r.startSession(c.Panel,I.None),!this.f)throw new Error("Could not start chat session");this.b.setModel(this.f,{inputValue:this.g})}};l=a=p([h(0,g),h(1,b),h(2,y),h(3,T),h(4,Q)],l);export{f as $ygc};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import * as dom from "../../../../base/browser/dom.js";
+import { Sash } from "../../../../base/browser/ui/sash/sash.js";
+import { disposableTimeout } from "../../../../base/common/async.js";
+import { CancellationToken } from "../../../../base/common/cancellation.js";
+import { Emitter, Event } from "../../../../base/common/event.js";
+import { Disposable, DisposableStore, MutableDisposable } from "../../../../base/common/lifecycle.js";
+import { MenuId } from "../../../../platform/actions/common/actions.js";
+import { IContextKeyService } from "../../../../platform/contextkey/common/contextkey.js";
+import { IInstantiationService } from "../../../../platform/instantiation/common/instantiation.js";
+import { ServiceCollection } from "../../../../platform/instantiation/common/serviceCollection.js";
+import { ILayoutService } from "../../../../platform/layout/browser/layoutService.js";
+import { IQuickInputService } from "../../../../platform/quickinput/common/quickInput.js";
+import { editorBackground, inputBackground, quickInputBackground, quickInputForeground } from "../../../../platform/theme/common/colorRegistry.js";
+import { showChatView } from "./chat.js";
+import { ChatWidget } from "./chatWidget.js";
+import { isCellTextEditOperation } from "../common/chatModel.js";
+import { IChatService } from "../common/chatService.js";
+import { IViewsService } from "../../../services/views/common/viewsService.js";
+import { EDITOR_DRAG_AND_DROP_BACKGROUND } from "../../../common/theme.js";
+import { ChatAgentLocation } from "../common/constants.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+var QuickChat_1;
+let QuickChatService = class QuickChatService2 extends Disposable {
+  static {
+    __name(this, "QuickChatService");
+  }
+  constructor(quickInputService, chatService, instantiationService) {
+    super();
+    this.quickInputService = quickInputService;
+    this.chatService = chatService;
+    this.instantiationService = instantiationService;
+    this._onDidClose = this._register(new Emitter());
+    this.onDidClose = this._onDidClose.event;
+  }
+  get enabled() {
+    return !!this.chatService.isEnabled(ChatAgentLocation.Panel);
+  }
+  get focused() {
+    const widget = this._input?.widget;
+    if (!widget) {
+      return false;
+    }
+    return dom.isAncestorOfActiveElement(widget);
+  }
+  toggle(options) {
+    if (this.focused && !options?.query) {
+      this.close();
+    } else {
+      this.open(options);
+      if (options?.isPartialQuery) {
+        const disposable = this._store.add(Event.once(this.onDidClose)(() => {
+          this._currentChat?.clearValue();
+          this._store.delete(disposable);
+        }));
+      }
+    }
+  }
+  open(options) {
+    if (this._input) {
+      if (this._currentChat && options?.query) {
+        this._currentChat.focus();
+        this._currentChat.setValue(options.query, options.selection);
+        if (!options.isPartialQuery) {
+          this._currentChat.acceptInput();
+        }
+        return;
+      }
+      return this.focus();
+    }
+    const disposableStore = new DisposableStore();
+    this._input = this.quickInputService.createQuickWidget();
+    this._input.contextKey = "chatInputVisible";
+    this._input.ignoreFocusOut = true;
+    disposableStore.add(this._input);
+    this._container ??= dom.$(".interactive-session");
+    this._input.widget = this._container;
+    this._input.show();
+    if (!this._currentChat) {
+      this._currentChat = this.instantiationService.createInstance(QuickChat);
+      this._currentChat.render(this._container);
+    } else {
+      this._currentChat.show();
+    }
+    disposableStore.add(this._input.onDidHide(() => {
+      disposableStore.dispose();
+      this._currentChat.hide();
+      this._input = void 0;
+      this._onDidClose.fire();
+    }));
+    this._currentChat.focus();
+    if (options?.query) {
+      this._currentChat.setValue(options.query, options.selection);
+      if (!options.isPartialQuery) {
+        this._currentChat.acceptInput();
+      }
+    }
+  }
+  focus() {
+    this._currentChat?.focus();
+  }
+  close() {
+    this._input?.dispose();
+    this._input = void 0;
+  }
+  async openInChatView() {
+    await this._currentChat?.openChatView();
+    this.close();
+  }
+};
+QuickChatService = __decorate([
+  __param(0, IQuickInputService),
+  __param(1, IChatService),
+  __param(2, IInstantiationService)
+], QuickChatService);
+let QuickChat = class QuickChat2 extends Disposable {
+  static {
+    __name(this, "QuickChat");
+  }
+  static {
+    QuickChat_1 = this;
+  }
+  static {
+    this.DEFAULT_MIN_HEIGHT = 200;
+  }
+  static {
+    this.DEFAULT_HEIGHT_OFFSET = 100;
+  }
+  constructor(instantiationService, contextKeyService, chatService, layoutService, viewsService) {
+    super();
+    this.instantiationService = instantiationService;
+    this.contextKeyService = contextKeyService;
+    this.chatService = chatService;
+    this.layoutService = layoutService;
+    this.viewsService = viewsService;
+    this.maintainScrollTimer = this._register(new MutableDisposable());
+    this._deferUpdatingDynamicLayout = false;
+  }
+  clear() {
+    this.model?.dispose();
+    this.model = void 0;
+    this.updateModel();
+    this.widget.inputEditor.setValue("");
+  }
+  focus(selection) {
+    if (this.widget) {
+      this.widget.focusInput();
+      const value = this.widget.inputEditor.getValue();
+      if (value) {
+        this.widget.inputEditor.setSelection(selection ?? {
+          startLineNumber: 1,
+          startColumn: 1,
+          endLineNumber: 1,
+          endColumn: value.length + 1
+        });
+      }
+    }
+  }
+  hide() {
+    this.widget.setVisible(false);
+    this.maintainScrollTimer.value = disposableTimeout(() => {
+      this.maintainScrollTimer.clear();
+    }, 30 * 1e3);
+  }
+  show() {
+    this.widget.setVisible(true);
+    if (this._deferUpdatingDynamicLayout) {
+      this._deferUpdatingDynamicLayout = false;
+      this.widget.updateDynamicChatTreeItemLayout(2, this.maxHeight);
+    }
+    if (!this.maintainScrollTimer.value) {
+      this.widget.layoutDynamicChatTreeItemMode();
+    }
+  }
+  render(parent) {
+    if (this.widget) {
+      throw new Error("Cannot render quick chat twice");
+    }
+    const scopedInstantiationService = this._register(this.instantiationService.createChild(new ServiceCollection([
+      IContextKeyService,
+      this._register(this.contextKeyService.createScoped(parent))
+    ])));
+    this.widget = this._register(scopedInstantiationService.createInstance(ChatWidget, ChatAgentLocation.Panel, { isQuickChat: true }, { autoScroll: true, renderInputOnTop: true, renderStyle: "compact", menus: { inputSideToolbar: MenuId.ChatInputSide }, enableImplicitContext: true }, {
+      listForeground: quickInputForeground,
+      listBackground: quickInputBackground,
+      overlayBackground: EDITOR_DRAG_AND_DROP_BACKGROUND,
+      inputEditorBackground: inputBackground,
+      resultEditorBackground: editorBackground
+    }));
+    this.widget.render(parent);
+    this.widget.setVisible(true);
+    this.widget.setDynamicChatTreeItemLayout(2, this.maxHeight);
+    this.updateModel();
+    this.sash = this._register(new Sash(parent, { getHorizontalSashTop: /* @__PURE__ */ __name(() => parent.offsetHeight, "getHorizontalSashTop") }, {
+      orientation: 1
+      /* Orientation.HORIZONTAL */
+    }));
+    this.registerListeners(parent);
+  }
+  get maxHeight() {
+    return this.layoutService.mainContainerDimension.height - QuickChat_1.DEFAULT_HEIGHT_OFFSET;
+  }
+  registerListeners(parent) {
+    this._register(this.layoutService.onDidLayoutMainContainer(() => {
+      if (this.widget.visible) {
+        this.widget.updateDynamicChatTreeItemLayout(2, this.maxHeight);
+      } else {
+        this._deferUpdatingDynamicLayout = true;
+      }
+    }));
+    this._register(this.widget.inputEditor.onDidChangeModelContent((e) => {
+      this._currentQuery = this.widget.inputEditor.getValue();
+    }));
+    this._register(this.widget.onDidClear(() => this.clear()));
+    this._register(this.widget.onDidChangeHeight((e) => this.sash.layout()));
+    const width = parent.offsetWidth;
+    this._register(this.sash.onDidStart(() => {
+      this.widget.isDynamicChatTreeItemLayoutEnabled = false;
+    }));
+    this._register(this.sash.onDidChange((e) => {
+      if (e.currentY < QuickChat_1.DEFAULT_MIN_HEIGHT || e.currentY > this.maxHeight) {
+        return;
+      }
+      this.widget.layout(e.currentY, width);
+      this.sash.layout();
+    }));
+    this._register(this.sash.onDidReset(() => {
+      this.widget.isDynamicChatTreeItemLayoutEnabled = true;
+      this.widget.layoutDynamicChatTreeItemMode();
+    }));
+  }
+  async acceptInput() {
+    return this.widget.acceptInput();
+  }
+  async openChatView() {
+    const widget = await showChatView(this.viewsService);
+    if (!widget?.viewModel || !this.model) {
+      return;
+    }
+    for (const request of this.model.getRequests()) {
+      if (request.response?.response.value || request.response?.result) {
+        const message = [];
+        for (const item of request.response.response.value) {
+          if (item.kind === "textEditGroup") {
+            for (const group of item.edits) {
+              message.push({
+                kind: "textEdit",
+                edits: group,
+                uri: item.uri
+              });
+            }
+          } else if (item.kind === "notebookEditGroup") {
+            for (const group of item.edits) {
+              if (isCellTextEditOperation(group)) {
+                message.push({
+                  kind: "textEdit",
+                  edits: [group.edit],
+                  uri: group.uri
+                });
+              } else {
+                message.push({
+                  kind: "notebookEdit",
+                  edits: [group],
+                  uri: item.uri
+                });
+              }
+            }
+          } else {
+            message.push(item);
+          }
+        }
+        this.chatService.addCompleteRequest(widget.viewModel.sessionId, request.message, request.variableData, request.attempt, {
+          message,
+          result: request.response.result,
+          followups: request.response.followups
+        });
+      } else if (request.message) {
+      }
+    }
+    const value = this.widget.inputEditor.getValue();
+    if (value) {
+      widget.inputEditor.setValue(value);
+    }
+    widget.focusInput();
+  }
+  setValue(value, selection) {
+    this.widget.inputEditor.setValue(value);
+    this.focus(selection);
+  }
+  clearValue() {
+    this.widget.inputEditor.setValue("");
+  }
+  updateModel() {
+    this.model ??= this.chatService.startSession(ChatAgentLocation.Panel, CancellationToken.None);
+    if (!this.model) {
+      throw new Error("Could not start chat session");
+    }
+    this.widget.setModel(this.model, { inputValue: this._currentQuery });
+  }
+};
+QuickChat = QuickChat_1 = __decorate([
+  __param(0, IInstantiationService),
+  __param(1, IContextKeyService),
+  __param(2, IChatService),
+  __param(3, ILayoutService),
+  __param(4, IViewsService)
+], QuickChat);
+export {
+  QuickChatService
+};
+//# sourceMappingURL=chatQuick.js.map

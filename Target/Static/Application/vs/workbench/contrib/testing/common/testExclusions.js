@@ -1,1 +1,78 @@
-import{Iterable as f}from"../../../../base/common/iterator.js";import{$vd as m}from"../../../../base/common/lifecycle.js";import{$Ho as c}from"../../../../platform/storage/common/storage.js";import{$J2b as p}from"./observableValue.js";import{$H2b as v}from"./storedValue.js";var h=function(r,e,t,i){var s=arguments.length,a=s<3?e:i===null?i=Object.getOwnPropertyDescriptor(e,t):i,n;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")a=Reflect.decorate(r,e,t,i);else for(var o=r.length-1;o>=0;o--)(n=r[o])&&(a=(s<3?n(a):s>3?n(e,t,a):n(e,t))||a);return s>3&&a&&Object.defineProperty(e,t,a),a},u=function(r,e){return function(t,i){e(t,i,r)}};let l=class extends m{constructor(e){super(),this.b=e,this.a=this.B(p.stored(new v({key:"excludedTestItems",scope:1,target:1,serialization:{deserialize:t=>new Set(JSON.parse(t)),serialize:t=>JSON.stringify([...t])}},this.b),new Set)),this.onTestExclusionsChanged=this.a.onDidChange}get hasAny(){return this.a.value.size>0}get all(){return this.a.value}toggle(e,t){t!==!0&&this.a.value.has(e.item.extId)?this.a.value=new Set(f.filter(this.a.value,i=>i!==e.item.extId)):t!==!1&&!this.a.value.has(e.item.extId)&&(this.a.value=new Set([...this.a.value,e.item.extId]))}contains(e){return this.a.value.has(e.item.extId)}clear(){this.a.value=new Set}};l=h([u(0,c)],l);export{l as $K2b};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { Iterable } from "../../../../base/common/iterator.js";
+import { Disposable } from "../../../../base/common/lifecycle.js";
+import { IStorageService } from "../../../../platform/storage/common/storage.js";
+import { MutableObservableValue } from "./observableValue.js";
+import { StoredValue } from "./storedValue.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+let TestExclusions = class TestExclusions2 extends Disposable {
+  static {
+    __name(this, "TestExclusions");
+  }
+  constructor(storageService) {
+    super();
+    this.storageService = storageService;
+    this.excluded = this._register(MutableObservableValue.stored(new StoredValue({
+      key: "excludedTestItems",
+      scope: 1,
+      target: 1,
+      serialization: {
+        deserialize: /* @__PURE__ */ __name((v) => new Set(JSON.parse(v)), "deserialize"),
+        serialize: /* @__PURE__ */ __name((v) => JSON.stringify([...v]), "serialize")
+      }
+    }, this.storageService), /* @__PURE__ */ new Set()));
+    this.onTestExclusionsChanged = this.excluded.onDidChange;
+  }
+  /**
+   * Gets whether there's any excluded tests.
+   */
+  get hasAny() {
+    return this.excluded.value.size > 0;
+  }
+  /**
+   * Gets all excluded tests.
+   */
+  get all() {
+    return this.excluded.value;
+  }
+  /**
+   * Sets whether a test is excluded.
+   */
+  toggle(test, exclude) {
+    if (exclude !== true && this.excluded.value.has(test.item.extId)) {
+      this.excluded.value = new Set(Iterable.filter(this.excluded.value, (e) => e !== test.item.extId));
+    } else if (exclude !== false && !this.excluded.value.has(test.item.extId)) {
+      this.excluded.value = /* @__PURE__ */ new Set([...this.excluded.value, test.item.extId]);
+    }
+  }
+  /**
+   * Gets whether a test is excluded.
+   */
+  contains(test) {
+    return this.excluded.value.has(test.item.extId);
+  }
+  /**
+   * Removes all test exclusions.
+   */
+  clear() {
+    this.excluded.value = /* @__PURE__ */ new Set();
+  }
+};
+TestExclusions = __decorate([
+  __param(0, IStorageService)
+], TestExclusions);
+export {
+  TestExclusions
+};
+//# sourceMappingURL=testExclusions.js.map

@@ -1,1 +1,34 @@
-import{$Xxc as n}from"./tableColumnResizeQuickPick.js";import{$k0 as s}from"../../../../base/browser/ui/table/tableWidget.js";import{$mj as l}from"../../../../platform/instantiation/common/instantiation.js";import{$gmb as m,$omb as c}from"../../../../platform/list/browser/listService.js";import{$iI as a}from"../../../../platform/actions/common/actions.js";import{localize as o}from"../../../../nls.js";class x extends a{constructor(){super({id:"list.resizeColumn",title:{value:o(8431,null),original:"Resize Column"},category:{value:o(8432,null),original:"List"},precondition:c,f1:!0})}async run(o){const t=o.get(m),i=o.get(l),a=t.lastFocusedList;a instanceof s&&await i.createInstance(n,a).show()}}export{x as $Yxc};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { TableColumnResizeQuickPick } from "./tableColumnResizeQuickPick.js";
+import { Table } from "../../../../base/browser/ui/table/tableWidget.js";
+import { IInstantiationService } from "../../../../platform/instantiation/common/instantiation.js";
+import { IListService, WorkbenchListFocusContextKey } from "../../../../platform/list/browser/listService.js";
+import { Action2 } from "../../../../platform/actions/common/actions.js";
+import { localize } from "../../../../nls.js";
+class ListResizeColumnAction extends Action2 {
+  static {
+    __name(this, "ListResizeColumnAction");
+  }
+  constructor() {
+    super({
+      id: "list.resizeColumn",
+      title: { value: localize("list.resizeColumn", "Resize Column"), original: "Resize Column" },
+      category: { value: localize("list", "List"), original: "List" },
+      precondition: WorkbenchListFocusContextKey,
+      f1: true
+    });
+  }
+  async run(accessor) {
+    const listService = accessor.get(IListService);
+    const instantiationService = accessor.get(IInstantiationService);
+    const list = listService.lastFocusedList;
+    if (list instanceof Table) {
+      await instantiationService.createInstance(TableColumnResizeQuickPick, list).show();
+    }
+  }
+}
+export {
+  ListResizeColumnAction
+};
+//# sourceMappingURL=listResizeColumnAction.js.map

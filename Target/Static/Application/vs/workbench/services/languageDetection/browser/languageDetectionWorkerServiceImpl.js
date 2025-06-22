@@ -1,1 +1,290 @@
-import{$vd as L}from"../../../../base/common/lifecycle.js";import{$hF as O,$kF as x}from"../common/languageDetectionWorkerService.js";import{$8g as c,$5g as b,$4g as S,Schemas as U}from"../../../../base/common/network.js";import{$KX as B}from"../../environment/common/environmentService.js";import{$El as v}from"../../../../platform/configuration/common/configuration.js";import{$BD as j}from"../../../../editor/common/languages/language.js";import{URI as J}from"../../../../base/common/uri.js";import{$s as D}from"../../../../base/common/platform.js";import{$WB as I}from"../../../../platform/instantiation/common/extensions.js";import{$gF as N}from"../../../../editor/common/services/model.js";import{$Po as C}from"../../../../platform/telemetry/common/telemetry.js";import{$5v as E}from"../../../../platform/diagnostics/common/diagnostics.js";import{$hl as M}from"../../../../platform/workspace/common/workspace.js";import{$oI as W}from"../../editor/common/editorService.js";import{$Ho as _}from"../../../../platform/storage/common/storage.js";import{$Lc as w}from"../../../../base/common/map.js";import{$3n as H}from"../../../../platform/log/common/log.js";import{$tI as K}from"../../../../amdX.js";import{$c9 as R}from"../../../../base/browser/webWorkerFactory.js";import{$1eb as T}from"../../../../editor/common/services/textModelSync/textModelSync.impl.js";import{$o7b as F}from"./languageDetectionWorker.protocol.js";var k=function(h,t,e,s){var r=arguments.length,i=r<3?t:s===null?s=Object.getOwnPropertyDescriptor(t,e):s,n;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")i=Reflect.decorate(h,t,e,s);else for(var a=h.length-1;a>=0;a--)(n=h[a])&&(i=(r<3?n(i):r>3?n(t,e,i):n(t,e))||i);return r>3&&i&&Object.defineProperty(t,e,i),i},o=function(h,t){return function(e,s){t(e,s,h)}},g;const f=12,A=`${S}/vscode-regexp-languagedetection`,P=`${b}/vscode-regexp-languagedetection`,m=`${S}/@vscode/vscode-languagedetection`,y=`${b}/@vscode/vscode-languagedetection`;let $=class extends L{static{g=this}static{this.enablementSettingKey="workbench.editor.languageDetection"}static{this.historyBasedEnablementConfig="workbench.editor.historyBasedLanguageDetection"}static{this.preferHistoryConfig="workbench.editor.preferHistoryBasedLanguageDetection"}static{this.workspaceOpenedLanguagesStorageKey="workbench.editor.languageDetectionOpenedLanguages.workspace"}static{this.globalOpenedLanguagesStorageKey="workbench.editor.languageDetectionOpenedLanguages.global"}constructor(t,e,s,r,i,n,a,l,p,d){super(),this.n=t,this.r=s,this.s=r,this.t=i,this.u=a,this.w=d,this.b=!1,this.c=new Set,this.f=new Set,this.g=new w(f),this.h=new w(f),this.j=!0,this.m={};const u=K&&this.n.isBuilt&&!D;this.a=this.B(new G(n,e,l,u?c.asBrowserUri(`${y}/dist/lib/index.js`).toString(!0):c.asBrowserUri(`${m}/dist/lib/index.js`).toString(!0),u?c.asBrowserUri(`${y}/model/model.json`).toString(!0):c.asBrowserUri(`${m}/model/model.json`).toString(!0),u?c.asBrowserUri(`${y}/model/group1-shard1of1.bin`).toString(!0):c.asBrowserUri(`${m}/model/group1-shard1of1.bin`).toString(!0),u?c.asBrowserUri(`${P}/dist/index.js`).toString(!0):c.asBrowserUri(`${A}/dist/index.js`).toString(!0))),this.C(p)}async y(){if(this.b)return;this.b=!0;const t=await this.s.getWorkspaceFileExtensions(this.t.getWorkspace());let e=0;for(const s of t.extensions){const r=this.a.getLanguageId(s);if(r&&e<f&&(this.c.add(r),e++,e>f))break}this.j=!0}isEnabledForLanguage(t){return!!t&&this.r.getValue(g.enablementSettingKey,{overrideIdentifier:t})}z(){if(!this.j)return this.m;const t={};return this.f.forEach(e=>t[e]=(t[e]??0)+7),this.c.forEach(e=>t[e]=(t[e]??0)+5),[...this.h.keys()].forEach(e=>t[e]=(t[e]??0)+3),[...this.g.keys()].forEach(e=>t[e]=(t[e]??0)+1),this.w.trace("Session Languages:",JSON.stringify([...this.f])),this.w.trace("Workspace Languages:",JSON.stringify([...this.c])),this.w.trace("Historical Workspace Opened Languages:",JSON.stringify([...this.h.keys()])),this.w.trace("Historical Globally Opened Languages:",JSON.stringify([...this.g.keys()])),this.w.trace("Computed Language Detection Biases:",JSON.stringify(t)),this.j=!1,this.m=t,t}async detectLanguage(t,e){const s=this.r.getValue(g.historyBasedEnablementConfig),r=this.r.getValue(g.preferHistoryConfig);s&&await this.y();const i=s?this.z():void 0;return this.a.detectLanguage(t,i,r,e)}C(t){try{const e=JSON.parse(t.get(g.globalOpenedLanguagesStorageKey,0,"[]"));this.g.fromJSON(e)}catch{}try{const e=JSON.parse(t.get(g.workspaceOpenedLanguagesStorageKey,1,"[]"));this.h.fromJSON(e)}catch{}this.B(this.u.onDidActiveEditorChange(()=>{const e=this.u.activeTextEditorLanguageId;e&&this.u.activeEditor?.resource?.scheme!==U.untitled&&(this.f.add(e),this.g.set(e,!0),this.h.set(e,!0),t.store(g.globalOpenedLanguagesStorageKey,JSON.stringify(this.g.toJSON()),0,1),t.store(g.workspaceOpenedLanguagesStorageKey,JSON.stringify(this.h.toJSON()),1,1),this.j=!0)}))}};$=g=k([o(0,B),o(1,j),o(2,v),o(3,E),o(4,M),o(5,N),o(6,W),o(7,C),o(8,_),o(9,H)],$);class G extends L{constructor(t,e,s,r,i,n,a){super(),this.b=t,this.c=e,this.f=s,this.g=r,this.h=i,this.j=n,this.m=a}n(){if(!this.a){const t=this.B(R(c.asBrowserUri("vs/workbench/services/languageDetection/browser/languageDetectionWebWorkerMain.js"),"LanguageDetectionWorker"));F.setChannel(t,{$getIndexJsUri:async()=>this.getIndexJsUri(),$getLanguageId:async s=>this.getLanguageId(s),$sendTelemetryEvent:async(s,r,i)=>this.sendTelemetryEvent(s,r,i),$getRegexpModelUri:async()=>this.getRegexpModelUri(),$getModelJsonUri:async()=>this.getModelJsonUri(),$getWeightsUri:async()=>this.getWeightsUri()});const e=T.create(t,this.b);this.a={workerClient:t,workerTextModelSyncClient:e}}return this.a}r(t){const e=this.c.guessLanguageIdByFilepathOrFirstLine(t);if(e&&e!=="unknown")return e}async getIndexJsUri(){return this.g}getLanguageId(t){if(!t)return;if(this.c.isRegisteredLanguageId(t))return t;const e=this.r(J.file(`file.${t}`));if(!(!e||e==="unknown"))return e}async getModelJsonUri(){return this.h}async getWeightsUri(){return this.j}async getRegexpModelUri(){return this.m}async sendTelemetryEvent(t,e,s){this.f.publicLog2(x,{languages:t.join(","),confidences:e.join(","),timeSpent:s})}async detectLanguage(t,e,s,r){const i=Date.now(),n=this.r(t);if(n)return n;const{workerClient:a,workerTextModelSyncClient:l}=this.n();await l.ensureSyncedResources([t]);const p=await a.proxy.$detectLanguage(t.toString(),e,s,r),d=this.getLanguageId(p);return this.f.publicLog2("automaticlanguagedetection.perf",{timeSpent:Date.now()-i,detection:d||"unknown"}),d}}I(O,$,0);export{$ as $p7b,G as $q7b};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { Disposable } from "../../../../base/common/lifecycle.js";
+import { ILanguageDetectionService, LanguageDetectionStatsId } from "../common/languageDetectionWorkerService.js";
+import { FileAccess, nodeModulesAsarPath, nodeModulesPath, Schemas } from "../../../../base/common/network.js";
+import { IWorkbenchEnvironmentService } from "../../environment/common/environmentService.js";
+import { IConfigurationService } from "../../../../platform/configuration/common/configuration.js";
+import { ILanguageService } from "../../../../editor/common/languages/language.js";
+import { URI } from "../../../../base/common/uri.js";
+import { isWeb } from "../../../../base/common/platform.js";
+import { registerSingleton } from "../../../../platform/instantiation/common/extensions.js";
+import { IModelService } from "../../../../editor/common/services/model.js";
+import { ITelemetryService } from "../../../../platform/telemetry/common/telemetry.js";
+import { IDiagnosticsService } from "../../../../platform/diagnostics/common/diagnostics.js";
+import { IWorkspaceContextService } from "../../../../platform/workspace/common/workspace.js";
+import { IEditorService } from "../../editor/common/editorService.js";
+import { IStorageService } from "../../../../platform/storage/common/storage.js";
+import { LRUCache } from "../../../../base/common/map.js";
+import { ILogService } from "../../../../platform/log/common/log.js";
+import { canASAR } from "../../../../amdX.js";
+import { createWebWorker } from "../../../../base/browser/webWorkerFactory.js";
+import { WorkerTextModelSyncClient } from "../../../../editor/common/services/textModelSync/textModelSync.impl.js";
+import { LanguageDetectionWorkerHost } from "./languageDetectionWorker.protocol.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+var LanguageDetectionService_1;
+const TOP_LANG_COUNTS = 12;
+const regexpModuleLocation = `${nodeModulesPath}/vscode-regexp-languagedetection`;
+const regexpModuleLocationAsar = `${nodeModulesAsarPath}/vscode-regexp-languagedetection`;
+const moduleLocation = `${nodeModulesPath}/@vscode/vscode-languagedetection`;
+const moduleLocationAsar = `${nodeModulesAsarPath}/@vscode/vscode-languagedetection`;
+let LanguageDetectionService = class LanguageDetectionService2 extends Disposable {
+  static {
+    __name(this, "LanguageDetectionService");
+  }
+  static {
+    LanguageDetectionService_1 = this;
+  }
+  static {
+    this.enablementSettingKey = "workbench.editor.languageDetection";
+  }
+  static {
+    this.historyBasedEnablementConfig = "workbench.editor.historyBasedLanguageDetection";
+  }
+  static {
+    this.preferHistoryConfig = "workbench.editor.preferHistoryBasedLanguageDetection";
+  }
+  static {
+    this.workspaceOpenedLanguagesStorageKey = "workbench.editor.languageDetectionOpenedLanguages.workspace";
+  }
+  static {
+    this.globalOpenedLanguagesStorageKey = "workbench.editor.languageDetectionOpenedLanguages.global";
+  }
+  constructor(_environmentService, languageService, _configurationService, _diagnosticsService, _workspaceContextService, modelService, _editorService, telemetryService, storageService, _logService) {
+    super();
+    this._environmentService = _environmentService;
+    this._configurationService = _configurationService;
+    this._diagnosticsService = _diagnosticsService;
+    this._workspaceContextService = _workspaceContextService;
+    this._editorService = _editorService;
+    this._logService = _logService;
+    this.hasResolvedWorkspaceLanguageIds = false;
+    this.workspaceLanguageIds = /* @__PURE__ */ new Set();
+    this.sessionOpenedLanguageIds = /* @__PURE__ */ new Set();
+    this.historicalGlobalOpenedLanguageIds = new LRUCache(TOP_LANG_COUNTS);
+    this.historicalWorkspaceOpenedLanguageIds = new LRUCache(TOP_LANG_COUNTS);
+    this.dirtyBiases = true;
+    this.langBiases = {};
+    const useAsar = canASAR && this._environmentService.isBuilt && !isWeb;
+    this._languageDetectionWorkerClient = this._register(new LanguageDetectionWorkerClient(
+      modelService,
+      languageService,
+      telemetryService,
+      // TODO See if it's possible to bundle vscode-languagedetection
+      useAsar ? FileAccess.asBrowserUri(`${moduleLocationAsar}/dist/lib/index.js`).toString(true) : FileAccess.asBrowserUri(`${moduleLocation}/dist/lib/index.js`).toString(true),
+      useAsar ? FileAccess.asBrowserUri(`${moduleLocationAsar}/model/model.json`).toString(true) : FileAccess.asBrowserUri(`${moduleLocation}/model/model.json`).toString(true),
+      useAsar ? FileAccess.asBrowserUri(`${moduleLocationAsar}/model/group1-shard1of1.bin`).toString(true) : FileAccess.asBrowserUri(`${moduleLocation}/model/group1-shard1of1.bin`).toString(true),
+      useAsar ? FileAccess.asBrowserUri(`${regexpModuleLocationAsar}/dist/index.js`).toString(true) : FileAccess.asBrowserUri(`${regexpModuleLocation}/dist/index.js`).toString(true)
+    ));
+    this.initEditorOpenedListeners(storageService);
+  }
+  async resolveWorkspaceLanguageIds() {
+    if (this.hasResolvedWorkspaceLanguageIds) {
+      return;
+    }
+    this.hasResolvedWorkspaceLanguageIds = true;
+    const fileExtensions = await this._diagnosticsService.getWorkspaceFileExtensions(this._workspaceContextService.getWorkspace());
+    let count = 0;
+    for (const ext of fileExtensions.extensions) {
+      const langId = this._languageDetectionWorkerClient.getLanguageId(ext);
+      if (langId && count < TOP_LANG_COUNTS) {
+        this.workspaceLanguageIds.add(langId);
+        count++;
+        if (count > TOP_LANG_COUNTS) {
+          break;
+        }
+      }
+    }
+    this.dirtyBiases = true;
+  }
+  isEnabledForLanguage(languageId) {
+    return !!languageId && this._configurationService.getValue(LanguageDetectionService_1.enablementSettingKey, { overrideIdentifier: languageId });
+  }
+  getLanguageBiases() {
+    if (!this.dirtyBiases) {
+      return this.langBiases;
+    }
+    const biases = {};
+    this.sessionOpenedLanguageIds.forEach((lang) => biases[lang] = (biases[lang] ?? 0) + 7);
+    this.workspaceLanguageIds.forEach((lang) => biases[lang] = (biases[lang] ?? 0) + 5);
+    [...this.historicalWorkspaceOpenedLanguageIds.keys()].forEach((lang) => biases[lang] = (biases[lang] ?? 0) + 3);
+    [...this.historicalGlobalOpenedLanguageIds.keys()].forEach((lang) => biases[lang] = (biases[lang] ?? 0) + 1);
+    this._logService.trace("Session Languages:", JSON.stringify([...this.sessionOpenedLanguageIds]));
+    this._logService.trace("Workspace Languages:", JSON.stringify([...this.workspaceLanguageIds]));
+    this._logService.trace("Historical Workspace Opened Languages:", JSON.stringify([...this.historicalWorkspaceOpenedLanguageIds.keys()]));
+    this._logService.trace("Historical Globally Opened Languages:", JSON.stringify([...this.historicalGlobalOpenedLanguageIds.keys()]));
+    this._logService.trace("Computed Language Detection Biases:", JSON.stringify(biases));
+    this.dirtyBiases = false;
+    this.langBiases = biases;
+    return biases;
+  }
+  async detectLanguage(resource, supportedLangs) {
+    const useHistory = this._configurationService.getValue(LanguageDetectionService_1.historyBasedEnablementConfig);
+    const preferHistory = this._configurationService.getValue(LanguageDetectionService_1.preferHistoryConfig);
+    if (useHistory) {
+      await this.resolveWorkspaceLanguageIds();
+    }
+    const biases = useHistory ? this.getLanguageBiases() : void 0;
+    return this._languageDetectionWorkerClient.detectLanguage(resource, biases, preferHistory, supportedLangs);
+  }
+  // TODO: explore using the history service or something similar to provide this list of opened editors
+  // so this service can support delayed instantiation. This may be tricky since it seems the IHistoryService
+  // only gives history for a workspace... where this takes advantage of history at a global level as well.
+  initEditorOpenedListeners(storageService) {
+    try {
+      const globalLangHistoryData = JSON.parse(storageService.get(LanguageDetectionService_1.globalOpenedLanguagesStorageKey, 0, "[]"));
+      this.historicalGlobalOpenedLanguageIds.fromJSON(globalLangHistoryData);
+    } catch (e) {
+      console.error(e);
+    }
+    try {
+      const workspaceLangHistoryData = JSON.parse(storageService.get(LanguageDetectionService_1.workspaceOpenedLanguagesStorageKey, 1, "[]"));
+      this.historicalWorkspaceOpenedLanguageIds.fromJSON(workspaceLangHistoryData);
+    } catch (e) {
+      console.error(e);
+    }
+    this._register(this._editorService.onDidActiveEditorChange(() => {
+      const activeLanguage = this._editorService.activeTextEditorLanguageId;
+      if (activeLanguage && this._editorService.activeEditor?.resource?.scheme !== Schemas.untitled) {
+        this.sessionOpenedLanguageIds.add(activeLanguage);
+        this.historicalGlobalOpenedLanguageIds.set(activeLanguage, true);
+        this.historicalWorkspaceOpenedLanguageIds.set(activeLanguage, true);
+        storageService.store(
+          LanguageDetectionService_1.globalOpenedLanguagesStorageKey,
+          JSON.stringify(this.historicalGlobalOpenedLanguageIds.toJSON()),
+          0,
+          1
+          /* StorageTarget.MACHINE */
+        );
+        storageService.store(
+          LanguageDetectionService_1.workspaceOpenedLanguagesStorageKey,
+          JSON.stringify(this.historicalWorkspaceOpenedLanguageIds.toJSON()),
+          1,
+          1
+          /* StorageTarget.MACHINE */
+        );
+        this.dirtyBiases = true;
+      }
+    }));
+  }
+};
+LanguageDetectionService = LanguageDetectionService_1 = __decorate([
+  __param(0, IWorkbenchEnvironmentService),
+  __param(1, ILanguageService),
+  __param(2, IConfigurationService),
+  __param(3, IDiagnosticsService),
+  __param(4, IWorkspaceContextService),
+  __param(5, IModelService),
+  __param(6, IEditorService),
+  __param(7, ITelemetryService),
+  __param(8, IStorageService),
+  __param(9, ILogService)
+], LanguageDetectionService);
+class LanguageDetectionWorkerClient extends Disposable {
+  static {
+    __name(this, "LanguageDetectionWorkerClient");
+  }
+  constructor(_modelService, _languageService, _telemetryService, _indexJsUri, _modelJsonUri, _weightsUri, _regexpModelUri) {
+    super();
+    this._modelService = _modelService;
+    this._languageService = _languageService;
+    this._telemetryService = _telemetryService;
+    this._indexJsUri = _indexJsUri;
+    this._modelJsonUri = _modelJsonUri;
+    this._weightsUri = _weightsUri;
+    this._regexpModelUri = _regexpModelUri;
+  }
+  _getOrCreateLanguageDetectionWorker() {
+    if (!this.worker) {
+      const workerClient = this._register(createWebWorker(FileAccess.asBrowserUri("vs/workbench/services/languageDetection/browser/languageDetectionWebWorkerMain.js"), "LanguageDetectionWorker"));
+      LanguageDetectionWorkerHost.setChannel(workerClient, {
+        $getIndexJsUri: /* @__PURE__ */ __name(async () => this.getIndexJsUri(), "$getIndexJsUri"),
+        $getLanguageId: /* @__PURE__ */ __name(async (languageIdOrExt) => this.getLanguageId(languageIdOrExt), "$getLanguageId"),
+        $sendTelemetryEvent: /* @__PURE__ */ __name(async (languages, confidences, timeSpent) => this.sendTelemetryEvent(languages, confidences, timeSpent), "$sendTelemetryEvent"),
+        $getRegexpModelUri: /* @__PURE__ */ __name(async () => this.getRegexpModelUri(), "$getRegexpModelUri"),
+        $getModelJsonUri: /* @__PURE__ */ __name(async () => this.getModelJsonUri(), "$getModelJsonUri"),
+        $getWeightsUri: /* @__PURE__ */ __name(async () => this.getWeightsUri(), "$getWeightsUri")
+      });
+      const workerTextModelSyncClient = WorkerTextModelSyncClient.create(workerClient, this._modelService);
+      this.worker = { workerClient, workerTextModelSyncClient };
+    }
+    return this.worker;
+  }
+  _guessLanguageIdByUri(uri) {
+    const guess = this._languageService.guessLanguageIdByFilepathOrFirstLine(uri);
+    if (guess && guess !== "unknown") {
+      return guess;
+    }
+    return void 0;
+  }
+  async getIndexJsUri() {
+    return this._indexJsUri;
+  }
+  getLanguageId(languageIdOrExt) {
+    if (!languageIdOrExt) {
+      return void 0;
+    }
+    if (this._languageService.isRegisteredLanguageId(languageIdOrExt)) {
+      return languageIdOrExt;
+    }
+    const guessed = this._guessLanguageIdByUri(URI.file(`file.${languageIdOrExt}`));
+    if (!guessed || guessed === "unknown") {
+      return void 0;
+    }
+    return guessed;
+  }
+  async getModelJsonUri() {
+    return this._modelJsonUri;
+  }
+  async getWeightsUri() {
+    return this._weightsUri;
+  }
+  async getRegexpModelUri() {
+    return this._regexpModelUri;
+  }
+  async sendTelemetryEvent(languages, confidences, timeSpent) {
+    this._telemetryService.publicLog2(LanguageDetectionStatsId, {
+      languages: languages.join(","),
+      confidences: confidences.join(","),
+      timeSpent
+    });
+  }
+  async detectLanguage(resource, langBiases, preferHistory, supportedLangs) {
+    const startTime = Date.now();
+    const quickGuess = this._guessLanguageIdByUri(resource);
+    if (quickGuess) {
+      return quickGuess;
+    }
+    const { workerClient, workerTextModelSyncClient } = this._getOrCreateLanguageDetectionWorker();
+    await workerTextModelSyncClient.ensureSyncedResources([resource]);
+    const modelId = await workerClient.proxy.$detectLanguage(resource.toString(), langBiases, preferHistory, supportedLangs);
+    const languageId = this.getLanguageId(modelId);
+    const LanguageDetectionStatsId2 = "automaticlanguagedetection.perf";
+    this._telemetryService.publicLog2(LanguageDetectionStatsId2, {
+      timeSpent: Date.now() - startTime,
+      detection: languageId || "unknown"
+    });
+    return languageId;
+  }
+}
+registerSingleton(
+  ILanguageDetectionService,
+  LanguageDetectionService,
+  0
+  /* InstantiationType.Eager */
+);
+export {
+  LanguageDetectionService,
+  LanguageDetectionWorkerClient
+};
+//# sourceMappingURL=languageDetectionWorkerServiceImpl.js.map

@@ -1,1 +1,239 @@
-import{$15 as b,$35 as h,$z6 as p,$w6 as E}from"../../../../base/browser/dom.js";import{$c5 as a}from"../../../../base/browser/window.js";import{$7b as g}from"../../../../base/common/arrays.js";import{$A as $,$B as v}from"../../../../base/common/platform.js";import{$fl as y}from"../../../../platform/environment/common/environment.js";import{$5j as S}from"../../../../platform/files/common/files.js";import f from"../../../../platform/languagePacks/common/localizedStrings.js";import{$3wb as x}from"../../../../platform/log/browser/log.js";import{$3n as j}from"../../../../platform/log/common/log.js";import{$Ql as R}from"../../../../platform/registry/common/platform.js";import{Extensions as q}from"../../../common/contributions.js";import{$RK as _}from"../../lifecycle/common/lifecycle.js";var w=function(e,t,n,o){var r,s=arguments.length,i=s<3?t:null===o?o=Object.getOwnPropertyDescriptor(t,n):o;if("object"==typeof Reflect&&"function"==typeof Reflect.decorate)i=Reflect.decorate(e,t,n,o);else for(var c=e.length-1;c>=0;c--)(r=e[c])&&(i=(s<3?r(i):s>3?r(t,n,i):r(t,n))||i);return s>3&&i&&Object.defineProperty(t,n,i),i},m=function(e,t){return function(n,o){t(n,o,e)}};let d=class{constructor(e,t,n,o){this.a=e,this.b=t,this.d=n,this.e=o}async getLogs(){return x(this.a,this.b)}async whenWorkbenchRestored(){this.e.info("[driver] Waiting for restored lifecycle phase..."),await this.d.when(3),this.e.info("[driver] Restored lifecycle phase reached. Waiting for contributions..."),await R.as(q.Workbench).whenRestored,this.e.info("[driver] Workbench contributions created.")}async setValue(e,t){const n=a.document.querySelector(e);if(!n)return Promise.reject(new Error(`Element not found: ${e}`));const o=n;o.value=t;const r=new Event("input",{bubbles:!0,cancelable:!0});o.dispatchEvent(r)}async isActiveElement(e){if(a.document.querySelector(e)!==a.document.activeElement){const t=[];let n=a.document.activeElement;for(;n;){const e=n.tagName,o=n.id?`#${n.id}`:"",r=g(n.className.split(/\s+/g).map((e=>e.trim()))).map((e=>`.${e}`)).join("");t.unshift(`${e}${o}${r}`),n=n.parentElement}throw new Error(`Active element not found. Current active element is '${t.join(" > ")}'. Looking for ${e}`)}return!0}async getElements(e,t){const n=a.document.querySelectorAll(e),o=[];for(let e=0;e<n.length;e++){const r=n.item(e);o.push(this.f(r,t))}return o}f(e,t){const n=Object.create(null);for(let t=0;t<e.attributes.length;t++){const o=e.attributes.item(t);o&&(n[o.name]=o.value)}const o=[];if(t)for(let t=0;t<e.children.length;t++){const n=e.children.item(t);n&&o.push(this.f(n,!0))}const{left:r,top:s}=h(e);return{tagName:e.tagName,className:e.className,textContent:e.textContent||"",attributes:n,children:o,left:r,top:s}}async getElementXY(e,t,n){const o="number"==typeof t&&"number"==typeof n?{x:t,y:n}:void 0;return this.g(e,o)}async typeInEditor(e,t){const n=a.document.querySelector(e);if(!n)throw new Error(`Editor not found: ${e}`);if(p(n)){const o=n.editContext;if(!o)throw new Error(`Edit context not found: ${e}`);const r=o.selectionStart,s=o.selectionEnd,i=new TextUpdateEvent("textupdate",{updateRangeStart:r,updateRangeEnd:s,text:t,selectionStart:r+t.length,selectionEnd:r+t.length,compositionStart:0,compositionEnd:0});o.dispatchEvent(i)}else if(E(n)){const e=n.selectionStart,o=e+t.length,r=n.value,s=r.substr(0,e)+t+r.substr(e);n.value=s,n.setSelectionRange(o,o);const i=new Event("input",{bubbles:!0,cancelable:!0});n.dispatchEvent(i)}}async getEditorSelection(e){const t=a.document.querySelector(e);if(!t)throw new Error(`Editor not found: ${e}`);if(p(t)){const n=t.editContext;if(!n)throw new Error(`Edit context not found: ${e}`);return{selectionStart:n.selectionStart,selectionEnd:n.selectionEnd}}if(E(t))return{selectionStart:t.selectionStart,selectionEnd:t.selectionEnd};throw new Error(`Unknown type of element: ${e}`)}async getTerminalBuffer(e){const t=a.document.querySelector(e);if(!t)throw new Error(`Terminal not found: ${e}`);const n=t.xterm;if(!n)throw new Error(`Xterm not found: ${e}`);const o=[];for(let e=0;e<n.buffer.active.length;e++)o.push(n.buffer.active.getLine(e).translateToString(!0));return o}async writeInTerminal(e,t){const n=a.document.querySelector(e);if(!n)throw new Error(`Element not found: ${e}`);const o=n.xterm;if(!o)throw new Error(`Xterm not found: ${e}`);o.input(t)}getLocaleInfo(){return Promise.resolve({language:$,locale:v})}getLocalizedStrings(){return Promise.resolve({open:f.open,close:f.close,find:f.find})}async g(e,t){const n=a.document.querySelector(e);if(!n)return Promise.reject(new Error(`Element not found: ${e}`));const{left:o,top:r}=h(n),{width:s,height:i}=b(n);let c,l;return t?(c=o+t.x,l=r+t.y):(c=o+s/2,l=r+i/2),c=Math.round(c),l=Math.round(l),{x:c,y:l}}};function M(e){Object.assign(a,{driver:e.createInstance(d)})}d=w([m(0,S),m(1,y),m(2,_),m(3,j)],d);export{d as $5wb,M as $6wb};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { getClientArea, getTopLeftOffset, isHTMLDivElement, isHTMLTextAreaElement } from "../../../../base/browser/dom.js";
+import { mainWindow } from "../../../../base/browser/window.js";
+import { coalesce } from "../../../../base/common/arrays.js";
+import { language, locale } from "../../../../base/common/platform.js";
+import { IEnvironmentService } from "../../../../platform/environment/common/environment.js";
+import { IFileService } from "../../../../platform/files/common/files.js";
+import localizedStrings from "../../../../platform/languagePacks/common/localizedStrings.js";
+import { getLogs } from "../../../../platform/log/browser/log.js";
+import { ILogService } from "../../../../platform/log/common/log.js";
+import { Registry } from "../../../../platform/registry/common/platform.js";
+import { Extensions as WorkbenchExtensions } from "../../../common/contributions.js";
+import { ILifecycleService } from "../../lifecycle/common/lifecycle.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+let BrowserWindowDriver = class BrowserWindowDriver2 {
+  static {
+    __name(this, "BrowserWindowDriver");
+  }
+  constructor(fileService, environmentService, lifecycleService, logService) {
+    this.fileService = fileService;
+    this.environmentService = environmentService;
+    this.lifecycleService = lifecycleService;
+    this.logService = logService;
+  }
+  async getLogs() {
+    return getLogs(this.fileService, this.environmentService);
+  }
+  async whenWorkbenchRestored() {
+    this.logService.info("[driver] Waiting for restored lifecycle phase...");
+    await this.lifecycleService.when(
+      3
+      /* LifecyclePhase.Restored */
+    );
+    this.logService.info("[driver] Restored lifecycle phase reached. Waiting for contributions...");
+    await Registry.as(WorkbenchExtensions.Workbench).whenRestored;
+    this.logService.info("[driver] Workbench contributions created.");
+  }
+  async setValue(selector, text) {
+    const element = mainWindow.document.querySelector(selector);
+    if (!element) {
+      return Promise.reject(new Error(`Element not found: ${selector}`));
+    }
+    const inputElement = element;
+    inputElement.value = text;
+    const event = new Event("input", { bubbles: true, cancelable: true });
+    inputElement.dispatchEvent(event);
+  }
+  async isActiveElement(selector) {
+    const element = mainWindow.document.querySelector(selector);
+    if (element !== mainWindow.document.activeElement) {
+      const chain = [];
+      let el = mainWindow.document.activeElement;
+      while (el) {
+        const tagName = el.tagName;
+        const id = el.id ? `#${el.id}` : "";
+        const classes = coalesce(el.className.split(/\s+/g).map((c) => c.trim())).map((c) => `.${c}`).join("");
+        chain.unshift(`${tagName}${id}${classes}`);
+        el = el.parentElement;
+      }
+      throw new Error(`Active element not found. Current active element is '${chain.join(" > ")}'. Looking for ${selector}`);
+    }
+    return true;
+  }
+  async getElements(selector, recursive) {
+    const query = mainWindow.document.querySelectorAll(selector);
+    const result = [];
+    for (let i = 0; i < query.length; i++) {
+      const element = query.item(i);
+      result.push(this.serializeElement(element, recursive));
+    }
+    return result;
+  }
+  serializeElement(element, recursive) {
+    const attributes = /* @__PURE__ */ Object.create(null);
+    for (let j = 0; j < element.attributes.length; j++) {
+      const attr = element.attributes.item(j);
+      if (attr) {
+        attributes[attr.name] = attr.value;
+      }
+    }
+    const children = [];
+    if (recursive) {
+      for (let i = 0; i < element.children.length; i++) {
+        const child = element.children.item(i);
+        if (child) {
+          children.push(this.serializeElement(child, true));
+        }
+      }
+    }
+    const { left, top } = getTopLeftOffset(element);
+    return {
+      tagName: element.tagName,
+      className: element.className,
+      textContent: element.textContent || "",
+      attributes,
+      children,
+      left,
+      top
+    };
+  }
+  async getElementXY(selector, xoffset, yoffset) {
+    const offset = typeof xoffset === "number" && typeof yoffset === "number" ? { x: xoffset, y: yoffset } : void 0;
+    return this._getElementXY(selector, offset);
+  }
+  async typeInEditor(selector, text) {
+    const element = mainWindow.document.querySelector(selector);
+    if (!element) {
+      throw new Error(`Editor not found: ${selector}`);
+    }
+    if (isHTMLDivElement(element)) {
+      const editContext = element.editContext;
+      if (!editContext) {
+        throw new Error(`Edit context not found: ${selector}`);
+      }
+      const selectionStart = editContext.selectionStart;
+      const selectionEnd = editContext.selectionEnd;
+      const event = new TextUpdateEvent("textupdate", {
+        updateRangeStart: selectionStart,
+        updateRangeEnd: selectionEnd,
+        text,
+        selectionStart: selectionStart + text.length,
+        selectionEnd: selectionStart + text.length,
+        compositionStart: 0,
+        compositionEnd: 0
+      });
+      editContext.dispatchEvent(event);
+    } else if (isHTMLTextAreaElement(element)) {
+      const start = element.selectionStart;
+      const newStart = start + text.length;
+      const value = element.value;
+      const newValue = value.substr(0, start) + text + value.substr(start);
+      element.value = newValue;
+      element.setSelectionRange(newStart, newStart);
+      const event = new Event("input", { "bubbles": true, "cancelable": true });
+      element.dispatchEvent(event);
+    }
+  }
+  async getEditorSelection(selector) {
+    const element = mainWindow.document.querySelector(selector);
+    if (!element) {
+      throw new Error(`Editor not found: ${selector}`);
+    }
+    if (isHTMLDivElement(element)) {
+      const editContext = element.editContext;
+      if (!editContext) {
+        throw new Error(`Edit context not found: ${selector}`);
+      }
+      return { selectionStart: editContext.selectionStart, selectionEnd: editContext.selectionEnd };
+    } else if (isHTMLTextAreaElement(element)) {
+      return { selectionStart: element.selectionStart, selectionEnd: element.selectionEnd };
+    } else {
+      throw new Error(`Unknown type of element: ${selector}`);
+    }
+  }
+  async getTerminalBuffer(selector) {
+    const element = mainWindow.document.querySelector(selector);
+    if (!element) {
+      throw new Error(`Terminal not found: ${selector}`);
+    }
+    const xterm = element.xterm;
+    if (!xterm) {
+      throw new Error(`Xterm not found: ${selector}`);
+    }
+    const lines = [];
+    for (let i = 0; i < xterm.buffer.active.length; i++) {
+      lines.push(xterm.buffer.active.getLine(i).translateToString(true));
+    }
+    return lines;
+  }
+  async writeInTerminal(selector, text) {
+    const element = mainWindow.document.querySelector(selector);
+    if (!element) {
+      throw new Error(`Element not found: ${selector}`);
+    }
+    const xterm = element.xterm;
+    if (!xterm) {
+      throw new Error(`Xterm not found: ${selector}`);
+    }
+    xterm.input(text);
+  }
+  getLocaleInfo() {
+    return Promise.resolve({
+      language,
+      locale
+    });
+  }
+  getLocalizedStrings() {
+    return Promise.resolve({
+      open: localizedStrings.open,
+      close: localizedStrings.close,
+      find: localizedStrings.find
+    });
+  }
+  async _getElementXY(selector, offset) {
+    const element = mainWindow.document.querySelector(selector);
+    if (!element) {
+      return Promise.reject(new Error(`Element not found: ${selector}`));
+    }
+    const { left, top } = getTopLeftOffset(element);
+    const { width, height } = getClientArea(element);
+    let x, y;
+    if (offset) {
+      x = left + offset.x;
+      y = top + offset.y;
+    } else {
+      x = left + width / 2;
+      y = top + height / 2;
+    }
+    x = Math.round(x);
+    y = Math.round(y);
+    return { x, y };
+  }
+};
+BrowserWindowDriver = __decorate([
+  __param(0, IFileService),
+  __param(1, IEnvironmentService),
+  __param(2, ILifecycleService),
+  __param(3, ILogService)
+], BrowserWindowDriver);
+function registerWindowDriver(instantiationService) {
+  Object.assign(mainWindow, { driver: instantiationService.createInstance(BrowserWindowDriver) });
+}
+__name(registerWindowDriver, "registerWindowDriver");
+export {
+  BrowserWindowDriver,
+  registerWindowDriver
+};
+//# sourceMappingURL=driver.js.map

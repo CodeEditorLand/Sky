@@ -1,1 +1,307 @@
-import{$Sh as O}from"../../../../base/common/async.js";import{Iterable as R}from"../../../../base/common/iterator.js";import{$Lc as x}from"../../../../base/common/map.js";import{Schemas as k}from"../../../../base/common/network.js";import*as f from"../../../../base/common/types.js";import{$5_ as y,$6_ as I}from"../../../../editor/browser/editorBrowser.js";import{localize as g}from"../../../../nls.js";import{$sK as E,SideBySideEditor as V}from"../../../common/editor.js";import{$zW as w,VariableKind as $}from"../common/configurationResolver.js";import{$AW as v}from"../common/configurationResolverExpression.js";import{$H4 as N}from"../common/variableResolver.js";const b="configResolveInputLru",P=5;class D extends N{static{this.INPUT_OR_COMMAND_VARIABLES_PATTERN=/\${((input|command):(.*?))}/g}constructor(u,r,c,o,t,i,a,l,d,s,h){super({getFolderUri:e=>{const n=i.getWorkspace().folders.filter(p=>p.name===e).pop();return n?n.uri:void 0},getWorkspaceFolderCount:()=>i.getWorkspace().folders.length,getConfigurationValue:(e,n)=>o.getValue(n,e?{resource:e}:{}),getAppRoot:()=>u.getAppRoot(),getExecPath:()=>u.getExecPath(),getFilePath:()=>{const e=E.getOriginalUri(c.activeEditor,{supportSideBySide:V.PRIMARY,filterByScheme:[k.file,k.vscodeUserData,this.p.defaultUriScheme]});if(e)return this.o.getUriLabel(e,{noPrefix:!0})},getWorkspaceFolderPathForFile:()=>{const e=E.getOriginalUri(c.activeEditor,{supportSideBySide:V.PRIMARY,filterByScheme:[k.file,k.vscodeUserData,this.p.defaultUriScheme]});if(!e)return;const n=i.getWorkspaceFolder(e);if(n)return this.o.getUriLabel(n.uri,{noPrefix:!0})},getSelectedText:()=>{const e=c.activeTextEditorControl;let n=null;if(y(e))n=e;else if(I(e)){const S=e.getOriginalEditor(),A=e.getModifiedEditor();n=S.hasWidgetFocus()?S:A}const p=n?.getModel(),m=n?.getSelection();if(p&&m)return p.getValueInRange(m)},getLineNumber:()=>{const e=c.activeTextEditorControl;if(y(e)){const n=e.getSelection();if(n){const p=n.positionLineNumber;return String(p)}}},getColumnNumber:()=>{const e=c.activeTextEditorControl;if(y(e)){const n=e.getSelection();if(n){const p=n.positionColumn;return String(p)}}},getExtension:e=>s.getExtension(e)},l,d.userHome().then(e=>e.path),r),this.e=o,this.k=t,this.n=a,this.o=l,this.p=d,this.q=h,this.d=new O,this.resolvableVariables.add("command"),this.resolvableVariables.add("input")}async resolveWithInteractionReplace(u,r,c,o,t){const i=v.parse(r);return await this.resolveWithInteraction(u,i,c,o,t),i.toObject()}async resolveWithInteraction(u,r,c,o,t){const i=v.parse(r);for(const a of i.unresolved()){let l;if(a.name==="command"){const d=(o?o[a.arg]:void 0)||a.arg,s=await this.k.executeCommand(d,i.toObject());if(!f.$9c(s)){if(typeof s!="string")throw new w($.Command,g(13897,null,d));l={value:s}}}else if(a.name==="input")l=await this.w(c,a.arg,await this.s(u,c,t),o);else if(this.h.has(a.inner))l={value:await this.h.get(a.inner)()};else{const d=await this.l(a,u?.uri);if(d===void 0)continue;l=typeof d=="string"?{value:d}:d}if(l===void 0)return;i.resolve(a,l)}return new Map(R.map(i.resolved(),([a,l])=>[a.inner,l.value]))}async s(u,r,c){if(!r)return;let o;const t=u?{resource:u.uri}:{},i=this.e.inspect(r,t);if(i)switch(c){case 8:o=i.memoryValue?.inputs;break;case 7:o=i.defaultValue?.inputs;break;case 2:o=i.userValue?.inputs;break;case 3:o=i.userLocalValue?.inputs;break;case 4:o=i.userRemoteValue?.inputs;break;case 1:o=i.applicationValue?.inputs;break;case 5:o=i.workspaceValue?.inputs;break;case 6:default:o=i.workspaceFolderValue?.inputs;break}return o??=this.e.getValue(r,t)?.inputs,o}t(){const u=this.q.get(b,1),r=new x(P);try{u&&r.fromJSON(JSON.parse(u))}catch{}return r}u(u){this.q.store(b,JSON.stringify(u.toJSON()),1,1)}async w(u,r,c,o){if(!c)throw new w($.Input,g(13898,null,r,"inputs"));const t=c.filter(i=>i.id===r).pop();if(t){const i=s=>{throw new w($.Input,g(13899,null,r,t.type,s))},a=this.t(),l=`${u}.${r}`,d=a.get(l);switch(t.type){case"promptString":{f.$Yc(t.description)||i("description");const s={prompt:t.description,ignoreFocusLost:!0,value:o?.[`input:${r}`]??d??t.default};return t.password&&(s.password=t.password),this.d.queue(()=>this.n.input(s)).then(h=>(typeof h=="string"&&this.u(a.set(l,h)),h!==void 0?{value:h,input:t}:void 0))}case"pickString":{if(f.$Yc(t.description)||i("description"),Array.isArray(t.options))for(const e of t.options)!f.$Yc(e)&&!f.$Yc(e.value)&&i("value");else i("options");const s=new Array;for(const e of t.options){const n=f.$Yc(e)?e:e.value,p=f.$Yc(e)?void 0:e.label,m={label:p?`${p}: ${n}`:n,value:n},S=o?.[`input:${r}`]??d??t.default;n===t.default?(m.description=g(13900,null),s.unshift(m)):n===S?s.unshift(m):s.push(m)}const h={placeHolder:t.description,matchOnDetail:!0,ignoreFocusLost:!0};return this.d.queue(()=>this.n.pick(s,h,void 0)).then(e=>{if(e){const n=e.value;return this.u(a.set(l,n)),{value:n,input:t}}})}case"command":return f.$Yc(t.command)||i("command"),this.d.queue(()=>this.k.executeCommand(t.command,t.args)).then(s=>{if(typeof s=="string"||f.$9c(s))return{value:s,input:t};throw new w($.Input,g(13901,null,r,t.command))});default:throw new w($.Input,g(13902,null,r))}}throw new w($.Input,g(13903,null,r))}}export{D as $gBc};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { Queue } from "../../../../base/common/async.js";
+import { Iterable } from "../../../../base/common/iterator.js";
+import { LRUCache } from "../../../../base/common/map.js";
+import { Schemas } from "../../../../base/common/network.js";
+import * as Types from "../../../../base/common/types.js";
+import { isCodeEditor, isDiffEditor } from "../../../../editor/browser/editorBrowser.js";
+import { localize } from "../../../../nls.js";
+import { EditorResourceAccessor, SideBySideEditor } from "../../../common/editor.js";
+import { VariableError, VariableKind } from "../common/configurationResolver.js";
+import { ConfigurationResolverExpression } from "../common/configurationResolverExpression.js";
+import { AbstractVariableResolverService } from "../common/variableResolver.js";
+const LAST_INPUT_STORAGE_KEY = "configResolveInputLru";
+const LAST_INPUT_CACHE_SIZE = 5;
+class BaseConfigurationResolverService extends AbstractVariableResolverService {
+  static {
+    __name(this, "BaseConfigurationResolverService");
+  }
+  static {
+    this.INPUT_OR_COMMAND_VARIABLES_PATTERN = /\${((input|command):(.*?))}/g;
+  }
+  constructor(context, envVariablesPromise, editorService, configurationService, commandService, workspaceContextService, quickInputService, labelService, pathService, extensionService, storageService) {
+    super({
+      getFolderUri: /* @__PURE__ */ __name((folderName) => {
+        const folder = workspaceContextService.getWorkspace().folders.filter((f) => f.name === folderName).pop();
+        return folder ? folder.uri : void 0;
+      }, "getFolderUri"),
+      getWorkspaceFolderCount: /* @__PURE__ */ __name(() => {
+        return workspaceContextService.getWorkspace().folders.length;
+      }, "getWorkspaceFolderCount"),
+      getConfigurationValue: /* @__PURE__ */ __name((folderUri, section) => {
+        return configurationService.getValue(section, folderUri ? { resource: folderUri } : {});
+      }, "getConfigurationValue"),
+      getAppRoot: /* @__PURE__ */ __name(() => {
+        return context.getAppRoot();
+      }, "getAppRoot"),
+      getExecPath: /* @__PURE__ */ __name(() => {
+        return context.getExecPath();
+      }, "getExecPath"),
+      getFilePath: /* @__PURE__ */ __name(() => {
+        const fileResource = EditorResourceAccessor.getOriginalUri(editorService.activeEditor, {
+          supportSideBySide: SideBySideEditor.PRIMARY,
+          filterByScheme: [Schemas.file, Schemas.vscodeUserData, this.pathService.defaultUriScheme]
+        });
+        if (!fileResource) {
+          return void 0;
+        }
+        return this.labelService.getUriLabel(fileResource, { noPrefix: true });
+      }, "getFilePath"),
+      getWorkspaceFolderPathForFile: /* @__PURE__ */ __name(() => {
+        const fileResource = EditorResourceAccessor.getOriginalUri(editorService.activeEditor, {
+          supportSideBySide: SideBySideEditor.PRIMARY,
+          filterByScheme: [Schemas.file, Schemas.vscodeUserData, this.pathService.defaultUriScheme]
+        });
+        if (!fileResource) {
+          return void 0;
+        }
+        const wsFolder = workspaceContextService.getWorkspaceFolder(fileResource);
+        if (!wsFolder) {
+          return void 0;
+        }
+        return this.labelService.getUriLabel(wsFolder.uri, { noPrefix: true });
+      }, "getWorkspaceFolderPathForFile"),
+      getSelectedText: /* @__PURE__ */ __name(() => {
+        const activeTextEditorControl = editorService.activeTextEditorControl;
+        let activeControl = null;
+        if (isCodeEditor(activeTextEditorControl)) {
+          activeControl = activeTextEditorControl;
+        } else if (isDiffEditor(activeTextEditorControl)) {
+          const original = activeTextEditorControl.getOriginalEditor();
+          const modified = activeTextEditorControl.getModifiedEditor();
+          activeControl = original.hasWidgetFocus() ? original : modified;
+        }
+        const activeModel = activeControl?.getModel();
+        const activeSelection = activeControl?.getSelection();
+        if (activeModel && activeSelection) {
+          return activeModel.getValueInRange(activeSelection);
+        }
+        return void 0;
+      }, "getSelectedText"),
+      getLineNumber: /* @__PURE__ */ __name(() => {
+        const activeTextEditorControl = editorService.activeTextEditorControl;
+        if (isCodeEditor(activeTextEditorControl)) {
+          const selection = activeTextEditorControl.getSelection();
+          if (selection) {
+            const lineNumber = selection.positionLineNumber;
+            return String(lineNumber);
+          }
+        }
+        return void 0;
+      }, "getLineNumber"),
+      getColumnNumber: /* @__PURE__ */ __name(() => {
+        const activeTextEditorControl = editorService.activeTextEditorControl;
+        if (isCodeEditor(activeTextEditorControl)) {
+          const selection = activeTextEditorControl.getSelection();
+          if (selection) {
+            const columnNumber = selection.positionColumn;
+            return String(columnNumber);
+          }
+        }
+        return void 0;
+      }, "getColumnNumber"),
+      getExtension: /* @__PURE__ */ __name((id) => {
+        return extensionService.getExtension(id);
+      }, "getExtension")
+    }, labelService, pathService.userHome().then((home) => home.path), envVariablesPromise);
+    this.configurationService = configurationService;
+    this.commandService = commandService;
+    this.quickInputService = quickInputService;
+    this.labelService = labelService;
+    this.pathService = pathService;
+    this.storageService = storageService;
+    this.userInputAccessQueue = new Queue();
+    this.resolvableVariables.add("command");
+    this.resolvableVariables.add("input");
+  }
+  async resolveWithInteractionReplace(folder, config, section, variables, target) {
+    const parsed = ConfigurationResolverExpression.parse(config);
+    await this.resolveWithInteraction(folder, parsed, section, variables, target);
+    return parsed.toObject();
+  }
+  async resolveWithInteraction(folder, config, section, variableToCommandMap, target) {
+    const expr = ConfigurationResolverExpression.parse(config);
+    for (const variable of expr.unresolved()) {
+      let result;
+      if (variable.name === "command") {
+        const commandId = (variableToCommandMap ? variableToCommandMap[variable.arg] : void 0) || variable.arg;
+        const value = await this.commandService.executeCommand(commandId, expr.toObject());
+        if (!Types.isUndefinedOrNull(value)) {
+          if (typeof value !== "string") {
+            throw new VariableError(VariableKind.Command, localize("commandVariable.noStringType", "Cannot substitute command variable '{0}' because command did not return a result of type string.", commandId));
+          }
+          result = { value };
+        }
+      } else if (variable.name === "input") {
+        result = await this.showUserInput(section, variable.arg, await this.resolveInputs(folder, section, target), variableToCommandMap);
+      } else if (this._contributedVariables.has(variable.inner)) {
+        result = { value: await this._contributedVariables.get(variable.inner)() };
+      } else {
+        const resolvedValue = await this.evaluateSingleVariable(variable, folder?.uri);
+        if (resolvedValue === void 0) {
+          continue;
+        }
+        result = typeof resolvedValue === "string" ? { value: resolvedValue } : resolvedValue;
+      }
+      if (result === void 0) {
+        return void 0;
+      }
+      expr.resolve(variable, result);
+    }
+    return new Map(Iterable.map(expr.resolved(), ([key, value]) => [key.inner, value.value]));
+  }
+  async resolveInputs(folder, section, target) {
+    if (!section) {
+      return void 0;
+    }
+    let inputs;
+    const overrides = folder ? { resource: folder.uri } : {};
+    const result = this.configurationService.inspect(section, overrides);
+    if (result) {
+      switch (target) {
+        case 8:
+          inputs = result.memoryValue?.inputs;
+          break;
+        case 7:
+          inputs = result.defaultValue?.inputs;
+          break;
+        case 2:
+          inputs = result.userValue?.inputs;
+          break;
+        case 3:
+          inputs = result.userLocalValue?.inputs;
+          break;
+        case 4:
+          inputs = result.userRemoteValue?.inputs;
+          break;
+        case 1:
+          inputs = result.applicationValue?.inputs;
+          break;
+        case 5:
+          inputs = result.workspaceValue?.inputs;
+          break;
+        case 6:
+        default:
+          inputs = result.workspaceFolderValue?.inputs;
+          break;
+      }
+    }
+    inputs ??= this.configurationService.getValue(section, overrides)?.inputs;
+    return inputs;
+  }
+  readInputLru() {
+    const contents = this.storageService.get(
+      LAST_INPUT_STORAGE_KEY,
+      1
+      /* StorageScope.WORKSPACE */
+    );
+    const lru = new LRUCache(LAST_INPUT_CACHE_SIZE);
+    try {
+      if (contents) {
+        lru.fromJSON(JSON.parse(contents));
+      }
+    } catch {
+    }
+    return lru;
+  }
+  storeInputLru(lru) {
+    this.storageService.store(
+      LAST_INPUT_STORAGE_KEY,
+      JSON.stringify(lru.toJSON()),
+      1,
+      1
+      /* StorageTarget.MACHINE */
+    );
+  }
+  async showUserInput(section, variable, inputInfos, variableToCommandMap) {
+    if (!inputInfos) {
+      throw new VariableError(VariableKind.Input, localize("inputVariable.noInputSection", "Variable '{0}' must be defined in an '{1}' section of the debug or task configuration.", variable, "inputs"));
+    }
+    const info = inputInfos.filter((item) => item.id === variable).pop();
+    if (info) {
+      const missingAttribute = /* @__PURE__ */ __name((attrName) => {
+        throw new VariableError(VariableKind.Input, localize("inputVariable.missingAttribute", "Input variable '{0}' is of type '{1}' and must include '{2}'.", variable, info.type, attrName));
+      }, "missingAttribute");
+      const defaultValueMap = this.readInputLru();
+      const defaultValueKey = `${section}.${variable}`;
+      const previousPickedValue = defaultValueMap.get(defaultValueKey);
+      switch (info.type) {
+        case "promptString": {
+          if (!Types.isString(info.description)) {
+            missingAttribute("description");
+          }
+          const inputOptions = { prompt: info.description, ignoreFocusLost: true, value: variableToCommandMap?.[`input:${variable}`] ?? previousPickedValue ?? info.default };
+          if (info.password) {
+            inputOptions.password = info.password;
+          }
+          return this.userInputAccessQueue.queue(() => this.quickInputService.input(inputOptions)).then((resolvedInput) => {
+            if (typeof resolvedInput === "string") {
+              this.storeInputLru(defaultValueMap.set(defaultValueKey, resolvedInput));
+            }
+            return resolvedInput !== void 0 ? { value: resolvedInput, input: info } : void 0;
+          });
+        }
+        case "pickString": {
+          if (!Types.isString(info.description)) {
+            missingAttribute("description");
+          }
+          if (Array.isArray(info.options)) {
+            for (const pickOption of info.options) {
+              if (!Types.isString(pickOption) && !Types.isString(pickOption.value)) {
+                missingAttribute("value");
+              }
+            }
+          } else {
+            missingAttribute("options");
+          }
+          const picks = new Array();
+          for (const pickOption of info.options) {
+            const value = Types.isString(pickOption) ? pickOption : pickOption.value;
+            const label = Types.isString(pickOption) ? void 0 : pickOption.label;
+            const item = {
+              label: label ? `${label}: ${value}` : value,
+              value
+            };
+            const topValue = variableToCommandMap?.[`input:${variable}`] ?? previousPickedValue ?? info.default;
+            if (value === info.default) {
+              item.description = localize("inputVariable.defaultInputValue", "(Default)");
+              picks.unshift(item);
+            } else if (value === topValue) {
+              picks.unshift(item);
+            } else {
+              picks.push(item);
+            }
+          }
+          const pickOptions = { placeHolder: info.description, matchOnDetail: true, ignoreFocusLost: true };
+          return this.userInputAccessQueue.queue(() => this.quickInputService.pick(picks, pickOptions, void 0)).then((resolvedInput) => {
+            if (resolvedInput) {
+              const value = resolvedInput.value;
+              this.storeInputLru(defaultValueMap.set(defaultValueKey, value));
+              return { value, input: info };
+            }
+            return void 0;
+          });
+        }
+        case "command": {
+          if (!Types.isString(info.command)) {
+            missingAttribute("command");
+          }
+          return this.userInputAccessQueue.queue(() => this.commandService.executeCommand(info.command, info.args)).then((result) => {
+            if (typeof result === "string" || Types.isUndefinedOrNull(result)) {
+              return { value: result, input: info };
+            }
+            throw new VariableError(VariableKind.Input, localize("inputVariable.command.noStringType", "Cannot substitute input variable '{0}' because command '{1}' did not return a result of type string.", variable, info.command));
+          });
+        }
+        default:
+          throw new VariableError(VariableKind.Input, localize("inputVariable.unknownType", "Input variable '{0}' can only be of type 'promptString', 'pickString', or 'command'.", variable));
+      }
+    }
+    throw new VariableError(VariableKind.Input, localize("inputVariable.undefinedVariable", "Undefined input variable '{0}' encountered. Remove or define '{0}' to continue.", variable));
+  }
+}
+export {
+  BaseConfigurationResolverService
+};
+//# sourceMappingURL=baseConfigurationResolverService.js.map

@@ -1,1 +1,40 @@
-import{$mj as s}from"../../../../platform/instantiation/common/instantiation.js";import{$Ho as l}from"../../../../platform/storage/common/storage.js";import{$Po as u}from"../../../../platform/telemetry/common/telemetry.js";import{$Mt as h}from"../../../../platform/theme/common/themeService.js";import{$aCc as _}from"../browser/processExplorerEditor.js";import{$mJc as $}from"./processExplorerControl.js";var a=function(t,e,o,r){var s,n=arguments.length,m=n<3?e:null===r?r=Object.getOwnPropertyDescriptor(e,o):r;if("object"==typeof Reflect&&"function"==typeof Reflect.decorate)m=Reflect.decorate(t,e,o,r);else for(var a=t.length-1;a>=0;a--)(s=t[a])&&(m=(n<3?s(m):n>3?s(e,o,m):s(e,o))||m);return n>3&&m&&Object.defineProperty(e,o,m),m},i=function(t,e){return function(o,r){e(o,r,t)}};let p=class extends _{constructor(t,e,o,r,s){super(t,e,o,r,s)}Y(t){this.a=this.B(this.b.createInstance($,t))}};p=a([i(1,u),i(2,h),i(3,l),i(4,s)],p);export{p as $nJc};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { IInstantiationService } from "../../../../platform/instantiation/common/instantiation.js";
+import { IStorageService } from "../../../../platform/storage/common/storage.js";
+import { ITelemetryService } from "../../../../platform/telemetry/common/telemetry.js";
+import { IThemeService } from "../../../../platform/theme/common/themeService.js";
+import { ProcessExplorerEditor } from "../browser/processExplorerEditor.js";
+import { NativeProcessExplorerControl } from "./processExplorerControl.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+let NativeProcessExplorerEditor = class NativeProcessExplorerEditor2 extends ProcessExplorerEditor {
+  static {
+    __name(this, "NativeProcessExplorerEditor");
+  }
+  constructor(group, telemetryService, themeService, storageService, instantiationService) {
+    super(group, telemetryService, themeService, storageService, instantiationService);
+  }
+  createEditor(parent) {
+    this.processExplorerControl = this._register(this.instantiationService.createInstance(NativeProcessExplorerControl, parent));
+  }
+};
+NativeProcessExplorerEditor = __decorate([
+  __param(1, ITelemetryService),
+  __param(2, IThemeService),
+  __param(3, IStorageService),
+  __param(4, IInstantiationService)
+], NativeProcessExplorerEditor);
+export {
+  NativeProcessExplorerEditor
+};
+//# sourceMappingURL=processExplorerEditor.js.map

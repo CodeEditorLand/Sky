@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["../../../Source/Application/File/Service.ts"],
+  "sourcesContent": ["/**\n * @module Service (File)\n * @description Defines the interface and Context.Tag for the File service.\n */\n\nimport { Context } from \"effect\";\nimport type { IFileService } from \"vs/platform/files/common/files.js\";\n\n/**\n * The service interface for the File service.\n * This is an alias for VS Code's `IFileService`.\n */\nexport type Interface = IFileService;\n\n/**\n * The Context.Tag for the File service.\n */\nexport class Tag extends Context.Tag(\"vscode/FileService\")<Interface, {}>() {}\n"],
+  "mappings": ";;AAKA,SAAS,eAAe;AAYjB,MAAM,YAAY,QAAQ,IAAI,oBAAoB,EAAiB,EAAE;AAAA,EAjB5E,OAiB4E;AAAA;AAAA;AAAC;",
+  "names": []
+}

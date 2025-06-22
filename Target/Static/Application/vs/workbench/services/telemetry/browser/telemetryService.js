@@ -1,1 +1,129 @@
-import{$vd as d}from"../../../../base/common/lifecycle.js";import{$El as I}from"../../../../platform/configuration/common/configuration.js";import{$WB as g}from"../../../../platform/instantiation/common/extensions.js";import{$3n as L,$4n as E}from"../../../../platform/log/common/log.js";import{$nn as T}from"../../../../platform/product/common/productService.js";import{$Ho as P}from"../../../../platform/storage/common/storage.js";import{$KAc as _}from"../../../../platform/telemetry/browser/1dsAppender.js";import{$Po as C,$Yo as D}from"../../../../platform/telemetry/common/telemetry.js";import{$Z4 as w}from"../../../../platform/telemetry/common/telemetryLogAppender.js";import{$dy as K}from"../../../../platform/telemetry/common/telemetryService.js";import{$Hu as x,$Ku as B,$Gu as j,$Au as u,$Fu as M}from"../../../../platform/telemetry/common/telemetryUtils.js";import{$2$ as O}from"../../environment/browser/environmentService.js";import{$YK as R}from"../../remote/common/remoteAgentService.js";import{$LAc as q}from"./workbenchCommonProperties.js";var b=function(l,t,r,m){var e=arguments.length,s=e<3?t:m===null?m=Object.getOwnPropertyDescriptor(t,r):m,o;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")s=Reflect.decorate(l,t,r,m);else for(var i=l.length-1;i>=0;i--)(o=l[i])&&(s=(e<3?o(s):e>3?o(t,r,s):o(t,r))||s);return e>3&&s&&Object.defineProperty(t,r,s),s},n=function(l,t){return function(r,m){t(r,m,l)}};let a=class extends d{get sessionId(){return this.a.sessionId}get machineId(){return this.a.machineId}get sqmId(){return this.a.sqmId}get devDeviceId(){return this.a.devDeviceId}get firstSessionDate(){return this.a.firstSessionDate}get msftInternal(){return this.a.msftInternal}constructor(t,r,m,e,s,o,i){super(),this.a=u,this.sendErrorTelemetry=!0,this.a=this.b(t,r,m,e,s,o,i),this.B(e.onDidChangeConfiguration(h=>{h.affectsConfiguration(D)&&(this.a=this.b(t,r,m,e,s,o,i))}))}b(t,r,m,e,s,o,i){if(M(o,t)&&o.aiConfig?.ariaKey&&x(e)!==0&&this.a===u){const f=[],p=B(o,e);if(!j(o,t))if(i.getConnection()!==null){const y={log:i.logTelemetry.bind(i),flush:i.flushTelemetry.bind(i)};f.push(y)}else f.push(new _(p,"monacoworkbench",null,o.aiConfig?.ariaKey));f.push(new w("",!1,m,t,o));const $={appenders:f,commonProperties:q(s,o.commit,o.version,p,t.remoteAuthority,o.embedderIdentifier,o.removeTelemetryMachineId,t.options&&t.options.resolveCommonTelemetryProperties),sendErrorTelemetry:this.sendErrorTelemetry};return this.B(new K($,e,o))}return this.a}setExperimentProperty(t,r){return this.a.setExperimentProperty(t,r)}get telemetryLevel(){return this.a.telemetryLevel}publicLog(t,r){this.a.publicLog(t,r)}publicLog2(t,r){this.publicLog(t,r)}publicLogError(t,r){this.a.publicLog(t,r)}publicLogError2(t,r){this.publicLogError(t,r)}};a=b([n(0,O),n(1,L),n(2,E),n(3,I),n(4,P),n(5,T),n(6,R)],a);g(C,a,1);export{a as $MAc};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { Disposable } from "../../../../base/common/lifecycle.js";
+import { IConfigurationService } from "../../../../platform/configuration/common/configuration.js";
+import { registerSingleton } from "../../../../platform/instantiation/common/extensions.js";
+import { ILogService, ILoggerService } from "../../../../platform/log/common/log.js";
+import { IProductService } from "../../../../platform/product/common/productService.js";
+import { IStorageService } from "../../../../platform/storage/common/storage.js";
+import { OneDataSystemWebAppender } from "../../../../platform/telemetry/browser/1dsAppender.js";
+import { ITelemetryService, TELEMETRY_SETTING_ID } from "../../../../platform/telemetry/common/telemetry.js";
+import { TelemetryLogAppender } from "../../../../platform/telemetry/common/telemetryLogAppender.js";
+import { TelemetryService as BaseTelemetryService } from "../../../../platform/telemetry/common/telemetryService.js";
+import { getTelemetryLevel, isInternalTelemetry, isLoggingOnly, NullTelemetryService, supportsTelemetry } from "../../../../platform/telemetry/common/telemetryUtils.js";
+import { IBrowserWorkbenchEnvironmentService } from "../../environment/browser/environmentService.js";
+import { IRemoteAgentService } from "../../remote/common/remoteAgentService.js";
+import { resolveWorkbenchCommonProperties } from "./workbenchCommonProperties.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+let TelemetryService = class TelemetryService2 extends Disposable {
+  static {
+    __name(this, "TelemetryService");
+  }
+  get sessionId() {
+    return this.impl.sessionId;
+  }
+  get machineId() {
+    return this.impl.machineId;
+  }
+  get sqmId() {
+    return this.impl.sqmId;
+  }
+  get devDeviceId() {
+    return this.impl.devDeviceId;
+  }
+  get firstSessionDate() {
+    return this.impl.firstSessionDate;
+  }
+  get msftInternal() {
+    return this.impl.msftInternal;
+  }
+  constructor(environmentService, logService, loggerService, configurationService, storageService, productService, remoteAgentService) {
+    super();
+    this.impl = NullTelemetryService;
+    this.sendErrorTelemetry = true;
+    this.impl = this.initializeService(environmentService, logService, loggerService, configurationService, storageService, productService, remoteAgentService);
+    this._register(configurationService.onDidChangeConfiguration((e) => {
+      if (e.affectsConfiguration(TELEMETRY_SETTING_ID)) {
+        this.impl = this.initializeService(environmentService, logService, loggerService, configurationService, storageService, productService, remoteAgentService);
+      }
+    }));
+  }
+  /**
+   * Initializes the telemetry service to be a full fledged service.
+   * This is only done once and only when telemetry is enabled as this will also ping the endpoint to
+   * ensure its not adblocked and we can send telemetry
+   */
+  initializeService(environmentService, logService, loggerService, configurationService, storageService, productService, remoteAgentService) {
+    const telemetrySupported = supportsTelemetry(productService, environmentService) && productService.aiConfig?.ariaKey;
+    if (telemetrySupported && getTelemetryLevel(configurationService) !== 0 && this.impl === NullTelemetryService) {
+      const appenders = [];
+      const isInternal = isInternalTelemetry(productService, configurationService);
+      if (!isLoggingOnly(productService, environmentService)) {
+        if (remoteAgentService.getConnection() !== null) {
+          const remoteTelemetryProvider = {
+            log: remoteAgentService.logTelemetry.bind(remoteAgentService),
+            flush: remoteAgentService.flushTelemetry.bind(remoteAgentService)
+          };
+          appenders.push(remoteTelemetryProvider);
+        } else {
+          appenders.push(new OneDataSystemWebAppender(isInternal, "monacoworkbench", null, productService.aiConfig?.ariaKey));
+        }
+      }
+      appenders.push(new TelemetryLogAppender("", false, loggerService, environmentService, productService));
+      const config = {
+        appenders,
+        commonProperties: resolveWorkbenchCommonProperties(storageService, productService.commit, productService.version, isInternal, environmentService.remoteAuthority, productService.embedderIdentifier, productService.removeTelemetryMachineId, environmentService.options && environmentService.options.resolveCommonTelemetryProperties),
+        sendErrorTelemetry: this.sendErrorTelemetry
+      };
+      return this._register(new BaseTelemetryService(config, configurationService, productService));
+    }
+    return this.impl;
+  }
+  setExperimentProperty(name, value) {
+    return this.impl.setExperimentProperty(name, value);
+  }
+  get telemetryLevel() {
+    return this.impl.telemetryLevel;
+  }
+  publicLog(eventName, data) {
+    this.impl.publicLog(eventName, data);
+  }
+  publicLog2(eventName, data) {
+    this.publicLog(eventName, data);
+  }
+  publicLogError(errorEventName, data) {
+    this.impl.publicLog(errorEventName, data);
+  }
+  publicLogError2(eventName, data) {
+    this.publicLogError(eventName, data);
+  }
+};
+TelemetryService = __decorate([
+  __param(0, IBrowserWorkbenchEnvironmentService),
+  __param(1, ILogService),
+  __param(2, ILoggerService),
+  __param(3, IConfigurationService),
+  __param(4, IStorageService),
+  __param(5, IProductService),
+  __param(6, IRemoteAgentService)
+], TelemetryService);
+registerSingleton(
+  ITelemetryService,
+  TelemetryService,
+  1
+  /* InstantiationType.Delayed */
+);
+export {
+  TelemetryService
+};
+//# sourceMappingURL=telemetryService.js.map

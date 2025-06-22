@@ -1,1 +1,199 @@
-import{$df as m}from"../../../../../base/common/event.js";import{$ud as b,$wd as v}from"../../../../../base/common/lifecycle.js";import{$dh as k}from"../../../../../base/common/resources.js";import{$El as C}from"../../../../../platform/configuration/common/configuration.js";import{$oD as w}from"../../../../../platform/markers/common/markers.js";import{CellKind as y}from"../../common/notebookCommon.js";import{$XUb as E}from"./notebookOutlineEntryFactory.js";var g=function(t,e,i,s){var o,r=arguments.length,n=r<3?e:null===s?s=Object.getOwnPropertyDescriptor(e,i):s;if("object"==typeof Reflect&&"function"==typeof Reflect.decorate)n=Reflect.decorate(t,e,i,s);else for(var c=t.length-1;c>=0;c--)(o=t[c])&&(n=(r<3?o(n):r>3?o(e,i,n):o(e,i))||n);return r>3&&n&&Object.defineProperty(e,i,n),n},u=function(t,e){return function(i,s){e(i,s,t)}};let p=class{constructor(t,e,i,s){this.g=t,this.h=e,this.j=i,this.k=s,this.a=new b,this.b=new m,this.onDidChange=this.b.event,this.d=[],this.recomputeState()}get activeElement(){return this.f}get entries(){return this.d}get isEmpty(){return 0===this.d.length}get uri(){return this.c}async computeFullSymbols(t){try{const e=this.g?.getViewModel()?.viewCells.filter((t=>t.cellKind===y.Code));if(e){const i=[];for(const s of e.slice(0,50))i.push(this.k.cacheSymbols(s,t));await Promise.allSettled(i)}this.recomputeState()}catch{this.recomputeState()}}recomputeState(){if(this.a.clear(),this.f=void 0,this.c=void 0,!this.g.hasModel())return;this.c=this.g.textModel.uri;const t=this.g;if(0===t.getLength())return;const e=t.getViewModel().viewCells,i=[];for(const t of e)i.push(...this.k.getOutlineEntries(t,i.length));if(i.length>0){const t=[i[0]],e=[i[0]];for(let s=1;s<i.length;s++){const o=i[s];for(;;){const i=e.length;if(0===i){t.push(o),e.push(o);break}{const t=e[i-1];if(t.level<o.level){t.addChild(o),e.push(o);break}e.pop()}}}this.d=t}const s=new v;this.a.add(s);const o=()=>{if(t.isDisposed)return;const e=t=>{for(const e of this.d)t?e.clearMarkers():e.updateMarkers(this.h)},i=this.j.getValue("problems.visibility");if(void 0===i)return;const o=this.j.getValue("outline.problems.enabled");i&&o?(s.value=this.h.onMarkerChanged((i=>{t.isDisposed||i.some((e=>t.getCellsInRange().some((t=>k(t.uri,e)))))&&(e(!1),this.b.fire({}))})),e(!1)):(s.clear(),e(!0))};o(),this.a.add(this.j.onDidChangeConfiguration((t=>{(t.affectsConfiguration("problems.visibility")||t.affectsConfiguration("outline.problems.enabled"))&&(o(),this.b.fire({}))})));const{changeEventTriggered:r}=this.recomputeActive();r||this.b.fire({})}recomputeActive(){let t;const e=this.g;if(e&&e.hasModel()&&e.getLength()>0){const i=e.cellAt(e.getFocus().start);if(i)for(const e of this.d)if(t=e.find(i,[]),t)break}return t!==this.f?(this.f=t,this.b.fire({affectOnlyActiveElement:!0}),{changeEventTriggered:!0}):{changeEventTriggered:!1}}dispose(){this.d.length=0,this.f=void 0,this.a.dispose()}};p=g([u(1,w),u(2,C),u(3,E)],p);export{p as $ZUb};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { Emitter } from "../../../../../base/common/event.js";
+import { DisposableStore, MutableDisposable } from "../../../../../base/common/lifecycle.js";
+import { isEqual } from "../../../../../base/common/resources.js";
+import { IConfigurationService } from "../../../../../platform/configuration/common/configuration.js";
+import { IMarkerService } from "../../../../../platform/markers/common/markers.js";
+import { CellKind } from "../../common/notebookCommon.js";
+import { INotebookOutlineEntryFactory } from "./notebookOutlineEntryFactory.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+let NotebookCellOutlineDataSource = class NotebookCellOutlineDataSource2 {
+  static {
+    __name(this, "NotebookCellOutlineDataSource");
+  }
+  constructor(_editor, _markerService, _configurationService, _outlineEntryFactory) {
+    this._editor = _editor;
+    this._markerService = _markerService;
+    this._configurationService = _configurationService;
+    this._outlineEntryFactory = _outlineEntryFactory;
+    this._disposables = new DisposableStore();
+    this._onDidChange = new Emitter();
+    this.onDidChange = this._onDidChange.event;
+    this._entries = [];
+    this.recomputeState();
+  }
+  get activeElement() {
+    return this._activeEntry;
+  }
+  get entries() {
+    return this._entries;
+  }
+  get isEmpty() {
+    return this._entries.length === 0;
+  }
+  get uri() {
+    return this._uri;
+  }
+  async computeFullSymbols(cancelToken) {
+    try {
+      const notebookEditorWidget = this._editor;
+      const notebookCells = notebookEditorWidget?.getViewModel()?.viewCells.filter((cell) => cell.cellKind === CellKind.Code);
+      if (notebookCells) {
+        const promises = [];
+        for (const cell of notebookCells.slice(0, 50)) {
+          promises.push(this._outlineEntryFactory.cacheSymbols(cell, cancelToken));
+        }
+        await Promise.allSettled(promises);
+      }
+      this.recomputeState();
+    } catch (err) {
+      console.error("Failed to compute notebook outline symbols:", err);
+      this.recomputeState();
+    }
+  }
+  recomputeState() {
+    this._disposables.clear();
+    this._activeEntry = void 0;
+    this._uri = void 0;
+    if (!this._editor.hasModel()) {
+      return;
+    }
+    this._uri = this._editor.textModel.uri;
+    const notebookEditorWidget = this._editor;
+    if (notebookEditorWidget.getLength() === 0) {
+      return;
+    }
+    const notebookCells = notebookEditorWidget.getViewModel().viewCells;
+    const entries = [];
+    for (const cell of notebookCells) {
+      entries.push(...this._outlineEntryFactory.getOutlineEntries(cell, entries.length));
+    }
+    if (entries.length > 0) {
+      const result = [entries[0]];
+      const parentStack = [entries[0]];
+      for (let i = 1; i < entries.length; i++) {
+        const entry = entries[i];
+        while (true) {
+          const len = parentStack.length;
+          if (len === 0) {
+            result.push(entry);
+            parentStack.push(entry);
+            break;
+          } else {
+            const parentCandidate = parentStack[len - 1];
+            if (parentCandidate.level < entry.level) {
+              parentCandidate.addChild(entry);
+              parentStack.push(entry);
+              break;
+            } else {
+              parentStack.pop();
+            }
+          }
+        }
+      }
+      this._entries = result;
+    }
+    const markerServiceListener = new MutableDisposable();
+    this._disposables.add(markerServiceListener);
+    const updateMarkerUpdater = /* @__PURE__ */ __name(() => {
+      if (notebookEditorWidget.isDisposed) {
+        return;
+      }
+      const doUpdateMarker = /* @__PURE__ */ __name((clear) => {
+        for (const entry of this._entries) {
+          if (clear) {
+            entry.clearMarkers();
+          } else {
+            entry.updateMarkers(this._markerService);
+          }
+        }
+      }, "doUpdateMarker");
+      const problem = this._configurationService.getValue("problems.visibility");
+      if (problem === void 0) {
+        return;
+      }
+      const config = this._configurationService.getValue(
+        "outline.problems.enabled"
+        /* OutlineConfigKeys.problemsEnabled */
+      );
+      if (problem && config) {
+        markerServiceListener.value = this._markerService.onMarkerChanged((e) => {
+          if (notebookEditorWidget.isDisposed) {
+            console.error("notebook editor is disposed");
+            return;
+          }
+          if (e.some((uri) => notebookEditorWidget.getCellsInRange().some((cell) => isEqual(cell.uri, uri)))) {
+            doUpdateMarker(false);
+            this._onDidChange.fire({});
+          }
+        });
+        doUpdateMarker(false);
+      } else {
+        markerServiceListener.clear();
+        doUpdateMarker(true);
+      }
+    }, "updateMarkerUpdater");
+    updateMarkerUpdater();
+    this._disposables.add(this._configurationService.onDidChangeConfiguration((e) => {
+      if (e.affectsConfiguration("problems.visibility") || e.affectsConfiguration(
+        "outline.problems.enabled"
+        /* OutlineConfigKeys.problemsEnabled */
+      )) {
+        updateMarkerUpdater();
+        this._onDidChange.fire({});
+      }
+    }));
+    const { changeEventTriggered } = this.recomputeActive();
+    if (!changeEventTriggered) {
+      this._onDidChange.fire({});
+    }
+  }
+  recomputeActive() {
+    let newActive;
+    const notebookEditorWidget = this._editor;
+    if (notebookEditorWidget) {
+      if (notebookEditorWidget.hasModel() && notebookEditorWidget.getLength() > 0) {
+        const cell = notebookEditorWidget.cellAt(notebookEditorWidget.getFocus().start);
+        if (cell) {
+          for (const entry of this._entries) {
+            newActive = entry.find(cell, []);
+            if (newActive) {
+              break;
+            }
+          }
+        }
+      }
+    }
+    if (newActive !== this._activeEntry) {
+      this._activeEntry = newActive;
+      this._onDidChange.fire({ affectOnlyActiveElement: true });
+      return { changeEventTriggered: true };
+    }
+    return { changeEventTriggered: false };
+  }
+  dispose() {
+    this._entries.length = 0;
+    this._activeEntry = void 0;
+    this._disposables.dispose();
+  }
+};
+NotebookCellOutlineDataSource = __decorate([
+  __param(1, IMarkerService),
+  __param(2, IConfigurationService),
+  __param(3, INotebookOutlineEntryFactory)
+], NotebookCellOutlineDataSource);
+export {
+  NotebookCellOutlineDataSource
+};
+//# sourceMappingURL=notebookOutlineDataSource.js.map

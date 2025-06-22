@@ -1,24 +1,33 @@
-import{$Cf as c}from"../../../../../base/common/strings.js";import{localize as h}from"../../../../../nls.js";import{ThemeSettingDefaults as e}from"../../../../services/themes/common/workbenchThemeService.js";var n=()=>`
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { escape } from "../../../../../base/common/strings.js";
+import { localize } from "../../../../../nls.js";
+import { ThemeSettingDefaults } from "../../../../services/themes/common/workbenchThemeService.js";
+var theme_picker_small_default = /* @__PURE__ */ __name(() => `
 <checklist>
 	<div class="theme-picker-row">
-		<checkbox when-checked="setTheme:${e.COLOR_THEME_DARK}" checked-on="config.workbench.colorTheme == '${e.COLOR_THEME_DARK}'">
+		<checkbox when-checked="setTheme:${ThemeSettingDefaults.COLOR_THEME_DARK}" checked-on="config.workbench.colorTheme == '${ThemeSettingDefaults.COLOR_THEME_DARK}'">
 			<img width="150" src="./dark.png"/>
-			${c(h(13337,null))}
+			${escape(localize("dark", "Dark Modern"))}
 		</checkbox>
-		<checkbox when-checked="setTheme:${e.COLOR_THEME_LIGHT}" checked-on="config.workbench.colorTheme == '${e.COLOR_THEME_LIGHT}'">
+		<checkbox when-checked="setTheme:${ThemeSettingDefaults.COLOR_THEME_LIGHT}" checked-on="config.workbench.colorTheme == '${ThemeSettingDefaults.COLOR_THEME_LIGHT}'">
 			<img width="150" src="./light.png"/>
-			${c(h(13338,null))}
+			${escape(localize("light", "Light Modern"))}
 		</checkbox>
 	</div>
 	<div class="theme-picker-row">
-		<checkbox when-checked="setTheme:${e.COLOR_THEME_HC_DARK}" checked-on="config.workbench.colorTheme == '${e.COLOR_THEME_HC_DARK}'">
+		<checkbox when-checked="setTheme:${ThemeSettingDefaults.COLOR_THEME_HC_DARK}" checked-on="config.workbench.colorTheme == '${ThemeSettingDefaults.COLOR_THEME_HC_DARK}'">
 			<img width="150" src="./dark-hc.png"/>
-			${c(h(13339,null))}
+			${escape(localize("HighContrast", "Dark High Contrast"))}
 		</checkbox>
-		<checkbox when-checked="setTheme:${e.COLOR_THEME_HC_LIGHT}" checked-on="config.workbench.colorTheme == '${e.COLOR_THEME_HC_LIGHT}'">
+		<checkbox when-checked="setTheme:${ThemeSettingDefaults.COLOR_THEME_HC_LIGHT}" checked-on="config.workbench.colorTheme == '${ThemeSettingDefaults.COLOR_THEME_HC_LIGHT}'">
 			<img width="150" src="./light-hc.png"/>
-			${c(h(13340,null))}
+			${escape(localize("HighContrastLight", "Light High Contrast"))}
 		</checkbox>
 	</div>
 </checklist>
-`;export{n as default};
+`, "default");
+export {
+  theme_picker_small_default as default
+};
+//# sourceMappingURL=theme_picker_small.js.map

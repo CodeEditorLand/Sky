@@ -1,1 +1,259 @@
-import*as a from"../../../../nls.js";import*as T from"../../../../base/common/path.js";import*as g from"../../../../base/common/resources.js";import*as w from"../../../../base/common/json.js";import{ExtensionData as S,ThemeSettingDefaults as x}from"../common/workbenchThemeService.js";import{$Mz as C}from"../../../../base/common/jsonErrorMessages.js";import{$1c as j,$Yc as d}from"../../../../base/common/types.js";import{$Dt as b,IconFontDefinition as z,$vt as A,$xt as L,$wt as $,$zt as P}from"../../../../platform/theme/common/iconRegistry.js";import{ThemeIcon as E}from"../../../../base/common/themables.js";const F="";class l{static{this.STORAGE_KEY="productIconThemeData"}constructor(t,e,o){this.iconThemeDocument={iconDefinitions:new Map},this.id=t,this.label=e,this.settingsId=o,this.isLoaded=!1}getIcon(t){return M(t,this.iconThemeDocument)}ensureLoaded(t,e){return this.isLoaded?Promise.resolve(this.styleSheetContent):this.a(t,e)}reload(t,e){return this.a(t,e)}async a(t,e){const o=this.location;if(!o)return Promise.resolve(this.styleSheetContent);const n=[];return this.iconThemeDocument=await J(t,o,n),this.isLoaded=!0,n.length&&e.error(a.localize(14492,null,o.toString(),n.join("\n"))),this.styleSheetContent}static fromExtensionTheme(t,e,o){const n=o.extensionId+"-"+t.id,i=t.label||T.$$(t.path),s=t.id,a=new l(n,i,s);return a.description=t.description,a.location=e,a.extensionData=o,a.watch=t._watch,a.isLoaded=!1,a}static createUnloadedTheme(t){const e=new l(t,"","__"+t);return e.isLoaded=!1,e.extensionData=void 0,e.watch=!1,e}static{this.b=null}static get defaultTheme(){let t=l.b;return t||(t=l.b=new l(F,a.localize(14493,null),x.PRODUCT_ICON_THEME),t.isLoaded=!0,t.extensionData=void 0,t.watch=!1),t}static fromStorageData(t){const e=t.get(l.STORAGE_KEY,0);if(e)try{const t=JSON.parse(e),o=new l("","","");for(const e in t)switch(e){case"id":case"label":case"description":case"settingsId":case"styleSheetContent":case"watch":o[e]=t[e];break;case"location":break;case"extensionData":o.extensionData=S.fromJSONObject(t.extensionData)}const{iconDefinitions:n,iconFontDefinitions:i}=t;if(Array.isArray(n)&&j(i)){const t=new Map;for(const e of n){const{id:o,fontCharacter:n,fontId:s}=e;if(d(o)&&d(n))if(d(s)){const e=z.fromJSONObject(i[s]);e&&t.set(o,{fontCharacter:n,font:{id:s,definition:e}})}else t.set(o,{fontCharacter:n})}o.iconThemeDocument={iconDefinitions:t}}return o}catch{return}}toStorage(t){const e=[],o={};for(const t of this.iconThemeDocument.iconDefinitions.entries()){const n=t[1].font;e.push({id:t[0],fontCharacter:t[1].fontCharacter,fontId:n?.id}),n&&void 0===o[n.id]&&(o[n.id]=z.toJSONObject(n.definition))}const n=JSON.stringify({id:this.id,label:this.label,description:this.description,settingsId:this.settingsId,styleSheetContent:this.styleSheetContent,watch:this.watch,extensionData:S.toJSONObject(this.extensionData),iconDefinitions:e,iconFontDefinitions:o});t.store(l.STORAGE_KEY,n,0,1)}}function J(t,e,o){return t.readExtensionResource(e).then((t=>{const n=[],i=w.$Vu(t,n);if(n.length>0)return Promise.reject(new Error(a.localize(14494,null,n.map((t=>C(t.error))).join(", "))));if("object"!==w.$4u(i))return Promise.reject(new Error(a.localize(14495,null)));if(!i.iconDefinitions||!Array.isArray(i.fonts)||!i.fonts.length)return Promise.reject(new Error(a.localize(14496,null)));const s=g.$jh(e),r=new Map;for(const t of i.fonts){const e=t.id;if(d(e)&&e.match(A)){let n,i;d(t.weight)&&t.weight.match(L)?n=t.weight:o.push(a.localize(14497,null,t.id)),d(t.style)&&t.style.match($)?i=t.style:o.push(a.localize(14498,null,t.id));const c=[];if(Array.isArray(t.src))for(const e of t.src)if(d(e.path)&&d(e.format)&&e.format.match(P)){const t=g.$kh(s,e.path);c.push({location:t,format:e.format})}else o.push(a.localize(14499,null,t.id));c.length?r.set(e,{weight:n,style:i,src:c}):o.push(a.localize(14500,null,t.id))}else o.push(a.localize(14501,null,t.id))}const c=new Map,l=i.fonts[0].id;for(const t in i.iconDefinitions){const e=i.iconDefinitions[t];if(d(e.fontCharacter)){const n=e.fontId??l,i=r.get(n);if(i){const o={id:`pi-${n}`,definition:i};c.set(t,{fontCharacter:e.fontCharacter,font:o})}else o.push(a.localize(14502,null,t))}else o.push(a.localize(14503,null,t))}return{iconDefinitions:c}}))}const N=b();function M(t,e){const o=e.iconDefinitions;let n=o.get(t.id),i=t.defaults;for(;!n&&E.isThemeIcon(i);){const t=N.getIcon(i.id);if(!t)return;n=o.get(t.id),i=t.defaults}return n||(E.isThemeIcon(i)?void 0:i)}export{F as $G5b,l as $H5b};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import * as nls from "../../../../nls.js";
+import * as Paths from "../../../../base/common/path.js";
+import * as resources from "../../../../base/common/resources.js";
+import * as Json from "../../../../base/common/json.js";
+import { ExtensionData, ThemeSettingDefaults } from "../common/workbenchThemeService.js";
+import { getParseErrorMessage } from "../../../../base/common/jsonErrorMessages.js";
+import { isObject, isString } from "../../../../base/common/types.js";
+import { getIconRegistry, IconFontDefinition, fontIdRegex, fontWeightRegex, fontStyleRegex, fontFormatRegex } from "../../../../platform/theme/common/iconRegistry.js";
+import { ThemeIcon } from "../../../../base/common/themables.js";
+const DEFAULT_PRODUCT_ICON_THEME_ID = "";
+class ProductIconThemeData {
+  static {
+    __name(this, "ProductIconThemeData");
+  }
+  static {
+    this.STORAGE_KEY = "productIconThemeData";
+  }
+  constructor(id, label, settingsId) {
+    this.iconThemeDocument = { iconDefinitions: /* @__PURE__ */ new Map() };
+    this.id = id;
+    this.label = label;
+    this.settingsId = settingsId;
+    this.isLoaded = false;
+  }
+  getIcon(iconContribution) {
+    return _resolveIconDefinition(iconContribution, this.iconThemeDocument);
+  }
+  ensureLoaded(fileService, logService) {
+    return !this.isLoaded ? this.load(fileService, logService) : Promise.resolve(this.styleSheetContent);
+  }
+  reload(fileService, logService) {
+    return this.load(fileService, logService);
+  }
+  async load(fileService, logService) {
+    const location = this.location;
+    if (!location) {
+      return Promise.resolve(this.styleSheetContent);
+    }
+    const warnings = [];
+    this.iconThemeDocument = await _loadProductIconThemeDocument(fileService, location, warnings);
+    this.isLoaded = true;
+    if (warnings.length) {
+      logService.error(nls.localize("error.parseicondefs", "Problems processing product icons definitions in {0}:\n{1}", location.toString(), warnings.join("\n")));
+    }
+    return this.styleSheetContent;
+  }
+  static fromExtensionTheme(iconTheme, iconThemeLocation, extensionData) {
+    const id = extensionData.extensionId + "-" + iconTheme.id;
+    const label = iconTheme.label || Paths.basename(iconTheme.path);
+    const settingsId = iconTheme.id;
+    const themeData = new ProductIconThemeData(id, label, settingsId);
+    themeData.description = iconTheme.description;
+    themeData.location = iconThemeLocation;
+    themeData.extensionData = extensionData;
+    themeData.watch = iconTheme._watch;
+    themeData.isLoaded = false;
+    return themeData;
+  }
+  static createUnloadedTheme(id) {
+    const themeData = new ProductIconThemeData(id, "", "__" + id);
+    themeData.isLoaded = false;
+    themeData.extensionData = void 0;
+    themeData.watch = false;
+    return themeData;
+  }
+  static {
+    this._defaultProductIconTheme = null;
+  }
+  static get defaultTheme() {
+    let themeData = ProductIconThemeData._defaultProductIconTheme;
+    if (!themeData) {
+      themeData = ProductIconThemeData._defaultProductIconTheme = new ProductIconThemeData(DEFAULT_PRODUCT_ICON_THEME_ID, nls.localize("defaultTheme", "Default"), ThemeSettingDefaults.PRODUCT_ICON_THEME);
+      themeData.isLoaded = true;
+      themeData.extensionData = void 0;
+      themeData.watch = false;
+    }
+    return themeData;
+  }
+  static fromStorageData(storageService) {
+    const input = storageService.get(
+      ProductIconThemeData.STORAGE_KEY,
+      0
+      /* StorageScope.PROFILE */
+    );
+    if (!input) {
+      return void 0;
+    }
+    try {
+      const data = JSON.parse(input);
+      const theme = new ProductIconThemeData("", "", "");
+      for (const key in data) {
+        switch (key) {
+          case "id":
+          case "label":
+          case "description":
+          case "settingsId":
+          case "styleSheetContent":
+          case "watch":
+            theme[key] = data[key];
+            break;
+          case "location":
+            break;
+          case "extensionData":
+            theme.extensionData = ExtensionData.fromJSONObject(data.extensionData);
+            break;
+        }
+      }
+      const { iconDefinitions, iconFontDefinitions } = data;
+      if (Array.isArray(iconDefinitions) && isObject(iconFontDefinitions)) {
+        const restoredIconDefinitions = /* @__PURE__ */ new Map();
+        for (const entry of iconDefinitions) {
+          const { id, fontCharacter, fontId } = entry;
+          if (isString(id) && isString(fontCharacter)) {
+            if (isString(fontId)) {
+              const iconFontDefinition = IconFontDefinition.fromJSONObject(iconFontDefinitions[fontId]);
+              if (iconFontDefinition) {
+                restoredIconDefinitions.set(id, { fontCharacter, font: { id: fontId, definition: iconFontDefinition } });
+              }
+            } else {
+              restoredIconDefinitions.set(id, { fontCharacter });
+            }
+          }
+        }
+        theme.iconThemeDocument = { iconDefinitions: restoredIconDefinitions };
+      }
+      return theme;
+    } catch (e) {
+      return void 0;
+    }
+  }
+  toStorage(storageService) {
+    const iconDefinitions = [];
+    const iconFontDefinitions = {};
+    for (const entry of this.iconThemeDocument.iconDefinitions.entries()) {
+      const font = entry[1].font;
+      iconDefinitions.push({ id: entry[0], fontCharacter: entry[1].fontCharacter, fontId: font?.id });
+      if (font && iconFontDefinitions[font.id] === void 0) {
+        iconFontDefinitions[font.id] = IconFontDefinition.toJSONObject(font.definition);
+      }
+    }
+    const data = JSON.stringify({
+      id: this.id,
+      label: this.label,
+      description: this.description,
+      settingsId: this.settingsId,
+      styleSheetContent: this.styleSheetContent,
+      watch: this.watch,
+      extensionData: ExtensionData.toJSONObject(this.extensionData),
+      iconDefinitions,
+      iconFontDefinitions
+    });
+    storageService.store(
+      ProductIconThemeData.STORAGE_KEY,
+      data,
+      0,
+      1
+      /* StorageTarget.MACHINE */
+    );
+  }
+}
+function _loadProductIconThemeDocument(fileService, location, warnings) {
+  return fileService.readExtensionResource(location).then((content) => {
+    const parseErrors = [];
+    const contentValue = Json.parse(content, parseErrors);
+    if (parseErrors.length > 0) {
+      return Promise.reject(new Error(nls.localize("error.cannotparseicontheme", "Problems parsing product icons file: {0}", parseErrors.map((e) => getParseErrorMessage(e.error)).join(", "))));
+    } else if (Json.getNodeType(contentValue) !== "object") {
+      return Promise.reject(new Error(nls.localize("error.invalidformat", "Invalid format for product icons theme file: Object expected.")));
+    } else if (!contentValue.iconDefinitions || !Array.isArray(contentValue.fonts) || !contentValue.fonts.length) {
+      return Promise.reject(new Error(nls.localize("error.missingProperties", "Invalid format for product icons theme file: Must contain iconDefinitions and fonts.")));
+    }
+    const iconThemeDocumentLocationDirname = resources.dirname(location);
+    const sanitizedFonts = /* @__PURE__ */ new Map();
+    for (const font of contentValue.fonts) {
+      const fontId = font.id;
+      if (isString(fontId) && fontId.match(fontIdRegex)) {
+        let fontWeight = void 0;
+        if (isString(font.weight) && font.weight.match(fontWeightRegex)) {
+          fontWeight = font.weight;
+        } else {
+          warnings.push(nls.localize("error.fontWeight", "Invalid font weight in font '{0}'. Ignoring setting.", font.id));
+        }
+        let fontStyle = void 0;
+        if (isString(font.style) && font.style.match(fontStyleRegex)) {
+          fontStyle = font.style;
+        } else {
+          warnings.push(nls.localize("error.fontStyle", "Invalid font style in font '{0}'. Ignoring setting.", font.id));
+        }
+        const sanitizedSrc = [];
+        if (Array.isArray(font.src)) {
+          for (const s of font.src) {
+            if (isString(s.path) && isString(s.format) && s.format.match(fontFormatRegex)) {
+              const iconFontLocation = resources.joinPath(iconThemeDocumentLocationDirname, s.path);
+              sanitizedSrc.push({ location: iconFontLocation, format: s.format });
+            } else {
+              warnings.push(nls.localize("error.fontSrc", "Invalid font source in font '{0}'. Ignoring source.", font.id));
+            }
+          }
+        }
+        if (sanitizedSrc.length) {
+          sanitizedFonts.set(fontId, { weight: fontWeight, style: fontStyle, src: sanitizedSrc });
+        } else {
+          warnings.push(nls.localize("error.noFontSrc", "No valid font source in font '{0}'. Ignoring font definition.", font.id));
+        }
+      } else {
+        warnings.push(nls.localize("error.fontId", "Missing or invalid font id '{0}'. Skipping font definition.", font.id));
+      }
+    }
+    const iconDefinitions = /* @__PURE__ */ new Map();
+    const primaryFontId = contentValue.fonts[0].id;
+    for (const iconId in contentValue.iconDefinitions) {
+      const definition = contentValue.iconDefinitions[iconId];
+      if (isString(definition.fontCharacter)) {
+        const fontId = definition.fontId ?? primaryFontId;
+        const fontDefinition = sanitizedFonts.get(fontId);
+        if (fontDefinition) {
+          const font = { id: `pi-${fontId}`, definition: fontDefinition };
+          iconDefinitions.set(iconId, { fontCharacter: definition.fontCharacter, font });
+        } else {
+          warnings.push(nls.localize("error.icon.font", "Skipping icon definition '{0}'. Unknown font.", iconId));
+        }
+      } else {
+        warnings.push(nls.localize("error.icon.fontCharacter", "Skipping icon definition '{0}': Needs to be defined", iconId));
+      }
+    }
+    return { iconDefinitions };
+  });
+}
+__name(_loadProductIconThemeDocument, "_loadProductIconThemeDocument");
+const iconRegistry = getIconRegistry();
+function _resolveIconDefinition(iconContribution, iconThemeDocument) {
+  const iconDefinitions = iconThemeDocument.iconDefinitions;
+  let definition = iconDefinitions.get(iconContribution.id);
+  let defaults = iconContribution.defaults;
+  while (!definition && ThemeIcon.isThemeIcon(defaults)) {
+    const ic = iconRegistry.getIcon(defaults.id);
+    if (ic) {
+      definition = iconDefinitions.get(ic.id);
+      defaults = ic.defaults;
+    } else {
+      return void 0;
+    }
+  }
+  if (definition) {
+    return definition;
+  }
+  if (!ThemeIcon.isThemeIcon(defaults)) {
+    return defaults;
+  }
+  return void 0;
+}
+__name(_resolveIconDefinition, "_resolveIconDefinition");
+export {
+  DEFAULT_PRODUCT_ICON_THEME_ID,
+  ProductIconThemeData
+};
+//# sourceMappingURL=productIconThemeData.js.map

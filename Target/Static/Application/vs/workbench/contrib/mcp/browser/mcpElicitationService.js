@@ -1,1 +1,305 @@
-import{$_l as y}from"../../../../base/common/actions.js";import{$Tc as j}from"../../../../base/common/assert.js";import{$4j as S,$Uj as v}from"../../../../base/common/htmlContent.js";import{$ud as b}from"../../../../base/common/lifecycle.js";import{localize as l}from"../../../../nls.js";import{$RI as N,Severity as h}from"../../../../platform/notification/common/notification.js";import{$OM as D}from"../../../../platform/quickinput/common/quickInput.js";import{$cT as I}from"../../chat/common/chatModel.js";import{$LS as M}from"../../chat/common/chatService.js";var $=function(f,e,n,t){var i=arguments.length,a=i<3?e:t===null?t=Object.getOwnPropertyDescriptor(e,n):t,r;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")a=Reflect.decorate(f,e,n,t);else for(var s=f.length-1;s>=0;s--)(r=f[s])&&(a=(i<3?r(a):i>3?r(e,n,a):r(e,n))||a);return i>3&&a&&Object.defineProperty(e,n,a),a},g=function(f,e){return function(n,t){e(n,t,f)}};const w={id:void 0,label:l(8743,null),description:l(8744,null),alwaysShow:!0};let V=class{constructor(e,n,t){this.a=e,this.b=n,this.c=t}elicit(e,n,t,i){const a=new b;return new Promise(r=>{const s=n?.chatSessionId&&this.c.getSession(n.chatSessionId);if(s instanceof I){const d=s.getRequests().at(-1);if(d){const u=new _(l(8745,null),t.message,new v(S({id:"workbench.mcp.showConfiguration",title:l(8746,null,e.definition.label),arguments:[e.collection.id,e.definition.id]}),{isTrusted:!0}),async()=>{const m=this.d(t,i);r(m);const o=await m;u.state=o.action==="accept"?"accepted":"rejected",u.acceptedResult=o.content},()=>(r({action:"decline"}),u.state="rejected",Promise.resolve()));s.acceptResponseProgress(d,u)}}else{const d=this.a.notify({message:t.message,source:l(8747,null,e.definition.label),severity:h.Info,actions:{primary:[a.add(new y("mcp.elicit.give",l(8748,null),void 0,!0,()=>r(this.d(t,i))))],secondary:[a.add(new y("mcp.elicit.cancel",l(8749,null),void 0,!0,()=>r({action:"decline"})))]}});a.add(d.onDidClose(()=>r({action:"cancel"}))),a.add(i.onCancellationRequested(()=>r({action:"cancel"})))}}).finally(()=>a.dispose())}async d(e,n){const t=this.b.createQuickPick(),i=new b;try{const a=Object.entries(e.requestedSchema.properties),r=new Set(e.requestedSchema.required||[]),s={},d=[];t.title=e.message,t.totalSteps=a.length,t.ignoreFocusOut=!0;for(let u=0;u<a.length;u++){const[m,o]=a[u],p=r.has(m),R=d.at(u);i.clear(),t.step=u+1,t.title=o.title||m,t.placeholder=this.e(o,p),t.value=R?.value??"",t.validationMessage="",t.buttons=u>0?[this.b.backButton]:[];let c;if(o.type==="boolean"?(c=await this.f(t,{...o,type:"string",enum:["true","false"]},p,i,n),c.type==="value"&&(c.value=c.value==="true")):o.type==="string"&&"enum"in o?c=await this.f(t,o,p,i,n):(c=await this.g(t,o,p,i,n),c.type==="value"&&(o.type==="number"||o.type==="integer")&&(c.value=Number(c.value))),c.type==="back"){u-=2;continue}if(c.type==="cancel")return{action:"cancel"};d[u]={value:t.value},c.value===void 0?delete s[m]:s[m]=c.value}return{action:"accept",content:s}}finally{i.dispose(),t.dispose()}}e(e,n){let t=e.description||"";return n||(t=t?`${t} (${l(8750,null)})`:l(8751,null)),t}async f(e,n,t,i,a){const r=n.enum.map((s,d)=>({id:s,label:s,description:n.enumNames?.[d]}));return t||r.push(w),e.items=r,e.canSelectMany=!1,new Promise(s=>{i.add(a.onCancellationRequested(()=>s({type:"cancel"}))),i.add(e.onDidAccept(()=>{const d=e.selectedItems[0];d&&s({type:"value",value:d.id})})),i.add(e.onDidTriggerButton(()=>s({type:"back"}))),i.add(e.onDidHide(()=>s({type:"cancel"}))),e.show()})}async g(e,n,t,i,a){e.canSelectMany=!1;const r=()=>{const s=[];if(e.value){const d=this.h(e.value,n);e.validationMessage=d.message,d.isValid&&s.push({id:"$current",label:`\u27A4 ${e.value}`})}else e.validationMessage="";e.validationMessage?e.severity=h.Warning:(e.severity=h.Ignore,t||s.push(w)),e.items=s};return r(),new Promise(s=>{if(a.isCancellationRequested){s({type:"cancel"});return}i.add(a.onCancellationRequested(()=>s({type:"cancel"}))),i.add(e.onDidChangeValue(r)),i.add(e.onDidAccept(()=>{e.selectedItems[0].id?e.validationMessage||s({type:"value",value:e.value}):s({type:"value",value:void 0})})),i.add(e.onDidTriggerButton(()=>s({type:"back"}))),i.add(e.onDidHide(()=>s({type:"cancel"}))),e.show()})}h(e,n){switch(n.type){case"string":return this.j(e,n);case"number":case"integer":return this.l(e,n);default:j(n)}}j(e,n){if(n.minLength&&e.length<n.minLength)return{isValid:!1,message:l(8752,null,n.minLength)};if(n.maxLength&&e.length>n.maxLength)return{isValid:!1,message:l(8753,null,n.maxLength)};if(n.format){const t=this.k(e,n.format);if(!t.isValid)return t}return{isValid:!0,parsedValue:e}}k(e,n){switch(n){case"email":return e.includes("@")?{isValid:!1,message:l(8754,null)}:{isValid:!0};case"uri":return URL.canParse(e)?{isValid:!0}:{isValid:!1,message:l(8755,null)};case"date":{if(!/^\d{4}-\d{2}-\d{2}$/.test(e))return{isValid:!1,message:l(8756,null)};const i=new Date(e);return isNaN(i.getTime())?{isValid:!1,message:l(8757,null)}:{isValid:!0}}case"date-time":{const t=new Date(e);return isNaN(t.getTime())?{isValid:!1,message:l(8758,null)}:{isValid:!0}}default:return{isValid:!0}}}l(e,n){const t=Number(e);return isNaN(t)?{isValid:!1,message:l(8759,null)}:n.type==="integer"&&!Number.isInteger(t)?{isValid:!1,message:l(8760,null)}:n.minimum!==void 0&&t<n.minimum?{isValid:!1,message:l(8761,null,n.minimum)}:n.maximum!==void 0&&t>n.maximum?{isValid:!1,message:l(8762,null,n.maximum)}:{isValid:!0,parsedValue:t}}};V=$([g(0,N),g(1,D),g(2,M)],V);class _{constructor(e,n,t,i,a){this.title=e,this.message=n,this.originMessage=t,this.accept=i,this.reject=a,this.kind="elicitation",this.state="pending"}toJSON(){return{kind:"elicitation",title:this.title,message:this.message,state:this.state==="pending"?"rejected":this.state,acceptedResult:this.acceptedResult}}}export{V as $cjc};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { Action } from "../../../../base/common/actions.js";
+import { assertNever } from "../../../../base/common/assert.js";
+import { markdownCommandLink, MarkdownString } from "../../../../base/common/htmlContent.js";
+import { DisposableStore } from "../../../../base/common/lifecycle.js";
+import { localize } from "../../../../nls.js";
+import { INotificationService, Severity } from "../../../../platform/notification/common/notification.js";
+import { IQuickInputService } from "../../../../platform/quickinput/common/quickInput.js";
+import { ChatModel } from "../../chat/common/chatModel.js";
+import { IChatService } from "../../chat/common/chatService.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+const noneItem = { id: void 0, label: localize("mcp.elicit.enum.none", "None"), description: localize("mcp.elicit.enum.none.description", "No selection"), alwaysShow: true };
+let McpElicitationService = class McpElicitationService2 {
+  static {
+    __name(this, "McpElicitationService");
+  }
+  constructor(_notificationService, _quickInputService, _chatService) {
+    this._notificationService = _notificationService;
+    this._quickInputService = _quickInputService;
+    this._chatService = _chatService;
+  }
+  elicit(server, context, elicitation, token) {
+    const store = new DisposableStore();
+    return new Promise((resolve) => {
+      const chatModel = context?.chatSessionId && this._chatService.getSession(context.chatSessionId);
+      if (chatModel instanceof ChatModel) {
+        const request = chatModel.getRequests().at(-1);
+        if (request) {
+          const part = new ChatElicitationRequestPart(localize("mcp.elicit.title", "Request for Input"), elicitation.message, new MarkdownString(markdownCommandLink({
+            id: "workbench.mcp.showConfiguration",
+            title: localize("msg.subtitle", "{0} (MCP Server)", server.definition.label),
+            arguments: [server.collection.id, server.definition.id]
+          }), { isTrusted: true }), async () => {
+            const p = this._doElicit(elicitation, token);
+            resolve(p);
+            const result = await p;
+            part.state = result.action === "accept" ? "accepted" : "rejected";
+            part.acceptedResult = result.content;
+          }, () => {
+            resolve({ action: "decline" });
+            part.state = "rejected";
+            return Promise.resolve();
+          });
+          chatModel.acceptResponseProgress(request, part);
+        }
+      } else {
+        const handle = this._notificationService.notify({
+          message: elicitation.message,
+          source: localize("mcp.elicit.source", "MCP Server ({0})", server.definition.label),
+          severity: Severity.Info,
+          actions: {
+            primary: [store.add(new Action("mcp.elicit.give", localize("mcp.elicit.give", "Respond"), void 0, true, () => resolve(this._doElicit(elicitation, token))))],
+            secondary: [store.add(new Action("mcp.elicit.cancel", localize("mcp.elicit.cancel", "Cancel"), void 0, true, () => resolve({ action: "decline" })))]
+          }
+        });
+        store.add(handle.onDidClose(() => resolve({ action: "cancel" })));
+        store.add(token.onCancellationRequested(() => resolve({ action: "cancel" })));
+      }
+    }).finally(() => store.dispose());
+  }
+  async _doElicit(elicitation, token) {
+    const quickPick = this._quickInputService.createQuickPick();
+    const store = new DisposableStore();
+    try {
+      const properties = Object.entries(elicitation.requestedSchema.properties);
+      const requiredFields = new Set(elicitation.requestedSchema.required || []);
+      const results = {};
+      const backSnapshots = [];
+      quickPick.title = elicitation.message;
+      quickPick.totalSteps = properties.length;
+      quickPick.ignoreFocusOut = true;
+      for (let i = 0; i < properties.length; i++) {
+        const [propertyName, schema] = properties[i];
+        const isRequired = requiredFields.has(propertyName);
+        const restore = backSnapshots.at(i);
+        store.clear();
+        quickPick.step = i + 1;
+        quickPick.title = schema.title || propertyName;
+        quickPick.placeholder = this._getFieldPlaceholder(schema, isRequired);
+        quickPick.value = restore?.value ?? "";
+        quickPick.validationMessage = "";
+        quickPick.buttons = i > 0 ? [this._quickInputService.backButton] : [];
+        let result;
+        if (schema.type === "boolean") {
+          result = await this._handleEnumField(quickPick, { ...schema, type: "string", enum: ["true", "false"] }, isRequired, store, token);
+          if (result.type === "value") {
+            result.value = result.value === "true" ? true : false;
+          }
+        } else if (schema.type === "string" && "enum" in schema) {
+          result = await this._handleEnumField(quickPick, schema, isRequired, store, token);
+        } else {
+          result = await this._handleInputField(quickPick, schema, isRequired, store, token);
+          if (result.type === "value" && (schema.type === "number" || schema.type === "integer")) {
+            result.value = Number(result.value);
+          }
+        }
+        if (result.type === "back") {
+          i -= 2;
+          continue;
+        }
+        if (result.type === "cancel") {
+          return { action: "cancel" };
+        }
+        backSnapshots[i] = { value: quickPick.value };
+        if (result.value === void 0) {
+          delete results[propertyName];
+        } else {
+          results[propertyName] = result.value;
+        }
+      }
+      return {
+        action: "accept",
+        content: results
+      };
+    } finally {
+      store.dispose();
+      quickPick.dispose();
+    }
+  }
+  _getFieldPlaceholder(schema, required) {
+    let placeholder = schema.description || "";
+    if (!required) {
+      placeholder = placeholder ? `${placeholder} (${localize("optional", "Optional")})` : localize("optional", "Optional");
+    }
+    return placeholder;
+  }
+  async _handleEnumField(quickPick, schema, required, store, token) {
+    const items = schema.enum.map((value, index) => ({
+      id: value,
+      label: value,
+      description: schema.enumNames?.[index]
+    }));
+    if (!required) {
+      items.push(noneItem);
+    }
+    quickPick.items = items;
+    quickPick.canSelectMany = false;
+    return new Promise((resolve) => {
+      store.add(token.onCancellationRequested(() => resolve({ type: "cancel" })));
+      store.add(quickPick.onDidAccept(() => {
+        const selected = quickPick.selectedItems[0];
+        if (selected) {
+          resolve({ type: "value", value: selected.id });
+        }
+      }));
+      store.add(quickPick.onDidTriggerButton(() => resolve({ type: "back" })));
+      store.add(quickPick.onDidHide(() => resolve({ type: "cancel" })));
+      quickPick.show();
+    });
+  }
+  async _handleInputField(quickPick, schema, required, store, token) {
+    quickPick.canSelectMany = false;
+    const updateItems = /* @__PURE__ */ __name(() => {
+      const items = [];
+      if (quickPick.value) {
+        const validation = this._validateInput(quickPick.value, schema);
+        quickPick.validationMessage = validation.message;
+        if (validation.isValid) {
+          items.push({ id: "$current", label: `\u27A4 ${quickPick.value}` });
+        }
+      } else {
+        quickPick.validationMessage = "";
+      }
+      if (quickPick.validationMessage) {
+        quickPick.severity = Severity.Warning;
+      } else {
+        quickPick.severity = Severity.Ignore;
+        if (!required) {
+          items.push(noneItem);
+        }
+      }
+      quickPick.items = items;
+    }, "updateItems");
+    updateItems();
+    return new Promise((resolve) => {
+      if (token.isCancellationRequested) {
+        resolve({ type: "cancel" });
+        return;
+      }
+      store.add(token.onCancellationRequested(() => resolve({ type: "cancel" })));
+      store.add(quickPick.onDidChangeValue(updateItems));
+      store.add(quickPick.onDidAccept(() => {
+        if (!quickPick.selectedItems[0].id) {
+          resolve({ type: "value", value: void 0 });
+        } else if (!quickPick.validationMessage) {
+          resolve({ type: "value", value: quickPick.value });
+        }
+      }));
+      store.add(quickPick.onDidTriggerButton(() => resolve({ type: "back" })));
+      store.add(quickPick.onDidHide(() => resolve({ type: "cancel" })));
+      quickPick.show();
+    });
+  }
+  _validateInput(value, schema) {
+    switch (schema.type) {
+      case "string":
+        return this._validateString(value, schema);
+      case "number":
+      case "integer":
+        return this._validateNumber(value, schema);
+      default:
+        assertNever(schema);
+    }
+  }
+  _validateString(value, schema) {
+    if (schema.minLength && value.length < schema.minLength) {
+      return { isValid: false, message: localize("mcp.elicit.validation.minLength", "Minimum length is {0}", schema.minLength) };
+    }
+    if (schema.maxLength && value.length > schema.maxLength) {
+      return { isValid: false, message: localize("mcp.elicit.validation.maxLength", "Maximum length is {0}", schema.maxLength) };
+    }
+    if (schema.format) {
+      const formatValid = this._validateStringFormat(value, schema.format);
+      if (!formatValid.isValid) {
+        return formatValid;
+      }
+    }
+    return { isValid: true, parsedValue: value };
+  }
+  _validateStringFormat(value, format) {
+    switch (format) {
+      case "email":
+        return !value.includes("@") ? { isValid: true } : { isValid: false, message: localize("mcp.elicit.validation.email", "Please enter a valid email address") };
+      case "uri":
+        if (URL.canParse(value)) {
+          return { isValid: true };
+        } else {
+          return { isValid: false, message: localize("mcp.elicit.validation.uri", "Please enter a valid URI") };
+        }
+      case "date": {
+        const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+        if (!dateRegex.test(value)) {
+          return { isValid: false, message: localize("mcp.elicit.validation.date", "Please enter a valid date (YYYY-MM-DD)") };
+        }
+        const date = new Date(value);
+        return !isNaN(date.getTime()) ? { isValid: true } : { isValid: false, message: localize("mcp.elicit.validation.date", "Please enter a valid date (YYYY-MM-DD)") };
+      }
+      case "date-time": {
+        const dateTime = new Date(value);
+        return !isNaN(dateTime.getTime()) ? { isValid: true } : { isValid: false, message: localize("mcp.elicit.validation.dateTime", "Please enter a valid date-time") };
+      }
+      default:
+        return { isValid: true };
+    }
+  }
+  _validateNumber(value, schema) {
+    const parsed = Number(value);
+    if (isNaN(parsed)) {
+      return { isValid: false, message: localize("mcp.elicit.validation.number", "Please enter a valid number") };
+    }
+    if (schema.type === "integer" && !Number.isInteger(parsed)) {
+      return { isValid: false, message: localize("mcp.elicit.validation.integer", "Please enter a valid integer") };
+    }
+    if (schema.minimum !== void 0 && parsed < schema.minimum) {
+      return { isValid: false, message: localize("mcp.elicit.validation.minimum", "Minimum value is {0}", schema.minimum) };
+    }
+    if (schema.maximum !== void 0 && parsed > schema.maximum) {
+      return { isValid: false, message: localize("mcp.elicit.validation.maximum", "Maximum value is {0}", schema.maximum) };
+    }
+    return { isValid: true, parsedValue: parsed };
+  }
+};
+McpElicitationService = __decorate([
+  __param(0, INotificationService),
+  __param(1, IQuickInputService),
+  __param(2, IChatService)
+], McpElicitationService);
+class ChatElicitationRequestPart {
+  static {
+    __name(this, "ChatElicitationRequestPart");
+  }
+  constructor(title, message, originMessage, accept, reject) {
+    this.title = title;
+    this.message = message;
+    this.originMessage = originMessage;
+    this.accept = accept;
+    this.reject = reject;
+    this.kind = "elicitation";
+    this.state = "pending";
+  }
+  toJSON() {
+    return {
+      kind: "elicitation",
+      title: this.title,
+      message: this.message,
+      state: this.state === "pending" ? "rejected" : this.state,
+      acceptedResult: this.acceptedResult
+    };
+  }
+}
+export {
+  McpElicitationService
+};
+//# sourceMappingURL=mcpElicitationService.js.map

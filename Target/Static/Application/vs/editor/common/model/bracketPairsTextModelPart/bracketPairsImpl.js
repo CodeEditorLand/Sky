@@ -1,1 +1,668 @@
-import{$xc as N,$qc as P}from"../../../../base/common/arrays.js";import{$df as j}from"../../../../base/common/event.js";import{$vd as E,$ud as y,$wd as D}from"../../../../base/common/lifecycle.js";import{$cC as v}from"../../core/range.js";import{$ED as b}from"../../languages/supports.js";import{$KD as B}from"../../languages/supports/richEditBrackets.js";import{$xF as A}from"./bracketPairsTree/bracketPairsTree.js";class W extends E{get f(){return this.h.getValueLength()<=5e6}constructor(e,n){super(),this.h=e,this.j=n,this.a=this.B(new D),this.c=new j,this.onDidChange=this.c.event,this.g=!1}handleLanguageConfigurationServiceChange(e){(!e.languageId||this.a.value?.object.didLanguageChange(e.languageId))&&(this.a.clear(),this.m())}handleDidChangeOptions(e){this.a.clear(),this.m()}handleDidChangeLanguage(e){this.a.clear(),this.m()}handleDidChangeContent(e){this.a.value?.object.handleContentChanged(e)}handleDidChangeBackgroundTokenizationState(){this.a.value?.object.handleDidChangeBackgroundTokenizationState()}handleDidChangeTokens(e){this.a.value?.object.handleDidChangeTokens(e)}m(){if(this.g&&this.f){if(!this.a.value){const e=new y;this.a.value=$(e.add(new A(this.h,n=>this.j.getLanguageConfiguration(n))),e),e.add(this.a.value.object.onDidChange(n=>this.c.fire(n))),this.c.fire()}}else this.a.value&&(this.a.clear(),this.c.fire())}getBracketPairsInRange(e){return this.g=!0,this.m(),this.a.value?.object.getBracketPairsInRange(e,!1)||N.empty}getBracketPairsInRangeWithMinIndentation(e){return this.g=!0,this.m(),this.a.value?.object.getBracketPairsInRange(e,!0)||N.empty}getBracketsInRange(e,n=!1){return this.g=!0,this.m(),this.a.value?.object.getBracketsInRange(e,n)||N.empty}findMatchingBracketUp(e,n,g){const a=this.h.validatePosition(n),l=this.h.getLanguageIdAtPosition(a.lineNumber,a.column);if(this.f){const u=this.j.getLanguageConfiguration(l).bracketsNew.getClosingBracketInfo(e);if(!u)return null;const f=this.getBracketPairsInRange(v.fromPositions(n,n)).findLast(d=>u.closes(d.openingBracketInfo));return f?f.openingBracketRange:null}else{const u=e.toLowerCase(),f=this.j.getLanguageConfiguration(l).brackets;if(!f)return null;const d=f.textIsBracket[u];return d?S(this.u(d,a,p(g))):null}}matchBracket(e,n){if(this.f){const g=this.getBracketPairsInRange(v.fromPositions(e,e)).filter(a=>a.closingBracketRange!==void 0&&(a.openingBracketRange.containsPosition(e)||a.closingBracketRange.containsPosition(e))).findLastMaxBy(P(a=>a.openingBracketRange.containsPosition(e)?a.openingBracketRange:a.closingBracketRange,v.compareRangesUsingStarts));return g?[g.openingBracketRange,g.closingBracketRange]:null}else{const g=p(n);return this.s(this.h.validatePosition(e),g)}}n(e,n,g,a){const l=n.getCount(),u=n.getLanguageId(a);let f=Math.max(0,e.column-1-g.maxBracketLength);for(let c=a-1;c>=0;c--){const o=n.getEndOffset(c);if(o<=f)break;if(b(n.getStandardTokenType(c))||n.getLanguageId(c)!==u){f=o;break}}let d=Math.min(n.getLineContent().length,e.column-1+g.maxBracketLength);for(let c=a+1;c<l;c++){const o=n.getStartOffset(c);if(o>=d)break;if(b(n.getStandardTokenType(c))||n.getLanguageId(c)!==u){d=o;break}}return{searchStartOffset:f,searchEndOffset:d}}s(e,n){const g=e.lineNumber,a=this.h.tokenization.getLineTokens(g),l=this.h.getLineContent(g),u=a.findTokenIndexAtOffset(e.column-1);if(u<0)return null;const f=this.j.getLanguageConfiguration(a.getLanguageId(u)).brackets;if(f&&!b(a.getStandardTokenType(u))){let{searchStartOffset:d,searchEndOffset:c}=this.n(e,a,f,u),o=null;for(;;){const s=B.findNextBracketInRange(f.forwardRegex,g,l,d,c);if(!s)break;if(s.startColumn<=e.column&&e.column<=s.endColumn){const i=l.substring(s.startColumn-1,s.endColumn-1).toLowerCase(),r=this.t(s,f.textIsBracket[i],f.textIsOpenBracket[i],n);if(r){if(r instanceof x)return null;o=r}}d=s.endColumn-1}if(o)return o}if(u>0&&a.getStartOffset(u)===e.column-1){const d=u-1,c=this.j.getLanguageConfiguration(a.getLanguageId(d)).brackets;if(c&&!b(a.getStandardTokenType(d))){const{searchStartOffset:o,searchEndOffset:s}=this.n(e,a,c,d),i=B.findPrevBracketInRange(c.reversedRegex,g,l,o,s);if(i&&i.startColumn<=e.column&&e.column<=i.endColumn){const r=l.substring(i.startColumn-1,i.endColumn-1).toLowerCase(),t=this.t(i,c.textIsBracket[r],c.textIsOpenBracket[r],n);if(t)return t instanceof x?null:t}}}return null}t(e,n,g,a){if(!n)return null;const l=g?this.w(n,e.getEndPosition(),a):this.u(n,e.getStartPosition(),a);return l?l instanceof x?l:[e,l]:null}u(e,n,g){const a=e.languageId,l=e.reversedRegex;let u=-1,f=0;const d=(c,o,s,i)=>{for(;;){if(g&&++f%100===0&&!g())return x.INSTANCE;const r=B.findPrevBracketInRange(l,c,o,s,i);if(!r)break;const t=o.substring(r.startColumn-1,r.endColumn-1).toLowerCase();if(e.isOpen(t)?u++:e.isClose(t)&&u--,u===0)return r;i=r.startColumn-1}return null};for(let c=n.lineNumber;c>=1;c--){const o=this.h.tokenization.getLineTokens(c),s=o.getCount(),i=this.h.getLineContent(c);let r=s-1,t=i.length,h=i.length;c===n.lineNumber&&(r=o.findTokenIndexAtOffset(n.column-1),t=n.column-1,h=n.column-1);let k=!0;for(;r>=0;r--){const C=o.getLanguageId(r)===a&&!b(o.getStandardTokenType(r));if(C)k?t=o.getStartOffset(r):(t=o.getStartOffset(r),h=o.getEndOffset(r));else if(k&&t!==h){const m=d(c,i,t,h);if(m)return m}k=C}if(k&&t!==h){const C=d(c,i,t,h);if(C)return C}}return null}w(e,n,g){const a=e.languageId,l=e.forwardRegex;let u=1,f=0;const d=(o,s,i,r)=>{for(;;){if(g&&++f%100===0&&!g())return x.INSTANCE;const t=B.findNextBracketInRange(l,o,s,i,r);if(!t)break;const h=s.substring(t.startColumn-1,t.endColumn-1).toLowerCase();if(e.isOpen(h)?u++:e.isClose(h)&&u--,u===0)return t;i=t.endColumn-1}return null},c=this.h.getLineCount();for(let o=n.lineNumber;o<=c;o++){const s=this.h.tokenization.getLineTokens(o),i=s.getCount(),r=this.h.getLineContent(o);let t=0,h=0,k=0;o===n.lineNumber&&(t=s.findTokenIndexAtOffset(n.column-1),h=n.column-1,k=n.column-1);let C=!0;for(;t<i;t++){const m=s.getLanguageId(t)===a&&!b(s.getStandardTokenType(t));if(m)C||(h=s.getStartOffset(t)),k=s.getEndOffset(t);else if(C&&h!==k){const I=d(o,r,h,k);if(I)return I}C=m}if(C&&h!==k){const m=d(o,r,h,k);if(m)return m}}return null}findPrevBracket(e){const n=this.h.validatePosition(e);if(this.f)return this.g=!0,this.m(),this.a.value?.object.getFirstBracketBefore(n)||null;let g=null,a=null,l=null;for(let u=n.lineNumber;u>=1;u--){const f=this.h.tokenization.getLineTokens(u),d=f.getCount(),c=this.h.getLineContent(u);let o=d-1,s=c.length,i=c.length;if(u===n.lineNumber){o=f.findTokenIndexAtOffset(n.column-1),s=n.column-1,i=n.column-1;const t=f.getLanguageId(o);g!==t&&(g=t,a=this.j.getLanguageConfiguration(g).brackets,l=this.j.getLanguageConfiguration(g).bracketsNew)}let r=!0;for(;o>=0;o--){const t=f.getLanguageId(o);if(g!==t){if(a&&l&&r&&s!==i){const k=B.findPrevBracketInRange(a.reversedRegex,u,c,s,i);if(k)return this.y(l,k);r=!1}g=t,a=this.j.getLanguageConfiguration(g).brackets,l=this.j.getLanguageConfiguration(g).bracketsNew}const h=!!a&&!b(f.getStandardTokenType(o));if(h)r?s=f.getStartOffset(o):(s=f.getStartOffset(o),i=f.getEndOffset(o));else if(l&&a&&r&&s!==i){const k=B.findPrevBracketInRange(a.reversedRegex,u,c,s,i);if(k)return this.y(l,k)}r=h}if(l&&a&&r&&s!==i){const t=B.findPrevBracketInRange(a.reversedRegex,u,c,s,i);if(t)return this.y(l,t)}}return null}findNextBracket(e){const n=this.h.validatePosition(e);if(this.f)return this.g=!0,this.m(),this.a.value?.object.getFirstBracketAfter(n)||null;const g=this.h.getLineCount();let a=null,l=null,u=null;for(let f=n.lineNumber;f<=g;f++){const d=this.h.tokenization.getLineTokens(f),c=d.getCount(),o=this.h.getLineContent(f);let s=0,i=0,r=0;if(f===n.lineNumber){s=d.findTokenIndexAtOffset(n.column-1),i=n.column-1,r=n.column-1;const h=d.getLanguageId(s);a!==h&&(a=h,l=this.j.getLanguageConfiguration(a).brackets,u=this.j.getLanguageConfiguration(a).bracketsNew)}let t=!0;for(;s<c;s++){const h=d.getLanguageId(s);if(a!==h){if(u&&l&&t&&i!==r){const C=B.findNextBracketInRange(l.forwardRegex,f,o,i,r);if(C)return this.y(u,C);t=!1}a=h,l=this.j.getLanguageConfiguration(a).brackets,u=this.j.getLanguageConfiguration(a).bracketsNew}const k=!!l&&!b(d.getStandardTokenType(s));if(k)t||(i=d.getStartOffset(s)),r=d.getEndOffset(s);else if(u&&l&&t&&i!==r){const C=B.findNextBracketInRange(l.forwardRegex,f,o,i,r);if(C)return this.y(u,C)}t=k}if(u&&l&&t&&i!==r){const h=B.findNextBracketInRange(l.forwardRegex,f,o,i,r);if(h)return this.y(u,h)}}return null}findEnclosingBrackets(e,n){const g=this.h.validatePosition(e);if(this.f){const r=v.fromPositions(g),t=this.getBracketPairsInRange(v.fromPositions(g,g)).findLast(h=>h.closingBracketRange!==void 0&&h.range.strictContainsRange(r));return t?[t.openingBracketRange,t.closingBracketRange]:null}const a=p(n),l=this.h.getLineCount(),u=new Map;let f=[];const d=(r,t)=>{if(!u.has(r)){const h=[];for(let k=0,C=t?t.brackets.length:0;k<C;k++)h[k]=0;u.set(r,h)}f=u.get(r)};let c=0;const o=(r,t,h,k,C)=>{for(;;){if(a&&++c%100===0&&!a())return x.INSTANCE;const m=B.findNextBracketInRange(r.forwardRegex,t,h,k,C);if(!m)break;const I=h.substring(m.startColumn-1,m.endColumn-1).toLowerCase(),L=r.textIsBracket[I];if(L&&(L.isOpen(I)?f[L.index]++:L.isClose(I)&&f[L.index]--,f[L.index]===-1))return this.t(m,L,!1,a);k=m.endColumn-1}return null};let s=null,i=null;for(let r=g.lineNumber;r<=l;r++){const t=this.h.tokenization.getLineTokens(r),h=t.getCount(),k=this.h.getLineContent(r);let C=0,m=0,I=0;if(r===g.lineNumber){C=t.findTokenIndexAtOffset(g.column-1),m=g.column-1,I=g.column-1;const R=t.getLanguageId(C);s!==R&&(s=R,i=this.j.getLanguageConfiguration(s).brackets,d(s,i))}let L=!0;for(;C<h;C++){const R=t.getLanguageId(C);if(s!==R){if(i&&L&&m!==I){const O=o(i,r,k,m,I);if(O)return S(O);L=!1}s=R,i=this.j.getLanguageConfiguration(s).brackets,d(s,i)}const w=!!i&&!b(t.getStandardTokenType(C));if(w)L||(m=t.getStartOffset(C)),I=t.getEndOffset(C);else if(i&&L&&m!==I){const O=o(i,r,k,m,I);if(O)return S(O)}L=w}if(i&&L&&m!==I){const R=o(i,r,k,m,I);if(R)return S(R)}}return null}y(e,n){if(!n)return null;let g=this.h.getValueInRange(n);g=g.toLowerCase();const a=e.getBracketInfo(g);return a?{range:n,bracketInfo:a}:null}}function $(T,e){return{object:T,dispose:()=>e?.dispose()}}function p(T){if(typeof T>"u")return()=>!0;{const e=Date.now();return()=>Date.now()-e<=T}}class x{static{this.INSTANCE=new x}constructor(){this._searchCanceledBrand=void 0}}function S(T){return T instanceof x?null:T}export{W as $yF};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { CallbackIterable, compareBy } from "../../../../base/common/arrays.js";
+import { Emitter } from "../../../../base/common/event.js";
+import { Disposable, DisposableStore, MutableDisposable } from "../../../../base/common/lifecycle.js";
+import { Range } from "../../core/range.js";
+import { ignoreBracketsInToken } from "../../languages/supports.js";
+import { BracketsUtils } from "../../languages/supports/richEditBrackets.js";
+import { BracketPairsTree } from "./bracketPairsTree/bracketPairsTree.js";
+class BracketPairsTextModelPart extends Disposable {
+  static {
+    __name(this, "BracketPairsTextModelPart");
+  }
+  get canBuildAST() {
+    const maxSupportedDocumentLength = (
+      /* max lines */
+      5e4 * /* average column count */
+      100
+    );
+    return this.textModel.getValueLength() <= maxSupportedDocumentLength;
+  }
+  constructor(textModel, languageConfigurationService) {
+    super();
+    this.textModel = textModel;
+    this.languageConfigurationService = languageConfigurationService;
+    this.bracketPairsTree = this._register(new MutableDisposable());
+    this.onDidChangeEmitter = new Emitter();
+    this.onDidChange = this.onDidChangeEmitter.event;
+    this.bracketsRequested = false;
+  }
+  //#region TextModel events
+  handleLanguageConfigurationServiceChange(e) {
+    if (!e.languageId || this.bracketPairsTree.value?.object.didLanguageChange(e.languageId)) {
+      this.bracketPairsTree.clear();
+      this.updateBracketPairsTree();
+    }
+  }
+  handleDidChangeOptions(e) {
+    this.bracketPairsTree.clear();
+    this.updateBracketPairsTree();
+  }
+  handleDidChangeLanguage(e) {
+    this.bracketPairsTree.clear();
+    this.updateBracketPairsTree();
+  }
+  handleDidChangeContent(change) {
+    this.bracketPairsTree.value?.object.handleContentChanged(change);
+  }
+  handleDidChangeBackgroundTokenizationState() {
+    this.bracketPairsTree.value?.object.handleDidChangeBackgroundTokenizationState();
+  }
+  handleDidChangeTokens(e) {
+    this.bracketPairsTree.value?.object.handleDidChangeTokens(e);
+  }
+  //#endregion
+  updateBracketPairsTree() {
+    if (this.bracketsRequested && this.canBuildAST) {
+      if (!this.bracketPairsTree.value) {
+        const store = new DisposableStore();
+        this.bracketPairsTree.value = createDisposableRef(store.add(new BracketPairsTree(this.textModel, (languageId) => {
+          return this.languageConfigurationService.getLanguageConfiguration(languageId);
+        })), store);
+        store.add(this.bracketPairsTree.value.object.onDidChange((e) => this.onDidChangeEmitter.fire(e)));
+        this.onDidChangeEmitter.fire();
+      }
+    } else {
+      if (this.bracketPairsTree.value) {
+        this.bracketPairsTree.clear();
+        this.onDidChangeEmitter.fire();
+      }
+    }
+  }
+  /**
+   * Returns all bracket pairs that intersect the given range.
+   * The result is sorted by the start position.
+  */
+  getBracketPairsInRange(range) {
+    this.bracketsRequested = true;
+    this.updateBracketPairsTree();
+    return this.bracketPairsTree.value?.object.getBracketPairsInRange(range, false) || CallbackIterable.empty;
+  }
+  getBracketPairsInRangeWithMinIndentation(range) {
+    this.bracketsRequested = true;
+    this.updateBracketPairsTree();
+    return this.bracketPairsTree.value?.object.getBracketPairsInRange(range, true) || CallbackIterable.empty;
+  }
+  getBracketsInRange(range, onlyColorizedBrackets = false) {
+    this.bracketsRequested = true;
+    this.updateBracketPairsTree();
+    return this.bracketPairsTree.value?.object.getBracketsInRange(range, onlyColorizedBrackets) || CallbackIterable.empty;
+  }
+  findMatchingBracketUp(_bracket, _position, maxDuration) {
+    const position = this.textModel.validatePosition(_position);
+    const languageId = this.textModel.getLanguageIdAtPosition(position.lineNumber, position.column);
+    if (this.canBuildAST) {
+      const closingBracketInfo = this.languageConfigurationService.getLanguageConfiguration(languageId).bracketsNew.getClosingBracketInfo(_bracket);
+      if (!closingBracketInfo) {
+        return null;
+      }
+      const bracketPair = this.getBracketPairsInRange(Range.fromPositions(_position, _position)).findLast((b) => closingBracketInfo.closes(b.openingBracketInfo));
+      if (bracketPair) {
+        return bracketPair.openingBracketRange;
+      }
+      return null;
+    } else {
+      const bracket = _bracket.toLowerCase();
+      const bracketsSupport = this.languageConfigurationService.getLanguageConfiguration(languageId).brackets;
+      if (!bracketsSupport) {
+        return null;
+      }
+      const data = bracketsSupport.textIsBracket[bracket];
+      if (!data) {
+        return null;
+      }
+      return stripBracketSearchCanceled(this._findMatchingBracketUp(data, position, createTimeBasedContinueBracketSearchPredicate(maxDuration)));
+    }
+  }
+  matchBracket(position, maxDuration) {
+    if (this.canBuildAST) {
+      const bracketPair = this.getBracketPairsInRange(Range.fromPositions(position, position)).filter((item) => item.closingBracketRange !== void 0 && (item.openingBracketRange.containsPosition(position) || item.closingBracketRange.containsPosition(position))).findLastMaxBy(compareBy((item) => item.openingBracketRange.containsPosition(position) ? item.openingBracketRange : item.closingBracketRange, Range.compareRangesUsingStarts));
+      if (bracketPair) {
+        return [bracketPair.openingBracketRange, bracketPair.closingBracketRange];
+      }
+      return null;
+    } else {
+      const continueSearchPredicate = createTimeBasedContinueBracketSearchPredicate(maxDuration);
+      return this._matchBracket(this.textModel.validatePosition(position), continueSearchPredicate);
+    }
+  }
+  _establishBracketSearchOffsets(position, lineTokens, modeBrackets, tokenIndex) {
+    const tokenCount = lineTokens.getCount();
+    const currentLanguageId = lineTokens.getLanguageId(tokenIndex);
+    let searchStartOffset = Math.max(0, position.column - 1 - modeBrackets.maxBracketLength);
+    for (let i = tokenIndex - 1; i >= 0; i--) {
+      const tokenEndOffset = lineTokens.getEndOffset(i);
+      if (tokenEndOffset <= searchStartOffset) {
+        break;
+      }
+      if (ignoreBracketsInToken(lineTokens.getStandardTokenType(i)) || lineTokens.getLanguageId(i) !== currentLanguageId) {
+        searchStartOffset = tokenEndOffset;
+        break;
+      }
+    }
+    let searchEndOffset = Math.min(lineTokens.getLineContent().length, position.column - 1 + modeBrackets.maxBracketLength);
+    for (let i = tokenIndex + 1; i < tokenCount; i++) {
+      const tokenStartOffset = lineTokens.getStartOffset(i);
+      if (tokenStartOffset >= searchEndOffset) {
+        break;
+      }
+      if (ignoreBracketsInToken(lineTokens.getStandardTokenType(i)) || lineTokens.getLanguageId(i) !== currentLanguageId) {
+        searchEndOffset = tokenStartOffset;
+        break;
+      }
+    }
+    return { searchStartOffset, searchEndOffset };
+  }
+  _matchBracket(position, continueSearchPredicate) {
+    const lineNumber = position.lineNumber;
+    const lineTokens = this.textModel.tokenization.getLineTokens(lineNumber);
+    const lineText = this.textModel.getLineContent(lineNumber);
+    const tokenIndex = lineTokens.findTokenIndexAtOffset(position.column - 1);
+    if (tokenIndex < 0) {
+      return null;
+    }
+    const currentModeBrackets = this.languageConfigurationService.getLanguageConfiguration(lineTokens.getLanguageId(tokenIndex)).brackets;
+    if (currentModeBrackets && !ignoreBracketsInToken(lineTokens.getStandardTokenType(tokenIndex))) {
+      let { searchStartOffset, searchEndOffset } = this._establishBracketSearchOffsets(position, lineTokens, currentModeBrackets, tokenIndex);
+      let bestResult = null;
+      while (true) {
+        const foundBracket = BracketsUtils.findNextBracketInRange(currentModeBrackets.forwardRegex, lineNumber, lineText, searchStartOffset, searchEndOffset);
+        if (!foundBracket) {
+          break;
+        }
+        if (foundBracket.startColumn <= position.column && position.column <= foundBracket.endColumn) {
+          const foundBracketText = lineText.substring(foundBracket.startColumn - 1, foundBracket.endColumn - 1).toLowerCase();
+          const r = this._matchFoundBracket(foundBracket, currentModeBrackets.textIsBracket[foundBracketText], currentModeBrackets.textIsOpenBracket[foundBracketText], continueSearchPredicate);
+          if (r) {
+            if (r instanceof BracketSearchCanceled) {
+              return null;
+            }
+            bestResult = r;
+          }
+        }
+        searchStartOffset = foundBracket.endColumn - 1;
+      }
+      if (bestResult) {
+        return bestResult;
+      }
+    }
+    if (tokenIndex > 0 && lineTokens.getStartOffset(tokenIndex) === position.column - 1) {
+      const prevTokenIndex = tokenIndex - 1;
+      const prevModeBrackets = this.languageConfigurationService.getLanguageConfiguration(lineTokens.getLanguageId(prevTokenIndex)).brackets;
+      if (prevModeBrackets && !ignoreBracketsInToken(lineTokens.getStandardTokenType(prevTokenIndex))) {
+        const { searchStartOffset, searchEndOffset } = this._establishBracketSearchOffsets(position, lineTokens, prevModeBrackets, prevTokenIndex);
+        const foundBracket = BracketsUtils.findPrevBracketInRange(prevModeBrackets.reversedRegex, lineNumber, lineText, searchStartOffset, searchEndOffset);
+        if (foundBracket && foundBracket.startColumn <= position.column && position.column <= foundBracket.endColumn) {
+          const foundBracketText = lineText.substring(foundBracket.startColumn - 1, foundBracket.endColumn - 1).toLowerCase();
+          const r = this._matchFoundBracket(foundBracket, prevModeBrackets.textIsBracket[foundBracketText], prevModeBrackets.textIsOpenBracket[foundBracketText], continueSearchPredicate);
+          if (r) {
+            if (r instanceof BracketSearchCanceled) {
+              return null;
+            }
+            return r;
+          }
+        }
+      }
+    }
+    return null;
+  }
+  _matchFoundBracket(foundBracket, data, isOpen, continueSearchPredicate) {
+    if (!data) {
+      return null;
+    }
+    const matched = isOpen ? this._findMatchingBracketDown(data, foundBracket.getEndPosition(), continueSearchPredicate) : this._findMatchingBracketUp(data, foundBracket.getStartPosition(), continueSearchPredicate);
+    if (!matched) {
+      return null;
+    }
+    if (matched instanceof BracketSearchCanceled) {
+      return matched;
+    }
+    return [foundBracket, matched];
+  }
+  _findMatchingBracketUp(bracket, position, continueSearchPredicate) {
+    const languageId = bracket.languageId;
+    const reversedBracketRegex = bracket.reversedRegex;
+    let count = -1;
+    let totalCallCount = 0;
+    const searchPrevMatchingBracketInRange = /* @__PURE__ */ __name((lineNumber, lineText, searchStartOffset, searchEndOffset) => {
+      while (true) {
+        if (continueSearchPredicate && ++totalCallCount % 100 === 0 && !continueSearchPredicate()) {
+          return BracketSearchCanceled.INSTANCE;
+        }
+        const r = BracketsUtils.findPrevBracketInRange(reversedBracketRegex, lineNumber, lineText, searchStartOffset, searchEndOffset);
+        if (!r) {
+          break;
+        }
+        const hitText = lineText.substring(r.startColumn - 1, r.endColumn - 1).toLowerCase();
+        if (bracket.isOpen(hitText)) {
+          count++;
+        } else if (bracket.isClose(hitText)) {
+          count--;
+        }
+        if (count === 0) {
+          return r;
+        }
+        searchEndOffset = r.startColumn - 1;
+      }
+      return null;
+    }, "searchPrevMatchingBracketInRange");
+    for (let lineNumber = position.lineNumber; lineNumber >= 1; lineNumber--) {
+      const lineTokens = this.textModel.tokenization.getLineTokens(lineNumber);
+      const tokenCount = lineTokens.getCount();
+      const lineText = this.textModel.getLineContent(lineNumber);
+      let tokenIndex = tokenCount - 1;
+      let searchStartOffset = lineText.length;
+      let searchEndOffset = lineText.length;
+      if (lineNumber === position.lineNumber) {
+        tokenIndex = lineTokens.findTokenIndexAtOffset(position.column - 1);
+        searchStartOffset = position.column - 1;
+        searchEndOffset = position.column - 1;
+      }
+      let prevSearchInToken = true;
+      for (; tokenIndex >= 0; tokenIndex--) {
+        const searchInToken = lineTokens.getLanguageId(tokenIndex) === languageId && !ignoreBracketsInToken(lineTokens.getStandardTokenType(tokenIndex));
+        if (searchInToken) {
+          if (prevSearchInToken) {
+            searchStartOffset = lineTokens.getStartOffset(tokenIndex);
+          } else {
+            searchStartOffset = lineTokens.getStartOffset(tokenIndex);
+            searchEndOffset = lineTokens.getEndOffset(tokenIndex);
+          }
+        } else {
+          if (prevSearchInToken && searchStartOffset !== searchEndOffset) {
+            const r = searchPrevMatchingBracketInRange(lineNumber, lineText, searchStartOffset, searchEndOffset);
+            if (r) {
+              return r;
+            }
+          }
+        }
+        prevSearchInToken = searchInToken;
+      }
+      if (prevSearchInToken && searchStartOffset !== searchEndOffset) {
+        const r = searchPrevMatchingBracketInRange(lineNumber, lineText, searchStartOffset, searchEndOffset);
+        if (r) {
+          return r;
+        }
+      }
+    }
+    return null;
+  }
+  _findMatchingBracketDown(bracket, position, continueSearchPredicate) {
+    const languageId = bracket.languageId;
+    const bracketRegex = bracket.forwardRegex;
+    let count = 1;
+    let totalCallCount = 0;
+    const searchNextMatchingBracketInRange = /* @__PURE__ */ __name((lineNumber, lineText, searchStartOffset, searchEndOffset) => {
+      while (true) {
+        if (continueSearchPredicate && ++totalCallCount % 100 === 0 && !continueSearchPredicate()) {
+          return BracketSearchCanceled.INSTANCE;
+        }
+        const r = BracketsUtils.findNextBracketInRange(bracketRegex, lineNumber, lineText, searchStartOffset, searchEndOffset);
+        if (!r) {
+          break;
+        }
+        const hitText = lineText.substring(r.startColumn - 1, r.endColumn - 1).toLowerCase();
+        if (bracket.isOpen(hitText)) {
+          count++;
+        } else if (bracket.isClose(hitText)) {
+          count--;
+        }
+        if (count === 0) {
+          return r;
+        }
+        searchStartOffset = r.endColumn - 1;
+      }
+      return null;
+    }, "searchNextMatchingBracketInRange");
+    const lineCount = this.textModel.getLineCount();
+    for (let lineNumber = position.lineNumber; lineNumber <= lineCount; lineNumber++) {
+      const lineTokens = this.textModel.tokenization.getLineTokens(lineNumber);
+      const tokenCount = lineTokens.getCount();
+      const lineText = this.textModel.getLineContent(lineNumber);
+      let tokenIndex = 0;
+      let searchStartOffset = 0;
+      let searchEndOffset = 0;
+      if (lineNumber === position.lineNumber) {
+        tokenIndex = lineTokens.findTokenIndexAtOffset(position.column - 1);
+        searchStartOffset = position.column - 1;
+        searchEndOffset = position.column - 1;
+      }
+      let prevSearchInToken = true;
+      for (; tokenIndex < tokenCount; tokenIndex++) {
+        const searchInToken = lineTokens.getLanguageId(tokenIndex) === languageId && !ignoreBracketsInToken(lineTokens.getStandardTokenType(tokenIndex));
+        if (searchInToken) {
+          if (prevSearchInToken) {
+            searchEndOffset = lineTokens.getEndOffset(tokenIndex);
+          } else {
+            searchStartOffset = lineTokens.getStartOffset(tokenIndex);
+            searchEndOffset = lineTokens.getEndOffset(tokenIndex);
+          }
+        } else {
+          if (prevSearchInToken && searchStartOffset !== searchEndOffset) {
+            const r = searchNextMatchingBracketInRange(lineNumber, lineText, searchStartOffset, searchEndOffset);
+            if (r) {
+              return r;
+            }
+          }
+        }
+        prevSearchInToken = searchInToken;
+      }
+      if (prevSearchInToken && searchStartOffset !== searchEndOffset) {
+        const r = searchNextMatchingBracketInRange(lineNumber, lineText, searchStartOffset, searchEndOffset);
+        if (r) {
+          return r;
+        }
+      }
+    }
+    return null;
+  }
+  findPrevBracket(_position) {
+    const position = this.textModel.validatePosition(_position);
+    if (this.canBuildAST) {
+      this.bracketsRequested = true;
+      this.updateBracketPairsTree();
+      return this.bracketPairsTree.value?.object.getFirstBracketBefore(position) || null;
+    }
+    let languageId = null;
+    let modeBrackets = null;
+    let bracketConfig = null;
+    for (let lineNumber = position.lineNumber; lineNumber >= 1; lineNumber--) {
+      const lineTokens = this.textModel.tokenization.getLineTokens(lineNumber);
+      const tokenCount = lineTokens.getCount();
+      const lineText = this.textModel.getLineContent(lineNumber);
+      let tokenIndex = tokenCount - 1;
+      let searchStartOffset = lineText.length;
+      let searchEndOffset = lineText.length;
+      if (lineNumber === position.lineNumber) {
+        tokenIndex = lineTokens.findTokenIndexAtOffset(position.column - 1);
+        searchStartOffset = position.column - 1;
+        searchEndOffset = position.column - 1;
+        const tokenLanguageId = lineTokens.getLanguageId(tokenIndex);
+        if (languageId !== tokenLanguageId) {
+          languageId = tokenLanguageId;
+          modeBrackets = this.languageConfigurationService.getLanguageConfiguration(languageId).brackets;
+          bracketConfig = this.languageConfigurationService.getLanguageConfiguration(languageId).bracketsNew;
+        }
+      }
+      let prevSearchInToken = true;
+      for (; tokenIndex >= 0; tokenIndex--) {
+        const tokenLanguageId = lineTokens.getLanguageId(tokenIndex);
+        if (languageId !== tokenLanguageId) {
+          if (modeBrackets && bracketConfig && prevSearchInToken && searchStartOffset !== searchEndOffset) {
+            const r = BracketsUtils.findPrevBracketInRange(modeBrackets.reversedRegex, lineNumber, lineText, searchStartOffset, searchEndOffset);
+            if (r) {
+              return this._toFoundBracket(bracketConfig, r);
+            }
+            prevSearchInToken = false;
+          }
+          languageId = tokenLanguageId;
+          modeBrackets = this.languageConfigurationService.getLanguageConfiguration(languageId).brackets;
+          bracketConfig = this.languageConfigurationService.getLanguageConfiguration(languageId).bracketsNew;
+        }
+        const searchInToken = !!modeBrackets && !ignoreBracketsInToken(lineTokens.getStandardTokenType(tokenIndex));
+        if (searchInToken) {
+          if (prevSearchInToken) {
+            searchStartOffset = lineTokens.getStartOffset(tokenIndex);
+          } else {
+            searchStartOffset = lineTokens.getStartOffset(tokenIndex);
+            searchEndOffset = lineTokens.getEndOffset(tokenIndex);
+          }
+        } else {
+          if (bracketConfig && modeBrackets && prevSearchInToken && searchStartOffset !== searchEndOffset) {
+            const r = BracketsUtils.findPrevBracketInRange(modeBrackets.reversedRegex, lineNumber, lineText, searchStartOffset, searchEndOffset);
+            if (r) {
+              return this._toFoundBracket(bracketConfig, r);
+            }
+          }
+        }
+        prevSearchInToken = searchInToken;
+      }
+      if (bracketConfig && modeBrackets && prevSearchInToken && searchStartOffset !== searchEndOffset) {
+        const r = BracketsUtils.findPrevBracketInRange(modeBrackets.reversedRegex, lineNumber, lineText, searchStartOffset, searchEndOffset);
+        if (r) {
+          return this._toFoundBracket(bracketConfig, r);
+        }
+      }
+    }
+    return null;
+  }
+  findNextBracket(_position) {
+    const position = this.textModel.validatePosition(_position);
+    if (this.canBuildAST) {
+      this.bracketsRequested = true;
+      this.updateBracketPairsTree();
+      return this.bracketPairsTree.value?.object.getFirstBracketAfter(position) || null;
+    }
+    const lineCount = this.textModel.getLineCount();
+    let languageId = null;
+    let modeBrackets = null;
+    let bracketConfig = null;
+    for (let lineNumber = position.lineNumber; lineNumber <= lineCount; lineNumber++) {
+      const lineTokens = this.textModel.tokenization.getLineTokens(lineNumber);
+      const tokenCount = lineTokens.getCount();
+      const lineText = this.textModel.getLineContent(lineNumber);
+      let tokenIndex = 0;
+      let searchStartOffset = 0;
+      let searchEndOffset = 0;
+      if (lineNumber === position.lineNumber) {
+        tokenIndex = lineTokens.findTokenIndexAtOffset(position.column - 1);
+        searchStartOffset = position.column - 1;
+        searchEndOffset = position.column - 1;
+        const tokenLanguageId = lineTokens.getLanguageId(tokenIndex);
+        if (languageId !== tokenLanguageId) {
+          languageId = tokenLanguageId;
+          modeBrackets = this.languageConfigurationService.getLanguageConfiguration(languageId).brackets;
+          bracketConfig = this.languageConfigurationService.getLanguageConfiguration(languageId).bracketsNew;
+        }
+      }
+      let prevSearchInToken = true;
+      for (; tokenIndex < tokenCount; tokenIndex++) {
+        const tokenLanguageId = lineTokens.getLanguageId(tokenIndex);
+        if (languageId !== tokenLanguageId) {
+          if (bracketConfig && modeBrackets && prevSearchInToken && searchStartOffset !== searchEndOffset) {
+            const r = BracketsUtils.findNextBracketInRange(modeBrackets.forwardRegex, lineNumber, lineText, searchStartOffset, searchEndOffset);
+            if (r) {
+              return this._toFoundBracket(bracketConfig, r);
+            }
+            prevSearchInToken = false;
+          }
+          languageId = tokenLanguageId;
+          modeBrackets = this.languageConfigurationService.getLanguageConfiguration(languageId).brackets;
+          bracketConfig = this.languageConfigurationService.getLanguageConfiguration(languageId).bracketsNew;
+        }
+        const searchInToken = !!modeBrackets && !ignoreBracketsInToken(lineTokens.getStandardTokenType(tokenIndex));
+        if (searchInToken) {
+          if (prevSearchInToken) {
+            searchEndOffset = lineTokens.getEndOffset(tokenIndex);
+          } else {
+            searchStartOffset = lineTokens.getStartOffset(tokenIndex);
+            searchEndOffset = lineTokens.getEndOffset(tokenIndex);
+          }
+        } else {
+          if (bracketConfig && modeBrackets && prevSearchInToken && searchStartOffset !== searchEndOffset) {
+            const r = BracketsUtils.findNextBracketInRange(modeBrackets.forwardRegex, lineNumber, lineText, searchStartOffset, searchEndOffset);
+            if (r) {
+              return this._toFoundBracket(bracketConfig, r);
+            }
+          }
+        }
+        prevSearchInToken = searchInToken;
+      }
+      if (bracketConfig && modeBrackets && prevSearchInToken && searchStartOffset !== searchEndOffset) {
+        const r = BracketsUtils.findNextBracketInRange(modeBrackets.forwardRegex, lineNumber, lineText, searchStartOffset, searchEndOffset);
+        if (r) {
+          return this._toFoundBracket(bracketConfig, r);
+        }
+      }
+    }
+    return null;
+  }
+  findEnclosingBrackets(_position, maxDuration) {
+    const position = this.textModel.validatePosition(_position);
+    if (this.canBuildAST) {
+      const range = Range.fromPositions(position);
+      const bracketPair = this.getBracketPairsInRange(Range.fromPositions(position, position)).findLast((item) => item.closingBracketRange !== void 0 && item.range.strictContainsRange(range));
+      if (bracketPair) {
+        return [bracketPair.openingBracketRange, bracketPair.closingBracketRange];
+      }
+      return null;
+    }
+    const continueSearchPredicate = createTimeBasedContinueBracketSearchPredicate(maxDuration);
+    const lineCount = this.textModel.getLineCount();
+    const savedCounts = /* @__PURE__ */ new Map();
+    let counts = [];
+    const resetCounts = /* @__PURE__ */ __name((languageId2, modeBrackets2) => {
+      if (!savedCounts.has(languageId2)) {
+        const tmp = [];
+        for (let i = 0, len = modeBrackets2 ? modeBrackets2.brackets.length : 0; i < len; i++) {
+          tmp[i] = 0;
+        }
+        savedCounts.set(languageId2, tmp);
+      }
+      counts = savedCounts.get(languageId2);
+    }, "resetCounts");
+    let totalCallCount = 0;
+    const searchInRange = /* @__PURE__ */ __name((modeBrackets2, lineNumber, lineText, searchStartOffset, searchEndOffset) => {
+      while (true) {
+        if (continueSearchPredicate && ++totalCallCount % 100 === 0 && !continueSearchPredicate()) {
+          return BracketSearchCanceled.INSTANCE;
+        }
+        const r = BracketsUtils.findNextBracketInRange(modeBrackets2.forwardRegex, lineNumber, lineText, searchStartOffset, searchEndOffset);
+        if (!r) {
+          break;
+        }
+        const hitText = lineText.substring(r.startColumn - 1, r.endColumn - 1).toLowerCase();
+        const bracket = modeBrackets2.textIsBracket[hitText];
+        if (bracket) {
+          if (bracket.isOpen(hitText)) {
+            counts[bracket.index]++;
+          } else if (bracket.isClose(hitText)) {
+            counts[bracket.index]--;
+          }
+          if (counts[bracket.index] === -1) {
+            return this._matchFoundBracket(r, bracket, false, continueSearchPredicate);
+          }
+        }
+        searchStartOffset = r.endColumn - 1;
+      }
+      return null;
+    }, "searchInRange");
+    let languageId = null;
+    let modeBrackets = null;
+    for (let lineNumber = position.lineNumber; lineNumber <= lineCount; lineNumber++) {
+      const lineTokens = this.textModel.tokenization.getLineTokens(lineNumber);
+      const tokenCount = lineTokens.getCount();
+      const lineText = this.textModel.getLineContent(lineNumber);
+      let tokenIndex = 0;
+      let searchStartOffset = 0;
+      let searchEndOffset = 0;
+      if (lineNumber === position.lineNumber) {
+        tokenIndex = lineTokens.findTokenIndexAtOffset(position.column - 1);
+        searchStartOffset = position.column - 1;
+        searchEndOffset = position.column - 1;
+        const tokenLanguageId = lineTokens.getLanguageId(tokenIndex);
+        if (languageId !== tokenLanguageId) {
+          languageId = tokenLanguageId;
+          modeBrackets = this.languageConfigurationService.getLanguageConfiguration(languageId).brackets;
+          resetCounts(languageId, modeBrackets);
+        }
+      }
+      let prevSearchInToken = true;
+      for (; tokenIndex < tokenCount; tokenIndex++) {
+        const tokenLanguageId = lineTokens.getLanguageId(tokenIndex);
+        if (languageId !== tokenLanguageId) {
+          if (modeBrackets && prevSearchInToken && searchStartOffset !== searchEndOffset) {
+            const r = searchInRange(modeBrackets, lineNumber, lineText, searchStartOffset, searchEndOffset);
+            if (r) {
+              return stripBracketSearchCanceled(r);
+            }
+            prevSearchInToken = false;
+          }
+          languageId = tokenLanguageId;
+          modeBrackets = this.languageConfigurationService.getLanguageConfiguration(languageId).brackets;
+          resetCounts(languageId, modeBrackets);
+        }
+        const searchInToken = !!modeBrackets && !ignoreBracketsInToken(lineTokens.getStandardTokenType(tokenIndex));
+        if (searchInToken) {
+          if (prevSearchInToken) {
+            searchEndOffset = lineTokens.getEndOffset(tokenIndex);
+          } else {
+            searchStartOffset = lineTokens.getStartOffset(tokenIndex);
+            searchEndOffset = lineTokens.getEndOffset(tokenIndex);
+          }
+        } else {
+          if (modeBrackets && prevSearchInToken && searchStartOffset !== searchEndOffset) {
+            const r = searchInRange(modeBrackets, lineNumber, lineText, searchStartOffset, searchEndOffset);
+            if (r) {
+              return stripBracketSearchCanceled(r);
+            }
+          }
+        }
+        prevSearchInToken = searchInToken;
+      }
+      if (modeBrackets && prevSearchInToken && searchStartOffset !== searchEndOffset) {
+        const r = searchInRange(modeBrackets, lineNumber, lineText, searchStartOffset, searchEndOffset);
+        if (r) {
+          return stripBracketSearchCanceled(r);
+        }
+      }
+    }
+    return null;
+  }
+  _toFoundBracket(bracketConfig, r) {
+    if (!r) {
+      return null;
+    }
+    let text = this.textModel.getValueInRange(r);
+    text = text.toLowerCase();
+    const bracketInfo = bracketConfig.getBracketInfo(text);
+    if (!bracketInfo) {
+      return null;
+    }
+    return {
+      range: r,
+      bracketInfo
+    };
+  }
+}
+function createDisposableRef(object, disposable) {
+  return {
+    object,
+    dispose: /* @__PURE__ */ __name(() => disposable?.dispose(), "dispose")
+  };
+}
+__name(createDisposableRef, "createDisposableRef");
+function createTimeBasedContinueBracketSearchPredicate(maxDuration) {
+  if (typeof maxDuration === "undefined") {
+    return () => true;
+  } else {
+    const startTime = Date.now();
+    return () => {
+      return Date.now() - startTime <= maxDuration;
+    };
+  }
+}
+__name(createTimeBasedContinueBracketSearchPredicate, "createTimeBasedContinueBracketSearchPredicate");
+class BracketSearchCanceled {
+  static {
+    __name(this, "BracketSearchCanceled");
+  }
+  static {
+    this.INSTANCE = new BracketSearchCanceled();
+  }
+  constructor() {
+    this._searchCanceledBrand = void 0;
+  }
+}
+function stripBracketSearchCanceled(result) {
+  if (result instanceof BracketSearchCanceled) {
+    return null;
+  }
+  return result;
+}
+__name(stripBracketSearchCanceled, "stripBracketSearchCanceled");
+export {
+  BracketPairsTextModelPart
+};
+//# sourceMappingURL=bracketPairsImpl.js.map

@@ -1,6 +1,279 @@
-class d{constructor(){this.b=[],this.a=function(e){setTimeout(()=>{throw e.stack?n.isErrorNoTelemetry(e)?new n(e.message+`
-
-`+e.stack):new Error(e.message+`
-
-`+e.stack):e},0)}}addListener(e){return this.b.push(e),()=>{this.d(e)}}c(e){this.b.forEach(t=>{t(e)})}d(e){this.b.splice(this.b.indexOf(e),1)}setUnexpectedErrorHandler(e){this.a=e}getUnexpectedErrorHandler(){return this.a}onUnexpectedError(e){this.a(e),this.c(e)}onUnexpectedExternalError(e){this.a(e)}}const c=new d;function E(r){c.setUnexpectedErrorHandler(r)}function m(r){if(!r||typeof r!="object")return!1;const e=r;return e.code==="EPIPE"&&e.syscall?.toUpperCase()==="WRITE"}function h(r){c.onUnexpectedError(r)}function g(r){a(r)||c.onUnexpectedError(r)}function b(r){a(r)||c.onUnexpectedExternalError(r)}function f(r){if(r instanceof Error){const{name:e,message:t,cause:i}=r,p=r.stacktrace||r.stack;return{$isError:!0,name:e,message:t,stack:p,noTelemetry:n.isErrorNoTelemetry(r),cause:i?f(i):void 0,code:r.code}}return r}function x(r){let e;return r.noTelemetry?e=new n:(e=new Error,e.name=r.name),e.message=r.message,e.stack=r.stack,r.code&&(e.code=r.code),r.cause&&(e.cause=x(r.cause)),e}const o="Canceled";function a(r){return r instanceof l?!0:r instanceof Error&&r.name===o&&r.message===o}class l extends Error{constructor(){super(o),this.name=this.message}}class s extends Error{static{this.a="PendingMigrationError"}static is(e){return e instanceof s||e instanceof Error&&e.name===s.a}constructor(e){super(e),this.name=s.a}}function $(){const r=new Error(o);return r.name=r.message,r}function w(r){return r?new Error(`Illegal argument: ${r}`):new Error("Illegal argument")}function y(r){return r?new Error(`Illegal state: ${r}`):new Error("Illegal state")}class k extends TypeError{constructor(e){super(e?`${e} is read-only and cannot be changed`:"Cannot change read-only property")}}function U(r){return r?r.message?r.message:r.stack?r.stack.split(`
-`)[0]:String(r):"Error"}class T extends Error{constructor(e){super("NotImplemented"),e&&(this.message=e)}}class I extends Error{constructor(e){super("NotSupported"),e&&(this.message=e)}}class C extends Error{constructor(){super(...arguments),this.isExpected=!0}}class n extends Error{constructor(e){super(e),this.name="CodeExpectedError"}static fromError(e){if(e instanceof n)return e;const t=new n;return t.message=e.message,t.stack=e.stack,t}static isErrorNoTelemetry(e){return e.name==="CodeExpectedError"}}class u extends Error{constructor(e){super(e||"An unexpected bug occurred."),Object.setPrototypeOf(this,u.prototype)}}export{n as $Ab,u as $Bb,d as $fb,c as $gb,m as $ib,h as $jb,g as $kb,b as $lb,f as $mb,x as $nb,o as $ob,a as $pb,l as $qb,s as $rb,$ as $sb,w as $tb,y as $ub,k as $vb,U as $wb,T as $xb,I as $yb,C as $zb,E as setUnexpectedErrorHandler};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+class ErrorHandler {
+  static {
+    __name(this, "ErrorHandler");
+  }
+  constructor() {
+    this.listeners = [];
+    this.unexpectedErrorHandler = function(e) {
+      setTimeout(() => {
+        if (e.stack) {
+          if (ErrorNoTelemetry.isErrorNoTelemetry(e)) {
+            throw new ErrorNoTelemetry(e.message + "\n\n" + e.stack);
+          }
+          throw new Error(e.message + "\n\n" + e.stack);
+        }
+        throw e;
+      }, 0);
+    };
+  }
+  addListener(listener) {
+    this.listeners.push(listener);
+    return () => {
+      this._removeListener(listener);
+    };
+  }
+  emit(e) {
+    this.listeners.forEach((listener) => {
+      listener(e);
+    });
+  }
+  _removeListener(listener) {
+    this.listeners.splice(this.listeners.indexOf(listener), 1);
+  }
+  setUnexpectedErrorHandler(newUnexpectedErrorHandler) {
+    this.unexpectedErrorHandler = newUnexpectedErrorHandler;
+  }
+  getUnexpectedErrorHandler() {
+    return this.unexpectedErrorHandler;
+  }
+  onUnexpectedError(e) {
+    this.unexpectedErrorHandler(e);
+    this.emit(e);
+  }
+  // For external errors, we don't want the listeners to be called
+  onUnexpectedExternalError(e) {
+    this.unexpectedErrorHandler(e);
+  }
+}
+const errorHandler = new ErrorHandler();
+function setUnexpectedErrorHandler(newUnexpectedErrorHandler) {
+  errorHandler.setUnexpectedErrorHandler(newUnexpectedErrorHandler);
+}
+__name(setUnexpectedErrorHandler, "setUnexpectedErrorHandler");
+function isSigPipeError(e) {
+  if (!e || typeof e !== "object") {
+    return false;
+  }
+  const cast = e;
+  return cast.code === "EPIPE" && cast.syscall?.toUpperCase() === "WRITE";
+}
+__name(isSigPipeError, "isSigPipeError");
+function onBugIndicatingError(e) {
+  errorHandler.onUnexpectedError(e);
+  return void 0;
+}
+__name(onBugIndicatingError, "onBugIndicatingError");
+function onUnexpectedError(e) {
+  if (!isCancellationError(e)) {
+    errorHandler.onUnexpectedError(e);
+  }
+  return void 0;
+}
+__name(onUnexpectedError, "onUnexpectedError");
+function onUnexpectedExternalError(e) {
+  if (!isCancellationError(e)) {
+    errorHandler.onUnexpectedExternalError(e);
+  }
+  return void 0;
+}
+__name(onUnexpectedExternalError, "onUnexpectedExternalError");
+function transformErrorForSerialization(error) {
+  if (error instanceof Error) {
+    const { name, message, cause } = error;
+    const stack = error.stacktrace || error.stack;
+    return {
+      $isError: true,
+      name,
+      message,
+      stack,
+      noTelemetry: ErrorNoTelemetry.isErrorNoTelemetry(error),
+      cause: cause ? transformErrorForSerialization(cause) : void 0,
+      code: error.code
+    };
+  }
+  return error;
+}
+__name(transformErrorForSerialization, "transformErrorForSerialization");
+function transformErrorFromSerialization(data) {
+  let error;
+  if (data.noTelemetry) {
+    error = new ErrorNoTelemetry();
+  } else {
+    error = new Error();
+    error.name = data.name;
+  }
+  error.message = data.message;
+  error.stack = data.stack;
+  if (data.code) {
+    error.code = data.code;
+  }
+  if (data.cause) {
+    error.cause = transformErrorFromSerialization(data.cause);
+  }
+  return error;
+}
+__name(transformErrorFromSerialization, "transformErrorFromSerialization");
+const canceledName = "Canceled";
+function isCancellationError(error) {
+  if (error instanceof CancellationError) {
+    return true;
+  }
+  return error instanceof Error && error.name === canceledName && error.message === canceledName;
+}
+__name(isCancellationError, "isCancellationError");
+class CancellationError extends Error {
+  static {
+    __name(this, "CancellationError");
+  }
+  constructor() {
+    super(canceledName);
+    this.name = this.message;
+  }
+}
+class PendingMigrationError extends Error {
+  static {
+    __name(this, "PendingMigrationError");
+  }
+  static {
+    this._name = "PendingMigrationError";
+  }
+  static is(error) {
+    return error instanceof PendingMigrationError || error instanceof Error && error.name === PendingMigrationError._name;
+  }
+  constructor(message) {
+    super(message);
+    this.name = PendingMigrationError._name;
+  }
+}
+function canceled() {
+  const error = new Error(canceledName);
+  error.name = error.message;
+  return error;
+}
+__name(canceled, "canceled");
+function illegalArgument(name) {
+  if (name) {
+    return new Error(`Illegal argument: ${name}`);
+  } else {
+    return new Error("Illegal argument");
+  }
+}
+__name(illegalArgument, "illegalArgument");
+function illegalState(name) {
+  if (name) {
+    return new Error(`Illegal state: ${name}`);
+  } else {
+    return new Error("Illegal state");
+  }
+}
+__name(illegalState, "illegalState");
+class ReadonlyError extends TypeError {
+  static {
+    __name(this, "ReadonlyError");
+  }
+  constructor(name) {
+    super(name ? `${name} is read-only and cannot be changed` : "Cannot change read-only property");
+  }
+}
+function getErrorMessage(err) {
+  if (!err) {
+    return "Error";
+  }
+  if (err.message) {
+    return err.message;
+  }
+  if (err.stack) {
+    return err.stack.split("\n")[0];
+  }
+  return String(err);
+}
+__name(getErrorMessage, "getErrorMessage");
+class NotImplementedError extends Error {
+  static {
+    __name(this, "NotImplementedError");
+  }
+  constructor(message) {
+    super("NotImplemented");
+    if (message) {
+      this.message = message;
+    }
+  }
+}
+class NotSupportedError extends Error {
+  static {
+    __name(this, "NotSupportedError");
+  }
+  constructor(message) {
+    super("NotSupported");
+    if (message) {
+      this.message = message;
+    }
+  }
+}
+class ExpectedError extends Error {
+  static {
+    __name(this, "ExpectedError");
+  }
+  constructor() {
+    super(...arguments);
+    this.isExpected = true;
+  }
+}
+class ErrorNoTelemetry extends Error {
+  static {
+    __name(this, "ErrorNoTelemetry");
+  }
+  constructor(msg) {
+    super(msg);
+    this.name = "CodeExpectedError";
+  }
+  static fromError(err) {
+    if (err instanceof ErrorNoTelemetry) {
+      return err;
+    }
+    const result = new ErrorNoTelemetry();
+    result.message = err.message;
+    result.stack = err.stack;
+    return result;
+  }
+  static isErrorNoTelemetry(err) {
+    return err.name === "CodeExpectedError";
+  }
+}
+class BugIndicatingError extends Error {
+  static {
+    __name(this, "BugIndicatingError");
+  }
+  constructor(message) {
+    super(message || "An unexpected bug occurred.");
+    Object.setPrototypeOf(this, BugIndicatingError.prototype);
+  }
+}
+export {
+  BugIndicatingError,
+  CancellationError,
+  ErrorHandler,
+  ErrorNoTelemetry,
+  ExpectedError,
+  NotImplementedError,
+  NotSupportedError,
+  PendingMigrationError,
+  ReadonlyError,
+  canceled,
+  canceledName,
+  errorHandler,
+  getErrorMessage,
+  illegalArgument,
+  illegalState,
+  isCancellationError,
+  isSigPipeError,
+  onBugIndicatingError,
+  onUnexpectedError,
+  onUnexpectedExternalError,
+  setUnexpectedErrorHandler,
+  transformErrorForSerialization,
+  transformErrorFromSerialization
+};
+//# sourceMappingURL=errors.js.map

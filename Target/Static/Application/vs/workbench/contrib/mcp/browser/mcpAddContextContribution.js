@@ -1,1 +1,87 @@
-import{$Mj as m}from"../../../../base/common/codicons.js";import{$qb as b}from"../../../../base/common/errors.js";import{$vd as d,$wd as v}from"../../../../base/common/lifecycle.js";import{autorun as _,observableValue as $}from"../../../../base/common/observable.js";import{localize as u}from"../../../../nls.js";import{$mj as y}from"../../../../platform/instantiation/common/instantiation.js";import{$Jac as g}from"../../chat/browser/chatContextPickService.js";import{$Oic as a}from"./mcpResourceQuickAccess.js";var p=function(c,t,e,r){var i=arguments.length,s=i<3?t:r===null?r=Object.getOwnPropertyDescriptor(t,e):r,o;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")s=Reflect.decorate(c,t,e,r);else for(var n=c.length-1;n>=0;n--)(o=c[n])&&(s=(i<3?o(s):i>3?o(t,e,s):o(t,e))||s);return i>3&&s&&Object.defineProperty(t,e,s),s},l=function(c,t){return function(e,r){t(e,r,c)}};let h=class extends d{constructor(t,e){super(),this.c=t,this.b=this.B(new v),this.a=e.createInstance(a),this.B(_(r=>{this.a.hasServersWithResources.read(r)&&!this.b.value?this.f():this.b.clear()}))}f(){this.b.value=this.c.registerChatContextItem({type:"pickerPick",label:u(8650,null),icon:m.mcp,asPicker:()=>({placeholder:u(8651,null),picks:(t,e)=>this.g(e)})})}g(t){const e=$(this,{busy:!0,picks:[]});return this.a.getPicks(r=>{const i=[];for(const[s,o]of r)if(o.length!==0){i.push(a.sep(s));for(const n of o)i.push({...a.item(n),asAttachment:()=>this.a.toAttachment(n).then(f=>{if(f)return f;throw new b})})}e.set({picks:i,busy:!0},void 0)},t).finally(()=>{e.set({busy:!1,picks:e.get().picks},void 0)}),e}};h=p([l(0,g),l(1,y)],h);export{h as $Sic};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { Codicon } from "../../../../base/common/codicons.js";
+import { CancellationError } from "../../../../base/common/errors.js";
+import { Disposable, MutableDisposable } from "../../../../base/common/lifecycle.js";
+import { autorun, observableValue } from "../../../../base/common/observable.js";
+import { localize } from "../../../../nls.js";
+import { IInstantiationService } from "../../../../platform/instantiation/common/instantiation.js";
+import { IChatContextPickService } from "../../chat/browser/chatContextPickService.js";
+import { McpResourcePickHelper } from "./mcpResourceQuickAccess.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+let McpAddContextContribution = class McpAddContextContribution2 extends Disposable {
+  static {
+    __name(this, "McpAddContextContribution");
+  }
+  constructor(_chatContextPickService, instantiationService) {
+    super();
+    this._chatContextPickService = _chatContextPickService;
+    this._addContextMenu = this._register(new MutableDisposable());
+    this._helper = instantiationService.createInstance(McpResourcePickHelper);
+    this._register(autorun((reader) => {
+      const enabled = this._helper.hasServersWithResources.read(reader);
+      if (enabled && !this._addContextMenu.value) {
+        this._registerAddContextMenu();
+      } else {
+        this._addContextMenu.clear();
+      }
+    }));
+  }
+  _registerAddContextMenu() {
+    this._addContextMenu.value = this._chatContextPickService.registerChatContextItem({
+      type: "pickerPick",
+      label: localize("mcp.addContext", "MCP Resources..."),
+      icon: Codicon.mcp,
+      asPicker: /* @__PURE__ */ __name(() => ({
+        placeholder: localize("mcp.addContext.placeholder", "Select MCP Resource..."),
+        picks: /* @__PURE__ */ __name((_query, token) => this._getResourcePicks(token), "picks")
+      }), "asPicker")
+    });
+  }
+  _getResourcePicks(token) {
+    const observable = observableValue(this, { busy: true, picks: [] });
+    this._helper.getPicks((servers) => {
+      const picks = [];
+      for (const [server, resources] of servers) {
+        if (resources.length === 0) {
+          continue;
+        }
+        picks.push(McpResourcePickHelper.sep(server));
+        for (const resource of resources) {
+          picks.push({
+            ...McpResourcePickHelper.item(resource),
+            asAttachment: /* @__PURE__ */ __name(() => this._helper.toAttachment(resource).then((r) => {
+              if (!r) {
+                throw new CancellationError();
+              } else {
+                return r;
+              }
+            }), "asAttachment")
+          });
+        }
+      }
+      observable.set({ picks, busy: true }, void 0);
+    }, token).finally(() => {
+      observable.set({ busy: false, picks: observable.get().picks }, void 0);
+    });
+    return observable;
+  }
+};
+McpAddContextContribution = __decorate([
+  __param(0, IChatContextPickService),
+  __param(1, IInstantiationService)
+], McpAddContextContribution);
+export {
+  McpAddContextContribution
+};
+//# sourceMappingURL=mcpAddContextContribution.js.map

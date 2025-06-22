@@ -1,1 +1,110 @@
-import{$vd as m}from"../../../../../../base/common/lifecycle.js";import{observableValue as d,transaction as p}from"../../../../../../base/common/observable.js";import{$mj as g}from"../../../../../../platform/instantiation/common/instantiation.js";import{CellEditState as c}from"../../../../notebook/browser/notebookBrowser.js";import{$QVb as b}from"../../../../notebook/browser/services/notebookEditorService.js";import{CellKind as E}from"../../../../notebook/common/notebookCommon.js";import{$Wfc as v}from"../chatEditingTextModelChangeService.js";var u=function(n,t,e,s){var r=arguments.length,i=r<3?t:s===null?s=Object.getOwnPropertyDescriptor(t,e):s,o;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")i=Reflect.decorate(n,t,e,s);else for(var h=n.length-1;h>=0;h--)(o=n[h])&&(i=(r<3?o(i):r>3?o(t,e,i):o(t,e))||i);return r>3&&i&&Object.defineProperty(t,e,i),i},f=function(n,t){return function(e,s){t(e,s,n)}};let l=class extends m{get isDisposed(){return this.q.isDisposed}get isEditFromUs(){return this.f.isEditFromUs}get allEditsAreFromUs(){return this.f.allEditsAreFromUs}get diffInfo(){return this.f.diffInfo}constructor(t,e,s,r,i,o,h){super(),this.notebookUri=t,this.cell=e,this.g=s,this.h=r,this.j=o,this.m=h,this.a=d(this,0),this.maxModifiedLineNumber=this.a,this.b=d(this,0),this.state=this.b,this.c=this.h.getValue(),this.B(i),this.f=this.B(this.m.createInstance(v,this.h,this.g,this.state)),this.B(this.f.onDidAcceptOrRejectAllHunks(a=>{this.revertMarkdownPreviewState(),this.b.set(a,void 0)})),this.B(this.f.onDidUserEditModel(()=>{const a=this.g.getValue()===this.c;this.b.get()===0&&a&&this.b.set(2,void 0)}))}clearCurrentEditLineDecoration(){this.g.isDisposed()||this.f.clearCurrentEditLineDecoration()}async acceptAgentEdits(t,e,s){const{maxLineNumber:r}=await this.f.acceptAgentEdits(this.g.uri,t,e);p(i=>{e?this.a.set(0,i):(this.b.set(0,i),this.a.set(r,i))})}revertMarkdownPreviewState(){if(this.cell.cellKind!==E.Markup)return;const t=this.j.retrieveExistingWidgetFromURI(this.notebookUri)?.value;if(t){const e=t.getCellByHandle(this.cell.handle);e?.getEditState()===c.Editing&&(e.editStateSource==="chatEdit"||e.editStateSource==="chatEditNavigation")&&e?.updateEditState(c.Preview,"chatEdit")}}async keep(t){return this.f.diffInfo.get().keep(t)}async undo(t){return this.f.diffInfo.get().undo(t)}};l=u([f(5,b),f(6,g)],l);export{l as $9fc};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { Disposable } from "../../../../../../base/common/lifecycle.js";
+import { observableValue, transaction } from "../../../../../../base/common/observable.js";
+import { IInstantiationService } from "../../../../../../platform/instantiation/common/instantiation.js";
+import { CellEditState } from "../../../../notebook/browser/notebookBrowser.js";
+import { INotebookEditorService } from "../../../../notebook/browser/services/notebookEditorService.js";
+import { CellKind } from "../../../../notebook/common/notebookCommon.js";
+import { ChatEditingTextModelChangeService } from "../chatEditingTextModelChangeService.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+let ChatEditingNotebookCellEntry = class ChatEditingNotebookCellEntry2 extends Disposable {
+  static {
+    __name(this, "ChatEditingNotebookCellEntry");
+  }
+  get isDisposed() {
+    return this._store.isDisposed;
+  }
+  get isEditFromUs() {
+    return this._textModelChangeService.isEditFromUs;
+  }
+  get allEditsAreFromUs() {
+    return this._textModelChangeService.allEditsAreFromUs;
+  }
+  get diffInfo() {
+    return this._textModelChangeService.diffInfo;
+  }
+  constructor(notebookUri, cell, modifiedModel, originalModel, disposables, notebookEditorService, instantiationService) {
+    super();
+    this.notebookUri = notebookUri;
+    this.cell = cell;
+    this.modifiedModel = modifiedModel;
+    this.originalModel = originalModel;
+    this.notebookEditorService = notebookEditorService;
+    this.instantiationService = instantiationService;
+    this._maxModifiedLineNumber = observableValue(this, 0);
+    this.maxModifiedLineNumber = this._maxModifiedLineNumber;
+    this._stateObs = observableValue(
+      this,
+      0
+      /* ModifiedFileEntryState.Modified */
+    );
+    this.state = this._stateObs;
+    this.initialContent = this.originalModel.getValue();
+    this._register(disposables);
+    this._textModelChangeService = this._register(this.instantiationService.createInstance(ChatEditingTextModelChangeService, this.originalModel, this.modifiedModel, this.state));
+    this._register(this._textModelChangeService.onDidAcceptOrRejectAllHunks((action) => {
+      this.revertMarkdownPreviewState();
+      this._stateObs.set(action, void 0);
+    }));
+    this._register(this._textModelChangeService.onDidUserEditModel(() => {
+      const didResetToOriginalContent = this.modifiedModel.getValue() === this.initialContent;
+      if (this._stateObs.get() === 0 && didResetToOriginalContent) {
+        this._stateObs.set(2, void 0);
+      }
+    }));
+  }
+  clearCurrentEditLineDecoration() {
+    if (this.modifiedModel.isDisposed()) {
+      return;
+    }
+    this._textModelChangeService.clearCurrentEditLineDecoration();
+  }
+  async acceptAgentEdits(textEdits, isLastEdits, responseModel) {
+    const { maxLineNumber } = await this._textModelChangeService.acceptAgentEdits(this.modifiedModel.uri, textEdits, isLastEdits);
+    transaction((tx) => {
+      if (!isLastEdits) {
+        this._stateObs.set(0, tx);
+        this._maxModifiedLineNumber.set(maxLineNumber, tx);
+      } else {
+        this._maxModifiedLineNumber.set(0, tx);
+      }
+    });
+  }
+  revertMarkdownPreviewState() {
+    if (this.cell.cellKind !== CellKind.Markup) {
+      return;
+    }
+    const notebookEditor = this.notebookEditorService.retrieveExistingWidgetFromURI(this.notebookUri)?.value;
+    if (notebookEditor) {
+      const vm = notebookEditor.getCellByHandle(this.cell.handle);
+      if (vm?.getEditState() === CellEditState.Editing && (vm.editStateSource === "chatEdit" || vm.editStateSource === "chatEditNavigation")) {
+        vm?.updateEditState(CellEditState.Preview, "chatEdit");
+      }
+    }
+  }
+  async keep(change) {
+    return this._textModelChangeService.diffInfo.get().keep(change);
+  }
+  async undo(change) {
+    return this._textModelChangeService.diffInfo.get().undo(change);
+  }
+};
+ChatEditingNotebookCellEntry = __decorate([
+  __param(5, INotebookEditorService),
+  __param(6, IInstantiationService)
+], ChatEditingNotebookCellEntry);
+export {
+  ChatEditingNotebookCellEntry
+};
+//# sourceMappingURL=chatEditingNotebookCellEntry.js.map

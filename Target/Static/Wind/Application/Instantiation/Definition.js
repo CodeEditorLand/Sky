@@ -1,1 +1,84 @@
-import{Context as f,Effect as p,Layer as d,Runtime as i}from"../../effect";import{_util as l}from"vs/platform/instantiation/common/instantiation.js";import"vs/platform/instantiation/common/serviceCollection.js";import{LayerMap as S}from"./Register.js";class c{constructor(n,e){this.AppRuntime=n;this.AppContext=e}_serviceBrand;createInstance=(n,...e)=>{const t=n.ctor??n,o=n.staticArgument??[],s=S.get(t);if(s){const r=d.provide(s,this.AppContext),y=i.runSync(p.scoped(d.toRuntime(r))),u=i.context(y),C=Array.from(u.tags).map(v=>u.get(v));return new t(...o,...e,...C)}const m=t[l.DI_DEPENDENCIES]?.map(r=>this.AppContext.get(r.id)).filter(Boolean)??[];return new t(...o,...e,...m)};invokeFunction=(n,...e)=>n({get:o=>this.AppContext.get(o)},...e);createChild=n=>{let e=this.AppContext;for(const[o,s]of n)e=f.add(e,o,s);const t=i.make(e);return new c(t,e)};dispose=()=>{i.runFork(this.AppRuntime.shutdown)}}const x=a=>p.sync(()=>new c(a,i.context(a)));var E=x;export{E as default};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { Context, Effect, Layer, Runtime } from "../../effect";
+import {
+  _util
+} from "vs/platform/instantiation/common/instantiation.js";
+import { LayerMap } from "./Register.js";
+class InstantiationServiceImpl {
+  constructor(AppRuntime, AppContext) {
+    this.AppRuntime = AppRuntime;
+    this.AppContext = AppContext;
+  }
+  static {
+    __name(this, "InstantiationServiceImpl");
+  }
+  _serviceBrand;
+  /**
+   * Creates an instance of a class, satisfying its dependencies.
+   * This is the core of the compatibility bridge.
+   */
+  createInstance = /* @__PURE__ */ __name((ctorOrDescriptor, ...args) => {
+    const Constructor = ctorOrDescriptor.ctor ?? ctorOrDescriptor;
+    const StaticArgument = ctorOrDescriptor.staticArgument ?? [];
+    const ServiceLayer = LayerMap.get(Constructor);
+    if (ServiceLayer) {
+      const InstanceLayer = Layer.provide(
+        ServiceLayer,
+        this.AppContext
+      );
+      const InstanceRuntime = Runtime.runSync(
+        Effect.scoped(Layer.toRuntime(InstanceLayer))
+      );
+      const InstanceContext = Runtime.context(InstanceRuntime);
+      const Dependencies2 = Array.from(InstanceContext.tags).map(
+        (tag) => InstanceContext.get(tag)
+      );
+      return new Constructor(...StaticArgument, ...args, ...Dependencies2);
+    }
+    const Dependencies = Constructor[_util.DI_DEPENDENCIES]?.map((dep) => this.AppContext.get(dep.id)).filter(Boolean) ?? [];
+    return new Constructor(...StaticArgument, ...args, ...Dependencies);
+  }, "createInstance");
+  /**
+   * Invokes a function with a `ServicesAccessor`, allowing it to access services
+   * from our main application context.
+   */
+  invokeFunction = /* @__PURE__ */ __name((fn, ...args) => {
+    const accessor = {
+      get: /* @__PURE__ */ __name((id) => this.AppContext.get(id), "get")
+    };
+    return fn(accessor, ...args);
+  }, "invokeFunction");
+  /**
+   * Creates a child instantiation service with additional services.
+   */
+  createChild = /* @__PURE__ */ __name((services) => {
+    let ChildContext = this.AppContext;
+    for (const [id, service] of services) {
+      ChildContext = Context.add(
+        ChildContext,
+        id,
+        service
+      );
+    }
+    const ChildRuntime = Runtime.make(ChildContext);
+    return new InstantiationServiceImpl(ChildRuntime, ChildContext);
+  }, "createChild");
+  /**
+   * Disposes of the instantiation service by shutting down the entire Effect runtime.
+   */
+  dispose = /* @__PURE__ */ __name(() => {
+    Runtime.runFork(this.AppRuntime.shutdown);
+  }, "dispose");
+}
+const Definition = /* @__PURE__ */ __name((AppRuntime) => Effect.sync(
+  () => new InstantiationServiceImpl(
+    AppRuntime,
+    Runtime.context(AppRuntime)
+  )
+), "Definition");
+var Definition_default = Definition;
+export {
+  Definition_default as default
+};
+//# sourceMappingURL=Definition.js.map

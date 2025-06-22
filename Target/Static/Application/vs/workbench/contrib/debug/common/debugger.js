@@ -1,5 +1,263 @@
-import*as u from"../../../../nls.js";import{$1c as p}from"../../../../base/common/types.js";import{$hW as b,$_V as $,DebugConfigurationProviderTriggerKind as y}from"./debug.js";import{$El as v}from"../../../../platform/configuration/common/configuration.js";import{$xW as C}from"../../../services/configurationResolver/common/configurationResolver.js";import*as _ from"../../../services/configurationResolver/common/configurationResolverUtils.js";import{$oF as w}from"../../../../editor/common/services/textResourceConfiguration.js";import{URI as z}from"../../../../base/common/uri.js";import{Schemas as D}from"../../../../base/common/network.js";import{$xT as M}from"./debugUtils.js";import{$Ju as j}from"../../../../platform/telemetry/common/telemetryUtils.js";import{$KX as E}from"../../../services/environment/common/environmentService.js";import{$Bn as f,$Vn as P}from"../../../../platform/contextkey/common/contextkey.js";import{$0o as S}from"../../../../base/common/objects.js";var m=function(h,e,t,r){var n=arguments.length,i=n<3?e:r===null?r=Object.getOwnPropertyDescriptor(e,t):r,a;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")i=Reflect.decorate(h,e,t,r);else for(var o=h.length-1;o>=0;o--)(a=h[o])&&(i=(n<3?a(i):n>3?a(e,t,i):a(e,t))||i);return n>3&&i&&Object.defineProperty(e,t,i),i},c=function(h,e){return function(t,r){e(t,r,h)}};let g=class{constructor(e,t,r,n,i,a,o,s,l){this.f=e,this.g=n,this.h=i,this.i=a,this.j=o,this.k=s,this.l=l,this.b=[],this.a={type:t.type},this.merge(t,r),this.d=typeof this.a.when=="string"?f.deserialize(this.a.when):void 0,this.e=typeof this.a.hiddenWhen=="string"?f.deserialize(this.a.hiddenWhen):void 0}merge(e,t){function r(n,i,a,o=0){return p(n)?(p(i)&&Object.keys(i).forEach(s=>{s!=="__proto__"&&(p(n[s])&&p(i[s])?r(n[s],i[s],a,o+1):s in n?a&&(o===0&&s==="type"||(n[s]=i[s])):n[s]=i[s])}),n):i}this.b.indexOf(t)<0&&(this.b.push(t),r(this.a,e,t.isBuiltin),M(e)&&(this.c=t))}async startDebugging(e,t){const r=this.k.getModel().getSession(t);return await this.k.startDebugging(void 0,e,{parentSession:r},void 0)}async createDebugAdapter(e){await this.f.activateDebuggers("onDebugAdapterProtocolTracker",this.type);const t=this.f.createDebugAdapter(e);if(t)return Promise.resolve(t);throw new Error(u.localize(6869,null,this.type))}async substituteVariables(e,t){const r=await this.f.substituteVariables(this.type,e,t);return await this.i.resolveWithInteractionReplace(e,r,"launch",this.variables,r.__configurationTarget)}runInTerminal(e,t){return this.f.runInTerminal(this.type,e,t)}get label(){return this.a.label||this.a.type}get type(){return this.a.type}get variables(){return this.a.variables}get configurationSnippets(){return this.a.configurationSnippets}get languages(){return this.a.languages}get when(){return this.d}get hiddenWhen(){return this.e}get enabled(){return!this.d||this.l.contextMatchesRules(this.d)}get isHiddenFromDropdown(){return this.e?this.l.contextMatchesRules(this.e):!1}get strings(){return this.a.strings??this.a.uiMessages}interestedInLanguage(e){return!!(this.languages&&this.languages.indexOf(e)>=0)}hasInitialConfiguration(){return!!this.a.initialConfigurations}hasDynamicConfigurationProviders(){return this.k.getConfigurationManager().hasDebugConfigurationProvider(this.type,y.Dynamic)}hasConfigurationProvider(){return this.k.getConfigurationManager().hasDebugConfigurationProvider(this.type)}getInitialConfigurationContent(e){let t=this.a.initialConfigurations||[];e&&(t=t.concat(e));const r=this.h.getEOL(z.from({scheme:D.untitled,path:"1"}))===`\r
-`?`\r
-`:`
-`,n=JSON.stringify(t,null,"	").split(`
-`).map(d=>"	"+d).join(r).trim(),i=u.localize(6870,null),a=u.localize(6871,null),o=u.localize(6872,null,"https://go.microsoft.com/fwlink/?linkid=830387");let s=["{",`	// ${i}`,`	// ${a}`,`	// ${o}`,'	"version": "0.2.0",',`	"configurations": ${n}`,"}"].join(r);const l=this.g.getValue();return l.editor&&l.editor.insertSpaces&&(s=s.replace(new RegExp("	","g")," ".repeat(l.editor.tabSize))),Promise.resolve(s)}getMainExtensionDescriptor(){return this.c||this.b[0]}getCustomTelemetryEndpoint(){const e=this.a.aiKey;if(!e)return;const t=j(this.j.remoteAuthority)!=="other";return{id:`${this.getMainExtensionDescriptor().publisher}.${this.type}`,aiKey:e,sendErrorTelemetry:t}}getSchemaAttributes(e){return this.a.configurationAttributes?Object.keys(this.a.configurationAttributes).map(t=>{const r=`${this.type}:${t}`,n=`${this.type}:${t}:platform`,i=this.a.configurationAttributes[t],a=["name","type","request"];i.required=i.required&&i.required.length?a.concat(i.required):a,i.additionalProperties=!1,i.type="object",i.properties||(i.properties={});const o=i.properties;o.type={enum:[this.type],enumDescriptions:[this.label],description:u.localize(6873,null),pattern:"^(?!node2)",deprecationMessage:this.a.deprecated||(this.enabled?void 0:$(this.type)),doNotSuggest:!!this.a.deprecated,errorMessage:u.localize(6874,null),patternErrorMessage:u.localize(6875,null)},o.request={enum:[t],description:u.localize(6876,null)};for(const l in e.common.properties)o[l]={$ref:`#/definitions/common/properties/${l}`};Object.keys(o).forEach(l=>{_.$Loc(o[l])}),e[r]={...i},e[n]={type:"object",additionalProperties:!1,properties:S(o,l=>l!=="type"&&l!=="request"&&l!=="name")};const s={...i};return s.properties={...o,windows:{$ref:`#/definitions/${n}`,description:u.localize(6877,null)},osx:{$ref:`#/definitions/${n}`,description:u.localize(6878,null)},linux:{$ref:`#/definitions/${n}`,description:u.localize(6879,null)}},s}):null}};g=m([c(3,v),c(4,w),c(5,C),c(6,E),c(7,b),c(8,P)],g);export{g as $Moc};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import * as nls from "../../../../nls.js";
+import { isObject } from "../../../../base/common/types.js";
+import { IDebugService, debuggerDisabledMessage, DebugConfigurationProviderTriggerKind } from "./debug.js";
+import { IConfigurationService } from "../../../../platform/configuration/common/configuration.js";
+import { IConfigurationResolverService } from "../../../services/configurationResolver/common/configurationResolver.js";
+import * as ConfigurationResolverUtils from "../../../services/configurationResolver/common/configurationResolverUtils.js";
+import { ITextResourcePropertiesService } from "../../../../editor/common/services/textResourceConfiguration.js";
+import { URI } from "../../../../base/common/uri.js";
+import { Schemas } from "../../../../base/common/network.js";
+import { isDebuggerMainContribution } from "./debugUtils.js";
+import { cleanRemoteAuthority } from "../../../../platform/telemetry/common/telemetryUtils.js";
+import { IWorkbenchEnvironmentService } from "../../../services/environment/common/environmentService.js";
+import { ContextKeyExpr, IContextKeyService } from "../../../../platform/contextkey/common/contextkey.js";
+import { filter } from "../../../../base/common/objects.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+let Debugger = class Debugger2 {
+  static {
+    __name(this, "Debugger");
+  }
+  constructor(adapterManager, dbgContribution, extensionDescription, configurationService, resourcePropertiesService, configurationResolverService, environmentService, debugService, contextKeyService) {
+    this.adapterManager = adapterManager;
+    this.configurationService = configurationService;
+    this.resourcePropertiesService = resourcePropertiesService;
+    this.configurationResolverService = configurationResolverService;
+    this.environmentService = environmentService;
+    this.debugService = debugService;
+    this.contextKeyService = contextKeyService;
+    this.mergedExtensionDescriptions = [];
+    this.debuggerContribution = { type: dbgContribution.type };
+    this.merge(dbgContribution, extensionDescription);
+    this.debuggerWhen = typeof this.debuggerContribution.when === "string" ? ContextKeyExpr.deserialize(this.debuggerContribution.when) : void 0;
+    this.debuggerHiddenWhen = typeof this.debuggerContribution.hiddenWhen === "string" ? ContextKeyExpr.deserialize(this.debuggerContribution.hiddenWhen) : void 0;
+  }
+  merge(otherDebuggerContribution, extensionDescription) {
+    function mixin(destination, source, overwrite, level = 0) {
+      if (!isObject(destination)) {
+        return source;
+      }
+      if (isObject(source)) {
+        Object.keys(source).forEach((key) => {
+          if (key !== "__proto__") {
+            if (isObject(destination[key]) && isObject(source[key])) {
+              mixin(destination[key], source[key], overwrite, level + 1);
+            } else {
+              if (key in destination) {
+                if (overwrite) {
+                  if (level === 0 && key === "type") {
+                  } else {
+                    destination[key] = source[key];
+                  }
+                }
+              } else {
+                destination[key] = source[key];
+              }
+            }
+          }
+        });
+      }
+      return destination;
+    }
+    __name(mixin, "mixin");
+    if (this.mergedExtensionDescriptions.indexOf(extensionDescription) < 0) {
+      this.mergedExtensionDescriptions.push(extensionDescription);
+      mixin(this.debuggerContribution, otherDebuggerContribution, extensionDescription.isBuiltin);
+      if (isDebuggerMainContribution(otherDebuggerContribution)) {
+        this.mainExtensionDescription = extensionDescription;
+      }
+    }
+  }
+  async startDebugging(configuration, parentSessionId) {
+    const parentSession = this.debugService.getModel().getSession(parentSessionId);
+    return await this.debugService.startDebugging(void 0, configuration, { parentSession }, void 0);
+  }
+  async createDebugAdapter(session) {
+    await this.adapterManager.activateDebuggers("onDebugAdapterProtocolTracker", this.type);
+    const da = this.adapterManager.createDebugAdapter(session);
+    if (da) {
+      return Promise.resolve(da);
+    }
+    throw new Error(nls.localize("cannot.find.da", "Cannot find debug adapter for type '{0}'.", this.type));
+  }
+  async substituteVariables(folder, config) {
+    const substitutedConfig = await this.adapterManager.substituteVariables(this.type, folder, config);
+    return await this.configurationResolverService.resolveWithInteractionReplace(folder, substitutedConfig, "launch", this.variables, substitutedConfig.__configurationTarget);
+  }
+  runInTerminal(args, sessionId) {
+    return this.adapterManager.runInTerminal(this.type, args, sessionId);
+  }
+  get label() {
+    return this.debuggerContribution.label || this.debuggerContribution.type;
+  }
+  get type() {
+    return this.debuggerContribution.type;
+  }
+  get variables() {
+    return this.debuggerContribution.variables;
+  }
+  get configurationSnippets() {
+    return this.debuggerContribution.configurationSnippets;
+  }
+  get languages() {
+    return this.debuggerContribution.languages;
+  }
+  get when() {
+    return this.debuggerWhen;
+  }
+  get hiddenWhen() {
+    return this.debuggerHiddenWhen;
+  }
+  get enabled() {
+    return !this.debuggerWhen || this.contextKeyService.contextMatchesRules(this.debuggerWhen);
+  }
+  get isHiddenFromDropdown() {
+    if (!this.debuggerHiddenWhen) {
+      return false;
+    }
+    return this.contextKeyService.contextMatchesRules(this.debuggerHiddenWhen);
+  }
+  get strings() {
+    return this.debuggerContribution.strings ?? this.debuggerContribution.uiMessages;
+  }
+  interestedInLanguage(languageId) {
+    return !!(this.languages && this.languages.indexOf(languageId) >= 0);
+  }
+  hasInitialConfiguration() {
+    return !!this.debuggerContribution.initialConfigurations;
+  }
+  hasDynamicConfigurationProviders() {
+    return this.debugService.getConfigurationManager().hasDebugConfigurationProvider(this.type, DebugConfigurationProviderTriggerKind.Dynamic);
+  }
+  hasConfigurationProvider() {
+    return this.debugService.getConfigurationManager().hasDebugConfigurationProvider(this.type);
+  }
+  getInitialConfigurationContent(initialConfigs) {
+    let initialConfigurations = this.debuggerContribution.initialConfigurations || [];
+    if (initialConfigs) {
+      initialConfigurations = initialConfigurations.concat(initialConfigs);
+    }
+    const eol = this.resourcePropertiesService.getEOL(URI.from({ scheme: Schemas.untitled, path: "1" })) === "\r\n" ? "\r\n" : "\n";
+    const configs = JSON.stringify(initialConfigurations, null, "	").split("\n").map((line) => "	" + line).join(eol).trim();
+    const comment1 = nls.localize("launch.config.comment1", "Use IntelliSense to learn about possible attributes.");
+    const comment2 = nls.localize("launch.config.comment2", "Hover to view descriptions of existing attributes.");
+    const comment3 = nls.localize("launch.config.comment3", "For more information, visit: {0}", "https://go.microsoft.com/fwlink/?linkid=830387");
+    let content = [
+      "{",
+      `	// ${comment1}`,
+      `	// ${comment2}`,
+      `	// ${comment3}`,
+      `	"version": "0.2.0",`,
+      `	"configurations": ${configs}`,
+      "}"
+    ].join(eol);
+    const editorConfig = this.configurationService.getValue();
+    if (editorConfig.editor && editorConfig.editor.insertSpaces) {
+      content = content.replace(new RegExp("	", "g"), " ".repeat(editorConfig.editor.tabSize));
+    }
+    return Promise.resolve(content);
+  }
+  getMainExtensionDescriptor() {
+    return this.mainExtensionDescription || this.mergedExtensionDescriptions[0];
+  }
+  getCustomTelemetryEndpoint() {
+    const aiKey = this.debuggerContribution.aiKey;
+    if (!aiKey) {
+      return void 0;
+    }
+    const sendErrorTelemtry = cleanRemoteAuthority(this.environmentService.remoteAuthority) !== "other";
+    return {
+      id: `${this.getMainExtensionDescriptor().publisher}.${this.type}`,
+      aiKey,
+      sendErrorTelemetry: sendErrorTelemtry
+    };
+  }
+  getSchemaAttributes(definitions) {
+    if (!this.debuggerContribution.configurationAttributes) {
+      return null;
+    }
+    return Object.keys(this.debuggerContribution.configurationAttributes).map((request) => {
+      const definitionId = `${this.type}:${request}`;
+      const platformSpecificDefinitionId = `${this.type}:${request}:platform`;
+      const attributes = this.debuggerContribution.configurationAttributes[request];
+      const defaultRequired = ["name", "type", "request"];
+      attributes.required = attributes.required && attributes.required.length ? defaultRequired.concat(attributes.required) : defaultRequired;
+      attributes.additionalProperties = false;
+      attributes.type = "object";
+      if (!attributes.properties) {
+        attributes.properties = {};
+      }
+      const properties = attributes.properties;
+      properties["type"] = {
+        enum: [this.type],
+        enumDescriptions: [this.label],
+        description: nls.localize("debugType", "Type of configuration."),
+        pattern: "^(?!node2)",
+        deprecationMessage: this.debuggerContribution.deprecated || (this.enabled ? void 0 : debuggerDisabledMessage(this.type)),
+        doNotSuggest: !!this.debuggerContribution.deprecated,
+        errorMessage: nls.localize("debugTypeNotRecognised", "The debug type is not recognized. Make sure that you have a corresponding debug extension installed and that it is enabled."),
+        patternErrorMessage: nls.localize("node2NotSupported", '"node2" is no longer supported, use "node" instead and set the "protocol" attribute to "inspector".')
+      };
+      properties["request"] = {
+        enum: [request],
+        description: nls.localize("debugRequest", 'Request type of configuration. Can be "launch" or "attach".')
+      };
+      for (const prop in definitions["common"].properties) {
+        properties[prop] = {
+          $ref: `#/definitions/common/properties/${prop}`
+        };
+      }
+      Object.keys(properties).forEach((name) => {
+        ConfigurationResolverUtils.applyDeprecatedVariableMessage(properties[name]);
+      });
+      definitions[definitionId] = { ...attributes };
+      definitions[platformSpecificDefinitionId] = {
+        type: "object",
+        additionalProperties: false,
+        properties: filter(properties, (key) => key !== "type" && key !== "request" && key !== "name")
+      };
+      const attributesCopy = { ...attributes };
+      attributesCopy.properties = {
+        ...properties,
+        ...{
+          windows: {
+            $ref: `#/definitions/${platformSpecificDefinitionId}`,
+            description: nls.localize("debugWindowsConfiguration", "Windows specific launch configuration attributes.")
+          },
+          osx: {
+            $ref: `#/definitions/${platformSpecificDefinitionId}`,
+            description: nls.localize("debugOSXConfiguration", "OS X specific launch configuration attributes.")
+          },
+          linux: {
+            $ref: `#/definitions/${platformSpecificDefinitionId}`,
+            description: nls.localize("debugLinuxConfiguration", "Linux specific launch configuration attributes.")
+          }
+        }
+      };
+      return attributesCopy;
+    });
+  }
+};
+Debugger = __decorate([
+  __param(3, IConfigurationService),
+  __param(4, ITextResourcePropertiesService),
+  __param(5, IConfigurationResolverService),
+  __param(6, IWorkbenchEnvironmentService),
+  __param(7, IDebugService),
+  __param(8, IContextKeyService)
+], Debugger);
+export {
+  Debugger
+};
+//# sourceMappingURL=debugger.js.map

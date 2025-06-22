@@ -1,1 +1,80 @@
-import{$Ji as d}from"../../../base/common/buffer.js";import{$sb as w}from"../../../base/common/errors.js";import{localize as s}from"../../../nls.js";import{$gk as z,$hk as g,FileSystemProviderErrorCode as R}from"./files.js";async function F(e,r,t,o,i,n){let a;try{await S(e,r,t,o,i,n)}catch(e){a=e}finally{a&&i.errorTransformer&&(a=i.errorTransformer(a)),typeof a<"u"&&t.error(a),t.end()}}async function S(e,r,t,o,i,n){c(n);const a=await e.open(r,{create:!1});try{c(n);let r=0,f=0,s=i&&"number"==typeof i.length?i.length:void 0,l=d.alloc(Math.min(i.bufferSize,"number"==typeof s?s:i.bufferSize)),m=i&&"number"==typeof i.position?i.position:0,u=0;do{f=await e.read(a,m,l.buffer,u,l.byteLength-u),m+=f,u+=f,r+=f,"number"==typeof s&&(s-=f),u===l.byteLength&&(await t.write(o(l)),l=d.alloc(Math.min(i.bufferSize,"number"==typeof s?s:i.bufferSize)),u=0)}while(f>0&&("number"!=typeof s||s>0)&&c(n)&&I(r,i));if(u>0){let e=u;"number"==typeof s&&(e=Math.min(u,s)),t.write(o(l.slice(0,e)))}}catch(e){throw g(e)}finally{await e.close(a)}}function c(e){if(e.isCancellationRequested)throw w();return!0}function I(e,r){if("number"==typeof r?.limits?.size&&e>r.limits.size)throw z(s(2057,null),R.FileTooLarge);return!0}export{F as $Rw};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { VSBuffer } from "../../../base/common/buffer.js";
+import { canceled } from "../../../base/common/errors.js";
+import { localize } from "../../../nls.js";
+import { createFileSystemProviderError, ensureFileSystemProviderError, FileSystemProviderErrorCode } from "./files.js";
+async function readFileIntoStream(provider, resource, target, transformer, options, token) {
+  let error = void 0;
+  try {
+    await doReadFileIntoStream(provider, resource, target, transformer, options, token);
+  } catch (err) {
+    error = err;
+  } finally {
+    if (error && options.errorTransformer) {
+      error = options.errorTransformer(error);
+    }
+    if (typeof error !== "undefined") {
+      target.error(error);
+    }
+    target.end();
+  }
+}
+__name(readFileIntoStream, "readFileIntoStream");
+async function doReadFileIntoStream(provider, resource, target, transformer, options, token) {
+  throwIfCancelled(token);
+  const handle = await provider.open(resource, { create: false });
+  try {
+    throwIfCancelled(token);
+    let totalBytesRead = 0;
+    let bytesRead = 0;
+    let allowedRemainingBytes = options && typeof options.length === "number" ? options.length : void 0;
+    let buffer = VSBuffer.alloc(Math.min(options.bufferSize, typeof allowedRemainingBytes === "number" ? allowedRemainingBytes : options.bufferSize));
+    let posInFile = options && typeof options.position === "number" ? options.position : 0;
+    let posInBuffer = 0;
+    do {
+      bytesRead = await provider.read(handle, posInFile, buffer.buffer, posInBuffer, buffer.byteLength - posInBuffer);
+      posInFile += bytesRead;
+      posInBuffer += bytesRead;
+      totalBytesRead += bytesRead;
+      if (typeof allowedRemainingBytes === "number") {
+        allowedRemainingBytes -= bytesRead;
+      }
+      if (posInBuffer === buffer.byteLength) {
+        await target.write(transformer(buffer));
+        buffer = VSBuffer.alloc(Math.min(options.bufferSize, typeof allowedRemainingBytes === "number" ? allowedRemainingBytes : options.bufferSize));
+        posInBuffer = 0;
+      }
+    } while (bytesRead > 0 && (typeof allowedRemainingBytes !== "number" || allowedRemainingBytes > 0) && throwIfCancelled(token) && throwIfTooLarge(totalBytesRead, options));
+    if (posInBuffer > 0) {
+      let lastChunkLength = posInBuffer;
+      if (typeof allowedRemainingBytes === "number") {
+        lastChunkLength = Math.min(posInBuffer, allowedRemainingBytes);
+      }
+      target.write(transformer(buffer.slice(0, lastChunkLength)));
+    }
+  } catch (error) {
+    throw ensureFileSystemProviderError(error);
+  } finally {
+    await provider.close(handle);
+  }
+}
+__name(doReadFileIntoStream, "doReadFileIntoStream");
+function throwIfCancelled(token) {
+  if (token.isCancellationRequested) {
+    throw canceled();
+  }
+  return true;
+}
+__name(throwIfCancelled, "throwIfCancelled");
+function throwIfTooLarge(totalBytesRead, options) {
+  if (typeof options?.limits?.size === "number" && totalBytesRead > options.limits.size) {
+    throw createFileSystemProviderError(localize("fileTooLargeError", "File is too large to open"), FileSystemProviderErrorCode.FileTooLarge);
+  }
+  return true;
+}
+__name(throwIfTooLarge, "throwIfTooLarge");
+export {
+  readFileIntoStream
+};
+//# sourceMappingURL=io.js.map

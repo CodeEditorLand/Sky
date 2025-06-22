@@ -1,1 +1,40 @@
-import{$oY as u}from"./extHost.protocol.js";import{$i2 as m}from"./extHostRpcService.js";import{WorkspaceEdit as l}from"./extHostTypeConverters.js";import{$kX as d}from"../../services/extensions/common/proxyIdentifier.js";var p=function(e,t,o,r){var s,i=arguments.length,n=i<3?t:null===r?r=Object.getOwnPropertyDescriptor(t,o):r;if("object"==typeof Reflect&&"function"==typeof Reflect.decorate)n=Reflect.decorate(e,t,o,r);else for(var c=e.length-1;c>=0;c--)(s=e[c])&&(n=(i<3?s(n):i>3?s(t,o,n):s(t,o))||n);return i>3&&n&&Object.defineProperty(t,o,n),n},a=function(e,t){return function(o,r){t(o,r,e)}};let s=class{constructor(e,t){this.a=e.getProxy(u.MainThreadBulkEdits),this.b={getTextDocumentVersion:e=>t.getDocument(e)?.version,getNotebookDocumentVersion:()=>{}}}applyWorkspaceEdit(e,t,o){const r=new d(l.from(e,this.b));return this.a.$tryApplyWorkspaceEdit(r,void 0,o?.isRefactoring??!1)}};s=p([a(0,m)],s);export{s as $wKc};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { MainContext } from "./extHost.protocol.js";
+import { IExtHostRpcService } from "./extHostRpcService.js";
+import { WorkspaceEdit } from "./extHostTypeConverters.js";
+import { SerializableObjectWithBuffers } from "../../services/extensions/common/proxyIdentifier.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+let ExtHostBulkEdits = class ExtHostBulkEdits2 {
+  static {
+    __name(this, "ExtHostBulkEdits");
+  }
+  constructor(extHostRpc, extHostDocumentsAndEditors) {
+    this._proxy = extHostRpc.getProxy(MainContext.MainThreadBulkEdits);
+    this._versionInformationProvider = {
+      getTextDocumentVersion: /* @__PURE__ */ __name((uri) => extHostDocumentsAndEditors.getDocument(uri)?.version, "getTextDocumentVersion"),
+      getNotebookDocumentVersion: /* @__PURE__ */ __name(() => void 0, "getNotebookDocumentVersion")
+    };
+  }
+  applyWorkspaceEdit(edit, extension, metadata) {
+    const dto = new SerializableObjectWithBuffers(WorkspaceEdit.from(edit, this._versionInformationProvider));
+    return this._proxy.$tryApplyWorkspaceEdit(dto, void 0, metadata?.isRefactoring ?? false);
+  }
+};
+ExtHostBulkEdits = __decorate([
+  __param(0, IExtHostRpcService)
+], ExtHostBulkEdits);
+export {
+  ExtHostBulkEdits
+};
+//# sourceMappingURL=extHostBulkEdits.js.map

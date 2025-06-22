@@ -1,8 +1,154 @@
-import{$vd as h,$ud as d}from"../../../base/common/lifecycle.js";import{Schemas as a}from"../../../base/common/network.js";import{$s as b}from"../../../base/common/platform.js";import{$Cf as $}from"../../../base/common/strings.js";import{URI as l}from"../../../base/common/uri.js";import{localize as C}from"../../../nls.js";import{$4$ as g}from"../../../platform/opener/common/opener.js";import{$nn as y}from"../../../platform/product/common/productService.js";import*as v from"../common/extHost.protocol.js";import{$yWb as W,$xWb as R}from"../common/extHostWebviewMessaging.js";import{$kX as U}from"../../services/extensions/common/proxyIdentifier.js";var u=function(o,t,e,r){var n=arguments.length,s=n<3?t:r===null?r=Object.getOwnPropertyDescriptor(t,e):r,i;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")s=Reflect.decorate(o,t,e,r);else for(var c=o.length-1;c>=0;c--)(i=o[c])&&(s=(n<3?i(s):n>3?i(t,e,s):i(t,e))||s);return n>3&&s&&Object.defineProperty(t,e,s),s},p=function(o,t){return function(e,r){t(e,r,o)}},m;let f=class extends h{static{m=this}static{this.a=new Set([a.http,a.https,a.mailto,a.vscode,"vscode-insider"])}constructor(t,e,r){super(),this.f=e,this.g=r,this.c=new Map,this.b=t.getProxy(v.$pY.ExtHostWebviews)}addWebview(t,e,r){if(this.c.has(t))throw new Error("Webview already registered");this.c.set(t,e),this.h(t,e,r)}$setHtml(t,e){this.n(t)?.setHtml(e)}$setOptions(t,e){const r=this.n(t);r&&(r.contentOptions=M(e))}async $postMessage(t,e,...r){const n=this.n(t);if(!n)return!1;const{message:s,arrayBuffers:i}=W(e,r);return n.postMessage(s,i)}h(t,e,r){const n=new d;n.add(e.onDidClickLink(s=>this.j(t,s))),n.add(e.onMessage(s=>{const i=R(s.message,r);this.b.$onMessage(t,i.message,new U(i.buffers))})),n.add(e.onMissingCsp(s=>this.b.$onMissingCsp(t,s.value))),n.add(e.onDidDispose(()=>{n.dispose(),this.c.delete(t)}))}j(t,e){const r=this.s(t);this.m(r,l.parse(e))&&this.f.open(e,{fromUserGesture:!0,allowContributedOpeners:!0,allowCommands:Array.isArray(r.contentOptions.enableCommandUris)||r.contentOptions.enableCommandUris===!0,fromWorkspace:!0})}m(t,e){return m.a.has(e.scheme)||!b&&this.g.urlProtocol===e.scheme?!0:e.scheme===a.command?Array.isArray(t.contentOptions.enableCommandUris)?t.contentOptions.enableCommandUris.includes(e.path):t.contentOptions.enableCommandUris===!0:!1}n(t){return this.c.get(t)}s(t){const e=this.n(t);if(!e)throw new Error(`Unknown webview handle:${t}`);return e}getWebviewResolvedFailedContent(t){return`<!DOCTYPE html>
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { Disposable, DisposableStore } from "../../../base/common/lifecycle.js";
+import { Schemas } from "../../../base/common/network.js";
+import { isWeb } from "../../../base/common/platform.js";
+import { escape } from "../../../base/common/strings.js";
+import { URI } from "../../../base/common/uri.js";
+import { localize } from "../../../nls.js";
+import { IOpenerService } from "../../../platform/opener/common/opener.js";
+import { IProductService } from "../../../platform/product/common/productService.js";
+import * as extHostProtocol from "../common/extHost.protocol.js";
+import { deserializeWebviewMessage, serializeWebviewMessage } from "../common/extHostWebviewMessaging.js";
+import { SerializableObjectWithBuffers } from "../../services/extensions/common/proxyIdentifier.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+var MainThreadWebviews_1;
+let MainThreadWebviews = class MainThreadWebviews2 extends Disposable {
+  static {
+    __name(this, "MainThreadWebviews");
+  }
+  static {
+    MainThreadWebviews_1 = this;
+  }
+  static {
+    this.standardSupportedLinkSchemes = /* @__PURE__ */ new Set([
+      Schemas.http,
+      Schemas.https,
+      Schemas.mailto,
+      Schemas.vscode,
+      "vscode-insider"
+    ]);
+  }
+  constructor(context, _openerService, _productService) {
+    super();
+    this._openerService = _openerService;
+    this._productService = _productService;
+    this._webviews = /* @__PURE__ */ new Map();
+    this._proxy = context.getProxy(extHostProtocol.ExtHostContext.ExtHostWebviews);
+  }
+  addWebview(handle, webview, options) {
+    if (this._webviews.has(handle)) {
+      throw new Error("Webview already registered");
+    }
+    this._webviews.set(handle, webview);
+    this.hookupWebviewEventDelegate(handle, webview, options);
+  }
+  $setHtml(handle, value) {
+    this.tryGetWebview(handle)?.setHtml(value);
+  }
+  $setOptions(handle, options) {
+    const webview = this.tryGetWebview(handle);
+    if (webview) {
+      webview.contentOptions = reviveWebviewContentOptions(options);
+    }
+  }
+  async $postMessage(handle, jsonMessage, ...buffers) {
+    const webview = this.tryGetWebview(handle);
+    if (!webview) {
+      return false;
+    }
+    const { message, arrayBuffers } = deserializeWebviewMessage(jsonMessage, buffers);
+    return webview.postMessage(message, arrayBuffers);
+  }
+  hookupWebviewEventDelegate(handle, webview, options) {
+    const disposables = new DisposableStore();
+    disposables.add(webview.onDidClickLink((uri) => this.onDidClickLink(handle, uri)));
+    disposables.add(webview.onMessage((message) => {
+      const serialized = serializeWebviewMessage(message.message, options);
+      this._proxy.$onMessage(handle, serialized.message, new SerializableObjectWithBuffers(serialized.buffers));
+    }));
+    disposables.add(webview.onMissingCsp((extension) => this._proxy.$onMissingCsp(handle, extension.value)));
+    disposables.add(webview.onDidDispose(() => {
+      disposables.dispose();
+      this._webviews.delete(handle);
+    }));
+  }
+  onDidClickLink(handle, link) {
+    const webview = this.getWebview(handle);
+    if (this.isSupportedLink(webview, URI.parse(link))) {
+      this._openerService.open(link, { fromUserGesture: true, allowContributedOpeners: true, allowCommands: Array.isArray(webview.contentOptions.enableCommandUris) || webview.contentOptions.enableCommandUris === true, fromWorkspace: true });
+    }
+  }
+  isSupportedLink(webview, link) {
+    if (MainThreadWebviews_1.standardSupportedLinkSchemes.has(link.scheme)) {
+      return true;
+    }
+    if (!isWeb && this._productService.urlProtocol === link.scheme) {
+      return true;
+    }
+    if (link.scheme === Schemas.command) {
+      if (Array.isArray(webview.contentOptions.enableCommandUris)) {
+        return webview.contentOptions.enableCommandUris.includes(link.path);
+      }
+      return webview.contentOptions.enableCommandUris === true;
+    }
+    return false;
+  }
+  tryGetWebview(handle) {
+    return this._webviews.get(handle);
+  }
+  getWebview(handle) {
+    const webview = this.tryGetWebview(handle);
+    if (!webview) {
+      throw new Error(`Unknown webview handle:${handle}`);
+    }
+    return webview;
+  }
+  getWebviewResolvedFailedContent(viewType) {
+    return `<!DOCTYPE html>
 		<html>
 			<head>
 				<meta http-equiv="Content-type" content="text/html;charset=UTF-8">
 				<meta http-equiv="Content-Security-Policy" content="default-src 'none';">
 			</head>
-			<body>${C(2777,null,$(t))}</body>
-		</html>`}};f=m=u([p(1,g),p(2,y)],f);function F(o){return{id:o.id,location:l.revive(o.location)}}function M(o){return{allowScripts:o.enableScripts,allowForms:o.enableForms,enableCommandUris:o.enableCommandUris,localResourceRoots:Array.isArray(o.localResourceRoots)?o.localResourceRoots.map(t=>l.revive(t)):void 0,portMapping:o.portMapping}}export{F as $AWb,M as $BWb,f as $zWb};
+			<body>${localize("errorMessage", "An error occurred while loading view: {0}", escape(viewType))}</body>
+		</html>`;
+  }
+};
+MainThreadWebviews = MainThreadWebviews_1 = __decorate([
+  __param(1, IOpenerService),
+  __param(2, IProductService)
+], MainThreadWebviews);
+function reviveWebviewExtension(extensionData) {
+  return {
+    id: extensionData.id,
+    location: URI.revive(extensionData.location)
+  };
+}
+__name(reviveWebviewExtension, "reviveWebviewExtension");
+function reviveWebviewContentOptions(webviewOptions) {
+  return {
+    allowScripts: webviewOptions.enableScripts,
+    allowForms: webviewOptions.enableForms,
+    enableCommandUris: webviewOptions.enableCommandUris,
+    localResourceRoots: Array.isArray(webviewOptions.localResourceRoots) ? webviewOptions.localResourceRoots.map((r) => URI.revive(r)) : void 0,
+    portMapping: webviewOptions.portMapping
+  };
+}
+__name(reviveWebviewContentOptions, "reviveWebviewContentOptions");
+export {
+  MainThreadWebviews,
+  reviveWebviewContentOptions,
+  reviveWebviewExtension
+};
+//# sourceMappingURL=mainThreadWebviews.js.map

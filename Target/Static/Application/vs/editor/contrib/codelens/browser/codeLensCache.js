@@ -1,1 +1,128 @@
-import{Event as l}from"../../../../base/common/event.js";import{$Lc as h}from"../../../../base/common/map.js";import{$cC as p}from"../../../common/core/range.js";import{$Oib as m}from"./codelens.js";import{$WB as b}from"../../../../platform/instantiation/common/extensions.js";import{$nj as w}from"../../../../platform/instantiation/common/instantiation.js";import{$Ho as y,WillSaveStateReason as C}from"../../../../platform/storage/common/storage.js";import{$c5 as S}from"../../../../base/browser/window.js";import{$Q5 as $}from"../../../../base/browser/dom.js";var u=function(t,e,o,n){var s,r=arguments.length,a=r<3?e:null===n?n=Object.getOwnPropertyDescriptor(e,o):n;if("object"==typeof Reflect&&"function"==typeof Reflect.decorate)a=Reflect.decorate(t,e,o,n);else for(var i=t.length-1;i>=0;i--)(s=t[i])&&(a=(r<3?s(a):r>3?s(e,o,a):s(e,o))||a);return r>3&&a&&Object.defineProperty(e,o,a),a},d=function(t,e){return function(o,n){e(o,n,t)}};const g=w("ICodeLensCache");class f{constructor(t,e){this.lineCount=t,this.data=e}}let a=class{constructor(t){this.a=new class{provideCodeLenses(){throw new Error("not supported")}},this.b=new h(20,.75);$(S,(()=>t.remove("codelens/cache",1)));const e="codelens/cache2",o=t.get(e,1,"{}");this.f(o);const n=l.filter(t.onWillSaveState,(t=>t.reason===C.SHUTDOWN));l.once(n)((o=>{t.store(e,this.c(),1,1)}))}put(t,e){const o=e.lenses.map((t=>({range:t.symbol.range,command:t.symbol.command&&{id:"",title:t.symbol.command?.title}}))),n=new m;n.add({lenses:o},this.a);const s=new f(t.getLineCount(),n);this.b.set(t.uri.toString(),s)}get(t){const e=this.b.get(t.uri.toString());return e&&e.lineCount===t.getLineCount()?e.data:void 0}delete(t){this.b.delete(t.uri.toString())}c(){const t=Object.create(null);for(const[e,o]of this.b){const n=new Set;for(const t of o.data.lenses)n.add(t.symbol.range.startLineNumber);t[e]={lineCount:o.lineCount,lines:[...n.values()]}}return JSON.stringify(t)}f(t){try{const e=JSON.parse(t);for(const t in e){const o=e[t],n=[];for(const t of o.lines)n.push({range:new p(t,1,t,11)});const s=new m;s.add({lenses:n},this.a),this.b.set(t,new f(o.lineCount,s))}}catch{}}};a=u([d(0,y)],a),b(g,a,1);export{g as $Qib,a as $Rib};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { Event } from "../../../../base/common/event.js";
+import { LRUCache } from "../../../../base/common/map.js";
+import { Range } from "../../../common/core/range.js";
+import { CodeLensModel } from "./codelens.js";
+import { registerSingleton } from "../../../../platform/instantiation/common/extensions.js";
+import { createDecorator } from "../../../../platform/instantiation/common/instantiation.js";
+import { IStorageService, WillSaveStateReason } from "../../../../platform/storage/common/storage.js";
+import { mainWindow } from "../../../../base/browser/window.js";
+import { runWhenWindowIdle } from "../../../../base/browser/dom.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+const ICodeLensCache = createDecorator("ICodeLensCache");
+class CacheItem {
+  static {
+    __name(this, "CacheItem");
+  }
+  constructor(lineCount, data) {
+    this.lineCount = lineCount;
+    this.data = data;
+  }
+}
+let CodeLensCache = class CodeLensCache2 {
+  static {
+    __name(this, "CodeLensCache");
+  }
+  constructor(storageService) {
+    this._fakeProvider = new class {
+      provideCodeLenses() {
+        throw new Error("not supported");
+      }
+    }();
+    this._cache = new LRUCache(20, 0.75);
+    const oldkey = "codelens/cache";
+    runWhenWindowIdle(mainWindow, () => storageService.remove(
+      oldkey,
+      1
+      /* StorageScope.WORKSPACE */
+    ));
+    const key = "codelens/cache2";
+    const raw = storageService.get(key, 1, "{}");
+    this._deserialize(raw);
+    const onWillSaveStateBecauseOfShutdown = Event.filter(storageService.onWillSaveState, (e) => e.reason === WillSaveStateReason.SHUTDOWN);
+    Event.once(onWillSaveStateBecauseOfShutdown)((e) => {
+      storageService.store(
+        key,
+        this._serialize(),
+        1,
+        1
+        /* StorageTarget.MACHINE */
+      );
+    });
+  }
+  put(model, data) {
+    const copyItems = data.lenses.map((item2) => {
+      return {
+        range: item2.symbol.range,
+        command: item2.symbol.command && { id: "", title: item2.symbol.command?.title }
+      };
+    });
+    const copyModel = new CodeLensModel();
+    copyModel.add({ lenses: copyItems }, this._fakeProvider);
+    const item = new CacheItem(model.getLineCount(), copyModel);
+    this._cache.set(model.uri.toString(), item);
+  }
+  get(model) {
+    const item = this._cache.get(model.uri.toString());
+    return item && item.lineCount === model.getLineCount() ? item.data : void 0;
+  }
+  delete(model) {
+    this._cache.delete(model.uri.toString());
+  }
+  // --- persistence
+  _serialize() {
+    const data = /* @__PURE__ */ Object.create(null);
+    for (const [key, value] of this._cache) {
+      const lines = /* @__PURE__ */ new Set();
+      for (const d of value.data.lenses) {
+        lines.add(d.symbol.range.startLineNumber);
+      }
+      data[key] = {
+        lineCount: value.lineCount,
+        lines: [...lines.values()]
+      };
+    }
+    return JSON.stringify(data);
+  }
+  _deserialize(raw) {
+    try {
+      const data = JSON.parse(raw);
+      for (const key in data) {
+        const element = data[key];
+        const lenses = [];
+        for (const line of element.lines) {
+          lenses.push({ range: new Range(line, 1, line, 11) });
+        }
+        const model = new CodeLensModel();
+        model.add({ lenses }, this._fakeProvider);
+        this._cache.set(key, new CacheItem(element.lineCount, model));
+      }
+    } catch {
+    }
+  }
+};
+CodeLensCache = __decorate([
+  __param(0, IStorageService)
+], CodeLensCache);
+registerSingleton(
+  ICodeLensCache,
+  CodeLensCache,
+  1
+  /* InstantiationType.Delayed */
+);
+export {
+  CodeLensCache,
+  ICodeLensCache
+};
+//# sourceMappingURL=codeLensCache.js.map

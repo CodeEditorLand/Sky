@@ -1,2 +1,128 @@
-import{h as r}from"../../../../../base/browser/dom.js";import{$vd as p,$ud as L}from"../../../../../base/common/lifecycle.js";import{autorun as R}from"../../../../../base/common/observable.js";import{$VQb as v}from"../model/lineRange.js";import*as m from"../../../../../nls.js";const b={start:"<<<<<<<",end:">>>>>>>"};class I extends p{constructor(e,o){super(),this.editor=e,this.mergeEditorViewModel=o,this.a=[],this.f=new L,this.B(e.onDidChangeModelContent(n=>{this.g()})),this.B(e.onDidChangeModel(n=>{this.g()})),this.g()}g(){const e=this.editor.getModel(),o=e?k(e,{blockToRemoveStartLinePrefix:b.start,blockToRemoveEndLinePrefix:b.end}):{blocks:[]};this.editor.setHiddenAreas(o.blocks.map(n=>n.lineRange.deltaEnd(-1).toExclusiveRange()),this),this.editor.changeViewZones(n=>{this.f.clear();for(const t of this.a)n.removeZone(t);this.a.length=0;for(const t of o.blocks){const a=e.getLineContent(t.lineRange.startLineNumber).substring(0,20),l=e.getLineContent(t.lineRange.endLineNumberExclusive-1).substring(0,20),s=t.lineRange.length-2,d=r("div",[r("div.conflict-zone-root",[r("pre",[a]),r("span.dots",["..."]),r("pre",[l]),r("span.text",[s===1?m.localize(8994,null):m.localize(8995,null,s)])])]).root;this.a.push(n.addZone({afterLineNumber:t.lineRange.endLineNumberExclusive-1,domNode:d,heightInLines:1.5}));const u=()=>{const i=this.editor.getLayoutInfo();d.style.width=`${i.contentWidth-i.verticalScrollbarWidth}px`};this.f.add(this.editor.onDidLayoutChange(()=>{u()})),u(),this.f.add(R(i=>{const h=this.mergeEditorViewModel.read(i);if(!h)return;const g=h.activeModifiedBaseRange.read(i),f=[];f.push("conflict-zone"),g&&h.model.getLineRangeInResult(g.baseRange,i).intersectsOrTouches(t.lineRange)&&f.push("focused"),d.className=f.join(" ")}))}})}}function k(c,e){const o=[],n=[];let t=!1,a=-1,l=0;for(const s of c.getLinesContent())l++,t?s.startsWith(e.blockToRemoveEndLinePrefix)&&(t=!1,o.push(new x(v.fromLength(a,l-a+1))),n.push("")):s.startsWith(e.blockToRemoveStartLinePrefix)?(t=!0,a=l):n.push(s);return{blocks:o,transformedContent:n.join(`
-`)}}class x{constructor(e){this.lineRange=e}}export{b as $sXb,I as $tXb};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { h } from "../../../../../base/browser/dom.js";
+import { Disposable, DisposableStore } from "../../../../../base/common/lifecycle.js";
+import { autorun } from "../../../../../base/common/observable.js";
+import { MergeEditorLineRange } from "../model/lineRange.js";
+import * as nls from "../../../../../nls.js";
+const conflictMarkers = {
+  start: "<<<<<<<",
+  end: ">>>>>>>"
+};
+class MergeMarkersController extends Disposable {
+  static {
+    __name(this, "MergeMarkersController");
+  }
+  constructor(editor, mergeEditorViewModel) {
+    super();
+    this.editor = editor;
+    this.mergeEditorViewModel = mergeEditorViewModel;
+    this.viewZoneIds = [];
+    this.disposableStore = new DisposableStore();
+    this._register(editor.onDidChangeModelContent((e) => {
+      this.updateDecorations();
+    }));
+    this._register(editor.onDidChangeModel((e) => {
+      this.updateDecorations();
+    }));
+    this.updateDecorations();
+  }
+  updateDecorations() {
+    const model = this.editor.getModel();
+    const blocks = model ? getBlocks(model, { blockToRemoveStartLinePrefix: conflictMarkers.start, blockToRemoveEndLinePrefix: conflictMarkers.end }) : { blocks: [] };
+    this.editor.setHiddenAreas(blocks.blocks.map((b) => b.lineRange.deltaEnd(-1).toExclusiveRange()), this);
+    this.editor.changeViewZones((c) => {
+      this.disposableStore.clear();
+      for (const id of this.viewZoneIds) {
+        c.removeZone(id);
+      }
+      this.viewZoneIds.length = 0;
+      for (const b of blocks.blocks) {
+        const startLine = model.getLineContent(b.lineRange.startLineNumber).substring(0, 20);
+        const endLine = model.getLineContent(b.lineRange.endLineNumberExclusive - 1).substring(0, 20);
+        const conflictingLinesCount = b.lineRange.length - 2;
+        const domNode = h("div", [
+          h("div.conflict-zone-root", [
+            h("pre", [startLine]),
+            h("span.dots", ["..."]),
+            h("pre", [endLine]),
+            h("span.text", [
+              conflictingLinesCount === 1 ? nls.localize("conflictingLine", "1 Conflicting Line") : nls.localize("conflictingLines", "{0} Conflicting Lines", conflictingLinesCount)
+            ])
+          ])
+        ]).root;
+        this.viewZoneIds.push(c.addZone({
+          afterLineNumber: b.lineRange.endLineNumberExclusive - 1,
+          domNode,
+          heightInLines: 1.5
+        }));
+        const updateWidth = /* @__PURE__ */ __name(() => {
+          const layoutInfo = this.editor.getLayoutInfo();
+          domNode.style.width = `${layoutInfo.contentWidth - layoutInfo.verticalScrollbarWidth}px`;
+        }, "updateWidth");
+        this.disposableStore.add(this.editor.onDidLayoutChange(() => {
+          updateWidth();
+        }));
+        updateWidth();
+        this.disposableStore.add(autorun((reader) => {
+          const vm = this.mergeEditorViewModel.read(reader);
+          if (!vm) {
+            return;
+          }
+          const activeRange = vm.activeModifiedBaseRange.read(reader);
+          const classNames = [];
+          classNames.push("conflict-zone");
+          if (activeRange) {
+            const activeRangeInResult = vm.model.getLineRangeInResult(activeRange.baseRange, reader);
+            if (activeRangeInResult.intersectsOrTouches(b.lineRange)) {
+              classNames.push("focused");
+            }
+          }
+          domNode.className = classNames.join(" ");
+        }));
+      }
+    });
+  }
+}
+function getBlocks(document, configuration) {
+  const blocks = [];
+  const transformedContent = [];
+  let inBlock = false;
+  let startLineNumber = -1;
+  let curLine = 0;
+  for (const line of document.getLinesContent()) {
+    curLine++;
+    if (!inBlock) {
+      if (line.startsWith(configuration.blockToRemoveStartLinePrefix)) {
+        inBlock = true;
+        startLineNumber = curLine;
+      } else {
+        transformedContent.push(line);
+      }
+    } else {
+      if (line.startsWith(configuration.blockToRemoveEndLinePrefix)) {
+        inBlock = false;
+        blocks.push(new Block(MergeEditorLineRange.fromLength(startLineNumber, curLine - startLineNumber + 1)));
+        transformedContent.push("");
+      }
+    }
+  }
+  return {
+    blocks,
+    transformedContent: transformedContent.join("\n")
+  };
+}
+__name(getBlocks, "getBlocks");
+class Block {
+  static {
+    __name(this, "Block");
+  }
+  constructor(lineRange) {
+    this.lineRange = lineRange;
+  }
+}
+export {
+  MergeMarkersController,
+  conflictMarkers
+};
+//# sourceMappingURL=mergeMarkersController.js.map

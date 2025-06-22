@@ -1,2 +1,556 @@
-import*as C from"../../../../base/common/arrays.js";import*as R from"../../../../base/common/collections.js";import*as M from"../../../../base/common/glob.js";import{$lm as v}from"../../../../base/common/labels.js";import{$Ic as O}from"../../../../base/common/map.js";import{Schemas as P}from"../../../../base/common/network.js";import*as g from"../../../../base/common/path.js";import{$dh as Q,$hh as U,$mh as S,$oh as G}from"../../../../base/common/resources.js";import*as b from"../../../../base/common/strings.js";import{$$c as N,$8c as W}from"../../../../base/common/types.js";import{URI as y,URI as _}from"../../../../base/common/uri.js";import{$7G as A}from"../../../../editor/common/model/textModelSearch.js";import*as j from"../../../../nls.js";import{$El as q}from"../../../../platform/configuration/common/configuration.js";import{$3n as X}from"../../../../platform/log/common/log.js";import{$yo as z}from"../../../../platform/uriIdentity/common/uriIdentity.js";import{$hl as T,$tl as $}from"../../../../platform/workspace/common/workspace.js";import{$kI as B}from"../../editor/common/editorGroupsService.js";import{$3X as D}from"../../path/common/pathService.js";import{$sP as J,$tP as F}from"./search.js";var w=function(i,e,r,n){var t=arguments.length,s=t<3?e:n===null?n=Object.getOwnPropertyDescriptor(e,r):n,o;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")s=Reflect.decorate(i,e,r,n);else for(var l=i.length-1;l>=0;l--)(o=i[l])&&(s=(t<3?o(s):t>3?o(e,r,s):o(e,r))||s);return t>3&&s&&Object.defineProperty(e,r,s),s},p=function(i,e){return function(r,n){e(r,n,i)}};function V(i){return typeof i=="object"&&"uri"in i&&"pattern"in i}function me(i){return typeof i=="string"?{pattern:i}:{pattern:i.pattern,uri:i.baseUri}}let E=class{constructor(e,r,n,t,s,o){this.a=e,this.b=r,this.c=n,this.d=t,this.f=s,this.g=o}aiText(e,r,n={}){return{...this.j(r?.map($),n),type:3,contentPattern:e}}text(e,r,n={}){e=this.h(e,n);const t=this.a.getValue(),s=r&&r.some(l=>!this.a.getValue({resource:l}).search.useRipgrep);return{...this.j(r?.map($),n),type:2,contentPattern:e,previewOptions:n.previewOptions,maxFileSize:n.maxFileSize,usePCRE2:t.search.usePCRE2||s||!1,surroundingContext:n.surroundingContext,userDisabledExcludesAndIgnoreFiles:n.disregardExcludeSettings&&n.disregardIgnoreFiles}}h(e,r){const n=this.a.getValue();e.isRegExp&&(e.pattern=e.pattern.replace(/\r?\n/g,"\\n"));const t={...e,wordSeparators:n.editor.wordSeparators};return this.l(e,r)&&(t.isCaseSensitive=!0),this.m(e)&&(t.isMultiline=!0),r.notebookSearchConfig?.includeMarkupInput&&(t.notebookInfo||(t.notebookInfo={}),t.notebookInfo.isInNotebookMarkdownInput=r.notebookSearchConfig.includeMarkupInput),r.notebookSearchConfig?.includeMarkupPreview&&(t.notebookInfo||(t.notebookInfo={}),t.notebookInfo.isInNotebookMarkdownPreview=r.notebookSearchConfig.includeMarkupPreview),r.notebookSearchConfig?.includeCodeInput&&(t.notebookInfo||(t.notebookInfo={}),t.notebookInfo.isInNotebookCellInput=r.notebookSearchConfig.includeCodeInput),r.notebookSearchConfig?.includeOutput&&(t.notebookInfo||(t.notebookInfo={}),t.notebookInfo.isInNotebookCellOutput=r.notebookSearchConfig.includeOutput),t}file(e,r={}){return{...this.j(e,r),type:1,filePattern:r.filePattern?r.filePattern.trim():r.filePattern,exists:r.exists,sortByScore:r.sortByScore,cacheKey:r.cacheKey,shouldGlobMatchFilePattern:r.shouldGlobSearch}}i(e,r){if(!e)return{};if(Array.isArray(e)){if(e=e.filter(n=>n.length>0).map(x),!e.length)return{}}else e=x(e);return r?this.parseSearchPaths(e):{pattern:k(...Array.isArray(e)?e:[e])}}j(e=[],r={}){let n=Array.isArray(r.excludePattern)?r.excludePattern.map(u=>u.pattern).flat():r.excludePattern;n=n?.length===1?n[0]:n;const t=this.i(r.includePattern,r.expandPatterns),s=this.i(n,r.expandPatterns),o=e.length>1,l=(t.searchPaths&&t.searchPaths.length?t.searchPaths.map(u=>this.t(u,r,s)):e.map(u=>this.u(u,r,s,o))).filter(u=>!!u),a={_reason:r._reason,folderQueries:l,usingSearchPaths:!!(t.searchPaths&&t.searchPaths.length),extraFileResources:r.extraFileResources,excludePattern:s.pattern,includePattern:t.pattern,onlyOpenEditors:r.onlyOpenEditors,maxResults:r.maxResults,onlyFileScheme:r.onlyFileScheme};if(r.onlyOpenEditors){const u=C.$7b(this.c.groups.flatMap(h=>h.editors.map(m=>m.resource)));this.d.trace("QueryBuilder#commonQuery - openEditor URIs",JSON.stringify(u));const c=u.filter(h=>F(a,h.fsPath)),d=this.k(c);return this.d.trace("QueryBuilder#commonQuery - openEditor Query",JSON.stringify(d)),{...a,...d}}const f=r.extraFileResources&&r.extraFileResources.filter(u=>F(a,u.fsPath));return a.extraFileResources=f&&f.length?f:void 0,a}k(e){const r=[],n=new O,t={};let s=!1;return e.forEach(o=>{if(o.scheme===P.walkThrough)return;if(G(o)){const a=this.b.getWorkspaceFolder(o)?.uri??this.g.extUri.dirname(o);let f=n.get(a);f||(s=!0,f={folder:a,includePattern:{}},r.push(f),n.set(a,f));const u=g.$9(a.fsPath,o.fsPath);N(f.includePattern)[u.replace(/\\/g,"/")]=!0}else o.fsPath&&(s=!0,t[o.fsPath]=!0)}),{folderQueries:r,includePattern:t,usingSearchPaths:!0,excludePattern:s?void 0:{"**/*":!0}}}l(e,r){if(r.isSmartCase){if(e.isRegExp){if(b.$vg(e.pattern,!0))return!0}else if(b.$vg(e.pattern))return!0}return!!e.isCaseSensitive}m(e){return e.isMultiline||e.isRegExp&&A(e.pattern)||e.pattern.indexOf(`
-`)>=0?!0:!!e.isMultiline}parseSearchPaths(e){const r=c=>g.$6(c)||/^\.\.?([\/\\]|$)/.test(c),t=(Array.isArray(e)?e:K(e)).map(c=>{const d=this.f.resolvedUserHome;return d?v(c,d.scheme===P.file?d.fsPath:d.path):c}),s=R.$a(t,c=>r(c)?"searchPaths":"exprSegments"),o=(s.exprSegments||[]).map(c=>b.$Jf(c,"/")).map(c=>b.$Jf(c,"\\")).map(c=>(c[0]==="."&&(c="*"+c),L(c))),l={},a=this.o(s.searchPaths||[]);a&&a.length&&(l.searchPaths=a);const f=o.flat(),u=k(...f);return u&&(l.pattern=u),l}n(e,r){return r.disregardExcludeSettings?void 0:J(e,!r.disregardSearchExcludeSettings)}o(e){if(!e||!e.length)return[];const r=e.flatMap(t=>{let{pathPortion:s,globPortion:o}=H(t);return o&&(o=I(o)),this.q(s).flatMap(a=>this.r(a,o))}),n=new Map;return r.forEach(t=>{const s=t.searchPath.toString(),o=n.get(s);o?t.pattern&&(o.pattern=o.pattern||{},o.pattern[t.pattern]=!0):n.set(s,{searchPath:t.searchPath,pattern:t.pattern?k(t.pattern):void 0})}),Array.from(n.values())}q(e){if(g.$6(e)){const r=this.b.getWorkspace().folders;return r[0]&&r[0].uri.scheme!==P.file?[{searchPath:r[0].uri.with({path:e})}]:[{searchPath:_.file(g.$5(e))}]}if(this.b.getWorkbenchState()===2){const r=this.b.getWorkspace().folders[0].uri;if(e=x(e),e.startsWith("../")||e===".."){const t=g.$4.resolve(r.path,e);return[{searchPath:r.with({path:t})}]}const n=I(e);return[{searchPath:r,pattern:n}]}else{if(e==="./"||e===".\\")return[];{const r=e.replace(/^\.[\/\\]/,""),t=this.b.getWorkspace().folders.map(s=>{const o=r.match(new RegExp(`^${b.$Df(s.name)}(?:/(.*)|$)`));return o?{match:o,folder:s}:null}).filter(W);if(t.length)return t.map(s=>{const o=s.match[1];return{searchPath:s.folder.uri,pattern:o&&I(o)}});{const s=e.match(/\.[\/\\](.+)[\/\\]?/),o=s?s[1]:e,l=j.localize(14430,null,o);throw new Error(l)}}}}r(e,r){const n=e.pattern&&r?`${e.pattern}/${r}`:e.pattern||r,t=[{searchPath:e.searchPath,pattern:n}];return n&&!n.endsWith("**")&&t.push({searchPath:e.searchPath,pattern:n+"/**"}),t}t(e,r,n){const t=this.u($(e.searchPath),r,n,!1);return t?{...t,includePattern:e.pattern}:null}u(e,r,n,t){let s;const o=y.isUri(e)?e:e.uri;let l=r.excludePattern?.map(h=>{const m=r.excludePattern&&V(h)?h.uri:void 0;return!m||!(y.isUri(e)&&this.g.extUri.isEqual(e,m))?m:void 0});if(l?.length||(l=[void 0]),n.searchPaths){const h=n.searchPaths.filter(m=>Q(m.searchPath,o))[0];if(h&&!h.pattern)return null;h&&(s=h.pattern)}const a=this.a.getValue({resource:o}),u={...this.n(a,r)||{},...s||{}},c=y.isUri(e)?U(e):e.name,d=l.map(h=>Object.keys(u).length>0?{folder:h,pattern:u}:void 0).filter(h=>h);return{folder:o,folderName:t?c:void 0,excludePattern:d,fileEncoding:a.files&&a.files.encoding,disregardIgnoreFiles:typeof r.disregardIgnoreFiles=="boolean"?r.disregardIgnoreFiles:!a.search.useIgnoreFiles,disregardGlobalIgnoreFiles:typeof r.disregardGlobalIgnoreFiles=="boolean"?r.disregardGlobalIgnoreFiles:!a.search.useGlobalIgnoreFiles,disregardParentIgnoreFiles:typeof r.disregardParentIgnoreFiles=="boolean"?r.disregardParentIgnoreFiles:!a.search.useParentIgnoreFiles,ignoreSymlinks:typeof r.ignoreSymlinks=="boolean"?r.ignoreSymlinks:!a.search.followSymlinks}}};E=w([p(0,q),p(1,T),p(2,B),p(3,X),p(4,D),p(5,z)],E);function H(i){const e=i.match(/[\*\{\}\(\)\[\]\?]/);if(e){const r=e.index,n=i.substr(0,r).match(/[/|\\][^/\\]*$/);if(n){let t=i.substr(0,n.index);return t.match(/[/\\]/)||(t+="/"),{pathPortion:t,globPortion:i.substr((n.index||0)+1)}}}return{pathPortion:i}}function k(...i){return i.length?i.reduce((e,r)=>(e[r]=!0,e),Object.create(null)):void 0}function K(i){return M.$0i(i,",").map(e=>e.trim()).filter(e=>!!e.length)}function L(i){return[`**/${i}/**`,`**/${i}`].map(r=>r.replace(/\*\*\/\*\*/g,"**"))}function x(i){return i.replace(/\\/g,"/")}function I(i){return x(i).replace(/^\.\//,"").replace(/\/+$/g,"")}function Y(i){return i.replace(/([?*[\]])/g,"[$1]")}function ge(i,e){i=C.$_b(i,t=>t.toString());const r=[],n=e.getWorkspace();return i&&i.forEach(t=>{let s;if(e.getWorkbenchState()===2)s=S(n.folders[0].uri,t),s&&s!=="."&&(s="./"+s);else{const o=e.getWorkspaceFolder(t);if(o){const l=o.name;if(n.folders.filter(f=>f.name===l).length===1){const f=S(o.uri,t);f===""?s=`./${o.name}`:s=`./${o.name}/${f}`}else s=t.fsPath}}s&&r.push(Y(s))}),r}export{V as $5X,me as $6X,E as $7X,ge as $8X};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import * as arrays from "../../../../base/common/arrays.js";
+import * as collections from "../../../../base/common/collections.js";
+import * as glob from "../../../../base/common/glob.js";
+import { untildify } from "../../../../base/common/labels.js";
+import { ResourceMap } from "../../../../base/common/map.js";
+import { Schemas } from "../../../../base/common/network.js";
+import * as path from "../../../../base/common/path.js";
+import { isEqual, basename, relativePath, isAbsolutePath } from "../../../../base/common/resources.js";
+import * as strings from "../../../../base/common/strings.js";
+import { assertReturnsDefined, isDefined } from "../../../../base/common/types.js";
+import { URI, URI as uri } from "../../../../base/common/uri.js";
+import { isMultilineRegexSource } from "../../../../editor/common/model/textModelSearch.js";
+import * as nls from "../../../../nls.js";
+import { IConfigurationService } from "../../../../platform/configuration/common/configuration.js";
+import { ILogService } from "../../../../platform/log/common/log.js";
+import { IUriIdentityService } from "../../../../platform/uriIdentity/common/uriIdentity.js";
+import { IWorkspaceContextService, toWorkspaceFolder } from "../../../../platform/workspace/common/workspace.js";
+import { IEditorGroupsService } from "../../editor/common/editorGroupsService.js";
+import { IPathService } from "../../path/common/pathService.js";
+import { getExcludes, pathIncludedInQuery } from "./search.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+function isISearchPatternBuilder(object) {
+  return typeof object === "object" && "uri" in object && "pattern" in object;
+}
+__name(isISearchPatternBuilder, "isISearchPatternBuilder");
+function globPatternToISearchPatternBuilder(globPattern) {
+  if (typeof globPattern === "string") {
+    return {
+      pattern: globPattern
+    };
+  }
+  return {
+    pattern: globPattern.pattern,
+    uri: globPattern.baseUri
+  };
+}
+__name(globPatternToISearchPatternBuilder, "globPatternToISearchPatternBuilder");
+let QueryBuilder = class QueryBuilder2 {
+  static {
+    __name(this, "QueryBuilder");
+  }
+  constructor(configurationService, workspaceContextService, editorGroupsService, logService, pathService, uriIdentityService) {
+    this.configurationService = configurationService;
+    this.workspaceContextService = workspaceContextService;
+    this.editorGroupsService = editorGroupsService;
+    this.logService = logService;
+    this.pathService = pathService;
+    this.uriIdentityService = uriIdentityService;
+  }
+  aiText(contentPattern, folderResources, options = {}) {
+    const commonQuery = this.commonQuery(folderResources?.map(toWorkspaceFolder), options);
+    return {
+      ...commonQuery,
+      type: 3,
+      contentPattern
+    };
+  }
+  text(contentPattern, folderResources, options = {}) {
+    contentPattern = this.getContentPattern(contentPattern, options);
+    const searchConfig = this.configurationService.getValue();
+    const fallbackToPCRE = folderResources && folderResources.some((folder) => {
+      const folderConfig = this.configurationService.getValue({ resource: folder });
+      return !folderConfig.search.useRipgrep;
+    });
+    const commonQuery = this.commonQuery(folderResources?.map(toWorkspaceFolder), options);
+    return {
+      ...commonQuery,
+      type: 2,
+      contentPattern,
+      previewOptions: options.previewOptions,
+      maxFileSize: options.maxFileSize,
+      usePCRE2: searchConfig.search.usePCRE2 || fallbackToPCRE || false,
+      surroundingContext: options.surroundingContext,
+      userDisabledExcludesAndIgnoreFiles: options.disregardExcludeSettings && options.disregardIgnoreFiles
+    };
+  }
+  /**
+   * Adjusts input pattern for config
+   */
+  getContentPattern(inputPattern, options) {
+    const searchConfig = this.configurationService.getValue();
+    if (inputPattern.isRegExp) {
+      inputPattern.pattern = inputPattern.pattern.replace(/\r?\n/g, "\\n");
+    }
+    const newPattern = {
+      ...inputPattern,
+      wordSeparators: searchConfig.editor.wordSeparators
+    };
+    if (this.isCaseSensitive(inputPattern, options)) {
+      newPattern.isCaseSensitive = true;
+    }
+    if (this.isMultiline(inputPattern)) {
+      newPattern.isMultiline = true;
+    }
+    if (options.notebookSearchConfig?.includeMarkupInput) {
+      if (!newPattern.notebookInfo) {
+        newPattern.notebookInfo = {};
+      }
+      newPattern.notebookInfo.isInNotebookMarkdownInput = options.notebookSearchConfig.includeMarkupInput;
+    }
+    if (options.notebookSearchConfig?.includeMarkupPreview) {
+      if (!newPattern.notebookInfo) {
+        newPattern.notebookInfo = {};
+      }
+      newPattern.notebookInfo.isInNotebookMarkdownPreview = options.notebookSearchConfig.includeMarkupPreview;
+    }
+    if (options.notebookSearchConfig?.includeCodeInput) {
+      if (!newPattern.notebookInfo) {
+        newPattern.notebookInfo = {};
+      }
+      newPattern.notebookInfo.isInNotebookCellInput = options.notebookSearchConfig.includeCodeInput;
+    }
+    if (options.notebookSearchConfig?.includeOutput) {
+      if (!newPattern.notebookInfo) {
+        newPattern.notebookInfo = {};
+      }
+      newPattern.notebookInfo.isInNotebookCellOutput = options.notebookSearchConfig.includeOutput;
+    }
+    return newPattern;
+  }
+  file(folders, options = {}) {
+    const commonQuery = this.commonQuery(folders, options);
+    return {
+      ...commonQuery,
+      type: 1,
+      filePattern: options.filePattern ? options.filePattern.trim() : options.filePattern,
+      exists: options.exists,
+      sortByScore: options.sortByScore,
+      cacheKey: options.cacheKey,
+      shouldGlobMatchFilePattern: options.shouldGlobSearch
+    };
+  }
+  handleIncludeExclude(pattern, expandPatterns) {
+    if (!pattern) {
+      return {};
+    }
+    if (Array.isArray(pattern)) {
+      pattern = pattern.filter((p) => p.length > 0).map(normalizeSlashes);
+      if (!pattern.length) {
+        return {};
+      }
+    } else {
+      pattern = normalizeSlashes(pattern);
+    }
+    return expandPatterns ? this.parseSearchPaths(pattern) : { pattern: patternListToIExpression(...Array.isArray(pattern) ? pattern : [pattern]) };
+  }
+  commonQuery(folderResources = [], options = {}) {
+    let excludePatterns = Array.isArray(options.excludePattern) ? options.excludePattern.map((p) => p.pattern).flat() : options.excludePattern;
+    excludePatterns = excludePatterns?.length === 1 ? excludePatterns[0] : excludePatterns;
+    const includeSearchPathsInfo = this.handleIncludeExclude(options.includePattern, options.expandPatterns);
+    const excludeSearchPathsInfo = this.handleIncludeExclude(excludePatterns, options.expandPatterns);
+    const includeFolderName = folderResources.length > 1;
+    const folderQueries = (includeSearchPathsInfo.searchPaths && includeSearchPathsInfo.searchPaths.length ? includeSearchPathsInfo.searchPaths.map((searchPath) => this.getFolderQueryForSearchPath(searchPath, options, excludeSearchPathsInfo)) : folderResources.map((folder) => this.getFolderQueryForRoot(folder, options, excludeSearchPathsInfo, includeFolderName))).filter((query) => !!query);
+    const queryProps = {
+      _reason: options._reason,
+      folderQueries,
+      usingSearchPaths: !!(includeSearchPathsInfo.searchPaths && includeSearchPathsInfo.searchPaths.length),
+      extraFileResources: options.extraFileResources,
+      excludePattern: excludeSearchPathsInfo.pattern,
+      includePattern: includeSearchPathsInfo.pattern,
+      onlyOpenEditors: options.onlyOpenEditors,
+      maxResults: options.maxResults,
+      onlyFileScheme: options.onlyFileScheme
+    };
+    if (options.onlyOpenEditors) {
+      const openEditors = arrays.coalesce(this.editorGroupsService.groups.flatMap((group) => group.editors.map((editor) => editor.resource)));
+      this.logService.trace("QueryBuilder#commonQuery - openEditor URIs", JSON.stringify(openEditors));
+      const openEditorsInQuery = openEditors.filter((editor) => pathIncludedInQuery(queryProps, editor.fsPath));
+      const openEditorsQueryProps = this.commonQueryFromFileList(openEditorsInQuery);
+      this.logService.trace("QueryBuilder#commonQuery - openEditor Query", JSON.stringify(openEditorsQueryProps));
+      return { ...queryProps, ...openEditorsQueryProps };
+    }
+    const extraFileResources = options.extraFileResources && options.extraFileResources.filter((extraFile) => pathIncludedInQuery(queryProps, extraFile.fsPath));
+    queryProps.extraFileResources = extraFileResources && extraFileResources.length ? extraFileResources : void 0;
+    return queryProps;
+  }
+  commonQueryFromFileList(files) {
+    const folderQueries = [];
+    const foldersToSearch = new ResourceMap();
+    const includePattern = {};
+    let hasIncludedFile = false;
+    files.forEach((file) => {
+      if (file.scheme === Schemas.walkThrough) {
+        return;
+      }
+      const providerExists = isAbsolutePath(file);
+      if (providerExists) {
+        const searchRoot = this.workspaceContextService.getWorkspaceFolder(file)?.uri ?? this.uriIdentityService.extUri.dirname(file);
+        let folderQuery = foldersToSearch.get(searchRoot);
+        if (!folderQuery) {
+          hasIncludedFile = true;
+          folderQuery = { folder: searchRoot, includePattern: {} };
+          folderQueries.push(folderQuery);
+          foldersToSearch.set(searchRoot, folderQuery);
+        }
+        const relPath = path.relative(searchRoot.fsPath, file.fsPath);
+        assertReturnsDefined(folderQuery.includePattern)[relPath.replace(/\\/g, "/")] = true;
+      } else {
+        if (file.fsPath) {
+          hasIncludedFile = true;
+          includePattern[file.fsPath] = true;
+        }
+      }
+    });
+    return {
+      folderQueries,
+      includePattern,
+      usingSearchPaths: true,
+      excludePattern: hasIncludedFile ? void 0 : { "**/*": true }
+    };
+  }
+  /**
+   * Resolve isCaseSensitive flag based on the query and the isSmartCase flag, for search providers that don't support smart case natively.
+   */
+  isCaseSensitive(contentPattern, options) {
+    if (options.isSmartCase) {
+      if (contentPattern.isRegExp) {
+        if (strings.containsUppercaseCharacter(contentPattern.pattern, true)) {
+          return true;
+        }
+      } else if (strings.containsUppercaseCharacter(contentPattern.pattern)) {
+        return true;
+      }
+    }
+    return !!contentPattern.isCaseSensitive;
+  }
+  isMultiline(contentPattern) {
+    if (contentPattern.isMultiline) {
+      return true;
+    }
+    if (contentPattern.isRegExp && isMultilineRegexSource(contentPattern.pattern)) {
+      return true;
+    }
+    if (contentPattern.pattern.indexOf("\n") >= 0) {
+      return true;
+    }
+    return !!contentPattern.isMultiline;
+  }
+  /**
+   * Take the includePattern as seen in the search viewlet, and split into components that look like searchPaths, and
+   * glob patterns. Glob patterns are expanded from 'foo/bar' to '{foo/bar/**, **\/foo/bar}.
+   *
+   * Public for test.
+   */
+  parseSearchPaths(pattern) {
+    const isSearchPath = /* @__PURE__ */ __name((segment) => {
+      return path.isAbsolute(segment) || /^\.\.?([\/\\]|$)/.test(segment);
+    }, "isSearchPath");
+    const patterns = Array.isArray(pattern) ? pattern : splitGlobPattern(pattern);
+    const segments = patterns.map((segment) => {
+      const userHome = this.pathService.resolvedUserHome;
+      if (userHome) {
+        return untildify(segment, userHome.scheme === Schemas.file ? userHome.fsPath : userHome.path);
+      }
+      return segment;
+    });
+    const groups = collections.groupBy(segments, (segment) => isSearchPath(segment) ? "searchPaths" : "exprSegments");
+    const expandedExprSegments = (groups.exprSegments || []).map((s) => strings.rtrim(s, "/")).map((s) => strings.rtrim(s, "\\")).map((p) => {
+      if (p[0] === ".") {
+        p = "*" + p;
+      }
+      return expandGlobalGlob(p);
+    });
+    const result = {};
+    const searchPaths = this.expandSearchPathPatterns(groups.searchPaths || []);
+    if (searchPaths && searchPaths.length) {
+      result.searchPaths = searchPaths;
+    }
+    const exprSegments = expandedExprSegments.flat();
+    const includePattern = patternListToIExpression(...exprSegments);
+    if (includePattern) {
+      result.pattern = includePattern;
+    }
+    return result;
+  }
+  getExcludesForFolder(folderConfig, options) {
+    return options.disregardExcludeSettings ? void 0 : getExcludes(folderConfig, !options.disregardSearchExcludeSettings);
+  }
+  /**
+   * Split search paths (./ or ../ or absolute paths in the includePatterns) into absolute paths and globs applied to those paths
+   */
+  expandSearchPathPatterns(searchPaths) {
+    if (!searchPaths || !searchPaths.length) {
+      return [];
+    }
+    const expandedSearchPaths = searchPaths.flatMap((searchPath) => {
+      let { pathPortion, globPortion } = splitGlobFromPath(searchPath);
+      if (globPortion) {
+        globPortion = normalizeGlobPattern(globPortion);
+      }
+      const oneExpanded = this.expandOneSearchPath(pathPortion);
+      return oneExpanded.flatMap((oneExpandedResult) => this.resolveOneSearchPathPattern(oneExpandedResult, globPortion));
+    });
+    const searchPathPatternMap = /* @__PURE__ */ new Map();
+    expandedSearchPaths.forEach((oneSearchPathPattern) => {
+      const key = oneSearchPathPattern.searchPath.toString();
+      const existing = searchPathPatternMap.get(key);
+      if (existing) {
+        if (oneSearchPathPattern.pattern) {
+          existing.pattern = existing.pattern || {};
+          existing.pattern[oneSearchPathPattern.pattern] = true;
+        }
+      } else {
+        searchPathPatternMap.set(key, {
+          searchPath: oneSearchPathPattern.searchPath,
+          pattern: oneSearchPathPattern.pattern ? patternListToIExpression(oneSearchPathPattern.pattern) : void 0
+        });
+      }
+    });
+    return Array.from(searchPathPatternMap.values());
+  }
+  /**
+   * Takes a searchPath like `./a/foo` or `../a/foo` and expands it to absolute paths for all the workspaces it matches.
+   */
+  expandOneSearchPath(searchPath) {
+    if (path.isAbsolute(searchPath)) {
+      const workspaceFolders = this.workspaceContextService.getWorkspace().folders;
+      if (workspaceFolders[0] && workspaceFolders[0].uri.scheme !== Schemas.file) {
+        return [{
+          searchPath: workspaceFolders[0].uri.with({ path: searchPath })
+        }];
+      }
+      return [{
+        searchPath: uri.file(path.normalize(searchPath))
+      }];
+    }
+    if (this.workspaceContextService.getWorkbenchState() === 2) {
+      const workspaceUri = this.workspaceContextService.getWorkspace().folders[0].uri;
+      searchPath = normalizeSlashes(searchPath);
+      if (searchPath.startsWith("../") || searchPath === "..") {
+        const resolvedPath = path.posix.resolve(workspaceUri.path, searchPath);
+        return [{
+          searchPath: workspaceUri.with({ path: resolvedPath })
+        }];
+      }
+      const cleanedPattern = normalizeGlobPattern(searchPath);
+      return [{
+        searchPath: workspaceUri,
+        pattern: cleanedPattern
+      }];
+    } else if (searchPath === "./" || searchPath === ".\\") {
+      return [];
+    } else {
+      const searchPathWithoutDotSlash = searchPath.replace(/^\.[\/\\]/, "");
+      const folders = this.workspaceContextService.getWorkspace().folders;
+      const folderMatches = folders.map((folder) => {
+        const match = searchPathWithoutDotSlash.match(new RegExp(`^${strings.escapeRegExpCharacters(folder.name)}(?:/(.*)|$)`));
+        return match ? {
+          match,
+          folder
+        } : null;
+      }).filter(isDefined);
+      if (folderMatches.length) {
+        return folderMatches.map((match) => {
+          const patternMatch = match.match[1];
+          return {
+            searchPath: match.folder.uri,
+            pattern: patternMatch && normalizeGlobPattern(patternMatch)
+          };
+        });
+      } else {
+        const probableWorkspaceFolderNameMatch = searchPath.match(/\.[\/\\](.+)[\/\\]?/);
+        const probableWorkspaceFolderName = probableWorkspaceFolderNameMatch ? probableWorkspaceFolderNameMatch[1] : searchPath;
+        const searchPathNotFoundError = nls.localize("search.noWorkspaceWithName", "Workspace folder does not exist: {0}", probableWorkspaceFolderName);
+        throw new Error(searchPathNotFoundError);
+      }
+    }
+  }
+  resolveOneSearchPathPattern(oneExpandedResult, globPortion) {
+    const pattern = oneExpandedResult.pattern && globPortion ? `${oneExpandedResult.pattern}/${globPortion}` : oneExpandedResult.pattern || globPortion;
+    const results = [
+      {
+        searchPath: oneExpandedResult.searchPath,
+        pattern
+      }
+    ];
+    if (pattern && !pattern.endsWith("**")) {
+      results.push({
+        searchPath: oneExpandedResult.searchPath,
+        pattern: pattern + "/**"
+      });
+    }
+    return results;
+  }
+  getFolderQueryForSearchPath(searchPath, options, searchPathExcludes) {
+    const rootConfig = this.getFolderQueryForRoot(toWorkspaceFolder(searchPath.searchPath), options, searchPathExcludes, false);
+    if (!rootConfig) {
+      return null;
+    }
+    return {
+      ...rootConfig,
+      ...{
+        includePattern: searchPath.pattern
+      }
+    };
+  }
+  getFolderQueryForRoot(folder, options, searchPathExcludes, includeFolderName) {
+    let thisFolderExcludeSearchPathPattern;
+    const folderUri = URI.isUri(folder) ? folder : folder.uri;
+    let excludeFolderRoots = options.excludePattern?.map((excludePattern2) => {
+      const excludeRoot = options.excludePattern && isISearchPatternBuilder(excludePattern2) ? excludePattern2.uri : void 0;
+      const shouldUseExcludeRoot = !excludeRoot || !(URI.isUri(folder) && this.uriIdentityService.extUri.isEqual(folder, excludeRoot));
+      return shouldUseExcludeRoot ? excludeRoot : void 0;
+    });
+    if (!excludeFolderRoots?.length) {
+      excludeFolderRoots = [void 0];
+    }
+    if (searchPathExcludes.searchPaths) {
+      const thisFolderExcludeSearchPath = searchPathExcludes.searchPaths.filter((sp) => isEqual(sp.searchPath, folderUri))[0];
+      if (thisFolderExcludeSearchPath && !thisFolderExcludeSearchPath.pattern) {
+        return null;
+      } else if (thisFolderExcludeSearchPath) {
+        thisFolderExcludeSearchPathPattern = thisFolderExcludeSearchPath.pattern;
+      }
+    }
+    const folderConfig = this.configurationService.getValue({ resource: folderUri });
+    const settingExcludes = this.getExcludesForFolder(folderConfig, options);
+    const excludePattern = {
+      ...settingExcludes || {},
+      ...thisFolderExcludeSearchPathPattern || {}
+    };
+    const folderName = URI.isUri(folder) ? basename(folder) : folder.name;
+    const excludePatternRet = excludeFolderRoots.map((excludeFolderRoot) => {
+      return Object.keys(excludePattern).length > 0 ? {
+        folder: excludeFolderRoot,
+        pattern: excludePattern
+      } : void 0;
+    }).filter((e) => e);
+    return {
+      folder: folderUri,
+      folderName: includeFolderName ? folderName : void 0,
+      excludePattern: excludePatternRet,
+      fileEncoding: folderConfig.files && folderConfig.files.encoding,
+      disregardIgnoreFiles: typeof options.disregardIgnoreFiles === "boolean" ? options.disregardIgnoreFiles : !folderConfig.search.useIgnoreFiles,
+      disregardGlobalIgnoreFiles: typeof options.disregardGlobalIgnoreFiles === "boolean" ? options.disregardGlobalIgnoreFiles : !folderConfig.search.useGlobalIgnoreFiles,
+      disregardParentIgnoreFiles: typeof options.disregardParentIgnoreFiles === "boolean" ? options.disregardParentIgnoreFiles : !folderConfig.search.useParentIgnoreFiles,
+      ignoreSymlinks: typeof options.ignoreSymlinks === "boolean" ? options.ignoreSymlinks : !folderConfig.search.followSymlinks
+    };
+  }
+};
+QueryBuilder = __decorate([
+  __param(0, IConfigurationService),
+  __param(1, IWorkspaceContextService),
+  __param(2, IEditorGroupsService),
+  __param(3, ILogService),
+  __param(4, IPathService),
+  __param(5, IUriIdentityService)
+], QueryBuilder);
+function splitGlobFromPath(searchPath) {
+  const globCharMatch = searchPath.match(/[\*\{\}\(\)\[\]\?]/);
+  if (globCharMatch) {
+    const globCharIdx = globCharMatch.index;
+    const lastSlashMatch = searchPath.substr(0, globCharIdx).match(/[/|\\][^/\\]*$/);
+    if (lastSlashMatch) {
+      let pathPortion = searchPath.substr(0, lastSlashMatch.index);
+      if (!pathPortion.match(/[/\\]/)) {
+        pathPortion += "/";
+      }
+      return {
+        pathPortion,
+        globPortion: searchPath.substr((lastSlashMatch.index || 0) + 1)
+      };
+    }
+  }
+  return {
+    pathPortion: searchPath
+  };
+}
+__name(splitGlobFromPath, "splitGlobFromPath");
+function patternListToIExpression(...patterns) {
+  return patterns.length ? patterns.reduce((glob2, cur) => {
+    glob2[cur] = true;
+    return glob2;
+  }, /* @__PURE__ */ Object.create(null)) : void 0;
+}
+__name(patternListToIExpression, "patternListToIExpression");
+function splitGlobPattern(pattern) {
+  return glob.splitGlobAware(pattern, ",").map((s) => s.trim()).filter((s) => !!s.length);
+}
+__name(splitGlobPattern, "splitGlobPattern");
+function expandGlobalGlob(pattern) {
+  const patterns = [
+    `**/${pattern}/**`,
+    `**/${pattern}`
+  ];
+  return patterns.map((p) => p.replace(/\*\*\/\*\*/g, "**"));
+}
+__name(expandGlobalGlob, "expandGlobalGlob");
+function normalizeSlashes(pattern) {
+  return pattern.replace(/\\/g, "/");
+}
+__name(normalizeSlashes, "normalizeSlashes");
+function normalizeGlobPattern(pattern) {
+  return normalizeSlashes(pattern).replace(/^\.\//, "").replace(/\/+$/g, "");
+}
+__name(normalizeGlobPattern, "normalizeGlobPattern");
+function escapeGlobPattern(path2) {
+  return path2.replace(/([?*[\]])/g, "[$1]");
+}
+__name(escapeGlobPattern, "escapeGlobPattern");
+function resolveResourcesForSearchIncludes(resources, contextService) {
+  resources = arrays.distinct(resources, (resource) => resource.toString());
+  const folderPaths = [];
+  const workspace = contextService.getWorkspace();
+  if (resources) {
+    resources.forEach((resource) => {
+      let folderPath;
+      if (contextService.getWorkbenchState() === 2) {
+        folderPath = relativePath(workspace.folders[0].uri, resource);
+        if (folderPath && folderPath !== ".") {
+          folderPath = "./" + folderPath;
+        }
+      } else {
+        const owningFolder = contextService.getWorkspaceFolder(resource);
+        if (owningFolder) {
+          const owningRootName = owningFolder.name;
+          const isUniqueFolder = workspace.folders.filter((folder) => folder.name === owningRootName).length === 1;
+          if (isUniqueFolder) {
+            const relPath = relativePath(owningFolder.uri, resource);
+            if (relPath === "") {
+              folderPath = `./${owningFolder.name}`;
+            } else {
+              folderPath = `./${owningFolder.name}/${relPath}`;
+            }
+          } else {
+            folderPath = resource.fsPath;
+          }
+        }
+      }
+      if (folderPath) {
+        folderPaths.push(escapeGlobPattern(folderPath));
+      }
+    });
+  }
+  return folderPaths;
+}
+__name(resolveResourcesForSearchIncludes, "resolveResourcesForSearchIncludes");
+export {
+  QueryBuilder,
+  globPatternToISearchPatternBuilder,
+  isISearchPatternBuilder,
+  resolveResourcesForSearchIncludes
+};
+//# sourceMappingURL=queryBuilder.js.map

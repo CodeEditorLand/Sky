@@ -1,1 +1,54 @@
-import{$WB as e}from"../../../../platform/instantiation/common/extensions.js";import{$8Mb as t}from"../../../../platform/userDataSync/common/userDataSync.js";import{$dBc as s}from"./userDataSyncEnablementService.js";class i extends s{constructor(){super(...arguments),this.n=void 0}canToggleEnablement(){return this.r()&&super.canToggleEnablement()}isEnabled(){return!!this.r()&&(void 0===this.n&&(this.n=this.m.options?.settingsSyncOptions?.enabled),void 0===this.n&&(this.n=super.isEnabled()),this.n)}setEnablement(t){t&&!this.canToggleEnablement()||this.n!==t&&(this.n=t,super.setEnablement(t))}getResourceSyncStateVersion(t){return"extensions"===t?this.m.options?.settingsSyncOptions?.extensionsSyncStateVersion:void 0}r(){return!!this.m.options?.workspaceProvider?.trusted}}e(t,i,1);export{i as $eBc};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { registerSingleton } from "../../../../platform/instantiation/common/extensions.js";
+import { IUserDataSyncEnablementService } from "../../../../platform/userDataSync/common/userDataSync.js";
+import { UserDataSyncEnablementService } from "./userDataSyncEnablementService.js";
+class WebUserDataSyncEnablementService extends UserDataSyncEnablementService {
+  static {
+    __name(this, "WebUserDataSyncEnablementService");
+  }
+  constructor() {
+    super(...arguments);
+    this.enabled = void 0;
+  }
+  canToggleEnablement() {
+    return this.isTrusted() && super.canToggleEnablement();
+  }
+  isEnabled() {
+    if (!this.isTrusted()) {
+      return false;
+    }
+    if (this.enabled === void 0) {
+      this.enabled = this.workbenchEnvironmentService.options?.settingsSyncOptions?.enabled;
+    }
+    if (this.enabled === void 0) {
+      this.enabled = super.isEnabled();
+    }
+    return this.enabled;
+  }
+  setEnablement(enabled) {
+    if (enabled && !this.canToggleEnablement()) {
+      return;
+    }
+    if (this.enabled !== enabled) {
+      this.enabled = enabled;
+      super.setEnablement(enabled);
+    }
+  }
+  getResourceSyncStateVersion(resource) {
+    return resource === "extensions" ? this.workbenchEnvironmentService.options?.settingsSyncOptions?.extensionsSyncStateVersion : void 0;
+  }
+  isTrusted() {
+    return !!this.workbenchEnvironmentService.options?.workspaceProvider?.trusted;
+  }
+}
+registerSingleton(
+  IUserDataSyncEnablementService,
+  WebUserDataSyncEnablementService,
+  1
+  /* InstantiationType.Delayed */
+);
+export {
+  WebUserDataSyncEnablementService
+};
+//# sourceMappingURL=webUserDataSyncEnablementService.js.map

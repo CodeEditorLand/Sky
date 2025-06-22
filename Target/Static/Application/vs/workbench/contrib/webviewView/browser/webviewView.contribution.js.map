@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["../../../../../../../../../../Dependency/Microsoft/Dependency/Editor/src/vs/workbench/contrib/webviewView/browser/webviewView.contribution.ts"],
+  "sourcesContent": ["/*---------------------------------------------------------------------------------------------\r\n *  Copyright (c) Microsoft Corporation. All rights reserved.\r\n *  Licensed under the MIT License. See License.txt in the project root for license information.\r\n *--------------------------------------------------------------------------------------------*/\r\n\r\nimport { InstantiationType, registerSingleton } from '../../../../platform/instantiation/common/extensions.js';\r\nimport { IWebviewViewService, WebviewViewService } from './webviewViewService.js';\r\n\r\nregisterSingleton(IWebviewViewService, WebviewViewService, InstantiationType.Delayed);\r\n"],
+  "mappings": "AAKA,SAA4B,yBAAyB;AACrD,SAAS,qBAAqB,0BAA0B;AAExD;EAAkB;EAAqB;EAAkB;;AAAA;",
+  "names": []
+}

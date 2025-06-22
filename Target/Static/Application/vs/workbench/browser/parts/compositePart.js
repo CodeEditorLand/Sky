@@ -1,1 +1,347 @@
-import"./media/compositepart.css";import{localize as u}from"../../../nls.js";import{$o2 as v}from"../../../base/common/idGenerator.js";import{$qd as c,$ud as C,$wd as x}from"../../../base/common/lifecycle.js";import{$df as f}from"../../../base/common/event.js";import{$pb as S}from"../../../base/common/errors.js";import{$N7 as p}from"../../../base/browser/ui/actionbar/actionbar.js";import{$d0 as L}from"../../../base/browser/ui/progressbar/progressbar.js";import{Part as T}from"../part.js";import{$lj as k}from"../../../platform/instantiation/common/serviceCollection.js";import{$3I as M}from"../../../platform/progress/common/progress.js";import{$25 as R,$M6 as l,$ as o,$T6 as z,$S6 as D}from"../../../base/browser/dom.js";import{$$c as a}from"../../../base/common/types.js";import{$ggb as P}from"../../../platform/actions/browser/menuEntryActionViewItem.js";import{$ixb as j,$hxb as H}from"../../services/progress/browser/progressIndicator.js";import{$lgb as K}from"../../../platform/actions/browser/toolbar.js";import{$Ofb as E}from"../../../platform/theme/browser/defaultStyles.js";import{$L7 as O,$K7 as V}from"../../../base/browser/ui/hover/hoverDelegateFactory.js";class ht extends T{constructor(t,i,e,s,r,h,n,b,g,d,m,I,$,y,B,w,A){super(w,A,b,i,s),this.pb=t,this.qb=i,this.rb=e,this.sb=r,this.tb=h,this.ub=n,this.vb=g,this.wb=d,this.xb=m,this.yb=I,this.zb=$,this.Ab=y,this.Bb=B,this.b=this.B(new f),this.y=this.B(new f),this.eb=new Map,this.fb=new Map,this.ib=new Map,this.mb=this.B(new x),this.hb=i.get(d,1,this.xb),this.db=this.B(O())}Cb(t,i){if(this.gb?.getId()===t)return i&&this.gb.focus(),this.gb;if(this.element)return this.Db(t,i)}Db(t,i=!1){const e=v.nextId();this.nb=e,this.gb&&this.Lb(),this.Hb(t);const s=this.Eb(t,!0);if(!(this.nb!==e||this.gb&&this.gb.getId()!==s.getId()))return this.gb?.getId()===s.getId()?(i&&s.focus(),this.b.fire({composite:s,focus:i}),s):(this.Fb(s),i&&s.focus(),s&&this.b.fire({composite:s,focus:i}),s)}Eb(t,i){const e=this.ib.get(t);if(e)return e.composite;const s=this.vb.getComposite(t);if(s){const r=this,h=new H(a(this.kb),new class extends j{constructor(){super(s.id,!!i),this.B(r.b.event(d=>this.f(d.composite.getId()))),this.B(r.y.event(d=>this.g(d.getId())))}}),n=this.B(this.ub.createChild(new k([M,h]))),b=s.instantiate(n),g=new C;return this.ib.set(t,{composite:b,disposable:g,progress:h}),g.add(b.onTitleAreaUpdate(()=>this.Gb(b.getId()),this)),g.add(n),b}throw new Error(`Unable to find composite with id ${t}`)}Fb(t){this.gb=t;const i=this.gb.getId();i!==this.xb?this.qb.store(this.wb,i,1,1):this.qb.remove(this.wb,1),this.hb=this.gb.getId();let e=this.eb.get(t.getId());if(e||(e=o(".composite"),e.classList.add(...this.zb.split(" ")),e.id=t.getId(),t.create(e),t.updateStyles(),this.eb.set(t.getId(),e)),!this.gb||t.getId()!==this.gb.getId())return;this.R()?.appendChild(e),D(e);const r=a(this.bb);r.actionRunner=t.getActionRunner();const h=this.vb.getComposite(t.getId());h&&h.name!==t.getTitle()&&this.Hb(t.getId(),t.getTitle());let n=this.fb.get(t.getId());n||(n=this.Ib(t),this.fb.set(t.getId(),n)),n(),this.mb.value=r.actionRunner.onDidRun(b=>{b.error&&!S(b.error)&&this.pb.error(b.error)}),t.setVisible(!0),!(!this.gb||t.getId()!==this.gb.getId())&&(this.lb&&t.layout(this.lb),this.ob&&t.setBoundarySashes(this.ob))}Gb(t){const i=this.ib.get(t);if(i&&this.Hb(t,i.composite.getTitle()),this.gb?.getId()===t){const e=this.Ib(this.gb);this.fb.set(this.gb.getId(),e),e()}else this.fb.delete(t)}Hb(t,i){const e=this.vb.getComposite(t);if(!e||!this.jb)return;i||(i=e.name);const s=this.sb.lookupKeybinding(t);this.jb.updateTitle(t,i,s?.getLabel()??void 0),a(this.bb).setAriaLabel(u(3268,null,i))}Ib(t){const i=t?.getMenuIds(),e=t?.getActions().slice(0)||[],s=t?.getSecondaryActions().slice(0)||[],r=a(this.bb);return r.context=this.Rb(),()=>r.setActions(p(e),p(s),i)}Jb(){return this.gb}Kb(){return this.hb}Lb(){if(!this.gb)return;const t=this.gb;this.gb=void 0;const i=this.eb.get(t.getId());return t.setVisible(!1),i&&(i.remove(),z(i)),this.kb?.stop().hide(),this.bb&&this.Ib()(),this.y.fire(t),t}O(t){const i=l(t,o(".composite"));i.classList.add("title"),this.jb=this.Nb(i);const e=l(i,o(".title-actions"));return this.bb=this.B(this.ub.createInstance(K,e,{actionViewItemProvider:(s,r)=>this.Qb(s,r),orientation:0,getKeyBinding:s=>this.sb.lookupKeybinding(s.id),anchorAlignmentProvider:()=>this.Tb(),toggleMenuTitle:u(3269,null),telemetrySource:this.yb,hoverDelegate:this.db})),this.Ib()(),i}Nb(t){const i=l(t,o(".title-label")),e=l(i,o("h2"));this.cb=e;const s=this.B(this.tb.setupManagedHover(V("mouse"),e,"")),r=this;return{updateTitle:(h,n,b)=>{(!this.gb||this.gb.getId()===h)&&(e.innerText=n,s.update(b?u(3270,null,n,b):n))},updateStyles:()=>{e.style.color=r.Ab&&r.z(r.Ab)||"";const h=r.Bb?r.z(r.Bb):void 0;t.style.borderBottom=h?`1px solid ${h}`:""}}}Ob(){return o(".composite")}Pb(){return o(".composite")}updateStyles(){super.updateStyles(),a(this.jb).updateStyles()}Qb(t,i){return this.gb?this.gb.getActionViewItem(t,i):P(this.ub,t,i)}Rb(){return this.gb?this.gb.getActionsContext():null}Q(t){const i=l(t,o(".content"));return this.kb=this.B(new L(i,E)),this.kb.hide(),i}getProgressIndicator(t){const i=this.ib.get(t);return i?i.progress:void 0}Tb(){return 1}layout(t,i,e,s){super.layout(t,i,e,s),this.lb=R.lift(super.Z(t,i).contentSize),this.gb?.layout(this.lb)}setBoundarySashes(t){this.ob=t,this.gb?.setBoundarySashes(t)}Ub(t){if(this.gb?.getId()===t)return!1;this.eb.delete(t),this.fb.delete(t);const i=this.ib.get(t);return i&&(i.composite.dispose(),c(i.disposable),this.ib.delete(t)),!0}dispose(){this.eb.clear(),this.fb.clear(),this.ib.forEach(t=>{t.composite.dispose(),c(t.disposable)}),this.ib.clear(),super.dispose()}}export{ht as $G4b};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import "./media/compositepart.css";
+import { localize } from "../../../nls.js";
+import { defaultGenerator } from "../../../base/common/idGenerator.js";
+import { dispose, DisposableStore, MutableDisposable } from "../../../base/common/lifecycle.js";
+import { Emitter } from "../../../base/common/event.js";
+import { isCancellationError } from "../../../base/common/errors.js";
+import { prepareActions } from "../../../base/browser/ui/actionbar/actionbar.js";
+import { ProgressBar } from "../../../base/browser/ui/progressbar/progressbar.js";
+import { Part } from "../part.js";
+import { ServiceCollection } from "../../../platform/instantiation/common/serviceCollection.js";
+import { IEditorProgressService } from "../../../platform/progress/common/progress.js";
+import { Dimension, append, $, hide, show } from "../../../base/browser/dom.js";
+import { assertReturnsDefined } from "../../../base/common/types.js";
+import { createActionViewItem } from "../../../platform/actions/browser/menuEntryActionViewItem.js";
+import { AbstractProgressScope, ScopedProgressIndicator } from "../../services/progress/browser/progressIndicator.js";
+import { WorkbenchToolBar } from "../../../platform/actions/browser/toolbar.js";
+import { defaultProgressBarStyles } from "../../../platform/theme/browser/defaultStyles.js";
+import { createInstantHoverDelegate, getDefaultHoverDelegate } from "../../../base/browser/ui/hover/hoverDelegateFactory.js";
+class CompositePart extends Part {
+  static {
+    __name(this, "CompositePart");
+  }
+  constructor(notificationService, storageService, contextMenuService, layoutService, keybindingService, hoverService, instantiationService, themeService, registry, activeCompositeSettingsKey, defaultCompositeId, nameForTelemetry, compositeCSSClass, titleForegroundColor, titleBorderColor, id, options) {
+    super(id, options, themeService, storageService, layoutService);
+    this.notificationService = notificationService;
+    this.storageService = storageService;
+    this.contextMenuService = contextMenuService;
+    this.keybindingService = keybindingService;
+    this.hoverService = hoverService;
+    this.instantiationService = instantiationService;
+    this.registry = registry;
+    this.activeCompositeSettingsKey = activeCompositeSettingsKey;
+    this.defaultCompositeId = defaultCompositeId;
+    this.nameForTelemetry = nameForTelemetry;
+    this.compositeCSSClass = compositeCSSClass;
+    this.titleForegroundColor = titleForegroundColor;
+    this.titleBorderColor = titleBorderColor;
+    this.onDidCompositeOpen = this._register(new Emitter());
+    this.onDidCompositeClose = this._register(new Emitter());
+    this.mapCompositeToCompositeContainer = /* @__PURE__ */ new Map();
+    this.mapActionsBindingToComposite = /* @__PURE__ */ new Map();
+    this.instantiatedCompositeItems = /* @__PURE__ */ new Map();
+    this.actionsListener = this._register(new MutableDisposable());
+    this.lastActiveCompositeId = storageService.get(activeCompositeSettingsKey, 1, this.defaultCompositeId);
+    this.toolbarHoverDelegate = this._register(createInstantHoverDelegate());
+  }
+  openComposite(id, focus) {
+    if (this.activeComposite?.getId() === id) {
+      if (focus) {
+        this.activeComposite.focus();
+      }
+      return this.activeComposite;
+    }
+    if (!this.element) {
+      return;
+    }
+    return this.doOpenComposite(id, focus);
+  }
+  doOpenComposite(id, focus = false) {
+    const currentCompositeOpenToken = defaultGenerator.nextId();
+    this.currentCompositeOpenToken = currentCompositeOpenToken;
+    if (this.activeComposite) {
+      this.hideActiveComposite();
+    }
+    this.updateTitle(id);
+    const composite = this.createComposite(id, true);
+    if (this.currentCompositeOpenToken !== currentCompositeOpenToken || this.activeComposite && this.activeComposite.getId() !== composite.getId()) {
+      return void 0;
+    }
+    if (this.activeComposite?.getId() === composite.getId()) {
+      if (focus) {
+        composite.focus();
+      }
+      this.onDidCompositeOpen.fire({ composite, focus });
+      return composite;
+    }
+    this.showComposite(composite);
+    if (focus) {
+      composite.focus();
+    }
+    if (composite) {
+      this.onDidCompositeOpen.fire({ composite, focus });
+    }
+    return composite;
+  }
+  createComposite(id, isActive) {
+    const compositeItem = this.instantiatedCompositeItems.get(id);
+    if (compositeItem) {
+      return compositeItem.composite;
+    }
+    const compositeDescriptor = this.registry.getComposite(id);
+    if (compositeDescriptor) {
+      const that = this;
+      const compositeProgressIndicator = new ScopedProgressIndicator(assertReturnsDefined(this.progressBar), new class extends AbstractProgressScope {
+        constructor() {
+          super(compositeDescriptor.id, !!isActive);
+          this._register(that.onDidCompositeOpen.event((e) => this.onScopeOpened(e.composite.getId())));
+          this._register(that.onDidCompositeClose.event((e) => this.onScopeClosed(e.getId())));
+        }
+      }());
+      const compositeInstantiationService = this._register(this.instantiationService.createChild(new ServiceCollection(
+        [IEditorProgressService, compositeProgressIndicator]
+        // provide the editor progress service for any editors instantiated within the composite
+      )));
+      const composite = compositeDescriptor.instantiate(compositeInstantiationService);
+      const disposable = new DisposableStore();
+      this.instantiatedCompositeItems.set(id, { composite, disposable, progress: compositeProgressIndicator });
+      disposable.add(composite.onTitleAreaUpdate(() => this.onTitleAreaUpdate(composite.getId()), this));
+      disposable.add(compositeInstantiationService);
+      return composite;
+    }
+    throw new Error(`Unable to find composite with id ${id}`);
+  }
+  showComposite(composite) {
+    this.activeComposite = composite;
+    const id = this.activeComposite.getId();
+    if (id !== this.defaultCompositeId) {
+      this.storageService.store(
+        this.activeCompositeSettingsKey,
+        id,
+        1,
+        1
+        /* StorageTarget.MACHINE */
+      );
+    } else {
+      this.storageService.remove(
+        this.activeCompositeSettingsKey,
+        1
+        /* StorageScope.WORKSPACE */
+      );
+    }
+    this.lastActiveCompositeId = this.activeComposite.getId();
+    let compositeContainer = this.mapCompositeToCompositeContainer.get(composite.getId());
+    if (!compositeContainer) {
+      compositeContainer = $(".composite");
+      compositeContainer.classList.add(...this.compositeCSSClass.split(" "));
+      compositeContainer.id = composite.getId();
+      composite.create(compositeContainer);
+      composite.updateStyles();
+      this.mapCompositeToCompositeContainer.set(composite.getId(), compositeContainer);
+    }
+    if (!this.activeComposite || composite.getId() !== this.activeComposite.getId()) {
+      return void 0;
+    }
+    const contentArea = this.getContentArea();
+    contentArea?.appendChild(compositeContainer);
+    show(compositeContainer);
+    const toolBar = assertReturnsDefined(this.toolBar);
+    toolBar.actionRunner = composite.getActionRunner();
+    const descriptor = this.registry.getComposite(composite.getId());
+    if (descriptor && descriptor.name !== composite.getTitle()) {
+      this.updateTitle(composite.getId(), composite.getTitle());
+    }
+    let actionsBinding = this.mapActionsBindingToComposite.get(composite.getId());
+    if (!actionsBinding) {
+      actionsBinding = this.collectCompositeActions(composite);
+      this.mapActionsBindingToComposite.set(composite.getId(), actionsBinding);
+    }
+    actionsBinding();
+    this.actionsListener.value = toolBar.actionRunner.onDidRun((e) => {
+      if (e.error && !isCancellationError(e.error)) {
+        this.notificationService.error(e.error);
+      }
+    });
+    composite.setVisible(true);
+    if (!this.activeComposite || composite.getId() !== this.activeComposite.getId()) {
+      return;
+    }
+    if (this.contentAreaSize) {
+      composite.layout(this.contentAreaSize);
+    }
+    if (this.boundarySashes) {
+      composite.setBoundarySashes(this.boundarySashes);
+    }
+  }
+  onTitleAreaUpdate(compositeId) {
+    const composite = this.instantiatedCompositeItems.get(compositeId);
+    if (composite) {
+      this.updateTitle(compositeId, composite.composite.getTitle());
+    }
+    if (this.activeComposite?.getId() === compositeId) {
+      const actionsBinding = this.collectCompositeActions(this.activeComposite);
+      this.mapActionsBindingToComposite.set(this.activeComposite.getId(), actionsBinding);
+      actionsBinding();
+    } else {
+      this.mapActionsBindingToComposite.delete(compositeId);
+    }
+  }
+  updateTitle(compositeId, compositeTitle) {
+    const compositeDescriptor = this.registry.getComposite(compositeId);
+    if (!compositeDescriptor || !this.titleLabel) {
+      return;
+    }
+    if (!compositeTitle) {
+      compositeTitle = compositeDescriptor.name;
+    }
+    const keybinding = this.keybindingService.lookupKeybinding(compositeId);
+    this.titleLabel.updateTitle(compositeId, compositeTitle, keybinding?.getLabel() ?? void 0);
+    const toolBar = assertReturnsDefined(this.toolBar);
+    toolBar.setAriaLabel(localize("ariaCompositeToolbarLabel", "{0} actions", compositeTitle));
+  }
+  collectCompositeActions(composite) {
+    const menuIds = composite?.getMenuIds();
+    const primaryActions = composite?.getActions().slice(0) || [];
+    const secondaryActions = composite?.getSecondaryActions().slice(0) || [];
+    const toolBar = assertReturnsDefined(this.toolBar);
+    toolBar.context = this.actionsContextProvider();
+    return () => toolBar.setActions(prepareActions(primaryActions), prepareActions(secondaryActions), menuIds);
+  }
+  getActiveComposite() {
+    return this.activeComposite;
+  }
+  getLastActiveCompositeId() {
+    return this.lastActiveCompositeId;
+  }
+  hideActiveComposite() {
+    if (!this.activeComposite) {
+      return void 0;
+    }
+    const composite = this.activeComposite;
+    this.activeComposite = void 0;
+    const compositeContainer = this.mapCompositeToCompositeContainer.get(composite.getId());
+    composite.setVisible(false);
+    if (compositeContainer) {
+      compositeContainer.remove();
+      hide(compositeContainer);
+    }
+    this.progressBar?.stop().hide();
+    if (this.toolBar) {
+      this.collectCompositeActions()();
+    }
+    this.onDidCompositeClose.fire(composite);
+    return composite;
+  }
+  createTitleArea(parent) {
+    const titleArea = append(parent, $(".composite"));
+    titleArea.classList.add("title");
+    this.titleLabel = this.createTitleLabel(titleArea);
+    const titleActionsContainer = append(titleArea, $(".title-actions"));
+    this.toolBar = this._register(this.instantiationService.createInstance(WorkbenchToolBar, titleActionsContainer, {
+      actionViewItemProvider: /* @__PURE__ */ __name((action, options) => this.actionViewItemProvider(action, options), "actionViewItemProvider"),
+      orientation: 0,
+      getKeyBinding: /* @__PURE__ */ __name((action) => this.keybindingService.lookupKeybinding(action.id), "getKeyBinding"),
+      anchorAlignmentProvider: /* @__PURE__ */ __name(() => this.getTitleAreaDropDownAnchorAlignment(), "anchorAlignmentProvider"),
+      toggleMenuTitle: localize("viewsAndMoreActions", "Views and More Actions..."),
+      telemetrySource: this.nameForTelemetry,
+      hoverDelegate: this.toolbarHoverDelegate
+    }));
+    this.collectCompositeActions()();
+    return titleArea;
+  }
+  createTitleLabel(parent) {
+    const titleContainer = append(parent, $(".title-label"));
+    const titleLabel = append(titleContainer, $("h2"));
+    this.titleLabelElement = titleLabel;
+    const hover = this._register(this.hoverService.setupManagedHover(getDefaultHoverDelegate("mouse"), titleLabel, ""));
+    const $this = this;
+    return {
+      updateTitle: /* @__PURE__ */ __name((id, title, keybinding) => {
+        if (!this.activeComposite || this.activeComposite.getId() === id) {
+          titleLabel.innerText = title;
+          hover.update(keybinding ? localize("titleTooltip", "{0} ({1})", title, keybinding) : title);
+        }
+      }, "updateTitle"),
+      updateStyles: /* @__PURE__ */ __name(() => {
+        titleLabel.style.color = $this.titleForegroundColor ? $this.getColor($this.titleForegroundColor) || "" : "";
+        const borderColor = $this.titleBorderColor ? $this.getColor($this.titleBorderColor) : void 0;
+        parent.style.borderBottom = borderColor ? `1px solid ${borderColor}` : "";
+      }, "updateStyles")
+    };
+  }
+  createHeaderArea() {
+    return $(".composite");
+  }
+  createFooterArea() {
+    return $(".composite");
+  }
+  updateStyles() {
+    super.updateStyles();
+    const titleLabel = assertReturnsDefined(this.titleLabel);
+    titleLabel.updateStyles();
+  }
+  actionViewItemProvider(action, options) {
+    if (this.activeComposite) {
+      return this.activeComposite.getActionViewItem(action, options);
+    }
+    return createActionViewItem(this.instantiationService, action, options);
+  }
+  actionsContextProvider() {
+    if (this.activeComposite) {
+      return this.activeComposite.getActionsContext();
+    }
+    return null;
+  }
+  createContentArea(parent) {
+    const contentContainer = append(parent, $(".content"));
+    this.progressBar = this._register(new ProgressBar(contentContainer, defaultProgressBarStyles));
+    this.progressBar.hide();
+    return contentContainer;
+  }
+  getProgressIndicator(id) {
+    const compositeItem = this.instantiatedCompositeItems.get(id);
+    return compositeItem ? compositeItem.progress : void 0;
+  }
+  getTitleAreaDropDownAnchorAlignment() {
+    return 1;
+  }
+  layout(width, height, top, left) {
+    super.layout(width, height, top, left);
+    this.contentAreaSize = Dimension.lift(super.layoutContents(width, height).contentSize);
+    this.activeComposite?.layout(this.contentAreaSize);
+  }
+  setBoundarySashes(sashes) {
+    this.boundarySashes = sashes;
+    this.activeComposite?.setBoundarySashes(sashes);
+  }
+  removeComposite(compositeId) {
+    if (this.activeComposite?.getId() === compositeId) {
+      return false;
+    }
+    this.mapCompositeToCompositeContainer.delete(compositeId);
+    this.mapActionsBindingToComposite.delete(compositeId);
+    const compositeItem = this.instantiatedCompositeItems.get(compositeId);
+    if (compositeItem) {
+      compositeItem.composite.dispose();
+      dispose(compositeItem.disposable);
+      this.instantiatedCompositeItems.delete(compositeId);
+    }
+    return true;
+  }
+  dispose() {
+    this.mapCompositeToCompositeContainer.clear();
+    this.mapActionsBindingToComposite.clear();
+    this.instantiatedCompositeItems.forEach((compositeItem) => {
+      compositeItem.composite.dispose();
+      dispose(compositeItem.disposable);
+    });
+    this.instantiatedCompositeItems.clear();
+    super.dispose();
+  }
+}
+export {
+  CompositePart
+};
+//# sourceMappingURL=compositePart.js.map

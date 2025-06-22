@@ -1,1 +1,88 @@
-import{$vd as a}from"../../../../base/common/lifecycle.js";import{$cC as c}from"../../../../editor/common/core/range.js";import{$fH as i}from"../../../../editor/common/model/pieceTreeTextBuffer/pieceTreeTextBufferBuilder.js";import{$6G as u}from"../../../../editor/common/model/textModelSearch.js";class d extends a{constructor(t,e,r){super(),this._source=t,this.b=e,this.c=r,this.a=void 0}f(t){const e=t.getLineCount();return new c(1,1,e,this.g(t,e))}g(t,e){if(e<1||e>t.getLineCount())throw new Error("Illegal value for lineNumber");return t.getLineLength(e)+1}get inputTextBuffer(){if(!this.b){const t=new i;t.acceptChunk(this._source);const e=t.finish(!0),{textBuffer:r,disposable:s}=e.create(1);this.b=r,this.B(s)}return this.b}get outputTextBuffers(){return this.a||(this.a=this.c.map(t=>{const e=new i;e.acceptChunk(t);const r=e.finish(!0),{textBuffer:s,disposable:n}=r.create(1);return this.B(n),s})),this.a}findInInputs(t){const r=new u(t,!1,!1,null).parseSearchRequest();if(!r)return[];const s=this.f(this.inputTextBuffer);return this.inputTextBuffer.findMatchesLineByLine(s,r,!0,5e3)}findInOutputs(t){const r=new u(t,!1,!1,null).parseSearchRequest();return r?this.outputTextBuffers.map(s=>{const n=s.findMatchesLineByLine(this.f(s),r,!0,5e3);if(n.length!==0)return{textBuffer:s,matches:n}}).filter(s=>!!s):[]}}export{d as $$bc};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { Disposable } from "../../../../base/common/lifecycle.js";
+import { Range } from "../../../../editor/common/core/range.js";
+import { PieceTreeTextBufferBuilder } from "../../../../editor/common/model/pieceTreeTextBuffer/pieceTreeTextBufferBuilder.js";
+import { SearchParams } from "../../../../editor/common/model/textModelSearch.js";
+class CellSearchModel extends Disposable {
+  static {
+    __name(this, "CellSearchModel");
+  }
+  constructor(_source, _inputTextBuffer, _outputs) {
+    super();
+    this._source = _source;
+    this._inputTextBuffer = _inputTextBuffer;
+    this._outputs = _outputs;
+    this._outputTextBuffers = void 0;
+  }
+  _getFullModelRange(buffer) {
+    const lineCount = buffer.getLineCount();
+    return new Range(1, 1, lineCount, this._getLineMaxColumn(buffer, lineCount));
+  }
+  _getLineMaxColumn(buffer, lineNumber) {
+    if (lineNumber < 1 || lineNumber > buffer.getLineCount()) {
+      throw new Error("Illegal value for lineNumber");
+    }
+    return buffer.getLineLength(lineNumber) + 1;
+  }
+  get inputTextBuffer() {
+    if (!this._inputTextBuffer) {
+      const builder = new PieceTreeTextBufferBuilder();
+      builder.acceptChunk(this._source);
+      const bufferFactory = builder.finish(true);
+      const { textBuffer, disposable } = bufferFactory.create(
+        1
+        /* DefaultEndOfLine.LF */
+      );
+      this._inputTextBuffer = textBuffer;
+      this._register(disposable);
+    }
+    return this._inputTextBuffer;
+  }
+  get outputTextBuffers() {
+    if (!this._outputTextBuffers) {
+      this._outputTextBuffers = this._outputs.map((output) => {
+        const builder = new PieceTreeTextBufferBuilder();
+        builder.acceptChunk(output);
+        const bufferFactory = builder.finish(true);
+        const { textBuffer, disposable } = bufferFactory.create(
+          1
+          /* DefaultEndOfLine.LF */
+        );
+        this._register(disposable);
+        return textBuffer;
+      });
+    }
+    return this._outputTextBuffers;
+  }
+  findInInputs(target) {
+    const searchParams = new SearchParams(target, false, false, null);
+    const searchData = searchParams.parseSearchRequest();
+    if (!searchData) {
+      return [];
+    }
+    const fullInputRange = this._getFullModelRange(this.inputTextBuffer);
+    return this.inputTextBuffer.findMatchesLineByLine(fullInputRange, searchData, true, 5e3);
+  }
+  findInOutputs(target) {
+    const searchParams = new SearchParams(target, false, false, null);
+    const searchData = searchParams.parseSearchRequest();
+    if (!searchData) {
+      return [];
+    }
+    return this.outputTextBuffers.map((buffer) => {
+      const matches = buffer.findMatchesLineByLine(this._getFullModelRange(buffer), searchData, true, 5e3);
+      if (matches.length === 0) {
+        return void 0;
+      }
+      return {
+        textBuffer: buffer,
+        matches
+      };
+    }).filter((item) => !!item);
+  }
+}
+export {
+  CellSearchModel
+};
+//# sourceMappingURL=cellSearchModel.js.map

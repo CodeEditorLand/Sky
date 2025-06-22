@@ -1,1 +1,75 @@
-import{$9Q as a}from"./base/string.js";import{localize as s}from"../../../../../../../../nls.js";import{$fR as o}from"../../../promptTypes.js";import{$$i as f,$aj as l,$0i as u}from"../../../../../../../../base/common/glob.js";import{$lQ as h,$kQ as c}from"../diagnostics.js";import{FrontMatterRecord as p}from"../../../codecs/base/frontMatterCodec/tokens/index.js";const r="applyTo";class y extends a{constructor(t,s){super(r,t,s)}get recordName(){return r}validate(){if(super.validate(),void 0===this.e)return this.a;if(this.d!==o)return this.a.push(new h(this.range,s(5742,null,this.recordName))),delete this.e,this.a;const{cleanText:t}=this.e;return!1===this.f(t)?(this.a.push(new c(this.e.range,s(5743,null,t))),delete this.e,this.a):this.a}f(t){try{const s=u(t,",");if(0===s.length)return!1;for(const t of s){const s=l(t);if(f(s))return!1}return!0}catch{return!1}}static isApplyToRecord(t){return t instanceof p&&t.nameToken.text===r}}export{y as $nR};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { PromptStringMetadata } from "./base/string.js";
+import { localize } from "../../../../../../../../nls.js";
+import { INSTRUCTIONS_LANGUAGE_ID } from "../../../promptTypes.js";
+import { isEmptyPattern, parse, splitGlobAware } from "../../../../../../../../base/common/glob.js";
+import { PromptMetadataError, PromptMetadataWarning } from "../diagnostics.js";
+import { FrontMatterRecord } from "../../../codecs/base/frontMatterCodec/tokens/index.js";
+const RECORD_NAME = "applyTo";
+class PromptApplyToMetadata extends PromptStringMetadata {
+  static {
+    __name(this, "PromptApplyToMetadata");
+  }
+  constructor(recordToken, languageId) {
+    super(RECORD_NAME, recordToken, languageId);
+  }
+  get recordName() {
+    return RECORD_NAME;
+  }
+  validate() {
+    super.validate();
+    if (this.valueToken === void 0) {
+      return this.issues;
+    }
+    if (this.languageId !== INSTRUCTIONS_LANGUAGE_ID) {
+      this.issues.push(new PromptMetadataError(this.range, localize("prompt.header.metadata.string.diagnostics.invalid-language", "The '{0}' metadata record is only valid in instruction files.", this.recordName)));
+      delete this.valueToken;
+      return this.issues;
+    }
+    const { cleanText } = this.valueToken;
+    if (this.isValidGlob(cleanText) === false) {
+      this.issues.push(new PromptMetadataWarning(this.valueToken.range, localize("prompt.header.metadata.applyTo.diagnostics.non-valid-glob", "Invalid glob pattern '{0}'.", cleanText)));
+      delete this.valueToken;
+      return this.issues;
+    }
+    return this.issues;
+  }
+  /**
+   * Check if a provided string contains a valid glob pattern.
+   */
+  isValidGlob(pattern) {
+    try {
+      const patterns = splitGlobAware(pattern, ",");
+      if (patterns.length === 0) {
+        return false;
+      }
+      for (const pattern2 of patterns) {
+        const globPattern = parse(pattern2);
+        if (isEmptyPattern(globPattern)) {
+          return false;
+        }
+      }
+      return true;
+    } catch (_error) {
+      return false;
+    }
+  }
+  /**
+   * Check if a provided front matter token is a metadata record
+   * with name equal to `applyTo`.
+   */
+  static isApplyToRecord(token) {
+    if (token instanceof FrontMatterRecord === false) {
+      return false;
+    }
+    if (token.nameToken.text === RECORD_NAME) {
+      return true;
+    }
+    return false;
+  }
+}
+export {
+  PromptApplyToMetadata
+};
+//# sourceMappingURL=applyTo.js.map

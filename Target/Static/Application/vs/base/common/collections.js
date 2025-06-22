@@ -1,1 +1,133 @@
-var a;function i(n,t){const e=Object.create(null);for(const s of n){const o=t(s);let r=e[o];r||(r=e[o]=[]),r.push(s)}return e}function c(n,t){const e=new Map;for(const s of n){const o=t(s);let r=e.get(o);r||(r=[],e.set(o,r)),r.push(s)}return e}function h(n,t){const e=[],s=[];for(const o of n)t.has(o)||e.push(o);for(const o of t)n.has(o)||s.push(o);return{removed:e,added:s}}function u(n,t){const e=[],s=[];for(const[o,r]of n)t.has(o)||e.push(r);for(const[o,r]of t)n.has(o)||s.push(r);return{removed:e,added:s}}function f(n,t){const e=new Set;for(const s of t)n.has(s)&&e.add(s);return e}class l{static{a=Symbol.toStringTag}constructor(t,e){this.b=e,this.a=new Map,this[a]="SetWithKey";for(const s of t)this.add(s)}get size(){return this.a.size}add(t){const e=this.b(t);return this.a.set(e,t),this}delete(t){return this.a.delete(this.b(t))}has(t){return this.a.has(this.b(t))}*entries(){for(const t of this.a.values())yield[t,t]}keys(){return this.values()}*values(){for(const t of this.a.values())yield t}clear(){this.a.clear()}forEach(t,e){this.a.forEach(s=>t.call(e,s,s,this))}[Symbol.iterator](){return this.values()}}export{i as $a,c as $b,h as $c,u as $d,f as $e,l as $f};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var _a;
+function groupBy(data, groupFn) {
+  const result = /* @__PURE__ */ Object.create(null);
+  for (const element of data) {
+    const key = groupFn(element);
+    let target = result[key];
+    if (!target) {
+      target = result[key] = [];
+    }
+    target.push(element);
+  }
+  return result;
+}
+__name(groupBy, "groupBy");
+function groupByMap(data, groupFn) {
+  const result = /* @__PURE__ */ new Map();
+  for (const element of data) {
+    const key = groupFn(element);
+    let target = result.get(key);
+    if (!target) {
+      target = [];
+      result.set(key, target);
+    }
+    target.push(element);
+  }
+  return result;
+}
+__name(groupByMap, "groupByMap");
+function diffSets(before, after) {
+  const removed = [];
+  const added = [];
+  for (const element of before) {
+    if (!after.has(element)) {
+      removed.push(element);
+    }
+  }
+  for (const element of after) {
+    if (!before.has(element)) {
+      added.push(element);
+    }
+  }
+  return { removed, added };
+}
+__name(diffSets, "diffSets");
+function diffMaps(before, after) {
+  const removed = [];
+  const added = [];
+  for (const [index, value] of before) {
+    if (!after.has(index)) {
+      removed.push(value);
+    }
+  }
+  for (const [index, value] of after) {
+    if (!before.has(index)) {
+      added.push(value);
+    }
+  }
+  return { removed, added };
+}
+__name(diffMaps, "diffMaps");
+function intersection(setA, setB) {
+  const result = /* @__PURE__ */ new Set();
+  for (const elem of setB) {
+    if (setA.has(elem)) {
+      result.add(elem);
+    }
+  }
+  return result;
+}
+__name(intersection, "intersection");
+class SetWithKey {
+  static {
+    __name(this, "SetWithKey");
+  }
+  static {
+    _a = Symbol.toStringTag;
+  }
+  constructor(values, toKey) {
+    this.toKey = toKey;
+    this._map = /* @__PURE__ */ new Map();
+    this[_a] = "SetWithKey";
+    for (const value of values) {
+      this.add(value);
+    }
+  }
+  get size() {
+    return this._map.size;
+  }
+  add(value) {
+    const key = this.toKey(value);
+    this._map.set(key, value);
+    return this;
+  }
+  delete(value) {
+    return this._map.delete(this.toKey(value));
+  }
+  has(value) {
+    return this._map.has(this.toKey(value));
+  }
+  *entries() {
+    for (const entry of this._map.values()) {
+      yield [entry, entry];
+    }
+  }
+  keys() {
+    return this.values();
+  }
+  *values() {
+    for (const entry of this._map.values()) {
+      yield entry;
+    }
+  }
+  clear() {
+    this._map.clear();
+  }
+  forEach(callbackfn, thisArg) {
+    this._map.forEach((entry) => callbackfn.call(thisArg, entry, entry, this));
+  }
+  [Symbol.iterator]() {
+    return this.values();
+  }
+}
+export {
+  SetWithKey,
+  diffMaps,
+  diffSets,
+  groupBy,
+  groupByMap,
+  intersection
+};
+//# sourceMappingURL=collections.js.map

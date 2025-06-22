@@ -1,1 +1,136 @@
-import*as u from"../../../../base/common/marked/marked.js";import{Schemas as f}from"../../../../base/common/network.js";import{$dh as d}from"../../../../base/common/resources.js";import{$cF as g}from"../../../../editor/common/services/resolverService.js";import{$mj as b}from"../../../../platform/instantiation/common/instantiation.js";import{$bF as v}from"../../../common/editor/editorInput.js";import{$fF as $}from"../../../common/editor/editorModel.js";import{$ghc as y}from"../../markdown/browser/markedGfmHeadingIdPlugin.js";import{$Vvc as _}from"../common/walkThroughContentProvider.js";var l=function(o,e,t,r){var h=arguments.length,s=h<3?e:r===null?r=Object.getOwnPropertyDescriptor(e,t):r,i;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")s=Reflect.decorate(o,e,t,r);else for(var n=o.length-1;n>=0;n--)(i=o[n])&&(s=(h<3?i(s):h>3?i(e,t,s):i(e,t))||s);return h>3&&s&&Object.defineProperty(e,t,s),s},c=function(o,e){return function(t,r){e(t,r,o)}},a;class p extends ${constructor(e,t){super(),this.a=e,this.b=t}get main(){return this.a}get snippets(){return this.b.map(e=>e.object)}dispose(){this.b.forEach(e=>e.dispose()),super.dispose()}}let m=a=class extends v{get capabilities(){return 8|super.capabilities}get resource(){return this.h.resource}constructor(e,t,r){super(),this.h=e,this.r=t,this.s=r,this.a=null,this.b=0,this.c=0}get typeId(){return this.h.typeId}getName(){return this.h.name}getDescription(){return this.h.description||""}getTelemetryFrom(){return this.h.telemetryFrom}getTelemetryDescriptor(){const e=super.getTelemetryDescriptor();return e.target=this.getTelemetryFrom(),e}get onReady(){return this.h.onReady}get layout(){return this.h.layout}resolve(){return this.a||(this.a=_(this.r,this.h.resource).then(e=>{if(this.resource.path.endsWith(".html"))return new p(e,[]);const t=[];let r=0;const h=new u.marked.Renderer;return h.code=({lang:i})=>{r++;const n=this.h.resource.with({scheme:f.walkThroughSnippet,fragment:`${r}.${i}`});return t.push(this.s.createModelReference(n)),`<div id="snippet-${n.fragment}" class="walkThroughEditorContainer" ></div>`},e=new u.Marked({renderer:h},y()).parse(e,{async:!1}),Promise.all(t).then(i=>new p(e,i))})),this.a}matches(e){return super.matches(e)?!0:e instanceof a?d(e.h.resource,this.h.resource):!1}dispose(){this.a&&(this.a.then(e=>e.dispose()),this.a=null),super.dispose()}relativeScrollPosition(e,t){this.b=Math.max(this.b,e),this.c=Math.max(this.c,t)}};m=a=l([c(1,b),c(2,g)],m);export{m as $Xvc};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import * as marked from "../../../../base/common/marked/marked.js";
+import { Schemas } from "../../../../base/common/network.js";
+import { isEqual } from "../../../../base/common/resources.js";
+import { ITextModelService } from "../../../../editor/common/services/resolverService.js";
+import { IInstantiationService } from "../../../../platform/instantiation/common/instantiation.js";
+import { EditorInput } from "../../../common/editor/editorInput.js";
+import { EditorModel } from "../../../common/editor/editorModel.js";
+import { markedGfmHeadingIdPlugin } from "../../markdown/browser/markedGfmHeadingIdPlugin.js";
+import { moduleToContent } from "../common/walkThroughContentProvider.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+var WalkThroughInput_1;
+class WalkThroughModel extends EditorModel {
+  static {
+    __name(this, "WalkThroughModel");
+  }
+  constructor(mainRef, snippetRefs) {
+    super();
+    this.mainRef = mainRef;
+    this.snippetRefs = snippetRefs;
+  }
+  get main() {
+    return this.mainRef;
+  }
+  get snippets() {
+    return this.snippetRefs.map((snippet) => snippet.object);
+  }
+  dispose() {
+    this.snippetRefs.forEach((ref) => ref.dispose());
+    super.dispose();
+  }
+}
+let WalkThroughInput = WalkThroughInput_1 = class WalkThroughInput2 extends EditorInput {
+  static {
+    __name(this, "WalkThroughInput");
+  }
+  get capabilities() {
+    return 8 | super.capabilities;
+  }
+  get resource() {
+    return this.options.resource;
+  }
+  constructor(options, instantiationService, textModelResolverService) {
+    super();
+    this.options = options;
+    this.instantiationService = instantiationService;
+    this.textModelResolverService = textModelResolverService;
+    this.promise = null;
+    this.maxTopScroll = 0;
+    this.maxBottomScroll = 0;
+  }
+  get typeId() {
+    return this.options.typeId;
+  }
+  getName() {
+    return this.options.name;
+  }
+  getDescription() {
+    return this.options.description || "";
+  }
+  getTelemetryFrom() {
+    return this.options.telemetryFrom;
+  }
+  getTelemetryDescriptor() {
+    const descriptor = super.getTelemetryDescriptor();
+    descriptor["target"] = this.getTelemetryFrom();
+    return descriptor;
+  }
+  get onReady() {
+    return this.options.onReady;
+  }
+  get layout() {
+    return this.options.layout;
+  }
+  resolve() {
+    if (!this.promise) {
+      this.promise = moduleToContent(this.instantiationService, this.options.resource).then((content) => {
+        if (this.resource.path.endsWith(".html")) {
+          return new WalkThroughModel(content, []);
+        }
+        const snippets = [];
+        let i = 0;
+        const renderer = new marked.marked.Renderer();
+        renderer.code = ({ lang }) => {
+          i++;
+          const resource = this.options.resource.with({ scheme: Schemas.walkThroughSnippet, fragment: `${i}.${lang}` });
+          snippets.push(this.textModelResolverService.createModelReference(resource));
+          return `<div id="snippet-${resource.fragment}" class="walkThroughEditorContainer" ></div>`;
+        };
+        const m = new marked.Marked({ renderer }, markedGfmHeadingIdPlugin());
+        content = m.parse(content, { async: false });
+        return Promise.all(snippets).then((refs) => new WalkThroughModel(content, refs));
+      });
+    }
+    return this.promise;
+  }
+  matches(otherInput) {
+    if (super.matches(otherInput)) {
+      return true;
+    }
+    if (otherInput instanceof WalkThroughInput_1) {
+      return isEqual(otherInput.options.resource, this.options.resource);
+    }
+    return false;
+  }
+  dispose() {
+    if (this.promise) {
+      this.promise.then((model) => model.dispose());
+      this.promise = null;
+    }
+    super.dispose();
+  }
+  relativeScrollPosition(topScroll, bottomScroll) {
+    this.maxTopScroll = Math.max(this.maxTopScroll, topScroll);
+    this.maxBottomScroll = Math.max(this.maxBottomScroll, bottomScroll);
+  }
+};
+WalkThroughInput = WalkThroughInput_1 = __decorate([
+  __param(1, IInstantiationService),
+  __param(2, ITextModelService)
+], WalkThroughInput);
+export {
+  WalkThroughInput
+};
+//# sourceMappingURL=walkThroughInput.js.map

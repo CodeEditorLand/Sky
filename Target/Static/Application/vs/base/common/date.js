@@ -1,1 +1,220 @@
-import{localize as t}from"../../nls.js";import{$vf as o}from"./lazy.js";import{$k as S}from"./platform.js";const i=60,a=3600,f=24*a,h=7*f,w=30*f,M=365*f;function g(e,n,r,l){"number"!=typeof e&&(e=e.getTime());const o=Math.round(((new Date).getTime()-e)/1e3);if(o<-30)return t(45,null,g((new Date).getTime()+1e3*o,!1));if(!l&&o<30)return t(46,null);let u;return o<i?(u=o,t(n?1===u?r?47:48:r?49:50:1===u?r?51:52:r?53:54,null,u)):o<a?(u=Math.floor(o/i),t(n?1===u?r?55:56:r?57:58:1===u?r?59:60:r?61:62,null,u)):o<f?(u=Math.floor(o/a),t(n?1===u?r?63:64:r?65:66:1===u?r?67:68:r?69:70,null,u)):o<h?(u=Math.floor(o/f),t(n?1===u?71:72:1===u?73:74,null,u)):o<w?(u=Math.floor(o/h),t(n?1===u?r?75:76:r?77:78:1===u?r?79:80:r?81:82,null,u)):o<M?(u=Math.floor(o/w),t(n?1===u?r?83:84:r?85:86:1===u?r?87:88:r?89:90,null,u)):(u=Math.floor(o/M),t(n?1===u?r?91:92:r?93:94:1===u?r?95:96:r?97:98,null,u))}function $(e,n,r){"number"!=typeof e&&(e=e.getTime());const l=new Date;l.setHours(0,0,0,0);const o=new Date(l.getTime());return o.setDate(o.getDate()-1),e>l.getTime()?t(99,null):e>o.getTime()?t(100,null):g(e,n,r)}function x(e,n){const r=Math.abs(e/1e3);return r<1?t(n?101:102,null,e):r<i?t(n?103:104,null,Math.round(e)/1e3):r<a?t(n?105:106,null,Math.round(e/6e4)):r<f?t(n?107:108,null,Math.round(e/(1e3*a))):t(109,null,Math.round(e/(1e3*f)))}function k(t){return t.getFullYear()+"-"+String(t.getMonth()+1).padStart(2,"0")+"-"+String(t.getDate()).padStart(2,"0")+"T"+String(t.getHours()).padStart(2,"0")+":"+String(t.getMinutes()).padStart(2,"0")+":"+String(t.getSeconds()).padStart(2,"0")+"."+(t.getMilliseconds()/1e3).toFixed(3).slice(2,5)+"Z"}const C={DateTimeFormat:(t,e)=>new o((()=>{try{return new Intl.DateTimeFormat(t,e)}catch{return new Intl.DateTimeFormat(void 0,e)}})),Collator:(t,e)=>new o((()=>{try{return new Intl.Collator(t,e)}catch{return new Intl.Collator(void 0,e)}})),Segmenter:(t,e)=>new o((()=>{try{return new Intl.Segmenter(t,e)}catch{return new Intl.Segmenter(void 0,e)}})),Locale:(t,e)=>new o((()=>{try{return new Intl.Locale(t,e)}catch{return new Intl.Locale(S,e)}})),NumberFormat:(t,e)=>new o((()=>{try{return new Intl.NumberFormat(t,e)}catch{return new Intl.NumberFormat(void 0,e)}}))};export{g as $in,$ as $jn,x as $kn,k as $ln,C as $mn};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { localize } from "../../nls.js";
+import { Lazy } from "./lazy.js";
+import { LANGUAGE_DEFAULT } from "./platform.js";
+const minute = 60;
+const hour = minute * 60;
+const day = hour * 24;
+const week = day * 7;
+const month = day * 30;
+const year = day * 365;
+function fromNow(date, appendAgoLabel, useFullTimeWords, disallowNow) {
+  if (typeof date !== "number") {
+    date = date.getTime();
+  }
+  const seconds = Math.round(((/* @__PURE__ */ new Date()).getTime() - date) / 1e3);
+  if (seconds < -30) {
+    return localize("date.fromNow.in", "in {0}", fromNow((/* @__PURE__ */ new Date()).getTime() + seconds * 1e3, false));
+  }
+  if (!disallowNow && seconds < 30) {
+    return localize("date.fromNow.now", "now");
+  }
+  let value;
+  if (seconds < minute) {
+    value = seconds;
+    if (appendAgoLabel) {
+      if (value === 1) {
+        return useFullTimeWords ? localize("date.fromNow.seconds.singular.ago.fullWord", "{0} second ago", value) : localize("date.fromNow.seconds.singular.ago", "{0} sec ago", value);
+      } else {
+        return useFullTimeWords ? localize("date.fromNow.seconds.plural.ago.fullWord", "{0} seconds ago", value) : localize("date.fromNow.seconds.plural.ago", "{0} secs ago", value);
+      }
+    } else {
+      if (value === 1) {
+        return useFullTimeWords ? localize("date.fromNow.seconds.singular.fullWord", "{0} second", value) : localize("date.fromNow.seconds.singular", "{0} sec", value);
+      } else {
+        return useFullTimeWords ? localize("date.fromNow.seconds.plural.fullWord", "{0} seconds", value) : localize("date.fromNow.seconds.plural", "{0} secs", value);
+      }
+    }
+  }
+  if (seconds < hour) {
+    value = Math.floor(seconds / minute);
+    if (appendAgoLabel) {
+      if (value === 1) {
+        return useFullTimeWords ? localize("date.fromNow.minutes.singular.ago.fullWord", "{0} minute ago", value) : localize("date.fromNow.minutes.singular.ago", "{0} min ago", value);
+      } else {
+        return useFullTimeWords ? localize("date.fromNow.minutes.plural.ago.fullWord", "{0} minutes ago", value) : localize("date.fromNow.minutes.plural.ago", "{0} mins ago", value);
+      }
+    } else {
+      if (value === 1) {
+        return useFullTimeWords ? localize("date.fromNow.minutes.singular.fullWord", "{0} minute", value) : localize("date.fromNow.minutes.singular", "{0} min", value);
+      } else {
+        return useFullTimeWords ? localize("date.fromNow.minutes.plural.fullWord", "{0} minutes", value) : localize("date.fromNow.minutes.plural", "{0} mins", value);
+      }
+    }
+  }
+  if (seconds < day) {
+    value = Math.floor(seconds / hour);
+    if (appendAgoLabel) {
+      if (value === 1) {
+        return useFullTimeWords ? localize("date.fromNow.hours.singular.ago.fullWord", "{0} hour ago", value) : localize("date.fromNow.hours.singular.ago", "{0} hr ago", value);
+      } else {
+        return useFullTimeWords ? localize("date.fromNow.hours.plural.ago.fullWord", "{0} hours ago", value) : localize("date.fromNow.hours.plural.ago", "{0} hrs ago", value);
+      }
+    } else {
+      if (value === 1) {
+        return useFullTimeWords ? localize("date.fromNow.hours.singular.fullWord", "{0} hour", value) : localize("date.fromNow.hours.singular", "{0} hr", value);
+      } else {
+        return useFullTimeWords ? localize("date.fromNow.hours.plural.fullWord", "{0} hours", value) : localize("date.fromNow.hours.plural", "{0} hrs", value);
+      }
+    }
+  }
+  if (seconds < week) {
+    value = Math.floor(seconds / day);
+    if (appendAgoLabel) {
+      return value === 1 ? localize("date.fromNow.days.singular.ago", "{0} day ago", value) : localize("date.fromNow.days.plural.ago", "{0} days ago", value);
+    } else {
+      return value === 1 ? localize("date.fromNow.days.singular", "{0} day", value) : localize("date.fromNow.days.plural", "{0} days", value);
+    }
+  }
+  if (seconds < month) {
+    value = Math.floor(seconds / week);
+    if (appendAgoLabel) {
+      if (value === 1) {
+        return useFullTimeWords ? localize("date.fromNow.weeks.singular.ago.fullWord", "{0} week ago", value) : localize("date.fromNow.weeks.singular.ago", "{0} wk ago", value);
+      } else {
+        return useFullTimeWords ? localize("date.fromNow.weeks.plural.ago.fullWord", "{0} weeks ago", value) : localize("date.fromNow.weeks.plural.ago", "{0} wks ago", value);
+      }
+    } else {
+      if (value === 1) {
+        return useFullTimeWords ? localize("date.fromNow.weeks.singular.fullWord", "{0} week", value) : localize("date.fromNow.weeks.singular", "{0} wk", value);
+      } else {
+        return useFullTimeWords ? localize("date.fromNow.weeks.plural.fullWord", "{0} weeks", value) : localize("date.fromNow.weeks.plural", "{0} wks", value);
+      }
+    }
+  }
+  if (seconds < year) {
+    value = Math.floor(seconds / month);
+    if (appendAgoLabel) {
+      if (value === 1) {
+        return useFullTimeWords ? localize("date.fromNow.months.singular.ago.fullWord", "{0} month ago", value) : localize("date.fromNow.months.singular.ago", "{0} mo ago", value);
+      } else {
+        return useFullTimeWords ? localize("date.fromNow.months.plural.ago.fullWord", "{0} months ago", value) : localize("date.fromNow.months.plural.ago", "{0} mos ago", value);
+      }
+    } else {
+      if (value === 1) {
+        return useFullTimeWords ? localize("date.fromNow.months.singular.fullWord", "{0} month", value) : localize("date.fromNow.months.singular", "{0} mo", value);
+      } else {
+        return useFullTimeWords ? localize("date.fromNow.months.plural.fullWord", "{0} months", value) : localize("date.fromNow.months.plural", "{0} mos", value);
+      }
+    }
+  }
+  value = Math.floor(seconds / year);
+  if (appendAgoLabel) {
+    if (value === 1) {
+      return useFullTimeWords ? localize("date.fromNow.years.singular.ago.fullWord", "{0} year ago", value) : localize("date.fromNow.years.singular.ago", "{0} yr ago", value);
+    } else {
+      return useFullTimeWords ? localize("date.fromNow.years.plural.ago.fullWord", "{0} years ago", value) : localize("date.fromNow.years.plural.ago", "{0} yrs ago", value);
+    }
+  } else {
+    if (value === 1) {
+      return useFullTimeWords ? localize("date.fromNow.years.singular.fullWord", "{0} year", value) : localize("date.fromNow.years.singular", "{0} yr", value);
+    } else {
+      return useFullTimeWords ? localize("date.fromNow.years.plural.fullWord", "{0} years", value) : localize("date.fromNow.years.plural", "{0} yrs", value);
+    }
+  }
+}
+__name(fromNow, "fromNow");
+function fromNowByDay(date, appendAgoLabel, useFullTimeWords) {
+  if (typeof date !== "number") {
+    date = date.getTime();
+  }
+  const todayMidnightTime = /* @__PURE__ */ new Date();
+  todayMidnightTime.setHours(0, 0, 0, 0);
+  const yesterdayMidnightTime = new Date(todayMidnightTime.getTime());
+  yesterdayMidnightTime.setDate(yesterdayMidnightTime.getDate() - 1);
+  if (date > todayMidnightTime.getTime()) {
+    return localize("today", "Today");
+  }
+  if (date > yesterdayMidnightTime.getTime()) {
+    return localize("yesterday", "Yesterday");
+  }
+  return fromNow(date, appendAgoLabel, useFullTimeWords);
+}
+__name(fromNowByDay, "fromNowByDay");
+function getDurationString(ms, useFullTimeWords) {
+  const seconds = Math.abs(ms / 1e3);
+  if (seconds < 1) {
+    return useFullTimeWords ? localize("duration.ms.full", "{0} milliseconds", ms) : localize("duration.ms", "{0}ms", ms);
+  }
+  if (seconds < minute) {
+    return useFullTimeWords ? localize("duration.s.full", "{0} seconds", Math.round(ms) / 1e3) : localize("duration.s", "{0}s", Math.round(ms) / 1e3);
+  }
+  if (seconds < hour) {
+    return useFullTimeWords ? localize("duration.m.full", "{0} minutes", Math.round(ms / (1e3 * minute))) : localize("duration.m", "{0} mins", Math.round(ms / (1e3 * minute)));
+  }
+  if (seconds < day) {
+    return useFullTimeWords ? localize("duration.h.full", "{0} hours", Math.round(ms / (1e3 * hour))) : localize("duration.h", "{0} hrs", Math.round(ms / (1e3 * hour)));
+  }
+  return localize("duration.d", "{0} days", Math.round(ms / (1e3 * day)));
+}
+__name(getDurationString, "getDurationString");
+function toLocalISOString(date) {
+  return date.getFullYear() + "-" + String(date.getMonth() + 1).padStart(2, "0") + "-" + String(date.getDate()).padStart(2, "0") + "T" + String(date.getHours()).padStart(2, "0") + ":" + String(date.getMinutes()).padStart(2, "0") + ":" + String(date.getSeconds()).padStart(2, "0") + "." + (date.getMilliseconds() / 1e3).toFixed(3).slice(2, 5) + "Z";
+}
+__name(toLocalISOString, "toLocalISOString");
+const safeIntl = {
+  DateTimeFormat(locales, options) {
+    return new Lazy(() => {
+      try {
+        return new Intl.DateTimeFormat(locales, options);
+      } catch {
+        return new Intl.DateTimeFormat(void 0, options);
+      }
+    });
+  },
+  Collator(locales, options) {
+    return new Lazy(() => {
+      try {
+        return new Intl.Collator(locales, options);
+      } catch {
+        return new Intl.Collator(void 0, options);
+      }
+    });
+  },
+  Segmenter(locales, options) {
+    return new Lazy(() => {
+      try {
+        return new Intl.Segmenter(locales, options);
+      } catch {
+        return new Intl.Segmenter(void 0, options);
+      }
+    });
+  },
+  Locale(tag, options) {
+    return new Lazy(() => {
+      try {
+        return new Intl.Locale(tag, options);
+      } catch {
+        return new Intl.Locale(LANGUAGE_DEFAULT, options);
+      }
+    });
+  },
+  NumberFormat(locales, options) {
+    return new Lazy(() => {
+      try {
+        return new Intl.NumberFormat(locales, options);
+      } catch {
+        return new Intl.NumberFormat(void 0, options);
+      }
+    });
+  }
+};
+export {
+  fromNow,
+  fromNowByDay,
+  getDurationString,
+  safeIntl,
+  toLocalISOString
+};
+//# sourceMappingURL=date.js.map

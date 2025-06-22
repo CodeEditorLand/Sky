@@ -1,1 +1,150 @@
-import{Event as k}from"../../../base/common/event.js";import{$ud as p,$qd as v}from"../../../base/common/lifecycle.js";import{$Ic as w}from"../../../base/common/map.js";import{URI as l}from"../../../base/common/uri.js";import{$QWb as g}from"./mainThreadDocuments.js";import{NotebookCellsChangeType as a}from"../../contrib/notebook/common/notebookCommon.js";import{$Tyb as C}from"../../contrib/notebook/common/notebookEditorModelResolverService.js";import{$yo as D}from"../../../platform/uriIdentity/common/uriIdentity.js";import{$pY as y}from"../common/extHost.protocol.js";import{NotebookDto as c}from"./mainThreadNotebookDto.js";import{$kX as $}from"../../services/extensions/common/proxyIdentifier.js";var m=function(r,t,e,n){var s=arguments.length,i=s<3?t:n===null?n=Object.getOwnPropertyDescriptor(t,e):n,d;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")i=Reflect.decorate(r,t,e,n);else for(var o=r.length-1;o>=0;o--)(d=r[o])&&(i=(s<3?d(i):s>3?d(t,e,i):d(t,e))||i);return s>3&&i&&Object.defineProperty(t,e,i),i},u=function(r,t){return function(e,n){t(e,n,r)}};let b=class{constructor(t,e,n){this.f=e,this.g=n,this.a=new p,this.c=new w,this.b=t.getProxy(y.ExtHostNotebookDocuments),this.d=new g(this.g.extUri),this.a.add(this.f.onDidChangeDirty(s=>this.b.$acceptDirtyStateChanged(s.resource,s.isDirty()))),this.a.add(this.f.onDidSaveNotebook(s=>this.b.$acceptModelSaved(s))),this.a.add(e.onWillFailWithConflict(s=>{this.d.remove(s.resource)}))}dispose(){this.a.dispose(),this.d.dispose(),v(this.c.values())}handleNotebooksAdded(t){for(const e of t){const n=new p;n.add(e.onDidChangeContent(s=>{const i={versionId:s.versionId,rawEvents:[]};for(const o of s.rawEvents)switch(o.kind){case a.ModelChange:i.rawEvents.push({kind:o.kind,changes:o.changes.map(h=>[h[0],h[1],h[2].map(f=>c.toNotebookCellDto(f))])});break;case a.Move:i.rawEvents.push({kind:o.kind,index:o.index,length:o.length,newIdx:o.newIdx});break;case a.Output:i.rawEvents.push({kind:o.kind,index:o.index,outputs:o.outputs.map(c.toNotebookOutputDto)});break;case a.OutputItem:i.rawEvents.push({kind:o.kind,index:o.index,outputId:o.outputId,outputItems:o.outputItems.map(c.toNotebookOutputItemDto),append:o.append});break;case a.ChangeCellLanguage:case a.ChangeCellContent:case a.ChangeCellMetadata:case a.ChangeCellInternalMetadata:i.rawEvents.push(o);break}const d=s.rawEvents.find(o=>o.kind===a.ChangeDocumentMetadata);this.b.$acceptModelChanged(e.uri,new $(i),this.f.isDirty(e.uri),d?e.metadata:void 0)})),this.c.set(e.uri,n)}}handleNotebooksRemoved(t){for(const e of t)this.c.get(e)?.dispose(),this.c.delete(e)}async $tryCreateNotebook(t){if(t.content){const e=await this.f.resolve({untitledResource:void 0},t.viewType);if(k.once(e.object.notebook.onWillDispose)(()=>{e.dispose()}),this.b.$acceptDirtyStateChanged(e.object.resource,!0),t.content){const n=c.fromNotebookDataDto(t.content);e.object.notebook.reset(n.cells,n.metadata,e.object.notebook.transientOptions)}return e.object.notebook.uri}else return(await this.f.createUntitledNotebookTextModel(t.viewType)).uri}async $tryOpenNotebook(t){const e=l.revive(t),n=await this.f.resolve(e,void 0);return t.scheme==="untitled"&&n.object.notebook.onWillDispose(()=>{n.dispose()}),this.d.add(e,n),e}async $trySaveNotebook(t){const e=l.revive(t),n=await this.f.resolve(e),s=await n.object.save();return n.dispose(),s}};b=m([u(1,C),u(2,D)],b);export{b as $51b};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { Event } from "../../../base/common/event.js";
+import { DisposableStore, dispose } from "../../../base/common/lifecycle.js";
+import { ResourceMap } from "../../../base/common/map.js";
+import { URI } from "../../../base/common/uri.js";
+import { BoundModelReferenceCollection } from "./mainThreadDocuments.js";
+import { NotebookCellsChangeType } from "../../contrib/notebook/common/notebookCommon.js";
+import { INotebookEditorModelResolverService } from "../../contrib/notebook/common/notebookEditorModelResolverService.js";
+import { IUriIdentityService } from "../../../platform/uriIdentity/common/uriIdentity.js";
+import { ExtHostContext } from "../common/extHost.protocol.js";
+import { NotebookDto } from "./mainThreadNotebookDto.js";
+import { SerializableObjectWithBuffers } from "../../services/extensions/common/proxyIdentifier.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+let MainThreadNotebookDocuments = class MainThreadNotebookDocuments2 {
+  static {
+    __name(this, "MainThreadNotebookDocuments");
+  }
+  constructor(extHostContext, _notebookEditorModelResolverService, _uriIdentityService) {
+    this._notebookEditorModelResolverService = _notebookEditorModelResolverService;
+    this._uriIdentityService = _uriIdentityService;
+    this._disposables = new DisposableStore();
+    this._documentEventListenersMapping = new ResourceMap();
+    this._proxy = extHostContext.getProxy(ExtHostContext.ExtHostNotebookDocuments);
+    this._modelReferenceCollection = new BoundModelReferenceCollection(this._uriIdentityService.extUri);
+    this._disposables.add(this._notebookEditorModelResolverService.onDidChangeDirty((model) => this._proxy.$acceptDirtyStateChanged(model.resource, model.isDirty())));
+    this._disposables.add(this._notebookEditorModelResolverService.onDidSaveNotebook((e) => this._proxy.$acceptModelSaved(e)));
+    this._disposables.add(_notebookEditorModelResolverService.onWillFailWithConflict((e) => {
+      this._modelReferenceCollection.remove(e.resource);
+    }));
+  }
+  dispose() {
+    this._disposables.dispose();
+    this._modelReferenceCollection.dispose();
+    dispose(this._documentEventListenersMapping.values());
+  }
+  handleNotebooksAdded(notebooks) {
+    for (const textModel of notebooks) {
+      const disposableStore = new DisposableStore();
+      disposableStore.add(textModel.onDidChangeContent((event) => {
+        const eventDto = {
+          versionId: event.versionId,
+          rawEvents: []
+        };
+        for (const e of event.rawEvents) {
+          switch (e.kind) {
+            case NotebookCellsChangeType.ModelChange:
+              eventDto.rawEvents.push({
+                kind: e.kind,
+                changes: e.changes.map((diff) => [diff[0], diff[1], diff[2].map((cell) => NotebookDto.toNotebookCellDto(cell))])
+              });
+              break;
+            case NotebookCellsChangeType.Move:
+              eventDto.rawEvents.push({
+                kind: e.kind,
+                index: e.index,
+                length: e.length,
+                newIdx: e.newIdx
+              });
+              break;
+            case NotebookCellsChangeType.Output:
+              eventDto.rawEvents.push({
+                kind: e.kind,
+                index: e.index,
+                outputs: e.outputs.map(NotebookDto.toNotebookOutputDto)
+              });
+              break;
+            case NotebookCellsChangeType.OutputItem:
+              eventDto.rawEvents.push({
+                kind: e.kind,
+                index: e.index,
+                outputId: e.outputId,
+                outputItems: e.outputItems.map(NotebookDto.toNotebookOutputItemDto),
+                append: e.append
+              });
+              break;
+            case NotebookCellsChangeType.ChangeCellLanguage:
+            case NotebookCellsChangeType.ChangeCellContent:
+            case NotebookCellsChangeType.ChangeCellMetadata:
+            case NotebookCellsChangeType.ChangeCellInternalMetadata:
+              eventDto.rawEvents.push(e);
+              break;
+          }
+        }
+        const hasDocumentMetadataChangeEvent = event.rawEvents.find((e) => e.kind === NotebookCellsChangeType.ChangeDocumentMetadata);
+        this._proxy.$acceptModelChanged(textModel.uri, new SerializableObjectWithBuffers(eventDto), this._notebookEditorModelResolverService.isDirty(textModel.uri), hasDocumentMetadataChangeEvent ? textModel.metadata : void 0);
+      }));
+      this._documentEventListenersMapping.set(textModel.uri, disposableStore);
+    }
+  }
+  handleNotebooksRemoved(uris) {
+    for (const uri of uris) {
+      this._documentEventListenersMapping.get(uri)?.dispose();
+      this._documentEventListenersMapping.delete(uri);
+    }
+  }
+  async $tryCreateNotebook(options) {
+    if (options.content) {
+      const ref = await this._notebookEditorModelResolverService.resolve({ untitledResource: void 0 }, options.viewType);
+      Event.once(ref.object.notebook.onWillDispose)(() => {
+        ref.dispose();
+      });
+      this._proxy.$acceptDirtyStateChanged(ref.object.resource, true);
+      if (options.content) {
+        const data = NotebookDto.fromNotebookDataDto(options.content);
+        ref.object.notebook.reset(data.cells, data.metadata, ref.object.notebook.transientOptions);
+      }
+      return ref.object.notebook.uri;
+    } else {
+      const notebook = await this._notebookEditorModelResolverService.createUntitledNotebookTextModel(options.viewType);
+      return notebook.uri;
+    }
+  }
+  async $tryOpenNotebook(uriComponents) {
+    const uri = URI.revive(uriComponents);
+    const ref = await this._notebookEditorModelResolverService.resolve(uri, void 0);
+    if (uriComponents.scheme === "untitled") {
+      ref.object.notebook.onWillDispose(() => {
+        ref.dispose();
+      });
+    }
+    this._modelReferenceCollection.add(uri, ref);
+    return uri;
+  }
+  async $trySaveNotebook(uriComponents) {
+    const uri = URI.revive(uriComponents);
+    const ref = await this._notebookEditorModelResolverService.resolve(uri);
+    const saveResult = await ref.object.save();
+    ref.dispose();
+    return saveResult;
+  }
+};
+MainThreadNotebookDocuments = __decorate([
+  __param(1, INotebookEditorModelResolverService),
+  __param(2, IUriIdentityService)
+], MainThreadNotebookDocuments);
+export {
+  MainThreadNotebookDocuments
+};
+//# sourceMappingURL=mainThreadNotebookDocuments.js.map

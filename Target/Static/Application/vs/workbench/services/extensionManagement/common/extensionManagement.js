@@ -1,1 +1,39 @@
-import{$nj as s,$oj as d}from"../../../../platform/instantiation/common/instantiation.js";import{$jz as y}from"../../../../platform/extensionManagement/common/extensionManagement.js";const D=d(y);var o;!function(e){e[e.Local=1]="Local",e[e.Remote=2]="Remote",e[e.Web=3]="Web"}(o||(o={}));const B=s("extensionManagementServerService"),p=d(D);var r;!function(e){e[e.DisabledByTrustRequirement=0]="DisabledByTrustRequirement",e[e.DisabledByExtensionKind=1]="DisabledByExtensionKind",e[e.DisabledByEnvironment=2]="DisabledByEnvironment",e[e.EnabledByEnvironment=3]="EnabledByEnvironment",e[e.DisabledByMalicious=4]="DisabledByMalicious",e[e.DisabledByVirtualWorkspace=5]="DisabledByVirtualWorkspace",e[e.DisabledByInvalidExtension=6]="DisabledByInvalidExtension",e[e.DisabledByAllowlist=7]="DisabledByAllowlist",e[e.DisabledByExtensionDependency=8]="DisabledByExtensionDependency",e[e.DisabledGlobally=9]="DisabledGlobally",e[e.DisabledWorkspace=10]="DisabledWorkspace",e[e.EnabledGlobally=11]="EnabledGlobally",e[e.EnabledWorkspace=12]="EnabledWorkspace"}(r||(r={}));const b=s("extensionEnablementService"),v=s("IWebExtensionsScannerService");export{v as $0Cb,D as $6Cb,B as $7Cb,p as $8Cb,b as $9Cb,r as EnablementState,o as ExtensionInstallLocation};
+import { createDecorator, refineServiceDecorator } from "../../../../platform/instantiation/common/instantiation.js";
+import { IExtensionManagementService } from "../../../../platform/extensionManagement/common/extensionManagement.js";
+const IProfileAwareExtensionManagementService = refineServiceDecorator(IExtensionManagementService);
+var ExtensionInstallLocation;
+(function(ExtensionInstallLocation2) {
+  ExtensionInstallLocation2[ExtensionInstallLocation2["Local"] = 1] = "Local";
+  ExtensionInstallLocation2[ExtensionInstallLocation2["Remote"] = 2] = "Remote";
+  ExtensionInstallLocation2[ExtensionInstallLocation2["Web"] = 3] = "Web";
+})(ExtensionInstallLocation || (ExtensionInstallLocation = {}));
+const IExtensionManagementServerService = createDecorator("extensionManagementServerService");
+const IWorkbenchExtensionManagementService = refineServiceDecorator(IProfileAwareExtensionManagementService);
+var EnablementState;
+(function(EnablementState2) {
+  EnablementState2[EnablementState2["DisabledByTrustRequirement"] = 0] = "DisabledByTrustRequirement";
+  EnablementState2[EnablementState2["DisabledByExtensionKind"] = 1] = "DisabledByExtensionKind";
+  EnablementState2[EnablementState2["DisabledByEnvironment"] = 2] = "DisabledByEnvironment";
+  EnablementState2[EnablementState2["EnabledByEnvironment"] = 3] = "EnabledByEnvironment";
+  EnablementState2[EnablementState2["DisabledByMalicious"] = 4] = "DisabledByMalicious";
+  EnablementState2[EnablementState2["DisabledByVirtualWorkspace"] = 5] = "DisabledByVirtualWorkspace";
+  EnablementState2[EnablementState2["DisabledByInvalidExtension"] = 6] = "DisabledByInvalidExtension";
+  EnablementState2[EnablementState2["DisabledByAllowlist"] = 7] = "DisabledByAllowlist";
+  EnablementState2[EnablementState2["DisabledByExtensionDependency"] = 8] = "DisabledByExtensionDependency";
+  EnablementState2[EnablementState2["DisabledGlobally"] = 9] = "DisabledGlobally";
+  EnablementState2[EnablementState2["DisabledWorkspace"] = 10] = "DisabledWorkspace";
+  EnablementState2[EnablementState2["EnabledGlobally"] = 11] = "EnabledGlobally";
+  EnablementState2[EnablementState2["EnabledWorkspace"] = 12] = "EnabledWorkspace";
+})(EnablementState || (EnablementState = {}));
+const IWorkbenchExtensionEnablementService = createDecorator("extensionEnablementService");
+const IWebExtensionsScannerService = createDecorator("IWebExtensionsScannerService");
+export {
+  EnablementState,
+  ExtensionInstallLocation,
+  IExtensionManagementServerService,
+  IProfileAwareExtensionManagementService,
+  IWebExtensionsScannerService,
+  IWorkbenchExtensionEnablementService,
+  IWorkbenchExtensionManagementService
+};
+//# sourceMappingURL=extensionManagement.js.map

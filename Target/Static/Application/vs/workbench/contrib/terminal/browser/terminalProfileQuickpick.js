@@ -1,1 +1,307 @@
-import{$Mj as D}from"../../../../base/common/codicons.js";import{$El as k}from"../../../../platform/configuration/common/configuration.js";import{$OM as v}from"../../../../platform/quickinput/common/quickInput.js";import{$QYb as z,$MYb as N,$OYb as j}from"./terminalIcon.js";import{$pYb as K}from"./terminalIcons.js";import*as a from"../../../../nls.js";import{$Mt as _}from"../../../../platform/theme/common/themeService.js";import{ThemeIcon as y}from"../../../../base/common/themables.js";import{$l4 as V,$n4 as q}from"../common/terminal.js";import{$Dt as O}from"../../../../platform/theme/common/iconRegistry.js";import{$$ as U}from"../../../../base/common/path.js";import{$RI as R,Severity as T}from"../../../../platform/notification/common/notification.js";var M=function(e,i,t,o){var r,a=arguments.length,l=a<3?i:null===o?o=Object.getOwnPropertyDescriptor(i,t):o;if("object"==typeof Reflect&&"function"==typeof Reflect.decorate)l=Reflect.decorate(e,i,t,o);else for(var n=e.length-1;n>=0;n--)(r=e[n])&&(l=(a<3?r(l):a>3?r(i,t,l):r(i,t))||l);return a>3&&l&&Object.defineProperty(i,t,l),l},m=function(e,i){return function(t,o){i(t,o,e)}};let w=class{constructor(e,i,t,o,r,a){this.c=e,this.d=i,this.f=t,this.g=o,this.h=r,this.i=a}async showAndGetResult(e){const i=await this.c.getPlatformKey(),t="terminal.integrated.profiles."+i,o=await this.j(e),r=`terminal.integrated.defaultProfile.${i}`;if(o){if("setDefault"===e){if("command"in o.profile)return;if("id"in o.profile)return await this.f.updateValue(r,o.profile.title,2),{config:{extensionIdentifier:o.profile.extensionIdentifier,id:o.profile.id,title:o.profile.title,options:{color:o.profile.color,icon:o.profile.icon}},keyMods:o.keyMods};if("isAutoDetected"in o.profile){const e=await this.f.getValue(t);if("object"==typeof e){const i={path:o.profile.path};o.profile.args&&(i.args=o.profile.args),e[o.profile.profileName]=this.k(o.profile),await this.f.updateValue(t,e,2)}}await this.f.updateValue(r,o.profileName,2)}else if("createInstance"===e)return"id"in o.profile?{config:{extensionIdentifier:o.profile.extensionIdentifier,id:o.profile.id,title:o.profile.title,options:{icon:o.profile.icon,color:o.profile.color}},keyMods:o.keyMods}:{config:o.profile,keyMods:o.keyMods};return"profileName"in o.profile?o.profile.profileName:o.profile.title}}async j(e){const i=await this.c.getPlatformKey(),t=this.c.availableProfiles,o="terminal.integrated.profiles."+i,r=this.c.getDefaultProfileName();let l;const n={placeHolder:"createInstance"===e?a.localize(11671,null):a.localize(11672,null),onDidTriggerItemButton:async e=>{if(!await this.l(e.item.profile)||"command"in e.item.profile||"id"in e.item.profile)return;const t=this.f.getValue("terminal.integrated.profiles."+i),r=t?Object.keys(t):[],l=await this.g.input({prompt:a.localize(11673,null),value:e.item.profile.profileName,validateInput:async e=>{if(r.includes(e))return a.localize(11674,null)}});if(!l)return;const n={...t,[l]:this.k(e.item.profile)};await this.f.updateValue(o,n,2)},onKeyMods:e=>l=e},s=[],f=t.filter((e=>!e.isAutoDetected)),p=t.filter((e=>e.isAutoDetected));f.length>0&&(s.push({type:"separator",label:a.localize(11675,null)}),s.push(...this.n(f.map((e=>this.m(e))),r))),s.push({type:"separator",label:a.localize(11676,null)});const c=[];for(const e of this.c.contributedProfiles){let i;"string"==typeof e.icon&&(i=e.icon.startsWith("$(")?y.fromString(e.icon):y.fromId(e.icon)),(!i||!O().getIcon(i.id))&&(i=this.d.getDefaultIcon());const t=z(e,this.h.getColorTheme().type,!0),o=N(e),r=[];t&&r.push(...t),o&&r.push(o),c.push({label:`$(${i.id}) ${e.title}`,profile:{extensionIdentifier:e.extensionIdentifier,title:e.title,icon:e.icon,id:e.id,color:e.color},profileName:e.title,iconClasses:r})}c.length>0&&s.push(...this.n(c,r)),p.length>0&&(s.push({type:"separator",label:a.localize(11677,null)}),s.push(...this.n(p.map((e=>this.m(e))),r)));const m=j(this.h.getColorTheme()),u=await this.g.pick(s,n);if(m.dispose(),u&&await this.l(u.profile))return l&&(u.keyMods=l),u}k(e){const i={path:e.path};return e.args&&(i.args=e.args),e.env&&(i.env=e.env),i}async l(e){const i="isUnsafePath"in e&&e.isUnsafePath,t="requiresUnsafePath"in e&&e.requiresUnsafePath;return!i&&!t||await new Promise((o=>{const r=[];i&&r.push(e.path),t&&r.push(t),this.i.prompt(T.Warning,a.localize(11678,null,`"${r.join(",")}"`),[{label:a.localize(11679,null),run:()=>o(!0)},{label:a.localize(11680,null),run:()=>o(!1)}]).onDidClose((()=>o(!1)))}))}m(e){const i=[{iconClass:y.asClassName(K),tooltip:a.localize(11681,null)}],t=`$(${(e.icon&&y.isThemeIcon(e.icon)?e.icon:D.terminal).id}) ${e.profileName}`,o=e.isFromPath?U(e.path):e.path,r=N(e),l=[];if(r&&l.push(r),e.args){if("string"==typeof e.args)return{label:t,description:`${e.path} ${e.args}`,profile:e,profileName:e.profileName,buttons:i,iconClasses:l};return{label:t,description:`${o} ${e.args.map((e=>e.includes(" ")?`"${e.replace(/"/g,'\\"')}"`:e)).join(" ")}`,profile:e,profileName:e.profileName,buttons:i,iconClasses:l}}return{label:t,description:o,profile:e,profileName:e.profileName,buttons:i,iconClasses:l}}n(e,i){return e.sort(((e,t)=>t.profileName===i?1:e.profileName===i?-1:e.profileName.localeCompare(t.profileName)))}};w=M([m(0,q),m(1,V),m(2,k),m(3,v),m(4,_),m(5,R)],w);export{w as $1qc};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { Codicon } from "../../../../base/common/codicons.js";
+import { IConfigurationService } from "../../../../platform/configuration/common/configuration.js";
+import { IQuickInputService } from "../../../../platform/quickinput/common/quickInput.js";
+import { getUriClasses, getColorClass, createColorStyleElement } from "./terminalIcon.js";
+import { configureTerminalProfileIcon } from "./terminalIcons.js";
+import * as nls from "../../../../nls.js";
+import { IThemeService } from "../../../../platform/theme/common/themeService.js";
+import { ThemeIcon } from "../../../../base/common/themables.js";
+import { ITerminalProfileResolverService, ITerminalProfileService } from "../common/terminal.js";
+import { getIconRegistry } from "../../../../platform/theme/common/iconRegistry.js";
+import { basename } from "../../../../base/common/path.js";
+import { INotificationService, Severity } from "../../../../platform/notification/common/notification.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+let TerminalProfileQuickpick = class TerminalProfileQuickpick2 {
+  static {
+    __name(this, "TerminalProfileQuickpick");
+  }
+  constructor(_terminalProfileService, _terminalProfileResolverService, _configurationService, _quickInputService, _themeService, _notificationService) {
+    this._terminalProfileService = _terminalProfileService;
+    this._terminalProfileResolverService = _terminalProfileResolverService;
+    this._configurationService = _configurationService;
+    this._quickInputService = _quickInputService;
+    this._themeService = _themeService;
+    this._notificationService = _notificationService;
+  }
+  async showAndGetResult(type) {
+    const platformKey = await this._terminalProfileService.getPlatformKey();
+    const profilesKey = "terminal.integrated.profiles." + platformKey;
+    const result = await this._createAndShow(type);
+    const defaultProfileKey = `${"terminal.integrated.defaultProfile."}${platformKey}`;
+    if (!result) {
+      return;
+    }
+    if (type === "setDefault") {
+      if ("command" in result.profile) {
+        return;
+      } else if ("id" in result.profile) {
+        await this._configurationService.updateValue(
+          defaultProfileKey,
+          result.profile.title,
+          2
+          /* ConfigurationTarget.USER */
+        );
+        return {
+          config: {
+            extensionIdentifier: result.profile.extensionIdentifier,
+            id: result.profile.id,
+            title: result.profile.title,
+            options: {
+              color: result.profile.color,
+              icon: result.profile.icon
+            }
+          },
+          keyMods: result.keyMods
+        };
+      }
+      if ("isAutoDetected" in result.profile) {
+        const profilesConfig = await this._configurationService.getValue(profilesKey);
+        if (typeof profilesConfig === "object") {
+          const newProfile = {
+            path: result.profile.path
+          };
+          if (result.profile.args) {
+            newProfile.args = result.profile.args;
+          }
+          profilesConfig[result.profile.profileName] = this._createNewProfileConfig(result.profile);
+          await this._configurationService.updateValue(
+            profilesKey,
+            profilesConfig,
+            2
+            /* ConfigurationTarget.USER */
+          );
+        }
+      }
+      await this._configurationService.updateValue(
+        defaultProfileKey,
+        result.profileName,
+        2
+        /* ConfigurationTarget.USER */
+      );
+    } else if (type === "createInstance") {
+      if ("id" in result.profile) {
+        return {
+          config: {
+            extensionIdentifier: result.profile.extensionIdentifier,
+            id: result.profile.id,
+            title: result.profile.title,
+            options: {
+              icon: result.profile.icon,
+              color: result.profile.color
+            }
+          },
+          keyMods: result.keyMods
+        };
+      } else {
+        return { config: result.profile, keyMods: result.keyMods };
+      }
+    }
+    return "profileName" in result.profile ? result.profile.profileName : result.profile.title;
+  }
+  async _createAndShow(type) {
+    const platformKey = await this._terminalProfileService.getPlatformKey();
+    const profiles = this._terminalProfileService.availableProfiles;
+    const profilesKey = "terminal.integrated.profiles." + platformKey;
+    const defaultProfileName = this._terminalProfileService.getDefaultProfileName();
+    let keyMods;
+    const options = {
+      placeHolder: type === "createInstance" ? nls.localize("terminal.integrated.selectProfileToCreate", "Select the terminal profile to create") : nls.localize("terminal.integrated.chooseDefaultProfile", "Select your default terminal profile"),
+      onDidTriggerItemButton: /* @__PURE__ */ __name(async (context) => {
+        if (!await this._isProfileSafe(context.item.profile)) {
+          return;
+        }
+        if ("command" in context.item.profile) {
+          return;
+        }
+        if ("id" in context.item.profile) {
+          return;
+        }
+        const configProfiles2 = this._configurationService.getValue("terminal.integrated.profiles." + platformKey);
+        const existingProfiles = !!configProfiles2 ? Object.keys(configProfiles2) : [];
+        const name = await this._quickInputService.input({
+          prompt: nls.localize("enterTerminalProfileName", "Enter terminal profile name"),
+          value: context.item.profile.profileName,
+          validateInput: /* @__PURE__ */ __name(async (input) => {
+            if (existingProfiles.includes(input)) {
+              return nls.localize("terminalProfileAlreadyExists", "A terminal profile already exists with that name");
+            }
+            return void 0;
+          }, "validateInput")
+        });
+        if (!name) {
+          return;
+        }
+        const newConfigValue = {
+          ...configProfiles2,
+          [name]: this._createNewProfileConfig(context.item.profile)
+        };
+        await this._configurationService.updateValue(
+          profilesKey,
+          newConfigValue,
+          2
+          /* ConfigurationTarget.USER */
+        );
+      }, "onDidTriggerItemButton"),
+      onKeyMods: /* @__PURE__ */ __name((mods) => keyMods = mods, "onKeyMods")
+    };
+    const quickPickItems = [];
+    const configProfiles = profiles.filter((e) => !e.isAutoDetected);
+    const autoDetectedProfiles = profiles.filter((e) => e.isAutoDetected);
+    if (configProfiles.length > 0) {
+      quickPickItems.push({ type: "separator", label: nls.localize("terminalProfiles", "profiles") });
+      quickPickItems.push(...this._sortProfileQuickPickItems(configProfiles.map((e) => this._createProfileQuickPickItem(e)), defaultProfileName));
+    }
+    quickPickItems.push({ type: "separator", label: nls.localize("ICreateContributedTerminalProfileOptions", "contributed") });
+    const contributedProfiles = [];
+    for (const contributed of this._terminalProfileService.contributedProfiles) {
+      let icon;
+      if (typeof contributed.icon === "string") {
+        if (contributed.icon.startsWith("$(")) {
+          icon = ThemeIcon.fromString(contributed.icon);
+        } else {
+          icon = ThemeIcon.fromId(contributed.icon);
+        }
+      }
+      if (!icon || !getIconRegistry().getIcon(icon.id)) {
+        icon = this._terminalProfileResolverService.getDefaultIcon();
+      }
+      const uriClasses = getUriClasses(contributed, this._themeService.getColorTheme().type, true);
+      const colorClass = getColorClass(contributed);
+      const iconClasses = [];
+      if (uriClasses) {
+        iconClasses.push(...uriClasses);
+      }
+      if (colorClass) {
+        iconClasses.push(colorClass);
+      }
+      contributedProfiles.push({
+        label: `$(${icon.id}) ${contributed.title}`,
+        profile: {
+          extensionIdentifier: contributed.extensionIdentifier,
+          title: contributed.title,
+          icon: contributed.icon,
+          id: contributed.id,
+          color: contributed.color
+        },
+        profileName: contributed.title,
+        iconClasses
+      });
+    }
+    if (contributedProfiles.length > 0) {
+      quickPickItems.push(...this._sortProfileQuickPickItems(contributedProfiles, defaultProfileName));
+    }
+    if (autoDetectedProfiles.length > 0) {
+      quickPickItems.push({ type: "separator", label: nls.localize("terminalProfiles.detected", "detected") });
+      quickPickItems.push(...this._sortProfileQuickPickItems(autoDetectedProfiles.map((e) => this._createProfileQuickPickItem(e)), defaultProfileName));
+    }
+    const colorStyleDisposable = createColorStyleElement(this._themeService.getColorTheme());
+    const result = await this._quickInputService.pick(quickPickItems, options);
+    colorStyleDisposable.dispose();
+    if (!result) {
+      return void 0;
+    }
+    if (!await this._isProfileSafe(result.profile)) {
+      return void 0;
+    }
+    if (keyMods) {
+      result.keyMods = keyMods;
+    }
+    return result;
+  }
+  _createNewProfileConfig(profile) {
+    const result = { path: profile.path };
+    if (profile.args) {
+      result.args = profile.args;
+    }
+    if (profile.env) {
+      result.env = profile.env;
+    }
+    return result;
+  }
+  async _isProfileSafe(profile) {
+    const isUnsafePath = "isUnsafePath" in profile && profile.isUnsafePath;
+    const requiresUnsafePath = "requiresUnsafePath" in profile && profile.requiresUnsafePath;
+    if (!isUnsafePath && !requiresUnsafePath) {
+      return true;
+    }
+    return await new Promise((r) => {
+      const unsafePaths = [];
+      if (isUnsafePath) {
+        unsafePaths.push(profile.path);
+      }
+      if (requiresUnsafePath) {
+        unsafePaths.push(requiresUnsafePath);
+      }
+      const handle = this._notificationService.prompt(Severity.Warning, nls.localize("unsafePathWarning", "This terminal profile uses a potentially unsafe path that can be modified by another user: {0}. Are you sure you want to use it?", `"${unsafePaths.join(",")}"`), [{
+        label: nls.localize("yes", "Yes"),
+        run: /* @__PURE__ */ __name(() => r(true), "run")
+      }, {
+        label: nls.localize("cancel", "Cancel"),
+        run: /* @__PURE__ */ __name(() => r(false), "run")
+      }]);
+      handle.onDidClose(() => r(false));
+    });
+  }
+  _createProfileQuickPickItem(profile) {
+    const buttons = [{
+      iconClass: ThemeIcon.asClassName(configureTerminalProfileIcon),
+      tooltip: nls.localize("createQuickLaunchProfile", "Configure Terminal Profile")
+    }];
+    const icon = profile.icon && ThemeIcon.isThemeIcon(profile.icon) ? profile.icon : Codicon.terminal;
+    const label = `$(${icon.id}) ${profile.profileName}`;
+    const friendlyPath = profile.isFromPath ? basename(profile.path) : profile.path;
+    const colorClass = getColorClass(profile);
+    const iconClasses = [];
+    if (colorClass) {
+      iconClasses.push(colorClass);
+    }
+    if (profile.args) {
+      if (typeof profile.args === "string") {
+        return { label, description: `${profile.path} ${profile.args}`, profile, profileName: profile.profileName, buttons, iconClasses };
+      }
+      const argsString = profile.args.map((e) => {
+        if (e.includes(" ")) {
+          return `"${e.replace(/"/g, '\\"')}"`;
+        }
+        return e;
+      }).join(" ");
+      return { label, description: `${friendlyPath} ${argsString}`, profile, profileName: profile.profileName, buttons, iconClasses };
+    }
+    return { label, description: friendlyPath, profile, profileName: profile.profileName, buttons, iconClasses };
+  }
+  _sortProfileQuickPickItems(items, defaultProfileName) {
+    return items.sort((a, b) => {
+      if (b.profileName === defaultProfileName) {
+        return 1;
+      }
+      if (a.profileName === defaultProfileName) {
+        return -1;
+      }
+      return a.profileName.localeCompare(b.profileName);
+    });
+  }
+};
+TerminalProfileQuickpick = __decorate([
+  __param(0, ITerminalProfileService),
+  __param(1, ITerminalProfileResolverService),
+  __param(2, IConfigurationService),
+  __param(3, IQuickInputService),
+  __param(4, IThemeService),
+  __param(5, INotificationService)
+], TerminalProfileQuickpick);
+export {
+  TerminalProfileQuickpick
+};
+//# sourceMappingURL=terminalProfileQuickpick.js.map

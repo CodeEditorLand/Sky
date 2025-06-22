@@ -1,1 +1,129 @@
-import{$G8 as u}from"../../../../../base/browser/markdownRenderer.js";import{$98 as h}from"../../../../../base/browser/trustedTypes.js";import{$kb as p}from"../../../../../base/common/errors.js";import{$ud as b}from"../../../../../base/common/lifecycle.js";import{$4$ as $}from"../../../../../platform/opener/common/opener.js";import{$BD as g}from"../../../../common/languages/language.js";import{$mE as y}from"../../../../common/languages/modesRegistry.js";import{$Idb as _}from"../../../../common/languages/textToHtmlTokenizer.js";import{$e_ as w}from"../../../config/domFontInfo.js";import"./renderedMarkdown.css";var c,f=function(e,t,o,r){var s,n=arguments.length,a=n<3?t:null===r?r=Object.getOwnPropertyDescriptor(t,o):r;if("object"==typeof Reflect&&"function"==typeof Reflect.decorate)a=Reflect.decorate(e,t,o,r);else for(var i=e.length-1;i>=0;i--)(s=e[i])&&(a=(n<3?s(a):n>3?s(t,o,a):s(t,o))||a);return n>3&&a&&Object.defineProperty(t,o,a),a},l=function(e,t){return function(o,r){t(o,r,e)}};let m=class{static{c=this}static{this.a=h("tokenizeToString",{createHTML:e=>e})}constructor(e,t,o){this.b=e,this.c=t,this.d=o}render(e,t,o){if(!e)return{element:document.createElement("span"),dispose:()=>{}};const r=new b,s=r.add(u(e,{...this.f(e,r),...t},o));return s.element.classList.add("rendered-markdown"),{element:s.element,dispose:()=>r.dispose()}}f(e,t){return{codeBlockRenderer:async(e,t)=>{let o;e?o=this.c.getLanguageIdByLanguageName(e):this.b.editor&&(o=this.b.editor.getModel()?.getLanguageId()),o||(o=y);const r=await _(this.c,t,o),s=document.createElement("span");if(s.innerHTML=c.a?.createHTML(r)??r,this.b.editor){const e=this.b.editor.getOption(55);w(s,e)}else this.b.codeBlockFontFamily&&(s.style.fontFamily=this.b.codeBlockFontFamily);return void 0!==this.b.codeBlockFontSize&&(s.style.fontSize=this.b.codeBlockFontSize),s},actionHandler:{callback:t=>this.g(t,e),disposables:t}}}async g(e,t){await B(this.d,e,t.isTrusted)}};async function B(e,t,o,r){try{return await e.open(t,{fromUserGesture:!0,allowContributedOpeners:!0,allowCommands:F(o),skipValidation:r})}catch(e){return p(e),!1}}function F(e){return!0===e||!(!e||!Array.isArray(e.enabledCommands))&&e.enabledCommands}m=c=f([l(1,g),l(2,$)],m);export{m as $dhb,B as $ehb};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { renderMarkdown } from "../../../../../base/browser/markdownRenderer.js";
+import { createTrustedTypesPolicy } from "../../../../../base/browser/trustedTypes.js";
+import { onUnexpectedError } from "../../../../../base/common/errors.js";
+import { DisposableStore } from "../../../../../base/common/lifecycle.js";
+import { IOpenerService } from "../../../../../platform/opener/common/opener.js";
+import { ILanguageService } from "../../../../common/languages/language.js";
+import { PLAINTEXT_LANGUAGE_ID } from "../../../../common/languages/modesRegistry.js";
+import { tokenizeToString } from "../../../../common/languages/textToHtmlTokenizer.js";
+import { applyFontInfo } from "../../../config/domFontInfo.js";
+import "./renderedMarkdown.css";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+var MarkdownRenderer_1;
+let MarkdownRenderer = class MarkdownRenderer2 {
+  static {
+    __name(this, "MarkdownRenderer");
+  }
+  static {
+    MarkdownRenderer_1 = this;
+  }
+  static {
+    this._ttpTokenizer = createTrustedTypesPolicy("tokenizeToString", {
+      createHTML(html) {
+        return html;
+      }
+    });
+  }
+  constructor(_options, _languageService, _openerService) {
+    this._options = _options;
+    this._languageService = _languageService;
+    this._openerService = _openerService;
+  }
+  render(markdown, options, markedOptions) {
+    if (!markdown) {
+      const element = document.createElement("span");
+      return { element, dispose: /* @__PURE__ */ __name(() => {
+      }, "dispose") };
+    }
+    const disposables = new DisposableStore();
+    const rendered = disposables.add(renderMarkdown(markdown, { ...this._getRenderOptions(markdown, disposables), ...options }, markedOptions));
+    rendered.element.classList.add("rendered-markdown");
+    return {
+      element: rendered.element,
+      dispose: /* @__PURE__ */ __name(() => disposables.dispose(), "dispose")
+    };
+  }
+  _getRenderOptions(markdown, disposables) {
+    return {
+      codeBlockRenderer: /* @__PURE__ */ __name(async (languageAlias, value) => {
+        let languageId;
+        if (languageAlias) {
+          languageId = this._languageService.getLanguageIdByLanguageName(languageAlias);
+        } else if (this._options.editor) {
+          languageId = this._options.editor.getModel()?.getLanguageId();
+        }
+        if (!languageId) {
+          languageId = PLAINTEXT_LANGUAGE_ID;
+        }
+        const html = await tokenizeToString(this._languageService, value, languageId);
+        const element = document.createElement("span");
+        element.innerHTML = MarkdownRenderer_1._ttpTokenizer?.createHTML(html) ?? html;
+        if (this._options.editor) {
+          const fontInfo = this._options.editor.getOption(
+            55
+            /* EditorOption.fontInfo */
+          );
+          applyFontInfo(element, fontInfo);
+        } else if (this._options.codeBlockFontFamily) {
+          element.style.fontFamily = this._options.codeBlockFontFamily;
+        }
+        if (this._options.codeBlockFontSize !== void 0) {
+          element.style.fontSize = this._options.codeBlockFontSize;
+        }
+        return element;
+      }, "codeBlockRenderer"),
+      actionHandler: {
+        callback: /* @__PURE__ */ __name((link) => this.openMarkdownLink(link, markdown), "callback"),
+        disposables
+      }
+    };
+  }
+  async openMarkdownLink(link, markdown) {
+    await openLinkFromMarkdown(this._openerService, link, markdown.isTrusted);
+  }
+};
+MarkdownRenderer = MarkdownRenderer_1 = __decorate([
+  __param(1, ILanguageService),
+  __param(2, IOpenerService)
+], MarkdownRenderer);
+async function openLinkFromMarkdown(openerService, link, isTrusted, skipValidation) {
+  try {
+    return await openerService.open(link, {
+      fromUserGesture: true,
+      allowContributedOpeners: true,
+      allowCommands: toAllowCommandsOption(isTrusted),
+      skipValidation
+    });
+  } catch (e) {
+    onUnexpectedError(e);
+    return false;
+  }
+}
+__name(openLinkFromMarkdown, "openLinkFromMarkdown");
+function toAllowCommandsOption(isTrusted) {
+  if (isTrusted === true) {
+    return true;
+  }
+  if (isTrusted && Array.isArray(isTrusted.enabledCommands)) {
+    return isTrusted.enabledCommands;
+  }
+  return false;
+}
+__name(toAllowCommandsOption, "toAllowCommandsOption");
+export {
+  MarkdownRenderer,
+  openLinkFromMarkdown
+};
+//# sourceMappingURL=markdownRenderer.js.map

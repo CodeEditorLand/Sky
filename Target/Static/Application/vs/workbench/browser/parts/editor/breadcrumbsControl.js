@@ -1,1 +1,843 @@
-import*as v from"../../../../base/browser/dom.js";import{$B5 as ie}from"../../../../base/browser/mouseEvent.js";import{$88 as se}from"../../../../base/browser/pixelRatio.js";import{$d9 as L,$e9 as re}from"../../../../base/browser/ui/breadcrumbs/breadcrumbsWidget.js";import{$i8 as oe}from"../../../../base/browser/ui/dnd/dnd.js";import{$K7 as ne}from"../../../../base/browser/ui/hover/hoverDelegateFactory.js";import{$Mh as de}from"../../../../base/common/async.js";import{$Mj as ae}from"../../../../base/common/codicons.js";import{$df as R}from"../../../../base/common/event.js";import{$sd as ce,$ud as F,$wd as he,$td as D}from"../../../../base/common/lifecycle.js";import{$hh as le,$ah as ue}from"../../../../base/common/resources.js";import{URI as J}from"../../../../base/common/uri.js";import{$4ob as me}from"../../../../editor/contrib/documentSymbols/browser/outlineModel.js";import{localize as I,localize2 as O}from"../../../../nls.js";import{$Xn as be}from"../../../../platform/action/common/actionCommonCategories.js";import{$iI as j,$dI as k,$jI as M}from"../../../../platform/actions/common/actions.js";import{$El as A}from"../../../../platform/configuration/common/configuration.js";import{$Bn as p,$Vn as fe,$Un as E}from"../../../../platform/contextkey/common/contextkey.js";import{$nfb as ge}from"../../../../platform/contextview/browser/contextView.js";import{$Zgb as pe,$Xgb as we}from"../../../../platform/dnd/browser/dnd.js";import{FileKind as H,$5j as Z}from"../../../../platform/files/common/files.js";import{$mj as _}from"../../../../platform/instantiation/common/instantiation.js";import{$_H as y}from"../../../../platform/keybinding/common/keybindingsRegistry.js";import{$2H as ye}from"../../../../platform/label/common/label.js";import{$gmb as Ce,$Gmb as Ie,$Fmb as $e,$omb as W}from"../../../../platform/list/browser/listService.js";import{$OM as ve}from"../../../../platform/quickinput/common/quickInput.js";import{$2fb as Ke}from"../../../../platform/theme/browser/defaultStyles.js";import{$Ct as ke}from"../../../../platform/theme/common/iconRegistry.js";import{$sK as G,SideBySideEditor as q}from"../../../common/editor.js";import{$kI as $}from"../../../services/editor/common/editorGroupsService.js";import{$pI as Fe,$oI as ee,$qI as N}from"../../../services/editor/common/editorService.js";import{$Owb as U,$Swb as Q}from"../../dnd.js";import{$PEb as _e,$QEb as Pe}from"../../labels.js";import{$HKb as K,$FKb as C}from"./breadcrumbs.js";import{$KKb as Se,$IKb as X,$JKb as Be}from"./breadcrumbsModel.js";import{$NKb as Ae,$OKb as Ve}from"./breadcrumbsPicker.js";import"./media/breadcrumbscontrol.css";var B=function(r,e,i,t){var s=arguments.length,o=s<3?e:t===null?t=Object.getOwnPropertyDescriptor(e,i):t,n;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")o=Reflect.decorate(r,e,i,t);else for(var d=r.length-1;d>=0;d--)(n=r[d])&&(o=(s<3?n(o):s>3?n(e,i,o):n(e,i))||o);return s>3&&o&&Object.defineProperty(e,i,o),o},h=function(r,e){return function(i,t){e(i,t,r)}},x,T,g;let P=x=class extends L{constructor(e,i,t,s){super(),this.model=e,this.element=i,this.options=t,this.d=s,this.c=new F}dispose(){this.c.dispose()}equals(e){return e instanceof x?this.element.element===e.element.element&&this.options.showFileIcons===e.options.showFileIcons&&this.options.showSymbolIcons===e.options.showSymbolIcons:!1}render(e){const{element:i,outline:t}=this.element;if(i===t){const d=v.$("span",void 0,"\u2026");e.appendChild(d);return}const s=t.config.delegate.getTemplateId(i),o=t.config.renderers.find(d=>d.templateId===s);if(!o){e.innerText="<<NO RENDERER>>";return}const n=o.renderTemplate(e);o.renderElement({element:i,children:[],depth:0,visibleChildrenCount:0,visibleChildIndex:0,collapsible:!1,collapsed:!1,visible:!0,filterData:void 0},0,n,void 0),this.c.add(D(()=>{o.disposeTemplate(n)})),i instanceof me&&t.uri&&this.c.add(this.d.invokeFunction(d=>te(d,e,i.symbol.name,{symbol:i.symbol,uri:t.uri},this.model,this.options.dragEditor)))}};P=x=B([h(3,_)],P);let S=T=class extends L{constructor(e,i,t,s,o,n){super(),this.model=e,this.element=i,this.options=t,this.d=s,this.f=o,this.g=n,this.c=new F}dispose(){this.c.dispose()}equals(e){return e instanceof T?ue.isEqual(this.element.uri,e.element.uri)&&this.options.showFileIcons===e.options.showFileIcons&&this.options.showSymbolIcons===e.options.showSymbolIcons:!1}render(e){const i=this.d.create(e,{hoverDelegate:this.f});i.setFile(this.element.uri,{hidePath:!0,hideIcon:this.element.kind===H.FOLDER||!this.options.showFileIcons,fileKind:this.element.kind,fileDecorations:{colors:this.options.showDecorationColors,badges:!1}}),e.classList.add(H[this.element.kind].toLowerCase()),this.c.add(i),this.c.add(this.g.invokeFunction(t=>te(t,e,le(this.element.uri),this.element.uri,this.model,this.options.dragEditor)))}};S=T=B([h(5,_)],S);function te(r,e,i,t,s,o){const n=r.get(_);return e.draggable=!0,new v.$_6(e,{onDragStart:d=>{d.dataTransfer&&(d.dataTransfer.effectAllowed="copyMove",n.invokeFunction(c=>{J.isUri(t)?Q(c,[t],d):(Q(c,[{resource:t.uri,selection:t.symbol.range}],d),pe([{name:t.symbol.name,fsPath:t.uri.fsPath,range:t.symbol.range,kind:t.symbol.kind}],d)),o&&s.editor&&s.editor?.input&&we.getInstance().setData([new U({editor:s.editor.input,groupId:s.editor.group.id})],U.prototype)}),oe(d,e,i))}})}const Ee=ke("breadcrumb-separator",ae.chevronRight,I(3322,null));let a=class{static{g=this}static{this.HEIGHT=22}static{this.a={default:3,large:8}}static{this.Payload_Reveal={}}static{this.Payload_RevealAside={}}static{this.Payload_Pick={}}static{this.CK_BreadcrumbsPossible=new E("breadcrumbsPossible",!1,I(3323,null))}static{this.CK_BreadcrumbsVisible=new E("breadcrumbsVisible",!1,I(3324,null))}static{this.CK_BreadcrumbsActive=new E("breadcrumbsActive",!1,I(3325,null))}get onDidVisibilityChange(){return this.q.event}constructor(e,i,t,s,o,n,d,c,l,b,u,f){this.r=i,this.s=t,this.t=s,this.u=o,this.v=n,this.w=d,this.z=c,this.A=l,this.B=b,this.j=new F,this.k=new F,this.m=new he,this.n=!1,this.q=this.j.add(new R),this.domNode=document.createElement("div"),this.domNode.classList.add("breadcrumbs-control"),v.$M6(e,this.domNode),this.f=K.UseQuickPick.bindTo(u),this.g=K.Icons.bindTo(u),this.h=K.TitleScrollbarSizing.bindTo(u),this.l=this.v.createInstance(Pe,_e);const m=this.h.getValue()??"default",w=i.widgetStyles??Ke;this.i=new re(this.domNode,g.a[m],Ee,w),this.i.onDidSelectItem(this.E,this,this.j),this.i.onDidFocusItem(this.D,this,this.j),this.i.onDidChangeFocus(this.F,this,this.j),this.b=g.CK_BreadcrumbsPossible.bindTo(this.t),this.c=g.CK_BreadcrumbsVisible.bindTo(this.t),this.d=g.CK_BreadcrumbsActive.bindTo(this.t),this.p=ne("mouse"),this.j.add(f.register(this.s.id,this.i)),this.hide()}dispose(){this.j.dispose(),this.k.dispose(),this.m.dispose(),this.b.reset(),this.c.reset(),this.d.reset(),this.f.dispose(),this.g.dispose(),this.i.dispose(),this.l.dispose(),this.domNode.remove()}get model(){return this.m.value}layout(e){this.i.layout(e)}isHidden(){return this.domNode.classList.contains("hidden")}hide(){const e=this.isHidden();this.k.clear(),this.c.set(!1),this.domNode.classList.toggle("hidden",!0),e||this.q.fire()}C(){const e=this.isHidden();this.c.set(!0),this.domNode.classList.toggle("hidden",!1),e&&this.q.fire()}revealLast(){this.i.revealLast()}update(){this.k.clear();const e=G.getCanonicalUri(this.s.activeEditor,{supportSideBySide:q.PRIMARY}),i=this.isHidden();if(!e||!this.z.hasProvider(e))return this.b.set(!1),i?!1:(this.hide(),!0);const t=G.getOriginalUri(this.s.activeEditor,{supportSideBySide:q.PRIMARY});this.C(),this.b.set(!0);const s=this.v.createInstance(Se,t??e,this.s.activeEditorPane);this.m.value=s,this.domNode.classList.toggle("backslash-path",this.B.getSeparator(e.scheme,e.authority)==="\\");const o=()=>{this.domNode.classList.toggle("relative-path",s.isRelative());const b=this.g.getValue(),u={...this.r,showFileIcons:this.r.showFileIcons&&b,showSymbolIcons:this.r.showSymbolIcons&&b},f=s.getElements().map(m=>m instanceof X?this.v.createInstance(S,s,m,u,this.l,this.p):this.v.createInstance(P,s,m,u));f.length===0?(this.i.setEnabled(!1),this.i.setItems([new class extends L{render(m){m.innerText=I(3326,null)}equals(m){return m===this}dispose(){}}])):(this.i.setEnabled(!0),this.i.setItems(f),this.i.reveal(f[f.length-1]))},n=s.onDidUpdate(o),d=this.g.onDidChange(o);o(),this.k.clear(),this.k.add(n),this.k.add(D(()=>this.m.clear())),this.k.add(d),this.k.add(D(()=>this.i.setItems([])));const c=()=>{const b=this.h.getValue()??"default";this.i.setHorizontalScrollbarSize(g.a[b])};c();const l=this.h.onDidChange(c);return this.k.add(l),this.k.add({dispose:()=>{this.n&&this.u.hideContextView({source:this})}}),i!==this.isHidden()}D(e){e.item&&this.n&&(this.o=void 0,this.i.setSelection(e.item))}E(e){if(!e.item)return;if(e.item===this.o){this.o=void 0,this.i.setFocused(void 0),this.i.setSelection(void 0);return}const{element:i}=e.item;this.s.focus();const t=this.H(e.payload);if(t!==void 0){this.i.setFocused(void 0),this.i.setSelection(void 0),this.G(e,i,t);return}if(this.f.getValue()){this.i.setFocused(void 0),this.i.setSelection(void 0),this.w.quickAccess.show(i instanceof Be?"@":"");return}let s,o;this.u.showContextView({render:n=>{e.item instanceof S?s=this.v.createInstance(Ae,n,e.item.model.resource):e.item instanceof P&&(s=this.v.createInstance(Ve,n,e.item.model.resource));const d=s.onWillPickElement(()=>this.u.hideContextView({source:this,didPick:!0})),c=se.getInstance(v.getWindow(this.domNode)).onDidChange(()=>this.u.hideContextView({source:this})),l=v.$K6(n),b=l.onDidBlur(()=>{this.o=this.i.isDOMFocused()?e.item:void 0,this.u.hideContextView({source:this})});return this.n=!0,this.F(),ce(s,d,c,l,b)},getAnchor:()=>{if(!o){const n=v.getWindow(this.domNode),d=n.innerWidth-8;let c=Math.min(n.innerHeight*.7,300);const l=Math.min(d,Math.max(240,d/4.17)),b=8;let u;const f=v.$65(e.node.firstChild),m=f.top+f.height+b;m+c>=n.innerHeight&&(c=n.innerHeight-m-30);let w=f.left;if(w+l>=d&&(w=d-l),e.payload instanceof ie){const V=l-2*b;u=e.payload.posx-w,u>V&&(w=Math.min(d-l,w+u-V),u=V)}else u=f.left+f.width*.3-w;s.show(i,c,l,b,Math.max(0,u)),o={x:w,y:m}}return o},onHide:n=>{n?.didPick||s.restoreViewState(),this.n=!1,this.F(),n?.source===this&&(this.i.setFocused(void 0),this.i.setSelection(void 0)),s.dispose()}})}F(){const e=this.i.isDOMFocused()||this.n;this.d.set(e)}async G(e,i,t,s=!1){if(i instanceof X)if(i.kind===H.FILE)await this.A.openEditor({resource:i.uri,options:{pinned:s}},t);else{const o=this.i.getItems(),n=o.indexOf(e.item);this.i.setFocused(o[n+1]),this.i.setSelection(o[n+1],g.Payload_Pick)}else i.outline.reveal(i,{pinned:s},t===N,!1)}H(e){return e===g.Payload_RevealAside?N:e===g.Payload_Reveal?Fe:void 0}};a=g=B([h(3,fe),h(4,ge),h(5,_),h(6,ve),h(7,Z),h(8,ee),h(9,ye),h(10,A),h(11,C)],a);let Y=class{get control(){return this.c}get onDidEnablementChange(){return this.d.event}get onDidVisibilityChange(){return this.f.event}constructor(e,i,t,s,o,n){this.g=e,this.h=i,this.i=t,this.j=o,this.a=new F,this.b=new F,this.d=this.a.add(new R),this.f=this.a.add(new R);const d=this.a.add(K.IsEnabled.bindTo(s));this.a.add(d.onDidChange(()=>{const c=d.getValue();!c&&this.c?(this.b.clear(),this.c=void 0,this.d.fire()):c&&!this.c&&(this.c=this.k(),this.c.update(),this.d.fire())})),d.getValue()&&(this.c=this.k()),this.a.add(n.onDidChangeFileSystemProviderRegistrations(c=>{this.c?.model&&this.c.model.resource.scheme!==c.scheme||this.c?.update()&&this.d.fire()}))}k(){const e=this.b.add(this.j.createInstance(a,this.g,this.i,this.h));return this.b.add(e.onDidVisibilityChange(()=>this.f.fire())),e}dispose(){this.a.dispose(),this.b.dispose()}};Y=B([h(3,A),h(4,_),h(5,Z)],Y);M(class extends j{constructor(){super({id:"breadcrumbs.toggle",title:{...O(3330,"Toggle Breadcrumbs"),mnemonicTitle:I(3327,null)},category:be.View,toggled:{condition:p.equals("config.breadcrumbs.enabled",!0),title:I(3328,null),mnemonicTitle:I(3329,null)},menu:[{id:k.CommandPalette},{id:k.MenubarAppearanceMenu,group:"4_editor",order:2},{id:k.NotebookToolbar,group:"notebookLayout",order:2},{id:k.StickyScrollContext},{id:k.NotebookStickyScrollContext,group:"notebookView",order:2},{id:k.NotebookToolbarContext,group:"notebookView",order:2}]})}run(e){const i=e.get(A),t=K.IsEnabled.bindTo(i).getValue();K.IsEnabled.bindTo(i).updateValue(!t)}});function z(r,e){const i=r.get($),s=r.get(C).getWidget(i.activeGroup.id);if(s){const o=s.getItems().at(-1);s.setFocused(o),e&&s.setSelection(o,a.Payload_Pick)}}M(class extends j{constructor(){super({id:"breadcrumbs.focusAndSelect",title:O(3331,"Focus and Select Breadcrumbs"),precondition:a.CK_BreadcrumbsVisible,keybinding:{weight:200,primary:3161,when:a.CK_BreadcrumbsPossible},f1:!0})}run(e,...i){z(e,!0)}});M(class extends j{constructor(){super({id:"breadcrumbs.focus",title:O(3332,"Focus Breadcrumbs"),precondition:a.CK_BreadcrumbsVisible,keybinding:{weight:200,primary:3157,when:a.CK_BreadcrumbsPossible},f1:!0})}run(e,...i){z(e,!1)}});y.registerCommandAndKeybindingRule({id:"breadcrumbs.toggleToOn",weight:200,primary:3161,when:p.not("config.breadcrumbs.enabled"),handler:async r=>{const e=r.get(_),i=r.get(A),t=K.IsEnabled.bindTo(i);return t.getValue()||(await t.updateValue(!0),await de(50)),e.invokeFunction(z,!0)}});y.registerCommandAndKeybindingRule({id:"breadcrumbs.focusNext",weight:200,primary:17,secondary:[2065],mac:{primary:17,secondary:[529]},when:p.and(a.CK_BreadcrumbsVisible,a.CK_BreadcrumbsActive),handler(r){const e=r.get($),t=r.get(C).getWidget(e.activeGroup.id);t&&t.focusNext()}});y.registerCommandAndKeybindingRule({id:"breadcrumbs.focusPrevious",weight:200,primary:15,secondary:[2063],mac:{primary:15,secondary:[527]},when:p.and(a.CK_BreadcrumbsVisible,a.CK_BreadcrumbsActive),handler(r){const e=r.get($),t=r.get(C).getWidget(e.activeGroup.id);t&&t.focusPrev()}});y.registerCommandAndKeybindingRule({id:"breadcrumbs.focusNextWithPicker",weight:201,primary:2065,mac:{primary:529},when:p.and(a.CK_BreadcrumbsVisible,a.CK_BreadcrumbsActive,W),handler(r){const e=r.get($),t=r.get(C).getWidget(e.activeGroup.id);t&&t.focusNext()}});y.registerCommandAndKeybindingRule({id:"breadcrumbs.focusPreviousWithPicker",weight:201,primary:2063,mac:{primary:527},when:p.and(a.CK_BreadcrumbsVisible,a.CK_BreadcrumbsActive,W),handler(r){const e=r.get($),t=r.get(C).getWidget(e.activeGroup.id);t&&t.focusPrev()}});y.registerCommandAndKeybindingRule({id:"breadcrumbs.selectFocused",weight:200,primary:3,secondary:[18],when:p.and(a.CK_BreadcrumbsVisible,a.CK_BreadcrumbsActive),handler(r){const e=r.get($),t=r.get(C).getWidget(e.activeGroup.id);t&&t.setSelection(t.getFocused(),a.Payload_Pick)}});y.registerCommandAndKeybindingRule({id:"breadcrumbs.revealFocused",weight:200,primary:10,secondary:[2051],when:p.and(a.CK_BreadcrumbsVisible,a.CK_BreadcrumbsActive),handler(r){const e=r.get($),t=r.get(C).getWidget(e.activeGroup.id);t&&t.setSelection(t.getFocused(),a.Payload_Reveal)}});y.registerCommandAndKeybindingRule({id:"breadcrumbs.selectEditor",weight:201,primary:9,when:p.and(a.CK_BreadcrumbsVisible,a.CK_BreadcrumbsActive),handler(r){const e=r.get($),t=r.get(C).getWidget(e.activeGroup.id);t&&(t.setFocused(void 0),t.setSelection(void 0),e.activeGroup.activeEditorPane?.focus())}});y.registerCommandAndKeybindingRule({id:"breadcrumbs.revealFocusedFromTreeAside",weight:200,primary:2051,when:p.and(a.CK_BreadcrumbsVisible,a.CK_BreadcrumbsActive,W),handler(r){const e=r.get(ee),t=r.get(Ce).lastFocusedList;if(!(t instanceof $e)&&!(t instanceof Ie))return;const s=t.getFocus()[0];if(J.isUri(s?.resource))return e.openEditor({resource:s.resource,options:{pinned:!0}},N);const o=t.getInput();if(o&&typeof o.outlineKind=="string")return o.reveal(s,{pinned:!0,preserveFocus:!1},!0,!1)}});export{a as $PKb,Y as $QKb};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import * as dom from "../../../../base/browser/dom.js";
+import { StandardMouseEvent } from "../../../../base/browser/mouseEvent.js";
+import { PixelRatio } from "../../../../base/browser/pixelRatio.js";
+import { BreadcrumbsItem, BreadcrumbsWidget } from "../../../../base/browser/ui/breadcrumbs/breadcrumbsWidget.js";
+import { applyDragImage } from "../../../../base/browser/ui/dnd/dnd.js";
+import { getDefaultHoverDelegate } from "../../../../base/browser/ui/hover/hoverDelegateFactory.js";
+import { timeout } from "../../../../base/common/async.js";
+import { Codicon } from "../../../../base/common/codicons.js";
+import { Emitter } from "../../../../base/common/event.js";
+import { combinedDisposable, DisposableStore, MutableDisposable, toDisposable } from "../../../../base/common/lifecycle.js";
+import { basename, extUri } from "../../../../base/common/resources.js";
+import { URI } from "../../../../base/common/uri.js";
+import { OutlineElement } from "../../../../editor/contrib/documentSymbols/browser/outlineModel.js";
+import { localize, localize2 } from "../../../../nls.js";
+import { Categories } from "../../../../platform/action/common/actionCommonCategories.js";
+import { Action2, MenuId, registerAction2 } from "../../../../platform/actions/common/actions.js";
+import { IConfigurationService } from "../../../../platform/configuration/common/configuration.js";
+import { ContextKeyExpr, IContextKeyService, RawContextKey } from "../../../../platform/contextkey/common/contextkey.js";
+import { IContextViewService } from "../../../../platform/contextview/browser/contextView.js";
+import { fillInSymbolsDragData, LocalSelectionTransfer } from "../../../../platform/dnd/browser/dnd.js";
+import { FileKind, IFileService } from "../../../../platform/files/common/files.js";
+import { IInstantiationService } from "../../../../platform/instantiation/common/instantiation.js";
+import { KeybindingsRegistry } from "../../../../platform/keybinding/common/keybindingsRegistry.js";
+import { ILabelService } from "../../../../platform/label/common/label.js";
+import { IListService, WorkbenchAsyncDataTree, WorkbenchDataTree, WorkbenchListFocusContextKey } from "../../../../platform/list/browser/listService.js";
+import { IQuickInputService } from "../../../../platform/quickinput/common/quickInput.js";
+import { defaultBreadcrumbsWidgetStyles } from "../../../../platform/theme/browser/defaultStyles.js";
+import { registerIcon } from "../../../../platform/theme/common/iconRegistry.js";
+import { EditorResourceAccessor, SideBySideEditor } from "../../../common/editor.js";
+import { IEditorGroupsService } from "../../../services/editor/common/editorGroupsService.js";
+import { ACTIVE_GROUP, IEditorService, SIDE_GROUP } from "../../../services/editor/common/editorService.js";
+import { DraggedEditorIdentifier, fillEditorsDragData } from "../../dnd.js";
+import { DEFAULT_LABELS_CONTAINER, ResourceLabels } from "../../labels.js";
+import { BreadcrumbsConfig, IBreadcrumbsService } from "./breadcrumbs.js";
+import { BreadcrumbsModel, FileElement, OutlineElement2 } from "./breadcrumbsModel.js";
+import { BreadcrumbsFilePicker, BreadcrumbsOutlinePicker } from "./breadcrumbsPicker.js";
+import "./media/breadcrumbscontrol.css";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+var OutlineItem_1;
+var FileItem_1;
+var BreadcrumbsControl_1;
+let OutlineItem = OutlineItem_1 = class OutlineItem2 extends BreadcrumbsItem {
+  static {
+    __name(this, "OutlineItem");
+  }
+  constructor(model, element, options, _instantiationService) {
+    super();
+    this.model = model;
+    this.element = element;
+    this.options = options;
+    this._instantiationService = _instantiationService;
+    this._disposables = new DisposableStore();
+  }
+  dispose() {
+    this._disposables.dispose();
+  }
+  equals(other) {
+    if (!(other instanceof OutlineItem_1)) {
+      return false;
+    }
+    return this.element.element === other.element.element && this.options.showFileIcons === other.options.showFileIcons && this.options.showSymbolIcons === other.options.showSymbolIcons;
+  }
+  render(container) {
+    const { element, outline } = this.element;
+    if (element === outline) {
+      const element2 = dom.$("span", void 0, "\u2026");
+      container.appendChild(element2);
+      return;
+    }
+    const templateId = outline.config.delegate.getTemplateId(element);
+    const renderer = outline.config.renderers.find((renderer2) => renderer2.templateId === templateId);
+    if (!renderer) {
+      container.innerText = "<<NO RENDERER>>";
+      return;
+    }
+    const template = renderer.renderTemplate(container);
+    renderer.renderElement({
+      element,
+      children: [],
+      depth: 0,
+      visibleChildrenCount: 0,
+      visibleChildIndex: 0,
+      collapsible: false,
+      collapsed: false,
+      visible: true,
+      filterData: void 0
+    }, 0, template, void 0);
+    this._disposables.add(toDisposable(() => {
+      renderer.disposeTemplate(template);
+    }));
+    if (element instanceof OutlineElement && outline.uri) {
+      this._disposables.add(this._instantiationService.invokeFunction((accessor) => createBreadcrumbDndObserver(accessor, container, element.symbol.name, { symbol: element.symbol, uri: outline.uri }, this.model, this.options.dragEditor)));
+    }
+  }
+};
+OutlineItem = OutlineItem_1 = __decorate([
+  __param(3, IInstantiationService)
+], OutlineItem);
+let FileItem = FileItem_1 = class FileItem2 extends BreadcrumbsItem {
+  static {
+    __name(this, "FileItem");
+  }
+  constructor(model, element, options, _labels, _hoverDelegate, _instantiationService) {
+    super();
+    this.model = model;
+    this.element = element;
+    this.options = options;
+    this._labels = _labels;
+    this._hoverDelegate = _hoverDelegate;
+    this._instantiationService = _instantiationService;
+    this._disposables = new DisposableStore();
+  }
+  dispose() {
+    this._disposables.dispose();
+  }
+  equals(other) {
+    if (!(other instanceof FileItem_1)) {
+      return false;
+    }
+    return extUri.isEqual(this.element.uri, other.element.uri) && this.options.showFileIcons === other.options.showFileIcons && this.options.showSymbolIcons === other.options.showSymbolIcons;
+  }
+  render(container) {
+    const label = this._labels.create(container, { hoverDelegate: this._hoverDelegate });
+    label.setFile(this.element.uri, {
+      hidePath: true,
+      hideIcon: this.element.kind === FileKind.FOLDER || !this.options.showFileIcons,
+      fileKind: this.element.kind,
+      fileDecorations: { colors: this.options.showDecorationColors, badges: false }
+    });
+    container.classList.add(FileKind[this.element.kind].toLowerCase());
+    this._disposables.add(label);
+    this._disposables.add(this._instantiationService.invokeFunction((accessor) => createBreadcrumbDndObserver(accessor, container, basename(this.element.uri), this.element.uri, this.model, this.options.dragEditor)));
+  }
+};
+FileItem = FileItem_1 = __decorate([
+  __param(5, IInstantiationService)
+], FileItem);
+function createBreadcrumbDndObserver(accessor, container, label, item, model, dragEditor) {
+  const instantiationService = accessor.get(IInstantiationService);
+  container.draggable = true;
+  return new dom.DragAndDropObserver(container, {
+    onDragStart: /* @__PURE__ */ __name((event) => {
+      if (!event.dataTransfer) {
+        return;
+      }
+      event.dataTransfer.effectAllowed = "copyMove";
+      instantiationService.invokeFunction((accessor2) => {
+        if (URI.isUri(item)) {
+          fillEditorsDragData(accessor2, [item], event);
+        } else {
+          fillEditorsDragData(accessor2, [{ resource: item.uri, selection: item.symbol.range }], event);
+          fillInSymbolsDragData([{
+            name: item.symbol.name,
+            fsPath: item.uri.fsPath,
+            range: item.symbol.range,
+            kind: item.symbol.kind
+          }], event);
+        }
+        if (dragEditor && model.editor && model.editor?.input) {
+          const editorTransfer = LocalSelectionTransfer.getInstance();
+          editorTransfer.setData([new DraggedEditorIdentifier({ editor: model.editor.input, groupId: model.editor.group.id })], DraggedEditorIdentifier.prototype);
+        }
+      });
+      applyDragImage(event, container, label);
+    }, "onDragStart")
+  });
+}
+__name(createBreadcrumbDndObserver, "createBreadcrumbDndObserver");
+const separatorIcon = registerIcon("breadcrumb-separator", Codicon.chevronRight, localize("separatorIcon", "Icon for the separator in the breadcrumbs."));
+let BreadcrumbsControl = class BreadcrumbsControl2 {
+  static {
+    __name(this, "BreadcrumbsControl");
+  }
+  static {
+    BreadcrumbsControl_1 = this;
+  }
+  static {
+    this.HEIGHT = 22;
+  }
+  static {
+    this.SCROLLBAR_SIZES = {
+      default: 3,
+      large: 8
+    };
+  }
+  static {
+    this.Payload_Reveal = {};
+  }
+  static {
+    this.Payload_RevealAside = {};
+  }
+  static {
+    this.Payload_Pick = {};
+  }
+  static {
+    this.CK_BreadcrumbsPossible = new RawContextKey("breadcrumbsPossible", false, localize("breadcrumbsPossible", "Whether the editor can show breadcrumbs"));
+  }
+  static {
+    this.CK_BreadcrumbsVisible = new RawContextKey("breadcrumbsVisible", false, localize("breadcrumbsVisible", "Whether breadcrumbs are currently visible"));
+  }
+  static {
+    this.CK_BreadcrumbsActive = new RawContextKey("breadcrumbsActive", false, localize("breadcrumbsActive", "Whether breadcrumbs have focus"));
+  }
+  get onDidVisibilityChange() {
+    return this._onDidVisibilityChange.event;
+  }
+  constructor(container, _options, _editorGroup, _contextKeyService, _contextViewService, _instantiationService, _quickInputService, _fileService, _editorService, _labelService, configurationService, breadcrumbsService) {
+    this._options = _options;
+    this._editorGroup = _editorGroup;
+    this._contextKeyService = _contextKeyService;
+    this._contextViewService = _contextViewService;
+    this._instantiationService = _instantiationService;
+    this._quickInputService = _quickInputService;
+    this._fileService = _fileService;
+    this._editorService = _editorService;
+    this._labelService = _labelService;
+    this._disposables = new DisposableStore();
+    this._breadcrumbsDisposables = new DisposableStore();
+    this._model = new MutableDisposable();
+    this._breadcrumbsPickerShowing = false;
+    this._onDidVisibilityChange = this._disposables.add(new Emitter());
+    this.domNode = document.createElement("div");
+    this.domNode.classList.add("breadcrumbs-control");
+    dom.append(container, this.domNode);
+    this._cfUseQuickPick = BreadcrumbsConfig.UseQuickPick.bindTo(configurationService);
+    this._cfShowIcons = BreadcrumbsConfig.Icons.bindTo(configurationService);
+    this._cfTitleScrollbarSizing = BreadcrumbsConfig.TitleScrollbarSizing.bindTo(configurationService);
+    this._labels = this._instantiationService.createInstance(ResourceLabels, DEFAULT_LABELS_CONTAINER);
+    const sizing = this._cfTitleScrollbarSizing.getValue() ?? "default";
+    const styles = _options.widgetStyles ?? defaultBreadcrumbsWidgetStyles;
+    this._widget = new BreadcrumbsWidget(this.domNode, BreadcrumbsControl_1.SCROLLBAR_SIZES[sizing], separatorIcon, styles);
+    this._widget.onDidSelectItem(this._onSelectEvent, this, this._disposables);
+    this._widget.onDidFocusItem(this._onFocusEvent, this, this._disposables);
+    this._widget.onDidChangeFocus(this._updateCkBreadcrumbsActive, this, this._disposables);
+    this._ckBreadcrumbsPossible = BreadcrumbsControl_1.CK_BreadcrumbsPossible.bindTo(this._contextKeyService);
+    this._ckBreadcrumbsVisible = BreadcrumbsControl_1.CK_BreadcrumbsVisible.bindTo(this._contextKeyService);
+    this._ckBreadcrumbsActive = BreadcrumbsControl_1.CK_BreadcrumbsActive.bindTo(this._contextKeyService);
+    this._hoverDelegate = getDefaultHoverDelegate("mouse");
+    this._disposables.add(breadcrumbsService.register(this._editorGroup.id, this._widget));
+    this.hide();
+  }
+  dispose() {
+    this._disposables.dispose();
+    this._breadcrumbsDisposables.dispose();
+    this._model.dispose();
+    this._ckBreadcrumbsPossible.reset();
+    this._ckBreadcrumbsVisible.reset();
+    this._ckBreadcrumbsActive.reset();
+    this._cfUseQuickPick.dispose();
+    this._cfShowIcons.dispose();
+    this._widget.dispose();
+    this._labels.dispose();
+    this.domNode.remove();
+  }
+  get model() {
+    return this._model.value;
+  }
+  layout(dim) {
+    this._widget.layout(dim);
+  }
+  isHidden() {
+    return this.domNode.classList.contains("hidden");
+  }
+  hide() {
+    const wasHidden = this.isHidden();
+    this._breadcrumbsDisposables.clear();
+    this._ckBreadcrumbsVisible.set(false);
+    this.domNode.classList.toggle("hidden", true);
+    if (!wasHidden) {
+      this._onDidVisibilityChange.fire();
+    }
+  }
+  show() {
+    const wasHidden = this.isHidden();
+    this._ckBreadcrumbsVisible.set(true);
+    this.domNode.classList.toggle("hidden", false);
+    if (wasHidden) {
+      this._onDidVisibilityChange.fire();
+    }
+  }
+  revealLast() {
+    this._widget.revealLast();
+  }
+  update() {
+    this._breadcrumbsDisposables.clear();
+    const uri = EditorResourceAccessor.getCanonicalUri(this._editorGroup.activeEditor, { supportSideBySide: SideBySideEditor.PRIMARY });
+    const wasHidden = this.isHidden();
+    if (!uri || !this._fileService.hasProvider(uri)) {
+      this._ckBreadcrumbsPossible.set(false);
+      if (!wasHidden) {
+        this.hide();
+        return true;
+      } else {
+        return false;
+      }
+    }
+    const fileInfoUri = EditorResourceAccessor.getOriginalUri(this._editorGroup.activeEditor, { supportSideBySide: SideBySideEditor.PRIMARY });
+    this.show();
+    this._ckBreadcrumbsPossible.set(true);
+    const model = this._instantiationService.createInstance(BreadcrumbsModel, fileInfoUri ?? uri, this._editorGroup.activeEditorPane);
+    this._model.value = model;
+    this.domNode.classList.toggle("backslash-path", this._labelService.getSeparator(uri.scheme, uri.authority) === "\\");
+    const updateBreadcrumbs = /* @__PURE__ */ __name(() => {
+      this.domNode.classList.toggle("relative-path", model.isRelative());
+      const showIcons = this._cfShowIcons.getValue();
+      const options = {
+        ...this._options,
+        showFileIcons: this._options.showFileIcons && showIcons,
+        showSymbolIcons: this._options.showSymbolIcons && showIcons
+      };
+      const items = model.getElements().map((element) => element instanceof FileElement ? this._instantiationService.createInstance(FileItem, model, element, options, this._labels, this._hoverDelegate) : this._instantiationService.createInstance(OutlineItem, model, element, options));
+      if (items.length === 0) {
+        this._widget.setEnabled(false);
+        this._widget.setItems([new class extends BreadcrumbsItem {
+          render(container) {
+            container.innerText = localize("empty", "no elements");
+          }
+          equals(other) {
+            return other === this;
+          }
+          dispose() {
+          }
+        }()]);
+      } else {
+        this._widget.setEnabled(true);
+        this._widget.setItems(items);
+        this._widget.reveal(items[items.length - 1]);
+      }
+    }, "updateBreadcrumbs");
+    const listener = model.onDidUpdate(updateBreadcrumbs);
+    const configListener = this._cfShowIcons.onDidChange(updateBreadcrumbs);
+    updateBreadcrumbs();
+    this._breadcrumbsDisposables.clear();
+    this._breadcrumbsDisposables.add(listener);
+    this._breadcrumbsDisposables.add(toDisposable(() => this._model.clear()));
+    this._breadcrumbsDisposables.add(configListener);
+    this._breadcrumbsDisposables.add(toDisposable(() => this._widget.setItems([])));
+    const updateScrollbarSizing = /* @__PURE__ */ __name(() => {
+      const sizing = this._cfTitleScrollbarSizing.getValue() ?? "default";
+      this._widget.setHorizontalScrollbarSize(BreadcrumbsControl_1.SCROLLBAR_SIZES[sizing]);
+    }, "updateScrollbarSizing");
+    updateScrollbarSizing();
+    const updateScrollbarSizeListener = this._cfTitleScrollbarSizing.onDidChange(updateScrollbarSizing);
+    this._breadcrumbsDisposables.add(updateScrollbarSizeListener);
+    this._breadcrumbsDisposables.add({
+      dispose: /* @__PURE__ */ __name(() => {
+        if (this._breadcrumbsPickerShowing) {
+          this._contextViewService.hideContextView({ source: this });
+        }
+      }, "dispose")
+    });
+    return wasHidden !== this.isHidden();
+  }
+  _onFocusEvent(event) {
+    if (event.item && this._breadcrumbsPickerShowing) {
+      this._breadcrumbsPickerIgnoreOnceItem = void 0;
+      this._widget.setSelection(event.item);
+    }
+  }
+  _onSelectEvent(event) {
+    if (!event.item) {
+      return;
+    }
+    if (event.item === this._breadcrumbsPickerIgnoreOnceItem) {
+      this._breadcrumbsPickerIgnoreOnceItem = void 0;
+      this._widget.setFocused(void 0);
+      this._widget.setSelection(void 0);
+      return;
+    }
+    const { element } = event.item;
+    this._editorGroup.focus();
+    const group = this._getEditorGroup(event.payload);
+    if (group !== void 0) {
+      this._widget.setFocused(void 0);
+      this._widget.setSelection(void 0);
+      this._revealInEditor(event, element, group);
+      return;
+    }
+    if (this._cfUseQuickPick.getValue()) {
+      this._widget.setFocused(void 0);
+      this._widget.setSelection(void 0);
+      this._quickInputService.quickAccess.show(element instanceof OutlineElement2 ? "@" : "");
+      return;
+    }
+    let picker;
+    let pickerAnchor;
+    this._contextViewService.showContextView({
+      render: /* @__PURE__ */ __name((parent) => {
+        if (event.item instanceof FileItem) {
+          picker = this._instantiationService.createInstance(BreadcrumbsFilePicker, parent, event.item.model.resource);
+        } else if (event.item instanceof OutlineItem) {
+          picker = this._instantiationService.createInstance(BreadcrumbsOutlinePicker, parent, event.item.model.resource);
+        }
+        const selectListener = picker.onWillPickElement(() => this._contextViewService.hideContextView({ source: this, didPick: true }));
+        const zoomListener = PixelRatio.getInstance(dom.getWindow(this.domNode)).onDidChange(() => this._contextViewService.hideContextView({ source: this }));
+        const focusTracker = dom.trackFocus(parent);
+        const blurListener = focusTracker.onDidBlur(() => {
+          this._breadcrumbsPickerIgnoreOnceItem = this._widget.isDOMFocused() ? event.item : void 0;
+          this._contextViewService.hideContextView({ source: this });
+        });
+        this._breadcrumbsPickerShowing = true;
+        this._updateCkBreadcrumbsActive();
+        return combinedDisposable(picker, selectListener, zoomListener, focusTracker, blurListener);
+      }, "render"),
+      getAnchor: /* @__PURE__ */ __name(() => {
+        if (!pickerAnchor) {
+          const window = dom.getWindow(this.domNode);
+          const maxInnerWidth = window.innerWidth - 8;
+          let maxHeight = Math.min(window.innerHeight * 0.7, 300);
+          const pickerWidth = Math.min(maxInnerWidth, Math.max(240, maxInnerWidth / 4.17));
+          const pickerArrowSize = 8;
+          let pickerArrowOffset;
+          const data = dom.getDomNodePagePosition(event.node.firstChild);
+          const y = data.top + data.height + pickerArrowSize;
+          if (y + maxHeight >= window.innerHeight) {
+            maxHeight = window.innerHeight - y - 30;
+          }
+          let x = data.left;
+          if (x + pickerWidth >= maxInnerWidth) {
+            x = maxInnerWidth - pickerWidth;
+          }
+          if (event.payload instanceof StandardMouseEvent) {
+            const maxPickerArrowOffset = pickerWidth - 2 * pickerArrowSize;
+            pickerArrowOffset = event.payload.posx - x;
+            if (pickerArrowOffset > maxPickerArrowOffset) {
+              x = Math.min(maxInnerWidth - pickerWidth, x + pickerArrowOffset - maxPickerArrowOffset);
+              pickerArrowOffset = maxPickerArrowOffset;
+            }
+          } else {
+            pickerArrowOffset = data.left + data.width * 0.3 - x;
+          }
+          picker.show(element, maxHeight, pickerWidth, pickerArrowSize, Math.max(0, pickerArrowOffset));
+          pickerAnchor = { x, y };
+        }
+        return pickerAnchor;
+      }, "getAnchor"),
+      onHide: /* @__PURE__ */ __name((data) => {
+        if (!data?.didPick) {
+          picker.restoreViewState();
+        }
+        this._breadcrumbsPickerShowing = false;
+        this._updateCkBreadcrumbsActive();
+        if (data?.source === this) {
+          this._widget.setFocused(void 0);
+          this._widget.setSelection(void 0);
+        }
+        picker.dispose();
+      }, "onHide")
+    });
+  }
+  _updateCkBreadcrumbsActive() {
+    const value = this._widget.isDOMFocused() || this._breadcrumbsPickerShowing;
+    this._ckBreadcrumbsActive.set(value);
+  }
+  async _revealInEditor(event, element, group, pinned = false) {
+    if (element instanceof FileElement) {
+      if (element.kind === FileKind.FILE) {
+        await this._editorService.openEditor({ resource: element.uri, options: { pinned } }, group);
+      } else {
+        const items = this._widget.getItems();
+        const idx = items.indexOf(event.item);
+        this._widget.setFocused(items[idx + 1]);
+        this._widget.setSelection(items[idx + 1], BreadcrumbsControl_1.Payload_Pick);
+      }
+    } else {
+      element.outline.reveal(element, { pinned }, group === SIDE_GROUP, false);
+    }
+  }
+  _getEditorGroup(data) {
+    if (data === BreadcrumbsControl_1.Payload_RevealAside) {
+      return SIDE_GROUP;
+    } else if (data === BreadcrumbsControl_1.Payload_Reveal) {
+      return ACTIVE_GROUP;
+    } else {
+      return void 0;
+    }
+  }
+};
+BreadcrumbsControl = BreadcrumbsControl_1 = __decorate([
+  __param(3, IContextKeyService),
+  __param(4, IContextViewService),
+  __param(5, IInstantiationService),
+  __param(6, IQuickInputService),
+  __param(7, IFileService),
+  __param(8, IEditorService),
+  __param(9, ILabelService),
+  __param(10, IConfigurationService),
+  __param(11, IBreadcrumbsService)
+], BreadcrumbsControl);
+let BreadcrumbsControlFactory = class BreadcrumbsControlFactory2 {
+  static {
+    __name(this, "BreadcrumbsControlFactory");
+  }
+  get control() {
+    return this._control;
+  }
+  get onDidEnablementChange() {
+    return this._onDidEnablementChange.event;
+  }
+  get onDidVisibilityChange() {
+    return this._onDidVisibilityChange.event;
+  }
+  constructor(_container, _editorGroup, _options, configurationService, _instantiationService, fileService) {
+    this._container = _container;
+    this._editorGroup = _editorGroup;
+    this._options = _options;
+    this._instantiationService = _instantiationService;
+    this._disposables = new DisposableStore();
+    this._controlDisposables = new DisposableStore();
+    this._onDidEnablementChange = this._disposables.add(new Emitter());
+    this._onDidVisibilityChange = this._disposables.add(new Emitter());
+    const config = this._disposables.add(BreadcrumbsConfig.IsEnabled.bindTo(configurationService));
+    this._disposables.add(config.onDidChange(() => {
+      const value = config.getValue();
+      if (!value && this._control) {
+        this._controlDisposables.clear();
+        this._control = void 0;
+        this._onDidEnablementChange.fire();
+      } else if (value && !this._control) {
+        this._control = this.createControl();
+        this._control.update();
+        this._onDidEnablementChange.fire();
+      }
+    }));
+    if (config.getValue()) {
+      this._control = this.createControl();
+    }
+    this._disposables.add(fileService.onDidChangeFileSystemProviderRegistrations((e) => {
+      if (this._control?.model && this._control.model.resource.scheme !== e.scheme) {
+        return;
+      }
+      if (this._control?.update()) {
+        this._onDidEnablementChange.fire();
+      }
+    }));
+  }
+  createControl() {
+    const control = this._controlDisposables.add(this._instantiationService.createInstance(BreadcrumbsControl, this._container, this._options, this._editorGroup));
+    this._controlDisposables.add(control.onDidVisibilityChange(() => this._onDidVisibilityChange.fire()));
+    return control;
+  }
+  dispose() {
+    this._disposables.dispose();
+    this._controlDisposables.dispose();
+  }
+};
+BreadcrumbsControlFactory = __decorate([
+  __param(3, IConfigurationService),
+  __param(4, IInstantiationService),
+  __param(5, IFileService)
+], BreadcrumbsControlFactory);
+registerAction2(class ToggleBreadcrumb extends Action2 {
+  static {
+    __name(this, "ToggleBreadcrumb");
+  }
+  constructor() {
+    super({
+      id: "breadcrumbs.toggle",
+      title: {
+        ...localize2("cmd.toggle", "Toggle Breadcrumbs"),
+        mnemonicTitle: localize({ key: "miBreadcrumbs", comment: ["&& denotes a mnemonic"] }, "Toggle &&Breadcrumbs")
+      },
+      category: Categories.View,
+      toggled: {
+        condition: ContextKeyExpr.equals("config.breadcrumbs.enabled", true),
+        title: localize("cmd.toggle2", "Toggle Breadcrumbs"),
+        mnemonicTitle: localize({ key: "miBreadcrumbs2", comment: ["&& denotes a mnemonic"] }, "Toggle &&Breadcrumbs")
+      },
+      menu: [
+        { id: MenuId.CommandPalette },
+        { id: MenuId.MenubarAppearanceMenu, group: "4_editor", order: 2 },
+        { id: MenuId.NotebookToolbar, group: "notebookLayout", order: 2 },
+        { id: MenuId.StickyScrollContext },
+        { id: MenuId.NotebookStickyScrollContext, group: "notebookView", order: 2 },
+        { id: MenuId.NotebookToolbarContext, group: "notebookView", order: 2 }
+      ]
+    });
+  }
+  run(accessor) {
+    const config = accessor.get(IConfigurationService);
+    const value = BreadcrumbsConfig.IsEnabled.bindTo(config).getValue();
+    BreadcrumbsConfig.IsEnabled.bindTo(config).updateValue(!value);
+  }
+});
+function focusAndSelectHandler(accessor, select) {
+  const groups = accessor.get(IEditorGroupsService);
+  const breadcrumbs = accessor.get(IBreadcrumbsService);
+  const widget = breadcrumbs.getWidget(groups.activeGroup.id);
+  if (widget) {
+    const item = widget.getItems().at(-1);
+    widget.setFocused(item);
+    if (select) {
+      widget.setSelection(item, BreadcrumbsControl.Payload_Pick);
+    }
+  }
+}
+__name(focusAndSelectHandler, "focusAndSelectHandler");
+registerAction2(class FocusAndSelectBreadcrumbs extends Action2 {
+  static {
+    __name(this, "FocusAndSelectBreadcrumbs");
+  }
+  constructor() {
+    super({
+      id: "breadcrumbs.focusAndSelect",
+      title: localize2("cmd.focusAndSelect", "Focus and Select Breadcrumbs"),
+      precondition: BreadcrumbsControl.CK_BreadcrumbsVisible,
+      keybinding: {
+        weight: 200,
+        primary: 2048 | 1024 | 89,
+        when: BreadcrumbsControl.CK_BreadcrumbsPossible
+      },
+      f1: true
+    });
+  }
+  run(accessor, ...args) {
+    focusAndSelectHandler(accessor, true);
+  }
+});
+registerAction2(class FocusBreadcrumbs extends Action2 {
+  static {
+    __name(this, "FocusBreadcrumbs");
+  }
+  constructor() {
+    super({
+      id: "breadcrumbs.focus",
+      title: localize2("cmd.focus", "Focus Breadcrumbs"),
+      precondition: BreadcrumbsControl.CK_BreadcrumbsVisible,
+      keybinding: {
+        weight: 200,
+        primary: 2048 | 1024 | 85,
+        when: BreadcrumbsControl.CK_BreadcrumbsPossible
+      },
+      f1: true
+    });
+  }
+  run(accessor, ...args) {
+    focusAndSelectHandler(accessor, false);
+  }
+});
+KeybindingsRegistry.registerCommandAndKeybindingRule({
+  id: "breadcrumbs.toggleToOn",
+  weight: 200,
+  primary: 2048 | 1024 | 89,
+  when: ContextKeyExpr.not("config.breadcrumbs.enabled"),
+  handler: /* @__PURE__ */ __name(async (accessor) => {
+    const instant = accessor.get(IInstantiationService);
+    const config = accessor.get(IConfigurationService);
+    const isEnabled = BreadcrumbsConfig.IsEnabled.bindTo(config);
+    if (!isEnabled.getValue()) {
+      await isEnabled.updateValue(true);
+      await timeout(50);
+    }
+    return instant.invokeFunction(focusAndSelectHandler, true);
+  }, "handler")
+});
+KeybindingsRegistry.registerCommandAndKeybindingRule({
+  id: "breadcrumbs.focusNext",
+  weight: 200,
+  primary: 17,
+  secondary: [
+    2048 | 17
+    /* KeyCode.RightArrow */
+  ],
+  mac: {
+    primary: 17,
+    secondary: [
+      512 | 17
+      /* KeyCode.RightArrow */
+    ]
+  },
+  when: ContextKeyExpr.and(BreadcrumbsControl.CK_BreadcrumbsVisible, BreadcrumbsControl.CK_BreadcrumbsActive),
+  handler(accessor) {
+    const groups = accessor.get(IEditorGroupsService);
+    const breadcrumbs = accessor.get(IBreadcrumbsService);
+    const widget = breadcrumbs.getWidget(groups.activeGroup.id);
+    if (!widget) {
+      return;
+    }
+    widget.focusNext();
+  }
+});
+KeybindingsRegistry.registerCommandAndKeybindingRule({
+  id: "breadcrumbs.focusPrevious",
+  weight: 200,
+  primary: 15,
+  secondary: [
+    2048 | 15
+    /* KeyCode.LeftArrow */
+  ],
+  mac: {
+    primary: 15,
+    secondary: [
+      512 | 15
+      /* KeyCode.LeftArrow */
+    ]
+  },
+  when: ContextKeyExpr.and(BreadcrumbsControl.CK_BreadcrumbsVisible, BreadcrumbsControl.CK_BreadcrumbsActive),
+  handler(accessor) {
+    const groups = accessor.get(IEditorGroupsService);
+    const breadcrumbs = accessor.get(IBreadcrumbsService);
+    const widget = breadcrumbs.getWidget(groups.activeGroup.id);
+    if (!widget) {
+      return;
+    }
+    widget.focusPrev();
+  }
+});
+KeybindingsRegistry.registerCommandAndKeybindingRule({
+  id: "breadcrumbs.focusNextWithPicker",
+  weight: 200 + 1,
+  primary: 2048 | 17,
+  mac: {
+    primary: 512 | 17
+  },
+  when: ContextKeyExpr.and(BreadcrumbsControl.CK_BreadcrumbsVisible, BreadcrumbsControl.CK_BreadcrumbsActive, WorkbenchListFocusContextKey),
+  handler(accessor) {
+    const groups = accessor.get(IEditorGroupsService);
+    const breadcrumbs = accessor.get(IBreadcrumbsService);
+    const widget = breadcrumbs.getWidget(groups.activeGroup.id);
+    if (!widget) {
+      return;
+    }
+    widget.focusNext();
+  }
+});
+KeybindingsRegistry.registerCommandAndKeybindingRule({
+  id: "breadcrumbs.focusPreviousWithPicker",
+  weight: 200 + 1,
+  primary: 2048 | 15,
+  mac: {
+    primary: 512 | 15
+  },
+  when: ContextKeyExpr.and(BreadcrumbsControl.CK_BreadcrumbsVisible, BreadcrumbsControl.CK_BreadcrumbsActive, WorkbenchListFocusContextKey),
+  handler(accessor) {
+    const groups = accessor.get(IEditorGroupsService);
+    const breadcrumbs = accessor.get(IBreadcrumbsService);
+    const widget = breadcrumbs.getWidget(groups.activeGroup.id);
+    if (!widget) {
+      return;
+    }
+    widget.focusPrev();
+  }
+});
+KeybindingsRegistry.registerCommandAndKeybindingRule({
+  id: "breadcrumbs.selectFocused",
+  weight: 200,
+  primary: 3,
+  secondary: [
+    18
+    /* KeyCode.DownArrow */
+  ],
+  when: ContextKeyExpr.and(BreadcrumbsControl.CK_BreadcrumbsVisible, BreadcrumbsControl.CK_BreadcrumbsActive),
+  handler(accessor) {
+    const groups = accessor.get(IEditorGroupsService);
+    const breadcrumbs = accessor.get(IBreadcrumbsService);
+    const widget = breadcrumbs.getWidget(groups.activeGroup.id);
+    if (!widget) {
+      return;
+    }
+    widget.setSelection(widget.getFocused(), BreadcrumbsControl.Payload_Pick);
+  }
+});
+KeybindingsRegistry.registerCommandAndKeybindingRule({
+  id: "breadcrumbs.revealFocused",
+  weight: 200,
+  primary: 10,
+  secondary: [
+    2048 | 3
+    /* KeyCode.Enter */
+  ],
+  when: ContextKeyExpr.and(BreadcrumbsControl.CK_BreadcrumbsVisible, BreadcrumbsControl.CK_BreadcrumbsActive),
+  handler(accessor) {
+    const groups = accessor.get(IEditorGroupsService);
+    const breadcrumbs = accessor.get(IBreadcrumbsService);
+    const widget = breadcrumbs.getWidget(groups.activeGroup.id);
+    if (!widget) {
+      return;
+    }
+    widget.setSelection(widget.getFocused(), BreadcrumbsControl.Payload_Reveal);
+  }
+});
+KeybindingsRegistry.registerCommandAndKeybindingRule({
+  id: "breadcrumbs.selectEditor",
+  weight: 200 + 1,
+  primary: 9,
+  when: ContextKeyExpr.and(BreadcrumbsControl.CK_BreadcrumbsVisible, BreadcrumbsControl.CK_BreadcrumbsActive),
+  handler(accessor) {
+    const groups = accessor.get(IEditorGroupsService);
+    const breadcrumbs = accessor.get(IBreadcrumbsService);
+    const widget = breadcrumbs.getWidget(groups.activeGroup.id);
+    if (!widget) {
+      return;
+    }
+    widget.setFocused(void 0);
+    widget.setSelection(void 0);
+    groups.activeGroup.activeEditorPane?.focus();
+  }
+});
+KeybindingsRegistry.registerCommandAndKeybindingRule({
+  id: "breadcrumbs.revealFocusedFromTreeAside",
+  weight: 200,
+  primary: 2048 | 3,
+  when: ContextKeyExpr.and(BreadcrumbsControl.CK_BreadcrumbsVisible, BreadcrumbsControl.CK_BreadcrumbsActive, WorkbenchListFocusContextKey),
+  handler(accessor) {
+    const editors = accessor.get(IEditorService);
+    const lists = accessor.get(IListService);
+    const tree = lists.lastFocusedList;
+    if (!(tree instanceof WorkbenchDataTree) && !(tree instanceof WorkbenchAsyncDataTree)) {
+      return;
+    }
+    const element = tree.getFocus()[0];
+    if (URI.isUri(element?.resource)) {
+      return editors.openEditor({
+        resource: element.resource,
+        options: { pinned: true }
+      }, SIDE_GROUP);
+    }
+    const input = tree.getInput();
+    if (input && typeof input.outlineKind === "string") {
+      return input.reveal(element, {
+        pinned: true,
+        preserveFocus: false
+      }, true, false);
+    }
+  }
+});
+export {
+  BreadcrumbsControl,
+  BreadcrumbsControlFactory
+};
+//# sourceMappingURL=breadcrumbsControl.js.map

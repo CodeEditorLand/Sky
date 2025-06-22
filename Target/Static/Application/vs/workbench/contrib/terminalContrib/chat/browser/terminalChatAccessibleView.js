@@ -1,1 +1,51 @@
-import{$$ob as l}from"../../../../../platform/accessibility/browser/accessibleView.js";import{$EYb as p}from"../../../terminal/browser/terminal.js";import{$csc as r}from"./terminalChatController.js";import{$eI as u,$hI as h}from"../../../../../platform/actions/common/actions.js";import{$_rc as C,TerminalChatContextKeys as v}from"./terminalChat.js";class w{constructor(){this.priority=105,this.name="terminalInlineChat",this.type="view",this.when=v.focused}getProvider(e){const s=e.get(p),c=e.get(u),n=[],o=r.activeChatController?.scopedContextKeyService;if(o){const f=c.getMenuActions(C,o);for(const m of f)for(const i of m[1])i instanceof h&&n.push(i)}const t=s.activeInstance?.getContribution(r.ID)??void 0;if(!t?.lastResponseContent)return;const a=t.lastResponseContent;return new l("terminal-chat",{type:"view"},()=>a,()=>{t.focus()},"accessibility.verbosity.inlineChat",void 0,n)}}export{w as $dsc};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { AccessibleContentProvider } from "../../../../../platform/accessibility/browser/accessibleView.js";
+import { ITerminalService } from "../../../terminal/browser/terminal.js";
+import { TerminalChatController } from "./terminalChatController.js";
+import { IMenuService, MenuItemAction } from "../../../../../platform/actions/common/actions.js";
+import { MENU_TERMINAL_CHAT_WIDGET_STATUS, TerminalChatContextKeys } from "./terminalChat.js";
+class TerminalInlineChatAccessibleView {
+  static {
+    __name(this, "TerminalInlineChatAccessibleView");
+  }
+  constructor() {
+    this.priority = 105;
+    this.name = "terminalInlineChat";
+    this.type = "view";
+    this.when = TerminalChatContextKeys.focused;
+  }
+  getProvider(accessor) {
+    const terminalService = accessor.get(ITerminalService);
+    const menuService = accessor.get(IMenuService);
+    const actions = [];
+    const contextKeyService = TerminalChatController.activeChatController?.scopedContextKeyService;
+    if (contextKeyService) {
+      const menuActions = menuService.getMenuActions(MENU_TERMINAL_CHAT_WIDGET_STATUS, contextKeyService);
+      for (const action of menuActions) {
+        for (const a of action[1]) {
+          if (a instanceof MenuItemAction) {
+            actions.push(a);
+          }
+        }
+      }
+    }
+    const controller = terminalService.activeInstance?.getContribution(TerminalChatController.ID) ?? void 0;
+    if (!controller?.lastResponseContent) {
+      return;
+    }
+    const responseContent = controller.lastResponseContent;
+    return new AccessibleContentProvider("terminal-chat", {
+      type: "view"
+      /* AccessibleViewType.View */
+    }, () => {
+      return responseContent;
+    }, () => {
+      controller.focus();
+    }, "accessibility.verbosity.inlineChat", void 0, actions);
+  }
+}
+export {
+  TerminalInlineChatAccessibleView
+};
+//# sourceMappingURL=terminalChatAccessibleView.js.map

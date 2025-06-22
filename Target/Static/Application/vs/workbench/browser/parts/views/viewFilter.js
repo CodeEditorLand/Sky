@@ -1,1 +1,238 @@
-import{$Ih as g}from"../../../../base/common/async.js";import*as r from"../../../../base/browser/dom.js";import{$nfb as B}from"../../../../platform/contextview/browser/contextView.js";import{$td as c}from"../../../../base/common/lifecycle.js";import{$Sp as b,$Tp as y,$Gp as x,$jp as u}from"../../../../platform/theme/common/colorRegistry.js";import{localize as w}from"../../../../nls.js";import{$mj as I}from"../../../../platform/instantiation/common/instantiation.js";import{$Bjb as F}from"../../../../platform/history/browser/contextScopedHistoryWidget.js";import{$Vn as D,$Un as v}from"../../../../platform/contextkey/common/contextkey.js";import{$Mj as R}from"../../../../base/common/codicons.js";import{$ux as K}from"../../../../platform/keybinding/common/keybinding.js";import{$Wnb as L}from"../../../../platform/history/browser/historyWidgetKeybindingHint.js";import{$dI as m,$fI as _,$gI as M}from"../../../../platform/actions/common/actions.js";import{$mgb as C}from"../../../../platform/actions/browser/toolbar.js";import{$egb as E}from"../../../../platform/actions/browser/menuEntryActionViewItem.js";import{$p7 as H}from"../../../../base/browser/ui/widget.js";import{$df as P}from"../../../../base/common/event.js";import{$Wfb as j}from"../../../../platform/theme/browser/defaultStyles.js";var $=function(n,t,e,i){var o=arguments.length,s=o<3?t:i===null?i=Object.getOwnPropertyDescriptor(t,e):i,h;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")s=Reflect.decorate(n,t,e,i);else for(var a=n.length-1;a>=0;a--)(h=n[a])&&(s=(o<3?h(s):o>3?h(t,e,s):h(t,e))||s);return o>3&&s&&Object.defineProperty(t,e,s),s},l=function(n,t){return function(e,i){t(e,i,n)}};const p=new m("menu.view.filter"),d=new m("submenu.view.filter");_.appendMenuItem(p,{submenu:d,title:w(3968,null),group:"navigation",icon:R.filter});class O extends E{constructor(){super(...arguments),this.R=!1}set checked(t){this.R!==t&&(this.R=t,this.J())}J(){this.element&&this.element.classList.toggle("checked",this.R)}render(t){super.render(t),this.J()}}let f=class extends H{get onDidFocus(){return this.H.onDidFocus}get onDidBlur(){return this.H.onDidBlur}constructor(t,e,i,o,s){super(),this.I=t,this.J=e,this.L=i,this.M=s,this.r=this.B(new P),this.onDidChangeFilterText=this.r.event,this.w=!1,this.a=new g(300),this.B(c(()=>this.a.cancel())),t.focusContextKey&&(this.n=new v(t.focusContextKey,!1).bindTo(o)),this.element=r.$(".viewpane-filter"),[this.c,this.H]=this.N(this.element),this.B(this.c),this.B(this.H);const h=r.$M6(this.element,r.$(".viewpane-filter-controls"));this.g=this.O(h),this.h=this.B(this.P(h)),this.R()}hasFocus(){return this.c.hasFocus()}focus(){this.c.focus()}blur(){this.c.blur()}updateBadge(t){this.g.classList.toggle("hidden",!t),this.g.textContent=t||"",this.R()}setFilterText(t){this.c.value=t}getFilterText(){return this.c.value}getHistory(){return this.c.getHistory()}layout(t){this.element.parentElement?.classList.toggle("grow",t>700),this.element.classList.toggle("small",t<400),this.R(),this.y=t}relayout(){this.y&&this.layout(this.y)}checkMoreFilters(t){this.w=t,this.t&&(this.t.checked=t)}N(t){const e=this.I.history||[],i=this.B(this.J.createInstance(F,t,this.L,{placeholder:this.I.placeholder,ariaLabel:this.I.ariaLabel,history:new Set(e),showHistoryHint:()=>L(this.M),inputBoxStyles:j}));this.I.text&&(i.value=this.I.text),this.B(i.onDidChange(s=>this.a.trigger(()=>this.Q(i)))),this.B(r.$K5(i.inputElement,r.$F6.KEY_DOWN,s=>this.U(s,i))),this.B(r.$K5(t,r.$F6.KEY_DOWN,this.S)),this.B(r.$K5(t,r.$F6.KEY_UP,this.S)),this.B(r.$K5(i.inputElement,r.$F6.CLICK,s=>{s.stopPropagation(),s.preventDefault()}));const o=this.B(r.$K6(i.inputElement));return this.n&&(this.B(o.onDidFocus(()=>this.n.set(!0))),this.B(o.onDidBlur(()=>this.n.set(!1))),this.B(c(()=>this.n.reset()))),[i,o]}O(t){const e=r.$M6(t,r.$(".viewpane-filter-badge.hidden"));return e.style.backgroundColor=u(b),e.style.color=u(y),e.style.border=`1px solid ${u(x)}`,e}P(t){return this.J.createInstance(C,t,p,{hiddenItemStrategy:-1,actionViewItemProvider:(e,i)=>{if(e instanceof M&&e.item.submenu.id===d.id)return this.t=this.J.createInstance(O,e,i),this.t.checked=this.w,this.t}})}Q(t){t.addToHistory(),this.r.fire(t.value)}R(){this.c.inputElement.style.paddingRight=this.element.classList.contains("small")||this.g.classList.contains("hidden")?"25px":"150px"}S(t){(t.equals(10)||t.equals(15)||t.equals(17)||t.equals(14)||t.equals(13))&&t.stopPropagation()}U(t,e){let i=!1;t.equals(2)&&!this.h.isEmpty()&&(this.h.focus(),i=!0),i&&(t.stopPropagation(),t.preventDefault())}};f=$([l(1,I),l(2,B),l(3,D),l(4,K)],f);export{d as $jxb,f as $kxb};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { Delayer } from "../../../../base/common/async.js";
+import * as DOM from "../../../../base/browser/dom.js";
+import { IContextViewService } from "../../../../platform/contextview/browser/contextView.js";
+import { toDisposable } from "../../../../base/common/lifecycle.js";
+import { badgeBackground, badgeForeground, contrastBorder, asCssVariable } from "../../../../platform/theme/common/colorRegistry.js";
+import { localize } from "../../../../nls.js";
+import { IInstantiationService } from "../../../../platform/instantiation/common/instantiation.js";
+import { ContextScopedHistoryInputBox } from "../../../../platform/history/browser/contextScopedHistoryWidget.js";
+import { IContextKeyService, RawContextKey } from "../../../../platform/contextkey/common/contextkey.js";
+import { Codicon } from "../../../../base/common/codicons.js";
+import { IKeybindingService } from "../../../../platform/keybinding/common/keybinding.js";
+import { showHistoryKeybindingHint } from "../../../../platform/history/browser/historyWidgetKeybindingHint.js";
+import { MenuId, MenuRegistry, SubmenuItemAction } from "../../../../platform/actions/common/actions.js";
+import { MenuWorkbenchToolBar } from "../../../../platform/actions/browser/toolbar.js";
+import { SubmenuEntryActionViewItem } from "../../../../platform/actions/browser/menuEntryActionViewItem.js";
+import { Widget } from "../../../../base/browser/ui/widget.js";
+import { Emitter } from "../../../../base/common/event.js";
+import { defaultInputBoxStyles } from "../../../../platform/theme/browser/defaultStyles.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+const viewFilterMenu = new MenuId("menu.view.filter");
+const viewFilterSubmenu = new MenuId("submenu.view.filter");
+MenuRegistry.appendMenuItem(viewFilterMenu, {
+  submenu: viewFilterSubmenu,
+  title: localize("more filters", "More Filters..."),
+  group: "navigation",
+  icon: Codicon.filter
+});
+class MoreFiltersActionViewItem extends SubmenuEntryActionViewItem {
+  static {
+    __name(this, "MoreFiltersActionViewItem");
+  }
+  constructor() {
+    super(...arguments);
+    this._checked = false;
+  }
+  set checked(checked) {
+    if (this._checked !== checked) {
+      this._checked = checked;
+      this.updateChecked();
+    }
+  }
+  updateChecked() {
+    if (this.element) {
+      this.element.classList.toggle("checked", this._checked);
+    }
+  }
+  render(container) {
+    super.render(container);
+    this.updateChecked();
+  }
+}
+let FilterWidget = class FilterWidget2 extends Widget {
+  static {
+    __name(this, "FilterWidget");
+  }
+  get onDidFocus() {
+    return this.focusTracker.onDidFocus;
+  }
+  get onDidBlur() {
+    return this.focusTracker.onDidBlur;
+  }
+  constructor(options, instantiationService, contextViewService, contextKeyService, keybindingService) {
+    super();
+    this.options = options;
+    this.instantiationService = instantiationService;
+    this.contextViewService = contextViewService;
+    this.keybindingService = keybindingService;
+    this._onDidChangeFilterText = this._register(new Emitter());
+    this.onDidChangeFilterText = this._onDidChangeFilterText.event;
+    this.isMoreFiltersChecked = false;
+    this.delayedFilterUpdate = new Delayer(300);
+    this._register(toDisposable(() => this.delayedFilterUpdate.cancel()));
+    if (options.focusContextKey) {
+      this.focusContextKey = new RawContextKey(options.focusContextKey, false).bindTo(contextKeyService);
+    }
+    this.element = DOM.$(".viewpane-filter");
+    [this.filterInputBox, this.focusTracker] = this.createInput(this.element);
+    this._register(this.filterInputBox);
+    this._register(this.focusTracker);
+    const controlsContainer = DOM.append(this.element, DOM.$(".viewpane-filter-controls"));
+    this.filterBadge = this.createBadge(controlsContainer);
+    this.toolbar = this._register(this.createToolBar(controlsContainer));
+    this.adjustInputBox();
+  }
+  hasFocus() {
+    return this.filterInputBox.hasFocus();
+  }
+  focus() {
+    this.filterInputBox.focus();
+  }
+  blur() {
+    this.filterInputBox.blur();
+  }
+  updateBadge(message) {
+    this.filterBadge.classList.toggle("hidden", !message);
+    this.filterBadge.textContent = message || "";
+    this.adjustInputBox();
+  }
+  setFilterText(filterText) {
+    this.filterInputBox.value = filterText;
+  }
+  getFilterText() {
+    return this.filterInputBox.value;
+  }
+  getHistory() {
+    return this.filterInputBox.getHistory();
+  }
+  layout(width) {
+    this.element.parentElement?.classList.toggle("grow", width > 700);
+    this.element.classList.toggle("small", width < 400);
+    this.adjustInputBox();
+    this.lastWidth = width;
+  }
+  relayout() {
+    if (this.lastWidth) {
+      this.layout(this.lastWidth);
+    }
+  }
+  checkMoreFilters(checked) {
+    this.isMoreFiltersChecked = checked;
+    if (this.moreFiltersActionViewItem) {
+      this.moreFiltersActionViewItem.checked = checked;
+    }
+  }
+  createInput(container) {
+    const history = this.options.history || [];
+    const inputBox = this._register(this.instantiationService.createInstance(ContextScopedHistoryInputBox, container, this.contextViewService, {
+      placeholder: this.options.placeholder,
+      ariaLabel: this.options.ariaLabel,
+      history: new Set(history),
+      showHistoryHint: /* @__PURE__ */ __name(() => showHistoryKeybindingHint(this.keybindingService), "showHistoryHint"),
+      inputBoxStyles: defaultInputBoxStyles
+    }));
+    if (this.options.text) {
+      inputBox.value = this.options.text;
+    }
+    this._register(inputBox.onDidChange((filter) => this.delayedFilterUpdate.trigger(() => this.onDidInputChange(inputBox))));
+    this._register(DOM.addStandardDisposableListener(inputBox.inputElement, DOM.EventType.KEY_DOWN, (e) => this.onInputKeyDown(e, inputBox)));
+    this._register(DOM.addStandardDisposableListener(container, DOM.EventType.KEY_DOWN, this.handleKeyboardEvent));
+    this._register(DOM.addStandardDisposableListener(container, DOM.EventType.KEY_UP, this.handleKeyboardEvent));
+    this._register(DOM.addStandardDisposableListener(inputBox.inputElement, DOM.EventType.CLICK, (e) => {
+      e.stopPropagation();
+      e.preventDefault();
+    }));
+    const focusTracker = this._register(DOM.trackFocus(inputBox.inputElement));
+    if (this.focusContextKey) {
+      this._register(focusTracker.onDidFocus(() => this.focusContextKey.set(true)));
+      this._register(focusTracker.onDidBlur(() => this.focusContextKey.set(false)));
+      this._register(toDisposable(() => this.focusContextKey.reset()));
+    }
+    return [inputBox, focusTracker];
+  }
+  createBadge(container) {
+    const filterBadge = DOM.append(container, DOM.$(".viewpane-filter-badge.hidden"));
+    filterBadge.style.backgroundColor = asCssVariable(badgeBackground);
+    filterBadge.style.color = asCssVariable(badgeForeground);
+    filterBadge.style.border = `1px solid ${asCssVariable(contrastBorder)}`;
+    return filterBadge;
+  }
+  createToolBar(container) {
+    return this.instantiationService.createInstance(MenuWorkbenchToolBar, container, viewFilterMenu, {
+      hiddenItemStrategy: -1,
+      actionViewItemProvider: /* @__PURE__ */ __name((action, options) => {
+        if (action instanceof SubmenuItemAction && action.item.submenu.id === viewFilterSubmenu.id) {
+          this.moreFiltersActionViewItem = this.instantiationService.createInstance(MoreFiltersActionViewItem, action, options);
+          this.moreFiltersActionViewItem.checked = this.isMoreFiltersChecked;
+          return this.moreFiltersActionViewItem;
+        }
+        return void 0;
+      }, "actionViewItemProvider")
+    });
+  }
+  onDidInputChange(inputbox) {
+    inputbox.addToHistory();
+    this._onDidChangeFilterText.fire(inputbox.value);
+  }
+  adjustInputBox() {
+    this.filterInputBox.inputElement.style.paddingRight = this.element.classList.contains("small") || this.filterBadge.classList.contains("hidden") ? "25px" : "150px";
+  }
+  // Action toolbar is swallowing some keys for action items which should not be for an input box
+  handleKeyboardEvent(event) {
+    if (event.equals(
+      10
+      /* KeyCode.Space */
+    ) || event.equals(
+      15
+      /* KeyCode.LeftArrow */
+    ) || event.equals(
+      17
+      /* KeyCode.RightArrow */
+    ) || event.equals(
+      14
+      /* KeyCode.Home */
+    ) || event.equals(
+      13
+      /* KeyCode.End */
+    )) {
+      event.stopPropagation();
+    }
+  }
+  onInputKeyDown(event, filterInputBox) {
+    let handled = false;
+    if (event.equals(
+      2
+      /* KeyCode.Tab */
+    ) && !this.toolbar.isEmpty()) {
+      this.toolbar.focus();
+      handled = true;
+    }
+    if (handled) {
+      event.stopPropagation();
+      event.preventDefault();
+    }
+  }
+};
+FilterWidget = __decorate([
+  __param(1, IInstantiationService),
+  __param(2, IContextViewService),
+  __param(3, IContextKeyService),
+  __param(4, IKeybindingService)
+], FilterWidget);
+export {
+  FilterWidget,
+  viewFilterSubmenu
+};
+//# sourceMappingURL=viewFilter.js.map

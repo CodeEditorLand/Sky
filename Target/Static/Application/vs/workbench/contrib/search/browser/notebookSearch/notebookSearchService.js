@@ -1,1 +1,245 @@
-import{CancellationToken as N}from"../../../../../base/common/cancellation.js";import{$Jc as P,$Ic as x}from"../../../../../base/common/map.js";import{$El as y}from"../../../../../platform/configuration/common/configuration.js";import{$3n as D}from"../../../../../platform/log/common/log.js";import{$yo as E}from"../../../../../platform/uriIdentity/common/uriIdentity.js";import{$Ryb as F}from"../../../notebook/common/notebookService.js";import{$ebc as H,$fbc as W}from"./searchNotebookHelpers.js";import{$tP as T,$jP as _,$iP as j}from"../../../../services/search/common/search.js";import*as v from"../../../../../base/common/arrays.js";import{$3c as A}from"../../../../../base/common/types.js";import{$$K as K}from"../../../../services/editor/common/editorResolverService.js";import{$QVb as O}from"../../../notebook/browser/services/notebookEditorService.js";import{$7X as U}from"../../../../services/search/common/queryBuilder.js";import{$mj as z}from"../../../../../platform/instantiation/common/instantiation.js";var C=function(w,e,o,i){var l=arguments.length,s=l<3?e:i===null?i=Object.getOwnPropertyDescriptor(e,o):i,r;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")s=Reflect.decorate(w,e,o,i);else for(var n=w.length-1;n>=0;n--)(r=w[n])&&(s=(l<3?r(s):l>3?r(e,o,s):r(e,o))||s);return l>3&&s&&Object.defineProperty(e,o,s),s},p=function(w,e){return function(o,i){e(o,i,w)}};let M=class{constructor(e,o,i,l,s,r,n,u){this.b=e,this.c=o,this.d=i,this.f=l,this.g=s,this.h=r,this.i=n,this.a=u.createInstance(U)}notebookSearch(e,o,i,l){if(e.type!==2)return{openFilesToScan:new P,completeData:Promise.resolve({messages:[],limitHit:!1,results:[]}),allScannedFiles:Promise.resolve(new P)};const s=this.m(),r=s.map(c=>c.viewModel.uri),u=(()=>{const c=Date.now(),m=this.l(e,o??N.None,s,i),R=Date.now(),h=this.g.getValue("search").experimental?.closedNotebookRichContentResults??!1;let a=Promise.resolve(void 0);h&&(a=this.k(e,new P(r,t=>this.b.extUri.getComparisonKey(t)),o??N.None));const g=Promise.all([m,a]);return{completeData:g.then(t=>{const f=t[0],d=t[1],b=t.filter($=>!!$),k=[...f.results.values(),...d?.results.values()??[]],I=v.$7b(k);return l&&I.forEach(l),this.d.trace(`local notebook search time | ${R-c}ms`),{messages:[],limitHit:b.reduce(($,S)=>$||S.limitHit,!1),results:I}}),allScannedFiles:g.then(t=>{const f=t[0],d=t[1],b=v.$7b([...f.results.keys(),...d?.results.keys()??[]]);return new P(b,k=>this.b.extUri.getComparisonKey(k))})}})();return{openFilesToScan:new P(r),completeData:u.completeData,allScannedFiles:u.allScannedFiles}}async j(e,o,i){const l=e.map(async s=>{const r=this.a.file(o.map(n=>n.folder),{includePattern:s.startsWith("/")?s:"**/"+s,exists:!0,onlyFileScheme:!0});return this.i.fileSearch(r,i).then(n=>!!n.limitHit)});return Promise.any(l)}async k(e,o,i){const l=this.h.getAllUserAssociations(),s=new Map,r=this.f.getContributedNotebookTypes();l.forEach(t=>{if(!t.filenamePattern)return;const f={isFromSettings:!0,filenamePatterns:[t.filenamePattern]},d=s.get(t.viewType);d?s.set(t.viewType,d.concat(f)):s.set(t.viewType,[f])});const n=[];r.forEach(t=>{t.selectors.length>0&&n.push((async()=>{const f=t.selectors.map(b=>(b.include||b).toString());if(await this.j(f,e.folderQueries,i))return await this.f.canResolve(t.id)?await(await this.f.withNotebookDataProvider(t.id)).serializer.searchInNotebooks(e,i,s):void 0})())});const u=Date.now(),c=v.$7b(await Promise.all(n)),m=c.flatMap(t=>t.results);let R=c.some(t=>t.limitHit);const h=new x(t=>this.b.extUri.getComparisonKey(t));let a=0;for(const t of m){if(e.maxResults&&a>=e.maxResults){R=!0;break}!o.has(t.resource)&&!h.has(t.resource)&&(h.set(t.resource,t.cellResults.length>0?t:null),a++)}const g=Date.now();return this.d.trace(`query: ${e.contentPattern.pattern}`),this.d.trace(`closed notebook search time | ${g-u}ms`),{results:h,limitHit:R}}async l(e,o,i,l){const s=new x(n=>this.b.extUri.getComparisonKey(n));let r=!1;for(const n of i){if(!n.hasModel())continue;const u=(A(e.maxResults)?e.maxResults:j)+1,c=n.viewModel.uri;if(!T(e,c.fsPath))continue;let m=await n.find(e.contentPattern.pattern,{regex:e.contentPattern.isRegExp,wholeWord:e.contentPattern.isWordMatch,caseSensitive:e.contentPattern.isCaseSensitive,includeMarkupInput:e.contentPattern.notebookInfo?.isInNotebookMarkdownInput??!0,includeMarkupPreview:e.contentPattern.notebookInfo?.isInNotebookMarkdownPreview??!0,includeCodeInput:e.contentPattern.notebookInfo?.isInNotebookCellInput??!0,includeOutput:e.contentPattern.notebookInfo?.isInNotebookCellOutput??!0},o,!1,!0,l);if(m.length){u&&m.length>=u&&(r=!0,m=m.slice(0,u-1));const R=m.map(a=>{const g=H(a.contentMatches,a.cell),t=W(a.webviewMatches);return{cell:a.cell,index:a.index,contentResults:g,webviewResults:t}}),h={resource:c,cellResults:R};s.set(c,h)}else s.set(c,null)}return{results:s,limitHit:r}}m(){return this.c.retrieveAllExistingWidgets().map(o=>o.value).filter(o=>!!o&&o.hasModel())}};M=C([p(0,E),p(1,O),p(2,D),p(3,F),p(4,y),p(5,K),p(6,_),p(7,z)],M);export{M as $Hnc};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { CancellationToken } from "../../../../../base/common/cancellation.js";
+import { ResourceSet, ResourceMap } from "../../../../../base/common/map.js";
+import { IConfigurationService } from "../../../../../platform/configuration/common/configuration.js";
+import { ILogService } from "../../../../../platform/log/common/log.js";
+import { IUriIdentityService } from "../../../../../platform/uriIdentity/common/uriIdentity.js";
+import { INotebookService } from "../../../notebook/common/notebookService.js";
+import { contentMatchesToTextSearchMatches, webviewMatchesToTextSearchMatches } from "./searchNotebookHelpers.js";
+import { pathIncludedInQuery, ISearchService, DEFAULT_MAX_SEARCH_RESULTS } from "../../../../services/search/common/search.js";
+import * as arrays from "../../../../../base/common/arrays.js";
+import { isNumber } from "../../../../../base/common/types.js";
+import { IEditorResolverService } from "../../../../services/editor/common/editorResolverService.js";
+import { INotebookEditorService } from "../../../notebook/browser/services/notebookEditorService.js";
+import { QueryBuilder } from "../../../../services/search/common/queryBuilder.js";
+import { IInstantiationService } from "../../../../../platform/instantiation/common/instantiation.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+let NotebookSearchService = class NotebookSearchService2 {
+  static {
+    __name(this, "NotebookSearchService");
+  }
+  constructor(uriIdentityService, notebookEditorService, logService, notebookService, configurationService, editorResolverService, searchService, instantiationService) {
+    this.uriIdentityService = uriIdentityService;
+    this.notebookEditorService = notebookEditorService;
+    this.logService = logService;
+    this.notebookService = notebookService;
+    this.configurationService = configurationService;
+    this.editorResolverService = editorResolverService;
+    this.searchService = searchService;
+    this.queryBuilder = instantiationService.createInstance(QueryBuilder);
+  }
+  notebookSearch(query, token, searchInstanceID, onProgress) {
+    if (query.type !== 2) {
+      return {
+        openFilesToScan: new ResourceSet(),
+        completeData: Promise.resolve({
+          messages: [],
+          limitHit: false,
+          results: []
+        }),
+        allScannedFiles: Promise.resolve(new ResourceSet())
+      };
+    }
+    const localNotebookWidgets = this.getLocalNotebookWidgets();
+    const localNotebookFiles = localNotebookWidgets.map((widget) => widget.viewModel.uri);
+    const getAllResults = /* @__PURE__ */ __name(() => {
+      const searchStart = Date.now();
+      const localResultPromise = this.getLocalNotebookResults(query, token ?? CancellationToken.None, localNotebookWidgets, searchInstanceID);
+      const searchLocalEnd = Date.now();
+      const experimentalNotebooksEnabled = this.configurationService.getValue("search").experimental?.closedNotebookRichContentResults ?? false;
+      let closedResultsPromise = Promise.resolve(void 0);
+      if (experimentalNotebooksEnabled) {
+        closedResultsPromise = this.getClosedNotebookResults(query, new ResourceSet(localNotebookFiles, (uri) => this.uriIdentityService.extUri.getComparisonKey(uri)), token ?? CancellationToken.None);
+      }
+      const promise = Promise.all([localResultPromise, closedResultsPromise]);
+      return {
+        completeData: promise.then((resolvedPromise) => {
+          const openNotebookResult = resolvedPromise[0];
+          const closedNotebookResult = resolvedPromise[1];
+          const resolved = resolvedPromise.filter((e) => !!e);
+          const resultArray = [...openNotebookResult.results.values(), ...closedNotebookResult?.results.values() ?? []];
+          const results = arrays.coalesce(resultArray);
+          if (onProgress) {
+            results.forEach(onProgress);
+          }
+          this.logService.trace(`local notebook search time | ${searchLocalEnd - searchStart}ms`);
+          return {
+            messages: [],
+            limitHit: resolved.reduce((prev, cur) => prev || cur.limitHit, false),
+            results
+          };
+        }),
+        allScannedFiles: promise.then((resolvedPromise) => {
+          const openNotebookResults = resolvedPromise[0];
+          const closedNotebookResults = resolvedPromise[1];
+          const results = arrays.coalesce([...openNotebookResults.results.keys(), ...closedNotebookResults?.results.keys() ?? []]);
+          return new ResourceSet(results, (uri) => this.uriIdentityService.extUri.getComparisonKey(uri));
+        })
+      };
+    }, "getAllResults");
+    const promiseResults = getAllResults();
+    return {
+      openFilesToScan: new ResourceSet(localNotebookFiles),
+      completeData: promiseResults.completeData,
+      allScannedFiles: promiseResults.allScannedFiles
+    };
+  }
+  async doesFileExist(includes, folderQueries, token) {
+    const promises = includes.map(async (includePattern) => {
+      const query = this.queryBuilder.file(folderQueries.map((e) => e.folder), {
+        includePattern: includePattern.startsWith("/") ? includePattern : "**/" + includePattern,
+        // todo: find cleaner way to ensure that globs match all appropriate filetypes
+        exists: true,
+        onlyFileScheme: true
+      });
+      return this.searchService.fileSearch(query, token).then((ret) => {
+        return !!ret.limitHit;
+      });
+    });
+    return Promise.any(promises);
+  }
+  async getClosedNotebookResults(textQuery, scannedFiles, token) {
+    const userAssociations = this.editorResolverService.getAllUserAssociations();
+    const allPriorityInfo = /* @__PURE__ */ new Map();
+    const contributedNotebookTypes = this.notebookService.getContributedNotebookTypes();
+    userAssociations.forEach((association) => {
+      if (!association.filenamePattern) {
+        return;
+      }
+      const info = {
+        isFromSettings: true,
+        filenamePatterns: [association.filenamePattern]
+      };
+      const existingEntry = allPriorityInfo.get(association.viewType);
+      if (existingEntry) {
+        allPriorityInfo.set(association.viewType, existingEntry.concat(info));
+      } else {
+        allPriorityInfo.set(association.viewType, [info]);
+      }
+    });
+    const promises = [];
+    contributedNotebookTypes.forEach((notebook) => {
+      if (notebook.selectors.length > 0) {
+        promises.push((async () => {
+          const includes = notebook.selectors.map((selector) => {
+            const globPattern = selector.include || selector;
+            return globPattern.toString();
+          });
+          const isInWorkspace = await this.doesFileExist(includes, textQuery.folderQueries, token);
+          if (isInWorkspace) {
+            const canResolve = await this.notebookService.canResolve(notebook.id);
+            if (!canResolve) {
+              return void 0;
+            }
+            const serializer = (await this.notebookService.withNotebookDataProvider(notebook.id)).serializer;
+            return await serializer.searchInNotebooks(textQuery, token, allPriorityInfo);
+          } else {
+            return void 0;
+          }
+        })());
+      }
+    });
+    const start = Date.now();
+    const searchComplete = arrays.coalesce(await Promise.all(promises));
+    const results = searchComplete.flatMap((e) => e.results);
+    let limitHit = searchComplete.some((e) => e.limitHit);
+    const uniqueResults = new ResourceMap((uri) => this.uriIdentityService.extUri.getComparisonKey(uri));
+    let numResults = 0;
+    for (const result of results) {
+      if (textQuery.maxResults && numResults >= textQuery.maxResults) {
+        limitHit = true;
+        break;
+      }
+      if (!scannedFiles.has(result.resource) && !uniqueResults.has(result.resource)) {
+        uniqueResults.set(result.resource, result.cellResults.length > 0 ? result : null);
+        numResults++;
+      }
+    }
+    const end = Date.now();
+    this.logService.trace(`query: ${textQuery.contentPattern.pattern}`);
+    this.logService.trace(`closed notebook search time | ${end - start}ms`);
+    return {
+      results: uniqueResults,
+      limitHit
+    };
+  }
+  async getLocalNotebookResults(query, token, widgets, searchID) {
+    const localResults = new ResourceMap((uri) => this.uriIdentityService.extUri.getComparisonKey(uri));
+    let limitHit = false;
+    for (const widget of widgets) {
+      if (!widget.hasModel()) {
+        continue;
+      }
+      const askMax = (isNumber(query.maxResults) ? query.maxResults : DEFAULT_MAX_SEARCH_RESULTS) + 1;
+      const uri = widget.viewModel.uri;
+      if (!pathIncludedInQuery(query, uri.fsPath)) {
+        continue;
+      }
+      let matches = await widget.find(query.contentPattern.pattern, {
+        regex: query.contentPattern.isRegExp,
+        wholeWord: query.contentPattern.isWordMatch,
+        caseSensitive: query.contentPattern.isCaseSensitive,
+        includeMarkupInput: query.contentPattern.notebookInfo?.isInNotebookMarkdownInput ?? true,
+        includeMarkupPreview: query.contentPattern.notebookInfo?.isInNotebookMarkdownPreview ?? true,
+        includeCodeInput: query.contentPattern.notebookInfo?.isInNotebookCellInput ?? true,
+        includeOutput: query.contentPattern.notebookInfo?.isInNotebookCellOutput ?? true
+      }, token, false, true, searchID);
+      if (matches.length) {
+        if (askMax && matches.length >= askMax) {
+          limitHit = true;
+          matches = matches.slice(0, askMax - 1);
+        }
+        const cellResults = matches.map((match) => {
+          const contentResults = contentMatchesToTextSearchMatches(match.contentMatches, match.cell);
+          const webviewResults = webviewMatchesToTextSearchMatches(match.webviewMatches);
+          return {
+            cell: match.cell,
+            index: match.index,
+            contentResults,
+            webviewResults
+          };
+        });
+        const fileMatch = {
+          resource: uri,
+          cellResults
+        };
+        localResults.set(uri, fileMatch);
+      } else {
+        localResults.set(uri, null);
+      }
+    }
+    return {
+      results: localResults,
+      limitHit
+    };
+  }
+  getLocalNotebookWidgets() {
+    const notebookWidgets = this.notebookEditorService.retrieveAllExistingWidgets();
+    return notebookWidgets.map((widget) => widget.value).filter((val) => !!val && val.hasModel());
+  }
+};
+NotebookSearchService = __decorate([
+  __param(0, IUriIdentityService),
+  __param(1, INotebookEditorService),
+  __param(2, ILogService),
+  __param(3, INotebookService),
+  __param(4, IConfigurationService),
+  __param(5, IEditorResolverService),
+  __param(6, ISearchService),
+  __param(7, IInstantiationService)
+], NotebookSearchService);
+export {
+  NotebookSearchService
+};
+//# sourceMappingURL=notebookSearchService.js.map

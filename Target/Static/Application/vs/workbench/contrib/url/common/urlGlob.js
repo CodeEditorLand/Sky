@@ -1,1 +1,89 @@
-import{URI as A}from"../../../../base/common/uri.js";function w(t){const e="string"==typeof t?A.parse(t):t;return e.with({path:e.path.replace(/\/+$/,""),query:null,fragment:null})}function I(t,e){const n=w(t);let h;if(/^[^./:]*:\/\//.test(e))h=w(e);else{if("http"!==n.scheme&&"https"!==n.scheme)return!1;h=w(`${n.scheme}://${e}`)}return x(n.scheme,h.scheme)&&x(n.authority,h.authority,!0)&&("/"===h.path||x(n.path,h.path))}function x(t,e,n=!1){return $(Array.from({length:t.length+1}).map((()=>Array.from({length:e.length+1}).map((()=>{})))),n,t,e,0,0)}function $(t,e,n,h,r,s){if(void 0!==t[r]?.[s])return t[r][s];const u=[];if(r===n.length)return s===h.length||!(!e||h[s]+h[s+1]!==":*")&&s+2===h.length;if(s===h.length)return"/"===n.slice(r)[0];if(n[r]===h[s]&&u.push($(t,e,n,h,r+1,s+1)),h[s]+h[s+1]==="*."&&(["/",":"].includes(n[r])||u.push($(t,e,n,h,r+1,s)),u.push($(t,e,n,h,r,s+2))),"*"===h[s]&&(r+1===n.length?u.push($(t,e,n,h,r+1,s+1)):u.push($(t,e,n,h,r+1,s)),u.push($(t,e,n,h,r,s+1))),e&&h[s]+h[s+1]===":*")if(":"===n[r]){let p=r+1;do{p++}while(/[0-9]/.test(n[p]));u.push($(t,e,n,h,p,s+2))}else u.push($(t,e,n,h,r,s+2));return t[r][s]=u.some((t=>!0===t))}export{I as $YZb};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { URI } from "../../../../base/common/uri.js";
+function normalizeURL(url) {
+  const uri = typeof url === "string" ? URI.parse(url) : url;
+  return uri.with({
+    // Remove trailing slashes
+    path: uri.path.replace(/\/+$/, ""),
+    // Remove query and fragment
+    query: null,
+    fragment: null
+  });
+}
+__name(normalizeURL, "normalizeURL");
+function testUrlMatchesGlob(uri, globUrl) {
+  const normalizedUrl = normalizeURL(uri);
+  let normalizedGlobUrl;
+  const globHasScheme = /^[^./:]*:\/\//.test(globUrl);
+  if (!globHasScheme) {
+    if (normalizedUrl.scheme !== "http" && normalizedUrl.scheme !== "https") {
+      return false;
+    }
+    normalizedGlobUrl = normalizeURL(`${normalizedUrl.scheme}://${globUrl}`);
+  } else {
+    normalizedGlobUrl = normalizeURL(globUrl);
+  }
+  return doMemoUrlMatch(normalizedUrl.scheme, normalizedGlobUrl.scheme) && // The authority is the only thing that should do port logic.
+  doMemoUrlMatch(normalizedUrl.authority, normalizedGlobUrl.authority, true) && //
+  (normalizedGlobUrl.path === "/" || doMemoUrlMatch(normalizedUrl.path, normalizedGlobUrl.path));
+}
+__name(testUrlMatchesGlob, "testUrlMatchesGlob");
+function doMemoUrlMatch(normalizedUrlPart, normalizedGlobUrlPart, includePortLogic = false) {
+  const memo = Array.from({ length: normalizedUrlPart.length + 1 }).map(() => Array.from({ length: normalizedGlobUrlPart.length + 1 }).map(() => void 0));
+  return doUrlPartMatch(memo, includePortLogic, normalizedUrlPart, normalizedGlobUrlPart, 0, 0);
+}
+__name(doMemoUrlMatch, "doMemoUrlMatch");
+function doUrlPartMatch(memo, includePortLogic, urlPart, globUrlPart, urlOffset, globUrlOffset) {
+  if (memo[urlOffset]?.[globUrlOffset] !== void 0) {
+    return memo[urlOffset][globUrlOffset];
+  }
+  const options = [];
+  if (urlOffset === urlPart.length) {
+    if (globUrlOffset === globUrlPart.length) {
+      return true;
+    }
+    if (includePortLogic && globUrlPart[globUrlOffset] + globUrlPart[globUrlOffset + 1] === ":*") {
+      return globUrlOffset + 2 === globUrlPart.length;
+    }
+    return false;
+  }
+  if (globUrlOffset === globUrlPart.length) {
+    const remaining = urlPart.slice(urlOffset);
+    return remaining[0] === "/";
+  }
+  if (urlPart[urlOffset] === globUrlPart[globUrlOffset]) {
+    options.push(doUrlPartMatch(memo, includePortLogic, urlPart, globUrlPart, urlOffset + 1, globUrlOffset + 1));
+  }
+  if (globUrlPart[globUrlOffset] + globUrlPart[globUrlOffset + 1] === "*.") {
+    if (!["/", ":"].includes(urlPart[urlOffset])) {
+      options.push(doUrlPartMatch(memo, includePortLogic, urlPart, globUrlPart, urlOffset + 1, globUrlOffset));
+    }
+    options.push(doUrlPartMatch(memo, includePortLogic, urlPart, globUrlPart, urlOffset, globUrlOffset + 2));
+  }
+  if (globUrlPart[globUrlOffset] === "*") {
+    if (urlOffset + 1 === urlPart.length) {
+      options.push(doUrlPartMatch(memo, includePortLogic, urlPart, globUrlPart, urlOffset + 1, globUrlOffset + 1));
+    } else {
+      options.push(doUrlPartMatch(memo, includePortLogic, urlPart, globUrlPart, urlOffset + 1, globUrlOffset));
+    }
+    options.push(doUrlPartMatch(memo, includePortLogic, urlPart, globUrlPart, urlOffset, globUrlOffset + 1));
+  }
+  if (includePortLogic && globUrlPart[globUrlOffset] + globUrlPart[globUrlOffset + 1] === ":*") {
+    if (urlPart[urlOffset] === ":") {
+      let endPortIndex = urlOffset + 1;
+      do {
+        endPortIndex++;
+      } while (/[0-9]/.test(urlPart[endPortIndex]));
+      options.push(doUrlPartMatch(memo, includePortLogic, urlPart, globUrlPart, endPortIndex, globUrlOffset + 2));
+    } else {
+      options.push(doUrlPartMatch(memo, includePortLogic, urlPart, globUrlPart, urlOffset, globUrlOffset + 2));
+    }
+  }
+  return memo[urlOffset][globUrlOffset] = options.some((a) => a === true);
+}
+__name(doUrlPartMatch, "doUrlPartMatch");
+export {
+  testUrlMatchesGlob
+};
+//# sourceMappingURL=urlGlob.js.map

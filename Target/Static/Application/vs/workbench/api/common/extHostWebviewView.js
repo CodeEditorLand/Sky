@@ -1,1 +1,166 @@
-import{$df as n}from"../../../base/common/event.js";import{$vd as c}from"../../../base/common/lifecycle.js";import{$WKc as f,$UKc as p}from"./extHostWebview.js";import{ViewBadge as v}from"./extHostTypeConverters.js";import*as V from"./extHost.protocol.js";import*as g from"./extHostTypes.js";class u extends c{#i;#e;#a;#o;#t;#s;#r;#n;#h;constructor(i,e,t,s,h,r){super(),this.#t=!1,this.#w=this.B(new n),this.onDidChangeVisibility=this.#w.event,this.#d=this.B(new n),this.onDidDispose=this.#d.event,this.#a=t,this.#r=s,this.#i=i,this.#e=e,this.#o=h,this.#s=r}dispose(){this.#t||(this.#t=!0,this.#d.fire(),this.#o.dispose(),super.dispose())}#w;#d;get title(){return this.a(),this.#r}set title(i){this.a(),this.#r!==i&&(this.#r=i,this.#e.$setWebviewViewTitle(this.#i,i))}get description(){return this.a(),this.#n}set description(i){this.a(),this.#n!==i&&(this.#n=i,this.#e.$setWebviewViewDescription(this.#i,i))}get visible(){return this.#s}get webview(){return this.#o}get viewType(){return this.#a}_setVisible(i){i===this.#s||this.#t||(this.#s=i,this.#w.fire())}get badge(){return this.a(),this.#h}set badge(i){this.a(),!(i?.value===this.#h?.value&&i?.tooltip===this.#h?.tooltip)&&(this.#h=v.from(i),this.#e.$setWebviewViewBadge(this.#i,i))}show(i){this.a(),this.#e.$show(this.#i,!!i)}a(){if(this.#t)throw new Error("Webview is disposed")}}class D{constructor(i,e){this.d=e,this.b=new Map,this.c=new Map,this.a=i.getProxy(V.$oY.MainThreadWebviewViews)}registerWebviewViewProvider(i,e,t,s){if(this.b.has(e))throw new Error(`View provider for '${e}' already registered`);return this.b.set(e,{provider:t,extension:i}),this.a.$registerWebviewViewProvider(f(i),e,{retainContextWhenHidden:s?.retainContextWhenHidden,serializeBuffersForPostMessage:p(i)}),new g.$qY(()=>{this.b.delete(e),this.a.$unregisterWebviewViewProvider(e)})}async $resolveWebviewView(i,e,t,s,h){const r=this.b.get(e);if(!r)throw new Error(`No view provider found for '${e}'`);const{provider:d,extension:a}=r,b=this.d.createNewWebview(i,{},a),o=new u(i,this.a,e,t,b,!0);this.c.set(i,o),await d.resolveWebviewView(o,{state:s},h)}async $onDidChangeWebviewViewVisibility(i,e){this.e(i)._setVisible(e)}async $disposeWebviewView(i){const e=this.e(i);this.c.delete(i),e.dispose(),this.d.deleteWebview(i)}e(i){const e=this.c.get(i);if(!e)throw new Error("No webview found");return e}}export{D as $yMc};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { Emitter } from "../../../base/common/event.js";
+import { Disposable } from "../../../base/common/lifecycle.js";
+import { toExtensionData, shouldSerializeBuffersForPostMessage } from "./extHostWebview.js";
+import { ViewBadge } from "./extHostTypeConverters.js";
+import * as extHostProtocol from "./extHost.protocol.js";
+import * as extHostTypes from "./extHostTypes.js";
+class ExtHostWebviewView extends Disposable {
+  static {
+    __name(this, "ExtHostWebviewView");
+  }
+  #handle;
+  #proxy;
+  #viewType;
+  #webview;
+  #isDisposed;
+  #isVisible;
+  #title;
+  #description;
+  #badge;
+  constructor(handle, proxy, viewType, title, webview, isVisible) {
+    super();
+    this.#isDisposed = false;
+    this.#onDidChangeVisibility = this._register(new Emitter());
+    this.onDidChangeVisibility = this.#onDidChangeVisibility.event;
+    this.#onDidDispose = this._register(new Emitter());
+    this.onDidDispose = this.#onDidDispose.event;
+    this.#viewType = viewType;
+    this.#title = title;
+    this.#handle = handle;
+    this.#proxy = proxy;
+    this.#webview = webview;
+    this.#isVisible = isVisible;
+  }
+  dispose() {
+    if (this.#isDisposed) {
+      return;
+    }
+    this.#isDisposed = true;
+    this.#onDidDispose.fire();
+    this.#webview.dispose();
+    super.dispose();
+  }
+  #onDidChangeVisibility;
+  #onDidDispose;
+  get title() {
+    this.assertNotDisposed();
+    return this.#title;
+  }
+  set title(value) {
+    this.assertNotDisposed();
+    if (this.#title !== value) {
+      this.#title = value;
+      this.#proxy.$setWebviewViewTitle(this.#handle, value);
+    }
+  }
+  get description() {
+    this.assertNotDisposed();
+    return this.#description;
+  }
+  set description(value) {
+    this.assertNotDisposed();
+    if (this.#description !== value) {
+      this.#description = value;
+      this.#proxy.$setWebviewViewDescription(this.#handle, value);
+    }
+  }
+  get visible() {
+    return this.#isVisible;
+  }
+  get webview() {
+    return this.#webview;
+  }
+  get viewType() {
+    return this.#viewType;
+  }
+  /* internal */
+  _setVisible(visible) {
+    if (visible === this.#isVisible || this.#isDisposed) {
+      return;
+    }
+    this.#isVisible = visible;
+    this.#onDidChangeVisibility.fire();
+  }
+  get badge() {
+    this.assertNotDisposed();
+    return this.#badge;
+  }
+  set badge(badge) {
+    this.assertNotDisposed();
+    if (badge?.value === this.#badge?.value && badge?.tooltip === this.#badge?.tooltip) {
+      return;
+    }
+    this.#badge = ViewBadge.from(badge);
+    this.#proxy.$setWebviewViewBadge(this.#handle, badge);
+  }
+  show(preserveFocus) {
+    this.assertNotDisposed();
+    this.#proxy.$show(this.#handle, !!preserveFocus);
+  }
+  assertNotDisposed() {
+    if (this.#isDisposed) {
+      throw new Error("Webview is disposed");
+    }
+  }
+}
+class ExtHostWebviewViews {
+  static {
+    __name(this, "ExtHostWebviewViews");
+  }
+  constructor(mainContext, _extHostWebview) {
+    this._extHostWebview = _extHostWebview;
+    this._viewProviders = /* @__PURE__ */ new Map();
+    this._webviewViews = /* @__PURE__ */ new Map();
+    this._proxy = mainContext.getProxy(extHostProtocol.MainContext.MainThreadWebviewViews);
+  }
+  registerWebviewViewProvider(extension, viewType, provider, webviewOptions) {
+    if (this._viewProviders.has(viewType)) {
+      throw new Error(`View provider for '${viewType}' already registered`);
+    }
+    this._viewProviders.set(viewType, { provider, extension });
+    this._proxy.$registerWebviewViewProvider(toExtensionData(extension), viewType, {
+      retainContextWhenHidden: webviewOptions?.retainContextWhenHidden,
+      serializeBuffersForPostMessage: shouldSerializeBuffersForPostMessage(extension)
+    });
+    return new extHostTypes.Disposable(() => {
+      this._viewProviders.delete(viewType);
+      this._proxy.$unregisterWebviewViewProvider(viewType);
+    });
+  }
+  async $resolveWebviewView(webviewHandle, viewType, title, state, cancellation) {
+    const entry = this._viewProviders.get(viewType);
+    if (!entry) {
+      throw new Error(`No view provider found for '${viewType}'`);
+    }
+    const { provider, extension } = entry;
+    const webview = this._extHostWebview.createNewWebview(webviewHandle, {
+      /* todo */
+    }, extension);
+    const revivedView = new ExtHostWebviewView(webviewHandle, this._proxy, viewType, title, webview, true);
+    this._webviewViews.set(webviewHandle, revivedView);
+    await provider.resolveWebviewView(revivedView, { state }, cancellation);
+  }
+  async $onDidChangeWebviewViewVisibility(webviewHandle, visible) {
+    const webviewView = this.getWebviewView(webviewHandle);
+    webviewView._setVisible(visible);
+  }
+  async $disposeWebviewView(webviewHandle) {
+    const webviewView = this.getWebviewView(webviewHandle);
+    this._webviewViews.delete(webviewHandle);
+    webviewView.dispose();
+    this._extHostWebview.deleteWebview(webviewHandle);
+  }
+  getWebviewView(handle) {
+    const entry = this._webviewViews.get(handle);
+    if (!entry) {
+      throw new Error("No webview found");
+    }
+    return entry;
+  }
+}
+export {
+  ExtHostWebviewViews
+};
+//# sourceMappingURL=extHostWebviewView.js.map

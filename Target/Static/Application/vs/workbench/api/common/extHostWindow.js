@@ -1,1 +1,114 @@
-import{$df as l}from"../../../base/common/event.js";import{Schemas as $}from"../../../base/common/network.js";import{$yf as f}from"../../../base/common/strings.js";import{URI as d}from"../../../base/common/uri.js";import{$nj as v}from"../../../platform/instantiation/common/instantiation.js";import{$i2 as w}from"./extHostRpcService.js";import{$oY as y}from"./extHost.protocol.js";import{$y2 as P}from"./extHostInitDataService.js";import{$3i as m}from"../../../base/common/buffer.js";var p=function(r,e,t,i){var o=arguments.length,n=o<3?e:i===null?i=Object.getOwnPropertyDescriptor(e,t):i,c;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")n=Reflect.decorate(r,e,t,i);else for(var s=r.length-1;s>=0;s--)(c=r[s])&&(n=(o<3?c(n):o>3?c(e,t,n):c(e,t))||n);return o>3&&n&&Object.defineProperty(e,t,n),n},h=function(r,e){return function(t,i){e(t,i,r)}},a;let u=class{static{a=this}static{this.a={focused:!0,active:!0}}getState(){const e=this.f;return{get focused(){return e.focused},get active(){return e.active}}}constructor(e,t){this.c=new l,this.onDidChangeWindowState=this.c.event,this.f=a.a,e.handle&&(this.d=m(e.handle).buffer),this.b=t.getProxy(y.MainThreadWindow),this.b.$getInitialState().then(({isFocused:i,isActive:o})=>{this.onDidChangeWindowProperty("focused",i),this.onDidChangeWindowProperty("active",o)})}get nativeHandle(){return this.d}$onDidChangeActiveNativeWindowHandle(e){this.d=e?m(e).buffer:void 0}$onDidChangeWindowFocus(e){this.onDidChangeWindowProperty("focused",e)}$onDidChangeWindowActive(e){this.onDidChangeWindowProperty("active",e)}onDidChangeWindowProperty(e,t){t!==this.f[e]&&(this.f={...this.f,[e]:t},this.c.fire(this.f))}openUri(e,t){let i;if(typeof e=="string"){i=e;try{e=d.parse(e)}catch{return Promise.reject(`Invalid uri - '${e}'`)}}return f(e.scheme)?Promise.reject("Invalid scheme - cannot be empty"):e.scheme===$.command?Promise.reject(`Invalid scheme '${e.scheme}'`):this.b.$openUri(e,i,t)}async asExternalUri(e,t){if(f(e.scheme))return Promise.reject("Invalid scheme - cannot be empty");const i=await this.b.$asExternalUri(e,t);return d.from(i)}};u=a=p([h(0,P),h(1,w)],u);const K=v("IExtHostWindow");export{u as $nKc,K as $oKc};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { Emitter } from "../../../base/common/event.js";
+import { Schemas } from "../../../base/common/network.js";
+import { isFalsyOrWhitespace } from "../../../base/common/strings.js";
+import { URI } from "../../../base/common/uri.js";
+import { createDecorator } from "../../../platform/instantiation/common/instantiation.js";
+import { IExtHostRpcService } from "./extHostRpcService.js";
+import { MainContext } from "./extHost.protocol.js";
+import { IExtHostInitDataService } from "./extHostInitDataService.js";
+import { decodeBase64 } from "../../../base/common/buffer.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+var ExtHostWindow_1;
+let ExtHostWindow = class ExtHostWindow2 {
+  static {
+    __name(this, "ExtHostWindow");
+  }
+  static {
+    ExtHostWindow_1 = this;
+  }
+  static {
+    this.InitialState = {
+      focused: true,
+      active: true
+    };
+  }
+  getState() {
+    const state = this._state;
+    return {
+      get focused() {
+        return state.focused;
+      },
+      get active() {
+        return state.active;
+      }
+    };
+  }
+  constructor(initData, extHostRpc) {
+    this._onDidChangeWindowState = new Emitter();
+    this.onDidChangeWindowState = this._onDidChangeWindowState.event;
+    this._state = ExtHostWindow_1.InitialState;
+    if (initData.handle) {
+      this._nativeHandle = decodeBase64(initData.handle).buffer;
+    }
+    this._proxy = extHostRpc.getProxy(MainContext.MainThreadWindow);
+    this._proxy.$getInitialState().then(({ isFocused, isActive }) => {
+      this.onDidChangeWindowProperty("focused", isFocused);
+      this.onDidChangeWindowProperty("active", isActive);
+    });
+  }
+  get nativeHandle() {
+    return this._nativeHandle;
+  }
+  $onDidChangeActiveNativeWindowHandle(handle) {
+    this._nativeHandle = handle ? decodeBase64(handle).buffer : void 0;
+  }
+  $onDidChangeWindowFocus(value) {
+    this.onDidChangeWindowProperty("focused", value);
+  }
+  $onDidChangeWindowActive(value) {
+    this.onDidChangeWindowProperty("active", value);
+  }
+  onDidChangeWindowProperty(property, value) {
+    if (value === this._state[property]) {
+      return;
+    }
+    this._state = { ...this._state, [property]: value };
+    this._onDidChangeWindowState.fire(this._state);
+  }
+  openUri(stringOrUri, options) {
+    let uriAsString;
+    if (typeof stringOrUri === "string") {
+      uriAsString = stringOrUri;
+      try {
+        stringOrUri = URI.parse(stringOrUri);
+      } catch (e) {
+        return Promise.reject(`Invalid uri - '${stringOrUri}'`);
+      }
+    }
+    if (isFalsyOrWhitespace(stringOrUri.scheme)) {
+      return Promise.reject("Invalid scheme - cannot be empty");
+    } else if (stringOrUri.scheme === Schemas.command) {
+      return Promise.reject(`Invalid scheme '${stringOrUri.scheme}'`);
+    }
+    return this._proxy.$openUri(stringOrUri, uriAsString, options);
+  }
+  async asExternalUri(uri, options) {
+    if (isFalsyOrWhitespace(uri.scheme)) {
+      return Promise.reject("Invalid scheme - cannot be empty");
+    }
+    const result = await this._proxy.$asExternalUri(uri, options);
+    return URI.from(result);
+  }
+};
+ExtHostWindow = ExtHostWindow_1 = __decorate([
+  __param(0, IExtHostInitDataService),
+  __param(1, IExtHostRpcService)
+], ExtHostWindow);
+const IExtHostWindow = createDecorator("IExtHostWindow");
+export {
+  ExtHostWindow,
+  IExtHostWindow
+};
+//# sourceMappingURL=extHostWindow.js.map

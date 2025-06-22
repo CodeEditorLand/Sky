@@ -1,1 +1,96 @@
-import{$bDb as h}from"../common/extensions.js";import{$XO as p}from"../../../services/extensions/common/extensions.js";import{$Zn as d}from"../../../../platform/commands/common/commands.js";import{$fI as u,$dI as w}from"../../../../platform/actions/common/actions.js";import{localize as r}from"../../../../nls.js";import{$vz as g}from"../../../../platform/extensionManagement/common/extensionManagementUtil.js";import{$RI as x,Severity as $}from"../../../../platform/notification/common/notification.js";import{$_l as b}from"../../../../base/common/actions.js";import{$8$ as v}from"../../../services/host/browser/host.js";import{$vd as y}from"../../../../base/common/lifecycle.js";import{CancellationToken as D}from"../../../../base/common/cancellation.js";import{Promises as _}from"../../../../base/common/async.js";var m=function(o,n,t,e){var i=arguments.length,s=i<3?n:e===null?e=Object.getOwnPropertyDescriptor(n,t):e,a;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")s=Reflect.decorate(o,n,t,e);else for(var c=o.length-1;c>=0;c--)(a=o[c])&&(s=(i<3?a(s):i>3?a(n,t,s):a(n,t))||s);return i>3&&s&&Object.defineProperty(n,t,s),s},l=function(o,n){return function(t,e){n(t,e,o)}};let f=class extends y{constructor(n,t,e,i){super(),this.a=n,this.b=t,this.c=e,this.f=i,d.registerCommand("workbench.extensions.installMissingDependencies",()=>this.j()),u.appendMenuItem(w.CommandPalette,{command:{id:"workbench.extensions.installMissingDependencies",category:r(7469,null),title:r(7470,null)}})}async g(){const n=await this.h(),t=await this.b.queryLocal();return n.filter(e=>t.every(i=>!g(i.identifier,{id:e})))}async h(){await this.a.whenInstalledExtensionsRegistered();const n=this.a.extensions.reduce((e,i)=>(e.add(i.identifier.value.toLowerCase()),e),new Set),t=new Set;for(const e of this.a.extensions)e.extensionDependencies&&e.extensionDependencies.forEach(i=>{n.has(i.toLowerCase())||t.add(i)});return[...t.values()]}async j(){const n=await this.g();if(n.length){const t=await this.b.getExtensions(n.map(e=>({id:e})),D.None);t.length&&(await _.settled(t.map(e=>this.b.install(e))),this.c.notify({severity:$.Info,message:r(7471,null),actions:{primary:[new b("realod",r(7472,null),"",!0,()=>this.f.reload())]}}))}else this.c.info(r(7473,null))}};f=m([l(0,p),l(1,h),l(2,x),l(3,v)],f);export{f as $Phc};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { IExtensionsWorkbenchService } from "../common/extensions.js";
+import { IExtensionService } from "../../../services/extensions/common/extensions.js";
+import { CommandsRegistry } from "../../../../platform/commands/common/commands.js";
+import { MenuRegistry, MenuId } from "../../../../platform/actions/common/actions.js";
+import { localize } from "../../../../nls.js";
+import { areSameExtensions } from "../../../../platform/extensionManagement/common/extensionManagementUtil.js";
+import { INotificationService, Severity } from "../../../../platform/notification/common/notification.js";
+import { Action } from "../../../../base/common/actions.js";
+import { IHostService } from "../../../services/host/browser/host.js";
+import { Disposable } from "../../../../base/common/lifecycle.js";
+import { CancellationToken } from "../../../../base/common/cancellation.js";
+import { Promises } from "../../../../base/common/async.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+let ExtensionDependencyChecker = class ExtensionDependencyChecker2 extends Disposable {
+  static {
+    __name(this, "ExtensionDependencyChecker");
+  }
+  constructor(extensionService, extensionsWorkbenchService, notificationService, hostService) {
+    super();
+    this.extensionService = extensionService;
+    this.extensionsWorkbenchService = extensionsWorkbenchService;
+    this.notificationService = notificationService;
+    this.hostService = hostService;
+    CommandsRegistry.registerCommand("workbench.extensions.installMissingDependencies", () => this.installMissingDependencies());
+    MenuRegistry.appendMenuItem(MenuId.CommandPalette, {
+      command: {
+        id: "workbench.extensions.installMissingDependencies",
+        category: localize("extensions", "Extensions"),
+        title: localize("auto install missing deps", "Install Missing Dependencies")
+      }
+    });
+  }
+  async getUninstalledMissingDependencies() {
+    const allMissingDependencies = await this.getAllMissingDependencies();
+    const localExtensions = await this.extensionsWorkbenchService.queryLocal();
+    return allMissingDependencies.filter((id) => localExtensions.every((l) => !areSameExtensions(l.identifier, { id })));
+  }
+  async getAllMissingDependencies() {
+    await this.extensionService.whenInstalledExtensionsRegistered();
+    const runningExtensionsIds = this.extensionService.extensions.reduce((result, r) => {
+      result.add(r.identifier.value.toLowerCase());
+      return result;
+    }, /* @__PURE__ */ new Set());
+    const missingDependencies = /* @__PURE__ */ new Set();
+    for (const extension of this.extensionService.extensions) {
+      if (extension.extensionDependencies) {
+        extension.extensionDependencies.forEach((dep) => {
+          if (!runningExtensionsIds.has(dep.toLowerCase())) {
+            missingDependencies.add(dep);
+          }
+        });
+      }
+    }
+    return [...missingDependencies.values()];
+  }
+  async installMissingDependencies() {
+    const missingDependencies = await this.getUninstalledMissingDependencies();
+    if (missingDependencies.length) {
+      const extensions = await this.extensionsWorkbenchService.getExtensions(missingDependencies.map((id) => ({ id })), CancellationToken.None);
+      if (extensions.length) {
+        await Promises.settled(extensions.map((extension) => this.extensionsWorkbenchService.install(extension)));
+        this.notificationService.notify({
+          severity: Severity.Info,
+          message: localize("finished installing missing deps", "Finished installing missing dependencies. Please reload the window now."),
+          actions: {
+            primary: [new Action("realod", localize("reload", "Reload Window"), "", true, () => this.hostService.reload())]
+          }
+        });
+      }
+    } else {
+      this.notificationService.info(localize("no missing deps", "There are no missing dependencies to install."));
+    }
+  }
+};
+ExtensionDependencyChecker = __decorate([
+  __param(0, IExtensionService),
+  __param(1, IExtensionsWorkbenchService),
+  __param(2, INotificationService),
+  __param(3, IHostService)
+], ExtensionDependencyChecker);
+export {
+  ExtensionDependencyChecker
+};
+//# sourceMappingURL=extensionsDependencyChecker.js.map

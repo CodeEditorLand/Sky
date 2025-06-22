@@ -1,1 +1,63 @@
-import{$cab as P,$hab as d}from"../../../browser/editorExtensions.js";import{$qab as C}from"../../../common/commands/replaceCommand.js";import{$zab as c}from"../../../common/cursor/cursorMoveOperations.js";import{$cC as m}from"../../../common/core/range.js";import{EditorContextKeys as u}from"../../../common/editorContextKeys.js";import*as x from"../../../../nls.js";class L extends P{constructor(){super({id:"editor.action.transposeLetters",label:x.localize2(937,"Transpose Letters"),precondition:u.writable,kbOpts:{kbExpr:u.textInputFocus,primary:0,mac:{primary:306},weight:100}})}run(o,t){if(!t.hasModel())return;const s=t.getModel(),e=[],n=t.getSelections();for(const o of n){if(!o.isEmpty())continue;const t=o.startLineNumber,n=o.startColumn,i=s.getLineMaxColumn(t);if(1===t&&(1===n||2===n&&2===i))continue;const r=n===i?o.getPosition():c.rightPosition(s,o.getPosition().lineNumber,o.getPosition().column),a=c.leftPosition(s,r),u=c.leftPosition(s,a),p=s.getValueInRange(m.fromPositions(u,a)),l=s.getValueInRange(m.fromPositions(a,r)),d=m.fromPositions(u,r);e.push(new C(d,l+p))}e.length>0&&(t.pushUndoStop(),t.executeCommands(this.id,e),t.pushUndoStop())}}d(L);
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { EditorAction, registerEditorAction } from "../../../browser/editorExtensions.js";
+import { ReplaceCommand } from "../../../common/commands/replaceCommand.js";
+import { MoveOperations } from "../../../common/cursor/cursorMoveOperations.js";
+import { Range } from "../../../common/core/range.js";
+import { EditorContextKeys } from "../../../common/editorContextKeys.js";
+import * as nls from "../../../../nls.js";
+class TransposeLettersAction extends EditorAction {
+  static {
+    __name(this, "TransposeLettersAction");
+  }
+  constructor() {
+    super({
+      id: "editor.action.transposeLetters",
+      label: nls.localize2("transposeLetters.label", "Transpose Letters"),
+      precondition: EditorContextKeys.writable,
+      kbOpts: {
+        kbExpr: EditorContextKeys.textInputFocus,
+        primary: 0,
+        mac: {
+          primary: 256 | 50
+          /* KeyCode.KeyT */
+        },
+        weight: 100
+        /* KeybindingWeight.EditorContrib */
+      }
+    });
+  }
+  run(accessor, editor) {
+    if (!editor.hasModel()) {
+      return;
+    }
+    const model = editor.getModel();
+    const commands = [];
+    const selections = editor.getSelections();
+    for (const selection of selections) {
+      if (!selection.isEmpty()) {
+        continue;
+      }
+      const lineNumber = selection.startLineNumber;
+      const column = selection.startColumn;
+      const lastColumn = model.getLineMaxColumn(lineNumber);
+      if (lineNumber === 1 && (column === 1 || column === 2 && lastColumn === 2)) {
+        continue;
+      }
+      const endPosition = column === lastColumn ? selection.getPosition() : MoveOperations.rightPosition(model, selection.getPosition().lineNumber, selection.getPosition().column);
+      const middlePosition = MoveOperations.leftPosition(model, endPosition);
+      const beginPosition = MoveOperations.leftPosition(model, middlePosition);
+      const leftChar = model.getValueInRange(Range.fromPositions(beginPosition, middlePosition));
+      const rightChar = model.getValueInRange(Range.fromPositions(middlePosition, endPosition));
+      const replaceRange = Range.fromPositions(beginPosition, endPosition);
+      commands.push(new ReplaceCommand(replaceRange, rightChar + leftChar));
+    }
+    if (commands.length > 0) {
+      editor.pushUndoStop();
+      editor.executeCommands(this.id, commands);
+      editor.pushUndoStop();
+    }
+  }
+}
+registerEditorAction(TransposeLettersAction);
+//# sourceMappingURL=transpose.js.map

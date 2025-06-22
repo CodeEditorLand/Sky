@@ -1,1 +1,103 @@
-import{Iterable as D}from"../../../../base/common/iterator.js";import{$OU as b,$LU as k,$GU as g}from"./testingStates.js";const O=t=>"getOwnDuration"in t,S=(t,e,o=!1)=>{let n=t.getCurrentComputedState(e);if(void 0===n||o){n=t.getOwnState(e)??0;let o=0;const r=b();for(const a of t.getChildren(e)){const e=S(t,a);o++,r[e]++,n=5===e&&0===n?5:k(n,e)}o>P&&h.set(e,r),t.setComputedState(e,n)}return n},w=(t,e,o=!1)=>{let n=t.getCurrentComputedDuration(e);if(void 0===n||o){const o=t.getOwnDuration(e);if(void 0!==o)n=o;else{n=void 0;for(const o of t.getChildren(e)){const e=w(t,o);void 0!==e&&(n=(n||0)+e)}}t.setComputedDuration(e,n)}return n},P=64,h=new WeakMap,v=(t,e,o,n=!0)=>{const r=t.getCurrentComputedState(e),a=g[r],s=o??S(t,e,!0),i=g[s],d=new Set;if(i!==a){t.setComputedState(e,s),d.add(e);let o=r,n=s;for(const r of t.getParents(e)){const e=h.get(r);e&&(e[o]--,e[n]++);const u=t.getCurrentComputedState(r);if(i>a){if(void 0!==u&&g[u]>=i||e&&e[n]>1)break;t.setComputedState(r,s),d.add(r)}else{if(void 0===u||g[u]>a||e&&e[o]>0)break;n=S(t,r,!0),t.setComputedState(r,n),d.add(r)}o=u}}if(O(t)&&n)for(const o of D.concat(D.single(e),t.getParents(e))){const e=t.getCurrentComputedDuration(o),n=w(t,o,!0);if(e===n)break;t.setComputedDuration(o,n),d.add(o)}return d};export{v as $PU};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { Iterable } from "../../../../base/common/iterator.js";
+import { makeEmptyCounts, maxPriority, statePriority } from "./testingStates.js";
+const isDurationAccessor = /* @__PURE__ */ __name((accessor) => "getOwnDuration" in accessor, "isDurationAccessor");
+const getComputedState = /* @__PURE__ */ __name((accessor, node, force = false) => {
+  let computed = accessor.getCurrentComputedState(node);
+  if (computed === void 0 || force) {
+    computed = accessor.getOwnState(node) ?? 0;
+    let childrenCount = 0;
+    const stateMap = makeEmptyCounts();
+    for (const child of accessor.getChildren(node)) {
+      const childComputed = getComputedState(accessor, child);
+      childrenCount++;
+      stateMap[childComputed]++;
+      computed = childComputed === 5 && computed === 0 ? 5 : maxPriority(computed, childComputed);
+    }
+    if (childrenCount > LARGE_NODE_THRESHOLD) {
+      largeNodeChildrenStates.set(node, stateMap);
+    }
+    accessor.setComputedState(node, computed);
+  }
+  return computed;
+}, "getComputedState");
+const getComputedDuration = /* @__PURE__ */ __name((accessor, node, force = false) => {
+  let computed = accessor.getCurrentComputedDuration(node);
+  if (computed === void 0 || force) {
+    const own = accessor.getOwnDuration(node);
+    if (own !== void 0) {
+      computed = own;
+    } else {
+      computed = void 0;
+      for (const child of accessor.getChildren(node)) {
+        const d = getComputedDuration(accessor, child);
+        if (d !== void 0) {
+          computed = (computed || 0) + d;
+        }
+      }
+    }
+    accessor.setComputedDuration(node, computed);
+  }
+  return computed;
+}, "getComputedDuration");
+const LARGE_NODE_THRESHOLD = 64;
+const largeNodeChildrenStates = /* @__PURE__ */ new WeakMap();
+const refreshComputedState = /* @__PURE__ */ __name((accessor, node, explicitNewComputedState, refreshDuration = true) => {
+  const oldState = accessor.getCurrentComputedState(node);
+  const oldPriority = statePriority[oldState];
+  const newState = explicitNewComputedState ?? getComputedState(accessor, node, true);
+  const newPriority = statePriority[newState];
+  const toUpdate = /* @__PURE__ */ new Set();
+  if (newPriority !== oldPriority) {
+    accessor.setComputedState(node, newState);
+    toUpdate.add(node);
+    let moveFromState = oldState;
+    let moveToState = newState;
+    for (const parent of accessor.getParents(node)) {
+      const lnm = largeNodeChildrenStates.get(parent);
+      if (lnm) {
+        lnm[moveFromState]--;
+        lnm[moveToState]++;
+      }
+      const prev = accessor.getCurrentComputedState(parent);
+      if (newPriority > oldPriority) {
+        if (prev !== void 0 && statePriority[prev] >= newPriority) {
+          break;
+        }
+        if (lnm && lnm[moveToState] > 1) {
+          break;
+        }
+        accessor.setComputedState(parent, newState);
+        toUpdate.add(parent);
+      } else {
+        if (prev === void 0 || statePriority[prev] > oldPriority) {
+          break;
+        }
+        if (lnm && lnm[moveFromState] > 0) {
+          break;
+        }
+        moveToState = getComputedState(accessor, parent, true);
+        accessor.setComputedState(parent, moveToState);
+        toUpdate.add(parent);
+      }
+      moveFromState = prev;
+    }
+  }
+  if (isDurationAccessor(accessor) && refreshDuration) {
+    for (const parent of Iterable.concat(Iterable.single(node), accessor.getParents(node))) {
+      const oldDuration = accessor.getCurrentComputedDuration(parent);
+      const newDuration = getComputedDuration(accessor, parent, true);
+      if (oldDuration === newDuration) {
+        break;
+      }
+      accessor.setComputedDuration(parent, newDuration);
+      toUpdate.add(parent);
+    }
+  }
+  return toUpdate;
+}, "refreshComputedState");
+export {
+  refreshComputedState
+};
+//# sourceMappingURL=getComputedState.js.map

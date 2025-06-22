@@ -1,1 +1,151 @@
-function l(t){const e=new Map;for(const s of t)e.set(s,(e.get(s)??0)+1);return e}class u{constructor(){this.e=0,this.f=new Map,this.g=new Map}calculateScores(t,e){const s=this.i(t),o=new Map,n=[];for(const[t,c]of this.g){if(e.isCancellationRequested)return[];for(const e of c.chunks){const c=this.h(e,s,o);c>0&&n.push({key:t,score:c})}}return n}static c(t){return l(u.d(t))}static*d(t){const e=t=>t.toLowerCase();for(const[s]of t.matchAll(new RegExp("\\b\\p{Letter}[\\p{Letter}\\d]{2,}\\b","gu"))){yield e(s);const t=s.replace(/([a-z])([A-Z])/g,"$1 $2").split(/\s+/g);if(t.length>1)for(const s of t)s.length>2&&new RegExp("\\p{Letter}{3,}","gu").test(s)&&(yield e(s))}}updateDocuments(t){for(const{key:e}of t)this.deleteDocument(e);for(const e of t){const t=[];for(const s of e.textChunks){const e=u.c(s);for(const t of e.keys())this.f.set(t,(this.f.get(t)??0)+1);t.push({text:s,tf:e})}this.e+=t.length,this.g.set(e.key,{chunks:t})}return this}deleteDocument(t){const e=this.g.get(t);if(e){this.g.delete(t),this.e-=e.chunks.length;for(const t of e.chunks)for(const e of t.tf.keys()){const t=this.f.get(e);if("number"==typeof t){const s=t-1;s<=0?this.f.delete(e):this.f.set(e,s)}}}}h(t,e,s){let o=0;for(const[n,c]of Object.entries(e)){const e=t.tf.get(n);if(!e)continue;let r=s.get(n);"number"!=typeof r&&(r=this.j(n),s.set(n,r));o+=e*r*c}return o}i(t){const e=u.c(t);return this.k(e)}j(t){const e=this.f.get(t)??0;return e>0?Math.log((this.e+1)/e):0}k(t){const e=Object.create(null);for(const[s,o]of t){const t=this.j(s);t>0&&(e[s]=o*t)}return e}}function a(t){const e=t.slice(0);e.sort(((t,e)=>e.score-t.score));const s=e[0]?.score??0;if(s>0)for(const t of e)t.score/=s;return e}export{u as $50,a as $60};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+function countMapFrom(values) {
+  const map = /* @__PURE__ */ new Map();
+  for (const value of values) {
+    map.set(value, (map.get(value) ?? 0) + 1);
+  }
+  return map;
+}
+__name(countMapFrom, "countMapFrom");
+class TfIdfCalculator {
+  static {
+    __name(this, "TfIdfCalculator");
+  }
+  constructor() {
+    this.chunkCount = 0;
+    this.chunkOccurrences = /* @__PURE__ */ new Map();
+    this.documents = /* @__PURE__ */ new Map();
+  }
+  calculateScores(query, token) {
+    const embedding = this.computeEmbedding(query);
+    const idfCache = /* @__PURE__ */ new Map();
+    const scores = [];
+    for (const [key, doc] of this.documents) {
+      if (token.isCancellationRequested) {
+        return [];
+      }
+      for (const chunk of doc.chunks) {
+        const score = this.computeSimilarityScore(chunk, embedding, idfCache);
+        if (score > 0) {
+          scores.push({ key, score });
+        }
+      }
+    }
+    return scores;
+  }
+  /**
+   * Count how many times each term (word) appears in a string.
+   */
+  static termFrequencies(input) {
+    return countMapFrom(TfIdfCalculator.splitTerms(input));
+  }
+  /**
+   * Break a string into terms (words).
+   */
+  static *splitTerms(input) {
+    const normalize = /* @__PURE__ */ __name((word) => word.toLowerCase(), "normalize");
+    for (const [word] of input.matchAll(new RegExp("\\b\\p{Letter}[\\p{Letter}\\d]{2,}\\b", "gu"))) {
+      yield normalize(word);
+      const camelParts = word.replace(/([a-z])([A-Z])/g, "$1 $2").split(/\s+/g);
+      if (camelParts.length > 1) {
+        for (const part of camelParts) {
+          if (part.length > 2 && new RegExp("\\p{Letter}{3,}", "gu").test(part)) {
+            yield normalize(part);
+          }
+        }
+      }
+    }
+  }
+  updateDocuments(documents) {
+    for (const { key } of documents) {
+      this.deleteDocument(key);
+    }
+    for (const doc of documents) {
+      const chunks = [];
+      for (const text of doc.textChunks) {
+        const tf = TfIdfCalculator.termFrequencies(text);
+        for (const term of tf.keys()) {
+          this.chunkOccurrences.set(term, (this.chunkOccurrences.get(term) ?? 0) + 1);
+        }
+        chunks.push({ text, tf });
+      }
+      this.chunkCount += chunks.length;
+      this.documents.set(doc.key, { chunks });
+    }
+    return this;
+  }
+  deleteDocument(key) {
+    const doc = this.documents.get(key);
+    if (!doc) {
+      return;
+    }
+    this.documents.delete(key);
+    this.chunkCount -= doc.chunks.length;
+    for (const chunk of doc.chunks) {
+      for (const term of chunk.tf.keys()) {
+        const currentOccurrences = this.chunkOccurrences.get(term);
+        if (typeof currentOccurrences === "number") {
+          const newOccurrences = currentOccurrences - 1;
+          if (newOccurrences <= 0) {
+            this.chunkOccurrences.delete(term);
+          } else {
+            this.chunkOccurrences.set(term, newOccurrences);
+          }
+        }
+      }
+    }
+  }
+  computeSimilarityScore(chunk, queryEmbedding, idfCache) {
+    let sum = 0;
+    for (const [term, termTfidf] of Object.entries(queryEmbedding)) {
+      const chunkTf = chunk.tf.get(term);
+      if (!chunkTf) {
+        continue;
+      }
+      let chunkIdf = idfCache.get(term);
+      if (typeof chunkIdf !== "number") {
+        chunkIdf = this.computeIdf(term);
+        idfCache.set(term, chunkIdf);
+      }
+      const chunkTfidf = chunkTf * chunkIdf;
+      sum += chunkTfidf * termTfidf;
+    }
+    return sum;
+  }
+  computeEmbedding(input) {
+    const tf = TfIdfCalculator.termFrequencies(input);
+    return this.computeTfidf(tf);
+  }
+  computeIdf(term) {
+    const chunkOccurrences = this.chunkOccurrences.get(term) ?? 0;
+    return chunkOccurrences > 0 ? Math.log((this.chunkCount + 1) / chunkOccurrences) : 0;
+  }
+  computeTfidf(termFrequencies) {
+    const embedding = /* @__PURE__ */ Object.create(null);
+    for (const [word, occurrences] of termFrequencies) {
+      const idf = this.computeIdf(word);
+      if (idf > 0) {
+        embedding[word] = occurrences * idf;
+      }
+    }
+    return embedding;
+  }
+}
+function normalizeTfIdfScores(scores) {
+  const result = scores.slice(0);
+  result.sort((a, b) => b.score - a.score);
+  const max = result[0]?.score ?? 0;
+  if (max > 0) {
+    for (const score of result) {
+      score.score /= max;
+    }
+  }
+  return result;
+}
+__name(normalizeTfIdfScores, "normalizeTfIdfScores");
+export {
+  TfIdfCalculator,
+  normalizeTfIdfScores
+};
+//# sourceMappingURL=tfIdf.js.map

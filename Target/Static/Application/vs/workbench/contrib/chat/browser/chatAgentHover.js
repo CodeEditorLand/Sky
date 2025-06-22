@@ -1,1 +1,129 @@
-import*as n from"../../../../base/browser/dom.js";import{$F8 as m}from"../../../../base/browser/ui/iconLabel/iconLabels.js";import{$pf as g}from"../../../../base/common/cancellation.js";import{$Mj as u}from"../../../../base/common/codicons.js";import{$df as v}from"../../../../base/common/event.js";import{$vd as $}from"../../../../base/common/lifecycle.js";import{$8g as b}from"../../../../base/common/network.js";import{ThemeIcon as x}from"../../../../base/common/themables.js";import{URI as N}from"../../../../base/common/uri.js";import{localize as p}from"../../../../nls.js";import{$nT as C,$lT as w,$iT as I}from"../common/chatAgents.js";import{$IOb as d}from"../../extensions/browser/extensionsActions.js";import{$bDb as O}from"../../extensions/common/extensions.js";import{$LOb as D}from"../../../services/extensionManagement/common/extensionsIcons.js";var f=function(r,o,e,a){var t=arguments.length,i=t<3?o:a===null?a=Object.getOwnPropertyDescriptor(o,e):a,s;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")i=Reflect.decorate(r,o,e,a);else for(var h=r.length-1;h>=0;h--)(s=r[h])&&(i=(t<3?s(i):t>3?s(o,e,i):s(o,e))||i);return t>3&&i&&Object.defineProperty(o,e,i),i},c=function(r,o){return function(e,a){o(e,a,r)}};let l=class extends ${constructor(o,e,a){super(),this.m=o,this.n=e,this.r=a,this.j=this.B(new v),this.onDidChangeContents=this.j.event;const t=n.h(".chat-agent-hover@root",[n.h(".chat-agent-hover-header",[n.h(".chat-agent-hover-icon@icon"),n.h(".chat-agent-hover-details",[n.h(".chat-agent-hover-name@name"),n.h(".chat-agent-hover-extension",[n.h(".chat-agent-hover-extension-name@extensionName"),n.h(".chat-agent-hover-separator@separator"),n.h(".chat-agent-hover-publisher@publisher")])])]),n.h(".chat-agent-hover-warning@warning"),n.h("span.chat-agent-hover-description@description")]);this.domNode=t.root,this.a=t.icon,this.b=t.name,this.c=t.extensionName,this.g=t.description,t.separator.textContent="|";const i=n.$("span.extension-verified-publisher",void 0,m(D));this.f=n.$("span.chat-agent-hover-publisher-name"),n.$M6(t.publisher,i,this.f),t.warning.appendChild(m(u.warning)),t.warning.appendChild(n.$("span",void 0,p(5126,null)))}setAgent(o){const e=this.m.getAgent(o);if(e.metadata.icon instanceof N){const i=n.$("img.icon");i.src=b.uriToBrowserUri(e.metadata.icon).toString(!0),this.a.replaceChildren(n.$(".avatar",void 0,i))}else if(e.metadata.themeIcon){const i=n.$(x.asCSSSelector(e.metadata.themeIcon));this.a.replaceChildren(n.$(".avatar.codicon-avatar",void 0,i))}this.domNode.classList.toggle("noExtensionName",!!e.isDynamic);const a=this.r.getAgentNameRestriction(e);this.b.textContent=a?`@${e.name}`:C(e),this.c.textContent=e.extensionDisplayName,this.f.textContent=e.publisherDisplayName??e.extensionPublisherId;let t=e.description??"";if(t&&(t.match(/[\.\?\!] *$/)||(t+=".")),this.g.textContent=t,this.domNode.classList.toggle("allowedName",a),this.domNode.classList.toggle("verifiedPublisher",!1),!e.isDynamic){const i=this.B(new g);this.n.getExtensions([{id:e.extensionId.value}],i.token).then(s=>{i.dispose(),s[0]?.publisherDomain?.verified&&(this.domNode.classList.toggle("verifiedPublisher",!0),this.j.fire())})}}};l=f([c(0,I),c(1,O),c(2,w)],l);function F(r,o){return{actions:[{commandId:d,label:p(5127,null),run:()=>{const e=r();e&&o.executeCommand(d,[e.extensionId.value])}}]}}export{l as $NOb,F as $OOb};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import * as dom from "../../../../base/browser/dom.js";
+import { renderIcon } from "../../../../base/browser/ui/iconLabel/iconLabels.js";
+import { CancellationTokenSource } from "../../../../base/common/cancellation.js";
+import { Codicon } from "../../../../base/common/codicons.js";
+import { Emitter } from "../../../../base/common/event.js";
+import { Disposable } from "../../../../base/common/lifecycle.js";
+import { FileAccess } from "../../../../base/common/network.js";
+import { ThemeIcon } from "../../../../base/common/themables.js";
+import { URI } from "../../../../base/common/uri.js";
+import { localize } from "../../../../nls.js";
+import { getFullyQualifiedId, IChatAgentNameService, IChatAgentService } from "../common/chatAgents.js";
+import { showExtensionsWithIdsCommandId } from "../../extensions/browser/extensionsActions.js";
+import { IExtensionsWorkbenchService } from "../../extensions/common/extensions.js";
+import { verifiedPublisherIcon } from "../../../services/extensionManagement/common/extensionsIcons.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+let ChatAgentHover = class ChatAgentHover2 extends Disposable {
+  static {
+    __name(this, "ChatAgentHover");
+  }
+  constructor(chatAgentService, extensionService, chatAgentNameService) {
+    super();
+    this.chatAgentService = chatAgentService;
+    this.extensionService = extensionService;
+    this.chatAgentNameService = chatAgentNameService;
+    this._onDidChangeContents = this._register(new Emitter());
+    this.onDidChangeContents = this._onDidChangeContents.event;
+    const hoverElement = dom.h(".chat-agent-hover@root", [
+      dom.h(".chat-agent-hover-header", [
+        dom.h(".chat-agent-hover-icon@icon"),
+        dom.h(".chat-agent-hover-details", [
+          dom.h(".chat-agent-hover-name@name"),
+          dom.h(".chat-agent-hover-extension", [
+            dom.h(".chat-agent-hover-extension-name@extensionName"),
+            dom.h(".chat-agent-hover-separator@separator"),
+            dom.h(".chat-agent-hover-publisher@publisher")
+          ])
+        ])
+      ]),
+      dom.h(".chat-agent-hover-warning@warning"),
+      dom.h("span.chat-agent-hover-description@description")
+    ]);
+    this.domNode = hoverElement.root;
+    this.icon = hoverElement.icon;
+    this.name = hoverElement.name;
+    this.extensionName = hoverElement.extensionName;
+    this.description = hoverElement.description;
+    hoverElement.separator.textContent = "|";
+    const verifiedBadge = dom.$("span.extension-verified-publisher", void 0, renderIcon(verifiedPublisherIcon));
+    this.publisherName = dom.$("span.chat-agent-hover-publisher-name");
+    dom.append(hoverElement.publisher, verifiedBadge, this.publisherName);
+    hoverElement.warning.appendChild(renderIcon(Codicon.warning));
+    hoverElement.warning.appendChild(dom.$("span", void 0, localize("reservedName", "This chat extension is using a reserved name.")));
+  }
+  setAgent(id) {
+    const agent = this.chatAgentService.getAgent(id);
+    if (agent.metadata.icon instanceof URI) {
+      const avatarIcon = dom.$("img.icon");
+      avatarIcon.src = FileAccess.uriToBrowserUri(agent.metadata.icon).toString(true);
+      this.icon.replaceChildren(dom.$(".avatar", void 0, avatarIcon));
+    } else if (agent.metadata.themeIcon) {
+      const avatarIcon = dom.$(ThemeIcon.asCSSSelector(agent.metadata.themeIcon));
+      this.icon.replaceChildren(dom.$(".avatar.codicon-avatar", void 0, avatarIcon));
+    }
+    this.domNode.classList.toggle("noExtensionName", !!agent.isDynamic);
+    const isAllowed = this.chatAgentNameService.getAgentNameRestriction(agent);
+    this.name.textContent = isAllowed ? `@${agent.name}` : getFullyQualifiedId(agent);
+    this.extensionName.textContent = agent.extensionDisplayName;
+    this.publisherName.textContent = agent.publisherDisplayName ?? agent.extensionPublisherId;
+    let description = agent.description ?? "";
+    if (description) {
+      if (!description.match(/[\.\?\!] *$/)) {
+        description += ".";
+      }
+    }
+    this.description.textContent = description;
+    this.domNode.classList.toggle("allowedName", isAllowed);
+    this.domNode.classList.toggle("verifiedPublisher", false);
+    if (!agent.isDynamic) {
+      const cancel = this._register(new CancellationTokenSource());
+      this.extensionService.getExtensions([{ id: agent.extensionId.value }], cancel.token).then((extensions) => {
+        cancel.dispose();
+        const extension = extensions[0];
+        if (extension?.publisherDomain?.verified) {
+          this.domNode.classList.toggle("verifiedPublisher", true);
+          this._onDidChangeContents.fire();
+        }
+      });
+    }
+  }
+};
+ChatAgentHover = __decorate([
+  __param(0, IChatAgentService),
+  __param(1, IExtensionsWorkbenchService),
+  __param(2, IChatAgentNameService)
+], ChatAgentHover);
+function getChatAgentHoverOptions(getAgent, commandService) {
+  return {
+    actions: [
+      {
+        commandId: showExtensionsWithIdsCommandId,
+        label: localize("viewExtensionLabel", "View Extension"),
+        run: /* @__PURE__ */ __name(() => {
+          const agent = getAgent();
+          if (agent) {
+            commandService.executeCommand(showExtensionsWithIdsCommandId, [agent.extensionId.value]);
+          }
+        }, "run")
+      }
+    ]
+  };
+}
+__name(getChatAgentHoverOptions, "getChatAgentHoverOptions");
+export {
+  ChatAgentHover,
+  getChatAgentHoverOptions
+};
+//# sourceMappingURL=chatAgentHover.js.map

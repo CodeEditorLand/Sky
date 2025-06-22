@@ -1,1 +1,371 @@
-import{$df as d,Event as p}from"../../../../base/common/event.js";import{$vd as w,$Ed as $,$ud as g,$pd as y,$td as P}from"../../../../base/common/lifecycle.js";import{$yf as u}from"../../../../base/common/strings.js";import{$Yc as f}from"../../../../base/common/types.js";import{localize as a}from"../../../../nls.js";import{$WB as S}from"../../../../platform/instantiation/common/extensions.js";import{$$$ as A}from"./authenticationAccessService.js";import{$cX as b}from"../common/authentication.js";import{$2$ as E}from"../../environment/browser/environmentService.js";import{$XO as D}from"../../extensions/common/extensions.js";import{$3n as j}from"../../../../platform/log/common/log.js";import{$UO as x}from"../../extensions/common/extensionsRegistry.js";import{$_i as l}from"../../../../base/common/glob.js";import{$xh as _,$Bh as R}from"../../../../base/common/async.js";import{$pf as z}from"../../../../base/common/cancellation.js";var m=function(s,t,e,i){var o=arguments.length,r=o<3?t:i===null?i=Object.getOwnPropertyDescriptor(t,e):i,n;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")r=Reflect.decorate(s,t,e,i);else for(var h=s.length-1;h>=0;h--)(n=s[h])&&(r=(o<3?n(r):o>3?n(t,e,r):n(t,e))||r);return o>3&&r&&Object.defineProperty(t,e,r),r},c=function(s,t){return function(e,i){t(e,i,s)}};function B(s){return`onAuthenticationRequest:${s}`}async function K(s,t){const e=await s.get(`${t.urlProtocol}.loginAccount`);if(e)try{const i=JSON.parse(e);if(i&&f(i.id)&&f(i.accessToken)&&f(i.providerId))return i}catch{}}const C={type:"object",additionalProperties:!1,properties:{id:{type:"string",description:a(13828,null)},label:{type:"string",description:a(13829,null)},authorizationServerGlobs:{type:"array",items:{type:"string",description:a(13830,null)},description:a(13831,null)}}},F=x.registerExtensionPoint({extensionPoint:"authentication",jsonSchema:{description:a(13832,null),type:"array",items:C},activationEventsGenerator:(s,t)=>{for(const e of s)e.id&&t.push(`onAuthenticationRequest:${e.id}`)}});let v=class extends w{constructor(t,e,i,o){super(),this.u=t,this.w=i,this.y=o,this.c=this.B(new d),this.onDidRegisterAuthenticationProvider=this.c.event,this.f=this.B(new d),this.onDidUnregisterAuthenticationProvider=this.f.event,this.g=this.B(new d),this.onDidChangeSessions=this.g.event,this.h=this.B(new d),this.onDidChangeDeclaredProviders=this.h.event,this.j=new Map,this.m=this.B(new $),this.n=new Set,this.s=[],this.t=new z,this.z=[],this.B(P(()=>this.t.dispose(!0))),this.B(e.onDidChangeExtensionSessionAccess(r=>{this.g.fire({providerId:r.providerId,label:r.accountName,event:{added:[],changed:[],removed:[]}})})),this.C(),this.D()}get declaredProviders(){return this.z}C(){if(this.w.options?.authenticationProviders?.length)for(const t of this.w.options.authenticationProviders)this.registerDeclaredAuthenticationProvider(t),this.registerAuthenticationProvider(t.id,t)}D(){this.B(F.setHandler((t,{added:e,removed:i})=>{this.y.debug(`Found authentication providers. added: ${e.length}, removed: ${i.length}`),e.forEach(r=>{for(const n of r.value){if(u(n.id)){r.collector.error(a(13833,null));continue}if(u(n.label)){r.collector.error(a(13834,null));continue}this.declaredProviders.some(h=>h.id===n.id)?r.collector.error(a(13835,null,n.id)):(this.registerDeclaredAuthenticationProvider(n),this.y.debug(`Declared authentication provider: ${n.id}`))}}),i.flatMap(r=>r.value).forEach(r=>{const n=this.declaredProviders.find(h=>h.id===r.id);n&&(this.unregisterDeclaredAuthenticationProvider(n.id),this.y.debug(`Undeclared authentication provider: ${n.id}`))})}))}registerDeclaredAuthenticationProvider(t){if(u(t.id))throw new Error(a(13836,null));if(u(t.label))throw new Error(a(13837,null));if(this.declaredProviders.some(e=>e.id===t.id))throw new Error(a(13838,null,t.id));this.z.push(t),this.h.fire()}unregisterDeclaredAuthenticationProvider(t){const e=this.declaredProviders.findIndex(i=>i.id===t);e>-1&&this.declaredProviders.splice(e,1),this.h.fire()}isAuthenticationProviderRegistered(t){return this.j.has(t)}isDynamicAuthenticationProvider(t){return this.n.has(t)}registerAuthenticationProvider(t,e){this.j.set(t,e);const i=new g;i.add(e.onDidChangeSessions(o=>this.g.fire({providerId:t,label:e.label,event:o}))),y(e)&&i.add(e),this.m.set(t,i),this.c.fire({id:t,label:e.label})}unregisterAuthenticationProvider(t){const e=this.j.get(t);e&&(this.j.delete(t),this.n.has(t)&&this.n.delete(t),this.f.fire({id:t,label:e.label})),this.m.deleteAndDispose(t)}getProviderIds(){const t=[];return this.j.forEach(e=>{t.push(e.id)}),t}getProvider(t){if(this.j.has(t))return this.j.get(t);throw new Error(`No authentication provider '${t}' is currently registered.`)}async getAccounts(t){const e=await this.getSessions(t),i=new Array,o=new Set;for(const r of e)o.has(r.account.label)||(o.add(r.account.label),i.push(r.account));return i}async getSessions(t,e,i,o=!1){if(this.t.token.isCancellationRequested)return[];const r=this.j.get(t)||await this.F(t,o);if(r){if(i?.authorizationServer){const n=i.authorizationServer.toString(!0);if(!r.authorizationServers?.some(h=>h.toString(!0)===n||l(h.toString(!0),n)))throw new Error(`The authorization server '${n}' is not supported by the authentication provider '${t}'.`)}return await r.getSessions(e,{...i})}else throw new Error(`No authentication provider '${t}' is currently registered.`)}async createSession(t,e,i){if(this.t.token.isCancellationRequested)throw new Error("Authentication service is disposed.");const o=this.j.get(t)||await this.F(t,!!i?.activateImmediate);if(o)return await o.createSession(e,{...i});throw new Error(`No authentication provider '${t}' is currently registered.`)}async removeSession(t,e){if(this.t.token.isCancellationRequested)throw new Error("Authentication service is disposed.");const i=this.j.get(t);if(i)return i.removeSession(e);throw new Error(`No authentication provider '${t}' is currently registered.`)}async getOrActivateProviderIdForServer(t){for(const o of this.j.values())if(o.authorizationServers?.some(r=>r.toString(!0)===t.toString(!0)||l(r.toString(!0),t.toString(!0))))return o.id;const e=t.toString(!0),i=this.z.filter(o=>!this.j.has(o.id)).filter(o=>!!o.authorizationServerGlobs?.some(r=>l(r,e)));for(const o of i){const r=await this.F(o.id,!0);if(r.authorizationServers?.some(n=>l(n.toString(!0),e)))return r.id}}async createDynamicAuthenticationProvider(t,e,i){const o=this.s[0];if(!o){this.y.error("No authentication provider host delegate found");return}const r=await o.create(t,e,i),n=this.j.get(r);if(n)return this.y.debug(`Created dynamic authentication provider: ${r}`),this.n.add(r),n;this.y.error(`Failed to create dynamic authentication provider: ${r}`)}registerAuthenticationProviderHostDelegate(t){return this.s.push(t),this.s.sort((e,i)=>i.priority-e.priority),{dispose:()=>{const e=this.s.indexOf(t);e!==-1&&this.s.splice(e,1)}}}async F(t,e){await this.u.activateByEvent(B(t),e?1:0);let i=this.j.get(t);if(i)return i;if(this.t.token.isCancellationRequested)throw new Error("Authentication service is disposed.");const o=new g;try{const r=await R(_(p.toPromise(p.filter(this.onDidRegisterAuthenticationProvider,n=>n.id===t,o),o),this.t.token),5e3);if(!r)throw new Error(`Timed out waiting for authentication provider '${t}' to register.`);if(i=this.j.get(r.id),i)return i;throw new Error(`No authentication provider '${t}' is currently registered.`)}finally{o.dispose()}}};v=m([c(0,D),c(1,A),c(2,E),c(3,j)],v);S(b,v,1);export{B as $a_,K as $b_,v as $c_};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { Emitter, Event } from "../../../../base/common/event.js";
+import { Disposable, DisposableMap, DisposableStore, isDisposable, toDisposable } from "../../../../base/common/lifecycle.js";
+import { isFalsyOrWhitespace } from "../../../../base/common/strings.js";
+import { isString } from "../../../../base/common/types.js";
+import { localize } from "../../../../nls.js";
+import { registerSingleton } from "../../../../platform/instantiation/common/extensions.js";
+import { IAuthenticationAccessService } from "./authenticationAccessService.js";
+import { IAuthenticationService } from "../common/authentication.js";
+import { IBrowserWorkbenchEnvironmentService } from "../../environment/browser/environmentService.js";
+import { IExtensionService } from "../../extensions/common/extensions.js";
+import { ILogService } from "../../../../platform/log/common/log.js";
+import { ExtensionsRegistry } from "../../extensions/common/extensionsRegistry.js";
+import { match } from "../../../../base/common/glob.js";
+import { raceCancellation, raceTimeout } from "../../../../base/common/async.js";
+import { CancellationTokenSource } from "../../../../base/common/cancellation.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+function getAuthenticationProviderActivationEvent(id) {
+  return `onAuthenticationRequest:${id}`;
+}
+__name(getAuthenticationProviderActivationEvent, "getAuthenticationProviderActivationEvent");
+async function getCurrentAuthenticationSessionInfo(secretStorageService, productService) {
+  const authenticationSessionValue = await secretStorageService.get(`${productService.urlProtocol}.loginAccount`);
+  if (authenticationSessionValue) {
+    try {
+      const authenticationSessionInfo = JSON.parse(authenticationSessionValue);
+      if (authenticationSessionInfo && isString(authenticationSessionInfo.id) && isString(authenticationSessionInfo.accessToken) && isString(authenticationSessionInfo.providerId)) {
+        return authenticationSessionInfo;
+      }
+    } catch (e) {
+      console.error(`Failed parsing current auth session value: ${e}`);
+    }
+  }
+  return void 0;
+}
+__name(getCurrentAuthenticationSessionInfo, "getCurrentAuthenticationSessionInfo");
+const authenticationDefinitionSchema = {
+  type: "object",
+  additionalProperties: false,
+  properties: {
+    id: {
+      type: "string",
+      description: localize("authentication.id", "The id of the authentication provider.")
+    },
+    label: {
+      type: "string",
+      description: localize("authentication.label", "The human readable name of the authentication provider.")
+    },
+    authorizationServerGlobs: {
+      type: "array",
+      items: {
+        type: "string",
+        description: localize("authentication.authorizationServerGlobs", "A list of globs that match the authorization servers that this provider supports.")
+      },
+      description: localize("authentication.authorizationServerGlobsDescription", "A list of globs that match the authorization servers that this provider supports.")
+    }
+  }
+};
+const authenticationExtPoint = ExtensionsRegistry.registerExtensionPoint({
+  extensionPoint: "authentication",
+  jsonSchema: {
+    description: localize({ key: "authenticationExtensionPoint", comment: [`'Contributes' means adds here`] }, "Contributes authentication"),
+    type: "array",
+    items: authenticationDefinitionSchema
+  },
+  activationEventsGenerator: /* @__PURE__ */ __name((authenticationProviders, result) => {
+    for (const authenticationProvider of authenticationProviders) {
+      if (authenticationProvider.id) {
+        result.push(`onAuthenticationRequest:${authenticationProvider.id}`);
+      }
+    }
+  }, "activationEventsGenerator")
+});
+let AuthenticationService = class AuthenticationService2 extends Disposable {
+  static {
+    __name(this, "AuthenticationService");
+  }
+  constructor(_extensionService, authenticationAccessService, _environmentService, _logService) {
+    super();
+    this._extensionService = _extensionService;
+    this._environmentService = _environmentService;
+    this._logService = _logService;
+    this._onDidRegisterAuthenticationProvider = this._register(new Emitter());
+    this.onDidRegisterAuthenticationProvider = this._onDidRegisterAuthenticationProvider.event;
+    this._onDidUnregisterAuthenticationProvider = this._register(new Emitter());
+    this.onDidUnregisterAuthenticationProvider = this._onDidUnregisterAuthenticationProvider.event;
+    this._onDidChangeSessions = this._register(new Emitter());
+    this.onDidChangeSessions = this._onDidChangeSessions.event;
+    this._onDidChangeDeclaredProviders = this._register(new Emitter());
+    this.onDidChangeDeclaredProviders = this._onDidChangeDeclaredProviders.event;
+    this._authenticationProviders = /* @__PURE__ */ new Map();
+    this._authenticationProviderDisposables = this._register(new DisposableMap());
+    this._dynamicAuthenticationProviderIds = /* @__PURE__ */ new Set();
+    this._delegates = [];
+    this._disposedSource = new CancellationTokenSource();
+    this._declaredProviders = [];
+    this._register(toDisposable(() => this._disposedSource.dispose(true)));
+    this._register(authenticationAccessService.onDidChangeExtensionSessionAccess((e) => {
+      this._onDidChangeSessions.fire({
+        providerId: e.providerId,
+        label: e.accountName,
+        event: {
+          added: [],
+          changed: [],
+          removed: []
+        }
+      });
+    }));
+    this._registerEnvContributedAuthenticationProviders();
+    this._registerAuthenticationExtentionPointHandler();
+  }
+  get declaredProviders() {
+    return this._declaredProviders;
+  }
+  _registerEnvContributedAuthenticationProviders() {
+    if (!this._environmentService.options?.authenticationProviders?.length) {
+      return;
+    }
+    for (const provider of this._environmentService.options.authenticationProviders) {
+      this.registerDeclaredAuthenticationProvider(provider);
+      this.registerAuthenticationProvider(provider.id, provider);
+    }
+  }
+  _registerAuthenticationExtentionPointHandler() {
+    this._register(authenticationExtPoint.setHandler((_extensions, { added, removed }) => {
+      this._logService.debug(`Found authentication providers. added: ${added.length}, removed: ${removed.length}`);
+      added.forEach((point) => {
+        for (const provider of point.value) {
+          if (isFalsyOrWhitespace(provider.id)) {
+            point.collector.error(localize("authentication.missingId", "An authentication contribution must specify an id."));
+            continue;
+          }
+          if (isFalsyOrWhitespace(provider.label)) {
+            point.collector.error(localize("authentication.missingLabel", "An authentication contribution must specify a label."));
+            continue;
+          }
+          if (!this.declaredProviders.some((p) => p.id === provider.id)) {
+            this.registerDeclaredAuthenticationProvider(provider);
+            this._logService.debug(`Declared authentication provider: ${provider.id}`);
+          } else {
+            point.collector.error(localize("authentication.idConflict", "This authentication id '{0}' has already been registered", provider.id));
+          }
+        }
+      });
+      const removedExtPoints = removed.flatMap((r) => r.value);
+      removedExtPoints.forEach((point) => {
+        const provider = this.declaredProviders.find((provider2) => provider2.id === point.id);
+        if (provider) {
+          this.unregisterDeclaredAuthenticationProvider(provider.id);
+          this._logService.debug(`Undeclared authentication provider: ${provider.id}`);
+        }
+      });
+    }));
+  }
+  registerDeclaredAuthenticationProvider(provider) {
+    if (isFalsyOrWhitespace(provider.id)) {
+      throw new Error(localize("authentication.missingId", "An authentication contribution must specify an id."));
+    }
+    if (isFalsyOrWhitespace(provider.label)) {
+      throw new Error(localize("authentication.missingLabel", "An authentication contribution must specify a label."));
+    }
+    if (this.declaredProviders.some((p) => p.id === provider.id)) {
+      throw new Error(localize("authentication.idConflict", "This authentication id '{0}' has already been registered", provider.id));
+    }
+    this._declaredProviders.push(provider);
+    this._onDidChangeDeclaredProviders.fire();
+  }
+  unregisterDeclaredAuthenticationProvider(id) {
+    const index = this.declaredProviders.findIndex((provider) => provider.id === id);
+    if (index > -1) {
+      this.declaredProviders.splice(index, 1);
+    }
+    this._onDidChangeDeclaredProviders.fire();
+  }
+  isAuthenticationProviderRegistered(id) {
+    return this._authenticationProviders.has(id);
+  }
+  isDynamicAuthenticationProvider(id) {
+    return this._dynamicAuthenticationProviderIds.has(id);
+  }
+  registerAuthenticationProvider(id, authenticationProvider) {
+    this._authenticationProviders.set(id, authenticationProvider);
+    const disposableStore = new DisposableStore();
+    disposableStore.add(authenticationProvider.onDidChangeSessions((e) => this._onDidChangeSessions.fire({
+      providerId: id,
+      label: authenticationProvider.label,
+      event: e
+    })));
+    if (isDisposable(authenticationProvider)) {
+      disposableStore.add(authenticationProvider);
+    }
+    this._authenticationProviderDisposables.set(id, disposableStore);
+    this._onDidRegisterAuthenticationProvider.fire({ id, label: authenticationProvider.label });
+  }
+  unregisterAuthenticationProvider(id) {
+    const provider = this._authenticationProviders.get(id);
+    if (provider) {
+      this._authenticationProviders.delete(id);
+      if (this._dynamicAuthenticationProviderIds.has(id)) {
+        this._dynamicAuthenticationProviderIds.delete(id);
+      }
+      this._onDidUnregisterAuthenticationProvider.fire({ id, label: provider.label });
+    }
+    this._authenticationProviderDisposables.deleteAndDispose(id);
+  }
+  getProviderIds() {
+    const providerIds = [];
+    this._authenticationProviders.forEach((provider) => {
+      providerIds.push(provider.id);
+    });
+    return providerIds;
+  }
+  getProvider(id) {
+    if (this._authenticationProviders.has(id)) {
+      return this._authenticationProviders.get(id);
+    }
+    throw new Error(`No authentication provider '${id}' is currently registered.`);
+  }
+  async getAccounts(id) {
+    const sessions = await this.getSessions(id);
+    const accounts = new Array();
+    const seenAccounts = /* @__PURE__ */ new Set();
+    for (const session of sessions) {
+      if (!seenAccounts.has(session.account.label)) {
+        seenAccounts.add(session.account.label);
+        accounts.push(session.account);
+      }
+    }
+    return accounts;
+  }
+  async getSessions(id, scopes, options, activateImmediate = false) {
+    if (this._disposedSource.token.isCancellationRequested) {
+      return [];
+    }
+    const authProvider = this._authenticationProviders.get(id) || await this.tryActivateProvider(id, activateImmediate);
+    if (authProvider) {
+      if (options?.authorizationServer) {
+        const authServerStr = options.authorizationServer.toString(true);
+        if (!authProvider.authorizationServers?.some((i) => i.toString(true) === authServerStr || match(i.toString(true), authServerStr))) {
+          throw new Error(`The authorization server '${authServerStr}' is not supported by the authentication provider '${id}'.`);
+        }
+      }
+      return await authProvider.getSessions(scopes, { ...options });
+    } else {
+      throw new Error(`No authentication provider '${id}' is currently registered.`);
+    }
+  }
+  async createSession(id, scopes, options) {
+    if (this._disposedSource.token.isCancellationRequested) {
+      throw new Error("Authentication service is disposed.");
+    }
+    const authProvider = this._authenticationProviders.get(id) || await this.tryActivateProvider(id, !!options?.activateImmediate);
+    if (authProvider) {
+      return await authProvider.createSession(scopes, { ...options });
+    } else {
+      throw new Error(`No authentication provider '${id}' is currently registered.`);
+    }
+  }
+  async removeSession(id, sessionId) {
+    if (this._disposedSource.token.isCancellationRequested) {
+      throw new Error("Authentication service is disposed.");
+    }
+    const authProvider = this._authenticationProviders.get(id);
+    if (authProvider) {
+      return authProvider.removeSession(sessionId);
+    } else {
+      throw new Error(`No authentication provider '${id}' is currently registered.`);
+    }
+  }
+  async getOrActivateProviderIdForServer(authorizationServer) {
+    for (const provider of this._authenticationProviders.values()) {
+      if (provider.authorizationServers?.some((i) => i.toString(true) === authorizationServer.toString(true) || match(i.toString(true), authorizationServer.toString(true)))) {
+        return provider.id;
+      }
+    }
+    const authServerStr = authorizationServer.toString(true);
+    const providers = this._declaredProviders.filter((p) => !this._authenticationProviders.has(p.id)).filter((p) => !!p.authorizationServerGlobs?.some((i) => match(i, authServerStr)));
+    for (const provider of providers) {
+      const activeProvider = await this.tryActivateProvider(provider.id, true);
+      if (activeProvider.authorizationServers?.some((i) => match(i.toString(true), authServerStr))) {
+        return activeProvider.id;
+      }
+    }
+    return void 0;
+  }
+  async createDynamicAuthenticationProvider(authorizationServer, serverMetadata, resource) {
+    const delegate = this._delegates[0];
+    if (!delegate) {
+      this._logService.error("No authentication provider host delegate found");
+      return void 0;
+    }
+    const providerId = await delegate.create(authorizationServer, serverMetadata, resource);
+    const provider = this._authenticationProviders.get(providerId);
+    if (provider) {
+      this._logService.debug(`Created dynamic authentication provider: ${providerId}`);
+      this._dynamicAuthenticationProviderIds.add(providerId);
+      return provider;
+    }
+    this._logService.error(`Failed to create dynamic authentication provider: ${providerId}`);
+    return void 0;
+  }
+  registerAuthenticationProviderHostDelegate(delegate) {
+    this._delegates.push(delegate);
+    this._delegates.sort((a, b) => b.priority - a.priority);
+    return {
+      dispose: /* @__PURE__ */ __name(() => {
+        const index = this._delegates.indexOf(delegate);
+        if (index !== -1) {
+          this._delegates.splice(index, 1);
+        }
+      }, "dispose")
+    };
+  }
+  async tryActivateProvider(providerId, activateImmediate) {
+    await this._extensionService.activateByEvent(
+      getAuthenticationProviderActivationEvent(providerId),
+      activateImmediate ? 1 : 0
+      /* ActivationKind.Normal */
+    );
+    let provider = this._authenticationProviders.get(providerId);
+    if (provider) {
+      return provider;
+    }
+    if (this._disposedSource.token.isCancellationRequested) {
+      throw new Error("Authentication service is disposed.");
+    }
+    const store = new DisposableStore();
+    try {
+      const result = await raceTimeout(raceCancellation(Event.toPromise(Event.filter(this.onDidRegisterAuthenticationProvider, (e) => e.id === providerId, store), store), this._disposedSource.token), 5e3);
+      if (!result) {
+        throw new Error(`Timed out waiting for authentication provider '${providerId}' to register.`);
+      }
+      provider = this._authenticationProviders.get(result.id);
+      if (provider) {
+        return provider;
+      }
+      throw new Error(`No authentication provider '${providerId}' is currently registered.`);
+    } finally {
+      store.dispose();
+    }
+  }
+};
+AuthenticationService = __decorate([
+  __param(0, IExtensionService),
+  __param(1, IAuthenticationAccessService),
+  __param(2, IBrowserWorkbenchEnvironmentService),
+  __param(3, ILogService)
+], AuthenticationService);
+registerSingleton(
+  IAuthenticationService,
+  AuthenticationService,
+  1
+  /* InstantiationType.Delayed */
+);
+export {
+  AuthenticationService,
+  getAuthenticationProviderActivationEvent,
+  getCurrentAuthenticationSessionInfo
+};
+//# sourceMappingURL=authenticationService.js.map

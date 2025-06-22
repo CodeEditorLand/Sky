@@ -1,1 +1,277 @@
-import{localize as w}from"../../../../nls.js";import{$RI as O,Severity as m,$TI as v,NeverShowAgainScope as y,NotificationsFilter as a,$SI as j}from"../../../../platform/notification/common/notification.js";import{$Z5b as $,$45b as E}from"../../../common/notifications.js";import{$vd as D,$ud as b}from"../../../../base/common/lifecycle.js";import{$df as N,Event as A}from"../../../../base/common/event.js";import{$WB as C}from"../../../../platform/instantiation/common/extensions.js";import{$_l as _}from"../../../../base/common/actions.js";import{$Ho as I}from"../../../../platform/storage/common/storage.js";var R=function(c,t,e,i){var r=arguments.length,s=r<3?t:i===null?i=Object.getOwnPropertyDescriptor(t,e):i,o;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")s=Reflect.decorate(c,t,e,i);else for(var n=c.length-1;n>=0;n--)(o=c[n])&&(s=(r<3?o(s):r>3?o(t,e,s):o(t,e))||s);return r>3&&s&&Object.defineProperty(t,e,s),s},F=function(c,t){return function(e,i){t(e,i,c)}},d;let p=class extends D{static{d=this}constructor(t){super(),this.a=t,this.model=this.B(new $),this.g=this.B(new N),this.onDidChangeFilter=this.g.event,this.j=(()=>{const e=new Map;for(const i of this.a.getObject(d.f,-1,[]))e.set(i.id,i);return e})(),this.h=this.a.getBoolean(d.c,-1,!1),this.r(),this.b()}b(){this.B(this.model.onDidChangeNotification(t=>{switch(t.kind){case 0:{const e=typeof t.item.sourceId=="string"&&typeof t.item.source=="string"?{id:t.item.sourceId,label:t.item.source}:t.item.source;j(e)&&(this.j.has(e.id)?this.m(e):this.setFilter({...e,filter:a.OFF}));break}}}))}static{this.c="notifications.doNotDisturbMode"}static{this.f="notifications.perSourceDoNotDisturbMode"}setFilter(t){if(typeof t=="number"){if(this.h===(t===a.ERROR))return;this.h=t===a.ERROR,this.a.store(d.c,this.h,-1,1),this.r(),this.g.fire()}else{const e=this.j.get(t.id);if(e?.filter===t.filter&&e.label===t.label)return;this.j.set(t.id,{id:t.id,label:t.label,filter:t.filter}),this.n(),this.r()}}getFilter(t){return t?this.j.get(t.id)?.filter??a.OFF:this.h?a.ERROR:a.OFF}m(t){const e=this.j.get(t.id);e&&e.label!==t.label&&(this.j.set(t.id,{id:t.id,label:t.label,filter:e.filter}),this.n())}n(){this.a.store(d.f,JSON.stringify([...this.j.values()]),-1,1)}getFilters(){return[...this.j.values()]}r(){this.model.setFilter({global:this.h?a.ERROR:a.OFF,sources:new Map([...this.j.values()].map(t=>[t.id,t.filter]))})}removeFilter(t){this.j.delete(t)&&(this.n(),this.r())}info(t){if(Array.isArray(t)){for(const e of t)this.info(e);return}this.model.addNotification({severity:m.Info,message:t})}warn(t){if(Array.isArray(t)){for(const e of t)this.warn(e);return}this.model.addNotification({severity:m.Warning,message:t})}error(t){if(Array.isArray(t)){for(const e of t)this.error(e);return}this.model.addNotification({severity:m.Error,message:t})}notify(t){const e=new b;if(t.neverShowAgain){const r=this.s(t.neverShowAgain),s=t.neverShowAgain.id;if(this.a.getBoolean(s,r))return new v;const o=e.add(new _("workbench.notification.neverShowAgain",w(14347,null),void 0,!0,async()=>{i.close(),this.a.store(s,!0,r,0)})),n={primary:t.actions?.primary||[],secondary:t.actions?.secondary||[]};t.neverShowAgain.isSecondary?n.secondary=[...n.secondary,o]:n.primary=[o,...n.primary],t.actions=n}const i=this.model.addNotification(t);return A.once(i.onDidClose)(()=>e.dispose()),i}s(t){switch(t.scope){case y.APPLICATION:return-1;case y.PROFILE:return 0;case y.WORKSPACE:return 1;default:return-1}}prompt(t,e,i,r){if(r?.neverShowAgain){const l=this.s(r.neverShowAgain),f=r.neverShowAgain.id;if(this.a.getBoolean(f,l))return new v;const h={label:w(14348,null),run:()=>this.a.store(f,!0,l,0),isSecondary:r.neverShowAgain.isSecondary};r.neverShowAgain.isSecondary?i=[...i,h]:i=[h,...i]}let s=!1;const o=new b,n=[],g=[];i.forEach((l,f)=>{const h=new E(`workbench.dialog.choice.${f}`,l);l.isSecondary?g.push(h):n.push(h),o.add(h.onDidRun(()=>{s=!0,l.keepOpen||u.close()})),o.add(h)});const S={primary:n,secondary:g},u=this.notify({severity:t,message:e,actions:S,sticky:r?.sticky,priority:r?.priority});return A.once(u.onDidClose)(()=>{o.dispose(),r&&typeof r.onCancel=="function"&&!s&&r.onCancel()}),u}status(t,e){return this.model.showStatusMessage(t,e)}};p=d=R([F(0,I)],p);C(O,p,1);export{p as $55b};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { localize } from "../../../../nls.js";
+import { INotificationService, Severity, NoOpNotification, NeverShowAgainScope, NotificationsFilter, isNotificationSource } from "../../../../platform/notification/common/notification.js";
+import { NotificationsModel, ChoiceAction } from "../../../common/notifications.js";
+import { Disposable, DisposableStore } from "../../../../base/common/lifecycle.js";
+import { Emitter, Event } from "../../../../base/common/event.js";
+import { registerSingleton } from "../../../../platform/instantiation/common/extensions.js";
+import { Action } from "../../../../base/common/actions.js";
+import { IStorageService } from "../../../../platform/storage/common/storage.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+var NotificationService_1;
+let NotificationService = class NotificationService2 extends Disposable {
+  static {
+    __name(this, "NotificationService");
+  }
+  static {
+    NotificationService_1 = this;
+  }
+  constructor(storageService) {
+    super();
+    this.storageService = storageService;
+    this.model = this._register(new NotificationsModel());
+    this._onDidChangeFilter = this._register(new Emitter());
+    this.onDidChangeFilter = this._onDidChangeFilter.event;
+    this.mapSourceToFilter = (() => {
+      const map = /* @__PURE__ */ new Map();
+      for (const sourceFilter of this.storageService.getObject(NotificationService_1.PER_SOURCE_FILTER_SETTINGS_KEY, -1, [])) {
+        map.set(sourceFilter.id, sourceFilter);
+      }
+      return map;
+    })();
+    this.globalFilterEnabled = this.storageService.getBoolean(NotificationService_1.GLOBAL_FILTER_SETTINGS_KEY, -1, false);
+    this.updateFilters();
+    this.registerListeners();
+  }
+  registerListeners() {
+    this._register(this.model.onDidChangeNotification((e) => {
+      switch (e.kind) {
+        case 0: {
+          const source = typeof e.item.sourceId === "string" && typeof e.item.source === "string" ? { id: e.item.sourceId, label: e.item.source } : e.item.source;
+          if (isNotificationSource(source)) {
+            if (!this.mapSourceToFilter.has(source.id)) {
+              this.setFilter({ ...source, filter: NotificationsFilter.OFF });
+            } else {
+              this.updateSourceFilter(source);
+            }
+          }
+          break;
+        }
+      }
+    }));
+  }
+  static {
+    this.GLOBAL_FILTER_SETTINGS_KEY = "notifications.doNotDisturbMode";
+  }
+  static {
+    this.PER_SOURCE_FILTER_SETTINGS_KEY = "notifications.perSourceDoNotDisturbMode";
+  }
+  setFilter(filter) {
+    if (typeof filter === "number") {
+      if (this.globalFilterEnabled === (filter === NotificationsFilter.ERROR)) {
+        return;
+      }
+      this.globalFilterEnabled = filter === NotificationsFilter.ERROR;
+      this.storageService.store(
+        NotificationService_1.GLOBAL_FILTER_SETTINGS_KEY,
+        this.globalFilterEnabled,
+        -1,
+        1
+        /* StorageTarget.MACHINE */
+      );
+      this.updateFilters();
+      this._onDidChangeFilter.fire();
+    } else {
+      const existing = this.mapSourceToFilter.get(filter.id);
+      if (existing?.filter === filter.filter && existing.label === filter.label) {
+        return;
+      }
+      this.mapSourceToFilter.set(filter.id, { id: filter.id, label: filter.label, filter: filter.filter });
+      this.saveSourceFilters();
+      this.updateFilters();
+    }
+  }
+  getFilter(source) {
+    if (source) {
+      return this.mapSourceToFilter.get(source.id)?.filter ?? NotificationsFilter.OFF;
+    }
+    return this.globalFilterEnabled ? NotificationsFilter.ERROR : NotificationsFilter.OFF;
+  }
+  updateSourceFilter(source) {
+    const existing = this.mapSourceToFilter.get(source.id);
+    if (!existing) {
+      return;
+    }
+    if (existing.label !== source.label) {
+      this.mapSourceToFilter.set(source.id, { id: source.id, label: source.label, filter: existing.filter });
+      this.saveSourceFilters();
+    }
+  }
+  saveSourceFilters() {
+    this.storageService.store(
+      NotificationService_1.PER_SOURCE_FILTER_SETTINGS_KEY,
+      JSON.stringify([...this.mapSourceToFilter.values()]),
+      -1,
+      1
+      /* StorageTarget.MACHINE */
+    );
+  }
+  getFilters() {
+    return [...this.mapSourceToFilter.values()];
+  }
+  updateFilters() {
+    this.model.setFilter({
+      global: this.globalFilterEnabled ? NotificationsFilter.ERROR : NotificationsFilter.OFF,
+      sources: new Map([...this.mapSourceToFilter.values()].map((source) => [source.id, source.filter]))
+    });
+  }
+  removeFilter(sourceId) {
+    if (this.mapSourceToFilter.delete(sourceId)) {
+      this.saveSourceFilters();
+      this.updateFilters();
+    }
+  }
+  //#endregion
+  info(message) {
+    if (Array.isArray(message)) {
+      for (const messageEntry of message) {
+        this.info(messageEntry);
+      }
+      return;
+    }
+    this.model.addNotification({ severity: Severity.Info, message });
+  }
+  warn(message) {
+    if (Array.isArray(message)) {
+      for (const messageEntry of message) {
+        this.warn(messageEntry);
+      }
+      return;
+    }
+    this.model.addNotification({ severity: Severity.Warning, message });
+  }
+  error(message) {
+    if (Array.isArray(message)) {
+      for (const messageEntry of message) {
+        this.error(messageEntry);
+      }
+      return;
+    }
+    this.model.addNotification({ severity: Severity.Error, message });
+  }
+  notify(notification) {
+    const toDispose = new DisposableStore();
+    if (notification.neverShowAgain) {
+      const scope = this.toStorageScope(notification.neverShowAgain);
+      const id = notification.neverShowAgain.id;
+      if (this.storageService.getBoolean(id, scope)) {
+        return new NoOpNotification();
+      }
+      const neverShowAgainAction = toDispose.add(new Action("workbench.notification.neverShowAgain", localize("neverShowAgain", "Don't Show Again"), void 0, true, async () => {
+        handle.close();
+        this.storageService.store(
+          id,
+          true,
+          scope,
+          0
+          /* StorageTarget.USER */
+        );
+      }));
+      const actions = {
+        primary: notification.actions?.primary || [],
+        secondary: notification.actions?.secondary || []
+      };
+      if (!notification.neverShowAgain.isSecondary) {
+        actions.primary = [neverShowAgainAction, ...actions.primary];
+      } else {
+        actions.secondary = [...actions.secondary, neverShowAgainAction];
+      }
+      notification.actions = actions;
+    }
+    const handle = this.model.addNotification(notification);
+    Event.once(handle.onDidClose)(() => toDispose.dispose());
+    return handle;
+  }
+  toStorageScope(options) {
+    switch (options.scope) {
+      case NeverShowAgainScope.APPLICATION:
+        return -1;
+      case NeverShowAgainScope.PROFILE:
+        return 0;
+      case NeverShowAgainScope.WORKSPACE:
+        return 1;
+      default:
+        return -1;
+    }
+  }
+  prompt(severity, message, choices, options) {
+    if (options?.neverShowAgain) {
+      const scope = this.toStorageScope(options.neverShowAgain);
+      const id = options.neverShowAgain.id;
+      if (this.storageService.getBoolean(id, scope)) {
+        return new NoOpNotification();
+      }
+      const neverShowAgainChoice = {
+        label: localize("neverShowAgain", "Don't Show Again"),
+        run: /* @__PURE__ */ __name(() => this.storageService.store(
+          id,
+          true,
+          scope,
+          0
+          /* StorageTarget.USER */
+        ), "run"),
+        isSecondary: options.neverShowAgain.isSecondary
+      };
+      if (!options.neverShowAgain.isSecondary) {
+        choices = [neverShowAgainChoice, ...choices];
+      } else {
+        choices = [...choices, neverShowAgainChoice];
+      }
+    }
+    let choiceClicked = false;
+    const toDispose = new DisposableStore();
+    const primaryActions = [];
+    const secondaryActions = [];
+    choices.forEach((choice, index) => {
+      const action = new ChoiceAction(`workbench.dialog.choice.${index}`, choice);
+      if (!choice.isSecondary) {
+        primaryActions.push(action);
+      } else {
+        secondaryActions.push(action);
+      }
+      toDispose.add(action.onDidRun(() => {
+        choiceClicked = true;
+        if (!choice.keepOpen) {
+          handle.close();
+        }
+      }));
+      toDispose.add(action);
+    });
+    const actions = { primary: primaryActions, secondary: secondaryActions };
+    const handle = this.notify({ severity, message, actions, sticky: options?.sticky, priority: options?.priority });
+    Event.once(handle.onDidClose)(() => {
+      toDispose.dispose();
+      if (options && typeof options.onCancel === "function" && !choiceClicked) {
+        options.onCancel();
+      }
+    });
+    return handle;
+  }
+  status(message, options) {
+    return this.model.showStatusMessage(message, options);
+  }
+};
+NotificationService = NotificationService_1 = __decorate([
+  __param(0, IStorageService)
+], NotificationService);
+registerSingleton(
+  INotificationService,
+  NotificationService,
+  1
+  /* InstantiationType.Delayed */
+);
+export {
+  NotificationService
+};
+//# sourceMappingURL=notificationService.js.map

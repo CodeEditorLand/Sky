@@ -1,1 +1,85 @@
-import{$vd as m}from"../../../base/common/lifecycle.js";import{$Kyb as u}from"../../services/extensions/common/extHostCustomers.js";import{$pY as p,$oY as S}from"../common/extHost.protocol.js";import{$3n as d}from"../../../platform/log/common/log.js";import{$Hh as l}from"../../../base/common/async.js";import{$Y$ as $}from"../../../platform/secrets/common/secrets.js";import{$2$ as w}from"../../services/environment/browser/environmentService.js";var f=function(o,t,e,r){var s=arguments.length,a=s<3?t:r===null?r=Object.getOwnPropertyDescriptor(t,e):r,i;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")a=Reflect.decorate(o,t,e,r);else for(var c=o.length-1;c>=0;c--)(i=o[c])&&(a=(s<3?i(a):s>3?i(t,e,a):i(t,e))||a);return s>3&&a&&Object.defineProperty(t,e,a),a},h=function(o,t){return function(e,r){t(e,r,o)}};let n=class extends m{constructor(t,e,r,s){super(),this.c=e,this.f=r,this.b=new l,this.a=t.getProxy(p.ExtHostSecretState),this.B(this.c.onDidChangeSecret(a=>{try{const{extensionId:i,key:c}=this.n(a);i&&c&&this.a.$onDidChangePassword({extensionId:i,key:c})}catch{}}))}$getPassword(t,e){return this.f.trace(`[mainThreadSecretState] Getting password for ${t} extension: `,e),this.b.queue(t,()=>this.g(t,e))}async g(t,e){const r=this.m(t,e),s=await this.c.get(r);return this.f.trace(`[mainThreadSecretState] ${s?"P":"No p"}assword found for: `,t,e),s}$setPassword(t,e,r){return this.f.trace(`[mainThreadSecretState] Setting password for ${t} extension: `,e),this.b.queue(t,()=>this.h(t,e,r))}async h(t,e,r){const s=this.m(t,e);await this.c.set(s,r),this.f.trace("[mainThreadSecretState] Password set for: ",t,e)}$deletePassword(t,e){return this.f.trace(`[mainThreadSecretState] Deleting password for ${t} extension: `,e),this.b.queue(t,()=>this.j(t,e))}async j(t,e){const r=this.m(t,e);await this.c.delete(r),this.f.trace("[mainThreadSecretState] Password deleted for: ",t,e)}m(t,e){return JSON.stringify({extensionId:t,key:e})}n(t){return JSON.parse(t)}};n=f([u(S.MainThreadSecretState),h(1,$),h(2,d),h(3,w)],n);export{n as $72b};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { Disposable } from "../../../base/common/lifecycle.js";
+import { extHostNamedCustomer } from "../../services/extensions/common/extHostCustomers.js";
+import { ExtHostContext, MainContext } from "../common/extHost.protocol.js";
+import { ILogService } from "../../../platform/log/common/log.js";
+import { SequencerByKey } from "../../../base/common/async.js";
+import { ISecretStorageService } from "../../../platform/secrets/common/secrets.js";
+import { IBrowserWorkbenchEnvironmentService } from "../../services/environment/browser/environmentService.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+let MainThreadSecretState = class MainThreadSecretState2 extends Disposable {
+  static {
+    __name(this, "MainThreadSecretState");
+  }
+  constructor(extHostContext, secretStorageService, logService, environmentService) {
+    super();
+    this.secretStorageService = secretStorageService;
+    this.logService = logService;
+    this._sequencer = new SequencerByKey();
+    this._proxy = extHostContext.getProxy(ExtHostContext.ExtHostSecretState);
+    this._register(this.secretStorageService.onDidChangeSecret((e) => {
+      try {
+        const { extensionId, key } = this.parseKey(e);
+        if (extensionId && key) {
+          this._proxy.$onDidChangePassword({ extensionId, key });
+        }
+      } catch (e2) {
+      }
+    }));
+  }
+  $getPassword(extensionId, key) {
+    this.logService.trace(`[mainThreadSecretState] Getting password for ${extensionId} extension: `, key);
+    return this._sequencer.queue(extensionId, () => this.doGetPassword(extensionId, key));
+  }
+  async doGetPassword(extensionId, key) {
+    const fullKey = this.getKey(extensionId, key);
+    const password = await this.secretStorageService.get(fullKey);
+    this.logService.trace(`[mainThreadSecretState] ${password ? "P" : "No p"}assword found for: `, extensionId, key);
+    return password;
+  }
+  $setPassword(extensionId, key, value) {
+    this.logService.trace(`[mainThreadSecretState] Setting password for ${extensionId} extension: `, key);
+    return this._sequencer.queue(extensionId, () => this.doSetPassword(extensionId, key, value));
+  }
+  async doSetPassword(extensionId, key, value) {
+    const fullKey = this.getKey(extensionId, key);
+    await this.secretStorageService.set(fullKey, value);
+    this.logService.trace("[mainThreadSecretState] Password set for: ", extensionId, key);
+  }
+  $deletePassword(extensionId, key) {
+    this.logService.trace(`[mainThreadSecretState] Deleting password for ${extensionId} extension: `, key);
+    return this._sequencer.queue(extensionId, () => this.doDeletePassword(extensionId, key));
+  }
+  async doDeletePassword(extensionId, key) {
+    const fullKey = this.getKey(extensionId, key);
+    await this.secretStorageService.delete(fullKey);
+    this.logService.trace("[mainThreadSecretState] Password deleted for: ", extensionId, key);
+  }
+  getKey(extensionId, key) {
+    return JSON.stringify({ extensionId, key });
+  }
+  parseKey(key) {
+    return JSON.parse(key);
+  }
+};
+MainThreadSecretState = __decorate([
+  extHostNamedCustomer(MainContext.MainThreadSecretState),
+  __param(1, ISecretStorageService),
+  __param(2, ILogService),
+  __param(3, IBrowserWorkbenchEnvironmentService)
+], MainThreadSecretState);
+export {
+  MainThreadSecretState
+};
+//# sourceMappingURL=mainThreadSecretState.js.map

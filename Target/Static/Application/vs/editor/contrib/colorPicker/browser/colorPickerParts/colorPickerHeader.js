@@ -1,1 +1,73 @@
-import"../colorPicker.css";import*as t from"../../../../../base/browser/dom.js";import{$hp as s}from"../../../../../base/common/color.js";import{$vd as a}from"../../../../../base/common/lifecycle.js";import{localize as g}from"../../../../../nls.js";import{$Gq as e}from"../../../../../platform/theme/common/colorRegistry.js";import{$Llb as m}from"./colorPickerCloseButton.js";const r=t.$;class L extends a{constructor(i,o,h,l){super(),this.m=o,this.n=l,this.h=null,this.b=r(".colorpicker-header"),t.$M6(i,this.b),this.c=t.$M6(this.b,r(".picked-color")),t.$M6(this.c,r("span.codicon.codicon-color-mode")),this.f=t.$M6(this.c,document.createElement("span")),this.f.classList.add("picked-color-presentation");const n=g(1011,null);this.c.setAttribute("title",n),this.g=t.$M6(this.b,r(".original-color")),this.g.style.backgroundColor=s.Format.CSS.format(this.m.originalColor)||"",this.j=h.getColorTheme().getColor(e)||s.white,this.B(h.onDidColorThemeChange(c=>{this.j=c.getColor(e)||s.white})),this.B(t.$J5(this.c,t.$F6.CLICK,()=>this.m.selectNextColorPresentation())),this.B(t.$J5(this.g,t.$F6.CLICK,()=>{this.m.color=this.m.originalColor,this.m.flushColor()})),this.B(o.onDidChangeColor(this.r,this)),this.B(o.onDidChangePresentation(this.s,this)),this.c.style.backgroundColor=s.Format.CSS.format(o.color)||"",this.c.classList.toggle("light",o.color.rgba.a<.5?this.j.isLighter():o.color.isLighter()),this.r(this.m.color),this.n==="standalone"&&(this.b.classList.add("standalone-colorpicker"),this.h=this.B(new m(this.b)))}get domNode(){return this.b}get closeButton(){return this.h}get pickedColorNode(){return this.c}get originalColorNode(){return this.g}r(i){this.c.style.backgroundColor=s.Format.CSS.format(i)||"",this.c.classList.toggle("light",i.rgba.a<.5?this.j.isLighter():i.isLighter()),this.s()}s(){this.f.textContent=this.m.presentation?this.m.presentation.label:""}}export{L as $Mlb};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import "../colorPicker.css";
+import * as dom from "../../../../../base/browser/dom.js";
+import { Color } from "../../../../../base/common/color.js";
+import { Disposable } from "../../../../../base/common/lifecycle.js";
+import { localize } from "../../../../../nls.js";
+import { editorHoverBackground } from "../../../../../platform/theme/common/colorRegistry.js";
+import { CloseButton } from "./colorPickerCloseButton.js";
+const $ = dom.$;
+class ColorPickerHeader extends Disposable {
+  static {
+    __name(this, "ColorPickerHeader");
+  }
+  constructor(container, model, themeService, type) {
+    super();
+    this.model = model;
+    this.type = type;
+    this._closeButton = null;
+    this._domNode = $(".colorpicker-header");
+    dom.append(container, this._domNode);
+    this._pickedColorNode = dom.append(this._domNode, $(".picked-color"));
+    dom.append(this._pickedColorNode, $("span.codicon.codicon-color-mode"));
+    this._pickedColorPresentation = dom.append(this._pickedColorNode, document.createElement("span"));
+    this._pickedColorPresentation.classList.add("picked-color-presentation");
+    const tooltip = localize("clickToToggleColorOptions", "Click to toggle color options (rgb/hsl/hex)");
+    this._pickedColorNode.setAttribute("title", tooltip);
+    this._originalColorNode = dom.append(this._domNode, $(".original-color"));
+    this._originalColorNode.style.backgroundColor = Color.Format.CSS.format(this.model.originalColor) || "";
+    this.backgroundColor = themeService.getColorTheme().getColor(editorHoverBackground) || Color.white;
+    this._register(themeService.onDidColorThemeChange((theme) => {
+      this.backgroundColor = theme.getColor(editorHoverBackground) || Color.white;
+    }));
+    this._register(dom.addDisposableListener(this._pickedColorNode, dom.EventType.CLICK, () => this.model.selectNextColorPresentation()));
+    this._register(dom.addDisposableListener(this._originalColorNode, dom.EventType.CLICK, () => {
+      this.model.color = this.model.originalColor;
+      this.model.flushColor();
+    }));
+    this._register(model.onDidChangeColor(this.onDidChangeColor, this));
+    this._register(model.onDidChangePresentation(this.onDidChangePresentation, this));
+    this._pickedColorNode.style.backgroundColor = Color.Format.CSS.format(model.color) || "";
+    this._pickedColorNode.classList.toggle("light", model.color.rgba.a < 0.5 ? this.backgroundColor.isLighter() : model.color.isLighter());
+    this.onDidChangeColor(this.model.color);
+    if (this.type === "standalone") {
+      this._domNode.classList.add("standalone-colorpicker");
+      this._closeButton = this._register(new CloseButton(this._domNode));
+    }
+  }
+  get domNode() {
+    return this._domNode;
+  }
+  get closeButton() {
+    return this._closeButton;
+  }
+  get pickedColorNode() {
+    return this._pickedColorNode;
+  }
+  get originalColorNode() {
+    return this._originalColorNode;
+  }
+  onDidChangeColor(color) {
+    this._pickedColorNode.style.backgroundColor = Color.Format.CSS.format(color) || "";
+    this._pickedColorNode.classList.toggle("light", color.rgba.a < 0.5 ? this.backgroundColor.isLighter() : color.isLighter());
+    this.onDidChangePresentation();
+  }
+  onDidChangePresentation() {
+    this._pickedColorPresentation.textContent = this.model.presentation ? this.model.presentation.label : "";
+  }
+}
+export {
+  ColorPickerHeader
+};
+//# sourceMappingURL=colorPickerHeader.js.map

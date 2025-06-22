@@ -1,1 +1,77 @@
-import{localize as m}from"../../../../../../../../nls.js";import{$Gp as i,$7p as a}from"../../../../../../../../platform/theme/common/colorRegistry.js";import{$jp as s,$rp as c,$op as d}from"../../../../../../../../platform/theme/common/colorUtils.js";import{$vR as l}from"../../../codecs/base/markdownExtensionsCodec/tokens/frontMatterHeader.js";import"../types.js";import{$1Oc as e}from"./frontMatterMarkerDecoration.js";import{$ZOc as u}from"./utils/reactiveDecorationBase.js";var r;!function(r){r.Main=".prompt-front-matter-decoration",r.Inline=".prompt-front-matter-decoration-inline",r.MainInactive=".prompt-front-matter-decoration.prompt-decoration-inactive",r.InlineInactive=".prompt-front-matter-decoration-inline.prompt-decoration-inactive"}(r||(r={}));const f=d("prompt.frontMatter.background",{dark:c(a,.2),light:c(a,.05),hcDark:i,hcLight:i},m(5736,null)),h=d("prompt.frontMatter.inactiveBackground",{dark:c(a,.1),light:c(a,.025),hcDark:i,hcLight:i},m(5737,null)),$={[r.Main]:[`background-color: ${s(f)};`,"z-index: -1;"],[r.MainInactive]:[`background-color: ${s(h)};`],[r.InlineInactive]:["color: var(--vscode-disabledForeground);"],...e.cssStyles};class w extends u{constructor(r,t){super(r,t),this.i.push(new e(r,t.startMarker),new e(r,t.endMarker))}setCursorPosition(r){const t=super.setCursorPosition(r);for(const r of this.i)r instanceof e&&r.activate(this.l);return t}get h(){return r}get d(){return!0}get a(){return"Front Matter header decoration."}static get cssStyles(){return $}static handles(r){return r instanceof l}}export{f as $2Oc,h as $3Oc,$ as $4Oc,w as $5Oc,r as CssClassNames};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { localize } from "../../../../../../../../nls.js";
+import { contrastBorder, editorBackground } from "../../../../../../../../platform/theme/common/colorRegistry.js";
+import { asCssVariable, darken, registerColor } from "../../../../../../../../platform/theme/common/colorUtils.js";
+import { FrontMatterHeader } from "../../../codecs/base/markdownExtensionsCodec/tokens/frontMatterHeader.js";
+import { CssClassModifiers } from "../types.js";
+import { FrontMatterMarkerDecoration } from "./frontMatterMarkerDecoration.js";
+import { ReactiveDecorationBase } from "./utils/reactiveDecorationBase.js";
+var CssClassNames;
+(function(CssClassNames2) {
+  CssClassNames2["Main"] = ".prompt-front-matter-decoration";
+  CssClassNames2["Inline"] = ".prompt-front-matter-decoration-inline";
+  CssClassNames2["MainInactive"] = ".prompt-front-matter-decoration.prompt-decoration-inactive";
+  CssClassNames2["InlineInactive"] = ".prompt-front-matter-decoration-inline.prompt-decoration-inactive";
+})(CssClassNames || (CssClassNames = {}));
+const BACKGROUND_COLOR = registerColor("prompt.frontMatter.background", { dark: darken(editorBackground, 0.2), light: darken(editorBackground, 0.05), hcDark: contrastBorder, hcLight: contrastBorder }, localize("chat.prompt.frontMatter.background.description", "Background color of a Front Matter header block."));
+const INACTIVE_BACKGROUND_COLOR = registerColor("prompt.frontMatter.inactiveBackground", { dark: darken(editorBackground, 0.1), light: darken(editorBackground, 0.025), hcDark: contrastBorder, hcLight: contrastBorder }, localize("chat.prompt.frontMatter.inactiveBackground.description", "Background color of an inactive Front Matter header block."));
+const CSS_STYLES = {
+  [CssClassNames.Main]: [
+    `background-color: ${asCssVariable(BACKGROUND_COLOR)};`,
+    "z-index: -1;"
+    // this is required to allow for selections to appear above the decoration background
+  ],
+  [CssClassNames.MainInactive]: [
+    `background-color: ${asCssVariable(INACTIVE_BACKGROUND_COLOR)};`
+  ],
+  [CssClassNames.InlineInactive]: [
+    "color: var(--vscode-disabledForeground);"
+  ],
+  ...FrontMatterMarkerDecoration.cssStyles
+};
+class FrontMatterDecoration extends ReactiveDecorationBase {
+  static {
+    __name(this, "FrontMatterDecoration");
+  }
+  constructor(accessor, token) {
+    super(accessor, token);
+    this.childDecorators.push(new FrontMatterMarkerDecoration(accessor, token.startMarker), new FrontMatterMarkerDecoration(accessor, token.endMarker));
+  }
+  setCursorPosition(position) {
+    const result = super.setCursorPosition(position);
+    for (const marker of this.childDecorators) {
+      if (marker instanceof FrontMatterMarkerDecoration === false) {
+        continue;
+      }
+      marker.activate(this.active);
+    }
+    return result;
+  }
+  get classNames() {
+    return CssClassNames;
+  }
+  get isWholeLine() {
+    return true;
+  }
+  get description() {
+    return "Front Matter header decoration.";
+  }
+  static get cssStyles() {
+    return CSS_STYLES;
+  }
+  /**
+   * Whether current decoration class can decorate provided token.
+   */
+  static handles(token) {
+    return token instanceof FrontMatterHeader;
+  }
+}
+export {
+  BACKGROUND_COLOR,
+  CSS_STYLES,
+  CssClassNames,
+  FrontMatterDecoration,
+  INACTIVE_BACKGROUND_COLOR
+};
+//# sourceMappingURL=frontMatterDecoration.js.map

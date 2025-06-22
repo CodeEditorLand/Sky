@@ -1,1 +1,212 @@
-import{$7b as I}from"../../../../../base/common/arrays.js";import{$Uj as f}from"../../../../../base/common/htmlContent.js";import{$vd as x,$qd as $,$pd as p}from"../../../../../base/common/lifecycle.js";import{URI as w}from"../../../../../base/common/uri.js";import{$cC as l}from"../../../../../editor/common/core/range.js";import{$uD as R}from"../../../../../editor/common/languages.js";import{$iI as y,$jI as C}from"../../../../../platform/actions/common/actions.js";import{$Yn as E}from"../../../../../platform/commands/common/commands.js";import{$2H as V}from"../../../../../platform/label/common/label.js";var v=function(r,e,t,i){var n=arguments.length,s=n<3?e:i===null?i=Object.getOwnPropertyDescriptor(e,t):i,a;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")s=Reflect.decorate(r,e,t,i);else for(var c=r.length-1;c>=0;c--)(a=r[c])&&(s=(n<3?a(s):n>3?a(e,t,s):a(e,t))||s);return n>3&&s&&Object.defineProperty(e,t,s),s},D=function(r,e){return function(t,i){e(t,i,r)}},h;const _="chat-dynamic-variable";let m=class extends x{static{h=this}static{this.ID="chatDynamicVariableModel"}get variables(){return[...this.a]}get id(){return h.ID}constructor(e,t){super(),this.c=e,this.f=t,this.a=[],this.b=[],this.B(e.inputEditor.onDidChangeModelContent(i=>{const n=[];let s=!1;this.a=I(this.a.map((a,c)=>{const u=e.inputEditor.getModel();if(!u)return n.push(a),null;const d=this.b[c],o=u.getDecorationRange(d.id);return o?u.getValueInRange(o)!==d.text?(this.c.inputEditor.executeEdits(this.id,[{range:o,text:""}]),this.c.refreshParsedInput(),n.push(a),null):o.equalsRange(a.range)?a:(s=!0,{...a,range:o}):(n.push(a),null)})),$(n.filter(p)),(s||n.length>0)&&this.c.refreshParsedInput(),this.g()}))}getInputState(){return this.variables}setInputState(e){Array.isArray(e)||(e=[]),this.j(),this.a=[];for(const t of e)L(t)&&this.addReference(t)}addReference(e){this.a.push(e),this.g(),this.c.refreshParsedInput()}g(){const e=this.c.inputEditor.setDecorationsByType("chat",_,this.a.map(t=>({range:t.range,hoverMessage:this.h(t)})));this.b=[];for(let t=0;t<e.length;t++)this.b.push({id:e[t],text:this.c.inputEditor.getModel().getValueInRange(this.a[t].range)})}h(e){const t=e.data;if(w.isUri(t))return new f(this.f.getUriLabel(t,{relative:!0}));if(R(t)){const i=e.fullName?` ${e.fullName}`:"",n=`#${t.range.startLineNumber}-${t.range.endLineNumber}`;return new f(i+this.f.getUriLabel(t.uri,{relative:!0})+n)}else return}j(){for(const e of this.a)p(e)&&e.dispose()}dispose(){this.j(),super.dispose()}};m=h=v([D(1,V)],m);function L(r){return r&&typeof r.id=="string"&&l.isIRange(r.range)&&"data"in r}function N(r){return"widget"in r&&"range"in r&&"variableData"in r}class g extends y{static{this.ID="workbench.action.chat.addDynamicVariable"}constructor(){super({id:g.ID,title:""})}async run(e,...t){const i=t[0];if(!N(i))return;let n=i.range;const s=i.variableData,a=()=>{i.widget.inputEditor.executeEdits("chatInsertDynamicVariableWithArguments",[{range:i.range,text:""}])};if(i.command){const u=await e.get(E).executeCommand(i.command.id,...i.command.arguments??[]);if(!u){a();return}const d=":"+u,o=new l(n.startLineNumber,n.endColumn,n.endLineNumber,n.endColumn+d.length);if(n=new l(n.startLineNumber,n.startColumn,n.endLineNumber,n.endColumn+d.length),!i.widget.inputEditor.executeEdits("chatInsertDynamicVariableWithArguments",[{range:o,text:d+" "}])){a();return}}i.widget.getContrib(m.ID)?.addReference({id:i.id,range:n,isFile:!0,data:s})}}C(g);export{_ as $_Vb,m as $aWb,g as $bWb};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { coalesce } from "../../../../../base/common/arrays.js";
+import { MarkdownString } from "../../../../../base/common/htmlContent.js";
+import { Disposable, dispose, isDisposable } from "../../../../../base/common/lifecycle.js";
+import { URI } from "../../../../../base/common/uri.js";
+import { Range } from "../../../../../editor/common/core/range.js";
+import { isLocation } from "../../../../../editor/common/languages.js";
+import { Action2, registerAction2 } from "../../../../../platform/actions/common/actions.js";
+import { ICommandService } from "../../../../../platform/commands/common/commands.js";
+import { ILabelService } from "../../../../../platform/label/common/label.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+var ChatDynamicVariableModel_1;
+const dynamicVariableDecorationType = "chat-dynamic-variable";
+let ChatDynamicVariableModel = class ChatDynamicVariableModel2 extends Disposable {
+  static {
+    __name(this, "ChatDynamicVariableModel");
+  }
+  static {
+    ChatDynamicVariableModel_1 = this;
+  }
+  static {
+    this.ID = "chatDynamicVariableModel";
+  }
+  get variables() {
+    return [...this._variables];
+  }
+  get id() {
+    return ChatDynamicVariableModel_1.ID;
+  }
+  constructor(widget, labelService) {
+    super();
+    this.widget = widget;
+    this.labelService = labelService;
+    this._variables = [];
+    this.decorationData = [];
+    this._register(widget.inputEditor.onDidChangeModelContent((e) => {
+      const removed = [];
+      let didChange = false;
+      this._variables = coalesce(this._variables.map((ref, idx) => {
+        const model = widget.inputEditor.getModel();
+        if (!model) {
+          removed.push(ref);
+          return null;
+        }
+        const data = this.decorationData[idx];
+        const newRange = model.getDecorationRange(data.id);
+        if (!newRange) {
+          removed.push(ref);
+          return null;
+        }
+        const newText = model.getValueInRange(newRange);
+        if (newText !== data.text) {
+          this.widget.inputEditor.executeEdits(this.id, [{
+            range: newRange,
+            text: ""
+          }]);
+          this.widget.refreshParsedInput();
+          removed.push(ref);
+          return null;
+        }
+        if (newRange.equalsRange(ref.range)) {
+          return ref;
+        }
+        didChange = true;
+        return { ...ref, range: newRange };
+      }));
+      dispose(removed.filter(isDisposable));
+      if (didChange || removed.length > 0) {
+        this.widget.refreshParsedInput();
+      }
+      this.updateDecorations();
+    }));
+  }
+  getInputState() {
+    return this.variables;
+  }
+  setInputState(s) {
+    if (!Array.isArray(s)) {
+      s = [];
+    }
+    this.disposeVariables();
+    this._variables = [];
+    for (const variable of s) {
+      if (!isDynamicVariable(variable)) {
+        continue;
+      }
+      this.addReference(variable);
+    }
+  }
+  addReference(ref) {
+    this._variables.push(ref);
+    this.updateDecorations();
+    this.widget.refreshParsedInput();
+  }
+  updateDecorations() {
+    const decorationIds = this.widget.inputEditor.setDecorationsByType("chat", dynamicVariableDecorationType, this._variables.map((r) => ({
+      range: r.range,
+      hoverMessage: this.getHoverForReference(r)
+    })));
+    this.decorationData = [];
+    for (let i = 0; i < decorationIds.length; i++) {
+      this.decorationData.push({
+        id: decorationIds[i],
+        text: this.widget.inputEditor.getModel().getValueInRange(this._variables[i].range)
+      });
+    }
+  }
+  getHoverForReference(ref) {
+    const value = ref.data;
+    if (URI.isUri(value)) {
+      return new MarkdownString(this.labelService.getUriLabel(value, { relative: true }));
+    } else if (isLocation(value)) {
+      const prefix = ref.fullName ? ` ${ref.fullName}` : "";
+      const rangeString = `#${value.range.startLineNumber}-${value.range.endLineNumber}`;
+      return new MarkdownString(prefix + this.labelService.getUriLabel(value.uri, { relative: true }) + rangeString);
+    } else {
+      return void 0;
+    }
+  }
+  /**
+   * Dispose all existing variables.
+   */
+  disposeVariables() {
+    for (const variable of this._variables) {
+      if (isDisposable(variable)) {
+        variable.dispose();
+      }
+    }
+  }
+  dispose() {
+    this.disposeVariables();
+    super.dispose();
+  }
+};
+ChatDynamicVariableModel = ChatDynamicVariableModel_1 = __decorate([
+  __param(1, ILabelService)
+], ChatDynamicVariableModel);
+function isDynamicVariable(obj) {
+  return obj && typeof obj.id === "string" && Range.isIRange(obj.range) && "data" in obj;
+}
+__name(isDynamicVariable, "isDynamicVariable");
+function isAddDynamicVariableContext(context) {
+  return "widget" in context && "range" in context && "variableData" in context;
+}
+__name(isAddDynamicVariableContext, "isAddDynamicVariableContext");
+class AddDynamicVariableAction extends Action2 {
+  static {
+    __name(this, "AddDynamicVariableAction");
+  }
+  static {
+    this.ID = "workbench.action.chat.addDynamicVariable";
+  }
+  constructor() {
+    super({
+      id: AddDynamicVariableAction.ID,
+      title: ""
+      // not displayed
+    });
+  }
+  async run(accessor, ...args) {
+    const context = args[0];
+    if (!isAddDynamicVariableContext(context)) {
+      return;
+    }
+    let range = context.range;
+    const variableData = context.variableData;
+    const doCleanup = /* @__PURE__ */ __name(() => {
+      context.widget.inputEditor.executeEdits("chatInsertDynamicVariableWithArguments", [{ range: context.range, text: `` }]);
+    }, "doCleanup");
+    if (context.command) {
+      const commandService = accessor.get(ICommandService);
+      const selection = await commandService.executeCommand(context.command.id, ...context.command.arguments ?? []);
+      if (!selection) {
+        doCleanup();
+        return;
+      }
+      const insertText = ":" + selection;
+      const insertRange = new Range(range.startLineNumber, range.endColumn, range.endLineNumber, range.endColumn + insertText.length);
+      range = new Range(range.startLineNumber, range.startColumn, range.endLineNumber, range.endColumn + insertText.length);
+      const editor = context.widget.inputEditor;
+      const success = editor.executeEdits("chatInsertDynamicVariableWithArguments", [{ range: insertRange, text: insertText + " " }]);
+      if (!success) {
+        doCleanup();
+        return;
+      }
+    }
+    context.widget.getContrib(ChatDynamicVariableModel.ID)?.addReference({
+      id: context.id,
+      range,
+      isFile: true,
+      data: variableData
+    });
+  }
+}
+registerAction2(AddDynamicVariableAction);
+export {
+  AddDynamicVariableAction,
+  ChatDynamicVariableModel,
+  dynamicVariableDecorationType
+};
+//# sourceMappingURL=chatDynamicVariables.js.map

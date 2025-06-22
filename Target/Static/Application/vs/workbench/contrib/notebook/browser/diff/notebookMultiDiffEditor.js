@@ -1,1 +1,269 @@
-import{$Ho as U}from"../../../../../platform/storage/common/storage.js";import{$Po as D}from"../../../../../platform/telemetry/common/telemetry.js";import{$Mt as N}from"../../../../../platform/theme/common/themeService.js";import{$pf as F}from"../../../../../base/common/cancellation.js";import{$mj as y}from"../../../../../platform/instantiation/common/instantiation.js";import{$Vn as O}from"../../../../../platform/contextkey/common/contextkey.js";import{$E0b as _}from"../../common/services/notebookWorkerService.js";import{$El as j}from"../../../../../platform/configuration/common/configuration.js";import{$kC as x}from"../../../../../editor/common/config/fontInfo.js";import{$88 as V}from"../../../../../base/browser/pixelRatio.js";import{$ud as E}from"../../../../../base/common/lifecycle.js";import{$DDb as A}from"../../../../browser/parts/editor/editorPane.js";import{CellUri as v,$lL as R}from"../../common/notebookCommon.js";import{$i_ as L}from"../../../../../editor/browser/config/fontMeasurements.js";import{$3yb as z}from"../notebookOptions.js";import{$Ryb as M}from"../../common/notebookService.js";import{$L0b as B}from"./notebookMultiDiffEditorInput.js";import{$Udc as H}from"../../../../../editor/browser/widget/multiDiffEditor/multiDiffEditorWidget.js";import{$REb as P}from"../../../../browser/labels.js";import{$cL as W}from"../../../../services/notebook/common/notebookDocumentService.js";import{localize as p}from"../../../../../nls.js";import{Schemas as n}from"../../../../../base/common/network.js";import{$9kb as K}from"../../../../../editor/common/services/getIconClasses.js";import{$G0b as T}from"./notebookDiffViewModel.js";import{$gzb as G}from"./eventDispatcher.js";import{$Dzb as Y,$Ezb as q,$Fzb as J}from"./notebookDiffEditorBrowser.js";import{autorun as Q,transaction as X}from"../../../../../base/common/observable.js";import{$hzb as Z}from"./editorHeightCalculator.js";var I=function(c,e,t,i){var o=arguments.length,s=o<3?e:i===null?i=Object.getOwnPropertyDescriptor(e,t):i,r;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")s=Reflect.decorate(c,e,t,i);else for(var a=c.length-1;a>=0;a--)(r=c[a])&&(s=(o<3?r(s):o>3?r(e,t,s):r(e,t))||s);return o>3&&s&&Object.defineProperty(e,t,s),s},h=function(c,e){return function(t,i){e(t,i,c)}},g;let w=class extends A{static{g=this}static{this.ID=R}get textModel(){return this.j?.modified.notebook}get notebookOptions(){return this.s}constructor(e,t,i,o,s,r,a,d,l){super(g.ID,e,a,i,d),this.db=t,this.eb=o,this.fb=s,this.gb=r,this.hb=l,this.g=this.B(new E),this.u=this.eb.createKey(Y.key,!1),this.$=this.eb.createKey(q.key,!1),this.cb=this.eb.createKey(J.key,!0),this.s=t.createInstance(z,this.window,!1,void 0),this.B(this.s)}get ib(){return this.b||(this.b=this.jb()),this.b}layout(e,t){this.a.layout(e)}jb(){const e=this.gb.getValue("editor");return L.readFontInfo(this.window,x.createFromRawSettings(e,V.getInstance(this.window).value))}Y(e){this.a=this.B(this.db.createInstance(H,e,this.db.createInstance($))),this.B(this.a.onDidChangeActiveControl(()=>{this.S.fire()}))}async setInput(e,t,i,o){super.setInput(e,t,i,o);const s=await e.resolve();this.j!==s&&(this.lb(),this.j=s);const r=this.g.add(new G),a=this.db.createInstance(Z,this.ib.lineHeight);this.m=this.g.add(new T(s,this.fb,this.gb,r,this.hb,a,void 0,!0)),await this.m.computeDiff(this.g.add(new F).token),this.$.set(this.m.hasUnchangedCells),this.$.set(this.m.hasUnchangedCells);const d=this.g.add(B.createInput(this.m,this.db));this.r=this.g.add(await d.getViewModel());const l=new WeakSet;this.g.add(Q(f=>{if(!this.r||!this.m)return;const m=this.r.items.read(f),u=this.m.value;m.length===u.length&&X(S=>{m.forEach(b=>{if(l.has(b))return;l.add(b);const C=u.find(k=>k.modifiedUri?.toString()===b.modifiedUri?.toString()&&k.originalUri?.toString()===b.originalUri?.toString());C&&C.type==="unchanged"&&b.collapsed.set(!0,S)})})})),this.a.setViewModel(this.r)}lb(){this.m=void 0,this.g.clear()}_generateFontFamily(){return this.ib.fontFamily??'"SF Mono", Monaco, Menlo, Consolas, "Ubuntu Mono", "Liberation Mono", "DejaVu Sans Mono", "Courier New", monospace'}setOptions(e){super.setOptions(e)}getControl(){return this.a.getActiveControl()}focus(){super.focus(),this.a?.getActiveControl()?.focus()}hasFocus(){return this.a?.getActiveControl()?.hasTextFocus()||super.hasFocus()}clearInput(){super.clearInput(),this.a.setViewModel(void 0),this.g.clear(),this.m=void 0,this.r=void 0}expandAll(){this.r&&(this.r.expandAll(),this.u.set(!1))}collapseAll(){this.r&&(this.r.collapseAll(),this.u.set(!0))}hideUnchanged(){this.m&&(this.m.includeUnchanged=!1,this.cb.set(!0))}showUnchanged(){this.m&&(this.m.includeUnchanged=!0,this.cb.set(!1))}getDiffElementViewModel(e){if(e.scheme===n.vscodeNotebookCellOutput||e.scheme===n.vscodeNotebookCellOutputDiff||e.scheme===n.vscodeNotebookCellMetadata||e.scheme===n.vscodeNotebookCellMetadataDiff){const t=v.parseCellPropertyUri(e,e.scheme);t&&(e=v.generate(t.notebook,t.handle))}return e.scheme===n.vscodeNotebookMetadata?this.m?.items.find(t=>t.type==="modifiedMetadata"||t.type==="unchangedMetadata"):this.m?.items.find(t=>{switch(t.type){case"delete":return t.original?.uri.toString()===e.toString();case"insert":return t.modified?.uri.toString()===e.toString();case"modified":case"unchanged":return t.modified?.uri.toString()===e.toString()||t.original?.uri.toString()===e.toString();default:return}})}};w=g=I([h(1,y),h(2,N),h(3,O),h(4,_),h(5,j),h(6,D),h(7,U),h(8,M)],w);let $=class{constructor(e,t,i){this.a=e,this.b=t,this.e=i}createResourceLabel(e){const t=this.a.createInstance(P,e,{}),i=this;return{setUri(o,s={}){if(!o)t.element.clear();else{let r="",a="",d;if(o.scheme===n.vscodeNotebookCell){const l=o.scheme===n.vscodeNotebookCell?i.b.getNotebook(o):void 0,f=n.vscodeNotebookCell?i.b.getNotebook(o)?.getCellIndex(o):void 0;if(l&&f!==void 0){r=p(9404,null,`${f+1}`);const m=l?i.e.getNotebookTextModel(l?.uri):void 0,u=m&&f!==void 0?m.cells[f].language:void 0;d=u?K(u):void 0}}else o.scheme===n.vscodeNotebookCellMetadata||o.scheme===n.vscodeNotebookCellMetadataDiff?a=p(9405,null):(o.scheme===n.vscodeNotebookCellOutput||o.scheme===n.vscodeNotebookCellOutputDiff)&&(a=p(9406,null));t.element.setResource({name:r,description:a},{strikethrough:s.strikethrough,forceLabel:!0,hideIcon:!d,extraClasses:d})}},dispose(){t.dispose()}}}};$=I([h(0,y),h(1,W),h(2,M)],$);export{w as $Vdc};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { IStorageService } from "../../../../../platform/storage/common/storage.js";
+import { ITelemetryService } from "../../../../../platform/telemetry/common/telemetry.js";
+import { IThemeService } from "../../../../../platform/theme/common/themeService.js";
+import { CancellationTokenSource } from "../../../../../base/common/cancellation.js";
+import { IInstantiationService } from "../../../../../platform/instantiation/common/instantiation.js";
+import { IContextKeyService } from "../../../../../platform/contextkey/common/contextkey.js";
+import { INotebookEditorWorkerService } from "../../common/services/notebookWorkerService.js";
+import { IConfigurationService } from "../../../../../platform/configuration/common/configuration.js";
+import { BareFontInfo } from "../../../../../editor/common/config/fontInfo.js";
+import { PixelRatio } from "../../../../../base/browser/pixelRatio.js";
+import { DisposableStore } from "../../../../../base/common/lifecycle.js";
+import { EditorPane } from "../../../../browser/parts/editor/editorPane.js";
+import { CellUri, NOTEBOOK_MULTI_DIFF_EDITOR_ID } from "../../common/notebookCommon.js";
+import { FontMeasurements } from "../../../../../editor/browser/config/fontMeasurements.js";
+import { NotebookOptions } from "../notebookOptions.js";
+import { INotebookService } from "../../common/notebookService.js";
+import { NotebookMultiDiffEditorWidgetInput } from "./notebookMultiDiffEditorInput.js";
+import { MultiDiffEditorWidget } from "../../../../../editor/browser/widget/multiDiffEditor/multiDiffEditorWidget.js";
+import { ResourceLabel } from "../../../../browser/labels.js";
+import { INotebookDocumentService } from "../../../../services/notebook/common/notebookDocumentService.js";
+import { localize } from "../../../../../nls.js";
+import { Schemas } from "../../../../../base/common/network.js";
+import { getIconClassesForLanguageId } from "../../../../../editor/common/services/getIconClasses.js";
+import { NotebookDiffViewModel } from "./notebookDiffViewModel.js";
+import { NotebookDiffEditorEventDispatcher } from "./eventDispatcher.js";
+import { NOTEBOOK_DIFF_CELLS_COLLAPSED, NOTEBOOK_DIFF_HAS_UNCHANGED_CELLS, NOTEBOOK_DIFF_UNCHANGED_CELLS_HIDDEN } from "./notebookDiffEditorBrowser.js";
+import { autorun, transaction } from "../../../../../base/common/observable.js";
+import { DiffEditorHeightCalculatorService } from "./editorHeightCalculator.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+var NotebookMultiTextDiffEditor_1;
+let NotebookMultiTextDiffEditor = class NotebookMultiTextDiffEditor2 extends EditorPane {
+  static {
+    __name(this, "NotebookMultiTextDiffEditor");
+  }
+  static {
+    NotebookMultiTextDiffEditor_1 = this;
+  }
+  static {
+    this.ID = NOTEBOOK_MULTI_DIFF_EDITOR_ID;
+  }
+  get textModel() {
+    return this._model?.modified.notebook;
+  }
+  get notebookOptions() {
+    return this._notebookOptions;
+  }
+  constructor(group, instantiationService, themeService, _parentContextKeyService, notebookEditorWorkerService, configurationService, telemetryService, storageService, notebookService) {
+    super(NotebookMultiTextDiffEditor_1.ID, group, telemetryService, themeService, storageService);
+    this.instantiationService = instantiationService;
+    this._parentContextKeyService = _parentContextKeyService;
+    this.notebookEditorWorkerService = notebookEditorWorkerService;
+    this.configurationService = configurationService;
+    this.notebookService = notebookService;
+    this.modelSpecificResources = this._register(new DisposableStore());
+    this.ctxAllCollapsed = this._parentContextKeyService.createKey(NOTEBOOK_DIFF_CELLS_COLLAPSED.key, false);
+    this.ctxHasUnchangedCells = this._parentContextKeyService.createKey(NOTEBOOK_DIFF_HAS_UNCHANGED_CELLS.key, false);
+    this.ctxHiddenUnchangedCells = this._parentContextKeyService.createKey(NOTEBOOK_DIFF_UNCHANGED_CELLS_HIDDEN.key, true);
+    this._notebookOptions = instantiationService.createInstance(NotebookOptions, this.window, false, void 0);
+    this._register(this._notebookOptions);
+  }
+  get fontInfo() {
+    if (!this._fontInfo) {
+      this._fontInfo = this.createFontInfo();
+    }
+    return this._fontInfo;
+  }
+  layout(dimension, position) {
+    this._multiDiffEditorWidget.layout(dimension);
+  }
+  createFontInfo() {
+    const editorOptions = this.configurationService.getValue("editor");
+    return FontMeasurements.readFontInfo(this.window, BareFontInfo.createFromRawSettings(editorOptions, PixelRatio.getInstance(this.window).value));
+  }
+  createEditor(parent) {
+    this._multiDiffEditorWidget = this._register(this.instantiationService.createInstance(MultiDiffEditorWidget, parent, this.instantiationService.createInstance(WorkbenchUIElementFactory)));
+    this._register(this._multiDiffEditorWidget.onDidChangeActiveControl(() => {
+      this._onDidChangeControl.fire();
+    }));
+  }
+  async setInput(input, options, context, token) {
+    super.setInput(input, options, context, token);
+    const model = await input.resolve();
+    if (this._model !== model) {
+      this._detachModel();
+      this._model = model;
+    }
+    const eventDispatcher = this.modelSpecificResources.add(new NotebookDiffEditorEventDispatcher());
+    const diffEditorHeightCalculator = this.instantiationService.createInstance(DiffEditorHeightCalculatorService, this.fontInfo.lineHeight);
+    this.viewModel = this.modelSpecificResources.add(new NotebookDiffViewModel(model, this.notebookEditorWorkerService, this.configurationService, eventDispatcher, this.notebookService, diffEditorHeightCalculator, void 0, true));
+    await this.viewModel.computeDiff(this.modelSpecificResources.add(new CancellationTokenSource()).token);
+    this.ctxHasUnchangedCells.set(this.viewModel.hasUnchangedCells);
+    this.ctxHasUnchangedCells.set(this.viewModel.hasUnchangedCells);
+    const widgetInput = this.modelSpecificResources.add(NotebookMultiDiffEditorWidgetInput.createInput(this.viewModel, this.instantiationService));
+    this.widgetViewModel = this.modelSpecificResources.add(await widgetInput.getViewModel());
+    const itemsWeHaveSeen = /* @__PURE__ */ new WeakSet();
+    this.modelSpecificResources.add(autorun((reader) => {
+      if (!this.widgetViewModel || !this.viewModel) {
+        return;
+      }
+      const items = this.widgetViewModel.items.read(reader);
+      const diffItems = this.viewModel.value;
+      if (items.length !== diffItems.length) {
+        return;
+      }
+      transaction((tx) => {
+        items.forEach((item) => {
+          if (itemsWeHaveSeen.has(item)) {
+            return;
+          }
+          itemsWeHaveSeen.add(item);
+          const diffItem = diffItems.find((d) => d.modifiedUri?.toString() === item.modifiedUri?.toString() && d.originalUri?.toString() === item.originalUri?.toString());
+          if (diffItem && diffItem.type === "unchanged") {
+            item.collapsed.set(true, tx);
+          }
+        });
+      });
+    }));
+    this._multiDiffEditorWidget.setViewModel(this.widgetViewModel);
+  }
+  _detachModel() {
+    this.viewModel = void 0;
+    this.modelSpecificResources.clear();
+  }
+  _generateFontFamily() {
+    return this.fontInfo.fontFamily ?? `"SF Mono", Monaco, Menlo, Consolas, "Ubuntu Mono", "Liberation Mono", "DejaVu Sans Mono", "Courier New", monospace`;
+  }
+  setOptions(options) {
+    super.setOptions(options);
+  }
+  getControl() {
+    return this._multiDiffEditorWidget.getActiveControl();
+  }
+  focus() {
+    super.focus();
+    this._multiDiffEditorWidget?.getActiveControl()?.focus();
+  }
+  hasFocus() {
+    return this._multiDiffEditorWidget?.getActiveControl()?.hasTextFocus() || super.hasFocus();
+  }
+  clearInput() {
+    super.clearInput();
+    this._multiDiffEditorWidget.setViewModel(void 0);
+    this.modelSpecificResources.clear();
+    this.viewModel = void 0;
+    this.widgetViewModel = void 0;
+  }
+  expandAll() {
+    if (this.widgetViewModel) {
+      this.widgetViewModel.expandAll();
+      this.ctxAllCollapsed.set(false);
+    }
+  }
+  collapseAll() {
+    if (this.widgetViewModel) {
+      this.widgetViewModel.collapseAll();
+      this.ctxAllCollapsed.set(true);
+    }
+  }
+  hideUnchanged() {
+    if (this.viewModel) {
+      this.viewModel.includeUnchanged = false;
+      this.ctxHiddenUnchangedCells.set(true);
+    }
+  }
+  showUnchanged() {
+    if (this.viewModel) {
+      this.viewModel.includeUnchanged = true;
+      this.ctxHiddenUnchangedCells.set(false);
+    }
+  }
+  getDiffElementViewModel(uri) {
+    if (uri.scheme === Schemas.vscodeNotebookCellOutput || uri.scheme === Schemas.vscodeNotebookCellOutputDiff || uri.scheme === Schemas.vscodeNotebookCellMetadata || uri.scheme === Schemas.vscodeNotebookCellMetadataDiff) {
+      const data = CellUri.parseCellPropertyUri(uri, uri.scheme);
+      if (data) {
+        uri = CellUri.generate(data.notebook, data.handle);
+      }
+    }
+    if (uri.scheme === Schemas.vscodeNotebookMetadata) {
+      return this.viewModel?.items.find((item) => item.type === "modifiedMetadata" || item.type === "unchangedMetadata");
+    }
+    return this.viewModel?.items.find((c) => {
+      switch (c.type) {
+        case "delete":
+          return c.original?.uri.toString() === uri.toString();
+        case "insert":
+          return c.modified?.uri.toString() === uri.toString();
+        case "modified":
+        case "unchanged":
+          return c.modified?.uri.toString() === uri.toString() || c.original?.uri.toString() === uri.toString();
+        default:
+          return;
+      }
+    });
+  }
+};
+NotebookMultiTextDiffEditor = NotebookMultiTextDiffEditor_1 = __decorate([
+  __param(1, IInstantiationService),
+  __param(2, IThemeService),
+  __param(3, IContextKeyService),
+  __param(4, INotebookEditorWorkerService),
+  __param(5, IConfigurationService),
+  __param(6, ITelemetryService),
+  __param(7, IStorageService),
+  __param(8, INotebookService)
+], NotebookMultiTextDiffEditor);
+let WorkbenchUIElementFactory = class WorkbenchUIElementFactory2 {
+  static {
+    __name(this, "WorkbenchUIElementFactory");
+  }
+  constructor(_instantiationService, notebookDocumentService, notebookService) {
+    this._instantiationService = _instantiationService;
+    this.notebookDocumentService = notebookDocumentService;
+    this.notebookService = notebookService;
+  }
+  createResourceLabel(element) {
+    const label = this._instantiationService.createInstance(ResourceLabel, element, {});
+    const that = this;
+    return {
+      setUri(uri, options = {}) {
+        if (!uri) {
+          label.element.clear();
+        } else {
+          let name = "";
+          let description = "";
+          let extraClasses = void 0;
+          if (uri.scheme === Schemas.vscodeNotebookCell) {
+            const notebookDocument = uri.scheme === Schemas.vscodeNotebookCell ? that.notebookDocumentService.getNotebook(uri) : void 0;
+            const cellIndex = Schemas.vscodeNotebookCell ? that.notebookDocumentService.getNotebook(uri)?.getCellIndex(uri) : void 0;
+            if (notebookDocument && cellIndex !== void 0) {
+              name = localize("notebookCellLabel", "Cell {0}", `${cellIndex + 1}`);
+              const nb = notebookDocument ? that.notebookService.getNotebookTextModel(notebookDocument?.uri) : void 0;
+              const cellLanguage = nb && cellIndex !== void 0 ? nb.cells[cellIndex].language : void 0;
+              extraClasses = cellLanguage ? getIconClassesForLanguageId(cellLanguage) : void 0;
+            }
+          } else if (uri.scheme === Schemas.vscodeNotebookCellMetadata || uri.scheme === Schemas.vscodeNotebookCellMetadataDiff) {
+            description = localize("notebookCellMetadataLabel", "Metadata");
+          } else if (uri.scheme === Schemas.vscodeNotebookCellOutput || uri.scheme === Schemas.vscodeNotebookCellOutputDiff) {
+            description = localize("notebookCellOutputLabel", "Output");
+          }
+          label.element.setResource({ name, description }, { strikethrough: options.strikethrough, forceLabel: true, hideIcon: !extraClasses, extraClasses });
+        }
+      },
+      dispose() {
+        label.dispose();
+      }
+    };
+  }
+};
+WorkbenchUIElementFactory = __decorate([
+  __param(0, IInstantiationService),
+  __param(1, INotebookDocumentService),
+  __param(2, INotebookService)
+], WorkbenchUIElementFactory);
+export {
+  NotebookMultiTextDiffEditor
+};
+//# sourceMappingURL=notebookMultiDiffEditor.js.map

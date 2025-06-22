@@ -1,1 +1,174 @@
-import*as n from"../../../../../base/browser/dom.js";import{$p9 as D}from"../../../../../base/browser/ui/button/button.js";import{$F8 as B}from"../../../../../base/browser/ui/iconLabel/iconLabels.js";import{Event as x}from"../../../../../base/common/event.js";import{$vd as $,$ud as d}from"../../../../../base/common/lifecycle.js";import{$dhb as y}from"../../../../../editor/browser/widget/markdownRenderer/browser/markdownRenderer.js";import{localize as R}from"../../../../../nls.js";import{$Vn as _}from"../../../../../platform/contextkey/common/contextkey.js";import{$mj as b}from"../../../../../platform/instantiation/common/instantiation.js";import{$3n as S}from"../../../../../platform/log/common/log.js";import{$4$ as j}from"../../../../../platform/opener/common/opener.js";import{$Mfb as L}from"../../../../../platform/theme/browser/defaultStyles.js";import{$iT as O}from"../../common/chatAgents.js";import{$NDb as u}from"./chatViewsWelcome.js";var g=function(a,e,s,t){var o=arguments.length,i=o<3?e:t===null?t=Object.getOwnPropertyDescriptor(e,s):t,l;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")i=Reflect.decorate(a,e,s,t);else for(var r=a.length-1;r>=0;r--)(l=a[r])&&(i=(o<3?l(i):o>3?l(e,s,i):l(e,s))||i);return o>3&&i&&Object.defineProperty(e,s,i),i},m=function(a,e){return function(s,t){e(s,t,a)}};const h=n.$;let w=class extends ${constructor(e,s,t,o,i){super(),this.g=e,this.h=s,this.j=t,this.m=o,this.n=i,this.b=!1,this.c=this.B(new d),this.f=this.B(new d),this.a=n.$M6(this.g,n.$(".chat-view-welcome")),this.B(x.runAndSubscribe(s.onDidChangeViewWelcomeState,()=>this.r())),this.B(u.onDidChange(()=>this.r(!0)))}r(e){const s=this.h.shouldShowWelcome();if(this.b===s&&!e)return;if(this.b=s,this.c.clear(),!s){this.g.classList.toggle("chat-view-welcome-visible",!1),this.f.clear();return}const t=u.get();if(t.length){this.s(t);const o=new Set(t.flatMap(i=>i.when.keys()));this.c.add(this.m.onDidChangeContext(i=>{i.affectsSome(o)&&this.s(t)}))}}s(e){this.f.clear(),n.$I5(this.a);const s=e.filter(o=>this.m.contextMatchesRules(o.when));let t;for(const o of s)if(typeof o.content=="function"){t=o;break}if(t=t??s.at(0),t){const o={icon:t.icon,title:t.title,message:t.content},i=this.f.add(this.n.createInstance(p,o,{firstLinkToButton:!0,location:this.j}));this.a.appendChild(i.element),this.g.classList.toggle("chat-view-welcome-visible",!0)}else this.g.classList.toggle("chat-view-welcome-visible",!1)}};w=g([m(3,_),m(4,b)],w);let p=class extends ${constructor(e,s,t,o,i,l){super(),this.content=e,this.a=t,this.b=o,this.c=i,this.element=n.$(".chat-welcome-view");try{const r=this.b.createInstance(y,{}),v=n.$M6(this.element,h(".chat-welcome-view-icon"));e.icon&&v.appendChild(B(e.icon));const M=n.$M6(this.element,h(".chat-welcome-view-title"));if(M.textContent=e.title,typeof e.message!="function"&&s?.isWidgetAgentWelcomeViewContent){const c=n.$M6(this.element,h(".chat-welcome-view-indicator-container"));n.$M6(c,h(".chat-welcome-view-subtitle",void 0,R(5648,null)))}const f=n.$M6(this.element,h(".chat-welcome-view-message"));if(typeof e.message=="function")n.$M6(f,e.message(this.B(new d)));else{const c=this.f(r,e.message,s);n.$M6(f,c.element)}if(typeof e.additionalMessage=="string"){const c=h("");c.textContent=e.additionalMessage,n.$M6(f,c)}else if(e.additionalMessage){const c=this.f(r,e.additionalMessage,s);n.$M6(f,c.element)}if(e.tips){const c=n.$M6(this.element,h(".chat-welcome-view-tips")),C=this.B(r.render(e.tips));c.appendChild(C.element)}}catch(r){this.c.error("Failed to render chat view welcome content",r)}}f(e,s,t){const o=this.B(e.render(s)),i=t?.firstLinkToButton?o.element.querySelector("a"):void 0;if(i){const l=i.getAttribute("data-href"),r=this.B(new D(i.parentElement,L));r.label=i.textContent??"",l&&this.B(r.onDidClick(()=>{this.a.open(l,{allowCommands:!0})})),i.replaceWith(r.element)}return o}};p=g([m(2,j),m(3,b),m(4,S),m(5,O)],p);export{w as $ODb,p as $PDb};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import * as dom from "../../../../../base/browser/dom.js";
+import { Button } from "../../../../../base/browser/ui/button/button.js";
+import { renderIcon } from "../../../../../base/browser/ui/iconLabel/iconLabels.js";
+import { Event } from "../../../../../base/common/event.js";
+import { Disposable, DisposableStore } from "../../../../../base/common/lifecycle.js";
+import { MarkdownRenderer } from "../../../../../editor/browser/widget/markdownRenderer/browser/markdownRenderer.js";
+import { localize } from "../../../../../nls.js";
+import { IContextKeyService } from "../../../../../platform/contextkey/common/contextkey.js";
+import { IInstantiationService } from "../../../../../platform/instantiation/common/instantiation.js";
+import { ILogService } from "../../../../../platform/log/common/log.js";
+import { IOpenerService } from "../../../../../platform/opener/common/opener.js";
+import { defaultButtonStyles } from "../../../../../platform/theme/browser/defaultStyles.js";
+import { IChatAgentService } from "../../common/chatAgents.js";
+import { chatViewsWelcomeRegistry } from "./chatViewsWelcome.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+const $ = dom.$;
+let ChatViewWelcomeController = class ChatViewWelcomeController2 extends Disposable {
+  static {
+    __name(this, "ChatViewWelcomeController");
+  }
+  constructor(container, delegate, location, contextKeyService, instantiationService) {
+    super();
+    this.container = container;
+    this.delegate = delegate;
+    this.location = location;
+    this.contextKeyService = contextKeyService;
+    this.instantiationService = instantiationService;
+    this.enabled = false;
+    this.enabledDisposables = this._register(new DisposableStore());
+    this.renderDisposables = this._register(new DisposableStore());
+    this.element = dom.append(this.container, dom.$(".chat-view-welcome"));
+    this._register(Event.runAndSubscribe(delegate.onDidChangeViewWelcomeState, () => this.update()));
+    this._register(chatViewsWelcomeRegistry.onDidChange(() => this.update(true)));
+  }
+  update(force) {
+    const enabled = this.delegate.shouldShowWelcome();
+    if (this.enabled === enabled && !force) {
+      return;
+    }
+    this.enabled = enabled;
+    this.enabledDisposables.clear();
+    if (!enabled) {
+      this.container.classList.toggle("chat-view-welcome-visible", false);
+      this.renderDisposables.clear();
+      return;
+    }
+    const descriptors = chatViewsWelcomeRegistry.get();
+    if (descriptors.length) {
+      this.render(descriptors);
+      const descriptorKeys = new Set(descriptors.flatMap((d) => d.when.keys()));
+      this.enabledDisposables.add(this.contextKeyService.onDidChangeContext((e) => {
+        if (e.affectsSome(descriptorKeys)) {
+          this.render(descriptors);
+        }
+      }));
+    }
+  }
+  render(descriptors) {
+    this.renderDisposables.clear();
+    dom.clearNode(this.element);
+    const matchingDescriptors = descriptors.filter((descriptor) => this.contextKeyService.contextMatchesRules(descriptor.when));
+    let enabledDescriptor;
+    for (const descriptor of matchingDescriptors) {
+      if (typeof descriptor.content === "function") {
+        enabledDescriptor = descriptor;
+        break;
+      }
+    }
+    enabledDescriptor = enabledDescriptor ?? matchingDescriptors.at(0);
+    if (enabledDescriptor) {
+      const content = {
+        icon: enabledDescriptor.icon,
+        title: enabledDescriptor.title,
+        message: enabledDescriptor.content
+      };
+      const welcomeView = this.renderDisposables.add(this.instantiationService.createInstance(ChatViewWelcomePart, content, { firstLinkToButton: true, location: this.location }));
+      this.element.appendChild(welcomeView.element);
+      this.container.classList.toggle("chat-view-welcome-visible", true);
+    } else {
+      this.container.classList.toggle("chat-view-welcome-visible", false);
+    }
+  }
+};
+ChatViewWelcomeController = __decorate([
+  __param(3, IContextKeyService),
+  __param(4, IInstantiationService)
+], ChatViewWelcomeController);
+let ChatViewWelcomePart = class ChatViewWelcomePart2 extends Disposable {
+  static {
+    __name(this, "ChatViewWelcomePart");
+  }
+  constructor(content, options, openerService, instantiationService, logService, chatAgentService) {
+    super();
+    this.content = content;
+    this.openerService = openerService;
+    this.instantiationService = instantiationService;
+    this.logService = logService;
+    this.element = dom.$(".chat-welcome-view");
+    try {
+      const renderer = this.instantiationService.createInstance(MarkdownRenderer, {});
+      const icon = dom.append(this.element, $(".chat-welcome-view-icon"));
+      if (content.icon) {
+        icon.appendChild(renderIcon(content.icon));
+      }
+      const title = dom.append(this.element, $(".chat-welcome-view-title"));
+      title.textContent = content.title;
+      if (typeof content.message !== "function" && options?.isWidgetAgentWelcomeViewContent) {
+        const container = dom.append(this.element, $(".chat-welcome-view-indicator-container"));
+        dom.append(container, $(".chat-welcome-view-subtitle", void 0, localize("agentModeSubtitle", "Agent Mode")));
+      }
+      const message = dom.append(this.element, $(".chat-welcome-view-message"));
+      if (typeof content.message === "function") {
+        dom.append(message, content.message(this._register(new DisposableStore())));
+      } else {
+        const messageResult = this.renderMarkdownMessageContent(renderer, content.message, options);
+        dom.append(message, messageResult.element);
+      }
+      if (typeof content.additionalMessage === "string") {
+        const element = $("");
+        element.textContent = content.additionalMessage;
+        dom.append(message, element);
+      } else if (content.additionalMessage) {
+        const additionalMessageResult = this.renderMarkdownMessageContent(renderer, content.additionalMessage, options);
+        dom.append(message, additionalMessageResult.element);
+      }
+      if (content.tips) {
+        const tips = dom.append(this.element, $(".chat-welcome-view-tips"));
+        const tipsResult = this._register(renderer.render(content.tips));
+        tips.appendChild(tipsResult.element);
+      }
+    } catch (err) {
+      this.logService.error("Failed to render chat view welcome content", err);
+    }
+  }
+  renderMarkdownMessageContent(renderer, content, options) {
+    const messageResult = this._register(renderer.render(content));
+    const firstLink = options?.firstLinkToButton ? messageResult.element.querySelector("a") : void 0;
+    if (firstLink) {
+      const target = firstLink.getAttribute("data-href");
+      const button = this._register(new Button(firstLink.parentElement, defaultButtonStyles));
+      button.label = firstLink.textContent ?? "";
+      if (target) {
+        this._register(button.onDidClick(() => {
+          this.openerService.open(target, { allowCommands: true });
+        }));
+      }
+      firstLink.replaceWith(button.element);
+    }
+    return messageResult;
+  }
+};
+ChatViewWelcomePart = __decorate([
+  __param(2, IOpenerService),
+  __param(3, IInstantiationService),
+  __param(4, ILogService),
+  __param(5, IChatAgentService)
+], ChatViewWelcomePart);
+export {
+  ChatViewWelcomeController,
+  ChatViewWelcomePart
+};
+//# sourceMappingURL=chatViewWelcomeController.js.map

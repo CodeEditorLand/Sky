@@ -1,1 +1,6 @@
-import{$nj as o}from"../../instantiation/common/instantiation.js";const e=o("downloadService");export{e as $82};
+import { createDecorator } from "../../instantiation/common/instantiation.js";
+const IDownloadService = createDecorator("downloadService");
+export {
+  IDownloadService
+};
+//# sourceMappingURL=download.js.map

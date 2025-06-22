@@ -1,1 +1,33 @@
-import{BugIndicatingError as g}from"./commonFacade/deps.js";function t(e){return{createChangeSummary:e=>({changes:[]}),handleChange(n,r){for(const a in e)n.didChange(e[a])&&r.changes.push({key:a,change:n.change});return!0},beforeUpdate(n,r){for(const a in e){if("changes"===a)throw new g('property name "changes" is reserved for change tracking');r[a]=e[a].read(n)}}}}export{t as $Td};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { BugIndicatingError } from "./commonFacade/deps.js";
+function recordChanges(obs) {
+  return {
+    createChangeSummary: /* @__PURE__ */ __name((_previousChangeSummary) => {
+      return {
+        changes: []
+      };
+    }, "createChangeSummary"),
+    handleChange(ctx, changeSummary) {
+      for (const key in obs) {
+        if (ctx.didChange(obs[key])) {
+          changeSummary.changes.push({ key, change: ctx.change });
+        }
+      }
+      return true;
+    },
+    beforeUpdate(reader, changeSummary) {
+      for (const key in obs) {
+        if (key === "changes") {
+          throw new BugIndicatingError('property name "changes" is reserved for change tracking');
+        }
+        changeSummary[key] = obs[key].read(reader);
+      }
+    }
+  };
+}
+__name(recordChanges, "recordChanges");
+export {
+  recordChanges
+};
+//# sourceMappingURL=changeTracker.js.map

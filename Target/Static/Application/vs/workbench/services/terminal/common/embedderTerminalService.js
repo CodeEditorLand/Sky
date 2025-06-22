@@ -1,1 +1,99 @@
-import{$WB as n}from"../../../../platform/instantiation/common/extensions.js";import{$nj as o}from"../../../../platform/instantiation/common/instantiation.js";import{$df as s,Event as a}from"../../../../base/common/event.js";import{$vd as d}from"../../../../base/common/lifecycle.js";const h=o("embedderTerminalService");class c{constructor(){this.a=new s,this.onDidCreateTerminal=a.buffer(this.a.event)}createTerminal(e){const t={name:e.name,isFeatureTerminal:!0,customPtyImplementation:(t,s,i)=>new p(t,e.pty)};this.a.fire(t)}}class p extends d{constructor(e,t){super(),this.id=e,this.shouldPersist=!1,this.b=this.B(new s),this.onProcessReady=this.b.event,this.c=this.B(new s),this.onDidChangeProperty=this.c.event,this.f=this.B(new s),this.onProcessExit=this.f.event,this.a=t,this.onProcessData=this.a.onDidWrite,this.a.onDidClose&&this.B(this.a.onDidClose((e=>this.f.fire(e||void 0)))),this.a.onDidChangeName&&this.B(this.a.onDidChangeName((e=>this.c.fire({type:"title",value:e}))))}async start(){this.b.fire({pid:-1,cwd:"",windowsPty:void 0}),this.a.open()}shutdown(){this.a.close()}input(){}sendSignal(){}async processBinary(){}resize(){}clearBuffer(){}acknowledgeDataEvent(){}async setUnicodeVersion(){}async getInitialCwd(){return""}async getCwd(){return""}refreshProperty(e){throw new Error(`refreshProperty is not suppported in EmbedderTerminalProcess. property: ${e}`)}updateProperty(e,t){throw new Error(`updateProperty is not suppported in EmbedderTerminalProcess. property: ${e}, value: ${t}`)}}n(h,c,1);export{h as $0$};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { registerSingleton } from "../../../../platform/instantiation/common/extensions.js";
+import { createDecorator } from "../../../../platform/instantiation/common/instantiation.js";
+import { Emitter, Event } from "../../../../base/common/event.js";
+import { Disposable } from "../../../../base/common/lifecycle.js";
+const IEmbedderTerminalService = createDecorator("embedderTerminalService");
+class EmbedderTerminalService {
+  static {
+    __name(this, "EmbedderTerminalService");
+  }
+  constructor() {
+    this._onDidCreateTerminal = new Emitter();
+    this.onDidCreateTerminal = Event.buffer(this._onDidCreateTerminal.event);
+  }
+  createTerminal(options) {
+    const slc = {
+      name: options.name,
+      isFeatureTerminal: true,
+      customPtyImplementation(terminalId, cols, rows) {
+        return new EmbedderTerminalProcess(terminalId, options.pty);
+      }
+    };
+    this._onDidCreateTerminal.fire(slc);
+  }
+}
+class EmbedderTerminalProcess extends Disposable {
+  static {
+    __name(this, "EmbedderTerminalProcess");
+  }
+  constructor(id, pty) {
+    super();
+    this.id = id;
+    this.shouldPersist = false;
+    this._onProcessReady = this._register(new Emitter());
+    this.onProcessReady = this._onProcessReady.event;
+    this._onDidChangeProperty = this._register(new Emitter());
+    this.onDidChangeProperty = this._onDidChangeProperty.event;
+    this._onProcessExit = this._register(new Emitter());
+    this.onProcessExit = this._onProcessExit.event;
+    this._pty = pty;
+    this.onProcessData = this._pty.onDidWrite;
+    if (this._pty.onDidClose) {
+      this._register(this._pty.onDidClose((e) => this._onProcessExit.fire(e || void 0)));
+    }
+    if (this._pty.onDidChangeName) {
+      this._register(this._pty.onDidChangeName((e) => this._onDidChangeProperty.fire({
+        type: "title",
+        value: e
+      })));
+    }
+  }
+  async start() {
+    this._onProcessReady.fire({ pid: -1, cwd: "", windowsPty: void 0 });
+    this._pty.open();
+    return void 0;
+  }
+  shutdown() {
+    this._pty.close();
+  }
+  // TODO: A lot of these aren't useful for some implementations of ITerminalChildProcess, should
+  // they be optional? Should there be a base class for "external" consumers to implement?
+  input() {
+  }
+  sendSignal() {
+  }
+  async processBinary() {
+  }
+  resize() {
+  }
+  clearBuffer() {
+  }
+  acknowledgeDataEvent() {
+  }
+  async setUnicodeVersion() {
+  }
+  async getInitialCwd() {
+    return "";
+  }
+  async getCwd() {
+    return "";
+  }
+  refreshProperty(property) {
+    throw new Error(`refreshProperty is not suppported in EmbedderTerminalProcess. property: ${property}`);
+  }
+  updateProperty(property, value) {
+    throw new Error(`updateProperty is not suppported in EmbedderTerminalProcess. property: ${property}, value: ${value}`);
+  }
+}
+registerSingleton(
+  IEmbedderTerminalService,
+  EmbedderTerminalService,
+  1
+  /* InstantiationType.Delayed */
+);
+export {
+  IEmbedderTerminalService
+};
+//# sourceMappingURL=embedderTerminalService.js.map

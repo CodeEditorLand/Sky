@@ -1,1 +1,69 @@
-import{$df as p}from"../../../../base/common/event.js";import{$nj as u}from"../../../../platform/instantiation/common/instantiation.js";import{$WB as a}from"../../../../platform/instantiation/common/extensions.js";import{$vd as l,$td as m}from"../../../../base/common/lifecycle.js";import{$oI as $}from"../../editor/common/editorService.js";var d=function(o,t,e,r){var n=arguments.length,i=n<3?t:r===null?r=Object.getOwnPropertyDescriptor(t,e):r,f;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")i=Reflect.decorate(o,t,e,r);else for(var s=o.length-1;s>=0;s--)(f=o[s])&&(i=(n<3?f(i):n>3?f(t,e,i):f(t,e))||i);return n>3&&i&&Object.defineProperty(t,e,i),i},h=function(o,t){return function(e,r){t(e,r,o)}};const _=u("workingCopyEditorService");let c=class extends l{constructor(t){super(),this.c=t,this.a=this.B(new p),this.onDidRegisterHandler=this.a.event,this.b=new Set}registerHandler(t){return this.b.add(t),this.a.fire(t),m(()=>this.b.delete(t))}findEditor(t){for(const e of this.c.getEditors(0))if(this.f(t,e.editor))return e}f(t,e){for(const r of this.b)if(r.isOpen(t,e))return!0;return!1}};c=d([h(0,$)],c);a(_,c,1);export{c as $0I,_ as $9I};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { Emitter } from "../../../../base/common/event.js";
+import { createDecorator } from "../../../../platform/instantiation/common/instantiation.js";
+import { registerSingleton } from "../../../../platform/instantiation/common/extensions.js";
+import { Disposable, toDisposable } from "../../../../base/common/lifecycle.js";
+import { IEditorService } from "../../editor/common/editorService.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+const IWorkingCopyEditorService = createDecorator("workingCopyEditorService");
+let WorkingCopyEditorService = class WorkingCopyEditorService2 extends Disposable {
+  static {
+    __name(this, "WorkingCopyEditorService");
+  }
+  constructor(editorService) {
+    super();
+    this.editorService = editorService;
+    this._onDidRegisterHandler = this._register(new Emitter());
+    this.onDidRegisterHandler = this._onDidRegisterHandler.event;
+    this.handlers = /* @__PURE__ */ new Set();
+  }
+  registerHandler(handler) {
+    this.handlers.add(handler);
+    this._onDidRegisterHandler.fire(handler);
+    return toDisposable(() => this.handlers.delete(handler));
+  }
+  findEditor(workingCopy) {
+    for (const editorIdentifier of this.editorService.getEditors(
+      0
+      /* EditorsOrder.MOST_RECENTLY_ACTIVE */
+    )) {
+      if (this.isOpen(workingCopy, editorIdentifier.editor)) {
+        return editorIdentifier;
+      }
+    }
+    return void 0;
+  }
+  isOpen(workingCopy, editor) {
+    for (const handler of this.handlers) {
+      if (handler.isOpen(workingCopy, editor)) {
+        return true;
+      }
+    }
+    return false;
+  }
+};
+WorkingCopyEditorService = __decorate([
+  __param(0, IEditorService)
+], WorkingCopyEditorService);
+registerSingleton(
+  IWorkingCopyEditorService,
+  WorkingCopyEditorService,
+  1
+  /* InstantiationType.Delayed */
+);
+export {
+  IWorkingCopyEditorService,
+  WorkingCopyEditorService
+};
+//# sourceMappingURL=workingCopyEditorService.js.map

@@ -1,1 +1,59 @@
-import{$2M as i}from"../languageFeatureRegistry.js";import{$sT as e}from"./languageFeatures.js";import{$WB as n}from"../../../platform/instantiation/common/extensions.js";class s{constructor(){this.referenceProvider=new i(this.b.bind(this)),this.renameProvider=new i(this.b.bind(this)),this.newSymbolNamesProvider=new i(this.b.bind(this)),this.codeActionProvider=new i(this.b.bind(this)),this.definitionProvider=new i(this.b.bind(this)),this.typeDefinitionProvider=new i(this.b.bind(this)),this.declarationProvider=new i(this.b.bind(this)),this.implementationProvider=new i(this.b.bind(this)),this.documentSymbolProvider=new i(this.b.bind(this)),this.inlayHintsProvider=new i(this.b.bind(this)),this.colorProvider=new i(this.b.bind(this)),this.codeLensProvider=new i(this.b.bind(this)),this.documentFormattingEditProvider=new i(this.b.bind(this)),this.documentRangeFormattingEditProvider=new i(this.b.bind(this)),this.onTypeFormattingEditProvider=new i(this.b.bind(this)),this.signatureHelpProvider=new i(this.b.bind(this)),this.hoverProvider=new i(this.b.bind(this)),this.documentHighlightProvider=new i(this.b.bind(this)),this.multiDocumentHighlightProvider=new i(this.b.bind(this)),this.selectionRangeProvider=new i(this.b.bind(this)),this.foldingRangeProvider=new i(this.b.bind(this)),this.linkProvider=new i(this.b.bind(this)),this.inlineCompletionsProvider=new i(this.b.bind(this)),this.completionProvider=new i(this.b.bind(this)),this.linkedEditingRangeProvider=new i(this.b.bind(this)),this.inlineValuesProvider=new i(this.b.bind(this)),this.evaluatableExpressionProvider=new i(this.b.bind(this)),this.documentRangeSemanticTokensProvider=new i(this.b.bind(this)),this.documentSemanticTokensProvider=new i(this.b.bind(this)),this.documentDropEditProvider=new i(this.b.bind(this)),this.documentPasteEditProvider=new i(this.b.bind(this))}setNotebookTypeResolver(i){this.a=i}b(i){return this.a?.(i)}}n(e,s,1);export{s as $r7b};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { LanguageFeatureRegistry } from "../languageFeatureRegistry.js";
+import { ILanguageFeaturesService } from "./languageFeatures.js";
+import { registerSingleton } from "../../../platform/instantiation/common/extensions.js";
+class LanguageFeaturesService {
+  static {
+    __name(this, "LanguageFeaturesService");
+  }
+  constructor() {
+    this.referenceProvider = new LanguageFeatureRegistry(this._score.bind(this));
+    this.renameProvider = new LanguageFeatureRegistry(this._score.bind(this));
+    this.newSymbolNamesProvider = new LanguageFeatureRegistry(this._score.bind(this));
+    this.codeActionProvider = new LanguageFeatureRegistry(this._score.bind(this));
+    this.definitionProvider = new LanguageFeatureRegistry(this._score.bind(this));
+    this.typeDefinitionProvider = new LanguageFeatureRegistry(this._score.bind(this));
+    this.declarationProvider = new LanguageFeatureRegistry(this._score.bind(this));
+    this.implementationProvider = new LanguageFeatureRegistry(this._score.bind(this));
+    this.documentSymbolProvider = new LanguageFeatureRegistry(this._score.bind(this));
+    this.inlayHintsProvider = new LanguageFeatureRegistry(this._score.bind(this));
+    this.colorProvider = new LanguageFeatureRegistry(this._score.bind(this));
+    this.codeLensProvider = new LanguageFeatureRegistry(this._score.bind(this));
+    this.documentFormattingEditProvider = new LanguageFeatureRegistry(this._score.bind(this));
+    this.documentRangeFormattingEditProvider = new LanguageFeatureRegistry(this._score.bind(this));
+    this.onTypeFormattingEditProvider = new LanguageFeatureRegistry(this._score.bind(this));
+    this.signatureHelpProvider = new LanguageFeatureRegistry(this._score.bind(this));
+    this.hoverProvider = new LanguageFeatureRegistry(this._score.bind(this));
+    this.documentHighlightProvider = new LanguageFeatureRegistry(this._score.bind(this));
+    this.multiDocumentHighlightProvider = new LanguageFeatureRegistry(this._score.bind(this));
+    this.selectionRangeProvider = new LanguageFeatureRegistry(this._score.bind(this));
+    this.foldingRangeProvider = new LanguageFeatureRegistry(this._score.bind(this));
+    this.linkProvider = new LanguageFeatureRegistry(this._score.bind(this));
+    this.inlineCompletionsProvider = new LanguageFeatureRegistry(this._score.bind(this));
+    this.completionProvider = new LanguageFeatureRegistry(this._score.bind(this));
+    this.linkedEditingRangeProvider = new LanguageFeatureRegistry(this._score.bind(this));
+    this.inlineValuesProvider = new LanguageFeatureRegistry(this._score.bind(this));
+    this.evaluatableExpressionProvider = new LanguageFeatureRegistry(this._score.bind(this));
+    this.documentRangeSemanticTokensProvider = new LanguageFeatureRegistry(this._score.bind(this));
+    this.documentSemanticTokensProvider = new LanguageFeatureRegistry(this._score.bind(this));
+    this.documentDropEditProvider = new LanguageFeatureRegistry(this._score.bind(this));
+    this.documentPasteEditProvider = new LanguageFeatureRegistry(this._score.bind(this));
+  }
+  setNotebookTypeResolver(resolver) {
+    this._notebookTypeResolver = resolver;
+  }
+  _score(uri) {
+    return this._notebookTypeResolver?.(uri);
+  }
+}
+registerSingleton(
+  ILanguageFeaturesService,
+  LanguageFeaturesService,
+  1
+  /* InstantiationType.Delayed */
+);
+export {
+  LanguageFeaturesService
+};
+//# sourceMappingURL=languageFeaturesService.js.map

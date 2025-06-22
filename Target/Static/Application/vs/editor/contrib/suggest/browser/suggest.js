@@ -1,1 +1,360 @@
-import{CancellationToken as M}from"../../../../base/common/cancellation.js";import{$qb as F,$pb as P,$lb as S}from"../../../../base/common/errors.js";import{FuzzyScore as A}from"../../../../base/common/filters.js";import{$ud as D,$pd as z}from"../../../../base/common/lifecycle.js";import{$0e as I}from"../../../../base/common/stopwatch.js";import{$0c as L}from"../../../../base/common/types.js";import{URI as O}from"../../../../base/common/uri.js";import{$bC as h}from"../../../common/core/position.js";import{$cC as C}from"../../../common/core/range.js";import{$cF as W}from"../../../common/services/resolverService.js";import{$whb as q}from"../../snippet/browser/snippetParser.js";import{localize as d}from"../../../../nls.js";import{$dI as H}from"../../../../platform/actions/common/actions.js";import{$Zn as U}from"../../../../platform/commands/common/commands.js";import{$Un as f}from"../../../../platform/contextkey/common/contextkey.js";import{$sT as _}from"../../../common/services/languageFeatures.js";import{$zjb as B}from"../../../../platform/history/browser/contextScopedHistoryWidget.js";const pe={Visible:B,HasFocusedSuggestion:new f("suggestWidgetHasFocusedSuggestion",!1,d(1577,null)),DetailsVisible:new f("suggestWidgetDetailsVisible",!1,d(1578,null)),MultipleSuggestions:new f("suggestWidgetMultipleSuggestions",!1,d(1579,null)),MakesTextEdit:new f("suggestionMakesTextEdit",!0,d(1580,null)),AcceptSuggestionsOnEnter:new f("acceptSuggestionOnEnter",!0,d(1581,null)),HasInsertAndReplaceRange:new f("suggestionHasInsertAndReplaceRange",!1,d(1582,null)),InsertMode:new f("suggestionInsertMode",void 0,{type:"string",description:d(1583,null)}),CanResolve:new f("suggestionCanResolve",!1,d(1584,null))},he=new H("suggestWidgetStatusBar");class G{constructor(t,e,r,n){this.position=t,this.completion=e,this.container=r,this.provider=n,this.isInvalid=!1,this.score=A.Default,this.distance=0,this.textLabel=typeof e.label=="string"?e.label:e.label?.label,this.labelLow=this.textLabel.toLowerCase(),this.isInvalid=!this.textLabel,this.sortTextLow=e.sortText&&e.sortText.toLowerCase(),this.filterTextLow=e.filterText&&e.filterText.toLowerCase(),this.extensionId=e.extensionId,C.isIRange(e.range)?(this.editStart=new h(e.range.startLineNumber,e.range.startColumn),this.editInsertEnd=new h(e.range.endLineNumber,e.range.endColumn),this.editReplaceEnd=new h(e.range.endLineNumber,e.range.endColumn),this.isInvalid=this.isInvalid||C.spansMultipleLines(e.range)||e.range.startLineNumber!==t.lineNumber):(this.editStart=new h(e.range.insert.startLineNumber,e.range.insert.startColumn),this.editInsertEnd=new h(e.range.insert.endLineNumber,e.range.insert.endColumn),this.editReplaceEnd=new h(e.range.replace.endLineNumber,e.range.replace.endColumn),this.isInvalid=this.isInvalid||C.spansMultipleLines(e.range.insert)||C.spansMultipleLines(e.range.replace)||e.range.insert.startLineNumber!==t.lineNumber||e.range.replace.startLineNumber!==t.lineNumber||e.range.insert.startColumn!==e.range.replace.startColumn),typeof n.resolveCompletionItem!="function"&&(this.d=Promise.resolve(),this.c=0)}get isResolved(){return this.c!==void 0}get resolveDuration(){return this.c!==void 0?this.c:-1}async resolve(t){if(!this.d){const e=t.onCancellationRequested(()=>{this.d=void 0,this.c=void 0}),r=new I(!0);this.d=Promise.resolve(this.provider.resolveCompletionItem(this.completion,t)).then(n=>{Object.assign(this.completion,n),this.c=r.elapsed()},n=>{P(n)&&(this.d=void 0,this.c=void 0)}).finally(()=>{e.dispose()})}return this.d}}var k;(function(s){s[s.Top=0]="Top",s[s.Inline=1]="Inline",s[s.Bottom=2]="Bottom"})(k||(k={}));class N{static{this.default=new N}constructor(t=2,e=new Set,r=new Set,n=new Map,a=!0){this.snippetSortOrder=t,this.kindFilter=e,this.providerFilter=r,this.providerItemsToReuse=n,this.showDeprecated=a}}let c;function we(){return c}function be(s){const t=c;return c=s,t}class K{constructor(t,e,r,n){this.items=t,this.needsClipboard=e,this.durations=r,this.disposable=n}}async function V(s,t,e,r=N.default,n={triggerKind:0},a=M.None){const R=new I;e=e.clone();const g=t.getWordAtPosition(e),m=g?new C(e.lineNumber,g.startColumn,e.lineNumber,g.endColumn):C.fromPositions(e),v={replace:m,insert:m.setEndPosition(e.lineNumber,e.column)},w=[],b=new D,x=[];let $=!1;const j=(p,o,u)=>{let l=!1;if(!o)return l;for(const i of o.suggestions)if(!r.kindFilter.has(i.kind)){if(!r.showDeprecated&&i?.tags?.includes(1))continue;i.range||(i.range=v),i.sortText||(i.sortText=typeof i.label=="string"?i.label:i.label.label),!$&&i.insertTextRules&&i.insertTextRules&4&&($=q.guessNeedsClipboard(i.insertText)),w.push(new G(e,i,o,p)),l=!0}return z(o)&&b.add(o),x.push({providerName:p._debugDisplayName??"unknown_provider",elapsedProvider:o.duration??-1,elapsedOverall:u.elapsed()}),l},E=(async()=>{if(!c||r.kindFilter.has(28))return;const p=r.providerItemsToReuse.get(c);if(p){p.forEach(l=>w.push(l));return}if(r.providerFilter.size>0&&!r.providerFilter.has(c))return;const o=new I,u=await c.provideCompletionItems(t,e,n,a);j(c,u,o)})();for(const p of s.orderedGroups(t)){let o=!1;if(await Promise.all(p.map(async u=>{if(r.providerItemsToReuse.has(u)){const l=r.providerItemsToReuse.get(u);l.forEach(i=>w.push(i)),o=o||l.length>0;return}if(!(r.providerFilter.size>0&&!r.providerFilter.has(u)))try{const l=new I,i=await u.provideCompletionItems(t,e,n,a);o=j(u,i,l)||o}catch(l){S(l)}})),o||a.isCancellationRequested)break}return await E,a.isCancellationRequested?(b.dispose(),Promise.reject(new F)):new K(w.sort(Q(r.snippetSortOrder)),$,{entries:x,elapsed:R.elapsed()},b)}function y(s,t){if(s.sortTextLow&&t.sortTextLow){if(s.sortTextLow<t.sortTextLow)return-1;if(s.sortTextLow>t.sortTextLow)return 1}return s.textLabel<t.textLabel?-1:s.textLabel>t.textLabel?1:s.completion.kind-t.completion.kind}function J(s,t){if(s.completion.kind!==t.completion.kind){if(s.completion.kind===28)return-1;if(t.completion.kind===28)return 1}return y(s,t)}function Z(s,t){if(s.completion.kind!==t.completion.kind){if(s.completion.kind===28)return 1;if(t.completion.kind===28)return-1}return y(s,t)}const T=new Map;T.set(0,J);T.set(2,Z);T.set(1,y);function Q(s){return T.get(s)}U.registerCommand("_executeCompletionItemProvider",async(s,...t)=>{const[e,r,n,a]=t;L(O.isUri(e)),L(h.isIPosition(r)),L(typeof n=="string"||!n),L(typeof a=="number"||!a);const{completionProvider:R}=s.get(_),g=await s.get(W).createModelReference(e);try{const m={incomplete:!1,suggestions:[]},v=[],w=g.object.textEditorModel.validatePosition(r),b=await V(R,g.object.textEditorModel,w,void 0,{triggerCharacter:n??void 0,triggerKind:n?1:0});for(const x of b.items)v.length<(a??0)&&v.push(x.resolve(M.None)),m.incomplete=m.incomplete||x.container.incomplete,m.suggestions.push(x.completion);try{return await Promise.all(v),m}finally{setTimeout(()=>b.disposable.dispose(),100)}}finally{g.dispose()}});function xe(s,t){s.getContribution("editor.contrib.suggestController")?.triggerSuggest(new Set().add(t),void 0,!0)}class Ce{static isAllOff(t){return t.other==="off"&&t.comments==="off"&&t.strings==="off"}static isAllOn(t){return t.other==="on"&&t.comments==="on"&&t.strings==="on"}static valueFor(t,e){switch(e){case 1:return t.comments;case 2:return t.strings;default:return t.other}}}export{pe as $Ejb,he as $Fjb,G as $Gjb,N as $Hjb,we as $Ijb,be as $Jjb,K as $Kjb,V as $Ljb,Q as $Mjb,xe as $Njb,Ce as $Ojb,k as SnippetSortOrder};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { CancellationToken } from "../../../../base/common/cancellation.js";
+import { CancellationError, isCancellationError, onUnexpectedExternalError } from "../../../../base/common/errors.js";
+import { FuzzyScore } from "../../../../base/common/filters.js";
+import { DisposableStore, isDisposable } from "../../../../base/common/lifecycle.js";
+import { StopWatch } from "../../../../base/common/stopwatch.js";
+import { assertType } from "../../../../base/common/types.js";
+import { URI } from "../../../../base/common/uri.js";
+import { Position } from "../../../common/core/position.js";
+import { Range } from "../../../common/core/range.js";
+import { ITextModelService } from "../../../common/services/resolverService.js";
+import { SnippetParser } from "../../snippet/browser/snippetParser.js";
+import { localize } from "../../../../nls.js";
+import { MenuId } from "../../../../platform/actions/common/actions.js";
+import { CommandsRegistry } from "../../../../platform/commands/common/commands.js";
+import { RawContextKey } from "../../../../platform/contextkey/common/contextkey.js";
+import { ILanguageFeaturesService } from "../../../common/services/languageFeatures.js";
+import { historyNavigationVisible } from "../../../../platform/history/browser/contextScopedHistoryWidget.js";
+const Context = {
+  Visible: historyNavigationVisible,
+  HasFocusedSuggestion: new RawContextKey("suggestWidgetHasFocusedSuggestion", false, localize("suggestWidgetHasSelection", "Whether any suggestion is focused")),
+  DetailsVisible: new RawContextKey("suggestWidgetDetailsVisible", false, localize("suggestWidgetDetailsVisible", "Whether suggestion details are visible")),
+  MultipleSuggestions: new RawContextKey("suggestWidgetMultipleSuggestions", false, localize("suggestWidgetMultipleSuggestions", "Whether there are multiple suggestions to pick from")),
+  MakesTextEdit: new RawContextKey("suggestionMakesTextEdit", true, localize("suggestionMakesTextEdit", "Whether inserting the current suggestion yields in a change or has everything already been typed")),
+  AcceptSuggestionsOnEnter: new RawContextKey("acceptSuggestionOnEnter", true, localize("acceptSuggestionOnEnter", "Whether suggestions are inserted when pressing Enter")),
+  HasInsertAndReplaceRange: new RawContextKey("suggestionHasInsertAndReplaceRange", false, localize("suggestionHasInsertAndReplaceRange", "Whether the current suggestion has insert and replace behaviour")),
+  InsertMode: new RawContextKey("suggestionInsertMode", void 0, { type: "string", description: localize("suggestionInsertMode", "Whether the default behaviour is to insert or replace") }),
+  CanResolve: new RawContextKey("suggestionCanResolve", false, localize("suggestionCanResolve", "Whether the current suggestion supports to resolve further details"))
+};
+const suggestWidgetStatusbarMenu = new MenuId("suggestWidgetStatusBar");
+class CompletionItem {
+  static {
+    __name(this, "CompletionItem");
+  }
+  constructor(position, completion, container, provider) {
+    this.position = position;
+    this.completion = completion;
+    this.container = container;
+    this.provider = provider;
+    this.isInvalid = false;
+    this.score = FuzzyScore.Default;
+    this.distance = 0;
+    this.textLabel = typeof completion.label === "string" ? completion.label : completion.label?.label;
+    this.labelLow = this.textLabel.toLowerCase();
+    this.isInvalid = !this.textLabel;
+    this.sortTextLow = completion.sortText && completion.sortText.toLowerCase();
+    this.filterTextLow = completion.filterText && completion.filterText.toLowerCase();
+    this.extensionId = completion.extensionId;
+    if (Range.isIRange(completion.range)) {
+      this.editStart = new Position(completion.range.startLineNumber, completion.range.startColumn);
+      this.editInsertEnd = new Position(completion.range.endLineNumber, completion.range.endColumn);
+      this.editReplaceEnd = new Position(completion.range.endLineNumber, completion.range.endColumn);
+      this.isInvalid = this.isInvalid || Range.spansMultipleLines(completion.range) || completion.range.startLineNumber !== position.lineNumber;
+    } else {
+      this.editStart = new Position(completion.range.insert.startLineNumber, completion.range.insert.startColumn);
+      this.editInsertEnd = new Position(completion.range.insert.endLineNumber, completion.range.insert.endColumn);
+      this.editReplaceEnd = new Position(completion.range.replace.endLineNumber, completion.range.replace.endColumn);
+      this.isInvalid = this.isInvalid || Range.spansMultipleLines(completion.range.insert) || Range.spansMultipleLines(completion.range.replace) || completion.range.insert.startLineNumber !== position.lineNumber || completion.range.replace.startLineNumber !== position.lineNumber || completion.range.insert.startColumn !== completion.range.replace.startColumn;
+    }
+    if (typeof provider.resolveCompletionItem !== "function") {
+      this._resolveCache = Promise.resolve();
+      this._resolveDuration = 0;
+    }
+  }
+  // ---- resolving
+  get isResolved() {
+    return this._resolveDuration !== void 0;
+  }
+  get resolveDuration() {
+    return this._resolveDuration !== void 0 ? this._resolveDuration : -1;
+  }
+  async resolve(token) {
+    if (!this._resolveCache) {
+      const sub = token.onCancellationRequested(() => {
+        this._resolveCache = void 0;
+        this._resolveDuration = void 0;
+      });
+      const sw = new StopWatch(true);
+      this._resolveCache = Promise.resolve(this.provider.resolveCompletionItem(this.completion, token)).then((value) => {
+        Object.assign(this.completion, value);
+        this._resolveDuration = sw.elapsed();
+      }, (err) => {
+        if (isCancellationError(err)) {
+          this._resolveCache = void 0;
+          this._resolveDuration = void 0;
+        }
+      }).finally(() => {
+        sub.dispose();
+      });
+    }
+    return this._resolveCache;
+  }
+}
+var SnippetSortOrder;
+(function(SnippetSortOrder2) {
+  SnippetSortOrder2[SnippetSortOrder2["Top"] = 0] = "Top";
+  SnippetSortOrder2[SnippetSortOrder2["Inline"] = 1] = "Inline";
+  SnippetSortOrder2[SnippetSortOrder2["Bottom"] = 2] = "Bottom";
+})(SnippetSortOrder || (SnippetSortOrder = {}));
+class CompletionOptions {
+  static {
+    __name(this, "CompletionOptions");
+  }
+  static {
+    this.default = new CompletionOptions();
+  }
+  constructor(snippetSortOrder = 2, kindFilter = /* @__PURE__ */ new Set(), providerFilter = /* @__PURE__ */ new Set(), providerItemsToReuse = /* @__PURE__ */ new Map(), showDeprecated = true) {
+    this.snippetSortOrder = snippetSortOrder;
+    this.kindFilter = kindFilter;
+    this.providerFilter = providerFilter;
+    this.providerItemsToReuse = providerItemsToReuse;
+    this.showDeprecated = showDeprecated;
+  }
+}
+let _snippetSuggestSupport;
+function getSnippetSuggestSupport() {
+  return _snippetSuggestSupport;
+}
+__name(getSnippetSuggestSupport, "getSnippetSuggestSupport");
+function setSnippetSuggestSupport(support) {
+  const old = _snippetSuggestSupport;
+  _snippetSuggestSupport = support;
+  return old;
+}
+__name(setSnippetSuggestSupport, "setSnippetSuggestSupport");
+class CompletionItemModel {
+  static {
+    __name(this, "CompletionItemModel");
+  }
+  constructor(items, needsClipboard, durations, disposable) {
+    this.items = items;
+    this.needsClipboard = needsClipboard;
+    this.durations = durations;
+    this.disposable = disposable;
+  }
+}
+async function provideSuggestionItems(registry, model, position, options = CompletionOptions.default, context = {
+  triggerKind: 0
+  /* languages.CompletionTriggerKind.Invoke */
+}, token = CancellationToken.None) {
+  const sw = new StopWatch();
+  position = position.clone();
+  const word = model.getWordAtPosition(position);
+  const defaultReplaceRange = word ? new Range(position.lineNumber, word.startColumn, position.lineNumber, word.endColumn) : Range.fromPositions(position);
+  const defaultRange = { replace: defaultReplaceRange, insert: defaultReplaceRange.setEndPosition(position.lineNumber, position.column) };
+  const result = [];
+  const disposables = new DisposableStore();
+  const durations = [];
+  let needsClipboard = false;
+  const onCompletionList = /* @__PURE__ */ __name((provider, container, sw2) => {
+    let didAddResult = false;
+    if (!container) {
+      return didAddResult;
+    }
+    for (const suggestion of container.suggestions) {
+      if (!options.kindFilter.has(suggestion.kind)) {
+        if (!options.showDeprecated && suggestion?.tags?.includes(
+          1
+          /* languages.CompletionItemTag.Deprecated */
+        )) {
+          continue;
+        }
+        if (!suggestion.range) {
+          suggestion.range = defaultRange;
+        }
+        if (!suggestion.sortText) {
+          suggestion.sortText = typeof suggestion.label === "string" ? suggestion.label : suggestion.label.label;
+        }
+        if (!needsClipboard && suggestion.insertTextRules && suggestion.insertTextRules & 4) {
+          needsClipboard = SnippetParser.guessNeedsClipboard(suggestion.insertText);
+        }
+        result.push(new CompletionItem(position, suggestion, container, provider));
+        didAddResult = true;
+      }
+    }
+    if (isDisposable(container)) {
+      disposables.add(container);
+    }
+    durations.push({
+      providerName: provider._debugDisplayName ?? "unknown_provider",
+      elapsedProvider: container.duration ?? -1,
+      elapsedOverall: sw2.elapsed()
+    });
+    return didAddResult;
+  }, "onCompletionList");
+  const snippetCompletions = (async () => {
+    if (!_snippetSuggestSupport || options.kindFilter.has(
+      28
+      /* languages.CompletionItemKind.Snippet */
+    )) {
+      return;
+    }
+    const reuseItems = options.providerItemsToReuse.get(_snippetSuggestSupport);
+    if (reuseItems) {
+      reuseItems.forEach((item) => result.push(item));
+      return;
+    }
+    if (options.providerFilter.size > 0 && !options.providerFilter.has(_snippetSuggestSupport)) {
+      return;
+    }
+    const sw2 = new StopWatch();
+    const list = await _snippetSuggestSupport.provideCompletionItems(model, position, context, token);
+    onCompletionList(_snippetSuggestSupport, list, sw2);
+  })();
+  for (const providerGroup of registry.orderedGroups(model)) {
+    let didAddResult = false;
+    await Promise.all(providerGroup.map(async (provider) => {
+      if (options.providerItemsToReuse.has(provider)) {
+        const items = options.providerItemsToReuse.get(provider);
+        items.forEach((item) => result.push(item));
+        didAddResult = didAddResult || items.length > 0;
+        return;
+      }
+      if (options.providerFilter.size > 0 && !options.providerFilter.has(provider)) {
+        return;
+      }
+      try {
+        const sw2 = new StopWatch();
+        const list = await provider.provideCompletionItems(model, position, context, token);
+        didAddResult = onCompletionList(provider, list, sw2) || didAddResult;
+      } catch (err) {
+        onUnexpectedExternalError(err);
+      }
+    }));
+    if (didAddResult || token.isCancellationRequested) {
+      break;
+    }
+  }
+  await snippetCompletions;
+  if (token.isCancellationRequested) {
+    disposables.dispose();
+    return Promise.reject(new CancellationError());
+  }
+  return new CompletionItemModel(result.sort(getSuggestionComparator(options.snippetSortOrder)), needsClipboard, { entries: durations, elapsed: sw.elapsed() }, disposables);
+}
+__name(provideSuggestionItems, "provideSuggestionItems");
+function defaultComparator(a, b) {
+  if (a.sortTextLow && b.sortTextLow) {
+    if (a.sortTextLow < b.sortTextLow) {
+      return -1;
+    } else if (a.sortTextLow > b.sortTextLow) {
+      return 1;
+    }
+  }
+  if (a.textLabel < b.textLabel) {
+    return -1;
+  } else if (a.textLabel > b.textLabel) {
+    return 1;
+  }
+  return a.completion.kind - b.completion.kind;
+}
+__name(defaultComparator, "defaultComparator");
+function snippetUpComparator(a, b) {
+  if (a.completion.kind !== b.completion.kind) {
+    if (a.completion.kind === 28) {
+      return -1;
+    } else if (b.completion.kind === 28) {
+      return 1;
+    }
+  }
+  return defaultComparator(a, b);
+}
+__name(snippetUpComparator, "snippetUpComparator");
+function snippetDownComparator(a, b) {
+  if (a.completion.kind !== b.completion.kind) {
+    if (a.completion.kind === 28) {
+      return 1;
+    } else if (b.completion.kind === 28) {
+      return -1;
+    }
+  }
+  return defaultComparator(a, b);
+}
+__name(snippetDownComparator, "snippetDownComparator");
+const _snippetComparators = /* @__PURE__ */ new Map();
+_snippetComparators.set(0, snippetUpComparator);
+_snippetComparators.set(2, snippetDownComparator);
+_snippetComparators.set(1, defaultComparator);
+function getSuggestionComparator(snippetConfig) {
+  return _snippetComparators.get(snippetConfig);
+}
+__name(getSuggestionComparator, "getSuggestionComparator");
+CommandsRegistry.registerCommand("_executeCompletionItemProvider", async (accessor, ...args) => {
+  const [uri, position, triggerCharacter, maxItemsToResolve] = args;
+  assertType(URI.isUri(uri));
+  assertType(Position.isIPosition(position));
+  assertType(typeof triggerCharacter === "string" || !triggerCharacter);
+  assertType(typeof maxItemsToResolve === "number" || !maxItemsToResolve);
+  const { completionProvider } = accessor.get(ILanguageFeaturesService);
+  const ref = await accessor.get(ITextModelService).createModelReference(uri);
+  try {
+    const result = {
+      incomplete: false,
+      suggestions: []
+    };
+    const resolving = [];
+    const actualPosition = ref.object.textEditorModel.validatePosition(position);
+    const completions = await provideSuggestionItems(completionProvider, ref.object.textEditorModel, actualPosition, void 0, {
+      triggerCharacter: triggerCharacter ?? void 0,
+      triggerKind: triggerCharacter ? 1 : 0
+      /* languages.CompletionTriggerKind.Invoke */
+    });
+    for (const item of completions.items) {
+      if (resolving.length < (maxItemsToResolve ?? 0)) {
+        resolving.push(item.resolve(CancellationToken.None));
+      }
+      result.incomplete = result.incomplete || item.container.incomplete;
+      result.suggestions.push(item.completion);
+    }
+    try {
+      await Promise.all(resolving);
+      return result;
+    } finally {
+      setTimeout(() => completions.disposable.dispose(), 100);
+    }
+  } finally {
+    ref.dispose();
+  }
+});
+function showSimpleSuggestions(editor, provider) {
+  editor.getContribution("editor.contrib.suggestController")?.triggerSuggest((/* @__PURE__ */ new Set()).add(provider), void 0, true);
+}
+__name(showSimpleSuggestions, "showSimpleSuggestions");
+class QuickSuggestionsOptions {
+  static {
+    __name(this, "QuickSuggestionsOptions");
+  }
+  static isAllOff(config) {
+    return config.other === "off" && config.comments === "off" && config.strings === "off";
+  }
+  static isAllOn(config) {
+    return config.other === "on" && config.comments === "on" && config.strings === "on";
+  }
+  static valueFor(config, tokenType) {
+    switch (tokenType) {
+      case 1:
+        return config.comments;
+      case 2:
+        return config.strings;
+      default:
+        return config.other;
+    }
+  }
+}
+export {
+  CompletionItem,
+  CompletionItemModel,
+  CompletionOptions,
+  Context,
+  QuickSuggestionsOptions,
+  SnippetSortOrder,
+  getSnippetSuggestSupport,
+  getSuggestionComparator,
+  provideSuggestionItems,
+  setSnippetSuggestSupport,
+  showSimpleSuggestions,
+  suggestWidgetStatusbarMenu
+};
+//# sourceMappingURL=suggest.js.map

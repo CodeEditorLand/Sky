@@ -1,1 +1,251 @@
-import{$vd as m,$ud as C,$qd as k,$td as w}from"../../../../../base/common/lifecycle.js";import{$c9 as $}from"../../../../../base/browser/webWorkerFactory.js";import{CellUri as v,NotebookCellsChangeType as p}from"../../common/notebookCommon.js";import{$Ryb as x}from"../../common/notebookService.js";import{$gF as M}from"../../../../../editor/common/services/model.js";import{$SH as S}from"../../../../../editor/common/model/textModel.js";import{$8g as D,Schemas as y}from"../../../../../base/common/network.js";import{$dh as I}from"../../../../../base/common/resources.js";var b=function(h,e,t,n){var s=arguments.length,a=s<3?e:n===null?n=Object.getOwnPropertyDescriptor(e,t):n,d;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")a=Reflect.decorate(h,e,t,n);else for(var u=h.length-1;u>=0;u--)(d=h[u])&&(a=(s<3?d(a):s>3?d(e,t,a):d(e,t))||a);return s>3&&a&&Object.defineProperty(e,t,a),a},f=function(h,e){return function(t,n){e(t,n,h)}};let g=class extends m{constructor(e,t){super(),this.a=this.B(new j(e,t))}canComputeDiff(e,t){throw new Error("Method not implemented.")}computeDiff(e,t){return this.a.withWorker().then(n=>n.computeDiff(e,t))}canPromptRecommendation(e){return this.a.withWorker().then(t=>t.canPromptRecommendation(e))}};g=b([f(0,x),f(1,M)],g);class j extends m{constructor(e,t){super(),this.b=e,this.c=t,this.a=null}withWorker(){return this.a||(this.a=new B(this.b,this.c),this.B(this.a)),Promise.resolve(this.a)}}class R extends m{constructor(e,t,n){super(),this.c=e,this.f=t,this.g=n,this.a=Object.create(null),this.b=Object.create(null)}ensureSyncedResources(e){for(const t of e){const n=t.toString();this.a[n]||this.h(t),this.a[n]&&(this.b[n]=new Date().getTime())}}h(e){const t=this.f.listNotebookDocuments().find(o=>o.uri.toString()===e.toString());if(!t)return;const n=e.toString();this.c.$acceptNewModel(t.uri.toString(),t.metadata,t.transientOptions.transientDocumentMetadata,t.cells.map(o=>({handle:o.handle,url:o.uri.toString(),source:o.textBuffer.getLinesContent(),eol:o.textBuffer.getEOL(),versionId:o.textModel?.getVersionId()??0,language:o.language,mime:o.mime,cellKind:o.cellKind,outputs:o.outputs.map(r=>({outputId:r.outputId,outputs:r.outputs})),metadata:o.metadata,internalMetadata:o.internalMetadata})));const s=new C,a=o=>({handle:o.handle,url:o.uri.toString(),source:o.textBuffer.getLinesContent(),eol:o.textBuffer.getEOL(),versionId:0,language:o.language,cellKind:o.cellKind,outputs:o.outputs.map(r=>({outputId:r.outputId,outputs:r.outputs})),metadata:o.metadata,internalMetadata:o.internalMetadata}),d=new Set,u=o=>{d.add(o),s.add(o.onDidChangeContent(r=>{typeof r=="object"&&r.type==="model"&&this.c.$acceptCellModelChanged(n,o.handle,r.event)}))};t.cells.forEach(o=>u(o)),t.cells.length!==d.size&&s.add(this.g.onModelAdded(o=>{if(o.uri.scheme!==y.vscodeNotebookCell||!(o instanceof S))return;const r=v.parse(o.uri);if(!r||!I(r.notebook,t.uri))return;const i=t.cells.find(c=>c.handle===r.handle);i&&u(i)})),s.add(t.onDidChangeContent(o=>{const r=[];o.rawEvents.forEach(i=>{switch(i.kind){case p.ModelChange:case p.Initialize:{r.push({kind:i.kind,changes:i.changes.map(c=>[c[0],c[1],c[2].map(l=>a(l))])});for(const c of i.changes)for(const l of c[2])u(l);break}case p.Move:{r.push({kind:p.Move,index:i.index,length:i.length,newIdx:i.newIdx,cells:i.cells.map(c=>a(c))});break}case p.ChangeCellContent:break;case p.ChangeDocumentMetadata:r.push({kind:i.kind,metadata:i.metadata});default:r.push(i)}}),this.c.$acceptModelChanged(n.toString(),{rawEvents:r,versionId:o.versionId})})),s.add(t.onWillDispose(()=>{this.j(n)})),s.add(w(()=>{this.c.$acceptRemovedModel(n)})),this.a[n]=s}j(e){const t=this.a[e];delete this.a[e],delete this.b[e],k(t)}}class B extends m{constructor(e,t){super(),this.c=e,this.f=t,this.a=null,this.b=null}computeDiff(e,t){return this.h([e,t]).$computeDiff(e.toString(),t.toString())}canPromptRecommendation(e){return this.h([e]).$canPromptRecommendation(e.toString())}g(e){return this.b||(this.b=this.B(new R(e,this.c,this.f))),this.b}h(e){const t=this.j().proxy;return this.g(t).ensureSyncedResources(e),t}j(){if(!this.a)try{this.a=this.B($(D.asBrowserUri("vs/workbench/contrib/notebook/common/services/notebookWebWorkerMain.js"),"NotebookEditorWorker"))}catch(e){throw e}return this.a}}export{g as $m$b};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { Disposable, DisposableStore, dispose, toDisposable } from "../../../../../base/common/lifecycle.js";
+import { createWebWorker } from "../../../../../base/browser/webWorkerFactory.js";
+import { CellUri, NotebookCellsChangeType } from "../../common/notebookCommon.js";
+import { INotebookService } from "../../common/notebookService.js";
+import { IModelService } from "../../../../../editor/common/services/model.js";
+import { TextModel } from "../../../../../editor/common/model/textModel.js";
+import { FileAccess, Schemas } from "../../../../../base/common/network.js";
+import { isEqual } from "../../../../../base/common/resources.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+let NotebookEditorWorkerServiceImpl = class NotebookEditorWorkerServiceImpl2 extends Disposable {
+  static {
+    __name(this, "NotebookEditorWorkerServiceImpl");
+  }
+  constructor(notebookService, modelService) {
+    super();
+    this._workerManager = this._register(new WorkerManager(notebookService, modelService));
+  }
+  canComputeDiff(original, modified) {
+    throw new Error("Method not implemented.");
+  }
+  computeDiff(original, modified) {
+    return this._workerManager.withWorker().then((client) => {
+      return client.computeDiff(original, modified);
+    });
+  }
+  canPromptRecommendation(model) {
+    return this._workerManager.withWorker().then((client) => {
+      return client.canPromptRecommendation(model);
+    });
+  }
+};
+NotebookEditorWorkerServiceImpl = __decorate([
+  __param(0, INotebookService),
+  __param(1, IModelService)
+], NotebookEditorWorkerServiceImpl);
+class WorkerManager extends Disposable {
+  static {
+    __name(this, "WorkerManager");
+  }
+  // private _lastWorkerUsedTime: number;
+  constructor(_notebookService, _modelService) {
+    super();
+    this._notebookService = _notebookService;
+    this._modelService = _modelService;
+    this._editorWorkerClient = null;
+  }
+  withWorker() {
+    if (!this._editorWorkerClient) {
+      this._editorWorkerClient = new NotebookWorkerClient(this._notebookService, this._modelService);
+      this._register(this._editorWorkerClient);
+    }
+    return Promise.resolve(this._editorWorkerClient);
+  }
+}
+class NotebookEditorModelManager extends Disposable {
+  static {
+    __name(this, "NotebookEditorModelManager");
+  }
+  constructor(_proxy, _notebookService, _modelService) {
+    super();
+    this._proxy = _proxy;
+    this._notebookService = _notebookService;
+    this._modelService = _modelService;
+    this._syncedModels = /* @__PURE__ */ Object.create(null);
+    this._syncedModelsLastUsedTime = /* @__PURE__ */ Object.create(null);
+  }
+  ensureSyncedResources(resources) {
+    for (const resource of resources) {
+      const resourceStr = resource.toString();
+      if (!this._syncedModels[resourceStr]) {
+        this._beginModelSync(resource);
+      }
+      if (this._syncedModels[resourceStr]) {
+        this._syncedModelsLastUsedTime[resourceStr] = (/* @__PURE__ */ new Date()).getTime();
+      }
+    }
+  }
+  _beginModelSync(resource) {
+    const model = this._notebookService.listNotebookDocuments().find((document) => document.uri.toString() === resource.toString());
+    if (!model) {
+      return;
+    }
+    const modelUrl = resource.toString();
+    this._proxy.$acceptNewModel(model.uri.toString(), model.metadata, model.transientOptions.transientDocumentMetadata, model.cells.map((cell) => ({
+      handle: cell.handle,
+      url: cell.uri.toString(),
+      source: cell.textBuffer.getLinesContent(),
+      eol: cell.textBuffer.getEOL(),
+      versionId: cell.textModel?.getVersionId() ?? 0,
+      language: cell.language,
+      mime: cell.mime,
+      cellKind: cell.cellKind,
+      outputs: cell.outputs.map((op) => ({ outputId: op.outputId, outputs: op.outputs })),
+      metadata: cell.metadata,
+      internalMetadata: cell.internalMetadata
+    })));
+    const toDispose = new DisposableStore();
+    const cellToDto = /* @__PURE__ */ __name((cell) => {
+      return {
+        handle: cell.handle,
+        url: cell.uri.toString(),
+        source: cell.textBuffer.getLinesContent(),
+        eol: cell.textBuffer.getEOL(),
+        versionId: 0,
+        language: cell.language,
+        cellKind: cell.cellKind,
+        outputs: cell.outputs.map((op) => ({ outputId: op.outputId, outputs: op.outputs })),
+        metadata: cell.metadata,
+        internalMetadata: cell.internalMetadata
+      };
+    }, "cellToDto");
+    const cellHandlers = /* @__PURE__ */ new Set();
+    const addCellContentChangeHandler = /* @__PURE__ */ __name((cell) => {
+      cellHandlers.add(cell);
+      toDispose.add(cell.onDidChangeContent((e) => {
+        if (typeof e === "object" && e.type === "model") {
+          this._proxy.$acceptCellModelChanged(modelUrl, cell.handle, e.event);
+        }
+      }));
+    }, "addCellContentChangeHandler");
+    model.cells.forEach((cell) => addCellContentChangeHandler(cell));
+    if (model.cells.length !== cellHandlers.size) {
+      toDispose.add(this._modelService.onModelAdded((textModel) => {
+        if (textModel.uri.scheme !== Schemas.vscodeNotebookCell || !(textModel instanceof TextModel)) {
+          return;
+        }
+        const cellUri = CellUri.parse(textModel.uri);
+        if (!cellUri || !isEqual(cellUri.notebook, model.uri)) {
+          return;
+        }
+        const cell = model.cells.find((cell2) => cell2.handle === cellUri.handle);
+        if (cell) {
+          addCellContentChangeHandler(cell);
+        }
+      }));
+    }
+    toDispose.add(model.onDidChangeContent((event) => {
+      const dto = [];
+      event.rawEvents.forEach((e) => {
+        switch (e.kind) {
+          case NotebookCellsChangeType.ModelChange:
+          case NotebookCellsChangeType.Initialize: {
+            dto.push({
+              kind: e.kind,
+              changes: e.changes.map((diff) => [diff[0], diff[1], diff[2].map((cell) => cellToDto(cell))])
+            });
+            for (const change of e.changes) {
+              for (const cell of change[2]) {
+                addCellContentChangeHandler(cell);
+              }
+            }
+            break;
+          }
+          case NotebookCellsChangeType.Move: {
+            dto.push({
+              kind: NotebookCellsChangeType.Move,
+              index: e.index,
+              length: e.length,
+              newIdx: e.newIdx,
+              cells: e.cells.map((cell) => cellToDto(cell))
+            });
+            break;
+          }
+          case NotebookCellsChangeType.ChangeCellContent:
+            break;
+          case NotebookCellsChangeType.ChangeDocumentMetadata:
+            dto.push({
+              kind: e.kind,
+              metadata: e.metadata
+            });
+          default:
+            dto.push(e);
+        }
+      });
+      this._proxy.$acceptModelChanged(modelUrl.toString(), {
+        rawEvents: dto,
+        versionId: event.versionId
+      });
+    }));
+    toDispose.add(model.onWillDispose(() => {
+      this._stopModelSync(modelUrl);
+    }));
+    toDispose.add(toDisposable(() => {
+      this._proxy.$acceptRemovedModel(modelUrl);
+    }));
+    this._syncedModels[modelUrl] = toDispose;
+  }
+  _stopModelSync(modelUrl) {
+    const toDispose = this._syncedModels[modelUrl];
+    delete this._syncedModels[modelUrl];
+    delete this._syncedModelsLastUsedTime[modelUrl];
+    dispose(toDispose);
+  }
+}
+class NotebookWorkerClient extends Disposable {
+  static {
+    __name(this, "NotebookWorkerClient");
+  }
+  constructor(_notebookService, _modelService) {
+    super();
+    this._notebookService = _notebookService;
+    this._modelService = _modelService;
+    this._worker = null;
+    this._modelManager = null;
+  }
+  computeDiff(original, modified) {
+    const proxy = this._ensureSyncedResources([original, modified]);
+    return proxy.$computeDiff(original.toString(), modified.toString());
+  }
+  canPromptRecommendation(modelUri) {
+    const proxy = this._ensureSyncedResources([modelUri]);
+    return proxy.$canPromptRecommendation(modelUri.toString());
+  }
+  _getOrCreateModelManager(proxy) {
+    if (!this._modelManager) {
+      this._modelManager = this._register(new NotebookEditorModelManager(proxy, this._notebookService, this._modelService));
+    }
+    return this._modelManager;
+  }
+  _ensureSyncedResources(resources) {
+    const proxy = this._getOrCreateWorker().proxy;
+    this._getOrCreateModelManager(proxy).ensureSyncedResources(resources);
+    return proxy;
+  }
+  _getOrCreateWorker() {
+    if (!this._worker) {
+      try {
+        this._worker = this._register(createWebWorker(FileAccess.asBrowserUri("vs/workbench/contrib/notebook/common/services/notebookWebWorkerMain.js"), "NotebookEditorWorker"));
+      } catch (err) {
+        throw err;
+      }
+    }
+    return this._worker;
+  }
+}
+export {
+  NotebookEditorWorkerServiceImpl
+};
+//# sourceMappingURL=notebookWorkerServiceImpl.js.map

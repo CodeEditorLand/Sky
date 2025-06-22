@@ -1,1 +1,316 @@
-import{$df as u}from"../../../../base/common/event.js";import{localize as e}from"../../../../nls.js";import{$Sl as i}from"../../../../platform/configuration/common/configurationRegistry.js";import{$WB as c}from"../../../../platform/instantiation/common/extensions.js";import{$nj as d}from"../../../../platform/instantiation/common/instantiation.js";import{$Ql as b}from"../../../../platform/registry/common/platform.js";const p=d("IEditorBreadcrumbsService");class m{constructor(){this.a=new Map}register(o,t){if(this.a.has(o))throw new Error(`group (${o}) has already a widget`);return this.a.set(o,t),{dispose:()=>this.a.delete(o)}}getWidget(o){return this.a.get(o)}}c(p,m,1);class r{constructor(){}static{this.IsEnabled=r.a("breadcrumbs.enabled")}static{this.UseQuickPick=r.a("breadcrumbs.useQuickPick")}static{this.FilePath=r.a("breadcrumbs.filePath")}static{this.SymbolPath=r.a("breadcrumbs.symbolPath")}static{this.SymbolSortOrder=r.a("breadcrumbs.symbolSortOrder")}static{this.Icons=r.a("breadcrumbs.icons")}static{this.TitleScrollbarSizing=r.a("workbench.editor.titleScrollbarSizing")}static{this.FileExcludes=r.a("files.exclude")}static a(o){return{bindTo(t){const a=new u,l=t.onDidChangeConfiguration(s=>{s.affectsConfiguration(o)&&a.fire(void 0)});return new class{constructor(){this.name=o,this.onDidChange=a.event}getValue(s){return s?t.getValue(o,s):t.getValue(o)}updateValue(s,n){return n?t.updateValue(o,s,n):t.updateValue(o,s)}dispose(){l.dispose(),a.dispose()}}}}}}b.as(i.Configuration).registerConfiguration({id:"breadcrumbs",title:e(3281,null),order:101,type:"object",properties:{"breadcrumbs.enabled":{description:e(3282,null),type:"boolean",default:!0},"breadcrumbs.filePath":{description:e(3283,null),type:"string",default:"on",enum:["on","off","last"],enumDescriptions:[e(3284,null),e(3285,null),e(3286,null)]},"breadcrumbs.symbolPath":{description:e(3287,null),type:"string",default:"on",enum:["on","off","last"],enumDescriptions:[e(3288,null),e(3289,null),e(3290,null)]},"breadcrumbs.symbolSortOrder":{description:e(3291,null),type:"string",default:"position",scope:6,enum:["position","name","type"],enumDescriptions:[e(3292,null),e(3293,null),e(3294,null)]},"breadcrumbs.icons":{description:e(3295,null),type:"boolean",default:!0},"breadcrumbs.showFiles":{type:"boolean",default:!0,scope:6,markdownDescription:e(3296,null)},"breadcrumbs.showModules":{type:"boolean",default:!0,scope:6,markdownDescription:e(3297,null)},"breadcrumbs.showNamespaces":{type:"boolean",default:!0,scope:6,markdownDescription:e(3298,null)},"breadcrumbs.showPackages":{type:"boolean",default:!0,scope:6,markdownDescription:e(3299,null)},"breadcrumbs.showClasses":{type:"boolean",default:!0,scope:6,markdownDescription:e(3300,null)},"breadcrumbs.showMethods":{type:"boolean",default:!0,scope:6,markdownDescription:e(3301,null)},"breadcrumbs.showProperties":{type:"boolean",default:!0,scope:6,markdownDescription:e(3302,null)},"breadcrumbs.showFields":{type:"boolean",default:!0,scope:6,markdownDescription:e(3303,null)},"breadcrumbs.showConstructors":{type:"boolean",default:!0,scope:6,markdownDescription:e(3304,null)},"breadcrumbs.showEnums":{type:"boolean",default:!0,scope:6,markdownDescription:e(3305,null)},"breadcrumbs.showInterfaces":{type:"boolean",default:!0,scope:6,markdownDescription:e(3306,null)},"breadcrumbs.showFunctions":{type:"boolean",default:!0,scope:6,markdownDescription:e(3307,null)},"breadcrumbs.showVariables":{type:"boolean",default:!0,scope:6,markdownDescription:e(3308,null)},"breadcrumbs.showConstants":{type:"boolean",default:!0,scope:6,markdownDescription:e(3309,null)},"breadcrumbs.showStrings":{type:"boolean",default:!0,scope:6,markdownDescription:e(3310,null)},"breadcrumbs.showNumbers":{type:"boolean",default:!0,scope:6,markdownDescription:e(3311,null)},"breadcrumbs.showBooleans":{type:"boolean",default:!0,scope:6,markdownDescription:e(3312,null)},"breadcrumbs.showArrays":{type:"boolean",default:!0,scope:6,markdownDescription:e(3313,null)},"breadcrumbs.showObjects":{type:"boolean",default:!0,scope:6,markdownDescription:e(3314,null)},"breadcrumbs.showKeys":{type:"boolean",default:!0,scope:6,markdownDescription:e(3315,null)},"breadcrumbs.showNull":{type:"boolean",default:!0,scope:6,markdownDescription:e(3316,null)},"breadcrumbs.showEnumMembers":{type:"boolean",default:!0,scope:6,markdownDescription:e(3317,null)},"breadcrumbs.showStructs":{type:"boolean",default:!0,scope:6,markdownDescription:e(3318,null)},"breadcrumbs.showEvents":{type:"boolean",default:!0,scope:6,markdownDescription:e(3319,null)},"breadcrumbs.showOperators":{type:"boolean",default:!0,scope:6,markdownDescription:e(3320,null)},"breadcrumbs.showTypeParameters":{type:"boolean",default:!0,scope:6,markdownDescription:e(3321,null)}}});export{p as $FKb,m as $GKb,r as $HKb};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { Emitter } from "../../../../base/common/event.js";
+import { localize } from "../../../../nls.js";
+import { Extensions } from "../../../../platform/configuration/common/configurationRegistry.js";
+import { registerSingleton } from "../../../../platform/instantiation/common/extensions.js";
+import { createDecorator } from "../../../../platform/instantiation/common/instantiation.js";
+import { Registry } from "../../../../platform/registry/common/platform.js";
+const IBreadcrumbsService = createDecorator("IEditorBreadcrumbsService");
+class BreadcrumbsService {
+  static {
+    __name(this, "BreadcrumbsService");
+  }
+  constructor() {
+    this._map = /* @__PURE__ */ new Map();
+  }
+  register(group, widget) {
+    if (this._map.has(group)) {
+      throw new Error(`group (${group}) has already a widget`);
+    }
+    this._map.set(group, widget);
+    return {
+      dispose: /* @__PURE__ */ __name(() => this._map.delete(group), "dispose")
+    };
+  }
+  getWidget(group) {
+    return this._map.get(group);
+  }
+}
+registerSingleton(
+  IBreadcrumbsService,
+  BreadcrumbsService,
+  1
+  /* InstantiationType.Delayed */
+);
+class BreadcrumbsConfig {
+  static {
+    __name(this, "BreadcrumbsConfig");
+  }
+  constructor() {
+  }
+  static {
+    this.IsEnabled = BreadcrumbsConfig._stub("breadcrumbs.enabled");
+  }
+  static {
+    this.UseQuickPick = BreadcrumbsConfig._stub("breadcrumbs.useQuickPick");
+  }
+  static {
+    this.FilePath = BreadcrumbsConfig._stub("breadcrumbs.filePath");
+  }
+  static {
+    this.SymbolPath = BreadcrumbsConfig._stub("breadcrumbs.symbolPath");
+  }
+  static {
+    this.SymbolSortOrder = BreadcrumbsConfig._stub("breadcrumbs.symbolSortOrder");
+  }
+  static {
+    this.Icons = BreadcrumbsConfig._stub("breadcrumbs.icons");
+  }
+  static {
+    this.TitleScrollbarSizing = BreadcrumbsConfig._stub("workbench.editor.titleScrollbarSizing");
+  }
+  static {
+    this.FileExcludes = BreadcrumbsConfig._stub("files.exclude");
+  }
+  static _stub(name) {
+    return {
+      bindTo(service) {
+        const onDidChange = new Emitter();
+        const listener = service.onDidChangeConfiguration((e) => {
+          if (e.affectsConfiguration(name)) {
+            onDidChange.fire(void 0);
+          }
+        });
+        return new class {
+          constructor() {
+            this.name = name;
+            this.onDidChange = onDidChange.event;
+          }
+          getValue(overrides) {
+            if (overrides) {
+              return service.getValue(name, overrides);
+            } else {
+              return service.getValue(name);
+            }
+          }
+          updateValue(newValue, overrides) {
+            if (overrides) {
+              return service.updateValue(name, newValue, overrides);
+            } else {
+              return service.updateValue(name, newValue);
+            }
+          }
+          dispose() {
+            listener.dispose();
+            onDidChange.dispose();
+          }
+        }();
+      }
+    };
+  }
+}
+Registry.as(Extensions.Configuration).registerConfiguration({
+  id: "breadcrumbs",
+  title: localize("title", "Breadcrumb Navigation"),
+  order: 101,
+  type: "object",
+  properties: {
+    "breadcrumbs.enabled": {
+      description: localize("enabled", "Enable/disable navigation breadcrumbs."),
+      type: "boolean",
+      default: true
+    },
+    "breadcrumbs.filePath": {
+      description: localize("filepath", "Controls whether and how file paths are shown in the breadcrumbs view."),
+      type: "string",
+      default: "on",
+      enum: ["on", "off", "last"],
+      enumDescriptions: [
+        localize("filepath.on", "Show the file path in the breadcrumbs view."),
+        localize("filepath.off", "Do not show the file path in the breadcrumbs view."),
+        localize("filepath.last", "Only show the last element of the file path in the breadcrumbs view.")
+      ]
+    },
+    "breadcrumbs.symbolPath": {
+      description: localize("symbolpath", "Controls whether and how symbols are shown in the breadcrumbs view."),
+      type: "string",
+      default: "on",
+      enum: ["on", "off", "last"],
+      enumDescriptions: [
+        localize("symbolpath.on", "Show all symbols in the breadcrumbs view."),
+        localize("symbolpath.off", "Do not show symbols in the breadcrumbs view."),
+        localize("symbolpath.last", "Only show the current symbol in the breadcrumbs view.")
+      ]
+    },
+    "breadcrumbs.symbolSortOrder": {
+      description: localize("symbolSortOrder", "Controls how symbols are sorted in the breadcrumbs outline view."),
+      type: "string",
+      default: "position",
+      scope: 6,
+      enum: ["position", "name", "type"],
+      enumDescriptions: [
+        localize("symbolSortOrder.position", "Show symbol outline in file position order."),
+        localize("symbolSortOrder.name", "Show symbol outline in alphabetical order."),
+        localize("symbolSortOrder.type", "Show symbol outline in symbol type order.")
+      ]
+    },
+    "breadcrumbs.icons": {
+      description: localize("icons", "Render breadcrumb items with icons."),
+      type: "boolean",
+      default: true
+    },
+    "breadcrumbs.showFiles": {
+      type: "boolean",
+      default: true,
+      scope: 6,
+      markdownDescription: localize("filteredTypes.file", "When enabled breadcrumbs show `file`-symbols.")
+    },
+    "breadcrumbs.showModules": {
+      type: "boolean",
+      default: true,
+      scope: 6,
+      markdownDescription: localize("filteredTypes.module", "When enabled breadcrumbs show `module`-symbols.")
+    },
+    "breadcrumbs.showNamespaces": {
+      type: "boolean",
+      default: true,
+      scope: 6,
+      markdownDescription: localize("filteredTypes.namespace", "When enabled breadcrumbs show `namespace`-symbols.")
+    },
+    "breadcrumbs.showPackages": {
+      type: "boolean",
+      default: true,
+      scope: 6,
+      markdownDescription: localize("filteredTypes.package", "When enabled breadcrumbs show `package`-symbols.")
+    },
+    "breadcrumbs.showClasses": {
+      type: "boolean",
+      default: true,
+      scope: 6,
+      markdownDescription: localize("filteredTypes.class", "When enabled breadcrumbs show `class`-symbols.")
+    },
+    "breadcrumbs.showMethods": {
+      type: "boolean",
+      default: true,
+      scope: 6,
+      markdownDescription: localize("filteredTypes.method", "When enabled breadcrumbs show `method`-symbols.")
+    },
+    "breadcrumbs.showProperties": {
+      type: "boolean",
+      default: true,
+      scope: 6,
+      markdownDescription: localize("filteredTypes.property", "When enabled breadcrumbs show `property`-symbols.")
+    },
+    "breadcrumbs.showFields": {
+      type: "boolean",
+      default: true,
+      scope: 6,
+      markdownDescription: localize("filteredTypes.field", "When enabled breadcrumbs show `field`-symbols.")
+    },
+    "breadcrumbs.showConstructors": {
+      type: "boolean",
+      default: true,
+      scope: 6,
+      markdownDescription: localize("filteredTypes.constructor", "When enabled breadcrumbs show `constructor`-symbols.")
+    },
+    "breadcrumbs.showEnums": {
+      type: "boolean",
+      default: true,
+      scope: 6,
+      markdownDescription: localize("filteredTypes.enum", "When enabled breadcrumbs show `enum`-symbols.")
+    },
+    "breadcrumbs.showInterfaces": {
+      type: "boolean",
+      default: true,
+      scope: 6,
+      markdownDescription: localize("filteredTypes.interface", "When enabled breadcrumbs show `interface`-symbols.")
+    },
+    "breadcrumbs.showFunctions": {
+      type: "boolean",
+      default: true,
+      scope: 6,
+      markdownDescription: localize("filteredTypes.function", "When enabled breadcrumbs show `function`-symbols.")
+    },
+    "breadcrumbs.showVariables": {
+      type: "boolean",
+      default: true,
+      scope: 6,
+      markdownDescription: localize("filteredTypes.variable", "When enabled breadcrumbs show `variable`-symbols.")
+    },
+    "breadcrumbs.showConstants": {
+      type: "boolean",
+      default: true,
+      scope: 6,
+      markdownDescription: localize("filteredTypes.constant", "When enabled breadcrumbs show `constant`-symbols.")
+    },
+    "breadcrumbs.showStrings": {
+      type: "boolean",
+      default: true,
+      scope: 6,
+      markdownDescription: localize("filteredTypes.string", "When enabled breadcrumbs show `string`-symbols.")
+    },
+    "breadcrumbs.showNumbers": {
+      type: "boolean",
+      default: true,
+      scope: 6,
+      markdownDescription: localize("filteredTypes.number", "When enabled breadcrumbs show `number`-symbols.")
+    },
+    "breadcrumbs.showBooleans": {
+      type: "boolean",
+      default: true,
+      scope: 6,
+      markdownDescription: localize("filteredTypes.boolean", "When enabled breadcrumbs show `boolean`-symbols.")
+    },
+    "breadcrumbs.showArrays": {
+      type: "boolean",
+      default: true,
+      scope: 6,
+      markdownDescription: localize("filteredTypes.array", "When enabled breadcrumbs show `array`-symbols.")
+    },
+    "breadcrumbs.showObjects": {
+      type: "boolean",
+      default: true,
+      scope: 6,
+      markdownDescription: localize("filteredTypes.object", "When enabled breadcrumbs show `object`-symbols.")
+    },
+    "breadcrumbs.showKeys": {
+      type: "boolean",
+      default: true,
+      scope: 6,
+      markdownDescription: localize("filteredTypes.key", "When enabled breadcrumbs show `key`-symbols.")
+    },
+    "breadcrumbs.showNull": {
+      type: "boolean",
+      default: true,
+      scope: 6,
+      markdownDescription: localize("filteredTypes.null", "When enabled breadcrumbs show `null`-symbols.")
+    },
+    "breadcrumbs.showEnumMembers": {
+      type: "boolean",
+      default: true,
+      scope: 6,
+      markdownDescription: localize("filteredTypes.enumMember", "When enabled breadcrumbs show `enumMember`-symbols.")
+    },
+    "breadcrumbs.showStructs": {
+      type: "boolean",
+      default: true,
+      scope: 6,
+      markdownDescription: localize("filteredTypes.struct", "When enabled breadcrumbs show `struct`-symbols.")
+    },
+    "breadcrumbs.showEvents": {
+      type: "boolean",
+      default: true,
+      scope: 6,
+      markdownDescription: localize("filteredTypes.event", "When enabled breadcrumbs show `event`-symbols.")
+    },
+    "breadcrumbs.showOperators": {
+      type: "boolean",
+      default: true,
+      scope: 6,
+      markdownDescription: localize("filteredTypes.operator", "When enabled breadcrumbs show `operator`-symbols.")
+    },
+    "breadcrumbs.showTypeParameters": {
+      type: "boolean",
+      default: true,
+      scope: 6,
+      markdownDescription: localize("filteredTypes.typeParameter", "When enabled breadcrumbs show `typeParameter`-symbols.")
+    }
+  }
+});
+export {
+  BreadcrumbsConfig,
+  BreadcrumbsService,
+  IBreadcrumbsService
+};
+//# sourceMappingURL=breadcrumbs.js.map

@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["../../../Source/Application/Instantiation/Register.ts"],
+  "sourcesContent": ["/**\n * @module Register (Instantiation)\n * @description Provides the mechanism for mapping legacy VS Code service constructors\n * to their modern `Effect.Layer` implementations.\n */\n\nimport { Layer } from \"effect\";\n\n/**\n * A global map that stores the association between a legacy class constructor\n * and the `Effect.Layer` that provides its implementation.\n *\n * The `InstantiationService` consults this map to determine whether to use\n * modern, Layer-based DI or fall back to the legacy decorator-based DI for a\nticular class.\n */\nexport const LayerMap = new Map<any, Layer.Layer<any, any, any>>();\n\n/**\n * A helper function to associate a legacy VS Code class constructor with its\n * corresponding `Effect.Layer`. This is the primary way to register new,\n * Effect-TS native services so that they can be instantiated by legacy parts\n * of the workbench.\n *\n * @param Constructor - The class constructor (e.g., `MyServiceClass`).\n * @param Layer - The `Effect.Layer` that provides the live implementation for\n *   the service (e.g., `LiveMyService`).\n */\nexport const RegisterService = (\n\tConstructor: any,\n\tLayer: Layer.Layer<any, any, any>,\n): void => {\n\tLayerMap.set(Constructor, Layer);\n};\n"],
+  "mappings": ";;AAgBO,MAAM,WAAW,oBAAI,IAAqC;AAY1D,MAAM,kBAAkB,wBAC9B,aACA,UACU;AACV,WAAS,IAAI,aAAa,KAAK;AAChC,GAL+B;",
+  "names": []
+}

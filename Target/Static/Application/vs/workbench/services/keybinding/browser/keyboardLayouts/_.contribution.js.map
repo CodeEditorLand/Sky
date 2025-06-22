@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["../../../../../../../../../../../Dependency/Microsoft/Dependency/Editor/src/vs/workbench/services/keybinding/browser/keyboardLayouts/_.contribution.ts"],
+  "sourcesContent": ["/*---------------------------------------------------------------------------------------------\r\n *  Copyright (c) Microsoft Corporation. All rights reserved.\r\n *  Licensed under the MIT License. See License.txt in the project root for license information.\r\n *--------------------------------------------------------------------------------------------*/\r\n\r\nimport { IKeymapInfo } from '../../common/keymapInfo.js';\r\n\r\nexport class KeyboardLayoutContribution {\r\n\tpublic static readonly INSTANCE: KeyboardLayoutContribution = new KeyboardLayoutContribution();\r\n\r\n\tprivate _layoutInfos: IKeymapInfo[] = [];\r\n\r\n\tget layoutInfos() {\r\n\t\treturn this._layoutInfos;\r\n\t}\r\n\r\n\tprivate constructor() {\r\n\t}\r\n\r\n\tregisterKeyboardLayout(layout: IKeymapInfo) {\r\n\t\tthis._layoutInfos.push(layout);\r\n\t}\r\n}"],
+  "mappings": ";;AAOM,MAAO,2BAA0B;EAPvC,OAOuC;;;;AACf,SAAA,WAAuC,IAAI,2BAA0B;EAAG;EAI/F,IAAI,cAAW;AACd,WAAO,KAAK;EACb;EAEA,cAAA;AANQ,SAAA,eAA8B,CAAA;EAOtC;EAEA,uBAAuB,QAAmB;AACzC,SAAK,aAAa,KAAK,MAAM;EAC9B;;",
+  "names": []
+}

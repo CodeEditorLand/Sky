@@ -1,1 +1,111 @@
-import{localize as h}from"../../../../nls.js";import{$jp as l,$ip as b,$op as u,$tp as m}from"../../../../platform/theme/common/colorRegistry.js";import{$hW as C}from"../common/debug.js";import{$hl as $}from"../../../../platform/workspace/common/workspace.js";import{$Yub as f,$3ub as B,$rwb as D}from"../../../common/theme.js";import{$ud as j}from"../../../../base/common/lifecycle.js";import{$Cyb as _}from"../../../services/statusbar/browser/statusbar.js";import{$El as F}from"../../../../platform/configuration/common/configuration.js";import{$zhb as S}from"../../../../platform/layout/browser/layoutService.js";var p=function(r,t,i,o){var s=arguments.length,e=s<3?t:o===null?o=Object.getOwnPropertyDescriptor(t,i):o,n;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")e=Reflect.decorate(r,t,i,o);else for(var c=r.length-1;c>=0;c--)(n=r[c])&&(e=(s<3?n(e):s>3?n(t,i,e):n(t,i))||e);return s>3&&e&&Object.defineProperty(t,i,e),e},a=function(r,t){return function(i,o){t(i,o,r)}};const g=u("statusBar.debuggingBackground",{dark:"#CC6633",light:"#CC6633",hcDark:"#BA592C",hcLight:"#B5200D"},h(6771,null)),v=u("statusBar.debuggingForeground",{dark:f,light:f,hcDark:f,hcLight:"#FFFFFF"},h(6772,null)),x=u("statusBar.debuggingBorder",B,h(6773,null)),y=u("commandCenter.debuggingBackground",m(g,.258),h(6774,null),!0);let d=class{set c(t){t!==!!this.b&&(t?this.b=this.g.overrideStyle({priority:10,foreground:v,background:g,border:x}):(this.b.dispose(),this.b=void 0))}constructor(t,i,o,s,e){this.d=t,this.f=i,this.g=o,this.h=s,this.i=e,this.a=new j,this.d.onDidChangeState(this.j,this,this.a),this.f.onDidChangeWorkbenchState(this.j,this,this.a),this.i.onDidChangeConfiguration(n=>{(n.affectsConfiguration("debug.enableStatusBarColor")||n.affectsConfiguration("debug.toolBarLocation"))&&this.j()},void 0,this.a),this.j()}j(){const t=this.i.getValue("debug"),i=k(this.d.state,this.d.getModel().getSessions());t.enableStatusBarColor?this.c=i:this.c=!1;const o=t.toolBarLocation==="commandCenter";this.h.mainContainer.style.setProperty(b(D),o&&i?l(y):"")}dispose(){this.b?.dispose(),this.a.dispose()}};d=p([a(0,C),a(1,$),a(2,_),a(3,S),a(4,F)],d);function k(r,t){return!(r===0||r===1||t.every(i=>i.suppressDebugStatusbar||i.configuration?.noDebug))}export{g as $_oc,v as $apc,x as $bpc,y as $cpc,d as $dpc,k as $epc};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { localize } from "../../../../nls.js";
+import { asCssVariable, asCssVariableName, registerColor, transparent } from "../../../../platform/theme/common/colorRegistry.js";
+import { IDebugService } from "../common/debug.js";
+import { IWorkspaceContextService } from "../../../../platform/workspace/common/workspace.js";
+import { STATUS_BAR_FOREGROUND, STATUS_BAR_BORDER, COMMAND_CENTER_BACKGROUND } from "../../../common/theme.js";
+import { DisposableStore } from "../../../../base/common/lifecycle.js";
+import { IStatusbarService } from "../../../services/statusbar/browser/statusbar.js";
+import { IConfigurationService } from "../../../../platform/configuration/common/configuration.js";
+import { ILayoutService } from "../../../../platform/layout/browser/layoutService.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+const STATUS_BAR_DEBUGGING_BACKGROUND = registerColor("statusBar.debuggingBackground", {
+  dark: "#CC6633",
+  light: "#CC6633",
+  hcDark: "#BA592C",
+  hcLight: "#B5200D"
+}, localize("statusBarDebuggingBackground", "Status bar background color when a program is being debugged. The status bar is shown in the bottom of the window"));
+const STATUS_BAR_DEBUGGING_FOREGROUND = registerColor("statusBar.debuggingForeground", {
+  dark: STATUS_BAR_FOREGROUND,
+  light: STATUS_BAR_FOREGROUND,
+  hcDark: STATUS_BAR_FOREGROUND,
+  hcLight: "#FFFFFF"
+}, localize("statusBarDebuggingForeground", "Status bar foreground color when a program is being debugged. The status bar is shown in the bottom of the window"));
+const STATUS_BAR_DEBUGGING_BORDER = registerColor("statusBar.debuggingBorder", STATUS_BAR_BORDER, localize("statusBarDebuggingBorder", "Status bar border color separating to the sidebar and editor when a program is being debugged. The status bar is shown in the bottom of the window"));
+const COMMAND_CENTER_DEBUGGING_BACKGROUND = registerColor("commandCenter.debuggingBackground", transparent(STATUS_BAR_DEBUGGING_BACKGROUND, 0.258), localize("commandCenter-activeBackground", "Command center background color when a program is being debugged"), true);
+let StatusBarColorProvider = class StatusBarColorProvider2 {
+  static {
+    __name(this, "StatusBarColorProvider");
+  }
+  set enabled(enabled) {
+    if (enabled === !!this.disposable) {
+      return;
+    }
+    if (enabled) {
+      this.disposable = this.statusbarService.overrideStyle({
+        priority: 10,
+        foreground: STATUS_BAR_DEBUGGING_FOREGROUND,
+        background: STATUS_BAR_DEBUGGING_BACKGROUND,
+        border: STATUS_BAR_DEBUGGING_BORDER
+      });
+    } else {
+      this.disposable.dispose();
+      this.disposable = void 0;
+    }
+  }
+  constructor(debugService, contextService, statusbarService, layoutService, configurationService) {
+    this.debugService = debugService;
+    this.contextService = contextService;
+    this.statusbarService = statusbarService;
+    this.layoutService = layoutService;
+    this.configurationService = configurationService;
+    this.disposables = new DisposableStore();
+    this.debugService.onDidChangeState(this.update, this, this.disposables);
+    this.contextService.onDidChangeWorkbenchState(this.update, this, this.disposables);
+    this.configurationService.onDidChangeConfiguration((e) => {
+      if (e.affectsConfiguration("debug.enableStatusBarColor") || e.affectsConfiguration("debug.toolBarLocation")) {
+        this.update();
+      }
+    }, void 0, this.disposables);
+    this.update();
+  }
+  update() {
+    const debugConfig = this.configurationService.getValue("debug");
+    const isInDebugMode = isStatusbarInDebugMode(this.debugService.state, this.debugService.getModel().getSessions());
+    if (!debugConfig.enableStatusBarColor) {
+      this.enabled = false;
+    } else {
+      this.enabled = isInDebugMode;
+    }
+    const isInCommandCenter = debugConfig.toolBarLocation === "commandCenter";
+    this.layoutService.mainContainer.style.setProperty(asCssVariableName(COMMAND_CENTER_BACKGROUND), isInCommandCenter && isInDebugMode ? asCssVariable(COMMAND_CENTER_DEBUGGING_BACKGROUND) : "");
+  }
+  dispose() {
+    this.disposable?.dispose();
+    this.disposables.dispose();
+  }
+};
+StatusBarColorProvider = __decorate([
+  __param(0, IDebugService),
+  __param(1, IWorkspaceContextService),
+  __param(2, IStatusbarService),
+  __param(3, ILayoutService),
+  __param(4, IConfigurationService)
+], StatusBarColorProvider);
+function isStatusbarInDebugMode(state, sessions) {
+  if (state === 0 || state === 1 || sessions.every((s) => s.suppressDebugStatusbar || s.configuration?.noDebug)) {
+    return false;
+  }
+  return true;
+}
+__name(isStatusbarInDebugMode, "isStatusbarInDebugMode");
+export {
+  COMMAND_CENTER_DEBUGGING_BACKGROUND,
+  STATUS_BAR_DEBUGGING_BACKGROUND,
+  STATUS_BAR_DEBUGGING_BORDER,
+  STATUS_BAR_DEBUGGING_FOREGROUND,
+  StatusBarColorProvider,
+  isStatusbarInDebugMode
+};
+//# sourceMappingURL=statusbarColorProvider.js.map

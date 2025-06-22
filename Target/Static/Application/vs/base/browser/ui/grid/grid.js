@@ -1,1 +1,750 @@
-import{$Sb as x,$Rb as f}from"../../../common/arrays.js";import{$vd as N}from"../../../common/lifecycle.js";import"./gridview.css";import{$A9 as m,$y9 as V,Sizing as l}from"./gridview.js";import{LayoutPriority as T,Orientation as q,$y9 as F}from"./gridview.js";var y,b;function O(t){switch(t){case 0:return 1;case 1:return 0;case 2:return 3;case 3:return 2}}function w(t){return!!t.children}function v(t,e){if(0===e.length)return t;if(!w(t))throw new Error("Invalid location");const[i,...s]=e;return v(t.children[i],s)}function $(t,e){return!(t.start>=e.end||e.start>=t.end)}function E(t,e){const i=z(e);return{offset:0===e?t.top:3===e?t.left+t.width:1===e?t.top+t.height:t.left,range:{start:1===i?t.top:t.left,end:1===i?t.top+t.height:t.left+t.width}}}function B(t,e,i){const s=[];return function t(e,i,n){if(w(e))for(const s of e.children)t(s,i,n);else{const{offset:t,range:r}=E(e.box,i);t===n.offset&&$(r,n.range)&&s.push(e)}}(t,e,i),s}function p(t,e){return e.length%2==0?V(t):t}function z(t){return 0===t||1===t?0:1}function S(t,e,i){if(p(t,e)===z(i)){let[t,s]=f(e);return(3===i||1===i)&&(s+=1),[...t,s]}{const t=3===i||1===i?1:0;return[...e,t]}}function P(t){const e=t.parentElement;if(!e)throw new Error("Invalid grid element");let i=e.firstElementChild,s=0;for(;i!==t&&i!==e.lastElementChild&&i;)i=i.nextElementSibling,s++;return s}function L(t){const e=t.parentElement;if(!e)throw new Error("Invalid grid element");if(/\bmonaco-grid-view\b/.test(e.className))return[];const i=P(e);return[...L(e.parentElement.parentElement.parentElement.parentElement),i]}!function(t){t[t.Up=0]="Up",t[t.Down=1]="Down",t[t.Left=2]="Left",t[t.Right=3]="Right"}(y||(y={})),function(t){t.Distribute={type:"distribute"},t.Split={type:"split"},t.Auto={type:"auto"},t.Invisible=function(t){return{type:"invisible",cachedVisibleSize:t}}}(b||(b={}));class A extends N{get orientation(){return this.a.orientation}set orientation(t){this.a.orientation=t}get width(){return this.a.width}get height(){return this.a.height}get minimumWidth(){return this.a.minimumWidth}get minimumHeight(){return this.a.minimumHeight}get maximumWidth(){return this.a.maximumWidth}get maximumHeight(){return this.a.maximumHeight}get boundarySashes(){return this.a.boundarySashes}set boundarySashes(t){this.a.boundarySashes=t}set edgeSnapping(t){this.a.edgeSnapping=t}get element(){return this.a.element}constructor(t,e={}){super(),this.b=new Map,this.f=!1,t instanceof m?(this.a=t,this.a.getViewMap(this.b)):this.a=new m(e),this.B(this.a),this.B(this.a.onDidSashReset(this.m,this)),t instanceof m||this.h(t,0,[0]),this.onDidChange=this.a.onDidChange,this.onDidScroll=this.a.onDidScroll,this.onDidChangeViewMaximized=this.a.onDidChangeViewMaximized}style(t){this.a.style(t)}layout(t,e,i=0,s=0){this.a.layout(t,e,i,s),this.f=!0}addView(t,e,i,s){if(this.b.has(t))throw new Error("Can't add same view twice");const n=z(s);1===this.b.size&&this.orientation!==n&&(this.orientation=n);const r=this.j(i),o=S(this.a.orientation,r,s);let a;if("number"==typeof e)a=e;else if("split"===e.type){const[,t]=f(r);a=l.Split(t)}else if("distribute"===e.type)a=l.Distribute;else if("auto"===e.type){const[,t]=f(r);a=l.Auto(t)}else a=e;this.h(t,a,o)}g(t,e,i){if(this.b.has(t))throw new Error("Can't add same view twice");let s;s="number"==typeof e?e:"distribute"===e.type?l.Distribute:e,this.h(t,s,i)}h(t,e,i){this.b.set(t,t.element),this.a.addView(t,e,i)}removeView(t,e){if(1===this.b.size)throw new Error("Can't remove last view");const i=this.j(t);let s;if("distribute"===e?.type)s=l.Distribute;else if("auto"===e?.type){const t=i[i.length-1];s=l.Auto(0===t?1:t-1)}this.a.removeView(i,s),this.b.delete(t)}moveView(t,e,i,s){const n=this.j(t),[r,o]=f(n),a=this.j(i),h=S(this.a.orientation,a,s),[u,d]=f(h);x(r,u)?this.a.moveView(r,o,d):(this.removeView(t,"number"==typeof e?void 0:e),this.addView(t,e,i,s))}moveViewTo(t,e){const i=this.j(t),[s,n]=f(i),[r,o]=f(e);if(x(s,r))this.a.moveView(s,n,o);else{const s=this.getViewSize(t),n=p(this.a.orientation,i),r=this.getViewCachedVisibleSize(t),o=typeof r>"u"?1===n?s.width:s.height:b.Invisible(r);this.removeView(t),this.g(t,o,e)}}swapViews(t,e){const i=this.j(t),s=this.j(e);return this.a.swapViews(i,s)}resizeView(t,e){const i=this.j(t);return this.a.resizeView(i,e)}isViewExpanded(t){const e=this.j(t);return this.a.isViewExpanded(e)}isViewMaximized(t){const e=this.j(t);return this.a.isViewMaximized(e)}hasMaximizedView(){return this.a.hasMaximizedView()}getViewSize(t){if(!t)return this.a.getViewSize();const e=this.j(t);return this.a.getViewSize(e)}getViewCachedVisibleSize(t){const e=this.j(t);return this.a.getViewCachedVisibleSize(e)}maximizeView(t){if(this.b.size<2)throw new Error("At least two views are required to maximize a view");const e=this.j(t);this.a.maximizeView(e)}exitMaximizedView(){this.a.exitMaximizedView()}expandView(t){const e=this.j(t);this.a.expandView(e)}distributeViewSizes(){this.a.distributeViewSizes()}isViewVisible(t){const e=this.j(t);return this.a.isViewVisible(e)}setViewVisible(t,e){const i=this.j(t);this.a.setViewVisible(i,e)}getViews(){return this.a.getView()}getNeighborViews(t,e,i=!1){if(!this.f)throw new Error("Can't call getNeighborViews before first layout");const s=this.j(t),n=this.getViews(),r=v(n,s);let o=E(r.box,e);return i&&(0===e&&0===r.box.top?o={offset:n.box.top+n.box.height,range:o.range}:3===e&&r.box.left+r.box.width===n.box.width||1===e&&r.box.top+r.box.height===n.box.height?o={offset:0,range:o.range}:2===e&&0===r.box.left&&(o={offset:n.box.left+n.box.width,range:o.range})),B(n,O(e),o).map((t=>t.view))}j(t){const e=this.b.get(t);if(!e)throw new Error("View not found");return L(e)}m(t){const e=t=>{const e=this.a.getView(t);if(w(e))return!1;const i=p(this.orientation,t),s=1===i?e.view.preferredWidth:e.view.preferredHeight;if("number"!=typeof s)return!1;const n=1===i?{width:Math.round(s)}:{height:Math.round(s)};return this.a.resizeView(t,n),!0};if(e(t))return;const[i,s]=f(t);e([...i,s+1])||this.a.distributeViewSizes(i)}}class c extends A{constructor(){super(...arguments),this.s=!0}static n(t,e){const i=0===e?t.box.width:t.box.height;if(!w(t)){const e={type:"leaf",data:t.view.toJSON(),size:i};return"number"==typeof t.cachedVisibleSize?(e.size=t.cachedVisibleSize,e.visible=!1):t.maximized&&(e.maximized=!0),e}const s=t.children.map((t=>c.n(t,V(e))));return s.some((t=>!1!==t.visible))?{type:"branch",data:s,size:i}:{type:"branch",data:s,size:i,visible:!1}}static deserialize(t,e,i={}){if("number"!=typeof t.orientation)throw new Error("Invalid JSON: 'orientation' property must be a number.");if("number"!=typeof t.width)throw new Error("Invalid JSON: 'width' property must be a number.");if("number"!=typeof t.height)throw new Error("Invalid JSON: 'height' property must be a number.");const s=m.deserialize(t,e,i);return new c(s,i)}static from(t,e={}){return c.deserialize(G(t),{fromJSON:t=>t},e)}serialize(){return{root:c.n(this.getViews(),this.orientation),orientation:this.orientation,width:this.width,height:this.height}}layout(t,e,i=0,s=0){super.layout(t,e,i,s),this.s&&(this.s=!1,this.a.trySet2x2())}}function j(t){return!!t.groups}function C(t,e){if(!e&&t.groups&&t.groups.length<=1&&(t.groups=void 0),!j(t))return;let i=0,s=0;for(const e of t.groups)C(e,!1),e.size&&(i+=e.size,s++);const n=(s>0?i:1)/(t.groups.length-s);for(const e of t.groups)e.size||(e.size=n)}function M(t){return j(t)?{type:"branch",data:t.groups.map((t=>M(t))),size:t.size}:{type:"leaf",data:t.data,size:t.size}}function I(t,e){if("branch"===t.type){const i=t.data.map((t=>I(t,V(e))));if(0===e){return{width:t.size||(0===i.length?void 0:Math.max(...i.map((t=>t.width||0)))),height:0===i.length?void 0:i.reduce(((t,e)=>t+(e.height||0)),0)}}return{width:0===i.length?void 0:i.reduce(((t,e)=>t+(e.width||0)),0),height:t.size||(0===i.length?void 0:Math.max(...i.map((t=>t.height||0))))}}return{width:0===e?t.size:void 0,height:0===e?void 0:t.size}}function G(t){C(t,!0);const e=M(t),{width:i,height:s}=I(e,t.orientation);return{root:e,orientation:t.orientation,width:i||1,height:s||1}}export{w as $B9,S as $C9,A as $D9,c as $E9,C as $F9,G as $G9,y as Direction,T as LayoutPriority,q as Orientation,b as Sizing,F as orthogonal};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { equals, tail } from "../../../common/arrays.js";
+import { Disposable } from "../../../common/lifecycle.js";
+import "./gridview.css";
+import { GridView, orthogonal, Sizing as GridViewSizing } from "./gridview.js";
+import { LayoutPriority, Orientation, orthogonal as orthogonal2 } from "./gridview.js";
+var Direction;
+(function(Direction2) {
+  Direction2[Direction2["Up"] = 0] = "Up";
+  Direction2[Direction2["Down"] = 1] = "Down";
+  Direction2[Direction2["Left"] = 2] = "Left";
+  Direction2[Direction2["Right"] = 3] = "Right";
+})(Direction || (Direction = {}));
+function oppositeDirection(direction) {
+  switch (direction) {
+    case 0:
+      return 1;
+    case 1:
+      return 0;
+    case 2:
+      return 3;
+    case 3:
+      return 2;
+  }
+}
+__name(oppositeDirection, "oppositeDirection");
+function isGridBranchNode(node) {
+  return !!node.children;
+}
+__name(isGridBranchNode, "isGridBranchNode");
+function getGridNode(node, location) {
+  if (location.length === 0) {
+    return node;
+  }
+  if (!isGridBranchNode(node)) {
+    throw new Error("Invalid location");
+  }
+  const [index, ...rest] = location;
+  return getGridNode(node.children[index], rest);
+}
+__name(getGridNode, "getGridNode");
+function intersects(one, other) {
+  return !(one.start >= other.end || other.start >= one.end);
+}
+__name(intersects, "intersects");
+function getBoxBoundary(box, direction) {
+  const orientation = getDirectionOrientation(direction);
+  const offset = direction === 0 ? box.top : direction === 3 ? box.left + box.width : direction === 1 ? box.top + box.height : box.left;
+  const range = {
+    start: orientation === 1 ? box.top : box.left,
+    end: orientation === 1 ? box.top + box.height : box.left + box.width
+  };
+  return { offset, range };
+}
+__name(getBoxBoundary, "getBoxBoundary");
+function findAdjacentBoxLeafNodes(boxNode, direction, boundary) {
+  const result = [];
+  function _(boxNode2, direction2, boundary2) {
+    if (isGridBranchNode(boxNode2)) {
+      for (const child of boxNode2.children) {
+        _(child, direction2, boundary2);
+      }
+    } else {
+      const { offset, range } = getBoxBoundary(boxNode2.box, direction2);
+      if (offset === boundary2.offset && intersects(range, boundary2.range)) {
+        result.push(boxNode2);
+      }
+    }
+  }
+  __name(_, "_");
+  _(boxNode, direction, boundary);
+  return result;
+}
+__name(findAdjacentBoxLeafNodes, "findAdjacentBoxLeafNodes");
+function getLocationOrientation(rootOrientation, location) {
+  return location.length % 2 === 0 ? orthogonal(rootOrientation) : rootOrientation;
+}
+__name(getLocationOrientation, "getLocationOrientation");
+function getDirectionOrientation(direction) {
+  return direction === 0 || direction === 1 ? 0 : 1;
+}
+__name(getDirectionOrientation, "getDirectionOrientation");
+function getRelativeLocation(rootOrientation, location, direction) {
+  const orientation = getLocationOrientation(rootOrientation, location);
+  const directionOrientation = getDirectionOrientation(direction);
+  if (orientation === directionOrientation) {
+    let [rest, index] = tail(location);
+    if (direction === 3 || direction === 1) {
+      index += 1;
+    }
+    return [...rest, index];
+  } else {
+    const index = direction === 3 || direction === 1 ? 1 : 0;
+    return [...location, index];
+  }
+}
+__name(getRelativeLocation, "getRelativeLocation");
+function indexInParent(element) {
+  const parentElement = element.parentElement;
+  if (!parentElement) {
+    throw new Error("Invalid grid element");
+  }
+  let el = parentElement.firstElementChild;
+  let index = 0;
+  while (el !== element && el !== parentElement.lastElementChild && el) {
+    el = el.nextElementSibling;
+    index++;
+  }
+  return index;
+}
+__name(indexInParent, "indexInParent");
+function getGridLocation(element) {
+  const parentElement = element.parentElement;
+  if (!parentElement) {
+    throw new Error("Invalid grid element");
+  }
+  if (/\bmonaco-grid-view\b/.test(parentElement.className)) {
+    return [];
+  }
+  const index = indexInParent(parentElement);
+  const ancestor = parentElement.parentElement.parentElement.parentElement.parentElement;
+  return [...getGridLocation(ancestor), index];
+}
+__name(getGridLocation, "getGridLocation");
+var Sizing;
+(function(Sizing2) {
+  Sizing2.Distribute = { type: "distribute" };
+  Sizing2.Split = { type: "split" };
+  Sizing2.Auto = { type: "auto" };
+  function Invisible(cachedVisibleSize) {
+    return { type: "invisible", cachedVisibleSize };
+  }
+  __name(Invisible, "Invisible");
+  Sizing2.Invisible = Invisible;
+})(Sizing || (Sizing = {}));
+class Grid extends Disposable {
+  static {
+    __name(this, "Grid");
+  }
+  /**
+   * The orientation of the grid. Matches the orientation of the root
+   * {@link SplitView} in the grid's {@link GridLocation} model.
+   */
+  get orientation() {
+    return this.gridview.orientation;
+  }
+  set orientation(orientation) {
+    this.gridview.orientation = orientation;
+  }
+  /**
+   * The width of the grid.
+   */
+  get width() {
+    return this.gridview.width;
+  }
+  /**
+   * The height of the grid.
+   */
+  get height() {
+    return this.gridview.height;
+  }
+  /**
+   * The minimum width of the grid.
+   */
+  get minimumWidth() {
+    return this.gridview.minimumWidth;
+  }
+  /**
+   * The minimum height of the grid.
+   */
+  get minimumHeight() {
+    return this.gridview.minimumHeight;
+  }
+  /**
+   * The maximum width of the grid.
+   */
+  get maximumWidth() {
+    return this.gridview.maximumWidth;
+  }
+  /**
+   * The maximum height of the grid.
+   */
+  get maximumHeight() {
+    return this.gridview.maximumHeight;
+  }
+  /**
+   * A collection of sashes perpendicular to each edge of the grid.
+   * Corner sashes will be created for each intersection.
+   */
+  get boundarySashes() {
+    return this.gridview.boundarySashes;
+  }
+  set boundarySashes(boundarySashes) {
+    this.gridview.boundarySashes = boundarySashes;
+  }
+  /**
+   * Enable/disable edge snapping across all grid views.
+   */
+  set edgeSnapping(edgeSnapping) {
+    this.gridview.edgeSnapping = edgeSnapping;
+  }
+  /**
+   * The DOM element for this view.
+   */
+  get element() {
+    return this.gridview.element;
+  }
+  /**
+   * Create a new {@link Grid}. A grid must *always* have a view
+   * inside.
+   *
+   * @param view An initial view for this Grid.
+   */
+  constructor(view, options = {}) {
+    super();
+    this.views = /* @__PURE__ */ new Map();
+    this.didLayout = false;
+    if (view instanceof GridView) {
+      this.gridview = view;
+      this.gridview.getViewMap(this.views);
+    } else {
+      this.gridview = new GridView(options);
+    }
+    this._register(this.gridview);
+    this._register(this.gridview.onDidSashReset(this.onDidSashReset, this));
+    if (!(view instanceof GridView)) {
+      this._addView(view, 0, [0]);
+    }
+    this.onDidChange = this.gridview.onDidChange;
+    this.onDidScroll = this.gridview.onDidScroll;
+    this.onDidChangeViewMaximized = this.gridview.onDidChangeViewMaximized;
+  }
+  style(styles) {
+    this.gridview.style(styles);
+  }
+  /**
+   * Layout the {@link Grid}.
+   *
+   * Optionally provide a `top` and `left` positions, those will propagate
+   * as an origin for positions passed to {@link IView.layout}.
+   *
+   * @param width The width of the {@link Grid}.
+   * @param height The height of the {@link Grid}.
+   * @param top Optional, the top location of the {@link Grid}.
+   * @param left Optional, the left location of the {@link Grid}.
+   */
+  layout(width, height, top = 0, left = 0) {
+    this.gridview.layout(width, height, top, left);
+    this.didLayout = true;
+  }
+  /**
+   * Add a {@link IView view} to this {@link Grid}, based on another reference view.
+   *
+   * Take this grid as an example:
+   *
+   * ```
+   *  +-----+---------------+
+   *  |  A  |      B        |
+   *  +-----+---------+-----+
+   *  |        C      |     |
+   *  +---------------+  D  |
+   *  |        E      |     |
+   *  +---------------+-----+
+   * ```
+   *
+   * Calling `addView(X, Sizing.Distribute, C, Direction.Right)` will make the following
+   * changes:
+   *
+   * ```
+   *  +-----+---------------+
+   *  |  A  |      B        |
+   *  +-----+-+-------+-----+
+   *  |   C   |   X   |     |
+   *  +-------+-------+  D  |
+   *  |        E      |     |
+   *  +---------------+-----+
+   * ```
+   *
+   * Or `addView(X, Sizing.Distribute, D, Direction.Down)`:
+   *
+   * ```
+   *  +-----+---------------+
+   *  |  A  |      B        |
+   *  +-----+---------+-----+
+   *  |        C      |  D  |
+   *  +---------------+-----+
+   *  |        E      |  X  |
+   *  +---------------+-----+
+   * ```
+   *
+   * @param newView The view to add.
+   * @param size Either a fixed size, or a dynamic {@link Sizing} strategy.
+   * @param referenceView Another view to place this new view next to.
+   * @param direction The direction the new view should be placed next to the reference view.
+   */
+  addView(newView, size, referenceView, direction) {
+    if (this.views.has(newView)) {
+      throw new Error("Can't add same view twice");
+    }
+    const orientation = getDirectionOrientation(direction);
+    if (this.views.size === 1 && this.orientation !== orientation) {
+      this.orientation = orientation;
+    }
+    const referenceLocation = this.getViewLocation(referenceView);
+    const location = getRelativeLocation(this.gridview.orientation, referenceLocation, direction);
+    let viewSize;
+    if (typeof size === "number") {
+      viewSize = size;
+    } else if (size.type === "split") {
+      const [, index] = tail(referenceLocation);
+      viewSize = GridViewSizing.Split(index);
+    } else if (size.type === "distribute") {
+      viewSize = GridViewSizing.Distribute;
+    } else if (size.type === "auto") {
+      const [, index] = tail(referenceLocation);
+      viewSize = GridViewSizing.Auto(index);
+    } else {
+      viewSize = size;
+    }
+    this._addView(newView, viewSize, location);
+  }
+  addViewAt(newView, size, location) {
+    if (this.views.has(newView)) {
+      throw new Error("Can't add same view twice");
+    }
+    let viewSize;
+    if (typeof size === "number") {
+      viewSize = size;
+    } else if (size.type === "distribute") {
+      viewSize = GridViewSizing.Distribute;
+    } else {
+      viewSize = size;
+    }
+    this._addView(newView, viewSize, location);
+  }
+  _addView(newView, size, location) {
+    this.views.set(newView, newView.element);
+    this.gridview.addView(newView, size, location);
+  }
+  /**
+   * Remove a {@link IView view} from this {@link Grid}.
+   *
+   * @param view The {@link IView view} to remove.
+   * @param sizing Whether to distribute other {@link IView view}'s sizes.
+   */
+  removeView(view, sizing) {
+    if (this.views.size === 1) {
+      throw new Error("Can't remove last view");
+    }
+    const location = this.getViewLocation(view);
+    let gridViewSizing;
+    if (sizing?.type === "distribute") {
+      gridViewSizing = GridViewSizing.Distribute;
+    } else if (sizing?.type === "auto") {
+      const index = location[location.length - 1];
+      gridViewSizing = GridViewSizing.Auto(index === 0 ? 1 : index - 1);
+    }
+    this.gridview.removeView(location, gridViewSizing);
+    this.views.delete(view);
+  }
+  /**
+   * Move a {@link IView view} to another location in the grid.
+   *
+   * @remarks See {@link Grid.addView}.
+   *
+   * @param view The {@link IView view} to move.
+   * @param sizing Either a fixed size, or a dynamic {@link Sizing} strategy.
+   * @param referenceView Another view to place the view next to.
+   * @param direction The direction the view should be placed next to the reference view.
+   */
+  moveView(view, sizing, referenceView, direction) {
+    const sourceLocation = this.getViewLocation(view);
+    const [sourceParentLocation, from] = tail(sourceLocation);
+    const referenceLocation = this.getViewLocation(referenceView);
+    const targetLocation = getRelativeLocation(this.gridview.orientation, referenceLocation, direction);
+    const [targetParentLocation, to] = tail(targetLocation);
+    if (equals(sourceParentLocation, targetParentLocation)) {
+      this.gridview.moveView(sourceParentLocation, from, to);
+    } else {
+      this.removeView(view, typeof sizing === "number" ? void 0 : sizing);
+      this.addView(view, sizing, referenceView, direction);
+    }
+  }
+  /**
+   * Move a {@link IView view} to another location in the grid.
+   *
+   * @remarks Internal method, do not use without knowing what you're doing.
+   * @remarks See {@link GridView.moveView}.
+   *
+   * @param view The {@link IView view} to move.
+   * @param location The {@link GridLocation location} to insert the view on.
+   */
+  moveViewTo(view, location) {
+    const sourceLocation = this.getViewLocation(view);
+    const [sourceParentLocation, from] = tail(sourceLocation);
+    const [targetParentLocation, to] = tail(location);
+    if (equals(sourceParentLocation, targetParentLocation)) {
+      this.gridview.moveView(sourceParentLocation, from, to);
+    } else {
+      const size = this.getViewSize(view);
+      const orientation = getLocationOrientation(this.gridview.orientation, sourceLocation);
+      const cachedViewSize = this.getViewCachedVisibleSize(view);
+      const sizing = typeof cachedViewSize === "undefined" ? orientation === 1 ? size.width : size.height : Sizing.Invisible(cachedViewSize);
+      this.removeView(view);
+      this.addViewAt(view, sizing, location);
+    }
+  }
+  /**
+   * Swap two {@link IView views} within the {@link Grid}.
+   *
+   * @param from One {@link IView view}.
+   * @param to Another {@link IView view}.
+   */
+  swapViews(from, to) {
+    const fromLocation = this.getViewLocation(from);
+    const toLocation = this.getViewLocation(to);
+    return this.gridview.swapViews(fromLocation, toLocation);
+  }
+  /**
+   * Resize a {@link IView view}.
+   *
+   * @param view The {@link IView view} to resize.
+   * @param size The size the view should be.
+   */
+  resizeView(view, size) {
+    const location = this.getViewLocation(view);
+    return this.gridview.resizeView(location, size);
+  }
+  /**
+   * Returns whether all other {@link IView views} are at their minimum size.
+   *
+   * @param view The reference {@link IView view}.
+   */
+  isViewExpanded(view) {
+    const location = this.getViewLocation(view);
+    return this.gridview.isViewExpanded(location);
+  }
+  /**
+   * Returns whether the {@link IView view} is maximized.
+   *
+   * @param view The reference {@link IView view}.
+   */
+  isViewMaximized(view) {
+    const location = this.getViewLocation(view);
+    return this.gridview.isViewMaximized(location);
+  }
+  /**
+   * Returns whether the {@link IView view} is maximized.
+   *
+   * @param view The reference {@link IView view}.
+   */
+  hasMaximizedView() {
+    return this.gridview.hasMaximizedView();
+  }
+  /**
+   * Get the size of a {@link IView view}.
+   *
+   * @param view The {@link IView view}. Provide `undefined` to get the size
+   * of the grid itself.
+   */
+  getViewSize(view) {
+    if (!view) {
+      return this.gridview.getViewSize();
+    }
+    const location = this.getViewLocation(view);
+    return this.gridview.getViewSize(location);
+  }
+  /**
+   * Get the cached visible size of a {@link IView view}. This was the size
+   * of the view at the moment it last became hidden.
+   *
+   * @param view The {@link IView view}.
+   */
+  getViewCachedVisibleSize(view) {
+    const location = this.getViewLocation(view);
+    return this.gridview.getViewCachedVisibleSize(location);
+  }
+  /**
+   * Maximizes the specified view and hides all other views.
+   * @param view The view to maximize.
+   */
+  maximizeView(view) {
+    if (this.views.size < 2) {
+      throw new Error("At least two views are required to maximize a view");
+    }
+    const location = this.getViewLocation(view);
+    this.gridview.maximizeView(location);
+  }
+  exitMaximizedView() {
+    this.gridview.exitMaximizedView();
+  }
+  /**
+   * Expand the size of a {@link IView view} by collapsing all other views
+   * to their minimum sizes.
+   *
+   * @param view The {@link IView view}.
+   */
+  expandView(view) {
+    const location = this.getViewLocation(view);
+    this.gridview.expandView(location);
+  }
+  /**
+   * Distribute the size among all {@link IView views} within the entire
+   * grid or within a single {@link SplitView}.
+   */
+  distributeViewSizes() {
+    this.gridview.distributeViewSizes();
+  }
+  /**
+   * Returns whether a {@link IView view} is visible.
+   *
+   * @param view The {@link IView view}.
+   */
+  isViewVisible(view) {
+    const location = this.getViewLocation(view);
+    return this.gridview.isViewVisible(location);
+  }
+  /**
+   * Set the visibility state of a {@link IView view}.
+   *
+   * @param view The {@link IView view}.
+   */
+  setViewVisible(view, visible) {
+    const location = this.getViewLocation(view);
+    this.gridview.setViewVisible(location, visible);
+  }
+  /**
+   * Returns a descriptor for the entire grid.
+   */
+  getViews() {
+    return this.gridview.getView();
+  }
+  /**
+   * Utility method to return the collection all views which intersect
+   * a view's edge.
+   *
+   * @param view The {@link IView view}.
+   * @param direction Which direction edge to be considered.
+   * @param wrap Whether the grid wraps around (from right to left, from bottom to top).
+   */
+  getNeighborViews(view, direction, wrap = false) {
+    if (!this.didLayout) {
+      throw new Error("Can't call getNeighborViews before first layout");
+    }
+    const location = this.getViewLocation(view);
+    const root = this.getViews();
+    const node = getGridNode(root, location);
+    let boundary = getBoxBoundary(node.box, direction);
+    if (wrap) {
+      if (direction === 0 && node.box.top === 0) {
+        boundary = { offset: root.box.top + root.box.height, range: boundary.range };
+      } else if (direction === 3 && node.box.left + node.box.width === root.box.width) {
+        boundary = { offset: 0, range: boundary.range };
+      } else if (direction === 1 && node.box.top + node.box.height === root.box.height) {
+        boundary = { offset: 0, range: boundary.range };
+      } else if (direction === 2 && node.box.left === 0) {
+        boundary = { offset: root.box.left + root.box.width, range: boundary.range };
+      }
+    }
+    return findAdjacentBoxLeafNodes(root, oppositeDirection(direction), boundary).map((node2) => node2.view);
+  }
+  getViewLocation(view) {
+    const element = this.views.get(view);
+    if (!element) {
+      throw new Error("View not found");
+    }
+    return getGridLocation(element);
+  }
+  onDidSashReset(location) {
+    const resizeToPreferredSize = /* @__PURE__ */ __name((location2) => {
+      const node = this.gridview.getView(location2);
+      if (isGridBranchNode(node)) {
+        return false;
+      }
+      const direction = getLocationOrientation(this.orientation, location2);
+      const size = direction === 1 ? node.view.preferredWidth : node.view.preferredHeight;
+      if (typeof size !== "number") {
+        return false;
+      }
+      const viewSize = direction === 1 ? { width: Math.round(size) } : { height: Math.round(size) };
+      this.gridview.resizeView(location2, viewSize);
+      return true;
+    }, "resizeToPreferredSize");
+    if (resizeToPreferredSize(location)) {
+      return;
+    }
+    const [parentLocation, index] = tail(location);
+    if (resizeToPreferredSize([...parentLocation, index + 1])) {
+      return;
+    }
+    this.gridview.distributeViewSizes(parentLocation);
+  }
+}
+class SerializableGrid extends Grid {
+  static {
+    __name(this, "SerializableGrid");
+  }
+  constructor() {
+    super(...arguments);
+    this.initialLayoutContext = true;
+  }
+  static serializeNode(node, orientation) {
+    const size = orientation === 0 ? node.box.width : node.box.height;
+    if (!isGridBranchNode(node)) {
+      const serializedLeafNode = { type: "leaf", data: node.view.toJSON(), size };
+      if (typeof node.cachedVisibleSize === "number") {
+        serializedLeafNode.size = node.cachedVisibleSize;
+        serializedLeafNode.visible = false;
+      } else if (node.maximized) {
+        serializedLeafNode.maximized = true;
+      }
+      return serializedLeafNode;
+    }
+    const data = node.children.map((c) => SerializableGrid.serializeNode(c, orthogonal(orientation)));
+    if (data.some((c) => c.visible !== false)) {
+      return { type: "branch", data, size };
+    }
+    return { type: "branch", data, size, visible: false };
+  }
+  /**
+   * Construct a new {@link SerializableGrid} from a JSON object.
+   *
+   * @param json The JSON object.
+   * @param deserializer A deserializer which can revive each view.
+   * @returns A new {@link SerializableGrid} instance.
+   */
+  static deserialize(json, deserializer, options = {}) {
+    if (typeof json.orientation !== "number") {
+      throw new Error("Invalid JSON: 'orientation' property must be a number.");
+    } else if (typeof json.width !== "number") {
+      throw new Error("Invalid JSON: 'width' property must be a number.");
+    } else if (typeof json.height !== "number") {
+      throw new Error("Invalid JSON: 'height' property must be a number.");
+    }
+    const gridview = GridView.deserialize(json, deserializer, options);
+    const result = new SerializableGrid(gridview, options);
+    return result;
+  }
+  /**
+   * Construct a new {@link SerializableGrid} from a grid descriptor.
+   *
+   * @param gridDescriptor A grid descriptor in which leaf nodes point to actual views.
+   * @returns A new {@link SerializableGrid} instance.
+   */
+  static from(gridDescriptor, options = {}) {
+    return SerializableGrid.deserialize(createSerializedGrid(gridDescriptor), { fromJSON: /* @__PURE__ */ __name((view) => view, "fromJSON") }, options);
+  }
+  /**
+   * Serialize this grid into a JSON object.
+   */
+  serialize() {
+    return {
+      root: SerializableGrid.serializeNode(this.getViews(), this.orientation),
+      orientation: this.orientation,
+      width: this.width,
+      height: this.height
+    };
+  }
+  layout(width, height, top = 0, left = 0) {
+    super.layout(width, height, top, left);
+    if (this.initialLayoutContext) {
+      this.initialLayoutContext = false;
+      this.gridview.trySet2x2();
+    }
+  }
+}
+function isGridBranchNodeDescriptor(nodeDescriptor) {
+  return !!nodeDescriptor.groups;
+}
+__name(isGridBranchNodeDescriptor, "isGridBranchNodeDescriptor");
+function sanitizeGridNodeDescriptor(nodeDescriptor, rootNode) {
+  if (!rootNode && nodeDescriptor.groups && nodeDescriptor.groups.length <= 1) {
+    nodeDescriptor.groups = void 0;
+  }
+  if (!isGridBranchNodeDescriptor(nodeDescriptor)) {
+    return;
+  }
+  let totalDefinedSize = 0;
+  let totalDefinedSizeCount = 0;
+  for (const child of nodeDescriptor.groups) {
+    sanitizeGridNodeDescriptor(child, false);
+    if (child.size) {
+      totalDefinedSize += child.size;
+      totalDefinedSizeCount++;
+    }
+  }
+  const totalUndefinedSize = totalDefinedSizeCount > 0 ? totalDefinedSize : 1;
+  const totalUndefinedSizeCount = nodeDescriptor.groups.length - totalDefinedSizeCount;
+  const eachUndefinedSize = totalUndefinedSize / totalUndefinedSizeCount;
+  for (const child of nodeDescriptor.groups) {
+    if (!child.size) {
+      child.size = eachUndefinedSize;
+    }
+  }
+}
+__name(sanitizeGridNodeDescriptor, "sanitizeGridNodeDescriptor");
+function createSerializedNode(nodeDescriptor) {
+  if (isGridBranchNodeDescriptor(nodeDescriptor)) {
+    return { type: "branch", data: nodeDescriptor.groups.map((c) => createSerializedNode(c)), size: nodeDescriptor.size };
+  } else {
+    return { type: "leaf", data: nodeDescriptor.data, size: nodeDescriptor.size };
+  }
+}
+__name(createSerializedNode, "createSerializedNode");
+function getDimensions(node, orientation) {
+  if (node.type === "branch") {
+    const childrenDimensions = node.data.map((c) => getDimensions(c, orthogonal(orientation)));
+    if (orientation === 0) {
+      const width = node.size || (childrenDimensions.length === 0 ? void 0 : Math.max(...childrenDimensions.map((d) => d.width || 0)));
+      const height = childrenDimensions.length === 0 ? void 0 : childrenDimensions.reduce((r, d) => r + (d.height || 0), 0);
+      return { width, height };
+    } else {
+      const width = childrenDimensions.length === 0 ? void 0 : childrenDimensions.reduce((r, d) => r + (d.width || 0), 0);
+      const height = node.size || (childrenDimensions.length === 0 ? void 0 : Math.max(...childrenDimensions.map((d) => d.height || 0)));
+      return { width, height };
+    }
+  } else {
+    const width = orientation === 0 ? node.size : void 0;
+    const height = orientation === 0 ? void 0 : node.size;
+    return { width, height };
+  }
+}
+__name(getDimensions, "getDimensions");
+function createSerializedGrid(gridDescriptor) {
+  sanitizeGridNodeDescriptor(gridDescriptor, true);
+  const root = createSerializedNode(gridDescriptor);
+  const { width, height } = getDimensions(root, gridDescriptor.orientation);
+  return {
+    root,
+    orientation: gridDescriptor.orientation,
+    width: width || 1,
+    height: height || 1
+  };
+}
+__name(createSerializedGrid, "createSerializedGrid");
+export {
+  Direction,
+  Grid,
+  LayoutPriority,
+  Orientation,
+  SerializableGrid,
+  Sizing,
+  createSerializedGrid,
+  getRelativeLocation,
+  isGridBranchNode,
+  orthogonal2 as orthogonal,
+  sanitizeGridNodeDescriptor
+};
+//# sourceMappingURL=grid.js.map

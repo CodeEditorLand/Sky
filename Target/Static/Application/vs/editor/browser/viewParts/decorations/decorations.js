@@ -1,1 +1,191 @@
-import"./decorations.css";import{$vcb as L}from"../../view/dynamicViewOverlay.js";import{$pbb as N}from"../../view/renderingContext.js";import{$cC as f}from"../../../common/core/range.js";class x extends L{constructor(e){super(),this.c=e;const n=this.c.configuration.options;this.f=n.get(55).typicalHalfwidthCharacterWidth,this.g=null,this.c.addEventHandler(this)}dispose(){this.c.removeEventHandler(this),this.g=null,super.dispose()}onConfigurationChanged(e){const n=this.c.configuration.options;return this.f=n.get(55).typicalHalfwidthCharacterWidth,!0}onDecorationsChanged(e){return!0}onFlushed(e){return!0}onLinesChanged(e){return!0}onLinesDeleted(e){return!0}onLinesInserted(e){return!0}onScrollChanged(e){return e.scrollTopChanged||e.scrollWidthChanged}onZonesChanged(e){return!0}prepareRender(e){const n=e.getDecorationsInViewport();let t=[],i=0;for(let e=0,s=n.length;e<s;e++){const s=n[e];s.options.className&&(t[i++]=s)}t=t.sort(((e,n)=>{if(e.options.zIndex<n.options.zIndex)return-1;if(e.options.zIndex>n.options.zIndex)return 1;const t=e.options.className,i=n.options.className;return t<i?-1:t>i?1:f.compareRangesUsingStarts(e.range,n.range)}));const s=e.visibleRange.startLineNumber,r=e.visibleRange.endLineNumber,o=[];for(let e=s;e<=r;e++){o[e-s]=""}this.h(e,t,o),this.n(e,t,o),this.g=o}h(e,n,t){const i=e.visibleRange.startLineNumber,s=e.visibleRange.endLineNumber;for(let e=0,r=n.length;e<r;e++){const r=n[e];if(!r.options.isWholeLine)continue;const o='<div class="cdr '+r.options.className+'" style="left:0;width:100%;"></div>',a=Math.max(r.range.startLineNumber,i),l=Math.min(r.range.endLineNumber,s);for(let e=a;e<=l;e++){t[e-i]+=o}}}n(e,n,t){const i=e.visibleRange.startLineNumber;let s=null,r=!1,o=null,a=!1;for(let l=0,c=n.length;l<c;l++){const c=n[l];if(c.options.isWholeLine)continue;const h=c.options.className,d=!!c.options.showIfCollapsed;let g=c.range;(d&&1===g.endColumn&&g.endLineNumber!==g.startLineNumber&&(g=new f(g.startLineNumber,g.startColumn,g.endLineNumber-1,this.c.viewModel.getLineMaxColumn(g.endLineNumber-1))),s===h&&r===d&&f.areIntersectingOrTouching(o,g))?o=f.plusRange(o,g):(null!==s&&this.r(e,o,s,a,r,i,t),s=h,r=d,o=g,a=c.options.shouldFillLineOnLineBreak??!1)}null!==s&&this.r(e,o,s,a,r,i,t)}r(e,n,t,i,s,r,o){const a=e.linesVisibleRangesForRange(n,"findMatch"===t);if(a)for(let e=0,n=a.length;e<n;e++){const n=a[e];if(n.outsideRenderedLine)continue;const l=n.lineNumber-r;if(s&&1===n.ranges.length){const e=n.ranges[0];if(e.width<this.f){const t=Math.round(e.left+e.width/2),i=Math.max(0,Math.round(t-this.f/2));n.ranges[0]=new N(i,this.f)}}for(let e=0,s=n.ranges.length;e<s;e++){const r=i&&n.continuesOnNextLine&&1===s,a=n.ranges[e],c='<div class="cdr '+t+'" style="left:'+String(a.left)+"px;width:"+(r?"100%;":String(a.width)+"px;")+'"></div>';o[l]+=c}}}render(e,n){if(!this.g)return"";const t=n-e;return t<0||t>=this.g.length?"":this.g[t]}}export{x as $Fcb};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import "./decorations.css";
+import { DynamicViewOverlay } from "../../view/dynamicViewOverlay.js";
+import { HorizontalRange } from "../../view/renderingContext.js";
+import { Range } from "../../../common/core/range.js";
+class DecorationsOverlay extends DynamicViewOverlay {
+  static {
+    __name(this, "DecorationsOverlay");
+  }
+  constructor(context) {
+    super();
+    this._context = context;
+    const options = this._context.configuration.options;
+    this._typicalHalfwidthCharacterWidth = options.get(
+      55
+      /* EditorOption.fontInfo */
+    ).typicalHalfwidthCharacterWidth;
+    this._renderResult = null;
+    this._context.addEventHandler(this);
+  }
+  dispose() {
+    this._context.removeEventHandler(this);
+    this._renderResult = null;
+    super.dispose();
+  }
+  // --- begin event handlers
+  onConfigurationChanged(e) {
+    const options = this._context.configuration.options;
+    this._typicalHalfwidthCharacterWidth = options.get(
+      55
+      /* EditorOption.fontInfo */
+    ).typicalHalfwidthCharacterWidth;
+    return true;
+  }
+  onDecorationsChanged(e) {
+    return true;
+  }
+  onFlushed(e) {
+    return true;
+  }
+  onLinesChanged(e) {
+    return true;
+  }
+  onLinesDeleted(e) {
+    return true;
+  }
+  onLinesInserted(e) {
+    return true;
+  }
+  onScrollChanged(e) {
+    return e.scrollTopChanged || e.scrollWidthChanged;
+  }
+  onZonesChanged(e) {
+    return true;
+  }
+  // --- end event handlers
+  prepareRender(ctx) {
+    const _decorations = ctx.getDecorationsInViewport();
+    let decorations = [];
+    let decorationsLen = 0;
+    for (let i = 0, len = _decorations.length; i < len; i++) {
+      const d = _decorations[i];
+      if (d.options.className) {
+        decorations[decorationsLen++] = d;
+      }
+    }
+    decorations = decorations.sort((a, b) => {
+      if (a.options.zIndex < b.options.zIndex) {
+        return -1;
+      }
+      if (a.options.zIndex > b.options.zIndex) {
+        return 1;
+      }
+      const aClassName = a.options.className;
+      const bClassName = b.options.className;
+      if (aClassName < bClassName) {
+        return -1;
+      }
+      if (aClassName > bClassName) {
+        return 1;
+      }
+      return Range.compareRangesUsingStarts(a.range, b.range);
+    });
+    const visibleStartLineNumber = ctx.visibleRange.startLineNumber;
+    const visibleEndLineNumber = ctx.visibleRange.endLineNumber;
+    const output = [];
+    for (let lineNumber = visibleStartLineNumber; lineNumber <= visibleEndLineNumber; lineNumber++) {
+      const lineIndex = lineNumber - visibleStartLineNumber;
+      output[lineIndex] = "";
+    }
+    this._renderWholeLineDecorations(ctx, decorations, output);
+    this._renderNormalDecorations(ctx, decorations, output);
+    this._renderResult = output;
+  }
+  _renderWholeLineDecorations(ctx, decorations, output) {
+    const visibleStartLineNumber = ctx.visibleRange.startLineNumber;
+    const visibleEndLineNumber = ctx.visibleRange.endLineNumber;
+    for (let i = 0, lenI = decorations.length; i < lenI; i++) {
+      const d = decorations[i];
+      if (!d.options.isWholeLine) {
+        continue;
+      }
+      const decorationOutput = '<div class="cdr ' + d.options.className + '" style="left:0;width:100%;"></div>';
+      const startLineNumber = Math.max(d.range.startLineNumber, visibleStartLineNumber);
+      const endLineNumber = Math.min(d.range.endLineNumber, visibleEndLineNumber);
+      for (let j = startLineNumber; j <= endLineNumber; j++) {
+        const lineIndex = j - visibleStartLineNumber;
+        output[lineIndex] += decorationOutput;
+      }
+    }
+  }
+  _renderNormalDecorations(ctx, decorations, output) {
+    const visibleStartLineNumber = ctx.visibleRange.startLineNumber;
+    let prevClassName = null;
+    let prevShowIfCollapsed = false;
+    let prevRange = null;
+    let prevShouldFillLineOnLineBreak = false;
+    for (let i = 0, lenI = decorations.length; i < lenI; i++) {
+      const d = decorations[i];
+      if (d.options.isWholeLine) {
+        continue;
+      }
+      const className = d.options.className;
+      const showIfCollapsed = Boolean(d.options.showIfCollapsed);
+      let range = d.range;
+      if (showIfCollapsed && range.endColumn === 1 && range.endLineNumber !== range.startLineNumber) {
+        range = new Range(range.startLineNumber, range.startColumn, range.endLineNumber - 1, this._context.viewModel.getLineMaxColumn(range.endLineNumber - 1));
+      }
+      if (prevClassName === className && prevShowIfCollapsed === showIfCollapsed && Range.areIntersectingOrTouching(prevRange, range)) {
+        prevRange = Range.plusRange(prevRange, range);
+        continue;
+      }
+      if (prevClassName !== null) {
+        this._renderNormalDecoration(ctx, prevRange, prevClassName, prevShouldFillLineOnLineBreak, prevShowIfCollapsed, visibleStartLineNumber, output);
+      }
+      prevClassName = className;
+      prevShowIfCollapsed = showIfCollapsed;
+      prevRange = range;
+      prevShouldFillLineOnLineBreak = d.options.shouldFillLineOnLineBreak ?? false;
+    }
+    if (prevClassName !== null) {
+      this._renderNormalDecoration(ctx, prevRange, prevClassName, prevShouldFillLineOnLineBreak, prevShowIfCollapsed, visibleStartLineNumber, output);
+    }
+  }
+  _renderNormalDecoration(ctx, range, className, shouldFillLineOnLineBreak, showIfCollapsed, visibleStartLineNumber, output) {
+    const linesVisibleRanges = ctx.linesVisibleRangesForRange(
+      range,
+      /*TODO@Alex*/
+      className === "findMatch"
+    );
+    if (!linesVisibleRanges) {
+      return;
+    }
+    for (let j = 0, lenJ = linesVisibleRanges.length; j < lenJ; j++) {
+      const lineVisibleRanges = linesVisibleRanges[j];
+      if (lineVisibleRanges.outsideRenderedLine) {
+        continue;
+      }
+      const lineIndex = lineVisibleRanges.lineNumber - visibleStartLineNumber;
+      if (showIfCollapsed && lineVisibleRanges.ranges.length === 1) {
+        const singleVisibleRange = lineVisibleRanges.ranges[0];
+        if (singleVisibleRange.width < this._typicalHalfwidthCharacterWidth) {
+          const center = Math.round(singleVisibleRange.left + singleVisibleRange.width / 2);
+          const left = Math.max(0, Math.round(center - this._typicalHalfwidthCharacterWidth / 2));
+          lineVisibleRanges.ranges[0] = new HorizontalRange(left, this._typicalHalfwidthCharacterWidth);
+        }
+      }
+      for (let k = 0, lenK = lineVisibleRanges.ranges.length; k < lenK; k++) {
+        const expandToLeft = shouldFillLineOnLineBreak && lineVisibleRanges.continuesOnNextLine && lenK === 1;
+        const visibleRange = lineVisibleRanges.ranges[k];
+        const decorationOutput = '<div class="cdr ' + className + '" style="left:' + String(visibleRange.left) + "px;width:" + (expandToLeft ? "100%;" : String(visibleRange.width) + "px;") + '"></div>';
+        output[lineIndex] += decorationOutput;
+      }
+    }
+  }
+  render(startLineNumber, lineNumber) {
+    if (!this._renderResult) {
+      return "";
+    }
+    const lineIndex = lineNumber - startLineNumber;
+    if (lineIndex < 0 || lineIndex >= this._renderResult.length) {
+      return "";
+    }
+    return this._renderResult[lineIndex];
+  }
+}
+export {
+  DecorationsOverlay
+};
+//# sourceMappingURL=decorations.js.map

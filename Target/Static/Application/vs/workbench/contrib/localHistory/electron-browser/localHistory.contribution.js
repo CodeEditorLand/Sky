@@ -1,1 +1,2 @@
-import"./localHistoryCommands.js";
+import "./localHistoryCommands.js";
+//# sourceMappingURL=localHistory.contribution.js.map

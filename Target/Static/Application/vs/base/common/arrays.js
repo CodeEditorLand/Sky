@@ -1,1 +1,716 @@
-import{$Ib as b}from"./arraysFind.js";import{$qb as m}from"./errors.js";function A(t){if(t.length===0)throw new Error("Invalid tail call");return[t.slice(0,t.length-1),t[t.length-1]]}function G(t,n,e=(r,i)=>r===i){if(t===n)return!0;if(!t||!n||t.length!==n.length)return!1;for(let r=0,i=t.length;r<i;r++)if(!e(t[r],n[r]))return!1;return!0}function I(t,n){const e=t.length-1;n<e&&(t[n]=t[e]),t.pop()}function E(t,n,e){return w(t.length,r=>e(t[r],n))}function w(t,n){let e=0,r=t-1;for(;e<=r;){const i=(e+r)/2|0,s=n(i);if(s<0)e=i+1;else if(s>0)r=i-1;else return i}return-(e+1)}function g(t,n,e){if(t=t|0,t>=n.length)throw new TypeError("invalid index");const r=n[Math.floor(n.length*Math.random())],i=[],s=[],o=[];for(const u of n){const c=e(u,r);c<0?i.push(u):c>0?s.push(u):o.push(u)}return t<i.length?g(t,i,e):t<i.length+o.length?o[0]:g(t-(i.length+o.length),s,e)}function S(t,n){const e=[];let r;for(const i of t.slice(0).sort(n))!r||n(r[0],i)!==0?(r=[i],e.push(r)):r.push(i);return e}function*q(t,n){let e,r;for(const i of t)r!==void 0&&n(r,i)?e.push(i):(e&&(yield e),e=[i]),r=i;e&&(yield e)}function P(t,n){for(let e=0;e<=t.length;e++)n(e===0?void 0:t[e-1],e===t.length?void 0:t[e])}function N(t,n){for(let e=0;e<t.length;e++)n(e===0?void 0:t[e-1],t[e],e+1===t.length?void 0:t[e+1])}function W(...t){return[].concat(...t)}function T(t,n,e){const r=[];function i(u,c,l){if(c===0&&l.length===0)return;const f=r[r.length-1];f&&f.start+f.deleteCount===u?(f.deleteCount+=c,f.toInsert.push(...l)):r.push({start:u,deleteCount:c,toInsert:l})}let s=0,o=0;for(;;){if(s===t.length){i(s,0,n.slice(o));break}if(o===n.length){i(s,t.length-s,[]);break}const u=t[s],c=n[o],l=e(u,c);l===0?(s+=1,o+=1):l<0?(i(s,1,[]),s+=1):l>0&&(i(s,0,[c]),o+=1)}return r}function j(t,n,e){const r=T(t,n,e),i=[],s=[];for(const o of r)i.push(...t.slice(o.start,o.start+o.deleteCount)),s.push(...o.toInsert);return{removed:i,added:s}}function B(t,n,e){if(e===0)return[];const r=t.slice(0,e).sort(n);return x(t,n,r,e,t.length),r}function F(t,n,e,r,i){return e===0?Promise.resolve([]):new Promise((s,o)=>{(async()=>{const u=t.length,c=t.slice(0,e).sort(n);for(let l=e,f=Math.min(e+r,u);l<u;l=f,f=Math.min(f+r,u)){if(l>e&&await new Promise(a=>setTimeout(a)),i&&i.isCancellationRequested)throw new m;x(t,n,c,l,f)}return c})().then(s,o)})}function x(t,n,e,r,i){for(const s=e.length;r<i;r++){const o=t[r];if(n(o,e[s-1])<0){e.pop();const u=b(e,c=>n(o,c)<0);e.splice(u,0,o)}}}function V(t){return t.filter(n=>!!n)}function z(t){let n=0;for(let e=0;e<t.length;e++)t[e]&&(t[n]=t[e],n+=1);t.length=n}function U(t,n,e){t.splice(e,0,t.splice(n,1)[0])}function X(t){return!Array.isArray(t)||t.length===0}function Y(t){return Array.isArray(t)&&t.length>0}function Z(t,n=e=>e){const e=new Set;return t.filter(r=>{const i=n(r);return e.has(i)?!1:(e.add(i),!0)})}function D(t){const n=new Set;return e=>{const r=t(e);return n.has(r)?!1:(n.add(r),!0)}}function H(t,n,e=(r,i)=>r===i){let r=0;for(let i=0,s=Math.min(t.length,n.length);i<s&&e(t[i],n[i]);i++)r++;return r}function J(t,n){let e=typeof n=="number"?t:0;typeof n=="number"?e=t:(e=0,n=t);const r=[];if(e<=n)for(let i=e;i<n;i++)r.push(i);else for(let i=e;i>n;i--)r.push(i);return r}function K(t,n,e){return t.reduce((r,i)=>(r[n(i)]=e?e(i):i,r),Object.create(null))}function Q(t,n){return t.push(n),()=>L(t,n)}function L(t,n){const e=t.indexOf(n);if(e>-1)return t.splice(e,1),n}function C(t,n,e){const r=t.slice(0,n),i=t.slice(n);return r.concat(e,i)}function y(t,n){let e;if(typeof n=="number"){let r=n;e=()=>{const i=Math.sin(r++)*179426549;return i-Math.floor(i)}}else e=Math.random;for(let r=t.length-1;r>0;r-=1){const i=Math.floor(e()*(r+1)),s=t[r];t[r]=t[i],t[i]=s}}function R(t,n){const e=t.indexOf(n);e>-1&&(t.splice(e,1),t.unshift(n))}function _(t,n){const e=t.indexOf(n);e>-1&&(t.splice(e,1),t.push(n))}function tt(t,n){for(const e of n)t.push(e)}function et(t,n){return Array.isArray(t)?t.map(n):n(t)}function nt(t){return Array.isArray(t)?t:[t]}function rt(t){return t[Math.floor(Math.random()*t.length)]}function M(t,n,e){const r=$(t,n),i=t.length,s=e.length;t.length=i+s;for(let o=i-1;o>=r;o--)t[o+s]=t[o];for(let o=0;o<s;o++)t[o+r]=e[o]}function it(t,n,e,r){const i=$(t,n);let s=t.splice(i,e);return s===void 0&&(s=[]),M(t,i,r),s}function $(t,n){return n<0?Math.max(n+t.length,0):Math.min(n,t.length)}var h;(function(t){function n(s){return s<0}t.isLessThan=n;function e(s){return s<=0}t.isLessThanOrEqual=e;function r(s){return s>0}t.isGreaterThan=r;function i(s){return s===0}t.isNeitherLessOrGreaterThan=i,t.greaterThan=1,t.lessThan=-1,t.neitherLessOrGreaterThan=0})(h||(h={}));function st(t,n){return(e,r)=>n(t(e),t(r))}function ot(...t){return(n,e)=>{for(const r of t){const i=r(n,e);if(!h.isNeitherLessOrGreaterThan(i))return i}return h.neitherLessOrGreaterThan}}const k=(t,n)=>t-n,ut=(t,n)=>k(t?1:0,n?1:0);function ct(t){return(n,e)=>-t(n,e)}function lt(t){return(n,e)=>n===void 0?e===void 0?h.neitherLessOrGreaterThan:h.lessThan:e===void 0?h.greaterThan:t(n,e)}class ft{constructor(n){this.d=0,this.c=n,this.g=this.c.length-1}get length(){return this.g-this.d+1}takeWhile(n){let e=this.d;for(;e<this.c.length&&n(this.c[e]);)e++;const r=e===this.d?null:this.c.slice(this.d,e);return this.d=e,r}takeFromEndWhile(n){let e=this.g;for(;e>=0&&n(this.c[e]);)e--;const r=e===this.g?null:this.c.slice(e+1,this.g+1);return this.g=e,r}peek(){if(this.length!==0)return this.c[this.d]}peekLast(){if(this.length!==0)return this.c[this.g]}dequeue(){const n=this.c[this.d];return this.d++,n}removeLast(){const n=this.c[this.g];return this.g--,n}takeCount(n){const e=this.c.slice(this.d,this.d+n);return this.d+=n,e}}class p{static{this.empty=new p(n=>{})}constructor(n){this.iterate=n}forEach(n){this.iterate(e=>(n(e),!0))}toArray(){const n=[];return this.iterate(e=>(n.push(e),!0)),n}filter(n){return new p(e=>this.iterate(r=>n(r)?e(r):!0))}map(n){return new p(e=>this.iterate(r=>e(n(r))))}some(n){let e=!1;return this.iterate(r=>(e=n(r),!e)),e}findFirst(n){let e;return this.iterate(r=>n(r)?(e=r,!1):!0),e}findLast(n){let e;return this.iterate(r=>(n(r)&&(e=r),!0)),e}findLastMaxBy(n){let e,r=!0;return this.iterate(i=>((r||h.isGreaterThan(n(i,e)))&&(r=!1,e=i),!0)),e}}class d{constructor(n){this.c=n}static createSortPermutation(n,e){const r=Array.from(n.keys()).sort((i,s)=>e(n[i],n[s]));return new d(r)}apply(n){return n.map((e,r)=>n[this.c[r]])}inverse(){const n=this.c.slice();for(let e=0;e<this.c.length;e++)n[this.c[e]]=e;return new d(n)}}async function ht(t,n){return(await Promise.all(t.map(async(r,i)=>({element:r,ok:await n(r,i)})))).find(r=>r.ok)?.element}function pt(t){return t.reduce((n,e)=>n+e,0)}function dt(t,n){return t.reduce((e,r)=>e+n(r),0)}export{Y as $$b,X as $0b,N as $1b,W as $2b,T as $3b,j as $4b,F as $6b,V as $7b,z as $8b,U as $9b,dt as $Bc,A as $Rb,G as $Sb,I as $Tb,E as $Ub,w as $Vb,g as $Wb,S as $Xb,q as $Yb,P as $Zb,Z as $_b,D as $ac,H as $bc,J as $cc,K as $dc,Q as $ec,L as $fc,C as $gc,y as $hc,R as $ic,_ as $jc,tt as $kc,et as $lc,nt as $mc,rt as $nc,M as $oc,it as $pc,st as $qc,ot as $rc,k as $sc,ut as $tc,ct as $uc,lt as $vc,ft as $wc,p as $xc,d as $yc,ht as $zc,h as CompareResult,pt as sum,B as top};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { findFirstIdxMonotonousOrArrLen } from "./arraysFind.js";
+import { CancellationError } from "./errors.js";
+function tail(arr) {
+  if (arr.length === 0) {
+    throw new Error("Invalid tail call");
+  }
+  return [arr.slice(0, arr.length - 1), arr[arr.length - 1]];
+}
+__name(tail, "tail");
+function equals(one, other, itemEquals = (a, b) => a === b) {
+  if (one === other) {
+    return true;
+  }
+  if (!one || !other) {
+    return false;
+  }
+  if (one.length !== other.length) {
+    return false;
+  }
+  for (let i = 0, len = one.length; i < len; i++) {
+    if (!itemEquals(one[i], other[i])) {
+      return false;
+    }
+  }
+  return true;
+}
+__name(equals, "equals");
+function removeFastWithoutKeepingOrder(array, index2) {
+  const last = array.length - 1;
+  if (index2 < last) {
+    array[index2] = array[last];
+  }
+  array.pop();
+}
+__name(removeFastWithoutKeepingOrder, "removeFastWithoutKeepingOrder");
+function binarySearch(array, key, comparator) {
+  return binarySearch2(array.length, (i) => comparator(array[i], key));
+}
+__name(binarySearch, "binarySearch");
+function binarySearch2(length, compareToKey) {
+  let low = 0, high = length - 1;
+  while (low <= high) {
+    const mid = (low + high) / 2 | 0;
+    const comp = compareToKey(mid);
+    if (comp < 0) {
+      low = mid + 1;
+    } else if (comp > 0) {
+      high = mid - 1;
+    } else {
+      return mid;
+    }
+  }
+  return -(low + 1);
+}
+__name(binarySearch2, "binarySearch2");
+function quickSelect(nth, data, compare) {
+  nth = nth | 0;
+  if (nth >= data.length) {
+    throw new TypeError("invalid index");
+  }
+  const pivotValue = data[Math.floor(data.length * Math.random())];
+  const lower = [];
+  const higher = [];
+  const pivots = [];
+  for (const value of data) {
+    const val = compare(value, pivotValue);
+    if (val < 0) {
+      lower.push(value);
+    } else if (val > 0) {
+      higher.push(value);
+    } else {
+      pivots.push(value);
+    }
+  }
+  if (nth < lower.length) {
+    return quickSelect(nth, lower, compare);
+  } else if (nth < lower.length + pivots.length) {
+    return pivots[0];
+  } else {
+    return quickSelect(nth - (lower.length + pivots.length), higher, compare);
+  }
+}
+__name(quickSelect, "quickSelect");
+function groupBy(data, compare) {
+  const result = [];
+  let currentGroup = void 0;
+  for (const element of data.slice(0).sort(compare)) {
+    if (!currentGroup || compare(currentGroup[0], element) !== 0) {
+      currentGroup = [element];
+      result.push(currentGroup);
+    } else {
+      currentGroup.push(element);
+    }
+  }
+  return result;
+}
+__name(groupBy, "groupBy");
+function* groupAdjacentBy(items, shouldBeGrouped) {
+  let currentGroup;
+  let last;
+  for (const item of items) {
+    if (last !== void 0 && shouldBeGrouped(last, item)) {
+      currentGroup.push(item);
+    } else {
+      if (currentGroup) {
+        yield currentGroup;
+      }
+      currentGroup = [item];
+    }
+    last = item;
+  }
+  if (currentGroup) {
+    yield currentGroup;
+  }
+}
+__name(groupAdjacentBy, "groupAdjacentBy");
+function forEachAdjacent(arr, f) {
+  for (let i = 0; i <= arr.length; i++) {
+    f(i === 0 ? void 0 : arr[i - 1], i === arr.length ? void 0 : arr[i]);
+  }
+}
+__name(forEachAdjacent, "forEachAdjacent");
+function forEachWithNeighbors(arr, f) {
+  for (let i = 0; i < arr.length; i++) {
+    f(i === 0 ? void 0 : arr[i - 1], arr[i], i + 1 === arr.length ? void 0 : arr[i + 1]);
+  }
+}
+__name(forEachWithNeighbors, "forEachWithNeighbors");
+function concatArrays(...arrays) {
+  return [].concat(...arrays);
+}
+__name(concatArrays, "concatArrays");
+function sortedDiff(before, after, compare) {
+  const result = [];
+  function pushSplice(start, deleteCount, toInsert) {
+    if (deleteCount === 0 && toInsert.length === 0) {
+      return;
+    }
+    const latest = result[result.length - 1];
+    if (latest && latest.start + latest.deleteCount === start) {
+      latest.deleteCount += deleteCount;
+      latest.toInsert.push(...toInsert);
+    } else {
+      result.push({ start, deleteCount, toInsert });
+    }
+  }
+  __name(pushSplice, "pushSplice");
+  let beforeIdx = 0;
+  let afterIdx = 0;
+  while (true) {
+    if (beforeIdx === before.length) {
+      pushSplice(beforeIdx, 0, after.slice(afterIdx));
+      break;
+    }
+    if (afterIdx === after.length) {
+      pushSplice(beforeIdx, before.length - beforeIdx, []);
+      break;
+    }
+    const beforeElement = before[beforeIdx];
+    const afterElement = after[afterIdx];
+    const n = compare(beforeElement, afterElement);
+    if (n === 0) {
+      beforeIdx += 1;
+      afterIdx += 1;
+    } else if (n < 0) {
+      pushSplice(beforeIdx, 1, []);
+      beforeIdx += 1;
+    } else if (n > 0) {
+      pushSplice(beforeIdx, 0, [afterElement]);
+      afterIdx += 1;
+    }
+  }
+  return result;
+}
+__name(sortedDiff, "sortedDiff");
+function delta(before, after, compare) {
+  const splices = sortedDiff(before, after, compare);
+  const removed = [];
+  const added = [];
+  for (const splice2 of splices) {
+    removed.push(...before.slice(splice2.start, splice2.start + splice2.deleteCount));
+    added.push(...splice2.toInsert);
+  }
+  return { removed, added };
+}
+__name(delta, "delta");
+function top(array, compare, n) {
+  if (n === 0) {
+    return [];
+  }
+  const result = array.slice(0, n).sort(compare);
+  topStep(array, compare, result, n, array.length);
+  return result;
+}
+__name(top, "top");
+function topAsync(array, compare, n, batch, token) {
+  if (n === 0) {
+    return Promise.resolve([]);
+  }
+  return new Promise((resolve, reject) => {
+    (async () => {
+      const o = array.length;
+      const result = array.slice(0, n).sort(compare);
+      for (let i = n, m = Math.min(n + batch, o); i < o; i = m, m = Math.min(m + batch, o)) {
+        if (i > n) {
+          await new Promise((resolve2) => setTimeout(resolve2));
+        }
+        if (token && token.isCancellationRequested) {
+          throw new CancellationError();
+        }
+        topStep(array, compare, result, i, m);
+      }
+      return result;
+    })().then(resolve, reject);
+  });
+}
+__name(topAsync, "topAsync");
+function topStep(array, compare, result, i, m) {
+  for (const n = result.length; i < m; i++) {
+    const element = array[i];
+    if (compare(element, result[n - 1]) < 0) {
+      result.pop();
+      const j = findFirstIdxMonotonousOrArrLen(result, (e) => compare(element, e) < 0);
+      result.splice(j, 0, element);
+    }
+  }
+}
+__name(topStep, "topStep");
+function coalesce(array) {
+  return array.filter((e) => !!e);
+}
+__name(coalesce, "coalesce");
+function coalesceInPlace(array) {
+  let to = 0;
+  for (let i = 0; i < array.length; i++) {
+    if (!!array[i]) {
+      array[to] = array[i];
+      to += 1;
+    }
+  }
+  array.length = to;
+}
+__name(coalesceInPlace, "coalesceInPlace");
+function move(array, from, to) {
+  array.splice(to, 0, array.splice(from, 1)[0]);
+}
+__name(move, "move");
+function isFalsyOrEmpty(obj) {
+  return !Array.isArray(obj) || obj.length === 0;
+}
+__name(isFalsyOrEmpty, "isFalsyOrEmpty");
+function isNonEmptyArray(obj) {
+  return Array.isArray(obj) && obj.length > 0;
+}
+__name(isNonEmptyArray, "isNonEmptyArray");
+function distinct(array, keyFn = (value) => value) {
+  const seen = /* @__PURE__ */ new Set();
+  return array.filter((element) => {
+    const key = keyFn(element);
+    if (seen.has(key)) {
+      return false;
+    }
+    seen.add(key);
+    return true;
+  });
+}
+__name(distinct, "distinct");
+function uniqueFilter(keyFn) {
+  const seen = /* @__PURE__ */ new Set();
+  return (element) => {
+    const key = keyFn(element);
+    if (seen.has(key)) {
+      return false;
+    }
+    seen.add(key);
+    return true;
+  };
+}
+__name(uniqueFilter, "uniqueFilter");
+function commonPrefixLength(one, other, equals2 = (a, b) => a === b) {
+  let result = 0;
+  for (let i = 0, len = Math.min(one.length, other.length); i < len && equals2(one[i], other[i]); i++) {
+    result++;
+  }
+  return result;
+}
+__name(commonPrefixLength, "commonPrefixLength");
+function range(arg, to) {
+  let from = typeof to === "number" ? arg : 0;
+  if (typeof to === "number") {
+    from = arg;
+  } else {
+    from = 0;
+    to = arg;
+  }
+  const result = [];
+  if (from <= to) {
+    for (let i = from; i < to; i++) {
+      result.push(i);
+    }
+  } else {
+    for (let i = from; i > to; i--) {
+      result.push(i);
+    }
+  }
+  return result;
+}
+__name(range, "range");
+function index(array, indexer, mapper) {
+  return array.reduce((r, t) => {
+    r[indexer(t)] = mapper ? mapper(t) : t;
+    return r;
+  }, /* @__PURE__ */ Object.create(null));
+}
+__name(index, "index");
+function insert(array, element) {
+  array.push(element);
+  return () => remove(array, element);
+}
+__name(insert, "insert");
+function remove(array, element) {
+  const index2 = array.indexOf(element);
+  if (index2 > -1) {
+    array.splice(index2, 1);
+    return element;
+  }
+  return void 0;
+}
+__name(remove, "remove");
+function arrayInsert(target, insertIndex, insertArr) {
+  const before = target.slice(0, insertIndex);
+  const after = target.slice(insertIndex);
+  return before.concat(insertArr, after);
+}
+__name(arrayInsert, "arrayInsert");
+function shuffle(array, _seed) {
+  let rand;
+  if (typeof _seed === "number") {
+    let seed = _seed;
+    rand = /* @__PURE__ */ __name(() => {
+      const x = Math.sin(seed++) * 179426549;
+      return x - Math.floor(x);
+    }, "rand");
+  } else {
+    rand = Math.random;
+  }
+  for (let i = array.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(rand() * (i + 1));
+    const temp = array[i];
+    array[i] = array[j];
+    array[j] = temp;
+  }
+}
+__name(shuffle, "shuffle");
+function pushToStart(arr, value) {
+  const index2 = arr.indexOf(value);
+  if (index2 > -1) {
+    arr.splice(index2, 1);
+    arr.unshift(value);
+  }
+}
+__name(pushToStart, "pushToStart");
+function pushToEnd(arr, value) {
+  const index2 = arr.indexOf(value);
+  if (index2 > -1) {
+    arr.splice(index2, 1);
+    arr.push(value);
+  }
+}
+__name(pushToEnd, "pushToEnd");
+function pushMany(arr, items) {
+  for (const item of items) {
+    arr.push(item);
+  }
+}
+__name(pushMany, "pushMany");
+function mapArrayOrNot(items, fn) {
+  return Array.isArray(items) ? items.map(fn) : fn(items);
+}
+__name(mapArrayOrNot, "mapArrayOrNot");
+function asArray(x) {
+  return Array.isArray(x) ? x : [x];
+}
+__name(asArray, "asArray");
+function getRandomElement(arr) {
+  return arr[Math.floor(Math.random() * arr.length)];
+}
+__name(getRandomElement, "getRandomElement");
+function insertInto(array, start, newItems) {
+  const startIdx = getActualStartIndex(array, start);
+  const originalLength = array.length;
+  const newItemsLength = newItems.length;
+  array.length = originalLength + newItemsLength;
+  for (let i = originalLength - 1; i >= startIdx; i--) {
+    array[i + newItemsLength] = array[i];
+  }
+  for (let i = 0; i < newItemsLength; i++) {
+    array[i + startIdx] = newItems[i];
+  }
+}
+__name(insertInto, "insertInto");
+function splice(array, start, deleteCount, newItems) {
+  const index2 = getActualStartIndex(array, start);
+  let result = array.splice(index2, deleteCount);
+  if (result === void 0) {
+    result = [];
+  }
+  insertInto(array, index2, newItems);
+  return result;
+}
+__name(splice, "splice");
+function getActualStartIndex(array, start) {
+  return start < 0 ? Math.max(start + array.length, 0) : Math.min(start, array.length);
+}
+__name(getActualStartIndex, "getActualStartIndex");
+var CompareResult;
+(function(CompareResult2) {
+  function isLessThan(result) {
+    return result < 0;
+  }
+  __name(isLessThan, "isLessThan");
+  CompareResult2.isLessThan = isLessThan;
+  function isLessThanOrEqual(result) {
+    return result <= 0;
+  }
+  __name(isLessThanOrEqual, "isLessThanOrEqual");
+  CompareResult2.isLessThanOrEqual = isLessThanOrEqual;
+  function isGreaterThan(result) {
+    return result > 0;
+  }
+  __name(isGreaterThan, "isGreaterThan");
+  CompareResult2.isGreaterThan = isGreaterThan;
+  function isNeitherLessOrGreaterThan(result) {
+    return result === 0;
+  }
+  __name(isNeitherLessOrGreaterThan, "isNeitherLessOrGreaterThan");
+  CompareResult2.isNeitherLessOrGreaterThan = isNeitherLessOrGreaterThan;
+  CompareResult2.greaterThan = 1;
+  CompareResult2.lessThan = -1;
+  CompareResult2.neitherLessOrGreaterThan = 0;
+})(CompareResult || (CompareResult = {}));
+function compareBy(selector, comparator) {
+  return (a, b) => comparator(selector(a), selector(b));
+}
+__name(compareBy, "compareBy");
+function tieBreakComparators(...comparators) {
+  return (item1, item2) => {
+    for (const comparator of comparators) {
+      const result = comparator(item1, item2);
+      if (!CompareResult.isNeitherLessOrGreaterThan(result)) {
+        return result;
+      }
+    }
+    return CompareResult.neitherLessOrGreaterThan;
+  };
+}
+__name(tieBreakComparators, "tieBreakComparators");
+const numberComparator = /* @__PURE__ */ __name((a, b) => a - b, "numberComparator");
+const booleanComparator = /* @__PURE__ */ __name((a, b) => numberComparator(a ? 1 : 0, b ? 1 : 0), "booleanComparator");
+function reverseOrder(comparator) {
+  return (a, b) => -comparator(a, b);
+}
+__name(reverseOrder, "reverseOrder");
+function compareUndefinedSmallest(comparator) {
+  return (a, b) => {
+    if (a === void 0) {
+      return b === void 0 ? CompareResult.neitherLessOrGreaterThan : CompareResult.lessThan;
+    } else if (b === void 0) {
+      return CompareResult.greaterThan;
+    }
+    return comparator(a, b);
+  };
+}
+__name(compareUndefinedSmallest, "compareUndefinedSmallest");
+class ArrayQueue {
+  static {
+    __name(this, "ArrayQueue");
+  }
+  /**
+   * Constructs a queue that is backed by the given array. Runtime is O(1).
+  */
+  constructor(items) {
+    this.firstIdx = 0;
+    this.items = items;
+    this.lastIdx = this.items.length - 1;
+  }
+  get length() {
+    return this.lastIdx - this.firstIdx + 1;
+  }
+  /**
+   * Consumes elements from the beginning of the queue as long as the predicate returns true.
+   * If no elements were consumed, `null` is returned. Has a runtime of O(result.length).
+  */
+  takeWhile(predicate) {
+    let startIdx = this.firstIdx;
+    while (startIdx < this.items.length && predicate(this.items[startIdx])) {
+      startIdx++;
+    }
+    const result = startIdx === this.firstIdx ? null : this.items.slice(this.firstIdx, startIdx);
+    this.firstIdx = startIdx;
+    return result;
+  }
+  /**
+   * Consumes elements from the end of the queue as long as the predicate returns true.
+   * If no elements were consumed, `null` is returned.
+   * The result has the same order as the underlying array!
+  */
+  takeFromEndWhile(predicate) {
+    let endIdx = this.lastIdx;
+    while (endIdx >= 0 && predicate(this.items[endIdx])) {
+      endIdx--;
+    }
+    const result = endIdx === this.lastIdx ? null : this.items.slice(endIdx + 1, this.lastIdx + 1);
+    this.lastIdx = endIdx;
+    return result;
+  }
+  peek() {
+    if (this.length === 0) {
+      return void 0;
+    }
+    return this.items[this.firstIdx];
+  }
+  peekLast() {
+    if (this.length === 0) {
+      return void 0;
+    }
+    return this.items[this.lastIdx];
+  }
+  dequeue() {
+    const result = this.items[this.firstIdx];
+    this.firstIdx++;
+    return result;
+  }
+  removeLast() {
+    const result = this.items[this.lastIdx];
+    this.lastIdx--;
+    return result;
+  }
+  takeCount(count) {
+    const result = this.items.slice(this.firstIdx, this.firstIdx + count);
+    this.firstIdx += count;
+    return result;
+  }
+}
+class CallbackIterable {
+  static {
+    __name(this, "CallbackIterable");
+  }
+  static {
+    this.empty = new CallbackIterable((_callback) => {
+    });
+  }
+  constructor(iterate) {
+    this.iterate = iterate;
+  }
+  forEach(handler) {
+    this.iterate((item) => {
+      handler(item);
+      return true;
+    });
+  }
+  toArray() {
+    const result = [];
+    this.iterate((item) => {
+      result.push(item);
+      return true;
+    });
+    return result;
+  }
+  filter(predicate) {
+    return new CallbackIterable((cb) => this.iterate((item) => predicate(item) ? cb(item) : true));
+  }
+  map(mapFn) {
+    return new CallbackIterable((cb) => this.iterate((item) => cb(mapFn(item))));
+  }
+  some(predicate) {
+    let result = false;
+    this.iterate((item) => {
+      result = predicate(item);
+      return !result;
+    });
+    return result;
+  }
+  findFirst(predicate) {
+    let result;
+    this.iterate((item) => {
+      if (predicate(item)) {
+        result = item;
+        return false;
+      }
+      return true;
+    });
+    return result;
+  }
+  findLast(predicate) {
+    let result;
+    this.iterate((item) => {
+      if (predicate(item)) {
+        result = item;
+      }
+      return true;
+    });
+    return result;
+  }
+  findLastMaxBy(comparator) {
+    let result;
+    let first = true;
+    this.iterate((item) => {
+      if (first || CompareResult.isGreaterThan(comparator(item, result))) {
+        first = false;
+        result = item;
+      }
+      return true;
+    });
+    return result;
+  }
+}
+class Permutation {
+  static {
+    __name(this, "Permutation");
+  }
+  constructor(_indexMap) {
+    this._indexMap = _indexMap;
+  }
+  /**
+   * Returns a permutation that sorts the given array according to the given compare function.
+   */
+  static createSortPermutation(arr, compareFn) {
+    const sortIndices = Array.from(arr.keys()).sort((index1, index2) => compareFn(arr[index1], arr[index2]));
+    return new Permutation(sortIndices);
+  }
+  /**
+   * Returns a new array with the elements of the given array re-arranged according to this permutation.
+   */
+  apply(arr) {
+    return arr.map((_, index2) => arr[this._indexMap[index2]]);
+  }
+  /**
+   * Returns a new permutation that undoes the re-arrangement of this permutation.
+  */
+  inverse() {
+    const inverseIndexMap = this._indexMap.slice();
+    for (let i = 0; i < this._indexMap.length; i++) {
+      inverseIndexMap[this._indexMap[i]] = i;
+    }
+    return new Permutation(inverseIndexMap);
+  }
+}
+async function findAsync(array, predicate) {
+  const results = await Promise.all(array.map(async (element, index2) => ({ element, ok: await predicate(element, index2) })));
+  return results.find((r) => r.ok)?.element;
+}
+__name(findAsync, "findAsync");
+function sum(array) {
+  return array.reduce((acc, value) => acc + value, 0);
+}
+__name(sum, "sum");
+function sumBy(array, selector) {
+  return array.reduce((acc, value) => acc + selector(value), 0);
+}
+__name(sumBy, "sumBy");
+export {
+  ArrayQueue,
+  CallbackIterable,
+  CompareResult,
+  Permutation,
+  arrayInsert,
+  asArray,
+  binarySearch,
+  binarySearch2,
+  booleanComparator,
+  coalesce,
+  coalesceInPlace,
+  commonPrefixLength,
+  compareBy,
+  compareUndefinedSmallest,
+  concatArrays,
+  delta,
+  distinct,
+  equals,
+  findAsync,
+  forEachAdjacent,
+  forEachWithNeighbors,
+  getRandomElement,
+  groupAdjacentBy,
+  groupBy,
+  index,
+  insert,
+  insertInto,
+  isFalsyOrEmpty,
+  isNonEmptyArray,
+  mapArrayOrNot,
+  move,
+  numberComparator,
+  pushMany,
+  pushToEnd,
+  pushToStart,
+  quickSelect,
+  range,
+  remove,
+  removeFastWithoutKeepingOrder,
+  reverseOrder,
+  shuffle,
+  sortedDiff,
+  splice,
+  sum,
+  sumBy,
+  tail,
+  tieBreakComparators,
+  top,
+  topAsync,
+  uniqueFilter
+};
+//# sourceMappingURL=arrays.js.map

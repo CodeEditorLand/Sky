@@ -1,1 +1,103 @@
-let t,l;function d(e){t?t instanceof g?t.loggers.push(e):t=new g([t,e]):t=e}function a(){return t}function h(e){l=e}function i(e){l&&l(e)}class g{constructor(e){this.loggers=e}handleObservableCreated(e){for(const n of this.loggers)n.handleObservableCreated(e)}handleOnListenerCountChanged(e,n){for(const o of this.loggers)o.handleOnListenerCountChanged(e,n)}handleObservableUpdated(e,n){for(const o of this.loggers)o.handleObservableUpdated(e,n)}handleAutorunCreated(e){for(const n of this.loggers)n.handleAutorunCreated(e)}handleAutorunDisposed(e){for(const n of this.loggers)n.handleAutorunDisposed(e)}handleAutorunDependencyChanged(e,n,o){for(const t of this.loggers)t.handleAutorunDependencyChanged(e,n,o)}handleAutorunStarted(e){for(const n of this.loggers)n.handleAutorunStarted(e)}handleAutorunFinished(e){for(const n of this.loggers)n.handleAutorunFinished(e)}handleDerivedDependencyChanged(e,n,o){for(const t of this.loggers)t.handleDerivedDependencyChanged(e,n,o)}handleDerivedCleared(e){for(const n of this.loggers)n.handleDerivedCleared(e)}handleBeginTransaction(e){for(const n of this.loggers)n.handleBeginTransaction(e)}handleEndTransaction(e){for(const n of this.loggers)n.handleEndTransaction(e)}}export{d as $se,a as $te,h as $ue,i as $ve};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+let globalObservableLogger;
+function addLogger(logger) {
+  if (!globalObservableLogger) {
+    globalObservableLogger = logger;
+  } else if (globalObservableLogger instanceof ComposedLogger) {
+    globalObservableLogger.loggers.push(logger);
+  } else {
+    globalObservableLogger = new ComposedLogger([globalObservableLogger, logger]);
+  }
+}
+__name(addLogger, "addLogger");
+function getLogger() {
+  return globalObservableLogger;
+}
+__name(getLogger, "getLogger");
+let globalObservableLoggerFn = void 0;
+function setLogObservableFn(fn) {
+  globalObservableLoggerFn = fn;
+}
+__name(setLogObservableFn, "setLogObservableFn");
+function logObservable(obs) {
+  if (globalObservableLoggerFn) {
+    globalObservableLoggerFn(obs);
+  }
+}
+__name(logObservable, "logObservable");
+class ComposedLogger {
+  static {
+    __name(this, "ComposedLogger");
+  }
+  constructor(loggers) {
+    this.loggers = loggers;
+  }
+  handleObservableCreated(observable) {
+    for (const logger of this.loggers) {
+      logger.handleObservableCreated(observable);
+    }
+  }
+  handleOnListenerCountChanged(observable, newCount) {
+    for (const logger of this.loggers) {
+      logger.handleOnListenerCountChanged(observable, newCount);
+    }
+  }
+  handleObservableUpdated(observable, info) {
+    for (const logger of this.loggers) {
+      logger.handleObservableUpdated(observable, info);
+    }
+  }
+  handleAutorunCreated(autorun) {
+    for (const logger of this.loggers) {
+      logger.handleAutorunCreated(autorun);
+    }
+  }
+  handleAutorunDisposed(autorun) {
+    for (const logger of this.loggers) {
+      logger.handleAutorunDisposed(autorun);
+    }
+  }
+  handleAutorunDependencyChanged(autorun, observable, change) {
+    for (const logger of this.loggers) {
+      logger.handleAutorunDependencyChanged(autorun, observable, change);
+    }
+  }
+  handleAutorunStarted(autorun) {
+    for (const logger of this.loggers) {
+      logger.handleAutorunStarted(autorun);
+    }
+  }
+  handleAutorunFinished(autorun) {
+    for (const logger of this.loggers) {
+      logger.handleAutorunFinished(autorun);
+    }
+  }
+  handleDerivedDependencyChanged(derived, observable, change) {
+    for (const logger of this.loggers) {
+      logger.handleDerivedDependencyChanged(derived, observable, change);
+    }
+  }
+  handleDerivedCleared(observable) {
+    for (const logger of this.loggers) {
+      logger.handleDerivedCleared(observable);
+    }
+  }
+  handleBeginTransaction(transaction) {
+    for (const logger of this.loggers) {
+      logger.handleBeginTransaction(transaction);
+    }
+  }
+  handleEndTransaction(transaction) {
+    for (const logger of this.loggers) {
+      logger.handleEndTransaction(transaction);
+    }
+  }
+}
+export {
+  addLogger,
+  getLogger,
+  logObservable,
+  setLogObservableFn
+};
+//# sourceMappingURL=logging.js.map

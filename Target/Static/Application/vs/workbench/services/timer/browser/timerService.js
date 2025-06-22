@@ -1,1 +1,292 @@
-import*as S from"../../../../base/common/performance.js";import{$nj as M}from"../../../../platform/instantiation/common/instantiation.js";import{$hl as C}from"../../../../platform/workspace/common/workspace.js";import{$XO as k}from"../../extensions/common/extensions.js";import{$Wx as v}from"../../../../platform/update/common/update.js";import{$RK as $}from"../../lifecycle/common/lifecycle.js";import{$oI as y}from"../../editor/common/editorService.js";import{$tC as L}from"../../../../platform/accessibility/common/accessibility.js";import{$Po as I}from"../../../../platform/telemetry/common/telemetry.js";import{$Kh as P,$Mh as E}from"../../../../base/common/async.js";import{$8tb as x}from"../../layout/browser/layoutService.js";import{$Cxb as O}from"../../panecomposite/browser/panecomposite.js";import{$yu as U}from"../../../../platform/telemetry/common/telemetryUtils.js";import{$s as B}from"../../../../base/common/platform.js";import{$a9 as T}from"../../../../base/browser/webWorkerFactory.js";import{$Ql as V}from"../../../../platform/registry/common/platform.js";import{$Gw as j}from"../../../../platform/terminal/common/terminal.js";var D=function(a,e,t,i){var r=arguments.length,o=r<3?e:i===null?i=Object.getOwnPropertyDescriptor(e,t):i,d;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")o=Reflect.decorate(a,e,t,i);else for(var l=a.length-1;l>=0;l--)(d=a[l])&&(o=(r<3?d(o):r>3?d(e,t,o):d(e,t))||o);return r>3&&o&&Object.defineProperty(e,t,o),o},n=function(a,e){return function(t,i){e(t,i,a)}};const re=M("timerService");class A{constructor(){this.a=[]}setMarks(e,t){this.a.push([e,t])}getDuration(e,t){const i=this.b(e);if(!i)return 0;const r=this.b(t);return r?r.startTime-i.startTime:0}getStartTime(e){const t=this.b(e);return t?t.startTime:-1}b(e){for(const[,t]of this.a)for(let i=t.length-1;i>=0;i--)if(t[i].name===e)return t[i]}getEntries(){return this.a.slice(0)}}let p=class{constructor(e,t,i,r,o,d,l,b,g){this.f=e,this.g=t,this.h=i,this.j=r,this.k=o,this.l=d,this.m=l,this.o=b,this.a=new P,this.b=new A,this.c=Math.random()<.03,Promise.all([this.h.whenInstalledExtensionsRegistered(),e.when(3),g.whenRestored,Promise.all(Array.from(V.as(j.Backend).backends.values()).map(s=>s.whenReady))]).then(()=>(this.setPerformanceMarks("renderer",S.$U()),this.s())).then(s=>{this.d=s,this.p(s),this.a.open()}),this.perfBaseline=this.a.wait().then(()=>this.f.when(4)).then(()=>E(this.d.timers.ellapsedRequire)).then(()=>{const s=function(){let c=!1;function h(u){return c?0:(performance.now()-w>=1e3&&(c=!0),u<=2?u:h(u-1)+h(u-2))}const w=performance.now();h(24);const W=Math.round(performance.now()-w);self.postMessage({value:c?-1:W})}.toString(),R=new Blob([`(${s})();`],{type:"application/javascript"}),f=URL.createObjectURL(R),m=T(f,{name:"perfBaseline"});return new Promise(c=>{m.onmessage=h=>c(h.data.value)}).finally(()=>{m.terminate(),URL.revokeObjectURL(f)})})}whenReady(){return this.a.wait()}get startupMetrics(){if(!this.d)throw new Error("illegal state, MUST NOT access startupMetrics before whenReady has resolved");return this.d}setPerformanceMarks(e,t){const i=t.filter(r=>r.name.startsWith("code/"));this.b.setMarks(e,i),this.r(e,i)}getPerformanceMarks(){return this.b.getEntries()}getDuration(e,t){return this.b.getDuration(e,t)}getStartTime(e){return this.b.getStartTime(e)}p(e){this.o.publicLog("startupTimeVaried",e)}q(){return this.c}r(e,t){if(this.q())for(const i of t)this.o.publicLog2("startup.timer.mark",{source:e,name:new U(i.name),startTime:i.startTime})}async s(){const e=this.t();let t;B?t="code/timeOrigin":t=e?"code/didStartMain":"code/willOpenNewWindow";const i=this.k.getActivePaneComposite(0),r=this.k.getActivePaneComposite(1),o={ellapsed:this.b.getDuration(t,"code/didStartWorkbench"),isLatestVersion:!!await this.j.isLatestVersion(),didUseCachedData:this.u(),windowKind:this.f.startupKind,windowCount:await this.v(),viewletId:i?.getId(),editorIds:this.l.visibleEditors.map(d=>d.typeId),panelId:r?r.getId():void 0,timers:{ellapsedAppReady:e?this.b.getDuration("code/didStartMain","code/mainAppReady"):void 0,ellapsedNlsGeneration:e?this.b.getDuration("code/willGenerateNls","code/didGenerateNls"):void 0,ellapsedLoadMainBundle:e?this.b.getDuration("code/willLoadMainBundle","code/didLoadMainBundle"):void 0,ellapsedRunMainBundle:e?this.b.getDuration("code/didStartMain","code/didRunMainBundle"):void 0,ellapsedCrashReporter:e?this.b.getDuration("code/willStartCrashReporter","code/didStartCrashReporter"):void 0,ellapsedMainServer:e?this.b.getDuration("code/willStartMainServer","code/didStartMainServer"):void 0,ellapsedWindowCreate:e?this.b.getDuration("code/willCreateCodeWindow","code/didCreateCodeWindow"):void 0,ellapsedWindowRestoreState:e?this.b.getDuration("code/willRestoreCodeWindowState","code/didRestoreCodeWindowState"):void 0,ellapsedBrowserWindowCreate:e?this.b.getDuration("code/willCreateCodeBrowserWindow","code/didCreateCodeBrowserWindow"):void 0,ellapsedWindowMaximize:e?this.b.getDuration("code/willMaximizeCodeWindow","code/didMaximizeCodeWindow"):void 0,ellapsedWindowLoad:e?this.b.getDuration("code/mainAppReady","code/willOpenNewWindow"):void 0,ellapsedWindowLoadToRequire:this.b.getDuration("code/willOpenNewWindow","code/willLoadWorkbenchMain"),ellapsedRequire:this.b.getDuration("code/willLoadWorkbenchMain","code/didLoadWorkbenchMain"),ellapsedWaitForWindowConfig:this.b.getDuration("code/willWaitForWindowConfig","code/didWaitForWindowConfig"),ellapsedStorageInit:this.b.getDuration("code/willInitStorage","code/didInitStorage"),ellapsedSharedProcesConnected:this.b.getDuration("code/willConnectSharedProcess","code/didConnectSharedProcess"),ellapsedWorkspaceServiceInit:this.b.getDuration("code/willInitWorkspaceService","code/didInitWorkspaceService"),ellapsedRequiredUserDataInit:this.b.getDuration("code/willInitRequiredUserData","code/didInitRequiredUserData"),ellapsedOtherUserDataInit:this.b.getDuration("code/willInitOtherUserData","code/didInitOtherUserData"),ellapsedExtensions:this.b.getDuration("code/willLoadExtensions","code/didLoadExtensions"),ellapsedEditorRestore:this.b.getDuration("code/willRestoreEditors","code/didRestoreEditors"),ellapsedViewletRestore:this.b.getDuration("code/willRestoreViewlet","code/didRestoreViewlet"),ellapsedPanelRestore:this.b.getDuration("code/willRestorePanel","code/didRestorePanel"),ellapsedWorkbenchContributions:this.b.getDuration("code/willCreateWorkbenchContributions/1","code/didCreateWorkbenchContributions/2"),ellapsedWorkbench:this.b.getDuration("code/willStartWorkbench","code/didStartWorkbench"),ellapsedExtensionsReady:this.b.getDuration(t,"code/didLoadExtensions"),ellapsedRenderer:this.b.getDuration("code/didStartRenderer","code/didStartWorkbench")},platform:void 0,release:void 0,arch:void 0,totalmem:void 0,freemem:void 0,meminfo:void 0,cpus:void 0,loadavg:void 0,isVMLikelyhood:void 0,initialStartup:e,hasAccessibilitySupport:this.m.isScreenReaderOptimized(),emptyWorkbench:this.g.getWorkbenchState()===1};return await this.w(o),o}};p=D([n(0,$),n(1,C),n(2,k),n(3,v),n(4,O),n(5,y),n(6,L),n(7,I),n(8,x)],p);class ne extends p{t(){return!1}u(){return!1}async v(){return 1}async w(e){e.isVMLikelyhood=0,e.isARM64Emulated=!1,e.platform=navigator.userAgent,e.release=navigator.appVersion}}export{re as $VYb,p as $WYb,ne as $XYb};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import * as perf from "../../../../base/common/performance.js";
+import { createDecorator } from "../../../../platform/instantiation/common/instantiation.js";
+import { IWorkspaceContextService } from "../../../../platform/workspace/common/workspace.js";
+import { IExtensionService } from "../../extensions/common/extensions.js";
+import { IUpdateService } from "../../../../platform/update/common/update.js";
+import { ILifecycleService } from "../../lifecycle/common/lifecycle.js";
+import { IEditorService } from "../../editor/common/editorService.js";
+import { IAccessibilityService } from "../../../../platform/accessibility/common/accessibility.js";
+import { ITelemetryService } from "../../../../platform/telemetry/common/telemetry.js";
+import { Barrier, timeout } from "../../../../base/common/async.js";
+import { IWorkbenchLayoutService } from "../../layout/browser/layoutService.js";
+import { IPaneCompositePartService } from "../../panecomposite/browser/panecomposite.js";
+import { TelemetryTrustedValue } from "../../../../platform/telemetry/common/telemetryUtils.js";
+import { isWeb } from "../../../../base/common/platform.js";
+import { createBlobWorker } from "../../../../base/browser/webWorkerFactory.js";
+import { Registry } from "../../../../platform/registry/common/platform.js";
+import { TerminalExtensions } from "../../../../platform/terminal/common/terminal.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+const ITimerService = createDecorator("timerService");
+class PerfMarks {
+  static {
+    __name(this, "PerfMarks");
+  }
+  constructor() {
+    this._entries = [];
+  }
+  setMarks(source, entries) {
+    this._entries.push([source, entries]);
+  }
+  getDuration(from, to) {
+    const fromEntry = this._findEntry(from);
+    if (!fromEntry) {
+      return 0;
+    }
+    const toEntry = this._findEntry(to);
+    if (!toEntry) {
+      return 0;
+    }
+    return toEntry.startTime - fromEntry.startTime;
+  }
+  getStartTime(mark) {
+    const entry = this._findEntry(mark);
+    return entry ? entry.startTime : -1;
+  }
+  _findEntry(name) {
+    for (const [, marks] of this._entries) {
+      for (let i = marks.length - 1; i >= 0; i--) {
+        if (marks[i].name === name) {
+          return marks[i];
+        }
+      }
+    }
+  }
+  getEntries() {
+    return this._entries.slice(0);
+  }
+}
+let AbstractTimerService = class AbstractTimerService2 {
+  static {
+    __name(this, "AbstractTimerService");
+  }
+  constructor(_lifecycleService, _contextService, _extensionService, _updateService, _paneCompositeService, _editorService, _accessibilityService, _telemetryService, layoutService) {
+    this._lifecycleService = _lifecycleService;
+    this._contextService = _contextService;
+    this._extensionService = _extensionService;
+    this._updateService = _updateService;
+    this._paneCompositeService = _paneCompositeService;
+    this._editorService = _editorService;
+    this._accessibilityService = _accessibilityService;
+    this._telemetryService = _telemetryService;
+    this._barrier = new Barrier();
+    this._marks = new PerfMarks();
+    this._rndValueShouldSendTelemetry = Math.random() < 0.03;
+    Promise.all([
+      this._extensionService.whenInstalledExtensionsRegistered(),
+      // extensions registered
+      _lifecycleService.when(
+        3
+        /* LifecyclePhase.Restored */
+      ),
+      // workbench created and parts restored
+      layoutService.whenRestored,
+      // layout restored (including visible editors resolved)
+      Promise.all(Array.from(Registry.as(TerminalExtensions.Backend).backends.values()).map((e) => e.whenReady))
+    ]).then(() => {
+      this.setPerformanceMarks("renderer", perf.getMarks());
+      return this._computeStartupMetrics();
+    }).then((metrics) => {
+      this._startupMetrics = metrics;
+      this._reportStartupTimes(metrics);
+      this._barrier.open();
+    });
+    this.perfBaseline = this._barrier.wait().then(() => this._lifecycleService.when(
+      4
+      /* LifecyclePhase.Eventually */
+    )).then(() => timeout(this._startupMetrics.timers.ellapsedRequire)).then(() => {
+      const jsSrc = function() {
+        let tooSlow = false;
+        function fib(n) {
+          if (tooSlow) {
+            return 0;
+          }
+          if (performance.now() - t1 >= 1e3) {
+            tooSlow = true;
+          }
+          if (n <= 2) {
+            return n;
+          }
+          return fib(n - 1) + fib(n - 2);
+        }
+        __name(fib, "fib");
+        const t1 = performance.now();
+        fib(24);
+        const value = Math.round(performance.now() - t1);
+        self.postMessage({ value: tooSlow ? -1 : value });
+      }.toString();
+      const blob = new Blob([`(${jsSrc})();`], { type: "application/javascript" });
+      const blobUrl = URL.createObjectURL(blob);
+      const worker = createBlobWorker(blobUrl, { name: "perfBaseline" });
+      return new Promise((resolve) => {
+        worker.onmessage = (e) => resolve(e.data.value);
+      }).finally(() => {
+        worker.terminate();
+        URL.revokeObjectURL(blobUrl);
+      });
+    });
+  }
+  whenReady() {
+    return this._barrier.wait();
+  }
+  get startupMetrics() {
+    if (!this._startupMetrics) {
+      throw new Error("illegal state, MUST NOT access startupMetrics before whenReady has resolved");
+    }
+    return this._startupMetrics;
+  }
+  setPerformanceMarks(source, marks) {
+    const codeMarks = marks.filter((mark) => mark.name.startsWith("code/"));
+    this._marks.setMarks(source, codeMarks);
+    this._reportPerformanceMarks(source, codeMarks);
+  }
+  getPerformanceMarks() {
+    return this._marks.getEntries();
+  }
+  getDuration(from, to) {
+    return this._marks.getDuration(from, to);
+  }
+  getStartTime(mark) {
+    return this._marks.getStartTime(mark);
+  }
+  _reportStartupTimes(metrics) {
+    this._telemetryService.publicLog("startupTimeVaried", metrics);
+  }
+  _shouldReportPerfMarks() {
+    return this._rndValueShouldSendTelemetry;
+  }
+  _reportPerformanceMarks(source, marks) {
+    if (!this._shouldReportPerfMarks()) {
+      return;
+    }
+    for (const mark of marks) {
+      this._telemetryService.publicLog2("startup.timer.mark", {
+        source,
+        name: new TelemetryTrustedValue(mark.name),
+        startTime: mark.startTime
+      });
+    }
+  }
+  async _computeStartupMetrics() {
+    const initialStartup = this._isInitialStartup();
+    let startMark;
+    if (isWeb) {
+      startMark = "code/timeOrigin";
+    } else {
+      startMark = initialStartup ? "code/didStartMain" : "code/willOpenNewWindow";
+    }
+    const activeViewlet = this._paneCompositeService.getActivePaneComposite(
+      0
+      /* ViewContainerLocation.Sidebar */
+    );
+    const activePanel = this._paneCompositeService.getActivePaneComposite(
+      1
+      /* ViewContainerLocation.Panel */
+    );
+    const info = {
+      ellapsed: this._marks.getDuration(startMark, "code/didStartWorkbench"),
+      // reflections
+      isLatestVersion: Boolean(await this._updateService.isLatestVersion()),
+      didUseCachedData: this._didUseCachedData(),
+      windowKind: this._lifecycleService.startupKind,
+      windowCount: await this._getWindowCount(),
+      viewletId: activeViewlet?.getId(),
+      editorIds: this._editorService.visibleEditors.map((input) => input.typeId),
+      panelId: activePanel ? activePanel.getId() : void 0,
+      // timers
+      timers: {
+        ellapsedAppReady: initialStartup ? this._marks.getDuration("code/didStartMain", "code/mainAppReady") : void 0,
+        ellapsedNlsGeneration: initialStartup ? this._marks.getDuration("code/willGenerateNls", "code/didGenerateNls") : void 0,
+        ellapsedLoadMainBundle: initialStartup ? this._marks.getDuration("code/willLoadMainBundle", "code/didLoadMainBundle") : void 0,
+        ellapsedRunMainBundle: initialStartup ? this._marks.getDuration("code/didStartMain", "code/didRunMainBundle") : void 0,
+        ellapsedCrashReporter: initialStartup ? this._marks.getDuration("code/willStartCrashReporter", "code/didStartCrashReporter") : void 0,
+        ellapsedMainServer: initialStartup ? this._marks.getDuration("code/willStartMainServer", "code/didStartMainServer") : void 0,
+        ellapsedWindowCreate: initialStartup ? this._marks.getDuration("code/willCreateCodeWindow", "code/didCreateCodeWindow") : void 0,
+        ellapsedWindowRestoreState: initialStartup ? this._marks.getDuration("code/willRestoreCodeWindowState", "code/didRestoreCodeWindowState") : void 0,
+        ellapsedBrowserWindowCreate: initialStartup ? this._marks.getDuration("code/willCreateCodeBrowserWindow", "code/didCreateCodeBrowserWindow") : void 0,
+        ellapsedWindowMaximize: initialStartup ? this._marks.getDuration("code/willMaximizeCodeWindow", "code/didMaximizeCodeWindow") : void 0,
+        ellapsedWindowLoad: initialStartup ? this._marks.getDuration("code/mainAppReady", "code/willOpenNewWindow") : void 0,
+        ellapsedWindowLoadToRequire: this._marks.getDuration("code/willOpenNewWindow", "code/willLoadWorkbenchMain"),
+        ellapsedRequire: this._marks.getDuration("code/willLoadWorkbenchMain", "code/didLoadWorkbenchMain"),
+        ellapsedWaitForWindowConfig: this._marks.getDuration("code/willWaitForWindowConfig", "code/didWaitForWindowConfig"),
+        ellapsedStorageInit: this._marks.getDuration("code/willInitStorage", "code/didInitStorage"),
+        ellapsedSharedProcesConnected: this._marks.getDuration("code/willConnectSharedProcess", "code/didConnectSharedProcess"),
+        ellapsedWorkspaceServiceInit: this._marks.getDuration("code/willInitWorkspaceService", "code/didInitWorkspaceService"),
+        ellapsedRequiredUserDataInit: this._marks.getDuration("code/willInitRequiredUserData", "code/didInitRequiredUserData"),
+        ellapsedOtherUserDataInit: this._marks.getDuration("code/willInitOtherUserData", "code/didInitOtherUserData"),
+        ellapsedExtensions: this._marks.getDuration("code/willLoadExtensions", "code/didLoadExtensions"),
+        ellapsedEditorRestore: this._marks.getDuration("code/willRestoreEditors", "code/didRestoreEditors"),
+        ellapsedViewletRestore: this._marks.getDuration("code/willRestoreViewlet", "code/didRestoreViewlet"),
+        ellapsedPanelRestore: this._marks.getDuration("code/willRestorePanel", "code/didRestorePanel"),
+        ellapsedWorkbenchContributions: this._marks.getDuration("code/willCreateWorkbenchContributions/1", "code/didCreateWorkbenchContributions/2"),
+        ellapsedWorkbench: this._marks.getDuration("code/willStartWorkbench", "code/didStartWorkbench"),
+        ellapsedExtensionsReady: this._marks.getDuration(startMark, "code/didLoadExtensions"),
+        ellapsedRenderer: this._marks.getDuration("code/didStartRenderer", "code/didStartWorkbench")
+      },
+      // system info
+      platform: void 0,
+      release: void 0,
+      arch: void 0,
+      totalmem: void 0,
+      freemem: void 0,
+      meminfo: void 0,
+      cpus: void 0,
+      loadavg: void 0,
+      isVMLikelyhood: void 0,
+      initialStartup,
+      hasAccessibilitySupport: this._accessibilityService.isScreenReaderOptimized(),
+      emptyWorkbench: this._contextService.getWorkbenchState() === 1
+      /* WorkbenchState.EMPTY */
+    };
+    await this._extendStartupInfo(info);
+    return info;
+  }
+};
+AbstractTimerService = __decorate([
+  __param(0, ILifecycleService),
+  __param(1, IWorkspaceContextService),
+  __param(2, IExtensionService),
+  __param(3, IUpdateService),
+  __param(4, IPaneCompositePartService),
+  __param(5, IEditorService),
+  __param(6, IAccessibilityService),
+  __param(7, ITelemetryService),
+  __param(8, IWorkbenchLayoutService)
+], AbstractTimerService);
+class TimerService extends AbstractTimerService {
+  static {
+    __name(this, "TimerService");
+  }
+  _isInitialStartup() {
+    return false;
+  }
+  _didUseCachedData() {
+    return false;
+  }
+  async _getWindowCount() {
+    return 1;
+  }
+  async _extendStartupInfo(info) {
+    info.isVMLikelyhood = 0;
+    info.isARM64Emulated = false;
+    info.platform = navigator.userAgent;
+    info.release = navigator.appVersion;
+  }
+}
+export {
+  AbstractTimerService,
+  ITimerService,
+  TimerService
+};
+//# sourceMappingURL=timerService.js.map

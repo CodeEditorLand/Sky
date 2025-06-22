@@ -1,1 +1,311 @@
-import{Event as C}from"../../../base/common/event.js";import{$vd as D,$ud as w,$wd as P,$td as j}from"../../../base/common/lifecycle.js";import{observableValue as m,transaction as $}from"../../../base/common/observable.js";import{$uU as x}from"../../../base/common/prefixTree.js";import{URI as c}from"../../../base/common/uri.js";import{$cC as g}from"../../../editor/common/core/range.js";import{$yo as F}from"../../../platform/uriIdentity/common/uriIdentity.js";import{$QU as _}from"../../contrib/testing/common/testCoverage.js";import{$vU as z}from"../../contrib/testing/common/testId.js";import{$U2b as y}from"../../contrib/testing/common/testProfileService.js";import{$1U as p}from"../../contrib/testing/common/testResult.js";import{$42b as E}from"../../contrib/testing/common/testResultService.js";import{$L2b as O}from"../../contrib/testing/common/testService.js";import{CoverageDetails as U,IFileCoverage as k,ITestItem as M,ITestMessage as B,TestsDiffOp as T}from"../../contrib/testing/common/testTypes.js";import{$Kyb as S}from"../../services/extensions/common/extHostCustomers.js";import{$pY as H,$oY as L}from"../common/extHost.protocol.js";var v=function(l,e,t,s){var r=arguments.length,n=r<3?e:s===null?s=Object.getOwnPropertyDescriptor(e,t):s,i;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")n=Reflect.decorate(l,e,t,s);else for(var o=l.length-1;o>=0;o--)(i=l[o])&&(n=(r<3?i(n):r>3?i(e,t,n):i(e,t))||n);return r>3&&n&&Object.defineProperty(e,t,n),n},h=function(l,e){return function(t,s){e(t,s,l)}};let b=class extends D{constructor(e,t,s,r,n){super(),this.f=t,this.g=s,this.h=r,this.j=n,this.b=this.B(new P),this.c=new Map,this.a=e.getProxy(H.ExtHostTesting),this.B(this.g.registerExtHost({provideTestFollowups:(i,o)=>this.a.$provideTestFollowups(i,o),executeTestFollowup:i=>this.a.$executeTestFollowup(i),disposeTestFollowups:i=>this.a.$disposeTestFollowups(i),getTestsRelatedToCode:(i,o,a)=>this.a.$getTestsRelatedToCode(i,o,a)})),this.B(this.g.onDidCancelTestRun(({runId:i,taskId:o})=>{this.a.$cancelExtensionTestRun(i,o)})),this.B(C.debounce(r.onDidChange,(i,o)=>o)(()=>{const i={};for(const o of[2,4,8])for(const a of this.h.getGroupDefaultProfiles(o))i[a.controllerId]??=[],i[a.controllerId].push(a.profileId);this.a.$setDefaultRunProfiles(i)})),this.B(n.onResultsChanged(i=>{if("completed"in i){const o=i.completed.toJSONWithMessages();o&&this.a.$publishTestResults([o])}else"removed"in i&&i.removed.forEach(o=>{o instanceof p&&this.a.$disposeRun(o.id)})}))}$markTestRetired(e){let t;if(e){t=new x;for(const s of e)t.insert(z.fromString(s).path,void 0)}for(const s of this.j.results)s instanceof p&&s.markRetired(t)}$publishTestRunProfile(e){const t=this.c.get(e.controllerId);t&&this.h.addProfile(t.instance,e)}$updateTestRunConfig(e,t,s){this.h.updateProfile(e,t,s)}$removeTestProfile(e,t){this.h.removeProfile(e,t)}$addTestsToRun(e,t,s){this.m(t,r=>r.addTestChainToRun(e,s.map(n=>M.deserialize(this.f,n))))}$appendCoverage(e,t,s){this.m(e,r=>{const n=r.tasks.find(o=>o.id===t);if(!n)return;const i=k.deserialize(this.f,s);$(o=>{let a=n.coverage.read(void 0);a?a.append(i,o):(a=new _(r,t,this.f,{getCoverageDetails:(f,d,u)=>this.a.$getCoverageDetails(f,d,u).then(R=>R.map(U.deserialize))}),a.append(i,o),n.coverage.set(a,o))})})}$startedExtensionTestRun(e){this.j.createLiveResult(e)}$startedTestRunTask(e,t){this.m(e,s=>s.addTask(t))}$finishedTestRunTask(e,t){this.m(e,s=>s.markTaskComplete(t))}$finishedExtensionTestRun(e){this.m(e,t=>t.markComplete())}$updateTestStateInRun(e,t,s,r,n){this.m(e,i=>i.updateState(s,t,r,n))}$appendOutputToRun(e,t,s,r,n){const i=r&&{uri:c.revive(r.uri),range:g.lift(r.range)};this.m(e,o=>o.appendOutput(s,t,i,n))}$appendTestMessagesInRun(e,t,s,r){const n=this.j.getResult(e);if(n&&n instanceof p)for(const i of r)n.appendMessage(s,t,B.deserialize(this.f,i))}$registerTestController(e,t,s){const r=new w,n=m(`${e}.label`,t),i=m(`${e}.cap`,s),o={id:e,label:n,capabilities:i,syncTests:()=>this.a.$syncTests(),refreshTests:a=>this.a.$refreshTests(e,a),configureRunProfile:a=>this.a.$configureRunProfile(e,a),runTests:(a,f)=>this.a.$runControllerTests(a,f),startContinuousRun:(a,f)=>this.a.$startContinuousRun(a,f),expandTest:(a,f)=>this.a.$expandTest(a,isFinite(f)?f:-1),getRelatedCode:(a,f)=>this.a.$getCodeRelatedToTest(a,f).then(d=>d.map(u=>({uri:c.revive(u.uri),range:g.lift(u.range)})))};r.add(j(()=>this.h.removeProfile(e))),r.add(this.g.registerTestController(e,o)),this.c.set(e,{instance:o,label:n,capabilities:i,disposable:r})}$updateController(e,t){const s=this.c.get(e);s&&$(r=>{t.label!==void 0&&s.label.set(t.label,r),t.capabilities!==void 0&&s.capabilities.set(t.capabilities,r)})}$unregisterTestController(e){this.c.get(e)?.disposable.dispose(),this.c.delete(e)}$subscribeToDiffs(){this.a.$acceptDiff(this.g.collection.getReviverDiff().map(T.serialize)),this.b.value=this.g.onDidProcessDiff(this.a.$acceptDiff,this.a)}$unsubscribeFromDiffs(){this.b.clear()}$publishDiff(e,t){this.g.publishDiff(e,t.map(s=>T.deserialize(this.f,s)))}async $runTests(e,t){return(await this.g.runResolvedTests(e,t)).id}async $getCoverageDetails(e,t,s,r){return await this.j.getResult(e)?.tasks[t]?.coverage.get()?.getUri(c.from(s))?.details(r)||[]}dispose(){super.dispose();for(const e of this.c.values())e.disposable.dispose();this.c.clear()}m(e,t){const s=this.j.getResult(e);return s&&s instanceof p?t(s):void 0}};b=v([S(L.MainThreadTesting),h(1,F),h(2,O),h(3,y),h(4,E)],b);export{b as $62b};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { Event } from "../../../base/common/event.js";
+import { Disposable, DisposableStore, MutableDisposable, toDisposable } from "../../../base/common/lifecycle.js";
+import { observableValue, transaction } from "../../../base/common/observable.js";
+import { WellDefinedPrefixTree } from "../../../base/common/prefixTree.js";
+import { URI } from "../../../base/common/uri.js";
+import { Range } from "../../../editor/common/core/range.js";
+import { IUriIdentityService } from "../../../platform/uriIdentity/common/uriIdentity.js";
+import { TestCoverage } from "../../contrib/testing/common/testCoverage.js";
+import { TestId } from "../../contrib/testing/common/testId.js";
+import { ITestProfileService } from "../../contrib/testing/common/testProfileService.js";
+import { LiveTestResult } from "../../contrib/testing/common/testResult.js";
+import { ITestResultService } from "../../contrib/testing/common/testResultService.js";
+import { ITestService } from "../../contrib/testing/common/testService.js";
+import { CoverageDetails, IFileCoverage, ITestItem, ITestMessage, TestsDiffOp } from "../../contrib/testing/common/testTypes.js";
+import { extHostNamedCustomer } from "../../services/extensions/common/extHostCustomers.js";
+import { ExtHostContext, MainContext } from "../common/extHost.protocol.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+let MainThreadTesting = class MainThreadTesting2 extends Disposable {
+  static {
+    __name(this, "MainThreadTesting");
+  }
+  constructor(extHostContext, uriIdentityService, testService, testProfiles, resultService) {
+    super();
+    this.uriIdentityService = uriIdentityService;
+    this.testService = testService;
+    this.testProfiles = testProfiles;
+    this.resultService = resultService;
+    this.diffListener = this._register(new MutableDisposable());
+    this.testProviderRegistrations = /* @__PURE__ */ new Map();
+    this.proxy = extHostContext.getProxy(ExtHostContext.ExtHostTesting);
+    this._register(this.testService.registerExtHost({
+      provideTestFollowups: /* @__PURE__ */ __name((req, token) => this.proxy.$provideTestFollowups(req, token), "provideTestFollowups"),
+      executeTestFollowup: /* @__PURE__ */ __name((id) => this.proxy.$executeTestFollowup(id), "executeTestFollowup"),
+      disposeTestFollowups: /* @__PURE__ */ __name((ids) => this.proxy.$disposeTestFollowups(ids), "disposeTestFollowups"),
+      getTestsRelatedToCode: /* @__PURE__ */ __name((uri, position, token) => this.proxy.$getTestsRelatedToCode(uri, position, token), "getTestsRelatedToCode")
+    }));
+    this._register(this.testService.onDidCancelTestRun(({ runId, taskId }) => {
+      this.proxy.$cancelExtensionTestRun(runId, taskId);
+    }));
+    this._register(Event.debounce(testProfiles.onDidChange, (_last, e) => e)(() => {
+      const obj = {};
+      for (const group of [
+        2,
+        4,
+        8
+        /* TestRunProfileBitset.Coverage */
+      ]) {
+        for (const profile of this.testProfiles.getGroupDefaultProfiles(group)) {
+          obj[profile.controllerId] ??= [];
+          obj[profile.controllerId].push(profile.profileId);
+        }
+      }
+      this.proxy.$setDefaultRunProfiles(obj);
+    }));
+    this._register(resultService.onResultsChanged((evt) => {
+      if ("completed" in evt) {
+        const serialized = evt.completed.toJSONWithMessages();
+        if (serialized) {
+          this.proxy.$publishTestResults([serialized]);
+        }
+      } else if ("removed" in evt) {
+        evt.removed.forEach((r) => {
+          if (r instanceof LiveTestResult) {
+            this.proxy.$disposeRun(r.id);
+          }
+        });
+      }
+    }));
+  }
+  /**
+   * @inheritdoc
+   */
+  $markTestRetired(testIds) {
+    let tree;
+    if (testIds) {
+      tree = new WellDefinedPrefixTree();
+      for (const id of testIds) {
+        tree.insert(TestId.fromString(id).path, void 0);
+      }
+    }
+    for (const result of this.resultService.results) {
+      if (result instanceof LiveTestResult) {
+        result.markRetired(tree);
+      }
+    }
+  }
+  /**
+   * @inheritdoc
+   */
+  $publishTestRunProfile(profile) {
+    const controller = this.testProviderRegistrations.get(profile.controllerId);
+    if (controller) {
+      this.testProfiles.addProfile(controller.instance, profile);
+    }
+  }
+  /**
+   * @inheritdoc
+   */
+  $updateTestRunConfig(controllerId, profileId, update) {
+    this.testProfiles.updateProfile(controllerId, profileId, update);
+  }
+  /**
+   * @inheritdoc
+   */
+  $removeTestProfile(controllerId, profileId) {
+    this.testProfiles.removeProfile(controllerId, profileId);
+  }
+  /**
+   * @inheritdoc
+   */
+  $addTestsToRun(controllerId, runId, tests) {
+    this.withLiveRun(runId, (r) => r.addTestChainToRun(controllerId, tests.map((t) => ITestItem.deserialize(this.uriIdentityService, t))));
+  }
+  /**
+   * @inheritdoc
+   */
+  $appendCoverage(runId, taskId, coverage) {
+    this.withLiveRun(runId, (run) => {
+      const task = run.tasks.find((t) => t.id === taskId);
+      if (!task) {
+        return;
+      }
+      const deserialized = IFileCoverage.deserialize(this.uriIdentityService, coverage);
+      transaction((tx) => {
+        let value = task.coverage.read(void 0);
+        if (!value) {
+          value = new TestCoverage(run, taskId, this.uriIdentityService, {
+            getCoverageDetails: /* @__PURE__ */ __name((id, testId, token) => this.proxy.$getCoverageDetails(id, testId, token).then((r) => r.map(CoverageDetails.deserialize)), "getCoverageDetails")
+          });
+          value.append(deserialized, tx);
+          task.coverage.set(value, tx);
+        } else {
+          value.append(deserialized, tx);
+        }
+      });
+    });
+  }
+  /**
+   * @inheritdoc
+   */
+  $startedExtensionTestRun(req) {
+    this.resultService.createLiveResult(req);
+  }
+  /**
+   * @inheritdoc
+   */
+  $startedTestRunTask(runId, task) {
+    this.withLiveRun(runId, (r) => r.addTask(task));
+  }
+  /**
+   * @inheritdoc
+   */
+  $finishedTestRunTask(runId, taskId) {
+    this.withLiveRun(runId, (r) => r.markTaskComplete(taskId));
+  }
+  /**
+   * @inheritdoc
+   */
+  $finishedExtensionTestRun(runId) {
+    this.withLiveRun(runId, (r) => r.markComplete());
+  }
+  /**
+   * @inheritdoc
+   */
+  $updateTestStateInRun(runId, taskId, testId, state, duration) {
+    this.withLiveRun(runId, (r) => r.updateState(testId, taskId, state, duration));
+  }
+  /**
+   * @inheritdoc
+   */
+  $appendOutputToRun(runId, taskId, output, locationDto, testId) {
+    const location = locationDto && {
+      uri: URI.revive(locationDto.uri),
+      range: Range.lift(locationDto.range)
+    };
+    this.withLiveRun(runId, (r) => r.appendOutput(output, taskId, location, testId));
+  }
+  /**
+   * @inheritdoc
+   */
+  $appendTestMessagesInRun(runId, taskId, testId, messages) {
+    const r = this.resultService.getResult(runId);
+    if (r && r instanceof LiveTestResult) {
+      for (const message of messages) {
+        r.appendMessage(testId, taskId, ITestMessage.deserialize(this.uriIdentityService, message));
+      }
+    }
+  }
+  /**
+   * @inheritdoc
+   */
+  $registerTestController(controllerId, _label, _capabilities) {
+    const disposable = new DisposableStore();
+    const label = observableValue(`${controllerId}.label`, _label);
+    const capabilities = observableValue(`${controllerId}.cap`, _capabilities);
+    const controller = {
+      id: controllerId,
+      label,
+      capabilities,
+      syncTests: /* @__PURE__ */ __name(() => this.proxy.$syncTests(), "syncTests"),
+      refreshTests: /* @__PURE__ */ __name((token) => this.proxy.$refreshTests(controllerId, token), "refreshTests"),
+      configureRunProfile: /* @__PURE__ */ __name((id) => this.proxy.$configureRunProfile(controllerId, id), "configureRunProfile"),
+      runTests: /* @__PURE__ */ __name((reqs, token) => this.proxy.$runControllerTests(reqs, token), "runTests"),
+      startContinuousRun: /* @__PURE__ */ __name((reqs, token) => this.proxy.$startContinuousRun(reqs, token), "startContinuousRun"),
+      expandTest: /* @__PURE__ */ __name((testId, levels) => this.proxy.$expandTest(testId, isFinite(levels) ? levels : -1), "expandTest"),
+      getRelatedCode: /* @__PURE__ */ __name((testId, token) => this.proxy.$getCodeRelatedToTest(testId, token).then((locations) => locations.map((l) => ({
+        uri: URI.revive(l.uri),
+        range: Range.lift(l.range)
+      }))), "getRelatedCode")
+    };
+    disposable.add(toDisposable(() => this.testProfiles.removeProfile(controllerId)));
+    disposable.add(this.testService.registerTestController(controllerId, controller));
+    this.testProviderRegistrations.set(controllerId, {
+      instance: controller,
+      label,
+      capabilities,
+      disposable
+    });
+  }
+  /**
+   * @inheritdoc
+   */
+  $updateController(controllerId, patch) {
+    const controller = this.testProviderRegistrations.get(controllerId);
+    if (!controller) {
+      return;
+    }
+    transaction((tx) => {
+      if (patch.label !== void 0) {
+        controller.label.set(patch.label, tx);
+      }
+      if (patch.capabilities !== void 0) {
+        controller.capabilities.set(patch.capabilities, tx);
+      }
+    });
+  }
+  /**
+   * @inheritdoc
+   */
+  $unregisterTestController(controllerId) {
+    this.testProviderRegistrations.get(controllerId)?.disposable.dispose();
+    this.testProviderRegistrations.delete(controllerId);
+  }
+  /**
+   * @inheritdoc
+   */
+  $subscribeToDiffs() {
+    this.proxy.$acceptDiff(this.testService.collection.getReviverDiff().map(TestsDiffOp.serialize));
+    this.diffListener.value = this.testService.onDidProcessDiff(this.proxy.$acceptDiff, this.proxy);
+  }
+  /**
+   * @inheritdoc
+   */
+  $unsubscribeFromDiffs() {
+    this.diffListener.clear();
+  }
+  /**
+   * @inheritdoc
+   */
+  $publishDiff(controllerId, diff) {
+    this.testService.publishDiff(controllerId, diff.map((d) => TestsDiffOp.deserialize(this.uriIdentityService, d)));
+  }
+  /**
+   * @inheritdoc
+   */
+  async $runTests(req, token) {
+    const result = await this.testService.runResolvedTests(req, token);
+    return result.id;
+  }
+  /**
+   * @inheritdoc
+   */
+  async $getCoverageDetails(resultId, taskIndex, uri, token) {
+    const details = await this.resultService.getResult(resultId)?.tasks[taskIndex]?.coverage.get()?.getUri(URI.from(uri))?.details(token);
+    return details || [];
+  }
+  dispose() {
+    super.dispose();
+    for (const subscription of this.testProviderRegistrations.values()) {
+      subscription.disposable.dispose();
+    }
+    this.testProviderRegistrations.clear();
+  }
+  withLiveRun(runId, fn) {
+    const r = this.resultService.getResult(runId);
+    return r && r instanceof LiveTestResult ? fn(r) : void 0;
+  }
+};
+MainThreadTesting = __decorate([
+  extHostNamedCustomer(MainContext.MainThreadTesting),
+  __param(1, IUriIdentityService),
+  __param(2, ITestService),
+  __param(3, ITestProfileService),
+  __param(4, ITestResultService)
+], MainThreadTesting);
+export {
+  MainThreadTesting
+};
+//# sourceMappingURL=mainThreadTesting.js.map

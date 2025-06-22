@@ -1,1 +1,12 @@
-import{Data as e}from"../../../../effect";class o extends e.TaggedError("IntegrationClipboardProblem"){}export{o as Problem};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { Data } from "../../../../effect";
+class Problem extends Data.TaggedError("IntegrationClipboardProblem") {
+  static {
+    __name(this, "Problem");
+  }
+}
+export {
+  Problem
+};
+//# sourceMappingURL=Problem.js.map

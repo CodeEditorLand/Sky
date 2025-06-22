@@ -1,2 +1,481 @@
-import{$kh as x}from"../../../../base/common/resources.js";import{URI as C}from"../../../../base/common/uri.js";import{$7b as _}from"../../../../base/common/arrays.js";import{$6o as D,$2o as $}from"../../../../base/common/objects.js";import{Promises as j,$Uh as W}from"../../../../base/common/async.js";import{$5j as A}from"../../../../platform/files/common/files.js";import{$Ic as d}from"../../../../base/common/map.js";import{$vi as z,$Ci as J}from"../../../../base/common/stream.js";import{$Xi as F,$1i as M,$2i as S,$Ti as N,$Vi as T,$Ji as f}from"../../../../base/common/buffer.js";import{$vd as B}from"../../../../base/common/lifecycle.js";import{$3n as O}from"../../../../platform/log/common/log.js";import{Schemas as k}from"../../../../base/common/network.js";import{$$m as U}from"../../../../base/common/hash.js";import{$dd as E}from"../../../../base/common/types.js";import{$eF as V}from"./workingCopy.js";var v=function(i,t,e,s){var r=arguments.length,a=r<3?t:s===null?s=Object.getOwnPropertyDescriptor(t,e):s,c;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")a=Reflect.decorate(i,t,e,s);else for(var n=i.length-1;n>=0;n--)(c=i[n])&&(a=(r<3?c(a):r>3?c(t,e,a):c(t,e))||a);return r>3&&a&&Object.defineProperty(t,e,a),a},l=function(i,t){return function(e,s){t(e,s,i)}},o;class w{static async create(t,e){const s=new w(t,e);return await s.d(),s}constructor(t,e){this.b=t,this.c=e,this.a=new d}async d(){try{const t=await this.c.resolve(this.b);t.children&&await j.settled(t.children.filter(e=>e.isDirectory).map(async e=>{const s=await this.c.resolve(e.resource);if(s.children)for(const r of s.children)r.isDirectory||this.add(r.resource)}))}catch{}}add(t,e=0,s){this.a.set(t,{versionId:e,meta:$(s)})}update(t,e){const s=this.a.get(t);s&&(s.meta=$(e))}count(){return this.a.size}has(t,e,s){const r=this.a.get(t);return!(!r||typeof e=="number"&&e!==r.versionId||s&&!D(s,r.meta))}get(){return Array.from(this.a.keys())}remove(t){this.a.delete(t)}clear(){this.a.clear()}}let R=class extends B{constructor(t,e,s){super(),this.b=e,this.g=s,this.a=this.B(this.h(t))}h(t){return t?new m(t,this.b,this.g):new I}reinitialize(t){this.a instanceof m&&(t?this.a.initialize(t):this.a=new I)}hasBackups(){return this.a.hasBackups()}hasBackupSync(t,e,s){return this.a.hasBackupSync(t,e,s)}backup(t,e,s,r,a){return this.a.backup(t,e,s,r,a)}discardBackup(t,e){return this.a.discardBackup(t,e)}discardBackups(t){return this.a.discardBackups(t)}getBackups(){return this.a.getBackups()}resolve(t){return this.a.resolve(t)}toBackupResource(t){return this.a.toBackupResource(t)}joinBackups(){return this.a.joinBackups()}};R=v([l(1,A),l(2,O)],R);let m=class extends B{static{o=this}static{this.a=`
-`}static{this.b=10}static{this.c=" "}static{this.f=1e4}constructor(t,e,s){super(),this.m=t,this.n=e,this.r=s,this.g=this.B(new W),this.j=void 0,this.initialize(t)}initialize(t){this.m=t,this.h=this.s()}async s(){return this.j=await w.create(this.m,this.n),this.j}async hasBackups(){const t=await this.h;return await this.joinBackups(),t.count()>0}hasBackupSync(t,e,s){if(!this.j)return!1;const r=this.toBackupResource(t);return this.j.has(r,e,s)}async backup(t,e,s,r,a){const c=await this.h;if(a?.isCancellationRequested)return;const n=this.toBackupResource(t);if(!c.has(n,s,r))return this.g.queueFor(n,async()=>{if(a?.isCancellationRequested||c.has(n,s,r))return;let u=this.t(t,r);u.length>=o.f&&(u=this.t(t));const h=f.fromString(u);let p;z(e)?p=S(h,e):e?p=M(h,e):p=f.concat([h,f.fromString("")]),await this.n.writeFile(n,p),c.add(n,s,r)})}t(t,e){return`${t.resource.toString()}${o.c}${JSON.stringify({...e,typeId:t.typeId})}${o.a}`}async discardBackups(t){const e=await this.h,s=t?.except;if(Array.isArray(s)&&s.length>0){const r=new d;for(const a of s)r.set(this.toBackupResource(a),!0);await j.settled(e.get().map(async a=>{r.has(a)||await this.u(a)}))}else await this.w(this.m),e.clear()}discardBackup(t,e){const s=this.toBackupResource(t);return this.u(s,e)}async u(t,e){const s=await this.h;if(!e?.isCancellationRequested)return this.g.queueFor(t,async()=>{e?.isCancellationRequested||(await this.w(t),s.remove(t))})}async w(t){try{await this.n.del(t,{recursive:!0})}catch(e){if(e.fileOperationResult!==1)throw e}}async getBackups(){const t=await this.h;await this.joinBackups();const e=await Promise.all(t.get().map(s=>this.y(s,t)));return _(e)}async y(t,e){let s;return await this.g.queueFor(t,async()=>{if(!e.has(t))return;const r=await this.z(t,o.a,o.f);if(!r)return;const a=r.indexOf(o.c);let c,n;a>0?(c=r.substring(0,a),n=r.substr(a+1)):(c=r,n=void 0);const{typeId:u,meta:h}=this.C(n);e.update(t,h),s={typeId:u??V,resource:C.parse(c)}}),s}async z(t,e,s){const r=(await this.n.readFile(t,{length:s})).value.toString(),a=r.indexOf(e);if(a>=0)return r.substr(0,a)}async resolve(t){const e=this.toBackupResource(t),s=await this.h;let r;return await this.g.queueFor(e,async()=>{if(!s.has(e))return;const a=await this.n.readFileStream(e),c=await J(a.value,1),n=f.concat(c.buffer),u=n.buffer.indexOf(o.b);if(u===-1){this.r.trace(`Backup: Could not find meta end marker in ${e}. The file is probably corrupt (filesize: ${a.size}).`);return}const h=n.slice(0,u).toString();let p;const g=h.indexOf(o.c);g!==-1&&(p=this.C(h.substr(g+1)).meta),s.update(e,p);const b=n.slice(u+1);let y;c.ended?y=F(b):y=S(b,c.stream),r={value:y,meta:p}}),r}C(t){let e,s;if(t)try{s=JSON.parse(t),e=s?.typeId,typeof s?.typeId=="string"&&(delete s.typeId,E(s)&&(s=void 0))}catch{}return{typeId:e,meta:s}}toBackupResource(t){return x(this.m,t.resource.scheme,P(t))}joinBackups(){return this.g.whenDrained()}};m=o=v([l(1,A),l(2,O)],m);class I extends B{constructor(){super(),this.a=new d}async hasBackups(){return this.a.size>0}hasBackupSync(t,e){const s=this.toBackupResource(t);return this.a.has(s)}async backup(t,e,s,r,a){const c=this.toBackupResource(t);this.a.set(c,{typeId:t.typeId,content:e instanceof f?e:e?z(e)?await T(e):N(e):f.fromString(""),meta:r})}async resolve(t){const e=this.toBackupResource(t),s=this.a.get(e);if(s)return{value:F(s.content),meta:s.meta}}async getBackups(){return Array.from(this.a.entries()).map(([t,e])=>({typeId:e.typeId,resource:t}))}async discardBackup(t){this.a.delete(this.toBackupResource(t))}async discardBackups(t){const e=t?.except;if(Array.isArray(e)&&e.length>0){const s=new d;for(const r of e)s.set(this.toBackupResource(r),!0);for(const r of await this.getBackups())s.has(this.toBackupResource(r))||await this.discardBackup(r)}else this.a.clear()}toBackupResource(t){return C.from({scheme:k.inMemory,path:P(t)})}async joinBackups(){}}function P(i){let t;if(i.typeId.length>0){const e=q(i.typeId);i.resource.path?t=x(i.resource,e):t=i.resource.with({path:e})}else t=i.resource;return X(t)}function X(i){const t=i.scheme===k.file||i.scheme===k.untitled?i.fsPath:i.toString();return q(t)}function q(i){return U(i).toString(16)}export{w as $1Ac,R as $2Ac,I as $3Ac,P as $4Ac};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { joinPath } from "../../../../base/common/resources.js";
+import { URI } from "../../../../base/common/uri.js";
+import { coalesce } from "../../../../base/common/arrays.js";
+import { equals, deepClone } from "../../../../base/common/objects.js";
+import { Promises, ResourceQueue } from "../../../../base/common/async.js";
+import { IFileService } from "../../../../platform/files/common/files.js";
+import { ResourceMap } from "../../../../base/common/map.js";
+import { isReadableStream, peekStream } from "../../../../base/common/stream.js";
+import { bufferToStream, prefixedBufferReadable, prefixedBufferStream, readableToBuffer, streamToBuffer, VSBuffer } from "../../../../base/common/buffer.js";
+import { Disposable } from "../../../../base/common/lifecycle.js";
+import { ILogService } from "../../../../platform/log/common/log.js";
+import { Schemas } from "../../../../base/common/network.js";
+import { hash } from "../../../../base/common/hash.js";
+import { isEmptyObject } from "../../../../base/common/types.js";
+import { NO_TYPE_ID } from "./workingCopy.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+var WorkingCopyBackupServiceImpl_1;
+class WorkingCopyBackupsModel {
+  static {
+    __name(this, "WorkingCopyBackupsModel");
+  }
+  static async create(backupRoot, fileService) {
+    const model = new WorkingCopyBackupsModel(backupRoot, fileService);
+    await model.resolve();
+    return model;
+  }
+  constructor(backupRoot, fileService) {
+    this.backupRoot = backupRoot;
+    this.fileService = fileService;
+    this.cache = new ResourceMap();
+  }
+  async resolve() {
+    try {
+      const backupRootStat = await this.fileService.resolve(this.backupRoot);
+      if (backupRootStat.children) {
+        await Promises.settled(backupRootStat.children.filter((child) => child.isDirectory).map(async (backupSchemaFolder) => {
+          const backupSchemaFolderStat = await this.fileService.resolve(backupSchemaFolder.resource);
+          if (backupSchemaFolderStat.children) {
+            for (const backupForSchema of backupSchemaFolderStat.children) {
+              if (!backupForSchema.isDirectory) {
+                this.add(backupForSchema.resource);
+              }
+            }
+          }
+        }));
+      }
+    } catch (error) {
+    }
+  }
+  add(resource, versionId = 0, meta) {
+    this.cache.set(resource, {
+      versionId,
+      meta: deepClone(meta)
+    });
+  }
+  update(resource, meta) {
+    const entry = this.cache.get(resource);
+    if (entry) {
+      entry.meta = deepClone(meta);
+    }
+  }
+  count() {
+    return this.cache.size;
+  }
+  has(resource, versionId, meta) {
+    const entry = this.cache.get(resource);
+    if (!entry) {
+      return false;
+    }
+    if (typeof versionId === "number" && versionId !== entry.versionId) {
+      return false;
+    }
+    if (meta && !equals(meta, entry.meta)) {
+      return false;
+    }
+    return true;
+  }
+  get() {
+    return Array.from(this.cache.keys());
+  }
+  remove(resource) {
+    this.cache.delete(resource);
+  }
+  clear() {
+    this.cache.clear();
+  }
+}
+let WorkingCopyBackupService = class WorkingCopyBackupService2 extends Disposable {
+  static {
+    __name(this, "WorkingCopyBackupService");
+  }
+  constructor(backupWorkspaceHome, fileService, logService) {
+    super();
+    this.fileService = fileService;
+    this.logService = logService;
+    this.impl = this._register(this.initialize(backupWorkspaceHome));
+  }
+  initialize(backupWorkspaceHome) {
+    if (backupWorkspaceHome) {
+      return new WorkingCopyBackupServiceImpl(backupWorkspaceHome, this.fileService, this.logService);
+    }
+    return new InMemoryWorkingCopyBackupService();
+  }
+  reinitialize(backupWorkspaceHome) {
+    if (this.impl instanceof WorkingCopyBackupServiceImpl) {
+      if (backupWorkspaceHome) {
+        this.impl.initialize(backupWorkspaceHome);
+      } else {
+        this.impl = new InMemoryWorkingCopyBackupService();
+      }
+    }
+  }
+  hasBackups() {
+    return this.impl.hasBackups();
+  }
+  hasBackupSync(identifier, versionId, meta) {
+    return this.impl.hasBackupSync(identifier, versionId, meta);
+  }
+  backup(identifier, content, versionId, meta, token) {
+    return this.impl.backup(identifier, content, versionId, meta, token);
+  }
+  discardBackup(identifier, token) {
+    return this.impl.discardBackup(identifier, token);
+  }
+  discardBackups(filter) {
+    return this.impl.discardBackups(filter);
+  }
+  getBackups() {
+    return this.impl.getBackups();
+  }
+  resolve(identifier) {
+    return this.impl.resolve(identifier);
+  }
+  toBackupResource(identifier) {
+    return this.impl.toBackupResource(identifier);
+  }
+  joinBackups() {
+    return this.impl.joinBackups();
+  }
+};
+WorkingCopyBackupService = __decorate([
+  __param(1, IFileService),
+  __param(2, ILogService)
+], WorkingCopyBackupService);
+let WorkingCopyBackupServiceImpl = class WorkingCopyBackupServiceImpl2 extends Disposable {
+  static {
+    __name(this, "WorkingCopyBackupServiceImpl");
+  }
+  static {
+    WorkingCopyBackupServiceImpl_1 = this;
+  }
+  static {
+    this.PREAMBLE_END_MARKER = "\n";
+  }
+  static {
+    this.PREAMBLE_END_MARKER_CHARCODE = "\n".charCodeAt(0);
+  }
+  static {
+    this.PREAMBLE_META_SEPARATOR = " ";
+  }
+  static {
+    this.PREAMBLE_MAX_LENGTH = 1e4;
+  }
+  constructor(backupWorkspaceHome, fileService, logService) {
+    super();
+    this.backupWorkspaceHome = backupWorkspaceHome;
+    this.fileService = fileService;
+    this.logService = logService;
+    this.ioOperationQueues = this._register(new ResourceQueue());
+    this.model = void 0;
+    this.initialize(backupWorkspaceHome);
+  }
+  initialize(backupWorkspaceResource) {
+    this.backupWorkspaceHome = backupWorkspaceResource;
+    this.ready = this.doInitialize();
+  }
+  async doInitialize() {
+    this.model = await WorkingCopyBackupsModel.create(this.backupWorkspaceHome, this.fileService);
+    return this.model;
+  }
+  async hasBackups() {
+    const model = await this.ready;
+    await this.joinBackups();
+    return model.count() > 0;
+  }
+  hasBackupSync(identifier, versionId, meta) {
+    if (!this.model) {
+      return false;
+    }
+    const backupResource = this.toBackupResource(identifier);
+    return this.model.has(backupResource, versionId, meta);
+  }
+  async backup(identifier, content, versionId, meta, token) {
+    const model = await this.ready;
+    if (token?.isCancellationRequested) {
+      return;
+    }
+    const backupResource = this.toBackupResource(identifier);
+    if (model.has(backupResource, versionId, meta)) {
+      return;
+    }
+    return this.ioOperationQueues.queueFor(backupResource, async () => {
+      if (token?.isCancellationRequested) {
+        return;
+      }
+      if (model.has(backupResource, versionId, meta)) {
+        return;
+      }
+      let preamble = this.createPreamble(identifier, meta);
+      if (preamble.length >= WorkingCopyBackupServiceImpl_1.PREAMBLE_MAX_LENGTH) {
+        preamble = this.createPreamble(identifier);
+      }
+      const preambleBuffer = VSBuffer.fromString(preamble);
+      let backupBuffer;
+      if (isReadableStream(content)) {
+        backupBuffer = prefixedBufferStream(preambleBuffer, content);
+      } else if (content) {
+        backupBuffer = prefixedBufferReadable(preambleBuffer, content);
+      } else {
+        backupBuffer = VSBuffer.concat([preambleBuffer, VSBuffer.fromString("")]);
+      }
+      await this.fileService.writeFile(backupResource, backupBuffer);
+      model.add(backupResource, versionId, meta);
+    });
+  }
+  createPreamble(identifier, meta) {
+    return `${identifier.resource.toString()}${WorkingCopyBackupServiceImpl_1.PREAMBLE_META_SEPARATOR}${JSON.stringify({ ...meta, typeId: identifier.typeId })}${WorkingCopyBackupServiceImpl_1.PREAMBLE_END_MARKER}`;
+  }
+  async discardBackups(filter) {
+    const model = await this.ready;
+    const except = filter?.except;
+    if (Array.isArray(except) && except.length > 0) {
+      const exceptMap = new ResourceMap();
+      for (const exceptWorkingCopy of except) {
+        exceptMap.set(this.toBackupResource(exceptWorkingCopy), true);
+      }
+      await Promises.settled(model.get().map(async (backupResource) => {
+        if (!exceptMap.has(backupResource)) {
+          await this.doDiscardBackup(backupResource);
+        }
+      }));
+    } else {
+      await this.deleteIgnoreFileNotFound(this.backupWorkspaceHome);
+      model.clear();
+    }
+  }
+  discardBackup(identifier, token) {
+    const backupResource = this.toBackupResource(identifier);
+    return this.doDiscardBackup(backupResource, token);
+  }
+  async doDiscardBackup(backupResource, token) {
+    const model = await this.ready;
+    if (token?.isCancellationRequested) {
+      return;
+    }
+    return this.ioOperationQueues.queueFor(backupResource, async () => {
+      if (token?.isCancellationRequested) {
+        return;
+      }
+      await this.deleteIgnoreFileNotFound(backupResource);
+      model.remove(backupResource);
+    });
+  }
+  async deleteIgnoreFileNotFound(backupResource) {
+    try {
+      await this.fileService.del(backupResource, { recursive: true });
+    } catch (error) {
+      if (error.fileOperationResult !== 1) {
+        throw error;
+      }
+    }
+  }
+  async getBackups() {
+    const model = await this.ready;
+    await this.joinBackups();
+    const backups = await Promise.all(model.get().map((backupResource) => this.resolveIdentifier(backupResource, model)));
+    return coalesce(backups);
+  }
+  async resolveIdentifier(backupResource, model) {
+    let res = void 0;
+    await this.ioOperationQueues.queueFor(backupResource, async () => {
+      if (!model.has(backupResource)) {
+        return;
+      }
+      const backupPreamble = await this.readToMatchingString(backupResource, WorkingCopyBackupServiceImpl_1.PREAMBLE_END_MARKER, WorkingCopyBackupServiceImpl_1.PREAMBLE_MAX_LENGTH);
+      if (!backupPreamble) {
+        return;
+      }
+      const metaStartIndex = backupPreamble.indexOf(WorkingCopyBackupServiceImpl_1.PREAMBLE_META_SEPARATOR);
+      let resourcePreamble;
+      let metaPreamble;
+      if (metaStartIndex > 0) {
+        resourcePreamble = backupPreamble.substring(0, metaStartIndex);
+        metaPreamble = backupPreamble.substr(metaStartIndex + 1);
+      } else {
+        resourcePreamble = backupPreamble;
+        metaPreamble = void 0;
+      }
+      const { typeId, meta } = this.parsePreambleMeta(metaPreamble);
+      model.update(backupResource, meta);
+      res = {
+        typeId: typeId ?? NO_TYPE_ID,
+        resource: URI.parse(resourcePreamble)
+      };
+    });
+    return res;
+  }
+  async readToMatchingString(backupResource, matchingString, maximumBytesToRead) {
+    const contents = (await this.fileService.readFile(backupResource, { length: maximumBytesToRead })).value.toString();
+    const matchingStringIndex = contents.indexOf(matchingString);
+    if (matchingStringIndex >= 0) {
+      return contents.substr(0, matchingStringIndex);
+    }
+    return void 0;
+  }
+  async resolve(identifier) {
+    const backupResource = this.toBackupResource(identifier);
+    const model = await this.ready;
+    let res = void 0;
+    await this.ioOperationQueues.queueFor(backupResource, async () => {
+      if (!model.has(backupResource)) {
+        return;
+      }
+      const backupStream = await this.fileService.readFileStream(backupResource);
+      const peekedBackupStream = await peekStream(backupStream.value, 1);
+      const firstBackupChunk = VSBuffer.concat(peekedBackupStream.buffer);
+      const preambleEndIndex = firstBackupChunk.buffer.indexOf(WorkingCopyBackupServiceImpl_1.PREAMBLE_END_MARKER_CHARCODE);
+      if (preambleEndIndex === -1) {
+        this.logService.trace(`Backup: Could not find meta end marker in ${backupResource}. The file is probably corrupt (filesize: ${backupStream.size}).`);
+        return void 0;
+      }
+      const preambelRaw = firstBackupChunk.slice(0, preambleEndIndex).toString();
+      let meta;
+      const metaStartIndex = preambelRaw.indexOf(WorkingCopyBackupServiceImpl_1.PREAMBLE_META_SEPARATOR);
+      if (metaStartIndex !== -1) {
+        meta = this.parsePreambleMeta(preambelRaw.substr(metaStartIndex + 1)).meta;
+      }
+      model.update(backupResource, meta);
+      const firstBackupChunkWithoutPreamble = firstBackupChunk.slice(preambleEndIndex + 1);
+      let value;
+      if (peekedBackupStream.ended) {
+        value = bufferToStream(firstBackupChunkWithoutPreamble);
+      } else {
+        value = prefixedBufferStream(firstBackupChunkWithoutPreamble, peekedBackupStream.stream);
+      }
+      res = { value, meta };
+    });
+    return res;
+  }
+  parsePreambleMeta(preambleMetaRaw) {
+    let typeId = void 0;
+    let meta = void 0;
+    if (preambleMetaRaw) {
+      try {
+        meta = JSON.parse(preambleMetaRaw);
+        typeId = meta?.typeId;
+        if (typeof meta?.typeId === "string") {
+          delete meta.typeId;
+          if (isEmptyObject(meta)) {
+            meta = void 0;
+          }
+        }
+      } catch (error) {
+      }
+    }
+    return { typeId, meta };
+  }
+  toBackupResource(identifier) {
+    return joinPath(this.backupWorkspaceHome, identifier.resource.scheme, hashIdentifier(identifier));
+  }
+  joinBackups() {
+    return this.ioOperationQueues.whenDrained();
+  }
+};
+WorkingCopyBackupServiceImpl = WorkingCopyBackupServiceImpl_1 = __decorate([
+  __param(1, IFileService),
+  __param(2, ILogService)
+], WorkingCopyBackupServiceImpl);
+class InMemoryWorkingCopyBackupService extends Disposable {
+  static {
+    __name(this, "InMemoryWorkingCopyBackupService");
+  }
+  constructor() {
+    super();
+    this.backups = new ResourceMap();
+  }
+  async hasBackups() {
+    return this.backups.size > 0;
+  }
+  hasBackupSync(identifier, versionId) {
+    const backupResource = this.toBackupResource(identifier);
+    return this.backups.has(backupResource);
+  }
+  async backup(identifier, content, versionId, meta, token) {
+    const backupResource = this.toBackupResource(identifier);
+    this.backups.set(backupResource, {
+      typeId: identifier.typeId,
+      content: content instanceof VSBuffer ? content : content ? isReadableStream(content) ? await streamToBuffer(content) : readableToBuffer(content) : VSBuffer.fromString(""),
+      meta
+    });
+  }
+  async resolve(identifier) {
+    const backupResource = this.toBackupResource(identifier);
+    const backup = this.backups.get(backupResource);
+    if (backup) {
+      return { value: bufferToStream(backup.content), meta: backup.meta };
+    }
+    return void 0;
+  }
+  async getBackups() {
+    return Array.from(this.backups.entries()).map(([resource, backup]) => ({ typeId: backup.typeId, resource }));
+  }
+  async discardBackup(identifier) {
+    this.backups.delete(this.toBackupResource(identifier));
+  }
+  async discardBackups(filter) {
+    const except = filter?.except;
+    if (Array.isArray(except) && except.length > 0) {
+      const exceptMap = new ResourceMap();
+      for (const exceptWorkingCopy of except) {
+        exceptMap.set(this.toBackupResource(exceptWorkingCopy), true);
+      }
+      for (const backup of await this.getBackups()) {
+        if (!exceptMap.has(this.toBackupResource(backup))) {
+          await this.discardBackup(backup);
+        }
+      }
+    } else {
+      this.backups.clear();
+    }
+  }
+  toBackupResource(identifier) {
+    return URI.from({ scheme: Schemas.inMemory, path: hashIdentifier(identifier) });
+  }
+  async joinBackups() {
+    return;
+  }
+}
+function hashIdentifier(identifier) {
+  let resource;
+  if (identifier.typeId.length > 0) {
+    const typeIdHash = hashString(identifier.typeId);
+    if (identifier.resource.path) {
+      resource = joinPath(identifier.resource, typeIdHash);
+    } else {
+      resource = identifier.resource.with({ path: typeIdHash });
+    }
+  } else {
+    resource = identifier.resource;
+  }
+  return hashPath(resource);
+}
+__name(hashIdentifier, "hashIdentifier");
+function hashPath(resource) {
+  const str = resource.scheme === Schemas.file || resource.scheme === Schemas.untitled ? resource.fsPath : resource.toString();
+  return hashString(str);
+}
+__name(hashPath, "hashPath");
+function hashString(str) {
+  return hash(str).toString(16);
+}
+__name(hashString, "hashString");
+export {
+  InMemoryWorkingCopyBackupService,
+  WorkingCopyBackupService,
+  WorkingCopyBackupsModel,
+  hashIdentifier
+};
+//# sourceMappingURL=workingCopyBackupService.js.map

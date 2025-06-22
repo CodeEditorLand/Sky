@@ -288,7 +288,9 @@ console.log(Bundle);
 				<script
 					is:inline
 					type="module"
-					src={Bust("/Static/Application/nls.messages.js")}
+					src={Bust(
+						`/Static/Application/${On ? "vs/" : ""}nls.messages.js`,
+					)}
 				/>
 
 				{Browser ? <BrowserWorkbench /> : <DefaultWorkbench />}
@@ -318,7 +320,9 @@ console.log(Bundle);
 				<script
 					is:inline
 					type="module"
-					src={Bust(`/Static/Application/nls.messages.js`)}
+					src={Bust(
+						`/Static/Application/${On ? "vs/" : ""}nls.messages.js`,
+					)}
 				/>
 
 				{Browser ? (

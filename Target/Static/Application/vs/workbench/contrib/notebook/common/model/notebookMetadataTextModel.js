@@ -1,2 +1,103 @@
-import{$ev as h}from"../../../../../base/common/jsonFormatter.js";import{NotebookCellsChangeType as s,NotebookMetadataUri as a}from"../notebookCommon.js";import{$dn as f}from"../../../../../base/common/hash.js";import{$vd as u}from"../../../../../base/common/lifecycle.js";import{$df as l}from"../../../../../base/common/event.js";import{$cC as c}from"../../../../../editor/common/core/range.js";import{$RH as d}from"../../../../../editor/common/model/textModel.js";function g(n,t){let e={};if(n){const r=new Set([...Object.keys(t)]);for(const i of r)n[i]||(e[i]=t[i])}else e=t;return h(e,{})}class M extends u{get metadata(){return this.notebookModel.metadata}get textBuffer(){if(this.c)return this.c;const t=g(this.notebookModel.transientOptions.transientDocumentMetadata,this.metadata);return this.c=this.B(d(t,1).textBuffer),this.B(this.c.onDidChangeContent(()=>{this.a.fire()})),this.c}constructor(t){super(),this.notebookModel=t,this.a=this.B(new l),this.onDidChange=this.a.event,this.b=null,this.uri=a.generate(this.notebookModel.uri),this.B(this.notebookModel.onDidChangeContent(e=>{e.rawEvents.some(o=>o.kind===s.ChangeDocumentMetadata||o.kind===s.ModelChange)&&(this.c?.dispose(),this.c=void 0,this.b=null,this.a.fire())}))}getHash(){if(this.b!==null)return this.b;const t=new f,e=this.textBuffer.createSnapshot(!1);let o;for(;o=e.read();)t.update(o);return this.b=t.digest(),this.b}getValue(){const t=this.f();return this.textBuffer.getEOL()===`
-`?this.textBuffer.getValueInRange(t,1):this.textBuffer.getValueInRange(t,2)}f(){const t=this.textBuffer.getLineCount();return new c(1,1,t,this.textBuffer.getLineLength(t)+1)}}export{g as $izb,M as $jzb};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { toFormattedString } from "../../../../../base/common/jsonFormatter.js";
+import { NotebookCellsChangeType, NotebookMetadataUri } from "../notebookCommon.js";
+import { StringSHA1 } from "../../../../../base/common/hash.js";
+import { Disposable } from "../../../../../base/common/lifecycle.js";
+import { Emitter } from "../../../../../base/common/event.js";
+import { Range } from "../../../../../editor/common/core/range.js";
+import { createTextBuffer } from "../../../../../editor/common/model/textModel.js";
+function getFormattedNotebookMetadataJSON(transientMetadata, metadata) {
+  let filteredMetadata = {};
+  if (transientMetadata) {
+    const keys = /* @__PURE__ */ new Set([...Object.keys(metadata)]);
+    for (const key of keys) {
+      if (!transientMetadata[key]) {
+        filteredMetadata[key] = metadata[key];
+      }
+    }
+  } else {
+    filteredMetadata = metadata;
+  }
+  const metadataSource = toFormattedString(filteredMetadata, {});
+  return metadataSource;
+}
+__name(getFormattedNotebookMetadataJSON, "getFormattedNotebookMetadataJSON");
+class NotebookDocumentMetadataTextModel extends Disposable {
+  static {
+    __name(this, "NotebookDocumentMetadataTextModel");
+  }
+  get metadata() {
+    return this.notebookModel.metadata;
+  }
+  get textBuffer() {
+    if (this._textBuffer) {
+      return this._textBuffer;
+    }
+    const source = getFormattedNotebookMetadataJSON(this.notebookModel.transientOptions.transientDocumentMetadata, this.metadata);
+    this._textBuffer = this._register(createTextBuffer(
+      source,
+      1
+      /* DefaultEndOfLine.LF */
+    ).textBuffer);
+    this._register(this._textBuffer.onDidChangeContent(() => {
+      this._onDidChange.fire();
+    }));
+    return this._textBuffer;
+  }
+  constructor(notebookModel) {
+    super();
+    this.notebookModel = notebookModel;
+    this._onDidChange = this._register(new Emitter());
+    this.onDidChange = this._onDidChange.event;
+    this._textBufferHash = null;
+    this.uri = NotebookMetadataUri.generate(this.notebookModel.uri);
+    this._register(this.notebookModel.onDidChangeContent((e) => {
+      if (e.rawEvents.some((event) => event.kind === NotebookCellsChangeType.ChangeDocumentMetadata || event.kind === NotebookCellsChangeType.ModelChange)) {
+        this._textBuffer?.dispose();
+        this._textBuffer = void 0;
+        this._textBufferHash = null;
+        this._onDidChange.fire();
+      }
+    }));
+  }
+  getHash() {
+    if (this._textBufferHash !== null) {
+      return this._textBufferHash;
+    }
+    const shaComputer = new StringSHA1();
+    const snapshot = this.textBuffer.createSnapshot(false);
+    let text;
+    while (text = snapshot.read()) {
+      shaComputer.update(text);
+    }
+    this._textBufferHash = shaComputer.digest();
+    return this._textBufferHash;
+  }
+  getValue() {
+    const fullRange = this.getFullModelRange();
+    const eol = this.textBuffer.getEOL();
+    if (eol === "\n") {
+      return this.textBuffer.getValueInRange(
+        fullRange,
+        1
+        /* EndOfLinePreference.LF */
+      );
+    } else {
+      return this.textBuffer.getValueInRange(
+        fullRange,
+        2
+        /* EndOfLinePreference.CRLF */
+      );
+    }
+  }
+  getFullModelRange() {
+    const lineCount = this.textBuffer.getLineCount();
+    return new Range(1, 1, lineCount, this.textBuffer.getLineLength(lineCount) + 1);
+  }
+}
+export {
+  NotebookDocumentMetadataTextModel,
+  getFormattedNotebookMetadataJSON
+};
+//# sourceMappingURL=notebookMetadataTextModel.js.map

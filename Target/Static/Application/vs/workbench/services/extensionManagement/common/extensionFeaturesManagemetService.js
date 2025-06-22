@@ -1,1 +1,268 @@
-import{$df as g}from"../../../../base/common/event.js";import{$Qy as m}from"../../../../platform/extensions/common/extensions.js";import{$vd as x}from"../../../../base/common/lifecycle.js";import{Extensions as S,$Rtb as T}from"./extensionFeatures.js";import{$WB as _}from"../../../../platform/instantiation/common/extensions.js";import{$Ho as F}from"../../../../platform/storage/common/storage.js";import{$Ql as A}from"../../../../platform/registry/common/platform.js";import{$6c as p}from"../../../../base/common/types.js";import{$_o as $}from"../../../../platform/dialogs/common/dialogs.js";import{localize as u}from"../../../../nls.js";import{$XO as y}from"../../extensions/common/extensions.js";import{$_b as b}from"../../../../base/common/arrays.js";import{$6o as v}from"../../../../base/common/objects.js";var E=function(o,e,t,a){var i=arguments.length,s=i<3?e:a===null?a=Object.getOwnPropertyDescriptor(e,t):a,c;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")s=Reflect.decorate(o,e,t,a);else for(var n=o.length-1;n>=0;n--)(c=o[n])&&(s=(i<3?c(s):i>3?c(e,t,s):c(e,t))||s);return i>3&&s&&Object.defineProperty(e,t,s),s},h=function(o,e){return function(t,a){e(t,a,o)}};const d="extension.features.state";let D=class extends x{constructor(e,t,a){super(),this.g=e,this.h=t,this.j=a,this.a=this.B(new g),this.onDidChangeEnablement=this.a.event,this.b=this.B(new g),this.onDidChangeAccessData=this.b.event,this.f=new Map,this.c=A.as(S.ExtensionFeaturesRegistry),this.f=this.s(),this.u(),this.B(e.onDidChangeValue(0,d,this.q)(i=>this.r(i)))}isEnabled(e,t){const a=this.c.getExtensionFeature(t);if(!a)return!1;const i=this.m(e,t)?.disabled;if(p(i))return!i;const s=a.access.extensionsList?.[e._lower];return p(s)?s:!a.access.requireUserConsent}setEnablement(e,t,a){if(!this.c.getExtensionFeature(t))throw new Error(`No feature with id '${t}'`);const s=this.n(e,t);s.disabled!==!a&&(s.disabled=!a,this.a.fire({extension:e,featureId:t,enabled:a}),this.t())}getEnablementData(e){const t=[];if(this.c.getExtensionFeature(e))for(const[i,s]of this.f){const c=s.get(e);c?.disabled!==void 0&&t.push({extension:new m(i),enabled:!c.disabled})}return t}async getAccess(e,t,a){const i=this.c.getExtensionFeature(t);if(!i)return!1;const s=this.n(e,t);if(s.disabled)return!1;if(s.disabled===void 0){let n=!0;if(i.access.requireUserConsent){const r=this.j.extensions.find(l=>m.equals(l.identifier,e));n=(await this.h.confirm({title:u(14031,null,i.label),message:u(14032,null,r?.displayName??e._lower,i.label),detail:a??i.description,custom:!0,primaryButton:u(14033,null),cancelButton:u(14034,null)})).confirmed}if(this.setEnablement(e,t,n),!n)return!1}const c=new Date;return s.accessData.current={accessTimes:[c].concat(s.accessData.current?.accessTimes??[]),lastAccessed:c,status:s.accessData.current?.status},s.accessData.accessTimes=(s.accessData.accessTimes??[]).concat(c),this.t(),this.b.fire({extension:e,featureId:t,accessData:s.accessData}),!0}getAllAccessDataForExtension(e){const t=new Map,a=this.f.get(e._lower);if(a)for(const[i,s]of a)t.set(i,s.accessData);return t}getAccessData(e,t){if(this.c.getExtensionFeature(t))return this.m(e,t)?.accessData}setStatus(e,t,a){if(!this.c.getExtensionFeature(t))throw new Error(`No feature with id '${t}'`);const s=this.n(e,t);s.accessData.current={accessTimes:s.accessData.current?.accessTimes??[],lastAccessed:s.accessData.current?.lastAccessed??new Date,status:a},this.b.fire({extension:e,featureId:t,accessData:this.getAccessData(e,t)})}m(e,t){return this.f.get(e._lower)?.get(t)}n(e,t){let a=this.f.get(e._lower);a||(a=new Map,this.f.set(e._lower,a));let i=a.get(t);return i||(i={accessData:{accessTimes:[]}},a.set(t,i)),i}r(e){if(e.external){const t=this.f;this.f=this.s();for(const a of b([...t.keys(),...this.f.keys()])){const i=new m(a),s=t.get(a),c=this.f.get(a);for(const n of b([...s?.keys()??[],...c?.keys()??[]])){const r=this.isEnabled(i,n),f=!s?.get(n)?.disabled;r!==f&&this.a.fire({extension:i,featureId:n,enabled:r});const l=this.getAccessData(i,n),w=s?.get(n)?.accessData;v(l,w)||this.b.fire({extension:i,featureId:n,accessData:l??{accessTimes:[]}})}}}}s(){let e={};const t=this.g.get(d,0,"{}");try{e=JSON.parse(t)}catch{}const a=new Map;for(const i in e){const s=new Map,c=e[i];for(const n in c){const r=c[n];s.set(n,{disabled:r.disabled,accessData:{accessTimes:(r.accessTimes??[]).map(f=>new Date(f))}})}a.set(i.toLowerCase(),s)}return a}t(){const e={};this.f.forEach((t,a)=>{const i={};t.forEach((s,c)=>{i[c]={disabled:s.disabled,accessTimes:s.accessData.accessTimes.map(n=>n.getTime())}}),e[a]=i}),this.g.store(d,JSON.stringify(e),0,0)}u(){const e=new Date,t=new Date(e.setDate(e.getDate()-30));let a=!1;for(const[,i]of this.f)for(const[,s]of i){const c=s.accessData.accessTimes.length;s.accessData.accessTimes=s.accessData.accessTimes.filter(n=>n>t),s.accessData.accessTimes.length!==c&&(a=!0)}a&&this.t()}};D=E([h(0,F),h(1,$),h(2,y)],D);_(T,D,1);
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { Emitter } from "../../../../base/common/event.js";
+import { ExtensionIdentifier } from "../../../../platform/extensions/common/extensions.js";
+import { Disposable } from "../../../../base/common/lifecycle.js";
+import { Extensions, IExtensionFeaturesManagementService } from "./extensionFeatures.js";
+import { registerSingleton } from "../../../../platform/instantiation/common/extensions.js";
+import { IStorageService } from "../../../../platform/storage/common/storage.js";
+import { Registry } from "../../../../platform/registry/common/platform.js";
+import { isBoolean } from "../../../../base/common/types.js";
+import { IDialogService } from "../../../../platform/dialogs/common/dialogs.js";
+import { localize } from "../../../../nls.js";
+import { IExtensionService } from "../../extensions/common/extensions.js";
+import { distinct } from "../../../../base/common/arrays.js";
+import { equals } from "../../../../base/common/objects.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+const FEATURES_STATE_KEY = "extension.features.state";
+let ExtensionFeaturesManagementService = class ExtensionFeaturesManagementService2 extends Disposable {
+  static {
+    __name(this, "ExtensionFeaturesManagementService");
+  }
+  constructor(storageService, dialogService, extensionService) {
+    super();
+    this.storageService = storageService;
+    this.dialogService = dialogService;
+    this.extensionService = extensionService;
+    this._onDidChangeEnablement = this._register(new Emitter());
+    this.onDidChangeEnablement = this._onDidChangeEnablement.event;
+    this._onDidChangeAccessData = this._register(new Emitter());
+    this.onDidChangeAccessData = this._onDidChangeAccessData.event;
+    this.extensionFeaturesState = /* @__PURE__ */ new Map();
+    this.registry = Registry.as(Extensions.ExtensionFeaturesRegistry);
+    this.extensionFeaturesState = this.loadState();
+    this.garbageCollectOldRequests();
+    this._register(storageService.onDidChangeValue(0, FEATURES_STATE_KEY, this._store)((e) => this.onDidStorageChange(e)));
+  }
+  isEnabled(extension, featureId) {
+    const feature = this.registry.getExtensionFeature(featureId);
+    if (!feature) {
+      return false;
+    }
+    const isDisabled = this.getExtensionFeatureState(extension, featureId)?.disabled;
+    if (isBoolean(isDisabled)) {
+      return !isDisabled;
+    }
+    const defaultExtensionAccess = feature.access.extensionsList?.[extension._lower];
+    if (isBoolean(defaultExtensionAccess)) {
+      return defaultExtensionAccess;
+    }
+    return !feature.access.requireUserConsent;
+  }
+  setEnablement(extension, featureId, enabled) {
+    const feature = this.registry.getExtensionFeature(featureId);
+    if (!feature) {
+      throw new Error(`No feature with id '${featureId}'`);
+    }
+    const featureState = this.getAndSetIfNotExistsExtensionFeatureState(extension, featureId);
+    if (featureState.disabled !== !enabled) {
+      featureState.disabled = !enabled;
+      this._onDidChangeEnablement.fire({ extension, featureId, enabled });
+      this.saveState();
+    }
+  }
+  getEnablementData(featureId) {
+    const result = [];
+    const feature = this.registry.getExtensionFeature(featureId);
+    if (feature) {
+      for (const [extension, featuresStateMap] of this.extensionFeaturesState) {
+        const featureState = featuresStateMap.get(featureId);
+        if (featureState?.disabled !== void 0) {
+          result.push({ extension: new ExtensionIdentifier(extension), enabled: !featureState.disabled });
+        }
+      }
+    }
+    return result;
+  }
+  async getAccess(extension, featureId, justification) {
+    const feature = this.registry.getExtensionFeature(featureId);
+    if (!feature) {
+      return false;
+    }
+    const featureState = this.getAndSetIfNotExistsExtensionFeatureState(extension, featureId);
+    if (featureState.disabled) {
+      return false;
+    }
+    if (featureState.disabled === void 0) {
+      let enabled = true;
+      if (feature.access.requireUserConsent) {
+        const extensionDescription = this.extensionService.extensions.find((e) => ExtensionIdentifier.equals(e.identifier, extension));
+        const confirmationResult = await this.dialogService.confirm({
+          title: localize("accessExtensionFeature", "Access '{0}' Feature", feature.label),
+          message: localize("accessExtensionFeatureMessage", "'{0}' extension would like to access the '{1}' feature.", extensionDescription?.displayName ?? extension._lower, feature.label),
+          detail: justification ?? feature.description,
+          custom: true,
+          primaryButton: localize("allow", "Allow"),
+          cancelButton: localize("disallow", "Don't Allow")
+        });
+        enabled = confirmationResult.confirmed;
+      }
+      this.setEnablement(extension, featureId, enabled);
+      if (!enabled) {
+        return false;
+      }
+    }
+    const accessTime = /* @__PURE__ */ new Date();
+    featureState.accessData.current = {
+      accessTimes: [accessTime].concat(featureState.accessData.current?.accessTimes ?? []),
+      lastAccessed: accessTime,
+      status: featureState.accessData.current?.status
+    };
+    featureState.accessData.accessTimes = (featureState.accessData.accessTimes ?? []).concat(accessTime);
+    this.saveState();
+    this._onDidChangeAccessData.fire({ extension, featureId, accessData: featureState.accessData });
+    return true;
+  }
+  getAllAccessDataForExtension(extension) {
+    const result = /* @__PURE__ */ new Map();
+    const extensionState = this.extensionFeaturesState.get(extension._lower);
+    if (extensionState) {
+      for (const [featureId, featureState] of extensionState) {
+        result.set(featureId, featureState.accessData);
+      }
+    }
+    return result;
+  }
+  getAccessData(extension, featureId) {
+    const feature = this.registry.getExtensionFeature(featureId);
+    if (!feature) {
+      return;
+    }
+    return this.getExtensionFeatureState(extension, featureId)?.accessData;
+  }
+  setStatus(extension, featureId, status) {
+    const feature = this.registry.getExtensionFeature(featureId);
+    if (!feature) {
+      throw new Error(`No feature with id '${featureId}'`);
+    }
+    const featureState = this.getAndSetIfNotExistsExtensionFeatureState(extension, featureId);
+    featureState.accessData.current = {
+      accessTimes: featureState.accessData.current?.accessTimes ?? [],
+      lastAccessed: featureState.accessData.current?.lastAccessed ?? /* @__PURE__ */ new Date(),
+      status
+    };
+    this._onDidChangeAccessData.fire({ extension, featureId, accessData: this.getAccessData(extension, featureId) });
+  }
+  getExtensionFeatureState(extension, featureId) {
+    return this.extensionFeaturesState.get(extension._lower)?.get(featureId);
+  }
+  getAndSetIfNotExistsExtensionFeatureState(extension, featureId) {
+    let extensionState = this.extensionFeaturesState.get(extension._lower);
+    if (!extensionState) {
+      extensionState = /* @__PURE__ */ new Map();
+      this.extensionFeaturesState.set(extension._lower, extensionState);
+    }
+    let featureState = extensionState.get(featureId);
+    if (!featureState) {
+      featureState = { accessData: { accessTimes: [] } };
+      extensionState.set(featureId, featureState);
+    }
+    return featureState;
+  }
+  onDidStorageChange(e) {
+    if (e.external) {
+      const oldState = this.extensionFeaturesState;
+      this.extensionFeaturesState = this.loadState();
+      for (const extensionId of distinct([...oldState.keys(), ...this.extensionFeaturesState.keys()])) {
+        const extension = new ExtensionIdentifier(extensionId);
+        const oldExtensionFeaturesState = oldState.get(extensionId);
+        const newExtensionFeaturesState = this.extensionFeaturesState.get(extensionId);
+        for (const featureId of distinct([...oldExtensionFeaturesState?.keys() ?? [], ...newExtensionFeaturesState?.keys() ?? []])) {
+          const isEnabled = this.isEnabled(extension, featureId);
+          const wasEnabled = !oldExtensionFeaturesState?.get(featureId)?.disabled;
+          if (isEnabled !== wasEnabled) {
+            this._onDidChangeEnablement.fire({ extension, featureId, enabled: isEnabled });
+          }
+          const newAccessData = this.getAccessData(extension, featureId);
+          const oldAccessData = oldExtensionFeaturesState?.get(featureId)?.accessData;
+          if (!equals(newAccessData, oldAccessData)) {
+            this._onDidChangeAccessData.fire({ extension, featureId, accessData: newAccessData ?? { accessTimes: [] } });
+          }
+        }
+      }
+    }
+  }
+  loadState() {
+    let data = {};
+    const raw = this.storageService.get(FEATURES_STATE_KEY, 0, "{}");
+    try {
+      data = JSON.parse(raw);
+    } catch (e) {
+    }
+    const result = /* @__PURE__ */ new Map();
+    for (const extensionId in data) {
+      const extensionFeatureState = /* @__PURE__ */ new Map();
+      const extensionFeatures = data[extensionId];
+      for (const featureId in extensionFeatures) {
+        const extensionFeature = extensionFeatures[featureId];
+        extensionFeatureState.set(featureId, {
+          disabled: extensionFeature.disabled,
+          accessData: {
+            accessTimes: (extensionFeature.accessTimes ?? []).map((time) => new Date(time))
+          }
+        });
+      }
+      result.set(extensionId.toLowerCase(), extensionFeatureState);
+    }
+    return result;
+  }
+  saveState() {
+    const data = {};
+    this.extensionFeaturesState.forEach((extensionState, extensionId) => {
+      const extensionFeatures = {};
+      extensionState.forEach((featureState, featureId) => {
+        extensionFeatures[featureId] = {
+          disabled: featureState.disabled,
+          accessTimes: featureState.accessData.accessTimes.map((time) => time.getTime())
+        };
+      });
+      data[extensionId] = extensionFeatures;
+    });
+    this.storageService.store(
+      FEATURES_STATE_KEY,
+      JSON.stringify(data),
+      0,
+      0
+      /* StorageTarget.USER */
+    );
+  }
+  garbageCollectOldRequests() {
+    const now = /* @__PURE__ */ new Date();
+    const thirtyDaysAgo = new Date(now.setDate(now.getDate() - 30));
+    let modified = false;
+    for (const [, featuresStateMap] of this.extensionFeaturesState) {
+      for (const [, featureState] of featuresStateMap) {
+        const originalLength = featureState.accessData.accessTimes.length;
+        featureState.accessData.accessTimes = featureState.accessData.accessTimes.filter((accessTime) => accessTime > thirtyDaysAgo);
+        if (featureState.accessData.accessTimes.length !== originalLength) {
+          modified = true;
+        }
+      }
+    }
+    if (modified) {
+      this.saveState();
+    }
+  }
+};
+ExtensionFeaturesManagementService = __decorate([
+  __param(0, IStorageService),
+  __param(1, IDialogService),
+  __param(2, IExtensionService)
+], ExtensionFeaturesManagementService);
+registerSingleton(
+  IExtensionFeaturesManagementService,
+  ExtensionFeaturesManagementService,
+  1
+  /* InstantiationType.Delayed */
+);
+//# sourceMappingURL=extensionFeaturesManagemetService.js.map

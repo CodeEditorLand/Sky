@@ -1,1 +1,44 @@
-import{$Lc as o}from"./map.js";const i=new o(1e4);function g(n){return u(n,"NFC",i)}const f=new o(1e4);function a(n){return u(n,"NFD",f)}const s=/[^\u0000-\u0080]/;function u(n,t,e){if(!n)return n;const r=e.get(n);if(r)return r;let u;return u=s.test(n)?n.normalize(t):n,e.set(n,u),u}const h=function(){const n=/[\u0300-\u036f]/g;return function(t){return a(t).replace(n,"")}}();export{g as $fi,a as $gi,h as $hi};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { LRUCache } from "./map.js";
+const nfcCache = new LRUCache(1e4);
+function normalizeNFC(str) {
+  return normalize(str, "NFC", nfcCache);
+}
+__name(normalizeNFC, "normalizeNFC");
+const nfdCache = new LRUCache(1e4);
+function normalizeNFD(str) {
+  return normalize(str, "NFD", nfdCache);
+}
+__name(normalizeNFD, "normalizeNFD");
+const nonAsciiCharactersPattern = /[^\u0000-\u0080]/;
+function normalize(str, form, normalizedCache) {
+  if (!str) {
+    return str;
+  }
+  const cached = normalizedCache.get(str);
+  if (cached) {
+    return cached;
+  }
+  let res;
+  if (nonAsciiCharactersPattern.test(str)) {
+    res = str.normalize(form);
+  } else {
+    res = str;
+  }
+  normalizedCache.set(str, res);
+  return res;
+}
+__name(normalize, "normalize");
+const removeAccents = /* @__PURE__ */ function() {
+  const regex = /[\u0300-\u036f]/g;
+  return function(str) {
+    return normalizeNFD(str).replace(regex, "");
+  };
+}();
+export {
+  normalizeNFC,
+  normalizeNFD,
+  removeAccents
+};
+//# sourceMappingURL=normalization.js.map

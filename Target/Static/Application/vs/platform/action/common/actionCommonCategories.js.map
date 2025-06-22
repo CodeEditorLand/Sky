@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["../../../../../../../../../Dependency/Microsoft/Dependency/Editor/src/vs/platform/action/common/actionCommonCategories.ts"],
+  "sourcesContent": ["/*---------------------------------------------------------------------------------------------\r\n *  Copyright (c) Microsoft Corporation. All rights reserved.\r\n *  Licensed under the MIT License. See License.txt in the project root for license information.\r\n *--------------------------------------------------------------------------------------------*/\r\n\r\nimport { localize2 } from '../../../nls.js';\r\n\r\nexport const Categories = Object.freeze({\r\n\tView: localize2('view', 'View'),\r\n\tHelp: localize2('help', 'Help'),\r\n\tTest: localize2('test', 'Test'),\r\n\tFile: localize2('file', 'File'),\r\n\tPreferences: localize2('preferences', 'Preferences'),\r\n\tDeveloper: localize2({ key: 'developer', comment: ['A developer on Code itself or someone diagnosing issues in Code'] }, \"Developer\"),\r\n});\r\n"],
+  "mappings": "AAKA,SAAS,iBAAiB;AAEnB,MAAM,aAAa,OAAO,OAAO;EACvC,MAAM,UAAU,QAAQ,MAAM;EAC9B,MAAM,UAAU,QAAQ,MAAM;EAC9B,MAAM,UAAU,QAAQ,MAAM;EAC9B,MAAM,UAAU,QAAQ,MAAM;EAC9B,aAAa,UAAU,eAAe,aAAa;EACnD,WAAW,UAAU,EAAE,KAAK,aAAa,SAAS,CAAC,iEAAiE,EAAC,GAAI,WAAW;CACpI;",
+  "names": []
+}

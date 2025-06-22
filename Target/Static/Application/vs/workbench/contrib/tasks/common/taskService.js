@@ -1,1 +1,20 @@
-import*as e from"../../../../nls.js";import{$nj as t}from"../../../../platform/instantiation/common/instantiation.js";import{$Un as o,$Bn as l}from"../../../../platform/contextkey/common/contextkey.js";const n=new o("customExecutionSupported",!1,e.localize(11506,null)),s=new o("shellExecutionSupported",!1,e.localize(11507,null)),a=new o("taskCommandsRegistered",!1,e.localize(11508,null)),r=new o("processExecutionSupported",!1,e.localize(11509,null)),i=new o("serverlessWebContext",!1,e.localize(11510,null)),u=l.or(l.and(s,r),n),x=t("taskService");export{n as $h2b,s as $i2b,a as $j2b,r as $k2b,i as $l2b,u as $m2b,x as $n2b};
+import * as nls from "../../../../nls.js";
+import { createDecorator } from "../../../../platform/instantiation/common/instantiation.js";
+import { RawContextKey, ContextKeyExpr } from "../../../../platform/contextkey/common/contextkey.js";
+const CustomExecutionSupportedContext = new RawContextKey("customExecutionSupported", false, nls.localize("tasks.customExecutionSupported", "Whether CustomExecution tasks are supported. Consider using in the when clause of a 'taskDefinition' contribution."));
+const ShellExecutionSupportedContext = new RawContextKey("shellExecutionSupported", false, nls.localize("tasks.shellExecutionSupported", "Whether ShellExecution tasks are supported. Consider using in the when clause of a 'taskDefinition' contribution."));
+const TaskCommandsRegistered = new RawContextKey("taskCommandsRegistered", false, nls.localize("tasks.taskCommandsRegistered", "Whether the task commands have been registered yet"));
+const ProcessExecutionSupportedContext = new RawContextKey("processExecutionSupported", false, nls.localize("tasks.processExecutionSupported", "Whether ProcessExecution tasks are supported. Consider using in the when clause of a 'taskDefinition' contribution."));
+const ServerlessWebContext = new RawContextKey("serverlessWebContext", false, nls.localize("tasks.serverlessWebContext", "True when in the web with no remote authority."));
+const TaskExecutionSupportedContext = ContextKeyExpr.or(ContextKeyExpr.and(ShellExecutionSupportedContext, ProcessExecutionSupportedContext), CustomExecutionSupportedContext);
+const ITaskService = createDecorator("taskService");
+export {
+  CustomExecutionSupportedContext,
+  ITaskService,
+  ProcessExecutionSupportedContext,
+  ServerlessWebContext,
+  ShellExecutionSupportedContext,
+  TaskCommandsRegistered,
+  TaskExecutionSupportedContext
+};
+//# sourceMappingURL=taskService.js.map

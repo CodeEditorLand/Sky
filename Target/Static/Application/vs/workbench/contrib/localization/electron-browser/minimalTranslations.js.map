@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["../../../../../../../../../../Dependency/Microsoft/Dependency/Editor/src/vs/workbench/contrib/localization/electron-browser/minimalTranslations.ts"],
+  "sourcesContent": ["/*---------------------------------------------------------------------------------------------\r\n *  Copyright (c) Microsoft Corporation. All rights reserved.\r\n *  Licensed under the MIT License. See License.txt in the project root for license information.\r\n *--------------------------------------------------------------------------------------------*/\r\n\r\nimport { localize } from '../../../../nls.js';\r\n\r\n// The strings localized in this file will get pulled into the manifest of the language packs.\r\n// So that they are available for VS Code to use without downloading the entire language pack.\r\n\r\nexport const minimumTranslatedStrings: { [key: string]: string } = {\r\n\tshowLanguagePackExtensions: localize('showLanguagePackExtensions', \"Search language packs in the Marketplace to change the display language to {0}.\"),\r\n\tsearchMarketplace: localize('searchMarketplace', \"Search Marketplace\"),\r\n\tinstallAndRestartMessage: localize('installAndRestartMessage', \"Install language pack to change the display language to {0}.\"),\r\n\tinstallAndRestart: localize('installAndRestart', \"Install and Restart\")\r\n};"],
+  "mappings": "AAKA,SAAS,gBAAgB;AAKlB,MAAM,2BAAsD;EAClE,4BAA4B,SAAS,8BAA8B,iFAAiF;EACpJ,mBAAmB,SAAS,qBAAqB,oBAAoB;EACrE,0BAA0B,SAAS,4BAA4B,8DAA8D;EAC7H,mBAAmB,SAAS,qBAAqB,qBAAqB;;",
+  "names": []
+}

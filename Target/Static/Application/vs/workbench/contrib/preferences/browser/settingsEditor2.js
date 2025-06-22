@@ -1,1 +1,1698 @@
-import*as o from"../../../../base/browser/dom.js";import{$G5 as dt}from"../../../../base/browser/keyboardEvent.js";import{$M7 as ft}from"../../../../base/browser/ui/actionbar/actionbar.js";import*as gt from"../../../../base/browser/ui/aria/aria.js";import{$p9 as mt}from"../../../../base/browser/ui/button/button.js";import{Sizing as pt,$x9 as $t}from"../../../../base/browser/ui/splitview/splitview.js";import{$S8 as yt}from"../../../../base/browser/ui/toggle/toggle.js";import{$_l as O}from"../../../../base/common/actions.js";import{$wh as St,$Ih as R,$Bh as Tt}from"../../../../base/common/async.js";import{CancellationToken as wt,$pf as Et}from"../../../../base/common/cancellation.js";import{$hp as G}from"../../../../base/common/color.js";import{$in as vt}from"../../../../base/common/date.js";import{$pb as U}from"../../../../base/common/errors.js";import{$df as Ct,Event as Z}from"../../../../base/common/event.js";import{Iterable as It}from"../../../../base/common/iterator.js";import{$vd as Bt,$ud as X,$qd as xt,$wd as W}from"../../../../base/common/lifecycle.js";import*as N from"../../../../base/common/platform.js";import{ThemeIcon as q}from"../../../../base/common/themables.js";import{URI as A}from"../../../../base/common/uri.js";import{$BD as Dt}from"../../../../editor/common/languages/language.js";import{$nF as Rt}from"../../../../editor/common/services/textResourceConfiguration.js";import{localize as S}from"../../../../nls.js";import{$Yn as Vt}from"../../../../platform/commands/common/commands.js";import{$Sl as Ft}from"../../../../platform/configuration/common/configurationRegistry.js";import{$Vn as Mt}from"../../../../platform/contextkey/common/contextkey.js";import{$gz as zt,$jz as At}from"../../../../platform/extensionManagement/common/extensionManagement.js";import{$mj as Lt}from"../../../../platform/instantiation/common/instantiation.js";import{$3n as kt}from"../../../../platform/log/common/log.js";import{$nn as Jt}from"../../../../platform/product/common/productService.js";import{$3I as Ot}from"../../../../platform/progress/common/progress.js";import{$Ql as Wt}from"../../../../platform/registry/common/platform.js";import{$Ho as Nt}from"../../../../platform/storage/common/storage.js";import{$Po as at}from"../../../../platform/telemetry/common/telemetry.js";import{$Mfb as qt,$Qfb as jt}from"../../../../platform/theme/browser/defaultStyles.js";import{$jp as V,$Sp as Pt,$Tp as Kt,$Gp as _t,$8p as Ht}from"../../../../platform/theme/common/colorRegistry.js";import{$Mt as Yt}from"../../../../platform/theme/common/themeService.js";import{$8Mb as lt,$9Mb as Qt}from"../../../../platform/userDataSync/common/userDataSync.js";import{$RM as Gt}from"../../../../platform/workspace/common/workspaceTrust.js";import{$HTb as Ut}from"../../../browser/actions/widgetNavigationCommands.js";import{$DDb as Zt}from"../../../browser/parts/editor/editorPane.js";import{$xJ as Xt,$JJ as te}from"../../../services/configuration/common/configuration.js";import{$kI as ee}from"../../../services/editor/common/editorGroupsService.js";import{$XO as ie}from"../../../services/extensions/common/extensions.js";import{$ZJ as se,SettingMatchType as ne,SettingValueType as w,$YJ as re}from"../../../services/preferences/common/preferences.js";import{$OJ as F,$QJ as he}from"../../../services/preferences/common/preferencesModels.js";import{$9X as oe}from"../../../services/userDataProfile/common/userDataProfile.js";import{$L6b as ce}from"../../../services/userDataSync/common/userDataSync.js";import{$h9b as ae}from"../../codeEditor/browser/suggestEnabledInput/suggestEnabledInput.js";import{$a8b as le,$e8b as ue,$c8b as be,$d8b as de,$N8b as fe,$P8b as ge,$E8b as j,$F8b as y,$Q8b as me,$G8b as tt,$67b as pe,$H8b as v,$D8b as P,$J8b as $e,$L8b as ye,$97b as Se,$07b as Te,$_7b as we,WorkbenchSettingsEditorSettings as et,$K8b as Ee}from"../common/preferences.js";import{$n9b as ve,$o9b as it,$y9b as Ce}from"../common/settingsEditorColorRegistry.js";import"./media/settingsEditor2.css";import{$08b as Ie,$98b as Be,$$8b as xe}from"./preferencesIcons.js";import{$b9b as De}from"./preferencesWidgets.js";import{$K9b as Re,$L9b as Ve}from"./settingsLayout.js";import{$Z9b as Fe}from"./settingsSearchMenu.js";import{$_9b as L,$09b as Me,$99b as ze,$89b as st,$f0b as Ae,$c0b as Le}from"./settingsTree.js";import{$W9b as K,$V9b as nt,$O9b as ut,$R9b as ke,$Q9b as _}from"./settingsTreeModels.js";import{$i0b as Je,$j0b as Oe,$g0b as We}from"./tocTree.js";var ct=function(f,t,e,i){var s=arguments.length,n=s<3?t:i===null?i=Object.getOwnPropertyDescriptor(t,e):i,r;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")n=Reflect.decorate(f,t,e,i);else for(var h=f.length-1;h>=0;h--)(r=f[h])&&(n=(s<3?r(n):s>3?r(t,e,n):r(t,e))||n);return s>3&&n&&Object.defineProperty(t,e,n),n},b=function(f,t){return function(e,i){t(e,i,f)}},u,rt;(function(f){f[f.Search=0]="Search",f[f.TableOfContents=1]="TableOfContents",f[f.SettingTree=2]="SettingTree",f[f.SettingControl=3]="SettingControl"})(rt||(rt={}));function bt(f){return It.map(f.children,t=>({element:t,children:t instanceof ut?bt(t):void 0}))}const m=o.$,H=S(9901,null),ht="workbench.settings.settingsSearchTocBehavior",Ne="settingsEditorState";let ot=class extends Zt{static{u=this}static{this.ID="workbench.editor.settings2"}static{this.a=0}static{this.b=200}static{this.c=200}static{this.f=1e3}static{this.j=500}static{this.r=100}static{this.u=200}static{this.cb=500}static{this.db=this.u+this.cb}static{this.eb=[`@${P}`,"@tag:notebookLayout","@tag:notebookOutputLayout",`@tag:${ye}`,`@tag:${Ee}`,"@tag:sync","@tag:usesOnlineServices","@tag:telemetry","@tag:accessibility","@tag:preview","@tag:experimental",`@${tt}`,`@${j}`,`@${y}scm`,`@${y}explorer`,`@${y}search`,`@${y}debug`,`@${y}extensions`,`@${y}terminal`,`@${y}task`,`@${y}problems`,`@${y}output`,`@${y}comments`,`@${y}remote`,`@${y}timeline`,`@${y}notebook`,`@${$e}`]}static fb(t){return Array.isArray(t)?!1:t===w.Enum||t===w.Array||t===w.BooleanObject||t===w.Object||t===w.Complex||t===w.Boolean||t===w.Exclude||t===w.Include}constructor(t,e,i,s,n,r,h,c,a,l,g,C,d,p,$,k,x,E,I,D,J,M){super(u.ID,t,e,n,g),this.gc=i,this.hc=r,this.ic=h,this.jc=c,this.kc=a,this.lc=l,this.mc=g,this.nc=C,this.oc=d,this.pc=p,this.qc=$,this.rc=k,this.sc=x,this.tc=E,this.uc=I,this.vc=D,this.wc=J,this.kb=null,this.vb=this.B(new W),this.Bb=null,this.Cb=null,this.Db=null,this.Ib=null,this.Kb=this.B(new W),this.Lb=null,this.Mb=null,this.Nb=null,this.Tb=0,this.Ub=!1,this.Vb=!1,this.Xb=null,this.Yb=null,this.Zb=0,this.ac=[],this.bc=[],this.cc="settingsEditor2.dismissedExtensionSettings",this.dc="	",this.fc=null,this.Ab=new R(200),this.Jb={settingsTarget:3},this.Gb=new R(u.c),this.Hb=new R(u.f),this.Eb=new R(u.b),this.Fb=new R(u.j),this.Qb=le.bindTo(l),this.Rb=be.bindTo(l),this.Ob=de.bindTo(l),this.Pb=ue.bindTo(l),this.Sb=new Map,this.Wb=this.ab(C,s,Ne),this.bc=this.mc.get(this.cc,0,"").split(this.dc),this.B(i.onDidChangeConfiguration(T=>{if(T.affectedKeys.has(et.ShowAISearchToggle)){const z=this.gc.getValue(et.ShowAISearchToggle);this.yc(z)}T.source!==7&&this.bd(T.affectedKeys)})),this.B(M.onDidChangeCurrentProfile(T=>{T.join(this.xc())})),this.B($.onDidChangeTrust(()=>{this.Ac?.updateWorkspaceTrust($.isWorkspaceTrusted()),this.vb.value&&(this.vb.value.updateWorkspaceTrust($.isWorkspaceTrusted()),this.ed())})),this.B(i.onDidChangeRestrictedSettings(T=>{T.default.length&&this.zc&&this.cd(new Set(T.default))})),this.B(E.onDidInstallExtensions(()=>{this.Dc()})),this.B(E.onDidUninstallExtension(()=>{this.Dc()})),this.hb=this.B(new X),fe&&!u.eb.includes(`@${v}`)&&u.eb.push(`@${v}`),this.ec=this.B(new W)}async xc(){this.Fb.trigger(()=>{this.bc=this.mc.get(this.cc,0,"").split(this.dc),this.bd(void 0,!0)})}yc(t){if(!this.kb||!this.Db||!this.fc)return;const e=this.lc.getContextKeyValue("chatSetupHidden"),i=this.fc.hasAction(this.Db);!i&&t&&!e?(this.fc.push(this.Db,{index:0,label:!1,icon:!0}),this.kb.classList.add("with-ai-toggle")):i&&(this.fc.pull(0),this.kb.classList.remove("with-ai-toggle"),this.Db.checked=!1)}get minimumWidth(){return u.cb}get maximumWidth(){return Number.POSITIVE_INFINITY}get minimumHeight(){return 180}set minimumWidth(t){}set maximumWidth(t){}get zc(){return this.Ac||this.vb.value}get Ac(){return this.Kb.value??null}set Ac(t){this.Kb.value=t??void 0,this.ib.classList.toggle("search-mode",!!this.Kb.value)}get Bc(){const t=this.sb.getFocus()[0];if(t instanceof _)return this.tb.getDOMElementsForSettingKey(this.sb.getHTMLElement(),t.setting.key)[0]}get currentFocusContext(){return this.Tb}Y(t){t.setAttribute("tabindex","-1"),this.ib=o.$M6(t,m(".settings-editor",{tabindex:"-1"})),this.Ic(this.ib),this.Oc(this.ib),this.Pc(this.ib),this.updateStyles(),this.B(Ut({name:"settingsEditor2",focusNotifiers:[this],focusNextWidget:()=>{this.mb.inputWidget.hasWidgetFocus()&&this.focusTOC()},focusPreviousWidget:()=>{this.mb.inputWidget.hasWidgetFocus()||this.focusSearch()}}))}async setInput(t,e,i,s){if(this.Qb.set(!0),await super.setInput(t,e,i,s),!this.input)return;const n=await this.input.resolve();if(!(s.isCancellationRequested||!(n instanceof he))){if(this.hb.clear(),this.hb.add(n.onDidChangeGroups(()=>{this.Fb.trigger(()=>{this.bd(void 0,!1,!0)})})),this.gb=n,e=e||re({}),!this.Jb.settingsTarget||!this.pb.settingsTarget){const r=e.viewState&&e.viewState.settingsTarget;!e.target&&!r&&(e.target=3)}this.Fc(e),this.bd(void 0,!0).then(()=>{this.ec.value=t.onWillDispose(()=>{this.mb.setValue("")}),this.Vc()}),await this.Dc()}}async Dc(){const t=await this.tc.getInstalled();this.ac=t.filter(e=>e.manifest.contributes?.configuration).map(e=>e.identifier.id)}Ec(){const t=this.input&&this.Wb.loadEditorState(this.group,this.input);if(t&&typeof t.target=="object"&&(t.target=A.revive(t.target)),t){const e=t.target;this.pb.settingsTarget=e,this.Jb.settingsTarget=e,this.mb.getValue()||this.mb.setValue(t.searchQuery)}return this.input&&this.Wb.clearEditorState(this.input,this.group),t??null}getViewState(){return this.Jb}setOptions(t){super.setOptions(t),t&&this.Fc(t)}Fc(t){t.focusSearch&&!N.$v&&this.focusSearch();const e=t.viewState?t.viewState:void 0,i=e?.query??t.query;i!==void 0&&(this.mb.setValue(i),this.Jb.query=i);const s=t.folderUri??e?.settingsTarget??t.target;s&&this.pb.updateTarget(s)}clearInput(){this.Qb.set(!1),super.clearInput()}layout(t){if(this.$b=t,!this.isVisible())return;this.zd(t);const i=Math.min(this.jb.clientWidth,t.width)-24*2-10-this.nb.clientWidth-this.ob.clientWidth-12;this.mb.layout(new o.$25(i,20)),this.ib.classList.toggle("narrow-width",t.width<u.db)}focus(){if(super.focus(),this.Tb===0)N.$v||this.focusSearch();else if(this.Tb===3){const t=this.Bc;if(t){const e=t.querySelector(L.CONTROL_SELECTOR);if(e){e.focus();return}}}else this.Tb===2?this.sb.domFocus():this.Tb===1&&this.zb.domFocus()}Z(t){super.Z(t),t||setTimeout(()=>{this.mb.onHide(),this.tb.cancelSuggesters()},0)}focusSettings(t=!1){if(this.sb.getFocus().length||this.sb.focusFirst(),this.sb.domFocus(),t){const i=this.sb.getHTMLElement().querySelector(`.focused ${L.CONTROL_SELECTOR}`);i&&i.focus()}}focusTOC(){this.zb.domFocus()}showContextMenu(){const t=this.sb.getFocus()[0],e=this.Bc;e&&t instanceof _&&this.tb.showContextMenu(t,e)}focusSearch(t,e=!0){t&&this.mb&&this.mb.setValue(t),this.mb.focus(e&&!this.Eb.isTriggered)}clearSearchResults(){this.yc(!1),this.mb.setValue(""),this.focusSearch()}clearSearchFilters(){const e=this.mb.getValue().split(" ").filter(i=>i.length&&!u.eb.some(s=>i.startsWith(s)));this.mb.setValue(e.join(" "))}Hc(){let t=H;this.Lb&&(t+=`. ${this.Lb}`),this.Mb&&(t+=`. ${this.Mb}`),this.mb.updateAriaLabel(t)}Ic(t){this.jb=o.$M6(t,m(".settings-header")),this.kb=o.$M6(this.jb,m(".search-container"));const e=this.B(new O(Se,S(9902,null),q.asClassName(Be),!1,async()=>this.clearSearchResults())),i=["action-label",q.asClassName(Ie)];this.Db=this.B(new O(Te,S(9903,null),i.join(" "),!0)),this.B(this.Db.onDidChange(async()=>{await this.Jc()}));const s=this.B(new O(we,S(9904,null),q.asClassName(xe)));this.mb=this.B(this.ic.createInstance(ae,`${u.ID}.searchbox`,this.kb,{triggerCharacters:["@",":"],provideResults:c=>{const a=c.split(/\s/g);return a[a.length-1].startsWith(`@${v}`)?this.sc.getRegisteredLanguageIds().map(g=>`@${v}${g} `).sort().filter(g=>!c.includes(g)):a[a.length-1].startsWith(`@${j}`)?this.ac.map(g=>`@${j}${g} `).sort().filter(g=>!c.includes(g)):a[a.length-1].startsWith("@")?u.eb.filter(l=>!c.includes(l)).map(l=>l.endsWith(":")?l:l+" "):[]}},H,"settingseditor:searchinput"+u.a++,{placeholderText:H,focusContextKey:this.Rb,styleOverrides:{inputBorder:Ce}})),this.B(this.mb.onDidFocus(()=>{this.Tb=0})),this.nb=o.$M6(this.kb,o.$(".settings-count-widget.monaco-count-badge.long")),this.nb.style.backgroundColor=V(Pt),this.nb.style.color=V(Kt),this.nb.style.border=`1px solid ${V(_t)}`,this.B(this.mb.onInputDidChange(()=>{const c=this.mb.getValue();e.enabled=!!c,this.Eb.trigger(()=>this.ld(!0))}));const n=o.$M6(this.jb,m(".settings-header-controls"));n.style.borderColor=V(ve);const r=o.$M6(n,m(".settings-target-container"));if(this.pb=this.B(this.ic.createInstance(De,r,{enableRemoteSettings:!0})),this.pb.settingsTarget=3,this.B(this.pb.onDidTargetChange(c=>this.Kc(c))),this.B(o.$J5(r,o.$F6.KEY_DOWN,c=>{new dt(c).keyCode===18&&this.focusSettings()})),this.oc.enabled&&this.pc.canToggleEnablement()){const c=this.B(this.ic.createInstance(Y,this.window,n));this.B(c.onDidChangeLastSyncedLabel(a=>{this.Mb=a,this.Hc()}))}this.ob=o.$M6(this.kb,o.$(".settings-clear-widget")),this.fc=this.B(new ft(this.ob,{actionViewItemProvider:(c,a)=>{if(c.id===s.id)return this.ic.createInstance(Fe,c,a,this.N,this.mb);if(this.Db&&c.id===this.Db.id)return new yt(null,c,{...a,keybinding:"Ctrl+I",toggleStyles:jt})}}));const h=[e,s];this.fc.push(h,{label:!1,icon:!0})}toggleAiSearch(){this.Db&&(this.Db.checked=!this.Db.checked)}async Jc(){this.Ac&&this.Db&&(this.Ac.showAiResults=this.Db.checked??!1,this.rd(!0,void 0))}Kc(t){this.Jb.settingsTarget=t,this.bd(void 0,!0)}Lc(t){this.bc.includes(t)||this.bc.push(t),this.mc.store(this.cc,this.bc.join(this.dc),0,0),this.bd(void 0,!0)}Mc(t,e){const i=this.zc?.getElementsByName(t.targetKey)?.[0];let s=!1;if(i){let n=.5;try{const r=this.sb.getRelativeTop(t.source);r!==null&&(n=r)}catch{}this.Jb.filterToCategory&&t.source.displayCategory!==i.displayCategory&&this.zb.setFocus([]);try{this.sb.reveal(i,n)}catch{s=!0}if(!s){setTimeout(()=>{this.sb.setFocus([i])},50);const r=this.tb.getDOMElementsForSettingKey(this.sb.getHTMLElement(),t.targetKey);if(r&&r[0]){const h=r[0].querySelector(L.CONTROL_SELECTOR);h&&h.focus()}}}!e&&(!i||s)&&this.od("",!0).then(()=>{this.mb.setValue(""),this.Mc(t,!0)})}switchToSettingsFile(){const t=K(this.mb.getValue()).query;return this.Nc({query:t})}async Nc(t){const e=this.pb.settingsTarget,i={jsonEditor:!0,groupId:this.group.id,...t};if(e===3){if(t?.revealSetting){const n=Wt.as(Ft.Configuration).getConfigurationProperties()[t?.revealSetting.key]?.scope;if(n&&Xt.includes(n))return this.hc.openApplicationSettings(i)}return this.hc.openUserSettings(i)}else{if(e===4)return this.hc.openRemoteSettings(i);if(e===5)return this.hc.openWorkspaceSettings(i);if(A.isUri(e))return this.hc.openFolderSettings({folderUri:e,...i})}}Oc(t){this.lb=o.$M6(t,m(".settings-body")),this.wb=o.$M6(this.lb,m(".no-results-message")),this.wb.innerText=S(9905,null),this.xb=m("span.clear-search-filters"),this.xb.textContent=" - ";const e=o.$M6(this.xb,m("a.pointer.prominent",{tabindex:0},S(9906,null)));this.B(o.$J5(e,o.$F6.CLICK,n=>{o.$H6.stop(n,!1),this.clearSearchFilters()})),o.$M6(this.wb,this.xb),this.wb.style.color=V(Ht),this.yb=m(".settings-toc-container"),this.rb=m(".settings-tree-container"),this.Qc(this.yb),this.Tc(this.rb),this.qb=this.B(new $t(this.lb,{orientation:1,proportionalLayout:!0}));const i=this.mc.getNumber("settingsEditor2.splitViewWidth",0,u.u);this.qb.addView({onDidChange:Z.None,element:this.yb,minimumSize:u.r,maximumSize:Number.POSITIVE_INFINITY,layout:(n,r,h)=>{this.yb.style.width=`${n}px`,this.zb.layout(h,n)}},i,void 0,!0),this.qb.addView({onDidChange:Z.None,element:this.rb,minimumSize:u.cb,maximumSize:Number.POSITIVE_INFINITY,layout:(n,r,h)=>{this.rb.style.width=`${n}px`,this.sb.layout(h,n)}},pt.Distribute,void 0,!0),this.B(this.qb.onDidSashReset(()=>{const n=this.qb.getViewSize(0)+this.qb.getViewSize(1);this.qb.resizeView(0,u.u),this.qb.resizeView(1,n-u.u)})),this.B(this.qb.onDidSashChange(()=>{const n=this.qb.getViewSize(0);this.mc.store("settingsEditor2.splitViewWidth",n,0,0)}));const s=this.h.getColor(it);this.qb.style({separatorBorder:s})}Pc(t){this.B(o.$K5(t,o.$F6.KEY_DOWN,e=>{e.keyCode===31&&(N.$n?e.metaKey:e.ctrlKey)&&!o.$e7(e.target)&&(e.browserEvent.stopPropagation(),e.browserEvent.preventDefault())}))}Qc(t){this.ub=this.ic.createInstance(We,this.Jb),this.zb=this.B(this.ic.createInstance(Oe,o.$M6(t,m(".settings-toc-wrapper",{role:"navigation","aria-label":S(9907,null)})),this.Jb)),this.Vb=!1,this.B(this.zb.onDidFocus(()=>{this.Tb=1})),this.B(this.zb.onDidChangeFocus(e=>{const i=e.elements?.[0]??null;this.Xb!==i&&(this.Xb=i,this.zb.setSelection(i?[i]:[]),this.Ac?this.Jb.filterToCategory!==i&&(this.Jb.filterToCategory=i??void 0,this.ed(void 0,!0),this.sb.scrollTop=0):i&&(!e.browserEvent||!e.browserEvent.fromScroll)&&(this.sb.reveal(i,0),this.sb.setFocus([i])))})),this.B(this.zb.onDidFocus(()=>{this.Ob.set(!0)})),this.B(this.zb.onDidBlur(()=>{this.Ob.set(!1)})),this.B(this.zb.onDidDispose(()=>{this.Vb=!0}))}Rc(t){if(this.mb&&!this.mb.getValue().includes(t)){const e=`${t} ${this.mb.getValue().trimStart()}`;this.focusSearch(e,!1)}}Sc(){if(this.mb&&this.mb.getValue().includes(`@${v}`)){const e=this.mb.getValue().split(" ").filter(i=>!i.startsWith(`@${v}`)).join(" ");this.focusSearch(e,!1)}}Tc(t){this.tb=this.B(this.ic.createInstance(Le)),this.B(this.tb.onDidChangeSetting(e=>this.Uc(e.key,e.value,e.type,e.manualReset,e.scope))),this.B(this.tb.onDidDismissExtensionSetting(e=>this.Lc(e))),this.B(this.tb.onDidOpenSettings(e=>{this.Nc({revealSetting:{key:e,edit:!0}})})),this.B(this.tb.onDidClickSettingLink(e=>this.Mc(e))),this.B(this.tb.onDidFocusSetting(e=>{this.sb.setFocus([e]),this.Tb=3,this.Pb.set(!1)})),this.B(this.tb.onDidChangeSettingHeight(e=>{const{element:i,height:s}=e;try{this.sb.updateElementHeight(i,s)}catch{}})),this.B(this.tb.onApplyFilter(e=>this.Rc(e))),this.B(this.tb.onDidClickOverrideElement(e=>{this.Sc(),e.language&&this.Rc(`@${v}${e.language}`),e.scope==="workspace"?this.pb.updateTarget(5):e.scope==="user"?this.pb.updateTarget(3):e.scope==="remote"&&this.pb.updateTarget(4),this.Rc(`@${tt}${e.settingKey}`)})),this.sb=this.B(this.ic.createInstance(Ae,t,this.Jb,this.tb.allRenderers)),this.B(this.sb.onDidScroll(()=>{this.sb.scrollTop!==this.Zb&&(this.Zb=this.sb.scrollTop,setTimeout(()=>{this.Vc()},0))})),this.B(this.sb.onDidFocus(()=>{const e=t.ownerDocument.activeElement?.classList;e&&e.contains("monaco-list")&&e.contains("settings-editor-tree")&&(this.Tb=2,this.Pb.set(!0),this.Yb??=this.sb.firstVisibleElement??null,this.Yb&&(this.Yb.tabbable=!0))})),this.B(this.sb.onDidBlur(()=>{this.Pb.set(!1),this.Yb=null})),this.B(this.sb.onDidChangeFocus(e=>{const i=e.elements[0];this.Yb!==i&&(this.Yb&&(this.Yb.tabbable=!1),this.Yb=i,this.Yb&&(this.Yb.tabbable=!0),this.sb.setSelection(i?[i]:[]))}))}Uc(t,e,i,s,n){const h=K(this.mb.getValue()).languageFilter;(s||this.Ib&&this.Ib.key!==t)&&this.Xc(t,e,s,h,n),this.Ib={key:t,value:e,languageFilter:h},u.fb(i)?this.Gb.trigger(()=>this.Xc(t,e,s,h,n)):this.Hb.trigger(()=>this.Xc(t,e,s,h,n))}Vc(){if(this.tb.cancelSuggesters(),this.Ac||!this.ub)return;const t=this.sb.firstVisibleElement,e=t instanceof _?t.parent:t instanceof ut?t:null;let i=!0;try{this.zb.getNode(e)}catch{i=!1}if(i&&e&&this.zb.getSelection()[0]!==e){const s=this.Wc(e);s.forEach(h=>this.zb.expand(h)),this.zb.reveal(e);const n=this.zb.getRelativeTop(e);if(typeof n!="number")return;this.zb.collapseAll(),s.forEach(h=>this.zb.expand(h)),n<0||n>1?this.zb.reveal(e):this.zb.reveal(e,n),this.zb.expand(e),this.zb.setSelection([e]);const r=new KeyboardEvent("keydown");r.fromScroll=!0,this.zb.setFocus([e],r)}}Wc(t){const e=[];for(;t.parent;)t.parent.id!=="root"&&e.push(t.parent),t=t.parent;return e.reverse()}Xc(t,e,i,s,n){const r=this.pb.settingsTarget,h=A.isUri(r)?r:void 0,c=(h?6:r)??3,a={resource:h,overrideIdentifiers:s?[s]:void 0},g=c===5||c===6||!!s,C=g?i:e===void 0,d=this.gc.inspect(t,a);return!g&&d.defaultValue===e&&(e=void 0),this.gc.updateValue(t,e,a,c,{handleDirtyFile:"save"}).then(()=>{const p=this.mb.getValue();p.includes(`@${P}`)&&this.jd(),this.ed(t,C),this.Ib=null;const $={key:t,query:p,searchResults:this.Ac?.getUniqueSearchResults()??null,rawResults:this.Ac?.getRawResults()??null,showConfiguredOnly:!!this.Jb.tagFilters&&this.Jb.tagFilters.has(P),isReset:typeof e>"u",settingsTarget:this.pb.settingsTarget};return this.Yc($)})}Yc(t){let e,i,s,n;if(t.searchResults&&(n=t.searchResults.filterMatches.findIndex(c=>c.setting.key===t.key),this.Ac)){i=t.searchResults.filterMatches.find(a=>a.setting.key===t.key)?.providerName;const c=this.Ac.getRawResults();if(c[0]&&n>=0&&(e=c[0].filterMatches.some(l=>l.setting.key===t.key)?"local":"remote"),c[1]){const a=c[1].filterMatches.findIndex(l=>l.setting.key===t.key);s=a>=0?a:void 0}}const r=t.settingsTarget===3?"user":t.settingsTarget===4?"user_remote":t.settingsTarget===5?"workspace":"folder",h={key:t.key,groupId:e,providerName:i,nlpIndex:s,displayIndex:n,showConfiguredOnly:t.showConfiguredOnly,isReset:t.isReset,target:r};this.Q.publicLog2("settingsEditor.settingModified",h)}Zc(t,e=""){if(e&&this.Sb.has(e))return;e||(xt(this.Sb.values()),this.Sb.clear());const i=new X,s=o.$K6(t);i.add(s),i.add(s.onDidBlur(()=>{this.Sb.get(e)?.dispose(),this.Sb.delete(e),this.bd(new Set([e]))})),this.Sb.set(e,i)}$c(t){const e=new Map;function i(s,n=0){if(s.settings)for(const r of s.settings)e.has(r.key)||e.set(r.key,n++);if(s.children)for(const r of s.children)n=i(r,n);return n}return i(t),e}ad(t){this.vb.value.update(t),this.ub.settingsTreeRoot=this.vb.value.root,this.Nb=this.$c(t)}async bd(t,e=!1,i=!1){if(t&&this.vb)return this.cd(t);if(!this.gb)return;const s=this.gb.settingsGroups.slice(1),n=s.filter(d=>!d.extensionInfo),r=st(Ve,n,this.kc),h=r.tree;if(r.leftoverSettings.size&&!this.Ub){const d=[];r.leftoverSettings.forEach(p=>{d.push(p.key)}),this.kc.warn(`SettingsEditor2: Settings not included in settingsLayout.ts: ${d.join(", ")}`),this.Ub=!0}const c=[];let a=!1;const l=await me(this.lc,this.vc,this.uc);if(l&&s.filter(d=>d.extensionInfo).length)for(const d in l.settingsEditorRecommendedExtensions){const p=l.recommendedExtensionsGalleryInfo[d];if(!p)continue;const $=p.identifier.id;await this.Dc();const k=this.ac.includes($),x=s.findIndex(B=>B.extensionInfo&&B.extensionInfo.id.toLowerCase()===$.toLowerCase()&&B.sections.length===1&&B.sections[0].settings.length===1&&B.sections[0].settings[0].displayExtensionId);if(k||this.bc.includes($)){x!==-1&&(s.splice(x,1),a=!0);continue}if(x!==-1)continue;let E=null;try{E=await Tt(this.vc.getManifest(p,wt.None),ge)??null}catch{continue}if(E===null)continue;const I=E?.contributes?.configuration;let D;Array.isArray(I)?I.length===1&&(D=I[0].title):D=I?.title;const J=l.settingsEditorRecommendedExtensions[d],M=p.displayName??p.name??$,T=`${d}.manageExtension`,z={range:F,key:T,keyRange:F,value:null,valueRange:F,description:[J.onSettingsEditorOpen?.descriptionOverride??p.description],descriptionIsMarkdown:!1,descriptionRanges:[],scope:4,type:"null",displayExtensionId:$,extensionGroupTitle:D??M,categoryLabel:"Extensions",title:M},Q={sections:[{settings:[z]}],id:$,title:z.extensionGroupTitle,titleRange:F,range:F,extensionInfo:{id:$,displayName:p.displayName}};s.push(Q),c.push(Q),a=!0}h.children.push(await Me(this.rc,s.filter(d=>d.extensionInfo)));const g=Re(l),C=st(g,s,this.kc);if(h.children.unshift(C.tree),l&&a&&this.gb.setAdditionalGroups(c),!this.qc.isWorkspaceTrusted()&&(this.Jb.settingsTarget instanceof A||this.Jb.settingsTarget===5)){const d=ze(s,this.Jb.settingsTarget,this.Jb.languageFilter,this.gc);d.length&&h.children.unshift({id:"workspaceTrust",label:S(9908,null),settings:d})}if(this.Ac?.updateChildren(),this.vb.value){if(this.ad(h),i&&this.Ac)return await this.ld(!1);this.jd(),this.ed(void 0,e)}else this.vb.value=this.ic.createInstance(ke,this.Jb,this.qc.isWorkspaceTrusted()),this.ad(h),(this.Jb.query?void 0:this.Ec())?.searchQuery||this.mb.getValue()?await this.ld(!0):(this.jd(),this.hd(),this.zb.collapseAll())}cd(t){t.size?(this.Ac&&t.forEach(e=>this.Ac.updateElementsByName(e)),this.vb.value&&t.forEach(e=>this.vb.value.updateElementsByName(e)),t.forEach(e=>this.ed(e))):this.ed()}dd(){const t=this.sb.getHTMLElement(),e=t.ownerDocument.activeElement;return e&&o.$m6(t)?e:null}ed(t,e=!1){if(!e&&t&&this.Sb.has(t)){this.kd(t);return}if(this.fd()){const n=this.window.document.querySelector(".context-view");n&&this.Zc(n,t);return}const i=this.dd(),s=i&&this.tb.getSettingDOMElementForDOMElement(i);if(s&&!e)if(t){if(s.getAttribute(L.SETTING_KEY_ATTR)===t&&s.parentElement&&!s.parentElement.classList.contains("setting-item-list")){this.kd(t),this.Zc(s,t);return}}else{this.Zc(s);return}if(this.xd(),t){const n=this.zc?.getElementsByName(t);if(n?.length)n.length>=2,this.gd(n[0]);else return}else this.hd()}fd(){return!!o.$f6(this.ib.ownerDocument.activeElement,"context-view")}gd(t){this.isVisible()&&(!t.setting.deprecationMessage||t.isConfigured)&&this.sb.rerender(t)}hd(){this.isVisible()&&this.zc&&this.sb.setChildren(null,bt(this.zc.root))}jd(){this.isVisible()&&(this.ub.update(),this.zb.setChildren(null,Je(this.ub,this.zb)))}kd(t){if(!this.zc)return;const e=this.zc.getElementsByName(t),i=e&&e[0]&&e[0].isConfigured,s=this.tb.getDOMElementsForSettingKey(this.sb.getHTMLElement(),t);s&&s[0]&&s[0].classList.toggle("is-configured",!!i)}async ld(t){if(!this.zc)return;const e=this.mb.getValue().trim();this.Jb.query=e,await this.od(e.replace(/\u203A/g," "),t)}md(t){const e=t.match(/"([a-zA-Z.]+)": /);return e&&e[1]}nd(){this.gc.getValue(ht)==="hide"?(this.qb.setViewVisible(0,!1),this.qb.style({separatorBorder:G.transparent})):this.zd(this.$b)}async od(t,e){const i=this.wc.show(!0,800);if(this.Jb.tagFilters=new Set,this.Jb.extensionFilters=new Set,this.Jb.featureFilters=new Set,this.Jb.idFilters=new Set,this.Jb.languageFilter=void 0,t){const s=K(t);t=s.query,s.tags.forEach(n=>this.Jb.tagFilters.add(n)),s.extensionFilters.forEach(n=>this.Jb.extensionFilters.add(n)),s.featureFilters.forEach(n=>this.Jb.featureFilters.add(n)),s.idFilters.forEach(n=>this.Jb.idFilters.add(n)),this.Jb.languageFilter=s.languageFilter}this.pb.updateLanguageFilterIndicators(this.Jb.languageFilter),t&&t!=="@"?(t=this.md(t)||t,await this.qd(t,e,i),this.nd()):(this.Jb.tagFilters.size||this.Jb.extensionFilters.size||this.Jb.featureFilters.size||this.Jb.idFilters.size||this.Jb.languageFilter?this.Ac=this.pd():this.Ac=null,this.Ab.cancel(),this.Bb&&(this.Bb.dispose(!0),this.Bb=null),e&&(this.zb.setFocus([]),this.Jb.filterToCategory=void 0),this.ub.currentSearchModel=this.Ac,this.Ac?(e&&(this.zb.setSelection([]),this.zb.expandAll()),this.jd(),this.xd(),this.hd(),this.nd()):this.Vb||(this.zb.collapseAll(),this.jd(),this.xd(),this.hd(),this.zd(this.$b)),i.done())}pd(){const t=this.ic.createInstance(nt,this.Jb,this.Nb,this.qc.isWorkspaceTrusted()),e={filterMatches:[],exactMatch:!1};for(const i of this.gb.settingsGroups.slice(1))for(const s of i.sections)for(const n of s.settings)e.filterMatches.push({setting:n,matches:[],matchType:ne.None,keyMatchScore:0,score:0,providerName:"filterModel"});return t.setResult(0,e),t}async qd(t,e,i){this.Bb&&(this.Bb.dispose(!0),this.Bb=null);const s=this.Bb=new Et;return this.Ab.trigger(async()=>{if(s.token.isCancellationRequested)return;this.yc(!1);const n=await this.sd(t,s.token);!this.Ac||s.token.isCancellationRequested||(this.Ac.showAiResults=!1,n&&n.filterMatches.length>0&&this.rd(e,void 0),(!n||!n.exactMatch)&&await this.td(t,s.token),!s.token.isCancellationRequested&&(this.Cb&&this.Cb.cancel(),this.Cb=St(r=>this.ud(t,r).then(h=>{h&&this.yc(!0)}).catch(h=>{U(h)||this.kc.trace("Error during AI settings search:",h)})),this.rd(e,i)))})}rd(t,e){this.ub.currentSearchModel=this.Ac,t&&(this.zb.setFocus([]),this.Jb.filterToCategory=void 0,this.zb.expandAll(),this.sb.scrollTop=0),this.jd(),this.ed(void 0,!0),e?.done()}sd(t,e){const i=this.jc.getLocalSearchProvider(t);return this.wd(0,i,e)}td(t,e){const i=this.jc.getRemoteSearchProvider(t);return i?this.wd(1,i,e):Promise.resolve(null)}async ud(t,e){const i=this.jc.getAiSearchProvider(t),s=await this.wd(3,i,e);if(!s||e.isCancellationRequested)return null;const n=await this.vd(t,e);return e.isCancellationRequested?null:{filterMatches:s.filterMatches.concat(n?.filterMatches??[]),exactMatch:!1}}async vd(t,e){const s=await this.jc.getAiSearchProvider(t).getLLMRankedResults(e);return!s||e.isCancellationRequested?null:(this.Ac.setResult(4,s),s)}async wd(t,e,i){const s=await this.yd(this.gb,e,i);return i.isCancellationRequested?null:(this.Ac??=this.ic.createInstance(nt,this.Jb,this.Nb,this.qc.isWorkspaceTrusted()),this.Ac.setResult(t,s),s)}xd(){if(this.zc)if(this.xb.style.display=this.Jb.tagFilters&&this.Jb.tagFilters.size>0?"initial":"none",this.Ac){const t=this.Ac.getUniqueResultsCount();let e;switch(t){case 0:e=S(9909,null);break;case 1:e=S(9910,null);break;default:e=S(9911,null,t)}this.Lb=e,this.Hc(),this.nb.innerText=e,gt.$b8(e),this.nb.style.display!=="block"&&(this.nb.style.display="block",this.layout(this.$b)),this.ib.classList.toggle("no-results",t===0),this.qb.el.style.visibility=t===0?"hidden":"visible"}else{this.nb.style.display!=="none"&&(this.Lb=null,this.Hc(),this.nb.style.display="none",this.nb.innerText="",this.layout(this.$b)),this.ib.classList.remove("no-results"),this.qb.el.style.visibility="visible";return}}async yd(t,e,i){try{return await e.searchModel(t,i)}catch(s){return U(s)?Promise.reject(s):null}}zd(t){if(!this.isVisible())return;const e=t.height-97;if(this.qb.el.style.height=`${e}px`,this.qb.layout(this.lb.clientWidth,e),!(this.gc.getValue(ht)==="hide"&&this.Ac)){const n=this.qb.isViewVisible(0),r=this.lb.clientWidth>=u.db;this.qb.setViewVisible(0,r),!n&&r&&this.lb.clientWidth>=u.cb+u.u&&this.qb.resizeView(0,u.u),this.qb.style({separatorBorder:r?this.h.getColor(it):G.transparent})}}I(){if(this.isVisible()){const t=this.mb.getValue().trim(),e=this.pb.settingsTarget;this.input&&this.Wb.saveEditorState(this.group,this.input,{searchQuery:t,target:e})}else this.input&&this.Wb.clearEditorState(this.input,this.group);super.I()}};ot=u=ct([b(1,at),b(2,te),b(3,Rt),b(4,Yt),b(5,se),b(6,Lt),b(7,pe),b(8,kt),b(9,Mt),b(10,Nt),b(11,ee),b(12,ce),b(13,lt),b(14,Gt),b(15,ie),b(16,Dt),b(17,At),b(18,Jt),b(19,zt),b(20,Ot),b(21,oe)],ot);let Y=class extends Bt{constructor(t,e,i,s,n,r){super(),this.f=i,this.h=s,this.j=n,this.c=this.B(new Ct),this.onDidChangeLastSyncedLabel=this.c.event;const h=o.$M6(e,m(".settings-right-controls")),c=o.$M6(h,m(".turn-on-sync"));this.b=this.B(new mt(c,{title:!0,...qt})),this.a=o.$M6(h,m(".last-synced-label")),o.$T6(this.a),this.b.enabled=!0,this.b.label=S(9912,null),o.$T6(this.b.element),this.B(this.b.onDidClick(async()=>{await this.f.executeCommand("workbench.userDataSync.actions.turnOn")})),this.n(),this.B(this.h.onDidChangeLastSyncTime(()=>{this.n()})),this.B(new o.$V5).cancelAndSet(()=>this.n(),60*1e3,t),this.r(),this.B(this.h.onDidChangeStatus(()=>{this.r()})),this.B(this.j.onDidChangeEnablement(()=>{this.r()}))}n(){const t=this.h.lastSyncTime;let e;if(typeof t=="number"){const i=vt(t,!0,void 0,!0);e=S(9913,null,i)}else e="";this.a.textContent=e,this.c.fire(e)}r(){this.h.status!=="uninitialized"&&(this.j.isEnabled()||this.h.status!=="idle"?(o.$S6(this.a),o.$T6(this.b.element)):(o.$T6(this.a),o.$S6(this.b.element)))}};Y=ct([b(2,Vt),b(3,Qt),b(4,lt),b(5,at)],Y);export{bt as $k0b,ot as $l0b,rt as SettingsFocusContext};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import * as DOM from "../../../../base/browser/dom.js";
+import { StandardKeyboardEvent } from "../../../../base/browser/keyboardEvent.js";
+import { ActionBar } from "../../../../base/browser/ui/actionbar/actionbar.js";
+import * as aria from "../../../../base/browser/ui/aria/aria.js";
+import { Button } from "../../../../base/browser/ui/button/button.js";
+import { Sizing, SplitView } from "../../../../base/browser/ui/splitview/splitview.js";
+import { ToggleActionViewItem } from "../../../../base/browser/ui/toggle/toggle.js";
+import { Action } from "../../../../base/common/actions.js";
+import { createCancelablePromise, Delayer, raceTimeout } from "../../../../base/common/async.js";
+import { CancellationToken, CancellationTokenSource } from "../../../../base/common/cancellation.js";
+import { Color } from "../../../../base/common/color.js";
+import { fromNow } from "../../../../base/common/date.js";
+import { isCancellationError } from "../../../../base/common/errors.js";
+import { Emitter, Event } from "../../../../base/common/event.js";
+import { Iterable } from "../../../../base/common/iterator.js";
+import { Disposable, DisposableStore, dispose, MutableDisposable } from "../../../../base/common/lifecycle.js";
+import * as platform from "../../../../base/common/platform.js";
+import { ThemeIcon } from "../../../../base/common/themables.js";
+import { URI } from "../../../../base/common/uri.js";
+import { ILanguageService } from "../../../../editor/common/languages/language.js";
+import { ITextResourceConfigurationService } from "../../../../editor/common/services/textResourceConfiguration.js";
+import { localize } from "../../../../nls.js";
+import { ICommandService } from "../../../../platform/commands/common/commands.js";
+import { Extensions } from "../../../../platform/configuration/common/configurationRegistry.js";
+import { IContextKeyService } from "../../../../platform/contextkey/common/contextkey.js";
+import { IExtensionGalleryService, IExtensionManagementService } from "../../../../platform/extensionManagement/common/extensionManagement.js";
+import { IInstantiationService } from "../../../../platform/instantiation/common/instantiation.js";
+import { ILogService } from "../../../../platform/log/common/log.js";
+import { IProductService } from "../../../../platform/product/common/productService.js";
+import { IEditorProgressService } from "../../../../platform/progress/common/progress.js";
+import { Registry } from "../../../../platform/registry/common/platform.js";
+import { IStorageService } from "../../../../platform/storage/common/storage.js";
+import { ITelemetryService } from "../../../../platform/telemetry/common/telemetry.js";
+import { defaultButtonStyles, defaultToggleStyles } from "../../../../platform/theme/browser/defaultStyles.js";
+import { asCssVariable, badgeBackground, badgeForeground, contrastBorder, editorForeground } from "../../../../platform/theme/common/colorRegistry.js";
+import { IThemeService } from "../../../../platform/theme/common/themeService.js";
+import { IUserDataSyncEnablementService, IUserDataSyncService } from "../../../../platform/userDataSync/common/userDataSync.js";
+import { IWorkspaceTrustManagementService } from "../../../../platform/workspace/common/workspaceTrust.js";
+import { registerNavigableContainer } from "../../../browser/actions/widgetNavigationCommands.js";
+import { EditorPane } from "../../../browser/parts/editor/editorPane.js";
+import { APPLICATION_SCOPES, IWorkbenchConfigurationService } from "../../../services/configuration/common/configuration.js";
+import { IEditorGroupsService } from "../../../services/editor/common/editorGroupsService.js";
+import { IExtensionService } from "../../../services/extensions/common/extensions.js";
+import { IPreferencesService, SettingMatchType, SettingValueType, validateSettingsEditorOptions } from "../../../services/preferences/common/preferences.js";
+import { nullRange, Settings2EditorModel } from "../../../services/preferences/common/preferencesModels.js";
+import { IUserDataProfileService } from "../../../services/userDataProfile/common/userDataProfile.js";
+import { IUserDataSyncWorkbenchService } from "../../../services/userDataSync/common/userDataSync.js";
+import { SuggestEnabledInput } from "../../codeEditor/browser/suggestEnabledInput/suggestEnabledInput.js";
+import { CONTEXT_SETTINGS_EDITOR, CONTEXT_SETTINGS_ROW_FOCUS, CONTEXT_SETTINGS_SEARCH_FOCUS, CONTEXT_TOC_ROW_FOCUS, ENABLE_LANGUAGE_FILTER, EXTENSION_FETCH_TIMEOUT_MS, EXTENSION_SETTING_TAG, FEATURE_SETTING_TAG, getExperimentalExtensionToggleData, ID_SETTING_TAG, IPreferencesSearchService, LANGUAGE_SETTING_TAG, MODIFIED_SETTING_TAG, POLICY_SETTING_TAG, REQUIRE_TRUSTED_WORKSPACE_SETTING_TAG, SETTINGS_EDITOR_COMMAND_CLEAR_SEARCH_RESULTS, SETTINGS_EDITOR_COMMAND_SHOW_AI_RESULTS, SETTINGS_EDITOR_COMMAND_SUGGEST_FILTERS, WorkbenchSettingsEditorSettings, WORKSPACE_TRUST_SETTING_TAG } from "../common/preferences.js";
+import { settingsHeaderBorder, settingsSashBorder, settingsTextInputBorder } from "../common/settingsEditorColorRegistry.js";
+import "./media/settingsEditor2.css";
+import { preferencesAiResultsIcon, preferencesClearInputIcon, preferencesFilterIcon } from "./preferencesIcons.js";
+import { SettingsTargetsWidget } from "./preferencesWidgets.js";
+import { getCommonlyUsedData, tocData } from "./settingsLayout.js";
+import { SettingsSearchFilterDropdownMenuActionViewItem } from "./settingsSearchMenu.js";
+import { AbstractSettingRenderer, createTocTreeForExtensionSettings, resolveConfiguredUntrustedSettings, resolveSettingsTree, SettingsTree, SettingTreeRenderers } from "./settingsTree.js";
+import { parseQuery, SearchResultModel, SettingsTreeGroupElement, SettingsTreeModel, SettingsTreeSettingElement } from "./settingsTreeModels.js";
+import { createTOCIterator, TOCTree, TOCTreeModel } from "./tocTree.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+var SettingsEditor2_1;
+var SettingsFocusContext;
+(function(SettingsFocusContext2) {
+  SettingsFocusContext2[SettingsFocusContext2["Search"] = 0] = "Search";
+  SettingsFocusContext2[SettingsFocusContext2["TableOfContents"] = 1] = "TableOfContents";
+  SettingsFocusContext2[SettingsFocusContext2["SettingTree"] = 2] = "SettingTree";
+  SettingsFocusContext2[SettingsFocusContext2["SettingControl"] = 3] = "SettingControl";
+})(SettingsFocusContext || (SettingsFocusContext = {}));
+function createGroupIterator(group) {
+  return Iterable.map(group.children, (g) => {
+    return {
+      element: g,
+      children: g instanceof SettingsTreeGroupElement ? createGroupIterator(g) : void 0
+    };
+  });
+}
+__name(createGroupIterator, "createGroupIterator");
+const $ = DOM.$;
+const searchBoxLabel = localize("SearchSettings.AriaLabel", "Search settings");
+const SEARCH_TOC_BEHAVIOR_KEY = "workbench.settings.settingsSearchTocBehavior";
+const SETTINGS_EDITOR_STATE_KEY = "settingsEditorState";
+let SettingsEditor2 = class SettingsEditor22 extends EditorPane {
+  static {
+    __name(this, "SettingsEditor2");
+  }
+  static {
+    SettingsEditor2_1 = this;
+  }
+  static {
+    this.ID = "workbench.editor.settings2";
+  }
+  static {
+    this.NUM_INSTANCES = 0;
+  }
+  static {
+    this.SEARCH_DEBOUNCE = 200;
+  }
+  static {
+    this.SETTING_UPDATE_FAST_DEBOUNCE = 200;
+  }
+  static {
+    this.SETTING_UPDATE_SLOW_DEBOUNCE = 1e3;
+  }
+  static {
+    this.CONFIG_SCHEMA_UPDATE_DELAYER = 500;
+  }
+  static {
+    this.TOC_MIN_WIDTH = 100;
+  }
+  static {
+    this.TOC_RESET_WIDTH = 200;
+  }
+  static {
+    this.EDITOR_MIN_WIDTH = 500;
+  }
+  static {
+    this.NARROW_TOTAL_WIDTH = this.TOC_RESET_WIDTH + this.EDITOR_MIN_WIDTH;
+  }
+  static {
+    this.SUGGESTIONS = [
+      `@${MODIFIED_SETTING_TAG}`,
+      "@tag:notebookLayout",
+      "@tag:notebookOutputLayout",
+      `@tag:${REQUIRE_TRUSTED_WORKSPACE_SETTING_TAG}`,
+      `@tag:${WORKSPACE_TRUST_SETTING_TAG}`,
+      "@tag:sync",
+      "@tag:usesOnlineServices",
+      "@tag:telemetry",
+      "@tag:accessibility",
+      "@tag:preview",
+      "@tag:experimental",
+      `@${ID_SETTING_TAG}`,
+      `@${EXTENSION_SETTING_TAG}`,
+      `@${FEATURE_SETTING_TAG}scm`,
+      `@${FEATURE_SETTING_TAG}explorer`,
+      `@${FEATURE_SETTING_TAG}search`,
+      `@${FEATURE_SETTING_TAG}debug`,
+      `@${FEATURE_SETTING_TAG}extensions`,
+      `@${FEATURE_SETTING_TAG}terminal`,
+      `@${FEATURE_SETTING_TAG}task`,
+      `@${FEATURE_SETTING_TAG}problems`,
+      `@${FEATURE_SETTING_TAG}output`,
+      `@${FEATURE_SETTING_TAG}comments`,
+      `@${FEATURE_SETTING_TAG}remote`,
+      `@${FEATURE_SETTING_TAG}timeline`,
+      `@${FEATURE_SETTING_TAG}notebook`,
+      `@${POLICY_SETTING_TAG}`
+    ];
+  }
+  static shouldSettingUpdateFast(type) {
+    if (Array.isArray(type)) {
+      return false;
+    }
+    return type === SettingValueType.Enum || type === SettingValueType.Array || type === SettingValueType.BooleanObject || type === SettingValueType.Object || type === SettingValueType.Complex || type === SettingValueType.Boolean || type === SettingValueType.Exclude || type === SettingValueType.Include;
+  }
+  constructor(group, telemetryService, configurationService, textResourceConfigurationService, themeService, preferencesService, instantiationService, preferencesSearchService, logService, contextKeyService, storageService, editorGroupService, userDataSyncWorkbenchService, userDataSyncEnablementService, workspaceTrustManagementService, extensionService, languageService, extensionManagementService, productService, extensionGalleryService, editorProgressService, userDataProfileService) {
+    super(SettingsEditor2_1.ID, group, telemetryService, themeService, storageService);
+    this.configurationService = configurationService;
+    this.preferencesService = preferencesService;
+    this.instantiationService = instantiationService;
+    this.preferencesSearchService = preferencesSearchService;
+    this.logService = logService;
+    this.contextKeyService = contextKeyService;
+    this.storageService = storageService;
+    this.editorGroupService = editorGroupService;
+    this.userDataSyncWorkbenchService = userDataSyncWorkbenchService;
+    this.userDataSyncEnablementService = userDataSyncEnablementService;
+    this.workspaceTrustManagementService = workspaceTrustManagementService;
+    this.extensionService = extensionService;
+    this.languageService = languageService;
+    this.extensionManagementService = extensionManagementService;
+    this.productService = productService;
+    this.extensionGalleryService = extensionGalleryService;
+    this.editorProgressService = editorProgressService;
+    this.searchContainer = null;
+    this.settingsTreeModel = this._register(new MutableDisposable());
+    this.searchInProgress = null;
+    this.aiSearchPromise = null;
+    this.showAiResultsAction = null;
+    this.pendingSettingUpdate = null;
+    this._searchResultModel = this._register(new MutableDisposable());
+    this.searchResultLabel = null;
+    this.lastSyncedLabel = null;
+    this.settingsOrderByTocIndex = null;
+    this._currentFocusContext = 0;
+    this.hasWarnedMissingSettings = false;
+    this.tocTreeDisposed = false;
+    this.tocFocusedElement = null;
+    this.treeFocusedElement = null;
+    this.settingsTreeScrollTop = 0;
+    this.installedExtensionIds = [];
+    this.dismissedExtensionSettings = [];
+    this.DISMISSED_EXTENSION_SETTINGS_STORAGE_KEY = "settingsEditor2.dismissedExtensionSettings";
+    this.DISMISSED_EXTENSION_SETTINGS_DELIMITER = "	";
+    this.searchInputActionBar = null;
+    this.searchDelayer = new Delayer(200);
+    this.viewState = {
+      settingsTarget: 3
+      /* ConfigurationTarget.USER_LOCAL */
+    };
+    this.settingFastUpdateDelayer = new Delayer(SettingsEditor2_1.SETTING_UPDATE_FAST_DEBOUNCE);
+    this.settingSlowUpdateDelayer = new Delayer(SettingsEditor2_1.SETTING_UPDATE_SLOW_DEBOUNCE);
+    this.searchInputDelayer = new Delayer(SettingsEditor2_1.SEARCH_DEBOUNCE);
+    this.updatedConfigSchemaDelayer = new Delayer(SettingsEditor2_1.CONFIG_SCHEMA_UPDATE_DELAYER);
+    this.inSettingsEditorContextKey = CONTEXT_SETTINGS_EDITOR.bindTo(contextKeyService);
+    this.searchFocusContextKey = CONTEXT_SETTINGS_SEARCH_FOCUS.bindTo(contextKeyService);
+    this.tocRowFocused = CONTEXT_TOC_ROW_FOCUS.bindTo(contextKeyService);
+    this.settingRowFocused = CONTEXT_SETTINGS_ROW_FOCUS.bindTo(contextKeyService);
+    this.scheduledRefreshes = /* @__PURE__ */ new Map();
+    this.editorMemento = this.getEditorMemento(editorGroupService, textResourceConfigurationService, SETTINGS_EDITOR_STATE_KEY);
+    this.dismissedExtensionSettings = this.storageService.get(this.DISMISSED_EXTENSION_SETTINGS_STORAGE_KEY, 0, "").split(this.DISMISSED_EXTENSION_SETTINGS_DELIMITER);
+    this._register(configurationService.onDidChangeConfiguration((e) => {
+      if (e.affectedKeys.has(WorkbenchSettingsEditorSettings.ShowAISearchToggle)) {
+        const isToggleVisible = this.configurationService.getValue(WorkbenchSettingsEditorSettings.ShowAISearchToggle);
+        this.updateAiSearchToggleVisibility(isToggleVisible);
+      }
+      if (e.source !== 7) {
+        this.onConfigUpdate(e.affectedKeys);
+      }
+    }));
+    this._register(userDataProfileService.onDidChangeCurrentProfile((e) => {
+      e.join(this.whenCurrentProfileChanged());
+    }));
+    this._register(workspaceTrustManagementService.onDidChangeTrust(() => {
+      this.searchResultModel?.updateWorkspaceTrust(workspaceTrustManagementService.isWorkspaceTrusted());
+      if (this.settingsTreeModel.value) {
+        this.settingsTreeModel.value.updateWorkspaceTrust(workspaceTrustManagementService.isWorkspaceTrusted());
+        this.renderTree();
+      }
+    }));
+    this._register(configurationService.onDidChangeRestrictedSettings((e) => {
+      if (e.default.length && this.currentSettingsModel) {
+        this.updateElementsByKey(new Set(e.default));
+      }
+    }));
+    this._register(extensionManagementService.onDidInstallExtensions(() => {
+      this.refreshInstalledExtensionsList();
+    }));
+    this._register(extensionManagementService.onDidUninstallExtension(() => {
+      this.refreshInstalledExtensionsList();
+    }));
+    this.modelDisposables = this._register(new DisposableStore());
+    if (ENABLE_LANGUAGE_FILTER && !SettingsEditor2_1.SUGGESTIONS.includes(`@${LANGUAGE_SETTING_TAG}`)) {
+      SettingsEditor2_1.SUGGESTIONS.push(`@${LANGUAGE_SETTING_TAG}`);
+    }
+    this.inputChangeListener = this._register(new MutableDisposable());
+  }
+  async whenCurrentProfileChanged() {
+    this.updatedConfigSchemaDelayer.trigger(() => {
+      this.dismissedExtensionSettings = this.storageService.get(this.DISMISSED_EXTENSION_SETTINGS_STORAGE_KEY, 0, "").split(this.DISMISSED_EXTENSION_SETTINGS_DELIMITER);
+      this.onConfigUpdate(void 0, true);
+    });
+  }
+  updateAiSearchToggleVisibility(showToggle) {
+    if (!this.searchContainer || !this.showAiResultsAction || !this.searchInputActionBar) {
+      return;
+    }
+    const chatSetupHidden = this.contextKeyService.getContextKeyValue("chatSetupHidden");
+    const alreadyVisible = this.searchInputActionBar.hasAction(this.showAiResultsAction);
+    if (!alreadyVisible && showToggle && !chatSetupHidden) {
+      this.searchInputActionBar.push(this.showAiResultsAction, {
+        index: 0,
+        label: false,
+        icon: true
+      });
+      this.searchContainer.classList.add("with-ai-toggle");
+    } else if (alreadyVisible) {
+      this.searchInputActionBar.pull(0);
+      this.searchContainer.classList.remove("with-ai-toggle");
+      this.showAiResultsAction.checked = false;
+    }
+  }
+  get minimumWidth() {
+    return SettingsEditor2_1.EDITOR_MIN_WIDTH;
+  }
+  get maximumWidth() {
+    return Number.POSITIVE_INFINITY;
+  }
+  get minimumHeight() {
+    return 180;
+  }
+  // these setters need to exist because this extends from EditorPane
+  set minimumWidth(value) {
+  }
+  set maximumWidth(value) {
+  }
+  get currentSettingsModel() {
+    return this.searchResultModel || this.settingsTreeModel.value;
+  }
+  get searchResultModel() {
+    return this._searchResultModel.value ?? null;
+  }
+  set searchResultModel(value) {
+    this._searchResultModel.value = value ?? void 0;
+    this.rootElement.classList.toggle("search-mode", !!this._searchResultModel.value);
+  }
+  get focusedSettingDOMElement() {
+    const focused = this.settingsTree.getFocus()[0];
+    if (!(focused instanceof SettingsTreeSettingElement)) {
+      return;
+    }
+    return this.settingRenderers.getDOMElementsForSettingKey(this.settingsTree.getHTMLElement(), focused.setting.key)[0];
+  }
+  get currentFocusContext() {
+    return this._currentFocusContext;
+  }
+  createEditor(parent) {
+    parent.setAttribute("tabindex", "-1");
+    this.rootElement = DOM.append(parent, $(".settings-editor", { tabindex: "-1" }));
+    this.createHeader(this.rootElement);
+    this.createBody(this.rootElement);
+    this.addCtrlAInterceptor(this.rootElement);
+    this.updateStyles();
+    this._register(registerNavigableContainer({
+      name: "settingsEditor2",
+      focusNotifiers: [this],
+      focusNextWidget: /* @__PURE__ */ __name(() => {
+        if (this.searchWidget.inputWidget.hasWidgetFocus()) {
+          this.focusTOC();
+        }
+      }, "focusNextWidget"),
+      focusPreviousWidget: /* @__PURE__ */ __name(() => {
+        if (!this.searchWidget.inputWidget.hasWidgetFocus()) {
+          this.focusSearch();
+        }
+      }, "focusPreviousWidget")
+    }));
+  }
+  async setInput(input, options, context, token) {
+    this.inSettingsEditorContextKey.set(true);
+    await super.setInput(input, options, context, token);
+    if (!this.input) {
+      return;
+    }
+    const model = await this.input.resolve();
+    if (token.isCancellationRequested || !(model instanceof Settings2EditorModel)) {
+      return;
+    }
+    this.modelDisposables.clear();
+    this.modelDisposables.add(model.onDidChangeGroups(() => {
+      this.updatedConfigSchemaDelayer.trigger(() => {
+        this.onConfigUpdate(void 0, false, true);
+      });
+    }));
+    this.defaultSettingsEditorModel = model;
+    options = options || validateSettingsEditorOptions({});
+    if (!this.viewState.settingsTarget || !this.settingsTargetsWidget.settingsTarget) {
+      const optionsHasViewStateTarget = options.viewState && options.viewState.settingsTarget;
+      if (!options.target && !optionsHasViewStateTarget) {
+        options.target = 3;
+      }
+    }
+    this._setOptions(options);
+    this.onConfigUpdate(void 0, true).then(() => {
+      this.inputChangeListener.value = input.onWillDispose(() => {
+        this.searchWidget.setValue("");
+      });
+      this.updateTreeScrollSync();
+    });
+    await this.refreshInstalledExtensionsList();
+  }
+  async refreshInstalledExtensionsList() {
+    const installedExtensions = await this.extensionManagementService.getInstalled();
+    this.installedExtensionIds = installedExtensions.filter((ext) => ext.manifest.contributes?.configuration).map((ext) => ext.identifier.id);
+  }
+  restoreCachedState() {
+    const cachedState = this.input && this.editorMemento.loadEditorState(this.group, this.input);
+    if (cachedState && typeof cachedState.target === "object") {
+      cachedState.target = URI.revive(cachedState.target);
+    }
+    if (cachedState) {
+      const settingsTarget = cachedState.target;
+      this.settingsTargetsWidget.settingsTarget = settingsTarget;
+      this.viewState.settingsTarget = settingsTarget;
+      if (!this.searchWidget.getValue()) {
+        this.searchWidget.setValue(cachedState.searchQuery);
+      }
+    }
+    if (this.input) {
+      this.editorMemento.clearEditorState(this.input, this.group);
+    }
+    return cachedState ?? null;
+  }
+  getViewState() {
+    return this.viewState;
+  }
+  setOptions(options) {
+    super.setOptions(options);
+    if (options) {
+      this._setOptions(options);
+    }
+  }
+  _setOptions(options) {
+    if (options.focusSearch && !platform.isIOS) {
+      this.focusSearch();
+    }
+    const recoveredViewState = options.viewState ? options.viewState : void 0;
+    const query = recoveredViewState?.query ?? options.query;
+    if (query !== void 0) {
+      this.searchWidget.setValue(query);
+      this.viewState.query = query;
+    }
+    const target = options.folderUri ?? recoveredViewState?.settingsTarget ?? options.target;
+    if (target) {
+      this.settingsTargetsWidget.updateTarget(target);
+    }
+  }
+  clearInput() {
+    this.inSettingsEditorContextKey.set(false);
+    super.clearInput();
+  }
+  layout(dimension) {
+    this.dimension = dimension;
+    if (!this.isVisible()) {
+      return;
+    }
+    this.layoutSplitView(dimension);
+    const innerWidth = Math.min(this.headerContainer.clientWidth, dimension.width) - 24 * 2;
+    const monacoWidth = innerWidth - 10 - this.countElement.clientWidth - this.controlsElement.clientWidth - 12;
+    this.searchWidget.layout(new DOM.Dimension(monacoWidth, 20));
+    this.rootElement.classList.toggle("narrow-width", dimension.width < SettingsEditor2_1.NARROW_TOTAL_WIDTH);
+  }
+  focus() {
+    super.focus();
+    if (this._currentFocusContext === 0) {
+      if (!platform.isIOS) {
+        this.focusSearch();
+      }
+    } else if (this._currentFocusContext === 3) {
+      const element = this.focusedSettingDOMElement;
+      if (element) {
+        const control = element.querySelector(AbstractSettingRenderer.CONTROL_SELECTOR);
+        if (control) {
+          control.focus();
+          return;
+        }
+      }
+    } else if (this._currentFocusContext === 2) {
+      this.settingsTree.domFocus();
+    } else if (this._currentFocusContext === 1) {
+      this.tocTree.domFocus();
+    }
+  }
+  setEditorVisible(visible) {
+    super.setEditorVisible(visible);
+    if (!visible) {
+      setTimeout(() => {
+        this.searchWidget.onHide();
+        this.settingRenderers.cancelSuggesters();
+      }, 0);
+    }
+  }
+  focusSettings(focusSettingInput = false) {
+    const focused = this.settingsTree.getFocus();
+    if (!focused.length) {
+      this.settingsTree.focusFirst();
+    }
+    this.settingsTree.domFocus();
+    if (focusSettingInput) {
+      const controlInFocusedRow = this.settingsTree.getHTMLElement().querySelector(`.focused ${AbstractSettingRenderer.CONTROL_SELECTOR}`);
+      if (controlInFocusedRow) {
+        controlInFocusedRow.focus();
+      }
+    }
+  }
+  focusTOC() {
+    this.tocTree.domFocus();
+  }
+  showContextMenu() {
+    const focused = this.settingsTree.getFocus()[0];
+    const rowElement = this.focusedSettingDOMElement;
+    if (rowElement && focused instanceof SettingsTreeSettingElement) {
+      this.settingRenderers.showContextMenu(focused, rowElement);
+    }
+  }
+  focusSearch(filter, selectAll = true) {
+    if (filter && this.searchWidget) {
+      this.searchWidget.setValue(filter);
+    }
+    this.searchWidget.focus(selectAll && !this.searchInputDelayer.isTriggered);
+  }
+  clearSearchResults() {
+    this.updateAiSearchToggleVisibility(false);
+    this.searchWidget.setValue("");
+    this.focusSearch();
+  }
+  clearSearchFilters() {
+    const query = this.searchWidget.getValue();
+    const splitQuery = query.split(" ").filter((word) => {
+      return word.length && !SettingsEditor2_1.SUGGESTIONS.some((suggestion) => word.startsWith(suggestion));
+    });
+    this.searchWidget.setValue(splitQuery.join(" "));
+  }
+  updateInputAriaLabel() {
+    let label = searchBoxLabel;
+    if (this.searchResultLabel) {
+      label += `. ${this.searchResultLabel}`;
+    }
+    if (this.lastSyncedLabel) {
+      label += `. ${this.lastSyncedLabel}`;
+    }
+    this.searchWidget.updateAriaLabel(label);
+  }
+  /**
+   * Render the header of the Settings editor, which includes the content above the splitview.
+   */
+  createHeader(parent) {
+    this.headerContainer = DOM.append(parent, $(".settings-header"));
+    this.searchContainer = DOM.append(this.headerContainer, $(".search-container"));
+    const clearInputAction = this._register(new Action(SETTINGS_EDITOR_COMMAND_CLEAR_SEARCH_RESULTS, localize("clearInput", "Clear Settings Search Input"), ThemeIcon.asClassName(preferencesClearInputIcon), false, async () => this.clearSearchResults()));
+    const showAiResultActionClassNames = ["action-label", ThemeIcon.asClassName(preferencesAiResultsIcon)];
+    this.showAiResultsAction = this._register(new Action(SETTINGS_EDITOR_COMMAND_SHOW_AI_RESULTS, localize("showAiResults", "Show AI-recommended results"), showAiResultActionClassNames.join(" "), true));
+    this._register(this.showAiResultsAction.onDidChange(async () => {
+      await this.onDidToggleAiSearch();
+    }));
+    const filterAction = this._register(new Action(SETTINGS_EDITOR_COMMAND_SUGGEST_FILTERS, localize("filterInput", "Filter Settings"), ThemeIcon.asClassName(preferencesFilterIcon)));
+    this.searchWidget = this._register(this.instantiationService.createInstance(SuggestEnabledInput, `${SettingsEditor2_1.ID}.searchbox`, this.searchContainer, {
+      triggerCharacters: ["@", ":"],
+      provideResults: /* @__PURE__ */ __name((query) => {
+        const queryParts = query.split(/\s/g);
+        if (queryParts[queryParts.length - 1].startsWith(`@${LANGUAGE_SETTING_TAG}`)) {
+          const sortedLanguages = this.languageService.getRegisteredLanguageIds().map((languageId) => {
+            return `@${LANGUAGE_SETTING_TAG}${languageId} `;
+          }).sort();
+          return sortedLanguages.filter((langFilter) => !query.includes(langFilter));
+        } else if (queryParts[queryParts.length - 1].startsWith(`@${EXTENSION_SETTING_TAG}`)) {
+          const installedExtensionsTags = this.installedExtensionIds.map((extensionId) => {
+            return `@${EXTENSION_SETTING_TAG}${extensionId} `;
+          }).sort();
+          return installedExtensionsTags.filter((extFilter) => !query.includes(extFilter));
+        } else if (queryParts[queryParts.length - 1].startsWith("@")) {
+          return SettingsEditor2_1.SUGGESTIONS.filter((tag) => !query.includes(tag)).map((tag) => tag.endsWith(":") ? tag : tag + " ");
+        }
+        return [];
+      }, "provideResults")
+    }, searchBoxLabel, "settingseditor:searchinput" + SettingsEditor2_1.NUM_INSTANCES++, {
+      placeholderText: searchBoxLabel,
+      focusContextKey: this.searchFocusContextKey,
+      styleOverrides: {
+        inputBorder: settingsTextInputBorder
+      }
+      // TODO: Aria-live
+    }));
+    this._register(this.searchWidget.onDidFocus(() => {
+      this._currentFocusContext = 0;
+    }));
+    this.countElement = DOM.append(this.searchContainer, DOM.$(".settings-count-widget.monaco-count-badge.long"));
+    this.countElement.style.backgroundColor = asCssVariable(badgeBackground);
+    this.countElement.style.color = asCssVariable(badgeForeground);
+    this.countElement.style.border = `1px solid ${asCssVariable(contrastBorder)}`;
+    this._register(this.searchWidget.onInputDidChange(() => {
+      const searchVal = this.searchWidget.getValue();
+      clearInputAction.enabled = !!searchVal;
+      this.searchInputDelayer.trigger(() => this.onSearchInputChanged(true));
+    }));
+    const headerControlsContainer = DOM.append(this.headerContainer, $(".settings-header-controls"));
+    headerControlsContainer.style.borderColor = asCssVariable(settingsHeaderBorder);
+    const targetWidgetContainer = DOM.append(headerControlsContainer, $(".settings-target-container"));
+    this.settingsTargetsWidget = this._register(this.instantiationService.createInstance(SettingsTargetsWidget, targetWidgetContainer, { enableRemoteSettings: true }));
+    this.settingsTargetsWidget.settingsTarget = 3;
+    this._register(this.settingsTargetsWidget.onDidTargetChange((target) => this.onDidSettingsTargetChange(target)));
+    this._register(DOM.addDisposableListener(targetWidgetContainer, DOM.EventType.KEY_DOWN, (e) => {
+      const event = new StandardKeyboardEvent(e);
+      if (event.keyCode === 18) {
+        this.focusSettings();
+      }
+    }));
+    if (this.userDataSyncWorkbenchService.enabled && this.userDataSyncEnablementService.canToggleEnablement()) {
+      const syncControls = this._register(this.instantiationService.createInstance(SyncControls, this.window, headerControlsContainer));
+      this._register(syncControls.onDidChangeLastSyncedLabel((lastSyncedLabel) => {
+        this.lastSyncedLabel = lastSyncedLabel;
+        this.updateInputAriaLabel();
+      }));
+    }
+    this.controlsElement = DOM.append(this.searchContainer, DOM.$(".settings-clear-widget"));
+    this.searchInputActionBar = this._register(new ActionBar(this.controlsElement, {
+      actionViewItemProvider: /* @__PURE__ */ __name((action, options) => {
+        if (action.id === filterAction.id) {
+          return this.instantiationService.createInstance(SettingsSearchFilterDropdownMenuActionViewItem, action, options, this.actionRunner, this.searchWidget);
+        }
+        if (this.showAiResultsAction && action.id === this.showAiResultsAction.id) {
+          return new ToggleActionViewItem(null, action, { ...options, keybinding: "Ctrl+I", toggleStyles: defaultToggleStyles });
+        }
+        return void 0;
+      }, "actionViewItemProvider")
+    }));
+    const actionsToPush = [clearInputAction, filterAction];
+    this.searchInputActionBar.push(actionsToPush, { label: false, icon: true });
+  }
+  toggleAiSearch() {
+    if (this.showAiResultsAction) {
+      this.showAiResultsAction.checked = !this.showAiResultsAction.checked;
+    }
+  }
+  async onDidToggleAiSearch() {
+    if (this.searchResultModel && this.showAiResultsAction) {
+      this.searchResultModel.showAiResults = this.showAiResultsAction.checked ?? false;
+      this.onDidFinishSearch(true, void 0);
+    }
+  }
+  onDidSettingsTargetChange(target) {
+    this.viewState.settingsTarget = target;
+    this.onConfigUpdate(void 0, true);
+  }
+  onDidDismissExtensionSetting(extensionId) {
+    if (!this.dismissedExtensionSettings.includes(extensionId)) {
+      this.dismissedExtensionSettings.push(extensionId);
+    }
+    this.storageService.store(
+      this.DISMISSED_EXTENSION_SETTINGS_STORAGE_KEY,
+      this.dismissedExtensionSettings.join(this.DISMISSED_EXTENSION_SETTINGS_DELIMITER),
+      0,
+      0
+      /* StorageTarget.USER */
+    );
+    this.onConfigUpdate(void 0, true);
+  }
+  onDidClickSetting(evt, recursed) {
+    const targetElement = this.currentSettingsModel?.getElementsByName(evt.targetKey)?.[0];
+    let revealFailed = false;
+    if (targetElement) {
+      let sourceTop = 0.5;
+      try {
+        const _sourceTop = this.settingsTree.getRelativeTop(evt.source);
+        if (_sourceTop !== null) {
+          sourceTop = _sourceTop;
+        }
+      } catch {
+      }
+      if (this.viewState.filterToCategory && evt.source.displayCategory !== targetElement.displayCategory) {
+        this.tocTree.setFocus([]);
+      }
+      try {
+        this.settingsTree.reveal(targetElement, sourceTop);
+      } catch (_) {
+        revealFailed = true;
+      }
+      if (!revealFailed) {
+        setTimeout(() => {
+          this.settingsTree.setFocus([targetElement]);
+        }, 50);
+        const domElements = this.settingRenderers.getDOMElementsForSettingKey(this.settingsTree.getHTMLElement(), evt.targetKey);
+        if (domElements && domElements[0]) {
+          const control = domElements[0].querySelector(AbstractSettingRenderer.CONTROL_SELECTOR);
+          if (control) {
+            control.focus();
+          }
+        }
+      }
+    }
+    if (!recursed && (!targetElement || revealFailed)) {
+      const p = this.triggerSearch("", true);
+      p.then(() => {
+        this.searchWidget.setValue("");
+        this.onDidClickSetting(evt, true);
+      });
+    }
+  }
+  switchToSettingsFile() {
+    const query = parseQuery(this.searchWidget.getValue()).query;
+    return this.openSettingsFile({ query });
+  }
+  async openSettingsFile(options) {
+    const currentSettingsTarget = this.settingsTargetsWidget.settingsTarget;
+    const openOptions = { jsonEditor: true, groupId: this.group.id, ...options };
+    if (currentSettingsTarget === 3) {
+      if (options?.revealSetting) {
+        const configurationProperties = Registry.as(Extensions.Configuration).getConfigurationProperties();
+        const configurationScope = configurationProperties[options?.revealSetting.key]?.scope;
+        if (configurationScope && APPLICATION_SCOPES.includes(configurationScope)) {
+          return this.preferencesService.openApplicationSettings(openOptions);
+        }
+      }
+      return this.preferencesService.openUserSettings(openOptions);
+    } else if (currentSettingsTarget === 4) {
+      return this.preferencesService.openRemoteSettings(openOptions);
+    } else if (currentSettingsTarget === 5) {
+      return this.preferencesService.openWorkspaceSettings(openOptions);
+    } else if (URI.isUri(currentSettingsTarget)) {
+      return this.preferencesService.openFolderSettings({ folderUri: currentSettingsTarget, ...openOptions });
+    }
+    return void 0;
+  }
+  createBody(parent) {
+    this.bodyContainer = DOM.append(parent, $(".settings-body"));
+    this.noResultsMessage = DOM.append(this.bodyContainer, $(".no-results-message"));
+    this.noResultsMessage.innerText = localize("noResults", "No Settings Found");
+    this.clearFilterLinkContainer = $("span.clear-search-filters");
+    this.clearFilterLinkContainer.textContent = " - ";
+    const clearFilterLink = DOM.append(this.clearFilterLinkContainer, $("a.pointer.prominent", { tabindex: 0 }, localize("clearSearchFilters", "Clear Filters")));
+    this._register(DOM.addDisposableListener(clearFilterLink, DOM.EventType.CLICK, (e) => {
+      DOM.EventHelper.stop(e, false);
+      this.clearSearchFilters();
+    }));
+    DOM.append(this.noResultsMessage, this.clearFilterLinkContainer);
+    this.noResultsMessage.style.color = asCssVariable(editorForeground);
+    this.tocTreeContainer = $(".settings-toc-container");
+    this.settingsTreeContainer = $(".settings-tree-container");
+    this.createTOC(this.tocTreeContainer);
+    this.createSettingsTree(this.settingsTreeContainer);
+    this.splitView = this._register(new SplitView(this.bodyContainer, {
+      orientation: 1,
+      proportionalLayout: true
+    }));
+    const startingWidth = this.storageService.getNumber("settingsEditor2.splitViewWidth", 0, SettingsEditor2_1.TOC_RESET_WIDTH);
+    this.splitView.addView({
+      onDidChange: Event.None,
+      element: this.tocTreeContainer,
+      minimumSize: SettingsEditor2_1.TOC_MIN_WIDTH,
+      maximumSize: Number.POSITIVE_INFINITY,
+      layout: /* @__PURE__ */ __name((width, _, height) => {
+        this.tocTreeContainer.style.width = `${width}px`;
+        this.tocTree.layout(height, width);
+      }, "layout")
+    }, startingWidth, void 0, true);
+    this.splitView.addView({
+      onDidChange: Event.None,
+      element: this.settingsTreeContainer,
+      minimumSize: SettingsEditor2_1.EDITOR_MIN_WIDTH,
+      maximumSize: Number.POSITIVE_INFINITY,
+      layout: /* @__PURE__ */ __name((width, _, height) => {
+        this.settingsTreeContainer.style.width = `${width}px`;
+        this.settingsTree.layout(height, width);
+      }, "layout")
+    }, Sizing.Distribute, void 0, true);
+    this._register(this.splitView.onDidSashReset(() => {
+      const totalSize = this.splitView.getViewSize(0) + this.splitView.getViewSize(1);
+      this.splitView.resizeView(0, SettingsEditor2_1.TOC_RESET_WIDTH);
+      this.splitView.resizeView(1, totalSize - SettingsEditor2_1.TOC_RESET_WIDTH);
+    }));
+    this._register(this.splitView.onDidSashChange(() => {
+      const width = this.splitView.getViewSize(0);
+      this.storageService.store(
+        "settingsEditor2.splitViewWidth",
+        width,
+        0,
+        0
+        /* StorageTarget.USER */
+      );
+    }));
+    const borderColor = this.theme.getColor(settingsSashBorder);
+    this.splitView.style({ separatorBorder: borderColor });
+  }
+  addCtrlAInterceptor(container) {
+    this._register(DOM.addStandardDisposableListener(container, DOM.EventType.KEY_DOWN, (e) => {
+      if (e.keyCode === 31 && (platform.isMacintosh ? e.metaKey : e.ctrlKey) && !DOM.isEditableElement(e.target)) {
+        e.browserEvent.stopPropagation();
+        e.browserEvent.preventDefault();
+      }
+    }));
+  }
+  createTOC(container) {
+    this.tocTreeModel = this.instantiationService.createInstance(TOCTreeModel, this.viewState);
+    this.tocTree = this._register(this.instantiationService.createInstance(TOCTree, DOM.append(container, $(".settings-toc-wrapper", {
+      "role": "navigation",
+      "aria-label": localize("settings", "Settings")
+    })), this.viewState));
+    this.tocTreeDisposed = false;
+    this._register(this.tocTree.onDidFocus(() => {
+      this._currentFocusContext = 1;
+    }));
+    this._register(this.tocTree.onDidChangeFocus((e) => {
+      const element = e.elements?.[0] ?? null;
+      if (this.tocFocusedElement === element) {
+        return;
+      }
+      this.tocFocusedElement = element;
+      this.tocTree.setSelection(element ? [element] : []);
+      if (this.searchResultModel) {
+        if (this.viewState.filterToCategory !== element) {
+          this.viewState.filterToCategory = element ?? void 0;
+          this.renderTree(void 0, true);
+          this.settingsTree.scrollTop = 0;
+        }
+      } else if (element && (!e.browserEvent || !e.browserEvent.fromScroll)) {
+        this.settingsTree.reveal(element, 0);
+        this.settingsTree.setFocus([element]);
+      }
+    }));
+    this._register(this.tocTree.onDidFocus(() => {
+      this.tocRowFocused.set(true);
+    }));
+    this._register(this.tocTree.onDidBlur(() => {
+      this.tocRowFocused.set(false);
+    }));
+    this._register(this.tocTree.onDidDispose(() => {
+      this.tocTreeDisposed = true;
+    }));
+  }
+  applyFilter(filter) {
+    if (this.searchWidget && !this.searchWidget.getValue().includes(filter)) {
+      const newQuery = `${filter} ${this.searchWidget.getValue().trimStart()}`;
+      this.focusSearch(newQuery, false);
+    }
+  }
+  removeLanguageFilters() {
+    if (this.searchWidget && this.searchWidget.getValue().includes(`@${LANGUAGE_SETTING_TAG}`)) {
+      const query = this.searchWidget.getValue().split(" ");
+      const newQuery = query.filter((word) => !word.startsWith(`@${LANGUAGE_SETTING_TAG}`)).join(" ");
+      this.focusSearch(newQuery, false);
+    }
+  }
+  createSettingsTree(container) {
+    this.settingRenderers = this._register(this.instantiationService.createInstance(SettingTreeRenderers));
+    this._register(this.settingRenderers.onDidChangeSetting((e) => this.onDidChangeSetting(e.key, e.value, e.type, e.manualReset, e.scope)));
+    this._register(this.settingRenderers.onDidDismissExtensionSetting((e) => this.onDidDismissExtensionSetting(e)));
+    this._register(this.settingRenderers.onDidOpenSettings((settingKey) => {
+      this.openSettingsFile({ revealSetting: { key: settingKey, edit: true } });
+    }));
+    this._register(this.settingRenderers.onDidClickSettingLink((settingName) => this.onDidClickSetting(settingName)));
+    this._register(this.settingRenderers.onDidFocusSetting((element) => {
+      this.settingsTree.setFocus([element]);
+      this._currentFocusContext = 3;
+      this.settingRowFocused.set(false);
+    }));
+    this._register(this.settingRenderers.onDidChangeSettingHeight((params) => {
+      const { element, height } = params;
+      try {
+        this.settingsTree.updateElementHeight(element, height);
+      } catch (e) {
+      }
+    }));
+    this._register(this.settingRenderers.onApplyFilter((filter) => this.applyFilter(filter)));
+    this._register(this.settingRenderers.onDidClickOverrideElement((element) => {
+      this.removeLanguageFilters();
+      if (element.language) {
+        this.applyFilter(`@${LANGUAGE_SETTING_TAG}${element.language}`);
+      }
+      if (element.scope === "workspace") {
+        this.settingsTargetsWidget.updateTarget(
+          5
+          /* ConfigurationTarget.WORKSPACE */
+        );
+      } else if (element.scope === "user") {
+        this.settingsTargetsWidget.updateTarget(
+          3
+          /* ConfigurationTarget.USER_LOCAL */
+        );
+      } else if (element.scope === "remote") {
+        this.settingsTargetsWidget.updateTarget(
+          4
+          /* ConfigurationTarget.USER_REMOTE */
+        );
+      }
+      this.applyFilter(`@${ID_SETTING_TAG}${element.settingKey}`);
+    }));
+    this.settingsTree = this._register(this.instantiationService.createInstance(SettingsTree, container, this.viewState, this.settingRenderers.allRenderers));
+    this._register(this.settingsTree.onDidScroll(() => {
+      if (this.settingsTree.scrollTop === this.settingsTreeScrollTop) {
+        return;
+      }
+      this.settingsTreeScrollTop = this.settingsTree.scrollTop;
+      setTimeout(() => {
+        this.updateTreeScrollSync();
+      }, 0);
+    }));
+    this._register(this.settingsTree.onDidFocus(() => {
+      const classList = container.ownerDocument.activeElement?.classList;
+      if (classList && classList.contains("monaco-list") && classList.contains("settings-editor-tree")) {
+        this._currentFocusContext = 2;
+        this.settingRowFocused.set(true);
+        this.treeFocusedElement ??= this.settingsTree.firstVisibleElement ?? null;
+        if (this.treeFocusedElement) {
+          this.treeFocusedElement.tabbable = true;
+        }
+      }
+    }));
+    this._register(this.settingsTree.onDidBlur(() => {
+      this.settingRowFocused.set(false);
+      this.treeFocusedElement = null;
+    }));
+    this._register(this.settingsTree.onDidChangeFocus((e) => {
+      const element = e.elements[0];
+      if (this.treeFocusedElement === element) {
+        return;
+      }
+      if (this.treeFocusedElement) {
+        this.treeFocusedElement.tabbable = false;
+      }
+      this.treeFocusedElement = element;
+      if (this.treeFocusedElement) {
+        this.treeFocusedElement.tabbable = true;
+      }
+      this.settingsTree.setSelection(element ? [element] : []);
+    }));
+  }
+  onDidChangeSetting(key, value, type, manualReset, scope) {
+    const parsedQuery = parseQuery(this.searchWidget.getValue());
+    const languageFilter = parsedQuery.languageFilter;
+    if (manualReset || this.pendingSettingUpdate && this.pendingSettingUpdate.key !== key) {
+      this.updateChangedSetting(key, value, manualReset, languageFilter, scope);
+    }
+    this.pendingSettingUpdate = { key, value, languageFilter };
+    if (SettingsEditor2_1.shouldSettingUpdateFast(type)) {
+      this.settingFastUpdateDelayer.trigger(() => this.updateChangedSetting(key, value, manualReset, languageFilter, scope));
+    } else {
+      this.settingSlowUpdateDelayer.trigger(() => this.updateChangedSetting(key, value, manualReset, languageFilter, scope));
+    }
+  }
+  updateTreeScrollSync() {
+    this.settingRenderers.cancelSuggesters();
+    if (this.searchResultModel) {
+      return;
+    }
+    if (!this.tocTreeModel) {
+      return;
+    }
+    const elementToSync = this.settingsTree.firstVisibleElement;
+    const element = elementToSync instanceof SettingsTreeSettingElement ? elementToSync.parent : elementToSync instanceof SettingsTreeGroupElement ? elementToSync : null;
+    let nodeExists = true;
+    try {
+      this.tocTree.getNode(element);
+    } catch (e) {
+      nodeExists = false;
+    }
+    if (!nodeExists) {
+      return;
+    }
+    if (element && this.tocTree.getSelection()[0] !== element) {
+      const ancestors = this.getAncestors(element);
+      ancestors.forEach((e) => this.tocTree.expand(e));
+      this.tocTree.reveal(element);
+      const elementTop = this.tocTree.getRelativeTop(element);
+      if (typeof elementTop !== "number") {
+        return;
+      }
+      this.tocTree.collapseAll();
+      ancestors.forEach((e) => this.tocTree.expand(e));
+      if (elementTop < 0 || elementTop > 1) {
+        this.tocTree.reveal(element);
+      } else {
+        this.tocTree.reveal(element, elementTop);
+      }
+      this.tocTree.expand(element);
+      this.tocTree.setSelection([element]);
+      const fakeKeyboardEvent = new KeyboardEvent("keydown");
+      fakeKeyboardEvent.fromScroll = true;
+      this.tocTree.setFocus([element], fakeKeyboardEvent);
+    }
+  }
+  getAncestors(element) {
+    const ancestors = [];
+    while (element.parent) {
+      if (element.parent.id !== "root") {
+        ancestors.push(element.parent);
+      }
+      element = element.parent;
+    }
+    return ancestors.reverse();
+  }
+  updateChangedSetting(key, value, manualReset, languageFilter, scope) {
+    const settingsTarget = this.settingsTargetsWidget.settingsTarget;
+    const resource = URI.isUri(settingsTarget) ? settingsTarget : void 0;
+    const configurationTarget = (resource ? 6 : settingsTarget) ?? 3;
+    const overrides = { resource, overrideIdentifiers: languageFilter ? [languageFilter] : void 0 };
+    const configurationTargetIsWorkspace = configurationTarget === 5 || configurationTarget === 6;
+    const userPassedInManualReset = configurationTargetIsWorkspace || !!languageFilter;
+    const isManualReset = userPassedInManualReset ? manualReset : value === void 0;
+    const inspected = this.configurationService.inspect(key, overrides);
+    if (!userPassedInManualReset && inspected.defaultValue === value) {
+      value = void 0;
+    }
+    return this.configurationService.updateValue(key, value, overrides, configurationTarget, { handleDirtyFile: "save" }).then(() => {
+      const query = this.searchWidget.getValue();
+      if (query.includes(`@${MODIFIED_SETTING_TAG}`)) {
+        this.refreshTOCTree();
+      }
+      this.renderTree(key, isManualReset);
+      this.pendingSettingUpdate = null;
+      const reportModifiedProps = {
+        key,
+        query,
+        searchResults: this.searchResultModel?.getUniqueSearchResults() ?? null,
+        rawResults: this.searchResultModel?.getRawResults() ?? null,
+        showConfiguredOnly: !!this.viewState.tagFilters && this.viewState.tagFilters.has(MODIFIED_SETTING_TAG),
+        isReset: typeof value === "undefined",
+        settingsTarget: this.settingsTargetsWidget.settingsTarget
+      };
+      return this.reportModifiedSetting(reportModifiedProps);
+    });
+  }
+  reportModifiedSetting(props) {
+    let groupId = void 0;
+    let providerName = void 0;
+    let nlpIndex = void 0;
+    let displayIndex = void 0;
+    if (props.searchResults) {
+      displayIndex = props.searchResults.filterMatches.findIndex((m) => m.setting.key === props.key);
+      if (this.searchResultModel) {
+        providerName = props.searchResults.filterMatches.find((m) => m.setting.key === props.key)?.providerName;
+        const rawResults = this.searchResultModel.getRawResults();
+        if (rawResults[
+          0
+          /* SearchResultIdx.Local */
+        ] && displayIndex >= 0) {
+          const settingInLocalResults = rawResults[
+            0
+            /* SearchResultIdx.Local */
+          ].filterMatches.some((m) => m.setting.key === props.key);
+          groupId = settingInLocalResults ? "local" : "remote";
+        }
+        if (rawResults[
+          1
+          /* SearchResultIdx.Remote */
+        ]) {
+          const _nlpIndex = rawResults[
+            1
+            /* SearchResultIdx.Remote */
+          ].filterMatches.findIndex((m) => m.setting.key === props.key);
+          nlpIndex = _nlpIndex >= 0 ? _nlpIndex : void 0;
+        }
+      }
+    }
+    const reportedTarget = props.settingsTarget === 3 ? "user" : props.settingsTarget === 4 ? "user_remote" : props.settingsTarget === 5 ? "workspace" : "folder";
+    const data = {
+      key: props.key,
+      groupId,
+      providerName,
+      nlpIndex,
+      displayIndex,
+      showConfiguredOnly: props.showConfiguredOnly,
+      isReset: props.isReset,
+      target: reportedTarget
+    };
+    this.telemetryService.publicLog2("settingsEditor.settingModified", data);
+  }
+  scheduleRefresh(element, key = "") {
+    if (key && this.scheduledRefreshes.has(key)) {
+      return;
+    }
+    if (!key) {
+      dispose(this.scheduledRefreshes.values());
+      this.scheduledRefreshes.clear();
+    }
+    const store = new DisposableStore();
+    const scheduledRefreshTracker = DOM.trackFocus(element);
+    store.add(scheduledRefreshTracker);
+    store.add(scheduledRefreshTracker.onDidBlur(() => {
+      this.scheduledRefreshes.get(key)?.dispose();
+      this.scheduledRefreshes.delete(key);
+      this.onConfigUpdate(/* @__PURE__ */ new Set([key]));
+    }));
+    this.scheduledRefreshes.set(key, store);
+  }
+  createSettingsOrderByTocIndex(resolvedSettingsRoot) {
+    const index = /* @__PURE__ */ new Map();
+    function indexSettings(resolvedSettingsRoot2, counter = 0) {
+      if (resolvedSettingsRoot2.settings) {
+        for (const setting of resolvedSettingsRoot2.settings) {
+          if (!index.has(setting.key)) {
+            index.set(setting.key, counter++);
+          }
+        }
+      }
+      if (resolvedSettingsRoot2.children) {
+        for (const child of resolvedSettingsRoot2.children) {
+          counter = indexSettings(child, counter);
+        }
+      }
+      return counter;
+    }
+    __name(indexSettings, "indexSettings");
+    indexSettings(resolvedSettingsRoot);
+    return index;
+  }
+  refreshModels(resolvedSettingsRoot) {
+    this.settingsTreeModel.value.update(resolvedSettingsRoot);
+    this.tocTreeModel.settingsTreeRoot = this.settingsTreeModel.value.root;
+    this.settingsOrderByTocIndex = this.createSettingsOrderByTocIndex(resolvedSettingsRoot);
+  }
+  async onConfigUpdate(keys, forceRefresh = false, schemaChange = false) {
+    if (keys && this.settingsTreeModel) {
+      return this.updateElementsByKey(keys);
+    }
+    if (!this.defaultSettingsEditorModel) {
+      return;
+    }
+    const groups = this.defaultSettingsEditorModel.settingsGroups.slice(1);
+    const coreSettings = groups.filter((g) => !g.extensionInfo);
+    const settingsResult = resolveSettingsTree(tocData, coreSettings, this.logService);
+    const resolvedSettingsRoot = settingsResult.tree;
+    if (settingsResult.leftoverSettings.size && !this.hasWarnedMissingSettings) {
+      const settingKeyList = [];
+      settingsResult.leftoverSettings.forEach((s) => {
+        settingKeyList.push(s.key);
+      });
+      this.logService.warn(`SettingsEditor2: Settings not included in settingsLayout.ts: ${settingKeyList.join(", ")}`);
+      this.hasWarnedMissingSettings = true;
+    }
+    const additionalGroups = [];
+    let setAdditionalGroups = false;
+    const toggleData = await getExperimentalExtensionToggleData(this.contextKeyService, this.extensionGalleryService, this.productService);
+    if (toggleData && groups.filter((g) => g.extensionInfo).length) {
+      for (const key in toggleData.settingsEditorRecommendedExtensions) {
+        const extension = toggleData.recommendedExtensionsGalleryInfo[key];
+        if (!extension) {
+          continue;
+        }
+        const extensionId = extension.identifier.id;
+        await this.refreshInstalledExtensionsList();
+        const extensionInstalled = this.installedExtensionIds.includes(extensionId);
+        const matchingGroupIndex = groups.findIndex((g) => g.extensionInfo && g.extensionInfo.id.toLowerCase() === extensionId.toLowerCase() && g.sections.length === 1 && g.sections[0].settings.length === 1 && g.sections[0].settings[0].displayExtensionId);
+        if (extensionInstalled || this.dismissedExtensionSettings.includes(extensionId)) {
+          if (matchingGroupIndex !== -1) {
+            groups.splice(matchingGroupIndex, 1);
+            setAdditionalGroups = true;
+          }
+          continue;
+        }
+        if (matchingGroupIndex !== -1) {
+          continue;
+        }
+        let manifest = null;
+        try {
+          manifest = await raceTimeout(this.extensionGalleryService.getManifest(extension, CancellationToken.None), EXTENSION_FETCH_TIMEOUT_MS) ?? null;
+        } catch (e) {
+          continue;
+        }
+        if (manifest === null) {
+          continue;
+        }
+        const contributesConfiguration = manifest?.contributes?.configuration;
+        let groupTitle;
+        if (!Array.isArray(contributesConfiguration)) {
+          groupTitle = contributesConfiguration?.title;
+        } else if (contributesConfiguration.length === 1) {
+          groupTitle = contributesConfiguration[0].title;
+        }
+        const recommendationInfo = toggleData.settingsEditorRecommendedExtensions[key];
+        const extensionName = extension.displayName ?? extension.name ?? extensionId;
+        const settingKey = `${key}.manageExtension`;
+        const setting = {
+          range: nullRange,
+          key: settingKey,
+          keyRange: nullRange,
+          value: null,
+          valueRange: nullRange,
+          description: [recommendationInfo.onSettingsEditorOpen?.descriptionOverride ?? extension.description],
+          descriptionIsMarkdown: false,
+          descriptionRanges: [],
+          scope: 4,
+          type: "null",
+          displayExtensionId: extensionId,
+          extensionGroupTitle: groupTitle ?? extensionName,
+          categoryLabel: "Extensions",
+          title: extensionName
+        };
+        const additionalGroup = {
+          sections: [{
+            settings: [setting]
+          }],
+          id: extensionId,
+          title: setting.extensionGroupTitle,
+          titleRange: nullRange,
+          range: nullRange,
+          extensionInfo: {
+            id: extensionId,
+            displayName: extension.displayName
+          }
+        };
+        groups.push(additionalGroup);
+        additionalGroups.push(additionalGroup);
+        setAdditionalGroups = true;
+      }
+    }
+    resolvedSettingsRoot.children.push(await createTocTreeForExtensionSettings(this.extensionService, groups.filter((g) => g.extensionInfo)));
+    const commonlyUsedDataToUse = getCommonlyUsedData(toggleData);
+    const commonlyUsed = resolveSettingsTree(commonlyUsedDataToUse, groups, this.logService);
+    resolvedSettingsRoot.children.unshift(commonlyUsed.tree);
+    if (toggleData && setAdditionalGroups) {
+      this.defaultSettingsEditorModel.setAdditionalGroups(additionalGroups);
+    }
+    if (!this.workspaceTrustManagementService.isWorkspaceTrusted() && (this.viewState.settingsTarget instanceof URI || this.viewState.settingsTarget === 5)) {
+      const configuredUntrustedWorkspaceSettings = resolveConfiguredUntrustedSettings(groups, this.viewState.settingsTarget, this.viewState.languageFilter, this.configurationService);
+      if (configuredUntrustedWorkspaceSettings.length) {
+        resolvedSettingsRoot.children.unshift({
+          id: "workspaceTrust",
+          label: localize("settings require trust", "Workspace Trust"),
+          settings: configuredUntrustedWorkspaceSettings
+        });
+      }
+    }
+    this.searchResultModel?.updateChildren();
+    if (this.settingsTreeModel.value) {
+      this.refreshModels(resolvedSettingsRoot);
+      if (schemaChange && this.searchResultModel) {
+        return await this.onSearchInputChanged(false);
+      }
+      this.refreshTOCTree();
+      this.renderTree(void 0, forceRefresh);
+    } else {
+      this.settingsTreeModel.value = this.instantiationService.createInstance(SettingsTreeModel, this.viewState, this.workspaceTrustManagementService.isWorkspaceTrusted());
+      this.refreshModels(resolvedSettingsRoot);
+      const cachedState = !this.viewState.query ? this.restoreCachedState() : void 0;
+      if (cachedState?.searchQuery || this.searchWidget.getValue()) {
+        await this.onSearchInputChanged(true);
+      } else {
+        this.refreshTOCTree();
+        this.refreshTree();
+        this.tocTree.collapseAll();
+      }
+    }
+  }
+  updateElementsByKey(keys) {
+    if (keys.size) {
+      if (this.searchResultModel) {
+        keys.forEach((key) => this.searchResultModel.updateElementsByName(key));
+      }
+      if (this.settingsTreeModel.value) {
+        keys.forEach((key) => this.settingsTreeModel.value.updateElementsByName(key));
+      }
+      keys.forEach((key) => this.renderTree(key));
+    } else {
+      this.renderTree();
+    }
+  }
+  getActiveControlInSettingsTree() {
+    const element = this.settingsTree.getHTMLElement();
+    const activeElement = element.ownerDocument.activeElement;
+    return activeElement && DOM.isAncestorOfActiveElement(element) ? activeElement : null;
+  }
+  renderTree(key, force = false) {
+    if (!force && key && this.scheduledRefreshes.has(key)) {
+      this.updateModifiedLabelForKey(key);
+      return;
+    }
+    if (this.contextViewFocused()) {
+      const element = this.window.document.querySelector(".context-view");
+      if (element) {
+        this.scheduleRefresh(element, key);
+      }
+      return;
+    }
+    const activeElement = this.getActiveControlInSettingsTree();
+    const focusedSetting = activeElement && this.settingRenderers.getSettingDOMElementForDOMElement(activeElement);
+    if (focusedSetting && !force) {
+      if (key) {
+        const focusedKey = focusedSetting.getAttribute(AbstractSettingRenderer.SETTING_KEY_ATTR);
+        if (focusedKey === key && // update `list`s live, as they have a separate "submit edit" step built in before this
+        (focusedSetting.parentElement && !focusedSetting.parentElement.classList.contains("setting-item-list"))) {
+          this.updateModifiedLabelForKey(key);
+          this.scheduleRefresh(focusedSetting, key);
+          return;
+        }
+      } else {
+        this.scheduleRefresh(focusedSetting);
+        return;
+      }
+    }
+    this.renderResultCountMessages();
+    if (key) {
+      const elements = this.currentSettingsModel?.getElementsByName(key);
+      if (elements?.length) {
+        if (elements.length >= 2) {
+          console.warn("More than one setting with key " + key + " found");
+        }
+        this.refreshSingleElement(elements[0]);
+      } else {
+        return;
+      }
+    } else {
+      this.refreshTree();
+    }
+    return;
+  }
+  contextViewFocused() {
+    return !!DOM.findParentWithClass(this.rootElement.ownerDocument.activeElement, "context-view");
+  }
+  refreshSingleElement(element) {
+    if (this.isVisible()) {
+      if (!element.setting.deprecationMessage || element.isConfigured) {
+        this.settingsTree.rerender(element);
+      }
+    }
+  }
+  refreshTree() {
+    if (this.isVisible() && this.currentSettingsModel) {
+      this.settingsTree.setChildren(null, createGroupIterator(this.currentSettingsModel.root));
+    }
+  }
+  refreshTOCTree() {
+    if (this.isVisible()) {
+      this.tocTreeModel.update();
+      this.tocTree.setChildren(null, createTOCIterator(this.tocTreeModel, this.tocTree));
+    }
+  }
+  updateModifiedLabelForKey(key) {
+    if (!this.currentSettingsModel) {
+      return;
+    }
+    const dataElements = this.currentSettingsModel.getElementsByName(key);
+    const isModified = dataElements && dataElements[0] && dataElements[0].isConfigured;
+    const elements = this.settingRenderers.getDOMElementsForSettingKey(this.settingsTree.getHTMLElement(), key);
+    if (elements && elements[0]) {
+      elements[0].classList.toggle("is-configured", !!isModified);
+    }
+  }
+  async onSearchInputChanged(expandResults) {
+    if (!this.currentSettingsModel) {
+      return;
+    }
+    const query = this.searchWidget.getValue().trim();
+    this.viewState.query = query;
+    await this.triggerSearch(query.replace(/\u203A/g, " "), expandResults);
+  }
+  parseSettingFromJSON(query) {
+    const match = query.match(/"([a-zA-Z.]+)": /);
+    return match && match[1];
+  }
+  /**
+   * Toggles the visibility of the Settings editor table of contents during a search
+   * depending on the behavior.
+   */
+  toggleTocBySearchBehaviorType() {
+    const tocBehavior = this.configurationService.getValue(SEARCH_TOC_BEHAVIOR_KEY);
+    const hideToc = tocBehavior === "hide";
+    if (hideToc) {
+      this.splitView.setViewVisible(0, false);
+      this.splitView.style({
+        separatorBorder: Color.transparent
+      });
+    } else {
+      this.layoutSplitView(this.dimension);
+    }
+  }
+  async triggerSearch(query, expandResults) {
+    const progressRunner = this.editorProgressService.show(true, 800);
+    this.viewState.tagFilters = /* @__PURE__ */ new Set();
+    this.viewState.extensionFilters = /* @__PURE__ */ new Set();
+    this.viewState.featureFilters = /* @__PURE__ */ new Set();
+    this.viewState.idFilters = /* @__PURE__ */ new Set();
+    this.viewState.languageFilter = void 0;
+    if (query) {
+      const parsedQuery = parseQuery(query);
+      query = parsedQuery.query;
+      parsedQuery.tags.forEach((tag) => this.viewState.tagFilters.add(tag));
+      parsedQuery.extensionFilters.forEach((extensionId) => this.viewState.extensionFilters.add(extensionId));
+      parsedQuery.featureFilters.forEach((feature) => this.viewState.featureFilters.add(feature));
+      parsedQuery.idFilters.forEach((id) => this.viewState.idFilters.add(id));
+      this.viewState.languageFilter = parsedQuery.languageFilter;
+    }
+    this.settingsTargetsWidget.updateLanguageFilterIndicators(this.viewState.languageFilter);
+    if (query && query !== "@") {
+      query = this.parseSettingFromJSON(query) || query;
+      await this.triggerFilterPreferences(query, expandResults, progressRunner);
+      this.toggleTocBySearchBehaviorType();
+    } else {
+      if (this.viewState.tagFilters.size || this.viewState.extensionFilters.size || this.viewState.featureFilters.size || this.viewState.idFilters.size || this.viewState.languageFilter) {
+        this.searchResultModel = this.createFilterModel();
+      } else {
+        this.searchResultModel = null;
+      }
+      this.searchDelayer.cancel();
+      if (this.searchInProgress) {
+        this.searchInProgress.dispose(true);
+        this.searchInProgress = null;
+      }
+      if (expandResults) {
+        this.tocTree.setFocus([]);
+        this.viewState.filterToCategory = void 0;
+      }
+      this.tocTreeModel.currentSearchModel = this.searchResultModel;
+      if (this.searchResultModel) {
+        if (expandResults) {
+          this.tocTree.setSelection([]);
+          this.tocTree.expandAll();
+        }
+        this.refreshTOCTree();
+        this.renderResultCountMessages();
+        this.refreshTree();
+        this.toggleTocBySearchBehaviorType();
+      } else if (!this.tocTreeDisposed) {
+        this.tocTree.collapseAll();
+        this.refreshTOCTree();
+        this.renderResultCountMessages();
+        this.refreshTree();
+        this.layoutSplitView(this.dimension);
+      }
+      progressRunner.done();
+    }
+  }
+  /**
+   * Return a fake SearchResultModel which can hold a flat list of all settings, to be filtered (@modified etc)
+   */
+  createFilterModel() {
+    const filterModel = this.instantiationService.createInstance(SearchResultModel, this.viewState, this.settingsOrderByTocIndex, this.workspaceTrustManagementService.isWorkspaceTrusted());
+    const fullResult = {
+      filterMatches: [],
+      exactMatch: false
+    };
+    for (const g of this.defaultSettingsEditorModel.settingsGroups.slice(1)) {
+      for (const sect of g.sections) {
+        for (const setting of sect.settings) {
+          fullResult.filterMatches.push({
+            setting,
+            matches: [],
+            matchType: SettingMatchType.None,
+            keyMatchScore: 0,
+            score: 0,
+            providerName: "filterModel"
+          });
+        }
+      }
+    }
+    filterModel.setResult(0, fullResult);
+    return filterModel;
+  }
+  async triggerFilterPreferences(query, expandResults, progressRunner) {
+    if (this.searchInProgress) {
+      this.searchInProgress.dispose(true);
+      this.searchInProgress = null;
+    }
+    const searchInProgress = this.searchInProgress = new CancellationTokenSource();
+    return this.searchDelayer.trigger(async () => {
+      if (searchInProgress.token.isCancellationRequested) {
+        return;
+      }
+      this.updateAiSearchToggleVisibility(false);
+      const localResults = await this.doLocalSearch(query, searchInProgress.token);
+      if (!this.searchResultModel || searchInProgress.token.isCancellationRequested) {
+        return;
+      }
+      this.searchResultModel.showAiResults = false;
+      if (localResults && localResults.filterMatches.length > 0) {
+        this.onDidFinishSearch(expandResults, void 0);
+      }
+      if (!localResults || !localResults.exactMatch) {
+        await this.doRemoteSearch(query, searchInProgress.token);
+      }
+      if (searchInProgress.token.isCancellationRequested) {
+        return;
+      }
+      if (this.aiSearchPromise) {
+        this.aiSearchPromise.cancel();
+      }
+      this.aiSearchPromise = createCancelablePromise((token) => {
+        return this.doAiSearch(query, token).then((results) => {
+          if (results) {
+            this.updateAiSearchToggleVisibility(true);
+          }
+        }).catch((e) => {
+          if (!isCancellationError(e)) {
+            this.logService.trace("Error during AI settings search:", e);
+          }
+        });
+      });
+      this.onDidFinishSearch(expandResults, progressRunner);
+    });
+  }
+  onDidFinishSearch(expandResults, progressRunner) {
+    this.tocTreeModel.currentSearchModel = this.searchResultModel;
+    if (expandResults) {
+      this.tocTree.setFocus([]);
+      this.viewState.filterToCategory = void 0;
+      this.tocTree.expandAll();
+      this.settingsTree.scrollTop = 0;
+    }
+    this.refreshTOCTree();
+    this.renderTree(void 0, true);
+    progressRunner?.done();
+  }
+  doLocalSearch(query, token) {
+    const localSearchProvider = this.preferencesSearchService.getLocalSearchProvider(query);
+    return this.searchWithProvider(0, localSearchProvider, token);
+  }
+  doRemoteSearch(query, token) {
+    const remoteSearchProvider = this.preferencesSearchService.getRemoteSearchProvider(query);
+    if (!remoteSearchProvider) {
+      return Promise.resolve(null);
+    }
+    return this.searchWithProvider(1, remoteSearchProvider, token);
+  }
+  async doAiSearch(query, token) {
+    const aiSearchProvider = this.preferencesSearchService.getAiSearchProvider(query);
+    const embeddingsResults = await this.searchWithProvider(3, aiSearchProvider, token);
+    if (!embeddingsResults || token.isCancellationRequested) {
+      return null;
+    }
+    const llmResults = await this.getLLMRankedResults(query, token);
+    if (token.isCancellationRequested) {
+      return null;
+    }
+    return {
+      filterMatches: embeddingsResults.filterMatches.concat(llmResults?.filterMatches ?? []),
+      exactMatch: false
+    };
+  }
+  async getLLMRankedResults(query, token) {
+    const aiSearchProvider = this.preferencesSearchService.getAiSearchProvider(query);
+    const result = await aiSearchProvider.getLLMRankedResults(token);
+    if (!result || token.isCancellationRequested) {
+      return null;
+    }
+    this.searchResultModel.setResult(4, result);
+    return result;
+  }
+  async searchWithProvider(type, searchProvider, token) {
+    const result = await this._searchPreferencesModel(this.defaultSettingsEditorModel, searchProvider, token);
+    if (token.isCancellationRequested) {
+      return null;
+    }
+    this.searchResultModel ??= this.instantiationService.createInstance(SearchResultModel, this.viewState, this.settingsOrderByTocIndex, this.workspaceTrustManagementService.isWorkspaceTrusted());
+    this.searchResultModel.setResult(type, result);
+    return result;
+  }
+  renderResultCountMessages() {
+    if (!this.currentSettingsModel) {
+      return;
+    }
+    this.clearFilterLinkContainer.style.display = this.viewState.tagFilters && this.viewState.tagFilters.size > 0 ? "initial" : "none";
+    if (!this.searchResultModel) {
+      if (this.countElement.style.display !== "none") {
+        this.searchResultLabel = null;
+        this.updateInputAriaLabel();
+        this.countElement.style.display = "none";
+        this.countElement.innerText = "";
+        this.layout(this.dimension);
+      }
+      this.rootElement.classList.remove("no-results");
+      this.splitView.el.style.visibility = "visible";
+      return;
+    } else {
+      const count = this.searchResultModel.getUniqueResultsCount();
+      let resultString;
+      switch (count) {
+        case 0:
+          resultString = localize("noResults", "No Settings Found");
+          break;
+        case 1:
+          resultString = localize("oneResult", "1 Setting Found");
+          break;
+        default:
+          resultString = localize("moreThanOneResult", "{0} Settings Found", count);
+      }
+      this.searchResultLabel = resultString;
+      this.updateInputAriaLabel();
+      this.countElement.innerText = resultString;
+      aria.status(resultString);
+      if (this.countElement.style.display !== "block") {
+        this.countElement.style.display = "block";
+        this.layout(this.dimension);
+      }
+      this.rootElement.classList.toggle("no-results", count === 0);
+      this.splitView.el.style.visibility = count === 0 ? "hidden" : "visible";
+    }
+  }
+  async _searchPreferencesModel(model, provider, token) {
+    try {
+      return await provider.searchModel(model, token);
+    } catch (err) {
+      if (isCancellationError(err)) {
+        return Promise.reject(err);
+      } else {
+        return null;
+      }
+    }
+  }
+  layoutSplitView(dimension) {
+    if (!this.isVisible()) {
+      return;
+    }
+    const listHeight = dimension.height - (72 + 11 + 14);
+    this.splitView.el.style.height = `${listHeight}px`;
+    this.splitView.layout(this.bodyContainer.clientWidth, listHeight);
+    const tocBehavior = this.configurationService.getValue(SEARCH_TOC_BEHAVIOR_KEY);
+    const hideTocForSearch = tocBehavior === "hide" && this.searchResultModel;
+    if (!hideTocForSearch) {
+      const firstViewWasVisible = this.splitView.isViewVisible(0);
+      const firstViewVisible = this.bodyContainer.clientWidth >= SettingsEditor2_1.NARROW_TOTAL_WIDTH;
+      this.splitView.setViewVisible(0, firstViewVisible);
+      if (!firstViewWasVisible && firstViewVisible && this.bodyContainer.clientWidth >= SettingsEditor2_1.EDITOR_MIN_WIDTH + SettingsEditor2_1.TOC_RESET_WIDTH) {
+        this.splitView.resizeView(0, SettingsEditor2_1.TOC_RESET_WIDTH);
+      }
+      this.splitView.style({
+        separatorBorder: firstViewVisible ? this.theme.getColor(settingsSashBorder) : Color.transparent
+      });
+    }
+  }
+  saveState() {
+    if (this.isVisible()) {
+      const searchQuery = this.searchWidget.getValue().trim();
+      const target = this.settingsTargetsWidget.settingsTarget;
+      if (this.input) {
+        this.editorMemento.saveEditorState(this.group, this.input, { searchQuery, target });
+      }
+    } else if (this.input) {
+      this.editorMemento.clearEditorState(this.input, this.group);
+    }
+    super.saveState();
+  }
+};
+SettingsEditor2 = SettingsEditor2_1 = __decorate([
+  __param(1, ITelemetryService),
+  __param(2, IWorkbenchConfigurationService),
+  __param(3, ITextResourceConfigurationService),
+  __param(4, IThemeService),
+  __param(5, IPreferencesService),
+  __param(6, IInstantiationService),
+  __param(7, IPreferencesSearchService),
+  __param(8, ILogService),
+  __param(9, IContextKeyService),
+  __param(10, IStorageService),
+  __param(11, IEditorGroupsService),
+  __param(12, IUserDataSyncWorkbenchService),
+  __param(13, IUserDataSyncEnablementService),
+  __param(14, IWorkspaceTrustManagementService),
+  __param(15, IExtensionService),
+  __param(16, ILanguageService),
+  __param(17, IExtensionManagementService),
+  __param(18, IProductService),
+  __param(19, IExtensionGalleryService),
+  __param(20, IEditorProgressService),
+  __param(21, IUserDataProfileService)
+], SettingsEditor2);
+let SyncControls = class SyncControls2 extends Disposable {
+  static {
+    __name(this, "SyncControls");
+  }
+  constructor(window, container, commandService, userDataSyncService, userDataSyncEnablementService, telemetryService) {
+    super();
+    this.commandService = commandService;
+    this.userDataSyncService = userDataSyncService;
+    this.userDataSyncEnablementService = userDataSyncEnablementService;
+    this._onDidChangeLastSyncedLabel = this._register(new Emitter());
+    this.onDidChangeLastSyncedLabel = this._onDidChangeLastSyncedLabel.event;
+    const headerRightControlsContainer = DOM.append(container, $(".settings-right-controls"));
+    const turnOnSyncButtonContainer = DOM.append(headerRightControlsContainer, $(".turn-on-sync"));
+    this.turnOnSyncButton = this._register(new Button(turnOnSyncButtonContainer, { title: true, ...defaultButtonStyles }));
+    this.lastSyncedLabel = DOM.append(headerRightControlsContainer, $(".last-synced-label"));
+    DOM.hide(this.lastSyncedLabel);
+    this.turnOnSyncButton.enabled = true;
+    this.turnOnSyncButton.label = localize("turnOnSyncButton", "Backup and Sync Settings");
+    DOM.hide(this.turnOnSyncButton.element);
+    this._register(this.turnOnSyncButton.onDidClick(async () => {
+      await this.commandService.executeCommand("workbench.userDataSync.actions.turnOn");
+    }));
+    this.updateLastSyncedTime();
+    this._register(this.userDataSyncService.onDidChangeLastSyncTime(() => {
+      this.updateLastSyncedTime();
+    }));
+    const updateLastSyncedTimer = this._register(new DOM.WindowIntervalTimer());
+    updateLastSyncedTimer.cancelAndSet(() => this.updateLastSyncedTime(), 60 * 1e3, window);
+    this.update();
+    this._register(this.userDataSyncService.onDidChangeStatus(() => {
+      this.update();
+    }));
+    this._register(this.userDataSyncEnablementService.onDidChangeEnablement(() => {
+      this.update();
+    }));
+  }
+  updateLastSyncedTime() {
+    const last = this.userDataSyncService.lastSyncTime;
+    let label;
+    if (typeof last === "number") {
+      const d = fromNow(last, true, void 0, true);
+      label = localize("lastSyncedLabel", "Last synced: {0}", d);
+    } else {
+      label = "";
+    }
+    this.lastSyncedLabel.textContent = label;
+    this._onDidChangeLastSyncedLabel.fire(label);
+  }
+  update() {
+    if (this.userDataSyncService.status === "uninitialized") {
+      return;
+    }
+    if (this.userDataSyncEnablementService.isEnabled() || this.userDataSyncService.status !== "idle") {
+      DOM.show(this.lastSyncedLabel);
+      DOM.hide(this.turnOnSyncButton.element);
+    } else {
+      DOM.hide(this.lastSyncedLabel);
+      DOM.show(this.turnOnSyncButton.element);
+    }
+  }
+};
+SyncControls = __decorate([
+  __param(2, ICommandService),
+  __param(3, IUserDataSyncService),
+  __param(4, IUserDataSyncEnablementService),
+  __param(5, ITelemetryService)
+], SyncControls);
+export {
+  SettingsEditor2,
+  SettingsFocusContext,
+  createGroupIterator
+};
+//# sourceMappingURL=settingsEditor2.js.map

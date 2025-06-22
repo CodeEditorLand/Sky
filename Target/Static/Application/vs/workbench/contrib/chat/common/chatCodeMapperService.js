@@ -1,1 +1,38 @@
-import{$nj as t}from"../../../../platform/instantiation/common/instantiation.js";const p=t("codeMapperService");class c{constructor(){this.providers=[]}registerCodeMapperProvider(s,o){return this.providers.push(o),{dispose:()=>{const s=this.providers.indexOf(o);s>=0&&this.providers.splice(s,1)}}}async mapCode(s,o,r){for(const t of this.providers){const i=await t.mapCode(s,o,r);return r.isCancellationRequested?void 0:i}}}export{p as $pT,c as $qT};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { createDecorator } from "../../../../platform/instantiation/common/instantiation.js";
+const ICodeMapperService = createDecorator("codeMapperService");
+class CodeMapperService {
+  static {
+    __name(this, "CodeMapperService");
+  }
+  constructor() {
+    this.providers = [];
+  }
+  registerCodeMapperProvider(handle, provider) {
+    this.providers.push(provider);
+    return {
+      dispose: /* @__PURE__ */ __name(() => {
+        const index = this.providers.indexOf(provider);
+        if (index >= 0) {
+          this.providers.splice(index, 1);
+        }
+      }, "dispose")
+    };
+  }
+  async mapCode(request, response, token) {
+    for (const provider of this.providers) {
+      const result = await provider.mapCode(request, response, token);
+      if (token.isCancellationRequested) {
+        return void 0;
+      }
+      return result;
+    }
+    return void 0;
+  }
+}
+export {
+  CodeMapperService,
+  ICodeMapperService
+};
+//# sourceMappingURL=chatCodeMapperService.js.map

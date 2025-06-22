@@ -1,1 +1,40 @@
-import{$Kyb as u}from"../../services/extensions/common/extHostCustomers.js";import{$oY as h}from"../common/extHost.protocol.js";import{$mfb as m}from"../../../platform/clipboard/common/clipboardService.js";var p=function(e,t,r,o){var c,s=arguments.length,n=s<3?t:null===o?o=Object.getOwnPropertyDescriptor(t,r):o;if("object"==typeof Reflect&&"function"==typeof Reflect.decorate)n=Reflect.decorate(e,t,r,o);else for(var i=e.length-1;i>=0;i--)(c=e[i])&&(n=(s<3?c(n):s>3?c(t,r,n):c(t,r))||n);return s>3&&n&&Object.defineProperty(t,r,n),n},l=function(e,t){return function(r,o){t(r,o,e)}};let c=class{constructor(e,t){this.a=t}dispose(){}$readText(){return this.a.readText()}$writeText(e){return this.a.writeText(e)}};c=p([u(h.MainThreadClipboard),l(1,m)],c);export{c as $DWb};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { extHostNamedCustomer } from "../../services/extensions/common/extHostCustomers.js";
+import { MainContext } from "../common/extHost.protocol.js";
+import { IClipboardService } from "../../../platform/clipboard/common/clipboardService.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+let MainThreadClipboard = class MainThreadClipboard2 {
+  static {
+    __name(this, "MainThreadClipboard");
+  }
+  constructor(_context, _clipboardService) {
+    this._clipboardService = _clipboardService;
+  }
+  dispose() {
+  }
+  $readText() {
+    return this._clipboardService.readText();
+  }
+  $writeText(value) {
+    return this._clipboardService.writeText(value);
+  }
+};
+MainThreadClipboard = __decorate([
+  extHostNamedCustomer(MainContext.MainThreadClipboard),
+  __param(1, IClipboardService)
+], MainThreadClipboard);
+export {
+  MainThreadClipboard
+};
+//# sourceMappingURL=mainThreadClipboard.js.map

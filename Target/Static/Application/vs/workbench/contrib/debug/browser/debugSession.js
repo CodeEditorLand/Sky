@@ -1,1 +1,1364 @@
-import{$p6 as U}from"../../../../base/browser/dom.js";import*as R from"../../../../base/browser/ui/aria/aria.js";import{$c5 as _}from"../../../../base/browser/window.js";import{$_b as W}from"../../../../base/common/arrays.js";import{$Sh as z,$Yh as B,$Bh as G}from"../../../../base/common/async.js";import{$pf as C}from"../../../../base/common/cancellation.js";import{$sb as H}from"../../../../base/common/errors.js";import{$df as l}from"../../../../base/common/event.js";import{$jm as Y}from"../../../../base/common/labels.js";import{$vd as J,$Ed as Q,$ud as T,$wd as X,$qd as v}from"../../../../base/common/lifecycle.js";import{$5o as Z}from"../../../../base/common/objects.js";import*as tt from"../../../../base/common/platform.js";import*as et from"../../../../base/common/resources.js";import m from"../../../../base/common/severity.js";import{$8c as st}from"../../../../base/common/types.js";import{URI as it}from"../../../../base/common/uri.js";import{$Rm as rt}from"../../../../base/common/uuid.js";import{localize as a}from"../../../../nls.js";import{$tC as ot}from"../../../../platform/accessibility/common/accessibility.js";import{$El as at}from"../../../../platform/configuration/common/configuration.js";import{$mj as nt}from"../../../../platform/instantiation/common/instantiation.js";import{$3n as ht}from"../../../../platform/log/common/log.js";import{$RI as dt}from"../../../../platform/notification/common/notification.js";import{$nn as ct}from"../../../../platform/product/common/productService.js";import{$Qo as ut,$Po as lt}from"../../../../platform/telemetry/common/telemetry.js";import{$yo as pt}from"../../../../platform/uriIdentity/common/uriIdentity.js";import{$hl as ft}from"../../../../platform/workspace/common/workspace.js";import{$KX as wt}from"../../../services/environment/common/environmentService.js";import{$8$ as bt}from"../../../services/host/browser/host.js";import{$RK as gt}from"../../../services/lifecycle/common/lifecycle.js";import{$Cxb as mt}from"../../../services/panecomposite/browser/panecomposite.js";import{$42b as yt}from"../../testing/common/testResultService.js";import{$L2b as kt}from"../../testing/common/testService.js";import{$hW as St,$3U as Dt,$gW as It}from"../common/debug.js";import{$PT as $,$YT as Et,$WT as Rt}from"../common/debugModel.js";import{$HT as y}from"../common/debugSource.js";import{$uT as Bt}from"../common/debugUtils.js";import{$U$b as Tt}from"../common/replModel.js";import{$Xoc as $t}from"./rawDebugSession.js";var N=function(p,e,s,t){var i=arguments.length,r=i<3?e:t===null?t=Object.getOwnPropertyDescriptor(e,s):t,o;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")r=Reflect.decorate(p,e,s,t);else for(var n=p.length-1;n>=0;n--)(o=p[n])&&(r=(i<3?o(r):i>3?o(e,s,r):o(e,s))||r);return i>3&&r&&Object.defineProperty(e,s,r),r},d=function(p,e){return function(s,t){e(s,t,p)}};const Mt=1500;let M=class{constructor(e,s,t,i,r,o,n,u,h,f,w,g,F,k,L,P,A,x,K,V,j,O){this.I=e,this.J=s,this.root=t,this.K=i,this.L=o,this.M=n,this.N=u,this.O=h,this.P=f,this.Q=w,this.R=g,this.S=F,this.T=L,this.U=P,this.V=A,this.W=x,this.X=K,this.Y=V,this.Z=O,this.b=!1,this.f=new Map,this.g=new Map,this.h=[],this.j=new Map,this.k=new T,this.l=new T,this.r=[],this.u=this.k.add(new Ct),this.w=new l,this.x=new l,this.y=new l,this.z=new l,this.A=new l,this.B=new l,this.C=new l,this.D=new l,this.E=new l,this.G=new l,this.c=r||{},this.parentSession=this.c.parentSession,this.hasSeparateRepl()?this.q=new Tt(this.O):this.q=this.parentSession.q;const b=this.l,S=b.add(new X);S.value=this.q.onDidChangeElements(c=>this.E.fire(c)),k&&b.add(k.onWillShutdown(()=>{this.jb(),v(b)})),this.correlatedTestRun=r?.testRun?j.getResult(r.testRun.runId):this.parentSession?.correlatedTestRun,this.correlatedTestRun&&b.add(this.correlatedTestRun.onComplete(()=>this.terminate()));const D=this.c.compoundRoot;D&&b.add(D.onDidSessionStop(()=>this.terminate())),this.n=new B(()=>{if(this.L.getModel().getSessions().some(c=>c.state===2)||this.getAllThreads().some(c=>c.stopped))if(typeof this.o=="number"){const c=this.L.getViewModel().focusedThread;if(c&&c.threadId===this.o&&!c.stopped){const E=this.getStoppedDetails()?.threadId,q=typeof E=="number"?this.getThread(E):void 0;this.L.focusStackFrame(void 0,q)}}else{const c=this.L.getViewModel().focusedSession;c&&c.getId()===this.getId()&&c.state!==2&&this.L.focusStackFrame(void 0)}},800);const I=this.c.parentSession;I&&b.add(I.onDidEndAdapter(()=>{!this.hasSeparateRepl()&&this.raw?.isInShutdown===!1&&(this.q=this.q.clone(),S.value=this.q.onDidChangeElements(c=>this.E.fire(c)),this.parentSession=void 0)}))}getId(){return this.I}setSubId(e){this.a=e}getMemory(e){return new Et(e,this)}get subId(){return this.a}get configuration(){return this.J.resolved}get unresolvedConfiguration(){return this.J.unresolved}get lifecycleManagedByParent(){return!!this.c.lifecycleManagedByParent}get compact(){return!!this.c.compact}get saveBeforeRestart(){return this.c.saveBeforeRestart??!this.c?.parentSession}get compoundRoot(){return this.c.compoundRoot}get suppressDebugStatusbar(){return this.c.suppressDebugStatusbar??!1}get suppressDebugToolbar(){return this.c.suppressDebugToolbar??!1}get suppressDebugView(){return this.c.suppressDebugView??!1}get autoExpandLazyVariables(){const e=this.Z.isScreenReaderOptimized(),s=this.O.getValue("debug").autoExpandLazyVariables;return s==="auto"&&e||s==="on"}setConfiguration(e){this.J=e}getLabel(){return this.Q.getWorkspace().folders.length>1&&this.root?`${this.name} (${et.$gh(this.root.uri)})`:this.name}setName(e){this.F=e,this.G.fire(e)}get name(){return this.F||this.configuration.name}get state(){if(!this.b)return 1;if(!this.raw)return 0;const e=this.L.getViewModel().focusedThread;return e&&e.session===this?e.stopped?2:3:this.getAllThreads().some(s=>s.stopped)?2:3}get capabilities(){return this.raw?this.raw.capabilities:Object.create(null)}get onDidChangeState(){return this.w.event}get onDidEndAdapter(){return this.x.event}get onDidChangeReplElements(){return this.E.event}get onDidChangeName(){return this.G.event}get onDidCustomEvent(){return this.z.event}get onDidLoadedSource(){return this.y.event}get onDidProgressStart(){return this.A.event}get onDidProgressUpdate(){return this.B.event}get onDidProgressEnd(){return this.C.event}get onDidInvalidateMemory(){return this.D.event}async initialize(e){this.raw&&await this.jb();try{const s=await e.createDebugAdapter(this);this.raw=this.U.createInstance($t,s,e,this.I,this.configuration.name),await this.raw.start(),this.db(),await this.raw.initialize({clientID:"vscode",clientName:this.R.nameLong,adapterID:this.configuration.type,pathFormat:"path",linesStartAt1:!0,columnsStartAt1:!0,supportsVariableType:!0,supportsVariablePaging:!0,supportsRunInTerminalRequest:!0,locale:tt.$A,supportsProgressReporting:!0,supportsInvalidatedEvent:!0,supportsMemoryReferences:!0,supportsArgsCanBeInterpretedByShell:!0,supportsMemoryEvent:!0,supportsStartDebuggingRequest:!0,supportsANSIStyling:!0}),this.b=!0,this.w.fire(),this.rememberedCapabilities=this.raw.capabilities,this.L.setExceptionBreakpointsForSession(this,this.raw&&this.raw.capabilities.exceptionBreakpointFilters||[]),this.L.getModel().registerBreakpointModes(this.configuration.type,this.raw.capabilities.breakpointModes||[])}catch(s){throw this.b=!0,this.w.fire(),await this.jb(),s}}async launchOrAttach(e){if(!this.raw)throw new Error(a(6620,null,"launch or attach"));if(this.parentSession&&this.parentSession.state===0)throw H();e.__sessionId=this.getId();try{await this.raw.launchOrAttach(e)}catch(s){throw this.jb(),s}}cancelCorrelatedTestRun(){this.correlatedTestRun&&!this.correlatedTestRun.completedAt&&(this.v=!0,this.Y.cancelTestRun(this.correlatedTestRun.id))}async terminate(e=!1){this.raw||this.hb(),this.mb(),this.c.lifecycleManagedByParent&&this.parentSession?await this.parentSession.terminate(e):this.correlatedTestRun&&!this.correlatedTestRun.completedAt&&!this.v?this.cancelCorrelatedTestRun():this.raw&&(this.raw.capabilities.supportsTerminateRequest&&this.J.resolved.request==="launch"?await this.raw.terminate(e):await this.raw.disconnect({restart:e,terminateDebuggee:!0})),e||this.c.compoundRoot?.sessionStopped()}async disconnect(e=!1,s=!1){this.raw||this.hb(),this.mb(),this.c.lifecycleManagedByParent&&this.parentSession?await this.parentSession.disconnect(e,s):this.raw&&await this.raw.disconnect({restart:e,terminateDebuggee:!1,suspendDebuggee:s}),e||this.c.compoundRoot?.sessionStopped()}async restart(){if(!this.raw)throw new Error(a(6621,null,"restart"));this.mb(),this.c.lifecycleManagedByParent&&this.parentSession?await this.parentSession.restart():await this.raw.restart({arguments:this.configuration})}async sendBreakpoints(e,s,t){if(!this.raw)throw new Error(a(6622,null,"breakpoints"));if(!this.raw.readyForBreakpoints)return Promise.resolve(void 0);const i=this.kb(e);s.length&&!i.adapterData&&(i.adapterData=s[0].adapterData),i.path&&(i.path=Y(i.path));const r=await this.raw.setBreakpoints({source:i,lines:s.map(o=>o.sessionAgnosticData.lineNumber),breakpoints:s.map(o=>o.toDAP()),sourceModified:t});if(r?.body){const o=new Map;for(let n=0;n<s.length;n++)o.set(s[n].getId(),r.body.breakpoints[n]);this.K.setBreakpointSessionData(this.getId(),this.capabilities,o)}}async sendFunctionBreakpoints(e){if(!this.raw)throw new Error(a(6623,null,"function breakpoints"));if(this.raw.readyForBreakpoints){const s=await this.raw.setFunctionBreakpoints({breakpoints:e.map(t=>t.toDAP())});if(s?.body){const t=new Map;for(let i=0;i<e.length;i++)t.set(e[i].getId(),s.body.breakpoints[i]);this.K.setBreakpointSessionData(this.getId(),this.capabilities,t)}}}async sendExceptionBreakpoints(e){if(!this.raw)throw new Error(a(6624,null,"exception breakpoints"));if(this.raw.readyForBreakpoints){const s=this.capabilities.supportsExceptionFilterOptions?{filters:[],filterOptions:e.map(i=>i.condition?{filterId:i.filter,condition:i.condition}:{filterId:i.filter})}:{filters:e.map(i=>i.filter)},t=await this.raw.setExceptionBreakpoints(s);if(t?.body&&t.body.breakpoints){const i=new Map;for(let r=0;r<e.length;r++)i.set(e[r].getId(),t.body.breakpoints[r]);this.K.setBreakpointSessionData(this.getId(),this.capabilities,i)}}}dataBytesBreakpointInfo(e,s){if(this.raw?.capabilities.supportsDataBreakpointBytes===!1)throw new Error(a(6625,null));return this.$({name:e,bytes:s,asAddress:!0})}dataBreakpointInfo(e,s){return this.$({name:e,variablesReference:s})}async $(e){if(!this.raw)throw new Error(a(6626,null,"data breakpoints info"));if(!this.raw.readyForBreakpoints)throw new Error(a(6627,null));return(await this.raw.dataBreakpointInfo(e))?.body}async sendDataBreakpoints(e){if(!this.raw)throw new Error(a(6628,null,"data breakpoints"));if(this.raw.readyForBreakpoints){const s=await Promise.all(e.map(async i=>{try{return{dap:await i.toDAP(this),bp:i}}catch(r){return{bp:i,message:r.message}}})),t=await this.raw.setDataBreakpoints({breakpoints:s.map(i=>i.dap).filter(st)});if(t?.body){const i=new Map;let r=0;for(const o of s)o.dap?r<t.body.breakpoints.length&&i.set(o.bp.getId(),t.body.breakpoints[r++]):i.set(o.bp.getId(),o.message);this.K.setBreakpointSessionData(this.getId(),this.capabilities,i)}}}async sendInstructionBreakpoints(e){if(!this.raw)throw new Error(a(6629,null,"instruction breakpoints"));if(this.raw.readyForBreakpoints){const s=await this.raw.setInstructionBreakpoints({breakpoints:e.map(t=>t.toDAP())});if(s?.body){const t=new Map;for(let i=0;i<e.length;i++)t.set(e[i].getId(),s.body.breakpoints[i]);this.K.setBreakpointSessionData(this.getId(),this.capabilities,t)}}}async breakpointsLocations(e,s){if(!this.raw)throw new Error(a(6630,null,"breakpoints locations"));const t=this.kb(e),i=await this.raw.breakpointLocations({source:t,line:s});if(!i||!i.body||!i.body.breakpoints)return[];const r=i.body.breakpoints.map(o=>({lineNumber:o.line,column:o.column||1}));return W(r,o=>`${o.lineNumber}:${o.column}`)}getDebugProtocolBreakpoint(e){return this.K.getDebugProtocolBreakpoint(e,this.getId())}customRequest(e,s){if(!this.raw)throw new Error(a(6631,null,e));return this.raw.custom(e,s)}stackTrace(e,s,t,i){if(!this.raw)throw new Error(a(6632,null,"stackTrace"));const r=this.lb(e,i);return this.raw.stackTrace({threadId:e,startFrame:s,levels:t},r)}async exceptionInfo(e){if(!this.raw)throw new Error(a(6633,null,"exceptionInfo"));const s=await this.raw.exceptionInfo({threadId:e});if(s)return{id:s.body.exceptionId,description:s.body.description,breakMode:s.body.breakMode,details:s.body.details}}scopes(e,s){if(!this.raw)throw new Error(a(6634,null,"scopes"));const t=this.lb(s);return this.raw.scopes({frameId:e},t)}variables(e,s,t,i,r){if(!this.raw)throw new Error(a(6635,null,"variables"));const o=s?this.lb(s):void 0;return this.raw.variables({variablesReference:e,filter:t,start:i,count:r},o)}evaluate(e,s,t,i){if(!this.raw)throw new Error(a(6636,null,"evaluate"));return this.raw.evaluate({expression:e,frameId:s,context:t,line:i?.line,column:i?.column,source:i?.source})}async restartFrame(e,s){if(await this.bb(),!this.raw)throw new Error(a(6637,null,"restartFrame"));await this.raw.restartFrame({frameId:e},s)}ab(e,s){const t=this.getThread(e);t&&(t.lastSteppingGranularity=s)}async next(e,s){if(await this.bb(),!this.raw)throw new Error(a(6638,null,"next"));this.ab(e,s),await this.raw.next({threadId:e,granularity:s})}async stepIn(e,s,t){if(await this.bb(),!this.raw)throw new Error(a(6639,null,"stepIn"));this.ab(e,t),await this.raw.stepIn({threadId:e,targetId:s,granularity:t})}async stepOut(e,s){if(await this.bb(),!this.raw)throw new Error(a(6640,null,"stepOut"));this.ab(e,s),await this.raw.stepOut({threadId:e,granularity:s})}async stepBack(e,s){if(await this.bb(),!this.raw)throw new Error(a(6641,null,"stepBack"));this.ab(e,s),await this.raw.stepBack({threadId:e,granularity:s})}async continue(e){if(await this.bb(),!this.raw)throw new Error(a(6642,null,"continue"));await this.raw.continue({threadId:e})}async reverseContinue(e){if(await this.bb(),!this.raw)throw new Error(a(6643,null,"reverse continue"));await this.raw.reverseContinue({threadId:e})}async pause(e){if(!this.raw)throw new Error(a(6644,null,"pause"));await this.raw.pause({threadId:e})}async terminateThreads(e){if(!this.raw)throw new Error(a(6645,null,"terminateThreads"));await this.raw.terminateThreads({threadIds:e})}setVariable(e,s,t){if(!this.raw)throw new Error(a(6646,null,"setVariable"));return this.raw.setVariable({variablesReference:e,name:s,value:t})}setExpression(e,s,t){if(!this.raw)throw new Error(a(6647,null,"setExpression"));return this.raw.setExpression({expression:s,value:t,frameId:e})}gotoTargets(e,s,t){if(!this.raw)throw new Error(a(6648,null,"gotoTargets"));return this.raw.gotoTargets({source:e,line:s,column:t})}goto(e,s){if(!this.raw)throw new Error(a(6649,null,"goto"));return this.raw.goto({threadId:e,targetId:s})}loadSource(e){if(!this.raw)return Promise.reject(new Error(a(6650,null,"loadSource")));const s=this.getSourceForUri(e);let t;if(s)t=s.raw;else{const i=y.getEncodedDebugData(e);t={path:i.path,sourceReference:i.sourceReference}}return this.raw.source({sourceReference:t.sourceReference||0,source:t})}async getLoadedSources(){if(!this.raw)return Promise.reject(new Error(a(6651,null,"getLoadedSources")));const e=await this.raw.loadedSources({});return e?.body&&e.body.sources?e.body.sources.map(s=>this.getSource(s)):[]}async completions(e,s,t,i,r){if(!this.raw)return Promise.reject(new Error(a(6652,null,"completions")));const o=this.lb(s,r);return this.raw.completions({frameId:e,text:t,column:i.column,line:i.lineNumber},o)}async stepInTargets(e){return this.raw?(await this.raw.stepInTargets({frameId:e}))?.body.targets:Promise.reject(new Error(a(6653,null,"stepInTargets")))}async cancel(e){return this.raw?this.raw.cancel({progressId:e}):Promise.reject(new Error(a(6654,null,"cancel")))}async disassemble(e,s,t,i){return this.raw?(await this.raw.disassemble({memoryReference:e,offset:s,instructionOffset:t,instructionCount:i,resolveSymbols:!0}))?.body?.instructions:Promise.reject(new Error(a(6655,null,"disassemble")))}readMemory(e,s,t){return this.raw?this.raw.readMemory({count:t,memoryReference:e,offset:s}):Promise.reject(new Error(a(6656,null,"readMemory")))}writeMemory(e,s,t,i){return this.raw?this.raw.writeMemory({memoryReference:e,offset:s,allowPartial:i,data:t}):Promise.reject(new Error(a(6657,null,"disassemble")))}async resolveLocationReference(e){if(!this.raw)throw new Error(a(6658,null,"locations"));const s=await this.raw.locations({locationReference:e});if(!s?.body)throw new Error(a(6659,null,"locations"));const t=this.getSource(s.body.source);return{column:1,...s.body,source:t}}getThread(e){return this.g.get(e)}getAllThreads(){const e=[];return this.h.forEach(s=>{const t=this.g.get(s);t&&e.push(t)}),e}clearThreads(e,s=void 0){if(s!=null){const t=this.g.get(s);t&&(t.clearCallStack(),t.stoppedDetails=void 0,t.stopped=!1,e&&this.g.delete(s))}else this.g.forEach(t=>{t.clearCallStack(),t.stoppedDetails=void 0,t.stopped=!1}),e&&(this.g.clear(),this.h=[],$.allValues.clear())}getStoppedDetails(){return this.r.length>=1?this.r[0]:void 0}rawUpdate(e){this.h=[],e.threads.forEach(t=>{if(this.h.push(t.id),!this.g.has(t.id))this.g.set(t.id,new Rt(this,t.name,t.id));else if(t.name){const i=this.g.get(t.id);i&&(i.name=t.name)}}),this.g.forEach(t=>{this.h.indexOf(t.threadId)===-1&&this.g.delete(t.threadId)});const s=e.stoppedDetails;if(s)if(s.allThreadsStopped)this.g.forEach(t=>{t.stoppedDetails=t.threadId===s.threadId?s:{reason:t.stoppedDetails?.reason},t.stopped=!0,t.clearCallStack()});else{const t=typeof s.threadId=="number"?this.g.get(s.threadId):void 0;t&&(t.stoppedDetails=s,t.clearCallStack(),t.stopped=!0)}}bb(){if(this.H)return G(this.H,Mt)}async cb(e){if(this.raw){const s=await this.raw.threads();s?.body&&s.body.threads&&this.K.rawUpdate({sessionId:this.getId(),threads:s.body.threads,stoppedDetails:e})}}initializeForTest(e){this.raw=e,this.db()}db(){if(!this.raw)return;this.k.add(this.raw.onDidInitialize(async()=>{R.$b8(this.configuration.noDebug?a(6660,null):a(6661,null));const t=async()=>{if(this.raw&&this.raw.capabilities.supportsConfigurationDoneRequest)try{await this.raw.configurationDone()}catch(i){this.S.error(i),this.raw?.disconnect({})}};try{await this.L.sendAllBreakpoints(this)}finally{await t(),await this.cb()}}));const e=this.u;this.k.add(this.raw.onDidStop(t=>this.eb(t.body))),this.k.add(this.raw.onDidThread(t=>{if(e.cancel([t.body.threadId]),t.body.reason==="started")this.m||(this.m=new B(()=>{this.cb()},100),this.k.add(this.m)),this.m.isScheduled()||this.m.schedule();else if(t.body.reason==="exited"){this.K.clearThreads(this.getId(),!0,t.body.threadId);const i=this.L.getViewModel(),r=i.focusedThread;this.n.cancel(),r&&t.body.threadId===r.threadId&&this.L.focusStackFrame(void 0,void 0,i.focusedSession,{explicit:!1})}})),this.k.add(this.raw.onDidTerminateDebugee(async t=>{R.$b8(a(6662,null)),t.body&&t.body.restart?await this.L.restartSession(this,t.body.restart):this.raw&&await this.raw.disconnect({terminateDebuggee:!1})})),this.k.add(this.raw.onDidContinued(t=>{const i=t.body.allThreadsContinued!==!1;e.cancel(i?void 0:[t.body.threadId]);const r=i?void 0:t.body.threadId;if(typeof r=="number"){this.r=this.r.filter(n=>n.threadId!==r);const o=this.j.get(r);this.j.delete(r),o?.forEach(n=>n.dispose(!0))}else this.r=[],this.mb();this.o=r,this.n.schedule(),this.K.clearThreads(this.getId(),!1,r),this.w.fire()}));const s=new z;this.k.add(this.raw.onDidOutput(async t=>{const i=t.body.category==="stderr"?m.Error:t.body.category==="console"?m.Warning:m.Info;if(t.body.variablesReference){const r=t.body.source&&t.body.line?{lineNumber:t.body.line,column:t.body.column?t.body.column:1,source:this.getSource(t.body.source)}:void 0,n=new $(this,void 0,t.body.variablesReference,rt()).getChildren();s.queue(async()=>{const u=await n;if(u.length===1){this.appendToRepl({output:t.body.output,expression:u[0],sev:i,source:r},t.body.category==="important");return}u.forEach(h=>{h.name=null,this.appendToRepl({output:"",expression:h,sev:i,source:r},t.body.category==="important")})});return}s.queue(async()=>{if(!t.body||!this.raw)return;if(t.body.category==="telemetry"){const o=this.raw.dbgr.getCustomTelemetryEndpoint();if(o&&this.M.telemetryLevel!==0){let n=t.body.data;!o.sendErrorTelemetry&&t.body.data&&(n=Bt(t.body.data)),this.V.publicLog(o,t.body.output,n)}return}const r=t.body.source&&t.body.line?{lineNumber:t.body.line,column:t.body.column?t.body.column:1,source:this.getSource(t.body.source)}:void 0;if(t.body.group==="start"||t.body.group==="startCollapsed"){const o=t.body.group==="start";this.q.startGroup(this,t.body.output||"",o,r);return}t.body.group==="end"&&(this.q.endGroup(),!t.body.output)||typeof t.body.output=="string"&&this.appendToRepl({output:t.body.output,sev:i,source:r},t.body.category==="important")})})),this.k.add(this.raw.onDidBreakpoint(t=>{const i=t.body&&t.body.breakpoint?t.body.breakpoint.id:void 0,r=this.K.getBreakpoints().find(h=>h.getIdFromAdapter(this.getId())===i),o=this.K.getFunctionBreakpoints().find(h=>h.getIdFromAdapter(this.getId())===i),n=this.K.getDataBreakpoints().find(h=>h.getIdFromAdapter(this.getId())===i),u=this.K.getExceptionBreakpoints().find(h=>h.getIdFromAdapter(this.getId())===i);if(t.body.reason==="new"&&t.body.breakpoint.source&&t.body.breakpoint.line){const h=this.getSource(t.body.breakpoint.source),f=this.K.addBreakpoints(h.uri,[{column:t.body.breakpoint.column,enabled:!0,lineNumber:t.body.breakpoint.line}],!1);if(f.length===1){const w=new Map([[f[0].getId(),t.body.breakpoint]]);this.K.setBreakpointSessionData(this.getId(),this.capabilities,w)}}if(t.body.reason==="removed"&&(r&&this.K.removeBreakpoints([r]),o&&this.K.removeFunctionBreakpoints(o.getId()),n&&this.K.removeDataBreakpoints(n.getId())),t.body.reason==="changed"){if(r){r.column||(t.body.breakpoint.column=void 0);const h=new Map([[r.getId(),t.body.breakpoint]]);this.K.setBreakpointSessionData(this.getId(),this.capabilities,h)}if(o){const h=new Map([[o.getId(),t.body.breakpoint]]);this.K.setBreakpointSessionData(this.getId(),this.capabilities,h)}if(n){const h=new Map([[n.getId(),t.body.breakpoint]]);this.K.setBreakpointSessionData(this.getId(),this.capabilities,h)}if(u){const h=new Map([[u.getId(),t.body.breakpoint]]);this.K.setBreakpointSessionData(this.getId(),this.capabilities,h)}}})),this.k.add(this.raw.onDidLoadedSource(t=>{this.y.fire({reason:t.body.reason,source:this.getSource(t.body.source)})})),this.k.add(this.raw.onDidCustomEvent(t=>{this.z.fire(t)})),this.k.add(this.raw.onDidProgressStart(t=>{this.A.fire(t)})),this.k.add(this.raw.onDidProgressUpdate(t=>{this.B.fire(t)})),this.k.add(this.raw.onDidProgressEnd(t=>{this.C.fire(t)})),this.k.add(this.raw.onDidInvalidateMemory(t=>{this.D.fire(t)})),this.k.add(this.raw.onDidInvalidated(async t=>{const i=t.body.areas||["all"];if(i.includes("threads")||i.includes("stacks")||i.includes("all")){this.mb(),this.K.clearThreads(this.getId(),!0);const o=this.r;this.r.length=1,await Promise.all(o.map(n=>this.eb(n)))}const r=this.L.getViewModel();r.focusedSession===this&&r.updateViews()})),this.k.add(this.raw.onDidExitAdapter(t=>this.hb(t)))}async eb(e){this.n.cancel(),this.r.push(e),e.hitBreakpointIds&&(this.H=this.fb(e.hitBreakpointIds)),this.u.run(this.cb(e).then(()=>e.threadId===void 0?this.h:[e.threadId]),async(s,t)=>{const i=e.threadId===void 0&&this.h.length>10,r=this.L.getViewModel().focusedThread,o=r!==void 0&&r.session===this&&!this.g.has(r.threadId);o&&this.L.focusStackFrame(void 0,void 0);const n=typeof s=="number"?this.getThread(s):void 0;if(n){const u=this.K.refreshTopOfCallstack(n,!i),h=async()=>{if(o||!e.preserveFocusHint&&n.getCallStack().length){const w=this.L.getViewModel().focusedStackFrame;if(!w||w.thread.session===this){const g=!this.O.getValue("debug").focusEditorOnBreak;await this.L.focusStackFrame(void 0,n,void 0,{preserveFocus:g})}n.stoppedDetails&&!t.isCancellationRequested&&(n.stoppedDetails.reason==="breakpoint"&&this.O.getValue("debug").openDebug==="openOnDebugBreak"&&!this.suppressDebugView&&await this.P.openPaneComposite(Dt,0),this.O.getValue("debug").focusWindowOnBreak&&!this.W.extensionTestsLocationURI&&(U().document.hasFocus()||await this.N.focus(_,{mode:2})))}};if(await u.topCallStack,e.hitBreakpointIds||(this.H=this.fb(n)),t.isCancellationRequested||(h(),await u.wholeCallStack,t.isCancellationRequested))return;const f=this.L.getViewModel().focusedStackFrame;(!f||It(f))&&h()}this.w.fire()})}async fb(e){let s;if(Array.isArray(e))s=this.K.getBreakpoints().filter(r=>e.includes(r.getIdFromAdapter(this.I)));else{const r=e.getTopStackFrame();if(r===void 0||e.stoppedDetails&&e.stoppedDetails.reason!=="breakpoint")return;s=this.gb(r.source.uri,r.range.startLineNumber,r.range.endLineNumber,r.range.startColumn,r.range.endColumn)}const t=new Set;this.K.getBreakpoints({triggeredOnly:!0,enabledOnly:!0}).forEach(r=>{s.forEach(o=>{r.enabled&&r.triggeredBy===o.getId()&&(r.setSessionDidTrigger(this.getId()),t.add(r.uri.toString()))})});const i=[];return t.forEach(r=>i.push(this.L.sendBreakpoints(it.parse(r),void 0,this))),Promise.all(i)}gb(e,s,t,i,r){return this.K.getBreakpoints({uri:e}).filter(o=>!(o.lineNumber<s||o.lineNumber>t||o.column&&(o.column<i||o.column>r)))}hb(e){this.b=!0,this.K.setBreakpointSessionData(this.getId(),this.capabilities,void 0),this.jb(),this.x.fire(e)}jb(){this.k.clear(),this.raw&&(this.raw.disconnect({}),this.raw.dispose(),this.raw=void 0),this.m?.dispose(),this.m=void 0,this.n.cancel(),this.n.dispose(),this.K.clearThreads(this.getId(),!0),this.w.fire()}dispose(){this.mb(),this.k.dispose(),this.l.dispose()}getSourceForUri(e){return this.f.get(this.T.asCanonicalUri(e).toString())}getSource(e){let s=new y(e,this.getId(),this.T,this.X);const t=s.uri.toString(),i=this.f.get(t);return i?(s=i,s.raw=Z(s.raw,e),s.raw&&e&&(s.raw.presentationHint=e.presentationHint)):this.f.set(t,s),s}kb(e){const s=this.getSourceForUri(e);if(s)return s.raw;{const t=y.getEncodedDebugData(e);return{name:t.name,path:t.path,sourceReference:t.sourceReference}}}lb(e,s){const t=new C(s),i=this.j.get(e)||[];return i.push(t),this.j.set(e,i),t.token}mb(){this.j.forEach(e=>e.forEach(s=>s.dispose(!0))),this.j.clear()}getReplElements(){return this.q.getReplElements()}hasSeparateRepl(){return!this.parentSession||this.c.repl!=="mergeWithParent"}removeReplExpressions(){this.q.removeReplExpressions()}async addReplExpression(e,s){await this.q.addReplExpression(this,e,s),this.L.getViewModel().updateViews()}appendToRepl(e,s){this.q.appendToRepl(this,e),s&&this.S.notify({message:e.output.toString(),severity:e.sev,source:this.name})}};M=N([d(5,St),d(6,lt),d(7,bt),d(8,at),d(9,mt),d(10,ft),d(11,ct),d(12,dt),d(13,gt),d(14,pt),d(15,nt),d(16,ut),d(17,wt),d(18,ht),d(19,kt),d(20,yt),d(21,ot)],M);class Ct extends J{constructor(){super(...arguments),this.a=[],this.b=this.B(new Q)}async run(e,s){const t=new Set;this.a.push(t);const i=await e;for(let r=0;r<this.a.length;r++){const o=this.a[r];if(o===t){this.a.splice(r,1);break}else for(const n of i)o.add(n)}t.has(void 0)||await Promise.all(i.map(r=>{if(t.has(r))return;this.b.get(r)?.cancel();const o=new C;return this.b.set(r,o),s(r,o.token)}))}cancel(e){if(e)for(const s of e){this.b.get(s)?.cancel(),this.b.deleteAndDispose(s);for(const t of this.a)t.add(s)}else{for(const[s,t]of this.b)t.cancel();this.b.clearAndDisposeAll();for(const s of this.a)s.add(void 0)}}}export{M as $Yoc,Ct as $Zoc};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { getActiveWindow } from "../../../../base/browser/dom.js";
+import * as aria from "../../../../base/browser/ui/aria/aria.js";
+import { mainWindow } from "../../../../base/browser/window.js";
+import { distinct } from "../../../../base/common/arrays.js";
+import { Queue, RunOnceScheduler, raceTimeout } from "../../../../base/common/async.js";
+import { CancellationTokenSource } from "../../../../base/common/cancellation.js";
+import { canceled } from "../../../../base/common/errors.js";
+import { Emitter } from "../../../../base/common/event.js";
+import { normalizeDriveLetter } from "../../../../base/common/labels.js";
+import { Disposable, DisposableMap, DisposableStore, MutableDisposable, dispose } from "../../../../base/common/lifecycle.js";
+import { mixin } from "../../../../base/common/objects.js";
+import * as platform from "../../../../base/common/platform.js";
+import * as resources from "../../../../base/common/resources.js";
+import Severity from "../../../../base/common/severity.js";
+import { isDefined } from "../../../../base/common/types.js";
+import { URI } from "../../../../base/common/uri.js";
+import { generateUuid } from "../../../../base/common/uuid.js";
+import { localize } from "../../../../nls.js";
+import { IAccessibilityService } from "../../../../platform/accessibility/common/accessibility.js";
+import { IConfigurationService } from "../../../../platform/configuration/common/configuration.js";
+import { IInstantiationService } from "../../../../platform/instantiation/common/instantiation.js";
+import { ILogService } from "../../../../platform/log/common/log.js";
+import { INotificationService } from "../../../../platform/notification/common/notification.js";
+import { IProductService } from "../../../../platform/product/common/productService.js";
+import { ICustomEndpointTelemetryService, ITelemetryService } from "../../../../platform/telemetry/common/telemetry.js";
+import { IUriIdentityService } from "../../../../platform/uriIdentity/common/uriIdentity.js";
+import { IWorkspaceContextService } from "../../../../platform/workspace/common/workspace.js";
+import { IWorkbenchEnvironmentService } from "../../../services/environment/common/environmentService.js";
+import { IHostService } from "../../../services/host/browser/host.js";
+import { ILifecycleService } from "../../../services/lifecycle/common/lifecycle.js";
+import { IPaneCompositePartService } from "../../../services/panecomposite/browser/panecomposite.js";
+import { ITestResultService } from "../../testing/common/testResultService.js";
+import { ITestService } from "../../testing/common/testService.js";
+import { IDebugService, VIEWLET_ID, isFrameDeemphasized } from "../common/debug.js";
+import { ExpressionContainer, MemoryRegion, Thread } from "../common/debugModel.js";
+import { Source } from "../common/debugSource.js";
+import { filterExceptionsFromTelemetry } from "../common/debugUtils.js";
+import { ReplModel } from "../common/replModel.js";
+import { RawDebugSession } from "./rawDebugSession.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+const TRIGGERED_BREAKPOINT_MAX_DELAY = 1500;
+let DebugSession = class DebugSession2 {
+  static {
+    __name(this, "DebugSession");
+  }
+  constructor(id, _configuration, root, model, options, debugService, telemetryService, hostService, configurationService, paneCompositeService, workspaceContextService, productService, notificationService, lifecycleService, uriIdentityService, instantiationService, customEndpointTelemetryService, workbenchEnvironmentService, logService, testService, testResultService, accessibilityService) {
+    this.id = id;
+    this._configuration = _configuration;
+    this.root = root;
+    this.model = model;
+    this.debugService = debugService;
+    this.telemetryService = telemetryService;
+    this.hostService = hostService;
+    this.configurationService = configurationService;
+    this.paneCompositeService = paneCompositeService;
+    this.workspaceContextService = workspaceContextService;
+    this.productService = productService;
+    this.notificationService = notificationService;
+    this.uriIdentityService = uriIdentityService;
+    this.instantiationService = instantiationService;
+    this.customEndpointTelemetryService = customEndpointTelemetryService;
+    this.workbenchEnvironmentService = workbenchEnvironmentService;
+    this.logService = logService;
+    this.testService = testService;
+    this.accessibilityService = accessibilityService;
+    this.initialized = false;
+    this.sources = /* @__PURE__ */ new Map();
+    this.threads = /* @__PURE__ */ new Map();
+    this.threadIds = [];
+    this.cancellationMap = /* @__PURE__ */ new Map();
+    this.rawListeners = new DisposableStore();
+    this.globalDisposables = new DisposableStore();
+    this.stoppedDetails = [];
+    this.statusQueue = this.rawListeners.add(new ThreadStatusScheduler());
+    this._onDidChangeState = new Emitter();
+    this._onDidEndAdapter = new Emitter();
+    this._onDidLoadedSource = new Emitter();
+    this._onDidCustomEvent = new Emitter();
+    this._onDidProgressStart = new Emitter();
+    this._onDidProgressUpdate = new Emitter();
+    this._onDidProgressEnd = new Emitter();
+    this._onDidInvalidMemory = new Emitter();
+    this._onDidChangeREPLElements = new Emitter();
+    this._onDidChangeName = new Emitter();
+    this._options = options || {};
+    this.parentSession = this._options.parentSession;
+    if (this.hasSeparateRepl()) {
+      this.repl = new ReplModel(this.configurationService);
+    } else {
+      this.repl = this.parentSession.repl;
+    }
+    const toDispose = this.globalDisposables;
+    const replListener = toDispose.add(new MutableDisposable());
+    replListener.value = this.repl.onDidChangeElements((e) => this._onDidChangeREPLElements.fire(e));
+    if (lifecycleService) {
+      toDispose.add(lifecycleService.onWillShutdown(() => {
+        this.shutdown();
+        dispose(toDispose);
+      }));
+    }
+    this.correlatedTestRun = options?.testRun ? testResultService.getResult(options.testRun.runId) : this.parentSession?.correlatedTestRun;
+    if (this.correlatedTestRun) {
+      toDispose.add(this.correlatedTestRun.onComplete(() => this.terminate()));
+    }
+    const compoundRoot = this._options.compoundRoot;
+    if (compoundRoot) {
+      toDispose.add(compoundRoot.onDidSessionStop(() => this.terminate()));
+    }
+    this.passFocusScheduler = new RunOnceScheduler(() => {
+      if (this.debugService.getModel().getSessions().some(
+        (s) => s.state === 2
+        /* State.Stopped */
+      ) || this.getAllThreads().some((t) => t.stopped)) {
+        if (typeof this.lastContinuedThreadId === "number") {
+          const thread = this.debugService.getViewModel().focusedThread;
+          if (thread && thread.threadId === this.lastContinuedThreadId && !thread.stopped) {
+            const toFocusThreadId = this.getStoppedDetails()?.threadId;
+            const toFocusThread = typeof toFocusThreadId === "number" ? this.getThread(toFocusThreadId) : void 0;
+            this.debugService.focusStackFrame(void 0, toFocusThread);
+          }
+        } else {
+          const session = this.debugService.getViewModel().focusedSession;
+          if (session && session.getId() === this.getId() && session.state !== 2) {
+            this.debugService.focusStackFrame(void 0);
+          }
+        }
+      }
+    }, 800);
+    const parent = this._options.parentSession;
+    if (parent) {
+      toDispose.add(parent.onDidEndAdapter(() => {
+        if (!this.hasSeparateRepl() && this.raw?.isInShutdown === false) {
+          this.repl = this.repl.clone();
+          replListener.value = this.repl.onDidChangeElements((e) => this._onDidChangeREPLElements.fire(e));
+          this.parentSession = void 0;
+        }
+      }));
+    }
+  }
+  getId() {
+    return this.id;
+  }
+  setSubId(subId) {
+    this._subId = subId;
+  }
+  getMemory(memoryReference) {
+    return new MemoryRegion(memoryReference, this);
+  }
+  get subId() {
+    return this._subId;
+  }
+  get configuration() {
+    return this._configuration.resolved;
+  }
+  get unresolvedConfiguration() {
+    return this._configuration.unresolved;
+  }
+  get lifecycleManagedByParent() {
+    return !!this._options.lifecycleManagedByParent;
+  }
+  get compact() {
+    return !!this._options.compact;
+  }
+  get saveBeforeRestart() {
+    return this._options.saveBeforeRestart ?? !this._options?.parentSession;
+  }
+  get compoundRoot() {
+    return this._options.compoundRoot;
+  }
+  get suppressDebugStatusbar() {
+    return this._options.suppressDebugStatusbar ?? false;
+  }
+  get suppressDebugToolbar() {
+    return this._options.suppressDebugToolbar ?? false;
+  }
+  get suppressDebugView() {
+    return this._options.suppressDebugView ?? false;
+  }
+  get autoExpandLazyVariables() {
+    const screenReaderOptimized = this.accessibilityService.isScreenReaderOptimized();
+    const value = this.configurationService.getValue("debug").autoExpandLazyVariables;
+    return value === "auto" && screenReaderOptimized || value === "on";
+  }
+  setConfiguration(configuration) {
+    this._configuration = configuration;
+  }
+  getLabel() {
+    const includeRoot = this.workspaceContextService.getWorkspace().folders.length > 1;
+    return includeRoot && this.root ? `${this.name} (${resources.basenameOrAuthority(this.root.uri)})` : this.name;
+  }
+  setName(name) {
+    this._name = name;
+    this._onDidChangeName.fire(name);
+  }
+  get name() {
+    return this._name || this.configuration.name;
+  }
+  get state() {
+    if (!this.initialized) {
+      return 1;
+    }
+    if (!this.raw) {
+      return 0;
+    }
+    const focusedThread = this.debugService.getViewModel().focusedThread;
+    if (focusedThread && focusedThread.session === this) {
+      return focusedThread.stopped ? 2 : 3;
+    }
+    if (this.getAllThreads().some((t) => t.stopped)) {
+      return 2;
+    }
+    return 3;
+  }
+  get capabilities() {
+    return this.raw ? this.raw.capabilities : /* @__PURE__ */ Object.create(null);
+  }
+  //---- events
+  get onDidChangeState() {
+    return this._onDidChangeState.event;
+  }
+  get onDidEndAdapter() {
+    return this._onDidEndAdapter.event;
+  }
+  get onDidChangeReplElements() {
+    return this._onDidChangeREPLElements.event;
+  }
+  get onDidChangeName() {
+    return this._onDidChangeName.event;
+  }
+  //---- DAP events
+  get onDidCustomEvent() {
+    return this._onDidCustomEvent.event;
+  }
+  get onDidLoadedSource() {
+    return this._onDidLoadedSource.event;
+  }
+  get onDidProgressStart() {
+    return this._onDidProgressStart.event;
+  }
+  get onDidProgressUpdate() {
+    return this._onDidProgressUpdate.event;
+  }
+  get onDidProgressEnd() {
+    return this._onDidProgressEnd.event;
+  }
+  get onDidInvalidateMemory() {
+    return this._onDidInvalidMemory.event;
+  }
+  //---- DAP requests
+  /**
+   * create and initialize a new debug adapter for this session
+   */
+  async initialize(dbgr) {
+    if (this.raw) {
+      await this.shutdown();
+    }
+    try {
+      const debugAdapter = await dbgr.createDebugAdapter(this);
+      this.raw = this.instantiationService.createInstance(RawDebugSession, debugAdapter, dbgr, this.id, this.configuration.name);
+      await this.raw.start();
+      this.registerListeners();
+      await this.raw.initialize({
+        clientID: "vscode",
+        clientName: this.productService.nameLong,
+        adapterID: this.configuration.type,
+        pathFormat: "path",
+        linesStartAt1: true,
+        columnsStartAt1: true,
+        supportsVariableType: true,
+        // #8858
+        supportsVariablePaging: true,
+        // #9537
+        supportsRunInTerminalRequest: true,
+        // #10574
+        locale: platform.language,
+        // #169114
+        supportsProgressReporting: true,
+        // #92253
+        supportsInvalidatedEvent: true,
+        // #106745
+        supportsMemoryReferences: true,
+        //#129684
+        supportsArgsCanBeInterpretedByShell: true,
+        // #149910
+        supportsMemoryEvent: true,
+        // #133643
+        supportsStartDebuggingRequest: true,
+        supportsANSIStyling: true
+      });
+      this.initialized = true;
+      this._onDidChangeState.fire();
+      this.rememberedCapabilities = this.raw.capabilities;
+      this.debugService.setExceptionBreakpointsForSession(this, this.raw && this.raw.capabilities.exceptionBreakpointFilters || []);
+      this.debugService.getModel().registerBreakpointModes(this.configuration.type, this.raw.capabilities.breakpointModes || []);
+    } catch (err) {
+      this.initialized = true;
+      this._onDidChangeState.fire();
+      await this.shutdown();
+      throw err;
+    }
+  }
+  /**
+   * launch or attach to the debuggee
+   */
+  async launchOrAttach(config) {
+    if (!this.raw) {
+      throw new Error(localize("noDebugAdapter", "No debugger available, can not send '{0}'", "launch or attach"));
+    }
+    if (this.parentSession && this.parentSession.state === 0) {
+      throw canceled();
+    }
+    config.__sessionId = this.getId();
+    try {
+      await this.raw.launchOrAttach(config);
+    } catch (err) {
+      this.shutdown();
+      throw err;
+    }
+  }
+  /**
+   * Terminate any linked test run.
+   */
+  cancelCorrelatedTestRun() {
+    if (this.correlatedTestRun && !this.correlatedTestRun.completedAt) {
+      this.didTerminateTestRun = true;
+      this.testService.cancelTestRun(this.correlatedTestRun.id);
+    }
+  }
+  /**
+   * terminate the current debug adapter session
+   */
+  async terminate(restart = false) {
+    if (!this.raw) {
+      this.onDidExitAdapter();
+    }
+    this.cancelAllRequests();
+    if (this._options.lifecycleManagedByParent && this.parentSession) {
+      await this.parentSession.terminate(restart);
+    } else if (this.correlatedTestRun && !this.correlatedTestRun.completedAt && !this.didTerminateTestRun) {
+      this.cancelCorrelatedTestRun();
+    } else if (this.raw) {
+      if (this.raw.capabilities.supportsTerminateRequest && this._configuration.resolved.request === "launch") {
+        await this.raw.terminate(restart);
+      } else {
+        await this.raw.disconnect({ restart, terminateDebuggee: true });
+      }
+    }
+    if (!restart) {
+      this._options.compoundRoot?.sessionStopped();
+    }
+  }
+  /**
+   * end the current debug adapter session
+   */
+  async disconnect(restart = false, suspend = false) {
+    if (!this.raw) {
+      this.onDidExitAdapter();
+    }
+    this.cancelAllRequests();
+    if (this._options.lifecycleManagedByParent && this.parentSession) {
+      await this.parentSession.disconnect(restart, suspend);
+    } else if (this.raw) {
+      await this.raw.disconnect({ restart, terminateDebuggee: false, suspendDebuggee: suspend });
+    }
+    if (!restart) {
+      this._options.compoundRoot?.sessionStopped();
+    }
+  }
+  /**
+   * restart debug adapter session
+   */
+  async restart() {
+    if (!this.raw) {
+      throw new Error(localize("noDebugAdapter", "No debugger available, can not send '{0}'", "restart"));
+    }
+    this.cancelAllRequests();
+    if (this._options.lifecycleManagedByParent && this.parentSession) {
+      await this.parentSession.restart();
+    } else {
+      await this.raw.restart({ arguments: this.configuration });
+    }
+  }
+  async sendBreakpoints(modelUri, breakpointsToSend, sourceModified) {
+    if (!this.raw) {
+      throw new Error(localize("noDebugAdapter", "No debugger available, can not send '{0}'", "breakpoints"));
+    }
+    if (!this.raw.readyForBreakpoints) {
+      return Promise.resolve(void 0);
+    }
+    const rawSource = this.getRawSource(modelUri);
+    if (breakpointsToSend.length && !rawSource.adapterData) {
+      rawSource.adapterData = breakpointsToSend[0].adapterData;
+    }
+    if (rawSource.path) {
+      rawSource.path = normalizeDriveLetter(rawSource.path);
+    }
+    const response = await this.raw.setBreakpoints({
+      source: rawSource,
+      lines: breakpointsToSend.map((bp) => bp.sessionAgnosticData.lineNumber),
+      breakpoints: breakpointsToSend.map((bp) => bp.toDAP()),
+      sourceModified
+    });
+    if (response?.body) {
+      const data = /* @__PURE__ */ new Map();
+      for (let i = 0; i < breakpointsToSend.length; i++) {
+        data.set(breakpointsToSend[i].getId(), response.body.breakpoints[i]);
+      }
+      this.model.setBreakpointSessionData(this.getId(), this.capabilities, data);
+    }
+  }
+  async sendFunctionBreakpoints(fbpts) {
+    if (!this.raw) {
+      throw new Error(localize("noDebugAdapter", "No debugger available, can not send '{0}'", "function breakpoints"));
+    }
+    if (this.raw.readyForBreakpoints) {
+      const response = await this.raw.setFunctionBreakpoints({ breakpoints: fbpts.map((bp) => bp.toDAP()) });
+      if (response?.body) {
+        const data = /* @__PURE__ */ new Map();
+        for (let i = 0; i < fbpts.length; i++) {
+          data.set(fbpts[i].getId(), response.body.breakpoints[i]);
+        }
+        this.model.setBreakpointSessionData(this.getId(), this.capabilities, data);
+      }
+    }
+  }
+  async sendExceptionBreakpoints(exbpts) {
+    if (!this.raw) {
+      throw new Error(localize("noDebugAdapter", "No debugger available, can not send '{0}'", "exception breakpoints"));
+    }
+    if (this.raw.readyForBreakpoints) {
+      const args = this.capabilities.supportsExceptionFilterOptions ? {
+        filters: [],
+        filterOptions: exbpts.map((exb) => {
+          if (exb.condition) {
+            return { filterId: exb.filter, condition: exb.condition };
+          }
+          return { filterId: exb.filter };
+        })
+      } : { filters: exbpts.map((exb) => exb.filter) };
+      const response = await this.raw.setExceptionBreakpoints(args);
+      if (response?.body && response.body.breakpoints) {
+        const data = /* @__PURE__ */ new Map();
+        for (let i = 0; i < exbpts.length; i++) {
+          data.set(exbpts[i].getId(), response.body.breakpoints[i]);
+        }
+        this.model.setBreakpointSessionData(this.getId(), this.capabilities, data);
+      }
+    }
+  }
+  dataBytesBreakpointInfo(address, bytes) {
+    if (this.raw?.capabilities.supportsDataBreakpointBytes === false) {
+      throw new Error(localize("sessionDoesNotSupporBytesBreakpoints", "Session does not support breakpoints with bytes"));
+    }
+    return this._dataBreakpointInfo({ name: address, bytes, asAddress: true });
+  }
+  dataBreakpointInfo(name, variablesReference) {
+    return this._dataBreakpointInfo({ name, variablesReference });
+  }
+  async _dataBreakpointInfo(args) {
+    if (!this.raw) {
+      throw new Error(localize("noDebugAdapter", "No debugger available, can not send '{0}'", "data breakpoints info"));
+    }
+    if (!this.raw.readyForBreakpoints) {
+      throw new Error(localize("sessionNotReadyForBreakpoints", "Session is not ready for breakpoints"));
+    }
+    const response = await this.raw.dataBreakpointInfo(args);
+    return response?.body;
+  }
+  async sendDataBreakpoints(dataBreakpoints) {
+    if (!this.raw) {
+      throw new Error(localize("noDebugAdapter", "No debugger available, can not send '{0}'", "data breakpoints"));
+    }
+    if (this.raw.readyForBreakpoints) {
+      const converted = await Promise.all(dataBreakpoints.map(async (bp) => {
+        try {
+          const dap = await bp.toDAP(this);
+          return { dap, bp };
+        } catch (e) {
+          return { bp, message: e.message };
+        }
+      }));
+      const response = await this.raw.setDataBreakpoints({ breakpoints: converted.map((d) => d.dap).filter(isDefined) });
+      if (response?.body) {
+        const data = /* @__PURE__ */ new Map();
+        let i = 0;
+        for (const dap of converted) {
+          if (!dap.dap) {
+            data.set(dap.bp.getId(), dap.message);
+          } else if (i < response.body.breakpoints.length) {
+            data.set(dap.bp.getId(), response.body.breakpoints[i++]);
+          }
+        }
+        this.model.setBreakpointSessionData(this.getId(), this.capabilities, data);
+      }
+    }
+  }
+  async sendInstructionBreakpoints(instructionBreakpoints) {
+    if (!this.raw) {
+      throw new Error(localize("noDebugAdapter", "No debugger available, can not send '{0}'", "instruction breakpoints"));
+    }
+    if (this.raw.readyForBreakpoints) {
+      const response = await this.raw.setInstructionBreakpoints({ breakpoints: instructionBreakpoints.map((ib) => ib.toDAP()) });
+      if (response?.body) {
+        const data = /* @__PURE__ */ new Map();
+        for (let i = 0; i < instructionBreakpoints.length; i++) {
+          data.set(instructionBreakpoints[i].getId(), response.body.breakpoints[i]);
+        }
+        this.model.setBreakpointSessionData(this.getId(), this.capabilities, data);
+      }
+    }
+  }
+  async breakpointsLocations(uri, lineNumber) {
+    if (!this.raw) {
+      throw new Error(localize("noDebugAdapter", "No debugger available, can not send '{0}'", "breakpoints locations"));
+    }
+    const source = this.getRawSource(uri);
+    const response = await this.raw.breakpointLocations({ source, line: lineNumber });
+    if (!response || !response.body || !response.body.breakpoints) {
+      return [];
+    }
+    const positions = response.body.breakpoints.map((bp) => ({ lineNumber: bp.line, column: bp.column || 1 }));
+    return distinct(positions, (p) => `${p.lineNumber}:${p.column}`);
+  }
+  getDebugProtocolBreakpoint(breakpointId) {
+    return this.model.getDebugProtocolBreakpoint(breakpointId, this.getId());
+  }
+  customRequest(request, args) {
+    if (!this.raw) {
+      throw new Error(localize("noDebugAdapter", "No debugger available, can not send '{0}'", request));
+    }
+    return this.raw.custom(request, args);
+  }
+  stackTrace(threadId, startFrame, levels, token) {
+    if (!this.raw) {
+      throw new Error(localize("noDebugAdapter", "No debugger available, can not send '{0}'", "stackTrace"));
+    }
+    const sessionToken = this.getNewCancellationToken(threadId, token);
+    return this.raw.stackTrace({ threadId, startFrame, levels }, sessionToken);
+  }
+  async exceptionInfo(threadId) {
+    if (!this.raw) {
+      throw new Error(localize("noDebugAdapter", "No debugger available, can not send '{0}'", "exceptionInfo"));
+    }
+    const response = await this.raw.exceptionInfo({ threadId });
+    if (response) {
+      return {
+        id: response.body.exceptionId,
+        description: response.body.description,
+        breakMode: response.body.breakMode,
+        details: response.body.details
+      };
+    }
+    return void 0;
+  }
+  scopes(frameId, threadId) {
+    if (!this.raw) {
+      throw new Error(localize("noDebugAdapter", "No debugger available, can not send '{0}'", "scopes"));
+    }
+    const token = this.getNewCancellationToken(threadId);
+    return this.raw.scopes({ frameId }, token);
+  }
+  variables(variablesReference, threadId, filter, start, count) {
+    if (!this.raw) {
+      throw new Error(localize("noDebugAdapter", "No debugger available, can not send '{0}'", "variables"));
+    }
+    const token = threadId ? this.getNewCancellationToken(threadId) : void 0;
+    return this.raw.variables({ variablesReference, filter, start, count }, token);
+  }
+  evaluate(expression, frameId, context, location) {
+    if (!this.raw) {
+      throw new Error(localize("noDebugAdapter", "No debugger available, can not send '{0}'", "evaluate"));
+    }
+    return this.raw.evaluate({ expression, frameId, context, line: location?.line, column: location?.column, source: location?.source });
+  }
+  async restartFrame(frameId, threadId) {
+    await this.waitForTriggeredBreakpoints();
+    if (!this.raw) {
+      throw new Error(localize("noDebugAdapter", "No debugger available, can not send '{0}'", "restartFrame"));
+    }
+    await this.raw.restartFrame({ frameId }, threadId);
+  }
+  setLastSteppingGranularity(threadId, granularity) {
+    const thread = this.getThread(threadId);
+    if (thread) {
+      thread.lastSteppingGranularity = granularity;
+    }
+  }
+  async next(threadId, granularity) {
+    await this.waitForTriggeredBreakpoints();
+    if (!this.raw) {
+      throw new Error(localize("noDebugAdapter", "No debugger available, can not send '{0}'", "next"));
+    }
+    this.setLastSteppingGranularity(threadId, granularity);
+    await this.raw.next({ threadId, granularity });
+  }
+  async stepIn(threadId, targetId, granularity) {
+    await this.waitForTriggeredBreakpoints();
+    if (!this.raw) {
+      throw new Error(localize("noDebugAdapter", "No debugger available, can not send '{0}'", "stepIn"));
+    }
+    this.setLastSteppingGranularity(threadId, granularity);
+    await this.raw.stepIn({ threadId, targetId, granularity });
+  }
+  async stepOut(threadId, granularity) {
+    await this.waitForTriggeredBreakpoints();
+    if (!this.raw) {
+      throw new Error(localize("noDebugAdapter", "No debugger available, can not send '{0}'", "stepOut"));
+    }
+    this.setLastSteppingGranularity(threadId, granularity);
+    await this.raw.stepOut({ threadId, granularity });
+  }
+  async stepBack(threadId, granularity) {
+    await this.waitForTriggeredBreakpoints();
+    if (!this.raw) {
+      throw new Error(localize("noDebugAdapter", "No debugger available, can not send '{0}'", "stepBack"));
+    }
+    this.setLastSteppingGranularity(threadId, granularity);
+    await this.raw.stepBack({ threadId, granularity });
+  }
+  async continue(threadId) {
+    await this.waitForTriggeredBreakpoints();
+    if (!this.raw) {
+      throw new Error(localize("noDebugAdapter", "No debugger available, can not send '{0}'", "continue"));
+    }
+    await this.raw.continue({ threadId });
+  }
+  async reverseContinue(threadId) {
+    await this.waitForTriggeredBreakpoints();
+    if (!this.raw) {
+      throw new Error(localize("noDebugAdapter", "No debugger available, can not send '{0}'", "reverse continue"));
+    }
+    await this.raw.reverseContinue({ threadId });
+  }
+  async pause(threadId) {
+    if (!this.raw) {
+      throw new Error(localize("noDebugAdapter", "No debugger available, can not send '{0}'", "pause"));
+    }
+    await this.raw.pause({ threadId });
+  }
+  async terminateThreads(threadIds) {
+    if (!this.raw) {
+      throw new Error(localize("noDebugAdapter", "No debugger available, can not send '{0}'", "terminateThreads"));
+    }
+    await this.raw.terminateThreads({ threadIds });
+  }
+  setVariable(variablesReference, name, value) {
+    if (!this.raw) {
+      throw new Error(localize("noDebugAdapter", "No debugger available, can not send '{0}'", "setVariable"));
+    }
+    return this.raw.setVariable({ variablesReference, name, value });
+  }
+  setExpression(frameId, expression, value) {
+    if (!this.raw) {
+      throw new Error(localize("noDebugAdapter", "No debugger available, can not send '{0}'", "setExpression"));
+    }
+    return this.raw.setExpression({ expression, value, frameId });
+  }
+  gotoTargets(source, line, column) {
+    if (!this.raw) {
+      throw new Error(localize("noDebugAdapter", "No debugger available, can not send '{0}'", "gotoTargets"));
+    }
+    return this.raw.gotoTargets({ source, line, column });
+  }
+  goto(threadId, targetId) {
+    if (!this.raw) {
+      throw new Error(localize("noDebugAdapter", "No debugger available, can not send '{0}'", "goto"));
+    }
+    return this.raw.goto({ threadId, targetId });
+  }
+  loadSource(resource) {
+    if (!this.raw) {
+      return Promise.reject(new Error(localize("noDebugAdapter", "No debugger available, can not send '{0}'", "loadSource")));
+    }
+    const source = this.getSourceForUri(resource);
+    let rawSource;
+    if (source) {
+      rawSource = source.raw;
+    } else {
+      const data = Source.getEncodedDebugData(resource);
+      rawSource = { path: data.path, sourceReference: data.sourceReference };
+    }
+    return this.raw.source({ sourceReference: rawSource.sourceReference || 0, source: rawSource });
+  }
+  async getLoadedSources() {
+    if (!this.raw) {
+      return Promise.reject(new Error(localize("noDebugAdapter", "No debugger available, can not send '{0}'", "getLoadedSources")));
+    }
+    const response = await this.raw.loadedSources({});
+    if (response?.body && response.body.sources) {
+      return response.body.sources.map((src) => this.getSource(src));
+    } else {
+      return [];
+    }
+  }
+  async completions(frameId, threadId, text, position, token) {
+    if (!this.raw) {
+      return Promise.reject(new Error(localize("noDebugAdapter", "No debugger available, can not send '{0}'", "completions")));
+    }
+    const sessionCancelationToken = this.getNewCancellationToken(threadId, token);
+    return this.raw.completions({
+      frameId,
+      text,
+      column: position.column,
+      line: position.lineNumber
+    }, sessionCancelationToken);
+  }
+  async stepInTargets(frameId) {
+    if (!this.raw) {
+      return Promise.reject(new Error(localize("noDebugAdapter", "No debugger available, can not send '{0}'", "stepInTargets")));
+    }
+    const response = await this.raw.stepInTargets({ frameId });
+    return response?.body.targets;
+  }
+  async cancel(progressId) {
+    if (!this.raw) {
+      return Promise.reject(new Error(localize("noDebugAdapter", "No debugger available, can not send '{0}'", "cancel")));
+    }
+    return this.raw.cancel({ progressId });
+  }
+  async disassemble(memoryReference, offset, instructionOffset, instructionCount) {
+    if (!this.raw) {
+      return Promise.reject(new Error(localize("noDebugAdapter", "No debugger available, can not send '{0}'", "disassemble")));
+    }
+    const response = await this.raw.disassemble({ memoryReference, offset, instructionOffset, instructionCount, resolveSymbols: true });
+    return response?.body?.instructions;
+  }
+  readMemory(memoryReference, offset, count) {
+    if (!this.raw) {
+      return Promise.reject(new Error(localize("noDebugAdapter", "No debugger available, can not send '{0}'", "readMemory")));
+    }
+    return this.raw.readMemory({ count, memoryReference, offset });
+  }
+  writeMemory(memoryReference, offset, data, allowPartial) {
+    if (!this.raw) {
+      return Promise.reject(new Error(localize("noDebugAdapter", "No debugger available, can not send '{0}'", "disassemble")));
+    }
+    return this.raw.writeMemory({ memoryReference, offset, allowPartial, data });
+  }
+  async resolveLocationReference(locationReference) {
+    if (!this.raw) {
+      throw new Error(localize("noDebugAdapter", "No debugger available, can not send '{0}'", "locations"));
+    }
+    const location = await this.raw.locations({ locationReference });
+    if (!location?.body) {
+      throw new Error(localize("noDebugAdapter", "No debugger available, can not send '{0}'", "locations"));
+    }
+    const source = this.getSource(location.body.source);
+    return { column: 1, ...location.body, source };
+  }
+  //---- threads
+  getThread(threadId) {
+    return this.threads.get(threadId);
+  }
+  getAllThreads() {
+    const result = [];
+    this.threadIds.forEach((threadId) => {
+      const thread = this.threads.get(threadId);
+      if (thread) {
+        result.push(thread);
+      }
+    });
+    return result;
+  }
+  clearThreads(removeThreads, reference = void 0) {
+    if (reference !== void 0 && reference !== null) {
+      const thread = this.threads.get(reference);
+      if (thread) {
+        thread.clearCallStack();
+        thread.stoppedDetails = void 0;
+        thread.stopped = false;
+        if (removeThreads) {
+          this.threads.delete(reference);
+        }
+      }
+    } else {
+      this.threads.forEach((thread) => {
+        thread.clearCallStack();
+        thread.stoppedDetails = void 0;
+        thread.stopped = false;
+      });
+      if (removeThreads) {
+        this.threads.clear();
+        this.threadIds = [];
+        ExpressionContainer.allValues.clear();
+      }
+    }
+  }
+  getStoppedDetails() {
+    return this.stoppedDetails.length >= 1 ? this.stoppedDetails[0] : void 0;
+  }
+  rawUpdate(data) {
+    this.threadIds = [];
+    data.threads.forEach((thread) => {
+      this.threadIds.push(thread.id);
+      if (!this.threads.has(thread.id)) {
+        this.threads.set(thread.id, new Thread(this, thread.name, thread.id));
+      } else if (thread.name) {
+        const oldThread = this.threads.get(thread.id);
+        if (oldThread) {
+          oldThread.name = thread.name;
+        }
+      }
+    });
+    this.threads.forEach((t) => {
+      if (this.threadIds.indexOf(t.threadId) === -1) {
+        this.threads.delete(t.threadId);
+      }
+    });
+    const stoppedDetails = data.stoppedDetails;
+    if (stoppedDetails) {
+      if (stoppedDetails.allThreadsStopped) {
+        this.threads.forEach((thread) => {
+          thread.stoppedDetails = thread.threadId === stoppedDetails.threadId ? stoppedDetails : { reason: thread.stoppedDetails?.reason };
+          thread.stopped = true;
+          thread.clearCallStack();
+        });
+      } else {
+        const thread = typeof stoppedDetails.threadId === "number" ? this.threads.get(stoppedDetails.threadId) : void 0;
+        if (thread) {
+          thread.stoppedDetails = stoppedDetails;
+          thread.clearCallStack();
+          thread.stopped = true;
+        }
+      }
+    }
+  }
+  waitForTriggeredBreakpoints() {
+    if (!this._waitToResume) {
+      return;
+    }
+    return raceTimeout(this._waitToResume, TRIGGERED_BREAKPOINT_MAX_DELAY);
+  }
+  async fetchThreads(stoppedDetails) {
+    if (this.raw) {
+      const response = await this.raw.threads();
+      if (response?.body && response.body.threads) {
+        this.model.rawUpdate({
+          sessionId: this.getId(),
+          threads: response.body.threads,
+          stoppedDetails
+        });
+      }
+    }
+  }
+  initializeForTest(raw) {
+    this.raw = raw;
+    this.registerListeners();
+  }
+  //---- private
+  registerListeners() {
+    if (!this.raw) {
+      return;
+    }
+    this.rawListeners.add(this.raw.onDidInitialize(async () => {
+      aria.status(this.configuration.noDebug ? localize("debuggingStartedNoDebug", "Started running without debugging.") : localize("debuggingStarted", "Debugging started."));
+      const sendConfigurationDone = /* @__PURE__ */ __name(async () => {
+        if (this.raw && this.raw.capabilities.supportsConfigurationDoneRequest) {
+          try {
+            await this.raw.configurationDone();
+          } catch (e) {
+            this.notificationService.error(e);
+            this.raw?.disconnect({});
+          }
+        }
+        return void 0;
+      }, "sendConfigurationDone");
+      try {
+        await this.debugService.sendAllBreakpoints(this);
+      } finally {
+        await sendConfigurationDone();
+        await this.fetchThreads();
+      }
+    }));
+    const statusQueue = this.statusQueue;
+    this.rawListeners.add(this.raw.onDidStop((event) => this.handleStop(event.body)));
+    this.rawListeners.add(this.raw.onDidThread((event) => {
+      statusQueue.cancel([event.body.threadId]);
+      if (event.body.reason === "started") {
+        if (!this.fetchThreadsScheduler) {
+          this.fetchThreadsScheduler = new RunOnceScheduler(() => {
+            this.fetchThreads();
+          }, 100);
+          this.rawListeners.add(this.fetchThreadsScheduler);
+        }
+        if (!this.fetchThreadsScheduler.isScheduled()) {
+          this.fetchThreadsScheduler.schedule();
+        }
+      } else if (event.body.reason === "exited") {
+        this.model.clearThreads(this.getId(), true, event.body.threadId);
+        const viewModel = this.debugService.getViewModel();
+        const focusedThread = viewModel.focusedThread;
+        this.passFocusScheduler.cancel();
+        if (focusedThread && event.body.threadId === focusedThread.threadId) {
+          this.debugService.focusStackFrame(void 0, void 0, viewModel.focusedSession, { explicit: false });
+        }
+      }
+    }));
+    this.rawListeners.add(this.raw.onDidTerminateDebugee(async (event) => {
+      aria.status(localize("debuggingStopped", "Debugging stopped."));
+      if (event.body && event.body.restart) {
+        await this.debugService.restartSession(this, event.body.restart);
+      } else if (this.raw) {
+        await this.raw.disconnect({ terminateDebuggee: false });
+      }
+    }));
+    this.rawListeners.add(this.raw.onDidContinued((event) => {
+      const allThreads = event.body.allThreadsContinued !== false;
+      statusQueue.cancel(allThreads ? void 0 : [event.body.threadId]);
+      const threadId = allThreads ? void 0 : event.body.threadId;
+      if (typeof threadId === "number") {
+        this.stoppedDetails = this.stoppedDetails.filter((sd) => sd.threadId !== threadId);
+        const tokens = this.cancellationMap.get(threadId);
+        this.cancellationMap.delete(threadId);
+        tokens?.forEach((t) => t.dispose(true));
+      } else {
+        this.stoppedDetails = [];
+        this.cancelAllRequests();
+      }
+      this.lastContinuedThreadId = threadId;
+      this.passFocusScheduler.schedule();
+      this.model.clearThreads(this.getId(), false, threadId);
+      this._onDidChangeState.fire();
+    }));
+    const outputQueue = new Queue();
+    this.rawListeners.add(this.raw.onDidOutput(async (event) => {
+      const outputSeverity = event.body.category === "stderr" ? Severity.Error : event.body.category === "console" ? Severity.Warning : Severity.Info;
+      if (event.body.variablesReference) {
+        const source = event.body.source && event.body.line ? {
+          lineNumber: event.body.line,
+          column: event.body.column ? event.body.column : 1,
+          source: this.getSource(event.body.source)
+        } : void 0;
+        const container = new ExpressionContainer(this, void 0, event.body.variablesReference, generateUuid());
+        const children = container.getChildren();
+        outputQueue.queue(async () => {
+          const resolved = await children;
+          if (resolved.length === 1) {
+            this.appendToRepl({ output: event.body.output, expression: resolved[0], sev: outputSeverity, source }, event.body.category === "important");
+            return;
+          }
+          resolved.forEach((child) => {
+            child.name = null;
+            this.appendToRepl({ output: "", expression: child, sev: outputSeverity, source }, event.body.category === "important");
+          });
+        });
+        return;
+      }
+      outputQueue.queue(async () => {
+        if (!event.body || !this.raw) {
+          return;
+        }
+        if (event.body.category === "telemetry") {
+          const telemetryEndpoint = this.raw.dbgr.getCustomTelemetryEndpoint();
+          if (telemetryEndpoint && this.telemetryService.telemetryLevel !== 0) {
+            let data = event.body.data;
+            if (!telemetryEndpoint.sendErrorTelemetry && event.body.data) {
+              data = filterExceptionsFromTelemetry(event.body.data);
+            }
+            this.customEndpointTelemetryService.publicLog(telemetryEndpoint, event.body.output, data);
+          }
+          return;
+        }
+        const source = event.body.source && event.body.line ? {
+          lineNumber: event.body.line,
+          column: event.body.column ? event.body.column : 1,
+          source: this.getSource(event.body.source)
+        } : void 0;
+        if (event.body.group === "start" || event.body.group === "startCollapsed") {
+          const expanded = event.body.group === "start";
+          this.repl.startGroup(this, event.body.output || "", expanded, source);
+          return;
+        }
+        if (event.body.group === "end") {
+          this.repl.endGroup();
+          if (!event.body.output) {
+            return;
+          }
+        }
+        if (typeof event.body.output === "string") {
+          this.appendToRepl({ output: event.body.output, sev: outputSeverity, source }, event.body.category === "important");
+        }
+      });
+    }));
+    this.rawListeners.add(this.raw.onDidBreakpoint((event) => {
+      const id = event.body && event.body.breakpoint ? event.body.breakpoint.id : void 0;
+      const breakpoint = this.model.getBreakpoints().find((bp) => bp.getIdFromAdapter(this.getId()) === id);
+      const functionBreakpoint = this.model.getFunctionBreakpoints().find((bp) => bp.getIdFromAdapter(this.getId()) === id);
+      const dataBreakpoint = this.model.getDataBreakpoints().find((dbp) => dbp.getIdFromAdapter(this.getId()) === id);
+      const exceptionBreakpoint = this.model.getExceptionBreakpoints().find((excbp) => excbp.getIdFromAdapter(this.getId()) === id);
+      if (event.body.reason === "new" && event.body.breakpoint.source && event.body.breakpoint.line) {
+        const source = this.getSource(event.body.breakpoint.source);
+        const bps = this.model.addBreakpoints(source.uri, [{
+          column: event.body.breakpoint.column,
+          enabled: true,
+          lineNumber: event.body.breakpoint.line
+        }], false);
+        if (bps.length === 1) {
+          const data = /* @__PURE__ */ new Map([[bps[0].getId(), event.body.breakpoint]]);
+          this.model.setBreakpointSessionData(this.getId(), this.capabilities, data);
+        }
+      }
+      if (event.body.reason === "removed") {
+        if (breakpoint) {
+          this.model.removeBreakpoints([breakpoint]);
+        }
+        if (functionBreakpoint) {
+          this.model.removeFunctionBreakpoints(functionBreakpoint.getId());
+        }
+        if (dataBreakpoint) {
+          this.model.removeDataBreakpoints(dataBreakpoint.getId());
+        }
+      }
+      if (event.body.reason === "changed") {
+        if (breakpoint) {
+          if (!breakpoint.column) {
+            event.body.breakpoint.column = void 0;
+          }
+          const data = /* @__PURE__ */ new Map([[breakpoint.getId(), event.body.breakpoint]]);
+          this.model.setBreakpointSessionData(this.getId(), this.capabilities, data);
+        }
+        if (functionBreakpoint) {
+          const data = /* @__PURE__ */ new Map([[functionBreakpoint.getId(), event.body.breakpoint]]);
+          this.model.setBreakpointSessionData(this.getId(), this.capabilities, data);
+        }
+        if (dataBreakpoint) {
+          const data = /* @__PURE__ */ new Map([[dataBreakpoint.getId(), event.body.breakpoint]]);
+          this.model.setBreakpointSessionData(this.getId(), this.capabilities, data);
+        }
+        if (exceptionBreakpoint) {
+          const data = /* @__PURE__ */ new Map([[exceptionBreakpoint.getId(), event.body.breakpoint]]);
+          this.model.setBreakpointSessionData(this.getId(), this.capabilities, data);
+        }
+      }
+    }));
+    this.rawListeners.add(this.raw.onDidLoadedSource((event) => {
+      this._onDidLoadedSource.fire({
+        reason: event.body.reason,
+        source: this.getSource(event.body.source)
+      });
+    }));
+    this.rawListeners.add(this.raw.onDidCustomEvent((event) => {
+      this._onDidCustomEvent.fire(event);
+    }));
+    this.rawListeners.add(this.raw.onDidProgressStart((event) => {
+      this._onDidProgressStart.fire(event);
+    }));
+    this.rawListeners.add(this.raw.onDidProgressUpdate((event) => {
+      this._onDidProgressUpdate.fire(event);
+    }));
+    this.rawListeners.add(this.raw.onDidProgressEnd((event) => {
+      this._onDidProgressEnd.fire(event);
+    }));
+    this.rawListeners.add(this.raw.onDidInvalidateMemory((event) => {
+      this._onDidInvalidMemory.fire(event);
+    }));
+    this.rawListeners.add(this.raw.onDidInvalidated(async (event) => {
+      const areas = event.body.areas || ["all"];
+      if (areas.includes("threads") || areas.includes("stacks") || areas.includes("all")) {
+        this.cancelAllRequests();
+        this.model.clearThreads(this.getId(), true);
+        const details = this.stoppedDetails;
+        this.stoppedDetails.length = 1;
+        await Promise.all(details.map((d) => this.handleStop(d)));
+      }
+      const viewModel = this.debugService.getViewModel();
+      if (viewModel.focusedSession === this) {
+        viewModel.updateViews();
+      }
+    }));
+    this.rawListeners.add(this.raw.onDidExitAdapter((event) => this.onDidExitAdapter(event)));
+  }
+  async handleStop(event) {
+    this.passFocusScheduler.cancel();
+    this.stoppedDetails.push(event);
+    if (event.hitBreakpointIds) {
+      this._waitToResume = this.enableDependentBreakpoints(event.hitBreakpointIds);
+    }
+    this.statusQueue.run(this.fetchThreads(event).then(() => event.threadId === void 0 ? this.threadIds : [event.threadId]), async (threadId, token) => {
+      const hasLotsOfThreads = event.threadId === void 0 && this.threadIds.length > 10;
+      const focusedThread = this.debugService.getViewModel().focusedThread;
+      const focusedThreadDoesNotExist = focusedThread !== void 0 && focusedThread.session === this && !this.threads.has(focusedThread.threadId);
+      if (focusedThreadDoesNotExist) {
+        this.debugService.focusStackFrame(void 0, void 0);
+      }
+      const thread = typeof threadId === "number" ? this.getThread(threadId) : void 0;
+      if (thread) {
+        const promises = this.model.refreshTopOfCallstack(
+          thread,
+          /* fetchFullStack= */
+          !hasLotsOfThreads
+        );
+        const focus = /* @__PURE__ */ __name(async () => {
+          if (focusedThreadDoesNotExist || !event.preserveFocusHint && thread.getCallStack().length) {
+            const focusedStackFrame2 = this.debugService.getViewModel().focusedStackFrame;
+            if (!focusedStackFrame2 || focusedStackFrame2.thread.session === this) {
+              const preserveFocus = !this.configurationService.getValue("debug").focusEditorOnBreak;
+              await this.debugService.focusStackFrame(void 0, thread, void 0, { preserveFocus });
+            }
+            if (thread.stoppedDetails && !token.isCancellationRequested) {
+              if (thread.stoppedDetails.reason === "breakpoint" && this.configurationService.getValue("debug").openDebug === "openOnDebugBreak" && !this.suppressDebugView) {
+                await this.paneCompositeService.openPaneComposite(
+                  VIEWLET_ID,
+                  0
+                  /* ViewContainerLocation.Sidebar */
+                );
+              }
+              if (this.configurationService.getValue("debug").focusWindowOnBreak && !this.workbenchEnvironmentService.extensionTestsLocationURI) {
+                const activeWindow = getActiveWindow();
+                if (!activeWindow.document.hasFocus()) {
+                  await this.hostService.focus(mainWindow, {
+                    mode: 2
+                    /* FocusMode.Force */
+                    /* Application may not be active */
+                  });
+                }
+              }
+            }
+          }
+        }, "focus");
+        await promises.topCallStack;
+        if (!event.hitBreakpointIds) {
+          this._waitToResume = this.enableDependentBreakpoints(thread);
+        }
+        if (token.isCancellationRequested) {
+          return;
+        }
+        focus();
+        await promises.wholeCallStack;
+        if (token.isCancellationRequested) {
+          return;
+        }
+        const focusedStackFrame = this.debugService.getViewModel().focusedStackFrame;
+        if (!focusedStackFrame || isFrameDeemphasized(focusedStackFrame)) {
+          focus();
+        }
+      }
+      this._onDidChangeState.fire();
+    });
+  }
+  async enableDependentBreakpoints(hitBreakpointIdsOrThread) {
+    let breakpoints;
+    if (Array.isArray(hitBreakpointIdsOrThread)) {
+      breakpoints = this.model.getBreakpoints().filter((bp) => hitBreakpointIdsOrThread.includes(bp.getIdFromAdapter(this.id)));
+    } else {
+      const frame = hitBreakpointIdsOrThread.getTopStackFrame();
+      if (frame === void 0) {
+        return;
+      }
+      if (hitBreakpointIdsOrThread.stoppedDetails && hitBreakpointIdsOrThread.stoppedDetails.reason !== "breakpoint") {
+        return;
+      }
+      breakpoints = this.getBreakpointsAtPosition(frame.source.uri, frame.range.startLineNumber, frame.range.endLineNumber, frame.range.startColumn, frame.range.endColumn);
+    }
+    const urisToResend = /* @__PURE__ */ new Set();
+    this.model.getBreakpoints({ triggeredOnly: true, enabledOnly: true }).forEach((bp) => {
+      breakpoints.forEach((cbp) => {
+        if (bp.enabled && bp.triggeredBy === cbp.getId()) {
+          bp.setSessionDidTrigger(this.getId());
+          urisToResend.add(bp.uri.toString());
+        }
+      });
+    });
+    const results = [];
+    urisToResend.forEach((uri) => results.push(this.debugService.sendBreakpoints(URI.parse(uri), void 0, this)));
+    return Promise.all(results);
+  }
+  getBreakpointsAtPosition(uri, startLineNumber, endLineNumber, startColumn, endColumn) {
+    return this.model.getBreakpoints({ uri }).filter((bp) => {
+      if (bp.lineNumber < startLineNumber || bp.lineNumber > endLineNumber) {
+        return false;
+      }
+      if (bp.column && (bp.column < startColumn || bp.column > endColumn)) {
+        return false;
+      }
+      return true;
+    });
+  }
+  onDidExitAdapter(event) {
+    this.initialized = true;
+    this.model.setBreakpointSessionData(this.getId(), this.capabilities, void 0);
+    this.shutdown();
+    this._onDidEndAdapter.fire(event);
+  }
+  // Disconnects and clears state. Session can be initialized again for a new connection.
+  shutdown() {
+    this.rawListeners.clear();
+    if (this.raw) {
+      this.raw.disconnect({});
+      this.raw.dispose();
+      this.raw = void 0;
+    }
+    this.fetchThreadsScheduler?.dispose();
+    this.fetchThreadsScheduler = void 0;
+    this.passFocusScheduler.cancel();
+    this.passFocusScheduler.dispose();
+    this.model.clearThreads(this.getId(), true);
+    this._onDidChangeState.fire();
+  }
+  dispose() {
+    this.cancelAllRequests();
+    this.rawListeners.dispose();
+    this.globalDisposables.dispose();
+  }
+  //---- sources
+  getSourceForUri(uri) {
+    return this.sources.get(this.uriIdentityService.asCanonicalUri(uri).toString());
+  }
+  getSource(raw) {
+    let source = new Source(raw, this.getId(), this.uriIdentityService, this.logService);
+    const uriKey = source.uri.toString();
+    const found = this.sources.get(uriKey);
+    if (found) {
+      source = found;
+      source.raw = mixin(source.raw, raw);
+      if (source.raw && raw) {
+        source.raw.presentationHint = raw.presentationHint;
+      }
+    } else {
+      this.sources.set(uriKey, source);
+    }
+    return source;
+  }
+  getRawSource(uri) {
+    const source = this.getSourceForUri(uri);
+    if (source) {
+      return source.raw;
+    } else {
+      const data = Source.getEncodedDebugData(uri);
+      return { name: data.name, path: data.path, sourceReference: data.sourceReference };
+    }
+  }
+  getNewCancellationToken(threadId, token) {
+    const tokenSource = new CancellationTokenSource(token);
+    const tokens = this.cancellationMap.get(threadId) || [];
+    tokens.push(tokenSource);
+    this.cancellationMap.set(threadId, tokens);
+    return tokenSource.token;
+  }
+  cancelAllRequests() {
+    this.cancellationMap.forEach((tokens) => tokens.forEach((t) => t.dispose(true)));
+    this.cancellationMap.clear();
+  }
+  // REPL
+  getReplElements() {
+    return this.repl.getReplElements();
+  }
+  hasSeparateRepl() {
+    return !this.parentSession || this._options.repl !== "mergeWithParent";
+  }
+  removeReplExpressions() {
+    this.repl.removeReplExpressions();
+  }
+  async addReplExpression(stackFrame, expression) {
+    await this.repl.addReplExpression(this, stackFrame, expression);
+    this.debugService.getViewModel().updateViews();
+  }
+  appendToRepl(data, isImportant) {
+    this.repl.appendToRepl(this, data);
+    if (isImportant) {
+      this.notificationService.notify({ message: data.output.toString(), severity: data.sev, source: this.name });
+    }
+  }
+};
+DebugSession = __decorate([
+  __param(5, IDebugService),
+  __param(6, ITelemetryService),
+  __param(7, IHostService),
+  __param(8, IConfigurationService),
+  __param(9, IPaneCompositePartService),
+  __param(10, IWorkspaceContextService),
+  __param(11, IProductService),
+  __param(12, INotificationService),
+  __param(13, ILifecycleService),
+  __param(14, IUriIdentityService),
+  __param(15, IInstantiationService),
+  __param(16, ICustomEndpointTelemetryService),
+  __param(17, IWorkbenchEnvironmentService),
+  __param(18, ILogService),
+  __param(19, ITestService),
+  __param(20, ITestResultService),
+  __param(21, IAccessibilityService)
+], DebugSession);
+class ThreadStatusScheduler extends Disposable {
+  static {
+    __name(this, "ThreadStatusScheduler");
+  }
+  constructor() {
+    super(...arguments);
+    this.pendingCancellations = [];
+    this.threadOps = this._register(new DisposableMap());
+  }
+  /**
+   * Runs the operation.
+   * If thread is undefined it affects all threads.
+   */
+  async run(threadIdsP, operation) {
+    const cancelledWhileLookingUpThreads = /* @__PURE__ */ new Set();
+    this.pendingCancellations.push(cancelledWhileLookingUpThreads);
+    const threadIds = await threadIdsP;
+    for (let i = 0; i < this.pendingCancellations.length; i++) {
+      const s = this.pendingCancellations[i];
+      if (s === cancelledWhileLookingUpThreads) {
+        this.pendingCancellations.splice(i, 1);
+        break;
+      } else {
+        for (const threadId of threadIds) {
+          s.add(threadId);
+        }
+      }
+    }
+    if (cancelledWhileLookingUpThreads.has(void 0)) {
+      return;
+    }
+    await Promise.all(threadIds.map((threadId) => {
+      if (cancelledWhileLookingUpThreads.has(threadId)) {
+        return;
+      }
+      this.threadOps.get(threadId)?.cancel();
+      const cts = new CancellationTokenSource();
+      this.threadOps.set(threadId, cts);
+      return operation(threadId, cts.token);
+    }));
+  }
+  /**
+   * Cancels all ongoing state operations on the given threads.
+   * If threads is undefined it cancel all threads.
+   */
+  cancel(threadIds) {
+    if (!threadIds) {
+      for (const [_, op] of this.threadOps) {
+        op.cancel();
+      }
+      this.threadOps.clearAndDisposeAll();
+      for (const s of this.pendingCancellations) {
+        s.add(void 0);
+      }
+    } else {
+      for (const threadId of threadIds) {
+        this.threadOps.get(threadId)?.cancel();
+        this.threadOps.deleteAndDispose(threadId);
+        for (const s of this.pendingCancellations) {
+          s.add(threadId);
+        }
+      }
+    }
+  }
+}
+export {
+  DebugSession,
+  ThreadStatusScheduler
+};
+//# sourceMappingURL=debugSession.js.map

@@ -1,4 +1,46 @@
-import{$FD as s}from"../languageConfiguration.js";class r{static{this.DEFAULT_AUTOCLOSE_BEFORE_LANGUAGE_DEFINED_QUOTES=`;:.,=}])> 
-	`}static{this.DEFAULT_AUTOCLOSE_BEFORE_LANGUAGE_DEFINED_BRACKETS=`'"\`;:.,=}])> 
-	`}static{this.DEFAULT_AUTOCLOSE_BEFORE_WHITESPACE=` 
-	`}constructor(t){if(t.autoClosingPairs?this.a=t.autoClosingPairs.map(e=>new s(e)):t.brackets?this.a=t.brackets.map(e=>new s({open:e[0],close:e[1]})):this.a=[],t.__electricCharacterSupport&&t.__electricCharacterSupport.docComment){const e=t.__electricCharacterSupport.docComment;this.a.push(new s({open:e.open,close:e.close||""}))}this.d=typeof t.autoCloseBefore=="string"?t.autoCloseBefore:r.DEFAULT_AUTOCLOSE_BEFORE_LANGUAGE_DEFINED_QUOTES,this.e=typeof t.autoCloseBefore=="string"?t.autoCloseBefore:r.DEFAULT_AUTOCLOSE_BEFORE_LANGUAGE_DEFINED_BRACKETS,this.c=t.surroundingPairs||this.a}getAutoClosingPairs(){return this.a}getAutoCloseBeforeSet(t){return t?this.d:this.e}getSurroundingPairs(){return this.c}}export{r as $fE};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { StandardAutoClosingPairConditional } from "../languageConfiguration.js";
+class CharacterPairSupport {
+  static {
+    __name(this, "CharacterPairSupport");
+  }
+  static {
+    this.DEFAULT_AUTOCLOSE_BEFORE_LANGUAGE_DEFINED_QUOTES = ";:.,=}])> \n	";
+  }
+  static {
+    this.DEFAULT_AUTOCLOSE_BEFORE_LANGUAGE_DEFINED_BRACKETS = "'\"`;:.,=}])> \n	";
+  }
+  static {
+    this.DEFAULT_AUTOCLOSE_BEFORE_WHITESPACE = " \n	";
+  }
+  constructor(config) {
+    if (config.autoClosingPairs) {
+      this._autoClosingPairs = config.autoClosingPairs.map((el) => new StandardAutoClosingPairConditional(el));
+    } else if (config.brackets) {
+      this._autoClosingPairs = config.brackets.map((b) => new StandardAutoClosingPairConditional({ open: b[0], close: b[1] }));
+    } else {
+      this._autoClosingPairs = [];
+    }
+    if (config.__electricCharacterSupport && config.__electricCharacterSupport.docComment) {
+      const docComment = config.__electricCharacterSupport.docComment;
+      this._autoClosingPairs.push(new StandardAutoClosingPairConditional({ open: docComment.open, close: docComment.close || "" }));
+    }
+    this._autoCloseBeforeForQuotes = typeof config.autoCloseBefore === "string" ? config.autoCloseBefore : CharacterPairSupport.DEFAULT_AUTOCLOSE_BEFORE_LANGUAGE_DEFINED_QUOTES;
+    this._autoCloseBeforeForBrackets = typeof config.autoCloseBefore === "string" ? config.autoCloseBefore : CharacterPairSupport.DEFAULT_AUTOCLOSE_BEFORE_LANGUAGE_DEFINED_BRACKETS;
+    this._surroundingPairs = config.surroundingPairs || this._autoClosingPairs;
+  }
+  getAutoClosingPairs() {
+    return this._autoClosingPairs;
+  }
+  getAutoCloseBeforeSet(forQuotes) {
+    return forQuotes ? this._autoCloseBeforeForQuotes : this._autoCloseBeforeForBrackets;
+  }
+  getSurroundingPairs() {
+    return this._surroundingPairs;
+  }
+}
+export {
+  CharacterPairSupport
+};
+//# sourceMappingURL=characterPair.js.map

@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["../../../../../../../../../../../../../Dependency/Microsoft/Dependency/Editor/src/vs/workbench/contrib/chat/common/promptSyntax/parsers/promptHeader/modeHeader.ts"],
+  "sourcesContent": ["/*---------------------------------------------------------------------------------------------\r\n *  Copyright (c) Microsoft Corporation. All rights reserved.\r\n *  Licensed under the MIT License. See License.txt in the project root for license information.\r\n *--------------------------------------------------------------------------------------------*/\r\n\r\nimport { type TDehydrated } from './headerBase.js';\r\nimport { PromptHeader, type IPromptMetadata } from './promptHeader.js';\r\nimport { PromptsType } from '../../promptTypes.js';\r\n\r\n/**\r\n * Metadata utility object for mode files.\r\n */\r\ninterface IModeMetadata extends IPromptMetadata { }\r\n\r\n/**\r\n * Metadata for mode files.\r\n */\r\nexport type TModeMetadata = Partial<TDehydrated<IModeMetadata>> & { promptType: PromptsType.mode };\r\n\r\n/**\r\n * Header object for mode files.\r\n */\r\nexport class ModeHeader extends PromptHeader { }\r\n"],
+  "mappings": ";;AAMA,SAAS,oBAA0C;AAgB7C,MAAO,mBAAmB,aAAY;EAtB5C,OAsB4C;;;;",
+  "names": []
+}

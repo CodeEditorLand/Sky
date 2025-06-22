@@ -1,1 +1,19 @@
-var i;!function(i){i.OpenAccessibleView="editor.action.accessibleView",i.OpenAccessibilityHelp="editor.action.accessibilityHelp",i.DisableVerbosityHint="editor.action.accessibleViewDisableHint",i.GoToSymbol="editor.action.accessibleViewGoToSymbol",i.ShowNext="editor.action.accessibleViewNext",i.ShowPrevious="editor.action.accessibleViewPrevious",i.AccessibleViewAcceptInlineCompletion="editor.action.accessibleViewAcceptInlineCompletion",i.NextCodeBlock="editor.action.accessibleViewNextCodeBlock",i.PreviousCodeBlock="editor.action.accessibleViewPreviousCodeBlock",i.AccessibilityHelpConfigureKeybindings="editor.action.accessibilityHelpConfigureKeybindings",i.AccessibilityHelpConfigureAssignedKeybindings="editor.action.accessibilityHelpConfigureAssignedKeybindings",i.AccessibilityHelpOpenHelpLink="editor.action.accessibilityHelpOpenHelpLink"}(i||(i={}));export{i as AccessibilityCommandId};
+var AccessibilityCommandId;
+(function(AccessibilityCommandId2) {
+  AccessibilityCommandId2["OpenAccessibleView"] = "editor.action.accessibleView";
+  AccessibilityCommandId2["OpenAccessibilityHelp"] = "editor.action.accessibilityHelp";
+  AccessibilityCommandId2["DisableVerbosityHint"] = "editor.action.accessibleViewDisableHint";
+  AccessibilityCommandId2["GoToSymbol"] = "editor.action.accessibleViewGoToSymbol";
+  AccessibilityCommandId2["ShowNext"] = "editor.action.accessibleViewNext";
+  AccessibilityCommandId2["ShowPrevious"] = "editor.action.accessibleViewPrevious";
+  AccessibilityCommandId2["AccessibleViewAcceptInlineCompletion"] = "editor.action.accessibleViewAcceptInlineCompletion";
+  AccessibilityCommandId2["NextCodeBlock"] = "editor.action.accessibleViewNextCodeBlock";
+  AccessibilityCommandId2["PreviousCodeBlock"] = "editor.action.accessibleViewPreviousCodeBlock";
+  AccessibilityCommandId2["AccessibilityHelpConfigureKeybindings"] = "editor.action.accessibilityHelpConfigureKeybindings";
+  AccessibilityCommandId2["AccessibilityHelpConfigureAssignedKeybindings"] = "editor.action.accessibilityHelpConfigureAssignedKeybindings";
+  AccessibilityCommandId2["AccessibilityHelpOpenHelpLink"] = "editor.action.accessibilityHelpOpenHelpLink";
+})(AccessibilityCommandId || (AccessibilityCommandId = {}));
+export {
+  AccessibilityCommandId
+};
+//# sourceMappingURL=accessibilityCommands.js.map

@@ -1,1 +1,323 @@
-import*as c from"../../../../../../nls.js";import{$vd as g,$ud as d,$wd as z}from"../../../../../../base/common/lifecycle.js";import{Schemas as x}from"../../../../../../base/common/network.js";import{$sT as y}from"../../../../../../editor/common/services/languageFeatures.js";import{$El as O}from"../../../../../../platform/configuration/common/configuration.js";import{$mj as j}from"../../../../../../platform/instantiation/common/instantiation.js";import{$3n as A}from"../../../../../../platform/log/common/log.js";import{$WK as B}from"../../../../../common/contributions.js";import{$qdc as M}from"../navigation/arrow.js";import{$RVb as b}from"../../controller/coreActions.js";import{$Eac as K}from"../../controller/editActions.js";import{$Uzb as D}from"../../notebookBrowser.js";import{NotebookCellsChangeType as p}from"../../../common/notebookCommon.js";import{$JK as w}from"../../../common/notebookKernelService.js";import{$oI as E}from"../../../../../services/editor/common/editorService.js";import{$Cyb as k}from"../../../../../services/statusbar/browser/statusbar.js";import{$kI as N}from"../../../../../services/editor/common/editorGroupsService.js";import{Event as P}from"../../../../../../base/common/event.js";var f=function(r,t,e,i){var n=arguments.length,o=n<3?t:i===null?i=Object.getOwnPropertyDescriptor(t,e):i,a;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")o=Reflect.decorate(r,t,e,i);else for(var s=r.length-1;s>=0;s--)(a=r[s])&&(o=(n<3?a(o):n>3?a(t,e,o):a(t,e))||o);return n>3&&o&&Object.defineProperty(t,e,o),o},l=function(r,t){return function(e,i){t(e,i,r)}};let C=class{constructor(t,e,i,n,o){const a=new d;this.dispose=a.dispose.bind(a);const s=()=>{a.clear(),i.selectKernelForNotebook(e,t)};a.add(t.onDidChangeContent(u=>{for(const h of u.rawEvents)switch(h.kind){case p.ChangeCellContent:case p.ModelChange:case p.Move:case p.ChangeCellLanguage:o.trace("IMPLICIT kernel selection because of change event",h.kind),s();break}})),a.add(n.hoverProvider.register({scheme:x.vscodeNotebookCell,pattern:t.uri.path},{provideHover(){o.trace("IMPLICIT kernel selection because of hover"),s()}}))}};C=f([l(2,w),l(3,y),l(4,A)],C);let v=class extends g{constructor(t,e,i,n){super(),this.c=t,this.f=e,this.g=i,this.h=n,this.a=this.B(new d),this.b=this.B(new d),this.B(this.c.onDidActiveEditorChange(()=>this.j())),this.j()}j(){this.a.clear();const t=D(this.c.activeEditorPane);if(!t){this.b.clear();return}const e=()=>{if(t.notebookOptions.getDisplayOptions().globalToolbar){this.b.clear();return}const i=t.textModel;i?this.m(i):this.b.clear()};this.a.add(this.g.onDidAddKernel(e)),this.a.add(this.g.onDidChangeSelectedNotebooks(e)),this.a.add(this.g.onDidChangeNotebookAffinity(e)),this.a.add(t.onDidChangeModel(e)),this.a.add(t.notebookOptions.onDidChangeOptions(e)),e()}m(t){this.b.clear();const{selected:e,suggestions:i,all:n}=this.g.getMatchingKernel(t),o=(i.length===1?i[0]:void 0)??n.length===1?n[0]:void 0;let a=!1;if(n.length!==0)if(e||o){let s=e;s||(s=o,a=!0,this.b.add(this.h.createInstance(C,t,s)));const u=s.description??s.detail??s.label;this.b.add(this.f.addEntry({name:c.localize(9117,null),text:`$(notebook-kernel-select) ${s.label}`,ariaLabel:s.label,tooltip:a?c.localize(9118,null,u):u,command:b},b,1,10)),this.b.add(s.onDidChange(()=>this.m(t)))}else this.b.add(this.f.addEntry({name:c.localize(9119,null),text:c.localize(9120,null),ariaLabel:c.localize(9121,null),command:b,kind:"prominent"},b,1,10))}};v=f([l(0,E),l(1,k),l(2,w),l(3,j)],v);let S=class extends g{constructor(t,e){super(),this.c=t,this.f=e,this.a=this.B(new d),this.b=this.B(new z),this.B(this.c.onDidActiveEditorChange(()=>this.g())),this.g()}g(){this.a.clear();const t=D(this.c.activeEditorPane);t?(this.a.add(t.onDidChangeSelection(()=>this.h(t))),this.a.add(t.onDidChangeActiveCell(()=>this.h(t))),this.h(t)):this.b.clear()}h(t){if(!t.hasModel()){this.b.clear();return}const e=this.j(t);if(!e){this.b.clear();return}const i={name:c.localize(9122,null),text:e,ariaLabel:e,command:M};this.b.value?this.b.value.update(i):this.b.value=this.f.addEntry(i,"notebook.activeCellStatus",1,100)}j(t){if(!t.hasModel())return;const e=t.getActiveCell();if(!e)return;const i=t.getCellIndex(e)+1,n=t.getSelections().reduce((a,s)=>a+(s.end-s.start),0),o=t.getLength();return n>1?c.localize(9123,null,i,n):c.localize(9124,null,i,o)}};S=f([l(0,E),l(1,k)],S);let I=class extends g{static{this.ID="selectNotebookIndentation"}constructor(t,e,i){super(),this.c=t,this.f=e,this.g=i,this.a=this.B(new d),this.b=this.B(new z),this.B(this.c.onDidActiveEditorChange(()=>this.h())),this.B(this.g.onDidChangeConfiguration(n=>{(n.affectsConfiguration("editor")||n.affectsConfiguration("notebook"))&&this.h()})),this.h()}h(){this.a.clear();const t=D(this.c.activeEditorPane);t?(this.j(t),this.a.add(t.onDidChangeSelection(()=>{this.b.clear(),this.j(t)}))):this.b.clear()}j(t){if(!t.hasModel()){this.b.clear();return}const e=t.getActiveCell()?.textModel?.getOptions();if(!e){this.b.clear();return}const i=t.notebookOptions.getDisplayOptions().editorOptionsCustomizations,n=i?.["editor.indentSize"]??e?.indentSize,o=i?.["editor.insertSpaces"]??e?.insertSpaces,a=i?.["editor.tabSize"]??e?.tabSize,s=typeof n=="number"?n:a,h=o?`Spaces: ${s}`:`Tab Size: ${s}`;if(!h){this.b.clear();return}const $={name:c.localize(9125,null),text:h,ariaLabel:h,tooltip:c.localize(9126,null),command:K};this.b.value?this.b.value.update($):this.b.value=this.f.addEntry($,"notebook.status.indentation",1,100.4)}};I=f([l(0,E),l(1,k),l(2,O)],I);let m=class extends g{static{this.ID="notebook.contrib.editorStatus"}constructor(t){super(),this.a=t;for(const e of t.parts)this.b(e);this.B(t.onDidCreateAuxiliaryEditorPart(e=>this.b(e)))}b(t){const e=new d;P.once(t.onWillDispose)(()=>e.dispose());const i=this.a.getScopedInstantiationService(t);e.add(i.createInstance(v)),e.add(i.createInstance(S)),e.add(i.createInstance(I))}};m=f([l(0,N)],m);B(m.ID,m,3);
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import * as nls from "../../../../../../nls.js";
+import { Disposable, DisposableStore, MutableDisposable } from "../../../../../../base/common/lifecycle.js";
+import { Schemas } from "../../../../../../base/common/network.js";
+import { ILanguageFeaturesService } from "../../../../../../editor/common/services/languageFeatures.js";
+import { IConfigurationService } from "../../../../../../platform/configuration/common/configuration.js";
+import { IInstantiationService } from "../../../../../../platform/instantiation/common/instantiation.js";
+import { ILogService } from "../../../../../../platform/log/common/log.js";
+import { registerWorkbenchContribution2 } from "../../../../../common/contributions.js";
+import { CENTER_ACTIVE_CELL } from "../navigation/arrow.js";
+import { SELECT_KERNEL_ID } from "../../controller/coreActions.js";
+import { SELECT_NOTEBOOK_INDENTATION_ID } from "../../controller/editActions.js";
+import { getNotebookEditorFromEditorPane } from "../../notebookBrowser.js";
+import { NotebookCellsChangeType } from "../../../common/notebookCommon.js";
+import { INotebookKernelService } from "../../../common/notebookKernelService.js";
+import { IEditorService } from "../../../../../services/editor/common/editorService.js";
+import { IStatusbarService } from "../../../../../services/statusbar/browser/statusbar.js";
+import { IEditorGroupsService } from "../../../../../services/editor/common/editorGroupsService.js";
+import { Event } from "../../../../../../base/common/event.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+let ImplictKernelSelector = class ImplictKernelSelector2 {
+  static {
+    __name(this, "ImplictKernelSelector");
+  }
+  constructor(notebook, suggested, notebookKernelService, languageFeaturesService, logService) {
+    const disposables = new DisposableStore();
+    this.dispose = disposables.dispose.bind(disposables);
+    const selectKernel = /* @__PURE__ */ __name(() => {
+      disposables.clear();
+      notebookKernelService.selectKernelForNotebook(suggested, notebook);
+    }, "selectKernel");
+    disposables.add(notebook.onDidChangeContent((e) => {
+      for (const event of e.rawEvents) {
+        switch (event.kind) {
+          case NotebookCellsChangeType.ChangeCellContent:
+          case NotebookCellsChangeType.ModelChange:
+          case NotebookCellsChangeType.Move:
+          case NotebookCellsChangeType.ChangeCellLanguage:
+            logService.trace("IMPLICIT kernel selection because of change event", event.kind);
+            selectKernel();
+            break;
+        }
+      }
+    }));
+    disposables.add(languageFeaturesService.hoverProvider.register({ scheme: Schemas.vscodeNotebookCell, pattern: notebook.uri.path }, {
+      provideHover() {
+        logService.trace("IMPLICIT kernel selection because of hover");
+        selectKernel();
+        return void 0;
+      }
+    }));
+  }
+};
+ImplictKernelSelector = __decorate([
+  __param(2, INotebookKernelService),
+  __param(3, ILanguageFeaturesService),
+  __param(4, ILogService)
+], ImplictKernelSelector);
+let KernelStatus = class KernelStatus2 extends Disposable {
+  static {
+    __name(this, "KernelStatus");
+  }
+  constructor(_editorService, _statusbarService, _notebookKernelService, _instantiationService) {
+    super();
+    this._editorService = _editorService;
+    this._statusbarService = _statusbarService;
+    this._notebookKernelService = _notebookKernelService;
+    this._instantiationService = _instantiationService;
+    this._editorDisposables = this._register(new DisposableStore());
+    this._kernelInfoElement = this._register(new DisposableStore());
+    this._register(this._editorService.onDidActiveEditorChange(() => this._updateStatusbar()));
+    this._updateStatusbar();
+  }
+  _updateStatusbar() {
+    this._editorDisposables.clear();
+    const activeEditor = getNotebookEditorFromEditorPane(this._editorService.activeEditorPane);
+    if (!activeEditor) {
+      this._kernelInfoElement.clear();
+      return;
+    }
+    const updateStatus = /* @__PURE__ */ __name(() => {
+      if (activeEditor.notebookOptions.getDisplayOptions().globalToolbar) {
+        this._kernelInfoElement.clear();
+        return;
+      }
+      const notebook = activeEditor.textModel;
+      if (notebook) {
+        this._showKernelStatus(notebook);
+      } else {
+        this._kernelInfoElement.clear();
+      }
+    }, "updateStatus");
+    this._editorDisposables.add(this._notebookKernelService.onDidAddKernel(updateStatus));
+    this._editorDisposables.add(this._notebookKernelService.onDidChangeSelectedNotebooks(updateStatus));
+    this._editorDisposables.add(this._notebookKernelService.onDidChangeNotebookAffinity(updateStatus));
+    this._editorDisposables.add(activeEditor.onDidChangeModel(updateStatus));
+    this._editorDisposables.add(activeEditor.notebookOptions.onDidChangeOptions(updateStatus));
+    updateStatus();
+  }
+  _showKernelStatus(notebook) {
+    this._kernelInfoElement.clear();
+    const { selected, suggestions, all } = this._notebookKernelService.getMatchingKernel(notebook);
+    const suggested = (suggestions.length === 1 ? suggestions[0] : void 0) ?? all.length === 1 ? all[0] : void 0;
+    let isSuggested = false;
+    if (all.length === 0) {
+      return;
+    } else if (selected || suggested) {
+      let kernel = selected;
+      if (!kernel) {
+        kernel = suggested;
+        isSuggested = true;
+        this._kernelInfoElement.add(this._instantiationService.createInstance(ImplictKernelSelector, notebook, kernel));
+      }
+      const tooltip = kernel.description ?? kernel.detail ?? kernel.label;
+      this._kernelInfoElement.add(this._statusbarService.addEntry({
+        name: nls.localize("notebook.info", "Notebook Kernel Info"),
+        text: `$(notebook-kernel-select) ${kernel.label}`,
+        ariaLabel: kernel.label,
+        tooltip: isSuggested ? nls.localize("tooltop", "{0} (suggestion)", tooltip) : tooltip,
+        command: SELECT_KERNEL_ID
+      }, SELECT_KERNEL_ID, 1, 10));
+      this._kernelInfoElement.add(kernel.onDidChange(() => this._showKernelStatus(notebook)));
+    } else {
+      this._kernelInfoElement.add(this._statusbarService.addEntry({
+        name: nls.localize("notebook.select", "Notebook Kernel Selection"),
+        text: nls.localize("kernel.select.label", "Select Kernel"),
+        ariaLabel: nls.localize("kernel.select.label", "Select Kernel"),
+        command: SELECT_KERNEL_ID,
+        kind: "prominent"
+      }, SELECT_KERNEL_ID, 1, 10));
+    }
+  }
+};
+KernelStatus = __decorate([
+  __param(0, IEditorService),
+  __param(1, IStatusbarService),
+  __param(2, INotebookKernelService),
+  __param(3, IInstantiationService)
+], KernelStatus);
+let ActiveCellStatus = class ActiveCellStatus2 extends Disposable {
+  static {
+    __name(this, "ActiveCellStatus");
+  }
+  constructor(_editorService, _statusbarService) {
+    super();
+    this._editorService = _editorService;
+    this._statusbarService = _statusbarService;
+    this._itemDisposables = this._register(new DisposableStore());
+    this._accessor = this._register(new MutableDisposable());
+    this._register(this._editorService.onDidActiveEditorChange(() => this._update()));
+    this._update();
+  }
+  _update() {
+    this._itemDisposables.clear();
+    const activeEditor = getNotebookEditorFromEditorPane(this._editorService.activeEditorPane);
+    if (activeEditor) {
+      this._itemDisposables.add(activeEditor.onDidChangeSelection(() => this._show(activeEditor)));
+      this._itemDisposables.add(activeEditor.onDidChangeActiveCell(() => this._show(activeEditor)));
+      this._show(activeEditor);
+    } else {
+      this._accessor.clear();
+    }
+  }
+  _show(editor) {
+    if (!editor.hasModel()) {
+      this._accessor.clear();
+      return;
+    }
+    const newText = this._getSelectionsText(editor);
+    if (!newText) {
+      this._accessor.clear();
+      return;
+    }
+    const entry = {
+      name: nls.localize("notebook.activeCellStatusName", "Notebook Editor Selections"),
+      text: newText,
+      ariaLabel: newText,
+      command: CENTER_ACTIVE_CELL
+    };
+    if (!this._accessor.value) {
+      this._accessor.value = this._statusbarService.addEntry(entry, "notebook.activeCellStatus", 1, 100);
+    } else {
+      this._accessor.value.update(entry);
+    }
+  }
+  _getSelectionsText(editor) {
+    if (!editor.hasModel()) {
+      return void 0;
+    }
+    const activeCell = editor.getActiveCell();
+    if (!activeCell) {
+      return void 0;
+    }
+    const idxFocused = editor.getCellIndex(activeCell) + 1;
+    const numSelected = editor.getSelections().reduce((prev, range) => prev + (range.end - range.start), 0);
+    const totalCells = editor.getLength();
+    return numSelected > 1 ? nls.localize("notebook.multiActiveCellIndicator", "Cell {0} ({1} selected)", idxFocused, numSelected) : nls.localize("notebook.singleActiveCellIndicator", "Cell {0} of {1}", idxFocused, totalCells);
+  }
+};
+ActiveCellStatus = __decorate([
+  __param(0, IEditorService),
+  __param(1, IStatusbarService)
+], ActiveCellStatus);
+let NotebookIndentationStatus = class NotebookIndentationStatus2 extends Disposable {
+  static {
+    __name(this, "NotebookIndentationStatus");
+  }
+  static {
+    this.ID = "selectNotebookIndentation";
+  }
+  constructor(_editorService, _statusbarService, _configurationService) {
+    super();
+    this._editorService = _editorService;
+    this._statusbarService = _statusbarService;
+    this._configurationService = _configurationService;
+    this._itemDisposables = this._register(new DisposableStore());
+    this._accessor = this._register(new MutableDisposable());
+    this._register(this._editorService.onDidActiveEditorChange(() => this._update()));
+    this._register(this._configurationService.onDidChangeConfiguration((e) => {
+      if (e.affectsConfiguration("editor") || e.affectsConfiguration("notebook")) {
+        this._update();
+      }
+    }));
+    this._update();
+  }
+  _update() {
+    this._itemDisposables.clear();
+    const activeEditor = getNotebookEditorFromEditorPane(this._editorService.activeEditorPane);
+    if (activeEditor) {
+      this._show(activeEditor);
+      this._itemDisposables.add(activeEditor.onDidChangeSelection(() => {
+        this._accessor.clear();
+        this._show(activeEditor);
+      }));
+    } else {
+      this._accessor.clear();
+    }
+  }
+  _show(editor) {
+    if (!editor.hasModel()) {
+      this._accessor.clear();
+      return;
+    }
+    const cellOptions = editor.getActiveCell()?.textModel?.getOptions();
+    if (!cellOptions) {
+      this._accessor.clear();
+      return;
+    }
+    const cellEditorOverridesRaw = editor.notebookOptions.getDisplayOptions().editorOptionsCustomizations;
+    const indentSize = cellEditorOverridesRaw?.["editor.indentSize"] ?? cellOptions?.indentSize;
+    const insertSpaces = cellEditorOverridesRaw?.["editor.insertSpaces"] ?? cellOptions?.insertSpaces;
+    const tabSize = cellEditorOverridesRaw?.["editor.tabSize"] ?? cellOptions?.tabSize;
+    const width = typeof indentSize === "number" ? indentSize : tabSize;
+    const message = insertSpaces ? `Spaces: ${width}` : `Tab Size: ${width}`;
+    const newText = message;
+    if (!newText) {
+      this._accessor.clear();
+      return;
+    }
+    const entry = {
+      name: nls.localize("notebook.indentation", "Notebook Indentation"),
+      text: newText,
+      ariaLabel: newText,
+      tooltip: nls.localize("selectNotebookIndentation", "Select Indentation"),
+      command: SELECT_NOTEBOOK_INDENTATION_ID
+    };
+    if (!this._accessor.value) {
+      this._accessor.value = this._statusbarService.addEntry(entry, "notebook.status.indentation", 1, 100.4);
+    } else {
+      this._accessor.value.update(entry);
+    }
+  }
+};
+NotebookIndentationStatus = __decorate([
+  __param(0, IEditorService),
+  __param(1, IStatusbarService),
+  __param(2, IConfigurationService)
+], NotebookIndentationStatus);
+let NotebookEditorStatusContribution = class NotebookEditorStatusContribution2 extends Disposable {
+  static {
+    __name(this, "NotebookEditorStatusContribution");
+  }
+  static {
+    this.ID = "notebook.contrib.editorStatus";
+  }
+  constructor(editorGroupService) {
+    super();
+    this.editorGroupService = editorGroupService;
+    for (const part of editorGroupService.parts) {
+      this.createNotebookStatus(part);
+    }
+    this._register(editorGroupService.onDidCreateAuxiliaryEditorPart((part) => this.createNotebookStatus(part)));
+  }
+  createNotebookStatus(part) {
+    const disposables = new DisposableStore();
+    Event.once(part.onWillDispose)(() => disposables.dispose());
+    const scopedInstantiationService = this.editorGroupService.getScopedInstantiationService(part);
+    disposables.add(scopedInstantiationService.createInstance(KernelStatus));
+    disposables.add(scopedInstantiationService.createInstance(ActiveCellStatus));
+    disposables.add(scopedInstantiationService.createInstance(NotebookIndentationStatus));
+  }
+};
+NotebookEditorStatusContribution = __decorate([
+  __param(0, IEditorGroupsService)
+], NotebookEditorStatusContribution);
+registerWorkbenchContribution2(
+  NotebookEditorStatusContribution.ID,
+  NotebookEditorStatusContribution,
+  3
+  /* WorkbenchPhase.AfterRestored */
+);
+//# sourceMappingURL=editorStatusBar.js.map

@@ -1,1 +1,43 @@
-import{strictEquals as c,BugIndicatingError as d}from"../commonFacade/deps.js";import{$ze as s}from"../transaction.js";import{$Pd as m}from"../debugName.js";import{$re as o}from"../observables/derivedImpl.js";function g(a,e){return $(a,e)}function $(a,e){let r,t=!1;const l=new o(new m(a,void 0,e.update),(n,u)=>{t||(r=e.initial instanceof Function?e.initial():e.initial,t=!0);const i=e.update(n,r,u);return r=i,i},e.changeTracker,()=>{t&&(e.disposeFinal?.(r),t=!1)},e.equalityComparer??c,(n,u,i)=>{if(!t)throw new d("Can only set when there is a listener! This is to prevent leaks.");s(u,f=>{r=n,l.setValue(n,f,i)})});return l}export{g as $a$,$ as $b$};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { strictEquals, BugIndicatingError } from "../commonFacade/deps.js";
+import { subtransaction } from "../transaction.js";
+import { DebugNameData } from "../debugName.js";
+import { DerivedWithSetter } from "../observables/derivedImpl.js";
+function observableReducer(owner, options) {
+  return observableReducerSettable(owner, options);
+}
+__name(observableReducer, "observableReducer");
+function observableReducerSettable(owner, options) {
+  let prevValue = void 0;
+  let hasValue = false;
+  const d = new DerivedWithSetter(new DebugNameData(owner, void 0, options.update), (reader, changeSummary) => {
+    if (!hasValue) {
+      prevValue = options.initial instanceof Function ? options.initial() : options.initial;
+      hasValue = true;
+    }
+    const newValue = options.update(reader, prevValue, changeSummary);
+    prevValue = newValue;
+    return newValue;
+  }, options.changeTracker, () => {
+    if (hasValue) {
+      options.disposeFinal?.(prevValue);
+      hasValue = false;
+    }
+  }, options.equalityComparer ?? strictEquals, (value, tx, change) => {
+    if (!hasValue) {
+      throw new BugIndicatingError("Can only set when there is a listener! This is to prevent leaks.");
+    }
+    subtransaction(tx, (tx2) => {
+      prevValue = value;
+      d.setValue(value, tx2, change);
+    });
+  });
+  return d;
+}
+__name(observableReducerSettable, "observableReducerSettable");
+export {
+  observableReducer,
+  observableReducerSettable
+};
+//# sourceMappingURL=reducer.js.map

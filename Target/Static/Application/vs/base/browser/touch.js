@@ -1,1 +1,274 @@
-import*as T from"./dom.js";import{$c5 as D}from"./window.js";import{$tm as N}from"../common/decorators.js";import{Event as x}from"../common/event.js";import{$vd as Y,$od as C,$td as v}from"../common/lifecycle.js";import{$Gd as w}from"../common/linkedList.js";var b=function(c,t,a,i){var o=arguments.length,e=o<3?t:i===null?i=Object.getOwnPropertyDescriptor(t,a):i,s;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")e=Reflect.decorate(c,t,a,i);else for(var r=c.length-1;r>=0;r--)(s=c[r])&&(e=(o<3?s(e):o>3?s(t,a,e):s(t,a))||e);return o>3&&e&&Object.defineProperty(t,a,e),e},g;(function(c){c.Tap="-monaco-gesturetap",c.Change="-monaco-gesturechange",c.Start="-monaco-gesturestart",c.End="-monaco-gesturesend",c.Contextmenu="-monaco-gesturecontextmenu"})(g||(g={}));class l extends Y{static{this.c=-.005}static{this.g=700}static{this.u=400}constructor(){super(),this.h=!1,this.j=new w,this.m=new w,this.r={},this.n=null,this.s=0,this.B(x.runAndSubscribe(T.onDidRegisterWindow,({window:t,disposables:a})=>{a.add(T.$J5(t.document,"touchstart",i=>this.w(i),{passive:!1})),a.add(T.$J5(t.document,"touchend",i=>this.z(t,i))),a.add(T.$J5(t.document,"touchmove",i=>this.G(i),{passive:!1}))},{window:D,disposables:this.q}))}static addTarget(t){if(!l.isTouchDevice())return Y.None;l.f||(l.f=C(new l));const a=l.f.j.push(t);return v(a)}static ignoreTarget(t){if(!l.isTouchDevice())return Y.None;l.f||(l.f=C(new l));const a=l.f.m.push(t);return v(a)}static isTouchDevice(){return"ontouchstart"in D||navigator.maxTouchPoints>0}dispose(){this.n&&(this.n.dispose(),this.n=null),super.dispose()}w(t){const a=Date.now();this.n&&(this.n.dispose(),this.n=null);for(let i=0,o=t.targetTouches.length;i<o;i++){const e=t.targetTouches.item(i);this.r[e.identifier]={id:e.identifier,initialTarget:e.target,initialTimeStamp:a,initialPageX:e.pageX,initialPageY:e.pageY,rollingTimestamps:[a],rollingPageX:[e.pageX],rollingPageY:[e.pageY]};const s=this.C(g.Start,e.target);s.pageX=e.pageX,s.pageY=e.pageY,this.D(s)}this.h&&(t.preventDefault(),t.stopPropagation(),this.h=!1)}z(t,a){const i=Date.now(),o=Object.keys(this.r).length;for(let e=0,s=a.changedTouches.length;e<s;e++){const r=a.changedTouches.item(e);if(!this.r.hasOwnProperty(String(r.identifier)))continue;const n=this.r[r.identifier],P=Date.now()-n.initialTimeStamp;if(P<l.g&&Math.abs(n.initialPageX-n.rollingPageX.at(-1))<30&&Math.abs(n.initialPageY-n.rollingPageY.at(-1))<30){const h=this.C(g.Tap,n.initialTarget);h.pageX=n.rollingPageX.at(-1),h.pageY=n.rollingPageY.at(-1),this.D(h)}else if(P>=l.g&&Math.abs(n.initialPageX-n.rollingPageX.at(-1))<30&&Math.abs(n.initialPageY-n.rollingPageY.at(-1))<30){const h=this.C(g.Contextmenu,n.initialTarget);h.pageX=n.rollingPageX.at(-1),h.pageY=n.rollingPageY.at(-1),this.D(h)}else if(o===1){const h=n.rollingPageX.at(-1),f=n.rollingPageY.at(-1),p=n.rollingTimestamps.at(-1)-n.rollingTimestamps[0],u=h-n.rollingPageX[0],m=f-n.rollingPageY[0],d=[...this.j].filter(X=>n.initialTarget instanceof Node&&X.contains(n.initialTarget));this.F(t,d,i,Math.abs(u)/p,u>0?1:-1,h,Math.abs(m)/p,m>0?1:-1,f)}this.D(this.C(g.End,n.initialTarget)),delete this.r[r.identifier]}this.h&&(a.preventDefault(),a.stopPropagation(),this.h=!1)}C(t,a){const i=document.createEvent("CustomEvent");return i.initEvent(t,!1,!0),i.initialTarget=a,i.tapCount=0,i}D(t){if(t.type===g.Tap){const a=new Date().getTime();let i=0;a-this.s>l.u?i=1:i=2,this.s=a,t.tapCount=i}else(t.type===g.Change||t.type===g.Contextmenu)&&(this.s=0);if(t.initialTarget instanceof Node){for(const i of this.m)if(i.contains(t.initialTarget))return;const a=[];for(const i of this.j)if(i.contains(t.initialTarget)){let o=0,e=t.initialTarget;for(;e&&e!==i;)o++,e=e.parentElement;a.push([o,i])}a.sort((i,o)=>i[0]-o[0]);for(const[i,o]of a)o.dispatchEvent(t),this.h=!0}}F(t,a,i,o,e,s,r,n,P){this.n=T.$T5(t,()=>{const h=Date.now(),f=h-i;let p=0,u=0,m=!0;o+=l.c*f,r+=l.c*f,o>0&&(m=!1,p=e*o*f),r>0&&(m=!1,u=n*r*f);const d=this.C(g.Change);d.translationX=p,d.translationY=u,a.forEach(X=>X.dispatchEvent(d)),m||this.F(t,a,h,o,e,s+p,r,n,P+u)})}G(t){const a=Date.now();for(let i=0,o=t.changedTouches.length;i<o;i++){const e=t.changedTouches.item(i);if(!this.r.hasOwnProperty(String(e.identifier)))continue;const s=this.r[e.identifier],r=this.C(g.Change,s.initialTarget);r.translationX=e.pageX-s.rollingPageX.at(-1),r.translationY=e.pageY-s.rollingPageY.at(-1),r.pageX=e.pageX,r.pageY=e.pageY,this.D(r),s.rollingPageX.length>3&&(s.rollingPageX.shift(),s.rollingPageY.shift(),s.rollingTimestamps.shift()),s.rollingPageX.push(e.pageX),s.rollingPageY.push(e.pageY),s.rollingTimestamps.push(a)}this.h&&(t.preventDefault(),t.stopPropagation(),this.h=!1)}}b([N],l,"isTouchDevice",null);export{l as $l7,g as EventType};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import * as DomUtils from "./dom.js";
+import { mainWindow } from "./window.js";
+import { memoize } from "../common/decorators.js";
+import { Event as EventUtils } from "../common/event.js";
+import { Disposable, markAsSingleton, toDisposable } from "../common/lifecycle.js";
+import { LinkedList } from "../common/linkedList.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var EventType;
+(function(EventType2) {
+  EventType2.Tap = "-monaco-gesturetap";
+  EventType2.Change = "-monaco-gesturechange";
+  EventType2.Start = "-monaco-gesturestart";
+  EventType2.End = "-monaco-gesturesend";
+  EventType2.Contextmenu = "-monaco-gesturecontextmenu";
+})(EventType || (EventType = {}));
+class Gesture extends Disposable {
+  static {
+    __name(this, "Gesture");
+  }
+  static {
+    this.SCROLL_FRICTION = -5e-3;
+  }
+  static {
+    this.HOLD_DELAY = 700;
+  }
+  static {
+    this.CLEAR_TAP_COUNT_TIME = 400;
+  }
+  // ms
+  constructor() {
+    super();
+    this.dispatched = false;
+    this.targets = new LinkedList();
+    this.ignoreTargets = new LinkedList();
+    this.activeTouches = {};
+    this.handle = null;
+    this._lastSetTapCountTime = 0;
+    this._register(EventUtils.runAndSubscribe(DomUtils.onDidRegisterWindow, ({ window, disposables }) => {
+      disposables.add(DomUtils.addDisposableListener(window.document, "touchstart", (e) => this.onTouchStart(e), { passive: false }));
+      disposables.add(DomUtils.addDisposableListener(window.document, "touchend", (e) => this.onTouchEnd(window, e)));
+      disposables.add(DomUtils.addDisposableListener(window.document, "touchmove", (e) => this.onTouchMove(e), { passive: false }));
+    }, { window: mainWindow, disposables: this._store }));
+  }
+  static addTarget(element) {
+    if (!Gesture.isTouchDevice()) {
+      return Disposable.None;
+    }
+    if (!Gesture.INSTANCE) {
+      Gesture.INSTANCE = markAsSingleton(new Gesture());
+    }
+    const remove = Gesture.INSTANCE.targets.push(element);
+    return toDisposable(remove);
+  }
+  static ignoreTarget(element) {
+    if (!Gesture.isTouchDevice()) {
+      return Disposable.None;
+    }
+    if (!Gesture.INSTANCE) {
+      Gesture.INSTANCE = markAsSingleton(new Gesture());
+    }
+    const remove = Gesture.INSTANCE.ignoreTargets.push(element);
+    return toDisposable(remove);
+  }
+  static isTouchDevice() {
+    return "ontouchstart" in mainWindow || navigator.maxTouchPoints > 0;
+  }
+  dispose() {
+    if (this.handle) {
+      this.handle.dispose();
+      this.handle = null;
+    }
+    super.dispose();
+  }
+  onTouchStart(e) {
+    const timestamp = Date.now();
+    if (this.handle) {
+      this.handle.dispose();
+      this.handle = null;
+    }
+    for (let i = 0, len = e.targetTouches.length; i < len; i++) {
+      const touch = e.targetTouches.item(i);
+      this.activeTouches[touch.identifier] = {
+        id: touch.identifier,
+        initialTarget: touch.target,
+        initialTimeStamp: timestamp,
+        initialPageX: touch.pageX,
+        initialPageY: touch.pageY,
+        rollingTimestamps: [timestamp],
+        rollingPageX: [touch.pageX],
+        rollingPageY: [touch.pageY]
+      };
+      const evt = this.newGestureEvent(EventType.Start, touch.target);
+      evt.pageX = touch.pageX;
+      evt.pageY = touch.pageY;
+      this.dispatchEvent(evt);
+    }
+    if (this.dispatched) {
+      e.preventDefault();
+      e.stopPropagation();
+      this.dispatched = false;
+    }
+  }
+  onTouchEnd(targetWindow, e) {
+    const timestamp = Date.now();
+    const activeTouchCount = Object.keys(this.activeTouches).length;
+    for (let i = 0, len = e.changedTouches.length; i < len; i++) {
+      const touch = e.changedTouches.item(i);
+      if (!this.activeTouches.hasOwnProperty(String(touch.identifier))) {
+        console.warn("move of an UNKNOWN touch", touch);
+        continue;
+      }
+      const data = this.activeTouches[touch.identifier], holdTime = Date.now() - data.initialTimeStamp;
+      if (holdTime < Gesture.HOLD_DELAY && Math.abs(data.initialPageX - data.rollingPageX.at(-1)) < 30 && Math.abs(data.initialPageY - data.rollingPageY.at(-1)) < 30) {
+        const evt = this.newGestureEvent(EventType.Tap, data.initialTarget);
+        evt.pageX = data.rollingPageX.at(-1);
+        evt.pageY = data.rollingPageY.at(-1);
+        this.dispatchEvent(evt);
+      } else if (holdTime >= Gesture.HOLD_DELAY && Math.abs(data.initialPageX - data.rollingPageX.at(-1)) < 30 && Math.abs(data.initialPageY - data.rollingPageY.at(-1)) < 30) {
+        const evt = this.newGestureEvent(EventType.Contextmenu, data.initialTarget);
+        evt.pageX = data.rollingPageX.at(-1);
+        evt.pageY = data.rollingPageY.at(-1);
+        this.dispatchEvent(evt);
+      } else if (activeTouchCount === 1) {
+        const finalX = data.rollingPageX.at(-1);
+        const finalY = data.rollingPageY.at(-1);
+        const deltaT = data.rollingTimestamps.at(-1) - data.rollingTimestamps[0];
+        const deltaX = finalX - data.rollingPageX[0];
+        const deltaY = finalY - data.rollingPageY[0];
+        const dispatchTo = [...this.targets].filter((t) => data.initialTarget instanceof Node && t.contains(data.initialTarget));
+        this.inertia(
+          targetWindow,
+          dispatchTo,
+          timestamp,
+          // time now
+          Math.abs(deltaX) / deltaT,
+          // speed
+          deltaX > 0 ? 1 : -1,
+          // x direction
+          finalX,
+          // x now
+          Math.abs(deltaY) / deltaT,
+          // y speed
+          deltaY > 0 ? 1 : -1,
+          // y direction
+          finalY
+          // y now
+        );
+      }
+      this.dispatchEvent(this.newGestureEvent(EventType.End, data.initialTarget));
+      delete this.activeTouches[touch.identifier];
+    }
+    if (this.dispatched) {
+      e.preventDefault();
+      e.stopPropagation();
+      this.dispatched = false;
+    }
+  }
+  newGestureEvent(type, initialTarget) {
+    const event = document.createEvent("CustomEvent");
+    event.initEvent(type, false, true);
+    event.initialTarget = initialTarget;
+    event.tapCount = 0;
+    return event;
+  }
+  dispatchEvent(event) {
+    if (event.type === EventType.Tap) {
+      const currentTime = (/* @__PURE__ */ new Date()).getTime();
+      let setTapCount = 0;
+      if (currentTime - this._lastSetTapCountTime > Gesture.CLEAR_TAP_COUNT_TIME) {
+        setTapCount = 1;
+      } else {
+        setTapCount = 2;
+      }
+      this._lastSetTapCountTime = currentTime;
+      event.tapCount = setTapCount;
+    } else if (event.type === EventType.Change || event.type === EventType.Contextmenu) {
+      this._lastSetTapCountTime = 0;
+    }
+    if (event.initialTarget instanceof Node) {
+      for (const ignoreTarget of this.ignoreTargets) {
+        if (ignoreTarget.contains(event.initialTarget)) {
+          return;
+        }
+      }
+      const targets = [];
+      for (const target of this.targets) {
+        if (target.contains(event.initialTarget)) {
+          let depth = 0;
+          let now = event.initialTarget;
+          while (now && now !== target) {
+            depth++;
+            now = now.parentElement;
+          }
+          targets.push([depth, target]);
+        }
+      }
+      targets.sort((a, b) => a[0] - b[0]);
+      for (const [_, target] of targets) {
+        target.dispatchEvent(event);
+        this.dispatched = true;
+      }
+    }
+  }
+  inertia(targetWindow, dispatchTo, t1, vX, dirX, x, vY, dirY, y) {
+    this.handle = DomUtils.scheduleAtNextAnimationFrame(targetWindow, () => {
+      const now = Date.now();
+      const deltaT = now - t1;
+      let delta_pos_x = 0, delta_pos_y = 0;
+      let stopped = true;
+      vX += Gesture.SCROLL_FRICTION * deltaT;
+      vY += Gesture.SCROLL_FRICTION * deltaT;
+      if (vX > 0) {
+        stopped = false;
+        delta_pos_x = dirX * vX * deltaT;
+      }
+      if (vY > 0) {
+        stopped = false;
+        delta_pos_y = dirY * vY * deltaT;
+      }
+      const evt = this.newGestureEvent(EventType.Change);
+      evt.translationX = delta_pos_x;
+      evt.translationY = delta_pos_y;
+      dispatchTo.forEach((d) => d.dispatchEvent(evt));
+      if (!stopped) {
+        this.inertia(targetWindow, dispatchTo, now, vX, dirX, x + delta_pos_x, vY, dirY, y + delta_pos_y);
+      }
+    });
+  }
+  onTouchMove(e) {
+    const timestamp = Date.now();
+    for (let i = 0, len = e.changedTouches.length; i < len; i++) {
+      const touch = e.changedTouches.item(i);
+      if (!this.activeTouches.hasOwnProperty(String(touch.identifier))) {
+        console.warn("end of an UNKNOWN touch", touch);
+        continue;
+      }
+      const data = this.activeTouches[touch.identifier];
+      const evt = this.newGestureEvent(EventType.Change, data.initialTarget);
+      evt.translationX = touch.pageX - data.rollingPageX.at(-1);
+      evt.translationY = touch.pageY - data.rollingPageY.at(-1);
+      evt.pageX = touch.pageX;
+      evt.pageY = touch.pageY;
+      this.dispatchEvent(evt);
+      if (data.rollingPageX.length > 3) {
+        data.rollingPageX.shift();
+        data.rollingPageY.shift();
+        data.rollingTimestamps.shift();
+      }
+      data.rollingPageX.push(touch.pageX);
+      data.rollingPageY.push(touch.pageY);
+      data.rollingTimestamps.push(timestamp);
+    }
+    if (this.dispatched) {
+      e.preventDefault();
+      e.stopPropagation();
+      this.dispatched = false;
+    }
+  }
+}
+__decorate([
+  memoize
+], Gesture, "isTouchDevice", null);
+export {
+  EventType,
+  Gesture
+};
+//# sourceMappingURL=touch.js.map

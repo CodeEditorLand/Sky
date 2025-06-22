@@ -1,1 +1,9 @@
-import{$Ql as o}from"../../../../platform/registry/common/platform.js";import{Extensions as r}from"../../../common/contributions.js";import{$uJc as n}from"./workspaceTags.js";o.as(r.Workbench).registerWorkbenchContribution(n,4);
+import { Registry } from "../../../../platform/registry/common/platform.js";
+import { Extensions as WorkbenchExtensions } from "../../../common/contributions.js";
+import { WorkspaceTags } from "./workspaceTags.js";
+Registry.as(WorkbenchExtensions.Workbench).registerWorkbenchContribution(
+  WorkspaceTags,
+  4
+  /* LifecyclePhase.Eventually */
+);
+//# sourceMappingURL=tags.contribution.js.map

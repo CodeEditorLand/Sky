@@ -1,1 +1,6 @@
-import{$nj as r}from"../../../platform/instantiation/common/instantiation.js";const e=r("markerDecorationsService");export{e as $$ab};
+import { createDecorator } from "../../../platform/instantiation/common/instantiation.js";
+const IMarkerDecorationsService = createDecorator("markerDecorationsService");
+export {
+  IMarkerDecorationsService
+};
+//# sourceMappingURL=markerDecorations.js.map

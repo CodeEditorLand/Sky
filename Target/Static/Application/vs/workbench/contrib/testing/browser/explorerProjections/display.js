@@ -1,1 +1,5 @@
-const c=" › ";export{c as $Vlc};
+const flatTestItemDelimiter = " \u203A ";
+export {
+  flatTestItemDelimiter
+};
+//# sourceMappingURL=display.js.map

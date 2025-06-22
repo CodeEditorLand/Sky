@@ -1,1 +1,41 @@
-import{$HS as a}from"../service/promptsService.js";import{$RQ as u}from"../utils/observableDisposable.js";import{$pf as f}from"../../../../../../base/common/cancellation.js";var p=function(i,t,r,e){var n=arguments.length,o=n<3?t:e===null?e=Object.getOwnPropertyDescriptor(t,r):e,s;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")o=Reflect.decorate(i,t,r,e);else for(var c=i.length-1;c>=0;c--)(s=i[c])&&(o=(n<3?s(o):n>3?s(t,r,o):s(t,r))||o);return n>3&&o&&Object.defineProperty(t,r,o),o},l=function(i,t){return function(r,e){t(r,e,i)}};let h=class extends u{constructor(t,r){super(),this.f=t,this.c=r.getSyntaxParserFor(t),this.B(this.c.onDispose(this.dispose.bind(this)));let e=new f;this.B(this.c.onSettled(n=>{e.dispose(!0),e=new f,this.b(n,e.token)})),this.c.start()}};h=p([l(1,a)],h);export{h as $Bec};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { IPromptsService } from "../service/promptsService.js";
+import { ObservableDisposable } from "../utils/observableDisposable.js";
+import { CancellationTokenSource } from "../../../../../../base/common/cancellation.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+let ProviderInstanceBase = class ProviderInstanceBase2 extends ObservableDisposable {
+  static {
+    __name(this, "ProviderInstanceBase");
+  }
+  constructor(model, promptsService) {
+    super();
+    this.model = model;
+    this.parser = promptsService.getSyntaxParserFor(model);
+    this._register(this.parser.onDispose(this.dispose.bind(this)));
+    let cancellationSource = new CancellationTokenSource();
+    this._register(this.parser.onSettled((error) => {
+      cancellationSource.dispose(true);
+      cancellationSource = new CancellationTokenSource();
+      this.onPromptSettled(error, cancellationSource.token);
+    }));
+    this.parser.start();
+  }
+};
+ProviderInstanceBase = __decorate([
+  __param(1, IPromptsService)
+], ProviderInstanceBase);
+export {
+  ProviderInstanceBase
+};
+//# sourceMappingURL=providerInstanceBase.js.map

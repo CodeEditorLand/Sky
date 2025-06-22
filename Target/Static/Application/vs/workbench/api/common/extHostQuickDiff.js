@@ -1,1 +1,44 @@
-import{URI as u}from"../../../base/common/uri.js";import{$oY as d}from"./extHost.protocol.js";import{$Dh as h}from"../../../base/common/async.js";import{DocumentSelector as m}from"./extHostTypeConverters.js";import{$Qy as l}from"../../../platform/extensions/common/extensions.js";class c{static{this.a=0}constructor(r,i){this.d=i,this.c=new Map,this.b=r.getProxy(d.MainThreadQuickDiff)}$provideOriginalResource(r,i,o){const s=u.revive(i),e=this.c.get(r);return e?h(()=>e.provideOriginalResource(s,o)).then(n=>n||null):Promise.resolve(null)}registerQuickDiffProvider(r,i,o,s,e,n){const t=c.a++;this.c.set(t,o);const f=l.toKey(r.identifier);return this.b.$registerQuickDiffProvider(t,m.from(i,this.d),`${f}.${s}`,e,n),{dispose:()=>{this.b.$unregisterQuickDiffProvider(t),this.c.delete(t)}}}}export{c as $fMc};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { URI } from "../../../base/common/uri.js";
+import { MainContext } from "./extHost.protocol.js";
+import { asPromise } from "../../../base/common/async.js";
+import { DocumentSelector } from "./extHostTypeConverters.js";
+import { ExtensionIdentifier } from "../../../platform/extensions/common/extensions.js";
+class ExtHostQuickDiff {
+  static {
+    __name(this, "ExtHostQuickDiff");
+  }
+  static {
+    this.handlePool = 0;
+  }
+  constructor(mainContext, uriTransformer) {
+    this.uriTransformer = uriTransformer;
+    this.providers = /* @__PURE__ */ new Map();
+    this.proxy = mainContext.getProxy(MainContext.MainThreadQuickDiff);
+  }
+  $provideOriginalResource(handle, uriComponents, token) {
+    const uri = URI.revive(uriComponents);
+    const provider = this.providers.get(handle);
+    if (!provider) {
+      return Promise.resolve(null);
+    }
+    return asPromise(() => provider.provideOriginalResource(uri, token)).then((r) => r || null);
+  }
+  registerQuickDiffProvider(extension, selector, quickDiffProvider, id, label, rootUri) {
+    const handle = ExtHostQuickDiff.handlePool++;
+    this.providers.set(handle, quickDiffProvider);
+    const extensionId = ExtensionIdentifier.toKey(extension.identifier);
+    this.proxy.$registerQuickDiffProvider(handle, DocumentSelector.from(selector, this.uriTransformer), `${extensionId}.${id}`, label, rootUri);
+    return {
+      dispose: /* @__PURE__ */ __name(() => {
+        this.proxy.$unregisterQuickDiffProvider(handle);
+        this.providers.delete(handle);
+      }, "dispose")
+    };
+  }
+}
+export {
+  ExtHostQuickDiff
+};
+//# sourceMappingURL=extHostQuickDiff.js.map

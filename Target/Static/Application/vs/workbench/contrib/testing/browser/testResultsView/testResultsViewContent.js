@@ -1,1 +1,482 @@
-import*as l from"../../../../../base/browser/dom.js";import{$G5 as A}from"../../../../../base/browser/keyboardEvent.js";import{$E8 as L}from"../../../../../base/browser/ui/iconLabel/iconLabels.js";import{Sizing as S,$x9 as O}from"../../../../../base/browser/ui/splitview/splitview.js";import{$zc as _}from"../../../../../base/common/arrays.js";import{$Rh as J}from"../../../../../base/common/async.js";import{$pf as P}from"../../../../../base/common/cancellation.js";import{$df as z,Event as w,$mf as q}from"../../../../../base/common/event.js";import{$vd as F,$ud as v,$td as g}from"../../../../../base/common/lifecycle.js";import{observableValue as U}from"../../../../../base/common/observable.js";import{$cF as W}from"../../../../../editor/common/services/resolverService.js";import{localize as y}from"../../../../../nls.js";import{$SUb as E}from"../../../../../platform/actions/browser/floatingMenu.js";import{$ggb as G}from"../../../../../platform/actions/browser/menuEntryActionViewItem.js";import{$mgb as K}from"../../../../../platform/actions/browser/toolbar.js";import{$iI as T,$dI as p,$jI as B}from"../../../../../platform/actions/common/actions.js";import{$Yn as Q}from"../../../../../platform/commands/common/commands.js";import{$Vn as $}from"../../../../../platform/contextkey/common/contextkey.js";import{$mj as M}from"../../../../../platform/instantiation/common/instantiation.js";import{$lj as R}from"../../../../../platform/instantiation/common/serviceCollection.js";import{$OM as X}from"../../../../../platform/quickinput/common/quickInput.js";import{$yo as Y}from"../../../../../platform/uriIdentity/common/uriIdentity.js";import{$llc as j,$olc as Z,$nlc as tt}from"../../../debug/browser/callStackWidget.js";import{$W2b as et,$U2b as it}from"../../common/testProfileService.js";import{$1U as V}from"../../common/testResult.js";import{$L2b as H}from"../../common/testService.js";import{TestingContextKeys as u}from"../../common/testingContextKeys.js";import*as x from"../icons.js";import{$vlc as st,$wlc as nt,$xlc as ot,$ylc as rt}from"./testResultsOutput.js";import{$ilc as ht,$klc as at,$flc as m,$glc as lt,$hlc as ct}from"./testResultsSubject.js";import{$Blc as dt}from"./testResultsTree.js";import"./testResultsViewContent.css";var I=function(o,t,e,i){var s=arguments.length,n=s<3?t:i===null?i=Object.getOwnPropertyDescriptor(t,e):i,r;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")n=Reflect.decorate(o,t,e,i);else for(var h=o.length-1;h>=0;h--)(r=o[h])&&(n=(s<3?r(n):s>3?r(t,e,n):r(t,e))||n);return s>3&&n&&Object.defineProperty(t,e,n),n},c=function(o,t){return function(e,i){t(e,i,o)}},f,k;(function(o){o[o.Diff=0]="Diff",o[o.History=1]="History"})(k||(k={}));let C=class extends tt{constructor(t,e,i,s,n,r){super(),this.a=t,this.b=e,this.c=i,this.g=s,this.j=n,this.k=r,this.height=U("MessageStackFrame.height",100),this.icon=x.$Ekc,this.label=i instanceof m?i.test.label:i instanceof ct?i.test.item.label:i.result.name}render(t){return this.a.style.visibility="visible",t.appendChild(this.a),g(()=>this.a.remove())}renderActions(t){const e=new v;t.appendChild(this.b.domNode),e.add(g(()=>this.b.domNode.remove()));const i=at(this.c),s=i&&this.k.capabilitiesForTest(i);let n;if(s)n=this.j.createOverlay(et(s));else{const d=this.k.getControllerProfiles(this.c.controllerId);n=this.j.createOverlay([[u.hasRunnableTests.key,d.some(a=>a.group&2)],[u.hasDebuggableTests.key,d.some(a=>a.group&4)]])}const r=e.add(this.g.createChild(new R([$,n]))),h=e.add(r.createInstance(K,t,p.TestCallStack,{menuOptions:{shouldForwardArgs:!0},actionViewItemProvider:(d,a)=>G(this.g,d,a)}));return h.context=this.c,e.add(h),e}};C=I([c(3,M),c(4,$),c(5,it)],C);function N(o,t,e){if(e instanceof lt)return o.get(Q).executeCommand(t===4?"testing.debugLastRun":"testing.reRunLastRun",e.result.id);const i=o.get(H),s=e instanceof m?e.test:e.test.item,n=i.collection.getNodeById(s.extId);if(n)return i.runTests({group:t,tests:[n]})}B(class extends T{constructor(){super({id:"testing.callStack.run",title:y(12476,null),icon:x.$Gkc,menu:{id:p.TestCallStack,when:u.hasRunnableTests,group:"navigation"}})}run(o,t){N(o,2,t)}});B(class extends T{constructor(){super({id:"testing.callStack.debug",title:y(12477,null),icon:x.$Kkc,menu:{id:p.TestCallStack,when:u.hasDebuggableTests,group:"navigation"}})}run(o,t){N(o,4,t)}});let D=class extends F{static{f=this}get uiState(){return{splitViewWidths:Array.from({length:this.C.length},(t,e)=>this.C.getViewSize(e))}}get onDidChangeContentHeight(){return this.u.onDidChangeContentHeight}get contentHeight(){return this.u?.contentHeight||0}constructor(t,e,i,s,n,r){super(),this.H=t,this.I=e,this.J=i,this.L=s,this.M=n,this.N=r,this.b=this.B(new z),this.c=this.B(new v),this.g=this.B(new q),this.G=this.B(new J(1)),this.onClose=this.g.event}fillBody(t){const e=f.a;this.C=new O(t,{orientation:1});const{historyVisible:i,showRevealLocationOnMessages:s}=this.I,n=this.H!==void 0,r=this.D=l.$(".test-output-peek-message-container");this.t=l.$M6(t,l.$(".test-output-call-stack-container")),this.u=this.B(this.J.createInstance(Z,this.t,this.H)),this.j=this.B(this.J.createInstance(b,this.H)),this.g.input=this.j.onClose,this.F=[this.B(this.J.createInstance(st,this.H,r)),this.B(this.J.createInstance(nt,r)),this.B(this.J.createInstance(rt,r,n)),this.B(this.J.createInstance(ot,this.H,r))],this.m=this.B(this.M.createScoped(t)),this.n=u.testMessageContext.bindTo(this.m),this.s=u.testResultOutdated.bindTo(this.m);const h=l.$M6(t,l.$(".test-output-peek-tree.testing-stdtree")),d=this.B(this.J.createInstance(dt,h,this.b.event,{showRevealLocationOnMessages:s,locationForProgress:this.I.locationForProgress}));this.onDidRequestReveal=d.onDidRequestReview,this.C.addView({onDidChange:w.None,element:this.t,minimumSize:200,maximumSize:Number.MAX_VALUE,layout:a=>{f.a=a,this.z&&(this.u?.layout(this.z.height,a),this.R(this.z,a))}},S.Distribute),this.C.addView({onDidChange:w.None,element:h,minimumSize:100,maximumSize:Number.MAX_VALUE,layout:a=>{this.z&&d.layout(this.z.height,a)}},S.Distribute),this.C.setViewVisible(1,i.value),this.B(i.onDidChange(a=>{this.C.setViewVisible(1,a)})),e&&queueMicrotask(()=>this.C.resizeView(0,e))}reveal(t){return this.b.fire(t),this.current&&ht(this.current,t.subject)?Promise.resolve():(this.current=t.subject,this.G.queue(async()=>{this.c.clear();const e=this.P(t.subject)||[],i=await this.Q(t.subject,e);this.O(i,e),this.j.show(t.subject),this.S(t.subject)}))}O(t,e){this.u.setFrames([t,...e.map(i=>new j(i.label,i.uri,i.position?.lineNumber,i.position?.column))])}collapseStack(){this.u.collapseAll()}P(t){if(!(t instanceof m))return;const e=t.stack;if(!e?.length||!this.H)return e;const i=e[0],s=t.revealLocation;return s&&i.position&&i.uri&&i.position.lineNumber===s.range.startLineNumber&&i.position.column===s.range.startColumn&&this.N.extUri.isEqual(i.uri,s.uri)?e.slice(1):e}async Q(t,e){this.D.style.visibility="hidden",this.t.appendChild(this.D);const i=this.w=this.J.createInstance(C,this.D,this.j,t),s=e.length>0;i.showHeader.set(s,void 0);const n=await _(this.F,r=>r.update(t));if(n){const r=this.C.getViewSize(0);r!==-1&&this.z&&i.height.set(n.layout({width:r,height:this.z?.height},s),void 0),n.onScrolled&&this.c.add(this.u.onDidScroll(h=>{n.onScrolled(h)})),n.onDidContentSizeChange&&this.c.add(n.onDidContentSizeChange(()=>{const h=this.C.getViewSize(0);this.z&&!this.y&&h!==-1&&(this.y=!0,i.height.set(n.layout({width:h,height:this.z.height},s),void 0),this.y=!1)}))}return i}R(t,e=this.C.getViewSize(0)){this.y=!0;for(const i of this.F){const s=i.layout({height:t.height,width:e},!!this.w?.showHeader.get());s&&this.w?.height.set(s,void 0)}this.y=!1}S(t){if(!(t instanceof m))return;this.c.add(g(()=>{this.s.reset(),this.n.reset()})),this.n.set(t.contextValue||""),t.result instanceof V?(this.s.set(t.result.getStateById(t.test.extId)?.retired??!1),this.c.add(t.result.onChange(i=>{i.item.item.extId===t.test.extId&&this.s.set(i.item.retired??!1)}))):this.s.set(!0);const e=this.c.add(this.J.createChild(new R([$,this.m])));this.c.add(e.createInstance(E,{container:this.D,menuId:p.TestMessageContent,getActionArg:()=>t.context}))}onLayoutBody(t,e){this.z=new l.$25(e,t),this.C.layout(e)}onWidth(t){this.C.layout(t)}};D=f=I([c(2,M),c(3,W),c(4,$),c(5,Y)],D);const ut=500;let b=class extends F{get domNode(){return this.a.root}constructor(t,e,i){super(),this.g=t,this.j=e,this.m=i,this.a=l.h("div.testing-followup-action",[]),this.b=this.B(new v),this.c=this.B(new z),this.onClose=this.c.event}show(t){this.b.clear(),t instanceof m&&this.n(t)}async n(t){const e=this.b.add(new P),i=Date.now();t.result instanceof V&&!t.result.completedAt&&await new Promise(n=>w.once(t.result.onComplete)(n));const s=await this.j.provideTestFollowups({extId:t.test.extId,messageIndex:t.messageIndex,resultId:t.result.id,taskIndex:t.taskIndex},e.token);if(!s.followups.length||e.token.isCancellationRequested){s.dispose();return}this.b.add(s),l.$I5(this.a.root),this.a.root.classList.toggle("animated",Date.now()-i>ut),this.a.root.appendChild(this.s(s.followups[0])),s.followups.length>1&&this.a.root.appendChild(this.t(s.followups)),this.b.add(g(()=>{this.a.root.remove()}))}s(t){const e=this.u(()=>this.w(e,t));return l.$O6(e,...L(t.message)),e}t(t){const e=this.u(()=>this.m.pick(t.map((i,s)=>({label:i.message,index:s}))).then(i=>{i?.length&&t[i[0].index].execute()}));return e.innerText=y(12478,null,t.length-1),e}u(t){const e=document.createElement("a");return e.tabIndex=0,this.b.add(l.$J5(e,"click",t)),this.b.add(l.$J5(e,"keydown",i=>{const s=new A(i);(s.equals(10)||s.equals(3))&&t()})),e}w(t,e){t.ariaDisabled!=="true"&&(t.ariaDisabled="true",e.execute(),this.g&&this.c.fire())}};b=I([c(1,H),c(2,X)],b);export{D as $Clc};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import * as dom from "../../../../../base/browser/dom.js";
+import { StandardKeyboardEvent } from "../../../../../base/browser/keyboardEvent.js";
+import { renderLabelWithIcons } from "../../../../../base/browser/ui/iconLabel/iconLabels.js";
+import { Sizing, SplitView } from "../../../../../base/browser/ui/splitview/splitview.js";
+import { findAsync } from "../../../../../base/common/arrays.js";
+import { Limiter } from "../../../../../base/common/async.js";
+import { CancellationTokenSource } from "../../../../../base/common/cancellation.js";
+import { Emitter, Event, Relay } from "../../../../../base/common/event.js";
+import { Disposable, DisposableStore, toDisposable } from "../../../../../base/common/lifecycle.js";
+import { observableValue } from "../../../../../base/common/observable.js";
+import { ITextModelService } from "../../../../../editor/common/services/resolverService.js";
+import { localize } from "../../../../../nls.js";
+import { FloatingClickMenu } from "../../../../../platform/actions/browser/floatingMenu.js";
+import { createActionViewItem } from "../../../../../platform/actions/browser/menuEntryActionViewItem.js";
+import { MenuWorkbenchToolBar } from "../../../../../platform/actions/browser/toolbar.js";
+import { Action2, MenuId, registerAction2 } from "../../../../../platform/actions/common/actions.js";
+import { ICommandService } from "../../../../../platform/commands/common/commands.js";
+import { IContextKeyService } from "../../../../../platform/contextkey/common/contextkey.js";
+import { IInstantiationService } from "../../../../../platform/instantiation/common/instantiation.js";
+import { ServiceCollection } from "../../../../../platform/instantiation/common/serviceCollection.js";
+import { IQuickInputService } from "../../../../../platform/quickinput/common/quickInput.js";
+import { IUriIdentityService } from "../../../../../platform/uriIdentity/common/uriIdentity.js";
+import { CallStackFrame, CallStackWidget, CustomStackFrame } from "../../../debug/browser/callStackWidget.js";
+import { capabilityContextKeys, ITestProfileService } from "../../common/testProfileService.js";
+import { LiveTestResult } from "../../common/testResult.js";
+import { ITestService } from "../../common/testService.js";
+import { TestingContextKeys } from "../../common/testingContextKeys.js";
+import * as icons from "../icons.js";
+import { DiffContentProvider, MarkdownTestMessagePeek, PlainTextMessagePeek, TerminalMessagePeek } from "./testResultsOutput.js";
+import { equalsSubject, getSubjectTestItem, MessageSubject, TaskSubject, TestOutputSubject } from "./testResultsSubject.js";
+import { OutputPeekTree } from "./testResultsTree.js";
+import "./testResultsViewContent.css";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+var TestResultsViewContent_1;
+var SubView;
+(function(SubView2) {
+  SubView2[SubView2["Diff"] = 0] = "Diff";
+  SubView2[SubView2["History"] = 1] = "History";
+})(SubView || (SubView = {}));
+let MessageStackFrame = class MessageStackFrame2 extends CustomStackFrame {
+  static {
+    __name(this, "MessageStackFrame");
+  }
+  constructor(message, followup, subject, instantiationService, contextKeyService, profileService) {
+    super();
+    this.message = message;
+    this.followup = followup;
+    this.subject = subject;
+    this.instantiationService = instantiationService;
+    this.contextKeyService = contextKeyService;
+    this.profileService = profileService;
+    this.height = observableValue("MessageStackFrame.height", 100);
+    this.icon = icons.testingViewIcon;
+    this.label = subject instanceof MessageSubject ? subject.test.label : subject instanceof TestOutputSubject ? subject.test.item.label : subject.result.name;
+  }
+  render(container) {
+    this.message.style.visibility = "visible";
+    container.appendChild(this.message);
+    return toDisposable(() => this.message.remove());
+  }
+  renderActions(container) {
+    const store = new DisposableStore();
+    container.appendChild(this.followup.domNode);
+    store.add(toDisposable(() => this.followup.domNode.remove()));
+    const test = getSubjectTestItem(this.subject);
+    const capabilities = test && this.profileService.capabilitiesForTest(test);
+    let contextKeyService;
+    if (capabilities) {
+      contextKeyService = this.contextKeyService.createOverlay(capabilityContextKeys(capabilities));
+    } else {
+      const profiles = this.profileService.getControllerProfiles(this.subject.controllerId);
+      contextKeyService = this.contextKeyService.createOverlay([
+        [TestingContextKeys.hasRunnableTests.key, profiles.some(
+          (p) => p.group & 2
+          /* TestRunProfileBitset.Run */
+        )],
+        [TestingContextKeys.hasDebuggableTests.key, profiles.some(
+          (p) => p.group & 4
+          /* TestRunProfileBitset.Debug */
+        )]
+      ]);
+    }
+    const instaService = store.add(this.instantiationService.createChild(new ServiceCollection([IContextKeyService, contextKeyService])));
+    const toolbar = store.add(instaService.createInstance(MenuWorkbenchToolBar, container, MenuId.TestCallStack, {
+      menuOptions: { shouldForwardArgs: true },
+      actionViewItemProvider: /* @__PURE__ */ __name((action, options) => createActionViewItem(this.instantiationService, action, options), "actionViewItemProvider")
+    }));
+    toolbar.context = this.subject;
+    store.add(toolbar);
+    return store;
+  }
+};
+MessageStackFrame = __decorate([
+  __param(3, IInstantiationService),
+  __param(4, IContextKeyService),
+  __param(5, ITestProfileService)
+], MessageStackFrame);
+function runInLast(accessor, bitset, subject) {
+  if (subject instanceof TaskSubject) {
+    return accessor.get(ICommandService).executeCommand(bitset === 4 ? "testing.debugLastRun" : "testing.reRunLastRun", subject.result.id);
+  }
+  const testService = accessor.get(ITestService);
+  const plainTest = subject instanceof MessageSubject ? subject.test : subject.test.item;
+  const currentTest = testService.collection.getNodeById(plainTest.extId);
+  if (!currentTest) {
+    return;
+  }
+  return testService.runTests({
+    group: bitset,
+    tests: [currentTest]
+  });
+}
+__name(runInLast, "runInLast");
+registerAction2(class extends Action2 {
+  constructor() {
+    super({
+      id: "testing.callStack.run",
+      title: localize("testing.callStack.run", "Rerun Test"),
+      icon: icons.testingRunIcon,
+      menu: {
+        id: MenuId.TestCallStack,
+        when: TestingContextKeys.hasRunnableTests,
+        group: "navigation"
+      }
+    });
+  }
+  run(accessor, subject) {
+    runInLast(accessor, 2, subject);
+  }
+});
+registerAction2(class extends Action2 {
+  constructor() {
+    super({
+      id: "testing.callStack.debug",
+      title: localize("testing.callStack.debug", "Debug Test"),
+      icon: icons.testingDebugIcon,
+      menu: {
+        id: MenuId.TestCallStack,
+        when: TestingContextKeys.hasDebuggableTests,
+        group: "navigation"
+      }
+    });
+  }
+  run(accessor, subject) {
+    runInLast(accessor, 4, subject);
+  }
+});
+let TestResultsViewContent = class TestResultsViewContent2 extends Disposable {
+  static {
+    __name(this, "TestResultsViewContent");
+  }
+  static {
+    TestResultsViewContent_1 = this;
+  }
+  get uiState() {
+    return {
+      splitViewWidths: Array.from({ length: this.splitView.length }, (_, i) => this.splitView.getViewSize(i))
+    };
+  }
+  get onDidChangeContentHeight() {
+    return this.callStackWidget.onDidChangeContentHeight;
+  }
+  get contentHeight() {
+    return this.callStackWidget?.contentHeight || 0;
+  }
+  constructor(editor, options, instantiationService, modelService, contextKeyService, uriIdentityService) {
+    super();
+    this.editor = editor;
+    this.options = options;
+    this.instantiationService = instantiationService;
+    this.modelService = modelService;
+    this.contextKeyService = contextKeyService;
+    this.uriIdentityService = uriIdentityService;
+    this.didReveal = this._register(new Emitter());
+    this.currentSubjectStore = this._register(new DisposableStore());
+    this.onCloseEmitter = this._register(new Relay());
+    this.contentProvidersUpdateLimiter = this._register(new Limiter(1));
+    this.onClose = this.onCloseEmitter.event;
+  }
+  fillBody(containerElement) {
+    const initialSpitWidth = TestResultsViewContent_1.lastSplitWidth;
+    this.splitView = new SplitView(containerElement, {
+      orientation: 1
+      /* Orientation.HORIZONTAL */
+    });
+    const { historyVisible, showRevealLocationOnMessages } = this.options;
+    const isInPeekView = this.editor !== void 0;
+    const messageContainer = this.messageContainer = dom.$(".test-output-peek-message-container");
+    this.stackContainer = dom.append(containerElement, dom.$(".test-output-call-stack-container"));
+    this.callStackWidget = this._register(this.instantiationService.createInstance(CallStackWidget, this.stackContainer, this.editor));
+    this.followupWidget = this._register(this.instantiationService.createInstance(FollowupActionWidget, this.editor));
+    this.onCloseEmitter.input = this.followupWidget.onClose;
+    this.contentProviders = [
+      this._register(this.instantiationService.createInstance(DiffContentProvider, this.editor, messageContainer)),
+      this._register(this.instantiationService.createInstance(MarkdownTestMessagePeek, messageContainer)),
+      this._register(this.instantiationService.createInstance(TerminalMessagePeek, messageContainer, isInPeekView)),
+      this._register(this.instantiationService.createInstance(PlainTextMessagePeek, this.editor, messageContainer))
+    ];
+    this.messageContextKeyService = this._register(this.contextKeyService.createScoped(containerElement));
+    this.contextKeyTestMessage = TestingContextKeys.testMessageContext.bindTo(this.messageContextKeyService);
+    this.contextKeyResultOutdated = TestingContextKeys.testResultOutdated.bindTo(this.messageContextKeyService);
+    const treeContainer = dom.append(containerElement, dom.$(".test-output-peek-tree.testing-stdtree"));
+    const tree = this._register(this.instantiationService.createInstance(OutputPeekTree, treeContainer, this.didReveal.event, { showRevealLocationOnMessages, locationForProgress: this.options.locationForProgress }));
+    this.onDidRequestReveal = tree.onDidRequestReview;
+    this.splitView.addView({
+      onDidChange: Event.None,
+      element: this.stackContainer,
+      minimumSize: 200,
+      maximumSize: Number.MAX_VALUE,
+      layout: /* @__PURE__ */ __name((width) => {
+        TestResultsViewContent_1.lastSplitWidth = width;
+        if (this.dimension) {
+          this.callStackWidget?.layout(this.dimension.height, width);
+          this.layoutContentWidgets(this.dimension, width);
+        }
+      }, "layout")
+    }, Sizing.Distribute);
+    this.splitView.addView({
+      onDidChange: Event.None,
+      element: treeContainer,
+      minimumSize: 100,
+      maximumSize: Number.MAX_VALUE,
+      layout: /* @__PURE__ */ __name((width) => {
+        if (this.dimension) {
+          tree.layout(this.dimension.height, width);
+        }
+      }, "layout")
+    }, Sizing.Distribute);
+    this.splitView.setViewVisible(1, historyVisible.value);
+    this._register(historyVisible.onDidChange((visible) => {
+      this.splitView.setViewVisible(1, visible);
+    }));
+    if (initialSpitWidth) {
+      queueMicrotask(() => this.splitView.resizeView(0, initialSpitWidth));
+    }
+  }
+  /**
+   * Shows a message in-place without showing or changing the peek location.
+   * This is mostly used if peeking a message without a location.
+   */
+  reveal(opts) {
+    this.didReveal.fire(opts);
+    if (this.current && equalsSubject(this.current, opts.subject)) {
+      return Promise.resolve();
+    }
+    this.current = opts.subject;
+    return this.contentProvidersUpdateLimiter.queue(async () => {
+      this.currentSubjectStore.clear();
+      const callFrames = this.getCallFrames(opts.subject) || [];
+      const topFrame = await this.prepareTopFrame(opts.subject, callFrames);
+      this.setCallStackFrames(topFrame, callFrames);
+      this.followupWidget.show(opts.subject);
+      this.populateFloatingClick(opts.subject);
+    });
+  }
+  setCallStackFrames(messageFrame, stack) {
+    this.callStackWidget.setFrames([messageFrame, ...stack.map((frame) => new CallStackFrame(frame.label, frame.uri, frame.position?.lineNumber, frame.position?.column))]);
+  }
+  /**
+   * Collapses all displayed stack frames.
+   */
+  collapseStack() {
+    this.callStackWidget.collapseAll();
+  }
+  getCallFrames(subject) {
+    if (!(subject instanceof MessageSubject)) {
+      return void 0;
+    }
+    const frames = subject.stack;
+    if (!frames?.length || !this.editor) {
+      return frames;
+    }
+    const topFrame = frames[0];
+    const peekLocation = subject.revealLocation;
+    const isTopFrameSame = peekLocation && topFrame.position && topFrame.uri && topFrame.position.lineNumber === peekLocation.range.startLineNumber && topFrame.position.column === peekLocation.range.startColumn && this.uriIdentityService.extUri.isEqual(topFrame.uri, peekLocation.uri);
+    return isTopFrameSame ? frames.slice(1) : frames;
+  }
+  async prepareTopFrame(subject, callFrames) {
+    this.messageContainer.style.visibility = "hidden";
+    this.stackContainer.appendChild(this.messageContainer);
+    const topFrame = this.currentTopFrame = this.instantiationService.createInstance(MessageStackFrame, this.messageContainer, this.followupWidget, subject);
+    const hasMultipleFrames = callFrames.length > 0;
+    topFrame.showHeader.set(hasMultipleFrames, void 0);
+    const provider = await findAsync(this.contentProviders, (p) => p.update(subject));
+    if (provider) {
+      const width = this.splitView.getViewSize(
+        0
+        /* SubView.Diff */
+      );
+      if (width !== -1 && this.dimension) {
+        topFrame.height.set(provider.layout({ width, height: this.dimension?.height }, hasMultipleFrames), void 0);
+      }
+      if (provider.onScrolled) {
+        this.currentSubjectStore.add(this.callStackWidget.onDidScroll((evt) => {
+          provider.onScrolled(evt);
+        }));
+      }
+      if (provider.onDidContentSizeChange) {
+        this.currentSubjectStore.add(provider.onDidContentSizeChange(() => {
+          const width2 = this.splitView.getViewSize(
+            0
+            /* SubView.Diff */
+          );
+          if (this.dimension && !this.isDoingLayoutUpdate && width2 !== -1) {
+            this.isDoingLayoutUpdate = true;
+            topFrame.height.set(provider.layout({ width: width2, height: this.dimension.height }, hasMultipleFrames), void 0);
+            this.isDoingLayoutUpdate = false;
+          }
+        }));
+      }
+    }
+    return topFrame;
+  }
+  layoutContentWidgets(dimension, width = this.splitView.getViewSize(
+    0
+    /* SubView.Diff */
+  )) {
+    this.isDoingLayoutUpdate = true;
+    for (const provider of this.contentProviders) {
+      const frameHeight = provider.layout({ height: dimension.height, width }, !!this.currentTopFrame?.showHeader.get());
+      if (frameHeight) {
+        this.currentTopFrame?.height.set(frameHeight, void 0);
+      }
+    }
+    this.isDoingLayoutUpdate = false;
+  }
+  populateFloatingClick(subject) {
+    if (!(subject instanceof MessageSubject)) {
+      return;
+    }
+    this.currentSubjectStore.add(toDisposable(() => {
+      this.contextKeyResultOutdated.reset();
+      this.contextKeyTestMessage.reset();
+    }));
+    this.contextKeyTestMessage.set(subject.contextValue || "");
+    if (subject.result instanceof LiveTestResult) {
+      this.contextKeyResultOutdated.set(subject.result.getStateById(subject.test.extId)?.retired ?? false);
+      this.currentSubjectStore.add(subject.result.onChange((ev) => {
+        if (ev.item.item.extId === subject.test.extId) {
+          this.contextKeyResultOutdated.set(ev.item.retired ?? false);
+        }
+      }));
+    } else {
+      this.contextKeyResultOutdated.set(true);
+    }
+    const instaService = this.currentSubjectStore.add(this.instantiationService.createChild(new ServiceCollection([IContextKeyService, this.messageContextKeyService])));
+    this.currentSubjectStore.add(instaService.createInstance(FloatingClickMenu, {
+      container: this.messageContainer,
+      menuId: MenuId.TestMessageContent,
+      getActionArg: /* @__PURE__ */ __name(() => subject.context, "getActionArg")
+    }));
+  }
+  onLayoutBody(height, width) {
+    this.dimension = new dom.Dimension(width, height);
+    this.splitView.layout(width);
+  }
+  onWidth(width) {
+    this.splitView.layout(width);
+  }
+};
+TestResultsViewContent = TestResultsViewContent_1 = __decorate([
+  __param(2, IInstantiationService),
+  __param(3, ITextModelService),
+  __param(4, IContextKeyService),
+  __param(5, IUriIdentityService)
+], TestResultsViewContent);
+const FOLLOWUP_ANIMATION_MIN_TIME = 500;
+let FollowupActionWidget = class FollowupActionWidget2 extends Disposable {
+  static {
+    __name(this, "FollowupActionWidget");
+  }
+  get domNode() {
+    return this.el.root;
+  }
+  constructor(editor, testService, quickInput) {
+    super();
+    this.editor = editor;
+    this.testService = testService;
+    this.quickInput = quickInput;
+    this.el = dom.h("div.testing-followup-action", []);
+    this.visibleStore = this._register(new DisposableStore());
+    this.onCloseEmitter = this._register(new Emitter());
+    this.onClose = this.onCloseEmitter.event;
+  }
+  show(subject) {
+    this.visibleStore.clear();
+    if (subject instanceof MessageSubject) {
+      this.showMessage(subject);
+    }
+  }
+  async showMessage(subject) {
+    const cts = this.visibleStore.add(new CancellationTokenSource());
+    const start = Date.now();
+    if (subject.result instanceof LiveTestResult && !subject.result.completedAt) {
+      await new Promise((r) => Event.once(subject.result.onComplete)(r));
+    }
+    const followups = await this.testService.provideTestFollowups({
+      extId: subject.test.extId,
+      messageIndex: subject.messageIndex,
+      resultId: subject.result.id,
+      taskIndex: subject.taskIndex
+    }, cts.token);
+    if (!followups.followups.length || cts.token.isCancellationRequested) {
+      followups.dispose();
+      return;
+    }
+    this.visibleStore.add(followups);
+    dom.clearNode(this.el.root);
+    this.el.root.classList.toggle("animated", Date.now() - start > FOLLOWUP_ANIMATION_MIN_TIME);
+    this.el.root.appendChild(this.makeFollowupLink(followups.followups[0]));
+    if (followups.followups.length > 1) {
+      this.el.root.appendChild(this.makeMoreLink(followups.followups));
+    }
+    this.visibleStore.add(toDisposable(() => {
+      this.el.root.remove();
+    }));
+  }
+  makeFollowupLink(first) {
+    const link = this.makeLink(() => this.actionFollowup(link, first));
+    dom.reset(link, ...renderLabelWithIcons(first.message));
+    return link;
+  }
+  makeMoreLink(followups) {
+    const link = this.makeLink(() => this.quickInput.pick(followups.map((f, i) => ({
+      label: f.message,
+      index: i
+    }))).then((picked) => {
+      if (picked?.length) {
+        followups[picked[0].index].execute();
+      }
+    }));
+    link.innerText = localize("testFollowup.more", "+{0} More...", followups.length - 1);
+    return link;
+  }
+  makeLink(onClick) {
+    const link = document.createElement("a");
+    link.tabIndex = 0;
+    this.visibleStore.add(dom.addDisposableListener(link, "click", onClick));
+    this.visibleStore.add(dom.addDisposableListener(link, "keydown", (e) => {
+      const event = new StandardKeyboardEvent(e);
+      if (event.equals(
+        10
+        /* KeyCode.Space */
+      ) || event.equals(
+        3
+        /* KeyCode.Enter */
+      )) {
+        onClick();
+      }
+    }));
+    return link;
+  }
+  actionFollowup(link, fu) {
+    if (link.ariaDisabled !== "true") {
+      link.ariaDisabled = "true";
+      fu.execute();
+      if (this.editor) {
+        this.onCloseEmitter.fire();
+      }
+    }
+  }
+};
+FollowupActionWidget = __decorate([
+  __param(1, ITestService),
+  __param(2, IQuickInputService)
+], FollowupActionWidget);
+export {
+  TestResultsViewContent
+};
+//# sourceMappingURL=testResultsViewContent.js.map

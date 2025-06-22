@@ -1,1 +1,91 @@
-import{$6o as h}from"../../../base/common/objects.js";function g(i,o,a,f){const u={added:[],removed:[],updated:[]};let t={added:[],removed:[],updated:[]};if(!o){const s=i.filter(({id:d})=>!f.includes(d));return s.length?t.added=s:t=null,{local:u,remote:t}}const c=p(i,o,f);if(c.added.length>0||c.removed.length>0||c.updated.length>0){const s=p(a,i,f),d=p(a,o,f);for(const e of d.removed){const n=i.find(l=>l.id===e);n&&u.removed.push(n)}for(const e of d.added){const n=o.find(l=>l.id===e);s.added.includes(e)?c.updated.includes(e)&&u.updated.push(n):u.added.push(n)}for(const e of d.updated)u.updated.push(o.find(n=>n.id===e));for(const e of s.added)d.added.includes(e)||t.added.push(i.find(n=>n.id===e));for(const e of s.updated)d.removed.includes(e)||d.updated.includes(e)||t.updated.push(i.find(n=>n.id===e));for(const e of s.removed){const n=o.find(l=>l.id===e);n&&t.removed.push(n)}}return t.added.length===0&&t.removed.length===0&&t.updated.length===0&&(t=null),{local:u,remote:t}}function p(i,o,a){i=i?i.filter(({id:d})=>!a.includes(d)):[],o=o.filter(({id:d})=>!a.includes(d));const f=i.map(({id:d})=>d),u=o.map(({id:d})=>d),t=u.filter(d=>!f.includes(d)),c=f.filter(d=>!u.includes(d)),s=[];for(const{id:d,name:e,icon:n,useDefaultFlags:l}of i){if(c.includes(d))continue;const r=o.find(m=>m.id===d);(!r||r.name!==e||r.icon!==n||!h(r.useDefaultFlags,l))&&s.push(d)}return{added:t,removed:c,updated:s}}export{g as $sBc};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { equals } from "../../../base/common/objects.js";
+function merge(local, remote, lastSync, ignored) {
+  const localResult = { added: [], removed: [], updated: [] };
+  let remoteResult = { added: [], removed: [], updated: [] };
+  if (!remote) {
+    const added = local.filter(({ id }) => !ignored.includes(id));
+    if (added.length) {
+      remoteResult.added = added;
+    } else {
+      remoteResult = null;
+    }
+    return {
+      local: localResult,
+      remote: remoteResult
+    };
+  }
+  const localToRemote = compare(local, remote, ignored);
+  if (localToRemote.added.length > 0 || localToRemote.removed.length > 0 || localToRemote.updated.length > 0) {
+    const baseToLocal = compare(lastSync, local, ignored);
+    const baseToRemote = compare(lastSync, remote, ignored);
+    for (const id of baseToRemote.removed) {
+      const e = local.find((profile) => profile.id === id);
+      if (e) {
+        localResult.removed.push(e);
+      }
+    }
+    for (const id of baseToRemote.added) {
+      const remoteProfile = remote.find((profile) => profile.id === id);
+      if (baseToLocal.added.includes(id)) {
+        if (localToRemote.updated.includes(id)) {
+          localResult.updated.push(remoteProfile);
+        }
+      } else {
+        localResult.added.push(remoteProfile);
+      }
+    }
+    for (const id of baseToRemote.updated) {
+      localResult.updated.push(remote.find((profile) => profile.id === id));
+    }
+    for (const id of baseToLocal.added) {
+      if (!baseToRemote.added.includes(id)) {
+        remoteResult.added.push(local.find((profile) => profile.id === id));
+      }
+    }
+    for (const id of baseToLocal.updated) {
+      if (baseToRemote.removed.includes(id)) {
+        continue;
+      }
+      if (!baseToRemote.updated.includes(id)) {
+        remoteResult.updated.push(local.find((profile) => profile.id === id));
+      }
+    }
+    for (const id of baseToLocal.removed) {
+      const removedProfile = remote.find((profile) => profile.id === id);
+      if (removedProfile) {
+        remoteResult.removed.push(removedProfile);
+      }
+    }
+  }
+  if (remoteResult.added.length === 0 && remoteResult.removed.length === 0 && remoteResult.updated.length === 0) {
+    remoteResult = null;
+  }
+  return { local: localResult, remote: remoteResult };
+}
+__name(merge, "merge");
+function compare(from, to, ignoredProfiles) {
+  from = from ? from.filter(({ id }) => !ignoredProfiles.includes(id)) : [];
+  to = to.filter(({ id }) => !ignoredProfiles.includes(id));
+  const fromKeys = from.map(({ id }) => id);
+  const toKeys = to.map(({ id }) => id);
+  const added = toKeys.filter((key) => !fromKeys.includes(key));
+  const removed = fromKeys.filter((key) => !toKeys.includes(key));
+  const updated = [];
+  for (const { id, name, icon, useDefaultFlags } of from) {
+    if (removed.includes(id)) {
+      continue;
+    }
+    const toProfile = to.find((p) => p.id === id);
+    if (!toProfile || toProfile.name !== name || toProfile.icon !== icon || !equals(toProfile.useDefaultFlags, useDefaultFlags)) {
+      updated.push(id);
+    }
+  }
+  return { added, removed, updated };
+}
+__name(compare, "compare");
+export {
+  merge
+};
+//# sourceMappingURL=userDataProfilesManifestMerge.js.map

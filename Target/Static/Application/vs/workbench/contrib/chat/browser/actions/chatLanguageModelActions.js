@@ -1,1 +1,176 @@
-import{$iI as v,$dI as k,$jI as D}from"../../../../../platform/actions/common/actions.js";import{$OM as T}from"../../../../../platform/quickinput/common/quickInput.js";import{$8O as z}from"../../common/languageModels.js";import{$$$ as C}from"../../../../services/authentication/browser/authenticationAccessService.js";import{localize as i,localize2 as N}from"../../../../../nls.js";import{$bX as $}from"../../../../services/authentication/common/authentication.js";import{$_o as O}from"../../../../../platform/dialogs/common/dialogs.js";import{$VDb as j}from"./chatActions.js";import{$XO as B}from"../../../../services/extensions/common/extensions.js";import{$bDb as X}from"../../../extensions/common/extensions.js";import{$nn as q}from"../../../../../platform/product/common/productService.js";import{$Mj as H}from"../../../../../base/common/codicons.js";import{ThemeIcon as P}from"../../../../../base/common/themables.js";class g extends v{static{this.ID="workbench.action.chat.manageLanguageModelAuthentication"}constructor(){super({id:g.ID,title:N(4985,"Manage Language Model Access..."),category:j,menu:[{id:k.AccountsContext,order:100}],f1:!0})}async run(r){const E=r.get(T),x=r.get(z),w=r.get(C),y=r.get(O),u=r.get(B),M=r.get(X),f=r.get(q),L=x.getLanguageModelIds(),a=new Map,h=new Map;for(const t of L){const o=x.lookupLanguageModel(t);if(!o?.auth)continue;const n=o.extension.value;if(!a.has(n))try{const e=$+n,s=o.auth.accountLabel||"Language Models";h.set(n,s);const d=w.readAllowedExtensions(e,s).filter(l=>!l.trusted);if(f.trustedExtensionAuthAccess&&!Array.isArray(f.trustedExtensionAuthAccess)){const l=f.trustedExtensionAuthAccess[e];for(const p of l){const I=d.findIndex(S=>S.id===p);I!==-1&&d.splice(I,1);const m=await u.getExtension(p);m&&d.push({id:p,name:m.displayName||m.name,allowed:!0,trusted:!0})}}const A=new Array;for(const l of d)await u.getExtension(l.id)&&A.push(l);a.set(n,A)}catch{a.has(n)||a.set(n,[])}}if(a.size===0){y.prompt({type:"info",message:i(4976,null),detail:i(4977,null)});return}const c=[];for(const[t,o]of a){const n=await u.getExtension(t);if(!n)continue;c.push({type:"separator",id:t,label:i(4978,null,n.displayName||n.name),buttons:[{iconClass:P.asClassName(H.info),tooltip:i(4979,null)}]});let e=!1;if(o.length>0)for(const s of o)s.trusted&&!e&&(c.push({type:"separator",label:i(4980,null)}),e=!0),c.push({label:s.name,ownerId:t,id:s.id,picked:s.allowed??!1,extension:s,disabled:s.trusted});else c.push({label:i(4981,null),description:i(4982,null,t),pickable:!1})}const b=await E.pick(c,{canPickMany:!0,sortByLabel:!0,onDidTriggerSeparatorButton(t){const o=t.separator.id;o&&M.open(o)},title:i(4983,null),placeHolder:i(4984,null)});if(b)for(const[t,o]of a){const n=new Set(b.filter(e=>e.ownerId===t).filter(e=>!e.extension?.trusted).map(e=>e.id));for(const e of o)e.allowed=n.has(e.id);w.updateAllowedExtensions($+t,h.get(t)||"Language Models",o)}}}function te(){D(g)}export{te as $Lgc};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { Action2, MenuId, registerAction2 } from "../../../../../platform/actions/common/actions.js";
+import { IQuickInputService } from "../../../../../platform/quickinput/common/quickInput.js";
+import { ILanguageModelsService } from "../../common/languageModels.js";
+import { IAuthenticationAccessService } from "../../../../services/authentication/browser/authenticationAccessService.js";
+import { localize, localize2 } from "../../../../../nls.js";
+import { INTERNAL_AUTH_PROVIDER_PREFIX } from "../../../../services/authentication/common/authentication.js";
+import { IDialogService } from "../../../../../platform/dialogs/common/dialogs.js";
+import { CHAT_CATEGORY } from "./chatActions.js";
+import { IExtensionService } from "../../../../services/extensions/common/extensions.js";
+import { IExtensionsWorkbenchService } from "../../../extensions/common/extensions.js";
+import { IProductService } from "../../../../../platform/product/common/productService.js";
+import { Codicon } from "../../../../../base/common/codicons.js";
+import { ThemeIcon } from "../../../../../base/common/themables.js";
+class ManageLanguageModelAuthenticationAction extends Action2 {
+  static {
+    __name(this, "ManageLanguageModelAuthenticationAction");
+  }
+  static {
+    this.ID = "workbench.action.chat.manageLanguageModelAuthentication";
+  }
+  constructor() {
+    super({
+      id: ManageLanguageModelAuthenticationAction.ID,
+      title: localize2("manageLanguageModelAuthentication", "Manage Language Model Access..."),
+      category: CHAT_CATEGORY,
+      menu: [{
+        id: MenuId.AccountsContext,
+        order: 100
+      }],
+      f1: true
+    });
+  }
+  async run(accessor) {
+    const quickInputService = accessor.get(IQuickInputService);
+    const languageModelsService = accessor.get(ILanguageModelsService);
+    const authenticationAccessService = accessor.get(IAuthenticationAccessService);
+    const dialogService = accessor.get(IDialogService);
+    const extensionService = accessor.get(IExtensionService);
+    const extensionsWorkbenchService = accessor.get(IExtensionsWorkbenchService);
+    const productService = accessor.get(IProductService);
+    const modelIds = languageModelsService.getLanguageModelIds();
+    const extensionAuth = /* @__PURE__ */ new Map();
+    const ownerToAccountLabel = /* @__PURE__ */ new Map();
+    for (const modelId of modelIds) {
+      const model = languageModelsService.lookupLanguageModel(modelId);
+      if (!model?.auth) {
+        continue;
+      }
+      const ownerId = model.extension.value;
+      if (extensionAuth.has(ownerId)) {
+        continue;
+      }
+      try {
+        const providerId = INTERNAL_AUTH_PROVIDER_PREFIX + ownerId;
+        const accountLabel = model.auth.accountLabel || "Language Models";
+        ownerToAccountLabel.set(ownerId, accountLabel);
+        const allowedExtensions = authenticationAccessService.readAllowedExtensions(providerId, accountLabel).filter((ext) => !ext.trusted);
+        if (productService.trustedExtensionAuthAccess && !Array.isArray(productService.trustedExtensionAuthAccess)) {
+          const trustedExtensions = productService.trustedExtensionAuthAccess[providerId];
+          for (const ext of trustedExtensions) {
+            const index = allowedExtensions.findIndex((a) => a.id === ext);
+            if (index !== -1) {
+              allowedExtensions.splice(index, 1);
+            }
+            const extension = await extensionService.getExtension(ext);
+            if (!extension) {
+              continue;
+            }
+            allowedExtensions.push({
+              id: ext,
+              name: extension.displayName || extension.name,
+              allowed: true,
+              // Assume trusted extensions are allowed by default
+              trusted: true
+              // Mark as trusted
+            });
+          }
+        }
+        const filteredExtensions = new Array();
+        for (const ext of allowedExtensions) {
+          if (await extensionService.getExtension(ext.id)) {
+            filteredExtensions.push(ext);
+          }
+        }
+        extensionAuth.set(ownerId, filteredExtensions);
+      } catch (error) {
+        if (!extensionAuth.has(ownerId)) {
+          extensionAuth.set(ownerId, []);
+        }
+      }
+    }
+    if (extensionAuth.size === 0) {
+      dialogService.prompt({
+        type: "info",
+        message: localize("noLanguageModels", "No language models requiring authentication found."),
+        detail: localize("noLanguageModelsDetail", "There are currently no language models that require authentication.")
+      });
+      return;
+    }
+    const items = [];
+    for (const [ownerId, allowedExtensions] of extensionAuth) {
+      const extension = await extensionService.getExtension(ownerId);
+      if (!extension) {
+        continue;
+      }
+      items.push({
+        type: "separator",
+        id: ownerId,
+        label: localize("extensionOwner", "{0}", extension.displayName || extension.name),
+        buttons: [{
+          iconClass: ThemeIcon.asClassName(Codicon.info),
+          tooltip: localize("openExtension", "Open Extension")
+        }]
+      });
+      let addedTrustedSeparator = false;
+      if (allowedExtensions.length > 0) {
+        for (const allowedExt of allowedExtensions) {
+          if (allowedExt.trusted && !addedTrustedSeparator) {
+            items.push({
+              type: "separator",
+              label: localize("trustedExtension", "Trusted by Microsoft")
+            });
+            addedTrustedSeparator = true;
+          }
+          items.push({
+            label: allowedExt.name,
+            ownerId,
+            id: allowedExt.id,
+            picked: allowedExt.allowed ?? false,
+            extension: allowedExt,
+            disabled: allowedExt.trusted
+            // Don't allow toggling trusted extensions
+          });
+        }
+      } else {
+        items.push({
+          label: localize("noAllowedExtensions", "No extensions have access"),
+          description: localize("noAccessDescription", "No extensions are currently allowed to use models from {0}", ownerId),
+          pickable: false
+        });
+      }
+    }
+    const result = await quickInputService.pick(items, {
+      canPickMany: true,
+      sortByLabel: true,
+      onDidTriggerSeparatorButton(context) {
+        const extId = context.separator.id;
+        if (extId) {
+          void extensionsWorkbenchService.open(extId);
+        }
+      },
+      title: localize("languageModelAuthTitle", "Manage Language Model Access"),
+      placeHolder: localize("languageModelAuthPlaceholder", "Choose which extensions can access language models")
+    });
+    if (!result) {
+      return;
+    }
+    for (const [ownerId, allowedExtensions] of extensionAuth) {
+      const allowedSet = new Set(result.filter((item) => item.ownerId === ownerId).filter((item) => !item.extension?.trusted).map((item) => item.id));
+      for (const allowedExt of allowedExtensions) {
+        allowedExt.allowed = allowedSet.has(allowedExt.id);
+      }
+      authenticationAccessService.updateAllowedExtensions(INTERNAL_AUTH_PROVIDER_PREFIX + ownerId, ownerToAccountLabel.get(ownerId) || "Language Models", allowedExtensions);
+    }
+  }
+}
+function registerLanguageModelActions() {
+  registerAction2(ManageLanguageModelAuthenticationAction);
+}
+__name(registerLanguageModelActions, "registerLanguageModelActions");
+export {
+  registerLanguageModelActions
+};
+//# sourceMappingURL=chatLanguageModelActions.js.map

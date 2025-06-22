@@ -1,1 +1,106 @@
-import{$vd as a}from"../../../../base/common/lifecycle.js";import{$Ho as u}from"../../../../platform/storage/common/storage.js";import{$6tb as g}from"../../../common/memento.js";import{$9Zb as m}from"./configuration.js";import{$XO as p}from"../../../services/extensions/common/extensions.js";var f,l=function(e,t,s,i){var n,o=arguments.length,r=o<3?t:null===i?i=Object.getOwnPropertyDescriptor(t,s):i;if("object"==typeof Reflect&&"function"==typeof Reflect.decorate)r=Reflect.decorate(e,t,s,i);else for(var c=e.length-1;c>=0;c--)(n=e[c])&&(r=(o<3?n(r):o>3?n(t,s,r):n(t,s))||r);return o>3&&r&&Object.defineProperty(t,s,r),r},c=function(e,t){return function(s,i){t(s,i,e)}};let d=class extends a{static{f=this}static{this.a="externalUriOpeners"}constructor(e,t){super(),this.g=t,this.b=new Map,this.c=new g(f.a,e),this.f=this.c.getMemento(0,1);for(const[e,t]of Object.entries(this.f||{}))this.h(e,t.extensionId,{isCurrentlyRegistered:!1});this.j(),this.B(this.g.onDidChangeExtensions((()=>this.j()))),this.B(this.g.onDidChangeExtensionsStatus((()=>this.j())))}didRegisterOpener(e,t){this.h(e,t,{isCurrentlyRegistered:!0})}h(e,t,s){const i=this.b.get(e);if(i)return void(i.isCurrentlyRegistered=i.isCurrentlyRegistered||s.isCurrentlyRegistered);const n={extensionId:t,isCurrentlyRegistered:s.isCurrentlyRegistered};this.b.set(e,n),this.f[e]=n,this.c.saveMemento(),this.m()}delete(e){this.b.delete(e),delete this.f[e],this.c.saveMemento(),this.m()}async j(){await this.g.whenInstalledExtensionsRegistered();const e=this.g.extensions;for(const[t,s]of this.b){const i=e.find((e=>e.identifier.value===s.extensionId));i&&(this.g.canRemoveExtension(i)||s.isCurrentlyRegistered)||this.delete(t)}}m(){const e=[],t=[];for(const[s,i]of this.b)e.push(s),t.push(i.extensionId);m(e,t)}};d=f=l([c(0,u),c(1,p)],d);export{d as $0Zb};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { Disposable } from "../../../../base/common/lifecycle.js";
+import { IStorageService } from "../../../../platform/storage/common/storage.js";
+import { Memento } from "../../../common/memento.js";
+import { updateContributedOpeners } from "./configuration.js";
+import { IExtensionService } from "../../../services/extensions/common/extensions.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+var ContributedExternalUriOpenersStore_1;
+let ContributedExternalUriOpenersStore = class ContributedExternalUriOpenersStore2 extends Disposable {
+  static {
+    __name(this, "ContributedExternalUriOpenersStore");
+  }
+  static {
+    ContributedExternalUriOpenersStore_1 = this;
+  }
+  static {
+    this.STORAGE_ID = "externalUriOpeners";
+  }
+  constructor(storageService, _extensionService) {
+    super();
+    this._extensionService = _extensionService;
+    this._openers = /* @__PURE__ */ new Map();
+    this._memento = new Memento(ContributedExternalUriOpenersStore_1.STORAGE_ID, storageService);
+    this._mementoObject = this._memento.getMemento(
+      0,
+      1
+      /* StorageTarget.MACHINE */
+    );
+    for (const [id, value] of Object.entries(this._mementoObject || {})) {
+      this.add(id, value.extensionId, { isCurrentlyRegistered: false });
+    }
+    this.invalidateOpenersOnExtensionsChanged();
+    this._register(this._extensionService.onDidChangeExtensions(() => this.invalidateOpenersOnExtensionsChanged()));
+    this._register(this._extensionService.onDidChangeExtensionsStatus(() => this.invalidateOpenersOnExtensionsChanged()));
+  }
+  didRegisterOpener(id, extensionId) {
+    this.add(id, extensionId, {
+      isCurrentlyRegistered: true
+    });
+  }
+  add(id, extensionId, options) {
+    const existing = this._openers.get(id);
+    if (existing) {
+      existing.isCurrentlyRegistered = existing.isCurrentlyRegistered || options.isCurrentlyRegistered;
+      return;
+    }
+    const entry = {
+      extensionId,
+      isCurrentlyRegistered: options.isCurrentlyRegistered
+    };
+    this._openers.set(id, entry);
+    this._mementoObject[id] = entry;
+    this._memento.saveMemento();
+    this.updateSchema();
+  }
+  delete(id) {
+    this._openers.delete(id);
+    delete this._mementoObject[id];
+    this._memento.saveMemento();
+    this.updateSchema();
+  }
+  async invalidateOpenersOnExtensionsChanged() {
+    await this._extensionService.whenInstalledExtensionsRegistered();
+    const registeredExtensions = this._extensionService.extensions;
+    for (const [id, entry] of this._openers) {
+      const extension = registeredExtensions.find((r) => r.identifier.value === entry.extensionId);
+      if (extension) {
+        if (!this._extensionService.canRemoveExtension(extension)) {
+          if (!entry.isCurrentlyRegistered) {
+            this.delete(id);
+          }
+        }
+      } else {
+        this.delete(id);
+      }
+    }
+  }
+  updateSchema() {
+    const ids = [];
+    const descriptions = [];
+    for (const [id, entry] of this._openers) {
+      ids.push(id);
+      descriptions.push(entry.extensionId);
+    }
+    updateContributedOpeners(ids, descriptions);
+  }
+};
+ContributedExternalUriOpenersStore = ContributedExternalUriOpenersStore_1 = __decorate([
+  __param(0, IStorageService),
+  __param(1, IExtensionService)
+], ContributedExternalUriOpenersStore);
+export {
+  ContributedExternalUriOpenersStore
+};
+//# sourceMappingURL=contributedOpeners.js.map

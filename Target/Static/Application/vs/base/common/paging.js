@@ -1,1 +1,143 @@
-import{$cc as p}from"./arrays.js";import{$pf as c}from"./cancellation.js";import{$qb as a}from"./errors.js";function g(i){return{isResolved:!!i,promise:null,cts:null,promiseIndexes:new Set,elements:i||[]}}function u(i){return{firstPage:i,total:i.length,pageSize:i.length,getPage:(e,s)=>Promise.resolve(i)}}class f{get length(){return this.a.total}constructor(e){this.b=[],this.a=Array.isArray(e)?u(e):e;const s=Math.ceil(this.a.total/this.a.pageSize);this.b=[g(this.a.firstPage.slice()),...p(s-1).map(()=>g())]}isResolved(e){const s=Math.floor(e/this.a.pageSize);return!!this.b[s].isResolved}get(e){const s=Math.floor(e/this.a.pageSize),o=e%this.a.pageSize;return this.b[s].elements[o]}resolve(e,s){if(s.isCancellationRequested)return Promise.reject(new a);const o=Math.floor(e/this.a.pageSize),r=e%this.a.pageSize,t=this.b[o];if(t.isResolved)return Promise.resolve(t.elements[r]);t.promise||(t.cts=new c,t.promise=this.a.getPage(o,t.cts.token).then(l=>{t.elements=l,t.isResolved=!0,t.promise=null,t.cts=null},l=>(t.isResolved=!1,t.promise=null,t.cts=null,Promise.reject(l))));const n=s.onCancellationRequested(()=>{t.cts&&(t.promiseIndexes.delete(e),t.promiseIndexes.size===0&&t.cts.cancel())});return t.promiseIndexes.add(e),t.promise.then(()=>t.elements[r]).finally(()=>n.dispose())}}class P{get length(){return this.a.length}constructor(e,s=500){this.a=e,this.b=s}isResolved(e){return this.a.isResolved(e)}get(e){return this.a.get(e)}resolve(e,s){return new Promise((o,r)=>{if(s.isCancellationRequested)return r(new a);const t=setTimeout(()=>{if(s.isCancellationRequested)return r(new a);n.dispose(),this.a.resolve(e,s).then(o,r)},this.b),n=s.onCancellationRequested(()=>{clearTimeout(t),n.dispose(),r(new a)})})}}function v(i,e){return{firstPage:i.firstPage.map(e),total:i.total,pageSize:i.pageSize,getPage:(s,o)=>i.getPage(s,o).then(r=>r.map(e))}}export{u as $Gy,f as $Hy,P as $Iy,v as $Jy};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { range } from "./arrays.js";
+import { CancellationTokenSource } from "./cancellation.js";
+import { CancellationError } from "./errors.js";
+function createPage(elements) {
+  return {
+    isResolved: !!elements,
+    promise: null,
+    cts: null,
+    promiseIndexes: /* @__PURE__ */ new Set(),
+    elements: elements || []
+  };
+}
+__name(createPage, "createPage");
+function singlePagePager(elements) {
+  return {
+    firstPage: elements,
+    total: elements.length,
+    pageSize: elements.length,
+    getPage: /* @__PURE__ */ __name((pageIndex, cancellationToken) => {
+      return Promise.resolve(elements);
+    }, "getPage")
+  };
+}
+__name(singlePagePager, "singlePagePager");
+class PagedModel {
+  static {
+    __name(this, "PagedModel");
+  }
+  get length() {
+    return this.pager.total;
+  }
+  constructor(arg) {
+    this.pages = [];
+    this.pager = Array.isArray(arg) ? singlePagePager(arg) : arg;
+    const totalPages = Math.ceil(this.pager.total / this.pager.pageSize);
+    this.pages = [
+      createPage(this.pager.firstPage.slice()),
+      ...range(totalPages - 1).map(() => createPage())
+    ];
+  }
+  isResolved(index) {
+    const pageIndex = Math.floor(index / this.pager.pageSize);
+    const page = this.pages[pageIndex];
+    return !!page.isResolved;
+  }
+  get(index) {
+    const pageIndex = Math.floor(index / this.pager.pageSize);
+    const indexInPage = index % this.pager.pageSize;
+    const page = this.pages[pageIndex];
+    return page.elements[indexInPage];
+  }
+  resolve(index, cancellationToken) {
+    if (cancellationToken.isCancellationRequested) {
+      return Promise.reject(new CancellationError());
+    }
+    const pageIndex = Math.floor(index / this.pager.pageSize);
+    const indexInPage = index % this.pager.pageSize;
+    const page = this.pages[pageIndex];
+    if (page.isResolved) {
+      return Promise.resolve(page.elements[indexInPage]);
+    }
+    if (!page.promise) {
+      page.cts = new CancellationTokenSource();
+      page.promise = this.pager.getPage(pageIndex, page.cts.token).then((elements) => {
+        page.elements = elements;
+        page.isResolved = true;
+        page.promise = null;
+        page.cts = null;
+      }, (err) => {
+        page.isResolved = false;
+        page.promise = null;
+        page.cts = null;
+        return Promise.reject(err);
+      });
+    }
+    const listener = cancellationToken.onCancellationRequested(() => {
+      if (!page.cts) {
+        return;
+      }
+      page.promiseIndexes.delete(index);
+      if (page.promiseIndexes.size === 0) {
+        page.cts.cancel();
+      }
+    });
+    page.promiseIndexes.add(index);
+    return page.promise.then(() => page.elements[indexInPage]).finally(() => listener.dispose());
+  }
+}
+class DelayedPagedModel {
+  static {
+    __name(this, "DelayedPagedModel");
+  }
+  get length() {
+    return this.model.length;
+  }
+  constructor(model, timeout = 500) {
+    this.model = model;
+    this.timeout = timeout;
+  }
+  isResolved(index) {
+    return this.model.isResolved(index);
+  }
+  get(index) {
+    return this.model.get(index);
+  }
+  resolve(index, cancellationToken) {
+    return new Promise((c, e) => {
+      if (cancellationToken.isCancellationRequested) {
+        return e(new CancellationError());
+      }
+      const timer = setTimeout(() => {
+        if (cancellationToken.isCancellationRequested) {
+          return e(new CancellationError());
+        }
+        timeoutCancellation.dispose();
+        this.model.resolve(index, cancellationToken).then(c, e);
+      }, this.timeout);
+      const timeoutCancellation = cancellationToken.onCancellationRequested(() => {
+        clearTimeout(timer);
+        timeoutCancellation.dispose();
+        e(new CancellationError());
+      });
+    });
+  }
+}
+function mapPager(pager, fn) {
+  return {
+    firstPage: pager.firstPage.map(fn),
+    total: pager.total,
+    pageSize: pager.pageSize,
+    getPage: /* @__PURE__ */ __name((pageIndex, token) => pager.getPage(pageIndex, token).then((r) => r.map(fn)), "getPage")
+  };
+}
+__name(mapPager, "mapPager");
+export {
+  DelayedPagedModel,
+  PagedModel,
+  mapPager,
+  singlePagePager
+};
+//# sourceMappingURL=paging.js.map

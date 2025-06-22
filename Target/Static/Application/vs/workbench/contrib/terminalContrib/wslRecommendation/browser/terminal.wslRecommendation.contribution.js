@@ -1,1 +1,89 @@
-import{$vd as I}from"../../../../../base/common/lifecycle.js";import{$$ as $}from"../../../../../base/common/path.js";import{$m as w}from"../../../../../base/common/platform.js";import{localize as u}from"../../../../../nls.js";import{$jz as b}from"../../../../../platform/extensionManagement/common/extensionManagement.js";import{$mj as v}from"../../../../../platform/instantiation/common/instantiation.js";import{$RI as y,NeverShowAgainScope as O,NotificationPriority as _,Severity as C}from"../../../../../platform/notification/common/notification.js";import{$nn as g}from"../../../../../platform/product/common/productService.js";import{$WK as j}from"../../../../common/contributions.js";import{$vOb as P}from"../../../extensions/browser/extensionsActions.js";import{$EYb as R}from"../../../terminal/browser/terminal.js";var x=function(i,e,o,r){var s=arguments.length,t=s<3?e:r===null?r=Object.getOwnPropertyDescriptor(e,o):r,n;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")t=Reflect.decorate(i,e,o,r);else for(var l=i.length-1;l>=0;l--)(n=i[l])&&(t=(s<3?n(t):s>3?n(e,o,t):n(e,o))||t);return s>3&&t&&Object.defineProperty(e,o,t),t},a=function(i,e){return function(o,r){e(o,r,i)}};let c=class extends I{static{this.ID="terminalWslRecommendation"}constructor(e,o,r,s,t){if(super(),!w)return;const n=s.exeBasedExtensionTips;if(!n||!n.wsl)return;let l=t.onDidCreateInstance(async p=>{async function d(f){return(await e.getInstalled()).some(h=>h.identifier.id===f)}if(!p.shellLaunchConfig.executable||$(p.shellLaunchConfig.executable).toLowerCase()!=="wsl.exe")return;l?.dispose(),l=void 0;const m=Object.keys(n.wsl.recommendations).find(f=>n.wsl.recommendations[f].important);!m||await d(m)||r.prompt(C.Info,u(12236,null,n.wsl.friendlyName),[{label:u(12237,null),run:()=>{o.createInstance(P,m).run()}}],{sticky:!0,priority:_.OPTIONAL,neverShowAgain:{id:"terminalConfigHelper/launchRecommendationsIgnore",scope:O.APPLICATION},onCancel:()=>{}})})}};c=x([a(0,b),a(1,v),a(2,y),a(3,g),a(4,R)],c);j(c.ID,c,4);export{c as $3tc};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { Disposable } from "../../../../../base/common/lifecycle.js";
+import { basename } from "../../../../../base/common/path.js";
+import { isWindows } from "../../../../../base/common/platform.js";
+import { localize } from "../../../../../nls.js";
+import { IExtensionManagementService } from "../../../../../platform/extensionManagement/common/extensionManagement.js";
+import { IInstantiationService } from "../../../../../platform/instantiation/common/instantiation.js";
+import { INotificationService, NeverShowAgainScope, NotificationPriority, Severity } from "../../../../../platform/notification/common/notification.js";
+import { IProductService } from "../../../../../platform/product/common/productService.js";
+import { registerWorkbenchContribution2 } from "../../../../common/contributions.js";
+import { InstallRecommendedExtensionAction } from "../../../extensions/browser/extensionsActions.js";
+import { ITerminalService } from "../../../terminal/browser/terminal.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+let TerminalWslRecommendationContribution = class TerminalWslRecommendationContribution2 extends Disposable {
+  static {
+    __name(this, "TerminalWslRecommendationContribution");
+  }
+  static {
+    this.ID = "terminalWslRecommendation";
+  }
+  constructor(extensionManagementService, instantiationService, notificationService, productService, terminalService) {
+    super();
+    if (!isWindows) {
+      return;
+    }
+    const exeBasedExtensionTips = productService.exeBasedExtensionTips;
+    if (!exeBasedExtensionTips || !exeBasedExtensionTips.wsl) {
+      return;
+    }
+    let listener = terminalService.onDidCreateInstance(async (instance) => {
+      async function isExtensionInstalled(id) {
+        const extensions = await extensionManagementService.getInstalled();
+        return extensions.some((e) => e.identifier.id === id);
+      }
+      __name(isExtensionInstalled, "isExtensionInstalled");
+      if (!instance.shellLaunchConfig.executable || basename(instance.shellLaunchConfig.executable).toLowerCase() !== "wsl.exe") {
+        return;
+      }
+      listener?.dispose();
+      listener = void 0;
+      const extId = Object.keys(exeBasedExtensionTips.wsl.recommendations).find((extId2) => exeBasedExtensionTips.wsl.recommendations[extId2].important);
+      if (!extId || await isExtensionInstalled(extId)) {
+        return;
+      }
+      notificationService.prompt(Severity.Info, localize("useWslExtension.title", "The '{0}' extension is recommended for opening a terminal in WSL.", exeBasedExtensionTips.wsl.friendlyName), [
+        {
+          label: localize("install", "Install"),
+          run: /* @__PURE__ */ __name(() => {
+            instantiationService.createInstance(InstallRecommendedExtensionAction, extId).run();
+          }, "run")
+        }
+      ], {
+        sticky: true,
+        priority: NotificationPriority.OPTIONAL,
+        neverShowAgain: { id: "terminalConfigHelper/launchRecommendationsIgnore", scope: NeverShowAgainScope.APPLICATION },
+        onCancel: /* @__PURE__ */ __name(() => {
+        }, "onCancel")
+      });
+    });
+  }
+};
+TerminalWslRecommendationContribution = __decorate([
+  __param(0, IExtensionManagementService),
+  __param(1, IInstantiationService),
+  __param(2, INotificationService),
+  __param(3, IProductService),
+  __param(4, ITerminalService)
+], TerminalWslRecommendationContribution);
+registerWorkbenchContribution2(
+  TerminalWslRecommendationContribution.ID,
+  TerminalWslRecommendationContribution,
+  4
+  /* WorkbenchPhase.Eventually */
+);
+export {
+  TerminalWslRecommendationContribution
+};
+//# sourceMappingURL=terminal.wslRecommendation.contribution.js.map

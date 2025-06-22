@@ -1,1 +1,233 @@
-import{$7f as g,$8f as w}from"../../../../base/common/strings.js";import{$bD as h}from"../ranges/offsetRange.js";import{$WL as f,$XL as x}from"./edit.js";class i extends f{static{this.empty=new i([])}static create(e){return new i(e)}static single(e){return new i([e])}static replace(e,t){return new i([new l(e,t)])}static insert(e,t){return new i([new l(h.emptyAt(e),t)])}static delete(e){return new i([new l(e,"")])}static fromJson(e){return new i(e.map(l.fromJson))}static compose(e){if(e.length===0)return i.empty;let t=e[0];for(let r=1;r<e.length;r++)t=t.compose(e[r]);return t}constructor(e){super(e)}a(e){return new i(e)}apply(e){const t=[];let r=0;for(const n of this.replacements)t.push(e.substring(r,n.replaceRange.start)),t.push(n.newText),r=n.replaceRange.endExclusive;return t.push(e.substring(r)),t.join("")}inverse(e){const t=[];let r=0;for(const n of this.replacements)t.push(new l(h.ofStartAndLength(n.replaceRange.start+r,n.newText.length),e.substring(n.replaceRange.start,n.replaceRange.endExclusive))),r+=n.newText.length-n.replaceRange.length;return new i(t)}tryRebase(e,t){const r=[];let n=0,c=0,s=0;for(;c<this.replacements.length||n<e.replacements.length;){const a=e.replacements[n],u=this.replacements[c];if(u)if(!a)r.push(new l(u.replaceRange.delta(s),u.newText)),c++;else if(u.replaceRange.intersectsOrTouches(a.replaceRange)){if(c++,t)return}else u.replaceRange.start<a.replaceRange.start?(r.push(new l(u.replaceRange.delta(s),u.newText)),c++):(n++,s+=a.newText.length-a.replaceRange.length);else break}return new i(r)}toJson(){return this.replacements.map(e=>({txt:e.newText,pos:e.replaceRange.start,len:e.replaceRange.length}))}isNeutralOn(e){return this.replacements.every(t=>t.isNeutralOn(e))}removeCommonSuffixPrefix(e){const t=[];for(const r of this.replacements){const n=r.removeCommonSuffixPrefix(e);n.isEmpty||t.push(n)}return new i(t)}normalizeEOL(e){return new i(this.replacements.map(t=>t.normalizeEOL(e)))}}class l extends x{static insert(e,t){return new l(h.emptyAt(e),t)}static replace(e,t){return new l(e,t)}static delete(e){return new l(e,"")}static fromJson(e){return new l(h.ofStartAndLength(e.pos,e.len),e.txt)}constructor(e,t){super(e),this.newText=t}equals(e){return this.replaceRange.equals(e.replaceRange)&&this.newText===e.newText}getNewLength(){return this.newText.length}tryJoinTouching(e){return new l(this.replaceRange.joinRightTouching(e.replaceRange),this.newText+e.newText)}slice(e,t){return new l(e,t.substring(this.newText))}toString(){return`${this.replaceRange} -> "${this.newText}"`}replace(e){return e.substring(0,this.replaceRange.start)+this.newText+e.substring(this.replaceRange.endExclusive)}isNeutralOn(e){return this.newText===e.substring(this.replaceRange.start,this.replaceRange.endExclusive)}removeCommonSuffixPrefix(e){const t=e.substring(this.replaceRange.start,this.replaceRange.endExclusive),r=g(t,this.newText),n=Math.min(t.length-r,this.newText.length-r,w(t,this.newText)),c=new h(this.replaceRange.start+r,this.replaceRange.endExclusive-n),s=this.newText.substring(r,this.newText.length-n);return new l(c,s)}normalizeEOL(e){const t=this.newText.replace(/\r\n|\n/g,e);return new l(this.replaceRange,t)}}function d(p,e){p=p.slice();const t=[];let r=0;for(const n of e.replacements){for(;;){const s=p[0];if(!s||s.endExclusive>=n.replaceRange.start)break;p.shift(),t.push(s.delta(r))}const c=[];for(;;){const s=p[0];if(!s||!s.intersectsOrTouches(n.replaceRange))break;p.shift(),c.push(s)}for(let s=c.length-1;s>=0;s--){let a=c[s];const u=a.intersect(n.replaceRange).length;a=a.deltaEnd(-u+(s===0?n.newText.length:0));const o=a.start-n.replaceRange.start;o>0&&(a=a.delta(-o)),s!==0&&(a=a.delta(n.newText.length)),a=a.delta(-(n.newText.length-n.replaceRange.length)),p.unshift(a)}r+=n.newText.length-n.replaceRange.length}for(;;){const n=p[0];if(!n)break;p.shift(),t.push(n.delta(r))}return t}export{i as $1L,l as $2L,d as $3L};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { commonPrefixLength, commonSuffixLength } from "../../../../base/common/strings.js";
+import { OffsetRange } from "../ranges/offsetRange.js";
+import { BaseEdit, BaseReplacement } from "./edit.js";
+class StringEdit extends BaseEdit {
+  static {
+    __name(this, "StringEdit");
+  }
+  static {
+    this.empty = new StringEdit([]);
+  }
+  static create(replacements) {
+    return new StringEdit(replacements);
+  }
+  static single(replacement) {
+    return new StringEdit([replacement]);
+  }
+  static replace(range, replacement) {
+    return new StringEdit([new StringReplacement(range, replacement)]);
+  }
+  static insert(offset, replacement) {
+    return new StringEdit([new StringReplacement(OffsetRange.emptyAt(offset), replacement)]);
+  }
+  static delete(range) {
+    return new StringEdit([new StringReplacement(range, "")]);
+  }
+  static fromJson(data) {
+    return new StringEdit(data.map(StringReplacement.fromJson));
+  }
+  static compose(edits) {
+    if (edits.length === 0) {
+      return StringEdit.empty;
+    }
+    let result = edits[0];
+    for (let i = 1; i < edits.length; i++) {
+      result = result.compose(edits[i]);
+    }
+    return result;
+  }
+  constructor(replacements) {
+    super(replacements);
+  }
+  _createNew(replacements) {
+    return new StringEdit(replacements);
+  }
+  apply(base) {
+    const resultText = [];
+    let pos = 0;
+    for (const edit of this.replacements) {
+      resultText.push(base.substring(pos, edit.replaceRange.start));
+      resultText.push(edit.newText);
+      pos = edit.replaceRange.endExclusive;
+    }
+    resultText.push(base.substring(pos));
+    return resultText.join("");
+  }
+  /**
+   * Creates an edit that reverts this edit.
+   */
+  inverse(baseStr) {
+    const edits = [];
+    let offset = 0;
+    for (const e of this.replacements) {
+      edits.push(new StringReplacement(OffsetRange.ofStartAndLength(e.replaceRange.start + offset, e.newText.length), baseStr.substring(e.replaceRange.start, e.replaceRange.endExclusive)));
+      offset += e.newText.length - e.replaceRange.length;
+    }
+    return new StringEdit(edits);
+  }
+  tryRebase(base, noOverlap) {
+    const newEdits = [];
+    let baseIdx = 0;
+    let ourIdx = 0;
+    let offset = 0;
+    while (ourIdx < this.replacements.length || baseIdx < base.replacements.length) {
+      const baseEdit = base.replacements[baseIdx];
+      const ourEdit = this.replacements[ourIdx];
+      if (!ourEdit) {
+        break;
+      } else if (!baseEdit) {
+        newEdits.push(new StringReplacement(ourEdit.replaceRange.delta(offset), ourEdit.newText));
+        ourIdx++;
+      } else if (ourEdit.replaceRange.intersectsOrTouches(baseEdit.replaceRange)) {
+        ourIdx++;
+        if (noOverlap) {
+          return void 0;
+        }
+      } else if (ourEdit.replaceRange.start < baseEdit.replaceRange.start) {
+        newEdits.push(new StringReplacement(ourEdit.replaceRange.delta(offset), ourEdit.newText));
+        ourIdx++;
+      } else {
+        baseIdx++;
+        offset += baseEdit.newText.length - baseEdit.replaceRange.length;
+      }
+    }
+    return new StringEdit(newEdits);
+  }
+  toJson() {
+    return this.replacements.map((e) => ({
+      txt: e.newText,
+      pos: e.replaceRange.start,
+      len: e.replaceRange.length
+    }));
+  }
+  isNeutralOn(text) {
+    return this.replacements.every((e) => e.isNeutralOn(text));
+  }
+  removeCommonSuffixPrefix(originalText) {
+    const edits = [];
+    for (const e of this.replacements) {
+      const edit = e.removeCommonSuffixPrefix(originalText);
+      if (!edit.isEmpty) {
+        edits.push(edit);
+      }
+    }
+    return new StringEdit(edits);
+  }
+  normalizeEOL(eol) {
+    return new StringEdit(this.replacements.map((edit) => edit.normalizeEOL(eol)));
+  }
+}
+class StringReplacement extends BaseReplacement {
+  static {
+    __name(this, "StringReplacement");
+  }
+  static insert(offset, text) {
+    return new StringReplacement(OffsetRange.emptyAt(offset), text);
+  }
+  static replace(range, text) {
+    return new StringReplacement(range, text);
+  }
+  static delete(range) {
+    return new StringReplacement(range, "");
+  }
+  static fromJson(data) {
+    return new StringReplacement(OffsetRange.ofStartAndLength(data.pos, data.len), data.txt);
+  }
+  constructor(range, newText) {
+    super(range);
+    this.newText = newText;
+  }
+  equals(other) {
+    return this.replaceRange.equals(other.replaceRange) && this.newText === other.newText;
+  }
+  getNewLength() {
+    return this.newText.length;
+  }
+  tryJoinTouching(other) {
+    return new StringReplacement(this.replaceRange.joinRightTouching(other.replaceRange), this.newText + other.newText);
+  }
+  slice(range, rangeInReplacement) {
+    return new StringReplacement(range, rangeInReplacement.substring(this.newText));
+  }
+  toString() {
+    return `${this.replaceRange} -> "${this.newText}"`;
+  }
+  replace(str) {
+    return str.substring(0, this.replaceRange.start) + this.newText + str.substring(this.replaceRange.endExclusive);
+  }
+  /**
+   * Checks if the edit would produce no changes when applied to the given text.
+   */
+  isNeutralOn(text) {
+    return this.newText === text.substring(this.replaceRange.start, this.replaceRange.endExclusive);
+  }
+  removeCommonSuffixPrefix(originalText) {
+    const oldText = originalText.substring(this.replaceRange.start, this.replaceRange.endExclusive);
+    const prefixLen = commonPrefixLength(oldText, this.newText);
+    const suffixLen = Math.min(oldText.length - prefixLen, this.newText.length - prefixLen, commonSuffixLength(oldText, this.newText));
+    const replaceRange = new OffsetRange(this.replaceRange.start + prefixLen, this.replaceRange.endExclusive - suffixLen);
+    const newText = this.newText.substring(prefixLen, this.newText.length - suffixLen);
+    return new StringReplacement(replaceRange, newText);
+  }
+  normalizeEOL(eol) {
+    const newText = this.newText.replace(/\r\n|\n/g, eol);
+    return new StringReplacement(this.replaceRange, newText);
+  }
+}
+function applyEditsToRanges(sortedRanges, edit) {
+  sortedRanges = sortedRanges.slice();
+  const result = [];
+  let offset = 0;
+  for (const e of edit.replacements) {
+    while (true) {
+      const r = sortedRanges[0];
+      if (!r || r.endExclusive >= e.replaceRange.start) {
+        break;
+      }
+      sortedRanges.shift();
+      result.push(r.delta(offset));
+    }
+    const intersecting = [];
+    while (true) {
+      const r = sortedRanges[0];
+      if (!r || !r.intersectsOrTouches(e.replaceRange)) {
+        break;
+      }
+      sortedRanges.shift();
+      intersecting.push(r);
+    }
+    for (let i = intersecting.length - 1; i >= 0; i--) {
+      let r = intersecting[i];
+      const overlap = r.intersect(e.replaceRange).length;
+      r = r.deltaEnd(-overlap + (i === 0 ? e.newText.length : 0));
+      const rangeAheadOfReplaceRange = r.start - e.replaceRange.start;
+      if (rangeAheadOfReplaceRange > 0) {
+        r = r.delta(-rangeAheadOfReplaceRange);
+      }
+      if (i !== 0) {
+        r = r.delta(e.newText.length);
+      }
+      r = r.delta(-(e.newText.length - e.replaceRange.length));
+      sortedRanges.unshift(r);
+    }
+    offset += e.newText.length - e.replaceRange.length;
+  }
+  while (true) {
+    const r = sortedRanges[0];
+    if (!r) {
+      break;
+    }
+    sortedRanges.shift();
+    result.push(r.delta(offset));
+  }
+  return result;
+}
+__name(applyEditsToRanges, "applyEditsToRanges");
+export {
+  StringEdit,
+  StringReplacement,
+  applyEditsToRanges
+};
+//# sourceMappingURL=stringEdit.js.map

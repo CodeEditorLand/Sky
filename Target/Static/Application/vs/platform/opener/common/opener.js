@@ -1,1 +1,29 @@
-import{$nj as r}from"../../instantiation/common/instantiation.js";const m=r("openerService");function u(n,e){return n.with({fragment:`${e.startLineNumber},${e.startColumn}${e.endLineNumber?`-${e.endLineNumber}${e.endColumn?`,${e.endColumn}`:""}`:""}`})}function $(n){let e;const t=/^L?(\d+)(?:,(\d+))?(-L?(\d+)(?:,(\d+))?)?/.exec(n.fragment);return t&&(e={startLineNumber:parseInt(t[1]),startColumn:t[2]?parseInt(t[2]):1,endLineNumber:t[4]?parseInt(t[4]):void 0,endColumn:t[4]?t[5]?parseInt(t[5]):1:void 0},n=n.with({fragment:""})),{selection:e,uri:n}}export{m as $4$,u as $5$,$ as $6$};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { createDecorator } from "../../instantiation/common/instantiation.js";
+const IOpenerService = createDecorator("openerService");
+function withSelection(uri, selection) {
+  return uri.with({ fragment: `${selection.startLineNumber},${selection.startColumn}${selection.endLineNumber ? `-${selection.endLineNumber}${selection.endColumn ? `,${selection.endColumn}` : ""}` : ""}` });
+}
+__name(withSelection, "withSelection");
+function extractSelection(uri) {
+  let selection = void 0;
+  const match = /^L?(\d+)(?:,(\d+))?(-L?(\d+)(?:,(\d+))?)?/.exec(uri.fragment);
+  if (match) {
+    selection = {
+      startLineNumber: parseInt(match[1]),
+      startColumn: match[2] ? parseInt(match[2]) : 1,
+      endLineNumber: match[4] ? parseInt(match[4]) : void 0,
+      endColumn: match[4] ? match[5] ? parseInt(match[5]) : 1 : void 0
+    };
+    uri = uri.with({ fragment: "" });
+  }
+  return { selection, uri };
+}
+__name(extractSelection, "extractSelection");
+export {
+  IOpenerService,
+  extractSelection,
+  withSelection
+};
+//# sourceMappingURL=opener.js.map

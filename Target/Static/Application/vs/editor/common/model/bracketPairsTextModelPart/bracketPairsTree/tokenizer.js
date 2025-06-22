@@ -1,1 +1,277 @@
-import{$yb as y}from"../../../../../base/common/errors.js";import{$9C as C}from"../../../encodedTokenAttributes.js";import{$CE as T}from"./ast.js";import{$YD as j,$RD as I,$XD as $,$VD as D,$SD as O,$UD as o}from"./length.js";import{$cE as w}from"./smallImmutableSet.js";var B;!function(t){t[t.Text=0]="Text",t[t.OpeningBracket=1]="OpeningBracket",t[t.ClosingBracket=2]="ClosingBracket"}(B||(B={}));class L{constructor(t,s,e,i,h){this.length=t,this.kind=s,this.bracketId=e,this.bracketIds=i,this.astNode=h}}class A{constructor(t,s){this.d=t,this.e=s,this.c=new z(this.d,this.e),this.f=O,this.g=!1,this.h=null,this.a=t.getLineCount(),this.b=t.getLineLength(this.a)}get offset(){return this.f}get length(){return o(this.a-1,this.b)}getText(){return this.d.getValue()}skip(t){this.g=!1,this.f=j(this.f,t);const s=D(this.f);this.c.setPosition(s.lineCount,s.columnCount)}read(){let t;return this.h?(this.g=!1,t=this.h):t=this.c.read(),t&&(this.f=j(this.f,t.length)),t}peek(){return this.g||(this.h=this.c.read(),this.g=!0),this.h}}class z{constructor(t,s){this.c=t,this.d=s,this.e=0,this.f=null,this.g=0,this.h=null,this.j=0,this.k=null,this.a=t.getLineCount(),this.b=t.getLineLength(this.a)}setPosition(t,s){t===this.e?(this.g=s,null!==this.f&&(this.j=0===this.g?0:this.h.findTokenIndexAtOffset(this.g))):(this.e=t,this.g=s,this.f=null),this.k=null}read(){if(this.k){const t=this.k;return this.k=null,this.g+=$(t.length),t}if(this.e>this.a-1||this.e===this.a-1&&this.g>=this.b)return null;null===this.f&&(this.h=this.c.tokenization.getLineTokens(this.e+1),this.f=this.h.getLineContent(),this.j=0===this.g?0:this.h.findTokenIndexAtOffset(this.g));const t=this.e,s=this.g;let e=0;for(;;){const i=this.h,h=i.getCount();let n=null;if(this.j<h){const o=i.getMetadata(this.j);for(;this.j+1<h&&o===i.getMetadata(this.j+1);)this.j++;const g=0===C.getTokenType(o),r=C.containsBalancedBrackets(o),l=i.getEndOffset(this.j);if(r&&g&&this.g<l){const t=i.getLanguageId(this.j),s=this.f.substring(this.g,l),e=this.d.getSingleLanguageBracketTokens(t),h=e.regExpGlobal;if(h){h.lastIndex=0;const t=h.exec(s);t&&(n=e.getToken(t[0]),n&&(this.g+=t.index))}}if(e+=l-this.g,n){if(t!==this.e||s!==this.g){this.k=n;break}return this.g+=$(n.length),n}this.j++,this.g=l}else if(this.e===this.a-1||(this.e++,this.h=this.c.tokenization.getLineTokens(this.e+1),this.j=0,this.f=this.h.getLineContent(),this.g=0,e+=33,e>1e3))break;if(e>1500)break}const i=I(t,s,this.e,this.g);return new L(i,0,-1,w.getEmpty(),new T(i))}}class N{constructor(t,s){this.d=t,this.a=O,this.c=0;const e=s.getRegExpStr(),i=e?new RegExp(e+"|\n","gi"):null,h=[];let n,g=0,r=0,l=0,a=0;const c=[];for(let t=0;t<60;t++)c.push(new L(o(0,t),0,-1,w.getEmpty(),new T(o(0,t))));const f=[];for(let t=0;t<60;t++)f.push(new L(o(1,t),0,-1,w.getEmpty(),new T(o(1,t))));if(i)for(i.lastIndex=0;null!==(n=i.exec(t));){const t=n.index,e=n[0];if("\n"===e)g++,r=t+1;else{if(l!==t){let s;if(a===g){const e=t-l;if(e<c.length)s=c[e];else{const t=o(0,e);s=new L(t,0,-1,w.getEmpty(),new T(t))}}else{const e=g-a,i=t-r;if(1===e&&i<f.length)s=f[i];else{const t=o(e,i);s=new L(t,0,-1,w.getEmpty(),new T(t))}}h.push(s)}h.push(s.getToken(e)),l=t+e.length,a=g}}const u=t.length;if(l!==u){const t=a===g?o(0,u-l):o(g-a,u-r);h.push(new L(t,0,-1,w.getEmpty(),new T(t)))}this.length=o(g,u-r),this.b=h}get offset(){return this.a}read(){return this.b[this.c++]||null}peek(){return this.b[this.c]||null}skip(t){throw new y}getText(){return this.d}}export{L as $xE,A as $yE,N as $zE,B as TokenKind};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { NotSupportedError } from "../../../../../base/common/errors.js";
+import { TokenMetadata } from "../../../encodedTokenAttributes.js";
+import { TextAstNode } from "./ast.js";
+import { lengthAdd, lengthDiff, lengthGetColumnCountIfZeroLineCount, lengthToObj, lengthZero, toLength } from "./length.js";
+import { SmallImmutableSet } from "./smallImmutableSet.js";
+var TokenKind;
+(function(TokenKind2) {
+  TokenKind2[TokenKind2["Text"] = 0] = "Text";
+  TokenKind2[TokenKind2["OpeningBracket"] = 1] = "OpeningBracket";
+  TokenKind2[TokenKind2["ClosingBracket"] = 2] = "ClosingBracket";
+})(TokenKind || (TokenKind = {}));
+class Token {
+  static {
+    __name(this, "Token");
+  }
+  constructor(length, kind, bracketId, bracketIds, astNode) {
+    this.length = length;
+    this.kind = kind;
+    this.bracketId = bracketId;
+    this.bracketIds = bracketIds;
+    this.astNode = astNode;
+  }
+}
+class TextBufferTokenizer {
+  static {
+    __name(this, "TextBufferTokenizer");
+  }
+  constructor(textModel, bracketTokens) {
+    this.textModel = textModel;
+    this.bracketTokens = bracketTokens;
+    this.reader = new NonPeekableTextBufferTokenizer(this.textModel, this.bracketTokens);
+    this._offset = lengthZero;
+    this.didPeek = false;
+    this.peeked = null;
+    this.textBufferLineCount = textModel.getLineCount();
+    this.textBufferLastLineLength = textModel.getLineLength(this.textBufferLineCount);
+  }
+  get offset() {
+    return this._offset;
+  }
+  get length() {
+    return toLength(this.textBufferLineCount - 1, this.textBufferLastLineLength);
+  }
+  getText() {
+    return this.textModel.getValue();
+  }
+  skip(length) {
+    this.didPeek = false;
+    this._offset = lengthAdd(this._offset, length);
+    const obj = lengthToObj(this._offset);
+    this.reader.setPosition(obj.lineCount, obj.columnCount);
+  }
+  read() {
+    let token;
+    if (this.peeked) {
+      this.didPeek = false;
+      token = this.peeked;
+    } else {
+      token = this.reader.read();
+    }
+    if (token) {
+      this._offset = lengthAdd(this._offset, token.length);
+    }
+    return token;
+  }
+  peek() {
+    if (!this.didPeek) {
+      this.peeked = this.reader.read();
+      this.didPeek = true;
+    }
+    return this.peeked;
+  }
+}
+class NonPeekableTextBufferTokenizer {
+  static {
+    __name(this, "NonPeekableTextBufferTokenizer");
+  }
+  constructor(textModel, bracketTokens) {
+    this.textModel = textModel;
+    this.bracketTokens = bracketTokens;
+    this.lineIdx = 0;
+    this.line = null;
+    this.lineCharOffset = 0;
+    this.lineTokens = null;
+    this.lineTokenOffset = 0;
+    this.peekedToken = null;
+    this.textBufferLineCount = textModel.getLineCount();
+    this.textBufferLastLineLength = textModel.getLineLength(this.textBufferLineCount);
+  }
+  setPosition(lineIdx, column) {
+    if (lineIdx === this.lineIdx) {
+      this.lineCharOffset = column;
+      if (this.line !== null) {
+        this.lineTokenOffset = this.lineCharOffset === 0 ? 0 : this.lineTokens.findTokenIndexAtOffset(this.lineCharOffset);
+      }
+    } else {
+      this.lineIdx = lineIdx;
+      this.lineCharOffset = column;
+      this.line = null;
+    }
+    this.peekedToken = null;
+  }
+  read() {
+    if (this.peekedToken) {
+      const token = this.peekedToken;
+      this.peekedToken = null;
+      this.lineCharOffset += lengthGetColumnCountIfZeroLineCount(token.length);
+      return token;
+    }
+    if (this.lineIdx > this.textBufferLineCount - 1 || this.lineIdx === this.textBufferLineCount - 1 && this.lineCharOffset >= this.textBufferLastLineLength) {
+      return null;
+    }
+    if (this.line === null) {
+      this.lineTokens = this.textModel.tokenization.getLineTokens(this.lineIdx + 1);
+      this.line = this.lineTokens.getLineContent();
+      this.lineTokenOffset = this.lineCharOffset === 0 ? 0 : this.lineTokens.findTokenIndexAtOffset(this.lineCharOffset);
+    }
+    const startLineIdx = this.lineIdx;
+    const startLineCharOffset = this.lineCharOffset;
+    let lengthHeuristic = 0;
+    while (true) {
+      const lineTokens = this.lineTokens;
+      const tokenCount = lineTokens.getCount();
+      let peekedBracketToken = null;
+      if (this.lineTokenOffset < tokenCount) {
+        const tokenMetadata = lineTokens.getMetadata(this.lineTokenOffset);
+        while (this.lineTokenOffset + 1 < tokenCount && tokenMetadata === lineTokens.getMetadata(this.lineTokenOffset + 1)) {
+          this.lineTokenOffset++;
+        }
+        const isOther = TokenMetadata.getTokenType(tokenMetadata) === 0;
+        const containsBracketType = TokenMetadata.containsBalancedBrackets(tokenMetadata);
+        const endOffset = lineTokens.getEndOffset(this.lineTokenOffset);
+        if (containsBracketType && isOther && this.lineCharOffset < endOffset) {
+          const languageId = lineTokens.getLanguageId(this.lineTokenOffset);
+          const text = this.line.substring(this.lineCharOffset, endOffset);
+          const brackets = this.bracketTokens.getSingleLanguageBracketTokens(languageId);
+          const regexp = brackets.regExpGlobal;
+          if (regexp) {
+            regexp.lastIndex = 0;
+            const match = regexp.exec(text);
+            if (match) {
+              peekedBracketToken = brackets.getToken(match[0]);
+              if (peekedBracketToken) {
+                this.lineCharOffset += match.index;
+              }
+            }
+          }
+        }
+        lengthHeuristic += endOffset - this.lineCharOffset;
+        if (peekedBracketToken) {
+          if (startLineIdx !== this.lineIdx || startLineCharOffset !== this.lineCharOffset) {
+            this.peekedToken = peekedBracketToken;
+            break;
+          } else {
+            this.lineCharOffset += lengthGetColumnCountIfZeroLineCount(peekedBracketToken.length);
+            return peekedBracketToken;
+          }
+        } else {
+          this.lineTokenOffset++;
+          this.lineCharOffset = endOffset;
+        }
+      } else {
+        if (this.lineIdx === this.textBufferLineCount - 1) {
+          break;
+        }
+        this.lineIdx++;
+        this.lineTokens = this.textModel.tokenization.getLineTokens(this.lineIdx + 1);
+        this.lineTokenOffset = 0;
+        this.line = this.lineTokens.getLineContent();
+        this.lineCharOffset = 0;
+        lengthHeuristic += 33;
+        if (lengthHeuristic > 1e3) {
+          break;
+        }
+      }
+      if (lengthHeuristic > 1500) {
+        break;
+      }
+    }
+    const length = lengthDiff(startLineIdx, startLineCharOffset, this.lineIdx, this.lineCharOffset);
+    return new Token(length, 0, -1, SmallImmutableSet.getEmpty(), new TextAstNode(length));
+  }
+}
+class FastTokenizer {
+  static {
+    __name(this, "FastTokenizer");
+  }
+  constructor(text, brackets) {
+    this.text = text;
+    this._offset = lengthZero;
+    this.idx = 0;
+    const regExpStr = brackets.getRegExpStr();
+    const regexp = regExpStr ? new RegExp(regExpStr + "|\n", "gi") : null;
+    const tokens = [];
+    let match;
+    let curLineCount = 0;
+    let lastLineBreakOffset = 0;
+    let lastTokenEndOffset = 0;
+    let lastTokenEndLine = 0;
+    const smallTextTokens0Line = [];
+    for (let i = 0; i < 60; i++) {
+      smallTextTokens0Line.push(new Token(toLength(0, i), 0, -1, SmallImmutableSet.getEmpty(), new TextAstNode(toLength(0, i))));
+    }
+    const smallTextTokens1Line = [];
+    for (let i = 0; i < 60; i++) {
+      smallTextTokens1Line.push(new Token(toLength(1, i), 0, -1, SmallImmutableSet.getEmpty(), new TextAstNode(toLength(1, i))));
+    }
+    if (regexp) {
+      regexp.lastIndex = 0;
+      while ((match = regexp.exec(text)) !== null) {
+        const curOffset = match.index;
+        const value = match[0];
+        if (value === "\n") {
+          curLineCount++;
+          lastLineBreakOffset = curOffset + 1;
+        } else {
+          if (lastTokenEndOffset !== curOffset) {
+            let token;
+            if (lastTokenEndLine === curLineCount) {
+              const colCount = curOffset - lastTokenEndOffset;
+              if (colCount < smallTextTokens0Line.length) {
+                token = smallTextTokens0Line[colCount];
+              } else {
+                const length = toLength(0, colCount);
+                token = new Token(length, 0, -1, SmallImmutableSet.getEmpty(), new TextAstNode(length));
+              }
+            } else {
+              const lineCount = curLineCount - lastTokenEndLine;
+              const colCount = curOffset - lastLineBreakOffset;
+              if (lineCount === 1 && colCount < smallTextTokens1Line.length) {
+                token = smallTextTokens1Line[colCount];
+              } else {
+                const length = toLength(lineCount, colCount);
+                token = new Token(length, 0, -1, SmallImmutableSet.getEmpty(), new TextAstNode(length));
+              }
+            }
+            tokens.push(token);
+          }
+          tokens.push(brackets.getToken(value));
+          lastTokenEndOffset = curOffset + value.length;
+          lastTokenEndLine = curLineCount;
+        }
+      }
+    }
+    const offset = text.length;
+    if (lastTokenEndOffset !== offset) {
+      const length = lastTokenEndLine === curLineCount ? toLength(0, offset - lastTokenEndOffset) : toLength(curLineCount - lastTokenEndLine, offset - lastLineBreakOffset);
+      tokens.push(new Token(length, 0, -1, SmallImmutableSet.getEmpty(), new TextAstNode(length)));
+    }
+    this.length = toLength(curLineCount, offset - lastLineBreakOffset);
+    this.tokens = tokens;
+  }
+  get offset() {
+    return this._offset;
+  }
+  read() {
+    return this.tokens[this.idx++] || null;
+  }
+  peek() {
+    return this.tokens[this.idx] || null;
+  }
+  skip(length) {
+    throw new NotSupportedError();
+  }
+  getText() {
+    return this.text;
+  }
+}
+export {
+  FastTokenizer,
+  TextBufferTokenizer,
+  Token,
+  TokenKind
+};
+//# sourceMappingURL=tokenizer.js.map

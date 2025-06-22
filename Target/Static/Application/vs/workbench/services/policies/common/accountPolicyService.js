@@ -1,1 +1,70 @@
-import{$3n as a}from"../../../../platform/log/common/log.js";import{$Xt as l}from"../../../../platform/policy/common/policy.js";import{$k7b as p}from"../../accounts/common/defaultAccount.js";var h=function(o,t,e,i){var c=arguments.length,n=c<3?t:i===null?i=Object.getOwnPropertyDescriptor(t,e):i,s;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")n=Reflect.decorate(o,t,e,i);else for(var f=o.length-1;f>=0;f--)(s=o[f])&&(n=(c<3?s(n):c>3?s(t,e,n):s(t,e))||n);return c>3&&n&&Object.defineProperty(t,e,n),n},r=function(o,t){return function(e,i){t(e,i,o)}};let u=class extends l{constructor(t,e){super(),this.b=t,this.c=e,this.a=!0,this.c.getDefaultAccount().then(i=>{this.j(i?.chat_preview_features_enabled??!0),this.B(this.c.onDidChangeDefaultAccount(c=>this.j(c?.chat_preview_features_enabled??!0)))})}j(t){const e=t===void 0||t;this.a!==e&&(this.a=e,this.h(this.policyDefinitions))}async h(t){this.b.trace(`AccountPolicyService#_updatePolicyDefinitions: Got ${Object.keys(t).length} policy definitions`);const e=[];for(const i in t){const c=t[i];if(c.previewFeature){if(this.a){this.f.delete(i),e.push(i);continue}const n=c.defaultValue,s=n===void 0?!1:n;if(this.f.get(i)===s)continue;this.f.set(i,s),e.push(i)}}e.length&&this.g.fire(e)}};u=h([r(0,a),r(1,p)],u);export{u as $FCc};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { ILogService } from "../../../../platform/log/common/log.js";
+import { AbstractPolicyService } from "../../../../platform/policy/common/policy.js";
+import { IDefaultAccountService } from "../../accounts/common/defaultAccount.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+let AccountPolicyService = class AccountPolicyService2 extends AbstractPolicyService {
+  static {
+    __name(this, "AccountPolicyService");
+  }
+  constructor(logService, defaultAccountService) {
+    super();
+    this.logService = logService;
+    this.defaultAccountService = defaultAccountService;
+    this.chatPreviewFeaturesEnabled = true;
+    this.defaultAccountService.getDefaultAccount().then((account) => {
+      this._update(account?.chat_preview_features_enabled ?? true);
+      this._register(this.defaultAccountService.onDidChangeDefaultAccount((account2) => this._update(account2?.chat_preview_features_enabled ?? true)));
+    });
+  }
+  _update(chatPreviewFeaturesEnabled) {
+    const newValue = chatPreviewFeaturesEnabled === void 0 || chatPreviewFeaturesEnabled;
+    if (this.chatPreviewFeaturesEnabled !== newValue) {
+      this.chatPreviewFeaturesEnabled = newValue;
+      this._updatePolicyDefinitions(this.policyDefinitions);
+    }
+  }
+  async _updatePolicyDefinitions(policyDefinitions) {
+    this.logService.trace(`AccountPolicyService#_updatePolicyDefinitions: Got ${Object.keys(policyDefinitions).length} policy definitions`);
+    const update = [];
+    for (const key in policyDefinitions) {
+      const policy = policyDefinitions[key];
+      if (policy.previewFeature) {
+        if (this.chatPreviewFeaturesEnabled) {
+          this.policies.delete(key);
+          update.push(key);
+          continue;
+        }
+        const defaultValue = policy.defaultValue;
+        const updatedValue = defaultValue === void 0 ? false : defaultValue;
+        if (this.policies.get(key) === updatedValue) {
+          continue;
+        }
+        this.policies.set(key, updatedValue);
+        update.push(key);
+      }
+    }
+    if (update.length) {
+      this._onDidChange.fire(update);
+    }
+  }
+};
+AccountPolicyService = __decorate([
+  __param(0, ILogService),
+  __param(1, IDefaultAccountService)
+], AccountPolicyService);
+export {
+  AccountPolicyService
+};
+//# sourceMappingURL=accountPolicyService.js.map

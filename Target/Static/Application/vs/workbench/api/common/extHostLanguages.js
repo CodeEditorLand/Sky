@@ -1,1 +1,186 @@
-import{$oY as p}from"./extHost.protocol.js";import*as u from"./extHostTypeConverters.js";import{StandardTokenType as b,$sY as v,LanguageStatusSeverity as l}from"./extHostTypes.js";import y from"../../../base/common/severity.js";import{$Nh as $}from"../../../base/common/async.js";import{$ud as I}from"../../../base/common/lifecycle.js";import{$2O as f}from"../../services/extensions/common/extensions.js";class D{constructor(t,r,n,c){this.c=r,this.d=n,this.e=c,this.b=[],this.f=0,this.g=new Set,this.a=t.getProxy(p.MainThreadLanguages)}$acceptLanguageIds(t){this.b=t}async getLanguages(){return this.b.slice(0)}async changeLanguage(t,r){await this.a.$changeLanguage(t,r);const n=this.c.getDocumentData(t);if(!n)throw new Error(`document '${t.toString()}' NOT found`);return n.document}async tokenAtPosition(t,r){const n=t.version,c=u.Position.from(r),m=await this.a.$tokensAtPosition(t.uri,c),i={type:b.Other,range:t.getWordRangeAtPosition(r)??new v(r.line,r.character,r.line,r.character)};if(!m)return i;const o={range:u.Range.to(m.range),type:u.TokenType.to(m.type)};return!o.range.contains(r)||n!==t.version?i:o}createLanguageStatusItem(t,r,n){const c=this.f++,m=this.a,i=this.g,o=`${t.identifier.value}/${r}`;if(i.has(o))throw new Error(`LanguageStatusItem with id '${r}' ALREADY exists`);i.add(o);const e={selector:n,id:r,name:t.displayName??t.name,severity:l.Information,command:void 0,text:"",detail:"",busy:!1};let d;const g=new I,s=()=>{d?.dispose(),i.has(o)&&(d=$(()=>{g.clear(),this.a.$setLanguageStatus(c,{id:o,name:e.name??t.displayName??t.name,source:t.displayName??t.name,selector:u.DocumentSelector.from(e.selector,this.e),label:e.text,detail:e.detail??"",severity:e.severity===l.Error?y.Error:e.severity===l.Warning?y.Warning:y.Info,command:e.command&&this.d.toInternal(e.command,g),accessibilityInfo:e.accessibilityInformation,busy:e.busy})},0))},h={dispose(){g.dispose(),d?.dispose(),m.$removeLanguageStatus(c),i.delete(o)},get id(){return e.id},get name(){return e.name},set name(a){e.name=a,s()},get selector(){return e.selector},set selector(a){e.selector=a,s()},get text(){return e.text},set text(a){e.text=a,s()},set text2(a){f(t,"languageStatusText"),e.text=a,s()},get text2(){return f(t,"languageStatusText"),e.text},get detail(){return e.detail},set detail(a){e.detail=a,s()},get severity(){return e.severity},set severity(a){e.severity=a,s()},get accessibilityInformation(){return e.accessibilityInformation},set accessibilityInformation(a){e.accessibilityInformation=a,s()},get command(){return e.command},set command(a){e.command=a,s()},get busy(){return e.busy},set busy(a){e.busy=a,s()}};return s(),h}}export{D as $5Lc};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { MainContext } from "./extHost.protocol.js";
+import * as typeConvert from "./extHostTypeConverters.js";
+import { StandardTokenType, Range, LanguageStatusSeverity } from "./extHostTypes.js";
+import Severity from "../../../base/common/severity.js";
+import { disposableTimeout } from "../../../base/common/async.js";
+import { DisposableStore } from "../../../base/common/lifecycle.js";
+import { checkProposedApiEnabled } from "../../services/extensions/common/extensions.js";
+class ExtHostLanguages {
+  static {
+    __name(this, "ExtHostLanguages");
+  }
+  constructor(mainContext, _documents, _commands, _uriTransformer) {
+    this._documents = _documents;
+    this._commands = _commands;
+    this._uriTransformer = _uriTransformer;
+    this._languageIds = [];
+    this._handlePool = 0;
+    this._ids = /* @__PURE__ */ new Set();
+    this._proxy = mainContext.getProxy(MainContext.MainThreadLanguages);
+  }
+  $acceptLanguageIds(ids) {
+    this._languageIds = ids;
+  }
+  async getLanguages() {
+    return this._languageIds.slice(0);
+  }
+  async changeLanguage(uri, languageId) {
+    await this._proxy.$changeLanguage(uri, languageId);
+    const data = this._documents.getDocumentData(uri);
+    if (!data) {
+      throw new Error(`document '${uri.toString()}' NOT found`);
+    }
+    return data.document;
+  }
+  async tokenAtPosition(document, position) {
+    const versionNow = document.version;
+    const pos = typeConvert.Position.from(position);
+    const info = await this._proxy.$tokensAtPosition(document.uri, pos);
+    const defaultRange = {
+      type: StandardTokenType.Other,
+      range: document.getWordRangeAtPosition(position) ?? new Range(position.line, position.character, position.line, position.character)
+    };
+    if (!info) {
+      return defaultRange;
+    }
+    const result = {
+      range: typeConvert.Range.to(info.range),
+      type: typeConvert.TokenType.to(info.type)
+    };
+    if (!result.range.contains(position)) {
+      return defaultRange;
+    }
+    if (versionNow !== document.version) {
+      return defaultRange;
+    }
+    return result;
+  }
+  createLanguageStatusItem(extension, id, selector) {
+    const handle = this._handlePool++;
+    const proxy = this._proxy;
+    const ids = this._ids;
+    const fullyQualifiedId = `${extension.identifier.value}/${id}`;
+    if (ids.has(fullyQualifiedId)) {
+      throw new Error(`LanguageStatusItem with id '${id}' ALREADY exists`);
+    }
+    ids.add(fullyQualifiedId);
+    const data = {
+      selector,
+      id,
+      name: extension.displayName ?? extension.name,
+      severity: LanguageStatusSeverity.Information,
+      command: void 0,
+      text: "",
+      detail: "",
+      busy: false
+    };
+    let soonHandle;
+    const commandDisposables = new DisposableStore();
+    const updateAsync = /* @__PURE__ */ __name(() => {
+      soonHandle?.dispose();
+      if (!ids.has(fullyQualifiedId)) {
+        console.warn(`LanguageStatusItem (${id}) from ${extension.identifier.value} has been disposed and CANNOT be updated anymore`);
+        return;
+      }
+      soonHandle = disposableTimeout(() => {
+        commandDisposables.clear();
+        this._proxy.$setLanguageStatus(handle, {
+          id: fullyQualifiedId,
+          name: data.name ?? extension.displayName ?? extension.name,
+          source: extension.displayName ?? extension.name,
+          selector: typeConvert.DocumentSelector.from(data.selector, this._uriTransformer),
+          label: data.text,
+          detail: data.detail ?? "",
+          severity: data.severity === LanguageStatusSeverity.Error ? Severity.Error : data.severity === LanguageStatusSeverity.Warning ? Severity.Warning : Severity.Info,
+          command: data.command && this._commands.toInternal(data.command, commandDisposables),
+          accessibilityInfo: data.accessibilityInformation,
+          busy: data.busy
+        });
+      }, 0);
+    }, "updateAsync");
+    const result = {
+      dispose() {
+        commandDisposables.dispose();
+        soonHandle?.dispose();
+        proxy.$removeLanguageStatus(handle);
+        ids.delete(fullyQualifiedId);
+      },
+      get id() {
+        return data.id;
+      },
+      get name() {
+        return data.name;
+      },
+      set name(value) {
+        data.name = value;
+        updateAsync();
+      },
+      get selector() {
+        return data.selector;
+      },
+      set selector(value) {
+        data.selector = value;
+        updateAsync();
+      },
+      get text() {
+        return data.text;
+      },
+      set text(value) {
+        data.text = value;
+        updateAsync();
+      },
+      set text2(value) {
+        checkProposedApiEnabled(extension, "languageStatusText");
+        data.text = value;
+        updateAsync();
+      },
+      get text2() {
+        checkProposedApiEnabled(extension, "languageStatusText");
+        return data.text;
+      },
+      get detail() {
+        return data.detail;
+      },
+      set detail(value) {
+        data.detail = value;
+        updateAsync();
+      },
+      get severity() {
+        return data.severity;
+      },
+      set severity(value) {
+        data.severity = value;
+        updateAsync();
+      },
+      get accessibilityInformation() {
+        return data.accessibilityInformation;
+      },
+      set accessibilityInformation(value) {
+        data.accessibilityInformation = value;
+        updateAsync();
+      },
+      get command() {
+        return data.command;
+      },
+      set command(value) {
+        data.command = value;
+        updateAsync();
+      },
+      get busy() {
+        return data.busy;
+      },
+      set busy(value) {
+        data.busy = value;
+        updateAsync();
+      }
+    };
+    updateAsync();
+    return result;
+  }
+}
+export {
+  ExtHostLanguages
+};
+//# sourceMappingURL=extHostLanguages.js.map

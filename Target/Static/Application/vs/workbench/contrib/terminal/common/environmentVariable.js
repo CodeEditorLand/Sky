@@ -1,1 +1,6 @@
-import{$nj as e}from"../../../../platform/instantiation/common/instantiation.js";const n=e("environmentVariableService");export{n as $S3};
+import { createDecorator } from "../../../../platform/instantiation/common/instantiation.js";
+const IEnvironmentVariableService = createDecorator("environmentVariableService");
+export {
+  IEnvironmentVariableService
+};
+//# sourceMappingURL=environmentVariable.js.map

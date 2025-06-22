@@ -1,1 +1,405 @@
-import{$p6 as q}from"../../../../base/browser/dom.js";import{$hp as J}from"../../../../base/common/color.js";import{$Bb as R}from"../../../../base/common/errors.js";import{$PD as K}from"../../../common/core/cursorColumns.js";import{$8bb as Q}from"../contentSegmenter.js";import{$0bb as v}from"./fullFileRenderStrategy.wgsl.js";import{GPULifecycle as H}from"../gpuDisposable.js";import{$Nbb as $}from"../gpuUtils.js";import{$4bb as W}from"../viewGpuContext.js";import{$9bb as _}from"./baseRenderStrategy.js";var X,Z;!function(e){e[e.IndicesPerCell=6]="IndicesPerCell"}(X||(X={})),function(e){e[e.FloatsPerEntry=6]="FloatsPerEntry",e[e.BytesPerEntry=24]="BytesPerEntry",e[e.Offset_X=0]="Offset_X",e[e.Offset_Y=1]="Offset_Y",e[e.Offset_Unused1=2]="Offset_Unused1",e[e.Offset_Unused2=3]="Offset_Unused2",e[e.GlyphIndex=4]="GlyphIndex",e[e.TextureIndex=5]="TextureIndex"}(Z||(Z={}));class s extends _{static{this.maxSupportedLines=3e3}static{this.maxSupportedColumns=200}get bindGroupEntries(){return[{binding:1,resource:{buffer:this.g}},{binding:6,resource:{buffer:this.w}}]}constructor(e,t,r,n){super(e,t,r,n),this.type="fullfile",this.wgsl=v,this.j=0,this.n=[new Set,new Set],this.s=0,this.t=0,this.C=!1,this.D=[[],[]];const o=s.maxSupportedLines*s.maxSupportedColumns*6*Float32Array.BYTES_PER_ELEMENT;this.g=this.B(H.createBuffer(this.c,{label:"Monaco full file cell buffer",size:o,usage:GPUBufferUsage.STORAGE|GPUBufferUsage.COPY_DST})).object,this.h=[new ArrayBuffer(o),new ArrayBuffer(o)];this.w=this.B(H.createBuffer(this.c,{label:"Monaco scroll offset buffer",size:2*Float32Array.BYTES_PER_ELEMENT,usage:GPUBufferUsage.UNIFORM|GPUBufferUsage.COPY_DST})).object,this.z=new Float32Array(2)}onConfigurationChanged(e){return this.F(),this.I(e),!0}onDecorationsChanged(e){return this.F(),!0}onTokensChanged(e){for(const t of e.ranges)this.H(t.fromLineNumber,t.toLineNumber);return!0}onLinesDeleted(e){return this.G(e.fromLineNumber),this.I(e),!0}onLinesInserted(e){return this.G(e.fromLineNumber),!0}onLinesChanged(e){return this.H(e.fromLineNumber,e.fromLineNumber+e.count),!0}onScrollChanged(e){const t=q().devicePixelRatio;return this.z[0]=(e?.scrollLeft??this.a.viewLayout.getCurrentScrollLeft())*t,this.z[1]=(e?.scrollTop??this.a.viewLayout.getCurrentScrollTop())*t,this.c.queue.writeBuffer(this.w,0,this.z),!0}onThemeChanged(e){return this.F(),!0}onLineMappingChanged(e){return this.F(),this.I(e),!0}onZonesChanged(e){return this.F(),this.I(e),!0}F(){this.n[0].clear(),this.n[1].clear()}G(e){for(const t of[0,1]){const s=this.n[t];for(const t of s)t>=e&&s.delete(t)}}H(e,t){for(let s=e;s<=t;s++)this.n[0].delete(s),this.n[1].delete(s)}reset(){this.F();for(const e of[0,1]){const t=new Float32Array(this.h[e]);t.fill(0,0,t.length),this.c.queue.writeBuffer(this.g,0,t.buffer,0,t.byteLength)}this.t=0}update(e,t){let r,n,o,i,a,u,h,l,f="",m=0,c=0,d=0,p=0,b=0,g=0,C=0,x=0,S=0,L=0,y=0,w=0;const E=q().devicePixelRatio;let N;this.C||(this.onScrollChanged(),this.C=!0);const B=new Float32Array(this.h[this.j]),M=6*s.maxSupportedColumns,_=this.n[this.j];let F=3e3,P=0;const T=this.D[this.j];for(;T.length;){const e=T.shift();switch(e.type){case 2:case 8:case 17:B.fill(0),F=1,P=Math.max(P,this.t),this.t=0;break;case 10:{const t=(e.fromLineNumber-1)*s.maxSupportedColumns*6,r=e.toLineNumber*s.maxSupportedColumns*6,n=(this.t-(e.toLineNumber-e.fromLineNumber+1))*s.maxSupportedColumns*6;B.set(B.subarray(r),t),B.fill(0,n),F=Math.min(F,e.fromLineNumber),P=Math.max(P,this.t),this.t-=e.toLineNumber-e.fromLineNumber+1;break}}}for(c=e.startLineNumber;c<=e.endLineNumber;c++)if(this.b.canRender(t,e,c)){if(!_.has(c)){F=Math.min(F,c),P=Math.max(P,c),u=e.getViewLineRenderingData(c),g=0,N=Q(u,t),m=t.spaceWidth*E,p=0,l=u.tokens,x=u.minColumn-1,S=0;for(let y=0,w=l.getCount();y<w;y++)if(S=l.getEndOffset(y),!(S<=x)){for(L=l.getMetadata(y),d=x;d<S&&!(d>s.maxSupportedColumns);d++){if(r=N.getSegmentAtIndex(d),void 0===r)continue;for(h of(f=r,u.isBasicASCII&&t.useMonospaceOptimizations||(m=this.glyphRasterizer.getTextMetrics(f).width),i=void 0,o=void 0,a=void 0,u.inlineDecorations)){if(c<h.range.startLineNumber||c>h.range.endLineNumber||c===h.range.startLineNumber&&d<h.range.startColumn-1||c===h.range.endLineNumber&&d>=h.range.endColumn-1)continue;const e=W.decorationCssRuleExtractor.getStyleRules(this.b.canvas.domNode,h.inlineClassName);for(const t of e)for(const e of t.style){const s=t.styleMap.get(e)?.toString()??"";switch(e){case"color":{const e=J.Format.CSS.parse(s);if(!e)throw new R("Invalid color format "+s);i=e.toNumber32Bit();break}case"font-weight":o=ee(s)>=400;break;case"opacity":a=te(s);break;default:throw new R("Unexpected inline decoration style")}}}if(" "===f||"\t"===f){if(C=6*((c-1)*s.maxSupportedColumns+d),B.fill(0,C,C+6),"\t"===f){const e=d+g;g=K.nextRenderTabStop(d+g,u.tabSize),p+=m*(g-e),g-=d+1}else p+=m;continue}const l=W.decorationStyleCache.getOrCreateEntry(i,o,a);n=this.b.atlas.getGlyph(this.glyphRasterizer,f,L,l,p),b=Math.round(e.relativeVerticalOffset[c-e.startLineNumber]*E+Math.floor((e.lineHeight*E-(n.fontBoundingBoxAscent+n.fontBoundingBoxDescent))/2)+n.fontBoundingBoxAscent),C=6*((c-1)*s.maxSupportedColumns+d),B[C+0]=Math.floor(p),B[C+1]=b,B[C+4]=n.glyphIndex,B[C+5]=n.pageIndex,p+=m}x=S}y=6*((c-1)*s.maxSupportedColumns+S),w=c*s.maxSupportedColumns*6,B.fill(0,y,w),_.add(c)}}else y=(c-1)*s.maxSupportedColumns*6,w=c*s.maxSupportedColumns*6,B.fill(0,y,w),F=Math.min(F,c),P=Math.max(P,c);const I=(e.endLineNumber-e.startLineNumber+1)*M;return F=Math.min(F,s.maxSupportedLines),P=Math.min(P,s.maxSupportedLines),F<=P&&this.c.queue.writeBuffer(this.g,(F-1)*M*Float32Array.BYTES_PER_ELEMENT,B.buffer,(F-1)*M*Float32Array.BYTES_PER_ELEMENT,(P-F+1)*M*Float32Array.BYTES_PER_ELEMENT),this.t=Math.max(this.t,P),this.j=this.j?0:1,this.s=I,I}draw(e,t){if(this.s<=0)throw new R("Attempt to draw 0 objects");e.draw($.length/2,this.s,void 0,(t.startLineNumber-1)*s.maxSupportedColumns)}I(e){this.D[0].push(e),this.D[1].push(e)}}function ee(e){switch(e){case"lighter":case"normal":return 400;case"bolder":case"bold":return 700}return parseInt(e)}function te(e){return e.endsWith("%")?parseFloat(e.substring(0,e.length-1))/100:e.match(/^\d+(?:\.\d*)/)?parseFloat(e):1}export{s as $_bb};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { getActiveWindow } from "../../../../base/browser/dom.js";
+import { Color } from "../../../../base/common/color.js";
+import { BugIndicatingError } from "../../../../base/common/errors.js";
+import { CursorColumns } from "../../../common/core/cursorColumns.js";
+import { createContentSegmenter } from "../contentSegmenter.js";
+import { fullFileRenderStrategyWgsl } from "./fullFileRenderStrategy.wgsl.js";
+import { GPULifecycle } from "../gpuDisposable.js";
+import { quadVertices } from "../gpuUtils.js";
+import { ViewGpuContext } from "../viewGpuContext.js";
+import { BaseRenderStrategy } from "./baseRenderStrategy.js";
+var Constants;
+(function(Constants2) {
+  Constants2[Constants2["IndicesPerCell"] = 6] = "IndicesPerCell";
+})(Constants || (Constants = {}));
+var CellBufferInfo;
+(function(CellBufferInfo2) {
+  CellBufferInfo2[CellBufferInfo2["FloatsPerEntry"] = 6] = "FloatsPerEntry";
+  CellBufferInfo2[CellBufferInfo2["BytesPerEntry"] = 24] = "BytesPerEntry";
+  CellBufferInfo2[CellBufferInfo2["Offset_X"] = 0] = "Offset_X";
+  CellBufferInfo2[CellBufferInfo2["Offset_Y"] = 1] = "Offset_Y";
+  CellBufferInfo2[CellBufferInfo2["Offset_Unused1"] = 2] = "Offset_Unused1";
+  CellBufferInfo2[CellBufferInfo2["Offset_Unused2"] = 3] = "Offset_Unused2";
+  CellBufferInfo2[CellBufferInfo2["GlyphIndex"] = 4] = "GlyphIndex";
+  CellBufferInfo2[CellBufferInfo2["TextureIndex"] = 5] = "TextureIndex";
+})(CellBufferInfo || (CellBufferInfo = {}));
+class FullFileRenderStrategy extends BaseRenderStrategy {
+  static {
+    __name(this, "FullFileRenderStrategy");
+  }
+  static {
+    this.maxSupportedLines = 3e3;
+  }
+  static {
+    this.maxSupportedColumns = 200;
+  }
+  get bindGroupEntries() {
+    return [
+      { binding: 1, resource: { buffer: this._cellBindBuffer } },
+      { binding: 6, resource: { buffer: this._scrollOffsetBindBuffer } }
+    ];
+  }
+  constructor(context, viewGpuContext, device, glyphRasterizer) {
+    super(context, viewGpuContext, device, glyphRasterizer);
+    this.type = "fullfile";
+    this.wgsl = fullFileRenderStrategyWgsl;
+    this._activeDoubleBufferIndex = 0;
+    this._upToDateLines = [/* @__PURE__ */ new Set(), /* @__PURE__ */ new Set()];
+    this._visibleObjectCount = 0;
+    this._finalRenderedLine = 0;
+    this._scrollInitialized = false;
+    this._queuedBufferUpdates = [[], []];
+    const bufferSize = FullFileRenderStrategy.maxSupportedLines * FullFileRenderStrategy.maxSupportedColumns * 6 * Float32Array.BYTES_PER_ELEMENT;
+    this._cellBindBuffer = this._register(GPULifecycle.createBuffer(this._device, {
+      label: "Monaco full file cell buffer",
+      size: bufferSize,
+      usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST
+    })).object;
+    this._cellValueBuffers = [
+      new ArrayBuffer(bufferSize),
+      new ArrayBuffer(bufferSize)
+    ];
+    const scrollOffsetBufferSize = 2;
+    this._scrollOffsetBindBuffer = this._register(GPULifecycle.createBuffer(this._device, {
+      label: "Monaco scroll offset buffer",
+      size: scrollOffsetBufferSize * Float32Array.BYTES_PER_ELEMENT,
+      usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
+    })).object;
+    this._scrollOffsetValueBuffer = new Float32Array(scrollOffsetBufferSize);
+  }
+  // #region Event handlers
+  // The primary job of these handlers is to:
+  // 1. Invalidate the up to date line cache, which will cause the line to be re-rendered when
+  //    it's _within the viewport_.
+  // 2. Pass relevant events on to the render function so it can force certain line ranges to be
+  //    re-rendered even if they're not in the viewport. For example when a view zone is added,
+  //    there are lines that used to be visible but are no longer, so those ranges must be
+  //    cleared and uploaded to the GPU.
+  onConfigurationChanged(e) {
+    this._invalidateAllLines();
+    this._queueBufferUpdate(e);
+    return true;
+  }
+  onDecorationsChanged(e) {
+    this._invalidateAllLines();
+    return true;
+  }
+  onTokensChanged(e) {
+    for (const range of e.ranges) {
+      this._invalidateLineRange(range.fromLineNumber, range.toLineNumber);
+    }
+    return true;
+  }
+  onLinesDeleted(e) {
+    this._invalidateLinesFrom(e.fromLineNumber);
+    this._queueBufferUpdate(e);
+    return true;
+  }
+  onLinesInserted(e) {
+    this._invalidateLinesFrom(e.fromLineNumber);
+    return true;
+  }
+  onLinesChanged(e) {
+    this._invalidateLineRange(e.fromLineNumber, e.fromLineNumber + e.count);
+    return true;
+  }
+  onScrollChanged(e) {
+    const dpr = getActiveWindow().devicePixelRatio;
+    this._scrollOffsetValueBuffer[0] = (e?.scrollLeft ?? this._context.viewLayout.getCurrentScrollLeft()) * dpr;
+    this._scrollOffsetValueBuffer[1] = (e?.scrollTop ?? this._context.viewLayout.getCurrentScrollTop()) * dpr;
+    this._device.queue.writeBuffer(this._scrollOffsetBindBuffer, 0, this._scrollOffsetValueBuffer);
+    return true;
+  }
+  onThemeChanged(e) {
+    this._invalidateAllLines();
+    return true;
+  }
+  onLineMappingChanged(e) {
+    this._invalidateAllLines();
+    this._queueBufferUpdate(e);
+    return true;
+  }
+  onZonesChanged(e) {
+    this._invalidateAllLines();
+    this._queueBufferUpdate(e);
+    return true;
+  }
+  // #endregion
+  _invalidateAllLines() {
+    this._upToDateLines[0].clear();
+    this._upToDateLines[1].clear();
+  }
+  _invalidateLinesFrom(lineNumber) {
+    for (const i of [0, 1]) {
+      const upToDateLines = this._upToDateLines[i];
+      for (const upToDateLine of upToDateLines) {
+        if (upToDateLine >= lineNumber) {
+          upToDateLines.delete(upToDateLine);
+        }
+      }
+    }
+  }
+  _invalidateLineRange(fromLineNumber, toLineNumber) {
+    for (let i = fromLineNumber; i <= toLineNumber; i++) {
+      this._upToDateLines[0].delete(i);
+      this._upToDateLines[1].delete(i);
+    }
+  }
+  reset() {
+    this._invalidateAllLines();
+    for (const bufferIndex of [0, 1]) {
+      const buffer = new Float32Array(this._cellValueBuffers[bufferIndex]);
+      buffer.fill(0, 0, buffer.length);
+      this._device.queue.writeBuffer(this._cellBindBuffer, 0, buffer.buffer, 0, buffer.byteLength);
+    }
+    this._finalRenderedLine = 0;
+  }
+  update(viewportData, viewLineOptions) {
+    let chars = "";
+    let segment;
+    let charWidth = 0;
+    let y = 0;
+    let x = 0;
+    let absoluteOffsetX = 0;
+    let absoluteOffsetY = 0;
+    let tabXOffset = 0;
+    let glyph;
+    let cellIndex = 0;
+    let tokenStartIndex = 0;
+    let tokenEndIndex = 0;
+    let tokenMetadata = 0;
+    let decorationStyleSetBold;
+    let decorationStyleSetColor;
+    let decorationStyleSetOpacity;
+    let lineData;
+    let decoration;
+    let fillStartIndex = 0;
+    let fillEndIndex = 0;
+    let tokens;
+    const dpr = getActiveWindow().devicePixelRatio;
+    let contentSegmenter;
+    if (!this._scrollInitialized) {
+      this.onScrollChanged();
+      this._scrollInitialized = true;
+    }
+    const cellBuffer = new Float32Array(this._cellValueBuffers[this._activeDoubleBufferIndex]);
+    const lineIndexCount = FullFileRenderStrategy.maxSupportedColumns * 6;
+    const upToDateLines = this._upToDateLines[this._activeDoubleBufferIndex];
+    let dirtyLineStart = 3e3;
+    let dirtyLineEnd = 0;
+    const queuedBufferUpdates = this._queuedBufferUpdates[this._activeDoubleBufferIndex];
+    while (queuedBufferUpdates.length) {
+      const e = queuedBufferUpdates.shift();
+      switch (e.type) {
+        // TODO: Refine these cases so we're not throwing away everything
+        case 2:
+        case 8:
+        case 17: {
+          cellBuffer.fill(0);
+          dirtyLineStart = 1;
+          dirtyLineEnd = Math.max(dirtyLineEnd, this._finalRenderedLine);
+          this._finalRenderedLine = 0;
+          break;
+        }
+        case 10: {
+          const deletedLineContentStartIndex = (e.fromLineNumber - 1) * FullFileRenderStrategy.maxSupportedColumns * 6;
+          const deletedLineContentEndIndex = e.toLineNumber * FullFileRenderStrategy.maxSupportedColumns * 6;
+          const nullContentStartIndex = (this._finalRenderedLine - (e.toLineNumber - e.fromLineNumber + 1)) * FullFileRenderStrategy.maxSupportedColumns * 6;
+          cellBuffer.set(cellBuffer.subarray(deletedLineContentEndIndex), deletedLineContentStartIndex);
+          cellBuffer.fill(0, nullContentStartIndex);
+          dirtyLineStart = Math.min(dirtyLineStart, e.fromLineNumber);
+          dirtyLineEnd = Math.max(dirtyLineEnd, this._finalRenderedLine);
+          this._finalRenderedLine -= e.toLineNumber - e.fromLineNumber + 1;
+          break;
+        }
+      }
+    }
+    for (y = viewportData.startLineNumber; y <= viewportData.endLineNumber; y++) {
+      if (!this._viewGpuContext.canRender(viewLineOptions, viewportData, y)) {
+        fillStartIndex = (y - 1) * FullFileRenderStrategy.maxSupportedColumns * 6;
+        fillEndIndex = y * FullFileRenderStrategy.maxSupportedColumns * 6;
+        cellBuffer.fill(0, fillStartIndex, fillEndIndex);
+        dirtyLineStart = Math.min(dirtyLineStart, y);
+        dirtyLineEnd = Math.max(dirtyLineEnd, y);
+        continue;
+      }
+      if (upToDateLines.has(y)) {
+        continue;
+      }
+      dirtyLineStart = Math.min(dirtyLineStart, y);
+      dirtyLineEnd = Math.max(dirtyLineEnd, y);
+      lineData = viewportData.getViewLineRenderingData(y);
+      tabXOffset = 0;
+      contentSegmenter = createContentSegmenter(lineData, viewLineOptions);
+      charWidth = viewLineOptions.spaceWidth * dpr;
+      absoluteOffsetX = 0;
+      tokens = lineData.tokens;
+      tokenStartIndex = lineData.minColumn - 1;
+      tokenEndIndex = 0;
+      for (let tokenIndex = 0, tokensLen = tokens.getCount(); tokenIndex < tokensLen; tokenIndex++) {
+        tokenEndIndex = tokens.getEndOffset(tokenIndex);
+        if (tokenEndIndex <= tokenStartIndex) {
+          continue;
+        }
+        tokenMetadata = tokens.getMetadata(tokenIndex);
+        for (x = tokenStartIndex; x < tokenEndIndex; x++) {
+          if (x > FullFileRenderStrategy.maxSupportedColumns) {
+            break;
+          }
+          segment = contentSegmenter.getSegmentAtIndex(x);
+          if (segment === void 0) {
+            continue;
+          }
+          chars = segment;
+          if (!(lineData.isBasicASCII && viewLineOptions.useMonospaceOptimizations)) {
+            charWidth = this.glyphRasterizer.getTextMetrics(chars).width;
+          }
+          decorationStyleSetColor = void 0;
+          decorationStyleSetBold = void 0;
+          decorationStyleSetOpacity = void 0;
+          for (decoration of lineData.inlineDecorations) {
+            if (y < decoration.range.startLineNumber || y > decoration.range.endLineNumber || y === decoration.range.startLineNumber && x < decoration.range.startColumn - 1 || y === decoration.range.endLineNumber && x >= decoration.range.endColumn - 1) {
+              continue;
+            }
+            const rules = ViewGpuContext.decorationCssRuleExtractor.getStyleRules(this._viewGpuContext.canvas.domNode, decoration.inlineClassName);
+            for (const rule of rules) {
+              for (const r of rule.style) {
+                const value = rule.styleMap.get(r)?.toString() ?? "";
+                switch (r) {
+                  case "color": {
+                    const parsedColor = Color.Format.CSS.parse(value);
+                    if (!parsedColor) {
+                      throw new BugIndicatingError("Invalid color format " + value);
+                    }
+                    decorationStyleSetColor = parsedColor.toNumber32Bit();
+                    break;
+                  }
+                  case "font-weight": {
+                    const parsedValue = parseCssFontWeight(value);
+                    if (parsedValue >= 400) {
+                      decorationStyleSetBold = true;
+                    } else {
+                      decorationStyleSetBold = false;
+                    }
+                    break;
+                  }
+                  case "opacity": {
+                    const parsedValue = parseCssOpacity(value);
+                    decorationStyleSetOpacity = parsedValue;
+                    break;
+                  }
+                  default:
+                    throw new BugIndicatingError("Unexpected inline decoration style");
+                }
+              }
+            }
+          }
+          if (chars === " " || chars === "	") {
+            cellIndex = ((y - 1) * FullFileRenderStrategy.maxSupportedColumns + x) * 6;
+            cellBuffer.fill(
+              0,
+              cellIndex,
+              cellIndex + 6
+              /* CellBufferInfo.FloatsPerEntry */
+            );
+            if (chars === "	") {
+              const offsetBefore = x + tabXOffset;
+              tabXOffset = CursorColumns.nextRenderTabStop(x + tabXOffset, lineData.tabSize);
+              absoluteOffsetX += charWidth * (tabXOffset - offsetBefore);
+              tabXOffset -= x + 1;
+            } else {
+              absoluteOffsetX += charWidth;
+            }
+            continue;
+          }
+          const decorationStyleSetId = ViewGpuContext.decorationStyleCache.getOrCreateEntry(decorationStyleSetColor, decorationStyleSetBold, decorationStyleSetOpacity);
+          glyph = this._viewGpuContext.atlas.getGlyph(this.glyphRasterizer, chars, tokenMetadata, decorationStyleSetId, absoluteOffsetX);
+          absoluteOffsetY = Math.round(
+            // Top of layout box (includes line height)
+            viewportData.relativeVerticalOffset[y - viewportData.startLineNumber] * dpr + // Delta from top of layout box (includes line height) to top of the inline box (no line height)
+            Math.floor((viewportData.lineHeight * dpr - (glyph.fontBoundingBoxAscent + glyph.fontBoundingBoxDescent)) / 2) + // Delta from top of inline box (no line height) to top of glyph origin. If the glyph was drawn
+            // with a top baseline for example, this ends up drawing the glyph correctly using the alphabetical
+            // baseline.
+            glyph.fontBoundingBoxAscent
+          );
+          cellIndex = ((y - 1) * FullFileRenderStrategy.maxSupportedColumns + x) * 6;
+          cellBuffer[
+            cellIndex + 0
+            /* CellBufferInfo.Offset_X */
+          ] = Math.floor(absoluteOffsetX);
+          cellBuffer[
+            cellIndex + 1
+            /* CellBufferInfo.Offset_Y */
+          ] = absoluteOffsetY;
+          cellBuffer[
+            cellIndex + 4
+            /* CellBufferInfo.GlyphIndex */
+          ] = glyph.glyphIndex;
+          cellBuffer[
+            cellIndex + 5
+            /* CellBufferInfo.TextureIndex */
+          ] = glyph.pageIndex;
+          absoluteOffsetX += charWidth;
+        }
+        tokenStartIndex = tokenEndIndex;
+      }
+      fillStartIndex = ((y - 1) * FullFileRenderStrategy.maxSupportedColumns + tokenEndIndex) * 6;
+      fillEndIndex = y * FullFileRenderStrategy.maxSupportedColumns * 6;
+      cellBuffer.fill(0, fillStartIndex, fillEndIndex);
+      upToDateLines.add(y);
+    }
+    const visibleObjectCount = (viewportData.endLineNumber - viewportData.startLineNumber + 1) * lineIndexCount;
+    dirtyLineStart = Math.min(dirtyLineStart, FullFileRenderStrategy.maxSupportedLines);
+    dirtyLineEnd = Math.min(dirtyLineEnd, FullFileRenderStrategy.maxSupportedLines);
+    if (dirtyLineStart <= dirtyLineEnd) {
+      this._device.queue.writeBuffer(this._cellBindBuffer, (dirtyLineStart - 1) * lineIndexCount * Float32Array.BYTES_PER_ELEMENT, cellBuffer.buffer, (dirtyLineStart - 1) * lineIndexCount * Float32Array.BYTES_PER_ELEMENT, (dirtyLineEnd - dirtyLineStart + 1) * lineIndexCount * Float32Array.BYTES_PER_ELEMENT);
+    }
+    this._finalRenderedLine = Math.max(this._finalRenderedLine, dirtyLineEnd);
+    this._activeDoubleBufferIndex = this._activeDoubleBufferIndex ? 0 : 1;
+    this._visibleObjectCount = visibleObjectCount;
+    return visibleObjectCount;
+  }
+  draw(pass, viewportData) {
+    if (this._visibleObjectCount <= 0) {
+      throw new BugIndicatingError("Attempt to draw 0 objects");
+    }
+    pass.draw(quadVertices.length / 2, this._visibleObjectCount, void 0, (viewportData.startLineNumber - 1) * FullFileRenderStrategy.maxSupportedColumns);
+  }
+  /**
+   * Queue updates that need to happen on the active buffer, not just the cache. This will be
+   * deferred to when the actual cell buffer is changed since the active buffer could be locked by
+   * the GPU which would block the main thread.
+   */
+  _queueBufferUpdate(e) {
+    this._queuedBufferUpdates[0].push(e);
+    this._queuedBufferUpdates[1].push(e);
+  }
+}
+function parseCssFontWeight(value) {
+  switch (value) {
+    case "lighter":
+    case "normal":
+      return 400;
+    case "bolder":
+    case "bold":
+      return 700;
+  }
+  return parseInt(value);
+}
+__name(parseCssFontWeight, "parseCssFontWeight");
+function parseCssOpacity(value) {
+  if (value.endsWith("%")) {
+    return parseFloat(value.substring(0, value.length - 1)) / 100;
+  }
+  if (value.match(/^\d+(?:\.\d*)/)) {
+    return parseFloat(value);
+  }
+  return 1;
+}
+__name(parseCssOpacity, "parseCssOpacity");
+export {
+  FullFileRenderStrategy
+};
+//# sourceMappingURL=fullFileRenderStrategy.js.map

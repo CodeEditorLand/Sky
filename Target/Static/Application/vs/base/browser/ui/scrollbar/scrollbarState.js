@@ -1,1 +1,155 @@
-class n{constructor(t,i,e,s,r,h){this.a=Math.round(i),this.b=Math.round(e),this.c=Math.round(t),this.d=s,this.e=r,this.f=h,this.g=0,this.h=!1,this.i=0,this.j=0,this.k=0,this.m()}clone(){return new n(this.c,this.a,this.b,this.d,this.e,this.f)}setVisibleSize(t){const i=Math.round(t);return this.d!==i&&(this.d=i,this.m(),!0)}setScrollSize(t){const i=Math.round(t);return this.e!==i&&(this.e=i,this.m(),!0)}setScrollPosition(t){const i=Math.round(t);return this.f!==i&&(this.f=i,this.m(),!0)}setScrollbarSize(t){this.a=Math.round(t)}setOppositeScrollbarSize(t){this.b=Math.round(t)}static l(t,i,e,s,r){const h=Math.max(0,e-t),o=Math.max(0,h-2*i),n=s>0&&s>e;if(!n)return{computedAvailableSize:Math.round(h),computedIsNeeded:n,computedSliderSize:Math.round(o),computedSliderRatio:0,computedSliderPosition:0};const d=Math.round(Math.max(20,Math.floor(e*o/s))),u=(o-d)/(s-e),a=r*u;return{computedAvailableSize:Math.round(h),computedIsNeeded:n,computedSliderSize:Math.round(d),computedSliderRatio:u,computedSliderPosition:Math.round(a)}}m(){const t=n.l(this.b,this.c,this.d,this.e,this.f);this.g=t.computedAvailableSize,this.h=t.computedIsNeeded,this.i=t.computedSliderSize,this.j=t.computedSliderRatio,this.k=t.computedSliderPosition}getArrowSize(){return this.c}getScrollPosition(){return this.f}getRectangleLargeSize(){return this.g}getRectangleSmallSize(){return this.a}isNeeded(){return this.h}getSliderSize(){return this.i}getSliderPosition(){return this.k}getDesiredScrollPositionFromOffset(t){if(!this.h)return 0;const i=t-this.c-this.i/2;return Math.round(i/this.j)}getDesiredScrollPositionFromOffsetPaged(t){if(!this.h)return 0;const i=t-this.c;let e=this.f;return i<this.k?e-=this.d:e+=this.d,e}getDesiredScrollPositionFromDelta(t){if(!this.h)return 0;const i=this.k+t;return Math.round(i/this.j)}}export{n as $s7};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+const MINIMUM_SLIDER_SIZE = 20;
+class ScrollbarState {
+  static {
+    __name(this, "ScrollbarState");
+  }
+  constructor(arrowSize, scrollbarSize, oppositeScrollbarSize, visibleSize, scrollSize, scrollPosition) {
+    this._scrollbarSize = Math.round(scrollbarSize);
+    this._oppositeScrollbarSize = Math.round(oppositeScrollbarSize);
+    this._arrowSize = Math.round(arrowSize);
+    this._visibleSize = visibleSize;
+    this._scrollSize = scrollSize;
+    this._scrollPosition = scrollPosition;
+    this._computedAvailableSize = 0;
+    this._computedIsNeeded = false;
+    this._computedSliderSize = 0;
+    this._computedSliderRatio = 0;
+    this._computedSliderPosition = 0;
+    this._refreshComputedValues();
+  }
+  clone() {
+    return new ScrollbarState(this._arrowSize, this._scrollbarSize, this._oppositeScrollbarSize, this._visibleSize, this._scrollSize, this._scrollPosition);
+  }
+  setVisibleSize(visibleSize) {
+    const iVisibleSize = Math.round(visibleSize);
+    if (this._visibleSize !== iVisibleSize) {
+      this._visibleSize = iVisibleSize;
+      this._refreshComputedValues();
+      return true;
+    }
+    return false;
+  }
+  setScrollSize(scrollSize) {
+    const iScrollSize = Math.round(scrollSize);
+    if (this._scrollSize !== iScrollSize) {
+      this._scrollSize = iScrollSize;
+      this._refreshComputedValues();
+      return true;
+    }
+    return false;
+  }
+  setScrollPosition(scrollPosition) {
+    const iScrollPosition = Math.round(scrollPosition);
+    if (this._scrollPosition !== iScrollPosition) {
+      this._scrollPosition = iScrollPosition;
+      this._refreshComputedValues();
+      return true;
+    }
+    return false;
+  }
+  setScrollbarSize(scrollbarSize) {
+    this._scrollbarSize = Math.round(scrollbarSize);
+  }
+  setOppositeScrollbarSize(oppositeScrollbarSize) {
+    this._oppositeScrollbarSize = Math.round(oppositeScrollbarSize);
+  }
+  static _computeValues(oppositeScrollbarSize, arrowSize, visibleSize, scrollSize, scrollPosition) {
+    const computedAvailableSize = Math.max(0, visibleSize - oppositeScrollbarSize);
+    const computedRepresentableSize = Math.max(0, computedAvailableSize - 2 * arrowSize);
+    const computedIsNeeded = scrollSize > 0 && scrollSize > visibleSize;
+    if (!computedIsNeeded) {
+      return {
+        computedAvailableSize: Math.round(computedAvailableSize),
+        computedIsNeeded,
+        computedSliderSize: Math.round(computedRepresentableSize),
+        computedSliderRatio: 0,
+        computedSliderPosition: 0
+      };
+    }
+    const computedSliderSize = Math.round(Math.max(MINIMUM_SLIDER_SIZE, Math.floor(visibleSize * computedRepresentableSize / scrollSize)));
+    const computedSliderRatio = (computedRepresentableSize - computedSliderSize) / (scrollSize - visibleSize);
+    const computedSliderPosition = scrollPosition * computedSliderRatio;
+    return {
+      computedAvailableSize: Math.round(computedAvailableSize),
+      computedIsNeeded,
+      computedSliderSize: Math.round(computedSliderSize),
+      computedSliderRatio,
+      computedSliderPosition: Math.round(computedSliderPosition)
+    };
+  }
+  _refreshComputedValues() {
+    const r = ScrollbarState._computeValues(this._oppositeScrollbarSize, this._arrowSize, this._visibleSize, this._scrollSize, this._scrollPosition);
+    this._computedAvailableSize = r.computedAvailableSize;
+    this._computedIsNeeded = r.computedIsNeeded;
+    this._computedSliderSize = r.computedSliderSize;
+    this._computedSliderRatio = r.computedSliderRatio;
+    this._computedSliderPosition = r.computedSliderPosition;
+  }
+  getArrowSize() {
+    return this._arrowSize;
+  }
+  getScrollPosition() {
+    return this._scrollPosition;
+  }
+  getRectangleLargeSize() {
+    return this._computedAvailableSize;
+  }
+  getRectangleSmallSize() {
+    return this._scrollbarSize;
+  }
+  isNeeded() {
+    return this._computedIsNeeded;
+  }
+  getSliderSize() {
+    return this._computedSliderSize;
+  }
+  getSliderPosition() {
+    return this._computedSliderPosition;
+  }
+  /**
+   * Compute a desired `scrollPosition` such that `offset` ends up in the center of the slider.
+   * `offset` is based on the same coordinate system as the `sliderPosition`.
+   */
+  getDesiredScrollPositionFromOffset(offset) {
+    if (!this._computedIsNeeded) {
+      return 0;
+    }
+    const desiredSliderPosition = offset - this._arrowSize - this._computedSliderSize / 2;
+    return Math.round(desiredSliderPosition / this._computedSliderRatio);
+  }
+  /**
+   * Compute a desired `scrollPosition` from if offset is before or after the slider position.
+   * If offset is before slider, treat as a page up (or left).  If after, page down (or right).
+   * `offset` and `_computedSliderPosition` are based on the same coordinate system.
+   * `_visibleSize` corresponds to a "page" of lines in the returned coordinate system.
+   */
+  getDesiredScrollPositionFromOffsetPaged(offset) {
+    if (!this._computedIsNeeded) {
+      return 0;
+    }
+    const correctedOffset = offset - this._arrowSize;
+    let desiredScrollPosition = this._scrollPosition;
+    if (correctedOffset < this._computedSliderPosition) {
+      desiredScrollPosition -= this._visibleSize;
+    } else {
+      desiredScrollPosition += this._visibleSize;
+    }
+    return desiredScrollPosition;
+  }
+  /**
+   * Compute a desired `scrollPosition` such that the slider moves by `delta`.
+   */
+  getDesiredScrollPositionFromDelta(delta) {
+    if (!this._computedIsNeeded) {
+      return 0;
+    }
+    const desiredSliderPosition = this._computedSliderPosition + delta;
+    return Math.round(desiredSliderPosition / this._computedSliderRatio);
+  }
+}
+export {
+  ScrollbarState
+};
+//# sourceMappingURL=scrollbarState.js.map

@@ -1,1 +1,28 @@
-import{$pD as e,$qD as o,$rD as u}from"../languages.js";const s=new class{clone(){return this}equals(n){return this===n}};function i(n,s){return new o([new e(0,"",n)],s)}function $(n,e){const r=new Uint32Array(2);return r[0]=0,r[1]=(32768|n|2<<24)>>>0,new u(r,null===e?s:e)}export{s as $sH,i as $tH,$ as $uH};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { Token, TokenizationResult, EncodedTokenizationResult } from "../languages.js";
+const NullState = new class {
+  clone() {
+    return this;
+  }
+  equals(other) {
+    return this === other;
+  }
+}();
+function nullTokenize(languageId, state) {
+  return new TokenizationResult([new Token(0, "", languageId)], state);
+}
+__name(nullTokenize, "nullTokenize");
+function nullTokenizeEncoded(languageId, state) {
+  const tokens = new Uint32Array(2);
+  tokens[0] = 0;
+  tokens[1] = (languageId << 0 | 0 << 8 | 0 << 11 | 1 << 15 | 2 << 24) >>> 0;
+  return new EncodedTokenizationResult(tokens, state === null ? NullState : state);
+}
+__name(nullTokenizeEncoded, "nullTokenizeEncoded");
+export {
+  NullState,
+  nullTokenize,
+  nullTokenizeEncoded
+};
+//# sourceMappingURL=nullTokenize.js.map

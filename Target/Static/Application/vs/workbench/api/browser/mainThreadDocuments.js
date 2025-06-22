@@ -1,1 +1,292 @@
-import{$fm as x}from"../../../base/common/errorMessage.js";import{$qd as u,$vd as C}from"../../../base/common/lifecycle.js";import{Schemas as p}from"../../../base/common/network.js";import{URI as m}from"../../../base/common/uri.js";import{$$E as $}from"../../../editor/common/model.js";import{$gF as E}from"../../../editor/common/services/model.js";import{$cF as M}from"../../../editor/common/services/resolverService.js";import{$5j as S}from"../../../platform/files/common/files.js";import{$pY as R}from"../common/extHost.protocol.js";import{$fJ as U}from"../../services/textfile/common/textfiles.js";import{$KX as q}from"../../services/environment/common/environmentService.js";import{$uh as I,$ah as j}from"../../../base/common/resources.js";import{$dJ as W}from"../../services/workingCopy/common/workingCopyFileService.js";import{$yo as _}from"../../../platform/uriIdentity/common/uriIdentity.js";import{$df as L,Event as w}from"../../../base/common/event.js";import{$3X as O}from"../../services/path/common/pathService.js";import{$Ic as P}from"../../../base/common/map.js";import{$Ab as d}from"../../../base/common/errors.js";var D=function(t,e,s,i){var o,n=arguments.length,r=n<3?e:null===i?i=Object.getOwnPropertyDescriptor(e,s):i;if("object"==typeof Reflect&&"function"==typeof Reflect.decorate)r=Reflect.decorate(t,e,s,i);else for(var a=t.length-1;a>=0;a--)(o=t[a])&&(r=(n<3?o(r):n>3?o(e,s,r):o(e,s))||r);return n>3&&r&&Object.defineProperty(e,s,r),r},c=function(t,e){return function(s,i){e(s,i,t)}};class A{constructor(t,e=18e4,s=83886080,i=50){this.c=t,this.d=e,this.f=s,this.g=i,this.a=new Array,this.b=0}dispose(){this.a=u(this.a)}remove(t){for(const e of[...this.a])this.c.isEqualOrParent(e.uri,t)&&e.dispose()}add(t,e,s=0){const i=()=>{const t=this.a.indexOf(n);t>=0&&(this.b-=s,e.dispose(),clearTimeout(o),this.a.splice(t,1))},o=setTimeout(i,this.d),n={uri:t,length:s,dispose:i};this.a.push(n),this.b+=s,this.h()}h(){for(;this.b>this.f;)this.a[0].dispose();const t=Math.ceil(1.2*this.g);this.a.length>=t&&u(this.a.slice(0,t-this.g))}}class F extends C{constructor(t,e,s,i){super(),this.b=t,this.c=e,this.f=s,this.g=i,this.a=this.b.getVersionId(),this.q.add(this.b.onDidChangeContent((t=>{this.a=t.versionId,this.f.$acceptModelChanged(this.b.uri,t,this.g.isDirty(this.b.uri)),this.isCaughtUpWithContentChanges()&&this.c.fire(this.b.uri)})))}isCaughtUpWithContentChanges(){return this.b.getVersionId()===this.a}}let b=class extends C{constructor(t,e,s,i,o,n,r,a,c){super(),this.g=e,this.h=s,this.j=i,this.n=o,this.r=n,this.s=r,this.t=c,this.a=this.q.add(new L),this.onIsCaughtUpWithContentChanges=this.a.event,this.c=new P,this.f=this.q.add(new A(r.extUri)),this.b=t.getProxy(R.ExtHostDocuments),this.q.add(e.onModelLanguageChanged(this.w,this)),this.q.add(s.files.onDidSave((t=>{this.u(t.model.resource)&&this.b.$acceptModelSaved(t.model.resource)}))),this.q.add(s.files.onDidChangeDirty((t=>{this.u(t.resource)&&this.b.$acceptDirtyStateChanged(t.resource,t.isDirty())}))),this.q.add(w.any(s.files.onDidChangeEncoding,s.untitled.onDidChangeEncoding)((t=>{if(this.u(t.resource)){const e=t.getEncoding();e&&this.b.$acceptEncodingChanged(t.resource,e)}}))),this.q.add(a.onDidRunWorkingCopyFileOperation((t=>{const e=2===t.operation;if(e||1===t.operation)for(const s of t.files){const t=e?s.source:s.target;t&&this.f.remove(t)}})))}dispose(){u(this.c.values()),this.c.clear(),super.dispose()}isCaughtUpWithContentChanges(t){const e=this.c.get(t);return!e||e.isCaughtUpWithContentChanges()}u(t){const e=this.g.getModel(t);return!!e&&$(e)}handleModelAdded(t){$(t)&&this.c.set(t.uri,new F(t,this.a,this.b,this.h))}w(t){const{model:e}=t;this.c.has(e.uri)&&this.b.$acceptModelLanguageChanged(e.uri,e.getLanguageId())}handleModelRemoved(t){this.c.has(t)&&(this.c.get(t).dispose(),this.c.delete(t))}async $trySaveDocument(t){return!!await this.h.save(m.revive(t))}async $tryOpenDocument(t,e){const s=m.revive(t);if(!s.scheme||!s.fsPath&&!s.authority)throw new d("Invalid uri. Scheme and authority or path must be set.");const i=this.s.asCanonicalUri(s);let o,n;switch(i.scheme){case p.untitled:o=this.z(i,e);break;case p.file:default:o=this.y(i,e)}try{n=await o}catch(t){throw new d(`cannot open ${i.toString()}. Detail: ${x(t)}`)}if(n){if(j.isEqual(n,i)){if(this.c.has(i))return i;throw new d(`cannot open ${i.toString()}. Detail: Files above 50MB cannot be synchronized with extensions.`)}throw new d(`cannot open ${i.toString()}. Detail: Actual document opened as ${n.toString()}`)}throw new d(`cannot open ${i.toString()}`)}$tryCreateDocument(t){return this.C(void 0,t)}async y(t,e){if(e?.encoding){const s=await this.h.files.resolve(t,{encoding:e.encoding,reason:2});if(s.isDirty())throw new d("Cannot re-open a dirty text document with different encoding. Save it first.");await s.setEncoding(e.encoding,1)}const s=await this.n.createModelReference(t);return this.f.add(t,s,s.object.textEditorModel.getValueLength()),s.object.textEditorModel.uri}async z(t,e){const s=I(t,this.r.remoteAuthority,this.t.defaultUriScheme);return await this.j.exists(s)?Promise.reject(new Error("file already exists")):await this.C(t.path?t:void 0,e)}async C(t,e){const s=this.h.untitled.create({associatedResource:t,languageId:e?.language,initialValue:e?.content,encoding:e?.encoding});e?.encoding&&await s.setEncoding(e.encoding);const i=s.resource,o=await this.n.createModelReference(i);if(!this.c.has(i))throw o.dispose(),new Error(`expected URI ${i.toString()} to have come to LIFE`);return this.f.add(i,o,o.object.textEditorModel.getValueLength()),w.once(s.onDidRevert)((()=>this.f.remove(i))),this.b.$acceptDirtyStateChanged(i,!0),i}};b=D([c(1,E),c(2,U),c(3,S),c(4,M),c(5,q),c(6,_),c(7,W),c(8,O)],b);export{A as $QWb,b as $RWb};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { toErrorMessage } from "../../../base/common/errorMessage.js";
+import { dispose, Disposable } from "../../../base/common/lifecycle.js";
+import { Schemas } from "../../../base/common/network.js";
+import { URI } from "../../../base/common/uri.js";
+import { shouldSynchronizeModel } from "../../../editor/common/model.js";
+import { IModelService } from "../../../editor/common/services/model.js";
+import { ITextModelService } from "../../../editor/common/services/resolverService.js";
+import { IFileService } from "../../../platform/files/common/files.js";
+import { ExtHostContext } from "../common/extHost.protocol.js";
+import { ITextFileService } from "../../services/textfile/common/textfiles.js";
+import { IWorkbenchEnvironmentService } from "../../services/environment/common/environmentService.js";
+import { toLocalResource, extUri } from "../../../base/common/resources.js";
+import { IWorkingCopyFileService } from "../../services/workingCopy/common/workingCopyFileService.js";
+import { IUriIdentityService } from "../../../platform/uriIdentity/common/uriIdentity.js";
+import { Emitter, Event } from "../../../base/common/event.js";
+import { IPathService } from "../../services/path/common/pathService.js";
+import { ResourceMap } from "../../../base/common/map.js";
+import { ErrorNoTelemetry } from "../../../base/common/errors.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+class BoundModelReferenceCollection {
+  static {
+    __name(this, "BoundModelReferenceCollection");
+  }
+  constructor(_extUri, _maxAge = 1e3 * 60 * 3, _maxLength = 1024 * 1024 * 80, _maxSize = 50) {
+    this._extUri = _extUri;
+    this._maxAge = _maxAge;
+    this._maxLength = _maxLength;
+    this._maxSize = _maxSize;
+    this._data = new Array();
+    this._length = 0;
+  }
+  dispose() {
+    this._data = dispose(this._data);
+  }
+  remove(uri) {
+    for (const entry of [...this._data]) {
+      if (this._extUri.isEqualOrParent(entry.uri, uri)) {
+        entry.dispose();
+      }
+    }
+  }
+  add(uri, ref, length = 0) {
+    const dispose2 = /* @__PURE__ */ __name(() => {
+      const idx = this._data.indexOf(entry);
+      if (idx >= 0) {
+        this._length -= length;
+        ref.dispose();
+        clearTimeout(handle);
+        this._data.splice(idx, 1);
+      }
+    }, "dispose");
+    const handle = setTimeout(dispose2, this._maxAge);
+    const entry = { uri, length, dispose: dispose2 };
+    this._data.push(entry);
+    this._length += length;
+    this._cleanup();
+  }
+  _cleanup() {
+    while (this._length > this._maxLength) {
+      this._data[0].dispose();
+    }
+    const extraSize = Math.ceil(this._maxSize * 1.2);
+    if (this._data.length >= extraSize) {
+      dispose(this._data.slice(0, extraSize - this._maxSize));
+    }
+  }
+}
+class ModelTracker extends Disposable {
+  static {
+    __name(this, "ModelTracker");
+  }
+  constructor(_model, _onIsCaughtUpWithContentChanges, _proxy, _textFileService) {
+    super();
+    this._model = _model;
+    this._onIsCaughtUpWithContentChanges = _onIsCaughtUpWithContentChanges;
+    this._proxy = _proxy;
+    this._textFileService = _textFileService;
+    this._knownVersionId = this._model.getVersionId();
+    this._store.add(this._model.onDidChangeContent((e) => {
+      this._knownVersionId = e.versionId;
+      this._proxy.$acceptModelChanged(this._model.uri, e, this._textFileService.isDirty(this._model.uri));
+      if (this.isCaughtUpWithContentChanges()) {
+        this._onIsCaughtUpWithContentChanges.fire(this._model.uri);
+      }
+    }));
+  }
+  isCaughtUpWithContentChanges() {
+    return this._model.getVersionId() === this._knownVersionId;
+  }
+}
+let MainThreadDocuments = class MainThreadDocuments2 extends Disposable {
+  static {
+    __name(this, "MainThreadDocuments");
+  }
+  constructor(extHostContext, _modelService, _textFileService, _fileService, _textModelResolverService, _environmentService, _uriIdentityService, workingCopyFileService, _pathService) {
+    super();
+    this._modelService = _modelService;
+    this._textFileService = _textFileService;
+    this._fileService = _fileService;
+    this._textModelResolverService = _textModelResolverService;
+    this._environmentService = _environmentService;
+    this._uriIdentityService = _uriIdentityService;
+    this._pathService = _pathService;
+    this._onIsCaughtUpWithContentChanges = this._store.add(new Emitter());
+    this.onIsCaughtUpWithContentChanges = this._onIsCaughtUpWithContentChanges.event;
+    this._modelTrackers = new ResourceMap();
+    this._modelReferenceCollection = this._store.add(new BoundModelReferenceCollection(_uriIdentityService.extUri));
+    this._proxy = extHostContext.getProxy(ExtHostContext.ExtHostDocuments);
+    this._store.add(_modelService.onModelLanguageChanged(this._onModelModeChanged, this));
+    this._store.add(_textFileService.files.onDidSave((e) => {
+      if (this._shouldHandleFileEvent(e.model.resource)) {
+        this._proxy.$acceptModelSaved(e.model.resource);
+      }
+    }));
+    this._store.add(_textFileService.files.onDidChangeDirty((m) => {
+      if (this._shouldHandleFileEvent(m.resource)) {
+        this._proxy.$acceptDirtyStateChanged(m.resource, m.isDirty());
+      }
+    }));
+    this._store.add(Event.any(_textFileService.files.onDidChangeEncoding, _textFileService.untitled.onDidChangeEncoding)((m) => {
+      if (this._shouldHandleFileEvent(m.resource)) {
+        const encoding = m.getEncoding();
+        if (encoding) {
+          this._proxy.$acceptEncodingChanged(m.resource, encoding);
+        }
+      }
+    }));
+    this._store.add(workingCopyFileService.onDidRunWorkingCopyFileOperation((e) => {
+      const isMove = e.operation === 2;
+      if (isMove || e.operation === 1) {
+        for (const pair of e.files) {
+          const removed = isMove ? pair.source : pair.target;
+          if (removed) {
+            this._modelReferenceCollection.remove(removed);
+          }
+        }
+      }
+    }));
+  }
+  dispose() {
+    dispose(this._modelTrackers.values());
+    this._modelTrackers.clear();
+    super.dispose();
+  }
+  isCaughtUpWithContentChanges(resource) {
+    const tracker = this._modelTrackers.get(resource);
+    if (tracker) {
+      return tracker.isCaughtUpWithContentChanges();
+    }
+    return true;
+  }
+  _shouldHandleFileEvent(resource) {
+    const model = this._modelService.getModel(resource);
+    return !!model && shouldSynchronizeModel(model);
+  }
+  handleModelAdded(model) {
+    if (!shouldSynchronizeModel(model)) {
+      return;
+    }
+    this._modelTrackers.set(model.uri, new ModelTracker(model, this._onIsCaughtUpWithContentChanges, this._proxy, this._textFileService));
+  }
+  _onModelModeChanged(event) {
+    const { model } = event;
+    if (!this._modelTrackers.has(model.uri)) {
+      return;
+    }
+    this._proxy.$acceptModelLanguageChanged(model.uri, model.getLanguageId());
+  }
+  handleModelRemoved(modelUrl) {
+    if (!this._modelTrackers.has(modelUrl)) {
+      return;
+    }
+    this._modelTrackers.get(modelUrl).dispose();
+    this._modelTrackers.delete(modelUrl);
+  }
+  // --- from extension host process
+  async $trySaveDocument(uri) {
+    const target = await this._textFileService.save(URI.revive(uri));
+    return Boolean(target);
+  }
+  async $tryOpenDocument(uriData, options) {
+    const inputUri = URI.revive(uriData);
+    if (!inputUri.scheme || !(inputUri.fsPath || inputUri.authority)) {
+      throw new ErrorNoTelemetry(`Invalid uri. Scheme and authority or path must be set.`);
+    }
+    const canonicalUri = this._uriIdentityService.asCanonicalUri(inputUri);
+    let promise;
+    switch (canonicalUri.scheme) {
+      case Schemas.untitled:
+        promise = this._handleUntitledScheme(canonicalUri, options);
+        break;
+      case Schemas.file:
+      default:
+        promise = this._handleAsResourceInput(canonicalUri, options);
+        break;
+    }
+    let documentUri;
+    try {
+      documentUri = await promise;
+    } catch (err) {
+      throw new ErrorNoTelemetry(`cannot open ${canonicalUri.toString()}. Detail: ${toErrorMessage(err)}`);
+    }
+    if (!documentUri) {
+      throw new ErrorNoTelemetry(`cannot open ${canonicalUri.toString()}`);
+    } else if (!extUri.isEqual(documentUri, canonicalUri)) {
+      throw new ErrorNoTelemetry(`cannot open ${canonicalUri.toString()}. Detail: Actual document opened as ${documentUri.toString()}`);
+    } else if (!this._modelTrackers.has(canonicalUri)) {
+      throw new ErrorNoTelemetry(`cannot open ${canonicalUri.toString()}. Detail: Files above 50MB cannot be synchronized with extensions.`);
+    } else {
+      return canonicalUri;
+    }
+  }
+  $tryCreateDocument(options) {
+    return this._doCreateUntitled(void 0, options);
+  }
+  async _handleAsResourceInput(uri, options) {
+    if (options?.encoding) {
+      const model = await this._textFileService.files.resolve(uri, {
+        encoding: options.encoding,
+        reason: 2
+        /* TextFileResolveReason.REFERENCE */
+      });
+      if (model.isDirty()) {
+        throw new ErrorNoTelemetry(`Cannot re-open a dirty text document with different encoding. Save it first.`);
+      }
+      await model.setEncoding(
+        options.encoding,
+        1
+        /* EncodingMode.Decode */
+      );
+    }
+    const ref = await this._textModelResolverService.createModelReference(uri);
+    this._modelReferenceCollection.add(uri, ref, ref.object.textEditorModel.getValueLength());
+    return ref.object.textEditorModel.uri;
+  }
+  async _handleUntitledScheme(uri, options) {
+    const asLocalUri = toLocalResource(uri, this._environmentService.remoteAuthority, this._pathService.defaultUriScheme);
+    const exists = await this._fileService.exists(asLocalUri);
+    if (exists) {
+      return Promise.reject(new Error("file already exists"));
+    }
+    return await this._doCreateUntitled(Boolean(uri.path) ? uri : void 0, options);
+  }
+  async _doCreateUntitled(associatedResource, options) {
+    const model = this._textFileService.untitled.create({
+      associatedResource,
+      languageId: options?.language,
+      initialValue: options?.content,
+      encoding: options?.encoding
+    });
+    if (options?.encoding) {
+      await model.setEncoding(options.encoding);
+    }
+    const resource = model.resource;
+    const ref = await this._textModelResolverService.createModelReference(resource);
+    if (!this._modelTrackers.has(resource)) {
+      ref.dispose();
+      throw new Error(`expected URI ${resource.toString()} to have come to LIFE`);
+    }
+    this._modelReferenceCollection.add(resource, ref, ref.object.textEditorModel.getValueLength());
+    Event.once(model.onDidRevert)(() => this._modelReferenceCollection.remove(resource));
+    this._proxy.$acceptDirtyStateChanged(resource, true);
+    return resource;
+  }
+};
+MainThreadDocuments = __decorate([
+  __param(1, IModelService),
+  __param(2, ITextFileService),
+  __param(3, IFileService),
+  __param(4, ITextModelService),
+  __param(5, IWorkbenchEnvironmentService),
+  __param(6, IUriIdentityService),
+  __param(7, IWorkingCopyFileService),
+  __param(8, IPathService)
+], MainThreadDocuments);
+export {
+  BoundModelReferenceCollection,
+  MainThreadDocuments
+};
+//# sourceMappingURL=mainThreadDocuments.js.map

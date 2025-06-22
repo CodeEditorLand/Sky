@@ -1,2 +1,329 @@
-import*as n from"../../../../nls.js";import{$2t as W,$4t as z}from"../../../../platform/window/common/window.js";import{$_o as E,$cp as H}from"../../../../platform/dialogs/common/dialogs.js";import{$Cl as P,$zl as D,$hl as _,$ul as L}from"../../../../platform/workspace/common/workspace.js";import{$x4 as j}from"../../history/common/history.js";import{$KX as k}from"../../environment/common/environmentService.js";import*as d from"../../../../base/common/resources.js";import{$6 as C,$5 as N}from"../../../../base/common/path.js";import{$mj as R}from"../../../../platform/instantiation/common/instantiation.js";import{$RAc as G}from"./simpleFileDialog.js";import{$mv as I}from"../../../../platform/workspaces/common/workspaces.js";import{$El as M}from"../../../../platform/configuration/common/configuration.js";import{$5j as T}from"../../../../platform/files/common/files.js";import{$4$ as B}from"../../../../platform/opener/common/opener.js";import{$8$ as K}from"../../host/browser/host.js";import V from"../../../../base/common/severity.js";import{$7b as $,$_b as X}from"../../../../base/common/arrays.js";import{$Hf as y}from"../../../../base/common/strings.js";import{$BD as q}from"../../../../editor/common/languages/language.js";import{$2H as J}from"../../../../platform/label/common/label.js";import{$3X as O}from"../../path/common/pathService.js";import{Schemas as f}from"../../../../base/common/network.js";import{$nE as Y}from"../../../../editor/common/languages/modesRegistry.js";import{$Yn as Q}from"../../../../platform/commands/common/commands.js";import{$0_ as Z}from"../../../../editor/browser/services/codeEditorService.js";import{$oI as ee}from"../../editor/common/editorService.js";import{EditorOpenSource as g}from"../../../../platform/editor/common/editor.js";import{$3n as te}from"../../../../platform/log/common/log.js";var U=function(u,e,t,i){var r=arguments.length,a=r<3?e:i===null?i=Object.getOwnPropertyDescriptor(e,t):i,l;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")a=Reflect.decorate(u,e,t,i);else for(var o=u.length-1;o>=0;o--)(l=u[o])&&(a=(r<3?l(a):r>3?l(e,t,a):l(e,t))||a);return r>3&&a&&Object.defineProperty(e,t,a),a},s=function(u,e){return function(t,i){e(t,i,u)}};let v=class{constructor(e,t,i,r,a,l,o,c,S,p,h,w,m,b,F,x,A){this.a=e,this.b=t,this.c=i,this.d=r,this.f=a,this.g=l,this.h=o,this.i=c,this.j=S,this.k=p,this.l=h,this.m=w,this.n=m,this.o=b,this.p=F,this.q=x,this.r=A}async defaultFilePath(e=this.G(),t=this.H()){let i=this.c.getLastActiveFile(e,t);return i?i=d.$jh(i):i=this.c.getLastActiveWorkspaceRoot(e,t),i||(i=await this.preferredHome(e)),i}async defaultFolderPath(e=this.G(),t=this.H()){let i=this.c.getLastActiveWorkspaceRoot(e,t);return i||(i=this.c.getLastActiveFile(e,t)),i?d.$jh(i):this.preferredHome(e)}async preferredHome(e=this.G()){const t=e===f.file,i=this.g.inspect("files.dialog.defaultPath"),r=t?i.userLocalValue:i.userRemoteValue;if(r&&(t?C(r):(await this.n.path).isAbsolute(r))){const l=t?N(r):(await this.n.path).normalize(r),o=d.$uh(await this.n.fileURI(l),this.d.remoteAuthority,this.n.defaultUriScheme);if(await this.h.exists(o))return o}return this.n.userHome({preferLocal:t})}async defaultWorkspacePath(e=this.G()){let t;if(this.b.getWorkbenchState()===3){const i=this.b.getWorkspace().configuration;i?.scheme===e&&P(i,this.d)&&!D(i)&&(t=d.$jh(i))}return t||(t=await this.defaultFilePath(e)),t}async showSaveConfirm(e){return this.s()?(this.r.trace("FileDialogService: refused to show save confirmation dialog in tests."),1):this.t(e)}s(){return this.d.isExtensionDevelopment&&this.d.extensionTestsLocationURI?!0:!!this.d.enableSmokeTestDriver}async t(e){if(e.length===0)return 1;let t,i=n.localize(13938,null);e.length===1?t=n.localize(13939,null,typeof e[0]=="string"?e[0]:d.$hh(e[0])):(t=n.localize(13940,null,e.length),i=H(e)+`
-`+i);const{result:r}=await this.j.prompt({type:V.Warning,message:t,detail:i,buttons:[{label:e.length>1?n.localize(13941,null):n.localize(13942,null),run:()=>0},{label:n.localize(13943,null),run:()=>1}],cancelButton:{run:()=>2}});return r}u(e,t){return e===f.untitled?[f.file]:e!==f.file?[e,f.file]:[e]}async v(e,t,i){const r=n.localize(13944,null),a=this.u(e),l=await this.E({canSelectFiles:!0,canSelectFolders:!0,canSelectMany:!1,defaultUri:t.defaultUri,title:r,availableFileSystems:a});if(l){const o=await this.h.stat(l),c=o.isDirectory?{folderUri:l}:{fileUri:l};!W(c)&&z(c)&&this.x(c.fileUri),o.isDirectory||t.forceNewWindow||i?await this.a.openWindow([c],{forceNewWindow:t.forceNewWindow,remoteAuthority:t.remoteAuthority}):await this.p.openEditors([{resource:l,options:{source:g.USER,pinned:!0}}],void 0,{validateTrust:!0})}}async w(e,t,i){const r=n.localize(13945,null),a=this.u(e),l=await this.E({canSelectFiles:!0,canSelectFolders:!1,canSelectMany:!1,defaultUri:t.defaultUri,title:r,availableFileSystems:a});l&&(this.x(l),t.forceNewWindow||i?await this.a.openWindow([{fileUri:l}],{forceNewWindow:t.forceNewWindow,remoteAuthority:t.remoteAuthority}):await this.p.openEditors([{resource:l,options:{source:g.USER,pinned:!0}}],void 0,{validateTrust:!0}))}x(e){this.l.addRecentlyOpened([{fileUri:e,label:this.m.getUriLabel(e,{appendWorkspaceSuffix:!0})}])}async y(e,t){const i=n.localize(13946,null),r=this.u(e,!0),a=await this.E({canSelectFiles:!1,canSelectFolders:!0,canSelectMany:!1,defaultUri:t.defaultUri,title:i,availableFileSystems:r});if(a)return this.a.openWindow([{folderUri:a}],{forceNewWindow:t.forceNewWindow,remoteAuthority:t.remoteAuthority})}async z(e,t){const i=n.localize(13947,null),r=[{name:n.localize(13948,null),extensions:[L]}],a=this.u(e,!0),l=await this.E({canSelectFiles:!0,canSelectFolders:!1,canSelectMany:!1,defaultUri:t.defaultUri,title:i,filters:r,availableFileSystems:a});if(l)return this.a.openWindow([{workspaceUri:l}],{forceNewWindow:t.forceNewWindow,remoteAuthority:t.remoteAuthority})}async A(e,t){t.availableFileSystems||(t.availableFileSystems=this.u(e)),t.title=n.localize(13949,null);const i=await this.F(t);return i&&this.x(i),i}async B(e,t){return t.availableFileSystems||(t.availableFileSystems=this.u(e)),this.F(t)}async C(e,t){t.availableFileSystems||(t.availableFileSystems=this.u(e,t.canSelectFolders));const i=await this.E(t);return i?[i]:void 0}D(){return this.f.createInstance(G)}E(e){return this.D().showOpenDialog(e)}F(e){return this.D().showSaveDialog(e)}G(e){return e??this.n.defaultUriScheme}H(){return this.d.remoteAuthority}I(e){return e.availableFileSystems&&e.availableFileSystems[0]||this.G(e.defaultUri?.scheme)}J(e){if(e.availableFileSystems&&e.availableFileSystems.length>0)return e.availableFileSystems;const t=[f.file];return this.d.remoteAuthority&&t.unshift(f.vscodeRemote),t}K(e,t){const i={defaultUri:e,title:n.localize(13950,null),availableFileSystems:t},r=e?d.$ih(e):void 0;let a;const l=this.k.getSortedRegisteredLanguageNames(),o=$(l.map(({languageName:c,languageId:S})=>{const p=this.k.getExtensions(S);if(!p.length)return null;const h={name:c,extensions:X(p).slice(0,10).map(m=>y(m,"."))},w=r||Y;if(!a&&p.includes(w)){a=h;const m=y(w,".");return h.extensions.includes(m)||h.extensions.unshift(m),null}return h}));return!a&&r&&(a={name:y(r,".").toUpperCase(),extensions:[y(r,".")]}),i.filters=$([{name:n.localize(13951,null),extensions:["*"]},a,...o,{name:n.localize(13952,null),extensions:[""]}]),i}};v=U([s(0,K),s(1,_),s(2,j),s(3,k),s(4,R),s(5,M),s(6,T),s(7,B),s(8,E),s(9,q),s(10,I),s(11,J),s(12,O),s(13,Q),s(14,ee),s(15,Z),s(16,te)],v);export{v as $SAc};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import * as nls from "../../../../nls.js";
+import { isWorkspaceToOpen, isFileToOpen } from "../../../../platform/window/common/window.js";
+import { IDialogService, getFileNamesMessage } from "../../../../platform/dialogs/common/dialogs.js";
+import { isSavedWorkspace, isTemporaryWorkspace, IWorkspaceContextService, WORKSPACE_EXTENSION } from "../../../../platform/workspace/common/workspace.js";
+import { IHistoryService } from "../../history/common/history.js";
+import { IWorkbenchEnvironmentService } from "../../environment/common/environmentService.js";
+import * as resources from "../../../../base/common/resources.js";
+import { isAbsolute as localPathIsAbsolute, normalize as localPathNormalize } from "../../../../base/common/path.js";
+import { IInstantiationService } from "../../../../platform/instantiation/common/instantiation.js";
+import { SimpleFileDialog } from "./simpleFileDialog.js";
+import { IWorkspacesService } from "../../../../platform/workspaces/common/workspaces.js";
+import { IConfigurationService } from "../../../../platform/configuration/common/configuration.js";
+import { IFileService } from "../../../../platform/files/common/files.js";
+import { IOpenerService } from "../../../../platform/opener/common/opener.js";
+import { IHostService } from "../../host/browser/host.js";
+import Severity from "../../../../base/common/severity.js";
+import { coalesce, distinct } from "../../../../base/common/arrays.js";
+import { trim } from "../../../../base/common/strings.js";
+import { ILanguageService } from "../../../../editor/common/languages/language.js";
+import { ILabelService } from "../../../../platform/label/common/label.js";
+import { IPathService } from "../../path/common/pathService.js";
+import { Schemas } from "../../../../base/common/network.js";
+import { PLAINTEXT_EXTENSION } from "../../../../editor/common/languages/modesRegistry.js";
+import { ICommandService } from "../../../../platform/commands/common/commands.js";
+import { ICodeEditorService } from "../../../../editor/browser/services/codeEditorService.js";
+import { IEditorService } from "../../editor/common/editorService.js";
+import { EditorOpenSource } from "../../../../platform/editor/common/editor.js";
+import { ILogService } from "../../../../platform/log/common/log.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+let AbstractFileDialogService = class AbstractFileDialogService2 {
+  static {
+    __name(this, "AbstractFileDialogService");
+  }
+  constructor(hostService, contextService, historyService, environmentService, instantiationService, configurationService, fileService, openerService, dialogService, languageService, workspacesService, labelService, pathService, commandService, editorService, codeEditorService, logService) {
+    this.hostService = hostService;
+    this.contextService = contextService;
+    this.historyService = historyService;
+    this.environmentService = environmentService;
+    this.instantiationService = instantiationService;
+    this.configurationService = configurationService;
+    this.fileService = fileService;
+    this.openerService = openerService;
+    this.dialogService = dialogService;
+    this.languageService = languageService;
+    this.workspacesService = workspacesService;
+    this.labelService = labelService;
+    this.pathService = pathService;
+    this.commandService = commandService;
+    this.editorService = editorService;
+    this.codeEditorService = codeEditorService;
+    this.logService = logService;
+  }
+  async defaultFilePath(schemeFilter = this.getSchemeFilterForWindow(), authorityFilter = this.getAuthorityFilterForWindow()) {
+    let candidate = this.historyService.getLastActiveFile(schemeFilter, authorityFilter);
+    if (!candidate) {
+      candidate = this.historyService.getLastActiveWorkspaceRoot(schemeFilter, authorityFilter);
+    } else {
+      candidate = resources.dirname(candidate);
+    }
+    if (!candidate) {
+      candidate = await this.preferredHome(schemeFilter);
+    }
+    return candidate;
+  }
+  async defaultFolderPath(schemeFilter = this.getSchemeFilterForWindow(), authorityFilter = this.getAuthorityFilterForWindow()) {
+    let candidate = this.historyService.getLastActiveWorkspaceRoot(schemeFilter, authorityFilter);
+    if (!candidate) {
+      candidate = this.historyService.getLastActiveFile(schemeFilter, authorityFilter);
+    }
+    if (!candidate) {
+      return this.preferredHome(schemeFilter);
+    }
+    return resources.dirname(candidate);
+  }
+  async preferredHome(schemeFilter = this.getSchemeFilterForWindow()) {
+    const preferLocal = schemeFilter === Schemas.file;
+    const preferredHomeConfig = this.configurationService.inspect("files.dialog.defaultPath");
+    const preferredHomeCandidate = preferLocal ? preferredHomeConfig.userLocalValue : preferredHomeConfig.userRemoteValue;
+    if (preferredHomeCandidate) {
+      const isPreferredHomeCandidateAbsolute = preferLocal ? localPathIsAbsolute(preferredHomeCandidate) : (await this.pathService.path).isAbsolute(preferredHomeCandidate);
+      if (isPreferredHomeCandidateAbsolute) {
+        const preferredHomeNormalized = preferLocal ? localPathNormalize(preferredHomeCandidate) : (await this.pathService.path).normalize(preferredHomeCandidate);
+        const preferredHome = resources.toLocalResource(await this.pathService.fileURI(preferredHomeNormalized), this.environmentService.remoteAuthority, this.pathService.defaultUriScheme);
+        if (await this.fileService.exists(preferredHome)) {
+          return preferredHome;
+        }
+      }
+    }
+    return this.pathService.userHome({ preferLocal });
+  }
+  async defaultWorkspacePath(schemeFilter = this.getSchemeFilterForWindow()) {
+    let defaultWorkspacePath;
+    if (this.contextService.getWorkbenchState() === 3) {
+      const configuration = this.contextService.getWorkspace().configuration;
+      if (configuration?.scheme === schemeFilter && isSavedWorkspace(configuration, this.environmentService) && !isTemporaryWorkspace(configuration)) {
+        defaultWorkspacePath = resources.dirname(configuration);
+      }
+    }
+    if (!defaultWorkspacePath) {
+      defaultWorkspacePath = await this.defaultFilePath(schemeFilter);
+    }
+    return defaultWorkspacePath;
+  }
+  async showSaveConfirm(fileNamesOrResources) {
+    if (this.skipDialogs()) {
+      this.logService.trace("FileDialogService: refused to show save confirmation dialog in tests.");
+      return 1;
+    }
+    return this.doShowSaveConfirm(fileNamesOrResources);
+  }
+  skipDialogs() {
+    if (this.environmentService.isExtensionDevelopment && this.environmentService.extensionTestsLocationURI) {
+      return true;
+    }
+    return !!this.environmentService.enableSmokeTestDriver;
+  }
+  async doShowSaveConfirm(fileNamesOrResources) {
+    if (fileNamesOrResources.length === 0) {
+      return 1;
+    }
+    let message;
+    let detail = nls.localize("saveChangesDetail", "Your changes will be lost if you don't save them.");
+    if (fileNamesOrResources.length === 1) {
+      message = nls.localize("saveChangesMessage", "Do you want to save the changes you made to {0}?", typeof fileNamesOrResources[0] === "string" ? fileNamesOrResources[0] : resources.basename(fileNamesOrResources[0]));
+    } else {
+      message = nls.localize("saveChangesMessages", "Do you want to save the changes to the following {0} files?", fileNamesOrResources.length);
+      detail = getFileNamesMessage(fileNamesOrResources) + "\n" + detail;
+    }
+    const { result } = await this.dialogService.prompt({
+      type: Severity.Warning,
+      message,
+      detail,
+      buttons: [
+        {
+          label: fileNamesOrResources.length > 1 ? nls.localize({ key: "saveAll", comment: ["&& denotes a mnemonic"] }, "&&Save All") : nls.localize({ key: "save", comment: ["&& denotes a mnemonic"] }, "&&Save"),
+          run: /* @__PURE__ */ __name(() => 0, "run")
+          /* ConfirmResult.SAVE */
+        },
+        {
+          label: nls.localize({ key: "dontSave", comment: ["&& denotes a mnemonic"] }, "Do&&n't Save"),
+          run: /* @__PURE__ */ __name(() => 1, "run")
+          /* ConfirmResult.DONT_SAVE */
+        }
+      ],
+      cancelButton: {
+        run: /* @__PURE__ */ __name(() => 2, "run")
+        /* ConfirmResult.CANCEL */
+      }
+    });
+    return result;
+  }
+  addFileSchemaIfNeeded(schema, _isFolder) {
+    return schema === Schemas.untitled ? [Schemas.file] : schema !== Schemas.file ? [schema, Schemas.file] : [schema];
+  }
+  async pickFileFolderAndOpenSimplified(schema, options, preferNewWindow) {
+    const title = nls.localize("openFileOrFolder.title", "Open File or Folder");
+    const availableFileSystems = this.addFileSchemaIfNeeded(schema);
+    const uri = await this.pickResource({ canSelectFiles: true, canSelectFolders: true, canSelectMany: false, defaultUri: options.defaultUri, title, availableFileSystems });
+    if (uri) {
+      const stat = await this.fileService.stat(uri);
+      const toOpen = stat.isDirectory ? { folderUri: uri } : { fileUri: uri };
+      if (!isWorkspaceToOpen(toOpen) && isFileToOpen(toOpen)) {
+        this.addFileToRecentlyOpened(toOpen.fileUri);
+      }
+      if (stat.isDirectory || options.forceNewWindow || preferNewWindow) {
+        await this.hostService.openWindow([toOpen], { forceNewWindow: options.forceNewWindow, remoteAuthority: options.remoteAuthority });
+      } else {
+        await this.editorService.openEditors([{ resource: uri, options: { source: EditorOpenSource.USER, pinned: true } }], void 0, { validateTrust: true });
+      }
+    }
+  }
+  async pickFileAndOpenSimplified(schema, options, preferNewWindow) {
+    const title = nls.localize("openFile.title", "Open File");
+    const availableFileSystems = this.addFileSchemaIfNeeded(schema);
+    const uri = await this.pickResource({ canSelectFiles: true, canSelectFolders: false, canSelectMany: false, defaultUri: options.defaultUri, title, availableFileSystems });
+    if (uri) {
+      this.addFileToRecentlyOpened(uri);
+      if (options.forceNewWindow || preferNewWindow) {
+        await this.hostService.openWindow([{ fileUri: uri }], { forceNewWindow: options.forceNewWindow, remoteAuthority: options.remoteAuthority });
+      } else {
+        await this.editorService.openEditors([{ resource: uri, options: { source: EditorOpenSource.USER, pinned: true } }], void 0, { validateTrust: true });
+      }
+    }
+  }
+  addFileToRecentlyOpened(uri) {
+    this.workspacesService.addRecentlyOpened([{ fileUri: uri, label: this.labelService.getUriLabel(uri, { appendWorkspaceSuffix: true }) }]);
+  }
+  async pickFolderAndOpenSimplified(schema, options) {
+    const title = nls.localize("openFolder.title", "Open Folder");
+    const availableFileSystems = this.addFileSchemaIfNeeded(schema, true);
+    const uri = await this.pickResource({ canSelectFiles: false, canSelectFolders: true, canSelectMany: false, defaultUri: options.defaultUri, title, availableFileSystems });
+    if (uri) {
+      return this.hostService.openWindow([{ folderUri: uri }], { forceNewWindow: options.forceNewWindow, remoteAuthority: options.remoteAuthority });
+    }
+  }
+  async pickWorkspaceAndOpenSimplified(schema, options) {
+    const title = nls.localize("openWorkspace.title", "Open Workspace from File");
+    const filters = [{ name: nls.localize("filterName.workspace", "Workspace"), extensions: [WORKSPACE_EXTENSION] }];
+    const availableFileSystems = this.addFileSchemaIfNeeded(schema, true);
+    const uri = await this.pickResource({ canSelectFiles: true, canSelectFolders: false, canSelectMany: false, defaultUri: options.defaultUri, title, filters, availableFileSystems });
+    if (uri) {
+      return this.hostService.openWindow([{ workspaceUri: uri }], { forceNewWindow: options.forceNewWindow, remoteAuthority: options.remoteAuthority });
+    }
+  }
+  async pickFileToSaveSimplified(schema, options) {
+    if (!options.availableFileSystems) {
+      options.availableFileSystems = this.addFileSchemaIfNeeded(schema);
+    }
+    options.title = nls.localize("saveFileAs.title", "Save As");
+    const uri = await this.saveRemoteResource(options);
+    if (uri) {
+      this.addFileToRecentlyOpened(uri);
+    }
+    return uri;
+  }
+  async showSaveDialogSimplified(schema, options) {
+    if (!options.availableFileSystems) {
+      options.availableFileSystems = this.addFileSchemaIfNeeded(schema);
+    }
+    return this.saveRemoteResource(options);
+  }
+  async showOpenDialogSimplified(schema, options) {
+    if (!options.availableFileSystems) {
+      options.availableFileSystems = this.addFileSchemaIfNeeded(schema, options.canSelectFolders);
+    }
+    const uri = await this.pickResource(options);
+    return uri ? [uri] : void 0;
+  }
+  getSimpleFileDialog() {
+    return this.instantiationService.createInstance(SimpleFileDialog);
+  }
+  pickResource(options) {
+    return this.getSimpleFileDialog().showOpenDialog(options);
+  }
+  saveRemoteResource(options) {
+    return this.getSimpleFileDialog().showSaveDialog(options);
+  }
+  getSchemeFilterForWindow(defaultUriScheme) {
+    return defaultUriScheme ?? this.pathService.defaultUriScheme;
+  }
+  getAuthorityFilterForWindow() {
+    return this.environmentService.remoteAuthority;
+  }
+  getFileSystemSchema(options) {
+    return options.availableFileSystems && options.availableFileSystems[0] || this.getSchemeFilterForWindow(options.defaultUri?.scheme);
+  }
+  getWorkspaceAvailableFileSystems(options) {
+    if (options.availableFileSystems && options.availableFileSystems.length > 0) {
+      return options.availableFileSystems;
+    }
+    const availableFileSystems = [Schemas.file];
+    if (this.environmentService.remoteAuthority) {
+      availableFileSystems.unshift(Schemas.vscodeRemote);
+    }
+    return availableFileSystems;
+  }
+  getPickFileToSaveDialogOptions(defaultUri, availableFileSystems) {
+    const options = {
+      defaultUri,
+      title: nls.localize("saveAsTitle", "Save As"),
+      availableFileSystems
+    };
+    const ext = defaultUri ? resources.extname(defaultUri) : void 0;
+    let matchingFilter;
+    const registeredLanguageNames = this.languageService.getSortedRegisteredLanguageNames();
+    const registeredLanguageFilters = coalesce(registeredLanguageNames.map(({ languageName, languageId }) => {
+      const extensions = this.languageService.getExtensions(languageId);
+      if (!extensions.length) {
+        return null;
+      }
+      const filter = { name: languageName, extensions: distinct(extensions).slice(0, 10).map((e) => trim(e, ".")) };
+      const extOrPlaintext = ext || PLAINTEXT_EXTENSION;
+      if (!matchingFilter && extensions.includes(extOrPlaintext)) {
+        matchingFilter = filter;
+        const trimmedExt = trim(extOrPlaintext, ".");
+        if (!filter.extensions.includes(trimmedExt)) {
+          filter.extensions.unshift(trimmedExt);
+        }
+        return null;
+      }
+      return filter;
+    }));
+    if (!matchingFilter && ext) {
+      matchingFilter = { name: trim(ext, ".").toUpperCase(), extensions: [trim(ext, ".")] };
+    }
+    options.filters = coalesce([
+      { name: nls.localize("allFiles", "All Files"), extensions: ["*"] },
+      matchingFilter,
+      ...registeredLanguageFilters,
+      { name: nls.localize("noExt", "No Extension"), extensions: [""] }
+    ]);
+    return options;
+  }
+};
+AbstractFileDialogService = __decorate([
+  __param(0, IHostService),
+  __param(1, IWorkspaceContextService),
+  __param(2, IHistoryService),
+  __param(3, IWorkbenchEnvironmentService),
+  __param(4, IInstantiationService),
+  __param(5, IConfigurationService),
+  __param(6, IFileService),
+  __param(7, IOpenerService),
+  __param(8, IDialogService),
+  __param(9, ILanguageService),
+  __param(10, IWorkspacesService),
+  __param(11, ILabelService),
+  __param(12, IPathService),
+  __param(13, ICommandService),
+  __param(14, IEditorService),
+  __param(15, ICodeEditorService),
+  __param(16, ILogService)
+], AbstractFileDialogService);
+export {
+  AbstractFileDialogService
+};
+//# sourceMappingURL=abstractFileDialogService.js.map

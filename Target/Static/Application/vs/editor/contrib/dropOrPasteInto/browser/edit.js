@@ -1,1 +1,80 @@
-import{$9gb as u}from"../../../browser/services/bulkEditService.js";import{$whb as a}from"../../snippet/browser/snippetParser.js";function m(r,p,e){return(typeof e.insertText=="string"?e.insertText==="":e.insertText.snippet==="")?{edits:e.additionalEdit?.edits??[]}:{edits:[...p.map(s=>new u(r,{range:s,text:typeof e.insertText=="string"?a.escape(e.insertText)+"$0":e.insertText.snippet,insertAsSnippet:!0})),...e.additionalEdit?.edits??[]]}}function y(r){function p(t,n){return"mimeType"in t?t.mimeType===n.handledMimeType:!!n.kind&&t.kind.contains(n.kind)}const e=new Map;for(const t of r)for(const n of t.yieldTo??[])for(const o of r)if(o!==t&&p(n,o)){let i=e.get(t);i||(i=[],e.set(t,i)),i.push(o)}if(!e.size)return Array.from(r);const s=new Set,c=[];function f(t){if(!t.length)return[];const n=t[0];if(c.includes(n))return t;if(s.has(n))return f(t.slice(1));let o=[];const i=e.get(n);return i&&(c.push(n),o=f(i),c.pop()),s.add(n),[...o,n,...f(t.slice(1))]}return f(Array.from(r))}export{m as $xhb,y as $yhb};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { ResourceTextEdit } from "../../../browser/services/bulkEditService.js";
+import { SnippetParser } from "../../snippet/browser/snippetParser.js";
+function createCombinedWorkspaceEdit(uri, ranges, edit) {
+  if (typeof edit.insertText === "string" ? edit.insertText === "" : edit.insertText.snippet === "") {
+    return {
+      edits: edit.additionalEdit?.edits ?? []
+    };
+  }
+  return {
+    edits: [
+      ...ranges.map((range) => new ResourceTextEdit(uri, { range, text: typeof edit.insertText === "string" ? SnippetParser.escape(edit.insertText) + "$0" : edit.insertText.snippet, insertAsSnippet: true })),
+      ...edit.additionalEdit?.edits ?? []
+    ]
+  };
+}
+__name(createCombinedWorkspaceEdit, "createCombinedWorkspaceEdit");
+function sortEditsByYieldTo(edits) {
+  function yieldsTo(yTo, other) {
+    if ("mimeType" in yTo) {
+      return yTo.mimeType === other.handledMimeType;
+    }
+    return !!other.kind && yTo.kind.contains(other.kind);
+  }
+  __name(yieldsTo, "yieldsTo");
+  const yieldsToMap = /* @__PURE__ */ new Map();
+  for (const edit of edits) {
+    for (const yTo of edit.yieldTo ?? []) {
+      for (const other of edits) {
+        if (other === edit) {
+          continue;
+        }
+        if (yieldsTo(yTo, other)) {
+          let arr = yieldsToMap.get(edit);
+          if (!arr) {
+            arr = [];
+            yieldsToMap.set(edit, arr);
+          }
+          arr.push(other);
+        }
+      }
+    }
+  }
+  if (!yieldsToMap.size) {
+    return Array.from(edits);
+  }
+  const visited = /* @__PURE__ */ new Set();
+  const tempStack = [];
+  function visit(nodes) {
+    if (!nodes.length) {
+      return [];
+    }
+    const node = nodes[0];
+    if (tempStack.includes(node)) {
+      console.warn("Yield to cycle detected", node);
+      return nodes;
+    }
+    if (visited.has(node)) {
+      return visit(nodes.slice(1));
+    }
+    let pre = [];
+    const yTo = yieldsToMap.get(node);
+    if (yTo) {
+      tempStack.push(node);
+      pre = visit(yTo);
+      tempStack.pop();
+    }
+    visited.add(node);
+    return [...pre, node, ...visit(nodes.slice(1))];
+  }
+  __name(visit, "visit");
+  return visit(Array.from(edits));
+}
+__name(sortEditsByYieldTo, "sortEditsByYieldTo");
+export {
+  createCombinedWorkspaceEdit,
+  sortEditsByYieldTo
+};
+//# sourceMappingURL=edit.js.map

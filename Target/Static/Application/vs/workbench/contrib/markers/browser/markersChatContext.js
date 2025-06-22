@@ -1,1 +1,94 @@
-import{$Xb as d}from"../../../../base/common/arrays.js";import{$Mj as v}from"../../../../base/common/codicons.js";import{$vd as k}from"../../../../base/common/lifecycle.js";import{$ah as C}from"../../../../base/common/resources.js";import{localize as l}from"../../../../nls.js";import{$mj as $}from"../../../../platform/instantiation/common/instantiation.js";import{$2H as y}from"../../../../platform/label/common/label.js";import{$oD as I,MarkerSeverity as m}from"../../../../platform/markers/common/markers.js";import{$Jac as _}from"../../chat/browser/chatContextPickService.js";import{IDiagnosticVariableEntryFilterData as f}from"../../chat/common/chatVariableEntries.js";var b=function(t,r,e,o){var s,a=arguments.length,n=a<3?r:null===o?o=Object.getOwnPropertyDescriptor(r,e):o;if("object"==typeof Reflect&&"function"==typeof Reflect.decorate)n=Reflect.decorate(t,r,e,o);else for(var i=t.length-1;i>=0;i--)(s=t[i])&&(n=(a<3?s(n):a>3?s(r,e,n):s(r,e))||n);return a>3&&n&&Object.defineProperty(r,e,n),n},p=function(t,r){return function(e,o){r(e,o,t)}};let u=class{constructor(t,r){this.c=t,this.d=r,this.type="pickerPick",this.label=l(8577,null),this.icon=v.error,this.ordinal=-100}asPicker(){const t=this.c.read({severities:m.Error|m.Warning|m.Info}),r=d(t,((t,r)=>C.compare(t.resource,r.resource))),e=new Set,o=[];for(const t of r){const r=t[0].resource;o.push({type:"separator",label:this.d.getUriLabel(r,{relative:!0})});for(const r of t)e.add(r.severity),o.push({label:r.message,description:l(8578,null,""+r.startLineNumber,""+r.startColumn),asAttachment:()=>f.toEntry(f.fromMarker(r))})}return o.unshift({label:l(8579,null),asAttachment:()=>f.toEntry({filterSeverity:m.Info})}),{placeholder:l(8580,null),picks:Promise.resolve(o)}}};u=b([p(0,I),p(1,y)],u);let h=class extends k{static{this.ID="workbench.contrib.chat.markerChatContextContribution"}constructor(t,r){super(),this.q.add(t.registerChatContextItem(r.createInstance(u)))}};h=b([p(0,_),p(1,$)],h);export{h as $Ipc};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { groupBy } from "../../../../base/common/arrays.js";
+import { Codicon } from "../../../../base/common/codicons.js";
+import { Disposable } from "../../../../base/common/lifecycle.js";
+import { extUri } from "../../../../base/common/resources.js";
+import { localize } from "../../../../nls.js";
+import { IInstantiationService } from "../../../../platform/instantiation/common/instantiation.js";
+import { ILabelService } from "../../../../platform/label/common/label.js";
+import { IMarkerService, MarkerSeverity } from "../../../../platform/markers/common/markers.js";
+import { IChatContextPickService } from "../../chat/browser/chatContextPickService.js";
+import { IDiagnosticVariableEntryFilterData } from "../../chat/common/chatVariableEntries.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+let MarkerChatContextPick = class MarkerChatContextPick2 {
+  static {
+    __name(this, "MarkerChatContextPick");
+  }
+  constructor(_markerService, _labelService) {
+    this._markerService = _markerService;
+    this._labelService = _labelService;
+    this.type = "pickerPick";
+    this.label = localize("chatContext.diagnstic", "Problems...");
+    this.icon = Codicon.error;
+    this.ordinal = -100;
+  }
+  asPicker() {
+    const markers = this._markerService.read({ severities: MarkerSeverity.Error | MarkerSeverity.Warning | MarkerSeverity.Info });
+    const grouped = groupBy(markers, (a, b) => extUri.compare(a.resource, b.resource));
+    const severities = /* @__PURE__ */ new Set();
+    const items = [];
+    let pickCount = 0;
+    for (const group of grouped) {
+      const resource = group[0].resource;
+      items.push({ type: "separator", label: this._labelService.getUriLabel(resource, { relative: true }) });
+      for (const marker of group) {
+        pickCount++;
+        severities.add(marker.severity);
+        items.push({
+          label: marker.message,
+          description: localize("markers.panel.at.ln.col.number", "[Ln {0}, Col {1}]", "" + marker.startLineNumber, "" + marker.startColumn),
+          asAttachment() {
+            return IDiagnosticVariableEntryFilterData.toEntry(IDiagnosticVariableEntryFilterData.fromMarker(marker));
+          }
+        });
+      }
+    }
+    items.unshift({
+      label: localize("markers.panel.allErrors", "All Problems"),
+      asAttachment() {
+        return IDiagnosticVariableEntryFilterData.toEntry({
+          filterSeverity: MarkerSeverity.Info
+        });
+      }
+    });
+    return {
+      placeholder: localize("chatContext.diagnstic.placeholder", "Select a problem to attach"),
+      picks: Promise.resolve(items)
+    };
+  }
+};
+MarkerChatContextPick = __decorate([
+  __param(0, IMarkerService),
+  __param(1, ILabelService)
+], MarkerChatContextPick);
+let MarkerChatContextContribution = class MarkerChatContextContribution2 extends Disposable {
+  static {
+    __name(this, "MarkerChatContextContribution");
+  }
+  static {
+    this.ID = "workbench.contrib.chat.markerChatContextContribution";
+  }
+  constructor(contextPickService, instantiationService) {
+    super();
+    this._store.add(contextPickService.registerChatContextItem(instantiationService.createInstance(MarkerChatContextPick)));
+  }
+};
+MarkerChatContextContribution = __decorate([
+  __param(0, IChatContextPickService),
+  __param(1, IInstantiationService)
+], MarkerChatContextContribution);
+export {
+  MarkerChatContextContribution
+};
+//# sourceMappingURL=markersChatContext.js.map

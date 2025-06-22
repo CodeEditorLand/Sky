@@ -1,2 +1,79 @@
-import*as o from"../../../nls.js";import{$df as a}from"../../../base/common/event.js";import{$Ql as i}from"../../../platform/registry/common/platform.js";import{$vd as n}from"../../../base/common/lifecycle.js";import{$4B as l}from"../../../base/common/mime.js";import{$Sl as g}from"../../../platform/configuration/common/configurationRegistry.js";const d={ModesRegistry:"editor.modesRegistry"};class p extends n{constructor(){super(),this.b=this.B(new a),this.onDidChangeLanguages=this.b.event,this.a=[]}registerLanguage(t){return this.a.push(t),this.b.fire(void 0),{dispose:()=>{for(let e=0,r=this.a.length;e<r;e++)if(this.a[e]===t){this.a.splice(e,1);return}}}}getLanguages(){return this.a}}const s=new p;i.add(d.ModesRegistry,s);const h="plaintext",u=".txt";s.registerLanguage({id:h,extensions:[u],aliases:[o.localize(872,null),"text"],mimetypes:[l.text]});i.as(g.Configuration).registerDefaultConfigurations([{overrides:{"[plaintext]":{"editor.unicodeHighlight.ambiguousCharacters":!1,"editor.unicodeHighlight.invisibleCharacters":!1},"[go]":{"editor.insertSpaces":!1},"[makefile]":{"editor.insertSpaces":!1},"[shellscript]":{"files.eol":`
-`},"[yaml]":{"editor.insertSpaces":!0,"editor.tabSize":2}}}]);export{d as $jE,p as $kE,s as $lE,h as $mE,u as $nE};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import * as nls from "../../../nls.js";
+import { Emitter } from "../../../base/common/event.js";
+import { Registry } from "../../../platform/registry/common/platform.js";
+import { Disposable } from "../../../base/common/lifecycle.js";
+import { Mimes } from "../../../base/common/mime.js";
+import { Extensions as ConfigurationExtensions } from "../../../platform/configuration/common/configurationRegistry.js";
+const Extensions = {
+  ModesRegistry: "editor.modesRegistry"
+};
+class EditorModesRegistry extends Disposable {
+  static {
+    __name(this, "EditorModesRegistry");
+  }
+  constructor() {
+    super();
+    this._onDidChangeLanguages = this._register(new Emitter());
+    this.onDidChangeLanguages = this._onDidChangeLanguages.event;
+    this._languages = [];
+  }
+  registerLanguage(def) {
+    this._languages.push(def);
+    this._onDidChangeLanguages.fire(void 0);
+    return {
+      dispose: /* @__PURE__ */ __name(() => {
+        for (let i = 0, len = this._languages.length; i < len; i++) {
+          if (this._languages[i] === def) {
+            this._languages.splice(i, 1);
+            return;
+          }
+        }
+      }, "dispose")
+    };
+  }
+  getLanguages() {
+    return this._languages;
+  }
+}
+const ModesRegistry = new EditorModesRegistry();
+Registry.add(Extensions.ModesRegistry, ModesRegistry);
+const PLAINTEXT_LANGUAGE_ID = "plaintext";
+const PLAINTEXT_EXTENSION = ".txt";
+ModesRegistry.registerLanguage({
+  id: PLAINTEXT_LANGUAGE_ID,
+  extensions: [PLAINTEXT_EXTENSION],
+  aliases: [nls.localize("plainText.alias", "Plain Text"), "text"],
+  mimetypes: [Mimes.text]
+});
+Registry.as(ConfigurationExtensions.Configuration).registerDefaultConfigurations([{
+  overrides: {
+    "[plaintext]": {
+      "editor.unicodeHighlight.ambiguousCharacters": false,
+      "editor.unicodeHighlight.invisibleCharacters": false
+    },
+    // TODO: Below is a workaround for: https://github.com/microsoft/vscode/issues/240567
+    "[go]": {
+      "editor.insertSpaces": false
+    },
+    "[makefile]": {
+      "editor.insertSpaces": false
+    },
+    "[shellscript]": {
+      "files.eol": "\n"
+    },
+    "[yaml]": {
+      "editor.insertSpaces": true,
+      "editor.tabSize": 2
+    }
+  }
+}]);
+export {
+  EditorModesRegistry,
+  Extensions,
+  ModesRegistry,
+  PLAINTEXT_EXTENSION,
+  PLAINTEXT_LANGUAGE_ID
+};
+//# sourceMappingURL=modesRegistry.js.map

@@ -1,1 +1,69 @@
-function h(t,e){const n=t.getCount(),s=t.findTokenIndexAtOffset(e),i=t.getLanguageId(s);let r=s;for(;r+1<n&&t.getLanguageId(r+1)===i;)r++;let f=s;for(;f>0&&t.getLanguageId(f-1)===i;)f--;return new d(t,i,f,r+1,t.getStartOffset(f),t.getEndOffset(r))}class d{constructor(t,e,n,s,i,r){this._scopedLineTokensBrand=void 0,this.a=t,this.languageId=e,this.b=n,this.c=s,this.firstCharOffset=i,this.d=r,this.languageIdCodec=t.languageIdCodec}getLineContent(){return this.a.getLineContent().substring(this.firstCharOffset,this.d)}getLineLength(){return this.d-this.firstCharOffset}getActualLineContentBefore(t){return this.a.getLineContent().substring(0,this.firstCharOffset+t)}getTokenCount(){return this.c-this.b}findTokenIndexAtOffset(t){return this.a.findTokenIndexAtOffset(t+this.firstCharOffset)-this.b}getStandardTokenType(t){return this.a.getStandardTokenType(t+this.b)}toIViewLineTokens(){return this.a.sliceAndInflate(this.firstCharOffset,this.d,0)}}var f;function o(t){return!!(3&t)}!function(t){t[t.value=3]="value"}(f||(f={}));export{h as $CD,d as $DD,o as $ED};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+function createScopedLineTokens(context, offset) {
+  const tokenCount = context.getCount();
+  const tokenIndex = context.findTokenIndexAtOffset(offset);
+  const desiredLanguageId = context.getLanguageId(tokenIndex);
+  let lastTokenIndex = tokenIndex;
+  while (lastTokenIndex + 1 < tokenCount && context.getLanguageId(lastTokenIndex + 1) === desiredLanguageId) {
+    lastTokenIndex++;
+  }
+  let firstTokenIndex = tokenIndex;
+  while (firstTokenIndex > 0 && context.getLanguageId(firstTokenIndex - 1) === desiredLanguageId) {
+    firstTokenIndex--;
+  }
+  return new ScopedLineTokens(context, desiredLanguageId, firstTokenIndex, lastTokenIndex + 1, context.getStartOffset(firstTokenIndex), context.getEndOffset(lastTokenIndex));
+}
+__name(createScopedLineTokens, "createScopedLineTokens");
+class ScopedLineTokens {
+  static {
+    __name(this, "ScopedLineTokens");
+  }
+  constructor(actual, languageId, firstTokenIndex, lastTokenIndex, firstCharOffset, lastCharOffset) {
+    this._scopedLineTokensBrand = void 0;
+    this._actual = actual;
+    this.languageId = languageId;
+    this._firstTokenIndex = firstTokenIndex;
+    this._lastTokenIndex = lastTokenIndex;
+    this.firstCharOffset = firstCharOffset;
+    this._lastCharOffset = lastCharOffset;
+    this.languageIdCodec = actual.languageIdCodec;
+  }
+  getLineContent() {
+    const actualLineContent = this._actual.getLineContent();
+    return actualLineContent.substring(this.firstCharOffset, this._lastCharOffset);
+  }
+  getLineLength() {
+    return this._lastCharOffset - this.firstCharOffset;
+  }
+  getActualLineContentBefore(offset) {
+    const actualLineContent = this._actual.getLineContent();
+    return actualLineContent.substring(0, this.firstCharOffset + offset);
+  }
+  getTokenCount() {
+    return this._lastTokenIndex - this._firstTokenIndex;
+  }
+  findTokenIndexAtOffset(offset) {
+    return this._actual.findTokenIndexAtOffset(offset + this.firstCharOffset) - this._firstTokenIndex;
+  }
+  getStandardTokenType(tokenIndex) {
+    return this._actual.getStandardTokenType(tokenIndex + this._firstTokenIndex);
+  }
+  toIViewLineTokens() {
+    return this._actual.sliceAndInflate(this.firstCharOffset, this._lastCharOffset, 0);
+  }
+}
+var IgnoreBracketsInTokens;
+(function(IgnoreBracketsInTokens2) {
+  IgnoreBracketsInTokens2[IgnoreBracketsInTokens2["value"] = 3] = "value";
+})(IgnoreBracketsInTokens || (IgnoreBracketsInTokens = {}));
+function ignoreBracketsInToken(standardTokenType) {
+  return (standardTokenType & 3) !== 0;
+}
+__name(ignoreBracketsInToken, "ignoreBracketsInToken");
+export {
+  ScopedLineTokens,
+  createScopedLineTokens,
+  ignoreBracketsInToken
+};
+//# sourceMappingURL=supports.js.map

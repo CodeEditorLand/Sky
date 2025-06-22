@@ -1,1 +1,438 @@
-import{$Yh as S}from"../../../../base/common/async.js";import{$df as D,Event as E}from"../../../../base/common/event.js";import{$vd as I}from"../../../../base/common/lifecycle.js";import C from"../../../../base/common/severity.js";import*as w from"../../../../base/common/strings.js";import{$5_ as x}from"../../../../editor/browser/editorBrowser.js";import{$BD as O}from"../../../../editor/common/languages/language.js";import*as u from"../../../../nls.js";import{$eI as z,$dI as P,$hI as B}from"../../../../platform/actions/common/actions.js";import{$Yn as L}from"../../../../platform/commands/common/commands.js";import{$El as T}from"../../../../platform/configuration/common/configuration.js";import{$Vn as R}from"../../../../platform/contextkey/common/contextkey.js";import{$_o as k}from"../../../../platform/dialogs/common/dialogs.js";import{$mj as M}from"../../../../platform/instantiation/common/instantiation.js";import{$Rl as _}from"../../../../platform/jsonschemas/common/jsonContributionRegistry.js";import{$OM as j}from"../../../../platform/quickinput/common/quickInput.js";import{$Ql as A}from"../../../../platform/registry/common/platform.js";import{$Poc as F}from"../common/breakpoints.js";import{$KV as H,$LV as J,$dW as N}from"../common/debug.js";import{$Moc as U}from"../common/debugger.js";import{$Roc as V,$Qoc as Q,$Toc as y,$Soc as G}from"../common/debugSchemas.js";import{$gU as K}from"../../tasks/common/taskDefinitionRegistry.js";import{$n2b as W}from"../../tasks/common/taskService.js";import{$uJ as Y}from"../../../services/configuration/common/configuration.js";import{$oI as X}from"../../../services/editor/common/editorService.js";import{$XO as q}from"../../../services/extensions/common/extensions.js";import{$RK as Z}from"../../../services/lifecycle/common/lifecycle.js";var v=function(g,t,e,i){var s=arguments.length,r=s<3?t:i===null?i=Object.getOwnPropertyDescriptor(t,e):i,o;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")r=Reflect.decorate(g,t,e,i);else for(var f=g.length-1;f>=0;f--)(o=g[f])&&(r=(s<3?o(r):s>3?o(t,e,r):o(t,e))||r);return s>3&&r&&Object.defineProperty(t,e,r),r},h=function(g,t){return function(e,i){t(e,i,g)}};const ee=A.as(_.JSONContribution);let $=class extends I{constructor(t,e,i,s,r,o,f,l,p,d,m,n,a){super(),this.z=t,this.C=e,this.D=i,this.F=s,this.G=r,this.H=o,this.I=f,this.J=l,this.L=p,this.M=d,this.N=m,this.O=n,this.P=a,this.g=new Map,this.m=new D,this.n=new D,this.r=[],this.t=new Set,this.u=[],this.y=new Set,this.f=[],this.b=[],this.Q(),this.J.bufferChangeEvents(()=>{this.h=H.bindTo(l),this.j=J.bindTo(l)}),this.B(this.J.onDidChangeContext(b=>{b.affectsSome(this.t)&&(this.h.set(this.hasEnabledDebuggers()),this.S())})),this.B(this.onDidDebuggersExtPointRead(()=>{this.j.set(this.b.length>0)}));const c=this.B(new S(()=>this.R(),5e3));this.B(E.any(n.onDidChangeTaskConfig,n.onDidChangeTaskProviders)(()=>{c.cancel(),c.schedule()})),this.N.when(4).then(()=>this.j.set(this.b.length>0)),this.B(t.onDidNewSession(b=>{this.y.add(b.configuration.type)})),c.schedule()}Q(){Q.setHandler((t,e)=>{e.added.forEach(i=>{i.value.forEach(s=>{if((!s.type||typeof s.type!="string")&&i.collector.error(u.localize(6437,null)),s.type!=="*"){const r=this.getDebugger(s.type);if(r)r.merge(s,i.description);else{const o=this.G.createInstance(U,this,s,i.description);o.when?.keys().forEach(f=>this.t.add(f)),this.b.push(o)}}})}),t.forEach(i=>{i.value.forEach(s=>{s.type==="*"&&this.b.forEach(r=>r.merge(s,i.description))})}),e.removed.forEach(i=>{const s=i.value.map(r=>r.type);this.b=this.b.filter(r=>s.indexOf(r.type)===-1)}),this.S(),this.n.fire()}),V.setHandler(t=>{this.r=t.flatMap(e=>e.value.map(i=>this.G.createInstance(F,i)))})}R(){this.O.getKnownTasks().then(t=>{this.u=t.map(e=>e._label),this.S()})}S(){const t=y.properties.configurations.items,e=K.getJsonSchema(),i={common:{properties:{name:{type:"string",description:u.localize(6438,null),default:"Launch"},debugServer:{type:"number",description:u.localize(6439,null),default:4711},preLaunchTask:{anyOf:[e,{type:["string"]}],default:"",defaultSnippets:[{body:{task:"",type:""}}],description:u.localize(6440,null),examples:this.u},postDebugTask:{anyOf:[e,{type:["string"]}],default:"",defaultSnippets:[{body:{task:"",type:""}}],description:u.localize(6441,null),examples:this.u},presentation:G,internalConsoleOptions:N,suppressMultipleSessionWarning:{type:"boolean",description:u.localize(6442,null),default:!0}}}};y.definitions=i,t.oneOf=[],t.defaultSnippets=[],this.b.forEach(s=>{const r=s.getSchemaAttributes(i);r&&t.oneOf&&t.oneOf.push(...r);const o=s.configurationSnippets;o&&t.defaultSnippets&&t.defaultSnippets.push(...o)}),ee.registerSchema(Y,y)}registerDebugAdapterFactory(t,e){return t.forEach(i=>this.g.set(i,e)),this.h.set(this.hasEnabledDebuggers()),this.m.fire(),{dispose:()=>{t.forEach(i=>this.g.delete(i))}}}hasEnabledDebuggers(){for(const[t]of this.g){const e=this.getDebugger(t);if(e&&e.enabled)return!0}return!1}createDebugAdapter(t){const e=this.g.get(t.configuration.type);if(e)return e.createDebugAdapter(t)}substituteVariables(t,e,i){const s=this.g.get(t);return s?s.substituteVariables(e,i):Promise.resolve(i)}runInTerminal(t,e,i){const s=this.g.get(t);return s?s.runInTerminal(e,i):Promise.resolve(void 0)}registerDebugAdapterDescriptorFactory(t){return this.f.push(t),{dispose:()=>{this.unregisterDebugAdapterDescriptorFactory(t)}}}unregisterDebugAdapterDescriptorFactory(t){const e=this.f.indexOf(t);e>=0&&this.f.splice(e,1)}getDebugAdapterDescriptor(t){const e=t.configuration,i=this.f.filter(s=>s.type===e.type&&s.createDebugAdapterDescriptor);return i.length===1?i[0].createDebugAdapterDescriptor(t):Promise.resolve(void 0)}getDebuggerLabel(t){const e=this.getDebugger(t);if(e)return e.label}get onDidRegisterDebugger(){return this.m.event}get onDidDebuggersExtPointRead(){return this.n.event}canSetBreakpointsIn(t){const e=t.getLanguageId();return!e||e==="jsonc"||e==="log"?!1:this.D.getValue("debug").allowBreakpointsEverywhere?!0:this.r.some(i=>i.language===e&&i.enabled)}getDebugger(t){return this.b.find(e=>w.$5f(e.type,t))}getEnabledDebugger(t){const e=this.getDebugger(t);return e&&e.enabled?e:void 0}someDebuggerInterestedInLanguage(t){return!!this.b.filter(e=>e.enabled).find(e=>e.interestedInLanguage(t))}async guessDebugger(t){const e=this.C.activeTextEditorControl;let i=[],s=null,r=null;if(x(e)){r=e.getModel();const n=r?r.getLanguageId():void 0;n&&(s=this.L.getLanguageName(n));const a=this.b.filter(c=>c.enabled).filter(c=>n&&c.interestedInLanguage(n));if(a.length===1)return{debugger:a[0]};a.length>1&&(i=a)}if((!s||t||r&&this.canSetBreakpointsIn(r))&&i.length===0&&(await this.activateDebuggers("onDebugInitialConfigurations"),i=this.b.filter(n=>n.enabled).filter(n=>n.hasInitialConfiguration()||n.hasDynamicConfigurationProviders()||n.hasConfigurationProvider())),i.length===0&&s){s.indexOf(" ")>=0&&(s=`'${s}'`);const{confirmed:n}=await this.M.confirm({type:C.Warning,message:u.localize(6443,null,s),primaryButton:u.localize(6444,null,s)});n&&await this.H.executeCommand("debug.installAdditionalDebuggers",s);return}this.U(),i.sort((n,a)=>n.label.localeCompare(a.label)),i=i.filter(n=>!n.isHiddenFromDropdown);const o=[],f=[];i.forEach(n=>{const a=n.getMainExtensionDescriptor();a.id&&this.w?.has(a.id)||this.y.has(n.type)?o.push(n):f.push(n)});const l=[],p=await this.z.configurationManager().getDynamicProviders();if(o.length>0&&l.push({type:"separator",label:u.localize(6445,null)},...o.map(n=>({label:n.label,pick:()=>({debugger:n})}))),f.length>0&&(l.length>0&&l.push({type:"separator",label:""}),l.push(...f.map(n=>({label:n.label,pick:()=>({debugger:n})})))),p.length){l.length&&l.push({type:"separator",label:""});for(const n of p)l.push({label:u.localize(6446,null,n.label),pick:async()=>{const a=await n.pick();if(a)return a&&{debugger:this.getDebugger(n.type),withConfig:a}}})}l.push({type:"separator",label:""},{label:s?u.localize(6447,null,s):u.localize(6448,null)});const d=this.P.getMenuActions(P.DebugCreateConfiguration,this.J);for(const[,n]of d)for(const a of n)l.push(a);const m=u.localize(6449,null);return this.F.pick(l,{activeItem:l[0],placeHolder:m}).then(async n=>{if(n&&"pick"in n&&typeof n.pick=="function")return await n.pick();if(n instanceof B){n.run();return}n&&this.H.executeCommand("debug.installAdditionalDebuggers",s)})}U(){if(!this.w){this.w=new Set;const t=this.I.getExtensionsStatus();for(const e in t)t[e].activationTimes&&this.w.add(e)}}async activateDebuggers(t,e){this.U();const i=[this.I.activateByEvent(t),this.I.activateByEvent("onDebug")];e&&i.push(this.I.activateByEvent(`${t}:${e}`)),await Promise.all(i)}};$=v([h(1,X),h(2,T),h(3,j),h(4,M),h(5,L),h(6,q),h(7,R),h(8,O),h(9,k),h(10,Z),h(11,W),h(12,z)],$);export{$ as $Uoc};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { RunOnceScheduler } from "../../../../base/common/async.js";
+import { Emitter, Event } from "../../../../base/common/event.js";
+import { Disposable } from "../../../../base/common/lifecycle.js";
+import Severity from "../../../../base/common/severity.js";
+import * as strings from "../../../../base/common/strings.js";
+import { isCodeEditor } from "../../../../editor/browser/editorBrowser.js";
+import { ILanguageService } from "../../../../editor/common/languages/language.js";
+import * as nls from "../../../../nls.js";
+import { IMenuService, MenuId, MenuItemAction } from "../../../../platform/actions/common/actions.js";
+import { ICommandService } from "../../../../platform/commands/common/commands.js";
+import { IConfigurationService } from "../../../../platform/configuration/common/configuration.js";
+import { IContextKeyService } from "../../../../platform/contextkey/common/contextkey.js";
+import { IDialogService } from "../../../../platform/dialogs/common/dialogs.js";
+import { IInstantiationService } from "../../../../platform/instantiation/common/instantiation.js";
+import { Extensions as JSONExtensions } from "../../../../platform/jsonschemas/common/jsonContributionRegistry.js";
+import { IQuickInputService } from "../../../../platform/quickinput/common/quickInput.js";
+import { Registry } from "../../../../platform/registry/common/platform.js";
+import { Breakpoints } from "../common/breakpoints.js";
+import { CONTEXT_DEBUGGERS_AVAILABLE, CONTEXT_DEBUG_EXTENSION_AVAILABLE, INTERNAL_CONSOLE_OPTIONS_SCHEMA } from "../common/debug.js";
+import { Debugger } from "../common/debugger.js";
+import { breakpointsExtPoint, debuggersExtPoint, launchSchema, presentationSchema } from "../common/debugSchemas.js";
+import { TaskDefinitionRegistry } from "../../tasks/common/taskDefinitionRegistry.js";
+import { ITaskService } from "../../tasks/common/taskService.js";
+import { launchSchemaId } from "../../../services/configuration/common/configuration.js";
+import { IEditorService } from "../../../services/editor/common/editorService.js";
+import { IExtensionService } from "../../../services/extensions/common/extensions.js";
+import { ILifecycleService } from "../../../services/lifecycle/common/lifecycle.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+const jsonRegistry = Registry.as(JSONExtensions.JSONContribution);
+let AdapterManager = class AdapterManager2 extends Disposable {
+  static {
+    __name(this, "AdapterManager");
+  }
+  constructor(delegate, editorService, configurationService, quickInputService, instantiationService, commandService, extensionService, contextKeyService, languageService, dialogService, lifecycleService, tasksService, menuService) {
+    super();
+    this.delegate = delegate;
+    this.editorService = editorService;
+    this.configurationService = configurationService;
+    this.quickInputService = quickInputService;
+    this.instantiationService = instantiationService;
+    this.commandService = commandService;
+    this.extensionService = extensionService;
+    this.contextKeyService = contextKeyService;
+    this.languageService = languageService;
+    this.dialogService = dialogService;
+    this.lifecycleService = lifecycleService;
+    this.tasksService = tasksService;
+    this.menuService = menuService;
+    this.debugAdapterFactories = /* @__PURE__ */ new Map();
+    this._onDidRegisterDebugger = new Emitter();
+    this._onDidDebuggersExtPointRead = new Emitter();
+    this.breakpointContributions = [];
+    this.debuggerWhenKeys = /* @__PURE__ */ new Set();
+    this.taskLabels = [];
+    this.usedDebugTypes = /* @__PURE__ */ new Set();
+    this.adapterDescriptorFactories = [];
+    this.debuggers = [];
+    this.registerListeners();
+    this.contextKeyService.bufferChangeEvents(() => {
+      this.debuggersAvailable = CONTEXT_DEBUGGERS_AVAILABLE.bindTo(contextKeyService);
+      this.debugExtensionsAvailable = CONTEXT_DEBUG_EXTENSION_AVAILABLE.bindTo(contextKeyService);
+    });
+    this._register(this.contextKeyService.onDidChangeContext((e) => {
+      if (e.affectsSome(this.debuggerWhenKeys)) {
+        this.debuggersAvailable.set(this.hasEnabledDebuggers());
+        this.updateDebugAdapterSchema();
+      }
+    }));
+    this._register(this.onDidDebuggersExtPointRead(() => {
+      this.debugExtensionsAvailable.set(this.debuggers.length > 0);
+    }));
+    const updateTaskScheduler = this._register(new RunOnceScheduler(() => this.updateTaskLabels(), 5e3));
+    this._register(Event.any(tasksService.onDidChangeTaskConfig, tasksService.onDidChangeTaskProviders)(() => {
+      updateTaskScheduler.cancel();
+      updateTaskScheduler.schedule();
+    }));
+    this.lifecycleService.when(
+      4
+      /* LifecyclePhase.Eventually */
+    ).then(() => this.debugExtensionsAvailable.set(this.debuggers.length > 0));
+    this._register(delegate.onDidNewSession((s) => {
+      this.usedDebugTypes.add(s.configuration.type);
+    }));
+    updateTaskScheduler.schedule();
+  }
+  registerListeners() {
+    debuggersExtPoint.setHandler((extensions, delta) => {
+      delta.added.forEach((added) => {
+        added.value.forEach((rawAdapter) => {
+          if (!rawAdapter.type || typeof rawAdapter.type !== "string") {
+            added.collector.error(nls.localize("debugNoType", "Debugger 'type' can not be omitted and must be of type 'string'."));
+          }
+          if (rawAdapter.type !== "*") {
+            const existing = this.getDebugger(rawAdapter.type);
+            if (existing) {
+              existing.merge(rawAdapter, added.description);
+            } else {
+              const dbg = this.instantiationService.createInstance(Debugger, this, rawAdapter, added.description);
+              dbg.when?.keys().forEach((key) => this.debuggerWhenKeys.add(key));
+              this.debuggers.push(dbg);
+            }
+          }
+        });
+      });
+      extensions.forEach((extension) => {
+        extension.value.forEach((rawAdapter) => {
+          if (rawAdapter.type === "*") {
+            this.debuggers.forEach((dbg) => dbg.merge(rawAdapter, extension.description));
+          }
+        });
+      });
+      delta.removed.forEach((removed) => {
+        const removedTypes = removed.value.map((rawAdapter) => rawAdapter.type);
+        this.debuggers = this.debuggers.filter((d) => removedTypes.indexOf(d.type) === -1);
+      });
+      this.updateDebugAdapterSchema();
+      this._onDidDebuggersExtPointRead.fire();
+    });
+    breakpointsExtPoint.setHandler((extensions) => {
+      this.breakpointContributions = extensions.flatMap((ext) => ext.value.map((breakpoint) => this.instantiationService.createInstance(Breakpoints, breakpoint)));
+    });
+  }
+  updateTaskLabels() {
+    this.tasksService.getKnownTasks().then((tasks) => {
+      this.taskLabels = tasks.map((task) => task._label);
+      this.updateDebugAdapterSchema();
+    });
+  }
+  updateDebugAdapterSchema() {
+    const items = launchSchema.properties["configurations"].items;
+    const taskSchema = TaskDefinitionRegistry.getJsonSchema();
+    const definitions = {
+      "common": {
+        properties: {
+          "name": {
+            type: "string",
+            description: nls.localize("debugName", "Name of configuration; appears in the launch configuration dropdown menu."),
+            default: "Launch"
+          },
+          "debugServer": {
+            type: "number",
+            description: nls.localize("debugServer", "For debug extension development only: if a port is specified VS Code tries to connect to a debug adapter running in server mode"),
+            default: 4711
+          },
+          "preLaunchTask": {
+            anyOf: [taskSchema, {
+              type: ["string"]
+            }],
+            default: "",
+            defaultSnippets: [{ body: { task: "", type: "" } }],
+            description: nls.localize("debugPrelaunchTask", "Task to run before debug session starts."),
+            examples: this.taskLabels
+          },
+          "postDebugTask": {
+            anyOf: [taskSchema, {
+              type: ["string"]
+            }],
+            default: "",
+            defaultSnippets: [{ body: { task: "", type: "" } }],
+            description: nls.localize("debugPostDebugTask", "Task to run after debug session ends."),
+            examples: this.taskLabels
+          },
+          "presentation": presentationSchema,
+          "internalConsoleOptions": INTERNAL_CONSOLE_OPTIONS_SCHEMA,
+          "suppressMultipleSessionWarning": {
+            type: "boolean",
+            description: nls.localize("suppressMultipleSessionWarning", "Disable the warning when trying to start the same debug configuration more than once."),
+            default: true
+          }
+        }
+      }
+    };
+    launchSchema.definitions = definitions;
+    items.oneOf = [];
+    items.defaultSnippets = [];
+    this.debuggers.forEach((adapter) => {
+      const schemaAttributes = adapter.getSchemaAttributes(definitions);
+      if (schemaAttributes && items.oneOf) {
+        items.oneOf.push(...schemaAttributes);
+      }
+      const configurationSnippets = adapter.configurationSnippets;
+      if (configurationSnippets && items.defaultSnippets) {
+        items.defaultSnippets.push(...configurationSnippets);
+      }
+    });
+    jsonRegistry.registerSchema(launchSchemaId, launchSchema);
+  }
+  registerDebugAdapterFactory(debugTypes, debugAdapterLauncher) {
+    debugTypes.forEach((debugType) => this.debugAdapterFactories.set(debugType, debugAdapterLauncher));
+    this.debuggersAvailable.set(this.hasEnabledDebuggers());
+    this._onDidRegisterDebugger.fire();
+    return {
+      dispose: /* @__PURE__ */ __name(() => {
+        debugTypes.forEach((debugType) => this.debugAdapterFactories.delete(debugType));
+      }, "dispose")
+    };
+  }
+  hasEnabledDebuggers() {
+    for (const [type] of this.debugAdapterFactories) {
+      const dbg = this.getDebugger(type);
+      if (dbg && dbg.enabled) {
+        return true;
+      }
+    }
+    return false;
+  }
+  createDebugAdapter(session) {
+    const factory = this.debugAdapterFactories.get(session.configuration.type);
+    if (factory) {
+      return factory.createDebugAdapter(session);
+    }
+    return void 0;
+  }
+  substituteVariables(debugType, folder, config) {
+    const factory = this.debugAdapterFactories.get(debugType);
+    if (factory) {
+      return factory.substituteVariables(folder, config);
+    }
+    return Promise.resolve(config);
+  }
+  runInTerminal(debugType, args, sessionId) {
+    const factory = this.debugAdapterFactories.get(debugType);
+    if (factory) {
+      return factory.runInTerminal(args, sessionId);
+    }
+    return Promise.resolve(void 0);
+  }
+  registerDebugAdapterDescriptorFactory(debugAdapterProvider) {
+    this.adapterDescriptorFactories.push(debugAdapterProvider);
+    return {
+      dispose: /* @__PURE__ */ __name(() => {
+        this.unregisterDebugAdapterDescriptorFactory(debugAdapterProvider);
+      }, "dispose")
+    };
+  }
+  unregisterDebugAdapterDescriptorFactory(debugAdapterProvider) {
+    const ix = this.adapterDescriptorFactories.indexOf(debugAdapterProvider);
+    if (ix >= 0) {
+      this.adapterDescriptorFactories.splice(ix, 1);
+    }
+  }
+  getDebugAdapterDescriptor(session) {
+    const config = session.configuration;
+    const providers = this.adapterDescriptorFactories.filter((p) => p.type === config.type && p.createDebugAdapterDescriptor);
+    if (providers.length === 1) {
+      return providers[0].createDebugAdapterDescriptor(session);
+    } else {
+    }
+    return Promise.resolve(void 0);
+  }
+  getDebuggerLabel(type) {
+    const dbgr = this.getDebugger(type);
+    if (dbgr) {
+      return dbgr.label;
+    }
+    return void 0;
+  }
+  get onDidRegisterDebugger() {
+    return this._onDidRegisterDebugger.event;
+  }
+  get onDidDebuggersExtPointRead() {
+    return this._onDidDebuggersExtPointRead.event;
+  }
+  canSetBreakpointsIn(model) {
+    const languageId = model.getLanguageId();
+    if (!languageId || languageId === "jsonc" || languageId === "log") {
+      return false;
+    }
+    if (this.configurationService.getValue("debug").allowBreakpointsEverywhere) {
+      return true;
+    }
+    return this.breakpointContributions.some((breakpoints) => breakpoints.language === languageId && breakpoints.enabled);
+  }
+  getDebugger(type) {
+    return this.debuggers.find((dbg) => strings.equalsIgnoreCase(dbg.type, type));
+  }
+  getEnabledDebugger(type) {
+    const adapter = this.getDebugger(type);
+    return adapter && adapter.enabled ? adapter : void 0;
+  }
+  someDebuggerInterestedInLanguage(languageId) {
+    return !!this.debuggers.filter((d) => d.enabled).find((a) => a.interestedInLanguage(languageId));
+  }
+  async guessDebugger(gettingConfigurations) {
+    const activeTextEditorControl = this.editorService.activeTextEditorControl;
+    let candidates = [];
+    let languageLabel = null;
+    let model = null;
+    if (isCodeEditor(activeTextEditorControl)) {
+      model = activeTextEditorControl.getModel();
+      const language = model ? model.getLanguageId() : void 0;
+      if (language) {
+        languageLabel = this.languageService.getLanguageName(language);
+      }
+      const adapters = this.debuggers.filter((a) => a.enabled).filter((a) => language && a.interestedInLanguage(language));
+      if (adapters.length === 1) {
+        return { debugger: adapters[0] };
+      }
+      if (adapters.length > 1) {
+        candidates = adapters;
+      }
+    }
+    if ((!languageLabel || gettingConfigurations || model && this.canSetBreakpointsIn(model)) && candidates.length === 0) {
+      await this.activateDebuggers("onDebugInitialConfigurations");
+      candidates = this.debuggers.filter((a) => a.enabled).filter((dbg) => dbg.hasInitialConfiguration() || dbg.hasDynamicConfigurationProviders() || dbg.hasConfigurationProvider());
+    }
+    if (candidates.length === 0 && languageLabel) {
+      if (languageLabel.indexOf(" ") >= 0) {
+        languageLabel = `'${languageLabel}'`;
+      }
+      const { confirmed } = await this.dialogService.confirm({
+        type: Severity.Warning,
+        message: nls.localize("CouldNotFindLanguage", "You don't have an extension for debugging {0}. Should we find a {0} extension in the Marketplace?", languageLabel),
+        primaryButton: nls.localize({ key: "findExtension", comment: ["&& denotes a mnemonic"] }, "&&Find {0} extension", languageLabel)
+      });
+      if (confirmed) {
+        await this.commandService.executeCommand("debug.installAdditionalDebuggers", languageLabel);
+      }
+      return void 0;
+    }
+    this.initExtensionActivationsIfNeeded();
+    candidates.sort((first, second) => first.label.localeCompare(second.label));
+    candidates = candidates.filter((a) => !a.isHiddenFromDropdown);
+    const suggestedCandidates = [];
+    const otherCandidates = [];
+    candidates.forEach((d) => {
+      const descriptor = d.getMainExtensionDescriptor();
+      if (descriptor.id && !!this.earlyActivatedExtensions?.has(descriptor.id)) {
+        suggestedCandidates.push(d);
+      } else if (this.usedDebugTypes.has(d.type)) {
+        suggestedCandidates.push(d);
+      } else {
+        otherCandidates.push(d);
+      }
+    });
+    const picks = [];
+    const dynamic = await this.delegate.configurationManager().getDynamicProviders();
+    if (suggestedCandidates.length > 0) {
+      picks.push({ type: "separator", label: nls.localize("suggestedDebuggers", "Suggested") }, ...suggestedCandidates.map((c) => ({ label: c.label, pick: /* @__PURE__ */ __name(() => ({ debugger: c }), "pick") })));
+    }
+    if (otherCandidates.length > 0) {
+      if (picks.length > 0) {
+        picks.push({ type: "separator", label: "" });
+      }
+      picks.push(...otherCandidates.map((c) => ({ label: c.label, pick: /* @__PURE__ */ __name(() => ({ debugger: c }), "pick") })));
+    }
+    if (dynamic.length) {
+      if (picks.length) {
+        picks.push({ type: "separator", label: "" });
+      }
+      for (const d of dynamic) {
+        picks.push({
+          label: nls.localize("moreOptionsForDebugType", "More {0} options...", d.label),
+          pick: /* @__PURE__ */ __name(async () => {
+            const cfg = await d.pick();
+            if (!cfg) {
+              return void 0;
+            }
+            return cfg && { debugger: this.getDebugger(d.type), withConfig: cfg };
+          }, "pick")
+        });
+      }
+    }
+    picks.push({ type: "separator", label: "" }, { label: languageLabel ? nls.localize("installLanguage", "Install an extension for {0}...", languageLabel) : nls.localize("installExt", "Install extension...") });
+    const contributed = this.menuService.getMenuActions(MenuId.DebugCreateConfiguration, this.contextKeyService);
+    for (const [, action] of contributed) {
+      for (const item of action) {
+        picks.push(item);
+      }
+    }
+    const placeHolder = nls.localize("selectDebug", "Select debugger");
+    return this.quickInputService.pick(picks, { activeItem: picks[0], placeHolder }).then(async (picked) => {
+      if (picked && "pick" in picked && typeof picked.pick === "function") {
+        return await picked.pick();
+      }
+      if (picked instanceof MenuItemAction) {
+        picked.run();
+        return;
+      }
+      if (picked) {
+        this.commandService.executeCommand("debug.installAdditionalDebuggers", languageLabel);
+      }
+      return void 0;
+    });
+  }
+  initExtensionActivationsIfNeeded() {
+    if (!this.earlyActivatedExtensions) {
+      this.earlyActivatedExtensions = /* @__PURE__ */ new Set();
+      const status = this.extensionService.getExtensionsStatus();
+      for (const id in status) {
+        if (!!status[id].activationTimes) {
+          this.earlyActivatedExtensions.add(id);
+        }
+      }
+    }
+  }
+  async activateDebuggers(activationEvent, debugType) {
+    this.initExtensionActivationsIfNeeded();
+    const promises = [
+      this.extensionService.activateByEvent(activationEvent),
+      this.extensionService.activateByEvent("onDebug")
+    ];
+    if (debugType) {
+      promises.push(this.extensionService.activateByEvent(`${activationEvent}:${debugType}`));
+    }
+    await Promise.all(promises);
+  }
+};
+AdapterManager = __decorate([
+  __param(1, IEditorService),
+  __param(2, IConfigurationService),
+  __param(3, IQuickInputService),
+  __param(4, IInstantiationService),
+  __param(5, ICommandService),
+  __param(6, IExtensionService),
+  __param(7, IContextKeyService),
+  __param(8, ILanguageService),
+  __param(9, IDialogService),
+  __param(10, ILifecycleService),
+  __param(11, ITaskService),
+  __param(12, IMenuService)
+], AdapterManager);
+export {
+  AdapterManager
+};
+//# sourceMappingURL=debugAdapterManager.js.map

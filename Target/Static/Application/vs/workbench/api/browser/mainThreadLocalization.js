@@ -1,1 +1,50 @@
-import{$oY as l}from"../common/extHost.protocol.js";import{$Kyb as m}from"../../services/extensions/common/extHostCustomers.js";import{URI as p}from"../../../base/common/uri.js";import{$5j as h}from"../../../platform/files/common/files.js";import{$vd as d}from"../../../base/common/lifecycle.js";import{$E3 as $}from"../../../platform/languagePacks/common/languagePacks.js";var u=function(t,e,o,r){var s,n=arguments.length,a=n<3?e:null===r?r=Object.getOwnPropertyDescriptor(e,o):r;if("object"==typeof Reflect&&"function"==typeof Reflect.decorate)a=Reflect.decorate(t,e,o,r);else for(var i=t.length-1;i>=0;i--)(s=t[i])&&(a=(n<3?s(a):n>3?s(e,o,a):s(e,o))||a);return n>3&&a&&Object.defineProperty(e,o,a),a},f=function(t,e){return function(o,r){e(o,r,t)}};let s=class extends d{constructor(t,e,o){super(),this.a=e,this.b=o}async $fetchBuiltInBundleUri(t,e){try{return await this.b.getBuiltInExtensionTranslationsUri(t,e)}catch{return}}async $fetchBundleContents(t){return(await this.a.readFile(p.revive(t))).value.toString()}};s=u([m(l.MainThreadLocalization),f(1,h),f(2,$)],s);export{s as $Myb};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { MainContext } from "../common/extHost.protocol.js";
+import { extHostNamedCustomer } from "../../services/extensions/common/extHostCustomers.js";
+import { URI } from "../../../base/common/uri.js";
+import { IFileService } from "../../../platform/files/common/files.js";
+import { Disposable } from "../../../base/common/lifecycle.js";
+import { ILanguagePackService } from "../../../platform/languagePacks/common/languagePacks.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+let MainThreadLocalization = class MainThreadLocalization2 extends Disposable {
+  static {
+    __name(this, "MainThreadLocalization");
+  }
+  constructor(extHostContext, fileService, languagePackService) {
+    super();
+    this.fileService = fileService;
+    this.languagePackService = languagePackService;
+  }
+  async $fetchBuiltInBundleUri(id, language) {
+    try {
+      const uri = await this.languagePackService.getBuiltInExtensionTranslationsUri(id, language);
+      return uri;
+    } catch (e) {
+      return void 0;
+    }
+  }
+  async $fetchBundleContents(uriComponents) {
+    const contents = await this.fileService.readFile(URI.revive(uriComponents));
+    return contents.value.toString();
+  }
+};
+MainThreadLocalization = __decorate([
+  extHostNamedCustomer(MainContext.MainThreadLocalization),
+  __param(1, IFileService),
+  __param(2, ILanguagePackService)
+], MainThreadLocalization);
+export {
+  MainThreadLocalization
+};
+//# sourceMappingURL=mainThreadLocalization.js.map

@@ -1,1 +1,1515 @@
-import{localize as o}from"../../../../nls.js";import*as y from"../../../../base/common/objects.js";import*as L from"../../../../base/common/strings.js";import*as N from"../../../../base/common/assert.js";import{$7 as T,$5 as v}from"../../../../base/common/path.js";import*as f from"../../../../base/common/types.js";import*as Y from"../../../../base/common/uuid.js";import*as S from"../../../../base/common/platform.js";import b from"../../../../base/common/severity.js";import{URI as k}from"../../../../base/common/uri.js";import{$9T as U,$0T as I}from"../../../../base/common/parsers.js";import{$mc as D}from"../../../../base/common/arrays.js";import{Schemas as F}from"../../../../base/common/network.js";import{MarkerSeverity as W}from"../../../../platform/markers/common/markers.js";import{$UO as O}from"../../../services/extensions/common/extensionsRegistry.js";import{$df as J}from"../../../../base/common/event.js";import{FileType as C}from"../../../../platform/files/common/files.js";var d,m,g;function B(e){return!(!e||!f.$Yc(e.name))}async function x(e,t,n){const r=t.fileLocation;let o;if(r===d.Absolute)o=e;else if(r===d.Relative&&t.filePrefix&&f.$Yc(t.filePrefix))o=T(t.filePrefix,e);else{if(r===d.AutoDetect){const r=y.$2o(t);if(r.fileLocation=d.Relative,n){const t=await x(e,r);let o;try{o=await n.stat(t)}catch{}if(o)return t}return r.fileLocation=d.Absolute,x(e,r)}if(r===d.Search&&n){const r=n.getProvider(F.file);if(r&&(o=(await H(e,r,t.filePrefix))?.path),!o){const n=y.$2o(t);return n.fileLocation=d.Absolute,x(e,n)}}}if(void 0===o)throw new Error("FileLocationKind is not actionable. Does the matcher have a filePrefix? This should never happen.");return o=v(o),o=o.replace(/\\/g,"/"),"/"!==o[0]&&(o="/"+o),void 0!==t.uriProvider?t.uriProvider(o):k.file(o)}async function H(e,t,n){const r=new Set(D(n.exclude||[]).map((e=>k.file(e).path)));async function o(n){if(r.has(n.path))return;const i=await t.readdir(n),s=[];for(const[t,r]of i)if(r!==C.Directory){if(r===C.File){const r=k.joinPath(n,t);if(r.path.endsWith(e))return r}}else s.push(k.joinPath(n,t));for(const e of s){const t=await o(e);if(t)return t}}for(const e of D(n.include||[])){const t=await o(k.file(e));if(t)return t}}function ue(e,t){const n=e.pattern;return Array.isArray(n)?new Z(e,t):new z(e,t)}!function(e){e[e.Default=0]="Default",e[e.Relative=1]="Relative",e[e.Absolute=2]="Absolute",e[e.AutoDetect=3]="AutoDetect",e[e.Search=4]="Search"}(d||(d={})),function(e){e.fromString=function(t){return"absolute"===(t=t.toLowerCase())?e.Absolute:"relative"===t?e.Relative:"autodetect"===t?e.AutoDetect:"search"===t?e.Search:void 0}}(d||(d={})),function(e){e[e.File=0]="File",e[e.Location=1]="Location"}(m||(m={})),function(e){e.fromString=function(t){return"file"===(t=t.toLowerCase())?e.File:"location"===t?e.Location:void 0}}(m||(m={})),function(e){e[e.allDocuments=0]="allDocuments",e[e.openDocuments=1]="openDocuments",e[e.closedDocuments=2]="closedDocuments"}(g||(g={})),function(e){e.fromString=function(t){return"alldocuments"===(t=t.toLowerCase())?e.allDocuments:"opendocuments"===t?e.openDocuments:"closeddocuments"===t?e.closedDocuments:void 0}}(g||(g={}));const V=1===S.OS?"\r\n":"\n";class j{constructor(e,t){this.a=e,this.b=t}handle(e,t=0){return{match:null,continue:!1}}next(e){return null}c(e,t,n){return!!e&&(this.e(e,"file",t,n,!0),this.d(e,"message",t,n,!0),this.e(e,"code",t,n,!0),this.e(e,"severity",t,n,!0),this.e(e,"location",t,n,!0),this.e(e,"line",t,n),this.e(e,"character",t,n),this.e(e,"endLine",t,n),this.e(e,"endCharacter",t,n),!0)}d(e,t,n,r,o=!1){const i=n[t];if(f.$7c(e[t]))this.e(e,t,n,r,o);else if(!f.$7c(i)&&i<r.length){let n=r[i];o&&(n=L.$Hf(n)),e[t]+=V+n}}e(e,t,n,r,o=!1){const i=n[t];if(f.$7c(e[t])&&!f.$7c(i)&&i<r.length){let n=r[i];void 0!==n&&(o&&(n=L.$Hf(n)),e[t]=n)}}f(e){try{const t=this.h(e);if(e.file&&t&&e.message){const n={severity:this.l(e),startLineNumber:t.startLineNumber,startColumn:t.startCharacter,endLineNumber:t.endLineNumber,endColumn:t.endCharacter,message:e.message};return void 0!==e.code&&(n.code=e.code),void 0!==this.a.source&&(n.source=this.a.source),{description:this.a,resource:this.g(e.file),marker:n}}}catch{}}g(e){return x(e,this.a,this.b)}h(e){if(e.kind===m.File)return this.k(0,0,0,0);if(e.location)return this.j(e.location);if(!e.line)return null;const t=parseInt(e.line),n=e.character?parseInt(e.character):void 0,r=e.endLine?parseInt(e.endLine):void 0,o=e.endCharacter?parseInt(e.endCharacter):void 0;return this.k(t,n,r,o)}j(e){if(!e||!e.match(/(\d+|\d+,\d+|\d+,\d+,\d+,\d+)/))return null;const t=e.split(","),n=parseInt(t[0]),r=t.length>1?parseInt(t[1]):void 0;return t.length>3?this.k(n,r,parseInt(t[2]),parseInt(t[3])):this.k(n,r,void 0,void 0)}k(e,t,n,r){return void 0!==t&&void 0!==r?{startLineNumber:e,startCharacter:t,endLineNumber:n||e,endCharacter:r}:void 0!==t?{startLineNumber:e,startCharacter:t,endLineNumber:e,endCharacter:t}:{startLineNumber:e,startCharacter:1,endLineNumber:e,endCharacter:2**31-1}}l(e){let t=null;if(e.severity){const n=e.severity;n&&(t=b.fromValue(n),t===b.Ignore&&("E"===n?t=b.Error:"W"===n?t=b.Warning:("I"===n||L.$5f(n,"hint")||L.$5f(n,"note"))&&(t=b.Info)))}return(null===t||t===b.Ignore)&&(t=this.a.severity||b.Error),W.fromSeverity(t)}}class z extends j{constructor(e,t){super(e,t),this.m=e.pattern}get matchLength(){return 1}handle(e,t=0){N.ok(e.length-t===1);const n=Object.create(null);void 0!==this.m.kind&&(n.kind=this.m.kind);const r=this.m.regexp.exec(e[t]);if(r){this.c(n,this.m,r);const e=this.f(n);if(e)return{match:e,continue:!1}}return{match:null,continue:!1}}next(e){return null}}class Z extends j{constructor(e,t){super(e,t),this.m=e.pattern}get matchLength(){return this.m.length}handle(e,t=0){N.ok(e.length-t===this.m.length),this.n=Object.create(null);let n=this.n;n.kind=this.m[0].kind;for(let r=0;r<this.m.length;r++){const o=this.m[r],i=o.regexp.exec(e[r+t]);if(!i)return{match:null,continue:!1};o.loop&&r===this.m.length-1&&(n=y.$2o(n)),this.c(n,o,i)}const r=!!this.m[this.m.length-1].loop;r||(this.n=void 0);return{match:(n?this.f(n):null)||null,continue:r}}next(e){const t=this.m[this.m.length-1];N.ok(!0===t.loop&&null!==this.n);const n=t.regexp.exec(e);if(!n)return this.n=void 0,null;const r=y.$2o(this.n);let o;return this.c(r,t,n)&&(o=this.f(r)),o||null}}var $,w;!function(e){let t;let n,r,o,i,s;(t=e.CheckedProblemPattern||(e.CheckedProblemPattern={})).is=function(e){const t=e;return t&&f.$Yc(t.regexp)},function(e){e.is=function(e){const t=e;return t&&f.$Yc(t.name)}}(n=e.NamedProblemPattern||(e.NamedProblemPattern={})),function(e){e.is=function(e){const t=e;return t&&n.is(t)&&f.$Yc(t.regexp)}}(r=e.NamedCheckedProblemPattern||(e.NamedCheckedProblemPattern={})),function(e){e.is=function(e){return e&&Array.isArray(e)}}(o=e.MultiLineProblemPattern||(e.MultiLineProblemPattern={})),function(t){t.is=function(t){if(!o.is(t))return!1;for(const n of t)if(!e.CheckedProblemPattern.is(n))return!1;return!0}}(i=e.MultiLineCheckedProblemPattern||(e.MultiLineCheckedProblemPattern={})),function(e){e.is=function(e){const t=e;return t&&f.$Yc(t.name)&&Array.isArray(t.patterns)&&i.is(t.patterns)}}(s=e.NamedMultiLineCheckedProblemPattern||(e.NamedMultiLineCheckedProblemPattern={})),e.isNamedProblemMatcher=function(e){return f.$Yc(e.name)}}($||($={}));class A extends I{constructor(e){super(e)}parse(e){if($.NamedMultiLineCheckedProblemPattern.is(e))return this.c(e);if($.MultiLineCheckedProblemPattern.is(e))return this.d(e);if($.NamedCheckedProblemPattern.is(e)){const t=this.b(e);return t.name=e.name,t}return $.CheckedProblemPattern.is(e)?this.b(e):(this.error(o(11412,null)),null)}b(e){const t=this.e(e,!0);return void 0===t?null:(void 0===t.kind&&(t.kind=m.Location),this.f([t])?t:null)}c(e){const t=this.d(e.patterns);return t?{name:e.name,label:e.label?e.label:e.name,patterns:t}:null}d(e){const t=[];for(let n=0;n<e.length;n++){const r=this.e(e[n],!1);if(void 0===r)return null;n<e.length-1&&!f.$7c(r.loop)&&r.loop&&(r.loop=!1,this.error(o(11413,null))),t.push(r)}return void 0===t[0].kind&&(t[0].kind=m.Location),this.f(t)?t:null}e(e,t){const n=this.g(e.regexp);if(void 0===n)return;let r={regexp:n};function o(e,t,n,r){const o=t[r];"number"==typeof o&&(e[n]=o)}if(e.kind&&(r.kind=m.fromString(e.kind)),o(r,e,"file","file"),o(r,e,"location","location"),o(r,e,"line","line"),o(r,e,"character","column"),o(r,e,"endLine","endLine"),o(r,e,"endCharacter","endColumn"),o(r,e,"severity","severity"),o(r,e,"code","code"),o(r,e,"message","message"),(!0===e.loop||!1===e.loop)&&(r.loop=e.loop),t)if(r.location||r.kind===m.File){const e={file:1,message:0};r=y.$5o(r,e,!1)}else{const e={file:1,line:2,character:3,message:0};r=y.$5o(r,e,!1)}return r}f(e){let t=!1,n=!1,r=!1,i=!1;const s=void 0===e[0].kind?m.Location:e[0].kind;return e.forEach(((e,s)=>{0!==s&&e.kind&&this.error(o(11414,null)),t=t||!f.$7c(e.file),n=n||!f.$7c(e.message),r=r||!f.$7c(e.location),i=i||!f.$7c(e.line)})),t&&n?!(s===m.Location&&!r&&!i)||(this.error(o(11416,null)),!1):(this.error(o(11415,null)),!1)}g(e){let t;try{t=new RegExp(e)}catch{this.error(o(11417,null,e))}return t}}class R{constructor(e,t=new U){this.a=e,this.b=t}info(e){this.b.state=1,this.a.info(e)}warn(e){this.b.state=2,this.a.warn(e)}error(e){this.b.state=3,this.a.error(e)}fatal(e){this.b.state=4,this.a.error(e)}get status(){return this.b}}!function(e){e.ProblemPattern={default:{regexp:"^([^\\\\s].*)\\\\((\\\\d+,\\\\d+)\\\\):\\\\s*(.*)$",file:1,location:2,message:3},type:"object",additionalProperties:!1,properties:{regexp:{type:"string",description:o(11418,null)},kind:{type:"string",description:o(11419,null)},file:{type:"integer",description:o(11420,null)},location:{type:"integer",description:o(11421,null)},line:{type:"integer",description:o(11422,null)},column:{type:"integer",description:o(11423,null)},endLine:{type:"integer",description:o(11424,null)},endColumn:{type:"integer",description:o(11425,null)},severity:{type:"integer",description:o(11426,null)},code:{type:"integer",description:o(11427,null)},message:{type:"integer",description:o(11428,null)},loop:{type:"boolean",description:o(11429,null)}}},e.NamedProblemPattern=y.$2o(e.ProblemPattern),e.NamedProblemPattern.properties=y.$2o(e.NamedProblemPattern.properties)||{},e.NamedProblemPattern.properties.name={type:"string",description:o(11430,null)},e.MultiLineProblemPattern={type:"array",items:e.ProblemPattern},e.NamedMultiLineProblemPattern={type:"object",additionalProperties:!1,properties:{name:{type:"string",description:o(11431,null)},patterns:{type:"array",description:o(11432,null),items:e.ProblemPattern}}},e.WatchingPattern={type:"object",additionalProperties:!1,properties:{regexp:{type:"string",description:o(11433,null)},file:{type:"integer",description:o(11434,null)}}},e.PatternType={anyOf:[{type:"string",description:o(11435,null)},e.ProblemPattern,e.MultiLineProblemPattern],description:o(11436,null)},e.ProblemMatcher={type:"object",additionalProperties:!1,properties:{base:{type:"string",description:o(11437,null)},owner:{type:"string",description:o(11438,null)},source:{type:"string",description:o(11439,null)},severity:{type:"string",enum:["error","warning","info"],description:o(11440,null)},applyTo:{type:"string",enum:["allDocuments","openDocuments","closedDocuments"],description:o(11441,null)},pattern:e.PatternType,fileLocation:{oneOf:[{type:"string",enum:["absolute","relative","autoDetect","search"]},{type:"array",prefixItems:[{type:"string",enum:["absolute","relative","autoDetect","search"]}],minItems:1,maxItems:1,additionalItems:!1},{type:"array",prefixItems:[{type:"string",enum:["relative","autoDetect"]},{type:"string"}],minItems:2,maxItems:2,additionalItems:!1,examples:[["relative","${workspaceFolder}"],["autoDetect","${workspaceFolder}"]]},{type:"array",prefixItems:[{type:"string",enum:["search"]},{type:"object",properties:{include:{oneOf:[{type:"string"},{type:"array",items:{type:"string"}}]},exclude:{oneOf:[{type:"string"},{type:"array",items:{type:"string"}}]}},required:["include"]}],minItems:2,maxItems:2,additionalItems:!1,examples:[["search",{include:["${workspaceFolder}"]}],["search",{include:["${workspaceFolder}"],exclude:[]}]]}],description:o(11442,null)},background:{type:"object",additionalProperties:!1,description:o(11443,null),properties:{activeOnStart:{type:"boolean",description:o(11444,null)},beginsPattern:{oneOf:[{type:"string"},e.WatchingPattern],description:o(11445,null)},endsPattern:{oneOf:[{type:"string"},e.WatchingPattern],description:o(11446,null)}}},watching:{type:"object",additionalProperties:!1,deprecationMessage:o(11447,null),description:o(11448,null),properties:{activeOnStart:{type:"boolean",description:o(11449,null)},beginsPattern:{oneOf:[{type:"string"},e.WatchingPattern],description:o(11450,null)},endsPattern:{oneOf:[{type:"string"},e.WatchingPattern],description:o(11451,null)}}}}},e.LegacyProblemMatcher=y.$2o(e.ProblemMatcher),e.LegacyProblemMatcher.properties=y.$2o(e.LegacyProblemMatcher.properties)||{},e.LegacyProblemMatcher.properties.watchedTaskBeginsRegExp={type:"string",deprecationMessage:o(11452,null),description:o(11453,null)},e.LegacyProblemMatcher.properties.watchedTaskEndsRegExp={type:"string",deprecationMessage:o(11454,null),description:o(11455,null)},e.NamedProblemMatcher=y.$2o(e.ProblemMatcher),e.NamedProblemMatcher.properties=y.$2o(e.NamedProblemMatcher.properties)||{},e.NamedProblemMatcher.properties.name={type:"string",description:o(11456,null)},e.NamedProblemMatcher.properties.label={type:"string",description:o(11457,null)}}(w||(w={}));const E=O.registerExtensionPoint({extensionPoint:"problemPatterns",jsonSchema:{description:o(11458,null),type:"array",items:{anyOf:[w.NamedProblemPattern,w.NamedMultiLineProblemPattern]}}});class q{constructor(){this.a=Object.create(null),this.c(),this.b=new Promise(((e,t)=>{E.setHandler(((t,n)=>{try{n.removed.forEach((e=>{const t=e.value;for(const e of t)this.a[e.name]&&delete this.a[e.name]})),n.added.forEach((e=>{const t=e.value,n=new A(new R(e.collector));for(const r of t){if($.NamedMultiLineCheckedProblemPattern.is(r)){const t=n.parse(r);n.problemReporter.status.state<3?this.add(t.name,t.patterns):(e.collector.error(o(11459,null)),e.collector.error(JSON.stringify(r,void 0,4)))}else if($.NamedProblemPattern.is(r)){const t=n.parse(r);n.problemReporter.status.state<3?this.add(r.name,t):(e.collector.error(o(11460,null)),e.collector.error(JSON.stringify(r,void 0,4)))}n.reset()}}))}catch{}e(void 0)}))}))}onReady(){return this.b}add(e,t){this.a[e]=t}get(e){return this.a[e]}c(){this.add("msCompile",{regexp:/^(?:\s*\d+>)?(\S.*)\((\d+|\d+,\d+|\d+,\d+,\d+,\d+)\)\s*:\s+((?:fatal +)?error|warning|info)\s+(\w+\d+)\s*:\s*(.*)$/,kind:m.Location,file:1,location:2,severity:3,code:4,message:5}),this.add("gulp-tsc",{regexp:/^([^\s].*)\((\d+|\d+,\d+|\d+,\d+,\d+,\d+)\):\s+(\d+)\s+(.*)$/,kind:m.Location,file:1,location:2,code:3,message:4}),this.add("cpp",{regexp:/^(\S.*)\((\d+|\d+,\d+|\d+,\d+,\d+,\d+)\):\s+(error|warning|info)\s+(C\d+)\s*:\s*(.*)$/,kind:m.Location,file:1,location:2,severity:3,code:4,message:5}),this.add("csc",{regexp:/^(\S.*)\((\d+|\d+,\d+|\d+,\d+,\d+,\d+)\):\s+(error|warning|info)\s+(CS\d+)\s*:\s*(.*)$/,kind:m.Location,file:1,location:2,severity:3,code:4,message:5}),this.add("vb",{regexp:/^(\S.*)\((\d+|\d+,\d+|\d+,\d+,\d+,\d+)\):\s+(error|warning|info)\s+(BC\d+)\s*:\s*(.*)$/,kind:m.Location,file:1,location:2,severity:3,code:4,message:5}),this.add("lessCompile",{regexp:/^\s*(.*) in file (.*) line no. (\d+)$/,kind:m.Location,message:1,file:2,line:3}),this.add("jshint",{regexp:/^(.*):\s+line\s+(\d+),\s+col\s+(\d+),\s(.+?)(?:\s+\((\w)(\d+)\))?$/,kind:m.Location,file:1,line:2,character:3,message:4,severity:5,code:6}),this.add("jshint-stylish",[{regexp:/^(.+)$/,kind:m.Location,file:1},{regexp:/^\s+line\s+(\d+)\s+col\s+(\d+)\s+(.+?)(?:\s+\((\w)(\d+)\))?$/,line:1,character:2,message:3,severity:4,code:5,loop:!0}]),this.add("eslint-compact",{regexp:/^(.+):\sline\s(\d+),\scol\s(\d+),\s(Error|Warning|Info)\s-\s(.+)\s\((.+)\)$/,file:1,kind:m.Location,line:2,character:3,severity:4,message:5,code:6}),this.add("eslint-stylish",[{regexp:/^((?:[a-zA-Z]:)*[./\\]+.*?)$/,kind:m.Location,file:1},{regexp:/^\s+(\d+):(\d+)\s+(error|warning|info)\s+(.+?)(?:\s\s+(.*))?$/,line:1,character:2,severity:3,message:4,code:5,loop:!0}]),this.add("go",{regexp:/^([^:]*: )?((.:)?[^:]*):(\d+)(:(\d+))?: (.*)$/,kind:m.Location,file:2,line:4,character:6,message:7})}}const P=new q;class _ extends I{constructor(e){super(e)}parse(e){const t=this.c(e);if(this.b(e,t))return this.e(e,t),t}b(e,t){return t?t.pattern?t.owner?!f.$7c(t.fileLocation)||(this.error(o(11464,null,JSON.stringify(e,null,4))),!1):(this.error(o(11463,null,JSON.stringify(e,null,4))),!1):(this.error(o(11462,null,JSON.stringify(e,null,4))),!1):(this.error(o(11461,null,JSON.stringify(e,null,4))),!1)}c(e){let t=null;const n=f.$Yc(e.owner)?e.owner:Y.$Rm(),r=f.$Yc(e.source)?e.source:void 0;let i,s,a,l=f.$Yc(e.applyTo)?g.fromString(e.applyTo):g.allDocuments;if(l||(l=g.allDocuments),f.$7c(e.fileLocation))i=d.Relative,s="${workspaceFolder}";else if(f.$Yc(e.fileLocation))a=d.fromString(e.fileLocation),a&&(i=a,a===d.Relative||a===d.AutoDetect?s="${workspaceFolder}":a===d.Search&&(s={include:["${workspaceFolder}"]}));else if(f.$Zc(e.fileLocation)){const t=e.fileLocation;t.length>0&&(a=d.fromString(t[0]),1===t.length&&a===d.Absolute?i=a:2===t.length&&(a===d.Relative||a===d.AutoDetect)&&t[1]&&(i=a,s=t[1]))}else Array.isArray(e.fileLocation)&&d.fromString(e.fileLocation[0])===d.Search&&(i=d.Search,s=e.fileLocation[1]??{include:["${workspaceFolder}"]});const c=e.pattern?this.d(e.pattern):void 0;let u=e.severity?b.fromValue(e.severity):void 0;if(u===b.Ignore&&(this.info(o(11465,null,e.severity)),u=b.Error),f.$Yc(e.base)){const o=e.base;if(o.length>1&&"$"===o[0]){const a=X.get(o.substring(1));a&&(t=y.$2o(a),void 0!==e.owner&&void 0!==n&&(t.owner=n),void 0!==e.source&&void 0!==r&&(t.source=r),void 0!==e.fileLocation&&void 0!==i&&(t.fileLocation=i,t.filePrefix=s),void 0!==e.pattern&&null!=c&&(t.pattern=c),void 0!==e.severity&&void 0!==u&&(t.severity=u),void 0!==e.applyTo&&void 0!==l&&(t.applyTo=l))}}else i&&c&&(t={owner:n,applyTo:l,fileLocation:i,pattern:c},r&&(t.source=r),s&&(t.filePrefix=s),u&&(t.severity=u));return $.isNamedProblemMatcher(e)&&(t.name=e.name,t.label=f.$Yc(e.label)?e.label:e.name),t}d(e){if(f.$Yc(e)){const t=e;if(t.length>1&&"$"===t[0]){const e=P.get(t.substring(1));return e||this.error(o(11466,null,t)),e}0===t.length?this.error(o(11467,null)):this.error(o(11468,null,t))}else if(e){const t=new A(this.problemReporter);return Array.isArray(e),t.parse(e)}return null}e(e,t){const n=this.g(e.watchedTaskBeginsRegExp),r=this.g(e.watchedTaskEndsRegExp);if(n&&r)return void(t.watching={activeOnStart:!1,beginsPattern:{regexp:n},endsPattern:{regexp:r}});const i=e.background||e.watching;if(f.$9c(i))return;const s=this.f(i.beginsPattern),a=this.f(i.endsPattern);s&&a?t.watching={activeOnStart:!!f.$6c(i.activeOnStart)&&i.activeOnStart,beginsPattern:s,endsPattern:a}:(s||a)&&this.error(o(11469,null))}f(e){if(f.$9c(e))return null;let t,n;return f.$Yc(e)?t=this.g(e):(t=this.g(e.regexp),f.$3c(e.file)&&(n=e.file)),t?n?{regexp:t,file:n}:{regexp:t,file:1}:null}g(e){let t=null;if(!e)return t;try{t=new RegExp(e)}catch{this.error(o(11470,null,e))}return t}}const G=O.registerExtensionPoint({extensionPoint:"problemMatchers",deps:[E],jsonSchema:{description:o(11471,null),type:"array",items:w.NamedProblemMatcher}});class Q{constructor(){this.c=new J,this.onMatcherChanged=this.c.event,this.a=Object.create(null),this.d(),this.b=new Promise(((e,t)=>{G.setHandler(((t,n)=>{try{n.removed.forEach((e=>{const t=e.value;for(const e of t)this.a[e.name]&&delete this.a[e.name]})),n.added.forEach((e=>{const t=e.value,n=new _(new R(e.collector));for(const e of t){const t=n.parse(e);t&&B(t)&&this.add(t)}})),(n.removed.length>0||n.added.length>0)&&this.c.fire()}catch{}const r=this.get("tsc-watch");r&&(r.tscWatch=!0),e(void 0)}))}))}onReady(){return P.onReady(),this.b}add(e){this.a[e.name]=e}get(e){return this.a[e]}keys(){return Object.keys(this.a)}d(){this.add({name:"msCompile",label:o(11472,null),owner:"msCompile",source:"cpp",applyTo:g.allDocuments,fileLocation:d.Absolute,pattern:P.get("msCompile")}),this.add({name:"lessCompile",label:o(11473,null),deprecated:!0,owner:"lessCompile",source:"less",applyTo:g.allDocuments,fileLocation:d.Absolute,pattern:P.get("lessCompile"),severity:b.Error}),this.add({name:"gulp-tsc",label:o(11474,null),owner:"typescript",source:"ts",applyTo:g.closedDocuments,fileLocation:d.Relative,filePrefix:"${workspaceFolder}",pattern:P.get("gulp-tsc")}),this.add({name:"jshint",label:o(11475,null),owner:"jshint",source:"jshint",applyTo:g.allDocuments,fileLocation:d.Absolute,pattern:P.get("jshint")}),this.add({name:"jshint-stylish",label:o(11476,null),owner:"jshint",source:"jshint",applyTo:g.allDocuments,fileLocation:d.Absolute,pattern:P.get("jshint-stylish")}),this.add({name:"eslint-compact",label:o(11477,null),owner:"eslint",source:"eslint",applyTo:g.allDocuments,fileLocation:d.Absolute,filePrefix:"${workspaceFolder}",pattern:P.get("eslint-compact")}),this.add({name:"eslint-stylish",label:o(11478,null),owner:"eslint",source:"eslint",applyTo:g.allDocuments,fileLocation:d.Absolute,pattern:P.get("eslint-stylish")}),this.add({name:"go",label:o(11479,null),owner:"go",source:"go",applyTo:g.allDocuments,fileLocation:d.Relative,filePrefix:"${workspaceFolder}",pattern:P.get("go")})}}const X=new Q;export{B as $$T,x as $_T,ue as $aU,A as $bU,R as $cU,P as $dU,_ as $eU,X as $fU,g as ApplyToKind,$ as Config,d as FileLocationKind,m as ProblemLocationKind,w as Schemas};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { localize } from "../../../../nls.js";
+import * as Objects from "../../../../base/common/objects.js";
+import * as Strings from "../../../../base/common/strings.js";
+import * as Assert from "../../../../base/common/assert.js";
+import { join, normalize } from "../../../../base/common/path.js";
+import * as Types from "../../../../base/common/types.js";
+import * as UUID from "../../../../base/common/uuid.js";
+import * as Platform from "../../../../base/common/platform.js";
+import Severity from "../../../../base/common/severity.js";
+import { URI } from "../../../../base/common/uri.js";
+import { ValidationStatus, Parser } from "../../../../base/common/parsers.js";
+import { asArray } from "../../../../base/common/arrays.js";
+import { Schemas as NetworkSchemas } from "../../../../base/common/network.js";
+import { MarkerSeverity } from "../../../../platform/markers/common/markers.js";
+import { ExtensionsRegistry } from "../../../services/extensions/common/extensionsRegistry.js";
+import { Emitter } from "../../../../base/common/event.js";
+import { FileType } from "../../../../platform/files/common/files.js";
+var FileLocationKind;
+(function(FileLocationKind2) {
+  FileLocationKind2[FileLocationKind2["Default"] = 0] = "Default";
+  FileLocationKind2[FileLocationKind2["Relative"] = 1] = "Relative";
+  FileLocationKind2[FileLocationKind2["Absolute"] = 2] = "Absolute";
+  FileLocationKind2[FileLocationKind2["AutoDetect"] = 3] = "AutoDetect";
+  FileLocationKind2[FileLocationKind2["Search"] = 4] = "Search";
+})(FileLocationKind || (FileLocationKind = {}));
+(function(FileLocationKind2) {
+  function fromString(value) {
+    value = value.toLowerCase();
+    if (value === "absolute") {
+      return FileLocationKind2.Absolute;
+    } else if (value === "relative") {
+      return FileLocationKind2.Relative;
+    } else if (value === "autodetect") {
+      return FileLocationKind2.AutoDetect;
+    } else if (value === "search") {
+      return FileLocationKind2.Search;
+    } else {
+      return void 0;
+    }
+  }
+  __name(fromString, "fromString");
+  FileLocationKind2.fromString = fromString;
+})(FileLocationKind || (FileLocationKind = {}));
+var ProblemLocationKind;
+(function(ProblemLocationKind2) {
+  ProblemLocationKind2[ProblemLocationKind2["File"] = 0] = "File";
+  ProblemLocationKind2[ProblemLocationKind2["Location"] = 1] = "Location";
+})(ProblemLocationKind || (ProblemLocationKind = {}));
+(function(ProblemLocationKind2) {
+  function fromString(value) {
+    value = value.toLowerCase();
+    if (value === "file") {
+      return ProblemLocationKind2.File;
+    } else if (value === "location") {
+      return ProblemLocationKind2.Location;
+    } else {
+      return void 0;
+    }
+  }
+  __name(fromString, "fromString");
+  ProblemLocationKind2.fromString = fromString;
+})(ProblemLocationKind || (ProblemLocationKind = {}));
+var ApplyToKind;
+(function(ApplyToKind2) {
+  ApplyToKind2[ApplyToKind2["allDocuments"] = 0] = "allDocuments";
+  ApplyToKind2[ApplyToKind2["openDocuments"] = 1] = "openDocuments";
+  ApplyToKind2[ApplyToKind2["closedDocuments"] = 2] = "closedDocuments";
+})(ApplyToKind || (ApplyToKind = {}));
+(function(ApplyToKind2) {
+  function fromString(value) {
+    value = value.toLowerCase();
+    if (value === "alldocuments") {
+      return ApplyToKind2.allDocuments;
+    } else if (value === "opendocuments") {
+      return ApplyToKind2.openDocuments;
+    } else if (value === "closeddocuments") {
+      return ApplyToKind2.closedDocuments;
+    } else {
+      return void 0;
+    }
+  }
+  __name(fromString, "fromString");
+  ApplyToKind2.fromString = fromString;
+})(ApplyToKind || (ApplyToKind = {}));
+function isNamedProblemMatcher(value) {
+  return value && Types.isString(value.name) ? true : false;
+}
+__name(isNamedProblemMatcher, "isNamedProblemMatcher");
+async function getResource(filename, matcher, fileService) {
+  const kind = matcher.fileLocation;
+  let fullPath;
+  if (kind === FileLocationKind.Absolute) {
+    fullPath = filename;
+  } else if (kind === FileLocationKind.Relative && matcher.filePrefix && Types.isString(matcher.filePrefix)) {
+    fullPath = join(matcher.filePrefix, filename);
+  } else if (kind === FileLocationKind.AutoDetect) {
+    const matcherClone = Objects.deepClone(matcher);
+    matcherClone.fileLocation = FileLocationKind.Relative;
+    if (fileService) {
+      const relative = await getResource(filename, matcherClone);
+      let stat = void 0;
+      try {
+        stat = await fileService.stat(relative);
+      } catch (ex) {
+      }
+      if (stat) {
+        return relative;
+      }
+    }
+    matcherClone.fileLocation = FileLocationKind.Absolute;
+    return getResource(filename, matcherClone);
+  } else if (kind === FileLocationKind.Search && fileService) {
+    const fsProvider = fileService.getProvider(NetworkSchemas.file);
+    if (fsProvider) {
+      const uri = await searchForFileLocation(filename, fsProvider, matcher.filePrefix);
+      fullPath = uri?.path;
+    }
+    if (!fullPath) {
+      const absoluteMatcher = Objects.deepClone(matcher);
+      absoluteMatcher.fileLocation = FileLocationKind.Absolute;
+      return getResource(filename, absoluteMatcher);
+    }
+  }
+  if (fullPath === void 0) {
+    throw new Error("FileLocationKind is not actionable. Does the matcher have a filePrefix? This should never happen.");
+  }
+  fullPath = normalize(fullPath);
+  fullPath = fullPath.replace(/\\/g, "/");
+  if (fullPath[0] !== "/") {
+    fullPath = "/" + fullPath;
+  }
+  if (matcher.uriProvider !== void 0) {
+    return matcher.uriProvider(fullPath);
+  } else {
+    return URI.file(fullPath);
+  }
+}
+__name(getResource, "getResource");
+async function searchForFileLocation(filename, fsProvider, args) {
+  const exclusions = new Set(asArray(args.exclude || []).map((x) => URI.file(x).path));
+  async function search(dir) {
+    if (exclusions.has(dir.path)) {
+      return void 0;
+    }
+    const entries = await fsProvider.readdir(dir);
+    const subdirs = [];
+    for (const [name, fileType] of entries) {
+      if (fileType === FileType.Directory) {
+        subdirs.push(URI.joinPath(dir, name));
+        continue;
+      }
+      if (fileType === FileType.File) {
+        const fullUri = URI.joinPath(dir, name);
+        if (fullUri.path.endsWith(filename)) {
+          return fullUri;
+        }
+      }
+    }
+    for (const subdir of subdirs) {
+      const result = await search(subdir);
+      if (result) {
+        return result;
+      }
+    }
+    return void 0;
+  }
+  __name(search, "search");
+  for (const dir of asArray(args.include || [])) {
+    const hit = await search(URI.file(dir));
+    if (hit) {
+      return hit;
+    }
+  }
+  return void 0;
+}
+__name(searchForFileLocation, "searchForFileLocation");
+function createLineMatcher(matcher, fileService) {
+  const pattern = matcher.pattern;
+  if (Array.isArray(pattern)) {
+    return new MultiLineMatcher(matcher, fileService);
+  } else {
+    return new SingleLineMatcher(matcher, fileService);
+  }
+}
+__name(createLineMatcher, "createLineMatcher");
+const endOfLine = Platform.OS === 1 ? "\r\n" : "\n";
+class AbstractLineMatcher {
+  static {
+    __name(this, "AbstractLineMatcher");
+  }
+  constructor(matcher, fileService) {
+    this.matcher = matcher;
+    this.fileService = fileService;
+  }
+  handle(lines, start = 0) {
+    return { match: null, continue: false };
+  }
+  next(line) {
+    return null;
+  }
+  fillProblemData(data, pattern, matches) {
+    if (data) {
+      this.fillProperty(data, "file", pattern, matches, true);
+      this.appendProperty(data, "message", pattern, matches, true);
+      this.fillProperty(data, "code", pattern, matches, true);
+      this.fillProperty(data, "severity", pattern, matches, true);
+      this.fillProperty(data, "location", pattern, matches, true);
+      this.fillProperty(data, "line", pattern, matches);
+      this.fillProperty(data, "character", pattern, matches);
+      this.fillProperty(data, "endLine", pattern, matches);
+      this.fillProperty(data, "endCharacter", pattern, matches);
+      return true;
+    } else {
+      return false;
+    }
+  }
+  appendProperty(data, property, pattern, matches, trim = false) {
+    const patternProperty = pattern[property];
+    if (Types.isUndefined(data[property])) {
+      this.fillProperty(data, property, pattern, matches, trim);
+    } else if (!Types.isUndefined(patternProperty) && patternProperty < matches.length) {
+      let value = matches[patternProperty];
+      if (trim) {
+        value = Strings.trim(value);
+      }
+      data[property] += endOfLine + value;
+    }
+  }
+  fillProperty(data, property, pattern, matches, trim = false) {
+    const patternAtProperty = pattern[property];
+    if (Types.isUndefined(data[property]) && !Types.isUndefined(patternAtProperty) && patternAtProperty < matches.length) {
+      let value = matches[patternAtProperty];
+      if (value !== void 0) {
+        if (trim) {
+          value = Strings.trim(value);
+        }
+        data[property] = value;
+      }
+    }
+  }
+  getMarkerMatch(data) {
+    try {
+      const location = this.getLocation(data);
+      if (data.file && location && data.message) {
+        const marker = {
+          severity: this.getSeverity(data),
+          startLineNumber: location.startLineNumber,
+          startColumn: location.startCharacter,
+          endLineNumber: location.endLineNumber,
+          endColumn: location.endCharacter,
+          message: data.message
+        };
+        if (data.code !== void 0) {
+          marker.code = data.code;
+        }
+        if (this.matcher.source !== void 0) {
+          marker.source = this.matcher.source;
+        }
+        return {
+          description: this.matcher,
+          resource: this.getResource(data.file),
+          marker
+        };
+      }
+    } catch (err) {
+      console.error(`Failed to convert problem data into match: ${JSON.stringify(data)}`);
+    }
+    return void 0;
+  }
+  getResource(filename) {
+    return getResource(filename, this.matcher, this.fileService);
+  }
+  getLocation(data) {
+    if (data.kind === ProblemLocationKind.File) {
+      return this.createLocation(0, 0, 0, 0);
+    }
+    if (data.location) {
+      return this.parseLocationInfo(data.location);
+    }
+    if (!data.line) {
+      return null;
+    }
+    const startLine = parseInt(data.line);
+    const startColumn = data.character ? parseInt(data.character) : void 0;
+    const endLine = data.endLine ? parseInt(data.endLine) : void 0;
+    const endColumn = data.endCharacter ? parseInt(data.endCharacter) : void 0;
+    return this.createLocation(startLine, startColumn, endLine, endColumn);
+  }
+  parseLocationInfo(value) {
+    if (!value || !value.match(/(\d+|\d+,\d+|\d+,\d+,\d+,\d+)/)) {
+      return null;
+    }
+    const parts = value.split(",");
+    const startLine = parseInt(parts[0]);
+    const startColumn = parts.length > 1 ? parseInt(parts[1]) : void 0;
+    if (parts.length > 3) {
+      return this.createLocation(startLine, startColumn, parseInt(parts[2]), parseInt(parts[3]));
+    } else {
+      return this.createLocation(startLine, startColumn, void 0, void 0);
+    }
+  }
+  createLocation(startLine, startColumn, endLine, endColumn) {
+    if (startColumn !== void 0 && endColumn !== void 0) {
+      return { startLineNumber: startLine, startCharacter: startColumn, endLineNumber: endLine || startLine, endCharacter: endColumn };
+    }
+    if (startColumn !== void 0) {
+      return { startLineNumber: startLine, startCharacter: startColumn, endLineNumber: startLine, endCharacter: startColumn };
+    }
+    return { startLineNumber: startLine, startCharacter: 1, endLineNumber: startLine, endCharacter: 2 ** 31 - 1 };
+  }
+  getSeverity(data) {
+    let result = null;
+    if (data.severity) {
+      const value = data.severity;
+      if (value) {
+        result = Severity.fromValue(value);
+        if (result === Severity.Ignore) {
+          if (value === "E") {
+            result = Severity.Error;
+          } else if (value === "W") {
+            result = Severity.Warning;
+          } else if (value === "I") {
+            result = Severity.Info;
+          } else if (Strings.equalsIgnoreCase(value, "hint")) {
+            result = Severity.Info;
+          } else if (Strings.equalsIgnoreCase(value, "note")) {
+            result = Severity.Info;
+          }
+        }
+      }
+    }
+    if (result === null || result === Severity.Ignore) {
+      result = this.matcher.severity || Severity.Error;
+    }
+    return MarkerSeverity.fromSeverity(result);
+  }
+}
+class SingleLineMatcher extends AbstractLineMatcher {
+  static {
+    __name(this, "SingleLineMatcher");
+  }
+  constructor(matcher, fileService) {
+    super(matcher, fileService);
+    this.pattern = matcher.pattern;
+  }
+  get matchLength() {
+    return 1;
+  }
+  handle(lines, start = 0) {
+    Assert.ok(lines.length - start === 1);
+    const data = /* @__PURE__ */ Object.create(null);
+    if (this.pattern.kind !== void 0) {
+      data.kind = this.pattern.kind;
+    }
+    const matches = this.pattern.regexp.exec(lines[start]);
+    if (matches) {
+      this.fillProblemData(data, this.pattern, matches);
+      const match = this.getMarkerMatch(data);
+      if (match) {
+        return { match, continue: false };
+      }
+    }
+    return { match: null, continue: false };
+  }
+  next(line) {
+    return null;
+  }
+}
+class MultiLineMatcher extends AbstractLineMatcher {
+  static {
+    __name(this, "MultiLineMatcher");
+  }
+  constructor(matcher, fileService) {
+    super(matcher, fileService);
+    this.patterns = matcher.pattern;
+  }
+  get matchLength() {
+    return this.patterns.length;
+  }
+  handle(lines, start = 0) {
+    Assert.ok(lines.length - start === this.patterns.length);
+    this.data = /* @__PURE__ */ Object.create(null);
+    let data = this.data;
+    data.kind = this.patterns[0].kind;
+    for (let i = 0; i < this.patterns.length; i++) {
+      const pattern = this.patterns[i];
+      const matches = pattern.regexp.exec(lines[i + start]);
+      if (!matches) {
+        return { match: null, continue: false };
+      } else {
+        if (pattern.loop && i === this.patterns.length - 1) {
+          data = Objects.deepClone(data);
+        }
+        this.fillProblemData(data, pattern, matches);
+      }
+    }
+    const loop = !!this.patterns[this.patterns.length - 1].loop;
+    if (!loop) {
+      this.data = void 0;
+    }
+    const markerMatch = data ? this.getMarkerMatch(data) : null;
+    return { match: markerMatch ? markerMatch : null, continue: loop };
+  }
+  next(line) {
+    const pattern = this.patterns[this.patterns.length - 1];
+    Assert.ok(pattern.loop === true && this.data !== null);
+    const matches = pattern.regexp.exec(line);
+    if (!matches) {
+      this.data = void 0;
+      return null;
+    }
+    const data = Objects.deepClone(this.data);
+    let problemMatch;
+    if (this.fillProblemData(data, pattern, matches)) {
+      problemMatch = this.getMarkerMatch(data);
+    }
+    return problemMatch ? problemMatch : null;
+  }
+}
+var Config;
+(function(Config2) {
+  let CheckedProblemPattern;
+  (function(CheckedProblemPattern2) {
+    function is(value) {
+      const candidate = value;
+      return candidate && Types.isString(candidate.regexp);
+    }
+    __name(is, "is");
+    CheckedProblemPattern2.is = is;
+  })(CheckedProblemPattern = Config2.CheckedProblemPattern || (Config2.CheckedProblemPattern = {}));
+  let NamedProblemPattern;
+  (function(NamedProblemPattern2) {
+    function is(value) {
+      const candidate = value;
+      return candidate && Types.isString(candidate.name);
+    }
+    __name(is, "is");
+    NamedProblemPattern2.is = is;
+  })(NamedProblemPattern = Config2.NamedProblemPattern || (Config2.NamedProblemPattern = {}));
+  let NamedCheckedProblemPattern;
+  (function(NamedCheckedProblemPattern2) {
+    function is(value) {
+      const candidate = value;
+      return candidate && NamedProblemPattern.is(candidate) && Types.isString(candidate.regexp);
+    }
+    __name(is, "is");
+    NamedCheckedProblemPattern2.is = is;
+  })(NamedCheckedProblemPattern = Config2.NamedCheckedProblemPattern || (Config2.NamedCheckedProblemPattern = {}));
+  let MultiLineProblemPattern;
+  (function(MultiLineProblemPattern2) {
+    function is(value) {
+      return value && Array.isArray(value);
+    }
+    __name(is, "is");
+    MultiLineProblemPattern2.is = is;
+  })(MultiLineProblemPattern = Config2.MultiLineProblemPattern || (Config2.MultiLineProblemPattern = {}));
+  let MultiLineCheckedProblemPattern;
+  (function(MultiLineCheckedProblemPattern2) {
+    function is(value) {
+      if (!MultiLineProblemPattern.is(value)) {
+        return false;
+      }
+      for (const element of value) {
+        if (!Config2.CheckedProblemPattern.is(element)) {
+          return false;
+        }
+      }
+      return true;
+    }
+    __name(is, "is");
+    MultiLineCheckedProblemPattern2.is = is;
+  })(MultiLineCheckedProblemPattern = Config2.MultiLineCheckedProblemPattern || (Config2.MultiLineCheckedProblemPattern = {}));
+  let NamedMultiLineCheckedProblemPattern;
+  (function(NamedMultiLineCheckedProblemPattern2) {
+    function is(value) {
+      const candidate = value;
+      return candidate && Types.isString(candidate.name) && Array.isArray(candidate.patterns) && MultiLineCheckedProblemPattern.is(candidate.patterns);
+    }
+    __name(is, "is");
+    NamedMultiLineCheckedProblemPattern2.is = is;
+  })(NamedMultiLineCheckedProblemPattern = Config2.NamedMultiLineCheckedProblemPattern || (Config2.NamedMultiLineCheckedProblemPattern = {}));
+  function isNamedProblemMatcher2(value) {
+    return Types.isString(value.name);
+  }
+  __name(isNamedProblemMatcher2, "isNamedProblemMatcher");
+  Config2.isNamedProblemMatcher = isNamedProblemMatcher2;
+})(Config || (Config = {}));
+class ProblemPatternParser extends Parser {
+  static {
+    __name(this, "ProblemPatternParser");
+  }
+  constructor(logger) {
+    super(logger);
+  }
+  parse(value) {
+    if (Config.NamedMultiLineCheckedProblemPattern.is(value)) {
+      return this.createNamedMultiLineProblemPattern(value);
+    } else if (Config.MultiLineCheckedProblemPattern.is(value)) {
+      return this.createMultiLineProblemPattern(value);
+    } else if (Config.NamedCheckedProblemPattern.is(value)) {
+      const result = this.createSingleProblemPattern(value);
+      result.name = value.name;
+      return result;
+    } else if (Config.CheckedProblemPattern.is(value)) {
+      return this.createSingleProblemPattern(value);
+    } else {
+      this.error(localize("ProblemPatternParser.problemPattern.missingRegExp", "The problem pattern is missing a regular expression."));
+      return null;
+    }
+  }
+  createSingleProblemPattern(value) {
+    const result = this.doCreateSingleProblemPattern(value, true);
+    if (result === void 0) {
+      return null;
+    } else if (result.kind === void 0) {
+      result.kind = ProblemLocationKind.Location;
+    }
+    return this.validateProblemPattern([result]) ? result : null;
+  }
+  createNamedMultiLineProblemPattern(value) {
+    const validPatterns = this.createMultiLineProblemPattern(value.patterns);
+    if (!validPatterns) {
+      return null;
+    }
+    const result = {
+      name: value.name,
+      label: value.label ? value.label : value.name,
+      patterns: validPatterns
+    };
+    return result;
+  }
+  createMultiLineProblemPattern(values) {
+    const result = [];
+    for (let i = 0; i < values.length; i++) {
+      const pattern = this.doCreateSingleProblemPattern(values[i], false);
+      if (pattern === void 0) {
+        return null;
+      }
+      if (i < values.length - 1) {
+        if (!Types.isUndefined(pattern.loop) && pattern.loop) {
+          pattern.loop = false;
+          this.error(localize("ProblemPatternParser.loopProperty.notLast", "The loop property is only supported on the last line matcher."));
+        }
+      }
+      result.push(pattern);
+    }
+    if (result[0].kind === void 0) {
+      result[0].kind = ProblemLocationKind.Location;
+    }
+    return this.validateProblemPattern(result) ? result : null;
+  }
+  doCreateSingleProblemPattern(value, setDefaults) {
+    const regexp = this.createRegularExpression(value.regexp);
+    if (regexp === void 0) {
+      return void 0;
+    }
+    let result = { regexp };
+    if (value.kind) {
+      result.kind = ProblemLocationKind.fromString(value.kind);
+    }
+    function copyProperty(result2, source, resultKey, sourceKey) {
+      const value2 = source[sourceKey];
+      if (typeof value2 === "number") {
+        result2[resultKey] = value2;
+      }
+    }
+    __name(copyProperty, "copyProperty");
+    copyProperty(result, value, "file", "file");
+    copyProperty(result, value, "location", "location");
+    copyProperty(result, value, "line", "line");
+    copyProperty(result, value, "character", "column");
+    copyProperty(result, value, "endLine", "endLine");
+    copyProperty(result, value, "endCharacter", "endColumn");
+    copyProperty(result, value, "severity", "severity");
+    copyProperty(result, value, "code", "code");
+    copyProperty(result, value, "message", "message");
+    if (value.loop === true || value.loop === false) {
+      result.loop = value.loop;
+    }
+    if (setDefaults) {
+      if (result.location || result.kind === ProblemLocationKind.File) {
+        const defaultValue = {
+          file: 1,
+          message: 0
+        };
+        result = Objects.mixin(result, defaultValue, false);
+      } else {
+        const defaultValue = {
+          file: 1,
+          line: 2,
+          character: 3,
+          message: 0
+        };
+        result = Objects.mixin(result, defaultValue, false);
+      }
+    }
+    return result;
+  }
+  validateProblemPattern(values) {
+    let file = false, message = false, location = false, line = false;
+    const locationKind = values[0].kind === void 0 ? ProblemLocationKind.Location : values[0].kind;
+    values.forEach((pattern, i) => {
+      if (i !== 0 && pattern.kind) {
+        this.error(localize("ProblemPatternParser.problemPattern.kindProperty.notFirst", "The problem pattern is invalid. The kind property must be provided only in the first element"));
+      }
+      file = file || !Types.isUndefined(pattern.file);
+      message = message || !Types.isUndefined(pattern.message);
+      location = location || !Types.isUndefined(pattern.location);
+      line = line || !Types.isUndefined(pattern.line);
+    });
+    if (!(file && message)) {
+      this.error(localize("ProblemPatternParser.problemPattern.missingProperty", "The problem pattern is invalid. It must have at least have a file and a message."));
+      return false;
+    }
+    if (locationKind === ProblemLocationKind.Location && !(location || line)) {
+      this.error(localize("ProblemPatternParser.problemPattern.missingLocation", 'The problem pattern is invalid. It must either have kind: "file" or have a line or location match group.'));
+      return false;
+    }
+    return true;
+  }
+  createRegularExpression(value) {
+    let result;
+    try {
+      result = new RegExp(value);
+    } catch (err) {
+      this.error(localize("ProblemPatternParser.invalidRegexp", "Error: The string {0} is not a valid regular expression.\n", value));
+    }
+    return result;
+  }
+}
+class ExtensionRegistryReporter {
+  static {
+    __name(this, "ExtensionRegistryReporter");
+  }
+  constructor(_collector, _validationStatus = new ValidationStatus()) {
+    this._collector = _collector;
+    this._validationStatus = _validationStatus;
+  }
+  info(message) {
+    this._validationStatus.state = 1;
+    this._collector.info(message);
+  }
+  warn(message) {
+    this._validationStatus.state = 2;
+    this._collector.warn(message);
+  }
+  error(message) {
+    this._validationStatus.state = 3;
+    this._collector.error(message);
+  }
+  fatal(message) {
+    this._validationStatus.state = 4;
+    this._collector.error(message);
+  }
+  get status() {
+    return this._validationStatus;
+  }
+}
+var Schemas;
+(function(Schemas2) {
+  Schemas2.ProblemPattern = {
+    default: {
+      regexp: "^([^\\\\s].*)\\\\((\\\\d+,\\\\d+)\\\\):\\\\s*(.*)$",
+      file: 1,
+      location: 2,
+      message: 3
+    },
+    type: "object",
+    additionalProperties: false,
+    properties: {
+      regexp: {
+        type: "string",
+        description: localize("ProblemPatternSchema.regexp", "The regular expression to find an error, warning or info in the output.")
+      },
+      kind: {
+        type: "string",
+        description: localize("ProblemPatternSchema.kind", "whether the pattern matches a location (file and line) or only a file.")
+      },
+      file: {
+        type: "integer",
+        description: localize("ProblemPatternSchema.file", "The match group index of the filename. If omitted 1 is used.")
+      },
+      location: {
+        type: "integer",
+        description: localize("ProblemPatternSchema.location", "The match group index of the problem's location. Valid location patterns are: (line), (line,column) and (startLine,startColumn,endLine,endColumn). If omitted (line,column) is assumed.")
+      },
+      line: {
+        type: "integer",
+        description: localize("ProblemPatternSchema.line", "The match group index of the problem's line. Defaults to 2")
+      },
+      column: {
+        type: "integer",
+        description: localize("ProblemPatternSchema.column", "The match group index of the problem's line character. Defaults to 3")
+      },
+      endLine: {
+        type: "integer",
+        description: localize("ProblemPatternSchema.endLine", "The match group index of the problem's end line. Defaults to undefined")
+      },
+      endColumn: {
+        type: "integer",
+        description: localize("ProblemPatternSchema.endColumn", "The match group index of the problem's end line character. Defaults to undefined")
+      },
+      severity: {
+        type: "integer",
+        description: localize("ProblemPatternSchema.severity", "The match group index of the problem's severity. Defaults to undefined")
+      },
+      code: {
+        type: "integer",
+        description: localize("ProblemPatternSchema.code", "The match group index of the problem's code. Defaults to undefined")
+      },
+      message: {
+        type: "integer",
+        description: localize("ProblemPatternSchema.message", "The match group index of the message. If omitted it defaults to 4 if location is specified. Otherwise it defaults to 5.")
+      },
+      loop: {
+        type: "boolean",
+        description: localize("ProblemPatternSchema.loop", "In a multi line matcher loop indicated whether this pattern is executed in a loop as long as it matches. Can only specified on a last pattern in a multi line pattern.")
+      }
+    }
+  };
+  Schemas2.NamedProblemPattern = Objects.deepClone(Schemas2.ProblemPattern);
+  Schemas2.NamedProblemPattern.properties = Objects.deepClone(Schemas2.NamedProblemPattern.properties) || {};
+  Schemas2.NamedProblemPattern.properties["name"] = {
+    type: "string",
+    description: localize("NamedProblemPatternSchema.name", "The name of the problem pattern.")
+  };
+  Schemas2.MultiLineProblemPattern = {
+    type: "array",
+    items: Schemas2.ProblemPattern
+  };
+  Schemas2.NamedMultiLineProblemPattern = {
+    type: "object",
+    additionalProperties: false,
+    properties: {
+      name: {
+        type: "string",
+        description: localize("NamedMultiLineProblemPatternSchema.name", "The name of the problem multi line problem pattern.")
+      },
+      patterns: {
+        type: "array",
+        description: localize("NamedMultiLineProblemPatternSchema.patterns", "The actual patterns."),
+        items: Schemas2.ProblemPattern
+      }
+    }
+  };
+  Schemas2.WatchingPattern = {
+    type: "object",
+    additionalProperties: false,
+    properties: {
+      regexp: {
+        type: "string",
+        description: localize("WatchingPatternSchema.regexp", "The regular expression to detect the begin or end of a background task.")
+      },
+      file: {
+        type: "integer",
+        description: localize("WatchingPatternSchema.file", "The match group index of the filename. Can be omitted.")
+      }
+    }
+  };
+  Schemas2.PatternType = {
+    anyOf: [
+      {
+        type: "string",
+        description: localize("PatternTypeSchema.name", "The name of a contributed or predefined pattern")
+      },
+      Schemas2.ProblemPattern,
+      Schemas2.MultiLineProblemPattern
+    ],
+    description: localize("PatternTypeSchema.description", "A problem pattern or the name of a contributed or predefined problem pattern. Can be omitted if base is specified.")
+  };
+  Schemas2.ProblemMatcher = {
+    type: "object",
+    additionalProperties: false,
+    properties: {
+      base: {
+        type: "string",
+        description: localize("ProblemMatcherSchema.base", "The name of a base problem matcher to use.")
+      },
+      owner: {
+        type: "string",
+        description: localize("ProblemMatcherSchema.owner", "The owner of the problem inside Code. Can be omitted if base is specified. Defaults to 'external' if omitted and base is not specified.")
+      },
+      source: {
+        type: "string",
+        description: localize("ProblemMatcherSchema.source", "A human-readable string describing the source of this diagnostic, e.g. 'typescript' or 'super lint'.")
+      },
+      severity: {
+        type: "string",
+        enum: ["error", "warning", "info"],
+        description: localize("ProblemMatcherSchema.severity", "The default severity for captures problems. Is used if the pattern doesn't define a match group for severity.")
+      },
+      applyTo: {
+        type: "string",
+        enum: ["allDocuments", "openDocuments", "closedDocuments"],
+        description: localize("ProblemMatcherSchema.applyTo", "Controls if a problem reported on a text document is applied only to open, closed or all documents.")
+      },
+      pattern: Schemas2.PatternType,
+      fileLocation: {
+        oneOf: [
+          {
+            type: "string",
+            enum: ["absolute", "relative", "autoDetect", "search"]
+          },
+          {
+            type: "array",
+            prefixItems: [
+              {
+                type: "string",
+                enum: ["absolute", "relative", "autoDetect", "search"]
+              }
+            ],
+            minItems: 1,
+            maxItems: 1,
+            additionalItems: false
+          },
+          {
+            type: "array",
+            prefixItems: [
+              { type: "string", enum: ["relative", "autoDetect"] },
+              { type: "string" }
+            ],
+            minItems: 2,
+            maxItems: 2,
+            additionalItems: false,
+            examples: [
+              ["relative", "${workspaceFolder}"],
+              ["autoDetect", "${workspaceFolder}"]
+            ]
+          },
+          {
+            type: "array",
+            prefixItems: [
+              { type: "string", enum: ["search"] },
+              {
+                type: "object",
+                properties: {
+                  "include": {
+                    oneOf: [
+                      { type: "string" },
+                      { type: "array", items: { type: "string" } }
+                    ]
+                  },
+                  "exclude": {
+                    oneOf: [
+                      { type: "string" },
+                      { type: "array", items: { type: "string" } }
+                    ]
+                  }
+                },
+                required: ["include"]
+              }
+            ],
+            minItems: 2,
+            maxItems: 2,
+            additionalItems: false,
+            examples: [
+              ["search", { "include": ["${workspaceFolder}"] }],
+              ["search", { "include": ["${workspaceFolder}"], "exclude": [] }]
+            ]
+          }
+        ],
+        description: localize("ProblemMatcherSchema.fileLocation", "Defines how file names reported in a problem pattern should be interpreted. A relative fileLocation may be an array, where the second element of the array is the path of the relative file location. The search fileLocation mode, performs a deep (and, possibly, heavy) file system search within the directories specified by the include/exclude properties of the second element (or the current workspace directory if not specified).")
+      },
+      background: {
+        type: "object",
+        additionalProperties: false,
+        description: localize("ProblemMatcherSchema.background", "Patterns to track the begin and end of a matcher active on a background task."),
+        properties: {
+          activeOnStart: {
+            type: "boolean",
+            description: localize("ProblemMatcherSchema.background.activeOnStart", "If set to true the background monitor starts in active mode. This is the same as outputting a line that matches beginsPattern when the task starts.")
+          },
+          beginsPattern: {
+            oneOf: [
+              {
+                type: "string"
+              },
+              Schemas2.WatchingPattern
+            ],
+            description: localize("ProblemMatcherSchema.background.beginsPattern", "If matched in the output the start of a background task is signaled.")
+          },
+          endsPattern: {
+            oneOf: [
+              {
+                type: "string"
+              },
+              Schemas2.WatchingPattern
+            ],
+            description: localize("ProblemMatcherSchema.background.endsPattern", "If matched in the output the end of a background task is signaled.")
+          }
+        }
+      },
+      watching: {
+        type: "object",
+        additionalProperties: false,
+        deprecationMessage: localize("ProblemMatcherSchema.watching.deprecated", "The watching property is deprecated. Use background instead."),
+        description: localize("ProblemMatcherSchema.watching", "Patterns to track the begin and end of a watching matcher."),
+        properties: {
+          activeOnStart: {
+            type: "boolean",
+            description: localize("ProblemMatcherSchema.watching.activeOnStart", "If set to true the watcher starts in active mode. This is the same as outputting a line that matches beginsPattern when the task starts.")
+          },
+          beginsPattern: {
+            oneOf: [
+              {
+                type: "string"
+              },
+              Schemas2.WatchingPattern
+            ],
+            description: localize("ProblemMatcherSchema.watching.beginsPattern", "If matched in the output the start of a watching task is signaled.")
+          },
+          endsPattern: {
+            oneOf: [
+              {
+                type: "string"
+              },
+              Schemas2.WatchingPattern
+            ],
+            description: localize("ProblemMatcherSchema.watching.endsPattern", "If matched in the output the end of a watching task is signaled.")
+          }
+        }
+      }
+    }
+  };
+  Schemas2.LegacyProblemMatcher = Objects.deepClone(Schemas2.ProblemMatcher);
+  Schemas2.LegacyProblemMatcher.properties = Objects.deepClone(Schemas2.LegacyProblemMatcher.properties) || {};
+  Schemas2.LegacyProblemMatcher.properties["watchedTaskBeginsRegExp"] = {
+    type: "string",
+    deprecationMessage: localize("LegacyProblemMatcherSchema.watchedBegin.deprecated", "This property is deprecated. Use the watching property instead."),
+    description: localize("LegacyProblemMatcherSchema.watchedBegin", "A regular expression signaling that a watched tasks begins executing triggered through file watching.")
+  };
+  Schemas2.LegacyProblemMatcher.properties["watchedTaskEndsRegExp"] = {
+    type: "string",
+    deprecationMessage: localize("LegacyProblemMatcherSchema.watchedEnd.deprecated", "This property is deprecated. Use the watching property instead."),
+    description: localize("LegacyProblemMatcherSchema.watchedEnd", "A regular expression signaling that a watched tasks ends executing.")
+  };
+  Schemas2.NamedProblemMatcher = Objects.deepClone(Schemas2.ProblemMatcher);
+  Schemas2.NamedProblemMatcher.properties = Objects.deepClone(Schemas2.NamedProblemMatcher.properties) || {};
+  Schemas2.NamedProblemMatcher.properties.name = {
+    type: "string",
+    description: localize("NamedProblemMatcherSchema.name", "The name of the problem matcher used to refer to it.")
+  };
+  Schemas2.NamedProblemMatcher.properties.label = {
+    type: "string",
+    description: localize("NamedProblemMatcherSchema.label", "A human readable label of the problem matcher.")
+  };
+})(Schemas || (Schemas = {}));
+const problemPatternExtPoint = ExtensionsRegistry.registerExtensionPoint({
+  extensionPoint: "problemPatterns",
+  jsonSchema: {
+    description: localize("ProblemPatternExtPoint", "Contributes problem patterns"),
+    type: "array",
+    items: {
+      anyOf: [
+        Schemas.NamedProblemPattern,
+        Schemas.NamedMultiLineProblemPattern
+      ]
+    }
+  }
+});
+class ProblemPatternRegistryImpl {
+  static {
+    __name(this, "ProblemPatternRegistryImpl");
+  }
+  constructor() {
+    this.patterns = /* @__PURE__ */ Object.create(null);
+    this.fillDefaults();
+    this.readyPromise = new Promise((resolve, reject) => {
+      problemPatternExtPoint.setHandler((extensions, delta) => {
+        try {
+          delta.removed.forEach((extension) => {
+            const problemPatterns = extension.value;
+            for (const pattern of problemPatterns) {
+              if (this.patterns[pattern.name]) {
+                delete this.patterns[pattern.name];
+              }
+            }
+          });
+          delta.added.forEach((extension) => {
+            const problemPatterns = extension.value;
+            const parser = new ProblemPatternParser(new ExtensionRegistryReporter(extension.collector));
+            for (const pattern of problemPatterns) {
+              if (Config.NamedMultiLineCheckedProblemPattern.is(pattern)) {
+                const result = parser.parse(pattern);
+                if (parser.problemReporter.status.state < 3) {
+                  this.add(result.name, result.patterns);
+                } else {
+                  extension.collector.error(localize("ProblemPatternRegistry.error", "Invalid problem pattern. The pattern will be ignored."));
+                  extension.collector.error(JSON.stringify(pattern, void 0, 4));
+                }
+              } else if (Config.NamedProblemPattern.is(pattern)) {
+                const result = parser.parse(pattern);
+                if (parser.problemReporter.status.state < 3) {
+                  this.add(pattern.name, result);
+                } else {
+                  extension.collector.error(localize("ProblemPatternRegistry.error", "Invalid problem pattern. The pattern will be ignored."));
+                  extension.collector.error(JSON.stringify(pattern, void 0, 4));
+                }
+              }
+              parser.reset();
+            }
+          });
+        } catch (error) {
+        }
+        resolve(void 0);
+      });
+    });
+  }
+  onReady() {
+    return this.readyPromise;
+  }
+  add(key, value) {
+    this.patterns[key] = value;
+  }
+  get(key) {
+    return this.patterns[key];
+  }
+  fillDefaults() {
+    this.add("msCompile", {
+      regexp: /^(?:\s*\d+>)?(\S.*)\((\d+|\d+,\d+|\d+,\d+,\d+,\d+)\)\s*:\s+((?:fatal +)?error|warning|info)\s+(\w+\d+)\s*:\s*(.*)$/,
+      kind: ProblemLocationKind.Location,
+      file: 1,
+      location: 2,
+      severity: 3,
+      code: 4,
+      message: 5
+    });
+    this.add("gulp-tsc", {
+      regexp: /^([^\s].*)\((\d+|\d+,\d+|\d+,\d+,\d+,\d+)\):\s+(\d+)\s+(.*)$/,
+      kind: ProblemLocationKind.Location,
+      file: 1,
+      location: 2,
+      code: 3,
+      message: 4
+    });
+    this.add("cpp", {
+      regexp: /^(\S.*)\((\d+|\d+,\d+|\d+,\d+,\d+,\d+)\):\s+(error|warning|info)\s+(C\d+)\s*:\s*(.*)$/,
+      kind: ProblemLocationKind.Location,
+      file: 1,
+      location: 2,
+      severity: 3,
+      code: 4,
+      message: 5
+    });
+    this.add("csc", {
+      regexp: /^(\S.*)\((\d+|\d+,\d+|\d+,\d+,\d+,\d+)\):\s+(error|warning|info)\s+(CS\d+)\s*:\s*(.*)$/,
+      kind: ProblemLocationKind.Location,
+      file: 1,
+      location: 2,
+      severity: 3,
+      code: 4,
+      message: 5
+    });
+    this.add("vb", {
+      regexp: /^(\S.*)\((\d+|\d+,\d+|\d+,\d+,\d+,\d+)\):\s+(error|warning|info)\s+(BC\d+)\s*:\s*(.*)$/,
+      kind: ProblemLocationKind.Location,
+      file: 1,
+      location: 2,
+      severity: 3,
+      code: 4,
+      message: 5
+    });
+    this.add("lessCompile", {
+      regexp: /^\s*(.*) in file (.*) line no. (\d+)$/,
+      kind: ProblemLocationKind.Location,
+      message: 1,
+      file: 2,
+      line: 3
+    });
+    this.add("jshint", {
+      regexp: /^(.*):\s+line\s+(\d+),\s+col\s+(\d+),\s(.+?)(?:\s+\((\w)(\d+)\))?$/,
+      kind: ProblemLocationKind.Location,
+      file: 1,
+      line: 2,
+      character: 3,
+      message: 4,
+      severity: 5,
+      code: 6
+    });
+    this.add("jshint-stylish", [
+      {
+        regexp: /^(.+)$/,
+        kind: ProblemLocationKind.Location,
+        file: 1
+      },
+      {
+        regexp: /^\s+line\s+(\d+)\s+col\s+(\d+)\s+(.+?)(?:\s+\((\w)(\d+)\))?$/,
+        line: 1,
+        character: 2,
+        message: 3,
+        severity: 4,
+        code: 5,
+        loop: true
+      }
+    ]);
+    this.add("eslint-compact", {
+      regexp: /^(.+):\sline\s(\d+),\scol\s(\d+),\s(Error|Warning|Info)\s-\s(.+)\s\((.+)\)$/,
+      file: 1,
+      kind: ProblemLocationKind.Location,
+      line: 2,
+      character: 3,
+      severity: 4,
+      message: 5,
+      code: 6
+    });
+    this.add("eslint-stylish", [
+      {
+        regexp: /^((?:[a-zA-Z]:)*[./\\]+.*?)$/,
+        kind: ProblemLocationKind.Location,
+        file: 1
+      },
+      {
+        regexp: /^\s+(\d+):(\d+)\s+(error|warning|info)\s+(.+?)(?:\s\s+(.*))?$/,
+        line: 1,
+        character: 2,
+        severity: 3,
+        message: 4,
+        code: 5,
+        loop: true
+      }
+    ]);
+    this.add("go", {
+      regexp: /^([^:]*: )?((.:)?[^:]*):(\d+)(:(\d+))?: (.*)$/,
+      kind: ProblemLocationKind.Location,
+      file: 2,
+      line: 4,
+      character: 6,
+      message: 7
+    });
+  }
+}
+const ProblemPatternRegistry = new ProblemPatternRegistryImpl();
+class ProblemMatcherParser extends Parser {
+  static {
+    __name(this, "ProblemMatcherParser");
+  }
+  constructor(logger) {
+    super(logger);
+  }
+  parse(json) {
+    const result = this.createProblemMatcher(json);
+    if (!this.checkProblemMatcherValid(json, result)) {
+      return void 0;
+    }
+    this.addWatchingMatcher(json, result);
+    return result;
+  }
+  checkProblemMatcherValid(externalProblemMatcher, problemMatcher) {
+    if (!problemMatcher) {
+      this.error(localize("ProblemMatcherParser.noProblemMatcher", "Error: the description can't be converted into a problem matcher:\n{0}\n", JSON.stringify(externalProblemMatcher, null, 4)));
+      return false;
+    }
+    if (!problemMatcher.pattern) {
+      this.error(localize("ProblemMatcherParser.noProblemPattern", "Error: the description doesn't define a valid problem pattern:\n{0}\n", JSON.stringify(externalProblemMatcher, null, 4)));
+      return false;
+    }
+    if (!problemMatcher.owner) {
+      this.error(localize("ProblemMatcherParser.noOwner", "Error: the description doesn't define an owner:\n{0}\n", JSON.stringify(externalProblemMatcher, null, 4)));
+      return false;
+    }
+    if (Types.isUndefined(problemMatcher.fileLocation)) {
+      this.error(localize("ProblemMatcherParser.noFileLocation", "Error: the description doesn't define a file location:\n{0}\n", JSON.stringify(externalProblemMatcher, null, 4)));
+      return false;
+    }
+    return true;
+  }
+  createProblemMatcher(description) {
+    let result = null;
+    const owner = Types.isString(description.owner) ? description.owner : UUID.generateUuid();
+    const source = Types.isString(description.source) ? description.source : void 0;
+    let applyTo = Types.isString(description.applyTo) ? ApplyToKind.fromString(description.applyTo) : ApplyToKind.allDocuments;
+    if (!applyTo) {
+      applyTo = ApplyToKind.allDocuments;
+    }
+    let fileLocation = void 0;
+    let filePrefix = void 0;
+    let kind;
+    if (Types.isUndefined(description.fileLocation)) {
+      fileLocation = FileLocationKind.Relative;
+      filePrefix = "${workspaceFolder}";
+    } else if (Types.isString(description.fileLocation)) {
+      kind = FileLocationKind.fromString(description.fileLocation);
+      if (kind) {
+        fileLocation = kind;
+        if (kind === FileLocationKind.Relative || kind === FileLocationKind.AutoDetect) {
+          filePrefix = "${workspaceFolder}";
+        } else if (kind === FileLocationKind.Search) {
+          filePrefix = { include: ["${workspaceFolder}"] };
+        }
+      }
+    } else if (Types.isStringArray(description.fileLocation)) {
+      const values = description.fileLocation;
+      if (values.length > 0) {
+        kind = FileLocationKind.fromString(values[0]);
+        if (values.length === 1 && kind === FileLocationKind.Absolute) {
+          fileLocation = kind;
+        } else if (values.length === 2 && (kind === FileLocationKind.Relative || kind === FileLocationKind.AutoDetect) && values[1]) {
+          fileLocation = kind;
+          filePrefix = values[1];
+        }
+      }
+    } else if (Array.isArray(description.fileLocation)) {
+      const kind2 = FileLocationKind.fromString(description.fileLocation[0]);
+      if (kind2 === FileLocationKind.Search) {
+        fileLocation = FileLocationKind.Search;
+        filePrefix = description.fileLocation[1] ?? { include: ["${workspaceFolder}"] };
+      }
+    }
+    const pattern = description.pattern ? this.createProblemPattern(description.pattern) : void 0;
+    let severity = description.severity ? Severity.fromValue(description.severity) : void 0;
+    if (severity === Severity.Ignore) {
+      this.info(localize("ProblemMatcherParser.unknownSeverity", "Info: unknown severity {0}. Valid values are error, warning and info.\n", description.severity));
+      severity = Severity.Error;
+    }
+    if (Types.isString(description.base)) {
+      const variableName = description.base;
+      if (variableName.length > 1 && variableName[0] === "$") {
+        const base = ProblemMatcherRegistry.get(variableName.substring(1));
+        if (base) {
+          result = Objects.deepClone(base);
+          if (description.owner !== void 0 && owner !== void 0) {
+            result.owner = owner;
+          }
+          if (description.source !== void 0 && source !== void 0) {
+            result.source = source;
+          }
+          if (description.fileLocation !== void 0 && fileLocation !== void 0) {
+            result.fileLocation = fileLocation;
+            result.filePrefix = filePrefix;
+          }
+          if (description.pattern !== void 0 && pattern !== void 0 && pattern !== null) {
+            result.pattern = pattern;
+          }
+          if (description.severity !== void 0 && severity !== void 0) {
+            result.severity = severity;
+          }
+          if (description.applyTo !== void 0 && applyTo !== void 0) {
+            result.applyTo = applyTo;
+          }
+        }
+      }
+    } else if (fileLocation && pattern) {
+      result = {
+        owner,
+        applyTo,
+        fileLocation,
+        pattern
+      };
+      if (source) {
+        result.source = source;
+      }
+      if (filePrefix) {
+        result.filePrefix = filePrefix;
+      }
+      if (severity) {
+        result.severity = severity;
+      }
+    }
+    if (Config.isNamedProblemMatcher(description)) {
+      result.name = description.name;
+      result.label = Types.isString(description.label) ? description.label : description.name;
+    }
+    return result;
+  }
+  createProblemPattern(value) {
+    if (Types.isString(value)) {
+      const variableName = value;
+      if (variableName.length > 1 && variableName[0] === "$") {
+        const result = ProblemPatternRegistry.get(variableName.substring(1));
+        if (!result) {
+          this.error(localize("ProblemMatcherParser.noDefinedPatter", "Error: the pattern with the identifier {0} doesn't exist.", variableName));
+        }
+        return result;
+      } else {
+        if (variableName.length === 0) {
+          this.error(localize("ProblemMatcherParser.noIdentifier", "Error: the pattern property refers to an empty identifier."));
+        } else {
+          this.error(localize("ProblemMatcherParser.noValidIdentifier", "Error: the pattern property {0} is not a valid pattern variable name.", variableName));
+        }
+      }
+    } else if (value) {
+      const problemPatternParser = new ProblemPatternParser(this.problemReporter);
+      if (Array.isArray(value)) {
+        return problemPatternParser.parse(value);
+      } else {
+        return problemPatternParser.parse(value);
+      }
+    }
+    return null;
+  }
+  addWatchingMatcher(external, internal) {
+    const oldBegins = this.createRegularExpression(external.watchedTaskBeginsRegExp);
+    const oldEnds = this.createRegularExpression(external.watchedTaskEndsRegExp);
+    if (oldBegins && oldEnds) {
+      internal.watching = {
+        activeOnStart: false,
+        beginsPattern: { regexp: oldBegins },
+        endsPattern: { regexp: oldEnds }
+      };
+      return;
+    }
+    const backgroundMonitor = external.background || external.watching;
+    if (Types.isUndefinedOrNull(backgroundMonitor)) {
+      return;
+    }
+    const begins = this.createWatchingPattern(backgroundMonitor.beginsPattern);
+    const ends = this.createWatchingPattern(backgroundMonitor.endsPattern);
+    if (begins && ends) {
+      internal.watching = {
+        activeOnStart: Types.isBoolean(backgroundMonitor.activeOnStart) ? backgroundMonitor.activeOnStart : false,
+        beginsPattern: begins,
+        endsPattern: ends
+      };
+      return;
+    }
+    if (begins || ends) {
+      this.error(localize("ProblemMatcherParser.problemPattern.watchingMatcher", "A problem matcher must define both a begin pattern and an end pattern for watching."));
+    }
+  }
+  createWatchingPattern(external) {
+    if (Types.isUndefinedOrNull(external)) {
+      return null;
+    }
+    let regexp;
+    let file;
+    if (Types.isString(external)) {
+      regexp = this.createRegularExpression(external);
+    } else {
+      regexp = this.createRegularExpression(external.regexp);
+      if (Types.isNumber(external.file)) {
+        file = external.file;
+      }
+    }
+    if (!regexp) {
+      return null;
+    }
+    return file ? { regexp, file } : { regexp, file: 1 };
+  }
+  createRegularExpression(value) {
+    let result = null;
+    if (!value) {
+      return result;
+    }
+    try {
+      result = new RegExp(value);
+    } catch (err) {
+      this.error(localize("ProblemMatcherParser.invalidRegexp", "Error: The string {0} is not a valid regular expression.\n", value));
+    }
+    return result;
+  }
+}
+const problemMatchersExtPoint = ExtensionsRegistry.registerExtensionPoint({
+  extensionPoint: "problemMatchers",
+  deps: [problemPatternExtPoint],
+  jsonSchema: {
+    description: localize("ProblemMatcherExtPoint", "Contributes problem matchers"),
+    type: "array",
+    items: Schemas.NamedProblemMatcher
+  }
+});
+class ProblemMatcherRegistryImpl {
+  static {
+    __name(this, "ProblemMatcherRegistryImpl");
+  }
+  constructor() {
+    this._onMatchersChanged = new Emitter();
+    this.onMatcherChanged = this._onMatchersChanged.event;
+    this.matchers = /* @__PURE__ */ Object.create(null);
+    this.fillDefaults();
+    this.readyPromise = new Promise((resolve, reject) => {
+      problemMatchersExtPoint.setHandler((extensions, delta) => {
+        try {
+          delta.removed.forEach((extension) => {
+            const problemMatchers = extension.value;
+            for (const matcher2 of problemMatchers) {
+              if (this.matchers[matcher2.name]) {
+                delete this.matchers[matcher2.name];
+              }
+            }
+          });
+          delta.added.forEach((extension) => {
+            const problemMatchers = extension.value;
+            const parser = new ProblemMatcherParser(new ExtensionRegistryReporter(extension.collector));
+            for (const matcher2 of problemMatchers) {
+              const result = parser.parse(matcher2);
+              if (result && isNamedProblemMatcher(result)) {
+                this.add(result);
+              }
+            }
+          });
+          if (delta.removed.length > 0 || delta.added.length > 0) {
+            this._onMatchersChanged.fire();
+          }
+        } catch (error) {
+        }
+        const matcher = this.get("tsc-watch");
+        if (matcher) {
+          matcher.tscWatch = true;
+        }
+        resolve(void 0);
+      });
+    });
+  }
+  onReady() {
+    ProblemPatternRegistry.onReady();
+    return this.readyPromise;
+  }
+  add(matcher) {
+    this.matchers[matcher.name] = matcher;
+  }
+  get(name) {
+    return this.matchers[name];
+  }
+  keys() {
+    return Object.keys(this.matchers);
+  }
+  fillDefaults() {
+    this.add({
+      name: "msCompile",
+      label: localize("msCompile", "Microsoft compiler problems"),
+      owner: "msCompile",
+      source: "cpp",
+      applyTo: ApplyToKind.allDocuments,
+      fileLocation: FileLocationKind.Absolute,
+      pattern: ProblemPatternRegistry.get("msCompile")
+    });
+    this.add({
+      name: "lessCompile",
+      label: localize("lessCompile", "Less problems"),
+      deprecated: true,
+      owner: "lessCompile",
+      source: "less",
+      applyTo: ApplyToKind.allDocuments,
+      fileLocation: FileLocationKind.Absolute,
+      pattern: ProblemPatternRegistry.get("lessCompile"),
+      severity: Severity.Error
+    });
+    this.add({
+      name: "gulp-tsc",
+      label: localize("gulp-tsc", "Gulp TSC Problems"),
+      owner: "typescript",
+      source: "ts",
+      applyTo: ApplyToKind.closedDocuments,
+      fileLocation: FileLocationKind.Relative,
+      filePrefix: "${workspaceFolder}",
+      pattern: ProblemPatternRegistry.get("gulp-tsc")
+    });
+    this.add({
+      name: "jshint",
+      label: localize("jshint", "JSHint problems"),
+      owner: "jshint",
+      source: "jshint",
+      applyTo: ApplyToKind.allDocuments,
+      fileLocation: FileLocationKind.Absolute,
+      pattern: ProblemPatternRegistry.get("jshint")
+    });
+    this.add({
+      name: "jshint-stylish",
+      label: localize("jshint-stylish", "JSHint stylish problems"),
+      owner: "jshint",
+      source: "jshint",
+      applyTo: ApplyToKind.allDocuments,
+      fileLocation: FileLocationKind.Absolute,
+      pattern: ProblemPatternRegistry.get("jshint-stylish")
+    });
+    this.add({
+      name: "eslint-compact",
+      label: localize("eslint-compact", "ESLint compact problems"),
+      owner: "eslint",
+      source: "eslint",
+      applyTo: ApplyToKind.allDocuments,
+      fileLocation: FileLocationKind.Absolute,
+      filePrefix: "${workspaceFolder}",
+      pattern: ProblemPatternRegistry.get("eslint-compact")
+    });
+    this.add({
+      name: "eslint-stylish",
+      label: localize("eslint-stylish", "ESLint stylish problems"),
+      owner: "eslint",
+      source: "eslint",
+      applyTo: ApplyToKind.allDocuments,
+      fileLocation: FileLocationKind.Absolute,
+      pattern: ProblemPatternRegistry.get("eslint-stylish")
+    });
+    this.add({
+      name: "go",
+      label: localize("go", "Go problems"),
+      owner: "go",
+      source: "go",
+      applyTo: ApplyToKind.allDocuments,
+      fileLocation: FileLocationKind.Relative,
+      filePrefix: "${workspaceFolder}",
+      pattern: ProblemPatternRegistry.get("go")
+    });
+  }
+}
+const ProblemMatcherRegistry = new ProblemMatcherRegistryImpl();
+export {
+  ApplyToKind,
+  Config,
+  ExtensionRegistryReporter,
+  FileLocationKind,
+  ProblemLocationKind,
+  ProblemMatcherParser,
+  ProblemMatcherRegistry,
+  ProblemPatternParser,
+  ProblemPatternRegistry,
+  Schemas,
+  createLineMatcher,
+  getResource,
+  isNamedProblemMatcher
+};
+//# sourceMappingURL=problemMatcher.js.map

@@ -1,1 +1,100 @@
-import{$k as d}from"../../../base/common/platform.js";import{$Af as u}from"../../../base/common/strings.js";import{URI as c}from"../../../base/common/uri.js";import{$nj as m}from"../../../platform/instantiation/common/instantiation.js";import{$3n as p}from"../../../platform/log/common/log.js";import{$oY as g}from"./extHost.protocol.js";import{$y2 as $}from"./extHostInitDataService.js";import{$i2 as v}from"./extHostRpcService.js";var h=function(s,t,i,r){var n=arguments.length,e=n<3?t:r===null?r=Object.getOwnPropertyDescriptor(t,i):r,o;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")e=Reflect.decorate(s,t,i,r);else for(var a=s.length-1;a>=0;a--)(o=s[a])&&(e=(n<3?o(e):n>3?o(t,i,e):o(t,i))||e);return n>3&&e&&Object.defineProperty(t,i,e),e},f=function(s,t){return function(i,r){t(i,r,s)}};let l=class{constructor(t,i,r){this.f=r,this.d=new Map,this.a=i.getProxy(g.MainThreadLocalization),this.b=t.environment.appLanguage,this.c=this.b===d}getMessage(t,i){const{message:r,args:n,comment:e}=i;if(this.c)return u(r,n??{});let o=r;e&&e.length>0&&(o+=`/${Array.isArray(e)?e.join(""):e}`);const a=this.d.get(t)?.contents[o];return a||this.f.warn(`Using default string since no string found in i18n bundle that has the key: ${o}`),u(a??r,n??{})}getBundle(t){return this.d.get(t)?.contents}getBundleUri(t){return this.d.get(t)?.uri}async initializeLocalizedMessages(t){if(this.c||!t.l10n&&!t.isBuiltin||this.d.has(t.identifier.value))return;let i;const r=await this.g(t);if(!r){this.f.error(`No bundle location found for extension ${t.identifier.value}`);return}try{const n=await this.a.$fetchBundleContents(r),e=JSON.parse(n);i=t.isBuiltin?e.contents?.bundle:e}catch(n){this.f.error(`Failed to load translations for ${t.identifier.value} from ${r}: ${n.message}`);return}i&&this.d.set(t.identifier.value,{contents:i,uri:r})}async g(t){if(t.isBuiltin){const i=await this.a.$fetchBuiltInBundleUri(t.identifier.value,this.b);return c.revive(i)}return t.l10n?c.joinPath(t.extensionLocation,t.l10n,`bundle.l10n.${this.b}.json`):void 0}};l=h([f(0,$),f(1,v),f(2,p)],l);const M=m("IExtHostLocalizationService");export{l as $hLc,M as $iLc};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { LANGUAGE_DEFAULT } from "../../../base/common/platform.js";
+import { format2 } from "../../../base/common/strings.js";
+import { URI } from "../../../base/common/uri.js";
+import { createDecorator } from "../../../platform/instantiation/common/instantiation.js";
+import { ILogService } from "../../../platform/log/common/log.js";
+import { MainContext } from "./extHost.protocol.js";
+import { IExtHostInitDataService } from "./extHostInitDataService.js";
+import { IExtHostRpcService } from "./extHostRpcService.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+let ExtHostLocalizationService = class ExtHostLocalizationService2 {
+  static {
+    __name(this, "ExtHostLocalizationService");
+  }
+  constructor(initData, rpc, logService) {
+    this.logService = logService;
+    this.bundleCache = /* @__PURE__ */ new Map();
+    this._proxy = rpc.getProxy(MainContext.MainThreadLocalization);
+    this.currentLanguage = initData.environment.appLanguage;
+    this.isDefaultLanguage = this.currentLanguage === LANGUAGE_DEFAULT;
+  }
+  getMessage(extensionId, details) {
+    const { message, args, comment } = details;
+    if (this.isDefaultLanguage) {
+      return format2(message, args ?? {});
+    }
+    let key = message;
+    if (comment && comment.length > 0) {
+      key += `/${Array.isArray(comment) ? comment.join("") : comment}`;
+    }
+    const str = this.bundleCache.get(extensionId)?.contents[key];
+    if (!str) {
+      this.logService.warn(`Using default string since no string found in i18n bundle that has the key: ${key}`);
+    }
+    return format2(str ?? message, args ?? {});
+  }
+  getBundle(extensionId) {
+    return this.bundleCache.get(extensionId)?.contents;
+  }
+  getBundleUri(extensionId) {
+    return this.bundleCache.get(extensionId)?.uri;
+  }
+  async initializeLocalizedMessages(extension) {
+    if (this.isDefaultLanguage || !extension.l10n && !extension.isBuiltin) {
+      return;
+    }
+    if (this.bundleCache.has(extension.identifier.value)) {
+      return;
+    }
+    let contents;
+    const bundleUri = await this.getBundleLocation(extension);
+    if (!bundleUri) {
+      this.logService.error(`No bundle location found for extension ${extension.identifier.value}`);
+      return;
+    }
+    try {
+      const response = await this._proxy.$fetchBundleContents(bundleUri);
+      const result = JSON.parse(response);
+      contents = extension.isBuiltin ? result.contents?.bundle : result;
+    } catch (e) {
+      this.logService.error(`Failed to load translations for ${extension.identifier.value} from ${bundleUri}: ${e.message}`);
+      return;
+    }
+    if (contents) {
+      this.bundleCache.set(extension.identifier.value, {
+        contents,
+        uri: bundleUri
+      });
+    }
+  }
+  async getBundleLocation(extension) {
+    if (extension.isBuiltin) {
+      const uri = await this._proxy.$fetchBuiltInBundleUri(extension.identifier.value, this.currentLanguage);
+      return URI.revive(uri);
+    }
+    return extension.l10n ? URI.joinPath(extension.extensionLocation, extension.l10n, `bundle.l10n.${this.currentLanguage}.json`) : void 0;
+  }
+};
+ExtHostLocalizationService = __decorate([
+  __param(0, IExtHostInitDataService),
+  __param(1, IExtHostRpcService),
+  __param(2, ILogService)
+], ExtHostLocalizationService);
+const IExtHostLocalizationService = createDecorator("IExtHostLocalizationService");
+export {
+  ExtHostLocalizationService,
+  IExtHostLocalizationService
+};
+//# sourceMappingURL=extHostLocalizationService.js.map

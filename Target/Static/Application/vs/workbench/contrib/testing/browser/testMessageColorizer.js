@@ -1,2 +1,94 @@
-import{$I8 as p}from"../../../../base/browser/markdownRenderer.js";import{$td as h}from"../../../../base/common/lifecycle.js";import{$bg as u,$og as $,$pg as b}from"../../../../base/common/strings.js";import"./media/testMessageColorizer.css";import{$bC as a}from"../../../../editor/common/core/position.js";import{$cC as x}from"../../../../editor/common/core/range.js";const P=/^\x1b\[([0-9]+)m$/;var d;(function(i){i.Prefix="tstm-ansidec-",i.ForegroundPrefix="tstm-ansidec-fg",i.BackgroundPrefix="tstm-ansidec-bg",i.Bold="tstm-ansidec-1",i.Faint="tstm-ansidec-2",i.Italic="tstm-ansidec-3",i.Underline="tstm-ansidec-4"})(d||(d={}));const F=i=>typeof i=="string"?b(i):p(i),I=(i,c)=>{const m=[];return c.changeDecorations(g=>{let o=new a(1,1),t=[];for(const r of $(i))if(r.isCode){const n=P.exec(r.str)?.[1];if(!n)continue;const e=Number(n);e===0?t.length=0:e===22?t=t.filter(s=>s!=="tstm-ansidec-1"&&s!=="tstm-ansidec-3"):e===23?t=t.filter(s=>s!=="tstm-ansidec-3"):e===24?t=t.filter(s=>s!=="tstm-ansidec-4"):e>=30&&e<=39||e>=90&&e<=99?(t=t.filter(s=>!s.startsWith("tstm-ansidec-fg")),t.push("tstm-ansidec-fg"+n)):e>=40&&e<=49||e>=100&&e<=109?(t=t.filter(s=>!s.startsWith("tstm-ansidec-bg")),t.push("tstm-ansidec-bg"+n)):t.push("tstm-ansidec-"+n)}else{let n=o.lineNumber,e=o.column;const s=new u(r.str);for(let l=0;!s.eol();l+=s.nextGraphemeLength())r.str[l]===`
-`?(n++,e=1):e++;const f=new a(n,e);t.length&&m.push(g.addDecoration(x.fromPositions(o,f),{inlineClassName:t.join(" "),description:"test-message-colorized"})),o=f}}),h(()=>c.removeDecorations(m))};export{F as $blc,I as $clc};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { renderStringAsPlaintext } from "../../../../base/browser/markdownRenderer.js";
+import { toDisposable } from "../../../../base/common/lifecycle.js";
+import { GraphemeIterator, forAnsiStringParts, removeAnsiEscapeCodes } from "../../../../base/common/strings.js";
+import "./media/testMessageColorizer.css";
+import { Position } from "../../../../editor/common/core/position.js";
+import { Range } from "../../../../editor/common/core/range.js";
+const colorAttrRe = /^\x1b\[([0-9]+)m$/;
+var Classes;
+(function(Classes2) {
+  Classes2["Prefix"] = "tstm-ansidec-";
+  Classes2["ForegroundPrefix"] = "tstm-ansidec-fg";
+  Classes2["BackgroundPrefix"] = "tstm-ansidec-bg";
+  Classes2["Bold"] = "tstm-ansidec-1";
+  Classes2["Faint"] = "tstm-ansidec-2";
+  Classes2["Italic"] = "tstm-ansidec-3";
+  Classes2["Underline"] = "tstm-ansidec-4";
+})(Classes || (Classes = {}));
+const renderTestMessageAsText = /* @__PURE__ */ __name((tm) => typeof tm === "string" ? removeAnsiEscapeCodes(tm) : renderStringAsPlaintext(tm), "renderTestMessageAsText");
+const colorizeTestMessageInEditor = /* @__PURE__ */ __name((message, editor) => {
+  const decos = [];
+  editor.changeDecorations((changeAccessor) => {
+    let start = new Position(1, 1);
+    let cls = [];
+    for (const part of forAnsiStringParts(message)) {
+      if (part.isCode) {
+        const colorAttr = colorAttrRe.exec(part.str)?.[1];
+        if (!colorAttr) {
+          continue;
+        }
+        const n = Number(colorAttr);
+        if (n === 0) {
+          cls.length = 0;
+        } else if (n === 22) {
+          cls = cls.filter(
+            (c) => c !== "tstm-ansidec-1" && c !== "tstm-ansidec-3"
+            /* Classes.Italic */
+          );
+        } else if (n === 23) {
+          cls = cls.filter(
+            (c) => c !== "tstm-ansidec-3"
+            /* Classes.Italic */
+          );
+        } else if (n === 24) {
+          cls = cls.filter(
+            (c) => c !== "tstm-ansidec-4"
+            /* Classes.Underline */
+          );
+        } else if (n >= 30 && n <= 39 || n >= 90 && n <= 99) {
+          cls = cls.filter((c) => !c.startsWith(
+            "tstm-ansidec-fg"
+            /* Classes.ForegroundPrefix */
+          ));
+          cls.push("tstm-ansidec-fg" + colorAttr);
+        } else if (n >= 40 && n <= 49 || n >= 100 && n <= 109) {
+          cls = cls.filter((c) => !c.startsWith(
+            "tstm-ansidec-bg"
+            /* Classes.BackgroundPrefix */
+          ));
+          cls.push("tstm-ansidec-bg" + colorAttr);
+        } else {
+          cls.push("tstm-ansidec-" + colorAttr);
+        }
+      } else {
+        let line = start.lineNumber;
+        let col = start.column;
+        const graphemes = new GraphemeIterator(part.str);
+        for (let i = 0; !graphemes.eol(); i += graphemes.nextGraphemeLength()) {
+          if (part.str[i] === "\n") {
+            line++;
+            col = 1;
+          } else {
+            col++;
+          }
+        }
+        const end = new Position(line, col);
+        if (cls.length) {
+          decos.push(changeAccessor.addDecoration(Range.fromPositions(start, end), {
+            inlineClassName: cls.join(" "),
+            description: "test-message-colorized"
+          }));
+        }
+        start = end;
+      }
+    }
+  });
+  return toDisposable(() => editor.removeDecorations(decos));
+}, "colorizeTestMessageInEditor");
+export {
+  colorizeTestMessageInEditor,
+  renderTestMessageAsText
+};
+//# sourceMappingURL=testMessageColorizer.js.map

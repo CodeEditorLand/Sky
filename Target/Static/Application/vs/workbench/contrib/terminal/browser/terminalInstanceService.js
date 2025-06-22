@@ -1,1 +1,110 @@
-import{$IYb as u}from"./terminal.js";import{$WB as l}from"../../../../platform/instantiation/common/extensions.js";import{$vd as v}from"../../../../base/common/lifecycle.js";import{$Gw as m}from"../../../../platform/terminal/common/terminal.js";import{$mj as $}from"../../../../platform/instantiation/common/instantiation.js";import{$Hrc as g}from"./terminalInstance.js";import{$Vn as B}from"../../../../platform/contextkey/common/contextkey.js";import{$df as h}from"../../../../base/common/event.js";import{TerminalContextKeys as b}from"../common/terminalContextKey.js";import{$Ql as f}from"../../../../platform/registry/common/platform.js";import{$KX as _}from"../../../services/environment/common/environmentService.js";import{$Eh as T}from"../../../../base/common/async.js";var d=function(o,e,t,r){var n=arguments.length,i=n<3?e:r===null?r=Object.getOwnPropertyDescriptor(e,t):r,s;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")i=Reflect.decorate(o,e,t,r);else for(var c=o.length-1;c>=0;c--)(s=o[c])&&(i=(n<3?s(i):n>3?s(e,t,i):s(e,t))||i);return n>3&&i&&Object.defineProperty(e,t,i),i},a=function(o,e){return function(t,r){e(t,r,o)}};let p=class extends v{get onDidCreateInstance(){return this.c.event}get onDidRegisterBackend(){return this.f.event}constructor(e,t,r){super(),this.g=e,this.h=t,this.b=new Map,this.c=this.B(new h),this.f=this.B(new h),this.a=b.shellType.bindTo(this.h);for(const n of[void 0,r.remoteAuthority]){const{promise:i,resolve:s}=T();this.b.set(n,{promise:i,resolve:s})}}createInstance(e,t){const r=this.convertProfileToShellLaunchConfig(e),n=this.g.createInstance(g,this.a,r);return n.target=t,this.c.fire(n),n}convertProfileToShellLaunchConfig(e,t){if(e&&"profileName"in e){const r=e;return r.path?{executable:r.path,args:r.args,env:r.env,icon:r.icon,color:r.color,name:r.overrideName?r.profileName:void 0,cwd:t}:e}return e?(t&&(e.cwd=t),e):{}}async getBackend(e){let t=f.as(m.Backend).getTerminalBackend(e);return t||(await this.b.get(e)?.promise,t=f.as(m.Backend).getTerminalBackend(e)),t}getRegisteredBackends(){return f.as(m.Backend).backends.values()}didRegisterBackend(e){this.b.get(e.remoteAuthority)?.resolve(),this.f.fire(e)}};p=d([a(0,$),a(1,B),a(2,_)],p);l(u,p,1);export{p as $Lrc};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { ITerminalInstanceService } from "./terminal.js";
+import { registerSingleton } from "../../../../platform/instantiation/common/extensions.js";
+import { Disposable } from "../../../../base/common/lifecycle.js";
+import { TerminalExtensions } from "../../../../platform/terminal/common/terminal.js";
+import { IInstantiationService } from "../../../../platform/instantiation/common/instantiation.js";
+import { TerminalInstance } from "./terminalInstance.js";
+import { IContextKeyService } from "../../../../platform/contextkey/common/contextkey.js";
+import { Emitter } from "../../../../base/common/event.js";
+import { TerminalContextKeys } from "../common/terminalContextKey.js";
+import { Registry } from "../../../../platform/registry/common/platform.js";
+import { IWorkbenchEnvironmentService } from "../../../services/environment/common/environmentService.js";
+import { promiseWithResolvers } from "../../../../base/common/async.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+let TerminalInstanceService = class TerminalInstanceService2 extends Disposable {
+  static {
+    __name(this, "TerminalInstanceService");
+  }
+  get onDidCreateInstance() {
+    return this._onDidCreateInstance.event;
+  }
+  get onDidRegisterBackend() {
+    return this._onDidRegisterBackend.event;
+  }
+  constructor(_instantiationService, _contextKeyService, environmentService) {
+    super();
+    this._instantiationService = _instantiationService;
+    this._contextKeyService = _contextKeyService;
+    this._backendRegistration = /* @__PURE__ */ new Map();
+    this._onDidCreateInstance = this._register(new Emitter());
+    this._onDidRegisterBackend = this._register(new Emitter());
+    this._terminalShellTypeContextKey = TerminalContextKeys.shellType.bindTo(this._contextKeyService);
+    for (const remoteAuthority of [void 0, environmentService.remoteAuthority]) {
+      const { promise, resolve } = promiseWithResolvers();
+      this._backendRegistration.set(remoteAuthority, { promise, resolve });
+    }
+  }
+  createInstance(config, target) {
+    const shellLaunchConfig = this.convertProfileToShellLaunchConfig(config);
+    const instance = this._instantiationService.createInstance(TerminalInstance, this._terminalShellTypeContextKey, shellLaunchConfig);
+    instance.target = target;
+    this._onDidCreateInstance.fire(instance);
+    return instance;
+  }
+  convertProfileToShellLaunchConfig(shellLaunchConfigOrProfile, cwd) {
+    if (shellLaunchConfigOrProfile && "profileName" in shellLaunchConfigOrProfile) {
+      const profile = shellLaunchConfigOrProfile;
+      if (!profile.path) {
+        return shellLaunchConfigOrProfile;
+      }
+      return {
+        executable: profile.path,
+        args: profile.args,
+        env: profile.env,
+        icon: profile.icon,
+        color: profile.color,
+        name: profile.overrideName ? profile.profileName : void 0,
+        cwd
+      };
+    }
+    if (shellLaunchConfigOrProfile) {
+      if (cwd) {
+        shellLaunchConfigOrProfile.cwd = cwd;
+      }
+      return shellLaunchConfigOrProfile;
+    }
+    return {};
+  }
+  async getBackend(remoteAuthority) {
+    let backend = Registry.as(TerminalExtensions.Backend).getTerminalBackend(remoteAuthority);
+    if (!backend) {
+      await this._backendRegistration.get(remoteAuthority)?.promise;
+      backend = Registry.as(TerminalExtensions.Backend).getTerminalBackend(remoteAuthority);
+    }
+    return backend;
+  }
+  getRegisteredBackends() {
+    return Registry.as(TerminalExtensions.Backend).backends.values();
+  }
+  didRegisterBackend(backend) {
+    this._backendRegistration.get(backend.remoteAuthority)?.resolve();
+    this._onDidRegisterBackend.fire(backend);
+  }
+};
+TerminalInstanceService = __decorate([
+  __param(0, IInstantiationService),
+  __param(1, IContextKeyService),
+  __param(2, IWorkbenchEnvironmentService)
+], TerminalInstanceService);
+registerSingleton(
+  ITerminalInstanceService,
+  TerminalInstanceService,
+  1
+  /* InstantiationType.Delayed */
+);
+export {
+  TerminalInstanceService
+};
+//# sourceMappingURL=terminalInstanceService.js.map

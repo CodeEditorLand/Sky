@@ -1,1 +1,153 @@
-import{$ud as h,$qd as u}from"../../../base/common/lifecycle.js";import{$6o as b}from"../../../base/common/objects.js";import{URI as m}from"../../../base/common/uri.js";import{$El as g}from"../../../platform/configuration/common/configuration.js";import{EditorActivation as v}from"../../../platform/editor/common/editor.js";import{$Uzb as l}from"../../contrib/notebook/browser/notebookBrowser.js";import{$QVb as E}from"../../contrib/notebook/browser/services/notebookEditorService.js";import{$fX as $,$gX as I}from"../../services/editor/common/editorGroupColumn.js";import{$kI as w}from"../../services/editor/common/editorGroupsService.js";import{$oI as R}from"../../services/editor/common/editorService.js";import{$pY as C,NotebookEditorRevealType as d}from"../common/extHost.protocol.js";var p=function(n,o,t,e){var s=arguments.length,i=s<3?o:e===null?e=Object.getOwnPropertyDescriptor(o,t):e,r;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")i=Reflect.decorate(n,o,t,e);else for(var a=n.length-1;a>=0;a--)(r=n[a])&&(i=(s<3?r(i):s>3?r(o,t,i):r(o,t))||i);return s>3&&i&&Object.defineProperty(o,t,i),i},c=function(n,o){return function(t,e){o(t,e,n)}};class D{constructor(o,t){this.editor=o,this.disposables=t}dispose(){this.disposables.dispose()}}let f=class{constructor(o,t,e,s,i){this.e=t,this.f=e,this.g=s,this.h=i,this.a=new h,this.c=new Map,this.b=o.getProxy(C.ExtHostNotebookEditors),this.e.onDidActiveEditorChange(()=>this.i(),this,this.a),this.g.onDidRemoveGroup(()=>this.i(),this,this.a),this.g.onDidMoveGroup(()=>this.i(),this,this.a)}dispose(){this.a.dispose(),u(this.c.values())}handleEditorsAdded(o){for(const t of o){const e=new h;e.add(t.onDidChangeVisibleRanges(()=>{this.b.$acceptEditorPropertiesChanged(t.getId(),{visibleRanges:{ranges:t.visibleRanges}})})),e.add(t.onDidChangeSelection(()=>{this.b.$acceptEditorPropertiesChanged(t.getId(),{selections:{selections:t.getSelections()}})}));const s=new D(t,e);this.c.set(t.getId(),s)}}handleEditorsRemoved(o){for(const t of o)this.c.get(t)?.dispose(),this.c.delete(t)}i(){const o=Object.create(null);for(const t of this.e.visibleEditorPanes){const e=l(t);e&&this.c.has(e.getId())&&(o[e.getId()]=I(this.g,t.group))}b(o,this.d)||(this.d=o,this.b.$acceptEditorViewColumns(o))}async $tryShowNotebookDocument(o,t,e){const s={cellSelections:e.selections,preserveFocus:e.preserveFocus,pinned:e.pinned,activation:e.preserveFocus?v.RESTORE:void 0,label:e.label,override:t},i=await this.e.openEditor({resource:m.revive(o),options:s},$(this.g,this.h,e.position)),r=l(i);if(r)return r.getId();throw new Error(`Notebook Editor creation failure for document ${JSON.stringify(o)}`)}async $tryRevealRange(o,t,e){const s=this.f.getNotebookEditor(o);if(!s)return;const i=s;if(!i.hasModel()||t.start>=i.getLength())return;const r=i.cellAt(t.start);switch(e){case d.Default:return i.revealCellRangeInView(t);case d.InCenter:return i.revealInCenter(r);case d.InCenterIfOutsideViewport:return i.revealInCenterIfOutsideViewport(r);case d.AtTop:return i.revealInViewAtTop(r)}}$trySetSelections(o,t){const e=this.f.getNotebookEditor(o);e&&(e.setSelections(t),t.length&&e.setFocus({start:t[0].start,end:t[0].start+1}))}};f=p([c(1,R),c(2,E),c(3,w),c(4,g)],f);export{f as $61b};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { DisposableStore, dispose } from "../../../base/common/lifecycle.js";
+import { equals } from "../../../base/common/objects.js";
+import { URI } from "../../../base/common/uri.js";
+import { IConfigurationService } from "../../../platform/configuration/common/configuration.js";
+import { EditorActivation } from "../../../platform/editor/common/editor.js";
+import { getNotebookEditorFromEditorPane } from "../../contrib/notebook/browser/notebookBrowser.js";
+import { INotebookEditorService } from "../../contrib/notebook/browser/services/notebookEditorService.js";
+import { columnToEditorGroup, editorGroupToColumn } from "../../services/editor/common/editorGroupColumn.js";
+import { IEditorGroupsService } from "../../services/editor/common/editorGroupsService.js";
+import { IEditorService } from "../../services/editor/common/editorService.js";
+import { ExtHostContext, NotebookEditorRevealType } from "../common/extHost.protocol.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+class MainThreadNotebook {
+  static {
+    __name(this, "MainThreadNotebook");
+  }
+  constructor(editor, disposables) {
+    this.editor = editor;
+    this.disposables = disposables;
+  }
+  dispose() {
+    this.disposables.dispose();
+  }
+}
+let MainThreadNotebookEditors = class MainThreadNotebookEditors2 {
+  static {
+    __name(this, "MainThreadNotebookEditors");
+  }
+  constructor(extHostContext, _editorService, _notebookEditorService, _editorGroupService, _configurationService) {
+    this._editorService = _editorService;
+    this._notebookEditorService = _notebookEditorService;
+    this._editorGroupService = _editorGroupService;
+    this._configurationService = _configurationService;
+    this._disposables = new DisposableStore();
+    this._mainThreadEditors = /* @__PURE__ */ new Map();
+    this._proxy = extHostContext.getProxy(ExtHostContext.ExtHostNotebookEditors);
+    this._editorService.onDidActiveEditorChange(() => this._updateEditorViewColumns(), this, this._disposables);
+    this._editorGroupService.onDidRemoveGroup(() => this._updateEditorViewColumns(), this, this._disposables);
+    this._editorGroupService.onDidMoveGroup(() => this._updateEditorViewColumns(), this, this._disposables);
+  }
+  dispose() {
+    this._disposables.dispose();
+    dispose(this._mainThreadEditors.values());
+  }
+  handleEditorsAdded(editors) {
+    for (const editor of editors) {
+      const editorDisposables = new DisposableStore();
+      editorDisposables.add(editor.onDidChangeVisibleRanges(() => {
+        this._proxy.$acceptEditorPropertiesChanged(editor.getId(), { visibleRanges: { ranges: editor.visibleRanges } });
+      }));
+      editorDisposables.add(editor.onDidChangeSelection(() => {
+        this._proxy.$acceptEditorPropertiesChanged(editor.getId(), { selections: { selections: editor.getSelections() } });
+      }));
+      const wrapper = new MainThreadNotebook(editor, editorDisposables);
+      this._mainThreadEditors.set(editor.getId(), wrapper);
+    }
+  }
+  handleEditorsRemoved(editorIds) {
+    for (const id of editorIds) {
+      this._mainThreadEditors.get(id)?.dispose();
+      this._mainThreadEditors.delete(id);
+    }
+  }
+  _updateEditorViewColumns() {
+    const result = /* @__PURE__ */ Object.create(null);
+    for (const editorPane of this._editorService.visibleEditorPanes) {
+      const candidate = getNotebookEditorFromEditorPane(editorPane);
+      if (candidate && this._mainThreadEditors.has(candidate.getId())) {
+        result[candidate.getId()] = editorGroupToColumn(this._editorGroupService, editorPane.group);
+      }
+    }
+    if (!equals(result, this._currentViewColumnInfo)) {
+      this._currentViewColumnInfo = result;
+      this._proxy.$acceptEditorViewColumns(result);
+    }
+  }
+  async $tryShowNotebookDocument(resource, viewType, options) {
+    const editorOptions = {
+      cellSelections: options.selections,
+      preserveFocus: options.preserveFocus,
+      pinned: options.pinned,
+      // selection: options.selection,
+      // preserve pre 1.38 behaviour to not make group active when preserveFocus: true
+      // but make sure to restore the editor to fix https://github.com/microsoft/vscode/issues/79633
+      activation: options.preserveFocus ? EditorActivation.RESTORE : void 0,
+      label: options.label,
+      override: viewType
+    };
+    const editorPane = await this._editorService.openEditor({ resource: URI.revive(resource), options: editorOptions }, columnToEditorGroup(this._editorGroupService, this._configurationService, options.position));
+    const notebookEditor = getNotebookEditorFromEditorPane(editorPane);
+    if (notebookEditor) {
+      return notebookEditor.getId();
+    } else {
+      throw new Error(`Notebook Editor creation failure for document ${JSON.stringify(resource)}`);
+    }
+  }
+  async $tryRevealRange(id, range, revealType) {
+    const editor = this._notebookEditorService.getNotebookEditor(id);
+    if (!editor) {
+      return;
+    }
+    const notebookEditor = editor;
+    if (!notebookEditor.hasModel()) {
+      return;
+    }
+    if (range.start >= notebookEditor.getLength()) {
+      return;
+    }
+    const cell = notebookEditor.cellAt(range.start);
+    switch (revealType) {
+      case NotebookEditorRevealType.Default:
+        return notebookEditor.revealCellRangeInView(range);
+      case NotebookEditorRevealType.InCenter:
+        return notebookEditor.revealInCenter(cell);
+      case NotebookEditorRevealType.InCenterIfOutsideViewport:
+        return notebookEditor.revealInCenterIfOutsideViewport(cell);
+      case NotebookEditorRevealType.AtTop:
+        return notebookEditor.revealInViewAtTop(cell);
+    }
+  }
+  $trySetSelections(id, ranges) {
+    const editor = this._notebookEditorService.getNotebookEditor(id);
+    if (!editor) {
+      return;
+    }
+    editor.setSelections(ranges);
+    if (ranges.length) {
+      editor.setFocus({ start: ranges[0].start, end: ranges[0].start + 1 });
+    }
+  }
+};
+MainThreadNotebookEditors = __decorate([
+  __param(1, IEditorService),
+  __param(2, INotebookEditorService),
+  __param(3, IEditorGroupsService),
+  __param(4, IConfigurationService)
+], MainThreadNotebookEditors);
+export {
+  MainThreadNotebookEditors
+};
+//# sourceMappingURL=mainThreadNotebookEditors.js.map

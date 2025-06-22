@@ -1,1 +1,337 @@
-import{localize as h}from"../../../../nls.js";import{$2o as v}from"../../../../base/common/objects.js";import{$1c as F,$$c as p}from"../../../../base/common/types.js";import{$qGb as w}from"./textEditor.js";import{$9J as R,$6J as M,$jK as S,$uK as T,$mK as V}from"../../../common/editor.js";import{applyTextEditorOptions as b}from"../../../common/editor/editorOptions.js";import{$vGb as l}from"../../../common/editor/diffEditorInput.js";import{$uGb as x}from"../../../common/editor/textDiffEditorModel.js";import{$Po as D}from"../../../../platform/telemetry/common/telemetry.js";import{$Ho as I}from"../../../../platform/storage/common/storage.js";import{$nF as C}from"../../../../editor/common/services/textResourceConfiguration.js";import{$mj as G}from"../../../../platform/instantiation/common/instantiation.js";import{$Mt as O}from"../../../../platform/theme/common/themeService.js";import{$Ql as W}from"../../../../platform/registry/common/platform.js";import{URI as _}from"../../../../base/common/uri.js";import{$kI as j}from"../../../services/editor/common/editorGroupsService.js";import{$oI as B}from"../../../services/editor/common/editorService.js";import{EditorActivation as L}from"../../../../platform/editor/common/editor.js";import{$Vn as z}from"../../../../platform/contextkey/common/contextkey.js";import{$dh as A}from"../../../../base/common/resources.js";import{$96 as g}from"../../../../base/browser/dom.js";import{$Bk as P,$5j as U,$pk as H}from"../../../../platform/files/common/files.js";import{$ZJ as K}from"../../../services/preferences/common/preferences.js";import{$0e as J}from"../../../../base/common/stopwatch.js";import{$xgb as $}from"../../../../editor/browser/widget/diffEditor/diffEditorWidget.js";var E=function(f,i,e,t){var r=arguments.length,o=r<3?i:t===null?t=Object.getOwnPropertyDescriptor(i,e):t,s;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")o=Reflect.decorate(f,i,e,t);else for(var n=f.length-1;n>=0;n--)(s=f[n])&&(o=(r<3?s(o):r>3?s(i,e,o):s(i,e))||o);return r>3&&o&&Object.defineProperty(i,e,o),o},a=function(f,i){return function(e,t){i(e,t,f)}},m;let y=class extends w{static{m=this}static{this.ID=R}get scopedContextKeyService(){if(!this.a)return;const i=this.a.getOriginalEditor(),e=this.a.getModifiedEditor();return(i.hasTextFocus()?i:e).invokeWithinContext(t=>t.get(z))}constructor(i,e,t,r,o,s,n,d,c,u){super(m.ID,i,e,t,r,o,n,s,d,c),this.f=u,this.a=void 0,this.c=void 0,this.Tb=null}getTitle(){return this.input?this.input.getName():h(3763,null)}Lb(i,e){this.a=this.B(this.m.createInstance($,i,e,{}))}Mb(i){this.a?.updateOptions(i)}Nb(){return this.a?.getModifiedEditor()}async setInput(i,e,t,r){this.Tb&&(this.Tb.dispose(),this.Tb=null),this.c=void 0,await super.setInput(i,e,t,r);try{const o=await i.resolve();if(r.isCancellationRequested)return;if(!(o instanceof x)){this.Wb(i,e);return}const s=p(this.a),n=o,d=n.textDiffEditorModel?s.createViewModel(n.textDiffEditorModel):null;this.Tb=d,await d?.waitForDiff(),s.setModel(d);let c=!1;T(e?.viewState)||(c=this.Vb(i,e,t,s));let u=!1;e&&(u=b(e,s,1)),!u&&!c&&s.revealFirstDiff(),s.updateOptions({...this.Gb(n.modifiedModel?.isReadonly()),originalEditable:!n.originalModel?.isReadonly()}),s.handleInitialized(),this.c=new J(!1)}catch(o){await this.Ub(o,i,e)}}async Ub(i,e,t){if(this.ac(i))return this.Wb(e,t);if(i.fileOperationResult===7){let r;throw i instanceof H?r=h(3764,null,P.formatSize(i.size)):r=h(3765,null),V(this.group,e,t,r,this.f)}throw i}Vb(i,e,t,r){const o=this.jb(i,t);return o?(e?.selection&&o.modified&&(o.modified.cursorState=[]),r.restoreViewState(o),e?.revealIfVisible&&r.revealFirstDiff(),!0):!1}Wb(i,e){const t=i.original,r=i.modified,o=this.m.createInstance(l,i.getName(),i.getDescription(),t,r,!0),s=W.as(M.EditorFactory).getFileEditorFactory();s.isFileEditor(t)&&t.setForceOpenAsBinary(),s.isFileEditor(r)&&r.setForceOpenAsBinary(),this.group.replaceEditors([{editor:i,replacement:o,options:{...e,activation:L.PRESERVE,pinned:this.group.isPinned(i),sticky:this.group.isSticky(i)}}])}setOptions(i){super.setOptions(i),i&&b(i,p(this.a),0)}zb(i,e){return super.zb(i,e)?!0:i.affectsConfiguration(e,"diffEditor")||i.affectsConfiguration(e,"accessibility.verbosity.diffEditor")}Bb(i){const e=super.Bb(i);if(F(i.diffEditor)){const r=v(i.diffEditor);r.diffCodeLens=r.codeLens,delete r.codeLens,r.diffWordWrap=r.wordWrap,delete r.wordWrap,Object.assign(e,r)}const t=i.accessibility?.verbosity?.diffEditor??!1;return e.accessibilityVerbose=t,e}Hb(i){return{...super.Hb(i),...this.Gb(this.input?.isReadonly()),originalEditable:this.input instanceof l&&!this.input.original.isReadonly(),lineDecorationsWidth:"2ch"}}Fb(i){i instanceof l?this.a?.updateOptions({...this.Gb(i.isReadonly()),originalEditable:!i.original.isReadonly()}):super.Fb(i)}ac(i){return Array.isArray(i)?i.some(t=>this.ac(t)):i.textFileOperationResult===0}clearInput(){this.Tb&&(this.Tb.dispose(),this.Tb=null),super.clearInput();const i=this.c?.elapsed();this.c=void 0,typeof i=="number"&&this.bc(i,this.getControl()?.getModel()?.modified?.getLanguageId()),this.a?.setModel(null)}bc(i,e){let t=!1;this.a instanceof $&&(t=this.a.collapseUnchangedRegions),this.Q.publicLog2("diffEditor.editorVisibleTime",{editorVisibleTimeMs:i,languageId:e??"",collapseUnchangedRegions:t})}getControl(){return this.a}focus(){super.focus(),this.a?.focus()}hasFocus(){return this.a?.hasTextFocus()||super.hasFocus()}Z(i){super.Z(i),i?this.a?.onVisible():this.a?.onHide()}layout(i){this.a?.layout(i)}setBoundarySashes(i){this.a?.setBoundarySashes(i)}nb(i){return i instanceof l}mb(i){if(!this.a)return;const e=this.a.getModel();if(!e||!e.modified||!e.original)return;const t=this.pb(e);if(t&&A(t,i))return this.a.saveViewState()??void 0}pb(i){let e,t;if(i instanceof l?(e=i.original.resource,t=i.modified.resource):S(i)||(e=i.original.uri,t=i.modified.uri),!(!e||!t))return _.from({scheme:"diff",path:`${g(e.toString())}${g(t.toString())}`})}};y=m=E([a(1,D),a(2,G),a(3,I),a(4,C),a(5,B),a(6,O),a(7,j),a(8,U),a(9,K)],y);export{y as $xGb};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { localize } from "../../../../nls.js";
+import { deepClone } from "../../../../base/common/objects.js";
+import { isObject, assertReturnsDefined } from "../../../../base/common/types.js";
+import { AbstractTextEditor } from "./textEditor.js";
+import { TEXT_DIFF_EDITOR_ID, EditorExtensions, isEditorInput, isTextEditorViewState, createTooLargeFileError } from "../../../common/editor.js";
+import { applyTextEditorOptions } from "../../../common/editor/editorOptions.js";
+import { DiffEditorInput } from "../../../common/editor/diffEditorInput.js";
+import { TextDiffEditorModel } from "../../../common/editor/textDiffEditorModel.js";
+import { ITelemetryService } from "../../../../platform/telemetry/common/telemetry.js";
+import { IStorageService } from "../../../../platform/storage/common/storage.js";
+import { ITextResourceConfigurationService } from "../../../../editor/common/services/textResourceConfiguration.js";
+import { IInstantiationService } from "../../../../platform/instantiation/common/instantiation.js";
+import { IThemeService } from "../../../../platform/theme/common/themeService.js";
+import { Registry } from "../../../../platform/registry/common/platform.js";
+import { URI } from "../../../../base/common/uri.js";
+import { IEditorGroupsService } from "../../../services/editor/common/editorGroupsService.js";
+import { IEditorService } from "../../../services/editor/common/editorService.js";
+import { EditorActivation } from "../../../../platform/editor/common/editor.js";
+import { IContextKeyService } from "../../../../platform/contextkey/common/contextkey.js";
+import { isEqual } from "../../../../base/common/resources.js";
+import { multibyteAwareBtoa } from "../../../../base/browser/dom.js";
+import { ByteSize, IFileService, TooLargeFileOperationError } from "../../../../platform/files/common/files.js";
+import { IPreferencesService } from "../../../services/preferences/common/preferences.js";
+import { StopWatch } from "../../../../base/common/stopwatch.js";
+import { DiffEditorWidget } from "../../../../editor/browser/widget/diffEditor/diffEditorWidget.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+var TextDiffEditor_1;
+let TextDiffEditor = class TextDiffEditor2 extends AbstractTextEditor {
+  static {
+    __name(this, "TextDiffEditor");
+  }
+  static {
+    TextDiffEditor_1 = this;
+  }
+  static {
+    this.ID = TEXT_DIFF_EDITOR_ID;
+  }
+  get scopedContextKeyService() {
+    if (!this.diffEditorControl) {
+      return void 0;
+    }
+    const originalEditor = this.diffEditorControl.getOriginalEditor();
+    const modifiedEditor = this.diffEditorControl.getModifiedEditor();
+    return (originalEditor.hasTextFocus() ? originalEditor : modifiedEditor).invokeWithinContext((accessor) => accessor.get(IContextKeyService));
+  }
+  constructor(group, telemetryService, instantiationService, storageService, configurationService, editorService, themeService, editorGroupService, fileService, preferencesService) {
+    super(TextDiffEditor_1.ID, group, telemetryService, instantiationService, storageService, configurationService, themeService, editorService, editorGroupService, fileService);
+    this.preferencesService = preferencesService;
+    this.diffEditorControl = void 0;
+    this.inputLifecycleStopWatch = void 0;
+    this._previousViewModel = null;
+  }
+  getTitle() {
+    if (this.input) {
+      return this.input.getName();
+    }
+    return localize("textDiffEditor", "Text Diff Editor");
+  }
+  createEditorControl(parent, configuration) {
+    this.diffEditorControl = this._register(this.instantiationService.createInstance(DiffEditorWidget, parent, configuration, {}));
+  }
+  updateEditorControlOptions(options) {
+    this.diffEditorControl?.updateOptions(options);
+  }
+  getMainControl() {
+    return this.diffEditorControl?.getModifiedEditor();
+  }
+  async setInput(input, options, context, token) {
+    if (this._previousViewModel) {
+      this._previousViewModel.dispose();
+      this._previousViewModel = null;
+    }
+    this.inputLifecycleStopWatch = void 0;
+    await super.setInput(input, options, context, token);
+    try {
+      const resolvedModel = await input.resolve();
+      if (token.isCancellationRequested) {
+        return void 0;
+      }
+      if (!(resolvedModel instanceof TextDiffEditorModel)) {
+        this.openAsBinary(input, options);
+        return void 0;
+      }
+      const control = assertReturnsDefined(this.diffEditorControl);
+      const resolvedDiffEditorModel = resolvedModel;
+      const vm = resolvedDiffEditorModel.textDiffEditorModel ? control.createViewModel(resolvedDiffEditorModel.textDiffEditorModel) : null;
+      this._previousViewModel = vm;
+      await vm?.waitForDiff();
+      control.setModel(vm);
+      let hasPreviousViewState = false;
+      if (!isTextEditorViewState(options?.viewState)) {
+        hasPreviousViewState = this.restoreTextDiffEditorViewState(input, options, context, control);
+      }
+      let optionsGotApplied = false;
+      if (options) {
+        optionsGotApplied = applyTextEditorOptions(
+          options,
+          control,
+          1
+          /* ScrollType.Immediate */
+        );
+      }
+      if (!optionsGotApplied && !hasPreviousViewState) {
+        control.revealFirstDiff();
+      }
+      control.updateOptions({
+        ...this.getReadonlyConfiguration(resolvedDiffEditorModel.modifiedModel?.isReadonly()),
+        originalEditable: !resolvedDiffEditorModel.originalModel?.isReadonly()
+      });
+      control.handleInitialized();
+      this.inputLifecycleStopWatch = new StopWatch(false);
+    } catch (error) {
+      await this.handleSetInputError(error, input, options);
+    }
+  }
+  async handleSetInputError(error, input, options) {
+    if (this.isFileBinaryError(error)) {
+      return this.openAsBinary(input, options);
+    }
+    if (error.fileOperationResult === 7) {
+      let message;
+      if (error instanceof TooLargeFileOperationError) {
+        message = localize("fileTooLargeForHeapErrorWithSize", "At least one file is not displayed in the text compare editor because it is very large ({0}).", ByteSize.formatSize(error.size));
+      } else {
+        message = localize("fileTooLargeForHeapErrorWithoutSize", "At least one file is not displayed in the text compare editor because it is very large.");
+      }
+      throw createTooLargeFileError(this.group, input, options, message, this.preferencesService);
+    }
+    throw error;
+  }
+  restoreTextDiffEditorViewState(editor, options, context, control) {
+    const editorViewState = this.loadEditorViewState(editor, context);
+    if (editorViewState) {
+      if (options?.selection && editorViewState.modified) {
+        editorViewState.modified.cursorState = [];
+      }
+      control.restoreViewState(editorViewState);
+      if (options?.revealIfVisible) {
+        control.revealFirstDiff();
+      }
+      return true;
+    }
+    return false;
+  }
+  openAsBinary(input, options) {
+    const original = input.original;
+    const modified = input.modified;
+    const binaryDiffInput = this.instantiationService.createInstance(DiffEditorInput, input.getName(), input.getDescription(), original, modified, true);
+    const fileEditorFactory = Registry.as(EditorExtensions.EditorFactory).getFileEditorFactory();
+    if (fileEditorFactory.isFileEditor(original)) {
+      original.setForceOpenAsBinary();
+    }
+    if (fileEditorFactory.isFileEditor(modified)) {
+      modified.setForceOpenAsBinary();
+    }
+    this.group.replaceEditors([{
+      editor: input,
+      replacement: binaryDiffInput,
+      options: {
+        ...options,
+        // Make sure to not steal away the currently active group
+        // because we are triggering another openEditor() call
+        // and do not control the initial intent that resulted
+        // in us now opening as binary.
+        activation: EditorActivation.PRESERVE,
+        pinned: this.group.isPinned(input),
+        sticky: this.group.isSticky(input)
+      }
+    }]);
+  }
+  setOptions(options) {
+    super.setOptions(options);
+    if (options) {
+      applyTextEditorOptions(
+        options,
+        assertReturnsDefined(this.diffEditorControl),
+        0
+        /* ScrollType.Smooth */
+      );
+    }
+  }
+  shouldHandleConfigurationChangeEvent(e, resource) {
+    if (super.shouldHandleConfigurationChangeEvent(e, resource)) {
+      return true;
+    }
+    return e.affectsConfiguration(resource, "diffEditor") || e.affectsConfiguration(resource, "accessibility.verbosity.diffEditor");
+  }
+  computeConfiguration(configuration) {
+    const editorConfiguration = super.computeConfiguration(configuration);
+    if (isObject(configuration.diffEditor)) {
+      const diffEditorConfiguration = deepClone(configuration.diffEditor);
+      diffEditorConfiguration.diffCodeLens = diffEditorConfiguration.codeLens;
+      delete diffEditorConfiguration.codeLens;
+      diffEditorConfiguration.diffWordWrap = diffEditorConfiguration.wordWrap;
+      delete diffEditorConfiguration.wordWrap;
+      Object.assign(editorConfiguration, diffEditorConfiguration);
+    }
+    const verbose = configuration.accessibility?.verbosity?.diffEditor ?? false;
+    editorConfiguration.accessibilityVerbose = verbose;
+    return editorConfiguration;
+  }
+  getConfigurationOverrides(configuration) {
+    return {
+      ...super.getConfigurationOverrides(configuration),
+      ...this.getReadonlyConfiguration(this.input?.isReadonly()),
+      originalEditable: this.input instanceof DiffEditorInput && !this.input.original.isReadonly(),
+      lineDecorationsWidth: "2ch"
+    };
+  }
+  updateReadonly(input) {
+    if (input instanceof DiffEditorInput) {
+      this.diffEditorControl?.updateOptions({
+        ...this.getReadonlyConfiguration(input.isReadonly()),
+        originalEditable: !input.original.isReadonly()
+      });
+    } else {
+      super.updateReadonly(input);
+    }
+  }
+  isFileBinaryError(error) {
+    if (Array.isArray(error)) {
+      const errors = error;
+      return errors.some((error2) => this.isFileBinaryError(error2));
+    }
+    return error.textFileOperationResult === 0;
+  }
+  clearInput() {
+    if (this._previousViewModel) {
+      this._previousViewModel.dispose();
+      this._previousViewModel = null;
+    }
+    super.clearInput();
+    const inputLifecycleElapsed = this.inputLifecycleStopWatch?.elapsed();
+    this.inputLifecycleStopWatch = void 0;
+    if (typeof inputLifecycleElapsed === "number") {
+      this.logInputLifecycleTelemetry(inputLifecycleElapsed, this.getControl()?.getModel()?.modified?.getLanguageId());
+    }
+    this.diffEditorControl?.setModel(null);
+  }
+  logInputLifecycleTelemetry(duration, languageId) {
+    let collapseUnchangedRegions = false;
+    if (this.diffEditorControl instanceof DiffEditorWidget) {
+      collapseUnchangedRegions = this.diffEditorControl.collapseUnchangedRegions;
+    }
+    this.telemetryService.publicLog2("diffEditor.editorVisibleTime", {
+      editorVisibleTimeMs: duration,
+      languageId: languageId ?? "",
+      collapseUnchangedRegions
+    });
+  }
+  getControl() {
+    return this.diffEditorControl;
+  }
+  focus() {
+    super.focus();
+    this.diffEditorControl?.focus();
+  }
+  hasFocus() {
+    return this.diffEditorControl?.hasTextFocus() || super.hasFocus();
+  }
+  setEditorVisible(visible) {
+    super.setEditorVisible(visible);
+    if (visible) {
+      this.diffEditorControl?.onVisible();
+    } else {
+      this.diffEditorControl?.onHide();
+    }
+  }
+  layout(dimension) {
+    this.diffEditorControl?.layout(dimension);
+  }
+  setBoundarySashes(sashes) {
+    this.diffEditorControl?.setBoundarySashes(sashes);
+  }
+  tracksEditorViewState(input) {
+    return input instanceof DiffEditorInput;
+  }
+  computeEditorViewState(resource) {
+    if (!this.diffEditorControl) {
+      return void 0;
+    }
+    const model = this.diffEditorControl.getModel();
+    if (!model || !model.modified || !model.original) {
+      return void 0;
+    }
+    const modelUri = this.toEditorViewStateResource(model);
+    if (!modelUri) {
+      return void 0;
+    }
+    if (!isEqual(modelUri, resource)) {
+      return void 0;
+    }
+    return this.diffEditorControl.saveViewState() ?? void 0;
+  }
+  toEditorViewStateResource(modelOrInput) {
+    let original;
+    let modified;
+    if (modelOrInput instanceof DiffEditorInput) {
+      original = modelOrInput.original.resource;
+      modified = modelOrInput.modified.resource;
+    } else if (!isEditorInput(modelOrInput)) {
+      original = modelOrInput.original.uri;
+      modified = modelOrInput.modified.uri;
+    }
+    if (!original || !modified) {
+      return void 0;
+    }
+    return URI.from({ scheme: "diff", path: `${multibyteAwareBtoa(original.toString())}${multibyteAwareBtoa(modified.toString())}` });
+  }
+};
+TextDiffEditor = TextDiffEditor_1 = __decorate([
+  __param(1, ITelemetryService),
+  __param(2, IInstantiationService),
+  __param(3, IStorageService),
+  __param(4, ITextResourceConfigurationService),
+  __param(5, IEditorService),
+  __param(6, IThemeService),
+  __param(7, IEditorGroupsService),
+  __param(8, IFileService),
+  __param(9, IPreferencesService)
+], TextDiffEditor);
+export {
+  TextDiffEditor
+};
+//# sourceMappingURL=textDiffEditor.js.map

@@ -1,1 +1,190 @@
-import{$wd as q}from"../../../../../base/common/lifecycle.js";import{autorun as B,transaction as E}from"../../../../../base/common/observable.js";import{$0c as F}from"../../../../../base/common/types.js";import{$8_ as V}from"../../../../../editor/browser/editorBrowser.js";import{$BD as _}from"../../../../../editor/common/languages/language.js";import{$EG as C}from"../../../../../editor/common/model/editStack.js";import{$QH as b}from"../../../../../editor/common/model/textModel.js";import{$gF as A}from"../../../../../editor/common/services/model.js";import{$cF as M}from"../../../../../editor/common/services/resolverService.js";import{localize as d}from"../../../../../nls.js";import{$El as P}from"../../../../../platform/configuration/common/configuration.js";import{$5j as O}from"../../../../../platform/files/common/files.js";import{$mj as W}from"../../../../../platform/instantiation/common/instantiation.js";import{$oD as Z}from"../../../../../platform/markers/common/markers.js";import{$YE as Y}from"../../../../../platform/undoRedo/common/undoRedo.js";import{$7I as H}from"../../../../services/filesConfiguration/common/filesConfigurationService.js";import{$fJ as J,$hJ as m,$jJ as L}from"../../../../services/textfile/common/textfiles.js";import{$LS as x}from"../../common/chatService.js";import{$Vfc as Q}from"./chatEditingCodeEditorIntegration.js";import{$Sfc as T}from"./chatEditingModifiedFileEntry.js";import{$Wfc as z}from"./chatEditingTextModelChangeService.js";import{$Yfc as G,$Xfc as N}from"./chatEditingTextModelContentProviders.js";var y=function(h,t,e,i){var n=arguments.length,s=n<3?t:i===null?i=Object.getOwnPropertyDescriptor(t,e):i,r;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")s=Reflect.decorate(h,t,e,i);else for(var c=h.length-1;c>=0;c--)(r=h[c])&&(s=(n<3?r(s):n>3?r(t,e,s):r(t,e))||s);return n>3&&s&&Object.defineProperty(t,e,s),s},o=function(h,t){return function(e,i){t(e,i,h)}};let g=class extends T{get changesCount(){return this.X.diffInfo.map(t=>t.changes.length)}constructor(t,e,i,n,s,r,c,p,I,U,$,R,S,w,X,u){super(t.object.textEditorModel.uri,i,n,U,$,R,w,X,u),this.Y=e,this.Z=S,this.W=this.B(t).object,this.U=t.object.textEditorModel,this.originalURI=N.getFileURI(i.sessionId,this.entryId,this.modifiedURI.path),this.initialContent=s??this.U.getValue();const D=this.s=this.B(c.createModel(b(s?L(s):this.U.createSnapshot()),I.createById(this.U.getLanguageId()),this.originalURI,!1));this.X=this.B(u.createInstance(z,this.s,this.U,this.g)),this.B(this.X.onDidAcceptOrRejectAllHunks(a=>{this.g.set(a,void 0),this.N(a===1?"accepted":"rejected")})),(async()=>{const a=await p.createModelReference(D.uri);if(this.q.isDisposed){a.dispose();return}this.B(a)})(),this.B(this.X.onDidUserEditModel(()=>{this.C.schedule();const a=this.U.getValue()===this.initialContent;this.g.get()===0&&a&&this.g.set(2,void 0)}));const l=this.B(new q);this.B(B(a=>{if(this.h.read(a)){const f=this.m.read(a),j=f&&f.session.getRequests().find(v=>v.id===f.requestId);l.value=r.installResourceFilter(this.modifiedURI,j?.message.text||d(5288,null))}else l.clear()}))}equalsSnapshot(t){return!!t&&this.modifiedURI.toString()===t.resource.toString()&&this.U.getLanguageId()===t.languageId&&this.s.getValue()===t.original&&this.U.getValue()===t.current&&this.state.get()===t.state}createSnapshot(t,e){return{resource:this.modifiedURI,languageId:this.U.getLanguageId(),snapshotUri:G.getSnapshotFileURI(this.D.sessionId,t,e,this.modifiedURI.path),original:this.s.getValue(),current:this.U.getValue(),state:this.state.get(),telemetryInfo:this.D}}async restoreFromSnapshot(t,e=!0){this.g.set(t.state,void 0),await this.X.resetDocumentValues(t.original,e?t.current:void 0)}async resetToInitialContent(){await this.X.resetDocumentValues(void 0,this.initialContent)}async R(){return this.X.areOriginalAndModifiedIdentical()}S(t){super.S(t),this.X.clearCurrentEditLineDecoration()}Q(t){const e=t.session.getRequests().find(n=>n.id===t.requestId),i=e?.message.text?d(5289,null,e.message.text):d(5290,null);return new C(i,"chat.edit",this.U,null)}async acceptAgentEdits(t,e,i,n){const s=await this.X.acceptAgentEdits(t,e,i);E(r=>{this.h.set(!i,r),this.g.set(0,r),i?(this.S(r),this.t.set(1,r)):(this.j.set(n,r),this.t.set(s.rewriteRatio,r))}),i&&await this.Z.save(this.U.uri,{reason:2,skipSaveParticipants:!0})}async L(){if(this.X.keep(),this.Y.collapse(void 0),!this.F.getAutoSaveConfiguration(this.modifiedURI).autoSave||!this.Z.isDirty(this.modifiedURI))try{await this.Z.save(this.modifiedURI,{reason:1,force:!0,ignoreErrorHandler:!0})}catch{}}async M(){this.createdInRequestId===this.D.requestId?(m(this.W)&&(await this.W.revert({soft:!0}),await this.H.del(this.modifiedURI)),this.f.fire()):(this.X.undo(),this.X.allEditsAreFromUs&&m(this.W)&&await this.W.save({reason:1,skipSaveParticipants:!0}),this.Y.collapse(void 0))}P(t){const e=V(t.getControl());F(e);const i=this.X.diffInfo;return this.J.createInstance(Q,this,e,i,!1)}};g=y([o(5,Z),o(6,A),o(7,M),o(8,_),o(9,P),o(10,H),o(11,x),o(12,J),o(13,O),o(14,Y),o(15,W)],g);export{g as $Zfc};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { MutableDisposable } from "../../../../../base/common/lifecycle.js";
+import { autorun, transaction } from "../../../../../base/common/observable.js";
+import { assertType } from "../../../../../base/common/types.js";
+import { getCodeEditor } from "../../../../../editor/browser/editorBrowser.js";
+import { ILanguageService } from "../../../../../editor/common/languages/language.js";
+import { SingleModelEditStackElement } from "../../../../../editor/common/model/editStack.js";
+import { createTextBufferFactoryFromSnapshot } from "../../../../../editor/common/model/textModel.js";
+import { IModelService } from "../../../../../editor/common/services/model.js";
+import { ITextModelService } from "../../../../../editor/common/services/resolverService.js";
+import { localize } from "../../../../../nls.js";
+import { IConfigurationService } from "../../../../../platform/configuration/common/configuration.js";
+import { IFileService } from "../../../../../platform/files/common/files.js";
+import { IInstantiationService } from "../../../../../platform/instantiation/common/instantiation.js";
+import { IMarkerService } from "../../../../../platform/markers/common/markers.js";
+import { IUndoRedoService } from "../../../../../platform/undoRedo/common/undoRedo.js";
+import { IFilesConfigurationService } from "../../../../services/filesConfiguration/common/filesConfigurationService.js";
+import { ITextFileService, isTextFileEditorModel, stringToSnapshot } from "../../../../services/textfile/common/textfiles.js";
+import { IChatService } from "../../common/chatService.js";
+import { ChatEditingCodeEditorIntegration } from "./chatEditingCodeEditorIntegration.js";
+import { AbstractChatEditingModifiedFileEntry } from "./chatEditingModifiedFileEntry.js";
+import { ChatEditingTextModelChangeService } from "./chatEditingTextModelChangeService.js";
+import { ChatEditingSnapshotTextModelContentProvider, ChatEditingTextModelContentProvider } from "./chatEditingTextModelContentProviders.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+let ChatEditingModifiedDocumentEntry = class ChatEditingModifiedDocumentEntry2 extends AbstractChatEditingModifiedFileEntry {
+  static {
+    __name(this, "ChatEditingModifiedDocumentEntry");
+  }
+  get changesCount() {
+    return this._textModelChangeService.diffInfo.map((diff) => diff.changes.length);
+  }
+  constructor(resourceRef, _multiDiffEntryDelegate, telemetryInfo, kind, initialContent, markerService, modelService, textModelService, languageService, configService, fileConfigService, chatService, _textFileService, fileService, undoRedoService, instantiationService) {
+    super(resourceRef.object.textEditorModel.uri, telemetryInfo, kind, configService, fileConfigService, chatService, fileService, undoRedoService, instantiationService);
+    this._multiDiffEntryDelegate = _multiDiffEntryDelegate;
+    this._textFileService = _textFileService;
+    this._docFileEditorModel = this._register(resourceRef).object;
+    this.modifiedModel = resourceRef.object.textEditorModel;
+    this.originalURI = ChatEditingTextModelContentProvider.getFileURI(telemetryInfo.sessionId, this.entryId, this.modifiedURI.path);
+    this.initialContent = initialContent ?? this.modifiedModel.getValue();
+    const docSnapshot = this.originalModel = this._register(modelService.createModel(createTextBufferFactoryFromSnapshot(initialContent ? stringToSnapshot(initialContent) : this.modifiedModel.createSnapshot()), languageService.createById(this.modifiedModel.getLanguageId()), this.originalURI, false));
+    this._textModelChangeService = this._register(instantiationService.createInstance(ChatEditingTextModelChangeService, this.originalModel, this.modifiedModel, this._stateObs));
+    this._register(this._textModelChangeService.onDidAcceptOrRejectAllHunks((action) => {
+      this._stateObs.set(action, void 0);
+      this._notifyAction(action === 1 ? "accepted" : "rejected");
+    }));
+    (async () => {
+      const reference = await textModelService.createModelReference(docSnapshot.uri);
+      if (this._store.isDisposed) {
+        reference.dispose();
+        return;
+      }
+      this._register(reference);
+    })();
+    this._register(this._textModelChangeService.onDidUserEditModel(() => {
+      this._userEditScheduler.schedule();
+      const didResetToOriginalContent = this.modifiedModel.getValue() === this.initialContent;
+      if (this._stateObs.get() === 0 && didResetToOriginalContent) {
+        this._stateObs.set(2, void 0);
+      }
+    }));
+    const resourceFilter = this._register(new MutableDisposable());
+    this._register(autorun((r) => {
+      const inProgress = this._waitsForLastEdits.read(r);
+      if (inProgress) {
+        const res = this._lastModifyingResponseObs.read(r);
+        const req = res && res.session.getRequests().find((value) => value.id === res.requestId);
+        resourceFilter.value = markerService.installResourceFilter(this.modifiedURI, req?.message.text || localize("default", "Chat Edits"));
+      } else {
+        resourceFilter.clear();
+      }
+    }));
+  }
+  equalsSnapshot(snapshot) {
+    return !!snapshot && this.modifiedURI.toString() === snapshot.resource.toString() && this.modifiedModel.getLanguageId() === snapshot.languageId && this.originalModel.getValue() === snapshot.original && this.modifiedModel.getValue() === snapshot.current && this.state.get() === snapshot.state;
+  }
+  createSnapshot(requestId, undoStop) {
+    return {
+      resource: this.modifiedURI,
+      languageId: this.modifiedModel.getLanguageId(),
+      snapshotUri: ChatEditingSnapshotTextModelContentProvider.getSnapshotFileURI(this._telemetryInfo.sessionId, requestId, undoStop, this.modifiedURI.path),
+      original: this.originalModel.getValue(),
+      current: this.modifiedModel.getValue(),
+      state: this.state.get(),
+      telemetryInfo: this._telemetryInfo
+    };
+  }
+  async restoreFromSnapshot(snapshot, restoreToDisk = true) {
+    this._stateObs.set(snapshot.state, void 0);
+    await this._textModelChangeService.resetDocumentValues(snapshot.original, restoreToDisk ? snapshot.current : void 0);
+  }
+  async resetToInitialContent() {
+    await this._textModelChangeService.resetDocumentValues(void 0, this.initialContent);
+  }
+  async _areOriginalAndModifiedIdentical() {
+    return this._textModelChangeService.areOriginalAndModifiedIdentical();
+  }
+  _resetEditsState(tx) {
+    super._resetEditsState(tx);
+    this._textModelChangeService.clearCurrentEditLineDecoration();
+  }
+  _createUndoRedoElement(response) {
+    const request = response.session.getRequests().find((req) => req.id === response.requestId);
+    const label = request?.message.text ? localize("chatEditing1", "Chat Edit: '{0}'", request.message.text) : localize("chatEditing2", "Chat Edit");
+    return new SingleModelEditStackElement(label, "chat.edit", this.modifiedModel, null);
+  }
+  async acceptAgentEdits(resource, textEdits, isLastEdits, responseModel) {
+    const result = await this._textModelChangeService.acceptAgentEdits(resource, textEdits, isLastEdits);
+    transaction((tx) => {
+      this._waitsForLastEdits.set(!isLastEdits, tx);
+      this._stateObs.set(0, tx);
+      if (!isLastEdits) {
+        this._isCurrentlyBeingModifiedByObs.set(responseModel, tx);
+        this._rewriteRatioObs.set(result.rewriteRatio, tx);
+      } else {
+        this._resetEditsState(tx);
+        this._rewriteRatioObs.set(1, tx);
+      }
+    });
+    if (isLastEdits) {
+      await this._textFileService.save(this.modifiedModel.uri, {
+        reason: 2,
+        skipSaveParticipants: true
+      });
+    }
+  }
+  async _doAccept() {
+    this._textModelChangeService.keep();
+    this._multiDiffEntryDelegate.collapse(void 0);
+    const config = this._fileConfigService.getAutoSaveConfiguration(this.modifiedURI);
+    if (!config.autoSave || !this._textFileService.isDirty(this.modifiedURI)) {
+      try {
+        await this._textFileService.save(this.modifiedURI, {
+          reason: 1,
+          force: true,
+          ignoreErrorHandler: true
+        });
+      } catch {
+      }
+    }
+  }
+  async _doReject() {
+    if (this.createdInRequestId === this._telemetryInfo.requestId) {
+      if (isTextFileEditorModel(this._docFileEditorModel)) {
+        await this._docFileEditorModel.revert({ soft: true });
+        await this._fileService.del(this.modifiedURI);
+      }
+      this._onDidDelete.fire();
+    } else {
+      this._textModelChangeService.undo();
+      if (this._textModelChangeService.allEditsAreFromUs && isTextFileEditorModel(this._docFileEditorModel)) {
+        await this._docFileEditorModel.save({ reason: 1, skipSaveParticipants: true });
+      }
+      this._multiDiffEntryDelegate.collapse(void 0);
+    }
+  }
+  _createEditorIntegration(editor) {
+    const codeEditor = getCodeEditor(editor.getControl());
+    assertType(codeEditor);
+    const diffInfo = this._textModelChangeService.diffInfo;
+    return this._instantiationService.createInstance(ChatEditingCodeEditorIntegration, this, codeEditor, diffInfo, false);
+  }
+};
+ChatEditingModifiedDocumentEntry = __decorate([
+  __param(5, IMarkerService),
+  __param(6, IModelService),
+  __param(7, ITextModelService),
+  __param(8, ILanguageService),
+  __param(9, IConfigurationService),
+  __param(10, IFilesConfigurationService),
+  __param(11, IChatService),
+  __param(12, ITextFileService),
+  __param(13, IFileService),
+  __param(14, IUndoRedoService),
+  __param(15, IInstantiationService)
+], ChatEditingModifiedDocumentEntry);
+export {
+  ChatEditingModifiedDocumentEntry
+};
+//# sourceMappingURL=chatEditingModifiedDocumentEntry.js.map

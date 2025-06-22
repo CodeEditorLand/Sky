@@ -1,1 +1,156 @@
-import{$vd as p,$wd as g}from"../../../../../base/common/lifecycle.js";import{$gF as u}from"../../../../../editor/common/services/model.js";import{$BD as x}from"../../../../../editor/common/languages/language.js";import{$cF as C}from"../../../../../editor/common/services/resolverService.js";import{URI as $}from"../../../../../base/common/uri.js";import{Schemas as f}from"../../../../../base/common/network.js";import{$Vtc as b,$Ttc as r}from"./lspTerminalUtil.js";var l,m=function(t,e,s,i){var o,n=arguments.length,r=n<3?e:null===i?i=Object.getOwnPropertyDescriptor(e,s):i;if("object"==typeof Reflect&&"function"==typeof Reflect.decorate)r=Reflect.decorate(t,e,s,i);else for(var a=t.length-1;a>=0;a--)(o=t[a])&&(r=(n<3?o(r):n>3?o(e,s,r):o(e,s))||r);return n>3&&r&&Object.defineProperty(e,s,r),r},c=function(t,e){return function(s,i){e(s,i,t)}};let d=class extends p{static{l=this}static{this.scheme=f.vscodeTerminal}constructor(t,e,s,i,o,n,r){super(),this.h=n,this.j=r,this.g=this.B(new g),this.B(o.registerTextModelContentProvider(l.scheme,this)),this.b=t,this.a=this.b.get(2),this.m(),this.c=s,this.f=i}shellTypeChanged(t){this.f=t}setContent(t){const e=this.h.getModel(this.c);if("exit()"!==t&&"python"===this.f&&e){const s=e.getValue();if(""===s)e.setValue(r);else{const i=s.lastIndexOf(r),o=(-1!==i?s.substring(0,i):s)+"\n"+t+"\n"+r;e.setValue(o)}}}trackPromptInputToVirtualFile(t){this.a=this.b.get(2);const e=this.h.getModel(this.c);if("exit()"!==t&&"python"===this.f&&e){const s=e.getValue(),i=s.lastIndexOf(r),o=(-1!==i?s.substring(0,i):s)+r+t;e.setValue(o)}}m(){const t=()=>{this.g.value||this.a&&this.a.onCommandFinished&&(this.g.value=this.B(this.a.onCommandFinished((t=>{0===t.exitCode&&"python"===this.f&&this.setContent(t.command)}))))};t(),this.B(this.b.onDidAddCapabilityType((e=>{2===e&&(this.a=this.b.get(2),t())})))}async provideTextContent(t){const e=this.h.getModel(t);if(e&&!e.isDisposed())return e;const s=t.path.split(".").pop();let i;if(s&&(i=this.j.getLanguageIdByLanguageName(s),!i)&&"py"===s)i=b;const o=i?this.j.createById(i):this.j.createById("plaintext");return this.h.createModel("",o,t,!1)}};function w(t,e){return $.from({scheme:f.vscodeTerminal,path:`/terminal${t}.${e}`})}d=l=m([c(4,C),c(5,u),c(6,x)],d);export{d as $Wtc,w as $Xtc};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { Disposable, MutableDisposable } from "../../../../../base/common/lifecycle.js";
+import { IModelService } from "../../../../../editor/common/services/model.js";
+import { ILanguageService } from "../../../../../editor/common/languages/language.js";
+import { ITextModelService } from "../../../../../editor/common/services/resolverService.js";
+import { URI } from "../../../../../base/common/uri.js";
+import { Schemas } from "../../../../../base/common/network.js";
+import { PYTHON_LANGUAGE_ID, VSCODE_LSP_TERMINAL_PROMPT_TRACKER } from "./lspTerminalUtil.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+var LspTerminalModelContentProvider_1;
+let LspTerminalModelContentProvider = class LspTerminalModelContentProvider2 extends Disposable {
+  static {
+    __name(this, "LspTerminalModelContentProvider");
+  }
+  static {
+    LspTerminalModelContentProvider_1 = this;
+  }
+  static {
+    this.scheme = Schemas.vscodeTerminal;
+  }
+  constructor(capabilityStore, terminalId, virtualTerminalDocument, shellType, textModelService, _modelService, _languageService) {
+    super();
+    this._modelService = _modelService;
+    this._languageService = _languageService;
+    this._onCommandFinishedListener = this._register(new MutableDisposable());
+    this._register(textModelService.registerTextModelContentProvider(LspTerminalModelContentProvider_1.scheme, this));
+    this._capabilitiesStore = capabilityStore;
+    this._commandDetection = this._capabilitiesStore.get(
+      2
+      /* TerminalCapability.CommandDetection */
+    );
+    this._registerTerminalCommandFinishedListener();
+    this._virtualTerminalDocumentUri = virtualTerminalDocument;
+    this._shellType = shellType;
+  }
+  // Listens to onDidChangeShellType event from `terminal.suggest.contribution.ts`
+  shellTypeChanged(shellType) {
+    this._shellType = shellType;
+  }
+  /**
+   * Sets or updates content for a terminal virtual document.
+   * This is when user has executed succesful command in terminal.
+   * Transfer the content to virtual document, and relocate delimiter to get terminal prompt ready for next prompt.
+   */
+  setContent(content) {
+    const model = this._modelService.getModel(this._virtualTerminalDocumentUri);
+    if (content !== "exit()" && this._shellType === "python") {
+      if (model) {
+        const existingContent = model.getValue();
+        if (existingContent === "") {
+          model.setValue(VSCODE_LSP_TERMINAL_PROMPT_TRACKER);
+        } else {
+          const delimiterIndex = existingContent.lastIndexOf(VSCODE_LSP_TERMINAL_PROMPT_TRACKER);
+          const sanitizedExistingContent = delimiterIndex !== -1 ? existingContent.substring(0, delimiterIndex) : existingContent;
+          const newContent = sanitizedExistingContent + "\n" + content + "\n" + VSCODE_LSP_TERMINAL_PROMPT_TRACKER;
+          model.setValue(newContent);
+        }
+      }
+    }
+  }
+  /**
+   * Real-time conversion of terminal input to virtual document happens here.
+   * This is when user types in terminal, and we want to track the input.
+   * We want to track the input and update the virtual document.
+   * Note: This is for non-executed command.
+  */
+  trackPromptInputToVirtualFile(content) {
+    this._commandDetection = this._capabilitiesStore.get(
+      2
+      /* TerminalCapability.CommandDetection */
+    );
+    const model = this._modelService.getModel(this._virtualTerminalDocumentUri);
+    if (content !== "exit()" && this._shellType === "python") {
+      if (model) {
+        const existingContent = model.getValue();
+        const delimiterIndex = existingContent.lastIndexOf(VSCODE_LSP_TERMINAL_PROMPT_TRACKER);
+        const sanitizedExistingContent = delimiterIndex !== -1 ? existingContent.substring(0, delimiterIndex) : existingContent;
+        const newContent = sanitizedExistingContent + VSCODE_LSP_TERMINAL_PROMPT_TRACKER + content;
+        model.setValue(newContent);
+      }
+    }
+  }
+  _registerTerminalCommandFinishedListener() {
+    const attachListener = /* @__PURE__ */ __name(() => {
+      if (this._onCommandFinishedListener.value) {
+        return;
+      }
+      if (this._commandDetection && this._commandDetection.onCommandFinished) {
+        this._onCommandFinishedListener.value = this._register(this._commandDetection.onCommandFinished((e) => {
+          if (e.exitCode === 0 && this._shellType === "python") {
+            this.setContent(e.command);
+          }
+        }));
+      }
+    }, "attachListener");
+    attachListener();
+    this._register(this._capabilitiesStore.onDidAddCapabilityType((e) => {
+      if (e === 2) {
+        this._commandDetection = this._capabilitiesStore.get(
+          2
+          /* TerminalCapability.CommandDetection */
+        );
+        attachListener();
+      }
+    }));
+  }
+  // TODO: Adapt to support non-python virtual document for non-python REPLs.
+  async provideTextContent(resource) {
+    const existing = this._modelService.getModel(resource);
+    if (existing && !existing.isDisposed()) {
+      return existing;
+    }
+    const extension = resource.path.split(".").pop();
+    let languageId = void 0;
+    if (extension) {
+      languageId = this._languageService.getLanguageIdByLanguageName(extension);
+      if (!languageId) {
+        switch (extension) {
+          case "py":
+            languageId = PYTHON_LANGUAGE_ID;
+            break;
+        }
+      }
+    }
+    const languageSelection = languageId ? this._languageService.createById(languageId) : this._languageService.createById("plaintext");
+    return this._modelService.createModel("", languageSelection, resource, false);
+  }
+};
+LspTerminalModelContentProvider = LspTerminalModelContentProvider_1 = __decorate([
+  __param(4, ITextModelService),
+  __param(5, IModelService),
+  __param(6, ILanguageService)
+], LspTerminalModelContentProvider);
+function createTerminalLanguageVirtualUri(terminalId, languageExtension) {
+  return URI.from({
+    scheme: Schemas.vscodeTerminal,
+    path: `/terminal${terminalId}.${languageExtension}`
+  });
+}
+__name(createTerminalLanguageVirtualUri, "createTerminalLanguageVirtualUri");
+export {
+  LspTerminalModelContentProvider,
+  createTerminalLanguageVirtualUri
+};
+//# sourceMappingURL=lspTerminalModelContentProvider.js.map

@@ -1,1 +1,19 @@
-import{$_H as r}from"../../../../platform/keybinding/common/keybindingsRegistry.js";import{$l4 as o}from"../common/terminal.js";import{$WB as i}from"../../../../platform/instantiation/common/extensions.js";import{$TBc as m}from"./terminalProfileResolverService.js";import{TerminalContextKeys as e}from"../common/terminalContextKey.js";i(o,m,1),r.registerKeybindingRule({id:"workbench.action.terminal.new",weight:200,when:e.notFocus,primary:3105});
+import { KeybindingsRegistry } from "../../../../platform/keybinding/common/keybindingsRegistry.js";
+import { ITerminalProfileResolverService } from "../common/terminal.js";
+import { registerSingleton } from "../../../../platform/instantiation/common/extensions.js";
+import { BrowserTerminalProfileResolverService } from "./terminalProfileResolverService.js";
+import { TerminalContextKeys } from "../common/terminalContextKey.js";
+registerSingleton(
+  ITerminalProfileResolverService,
+  BrowserTerminalProfileResolverService,
+  1
+  /* InstantiationType.Delayed */
+);
+KeybindingsRegistry.registerKeybindingRule({
+  id: "workbench.action.terminal.new",
+  weight: 200,
+  when: TerminalContextKeys.notFocus,
+  primary: 2048 | 1024 | 33
+  /* KeyCode.KeyC */
+});
+//# sourceMappingURL=terminal.web.contribution.js.map

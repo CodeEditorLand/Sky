@@ -1,1 +1,66 @@
-import{$ubb as g}from"../../view/viewPart.js";import{$hp as a}from"../../../../base/common/color.js";import{$4F as p}from"../../../common/core/editorColorRegistry.js";import{autorun as f}from"../../../../base/common/observable.js";class w extends g{constructor(t,o){super(t),this.f=o,this.c=[],this.B(f(e=>this.h(e)))}onConfigurationChanged(t){return this.h(void 0),!0}prepareRender(t){}render(t){}h(t){const o=this._context.configuration.options,e=o.get(110),l=o.get(55).typicalHalfwidthCharacterWidth,c=this.f.devicePixelRatio.read(t);for(let r=0,d=e.length;r<d;r++){const s=e[r],h=this.c[r],i=s.color?a.fromHex(s.color):this._context.theme.getColor(p)??a.white,n=[s.column*l*c,0,Math.max(1,Math.ceil(c)),Number.MAX_SAFE_INTEGER,i.rgba.r/255,i.rgba.g/255,i.rgba.b/255,i.rgba.a];h?h.setRaw(n):this.c[r]=this.f.rectangleRenderer.register(...n)}for(;this.c.length>e.length;)this.c.splice(-1,1)[0].dispose()}}export{w as $edb};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { ViewPart } from "../../view/viewPart.js";
+import { Color } from "../../../../base/common/color.js";
+import { editorRuler } from "../../../common/core/editorColorRegistry.js";
+import { autorun } from "../../../../base/common/observable.js";
+class RulersGpu extends ViewPart {
+  static {
+    __name(this, "RulersGpu");
+  }
+  constructor(context, _viewGpuContext) {
+    super(context);
+    this._viewGpuContext = _viewGpuContext;
+    this._gpuShapes = [];
+    this._register(autorun((reader) => this._updateEntries(reader)));
+  }
+  // --- begin event handlers
+  onConfigurationChanged(e) {
+    this._updateEntries(void 0);
+    return true;
+  }
+  // --- end event handlers
+  prepareRender(ctx) {
+  }
+  render(ctx) {
+  }
+  _updateEntries(reader) {
+    const options = this._context.configuration.options;
+    const rulers = options.get(
+      110
+      /* EditorOption.rulers */
+    );
+    const typicalHalfwidthCharacterWidth = options.get(
+      55
+      /* EditorOption.fontInfo */
+    ).typicalHalfwidthCharacterWidth;
+    const devicePixelRatio = this._viewGpuContext.devicePixelRatio.read(reader);
+    for (let i = 0, len = rulers.length; i < len; i++) {
+      const ruler = rulers[i];
+      const shape = this._gpuShapes[i];
+      const color = ruler.color ? Color.fromHex(ruler.color) : this._context.theme.getColor(editorRuler) ?? Color.white;
+      const rulerData = [
+        ruler.column * typicalHalfwidthCharacterWidth * devicePixelRatio,
+        0,
+        Math.max(1, Math.ceil(devicePixelRatio)),
+        Number.MAX_SAFE_INTEGER,
+        color.rgba.r / 255,
+        color.rgba.g / 255,
+        color.rgba.b / 255,
+        color.rgba.a
+      ];
+      if (!shape) {
+        this._gpuShapes[i] = this._viewGpuContext.rectangleRenderer.register(...rulerData);
+      } else {
+        shape.setRaw(rulerData);
+      }
+    }
+    while (this._gpuShapes.length > rulers.length) {
+      this._gpuShapes.splice(-1, 1)[0].dispose();
+    }
+  }
+}
+export {
+  RulersGpu
+};
+//# sourceMappingURL=rulersGpu.js.map

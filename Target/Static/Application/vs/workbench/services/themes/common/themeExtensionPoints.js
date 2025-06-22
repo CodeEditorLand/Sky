@@ -1,10 +1,276 @@
-import*as r from"../../../../nls.js";import*as p from"../../../../base/common/types.js";import*as c from"../../../../base/common/resources.js";import{$UO as d}from"../../extensions/common/extensionsRegistry.js";import{ExtensionData as m}from"./workbenchThemeService.js";import{$df as f}from"../../../../base/common/event.js";import{$vd as b}from"../../../../base/common/lifecycle.js";import{Extensions as y}from"../../extensionManagement/common/extensionFeatures.js";import{$Uj as $}from"../../../../base/common/htmlContent.js";import{$Ql as g}from"../../../../platform/registry/common/platform.js";import{$kj as T}from"../../../../platform/instantiation/common/descriptors.js";import{ThemeTypeSelector as a}from"../../../../platform/theme/common/theme.js";function M(){return d.registerExtensionPoint({extensionPoint:"themes",jsonSchema:{description:r.localize(14642,null),type:"array",items:{type:"object",defaultSnippets:[{body:{label:"${1:label}",id:"${2:id}",uiTheme:a.VS_DARK,path:"./themes/${3:id}.tmTheme."}}],properties:{id:{description:r.localize(14643,null),type:"string"},label:{description:r.localize(14644,null),type:"string"},uiTheme:{description:r.localize(14645,null),enum:[a.VS,a.VS_DARK,a.HC_BLACK,a.HC_LIGHT]},path:{description:r.localize(14646,null),type:"string"}},required:["path","uiTheme"]}}})}function v(){return d.registerExtensionPoint({extensionPoint:"iconThemes",jsonSchema:{description:r.localize(14647,null),type:"array",items:{type:"object",defaultSnippets:[{body:{id:"${1:id}",label:"${2:label}",path:"./fileicons/${3:id}-icon-theme.json"}}],properties:{id:{description:r.localize(14648,null),type:"string"},label:{description:r.localize(14649,null),type:"string"},path:{description:r.localize(14650,null),type:"string"}},required:["path","id"]}}})}function P(){return d.registerExtensionPoint({extensionPoint:"productIconThemes",jsonSchema:{description:r.localize(14651,null),type:"array",items:{type:"object",defaultSnippets:[{body:{id:"${1:id}",label:"${2:label}",path:"./producticons/${3:id}-product-icon-theme.json"}}],properties:{id:{description:r.localize(14652,null),type:"string"},label:{description:r.localize(14653,null),type:"string"},path:{description:r.localize(14654,null),type:"string"}},required:["path","id"]}}})}class z extends b{constructor(){super(...arguments),this.type="markdown"}shouldRender(e){return!!e.contributes?.themes||!!e.contributes?.iconThemes||!!e.contributes?.productIconThemes}render(e){const t=new $;if(e.contributes?.themes){t.appendMarkdown(`### ${r.localize(14655,null)}
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import * as nls from "../../../../nls.js";
+import * as types from "../../../../base/common/types.js";
+import * as resources from "../../../../base/common/resources.js";
+import { ExtensionsRegistry } from "../../extensions/common/extensionsRegistry.js";
+import { ExtensionData } from "./workbenchThemeService.js";
+import { Emitter } from "../../../../base/common/event.js";
+import { Disposable } from "../../../../base/common/lifecycle.js";
+import { Extensions } from "../../extensionManagement/common/extensionFeatures.js";
+import { MarkdownString } from "../../../../base/common/htmlContent.js";
+import { Registry } from "../../../../platform/registry/common/platform.js";
+import { SyncDescriptor } from "../../../../platform/instantiation/common/descriptors.js";
+import { ThemeTypeSelector } from "../../../../platform/theme/common/theme.js";
+function registerColorThemeExtensionPoint() {
+  return ExtensionsRegistry.registerExtensionPoint({
+    extensionPoint: "themes",
+    jsonSchema: {
+      description: nls.localize("vscode.extension.contributes.themes", "Contributes textmate color themes."),
+      type: "array",
+      items: {
+        type: "object",
+        defaultSnippets: [{ body: { label: "${1:label}", id: "${2:id}", uiTheme: ThemeTypeSelector.VS_DARK, path: "./themes/${3:id}.tmTheme." } }],
+        properties: {
+          id: {
+            description: nls.localize("vscode.extension.contributes.themes.id", "Id of the color theme as used in the user settings."),
+            type: "string"
+          },
+          label: {
+            description: nls.localize("vscode.extension.contributes.themes.label", "Label of the color theme as shown in the UI."),
+            type: "string"
+          },
+          uiTheme: {
+            description: nls.localize("vscode.extension.contributes.themes.uiTheme", "Base theme defining the colors around the editor: 'vs' is the light color theme, 'vs-dark' is the dark color theme. 'hc-black' is the dark high contrast theme, 'hc-light' is the light high contrast theme."),
+            enum: [ThemeTypeSelector.VS, ThemeTypeSelector.VS_DARK, ThemeTypeSelector.HC_BLACK, ThemeTypeSelector.HC_LIGHT]
+          },
+          path: {
+            description: nls.localize("vscode.extension.contributes.themes.path", "Path of the tmTheme file. The path is relative to the extension folder and is typically './colorthemes/awesome-color-theme.json'."),
+            type: "string"
+          }
+        },
+        required: ["path", "uiTheme"]
+      }
+    }
+  });
+}
+__name(registerColorThemeExtensionPoint, "registerColorThemeExtensionPoint");
+function registerFileIconThemeExtensionPoint() {
+  return ExtensionsRegistry.registerExtensionPoint({
+    extensionPoint: "iconThemes",
+    jsonSchema: {
+      description: nls.localize("vscode.extension.contributes.iconThemes", "Contributes file icon themes."),
+      type: "array",
+      items: {
+        type: "object",
+        defaultSnippets: [{ body: { id: "${1:id}", label: "${2:label}", path: "./fileicons/${3:id}-icon-theme.json" } }],
+        properties: {
+          id: {
+            description: nls.localize("vscode.extension.contributes.iconThemes.id", "Id of the file icon theme as used in the user settings."),
+            type: "string"
+          },
+          label: {
+            description: nls.localize("vscode.extension.contributes.iconThemes.label", "Label of the file icon theme as shown in the UI."),
+            type: "string"
+          },
+          path: {
+            description: nls.localize("vscode.extension.contributes.iconThemes.path", "Path of the file icon theme definition file. The path is relative to the extension folder and is typically './fileicons/awesome-icon-theme.json'."),
+            type: "string"
+          }
+        },
+        required: ["path", "id"]
+      }
+    }
+  });
+}
+__name(registerFileIconThemeExtensionPoint, "registerFileIconThemeExtensionPoint");
+function registerProductIconThemeExtensionPoint() {
+  return ExtensionsRegistry.registerExtensionPoint({
+    extensionPoint: "productIconThemes",
+    jsonSchema: {
+      description: nls.localize("vscode.extension.contributes.productIconThemes", "Contributes product icon themes."),
+      type: "array",
+      items: {
+        type: "object",
+        defaultSnippets: [{ body: { id: "${1:id}", label: "${2:label}", path: "./producticons/${3:id}-product-icon-theme.json" } }],
+        properties: {
+          id: {
+            description: nls.localize("vscode.extension.contributes.productIconThemes.id", "Id of the product icon theme as used in the user settings."),
+            type: "string"
+          },
+          label: {
+            description: nls.localize("vscode.extension.contributes.productIconThemes.label", "Label of the product icon theme as shown in the UI."),
+            type: "string"
+          },
+          path: {
+            description: nls.localize("vscode.extension.contributes.productIconThemes.path", "Path of the product icon theme definition file. The path is relative to the extension folder and is typically './producticons/awesome-product-icon-theme.json'."),
+            type: "string"
+          }
+        },
+        required: ["path", "id"]
+      }
+    }
+  });
+}
+__name(registerProductIconThemeExtensionPoint, "registerProductIconThemeExtensionPoint");
+class ThemeDataRenderer extends Disposable {
+  static {
+    __name(this, "ThemeDataRenderer");
+  }
+  constructor() {
+    super(...arguments);
+    this.type = "markdown";
+  }
+  shouldRender(manifest) {
+    return !!manifest.contributes?.themes || !!manifest.contributes?.iconThemes || !!manifest.contributes?.productIconThemes;
+  }
+  render(manifest) {
+    const markdown = new MarkdownString();
+    if (manifest.contributes?.themes) {
+      markdown.appendMarkdown(`### ${nls.localize("color themes", "Color Themes")}
 
-`);for(const i of e.contributes.themes)t.appendMarkdown(`- ${i.label}
-`)}if(e.contributes?.iconThemes){t.appendMarkdown(`### ${r.localize(14656,null)}
+`);
+      for (const theme of manifest.contributes.themes) {
+        markdown.appendMarkdown(`- ${theme.label}
+`);
+      }
+    }
+    if (manifest.contributes?.iconThemes) {
+      markdown.appendMarkdown(`### ${nls.localize("file icon themes", "File Icon Themes")}
 
-`);for(const i of e.contributes.iconThemes)t.appendMarkdown(`- ${i.label}
-`)}if(e.contributes?.productIconThemes){t.appendMarkdown(`### ${r.localize(14657,null)}
+`);
+      for (const theme of manifest.contributes.iconThemes) {
+        markdown.appendMarkdown(`- ${theme.label}
+`);
+      }
+    }
+    if (manifest.contributes?.productIconThemes) {
+      markdown.appendMarkdown(`### ${nls.localize("product icon themes", "Product Icon Themes")}
 
-`);for(const i of e.contributes.productIconThemes)t.appendMarkdown(`- ${i.label}
-`)}return{data:t,dispose:()=>{}}}}g.as(y.ExtensionFeaturesRegistry).registerExtensionFeature({id:"themes",label:r.localize(14658,null),access:{canToggle:!1},renderer:new T(z)});class B{constructor(e,t,i=!1,o=void 0){this.c=e,this.d=t,this.e=i,this.f=o,this.b=new f,this.onDidChange=this.b.event,this.a=[],this.g()}dispose(){this.c.setHandler(()=>{})}g(){this.c.setHandler((e,t)=>{const i={},o=[];for(const n of this.a)i[n.id]=n;this.a.length=0;for(const n of e){const l=m.fromName(n.description.publisher,n.description.name,n.description.isBuiltin);this.h(l,n.description.extensionLocation,n.value,this.a,n.collector)}for(const n of this.a)i[n.id]?delete i[n.id]:o.push(n);const s=Object.values(i);this.b.fire({themes:this.a,added:o,removed:s})})}h(e,t,i,o=[],s){return Array.isArray(i)?(i.forEach(n=>{if(!n.path||!p.$Yc(n.path)){s?.error(r.localize(14660,null,this.c.name,String(n.path)));return}if(this.e&&(!n.id||!p.$Yc(n.id))){s?.error(r.localize(14661,null,this.c.name,String(n.id)));return}const l=c.$kh(t,n.path);c.$eh(l,t)||s?.warn(r.localize(14662,null,this.c.name,l.path,t.path));const u=this.d(n,l,e);o.push(u)}),o):(s?.error(r.localize(14659,null,this.c.name)),o)}findThemeById(e){if(this.f&&this.f.id===e)return this.f;const t=this.getThemes();for(const i of t)if(i.id===e)return i}findThemeBySettingsId(e,t){if(this.f&&this.f.settingsId===e)return this.f;const i=this.getThemes();let o;for(const s of i){if(s.settingsId===e)return s;s.settingsId===t&&(o=s)}return o}findThemeByExtensionLocation(e){return e?this.getThemes().filter(t=>t.location&&c.$eh(t.location,e)):[]}getThemes(){return this.a}getMarketplaceThemes(e,t,i){const o=e?.contributes?.[this.c.name];return Array.isArray(o)?this.h(i,t,o):[]}}export{M as $C5b,v as $D5b,P as $E5b,B as $F5b};
+`);
+      for (const theme of manifest.contributes.productIconThemes) {
+        markdown.appendMarkdown(`- ${theme.label}
+`);
+      }
+    }
+    return {
+      data: markdown,
+      dispose: /* @__PURE__ */ __name(() => {
+      }, "dispose")
+    };
+  }
+}
+Registry.as(Extensions.ExtensionFeaturesRegistry).registerExtensionFeature({
+  id: "themes",
+  label: nls.localize("themes", "Themes"),
+  access: {
+    canToggle: false
+  },
+  renderer: new SyncDescriptor(ThemeDataRenderer)
+});
+class ThemeRegistry {
+  static {
+    __name(this, "ThemeRegistry");
+  }
+  constructor(themesExtPoint, create, idRequired = false, builtInTheme = void 0) {
+    this.themesExtPoint = themesExtPoint;
+    this.create = create;
+    this.idRequired = idRequired;
+    this.builtInTheme = builtInTheme;
+    this.onDidChangeEmitter = new Emitter();
+    this.onDidChange = this.onDidChangeEmitter.event;
+    this.extensionThemes = [];
+    this.initialize();
+  }
+  dispose() {
+    this.themesExtPoint.setHandler(() => {
+    });
+  }
+  initialize() {
+    this.themesExtPoint.setHandler((extensions, delta) => {
+      const previousIds = {};
+      const added = [];
+      for (const theme of this.extensionThemes) {
+        previousIds[theme.id] = theme;
+      }
+      this.extensionThemes.length = 0;
+      for (const ext of extensions) {
+        const extensionData = ExtensionData.fromName(ext.description.publisher, ext.description.name, ext.description.isBuiltin);
+        this.onThemes(extensionData, ext.description.extensionLocation, ext.value, this.extensionThemes, ext.collector);
+      }
+      for (const theme of this.extensionThemes) {
+        if (!previousIds[theme.id]) {
+          added.push(theme);
+        } else {
+          delete previousIds[theme.id];
+        }
+      }
+      const removed = Object.values(previousIds);
+      this.onDidChangeEmitter.fire({ themes: this.extensionThemes, added, removed });
+    });
+  }
+  onThemes(extensionData, extensionLocation, themeContributions, resultingThemes = [], log) {
+    if (!Array.isArray(themeContributions)) {
+      log?.error(nls.localize("reqarray", "Extension point `{0}` must be an array.", this.themesExtPoint.name));
+      return resultingThemes;
+    }
+    themeContributions.forEach((theme) => {
+      if (!theme.path || !types.isString(theme.path)) {
+        log?.error(nls.localize("reqpath", "Expected string in `contributes.{0}.path`. Provided value: {1}", this.themesExtPoint.name, String(theme.path)));
+        return;
+      }
+      if (this.idRequired && (!theme.id || !types.isString(theme.id))) {
+        log?.error(nls.localize("reqid", "Expected string in `contributes.{0}.id`. Provided value: {1}", this.themesExtPoint.name, String(theme.id)));
+        return;
+      }
+      const themeLocation = resources.joinPath(extensionLocation, theme.path);
+      if (!resources.isEqualOrParent(themeLocation, extensionLocation)) {
+        log?.warn(nls.localize("invalid.path.1", "Expected `contributes.{0}.path` ({1}) to be included inside extension's folder ({2}). This might make the extension non-portable.", this.themesExtPoint.name, themeLocation.path, extensionLocation.path));
+      }
+      const themeData = this.create(theme, themeLocation, extensionData);
+      resultingThemes.push(themeData);
+    });
+    return resultingThemes;
+  }
+  findThemeById(themeId) {
+    if (this.builtInTheme && this.builtInTheme.id === themeId) {
+      return this.builtInTheme;
+    }
+    const allThemes = this.getThemes();
+    for (const t of allThemes) {
+      if (t.id === themeId) {
+        return t;
+      }
+    }
+    return void 0;
+  }
+  findThemeBySettingsId(settingsId, defaultSettingsId) {
+    if (this.builtInTheme && this.builtInTheme.settingsId === settingsId) {
+      return this.builtInTheme;
+    }
+    const allThemes = this.getThemes();
+    let defaultTheme = void 0;
+    for (const t of allThemes) {
+      if (t.settingsId === settingsId) {
+        return t;
+      }
+      if (t.settingsId === defaultSettingsId) {
+        defaultTheme = t;
+      }
+    }
+    return defaultTheme;
+  }
+  findThemeByExtensionLocation(extLocation) {
+    if (extLocation) {
+      return this.getThemes().filter((t) => t.location && resources.isEqualOrParent(t.location, extLocation));
+    }
+    return [];
+  }
+  getThemes() {
+    return this.extensionThemes;
+  }
+  getMarketplaceThemes(manifest, extensionLocation, extensionData) {
+    const themes = manifest?.contributes?.[this.themesExtPoint.name];
+    if (Array.isArray(themes)) {
+      return this.onThemes(extensionData, extensionLocation, themes);
+    }
+    return [];
+  }
+}
+export {
+  ThemeRegistry,
+  registerColorThemeExtensionPoint,
+  registerFileIconThemeExtensionPoint,
+  registerProductIconThemeExtensionPoint
+};
+//# sourceMappingURL=themeExtensionPoints.js.map

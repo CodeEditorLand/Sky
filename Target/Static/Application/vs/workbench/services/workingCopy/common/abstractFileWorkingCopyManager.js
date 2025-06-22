@@ -1,1 +1,106 @@
-import{$df as m}from"../../../../base/common/event.js";import{$vd as u,$qd as c}from"../../../../base/common/lifecycle.js";import{$Ic as f}from"../../../../base/common/map.js";import{Promises as d}from"../../../../base/common/async.js";import{$5j as b}from"../../../../platform/files/common/files.js";import{$3n as v}from"../../../../platform/log/common/log.js";import{$mF as $}from"./workingCopyBackup.js";var p=function(r,t,e,i){var h=arguments.length,s=h<3?t:i===null?i=Object.getOwnPropertyDescriptor(t,e):i,n;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")s=Reflect.decorate(r,t,e,i);else for(var a=r.length-1;a>=0;a--)(n=r[a])&&(s=(h<3?n(s):h>3?n(t,e,s):n(t,e))||s);return h>3&&s&&Object.defineProperty(t,e,s),s},o=function(r,t){return function(e,i){t(e,i,r)}};let l=class extends u{constructor(t,e,i){super(),this.f=t,this.g=e,this.h=i,this.a=this.B(new m),this.onDidCreate=this.a.event,this.b=new f,this.c=new f}j(t){return this.b.has(t)}m(t,e){this.get(t)!==e&&(this.b.set(t,e),this.c.get(t)?.dispose(),this.c.set(t,e.onWillDispose(()=>this.n(t))),this.a.fire(e))}n(t){const e=this.c.get(t);return e&&(c(e),this.c.delete(t)),this.b.delete(t)}get workingCopies(){return[...this.b.values()]}get(t){return this.b.get(t)}dispose(){super.dispose(),this.b.clear(),c(this.c.values()),this.c.clear()}async destroy(){try{await d.settled(this.workingCopies.map(async t=>{t.isDirty()&&await this.r(t)}))}catch(t){this.g.error(t)}c(this.b.values()),this.dispose()}async r(t){let e=!1;try{e=await t.save()}catch{}if(!e||t.isDirty()){const i=await this.h.resolve(t);i&&await this.f.writeFile(t.resource,i.value,{unlock:!0})}}};l=p([o(0,b),o(1,v),o(2,$)],l);export{l as $91b};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { Emitter } from "../../../../base/common/event.js";
+import { Disposable, dispose } from "../../../../base/common/lifecycle.js";
+import { ResourceMap } from "../../../../base/common/map.js";
+import { Promises } from "../../../../base/common/async.js";
+import { IFileService } from "../../../../platform/files/common/files.js";
+import { ILogService } from "../../../../platform/log/common/log.js";
+import { IWorkingCopyBackupService } from "./workingCopyBackup.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+let BaseFileWorkingCopyManager = class BaseFileWorkingCopyManager2 extends Disposable {
+  static {
+    __name(this, "BaseFileWorkingCopyManager");
+  }
+  constructor(fileService, logService, workingCopyBackupService) {
+    super();
+    this.fileService = fileService;
+    this.logService = logService;
+    this.workingCopyBackupService = workingCopyBackupService;
+    this._onDidCreate = this._register(new Emitter());
+    this.onDidCreate = this._onDidCreate.event;
+    this.mapResourceToWorkingCopy = new ResourceMap();
+    this.mapResourceToDisposeListener = new ResourceMap();
+  }
+  has(resource) {
+    return this.mapResourceToWorkingCopy.has(resource);
+  }
+  add(resource, workingCopy) {
+    const knownWorkingCopy = this.get(resource);
+    if (knownWorkingCopy === workingCopy) {
+      return;
+    }
+    this.mapResourceToWorkingCopy.set(resource, workingCopy);
+    this.mapResourceToDisposeListener.get(resource)?.dispose();
+    this.mapResourceToDisposeListener.set(resource, workingCopy.onWillDispose(() => this.remove(resource)));
+    this._onDidCreate.fire(workingCopy);
+  }
+  remove(resource) {
+    const disposeListener = this.mapResourceToDisposeListener.get(resource);
+    if (disposeListener) {
+      dispose(disposeListener);
+      this.mapResourceToDisposeListener.delete(resource);
+    }
+    return this.mapResourceToWorkingCopy.delete(resource);
+  }
+  //#region Get / Get all
+  get workingCopies() {
+    return [...this.mapResourceToWorkingCopy.values()];
+  }
+  get(resource) {
+    return this.mapResourceToWorkingCopy.get(resource);
+  }
+  //#endregion
+  //#region Lifecycle
+  dispose() {
+    super.dispose();
+    this.mapResourceToWorkingCopy.clear();
+    dispose(this.mapResourceToDisposeListener.values());
+    this.mapResourceToDisposeListener.clear();
+  }
+  async destroy() {
+    try {
+      await Promises.settled(this.workingCopies.map(async (workingCopy) => {
+        if (workingCopy.isDirty()) {
+          await this.saveWithFallback(workingCopy);
+        }
+      }));
+    } catch (error) {
+      this.logService.error(error);
+    }
+    dispose(this.mapResourceToWorkingCopy.values());
+    this.dispose();
+  }
+  async saveWithFallback(workingCopy) {
+    let saveSuccess = false;
+    try {
+      saveSuccess = await workingCopy.save();
+    } catch (error) {
+    }
+    if (!saveSuccess || workingCopy.isDirty()) {
+      const backup = await this.workingCopyBackupService.resolve(workingCopy);
+      if (backup) {
+        await this.fileService.writeFile(workingCopy.resource, backup.value, { unlock: true });
+      }
+    }
+  }
+};
+BaseFileWorkingCopyManager = __decorate([
+  __param(0, IFileService),
+  __param(1, ILogService),
+  __param(2, IWorkingCopyBackupService)
+], BaseFileWorkingCopyManager);
+export {
+  BaseFileWorkingCopyManager
+};
+//# sourceMappingURL=abstractFileWorkingCopyManager.js.map

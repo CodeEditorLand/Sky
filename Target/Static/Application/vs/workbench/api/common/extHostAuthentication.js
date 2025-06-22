@@ -1,1 +1,594 @@
-import*as m from"../../../nls.js";import{$df as k,Event as z}from"../../../base/common/event.js";import{$oY as O}from"./extHost.protocol.js";import{$qY as _,ProgressLocation as L}from"./extHostTypes.js";import{$Qy as M}from"../../../platform/extensions/common/extensions.js";import{$bX as N}from"../../services/authentication/common/authentication.js";import{$nj as K}from"../../../platform/instantiation/common/instantiation.js";import{$i2 as I}from"./extHostRpcService.js";import{URI as v}from"../../../base/common/uri.js";import{$SL as H,$UL as b,$ML as x}from"../../../base/common/oauth.js";import{$oKc as D}from"./extHostWindow.js";import{$y2 as q}from"./extHostInitDataService.js";import{$4n as C,$3n as J}from"../../../platform/log/common/log.js";import{autorun as V,derivedOpts as Y,observableValue as G}from"../../../base/common/observable.js";import{$bn as Q}from"../../../base/common/hash.js";import{$ud as U}from"../../../base/common/lifecycle.js";import{$qKc as E}from"./extHostUrls.js";import{$4i as W,$Ji as X}from"../../../base/common/buffer.js";import{$Sb as S}from"../../../base/common/arrays.js";import{$rKc as R}from"./extHostProgress.js";import{$qb as T,$pb as j}from"../../../base/common/errors.js";import{$yh as B,$Hh as Z}from"../../../base/common/async.js";var P=function(u,e,i,t){var s=arguments.length,o=s<3?e:t===null?t=Object.getOwnPropertyDescriptor(e,i):t,n;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")o=Reflect.decorate(u,e,i,t);else for(var r=u.length-1;r>=0;r--)(n=u[r])&&(o=(s<3?n(o):s>3?n(e,i,o):n(e,i))||o);return s>3&&o&&Object.defineProperty(e,i,o),o},p=function(u,e){return function(i,t){e(i,t,u)}};const _e=K("IExtHostAuthentication");let A=class{constructor(e,i,t,s,o,n,r){this.l=i,this.m=t,this.n=s,this.o=o,this.p=n,this.q=r,this.c=y,this.f=new Map,this.g=new Z,this.h=new k,this.j=new ee,this.k=new k,this.d=e.getProxy(O.MainThreadAuthentication)}getExtensionScopedSessionsEvent(e){const i=e.toLowerCase();return z.chain(this.h.event,t=>t.filter(s=>!s.extensionIdFilter||s.extensionIdFilter.includes(i)).map(s=>({provider:s.provider})))}async getSession(e,i,t,s={}){const o=M.toKey(e.identifier),n=[...t].sort().join(" "),c=Object.keys(s).sort().map(a=>`${a}:${!!s[a]}`).join(", ");return await this.j.getOrCreate(`${o} ${i} ${n} ${c}`,async()=>{await this.d.$ensureProvider(i);const a=e.displayName||e.name;return this.d.$getSession(i,t,o,a,s)})}async getAccounts(e){return await this.d.$ensureProvider(e),await this.d.$getAccounts(e)}registerAuthenticationProvider(e,i,t,s){return this.g.queue(e,async()=>{if(this.f.get(e)){this.q.error(`An authentication provider with id '${e}' is already registered. The existing provider will not be replaced.`);return}const o=t.onDidChangeSessions(n=>this.d.$sendDidChangeSessions(e,n));this.f.set(e,{label:i,provider:t,disposable:o,options:s??{supportsMultipleAccounts:!1}}),await this.d.$registerAuthenticationProvider(e,i,s?.supportsMultipleAccounts??!1,s?.supportedAuthorizationServers)}),new _(()=>{this.g.queue(e,async()=>{const o=this.f.get(e);o&&(o.disposable?.dispose(),this.f.delete(e),await this.d.$unregisterAuthenticationProvider(e))})})}$createSession(e,i,t){return this.g.queue(e,async()=>{const s=this.f.get(e);if(s)return t.authorizationServer=v.revive(t.authorizationServer),await s.provider.createSession(i,t);throw new Error(`Unable to find authentication provider with handle: ${e}`)})}$removeSession(e,i){return this.g.queue(e,async()=>{const t=this.f.get(e);if(t)return await t.provider.removeSession(i);throw new Error(`Unable to find authentication provider with handle: ${e}`)})}$getSessions(e,i,t){return this.g.queue(e,async()=>{const s=this.f.get(e);if(s)return t.authorizationServer=v.revive(t.authorizationServer),await s.provider.getSessions(i,t);throw new Error(`Unable to find authentication provider with handle: ${e}`)})}$onDidChangeAuthenticationSessions(e,i,t){return e.startsWith(N)||this.h.fire({provider:{id:e,label:i},extensionIdFilter:t}),Promise.resolve()}$onDidUnregisterAuthenticationProvider(e){return this.g.queue(e,async()=>{const i=this.f.get(e);i&&(i.disposable?.dispose(),this.f.delete(e))})}async $registerDynamicAuthProvider(e,i,t,s,o){if(!s)try{s=(await H(i,this.l.environment.appName,t?.scopes_supported)).client_id}catch(r){throw new Error(`Dynamic registration failed: ${r.message}`)}const n=new this.c(this.m,this.n,this.l,this.o,this.p,this.d,v.revive(e),i,t,s,this.k,o||[]);return await this.g.queue(n.id,async()=>{const r=n.onDidChangeSessions(c=>this.d.$sendDidChangeSessions(n.id,c));this.f.set(n.id,{label:n.label,provider:n,disposable:_.from(n,r),options:{supportsMultipleAccounts:!1}}),await this.d.$registerDynamicAuthenticationProvider(n.id,n.label,n.authorizationServer,n.clientId)}),n.id}async $onDidChangeDynamicAuthProviderTokens(e,i,t){this.k.fire({authProviderId:e,clientId:i,tokens:t})}};A=P([p(0,I),p(1,q),p(2,D),p(3,E),p(4,R),p(5,C),p(6,J)],A);class ee{constructor(){this.c=new Map}getOrCreate(e,i){const t=this.c.get(e);if(t)return t;const s=i().finally(()=>this.c.delete(e));return this.c.set(e,s),s}}let y=class{constructor(e,i,t,s,o,n,r,c,a,h,g,w){this.j=e,this.k=i,this.l=t,this.m=s,this.n=n,this.authorizationServer=r,this.o=c,this.p=a,this.clientId=h,this.c=new k,this.onDidChangeSessions=this.c.event;const l=r.toString(!0);this.id=a?.resource?l+" "+a?.resource:l,this.label=a?.resource_name??this.authorizationServer.authority,this.g=o.createLogger(this.id,{name:this.label}),this.h=new U,this.h.add(this.c);const $=z.chain(g.event,f=>f.filter(d=>d.authProviderId===this.id&&d.clientId===h).map(d=>d.tokens));this.d=this.h.add(new te({onDidChange:$,set:f=>n.$setSessionsForDynamicAuthProvider(this.id,this.clientId,f)},w,this.g)),this.h.add(this.d.onDidChangeSessions(f=>this.c.fire(f))),this.f=[{label:m.localize(2902,null),handler:(f,d,F)=>this.q(f,d,F)}]}async getSessions(e,i){if(this.g.info(`Getting sessions for scopes: ${e?.join(" ")??"all"}`),!e)return this.d.sessions;const t=[...e].sort(),s=e.join(" ");let o=this.d.sessions.filter(n=>S([...n.scopes].sort(),t));if(this.g.info(`Found ${o.length} sessions for scopes: ${s}`),o.length){const n=[],r=[],c=new Map(this.d.tokens.map(a=>[a.access_token,a]));for(const a of o){const h=c.get(a.accessToken);if(h&&h.expires_in){const g=Date.now(),w=h.expires_in*1e3;if(g>h.created_at+w-5*60*1e3){if(this.g.info(`Token for session ${a.id} is about to expire, refreshing...`),r.push(h),!h.refresh_token){this.g.warn(`No refresh token available for scopes ${a.scopes.join(" ")}. Throwing away token.`);continue}try{const l=await this.w(h.refresh_token);l.scope!==s&&(this.g.warn(`Token scopes '${l.scope}' do not match requested scopes '${s}'. Overwriting token with what was requested...`),l.scope=s),this.g.info(`Successfully created a new token for scopes ${a.scopes.join(" ")}.`),n.push(l)}catch(l){this.g.error(`Failed to refresh token: ${l}`)}}}}return(n.length||r.length)&&(this.d.update({added:n,removed:r}),o=this.d.sessions.filter(a=>S([...a.scopes].sort(),t))),this.g.info(`Found ${o.length} sessions for scopes: ${s}`),o}return[]}async createSession(e,i){this.g.info(`Creating session for scopes: ${e.join(" ")}`);let t;for(let o=0;o<this.f.length;o++){const{handler:n}=this.f[o];try{if(t=await this.m.withProgressFromSource({label:this.label,id:this.id},{location:L.Notification,title:m.localize(2903,null,this.label),cancellable:!0},(r,c)=>n(e,r,c)),t)break}catch(r){const c=this.f[o+1]?.label;if(!c)break;const a=j(r)?m.localize(2904,null,this.label,c):m.localize(2905,null,this.label,c);if(!await this.n.$showContinueNotification(a))throw new T;this.g.error(`Failed to create token via flow '${c}': ${r}`)}}if(!t)throw new Error("Failed to create authentication token");t.scope!==e.join(" ")&&(this.g.warn(`Token scopes '${t.scope}' do not match requested scopes '${e.join(" ")}'. Overwriting token with what was requested...`),t.scope=e.join(" ")),this.d.update({added:[{...t,created_at:Date.now()}],removed:[]});const s=this.d.sessions.find(o=>o.accessToken===t.access_token);return this.g.info(`Created session for scopes: ${t.scope}`),s}async removeSession(e){this.g.info(`Removing session with id: ${e}`);const i=this.d.sessions.find(s=>s.id===e);if(!i){this.g.error(`Session with id ${e} not found`);return}const t=this.d.tokens.find(s=>s.access_token===i.accessToken);if(!t){this.g.error(`Failed to retrieve token for removed session: ${i.id}`);return}this.d.update({added:[],removed:[t]}),this.g.info(`Removed token for session: ${i.id} with scopes: ${i.scopes.join(" ")}`)}dispose(){this.h.dispose()}async q(e,i,t){const s=this.r(64),o=await this.s(s),n=this.r(32),r=v.parse(`${this.l.environment.appUriScheme}://dynamicauthprovider/${this.authorizationServer.authority}/authorize?nonce=${n}`);let c;try{c=await this.k.createAppUri(r)}catch(d){throw new Error(`Failed to create external URI: ${d}`)}const a=new URL(this.o.authorization_endpoint);a.searchParams.append("client_id",this.clientId),a.searchParams.append("response_type","code"),a.searchParams.append("state",c.toString()),a.searchParams.append("code_challenge",o),a.searchParams.append("code_challenge_method","S256");const h=e.join(" ");h&&a.searchParams.append("scope",h),this.p?.resource&&a.searchParams.append("resource",this.p.resource);const g="https://vscode.dev/redirect";a.searchParams.append("redirect_uri",g);const w=this.u(r);if(this.g.info(`Opening authorization URL for scopes: ${h}`),this.g.trace(`Authorization URL: ${a.toString()}`),!await this.j.openUri(a.toString(),{}))throw new T;i.report({message:m.localize(2906,null)});let $;try{$=(await B(w,t)).code}catch(d){throw j(d)?(this.g.info("Authorization code request was cancelled by the user."),d):(this.g.error(`Failed to receive authorization code: ${d}`),new Error(`Failed to receive authorization code: ${d}`))}return this.g.info(`Authorization code received for scopes: ${h}`),await this.v($,s,g)}r(e){const i=new Uint8Array(e);return crypto.getRandomValues(i),Array.from(i).map(t=>t.toString(16).padStart(2,"0")).join("").substring(0,e)}async s(e){const t=new TextEncoder().encode(e),s=await crypto.subtle.digest("SHA-256",t);return W(X.wrap(new Uint8Array(s)),!1,!1).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"")}async u(e){const i=await this.n.$waitForUriHandler(e),t=/[?&]code=([^&]+)/.exec(i.query||"");if(!t||t.length<2)throw new Error("Authentication failed: No authorization code received");return{code:t[1]}}async v(e,i,t){if(!this.o.token_endpoint)throw new Error("Token endpoint not available in server metadata");const s=new URLSearchParams;s.append("client_id",this.clientId),s.append("grant_type","authorization_code"),s.append("code",e),s.append("redirect_uri",t),s.append("code_verifier",i);const o=await fetch(this.o.token_endpoint,{method:"POST",headers:{"Content-Type":"application/x-www-form-urlencoded",Accept:"application/json"},body:s.toString()});if(!o.ok){const r=await o.text();throw new Error(`Token exchange failed: ${o.status} ${o.statusText} - ${r}`)}const n=await o.json();if(x(n))return n;throw new Error(`Invalid authorization token response: ${JSON.stringify(n)}`)}async w(e){if(!this.o.token_endpoint)throw new Error("Token endpoint not available in server metadata");const i=new URLSearchParams;i.append("client_id",this.clientId),i.append("grant_type","refresh_token"),i.append("refresh_token",e);const t=await fetch(this.o.token_endpoint,{method:"POST",headers:{"Content-Type":"application/x-www-form-urlencoded",Accept:"application/json"},body:i.toString()});if(!t.ok){const o=await t.text();throw new Error(`Token exchange failed: ${t.status} ${t.statusText} - ${o}`)}const s=await t.json();if(x(s))return{...s,created_at:Date.now()};throw new Error(`Invalid authorization token response: ${JSON.stringify(s)}`)}};y=P([p(0,D),p(1,E),p(2,q),p(3,R),p(4,C)],y);class te{constructor(e,i,t){this.h=e,this.j=t,this.f=new k,this.onDidChangeSessions=this.f.event,this.g=new U,this.c=G("tokens",i),this.d=Y({equalsFn:(s,o)=>S(s,o,(n,r)=>n.accessToken===r.accessToken)},s=>this.c.read(s).map(o=>this.l(o))),this.g.add(this.k()),this.g.add(this.h.onDidChange(s=>this.c.set(s,void 0)))}get tokens(){return this.c.get()}get sessions(){return this.d.get()}dispose(){this.g.dispose()}update({added:e,removed:i}){this.j.trace(`Updating tokens: added ${e.length}, removed ${i.length}`);const t=[...this.c.get()];for(const s of i){const o=t.findIndex(n=>n.access_token===s.access_token);o!==-1&&t.splice(o,1)}for(const s of e){const o=t.findIndex(n=>n.access_token===s.access_token);o===-1?t.push(s):t[o]=s}(e.length||i.length)&&(this.c.set(t,void 0),this.h.set(t)),this.j.trace(`Tokens updated: ${t.length} tokens stored.`)}k(){let e=[];return V(i=>{this.j.trace("Checking for session changes...");const t=this.d.read(i);if(e===t){this.j.trace("No session changes detected.");return}if(!t||t.length===0){this.j.trace("All sessions removed."),e.length>0&&(this.f.fire({added:[],removed:e,changed:[]}),e=[]);return}const s=[],o=[];for(const n of t)e.some(c=>c.accessToken===n.accessToken)||s.push(n);for(const n of e)t.some(c=>c.accessToken===n.accessToken)||o.push(n);(s.length>0||o.length>0)&&(this.j.trace(`Sessions changed: added ${s.length}, removed ${o.length}`),this.f.fire({added:s,removed:o,changed:[]})),e=t})}l(e){let i;if(e.id_token)try{i=b(e.id_token)}catch{}if(!i)try{i=b(e.access_token)}catch{}const t=e.scope?e.scope.split(" "):i?.scope?i.scope.split(" "):[];return{id:Q(e.access_token,0).toString(),accessToken:e.access_token,account:{id:i?.sub||"unknown",label:i?.preferred_username||i?.name||i?.email||"MCP"},scopes:t,idToken:e.id_token}}}export{_e as $tKc,A as $uKc,y as $vKc};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import * as nls from "../../../nls.js";
+import { Emitter, Event } from "../../../base/common/event.js";
+import { MainContext } from "./extHost.protocol.js";
+import { Disposable, ProgressLocation } from "./extHostTypes.js";
+import { ExtensionIdentifier } from "../../../platform/extensions/common/extensions.js";
+import { INTERNAL_AUTH_PROVIDER_PREFIX } from "../../services/authentication/common/authentication.js";
+import { createDecorator } from "../../../platform/instantiation/common/instantiation.js";
+import { IExtHostRpcService } from "./extHostRpcService.js";
+import { URI } from "../../../base/common/uri.js";
+import { fetchDynamicRegistration, getClaimsFromJWT, isAuthorizationTokenResponse } from "../../../base/common/oauth.js";
+import { IExtHostWindow } from "./extHostWindow.js";
+import { IExtHostInitDataService } from "./extHostInitDataService.js";
+import { ILoggerService, ILogService } from "../../../platform/log/common/log.js";
+import { autorun, derivedOpts, observableValue } from "../../../base/common/observable.js";
+import { stringHash } from "../../../base/common/hash.js";
+import { DisposableStore } from "../../../base/common/lifecycle.js";
+import { IExtHostUrlsService } from "./extHostUrls.js";
+import { encodeBase64, VSBuffer } from "../../../base/common/buffer.js";
+import { equals as arraysEqual } from "../../../base/common/arrays.js";
+import { IExtHostProgress } from "./extHostProgress.js";
+import { CancellationError, isCancellationError } from "../../../base/common/errors.js";
+import { raceCancellationError, SequencerByKey } from "../../../base/common/async.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+const IExtHostAuthentication = createDecorator("IExtHostAuthentication");
+let ExtHostAuthentication = class ExtHostAuthentication2 {
+  static {
+    __name(this, "ExtHostAuthentication");
+  }
+  constructor(extHostRpc, _initData, _extHostWindow, _extHostUrls, _extHostProgress, _extHostLoggerService, _logService) {
+    this._initData = _initData;
+    this._extHostWindow = _extHostWindow;
+    this._extHostUrls = _extHostUrls;
+    this._extHostProgress = _extHostProgress;
+    this._extHostLoggerService = _extHostLoggerService;
+    this._logService = _logService;
+    this._dynamicAuthProviderCtor = DynamicAuthProvider;
+    this._authenticationProviders = /* @__PURE__ */ new Map();
+    this._providerOperations = new SequencerByKey();
+    this._onDidChangeSessions = new Emitter();
+    this._getSessionTaskSingler = new TaskSingler();
+    this._onDidDynamicAuthProviderTokensChange = new Emitter();
+    this._proxy = extHostRpc.getProxy(MainContext.MainThreadAuthentication);
+  }
+  /**
+   * This sets up an event that will fire when the auth sessions change with a built-in filter for the extensionId
+   * if a session change only affects a specific extension.
+   * @param extensionId The extension that is interested in the event.
+   * @returns An event with a built-in filter for the extensionId
+   */
+  getExtensionScopedSessionsEvent(extensionId) {
+    const normalizedExtensionId = extensionId.toLowerCase();
+    return Event.chain(this._onDidChangeSessions.event, ($) => $.filter((e) => !e.extensionIdFilter || e.extensionIdFilter.includes(normalizedExtensionId)).map((e) => ({ provider: e.provider })));
+  }
+  async getSession(requestingExtension, providerId, scopes, options = {}) {
+    const extensionId = ExtensionIdentifier.toKey(requestingExtension.identifier);
+    const sortedScopes = [...scopes].sort().join(" ");
+    const keys = Object.keys(options);
+    const optionsStr = keys.sort().map((key) => `${key}:${!!options[key]}`).join(", ");
+    return await this._getSessionTaskSingler.getOrCreate(`${extensionId} ${providerId} ${sortedScopes} ${optionsStr}`, async () => {
+      await this._proxy.$ensureProvider(providerId);
+      const extensionName = requestingExtension.displayName || requestingExtension.name;
+      return this._proxy.$getSession(providerId, scopes, extensionId, extensionName, options);
+    });
+  }
+  async getAccounts(providerId) {
+    await this._proxy.$ensureProvider(providerId);
+    return await this._proxy.$getAccounts(providerId);
+  }
+  registerAuthenticationProvider(id, label, provider, options) {
+    void this._providerOperations.queue(id, async () => {
+      if (this._authenticationProviders.get(id)) {
+        this._logService.error(`An authentication provider with id '${id}' is already registered. The existing provider will not be replaced.`);
+        return;
+      }
+      const listener = provider.onDidChangeSessions((e) => this._proxy.$sendDidChangeSessions(id, e));
+      this._authenticationProviders.set(id, { label, provider, disposable: listener, options: options ?? { supportsMultipleAccounts: false } });
+      await this._proxy.$registerAuthenticationProvider(id, label, options?.supportsMultipleAccounts ?? false, options?.supportedAuthorizationServers);
+    });
+    return new Disposable(() => {
+      void this._providerOperations.queue(id, async () => {
+        const providerData = this._authenticationProviders.get(id);
+        if (providerData) {
+          providerData.disposable?.dispose();
+          this._authenticationProviders.delete(id);
+          await this._proxy.$unregisterAuthenticationProvider(id);
+        }
+      });
+    });
+  }
+  $createSession(providerId, scopes, options) {
+    return this._providerOperations.queue(providerId, async () => {
+      const providerData = this._authenticationProviders.get(providerId);
+      if (providerData) {
+        options.authorizationServer = URI.revive(options.authorizationServer);
+        return await providerData.provider.createSession(scopes, options);
+      }
+      throw new Error(`Unable to find authentication provider with handle: ${providerId}`);
+    });
+  }
+  $removeSession(providerId, sessionId) {
+    return this._providerOperations.queue(providerId, async () => {
+      const providerData = this._authenticationProviders.get(providerId);
+      if (providerData) {
+        return await providerData.provider.removeSession(sessionId);
+      }
+      throw new Error(`Unable to find authentication provider with handle: ${providerId}`);
+    });
+  }
+  $getSessions(providerId, scopes, options) {
+    return this._providerOperations.queue(providerId, async () => {
+      const providerData = this._authenticationProviders.get(providerId);
+      if (providerData) {
+        options.authorizationServer = URI.revive(options.authorizationServer);
+        return await providerData.provider.getSessions(scopes, options);
+      }
+      throw new Error(`Unable to find authentication provider with handle: ${providerId}`);
+    });
+  }
+  $onDidChangeAuthenticationSessions(id, label, extensionIdFilter) {
+    if (!id.startsWith(INTERNAL_AUTH_PROVIDER_PREFIX)) {
+      this._onDidChangeSessions.fire({ provider: { id, label }, extensionIdFilter });
+    }
+    return Promise.resolve();
+  }
+  $onDidUnregisterAuthenticationProvider(id) {
+    return this._providerOperations.queue(id, async () => {
+      const providerData = this._authenticationProviders.get(id);
+      if (providerData) {
+        providerData.disposable?.dispose();
+        this._authenticationProviders.delete(id);
+      }
+    });
+  }
+  async $registerDynamicAuthProvider(authorizationServerComponents, serverMetadata, resourceMetadata, clientId, initialTokens) {
+    if (!clientId) {
+      try {
+        const registration = await fetchDynamicRegistration(serverMetadata, this._initData.environment.appName, resourceMetadata?.scopes_supported);
+        clientId = registration.client_id;
+      } catch (err) {
+        throw new Error(`Dynamic registration failed: ${err.message}`);
+      }
+    }
+    const provider = new this._dynamicAuthProviderCtor(this._extHostWindow, this._extHostUrls, this._initData, this._extHostProgress, this._extHostLoggerService, this._proxy, URI.revive(authorizationServerComponents), serverMetadata, resourceMetadata, clientId, this._onDidDynamicAuthProviderTokensChange, initialTokens || []);
+    await this._providerOperations.queue(provider.id, async () => {
+      const disposable = provider.onDidChangeSessions((e) => this._proxy.$sendDidChangeSessions(provider.id, e));
+      this._authenticationProviders.set(provider.id, {
+        label: provider.label,
+        provider,
+        disposable: Disposable.from(provider, disposable),
+        options: { supportsMultipleAccounts: false }
+      });
+      await this._proxy.$registerDynamicAuthenticationProvider(provider.id, provider.label, provider.authorizationServer, provider.clientId);
+    });
+    return provider.id;
+  }
+  async $onDidChangeDynamicAuthProviderTokens(authProviderId, clientId, tokens) {
+    this._onDidDynamicAuthProviderTokensChange.fire({ authProviderId, clientId, tokens });
+  }
+};
+ExtHostAuthentication = __decorate([
+  __param(0, IExtHostRpcService),
+  __param(1, IExtHostInitDataService),
+  __param(2, IExtHostWindow),
+  __param(3, IExtHostUrlsService),
+  __param(4, IExtHostProgress),
+  __param(5, ILoggerService),
+  __param(6, ILogService)
+], ExtHostAuthentication);
+class TaskSingler {
+  static {
+    __name(this, "TaskSingler");
+  }
+  constructor() {
+    this._inFlightPromises = /* @__PURE__ */ new Map();
+  }
+  getOrCreate(key, promiseFactory) {
+    const inFlight = this._inFlightPromises.get(key);
+    if (inFlight) {
+      return inFlight;
+    }
+    const promise = promiseFactory().finally(() => this._inFlightPromises.delete(key));
+    this._inFlightPromises.set(key, promise);
+    return promise;
+  }
+}
+let DynamicAuthProvider = class DynamicAuthProvider2 {
+  static {
+    __name(this, "DynamicAuthProvider");
+  }
+  constructor(_extHostWindow, _extHostUrls, _initData, _extHostProgress, loggerService, _proxy, authorizationServer, _serverMetadata, _resourceMetadata, clientId, onDidDynamicAuthProviderTokensChange, initialTokens) {
+    this._extHostWindow = _extHostWindow;
+    this._extHostUrls = _extHostUrls;
+    this._initData = _initData;
+    this._extHostProgress = _extHostProgress;
+    this._proxy = _proxy;
+    this.authorizationServer = authorizationServer;
+    this._serverMetadata = _serverMetadata;
+    this._resourceMetadata = _resourceMetadata;
+    this.clientId = clientId;
+    this._onDidChangeSessions = new Emitter();
+    this.onDidChangeSessions = this._onDidChangeSessions.event;
+    const stringifiedServer = authorizationServer.toString(true);
+    this.id = _resourceMetadata?.resource ? stringifiedServer + " " + _resourceMetadata?.resource : stringifiedServer;
+    this.label = _resourceMetadata?.resource_name ?? this.authorizationServer.authority;
+    this._logger = loggerService.createLogger(this.id, { name: this.label });
+    this._disposable = new DisposableStore();
+    this._disposable.add(this._onDidChangeSessions);
+    const scopedEvent = Event.chain(onDidDynamicAuthProviderTokensChange.event, ($) => $.filter((e) => e.authProviderId === this.id && e.clientId === clientId).map((e) => e.tokens));
+    this._tokenStore = this._disposable.add(new TokenStore({
+      onDidChange: scopedEvent,
+      set: /* @__PURE__ */ __name((tokens) => _proxy.$setSessionsForDynamicAuthProvider(this.id, this.clientId, tokens), "set")
+    }, initialTokens, this._logger));
+    this._disposable.add(this._tokenStore.onDidChangeSessions((e) => this._onDidChangeSessions.fire(e)));
+    this._createFlows = [{
+      label: nls.localize("url handler", "URL Handler"),
+      handler: /* @__PURE__ */ __name((scopes, progress, token) => this._createWithUrlHandler(scopes, progress, token), "handler")
+    }];
+  }
+  async getSessions(scopes, _options) {
+    this._logger.info(`Getting sessions for scopes: ${scopes?.join(" ") ?? "all"}`);
+    if (!scopes) {
+      return this._tokenStore.sessions;
+    }
+    const sortedScopes = [...scopes].sort();
+    const scopeStr = scopes.join(" ");
+    let sessions = this._tokenStore.sessions.filter((session) => arraysEqual([...session.scopes].sort(), sortedScopes));
+    this._logger.info(`Found ${sessions.length} sessions for scopes: ${scopeStr}`);
+    if (sessions.length) {
+      const newTokens = [];
+      const removedTokens = [];
+      const tokenMap = new Map(this._tokenStore.tokens.map((token) => [token.access_token, token]));
+      for (const session of sessions) {
+        const token = tokenMap.get(session.accessToken);
+        if (token && token.expires_in) {
+          const now = Date.now();
+          const expiresInMS = token.expires_in * 1e3;
+          if (now > token.created_at + expiresInMS - 5 * 60 * 1e3) {
+            this._logger.info(`Token for session ${session.id} is about to expire, refreshing...`);
+            removedTokens.push(token);
+            if (!token.refresh_token) {
+              this._logger.warn(`No refresh token available for scopes ${session.scopes.join(" ")}. Throwing away token.`);
+              continue;
+            }
+            try {
+              const newToken = await this.exchangeRefreshTokenForToken(token.refresh_token);
+              if (newToken.scope !== scopeStr) {
+                this._logger.warn(`Token scopes '${newToken.scope}' do not match requested scopes '${scopeStr}'. Overwriting token with what was requested...`);
+                newToken.scope = scopeStr;
+              }
+              this._logger.info(`Successfully created a new token for scopes ${session.scopes.join(" ")}.`);
+              newTokens.push(newToken);
+            } catch (err) {
+              this._logger.error(`Failed to refresh token: ${err}`);
+            }
+          }
+        }
+      }
+      if (newTokens.length || removedTokens.length) {
+        this._tokenStore.update({ added: newTokens, removed: removedTokens });
+        sessions = this._tokenStore.sessions.filter((session) => arraysEqual([...session.scopes].sort(), sortedScopes));
+      }
+      this._logger.info(`Found ${sessions.length} sessions for scopes: ${scopeStr}`);
+      return sessions;
+    }
+    return [];
+  }
+  async createSession(scopes, _options) {
+    this._logger.info(`Creating session for scopes: ${scopes.join(" ")}`);
+    let token;
+    for (let i = 0; i < this._createFlows.length; i++) {
+      const { handler } = this._createFlows[i];
+      try {
+        token = await this._extHostProgress.withProgressFromSource({ label: this.label, id: this.id }, {
+          location: ProgressLocation.Notification,
+          title: nls.localize("authenticatingTo", "Authenticating to '{0}'", this.label),
+          cancellable: true
+        }, (progress, token2) => handler(scopes, progress, token2));
+        if (token) {
+          break;
+        }
+      } catch (err) {
+        const nextMode = this._createFlows[i + 1]?.label;
+        if (!nextMode) {
+          break;
+        }
+        const message = isCancellationError(err) ? nls.localize("userCanceledContinue", "Having trouble authenticating to '{0}'? Would you like to try a different way? ({1})", this.label, nextMode) : nls.localize("continueWith", "You have not yet finished authenticating to '{0}'. Would you like to try a different way? ({1})", this.label, nextMode);
+        const result = await this._proxy.$showContinueNotification(message);
+        if (!result) {
+          throw new CancellationError();
+        }
+        this._logger.error(`Failed to create token via flow '${nextMode}': ${err}`);
+      }
+    }
+    if (!token) {
+      throw new Error("Failed to create authentication token");
+    }
+    if (token.scope !== scopes.join(" ")) {
+      this._logger.warn(`Token scopes '${token.scope}' do not match requested scopes '${scopes.join(" ")}'. Overwriting token with what was requested...`);
+      token.scope = scopes.join(" ");
+    }
+    this._tokenStore.update({ added: [{ ...token, created_at: Date.now() }], removed: [] });
+    const session = this._tokenStore.sessions.find((t) => t.accessToken === token.access_token);
+    this._logger.info(`Created session for scopes: ${token.scope}`);
+    return session;
+  }
+  async removeSession(sessionId) {
+    this._logger.info(`Removing session with id: ${sessionId}`);
+    const session = this._tokenStore.sessions.find((session2) => session2.id === sessionId);
+    if (!session) {
+      this._logger.error(`Session with id ${sessionId} not found`);
+      return;
+    }
+    const token = this._tokenStore.tokens.find((token2) => token2.access_token === session.accessToken);
+    if (!token) {
+      this._logger.error(`Failed to retrieve token for removed session: ${session.id}`);
+      return;
+    }
+    this._tokenStore.update({ added: [], removed: [token] });
+    this._logger.info(`Removed token for session: ${session.id} with scopes: ${session.scopes.join(" ")}`);
+  }
+  dispose() {
+    this._disposable.dispose();
+  }
+  async _createWithUrlHandler(scopes, progress, token) {
+    const codeVerifier = this.generateRandomString(64);
+    const codeChallenge = await this.generateCodeChallenge(codeVerifier);
+    const nonce = this.generateRandomString(32);
+    const callbackUri = URI.parse(`${this._initData.environment.appUriScheme}://dynamicauthprovider/${this.authorizationServer.authority}/authorize?nonce=${nonce}`);
+    let state;
+    try {
+      state = await this._extHostUrls.createAppUri(callbackUri);
+    } catch (error) {
+      throw new Error(`Failed to create external URI: ${error}`);
+    }
+    const authorizationUrl = new URL(this._serverMetadata.authorization_endpoint);
+    authorizationUrl.searchParams.append("client_id", this.clientId);
+    authorizationUrl.searchParams.append("response_type", "code");
+    authorizationUrl.searchParams.append("state", state.toString());
+    authorizationUrl.searchParams.append("code_challenge", codeChallenge);
+    authorizationUrl.searchParams.append("code_challenge_method", "S256");
+    const scopeString = scopes.join(" ");
+    if (scopeString) {
+      authorizationUrl.searchParams.append("scope", scopeString);
+    }
+    if (this._resourceMetadata?.resource) {
+      authorizationUrl.searchParams.append("resource", this._resourceMetadata.resource);
+    }
+    const redirectUri = "https://vscode.dev/redirect";
+    authorizationUrl.searchParams.append("redirect_uri", redirectUri);
+    const promise = this.waitForAuthorizationCode(callbackUri);
+    this._logger.info(`Opening authorization URL for scopes: ${scopeString}`);
+    this._logger.trace(`Authorization URL: ${authorizationUrl.toString()}`);
+    const opened = await this._extHostWindow.openUri(authorizationUrl.toString(), {});
+    if (!opened) {
+      throw new CancellationError();
+    }
+    progress.report({
+      message: nls.localize("completeAuth", "Complete the authentication in the browser window that has opened.")
+    });
+    let code;
+    try {
+      const response = await raceCancellationError(promise, token);
+      code = response.code;
+    } catch (err) {
+      if (isCancellationError(err)) {
+        this._logger.info("Authorization code request was cancelled by the user.");
+        throw err;
+      }
+      this._logger.error(`Failed to receive authorization code: ${err}`);
+      throw new Error(`Failed to receive authorization code: ${err}`);
+    }
+    this._logger.info(`Authorization code received for scopes: ${scopeString}`);
+    const tokenResponse = await this.exchangeCodeForToken(code, codeVerifier, redirectUri);
+    return tokenResponse;
+  }
+  generateRandomString(length) {
+    const array = new Uint8Array(length);
+    crypto.getRandomValues(array);
+    return Array.from(array).map((b) => b.toString(16).padStart(2, "0")).join("").substring(0, length);
+  }
+  async generateCodeChallenge(codeVerifier) {
+    const encoder = new TextEncoder();
+    const data = encoder.encode(codeVerifier);
+    const digest = await crypto.subtle.digest("SHA-256", data);
+    return encodeBase64(VSBuffer.wrap(new Uint8Array(digest)), false, false).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+  }
+  async waitForAuthorizationCode(expectedState) {
+    const result = await this._proxy.$waitForUriHandler(expectedState);
+    const codeMatch = /[?&]code=([^&]+)/.exec(result.query || "");
+    if (!codeMatch || codeMatch.length < 2) {
+      throw new Error("Authentication failed: No authorization code received");
+    }
+    return { code: codeMatch[1] };
+  }
+  async exchangeCodeForToken(code, codeVerifier, redirectUri) {
+    if (!this._serverMetadata.token_endpoint) {
+      throw new Error("Token endpoint not available in server metadata");
+    }
+    const tokenRequest = new URLSearchParams();
+    tokenRequest.append("client_id", this.clientId);
+    tokenRequest.append("grant_type", "authorization_code");
+    tokenRequest.append("code", code);
+    tokenRequest.append("redirect_uri", redirectUri);
+    tokenRequest.append("code_verifier", codeVerifier);
+    const response = await fetch(this._serverMetadata.token_endpoint, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+        "Accept": "application/json"
+      },
+      body: tokenRequest.toString()
+    });
+    if (!response.ok) {
+      const text = await response.text();
+      throw new Error(`Token exchange failed: ${response.status} ${response.statusText} - ${text}`);
+    }
+    const result = await response.json();
+    if (isAuthorizationTokenResponse(result)) {
+      return result;
+    }
+    throw new Error(`Invalid authorization token response: ${JSON.stringify(result)}`);
+  }
+  async exchangeRefreshTokenForToken(refreshToken) {
+    if (!this._serverMetadata.token_endpoint) {
+      throw new Error("Token endpoint not available in server metadata");
+    }
+    const tokenRequest = new URLSearchParams();
+    tokenRequest.append("client_id", this.clientId);
+    tokenRequest.append("grant_type", "refresh_token");
+    tokenRequest.append("refresh_token", refreshToken);
+    const response = await fetch(this._serverMetadata.token_endpoint, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+        "Accept": "application/json"
+      },
+      body: tokenRequest.toString()
+    });
+    if (!response.ok) {
+      const text = await response.text();
+      throw new Error(`Token exchange failed: ${response.status} ${response.statusText} - ${text}`);
+    }
+    const result = await response.json();
+    if (isAuthorizationTokenResponse(result)) {
+      return {
+        ...result,
+        created_at: Date.now()
+      };
+    }
+    throw new Error(`Invalid authorization token response: ${JSON.stringify(result)}`);
+  }
+};
+DynamicAuthProvider = __decorate([
+  __param(0, IExtHostWindow),
+  __param(1, IExtHostUrlsService),
+  __param(2, IExtHostInitDataService),
+  __param(3, IExtHostProgress),
+  __param(4, ILoggerService)
+], DynamicAuthProvider);
+class TokenStore {
+  static {
+    __name(this, "TokenStore");
+  }
+  constructor(_persistence, initialTokens, _logger) {
+    this._persistence = _persistence;
+    this._logger = _logger;
+    this._onDidChangeSessions = new Emitter();
+    this.onDidChangeSessions = this._onDidChangeSessions.event;
+    this._disposable = new DisposableStore();
+    this._tokensObservable = observableValue("tokens", initialTokens);
+    this._sessionsObservable = derivedOpts({ equalsFn: /* @__PURE__ */ __name((a, b) => arraysEqual(a, b, (a2, b2) => a2.accessToken === b2.accessToken), "equalsFn") }, (reader) => this._tokensObservable.read(reader).map((t) => this._getSessionFromToken(t)));
+    this._disposable.add(this._registerChangeEventAutorun());
+    this._disposable.add(this._persistence.onDidChange((tokens) => this._tokensObservable.set(tokens, void 0)));
+  }
+  get tokens() {
+    return this._tokensObservable.get();
+  }
+  get sessions() {
+    return this._sessionsObservable.get();
+  }
+  dispose() {
+    this._disposable.dispose();
+  }
+  update({ added, removed }) {
+    this._logger.trace(`Updating tokens: added ${added.length}, removed ${removed.length}`);
+    const currentTokens = [...this._tokensObservable.get()];
+    for (const token of removed) {
+      const index = currentTokens.findIndex((t) => t.access_token === token.access_token);
+      if (index !== -1) {
+        currentTokens.splice(index, 1);
+      }
+    }
+    for (const token of added) {
+      const index = currentTokens.findIndex((t) => t.access_token === token.access_token);
+      if (index === -1) {
+        currentTokens.push(token);
+      } else {
+        currentTokens[index] = token;
+      }
+    }
+    if (added.length || removed.length) {
+      this._tokensObservable.set(currentTokens, void 0);
+      void this._persistence.set(currentTokens);
+    }
+    this._logger.trace(`Tokens updated: ${currentTokens.length} tokens stored.`);
+  }
+  _registerChangeEventAutorun() {
+    let previousSessions = [];
+    return autorun((reader) => {
+      this._logger.trace("Checking for session changes...");
+      const currentSessions = this._sessionsObservable.read(reader);
+      if (previousSessions === currentSessions) {
+        this._logger.trace("No session changes detected.");
+        return;
+      }
+      if (!currentSessions || currentSessions.length === 0) {
+        this._logger.trace("All sessions removed.");
+        if (previousSessions.length > 0) {
+          this._onDidChangeSessions.fire({
+            added: [],
+            removed: previousSessions,
+            changed: []
+          });
+          previousSessions = [];
+        }
+        return;
+      }
+      const added = [];
+      const removed = [];
+      for (const current of currentSessions) {
+        const exists = previousSessions.some((prev) => prev.accessToken === current.accessToken);
+        if (!exists) {
+          added.push(current);
+        }
+      }
+      for (const prev of previousSessions) {
+        const exists = currentSessions.some((current) => current.accessToken === prev.accessToken);
+        if (!exists) {
+          removed.push(prev);
+        }
+      }
+      if (added.length > 0 || removed.length > 0) {
+        this._logger.trace(`Sessions changed: added ${added.length}, removed ${removed.length}`);
+        this._onDidChangeSessions.fire({ added, removed, changed: [] });
+      }
+      previousSessions = currentSessions;
+    });
+  }
+  _getSessionFromToken(token) {
+    let claims;
+    if (token.id_token) {
+      try {
+        claims = getClaimsFromJWT(token.id_token);
+      } catch (e) {
+      }
+    }
+    if (!claims) {
+      try {
+        claims = getClaimsFromJWT(token.access_token);
+      } catch (e) {
+      }
+    }
+    const scopes = token.scope ? token.scope.split(" ") : claims?.scope ? claims.scope.split(" ") : [];
+    return {
+      id: stringHash(token.access_token, 0).toString(),
+      accessToken: token.access_token,
+      account: {
+        id: claims?.sub || "unknown",
+        // TODO: Don't say MCP...
+        label: claims?.preferred_username || claims?.name || claims?.email || "MCP"
+      },
+      scopes,
+      idToken: token.id_token
+    };
+  }
+}
+export {
+  DynamicAuthProvider,
+  ExtHostAuthentication,
+  IExtHostAuthentication
+};
+//# sourceMappingURL=extHostAuthentication.js.map

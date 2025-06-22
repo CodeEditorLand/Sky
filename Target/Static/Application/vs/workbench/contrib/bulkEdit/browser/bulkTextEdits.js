@@ -1,1 +1,278 @@
-import{$qd as j}from"../../../../base/common/lifecycle.js";import{$SC as $}from"../../../../editor/common/core/editOperation.js";import{$cC as f}from"../../../../editor/common/core/range.js";import{$cF as b}from"../../../../editor/common/services/resolverService.js";import{$5eb as A}from"../../../../editor/common/services/editorWorker.js";import{$YE as v}from"../../../../platform/undoRedo/common/undoRedo.js";import{$EG as y,$FG as O}from"../../../../editor/common/model/editStack.js";import{$Ic as C}from"../../../../base/common/map.js";import{$gF as R}from"../../../../editor/common/services/model.js";import{$9gb as _}from"../../../../editor/browser/services/bulkEditService.js";import{$9jb as I}from"../../../../editor/contrib/snippet/browser/snippetController2.js";import{$whb as M}from"../../../../editor/contrib/snippet/browser/snippetParser.js";var w=function(a,e,t,i){var s=arguments.length,r=s<3?e:i===null?i=Object.getOwnPropertyDescriptor(e,t):i,o;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")r=Reflect.decorate(a,e,t,i);else for(var n=a.length-1;n>=0;n--)(o=a[n])&&(r=(s<3?o(r):s>3?o(e,t,r):o(e,t))||r);return s>3&&r&&Object.defineProperty(e,t,r),r},m=function(a,e){return function(t,i){e(t,i,a)}};class k{constructor(e){this.g=e,this.model=this.g.object.textEditorModel,this.d=[]}dispose(){this.g.dispose()}isNoOp(){return!(this.d.length>0||this.f!==void 0&&this.f!==this.model.getEndOfLineSequence())}addEdit(e){this.c=e.versionId;const{textEdit:t}=e;if(typeof t.eol=="number"&&(this.f=t.eol),!t.range&&!t.text||f.isEmpty(t.range)&&!t.text)return;let i;t.range?i=f.lift(t.range):i=this.model.getFullModelRange(),this.d.push({...$.replaceMove(i,t.text),insertAsSnippet:t.insertAsSnippet,keepWhitespace:t.keepWhitespace})}validate(){return typeof this.c>"u"||this.model.getVersionId()===this.c?{canApply:!0}:{canApply:!1,reason:this.model.uri}}getBeforeCursorState(){return null}apply(){this.d.length>0&&(this.d=this.d.map(this.h,this).sort((e,t)=>f.compareRangesUsingStarts(e.range,t.range)),this.model.pushEditOperations(null,this.d,()=>null)),this.f!==void 0&&this.model.pushEOL(this.f)}h(e){if(!e.insertAsSnippet||!e.text)return e;const t=M.asInsertText(e.text);return{...e,insertAsSnippet:!1,text:t}}}class q extends k{constructor(e,t){super(e),this.j=t}getBeforeCursorState(){return this.k()?this.j.getSelections():null}apply(){if(!this.k()){super.apply();return}if(this.d.length>0){const e=I.get(this.j);if(e&&this.d.some(t=>t.insertAsSnippet)){const t=[];for(const i of this.d)i.range&&i.text!==null&&t.push({range:f.lift(i.range),template:i.insertAsSnippet?i.text:M.escape(i.text),keepWhitespace:i.keepWhitespace});e.apply(t,{undoStopBefore:!1,undoStopAfter:!1})}else this.d=this.d.map(this.h,this).sort((t,i)=>f.compareRangesUsingStarts(t.range,i.range)),this.j.executeEdits("",this.d)}this.f!==void 0&&this.j.hasModel()&&this.j.getModel().pushEOL(this.f)}k(){return this.j?.getModel()?.uri.toString()===this.model.uri.toString()}}let x=class{constructor(e,t,i,s,r,o,n,c,u,p,h,g){this.d=e,this.f=t,this.g=i,this.h=s,this.j=r,this.k=o,this.l=n,this.m=u,this.n=p,this.o=h,this.p=g,this.c=new C;for(const d of c){let l=this.c.get(d.resource);l||(l=[],this.c.set(d.resource,l)),l.push(d)}}q(){for(const e of this.c.values())for(const t of e)if(typeof t.versionId=="number"){const i=this.n.getModel(t.resource);if(i&&i.getVersionId()!==t.versionId)throw new Error(`${i.uri.toString()} has changed in the meantime`)}}async r(){const e=[],t=[];for(const[i,s]of this.c){const r=this.o.createModelReference(i).then(async o=>{let n,c=!1;if(this.g?.getModel()?.uri.toString()===o.object.textEditorModel.uri.toString()?(n=new q(o,this.g),c=!0):n=new k(o),e.push(n),!c){s.forEach(n.addEdit,n);return}const u=async(g,d)=>{const l=s.slice(g,d),S=await this.m.computeMoreMinimalEdits(o.object.textEditorModel.uri,l.map(E=>E.textEdit),!1);S?S.forEach(E=>n.addEdit(new _(o.object.textEditorModel.uri,E,void 0,void 0))):l.forEach(n.addEdit,n)};let p=0,h=0;for(;h<s.length;h++)(s[h].textEdit.insertAsSnippet||s[h].metadata)&&(await u(p,h),n.addEdit(s[h]),p=h+1);await u(p,h)});t.push(r)}return await Promise.all(t),e}s(e){for(const t of e){const i=t.validate();if(!i.canApply)return i}return{canApply:!0}}async apply(){this.q();const e=await this.r();try{if(this.l.isCancellationRequested)return[];const t=[],i=this.s(e);if(!i.canApply)throw new Error(`${i.reason.toString()} has changed in the meantime`);if(e.length===1){const s=e[0];if(!s.isNoOp()){const r=new y(this.d,this.f,s.model,s.getBeforeCursorState());this.p.pushElement(r,this.h,this.j),s.apply(),r.close(),t.push(s.model.uri)}this.k.report(void 0)}else{const s=new O(this.d,this.f,e.map(r=>new y(this.d,this.f,r.model,r.getBeforeCursorState())));this.p.pushElement(s,this.h,this.j);for(const r of e)r.apply(),this.k.report(void 0),t.push(r.model.uri);s.close()}return t}finally{j(e)}}};x=w([m(8,A),m(9,R),m(10,b),m(11,v)],x);export{x as $enc};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { dispose } from "../../../../base/common/lifecycle.js";
+import { EditOperation } from "../../../../editor/common/core/editOperation.js";
+import { Range } from "../../../../editor/common/core/range.js";
+import { ITextModelService } from "../../../../editor/common/services/resolverService.js";
+import { IEditorWorkerService } from "../../../../editor/common/services/editorWorker.js";
+import { IUndoRedoService } from "../../../../platform/undoRedo/common/undoRedo.js";
+import { SingleModelEditStackElement, MultiModelEditStackElement } from "../../../../editor/common/model/editStack.js";
+import { ResourceMap } from "../../../../base/common/map.js";
+import { IModelService } from "../../../../editor/common/services/model.js";
+import { ResourceTextEdit } from "../../../../editor/browser/services/bulkEditService.js";
+import { SnippetController2 } from "../../../../editor/contrib/snippet/browser/snippetController2.js";
+import { SnippetParser } from "../../../../editor/contrib/snippet/browser/snippetParser.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+class ModelEditTask {
+  static {
+    __name(this, "ModelEditTask");
+  }
+  constructor(_modelReference) {
+    this._modelReference = _modelReference;
+    this.model = this._modelReference.object.textEditorModel;
+    this._edits = [];
+  }
+  dispose() {
+    this._modelReference.dispose();
+  }
+  isNoOp() {
+    if (this._edits.length > 0) {
+      return false;
+    }
+    if (this._newEol !== void 0 && this._newEol !== this.model.getEndOfLineSequence()) {
+      return false;
+    }
+    return true;
+  }
+  addEdit(resourceEdit) {
+    this._expectedModelVersionId = resourceEdit.versionId;
+    const { textEdit } = resourceEdit;
+    if (typeof textEdit.eol === "number") {
+      this._newEol = textEdit.eol;
+    }
+    if (!textEdit.range && !textEdit.text) {
+      return;
+    }
+    if (Range.isEmpty(textEdit.range) && !textEdit.text) {
+      return;
+    }
+    let range;
+    if (!textEdit.range) {
+      range = this.model.getFullModelRange();
+    } else {
+      range = Range.lift(textEdit.range);
+    }
+    this._edits.push({ ...EditOperation.replaceMove(range, textEdit.text), insertAsSnippet: textEdit.insertAsSnippet, keepWhitespace: textEdit.keepWhitespace });
+  }
+  validate() {
+    if (typeof this._expectedModelVersionId === "undefined" || this.model.getVersionId() === this._expectedModelVersionId) {
+      return { canApply: true };
+    }
+    return { canApply: false, reason: this.model.uri };
+  }
+  getBeforeCursorState() {
+    return null;
+  }
+  apply() {
+    if (this._edits.length > 0) {
+      this._edits = this._edits.map(this._transformSnippetStringToInsertText, this).sort((a, b) => Range.compareRangesUsingStarts(a.range, b.range));
+      this.model.pushEditOperations(null, this._edits, () => null);
+    }
+    if (this._newEol !== void 0) {
+      this.model.pushEOL(this._newEol);
+    }
+  }
+  _transformSnippetStringToInsertText(edit) {
+    if (!edit.insertAsSnippet) {
+      return edit;
+    }
+    if (!edit.text) {
+      return edit;
+    }
+    const text = SnippetParser.asInsertText(edit.text);
+    return { ...edit, insertAsSnippet: false, text };
+  }
+}
+class EditorEditTask extends ModelEditTask {
+  static {
+    __name(this, "EditorEditTask");
+  }
+  constructor(modelReference, editor) {
+    super(modelReference);
+    this._editor = editor;
+  }
+  getBeforeCursorState() {
+    return this._canUseEditor() ? this._editor.getSelections() : null;
+  }
+  apply() {
+    if (!this._canUseEditor()) {
+      super.apply();
+      return;
+    }
+    if (this._edits.length > 0) {
+      const snippetCtrl = SnippetController2.get(this._editor);
+      if (snippetCtrl && this._edits.some((edit) => edit.insertAsSnippet)) {
+        const snippetEdits = [];
+        for (const edit of this._edits) {
+          if (edit.range && edit.text !== null) {
+            snippetEdits.push({
+              range: Range.lift(edit.range),
+              template: edit.insertAsSnippet ? edit.text : SnippetParser.escape(edit.text),
+              keepWhitespace: edit.keepWhitespace
+            });
+          }
+        }
+        snippetCtrl.apply(snippetEdits, { undoStopBefore: false, undoStopAfter: false });
+      } else {
+        this._edits = this._edits.map(this._transformSnippetStringToInsertText, this).sort((a, b) => Range.compareRangesUsingStarts(a.range, b.range));
+        this._editor.executeEdits("", this._edits);
+      }
+    }
+    if (this._newEol !== void 0) {
+      if (this._editor.hasModel()) {
+        this._editor.getModel().pushEOL(this._newEol);
+      }
+    }
+  }
+  _canUseEditor() {
+    return this._editor?.getModel()?.uri.toString() === this.model.uri.toString();
+  }
+}
+let BulkTextEdits = class BulkTextEdits2 {
+  static {
+    __name(this, "BulkTextEdits");
+  }
+  constructor(_label, _code, _editor, _undoRedoGroup, _undoRedoSource, _progress, _token, edits, _editorWorker, _modelService, _textModelResolverService, _undoRedoService) {
+    this._label = _label;
+    this._code = _code;
+    this._editor = _editor;
+    this._undoRedoGroup = _undoRedoGroup;
+    this._undoRedoSource = _undoRedoSource;
+    this._progress = _progress;
+    this._token = _token;
+    this._editorWorker = _editorWorker;
+    this._modelService = _modelService;
+    this._textModelResolverService = _textModelResolverService;
+    this._undoRedoService = _undoRedoService;
+    this._edits = new ResourceMap();
+    for (const edit of edits) {
+      let array = this._edits.get(edit.resource);
+      if (!array) {
+        array = [];
+        this._edits.set(edit.resource, array);
+      }
+      array.push(edit);
+    }
+  }
+  _validateBeforePrepare() {
+    for (const array of this._edits.values()) {
+      for (const edit of array) {
+        if (typeof edit.versionId === "number") {
+          const model = this._modelService.getModel(edit.resource);
+          if (model && model.getVersionId() !== edit.versionId) {
+            throw new Error(`${model.uri.toString()} has changed in the meantime`);
+          }
+        }
+      }
+    }
+  }
+  async _createEditsTasks() {
+    const tasks = [];
+    const promises = [];
+    for (const [key, edits] of this._edits) {
+      const promise = this._textModelResolverService.createModelReference(key).then(async (ref) => {
+        let task;
+        let makeMinimal = false;
+        if (this._editor?.getModel()?.uri.toString() === ref.object.textEditorModel.uri.toString()) {
+          task = new EditorEditTask(ref, this._editor);
+          makeMinimal = true;
+        } else {
+          task = new ModelEditTask(ref);
+        }
+        tasks.push(task);
+        if (!makeMinimal) {
+          edits.forEach(task.addEdit, task);
+          return;
+        }
+        const makeGroupMoreMinimal = /* @__PURE__ */ __name(async (start2, end) => {
+          const oldEdits = edits.slice(start2, end);
+          const newEdits = await this._editorWorker.computeMoreMinimalEdits(ref.object.textEditorModel.uri, oldEdits.map((e) => e.textEdit), false);
+          if (!newEdits) {
+            oldEdits.forEach(task.addEdit, task);
+          } else {
+            newEdits.forEach((edit) => task.addEdit(new ResourceTextEdit(ref.object.textEditorModel.uri, edit, void 0, void 0)));
+          }
+        }, "makeGroupMoreMinimal");
+        let start = 0;
+        let i = 0;
+        for (; i < edits.length; i++) {
+          if (edits[i].textEdit.insertAsSnippet || edits[i].metadata) {
+            await makeGroupMoreMinimal(start, i);
+            task.addEdit(edits[i]);
+            start = i + 1;
+          }
+        }
+        await makeGroupMoreMinimal(start, i);
+      });
+      promises.push(promise);
+    }
+    await Promise.all(promises);
+    return tasks;
+  }
+  _validateTasks(tasks) {
+    for (const task of tasks) {
+      const result = task.validate();
+      if (!result.canApply) {
+        return result;
+      }
+    }
+    return { canApply: true };
+  }
+  async apply() {
+    this._validateBeforePrepare();
+    const tasks = await this._createEditsTasks();
+    try {
+      if (this._token.isCancellationRequested) {
+        return [];
+      }
+      const resources = [];
+      const validation = this._validateTasks(tasks);
+      if (!validation.canApply) {
+        throw new Error(`${validation.reason.toString()} has changed in the meantime`);
+      }
+      if (tasks.length === 1) {
+        const task = tasks[0];
+        if (!task.isNoOp()) {
+          const singleModelEditStackElement = new SingleModelEditStackElement(this._label, this._code, task.model, task.getBeforeCursorState());
+          this._undoRedoService.pushElement(singleModelEditStackElement, this._undoRedoGroup, this._undoRedoSource);
+          task.apply();
+          singleModelEditStackElement.close();
+          resources.push(task.model.uri);
+        }
+        this._progress.report(void 0);
+      } else {
+        const multiModelEditStackElement = new MultiModelEditStackElement(this._label, this._code, tasks.map((t) => new SingleModelEditStackElement(this._label, this._code, t.model, t.getBeforeCursorState())));
+        this._undoRedoService.pushElement(multiModelEditStackElement, this._undoRedoGroup, this._undoRedoSource);
+        for (const task of tasks) {
+          task.apply();
+          this._progress.report(void 0);
+          resources.push(task.model.uri);
+        }
+        multiModelEditStackElement.close();
+      }
+      return resources;
+    } finally {
+      dispose(tasks);
+    }
+  }
+};
+BulkTextEdits = __decorate([
+  __param(8, IEditorWorkerService),
+  __param(9, IModelService),
+  __param(10, ITextModelService),
+  __param(11, IUndoRedoService)
+], BulkTextEdits);
+export {
+  BulkTextEdits
+};
+//# sourceMappingURL=bulkTextEdits.js.map

@@ -1,1 +1,50 @@
-import{Effect as t,Runtime as o}from"../../effect";import{Emitter as s,Event as a}from"vs/base/common/event.js";import"vs/base/common/lifecycle.js";import{FileSystemProviderCapabilities as n}from"vs/platform/files/common/files.js";import{Delete as l,Mkdir as d,Readdir as m,ReadFile as p,Rename as y,Stat as F,Unwatch as h,Watch as v,WriteFile as I}from"../../../Integration/Tauri/Wrapper.js";import"../../../Platform/VSCode/Type.js";class f{WatchCorrelationId=0;_onDidChangeFile=new s;capabilities=n.FileReadWrite|n.PathCaseSensitive;onDidChangeCapabilities=a.None;onDidChangeFile=this._onDidChangeFile.event;run=e=>o.runPromise(o.defaultRuntime,e);stat=e=>this.run(F(e));readdir=e=>this.run(m(e));mkdir=e=>this.run(d(e));readFile=e=>this.run(p(e));writeFile=(e,i,r)=>this.run(I(e,i,r));delete=(e,i)=>this.run(l(e,i));rename=(e,i,r)=>this.run(y(e,i,r));watch=(e,i)=>{const r=this.WatchCorrelationId++;return t.runFork(v(e,{...i,correlationId})),{dispose:()=>t.runFork(h(r))}}}const c=t.sync(()=>new f);var O=c;export{O as default};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { Effect, Runtime } from "../../effect";
+import { Emitter, Event } from "vs/base/common/event.js";
+import {
+  FileSystemProviderCapabilities
+} from "vs/platform/files/common/files.js";
+import {
+  Delete,
+  Mkdir,
+  Readdir,
+  ReadFile,
+  Rename,
+  Stat,
+  Unwatch,
+  Watch,
+  WriteFile
+} from "../../../Integration/Tauri/Wrapper.js";
+class FileSystemProviderImpl {
+  static {
+    __name(this, "FileSystemProviderImpl");
+  }
+  WatchCorrelationId = 0;
+  _onDidChangeFile = new Emitter();
+  // --- IFileSystemProvider Implementation ---
+  capabilities = FileSystemProviderCapabilities.FileReadWrite | FileSystemProviderCapabilities.PathCaseSensitive;
+  onDidChangeCapabilities = Event.None;
+  onDidChangeFile = this._onDidChangeFile.event;
+  run = /* @__PURE__ */ __name((effect) => Runtime.runPromise(Runtime.defaultRuntime, effect), "run");
+  stat = /* @__PURE__ */ __name((resource) => this.run(Stat(resource)), "stat");
+  readdir = /* @__PURE__ */ __name((resource) => this.run(Readdir(resource)), "readdir");
+  mkdir = /* @__PURE__ */ __name((resource) => this.run(Mkdir(resource)), "mkdir");
+  readFile = /* @__PURE__ */ __name((resource) => this.run(ReadFile(resource)), "readFile");
+  writeFile = /* @__PURE__ */ __name((resource, content, opts) => this.run(WriteFile(resource, content, opts)), "writeFile");
+  delete = /* @__PURE__ */ __name((resource, opts) => this.run(Delete(resource, opts)), "delete");
+  rename = /* @__PURE__ */ __name((from, to, opts) => this.run(Rename(from, to, opts)), "rename");
+  watch = /* @__PURE__ */ __name((resource, opts) => {
+    const CorrelationId = this.WatchCorrelationId++;
+    Effect.runFork(Watch(resource, { ...opts, correlationId }));
+    return {
+      dispose: /* @__PURE__ */ __name(() => Effect.runFork(Unwatch(CorrelationId)), "dispose")
+    };
+  }, "watch");
+}
+const Definition = Effect.sync(() => new FileSystemProviderImpl());
+var Definition_default = Definition;
+export {
+  Definition_default as default
+};
+//# sourceMappingURL=Definition.js.map

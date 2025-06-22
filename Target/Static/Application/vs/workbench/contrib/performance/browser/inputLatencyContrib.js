@@ -1,1 +1,61 @@
-import{inputLatency as p}from"../../../../base/browser/performance.js";import{$Yh as m}from"../../../../base/common/async.js";import{Event as u}from"../../../../base/common/event.js";import{$vd as l,$wd as d}from"../../../../base/common/lifecycle.js";import{$Po as b}from"../../../../platform/telemetry/common/telemetry.js";import{$oI as v}from"../../../services/editor/common/editorService.js";var a=function(r,t,e,o){var i=arguments.length,n=i<3?t:o===null?o=Object.getOwnPropertyDescriptor(t,e):o,s;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")n=Reflect.decorate(r,t,e,o);else for(var h=r.length-1;h>=0;h--)(s=r[h])&&(n=(i<3?s(n):i>3?s(t,e,n):s(t,e))||n);return i>3&&n&&Object.defineProperty(t,e,n),n},c=function(r,t){return function(e,o){t(e,o,r)}};let f=class extends l{constructor(t,e){super(),this.c=t,this.f=e,this.a=this.B(new d),this.b=this.B(new m(()=>{this.h(),this.g()},6e4)),Math.random()<=.01&&this.g()}g(){this.a.value=u.once(this.c.onDidActiveEditorChange)(()=>this.b.schedule())}h(){const t=p.getAndClearMeasurements();t&&this.f.publicLog2("performance.inputLatency",{keydown:t.keydown,input:t.input,render:t.render,total:t.total,sampleCount:t.sampleCount})}};f=a([c(0,v),c(1,b)],f);export{f as $w0b};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { inputLatency } from "../../../../base/browser/performance.js";
+import { RunOnceScheduler } from "../../../../base/common/async.js";
+import { Event } from "../../../../base/common/event.js";
+import { Disposable, MutableDisposable } from "../../../../base/common/lifecycle.js";
+import { ITelemetryService } from "../../../../platform/telemetry/common/telemetry.js";
+import { IEditorService } from "../../../services/editor/common/editorService.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+let InputLatencyContrib = class InputLatencyContrib2 extends Disposable {
+  static {
+    __name(this, "InputLatencyContrib");
+  }
+  constructor(_editorService, _telemetryService) {
+    super();
+    this._editorService = _editorService;
+    this._telemetryService = _telemetryService;
+    this._listener = this._register(new MutableDisposable());
+    this._scheduler = this._register(new RunOnceScheduler(() => {
+      this._logSamples();
+      this._setupListener();
+    }, 6e4));
+    if (Math.random() <= 0.01) {
+      this._setupListener();
+    }
+  }
+  _setupListener() {
+    this._listener.value = Event.once(this._editorService.onDidActiveEditorChange)(() => this._scheduler.schedule());
+  }
+  _logSamples() {
+    const measurements = inputLatency.getAndClearMeasurements();
+    if (!measurements) {
+      return;
+    }
+    this._telemetryService.publicLog2("performance.inputLatency", {
+      keydown: measurements.keydown,
+      input: measurements.input,
+      render: measurements.render,
+      total: measurements.total,
+      sampleCount: measurements.sampleCount
+    });
+  }
+};
+InputLatencyContrib = __decorate([
+  __param(0, IEditorService),
+  __param(1, ITelemetryService)
+], InputLatencyContrib);
+export {
+  InputLatencyContrib
+};
+//# sourceMappingURL=inputLatencyContrib.js.map

@@ -1,1 +1,208 @@
-import*as h from"../../../../nls.js";import*as w from"../../../../base/common/resources.js";import{$vd as A}from"../../../../base/common/lifecycle.js";import{$n2b as O}from"../common/taskService.js";import{RunOnOptions as p,TaskSourceKind as y,$kU as _}from"../common/tasks.js";import{$OM as $}from"../../../../platform/quickinput/common/quickInput.js";import{$iI as P}from"../../../../platform/actions/common/actions.js";import{$RM as R}from"../../../../platform/workspace/common/workspaceTrust.js";import{$El as g}from"../../../../platform/configuration/common/configuration.js";import{Event as f}from"../../../../base/common/event.js";import{$3n as I}from"../../../../platform/log/common/log.js";var b=function(c,t,s,e){var i=arguments.length,n=i<3?t:e===null?e=Object.getOwnPropertyDescriptor(t,s):e,o;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")n=Reflect.decorate(c,t,s,e);else for(var a=c.length-1;a>=0;a--)(o=c[a])&&(n=(i<3?o(n):i>3?o(t,s,n):o(t,s))||n);return i>3&&n&&Object.defineProperty(t,s,n),n},u=function(c,t){return function(s,e){t(s,e,c)}};const m="task.allowAutomaticTasks";let k=class extends A{constructor(t,s,e,i){super(),this.b=t,this.c=s,this.f=e,this.g=i,this.a=!1,this.b.isReconnected?this.h():this.B(f.once(this.b.onDidReconnectToTasks)(async()=>await this.h())),this.B(this.f.onDidChangeTrust(async()=>await this.h()))}async h(){if(!this.f.isWorkspaceTrusted()||this.a||this.c.getValue(m)==="off")return;this.a=!0,this.g.trace("RunAutomaticTasks: Trying to run tasks."),this.b.hasTaskSystemInfo||(this.g.trace("RunAutomaticTasks: Awaiting task system info."),await f.toPromise(f.once(this.b.onDidChangeTaskSystemInfo)));let t=await this.b.getWorkspaceTasks(2);this.g.trace(`RunAutomaticTasks: Found ${t.size} automatic tasks`);let s=this.n(this.b,t);if(this.g.trace(`RunAutomaticTasks: taskNames=${JSON.stringify(s.taskNames)}`),s.taskNames.length===0){if(!await Promise.race([new Promise(i=>{f.toPromise(f.once(this.b.onDidChangeTaskConfig)).then(()=>i(!0))}),new Promise(i=>{const n=setTimeout(()=>{clearTimeout(n),i(!1)},1e4)})])){this.g.trace("RunAutomaticTasks: waited some extra time, but no update of tasks configuration");return}t=await this.b.getWorkspaceTasks(2),s=this.n(this.b,t),this.g.trace(`RunAutomaticTasks: updated taskNames=${JSON.stringify(s.taskNames)}`)}this.r(this.b,this.c,s.tasks,s.taskNames)}j(t,s){s.forEach(e=>{e instanceof Promise?e.then(i=>{i&&t.run(i)}):t.run(e)})}m(t){switch(y.toConfigurationTarget(t.kind)){case 6:return w.$kh(t.config.workspaceFolder.uri,t.config.file);case 5:return t.config.workspace?.configuration??void 0}}n(t,s){const e=new Array,i=new Array,n=new Map;return s&&s.forEach(o=>{if(o.set&&o.set.tasks.forEach(a=>{if(a.runOptions.runOn===p.folderOpen){e.push(a),i.push(a._label);const r=this.m(a._source);r&&n.set(r.fsPath,r)}}),o.configurations){for(const a of Object.values(o.configurations.byIdentifier))if(a.runOptions.runOn===p.folderOpen){e.push(new Promise(d=>{t.getTask(o.workspaceFolder,a._id,!0).then(T=>d(T))})),a._label?i.push(a._label):i.push(a.configures.task);const r=this.m(a._source);r&&n.set(r.fsPath,r)}}}),{tasks:e,taskNames:i,locations:n}}async r(t,s,e,i){i.length!==0&&s.getValue(m)!=="off"&&this.j(t,e)}};k=b([u(0,O),u(1,g),u(2,R),u(3,I)],k);class l extends P{static{this.ID="workbench.action.tasks.manageAutomaticRunning"}static{this.LABEL=h.localize(11179,null)}constructor(){super({id:l.ID,title:l.LABEL,category:_})}async run(t){const s=t.get($),e=t.get(g),i={label:h.localize(11180,null)},n={label:h.localize(11181,null)},o=await s.pick([i,n],{canPickMany:!1});o&&e.updateValue(m,o===i?"on":"off",2)}}export{k as $7tc,l as $8tc};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import * as nls from "../../../../nls.js";
+import * as resources from "../../../../base/common/resources.js";
+import { Disposable } from "../../../../base/common/lifecycle.js";
+import { ITaskService } from "../common/taskService.js";
+import { RunOnOptions, TaskSourceKind, TASKS_CATEGORY } from "../common/tasks.js";
+import { IQuickInputService } from "../../../../platform/quickinput/common/quickInput.js";
+import { Action2 } from "../../../../platform/actions/common/actions.js";
+import { IWorkspaceTrustManagementService } from "../../../../platform/workspace/common/workspaceTrust.js";
+import { IConfigurationService } from "../../../../platform/configuration/common/configuration.js";
+import { Event } from "../../../../base/common/event.js";
+import { ILogService } from "../../../../platform/log/common/log.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+const ALLOW_AUTOMATIC_TASKS = "task.allowAutomaticTasks";
+let RunAutomaticTasks = class RunAutomaticTasks2 extends Disposable {
+  static {
+    __name(this, "RunAutomaticTasks");
+  }
+  constructor(_taskService, _configurationService, _workspaceTrustManagementService, _logService) {
+    super();
+    this._taskService = _taskService;
+    this._configurationService = _configurationService;
+    this._workspaceTrustManagementService = _workspaceTrustManagementService;
+    this._logService = _logService;
+    this._hasRunTasks = false;
+    if (this._taskService.isReconnected) {
+      this._tryRunTasks();
+    } else {
+      this._register(Event.once(this._taskService.onDidReconnectToTasks)(async () => await this._tryRunTasks()));
+    }
+    this._register(this._workspaceTrustManagementService.onDidChangeTrust(async () => await this._tryRunTasks()));
+  }
+  async _tryRunTasks() {
+    if (!this._workspaceTrustManagementService.isWorkspaceTrusted()) {
+      return;
+    }
+    if (this._hasRunTasks || this._configurationService.getValue(ALLOW_AUTOMATIC_TASKS) === "off") {
+      return;
+    }
+    this._hasRunTasks = true;
+    this._logService.trace("RunAutomaticTasks: Trying to run tasks.");
+    if (!this._taskService.hasTaskSystemInfo) {
+      this._logService.trace("RunAutomaticTasks: Awaiting task system info.");
+      await Event.toPromise(Event.once(this._taskService.onDidChangeTaskSystemInfo));
+    }
+    let workspaceTasks = await this._taskService.getWorkspaceTasks(
+      2
+      /* TaskRunSource.FolderOpen */
+    );
+    this._logService.trace(`RunAutomaticTasks: Found ${workspaceTasks.size} automatic tasks`);
+    let autoTasks = this._findAutoTasks(this._taskService, workspaceTasks);
+    this._logService.trace(`RunAutomaticTasks: taskNames=${JSON.stringify(autoTasks.taskNames)}`);
+    if (autoTasks.taskNames.length === 0) {
+      const updatedWithinTimeout = await Promise.race([
+        new Promise((resolve) => {
+          Event.toPromise(Event.once(this._taskService.onDidChangeTaskConfig)).then(() => resolve(true));
+        }),
+        new Promise((resolve) => {
+          const timer = setTimeout(() => {
+            clearTimeout(timer);
+            resolve(false);
+          }, 1e4);
+        })
+      ]);
+      if (!updatedWithinTimeout) {
+        this._logService.trace(`RunAutomaticTasks: waited some extra time, but no update of tasks configuration`);
+        return;
+      }
+      workspaceTasks = await this._taskService.getWorkspaceTasks(
+        2
+        /* TaskRunSource.FolderOpen */
+      );
+      autoTasks = this._findAutoTasks(this._taskService, workspaceTasks);
+      this._logService.trace(`RunAutomaticTasks: updated taskNames=${JSON.stringify(autoTasks.taskNames)}`);
+    }
+    this._runWithPermission(this._taskService, this._configurationService, autoTasks.tasks, autoTasks.taskNames);
+  }
+  _runTasks(taskService, tasks) {
+    tasks.forEach((task) => {
+      if (task instanceof Promise) {
+        task.then((promiseResult) => {
+          if (promiseResult) {
+            taskService.run(promiseResult);
+          }
+        });
+      } else {
+        taskService.run(task);
+      }
+    });
+  }
+  _getTaskSource(source) {
+    const taskKind = TaskSourceKind.toConfigurationTarget(source.kind);
+    switch (taskKind) {
+      case 6: {
+        return resources.joinPath(source.config.workspaceFolder.uri, source.config.file);
+      }
+      case 5: {
+        return source.config.workspace?.configuration ?? void 0;
+      }
+    }
+    return void 0;
+  }
+  _findAutoTasks(taskService, workspaceTaskResult) {
+    const tasks = new Array();
+    const taskNames = new Array();
+    const locations = /* @__PURE__ */ new Map();
+    if (workspaceTaskResult) {
+      workspaceTaskResult.forEach((resultElement) => {
+        if (resultElement.set) {
+          resultElement.set.tasks.forEach((task) => {
+            if (task.runOptions.runOn === RunOnOptions.folderOpen) {
+              tasks.push(task);
+              taskNames.push(task._label);
+              const location = this._getTaskSource(task._source);
+              if (location) {
+                locations.set(location.fsPath, location);
+              }
+            }
+          });
+        }
+        if (resultElement.configurations) {
+          for (const configuredTask of Object.values(resultElement.configurations.byIdentifier)) {
+            if (configuredTask.runOptions.runOn === RunOnOptions.folderOpen) {
+              tasks.push(new Promise((resolve) => {
+                taskService.getTask(resultElement.workspaceFolder, configuredTask._id, true).then((task) => resolve(task));
+              }));
+              if (configuredTask._label) {
+                taskNames.push(configuredTask._label);
+              } else {
+                taskNames.push(configuredTask.configures.task);
+              }
+              const location = this._getTaskSource(configuredTask._source);
+              if (location) {
+                locations.set(location.fsPath, location);
+              }
+            }
+          }
+        }
+      });
+    }
+    return { tasks, taskNames, locations };
+  }
+  async _runWithPermission(taskService, configurationService, tasks, taskNames) {
+    if (taskNames.length === 0) {
+      return;
+    }
+    if (configurationService.getValue(ALLOW_AUTOMATIC_TASKS) === "off") {
+      return;
+    }
+    this._runTasks(taskService, tasks);
+  }
+};
+RunAutomaticTasks = __decorate([
+  __param(0, ITaskService),
+  __param(1, IConfigurationService),
+  __param(2, IWorkspaceTrustManagementService),
+  __param(3, ILogService)
+], RunAutomaticTasks);
+class ManageAutomaticTaskRunning extends Action2 {
+  static {
+    __name(this, "ManageAutomaticTaskRunning");
+  }
+  static {
+    this.ID = "workbench.action.tasks.manageAutomaticRunning";
+  }
+  static {
+    this.LABEL = nls.localize("workbench.action.tasks.manageAutomaticRunning", "Manage Automatic Tasks");
+  }
+  constructor() {
+    super({
+      id: ManageAutomaticTaskRunning.ID,
+      title: ManageAutomaticTaskRunning.LABEL,
+      category: TASKS_CATEGORY
+    });
+  }
+  async run(accessor) {
+    const quickInputService = accessor.get(IQuickInputService);
+    const configurationService = accessor.get(IConfigurationService);
+    const allowItem = { label: nls.localize("workbench.action.tasks.allowAutomaticTasks", "Allow Automatic Tasks") };
+    const disallowItem = { label: nls.localize("workbench.action.tasks.disallowAutomaticTasks", "Disallow Automatic Tasks") };
+    const value = await quickInputService.pick([allowItem, disallowItem], { canPickMany: false });
+    if (!value) {
+      return;
+    }
+    configurationService.updateValue(
+      ALLOW_AUTOMATIC_TASKS,
+      value === allowItem ? "on" : "off",
+      2
+      /* ConfigurationTarget.USER */
+    );
+  }
+}
+export {
+  ManageAutomaticTaskRunning,
+  RunAutomaticTasks
+};
+//# sourceMappingURL=runAutomaticTasks.js.map

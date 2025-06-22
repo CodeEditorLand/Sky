@@ -1,2 +1,1039 @@
-import*as u from"../../../base/browser/dom.js";import{$G5 as L}from"../../../base/browser/keyboardEvent.js";import{$T8 as A}from"../../../base/browser/ui/toggle/toggle.js";import{$Sb as g}from"../../../base/common/arrays.js";import{$Wh as I}from"../../../base/common/async.js";import{$Mj as O}from"../../../base/common/codicons.js";import{$df as n,$lf as M}from"../../../base/common/event.js";import{$vd as F,$ud as T}from"../../../base/common/lifecycle.js";import{$v as B}from"../../../base/common/platform.js";import x from"../../../base/common/severity.js";import{ThemeIcon as U}from"../../../base/common/themables.js";import"./media/quickInput.css";import{localize as o}from"../../../nls.js";import{ItemActivation as c,$LM as N,QuickInputButtonLocation as y,QuickInputHideReason as v,QuickPickFocus as p}from"../common/quickInput.js";import{$Xxb as m,$Yxb as H}from"./quickInputUtils.js";import{$El as K}from"../../configuration/common/configuration.js";import{$ngb as E,$ogb as P}from"../../hover/browser/hover.js";import{$Bn as $,$Un as d}from"../../contextkey/common/contextkey.js";var C=function(l,t,i,s){var e=arguments.length,r=e<3?t:s===null?s=Object.getOwnPropertyDescriptor(t,i):s,a;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")r=Reflect.decorate(l,t,i,s);else for(var h=l.length-1;h>=0;h--)(a=l[h])&&(r=(e<3?a(r):e>3?a(t,i,r):a(t,i))||r);return e>3&&r&&Object.defineProperty(t,i,r),r},X=function(l,t){return function(i,s){t(i,s,l)}};const S="inQuickInput",lt=new d(S,!1,o(2186,null)),at=$.has(S),R="quickInputAlignment",ut=new d(R,"top",o(2187,null)),j="quickInputType",ct=new d(j,void 0,o(2188,null)),Z="cursorAtEndOfQuickInputBox",bt=new d(Z,!1,o(2189,null)),ft=$.has(Z),w={iconClass:U.asClassName(O.quickInputBack),tooltip:o(2190,null),handle:-1};class b extends F{static{this.c=o(2191,null)}constructor(t){super(),this.X=t,this.j=!1,this.r=!1,this.s=!0,this.u=!1,this.w=!1,this.y=[],this.z=[],this.C=[],this.D=!1,this.F=[],this.G=!1,this.H=b.c,this.L=x.Ignore,this.N=this.B(new n),this.Q=this.B(new n),this.R=this.B(new n),this.S=this.B(new n),this.U=this.B(new T),this.onDidTriggerButton=this.N.event,this.onDidHide=this.Q.event,this.onWillHide=this.R.event,this.onDispose=this.S.event}get title(){return this.f}set title(t){this.f=t,this.Z()}get description(){return this.g}set description(t){this.g=t,this.Z()}get widget(){return this.h}set widget(t){u.$t6(t)&&this.h!==t&&(this.h=t,this.j=!0,this.Z())}get step(){return this.m}set step(t){this.m=t,this.Z()}get totalSteps(){return this.n}set totalSteps(t){this.n=t,this.Z()}get enabled(){return this.s}set enabled(t){this.s=t,this.Z()}get contextKey(){return this.t}set contextKey(t){this.t=t,this.Z()}get busy(){return this.u}set busy(t){this.u=t,this.Z()}get ignoreFocusOut(){return this.w}set ignoreFocusOut(t){const i=this.w!==t&&!B;this.w=t&&!B,i&&this.Z()}get Y(){return this.y.length?[...this.y,this.z]:this.z}get buttons(){return[...this.y,...this.z,...this.C]}set buttons(t){this.y=t.filter(i=>i===w),this.z=t.filter(i=>i!==w&&i.location!==y.Inline),this.C=t.filter(i=>i.location===y.Inline),this.D=!0,this.Z()}get toggles(){return this.F}set toggles(t){this.F=t??[],this.G=!0,this.Z()}get validationMessage(){return this.I}set validationMessage(t){this.I=t,this.Z()}get severity(){return this.L}set severity(t){this.L=t,this.Z()}show(){this.r||(this.U.add(this.X.onDidTriggerButton(t=>{this.buttons.indexOf(t)!==-1&&this.N.fire(t)})),this.X.show(this),this.r=!0,this.J=void 0,this.M=void 0,this.buttons.length&&(this.D=!0),this.toggles.length&&(this.G=!0),this.Z())}hide(){this.r&&this.X.hide()}didHide(t=v.Other){this.r=!1,this.U.clear(),this.Q.fire({reason:t})}willHide(t=v.Other){this.R.fire({reason:t})}Z(){if(!this.r)return;const t=this.$();t&&this.X.title.textContent!==t?this.X.title.textContent=t:!t&&this.X.title.innerHTML!=="&nbsp;"&&(this.X.title.innerText="\xA0");const i=this.ab();if(this.X.description1.textContent!==i&&(this.X.description1.textContent=i),this.X.description2.textContent!==i&&(this.X.description2.textContent=i),this.j&&(this.j=!1,this.h?u.$O6(this.X.widget,this.h):u.$O6(this.X.widget)),this.busy&&!this.W&&(this.W=new I,this.W.setIfNotSet(()=>{this.r&&this.X.progressBar.infinite()},800)),!this.busy&&this.W&&(this.X.progressBar.stop(),this.W.cancel(),this.W=void 0),this.D){this.D=!1,this.X.leftActionBar.clear();const e=this.y.map((h,f)=>m(h,`id-${f}`,async()=>this.N.fire(h)));this.X.leftActionBar.push(e,{icon:!0,label:!1}),this.X.rightActionBar.clear();const r=this.z.map((h,f)=>m(h,`id-${f}`,async()=>this.N.fire(h)));this.X.rightActionBar.push(r,{icon:!0,label:!1}),this.X.inlineActionBar.clear();const a=this.C.map((h,f)=>m(h,`id-${f}`,async()=>this.N.fire(h)));this.X.inlineActionBar.push(a,{icon:!0,label:!1})}if(this.G){this.G=!1;const e=this.toggles?.filter(r=>r instanceof A)??[];this.X.inputBox.toggles=e}this.X.ignoreFocusOut=this.ignoreFocusOut,this.X.setEnabled(this.enabled),this.X.setContextKey(this.contextKey);const s=this.validationMessage||this.H;this.J!==s&&(this.J=s,u.$O6(this.X.message),H(s,this.X.message,{callback:e=>{this.X.linkOpenerDelegate(e)},disposables:this.U})),this.M!==this.severity&&(this.M=this.severity,this.cb(this.severity))}$(){return this.title&&this.step?`${this.title} (${this.bb()})`:this.title?this.title:this.step?this.bb():""}ab(){return this.description||""}bb(){return this.step&&this.totalSteps?o(2192,null,this.step,this.totalSteps):this.step?String(this.step):""}cb(t){if(this.X.inputBox.showDecoration(t),t!==x.Ignore){const i=this.X.inputBox.stylesForType(t);this.X.message.style.color=i.foreground?`${i.foreground}`:"",this.X.message.style.backgroundColor=i.background?`${i.background}`:"",this.X.message.style.border=i.border?`1px solid ${i.border}`:"",this.X.message.style.marginBottom="-2px"}else this.X.message.style.color="",this.X.message.style.backgroundColor="",this.X.message.style.border="",this.X.message.style.marginBottom=""}dispose(){this.hide(),this.S.fire(),super.dispose()}}class D extends b{constructor(){super(...arguments),this.eb="",this.hb=this.B(new n),this.ib=this.B(new n),this.jb=this.B(new n),this.kb=this.B(new n),this.lb=[],this.mb=!1,this.nb=!1,this.ob=!1,this.pb=!1,this.qb=!1,this.rb=!0,this.sb="fuzzy",this.tb=!0,this.ub=!1,this.vb=c.FIRST,this.wb=[],this.xb=!1,this.yb=[],this.zb=this.B(new n),this.Ab=[],this.Bb=!1,this.Cb=[],this.Db=this.B(new n),this.Eb=this.B(new n),this.Fb=this.B(new n),this.Hb=!0,this.Ib="default",this.Kb=!1,this.Rb=new M,this.type="quickPick",this.filterValue=t=>t,this.onDidChangeValue=this.hb.event,this.onWillAccept=this.ib.event,this.onDidAccept=this.jb.event,this.onDidCustom=this.kb.event,this.onDidChangeActive=this.zb.event,this.onDidChangeSelection=this.Db.event,this.onDidTriggerItemButton=this.Eb.event,this.onDidTriggerSeparatorButton=this.Fb.event}static{this.db=o(2193,null)}get quickNavigate(){return this.Nb}set quickNavigate(t){this.Nb=t,this.Z()}get value(){return this.eb}set value(t){this.Sb(t)}Sb(t,i){this.eb!==t&&(this.eb=t,i||this.Z(),this.r&&this.X.list.filter(this.filterValue(this.eb))&&this.Ub(),this.hb.fire(this.eb))}set ariaLabel(t){this.fb=t,this.Z()}get ariaLabel(){return this.fb}get placeholder(){return this.gb}set placeholder(t){this.gb=t,this.Z()}get items(){return this.lb}get Tb(){return this.X.list.scrollTop}set Tb(t){this.X.list.scrollTop=t}set items(t){this.lb=t,this.mb=!0,this.Z()}get canSelectMany(){return this.nb}set canSelectMany(t){this.nb=t,this.Z()}get canAcceptInBackground(){return this.ob}set canAcceptInBackground(t){this.ob=t}get matchOnDescription(){return this.pb}set matchOnDescription(t){this.pb=t,this.Z()}get matchOnDetail(){return this.qb}set matchOnDetail(t){this.qb=t,this.Z()}get matchOnLabel(){return this.rb}set matchOnLabel(t){this.rb=t,this.Z()}get matchOnLabelMode(){return this.sb}set matchOnLabelMode(t){this.sb=t,this.Z()}get sortByLabel(){return this.tb}set sortByLabel(t){this.tb=t,this.Z()}get keepScrollPosition(){return this.ub}set keepScrollPosition(t){this.ub=t}get itemActivation(){return this.vb}set itemActivation(t){this.vb=t}get activeItems(){return this.wb}set activeItems(t){this.wb=t,this.xb=!0,this.Z()}get selectedItems(){return this.Ab}set selectedItems(t){this.Ab=t,this.Bb=!0,this.Z()}get keyMods(){return this.Nb?N:this.X.keyMods}get valueSelection(){const t=this.X.inputBox.getSelection();if(t)return[t.start,t.end]}set valueSelection(t){this.Gb=t,this.Hb=!0,this.Z()}get customButton(){return this.Kb}set customButton(t){this.Kb=t,this.Z()}get customLabel(){return this.Lb}set customLabel(t){this.Lb=t,this.Z()}get customHover(){return this.Mb}set customHover(t){this.Mb=t,this.Z()}get ok(){return this.Ib}set ok(t){this.Ib=t,this.Z()}get okLabel(){return this.Jb??o(2194,null)}set okLabel(t){this.Jb=t,this.Z()}inputHasFocus(){return this.r?this.X.inputBox.hasFocus():!1}focusOnInput(){this.X.inputBox.setFocus()}get hideInput(){return!!this.Ob}set hideInput(t){this.Ob=t,this.Z()}get hideCountBadge(){return!!this.Pb}set hideCountBadge(t){this.Pb=t,this.Z()}get hideCheckAll(){return!!this.Qb}set hideCheckAll(t){this.Qb=t,this.Z()}Ub(){this.canSelectMany||this.X.list.focus(p.First)}show(){this.r||(this.U.add(this.X.inputBox.onDidChange(t=>{this.Sb(t,!0)})),this.U.add(this.X.onDidAccept(()=>{this.canSelectMany?this.X.list.getCheckedElements().length||(this.Ab=[],this.Db.fire(this.selectedItems)):this.activeItems[0]&&(this.Ab=[this.activeItems[0]],this.Db.fire(this.selectedItems)),this.Vb(!1)})),this.U.add(this.X.onDidCustom(()=>{this.kb.fire()})),this.U.add(this.Rb.wrapEvent(this.X.list.onDidChangeFocus,(t,i)=>i)(t=>{this.xb||this.yb!==this.wb&&g(t,this.wb,(i,s)=>i===s)||(this.wb=t,this.zb.fire(t))})),this.U.add(this.X.list.onDidChangeSelection(({items:t,event:i})=>{if(this.canSelectMany&&!t.some(s=>s.pickable===!1)){t.length&&this.X.list.setSelectedElements([]);return}this.Cb!==this.Ab&&g(t,this.Ab,(s,e)=>s===e)||(this.Ab=t,this.Db.fire(t),t.length&&this.Vb(u.$B6(i)&&i.button===1))})),this.U.add(this.X.list.onChangedCheckedElements(t=>{!this.canSelectMany||!this.r||this.Cb!==this.Ab&&g(t,this.Ab,(i,s)=>i===s)||(this.Ab=t,this.Db.fire(t))})),this.U.add(this.X.list.onButtonTriggered(t=>this.Eb.fire(t))),this.U.add(this.X.list.onSeparatorButtonTriggered(t=>this.Fb.fire(t))),this.U.add(this.Wb()),this.Hb=!0),super.show()}Vb(t){let i=!1;this.ib.fire({veto:()=>i=!0}),i||this.jb.fire({inBackground:t})}Wb(){return u.$J5(this.X.container,u.$F6.KEY_UP,t=>{if(this.canSelectMany||!this.Nb)return;const i=new L(t),s=i.keyCode;this.Nb.keybindings.some(a=>{const h=a.getChords();return h.length>1?!1:h[0].shiftKey&&s===4?!(i.ctrlKey||i.altKey||i.metaKey):!!(h[0].altKey&&s===6||h[0].ctrlKey&&s===5||h[0].metaKey&&s===57)})&&(this.activeItems[0]&&(this.Ab=[this.activeItems[0]],this.Db.fire(this.selectedItems),this.Vb(!1)),this.Nb=void 0)})}Z(){if(!this.r)return;const t=this.keepScrollPosition?this.Tb:0,i=!!this.description,s={title:!!this.title||!!this.step||!!this.Y.length,description:i,checkAll:this.canSelectMany&&!this.Qb,checkBox:this.canSelectMany,inputBox:!this.Ob,progressBar:!this.Ob||i,visibleCount:!0,count:this.canSelectMany&&!this.Pb,ok:this.ok==="default"?this.canSelectMany:this.ok,list:!0,message:!!this.validationMessage,customButton:this.customButton};this.X.setVisibilities(s),super.Z(),this.X.inputBox.value!==this.value&&(this.X.inputBox.value=this.value),this.Hb&&(this.Hb=!1,this.X.inputBox.select(this.Gb&&{start:this.Gb[0],end:this.Gb[1]})),this.X.inputBox.placeholder!==(this.placeholder||"")&&(this.X.inputBox.placeholder=this.placeholder||"");let e=this.ariaLabel;!e&&s.inputBox&&(e=this.placeholder||D.db,this.title&&(e+=` - ${this.title}`)),this.X.list.ariaLabel!==e&&(this.X.list.ariaLabel=e??null),this.X.inputBox.ariaLabel!==e&&(this.X.inputBox.ariaLabel=e??"input"),this.X.list.matchOnDescription=this.matchOnDescription,this.X.list.matchOnDetail=this.matchOnDetail,this.X.list.matchOnLabel=this.matchOnLabel,this.X.list.matchOnLabelMode=this.matchOnLabelMode,this.X.list.sortByLabel=this.sortByLabel,this.mb&&(this.mb=!1,this.Rb.bufferEvents(()=>{switch(this.X.list.setElements(this.items),this.X.list.shouldLoop=!this.canSelectMany,this.X.list.filter(this.filterValue(this.X.inputBox.value)),this.vb){case c.NONE:this.vb=c.FIRST;break;case c.SECOND:this.X.list.focus(p.Second),this.vb=c.FIRST;break;case c.LAST:this.X.list.focus(p.Last),this.vb=c.FIRST;break;default:this.Ub();break}})),this.X.container.classList.contains("show-checkboxes")!==!!this.canSelectMany&&(this.canSelectMany?this.X.list.clearFocus():this.Ub()),this.xb&&(this.xb=!1,this.yb=this.wb,this.X.list.setFocusedElements(this.activeItems),this.yb===this.wb&&(this.yb=null)),this.Bb&&(this.Bb=!1,this.Cb=this.Ab,this.canSelectMany?this.X.list.setCheckedElements(this.selectedItems):this.X.list.setSelectedElements(this.selectedItems),this.Cb===this.Ab&&(this.Cb=null)),this.X.ok.label=this.okLabel||"",this.X.customButton.label=this.customLabel||"",this.X.customButton.element.title=this.customHover||"",s.inputBox||(this.X.list.domFocus(),this.canSelectMany&&this.X.list.focus(p.First)),this.keepScrollPosition&&(this.Tb=t)}focus(t){this.X.list.focus(t),this.canSelectMany&&this.X.list.domFocus()}accept(t){t&&!this.ob||this.activeItems[0]&&(this.Ab=[this.activeItems[0]],this.Db.fire(this.selectedItems),this.Vb(t??!1))}}class pt extends b{constructor(){super(...arguments),this.db="",this.fb=!0,this.ib=!1,this.kb=this.B(new n),this.lb=this.B(new n),this.type="inputBox",this.onDidChangeValue=this.kb.event,this.onDidAccept=this.lb.event}get value(){return this.db}set value(t){this.db=t||"",this.Z()}get valueSelection(){const t=this.X.inputBox.getSelection();if(t)return[t.start,t.end]}set valueSelection(t){this.eb=t,this.fb=!0,this.Z()}get placeholder(){return this.gb}set placeholder(t){this.gb=t,this.Z()}get ariaLabel(){return this.hb}set ariaLabel(t){this.hb=t,this.Z()}get password(){return this.ib}set password(t){this.ib=t,this.Z()}get prompt(){return this.jb}set prompt(t){this.jb=t,this.H=t?o(2195,null,t):b.c,this.Z()}show(){this.r||(this.U.add(this.X.inputBox.onDidChange(t=>{t!==this.value&&(this.db=t,this.kb.fire(t))})),this.U.add(this.X.onDidAccept(()=>this.lb.fire())),this.fb=!0),super.show()}Z(){if(!this.r)return;this.X.container.classList.remove("hidden-input");const t={title:!!this.title||!!this.step||!!this.Y.length,description:!!this.description||!!this.step,inputBox:!0,message:!0,progressBar:!0};this.X.setVisibilities(t),super.Z(),this.X.inputBox.value!==this.value&&(this.X.inputBox.value=this.value),this.fb&&(this.fb=!1,this.X.inputBox.select(this.eb&&{start:this.eb[0],end:this.eb[1]})),this.X.inputBox.placeholder!==(this.placeholder||"")&&(this.X.inputBox.placeholder=this.placeholder||""),this.X.inputBox.password!==this.password&&(this.X.inputBox.password=this.password);let i=this.ariaLabel;!i&&t.inputBox&&(i=this.placeholder?this.title?`${this.placeholder} - ${this.title}`:this.placeholder:this.title?this.title:"input"),this.X.inputBox.ariaLabel!==i&&(this.X.inputBox.ariaLabel=i||"input")}}class dt extends b{constructor(){super(...arguments),this.type="quickWidget"}Z(){if(!this.r)return;const t={title:!!this.title||!!this.step||!!this.Y.length,description:!!this.description||!!this.step};this.X.setVisibilities(t),super.Z()}}let k=class extends P{constructor(t,i){super("element",void 0,s=>this.h(s),t,i)}h(t){const i=(u.$t6(t.content)?t.content.textContent??"":typeof t.content=="string"?t.content:t.content.value).includes(`
-`);return{persistence:{hideOnKeyDown:!1},appearance:{showHoverHint:i,skipFadeInAnimation:!0}}}};k=C([X(0,K),X(1,E)],k);export{w as $$xb,ft as $0xb,S as $1xb,lt as $2xb,at as $3xb,R as $4xb,ut as $5xb,j as $6xb,ct as $7xb,Z as $8xb,bt as $9xb,D as $_xb,pt as $ayb,dt as $byb,k as $cyb};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import * as dom from "../../../base/browser/dom.js";
+import { StandardKeyboardEvent } from "../../../base/browser/keyboardEvent.js";
+import { Toggle } from "../../../base/browser/ui/toggle/toggle.js";
+import { equals } from "../../../base/common/arrays.js";
+import { TimeoutTimer } from "../../../base/common/async.js";
+import { Codicon } from "../../../base/common/codicons.js";
+import { Emitter, EventBufferer } from "../../../base/common/event.js";
+import { Disposable, DisposableStore } from "../../../base/common/lifecycle.js";
+import { isIOS } from "../../../base/common/platform.js";
+import Severity from "../../../base/common/severity.js";
+import { ThemeIcon } from "../../../base/common/themables.js";
+import "./media/quickInput.css";
+import { localize } from "../../../nls.js";
+import { ItemActivation, NO_KEY_MODS, QuickInputButtonLocation, QuickInputHideReason, QuickPickFocus } from "../common/quickInput.js";
+import { quickInputButtonToAction, renderQuickInputDescription } from "./quickInputUtils.js";
+import { IConfigurationService } from "../../configuration/common/configuration.js";
+import { IHoverService, WorkbenchHoverDelegate } from "../../hover/browser/hover.js";
+import { ContextKeyExpr, RawContextKey } from "../../contextkey/common/contextkey.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+const inQuickInputContextKeyValue = "inQuickInput";
+const InQuickInputContextKey = new RawContextKey(inQuickInputContextKeyValue, false, localize("inQuickInput", "Whether keyboard focus is inside the quick input control"));
+const inQuickInputContext = ContextKeyExpr.has(inQuickInputContextKeyValue);
+const quickInputAlignmentContextKeyValue = "quickInputAlignment";
+const QuickInputAlignmentContextKey = new RawContextKey(quickInputAlignmentContextKeyValue, "top", localize("quickInputAlignment", "The alignment of the quick input"));
+const quickInputTypeContextKeyValue = "quickInputType";
+const QuickInputTypeContextKey = new RawContextKey(quickInputTypeContextKeyValue, void 0, localize("quickInputType", "The type of the currently visible quick input"));
+const endOfQuickInputBoxContextKeyValue = "cursorAtEndOfQuickInputBox";
+const EndOfQuickInputBoxContextKey = new RawContextKey(endOfQuickInputBoxContextKeyValue, false, localize("cursorAtEndOfQuickInputBox", "Whether the cursor in the quick input is at the end of the input box"));
+const endOfQuickInputBoxContext = ContextKeyExpr.has(endOfQuickInputBoxContextKeyValue);
+const backButton = {
+  iconClass: ThemeIcon.asClassName(Codicon.quickInputBack),
+  tooltip: localize("quickInput.back", "Back"),
+  handle: -1
+  // TODO
+};
+class QuickInput extends Disposable {
+  static {
+    __name(this, "QuickInput");
+  }
+  static {
+    this.noPromptMessage = localize("inputModeEntry", "Press 'Enter' to confirm your input or 'Escape' to cancel");
+  }
+  constructor(ui) {
+    super();
+    this.ui = ui;
+    this._widgetUpdated = false;
+    this.visible = false;
+    this._enabled = true;
+    this._busy = false;
+    this._ignoreFocusOut = false;
+    this._leftButtons = [];
+    this._rightButtons = [];
+    this._inlineButtons = [];
+    this.buttonsUpdated = false;
+    this._toggles = [];
+    this.togglesUpdated = false;
+    this.noValidationMessage = QuickInput.noPromptMessage;
+    this._severity = Severity.Ignore;
+    this.onDidTriggerButtonEmitter = this._register(new Emitter());
+    this.onDidHideEmitter = this._register(new Emitter());
+    this.onWillHideEmitter = this._register(new Emitter());
+    this.onDisposeEmitter = this._register(new Emitter());
+    this.visibleDisposables = this._register(new DisposableStore());
+    this.onDidTriggerButton = this.onDidTriggerButtonEmitter.event;
+    this.onDidHide = this.onDidHideEmitter.event;
+    this.onWillHide = this.onWillHideEmitter.event;
+    this.onDispose = this.onDisposeEmitter.event;
+  }
+  get title() {
+    return this._title;
+  }
+  set title(title) {
+    this._title = title;
+    this.update();
+  }
+  get description() {
+    return this._description;
+  }
+  set description(description) {
+    this._description = description;
+    this.update();
+  }
+  get widget() {
+    return this._widget;
+  }
+  set widget(widget) {
+    if (!dom.isHTMLElement(widget)) {
+      return;
+    }
+    if (this._widget !== widget) {
+      this._widget = widget;
+      this._widgetUpdated = true;
+      this.update();
+    }
+  }
+  get step() {
+    return this._steps;
+  }
+  set step(step) {
+    this._steps = step;
+    this.update();
+  }
+  get totalSteps() {
+    return this._totalSteps;
+  }
+  set totalSteps(totalSteps) {
+    this._totalSteps = totalSteps;
+    this.update();
+  }
+  get enabled() {
+    return this._enabled;
+  }
+  set enabled(enabled) {
+    this._enabled = enabled;
+    this.update();
+  }
+  get contextKey() {
+    return this._contextKey;
+  }
+  set contextKey(contextKey) {
+    this._contextKey = contextKey;
+    this.update();
+  }
+  get busy() {
+    return this._busy;
+  }
+  set busy(busy) {
+    this._busy = busy;
+    this.update();
+  }
+  get ignoreFocusOut() {
+    return this._ignoreFocusOut;
+  }
+  set ignoreFocusOut(ignoreFocusOut) {
+    const shouldUpdate = this._ignoreFocusOut !== ignoreFocusOut && !isIOS;
+    this._ignoreFocusOut = ignoreFocusOut && !isIOS;
+    if (shouldUpdate) {
+      this.update();
+    }
+  }
+  get titleButtons() {
+    return this._leftButtons.length ? [...this._leftButtons, this._rightButtons] : this._rightButtons;
+  }
+  get buttons() {
+    return [
+      ...this._leftButtons,
+      ...this._rightButtons,
+      ...this._inlineButtons
+    ];
+  }
+  set buttons(buttons) {
+    this._leftButtons = buttons.filter((b) => b === backButton);
+    this._rightButtons = buttons.filter((b) => b !== backButton && b.location !== QuickInputButtonLocation.Inline);
+    this._inlineButtons = buttons.filter((b) => b.location === QuickInputButtonLocation.Inline);
+    this.buttonsUpdated = true;
+    this.update();
+  }
+  get toggles() {
+    return this._toggles;
+  }
+  set toggles(toggles) {
+    this._toggles = toggles ?? [];
+    this.togglesUpdated = true;
+    this.update();
+  }
+  get validationMessage() {
+    return this._validationMessage;
+  }
+  set validationMessage(validationMessage) {
+    this._validationMessage = validationMessage;
+    this.update();
+  }
+  get severity() {
+    return this._severity;
+  }
+  set severity(severity) {
+    this._severity = severity;
+    this.update();
+  }
+  show() {
+    if (this.visible) {
+      return;
+    }
+    this.visibleDisposables.add(this.ui.onDidTriggerButton((button) => {
+      if (this.buttons.indexOf(button) !== -1) {
+        this.onDidTriggerButtonEmitter.fire(button);
+      }
+    }));
+    this.ui.show(this);
+    this.visible = true;
+    this._lastValidationMessage = void 0;
+    this._lastSeverity = void 0;
+    if (this.buttons.length) {
+      this.buttonsUpdated = true;
+    }
+    if (this.toggles.length) {
+      this.togglesUpdated = true;
+    }
+    this.update();
+  }
+  hide() {
+    if (!this.visible) {
+      return;
+    }
+    this.ui.hide();
+  }
+  didHide(reason = QuickInputHideReason.Other) {
+    this.visible = false;
+    this.visibleDisposables.clear();
+    this.onDidHideEmitter.fire({ reason });
+  }
+  willHide(reason = QuickInputHideReason.Other) {
+    this.onWillHideEmitter.fire({ reason });
+  }
+  update() {
+    if (!this.visible) {
+      return;
+    }
+    const title = this.getTitle();
+    if (title && this.ui.title.textContent !== title) {
+      this.ui.title.textContent = title;
+    } else if (!title && this.ui.title.innerHTML !== "&nbsp;") {
+      this.ui.title.innerText = "\xA0";
+    }
+    const description = this.getDescription();
+    if (this.ui.description1.textContent !== description) {
+      this.ui.description1.textContent = description;
+    }
+    if (this.ui.description2.textContent !== description) {
+      this.ui.description2.textContent = description;
+    }
+    if (this._widgetUpdated) {
+      this._widgetUpdated = false;
+      if (this._widget) {
+        dom.reset(this.ui.widget, this._widget);
+      } else {
+        dom.reset(this.ui.widget);
+      }
+    }
+    if (this.busy && !this.busyDelay) {
+      this.busyDelay = new TimeoutTimer();
+      this.busyDelay.setIfNotSet(() => {
+        if (this.visible) {
+          this.ui.progressBar.infinite();
+        }
+      }, 800);
+    }
+    if (!this.busy && this.busyDelay) {
+      this.ui.progressBar.stop();
+      this.busyDelay.cancel();
+      this.busyDelay = void 0;
+    }
+    if (this.buttonsUpdated) {
+      this.buttonsUpdated = false;
+      this.ui.leftActionBar.clear();
+      const leftButtons = this._leftButtons.map((button, index) => quickInputButtonToAction(button, `id-${index}`, async () => this.onDidTriggerButtonEmitter.fire(button)));
+      this.ui.leftActionBar.push(leftButtons, { icon: true, label: false });
+      this.ui.rightActionBar.clear();
+      const rightButtons = this._rightButtons.map((button, index) => quickInputButtonToAction(button, `id-${index}`, async () => this.onDidTriggerButtonEmitter.fire(button)));
+      this.ui.rightActionBar.push(rightButtons, { icon: true, label: false });
+      this.ui.inlineActionBar.clear();
+      const inlineButtons = this._inlineButtons.map((button, index) => quickInputButtonToAction(button, `id-${index}`, async () => this.onDidTriggerButtonEmitter.fire(button)));
+      this.ui.inlineActionBar.push(inlineButtons, { icon: true, label: false });
+    }
+    if (this.togglesUpdated) {
+      this.togglesUpdated = false;
+      const concreteToggles = this.toggles?.filter((opts) => opts instanceof Toggle) ?? [];
+      this.ui.inputBox.toggles = concreteToggles;
+    }
+    this.ui.ignoreFocusOut = this.ignoreFocusOut;
+    this.ui.setEnabled(this.enabled);
+    this.ui.setContextKey(this.contextKey);
+    const validationMessage = this.validationMessage || this.noValidationMessage;
+    if (this._lastValidationMessage !== validationMessage) {
+      this._lastValidationMessage = validationMessage;
+      dom.reset(this.ui.message);
+      renderQuickInputDescription(validationMessage, this.ui.message, {
+        callback: /* @__PURE__ */ __name((content) => {
+          this.ui.linkOpenerDelegate(content);
+        }, "callback"),
+        disposables: this.visibleDisposables
+      });
+    }
+    if (this._lastSeverity !== this.severity) {
+      this._lastSeverity = this.severity;
+      this.showMessageDecoration(this.severity);
+    }
+  }
+  getTitle() {
+    if (this.title && this.step) {
+      return `${this.title} (${this.getSteps()})`;
+    }
+    if (this.title) {
+      return this.title;
+    }
+    if (this.step) {
+      return this.getSteps();
+    }
+    return "";
+  }
+  getDescription() {
+    return this.description || "";
+  }
+  getSteps() {
+    if (this.step && this.totalSteps) {
+      return localize("quickInput.steps", "{0}/{1}", this.step, this.totalSteps);
+    }
+    if (this.step) {
+      return String(this.step);
+    }
+    return "";
+  }
+  showMessageDecoration(severity) {
+    this.ui.inputBox.showDecoration(severity);
+    if (severity !== Severity.Ignore) {
+      const styles = this.ui.inputBox.stylesForType(severity);
+      this.ui.message.style.color = styles.foreground ? `${styles.foreground}` : "";
+      this.ui.message.style.backgroundColor = styles.background ? `${styles.background}` : "";
+      this.ui.message.style.border = styles.border ? `1px solid ${styles.border}` : "";
+      this.ui.message.style.marginBottom = "-2px";
+    } else {
+      this.ui.message.style.color = "";
+      this.ui.message.style.backgroundColor = "";
+      this.ui.message.style.border = "";
+      this.ui.message.style.marginBottom = "";
+    }
+  }
+  dispose() {
+    this.hide();
+    this.onDisposeEmitter.fire();
+    super.dispose();
+  }
+}
+class QuickPick extends QuickInput {
+  static {
+    __name(this, "QuickPick");
+  }
+  constructor() {
+    super(...arguments);
+    this._value = "";
+    this.onDidChangeValueEmitter = this._register(new Emitter());
+    this.onWillAcceptEmitter = this._register(new Emitter());
+    this.onDidAcceptEmitter = this._register(new Emitter());
+    this.onDidCustomEmitter = this._register(new Emitter());
+    this._items = [];
+    this.itemsUpdated = false;
+    this._canSelectMany = false;
+    this._canAcceptInBackground = false;
+    this._matchOnDescription = false;
+    this._matchOnDetail = false;
+    this._matchOnLabel = true;
+    this._matchOnLabelMode = "fuzzy";
+    this._sortByLabel = true;
+    this._keepScrollPosition = false;
+    this._itemActivation = ItemActivation.FIRST;
+    this._activeItems = [];
+    this.activeItemsUpdated = false;
+    this.activeItemsToConfirm = [];
+    this.onDidChangeActiveEmitter = this._register(new Emitter());
+    this._selectedItems = [];
+    this.selectedItemsUpdated = false;
+    this.selectedItemsToConfirm = [];
+    this.onDidChangeSelectionEmitter = this._register(new Emitter());
+    this.onDidTriggerItemButtonEmitter = this._register(new Emitter());
+    this.onDidTriggerSeparatorButtonEmitter = this._register(new Emitter());
+    this.valueSelectionUpdated = true;
+    this._ok = "default";
+    this._customButton = false;
+    this._focusEventBufferer = new EventBufferer();
+    this.type = "quickPick";
+    this.filterValue = (value) => value;
+    this.onDidChangeValue = this.onDidChangeValueEmitter.event;
+    this.onWillAccept = this.onWillAcceptEmitter.event;
+    this.onDidAccept = this.onDidAcceptEmitter.event;
+    this.onDidCustom = this.onDidCustomEmitter.event;
+    this.onDidChangeActive = this.onDidChangeActiveEmitter.event;
+    this.onDidChangeSelection = this.onDidChangeSelectionEmitter.event;
+    this.onDidTriggerItemButton = this.onDidTriggerItemButtonEmitter.event;
+    this.onDidTriggerSeparatorButton = this.onDidTriggerSeparatorButtonEmitter.event;
+  }
+  static {
+    this.DEFAULT_ARIA_LABEL = localize("quickInputBox.ariaLabel", "Type to narrow down results.");
+  }
+  get quickNavigate() {
+    return this._quickNavigate;
+  }
+  set quickNavigate(quickNavigate) {
+    this._quickNavigate = quickNavigate;
+    this.update();
+  }
+  get value() {
+    return this._value;
+  }
+  set value(value) {
+    this.doSetValue(value);
+  }
+  doSetValue(value, skipUpdate) {
+    if (this._value !== value) {
+      this._value = value;
+      if (!skipUpdate) {
+        this.update();
+      }
+      if (this.visible) {
+        const didFilter = this.ui.list.filter(this.filterValue(this._value));
+        if (didFilter) {
+          this.trySelectFirst();
+        }
+      }
+      this.onDidChangeValueEmitter.fire(this._value);
+    }
+  }
+  set ariaLabel(ariaLabel) {
+    this._ariaLabel = ariaLabel;
+    this.update();
+  }
+  get ariaLabel() {
+    return this._ariaLabel;
+  }
+  get placeholder() {
+    return this._placeholder;
+  }
+  set placeholder(placeholder) {
+    this._placeholder = placeholder;
+    this.update();
+  }
+  get items() {
+    return this._items;
+  }
+  get scrollTop() {
+    return this.ui.list.scrollTop;
+  }
+  set scrollTop(scrollTop) {
+    this.ui.list.scrollTop = scrollTop;
+  }
+  set items(items) {
+    this._items = items;
+    this.itemsUpdated = true;
+    this.update();
+  }
+  get canSelectMany() {
+    return this._canSelectMany;
+  }
+  set canSelectMany(canSelectMany) {
+    this._canSelectMany = canSelectMany;
+    this.update();
+  }
+  get canAcceptInBackground() {
+    return this._canAcceptInBackground;
+  }
+  set canAcceptInBackground(canAcceptInBackground) {
+    this._canAcceptInBackground = canAcceptInBackground;
+  }
+  get matchOnDescription() {
+    return this._matchOnDescription;
+  }
+  set matchOnDescription(matchOnDescription) {
+    this._matchOnDescription = matchOnDescription;
+    this.update();
+  }
+  get matchOnDetail() {
+    return this._matchOnDetail;
+  }
+  set matchOnDetail(matchOnDetail) {
+    this._matchOnDetail = matchOnDetail;
+    this.update();
+  }
+  get matchOnLabel() {
+    return this._matchOnLabel;
+  }
+  set matchOnLabel(matchOnLabel) {
+    this._matchOnLabel = matchOnLabel;
+    this.update();
+  }
+  get matchOnLabelMode() {
+    return this._matchOnLabelMode;
+  }
+  set matchOnLabelMode(matchOnLabelMode) {
+    this._matchOnLabelMode = matchOnLabelMode;
+    this.update();
+  }
+  get sortByLabel() {
+    return this._sortByLabel;
+  }
+  set sortByLabel(sortByLabel) {
+    this._sortByLabel = sortByLabel;
+    this.update();
+  }
+  get keepScrollPosition() {
+    return this._keepScrollPosition;
+  }
+  set keepScrollPosition(keepScrollPosition) {
+    this._keepScrollPosition = keepScrollPosition;
+  }
+  get itemActivation() {
+    return this._itemActivation;
+  }
+  set itemActivation(itemActivation) {
+    this._itemActivation = itemActivation;
+  }
+  get activeItems() {
+    return this._activeItems;
+  }
+  set activeItems(activeItems) {
+    this._activeItems = activeItems;
+    this.activeItemsUpdated = true;
+    this.update();
+  }
+  get selectedItems() {
+    return this._selectedItems;
+  }
+  set selectedItems(selectedItems) {
+    this._selectedItems = selectedItems;
+    this.selectedItemsUpdated = true;
+    this.update();
+  }
+  get keyMods() {
+    if (this._quickNavigate) {
+      return NO_KEY_MODS;
+    }
+    return this.ui.keyMods;
+  }
+  get valueSelection() {
+    const selection = this.ui.inputBox.getSelection();
+    if (!selection) {
+      return void 0;
+    }
+    return [selection.start, selection.end];
+  }
+  set valueSelection(valueSelection) {
+    this._valueSelection = valueSelection;
+    this.valueSelectionUpdated = true;
+    this.update();
+  }
+  get customButton() {
+    return this._customButton;
+  }
+  set customButton(showCustomButton) {
+    this._customButton = showCustomButton;
+    this.update();
+  }
+  get customLabel() {
+    return this._customButtonLabel;
+  }
+  set customLabel(label) {
+    this._customButtonLabel = label;
+    this.update();
+  }
+  get customHover() {
+    return this._customButtonHover;
+  }
+  set customHover(hover) {
+    this._customButtonHover = hover;
+    this.update();
+  }
+  get ok() {
+    return this._ok;
+  }
+  set ok(showOkButton) {
+    this._ok = showOkButton;
+    this.update();
+  }
+  get okLabel() {
+    return this._okLabel ?? localize("ok", "OK");
+  }
+  set okLabel(okLabel) {
+    this._okLabel = okLabel;
+    this.update();
+  }
+  inputHasFocus() {
+    return this.visible ? this.ui.inputBox.hasFocus() : false;
+  }
+  focusOnInput() {
+    this.ui.inputBox.setFocus();
+  }
+  get hideInput() {
+    return !!this._hideInput;
+  }
+  set hideInput(hideInput) {
+    this._hideInput = hideInput;
+    this.update();
+  }
+  get hideCountBadge() {
+    return !!this._hideCountBadge;
+  }
+  set hideCountBadge(hideCountBadge) {
+    this._hideCountBadge = hideCountBadge;
+    this.update();
+  }
+  get hideCheckAll() {
+    return !!this._hideCheckAll;
+  }
+  set hideCheckAll(hideCheckAll) {
+    this._hideCheckAll = hideCheckAll;
+    this.update();
+  }
+  trySelectFirst() {
+    if (!this.canSelectMany) {
+      this.ui.list.focus(QuickPickFocus.First);
+    }
+  }
+  show() {
+    if (!this.visible) {
+      this.visibleDisposables.add(this.ui.inputBox.onDidChange((value) => {
+        this.doSetValue(
+          value,
+          true
+          /* skip update since this originates from the UI */
+        );
+      }));
+      this.visibleDisposables.add(this.ui.onDidAccept(() => {
+        if (this.canSelectMany) {
+          if (!this.ui.list.getCheckedElements().length) {
+            this._selectedItems = [];
+            this.onDidChangeSelectionEmitter.fire(this.selectedItems);
+          }
+        } else if (this.activeItems[0]) {
+          this._selectedItems = [this.activeItems[0]];
+          this.onDidChangeSelectionEmitter.fire(this.selectedItems);
+        }
+        this.handleAccept(false);
+      }));
+      this.visibleDisposables.add(this.ui.onDidCustom(() => {
+        this.onDidCustomEmitter.fire();
+      }));
+      this.visibleDisposables.add(this._focusEventBufferer.wrapEvent(
+        this.ui.list.onDidChangeFocus,
+        // Only fire the last event
+        (_, e) => e
+      )((focusedItems) => {
+        if (this.activeItemsUpdated) {
+          return;
+        }
+        if (this.activeItemsToConfirm !== this._activeItems && equals(focusedItems, this._activeItems, (a, b) => a === b)) {
+          return;
+        }
+        this._activeItems = focusedItems;
+        this.onDidChangeActiveEmitter.fire(focusedItems);
+      }));
+      this.visibleDisposables.add(this.ui.list.onDidChangeSelection(({ items: selectedItems, event }) => {
+        if (this.canSelectMany && !selectedItems.some((i) => i.pickable === false)) {
+          if (selectedItems.length) {
+            this.ui.list.setSelectedElements([]);
+          }
+          return;
+        }
+        if (this.selectedItemsToConfirm !== this._selectedItems && equals(selectedItems, this._selectedItems, (a, b) => a === b)) {
+          return;
+        }
+        this._selectedItems = selectedItems;
+        this.onDidChangeSelectionEmitter.fire(selectedItems);
+        if (selectedItems.length) {
+          this.handleAccept(
+            dom.isMouseEvent(event) && event.button === 1
+            /* mouse middle click */
+          );
+        }
+      }));
+      this.visibleDisposables.add(this.ui.list.onChangedCheckedElements((checkedItems) => {
+        if (!this.canSelectMany || !this.visible) {
+          return;
+        }
+        if (this.selectedItemsToConfirm !== this._selectedItems && equals(checkedItems, this._selectedItems, (a, b) => a === b)) {
+          return;
+        }
+        this._selectedItems = checkedItems;
+        this.onDidChangeSelectionEmitter.fire(checkedItems);
+      }));
+      this.visibleDisposables.add(this.ui.list.onButtonTriggered((event) => this.onDidTriggerItemButtonEmitter.fire(event)));
+      this.visibleDisposables.add(this.ui.list.onSeparatorButtonTriggered((event) => this.onDidTriggerSeparatorButtonEmitter.fire(event)));
+      this.visibleDisposables.add(this.registerQuickNavigation());
+      this.valueSelectionUpdated = true;
+    }
+    super.show();
+  }
+  handleAccept(inBackground) {
+    let veto = false;
+    this.onWillAcceptEmitter.fire({ veto: /* @__PURE__ */ __name(() => veto = true, "veto") });
+    if (!veto) {
+      this.onDidAcceptEmitter.fire({ inBackground });
+    }
+  }
+  registerQuickNavigation() {
+    return dom.addDisposableListener(this.ui.container, dom.EventType.KEY_UP, (e) => {
+      if (this.canSelectMany || !this._quickNavigate) {
+        return;
+      }
+      const keyboardEvent = new StandardKeyboardEvent(e);
+      const keyCode = keyboardEvent.keyCode;
+      const quickNavKeys = this._quickNavigate.keybindings;
+      const wasTriggerKeyPressed = quickNavKeys.some((k) => {
+        const chords = k.getChords();
+        if (chords.length > 1) {
+          return false;
+        }
+        if (chords[0].shiftKey && keyCode === 4) {
+          if (keyboardEvent.ctrlKey || keyboardEvent.altKey || keyboardEvent.metaKey) {
+            return false;
+          }
+          return true;
+        }
+        if (chords[0].altKey && keyCode === 6) {
+          return true;
+        }
+        if (chords[0].ctrlKey && keyCode === 5) {
+          return true;
+        }
+        if (chords[0].metaKey && keyCode === 57) {
+          return true;
+        }
+        return false;
+      });
+      if (wasTriggerKeyPressed) {
+        if (this.activeItems[0]) {
+          this._selectedItems = [this.activeItems[0]];
+          this.onDidChangeSelectionEmitter.fire(this.selectedItems);
+          this.handleAccept(false);
+        }
+        this._quickNavigate = void 0;
+      }
+    });
+  }
+  update() {
+    if (!this.visible) {
+      return;
+    }
+    const scrollTopBefore = this.keepScrollPosition ? this.scrollTop : 0;
+    const hasDescription = !!this.description;
+    const visibilities = {
+      title: !!this.title || !!this.step || !!this.titleButtons.length,
+      description: hasDescription,
+      checkAll: this.canSelectMany && !this._hideCheckAll,
+      checkBox: this.canSelectMany,
+      inputBox: !this._hideInput,
+      progressBar: !this._hideInput || hasDescription,
+      visibleCount: true,
+      count: this.canSelectMany && !this._hideCountBadge,
+      ok: this.ok === "default" ? this.canSelectMany : this.ok,
+      list: true,
+      message: !!this.validationMessage,
+      customButton: this.customButton
+    };
+    this.ui.setVisibilities(visibilities);
+    super.update();
+    if (this.ui.inputBox.value !== this.value) {
+      this.ui.inputBox.value = this.value;
+    }
+    if (this.valueSelectionUpdated) {
+      this.valueSelectionUpdated = false;
+      this.ui.inputBox.select(this._valueSelection && { start: this._valueSelection[0], end: this._valueSelection[1] });
+    }
+    if (this.ui.inputBox.placeholder !== (this.placeholder || "")) {
+      this.ui.inputBox.placeholder = this.placeholder || "";
+    }
+    let ariaLabel = this.ariaLabel;
+    if (!ariaLabel && visibilities.inputBox) {
+      ariaLabel = this.placeholder || QuickPick.DEFAULT_ARIA_LABEL;
+      if (this.title) {
+        ariaLabel += ` - ${this.title}`;
+      }
+    }
+    if (this.ui.list.ariaLabel !== ariaLabel) {
+      this.ui.list.ariaLabel = ariaLabel ?? null;
+    }
+    if (this.ui.inputBox.ariaLabel !== ariaLabel) {
+      this.ui.inputBox.ariaLabel = ariaLabel ?? "input";
+    }
+    this.ui.list.matchOnDescription = this.matchOnDescription;
+    this.ui.list.matchOnDetail = this.matchOnDetail;
+    this.ui.list.matchOnLabel = this.matchOnLabel;
+    this.ui.list.matchOnLabelMode = this.matchOnLabelMode;
+    this.ui.list.sortByLabel = this.sortByLabel;
+    if (this.itemsUpdated) {
+      this.itemsUpdated = false;
+      this._focusEventBufferer.bufferEvents(() => {
+        this.ui.list.setElements(this.items);
+        this.ui.list.shouldLoop = !this.canSelectMany;
+        this.ui.list.filter(this.filterValue(this.ui.inputBox.value));
+        switch (this._itemActivation) {
+          case ItemActivation.NONE:
+            this._itemActivation = ItemActivation.FIRST;
+            break;
+          case ItemActivation.SECOND:
+            this.ui.list.focus(QuickPickFocus.Second);
+            this._itemActivation = ItemActivation.FIRST;
+            break;
+          case ItemActivation.LAST:
+            this.ui.list.focus(QuickPickFocus.Last);
+            this._itemActivation = ItemActivation.FIRST;
+            break;
+          default:
+            this.trySelectFirst();
+            break;
+        }
+      });
+    }
+    if (this.ui.container.classList.contains("show-checkboxes") !== !!this.canSelectMany) {
+      if (this.canSelectMany) {
+        this.ui.list.clearFocus();
+      } else {
+        this.trySelectFirst();
+      }
+    }
+    if (this.activeItemsUpdated) {
+      this.activeItemsUpdated = false;
+      this.activeItemsToConfirm = this._activeItems;
+      this.ui.list.setFocusedElements(this.activeItems);
+      if (this.activeItemsToConfirm === this._activeItems) {
+        this.activeItemsToConfirm = null;
+      }
+    }
+    if (this.selectedItemsUpdated) {
+      this.selectedItemsUpdated = false;
+      this.selectedItemsToConfirm = this._selectedItems;
+      if (this.canSelectMany) {
+        this.ui.list.setCheckedElements(this.selectedItems);
+      } else {
+        this.ui.list.setSelectedElements(this.selectedItems);
+      }
+      if (this.selectedItemsToConfirm === this._selectedItems) {
+        this.selectedItemsToConfirm = null;
+      }
+    }
+    this.ui.ok.label = this.okLabel || "";
+    this.ui.customButton.label = this.customLabel || "";
+    this.ui.customButton.element.title = this.customHover || "";
+    if (!visibilities.inputBox) {
+      this.ui.list.domFocus();
+      if (this.canSelectMany) {
+        this.ui.list.focus(QuickPickFocus.First);
+      }
+    }
+    if (this.keepScrollPosition) {
+      this.scrollTop = scrollTopBefore;
+    }
+  }
+  focus(focus) {
+    this.ui.list.focus(focus);
+    if (this.canSelectMany) {
+      this.ui.list.domFocus();
+    }
+  }
+  accept(inBackground) {
+    if (inBackground && !this._canAcceptInBackground) {
+      return;
+    }
+    if (this.activeItems[0]) {
+      this._selectedItems = [this.activeItems[0]];
+      this.onDidChangeSelectionEmitter.fire(this.selectedItems);
+      this.handleAccept(inBackground ?? false);
+    }
+  }
+}
+class InputBox extends QuickInput {
+  static {
+    __name(this, "InputBox");
+  }
+  constructor() {
+    super(...arguments);
+    this._value = "";
+    this.valueSelectionUpdated = true;
+    this._password = false;
+    this.onDidValueChangeEmitter = this._register(new Emitter());
+    this.onDidAcceptEmitter = this._register(new Emitter());
+    this.type = "inputBox";
+    this.onDidChangeValue = this.onDidValueChangeEmitter.event;
+    this.onDidAccept = this.onDidAcceptEmitter.event;
+  }
+  get value() {
+    return this._value;
+  }
+  set value(value) {
+    this._value = value || "";
+    this.update();
+  }
+  get valueSelection() {
+    const selection = this.ui.inputBox.getSelection();
+    if (!selection) {
+      return void 0;
+    }
+    return [selection.start, selection.end];
+  }
+  set valueSelection(valueSelection) {
+    this._valueSelection = valueSelection;
+    this.valueSelectionUpdated = true;
+    this.update();
+  }
+  get placeholder() {
+    return this._placeholder;
+  }
+  set placeholder(placeholder) {
+    this._placeholder = placeholder;
+    this.update();
+  }
+  get ariaLabel() {
+    return this._ariaLabel;
+  }
+  set ariaLabel(ariaLabel) {
+    this._ariaLabel = ariaLabel;
+    this.update();
+  }
+  get password() {
+    return this._password;
+  }
+  set password(password) {
+    this._password = password;
+    this.update();
+  }
+  get prompt() {
+    return this._prompt;
+  }
+  set prompt(prompt) {
+    this._prompt = prompt;
+    this.noValidationMessage = prompt ? localize("inputModeEntryDescription", "{0} (Press 'Enter' to confirm or 'Escape' to cancel)", prompt) : QuickInput.noPromptMessage;
+    this.update();
+  }
+  show() {
+    if (!this.visible) {
+      this.visibleDisposables.add(this.ui.inputBox.onDidChange((value) => {
+        if (value === this.value) {
+          return;
+        }
+        this._value = value;
+        this.onDidValueChangeEmitter.fire(value);
+      }));
+      this.visibleDisposables.add(this.ui.onDidAccept(() => this.onDidAcceptEmitter.fire()));
+      this.valueSelectionUpdated = true;
+    }
+    super.show();
+  }
+  update() {
+    if (!this.visible) {
+      return;
+    }
+    this.ui.container.classList.remove("hidden-input");
+    const visibilities = {
+      title: !!this.title || !!this.step || !!this.titleButtons.length,
+      description: !!this.description || !!this.step,
+      inputBox: true,
+      message: true,
+      progressBar: true
+    };
+    this.ui.setVisibilities(visibilities);
+    super.update();
+    if (this.ui.inputBox.value !== this.value) {
+      this.ui.inputBox.value = this.value;
+    }
+    if (this.valueSelectionUpdated) {
+      this.valueSelectionUpdated = false;
+      this.ui.inputBox.select(this._valueSelection && { start: this._valueSelection[0], end: this._valueSelection[1] });
+    }
+    if (this.ui.inputBox.placeholder !== (this.placeholder || "")) {
+      this.ui.inputBox.placeholder = this.placeholder || "";
+    }
+    if (this.ui.inputBox.password !== this.password) {
+      this.ui.inputBox.password = this.password;
+    }
+    let ariaLabel = this.ariaLabel;
+    if (!ariaLabel && visibilities.inputBox) {
+      ariaLabel = this.placeholder ? this.title ? `${this.placeholder} - ${this.title}` : this.placeholder : this.title ? this.title : "input";
+    }
+    if (this.ui.inputBox.ariaLabel !== ariaLabel) {
+      this.ui.inputBox.ariaLabel = ariaLabel || "input";
+    }
+  }
+}
+class QuickWidget extends QuickInput {
+  static {
+    __name(this, "QuickWidget");
+  }
+  constructor() {
+    super(...arguments);
+    this.type = "quickWidget";
+  }
+  update() {
+    if (!this.visible) {
+      return;
+    }
+    const visibilities = {
+      title: !!this.title || !!this.step || !!this.titleButtons.length,
+      description: !!this.description || !!this.step
+    };
+    this.ui.setVisibilities(visibilities);
+    super.update();
+  }
+}
+let QuickInputHoverDelegate = class QuickInputHoverDelegate2 extends WorkbenchHoverDelegate {
+  static {
+    __name(this, "QuickInputHoverDelegate");
+  }
+  constructor(configurationService, hoverService) {
+    super("element", void 0, (options) => this.getOverrideOptions(options), configurationService, hoverService);
+  }
+  getOverrideOptions(options) {
+    const showHoverHint = (dom.isHTMLElement(options.content) ? options.content.textContent ?? "" : typeof options.content === "string" ? options.content : options.content.value).includes("\n");
+    return {
+      persistence: {
+        hideOnKeyDown: false
+      },
+      appearance: {
+        showHoverHint,
+        skipFadeInAnimation: true
+      }
+    };
+  }
+};
+QuickInputHoverDelegate = __decorate([
+  __param(0, IConfigurationService),
+  __param(1, IHoverService)
+], QuickInputHoverDelegate);
+export {
+  EndOfQuickInputBoxContextKey,
+  InQuickInputContextKey,
+  InputBox,
+  QuickInputAlignmentContextKey,
+  QuickInputHoverDelegate,
+  QuickInputTypeContextKey,
+  QuickPick,
+  QuickWidget,
+  backButton,
+  endOfQuickInputBoxContext,
+  endOfQuickInputBoxContextKeyValue,
+  inQuickInputContext,
+  inQuickInputContextKeyValue,
+  quickInputAlignmentContextKeyValue,
+  quickInputTypeContextKeyValue
+};
+//# sourceMappingURL=quickInput.js.map

@@ -1,1 +1,144 @@
-import*as i from"../../../../nls.js";const e=i.localize(13904,null),t=i.localize(13905,null),n=i.localize(13906,null),o=i.localize(13907,null),r={definitions:{inputs:{type:"array",description:i.localize(13908,null),items:{oneOf:[{type:"object",required:["id","type","description"],additionalProperties:!1,properties:{id:{type:"string",description:e},type:{type:"string",description:t,enum:["promptString"],enumDescriptions:[i.localize(13909,null)]},description:{type:"string",description:n},default:{type:"string",description:o},password:{type:"boolean",description:i.localize(13910,null)}}},{type:"object",required:["id","type","description","options"],additionalProperties:!1,properties:{id:{type:"string",description:e},type:{type:"string",description:t,enum:["pickString"],enumDescriptions:[i.localize(13911,null)]},description:{type:"string",description:n},default:{type:"string",description:o},options:{type:"array",description:i.localize(13912,null),items:{oneOf:[{type:"string"},{type:"object",required:["value"],additionalProperties:!1,properties:{label:{type:"string",description:i.localize(13913,null)},value:{type:"string",description:i.localize(13914,null)}}}]}}}},{type:"object",required:["id","type","command"],additionalProperties:!1,properties:{id:{type:"string",description:e},type:{type:"string",description:t,enum:["command"],enumDescriptions:[i.localize(13915,null)]},command:{type:"string",description:i.localize(13916,null)},args:{oneOf:[{type:"object",description:i.localize(13917,null)},{type:"array",description:i.localize(13918,null)},{type:"string",description:i.localize(13919,null)}]}}}]}}}};export{r as $lW};
+import * as nls from "../../../../nls.js";
+const idDescription = nls.localize("JsonSchema.input.id", "The input's id is used to associate an input with a variable of the form ${input:id}.");
+const typeDescription = nls.localize("JsonSchema.input.type", "The type of user input prompt to use.");
+const descriptionDescription = nls.localize("JsonSchema.input.description", "The description is shown when the user is prompted for input.");
+const defaultDescription = nls.localize("JsonSchema.input.default", "The default value for the input.");
+const inputsSchema = {
+  definitions: {
+    inputs: {
+      type: "array",
+      description: nls.localize("JsonSchema.inputs", "User inputs. Used for defining user input prompts, such as free string input or a choice from several options."),
+      items: {
+        oneOf: [
+          {
+            type: "object",
+            required: ["id", "type", "description"],
+            additionalProperties: false,
+            properties: {
+              id: {
+                type: "string",
+                description: idDescription
+              },
+              type: {
+                type: "string",
+                description: typeDescription,
+                enum: ["promptString"],
+                enumDescriptions: [
+                  nls.localize("JsonSchema.input.type.promptString", "The 'promptString' type opens an input box to ask the user for input.")
+                ]
+              },
+              description: {
+                type: "string",
+                description: descriptionDescription
+              },
+              default: {
+                type: "string",
+                description: defaultDescription
+              },
+              password: {
+                type: "boolean",
+                description: nls.localize("JsonSchema.input.password", "Controls if a password input is shown. Password input hides the typed text.")
+              }
+            }
+          },
+          {
+            type: "object",
+            required: ["id", "type", "description", "options"],
+            additionalProperties: false,
+            properties: {
+              id: {
+                type: "string",
+                description: idDescription
+              },
+              type: {
+                type: "string",
+                description: typeDescription,
+                enum: ["pickString"],
+                enumDescriptions: [
+                  nls.localize("JsonSchema.input.type.pickString", "The 'pickString' type shows a selection list.")
+                ]
+              },
+              description: {
+                type: "string",
+                description: descriptionDescription
+              },
+              default: {
+                type: "string",
+                description: defaultDescription
+              },
+              options: {
+                type: "array",
+                description: nls.localize("JsonSchema.input.options", "An array of strings that defines the options for a quick pick."),
+                items: {
+                  oneOf: [
+                    {
+                      type: "string"
+                    },
+                    {
+                      type: "object",
+                      required: ["value"],
+                      additionalProperties: false,
+                      properties: {
+                        label: {
+                          type: "string",
+                          description: nls.localize("JsonSchema.input.pickString.optionLabel", "Label for the option.")
+                        },
+                        value: {
+                          type: "string",
+                          description: nls.localize("JsonSchema.input.pickString.optionValue", "Value for the option.")
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          {
+            type: "object",
+            required: ["id", "type", "command"],
+            additionalProperties: false,
+            properties: {
+              id: {
+                type: "string",
+                description: idDescription
+              },
+              type: {
+                type: "string",
+                description: typeDescription,
+                enum: ["command"],
+                enumDescriptions: [
+                  nls.localize("JsonSchema.input.type.command", "The 'command' type executes a command.")
+                ]
+              },
+              command: {
+                type: "string",
+                description: nls.localize("JsonSchema.input.command.command", "The command to execute for this input variable.")
+              },
+              args: {
+                oneOf: [
+                  {
+                    type: "object",
+                    description: nls.localize("JsonSchema.input.command.args", "Optional arguments passed to the command.")
+                  },
+                  {
+                    type: "array",
+                    description: nls.localize("JsonSchema.input.command.args", "Optional arguments passed to the command.")
+                  },
+                  {
+                    type: "string",
+                    description: nls.localize("JsonSchema.input.command.args", "Optional arguments passed to the command.")
+                  }
+                ]
+              }
+            }
+          }
+        ]
+      }
+    }
+  }
+};
+export {
+  inputsSchema
+};
+//# sourceMappingURL=configurationResolverSchema.js.map

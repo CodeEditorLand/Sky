@@ -1,1 +1,165 @@
-import{localize as l}from"../../../../nls.js";import{Language as u,$k as v}from"../../../../base/common/platform.js";import{$_o as b}from"../../../../platform/dialogs/common/dialogs.js";import{$QNb as x,$PNb as I}from"../common/locale.js";import{$8$ as L}from"../../host/browser/host.js";import{$nn as $}from"../../../../platform/product/common/productService.js";import{$WB as p}from"../../../../platform/instantiation/common/extensions.js";import{CancellationToken as E}from"../../../../base/common/cancellation.js";import{$gz as S}from"../../../../platform/extensionManagement/common/extensionManagement.js";import{$3n as y}from"../../../../platform/log/common/log.js";var h=function(e,t,o,a){var n,r=arguments.length,s=r<3?t:null===a?a=Object.getOwnPropertyDescriptor(t,o):a;if("object"==typeof Reflect&&"function"==typeof Reflect.decorate)s=Reflect.decorate(e,t,o,a);else for(var i=e.length-1;i>=0;i--)(n=e[i])&&(s=(r<3?n(s):r>3?n(t,o,s):n(t,o))||s);return r>3&&s&&Object.defineProperty(t,o,s),s},c=function(e,t){return function(o,a){t(o,a,e)}};const r=new class e{static{this.a="vscode.nls.locale"}static{this.b="vscode.nls.languagePackExtensionId"}setLocale(t){localStorage.setItem(e.a,t),this.c(t)}c(t){document.cookie=`${e.a}=${t};path=/;max-age=3153600000`}clearLocale(){localStorage.removeItem(e.a),this.d()}d(){document.cookie=`${e.a}=;path=/;max-age=0`}setExtensionId(t){localStorage.setItem(e.b,t)}getExtensionId(){return localStorage.getItem(e.b)}clearExtensionId(){localStorage.removeItem(e.b)}};let d=class{constructor(e,t,o){this.a=e,this.b=t,this.c=o}async setLocale(e,t=!1){const o=e.id;o===u.value()||!o&&u.value()===navigator.language.toLowerCase()||(o?(r.setLocale(o),e.extensionId&&r.setExtensionId(e.extensionId)):(r.clearLocale(),r.clearExtensionId()),(await this.a.confirm({type:"info",message:l(14334,null,this.c.nameLong),detail:l(14335,null,e.label),primaryButton:l(14336,null)})).confirmed&&this.b.restart())}async clearLocalePreference(){r.clearLocale(),r.clearExtensionId(),u.value()!==navigator.language.toLowerCase()&&(await this.a.confirm({type:"info",message:l(14337,null,this.c.nameLong),detail:l(14338,null),primaryButton:l(14339,null)})).confirmed&&this.b.restart()}};d=h([c(0,b),c(1,L),c(2,$)],d);let g=class{constructor(e,t){this.a=e,this.b=t}async getExtensionIdProvidingCurrentLocale(){const e=u.value();if(e===v)return;const t=r.getExtensionId();if(t)return t;if(this.a.isEnabled())try{const t=(await this.a.query({text:`tag:lp-${e}`},E.None)).firstPage.find((e=>"MS-CEINTL"===e.publisher&&e.name.startsWith("vscode-language-pack")));if(t)return r.setExtensionId(t.identifier.id),t.identifier.id}catch(e){this.b.error(e)}}};g=h([c(0,S),c(1,y)],g),p(I,d,1),p(x,g,1);export{d as $XAc};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { localize } from "../../../../nls.js";
+import { Language, LANGUAGE_DEFAULT } from "../../../../base/common/platform.js";
+import { IDialogService } from "../../../../platform/dialogs/common/dialogs.js";
+import { IActiveLanguagePackService, ILocaleService } from "../common/locale.js";
+import { IHostService } from "../../host/browser/host.js";
+import { IProductService } from "../../../../platform/product/common/productService.js";
+import { registerSingleton } from "../../../../platform/instantiation/common/extensions.js";
+import { CancellationToken } from "../../../../base/common/cancellation.js";
+import { IExtensionGalleryService } from "../../../../platform/extensionManagement/common/extensionManagement.js";
+import { ILogService } from "../../../../platform/log/common/log.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+const localeStorage = new class LocaleStorage {
+  static {
+    __name(this, "LocaleStorage");
+  }
+  static {
+    this.LOCAL_STORAGE_LOCALE_KEY = "vscode.nls.locale";
+  }
+  static {
+    this.LOCAL_STORAGE_EXTENSION_ID_KEY = "vscode.nls.languagePackExtensionId";
+  }
+  setLocale(locale) {
+    localStorage.setItem(LocaleStorage.LOCAL_STORAGE_LOCALE_KEY, locale);
+    this.doSetLocaleToCookie(locale);
+  }
+  doSetLocaleToCookie(locale) {
+    document.cookie = `${LocaleStorage.LOCAL_STORAGE_LOCALE_KEY}=${locale};path=/;max-age=3153600000`;
+  }
+  clearLocale() {
+    localStorage.removeItem(LocaleStorage.LOCAL_STORAGE_LOCALE_KEY);
+    this.doClearLocaleToCookie();
+  }
+  doClearLocaleToCookie() {
+    document.cookie = `${LocaleStorage.LOCAL_STORAGE_LOCALE_KEY}=;path=/;max-age=0`;
+  }
+  setExtensionId(extensionId) {
+    localStorage.setItem(LocaleStorage.LOCAL_STORAGE_EXTENSION_ID_KEY, extensionId);
+  }
+  getExtensionId() {
+    return localStorage.getItem(LocaleStorage.LOCAL_STORAGE_EXTENSION_ID_KEY);
+  }
+  clearExtensionId() {
+    localStorage.removeItem(LocaleStorage.LOCAL_STORAGE_EXTENSION_ID_KEY);
+  }
+}();
+let WebLocaleService = class WebLocaleService2 {
+  static {
+    __name(this, "WebLocaleService");
+  }
+  constructor(dialogService, hostService, productService) {
+    this.dialogService = dialogService;
+    this.hostService = hostService;
+    this.productService = productService;
+  }
+  async setLocale(languagePackItem, _skipDialog = false) {
+    const locale = languagePackItem.id;
+    if (locale === Language.value() || !locale && Language.value() === navigator.language.toLowerCase()) {
+      return;
+    }
+    if (locale) {
+      localeStorage.setLocale(locale);
+      if (languagePackItem.extensionId) {
+        localeStorage.setExtensionId(languagePackItem.extensionId);
+      }
+    } else {
+      localeStorage.clearLocale();
+      localeStorage.clearExtensionId();
+    }
+    const restartDialog = await this.dialogService.confirm({
+      type: "info",
+      message: localize("relaunchDisplayLanguageMessage", "To change the display language, {0} needs to reload", this.productService.nameLong),
+      detail: localize("relaunchDisplayLanguageDetail", "Press the reload button to refresh the page and set the display language to {0}.", languagePackItem.label),
+      primaryButton: localize({ key: "reload", comment: ["&& denotes a mnemonic character"] }, "&&Reload")
+    });
+    if (restartDialog.confirmed) {
+      this.hostService.restart();
+    }
+  }
+  async clearLocalePreference() {
+    localeStorage.clearLocale();
+    localeStorage.clearExtensionId();
+    if (Language.value() === navigator.language.toLowerCase()) {
+      return;
+    }
+    const restartDialog = await this.dialogService.confirm({
+      type: "info",
+      message: localize("clearDisplayLanguageMessage", "To change the display language, {0} needs to reload", this.productService.nameLong),
+      detail: localize("clearDisplayLanguageDetail", "Press the reload button to refresh the page and use your browser's language."),
+      primaryButton: localize({ key: "reload", comment: ["&& denotes a mnemonic character"] }, "&&Reload")
+    });
+    if (restartDialog.confirmed) {
+      this.hostService.restart();
+    }
+  }
+};
+WebLocaleService = __decorate([
+  __param(0, IDialogService),
+  __param(1, IHostService),
+  __param(2, IProductService)
+], WebLocaleService);
+let WebActiveLanguagePackService = class WebActiveLanguagePackService2 {
+  static {
+    __name(this, "WebActiveLanguagePackService");
+  }
+  constructor(galleryService, logService) {
+    this.galleryService = galleryService;
+    this.logService = logService;
+  }
+  async getExtensionIdProvidingCurrentLocale() {
+    const language = Language.value();
+    if (language === LANGUAGE_DEFAULT) {
+      return void 0;
+    }
+    const extensionId = localeStorage.getExtensionId();
+    if (extensionId) {
+      return extensionId;
+    }
+    if (!this.galleryService.isEnabled()) {
+      return void 0;
+    }
+    try {
+      const tagResult = await this.galleryService.query({ text: `tag:lp-${language}` }, CancellationToken.None);
+      const extensionToInstall = tagResult.firstPage.find((e) => e.publisher === "MS-CEINTL" && e.name.startsWith("vscode-language-pack"));
+      if (extensionToInstall) {
+        localeStorage.setExtensionId(extensionToInstall.identifier.id);
+        return extensionToInstall.identifier.id;
+      }
+    } catch (e) {
+      this.logService.error(e);
+    }
+    return void 0;
+  }
+};
+WebActiveLanguagePackService = __decorate([
+  __param(0, IExtensionGalleryService),
+  __param(1, ILogService)
+], WebActiveLanguagePackService);
+registerSingleton(
+  ILocaleService,
+  WebLocaleService,
+  1
+  /* InstantiationType.Delayed */
+);
+registerSingleton(
+  IActiveLanguagePackService,
+  WebActiveLanguagePackService,
+  1
+  /* InstantiationType.Delayed */
+);
+export {
+  WebLocaleService
+};
+//# sourceMappingURL=localeService.js.map

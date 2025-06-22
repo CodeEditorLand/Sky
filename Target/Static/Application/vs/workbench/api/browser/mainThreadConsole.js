@@ -1,1 +1,50 @@
-import{$Kyb as l}from"../../services/extensions/common/extHostCustomers.js";import{$oY as h}from"../common/extHost.protocol.js";import{$fl as a}from"../../../platform/environment/common/environment.js";import{log as b}from"../../../base/common/console.js";import{$GWb as $,$HWb as u}from"../../services/extensions/common/remoteConsoleUtil.js";import{$IWb as _}from"../../services/extensions/common/extensionDevOptions.js";import{$3n as x}from"../../../platform/log/common/log.js";var p=function(o,e,t,s){var n,r=arguments.length,i=r<3?e:null===s?s=Object.getOwnPropertyDescriptor(e,t):s;if("object"==typeof Reflect&&"function"==typeof Reflect.decorate)i=Reflect.decorate(o,e,t,s);else for(var m=o.length-1;m>=0;m--)(n=o[m])&&(i=(r<3?n(i):r>3?n(e,t,i):n(e,t))||i);return r>3&&i&&Object.defineProperty(e,t,i),i},c=function(o,e){return function(t,s){e(t,s,o)}};let m=class{constructor(o,e,t){this.b=e,this.c=t;const s=_(this.b);this.a=s.isExtensionDevTestFromCli}dispose(){}$logExtensionHostMessage(o){this.a?$(this.c,o):(u(this.c,o,"Extension Host"),b(o,"Extension Host"))}};m=p([l(h.MainThreadConsole),c(1,a),c(2,x)],m);export{m as $JWb};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { extHostNamedCustomer } from "../../services/extensions/common/extHostCustomers.js";
+import { MainContext } from "../common/extHost.protocol.js";
+import { IEnvironmentService } from "../../../platform/environment/common/environment.js";
+import { log } from "../../../base/common/console.js";
+import { logRemoteEntry, logRemoteEntryIfError } from "../../services/extensions/common/remoteConsoleUtil.js";
+import { parseExtensionDevOptions } from "../../services/extensions/common/extensionDevOptions.js";
+import { ILogService } from "../../../platform/log/common/log.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+let MainThreadConsole = class MainThreadConsole2 {
+  static {
+    __name(this, "MainThreadConsole");
+  }
+  constructor(_extHostContext, _environmentService, _logService) {
+    this._environmentService = _environmentService;
+    this._logService = _logService;
+    const devOpts = parseExtensionDevOptions(this._environmentService);
+    this._isExtensionDevTestFromCli = devOpts.isExtensionDevTestFromCli;
+  }
+  dispose() {
+  }
+  $logExtensionHostMessage(entry) {
+    if (this._isExtensionDevTestFromCli) {
+      logRemoteEntry(this._logService, entry);
+    } else {
+      logRemoteEntryIfError(this._logService, entry, "Extension Host");
+      log(entry, "Extension Host");
+    }
+  }
+};
+MainThreadConsole = __decorate([
+  extHostNamedCustomer(MainContext.MainThreadConsole),
+  __param(1, IEnvironmentService),
+  __param(2, ILogService)
+], MainThreadConsole);
+export {
+  MainThreadConsole
+};
+//# sourceMappingURL=mainThreadConsole.js.map

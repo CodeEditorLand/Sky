@@ -1,1 +1,174 @@
-import{$Bb as u}from"../../../../base/common/errors.js";import{$qeb as f}from"./point.js";class e{static fromPoint(t){return new e(t.x,t.y,t.x,t.y)}static fromPoints(t,i){return new e(t.x,t.y,i.x,i.y)}static fromPointSize(t,i){return new e(t.x,t.y,t.x+i.x,t.y+i.y)}static fromLeftTopRightBottom(t,i,h,o){return new e(t,i,h,o)}static fromLeftTopWidthHeight(t,i,h,o){return new e(t,i,t+h,i+o)}static fromRanges(t,i){return new e(t.start,i.start,t.endExclusive,i.endExclusive)}static hull(t){let i=Number.MAX_SAFE_INTEGER,h=Number.MAX_SAFE_INTEGER,o=Number.MIN_SAFE_INTEGER,s=Number.MIN_SAFE_INTEGER;for(const e of t)i=Math.min(i,e.left),h=Math.min(h,e.top),o=Math.max(o,e.right),s=Math.max(s,e.bottom);return new e(i,h,o,s)}get width(){return this.right-this.left}get height(){return this.bottom-this.top}constructor(t,i,e,h){if(this.left=t,this.top=i,this.right=e,this.bottom=h,t>e||i>h)throw new u("Invalid arguments")}withMargin(t,i,h,o){let s,r,n,m;return void 0===i&&void 0===h&&void 0===o?s=r=n=m=t:void 0===h&&void 0===o?(s=r=i,n=m=t):(s=o,r=i,n=t,m=h),new e(this.left-s,this.top-n,this.right+r,this.bottom+m)}intersectVertical(t){const i=Math.max(this.top,t.start),h=Math.min(this.bottom,t.endExclusive);return new e(this.left,i,this.right,Math.max(i,h))}intersectHorizontal(t){const i=Math.max(this.left,t.start),h=Math.min(this.right,t.endExclusive);return new e(i,this.top,Math.max(i,h),this.bottom)}toString(){return`Rect{(${this.left},${this.top}), (${this.right},${this.bottom})}`}intersect(t){const i=Math.max(this.left,t.left),h=Math.min(this.right,t.right),o=Math.max(this.top,t.top),s=Math.min(this.bottom,t.bottom);if(!(i>h||o>s))return new e(i,o,h,s)}union(t){return new e(Math.min(this.left,t.left),Math.min(this.top,t.top),Math.max(this.right,t.right),Math.max(this.bottom,t.bottom))}containsRect(t){return this.left<=t.left&&this.top<=t.top&&this.right>=t.right&&this.bottom>=t.bottom}containsPoint(t){return this.left<=t.x&&this.top<=t.y&&this.right>=t.x&&this.bottom>=t.y}moveToBeContainedIn(t){const i=this.width,h=this.height;let o=this.left,s=this.top;return o<t.left?o=t.left:o+i>t.right&&(o=t.right-i),s<t.top?s=t.top:s+h>t.bottom&&(s=t.bottom-h),new e(o,s,o+i,s+h)}withWidth(t){return new e(this.left,this.top,this.left+t,this.bottom)}withHeight(t){return new e(this.left,this.top,this.right,this.top+t)}withTop(t){return new e(this.left,t,this.right,this.bottom)}withLeft(t){return new e(t,this.top,this.right,this.bottom)}translateX(t){return new e(this.left+t,this.top,this.right+t,this.bottom)}translateY(t){return new e(this.left,this.top+t,this.right,this.bottom+t)}deltaRight(t){return new e(this.left,this.top,this.right+t,this.bottom)}deltaTop(t){return new e(this.left,this.top+t,this.right,this.bottom)}deltaLeft(t){return new e(this.left+t,this.top,this.right,this.bottom)}deltaBottom(t){return new e(this.left,this.top,this.right,this.bottom+t)}getLeftBottom(){return new f(this.left,this.bottom)}getRightBottom(){return new f(this.right,this.bottom)}getLeftTop(){return new f(this.left,this.top)}getRightTop(){return new f(this.right,this.top)}toStyles(){return{position:"absolute",left:`${this.left}px`,top:`${this.top}px`,width:`${this.width}px`,height:`${this.height}px`}}}export{e as Rect};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { BugIndicatingError } from "../../../../base/common/errors.js";
+import { Point } from "./point.js";
+class Rect {
+  static {
+    __name(this, "Rect");
+  }
+  static fromPoint(point) {
+    return new Rect(point.x, point.y, point.x, point.y);
+  }
+  static fromPoints(topLeft, bottomRight) {
+    return new Rect(topLeft.x, topLeft.y, bottomRight.x, bottomRight.y);
+  }
+  static fromPointSize(point, size) {
+    return new Rect(point.x, point.y, point.x + size.x, point.y + size.y);
+  }
+  static fromLeftTopRightBottom(left, top, right, bottom) {
+    return new Rect(left, top, right, bottom);
+  }
+  static fromLeftTopWidthHeight(left, top, width, height) {
+    return new Rect(left, top, left + width, top + height);
+  }
+  static fromRanges(leftRight, topBottom) {
+    return new Rect(leftRight.start, topBottom.start, leftRight.endExclusive, topBottom.endExclusive);
+  }
+  static hull(rects) {
+    let left = Number.MAX_SAFE_INTEGER;
+    let top = Number.MAX_SAFE_INTEGER;
+    let right = Number.MIN_SAFE_INTEGER;
+    let bottom = Number.MIN_SAFE_INTEGER;
+    for (const rect of rects) {
+      left = Math.min(left, rect.left);
+      top = Math.min(top, rect.top);
+      right = Math.max(right, rect.right);
+      bottom = Math.max(bottom, rect.bottom);
+    }
+    return new Rect(left, top, right, bottom);
+  }
+  get width() {
+    return this.right - this.left;
+  }
+  get height() {
+    return this.bottom - this.top;
+  }
+  constructor(left, top, right, bottom) {
+    this.left = left;
+    this.top = top;
+    this.right = right;
+    this.bottom = bottom;
+    if (left > right || top > bottom) {
+      throw new BugIndicatingError("Invalid arguments");
+    }
+  }
+  withMargin(marginOrVerticalOrTop, rightOrHorizontal, bottom, left) {
+    let marginLeft, marginRight, marginTop, marginBottom;
+    if (rightOrHorizontal === void 0 && bottom === void 0 && left === void 0) {
+      marginLeft = marginRight = marginTop = marginBottom = marginOrVerticalOrTop;
+    } else if (bottom === void 0 && left === void 0) {
+      marginLeft = marginRight = rightOrHorizontal;
+      marginTop = marginBottom = marginOrVerticalOrTop;
+    } else {
+      marginLeft = left;
+      marginRight = rightOrHorizontal;
+      marginTop = marginOrVerticalOrTop;
+      marginBottom = bottom;
+    }
+    return new Rect(this.left - marginLeft, this.top - marginTop, this.right + marginRight, this.bottom + marginBottom);
+  }
+  intersectVertical(range) {
+    const newTop = Math.max(this.top, range.start);
+    const newBottom = Math.min(this.bottom, range.endExclusive);
+    return new Rect(this.left, newTop, this.right, Math.max(newTop, newBottom));
+  }
+  intersectHorizontal(range) {
+    const newLeft = Math.max(this.left, range.start);
+    const newRight = Math.min(this.right, range.endExclusive);
+    return new Rect(newLeft, this.top, Math.max(newLeft, newRight), this.bottom);
+  }
+  toString() {
+    return `Rect{(${this.left},${this.top}), (${this.right},${this.bottom})}`;
+  }
+  intersect(parent) {
+    const left = Math.max(this.left, parent.left);
+    const right = Math.min(this.right, parent.right);
+    const top = Math.max(this.top, parent.top);
+    const bottom = Math.min(this.bottom, parent.bottom);
+    if (left > right || top > bottom) {
+      return void 0;
+    }
+    return new Rect(left, top, right, bottom);
+  }
+  union(other) {
+    return new Rect(Math.min(this.left, other.left), Math.min(this.top, other.top), Math.max(this.right, other.right), Math.max(this.bottom, other.bottom));
+  }
+  containsRect(other) {
+    return this.left <= other.left && this.top <= other.top && this.right >= other.right && this.bottom >= other.bottom;
+  }
+  containsPoint(point) {
+    return this.left <= point.x && this.top <= point.y && this.right >= point.x && this.bottom >= point.y;
+  }
+  moveToBeContainedIn(parent) {
+    const width = this.width;
+    const height = this.height;
+    let left = this.left;
+    let top = this.top;
+    if (left < parent.left) {
+      left = parent.left;
+    } else if (left + width > parent.right) {
+      left = parent.right - width;
+    }
+    if (top < parent.top) {
+      top = parent.top;
+    } else if (top + height > parent.bottom) {
+      top = parent.bottom - height;
+    }
+    return new Rect(left, top, left + width, top + height);
+  }
+  withWidth(width) {
+    return new Rect(this.left, this.top, this.left + width, this.bottom);
+  }
+  withHeight(height) {
+    return new Rect(this.left, this.top, this.right, this.top + height);
+  }
+  withTop(top) {
+    return new Rect(this.left, top, this.right, this.bottom);
+  }
+  withLeft(left) {
+    return new Rect(left, this.top, this.right, this.bottom);
+  }
+  translateX(delta) {
+    return new Rect(this.left + delta, this.top, this.right + delta, this.bottom);
+  }
+  translateY(delta) {
+    return new Rect(this.left, this.top + delta, this.right, this.bottom + delta);
+  }
+  deltaRight(delta) {
+    return new Rect(this.left, this.top, this.right + delta, this.bottom);
+  }
+  deltaTop(delta) {
+    return new Rect(this.left, this.top + delta, this.right, this.bottom);
+  }
+  deltaLeft(delta) {
+    return new Rect(this.left + delta, this.top, this.right, this.bottom);
+  }
+  deltaBottom(delta) {
+    return new Rect(this.left, this.top, this.right, this.bottom + delta);
+  }
+  getLeftBottom() {
+    return new Point(this.left, this.bottom);
+  }
+  getRightBottom() {
+    return new Point(this.right, this.bottom);
+  }
+  getLeftTop() {
+    return new Point(this.left, this.top);
+  }
+  getRightTop() {
+    return new Point(this.right, this.top);
+  }
+  toStyles() {
+    return {
+      position: "absolute",
+      left: `${this.left}px`,
+      top: `${this.top}px`,
+      width: `${this.width}px`,
+      height: `${this.height}px`
+    };
+  }
+}
+export {
+  Rect
+};
+//# sourceMappingURL=rect.js.map

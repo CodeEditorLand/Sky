@@ -1,1 +1,15 @@
-import*as f from"../../../../base/browser/dom.js";function n(t,o,e){const r=f.$65(t);return!(o<r.left||o>r.left+r.width||e<r.top||e>r.top+r.height)}export{n as $olb};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import * as dom from "../../../../base/browser/dom.js";
+function isMousePositionWithinElement(element, posx, posy) {
+  const elementRect = dom.getDomNodePagePosition(element);
+  if (posx < elementRect.left || posx > elementRect.left + elementRect.width || posy < elementRect.top || posy > elementRect.top + elementRect.height) {
+    return false;
+  }
+  return true;
+}
+__name(isMousePositionWithinElement, "isMousePositionWithinElement");
+export {
+  isMousePositionWithinElement
+};
+//# sourceMappingURL=hoverUtils.js.map

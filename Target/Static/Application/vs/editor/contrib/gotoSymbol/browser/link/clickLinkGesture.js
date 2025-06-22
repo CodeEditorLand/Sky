@@ -1,1 +1,159 @@
-import{$df as n}from"../../../../../base/common/event.js";import{$vd as a}from"../../../../../base/common/lifecycle.js";import*as d from"../../../../../base/common/platform.js";function g(s,i){return!!s[i]}class o{constructor(i,e){this.target=i.target,this.isLeftClick=i.event.leftButton,this.isMiddleClick=i.event.middleButton,this.isRightClick=i.event.rightButton,this.hasTriggerModifier=g(i.event,e.triggerModifier),this.hasSideBySideModifier=g(i.event,e.triggerSideBySideModifier),this.isNoneOrSingleMouseDown=i.event.detail<=1}}class f{constructor(i,e){this.keyCodeIsTriggerKey=i.keyCode===e.triggerKey,this.keyCodeIsSideBySideKey=i.keyCode===e.triggerSideBySideKey,this.hasTriggerModifier=g(i,e.triggerModifier)}}class r{constructor(i,e,t,h){this.triggerKey=i,this.triggerModifier=e,this.triggerSideBySideKey=t,this.triggerSideBySideModifier=h}equals(i){return this.triggerKey===i.triggerKey&&this.triggerModifier===i.triggerModifier&&this.triggerSideBySideKey===i.triggerSideBySideKey&&this.triggerSideBySideModifier===i.triggerSideBySideModifier}}function l(s){return s==="altKey"?d.$n?new r(57,"metaKey",6,"altKey"):new r(5,"ctrlKey",6,"altKey"):d.$n?new r(6,"altKey",57,"metaKey"):new r(6,"altKey",5,"ctrlKey")}class u extends a{constructor(i,e){super(),this.a=this.B(new n),this.onMouseMoveOrRelevantKeyDown=this.a.event,this.b=this.B(new n),this.onExecute=this.b.event,this.c=this.B(new n),this.onCancel=this.c.event,this.f=i,this.g=e?.extractLineNumberFromMouseEvent??(t=>t.target.position?t.target.position.lineNumber:0),this.h=l(this.f.getOption(82)),this.j=null,this.m=!1,this.n=0,this.B(this.f.onDidChangeConfiguration(t=>{if(t.hasChanged(82)){const h=l(this.f.getOption(82));if(this.h.equals(h))return;this.h=h,this.j=null,this.m=!1,this.n=0,this.c.fire()}})),this.B(this.f.onMouseMove(t=>this.s(new o(t,this.h)))),this.B(this.f.onMouseDown(t=>this.t(new o(t,this.h)))),this.B(this.f.onMouseUp(t=>this.u(new o(t,this.h)))),this.B(this.f.onKeyDown(t=>this.w(new f(t,this.h)))),this.B(this.f.onKeyUp(t=>this.y(new f(t,this.h)))),this.B(this.f.onMouseDrag(()=>this.z())),this.B(this.f.onDidChangeCursorSelection(t=>this.r(t))),this.B(this.f.onDidChangeModel(t=>this.z())),this.B(this.f.onDidChangeModelContent(()=>this.z())),this.B(this.f.onDidScrollChange(t=>{(t.scrollTopChanged||t.scrollLeftChanged)&&this.z()}))}r(i){i.selection&&i.selection.startColumn!==i.selection.endColumn&&this.z()}s(i){this.j=i,this.a.fire([i,null])}t(i){this.m=i.hasTriggerModifier,this.n=this.g(i)}u(i){const e=this.g(i);this.m&&this.n&&this.n===e&&this.b.fire(i)}w(i){this.j&&(i.keyCodeIsTriggerKey||i.keyCodeIsSideBySideKey&&i.hasTriggerModifier)?this.a.fire([this.j,i]):i.hasTriggerModifier&&this.c.fire()}y(i){i.keyCodeIsTriggerKey&&this.c.fire()}z(){this.j=null,this.m=!1,this.c.fire()}}export{o as $Qlb,f as $Rlb,r as $Slb,u as $Tlb};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { Emitter } from "../../../../../base/common/event.js";
+import { Disposable } from "../../../../../base/common/lifecycle.js";
+import * as platform from "../../../../../base/common/platform.js";
+function hasModifier(e, modifier) {
+  return !!e[modifier];
+}
+__name(hasModifier, "hasModifier");
+class ClickLinkMouseEvent {
+  static {
+    __name(this, "ClickLinkMouseEvent");
+  }
+  constructor(source, opts) {
+    this.target = source.target;
+    this.isLeftClick = source.event.leftButton;
+    this.isMiddleClick = source.event.middleButton;
+    this.isRightClick = source.event.rightButton;
+    this.hasTriggerModifier = hasModifier(source.event, opts.triggerModifier);
+    this.hasSideBySideModifier = hasModifier(source.event, opts.triggerSideBySideModifier);
+    this.isNoneOrSingleMouseDown = source.event.detail <= 1;
+  }
+}
+class ClickLinkKeyboardEvent {
+  static {
+    __name(this, "ClickLinkKeyboardEvent");
+  }
+  constructor(source, opts) {
+    this.keyCodeIsTriggerKey = source.keyCode === opts.triggerKey;
+    this.keyCodeIsSideBySideKey = source.keyCode === opts.triggerSideBySideKey;
+    this.hasTriggerModifier = hasModifier(source, opts.triggerModifier);
+  }
+}
+class ClickLinkOptions {
+  static {
+    __name(this, "ClickLinkOptions");
+  }
+  constructor(triggerKey, triggerModifier, triggerSideBySideKey, triggerSideBySideModifier) {
+    this.triggerKey = triggerKey;
+    this.triggerModifier = triggerModifier;
+    this.triggerSideBySideKey = triggerSideBySideKey;
+    this.triggerSideBySideModifier = triggerSideBySideModifier;
+  }
+  equals(other) {
+    return this.triggerKey === other.triggerKey && this.triggerModifier === other.triggerModifier && this.triggerSideBySideKey === other.triggerSideBySideKey && this.triggerSideBySideModifier === other.triggerSideBySideModifier;
+  }
+}
+function createOptions(multiCursorModifier) {
+  if (multiCursorModifier === "altKey") {
+    if (platform.isMacintosh) {
+      return new ClickLinkOptions(57, "metaKey", 6, "altKey");
+    }
+    return new ClickLinkOptions(5, "ctrlKey", 6, "altKey");
+  }
+  if (platform.isMacintosh) {
+    return new ClickLinkOptions(6, "altKey", 57, "metaKey");
+  }
+  return new ClickLinkOptions(6, "altKey", 5, "ctrlKey");
+}
+__name(createOptions, "createOptions");
+class ClickLinkGesture extends Disposable {
+  static {
+    __name(this, "ClickLinkGesture");
+  }
+  constructor(editor, opts) {
+    super();
+    this._onMouseMoveOrRelevantKeyDown = this._register(new Emitter());
+    this.onMouseMoveOrRelevantKeyDown = this._onMouseMoveOrRelevantKeyDown.event;
+    this._onExecute = this._register(new Emitter());
+    this.onExecute = this._onExecute.event;
+    this._onCancel = this._register(new Emitter());
+    this.onCancel = this._onCancel.event;
+    this._editor = editor;
+    this._extractLineNumberFromMouseEvent = opts?.extractLineNumberFromMouseEvent ?? ((e) => e.target.position ? e.target.position.lineNumber : 0);
+    this._opts = createOptions(this._editor.getOption(
+      82
+      /* EditorOption.multiCursorModifier */
+    ));
+    this._lastMouseMoveEvent = null;
+    this._hasTriggerKeyOnMouseDown = false;
+    this._lineNumberOnMouseDown = 0;
+    this._register(this._editor.onDidChangeConfiguration((e) => {
+      if (e.hasChanged(
+        82
+        /* EditorOption.multiCursorModifier */
+      )) {
+        const newOpts = createOptions(this._editor.getOption(
+          82
+          /* EditorOption.multiCursorModifier */
+        ));
+        if (this._opts.equals(newOpts)) {
+          return;
+        }
+        this._opts = newOpts;
+        this._lastMouseMoveEvent = null;
+        this._hasTriggerKeyOnMouseDown = false;
+        this._lineNumberOnMouseDown = 0;
+        this._onCancel.fire();
+      }
+    }));
+    this._register(this._editor.onMouseMove((e) => this._onEditorMouseMove(new ClickLinkMouseEvent(e, this._opts))));
+    this._register(this._editor.onMouseDown((e) => this._onEditorMouseDown(new ClickLinkMouseEvent(e, this._opts))));
+    this._register(this._editor.onMouseUp((e) => this._onEditorMouseUp(new ClickLinkMouseEvent(e, this._opts))));
+    this._register(this._editor.onKeyDown((e) => this._onEditorKeyDown(new ClickLinkKeyboardEvent(e, this._opts))));
+    this._register(this._editor.onKeyUp((e) => this._onEditorKeyUp(new ClickLinkKeyboardEvent(e, this._opts))));
+    this._register(this._editor.onMouseDrag(() => this._resetHandler()));
+    this._register(this._editor.onDidChangeCursorSelection((e) => this._onDidChangeCursorSelection(e)));
+    this._register(this._editor.onDidChangeModel((e) => this._resetHandler()));
+    this._register(this._editor.onDidChangeModelContent(() => this._resetHandler()));
+    this._register(this._editor.onDidScrollChange((e) => {
+      if (e.scrollTopChanged || e.scrollLeftChanged) {
+        this._resetHandler();
+      }
+    }));
+  }
+  _onDidChangeCursorSelection(e) {
+    if (e.selection && e.selection.startColumn !== e.selection.endColumn) {
+      this._resetHandler();
+    }
+  }
+  _onEditorMouseMove(mouseEvent) {
+    this._lastMouseMoveEvent = mouseEvent;
+    this._onMouseMoveOrRelevantKeyDown.fire([mouseEvent, null]);
+  }
+  _onEditorMouseDown(mouseEvent) {
+    this._hasTriggerKeyOnMouseDown = mouseEvent.hasTriggerModifier;
+    this._lineNumberOnMouseDown = this._extractLineNumberFromMouseEvent(mouseEvent);
+  }
+  _onEditorMouseUp(mouseEvent) {
+    const currentLineNumber = this._extractLineNumberFromMouseEvent(mouseEvent);
+    if (this._hasTriggerKeyOnMouseDown && this._lineNumberOnMouseDown && this._lineNumberOnMouseDown === currentLineNumber) {
+      this._onExecute.fire(mouseEvent);
+    }
+  }
+  _onEditorKeyDown(e) {
+    if (this._lastMouseMoveEvent && (e.keyCodeIsTriggerKey || e.keyCodeIsSideBySideKey && e.hasTriggerModifier)) {
+      this._onMouseMoveOrRelevantKeyDown.fire([this._lastMouseMoveEvent, e]);
+    } else if (e.hasTriggerModifier) {
+      this._onCancel.fire();
+    }
+  }
+  _onEditorKeyUp(e) {
+    if (e.keyCodeIsTriggerKey) {
+      this._onCancel.fire();
+    }
+  }
+  _resetHandler() {
+    this._lastMouseMoveEvent = null;
+    this._hasTriggerKeyOnMouseDown = false;
+    this._onCancel.fire();
+  }
+}
+export {
+  ClickLinkGesture,
+  ClickLinkKeyboardEvent,
+  ClickLinkMouseEvent,
+  ClickLinkOptions
+};
+//# sourceMappingURL=clickLinkGesture.js.map

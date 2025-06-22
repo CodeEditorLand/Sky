@@ -1,1 +1,522 @@
-import*as n from"../../../../../base/browser/dom.js";import{Sizing as w,$x9 as L}from"../../../../../base/browser/ui/splitview/splitview.js";import{$hp as y}from"../../../../../base/common/color.js";import{$df as I,Event as D}from"../../../../../base/common/event.js";import{$ud as d,$qd as c}from"../../../../../base/common/lifecycle.js";import{Schemas as O}from"../../../../../base/common/network.js";import{$gh as z,$jh as x}from"../../../../../base/common/resources.js";import"./referencesWidget.css";import{$2kb as k}from"../../../../browser/widget/codeEditor/embeddedCodeEditorWidget.js";import{$cC as m}from"../../../../common/core/range.js";import{$YH as A,$SH as v}from"../../../../common/model/textModel.js";import{$mE as N}from"../../../../common/languages/modesRegistry.js";import{$cF as E}from"../../../../common/services/resolverService.js";import{$Smb as U,$Mmb as _,$Nmb as P,$Qmb as F,$Pmb as K,$Rmb as V,$Omb as H}from"./referencesTree.js";import*as b from"../../../peekView/browser/peekView.js";import*as f from"../../../../../nls.js";import{$mj as B}from"../../../../../platform/instantiation/common/instantiation.js";import{$ux as q}from"../../../../../platform/keybinding/common/keybinding.js";import{$2H as M}from"../../../../../platform/label/common/label.js";import{$Gmb as W}from"../../../../../platform/list/browser/listService.js";import{$Mt as Y}from"../../../../../platform/theme/common/themeService.js";import{$Kmb as T,$Imb as g}from"../referencesModel.js";import{$k7 as S}from"../../../../../base/browser/dnd.js";import{$5$ as Z}from"../../../../../platform/opener/common/opener.js";var R=function(e,t,s,i){var o,r=arguments.length,n=r<3?t:null===i?i=Object.getOwnPropertyDescriptor(t,s):i;if("object"==typeof Reflect&&"function"==typeof Reflect.decorate)n=Reflect.decorate(e,t,s,i);else for(var a=e.length-1;a>=0;a--)(o=e[a])&&(n=(r<3?o(n):r>3?o(t,s,n):o(t,s))||n);return r>3&&n&&Object.defineProperty(t,s,n),n},l=function(e,t){return function(s,i){t(s,i,e)}};class ${static{this.a=A.register({description:"reference-decoration",stickiness:1,className:"reference-decoration"})}constructor(e,t){this.g=e,this.h=t,this.b=new Map,this.c=new Set,this.d=new d,this.f=new d,this.d.add(this.g.onDidChangeModel((()=>this.j()))),this.j()}dispose(){this.f.dispose(),this.d.dispose(),this.removeDecorations()}j(){this.f.clear();const e=this.g.getModel();if(e)for(const t of this.h.references)if(t.uri.toString()===e.uri.toString())return void this.k(t.parent)}k(e){if(!this.g.hasModel())return;this.f.add(this.g.getModel().onDidChangeDecorations((()=>this.l())));const t=[],s=[];for(let i=0,o=e.children.length;i<o;i++){const o=e.children[i];this.c.has(o.id)||o.uri.toString()===this.g.getModel().uri.toString()&&(t.push({range:o.range,options:$.a}),s.push(i))}this.g.changeDecorations((i=>{const o=i.deltaDecorations([],t);for(let t=0;t<o.length;t++)this.b.set(o[t],e.children[s[t]])}))}l(){const e=[],t=this.g.getModel();if(t){for(const[s,i]of this.b){const o=t.getDecorationRange(s);if(!o)continue;let r=!1;if(!m.equalsRange(o,i.range)){if(m.spansMultipleLines(o))r=!0;else{i.range.endColumn-i.range.startColumn!==o.endColumn-o.startColumn&&(r=!0)}r?(this.c.add(i.id),e.push(s)):i.range=o}}for(let t=0,s=e.length;t<s;t++)this.b.delete(e[t]);this.g.removeDecorations(e)}}removeDecorations(){this.g.removeDecorations([...this.b.keys()]),this.b.clear()}}class $t{constructor(){this.ratio=.7,this.heightInLines=18}static fromJSON(e){let t,s;try{const i=JSON.parse(e);t=i.ratio,s=i.heightInLines}catch{}return{ratio:t||.7,heightInLines:s||18}}}class J extends W{}let p=class{constructor(e){this.b=e,this.a=new d}getDragURI(e){return e instanceof T?e.uri.toString():e instanceof g?Z(e.uri,e.range).toString():null}getDragLabel(e){return 0===e.length?void 0:e.map((e=>this.b.getUriBasenameLabel(e.uri))).join(", ")}onDragStart(e,t){if(!t.dataTransfer)return;const s=e.elements.map((e=>this.getDragURI(e))).filter(Boolean);s.length&&(t.dataTransfer.setData(S.RESOURCES,JSON.stringify(s)),t.dataTransfer.setData(S.TEXT,s.join("\n")))}onDragOver(){return!1}drop(){}dispose(){this.a.dispose()}};p=R([l(0,M)],p);let C=class extends b.$2lb{constructor(e,t,s,i,o,r,a,h,l){super(e,{showFrame:!1,showArrow:!0,isResizeable:!0,isAccessible:!0,supportOnTitleClick:!0},r),this.lb=t,this.layoutData=s,this.mb=o,this.nb=r,this.ob=a,this.pb=h,this.qb=l,this.r=new d,this.Z=new d,this.ab=new I,this.onDidSelectReference=this.ab.event,this.jb=new n.$25(0,0),this.kb=!1,this.rb(i.getColorTheme()),this.Z.add(i.onDidColorThemeChange(this.rb.bind(this))),this.ob.addExclusiveWidget(e,this),this.create()}get isClosing(){return this.kb}dispose(){this.kb=!0,this.setModel(void 0),this.Z.dispose(),this.r.dispose(),c(this.eb),c(this.gb),c(this.bb),c(this.fb),this.db.dispose(),super.dispose()}rb(e){const t=e.getColor(b.$6lb)||y.transparent;this.style({arrowColor:t,frameColor:t,headerBackgroundColor:e.getColor(b.$3lb)||y.transparent,primaryHeadingColor:e.getColor(b.$4lb),secondaryHeadingColor:e.getColor(b.$5lb)})}show(e){super.show(e,this.layoutData.heightInLines||18)}focusOnReferenceTree(){this.bb.domFocus()}focusOnPreviewEditor(){this.eb.focus()}isPreviewEditorFocused(){return this.eb.hasTextFocus()}U(e){this.eb&&this.eb.getModel()&&this.ab.fire({element:this.xb(),kind:e.ctrlKey||e.metaKey||e.altKey?"side":"open",source:"title"})}V(e){this.y("reference-zone-widget"),this.ib=n.$M6(e,n.$("div.messages")),n.$T6(this.ib),this.db=new L(e,{orientation:1}),this.hb=n.$M6(e,n.$("div.preview.inline"));this.eb=this.nb.createInstance(k,this.hb,{scrollBeyondLastLine:!1,scrollbar:{verticalScrollbarSize:14,horizontal:"auto",useShadows:!0,verticalHasArrows:!1,horizontalHasArrows:!1,alwaysConsumeMouseWheel:!0},overviewRulerLanes:2,fixedOverflowWidgets:!0,minimap:{enabled:!1}},{},this.editor),n.$T6(this.hb),this.gb=this.nb.createInstance(v,f.localize(1209,null),N,v.DEFAULT_CREATION_OPTIONS,null),this.cb=n.$M6(e,n.$("div.ref-tree.inline"));const t={keyboardSupport:this.lb,accessibilityProvider:new U,keyboardNavigationLabelProvider:this.nb.createInstance(H),identityProvider:new K,openOnSingleClick:!0,selectionNavigation:!0,overrideStyles:{listBackground:b.$7lb},dnd:this.nb.createInstance(p)};this.lb&&this.Z.add(n.$K5(this.cb,"keydown",(e=>{e.equals(9)&&(this.qb.dispatchEvent(e,e.target),e.stopPropagation())}),!0)),this.bb=this.nb.createInstance(J,"ReferencesWidget",this.cb,new P,[this.nb.createInstance(F),this.nb.createInstance(V)],this.nb.createInstance(_),t),this.db.addView({onDidChange:D.None,element:this.hb,minimumSize:200,maximumSize:Number.MAX_VALUE,layout:e=>{this.eb.layout({height:this.jb.height,width:e})}},w.Distribute),this.db.addView({onDidChange:D.None,element:this.cb,minimumSize:100,maximumSize:Number.MAX_VALUE,layout:e=>{this.cb.style.height=`${this.jb.height}px`,this.cb.style.width=`${e}px`,this.bb.layout(this.jb.height,e)}},w.Distribute),this.j.add(this.db.onDidSashChange((()=>{this.jb.width&&(this.layoutData.ratio=this.db.getViewSize(0)/this.jb.width)}),void 0));const s=(e,t)=>{e instanceof g&&("show"===t&&this.zb(e,!1),this.ab.fire({element:e,kind:t,source:"tree"}))};this.j.add(this.bb.onDidOpen((e=>{e.sideBySide?s(e.element,"side"):e.editorOptions.pinned?s(e.element,"goto"):s(e.element,"show")}))),n.$T6(this.cb)}A(e){this.jb&&this.Y(this.jb.height,e)}Y(e,t){super.Y(e,t),this.jb=new n.$25(t,e),this.layoutData.heightInLines=this.h?this.h.heightInLines:this.layoutData.heightInLines,this.db.layout(t),this.db.resizeView(0,t*this.layoutData.ratio)}setSelection(e){return this.zb(e,!0).then((()=>{this.c&&(this.bb.setSelection([e]),this.bb.setFocus([e]))}))}setModel(e){return this.r.clear(),this.c=e,this.c?this.wb():Promise.resolve()}wb(){return this.c?this.c.isEmpty?(this.setTitle(""),this.ib.innerText=f.localize(1210,null),n.$S6(this.ib),Promise.resolve(void 0)):(n.$T6(this.ib),this.m=new $(this.eb,this.c),this.r.add(this.m),this.r.add(this.c.onDidChangeReferenceRange((e=>this.bb.rerender(e)))),this.r.add(this.eb.onMouseDown((e=>{const{event:t,target:s}=e;if(2!==t.detail)return;const i=this.xb();i&&this.ab.fire({element:{uri:i.uri,range:s.range},kind:t.ctrlKey||t.metaKey||t.altKey?"side":"open",source:"editor"})}))),this.container.classList.add("results-loaded"),n.$S6(this.cb),n.$S6(this.hb),this.db.layout(this.jb.width),this.focusOnReferenceTree(),this.bb.setInput(1===this.c.groups.length?this.c.groups[0]:this.c)):Promise.resolve(void 0)}xb(){const[e]=this.bb.getFocus();return e instanceof g?e:e instanceof T&&e.children.length>0?e.children[0]:void 0}async revealReference(e){await this.zb(e,!1),this.ab.fire({element:e,kind:"goto",source:"tree"})}async zb(e,t){if(this.yb===e)return;this.yb=e,e.uri.scheme!==O.inMemory?this.setTitle(z(e.uri),this.pb.getUriLabel(x(e.uri))):this.setTitle(f.localize(1211,null));const s=this.mb.createModelReference(e.uri);this.bb.getInput()===e.parent||(t&&this.bb.reveal(e.parent),await this.bb.expand(e.parent)),this.bb.reveal(e);const i=await s;if(!this.c)return void i.dispose();c(this.fb);const o=i.object;if(o){const t=this.eb.getModel()===o.textEditorModel?0:1,s=m.lift(e.range).collapseToStart();this.fb=i,this.eb.setModel(o.textEditorModel),this.eb.setSelection(s),this.eb.revealRangeInCenter(s,t)}else this.eb.setModel(this.gb),i.dispose()}};C=R([l(3,Y),l(4,E),l(5,B),l(6,b.$1lb),l(7,M),l(8,q)],C);export{$t as $Tmb,C as $Umb};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import * as dom from "../../../../../base/browser/dom.js";
+import { Sizing, SplitView } from "../../../../../base/browser/ui/splitview/splitview.js";
+import { Color } from "../../../../../base/common/color.js";
+import { Emitter, Event } from "../../../../../base/common/event.js";
+import { DisposableStore, dispose } from "../../../../../base/common/lifecycle.js";
+import { Schemas } from "../../../../../base/common/network.js";
+import { basenameOrAuthority, dirname } from "../../../../../base/common/resources.js";
+import "./referencesWidget.css";
+import { EmbeddedCodeEditorWidget } from "../../../../browser/widget/codeEditor/embeddedCodeEditorWidget.js";
+import { Range } from "../../../../common/core/range.js";
+import { ModelDecorationOptions, TextModel } from "../../../../common/model/textModel.js";
+import { PLAINTEXT_LANGUAGE_ID } from "../../../../common/languages/modesRegistry.js";
+import { ITextModelService } from "../../../../common/services/resolverService.js";
+import { AccessibilityProvider, DataSource, Delegate, FileReferencesRenderer, IdentityProvider, OneReferenceRenderer, StringRepresentationProvider } from "./referencesTree.js";
+import * as peekView from "../../../peekView/browser/peekView.js";
+import * as nls from "../../../../../nls.js";
+import { IInstantiationService } from "../../../../../platform/instantiation/common/instantiation.js";
+import { IKeybindingService } from "../../../../../platform/keybinding/common/keybinding.js";
+import { ILabelService } from "../../../../../platform/label/common/label.js";
+import { WorkbenchAsyncDataTree } from "../../../../../platform/list/browser/listService.js";
+import { IThemeService } from "../../../../../platform/theme/common/themeService.js";
+import { FileReferences, OneReference } from "../referencesModel.js";
+import { DataTransfers } from "../../../../../base/browser/dnd.js";
+import { withSelection } from "../../../../../platform/opener/common/opener.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+class DecorationsManager {
+  static {
+    __name(this, "DecorationsManager");
+  }
+  static {
+    this.DecorationOptions = ModelDecorationOptions.register({
+      description: "reference-decoration",
+      stickiness: 1,
+      className: "reference-decoration"
+    });
+  }
+  constructor(_editor, _model) {
+    this._editor = _editor;
+    this._model = _model;
+    this._decorations = /* @__PURE__ */ new Map();
+    this._decorationIgnoreSet = /* @__PURE__ */ new Set();
+    this._callOnDispose = new DisposableStore();
+    this._callOnModelChange = new DisposableStore();
+    this._callOnDispose.add(this._editor.onDidChangeModel(() => this._onModelChanged()));
+    this._onModelChanged();
+  }
+  dispose() {
+    this._callOnModelChange.dispose();
+    this._callOnDispose.dispose();
+    this.removeDecorations();
+  }
+  _onModelChanged() {
+    this._callOnModelChange.clear();
+    const model = this._editor.getModel();
+    if (!model) {
+      return;
+    }
+    for (const ref of this._model.references) {
+      if (ref.uri.toString() === model.uri.toString()) {
+        this._addDecorations(ref.parent);
+        return;
+      }
+    }
+  }
+  _addDecorations(reference) {
+    if (!this._editor.hasModel()) {
+      return;
+    }
+    this._callOnModelChange.add(this._editor.getModel().onDidChangeDecorations(() => this._onDecorationChanged()));
+    const newDecorations = [];
+    const newDecorationsActualIndex = [];
+    for (let i = 0, len = reference.children.length; i < len; i++) {
+      const oneReference = reference.children[i];
+      if (this._decorationIgnoreSet.has(oneReference.id)) {
+        continue;
+      }
+      if (oneReference.uri.toString() !== this._editor.getModel().uri.toString()) {
+        continue;
+      }
+      newDecorations.push({
+        range: oneReference.range,
+        options: DecorationsManager.DecorationOptions
+      });
+      newDecorationsActualIndex.push(i);
+    }
+    this._editor.changeDecorations((changeAccessor) => {
+      const decorations = changeAccessor.deltaDecorations([], newDecorations);
+      for (let i = 0; i < decorations.length; i++) {
+        this._decorations.set(decorations[i], reference.children[newDecorationsActualIndex[i]]);
+      }
+    });
+  }
+  _onDecorationChanged() {
+    const toRemove = [];
+    const model = this._editor.getModel();
+    if (!model) {
+      return;
+    }
+    for (const [decorationId, reference] of this._decorations) {
+      const newRange = model.getDecorationRange(decorationId);
+      if (!newRange) {
+        continue;
+      }
+      let ignore = false;
+      if (Range.equalsRange(newRange, reference.range)) {
+        continue;
+      }
+      if (Range.spansMultipleLines(newRange)) {
+        ignore = true;
+      } else {
+        const lineLength = reference.range.endColumn - reference.range.startColumn;
+        const newLineLength = newRange.endColumn - newRange.startColumn;
+        if (lineLength !== newLineLength) {
+          ignore = true;
+        }
+      }
+      if (ignore) {
+        this._decorationIgnoreSet.add(reference.id);
+        toRemove.push(decorationId);
+      } else {
+        reference.range = newRange;
+      }
+    }
+    for (let i = 0, len = toRemove.length; i < len; i++) {
+      this._decorations.delete(toRemove[i]);
+    }
+    this._editor.removeDecorations(toRemove);
+  }
+  removeDecorations() {
+    this._editor.removeDecorations([...this._decorations.keys()]);
+    this._decorations.clear();
+  }
+}
+class LayoutData {
+  static {
+    __name(this, "LayoutData");
+  }
+  constructor() {
+    this.ratio = 0.7;
+    this.heightInLines = 18;
+  }
+  static fromJSON(raw) {
+    let ratio;
+    let heightInLines;
+    try {
+      const data = JSON.parse(raw);
+      ratio = data.ratio;
+      heightInLines = data.heightInLines;
+    } catch {
+    }
+    return {
+      ratio: ratio || 0.7,
+      heightInLines: heightInLines || 18
+    };
+  }
+}
+class ReferencesTree extends WorkbenchAsyncDataTree {
+  static {
+    __name(this, "ReferencesTree");
+  }
+}
+let ReferencesDragAndDrop = class ReferencesDragAndDrop2 {
+  static {
+    __name(this, "ReferencesDragAndDrop");
+  }
+  constructor(labelService) {
+    this.labelService = labelService;
+    this.disposables = new DisposableStore();
+  }
+  getDragURI(element) {
+    if (element instanceof FileReferences) {
+      return element.uri.toString();
+    } else if (element instanceof OneReference) {
+      return withSelection(element.uri, element.range).toString();
+    }
+    return null;
+  }
+  getDragLabel(elements) {
+    if (elements.length === 0) {
+      return void 0;
+    }
+    const labels = elements.map((e) => this.labelService.getUriBasenameLabel(e.uri));
+    return labels.join(", ");
+  }
+  onDragStart(data, originalEvent) {
+    if (!originalEvent.dataTransfer) {
+      return;
+    }
+    const elements = data.elements;
+    const resources = elements.map((e) => this.getDragURI(e)).filter(Boolean);
+    if (resources.length) {
+      originalEvent.dataTransfer.setData(DataTransfers.RESOURCES, JSON.stringify(resources));
+      originalEvent.dataTransfer.setData(DataTransfers.TEXT, resources.join("\n"));
+    }
+  }
+  onDragOver() {
+    return false;
+  }
+  drop() {
+  }
+  dispose() {
+    this.disposables.dispose();
+  }
+};
+ReferencesDragAndDrop = __decorate([
+  __param(0, ILabelService)
+], ReferencesDragAndDrop);
+let ReferenceWidget = class ReferenceWidget2 extends peekView.PeekViewWidget {
+  static {
+    __name(this, "ReferenceWidget");
+  }
+  constructor(editor, _defaultTreeKeyboardSupport, layoutData, themeService, _textModelResolverService, _instantiationService, _peekViewService, _uriLabel, _keybindingService) {
+    super(editor, { showFrame: false, showArrow: true, isResizeable: true, isAccessible: true, supportOnTitleClick: true }, _instantiationService);
+    this._defaultTreeKeyboardSupport = _defaultTreeKeyboardSupport;
+    this.layoutData = layoutData;
+    this._textModelResolverService = _textModelResolverService;
+    this._instantiationService = _instantiationService;
+    this._peekViewService = _peekViewService;
+    this._uriLabel = _uriLabel;
+    this._keybindingService = _keybindingService;
+    this._disposeOnNewModel = new DisposableStore();
+    this._callOnDispose = new DisposableStore();
+    this._onDidSelectReference = new Emitter();
+    this.onDidSelectReference = this._onDidSelectReference.event;
+    this._dim = new dom.Dimension(0, 0);
+    this._isClosing = false;
+    this._applyTheme(themeService.getColorTheme());
+    this._callOnDispose.add(themeService.onDidColorThemeChange(this._applyTheme.bind(this)));
+    this._peekViewService.addExclusiveWidget(editor, this);
+    this.create();
+  }
+  get isClosing() {
+    return this._isClosing;
+  }
+  dispose() {
+    this._isClosing = true;
+    this.setModel(void 0);
+    this._callOnDispose.dispose();
+    this._disposeOnNewModel.dispose();
+    dispose(this._preview);
+    dispose(this._previewNotAvailableMessage);
+    dispose(this._tree);
+    dispose(this._previewModelReference);
+    this._splitView.dispose();
+    super.dispose();
+  }
+  _applyTheme(theme) {
+    const borderColor = theme.getColor(peekView.peekViewBorder) || Color.transparent;
+    this.style({
+      arrowColor: borderColor,
+      frameColor: borderColor,
+      headerBackgroundColor: theme.getColor(peekView.peekViewTitleBackground) || Color.transparent,
+      primaryHeadingColor: theme.getColor(peekView.peekViewTitleForeground),
+      secondaryHeadingColor: theme.getColor(peekView.peekViewTitleInfoForeground)
+    });
+  }
+  show(where) {
+    super.show(where, this.layoutData.heightInLines || 18);
+  }
+  focusOnReferenceTree() {
+    this._tree.domFocus();
+  }
+  focusOnPreviewEditor() {
+    this._preview.focus();
+  }
+  isPreviewEditorFocused() {
+    return this._preview.hasTextFocus();
+  }
+  _onTitleClick(e) {
+    if (this._preview && this._preview.getModel()) {
+      this._onDidSelectReference.fire({
+        element: this._getFocusedReference(),
+        kind: e.ctrlKey || e.metaKey || e.altKey ? "side" : "open",
+        source: "title"
+      });
+    }
+  }
+  _fillBody(containerElement) {
+    this.setCssClass("reference-zone-widget");
+    this._messageContainer = dom.append(containerElement, dom.$("div.messages"));
+    dom.hide(this._messageContainer);
+    this._splitView = new SplitView(containerElement, {
+      orientation: 1
+      /* Orientation.HORIZONTAL */
+    });
+    this._previewContainer = dom.append(containerElement, dom.$("div.preview.inline"));
+    const options = {
+      scrollBeyondLastLine: false,
+      scrollbar: {
+        verticalScrollbarSize: 14,
+        horizontal: "auto",
+        useShadows: true,
+        verticalHasArrows: false,
+        horizontalHasArrows: false,
+        alwaysConsumeMouseWheel: true
+      },
+      overviewRulerLanes: 2,
+      fixedOverflowWidgets: true,
+      minimap: {
+        enabled: false
+      }
+    };
+    this._preview = this._instantiationService.createInstance(EmbeddedCodeEditorWidget, this._previewContainer, options, {}, this.editor);
+    dom.hide(this._previewContainer);
+    this._previewNotAvailableMessage = this._instantiationService.createInstance(TextModel, nls.localize("missingPreviewMessage", "no preview available"), PLAINTEXT_LANGUAGE_ID, TextModel.DEFAULT_CREATION_OPTIONS, null);
+    this._treeContainer = dom.append(containerElement, dom.$("div.ref-tree.inline"));
+    const treeOptions = {
+      keyboardSupport: this._defaultTreeKeyboardSupport,
+      accessibilityProvider: new AccessibilityProvider(),
+      keyboardNavigationLabelProvider: this._instantiationService.createInstance(StringRepresentationProvider),
+      identityProvider: new IdentityProvider(),
+      openOnSingleClick: true,
+      selectionNavigation: true,
+      overrideStyles: {
+        listBackground: peekView.peekViewResultsBackground
+      },
+      dnd: this._instantiationService.createInstance(ReferencesDragAndDrop)
+    };
+    if (this._defaultTreeKeyboardSupport) {
+      this._callOnDispose.add(dom.addStandardDisposableListener(this._treeContainer, "keydown", (e) => {
+        if (e.equals(
+          9
+          /* KeyCode.Escape */
+        )) {
+          this._keybindingService.dispatchEvent(e, e.target);
+          e.stopPropagation();
+        }
+      }, true));
+    }
+    this._tree = this._instantiationService.createInstance(ReferencesTree, "ReferencesWidget", this._treeContainer, new Delegate(), [
+      this._instantiationService.createInstance(FileReferencesRenderer),
+      this._instantiationService.createInstance(OneReferenceRenderer)
+    ], this._instantiationService.createInstance(DataSource), treeOptions);
+    this._splitView.addView({
+      onDidChange: Event.None,
+      element: this._previewContainer,
+      minimumSize: 200,
+      maximumSize: Number.MAX_VALUE,
+      layout: /* @__PURE__ */ __name((width) => {
+        this._preview.layout({ height: this._dim.height, width });
+      }, "layout")
+    }, Sizing.Distribute);
+    this._splitView.addView({
+      onDidChange: Event.None,
+      element: this._treeContainer,
+      minimumSize: 100,
+      maximumSize: Number.MAX_VALUE,
+      layout: /* @__PURE__ */ __name((width) => {
+        this._treeContainer.style.height = `${this._dim.height}px`;
+        this._treeContainer.style.width = `${width}px`;
+        this._tree.layout(this._dim.height, width);
+      }, "layout")
+    }, Sizing.Distribute);
+    this._disposables.add(this._splitView.onDidSashChange(() => {
+      if (this._dim.width) {
+        this.layoutData.ratio = this._splitView.getViewSize(0) / this._dim.width;
+      }
+    }, void 0));
+    const onEvent = /* @__PURE__ */ __name((element, kind) => {
+      if (element instanceof OneReference) {
+        if (kind === "show") {
+          this._revealReference(element, false);
+        }
+        this._onDidSelectReference.fire({ element, kind, source: "tree" });
+      }
+    }, "onEvent");
+    this._disposables.add(this._tree.onDidOpen((e) => {
+      if (e.sideBySide) {
+        onEvent(e.element, "side");
+      } else if (e.editorOptions.pinned) {
+        onEvent(e.element, "goto");
+      } else {
+        onEvent(e.element, "show");
+      }
+    }));
+    dom.hide(this._treeContainer);
+  }
+  _onWidth(width) {
+    if (this._dim) {
+      this._doLayoutBody(this._dim.height, width);
+    }
+  }
+  _doLayoutBody(heightInPixel, widthInPixel) {
+    super._doLayoutBody(heightInPixel, widthInPixel);
+    this._dim = new dom.Dimension(widthInPixel, heightInPixel);
+    this.layoutData.heightInLines = this._viewZone ? this._viewZone.heightInLines : this.layoutData.heightInLines;
+    this._splitView.layout(widthInPixel);
+    this._splitView.resizeView(0, widthInPixel * this.layoutData.ratio);
+  }
+  setSelection(selection) {
+    return this._revealReference(selection, true).then(() => {
+      if (!this._model) {
+        return;
+      }
+      this._tree.setSelection([selection]);
+      this._tree.setFocus([selection]);
+    });
+  }
+  setModel(newModel) {
+    this._disposeOnNewModel.clear();
+    this._model = newModel;
+    if (this._model) {
+      return this._onNewModel();
+    }
+    return Promise.resolve();
+  }
+  _onNewModel() {
+    if (!this._model) {
+      return Promise.resolve(void 0);
+    }
+    if (this._model.isEmpty) {
+      this.setTitle("");
+      this._messageContainer.innerText = nls.localize("noResults", "No results");
+      dom.show(this._messageContainer);
+      return Promise.resolve(void 0);
+    }
+    dom.hide(this._messageContainer);
+    this._decorationsManager = new DecorationsManager(this._preview, this._model);
+    this._disposeOnNewModel.add(this._decorationsManager);
+    this._disposeOnNewModel.add(this._model.onDidChangeReferenceRange((reference) => this._tree.rerender(reference)));
+    this._disposeOnNewModel.add(this._preview.onMouseDown((e) => {
+      const { event, target } = e;
+      if (event.detail !== 2) {
+        return;
+      }
+      const element = this._getFocusedReference();
+      if (!element) {
+        return;
+      }
+      this._onDidSelectReference.fire({
+        element: { uri: element.uri, range: target.range },
+        kind: event.ctrlKey || event.metaKey || event.altKey ? "side" : "open",
+        source: "editor"
+      });
+    }));
+    this.container.classList.add("results-loaded");
+    dom.show(this._treeContainer);
+    dom.show(this._previewContainer);
+    this._splitView.layout(this._dim.width);
+    this.focusOnReferenceTree();
+    return this._tree.setInput(this._model.groups.length === 1 ? this._model.groups[0] : this._model);
+  }
+  _getFocusedReference() {
+    const [element] = this._tree.getFocus();
+    if (element instanceof OneReference) {
+      return element;
+    } else if (element instanceof FileReferences) {
+      if (element.children.length > 0) {
+        return element.children[0];
+      }
+    }
+    return void 0;
+  }
+  async revealReference(reference) {
+    await this._revealReference(reference, false);
+    this._onDidSelectReference.fire({ element: reference, kind: "goto", source: "tree" });
+  }
+  async _revealReference(reference, revealParent) {
+    if (this._revealedReference === reference) {
+      return;
+    }
+    this._revealedReference = reference;
+    if (reference.uri.scheme !== Schemas.inMemory) {
+      this.setTitle(basenameOrAuthority(reference.uri), this._uriLabel.getUriLabel(dirname(reference.uri)));
+    } else {
+      this.setTitle(nls.localize("peekView.alternateTitle", "References"));
+    }
+    const promise = this._textModelResolverService.createModelReference(reference.uri);
+    if (this._tree.getInput() === reference.parent) {
+      this._tree.reveal(reference);
+    } else {
+      if (revealParent) {
+        this._tree.reveal(reference.parent);
+      }
+      await this._tree.expand(reference.parent);
+      this._tree.reveal(reference);
+    }
+    const ref = await promise;
+    if (!this._model) {
+      ref.dispose();
+      return;
+    }
+    dispose(this._previewModelReference);
+    const model = ref.object;
+    if (model) {
+      const scrollType = this._preview.getModel() === model.textEditorModel ? 0 : 1;
+      const sel = Range.lift(reference.range).collapseToStart();
+      this._previewModelReference = ref;
+      this._preview.setModel(model.textEditorModel);
+      this._preview.setSelection(sel);
+      this._preview.revealRangeInCenter(sel, scrollType);
+    } else {
+      this._preview.setModel(this._previewNotAvailableMessage);
+      ref.dispose();
+    }
+  }
+};
+ReferenceWidget = __decorate([
+  __param(3, IThemeService),
+  __param(4, ITextModelService),
+  __param(5, IInstantiationService),
+  __param(6, peekView.IPeekViewService),
+  __param(7, ILabelService),
+  __param(8, IKeybindingService)
+], ReferenceWidget);
+export {
+  LayoutData,
+  ReferenceWidget
+};
+//# sourceMappingURL=referencesWidget.js.map

@@ -1,1 +1,145 @@
-import{$Ji as n}from"../../../base/common/buffer.js";import{$fm as f}from"../../../base/common/errorMessage.js";import{$sb as m}from"../../../base/common/errors.js";import{$df as o,Event as d}from"../../../base/common/event.js";import{$vd as p,$ud as u,$td as w}from"../../../base/common/lifecycle.js";import{$xi as b}from"../../../base/common/stream.js";import{$Rm as c}from"../../../base/common/uuid.js";import{$gk as $,FileSystemProviderErrorCode as F}from"./files.js";import{$Ik as y}from"./watcher.js";const q="localFilesystem";class A extends p{constructor(e,t){super(),this.a=e,this.b=t,this.onDidChangeCapabilities=d.None,this.f=this.B(new o),this.onDidChangeFile=this.f.event,this.g=this.B(new o),this.onDidWatchError=this.g.event,this.h=c(),this.j()}get capabilities(){return this.c||(this.c=516126,this.b.pathCaseSensitive&&(this.c|=1024),this.b.trash&&(this.c|=4096)),this.c}stat(e){return this.a.call("stat",[e])}realpath(e){return this.a.call("realpath",[e])}readdir(e){return this.a.call("readdir",[e])}async readFile(e,t){const{buffer:i}=await this.a.call("readFile",[e,t]);return i}readFileStream(e,t,i){const s=b(r=>n.concat(r.map(l=>n.wrap(l))).buffer),a=new u;return a.add(this.a.listen("readFileStream",[e,t])(r=>{if(r instanceof n)s.write(r.buffer);else{if(r==="end")s.end();else{let l;if(r instanceof Error)l=r;else{const h=r;l=$(h.message??f(h),h.code??F.Unknown)}s.error(l),s.end()}a.dispose()}})),a.add(i.onCancellationRequested(()=>{s.error(m()),s.end(),a.dispose()})),s}writeFile(e,t,i){return this.a.call("writeFile",[e,n.wrap(t),i])}open(e,t){return this.a.call("open",[e,t])}close(e){return this.a.call("close",[e])}async read(e,t,i,s,a){const[r,l]=await this.a.call("read",[e,t,a]);return i.set(r.buffer.slice(0,l),s),l}write(e,t,i,s,a){return this.a.call("write",[e,t,n.wrap(i),s,a])}mkdir(e){return this.a.call("mkdir",[e])}delete(e,t){return this.a.call("delete",[e,t])}rename(e,t,i){return this.a.call("rename",[e,t,i])}copy(e,t,i){return this.a.call("copy",[e,t,i])}cloneFile(e,t){return this.a.call("cloneFile",[e,t])}j(){this.B(this.a.listen("fileChange",[this.h])(e=>{if(Array.isArray(e)){const t=e;this.f.fire(y(t))}else{const t=e;this.g.fire(t)}}))}watch(e,t){const i=c();return this.a.call("watch",[this.h,i,e,t]),w(()=>this.a.call("unwatch",[this.h,i]))}}export{q as $Pw,A as $Qw};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { VSBuffer } from "../../../base/common/buffer.js";
+import { toErrorMessage } from "../../../base/common/errorMessage.js";
+import { canceled } from "../../../base/common/errors.js";
+import { Emitter, Event } from "../../../base/common/event.js";
+import { Disposable, DisposableStore, toDisposable } from "../../../base/common/lifecycle.js";
+import { newWriteableStream } from "../../../base/common/stream.js";
+import { generateUuid } from "../../../base/common/uuid.js";
+import { createFileSystemProviderError, FileSystemProviderErrorCode } from "./files.js";
+import { reviveFileChanges } from "./watcher.js";
+const LOCAL_FILE_SYSTEM_CHANNEL_NAME = "localFilesystem";
+class DiskFileSystemProviderClient extends Disposable {
+  static {
+    __name(this, "DiskFileSystemProviderClient");
+  }
+  constructor(channel, extraCapabilities) {
+    super();
+    this.channel = channel;
+    this.extraCapabilities = extraCapabilities;
+    this.onDidChangeCapabilities = Event.None;
+    this._onDidChange = this._register(new Emitter());
+    this.onDidChangeFile = this._onDidChange.event;
+    this._onDidWatchError = this._register(new Emitter());
+    this.onDidWatchError = this._onDidWatchError.event;
+    this.sessionId = generateUuid();
+    this.registerFileChangeListeners();
+  }
+  get capabilities() {
+    if (!this._capabilities) {
+      this._capabilities = 2 | 4 | 16 | 8 | 8192 | 16384 | 32768 | 65536 | 131072 | 262144;
+      if (this.extraCapabilities.pathCaseSensitive) {
+        this._capabilities |= 1024;
+      }
+      if (this.extraCapabilities.trash) {
+        this._capabilities |= 4096;
+      }
+    }
+    return this._capabilities;
+  }
+  //#endregion
+  //#region File Metadata Resolving
+  stat(resource) {
+    return this.channel.call("stat", [resource]);
+  }
+  realpath(resource) {
+    return this.channel.call("realpath", [resource]);
+  }
+  readdir(resource) {
+    return this.channel.call("readdir", [resource]);
+  }
+  //#endregion
+  //#region File Reading/Writing
+  async readFile(resource, opts) {
+    const { buffer } = await this.channel.call("readFile", [resource, opts]);
+    return buffer;
+  }
+  readFileStream(resource, opts, token) {
+    const stream = newWriteableStream((data) => VSBuffer.concat(data.map((data2) => VSBuffer.wrap(data2))).buffer);
+    const disposables = new DisposableStore();
+    disposables.add(this.channel.listen("readFileStream", [resource, opts])((dataOrErrorOrEnd) => {
+      if (dataOrErrorOrEnd instanceof VSBuffer) {
+        stream.write(dataOrErrorOrEnd.buffer);
+      } else {
+        if (dataOrErrorOrEnd === "end") {
+          stream.end();
+        } else {
+          let error;
+          if (dataOrErrorOrEnd instanceof Error) {
+            error = dataOrErrorOrEnd;
+          } else {
+            const errorCandidate = dataOrErrorOrEnd;
+            error = createFileSystemProviderError(errorCandidate.message ?? toErrorMessage(errorCandidate), errorCandidate.code ?? FileSystemProviderErrorCode.Unknown);
+          }
+          stream.error(error);
+          stream.end();
+        }
+        disposables.dispose();
+      }
+    }));
+    disposables.add(token.onCancellationRequested(() => {
+      stream.error(canceled());
+      stream.end();
+      disposables.dispose();
+    }));
+    return stream;
+  }
+  writeFile(resource, content, opts) {
+    return this.channel.call("writeFile", [resource, VSBuffer.wrap(content), opts]);
+  }
+  open(resource, opts) {
+    return this.channel.call("open", [resource, opts]);
+  }
+  close(fd) {
+    return this.channel.call("close", [fd]);
+  }
+  async read(fd, pos, data, offset, length) {
+    const [bytes, bytesRead] = await this.channel.call("read", [fd, pos, length]);
+    data.set(bytes.buffer.slice(0, bytesRead), offset);
+    return bytesRead;
+  }
+  write(fd, pos, data, offset, length) {
+    return this.channel.call("write", [fd, pos, VSBuffer.wrap(data), offset, length]);
+  }
+  //#endregion
+  //#region Move/Copy/Delete/Create Folder
+  mkdir(resource) {
+    return this.channel.call("mkdir", [resource]);
+  }
+  delete(resource, opts) {
+    return this.channel.call("delete", [resource, opts]);
+  }
+  rename(resource, target, opts) {
+    return this.channel.call("rename", [resource, target, opts]);
+  }
+  copy(resource, target, opts) {
+    return this.channel.call("copy", [resource, target, opts]);
+  }
+  //#endregion
+  //#region Clone File
+  cloneFile(resource, target) {
+    return this.channel.call("cloneFile", [resource, target]);
+  }
+  registerFileChangeListeners() {
+    this._register(this.channel.listen("fileChange", [this.sessionId])((eventsOrError) => {
+      if (Array.isArray(eventsOrError)) {
+        const events = eventsOrError;
+        this._onDidChange.fire(reviveFileChanges(events));
+      } else {
+        const error = eventsOrError;
+        this._onDidWatchError.fire(error);
+      }
+    }));
+  }
+  watch(resource, opts) {
+    const req = generateUuid();
+    this.channel.call("watch", [this.sessionId, req, resource, opts]);
+    return toDisposable(() => this.channel.call("unwatch", [this.sessionId, req]));
+  }
+}
+export {
+  DiskFileSystemProviderClient,
+  LOCAL_FILE_SYSTEM_CHANNEL_NAME
+};
+//# sourceMappingURL=diskFileSystemProviderClient.js.map

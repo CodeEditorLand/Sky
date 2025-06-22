@@ -1,1 +1,202 @@
-import{$kb as c}from"../../../../base/common/errors.js";import{$5j as d}from"../../../../platform/files/common/files.js";import{$Po as g}from"../../../../platform/telemetry/common/telemetry.js";import{$hl as w}from"../../../../platform/workspace/common/workspace.js";import{$fJ as $}from"../../../services/textfile/common/textfiles.js";import{$Pwc as b,$Qwc as O}from"../common/workspaceTags.js";import{$5v as v}from"../../../../platform/diagnostics/common/diagnostics.js";import{$mo as y}from"../../../../platform/request/common/request.js";import{$m as P}from"../../../../base/common/platform.js";import{$Mwc as _,$Nwc as T}from"../../../../platform/extensionManagement/common/configRemotes.js";import{$fu as S}from"../../../../platform/native/common/native.js";import{$nn as j}from"../../../../platform/product/common/productService.js";import{$cn as x}from"../../../../base/common/hash.js";var p=function(a,t,e,r){var n=arguments.length,i=n<3?t:r===null?r=Object.getOwnPropertyDescriptor(t,e):r,o;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")i=Reflect.decorate(a,t,e,r);else for(var s=a.length-1;s>=0;s--)(o=a[s])&&(i=(n<3?o(i):n>3?o(t,e,i):o(t,e))||i);return n>3&&i&&Object.defineProperty(t,e,i),i},h=function(a,t){return function(e,r){t(e,r,a)}},f;async function K(a,t=!1){return O(a,t,x)}let m=f=class{constructor(t,e,r,n,i,o,s,u,l){this.a=t,this.b=e,this.d=r,this.e=n,this.f=i,this.g=o,this.h=s,this.i=u,this.j=l,this.d.telemetryLevel===3&&this.k()}async k(){this.l(),this.g.getTags().then(t=>this.n(t),t=>c(t)),this.u(),this.w(),this.m().then(t=>this.h.reportWorkspaceStats(t))}async l(){if(!P)return;let t=await this.j.windowsGetStringRegKey("HKEY_LOCAL_MACHINE","SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion","EditionID");t===void 0&&(t="Unknown"),this.d.publicLog2("windowsEdition",{edition:t})}async m(){const t=this.b.getWorkspace(),e=this.b.getWorkbenchState(),r=await this.g.getTelemetryWorkspaceId(t,e);return{id:t.id,telemetryId:r,rendererSessionId:this.d.sessionId,folders:t.folders,transient:t.transient,configuration:t.configuration}}n(t){this.d.publicLog("workspce.tags",t)}o(t){Promise.all(t.map(e=>{const r=e.path,n=e.with({path:`${r!=="/"?r:""}/.git/config`});return this.a.exists(n).then(i=>i?this.f.read(n,{acceptTextOnly:!0}).then(o=>T(o.value,_),o=>[]):[])})).then(e=>{const r=e.reduce((i,o)=>o.reduce((s,u)=>s.add(u),i),new Set),n=[];r.forEach(i=>n.push(i)),this.d.publicLog("workspace.remotes",{domains:n.sort()})},c)}p(t){Promise.all(t.map(e=>this.g.getHashedRemotesFromUri(e,!0))).then(()=>{},c)}q(t,e){const r=t.map(n=>{const i=n.path;return n.with({path:`${i!=="/"?i:""}/node_modules`})});return this.a.resolveAll(r.map(n=>({resource:n}))).then(n=>{const i=[].concat(...n.map(s=>s.success?s.stat.children||[]:[])).map(s=>s.name);return f.r(i,/azure/i)&&(e.node=!0),e},n=>e)}static r(t,e){return t.some(r=>r.search(e)>-1)||void 0}s(t,e){return Promise.all(t.map(r=>{const n=r.path,i=r.with({path:`${n!=="/"?n:""}/pom.xml`});return this.a.exists(i).then(o=>o?this.f.read(i,{acceptTextOnly:!0}).then(s=>!!s.value.match(/azure/i),s=>!1):!1)})).then(r=>(r.indexOf(!0)!==-1&&(e.java=!0),e))}t(t){const e=Object.create(null);this.q(t,e).then(r=>this.s(t,r)).then(r=>{Object.keys(r).length&&this.d.publicLog("workspace.azure",r)}).then(void 0,c)}u(){const t=this.b.getWorkspace().folders.map(e=>e.uri);t.length&&this.a&&(this.o(t),this.p(t),this.t(t))}w(){const t=this.i.downloadUrl;t&&this.e.resolveProxy(t).then(e=>{let r=e?String(e).trim().split(/\s+/,1)[0]:"EMPTY";["DIRECT","PROXY","HTTPS","SOCKS","EMPTY"].indexOf(r)===-1&&(r="UNKNOWN")}).then(void 0,c)}};m=f=p([h(0,d),h(1,w),h(2,g),h(3,y),h(4,$),h(5,b),h(6,v),h(7,j),h(8,S)],m);export{K as $tJc,m as $uJc};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { onUnexpectedError } from "../../../../base/common/errors.js";
+import { IFileService } from "../../../../platform/files/common/files.js";
+import { ITelemetryService } from "../../../../platform/telemetry/common/telemetry.js";
+import { IWorkspaceContextService } from "../../../../platform/workspace/common/workspace.js";
+import { ITextFileService } from "../../../services/textfile/common/textfiles.js";
+import { IWorkspaceTagsService, getHashedRemotesFromConfig as baseGetHashedRemotesFromConfig } from "../common/workspaceTags.js";
+import { IDiagnosticsService } from "../../../../platform/diagnostics/common/diagnostics.js";
+import { IRequestService } from "../../../../platform/request/common/request.js";
+import { isWindows } from "../../../../base/common/platform.js";
+import { AllowedSecondLevelDomains, getDomainsOfRemotes } from "../../../../platform/extensionManagement/common/configRemotes.js";
+import { INativeHostService } from "../../../../platform/native/common/native.js";
+import { IProductService } from "../../../../platform/product/common/productService.js";
+import { hashAsync } from "../../../../base/common/hash.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+var WorkspaceTags_1;
+async function getHashedRemotesFromConfig(text, stripEndingDotGit = false) {
+  return baseGetHashedRemotesFromConfig(text, stripEndingDotGit, hashAsync);
+}
+__name(getHashedRemotesFromConfig, "getHashedRemotesFromConfig");
+let WorkspaceTags = WorkspaceTags_1 = class WorkspaceTags2 {
+  static {
+    __name(this, "WorkspaceTags");
+  }
+  constructor(fileService, contextService, telemetryService, requestService, textFileService, workspaceTagsService, diagnosticsService, productService, nativeHostService) {
+    this.fileService = fileService;
+    this.contextService = contextService;
+    this.telemetryService = telemetryService;
+    this.requestService = requestService;
+    this.textFileService = textFileService;
+    this.workspaceTagsService = workspaceTagsService;
+    this.diagnosticsService = diagnosticsService;
+    this.productService = productService;
+    this.nativeHostService = nativeHostService;
+    if (this.telemetryService.telemetryLevel === 3) {
+      this.report();
+    }
+  }
+  async report() {
+    this.reportWindowsEdition();
+    this.workspaceTagsService.getTags().then((tags) => this.reportWorkspaceTags(tags), (error) => onUnexpectedError(error));
+    this.reportCloudStats();
+    this.reportProxyStats();
+    this.getWorkspaceInformation().then((stats) => this.diagnosticsService.reportWorkspaceStats(stats));
+  }
+  async reportWindowsEdition() {
+    if (!isWindows) {
+      return;
+    }
+    let value = await this.nativeHostService.windowsGetStringRegKey("HKEY_LOCAL_MACHINE", "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion", "EditionID");
+    if (value === void 0) {
+      value = "Unknown";
+    }
+    this.telemetryService.publicLog2("windowsEdition", { edition: value });
+  }
+  async getWorkspaceInformation() {
+    const workspace = this.contextService.getWorkspace();
+    const state = this.contextService.getWorkbenchState();
+    const telemetryId = await this.workspaceTagsService.getTelemetryWorkspaceId(workspace, state);
+    return {
+      id: workspace.id,
+      telemetryId,
+      rendererSessionId: this.telemetryService.sessionId,
+      folders: workspace.folders,
+      transient: workspace.transient,
+      configuration: workspace.configuration
+    };
+  }
+  reportWorkspaceTags(tags) {
+    this.telemetryService.publicLog("workspce.tags", tags);
+  }
+  reportRemoteDomains(workspaceUris) {
+    Promise.all(workspaceUris.map((workspaceUri) => {
+      const path = workspaceUri.path;
+      const uri = workspaceUri.with({ path: `${path !== "/" ? path : ""}/.git/config` });
+      return this.fileService.exists(uri).then((exists) => {
+        if (!exists) {
+          return [];
+        }
+        return this.textFileService.read(uri, { acceptTextOnly: true }).then(
+          (content) => getDomainsOfRemotes(content.value, AllowedSecondLevelDomains),
+          (err) => []
+          // ignore missing or binary file
+        );
+      });
+    })).then((domains) => {
+      const set = domains.reduce((set2, list2) => list2.reduce((set3, item) => set3.add(item), set2), /* @__PURE__ */ new Set());
+      const list = [];
+      set.forEach((item) => list.push(item));
+      this.telemetryService.publicLog("workspace.remotes", { domains: list.sort() });
+    }, onUnexpectedError);
+  }
+  reportRemotes(workspaceUris) {
+    Promise.all(workspaceUris.map((workspaceUri) => {
+      return this.workspaceTagsService.getHashedRemotesFromUri(workspaceUri, true);
+    })).then(() => {
+    }, onUnexpectedError);
+  }
+  /* __GDPR__FRAGMENT__
+      "AzureTags" : {
+          "node" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true }
+      }
+  */
+  reportAzureNode(workspaceUris, tags) {
+    const uris = workspaceUris.map((workspaceUri) => {
+      const path = workspaceUri.path;
+      return workspaceUri.with({ path: `${path !== "/" ? path : ""}/node_modules` });
+    });
+    return this.fileService.resolveAll(uris.map((resource) => ({ resource }))).then((results) => {
+      const names = [].concat(...results.map((result) => result.success ? result.stat.children || [] : [])).map((c) => c.name);
+      const referencesAzure = WorkspaceTags_1.searchArray(names, /azure/i);
+      if (referencesAzure) {
+        tags["node"] = true;
+      }
+      return tags;
+    }, (err) => {
+      return tags;
+    });
+  }
+  static searchArray(arr, regEx) {
+    return arr.some((v) => v.search(regEx) > -1) || void 0;
+  }
+  /* __GDPR__FRAGMENT__
+      "AzureTags" : {
+          "java" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true }
+      }
+  */
+  reportAzureJava(workspaceUris, tags) {
+    return Promise.all(workspaceUris.map((workspaceUri) => {
+      const path = workspaceUri.path;
+      const uri = workspaceUri.with({ path: `${path !== "/" ? path : ""}/pom.xml` });
+      return this.fileService.exists(uri).then((exists) => {
+        if (!exists) {
+          return false;
+        }
+        return this.textFileService.read(uri, { acceptTextOnly: true }).then((content) => !!content.value.match(/azure/i), (err) => false);
+      });
+    })).then((javas) => {
+      if (javas.indexOf(true) !== -1) {
+        tags["java"] = true;
+      }
+      return tags;
+    });
+  }
+  reportAzure(uris) {
+    const tags = /* @__PURE__ */ Object.create(null);
+    this.reportAzureNode(uris, tags).then((tags2) => {
+      return this.reportAzureJava(uris, tags2);
+    }).then((tags2) => {
+      if (Object.keys(tags2).length) {
+        this.telemetryService.publicLog("workspace.azure", tags2);
+      }
+    }).then(void 0, onUnexpectedError);
+  }
+  reportCloudStats() {
+    const uris = this.contextService.getWorkspace().folders.map((folder) => folder.uri);
+    if (uris.length && this.fileService) {
+      this.reportRemoteDomains(uris);
+      this.reportRemotes(uris);
+      this.reportAzure(uris);
+    }
+  }
+  reportProxyStats() {
+    const downloadUrl = this.productService.downloadUrl;
+    if (!downloadUrl) {
+      return;
+    }
+    this.requestService.resolveProxy(downloadUrl).then((proxy) => {
+      let type = proxy ? String(proxy).trim().split(/\s+/, 1)[0] : "EMPTY";
+      if (["DIRECT", "PROXY", "HTTPS", "SOCKS", "EMPTY"].indexOf(type) === -1) {
+        type = "UNKNOWN";
+      }
+    }).then(void 0, onUnexpectedError);
+  }
+};
+WorkspaceTags = WorkspaceTags_1 = __decorate([
+  __param(0, IFileService),
+  __param(1, IWorkspaceContextService),
+  __param(2, ITelemetryService),
+  __param(3, IRequestService),
+  __param(4, ITextFileService),
+  __param(5, IWorkspaceTagsService),
+  __param(6, IDiagnosticsService),
+  __param(7, IProductService),
+  __param(8, INativeHostService)
+], WorkspaceTags);
+export {
+  WorkspaceTags,
+  getHashedRemotesFromConfig
+};
+//# sourceMappingURL=workspaceTags.js.map

@@ -1,1 +1,121 @@
-import{$_l as m}from"../../../base/common/actions.js";import{$pb as u}from"../../../base/common/errors.js";import{$vd as $}from"../../../base/common/lifecycle.js";import{Schemas as h}from"../../../base/common/network.js";import{localize as c}from"../../../nls.js";import{$RI as b,Severity as d}from"../../../platform/notification/common/notification.js";import{$4$ as O}from"../../../platform/opener/common/opener.js";import{$Ho as y}from"../../../platform/storage/common/storage.js";import{$pY as w,$oY as v}from"../common/extHost.protocol.js";import{$6Zb as g}from"../../contrib/externalUriOpener/common/configuration.js";import{$0Zb as _}from"../../contrib/externalUriOpener/common/contributedOpeners.js";import{$$Zb as U}from"../../contrib/externalUriOpener/common/externalUriOpenerService.js";import{$XO as E}from"../../services/extensions/common/extensions.js";import{$Kyb as x}from"../../services/extensions/common/extHostCustomers.js";var l=function(e,r,t,o){var s,i=arguments.length,n=i<3?r:null===o?o=Object.getOwnPropertyDescriptor(r,t):o;if("object"==typeof Reflect&&"function"==typeof Reflect.decorate)n=Reflect.decorate(e,r,t,o);else for(var a=e.length-1;a>=0;a--)(s=e[a])&&(n=(i<3?s(n):i>3?s(r,t,n):s(r,t))||n);return i>3&&n&&Object.defineProperty(r,t,n),n},p=function(e,r){return function(t,o){r(t,o,e)}};let f=class extends ${constructor(e,r,t,o,s,i){super(),this.f=o,this.g=s,this.h=i,this.b=new Map,this.a=e.getProxy(w.ExtHostUriOpeners),this.B(t.registerExternalOpenerProvider(this)),this.c=this.B(new _(r,o))}async*getOpeners(e){if(e.scheme===h.http||e.scheme===h.https){await this.f.activateByEvent(`onOpenExternalUri:${e.scheme}`);for(const[r,t]of this.b)t.schemes.has(e.scheme)&&(yield this.j(r,t))}}j(e,r){return{id:e,label:r.label,canOpen:(r,t)=>this.a.$canOpenUri(e,r,t),openExternalUri:async(r,t,o)=>{try{await this.a.$openUri(e,{resolvedUri:r,sourceUri:t.sourceUri},o)}catch(t){if(!u(t)){const o=new m("default",c(2775,null),void 0,void 0,(async()=>{await this.g.open(r,{allowTunneling:!1,allowContributedOpeners:g})}));o.tooltip=r.toString(),this.h.notify({severity:d.Error,message:c(2776,null,e,t.toString()),actions:{primary:[o]}})}}return!0}}}async $registerUriOpener(e,r,t,o){if(this.b.has(e))throw new Error(`Opener with id '${e}' already registered`);this.b.set(e,{schemes:new Set(r),label:o,extensionId:t}),this.c.didRegisterOpener(e,t.value)}async $unregisterUriOpener(e){this.b.delete(e),this.c.delete(e)}dispose(){super.dispose(),this.b.clear()}};f=l([x(v.MainThreadUriOpeners),p(1,y),p(2,U),p(3,E),p(4,O),p(5,b)],f);export{f as $a1b};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { Action } from "../../../base/common/actions.js";
+import { isCancellationError } from "../../../base/common/errors.js";
+import { Disposable } from "../../../base/common/lifecycle.js";
+import { Schemas } from "../../../base/common/network.js";
+import { localize } from "../../../nls.js";
+import { INotificationService, Severity } from "../../../platform/notification/common/notification.js";
+import { IOpenerService } from "../../../platform/opener/common/opener.js";
+import { IStorageService } from "../../../platform/storage/common/storage.js";
+import { ExtHostContext, MainContext } from "../common/extHost.protocol.js";
+import { defaultExternalUriOpenerId } from "../../contrib/externalUriOpener/common/configuration.js";
+import { ContributedExternalUriOpenersStore } from "../../contrib/externalUriOpener/common/contributedOpeners.js";
+import { IExternalUriOpenerService } from "../../contrib/externalUriOpener/common/externalUriOpenerService.js";
+import { IExtensionService } from "../../services/extensions/common/extensions.js";
+import { extHostNamedCustomer } from "../../services/extensions/common/extHostCustomers.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+let MainThreadUriOpeners = class MainThreadUriOpeners2 extends Disposable {
+  static {
+    __name(this, "MainThreadUriOpeners");
+  }
+  constructor(context, storageService, externalUriOpenerService, extensionService, openerService, notificationService) {
+    super();
+    this.extensionService = extensionService;
+    this.openerService = openerService;
+    this.notificationService = notificationService;
+    this._registeredOpeners = /* @__PURE__ */ new Map();
+    this.proxy = context.getProxy(ExtHostContext.ExtHostUriOpeners);
+    this._register(externalUriOpenerService.registerExternalOpenerProvider(this));
+    this._contributedExternalUriOpenersStore = this._register(new ContributedExternalUriOpenersStore(storageService, extensionService));
+  }
+  async *getOpeners(targetUri) {
+    if (targetUri.scheme !== Schemas.http && targetUri.scheme !== Schemas.https) {
+      return;
+    }
+    await this.extensionService.activateByEvent(`onOpenExternalUri:${targetUri.scheme}`);
+    for (const [id, openerMetadata] of this._registeredOpeners) {
+      if (openerMetadata.schemes.has(targetUri.scheme)) {
+        yield this.createOpener(id, openerMetadata);
+      }
+    }
+  }
+  createOpener(id, metadata) {
+    return {
+      id,
+      label: metadata.label,
+      canOpen: /* @__PURE__ */ __name((uri, token) => {
+        return this.proxy.$canOpenUri(id, uri, token);
+      }, "canOpen"),
+      openExternalUri: /* @__PURE__ */ __name(async (uri, ctx, token) => {
+        try {
+          await this.proxy.$openUri(id, { resolvedUri: uri, sourceUri: ctx.sourceUri }, token);
+        } catch (e) {
+          if (!isCancellationError(e)) {
+            const openDefaultAction = new Action("default", localize("openerFailedUseDefault", "Open using default opener"), void 0, void 0, async () => {
+              await this.openerService.open(uri, {
+                allowTunneling: false,
+                allowContributedOpeners: defaultExternalUriOpenerId
+              });
+            });
+            openDefaultAction.tooltip = uri.toString();
+            this.notificationService.notify({
+              severity: Severity.Error,
+              message: localize({
+                key: "openerFailedMessage",
+                comment: ["{0} is the id of the opener. {1} is the url being opened."]
+              }, "Could not open uri with '{0}': {1}", id, e.toString()),
+              actions: {
+                primary: [
+                  openDefaultAction
+                ]
+              }
+            });
+          }
+        }
+        return true;
+      }, "openExternalUri")
+    };
+  }
+  async $registerUriOpener(id, schemes, extensionId, label) {
+    if (this._registeredOpeners.has(id)) {
+      throw new Error(`Opener with id '${id}' already registered`);
+    }
+    this._registeredOpeners.set(id, {
+      schemes: new Set(schemes),
+      label,
+      extensionId
+    });
+    this._contributedExternalUriOpenersStore.didRegisterOpener(id, extensionId.value);
+  }
+  async $unregisterUriOpener(id) {
+    this._registeredOpeners.delete(id);
+    this._contributedExternalUriOpenersStore.delete(id);
+  }
+  dispose() {
+    super.dispose();
+    this._registeredOpeners.clear();
+  }
+};
+MainThreadUriOpeners = __decorate([
+  extHostNamedCustomer(MainContext.MainThreadUriOpeners),
+  __param(1, IStorageService),
+  __param(2, IExternalUriOpenerService),
+  __param(3, IExtensionService),
+  __param(4, IOpenerService),
+  __param(5, INotificationService)
+], MainThreadUriOpeners);
+export {
+  MainThreadUriOpeners
+};
+//# sourceMappingURL=mainThreadUriOpeners.js.map

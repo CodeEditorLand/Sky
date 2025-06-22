@@ -1,1 +1,57 @@
-import{SelectionStateType as t}from"../../common/notebookCommon.js";import{CellFocusMode as i}from"../notebookBrowser.js";class m{constructor(e,t,i,s,o,l,d,h,r){this.resource=e,this.b=t,this.c=i,this.d=s,this.e=o,this.f=l,this.g=d,this.h=h,this.i=r,this.type=0,this.label="Join Cell",this.code="undoredo.textBufferEdit",this.a=this.h.model}async undo(){if(!this.i.insertCell||!this.i.createCellViewModel)throw new Error("Notebook Insert Cell not implemented for Undo/Redo");await this.d.resolveTextModel(),this.d.textModel?.applyEdits([{range:this.f,text:""}]),this.d.setSelections(this.e);const e=this.i.createCellViewModel(this.a);"above"===this.c?(this.i.insertCell(this.b,this.a,{kind:t.Handle,primary:e.handle,selections:[e.handle]}),e.focusMode=i.Editor):(this.i.insertCell(this.b,e.model,{kind:t.Handle,primary:this.d.handle,selections:[this.d.handle]}),this.d.focusMode=i.Editor)}async redo(){if(!this.i.deleteCell)throw new Error("Notebook Delete Cell not implemented for Undo/Redo");await this.d.resolveTextModel(),this.d.textModel?.applyEdits([{range:this.f,text:this.g}]),this.i.deleteCell(this.b,{kind:t.Handle,primary:this.d.handle,selections:[this.d.handle]}),this.d.focusMode=i.Editor}}export{m as $VPc};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { SelectionStateType } from "../../common/notebookCommon.js";
+import { CellFocusMode } from "../notebookBrowser.js";
+class JoinCellEdit {
+  static {
+    __name(this, "JoinCellEdit");
+  }
+  constructor(resource, index, direction, cell, selections, inverseRange, insertContent, removedCell, editingDelegate) {
+    this.resource = resource;
+    this.index = index;
+    this.direction = direction;
+    this.cell = cell;
+    this.selections = selections;
+    this.inverseRange = inverseRange;
+    this.insertContent = insertContent;
+    this.removedCell = removedCell;
+    this.editingDelegate = editingDelegate;
+    this.type = 0;
+    this.label = "Join Cell";
+    this.code = "undoredo.textBufferEdit";
+    this._deletedRawCell = this.removedCell.model;
+  }
+  async undo() {
+    if (!this.editingDelegate.insertCell || !this.editingDelegate.createCellViewModel) {
+      throw new Error("Notebook Insert Cell not implemented for Undo/Redo");
+    }
+    await this.cell.resolveTextModel();
+    this.cell.textModel?.applyEdits([
+      { range: this.inverseRange, text: "" }
+    ]);
+    this.cell.setSelections(this.selections);
+    const cell = this.editingDelegate.createCellViewModel(this._deletedRawCell);
+    if (this.direction === "above") {
+      this.editingDelegate.insertCell(this.index, this._deletedRawCell, { kind: SelectionStateType.Handle, primary: cell.handle, selections: [cell.handle] });
+      cell.focusMode = CellFocusMode.Editor;
+    } else {
+      this.editingDelegate.insertCell(this.index, cell.model, { kind: SelectionStateType.Handle, primary: this.cell.handle, selections: [this.cell.handle] });
+      this.cell.focusMode = CellFocusMode.Editor;
+    }
+  }
+  async redo() {
+    if (!this.editingDelegate.deleteCell) {
+      throw new Error("Notebook Delete Cell not implemented for Undo/Redo");
+    }
+    await this.cell.resolveTextModel();
+    this.cell.textModel?.applyEdits([
+      { range: this.inverseRange, text: this.insertContent }
+    ]);
+    this.editingDelegate.deleteCell(this.index, { kind: SelectionStateType.Handle, primary: this.cell.handle, selections: [this.cell.handle] });
+    this.cell.focusMode = CellFocusMode.Editor;
+  }
+}
+export {
+  JoinCellEdit
+};
+//# sourceMappingURL=cellEdit.js.map

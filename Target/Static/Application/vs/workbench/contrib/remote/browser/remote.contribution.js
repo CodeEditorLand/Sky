@@ -1,1 +1,58 @@
-import{Extensions as e,$WK as o}from"../../../common/contributions.js";import{$Ql as b}from"../../../../platform/registry/common/platform.js";import{$xuc as t}from"./showCandidate.js";import{$yuc as i}from"./tunnelFactory.js";import{$Quc as c,$Puc as m}from"./remote.js";import{$Ruc as n}from"./remoteIndicator.js";import{$h4b as s,$f4b as u,$g4b as $}from"./remoteExplorer.js";import{$Suc as h}from"./remoteConnectionHealth.js";const r=b.as(e.Workbench);o(t.ID,t,2),o(i.ID,i,2),r.registerWorkbenchContribution(c,4),o(n.ID,n,1),r.registerWorkbenchContribution(u,3),r.registerWorkbenchContribution($,4),r.registerWorkbenchContribution(s,4),r.registerWorkbenchContribution(m,4),r.registerWorkbenchContribution(h,3);
+import { Extensions as WorkbenchExtensions, registerWorkbenchContribution2 } from "../../../common/contributions.js";
+import { Registry } from "../../../../platform/registry/common/platform.js";
+import { ShowCandidateContribution } from "./showCandidate.js";
+import { TunnelFactoryContribution } from "./tunnelFactory.js";
+import { RemoteAgentConnectionStatusListener, RemoteMarkers } from "./remote.js";
+import { RemoteStatusIndicator } from "./remoteIndicator.js";
+import { AutomaticPortForwarding, ForwardedPortsView, PortRestore } from "./remoteExplorer.js";
+import { InitialRemoteConnectionHealthContribution } from "./remoteConnectionHealth.js";
+const workbenchContributionsRegistry = Registry.as(WorkbenchExtensions.Workbench);
+registerWorkbenchContribution2(
+  ShowCandidateContribution.ID,
+  ShowCandidateContribution,
+  2
+  /* WorkbenchPhase.BlockRestore */
+);
+registerWorkbenchContribution2(
+  TunnelFactoryContribution.ID,
+  TunnelFactoryContribution,
+  2
+  /* WorkbenchPhase.BlockRestore */
+);
+workbenchContributionsRegistry.registerWorkbenchContribution(
+  RemoteAgentConnectionStatusListener,
+  4
+  /* LifecyclePhase.Eventually */
+);
+registerWorkbenchContribution2(
+  RemoteStatusIndicator.ID,
+  RemoteStatusIndicator,
+  1
+  /* WorkbenchPhase.BlockStartup */
+);
+workbenchContributionsRegistry.registerWorkbenchContribution(
+  ForwardedPortsView,
+  3
+  /* LifecyclePhase.Restored */
+);
+workbenchContributionsRegistry.registerWorkbenchContribution(
+  PortRestore,
+  4
+  /* LifecyclePhase.Eventually */
+);
+workbenchContributionsRegistry.registerWorkbenchContribution(
+  AutomaticPortForwarding,
+  4
+  /* LifecyclePhase.Eventually */
+);
+workbenchContributionsRegistry.registerWorkbenchContribution(
+  RemoteMarkers,
+  4
+  /* LifecyclePhase.Eventually */
+);
+workbenchContributionsRegistry.registerWorkbenchContribution(
+  InitialRemoteConnectionHealthContribution,
+  3
+  /* LifecyclePhase.Restored */
+);
+//# sourceMappingURL=remote.contribution.js.map

@@ -1,6 +1,87 @@
-import{$17 as g}from"../../../../../base/browser/domStylesheets.js";import{$vd as b}from"../../../../../base/common/lifecycle.js";import{derived as l,mapObservableArrayCached as v,derivedDisposable as m,constObservable as w,derivedObservableWithCache as x}from"../../../../../base/common/observable.js";import{$mj as O}from"../../../../../platform/instantiation/common/instantiation.js";import{$reb as $}from"../../../../browser/observableCodeEditor.js";import{$llb as y}from"../hintsWidget/inlineCompletionsHintsWidget.js";import{$fkb as C}from"../utils.js";import{$kpb as _}from"./ghostText/ghostTextView.js";import{$oqb as q}from"./inlineEdits/inlineEditsViewProducer.js";var p=function(o,e,n,s){var r=arguments.length,t=r<3?e:s===null?s=Object.getOwnPropertyDescriptor(e,n):s,i;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")t=Reflect.decorate(o,e,n,s);else for(var h=o.length-1;h>=0;h--)(i=o[h])&&(t=(r<3?i(t):r>3?i(e,n,t):i(e,n))||t);return r>3&&t&&Object.defineProperty(e,n,t),t},u=function(o,e){return function(n,s){e(n,s,o)}};let c=class extends b{constructor(e,n,s,r){super(),this.r=e,this.s=n,this.t=s,this.u=r,this.a=l(this,t=>this.s.read(t)?.ghostTexts.read(t)??[]),this.b=C(this.a,this.q),this.c=$(this.r),this.f=v(this,this.b,(t,i)=>m(h=>this.u.createInstance(_.hot.read(h),this.r,{ghostText:t,warning:this.s.map((a,f)=>{const d=a?.warning?.read(f);return d?{icon:d.icon}:void 0}),minReservedLineCount:w(0),targetTextModel:this.s.map(a=>a?.textModel)},this.c.getOption(67).map(a=>({syntaxHighlightingEnabled:a.syntaxHighlightingEnabled})),!1,!1)).recomputeInitiallyAndOnChange(i)).recomputeInitiallyAndOnChange(this.q),this.g=l(this,t=>this.s.read(t)?.inlineEditState.read(t)?.inlineEdit),this.h=x(this,(t,i)=>i||!!this.g.read(t)||!!this.s.read(t)?.inlineCompletionState.read(t)?.inlineCompletion?.showInlineEditMenu),this.j=m(t=>{if(this.h.read(t))return this.u.createInstance(q.hot.read(t),this.r,this.g,this.s,this.t)}).recomputeInitiallyAndOnChange(this.q),this.n=this.c.getOption(67).map(t=>t.fontFamily),this.B(g(l(t=>{const i=this.n.read(t);return i===""||i==="default"?"":`
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { createStyleSheetFromObservable } from "../../../../../base/browser/domStylesheets.js";
+import { Disposable } from "../../../../../base/common/lifecycle.js";
+import { derived, mapObservableArrayCached, derivedDisposable, constObservable, derivedObservableWithCache } from "../../../../../base/common/observable.js";
+import { IInstantiationService } from "../../../../../platform/instantiation/common/instantiation.js";
+import { observableCodeEditor } from "../../../../browser/observableCodeEditor.js";
+import { InlineCompletionsHintsWidget } from "../hintsWidget/inlineCompletionsHintsWidget.js";
+import { convertItemsToStableObservables } from "../utils.js";
+import { GhostTextView } from "./ghostText/ghostTextView.js";
+import { InlineEditsViewAndDiffProducer } from "./inlineEdits/inlineEditsViewProducer.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+let InlineCompletionsView = class InlineCompletionsView2 extends Disposable {
+  static {
+    __name(this, "InlineCompletionsView");
+  }
+  constructor(_editor, _model, _focusIsInMenu, _instantiationService) {
+    super();
+    this._editor = _editor;
+    this._model = _model;
+    this._focusIsInMenu = _focusIsInMenu;
+    this._instantiationService = _instantiationService;
+    this._ghostTexts = derived(this, (reader) => {
+      const model = this._model.read(reader);
+      return model?.ghostTexts.read(reader) ?? [];
+    });
+    this._stablizedGhostTexts = convertItemsToStableObservables(this._ghostTexts, this._store);
+    this._editorObs = observableCodeEditor(this._editor);
+    this._ghostTextWidgets = mapObservableArrayCached(this, this._stablizedGhostTexts, (ghostText, store) => derivedDisposable((reader) => this._instantiationService.createInstance(GhostTextView.hot.read(reader), this._editor, {
+      ghostText,
+      warning: this._model.map((m, reader2) => {
+        const warning = m?.warning?.read(reader2);
+        return warning ? { icon: warning.icon } : void 0;
+      }),
+      minReservedLineCount: constObservable(0),
+      targetTextModel: this._model.map((v) => v?.textModel)
+    }, this._editorObs.getOption(
+      67
+      /* EditorOption.inlineSuggest */
+    ).map((v) => ({ syntaxHighlightingEnabled: v.syntaxHighlightingEnabled })), false, false)).recomputeInitiallyAndOnChange(store)).recomputeInitiallyAndOnChange(this._store);
+    this._inlineEdit = derived(this, (reader) => this._model.read(reader)?.inlineEditState.read(reader)?.inlineEdit);
+    this._everHadInlineEdit = derivedObservableWithCache(this, (reader, last) => last || !!this._inlineEdit.read(reader) || !!this._model.read(reader)?.inlineCompletionState.read(reader)?.inlineCompletion?.showInlineEditMenu);
+    this._inlineEditWidget = derivedDisposable((reader) => {
+      if (!this._everHadInlineEdit.read(reader)) {
+        return void 0;
+      }
+      return this._instantiationService.createInstance(InlineEditsViewAndDiffProducer.hot.read(reader), this._editor, this._inlineEdit, this._model, this._focusIsInMenu);
+    }).recomputeInitiallyAndOnChange(this._store);
+    this._fontFamily = this._editorObs.getOption(
+      67
+      /* EditorOption.inlineSuggest */
+    ).map((val) => val.fontFamily);
+    this._register(createStyleSheetFromObservable(derived((reader) => {
+      const fontFamily = this._fontFamily.read(reader);
+      if (fontFamily === "" || fontFamily === "default") {
+        return "";
+      }
+      return `
 .monaco-editor .ghost-text-decoration,
 .monaco-editor .ghost-text-decoration-preview,
 .monaco-editor .ghost-text {
-	font-family: ${i};
-}`}))),this.B(new y(this.r,this.s,this.u))}shouldShowHoverAtViewZone(e){return this.f.get()[0]?.get().ownsViewZone(e)??!1}};c=p([u(3,O)],c);export{c as $pqb};
+	font-family: ${fontFamily};
+}`;
+    })));
+    this._register(new InlineCompletionsHintsWidget(this._editor, this._model, this._instantiationService));
+  }
+  shouldShowHoverAtViewZone(viewZoneId) {
+    return this._ghostTextWidgets.get()[0]?.get().ownsViewZone(viewZoneId) ?? false;
+  }
+};
+InlineCompletionsView = __decorate([
+  __param(3, IInstantiationService)
+], InlineCompletionsView);
+export {
+  InlineCompletionsView
+};
+//# sourceMappingURL=inlineCompletionsView.js.map

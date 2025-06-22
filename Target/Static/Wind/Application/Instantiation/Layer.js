@@ -1,1 +1,44 @@
-import{Effect as r,Layer as o}from"../../effect";import{Live as m}from"../Clipboard/mod.js";import{Configuration as a,Live as L}from"../Configuration/mod.js";import{Live as c}from"../Dialog/mod.js";import{Live as f}from"../Editor/mod.js";import{Live as s}from"../EditorGroups/mod.js";import{Live as p}from"../Environment/mod.js";import{Live as n}from"../File/mod.js";import{Live as S}from"../Host/mod.js";import{Live as u}from"../Lifecycle/mod.js";import{Live as l}from"../Log/mod.js";import{Live as g}from"../Notification/mod.js";import{Live as E}from"../PaneComposite/mod.js";import{Live as d}from"../QuickInput/mod.js";import{Live as y}from"../Storage/mod.js";import{Live as C}from"../TextEditor/mod.js";import{Live as b}from"../Views/mod.js";import{Live as T}from"../Workspaces/mod.js";import{Live as k}from"../Workspaces/Trust/mod.js";const V=r.gen((function*(r){const i=yield*r(a.Tag),e=(i.getValue("feature.scm.enable",!0),i.getValue("feature.test.enable",!0),[m,c,f,s,p,n,S,u,l,g,E,d,y,C,b,T,k]);return o.mergeAll(...e)})),M=o.unwrapEffect(r.provide(V,L));export{M as Live};
+import { Effect, Layer } from "../../effect";
+const DynamicLiveLayerEffect = Effect.gen(function* (_) {
+  const ConfigurationService = yield* _(Configuration.Tag);
+  const Feature = {
+    Scm: ConfigurationService.getValue("feature.scm.enable", true),
+    Test: ConfigurationService.getValue(
+      "feature.test.enable",
+      true
+    )
+  };
+  const CoreLayer = [
+    LiveClipboardService,
+    LiveDialogService,
+    LiveEditorService,
+    LiveEditorGroupService,
+    LiveEnvironmentService,
+    LiveFileService,
+    LiveHostService,
+    LiveLifecycleService,
+    LiveLogService,
+    LiveNotificationService,
+    LivePaneCompositeService,
+    LiveQuickInputService,
+    LiveStorageService,
+    LiveTextEditorService,
+    LiveViewService,
+    LiveWorkspaceService,
+    LiveWorkspaceTrustService
+  ];
+  if (Feature.Scm) {
+  }
+  if (Feature.Test) {
+  }
+  return Layer.mergeAll(...CoreLayer);
+});
+const Live = Layer.unwrapEffect(
+  // The `DynamicLiveLayerEffect` itself needs the `ConfigurationService`,
+  // so we provide its live layer to the effect.
+  Effect.provide(DynamicLiveLayerEffect, LiveConfigurationService)
+);
+export {
+  Live
+};
+//# sourceMappingURL=Layer.js.map

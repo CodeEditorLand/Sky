@@ -1,1 +1,364 @@
-import{$s9 as G}from"../../../../../base/browser/ui/button/button.js";import{$uf as U,$tf as V}from"../../../../../base/common/cache.js";import{$ud as v}from"../../../../../base/common/lifecycle.js";import{URI as g}from"../../../../../base/common/uri.js";import"./bulkEdit.css";import{$cF as q}from"../../../../../editor/common/services/resolverService.js";import{localize as f}from"../../../../../nls.js";import{$dI as I}from"../../../../../platform/actions/common/actions.js";import{$El as Y}from"../../../../../platform/configuration/common/configuration.js";import{$Vn as z,$Un as b}from"../../../../../platform/contextkey/common/contextkey.js";import{$ofb as B}from"../../../../../platform/contextview/browser/contextView.js";import{$_o as A}from"../../../../../platform/dialogs/common/dialogs.js";import{$ngb as X}from"../../../../../platform/hover/browser/hover.js";import{$mj as Q}from"../../../../../platform/instantiation/common/instantiation.js";import{$ux as W}from"../../../../../platform/keybinding/common/keybinding.js";import{$2H as J}from"../../../../../platform/label/common/label.js";import{$Gmb as Z}from"../../../../../platform/list/browser/listService.js";import{$4$ as K}from"../../../../../platform/opener/common/opener.js";import{$Ho as tt}from"../../../../../platform/storage/common/storage.js";import{$Mfb as F}from"../../../../../platform/theme/browser/defaultStyles.js";import{$Mt as et}from"../../../../../platform/theme/common/themeService.js";import{$QEb as it}from"../../../../browser/labels.js";import{$qxb as st}from"../../../../browser/parts/views/viewPane.js";import{$YM as nt}from"../../../../common/views.js";import{$onc as x,$nnc as ot}from"./bulkEditPreview.js";import{$vnc as rt,$snc as ct,$Anc as at,$wnc as ht,$Bnc as lt,$tnc as dt,$pnc as k,$xnc as ut,$unc as pt,$qnc as $,$ync as ft,$rnc as E,$znc as mt}from"./bulkEditTree.js";import{$pI as gt,$oI as bt,$qI as $t}from"../../../../services/editor/common/editorService.js";var N=function(a,t,i,e){var s=arguments.length,n=s<3?t:e===null?e=Object.getOwnPropertyDescriptor(t,i):e,r;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")n=Reflect.decorate(a,t,i,e);else for(var c=a.length-1;c>=0;c--)(r=a[c])&&(n=(s<3?r(n):s>3?r(t,i,n):r(t,i))||n);return s>3&&n&&Object.defineProperty(t,i,n),n},o=function(a,t){return function(i,e){t(i,e,a)}},l,D;(function(a){a.Data="data",a.Message="message"})(D||(D={}));let O=class extends st{static{l=this}static{this.ID="refactorPreview"}static{this.Schema="vscode-bulkeditpreview-multieditor"}static{this.ctxHasCategories=new b("refactorPreview.hasCategories",!1)}static{this.ctxGroupByFile=new b("refactorPreview.groupByFile",!0)}static{this.ctxHasCheckedChanges=new b("refactorPreview.hasCheckedChanges",!0)}static{this.a=`${this.ID}.groupByFile`}constructor(t,i,e,s,n,r,c,u,h,P,R,j,T,M,_,H){super({...t,titleMenuId:I.BulkEditTitle},R,j,T,h,P,i,M,_,H),this.ab=i,this.sb=e,this.cc=s,this.dc=n,this.ec=r,this.fc=c,this.gc=u,this.f=new Map,this.n=new v,this.r=new v,this.nc=new V(async L=>{const w=new U(async d=>{const p=d.uri,y=this.L.asPreviewUri(p);if(d.type&4)return{original:{resource:g.revive(y)},modified:{resource:void 0},goToFileResource:d.uri};{let m;try{(await this.dc.createModelReference(p)).dispose(),m=p}catch{m=x.emptyPreview}return{original:{resource:g.revive(m)},modified:{resource:g.revive(y)},goToFileResource:m}}}),S=L.slice().sort(pt),C=[];for(const d of S)C.push(await w.get(d));return{resources:C,getResourceDiffEditorInputIdOfOperation:async d=>{const p=await w.get(d);return{original:p.original.resource,modified:p.modified.resource}}}}),this.element.classList.add("bulk-edit-panel","show-file-icons"),this.h=l.ctxHasCategories.bindTo(h),this.j=l.ctxGroupByFile.bindTo(h),this.m=l.ctxHasCheckedChanges.bindTo(h)}dispose(){this.b.dispose(),this.n.dispose(),super.dispose()}X(t){super.X(t);const i=this.ab.createInstance(it,{onDidChangeVisibility:this.onDidChangeBodyVisibility});this.n.add(i);const e=document.createElement("div");e.className="content",t.appendChild(e);const s=document.createElement("div");e.appendChild(s),this.c=this.ab.createInstance(ct),this.c.groupByFile=this.gc.getBoolean(l.a,0,!0),this.j.set(this.c.groupByFile),this.b=this.ab.createInstance(Z,this.id,s,new at,[this.ab.createInstance(mt),this.ab.createInstance(ft,i),this.ab.createInstance(ut)],this.c,{accessibilityProvider:this.ab.createInstance(rt),identityProvider:new ht,expandOnlyOnTwistieClick:!0,multipleSelectionSupport:!1,keyboardNavigationLabelProvider:new lt,sorter:new dt,selectionNavigation:!0}),this.n.add(this.b.onContextMenu(this.oc,this)),this.n.add(this.b.onDidOpen(h=>this.mc(h)));const n=document.createElement("div");n.className="buttons",e.appendChild(n);const r=new G(n);this.n.add(r);const c=r.addButton({supportIcons:!0,...F});c.label=f(4792,null),c.onDidClick(()=>this.accept(),this,this.n);const u=r.addButton({...F,secondary:!0});u.label=f(4793,null),u.onDidClick(()=>this.discard(),this,this.n),this.g=document.createElement("span"),this.g.className="message",this.g.innerText=f(4794,null),t.appendChild(this.g),this.jc("message")}Y(t,i){super.Y(t,i);const e=t-50;this.b.getHTMLElement().parentElement.style.height=`${e}px`,this.b.layout(e,i)}jc(t){this.element.dataset.state=t}async setInput(t,i){this.jc("data"),this.r.clear(),this.f.clear(),this.s&&(this.s(void 0),this.s=void 0);const e=await this.ab.invokeFunction(ot.create,t);this.L=this.ab.createInstance(x,e),this.r.add(this.L),this.r.add(e);const s=e.categories.length>1;return this.h.set(s),this.c.groupByFile=!s||this.c.groupByFile,this.m.set(e.checked.checkedCount>0),this.t=e,new Promise(n=>{i.onCancellationRequested(()=>n(void 0)),this.s=n,this.kc(e),this.r.add(e.checked.onDidChange(()=>{this.b.updateChildren(),this.m.set(e.checked.checkedCount>0)}))})}hasInput(){return!!this.t}async kc(t){const i=this.f.get(this.c.groupByFile);if(await this.b.setInput(t,i),this.b.domFocus(),i)return;const e=[...this.b.getNode(t).children].slice(0,10);for(;e.length>0;){const{element:s}=e.shift();s instanceof $&&await this.b.expand(s,!0),s instanceof k&&(await this.b.expand(s,!0),e.push(...this.b.getNode(s).children))}}accept(){const t=this.t?.conflicts.list();if(!t||t.length===0){this.lc(!0);return}let i;t.length===1?i=f(4795,null,this.cc.getUriLabel(t[0],{relative:!0})):i=f(4796,null,t.length),this.ec.warn(i).finally(()=>this.lc(!1))}discard(){this.lc(!1)}lc(t){this.s?.(t?this.t?.getWorkspaceEdit():void 0),this.t=void 0,this.jc("message"),this.r.clear()}toggleChecked(){const[t]=this.b.getFocus();((t instanceof $||t instanceof E)&&!t.isDisabled()||t instanceof k)&&t.setChecked(!t.isChecked())}groupByFile(){this.c.groupByFile||this.toggleGrouping()}groupByType(){this.c.groupByFile&&this.toggleGrouping()}toggleGrouping(){const t=this.b.getInput();if(t){const i=this.b.getViewState();this.f.set(this.c.groupByFile,i),this.c.groupByFile=!this.c.groupByFile,this.kc(t),this.gc.store(l.a,this.c.groupByFile,0,0),this.j.set(this.c.groupByFile)}}async mc(t){const i=this.t?.fileOperations;if(!i)return;let e,s;if(t.element instanceof E)s=t.element.parent,e=t.element.edit.textEdit.textEdit.range;else if(t.element instanceof $)s=t.element,e=t.element.edit.textEdits[0]?.textEdit.textEdit.range;else return;const n=await this.nc.get(i),r=await n.getResourceDiffEditorInputIdOfOperation(s.edit),c={...t.editorOptions,viewState:{revealData:{resource:r,range:e}}},u=g.from({scheme:l.Schema}),h="Refactor Preview";this.sb.openEditor({multiDiffSource:u,label:h,options:c,isTransient:!0,description:h,resources:n.resources},t.sideBySide?$t:gt)}oc(t){this.fc.showContextMenu({menuId:I.BulkEditContext,contextKeyService:this.Db,getAnchor:()=>t.anchor})}};O=l=N([o(1,Q),o(2,bt),o(3,J),o(4,q),o(5,A),o(6,B),o(7,tt),o(8,z),o(9,nt),o(10,W),o(11,B),o(12,Y),o(13,K),o(14,et),o(15,X)],O);export{O as $Cnc};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { ButtonBar } from "../../../../../base/browser/ui/button/button.js";
+import { CachedFunction, LRUCachedFunction } from "../../../../../base/common/cache.js";
+import { DisposableStore } from "../../../../../base/common/lifecycle.js";
+import { URI } from "../../../../../base/common/uri.js";
+import "./bulkEdit.css";
+import { ITextModelService } from "../../../../../editor/common/services/resolverService.js";
+import { localize } from "../../../../../nls.js";
+import { MenuId } from "../../../../../platform/actions/common/actions.js";
+import { IConfigurationService } from "../../../../../platform/configuration/common/configuration.js";
+import { IContextKeyService, RawContextKey } from "../../../../../platform/contextkey/common/contextkey.js";
+import { IContextMenuService } from "../../../../../platform/contextview/browser/contextView.js";
+import { IDialogService } from "../../../../../platform/dialogs/common/dialogs.js";
+import { IHoverService } from "../../../../../platform/hover/browser/hover.js";
+import { IInstantiationService } from "../../../../../platform/instantiation/common/instantiation.js";
+import { IKeybindingService } from "../../../../../platform/keybinding/common/keybinding.js";
+import { ILabelService } from "../../../../../platform/label/common/label.js";
+import { WorkbenchAsyncDataTree } from "../../../../../platform/list/browser/listService.js";
+import { IOpenerService } from "../../../../../platform/opener/common/opener.js";
+import { IStorageService } from "../../../../../platform/storage/common/storage.js";
+import { defaultButtonStyles } from "../../../../../platform/theme/browser/defaultStyles.js";
+import { IThemeService } from "../../../../../platform/theme/common/themeService.js";
+import { ResourceLabels } from "../../../../browser/labels.js";
+import { ViewPane } from "../../../../browser/parts/views/viewPane.js";
+import { IViewDescriptorService } from "../../../../common/views.js";
+import { BulkEditPreviewProvider, BulkFileOperations } from "./bulkEditPreview.js";
+import { BulkEditAccessibilityProvider, BulkEditDataSource, BulkEditDelegate, BulkEditIdentityProvider, BulkEditNaviLabelProvider, BulkEditSorter, CategoryElement, CategoryElementRenderer, compareBulkFileOperations, FileElement, FileElementRenderer, TextEditElement, TextEditElementRenderer } from "./bulkEditTree.js";
+import { ACTIVE_GROUP, IEditorService, SIDE_GROUP } from "../../../../services/editor/common/editorService.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+var BulkEditPane_1;
+var State;
+(function(State2) {
+  State2["Data"] = "data";
+  State2["Message"] = "message";
+})(State || (State = {}));
+let BulkEditPane = class BulkEditPane2 extends ViewPane {
+  static {
+    __name(this, "BulkEditPane");
+  }
+  static {
+    BulkEditPane_1 = this;
+  }
+  static {
+    this.ID = "refactorPreview";
+  }
+  static {
+    this.Schema = "vscode-bulkeditpreview-multieditor";
+  }
+  static {
+    this.ctxHasCategories = new RawContextKey("refactorPreview.hasCategories", false);
+  }
+  static {
+    this.ctxGroupByFile = new RawContextKey("refactorPreview.groupByFile", true);
+  }
+  static {
+    this.ctxHasCheckedChanges = new RawContextKey("refactorPreview.hasCheckedChanges", true);
+  }
+  static {
+    this._memGroupByFile = `${this.ID}.groupByFile`;
+  }
+  constructor(options, _instaService, _editorService, _labelService, _textModelService, _dialogService, _contextMenuService, _storageService, contextKeyService, viewDescriptorService, keybindingService, contextMenuService, configurationService, openerService, themeService, hoverService) {
+    super({ ...options, titleMenuId: MenuId.BulkEditTitle }, keybindingService, contextMenuService, configurationService, contextKeyService, viewDescriptorService, _instaService, openerService, themeService, hoverService);
+    this._instaService = _instaService;
+    this._editorService = _editorService;
+    this._labelService = _labelService;
+    this._textModelService = _textModelService;
+    this._dialogService = _dialogService;
+    this._contextMenuService = _contextMenuService;
+    this._storageService = _storageService;
+    this._treeViewStates = /* @__PURE__ */ new Map();
+    this._disposables = new DisposableStore();
+    this._sessionDisposables = new DisposableStore();
+    this._computeResourceDiffEditorInputs = new LRUCachedFunction(async (fileOperations) => {
+      const computeDiffEditorInput = new CachedFunction(async (fileOperation) => {
+        const fileOperationUri = fileOperation.uri;
+        const previewUri = this._currentProvider.asPreviewUri(fileOperationUri);
+        if (fileOperation.type & 4) {
+          return {
+            original: { resource: URI.revive(previewUri) },
+            modified: { resource: void 0 },
+            goToFileResource: fileOperation.uri
+          };
+        } else {
+          let leftResource;
+          try {
+            (await this._textModelService.createModelReference(fileOperationUri)).dispose();
+            leftResource = fileOperationUri;
+          } catch {
+            leftResource = BulkEditPreviewProvider.emptyPreview;
+          }
+          return {
+            original: { resource: URI.revive(leftResource) },
+            modified: { resource: URI.revive(previewUri) },
+            goToFileResource: leftResource
+          };
+        }
+      });
+      const sortedFileOperations = fileOperations.slice().sort(compareBulkFileOperations);
+      const resources = [];
+      for (const operation of sortedFileOperations) {
+        resources.push(await computeDiffEditorInput.get(operation));
+      }
+      const getResourceDiffEditorInputIdOfOperation = /* @__PURE__ */ __name(async (operation) => {
+        const resource = await computeDiffEditorInput.get(operation);
+        return { original: resource.original.resource, modified: resource.modified.resource };
+      }, "getResourceDiffEditorInputIdOfOperation");
+      return {
+        resources,
+        getResourceDiffEditorInputIdOfOperation
+      };
+    });
+    this.element.classList.add("bulk-edit-panel", "show-file-icons");
+    this._ctxHasCategories = BulkEditPane_1.ctxHasCategories.bindTo(contextKeyService);
+    this._ctxGroupByFile = BulkEditPane_1.ctxGroupByFile.bindTo(contextKeyService);
+    this._ctxHasCheckedChanges = BulkEditPane_1.ctxHasCheckedChanges.bindTo(contextKeyService);
+  }
+  dispose() {
+    this._tree.dispose();
+    this._disposables.dispose();
+    super.dispose();
+  }
+  renderBody(parent) {
+    super.renderBody(parent);
+    const resourceLabels = this._instaService.createInstance(ResourceLabels, { onDidChangeVisibility: this.onDidChangeBodyVisibility });
+    this._disposables.add(resourceLabels);
+    const contentContainer = document.createElement("div");
+    contentContainer.className = "content";
+    parent.appendChild(contentContainer);
+    const treeContainer = document.createElement("div");
+    contentContainer.appendChild(treeContainer);
+    this._treeDataSource = this._instaService.createInstance(BulkEditDataSource);
+    this._treeDataSource.groupByFile = this._storageService.getBoolean(BulkEditPane_1._memGroupByFile, 0, true);
+    this._ctxGroupByFile.set(this._treeDataSource.groupByFile);
+    this._tree = this._instaService.createInstance(WorkbenchAsyncDataTree, this.id, treeContainer, new BulkEditDelegate(), [this._instaService.createInstance(TextEditElementRenderer), this._instaService.createInstance(FileElementRenderer, resourceLabels), this._instaService.createInstance(CategoryElementRenderer)], this._treeDataSource, {
+      accessibilityProvider: this._instaService.createInstance(BulkEditAccessibilityProvider),
+      identityProvider: new BulkEditIdentityProvider(),
+      expandOnlyOnTwistieClick: true,
+      multipleSelectionSupport: false,
+      keyboardNavigationLabelProvider: new BulkEditNaviLabelProvider(),
+      sorter: new BulkEditSorter(),
+      selectionNavigation: true
+    });
+    this._disposables.add(this._tree.onContextMenu(this._onContextMenu, this));
+    this._disposables.add(this._tree.onDidOpen((e) => this._openElementInMultiDiffEditor(e)));
+    const buttonsContainer = document.createElement("div");
+    buttonsContainer.className = "buttons";
+    contentContainer.appendChild(buttonsContainer);
+    const buttonBar = new ButtonBar(buttonsContainer);
+    this._disposables.add(buttonBar);
+    const btnConfirm = buttonBar.addButton({ supportIcons: true, ...defaultButtonStyles });
+    btnConfirm.label = localize("ok", "Apply");
+    btnConfirm.onDidClick(() => this.accept(), this, this._disposables);
+    const btnCancel = buttonBar.addButton({ ...defaultButtonStyles, secondary: true });
+    btnCancel.label = localize("cancel", "Discard");
+    btnCancel.onDidClick(() => this.discard(), this, this._disposables);
+    this._message = document.createElement("span");
+    this._message.className = "message";
+    this._message.innerText = localize("empty.msg", "Invoke a code action, like rename, to see a preview of its changes here.");
+    parent.appendChild(this._message);
+    this._setState(
+      "message"
+      /* State.Message */
+    );
+  }
+  layoutBody(height, width) {
+    super.layoutBody(height, width);
+    const treeHeight = height - 50;
+    this._tree.getHTMLElement().parentElement.style.height = `${treeHeight}px`;
+    this._tree.layout(treeHeight, width);
+  }
+  _setState(state) {
+    this.element.dataset["state"] = state;
+  }
+  async setInput(edit, token) {
+    this._setState(
+      "data"
+      /* State.Data */
+    );
+    this._sessionDisposables.clear();
+    this._treeViewStates.clear();
+    if (this._currentResolve) {
+      this._currentResolve(void 0);
+      this._currentResolve = void 0;
+    }
+    const input = await this._instaService.invokeFunction(BulkFileOperations.create, edit);
+    this._currentProvider = this._instaService.createInstance(BulkEditPreviewProvider, input);
+    this._sessionDisposables.add(this._currentProvider);
+    this._sessionDisposables.add(input);
+    const hasCategories = input.categories.length > 1;
+    this._ctxHasCategories.set(hasCategories);
+    this._treeDataSource.groupByFile = !hasCategories || this._treeDataSource.groupByFile;
+    this._ctxHasCheckedChanges.set(input.checked.checkedCount > 0);
+    this._currentInput = input;
+    return new Promise((resolve) => {
+      token.onCancellationRequested(() => resolve(void 0));
+      this._currentResolve = resolve;
+      this._setTreeInput(input);
+      this._sessionDisposables.add(input.checked.onDidChange(() => {
+        this._tree.updateChildren();
+        this._ctxHasCheckedChanges.set(input.checked.checkedCount > 0);
+      }));
+    });
+  }
+  hasInput() {
+    return Boolean(this._currentInput);
+  }
+  async _setTreeInput(input) {
+    const viewState = this._treeViewStates.get(this._treeDataSource.groupByFile);
+    await this._tree.setInput(input, viewState);
+    this._tree.domFocus();
+    if (viewState) {
+      return;
+    }
+    const expand = [...this._tree.getNode(input).children].slice(0, 10);
+    while (expand.length > 0) {
+      const { element } = expand.shift();
+      if (element instanceof FileElement) {
+        await this._tree.expand(element, true);
+      }
+      if (element instanceof CategoryElement) {
+        await this._tree.expand(element, true);
+        expand.push(...this._tree.getNode(element).children);
+      }
+    }
+  }
+  accept() {
+    const conflicts = this._currentInput?.conflicts.list();
+    if (!conflicts || conflicts.length === 0) {
+      this._done(true);
+      return;
+    }
+    let message;
+    if (conflicts.length === 1) {
+      message = localize("conflict.1", "Cannot apply refactoring because '{0}' has changed in the meantime.", this._labelService.getUriLabel(conflicts[0], { relative: true }));
+    } else {
+      message = localize("conflict.N", "Cannot apply refactoring because {0} other files have changed in the meantime.", conflicts.length);
+    }
+    this._dialogService.warn(message).finally(() => this._done(false));
+  }
+  discard() {
+    this._done(false);
+  }
+  _done(accept) {
+    this._currentResolve?.(accept ? this._currentInput?.getWorkspaceEdit() : void 0);
+    this._currentInput = void 0;
+    this._setState(
+      "message"
+      /* State.Message */
+    );
+    this._sessionDisposables.clear();
+  }
+  toggleChecked() {
+    const [first] = this._tree.getFocus();
+    if ((first instanceof FileElement || first instanceof TextEditElement) && !first.isDisabled()) {
+      first.setChecked(!first.isChecked());
+    } else if (first instanceof CategoryElement) {
+      first.setChecked(!first.isChecked());
+    }
+  }
+  groupByFile() {
+    if (!this._treeDataSource.groupByFile) {
+      this.toggleGrouping();
+    }
+  }
+  groupByType() {
+    if (this._treeDataSource.groupByFile) {
+      this.toggleGrouping();
+    }
+  }
+  toggleGrouping() {
+    const input = this._tree.getInput();
+    if (input) {
+      const oldViewState = this._tree.getViewState();
+      this._treeViewStates.set(this._treeDataSource.groupByFile, oldViewState);
+      this._treeDataSource.groupByFile = !this._treeDataSource.groupByFile;
+      this._setTreeInput(input);
+      this._storageService.store(
+        BulkEditPane_1._memGroupByFile,
+        this._treeDataSource.groupByFile,
+        0,
+        0
+        /* StorageTarget.USER */
+      );
+      this._ctxGroupByFile.set(this._treeDataSource.groupByFile);
+    }
+  }
+  async _openElementInMultiDiffEditor(e) {
+    const fileOperations = this._currentInput?.fileOperations;
+    if (!fileOperations) {
+      return;
+    }
+    let selection = void 0;
+    let fileElement;
+    if (e.element instanceof TextEditElement) {
+      fileElement = e.element.parent;
+      selection = e.element.edit.textEdit.textEdit.range;
+    } else if (e.element instanceof FileElement) {
+      fileElement = e.element;
+      selection = e.element.edit.textEdits[0]?.textEdit.textEdit.range;
+    } else {
+      return;
+    }
+    const result = await this._computeResourceDiffEditorInputs.get(fileOperations);
+    const resourceId = await result.getResourceDiffEditorInputIdOfOperation(fileElement.edit);
+    const options = {
+      ...e.editorOptions,
+      viewState: {
+        revealData: {
+          resource: resourceId,
+          range: selection
+        }
+      }
+    };
+    const multiDiffSource = URI.from({ scheme: BulkEditPane_1.Schema });
+    const label = "Refactor Preview";
+    this._editorService.openEditor({
+      multiDiffSource,
+      label,
+      options,
+      isTransient: true,
+      description: label,
+      resources: result.resources
+    }, e.sideBySide ? SIDE_GROUP : ACTIVE_GROUP);
+  }
+  _onContextMenu(e) {
+    this._contextMenuService.showContextMenu({
+      menuId: MenuId.BulkEditContext,
+      contextKeyService: this.contextKeyService,
+      getAnchor: /* @__PURE__ */ __name(() => e.anchor, "getAnchor")
+    });
+  }
+};
+BulkEditPane = BulkEditPane_1 = __decorate([
+  __param(1, IInstantiationService),
+  __param(2, IEditorService),
+  __param(3, ILabelService),
+  __param(4, ITextModelService),
+  __param(5, IDialogService),
+  __param(6, IContextMenuService),
+  __param(7, IStorageService),
+  __param(8, IContextKeyService),
+  __param(9, IViewDescriptorService),
+  __param(10, IKeybindingService),
+  __param(11, IContextMenuService),
+  __param(12, IConfigurationService),
+  __param(13, IOpenerService),
+  __param(14, IThemeService),
+  __param(15, IHoverService)
+], BulkEditPane);
+export {
+  BulkEditPane
+};
+//# sourceMappingURL=bulkEditPane.js.map

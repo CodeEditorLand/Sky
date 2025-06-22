@@ -1,1 +1,29 @@
-import{Schemas as b}from"../../../../base/common/network.js";function D(e){const o=e.isExtensionDevelopment;let n=!0;const s=e.extensionDevelopmentLocationURI;if(s)for(const e of s)e.scheme!==b.file&&(n=!1);return{isExtensionDevHost:o,isExtensionDevDebug:n&&"number"==typeof e.debugExtensionHost.port,isExtensionDevDebugBrk:n&&!!e.debugExtensionHost.break,isExtensionDevTestFromCli:o&&!!e.extensionTestsLocationURI&&!e.debugExtensionHost.debugId}}export{D as $IWb};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { Schemas } from "../../../../base/common/network.js";
+function parseExtensionDevOptions(environmentService) {
+  const isExtensionDevHost = environmentService.isExtensionDevelopment;
+  let debugOk = true;
+  const extDevLocs = environmentService.extensionDevelopmentLocationURI;
+  if (extDevLocs) {
+    for (const x of extDevLocs) {
+      if (x.scheme !== Schemas.file) {
+        debugOk = false;
+      }
+    }
+  }
+  const isExtensionDevDebug = debugOk && typeof environmentService.debugExtensionHost.port === "number";
+  const isExtensionDevDebugBrk = debugOk && !!environmentService.debugExtensionHost.break;
+  const isExtensionDevTestFromCli = isExtensionDevHost && !!environmentService.extensionTestsLocationURI && !environmentService.debugExtensionHost.debugId;
+  return {
+    isExtensionDevHost,
+    isExtensionDevDebug,
+    isExtensionDevDebugBrk,
+    isExtensionDevTestFromCli
+  };
+}
+__name(parseExtensionDevOptions, "parseExtensionDevOptions");
+export {
+  parseExtensionDevOptions
+};
+//# sourceMappingURL=extensionDevOptions.js.map

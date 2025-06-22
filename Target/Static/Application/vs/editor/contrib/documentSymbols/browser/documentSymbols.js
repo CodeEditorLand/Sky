@@ -1,1 +1,19 @@
-import{CancellationToken as m}from"../../../../base/common/cancellation.js";import{$0c as n}from"../../../../base/common/types.js";import{URI as c}from"../../../../base/common/uri.js";import{$cF as l}from"../../../common/services/resolverService.js";import{$7ob as a}from"./outlineModel.js";import{$Zn as f}from"../../../../platform/commands/common/commands.js";f.registerCommand("_executeDocumentSymbolProvider",async function(e,...t){const[o]=t;n(c.isUri(o));const i=e.get(a),r=await e.get(l).createModelReference(o);try{return(await i.getOrCreate(r.object.textEditorModel,m.None)).getTopLevelSymbols()}finally{r.dispose()}});
+import { CancellationToken } from "../../../../base/common/cancellation.js";
+import { assertType } from "../../../../base/common/types.js";
+import { URI } from "../../../../base/common/uri.js";
+import { ITextModelService } from "../../../common/services/resolverService.js";
+import { IOutlineModelService } from "./outlineModel.js";
+import { CommandsRegistry } from "../../../../platform/commands/common/commands.js";
+CommandsRegistry.registerCommand("_executeDocumentSymbolProvider", async function(accessor, ...args) {
+  const [resource] = args;
+  assertType(URI.isUri(resource));
+  const outlineService = accessor.get(IOutlineModelService);
+  const modelService = accessor.get(ITextModelService);
+  const reference = await modelService.createModelReference(resource);
+  try {
+    return (await outlineService.getOrCreate(reference.object.textEditorModel, CancellationToken.None)).getTopLevelSymbols();
+  } finally {
+    reference.dispose();
+  }
+});
+//# sourceMappingURL=documentSymbols.js.map

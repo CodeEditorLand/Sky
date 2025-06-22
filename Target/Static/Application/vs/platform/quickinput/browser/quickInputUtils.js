@@ -1,1 +1,95 @@
-import*as l from"../../../base/browser/dom.js";import*as m from"../../../base/browser/domStylesheets.js";import*as c from"../../../base/browser/cssValue.js";import{$$7 as d}from"../../../base/browser/event.js";import{Event as $}from"../../../base/common/event.js";import{$G5 as C}from"../../../base/browser/keyboardEvent.js";import{$l7 as w,EventType as x}from"../../../base/browser/touch.js";import{$E8 as E}from"../../../base/browser/ui/iconLabel/iconLabels.js";import{$n2 as T}from"../../../base/common/idGenerator.js";import{$20 as I}from"../../../base/common/linkedText.js";import"./media/quickInput.css";import{localize as G}from"../../../nls.js";const p={},O=new T("quick-input-button-icon-");function Y(s){if(!s)return;let e;const t=s.dark.toString();return p[t]?e=p[t]:(e=O.nextId(),m.$Y7(`.${e}, .hc-light .${e}`,`background-image: ${c.$77(s.light||s.dark)}`),m.$Y7(`.vs-dark .${e}, .hc-black .${e}`,`background-image: ${c.$77(s.dark)}`),p[t]=e),e}function N(s,e,t){let n=s.iconClass||Y(s.iconPath);return s.alwaysVisible&&(n=n?`${n} always-visible`:"always-visible"),{id:e,label:"",tooltip:s.tooltip||"",class:n,enabled:!0,run:t}}function V(s,e,t){l.$O6(e);const n=I(s);let u=0;for(const o of n.nodes)if(typeof o=="string")e.append(...E(o));else{let i=o.title;!i&&o.href.startsWith("command:")?i=G(2207,null,o.href.substring(8)):i||(i=o.href);const r=l.$("a",{href:o.href,title:i,tabIndex:u++},o.label);r.style.textDecoration="underline";const b=a=>{l.$G6(a)&&l.$H6.stop(a,!0),t.callback(o.href)},h=t.disposables.add(new d(r,l.$F6.CLICK)).event,g=t.disposables.add(new d(r,l.$F6.KEY_DOWN)).event,k=$.chain(g,a=>a.filter(v=>{const f=new C(v);return f.equals(10)||f.equals(3)}));t.disposables.add(w.addTarget(r));const y=t.disposables.add(new d(r,x.Tap)).event;$.any(h,y,k)(b,null,t.disposables),e.appendChild(r)}}export{N as $Xxb,V as $Yxb};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import * as dom from "../../../base/browser/dom.js";
+import * as domStylesheetsJs from "../../../base/browser/domStylesheets.js";
+import * as cssJs from "../../../base/browser/cssValue.js";
+import { DomEmitter } from "../../../base/browser/event.js";
+import { Event } from "../../../base/common/event.js";
+import { StandardKeyboardEvent } from "../../../base/browser/keyboardEvent.js";
+import { Gesture, EventType as GestureEventType } from "../../../base/browser/touch.js";
+import { renderLabelWithIcons } from "../../../base/browser/ui/iconLabel/iconLabels.js";
+import { IdGenerator } from "../../../base/common/idGenerator.js";
+import { parseLinkedText } from "../../../base/common/linkedText.js";
+import "./media/quickInput.css";
+import { localize } from "../../../nls.js";
+const iconPathToClass = {};
+const iconClassGenerator = new IdGenerator("quick-input-button-icon-");
+function getIconClass(iconPath) {
+  if (!iconPath) {
+    return void 0;
+  }
+  let iconClass;
+  const key = iconPath.dark.toString();
+  if (iconPathToClass[key]) {
+    iconClass = iconPathToClass[key];
+  } else {
+    iconClass = iconClassGenerator.nextId();
+    domStylesheetsJs.createCSSRule(`.${iconClass}, .hc-light .${iconClass}`, `background-image: ${cssJs.asCSSUrl(iconPath.light || iconPath.dark)}`);
+    domStylesheetsJs.createCSSRule(`.vs-dark .${iconClass}, .hc-black .${iconClass}`, `background-image: ${cssJs.asCSSUrl(iconPath.dark)}`);
+    iconPathToClass[key] = iconClass;
+  }
+  return iconClass;
+}
+__name(getIconClass, "getIconClass");
+function quickInputButtonToAction(button, id, run) {
+  let cssClasses = button.iconClass || getIconClass(button.iconPath);
+  if (button.alwaysVisible) {
+    cssClasses = cssClasses ? `${cssClasses} always-visible` : "always-visible";
+  }
+  return {
+    id,
+    label: "",
+    tooltip: button.tooltip || "",
+    class: cssClasses,
+    enabled: true,
+    run
+  };
+}
+__name(quickInputButtonToAction, "quickInputButtonToAction");
+function renderQuickInputDescription(description, container, actionHandler) {
+  dom.reset(container);
+  const parsed = parseLinkedText(description);
+  let tabIndex = 0;
+  for (const node of parsed.nodes) {
+    if (typeof node === "string") {
+      container.append(...renderLabelWithIcons(node));
+    } else {
+      let title = node.title;
+      if (!title && node.href.startsWith("command:")) {
+        title = localize("executeCommand", "Click to execute command '{0}'", node.href.substring("command:".length));
+      } else if (!title) {
+        title = node.href;
+      }
+      const anchor = dom.$("a", { href: node.href, title, tabIndex: tabIndex++ }, node.label);
+      anchor.style.textDecoration = "underline";
+      const handleOpen = /* @__PURE__ */ __name((e) => {
+        if (dom.isEventLike(e)) {
+          dom.EventHelper.stop(e, true);
+        }
+        actionHandler.callback(node.href);
+      }, "handleOpen");
+      const onClick = actionHandler.disposables.add(new DomEmitter(anchor, dom.EventType.CLICK)).event;
+      const onKeydown = actionHandler.disposables.add(new DomEmitter(anchor, dom.EventType.KEY_DOWN)).event;
+      const onSpaceOrEnter = Event.chain(onKeydown, ($) => $.filter((e) => {
+        const event = new StandardKeyboardEvent(e);
+        return event.equals(
+          10
+          /* KeyCode.Space */
+        ) || event.equals(
+          3
+          /* KeyCode.Enter */
+        );
+      }));
+      actionHandler.disposables.add(Gesture.addTarget(anchor));
+      const onTap = actionHandler.disposables.add(new DomEmitter(anchor, GestureEventType.Tap)).event;
+      Event.any(onClick, onTap, onSpaceOrEnter)(handleOpen, null, actionHandler.disposables);
+      container.appendChild(anchor);
+    }
+  }
+}
+__name(renderQuickInputDescription, "renderQuickInputDescription");
+export {
+  quickInputButtonToAction,
+  renderQuickInputDescription
+};
+//# sourceMappingURL=quickInputUtils.js.map

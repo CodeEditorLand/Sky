@@ -1,1 +1,61 @@
-import{$$b as a}from"../../../../base/common/arrays.js";import{$ud as r}from"../../../../base/common/lifecycle.js";import{$ZC as c}from"../../../common/core/characterClassifier.js";class f{constructor(t,i,s,o){this.a=new r,this.a.add(s.onDidSuggest(h=>{h.completionModel.items.length===0&&this.reset()})),this.a.add(s.onDidCancel(h=>{this.reset()})),this.a.add(i.onDidShow(()=>this.c(i.getFocusedItem()))),this.a.add(i.onDidFocus(this.c,this)),this.a.add(i.onDidHide(this.reset,this)),this.a.add(t.onWillType(h=>{if(this.b&&!i.isFrozen()&&s.state!==0){const e=h.charCodeAt(h.length-1);this.b.acceptCharacters.has(e)&&t.getOption(0)&&o(this.b.item)}}))}c(t){if(!t||!a(t.item.completion.commitCharacters)){this.reset();return}if(this.b&&this.b.item.item===t.item)return;const i=new c;for(const s of t.item.completion.commitCharacters)s.length>0&&i.add(s.charCodeAt(0));this.b={acceptCharacters:i,item:t}}reset(){this.b=void 0}dispose(){this.a.dispose()}}export{f as $dlb};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { isNonEmptyArray } from "../../../../base/common/arrays.js";
+import { DisposableStore } from "../../../../base/common/lifecycle.js";
+import { CharacterSet } from "../../../common/core/characterClassifier.js";
+class CommitCharacterController {
+  static {
+    __name(this, "CommitCharacterController");
+  }
+  constructor(editor, widget, model, accept) {
+    this._disposables = new DisposableStore();
+    this._disposables.add(model.onDidSuggest((e) => {
+      if (e.completionModel.items.length === 0) {
+        this.reset();
+      }
+    }));
+    this._disposables.add(model.onDidCancel((e) => {
+      this.reset();
+    }));
+    this._disposables.add(widget.onDidShow(() => this._onItem(widget.getFocusedItem())));
+    this._disposables.add(widget.onDidFocus(this._onItem, this));
+    this._disposables.add(widget.onDidHide(this.reset, this));
+    this._disposables.add(editor.onWillType((text) => {
+      if (this._active && !widget.isFrozen() && model.state !== 0) {
+        const ch = text.charCodeAt(text.length - 1);
+        if (this._active.acceptCharacters.has(ch) && editor.getOption(
+          0
+          /* EditorOption.acceptSuggestionOnCommitCharacter */
+        )) {
+          accept(this._active.item);
+        }
+      }
+    }));
+  }
+  _onItem(selected) {
+    if (!selected || !isNonEmptyArray(selected.item.completion.commitCharacters)) {
+      this.reset();
+      return;
+    }
+    if (this._active && this._active.item.item === selected.item) {
+      return;
+    }
+    const acceptCharacters = new CharacterSet();
+    for (const ch of selected.item.completion.commitCharacters) {
+      if (ch.length > 0) {
+        acceptCharacters.add(ch.charCodeAt(0));
+      }
+    }
+    this._active = { acceptCharacters, item: selected };
+  }
+  reset() {
+    this._active = void 0;
+  }
+  dispose() {
+    this._disposables.dispose();
+  }
+}
+export {
+  CommitCharacterController
+};
+//# sourceMappingURL=suggestCommitCharacters.js.map

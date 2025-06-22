@@ -1,1 +1,45 @@
-import{$vd as c}from"../../../base/common/lifecycle.js";import{$k3b as d}from"../../contrib/chat/browser/chatStatusItemService.js";import{$Kyb as h}from"../../services/extensions/common/extHostCustomers.js";import{$oY as m}from"../common/extHost.protocol.js";var f=function(t,e,o,r){var s,c=arguments.length,n=c<3?e:null===r?r=Object.getOwnPropertyDescriptor(e,o):r;if("object"==typeof Reflect&&"function"==typeof Reflect.decorate)n=Reflect.decorate(t,e,o,r);else for(var i=t.length-1;i>=0;i--)(s=t[i])&&(n=(c<3?s(n):c>3?s(e,o,n):s(e,o))||n);return c>3&&n&&Object.defineProperty(e,o,n),n},p=function(t,e){return function(o,r){e(o,r,t)}};let s=class extends c{constructor(t,e){super(),this.a=e}$setEntry(t,e){this.a.setOrUpdateEntry({id:t,label:e.title,description:e.description,detail:e.detail})}$disposeEntry(t){this.a.deleteEntry(t)}};s=f([h(m.MainThreadChatStatus),p(1,d)],s);export{s as $l3b};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { Disposable } from "../../../base/common/lifecycle.js";
+import { IChatStatusItemService } from "../../contrib/chat/browser/chatStatusItemService.js";
+import { extHostNamedCustomer } from "../../services/extensions/common/extHostCustomers.js";
+import { MainContext } from "../common/extHost.protocol.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+let MainThreadChatStatus = class MainThreadChatStatus2 extends Disposable {
+  static {
+    __name(this, "MainThreadChatStatus");
+  }
+  constructor(_extHostContext, _chatStatusItemService) {
+    super();
+    this._chatStatusItemService = _chatStatusItemService;
+  }
+  $setEntry(id, entry) {
+    this._chatStatusItemService.setOrUpdateEntry({
+      id,
+      label: entry.title,
+      description: entry.description,
+      detail: entry.detail
+    });
+  }
+  $disposeEntry(id) {
+    this._chatStatusItemService.deleteEntry(id);
+  }
+};
+MainThreadChatStatus = __decorate([
+  extHostNamedCustomer(MainContext.MainThreadChatStatus),
+  __param(1, IChatStatusItemService)
+], MainThreadChatStatus);
+export {
+  MainThreadChatStatus
+};
+//# sourceMappingURL=mainThreadChatStatus.js.map

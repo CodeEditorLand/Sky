@@ -1,3 +1,818 @@
-import{$J5 as X,$C6 as J}from"../../../../base/browser/dom.js";import{$$7 as Y}from"../../../../base/browser/event.js";import{$G5 as E}from"../../../../base/browser/keyboardEvent.js";import{$Yh as P}from"../../../../base/common/async.js";import{CancellationToken as Q,$pf as Z}from"../../../../base/common/cancellation.js";import{$tm as D}from"../../../../base/common/decorators.js";import{$tb as O,$lb as tt}from"../../../../base/common/errors.js";import{Event as et}from"../../../../base/common/event.js";import{$3u as it}from"../../../../base/common/json.js";import{$iv as T}from"../../../../base/common/jsonEdit.js";import{$ud as st,$wd as W,$qd as nt,$td as ot}from"../../../../base/common/lifecycle.js";import{$nw as rt}from"../../../../base/common/numbers.js";import{$$ as at}from"../../../../base/common/path.js";import*as R from"../../../../base/common/platform.js";import*as N from"../../../../base/common/strings.js";import{$0c as A,$8c as K}from"../../../../base/common/types.js";import{URI as lt}from"../../../../base/common/uri.js";import{CoreEditingCommands as ht}from"../../../../editor/browser/coreCommands.js";import{$SC as ct}from"../../../../editor/common/core/editOperation.js";import{$bC as ut}from"../../../../editor/common/core/position.js";import{$cC as M}from"../../../../editor/common/core/range.js";import{$pC as _}from"../../../../editor/common/core/wordHelper.js";import{InjectedTextCursorStops as U}from"../../../../editor/common/model.js";import{$Uib as ft}from"../../../../editor/common/services/languageFeatureDebounce.js";import{$sT as H}from"../../../../editor/common/services/languageFeatures.js";import{$gF as dt}from"../../../../editor/common/services/model.js";import{$enb as j}from"../../../../editor/contrib/hover/browser/contentHoverController.js";import*as F from"../../../../nls.js";import{$Zn as pt,$Yn as gt}from"../../../../platform/commands/common/commands.js";import{$El as mt}from"../../../../platform/configuration/common/configuration.js";import{$Vn as wt}from"../../../../platform/contextkey/common/contextkey.js";import{$mj as Ct}from"../../../../platform/instantiation/common/instantiation.js";import{$op as G}from"../../../../platform/theme/common/colorRegistry.js";import{$yo as vt}from"../../../../platform/uriIdentity/common/uriIdentity.js";import{$vac as k}from"./debugHover.js";import{$wac as xt}from"./exceptionWidget.js";import{$5V as bt,$hW as yt}from"../common/debug.js";import{$RT as Lt}from"../common/debugModel.js";import{$8$ as $t}from"../../../services/host/browser/host.js";import{$Uj as B}from"../../../../base/common/htmlContent.js";var S=function(l,t,e,s){var i=arguments.length,o=i<3?t:s===null?s=Object.getOwnPropertyDescriptor(t,e):s,n;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")o=Reflect.decorate(l,t,e,s);else for(var r=l.length-1;r>=0;r--)(n=l[r])&&(o=(i<3?n(o):i>3?n(t,e,o):n(t,e))||o);return i>3&&o&&Object.defineProperty(t,e,o),o},y=function(l,t){return function(e,s){t(e,s,l)}};const Mt=100,It=150,Vt=500,z=200,we=G("editor.inlineValuesForeground",{dark:"#ffffff80",light:"#00000080",hcDark:"#ffffff80",hcLight:"#00000080"},F.localize(6527,null)),Ce=G("editor.inlineValuesBackground","#ffc80033",F.localize(6528,null));class Nt{constructor(t,e){this.column=t,this.text=e}}function St(l){if(l.includes(",")&&l.includes("=")){const s=(i=>{const o=[];let n=0,r=0;for(let h=0;h<i.length;h++)if(i[h]==="="){if(n===0){n++;continue}const u=i.lastIndexOf(",",h);u!==-1&&u>=r&&(o.push(u),r=u+1),n++}const c=[];let a=0;for(const h of o)c.push(i.substring(a,h).trim()),a=h+1;return a<i.length&&c.push(i.substring(a).trim()),c})(l).map(i=>{const o=i.indexOf("=");if(o!==-1){const n=" ".repeat(o+2),[r,...c]=i.split(/\r?\n/);return[r,...c.map(a=>n+a)].join(`
-`)}return i});return new B().appendCodeblock("",s.join(`,
-`))}return new B().appendCodeblock("",l)}function q(l,t,e,s=1073741824,i=It){const o=t;return t.length>i&&(t=t.substring(0,i)+"..."),[{range:{startLineNumber:l,endLineNumber:l,startColumn:s,endColumn:s},options:{description:`${e}-inline-value-decoration-spacer`,after:{content:N.$Bg,cursorStops:U.None},showIfCollapsed:!0}},{range:{startLineNumber:l,endLineNumber:l,startColumn:s,endColumn:s},options:{description:`${e}-inline-value-decoration`,after:{content:Pt(t),inlineClassName:`${e}-inline-value`,inlineClassNameAffectsLetterSpacing:!0,cursorStops:U.None},showIfCollapsed:!0,hoverMessage:St(o)}}]}function Pt(l){return l.replace(/[ \t\n]/g,N.$Bg)}function kt(l,t,e,s){const i=new Map;for(const n of l)if(i.set(n.name,n.value),i.size>=Mt)break;const o=new Map;return i.forEach((n,r)=>{const c=s.get(r);if(c)for(const a of c)t.some(h=>a>=h.startLineNumber&&a<=h.endLineNumber)&&(o.has(a)||o.set(a,[]),o.get(a).indexOf(r)===-1&&o.get(a).push(r))}),[...o].map(([n,r])=>({line:n,variables:r.sort((c,a)=>{const h=e.getLineContent(n);return h.indexOf(c)-h.indexOf(a)}).map(c=>({name:c,value:i.get(c)}))}))}function Dt(l,t,e){if(l.getLineLength(t)>Vt)return;const i=l.getLineContent(t);l.tokenization.forceTokenization(t);const o=l.tokenization.getLineTokens(t);for(let n=0,r=o.getCount();n<r;n++)if(o.getStandardTokenType(n)===0){_.lastIndex=0;const a=o.getStartOffset(n),h=o.getEndOffset(n),u=i.substring(a,h),v=_.exec(u);if(v){const b=v[0];e.has(b)||e.set(b,[]),e.get(b).push(t)}}}let V=class{constructor(t,e,s,i,o,n,r,c,a,h){this.x=t,this.y=e,this.z=s,this.A=i,this.B=o,this.C=n,this.D=r,this.E=a,this.g=!1,this.j=!1,this.m=new W,this.o=!1,this.q=new st,this.w=new W,this.p=this.x.createDecorationsCollection(),this.u=h.for(a.inlineValuesProvider,"InlineValues",{min:z}),this.d=this.z.createInstance(k,this.x),this.c=[this.w,this.m,this.q],this.F(),this.h=bt.bindTo(c),this.T()}F(){this.c.push(this.y.getViewModel().onDidFocusStackFrame(t=>this.M(t.stackFrame))),this.c.push(this.x.onMouseDown(t=>this.Q(t))),this.c.push(this.x.onMouseUp(()=>this.g=!1)),this.c.push(this.x.onMouseMove(t=>this.R(t))),this.c.push(this.x.onMouseLeave(t=>{const e=this.d.getDomNode();if(!e)return;const s=e.getBoundingClientRect();(t.event.posx<s.left||t.event.posx>s.right||t.event.posy<s.top||t.event.posy>s.bottom)&&this.P()})),this.c.push(this.x.onKeyDown(t=>this.S(t))),this.c.push(this.x.onDidChangeModelContent(()=>{this.G=void 0,this.W.schedule()})),this.c.push(this.y.getViewModel().onWillUpdateViews(()=>this.W.schedule())),this.c.push(this.y.getViewModel().onDidEvaluateLazyExpression(()=>this.W.schedule())),this.c.push(this.x.onDidChangeModel(async()=>{this.I(),this.T(),this.P(),this.G=void 0;const t=this.y.getViewModel().focusedStackFrame;await this.X(t)})),this.c.push(this.x.onDidScrollChange(()=>{this.P();const t=this.x.getModel();t&&this.E.inlineValuesProvider.has(t)&&this.W.schedule()})),this.c.push(this.B.onDidChangeConfiguration(t=>{t.affectsConfiguration("editor.hover")&&this.H()})),this.c.push(this.y.onDidChangeState(t=>{t!==2&&this.T()})),this.H()}H(){const t=this.x.getModel();t&&(this.t=this.B.getValue("editor.hover",{resource:t.uri,overrideIdentifier:t.getLanguageId()}))}I(){const t=this.y.getViewModel().focusedStackFrame,e=this.x.getModel();e&&this.J(e,t)}J(t,e){if(!e||!this.D.extUri.isEqual(t.uri,e.source.uri)){this.m.clear();return}const s=this.x.getContainerDomNode().ownerDocument;this.m.value=X(s,"keydown",i=>{if(new E(i).keyCode===6){this.o=!0;const n=this.d.isVisible();this.d.hide(),this.w.clear(),n&&this.f&&this.L(this.f.position,!1);const r=new Y(s,"keyup"),c=et.any(this.C.onDidChangeFocus,r.event)(a=>{let h;J(a)&&(h=new E(a)),(!h||h.keyCode===6)&&(this.o=!1,this.K(),c.dispose(),r.dispose())})}})}async showHover(t,e,s){this.K();const i=this.y.getViewModel().focusedStackFrame,o=this.x.getModel();i&&o&&this.D.extUri.isEqual(i.source.uri,o.uri)?await this.d.showAt(t,e,s)===1&&this.L(t,e):this.L(t,e)}K(){if(this.w.value||this.t?.enabled===!1)return;this.x.getContribution(j.ID)?.hideContentHover(),this.x.updateOptions({hover:{enabled:!1}}),this.w.value={dispose:()=>{this.x.updateOptions({hover:{enabled:this.t?.enabled??!0}})}}}L(t,e){const s=this.x.getContribution(j.ID),i=new M(t.lineNumber,t.column,t.lineNumber,t.column);this.w.clear(),s?.showContentHover(i,1,0,e)}async M(t){const e=this.x.getModel();e&&(this.J(e,t),t&&this.D.extUri.isEqual(t.source.uri,e.uri)?await this.T():this.P()),await this.X(t)}get N(){const t=this.t?.delay||0,e=rt(2-(t-300)/600,1,2);return t*e}get O(){const t=new P(()=>{this.f&&!this.o&&this.showHover(this.f.position,!1,this.f.event)},this.N);return this.c.push(t),t}P(){this.d.willBeVisible()&&this.d.hide(),this.O.cancel(),this.w.clear()}Q(t){this.g=!0,!(t.target.type===9&&t.target.detail===k.ID)&&this.P()}R(t){if(this.y.state!==2)return;const e=t.target,s=R.$n?"metaKey":"ctrlKey";this.o||(e.type===2?(this.w.clear(),this.j=!0):this.j&&(this.j=!1,this.H())),!((e.type===9&&e.detail===k.ID||this.d.isInSafeTriangle(t.event.posx,t.event.posy))&&((this.t?.sticky??!0)||this.d.isShowingComplexValue||t.event[s]))&&(e.type===6?e.position&&!ut.equals(e.position,this.f?.position||null)&&!this.d.isInSafeTriangle(t.event.posx,t.event.posy)&&(this.f={position:e.position,event:t.event},this.K(),this.O.schedule(this.N)):this.g||this.P())}S(t){const e=R.$n?57:5;t.keyCode!==e&&t.keyCode!==6&&this.P()}async T(){const t=this.x.getModel(),e=this.y.getViewModel().focusedStackFrame,s=e?e.thread.getCallStack():null;if(!t||!e||!s||s.length===0){this.closeExceptionWidget();return}const i=s.find(n=>!!(n&&n.source&&n.source.available&&n.source.presentationHint!=="deemphasize"));if(!i||i!==e){this.closeExceptionWidget();return}const o=this.D.extUri.isEqual(i.source.uri,t.uri);if(this.k&&!o)this.closeExceptionWidget();else if(o){const n=await e.thread.exceptionInfo;n&&this.U(n,this.y.getViewModel().focusedSession,i.range.startLineNumber,i.range.startColumn)}}U(t,e,s,i){this.k&&this.k.dispose(),this.k=this.z.createInstance(xt,this.x,t,e),this.k.show({lineNumber:s,column:i},0),this.k.focus(),this.x.revealRangeInCenter({startLineNumber:s,startColumn:i,endLineNumber:s,endColumn:i}),this.h.set(!0)}closeExceptionWidget(){if(this.k){const t=this.k.hasFocus();this.k.dispose(),this.k=void 0,this.h.set(!1),t&&this.x.focus()}}async addLaunchConfiguration(){const t=this.x.getModel();if(!t)return;let e,s;const i=()=>{let n=0;it(t.getValue(),{onObjectProperty:r=>{s=r},onArrayBegin:r=>{s==="configurations"&&n===0&&(e=t.getPositionAt(r+1)),n++},onArrayEnd:()=>{n--}})};if(i(),!e){const{tabSize:n,insertSpaces:r}=t.getOptions(),c=t.getEOL(),a=at(t.uri.fsPath)==="launch.json"?T(t.getValue(),["configurations"],[],{tabSize:n,insertSpaces:r,eol:c})[0]:T(t.getValue(),["launch"],{configurations:[]},{tabSize:n,insertSpaces:r,eol:c})[0],h=t.getPositionAt(a.offset),u=h.lineNumber,v=new M(u,h.column,u,t.getLineMaxColumn(u));t.pushEditOperations(null,[ct.replace(v,a.content)],()=>null),i()}if(!e)return;this.x.focus(),await(n=>(t.getLineLastNonWhitespaceColumn(n.lineNumber)>n.column&&(this.x.setPosition(n),ht.LineBreakInsert.runEditorCommand(null,this.x,null)),this.x.setPosition(n),this.A.executeCommand("editor.action.insertLineAfter")))(e),await this.A.executeCommand("editor.action.triggerSuggest")}get V(){return new P(()=>{this.q.clear(),this.p.clear()},100)}get W(){const t=this.x.getModel();return new P(async()=>await this.X(this.y.getViewModel().focusedStackFrame),t?this.u.get(t):z)}async X(t){const e="{0} = {1}",s=", ",i=this.x.getModel(),o=this.B.getValue("debug").inlineValues;if(!(o===!0||o==="on"||o==="auto"&&i&&this.E.inlineValuesProvider.has(i))||!i||!t||i.uri.toString()!==t.source.uri.toString()){this.V.isScheduled()||this.V.schedule();return}this.V.cancel(),this.q.clear();const r=this.x.getVisibleRangesPlusViewportAboveBelow();let c;const a=new Z;if(this.q.add(ot(()=>a.dispose(!0))),this.E.inlineValuesProvider.has(i)){const u=async(w,x)=>{const m=await t.getMostSpecificScopes(t.range),f=x?w:w.toLowerCase();for(const g of m){const d=(await g.getChildren()).find($=>x?$.name===f:$.name.toLowerCase()===f);if(d)return d.value}},v={frameId:t.frameId,stoppedLocation:new M(t.range.startLineNumber,t.range.startColumn+1,t.range.endLineNumber,t.range.endColumn+1)},b=this.E.inlineValuesProvider.ordered(i).reverse();c=[];const C=new Map,I=b.flatMap(w=>r.map(x=>Promise.resolve(w.provideInlineValues(i,x,v,a.token)).then(async m=>{if(m)for(const f of m){let g;switch(f.type){case"text":g=f.text;break;case"variable":{let p=f.variableName;p||(p=i.getLineContent(f.range.startLineNumber).substring(f.range.startColumn-1,f.range.endColumn-1));const d=await u(p,f.caseSensitiveLookup);d&&(g=N.$zf(e,p,d));break}case"expression":{let p=f.expression;if(p||(p=i.getLineContent(f.range.startLineNumber).substring(f.range.startColumn-1,f.range.endColumn-1)),p){const d=new Lt(p);await d.evaluate(t.thread.session,t,"watch",!0),d.available&&(g=N.$zf(e,p,d.value))}break}}if(g){const p=f.range.startLineNumber;let d=C.get(p);d||(d=[],C.set(p,d)),d.some($=>$.text===g)||d.push(new Nt(f.range.startColumn,g))}}},m=>{tt(m)}))),L=Date.now();await Promise.all(I),this.W.delay=this.u.update(i,Date.now()-L),C.forEach((w,x)=>{if(w.length>0){w=w.sort((d,$)=>d.column-$.column);const m=w.map(d=>d.text).join(s),f=this.x.getLayoutInfo().width,g=this.x.getOption(55),p=Math.floor((f-50)/g.typicalHalfwidthCharacterWidth);c.push(...q(x,m,"debug",void 0,p))}})}else{const u=await t.getMostSpecificScopes(t.range),v=await Promise.all(u.map(async C=>({scope:C,variables:await C.getChildren()}))),b=new Map;for(const{scope:C,variables:I}of v){let L=new M(0,0,t.range.startLineNumber,t.range.startColumn);C.range&&(L=L.setStartPosition(C.range.startLineNumber,C.range.startColumn));const w=r.map(m=>m.intersectRanges(L)).filter(K);this.G??=new Et(i);for(const m of w)this.G.ensureRangePopulated(m);const x=kt(I,w,i,this.G.value);for(const{line:m,variables:f}of x){let g=b.get(m);g||(g=new Map,b.set(m,g));for(const{name:p,value:d}of f)g.has(p)||g.set(p,d)}}c=[...b.entries()].flatMap(([C,I])=>{const L=[...I].map(([f,g])=>`${f} = ${g}`).join(", "),w=this.x.getLayoutInfo().width,x=this.x.getOption(55),m=Math.floor((w-50)/x.typicalHalfwidthCharacterWidth);return q(C,L,"debug",void 0,m)})}if(a.token.isCancellationRequested)return;let h;if(this.x.getOption(140)!=="off"){const u=this.x.getPosition();u&&this.x.getVisibleRanges().some(v=>v.containsPosition(u))&&(h={position:u,top:this.x.getTopForPosition(u.lineNumber,u.column)})}if(this.p.set(c),h){const u=this.x.getTopForPosition(h.position.lineNumber,h.position.column);this.x.setScrollTop(this.x.getScrollTop()-(h.top-u),1)}}dispose(){this.d&&this.d.dispose(),this.l&&this.l.dispose(),this.c=nt(this.c)}};S([D],V.prototype,"O",null);S([D],V.prototype,"V",null);S([D],V.prototype,"W",null);V=S([y(1,yt),y(2,Ct),y(3,gt),y(4,mt),y(5,$t),y(6,vt),y(7,wt),y(8,H),y(9,ft)],V);class Et{constructor(t){this.d=t,this.value=new Map,this.c=new Uint8Array(Math.ceil(t.getLineCount()/8))}ensureRangePopulated(t){for(let e=t.startLineNumber;e<=t.endLineNumber;e++){const s=e>>3,i=1<<(e&7);this.c[s]&i||(Dt(this.d,e,this.value),this.c[s]|=i)}}}pt.registerCommand("_executeInlineValueProvider",async(l,t,e,s)=>{if(A(lt.isUri(t)),A(M.isIRange(e)),!s||typeof s.frameId!="number"||!M.isIRange(s.stoppedLocation))throw O("context");const i=l.get(dt).getModel(t);if(!i)throw O("uri");const o=M.lift(e),{inlineValuesProvider:n}=l.get(H),r=n.ordered(i);return(await Promise.all(r.map(a=>a.provideInlineValues(i,o,s,Q.None)))).flat().filter(K)});export{q as $Aac,V as $Bac,we as $xac,Ce as $yac,St as $zac};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { addDisposableListener, isKeyboardEvent } from "../../../../base/browser/dom.js";
+import { DomEmitter } from "../../../../base/browser/event.js";
+import { StandardKeyboardEvent } from "../../../../base/browser/keyboardEvent.js";
+import { RunOnceScheduler } from "../../../../base/common/async.js";
+import { CancellationToken, CancellationTokenSource } from "../../../../base/common/cancellation.js";
+import { memoize } from "../../../../base/common/decorators.js";
+import { illegalArgument, onUnexpectedExternalError } from "../../../../base/common/errors.js";
+import { Event } from "../../../../base/common/event.js";
+import { visit } from "../../../../base/common/json.js";
+import { setProperty } from "../../../../base/common/jsonEdit.js";
+import { DisposableStore, MutableDisposable, dispose, toDisposable } from "../../../../base/common/lifecycle.js";
+import { clamp } from "../../../../base/common/numbers.js";
+import { basename } from "../../../../base/common/path.js";
+import * as env from "../../../../base/common/platform.js";
+import * as strings from "../../../../base/common/strings.js";
+import { assertType, isDefined } from "../../../../base/common/types.js";
+import { URI } from "../../../../base/common/uri.js";
+import { CoreEditingCommands } from "../../../../editor/browser/coreCommands.js";
+import { EditOperation } from "../../../../editor/common/core/editOperation.js";
+import { Position } from "../../../../editor/common/core/position.js";
+import { Range } from "../../../../editor/common/core/range.js";
+import { DEFAULT_WORD_REGEXP } from "../../../../editor/common/core/wordHelper.js";
+import { InjectedTextCursorStops } from "../../../../editor/common/model.js";
+import { ILanguageFeatureDebounceService } from "../../../../editor/common/services/languageFeatureDebounce.js";
+import { ILanguageFeaturesService } from "../../../../editor/common/services/languageFeatures.js";
+import { IModelService } from "../../../../editor/common/services/model.js";
+import { ContentHoverController } from "../../../../editor/contrib/hover/browser/contentHoverController.js";
+import * as nls from "../../../../nls.js";
+import { CommandsRegistry, ICommandService } from "../../../../platform/commands/common/commands.js";
+import { IConfigurationService } from "../../../../platform/configuration/common/configuration.js";
+import { IContextKeyService } from "../../../../platform/contextkey/common/contextkey.js";
+import { IInstantiationService } from "../../../../platform/instantiation/common/instantiation.js";
+import { registerColor } from "../../../../platform/theme/common/colorRegistry.js";
+import { IUriIdentityService } from "../../../../platform/uriIdentity/common/uriIdentity.js";
+import { DebugHoverWidget } from "./debugHover.js";
+import { ExceptionWidget } from "./exceptionWidget.js";
+import { CONTEXT_EXCEPTION_WIDGET_VISIBLE, IDebugService } from "../common/debug.js";
+import { Expression } from "../common/debugModel.js";
+import { IHostService } from "../../../services/host/browser/host.js";
+import { MarkdownString } from "../../../../base/common/htmlContent.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+const MAX_NUM_INLINE_VALUES = 100;
+const MAX_INLINE_DECORATOR_LENGTH = 150;
+const MAX_TOKENIZATION_LINE_LEN = 500;
+const DEAFULT_INLINE_DEBOUNCE_DELAY = 200;
+const debugInlineForeground = registerColor("editor.inlineValuesForeground", {
+  dark: "#ffffff80",
+  light: "#00000080",
+  hcDark: "#ffffff80",
+  hcLight: "#00000080"
+}, nls.localize("editor.inlineValuesForeground", "Color for the debug inline value text."));
+const debugInlineBackground = registerColor("editor.inlineValuesBackground", "#ffc80033", nls.localize("editor.inlineValuesBackground", "Color for the debug inline value background."));
+class InlineSegment {
+  static {
+    __name(this, "InlineSegment");
+  }
+  constructor(column, text) {
+    this.column = column;
+    this.text = text;
+  }
+}
+function formatHoverContent(contentText) {
+  if (contentText.includes(",") && contentText.includes("=")) {
+    const customSplit = /* @__PURE__ */ __name((text) => {
+      const splits = [];
+      let equalsFound = 0;
+      let start = 0;
+      for (let i = 0; i < text.length; i++) {
+        if (text[i] === "=") {
+          if (equalsFound === 0) {
+            equalsFound++;
+            continue;
+          }
+          const commaIndex = text.lastIndexOf(",", i);
+          if (commaIndex !== -1 && commaIndex >= start) {
+            splits.push(commaIndex);
+            start = commaIndex + 1;
+          }
+          equalsFound++;
+        }
+      }
+      const result = [];
+      let s = 0;
+      for (const index of splits) {
+        result.push(text.substring(s, index).trim());
+        s = index + 1;
+      }
+      if (s < text.length) {
+        result.push(text.substring(s).trim());
+      }
+      return result;
+    }, "customSplit");
+    const pairs = customSplit(contentText);
+    const formattedPairs = pairs.map((pair) => {
+      const equalsIndex = pair.indexOf("=");
+      if (equalsIndex !== -1) {
+        const indent = " ".repeat(equalsIndex + 2);
+        const [firstLine, ...restLines] = pair.split(/\r?\n/);
+        return [firstLine, ...restLines.map((line) => indent + line)].join("\n");
+      }
+      return pair;
+    });
+    return new MarkdownString().appendCodeblock("", formattedPairs.join(",\n"));
+  }
+  return new MarkdownString().appendCodeblock("", contentText);
+}
+__name(formatHoverContent, "formatHoverContent");
+function createInlineValueDecoration(lineNumber, contentText, classNamePrefix, column = 1073741824, viewportMaxCol = MAX_INLINE_DECORATOR_LENGTH) {
+  const rawText = contentText;
+  if (contentText.length > viewportMaxCol) {
+    contentText = contentText.substring(0, viewportMaxCol) + "...";
+  }
+  return [
+    {
+      range: {
+        startLineNumber: lineNumber,
+        endLineNumber: lineNumber,
+        startColumn: column,
+        endColumn: column
+      },
+      options: {
+        description: `${classNamePrefix}-inline-value-decoration-spacer`,
+        after: {
+          content: strings.noBreakWhitespace,
+          cursorStops: InjectedTextCursorStops.None
+        },
+        showIfCollapsed: true
+      }
+    },
+    {
+      range: {
+        startLineNumber: lineNumber,
+        endLineNumber: lineNumber,
+        startColumn: column,
+        endColumn: column
+      },
+      options: {
+        description: `${classNamePrefix}-inline-value-decoration`,
+        after: {
+          content: replaceWsWithNoBreakWs(contentText),
+          inlineClassName: `${classNamePrefix}-inline-value`,
+          inlineClassNameAffectsLetterSpacing: true,
+          cursorStops: InjectedTextCursorStops.None
+        },
+        showIfCollapsed: true,
+        hoverMessage: formatHoverContent(rawText)
+      }
+    }
+  ];
+}
+__name(createInlineValueDecoration, "createInlineValueDecoration");
+function replaceWsWithNoBreakWs(str) {
+  return str.replace(/[ \t\n]/g, strings.noBreakWhitespace);
+}
+__name(replaceWsWithNoBreakWs, "replaceWsWithNoBreakWs");
+function createInlineValueDecorationsInsideRange(expressions, ranges, model, wordToLineNumbersMap) {
+  const nameValueMap = /* @__PURE__ */ new Map();
+  for (const expr of expressions) {
+    nameValueMap.set(expr.name, expr.value);
+    if (nameValueMap.size >= MAX_NUM_INLINE_VALUES) {
+      break;
+    }
+  }
+  const lineToNamesMap = /* @__PURE__ */ new Map();
+  nameValueMap.forEach((_value, name) => {
+    const lineNumbers = wordToLineNumbersMap.get(name);
+    if (lineNumbers) {
+      for (const lineNumber of lineNumbers) {
+        if (ranges.some((r) => lineNumber >= r.startLineNumber && lineNumber <= r.endLineNumber)) {
+          if (!lineToNamesMap.has(lineNumber)) {
+            lineToNamesMap.set(lineNumber, []);
+          }
+          if (lineToNamesMap.get(lineNumber).indexOf(name) === -1) {
+            lineToNamesMap.get(lineNumber).push(name);
+          }
+        }
+      }
+    }
+  });
+  return [...lineToNamesMap].map(([line, names]) => ({
+    line,
+    variables: names.sort((first, second) => {
+      const content = model.getLineContent(line);
+      return content.indexOf(first) - content.indexOf(second);
+    }).map((name) => ({ name, value: nameValueMap.get(name) }))
+  }));
+}
+__name(createInlineValueDecorationsInsideRange, "createInlineValueDecorationsInsideRange");
+function getWordToLineNumbersMap(model, lineNumber, result) {
+  const lineLength = model.getLineLength(lineNumber);
+  if (lineLength > MAX_TOKENIZATION_LINE_LEN) {
+    return;
+  }
+  const lineContent = model.getLineContent(lineNumber);
+  model.tokenization.forceTokenization(lineNumber);
+  const lineTokens = model.tokenization.getLineTokens(lineNumber);
+  for (let tokenIndex = 0, tokenCount = lineTokens.getCount(); tokenIndex < tokenCount; tokenIndex++) {
+    const tokenType = lineTokens.getStandardTokenType(tokenIndex);
+    if (tokenType === 0) {
+      DEFAULT_WORD_REGEXP.lastIndex = 0;
+      const tokenStartOffset = lineTokens.getStartOffset(tokenIndex);
+      const tokenEndOffset = lineTokens.getEndOffset(tokenIndex);
+      const tokenStr = lineContent.substring(tokenStartOffset, tokenEndOffset);
+      const wordMatch = DEFAULT_WORD_REGEXP.exec(tokenStr);
+      if (wordMatch) {
+        const word = wordMatch[0];
+        if (!result.has(word)) {
+          result.set(word, []);
+        }
+        result.get(word).push(lineNumber);
+      }
+    }
+  }
+}
+__name(getWordToLineNumbersMap, "getWordToLineNumbersMap");
+let DebugEditorContribution = class DebugEditorContribution2 {
+  static {
+    __name(this, "DebugEditorContribution");
+  }
+  constructor(editor, debugService, instantiationService, commandService, configurationService, hostService, uriIdentityService, contextKeyService, languageFeaturesService, featureDebounceService) {
+    this.editor = editor;
+    this.debugService = debugService;
+    this.instantiationService = instantiationService;
+    this.commandService = commandService;
+    this.configurationService = configurationService;
+    this.hostService = hostService;
+    this.uriIdentityService = uriIdentityService;
+    this.languageFeaturesService = languageFeaturesService;
+    this.mouseDown = false;
+    this.gutterIsHovered = false;
+    this.altListener = new MutableDisposable();
+    this.altPressed = false;
+    this.displayedStore = new DisposableStore();
+    this.defaultHoverLockout = new MutableDisposable();
+    this.oldDecorations = this.editor.createDecorationsCollection();
+    this.debounceInfo = featureDebounceService.for(languageFeaturesService.inlineValuesProvider, "InlineValues", { min: DEAFULT_INLINE_DEBOUNCE_DELAY });
+    this.hoverWidget = this.instantiationService.createInstance(DebugHoverWidget, this.editor);
+    this.toDispose = [this.defaultHoverLockout, this.altListener, this.displayedStore];
+    this.registerListeners();
+    this.exceptionWidgetVisible = CONTEXT_EXCEPTION_WIDGET_VISIBLE.bindTo(contextKeyService);
+    this.toggleExceptionWidget();
+  }
+  registerListeners() {
+    this.toDispose.push(this.debugService.getViewModel().onDidFocusStackFrame((e) => this.onFocusStackFrame(e.stackFrame)));
+    this.toDispose.push(this.editor.onMouseDown((e) => this.onEditorMouseDown(e)));
+    this.toDispose.push(this.editor.onMouseUp(() => this.mouseDown = false));
+    this.toDispose.push(this.editor.onMouseMove((e) => this.onEditorMouseMove(e)));
+    this.toDispose.push(this.editor.onMouseLeave((e) => {
+      const hoverDomNode = this.hoverWidget.getDomNode();
+      if (!hoverDomNode) {
+        return;
+      }
+      const rect = hoverDomNode.getBoundingClientRect();
+      if (e.event.posx < rect.left || e.event.posx > rect.right || e.event.posy < rect.top || e.event.posy > rect.bottom) {
+        this.hideHoverWidget();
+      }
+    }));
+    this.toDispose.push(this.editor.onKeyDown((e) => this.onKeyDown(e)));
+    this.toDispose.push(this.editor.onDidChangeModelContent(() => {
+      this._wordToLineNumbersMap = void 0;
+      this.updateInlineValuesScheduler.schedule();
+    }));
+    this.toDispose.push(this.debugService.getViewModel().onWillUpdateViews(() => this.updateInlineValuesScheduler.schedule()));
+    this.toDispose.push(this.debugService.getViewModel().onDidEvaluateLazyExpression(() => this.updateInlineValuesScheduler.schedule()));
+    this.toDispose.push(this.editor.onDidChangeModel(async () => {
+      this.addDocumentListeners();
+      this.toggleExceptionWidget();
+      this.hideHoverWidget();
+      this._wordToLineNumbersMap = void 0;
+      const stackFrame = this.debugService.getViewModel().focusedStackFrame;
+      await this.updateInlineValueDecorations(stackFrame);
+    }));
+    this.toDispose.push(this.editor.onDidScrollChange(() => {
+      this.hideHoverWidget();
+      const model = this.editor.getModel();
+      if (model && this.languageFeaturesService.inlineValuesProvider.has(model)) {
+        this.updateInlineValuesScheduler.schedule();
+      }
+    }));
+    this.toDispose.push(this.configurationService.onDidChangeConfiguration((e) => {
+      if (e.affectsConfiguration("editor.hover")) {
+        this.updateHoverConfiguration();
+      }
+    }));
+    this.toDispose.push(this.debugService.onDidChangeState((state) => {
+      if (state !== 2) {
+        this.toggleExceptionWidget();
+      }
+    }));
+    this.updateHoverConfiguration();
+  }
+  updateHoverConfiguration() {
+    const model = this.editor.getModel();
+    if (model) {
+      this.editorHoverOptions = this.configurationService.getValue("editor.hover", {
+        resource: model.uri,
+        overrideIdentifier: model.getLanguageId()
+      });
+    }
+  }
+  addDocumentListeners() {
+    const stackFrame = this.debugService.getViewModel().focusedStackFrame;
+    const model = this.editor.getModel();
+    if (model) {
+      this.applyDocumentListeners(model, stackFrame);
+    }
+  }
+  applyDocumentListeners(model, stackFrame) {
+    if (!stackFrame || !this.uriIdentityService.extUri.isEqual(model.uri, stackFrame.source.uri)) {
+      this.altListener.clear();
+      return;
+    }
+    const ownerDocument = this.editor.getContainerDomNode().ownerDocument;
+    this.altListener.value = addDisposableListener(ownerDocument, "keydown", (keydownEvent) => {
+      const standardKeyboardEvent = new StandardKeyboardEvent(keydownEvent);
+      if (standardKeyboardEvent.keyCode === 6) {
+        this.altPressed = true;
+        const debugHoverWasVisible = this.hoverWidget.isVisible();
+        this.hoverWidget.hide();
+        this.defaultHoverLockout.clear();
+        if (debugHoverWasVisible && this.hoverPosition) {
+          this.showEditorHover(this.hoverPosition.position, false);
+        }
+        const onKeyUp = new DomEmitter(ownerDocument, "keyup");
+        const listener = Event.any(this.hostService.onDidChangeFocus, onKeyUp.event)((keyupEvent) => {
+          let standardKeyboardEvent2 = void 0;
+          if (isKeyboardEvent(keyupEvent)) {
+            standardKeyboardEvent2 = new StandardKeyboardEvent(keyupEvent);
+          }
+          if (!standardKeyboardEvent2 || standardKeyboardEvent2.keyCode === 6) {
+            this.altPressed = false;
+            this.preventDefaultEditorHover();
+            listener.dispose();
+            onKeyUp.dispose();
+          }
+        });
+      }
+    });
+  }
+  async showHover(position, focus, mouseEvent) {
+    this.preventDefaultEditorHover();
+    const sf = this.debugService.getViewModel().focusedStackFrame;
+    const model = this.editor.getModel();
+    if (sf && model && this.uriIdentityService.extUri.isEqual(sf.source.uri, model.uri)) {
+      const result = await this.hoverWidget.showAt(position, focus, mouseEvent);
+      if (result === 1) {
+        this.showEditorHover(position, focus);
+      }
+    } else {
+      this.showEditorHover(position, focus);
+    }
+  }
+  preventDefaultEditorHover() {
+    if (this.defaultHoverLockout.value || this.editorHoverOptions?.enabled === false) {
+      return;
+    }
+    const hoverController = this.editor.getContribution(ContentHoverController.ID);
+    hoverController?.hideContentHover();
+    this.editor.updateOptions({ hover: { enabled: false } });
+    this.defaultHoverLockout.value = {
+      dispose: /* @__PURE__ */ __name(() => {
+        this.editor.updateOptions({
+          hover: { enabled: this.editorHoverOptions?.enabled ?? true }
+        });
+      }, "dispose")
+    };
+  }
+  showEditorHover(position, focus) {
+    const hoverController = this.editor.getContribution(ContentHoverController.ID);
+    const range = new Range(position.lineNumber, position.column, position.lineNumber, position.column);
+    this.defaultHoverLockout.clear();
+    hoverController?.showContentHover(range, 1, 0, focus);
+  }
+  async onFocusStackFrame(sf) {
+    const model = this.editor.getModel();
+    if (model) {
+      this.applyDocumentListeners(model, sf);
+      if (sf && this.uriIdentityService.extUri.isEqual(sf.source.uri, model.uri)) {
+        await this.toggleExceptionWidget();
+      } else {
+        this.hideHoverWidget();
+      }
+    }
+    await this.updateInlineValueDecorations(sf);
+  }
+  get hoverDelay() {
+    const baseDelay = this.editorHoverOptions?.delay || 0;
+    const delayFactor = clamp(2 - (baseDelay - 300) / 600, 1, 2);
+    return baseDelay * delayFactor;
+  }
+  get showHoverScheduler() {
+    const scheduler = new RunOnceScheduler(() => {
+      if (this.hoverPosition && !this.altPressed) {
+        this.showHover(this.hoverPosition.position, false, this.hoverPosition.event);
+      }
+    }, this.hoverDelay);
+    this.toDispose.push(scheduler);
+    return scheduler;
+  }
+  hideHoverWidget() {
+    if (this.hoverWidget.willBeVisible()) {
+      this.hoverWidget.hide();
+    }
+    this.showHoverScheduler.cancel();
+    this.defaultHoverLockout.clear();
+  }
+  // hover business
+  onEditorMouseDown(mouseEvent) {
+    this.mouseDown = true;
+    if (mouseEvent.target.type === 9 && mouseEvent.target.detail === DebugHoverWidget.ID) {
+      return;
+    }
+    this.hideHoverWidget();
+  }
+  onEditorMouseMove(mouseEvent) {
+    if (this.debugService.state !== 2) {
+      return;
+    }
+    const target = mouseEvent.target;
+    const stopKey = env.isMacintosh ? "metaKey" : "ctrlKey";
+    if (!this.altPressed) {
+      if (target.type === 2) {
+        this.defaultHoverLockout.clear();
+        this.gutterIsHovered = true;
+      } else if (this.gutterIsHovered) {
+        this.gutterIsHovered = false;
+        this.updateHoverConfiguration();
+      }
+    }
+    if (target.type === 9 && target.detail === DebugHoverWidget.ID || this.hoverWidget.isInSafeTriangle(mouseEvent.event.posx, mouseEvent.event.posy)) {
+      const sticky = this.editorHoverOptions?.sticky ?? true;
+      if (sticky || this.hoverWidget.isShowingComplexValue || mouseEvent.event[stopKey]) {
+        return;
+      }
+    }
+    if (target.type === 6) {
+      if (target.position && !Position.equals(target.position, this.hoverPosition?.position || null) && !this.hoverWidget.isInSafeTriangle(mouseEvent.event.posx, mouseEvent.event.posy)) {
+        this.hoverPosition = { position: target.position, event: mouseEvent.event };
+        this.preventDefaultEditorHover();
+        this.showHoverScheduler.schedule(this.hoverDelay);
+      }
+    } else if (!this.mouseDown) {
+      this.hideHoverWidget();
+    }
+  }
+  onKeyDown(e) {
+    const stopKey = env.isMacintosh ? 57 : 5;
+    if (e.keyCode !== stopKey && e.keyCode !== 6) {
+      this.hideHoverWidget();
+    }
+  }
+  // end hover business
+  // exception widget
+  async toggleExceptionWidget() {
+    const model = this.editor.getModel();
+    const focusedSf = this.debugService.getViewModel().focusedStackFrame;
+    const callStack = focusedSf ? focusedSf.thread.getCallStack() : null;
+    if (!model || !focusedSf || !callStack || callStack.length === 0) {
+      this.closeExceptionWidget();
+      return;
+    }
+    const exceptionSf = callStack.find((sf) => !!(sf && sf.source && sf.source.available && sf.source.presentationHint !== "deemphasize"));
+    if (!exceptionSf || exceptionSf !== focusedSf) {
+      this.closeExceptionWidget();
+      return;
+    }
+    const sameUri = this.uriIdentityService.extUri.isEqual(exceptionSf.source.uri, model.uri);
+    if (this.exceptionWidget && !sameUri) {
+      this.closeExceptionWidget();
+    } else if (sameUri) {
+      const exceptionInfo = await focusedSf.thread.exceptionInfo;
+      if (exceptionInfo) {
+        this.showExceptionWidget(exceptionInfo, this.debugService.getViewModel().focusedSession, exceptionSf.range.startLineNumber, exceptionSf.range.startColumn);
+      }
+    }
+  }
+  showExceptionWidget(exceptionInfo, debugSession, lineNumber, column) {
+    if (this.exceptionWidget) {
+      this.exceptionWidget.dispose();
+    }
+    this.exceptionWidget = this.instantiationService.createInstance(ExceptionWidget, this.editor, exceptionInfo, debugSession);
+    this.exceptionWidget.show({ lineNumber, column }, 0);
+    this.exceptionWidget.focus();
+    this.editor.revealRangeInCenter({
+      startLineNumber: lineNumber,
+      startColumn: column,
+      endLineNumber: lineNumber,
+      endColumn: column
+    });
+    this.exceptionWidgetVisible.set(true);
+  }
+  closeExceptionWidget() {
+    if (this.exceptionWidget) {
+      const shouldFocusEditor = this.exceptionWidget.hasFocus();
+      this.exceptionWidget.dispose();
+      this.exceptionWidget = void 0;
+      this.exceptionWidgetVisible.set(false);
+      if (shouldFocusEditor) {
+        this.editor.focus();
+      }
+    }
+  }
+  async addLaunchConfiguration() {
+    const model = this.editor.getModel();
+    if (!model) {
+      return;
+    }
+    let configurationsArrayPosition;
+    let lastProperty;
+    const getConfigurationPosition = /* @__PURE__ */ __name(() => {
+      let depthInArray = 0;
+      visit(model.getValue(), {
+        onObjectProperty: /* @__PURE__ */ __name((property) => {
+          lastProperty = property;
+        }, "onObjectProperty"),
+        onArrayBegin: /* @__PURE__ */ __name((offset) => {
+          if (lastProperty === "configurations" && depthInArray === 0) {
+            configurationsArrayPosition = model.getPositionAt(offset + 1);
+          }
+          depthInArray++;
+        }, "onArrayBegin"),
+        onArrayEnd: /* @__PURE__ */ __name(() => {
+          depthInArray--;
+        }, "onArrayEnd")
+      });
+    }, "getConfigurationPosition");
+    getConfigurationPosition();
+    if (!configurationsArrayPosition) {
+      const { tabSize, insertSpaces } = model.getOptions();
+      const eol = model.getEOL();
+      const edit = basename(model.uri.fsPath) === "launch.json" ? setProperty(model.getValue(), ["configurations"], [], { tabSize, insertSpaces, eol })[0] : setProperty(model.getValue(), ["launch"], { "configurations": [] }, { tabSize, insertSpaces, eol })[0];
+      const startPosition = model.getPositionAt(edit.offset);
+      const lineNumber = startPosition.lineNumber;
+      const range = new Range(lineNumber, startPosition.column, lineNumber, model.getLineMaxColumn(lineNumber));
+      model.pushEditOperations(null, [EditOperation.replace(range, edit.content)], () => null);
+      getConfigurationPosition();
+    }
+    if (!configurationsArrayPosition) {
+      return;
+    }
+    this.editor.focus();
+    const insertLine = /* @__PURE__ */ __name((position) => {
+      if (model.getLineLastNonWhitespaceColumn(position.lineNumber) > position.column) {
+        this.editor.setPosition(position);
+        CoreEditingCommands.LineBreakInsert.runEditorCommand(null, this.editor, null);
+      }
+      this.editor.setPosition(position);
+      return this.commandService.executeCommand("editor.action.insertLineAfter");
+    }, "insertLine");
+    await insertLine(configurationsArrayPosition);
+    await this.commandService.executeCommand("editor.action.triggerSuggest");
+  }
+  // Inline Decorations
+  get removeInlineValuesScheduler() {
+    return new RunOnceScheduler(() => {
+      this.displayedStore.clear();
+      this.oldDecorations.clear();
+    }, 100);
+  }
+  get updateInlineValuesScheduler() {
+    const model = this.editor.getModel();
+    return new RunOnceScheduler(async () => await this.updateInlineValueDecorations(this.debugService.getViewModel().focusedStackFrame), model ? this.debounceInfo.get(model) : DEAFULT_INLINE_DEBOUNCE_DELAY);
+  }
+  async updateInlineValueDecorations(stackFrame) {
+    const var_value_format = "{0} = {1}";
+    const separator = ", ";
+    const model = this.editor.getModel();
+    const inlineValuesSetting = this.configurationService.getValue("debug").inlineValues;
+    const inlineValuesTurnedOn = inlineValuesSetting === true || inlineValuesSetting === "on" || inlineValuesSetting === "auto" && model && this.languageFeaturesService.inlineValuesProvider.has(model);
+    if (!inlineValuesTurnedOn || !model || !stackFrame || model.uri.toString() !== stackFrame.source.uri.toString()) {
+      if (!this.removeInlineValuesScheduler.isScheduled()) {
+        this.removeInlineValuesScheduler.schedule();
+      }
+      return;
+    }
+    this.removeInlineValuesScheduler.cancel();
+    this.displayedStore.clear();
+    const viewRanges = this.editor.getVisibleRangesPlusViewportAboveBelow();
+    let allDecorations;
+    const cts = new CancellationTokenSource();
+    this.displayedStore.add(toDisposable(() => cts.dispose(true)));
+    if (this.languageFeaturesService.inlineValuesProvider.has(model)) {
+      const findVariable = /* @__PURE__ */ __name(async (_key, caseSensitiveLookup) => {
+        const scopes = await stackFrame.getMostSpecificScopes(stackFrame.range);
+        const key = caseSensitiveLookup ? _key : _key.toLowerCase();
+        for (const scope of scopes) {
+          const variables = await scope.getChildren();
+          const found = variables.find((v) => caseSensitiveLookup ? v.name === key : v.name.toLowerCase() === key);
+          if (found) {
+            return found.value;
+          }
+        }
+        return void 0;
+      }, "findVariable");
+      const ctx = {
+        frameId: stackFrame.frameId,
+        stoppedLocation: new Range(stackFrame.range.startLineNumber, stackFrame.range.startColumn + 1, stackFrame.range.endLineNumber, stackFrame.range.endColumn + 1)
+      };
+      const providers = this.languageFeaturesService.inlineValuesProvider.ordered(model).reverse();
+      allDecorations = [];
+      const lineDecorations = /* @__PURE__ */ new Map();
+      const promises = providers.flatMap((provider) => viewRanges.map((range) => Promise.resolve(provider.provideInlineValues(model, range, ctx, cts.token)).then(async (result) => {
+        if (result) {
+          for (const iv of result) {
+            let text = void 0;
+            switch (iv.type) {
+              case "text":
+                text = iv.text;
+                break;
+              case "variable": {
+                let va = iv.variableName;
+                if (!va) {
+                  const lineContent = model.getLineContent(iv.range.startLineNumber);
+                  va = lineContent.substring(iv.range.startColumn - 1, iv.range.endColumn - 1);
+                }
+                const value = await findVariable(va, iv.caseSensitiveLookup);
+                if (value) {
+                  text = strings.format(var_value_format, va, value);
+                }
+                break;
+              }
+              case "expression": {
+                let expr = iv.expression;
+                if (!expr) {
+                  const lineContent = model.getLineContent(iv.range.startLineNumber);
+                  expr = lineContent.substring(iv.range.startColumn - 1, iv.range.endColumn - 1);
+                }
+                if (expr) {
+                  const expression = new Expression(expr);
+                  await expression.evaluate(stackFrame.thread.session, stackFrame, "watch", true);
+                  if (expression.available) {
+                    text = strings.format(var_value_format, expr, expression.value);
+                  }
+                }
+                break;
+              }
+            }
+            if (text) {
+              const line = iv.range.startLineNumber;
+              let lineSegments = lineDecorations.get(line);
+              if (!lineSegments) {
+                lineSegments = [];
+                lineDecorations.set(line, lineSegments);
+              }
+              if (!lineSegments.some((iv2) => iv2.text === text)) {
+                lineSegments.push(new InlineSegment(iv.range.startColumn, text));
+              }
+            }
+          }
+        }
+      }, (err) => {
+        onUnexpectedExternalError(err);
+      })));
+      const startTime = Date.now();
+      await Promise.all(promises);
+      this.updateInlineValuesScheduler.delay = this.debounceInfo.update(model, Date.now() - startTime);
+      lineDecorations.forEach((segments, line) => {
+        if (segments.length > 0) {
+          segments = segments.sort((a, b) => a.column - b.column);
+          const text = segments.map((s) => s.text).join(separator);
+          const editorWidth = this.editor.getLayoutInfo().width;
+          const fontInfo = this.editor.getOption(
+            55
+            /* EditorOption.fontInfo */
+          );
+          const viewportMaxCol = Math.floor((editorWidth - 50) / fontInfo.typicalHalfwidthCharacterWidth);
+          allDecorations.push(...createInlineValueDecoration(line, text, "debug", void 0, viewportMaxCol));
+        }
+      });
+    } else {
+      const scopes = await stackFrame.getMostSpecificScopes(stackFrame.range);
+      const scopesWithVariables = await Promise.all(scopes.map(async (scope) => ({ scope, variables: await scope.getChildren() })));
+      const valuesPerLine = /* @__PURE__ */ new Map();
+      for (const { scope, variables } of scopesWithVariables) {
+        let scopeRange = new Range(0, 0, stackFrame.range.startLineNumber, stackFrame.range.startColumn);
+        if (scope.range) {
+          scopeRange = scopeRange.setStartPosition(scope.range.startLineNumber, scope.range.startColumn);
+        }
+        const ownRanges = viewRanges.map((r) => r.intersectRanges(scopeRange)).filter(isDefined);
+        this._wordToLineNumbersMap ??= new WordsToLineNumbersCache(model);
+        for (const range of ownRanges) {
+          this._wordToLineNumbersMap.ensureRangePopulated(range);
+        }
+        const mapped = createInlineValueDecorationsInsideRange(variables, ownRanges, model, this._wordToLineNumbersMap.value);
+        for (const { line, variables: variables2 } of mapped) {
+          let values = valuesPerLine.get(line);
+          if (!values) {
+            values = /* @__PURE__ */ new Map();
+            valuesPerLine.set(line, values);
+          }
+          for (const { name, value } of variables2) {
+            if (!values.has(name)) {
+              values.set(name, value);
+            }
+          }
+        }
+      }
+      allDecorations = [...valuesPerLine.entries()].flatMap(([line, values]) => {
+        const text = [...values].map(([n, v]) => `${n} = ${v}`).join(", ");
+        const editorWidth = this.editor.getLayoutInfo().width;
+        const fontInfo = this.editor.getOption(
+          55
+          /* EditorOption.fontInfo */
+        );
+        const viewportMaxCol = Math.floor((editorWidth - 50) / fontInfo.typicalHalfwidthCharacterWidth);
+        return createInlineValueDecoration(line, text, "debug", void 0, viewportMaxCol);
+      });
+    }
+    if (cts.token.isCancellationRequested) {
+      return;
+    }
+    let preservePosition;
+    if (this.editor.getOption(
+      140
+      /* EditorOption.wordWrap */
+    ) !== "off") {
+      const position = this.editor.getPosition();
+      if (position && this.editor.getVisibleRanges().some((r) => r.containsPosition(position))) {
+        preservePosition = { position, top: this.editor.getTopForPosition(position.lineNumber, position.column) };
+      }
+    }
+    this.oldDecorations.set(allDecorations);
+    if (preservePosition) {
+      const top = this.editor.getTopForPosition(preservePosition.position.lineNumber, preservePosition.position.column);
+      this.editor.setScrollTop(
+        this.editor.getScrollTop() - (preservePosition.top - top),
+        1
+        /* ScrollType.Immediate */
+      );
+    }
+  }
+  dispose() {
+    if (this.hoverWidget) {
+      this.hoverWidget.dispose();
+    }
+    if (this.configurationWidget) {
+      this.configurationWidget.dispose();
+    }
+    this.toDispose = dispose(this.toDispose);
+  }
+};
+__decorate([
+  memoize
+], DebugEditorContribution.prototype, "showHoverScheduler", null);
+__decorate([
+  memoize
+], DebugEditorContribution.prototype, "removeInlineValuesScheduler", null);
+__decorate([
+  memoize
+], DebugEditorContribution.prototype, "updateInlineValuesScheduler", null);
+DebugEditorContribution = __decorate([
+  __param(1, IDebugService),
+  __param(2, IInstantiationService),
+  __param(3, ICommandService),
+  __param(4, IConfigurationService),
+  __param(5, IHostService),
+  __param(6, IUriIdentityService),
+  __param(7, IContextKeyService),
+  __param(8, ILanguageFeaturesService),
+  __param(9, ILanguageFeatureDebounceService)
+], DebugEditorContribution);
+class WordsToLineNumbersCache {
+  static {
+    __name(this, "WordsToLineNumbersCache");
+  }
+  constructor(model) {
+    this.model = model;
+    this.value = /* @__PURE__ */ new Map();
+    this.intervals = new Uint8Array(Math.ceil(model.getLineCount() / 8));
+  }
+  /** Ensures that variables names in the given range have been identified. */
+  ensureRangePopulated(range) {
+    for (let lineNumber = range.startLineNumber; lineNumber <= range.endLineNumber; lineNumber++) {
+      const bin = lineNumber >> 3;
+      const bit = 1 << (lineNumber & 7);
+      if (!(this.intervals[bin] & bit)) {
+        getWordToLineNumbersMap(this.model, lineNumber, this.value);
+        this.intervals[bin] |= bit;
+      }
+    }
+  }
+}
+CommandsRegistry.registerCommand("_executeInlineValueProvider", async (accessor, uri, iRange, context) => {
+  assertType(URI.isUri(uri));
+  assertType(Range.isIRange(iRange));
+  if (!context || typeof context.frameId !== "number" || !Range.isIRange(context.stoppedLocation)) {
+    throw illegalArgument("context");
+  }
+  const model = accessor.get(IModelService).getModel(uri);
+  if (!model) {
+    throw illegalArgument("uri");
+  }
+  const range = Range.lift(iRange);
+  const { inlineValuesProvider } = accessor.get(ILanguageFeaturesService);
+  const providers = inlineValuesProvider.ordered(model);
+  const providerResults = await Promise.all(providers.map((provider) => provider.provideInlineValues(model, range, context, CancellationToken.None)));
+  return providerResults.flat().filter(isDefined);
+});
+export {
+  DebugEditorContribution,
+  createInlineValueDecoration,
+  debugInlineBackground,
+  debugInlineForeground,
+  formatHoverContent
+};
+//# sourceMappingURL=debugEditorContribution.js.map

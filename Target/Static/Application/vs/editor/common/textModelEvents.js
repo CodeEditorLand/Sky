@@ -1,1 +1,229 @@
-import{$cC as m}from"./core/range.js";var l;!function(e){e[e.Flush=1]="Flush",e[e.LineChanged=2]="LineChanged",e[e.LinesDeleted=3]="LinesDeleted",e[e.LinesInserted=4]="LinesInserted",e[e.EOLChanged=5]="EOLChanged"}(l||(l={}));class p{constructor(){this.changeType=1}}class r{static applyInjectedText(e,n){if(!n||0===n.length)return e;let t="",s=0;for(const i of n)t+=e.substring(s,i.column-1),s=i.column-1,t+=i.options.content;return t+=e.substring(s),t}static fromDecorations(e){const n=[];for(const t of e)t.options.before&&t.options.before.content.length>0&&n.push(new r(t.ownerId,t.range.startLineNumber,t.range.startColumn,t.options.before,0)),t.options.after&&t.options.after.content.length>0&&n.push(new r(t.ownerId,t.range.endLineNumber,t.range.endColumn,t.options.after,1));return n.sort(((e,n)=>e.lineNumber===n.lineNumber?e.column===n.column?e.order-n.order:e.column-n.column:e.lineNumber-n.lineNumber)),n}constructor(e,n,t,s,i){this.ownerId=e,this.lineNumber=n,this.column=t,this.options=s,this.order=i}withText(e){return new r(this.ownerId,this.lineNumber,this.column,{...this.options,content:e},this.order)}}class N{constructor(e,n,t){this.changeType=2,this.lineNumber=e,this.detail=n,this.injectedText=t}}class E{constructor(e,n,t,s){this.ownerId=e,this.decorationId=n,this.lineNumber=t,this.lineHeight=s}}class I{constructor(e,n){this.changeType=3,this.fromLineNumber=e,this.toLineNumber=n}}class L{constructor(e,n,t,s){this.changeType=4,this.injectedTexts=s,this.fromLineNumber=e,this.toLineNumber=n,this.detail=t}}class v{constructor(){this.changeType=5}}class u{constructor(e,n,t,s){this.changes=e,this.versionId=n,this.isUndoing=t,this.isRedoing=s,this.resultingSelection=null}containsEvent(e){for(let n=0,t=this.changes.length;n<t;n++)if(this.changes[n].changeType===e)return!0;return!1}static merge(e,n){const t=[].concat(e.changes).concat(n.changes),s=n.versionId,i=e.isUndoing||n.isUndoing,o=e.isRedoing||n.isRedoing;return new u(t,s,i,o)}}class x{constructor(e){this.changes=e}}class b{constructor(e){this.changes=e}affects(e){if(m.isIRange(e)){for(const n of this.changes)if(n.lineNumber>=e.startLineNumber&&n.lineNumber<=e.endLineNumber)return!0;return!1}for(const n of this.changes)if(n.lineNumber===e.lineNumber)return!0;return!1}}class h{constructor(e,n){this.rawContentChangedEvent=e,this.contentChangedEvent=n}merge(e){const n=u.merge(this.rawContentChangedEvent,e.rawContentChangedEvent),t=h.c(this.contentChangedEvent,e.contentChangedEvent);return new h(n,t)}static c(e,n){const t=[].concat(e.changes).concat(n.changes),s=n.eol,i=n.versionId,o=e.isUndoing||n.isUndoing,r=e.isRedoing||n.isRedoing,c=e.isFlush||n.isFlush;return{changes:t,eol:s,isEolChange:e.isEolChange&&n.isEolChange,versionId:i,isUndoing:o,isRedoing:r,isFlush:c}}}export{p as $IE,r as $JE,N as $KE,E as $LE,I as $ME,L as $NE,v as $OE,u as $PE,x as $QE,b as $RE,h as $SE,l as RawContentChangedType};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { Range } from "./core/range.js";
+var RawContentChangedType;
+(function(RawContentChangedType2) {
+  RawContentChangedType2[RawContentChangedType2["Flush"] = 1] = "Flush";
+  RawContentChangedType2[RawContentChangedType2["LineChanged"] = 2] = "LineChanged";
+  RawContentChangedType2[RawContentChangedType2["LinesDeleted"] = 3] = "LinesDeleted";
+  RawContentChangedType2[RawContentChangedType2["LinesInserted"] = 4] = "LinesInserted";
+  RawContentChangedType2[RawContentChangedType2["EOLChanged"] = 5] = "EOLChanged";
+})(RawContentChangedType || (RawContentChangedType = {}));
+class ModelRawFlush {
+  static {
+    __name(this, "ModelRawFlush");
+  }
+  constructor() {
+    this.changeType = 1;
+  }
+}
+class LineInjectedText {
+  static {
+    __name(this, "LineInjectedText");
+  }
+  static applyInjectedText(lineText, injectedTexts) {
+    if (!injectedTexts || injectedTexts.length === 0) {
+      return lineText;
+    }
+    let result = "";
+    let lastOriginalOffset = 0;
+    for (const injectedText of injectedTexts) {
+      result += lineText.substring(lastOriginalOffset, injectedText.column - 1);
+      lastOriginalOffset = injectedText.column - 1;
+      result += injectedText.options.content;
+    }
+    result += lineText.substring(lastOriginalOffset);
+    return result;
+  }
+  static fromDecorations(decorations) {
+    const result = [];
+    for (const decoration of decorations) {
+      if (decoration.options.before && decoration.options.before.content.length > 0) {
+        result.push(new LineInjectedText(decoration.ownerId, decoration.range.startLineNumber, decoration.range.startColumn, decoration.options.before, 0));
+      }
+      if (decoration.options.after && decoration.options.after.content.length > 0) {
+        result.push(new LineInjectedText(decoration.ownerId, decoration.range.endLineNumber, decoration.range.endColumn, decoration.options.after, 1));
+      }
+    }
+    result.sort((a, b) => {
+      if (a.lineNumber === b.lineNumber) {
+        if (a.column === b.column) {
+          return a.order - b.order;
+        }
+        return a.column - b.column;
+      }
+      return a.lineNumber - b.lineNumber;
+    });
+    return result;
+  }
+  constructor(ownerId, lineNumber, column, options, order) {
+    this.ownerId = ownerId;
+    this.lineNumber = lineNumber;
+    this.column = column;
+    this.options = options;
+    this.order = order;
+  }
+  withText(text) {
+    return new LineInjectedText(this.ownerId, this.lineNumber, this.column, { ...this.options, content: text }, this.order);
+  }
+}
+class ModelRawLineChanged {
+  static {
+    __name(this, "ModelRawLineChanged");
+  }
+  constructor(lineNumber, detail, injectedText) {
+    this.changeType = 2;
+    this.lineNumber = lineNumber;
+    this.detail = detail;
+    this.injectedText = injectedText;
+  }
+}
+class ModelLineHeightChanged {
+  static {
+    __name(this, "ModelLineHeightChanged");
+  }
+  constructor(ownerId, decorationId, lineNumber, lineHeight) {
+    this.ownerId = ownerId;
+    this.decorationId = decorationId;
+    this.lineNumber = lineNumber;
+    this.lineHeight = lineHeight;
+  }
+}
+class ModelRawLinesDeleted {
+  static {
+    __name(this, "ModelRawLinesDeleted");
+  }
+  constructor(fromLineNumber, toLineNumber) {
+    this.changeType = 3;
+    this.fromLineNumber = fromLineNumber;
+    this.toLineNumber = toLineNumber;
+  }
+}
+class ModelRawLinesInserted {
+  static {
+    __name(this, "ModelRawLinesInserted");
+  }
+  constructor(fromLineNumber, toLineNumber, detail, injectedTexts) {
+    this.changeType = 4;
+    this.injectedTexts = injectedTexts;
+    this.fromLineNumber = fromLineNumber;
+    this.toLineNumber = toLineNumber;
+    this.detail = detail;
+  }
+}
+class ModelRawEOLChanged {
+  static {
+    __name(this, "ModelRawEOLChanged");
+  }
+  constructor() {
+    this.changeType = 5;
+  }
+}
+class ModelRawContentChangedEvent {
+  static {
+    __name(this, "ModelRawContentChangedEvent");
+  }
+  constructor(changes, versionId, isUndoing, isRedoing) {
+    this.changes = changes;
+    this.versionId = versionId;
+    this.isUndoing = isUndoing;
+    this.isRedoing = isRedoing;
+    this.resultingSelection = null;
+  }
+  containsEvent(type) {
+    for (let i = 0, len = this.changes.length; i < len; i++) {
+      const change = this.changes[i];
+      if (change.changeType === type) {
+        return true;
+      }
+    }
+    return false;
+  }
+  static merge(a, b) {
+    const changes = [].concat(a.changes).concat(b.changes);
+    const versionId = b.versionId;
+    const isUndoing = a.isUndoing || b.isUndoing;
+    const isRedoing = a.isRedoing || b.isRedoing;
+    return new ModelRawContentChangedEvent(changes, versionId, isUndoing, isRedoing);
+  }
+}
+class ModelInjectedTextChangedEvent {
+  static {
+    __name(this, "ModelInjectedTextChangedEvent");
+  }
+  constructor(changes) {
+    this.changes = changes;
+  }
+}
+class ModelLineHeightChangedEvent {
+  static {
+    __name(this, "ModelLineHeightChangedEvent");
+  }
+  constructor(changes) {
+    this.changes = changes;
+  }
+  affects(rangeOrPosition) {
+    if (Range.isIRange(rangeOrPosition)) {
+      for (const change of this.changes) {
+        if (change.lineNumber >= rangeOrPosition.startLineNumber && change.lineNumber <= rangeOrPosition.endLineNumber) {
+          return true;
+        }
+      }
+      return false;
+    } else {
+      for (const change of this.changes) {
+        if (change.lineNumber === rangeOrPosition.lineNumber) {
+          return true;
+        }
+      }
+      return false;
+    }
+  }
+}
+class InternalModelContentChangeEvent {
+  static {
+    __name(this, "InternalModelContentChangeEvent");
+  }
+  constructor(rawContentChangedEvent, contentChangedEvent) {
+    this.rawContentChangedEvent = rawContentChangedEvent;
+    this.contentChangedEvent = contentChangedEvent;
+  }
+  merge(other) {
+    const rawContentChangedEvent = ModelRawContentChangedEvent.merge(this.rawContentChangedEvent, other.rawContentChangedEvent);
+    const contentChangedEvent = InternalModelContentChangeEvent._mergeChangeEvents(this.contentChangedEvent, other.contentChangedEvent);
+    return new InternalModelContentChangeEvent(rawContentChangedEvent, contentChangedEvent);
+  }
+  static _mergeChangeEvents(a, b) {
+    const changes = [].concat(a.changes).concat(b.changes);
+    const eol = b.eol;
+    const versionId = b.versionId;
+    const isUndoing = a.isUndoing || b.isUndoing;
+    const isRedoing = a.isRedoing || b.isRedoing;
+    const isFlush = a.isFlush || b.isFlush;
+    const isEolChange = a.isEolChange && b.isEolChange;
+    return {
+      changes,
+      eol,
+      isEolChange,
+      versionId,
+      isUndoing,
+      isRedoing,
+      isFlush
+    };
+  }
+}
+export {
+  InternalModelContentChangeEvent,
+  LineInjectedText,
+  ModelInjectedTextChangedEvent,
+  ModelLineHeightChanged,
+  ModelLineHeightChangedEvent,
+  ModelRawContentChangedEvent,
+  ModelRawEOLChanged,
+  ModelRawFlush,
+  ModelRawLineChanged,
+  ModelRawLinesDeleted,
+  ModelRawLinesInserted,
+  RawContentChangedType
+};
+//# sourceMappingURL=textModelEvents.js.map

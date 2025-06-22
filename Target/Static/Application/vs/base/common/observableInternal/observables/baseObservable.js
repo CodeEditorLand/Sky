@@ -1,1 +1,139 @@
-import{$Sd as f}from"../debugName.js";import{$te as r,$ve as g}from"../logging/logging.js";let d,u,o;function m(e){d=e}function $(e){u=e}function v(e){o=e}class l{get TChange(){return null}reportChanges(){this.get()}read(e){return e?e.readObservable(this):this.get()}map(e,t){const s=void 0===t?void 0:e,r=void 0===t?e:t;return d({owner:s,debugName:()=>{const e=f(r);if(void 0!==e)return e;const t=/^\s*\(?\s*([a-zA-Z_$][a-zA-Z_$0-9]*)\s*\)?\s*=>\s*\1(?:\??)\.([a-zA-Z_$][a-zA-Z_$0-9]*)\s*$/.exec(r.toString());return t?`${this.debugName}.${t[2]}`:s?void 0:`${this.debugName} (mapped)`},debugReferenceFn:r},(e=>r(this.read(e),e)))}flatten(){return d({owner:void 0,debugName:()=>`${this.debugName} (flattened)`},(e=>this.read(e).read(e)))}recomputeInitiallyAndOnChange(e,t){return e.add(u(this,t)),this}keepObserved(e){return e.add(o(this)),this}get b(){return this.get()}}class C extends l{constructor(){super(),this.f=new Set,r()?.handleObservableCreated(this)}addObserver(e){const t=this.f.size;this.f.add(e),0===t&&this.g(),t!==this.f.size&&r()?.handleOnListenerCountChanged(this,this.f.size)}removeObserver(e){const t=this.f.delete(e);t&&0===this.f.size&&this.h(),t&&r()?.handleOnListenerCountChanged(this,this.f.size)}g(){}h(){}log(){const e=!!r();return g(this),e||r()?.handleObservableCreated(this),this}debugGetObservers(){return this.f}}export{m as $le,$ as $me,v as $ne,l as $oe,C as $pe};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { getFunctionName } from "../debugName.js";
+import { getLogger, logObservable } from "../logging/logging.js";
+let _derived;
+function _setDerivedOpts(derived) {
+  _derived = derived;
+}
+__name(_setDerivedOpts, "_setDerivedOpts");
+let _recomputeInitiallyAndOnChange;
+function _setRecomputeInitiallyAndOnChange(recomputeInitiallyAndOnChange) {
+  _recomputeInitiallyAndOnChange = recomputeInitiallyAndOnChange;
+}
+__name(_setRecomputeInitiallyAndOnChange, "_setRecomputeInitiallyAndOnChange");
+let _keepObserved;
+function _setKeepObserved(keepObserved) {
+  _keepObserved = keepObserved;
+}
+__name(_setKeepObserved, "_setKeepObserved");
+class ConvenientObservable {
+  static {
+    __name(this, "ConvenientObservable");
+  }
+  get TChange() {
+    return null;
+  }
+  reportChanges() {
+    this.get();
+  }
+  /** @sealed */
+  read(reader) {
+    if (reader) {
+      return reader.readObservable(this);
+    } else {
+      return this.get();
+    }
+  }
+  map(fnOrOwner, fnOrUndefined) {
+    const owner = fnOrUndefined === void 0 ? void 0 : fnOrOwner;
+    const fn = fnOrUndefined === void 0 ? fnOrOwner : fnOrUndefined;
+    return _derived({
+      owner,
+      debugName: /* @__PURE__ */ __name(() => {
+        const name = getFunctionName(fn);
+        if (name !== void 0) {
+          return name;
+        }
+        const regexp = /^\s*\(?\s*([a-zA-Z_$][a-zA-Z_$0-9]*)\s*\)?\s*=>\s*\1(?:\??)\.([a-zA-Z_$][a-zA-Z_$0-9]*)\s*$/;
+        const match = regexp.exec(fn.toString());
+        if (match) {
+          return `${this.debugName}.${match[2]}`;
+        }
+        if (!owner) {
+          return `${this.debugName} (mapped)`;
+        }
+        return void 0;
+      }, "debugName"),
+      debugReferenceFn: fn
+    }, (reader) => fn(this.read(reader), reader));
+  }
+  /**
+   * @sealed
+   * Converts an observable of an observable value into a direct observable of the value.
+  */
+  flatten() {
+    return _derived({
+      owner: void 0,
+      debugName: /* @__PURE__ */ __name(() => `${this.debugName} (flattened)`, "debugName")
+    }, (reader) => this.read(reader).read(reader));
+  }
+  recomputeInitiallyAndOnChange(store, handleValue) {
+    store.add(_recomputeInitiallyAndOnChange(this, handleValue));
+    return this;
+  }
+  /**
+   * Ensures that this observable is observed. This keeps the cache alive.
+   * However, in case of deriveds, it does not force eager evaluation (only when the value is read/get).
+   * Use `recomputeInitiallyAndOnChange` for eager evaluation.
+   */
+  keepObserved(store) {
+    store.add(_keepObserved(this));
+    return this;
+  }
+  get debugValue() {
+    return this.get();
+  }
+}
+class BaseObservable extends ConvenientObservable {
+  static {
+    __name(this, "BaseObservable");
+  }
+  constructor() {
+    super();
+    this._observers = /* @__PURE__ */ new Set();
+    getLogger()?.handleObservableCreated(this);
+  }
+  addObserver(observer) {
+    const len = this._observers.size;
+    this._observers.add(observer);
+    if (len === 0) {
+      this.onFirstObserverAdded();
+    }
+    if (len !== this._observers.size) {
+      getLogger()?.handleOnListenerCountChanged(this, this._observers.size);
+    }
+  }
+  removeObserver(observer) {
+    const deleted = this._observers.delete(observer);
+    if (deleted && this._observers.size === 0) {
+      this.onLastObserverRemoved();
+    }
+    if (deleted) {
+      getLogger()?.handleOnListenerCountChanged(this, this._observers.size);
+    }
+  }
+  onFirstObserverAdded() {
+  }
+  onLastObserverRemoved() {
+  }
+  log() {
+    const hadLogger = !!getLogger();
+    logObservable(this);
+    if (!hadLogger) {
+      getLogger()?.handleObservableCreated(this);
+    }
+    return this;
+  }
+  debugGetObservers() {
+    return this._observers;
+  }
+}
+export {
+  BaseObservable,
+  ConvenientObservable,
+  _setDerivedOpts,
+  _setKeepObserved,
+  _setRecomputeInitiallyAndOnChange
+};
+//# sourceMappingURL=baseObservable.js.map

@@ -1,1 +1,143 @@
-import*as m from"../../../../nls.js";import*as p from"../../../../base/common/json.js";import{$iv as g}from"../../../../base/common/jsonEdit.js";import{$Sh as b}from"../../../../base/common/async.js";import{$SC as u}from"../../../../editor/common/core/editOperation.js";import{$cC as w}from"../../../../editor/common/core/range.js";import{$RC as $}from"../../../../editor/common/core/selection.js";import{$fJ as y}from"../../textfile/common/textfiles.js";import{$5j as j}from"../../../../platform/files/common/files.js";import{$cF as v}from"../../../../editor/common/services/resolverService.js";import{$EMb as E,$FMb as O}from"./jsonEditing.js";import{$WB as P}from"../../../../platform/instantiation/common/extensions.js";import{$7I as _}from"../../filesConfiguration/common/filesConfigurationService.js";var h=function(t,e,o,n){var i,r=arguments.length,s=r<3?e:null===n?n=Object.getOwnPropertyDescriptor(e,o):n;if("object"==typeof Reflect&&"function"==typeof Reflect.decorate)s=Reflect.decorate(t,e,o,n);else for(var a=t.length-1;a>=0;a--)(i=t[a])&&(s=(r<3?i(s):r>3?i(e,o,s):i(e,o))||s);return r>3&&s&&Object.defineProperty(e,o,s),s},a=function(t,e){return function(o,n){e(o,n,t)}};let f=class{constructor(t,e,o,n){this.b=t,this.c=e,this.d=o,this.e=n,this.a=new b}write(t,e){return Promise.resolve(this.a.queue((()=>this.f(t,e))))}async f(t,e){const o=await this.l(t,!0);try{await this.g(o.object.textEditorModel,e)}finally{o.dispose()}}async g(t,e){let o;try{o=this.e.enableAutoSaveAfterShortDelay(t.uri);let n=!1;for(const o of e){const e=this.i(t,o)[0];n=!!e&&this.h(e,t)||n}if(n)return this.d.save(t.uri)}finally{o?.dispose()}}h(t,e){const o=e.getPositionAt(t.offset),n=e.getPositionAt(t.offset+t.length),i=new w(o.lineNumber,o.column,n.lineNumber,n.column),r=e.getValueInRange(i);if(t.content!==r){const n=r?u.replace(i,t.content):u.insert(o,t.content);return e.pushEditOperations([new $(o.lineNumber,o.column,o.lineNumber,o.column)],[n],(()=>[])),!0}return!1}i(t,e){const{tabSize:o,insertSpaces:n}=t.getOptions(),i=t.getEOL(),{path:r,value:s}=e;if(!r.length){const t=JSON.stringify(s,null,n?" ".repeat(o):"\t");return[{content:t,length:t.length,offset:0}]}return g(t.getValue(),r,s,{tabSize:o,insertSpaces:n,eol:i})}async j(t){return await this.b.exists(t)||await this.d.write(t,"{}",{encoding:"utf8"}),this.c.createModelReference(t)}k(t){const e=[];return p.$Vu(t.getValue(),e,{allowTrailingComma:!0,allowEmptyContent:!0}),e.length>0}async l(t,e){const o=await this.j(t),n=o.object.textEditorModel;return this.k(n)?(o.dispose(),this.m(0)):o}m(t){const e=this.n(t);return Promise.reject(new O(e,t))}n(t){if(0===t)return m.localize(13896,null)}};f=h([a(0,j),a(1,v),a(2,y),a(3,_)],f),P(E,f,1);export{f as $g5b};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import * as nls from "../../../../nls.js";
+import * as json from "../../../../base/common/json.js";
+import { setProperty } from "../../../../base/common/jsonEdit.js";
+import { Queue } from "../../../../base/common/async.js";
+import { EditOperation } from "../../../../editor/common/core/editOperation.js";
+import { Range } from "../../../../editor/common/core/range.js";
+import { Selection } from "../../../../editor/common/core/selection.js";
+import { ITextFileService } from "../../textfile/common/textfiles.js";
+import { IFileService } from "../../../../platform/files/common/files.js";
+import { ITextModelService } from "../../../../editor/common/services/resolverService.js";
+import { IJSONEditingService, JSONEditingError } from "./jsonEditing.js";
+import { registerSingleton } from "../../../../platform/instantiation/common/extensions.js";
+import { IFilesConfigurationService } from "../../filesConfiguration/common/filesConfigurationService.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+let JSONEditingService = class JSONEditingService2 {
+  static {
+    __name(this, "JSONEditingService");
+  }
+  constructor(fileService, textModelResolverService, textFileService, filesConfigurationService) {
+    this.fileService = fileService;
+    this.textModelResolverService = textModelResolverService;
+    this.textFileService = textFileService;
+    this.filesConfigurationService = filesConfigurationService;
+    this.queue = new Queue();
+  }
+  write(resource, values) {
+    return Promise.resolve(this.queue.queue(() => this.doWriteConfiguration(resource, values)));
+  }
+  async doWriteConfiguration(resource, values) {
+    const reference = await this.resolveAndValidate(resource, true);
+    try {
+      await this.writeToBuffer(reference.object.textEditorModel, values);
+    } finally {
+      reference.dispose();
+    }
+  }
+  async writeToBuffer(model, values) {
+    let disposable;
+    try {
+      disposable = this.filesConfigurationService.enableAutoSaveAfterShortDelay(model.uri);
+      let hasEdits = false;
+      for (const value of values) {
+        const edit = this.getEdits(model, value)[0];
+        hasEdits = !!edit && this.applyEditsToBuffer(edit, model) || hasEdits;
+      }
+      if (hasEdits) {
+        return this.textFileService.save(model.uri);
+      }
+    } finally {
+      disposable?.dispose();
+    }
+  }
+  applyEditsToBuffer(edit, model) {
+    const startPosition = model.getPositionAt(edit.offset);
+    const endPosition = model.getPositionAt(edit.offset + edit.length);
+    const range = new Range(startPosition.lineNumber, startPosition.column, endPosition.lineNumber, endPosition.column);
+    const currentText = model.getValueInRange(range);
+    if (edit.content !== currentText) {
+      const editOperation = currentText ? EditOperation.replace(range, edit.content) : EditOperation.insert(startPosition, edit.content);
+      model.pushEditOperations([new Selection(startPosition.lineNumber, startPosition.column, startPosition.lineNumber, startPosition.column)], [editOperation], () => []);
+      return true;
+    }
+    return false;
+  }
+  getEdits(model, configurationValue) {
+    const { tabSize, insertSpaces } = model.getOptions();
+    const eol = model.getEOL();
+    const { path, value } = configurationValue;
+    if (!path.length) {
+      const content = JSON.stringify(value, null, insertSpaces ? " ".repeat(tabSize) : "	");
+      return [{
+        content,
+        length: content.length,
+        offset: 0
+      }];
+    }
+    return setProperty(model.getValue(), path, value, { tabSize, insertSpaces, eol });
+  }
+  async resolveModelReference(resource) {
+    const exists = await this.fileService.exists(resource);
+    if (!exists) {
+      await this.textFileService.write(resource, "{}", { encoding: "utf8" });
+    }
+    return this.textModelResolverService.createModelReference(resource);
+  }
+  hasParseErrors(model) {
+    const parseErrors = [];
+    json.parse(model.getValue(), parseErrors, { allowTrailingComma: true, allowEmptyContent: true });
+    return parseErrors.length > 0;
+  }
+  async resolveAndValidate(resource, checkDirty) {
+    const reference = await this.resolveModelReference(resource);
+    const model = reference.object.textEditorModel;
+    if (this.hasParseErrors(model)) {
+      reference.dispose();
+      return this.reject(
+        0
+        /* JSONEditingErrorCode.ERROR_INVALID_FILE */
+      );
+    }
+    return reference;
+  }
+  reject(code) {
+    const message = this.toErrorMessage(code);
+    return Promise.reject(new JSONEditingError(message, code));
+  }
+  toErrorMessage(error) {
+    switch (error) {
+      // User issues
+      case 0: {
+        return nls.localize("errorInvalidFile", "Unable to write into the file. Please open the file to correct errors/warnings in the file and try again.");
+      }
+    }
+  }
+};
+JSONEditingService = __decorate([
+  __param(0, IFileService),
+  __param(1, ITextModelService),
+  __param(2, ITextFileService),
+  __param(3, IFilesConfigurationService)
+], JSONEditingService);
+registerSingleton(
+  IJSONEditingService,
+  JSONEditingService,
+  1
+  /* InstantiationType.Delayed */
+);
+export {
+  JSONEditingService
+};
+//# sourceMappingURL=jsonEditingService.js.map

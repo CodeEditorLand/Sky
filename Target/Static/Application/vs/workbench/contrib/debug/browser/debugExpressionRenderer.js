@@ -1,1 +1,227 @@
-import*as f from"../../../../base/browser/dom.js";import{$K7 as E}from"../../../../base/browser/ui/hover/hoverDelegateFactory.js";import{$ud as R}from"../../../../base/common/lifecycle.js";import{$Zn as N,$Yn as w}from"../../../../platform/commands/common/commands.js";import{$El as A}from"../../../../platform/configuration/common/configuration.js";import{$ngb as I}from"../../../../platform/hover/browser/hover.js";import{$mj as S}from"../../../../platform/instantiation/common/instantiation.js";import{$3db as T}from"../../../../platform/observable/common/platformObservableUtils.js";import{$RT as u,$PT as y,$ST as D}from"../common/debugModel.js";import{$S$b as H}from"../common/replModel.js";import{$K$b as U}from"./baseDebugView.js";import{$V$b as v}from"./debugANSIHandling.js";import{$P_b as j,$Q_b as k}from"./debugCommands.js";import{$I$b as P}from"./linkDetector.js";var C=function(i,t,e,n){var a=arguments.length,l=a<3?t:n===null?n=Object.getOwnPropertyDescriptor(t,e):n,s;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")l=Reflect.decorate(i,t,e,n);else for(var o=i.length-1;o>=0;o--)(s=i[o])&&(l=(a<3?s(l):a>3?s(t,e,l):s(t,e))||l);return a>3&&l&&Object.defineProperty(t,e,l),l},h=function(i,t){return function(e,n){t(e,n,i)}};const z=1024,M=/^(true|false)$/i,B=/^(['"]).*\1$/;var L;(function(i){i.Value="value",i.Unavailable="unavailable",i.Error="error",i.Changed="changed",i.Boolean="boolean",i.String="string",i.Number="number"})(L||(L={}));const F=Object.keys({value:0,unavailable:0,error:0,changed:0,boolean:0,string:0,number:0});let b=class{constructor(t,e,n,a){this.c=t,this.d=a,this.b=n.createInstance(P),this.a=T("debug.showVariableTypes",!1,e)}renderVariable(t,e,n={}){const a=this.a.get(),l=U(e,n.highlights||[]);if(e.available){t.type.textContent="";let o=e.name;e.value&&typeof e.name=="string"&&(e.type&&a?(o+=": ",t.type.textContent=e.type+" ="):o+=" ="),t.label.set(o,l.name,e.type&&!a?e.type:e.name),t.name.classList.toggle("virtual",e.presentationHint?.kind==="virtual"),t.name.classList.toggle("internal",e.presentationHint?.visibility==="internal")}else e.value&&typeof e.name=="string"&&e.name&&t.label.set(":");t.expression.classList.toggle("lazy",!!e.presentationHint?.lazy);const s=[{id:k,args:[e,[e]]}];return e.evaluateName&&s.push({id:j,args:[{variable:e}]}),this.renderValue(t.value,e,{showChanged:n.showChanged,maxValueLength:z,hover:{commands:s},highlights:l.value,colorize:!0,session:e.getSession()})}renderValue(t,e,n={}){const a=new R,l=n.session?.rememberedCapabilities?.supportsANSIStyling??n.wasANSI??!1;let s=typeof e=="string"?e:e.value;for(const g of F)t.classList.remove(g);t.classList.add("value"),s===null||(e instanceof u||e instanceof D||e instanceof H)&&!e.available?(t.classList.add("unavailable"),s!==u.DEFAULT_VALUE&&t.classList.add("error")):(typeof e!="string"&&n.showChanged&&e.valueChanged&&s!==u.DEFAULT_VALUE&&(t.classList.add("changed"),e.valueChanged=!1),n.colorize&&typeof e!="string"&&(e.type==="number"||e.type==="boolean"||e.type==="string"?t.classList.add(e.type):isNaN(+s)?M.test(s)?t.classList.add("boolean"):B.test(s)&&t.classList.add("string"):t.classList.add("number"))),n.maxValueLength&&s&&s.length>n.maxValueLength&&(s=s.substring(0,n.maxValueLength)+"..."),s||(s="");const o=n.session??(e instanceof y?e.getSession():void 0),_=n.hover===!1?{type:0,store:a}:{type:2};f.$I5(t);const p=n.locationReference??(e instanceof y&&e.valueLocationReference);let d=this.b;if(p&&o&&(d=this.b.makeReferencedLinkDetector(p,o)),l?t.appendChild(v(s,d,o?o.root:void 0,n.highlights)):t.appendChild(d.linkify(s,!1,o?.root,!0,_,n.highlights)),n.hover!==!1){const{commands:g=[]}=n.hover||{};a.add(this.d.setupManagedHover(E("mouse"),t,()=>{const r=f.$("div"),c=f.$("div.hover-row"),m=f.$M6(c,f.$("div.hover-contents")),$=f.$M6(m,f.$("pre.debug-var-hover-pre"));return l?$.appendChild(v(s,this.b,o?o.root:void 0,n.highlights)):$.textContent=s,r.appendChild(c),r},{actions:g.map(({id:r,args:c})=>{const m=N.getCommand(r)?.metadata?.description;return{label:typeof m=="string"?m:m?m.value:r,commandId:r,run:()=>this.c.executeCommand(r,...c)}})}))}return a}};b=C([h(0,w),h(1,A),h(2,S),h(3,I)],b);export{b as $kac};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import * as dom from "../../../../base/browser/dom.js";
+import { getDefaultHoverDelegate } from "../../../../base/browser/ui/hover/hoverDelegateFactory.js";
+import { DisposableStore } from "../../../../base/common/lifecycle.js";
+import { CommandsRegistry, ICommandService } from "../../../../platform/commands/common/commands.js";
+import { IConfigurationService } from "../../../../platform/configuration/common/configuration.js";
+import { IHoverService } from "../../../../platform/hover/browser/hover.js";
+import { IInstantiationService } from "../../../../platform/instantiation/common/instantiation.js";
+import { observableConfigValue } from "../../../../platform/observable/common/platformObservableUtils.js";
+import { Expression, ExpressionContainer, Variable } from "../common/debugModel.js";
+import { ReplEvaluationResult } from "../common/replModel.js";
+import { splitExpressionOrScopeHighlights } from "./baseDebugView.js";
+import { handleANSIOutput } from "./debugANSIHandling.js";
+import { COPY_EVALUATE_PATH_ID, COPY_VALUE_ID } from "./debugCommands.js";
+import { LinkDetector } from "./linkDetector.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+const MAX_VALUE_RENDER_LENGTH_IN_VIEWLET = 1024;
+const booleanRegex = /^(true|false)$/i;
+const stringRegex = /^(['"]).*\1$/;
+var Cls;
+(function(Cls2) {
+  Cls2["Value"] = "value";
+  Cls2["Unavailable"] = "unavailable";
+  Cls2["Error"] = "error";
+  Cls2["Changed"] = "changed";
+  Cls2["Boolean"] = "boolean";
+  Cls2["String"] = "string";
+  Cls2["Number"] = "number";
+})(Cls || (Cls = {}));
+const allClasses = Object.keys({
+  [
+    "value"
+    /* Cls.Value */
+  ]: 0,
+  [
+    "unavailable"
+    /* Cls.Unavailable */
+  ]: 0,
+  [
+    "error"
+    /* Cls.Error */
+  ]: 0,
+  [
+    "changed"
+    /* Cls.Changed */
+  ]: 0,
+  [
+    "boolean"
+    /* Cls.Boolean */
+  ]: 0,
+  [
+    "string"
+    /* Cls.String */
+  ]: 0,
+  [
+    "number"
+    /* Cls.Number */
+  ]: 0
+});
+let DebugExpressionRenderer = class DebugExpressionRenderer2 {
+  static {
+    __name(this, "DebugExpressionRenderer");
+  }
+  constructor(commandService, configurationService, instantiationService, hoverService) {
+    this.commandService = commandService;
+    this.hoverService = hoverService;
+    this.linkDetector = instantiationService.createInstance(LinkDetector);
+    this.displayType = observableConfigValue("debug.showVariableTypes", false, configurationService);
+  }
+  renderVariable(data, variable, options = {}) {
+    const displayType = this.displayType.get();
+    const highlights = splitExpressionOrScopeHighlights(variable, options.highlights || []);
+    if (variable.available) {
+      data.type.textContent = "";
+      let text = variable.name;
+      if (variable.value && typeof variable.name === "string") {
+        if (variable.type && displayType) {
+          text += ": ";
+          data.type.textContent = variable.type + " =";
+        } else {
+          text += " =";
+        }
+      }
+      data.label.set(text, highlights.name, variable.type && !displayType ? variable.type : variable.name);
+      data.name.classList.toggle("virtual", variable.presentationHint?.kind === "virtual");
+      data.name.classList.toggle("internal", variable.presentationHint?.visibility === "internal");
+    } else if (variable.value && typeof variable.name === "string" && variable.name) {
+      data.label.set(":");
+    }
+    data.expression.classList.toggle("lazy", !!variable.presentationHint?.lazy);
+    const commands = [
+      { id: COPY_VALUE_ID, args: [variable, [variable]] }
+    ];
+    if (variable.evaluateName) {
+      commands.push({ id: COPY_EVALUATE_PATH_ID, args: [{ variable }] });
+    }
+    return this.renderValue(data.value, variable, {
+      showChanged: options.showChanged,
+      maxValueLength: MAX_VALUE_RENDER_LENGTH_IN_VIEWLET,
+      hover: { commands },
+      highlights: highlights.value,
+      colorize: true,
+      session: variable.getSession()
+    });
+  }
+  renderValue(container, expressionOrValue, options = {}) {
+    const store = new DisposableStore();
+    const supportsANSI = options.session?.rememberedCapabilities?.supportsANSIStyling ?? options.wasANSI ?? false;
+    let value = typeof expressionOrValue === "string" ? expressionOrValue : expressionOrValue.value;
+    for (const cls of allClasses) {
+      container.classList.remove(cls);
+    }
+    container.classList.add(
+      "value"
+      /* Cls.Value */
+    );
+    if (value === null || (expressionOrValue instanceof Expression || expressionOrValue instanceof Variable || expressionOrValue instanceof ReplEvaluationResult) && !expressionOrValue.available) {
+      container.classList.add(
+        "unavailable"
+        /* Cls.Unavailable */
+      );
+      if (value !== Expression.DEFAULT_VALUE) {
+        container.classList.add(
+          "error"
+          /* Cls.Error */
+        );
+      }
+    } else {
+      if (typeof expressionOrValue !== "string" && options.showChanged && expressionOrValue.valueChanged && value !== Expression.DEFAULT_VALUE) {
+        container.classList.add(
+          "changed"
+          /* Cls.Changed */
+        );
+        expressionOrValue.valueChanged = false;
+      }
+      if (options.colorize && typeof expressionOrValue !== "string") {
+        if (expressionOrValue.type === "number" || expressionOrValue.type === "boolean" || expressionOrValue.type === "string") {
+          container.classList.add(expressionOrValue.type);
+        } else if (!isNaN(+value)) {
+          container.classList.add(
+            "number"
+            /* Cls.Number */
+          );
+        } else if (booleanRegex.test(value)) {
+          container.classList.add(
+            "boolean"
+            /* Cls.Boolean */
+          );
+        } else if (stringRegex.test(value)) {
+          container.classList.add(
+            "string"
+            /* Cls.String */
+          );
+        }
+      }
+    }
+    if (options.maxValueLength && value && value.length > options.maxValueLength) {
+      value = value.substring(0, options.maxValueLength) + "...";
+    }
+    if (!value) {
+      value = "";
+    }
+    const session = options.session ?? (expressionOrValue instanceof ExpressionContainer ? expressionOrValue.getSession() : void 0);
+    const hoverBehavior = options.hover === false ? { type: 0, store } : {
+      type: 2
+      /* DebugLinkHoverBehavior.None */
+    };
+    dom.clearNode(container);
+    const locationReference = options.locationReference ?? (expressionOrValue instanceof ExpressionContainer && expressionOrValue.valueLocationReference);
+    let linkDetector = this.linkDetector;
+    if (locationReference && session) {
+      linkDetector = this.linkDetector.makeReferencedLinkDetector(locationReference, session);
+    }
+    if (supportsANSI) {
+      container.appendChild(handleANSIOutput(value, linkDetector, session ? session.root : void 0, options.highlights));
+    } else {
+      container.appendChild(linkDetector.linkify(value, false, session?.root, true, hoverBehavior, options.highlights));
+    }
+    if (options.hover !== false) {
+      const { commands = [] } = options.hover || {};
+      store.add(this.hoverService.setupManagedHover(getDefaultHoverDelegate("mouse"), container, () => {
+        const container2 = dom.$("div");
+        const markdownHoverElement = dom.$("div.hover-row");
+        const hoverContentsElement = dom.append(markdownHoverElement, dom.$("div.hover-contents"));
+        const hoverContentsPre = dom.append(hoverContentsElement, dom.$("pre.debug-var-hover-pre"));
+        if (supportsANSI) {
+          hoverContentsPre.appendChild(handleANSIOutput(value, this.linkDetector, session ? session.root : void 0, options.highlights));
+        } else {
+          hoverContentsPre.textContent = value;
+        }
+        container2.appendChild(markdownHoverElement);
+        return container2;
+      }, {
+        actions: commands.map(({ id, args }) => {
+          const description = CommandsRegistry.getCommand(id)?.metadata?.description;
+          return {
+            label: typeof description === "string" ? description : description ? description.value : id,
+            commandId: id,
+            run: /* @__PURE__ */ __name(() => this.commandService.executeCommand(id, ...args), "run")
+          };
+        })
+      }));
+    }
+    return store;
+  }
+};
+DebugExpressionRenderer = __decorate([
+  __param(0, ICommandService),
+  __param(1, IConfigurationService),
+  __param(2, IInstantiationService),
+  __param(3, IHoverService)
+], DebugExpressionRenderer);
+export {
+  DebugExpressionRenderer
+};
+//# sourceMappingURL=debugExpressionRenderer.js.map

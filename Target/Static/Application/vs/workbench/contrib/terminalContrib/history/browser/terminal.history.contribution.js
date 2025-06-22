@@ -1,1 +1,199 @@
-import{$vd as $,$ud as D}from"../../../../../base/common/lifecycle.js";import{localize2 as d}from"../../../../../nls.js";import{$uC as p}from"../../../../../platform/accessibility/common/accessibility.js";import{$dI as w}from"../../../../../platform/actions/common/actions.js";import{$Bn as s,$Vn as T}from"../../../../../platform/contextkey/common/contextkey.js";import{$mj as R}from"../../../../../platform/instantiation/common/instantiation.js";import{TerminalLocation as y}from"../../../../../platform/terminal/common/terminal.js";import{$aEb as I,$8Db as P}from"../../../accessibility/browser/accessibilityConfiguration.js";import{$drc as _,$brc as v}from"../../../terminal/browser/terminalActions.js";import{$slc as H}from"../../../terminal/browser/terminalExtensions.js";import{$a4 as g}from"../../../terminal/common/terminal.js";import{TerminalContextKeys as m}from"../../../terminal/common/terminalContextKey.js";import{$msc as S,$jsc as b,$isc as k}from"../common/history.js";import{$usc as A}from"./terminalRunRecentQuickPick.js";var C=function(r,e,t,n){var a=arguments.length,i=a<3?e:n===null?n=Object.getOwnPropertyDescriptor(e,t):n,o;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")i=Reflect.decorate(r,e,t,n);else for(var c=r.length-1;c>=0;c--)(o=r[c])&&(i=(a<3?o(i):a>3?o(e,t,i):o(e,t))||i);return a>3&&i&&Object.defineProperty(e,t,i),i},h=function(r,e){return function(t,n){e(t,n,r)}},u;let l=class extends ${static{u=this}static{this.ID="terminal.history"}static get(e){return e.getContribution(u.ID)}constructor(e,t,n){super(),this.b=e,this.f=n,this.a=m.inTerminalRunCommandPicker.bindTo(t),this.B(e.instance.capabilities.onDidAddCapabilityType(a=>{switch(a){case 0:{const i=e.instance.capabilities.get(0);if(!i)return;this.B(i.onDidChangeCwd(o=>{this.f.invokeFunction(k)?.add(o,{remoteAuthority:e.instance.remoteAuthority})}));break}case 2:{const i=e.instance.capabilities.get(2);if(!i)return;this.B(i.onCommandFinished(o=>{o.command.trim().length>0&&this.f.invokeFunction(b)?.add(o.command,{shellType:e.instance.shellType})}));break}}}))}async runRecent(e,t,n){return this.f.invokeFunction(A,this.b.instance,this.a,e,t,n)}};l=u=C([h(1,T),h(2,R)],l);H(l.ID,l);const f=s.or(m.processSupported,m.terminalHasBeenCreated);v({id:"workbench.action.terminal.clearPreviousSessionHistory",title:d(12067,"Clear Previous Session History"),precondition:f,run:async(r,e)=>{b(e).clear(),S()}});_({id:"workbench.action.terminal.goToRecentDirectory",title:d(12068,"Go to Recent Directory..."),metadata:{description:d(12069,"Goes to a recent folder")},precondition:f,keybinding:{primary:2085,when:m.focus,weight:200},menu:[{id:w.ViewTitle,group:"shellIntegration",order:0,when:s.equals("view",g),isHiddenByDefault:!0}],run:async(r,e)=>{const t=l.get(r);t&&(await t.runRecent("cwd"),r?.target===y.Editor?await e.editorService.revealActiveEditor():await e.groupService.showPanel(!1))}});v({id:"workbench.action.terminal.runRecentCommand",title:d(12070,"Run Recent Command..."),precondition:f,keybinding:[{primary:2096,when:s.and(p,s.or(m.focus,s.and(P,I.isEqualTo("terminal")))),weight:200},{primary:2608,mac:{primary:816},when:s.and(m.focus,p.negate()),weight:200}],menu:[{id:w.ViewTitle,group:"shellIntegration",order:1,when:s.equals("view",g),isHiddenByDefault:!0}],run:async(r,e)=>{let t=r.service.activeInstance;if(!t){const a=t=await r.service.getActiveOrCreateInstance();await r.service.revealActiveTerminal();const i=new D,o=await new Promise(c=>{i.add(a.onDidChangeShellType(()=>c(!1))),i.add(a.onDisposed(()=>c(!0)))});if(i.dispose(),o)return}const n=l.get(t);n&&(await n.runRecent("command"),t?.target===y.Editor?await r.editorService.revealActiveEditor():await r.groupService.showPanel(!1))}});
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { Disposable, DisposableStore } from "../../../../../base/common/lifecycle.js";
+import { localize2 } from "../../../../../nls.js";
+import { CONTEXT_ACCESSIBILITY_MODE_ENABLED } from "../../../../../platform/accessibility/common/accessibility.js";
+import { MenuId } from "../../../../../platform/actions/common/actions.js";
+import { ContextKeyExpr, IContextKeyService } from "../../../../../platform/contextkey/common/contextkey.js";
+import { IInstantiationService } from "../../../../../platform/instantiation/common/instantiation.js";
+import { TerminalLocation } from "../../../../../platform/terminal/common/terminal.js";
+import { accessibleViewCurrentProviderId, accessibleViewIsShown } from "../../../accessibility/browser/accessibilityConfiguration.js";
+import { registerActiveInstanceAction, registerTerminalAction } from "../../../terminal/browser/terminalActions.js";
+import { registerTerminalContribution } from "../../../terminal/browser/terminalExtensions.js";
+import { TERMINAL_VIEW_ID } from "../../../terminal/common/terminal.js";
+import { TerminalContextKeys } from "../../../terminal/common/terminalContextKey.js";
+import { clearShellFileHistory, getCommandHistory, getDirectoryHistory } from "../common/history.js";
+import { showRunRecentQuickPick } from "./terminalRunRecentQuickPick.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+var TerminalHistoryContribution_1;
+let TerminalHistoryContribution = class TerminalHistoryContribution2 extends Disposable {
+  static {
+    __name(this, "TerminalHistoryContribution");
+  }
+  static {
+    TerminalHistoryContribution_1 = this;
+  }
+  static {
+    this.ID = "terminal.history";
+  }
+  static get(instance) {
+    return instance.getContribution(TerminalHistoryContribution_1.ID);
+  }
+  constructor(_ctx, contextKeyService, _instantiationService) {
+    super();
+    this._ctx = _ctx;
+    this._instantiationService = _instantiationService;
+    this._terminalInRunCommandPicker = TerminalContextKeys.inTerminalRunCommandPicker.bindTo(contextKeyService);
+    this._register(_ctx.instance.capabilities.onDidAddCapabilityType((e) => {
+      switch (e) {
+        case 0: {
+          const cwdDetection = _ctx.instance.capabilities.get(
+            0
+            /* TerminalCapability.CwdDetection */
+          );
+          if (!cwdDetection) {
+            return;
+          }
+          this._register(cwdDetection.onDidChangeCwd((e2) => {
+            this._instantiationService.invokeFunction(getDirectoryHistory)?.add(e2, { remoteAuthority: _ctx.instance.remoteAuthority });
+          }));
+          break;
+        }
+        case 2: {
+          const commandDetection = _ctx.instance.capabilities.get(
+            2
+            /* TerminalCapability.CommandDetection */
+          );
+          if (!commandDetection) {
+            return;
+          }
+          this._register(commandDetection.onCommandFinished((e2) => {
+            if (e2.command.trim().length > 0) {
+              this._instantiationService.invokeFunction(getCommandHistory)?.add(e2.command, { shellType: _ctx.instance.shellType });
+            }
+          }));
+          break;
+        }
+      }
+    }));
+  }
+  /**
+   * Triggers a quick pick that displays recent commands or cwds. Selecting one will
+   * rerun it in the active terminal.
+   */
+  async runRecent(type, filterMode, value) {
+    return this._instantiationService.invokeFunction(showRunRecentQuickPick, this._ctx.instance, this._terminalInRunCommandPicker, type, filterMode, value);
+  }
+};
+TerminalHistoryContribution = TerminalHistoryContribution_1 = __decorate([
+  __param(1, IContextKeyService),
+  __param(2, IInstantiationService)
+], TerminalHistoryContribution);
+registerTerminalContribution(TerminalHistoryContribution.ID, TerminalHistoryContribution);
+const precondition = ContextKeyExpr.or(TerminalContextKeys.processSupported, TerminalContextKeys.terminalHasBeenCreated);
+registerTerminalAction({
+  id: "workbench.action.terminal.clearPreviousSessionHistory",
+  title: localize2("workbench.action.terminal.clearPreviousSessionHistory", "Clear Previous Session History"),
+  precondition,
+  run: /* @__PURE__ */ __name(async (c, accessor) => {
+    getCommandHistory(accessor).clear();
+    clearShellFileHistory();
+  }, "run")
+});
+registerActiveInstanceAction({
+  id: "workbench.action.terminal.goToRecentDirectory",
+  title: localize2("workbench.action.terminal.goToRecentDirectory", "Go to Recent Directory..."),
+  metadata: {
+    description: localize2("goToRecentDirectory.metadata", "Goes to a recent folder")
+  },
+  precondition,
+  keybinding: {
+    primary: 2048 | 37,
+    when: TerminalContextKeys.focus,
+    weight: 200
+    /* KeybindingWeight.WorkbenchContrib */
+  },
+  menu: [
+    {
+      id: MenuId.ViewTitle,
+      group: "shellIntegration",
+      order: 0,
+      when: ContextKeyExpr.equals("view", TERMINAL_VIEW_ID),
+      isHiddenByDefault: true
+    }
+  ],
+  run: /* @__PURE__ */ __name(async (activeInstance, c) => {
+    const history = TerminalHistoryContribution.get(activeInstance);
+    if (!history) {
+      return;
+    }
+    await history.runRecent("cwd");
+    if (activeInstance?.target === TerminalLocation.Editor) {
+      await c.editorService.revealActiveEditor();
+    } else {
+      await c.groupService.showPanel(false);
+    }
+  }, "run")
+});
+registerTerminalAction({
+  id: "workbench.action.terminal.runRecentCommand",
+  title: localize2("workbench.action.terminal.runRecentCommand", "Run Recent Command..."),
+  precondition,
+  keybinding: [
+    {
+      primary: 2048 | 48,
+      when: ContextKeyExpr.and(CONTEXT_ACCESSIBILITY_MODE_ENABLED, ContextKeyExpr.or(TerminalContextKeys.focus, ContextKeyExpr.and(accessibleViewIsShown, accessibleViewCurrentProviderId.isEqualTo(
+        "terminal"
+        /* AccessibleViewProviderId.Terminal */
+      )))),
+      weight: 200
+      /* KeybindingWeight.WorkbenchContrib */
+    },
+    {
+      primary: 2048 | 512 | 48,
+      mac: {
+        primary: 256 | 512 | 48
+        /* KeyCode.KeyR */
+      },
+      when: ContextKeyExpr.and(TerminalContextKeys.focus, CONTEXT_ACCESSIBILITY_MODE_ENABLED.negate()),
+      weight: 200
+      /* KeybindingWeight.WorkbenchContrib */
+    }
+  ],
+  menu: [
+    {
+      id: MenuId.ViewTitle,
+      group: "shellIntegration",
+      order: 1,
+      when: ContextKeyExpr.equals("view", TERMINAL_VIEW_ID),
+      isHiddenByDefault: true
+    }
+  ],
+  run: /* @__PURE__ */ __name(async (c, accessor) => {
+    let activeInstance = c.service.activeInstance;
+    if (!activeInstance) {
+      const newInstance = activeInstance = await c.service.getActiveOrCreateInstance();
+      await c.service.revealActiveTerminal();
+      const store = new DisposableStore();
+      const wasDisposedPrematurely = await new Promise((r) => {
+        store.add(newInstance.onDidChangeShellType(() => r(false)));
+        store.add(newInstance.onDisposed(() => r(true)));
+      });
+      store.dispose();
+      if (wasDisposedPrematurely) {
+        return;
+      }
+    }
+    const history = TerminalHistoryContribution.get(activeInstance);
+    if (!history) {
+      return;
+    }
+    await history.runRecent("command");
+    if (activeInstance?.target === TerminalLocation.Editor) {
+      await c.editorService.revealActiveEditor();
+    } else {
+      await c.groupService.showPanel(false);
+    }
+  }, "run")
+});
+//# sourceMappingURL=terminal.history.contribution.js.map

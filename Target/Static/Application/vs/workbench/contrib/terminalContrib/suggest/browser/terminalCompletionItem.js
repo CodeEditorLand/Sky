@@ -1,1 +1,90 @@
-import{$$ as h}from"../../../../../base/common/path.js";import{$m as r}from"../../../../../base/common/platform.js";import{$CZb as e}from"../../../../services/suggest/browser/simpleCompletionItem.js";var t;function w(e){switch(e){case 20:return t.File;case 23:return t.Folder;case 0:default:return t.Method;case 18:case 4:return t.Argument;case 16:return t.OptionValue;case 17:return t.Alias}}!function(e){e[e.File=0]="File",e[e.Folder=1]="Folder",e[e.Method=2]="Method",e[e.Alias=3]="Alias",e[e.Argument=4]="Argument",e[e.Option=5]="Option",e[e.OptionValue=6]="OptionValue",e[e.Flag=7]="Flag",e[e.SymbolicLinkFile=8]="SymbolicLinkFile",e[e.SymbolicLinkFolder=9]="SymbolicLinkFolder",e[e.InlineSuggestion=100]="InlineSuggestion",e[e.InlineSuggestionAlwaysOnTop=101]="InlineSuggestionAlwaysOnTop"}(t||(t={}));class f extends e{constructor(e){if(super(e),this.completion=e,this.fileExtLow="",this.punctuationPenalty=0,this.labelLowExcludeFileExt=this.labelLow,this.labelLowNormalizedPath=this.labelLow,a(e)){r&&(this.labelLow=this.labelLow.replaceAll("/","\\"));const e=this.labelLow.lastIndexOf(".");e>0&&(this.labelLowExcludeFileExt=this.labelLow.substring(0,e),this.fileExtLow=this.labelLow.substring(e+1))}(a(e)||e.kind===t.Folder)&&(r&&(this.labelLowNormalizedPath=this.labelLow.replaceAll("\\","/")),e.kind===t.Folder&&(this.labelLowNormalizedPath=this.labelLowNormalizedPath.replace(/\/$/,""))),this.punctuationPenalty=c(this.labelLowExcludeFileExt)?1:0}}function a(e){return!(e.kind!==t.File&&!e.isFileOverride)}function c(e){return h(e).startsWith("_")||/^[\[\]\{\}\(\)\.,;:!?\/\\\-_@#~*%^=$]+$/.test(e)}export{w as $DZb,f as $EZb,t as TerminalCompletionItemKind};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { basename } from "../../../../../base/common/path.js";
+import { isWindows } from "../../../../../base/common/platform.js";
+import { SimpleCompletionItem } from "../../../../services/suggest/browser/simpleCompletionItem.js";
+var TerminalCompletionItemKind;
+(function(TerminalCompletionItemKind2) {
+  TerminalCompletionItemKind2[TerminalCompletionItemKind2["File"] = 0] = "File";
+  TerminalCompletionItemKind2[TerminalCompletionItemKind2["Folder"] = 1] = "Folder";
+  TerminalCompletionItemKind2[TerminalCompletionItemKind2["Method"] = 2] = "Method";
+  TerminalCompletionItemKind2[TerminalCompletionItemKind2["Alias"] = 3] = "Alias";
+  TerminalCompletionItemKind2[TerminalCompletionItemKind2["Argument"] = 4] = "Argument";
+  TerminalCompletionItemKind2[TerminalCompletionItemKind2["Option"] = 5] = "Option";
+  TerminalCompletionItemKind2[TerminalCompletionItemKind2["OptionValue"] = 6] = "OptionValue";
+  TerminalCompletionItemKind2[TerminalCompletionItemKind2["Flag"] = 7] = "Flag";
+  TerminalCompletionItemKind2[TerminalCompletionItemKind2["SymbolicLinkFile"] = 8] = "SymbolicLinkFile";
+  TerminalCompletionItemKind2[TerminalCompletionItemKind2["SymbolicLinkFolder"] = 9] = "SymbolicLinkFolder";
+  TerminalCompletionItemKind2[TerminalCompletionItemKind2["InlineSuggestion"] = 100] = "InlineSuggestion";
+  TerminalCompletionItemKind2[TerminalCompletionItemKind2["InlineSuggestionAlwaysOnTop"] = 101] = "InlineSuggestionAlwaysOnTop";
+})(TerminalCompletionItemKind || (TerminalCompletionItemKind = {}));
+function mapLspKindToTerminalKind(lspKind) {
+  switch (lspKind) {
+    case 20:
+      return TerminalCompletionItemKind.File;
+    case 23:
+      return TerminalCompletionItemKind.Folder;
+    case 0:
+      return TerminalCompletionItemKind.Method;
+    case 18:
+      return TerminalCompletionItemKind.Argument;
+    // consider adding new type?
+    case 4:
+      return TerminalCompletionItemKind.Argument;
+    // ""
+    case 16:
+      return TerminalCompletionItemKind.OptionValue;
+    // ""
+    case 17:
+      return TerminalCompletionItemKind.Alias;
+    default:
+      return TerminalCompletionItemKind.Method;
+  }
+}
+__name(mapLspKindToTerminalKind, "mapLspKindToTerminalKind");
+class TerminalCompletionItem extends SimpleCompletionItem {
+  static {
+    __name(this, "TerminalCompletionItem");
+  }
+  constructor(completion) {
+    super(completion);
+    this.completion = completion;
+    this.fileExtLow = "";
+    this.punctuationPenalty = 0;
+    this.labelLowExcludeFileExt = this.labelLow;
+    this.labelLowNormalizedPath = this.labelLow;
+    if (isFile(completion)) {
+      if (isWindows) {
+        this.labelLow = this.labelLow.replaceAll("/", "\\");
+      }
+      const extIndex = this.labelLow.lastIndexOf(".");
+      if (extIndex > 0) {
+        this.labelLowExcludeFileExt = this.labelLow.substring(0, extIndex);
+        this.fileExtLow = this.labelLow.substring(extIndex + 1);
+      }
+    }
+    if (isFile(completion) || completion.kind === TerminalCompletionItemKind.Folder) {
+      if (isWindows) {
+        this.labelLowNormalizedPath = this.labelLow.replaceAll("\\", "/");
+      }
+      if (completion.kind === TerminalCompletionItemKind.Folder) {
+        this.labelLowNormalizedPath = this.labelLowNormalizedPath.replace(/\/$/, "");
+      }
+    }
+    this.punctuationPenalty = shouldPenalizeForPunctuation(this.labelLowExcludeFileExt) ? 1 : 0;
+  }
+}
+function isFile(completion) {
+  return !!(completion.kind === TerminalCompletionItemKind.File || completion.isFileOverride);
+}
+__name(isFile, "isFile");
+function shouldPenalizeForPunctuation(label) {
+  return basename(label).startsWith("_") || /^[\[\]\{\}\(\)\.,;:!?\/\\\-_@#~*%^=$]+$/.test(label);
+}
+__name(shouldPenalizeForPunctuation, "shouldPenalizeForPunctuation");
+export {
+  TerminalCompletionItem,
+  TerminalCompletionItemKind,
+  mapLspKindToTerminalKind
+};
+//# sourceMappingURL=terminalCompletionItem.js.map

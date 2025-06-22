@@ -1,6 +1,113 @@
-import{$Ed as h}from"../../../base/common/lifecycle.js";import{$ym as f}from"../../../base/common/marshalling.js";import{$Zn as m,$Yn as p}from"../../../platform/commands/common/commands.js";import{$Kyb as l}from"../../services/extensions/common/extHostCustomers.js";import{$XO as $}from"../../services/extensions/common/extensions.js";import{$kX as C}from"../../services/extensions/common/proxyIdentifier.js";import{$pY as v,$oY as g}from"../common/extHost.protocol.js";import{$Yc as _}from"../../../base/common/types.js";var d=function(o,e,t,n){var r=arguments.length,i=r<3?e:n===null?n=Object.getOwnPropertyDescriptor(e,t):n,a;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")i=Reflect.decorate(o,e,t,n);else for(var s=o.length-1;s>=0;s--)(a=o[s])&&(i=(r<3?a(i):r>3?a(e,t,i):a(e,t))||i);return r>3&&i&&Object.defineProperty(e,t,i),i},c=function(o,e){return function(t,n){e(t,n,o)}};let u=class{constructor(e,t,n){this.d=t,this.e=n,this.a=new h,this.c=e.getProxy(v.ExtHostCommands),this.b=m.registerCommand("_generateCommandsDocumentation",()=>this.f())}dispose(){this.a.dispose(),this.b.dispose()}async f(){const e=await this.c.$getContributedCommandMetadata(),t=m.getCommands();for(const[r,i]of t)i.metadata&&(e[r]=i.metadata);const n=[];for(const r in e)n.push("`"+r+"` - "+b(e[r]))}$registerCommand(e){this.a.set(e,m.registerCommand(e,(t,...n)=>this.c.$executeContributedCommand(e,...n).then(r=>f(r))))}$unregisterCommand(e){this.a.deleteAndDispose(e)}$fireCommandActivationEvent(e){const t=`onCommand:${e}`;this.e.activationEventIsDone(t)||this.e.activateByEvent(t)}async $executeCommand(e,t,n){t instanceof C&&(t=t.value);for(let r=0;r<t.length;r++)t[r]=f(t[r]);if(n&&t.length>0&&!m.getCommand(e))throw await this.e.activateByEvent(`onCommand:${e}`),new Error("$executeCommand:retry");return this.d.executeCommand(e,...t)}$getCommands(){return Promise.resolve([...m.getCommands().keys()])}};u=d([l(g.MainThreadCommands),c(1,p),c(2,$)],u);function b(o){if(typeof o=="string")return o;{const t=[_(o.description)?o.description:o.description.original];if(t.push(`
-
-`),o.args)for(const n of o.args)t.push(`* _${n.name}_ - ${n.description||""}
-`);return o.returns&&t.push(`* _(returns)_ - ${o.returns}`),t.push(`
-
-`),t.join("")}}export{u as $EWb};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { DisposableMap } from "../../../base/common/lifecycle.js";
+import { revive } from "../../../base/common/marshalling.js";
+import { CommandsRegistry, ICommandService } from "../../../platform/commands/common/commands.js";
+import { extHostNamedCustomer } from "../../services/extensions/common/extHostCustomers.js";
+import { IExtensionService } from "../../services/extensions/common/extensions.js";
+import { SerializableObjectWithBuffers } from "../../services/extensions/common/proxyIdentifier.js";
+import { ExtHostContext, MainContext } from "../common/extHost.protocol.js";
+import { isString } from "../../../base/common/types.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+let MainThreadCommands = class MainThreadCommands2 {
+  static {
+    __name(this, "MainThreadCommands");
+  }
+  constructor(extHostContext, _commandService, _extensionService) {
+    this._commandService = _commandService;
+    this._extensionService = _extensionService;
+    this._commandRegistrations = new DisposableMap();
+    this._proxy = extHostContext.getProxy(ExtHostContext.ExtHostCommands);
+    this._generateCommandsDocumentationRegistration = CommandsRegistry.registerCommand("_generateCommandsDocumentation", () => this._generateCommandsDocumentation());
+  }
+  dispose() {
+    this._commandRegistrations.dispose();
+    this._generateCommandsDocumentationRegistration.dispose();
+  }
+  async _generateCommandsDocumentation() {
+    const result = await this._proxy.$getContributedCommandMetadata();
+    const commands = CommandsRegistry.getCommands();
+    for (const [id, command] of commands) {
+      if (command.metadata) {
+        result[id] = command.metadata;
+      }
+    }
+    const all = [];
+    for (const id in result) {
+      all.push("`" + id + "` - " + _generateMarkdown(result[id]));
+    }
+    console.log(all.join("\n"));
+  }
+  $registerCommand(id) {
+    this._commandRegistrations.set(id, CommandsRegistry.registerCommand(id, (accessor, ...args) => {
+      return this._proxy.$executeContributedCommand(id, ...args).then((result) => {
+        return revive(result);
+      });
+    }));
+  }
+  $unregisterCommand(id) {
+    this._commandRegistrations.deleteAndDispose(id);
+  }
+  $fireCommandActivationEvent(id) {
+    const activationEvent = `onCommand:${id}`;
+    if (!this._extensionService.activationEventIsDone(activationEvent)) {
+      this._extensionService.activateByEvent(activationEvent);
+    }
+  }
+  async $executeCommand(id, args, retry) {
+    if (args instanceof SerializableObjectWithBuffers) {
+      args = args.value;
+    }
+    for (let i = 0; i < args.length; i++) {
+      args[i] = revive(args[i]);
+    }
+    if (retry && args.length > 0 && !CommandsRegistry.getCommand(id)) {
+      await this._extensionService.activateByEvent(`onCommand:${id}`);
+      throw new Error("$executeCommand:retry");
+    }
+    return this._commandService.executeCommand(id, ...args);
+  }
+  $getCommands() {
+    return Promise.resolve([...CommandsRegistry.getCommands().keys()]);
+  }
+};
+MainThreadCommands = __decorate([
+  extHostNamedCustomer(MainContext.MainThreadCommands),
+  __param(1, ICommandService),
+  __param(2, IExtensionService)
+], MainThreadCommands);
+function _generateMarkdown(description) {
+  if (typeof description === "string") {
+    return description;
+  } else {
+    const descriptionString = isString(description.description) ? description.description : description.description.original;
+    const parts = [descriptionString];
+    parts.push("\n\n");
+    if (description.args) {
+      for (const arg of description.args) {
+        parts.push(`* _${arg.name}_ - ${arg.description || ""}
+`);
+      }
+    }
+    if (description.returns) {
+      parts.push(`* _(returns)_ - ${description.returns}`);
+    }
+    parts.push("\n\n");
+    return parts.join("");
+  }
+}
+__name(_generateMarkdown, "_generateMarkdown");
+export {
+  MainThreadCommands
+};
+//# sourceMappingURL=mainThreadCommands.js.map

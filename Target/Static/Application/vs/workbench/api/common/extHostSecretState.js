@@ -1,1 +1,33 @@
-import{$oY as s}from"./extHost.protocol.js";import{$df as o}from"../../../base/common/event.js";import{$nj as a}from"../../../platform/instantiation/common/instantiation.js";class c{constructor(t){this.b=new o,this.onDidChangePassword=this.b.event,this.a=t.getProxy(s.MainThreadSecretState)}async $onDidChangePassword(t){this.b.fire(t)}get(t,s){return this.a.$getPassword(t,s)}store(t,s,o){return this.a.$setPassword(t,s,o)}delete(t,s){return this.a.$deletePassword(t,s)}}const $=a("IExtHostSecretState");export{c as $eLc,$ as $fLc};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { MainContext } from "./extHost.protocol.js";
+import { Emitter } from "../../../base/common/event.js";
+import { createDecorator } from "../../../platform/instantiation/common/instantiation.js";
+class ExtHostSecretState {
+  static {
+    __name(this, "ExtHostSecretState");
+  }
+  constructor(mainContext) {
+    this._onDidChangePassword = new Emitter();
+    this.onDidChangePassword = this._onDidChangePassword.event;
+    this._proxy = mainContext.getProxy(MainContext.MainThreadSecretState);
+  }
+  async $onDidChangePassword(e) {
+    this._onDidChangePassword.fire(e);
+  }
+  get(extensionId, key) {
+    return this._proxy.$getPassword(extensionId, key);
+  }
+  store(extensionId, key, value) {
+    return this._proxy.$setPassword(extensionId, key, value);
+  }
+  delete(extensionId, key) {
+    return this._proxy.$deletePassword(extensionId, key);
+  }
+}
+const IExtHostSecretState = createDecorator("IExtHostSecretState");
+export {
+  ExtHostSecretState,
+  IExtHostSecretState
+};
+//# sourceMappingURL=extHostSecretState.js.map

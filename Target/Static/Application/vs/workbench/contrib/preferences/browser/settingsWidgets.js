@@ -1,1 +1,1074 @@
-import{$y5 as Y}from"../../../../base/browser/canIUse.js";import*as l from"../../../../base/browser/dom.js";import{$M7 as q}from"../../../../base/browser/ui/actionbar/actionbar.js";import{$p9 as k}from"../../../../base/browser/ui/button/button.js";import{$i8 as W}from"../../../../base/browser/ui/dnd/dnd.js";import{$O9 as $}from"../../../../base/browser/ui/inputbox/inputBox.js";import{$Q8 as X}from"../../../../base/browser/ui/selectBox/selectBox.js";import{$T8 as Z,$R8 as z}from"../../../../base/browser/ui/toggle/toggle.js";import{$Nh as F}from"../../../../base/common/async.js";import{$Mj as U}from"../../../../base/common/codicons.js";import{$df as Q}from"../../../../base/common/event.js";import{$Uj as H}from"../../../../base/common/htmlContent.js";import{$vd as V,$ud as tt}from"../../../../base/common/lifecycle.js";import{$v as et}from"../../../../base/common/platform.js";import{ThemeIcon as w}from"../../../../base/common/themables.js";import{$8c as N,$9c as I}from"../../../../base/common/types.js";import{localize as a}from"../../../../nls.js";import{$El as L}from"../../../../platform/configuration/common/configuration.js";import{$nfb as C}from"../../../../platform/contextview/browser/contextView.js";import{$ngb as P}from"../../../../platform/hover/browser/hover.js";import{$Mfb as x,$Xfb as j,$7fb as st}from"../../../../platform/theme/browser/defaultStyles.js";import{$Mt as A}from"../../../../platform/theme/common/themeService.js";import{$5t as it}from"../../../../platform/window/common/window.js";import{$p9b as nt,$r9b as lt,$q9b as at,$s9b as ot,$w9b as S,$y9b as M,$x9b as K}from"../common/settingsEditorColorRegistry.js";import"./media/settingsWidgets.css";import{$88b as rt,$68b as G,$78b as O}from"./preferencesIcons.js";var B=function(f,t,e,s){var i=arguments.length,n=i<3?t:s===null?s=Object.getOwnPropertyDescriptor(t,e):s,o;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")n=Reflect.decorate(f,t,e,s);else for(var r=f.length-1;r>=0;r--)(o=f[r])&&(n=(i<3?o(n):i>3?o(t,e,n):o(t,e))||n);return i>3&&n&&Object.defineProperty(t,e,n),n},g=function(f,t){return function(e,s){t(e,s,f)}};const d=l.$;class dt{get items(){const t=this.a.map((e,s)=>{const i=typeof this.b=="number"&&this.b===s;return{...e,editing:i,selected:s===this.d||i}});return this.b==="create"&&t.push({editing:!0,selected:!0,...this.f}),t}constructor(t){this.a=[],this.b=null,this.d=null,this.f=t}setEditKey(t){this.b=t}setValue(t){this.a=t}select(t){this.d=t}getSelected(){return this.d}selectNext(){typeof this.d=="number"?this.d=Math.min(this.d+1,this.a.length-1):this.d=0}selectPrevious(){typeof this.d=="number"?this.d=Math.max(this.d-1,0):this.d=0}}let D=class extends V{get domNode(){return this.a}get items(){return this.g.items}get j(){return!1}constructor(t,e,s,i){super(),this.m=t,this.n=e,this.r=s,this.s=i,this.b=[],this.f=this.B(new Q),this.g=new dt(this.t()),this.h=this.B(new tt),this.onDidChangeList=this.f.event,this.a=l.$M6(t,d("div")),this.a.setAttribute("role","list"),this.u().forEach(n=>this.a.classList.add(n)),l.$M6(t,this.O()),this.H(),this.B(l.$J5(this.a,l.$F6.POINTER_DOWN,n=>this.P(n))),this.B(l.$J5(this.a,l.$F6.DBLCLICK,n=>this.Q(n))),this.B(l.$K5(this.a,"keydown",n=>{if(n.equals(16))this.W();else if(n.equals(18))this.U();else return;n.preventDefault(),n.stopPropagation()}))}setValue(t){this.g.setValue(t),this.H()}F(){}G(){return!0}H(){const t=l.$m6(this.a);l.$I5(this.a),this.h.clear();const e=this.g.items.some(i=>!!(i.editing&&this.isItemNew(i)));this.m.classList.toggle("setting-list-hide-add-button",!this.G()||e),this.g.items.length?this.a.tabIndex=0:this.a.removeAttribute("tabIndex");const s=this.F();s&&this.a.appendChild(s),this.b=this.g.items.map((i,n)=>this.M(i,n,t)),this.b.forEach(i=>this.a.appendChild(i))}I(t){const e=t.options.map(({value:o,description:r})=>({text:o,description:r})),s=t.options.findIndex(o=>t.data===o.value),i=st({selectBackground:nt,selectForeground:at,selectBorder:lt,selectListBorder:ot});return new X(e,s,this.r,i,{useCustomDrawn:!it(this.s)||!(et&&Y.pointerEvents)})}J(t){this.g.setEditKey(t),this.H()}cancelEdit(){this.g.setEditKey("none"),this.H()}L(t,e,s){this.g.setEditKey("none"),this.isItemNew(t)?this.f.fire({type:"add",newItem:e,targetIndex:s}):this.f.fire({type:"change",originalItem:t,newItem:e,targetIndex:s}),this.H()}M(t,e,s){const i=t.editing?this.z(t,e):this.N(t,e,s);return i.setAttribute("role","listitem"),i}N(t,e,s){const i=this.y(t,e),n=i.rowElement;n.setAttribute("data-index",e+""),n.setAttribute("tabindex",t.selected?"0":"-1"),n.classList.toggle("selected",t.selected);const o=new q(n);return this.h.add(o),o.push(this.w(t,e),{icon:!0,label:!0}),this.C(i,t),t.selected&&s&&F(()=>n.focus(),void 0,this.h),this.h.add(l.$J5(n,"click",r=>{r.stopPropagation()})),n}O(){const t=d(".setting-list-new-row"),e=this.B(new k(t,x));return e.label=this.D().addButtonLabel,e.element.classList.add("setting-list-addButton"),this.B(e.onDidClick(()=>{this.g.setEditKey("create"),this.H()})),t}P(t){const e=this.R(t);e<0||(t.preventDefault(),t.stopImmediatePropagation(),this.g.getSelected()!==e&&this.S(e))}Q(t){const e=this.R(t);if(e<0||this.j)return;this.g.items[e]&&(this.J(e),t.preventDefault(),t.stopPropagation())}R(t){if(!t.target||l.$f6(t.target,"monaco-action-bar"))return-1;const s=l.$f6(t.target,"setting-list-row");if(!s)return-1;const i=s.getAttribute("data-index");return i?parseInt(i):-1}S(t){this.g.select(t),this.b.forEach(s=>s.classList.remove("selected"));const e=this.b[this.g.getSelected()];e.classList.add("selected"),e.focus()}U(){this.g.selectNext(),this.S(this.g.getSelected())}W(){this.g.selectPrevious(),this.S(this.g.getSelected())}};D=B([g(1,A),g(2,C),g(3,L)],D);let E=class extends D{setValue(t,e){this.X=e?.keySuggester,this.Y=e?.showAddButton??!0,super.setValue(t)}constructor(t,e,s,i,n){super(t,e,s,n),this.Z=i,this.Y=!0}t(){return{value:{type:"string",data:""}}}G(){return this.Y}u(){return["setting-list-widget"]}w(t,e){return this.j?[]:[{class:w.asClassName(G),enabled:!0,id:"workbench.action.editListItem",tooltip:this.D().editActionTooltip,run:()=>this.J(e)},{class:w.asClassName(O),enabled:!0,id:"workbench.action.removeListItem",tooltip:this.D().deleteActionTooltip,run:()=>this.f.fire({type:"remove",originalItem:t,targetIndex:e})}]}y(t,e){const s=d(".setting-list-row"),i=l.$M6(s,d(".setting-list-value")),n=l.$M6(s,d(".setting-list-sibling"));return i.textContent=t.value.data.toString(),t.sibling?n.textContent=`when: ${t.sibling}`:(n.textContent=null,i.classList.add("no-sibling")),this.gb(s,t,e),{rowElement:s,keyElement:i,valueElement:n}}gb(t,e,s){this.g.items.every(n=>!n.editing)?(t.draggable=!0,t.classList.add("draggable")):(t.draggable=!1,t.classList.remove("draggable")),this.h.add(l.$J5(t,l.$F6.DRAG_START,n=>{this.eb={element:t,item:e,itemIndex:s},W(n,t,e.value.data)})),this.h.add(l.$J5(t,l.$F6.DRAG_OVER,n=>this.eb?(n.preventDefault(),n.dataTransfer&&(n.dataTransfer.dropEffect="move"),!0):!1));let i=0;this.h.add(l.$J5(t,l.$F6.DRAG_ENTER,n=>{i++,t.classList.add("drag-hover")})),this.h.add(l.$J5(t,l.$F6.DRAG_LEAVE,n=>{i--,i||t.classList.remove("drag-hover")})),this.h.add(l.$J5(t,l.$F6.DROP,n=>this.eb?(n.preventDefault(),i=0,this.eb.element!==t&&this.f.fire({type:"move",originalItem:this.eb.item,sourceIndex:this.eb.itemIndex,newItem:e,targetIndex:s}),!0):!1)),this.h.add(l.$J5(t,l.$F6.DRAG_END,n=>{i=0,t.classList.remove("drag-hover"),n.dataTransfer?.clearData(),this.eb&&(this.eb=void 0)}))}z(t,e){const s=d(".setting-list-edit-row");let i,n,o;if(this.X){const p=this.X(this.g.items.map(({value:{data:b}})=>b),e);t={...t,value:{type:"enum",data:t.value.data,options:p?p.options:[]}}}switch(t.value.type){case"string":i=this.kb(t.value,s);break;case"enum":i=this.lb(t.value,s),o=t.value.options,t.value.options.length&&(n=this.isItemNew(t)?o[0].value:t.value.data);break}const r=()=>({value:{type:"string",data:i.value},sibling:h?.value}),u=p=>({value:{type:"enum",data:p,options:o??[]}}),c=p=>{p.equals(3)?this.L(t,r(),e):p.equals(9)&&(this.cancelEdit(),p.preventDefault()),s?.focus()};if(t.value.type!=="string"){const p=i;this.h.add(p.onDidSelect(({selected:b})=>{n=b}))}else{const p=i;this.h.add(l.$K5(p.inputElement,l.$F6.KEY_DOWN,c))}let h;I(t.sibling)?i instanceof $&&i.element.classList.add("no-sibling"):(h=new $(s,this.r,{placeholder:this.D().siblingInputPlaceholder,inputBoxStyles:j({inputBackground:S,inputForeground:K,inputBorder:M})}),h.element.classList.add("setting-list-siblingInput"),this.h.add(h),h.value=t.sibling,this.h.add(l.$K5(h.inputElement,l.$F6.KEY_DOWN,c)));const m=this.h.add(new k(s,x));m.label=a(10044,null),m.element.classList.add("setting-list-ok-button"),this.h.add(m.onDidClick(()=>{t.value.type==="string"?this.L(t,r(),e):this.L(t,u(n),e)}));const v=this.h.add(new k(s,{secondary:!0,...x}));return v.label=a(10045,null),v.element.classList.add("setting-list-cancel-button"),this.h.add(v.onDidClick(()=>this.cancelEdit())),this.h.add(F(()=>{i.focus(),i instanceof $&&i.select()})),s}isItemNew(t){return t.value.data===""}C(t,{value:e,sibling:s}){const i=I(s)?a(10046,null,e.data):a(10047,null,e.data,s),{rowElement:n}=t;this.h.add(this.Z.setupDelayedHover(n,{content:i})),n.setAttribute("aria-label",i)}D(){return{deleteActionTooltip:a(10048,null),editActionTooltip:a(10049,null),addButtonLabel:a(10050,null),inputPlaceholder:a(10051,null),siblingInputPlaceholder:a(10052,null)}}kb(t,e){const s=new $(e,this.r,{placeholder:this.D().inputPlaceholder,inputBoxStyles:j({inputBackground:S,inputForeground:K,inputBorder:M})});return s.element.classList.add("setting-list-valueInput"),this.h.add(s),s.value=t.data.toString(),s}lb(t,e){if(t.type!=="enum")throw new Error("Valuetype must be enum.");const s=this.I(t),i=d(".setting-list-object-list-row");return s.render(i),e.appendChild(i),s}};E=B([g(1,A),g(2,C),g(3,P),g(4,L)],E);class Ft extends E{u(){return["setting-list-include-exclude-widget"]}gb(t,e,s){}C(t,e){let s=I(e.sibling)?a(10053,null,e.value.data):a(10054,null,e.value.data,e.sibling);e.source&&(s+=a(10055,null,e.source));const i=new H().appendMarkdown(s),{rowElement:n}=t;this.h.add(this.Z.setupDelayedHover(n,{content:i})),n.setAttribute("aria-label",s)}D(){return{deleteActionTooltip:a(10056,null),editActionTooltip:a(10057,null),addButtonLabel:a(10058,null),inputPlaceholder:a(10059,null),siblingInputPlaceholder:a(10060,null)}}}class Ht extends E{u(){return["setting-list-include-exclude-widget"]}gb(t,e,s){}C(t,e){let s=I(e.sibling)?a(10061,null,e.value.data):a(10062,null,e.value.data,e.sibling);e.source&&(s+=a(10063,null,e.source));const i=new H().appendMarkdown(s),{rowElement:n}=t;this.h.add(this.Z.setupDelayedHover(n,{content:i})),n.setAttribute("aria-label",s)}D(){return{deleteActionTooltip:a(10064,null),editActionTooltip:a(10065,null),addButtonLabel:a(10066,null),inputPlaceholder:a(10067,null),siblingInputPlaceholder:a(10068,null)}}}let _=class extends D{constructor(t,e,s,i,n){super(t,e,s,n),this.cb=i,this.X=!0,this.Y="",this.Z=!0,this.ab=()=>{},this.bb=()=>{}}setValue(t,e){this.X=!e?.isReadOnly,this.Z=e?.showAddButton??this.Z,this.ab=e?.keySuggester??this.ab,this.bb=e?.valueSuggester??this.bb,N(e)&&e.settingKey!==this.Y&&(this.g.setEditKey("none"),this.g.select(null),this.Y=e.settingKey),super.setValue(t)}isItemNew(t){return t.key.data===""&&t.value.data===""}G(){return this.Z}get j(){return!this.X}t(){return{key:{type:"string",data:""},value:{type:"string",data:""},removable:!0,resetable:!1}}u(){return["setting-list-object-widget"]}w(t,e){if(this.j)return[];const s=[{class:w.asClassName(G),enabled:!0,id:"workbench.action.editListItem",label:"",tooltip:this.D().editActionTooltip,run:()=>this.J(e)}];return t.resetable&&s.push({class:w.asClassName(rt),enabled:!0,id:"workbench.action.resetListItem",label:"",tooltip:this.D().resetActionTooltip,run:()=>this.f.fire({type:"reset",originalItem:t,targetIndex:e})}),t.removable&&s.push({class:w.asClassName(O),enabled:!0,id:"workbench.action.removeListItem",label:"",tooltip:this.D().deleteActionTooltip,run:()=>this.f.fire({type:"remove",originalItem:t,targetIndex:e})}),s}F(){const t=d(".setting-list-row-header"),e=l.$M6(t,d(".setting-list-object-key")),s=l.$M6(t,d(".setting-list-object-value")),{keyHeaderText:i,valueHeaderText:n}=this.D();return e.textContent=i,s.textContent=n,t}y(t,e){const s=d(".setting-list-row");s.classList.add("setting-list-object-row");const i=l.$M6(s,d(".setting-list-object-key")),n=l.$M6(s,d(".setting-list-object-value"));return i.textContent=t.key.data,n.textContent=t.value.data.toString(),{rowElement:s,keyElement:i,valueElement:n}}z(t,e){const s=d(".setting-list-edit-row.setting-list-object-row"),i={...t},n=b=>{i.key=b,v.enabled=b.data!=="";const y=this.bb(b.data)??t.value;this.ob(t.value,i.value,y)&&(o(y),m())},o=b=>{i.value=b};let r,u;if(this.Z){if(this.isItemNew(t)){const R=this.ab(this.g.items.map(({key:{data:T}})=>T));if(N(R)){i.key=R;const T=this.bb(i.key.data);o(T??i.value)}}const{widget:b,element:y}=this.lb(i.key,{idx:e,isKey:!0,originalItem:t,changedItem:i,update:n});r=b,u=y}else u=d(".setting-list-object-key"),u.textContent=t.key.data;let c;const h=d(".setting-list-object-value-container"),m=()=>{const{widget:b,element:y}=this.lb(i.value,{idx:e,isKey:!1,originalItem:t,changedItem:i,update:o});c=b,l.$I5(h),h.append(y)};m(),s.append(u,h);const v=this.h.add(new k(s,x));v.enabled=i.key.data!=="",v.label=a(10069,null),v.element.classList.add("setting-list-ok-button"),this.h.add(v.onDidClick(()=>this.L(t,i,e)));const p=this.h.add(new k(s,{secondary:!0,...x}));return p.label=a(10070,null),p.element.classList.add("setting-list-cancel-button"),this.h.add(p.onDidClick(()=>this.cancelEdit())),this.h.add(F(()=>{const b=r??c;b.focus(),b instanceof $&&b.select()})),s}lb(t,e){switch(t.type){case"string":return this.mb(t,e);case"enum":return this.nb(t,e);case"boolean":return this.nb({type:"enum",data:t.data.toString(),options:[{value:"true"},{value:"false"}]},e)}}mb(t,{idx:e,isKey:s,originalItem:i,changedItem:n,update:o}){const r=d(s?".setting-list-object-input-key":".setting-list-object-input-value"),u=new $(r,this.r,{placeholder:s?a(10071,null):a(10072,null),inputBoxStyles:j({inputBackground:S,inputForeground:K,inputBorder:M})});u.element.classList.add("setting-list-object-input"),this.h.add(u),u.value=t.data,this.h.add(u.onDidChange(h=>o({...t,data:h})));const c=h=>{h.equals(3)?this.L(i,n,e):h.equals(9)&&(this.cancelEdit(),h.preventDefault())};return this.h.add(l.$K5(u.inputElement,l.$F6.KEY_DOWN,c)),{widget:u,element:r}}nb(t,{isKey:e,changedItem:s,update:i}){const n=this.I(t),o=e?s.key:s.value;this.h.add(n.onDidSelect(({selected:c})=>i(o.type==="boolean"?{...o,data:c==="true"}:{...o,data:c})));const r=d(".setting-list-object-input");return r.classList.add(e?"setting-list-object-input-key":"setting-list-object-input-value"),n.render(r),t.options.findIndex(c=>t.data===c.value)===-1&&t.options.length?i(o.type==="boolean"?{...o,data:!0}:{...o,data:t.options[0].value}):o.type==="boolean"&&i({...o,data:t.data==="true"}),{widget:n,element:r}}ob(t,e,s){if(s.type!=="enum"&&s.type===e.type&&s.data===e.data)return!1;if(t.data==="")return!0;if(e.type===s.type&&s.type!=="enum")return!1;if(e.type==="enum"&&s.type==="enum"){const i=new Set(e.options.map(({value:n})=>n));if(s.options.forEach(({value:n})=>i.delete(n)),i.size===0)return!1}return!0}C(t,e){const{keyElement:s,valueElement:i,rowElement:n}=t;let o;e.source?o=a(10073,null,e.key.data,e.value.data,e.source):o=a(10074,null,e.key.data,e.value.data);const r=new H().appendMarkdown(o),u=this.qb(e.key)??e.keyDescription??r;this.h.add(this.cb.setupDelayedHover(s,{content:u}));const c=this.qb(e.value)??r;this.h.add(this.cb.setupDelayedHover(i,{content:c})),n.setAttribute("aria-label",o)}qb(t){return t.type==="enum"?t.options.find(({value:s})=>t.data===s)?.description:void 0}D(){return{deleteActionTooltip:a(10075,null),resetActionTooltip:a(10076,null),editActionTooltip:a(10077,null),addButtonLabel:a(10078,null),keyHeaderText:a(10079,null),valueHeaderText:a(10080,null)}}};_=B([g(1,A),g(2,C),g(3,P),g(4,L)],_);let J=class extends D{constructor(t,e,s,i,n){super(t,e,s,n),this.Y=i,this.X=""}setValue(t,e){N(e)&&e.settingKey!==this.X&&(this.g.setEditKey("none"),this.g.select(null),this.X=e.settingKey),super.setValue(t)}isItemNew(t){return!t.key.data&&!t.value.data}t(){return{key:{type:"string",data:""},value:{type:"boolean",data:!1},removable:!1,resetable:!0}}u(){return["setting-list-object-widget"]}w(t,e){return[]}G(){return!1}F(){}M(t,e,s){const i=this.z(t,e);return i.setAttribute("role","listitem"),i}y(t,e){const s=d(".blank-row"),i=d(".blank-row-key");return{rowElement:s,keyElement:i}}z(t,e){const s=d(".setting-list-edit-row.setting-list-object-row.setting-item-bool"),i={...t},n=m=>{i.value.data=m,this.L(t,i,e)},o=t.keyDescription?`${t.keyDescription} (${t.key.data})`:t.key.data,{element:r,widget:u}=this.hb(i.value.data,o,n);s.appendChild(r);const c=l.$M6(s,d(".setting-list-object-value"));c.textContent=o;const h={rowElement:s,keyElement:c,valueElement:u.domNode};return this.C(h,t),this.B(l.$J5(c,l.$F6.MOUSE_DOWN,m=>{m.target.tagName.toLowerCase()!=="a"&&(u.checked=!u.checked,n(u.checked)),l.$H6.stop(m)})),s}hb(t,e,s){const i=new Z({icon:U.check,actionClassName:"setting-value-checkbox",isChecked:t,title:e,...z});this.h.add(i);const n=d(".setting-list-object-input");return n.classList.add("setting-list-object-input-key-checkbox"),i.domNode.classList.add("setting-value-checkbox"),n.appendChild(i.domNode),this.B(l.$J5(n,l.$F6.MOUSE_DOWN,o=>{i.checked=!i.checked,s(i.checked),o.stopImmediatePropagation()})),{widget:i,element:n}}C(t,e){const s=a(10081,null,e.key.data,e.value.data),i=e.keyDescription??s,{rowElement:n,keyElement:o,valueElement:r}=t;this.h.add(this.Y.setupDelayedHover(o,{content:i})),r.setAttribute("aria-label",s),n.setAttribute("aria-label",s)}D(){return{deleteActionTooltip:a(10082,null),resetActionTooltip:a(10083,null),editActionTooltip:a(10084,null),addButtonLabel:a(10085,null),keyHeaderText:a(10086,null),valueHeaderText:a(10087,null)}}};J=B([g(1,A),g(2,C),g(3,P),g(4,L)],J);export{dt as $19b,D as $29b,E as $39b,Ft as $49b,Ht as $59b,_ as $69b,J as $79b};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { BrowserFeatures } from "../../../../base/browser/canIUse.js";
+import * as DOM from "../../../../base/browser/dom.js";
+import { ActionBar } from "../../../../base/browser/ui/actionbar/actionbar.js";
+import { Button } from "../../../../base/browser/ui/button/button.js";
+import { applyDragImage } from "../../../../base/browser/ui/dnd/dnd.js";
+import { InputBox } from "../../../../base/browser/ui/inputbox/inputBox.js";
+import { SelectBox } from "../../../../base/browser/ui/selectBox/selectBox.js";
+import { Toggle, unthemedToggleStyles } from "../../../../base/browser/ui/toggle/toggle.js";
+import { disposableTimeout } from "../../../../base/common/async.js";
+import { Codicon } from "../../../../base/common/codicons.js";
+import { Emitter } from "../../../../base/common/event.js";
+import { MarkdownString } from "../../../../base/common/htmlContent.js";
+import { Disposable, DisposableStore } from "../../../../base/common/lifecycle.js";
+import { isIOS } from "../../../../base/common/platform.js";
+import { ThemeIcon } from "../../../../base/common/themables.js";
+import { isDefined, isUndefinedOrNull } from "../../../../base/common/types.js";
+import { localize } from "../../../../nls.js";
+import { IConfigurationService } from "../../../../platform/configuration/common/configuration.js";
+import { IContextViewService } from "../../../../platform/contextview/browser/contextView.js";
+import { IHoverService } from "../../../../platform/hover/browser/hover.js";
+import { defaultButtonStyles, getInputBoxStyle, getSelectBoxStyles } from "../../../../platform/theme/browser/defaultStyles.js";
+import { IThemeService } from "../../../../platform/theme/common/themeService.js";
+import { hasNativeContextMenu } from "../../../../platform/window/common/window.js";
+import { settingsSelectBackground, settingsSelectBorder, settingsSelectForeground, settingsSelectListBorder, settingsTextInputBackground, settingsTextInputBorder, settingsTextInputForeground } from "../common/settingsEditorColorRegistry.js";
+import "./media/settingsWidgets.css";
+import { settingsDiscardIcon, settingsEditIcon, settingsRemoveIcon } from "./preferencesIcons.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+const $ = DOM.$;
+class ListSettingListModel {
+  static {
+    __name(this, "ListSettingListModel");
+  }
+  get items() {
+    const items = this._dataItems.map((item, i) => {
+      const editing = typeof this._editKey === "number" && this._editKey === i;
+      return {
+        ...item,
+        editing,
+        selected: i === this._selectedIdx || editing
+      };
+    });
+    if (this._editKey === "create") {
+      items.push({
+        editing: true,
+        selected: true,
+        ...this._newDataItem
+      });
+    }
+    return items;
+  }
+  constructor(newItem) {
+    this._dataItems = [];
+    this._editKey = null;
+    this._selectedIdx = null;
+    this._newDataItem = newItem;
+  }
+  setEditKey(key) {
+    this._editKey = key;
+  }
+  setValue(listData) {
+    this._dataItems = listData;
+  }
+  select(idx) {
+    this._selectedIdx = idx;
+  }
+  getSelected() {
+    return this._selectedIdx;
+  }
+  selectNext() {
+    if (typeof this._selectedIdx === "number") {
+      this._selectedIdx = Math.min(this._selectedIdx + 1, this._dataItems.length - 1);
+    } else {
+      this._selectedIdx = 0;
+    }
+  }
+  selectPrevious() {
+    if (typeof this._selectedIdx === "number") {
+      this._selectedIdx = Math.max(this._selectedIdx - 1, 0);
+    } else {
+      this._selectedIdx = 0;
+    }
+  }
+}
+let AbstractListSettingWidget = class AbstractListSettingWidget2 extends Disposable {
+  static {
+    __name(this, "AbstractListSettingWidget");
+  }
+  get domNode() {
+    return this.listElement;
+  }
+  get items() {
+    return this.model.items;
+  }
+  get isReadOnly() {
+    return false;
+  }
+  constructor(container, themeService, contextViewService, configurationService) {
+    super();
+    this.container = container;
+    this.themeService = themeService;
+    this.contextViewService = contextViewService;
+    this.configurationService = configurationService;
+    this.rowElements = [];
+    this._onDidChangeList = this._register(new Emitter());
+    this.model = new ListSettingListModel(this.getEmptyItem());
+    this.listDisposables = this._register(new DisposableStore());
+    this.onDidChangeList = this._onDidChangeList.event;
+    this.listElement = DOM.append(container, $("div"));
+    this.listElement.setAttribute("role", "list");
+    this.getContainerClasses().forEach((c) => this.listElement.classList.add(c));
+    DOM.append(container, this.renderAddButton());
+    this.renderList();
+    this._register(DOM.addDisposableListener(this.listElement, DOM.EventType.POINTER_DOWN, (e) => this.onListClick(e)));
+    this._register(DOM.addDisposableListener(this.listElement, DOM.EventType.DBLCLICK, (e) => this.onListDoubleClick(e)));
+    this._register(DOM.addStandardDisposableListener(this.listElement, "keydown", (e) => {
+      if (e.equals(
+        16
+        /* KeyCode.UpArrow */
+      )) {
+        this.selectPreviousRow();
+      } else if (e.equals(
+        18
+        /* KeyCode.DownArrow */
+      )) {
+        this.selectNextRow();
+      } else {
+        return;
+      }
+      e.preventDefault();
+      e.stopPropagation();
+    }));
+  }
+  setValue(listData) {
+    this.model.setValue(listData);
+    this.renderList();
+  }
+  renderHeader() {
+    return;
+  }
+  isAddButtonVisible() {
+    return true;
+  }
+  renderList() {
+    const focused = DOM.isAncestorOfActiveElement(this.listElement);
+    DOM.clearNode(this.listElement);
+    this.listDisposables.clear();
+    const newMode = this.model.items.some((item) => !!(item.editing && this.isItemNew(item)));
+    this.container.classList.toggle("setting-list-hide-add-button", !this.isAddButtonVisible() || newMode);
+    if (this.model.items.length) {
+      this.listElement.tabIndex = 0;
+    } else {
+      this.listElement.removeAttribute("tabIndex");
+    }
+    const header = this.renderHeader();
+    if (header) {
+      this.listElement.appendChild(header);
+    }
+    this.rowElements = this.model.items.map((item, i) => this.renderDataOrEditItem(item, i, focused));
+    this.rowElements.forEach((rowElement) => this.listElement.appendChild(rowElement));
+  }
+  createBasicSelectBox(value) {
+    const selectBoxOptions = value.options.map(({ value: value2, description }) => ({ text: value2, description }));
+    const selected = value.options.findIndex((option) => value.data === option.value);
+    const styles = getSelectBoxStyles({
+      selectBackground: settingsSelectBackground,
+      selectForeground: settingsSelectForeground,
+      selectBorder: settingsSelectBorder,
+      selectListBorder: settingsSelectListBorder
+    });
+    const selectBox = new SelectBox(selectBoxOptions, selected, this.contextViewService, styles, {
+      useCustomDrawn: !hasNativeContextMenu(this.configurationService) || !(isIOS && BrowserFeatures.pointerEvents)
+    });
+    return selectBox;
+  }
+  editSetting(idx) {
+    this.model.setEditKey(idx);
+    this.renderList();
+  }
+  cancelEdit() {
+    this.model.setEditKey("none");
+    this.renderList();
+  }
+  handleItemChange(originalItem, changedItem, idx) {
+    this.model.setEditKey("none");
+    if (this.isItemNew(originalItem)) {
+      this._onDidChangeList.fire({
+        type: "add",
+        newItem: changedItem,
+        targetIndex: idx
+      });
+    } else {
+      this._onDidChangeList.fire({
+        type: "change",
+        originalItem,
+        newItem: changedItem,
+        targetIndex: idx
+      });
+    }
+    this.renderList();
+  }
+  renderDataOrEditItem(item, idx, listFocused) {
+    const rowElement = item.editing ? this.renderEdit(item, idx) : this.renderDataItem(item, idx, listFocused);
+    rowElement.setAttribute("role", "listitem");
+    return rowElement;
+  }
+  renderDataItem(item, idx, listFocused) {
+    const rowElementGroup = this.renderItem(item, idx);
+    const rowElement = rowElementGroup.rowElement;
+    rowElement.setAttribute("data-index", idx + "");
+    rowElement.setAttribute("tabindex", item.selected ? "0" : "-1");
+    rowElement.classList.toggle("selected", item.selected);
+    const actionBar = new ActionBar(rowElement);
+    this.listDisposables.add(actionBar);
+    actionBar.push(this.getActionsForItem(item, idx), { icon: true, label: true });
+    this.addTooltipsToRow(rowElementGroup, item);
+    if (item.selected && listFocused) {
+      disposableTimeout(() => rowElement.focus(), void 0, this.listDisposables);
+    }
+    this.listDisposables.add(DOM.addDisposableListener(rowElement, "click", (e) => {
+      e.stopPropagation();
+    }));
+    return rowElement;
+  }
+  renderAddButton() {
+    const rowElement = $(".setting-list-new-row");
+    const startAddButton = this._register(new Button(rowElement, defaultButtonStyles));
+    startAddButton.label = this.getLocalizedStrings().addButtonLabel;
+    startAddButton.element.classList.add("setting-list-addButton");
+    this._register(startAddButton.onDidClick(() => {
+      this.model.setEditKey("create");
+      this.renderList();
+    }));
+    return rowElement;
+  }
+  onListClick(e) {
+    const targetIdx = this.getClickedItemIndex(e);
+    if (targetIdx < 0) {
+      return;
+    }
+    e.preventDefault();
+    e.stopImmediatePropagation();
+    if (this.model.getSelected() === targetIdx) {
+      return;
+    }
+    this.selectRow(targetIdx);
+  }
+  onListDoubleClick(e) {
+    const targetIdx = this.getClickedItemIndex(e);
+    if (targetIdx < 0) {
+      return;
+    }
+    if (this.isReadOnly) {
+      return;
+    }
+    const item = this.model.items[targetIdx];
+    if (item) {
+      this.editSetting(targetIdx);
+      e.preventDefault();
+      e.stopPropagation();
+    }
+  }
+  getClickedItemIndex(e) {
+    if (!e.target) {
+      return -1;
+    }
+    const actionbar = DOM.findParentWithClass(e.target, "monaco-action-bar");
+    if (actionbar) {
+      return -1;
+    }
+    const element = DOM.findParentWithClass(e.target, "setting-list-row");
+    if (!element) {
+      return -1;
+    }
+    const targetIdxStr = element.getAttribute("data-index");
+    if (!targetIdxStr) {
+      return -1;
+    }
+    const targetIdx = parseInt(targetIdxStr);
+    return targetIdx;
+  }
+  selectRow(idx) {
+    this.model.select(idx);
+    this.rowElements.forEach((row) => row.classList.remove("selected"));
+    const selectedRow = this.rowElements[this.model.getSelected()];
+    selectedRow.classList.add("selected");
+    selectedRow.focus();
+  }
+  selectNextRow() {
+    this.model.selectNext();
+    this.selectRow(this.model.getSelected());
+  }
+  selectPreviousRow() {
+    this.model.selectPrevious();
+    this.selectRow(this.model.getSelected());
+  }
+};
+AbstractListSettingWidget = __decorate([
+  __param(1, IThemeService),
+  __param(2, IContextViewService),
+  __param(3, IConfigurationService)
+], AbstractListSettingWidget);
+let ListSettingWidget = class ListSettingWidget2 extends AbstractListSettingWidget {
+  static {
+    __name(this, "ListSettingWidget");
+  }
+  setValue(listData, options) {
+    this.keyValueSuggester = options?.keySuggester;
+    this.showAddButton = options?.showAddButton ?? true;
+    super.setValue(listData);
+  }
+  constructor(container, themeService, contextViewService, hoverService, configurationService) {
+    super(container, themeService, contextViewService, configurationService);
+    this.hoverService = hoverService;
+    this.showAddButton = true;
+  }
+  getEmptyItem() {
+    return {
+      value: {
+        type: "string",
+        data: ""
+      }
+    };
+  }
+  isAddButtonVisible() {
+    return this.showAddButton;
+  }
+  getContainerClasses() {
+    return ["setting-list-widget"];
+  }
+  getActionsForItem(item, idx) {
+    if (this.isReadOnly) {
+      return [];
+    }
+    return [
+      {
+        class: ThemeIcon.asClassName(settingsEditIcon),
+        enabled: true,
+        id: "workbench.action.editListItem",
+        tooltip: this.getLocalizedStrings().editActionTooltip,
+        run: /* @__PURE__ */ __name(() => this.editSetting(idx), "run")
+      },
+      {
+        class: ThemeIcon.asClassName(settingsRemoveIcon),
+        enabled: true,
+        id: "workbench.action.removeListItem",
+        tooltip: this.getLocalizedStrings().deleteActionTooltip,
+        run: /* @__PURE__ */ __name(() => this._onDidChangeList.fire({ type: "remove", originalItem: item, targetIndex: idx }), "run")
+      }
+    ];
+  }
+  renderItem(item, idx) {
+    const rowElement = $(".setting-list-row");
+    const valueElement = DOM.append(rowElement, $(".setting-list-value"));
+    const siblingElement = DOM.append(rowElement, $(".setting-list-sibling"));
+    valueElement.textContent = item.value.data.toString();
+    if (item.sibling) {
+      siblingElement.textContent = `when: ${item.sibling}`;
+    } else {
+      siblingElement.textContent = null;
+      valueElement.classList.add("no-sibling");
+    }
+    this.addDragAndDrop(rowElement, item, idx);
+    return { rowElement, keyElement: valueElement, valueElement: siblingElement };
+  }
+  addDragAndDrop(rowElement, item, idx) {
+    if (this.model.items.every((item2) => !item2.editing)) {
+      rowElement.draggable = true;
+      rowElement.classList.add("draggable");
+    } else {
+      rowElement.draggable = false;
+      rowElement.classList.remove("draggable");
+    }
+    this.listDisposables.add(DOM.addDisposableListener(rowElement, DOM.EventType.DRAG_START, (ev) => {
+      this.dragDetails = {
+        element: rowElement,
+        item,
+        itemIndex: idx
+      };
+      applyDragImage(ev, rowElement, item.value.data);
+    }));
+    this.listDisposables.add(DOM.addDisposableListener(rowElement, DOM.EventType.DRAG_OVER, (ev) => {
+      if (!this.dragDetails) {
+        return false;
+      }
+      ev.preventDefault();
+      if (ev.dataTransfer) {
+        ev.dataTransfer.dropEffect = "move";
+      }
+      return true;
+    }));
+    let counter = 0;
+    this.listDisposables.add(DOM.addDisposableListener(rowElement, DOM.EventType.DRAG_ENTER, (ev) => {
+      counter++;
+      rowElement.classList.add("drag-hover");
+    }));
+    this.listDisposables.add(DOM.addDisposableListener(rowElement, DOM.EventType.DRAG_LEAVE, (ev) => {
+      counter--;
+      if (!counter) {
+        rowElement.classList.remove("drag-hover");
+      }
+    }));
+    this.listDisposables.add(DOM.addDisposableListener(rowElement, DOM.EventType.DROP, (ev) => {
+      if (!this.dragDetails) {
+        return false;
+      }
+      ev.preventDefault();
+      counter = 0;
+      if (this.dragDetails.element !== rowElement) {
+        this._onDidChangeList.fire({
+          type: "move",
+          originalItem: this.dragDetails.item,
+          sourceIndex: this.dragDetails.itemIndex,
+          newItem: item,
+          targetIndex: idx
+        });
+      }
+      return true;
+    }));
+    this.listDisposables.add(DOM.addDisposableListener(rowElement, DOM.EventType.DRAG_END, (ev) => {
+      counter = 0;
+      rowElement.classList.remove("drag-hover");
+      ev.dataTransfer?.clearData();
+      if (this.dragDetails) {
+        this.dragDetails = void 0;
+      }
+    }));
+  }
+  renderEdit(item, idx) {
+    const rowElement = $(".setting-list-edit-row");
+    let valueInput;
+    let currentDisplayValue;
+    let currentEnumOptions;
+    if (this.keyValueSuggester) {
+      const enumData = this.keyValueSuggester(this.model.items.map(({ value: { data } }) => data), idx);
+      item = {
+        ...item,
+        value: {
+          type: "enum",
+          data: item.value.data,
+          options: enumData ? enumData.options : []
+        }
+      };
+    }
+    switch (item.value.type) {
+      case "string":
+        valueInput = this.renderInputBox(item.value, rowElement);
+        break;
+      case "enum":
+        valueInput = this.renderDropdown(item.value, rowElement);
+        currentEnumOptions = item.value.options;
+        if (item.value.options.length) {
+          currentDisplayValue = this.isItemNew(item) ? currentEnumOptions[0].value : item.value.data;
+        }
+        break;
+    }
+    const updatedInputBoxItem = /* @__PURE__ */ __name(() => {
+      const inputBox = valueInput;
+      return {
+        value: {
+          type: "string",
+          data: inputBox.value
+        },
+        sibling: siblingInput?.value
+      };
+    }, "updatedInputBoxItem");
+    const updatedSelectBoxItem = /* @__PURE__ */ __name((selectedValue) => {
+      return {
+        value: {
+          type: "enum",
+          data: selectedValue,
+          options: currentEnumOptions ?? []
+        }
+      };
+    }, "updatedSelectBoxItem");
+    const onKeyDown = /* @__PURE__ */ __name((e) => {
+      if (e.equals(
+        3
+        /* KeyCode.Enter */
+      )) {
+        this.handleItemChange(item, updatedInputBoxItem(), idx);
+      } else if (e.equals(
+        9
+        /* KeyCode.Escape */
+      )) {
+        this.cancelEdit();
+        e.preventDefault();
+      }
+      rowElement?.focus();
+    }, "onKeyDown");
+    if (item.value.type !== "string") {
+      const selectBox = valueInput;
+      this.listDisposables.add(selectBox.onDidSelect(({ selected }) => {
+        currentDisplayValue = selected;
+      }));
+    } else {
+      const inputBox = valueInput;
+      this.listDisposables.add(DOM.addStandardDisposableListener(inputBox.inputElement, DOM.EventType.KEY_DOWN, onKeyDown));
+    }
+    let siblingInput;
+    if (!isUndefinedOrNull(item.sibling)) {
+      siblingInput = new InputBox(rowElement, this.contextViewService, {
+        placeholder: this.getLocalizedStrings().siblingInputPlaceholder,
+        inputBoxStyles: getInputBoxStyle({
+          inputBackground: settingsTextInputBackground,
+          inputForeground: settingsTextInputForeground,
+          inputBorder: settingsTextInputBorder
+        })
+      });
+      siblingInput.element.classList.add("setting-list-siblingInput");
+      this.listDisposables.add(siblingInput);
+      siblingInput.value = item.sibling;
+      this.listDisposables.add(DOM.addStandardDisposableListener(siblingInput.inputElement, DOM.EventType.KEY_DOWN, onKeyDown));
+    } else if (valueInput instanceof InputBox) {
+      valueInput.element.classList.add("no-sibling");
+    }
+    const okButton = this.listDisposables.add(new Button(rowElement, defaultButtonStyles));
+    okButton.label = localize("okButton", "OK");
+    okButton.element.classList.add("setting-list-ok-button");
+    this.listDisposables.add(okButton.onDidClick(() => {
+      if (item.value.type === "string") {
+        this.handleItemChange(item, updatedInputBoxItem(), idx);
+      } else {
+        this.handleItemChange(item, updatedSelectBoxItem(currentDisplayValue), idx);
+      }
+    }));
+    const cancelButton = this.listDisposables.add(new Button(rowElement, { secondary: true, ...defaultButtonStyles }));
+    cancelButton.label = localize("cancelButton", "Cancel");
+    cancelButton.element.classList.add("setting-list-cancel-button");
+    this.listDisposables.add(cancelButton.onDidClick(() => this.cancelEdit()));
+    this.listDisposables.add(disposableTimeout(() => {
+      valueInput.focus();
+      if (valueInput instanceof InputBox) {
+        valueInput.select();
+      }
+    }));
+    return rowElement;
+  }
+  isItemNew(item) {
+    return item.value.data === "";
+  }
+  addTooltipsToRow(rowElementGroup, { value, sibling }) {
+    const title = isUndefinedOrNull(sibling) ? localize("listValueHintLabel", "List item `{0}`", value.data) : localize("listSiblingHintLabel", "List item `{0}` with sibling `${1}`", value.data, sibling);
+    const { rowElement } = rowElementGroup;
+    this.listDisposables.add(this.hoverService.setupDelayedHover(rowElement, { content: title }));
+    rowElement.setAttribute("aria-label", title);
+  }
+  getLocalizedStrings() {
+    return {
+      deleteActionTooltip: localize("removeItem", "Remove Item"),
+      editActionTooltip: localize("editItem", "Edit Item"),
+      addButtonLabel: localize("addItem", "Add Item"),
+      inputPlaceholder: localize("itemInputPlaceholder", "Item..."),
+      siblingInputPlaceholder: localize("listSiblingInputPlaceholder", "Sibling...")
+    };
+  }
+  renderInputBox(value, rowElement) {
+    const valueInput = new InputBox(rowElement, this.contextViewService, {
+      placeholder: this.getLocalizedStrings().inputPlaceholder,
+      inputBoxStyles: getInputBoxStyle({
+        inputBackground: settingsTextInputBackground,
+        inputForeground: settingsTextInputForeground,
+        inputBorder: settingsTextInputBorder
+      })
+    });
+    valueInput.element.classList.add("setting-list-valueInput");
+    this.listDisposables.add(valueInput);
+    valueInput.value = value.data.toString();
+    return valueInput;
+  }
+  renderDropdown(value, rowElement) {
+    if (value.type !== "enum") {
+      throw new Error("Valuetype must be enum.");
+    }
+    const selectBox = this.createBasicSelectBox(value);
+    const wrapper = $(".setting-list-object-list-row");
+    selectBox.render(wrapper);
+    rowElement.appendChild(wrapper);
+    return selectBox;
+  }
+};
+ListSettingWidget = __decorate([
+  __param(1, IThemeService),
+  __param(2, IContextViewService),
+  __param(3, IHoverService),
+  __param(4, IConfigurationService)
+], ListSettingWidget);
+class ExcludeSettingWidget extends ListSettingWidget {
+  static {
+    __name(this, "ExcludeSettingWidget");
+  }
+  getContainerClasses() {
+    return ["setting-list-include-exclude-widget"];
+  }
+  addDragAndDrop(rowElement, item, idx) {
+    return;
+  }
+  addTooltipsToRow(rowElementGroup, item) {
+    let title = isUndefinedOrNull(item.sibling) ? localize("excludePatternHintLabel", "Exclude files matching `{0}`", item.value.data) : localize("excludeSiblingHintLabel", "Exclude files matching `{0}`, only when a file matching `{1}` is present", item.value.data, item.sibling);
+    if (item.source) {
+      title += localize("excludeIncludeSource", ". Default value provided by `{0}`", item.source);
+    }
+    const markdownTitle = new MarkdownString().appendMarkdown(title);
+    const { rowElement } = rowElementGroup;
+    this.listDisposables.add(this.hoverService.setupDelayedHover(rowElement, { content: markdownTitle }));
+    rowElement.setAttribute("aria-label", title);
+  }
+  getLocalizedStrings() {
+    return {
+      deleteActionTooltip: localize("removeExcludeItem", "Remove Exclude Item"),
+      editActionTooltip: localize("editExcludeItem", "Edit Exclude Item"),
+      addButtonLabel: localize("addPattern", "Add Pattern"),
+      inputPlaceholder: localize("excludePatternInputPlaceholder", "Exclude Pattern..."),
+      siblingInputPlaceholder: localize("excludeSiblingInputPlaceholder", "When Pattern Is Present...")
+    };
+  }
+}
+class IncludeSettingWidget extends ListSettingWidget {
+  static {
+    __name(this, "IncludeSettingWidget");
+  }
+  getContainerClasses() {
+    return ["setting-list-include-exclude-widget"];
+  }
+  addDragAndDrop(rowElement, item, idx) {
+    return;
+  }
+  addTooltipsToRow(rowElementGroup, item) {
+    let title = isUndefinedOrNull(item.sibling) ? localize("includePatternHintLabel", "Include files matching `{0}`", item.value.data) : localize("includeSiblingHintLabel", "Include files matching `{0}`, only when a file matching `{1}` is present", item.value.data, item.sibling);
+    if (item.source) {
+      title += localize("excludeIncludeSource", ". Default value provided by `{0}`", item.source);
+    }
+    const markdownTitle = new MarkdownString().appendMarkdown(title);
+    const { rowElement } = rowElementGroup;
+    this.listDisposables.add(this.hoverService.setupDelayedHover(rowElement, { content: markdownTitle }));
+    rowElement.setAttribute("aria-label", title);
+  }
+  getLocalizedStrings() {
+    return {
+      deleteActionTooltip: localize("removeIncludeItem", "Remove Include Item"),
+      editActionTooltip: localize("editIncludeItem", "Edit Include Item"),
+      addButtonLabel: localize("addPattern", "Add Pattern"),
+      inputPlaceholder: localize("includePatternInputPlaceholder", "Include Pattern..."),
+      siblingInputPlaceholder: localize("includeSiblingInputPlaceholder", "When Pattern Is Present...")
+    };
+  }
+}
+let ObjectSettingDropdownWidget = class ObjectSettingDropdownWidget2 extends AbstractListSettingWidget {
+  static {
+    __name(this, "ObjectSettingDropdownWidget");
+  }
+  constructor(container, themeService, contextViewService, hoverService, configurationService) {
+    super(container, themeService, contextViewService, configurationService);
+    this.hoverService = hoverService;
+    this.editable = true;
+    this.currentSettingKey = "";
+    this.showAddButton = true;
+    this.keySuggester = () => void 0;
+    this.valueSuggester = () => void 0;
+  }
+  setValue(listData, options) {
+    this.editable = !options?.isReadOnly;
+    this.showAddButton = options?.showAddButton ?? this.showAddButton;
+    this.keySuggester = options?.keySuggester ?? this.keySuggester;
+    this.valueSuggester = options?.valueSuggester ?? this.valueSuggester;
+    if (isDefined(options) && options.settingKey !== this.currentSettingKey) {
+      this.model.setEditKey("none");
+      this.model.select(null);
+      this.currentSettingKey = options.settingKey;
+    }
+    super.setValue(listData);
+  }
+  isItemNew(item) {
+    return item.key.data === "" && item.value.data === "";
+  }
+  isAddButtonVisible() {
+    return this.showAddButton;
+  }
+  get isReadOnly() {
+    return !this.editable;
+  }
+  getEmptyItem() {
+    return {
+      key: { type: "string", data: "" },
+      value: { type: "string", data: "" },
+      removable: true,
+      resetable: false
+    };
+  }
+  getContainerClasses() {
+    return ["setting-list-object-widget"];
+  }
+  getActionsForItem(item, idx) {
+    if (this.isReadOnly) {
+      return [];
+    }
+    const actions = [
+      {
+        class: ThemeIcon.asClassName(settingsEditIcon),
+        enabled: true,
+        id: "workbench.action.editListItem",
+        label: "",
+        tooltip: this.getLocalizedStrings().editActionTooltip,
+        run: /* @__PURE__ */ __name(() => this.editSetting(idx), "run")
+      }
+    ];
+    if (item.resetable) {
+      actions.push({
+        class: ThemeIcon.asClassName(settingsDiscardIcon),
+        enabled: true,
+        id: "workbench.action.resetListItem",
+        label: "",
+        tooltip: this.getLocalizedStrings().resetActionTooltip,
+        run: /* @__PURE__ */ __name(() => this._onDidChangeList.fire({ type: "reset", originalItem: item, targetIndex: idx }), "run")
+      });
+    }
+    if (item.removable) {
+      actions.push({
+        class: ThemeIcon.asClassName(settingsRemoveIcon),
+        enabled: true,
+        id: "workbench.action.removeListItem",
+        label: "",
+        tooltip: this.getLocalizedStrings().deleteActionTooltip,
+        run: /* @__PURE__ */ __name(() => this._onDidChangeList.fire({ type: "remove", originalItem: item, targetIndex: idx }), "run")
+      });
+    }
+    return actions;
+  }
+  renderHeader() {
+    const header = $(".setting-list-row-header");
+    const keyHeader = DOM.append(header, $(".setting-list-object-key"));
+    const valueHeader = DOM.append(header, $(".setting-list-object-value"));
+    const { keyHeaderText, valueHeaderText } = this.getLocalizedStrings();
+    keyHeader.textContent = keyHeaderText;
+    valueHeader.textContent = valueHeaderText;
+    return header;
+  }
+  renderItem(item, idx) {
+    const rowElement = $(".setting-list-row");
+    rowElement.classList.add("setting-list-object-row");
+    const keyElement = DOM.append(rowElement, $(".setting-list-object-key"));
+    const valueElement = DOM.append(rowElement, $(".setting-list-object-value"));
+    keyElement.textContent = item.key.data;
+    valueElement.textContent = item.value.data.toString();
+    return { rowElement, keyElement, valueElement };
+  }
+  renderEdit(item, idx) {
+    const rowElement = $(".setting-list-edit-row.setting-list-object-row");
+    const changedItem = { ...item };
+    const onKeyChange = /* @__PURE__ */ __name((key) => {
+      changedItem.key = key;
+      okButton.enabled = key.data !== "";
+      const suggestedValue = this.valueSuggester(key.data) ?? item.value;
+      if (this.shouldUseSuggestion(item.value, changedItem.value, suggestedValue)) {
+        onValueChange(suggestedValue);
+        renderLatestValue();
+      }
+    }, "onKeyChange");
+    const onValueChange = /* @__PURE__ */ __name((value) => {
+      changedItem.value = value;
+    }, "onValueChange");
+    let keyWidget;
+    let keyElement;
+    if (this.showAddButton) {
+      if (this.isItemNew(item)) {
+        const suggestedKey = this.keySuggester(this.model.items.map(({ key: { data } }) => data));
+        if (isDefined(suggestedKey)) {
+          changedItem.key = suggestedKey;
+          const suggestedValue = this.valueSuggester(changedItem.key.data);
+          onValueChange(suggestedValue ?? changedItem.value);
+        }
+      }
+      const { widget, element } = this.renderEditWidget(changedItem.key, {
+        idx,
+        isKey: true,
+        originalItem: item,
+        changedItem,
+        update: onKeyChange
+      });
+      keyWidget = widget;
+      keyElement = element;
+    } else {
+      keyElement = $(".setting-list-object-key");
+      keyElement.textContent = item.key.data;
+    }
+    let valueWidget;
+    const valueContainer = $(".setting-list-object-value-container");
+    const renderLatestValue = /* @__PURE__ */ __name(() => {
+      const { widget, element } = this.renderEditWidget(changedItem.value, {
+        idx,
+        isKey: false,
+        originalItem: item,
+        changedItem,
+        update: onValueChange
+      });
+      valueWidget = widget;
+      DOM.clearNode(valueContainer);
+      valueContainer.append(element);
+    }, "renderLatestValue");
+    renderLatestValue();
+    rowElement.append(keyElement, valueContainer);
+    const okButton = this.listDisposables.add(new Button(rowElement, defaultButtonStyles));
+    okButton.enabled = changedItem.key.data !== "";
+    okButton.label = localize("okButton", "OK");
+    okButton.element.classList.add("setting-list-ok-button");
+    this.listDisposables.add(okButton.onDidClick(() => this.handleItemChange(item, changedItem, idx)));
+    const cancelButton = this.listDisposables.add(new Button(rowElement, { secondary: true, ...defaultButtonStyles }));
+    cancelButton.label = localize("cancelButton", "Cancel");
+    cancelButton.element.classList.add("setting-list-cancel-button");
+    this.listDisposables.add(cancelButton.onDidClick(() => this.cancelEdit()));
+    this.listDisposables.add(disposableTimeout(() => {
+      const widget = keyWidget ?? valueWidget;
+      widget.focus();
+      if (widget instanceof InputBox) {
+        widget.select();
+      }
+    }));
+    return rowElement;
+  }
+  renderEditWidget(keyOrValue, options) {
+    switch (keyOrValue.type) {
+      case "string":
+        return this.renderStringEditWidget(keyOrValue, options);
+      case "enum":
+        return this.renderEnumEditWidget(keyOrValue, options);
+      case "boolean":
+        return this.renderEnumEditWidget({
+          type: "enum",
+          data: keyOrValue.data.toString(),
+          options: [{ value: "true" }, { value: "false" }]
+        }, options);
+    }
+  }
+  renderStringEditWidget(keyOrValue, { idx, isKey, originalItem, changedItem, update }) {
+    const wrapper = $(isKey ? ".setting-list-object-input-key" : ".setting-list-object-input-value");
+    const inputBox = new InputBox(wrapper, this.contextViewService, {
+      placeholder: isKey ? localize("objectKeyInputPlaceholder", "Key") : localize("objectValueInputPlaceholder", "Value"),
+      inputBoxStyles: getInputBoxStyle({
+        inputBackground: settingsTextInputBackground,
+        inputForeground: settingsTextInputForeground,
+        inputBorder: settingsTextInputBorder
+      })
+    });
+    inputBox.element.classList.add("setting-list-object-input");
+    this.listDisposables.add(inputBox);
+    inputBox.value = keyOrValue.data;
+    this.listDisposables.add(inputBox.onDidChange((value) => update({ ...keyOrValue, data: value })));
+    const onKeyDown = /* @__PURE__ */ __name((e) => {
+      if (e.equals(
+        3
+        /* KeyCode.Enter */
+      )) {
+        this.handleItemChange(originalItem, changedItem, idx);
+      } else if (e.equals(
+        9
+        /* KeyCode.Escape */
+      )) {
+        this.cancelEdit();
+        e.preventDefault();
+      }
+    }, "onKeyDown");
+    this.listDisposables.add(DOM.addStandardDisposableListener(inputBox.inputElement, DOM.EventType.KEY_DOWN, onKeyDown));
+    return { widget: inputBox, element: wrapper };
+  }
+  renderEnumEditWidget(keyOrValue, { isKey, changedItem, update }) {
+    const selectBox = this.createBasicSelectBox(keyOrValue);
+    const changedKeyOrValue = isKey ? changedItem.key : changedItem.value;
+    this.listDisposables.add(selectBox.onDidSelect(({ selected: selected2 }) => update(changedKeyOrValue.type === "boolean" ? { ...changedKeyOrValue, data: selected2 === "true" ? true : false } : { ...changedKeyOrValue, data: selected2 })));
+    const wrapper = $(".setting-list-object-input");
+    wrapper.classList.add(isKey ? "setting-list-object-input-key" : "setting-list-object-input-value");
+    selectBox.render(wrapper);
+    const selected = keyOrValue.options.findIndex((option) => keyOrValue.data === option.value);
+    if (selected === -1 && keyOrValue.options.length) {
+      update(changedKeyOrValue.type === "boolean" ? { ...changedKeyOrValue, data: true } : { ...changedKeyOrValue, data: keyOrValue.options[0].value });
+    } else if (changedKeyOrValue.type === "boolean") {
+      update({ ...changedKeyOrValue, data: keyOrValue.data === "true" });
+    }
+    return { widget: selectBox, element: wrapper };
+  }
+  shouldUseSuggestion(originalValue, previousValue, newValue) {
+    if (newValue.type !== "enum" && newValue.type === previousValue.type && newValue.data === previousValue.data) {
+      return false;
+    }
+    if (originalValue.data === "") {
+      return true;
+    }
+    if (previousValue.type === newValue.type && newValue.type !== "enum") {
+      return false;
+    }
+    if (previousValue.type === "enum" && newValue.type === "enum") {
+      const previousEnums = new Set(previousValue.options.map(({ value }) => value));
+      newValue.options.forEach(({ value }) => previousEnums.delete(value));
+      if (previousEnums.size === 0) {
+        return false;
+      }
+    }
+    return true;
+  }
+  addTooltipsToRow(rowElementGroup, item) {
+    const { keyElement, valueElement, rowElement } = rowElementGroup;
+    let accessibleDescription;
+    if (item.source) {
+      accessibleDescription = localize("objectPairHintLabelWithSource", "The property `{0}` is set to `{1}` by `{2}`.", item.key.data, item.value.data, item.source);
+    } else {
+      accessibleDescription = localize("objectPairHintLabel", "The property `{0}` is set to `{1}`.", item.key.data, item.value.data);
+    }
+    const markdownString = new MarkdownString().appendMarkdown(accessibleDescription);
+    const keyDescription = this.getEnumDescription(item.key) ?? item.keyDescription ?? markdownString;
+    this.listDisposables.add(this.hoverService.setupDelayedHover(keyElement, { content: keyDescription }));
+    const valueDescription = this.getEnumDescription(item.value) ?? markdownString;
+    this.listDisposables.add(this.hoverService.setupDelayedHover(valueElement, { content: valueDescription }));
+    rowElement.setAttribute("aria-label", accessibleDescription);
+  }
+  getEnumDescription(keyOrValue) {
+    const enumDescription = keyOrValue.type === "enum" ? keyOrValue.options.find(({ value }) => keyOrValue.data === value)?.description : void 0;
+    return enumDescription;
+  }
+  getLocalizedStrings() {
+    return {
+      deleteActionTooltip: localize("removeItem", "Remove Item"),
+      resetActionTooltip: localize("resetItem", "Reset Item"),
+      editActionTooltip: localize("editItem", "Edit Item"),
+      addButtonLabel: localize("addItem", "Add Item"),
+      keyHeaderText: localize("objectKeyHeader", "Item"),
+      valueHeaderText: localize("objectValueHeader", "Value")
+    };
+  }
+};
+ObjectSettingDropdownWidget = __decorate([
+  __param(1, IThemeService),
+  __param(2, IContextViewService),
+  __param(3, IHoverService),
+  __param(4, IConfigurationService)
+], ObjectSettingDropdownWidget);
+let ObjectSettingCheckboxWidget = class ObjectSettingCheckboxWidget2 extends AbstractListSettingWidget {
+  static {
+    __name(this, "ObjectSettingCheckboxWidget");
+  }
+  constructor(container, themeService, contextViewService, hoverService, configurationService) {
+    super(container, themeService, contextViewService, configurationService);
+    this.hoverService = hoverService;
+    this.currentSettingKey = "";
+  }
+  setValue(listData, options) {
+    if (isDefined(options) && options.settingKey !== this.currentSettingKey) {
+      this.model.setEditKey("none");
+      this.model.select(null);
+      this.currentSettingKey = options.settingKey;
+    }
+    super.setValue(listData);
+  }
+  isItemNew(item) {
+    return !item.key.data && !item.value.data;
+  }
+  getEmptyItem() {
+    return {
+      key: { type: "string", data: "" },
+      value: { type: "boolean", data: false },
+      removable: false,
+      resetable: true
+    };
+  }
+  getContainerClasses() {
+    return ["setting-list-object-widget"];
+  }
+  getActionsForItem(item, idx) {
+    return [];
+  }
+  isAddButtonVisible() {
+    return false;
+  }
+  renderHeader() {
+    return void 0;
+  }
+  renderDataOrEditItem(item, idx, listFocused) {
+    const rowElement = this.renderEdit(item, idx);
+    rowElement.setAttribute("role", "listitem");
+    return rowElement;
+  }
+  renderItem(item, idx) {
+    const rowElement = $(".blank-row");
+    const keyElement = $(".blank-row-key");
+    return { rowElement, keyElement };
+  }
+  renderEdit(item, idx) {
+    const rowElement = $(".setting-list-edit-row.setting-list-object-row.setting-item-bool");
+    const changedItem = { ...item };
+    const onValueChange = /* @__PURE__ */ __name((newValue) => {
+      changedItem.value.data = newValue;
+      this.handleItemChange(item, changedItem, idx);
+    }, "onValueChange");
+    const checkboxDescription = item.keyDescription ? `${item.keyDescription} (${item.key.data})` : item.key.data;
+    const { element, widget: checkbox } = this.renderEditWidget(changedItem.value.data, checkboxDescription, onValueChange);
+    rowElement.appendChild(element);
+    const valueElement = DOM.append(rowElement, $(".setting-list-object-value"));
+    valueElement.textContent = checkboxDescription;
+    const rowElementGroup = { rowElement, keyElement: valueElement, valueElement: checkbox.domNode };
+    this.addTooltipsToRow(rowElementGroup, item);
+    this._register(DOM.addDisposableListener(valueElement, DOM.EventType.MOUSE_DOWN, (e) => {
+      const targetElement = e.target;
+      if (targetElement.tagName.toLowerCase() !== "a") {
+        checkbox.checked = !checkbox.checked;
+        onValueChange(checkbox.checked);
+      }
+      DOM.EventHelper.stop(e);
+    }));
+    return rowElement;
+  }
+  renderEditWidget(value, checkboxDescription, onValueChange) {
+    const checkbox = new Toggle({
+      icon: Codicon.check,
+      actionClassName: "setting-value-checkbox",
+      isChecked: value,
+      title: checkboxDescription,
+      ...unthemedToggleStyles
+    });
+    this.listDisposables.add(checkbox);
+    const wrapper = $(".setting-list-object-input");
+    wrapper.classList.add("setting-list-object-input-key-checkbox");
+    checkbox.domNode.classList.add("setting-value-checkbox");
+    wrapper.appendChild(checkbox.domNode);
+    this._register(DOM.addDisposableListener(wrapper, DOM.EventType.MOUSE_DOWN, (e) => {
+      checkbox.checked = !checkbox.checked;
+      onValueChange(checkbox.checked);
+      e.stopImmediatePropagation();
+    }));
+    return { widget: checkbox, element: wrapper };
+  }
+  addTooltipsToRow(rowElementGroup, item) {
+    const accessibleDescription = localize("objectPairHintLabel", "The property `{0}` is set to `{1}`.", item.key.data, item.value.data);
+    const title = item.keyDescription ?? accessibleDescription;
+    const { rowElement, keyElement, valueElement } = rowElementGroup;
+    this.listDisposables.add(this.hoverService.setupDelayedHover(keyElement, { content: title }));
+    valueElement.setAttribute("aria-label", accessibleDescription);
+    rowElement.setAttribute("aria-label", accessibleDescription);
+  }
+  getLocalizedStrings() {
+    return {
+      deleteActionTooltip: localize("removeItem", "Remove Item"),
+      resetActionTooltip: localize("resetItem", "Reset Item"),
+      editActionTooltip: localize("editItem", "Edit Item"),
+      addButtonLabel: localize("addItem", "Add Item"),
+      keyHeaderText: localize("objectKeyHeader", "Item"),
+      valueHeaderText: localize("objectValueHeader", "Value")
+    };
+  }
+};
+ObjectSettingCheckboxWidget = __decorate([
+  __param(1, IThemeService),
+  __param(2, IContextViewService),
+  __param(3, IHoverService),
+  __param(4, IConfigurationService)
+], ObjectSettingCheckboxWidget);
+export {
+  AbstractListSettingWidget,
+  ExcludeSettingWidget,
+  IncludeSettingWidget,
+  ListSettingListModel,
+  ListSettingWidget,
+  ObjectSettingCheckboxWidget,
+  ObjectSettingDropdownWidget
+};
+//# sourceMappingURL=settingsWidgets.js.map

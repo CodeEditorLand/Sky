@@ -1,2 +1,64 @@
-import{$0_ as g}from"../../../../editor/browser/services/codeEditorService.js";import{$Hgb as u,$Igb as p}from"../../../../editor/browser/widget/diffEditor/commands.js";import{$xgb as y}from"../../../../editor/browser/widget/diffEditor/diffEditorWidget.js";import{localize as i}from"../../../../nls.js";import{$$ob as b}from"../../../../platform/accessibility/browser/accessibleView.js";import{$Hn as $,$Vn as a}from"../../../../platform/contextkey/common/contextkey.js";import{$ux as h}from"../../../../platform/keybinding/common/keybinding.js";import{$Vuc as E}from"../../accessibility/browser/editorAccessibilityHelp.js";import{$oI as v}from"../../../services/editor/common/editorService.js";class H{constructor(){this.priority=105,this.name="diff-editor",this.when=$.create("isInDiffEditor",!0),this.type="help"}getProvider(t){const d=t.get(v),o=t.get(g),c=t.get(h),s=t.get(a);if(!(d.activeTextEditorControl instanceof y))return;const e=o.getActiveCodeEditor()||o.getFocusedCodeEditor();if(!e)return;const f=i(5854,null,"<keybinding:diffEditor.switchSide>"),l=i(5855,null),m=["accessibility.signals.diffLineDeleted","accessibility.signals.diffLineInserted","accessibility.signals.diffLineModified"],n=[i(5856,null),i(5857,null,"<keybinding:"+u.id+">","<keybinding:"+p.id+">"),f,l,i(5858,null,m.join(", "))],r=E(c,s,e);return r&&n.push(r),new b("diffEditor",{type:"help"},()=>n.join(`
-`),()=>e.focus(),"accessibility.verbosity.diffEditor")}}export{H as $Yuc};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { ICodeEditorService } from "../../../../editor/browser/services/codeEditorService.js";
+import { AccessibleDiffViewerNext, AccessibleDiffViewerPrev } from "../../../../editor/browser/widget/diffEditor/commands.js";
+import { DiffEditorWidget } from "../../../../editor/browser/widget/diffEditor/diffEditorWidget.js";
+import { localize } from "../../../../nls.js";
+import { AccessibleContentProvider } from "../../../../platform/accessibility/browser/accessibleView.js";
+import { ContextKeyEqualsExpr, IContextKeyService } from "../../../../platform/contextkey/common/contextkey.js";
+import { IKeybindingService } from "../../../../platform/keybinding/common/keybinding.js";
+import { getCommentCommandInfo } from "../../accessibility/browser/editorAccessibilityHelp.js";
+import { IEditorService } from "../../../services/editor/common/editorService.js";
+class DiffEditorAccessibilityHelp {
+  static {
+    __name(this, "DiffEditorAccessibilityHelp");
+  }
+  constructor() {
+    this.priority = 105;
+    this.name = "diff-editor";
+    this.when = ContextKeyEqualsExpr.create("isInDiffEditor", true);
+    this.type = "help";
+  }
+  getProvider(accessor) {
+    const editorService = accessor.get(IEditorService);
+    const codeEditorService = accessor.get(ICodeEditorService);
+    const keybindingService = accessor.get(IKeybindingService);
+    const contextKeyService = accessor.get(IContextKeyService);
+    if (!(editorService.activeTextEditorControl instanceof DiffEditorWidget)) {
+      return;
+    }
+    const codeEditor = codeEditorService.getActiveCodeEditor() || codeEditorService.getFocusedCodeEditor();
+    if (!codeEditor) {
+      return;
+    }
+    const switchSides = localize("msg3", "Run the command Diff Editor: Switch Side{0} to toggle between the original and modified editors.", "<keybinding:diffEditor.switchSide>");
+    const diffEditorActiveAnnouncement = localize("msg5", "The setting, accessibility.verbosity.diffEditorActive, controls if a diff editor announcement is made when it becomes the active editor.");
+    const keys = ["accessibility.signals.diffLineDeleted", "accessibility.signals.diffLineInserted", "accessibility.signals.diffLineModified"];
+    const content = [
+      localize("msg1", "You are in a diff editor."),
+      localize("msg2", "View the next{0} or previous{1} diff in diff review mode, which is optimized for screen readers.", "<keybinding:" + AccessibleDiffViewerNext.id + ">", "<keybinding:" + AccessibleDiffViewerPrev.id + ">"),
+      switchSides,
+      diffEditorActiveAnnouncement,
+      localize("msg4", "To control which accessibility signals should be played, the following settings can be configured: {0}.", keys.join(", "))
+    ];
+    const commentCommandInfo = getCommentCommandInfo(keybindingService, contextKeyService, codeEditor);
+    if (commentCommandInfo) {
+      content.push(commentCommandInfo);
+    }
+    return new AccessibleContentProvider(
+      "diffEditor",
+      {
+        type: "help"
+        /* AccessibleViewType.Help */
+      },
+      () => content.join("\n"),
+      () => codeEditor.focus(),
+      "accessibility.verbosity.diffEditor"
+      /* AccessibilityVerbositySettingId.DiffEditor */
+    );
+  }
+}
+export {
+  DiffEditorAccessibilityHelp
+};
+//# sourceMappingURL=diffEditorAccessibilityHelp.js.map

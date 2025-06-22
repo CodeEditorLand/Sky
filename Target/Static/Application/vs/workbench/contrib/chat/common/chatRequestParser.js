@@ -1,2 +1,203 @@
-import{$bD as v}from"../../../../editor/common/core/ranges/offsetRange.js";import{$bC as C}from"../../../../editor/common/core/position.js";import{$cC as P}from"../../../../editor/common/core/range.js";import{$iT as T}from"./chatAgents.js";import{$WS as S,$XS as y,$1S as j,$YS as B,$ZS as L,$QS as A,$US as x,$VS as V,$SS as O,$TS as Q,$RS as q}from"./chatParserTypes.js";import{$NS as F}from"./chatSlashCommands.js";import{$iQ as I}from"./chatVariables.js";import{ChatAgentLocation as H,ChatMode as U}from"./constants.js";import{$HS as W}from"./promptSyntax/service/promptsService.js";var M=function(p,o,t,r){var i=arguments.length,n=i<3?o:r===null?r=Object.getOwnPropertyDescriptor(o,t):r,a;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")n=Reflect.decorate(p,o,t,r);else for(var s=p.length-1;s>=0;s--)(a=p[s])&&(n=(i<3?a(n):i>3?a(o,t,n):a(o,t))||n);return i>3&&n&&Object.defineProperty(o,t,n),n},$=function(p,o){return function(t,r){o(t,r,p)}};const X=/^@([\w_\-\.]+)(?=(\s|$|\b))/i,Y=/^#([\w_\-]+)(:\d+)?(?=(\s|$|\b))/i,Z=/^\/([\w_\-\.:]+)(?=(\s|$|\b))/i;let _=class{constructor(o,t,r,i){this.b=o,this.d=t,this.e=r,this.f=i}parseChatRequest(o,t,r=H.Panel,i){const n=[],a=this.d.getDynamicVariables(o),s=new Map(this.d.getSelectedTools(o).filter(e=>e.canBeReferencedInPrompt&&e.toolReferenceName).map(e=>[e.toolReferenceName,e])),h=new Map(this.d.getSelectedToolSets(o).map(e=>[e.referenceName,e]));let u=1,l=1;for(let e=0;e<t.length;e++){const g=t.charAt(e-1),m=t.charAt(e);let w;if((g.match(/\s/)||e===0)&&(m===q?w=this.h(t.slice(e),e,new C(u,l),n,s,h):m===O?w=this.g(t.slice(e),t,e,new C(u,l),n,r,i):m===Q&&(w=this.j(t.slice(e),t,e,new C(u,l),n,r,i)),w||(w=this.k(t.slice(e),e,new C(u,l),a))),w){if(e!==0){const d=n.at(-1),c=d?.range.endExclusive??0,N=d?.editorRange.endLineNumber??1,R=d?.editorRange.endColumn??1;n.push(new A(new v(c,e),new P(N,R,u,l),t.slice(c,e)))}n.push(w)}m===`
-`?(u++,l=1):l++}const b=n.at(-1),f=b?.range.endExclusive??0;return f<t.length&&n.push(new A(new v(f,t.length),new P(b?.editorRange.endLineNumber??1,b?.editorRange.endColumn??1,u,l),t.slice(f,t.length))),{parts:n,text:t}}g(o,t,r,i,n,a,s){const h=o.match(X);if(!h)return;const[u,l]=h,b=new v(r,r+u.length),f=new P(i.lineNumber,i.column,i.lineNumber,i.column+u.length);let e=this.b.getAgentsByName(l);if(!e.length){const c=this.b.getAgentByFullyQualifiedId(l);c&&(e=[c])}const g=e.length>1&&s?.selectedAgent?s.selectedAgent:e.find(c=>c.locations.includes(a));if(!g||s?.mode&&!g.modes.includes(s.mode)||n.some(c=>c instanceof S)||n.some(c=>c instanceof A&&c.text.trim()!==""||!(c instanceof S)))return;const w=n.at(-1)?.range.endExclusive??0;if(t.slice(w,r).trim()==="")return new S(b,f,g)}h(o,t,r,i,n,a){const s=o.match(Y);if(!s)return;const[h,u]=s,l=new v(t,t+h.length),b=new P(r.lineNumber,r.column,r.lineNumber,r.column+h.length),f=n.get(u);if(f)return new x(l,b,u,f.id,f.displayName,f.icon);const e=a.get(u);if(e){const g=Array.from(e.getTools()).map(m=>new x(l,b,m.toolReferenceName??m.displayName,m.id,m.displayName,m.icon).toVariableEntry());return new V(l,b,e.id,e.referenceName,e.icon,g)}}j(o,t,r,i,n,a,s){const h=o.match(Z);if(!h||n.some(d=>!(d instanceof S)&&!(d instanceof A&&d.text.trim()==="")))return;const l=n.at(-1)?.range.endExclusive??0;if(t.slice(l,r).trim()!=="")return;const[f,e]=h,g=new v(r,r+f.length),m=new P(i.lineNumber,i.column,i.lineNumber,i.column+f.length),w=n.find(d=>d instanceof S);if(w){const d=w.agent.slashCommands.find(c=>c.name===e);if(d)return new y(g,m,d)}else{const c=this.e.getCommands(a,s?.mode??U.Ask).find(R=>R.command===e);if(c)return new B(g,m,c);{const E=this.b.getDefaultAgent(a,s?.mode)?.slashCommands.find(D=>D.name===e);if(E)return new y(g,m,E)}const N=this.f.asPromptSlashCommand(e);if(N)return new L(g,m,N)}}k(o,t,r,i){const n=i.find(a=>a.range.startLineNumber===r.lineNumber&&a.range.startColumn===r.column);if(n){const a=n.range.endColumn-n.range.startColumn,s=o.substring(0,a),h=new v(t,t+a);return new j(h,n.range,s,n.id,n.modelDescription,n.data,n.fullName,n.icon,n.isFile,n.isDirectory)}}};_=M([$(0,T),$(1,I),$(2,F),$(3,W)],_);export{_ as $IS};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { OffsetRange } from "../../../../editor/common/core/ranges/offsetRange.js";
+import { Position } from "../../../../editor/common/core/position.js";
+import { Range } from "../../../../editor/common/core/range.js";
+import { IChatAgentService } from "./chatAgents.js";
+import { ChatRequestAgentPart, ChatRequestAgentSubcommandPart, ChatRequestDynamicVariablePart, ChatRequestSlashCommandPart, ChatRequestSlashPromptPart, ChatRequestTextPart, ChatRequestToolPart, ChatRequestToolSetPart, chatAgentLeader, chatSubcommandLeader, chatVariableLeader } from "./chatParserTypes.js";
+import { IChatSlashCommandService } from "./chatSlashCommands.js";
+import { IChatVariablesService } from "./chatVariables.js";
+import { ChatAgentLocation, ChatMode } from "./constants.js";
+import { IPromptsService } from "./promptSyntax/service/promptsService.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+const agentReg = /^@([\w_\-\.]+)(?=(\s|$|\b))/i;
+const variableReg = /^#([\w_\-]+)(:\d+)?(?=(\s|$|\b))/i;
+const slashReg = /^\/([\w_\-\.:]+)(?=(\s|$|\b))/i;
+let ChatRequestParser = class ChatRequestParser2 {
+  static {
+    __name(this, "ChatRequestParser");
+  }
+  constructor(agentService, variableService, slashCommandService, promptsService) {
+    this.agentService = agentService;
+    this.variableService = variableService;
+    this.slashCommandService = slashCommandService;
+    this.promptsService = promptsService;
+  }
+  parseChatRequest(sessionId, message, location = ChatAgentLocation.Panel, context) {
+    const parts = [];
+    const references = this.variableService.getDynamicVariables(sessionId);
+    const toolsByName = new Map(this.variableService.getSelectedTools(sessionId).filter((t) => t.canBeReferencedInPrompt && t.toolReferenceName).map((t) => [t.toolReferenceName, t]));
+    const toolSetsByName = new Map(this.variableService.getSelectedToolSets(sessionId).map((t) => [t.referenceName, t]));
+    let lineNumber = 1;
+    let column = 1;
+    for (let i = 0; i < message.length; i++) {
+      const previousChar = message.charAt(i - 1);
+      const char = message.charAt(i);
+      let newPart;
+      if (previousChar.match(/\s/) || i === 0) {
+        if (char === chatVariableLeader) {
+          newPart = this.tryToParseVariable(message.slice(i), i, new Position(lineNumber, column), parts, toolsByName, toolSetsByName);
+        } else if (char === chatAgentLeader) {
+          newPart = this.tryToParseAgent(message.slice(i), message, i, new Position(lineNumber, column), parts, location, context);
+        } else if (char === chatSubcommandLeader) {
+          newPart = this.tryToParseSlashCommand(message.slice(i), message, i, new Position(lineNumber, column), parts, location, context);
+        }
+        if (!newPart) {
+          newPart = this.tryToParseDynamicVariable(message.slice(i), i, new Position(lineNumber, column), references);
+        }
+      }
+      if (newPart) {
+        if (i !== 0) {
+          const previousPart = parts.at(-1);
+          const previousPartEnd = previousPart?.range.endExclusive ?? 0;
+          const previousPartEditorRangeEndLine = previousPart?.editorRange.endLineNumber ?? 1;
+          const previousPartEditorRangeEndCol = previousPart?.editorRange.endColumn ?? 1;
+          parts.push(new ChatRequestTextPart(new OffsetRange(previousPartEnd, i), new Range(previousPartEditorRangeEndLine, previousPartEditorRangeEndCol, lineNumber, column), message.slice(previousPartEnd, i)));
+        }
+        parts.push(newPart);
+      }
+      if (char === "\n") {
+        lineNumber++;
+        column = 1;
+      } else {
+        column++;
+      }
+    }
+    const lastPart = parts.at(-1);
+    const lastPartEnd = lastPart?.range.endExclusive ?? 0;
+    if (lastPartEnd < message.length) {
+      parts.push(new ChatRequestTextPart(new OffsetRange(lastPartEnd, message.length), new Range(lastPart?.editorRange.endLineNumber ?? 1, lastPart?.editorRange.endColumn ?? 1, lineNumber, column), message.slice(lastPartEnd, message.length)));
+    }
+    return {
+      parts,
+      text: message
+    };
+  }
+  tryToParseAgent(message, fullMessage, offset, position, parts, location, context) {
+    const nextAgentMatch = message.match(agentReg);
+    if (!nextAgentMatch) {
+      return;
+    }
+    const [full, name] = nextAgentMatch;
+    const agentRange = new OffsetRange(offset, offset + full.length);
+    const agentEditorRange = new Range(position.lineNumber, position.column, position.lineNumber, position.column + full.length);
+    let agents = this.agentService.getAgentsByName(name);
+    if (!agents.length) {
+      const fqAgent = this.agentService.getAgentByFullyQualifiedId(name);
+      if (fqAgent) {
+        agents = [fqAgent];
+      }
+    }
+    const agent = agents.length > 1 && context?.selectedAgent ? context.selectedAgent : agents.find((a) => a.locations.includes(location));
+    if (!agent) {
+      return;
+    }
+    if (context?.mode && !agent.modes.includes(context.mode)) {
+      return;
+    }
+    if (parts.some((p) => p instanceof ChatRequestAgentPart)) {
+      return;
+    }
+    if (parts.some((p) => p instanceof ChatRequestTextPart && p.text.trim() !== "" || !(p instanceof ChatRequestAgentPart))) {
+      return;
+    }
+    const previousPart = parts.at(-1);
+    const previousPartEnd = previousPart?.range.endExclusive ?? 0;
+    const textSincePreviousPart = fullMessage.slice(previousPartEnd, offset);
+    if (textSincePreviousPart.trim() !== "") {
+      return;
+    }
+    return new ChatRequestAgentPart(agentRange, agentEditorRange, agent);
+  }
+  tryToParseVariable(message, offset, position, parts, toolsByName, toolSetsByName) {
+    const nextVariableMatch = message.match(variableReg);
+    if (!nextVariableMatch) {
+      return;
+    }
+    const [full, name] = nextVariableMatch;
+    const varRange = new OffsetRange(offset, offset + full.length);
+    const varEditorRange = new Range(position.lineNumber, position.column, position.lineNumber, position.column + full.length);
+    const tool = toolsByName.get(name);
+    if (tool) {
+      return new ChatRequestToolPart(varRange, varEditorRange, name, tool.id, tool.displayName, tool.icon);
+    }
+    const toolset = toolSetsByName.get(name);
+    if (toolset) {
+      const value = Array.from(toolset.getTools()).map((t) => new ChatRequestToolPart(varRange, varEditorRange, t.toolReferenceName ?? t.displayName, t.id, t.displayName, t.icon).toVariableEntry());
+      return new ChatRequestToolSetPart(varRange, varEditorRange, toolset.id, toolset.referenceName, toolset.icon, value);
+    }
+    return;
+  }
+  tryToParseSlashCommand(remainingMessage, fullMessage, offset, position, parts, location, context) {
+    const nextSlashMatch = remainingMessage.match(slashReg);
+    if (!nextSlashMatch) {
+      return;
+    }
+    if (parts.some((p) => !(p instanceof ChatRequestAgentPart) && !(p instanceof ChatRequestTextPart && p.text.trim() === ""))) {
+      return;
+    }
+    const previousPart = parts.at(-1);
+    const previousPartEnd = previousPart?.range.endExclusive ?? 0;
+    const textSincePreviousPart = fullMessage.slice(previousPartEnd, offset);
+    if (textSincePreviousPart.trim() !== "") {
+      return;
+    }
+    const [full, command] = nextSlashMatch;
+    const slashRange = new OffsetRange(offset, offset + full.length);
+    const slashEditorRange = new Range(position.lineNumber, position.column, position.lineNumber, position.column + full.length);
+    const usedAgent = parts.find((p) => p instanceof ChatRequestAgentPart);
+    if (usedAgent) {
+      const subCommand = usedAgent.agent.slashCommands.find((c) => c.name === command);
+      if (subCommand) {
+        return new ChatRequestAgentSubcommandPart(slashRange, slashEditorRange, subCommand);
+      }
+    } else {
+      const slashCommands = this.slashCommandService.getCommands(location, context?.mode ?? ChatMode.Ask);
+      const slashCommand = slashCommands.find((c) => c.command === command);
+      if (slashCommand) {
+        return new ChatRequestSlashCommandPart(slashRange, slashEditorRange, slashCommand);
+      } else {
+        const defaultAgent = this.agentService.getDefaultAgent(location, context?.mode);
+        const subCommand = defaultAgent?.slashCommands.find((c) => c.name === command);
+        if (subCommand) {
+          return new ChatRequestAgentSubcommandPart(slashRange, slashEditorRange, subCommand);
+        }
+      }
+      const promptCommand = this.promptsService.asPromptSlashCommand(command);
+      if (promptCommand) {
+        return new ChatRequestSlashPromptPart(slashRange, slashEditorRange, promptCommand);
+      }
+    }
+    return;
+  }
+  tryToParseDynamicVariable(message, offset, position, references) {
+    const refAtThisPosition = references.find((r) => r.range.startLineNumber === position.lineNumber && r.range.startColumn === position.column);
+    if (refAtThisPosition) {
+      const length = refAtThisPosition.range.endColumn - refAtThisPosition.range.startColumn;
+      const text = message.substring(0, length);
+      const range = new OffsetRange(offset, offset + length);
+      return new ChatRequestDynamicVariablePart(range, refAtThisPosition.range, text, refAtThisPosition.id, refAtThisPosition.modelDescription, refAtThisPosition.data, refAtThisPosition.fullName, refAtThisPosition.icon, refAtThisPosition.isFile, refAtThisPosition.isDirectory);
+    }
+    return;
+  }
+};
+ChatRequestParser = __decorate([
+  __param(0, IChatAgentService),
+  __param(1, IChatVariablesService),
+  __param(2, IChatSlashCommandService),
+  __param(3, IPromptsService)
+], ChatRequestParser);
+export {
+  ChatRequestParser
+};
+//# sourceMappingURL=chatRequestParser.js.map

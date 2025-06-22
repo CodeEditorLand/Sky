@@ -1,1 +1,135 @@
-import*as o from"../../../../nls.js";import*as s from"../../../../base/browser/dom.js";import*as d from"../../../../base/browser/cssValue.js";import{$_l as r}from"../../../../base/common/actions.js";import{URI as m}from"../../../../base/common/uri.js";import{$X8 as g}from"../../../../base/browser/ui/actionbar/actionViewItems.js";class i extends r{static{this.ID="toolbar.toggle.pickReactions"}constructor(s,t){super(i.ID,t||o.localize(6133,null),"toggle-reactions",!0),this.a=[],this.b=s}run(){return this.b(),Promise.resolve(!0)}get menuActions(){return this.a}set menuActions(s){this.a=s}}class z extends g{constructor(s){super(null,s,{})}C(){if(!this.L)return;const t=this.action;if(t.class&&this.L.classList.add(t.class),t.icon){const o=s.$M6(this.L,s.$(".reaction-icon")),e=m.revive(t.icon);o.style.backgroundImage=d.$77(e)}else{s.$M6(this.L,s.$("span.reaction-label")).innerText=t.label}if(t.count){s.$M6(this.L,s.$("span.reaction-count")).innerText=`${t.count}`}}F(){const s=this.action,t=s.enabled?o.localize(6134,null):"";if(void 0===s.count)return o.localize(6135,null,t,s.label);if(void 0===s.reactors||0===s.reactors.length){if(1===s.count)return o.localize(6136,null,t,s.label);if(s.count>1)return o.localize(6137,null,t,s.count,s.label)}else{if(s.reactors.length<=10&&s.reactors.length===s.count)return o.localize(6138,null,t,s.reactors.join(", "),s.label);if(s.count>1){const e=s.reactors.slice(0,10);return o.localize(6139,null,t,e.join(", "),s.count-e.length,s.label)}}}}class l extends r{static{this.ID="toolbar.toggle.reaction"}constructor(s,t="",o="",e=!0,r,i,n,a){super(l.ID,t,o,e,r),this.reactors=i,this.icon=n,this.count=a}}export{i as $sTb,z as $tTb,l as $uTb};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import * as nls from "../../../../nls.js";
+import * as dom from "../../../../base/browser/dom.js";
+import * as cssJs from "../../../../base/browser/cssValue.js";
+import { Action } from "../../../../base/common/actions.js";
+import { URI } from "../../../../base/common/uri.js";
+import { ActionViewItem } from "../../../../base/browser/ui/actionbar/actionViewItems.js";
+class ToggleReactionsAction extends Action {
+  static {
+    __name(this, "ToggleReactionsAction");
+  }
+  static {
+    this.ID = "toolbar.toggle.pickReactions";
+  }
+  constructor(toggleDropdownMenu, title) {
+    super(ToggleReactionsAction.ID, title || nls.localize("pickReactions", "Pick Reactions..."), "toggle-reactions", true);
+    this._menuActions = [];
+    this.toggleDropdownMenu = toggleDropdownMenu;
+  }
+  run() {
+    this.toggleDropdownMenu();
+    return Promise.resolve(true);
+  }
+  get menuActions() {
+    return this._menuActions;
+  }
+  set menuActions(actions) {
+    this._menuActions = actions;
+  }
+}
+class ReactionActionViewItem extends ActionViewItem {
+  static {
+    __name(this, "ReactionActionViewItem");
+  }
+  constructor(action) {
+    super(null, action, {});
+  }
+  updateLabel() {
+    if (!this.label) {
+      return;
+    }
+    const action = this.action;
+    if (action.class) {
+      this.label.classList.add(action.class);
+    }
+    if (!action.icon) {
+      const reactionLabel = dom.append(this.label, dom.$("span.reaction-label"));
+      reactionLabel.innerText = action.label;
+    } else {
+      const reactionIcon = dom.append(this.label, dom.$(".reaction-icon"));
+      const uri = URI.revive(action.icon);
+      reactionIcon.style.backgroundImage = cssJs.asCSSUrl(uri);
+    }
+    if (action.count) {
+      const reactionCount = dom.append(this.label, dom.$("span.reaction-count"));
+      reactionCount.innerText = `${action.count}`;
+    }
+  }
+  getTooltip() {
+    const action = this.action;
+    const toggleMessage = action.enabled ? nls.localize("comment.toggleableReaction", "Toggle reaction, ") : "";
+    if (action.count === void 0) {
+      return nls.localize({
+        key: "comment.reactionLabelNone",
+        comment: [
+          "This is a tooltip for an emoji button so that the current user can toggle their reaction to a comment.",
+          `The first arg is localized message "Toggle reaction" or empty if the user doesn't have permission to toggle the reaction, the second is the name of the reaction.`
+        ]
+      }, "{0}{1} reaction", toggleMessage, action.label);
+    } else if (action.reactors === void 0 || action.reactors.length === 0) {
+      if (action.count === 1) {
+        return nls.localize({
+          key: "comment.reactionLabelOne",
+          comment: [
+            'This is a tooltip for an emoji that is a "reaction" to a comment where the count of the reactions is 1.',
+            "The emoji is also a button so that the current user can also toggle their own emoji reaction.",
+            `The first arg is localized message "Toggle reaction" or empty if the user doesn't have permission to toggle the reaction, the second is the name of the reaction.`
+          ]
+        }, "{0}1 reaction with {1}", toggleMessage, action.label);
+      } else if (action.count > 1) {
+        return nls.localize({
+          key: "comment.reactionLabelMany",
+          comment: [
+            'This is a tooltip for an emoji that is a "reaction" to a comment where the count of the reactions is greater than 1.',
+            "The emoji is also a button so that the current user can also toggle their own emoji reaction.",
+            `The first arg is localized message "Toggle reaction" or empty if the user doesn't have permission to toggle the reaction, the second is number of users who have reacted with that reaction, and the third is the name of the reaction.`
+          ]
+        }, "{0}{1} reactions with {2}", toggleMessage, action.count, action.label);
+      }
+    } else {
+      if (action.reactors.length <= 10 && action.reactors.length === action.count) {
+        return nls.localize({
+          key: "comment.reactionLessThanTen",
+          comment: [
+            'This is a tooltip for an emoji that is a "reaction" to a comment where the count of the reactions is less than or equal to 10.',
+            "The emoji is also a button so that the current user can also toggle their own emoji reaction.",
+            `The first arg is localized message "Toggle reaction" or empty if the user doesn't have permission to toggle the reaction, the second iis a list of the reactors, and the third is the name of the reaction.`
+          ]
+        }, "{0}{1} reacted with {2}", toggleMessage, action.reactors.join(", "), action.label);
+      } else if (action.count > 1) {
+        const displayedReactors = action.reactors.slice(0, 10);
+        return nls.localize({
+          key: "comment.reactionMoreThanTen",
+          comment: [
+            'This is a tooltip for an emoji that is a "reaction" to a comment where the count of the reactions is less than or equal to 10.',
+            "The emoji is also a button so that the current user can also toggle their own emoji reaction.",
+            `The first arg is localized message "Toggle reaction" or empty if the user doesn't have permission to toggle the reaction, the second iis a list of the reactors, and the third is the name of the reaction.`
+          ]
+        }, "{0}{1} and {2} more reacted with {3}", toggleMessage, displayedReactors.join(", "), action.count - displayedReactors.length, action.label);
+      }
+    }
+    return void 0;
+  }
+}
+class ReactionAction extends Action {
+  static {
+    __name(this, "ReactionAction");
+  }
+  static {
+    this.ID = "toolbar.toggle.reaction";
+  }
+  constructor(id, label = "", cssClass = "", enabled = true, actionCallback, reactors, icon, count) {
+    super(ReactionAction.ID, label, cssClass, enabled, actionCallback);
+    this.reactors = reactors;
+    this.icon = icon;
+    this.count = count;
+  }
+}
+export {
+  ReactionAction,
+  ReactionActionViewItem,
+  ToggleReactionsAction
+};
+//# sourceMappingURL=reactionsAction.js.map

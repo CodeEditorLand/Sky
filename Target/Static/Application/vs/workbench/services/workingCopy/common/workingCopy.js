@@ -1,1 +1,12 @@
-var t;!function(t){t[t.None=0]="None",t[t.Untitled=2]="Untitled",t[t.Scratchpad=4]="Scratchpad"}(t||(t={}));const d="";export{d as $eF,t as WorkingCopyCapabilities};
+var WorkingCopyCapabilities;
+(function(WorkingCopyCapabilities2) {
+  WorkingCopyCapabilities2[WorkingCopyCapabilities2["None"] = 0] = "None";
+  WorkingCopyCapabilities2[WorkingCopyCapabilities2["Untitled"] = 2] = "Untitled";
+  WorkingCopyCapabilities2[WorkingCopyCapabilities2["Scratchpad"] = 4] = "Scratchpad";
+})(WorkingCopyCapabilities || (WorkingCopyCapabilities = {}));
+const NO_TYPE_ID = "";
+export {
+  NO_TYPE_ID,
+  WorkingCopyCapabilities
+};
+//# sourceMappingURL=workingCopy.js.map

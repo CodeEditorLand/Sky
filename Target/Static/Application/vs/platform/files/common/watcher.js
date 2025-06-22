@@ -1,1 +1,249 @@
-import{$8i as a,$aj as u}from"../../../base/common/glob.js";import{$vd as c,$ud as f,$wd as p}from"../../../base/common/lifecycle.js";import{$6 as d}from"../../../base/common/path.js";import{$o as h}from"../../../base/common/platform.js";import{URI as l}from"../../../base/common/uri.js";import{$nk as y}from"./files.js";function P(t){return"number"==typeof t.correlationId}function j(t){return!0===t.recursive}class o extends c{static{this.a=5}constructor(t,s,e,r){super(),this.h=t,this.j=s,this.m=e,this.n=r,this.c=this.B(new p),this.f=void 0,this.g=0}s(){const t=new f;this.c.value=t,this.b=this.r(t),this.b.setVerboseLogging(this.m),t.add(this.b.onDidChangeFile((t=>this.h(t)))),t.add(this.b.onDidLogMessage((t=>this.j(t)))),t.add(this.b.onDidError((t=>this.t(t.error,t.request))))}t(t,s){this.u(t,s)?this.g<o.a&&this.f?(this.y(`restarting watcher after unexpected error: ${t}`),this.w(this.f)):this.y(`gave up attempting to restart watcher after unexpected error: ${t}`):this.y(t)}u(t,s){return!(!this.n.restartOnError||s||-1!==t.indexOf("No space left on device")||-1!==t.indexOf("EMFILE"))}w(t){this.g++,this.s(),this.watch(t)}async watch(t){this.f=t,await(this.b?.watch(t))}async setVerboseLogging(t){this.m=t,await(this.b?.setVerboseLogging(t))}y(t){this.j({type:"error",message:`[File Watcher (${this.n.type})] ${t}`})}z(t){this.j({type:"trace",message:`[File Watcher (${this.n.type})] ${t}`})}dispose(){return this.b=void 0,super.dispose()}}class C extends o{constructor(t,s,e){super(t,s,e,{type:"node.js",restartOnError:!1})}}class I extends o{constructor(t,s,e){super(t,s,e,{type:"universal",restartOnError:!0})}}function L(t){return t.map((t=>({type:t.type,resource:l.revive(t.resource),cId:t.cId})))}function O(t){const s=new g;for(const e of t)s.processEvent(e);return s.coalesce()}function $(t,s){return"string"!=typeof s||s.startsWith(a)||d(s)?s:{base:t,pattern:s}}function v(t,s){const e=[];for(const r of s)e.push(u($(t,r)));return e}class g{constructor(){this.a=new Set,this.b=new Map}c(t){return h?t.resource.fsPath:t.resource.fsPath.toLowerCase()}processEvent(t){const s=this.b.get(this.c(t));let e=!1;if(s){const r=s.type,o=t.type;s.resource.fsPath===t.resource.fsPath||2!==t.type&&1!==t.type?1===r&&2===o?(this.b.delete(this.c(t)),this.a.delete(s)):2===r&&1===o?s.type=0:1===r&&0===o||(s.type=o):e=!0}else e=!0;e&&(this.a.add(t),this.b.set(this.c(t),t))}coalesce(){const t=[],s=[];return Array.from(this.a).filter((s=>2===s.type||(t.push(s),!1))).sort(((t,s)=>t.resource.fsPath.length-s.resource.fsPath.length)).filter((t=>!s.some((s=>y(t.resource.fsPath,s,!h)))&&(s.push(t.resource.fsPath),!0))).concat(t)}}function D(t,s){if("number"==typeof s)switch(t.type){case 1:return!(4&s);case 2:return!(8&s);case 0:return!(2&s)}return!1}function F(t){if("number"==typeof t){const s=[];return 4&t&&s.push("Added"),8&t&&s.push("Deleted"),2&t&&s.push("Updated"),0===s.length?"<all>":`[${s.join(", ")}]`}return"<none>"}export{P as $Dk,j as $Ek,o as $Fk,C as $Gk,I as $Hk,L as $Ik,O as $Jk,$ as $Kk,v as $Lk,D as $Mk,F as $Nk};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { GLOBSTAR, parse } from "../../../base/common/glob.js";
+import { Disposable, DisposableStore, MutableDisposable } from "../../../base/common/lifecycle.js";
+import { isAbsolute } from "../../../base/common/path.js";
+import { isLinux } from "../../../base/common/platform.js";
+import { URI } from "../../../base/common/uri.js";
+import { isParent } from "./files.js";
+function isWatchRequestWithCorrelation(request) {
+  return typeof request.correlationId === "number";
+}
+__name(isWatchRequestWithCorrelation, "isWatchRequestWithCorrelation");
+function isRecursiveWatchRequest(request) {
+  return request.recursive === true;
+}
+__name(isRecursiveWatchRequest, "isRecursiveWatchRequest");
+class AbstractWatcherClient extends Disposable {
+  static {
+    __name(this, "AbstractWatcherClient");
+  }
+  static {
+    this.MAX_RESTARTS = 5;
+  }
+  constructor(onFileChanges, onLogMessage, verboseLogging, options) {
+    super();
+    this.onFileChanges = onFileChanges;
+    this.onLogMessage = onLogMessage;
+    this.verboseLogging = verboseLogging;
+    this.options = options;
+    this.watcherDisposables = this._register(new MutableDisposable());
+    this.requests = void 0;
+    this.restartCounter = 0;
+  }
+  init() {
+    const disposables = new DisposableStore();
+    this.watcherDisposables.value = disposables;
+    this.watcher = this.createWatcher(disposables);
+    this.watcher.setVerboseLogging(this.verboseLogging);
+    disposables.add(this.watcher.onDidChangeFile((changes) => this.onFileChanges(changes)));
+    disposables.add(this.watcher.onDidLogMessage((msg) => this.onLogMessage(msg)));
+    disposables.add(this.watcher.onDidError((e) => this.onError(e.error, e.request)));
+  }
+  onError(error, failedRequest) {
+    if (this.canRestart(error, failedRequest)) {
+      if (this.restartCounter < AbstractWatcherClient.MAX_RESTARTS && this.requests) {
+        this.error(`restarting watcher after unexpected error: ${error}`);
+        this.restart(this.requests);
+      } else {
+        this.error(`gave up attempting to restart watcher after unexpected error: ${error}`);
+      }
+    } else {
+      this.error(error);
+    }
+  }
+  canRestart(error, failedRequest) {
+    if (!this.options.restartOnError) {
+      return false;
+    }
+    if (failedRequest) {
+      return false;
+    }
+    if (error.indexOf("No space left on device") !== -1 || error.indexOf("EMFILE") !== -1) {
+      return false;
+    }
+    return true;
+  }
+  restart(requests) {
+    this.restartCounter++;
+    this.init();
+    this.watch(requests);
+  }
+  async watch(requests) {
+    this.requests = requests;
+    await this.watcher?.watch(requests);
+  }
+  async setVerboseLogging(verboseLogging) {
+    this.verboseLogging = verboseLogging;
+    await this.watcher?.setVerboseLogging(verboseLogging);
+  }
+  error(message) {
+    this.onLogMessage({ type: "error", message: `[File Watcher (${this.options.type})] ${message}` });
+  }
+  trace(message) {
+    this.onLogMessage({ type: "trace", message: `[File Watcher (${this.options.type})] ${message}` });
+  }
+  dispose() {
+    this.watcher = void 0;
+    return super.dispose();
+  }
+}
+class AbstractNonRecursiveWatcherClient extends AbstractWatcherClient {
+  static {
+    __name(this, "AbstractNonRecursiveWatcherClient");
+  }
+  constructor(onFileChanges, onLogMessage, verboseLogging) {
+    super(onFileChanges, onLogMessage, verboseLogging, { type: "node.js", restartOnError: false });
+  }
+}
+class AbstractUniversalWatcherClient extends AbstractWatcherClient {
+  static {
+    __name(this, "AbstractUniversalWatcherClient");
+  }
+  constructor(onFileChanges, onLogMessage, verboseLogging) {
+    super(onFileChanges, onLogMessage, verboseLogging, { type: "universal", restartOnError: true });
+  }
+}
+function reviveFileChanges(changes) {
+  return changes.map((change) => ({
+    type: change.type,
+    resource: URI.revive(change.resource),
+    cId: change.cId
+  }));
+}
+__name(reviveFileChanges, "reviveFileChanges");
+function coalesceEvents(changes) {
+  const coalescer = new EventCoalescer();
+  for (const event of changes) {
+    coalescer.processEvent(event);
+  }
+  return coalescer.coalesce();
+}
+__name(coalesceEvents, "coalesceEvents");
+function normalizeWatcherPattern(path, pattern) {
+  if (typeof pattern === "string" && !pattern.startsWith(GLOBSTAR) && !isAbsolute(pattern)) {
+    return { base: path, pattern };
+  }
+  return pattern;
+}
+__name(normalizeWatcherPattern, "normalizeWatcherPattern");
+function parseWatcherPatterns(path, patterns) {
+  const parsedPatterns = [];
+  for (const pattern of patterns) {
+    parsedPatterns.push(parse(normalizeWatcherPattern(path, pattern)));
+  }
+  return parsedPatterns;
+}
+__name(parseWatcherPatterns, "parseWatcherPatterns");
+class EventCoalescer {
+  static {
+    __name(this, "EventCoalescer");
+  }
+  constructor() {
+    this.coalesced = /* @__PURE__ */ new Set();
+    this.mapPathToChange = /* @__PURE__ */ new Map();
+  }
+  toKey(event) {
+    if (isLinux) {
+      return event.resource.fsPath;
+    }
+    return event.resource.fsPath.toLowerCase();
+  }
+  processEvent(event) {
+    const existingEvent = this.mapPathToChange.get(this.toKey(event));
+    let keepEvent = false;
+    if (existingEvent) {
+      const currentChangeType = existingEvent.type;
+      const newChangeType = event.type;
+      if (existingEvent.resource.fsPath !== event.resource.fsPath && (event.type === 2 || event.type === 1)) {
+        keepEvent = true;
+      } else if (currentChangeType === 1 && newChangeType === 2) {
+        this.mapPathToChange.delete(this.toKey(event));
+        this.coalesced.delete(existingEvent);
+      } else if (currentChangeType === 2 && newChangeType === 1) {
+        existingEvent.type = 0;
+      } else if (currentChangeType === 1 && newChangeType === 0) {
+      } else {
+        existingEvent.type = newChangeType;
+      }
+    } else {
+      keepEvent = true;
+    }
+    if (keepEvent) {
+      this.coalesced.add(event);
+      this.mapPathToChange.set(this.toKey(event), event);
+    }
+  }
+  coalesce() {
+    const addOrChangeEvents = [];
+    const deletedPaths = [];
+    return Array.from(this.coalesced).filter((e) => {
+      if (e.type !== 2) {
+        addOrChangeEvents.push(e);
+        return false;
+      }
+      return true;
+    }).sort((e1, e2) => {
+      return e1.resource.fsPath.length - e2.resource.fsPath.length;
+    }).filter((e) => {
+      if (deletedPaths.some((deletedPath) => isParent(
+        e.resource.fsPath,
+        deletedPath,
+        !isLinux
+        /* ignorecase */
+      ))) {
+        return false;
+      }
+      deletedPaths.push(e.resource.fsPath);
+      return true;
+    }).concat(addOrChangeEvents);
+  }
+}
+function isFiltered(event, filter) {
+  if (typeof filter === "number") {
+    switch (event.type) {
+      case 1:
+        return (filter & 4) === 0;
+      case 2:
+        return (filter & 8) === 0;
+      case 0:
+        return (filter & 2) === 0;
+    }
+  }
+  return false;
+}
+__name(isFiltered, "isFiltered");
+function requestFilterToString(filter) {
+  if (typeof filter === "number") {
+    const filters = [];
+    if (filter & 4) {
+      filters.push("Added");
+    }
+    if (filter & 8) {
+      filters.push("Deleted");
+    }
+    if (filter & 2) {
+      filters.push("Updated");
+    }
+    if (filters.length === 0) {
+      return "<all>";
+    }
+    return `[${filters.join(", ")}]`;
+  }
+  return "<none>";
+}
+__name(requestFilterToString, "requestFilterToString");
+export {
+  AbstractNonRecursiveWatcherClient,
+  AbstractUniversalWatcherClient,
+  AbstractWatcherClient,
+  coalesceEvents,
+  isFiltered,
+  isRecursiveWatchRequest,
+  isWatchRequestWithCorrelation,
+  normalizeWatcherPattern,
+  parseWatcherPatterns,
+  requestFilterToString,
+  reviveFileChanges
+};
+//# sourceMappingURL=watcher.js.map

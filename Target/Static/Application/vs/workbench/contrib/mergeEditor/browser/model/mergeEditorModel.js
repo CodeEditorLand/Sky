@@ -1,2 +1,661 @@
-import{CompareResult as W,$Sb as j}from"../../../../../base/common/arrays.js";import{$Bb as M}from"../../../../../base/common/errors.js";import{autorunHandleChanges as A,derived as R,keepObserved as L,observableValue as v,transaction as b,waitForState as T}from"../../../../../base/common/observable.js";import{$cC as _}from"../../../../../editor/common/core/range.js";import{$BD as q}from"../../../../../editor/common/languages/language.js";import{localize as F}from"../../../../../nls.js";import{$YE as O,$1E as G}from"../../../../../platform/undoRedo/common/undoRedo.js";import{$fF as Q}from"../../../../common/editor/editorModel.js";import{$VQb as I}from"./lineRange.js";import{$6Qb as D,$0Qb as S,$5Qb as x}from"./mapping.js";import{$kRb as B}from"./textModelDiffs.js";import{$oRb as U}from"../utils.js";import{$$Qb as P,ModifiedBaseRangeState as m,ModifiedBaseRangeStateKind as f}from"./modifiedBaseRange.js";var H=function(g,e,t,n){var a=arguments.length,i=a<3?e:n===null?n=Object.getOwnPropertyDescriptor(e,t):n,s;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")i=Reflect.decorate(g,e,t,n);else for(var r=g.length-1;r>=0;r--)(s=g[r])&&(i=(a<3?s(i):a>3?s(e,t,i):s(e,t))||i);return a>3&&i&&Object.defineProperty(e,t,i),i},y=function(g,e){return function(t,n){e(t,n,g)}};let $=class extends Q{constructor(e,t,n,a,i,s,r,o,p){super(),this.base=e,this.input1=t,this.input2=n,this.resultTextModel=a,this.u=i,this.w=s,this.telemetry=r,this.y=o,this.z=p,this.c=this.B(new B(this.base,this.input1.textModel,this.u)),this.g=this.B(new B(this.base,this.input2.textModel,this.u)),this.j=this.B(new B(this.base,this.resultTextModel,this.u)),this.modifiedBaseRanges=R(this,u=>{const d=this.c.diffs.read(u),l=this.g.diffs.read(u);return P.fromDiffs(d,l,this.base,this.input1.textModel,this.input2.textModel)}),this.n=R(this,u=>new Map(this.modifiedBaseRanges.read(u).map(l=>[l,new z(l)]))),this.t=this.resultTextModel.createSnapshot(),this.baseInput1Diffs=this.c.diffs,this.baseInput2Diffs=this.g.diffs,this.baseResultDiffs=this.j.diffs,this.input1ResultMapping=R(this,u=>this.F(this.baseInput1Diffs.read(u),this.baseResultDiffs.read(u),this.input1.textModel.getLineCount())),this.resultInput1Mapping=R(this,u=>this.input1ResultMapping.read(u).reverse()),this.input2ResultMapping=R(this,u=>this.F(this.baseInput2Diffs.read(u),this.baseResultDiffs.read(u),this.input2.textModel.getLineCount())),this.resultInput2Mapping=R(this,u=>this.input2ResultMapping.read(u).reverse()),this.baseResultMapping=R(this,u=>{const d=new D(this.baseResultDiffs.read(u),-1);return new D(d.lineRangeMappings.map(l=>l.inputRange.isEmpty||l.outputRange.isEmpty?new x(l.inputRange.deltaStart(-1),l.outputRange.deltaStart(-1)):l),d.inputLineCount)}),this.resultBaseMapping=R(this,u=>this.baseResultMapping.read(u).reverse()),this.diffComputingState=R(this,u=>{const d=[this.c,this.g,this.j].map(l=>l.state.read(u));return d.some(l=>l===1)?1:d.some(l=>l===3)?3:2}),this.inputDiffComputingState=R(this,u=>{const d=[this.c,this.g].map(l=>l.state.read(u));return d.some(l=>l===1)?1:d.some(l=>l===3)?3:2}),this.isUpToDate=R(this,u=>this.diffComputingState.read(u)===2),this.G=!0,this.unhandledConflictsCount=R(this,u=>{const d=this.n.read(u);let l=0;for(const[E,C]of d)C.handled.read(u)||l++;return l}),this.hasUnhandledConflicts=this.unhandledConflictsCount.map(u=>u>0),this.B(L(this.n)),this.B(L(this.input1ResultMapping)),this.B(L(this.input2ResultMapping));const h=this.C();this.onInitialized=T(this.diffComputingState,u=>u===2).then(async()=>{await h}),h.then(()=>{let u=!0;this.B(A({changeTracker:{createChangeSummary:()=>{},handleChange:d=>(d.didChange(this.n)&&(u=!0),d.didChange(this.j.diffs)?d.change===1:!0)}},d=>{const l=this.n.read(d);if(!this.isUpToDate.read(d))return;const E=this.j.diffs.read(d);b(C=>{if(this.H(E,l,C),u){u=!1;for(const[X,w]of l){const k=w.accepted.get(),N=!(k.kind===f.base||k.kind===f.unrecognized);w.handledInput1.set(N,C),w.handledInput2.set(N,C)}}})}))})}async C(){this.w.resetResult&&await this.reset()}async reset(){await T(this.inputDiffComputingState,t=>t===2);const e=this.n.get();b(t=>{for(const[n,a]of e){let i,s=!1;n.input1Diffs.length===0?(i=m.base.withInputValue(2,!0),s=!0):n.input2Diffs.length===0?(i=m.base.withInputValue(1,!0),s=!0):n.isEqualChange?(i=m.base.withInputValue(1,!0),s=!0):(i=m.base,s=!1),a.accepted.set(i,t),a.computedFromDiffing=!1,a.previousNonDiffingState=void 0,a.handledInput1.set(s,t),a.handledInput2.set(s,t)}this.resultTextModel.pushEditOperations(null,[{range:new _(1,1,Number.MAX_SAFE_INTEGER,1),text:this.D()}],()=>null)})}D(){const e=this.modifiedBaseRanges.get(),t=this.base.getLinesContent(),n=this.input1.textModel.getLinesContent(),a=this.input2.textModel.getLinesContent(),i=[];function s(o,p){for(let h=p.startLineNumber;h<p.endLineNumberExclusive;h++)i.push(o[h-1])}let r=1;for(const o of e)s(t,I.fromLineNumbers(r,o.baseRange.startLineNumber)),r=o.baseRange.endLineNumberExclusive,o.input1Diffs.length===0?s(a,o.input2Range):o.input2Diffs.length===0||o.isEqualChange?s(n,o.input1Range):s(t,o.baseRange);return s(t,I.fromLineNumbers(r,t.length+1)),i.join(this.resultTextModel.getEOL())}hasBaseRange(e){return this.n.get().has(e)}get isApplyingEditInResult(){return this.j.isApplyingChange}F(e,t,n){const a=D.betweenOutputs(e,t,n);return new D(a.lineRangeMappings.map(i=>i.inputRange.isEmpty||i.outputRange.isEmpty?new x(i.inputRange.deltaStart(-1),i.outputRange.deltaStart(-1)):i),a.inputLineCount)}translateInputRangeToBase(e,t){const n=e===1?this.baseInput1Diffs.get():this.baseInput2Diffs.get();return new S(n.flatMap(i=>i.rangeMappings),0).reverse().projectRange(t).outputRange}translateBaseRangeToInput(e,t){const n=e===1?this.baseInput1Diffs.get():this.baseInput2Diffs.get();return new S(n.flatMap(i=>i.rangeMappings),0).projectRange(t).outputRange}getLineRangeInResult(e,t){return this.j.getResultLineRange(e,t)}translateResultRangeToBase(e){return new S(this.baseResultDiffs.get().flatMap(n=>n.rangeMappings),0).reverse().projectRange(e).outputRange}translateBaseRangeToResult(e){return new S(this.baseResultDiffs.get().flatMap(n=>n.rangeMappings),0).projectRange(e).outputRange}findModifiedBaseRangesInRange(e){return this.modifiedBaseRanges.get().filter(t=>t.baseRange.intersectsOrTouches(e))}H(e,t,n){const a=U(t,e,(i,s)=>i[0].baseRange.intersectsOrTouches(s.inputRange)?W.neitherLessOrGreaterThan:I.compareByStart(i[0].baseRange,s.inputRange));for(const i of a){const s=this.I(i.left[0],i.rights),r=i.left[1],o=r.accepted.get();o.equals(s)||(!this.G&&!r.computedFromDiffing&&(r.computedFromDiffing=!0,r.previousNonDiffingState=o),r.accepted.set(s,n))}this.G&&(this.G=!1)}I(e,t){if(t.length===0)return m.base;const n=t.map(s=>s.getLineEdit());function a(s){return j(n,s.map(r=>r.getLineEdit()),(r,o)=>r.equals(o))}if(a(e.input1Diffs))return m.base.withInputValue(1,!0);if(a(e.input2Diffs))return m.base.withInputValue(2,!0);const i=[m.base.withInputValue(1,!0).withInputValue(2,!0,!0),m.base.withInputValue(2,!0).withInputValue(1,!0,!0),m.base.withInputValue(1,!0).withInputValue(2,!0,!1),m.base.withInputValue(2,!0).withInputValue(1,!0,!1)];for(const s of i){const{edit:r}=e.getEditForBase(s);if(r){const p=this.j.getResultLineRange(e.baseRange).getLines(this.resultTextModel);if(j(r.newLines,p,(h,u)=>h===u))return s}}return m.unrecognized}getState(e){const t=this.n.get().get(e);if(!t)throw new M("object must be from this instance");return t.accepted}setState(e,t,n,a,i=!1){if(!this.isUpToDate.get())throw new M("Cannot set state while updating");const s=this.n.get().get(e);if(!s)throw new M("object must be from this instance");const r=this.j.findTouchingDiffs(e.baseRange),o=new G;r&&this.j.removeDiffs(r,a,o);const{edit:p,effectiveState:h}=e.getEditForBase(t);s.accepted.set(h,a),s.previousNonDiffingState=void 0,s.computedFromDiffing=!1;const u=s.handledInput1.get(),d=s.handledInput2.get();(!u||!d)&&this.z.pushElement(new K(this.resultTextModel.uri,new WeakRef(this),new WeakRef(s),u,d),o),p&&(this.resultTextModel.pushStackElement(),this.j.applyEditRelativeToOriginal(p,a,o),this.resultTextModel.pushStackElement()),s.handledInput1.set(!0,a),s.handledInput2.set(!0,a)}resetDirtyConflictsToBase(){b(e=>{this.resultTextModel.pushStackElement();for(const t of this.modifiedBaseRanges.get())this.getState(t).get().kind===f.unrecognized&&this.setState(t,m.base,!1,e,!1);this.resultTextModel.pushStackElement()})}isHandled(e){return this.n.get().get(e).handled}isInputHandled(e,t){const n=this.n.get().get(e);return t===1?n.handledInput1:n.handledInput2}setInputHandled(e,t,n,a){const i=this.n.get().get(e);if(i.handled.get()===n)return;const s=new WeakRef(z),r=new WeakRef(this);this.z.pushElement({type:0,resource:this.resultTextModel.uri,code:"setInputHandled",label:F(8996,null),redo(){const o=r.deref(),p=s.deref();o&&!o.isDisposed()&&p&&b(h=>{t===1?i.handledInput1.set(n,h):i.handledInput2.set(n,h)})},undo(){const o=r.deref(),p=s.deref();o&&!o.isDisposed()&&p&&b(h=>{t===1?i.handledInput1.set(!n,h):i.handledInput2.set(!n,h)})}}),t===1?i.handledInput1.set(n,a):i.handledInput2.set(n,a)}setHandled(e,t,n){const a=this.n.get().get(e);a.handled.get()!==t&&(a.handledInput1.set(t,n),a.handledInput2.set(t,n))}setLanguageId(e,t){const n=this.y.createById(e);this.base.setLanguage(n,t),this.input1.textModel.setLanguage(n,t),this.input2.textModel.setLanguage(n,t),this.resultTextModel.setLanguage(n,t)}getInitialResultValue(){const e=[];for(;;){const t=this.t.read();if(t===null)break;e.push(t)}return e.join()}async getResultValueWithConflictMarkers(){if(await T(this.diffComputingState,o=>o===2),this.unhandledConflictsCount.get()===0)return this.resultTextModel.getValue();const e=this.resultTextModel.getLinesContent(),t=this.input1.textModel.getLinesContent(),n=this.input2.textModel.getLinesContent(),a=this.n.get(),i=[];function s(o,p){for(let h=p.startLineNumber;h<p.endLineNumberExclusive;h++)i.push(o[h-1])}let r=1;for(const[o,p]of a){if(p.handled.get())continue;const h=this.j.getResultLineRange(o.baseRange);s(e,I.fromLineNumbers(r,Math.max(r,h.startLineNumber))),r=h.endLineNumberExclusive,i.push("<<<<<<<"),p.accepted.get().kind===f.unrecognized?s(e,h):s(t,o.input1Range),i.push("======="),s(n,o.input2Range),i.push(">>>>>>>")}return s(e,I.fromLineNumbers(r,e.length+1)),i.join(`
-`)}get conflictCount(){return c(this.modifiedBaseRanges.get(),e=>e.isConflicting)}get combinableConflictCount(){return c(this.modifiedBaseRanges.get(),e=>e.isConflicting&&e.canBeCombined)}get conflictsResolvedWithBase(){return c(this.n.get().entries(),([e,t])=>e.isConflicting&&t.accepted.get().kind===f.base)}get conflictsResolvedWithInput1(){return c(this.n.get().entries(),([e,t])=>e.isConflicting&&t.accepted.get().kind===f.input1)}get conflictsResolvedWithInput2(){return c(this.n.get().entries(),([e,t])=>e.isConflicting&&t.accepted.get().kind===f.input2)}get conflictsResolvedWithSmartCombination(){return c(this.n.get().entries(),([e,t])=>{const n=t.accepted.get();return e.isConflicting&&n.kind===f.both&&n.smartCombination})}get manuallySolvedConflictCountThatEqualNone(){return c(this.n.get().entries(),([e,t])=>e.isConflicting&&t.accepted.get().kind===f.unrecognized)}get manuallySolvedConflictCountThatEqualSmartCombine(){return c(this.n.get().entries(),([e,t])=>{const n=t.accepted.get();return e.isConflicting&&t.computedFromDiffing&&n.kind===f.both&&n.smartCombination})}get manuallySolvedConflictCountThatEqualInput1(){return c(this.n.get().entries(),([e,t])=>{const n=t.accepted.get();return e.isConflicting&&t.computedFromDiffing&&n.kind===f.input1})}get manuallySolvedConflictCountThatEqualInput2(){return c(this.n.get().entries(),([e,t])=>{const n=t.accepted.get();return e.isConflicting&&t.computedFromDiffing&&n.kind===f.input2})}get manuallySolvedConflictCountThatEqualNoneAndStartedWithBase(){return c(this.n.get().entries(),([e,t])=>{const n=t.accepted.get();return e.isConflicting&&n.kind===f.unrecognized&&t.previousNonDiffingState?.kind===f.base})}get manuallySolvedConflictCountThatEqualNoneAndStartedWithInput1(){return c(this.n.get().entries(),([e,t])=>{const n=t.accepted.get();return e.isConflicting&&n.kind===f.unrecognized&&t.previousNonDiffingState?.kind===f.input1})}get manuallySolvedConflictCountThatEqualNoneAndStartedWithInput2(){return c(this.n.get().entries(),([e,t])=>{const n=t.accepted.get();return e.isConflicting&&n.kind===f.unrecognized&&t.previousNonDiffingState?.kind===f.input2})}get manuallySolvedConflictCountThatEqualNoneAndStartedWithBothNonSmart(){return c(this.n.get().entries(),([e,t])=>{const n=t.accepted.get();return e.isConflicting&&n.kind===f.unrecognized&&t.previousNonDiffingState?.kind===f.both&&!t.previousNonDiffingState?.smartCombination})}get manuallySolvedConflictCountThatEqualNoneAndStartedWithBothSmart(){return c(this.n.get().entries(),([e,t])=>{const n=t.accepted.get();return e.isConflicting&&n.kind===f.unrecognized&&t.previousNonDiffingState?.kind===f.both&&t.previousNonDiffingState?.smartCombination})}};$=H([y(7,q),y(8,O)],$);function c(g,e){let t=0;for(const n of g)e(n)&&t++;return t}class z{constructor(e){this.c=e,this.accepted=v(`BaseRangeState${this.c.baseRange}`,m.base),this.handledInput1=v(`BaseRangeHandledState${this.c.baseRange}.Input1`,!1),this.handledInput2=v(`BaseRangeHandledState${this.c.baseRange}.Input2`,!1),this.computedFromDiffing=!1,this.previousNonDiffingState=void 0,this.handled=R(this,t=>this.handledInput1.read(t)&&this.handledInput2.read(t))}}var V;(function(g){g[g.initializing=1]="initializing",g[g.upToDate=2]="upToDate",g[g.updating=3]="updating"})(V||(V={}));class K{constructor(e,t,n,a,i){this.resource=e,this.c=t,this.e=n,this.f=a,this.g=i,this.code="undoMarkAsHandled",this.label=F(8997,null),this.type=0}redo(){const e=this.c.deref();if(!e||e.isDisposed())return;const t=this.e.deref();t&&b(n=>{t.handledInput1.set(!0,n),t.handledInput2.set(!0,n)})}undo(){const e=this.c.deref();if(!e||e.isDisposed())return;const t=this.e.deref();t&&b(n=>{t.handledInput1.set(this.f,n),t.handledInput2.set(this.g,n)})}}export{$ as $uRb,V as MergeEditorModelState};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { CompareResult, equals } from "../../../../../base/common/arrays.js";
+import { BugIndicatingError } from "../../../../../base/common/errors.js";
+import { autorunHandleChanges, derived, keepObserved, observableValue, transaction, waitForState } from "../../../../../base/common/observable.js";
+import { Range } from "../../../../../editor/common/core/range.js";
+import { ILanguageService } from "../../../../../editor/common/languages/language.js";
+import { localize } from "../../../../../nls.js";
+import { IUndoRedoService, UndoRedoGroup } from "../../../../../platform/undoRedo/common/undoRedo.js";
+import { EditorModel } from "../../../../common/editor/editorModel.js";
+import { MergeEditorLineRange } from "./lineRange.js";
+import { DocumentLineRangeMap, DocumentRangeMap, LineRangeMapping } from "./mapping.js";
+import { TextModelDiffs } from "./textModelDiffs.js";
+import { leftJoin } from "../utils.js";
+import { ModifiedBaseRange, ModifiedBaseRangeState, ModifiedBaseRangeStateKind } from "./modifiedBaseRange.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+let MergeEditorModel = class MergeEditorModel2 extends EditorModel {
+  static {
+    __name(this, "MergeEditorModel");
+  }
+  constructor(base, input1, input2, resultTextModel, diffComputer, options, telemetry, languageService, undoRedoService) {
+    super();
+    this.base = base;
+    this.input1 = input1;
+    this.input2 = input2;
+    this.resultTextModel = resultTextModel;
+    this.diffComputer = diffComputer;
+    this.options = options;
+    this.telemetry = telemetry;
+    this.languageService = languageService;
+    this.undoRedoService = undoRedoService;
+    this.input1TextModelDiffs = this._register(new TextModelDiffs(this.base, this.input1.textModel, this.diffComputer));
+    this.input2TextModelDiffs = this._register(new TextModelDiffs(this.base, this.input2.textModel, this.diffComputer));
+    this.resultTextModelDiffs = this._register(new TextModelDiffs(this.base, this.resultTextModel, this.diffComputer));
+    this.modifiedBaseRanges = derived(this, (reader) => {
+      const input1Diffs = this.input1TextModelDiffs.diffs.read(reader);
+      const input2Diffs = this.input2TextModelDiffs.diffs.read(reader);
+      return ModifiedBaseRange.fromDiffs(input1Diffs, input2Diffs, this.base, this.input1.textModel, this.input2.textModel);
+    });
+    this.modifiedBaseRangeResultStates = derived(this, (reader) => {
+      const map = new Map(this.modifiedBaseRanges.read(reader).map((s) => [
+        s,
+        new ModifiedBaseRangeData(s)
+      ]));
+      return map;
+    });
+    this.resultSnapshot = this.resultTextModel.createSnapshot();
+    this.baseInput1Diffs = this.input1TextModelDiffs.diffs;
+    this.baseInput2Diffs = this.input2TextModelDiffs.diffs;
+    this.baseResultDiffs = this.resultTextModelDiffs.diffs;
+    this.input1ResultMapping = derived(this, (reader) => {
+      return this.getInputResultMapping(this.baseInput1Diffs.read(reader), this.baseResultDiffs.read(reader), this.input1.textModel.getLineCount());
+    });
+    this.resultInput1Mapping = derived(this, (reader) => this.input1ResultMapping.read(reader).reverse());
+    this.input2ResultMapping = derived(this, (reader) => {
+      return this.getInputResultMapping(this.baseInput2Diffs.read(reader), this.baseResultDiffs.read(reader), this.input2.textModel.getLineCount());
+    });
+    this.resultInput2Mapping = derived(this, (reader) => this.input2ResultMapping.read(reader).reverse());
+    this.baseResultMapping = derived(this, (reader) => {
+      const map = new DocumentLineRangeMap(this.baseResultDiffs.read(reader), -1);
+      return new DocumentLineRangeMap(map.lineRangeMappings.map((m) => m.inputRange.isEmpty || m.outputRange.isEmpty ? new LineRangeMapping(
+        // We can do this because two adjacent diffs have one line in between.
+        m.inputRange.deltaStart(-1),
+        m.outputRange.deltaStart(-1)
+      ) : m), map.inputLineCount);
+    });
+    this.resultBaseMapping = derived(this, (reader) => this.baseResultMapping.read(reader).reverse());
+    this.diffComputingState = derived(this, (reader) => {
+      const states = [
+        this.input1TextModelDiffs,
+        this.input2TextModelDiffs,
+        this.resultTextModelDiffs
+      ].map((s) => s.state.read(reader));
+      if (states.some(
+        (s) => s === 1
+        /* TextModelDiffState.initializing */
+      )) {
+        return 1;
+      }
+      if (states.some(
+        (s) => s === 3
+        /* TextModelDiffState.updating */
+      )) {
+        return 3;
+      }
+      return 2;
+    });
+    this.inputDiffComputingState = derived(this, (reader) => {
+      const states = [
+        this.input1TextModelDiffs,
+        this.input2TextModelDiffs
+      ].map((s) => s.state.read(reader));
+      if (states.some(
+        (s) => s === 1
+        /* TextModelDiffState.initializing */
+      )) {
+        return 1;
+      }
+      if (states.some(
+        (s) => s === 3
+        /* TextModelDiffState.updating */
+      )) {
+        return 3;
+      }
+      return 2;
+    });
+    this.isUpToDate = derived(
+      this,
+      (reader) => this.diffComputingState.read(reader) === 2
+      /* MergeEditorModelState.upToDate */
+    );
+    this.firstRun = true;
+    this.unhandledConflictsCount = derived(this, (reader) => {
+      const map = this.modifiedBaseRangeResultStates.read(reader);
+      let unhandledCount = 0;
+      for (const [_key, value] of map) {
+        if (!value.handled.read(reader)) {
+          unhandledCount++;
+        }
+      }
+      return unhandledCount;
+    });
+    this.hasUnhandledConflicts = this.unhandledConflictsCount.map((value) => (
+      /** @description hasUnhandledConflicts */
+      value > 0
+    ));
+    this._register(keepObserved(this.modifiedBaseRangeResultStates));
+    this._register(keepObserved(this.input1ResultMapping));
+    this._register(keepObserved(this.input2ResultMapping));
+    const initializePromise = this.initialize();
+    this.onInitialized = waitForState(
+      this.diffComputingState,
+      (state) => state === 2
+      /* MergeEditorModelState.upToDate */
+    ).then(async () => {
+      await initializePromise;
+    });
+    initializePromise.then(() => {
+      let shouldRecomputeHandledFromAccepted = true;
+      this._register(autorunHandleChanges({
+        changeTracker: {
+          createChangeSummary: /* @__PURE__ */ __name(() => void 0, "createChangeSummary"),
+          handleChange: /* @__PURE__ */ __name((ctx) => {
+            if (ctx.didChange(this.modifiedBaseRangeResultStates)) {
+              shouldRecomputeHandledFromAccepted = true;
+            }
+            return ctx.didChange(this.resultTextModelDiffs.diffs) ? ctx.change === 1 : true;
+          }, "handleChange")
+        }
+      }, (reader) => {
+        const states = this.modifiedBaseRangeResultStates.read(reader);
+        if (!this.isUpToDate.read(reader)) {
+          return;
+        }
+        const resultDiffs = this.resultTextModelDiffs.diffs.read(reader);
+        transaction((tx) => {
+          this.updateBaseRangeAcceptedState(resultDiffs, states, tx);
+          if (shouldRecomputeHandledFromAccepted) {
+            shouldRecomputeHandledFromAccepted = false;
+            for (const [_range, observableState] of states) {
+              const state = observableState.accepted.get();
+              const handled = !(state.kind === ModifiedBaseRangeStateKind.base || state.kind === ModifiedBaseRangeStateKind.unrecognized);
+              observableState.handledInput1.set(handled, tx);
+              observableState.handledInput2.set(handled, tx);
+            }
+          }
+        });
+      }));
+    });
+  }
+  async initialize() {
+    if (this.options.resetResult) {
+      await this.reset();
+    }
+  }
+  async reset() {
+    await waitForState(
+      this.inputDiffComputingState,
+      (state) => state === 2
+      /* MergeEditorModelState.upToDate */
+    );
+    const states = this.modifiedBaseRangeResultStates.get();
+    transaction((tx) => {
+      for (const [range, state] of states) {
+        let newState;
+        let handled = false;
+        if (range.input1Diffs.length === 0) {
+          newState = ModifiedBaseRangeState.base.withInputValue(2, true);
+          handled = true;
+        } else if (range.input2Diffs.length === 0) {
+          newState = ModifiedBaseRangeState.base.withInputValue(1, true);
+          handled = true;
+        } else if (range.isEqualChange) {
+          newState = ModifiedBaseRangeState.base.withInputValue(1, true);
+          handled = true;
+        } else {
+          newState = ModifiedBaseRangeState.base;
+          handled = false;
+        }
+        state.accepted.set(newState, tx);
+        state.computedFromDiffing = false;
+        state.previousNonDiffingState = void 0;
+        state.handledInput1.set(handled, tx);
+        state.handledInput2.set(handled, tx);
+      }
+      this.resultTextModel.pushEditOperations(null, [{
+        range: new Range(1, 1, Number.MAX_SAFE_INTEGER, 1),
+        text: this.computeAutoMergedResult()
+      }], () => null);
+    });
+  }
+  computeAutoMergedResult() {
+    const baseRanges = this.modifiedBaseRanges.get();
+    const baseLines = this.base.getLinesContent();
+    const input1Lines = this.input1.textModel.getLinesContent();
+    const input2Lines = this.input2.textModel.getLinesContent();
+    const resultLines = [];
+    function appendLinesToResult(source, lineRange) {
+      for (let i = lineRange.startLineNumber; i < lineRange.endLineNumberExclusive; i++) {
+        resultLines.push(source[i - 1]);
+      }
+    }
+    __name(appendLinesToResult, "appendLinesToResult");
+    let baseStartLineNumber = 1;
+    for (const baseRange of baseRanges) {
+      appendLinesToResult(baseLines, MergeEditorLineRange.fromLineNumbers(baseStartLineNumber, baseRange.baseRange.startLineNumber));
+      baseStartLineNumber = baseRange.baseRange.endLineNumberExclusive;
+      if (baseRange.input1Diffs.length === 0) {
+        appendLinesToResult(input2Lines, baseRange.input2Range);
+      } else if (baseRange.input2Diffs.length === 0) {
+        appendLinesToResult(input1Lines, baseRange.input1Range);
+      } else if (baseRange.isEqualChange) {
+        appendLinesToResult(input1Lines, baseRange.input1Range);
+      } else {
+        appendLinesToResult(baseLines, baseRange.baseRange);
+      }
+    }
+    appendLinesToResult(baseLines, MergeEditorLineRange.fromLineNumbers(baseStartLineNumber, baseLines.length + 1));
+    return resultLines.join(this.resultTextModel.getEOL());
+  }
+  hasBaseRange(baseRange) {
+    return this.modifiedBaseRangeResultStates.get().has(baseRange);
+  }
+  get isApplyingEditInResult() {
+    return this.resultTextModelDiffs.isApplyingChange;
+  }
+  getInputResultMapping(inputLinesDiffs, resultDiffs, inputLineCount) {
+    const map = DocumentLineRangeMap.betweenOutputs(inputLinesDiffs, resultDiffs, inputLineCount);
+    return new DocumentLineRangeMap(map.lineRangeMappings.map((m) => m.inputRange.isEmpty || m.outputRange.isEmpty ? new LineRangeMapping(
+      // We can do this because two adjacent diffs have one line in between.
+      m.inputRange.deltaStart(-1),
+      m.outputRange.deltaStart(-1)
+    ) : m), map.inputLineCount);
+  }
+  translateInputRangeToBase(input, range) {
+    const baseInputDiffs = input === 1 ? this.baseInput1Diffs.get() : this.baseInput2Diffs.get();
+    const map = new DocumentRangeMap(baseInputDiffs.flatMap((d) => d.rangeMappings), 0).reverse();
+    return map.projectRange(range).outputRange;
+  }
+  translateBaseRangeToInput(input, range) {
+    const baseInputDiffs = input === 1 ? this.baseInput1Diffs.get() : this.baseInput2Diffs.get();
+    const map = new DocumentRangeMap(baseInputDiffs.flatMap((d) => d.rangeMappings), 0);
+    return map.projectRange(range).outputRange;
+  }
+  getLineRangeInResult(baseRange, reader) {
+    return this.resultTextModelDiffs.getResultLineRange(baseRange, reader);
+  }
+  translateResultRangeToBase(range) {
+    const map = new DocumentRangeMap(this.baseResultDiffs.get().flatMap((d) => d.rangeMappings), 0).reverse();
+    return map.projectRange(range).outputRange;
+  }
+  translateBaseRangeToResult(range) {
+    const map = new DocumentRangeMap(this.baseResultDiffs.get().flatMap((d) => d.rangeMappings), 0);
+    return map.projectRange(range).outputRange;
+  }
+  findModifiedBaseRangesInRange(rangeInBase) {
+    return this.modifiedBaseRanges.get().filter((r) => r.baseRange.intersectsOrTouches(rangeInBase));
+  }
+  updateBaseRangeAcceptedState(resultDiffs, states, tx) {
+    const baseRangeWithStoreAndTouchingDiffs = leftJoin(states, resultDiffs, (baseRange, diff) => baseRange[0].baseRange.intersectsOrTouches(diff.inputRange) ? CompareResult.neitherLessOrGreaterThan : MergeEditorLineRange.compareByStart(baseRange[0].baseRange, diff.inputRange));
+    for (const row of baseRangeWithStoreAndTouchingDiffs) {
+      const newState = this.computeState(row.left[0], row.rights);
+      const data = row.left[1];
+      const oldState = data.accepted.get();
+      if (!oldState.equals(newState)) {
+        if (!this.firstRun && !data.computedFromDiffing) {
+          data.computedFromDiffing = true;
+          data.previousNonDiffingState = oldState;
+        }
+        data.accepted.set(newState, tx);
+      }
+    }
+    if (this.firstRun) {
+      this.firstRun = false;
+    }
+  }
+  computeState(baseRange, conflictingDiffs) {
+    if (conflictingDiffs.length === 0) {
+      return ModifiedBaseRangeState.base;
+    }
+    const conflictingEdits = conflictingDiffs.map((d) => d.getLineEdit());
+    function editsAgreeWithDiffs(diffs) {
+      return equals(conflictingEdits, diffs.map((d) => d.getLineEdit()), (a, b) => a.equals(b));
+    }
+    __name(editsAgreeWithDiffs, "editsAgreeWithDiffs");
+    if (editsAgreeWithDiffs(baseRange.input1Diffs)) {
+      return ModifiedBaseRangeState.base.withInputValue(1, true);
+    }
+    if (editsAgreeWithDiffs(baseRange.input2Diffs)) {
+      return ModifiedBaseRangeState.base.withInputValue(2, true);
+    }
+    const states = [
+      ModifiedBaseRangeState.base.withInputValue(1, true).withInputValue(2, true, true),
+      ModifiedBaseRangeState.base.withInputValue(2, true).withInputValue(1, true, true),
+      ModifiedBaseRangeState.base.withInputValue(1, true).withInputValue(2, true, false),
+      ModifiedBaseRangeState.base.withInputValue(2, true).withInputValue(1, true, false)
+    ];
+    for (const s of states) {
+      const { edit } = baseRange.getEditForBase(s);
+      if (edit) {
+        const resultRange = this.resultTextModelDiffs.getResultLineRange(baseRange.baseRange);
+        const existingLines = resultRange.getLines(this.resultTextModel);
+        if (equals(edit.newLines, existingLines, (a, b) => a === b)) {
+          return s;
+        }
+      }
+    }
+    return ModifiedBaseRangeState.unrecognized;
+  }
+  getState(baseRange) {
+    const existingState = this.modifiedBaseRangeResultStates.get().get(baseRange);
+    if (!existingState) {
+      throw new BugIndicatingError("object must be from this instance");
+    }
+    return existingState.accepted;
+  }
+  setState(baseRange, state, _markInputAsHandled, tx, _pushStackElement = false) {
+    if (!this.isUpToDate.get()) {
+      throw new BugIndicatingError("Cannot set state while updating");
+    }
+    const existingState = this.modifiedBaseRangeResultStates.get().get(baseRange);
+    if (!existingState) {
+      throw new BugIndicatingError("object must be from this instance");
+    }
+    const conflictingDiffs = this.resultTextModelDiffs.findTouchingDiffs(baseRange.baseRange);
+    const group = new UndoRedoGroup();
+    if (conflictingDiffs) {
+      this.resultTextModelDiffs.removeDiffs(conflictingDiffs, tx, group);
+    }
+    const { edit, effectiveState } = baseRange.getEditForBase(state);
+    existingState.accepted.set(effectiveState, tx);
+    existingState.previousNonDiffingState = void 0;
+    existingState.computedFromDiffing = false;
+    const input1Handled = existingState.handledInput1.get();
+    const input2Handled = existingState.handledInput2.get();
+    if (!input1Handled || !input2Handled) {
+      this.undoRedoService.pushElement(new MarkAsHandledUndoRedoElement(this.resultTextModel.uri, new WeakRef(this), new WeakRef(existingState), input1Handled, input2Handled), group);
+    }
+    if (edit) {
+      this.resultTextModel.pushStackElement();
+      this.resultTextModelDiffs.applyEditRelativeToOriginal(edit, tx, group);
+      this.resultTextModel.pushStackElement();
+    }
+    existingState.handledInput1.set(true, tx);
+    existingState.handledInput2.set(true, tx);
+  }
+  resetDirtyConflictsToBase() {
+    transaction((tx) => {
+      this.resultTextModel.pushStackElement();
+      for (const range of this.modifiedBaseRanges.get()) {
+        if (this.getState(range).get().kind === ModifiedBaseRangeStateKind.unrecognized) {
+          this.setState(range, ModifiedBaseRangeState.base, false, tx, false);
+        }
+      }
+      this.resultTextModel.pushStackElement();
+    });
+  }
+  isHandled(baseRange) {
+    return this.modifiedBaseRangeResultStates.get().get(baseRange).handled;
+  }
+  isInputHandled(baseRange, inputNumber) {
+    const state = this.modifiedBaseRangeResultStates.get().get(baseRange);
+    return inputNumber === 1 ? state.handledInput1 : state.handledInput2;
+  }
+  setInputHandled(baseRange, inputNumber, handled, tx) {
+    const state = this.modifiedBaseRangeResultStates.get().get(baseRange);
+    if (state.handled.get() === handled) {
+      return;
+    }
+    const dataRef = new WeakRef(ModifiedBaseRangeData);
+    const modelRef = new WeakRef(this);
+    this.undoRedoService.pushElement({
+      type: 0,
+      resource: this.resultTextModel.uri,
+      code: "setInputHandled",
+      label: localize("setInputHandled", "Set Input Handled"),
+      redo() {
+        const model = modelRef.deref();
+        const data = dataRef.deref();
+        if (model && !model.isDisposed() && data) {
+          transaction((tx2) => {
+            if (inputNumber === 1) {
+              state.handledInput1.set(handled, tx2);
+            } else {
+              state.handledInput2.set(handled, tx2);
+            }
+          });
+        }
+      },
+      undo() {
+        const model = modelRef.deref();
+        const data = dataRef.deref();
+        if (model && !model.isDisposed() && data) {
+          transaction((tx2) => {
+            if (inputNumber === 1) {
+              state.handledInput1.set(!handled, tx2);
+            } else {
+              state.handledInput2.set(!handled, tx2);
+            }
+          });
+        }
+      }
+    });
+    if (inputNumber === 1) {
+      state.handledInput1.set(handled, tx);
+    } else {
+      state.handledInput2.set(handled, tx);
+    }
+  }
+  setHandled(baseRange, handled, tx) {
+    const state = this.modifiedBaseRangeResultStates.get().get(baseRange);
+    if (state.handled.get() === handled) {
+      return;
+    }
+    state.handledInput1.set(handled, tx);
+    state.handledInput2.set(handled, tx);
+  }
+  setLanguageId(languageId, source) {
+    const language = this.languageService.createById(languageId);
+    this.base.setLanguage(language, source);
+    this.input1.textModel.setLanguage(language, source);
+    this.input2.textModel.setLanguage(language, source);
+    this.resultTextModel.setLanguage(language, source);
+  }
+  getInitialResultValue() {
+    const chunks = [];
+    while (true) {
+      const chunk = this.resultSnapshot.read();
+      if (chunk === null) {
+        break;
+      }
+      chunks.push(chunk);
+    }
+    return chunks.join();
+  }
+  async getResultValueWithConflictMarkers() {
+    await waitForState(
+      this.diffComputingState,
+      (state) => state === 2
+      /* MergeEditorModelState.upToDate */
+    );
+    if (this.unhandledConflictsCount.get() === 0) {
+      return this.resultTextModel.getValue();
+    }
+    const resultLines = this.resultTextModel.getLinesContent();
+    const input1Lines = this.input1.textModel.getLinesContent();
+    const input2Lines = this.input2.textModel.getLinesContent();
+    const states = this.modifiedBaseRangeResultStates.get();
+    const outputLines = [];
+    function appendLinesToResult(source, lineRange) {
+      for (let i = lineRange.startLineNumber; i < lineRange.endLineNumberExclusive; i++) {
+        outputLines.push(source[i - 1]);
+      }
+    }
+    __name(appendLinesToResult, "appendLinesToResult");
+    let resultStartLineNumber = 1;
+    for (const [range, state] of states) {
+      if (state.handled.get()) {
+        continue;
+      }
+      const resultRange = this.resultTextModelDiffs.getResultLineRange(range.baseRange);
+      appendLinesToResult(resultLines, MergeEditorLineRange.fromLineNumbers(resultStartLineNumber, Math.max(resultStartLineNumber, resultRange.startLineNumber)));
+      resultStartLineNumber = resultRange.endLineNumberExclusive;
+      outputLines.push("<<<<<<<");
+      if (state.accepted.get().kind === ModifiedBaseRangeStateKind.unrecognized) {
+        appendLinesToResult(resultLines, resultRange);
+      } else {
+        appendLinesToResult(input1Lines, range.input1Range);
+      }
+      outputLines.push("=======");
+      appendLinesToResult(input2Lines, range.input2Range);
+      outputLines.push(">>>>>>>");
+    }
+    appendLinesToResult(resultLines, MergeEditorLineRange.fromLineNumbers(resultStartLineNumber, resultLines.length + 1));
+    return outputLines.join("\n");
+  }
+  get conflictCount() {
+    return arrayCount(this.modifiedBaseRanges.get(), (r) => r.isConflicting);
+  }
+  get combinableConflictCount() {
+    return arrayCount(this.modifiedBaseRanges.get(), (r) => r.isConflicting && r.canBeCombined);
+  }
+  get conflictsResolvedWithBase() {
+    return arrayCount(this.modifiedBaseRangeResultStates.get().entries(), ([r, s]) => r.isConflicting && s.accepted.get().kind === ModifiedBaseRangeStateKind.base);
+  }
+  get conflictsResolvedWithInput1() {
+    return arrayCount(this.modifiedBaseRangeResultStates.get().entries(), ([r, s]) => r.isConflicting && s.accepted.get().kind === ModifiedBaseRangeStateKind.input1);
+  }
+  get conflictsResolvedWithInput2() {
+    return arrayCount(this.modifiedBaseRangeResultStates.get().entries(), ([r, s]) => r.isConflicting && s.accepted.get().kind === ModifiedBaseRangeStateKind.input2);
+  }
+  get conflictsResolvedWithSmartCombination() {
+    return arrayCount(this.modifiedBaseRangeResultStates.get().entries(), ([r, s]) => {
+      const state = s.accepted.get();
+      return r.isConflicting && state.kind === ModifiedBaseRangeStateKind.both && state.smartCombination;
+    });
+  }
+  get manuallySolvedConflictCountThatEqualNone() {
+    return arrayCount(this.modifiedBaseRangeResultStates.get().entries(), ([r, s]) => r.isConflicting && s.accepted.get().kind === ModifiedBaseRangeStateKind.unrecognized);
+  }
+  get manuallySolvedConflictCountThatEqualSmartCombine() {
+    return arrayCount(this.modifiedBaseRangeResultStates.get().entries(), ([r, s]) => {
+      const state = s.accepted.get();
+      return r.isConflicting && s.computedFromDiffing && state.kind === ModifiedBaseRangeStateKind.both && state.smartCombination;
+    });
+  }
+  get manuallySolvedConflictCountThatEqualInput1() {
+    return arrayCount(this.modifiedBaseRangeResultStates.get().entries(), ([r, s]) => {
+      const state = s.accepted.get();
+      return r.isConflicting && s.computedFromDiffing && state.kind === ModifiedBaseRangeStateKind.input1;
+    });
+  }
+  get manuallySolvedConflictCountThatEqualInput2() {
+    return arrayCount(this.modifiedBaseRangeResultStates.get().entries(), ([r, s]) => {
+      const state = s.accepted.get();
+      return r.isConflicting && s.computedFromDiffing && state.kind === ModifiedBaseRangeStateKind.input2;
+    });
+  }
+  get manuallySolvedConflictCountThatEqualNoneAndStartedWithBase() {
+    return arrayCount(this.modifiedBaseRangeResultStates.get().entries(), ([r, s]) => {
+      const state = s.accepted.get();
+      return r.isConflicting && state.kind === ModifiedBaseRangeStateKind.unrecognized && s.previousNonDiffingState?.kind === ModifiedBaseRangeStateKind.base;
+    });
+  }
+  get manuallySolvedConflictCountThatEqualNoneAndStartedWithInput1() {
+    return arrayCount(this.modifiedBaseRangeResultStates.get().entries(), ([r, s]) => {
+      const state = s.accepted.get();
+      return r.isConflicting && state.kind === ModifiedBaseRangeStateKind.unrecognized && s.previousNonDiffingState?.kind === ModifiedBaseRangeStateKind.input1;
+    });
+  }
+  get manuallySolvedConflictCountThatEqualNoneAndStartedWithInput2() {
+    return arrayCount(this.modifiedBaseRangeResultStates.get().entries(), ([r, s]) => {
+      const state = s.accepted.get();
+      return r.isConflicting && state.kind === ModifiedBaseRangeStateKind.unrecognized && s.previousNonDiffingState?.kind === ModifiedBaseRangeStateKind.input2;
+    });
+  }
+  get manuallySolvedConflictCountThatEqualNoneAndStartedWithBothNonSmart() {
+    return arrayCount(this.modifiedBaseRangeResultStates.get().entries(), ([r, s]) => {
+      const state = s.accepted.get();
+      return r.isConflicting && state.kind === ModifiedBaseRangeStateKind.unrecognized && s.previousNonDiffingState?.kind === ModifiedBaseRangeStateKind.both && !s.previousNonDiffingState?.smartCombination;
+    });
+  }
+  get manuallySolvedConflictCountThatEqualNoneAndStartedWithBothSmart() {
+    return arrayCount(this.modifiedBaseRangeResultStates.get().entries(), ([r, s]) => {
+      const state = s.accepted.get();
+      return r.isConflicting && state.kind === ModifiedBaseRangeStateKind.unrecognized && s.previousNonDiffingState?.kind === ModifiedBaseRangeStateKind.both && s.previousNonDiffingState?.smartCombination;
+    });
+  }
+};
+MergeEditorModel = __decorate([
+  __param(7, ILanguageService),
+  __param(8, IUndoRedoService)
+], MergeEditorModel);
+function arrayCount(array, predicate) {
+  let count = 0;
+  for (const value of array) {
+    if (predicate(value)) {
+      count++;
+    }
+  }
+  return count;
+}
+__name(arrayCount, "arrayCount");
+class ModifiedBaseRangeData {
+  static {
+    __name(this, "ModifiedBaseRangeData");
+  }
+  constructor(baseRange) {
+    this.baseRange = baseRange;
+    this.accepted = observableValue(`BaseRangeState${this.baseRange.baseRange}`, ModifiedBaseRangeState.base);
+    this.handledInput1 = observableValue(`BaseRangeHandledState${this.baseRange.baseRange}.Input1`, false);
+    this.handledInput2 = observableValue(`BaseRangeHandledState${this.baseRange.baseRange}.Input2`, false);
+    this.computedFromDiffing = false;
+    this.previousNonDiffingState = void 0;
+    this.handled = derived(this, (reader) => this.handledInput1.read(reader) && this.handledInput2.read(reader));
+  }
+}
+var MergeEditorModelState;
+(function(MergeEditorModelState2) {
+  MergeEditorModelState2[MergeEditorModelState2["initializing"] = 1] = "initializing";
+  MergeEditorModelState2[MergeEditorModelState2["upToDate"] = 2] = "upToDate";
+  MergeEditorModelState2[MergeEditorModelState2["updating"] = 3] = "updating";
+})(MergeEditorModelState || (MergeEditorModelState = {}));
+class MarkAsHandledUndoRedoElement {
+  static {
+    __name(this, "MarkAsHandledUndoRedoElement");
+  }
+  constructor(resource, mergeEditorModelRef, stateRef, input1Handled, input2Handled) {
+    this.resource = resource;
+    this.mergeEditorModelRef = mergeEditorModelRef;
+    this.stateRef = stateRef;
+    this.input1Handled = input1Handled;
+    this.input2Handled = input2Handled;
+    this.code = "undoMarkAsHandled";
+    this.label = localize("undoMarkAsHandled", "Undo Mark As Handled");
+    this.type = 0;
+  }
+  redo() {
+    const mergeEditorModel = this.mergeEditorModelRef.deref();
+    if (!mergeEditorModel || mergeEditorModel.isDisposed()) {
+      return;
+    }
+    const state = this.stateRef.deref();
+    if (!state) {
+      return;
+    }
+    transaction((tx) => {
+      state.handledInput1.set(true, tx);
+      state.handledInput2.set(true, tx);
+    });
+  }
+  undo() {
+    const mergeEditorModel = this.mergeEditorModelRef.deref();
+    if (!mergeEditorModel || mergeEditorModel.isDisposed()) {
+      return;
+    }
+    const state = this.stateRef.deref();
+    if (!state) {
+      return;
+    }
+    transaction((tx) => {
+      state.handledInput1.set(this.input1Handled, tx);
+      state.handledInput2.set(this.input2Handled, tx);
+    });
+  }
+}
+export {
+  MergeEditorModel,
+  MergeEditorModelState
+};
+//# sourceMappingURL=mergeEditorModel.js.map

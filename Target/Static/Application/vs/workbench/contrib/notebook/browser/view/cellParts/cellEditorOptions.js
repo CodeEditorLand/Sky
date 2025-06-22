@@ -1,1 +1,230 @@
-import{$df as c}from"../../../../../../base/common/event.js";import{localize as a,localize2 as h}from"../../../../../../nls.js";import{$iI as g,$dI as m,$jI as d}from"../../../../../../platform/actions/common/actions.js";import{$El as l}from"../../../../../../platform/configuration/common/configuration.js";import{$Sl as p}from"../../../../../../platform/configuration/common/configurationRegistry.js";import{$Bn as r}from"../../../../../../platform/contextkey/common/contextkey.js";import{$Ql as N}from"../../../../../../platform/registry/common/platform.js";import{$CN as k}from"../../../../../common/contextkeys.js";import{$2Vb as S,$SVb as L}from"../../controller/coreActions.js";import{$UAb as f,$CAb as $}from"../../../common/notebookContextKeys.js";import{$DSb as z}from"../cellPart.js";import{$jL as C}from"../../../common/notebookCommon.js";class x extends z{set tabSize(o){this.b!==o&&(this.b=o,this.j.fire())}get tabSize(){return this.b}set indentSize(o){this.g!==o&&(this.g=o,this.j.fire())}get indentSize(){return this.g}set insertSpaces(o){this.h!==o&&(this.h=o,this.j.fire())}get insertSpaces(){return this.h}constructor(o,e,t){super(),this.n=o,this.notebookOptions=e,this.configurationService=t,this.a="inherit",this.j=this.B(new c),this.onDidChange=this.j.event,this.B(o.onDidChange((()=>{this.r()}))),this.m=this.s()}updateState(o,e){e.cellLineNumberChanged&&this.setLineNumbers(o.lineNumbers)}r(){this.m=this.s(),this.j.fire()}s(){const o=this.n.value,e=this.notebookOptions.getDisplayOptions().editorOptionsCustomizations,t=e?.["editor.indentSize"];void 0!==t&&(this.indentSize=t);const i=e?.["editor.insertSpaces"];void 0!==i&&(this.insertSpaces=i);const s=e?.["editor.tabSize"];void 0!==s&&(this.tabSize=s);let n=o.lineNumbers;switch(this.a){case"inherit":"on"===this.configurationService.getValue("notebook.lineNumbers")?"off"===o.lineNumbers&&(n="on"):n="off";break;case"on":"off"===o.lineNumbers&&(n="on");break;case"off":n="off"}const r={};return o.lineNumbers!==n&&(r.lineNumbers=n),this.notebookOptions.getLayoutConfiguration().disableRulers&&(r.rulers=[]),{...o,...r}}getUpdatedValue(o,e){const t=this.getValue(o,e);return delete t.hover,t}getValue(o,e){return{...this.m,padding:this.notebookOptions.computeEditorPadding(o,e)}}getDefaultValue(){return{...this.m,padding:{top:12,bottom:12}}}setLineNumbers(o){this.a=o,this.r()}}N.as(p.Configuration).registerConfiguration({id:"notebook",order:100,type:"object",properties:{"notebook.lineNumbers":{type:"string",enum:["off","on"],default:"off",markdownDescription:a(9593,null)}}}),d(class extends g{constructor(){super({id:"notebook.toggleLineNumbers",title:h(9596,"Toggle Notebook Line Numbers"),precondition:$,menu:[{id:m.NotebookToolbar,group:"notebookLayout",order:2,when:r.equals("config.notebook.globalToolbar",!0)}],category:L,f1:!0,toggled:{condition:r.notEquals("config.notebook.lineNumbers","off"),title:a(9594,null)}})}async run(o){const e=o.get(l);"on"===e.getValue("notebook.lineNumbers")?e.updateValue("notebook.lineNumbers","off"):e.updateValue("notebook.lineNumbers","on")}}),d(class extends S{constructor(){super({id:"notebook.cell.toggleLineNumbers",title:a(9595,null),precondition:k.isEqualTo(C),menu:[{id:m.NotebookCellTitle,group:"View",order:1}],toggled:r.or(f.isEqualTo("on"),r.and(f.isEqualTo("inherit"),r.equals("config.notebook.lineNumbers","on")))})}async runWithContext(o,e){if(e.ui)this.a(o.get(l),e.cell);else{const t=o.get(l);e.selectedCells.forEach((o=>{this.a(t,o)}))}}a(o,e){const t="on"===o.getValue("notebook.lineNumbers"),i=e.lineNumbers;e.lineNumbers="on"===i||"inherit"===i&&t?"off":"on"}});export{x as $NTb};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { Emitter } from "../../../../../../base/common/event.js";
+import { localize, localize2 } from "../../../../../../nls.js";
+import { Action2, MenuId, registerAction2 } from "../../../../../../platform/actions/common/actions.js";
+import { IConfigurationService } from "../../../../../../platform/configuration/common/configuration.js";
+import { Extensions as ConfigurationExtensions } from "../../../../../../platform/configuration/common/configurationRegistry.js";
+import { ContextKeyExpr } from "../../../../../../platform/contextkey/common/contextkey.js";
+import { Registry } from "../../../../../../platform/registry/common/platform.js";
+import { ActiveEditorContext } from "../../../../../common/contextkeys.js";
+import { NotebookMultiCellAction, NOTEBOOK_ACTIONS_CATEGORY } from "../../controller/coreActions.js";
+import { NOTEBOOK_CELL_LINE_NUMBERS, NOTEBOOK_EDITOR_FOCUSED } from "../../../common/notebookContextKeys.js";
+import { CellContentPart } from "../cellPart.js";
+import { NOTEBOOK_EDITOR_ID } from "../../../common/notebookCommon.js";
+class CellEditorOptions extends CellContentPart {
+  static {
+    __name(this, "CellEditorOptions");
+  }
+  set tabSize(value) {
+    if (this._tabSize !== value) {
+      this._tabSize = value;
+      this._onDidChange.fire();
+    }
+  }
+  get tabSize() {
+    return this._tabSize;
+  }
+  set indentSize(value) {
+    if (this._indentSize !== value) {
+      this._indentSize = value;
+      this._onDidChange.fire();
+    }
+  }
+  get indentSize() {
+    return this._indentSize;
+  }
+  set insertSpaces(value) {
+    if (this._insertSpaces !== value) {
+      this._insertSpaces = value;
+      this._onDidChange.fire();
+    }
+  }
+  get insertSpaces() {
+    return this._insertSpaces;
+  }
+  constructor(base, notebookOptions, configurationService) {
+    super();
+    this.base = base;
+    this.notebookOptions = notebookOptions;
+    this.configurationService = configurationService;
+    this._lineNumbers = "inherit";
+    this._onDidChange = this._register(new Emitter());
+    this.onDidChange = this._onDidChange.event;
+    this._register(base.onDidChange(() => {
+      this._recomputeOptions();
+    }));
+    this._value = this._computeEditorOptions();
+  }
+  updateState(element, e) {
+    if (e.cellLineNumberChanged) {
+      this.setLineNumbers(element.lineNumbers);
+    }
+  }
+  _recomputeOptions() {
+    this._value = this._computeEditorOptions();
+    this._onDidChange.fire();
+  }
+  _computeEditorOptions() {
+    const value = this.base.value;
+    const cellEditorOverridesRaw = this.notebookOptions.getDisplayOptions().editorOptionsCustomizations;
+    const indentSize = cellEditorOverridesRaw?.["editor.indentSize"];
+    if (indentSize !== void 0) {
+      this.indentSize = indentSize;
+    }
+    const insertSpaces = cellEditorOverridesRaw?.["editor.insertSpaces"];
+    if (insertSpaces !== void 0) {
+      this.insertSpaces = insertSpaces;
+    }
+    const tabSize = cellEditorOverridesRaw?.["editor.tabSize"];
+    if (tabSize !== void 0) {
+      this.tabSize = tabSize;
+    }
+    let cellRenderLineNumber = value.lineNumbers;
+    switch (this._lineNumbers) {
+      case "inherit":
+        if (this.configurationService.getValue("notebook.lineNumbers") === "on") {
+          if (value.lineNumbers === "off") {
+            cellRenderLineNumber = "on";
+          }
+        } else {
+          cellRenderLineNumber = "off";
+        }
+        break;
+      case "on":
+        if (value.lineNumbers === "off") {
+          cellRenderLineNumber = "on";
+        }
+        break;
+      case "off":
+        cellRenderLineNumber = "off";
+        break;
+    }
+    const overrides = {};
+    if (value.lineNumbers !== cellRenderLineNumber) {
+      overrides.lineNumbers = cellRenderLineNumber;
+    }
+    if (this.notebookOptions.getLayoutConfiguration().disableRulers) {
+      overrides.rulers = [];
+    }
+    return {
+      ...value,
+      ...overrides
+    };
+  }
+  getUpdatedValue(internalMetadata, cellUri) {
+    const options = this.getValue(internalMetadata, cellUri);
+    delete options.hover;
+    return options;
+  }
+  getValue(internalMetadata, cellUri) {
+    return {
+      ...this._value,
+      ...{
+        padding: this.notebookOptions.computeEditorPadding(internalMetadata, cellUri)
+      }
+    };
+  }
+  getDefaultValue() {
+    return {
+      ...this._value,
+      ...{
+        padding: { top: 12, bottom: 12 }
+      }
+    };
+  }
+  setLineNumbers(lineNumbers) {
+    this._lineNumbers = lineNumbers;
+    this._recomputeOptions();
+  }
+}
+Registry.as(ConfigurationExtensions.Configuration).registerConfiguration({
+  id: "notebook",
+  order: 100,
+  type: "object",
+  "properties": {
+    "notebook.lineNumbers": {
+      type: "string",
+      enum: ["off", "on"],
+      default: "off",
+      markdownDescription: localize("notebook.lineNumbers", "Controls the display of line numbers in the cell editor.")
+    }
+  }
+});
+registerAction2(class ToggleLineNumberAction extends Action2 {
+  static {
+    __name(this, "ToggleLineNumberAction");
+  }
+  constructor() {
+    super({
+      id: "notebook.toggleLineNumbers",
+      title: localize2("notebook.toggleLineNumbers", "Toggle Notebook Line Numbers"),
+      precondition: NOTEBOOK_EDITOR_FOCUSED,
+      menu: [
+        {
+          id: MenuId.NotebookToolbar,
+          group: "notebookLayout",
+          order: 2,
+          when: ContextKeyExpr.equals("config.notebook.globalToolbar", true)
+        }
+      ],
+      category: NOTEBOOK_ACTIONS_CATEGORY,
+      f1: true,
+      toggled: {
+        condition: ContextKeyExpr.notEquals("config.notebook.lineNumbers", "off"),
+        title: localize("notebook.showLineNumbers", "Notebook Line Numbers")
+      }
+    });
+  }
+  async run(accessor) {
+    const configurationService = accessor.get(IConfigurationService);
+    const renderLiNumbers = configurationService.getValue("notebook.lineNumbers") === "on";
+    if (renderLiNumbers) {
+      configurationService.updateValue("notebook.lineNumbers", "off");
+    } else {
+      configurationService.updateValue("notebook.lineNumbers", "on");
+    }
+  }
+});
+registerAction2(class ToggleActiveLineNumberAction extends NotebookMultiCellAction {
+  static {
+    __name(this, "ToggleActiveLineNumberAction");
+  }
+  constructor() {
+    super({
+      id: "notebook.cell.toggleLineNumbers",
+      title: localize("notebook.cell.toggleLineNumbers.title", "Show Cell Line Numbers"),
+      precondition: ActiveEditorContext.isEqualTo(NOTEBOOK_EDITOR_ID),
+      menu: [{
+        id: MenuId.NotebookCellTitle,
+        group: "View",
+        order: 1
+      }],
+      toggled: ContextKeyExpr.or(NOTEBOOK_CELL_LINE_NUMBERS.isEqualTo("on"), ContextKeyExpr.and(NOTEBOOK_CELL_LINE_NUMBERS.isEqualTo("inherit"), ContextKeyExpr.equals("config.notebook.lineNumbers", "on")))
+    });
+  }
+  async runWithContext(accessor, context) {
+    if (context.ui) {
+      this.updateCell(accessor.get(IConfigurationService), context.cell);
+    } else {
+      const configurationService = accessor.get(IConfigurationService);
+      context.selectedCells.forEach((cell) => {
+        this.updateCell(configurationService, cell);
+      });
+    }
+  }
+  updateCell(configurationService, cell) {
+    const renderLineNumbers = configurationService.getValue("notebook.lineNumbers") === "on";
+    const cellLineNumbers = cell.lineNumbers;
+    const currentLineNumberIsOn = cellLineNumbers === "on" || cellLineNumbers === "inherit" && renderLineNumbers;
+    if (currentLineNumberIsOn) {
+      cell.lineNumbers = "off";
+    } else {
+      cell.lineNumbers = "on";
+    }
+  }
+});
+export {
+  CellEditorOptions
+};
+//# sourceMappingURL=cellEditorOptions.js.map

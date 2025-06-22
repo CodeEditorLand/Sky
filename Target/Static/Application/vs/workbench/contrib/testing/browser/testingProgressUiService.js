@@ -1,1 +1,156 @@
-import{$vd as p,$ud as h}from"../../../../base/common/lifecycle.js";import{autorun as d}from"../../../../base/common/observable.js";import{localize as f}from"../../../../nls.js";import{$El as b}from"../../../../platform/configuration/common/configuration.js";import{$9jc as $}from"./testCoverageBars.js";import{$4jc as g}from"../common/configuration.js";import{$6jc as v}from"../common/testCoverageService.js";import{$HU as w}from"../common/testingStates.js";import{$42b as _}from"../common/testResultService.js";import{$Jwb as C}from"../../../services/views/common/viewsService.js";var a=function(s,t,e,r){var n=arguments.length,i=n<3?t:r===null?r=Object.getOwnPropertyDescriptor(t,e):r,o;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")i=Reflect.decorate(s,t,e,r);else for(var l=s.length-1;l>=0;l--)(o=s[l])&&(i=(n<3?o(i):n>3?o(t,e,i):o(t,e))||i);return n>3&&i&&Object.defineProperty(t,e,i),i},u=function(s,t){return function(e,r){t(e,r,s)}};let m=class extends p{constructor(t,e,r,n){super(),this.a=r,this.b=n,this.B(t.onResultsChanged(o=>{"started"in o&&this.c(o.started)}));const i=d(o=>{e.selected.read(o)&&(i.dispose(),$.register())});this.B(i)}c(t){if(t.request.preserveFocus===!0)return;const e=g(this.a,"testing.automaticallyOpenTestResults");if(e==="neverOpen")return;if(e==="openExplorerOnTestStart")return this.f();if(e==="openOnTestStart")return this.g();const r=new h;r.add(t.onComplete(()=>r.dispose())),r.add(t.onChange(n=>{n.reason===1&&w(n.item.ownComputedState)&&(this.g(),r.dispose())}))}f(){this.b.openView("workbench.view.testing",!1)}g(){this.b.openView("workbench.panel.testResults.view",!1)}};m=a([u(0,_),u(1,v),u(2,b),u(3,C)],m);const V=(s,t)=>{let e=0,r=0,n=0,i=0,o=0;for(const l of t){const c=l.counts;r+=c[6]+c[4],e+=c[3],n+=c[5],i+=c[2],o+=c[1]}return{isRunning:s,passed:e,failed:r,runSoFar:e+r,totalWillBeRun:e+r+o+i,skipped:n}},y=({isRunning:s,passed:t,runSoFar:e,totalWillBeRun:r,skipped:n,failed:i})=>{let o=t/e*100;return i>0?o=Math.min(o,99.9):e===0&&(o=0),s?e===0?f(12445,null):n===0?f(12446,null,t,r,o.toPrecision(3)):f(12447,null,t,r,o.toPrecision(3),n):n===0?f(12448,null,t,e,o.toPrecision(3)):f(12449,null,t,e,o.toPrecision(3),n)};export{m as $Lmc,V as $Mmc,y as $Nmc};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { Disposable, DisposableStore } from "../../../../base/common/lifecycle.js";
+import { autorun } from "../../../../base/common/observable.js";
+import { localize } from "../../../../nls.js";
+import { IConfigurationService } from "../../../../platform/configuration/common/configuration.js";
+import { ExplorerTestCoverageBars } from "./testCoverageBars.js";
+import { getTestingConfiguration } from "../common/configuration.js";
+import { ITestCoverageService } from "../common/testCoverageService.js";
+import { isFailedState } from "../common/testingStates.js";
+import { ITestResultService } from "../common/testResultService.js";
+import { IViewsService } from "../../../services/views/common/viewsService.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+let TestingProgressTrigger = class TestingProgressTrigger2 extends Disposable {
+  static {
+    __name(this, "TestingProgressTrigger");
+  }
+  constructor(resultService, testCoverageService, configurationService, viewsService) {
+    super();
+    this.configurationService = configurationService;
+    this.viewsService = viewsService;
+    this._register(resultService.onResultsChanged((e) => {
+      if ("started" in e) {
+        this.attachAutoOpenForNewResults(e.started);
+      }
+    }));
+    const barContributionRegistration = autorun((reader) => {
+      const hasCoverage = !!testCoverageService.selected.read(reader);
+      if (!hasCoverage) {
+        return;
+      }
+      barContributionRegistration.dispose();
+      ExplorerTestCoverageBars.register();
+    });
+    this._register(barContributionRegistration);
+  }
+  attachAutoOpenForNewResults(result) {
+    if (result.request.preserveFocus === true) {
+      return;
+    }
+    const cfg = getTestingConfiguration(
+      this.configurationService,
+      "testing.automaticallyOpenTestResults"
+      /* TestingConfigKeys.OpenResults */
+    );
+    if (cfg === "neverOpen") {
+      return;
+    }
+    if (cfg === "openExplorerOnTestStart") {
+      return this.openExplorerView();
+    }
+    if (cfg === "openOnTestStart") {
+      return this.openResultsView();
+    }
+    const disposable = new DisposableStore();
+    disposable.add(result.onComplete(() => disposable.dispose()));
+    disposable.add(result.onChange((e) => {
+      if (e.reason === 1 && isFailedState(e.item.ownComputedState)) {
+        this.openResultsView();
+        disposable.dispose();
+      }
+    }));
+  }
+  openExplorerView() {
+    this.viewsService.openView("workbench.view.testing", false);
+  }
+  openResultsView() {
+    this.viewsService.openView("workbench.panel.testResults.view", false);
+  }
+};
+TestingProgressTrigger = __decorate([
+  __param(0, ITestResultService),
+  __param(1, ITestCoverageService),
+  __param(2, IConfigurationService),
+  __param(3, IViewsService)
+], TestingProgressTrigger);
+const collectTestStateCounts = /* @__PURE__ */ __name((isRunning, results) => {
+  let passed = 0;
+  let failed = 0;
+  let skipped = 0;
+  let running = 0;
+  let queued = 0;
+  for (const result of results) {
+    const count = result.counts;
+    failed += count[
+      6
+      /* TestResultState.Errored */
+    ] + count[
+      4
+      /* TestResultState.Failed */
+    ];
+    passed += count[
+      3
+      /* TestResultState.Passed */
+    ];
+    skipped += count[
+      5
+      /* TestResultState.Skipped */
+    ];
+    running += count[
+      2
+      /* TestResultState.Running */
+    ];
+    queued += count[
+      1
+      /* TestResultState.Queued */
+    ];
+  }
+  return {
+    isRunning,
+    passed,
+    failed,
+    runSoFar: passed + failed,
+    totalWillBeRun: passed + failed + queued + running,
+    skipped
+  };
+}, "collectTestStateCounts");
+const getTestProgressText = /* @__PURE__ */ __name(({ isRunning, passed, runSoFar, totalWillBeRun, skipped, failed }) => {
+  let percent = passed / runSoFar * 100;
+  if (failed > 0) {
+    percent = Math.min(percent, 99.9);
+  } else if (runSoFar === 0) {
+    percent = 0;
+  }
+  if (isRunning) {
+    if (runSoFar === 0) {
+      return localize("testProgress.runningInitial", "Running tests...");
+    } else if (skipped === 0) {
+      return localize("testProgress.running", "Running tests, {0}/{1} passed ({2}%)", passed, totalWillBeRun, percent.toPrecision(3));
+    } else {
+      return localize("testProgressWithSkip.running", "Running tests, {0}/{1} tests passed ({2}%, {3} skipped)", passed, totalWillBeRun, percent.toPrecision(3), skipped);
+    }
+  } else {
+    if (skipped === 0) {
+      return localize("testProgress.completed", "{0}/{1} tests passed ({2}%)", passed, runSoFar, percent.toPrecision(3));
+    } else {
+      return localize("testProgressWithSkip.completed", "{0}/{1} tests passed ({2}%, {3} skipped)", passed, runSoFar, percent.toPrecision(3), skipped);
+    }
+  }
+}, "getTestProgressText");
+export {
+  TestingProgressTrigger,
+  collectTestStateCounts,
+  getTestProgressText
+};
+//# sourceMappingURL=testingProgressUiService.js.map

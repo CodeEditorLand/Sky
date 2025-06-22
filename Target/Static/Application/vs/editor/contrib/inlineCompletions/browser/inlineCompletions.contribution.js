@@ -1,1 +1,31 @@
-import{$bpb as $}from"../../../../platform/accessibility/browser/accessibleViewRegistry.js";import{$jI as o}from"../../../../platform/actions/common/actions.js";import{$epb as m}from"../../../../platform/observable/common/wrapInHotClass.js";import{$hab as b,$gab as q,$kab as t}from"../../../browser/editorExtensions.js";import{$3ib as i}from"../../hover/browser/hoverTypes.js";import{$yqb as p,$xqb as f,$wqb as e,$Dqb as a,$Aqb as g,$zqb as s,$rqb as w,$sqb as h,$Cqb as n,$uqb as D,$tqb as I,$vqb as j,$Bqb as k}from"./controller/commands.js";import{$qqb as r}from"./controller/inlineCompletionsController.js";import{$Fqb as u}from"./hintsWidget/hoverParticipant.js";import{$Gqb as v}from"./inlineCompletionsAccessibleView.js";t(r.ID,m(r.hot),3),b(I),b(D),q(new j),b(w),b(h),b(e),b(f),b(p),b(k),b(g),b(s),o(n),b(a),i.register(u),$.register(new v);
+import { AccessibleViewRegistry } from "../../../../platform/accessibility/browser/accessibleViewRegistry.js";
+import { registerAction2 } from "../../../../platform/actions/common/actions.js";
+import { wrapInHotClass1 } from "../../../../platform/observable/common/wrapInHotClass.js";
+import { registerEditorAction, registerEditorCommand, registerEditorContribution } from "../../../browser/editorExtensions.js";
+import { HoverParticipantRegistry } from "../../hover/browser/hoverTypes.js";
+import { AcceptInlineCompletion, AcceptNextLineOfInlineCompletion, AcceptNextWordOfInlineCompletion, DevExtractReproSample, HideInlineCompletion, JumpToNextInlineEdit, ShowNextInlineSuggestionAction, ShowPreviousInlineSuggestionAction, ToggleAlwaysShowInlineSuggestionToolbar, ExplicitTriggerInlineEditAction, TriggerInlineSuggestionAction, TriggerInlineEditAction, ToggleInlineCompletionShowCollapsed } from "./controller/commands.js";
+import { InlineCompletionsController } from "./controller/inlineCompletionsController.js";
+import { InlineCompletionsHoverParticipant } from "./hintsWidget/hoverParticipant.js";
+import { InlineCompletionsAccessibleView } from "./inlineCompletionsAccessibleView.js";
+registerEditorContribution(
+  InlineCompletionsController.ID,
+  wrapInHotClass1(InlineCompletionsController.hot),
+  3
+  /* EditorContributionInstantiation.Eventually */
+);
+registerEditorAction(TriggerInlineSuggestionAction);
+registerEditorAction(ExplicitTriggerInlineEditAction);
+registerEditorCommand(new TriggerInlineEditAction());
+registerEditorAction(ShowNextInlineSuggestionAction);
+registerEditorAction(ShowPreviousInlineSuggestionAction);
+registerEditorAction(AcceptNextWordOfInlineCompletion);
+registerEditorAction(AcceptNextLineOfInlineCompletion);
+registerEditorAction(AcceptInlineCompletion);
+registerEditorAction(ToggleInlineCompletionShowCollapsed);
+registerEditorAction(HideInlineCompletion);
+registerEditorAction(JumpToNextInlineEdit);
+registerAction2(ToggleAlwaysShowInlineSuggestionToolbar);
+registerEditorAction(DevExtractReproSample);
+HoverParticipantRegistry.register(InlineCompletionsHoverParticipant);
+AccessibleViewRegistry.register(new InlineCompletionsAccessibleView());
+//# sourceMappingURL=inlineCompletions.contribution.js.map

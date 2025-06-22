@@ -1,1 +1,46 @@
-import{$td as i}from"../../../base/common/lifecycle.js";import{$Yc as a}from"../../../base/common/types.js";import{URI as s}from"../../../base/common/uri.js";import{$2O as l}from"../../services/extensions/common/extensions.js";import{$oY as h}from"./extHost.protocol.js";class p{constructor(e){this.b=new Map,this.a=e.getProxy(h.MainThreadProfileContentHandlers)}registerProfileContentHandler(e,r,t){if(l(e,"profileContentHandlers"),this.b.has(r))throw new Error(`Handler with id '${r}' already registered`);return this.b.set(r,t),this.a.$registerProfileContentHandler(r,t.name,t.description,e.identifier.value),i(()=>{this.b.delete(r),this.a.$unregisterProfileContentHandler(r)})}async $saveProfile(e,r,t,n){const o=this.b.get(e);if(!o)throw new Error(`Unknown handler with id: ${e}`);return o.saveProfile(r,t,n)}async $readProfile(e,r,t){const n=this.b.get(e);if(!n)throw new Error(`Unknown handler with id: ${e}`);return n.readProfile(a(r)?r:s.revive(r),t)}}export{p as $eMc};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { toDisposable } from "../../../base/common/lifecycle.js";
+import { isString } from "../../../base/common/types.js";
+import { URI } from "../../../base/common/uri.js";
+import { checkProposedApiEnabled } from "../../services/extensions/common/extensions.js";
+import { MainContext } from "./extHost.protocol.js";
+class ExtHostProfileContentHandlers {
+  static {
+    __name(this, "ExtHostProfileContentHandlers");
+  }
+  constructor(mainContext) {
+    this.handlers = /* @__PURE__ */ new Map();
+    this.proxy = mainContext.getProxy(MainContext.MainThreadProfileContentHandlers);
+  }
+  registerProfileContentHandler(extension, id, handler) {
+    checkProposedApiEnabled(extension, "profileContentHandlers");
+    if (this.handlers.has(id)) {
+      throw new Error(`Handler with id '${id}' already registered`);
+    }
+    this.handlers.set(id, handler);
+    this.proxy.$registerProfileContentHandler(id, handler.name, handler.description, extension.identifier.value);
+    return toDisposable(() => {
+      this.handlers.delete(id);
+      this.proxy.$unregisterProfileContentHandler(id);
+    });
+  }
+  async $saveProfile(id, name, content, token) {
+    const handler = this.handlers.get(id);
+    if (!handler) {
+      throw new Error(`Unknown handler with id: ${id}`);
+    }
+    return handler.saveProfile(name, content, token);
+  }
+  async $readProfile(id, idOrUri, token) {
+    const handler = this.handlers.get(id);
+    if (!handler) {
+      throw new Error(`Unknown handler with id: ${id}`);
+    }
+    return handler.readProfile(isString(idOrUri) ? idOrUri : URI.revive(idOrUri), token);
+  }
+}
+export {
+  ExtHostProfileContentHandlers
+};
+//# sourceMappingURL=extHostProfileContentHandler.js.map

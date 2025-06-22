@@ -1,1 +1,508 @@
-import{$o5 as S}from"../../browser.js";import{$k7 as E}from"../../dnd.js";import{$ as d,$J5 as o,$M6 as l,$I5 as z,$H6 as D,$F6 as v,getWindow as u,$t6 as $,$K6 as C}from"../../dom.js";import{$$7 as w}from"../../event.js";import{$G5 as x}from"../../keyboardEvent.js";import{$l7 as T,EventType as I}from"../../touch.js";import{$hp as L,$ep as k}from"../../../common/color.js";import{$df as m,Event as r}from"../../../common/event.js";import{$vd as f,$ud as g}from"../../../common/lifecycle.js";import"./paneview.css";import{localize as P}from"../../../../nls.js";import{Sizing as V,$x9 as b}from"./splitview.js";import{$i8 as H}from"../dnd/dnd.js";class c extends f{static{this.u=22}get ariaHeaderLabel(){return this.M}set ariaHeaderLabel(t){this.M=t,this.w?.setAttribute("aria-label",this.ariaHeaderLabel)}get draggableElement(){return this.w}get dropTargetElement(){return this.element}get dropBackground(){return this.N.dropBackground}get minimumBodySize(){return this.I}set minimumBodySize(t){this.I=t,this.P.fire(void 0)}get maximumBodySize(){return this.J}set maximumBodySize(t){this.J=t,this.P.fire(void 0)}get R(){return this.headerVisible?c.u:0}get minimumSize(){const t=this.R,s=!this.headerVisible||this.isExpanded()?this.minimumBodySize:0;return t+s}get maximumSize(){const t=this.R,s=!this.headerVisible||this.isExpanded()?this.maximumBodySize:0;return t+s}S(t){return P(29,null,t)}constructor(t){super(),this.D=void 0,this.F=!0,this.G=!0,this.H=!1,this.N={dropBackground:void 0,headerBackground:void 0,headerBorder:void 0,headerForeground:void 0,leftBorder:void 0},this.O=void 0,this.P=this.B(new m),this.onDidChange=this.P.event,this.Q=this.B(new m),this.onDidChangeExpansionState=this.Q.event,this.orthogonalSize=0,this.z=typeof t.expanded>"u"?!0:!!t.expanded,this.C=typeof t.orientation>"u"?0:t.orientation,this.M=this.S(t.title),this.I=typeof t.minimumBodySize=="number"?t.minimumBodySize:this.C===1?200:120,this.J=typeof t.maximumBodySize=="number"?t.maximumBodySize:Number.POSITIVE_INFINITY,this.element=d(".pane")}isExpanded(){return this.z}setExpanded(t){return!t&&!this.collapsible||this.z===!!t?!1:(this.element?.classList.toggle("expanded",t),this.z=!!t,this.U(),t?(this.H||(this.X(this.y),this.H=!0),typeof this.O=="number"&&u(this.element).clearTimeout(this.O),l(this.element,this.y)):this.O=u(this.element).setTimeout(()=>{this.y.remove()},200),this.Q.fire(t),this.P.fire(t?this.D:void 0),!0)}get headerVisible(){return this.F}set headerVisible(t){this.F!==!!t&&(this.F=!!t,this.U(),this.P.fire(void 0))}get collapsible(){return this.G}set collapsible(t){this.G!==!!t&&(this.G=!!t,this.U())}get orientation(){return this.C}set orientation(t){this.C!==t&&(this.C=t,this.element&&(this.element.classList.toggle("horizontal",this.orientation===1),this.element.classList.toggle("vertical",this.orientation===0)),this.w&&this.U())}render(){this.element.classList.toggle("expanded",this.isExpanded()),this.element.classList.toggle("horizontal",this.orientation===1),this.element.classList.toggle("vertical",this.orientation===0),this.w=d(".pane-header"),l(this.element,this.w),this.w.setAttribute("tabindex","0"),this.w.setAttribute("role","button"),this.w.setAttribute("aria-label",this.ariaHeaderLabel),this.W(this.w);const t=C(this.w);this.B(t),this.B(t.onDidFocus(()=>this.w?.classList.add("focused"),null)),this.B(t.onDidBlur(()=>this.w?.classList.remove("focused"),null)),this.U();const e=this.B(new g),s=this.B(new w(this.w,"keydown")),i=r.map(s.event,h=>new x(h),e);this.B(r.filter(i,h=>h.keyCode===3||h.keyCode===10,e)(()=>this.setExpanded(!this.isExpanded()),null)),this.B(r.filter(i,h=>h.keyCode===15,e)(()=>this.setExpanded(!1),null)),this.B(r.filter(i,h=>h.keyCode===17,e)(()=>this.setExpanded(!0),null)),this.B(T.addTarget(this.w));const n=this.w;[v.CLICK,I.Tap].forEach(h=>{this.B(o(n,h,a=>{a.defaultPrevented||this.setExpanded(!this.isExpanded())}))}),this.y=l(this.element,d(".pane-body")),!this.H&&this.isExpanded()&&(this.X(this.y),this.H=!0),this.isExpanded()||this.y.remove()}layout(t){const e=this.headerVisible?c.u:0,s=this.C===0?this.orthogonalSize:t,i=this.C===0?t-e:this.orthogonalSize-e;this.isExpanded()&&(this.y.classList.toggle("wide",s>=600),this.Y(i,s),this.D=t)}style(t){this.N=t,this.w&&this.U()}U(){if(!this.w)return;const t=!this.headerVisible||this.isExpanded();this.collapsible?(this.w.setAttribute("tabindex","0"),this.w.setAttribute("role","button")):(this.w.removeAttribute("tabindex"),this.w.removeAttribute("role")),this.w.style.lineHeight=`${this.R}px`,this.w.classList.toggle("hidden",!this.headerVisible),this.w.classList.toggle("expanded",t),this.w.classList.toggle("not-collapsible",!this.collapsible),this.w.setAttribute("aria-expanded",String(t)),this.w.style.color=this.collapsible?this.N.headerForeground??"":"",this.w.style.backgroundColor=(this.collapsible?this.N.headerBackground:"transparent")??"",this.w.style.borderTop=this.N.headerBorder&&this.orientation===0?`1px solid ${this.N.headerBorder}`:"",this.element.style.borderLeft=this.N.leftBorder&&this.orientation===1?`1px solid ${this.N.leftBorder}`:""}}class p extends f{static{this.a=new L(new k(128,128,128,.5))}constructor(t,e,s){super(),this.f=t,this.g=e,this.h=s,this.b=0,this.c=this.B(new m),this.onDidDrop=this.c.event,t.draggableElement.draggable=!0,this.B(o(t.draggableElement,"dragstart",i=>this.j(i))),this.B(o(t.dropTargetElement,"dragenter",i=>this.m(i))),this.B(o(t.dropTargetElement,"dragleave",i=>this.n(i))),this.B(o(t.dropTargetElement,"dragend",i=>this.r(i))),this.B(o(t.dropTargetElement,"drop",i=>this.s(i)))}j(t){if(!this.g.canDrag(this.f)||!t.dataTransfer){t.preventDefault(),t.stopPropagation();return}const e=this.f.draggableElement?.textContent||"";t.dataTransfer.effectAllowed="move",S&&t.dataTransfer?.setData(E.TEXT,e),H(t,this.f.element,e),this.h.draggable=this}m(t){!this.h.draggable||this.h.draggable===this||this.g.canDrop(this.h.draggable.f,this.f)&&(this.b++,this.t())}n(t){!this.h.draggable||this.h.draggable===this||this.g.canDrop(this.h.draggable.f,this.f)&&(this.b--,this.b===0&&this.t())}r(t){this.h.draggable&&(this.b=0,this.t(),this.h.draggable=null)}s(t){this.h.draggable&&(D.stop(t),this.b=0,this.t(),this.g.canDrop(this.h.draggable.f,this.f)&&this.h.draggable!==this&&this.c.fire({from:this.h.draggable.f,to:this.f}),this.h.draggable=null)}t(){let t=null;this.b>0&&(t=this.f.dropBackground??p.a.toString()),this.f.dropTargetElement.style.backgroundColor=t||""}}class W{canDrag(t){return!0}canDrop(t,e){return!0}}class Y extends f{constructor(t,e={}){super(),this.b={draggable:null},this.c=[],this.f=0,this.g=0,this.j=void 0,this.m=this.B(new m),this.onDidDrop=this.m.event,this.a=e.dnd,this.orientation=e.orientation??0,this.element=l(t,d(".monaco-pane-view")),this.h=this.B(new b(this.element,{orientation:this.orientation})),this.onDidSashReset=this.h.onDidSashReset,this.onDidSashChange=this.h.onDidSashChange,this.onDidScroll=this.h.onDidScroll;const s=this.B(new g),i=this.B(new w(this.element,"keydown")),n=r.map(r.filter(i.event,h=>$(h.target)&&h.target.classList.contains("pane-header"),s),h=>new x(h),s);this.B(r.filter(n,h=>h.keyCode===16,s)(()=>this.u())),this.B(r.filter(n,h=>h.keyCode===18,s)(()=>this.w()))}addPane(t,e,s=this.h.length){const i=new g;t.onDidChangeExpansionState(this.s,this,i);const n={pane:t,disposable:i};if(this.c.splice(s,0,n),t.orientation=this.orientation,t.orthogonalSize=this.f,this.h.addView(t,e,s),this.a){const h=new p(t,this.a,this.b);i.add(h),i.add(h.onDidDrop(this.m.fire,this.m))}}removePane(t){const e=this.c.findIndex(i=>i.pane===t);if(e===-1)return;this.h.removeView(e,t.isExpanded()?V.Distribute:void 0),this.c.splice(e,1)[0].disposable.dispose()}movePane(t,e){const s=this.c.findIndex(h=>h.pane===t),i=this.c.findIndex(h=>h.pane===e);if(s===-1||i===-1)return;const[n]=this.c.splice(s,1);this.c.splice(i,0,n),this.h.moveView(s,i)}resizePane(t,e){const s=this.c.findIndex(i=>i.pane===t);s!==-1&&this.h.resizeView(s,e)}getPaneSize(t){const e=this.c.findIndex(s=>s.pane===t);return e===-1?-1:this.h.getViewSize(e)}layout(t,e){this.f=this.orientation===0?e:t,this.g=this.orientation===1?e:t;for(const s of this.c)s.pane.orthogonalSize=this.f;this.h.layout(this.g)}setBoundarySashes(t){this.n=t,this.r(t)}r(t){this.orientation===0?(this.h.orthogonalStartSash=t?.left,this.h.orthogonalEndSash=t?.right):this.h.orthogonalEndSash=t?.bottom}flipOrientation(t,e){this.orientation=this.orientation===0?1:0;const s=this.c.map(h=>this.getPaneSize(h.pane));this.h.dispose(),z(this.element),this.h=this.B(new b(this.element,{orientation:this.orientation})),this.r(this.n);const i=this.orientation===0?e:t,n=this.orientation===1?e:t;this.c.forEach((h,a)=>{h.pane.orthogonalSize=i,h.pane.orientation=this.orientation;const B=this.g===0?0:n*s[a]/this.g;this.h.addView(h.pane,B,a)}),this.g=n,this.f=i,this.h.layout(this.g)}s(){typeof this.j=="number"&&u(this.element).clearTimeout(this.j),this.element.classList.add("animated"),this.j=u(this.element).setTimeout(()=>{this.j=void 0,this.element.classList.remove("animated")},200)}t(){return[...this.element.querySelectorAll(".pane-header")]}u(){const t=this.t(),e=t.indexOf(this.element.ownerDocument.activeElement);e!==-1&&t[Math.max(e-1,0)].focus()}w(){const t=this.t(),e=t.indexOf(this.element.ownerDocument.activeElement);e!==-1&&t[Math.min(e+1,t.length-1)].focus()}dispose(){super.dispose(),this.c.forEach(t=>t.disposable.dispose())}}export{c as $g0,W as $h0,Y as $i0};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { isFirefox } from "../../browser.js";
+import { DataTransfers } from "../../dnd.js";
+import { $, addDisposableListener, append, clearNode, EventHelper, EventType, getWindow, isHTMLElement, trackFocus } from "../../dom.js";
+import { DomEmitter } from "../../event.js";
+import { StandardKeyboardEvent } from "../../keyboardEvent.js";
+import { Gesture, EventType as TouchEventType } from "../../touch.js";
+import { Color, RGBA } from "../../../common/color.js";
+import { Emitter, Event } from "../../../common/event.js";
+import { Disposable, DisposableStore } from "../../../common/lifecycle.js";
+import "./paneview.css";
+import { localize } from "../../../../nls.js";
+import { Sizing, SplitView } from "./splitview.js";
+import { applyDragImage } from "../dnd/dnd.js";
+class Pane extends Disposable {
+  static {
+    __name(this, "Pane");
+  }
+  static {
+    this.HEADER_SIZE = 22;
+  }
+  get ariaHeaderLabel() {
+    return this._ariaHeaderLabel;
+  }
+  set ariaHeaderLabel(newLabel) {
+    this._ariaHeaderLabel = newLabel;
+    this.header?.setAttribute("aria-label", this.ariaHeaderLabel);
+  }
+  get draggableElement() {
+    return this.header;
+  }
+  get dropTargetElement() {
+    return this.element;
+  }
+  get dropBackground() {
+    return this.styles.dropBackground;
+  }
+  get minimumBodySize() {
+    return this._minimumBodySize;
+  }
+  set minimumBodySize(size) {
+    this._minimumBodySize = size;
+    this._onDidChange.fire(void 0);
+  }
+  get maximumBodySize() {
+    return this._maximumBodySize;
+  }
+  set maximumBodySize(size) {
+    this._maximumBodySize = size;
+    this._onDidChange.fire(void 0);
+  }
+  get headerSize() {
+    return this.headerVisible ? Pane.HEADER_SIZE : 0;
+  }
+  get minimumSize() {
+    const headerSize = this.headerSize;
+    const expanded = !this.headerVisible || this.isExpanded();
+    const minimumBodySize = expanded ? this.minimumBodySize : 0;
+    return headerSize + minimumBodySize;
+  }
+  get maximumSize() {
+    const headerSize = this.headerSize;
+    const expanded = !this.headerVisible || this.isExpanded();
+    const maximumBodySize = expanded ? this.maximumBodySize : 0;
+    return headerSize + maximumBodySize;
+  }
+  getAriaHeaderLabel(title) {
+    return localize("viewSection", "{0} Section", title);
+  }
+  constructor(options) {
+    super();
+    this.expandedSize = void 0;
+    this._headerVisible = true;
+    this._collapsible = true;
+    this._bodyRendered = false;
+    this.styles = {
+      dropBackground: void 0,
+      headerBackground: void 0,
+      headerBorder: void 0,
+      headerForeground: void 0,
+      leftBorder: void 0
+    };
+    this.animationTimer = void 0;
+    this._onDidChange = this._register(new Emitter());
+    this.onDidChange = this._onDidChange.event;
+    this._onDidChangeExpansionState = this._register(new Emitter());
+    this.onDidChangeExpansionState = this._onDidChangeExpansionState.event;
+    this.orthogonalSize = 0;
+    this._expanded = typeof options.expanded === "undefined" ? true : !!options.expanded;
+    this._orientation = typeof options.orientation === "undefined" ? 0 : options.orientation;
+    this._ariaHeaderLabel = this.getAriaHeaderLabel(options.title);
+    this._minimumBodySize = typeof options.minimumBodySize === "number" ? options.minimumBodySize : this._orientation === 1 ? 200 : 120;
+    this._maximumBodySize = typeof options.maximumBodySize === "number" ? options.maximumBodySize : Number.POSITIVE_INFINITY;
+    this.element = $(".pane");
+  }
+  isExpanded() {
+    return this._expanded;
+  }
+  setExpanded(expanded) {
+    if (!expanded && !this.collapsible) {
+      return false;
+    }
+    if (this._expanded === !!expanded) {
+      return false;
+    }
+    this.element?.classList.toggle("expanded", expanded);
+    this._expanded = !!expanded;
+    this.updateHeader();
+    if (expanded) {
+      if (!this._bodyRendered) {
+        this.renderBody(this.body);
+        this._bodyRendered = true;
+      }
+      if (typeof this.animationTimer === "number") {
+        getWindow(this.element).clearTimeout(this.animationTimer);
+      }
+      append(this.element, this.body);
+    } else {
+      this.animationTimer = getWindow(this.element).setTimeout(() => {
+        this.body.remove();
+      }, 200);
+    }
+    this._onDidChangeExpansionState.fire(expanded);
+    this._onDidChange.fire(expanded ? this.expandedSize : void 0);
+    return true;
+  }
+  get headerVisible() {
+    return this._headerVisible;
+  }
+  set headerVisible(visible) {
+    if (this._headerVisible === !!visible) {
+      return;
+    }
+    this._headerVisible = !!visible;
+    this.updateHeader();
+    this._onDidChange.fire(void 0);
+  }
+  get collapsible() {
+    return this._collapsible;
+  }
+  set collapsible(collapsible) {
+    if (this._collapsible === !!collapsible) {
+      return;
+    }
+    this._collapsible = !!collapsible;
+    this.updateHeader();
+  }
+  get orientation() {
+    return this._orientation;
+  }
+  set orientation(orientation) {
+    if (this._orientation === orientation) {
+      return;
+    }
+    this._orientation = orientation;
+    if (this.element) {
+      this.element.classList.toggle(
+        "horizontal",
+        this.orientation === 1
+        /* Orientation.HORIZONTAL */
+      );
+      this.element.classList.toggle(
+        "vertical",
+        this.orientation === 0
+        /* Orientation.VERTICAL */
+      );
+    }
+    if (this.header) {
+      this.updateHeader();
+    }
+  }
+  render() {
+    this.element.classList.toggle("expanded", this.isExpanded());
+    this.element.classList.toggle(
+      "horizontal",
+      this.orientation === 1
+      /* Orientation.HORIZONTAL */
+    );
+    this.element.classList.toggle(
+      "vertical",
+      this.orientation === 0
+      /* Orientation.VERTICAL */
+    );
+    this.header = $(".pane-header");
+    append(this.element, this.header);
+    this.header.setAttribute("tabindex", "0");
+    this.header.setAttribute("role", "button");
+    this.header.setAttribute("aria-label", this.ariaHeaderLabel);
+    this.renderHeader(this.header);
+    const focusTracker = trackFocus(this.header);
+    this._register(focusTracker);
+    this._register(focusTracker.onDidFocus(() => this.header?.classList.add("focused"), null));
+    this._register(focusTracker.onDidBlur(() => this.header?.classList.remove("focused"), null));
+    this.updateHeader();
+    const eventDisposables = this._register(new DisposableStore());
+    const onKeyDown = this._register(new DomEmitter(this.header, "keydown"));
+    const onHeaderKeyDown = Event.map(onKeyDown.event, (e) => new StandardKeyboardEvent(e), eventDisposables);
+    this._register(Event.filter(onHeaderKeyDown, (e) => e.keyCode === 3 || e.keyCode === 10, eventDisposables)(() => this.setExpanded(!this.isExpanded()), null));
+    this._register(Event.filter(onHeaderKeyDown, (e) => e.keyCode === 15, eventDisposables)(() => this.setExpanded(false), null));
+    this._register(Event.filter(onHeaderKeyDown, (e) => e.keyCode === 17, eventDisposables)(() => this.setExpanded(true), null));
+    this._register(Gesture.addTarget(this.header));
+    const header = this.header;
+    [EventType.CLICK, TouchEventType.Tap].forEach((eventType) => {
+      this._register(addDisposableListener(header, eventType, (e) => {
+        if (!e.defaultPrevented) {
+          this.setExpanded(!this.isExpanded());
+        }
+      }));
+    });
+    this.body = append(this.element, $(".pane-body"));
+    if (!this._bodyRendered && this.isExpanded()) {
+      this.renderBody(this.body);
+      this._bodyRendered = true;
+    }
+    if (!this.isExpanded()) {
+      this.body.remove();
+    }
+  }
+  layout(size) {
+    const headerSize = this.headerVisible ? Pane.HEADER_SIZE : 0;
+    const width = this._orientation === 0 ? this.orthogonalSize : size;
+    const height = this._orientation === 0 ? size - headerSize : this.orthogonalSize - headerSize;
+    if (this.isExpanded()) {
+      this.body.classList.toggle("wide", width >= 600);
+      this.layoutBody(height, width);
+      this.expandedSize = size;
+    }
+  }
+  style(styles) {
+    this.styles = styles;
+    if (!this.header) {
+      return;
+    }
+    this.updateHeader();
+  }
+  updateHeader() {
+    if (!this.header) {
+      return;
+    }
+    const expanded = !this.headerVisible || this.isExpanded();
+    if (this.collapsible) {
+      this.header.setAttribute("tabindex", "0");
+      this.header.setAttribute("role", "button");
+    } else {
+      this.header.removeAttribute("tabindex");
+      this.header.removeAttribute("role");
+    }
+    this.header.style.lineHeight = `${this.headerSize}px`;
+    this.header.classList.toggle("hidden", !this.headerVisible);
+    this.header.classList.toggle("expanded", expanded);
+    this.header.classList.toggle("not-collapsible", !this.collapsible);
+    this.header.setAttribute("aria-expanded", String(expanded));
+    this.header.style.color = this.collapsible ? this.styles.headerForeground ?? "" : "";
+    this.header.style.backgroundColor = (this.collapsible ? this.styles.headerBackground : "transparent") ?? "";
+    this.header.style.borderTop = this.styles.headerBorder && this.orientation === 0 ? `1px solid ${this.styles.headerBorder}` : "";
+    this.element.style.borderLeft = this.styles.leftBorder && this.orientation === 1 ? `1px solid ${this.styles.leftBorder}` : "";
+  }
+}
+class PaneDraggable extends Disposable {
+  static {
+    __name(this, "PaneDraggable");
+  }
+  static {
+    this.DefaultDragOverBackgroundColor = new Color(new RGBA(128, 128, 128, 0.5));
+  }
+  constructor(pane, dnd, context) {
+    super();
+    this.pane = pane;
+    this.dnd = dnd;
+    this.context = context;
+    this.dragOverCounter = 0;
+    this._onDidDrop = this._register(new Emitter());
+    this.onDidDrop = this._onDidDrop.event;
+    pane.draggableElement.draggable = true;
+    this._register(addDisposableListener(pane.draggableElement, "dragstart", (e) => this.onDragStart(e)));
+    this._register(addDisposableListener(pane.dropTargetElement, "dragenter", (e) => this.onDragEnter(e)));
+    this._register(addDisposableListener(pane.dropTargetElement, "dragleave", (e) => this.onDragLeave(e)));
+    this._register(addDisposableListener(pane.dropTargetElement, "dragend", (e) => this.onDragEnd(e)));
+    this._register(addDisposableListener(pane.dropTargetElement, "drop", (e) => this.onDrop(e)));
+  }
+  onDragStart(e) {
+    if (!this.dnd.canDrag(this.pane) || !e.dataTransfer) {
+      e.preventDefault();
+      e.stopPropagation();
+      return;
+    }
+    const label = this.pane.draggableElement?.textContent || "";
+    e.dataTransfer.effectAllowed = "move";
+    if (isFirefox) {
+      e.dataTransfer?.setData(DataTransfers.TEXT, label);
+    }
+    applyDragImage(e, this.pane.element, label);
+    this.context.draggable = this;
+  }
+  onDragEnter(e) {
+    if (!this.context.draggable || this.context.draggable === this) {
+      return;
+    }
+    if (!this.dnd.canDrop(this.context.draggable.pane, this.pane)) {
+      return;
+    }
+    this.dragOverCounter++;
+    this.render();
+  }
+  onDragLeave(e) {
+    if (!this.context.draggable || this.context.draggable === this) {
+      return;
+    }
+    if (!this.dnd.canDrop(this.context.draggable.pane, this.pane)) {
+      return;
+    }
+    this.dragOverCounter--;
+    if (this.dragOverCounter === 0) {
+      this.render();
+    }
+  }
+  onDragEnd(e) {
+    if (!this.context.draggable) {
+      return;
+    }
+    this.dragOverCounter = 0;
+    this.render();
+    this.context.draggable = null;
+  }
+  onDrop(e) {
+    if (!this.context.draggable) {
+      return;
+    }
+    EventHelper.stop(e);
+    this.dragOverCounter = 0;
+    this.render();
+    if (this.dnd.canDrop(this.context.draggable.pane, this.pane) && this.context.draggable !== this) {
+      this._onDidDrop.fire({ from: this.context.draggable.pane, to: this.pane });
+    }
+    this.context.draggable = null;
+  }
+  render() {
+    let backgroundColor = null;
+    if (this.dragOverCounter > 0) {
+      backgroundColor = this.pane.dropBackground ?? PaneDraggable.DefaultDragOverBackgroundColor.toString();
+    }
+    this.pane.dropTargetElement.style.backgroundColor = backgroundColor || "";
+  }
+}
+class DefaultPaneDndController {
+  static {
+    __name(this, "DefaultPaneDndController");
+  }
+  canDrag(pane) {
+    return true;
+  }
+  canDrop(pane, overPane) {
+    return true;
+  }
+}
+class PaneView extends Disposable {
+  static {
+    __name(this, "PaneView");
+  }
+  constructor(container, options = {}) {
+    super();
+    this.dndContext = { draggable: null };
+    this.paneItems = [];
+    this.orthogonalSize = 0;
+    this.size = 0;
+    this.animationTimer = void 0;
+    this._onDidDrop = this._register(new Emitter());
+    this.onDidDrop = this._onDidDrop.event;
+    this.dnd = options.dnd;
+    this.orientation = options.orientation ?? 0;
+    this.element = append(container, $(".monaco-pane-view"));
+    this.splitview = this._register(new SplitView(this.element, { orientation: this.orientation }));
+    this.onDidSashReset = this.splitview.onDidSashReset;
+    this.onDidSashChange = this.splitview.onDidSashChange;
+    this.onDidScroll = this.splitview.onDidScroll;
+    const eventDisposables = this._register(new DisposableStore());
+    const onKeyDown = this._register(new DomEmitter(this.element, "keydown"));
+    const onHeaderKeyDown = Event.map(Event.filter(onKeyDown.event, (e) => isHTMLElement(e.target) && e.target.classList.contains("pane-header"), eventDisposables), (e) => new StandardKeyboardEvent(e), eventDisposables);
+    this._register(Event.filter(onHeaderKeyDown, (e) => e.keyCode === 16, eventDisposables)(() => this.focusPrevious()));
+    this._register(Event.filter(onHeaderKeyDown, (e) => e.keyCode === 18, eventDisposables)(() => this.focusNext()));
+  }
+  addPane(pane, size, index = this.splitview.length) {
+    const disposables = new DisposableStore();
+    pane.onDidChangeExpansionState(this.setupAnimation, this, disposables);
+    const paneItem = { pane, disposable: disposables };
+    this.paneItems.splice(index, 0, paneItem);
+    pane.orientation = this.orientation;
+    pane.orthogonalSize = this.orthogonalSize;
+    this.splitview.addView(pane, size, index);
+    if (this.dnd) {
+      const draggable = new PaneDraggable(pane, this.dnd, this.dndContext);
+      disposables.add(draggable);
+      disposables.add(draggable.onDidDrop(this._onDidDrop.fire, this._onDidDrop));
+    }
+  }
+  removePane(pane) {
+    const index = this.paneItems.findIndex((item) => item.pane === pane);
+    if (index === -1) {
+      return;
+    }
+    this.splitview.removeView(index, pane.isExpanded() ? Sizing.Distribute : void 0);
+    const paneItem = this.paneItems.splice(index, 1)[0];
+    paneItem.disposable.dispose();
+  }
+  movePane(from, to) {
+    const fromIndex = this.paneItems.findIndex((item) => item.pane === from);
+    const toIndex = this.paneItems.findIndex((item) => item.pane === to);
+    if (fromIndex === -1 || toIndex === -1) {
+      return;
+    }
+    const [paneItem] = this.paneItems.splice(fromIndex, 1);
+    this.paneItems.splice(toIndex, 0, paneItem);
+    this.splitview.moveView(fromIndex, toIndex);
+  }
+  resizePane(pane, size) {
+    const index = this.paneItems.findIndex((item) => item.pane === pane);
+    if (index === -1) {
+      return;
+    }
+    this.splitview.resizeView(index, size);
+  }
+  getPaneSize(pane) {
+    const index = this.paneItems.findIndex((item) => item.pane === pane);
+    if (index === -1) {
+      return -1;
+    }
+    return this.splitview.getViewSize(index);
+  }
+  layout(height, width) {
+    this.orthogonalSize = this.orientation === 0 ? width : height;
+    this.size = this.orientation === 1 ? width : height;
+    for (const paneItem of this.paneItems) {
+      paneItem.pane.orthogonalSize = this.orthogonalSize;
+    }
+    this.splitview.layout(this.size);
+  }
+  setBoundarySashes(sashes) {
+    this.boundarySashes = sashes;
+    this.updateSplitviewOrthogonalSashes(sashes);
+  }
+  updateSplitviewOrthogonalSashes(sashes) {
+    if (this.orientation === 0) {
+      this.splitview.orthogonalStartSash = sashes?.left;
+      this.splitview.orthogonalEndSash = sashes?.right;
+    } else {
+      this.splitview.orthogonalEndSash = sashes?.bottom;
+    }
+  }
+  flipOrientation(height, width) {
+    this.orientation = this.orientation === 0 ? 1 : 0;
+    const paneSizes = this.paneItems.map((pane) => this.getPaneSize(pane.pane));
+    this.splitview.dispose();
+    clearNode(this.element);
+    this.splitview = this._register(new SplitView(this.element, { orientation: this.orientation }));
+    this.updateSplitviewOrthogonalSashes(this.boundarySashes);
+    const newOrthogonalSize = this.orientation === 0 ? width : height;
+    const newSize = this.orientation === 1 ? width : height;
+    this.paneItems.forEach((pane, index) => {
+      pane.pane.orthogonalSize = newOrthogonalSize;
+      pane.pane.orientation = this.orientation;
+      const viewSize = this.size === 0 ? 0 : newSize * paneSizes[index] / this.size;
+      this.splitview.addView(pane.pane, viewSize, index);
+    });
+    this.size = newSize;
+    this.orthogonalSize = newOrthogonalSize;
+    this.splitview.layout(this.size);
+  }
+  setupAnimation() {
+    if (typeof this.animationTimer === "number") {
+      getWindow(this.element).clearTimeout(this.animationTimer);
+    }
+    this.element.classList.add("animated");
+    this.animationTimer = getWindow(this.element).setTimeout(() => {
+      this.animationTimer = void 0;
+      this.element.classList.remove("animated");
+    }, 200);
+  }
+  getPaneHeaderElements() {
+    return [...this.element.querySelectorAll(".pane-header")];
+  }
+  focusPrevious() {
+    const headers = this.getPaneHeaderElements();
+    const index = headers.indexOf(this.element.ownerDocument.activeElement);
+    if (index === -1) {
+      return;
+    }
+    headers[Math.max(index - 1, 0)].focus();
+  }
+  focusNext() {
+    const headers = this.getPaneHeaderElements();
+    const index = headers.indexOf(this.element.ownerDocument.activeElement);
+    if (index === -1) {
+      return;
+    }
+    headers[Math.min(index + 1, headers.length - 1)].focus();
+  }
+  dispose() {
+    super.dispose();
+    this.paneItems.forEach((i) => i.disposable.dispose());
+  }
+}
+export {
+  DefaultPaneDndController,
+  Pane,
+  PaneView
+};
+//# sourceMappingURL=paneview.js.map

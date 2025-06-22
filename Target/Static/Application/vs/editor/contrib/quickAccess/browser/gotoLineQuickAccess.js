@@ -1,1 +1,129 @@
-import{$vd as c,$ud as f,$td as p}from"../../../../base/common/lifecycle.js";import{$8_ as h}from"../../../browser/editorBrowser.js";import{$jfc as b}from"./editorNavigationQuickAccess.js";import{localize as u}from"../../../../nls.js";class d extends b{static{this.PREFIX=":"}constructor(){super({canAcceptInBackground:!0})}e(n){const t=u(1462,null);return n.items=[{label:t}],n.ariaLabel=t,c.None}d(n,t,s){const e=n.editor,r=new f;r.add(t.onDidAccept(i=>{const[o]=t.selectedItems;if(o){if(!this.p(e,o.lineNumber))return;this.f(n,{range:this.m(o.lineNumber,o.column),keyMods:t.keyMods,preserveFocus:i.inBackground}),i.inBackground||t.hide()}}));const a=()=>{const i=this.n(e,t.value.trim().substr(d.PREFIX.length)),o=this.o(e,i.lineNumber,i.column);if(t.items=[{lineNumber:i.lineNumber,column:i.column,label:o}],t.ariaLabel=o,!this.p(e,i.lineNumber)){this.clearDecorations(e);return}const m=this.m(i.lineNumber,i.column);e.revealRangeInCenter(m,0),this.addDecorations(e,m)};a(),r.add(t.onDidChangeValue(()=>a()));const l=h(e);return l&&l.getOptions().get(72).renderType===2&&(l.updateOptions({lineNumbers:"on"}),r.add(p(()=>l.updateOptions({lineNumbers:"relative"})))),r}m(n=1,t=1){return{startLineNumber:n,startColumn:t,endLineNumber:n,endColumn:t}}n(n,t){const s=t.split(/,|:|#/).map(r=>parseInt(r,10)).filter(r=>!isNaN(r)),e=this.r(n)+1;return{lineNumber:s[0]>0?s[0]:e+s[0],column:s[1]}}o(n,t,s){if(this.p(n,t))return this.q(n,t,s)?u(1463,null,t,s):u(1464,null,t);const e=n.getPosition()||{lineNumber:1,column:1},r=this.r(n);return r>1?u(1465,null,e.lineNumber,e.column,r):u(1466,null,e.lineNumber,e.column)}p(n,t){return!t||typeof t!="number"?!1:t>0&&t<=this.r(n)}q(n,t,s){if(!s||typeof s!="number")return!1;const e=this.g(n);if(!e)return!1;const r={lineNumber:t,column:s};return e.validatePosition(r).equals(r)}r(n){return this.g(n)?.getLineCount()??0}}export{d as $Dnc};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { Disposable, DisposableStore, toDisposable } from "../../../../base/common/lifecycle.js";
+import { getCodeEditor } from "../../../browser/editorBrowser.js";
+import { AbstractEditorNavigationQuickAccessProvider } from "./editorNavigationQuickAccess.js";
+import { localize } from "../../../../nls.js";
+class AbstractGotoLineQuickAccessProvider extends AbstractEditorNavigationQuickAccessProvider {
+  static {
+    __name(this, "AbstractGotoLineQuickAccessProvider");
+  }
+  static {
+    this.PREFIX = ":";
+  }
+  constructor() {
+    super({ canAcceptInBackground: true });
+  }
+  provideWithoutTextEditor(picker) {
+    const label = localize("cannotRunGotoLine", "Open a text editor first to go to a line.");
+    picker.items = [{ label }];
+    picker.ariaLabel = label;
+    return Disposable.None;
+  }
+  provideWithTextEditor(context, picker, token) {
+    const editor = context.editor;
+    const disposables = new DisposableStore();
+    disposables.add(picker.onDidAccept((event) => {
+      const [item] = picker.selectedItems;
+      if (item) {
+        if (!this.isValidLineNumber(editor, item.lineNumber)) {
+          return;
+        }
+        this.gotoLocation(context, { range: this.toRange(item.lineNumber, item.column), keyMods: picker.keyMods, preserveFocus: event.inBackground });
+        if (!event.inBackground) {
+          picker.hide();
+        }
+      }
+    }));
+    const updatePickerAndEditor = /* @__PURE__ */ __name(() => {
+      const position = this.parsePosition(editor, picker.value.trim().substr(AbstractGotoLineQuickAccessProvider.PREFIX.length));
+      const label = this.getPickLabel(editor, position.lineNumber, position.column);
+      picker.items = [{
+        lineNumber: position.lineNumber,
+        column: position.column,
+        label
+      }];
+      picker.ariaLabel = label;
+      if (!this.isValidLineNumber(editor, position.lineNumber)) {
+        this.clearDecorations(editor);
+        return;
+      }
+      const range = this.toRange(position.lineNumber, position.column);
+      editor.revealRangeInCenter(
+        range,
+        0
+        /* ScrollType.Smooth */
+      );
+      this.addDecorations(editor, range);
+    }, "updatePickerAndEditor");
+    updatePickerAndEditor();
+    disposables.add(picker.onDidChangeValue(() => updatePickerAndEditor()));
+    const codeEditor = getCodeEditor(editor);
+    if (codeEditor) {
+      const options = codeEditor.getOptions();
+      const lineNumbers = options.get(
+        72
+        /* EditorOption.lineNumbers */
+      );
+      if (lineNumbers.renderType === 2) {
+        codeEditor.updateOptions({ lineNumbers: "on" });
+        disposables.add(toDisposable(() => codeEditor.updateOptions({ lineNumbers: "relative" })));
+      }
+    }
+    return disposables;
+  }
+  toRange(lineNumber = 1, column = 1) {
+    return {
+      startLineNumber: lineNumber,
+      startColumn: column,
+      endLineNumber: lineNumber,
+      endColumn: column
+    };
+  }
+  parsePosition(editor, value) {
+    const numbers = value.split(/,|:|#/).map((part) => parseInt(part, 10)).filter((part) => !isNaN(part));
+    const endLine = this.lineCount(editor) + 1;
+    return {
+      lineNumber: numbers[0] > 0 ? numbers[0] : endLine + numbers[0],
+      column: numbers[1]
+    };
+  }
+  getPickLabel(editor, lineNumber, column) {
+    if (this.isValidLineNumber(editor, lineNumber)) {
+      if (this.isValidColumn(editor, lineNumber, column)) {
+        return localize("gotoLineColumnLabel", "Go to line {0} and character {1}.", lineNumber, column);
+      }
+      return localize("gotoLineLabel", "Go to line {0}.", lineNumber);
+    }
+    const position = editor.getPosition() || { lineNumber: 1, column: 1 };
+    const lineCount = this.lineCount(editor);
+    if (lineCount > 1) {
+      return localize("gotoLineLabelEmptyWithLimit", "Current Line: {0}, Character: {1}. Type a line number between 1 and {2} to navigate to.", position.lineNumber, position.column, lineCount);
+    }
+    return localize("gotoLineLabelEmpty", "Current Line: {0}, Character: {1}. Type a line number to navigate to.", position.lineNumber, position.column);
+  }
+  isValidLineNumber(editor, lineNumber) {
+    if (!lineNumber || typeof lineNumber !== "number") {
+      return false;
+    }
+    return lineNumber > 0 && lineNumber <= this.lineCount(editor);
+  }
+  isValidColumn(editor, lineNumber, column) {
+    if (!column || typeof column !== "number") {
+      return false;
+    }
+    const model = this.getModel(editor);
+    if (!model) {
+      return false;
+    }
+    const positionCandidate = { lineNumber, column };
+    return model.validatePosition(positionCandidate).equals(positionCandidate);
+  }
+  lineCount(editor) {
+    return this.getModel(editor)?.getLineCount() ?? 0;
+  }
+}
+export {
+  AbstractGotoLineQuickAccessProvider
+};
+//# sourceMappingURL=gotoLineQuickAccess.js.map

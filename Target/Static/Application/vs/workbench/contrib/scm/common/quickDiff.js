@@ -1,1 +1,120 @@
-import*as i from"../../../../nls.js";import{$nj as s}from"../../../../platform/instantiation/common/instantiation.js";import{$hp as c}from"../../../../base/common/color.js";import{$rp as m,$7p as b,$8p as L,$Ks as k,$up as p,$gq as g,$op as t,$tp as a,$sp as f}from"../../../../platform/theme/common/colorRegistry.js";const B=s("quickDiff"),n=t("editorGutter.modifiedBackground",{dark:"#1B81A8",light:"#2090D3",hcDark:"#1B81A8",hcLight:"#2090D3"},i.localize(10637,null));t("editorGutter.modifiedSecondaryBackground",{dark:m(n,.5),light:f(n,.7),hcDark:"#1B81A8",hcLight:"#2090D3"},i.localize(10638,null));const u=t("editorGutter.addedBackground",{dark:"#487E02",light:"#48985D",hcDark:"#487E02",hcLight:"#48985D"},i.localize(10639,null));t("editorGutter.addedSecondaryBackground",{dark:m(u,.5),light:f(u,.7),hcDark:"#487E02",hcLight:"#48985D"},i.localize(10640,null));const l=t("editorGutter.deletedBackground",g,i.localize(10641,null));t("editorGutter.deletedSecondaryBackground",{dark:m(l,.4),light:f(l,.3),hcDark:"#F48771",hcLight:"#B5200D"},i.localize(10642,null));const E=t("minimapGutter.modifiedBackground",n,i.localize(10643,null)),x=t("minimapGutter.addedBackground",u,i.localize(10644,null)),W=t("minimapGutter.deletedBackground",l,i.localize(10645,null)),G=t("editorOverviewRuler.modifiedForeground",a(n,.6),i.localize(10646,null)),h=t("editorOverviewRuler.addedForeground",a(u,.6),i.localize(10647,null)),z=t("editorOverviewRuler.deletedForeground",a(l,.6),i.localize(10648,null)),S=t("editorGutter.itemGlyphForeground",{dark:L,light:L,hcDark:c.black,hcLight:c.white},i.localize(10649,null)),A=t("editorGutter.itemBackground",{dark:p(k,b),light:m(p(k,b),.05),hcDark:c.white,hcLight:c.black},i.localize(10650,null));var d;function v(e){return 0===e.originalEndLineNumber?d.Add:0===e.modifiedEndLineNumber?d.Delete:d.Modify}function w(e,i){switch(i){case d.Modify:return e.getColor(n);case d.Add:return e.getColor(u);case d.Delete:return e.getColor(l)}}function F(e,i){let r=e.modifiedStartLineNumber-i.modifiedStartLineNumber;return 0!==r||(r=e.modifiedEndLineNumber-i.modifiedEndLineNumber,0!==r)||(r=e.originalStartLineNumber-i.originalStartLineNumber,0!==r)?r:e.originalEndLineNumber-i.originalEndLineNumber}function M(e){const i=e.modifiedEndLineNumber-e.modifiedStartLineNumber+1,r=e.originalEndLineNumber-e.originalStartLineNumber+1;return 0===e.originalEndLineNumber?i:0===e.modifiedEndLineNumber?r:i+r}function y(e){return 0===e.modifiedEndLineNumber?0===e.modifiedStartLineNumber?1:e.modifiedStartLineNumber:e.modifiedEndLineNumber}function O(e,i){return 1===e&&0===i.modifiedStartLineNumber&&0===i.modifiedEndLineNumber||e>=i.modifiedStartLineNumber&&e<=(i.modifiedEndLineNumber||i.modifiedStartLineNumber)}!function(e){e[e.Modify=0]="Modify",e[e.Add=1]="Add",e[e.Delete=2]="Delete"}(d||(d={}));export{z as $1Wb,S as $2Wb,A as $3Wb,v as $4Wb,w as $5Wb,F as $6Wb,M as $7Wb,y as $8Wb,O as $9Wb,B as $UWb,E as $VWb,x as $WWb,W as $XWb,G as $YWb,h as $ZWb,d as ChangeType};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import * as nls from "../../../../nls.js";
+import { createDecorator } from "../../../../platform/instantiation/common/instantiation.js";
+import { Color } from "../../../../base/common/color.js";
+import { darken, editorBackground, editorForeground, listInactiveSelectionBackground, opaque, editorErrorForeground, registerColor, transparent, lighten } from "../../../../platform/theme/common/colorRegistry.js";
+const IQuickDiffService = createDecorator("quickDiff");
+const editorGutterModifiedBackground = registerColor("editorGutter.modifiedBackground", {
+  dark: "#1B81A8",
+  light: "#2090D3",
+  hcDark: "#1B81A8",
+  hcLight: "#2090D3"
+}, nls.localize("editorGutterModifiedBackground", "Editor gutter background color for lines that are modified."));
+registerColor("editorGutter.modifiedSecondaryBackground", { dark: darken(editorGutterModifiedBackground, 0.5), light: lighten(editorGutterModifiedBackground, 0.7), hcDark: "#1B81A8", hcLight: "#2090D3" }, nls.localize("editorGutterModifiedSecondaryBackground", "Editor gutter secondary background color for lines that are modified."));
+const editorGutterAddedBackground = registerColor("editorGutter.addedBackground", {
+  dark: "#487E02",
+  light: "#48985D",
+  hcDark: "#487E02",
+  hcLight: "#48985D"
+}, nls.localize("editorGutterAddedBackground", "Editor gutter background color for lines that are added."));
+registerColor("editorGutter.addedSecondaryBackground", { dark: darken(editorGutterAddedBackground, 0.5), light: lighten(editorGutterAddedBackground, 0.7), hcDark: "#487E02", hcLight: "#48985D" }, nls.localize("editorGutterAddedSecondaryBackground", "Editor gutter secondary background color for lines that are added."));
+const editorGutterDeletedBackground = registerColor("editorGutter.deletedBackground", editorErrorForeground, nls.localize("editorGutterDeletedBackground", "Editor gutter background color for lines that are deleted."));
+registerColor("editorGutter.deletedSecondaryBackground", { dark: darken(editorGutterDeletedBackground, 0.4), light: lighten(editorGutterDeletedBackground, 0.3), hcDark: "#F48771", hcLight: "#B5200D" }, nls.localize("editorGutterDeletedSecondaryBackground", "Editor gutter secondary background color for lines that are deleted."));
+const minimapGutterModifiedBackground = registerColor("minimapGutter.modifiedBackground", editorGutterModifiedBackground, nls.localize("minimapGutterModifiedBackground", "Minimap gutter background color for lines that are modified."));
+const minimapGutterAddedBackground = registerColor("minimapGutter.addedBackground", editorGutterAddedBackground, nls.localize("minimapGutterAddedBackground", "Minimap gutter background color for lines that are added."));
+const minimapGutterDeletedBackground = registerColor("minimapGutter.deletedBackground", editorGutterDeletedBackground, nls.localize("minimapGutterDeletedBackground", "Minimap gutter background color for lines that are deleted."));
+const overviewRulerModifiedForeground = registerColor("editorOverviewRuler.modifiedForeground", transparent(editorGutterModifiedBackground, 0.6), nls.localize("overviewRulerModifiedForeground", "Overview ruler marker color for modified content."));
+const overviewRulerAddedForeground = registerColor("editorOverviewRuler.addedForeground", transparent(editorGutterAddedBackground, 0.6), nls.localize("overviewRulerAddedForeground", "Overview ruler marker color for added content."));
+const overviewRulerDeletedForeground = registerColor("editorOverviewRuler.deletedForeground", transparent(editorGutterDeletedBackground, 0.6), nls.localize("overviewRulerDeletedForeground", "Overview ruler marker color for deleted content."));
+const editorGutterItemGlyphForeground = registerColor("editorGutter.itemGlyphForeground", { dark: editorForeground, light: editorForeground, hcDark: Color.black, hcLight: Color.white }, nls.localize("editorGutterItemGlyphForeground", "Editor gutter decoration color for gutter item glyphs."));
+const editorGutterItemBackground = registerColor("editorGutter.itemBackground", { dark: opaque(listInactiveSelectionBackground, editorBackground), light: darken(opaque(listInactiveSelectionBackground, editorBackground), 0.05), hcDark: Color.white, hcLight: Color.black }, nls.localize("editorGutterItemBackground", "Editor gutter decoration color for gutter item background. This color should be opaque."));
+var ChangeType;
+(function(ChangeType2) {
+  ChangeType2[ChangeType2["Modify"] = 0] = "Modify";
+  ChangeType2[ChangeType2["Add"] = 1] = "Add";
+  ChangeType2[ChangeType2["Delete"] = 2] = "Delete";
+})(ChangeType || (ChangeType = {}));
+function getChangeType(change) {
+  if (change.originalEndLineNumber === 0) {
+    return ChangeType.Add;
+  } else if (change.modifiedEndLineNumber === 0) {
+    return ChangeType.Delete;
+  } else {
+    return ChangeType.Modify;
+  }
+}
+__name(getChangeType, "getChangeType");
+function getChangeTypeColor(theme, changeType) {
+  switch (changeType) {
+    case ChangeType.Modify:
+      return theme.getColor(editorGutterModifiedBackground);
+    case ChangeType.Add:
+      return theme.getColor(editorGutterAddedBackground);
+    case ChangeType.Delete:
+      return theme.getColor(editorGutterDeletedBackground);
+  }
+}
+__name(getChangeTypeColor, "getChangeTypeColor");
+function compareChanges(a, b) {
+  let result = a.modifiedStartLineNumber - b.modifiedStartLineNumber;
+  if (result !== 0) {
+    return result;
+  }
+  result = a.modifiedEndLineNumber - b.modifiedEndLineNumber;
+  if (result !== 0) {
+    return result;
+  }
+  result = a.originalStartLineNumber - b.originalStartLineNumber;
+  if (result !== 0) {
+    return result;
+  }
+  return a.originalEndLineNumber - b.originalEndLineNumber;
+}
+__name(compareChanges, "compareChanges");
+function getChangeHeight(change) {
+  const modified = change.modifiedEndLineNumber - change.modifiedStartLineNumber + 1;
+  const original = change.originalEndLineNumber - change.originalStartLineNumber + 1;
+  if (change.originalEndLineNumber === 0) {
+    return modified;
+  } else if (change.modifiedEndLineNumber === 0) {
+    return original;
+  } else {
+    return modified + original;
+  }
+}
+__name(getChangeHeight, "getChangeHeight");
+function getModifiedEndLineNumber(change) {
+  if (change.modifiedEndLineNumber === 0) {
+    return change.modifiedStartLineNumber === 0 ? 1 : change.modifiedStartLineNumber;
+  } else {
+    return change.modifiedEndLineNumber;
+  }
+}
+__name(getModifiedEndLineNumber, "getModifiedEndLineNumber");
+function lineIntersectsChange(lineNumber, change) {
+  if (lineNumber === 1 && change.modifiedStartLineNumber === 0 && change.modifiedEndLineNumber === 0) {
+    return true;
+  }
+  return lineNumber >= change.modifiedStartLineNumber && lineNumber <= (change.modifiedEndLineNumber || change.modifiedStartLineNumber);
+}
+__name(lineIntersectsChange, "lineIntersectsChange");
+export {
+  ChangeType,
+  IQuickDiffService,
+  compareChanges,
+  editorGutterItemBackground,
+  editorGutterItemGlyphForeground,
+  getChangeHeight,
+  getChangeType,
+  getChangeTypeColor,
+  getModifiedEndLineNumber,
+  lineIntersectsChange,
+  minimapGutterAddedBackground,
+  minimapGutterDeletedBackground,
+  minimapGutterModifiedBackground,
+  overviewRulerAddedForeground,
+  overviewRulerDeletedForeground,
+  overviewRulerModifiedForeground
+};
+//# sourceMappingURL=quickDiff.js.map

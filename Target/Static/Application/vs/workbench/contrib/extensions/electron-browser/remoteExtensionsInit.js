@@ -1,1 +1,255 @@
-import{CancellationToken as u}from"../../../../base/common/cancellation.js";import{$El as I}from"../../../../platform/configuration/common/configuration.js";import{$fl as M}from"../../../../platform/environment/common/environment.js";import{$9y as j,$gz as $,$jz as w}from"../../../../platform/extensionManagement/common/extensionManagement.js";import{$vz as f}from"../../../../platform/extensionManagement/common/extensionManagementUtil.js";import{$5j as z}from"../../../../platform/files/common/files.js";import{$mj as R}from"../../../../platform/instantiation/common/instantiation.js";import{$lj as N}from"../../../../platform/instantiation/common/serviceCollection.js";import{$3n as g}from"../../../../platform/log/common/log.js";import{$vuc as P}from"../../../../platform/remote/common/remote.js";import{$fB as C}from"../../../../platform/remote/common/remoteAuthorityResolver.js";import{$R4 as k}from"../../../../platform/remote/common/remoteExtensionsScanner.js";import{$Ho as S,$Fo as A}from"../../../../platform/storage/common/storage.js";import{$yo as D}from"../../../../platform/uriIdentity/common/uriIdentity.js";import{$Ao as T}from"../../../../platform/userDataProfile/common/userDataProfile.js";import{$rzc as _}from"../../../../platform/userDataSync/common/extensionsSync.js";import{$Y7b as O}from"../../../../platform/userDataSync/common/ignoredExtensions.js";import{$8Mb as J,$WMb as L}from"../../../../platform/userDataSync/common/userDataSync.js";import{$36b as F}from"../../../../platform/userDataSync/common/userDataSyncStoreService.js";import{$cX as V}from"../../../services/authentication/common/authentication.js";import{$7Cb as y}from"../../../services/extensionManagement/common/extensionManagement.js";import{$NNb as q}from"../../../services/extensions/common/extensionManifestPropertiesService.js";import{$YK as b}from"../../../services/remote/common/remoteAgentService.js";import{$bDb as B}from"../common/extensions.js";var p=function(c,t,o,s){var i=arguments.length,e=i<3?t:s===null?s=Object.getOwnPropertyDescriptor(t,o):s,r;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")e=Reflect.decorate(c,t,o,s);else for(var a=c.length-1;a>=0;a--)(r=c[a])&&(e=(i<3?r(e):i>3?r(t,o,e):r(t,o))||e);return i>3&&e&&Object.defineProperty(t,o,e),e},n=function(c,t){return function(o,s){t(o,s,c)}};let x=class{constructor(t,o,s,i,e,r,a){this.a=t,this.b=o,this.c=s,this.d=i,this.f=e,this.g=r,this.h=a,this.i(),this.j()}async i(){if(!this.a.getConnection())return;if(!this.d.remoteExtensionManagementServer){this.g.error("No remote extension management server available");return}if(!this.d.localExtensionManagementServer){this.g.error("No local extension management server available");return}const t=this.h.getValue(P);if(!t?.length)return;const o=await this.f.queryLocal(this.d.localExtensionManagementServer),s=await this.f.queryLocal(this.d.remoteExtensionManagementServer),i=o.filter(e=>t.some(r=>f(e.identifier,{id:r}))).filter(e=>!s.some(r=>f(r.identifier,e.identifier)));i.length&&await Promise.allSettled(i.map(e=>{this.f.installInServer(e,this.d.remoteExtensionManagementServer,{donotIncludePackAndDependencies:!0})}))}async j(){if(!this.a.getConnection())return;const{failed:t}=await this.b.whenExtensionsReady();if(t.length===0){this.g.trace("No extensions relayed from server");return}if(!this.d.remoteExtensionManagementServer){this.g.error("No remote extension management server available");return}this.g.info(`Installing '${t.length}' extensions relayed from server`);const o=await this.c.getExtensions(t.map(({id:i})=>({id:i})),u.None),s=[];for(const{id:i,installOptions:e}of t){const r=o.find(a=>f(a.identifier,{id:i}));r?s.push({extension:r,options:{...e,downloadExtensionsLocally:!0}}):this.g.warn(`Relayed failed extension '${i}' from server is not found in the gallery`)}s.length&&await Promise.allSettled(s.map(i=>this.d.remoteExtensionManagementServer.extensionManagementService.installFromGallery(i.extension,i.options)))}};x=p([n(0,b),n(1,k),n(2,$),n(3,y),n(4,B),n(5,g),n(6,I)],x);let v=class{constructor(t,o,s,i,e,r,a,l,m){this.a=t,this.b=o,this.c=s,this.d=i,this.f=e,this.g=r,this.h=a,this.i=l,this.j=m,this.k()}async k(){const t=this.c.getConnection(),o=this.a.localExtensionManagementServer,s=this.a.remoteExtensionManagementServer;if(!t||!s||!o||!this.d.userDataSyncStore)return;const i=`${A}.${t.remoteAuthority}`;if(!this.b.getBoolean(i,-1,!0)){this.g.trace("Skipping initializing remote extensions because the window with this remote authority was opened before.");return}if(this.b.store(i,!1,-1,1),!this.b.isNew(1)){this.g.trace("Skipping initializing remote extensions because this workspace was opened before.");return}if(!this.j.isEnabled())return;const e=await this.i.resolveAuthority(t.remoteAuthority);if(!e.options?.authenticationSession)return;const a=(await this.h.getSessions(e.options?.authenticationSession.providerId)).find(E=>E.id===e.options?.authenticationSession?.id);if(!a){this.g.info("Skipping initializing remote extensions because the account with given session id is not found",e.options.authenticationSession.id);return}const l=this.f.createInstance(F,this.d.userDataSyncStore.url);l.setAuthToken(a.accessToken,e.options.authenticationSession.providerId);const m=await l.readResource("extensions",null),h=new N;h.set(w,s.extensionManagementService),await this.f.createChild(h).createInstance(d).initialize(m)}};v=p([n(0,y),n(1,S),n(2,b),n(3,L),n(4,R),n(5,g),n(6,V),n(7,C),n(8,J)],v);let d=class extends _{constructor(t,o,s,i,e,r,a,l,m,h){super(t,o,s,i,e,r,m,a),this.c=l,this.v=h}async o(t){const o=await this.t(t);if(!o){this.j.info("No synced extensions exist while initializing remote extensions.");return}const s=await this.p.getInstalled(),{newExtensions:i}=this.u(o,s);if(!i.length){this.j.trace("No new remote extensions to install.");return}const e=await this.p.getTargetPlatform(),r=await this.c.getExtensions(i,{targetPlatform:e,compatible:!0},u.None);r.length&&await Promise.allSettled(r.map(async a=>{const l=await this.c.getManifest(a,u.None);if(l&&this.v.canExecuteOnWorkspace(l)){const m=o.find(h=>f(h.identifier,h.identifier));await this.p.installFromGallery(a,{installPreReleaseVersion:m?.preRelease,donotIncludePackAndDependencies:!0,context:{[j]:!0}})}}))}};d=p([n(0,w),n(1,O),n(2,z),n(3,T),n(4,M),n(5,g),n(6,D),n(7,$),n(8,S),n(9,q)],d);export{x as $fJc,v as $gJc};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { CancellationToken } from "../../../../base/common/cancellation.js";
+import { IConfigurationService } from "../../../../platform/configuration/common/configuration.js";
+import { IEnvironmentService } from "../../../../platform/environment/common/environment.js";
+import { EXTENSION_INSTALL_SKIP_PUBLISHER_TRUST_CONTEXT, IExtensionGalleryService, IExtensionManagementService } from "../../../../platform/extensionManagement/common/extensionManagement.js";
+import { areSameExtensions } from "../../../../platform/extensionManagement/common/extensionManagementUtil.js";
+import { IFileService } from "../../../../platform/files/common/files.js";
+import { IInstantiationService } from "../../../../platform/instantiation/common/instantiation.js";
+import { ServiceCollection } from "../../../../platform/instantiation/common/serviceCollection.js";
+import { ILogService } from "../../../../platform/log/common/log.js";
+import { REMOTE_DEFAULT_IF_LOCAL_EXTENSIONS } from "../../../../platform/remote/common/remote.js";
+import { IRemoteAuthorityResolverService } from "../../../../platform/remote/common/remoteAuthorityResolver.js";
+import { IRemoteExtensionsScannerService } from "../../../../platform/remote/common/remoteExtensionsScanner.js";
+import { IStorageService, IS_NEW_KEY } from "../../../../platform/storage/common/storage.js";
+import { IUriIdentityService } from "../../../../platform/uriIdentity/common/uriIdentity.js";
+import { IUserDataProfilesService } from "../../../../platform/userDataProfile/common/userDataProfile.js";
+import { AbstractExtensionsInitializer } from "../../../../platform/userDataSync/common/extensionsSync.js";
+import { IIgnoredExtensionsManagementService } from "../../../../platform/userDataSync/common/ignoredExtensions.js";
+import { IUserDataSyncEnablementService, IUserDataSyncStoreManagementService } from "../../../../platform/userDataSync/common/userDataSync.js";
+import { UserDataSyncStoreClient } from "../../../../platform/userDataSync/common/userDataSyncStoreService.js";
+import { IAuthenticationService } from "../../../services/authentication/common/authentication.js";
+import { IExtensionManagementServerService } from "../../../services/extensionManagement/common/extensionManagement.js";
+import { IExtensionManifestPropertiesService } from "../../../services/extensions/common/extensionManifestPropertiesService.js";
+import { IRemoteAgentService } from "../../../services/remote/common/remoteAgentService.js";
+import { IExtensionsWorkbenchService } from "../common/extensions.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+let InstallRemoteExtensionsContribution = class InstallRemoteExtensionsContribution2 {
+  static {
+    __name(this, "InstallRemoteExtensionsContribution");
+  }
+  constructor(remoteAgentService, remoteExtensionsScannerService, extensionGalleryService, extensionManagementServerService, extensionsWorkbenchService, logService, configurationService) {
+    this.remoteAgentService = remoteAgentService;
+    this.remoteExtensionsScannerService = remoteExtensionsScannerService;
+    this.extensionGalleryService = extensionGalleryService;
+    this.extensionManagementServerService = extensionManagementServerService;
+    this.extensionsWorkbenchService = extensionsWorkbenchService;
+    this.logService = logService;
+    this.configurationService = configurationService;
+    this.installExtensionsIfInstalledLocallyInRemote();
+    this.installFailedRemoteExtensions();
+  }
+  async installExtensionsIfInstalledLocallyInRemote() {
+    if (!this.remoteAgentService.getConnection()) {
+      return;
+    }
+    if (!this.extensionManagementServerService.remoteExtensionManagementServer) {
+      this.logService.error("No remote extension management server available");
+      return;
+    }
+    if (!this.extensionManagementServerService.localExtensionManagementServer) {
+      this.logService.error("No local extension management server available");
+      return;
+    }
+    const settingValue = this.configurationService.getValue(REMOTE_DEFAULT_IF_LOCAL_EXTENSIONS);
+    if (!settingValue?.length) {
+      return;
+    }
+    const alreadyInstalledLocally = await this.extensionsWorkbenchService.queryLocal(this.extensionManagementServerService.localExtensionManagementServer);
+    const alreadyInstalledRemotely = await this.extensionsWorkbenchService.queryLocal(this.extensionManagementServerService.remoteExtensionManagementServer);
+    const extensionsToInstall = alreadyInstalledLocally.filter((ext) => settingValue.some((id) => areSameExtensions(ext.identifier, { id }))).filter((ext) => !alreadyInstalledRemotely.some((e) => areSameExtensions(e.identifier, ext.identifier)));
+    if (!extensionsToInstall.length) {
+      return;
+    }
+    await Promise.allSettled(extensionsToInstall.map((ext) => {
+      this.extensionsWorkbenchService.installInServer(ext, this.extensionManagementServerService.remoteExtensionManagementServer, { donotIncludePackAndDependencies: true });
+    }));
+  }
+  async installFailedRemoteExtensions() {
+    if (!this.remoteAgentService.getConnection()) {
+      return;
+    }
+    const { failed } = await this.remoteExtensionsScannerService.whenExtensionsReady();
+    if (failed.length === 0) {
+      this.logService.trace("No extensions relayed from server");
+      return;
+    }
+    if (!this.extensionManagementServerService.remoteExtensionManagementServer) {
+      this.logService.error("No remote extension management server available");
+      return;
+    }
+    this.logService.info(`Installing '${failed.length}' extensions relayed from server`);
+    const galleryExtensions = await this.extensionGalleryService.getExtensions(failed.map(({ id }) => ({ id })), CancellationToken.None);
+    const installExtensionInfo = [];
+    for (const { id, installOptions } of failed) {
+      const extension = galleryExtensions.find((e) => areSameExtensions(e.identifier, { id }));
+      if (extension) {
+        installExtensionInfo.push({
+          extension,
+          options: {
+            ...installOptions,
+            downloadExtensionsLocally: true
+          }
+        });
+      } else {
+        this.logService.warn(`Relayed failed extension '${id}' from server is not found in the gallery`);
+      }
+    }
+    if (installExtensionInfo.length) {
+      await Promise.allSettled(installExtensionInfo.map((e) => this.extensionManagementServerService.remoteExtensionManagementServer.extensionManagementService.installFromGallery(e.extension, e.options)));
+    }
+  }
+};
+InstallRemoteExtensionsContribution = __decorate([
+  __param(0, IRemoteAgentService),
+  __param(1, IRemoteExtensionsScannerService),
+  __param(2, IExtensionGalleryService),
+  __param(3, IExtensionManagementServerService),
+  __param(4, IExtensionsWorkbenchService),
+  __param(5, ILogService),
+  __param(6, IConfigurationService)
+], InstallRemoteExtensionsContribution);
+let RemoteExtensionsInitializerContribution = class RemoteExtensionsInitializerContribution2 {
+  static {
+    __name(this, "RemoteExtensionsInitializerContribution");
+  }
+  constructor(extensionManagementServerService, storageService, remoteAgentService, userDataSyncStoreManagementService, instantiationService, logService, authenticationService, remoteAuthorityResolverService, userDataSyncEnablementService) {
+    this.extensionManagementServerService = extensionManagementServerService;
+    this.storageService = storageService;
+    this.remoteAgentService = remoteAgentService;
+    this.userDataSyncStoreManagementService = userDataSyncStoreManagementService;
+    this.instantiationService = instantiationService;
+    this.logService = logService;
+    this.authenticationService = authenticationService;
+    this.remoteAuthorityResolverService = remoteAuthorityResolverService;
+    this.userDataSyncEnablementService = userDataSyncEnablementService;
+    this.initializeRemoteExtensions();
+  }
+  async initializeRemoteExtensions() {
+    const connection = this.remoteAgentService.getConnection();
+    const localExtensionManagementServer = this.extensionManagementServerService.localExtensionManagementServer;
+    const remoteExtensionManagementServer = this.extensionManagementServerService.remoteExtensionManagementServer;
+    if (!connection || !remoteExtensionManagementServer) {
+      return;
+    }
+    if (!localExtensionManagementServer) {
+      return;
+    }
+    if (!this.userDataSyncStoreManagementService.userDataSyncStore) {
+      return;
+    }
+    const newRemoteConnectionKey = `${IS_NEW_KEY}.${connection.remoteAuthority}`;
+    if (!this.storageService.getBoolean(newRemoteConnectionKey, -1, true)) {
+      this.logService.trace(`Skipping initializing remote extensions because the window with this remote authority was opened before.`);
+      return;
+    }
+    this.storageService.store(
+      newRemoteConnectionKey,
+      false,
+      -1,
+      1
+      /* StorageTarget.MACHINE */
+    );
+    if (!this.storageService.isNew(
+      1
+      /* StorageScope.WORKSPACE */
+    )) {
+      this.logService.trace(`Skipping initializing remote extensions because this workspace was opened before.`);
+      return;
+    }
+    if (!this.userDataSyncEnablementService.isEnabled()) {
+      return;
+    }
+    const resolvedAuthority = await this.remoteAuthorityResolverService.resolveAuthority(connection.remoteAuthority);
+    if (!resolvedAuthority.options?.authenticationSession) {
+      return;
+    }
+    const sessions = await this.authenticationService.getSessions(resolvedAuthority.options?.authenticationSession.providerId);
+    const session = sessions.find((s) => s.id === resolvedAuthority.options?.authenticationSession?.id);
+    if (!session) {
+      this.logService.info("Skipping initializing remote extensions because the account with given session id is not found", resolvedAuthority.options.authenticationSession.id);
+      return;
+    }
+    const userDataSyncStoreClient = this.instantiationService.createInstance(UserDataSyncStoreClient, this.userDataSyncStoreManagementService.userDataSyncStore.url);
+    userDataSyncStoreClient.setAuthToken(session.accessToken, resolvedAuthority.options.authenticationSession.providerId);
+    const userData = await userDataSyncStoreClient.readResource("extensions", null);
+    const serviceCollection = new ServiceCollection();
+    serviceCollection.set(IExtensionManagementService, remoteExtensionManagementServer.extensionManagementService);
+    const instantiationService = this.instantiationService.createChild(serviceCollection);
+    const extensionsToInstallInitializer = instantiationService.createInstance(RemoteExtensionsInitializer);
+    await extensionsToInstallInitializer.initialize(userData);
+  }
+};
+RemoteExtensionsInitializerContribution = __decorate([
+  __param(0, IExtensionManagementServerService),
+  __param(1, IStorageService),
+  __param(2, IRemoteAgentService),
+  __param(3, IUserDataSyncStoreManagementService),
+  __param(4, IInstantiationService),
+  __param(5, ILogService),
+  __param(6, IAuthenticationService),
+  __param(7, IRemoteAuthorityResolverService),
+  __param(8, IUserDataSyncEnablementService)
+], RemoteExtensionsInitializerContribution);
+let RemoteExtensionsInitializer = class RemoteExtensionsInitializer2 extends AbstractExtensionsInitializer {
+  static {
+    __name(this, "RemoteExtensionsInitializer");
+  }
+  constructor(extensionManagementService, ignoredExtensionsManagementService, fileService, userDataProfilesService, environmentService, logService, uriIdentityService, extensionGalleryService, storageService, extensionManifestPropertiesService) {
+    super(extensionManagementService, ignoredExtensionsManagementService, fileService, userDataProfilesService, environmentService, logService, storageService, uriIdentityService);
+    this.extensionGalleryService = extensionGalleryService;
+    this.extensionManifestPropertiesService = extensionManifestPropertiesService;
+  }
+  async doInitialize(remoteUserData) {
+    const remoteExtensions = await this.parseExtensions(remoteUserData);
+    if (!remoteExtensions) {
+      this.logService.info("No synced extensions exist while initializing remote extensions.");
+      return;
+    }
+    const installedExtensions = await this.extensionManagementService.getInstalled();
+    const { newExtensions } = this.generatePreview(remoteExtensions, installedExtensions);
+    if (!newExtensions.length) {
+      this.logService.trace("No new remote extensions to install.");
+      return;
+    }
+    const targetPlatform = await this.extensionManagementService.getTargetPlatform();
+    const extensionsToInstall = await this.extensionGalleryService.getExtensions(newExtensions, { targetPlatform, compatible: true }, CancellationToken.None);
+    if (extensionsToInstall.length) {
+      await Promise.allSettled(extensionsToInstall.map(async (e) => {
+        const manifest = await this.extensionGalleryService.getManifest(e, CancellationToken.None);
+        if (manifest && this.extensionManifestPropertiesService.canExecuteOnWorkspace(manifest)) {
+          const syncedExtension = remoteExtensions.find((e2) => areSameExtensions(e2.identifier, e2.identifier));
+          await this.extensionManagementService.installFromGallery(e, { installPreReleaseVersion: syncedExtension?.preRelease, donotIncludePackAndDependencies: true, context: { [EXTENSION_INSTALL_SKIP_PUBLISHER_TRUST_CONTEXT]: true } });
+        }
+      }));
+    }
+  }
+};
+RemoteExtensionsInitializer = __decorate([
+  __param(0, IExtensionManagementService),
+  __param(1, IIgnoredExtensionsManagementService),
+  __param(2, IFileService),
+  __param(3, IUserDataProfilesService),
+  __param(4, IEnvironmentService),
+  __param(5, ILogService),
+  __param(6, IUriIdentityService),
+  __param(7, IExtensionGalleryService),
+  __param(8, IStorageService),
+  __param(9, IExtensionManifestPropertiesService)
+], RemoteExtensionsInitializer);
+export {
+  InstallRemoteExtensionsContribution,
+  RemoteExtensionsInitializerContribution
+};
+//# sourceMappingURL=remoteExtensionsInit.js.map

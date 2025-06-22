@@ -1,1 +1,253 @@
-import{localize as e}from"../../../../nls.js";import{$wJ as l}from"../../../services/configuration/common/configuration.js";import{$lW as a}from"../../../services/configurationResolver/common/configurationResolverSchema.js";const c="onMcpCollection:",d=e=>c+e;var o;!function(e){e.ClaudeDesktop="claude-desktop",e.Windsurf="windsurf",e.CursorGlobal="cursor-global",e.CursorWorkspace="cursor-workspace"}(o||(o={}));const f=Object.keys({"claude-desktop":!0,windsurf:!0,"cursor-global":!0,"cursor-workspace":!0}),b={"claude-desktop":e(8839,null),windsurf:e(8840,null),"cursor-global":e(8841,null),"cursor-workspace":e(8842,null)},x="mcp",v="chat.mcp.discovery.enabled",h="chat.mcp.enabled",w="chat.mcp.serverSampling",p={"mcp-server-time":{command:"python",args:["-m","mcp_server_time","--local-timezone=America/Los_Angeles"],env:{}}},s={"my-mcp-server":{url:"http://localhost:3001/mcp",headers:{}}},i=r=>({dev:{type:"object",markdownDescription:e(8843,null),examples:[{watch:"src/**/*.ts",debug:{type:"node"}}],properties:{watch:{description:e(8844,null),examples:["src/**/*.ts"],oneOf:[{type:"string"},{type:"array",items:{type:"string"}}]},...r&&{debug:{markdownDescription:e(8845,null),oneOf:[{type:"object",required:["type"],properties:{type:{type:"string",enum:["node"],description:e(8846,null)}},additionalProperties:!1},{type:"object",required:["type"],properties:{type:{type:"string",enum:["debugpy"],description:e(8847,null)},debugpyPath:{type:"string",description:e(8848,null)}},additionalProperties:!1}]}}}}}),u={type:"object",additionalProperties:!1,examples:[p["mcp-server-time"]],properties:{type:{type:"string",enum:["stdio"],description:e(8849,null)},command:{type:"string",description:e(8850,null)},cwd:{type:"string",description:e(8851,null),examples:["${workspaceFolder}"]},args:{type:"array",description:e(8852,null),items:{type:"string"}},envFile:{type:"string",description:e(8853,null),examples:["${workspaceFolder}/.env"]},env:{description:e(8854,null),additionalProperties:{anyOf:[{type:"null"},{type:"string"},{type:"number"}]}},...i(!0)}},$={id:l,type:"object",title:e(8855,null),allowTrailingCommas:!0,allowComments:!0,additionalProperties:!1,properties:{servers:{examples:[p,s],additionalProperties:{oneOf:[u,{type:"object",additionalProperties:!1,required:["url"],examples:[s["my-mcp-server"]],properties:{type:{type:"string",enum:["http","sse"],description:e(8856,null)},url:{type:"string",format:"uri",pattern:"^https?:\\/\\/.+",patternErrorMessage:e(8857,null),description:e(8858,null)},headers:{type:"object",description:e(8859,null),additionalProperties:{type:"string"}},...i(!1)}}]}},inputs:a.definitions.inputs}},P={extensionPoint:"mcpServerDefinitionProviders",activationEventsGenerator(e,r){for(const t of e)t.id&&r.push(d(t.id))},jsonSchema:{description:e(8860,null),type:"array",defaultSnippets:[{body:[{id:"",label:""}]}],items:{additionalProperties:!1,type:"object",defaultSnippets:[{body:{id:"",label:""}}],properties:{id:{description:e(8861,null),type:"string"},label:{description:e(8862,null),type:"string"}}}}};export{d as $mW,f as $nW,b as $oW,x as $pW,v as $qW,h as $rW,w as $sW,p as $tW,u as $uW,$ as $vW,P as $wW,o as DiscoverySource};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { localize } from "../../../../nls.js";
+import { mcpSchemaId } from "../../../services/configuration/common/configuration.js";
+import { inputsSchema } from "../../../services/configurationResolver/common/configurationResolverSchema.js";
+const mcpActivationEventPrefix = "onMcpCollection:";
+const mcpActivationEvent = /* @__PURE__ */ __name((contributedCollectionId) => mcpActivationEventPrefix + contributedCollectionId, "mcpActivationEvent");
+var DiscoverySource;
+(function(DiscoverySource2) {
+  DiscoverySource2["ClaudeDesktop"] = "claude-desktop";
+  DiscoverySource2["Windsurf"] = "windsurf";
+  DiscoverySource2["CursorGlobal"] = "cursor-global";
+  DiscoverySource2["CursorWorkspace"] = "cursor-workspace";
+})(DiscoverySource || (DiscoverySource = {}));
+const allDiscoverySources = Object.keys({
+  [
+    "claude-desktop"
+    /* DiscoverySource.ClaudeDesktop */
+  ]: true,
+  [
+    "windsurf"
+    /* DiscoverySource.Windsurf */
+  ]: true,
+  [
+    "cursor-global"
+    /* DiscoverySource.CursorGlobal */
+  ]: true,
+  [
+    "cursor-workspace"
+    /* DiscoverySource.CursorWorkspace */
+  ]: true
+});
+const discoverySourceLabel = {
+  [
+    "claude-desktop"
+    /* DiscoverySource.ClaudeDesktop */
+  ]: localize("mcp.discovery.source.claude-desktop", "Claude Desktop"),
+  [
+    "windsurf"
+    /* DiscoverySource.Windsurf */
+  ]: localize("mcp.discovery.source.windsurf", "Windsurf"),
+  [
+    "cursor-global"
+    /* DiscoverySource.CursorGlobal */
+  ]: localize("mcp.discovery.source.cursor-global", "Cursor (Global)"),
+  [
+    "cursor-workspace"
+    /* DiscoverySource.CursorWorkspace */
+  ]: localize("mcp.discovery.source.cursor-workspace", "Cursor (Workspace)")
+};
+const mcpConfigurationSection = "mcp";
+const mcpDiscoverySection = "chat.mcp.discovery.enabled";
+const mcpEnabledSection = "chat.mcp.enabled";
+const mcpServerSamplingSection = "chat.mcp.serverSampling";
+const mcpSchemaExampleServers = {
+  "mcp-server-time": {
+    command: "python",
+    args: ["-m", "mcp_server_time", "--local-timezone=America/Los_Angeles"],
+    env: {}
+  }
+};
+const httpSchemaExamples = {
+  "my-mcp-server": {
+    url: "http://localhost:3001/mcp",
+    headers: {}
+  }
+};
+const mcpDevModeProps = /* @__PURE__ */ __name((stdio) => ({
+  dev: {
+    type: "object",
+    markdownDescription: localize("app.mcp.dev", "Enabled development mode for the server. When present, the server will be started eagerly and output will be included in its output. Properties inside the `dev` object can configure additional behavior."),
+    examples: [{ watch: "src/**/*.ts", debug: { type: "node" } }],
+    properties: {
+      watch: {
+        description: localize("app.mcp.dev.watch", "A glob pattern or list of glob patterns relative to the workspace folder to watch. The MCP server will be restarted when these files change."),
+        examples: ["src/**/*.ts"],
+        oneOf: [{ type: "string" }, { type: "array", items: { type: "string" } }]
+      },
+      ...stdio && {
+        debug: {
+          markdownDescription: localize("app.mcp.dev.debug", "If set, debugs the MCP server using the given runtime as it's started."),
+          oneOf: [
+            {
+              type: "object",
+              required: ["type"],
+              properties: {
+                type: {
+                  type: "string",
+                  enum: ["node"],
+                  description: localize("app.mcp.dev.debug.type.node", "Debug the MCP server using Node.js.")
+                }
+              },
+              additionalProperties: false
+            },
+            {
+              type: "object",
+              required: ["type"],
+              properties: {
+                type: {
+                  type: "string",
+                  enum: ["debugpy"],
+                  description: localize("app.mcp.dev.debug.type.python", "Debug the MCP server using Python and debugpy.")
+                },
+                debugpyPath: {
+                  type: "string",
+                  description: localize("app.mcp.dev.debug.debugpyPath", "Path to the debugpy executable.")
+                }
+              },
+              additionalProperties: false
+            }
+          ]
+        }
+      }
+    }
+  }
+}), "mcpDevModeProps");
+const mcpStdioServerSchema = {
+  type: "object",
+  additionalProperties: false,
+  examples: [mcpSchemaExampleServers["mcp-server-time"]],
+  properties: {
+    type: {
+      type: "string",
+      enum: ["stdio"],
+      description: localize("app.mcp.json.type", "The type of the server.")
+    },
+    command: {
+      type: "string",
+      description: localize("app.mcp.json.command", "The command to run the server.")
+    },
+    cwd: {
+      type: "string",
+      description: localize("app.mcp.json.cwd", "The working directory for the server command. Defaults to the workspace folder when run in a workspace."),
+      examples: ["${workspaceFolder}"]
+    },
+    args: {
+      type: "array",
+      description: localize("app.mcp.args.command", "Arguments passed to the server."),
+      items: {
+        type: "string"
+      }
+    },
+    envFile: {
+      type: "string",
+      description: localize("app.mcp.envFile.command", "Path to a file containing environment variables for the server."),
+      examples: ["${workspaceFolder}/.env"]
+    },
+    env: {
+      description: localize("app.mcp.env.command", "Environment variables passed to the server."),
+      additionalProperties: {
+        anyOf: [
+          { type: "null" },
+          { type: "string" },
+          { type: "number" }
+        ]
+      }
+    },
+    ...mcpDevModeProps(true)
+  }
+};
+const mcpServerSchema = {
+  id: mcpSchemaId,
+  type: "object",
+  title: localize("app.mcp.json.title", "Model Context Protocol Servers"),
+  allowTrailingCommas: true,
+  allowComments: true,
+  additionalProperties: false,
+  properties: {
+    servers: {
+      examples: [
+        mcpSchemaExampleServers,
+        httpSchemaExamples
+      ],
+      additionalProperties: {
+        oneOf: [
+          mcpStdioServerSchema,
+          {
+            type: "object",
+            additionalProperties: false,
+            required: ["url"],
+            examples: [httpSchemaExamples["my-mcp-server"]],
+            properties: {
+              type: {
+                type: "string",
+                enum: ["http", "sse"],
+                description: localize("app.mcp.json.type", "The type of the server.")
+              },
+              url: {
+                type: "string",
+                format: "uri",
+                pattern: "^https?:\\/\\/.+",
+                patternErrorMessage: localize("app.mcp.json.url.pattern", "The URL must start with 'http://' or 'https://'."),
+                description: localize("app.mcp.json.url", "The URL of the Streamable HTTP or SSE endpoint.")
+              },
+              headers: {
+                type: "object",
+                description: localize("app.mcp.json.headers", "Additional headers sent to the server."),
+                additionalProperties: { type: "string" }
+              },
+              ...mcpDevModeProps(false)
+            }
+          }
+        ]
+      }
+    },
+    inputs: inputsSchema.definitions.inputs
+  }
+};
+const mcpContributionPoint = {
+  extensionPoint: "mcpServerDefinitionProviders",
+  activationEventsGenerator(contribs, result) {
+    for (const contrib of contribs) {
+      if (contrib.id) {
+        result.push(mcpActivationEvent(contrib.id));
+      }
+    }
+  },
+  jsonSchema: {
+    description: localize("vscode.extension.contributes.mcp", "Contributes Model Context Protocol servers. Users of this should also use `vscode.lm.registerMcpServerDefinitionProvider`."),
+    type: "array",
+    defaultSnippets: [{ body: [{ id: "", label: "" }] }],
+    items: {
+      additionalProperties: false,
+      type: "object",
+      defaultSnippets: [{ body: { id: "", label: "" } }],
+      properties: {
+        id: {
+          description: localize("vscode.extension.contributes.mcp.id", "Unique ID for the collection."),
+          type: "string"
+        },
+        label: {
+          description: localize("vscode.extension.contributes.mcp.label", "Display name for the collection."),
+          type: "string"
+        }
+      }
+    }
+  }
+};
+export {
+  DiscoverySource,
+  allDiscoverySources,
+  discoverySourceLabel,
+  mcpActivationEvent,
+  mcpConfigurationSection,
+  mcpContributionPoint,
+  mcpDiscoverySection,
+  mcpEnabledSection,
+  mcpSchemaExampleServers,
+  mcpServerSamplingSection,
+  mcpServerSchema,
+  mcpStdioServerSchema
+};
+//# sourceMappingURL=mcpConfiguration.js.map

@@ -1,1 +1,272 @@
-import{$5i as A,$Ji as E}from"./buffer.js";import*as a from"./strings.js";function D(t){return C(t,0)}function C(t,s){switch(typeof t){case"object":return null===t?c(349,s):Array.isArray(t)?$(t,s):d(t,s);case"string":return w(t,s);case"boolean":return U(t,s);case"number":return c(t,s);case"undefined":return c(937,s);default:return c(617,s)}}function c(t,s){return(s<<5)-s+t|0}function U(t,s){return c(t?433:863,s)}function w(t,s){s=c(149417,s);for(let i=0,r=t.length;i<r;i++)s=c(t.charCodeAt(i),s);return s}function $(t,s){return s=c(104579,s),t.reduce(((t,s)=>C(s,t)),s)}function d(t,s){return s=c(181387,s),Object.keys(t).sort().reduce(((s,i)=>(s=w(i,s),C(t[i],s))),s)}const k=t=>{if("string"==typeof t&&t.length<250){const s=new p;return s.update(t),Promise.resolve(s.digest())}let s;return s="string"==typeof t?(new TextEncoder).encode(t):t instanceof E?t.buffer:t,crypto.subtle.digest("sha-1",s).then(g)};var y;function u(t,s,i=32){const r=i-s;return(t<<s|(~((1<<r)-1)&t)>>>r)>>>0}function g(t,s=32){return t instanceof ArrayBuffer?A(E.wrap(new Uint8Array(t))):(t>>>0).toString(16).padStart(s/4,"0")}!function(t){t[t.BLOCK_SIZE=64]="BLOCK_SIZE",t[t.UNICODE_REPLACEMENT=65533]="UNICODE_REPLACEMENT"}(y||(y={}));class p{static{this.g=new DataView(new ArrayBuffer(320))}constructor(){this.h=1732584193,this.l=4023233417,this.m=2562383102,this.n=271733878,this.o=3285377520,this.p=new Uint8Array(67),this.q=new DataView(this.p.buffer),this.r=0,this.t=0,this.u=0,this.v=!1}update(t){const s=t.length;if(0===s)return;const i=this.p;let r,e,n=this.r,h=this.u;for(0!==h?(r=h,e=-1,h=0):(r=t.charCodeAt(0),e=0);;){let o=r;if(a.$9f(r)){if(!(e+1<s)){h=r;break}{const s=t.charCodeAt(e+1);a.$0f(s)?(e++,o=a.$$f(r,s)):o=65533}}else a.$0f(r)&&(o=65533);if(n=this.w(i,n,o),e++,!(e<s))break;r=t.charCodeAt(e)}this.r=n,this.u=h}w(t,s,i){return i<128?t[s++]=i:i<2048?(t[s++]=192|(1984&i)>>>6,t[s++]=128|(63&i)>>>0):i<65536?(t[s++]=224|(61440&i)>>>12,t[s++]=128|(4032&i)>>>6,t[s++]=128|(63&i)>>>0):(t[s++]=240|(1835008&i)>>>18,t[s++]=128|(258048&i)>>>12,t[s++]=128|(4032&i)>>>6,t[s++]=128|(63&i)>>>0),s>=64&&(this.y(),s-=64,this.t+=64,t[0]=t[64],t[1]=t[65],t[2]=t[66]),s}digest(){return this.v||(this.v=!0,this.u&&(this.u=0,this.r=this.w(this.p,this.r,65533)),this.t+=this.r,this.x()),g(this.h)+g(this.l)+g(this.m)+g(this.n)+g(this.o)}x(){this.p[this.r++]=128,this.p.subarray(this.r).fill(0),this.r>56&&(this.y(),this.p.fill(0));const t=8*this.t;this.q.setUint32(56,Math.floor(t/4294967296),!1),this.q.setUint32(60,t%4294967296,!1),this.y()}y(){const t=p.g,s=this.q;for(let i=0;i<64;i+=4)t.setUint32(i,s.getUint32(i,!1),!1);for(let s=64;s<320;s+=4)t.setUint32(s,u(t.getUint32(s-12,!1)^t.getUint32(s-32,!1)^t.getUint32(s-56,!1)^t.getUint32(s-64,!1),1),!1);let i,r,e,n=this.h,h=this.l,o=this.m,c=this.n,a=this.o;for(let s=0;s<80;s++)s<20?(i=h&o|~h&c,r=1518500249):s<40?(i=h^o^c,r=1859775393):s<60?(i=h&o|h&c|o&c,r=2400959708):(i=h^o^c,r=3395469782),e=u(n,5)+i+a+r+t.getUint32(4*s,!1)&4294967295,a=c,c=o,o=u(h,30),h=n,n=e;this.h=this.h+n&4294967295,this.l=this.l+h&4294967295,this.m=this.m+o&4294967295,this.n=this.n+c&4294967295,this.o=this.o+a&4294967295}}export{D as $$m,C as $_m,c as $an,w as $bn,k as $cn,p as $dn};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { encodeHex, VSBuffer } from "./buffer.js";
+import * as strings from "./strings.js";
+function hash(obj) {
+  return doHash(obj, 0);
+}
+__name(hash, "hash");
+function doHash(obj, hashVal) {
+  switch (typeof obj) {
+    case "object":
+      if (obj === null) {
+        return numberHash(349, hashVal);
+      } else if (Array.isArray(obj)) {
+        return arrayHash(obj, hashVal);
+      }
+      return objectHash(obj, hashVal);
+    case "string":
+      return stringHash(obj, hashVal);
+    case "boolean":
+      return booleanHash(obj, hashVal);
+    case "number":
+      return numberHash(obj, hashVal);
+    case "undefined":
+      return numberHash(937, hashVal);
+    default:
+      return numberHash(617, hashVal);
+  }
+}
+__name(doHash, "doHash");
+function numberHash(val, initialHashVal) {
+  return (initialHashVal << 5) - initialHashVal + val | 0;
+}
+__name(numberHash, "numberHash");
+function booleanHash(b, initialHashVal) {
+  return numberHash(b ? 433 : 863, initialHashVal);
+}
+__name(booleanHash, "booleanHash");
+function stringHash(s, hashVal) {
+  hashVal = numberHash(149417, hashVal);
+  for (let i = 0, length = s.length; i < length; i++) {
+    hashVal = numberHash(s.charCodeAt(i), hashVal);
+  }
+  return hashVal;
+}
+__name(stringHash, "stringHash");
+function arrayHash(arr, initialHashVal) {
+  initialHashVal = numberHash(104579, initialHashVal);
+  return arr.reduce((hashVal, item) => doHash(item, hashVal), initialHashVal);
+}
+__name(arrayHash, "arrayHash");
+function objectHash(obj, initialHashVal) {
+  initialHashVal = numberHash(181387, initialHashVal);
+  return Object.keys(obj).sort().reduce((hashVal, key) => {
+    hashVal = stringHash(key, hashVal);
+    return doHash(obj[key], hashVal);
+  }, initialHashVal);
+}
+__name(objectHash, "objectHash");
+const hashAsync = /* @__PURE__ */ __name((input) => {
+  if (typeof input === "string" && input.length < 250) {
+    const sha = new StringSHA1();
+    sha.update(input);
+    return Promise.resolve(sha.digest());
+  }
+  let buff;
+  if (typeof input === "string") {
+    buff = new TextEncoder().encode(input);
+  } else if (input instanceof VSBuffer) {
+    buff = input.buffer;
+  } else {
+    buff = input;
+  }
+  return crypto.subtle.digest("sha-1", buff).then(toHexString);
+}, "hashAsync");
+var SHA1Constant;
+(function(SHA1Constant2) {
+  SHA1Constant2[SHA1Constant2["BLOCK_SIZE"] = 64] = "BLOCK_SIZE";
+  SHA1Constant2[SHA1Constant2["UNICODE_REPLACEMENT"] = 65533] = "UNICODE_REPLACEMENT";
+})(SHA1Constant || (SHA1Constant = {}));
+function leftRotate(value, bits, totalBits = 32) {
+  const delta = totalBits - bits;
+  const mask = ~((1 << delta) - 1);
+  return (value << bits | (mask & value) >>> delta) >>> 0;
+}
+__name(leftRotate, "leftRotate");
+function toHexString(bufferOrValue, bitsize = 32) {
+  if (bufferOrValue instanceof ArrayBuffer) {
+    return encodeHex(VSBuffer.wrap(new Uint8Array(bufferOrValue)));
+  }
+  return (bufferOrValue >>> 0).toString(16).padStart(bitsize / 4, "0");
+}
+__name(toHexString, "toHexString");
+class StringSHA1 {
+  static {
+    __name(this, "StringSHA1");
+  }
+  static {
+    this._bigBlock32 = new DataView(new ArrayBuffer(320));
+  }
+  // 80 * 4 = 320
+  constructor() {
+    this._h0 = 1732584193;
+    this._h1 = 4023233417;
+    this._h2 = 2562383102;
+    this._h3 = 271733878;
+    this._h4 = 3285377520;
+    this._buff = new Uint8Array(
+      64 + 3
+      /* to fit any utf-8 */
+    );
+    this._buffDV = new DataView(this._buff.buffer);
+    this._buffLen = 0;
+    this._totalLen = 0;
+    this._leftoverHighSurrogate = 0;
+    this._finished = false;
+  }
+  update(str) {
+    const strLen = str.length;
+    if (strLen === 0) {
+      return;
+    }
+    const buff = this._buff;
+    let buffLen = this._buffLen;
+    let leftoverHighSurrogate = this._leftoverHighSurrogate;
+    let charCode;
+    let offset;
+    if (leftoverHighSurrogate !== 0) {
+      charCode = leftoverHighSurrogate;
+      offset = -1;
+      leftoverHighSurrogate = 0;
+    } else {
+      charCode = str.charCodeAt(0);
+      offset = 0;
+    }
+    while (true) {
+      let codePoint = charCode;
+      if (strings.isHighSurrogate(charCode)) {
+        if (offset + 1 < strLen) {
+          const nextCharCode = str.charCodeAt(offset + 1);
+          if (strings.isLowSurrogate(nextCharCode)) {
+            offset++;
+            codePoint = strings.computeCodePoint(charCode, nextCharCode);
+          } else {
+            codePoint = 65533;
+          }
+        } else {
+          leftoverHighSurrogate = charCode;
+          break;
+        }
+      } else if (strings.isLowSurrogate(charCode)) {
+        codePoint = 65533;
+      }
+      buffLen = this._push(buff, buffLen, codePoint);
+      offset++;
+      if (offset < strLen) {
+        charCode = str.charCodeAt(offset);
+      } else {
+        break;
+      }
+    }
+    this._buffLen = buffLen;
+    this._leftoverHighSurrogate = leftoverHighSurrogate;
+  }
+  _push(buff, buffLen, codePoint) {
+    if (codePoint < 128) {
+      buff[buffLen++] = codePoint;
+    } else if (codePoint < 2048) {
+      buff[buffLen++] = 192 | (codePoint & 1984) >>> 6;
+      buff[buffLen++] = 128 | (codePoint & 63) >>> 0;
+    } else if (codePoint < 65536) {
+      buff[buffLen++] = 224 | (codePoint & 61440) >>> 12;
+      buff[buffLen++] = 128 | (codePoint & 4032) >>> 6;
+      buff[buffLen++] = 128 | (codePoint & 63) >>> 0;
+    } else {
+      buff[buffLen++] = 240 | (codePoint & 1835008) >>> 18;
+      buff[buffLen++] = 128 | (codePoint & 258048) >>> 12;
+      buff[buffLen++] = 128 | (codePoint & 4032) >>> 6;
+      buff[buffLen++] = 128 | (codePoint & 63) >>> 0;
+    }
+    if (buffLen >= 64) {
+      this._step();
+      buffLen -= 64;
+      this._totalLen += 64;
+      buff[0] = buff[64 + 0];
+      buff[1] = buff[64 + 1];
+      buff[2] = buff[64 + 2];
+    }
+    return buffLen;
+  }
+  digest() {
+    if (!this._finished) {
+      this._finished = true;
+      if (this._leftoverHighSurrogate) {
+        this._leftoverHighSurrogate = 0;
+        this._buffLen = this._push(
+          this._buff,
+          this._buffLen,
+          65533
+          /* SHA1Constant.UNICODE_REPLACEMENT */
+        );
+      }
+      this._totalLen += this._buffLen;
+      this._wrapUp();
+    }
+    return toHexString(this._h0) + toHexString(this._h1) + toHexString(this._h2) + toHexString(this._h3) + toHexString(this._h4);
+  }
+  _wrapUp() {
+    this._buff[this._buffLen++] = 128;
+    this._buff.subarray(this._buffLen).fill(0);
+    if (this._buffLen > 56) {
+      this._step();
+      this._buff.fill(0);
+    }
+    const ml = 8 * this._totalLen;
+    this._buffDV.setUint32(56, Math.floor(ml / 4294967296), false);
+    this._buffDV.setUint32(60, ml % 4294967296, false);
+    this._step();
+  }
+  _step() {
+    const bigBlock32 = StringSHA1._bigBlock32;
+    const data = this._buffDV;
+    for (let j = 0; j < 64; j += 4) {
+      bigBlock32.setUint32(j, data.getUint32(j, false), false);
+    }
+    for (let j = 64; j < 320; j += 4) {
+      bigBlock32.setUint32(j, leftRotate(bigBlock32.getUint32(j - 12, false) ^ bigBlock32.getUint32(j - 32, false) ^ bigBlock32.getUint32(j - 56, false) ^ bigBlock32.getUint32(j - 64, false), 1), false);
+    }
+    let a = this._h0;
+    let b = this._h1;
+    let c = this._h2;
+    let d = this._h3;
+    let e = this._h4;
+    let f, k;
+    let temp;
+    for (let j = 0; j < 80; j++) {
+      if (j < 20) {
+        f = b & c | ~b & d;
+        k = 1518500249;
+      } else if (j < 40) {
+        f = b ^ c ^ d;
+        k = 1859775393;
+      } else if (j < 60) {
+        f = b & c | b & d | c & d;
+        k = 2400959708;
+      } else {
+        f = b ^ c ^ d;
+        k = 3395469782;
+      }
+      temp = leftRotate(a, 5) + f + e + k + bigBlock32.getUint32(j * 4, false) & 4294967295;
+      e = d;
+      d = c;
+      c = leftRotate(b, 30);
+      b = a;
+      a = temp;
+    }
+    this._h0 = this._h0 + a & 4294967295;
+    this._h1 = this._h1 + b & 4294967295;
+    this._h2 = this._h2 + c & 4294967295;
+    this._h3 = this._h3 + d & 4294967295;
+    this._h4 = this._h4 + e & 4294967295;
+  }
+}
+export {
+  StringSHA1,
+  doHash,
+  hash,
+  hashAsync,
+  numberHash,
+  stringHash
+};
+//# sourceMappingURL=hash.js.map

@@ -1,1 +1,237 @@
-import{$Bb as r}from"../../../../base/common/errors.js";class e{static fromTo(t,s){return new e(t,s)}static addRange(t,s){let i=0;for(;i<s.length&&s[i].endExclusive<t.start;)i++;let n=i;for(;n<s.length&&s[n].start<=t.endExclusive;)n++;if(i===n)s.splice(i,0,t);else{const r=Math.min(t.start,s[i].start),a=Math.max(t.endExclusive,s[n-1].endExclusive);s.splice(i,n-i,new e(r,a))}}static tryCreate(t,s){if(!(t>s))return new e(t,s)}static ofLength(t){return new e(0,t)}static ofStartAndLength(t,s){return new e(t,t+s)}static emptyAt(t){return new e(t,t)}constructor(t,e){if(this.start=t,this.endExclusive=e,t>e)throw new r(`Invalid range: ${this.toString()}`)}get isEmpty(){return this.start===this.endExclusive}delta(t){return new e(this.start+t,this.endExclusive+t)}deltaStart(t){return new e(this.start+t,this.endExclusive)}deltaEnd(t){return new e(this.start,this.endExclusive+t)}get length(){return this.endExclusive-this.start}toString(){return`[${this.start}, ${this.endExclusive})`}equals(t){return this.start===t.start&&this.endExclusive===t.endExclusive}containsRange(t){return this.start<=t.start&&t.endExclusive<=this.endExclusive}contains(t){return this.start<=t&&t<this.endExclusive}join(t){return new e(Math.min(this.start,t.start),Math.max(this.endExclusive,t.endExclusive))}intersect(t){const s=Math.max(this.start,t.start),i=Math.min(this.endExclusive,t.endExclusive);if(s<=i)return new e(s,i)}intersectionLength(t){const e=Math.max(this.start,t.start),s=Math.min(this.endExclusive,t.endExclusive);return Math.max(0,s-e)}intersects(t){return Math.max(this.start,t.start)<Math.min(this.endExclusive,t.endExclusive)}intersectsOrTouches(t){return Math.max(this.start,t.start)<=Math.min(this.endExclusive,t.endExclusive)}isBefore(t){return this.endExclusive<=t.start}isAfter(t){return this.start>=t.endExclusive}slice(t){return t.slice(this.start,this.endExclusive)}substring(t){return t.substring(this.start,this.endExclusive)}clip(t){if(this.isEmpty)throw new r(`Invalid clipping range: ${this.toString()}`);return Math.max(this.start,Math.min(this.endExclusive-1,t))}clipCyclic(t){if(this.isEmpty)throw new r(`Invalid clipping range: ${this.toString()}`);return t<this.start?this.endExclusive-(this.start-t)%this.length:t>=this.endExclusive?this.start+(t-this.start)%this.length:t}map(t){const e=[];for(let s=this.start;s<this.endExclusive;s++)e.push(t(s));return e}forEach(t){for(let e=this.start;e<this.endExclusive;e++)t(e)}joinRightTouching(t){if(this.endExclusive!==t.start)throw new r(`Invalid join: ${this.toString()} and ${t.toString()}`);return new e(this.start,t.endExclusive)}}class a{constructor(){this.a=[]}get ranges(){return[...this.a]}addRange(t){let s=0;for(;s<this.a.length&&this.a[s].endExclusive<t.start;)s++;let i=s;for(;i<this.a.length&&this.a[i].start<=t.endExclusive;)i++;if(s===i)this.a.splice(s,0,t);else{const n=Math.min(t.start,this.a[s].start),r=Math.max(t.endExclusive,this.a[i-1].endExclusive);this.a.splice(s,i-s,new e(n,r))}}toString(){return this.a.map((t=>t.toString())).join(", ")}intersectsStrict(t){let e=0;for(;e<this.a.length&&this.a[e].endExclusive<=t.start;)e++;return e<this.a.length&&this.a[e].start<t.endExclusive}intersectWithRange(t){const e=new a;for(const s of this.a){const i=s.intersect(t);i&&e.addRange(i)}return e}intersectWithRangeLength(t){return this.intersectWithRange(t).length}get length(){return this.a.reduce(((t,e)=>t+e.length),0)}}export{e as $bD,a as $cD};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { BugIndicatingError } from "../../../../base/common/errors.js";
+class OffsetRange {
+  static {
+    __name(this, "OffsetRange");
+  }
+  static fromTo(start, endExclusive) {
+    return new OffsetRange(start, endExclusive);
+  }
+  static addRange(range, sortedRanges) {
+    let i = 0;
+    while (i < sortedRanges.length && sortedRanges[i].endExclusive < range.start) {
+      i++;
+    }
+    let j = i;
+    while (j < sortedRanges.length && sortedRanges[j].start <= range.endExclusive) {
+      j++;
+    }
+    if (i === j) {
+      sortedRanges.splice(i, 0, range);
+    } else {
+      const start = Math.min(range.start, sortedRanges[i].start);
+      const end = Math.max(range.endExclusive, sortedRanges[j - 1].endExclusive);
+      sortedRanges.splice(i, j - i, new OffsetRange(start, end));
+    }
+  }
+  static tryCreate(start, endExclusive) {
+    if (start > endExclusive) {
+      return void 0;
+    }
+    return new OffsetRange(start, endExclusive);
+  }
+  static ofLength(length) {
+    return new OffsetRange(0, length);
+  }
+  static ofStartAndLength(start, length) {
+    return new OffsetRange(start, start + length);
+  }
+  static emptyAt(offset) {
+    return new OffsetRange(offset, offset);
+  }
+  constructor(start, endExclusive) {
+    this.start = start;
+    this.endExclusive = endExclusive;
+    if (start > endExclusive) {
+      throw new BugIndicatingError(`Invalid range: ${this.toString()}`);
+    }
+  }
+  get isEmpty() {
+    return this.start === this.endExclusive;
+  }
+  delta(offset) {
+    return new OffsetRange(this.start + offset, this.endExclusive + offset);
+  }
+  deltaStart(offset) {
+    return new OffsetRange(this.start + offset, this.endExclusive);
+  }
+  deltaEnd(offset) {
+    return new OffsetRange(this.start, this.endExclusive + offset);
+  }
+  get length() {
+    return this.endExclusive - this.start;
+  }
+  toString() {
+    return `[${this.start}, ${this.endExclusive})`;
+  }
+  equals(other) {
+    return this.start === other.start && this.endExclusive === other.endExclusive;
+  }
+  containsRange(other) {
+    return this.start <= other.start && other.endExclusive <= this.endExclusive;
+  }
+  contains(offset) {
+    return this.start <= offset && offset < this.endExclusive;
+  }
+  /**
+   * for all numbers n: range1.contains(n) or range2.contains(n) => range1.join(range2).contains(n)
+   * The joined range is the smallest range that contains both ranges.
+   */
+  join(other) {
+    return new OffsetRange(Math.min(this.start, other.start), Math.max(this.endExclusive, other.endExclusive));
+  }
+  /**
+   * for all numbers n: range1.contains(n) and range2.contains(n) <=> range1.intersect(range2).contains(n)
+   *
+   * The resulting range is empty if the ranges do not intersect, but touch.
+   * If the ranges don't even touch, the result is undefined.
+   */
+  intersect(other) {
+    const start = Math.max(this.start, other.start);
+    const end = Math.min(this.endExclusive, other.endExclusive);
+    if (start <= end) {
+      return new OffsetRange(start, end);
+    }
+    return void 0;
+  }
+  intersectionLength(range) {
+    const start = Math.max(this.start, range.start);
+    const end = Math.min(this.endExclusive, range.endExclusive);
+    return Math.max(0, end - start);
+  }
+  intersects(other) {
+    const start = Math.max(this.start, other.start);
+    const end = Math.min(this.endExclusive, other.endExclusive);
+    return start < end;
+  }
+  intersectsOrTouches(other) {
+    const start = Math.max(this.start, other.start);
+    const end = Math.min(this.endExclusive, other.endExclusive);
+    return start <= end;
+  }
+  isBefore(other) {
+    return this.endExclusive <= other.start;
+  }
+  isAfter(other) {
+    return this.start >= other.endExclusive;
+  }
+  slice(arr) {
+    return arr.slice(this.start, this.endExclusive);
+  }
+  substring(str) {
+    return str.substring(this.start, this.endExclusive);
+  }
+  /**
+   * Returns the given value if it is contained in this instance, otherwise the closest value that is contained.
+   * The range must not be empty.
+   */
+  clip(value) {
+    if (this.isEmpty) {
+      throw new BugIndicatingError(`Invalid clipping range: ${this.toString()}`);
+    }
+    return Math.max(this.start, Math.min(this.endExclusive - 1, value));
+  }
+  /**
+   * Returns `r := value + k * length` such that `r` is contained in this range.
+   * The range must not be empty.
+   *
+   * E.g. `[5, 10).clipCyclic(10) === 5`, `[5, 10).clipCyclic(11) === 6` and `[5, 10).clipCyclic(4) === 9`.
+   */
+  clipCyclic(value) {
+    if (this.isEmpty) {
+      throw new BugIndicatingError(`Invalid clipping range: ${this.toString()}`);
+    }
+    if (value < this.start) {
+      return this.endExclusive - (this.start - value) % this.length;
+    }
+    if (value >= this.endExclusive) {
+      return this.start + (value - this.start) % this.length;
+    }
+    return value;
+  }
+  map(f) {
+    const result = [];
+    for (let i = this.start; i < this.endExclusive; i++) {
+      result.push(f(i));
+    }
+    return result;
+  }
+  forEach(f) {
+    for (let i = this.start; i < this.endExclusive; i++) {
+      f(i);
+    }
+  }
+  /**
+   * this: [ 5, 10), range: [10, 15) => [5, 15)]
+   * Throws if the ranges are not touching.
+  */
+  joinRightTouching(range) {
+    if (this.endExclusive !== range.start) {
+      throw new BugIndicatingError(`Invalid join: ${this.toString()} and ${range.toString()}`);
+    }
+    return new OffsetRange(this.start, range.endExclusive);
+  }
+}
+class OffsetRangeSet {
+  static {
+    __name(this, "OffsetRangeSet");
+  }
+  constructor() {
+    this._sortedRanges = [];
+  }
+  get ranges() {
+    return [...this._sortedRanges];
+  }
+  addRange(range) {
+    let i = 0;
+    while (i < this._sortedRanges.length && this._sortedRanges[i].endExclusive < range.start) {
+      i++;
+    }
+    let j = i;
+    while (j < this._sortedRanges.length && this._sortedRanges[j].start <= range.endExclusive) {
+      j++;
+    }
+    if (i === j) {
+      this._sortedRanges.splice(i, 0, range);
+    } else {
+      const start = Math.min(range.start, this._sortedRanges[i].start);
+      const end = Math.max(range.endExclusive, this._sortedRanges[j - 1].endExclusive);
+      this._sortedRanges.splice(i, j - i, new OffsetRange(start, end));
+    }
+  }
+  toString() {
+    return this._sortedRanges.map((r) => r.toString()).join(", ");
+  }
+  /**
+   * Returns of there is a value that is contained in this instance and the given range.
+   */
+  intersectsStrict(other) {
+    let i = 0;
+    while (i < this._sortedRanges.length && this._sortedRanges[i].endExclusive <= other.start) {
+      i++;
+    }
+    return i < this._sortedRanges.length && this._sortedRanges[i].start < other.endExclusive;
+  }
+  intersectWithRange(other) {
+    const result = new OffsetRangeSet();
+    for (const range of this._sortedRanges) {
+      const intersection = range.intersect(other);
+      if (intersection) {
+        result.addRange(intersection);
+      }
+    }
+    return result;
+  }
+  intersectWithRangeLength(other) {
+    return this.intersectWithRange(other).length;
+  }
+  get length() {
+    return this._sortedRanges.reduce((prev, cur) => prev + cur.length, 0);
+  }
+}
+export {
+  OffsetRange,
+  OffsetRangeSet
+};
+//# sourceMappingURL=offsetRange.js.map

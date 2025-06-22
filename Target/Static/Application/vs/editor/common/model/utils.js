@@ -1,1 +1,27 @@
-function c(e,t){let c=0,n=0;const o=e.length;for(;n<o;){const o=e.charCodeAt(n);if(32===o)c++;else{if(9!==o)break;c=c-c%t+t}n++}return n===o?-1:c}export{c as $JG};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+function computeIndentLevel(line, tabSize) {
+  let indent = 0;
+  let i = 0;
+  const len = line.length;
+  while (i < len) {
+    const chCode = line.charCodeAt(i);
+    if (chCode === 32) {
+      indent++;
+    } else if (chCode === 9) {
+      indent = indent - indent % tabSize + tabSize;
+    } else {
+      break;
+    }
+    i++;
+  }
+  if (i === len) {
+    return -1;
+  }
+  return indent;
+}
+__name(computeIndentLevel, "computeIndentLevel");
+export {
+  computeIndentLevel
+};
+//# sourceMappingURL=utils.js.map

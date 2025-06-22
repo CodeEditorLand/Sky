@@ -1,1 +1,343 @@
-import*as h from"../../../../../../base/browser/dom.js";import{$a8 as D}from"../../../../../../base/browser/ui/aria/aria.js";import{$vf as R}from"../../../../../../base/common/lazy.js";import{$vd as _}from"../../../../../../base/common/lifecycle.js";import*as W from"../../../../../../base/common/strings.js";import{$Tnb as E}from"../../../../../../editor/contrib/find/browser/findModel.js";import{$Enb as F}from"../../../../../../editor/contrib/find/browser/findState.js";import{$3nb as O,$4nb as w}from"../../../../../../editor/contrib/find/browser/findWidget.js";import{$8nb as P}from"../../../../../../editor/contrib/find/browser/findWidgetSearchHistory.js";import{$9nb as X}from"../../../../../../editor/contrib/find/browser/replaceWidgetHistory.js";import{localize as m}from"../../../../../../nls.js";import{$El as A}from"../../../../../../platform/configuration/common/configuration.js";import{$Vn as I}from"../../../../../../platform/contextkey/common/contextkey.js";import{$ofb as U,$nfb as x}from"../../../../../../platform/contextview/browser/contextView.js";import{$ngb as H}from"../../../../../../platform/hover/browser/hover.js";import{$mj as C}from"../../../../../../platform/instantiation/common/instantiation.js";import{$Ho as y}from"../../../../../../platform/storage/common/storage.js";import{$8Rb as B}from"./findModel.js";import{$Zbc as j}from"./notebookFindReplaceWidget.js";import{CellEditState as v}from"../../notebookBrowser.js";import{$vAb as q}from"../../../common/notebookContextKeys.js";var V=function(l,t,e,i){var o=arguments.length,s=o<3?t:i===null?i=Object.getOwnPropertyDescriptor(t,e):i,r;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")s=Reflect.decorate(l,t,e,i);else for(var c=l.length-1;c>=0;c--)(r=l[c])&&(s=(o<3?r(s):o>3?r(t,e,s):r(t,e))||s);return o>3&&s&&Object.defineProperty(t,e,s),s},a=function(l,t){return function(e,i){t(e,i,l)}};const f="find-hide-transition",b="find-show-transition";let u=69;const p=200;let N=class extends _{static{this.id="workbench.notebook.find"}constructor(t,e){super(),this.b=t,this.c=e,this.a=new R(()=>this.B(this.c.createInstance(g,this.b)))}get widget(){return this.a.value}show(t,e){return this.a.value.show(t,e)}hide(){this.a.rawValue?.hide()}replace(t){return this.a.value.replace(t)}};N=V([a(1,C)],N);let g=class extends j{constructor(t,e,i,o,s,r,c,M){const T=P.getOrCreate(M),$=X.getOrCreate(M);super(e,i,o,s,c,r,new F,t,T,$),this.Rb=!1,this.Sb=null,this.Tb=null,this.Vb=new B(this.ib,this.hb,this.eb),h.$M6(this.ib.getDomNode(),this.getDomNode()),this.Qb=q.bindTo(i),this.B(this.a.onKeyDown(n=>this.Wb(n))),this.B(this.I.onKeyDown(n=>this.Xb(n))),this.B(this.hb.onFindReplaceStateChange(n=>{if(this.nb(),n.isSearching&&(this.hb.isSearching?this.X.infinite().show(p):this.X.stop().hide()),this.Vb.currentMatch>=0){const d=this.Vb.getCurrentMatch();this.O.setEnabled(d.isModelMatch)}const S=this.Vb.findMatches;this.P.setEnabled(S.length>0&&S.find(d=>d.webviewMatches.length>0)===void 0),n.filters&&this.a.updateFilterState(this.hb.filters?.isModified()??!1)})),this.B(h.$J5(this.getDomNode(),h.$F6.FOCUS,n=>{this.Ub=h.$t6(n.relatedTarget)?n.relatedTarget:void 0},!0))}get findModel(){return this.Vb}get isFocused(){return this.Rb}Wb(t){if(t.equals(3)){this.ob(!1),t.preventDefault();return}else if(t.equals(1027)){this.ob(!0),t.preventDefault();return}}Xb(t){if(t.equals(3)){this.pb(),t.preventDefault();return}}nb(){this.hb.change({searchString:this.xb},!1);const t=this.Vb.findMatches;return!!(t&&t.length)}Zb(t){this.Vb.find({index:t})}ob(t){this.Vb.find({previous:t})}pb(){if(!this.ib.hasModel()||!this.Vb.findMatches.length)return;this.Vb.ensureFindMatches(),this.Vb.currentMatch<0&&this.Vb.find({previous:!1});const t=this.Vb.getCurrentMatch(),e=t.cell;if(t.isModelMatch){const i=t.match;this.X.infinite().show(p);const s=this.zb.buildReplaceString(i.matches,this.hb.preserveCase);this.ib.getViewModel().replaceOne(e,i.range,s).then(()=>{this.X.stop()})}}qb(){if(!this.ib.hasModel())return;this.X.infinite().show(p);const t=this.zb,e=this.Vb.findMatches,i=[];e.forEach(s=>{s.contentMatches.forEach(r=>{const c=r.matches;i.push(t.buildReplaceString(c,this.hb.preserveCase))})}),this.ib.getViewModel().replaceAll(this.Vb.findMatches,i).then(()=>{this.X.stop()})}cc(){}rb(){this.Qb.set(!0),this.Rb=!0}sb(){this.Ub=void 0,this.Qb.reset(),this.Rb=!1}vb(){}wb(){}tb(){}ub(){}async show(t,e){const i=this.hb.searchString!==t;super.show(t,e),this.hb.change({searchString:t??this.hb.searchString,isRevealed:!0},!1),typeof e?.matchIndex=="number"?(this.Vb.findMatches.length||await this.Vb.research(),this.Zb(e.matchIndex)):this.a.select(),!i&&e?.searchStringSeededFrom&&this.Vb.refreshCurrentMatch(e.searchStringSeededFrom),this.Sb===null&&(this.Tb!==null&&(h.getWindow(this.getDomNode()).clearTimeout(this.Tb),this.Tb=null,this.ib.removeClassName(f)),this.ib.addClassName(b),this.Sb=h.getWindow(this.getDomNode()).setTimeout(()=>{this.ib.removeClassName(b),this.Sb=null},200))}replace(t,e){super.showWithReplace(t,e),this.hb.change({searchString:t??"",replaceString:e??"",isRevealed:!0},!1),this.I.select(),this.Sb===null&&(this.Tb!==null&&(h.getWindow(this.getDomNode()).clearTimeout(this.Tb),this.Tb=null,this.ib.removeClassName(f)),this.ib.addClassName(b),this.Sb=h.getWindow(this.getDomNode()).setTimeout(()=>{this.ib.removeClassName(b),this.Sb=null},200))}hide(){if(super.hide(),this.hb.change({isRevealed:!1},!1),this.Vb.clear(),this.ib.findStop(),this.X.stop(),this.Tb===null&&(this.Sb!==null&&(h.getWindow(this.getDomNode()).clearTimeout(this.Sb),this.Sb=null,this.ib.removeClassName(b)),this.ib.addClassName(f),this.Tb=h.getWindow(this.getDomNode()).setTimeout(()=>{this.ib.removeClassName(f)},200)),this.Ub&&this.Ub.offsetParent&&(this.Ub.focus(),this.Ub=void 0),this.ib.hasModel())for(let t=0;t<this.ib.getLength();t++){const e=this.ib.cellAt(t);e.getEditState()===v.Editing&&e.editStateSource==="find"&&e.updateEditState(v.Preview,"closeFind")}}Gb(){if(!this.Vb||!this.Vb.findMatches)return;this.w.style.minWidth=u+"px",this.w.title="",this.w.firstChild?.remove();let t;if(this.hb.matchesCount>0){let e=String(this.hb.matchesCount);this.hb.matchesCount>=E&&(e+="+");const i=this.Vb.currentMatch<0?"?":String(this.Vb.currentMatch+1);t=W.$zf(O,i,e)}else t=w;this.w.appendChild(document.createTextNode(t)),D(this.kc(t,this.hb.currentMatch,this.hb.searchString)),u=Math.max(u,this.w.clientWidth)}kc(t,e,i){return t===w?i===""?m(9146,null,t):m(9147,null,t,i):m(9148,null,t,i)}dispose(){this.ib?.removeClassName(b),this.ib?.removeClassName(f),this.Vb.dispose(),super.dispose()}};g=V([a(1,x),a(2,I),a(3,A),a(4,U),a(5,H),a(6,C),a(7,y)],g);export{N as $Vbc};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import * as DOM from "../../../../../../base/browser/dom.js";
+import { alert as alertFn } from "../../../../../../base/browser/ui/aria/aria.js";
+import { Lazy } from "../../../../../../base/common/lazy.js";
+import { Disposable } from "../../../../../../base/common/lifecycle.js";
+import * as strings from "../../../../../../base/common/strings.js";
+import { MATCHES_LIMIT } from "../../../../../../editor/contrib/find/browser/findModel.js";
+import { FindReplaceState } from "../../../../../../editor/contrib/find/browser/findState.js";
+import { NLS_MATCHES_LOCATION, NLS_NO_RESULTS } from "../../../../../../editor/contrib/find/browser/findWidget.js";
+import { FindWidgetSearchHistory } from "../../../../../../editor/contrib/find/browser/findWidgetSearchHistory.js";
+import { ReplaceWidgetHistory } from "../../../../../../editor/contrib/find/browser/replaceWidgetHistory.js";
+import { localize } from "../../../../../../nls.js";
+import { IConfigurationService } from "../../../../../../platform/configuration/common/configuration.js";
+import { IContextKeyService } from "../../../../../../platform/contextkey/common/contextkey.js";
+import { IContextMenuService, IContextViewService } from "../../../../../../platform/contextview/browser/contextView.js";
+import { IHoverService } from "../../../../../../platform/hover/browser/hover.js";
+import { IInstantiationService } from "../../../../../../platform/instantiation/common/instantiation.js";
+import { IStorageService } from "../../../../../../platform/storage/common/storage.js";
+import { FindModel } from "./findModel.js";
+import { SimpleFindReplaceWidget } from "./notebookFindReplaceWidget.js";
+import { CellEditState } from "../../notebookBrowser.js";
+import { KEYBINDING_CONTEXT_NOTEBOOK_FIND_WIDGET_FOCUSED } from "../../../common/notebookContextKeys.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+const FIND_HIDE_TRANSITION = "find-hide-transition";
+const FIND_SHOW_TRANSITION = "find-show-transition";
+let MAX_MATCHES_COUNT_WIDTH = 69;
+const PROGRESS_BAR_DELAY = 200;
+let NotebookFindContrib = class NotebookFindContrib2 extends Disposable {
+  static {
+    __name(this, "NotebookFindContrib");
+  }
+  static {
+    this.id = "workbench.notebook.find";
+  }
+  constructor(notebookEditor, instantiationService) {
+    super();
+    this.notebookEditor = notebookEditor;
+    this.instantiationService = instantiationService;
+    this._widget = new Lazy(() => this._register(this.instantiationService.createInstance(NotebookFindWidget, this.notebookEditor)));
+  }
+  get widget() {
+    return this._widget.value;
+  }
+  show(initialInput, options) {
+    return this._widget.value.show(initialInput, options);
+  }
+  hide() {
+    this._widget.rawValue?.hide();
+  }
+  replace(searchString) {
+    return this._widget.value.replace(searchString);
+  }
+};
+NotebookFindContrib = __decorate([
+  __param(1, IInstantiationService)
+], NotebookFindContrib);
+let NotebookFindWidget = class NotebookFindWidget2 extends SimpleFindReplaceWidget {
+  static {
+    __name(this, "NotebookFindWidget");
+  }
+  constructor(_notebookEditor, contextViewService, contextKeyService, configurationService, contextMenuService, hoverService, instantiationService, storageService) {
+    const findSearchHistory = FindWidgetSearchHistory.getOrCreate(storageService);
+    const replaceHistory = ReplaceWidgetHistory.getOrCreate(storageService);
+    super(contextViewService, contextKeyService, configurationService, contextMenuService, instantiationService, hoverService, new FindReplaceState(), _notebookEditor, findSearchHistory, replaceHistory);
+    this._isFocused = false;
+    this._showTimeout = null;
+    this._hideTimeout = null;
+    this._findModel = new FindModel(this._notebookEditor, this._state, this._configurationService);
+    DOM.append(this._notebookEditor.getDomNode(), this.getDomNode());
+    this._findWidgetFocused = KEYBINDING_CONTEXT_NOTEBOOK_FIND_WIDGET_FOCUSED.bindTo(contextKeyService);
+    this._register(this._findInput.onKeyDown((e) => this._onFindInputKeyDown(e)));
+    this._register(this._replaceInput.onKeyDown((e) => this._onReplaceInputKeyDown(e)));
+    this._register(this._state.onFindReplaceStateChange((e) => {
+      this.onInputChanged();
+      if (e.isSearching) {
+        if (this._state.isSearching) {
+          this._progressBar.infinite().show(PROGRESS_BAR_DELAY);
+        } else {
+          this._progressBar.stop().hide();
+        }
+      }
+      if (this._findModel.currentMatch >= 0) {
+        const currentMatch = this._findModel.getCurrentMatch();
+        this._replaceBtn.setEnabled(currentMatch.isModelMatch);
+      }
+      const matches = this._findModel.findMatches;
+      this._replaceAllBtn.setEnabled(matches.length > 0 && matches.find((match) => match.webviewMatches.length > 0) === void 0);
+      if (e.filters) {
+        this._findInput.updateFilterState(this._state.filters?.isModified() ?? false);
+      }
+    }));
+    this._register(DOM.addDisposableListener(this.getDomNode(), DOM.EventType.FOCUS, (e) => {
+      this._previousFocusElement = DOM.isHTMLElement(e.relatedTarget) ? e.relatedTarget : void 0;
+    }, true));
+  }
+  get findModel() {
+    return this._findModel;
+  }
+  get isFocused() {
+    return this._isFocused;
+  }
+  _onFindInputKeyDown(e) {
+    if (e.equals(
+      3
+      /* KeyCode.Enter */
+    )) {
+      this.find(false);
+      e.preventDefault();
+      return;
+    } else if (e.equals(
+      1024 | 3
+      /* KeyCode.Enter */
+    )) {
+      this.find(true);
+      e.preventDefault();
+      return;
+    }
+  }
+  _onReplaceInputKeyDown(e) {
+    if (e.equals(
+      3
+      /* KeyCode.Enter */
+    )) {
+      this.replaceOne();
+      e.preventDefault();
+      return;
+    }
+  }
+  onInputChanged() {
+    this._state.change({ searchString: this.inputValue }, false);
+    const findMatches = this._findModel.findMatches;
+    if (findMatches && findMatches.length) {
+      return true;
+    }
+    return false;
+  }
+  findIndex(index) {
+    this._findModel.find({ index });
+  }
+  find(previous) {
+    this._findModel.find({ previous });
+  }
+  replaceOne() {
+    if (!this._notebookEditor.hasModel()) {
+      return;
+    }
+    if (!this._findModel.findMatches.length) {
+      return;
+    }
+    this._findModel.ensureFindMatches();
+    if (this._findModel.currentMatch < 0) {
+      this._findModel.find({ previous: false });
+    }
+    const currentMatch = this._findModel.getCurrentMatch();
+    const cell = currentMatch.cell;
+    if (currentMatch.isModelMatch) {
+      const match = currentMatch.match;
+      this._progressBar.infinite().show(PROGRESS_BAR_DELAY);
+      const replacePattern = this.replacePattern;
+      const replaceString = replacePattern.buildReplaceString(match.matches, this._state.preserveCase);
+      const viewModel = this._notebookEditor.getViewModel();
+      viewModel.replaceOne(cell, match.range, replaceString).then(() => {
+        this._progressBar.stop();
+      });
+    } else {
+      console.error("Replace does not work for output match");
+    }
+  }
+  replaceAll() {
+    if (!this._notebookEditor.hasModel()) {
+      return;
+    }
+    this._progressBar.infinite().show(PROGRESS_BAR_DELAY);
+    const replacePattern = this.replacePattern;
+    const cellFindMatches = this._findModel.findMatches;
+    const replaceStrings = [];
+    cellFindMatches.forEach((cellFindMatch) => {
+      cellFindMatch.contentMatches.forEach((match) => {
+        const matches = match.matches;
+        replaceStrings.push(replacePattern.buildReplaceString(matches, this._state.preserveCase));
+      });
+    });
+    const viewModel = this._notebookEditor.getViewModel();
+    viewModel.replaceAll(this._findModel.findMatches, replaceStrings).then(() => {
+      this._progressBar.stop();
+    });
+  }
+  findFirst() {
+  }
+  onFocusTrackerFocus() {
+    this._findWidgetFocused.set(true);
+    this._isFocused = true;
+  }
+  onFocusTrackerBlur() {
+    this._previousFocusElement = void 0;
+    this._findWidgetFocused.reset();
+    this._isFocused = false;
+  }
+  onReplaceInputFocusTrackerFocus() {
+  }
+  onReplaceInputFocusTrackerBlur() {
+  }
+  onFindInputFocusTrackerFocus() {
+  }
+  onFindInputFocusTrackerBlur() {
+  }
+  async show(initialInput, options) {
+    const searchStringUpdate = this._state.searchString !== initialInput;
+    super.show(initialInput, options);
+    this._state.change({ searchString: initialInput ?? this._state.searchString, isRevealed: true }, false);
+    if (typeof options?.matchIndex === "number") {
+      if (!this._findModel.findMatches.length) {
+        await this._findModel.research();
+      }
+      this.findIndex(options.matchIndex);
+    } else {
+      this._findInput.select();
+    }
+    if (!searchStringUpdate && options?.searchStringSeededFrom) {
+      this._findModel.refreshCurrentMatch(options.searchStringSeededFrom);
+    }
+    if (this._showTimeout === null) {
+      if (this._hideTimeout !== null) {
+        DOM.getWindow(this.getDomNode()).clearTimeout(this._hideTimeout);
+        this._hideTimeout = null;
+        this._notebookEditor.removeClassName(FIND_HIDE_TRANSITION);
+      }
+      this._notebookEditor.addClassName(FIND_SHOW_TRANSITION);
+      this._showTimeout = DOM.getWindow(this.getDomNode()).setTimeout(() => {
+        this._notebookEditor.removeClassName(FIND_SHOW_TRANSITION);
+        this._showTimeout = null;
+      }, 200);
+    } else {
+    }
+  }
+  replace(initialFindInput, initialReplaceInput) {
+    super.showWithReplace(initialFindInput, initialReplaceInput);
+    this._state.change({ searchString: initialFindInput ?? "", replaceString: initialReplaceInput ?? "", isRevealed: true }, false);
+    this._replaceInput.select();
+    if (this._showTimeout === null) {
+      if (this._hideTimeout !== null) {
+        DOM.getWindow(this.getDomNode()).clearTimeout(this._hideTimeout);
+        this._hideTimeout = null;
+        this._notebookEditor.removeClassName(FIND_HIDE_TRANSITION);
+      }
+      this._notebookEditor.addClassName(FIND_SHOW_TRANSITION);
+      this._showTimeout = DOM.getWindow(this.getDomNode()).setTimeout(() => {
+        this._notebookEditor.removeClassName(FIND_SHOW_TRANSITION);
+        this._showTimeout = null;
+      }, 200);
+    } else {
+    }
+  }
+  hide() {
+    super.hide();
+    this._state.change({ isRevealed: false }, false);
+    this._findModel.clear();
+    this._notebookEditor.findStop();
+    this._progressBar.stop();
+    if (this._hideTimeout === null) {
+      if (this._showTimeout !== null) {
+        DOM.getWindow(this.getDomNode()).clearTimeout(this._showTimeout);
+        this._showTimeout = null;
+        this._notebookEditor.removeClassName(FIND_SHOW_TRANSITION);
+      }
+      this._notebookEditor.addClassName(FIND_HIDE_TRANSITION);
+      this._hideTimeout = DOM.getWindow(this.getDomNode()).setTimeout(() => {
+        this._notebookEditor.removeClassName(FIND_HIDE_TRANSITION);
+      }, 200);
+    } else {
+    }
+    if (this._previousFocusElement && this._previousFocusElement.offsetParent) {
+      this._previousFocusElement.focus();
+      this._previousFocusElement = void 0;
+    }
+    if (this._notebookEditor.hasModel()) {
+      for (let i = 0; i < this._notebookEditor.getLength(); i++) {
+        const cell = this._notebookEditor.cellAt(i);
+        if (cell.getEditState() === CellEditState.Editing && cell.editStateSource === "find") {
+          cell.updateEditState(CellEditState.Preview, "closeFind");
+        }
+      }
+    }
+  }
+  _updateMatchesCount() {
+    if (!this._findModel || !this._findModel.findMatches) {
+      return;
+    }
+    this._matchesCount.style.minWidth = MAX_MATCHES_COUNT_WIDTH + "px";
+    this._matchesCount.title = "";
+    this._matchesCount.firstChild?.remove();
+    let label;
+    if (this._state.matchesCount > 0) {
+      let matchesCount = String(this._state.matchesCount);
+      if (this._state.matchesCount >= MATCHES_LIMIT) {
+        matchesCount += "+";
+      }
+      const matchesPosition = this._findModel.currentMatch < 0 ? "?" : String(this._findModel.currentMatch + 1);
+      label = strings.format(NLS_MATCHES_LOCATION, matchesPosition, matchesCount);
+    } else {
+      label = NLS_NO_RESULTS;
+    }
+    this._matchesCount.appendChild(document.createTextNode(label));
+    alertFn(this._getAriaLabel(label, this._state.currentMatch, this._state.searchString));
+    MAX_MATCHES_COUNT_WIDTH = Math.max(MAX_MATCHES_COUNT_WIDTH, this._matchesCount.clientWidth);
+  }
+  _getAriaLabel(label, currentMatch, searchString) {
+    if (label === NLS_NO_RESULTS) {
+      return searchString === "" ? localize("ariaSearchNoResultEmpty", "{0} found", label) : localize("ariaSearchNoResult", "{0} found for '{1}'", label, searchString);
+    }
+    return localize("ariaSearchNoResultWithLineNumNoCurrentMatch", "{0} found for '{1}'", label, searchString);
+  }
+  dispose() {
+    this._notebookEditor?.removeClassName(FIND_SHOW_TRANSITION);
+    this._notebookEditor?.removeClassName(FIND_HIDE_TRANSITION);
+    this._findModel.dispose();
+    super.dispose();
+  }
+};
+NotebookFindWidget = __decorate([
+  __param(1, IContextViewService),
+  __param(2, IContextKeyService),
+  __param(3, IConfigurationService),
+  __param(4, IContextMenuService),
+  __param(5, IHoverService),
+  __param(6, IInstantiationService),
+  __param(7, IStorageService)
+], NotebookFindWidget);
+export {
+  NotebookFindContrib
+};
+//# sourceMappingURL=notebookFindWidget.js.map

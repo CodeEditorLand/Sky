@@ -1,1 +1,23 @@
-class i{constructor(){this.a=[],this.add=s=>{this.a.push(s)}}take(s,t){this.add=a=>t.createInstance(a,s),this.a.forEach(this.add),this.a=[]}}const c=new i;export{c as $b1b};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+class UserActivityRegistry {
+  static {
+    __name(this, "UserActivityRegistry");
+  }
+  constructor() {
+    this.todo = [];
+    this.add = (ctor) => {
+      this.todo.push(ctor);
+    };
+  }
+  take(userActivityService, instantiation) {
+    this.add = (ctor) => instantiation.createInstance(ctor, userActivityService);
+    this.todo.forEach(this.add);
+    this.todo = [];
+  }
+}
+const userActivityRegistry = new UserActivityRegistry();
+export {
+  userActivityRegistry
+};
+//# sourceMappingURL=userActivityRegistry.js.map

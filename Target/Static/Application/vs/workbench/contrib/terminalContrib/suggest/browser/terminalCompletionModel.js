@@ -1,1 +1,166 @@
-import{$m as f}from"../../../../../base/common/platform.js";import{$Ef as u}from"../../../../../base/common/strings.js";import{$itc as k}from"../../../../services/suggest/browser/simpleCompletionModel.js";import{TerminalCompletionItemKind as i}from"./terminalCompletionItem.js";class P extends k{constructor(i,e){super(i,e,h)}}const h=(e,o,l)=>{if(o.completion.kind===i.InlineSuggestionAlwaysOnTop&&o.completion.kind!==l.completion.kind)return-1;if(l.completion.kind===i.InlineSuggestionAlwaysOnTop&&o.completion.kind!==l.completion.kind)return 1;const n="python",t=o.completion.provider.includes(n),m=l.completion.provider.includes(n);if(t&&!m)return-1;if(m&&!t)return 1;let r=l.score[0]-o.score[0];if(0!==r)return r;if(o.completion.kind===i.InlineSuggestion&&o.completion.kind!==l.completion.kind)return-1;if(l.completion.kind===i.InlineSuggestion&&o.completion.kind!==l.completion.kind)return 1;if(o.punctuationPenalty!==l.punctuationPenalty)return o.punctuationPenalty-l.punctuationPenalty;if(!e.includes(" ")&&o.completion.kind===i.File&&l.completion.kind===i.File){if(o.labelLowExcludeFileExt!==l.labelLowExcludeFileExt)return o.labelLowExcludeFileExt.localeCompare(l.labelLowExcludeFileExt,void 0,{ignorePunctuation:!0});if(r=o.labelLowExcludeFileExt.length-l.labelLowExcludeFileExt.length,0!==r||(r=a(l.fileExtLow)-a(o.fileExtLow),0!==r)||(r=o.fileExtLow.length-l.fileExtLow.length,0!==r))return r}if(o.completion.kind===i.Argument&&l.completion.kind===i.Argument&&/^\s*git\b/.test(e)){const i="string"==typeof o.completion.label?o.completion.label:o.completion.label.label,e="string"==typeof l.completion.label?l.completion.label:l.completion.label.label,n="main"===i||"master"===i,t="main"===e||"master"===e;if(n&&!t)return-1;if(t&&!n)return 1}if(o.completion.kind===i.Method&&l.completion.kind===i.Method&&("string"!=typeof o.completion.label&&o.completion.label.description&&"string"!=typeof l.completion.label&&l.completion.label.description?r=0:"string"!=typeof o.completion.label&&o.completion.label.description?r=-2:"string"!=typeof l.completion.label&&l.completion.label.description&&(r=2),r+=(l.completion.detail?1:0)+(l.completion.documentation?2:0)-(o.completion.detail?1:0)-(o.completion.documentation?2:0),0!==r))return r;if(o.completion.kind===i.Folder&&l.completion.kind===i.Folder&&o.labelLowNormalizedPath&&l.labelLowNormalizedPath){if(r=u(o.labelLowNormalizedPath,"/")-u(l.labelLowNormalizedPath,"/"),0!==r)return r;if(l.labelLowNormalizedPath.startsWith(o.labelLowNormalizedPath))return-1;if(o.labelLowNormalizedPath.startsWith(l.labelLowNormalizedPath))return 1}if(o.completion.kind!==l.completion.kind){if((o.completion.kind===i.Method||o.completion.kind===i.Alias)&&l.completion.kind!==i.Method&&l.completion.kind!==i.Alias)return-1;if((l.completion.kind===i.Method||l.completion.kind===i.Alias)&&o.completion.kind!==i.Method&&o.completion.kind!==i.Alias||(o.completion.kind===i.File||o.completion.kind===i.Folder)&&l.completion.kind!==i.File&&l.completion.kind!==i.Folder)return 1;if((l.completion.kind===i.File||l.completion.kind===i.Folder)&&o.completion.kind!==i.File&&o.completion.kind!==i.Folder)return-1}return o.labelLow.localeCompare(l.labelLow,void 0,{ignorePunctuation:!0})},g=new Map(f?[["ps1",.09],["exe",.08],["bat",.07],["cmd",.07],["msi",.06],["com",.06],["sh",-.05],["bash",-.05],["zsh",-.05],["fish",-.05],["csh",-.06],["ksh",-.06]]:[["ps1",.05],["bat",-.05],["cmd",-.05],["exe",-.05],["sh",.05],["bash",.05],["zsh",.05],["fish",.05],["csh",.04],["ksh",.04],["py",.05],["pl",.05]]);function a(i){return g.get(i)||0}export{P as $rtc};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { isWindows } from "../../../../../base/common/platform.js";
+import { count } from "../../../../../base/common/strings.js";
+import { SimpleCompletionModel } from "../../../../services/suggest/browser/simpleCompletionModel.js";
+import { TerminalCompletionItemKind } from "./terminalCompletionItem.js";
+class TerminalCompletionModel extends SimpleCompletionModel {
+  static {
+    __name(this, "TerminalCompletionModel");
+  }
+  constructor(items, lineContext) {
+    super(items, lineContext, compareCompletionsFn);
+  }
+}
+const compareCompletionsFn = /* @__PURE__ */ __name((leadingLineContent, a, b) => {
+  if (a.completion.kind === TerminalCompletionItemKind.InlineSuggestionAlwaysOnTop && a.completion.kind !== b.completion.kind) {
+    return -1;
+  }
+  if (b.completion.kind === TerminalCompletionItemKind.InlineSuggestionAlwaysOnTop && a.completion.kind !== b.completion.kind) {
+    return 1;
+  }
+  const lspProviderId = "python";
+  const aIsLsp = a.completion.provider.includes(lspProviderId);
+  const bIsLsp = b.completion.provider.includes(lspProviderId);
+  if (aIsLsp && !bIsLsp) {
+    return -1;
+  }
+  if (bIsLsp && !aIsLsp) {
+    return 1;
+  }
+  let score = b.score[0] - a.score[0];
+  if (score !== 0) {
+    return score;
+  }
+  if (a.completion.kind === TerminalCompletionItemKind.InlineSuggestion && a.completion.kind !== b.completion.kind) {
+    return -1;
+  }
+  if (b.completion.kind === TerminalCompletionItemKind.InlineSuggestion && a.completion.kind !== b.completion.kind) {
+    return 1;
+  }
+  if (a.punctuationPenalty !== b.punctuationPenalty) {
+    return a.punctuationPenalty - b.punctuationPenalty;
+  }
+  const isArg = leadingLineContent.includes(" ");
+  if (!isArg && a.completion.kind === TerminalCompletionItemKind.File && b.completion.kind === TerminalCompletionItemKind.File) {
+    if (a.labelLowExcludeFileExt !== b.labelLowExcludeFileExt) {
+      return a.labelLowExcludeFileExt.localeCompare(b.labelLowExcludeFileExt, void 0, { ignorePunctuation: true });
+    }
+    score = a.labelLowExcludeFileExt.length - b.labelLowExcludeFileExt.length;
+    if (score !== 0) {
+      return score;
+    }
+    score = fileExtScore(b.fileExtLow) - fileExtScore(a.fileExtLow);
+    if (score !== 0) {
+      return score;
+    }
+    score = a.fileExtLow.length - b.fileExtLow.length;
+    if (score !== 0) {
+      return score;
+    }
+  }
+  if (a.completion.kind === TerminalCompletionItemKind.Argument && b.completion.kind === TerminalCompletionItemKind.Argument && /^\s*git\b/.test(leadingLineContent)) {
+    const aLabel = typeof a.completion.label === "string" ? a.completion.label : a.completion.label.label;
+    const bLabel = typeof b.completion.label === "string" ? b.completion.label : b.completion.label.label;
+    const aIsMainOrMaster = aLabel === "main" || aLabel === "master";
+    const bIsMainOrMaster = bLabel === "main" || bLabel === "master";
+    if (aIsMainOrMaster && !bIsMainOrMaster) {
+      return -1;
+    }
+    if (bIsMainOrMaster && !aIsMainOrMaster) {
+      return 1;
+    }
+  }
+  if (a.completion.kind === TerminalCompletionItemKind.Method && b.completion.kind === TerminalCompletionItemKind.Method) {
+    if (typeof a.completion.label !== "string" && a.completion.label.description && typeof b.completion.label !== "string" && b.completion.label.description) {
+      score = 0;
+    } else if (typeof a.completion.label !== "string" && a.completion.label.description) {
+      score = -2;
+    } else if (typeof b.completion.label !== "string" && b.completion.label.description) {
+      score = 2;
+    }
+    score += (b.completion.detail ? 1 : 0) + (b.completion.documentation ? 2 : 0) - (a.completion.detail ? 1 : 0) - (a.completion.documentation ? 2 : 0);
+    if (score !== 0) {
+      return score;
+    }
+  }
+  if (a.completion.kind === TerminalCompletionItemKind.Folder && b.completion.kind === TerminalCompletionItemKind.Folder) {
+    if (a.labelLowNormalizedPath && b.labelLowNormalizedPath) {
+      score = count(a.labelLowNormalizedPath, "/") - count(b.labelLowNormalizedPath, "/");
+      if (score !== 0) {
+        return score;
+      }
+      if (b.labelLowNormalizedPath.startsWith(a.labelLowNormalizedPath)) {
+        return -1;
+      }
+      if (a.labelLowNormalizedPath.startsWith(b.labelLowNormalizedPath)) {
+        return 1;
+      }
+    }
+  }
+  if (a.completion.kind !== b.completion.kind) {
+    if ((a.completion.kind === TerminalCompletionItemKind.Method || a.completion.kind === TerminalCompletionItemKind.Alias) && (b.completion.kind !== TerminalCompletionItemKind.Method && b.completion.kind !== TerminalCompletionItemKind.Alias)) {
+      return -1;
+    }
+    if ((b.completion.kind === TerminalCompletionItemKind.Method || b.completion.kind === TerminalCompletionItemKind.Alias) && (a.completion.kind !== TerminalCompletionItemKind.Method && a.completion.kind !== TerminalCompletionItemKind.Alias)) {
+      return 1;
+    }
+    if ((a.completion.kind === TerminalCompletionItemKind.File || a.completion.kind === TerminalCompletionItemKind.Folder) && (b.completion.kind !== TerminalCompletionItemKind.File && b.completion.kind !== TerminalCompletionItemKind.Folder)) {
+      return 1;
+    }
+    if ((b.completion.kind === TerminalCompletionItemKind.File || b.completion.kind === TerminalCompletionItemKind.Folder) && (a.completion.kind !== TerminalCompletionItemKind.File && a.completion.kind !== TerminalCompletionItemKind.Folder)) {
+      return -1;
+    }
+  }
+  return a.labelLow.localeCompare(b.labelLow, void 0, { ignorePunctuation: true });
+}, "compareCompletionsFn");
+const fileExtScores = new Map(isWindows ? [
+  // Windows - .ps1 > .exe > .bat > .cmd. This is the command precedence when running the files
+  //           without an extension, tested manually in pwsh v7.4.4
+  ["ps1", 0.09],
+  ["exe", 0.08],
+  ["bat", 0.07],
+  ["cmd", 0.07],
+  ["msi", 0.06],
+  ["com", 0.06],
+  // Non-Windows
+  ["sh", -0.05],
+  ["bash", -0.05],
+  ["zsh", -0.05],
+  ["fish", -0.05],
+  ["csh", -0.06],
+  // C shell
+  ["ksh", -0.06]
+  // Korn shell
+  // Scripting language files are excluded here as the standard behavior on Windows will just open
+  // the file in a text editor, not run the file
+] : [
+  // Pwsh
+  ["ps1", 0.05],
+  // Windows
+  ["bat", -0.05],
+  ["cmd", -0.05],
+  ["exe", -0.05],
+  // Non-Windows
+  ["sh", 0.05],
+  ["bash", 0.05],
+  ["zsh", 0.05],
+  ["fish", 0.05],
+  ["csh", 0.04],
+  // C shell
+  ["ksh", 0.04],
+  // Korn shell
+  // Scripting languages
+  ["py", 0.05],
+  // Python
+  ["pl", 0.05]
+  // Perl
+]);
+function fileExtScore(ext) {
+  return fileExtScores.get(ext) || 0;
+}
+__name(fileExtScore, "fileExtScore");
+export {
+  TerminalCompletionModel
+};
+//# sourceMappingURL=terminalCompletionModel.js.map

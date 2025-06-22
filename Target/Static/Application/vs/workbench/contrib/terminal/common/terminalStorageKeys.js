@@ -1,1 +1,17 @@
-var e;!function(e){e.SuggestedRendererType="terminal.integrated.suggestedRendererType",e.TabsListWidthHorizontal="tabs-list-width-horizontal",e.TabsListWidthVertical="tabs-list-width-vertical",e.TabsShowDetailed="terminal.integrated.tabs.showDetailed",e.DeprecatedEnvironmentVariableCollections="terminal.integrated.environmentVariableCollections",e.EnvironmentVariableCollections="terminal.integrated.environmentVariableCollectionsV2",e.TerminalBufferState="terminal.integrated.bufferState",e.TerminalLayoutInfo="terminal.integrated.layoutInfo",e.PinnedRecentCommandsPrefix="terminal.pinnedRecentCommands",e.TerminalSuggestSize="terminal.integrated.suggestSize"}(e||(e={}));export{e as TerminalStorageKeys};
+var TerminalStorageKeys;
+(function(TerminalStorageKeys2) {
+  TerminalStorageKeys2["SuggestedRendererType"] = "terminal.integrated.suggestedRendererType";
+  TerminalStorageKeys2["TabsListWidthHorizontal"] = "tabs-list-width-horizontal";
+  TerminalStorageKeys2["TabsListWidthVertical"] = "tabs-list-width-vertical";
+  TerminalStorageKeys2["TabsShowDetailed"] = "terminal.integrated.tabs.showDetailed";
+  TerminalStorageKeys2["DeprecatedEnvironmentVariableCollections"] = "terminal.integrated.environmentVariableCollections";
+  TerminalStorageKeys2["EnvironmentVariableCollections"] = "terminal.integrated.environmentVariableCollectionsV2";
+  TerminalStorageKeys2["TerminalBufferState"] = "terminal.integrated.bufferState";
+  TerminalStorageKeys2["TerminalLayoutInfo"] = "terminal.integrated.layoutInfo";
+  TerminalStorageKeys2["PinnedRecentCommandsPrefix"] = "terminal.pinnedRecentCommands";
+  TerminalStorageKeys2["TerminalSuggestSize"] = "terminal.integrated.suggestSize";
+})(TerminalStorageKeys || (TerminalStorageKeys = {}));
+export {
+  TerminalStorageKeys
+};
+//# sourceMappingURL=terminalStorageKeys.js.map

@@ -1,1 +1,698 @@
-import{$wh as W,$Eh as H}from"../../../base/common/async.js";import{$Ji as C}from"../../../base/common/buffer.js";import{CancellationToken as w,$pf as M}from"../../../base/common/cancellation.js";import{$pb as B,$kb as U}from"../../../base/common/errors.js";import{$df as _}from"../../../base/common/event.js";import{$vd as V,$ud as G,$td as J}from"../../../base/common/lifecycle.js";import{$1g as z}from"../../../base/common/network.js";import*as f from"../../../base/common/performance.js";import{$0e as X}from"../../../base/common/stopwatch.js";import{$Rm as k}from"../../../base/common/uuid.js";import{$Nm as K,$Pm as Y}from"../../../base/parts/ipc/common/ipc.net.js";import{$iB as m}from"./remoteAuthorityResolver.js";const Q=30*1e3;var O;(function(e){e[e.Management=1]="Management",e[e.ExtensionHost=2]="ExtensionHost",e[e.Tunnel=3]="Tunnel"})(O||(O={}));function p(e){switch(e){case 1:return"Management";case 2:return"ExtensionHost";case 3:return"Tunnel"}}function N(e){const t=new M;return setTimeout(()=>t.cancel(),e),t.token}function Z(e,t){if(e.isCancellationRequested||t.isCancellationRequested)return w.Cancelled;const r=new M;return e.onCancellationRequested(()=>r.cancel()),t.onCancellationRequested(()=>r.cancel()),r.token}class ${get didTimeout(){return this.c==="timedout"}constructor(t){this.c="pending",this.d=new G,{promise:this.promise,resolve:this.f,reject:this.g}=H(),t.isCancellationRequested?this.h():this.d.add(t.onCancellationRequested(()=>this.h()))}registerDisposable(t){this.c==="pending"?this.d.add(t):t.dispose()}h(){this.c==="pending"&&(this.d.dispose(),this.c="timedout",this.g(this.i()))}i(){const t=new Error("Time limit reached");return t.code="ETIMEDOUT",t.syscall="connect",t}resolve(t){this.c==="pending"&&(this.d.dispose(),this.c="resolved",this.f(t))}reject(t){this.c==="pending"&&(this.d.dispose(),this.c="rejected",this.g(t))}}function ee(e,t){const r=new $(t);return r.registerDisposable(e.onControlMessage(n=>{const o=JSON.parse(n.toString()),i=L(o);i?r.reject(i):r.resolve(o)})),r.promise}function te(e,t,r,n,o,i,c,a){const l=new $(a),u=X.create(!1);return e.info(`Creating a socket (${c})...`),f.$T(`code/willCreateSocket/${i}`),t.connect(r,n,o,c).then(s=>{l.didTimeout?(f.$T(`code/didCreateSocketError/${i}`),e.info(`Creating a socket (${c}) finished after ${u.elapsed()} ms, but this is too late and has timed out already.`),s?.dispose()):(f.$T(`code/didCreateSocketOK/${i}`),e.info(`Creating a socket (${c}) was successful after ${u.elapsed()} ms.`),l.resolve(s))},s=>{f.$T(`code/didCreateSocketError/${i}`),e.info(`Creating a socket (${c}) returned an error after ${u.elapsed()} ms.`),e.error(s),l.reject(s)}),l.promise}function v(e,t){const r=new $(t);return e.then(n=>{r.didTimeout||r.resolve(n)},n=>{r.didTimeout||r.reject(n)}),r.promise}async function P(e,t,r,n){const o=R(e,t);e.logService.trace(`${o} 1/6. invoking socketFactory.connect().`);let i;try{i=await te(e.logService,e.remoteSocketFactoryService,e.connectTo,z.getServerRootPath(),`reconnectionToken=${e.reconnectionToken}&reconnection=${e.reconnectionProtocol?"true":"false"}`,p(t),`renderer-${p(t)}-${e.reconnectionToken}`,n)}catch(s){throw e.logService.error(`${o} socketFactory.connect() failed or timed out. Error:`),e.logService.error(s),s}e.logService.trace(`${o} 2/6. socketFactory.connect() was successful.`);let c,a;e.reconnectionProtocol?(e.reconnectionProtocol.beginAcceptReconnection(i,null),c=e.reconnectionProtocol,a=!1):(c=new Y({socket:i}),a=!0),e.logService.trace(`${o} 3/6. sending AuthRequest control message.`);const l=await v(e.signService.createNewMessage(k()),n),u={type:"auth",auth:e.connectionToken||"00000000000000000000",data:l.data};c.sendControl(C.fromString(JSON.stringify(u)));try{const s=await ee(c,Z(n,N(1e4)));if(s.type!=="sign"||typeof s.data!="string"){const g=new Error("Unexpected handshake message");throw g.code="VSCODE_CONNECTION_ERROR",g}if(e.logService.trace(`${o} 4/6. received SignRequest control message.`),!await v(e.signService.validate(l,s.signedData),n)){const g=new Error("Refused to connect to unsupported server");throw g.code="VSCODE_CONNECTION_ERROR",g}const q=await v(e.signService.sign(s.data),n),y={type:"connectionType",commit:e.commit,signedData:q,desiredConnectionType:t};return r&&(y.args=r),e.logService.trace(`${o} 5/6. sending ConnectionTypeRequest control message.`),c.sendControl(C.fromString(JSON.stringify(y))),{protocol:c,ownsProtocol:a}}catch(s){throw s&&s.code==="ETIMEDOUT"&&(e.logService.error(`${o} the handshake timed out. Error:`),e.logService.error(s)),s&&s.code==="VSCODE_CONNECTION_ERROR"&&(e.logService.error(`${o} received error control message when negotiating connection. Error:`),e.logService.error(s)),a&&E(c),s}}async function A(e,t,r,n){const o=Date.now(),i=R(e,t),{protocol:c,ownsProtocol:a}=await P(e,t,r,n),l=new $(n);return l.registerDisposable(c.onControlMessage(u=>{const s=JSON.parse(u.toString()),d=L(s);d?(e.logService.error(`${i} received error control message when negotiating connection. Error:`),e.logService.error(d),a&&E(c),l.reject(d)):(e.reconnectionProtocol?.endAcceptReconnection(),e.logService.trace(`${i} 6/6. handshake finished, connection is up and running after ${j(o)}!`),l.resolve({protocol:c,firstMessage:s}))})),l.promise}async function I(e,t){const{protocol:r}=await A(e,1,void 0,t);return{protocol:r}}async function F(e,t,r){const{protocol:n,firstMessage:o}=await A(e,2,t,r),i=o&&o.debugPort;return{protocol:n,debugPort:i}}async function re(e,t,r){const n=Date.now(),o=R(e,3),{protocol:i}=await P(e,3,t,r);return e.logService.trace(`${o} 6/6. handshake finished, connection is up and running after ${j(n)}!`),i}async function T(e,t,r){const{connectTo:n,connectionToken:o}=await e.addressProvider.getAddress();return{commit:e.commit,quality:e.quality,connectTo:n,connectionToken:o,reconnectionToken:t,reconnectionProtocol:r,remoteSocketFactoryService:e.remoteSocketFactoryService,signService:e.signService,logService:e.logService}}async function Ee(e,t,r){return b(e,async n=>{const{protocol:o}=await I(n,w.None);return new ae(e,t,r,n.reconnectionToken,o)})}async function Re(e,t){return b(e,async r=>{const{protocol:n,debugPort:o}=await F(r,t,w.None);return new le(e,t,r.reconnectionToken,n,o)})}async function b(e,t){for(let n=1;;n++)try{const o=k(),i=await T(e,o,null);return await t(i)}catch(o){if(n<5)e.logService.error(`[remote-connection][attempt ${n}] An error occurred in initial connection! Will retry... Error:`),e.logService.error(o);else throw e.logService.error(`[remote-connection][attempt ${n}]  An error occurred in initial connection! It will be treated as a permanent error. Error:`),e.logService.error(o),h.triggerPermanentFailure(0,0,m.isHandled(o)),o}}async function ye(e,t,r){const n=await T(e,k(),null);return await re(n,{host:t,port:r},w.None)}function ne(e){return W(t=>new Promise((r,n)=>{const o=setTimeout(r,e*1e3);t.onCancellationRequested(()=>{clearTimeout(o),r()})}))}var D;(function(e){e[e.ConnectionLost=0]="ConnectionLost",e[e.ReconnectionWait=1]="ReconnectionWait",e[e.ReconnectionRunning=2]="ReconnectionRunning",e[e.ReconnectionPermanentFailure=3]="ReconnectionPermanentFailure",e[e.ConnectionGain=4]="ConnectionGain"})(D||(D={}));class oe{constructor(t,r){this.reconnectionToken=t,this.millisSinceLastIncomingData=r,this.type=0}}class ie{constructor(t,r,n,o){this.reconnectionToken=t,this.millisSinceLastIncomingData=r,this.durationSeconds=n,this.c=o,this.type=1}skipWait(){this.c.cancel()}}class ce{constructor(t,r,n){this.reconnectionToken=t,this.millisSinceLastIncomingData=r,this.attempt=n,this.type=2}}class x{constructor(t,r,n){this.reconnectionToken=t,this.millisSinceLastIncomingData=r,this.attempt=n,this.type=4}}class se{constructor(t,r,n,o){this.reconnectionToken=t,this.millisSinceLastIncomingData=r,this.attempt=n,this.handled=o,this.type=3}}class h extends V{static triggerPermanentFailure(t,r,n){this._permanentFailure=!0,this.f=t,this.g=r,this.h=n,this.j.forEach(o=>o.D(this.f,this.g,this.h))}static debugTriggerReconnection(){this.j.forEach(t=>t.y())}static debugPauseSocketWriting(){this.j.forEach(t=>t.F())}static{this._permanentFailure=!1}static{this.f=0}static{this.g=0}static{this.h=!1}static{this.j=[]}get n(){return this.c||h._permanentFailure}constructor(t,r,n,o,i){super(),this.t=t,this.u=r,this.reconnectionToken=n,this.protocol=o,this.w=i,this.m=this.B(new _),this.onDidStateChange=this.m.event,this.c=!1,this.r=!1,this.s=!1,this.m.fire(new x(this.reconnectionToken,0,0)),this.B(o.onSocketClose(c=>{const a=S(this.t,this.reconnectionToken,!0);c?c.type===0?(this.u.logService.info(`${a} received socket close event (hadError: ${c.hadError}).`),c.error&&this.u.logService.error(c.error)):(this.u.logService.info(`${a} received socket close event (wasClean: ${c.wasClean}, code: ${c.code}, reason: ${c.reason}).`),c.event&&this.u.logService.error(c.event)):this.u.logService.info(`${a} received socket close event.`),this.y()})),this.B(o.onSocketTimeout(c=>{const a=S(this.t,this.reconnectionToken,!0);this.u.logService.info(`${a} received socket timeout event (unacknowledgedMsgCount: ${c.unacknowledgedMsgCount}, timeSinceOldestUnacknowledgedMsg: ${c.timeSinceOldestUnacknowledgedMsg}, timeSinceLastReceivedSomeData: ${c.timeSinceLastReceivedSomeData}).`),this.y()})),h.j.push(this),this.B(J(()=>{const c=h.j.indexOf(this);c>=0&&h.j.splice(c,1)})),this.n&&this.D(h.f,h.g,h.h)}dispose(){super.dispose(),this.s=!0}async y(){if(!this.r)try{this.r=!0,await this.z()}finally{this.r=!1}}async z(){if(this.n||this.s)return;const t=S(this.t,this.reconnectionToken,!0);this.u.logService.info(`${t} starting reconnecting loop. You can get more information with the trace log level.`),this.m.fire(new oe(this.reconnectionToken,this.protocol.getMillisSinceLastIncomingData()));const r=[0,5,5,10,10,10,10,10,30];let n=-1;do{n++;const o=n<r.length?r[n]:r[r.length-1];try{if(o>0){const c=ne(o);this.m.fire(new ie(this.reconnectionToken,this.protocol.getMillisSinceLastIncomingData(),o,c)),this.u.logService.info(`${t} waiting for ${o} seconds before reconnecting...`);try{await c}catch{}}if(this.n){this.u.logService.error(`${t} permanent failure occurred while running the reconnecting loop.`);break}this.m.fire(new ce(this.reconnectionToken,this.protocol.getMillisSinceLastIncomingData(),n+1)),this.u.logService.info(`${t} resolving connection...`);const i=await T(this.u,this.reconnectionToken,this.protocol);this.u.logService.info(`${t} connecting to ${i.connectTo}...`),await this.G(i,N(Q)),this.u.logService.info(`${t} reconnected!`),this.m.fire(new x(this.reconnectionToken,this.protocol.getMillisSinceLastIncomingData(),n+1));break}catch(i){if(i.code==="VSCODE_CONNECTION_ERROR"){this.u.logService.error(`${t} A permanent error occurred in the reconnecting loop! Will give up now! Error:`),this.u.logService.error(i),this.C(this.protocol.getMillisSinceLastIncomingData(),n+1,!1);break}if(n>360){this.u.logService.error(`${t} An error occurred while reconnecting, but it will be treated as a permanent error because the reconnection grace time has expired! Will give up now! Error:`),this.u.logService.error(i),this.C(this.protocol.getMillisSinceLastIncomingData(),n+1,!1);break}if(m.isTemporarilyNotAvailable(i)){this.u.logService.info(`${t} A temporarily not available error occurred while trying to reconnect, will try again...`),this.u.logService.trace(i);continue}if((i.code==="ETIMEDOUT"||i.code==="ENETUNREACH"||i.code==="ECONNREFUSED"||i.code==="ECONNRESET")&&i.syscall==="connect"){this.u.logService.info(`${t} A network error occurred while trying to reconnect, will try again...`),this.u.logService.trace(i);continue}if(B(i)){this.u.logService.info(`${t} A promise cancelation error occurred while trying to reconnect, will try again...`),this.u.logService.trace(i);continue}if(i instanceof m){this.u.logService.error(`${t} A RemoteAuthorityResolverError occurred while trying to reconnect. Will give up now! Error:`),this.u.logService.error(i),this.C(this.protocol.getMillisSinceLastIncomingData(),n+1,m.isHandled(i));break}this.u.logService.error(`${t} An unknown error occurred while trying to reconnect, since this is an unknown case, it will be treated as a permanent error! Will give up now! Error:`),this.u.logService.error(i),this.C(this.protocol.getMillisSinceLastIncomingData(),n+1,!1);break}}while(!this.n&&!this.s)}C(t,r,n){this.w?h.triggerPermanentFailure(t,r,n):this.D(t,r,n)}D(t,r,n){this.m.fire(new se(this.reconnectionToken,t,r,n)),E(this.protocol)}F(){this.protocol.pauseSocketWriting()}}class ae extends h{constructor(t,r,n,o,i){super(1,t,o,i,!0),this.client=this.B(new K(i,{remoteAuthority:r,clientId:n},t.ipcLogger))}async G(t,r){await I(t,r)}}class le extends h{constructor(t,r,n,o,i){super(2,t,n,o,!1),this.H=r,this.debugPort=i}async G(t,r){await F(t,this.H,r)}}function E(e){try{e.acceptDisconnect();const t=e.getSocket();e.dispose(),t.dispose()}catch(t){U(t)}}function L(e){if(e&&e.type==="error"){const t=new Error(`Connection error: ${e.reason}`);return t.code="VSCODE_CONNECTION_ERROR",t}return null}function he(e,t){for(;e.length<t;)e+=" ";return e}function ue(e,t){return`[remote-connection][${he(p(e),13)}][${t.substr(0,5)}\u2026]`}function S(e,t,r){return`${ue(e,t)}[${r?"reconnect":"initial"}]`}function R(e,t){return`${S(t,e.reconnectionToken,!!e.reconnectionProtocol)}[${e.connectTo}]`}function j(e){return`${Date.now()-e} ms`}export{Ee as $mB,Re as $nB,ye as $oB,oe as $pB,ie as $qB,ce as $rB,x as $sB,se as $tB,h as $uB,ae as $vB,le as $wB,O as ConnectionType,D as PersistentConnectionEventType};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { createCancelablePromise, promiseWithResolvers } from "../../../base/common/async.js";
+import { VSBuffer } from "../../../base/common/buffer.js";
+import { CancellationToken, CancellationTokenSource } from "../../../base/common/cancellation.js";
+import { isCancellationError, onUnexpectedError } from "../../../base/common/errors.js";
+import { Emitter } from "../../../base/common/event.js";
+import { Disposable, DisposableStore, toDisposable } from "../../../base/common/lifecycle.js";
+import { RemoteAuthorities } from "../../../base/common/network.js";
+import * as performance from "../../../base/common/performance.js";
+import { StopWatch } from "../../../base/common/stopwatch.js";
+import { generateUuid } from "../../../base/common/uuid.js";
+import { Client, PersistentProtocol } from "../../../base/parts/ipc/common/ipc.net.js";
+import { RemoteAuthorityResolverError } from "./remoteAuthorityResolver.js";
+const RECONNECT_TIMEOUT = 30 * 1e3;
+var ConnectionType;
+(function(ConnectionType2) {
+  ConnectionType2[ConnectionType2["Management"] = 1] = "Management";
+  ConnectionType2[ConnectionType2["ExtensionHost"] = 2] = "ExtensionHost";
+  ConnectionType2[ConnectionType2["Tunnel"] = 3] = "Tunnel";
+})(ConnectionType || (ConnectionType = {}));
+function connectionTypeToString(connectionType) {
+  switch (connectionType) {
+    case 1:
+      return "Management";
+    case 2:
+      return "ExtensionHost";
+    case 3:
+      return "Tunnel";
+  }
+}
+__name(connectionTypeToString, "connectionTypeToString");
+function createTimeoutCancellation(millis) {
+  const source = new CancellationTokenSource();
+  setTimeout(() => source.cancel(), millis);
+  return source.token;
+}
+__name(createTimeoutCancellation, "createTimeoutCancellation");
+function combineTimeoutCancellation(a, b) {
+  if (a.isCancellationRequested || b.isCancellationRequested) {
+    return CancellationToken.Cancelled;
+  }
+  const source = new CancellationTokenSource();
+  a.onCancellationRequested(() => source.cancel());
+  b.onCancellationRequested(() => source.cancel());
+  return source.token;
+}
+__name(combineTimeoutCancellation, "combineTimeoutCancellation");
+class PromiseWithTimeout {
+  static {
+    __name(this, "PromiseWithTimeout");
+  }
+  get didTimeout() {
+    return this._state === "timedout";
+  }
+  constructor(timeoutCancellationToken) {
+    this._state = "pending";
+    this._disposables = new DisposableStore();
+    ({ promise: this.promise, resolve: this._resolvePromise, reject: this._rejectPromise } = promiseWithResolvers());
+    if (timeoutCancellationToken.isCancellationRequested) {
+      this._timeout();
+    } else {
+      this._disposables.add(timeoutCancellationToken.onCancellationRequested(() => this._timeout()));
+    }
+  }
+  registerDisposable(disposable) {
+    if (this._state === "pending") {
+      this._disposables.add(disposable);
+    } else {
+      disposable.dispose();
+    }
+  }
+  _timeout() {
+    if (this._state !== "pending") {
+      return;
+    }
+    this._disposables.dispose();
+    this._state = "timedout";
+    this._rejectPromise(this._createTimeoutError());
+  }
+  _createTimeoutError() {
+    const err = new Error("Time limit reached");
+    err.code = "ETIMEDOUT";
+    err.syscall = "connect";
+    return err;
+  }
+  resolve(value) {
+    if (this._state !== "pending") {
+      return;
+    }
+    this._disposables.dispose();
+    this._state = "resolved";
+    this._resolvePromise(value);
+  }
+  reject(err) {
+    if (this._state !== "pending") {
+      return;
+    }
+    this._disposables.dispose();
+    this._state = "rejected";
+    this._rejectPromise(err);
+  }
+}
+function readOneControlMessage(protocol, timeoutCancellationToken) {
+  const result = new PromiseWithTimeout(timeoutCancellationToken);
+  result.registerDisposable(protocol.onControlMessage((raw) => {
+    const msg = JSON.parse(raw.toString());
+    const error = getErrorFromMessage(msg);
+    if (error) {
+      result.reject(error);
+    } else {
+      result.resolve(msg);
+    }
+  }));
+  return result.promise;
+}
+__name(readOneControlMessage, "readOneControlMessage");
+function createSocket(logService, remoteSocketFactoryService, connectTo, path, query, debugConnectionType, debugLabel, timeoutCancellationToken) {
+  const result = new PromiseWithTimeout(timeoutCancellationToken);
+  const sw = StopWatch.create(false);
+  logService.info(`Creating a socket (${debugLabel})...`);
+  performance.mark(`code/willCreateSocket/${debugConnectionType}`);
+  remoteSocketFactoryService.connect(connectTo, path, query, debugLabel).then((socket) => {
+    if (result.didTimeout) {
+      performance.mark(`code/didCreateSocketError/${debugConnectionType}`);
+      logService.info(`Creating a socket (${debugLabel}) finished after ${sw.elapsed()} ms, but this is too late and has timed out already.`);
+      socket?.dispose();
+    } else {
+      performance.mark(`code/didCreateSocketOK/${debugConnectionType}`);
+      logService.info(`Creating a socket (${debugLabel}) was successful after ${sw.elapsed()} ms.`);
+      result.resolve(socket);
+    }
+  }, (err) => {
+    performance.mark(`code/didCreateSocketError/${debugConnectionType}`);
+    logService.info(`Creating a socket (${debugLabel}) returned an error after ${sw.elapsed()} ms.`);
+    logService.error(err);
+    result.reject(err);
+  });
+  return result.promise;
+}
+__name(createSocket, "createSocket");
+function raceWithTimeoutCancellation(promise, timeoutCancellationToken) {
+  const result = new PromiseWithTimeout(timeoutCancellationToken);
+  promise.then((res) => {
+    if (!result.didTimeout) {
+      result.resolve(res);
+    }
+  }, (err) => {
+    if (!result.didTimeout) {
+      result.reject(err);
+    }
+  });
+  return result.promise;
+}
+__name(raceWithTimeoutCancellation, "raceWithTimeoutCancellation");
+async function connectToRemoteExtensionHostAgent(options, connectionType, args, timeoutCancellationToken) {
+  const logPrefix = connectLogPrefix(options, connectionType);
+  options.logService.trace(`${logPrefix} 1/6. invoking socketFactory.connect().`);
+  let socket;
+  try {
+    socket = await createSocket(options.logService, options.remoteSocketFactoryService, options.connectTo, RemoteAuthorities.getServerRootPath(), `reconnectionToken=${options.reconnectionToken}&reconnection=${options.reconnectionProtocol ? "true" : "false"}`, connectionTypeToString(connectionType), `renderer-${connectionTypeToString(connectionType)}-${options.reconnectionToken}`, timeoutCancellationToken);
+  } catch (error) {
+    options.logService.error(`${logPrefix} socketFactory.connect() failed or timed out. Error:`);
+    options.logService.error(error);
+    throw error;
+  }
+  options.logService.trace(`${logPrefix} 2/6. socketFactory.connect() was successful.`);
+  let protocol;
+  let ownsProtocol;
+  if (options.reconnectionProtocol) {
+    options.reconnectionProtocol.beginAcceptReconnection(socket, null);
+    protocol = options.reconnectionProtocol;
+    ownsProtocol = false;
+  } else {
+    protocol = new PersistentProtocol({ socket });
+    ownsProtocol = true;
+  }
+  options.logService.trace(`${logPrefix} 3/6. sending AuthRequest control message.`);
+  const message = await raceWithTimeoutCancellation(options.signService.createNewMessage(generateUuid()), timeoutCancellationToken);
+  const authRequest = {
+    type: "auth",
+    auth: options.connectionToken || "00000000000000000000",
+    data: message.data
+  };
+  protocol.sendControl(VSBuffer.fromString(JSON.stringify(authRequest)));
+  try {
+    const msg = await readOneControlMessage(protocol, combineTimeoutCancellation(timeoutCancellationToken, createTimeoutCancellation(1e4)));
+    if (msg.type !== "sign" || typeof msg.data !== "string") {
+      const error = new Error("Unexpected handshake message");
+      error.code = "VSCODE_CONNECTION_ERROR";
+      throw error;
+    }
+    options.logService.trace(`${logPrefix} 4/6. received SignRequest control message.`);
+    const isValid = await raceWithTimeoutCancellation(options.signService.validate(message, msg.signedData), timeoutCancellationToken);
+    if (!isValid) {
+      const error = new Error("Refused to connect to unsupported server");
+      error.code = "VSCODE_CONNECTION_ERROR";
+      throw error;
+    }
+    const signed = await raceWithTimeoutCancellation(options.signService.sign(msg.data), timeoutCancellationToken);
+    const connTypeRequest = {
+      type: "connectionType",
+      commit: options.commit,
+      signedData: signed,
+      desiredConnectionType: connectionType
+    };
+    if (args) {
+      connTypeRequest.args = args;
+    }
+    options.logService.trace(`${logPrefix} 5/6. sending ConnectionTypeRequest control message.`);
+    protocol.sendControl(VSBuffer.fromString(JSON.stringify(connTypeRequest)));
+    return { protocol, ownsProtocol };
+  } catch (error) {
+    if (error && error.code === "ETIMEDOUT") {
+      options.logService.error(`${logPrefix} the handshake timed out. Error:`);
+      options.logService.error(error);
+    }
+    if (error && error.code === "VSCODE_CONNECTION_ERROR") {
+      options.logService.error(`${logPrefix} received error control message when negotiating connection. Error:`);
+      options.logService.error(error);
+    }
+    if (ownsProtocol) {
+      safeDisposeProtocolAndSocket(protocol);
+    }
+    throw error;
+  }
+}
+__name(connectToRemoteExtensionHostAgent, "connectToRemoteExtensionHostAgent");
+async function connectToRemoteExtensionHostAgentAndReadOneMessage(options, connectionType, args, timeoutCancellationToken) {
+  const startTime = Date.now();
+  const logPrefix = connectLogPrefix(options, connectionType);
+  const { protocol, ownsProtocol } = await connectToRemoteExtensionHostAgent(options, connectionType, args, timeoutCancellationToken);
+  const result = new PromiseWithTimeout(timeoutCancellationToken);
+  result.registerDisposable(protocol.onControlMessage((raw) => {
+    const msg = JSON.parse(raw.toString());
+    const error = getErrorFromMessage(msg);
+    if (error) {
+      options.logService.error(`${logPrefix} received error control message when negotiating connection. Error:`);
+      options.logService.error(error);
+      if (ownsProtocol) {
+        safeDisposeProtocolAndSocket(protocol);
+      }
+      result.reject(error);
+    } else {
+      options.reconnectionProtocol?.endAcceptReconnection();
+      options.logService.trace(`${logPrefix} 6/6. handshake finished, connection is up and running after ${logElapsed(startTime)}!`);
+      result.resolve({ protocol, firstMessage: msg });
+    }
+  }));
+  return result.promise;
+}
+__name(connectToRemoteExtensionHostAgentAndReadOneMessage, "connectToRemoteExtensionHostAgentAndReadOneMessage");
+async function doConnectRemoteAgentManagement(options, timeoutCancellationToken) {
+  const { protocol } = await connectToRemoteExtensionHostAgentAndReadOneMessage(options, 1, void 0, timeoutCancellationToken);
+  return { protocol };
+}
+__name(doConnectRemoteAgentManagement, "doConnectRemoteAgentManagement");
+async function doConnectRemoteAgentExtensionHost(options, startArguments, timeoutCancellationToken) {
+  const { protocol, firstMessage } = await connectToRemoteExtensionHostAgentAndReadOneMessage(options, 2, startArguments, timeoutCancellationToken);
+  const debugPort = firstMessage && firstMessage.debugPort;
+  return { protocol, debugPort };
+}
+__name(doConnectRemoteAgentExtensionHost, "doConnectRemoteAgentExtensionHost");
+async function doConnectRemoteAgentTunnel(options, startParams, timeoutCancellationToken) {
+  const startTime = Date.now();
+  const logPrefix = connectLogPrefix(
+    options,
+    3
+    /* ConnectionType.Tunnel */
+  );
+  const { protocol } = await connectToRemoteExtensionHostAgent(options, 3, startParams, timeoutCancellationToken);
+  options.logService.trace(`${logPrefix} 6/6. handshake finished, connection is up and running after ${logElapsed(startTime)}!`);
+  return protocol;
+}
+__name(doConnectRemoteAgentTunnel, "doConnectRemoteAgentTunnel");
+async function resolveConnectionOptions(options, reconnectionToken, reconnectionProtocol) {
+  const { connectTo, connectionToken } = await options.addressProvider.getAddress();
+  return {
+    commit: options.commit,
+    quality: options.quality,
+    connectTo,
+    connectionToken,
+    reconnectionToken,
+    reconnectionProtocol,
+    remoteSocketFactoryService: options.remoteSocketFactoryService,
+    signService: options.signService,
+    logService: options.logService
+  };
+}
+__name(resolveConnectionOptions, "resolveConnectionOptions");
+async function connectRemoteAgentManagement(options, remoteAuthority, clientId) {
+  return createInitialConnection(options, async (simpleOptions) => {
+    const { protocol } = await doConnectRemoteAgentManagement(simpleOptions, CancellationToken.None);
+    return new ManagementPersistentConnection(options, remoteAuthority, clientId, simpleOptions.reconnectionToken, protocol);
+  });
+}
+__name(connectRemoteAgentManagement, "connectRemoteAgentManagement");
+async function connectRemoteAgentExtensionHost(options, startArguments) {
+  return createInitialConnection(options, async (simpleOptions) => {
+    const { protocol, debugPort } = await doConnectRemoteAgentExtensionHost(simpleOptions, startArguments, CancellationToken.None);
+    return new ExtensionHostPersistentConnection(options, startArguments, simpleOptions.reconnectionToken, protocol, debugPort);
+  });
+}
+__name(connectRemoteAgentExtensionHost, "connectRemoteAgentExtensionHost");
+async function createInitialConnection(options, connectionFactory) {
+  const MAX_ATTEMPTS = 5;
+  for (let attempt = 1; ; attempt++) {
+    try {
+      const reconnectionToken = generateUuid();
+      const simpleOptions = await resolveConnectionOptions(options, reconnectionToken, null);
+      const result = await connectionFactory(simpleOptions);
+      return result;
+    } catch (err) {
+      if (attempt < MAX_ATTEMPTS) {
+        options.logService.error(`[remote-connection][attempt ${attempt}] An error occurred in initial connection! Will retry... Error:`);
+        options.logService.error(err);
+      } else {
+        options.logService.error(`[remote-connection][attempt ${attempt}]  An error occurred in initial connection! It will be treated as a permanent error. Error:`);
+        options.logService.error(err);
+        PersistentConnection.triggerPermanentFailure(0, 0, RemoteAuthorityResolverError.isHandled(err));
+        throw err;
+      }
+    }
+  }
+}
+__name(createInitialConnection, "createInitialConnection");
+async function connectRemoteAgentTunnel(options, tunnelRemoteHost, tunnelRemotePort) {
+  const simpleOptions = await resolveConnectionOptions(options, generateUuid(), null);
+  const protocol = await doConnectRemoteAgentTunnel(simpleOptions, { host: tunnelRemoteHost, port: tunnelRemotePort }, CancellationToken.None);
+  return protocol;
+}
+__name(connectRemoteAgentTunnel, "connectRemoteAgentTunnel");
+function sleep(seconds) {
+  return createCancelablePromise((token) => {
+    return new Promise((resolve, reject) => {
+      const timeout = setTimeout(resolve, seconds * 1e3);
+      token.onCancellationRequested(() => {
+        clearTimeout(timeout);
+        resolve();
+      });
+    });
+  });
+}
+__name(sleep, "sleep");
+var PersistentConnectionEventType;
+(function(PersistentConnectionEventType2) {
+  PersistentConnectionEventType2[PersistentConnectionEventType2["ConnectionLost"] = 0] = "ConnectionLost";
+  PersistentConnectionEventType2[PersistentConnectionEventType2["ReconnectionWait"] = 1] = "ReconnectionWait";
+  PersistentConnectionEventType2[PersistentConnectionEventType2["ReconnectionRunning"] = 2] = "ReconnectionRunning";
+  PersistentConnectionEventType2[PersistentConnectionEventType2["ReconnectionPermanentFailure"] = 3] = "ReconnectionPermanentFailure";
+  PersistentConnectionEventType2[PersistentConnectionEventType2["ConnectionGain"] = 4] = "ConnectionGain";
+})(PersistentConnectionEventType || (PersistentConnectionEventType = {}));
+class ConnectionLostEvent {
+  static {
+    __name(this, "ConnectionLostEvent");
+  }
+  constructor(reconnectionToken, millisSinceLastIncomingData) {
+    this.reconnectionToken = reconnectionToken;
+    this.millisSinceLastIncomingData = millisSinceLastIncomingData;
+    this.type = 0;
+  }
+}
+class ReconnectionWaitEvent {
+  static {
+    __name(this, "ReconnectionWaitEvent");
+  }
+  constructor(reconnectionToken, millisSinceLastIncomingData, durationSeconds, cancellableTimer) {
+    this.reconnectionToken = reconnectionToken;
+    this.millisSinceLastIncomingData = millisSinceLastIncomingData;
+    this.durationSeconds = durationSeconds;
+    this.cancellableTimer = cancellableTimer;
+    this.type = 1;
+  }
+  skipWait() {
+    this.cancellableTimer.cancel();
+  }
+}
+class ReconnectionRunningEvent {
+  static {
+    __name(this, "ReconnectionRunningEvent");
+  }
+  constructor(reconnectionToken, millisSinceLastIncomingData, attempt) {
+    this.reconnectionToken = reconnectionToken;
+    this.millisSinceLastIncomingData = millisSinceLastIncomingData;
+    this.attempt = attempt;
+    this.type = 2;
+  }
+}
+class ConnectionGainEvent {
+  static {
+    __name(this, "ConnectionGainEvent");
+  }
+  constructor(reconnectionToken, millisSinceLastIncomingData, attempt) {
+    this.reconnectionToken = reconnectionToken;
+    this.millisSinceLastIncomingData = millisSinceLastIncomingData;
+    this.attempt = attempt;
+    this.type = 4;
+  }
+}
+class ReconnectionPermanentFailureEvent {
+  static {
+    __name(this, "ReconnectionPermanentFailureEvent");
+  }
+  constructor(reconnectionToken, millisSinceLastIncomingData, attempt, handled) {
+    this.reconnectionToken = reconnectionToken;
+    this.millisSinceLastIncomingData = millisSinceLastIncomingData;
+    this.attempt = attempt;
+    this.handled = handled;
+    this.type = 3;
+  }
+}
+class PersistentConnection extends Disposable {
+  static {
+    __name(this, "PersistentConnection");
+  }
+  static triggerPermanentFailure(millisSinceLastIncomingData, attempt, handled) {
+    this._permanentFailure = true;
+    this._permanentFailureMillisSinceLastIncomingData = millisSinceLastIncomingData;
+    this._permanentFailureAttempt = attempt;
+    this._permanentFailureHandled = handled;
+    this._instances.forEach((instance) => instance._gotoPermanentFailure(this._permanentFailureMillisSinceLastIncomingData, this._permanentFailureAttempt, this._permanentFailureHandled));
+  }
+  static debugTriggerReconnection() {
+    this._instances.forEach((instance) => instance._beginReconnecting());
+  }
+  static debugPauseSocketWriting() {
+    this._instances.forEach((instance) => instance._pauseSocketWriting());
+  }
+  static {
+    this._permanentFailure = false;
+  }
+  static {
+    this._permanentFailureMillisSinceLastIncomingData = 0;
+  }
+  static {
+    this._permanentFailureAttempt = 0;
+  }
+  static {
+    this._permanentFailureHandled = false;
+  }
+  static {
+    this._instances = [];
+  }
+  get _isPermanentFailure() {
+    return this._permanentFailure || PersistentConnection._permanentFailure;
+  }
+  constructor(_connectionType, _options, reconnectionToken, protocol, _reconnectionFailureIsFatal) {
+    super();
+    this._connectionType = _connectionType;
+    this._options = _options;
+    this.reconnectionToken = reconnectionToken;
+    this.protocol = protocol;
+    this._reconnectionFailureIsFatal = _reconnectionFailureIsFatal;
+    this._onDidStateChange = this._register(new Emitter());
+    this.onDidStateChange = this._onDidStateChange.event;
+    this._permanentFailure = false;
+    this._isReconnecting = false;
+    this._isDisposed = false;
+    this._onDidStateChange.fire(new ConnectionGainEvent(this.reconnectionToken, 0, 0));
+    this._register(protocol.onSocketClose((e) => {
+      const logPrefix = commonLogPrefix(this._connectionType, this.reconnectionToken, true);
+      if (!e) {
+        this._options.logService.info(`${logPrefix} received socket close event.`);
+      } else if (e.type === 0) {
+        this._options.logService.info(`${logPrefix} received socket close event (hadError: ${e.hadError}).`);
+        if (e.error) {
+          this._options.logService.error(e.error);
+        }
+      } else {
+        this._options.logService.info(`${logPrefix} received socket close event (wasClean: ${e.wasClean}, code: ${e.code}, reason: ${e.reason}).`);
+        if (e.event) {
+          this._options.logService.error(e.event);
+        }
+      }
+      this._beginReconnecting();
+    }));
+    this._register(protocol.onSocketTimeout((e) => {
+      const logPrefix = commonLogPrefix(this._connectionType, this.reconnectionToken, true);
+      this._options.logService.info(`${logPrefix} received socket timeout event (unacknowledgedMsgCount: ${e.unacknowledgedMsgCount}, timeSinceOldestUnacknowledgedMsg: ${e.timeSinceOldestUnacknowledgedMsg}, timeSinceLastReceivedSomeData: ${e.timeSinceLastReceivedSomeData}).`);
+      this._beginReconnecting();
+    }));
+    PersistentConnection._instances.push(this);
+    this._register(toDisposable(() => {
+      const myIndex = PersistentConnection._instances.indexOf(this);
+      if (myIndex >= 0) {
+        PersistentConnection._instances.splice(myIndex, 1);
+      }
+    }));
+    if (this._isPermanentFailure) {
+      this._gotoPermanentFailure(PersistentConnection._permanentFailureMillisSinceLastIncomingData, PersistentConnection._permanentFailureAttempt, PersistentConnection._permanentFailureHandled);
+    }
+  }
+  dispose() {
+    super.dispose();
+    this._isDisposed = true;
+  }
+  async _beginReconnecting() {
+    if (this._isReconnecting) {
+      return;
+    }
+    try {
+      this._isReconnecting = true;
+      await this._runReconnectingLoop();
+    } finally {
+      this._isReconnecting = false;
+    }
+  }
+  async _runReconnectingLoop() {
+    if (this._isPermanentFailure || this._isDisposed) {
+      return;
+    }
+    const logPrefix = commonLogPrefix(this._connectionType, this.reconnectionToken, true);
+    this._options.logService.info(`${logPrefix} starting reconnecting loop. You can get more information with the trace log level.`);
+    this._onDidStateChange.fire(new ConnectionLostEvent(this.reconnectionToken, this.protocol.getMillisSinceLastIncomingData()));
+    const TIMES = [0, 5, 5, 10, 10, 10, 10, 10, 30];
+    let attempt = -1;
+    do {
+      attempt++;
+      const waitTime = attempt < TIMES.length ? TIMES[attempt] : TIMES[TIMES.length - 1];
+      try {
+        if (waitTime > 0) {
+          const sleepPromise = sleep(waitTime);
+          this._onDidStateChange.fire(new ReconnectionWaitEvent(this.reconnectionToken, this.protocol.getMillisSinceLastIncomingData(), waitTime, sleepPromise));
+          this._options.logService.info(`${logPrefix} waiting for ${waitTime} seconds before reconnecting...`);
+          try {
+            await sleepPromise;
+          } catch {
+          }
+        }
+        if (this._isPermanentFailure) {
+          this._options.logService.error(`${logPrefix} permanent failure occurred while running the reconnecting loop.`);
+          break;
+        }
+        this._onDidStateChange.fire(new ReconnectionRunningEvent(this.reconnectionToken, this.protocol.getMillisSinceLastIncomingData(), attempt + 1));
+        this._options.logService.info(`${logPrefix} resolving connection...`);
+        const simpleOptions = await resolveConnectionOptions(this._options, this.reconnectionToken, this.protocol);
+        this._options.logService.info(`${logPrefix} connecting to ${simpleOptions.connectTo}...`);
+        await this._reconnect(simpleOptions, createTimeoutCancellation(RECONNECT_TIMEOUT));
+        this._options.logService.info(`${logPrefix} reconnected!`);
+        this._onDidStateChange.fire(new ConnectionGainEvent(this.reconnectionToken, this.protocol.getMillisSinceLastIncomingData(), attempt + 1));
+        break;
+      } catch (err) {
+        if (err.code === "VSCODE_CONNECTION_ERROR") {
+          this._options.logService.error(`${logPrefix} A permanent error occurred in the reconnecting loop! Will give up now! Error:`);
+          this._options.logService.error(err);
+          this._onReconnectionPermanentFailure(this.protocol.getMillisSinceLastIncomingData(), attempt + 1, false);
+          break;
+        }
+        if (attempt > 360) {
+          this._options.logService.error(`${logPrefix} An error occurred while reconnecting, but it will be treated as a permanent error because the reconnection grace time has expired! Will give up now! Error:`);
+          this._options.logService.error(err);
+          this._onReconnectionPermanentFailure(this.protocol.getMillisSinceLastIncomingData(), attempt + 1, false);
+          break;
+        }
+        if (RemoteAuthorityResolverError.isTemporarilyNotAvailable(err)) {
+          this._options.logService.info(`${logPrefix} A temporarily not available error occurred while trying to reconnect, will try again...`);
+          this._options.logService.trace(err);
+          continue;
+        }
+        if ((err.code === "ETIMEDOUT" || err.code === "ENETUNREACH" || err.code === "ECONNREFUSED" || err.code === "ECONNRESET") && err.syscall === "connect") {
+          this._options.logService.info(`${logPrefix} A network error occurred while trying to reconnect, will try again...`);
+          this._options.logService.trace(err);
+          continue;
+        }
+        if (isCancellationError(err)) {
+          this._options.logService.info(`${logPrefix} A promise cancelation error occurred while trying to reconnect, will try again...`);
+          this._options.logService.trace(err);
+          continue;
+        }
+        if (err instanceof RemoteAuthorityResolverError) {
+          this._options.logService.error(`${logPrefix} A RemoteAuthorityResolverError occurred while trying to reconnect. Will give up now! Error:`);
+          this._options.logService.error(err);
+          this._onReconnectionPermanentFailure(this.protocol.getMillisSinceLastIncomingData(), attempt + 1, RemoteAuthorityResolverError.isHandled(err));
+          break;
+        }
+        this._options.logService.error(`${logPrefix} An unknown error occurred while trying to reconnect, since this is an unknown case, it will be treated as a permanent error! Will give up now! Error:`);
+        this._options.logService.error(err);
+        this._onReconnectionPermanentFailure(this.protocol.getMillisSinceLastIncomingData(), attempt + 1, false);
+        break;
+      }
+    } while (!this._isPermanentFailure && !this._isDisposed);
+  }
+  _onReconnectionPermanentFailure(millisSinceLastIncomingData, attempt, handled) {
+    if (this._reconnectionFailureIsFatal) {
+      PersistentConnection.triggerPermanentFailure(millisSinceLastIncomingData, attempt, handled);
+    } else {
+      this._gotoPermanentFailure(millisSinceLastIncomingData, attempt, handled);
+    }
+  }
+  _gotoPermanentFailure(millisSinceLastIncomingData, attempt, handled) {
+    this._onDidStateChange.fire(new ReconnectionPermanentFailureEvent(this.reconnectionToken, millisSinceLastIncomingData, attempt, handled));
+    safeDisposeProtocolAndSocket(this.protocol);
+  }
+  _pauseSocketWriting() {
+    this.protocol.pauseSocketWriting();
+  }
+}
+class ManagementPersistentConnection extends PersistentConnection {
+  static {
+    __name(this, "ManagementPersistentConnection");
+  }
+  constructor(options, remoteAuthority, clientId, reconnectionToken, protocol) {
+    super(
+      1,
+      options,
+      reconnectionToken,
+      protocol,
+      /*reconnectionFailureIsFatal*/
+      true
+    );
+    this.client = this._register(new Client(protocol, {
+      remoteAuthority,
+      clientId
+    }, options.ipcLogger));
+  }
+  async _reconnect(options, timeoutCancellationToken) {
+    await doConnectRemoteAgentManagement(options, timeoutCancellationToken);
+  }
+}
+class ExtensionHostPersistentConnection extends PersistentConnection {
+  static {
+    __name(this, "ExtensionHostPersistentConnection");
+  }
+  constructor(options, startArguments, reconnectionToken, protocol, debugPort) {
+    super(
+      2,
+      options,
+      reconnectionToken,
+      protocol,
+      /*reconnectionFailureIsFatal*/
+      false
+    );
+    this._startArguments = startArguments;
+    this.debugPort = debugPort;
+  }
+  async _reconnect(options, timeoutCancellationToken) {
+    await doConnectRemoteAgentExtensionHost(options, this._startArguments, timeoutCancellationToken);
+  }
+}
+function safeDisposeProtocolAndSocket(protocol) {
+  try {
+    protocol.acceptDisconnect();
+    const socket = protocol.getSocket();
+    protocol.dispose();
+    socket.dispose();
+  } catch (err) {
+    onUnexpectedError(err);
+  }
+}
+__name(safeDisposeProtocolAndSocket, "safeDisposeProtocolAndSocket");
+function getErrorFromMessage(msg) {
+  if (msg && msg.type === "error") {
+    const error = new Error(`Connection error: ${msg.reason}`);
+    error.code = "VSCODE_CONNECTION_ERROR";
+    return error;
+  }
+  return null;
+}
+__name(getErrorFromMessage, "getErrorFromMessage");
+function stringRightPad(str, len) {
+  while (str.length < len) {
+    str += " ";
+  }
+  return str;
+}
+__name(stringRightPad, "stringRightPad");
+function _commonLogPrefix(connectionType, reconnectionToken) {
+  return `[remote-connection][${stringRightPad(connectionTypeToString(connectionType), 13)}][${reconnectionToken.substr(0, 5)}\u2026]`;
+}
+__name(_commonLogPrefix, "_commonLogPrefix");
+function commonLogPrefix(connectionType, reconnectionToken, isReconnect) {
+  return `${_commonLogPrefix(connectionType, reconnectionToken)}[${isReconnect ? "reconnect" : "initial"}]`;
+}
+__name(commonLogPrefix, "commonLogPrefix");
+function connectLogPrefix(options, connectionType) {
+  return `${commonLogPrefix(connectionType, options.reconnectionToken, !!options.reconnectionProtocol)}[${options.connectTo}]`;
+}
+__name(connectLogPrefix, "connectLogPrefix");
+function logElapsed(startTime) {
+  return `${Date.now() - startTime} ms`;
+}
+__name(logElapsed, "logElapsed");
+export {
+  ConnectionGainEvent,
+  ConnectionLostEvent,
+  ConnectionType,
+  ExtensionHostPersistentConnection,
+  ManagementPersistentConnection,
+  PersistentConnection,
+  PersistentConnectionEventType,
+  ReconnectionPermanentFailureEvent,
+  ReconnectionRunningEvent,
+  ReconnectionWaitEvent,
+  connectRemoteAgentExtensionHost,
+  connectRemoteAgentManagement,
+  connectRemoteAgentTunnel
+};
+//# sourceMappingURL=remoteAgentConnection.js.map

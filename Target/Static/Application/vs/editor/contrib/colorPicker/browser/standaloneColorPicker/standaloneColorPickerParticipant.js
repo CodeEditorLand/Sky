@@ -1,1 +1,146 @@
-import{CancellationToken as M}from"../../../../../base/common/cancellation.js";import{$vd as $}from"../../../../../base/common/lifecycle.js";import{$Mt as w}from"../../../../../platform/theme/common/themeService.js";import{$6ib as P}from"../color.js";import{$ajb as B}from"../colorDetector.js";import{$Elb as _,$Glb as h,$Flb as O}from"../colorPickerParticipantUtils.js";import{$Nlb as j}from"../colorPickerWidget.js";import{$cC as m}from"../../../../common/core/range.js";import{$25 as v}from"../../../../../base/browser/dom.js";var g=function(l,t,o,e){var i=arguments.length,n=i<3?t:e===null?e=Object.getOwnPropertyDescriptor(t,o):e,r;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")n=Reflect.decorate(l,t,o,e);else for(var s=l.length-1;s>=0;s--)(r=l[s])&&(n=(i<3?r(n):i>3?r(t,o,n):r(t,o))||n);return i>3&&n&&Object.defineProperty(t,o,n),n},C=function(l,t){return function(o,e){t(o,e,l)}};class a{constructor(t,o,e,i){this.owner=t,this.range=o,this.model=e,this.provider=i}static fromBaseColor(t,o){return new a(t,o.range,o.model,o.provider)}}class I extends ${constructor(t,o,e,i){super();const n=t.getModel(),r=e.model;this.color=e.model.color,this.colorPicker=this.B(new j(o.fragment,r,t.getOption(152),i,"standalone")),this.B(r.onColorFlushed(c=>{this.color=c})),this.B(r.onDidChangeColor(c=>{h(n,r,c,e.range,e)}));let s=!1;this.B(t.onDidChangeModelContent(c=>{s?s=!1:(o.hide(),t.focus())})),h(n,r,this.color,e.range,e)}}let u=class{constructor(t,o){this.b=t,this.c=o,this.hoverOrdinal=2}async createColorHover(t,o,e){if(!this.b.hasModel()||!B.get(this.b))return null;const n=await P(e,this.b.getModel(),M.None);let r=null,s=null;for(const f of n){const d=f.colorInfo;m.containsRange(d.range,t.range)&&(r=d,s=f.provider)}const c=r??t,p=s??o,b=!!r;return{colorHover:a.fromBaseColor(this,await _(this.b.getModel(),c,p)),foundInEditor:b}}async updateEditorModel(t){if(!this.b.hasModel())return;const o=t.model;let e=new m(t.range.startLineNumber,t.range.startColumn,t.range.endLineNumber,t.range.endColumn);this.f&&(await h(this.b.getModel(),o,this.f,e,t),e=O(this.b,e,o))}renderHoverParts(t,o){if(!(o.length===0||!this.b.hasModel()))return this.d(t),this.a=new I(this.b,t,o[0],this.c),this.a}d(t){const o=this.b.getOption(71)+8;t.setMinimumDimensions(new v(302,o))}get f(){return this.a?.color}};u=g([C(1,w)],u);export{a as $gnb,I as $hnb,u as $inb};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { CancellationToken } from "../../../../../base/common/cancellation.js";
+import { Disposable } from "../../../../../base/common/lifecycle.js";
+import { IThemeService } from "../../../../../platform/theme/common/themeService.js";
+import { getColors } from "../color.js";
+import { ColorDetector } from "../colorDetector.js";
+import { createColorHover, updateColorPresentations, updateEditorModel } from "../colorPickerParticipantUtils.js";
+import { ColorPickerWidget } from "../colorPickerWidget.js";
+import { Range } from "../../../../common/core/range.js";
+import { Dimension } from "../../../../../base/browser/dom.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+class StandaloneColorPickerHover {
+  static {
+    __name(this, "StandaloneColorPickerHover");
+  }
+  constructor(owner, range, model, provider) {
+    this.owner = owner;
+    this.range = range;
+    this.model = model;
+    this.provider = provider;
+  }
+  static fromBaseColor(owner, color) {
+    return new StandaloneColorPickerHover(owner, color.range, color.model, color.provider);
+  }
+}
+class StandaloneColorPickerRenderedParts extends Disposable {
+  static {
+    __name(this, "StandaloneColorPickerRenderedParts");
+  }
+  constructor(editor, context, colorHover, themeService) {
+    super();
+    const editorModel = editor.getModel();
+    const colorPickerModel = colorHover.model;
+    this.color = colorHover.model.color;
+    this.colorPicker = this._register(new ColorPickerWidget(
+      context.fragment,
+      colorPickerModel,
+      editor.getOption(
+        152
+        /* EditorOption.pixelRatio */
+      ),
+      themeService,
+      "standalone"
+      /* ColorPickerWidgetType.Standalone */
+    ));
+    this._register(colorPickerModel.onColorFlushed((color) => {
+      this.color = color;
+    }));
+    this._register(colorPickerModel.onDidChangeColor((color) => {
+      updateColorPresentations(editorModel, colorPickerModel, color, colorHover.range, colorHover);
+    }));
+    let editorUpdatedByColorPicker = false;
+    this._register(editor.onDidChangeModelContent((e) => {
+      if (editorUpdatedByColorPicker) {
+        editorUpdatedByColorPicker = false;
+      } else {
+        context.hide();
+        editor.focus();
+      }
+    }));
+    updateColorPresentations(editorModel, colorPickerModel, this.color, colorHover.range, colorHover);
+  }
+}
+let StandaloneColorPickerParticipant = class StandaloneColorPickerParticipant2 {
+  static {
+    __name(this, "StandaloneColorPickerParticipant");
+  }
+  constructor(_editor, _themeService) {
+    this._editor = _editor;
+    this._themeService = _themeService;
+    this.hoverOrdinal = 2;
+  }
+  async createColorHover(defaultColorInfo, defaultColorProvider, colorProviderRegistry) {
+    if (!this._editor.hasModel()) {
+      return null;
+    }
+    const colorDetector = ColorDetector.get(this._editor);
+    if (!colorDetector) {
+      return null;
+    }
+    const colors = await getColors(colorProviderRegistry, this._editor.getModel(), CancellationToken.None);
+    let foundColorInfo = null;
+    let foundColorProvider = null;
+    for (const colorData of colors) {
+      const colorInfo2 = colorData.colorInfo;
+      if (Range.containsRange(colorInfo2.range, defaultColorInfo.range)) {
+        foundColorInfo = colorInfo2;
+        foundColorProvider = colorData.provider;
+      }
+    }
+    const colorInfo = foundColorInfo ?? defaultColorInfo;
+    const colorProvider = foundColorProvider ?? defaultColorProvider;
+    const foundInEditor = !!foundColorInfo;
+    const colorHover = StandaloneColorPickerHover.fromBaseColor(this, await createColorHover(this._editor.getModel(), colorInfo, colorProvider));
+    return { colorHover, foundInEditor };
+  }
+  async updateEditorModel(colorHoverData) {
+    if (!this._editor.hasModel()) {
+      return;
+    }
+    const colorPickerModel = colorHoverData.model;
+    let range = new Range(colorHoverData.range.startLineNumber, colorHoverData.range.startColumn, colorHoverData.range.endLineNumber, colorHoverData.range.endColumn);
+    if (this._color) {
+      await updateColorPresentations(this._editor.getModel(), colorPickerModel, this._color, range, colorHoverData);
+      range = updateEditorModel(this._editor, range, colorPickerModel);
+    }
+  }
+  renderHoverParts(context, hoverParts) {
+    if (hoverParts.length === 0 || !this._editor.hasModel()) {
+      return void 0;
+    }
+    this._setMinimumDimensions(context);
+    this._renderedParts = new StandaloneColorPickerRenderedParts(this._editor, context, hoverParts[0], this._themeService);
+    return this._renderedParts;
+  }
+  _setMinimumDimensions(context) {
+    const minimumHeight = this._editor.getOption(
+      71
+      /* EditorOption.lineHeight */
+    ) + 8;
+    context.setMinimumDimensions(new Dimension(302, minimumHeight));
+  }
+  get _color() {
+    return this._renderedParts?.color;
+  }
+};
+StandaloneColorPickerParticipant = __decorate([
+  __param(1, IThemeService)
+], StandaloneColorPickerParticipant);
+export {
+  StandaloneColorPickerHover,
+  StandaloneColorPickerParticipant,
+  StandaloneColorPickerRenderedParts
+};
+//# sourceMappingURL=standaloneColorPickerParticipant.js.map

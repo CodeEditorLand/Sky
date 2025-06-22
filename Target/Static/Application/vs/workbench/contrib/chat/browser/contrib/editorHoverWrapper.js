@@ -1,1 +1,55 @@
-import"./media/editorHoverWrapper.css";import*as p from"../../../../../base/browser/dom.js";import{$D7 as v}from"../../../../../base/browser/ui/hover/hoverWidget.js";import{$ux as _}from"../../../../../platform/keybinding/common/keybinding.js";var u=function(l,o,e,r){var c=arguments.length,t=c<3?o:r===null?r=Object.getOwnPropertyDescriptor(o,e):r,i;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")t=Reflect.decorate(l,o,e,r);else for(var n=l.length-1;n>=0;n--)(i=l[n])&&(t=(c<3?i(t):c>3?i(o,e,t):i(o,e))||t);return c>3&&t&&Object.defineProperty(o,e,t),t},b=function(l,o){return function(e,r){o(e,r,l)}};const s=p.$,d=p.h;let h=class{constructor(o,e,r){this.a=r;const c=d(".chat-editor-hover-wrapper@root",[d(".chat-editor-hover-wrapper-content@content")]);if(this.domNode=c.root,c.content.appendChild(o),e&&e.length>0){const t=s(".hover-row.status-bar"),i=s(".actions");e.forEach(n=>{const a=this.a.lookupKeybinding(n.commandId),m=a?a.getLabel():null;v.render(i,{label:n.label,commandId:n.commandId,run:f=>{n.run(f)},iconClass:n.iconClass},m)}),t.appendChild(i),this.domNode.appendChild(t)}}};h=u([b(2,_)],h);export{h as $Egc};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import "./media/editorHoverWrapper.css";
+import * as dom from "../../../../../base/browser/dom.js";
+import { HoverAction } from "../../../../../base/browser/ui/hover/hoverWidget.js";
+import { IKeybindingService } from "../../../../../platform/keybinding/common/keybinding.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+const $ = dom.$;
+const h = dom.h;
+let ChatEditorHoverWrapper = class ChatEditorHoverWrapper2 {
+  static {
+    __name(this, "ChatEditorHoverWrapper");
+  }
+  constructor(hoverContentElement, actions, keybindingService) {
+    this.keybindingService = keybindingService;
+    const hoverElement = h(".chat-editor-hover-wrapper@root", [h(".chat-editor-hover-wrapper-content@content")]);
+    this.domNode = hoverElement.root;
+    hoverElement.content.appendChild(hoverContentElement);
+    if (actions && actions.length > 0) {
+      const statusBarElement = $(".hover-row.status-bar");
+      const actionsElement = $(".actions");
+      actions.forEach((action) => {
+        const keybinding = this.keybindingService.lookupKeybinding(action.commandId);
+        const keybindingLabel = keybinding ? keybinding.getLabel() : null;
+        HoverAction.render(actionsElement, {
+          label: action.label,
+          commandId: action.commandId,
+          run: /* @__PURE__ */ __name((e) => {
+            action.run(e);
+          }, "run"),
+          iconClass: action.iconClass
+        }, keybindingLabel);
+      });
+      statusBarElement.appendChild(actionsElement);
+      this.domNode.appendChild(statusBarElement);
+    }
+  }
+};
+ChatEditorHoverWrapper = __decorate([
+  __param(2, IKeybindingService)
+], ChatEditorHoverWrapper);
+export {
+  ChatEditorHoverWrapper
+};
+//# sourceMappingURL=editorHoverWrapper.js.map

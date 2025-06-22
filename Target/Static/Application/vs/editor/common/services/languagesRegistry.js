@@ -1,1 +1,303 @@
-import{$df as m}from"../../../base/common/event.js";import{$vd as g}from"../../../base/common/lifecycle.js";import{$Zf as p,$Nf as y}from"../../../base/common/strings.js";import{$3Eb as d,$6Eb as x,$1Eb as a}from"./languagesAssociations.js";import{$lE as u,$mE as L}from"../languages/modesRegistry.js";import{$Sl as A}from"../../../platform/configuration/common/configurationRegistry.js";import{$Ql as $}from"../../../platform/registry/common/platform.js";const r=Object.prototype.hasOwnProperty,l="vs.editor.nullLanguage";class N{constructor(){this.e=[],this.f=new Map,this.g(l,0),this.g(L,1),this.c=2}g(e,t){this.e[t]=e,this.f.set(e,t)}register(e){if(this.f.has(e))return;const t=this.c++;this.g(e,t)}encodeLanguageId(e){return this.f.get(e)||0}decodeLanguageId(e){return this.e[e]||l}}class c extends g{static{this.instanceCount=0}constructor(e=!0,t=!1){super(),this.c=this.B(new m),this.onDidChange=this.c.event,c.instanceCount++,this.f=t,this.languageIdCodec=new N,this.g=[],this.h={},this.j={},this.n={},this.r={},e&&(this.s(),this.B(u.onDidChangeLanguages(i=>{this.s()})))}dispose(){c.instanceCount--,super.dispose()}setDynamicLanguages(e){this.g=e,this.s()}s(){this.h={},this.j={},this.n={},this.r={},d();const e=[].concat(u.getLanguages()).concat(this.g);this._registerLanguages(e)}registerLanguage(e){return u.registerLanguage(e)}_registerLanguages(e){for(const t of e)this.t(t);this.j={},this.n={},this.r={},Object.keys(this.h).forEach(t=>{const i=this.h[t];i.name&&(this.n[i.name]=i.identifier),i.aliases.forEach(n=>{this.r[n.toLowerCase()]=i.identifier}),i.mimetypes.forEach(n=>{this.j[n]=i.identifier})}),$.as(A.Configuration).registerOverrideIdentifiers(this.getRegisteredLanguageIds()),this.c.fire()}t(e){const t=e.id;let i;r.call(this.h,t)?i=this.h[t]:(this.languageIdCodec.register(t),i={identifier:t,name:null,mimetypes:[],aliases:[],extensions:[],filenames:[],configurationFiles:[],icons:[]},this.h[t]=i),this.u(i,e)}u(e,t){const i=t.id;let n=null;if(Array.isArray(t.mimetypes)&&t.mimetypes.length>0&&(e.mimetypes.push(...t.mimetypes),n=t.mimetypes[0]),n||(n=`text/x-${i}`,e.mimetypes.push(n)),Array.isArray(t.extensions)){t.configuration?e.extensions=t.extensions.concat(e.extensions):e.extensions=e.extensions.concat(t.extensions);for(const s of t.extensions)a({id:i,mime:n,extension:s},this.f)}if(Array.isArray(t.filenames))for(const s of t.filenames)a({id:i,mime:n,filename:s},this.f),e.filenames.push(s);if(Array.isArray(t.filenamePatterns))for(const s of t.filenamePatterns)a({id:i,mime:n,filepattern:s},this.f);if(typeof t.firstLine=="string"&&t.firstLine.length>0){let s=t.firstLine;s.charAt(0)!=="^"&&(s="^"+s);try{const f=new RegExp(s);y(f)||a({id:i,mime:n,firstline:f},this.f)}catch{}}e.aliases.push(i);let h=null;if(typeof t.aliases<"u"&&Array.isArray(t.aliases)&&(t.aliases.length===0?h=[null]:h=t.aliases),h!==null)for(const s of h)!s||s.length===0||e.aliases.push(s);const o=h!==null&&h.length>0;if(!(o&&h[0]===null)){const s=(o?h[0]:null)||i;(o||!e.name)&&(e.name=s)}t.configuration&&e.configurationFiles.push(t.configuration),t.icon&&e.icons.push(t.icon)}isRegisteredLanguageId(e){return e?r.call(this.h,e):!1}getRegisteredLanguageIds(){return Object.keys(this.h)}getSortedRegisteredLanguageNames(){const e=[];for(const t in this.n)r.call(this.n,t)&&e.push({languageName:t,languageId:this.n[t]});return e.sort((t,i)=>p(t.languageName,i.languageName)),e}getLanguageName(e){return r.call(this.h,e)?this.h[e].name:null}getMimeType(e){return r.call(this.h,e)&&this.h[e].mimetypes[0]||null}getExtensions(e){return r.call(this.h,e)?this.h[e].extensions:[]}getFilenames(e){return r.call(this.h,e)?this.h[e].filenames:[]}getIcon(e){return r.call(this.h,e)&&this.h[e].icons[0]||null}getConfigurationFiles(e){return r.call(this.h,e)?this.h[e].configurationFiles||[]:[]}getLanguageIdByLanguageName(e){const t=e.toLowerCase();return r.call(this.r,t)?this.r[t]:null}getLanguageIdByMimeType(e){return e&&r.call(this.j,e)?this.j[e]:null}guessLanguageIdByFilepathOrFirstLine(e,t){return!e&&!t?[]:x(e,t)}}export{N as $7Eb,c as $8Eb};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { Emitter } from "../../../base/common/event.js";
+import { Disposable } from "../../../base/common/lifecycle.js";
+import { compareIgnoreCase, regExpLeadsToEndlessLoop } from "../../../base/common/strings.js";
+import { clearPlatformLanguageAssociations, getLanguageIds, registerPlatformLanguageAssociation } from "./languagesAssociations.js";
+import { ModesRegistry, PLAINTEXT_LANGUAGE_ID } from "../languages/modesRegistry.js";
+import { Extensions } from "../../../platform/configuration/common/configurationRegistry.js";
+import { Registry } from "../../../platform/registry/common/platform.js";
+const hasOwnProperty = Object.prototype.hasOwnProperty;
+const NULL_LANGUAGE_ID = "vs.editor.nullLanguage";
+class LanguageIdCodec {
+  static {
+    __name(this, "LanguageIdCodec");
+  }
+  constructor() {
+    this._languageIdToLanguage = [];
+    this._languageToLanguageId = /* @__PURE__ */ new Map();
+    this._register(
+      NULL_LANGUAGE_ID,
+      0
+      /* LanguageId.Null */
+    );
+    this._register(
+      PLAINTEXT_LANGUAGE_ID,
+      1
+      /* LanguageId.PlainText */
+    );
+    this._nextLanguageId = 2;
+  }
+  _register(language, languageId) {
+    this._languageIdToLanguage[languageId] = language;
+    this._languageToLanguageId.set(language, languageId);
+  }
+  register(language) {
+    if (this._languageToLanguageId.has(language)) {
+      return;
+    }
+    const languageId = this._nextLanguageId++;
+    this._register(language, languageId);
+  }
+  encodeLanguageId(languageId) {
+    return this._languageToLanguageId.get(languageId) || 0;
+  }
+  decodeLanguageId(languageId) {
+    return this._languageIdToLanguage[languageId] || NULL_LANGUAGE_ID;
+  }
+}
+class LanguagesRegistry extends Disposable {
+  static {
+    __name(this, "LanguagesRegistry");
+  }
+  static {
+    this.instanceCount = 0;
+  }
+  constructor(useModesRegistry = true, warnOnOverwrite = false) {
+    super();
+    this._onDidChange = this._register(new Emitter());
+    this.onDidChange = this._onDidChange.event;
+    LanguagesRegistry.instanceCount++;
+    this._warnOnOverwrite = warnOnOverwrite;
+    this.languageIdCodec = new LanguageIdCodec();
+    this._dynamicLanguages = [];
+    this._languages = {};
+    this._mimeTypesMap = {};
+    this._nameMap = {};
+    this._lowercaseNameMap = {};
+    if (useModesRegistry) {
+      this._initializeFromRegistry();
+      this._register(ModesRegistry.onDidChangeLanguages((m) => {
+        this._initializeFromRegistry();
+      }));
+    }
+  }
+  dispose() {
+    LanguagesRegistry.instanceCount--;
+    super.dispose();
+  }
+  setDynamicLanguages(def) {
+    this._dynamicLanguages = def;
+    this._initializeFromRegistry();
+  }
+  _initializeFromRegistry() {
+    this._languages = {};
+    this._mimeTypesMap = {};
+    this._nameMap = {};
+    this._lowercaseNameMap = {};
+    clearPlatformLanguageAssociations();
+    const desc = [].concat(ModesRegistry.getLanguages()).concat(this._dynamicLanguages);
+    this._registerLanguages(desc);
+  }
+  registerLanguage(desc) {
+    return ModesRegistry.registerLanguage(desc);
+  }
+  _registerLanguages(desc) {
+    for (const d of desc) {
+      this._registerLanguage(d);
+    }
+    this._mimeTypesMap = {};
+    this._nameMap = {};
+    this._lowercaseNameMap = {};
+    Object.keys(this._languages).forEach((langId) => {
+      const language = this._languages[langId];
+      if (language.name) {
+        this._nameMap[language.name] = language.identifier;
+      }
+      language.aliases.forEach((alias) => {
+        this._lowercaseNameMap[alias.toLowerCase()] = language.identifier;
+      });
+      language.mimetypes.forEach((mimetype) => {
+        this._mimeTypesMap[mimetype] = language.identifier;
+      });
+    });
+    Registry.as(Extensions.Configuration).registerOverrideIdentifiers(this.getRegisteredLanguageIds());
+    this._onDidChange.fire();
+  }
+  _registerLanguage(lang) {
+    const langId = lang.id;
+    let resolvedLanguage;
+    if (hasOwnProperty.call(this._languages, langId)) {
+      resolvedLanguage = this._languages[langId];
+    } else {
+      this.languageIdCodec.register(langId);
+      resolvedLanguage = {
+        identifier: langId,
+        name: null,
+        mimetypes: [],
+        aliases: [],
+        extensions: [],
+        filenames: [],
+        configurationFiles: [],
+        icons: []
+      };
+      this._languages[langId] = resolvedLanguage;
+    }
+    this._mergeLanguage(resolvedLanguage, lang);
+  }
+  _mergeLanguage(resolvedLanguage, lang) {
+    const langId = lang.id;
+    let primaryMime = null;
+    if (Array.isArray(lang.mimetypes) && lang.mimetypes.length > 0) {
+      resolvedLanguage.mimetypes.push(...lang.mimetypes);
+      primaryMime = lang.mimetypes[0];
+    }
+    if (!primaryMime) {
+      primaryMime = `text/x-${langId}`;
+      resolvedLanguage.mimetypes.push(primaryMime);
+    }
+    if (Array.isArray(lang.extensions)) {
+      if (lang.configuration) {
+        resolvedLanguage.extensions = lang.extensions.concat(resolvedLanguage.extensions);
+      } else {
+        resolvedLanguage.extensions = resolvedLanguage.extensions.concat(lang.extensions);
+      }
+      for (const extension of lang.extensions) {
+        registerPlatformLanguageAssociation({ id: langId, mime: primaryMime, extension }, this._warnOnOverwrite);
+      }
+    }
+    if (Array.isArray(lang.filenames)) {
+      for (const filename of lang.filenames) {
+        registerPlatformLanguageAssociation({ id: langId, mime: primaryMime, filename }, this._warnOnOverwrite);
+        resolvedLanguage.filenames.push(filename);
+      }
+    }
+    if (Array.isArray(lang.filenamePatterns)) {
+      for (const filenamePattern of lang.filenamePatterns) {
+        registerPlatformLanguageAssociation({ id: langId, mime: primaryMime, filepattern: filenamePattern }, this._warnOnOverwrite);
+      }
+    }
+    if (typeof lang.firstLine === "string" && lang.firstLine.length > 0) {
+      let firstLineRegexStr = lang.firstLine;
+      if (firstLineRegexStr.charAt(0) !== "^") {
+        firstLineRegexStr = "^" + firstLineRegexStr;
+      }
+      try {
+        const firstLineRegex = new RegExp(firstLineRegexStr);
+        if (!regExpLeadsToEndlessLoop(firstLineRegex)) {
+          registerPlatformLanguageAssociation({ id: langId, mime: primaryMime, firstline: firstLineRegex }, this._warnOnOverwrite);
+        }
+      } catch (err) {
+        console.warn(`[${lang.id}]: Invalid regular expression \`${firstLineRegexStr}\`: `, err);
+      }
+    }
+    resolvedLanguage.aliases.push(langId);
+    let langAliases = null;
+    if (typeof lang.aliases !== "undefined" && Array.isArray(lang.aliases)) {
+      if (lang.aliases.length === 0) {
+        langAliases = [null];
+      } else {
+        langAliases = lang.aliases;
+      }
+    }
+    if (langAliases !== null) {
+      for (const langAlias of langAliases) {
+        if (!langAlias || langAlias.length === 0) {
+          continue;
+        }
+        resolvedLanguage.aliases.push(langAlias);
+      }
+    }
+    const containsAliases = langAliases !== null && langAliases.length > 0;
+    if (containsAliases && langAliases[0] === null) {
+    } else {
+      const bestName = (containsAliases ? langAliases[0] : null) || langId;
+      if (containsAliases || !resolvedLanguage.name) {
+        resolvedLanguage.name = bestName;
+      }
+    }
+    if (lang.configuration) {
+      resolvedLanguage.configurationFiles.push(lang.configuration);
+    }
+    if (lang.icon) {
+      resolvedLanguage.icons.push(lang.icon);
+    }
+  }
+  isRegisteredLanguageId(languageId) {
+    if (!languageId) {
+      return false;
+    }
+    return hasOwnProperty.call(this._languages, languageId);
+  }
+  getRegisteredLanguageIds() {
+    return Object.keys(this._languages);
+  }
+  getSortedRegisteredLanguageNames() {
+    const result = [];
+    for (const languageName in this._nameMap) {
+      if (hasOwnProperty.call(this._nameMap, languageName)) {
+        result.push({
+          languageName,
+          languageId: this._nameMap[languageName]
+        });
+      }
+    }
+    result.sort((a, b) => compareIgnoreCase(a.languageName, b.languageName));
+    return result;
+  }
+  getLanguageName(languageId) {
+    if (!hasOwnProperty.call(this._languages, languageId)) {
+      return null;
+    }
+    return this._languages[languageId].name;
+  }
+  getMimeType(languageId) {
+    if (!hasOwnProperty.call(this._languages, languageId)) {
+      return null;
+    }
+    const language = this._languages[languageId];
+    return language.mimetypes[0] || null;
+  }
+  getExtensions(languageId) {
+    if (!hasOwnProperty.call(this._languages, languageId)) {
+      return [];
+    }
+    return this._languages[languageId].extensions;
+  }
+  getFilenames(languageId) {
+    if (!hasOwnProperty.call(this._languages, languageId)) {
+      return [];
+    }
+    return this._languages[languageId].filenames;
+  }
+  getIcon(languageId) {
+    if (!hasOwnProperty.call(this._languages, languageId)) {
+      return null;
+    }
+    const language = this._languages[languageId];
+    return language.icons[0] || null;
+  }
+  getConfigurationFiles(languageId) {
+    if (!hasOwnProperty.call(this._languages, languageId)) {
+      return [];
+    }
+    return this._languages[languageId].configurationFiles || [];
+  }
+  getLanguageIdByLanguageName(languageName) {
+    const languageNameLower = languageName.toLowerCase();
+    if (!hasOwnProperty.call(this._lowercaseNameMap, languageNameLower)) {
+      return null;
+    }
+    return this._lowercaseNameMap[languageNameLower];
+  }
+  getLanguageIdByMimeType(mimeType) {
+    if (!mimeType) {
+      return null;
+    }
+    if (hasOwnProperty.call(this._mimeTypesMap, mimeType)) {
+      return this._mimeTypesMap[mimeType];
+    }
+    return null;
+  }
+  guessLanguageIdByFilepathOrFirstLine(resource, firstLine) {
+    if (!resource && !firstLine) {
+      return [];
+    }
+    return getLanguageIds(resource, firstLine);
+  }
+}
+export {
+  LanguageIdCodec,
+  LanguagesRegistry
+};
+//# sourceMappingURL=languagesRegistry.js.map

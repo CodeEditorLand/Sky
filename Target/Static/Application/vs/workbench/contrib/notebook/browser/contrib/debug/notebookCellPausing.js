@@ -1,1 +1,86 @@
-import{$Yh as u}from"../../../../../../base/common/async.js";import{$vd as p}from"../../../../../../base/common/lifecycle.js";import{URI as d}from"../../../../../../base/common/uri.js";import{$Ql as m}from"../../../../../../platform/registry/common/platform.js";import{Extensions as g}from"../../../../../common/contributions.js";import{$hW as b}from"../../../../debug/common/debug.js";import{CellUri as h}from"../../../common/notebookCommon.js";import{CellExecutionUpdateType as C}from"../../../common/notebookExecutionService.js";import{$DK as S}from"../../../common/notebookExecutionStateService.js";var f=function(n,e,t,o){var r=arguments.length,s=r<3?e:o===null?o=Object.getOwnPropertyDescriptor(e,t):o,i;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")s=Reflect.decorate(n,e,t,o);else for(var a=n.length-1;a>=0;a--)(i=n[a])&&(s=(r<3?i(s):r>3?i(e,t,s):i(e,t))||s);return r>3&&s&&Object.defineProperty(e,t,s),s},c=function(n,e){return function(t,o){e(t,o,n)}};let l=class extends p{constructor(e,t){super(),this.c=e,this.f=t,this.a=new Set,this.B(e.getModel().onDidChangeCallStack(()=>{this.g(!0),this.b.schedule()})),this.b=this.B(new u(()=>this.g(!1),2e3))}async g(e){const t=new Set;for(const o of this.c.getModel().getSessions())for(const r of o.getAllThreads()){let s=r.getCallStack();e&&!s.length&&(s=r.getStaleCallStack()),s.forEach(i=>{h.parse(i.source.uri)&&(t.add(i.source.uri.toString()),this.h(i.source.uri,!0))})}for(const o of this.a)t.has(o)||(this.h(d.parse(o),!1),this.a.delete(o));t.forEach(o=>this.a.add(o))}h(e,t){if(h.parse(e)){const r=this.f.getCellExecution(e);r&&(r.isPaused!==t||!r.didPause)&&r.update([{editType:C.ExecutionState,didPause:!0,isPaused:t}])}}};l=f([c(0,b),c(1,S)],l);m.as(g.Workbench).registerWorkbenchContribution(l,3);
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { RunOnceScheduler } from "../../../../../../base/common/async.js";
+import { Disposable } from "../../../../../../base/common/lifecycle.js";
+import { URI } from "../../../../../../base/common/uri.js";
+import { Registry } from "../../../../../../platform/registry/common/platform.js";
+import { Extensions as WorkbenchExtensions } from "../../../../../common/contributions.js";
+import { IDebugService } from "../../../../debug/common/debug.js";
+import { CellUri } from "../../../common/notebookCommon.js";
+import { CellExecutionUpdateType } from "../../../common/notebookExecutionService.js";
+import { INotebookExecutionStateService } from "../../../common/notebookExecutionStateService.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+let NotebookCellPausing = class NotebookCellPausing2 extends Disposable {
+  static {
+    __name(this, "NotebookCellPausing");
+  }
+  constructor(_debugService, _notebookExecutionStateService) {
+    super();
+    this._debugService = _debugService;
+    this._notebookExecutionStateService = _notebookExecutionStateService;
+    this._pausedCells = /* @__PURE__ */ new Set();
+    this._register(_debugService.getModel().onDidChangeCallStack(() => {
+      this.onDidChangeCallStack(true);
+      this._scheduler.schedule();
+    }));
+    this._scheduler = this._register(new RunOnceScheduler(() => this.onDidChangeCallStack(false), 2e3));
+  }
+  async onDidChangeCallStack(fallBackOnStaleCallstack) {
+    const newPausedCells = /* @__PURE__ */ new Set();
+    for (const session of this._debugService.getModel().getSessions()) {
+      for (const thread of session.getAllThreads()) {
+        let callStack = thread.getCallStack();
+        if (fallBackOnStaleCallstack && !callStack.length) {
+          callStack = thread.getStaleCallStack();
+        }
+        callStack.forEach((sf) => {
+          const parsed = CellUri.parse(sf.source.uri);
+          if (parsed) {
+            newPausedCells.add(sf.source.uri.toString());
+            this.editIsPaused(sf.source.uri, true);
+          }
+        });
+      }
+    }
+    for (const uri of this._pausedCells) {
+      if (!newPausedCells.has(uri)) {
+        this.editIsPaused(URI.parse(uri), false);
+        this._pausedCells.delete(uri);
+      }
+    }
+    newPausedCells.forEach((cell) => this._pausedCells.add(cell));
+  }
+  editIsPaused(cellUri, isPaused) {
+    const parsed = CellUri.parse(cellUri);
+    if (parsed) {
+      const exeState = this._notebookExecutionStateService.getCellExecution(cellUri);
+      if (exeState && (exeState.isPaused !== isPaused || !exeState.didPause)) {
+        exeState.update([{
+          editType: CellExecutionUpdateType.ExecutionState,
+          didPause: true,
+          isPaused
+        }]);
+      }
+    }
+  }
+};
+NotebookCellPausing = __decorate([
+  __param(0, IDebugService),
+  __param(1, INotebookExecutionStateService)
+], NotebookCellPausing);
+Registry.as(WorkbenchExtensions.Workbench).registerWorkbenchContribution(
+  NotebookCellPausing,
+  3
+  /* LifecyclePhase.Restored */
+);
+//# sourceMappingURL=notebookCellPausing.js.map

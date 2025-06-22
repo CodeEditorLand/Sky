@@ -1,1 +1,109 @@
-import{Event as c}from"../../../../base/common/event.js";import{$vd as d}from"../../../../base/common/lifecycle.js";import{URI as i}from"../../../../base/common/uri.js";import{FileType as p,$8j as u}from"../../../../platform/files/common/files.js";import{$dh as n}from"../../../../base/common/resources.js";import{$Ji as h}from"../../../../base/common/buffer.js";class r{static{this.SCHEMA="vscode-local-history"}static toLocalHistoryFileSystem(t){const e={location:t.location.toString(!0),associatedResource:t.associatedResource.toString(!0)};return t.associatedResource.with({scheme:r.SCHEMA,query:JSON.stringify(e)})}static fromLocalHistoryFileSystem(t){const e=JSON.parse(t.query);return{location:i.parse(e.location),associatedResource:i.parse(e.associatedResource)}}static{this.a=i.from({scheme:r.SCHEMA,path:"/empty"})}static{this.EMPTY={location:r.a,associatedResource:r.a}}get capabilities(){return 2050}constructor(t){this.b=t,this.c=new Map,this.onDidChangeCapabilities=c.None,this.onDidChangeFile=c.None}async d(t){const e=t.scheme;let o=this.c.get(e);if(!o){const a=this.b.getProvider(e);a?o=Promise.resolve(a):o=new Promise(l=>{const m=this.b.onDidChangeFileSystemProviderRegistrations(s=>{s.added&&s.provider&&s.scheme===e&&(m.dispose(),l(s.provider))})}),this.c.set(e,o)}return o}async stat(t){const e=r.fromLocalHistoryFileSystem(t).location;return n(r.a,e)?{type:p.File,ctime:0,mtime:0,size:0}:(await this.d(e)).stat(e)}async readFile(t){const e=r.fromLocalHistoryFileSystem(t).location;if(n(r.a,e))return h.fromString("").buffer;const o=await this.d(e);if(u(o))return o.readFile(e);throw new Error("Unsupported")}async writeFile(t,e,o){}async mkdir(t){}async readdir(t){return[]}async rename(t,e,o){}async delete(t,e){}watch(t,e){return d.None}}export{r as $Gxc};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { Event } from "../../../../base/common/event.js";
+import { Disposable } from "../../../../base/common/lifecycle.js";
+import { URI } from "../../../../base/common/uri.js";
+import { FileType, hasReadWriteCapability } from "../../../../platform/files/common/files.js";
+import { isEqual } from "../../../../base/common/resources.js";
+import { VSBuffer } from "../../../../base/common/buffer.js";
+class LocalHistoryFileSystemProvider {
+  static {
+    __name(this, "LocalHistoryFileSystemProvider");
+  }
+  static {
+    this.SCHEMA = "vscode-local-history";
+  }
+  static toLocalHistoryFileSystem(resource) {
+    const serializedLocalHistoryResource = {
+      location: resource.location.toString(true),
+      associatedResource: resource.associatedResource.toString(true)
+    };
+    return resource.associatedResource.with({
+      scheme: LocalHistoryFileSystemProvider.SCHEMA,
+      query: JSON.stringify(serializedLocalHistoryResource)
+    });
+  }
+  static fromLocalHistoryFileSystem(resource) {
+    const serializedLocalHistoryResource = JSON.parse(resource.query);
+    return {
+      location: URI.parse(serializedLocalHistoryResource.location),
+      associatedResource: URI.parse(serializedLocalHistoryResource.associatedResource)
+    };
+  }
+  static {
+    this.EMPTY_RESOURCE = URI.from({ scheme: LocalHistoryFileSystemProvider.SCHEMA, path: "/empty" });
+  }
+  static {
+    this.EMPTY = {
+      location: LocalHistoryFileSystemProvider.EMPTY_RESOURCE,
+      associatedResource: LocalHistoryFileSystemProvider.EMPTY_RESOURCE
+    };
+  }
+  get capabilities() {
+    return 2 | 2048;
+  }
+  constructor(fileService) {
+    this.fileService = fileService;
+    this.mapSchemeToProvider = /* @__PURE__ */ new Map();
+    this.onDidChangeCapabilities = Event.None;
+    this.onDidChangeFile = Event.None;
+  }
+  async withProvider(resource) {
+    const scheme = resource.scheme;
+    let providerPromise = this.mapSchemeToProvider.get(scheme);
+    if (!providerPromise) {
+      const provider = this.fileService.getProvider(scheme);
+      if (provider) {
+        providerPromise = Promise.resolve(provider);
+      } else {
+        providerPromise = new Promise((resolve) => {
+          const disposable = this.fileService.onDidChangeFileSystemProviderRegistrations((e) => {
+            if (e.added && e.provider && e.scheme === scheme) {
+              disposable.dispose();
+              resolve(e.provider);
+            }
+          });
+        });
+      }
+      this.mapSchemeToProvider.set(scheme, providerPromise);
+    }
+    return providerPromise;
+  }
+  //#region Supported File Operations
+  async stat(resource) {
+    const location = LocalHistoryFileSystemProvider.fromLocalHistoryFileSystem(resource).location;
+    if (isEqual(LocalHistoryFileSystemProvider.EMPTY_RESOURCE, location)) {
+      return { type: FileType.File, ctime: 0, mtime: 0, size: 0 };
+    }
+    return (await this.withProvider(location)).stat(location);
+  }
+  async readFile(resource) {
+    const location = LocalHistoryFileSystemProvider.fromLocalHistoryFileSystem(resource).location;
+    if (isEqual(LocalHistoryFileSystemProvider.EMPTY_RESOURCE, location)) {
+      return VSBuffer.fromString("").buffer;
+    }
+    const provider = await this.withProvider(location);
+    if (hasReadWriteCapability(provider)) {
+      return provider.readFile(location);
+    }
+    throw new Error("Unsupported");
+  }
+  async writeFile(resource, content, opts) {
+  }
+  async mkdir(resource) {
+  }
+  async readdir(resource) {
+    return [];
+  }
+  async rename(from, to, opts) {
+  }
+  async delete(resource, opts) {
+  }
+  watch(resource, opts) {
+    return Disposable.None;
+  }
+}
+export {
+  LocalHistoryFileSystemProvider
+};
+//# sourceMappingURL=localHistoryFileSystemProvider.js.map

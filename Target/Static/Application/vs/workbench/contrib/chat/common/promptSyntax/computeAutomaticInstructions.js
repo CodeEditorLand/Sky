@@ -1,5 +1,257 @@
-import{$_i as S,$0i as T}from"../../../../../base/common/glob.js";import{$Ic as P,$Jc as h}from"../../../../../base/common/map.js";import{Schemas as I}from"../../../../../base/common/network.js";import{$hh as F,$kh as v}from"../../../../../base/common/resources.js";import{$1c as b,$Yc as d}from"../../../../../base/common/types.js";import{localize as m}from"../../../../../nls.js";import{$El as x}from"../../../../../platform/configuration/common/configuration.js";import{$5j as O}from"../../../../../platform/files/common/files.js";import{$2H as R}from"../../../../../platform/label/common/label.js";import{$3n as N}from"../../../../../platform/log/common/log.js";import{$hl as j}from"../../../../../platform/workspace/common/workspace.js";import{IChatRequestVariableEntry as A,$3P as w,$7P as p,$8P as M}from"../chatVariableEntries.js";import{PromptsConfig as g}from"./config/config.js";import{$qS as V}from"./config/promptFileLocations.js";import{PromptsType as $}from"./promptTypes.js";import{$HS as L}from"./service/promptsService.js";var _=function(f,i,e,o){var s=arguments.length,t=s<3?i:o===null?o=Object.getOwnPropertyDescriptor(i,e):o,n;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")t=Reflect.decorate(f,i,e,o);else for(var c=f.length-1;c>=0;c--)(n=f[c])&&(t=(s<3?n(t):s>3?n(i,e,t):n(i,e))||t);return s>3&&t&&Object.defineProperty(i,e,t),t},l=function(f,i){return function(e,o){i(e,o,f)}};let y=class{constructor(i,e,o,s,t,n){this.c=i,this._logService=e,this.d=o,this.e=s,this.f=t,this.g=n,this.a=new P,this.b=[]}get autoAddedInstructions(){return this.b}async h(i,e){if(this.a.has(i))return this.a.get(i);const o=await this.c.parse(i,e);return this.a.set(i,o),o}async collect(i,e,o){const s=await this.c.listPromptFiles($.instructions,o);this._logService.trace(`[InstructionsContextComputer] ${s.length} instruction files available.`);const t=this.i(i),n=await this.findInstructionFilesFor(s,t,o);i.add(...n),this.b.push(...n);const c=await this.j();for(const u of c.files)i.add(p(u,!0));this._logService.trace(`[InstructionsContextComputer]  ${c.files.size} Copilot instructions files added.`);const r=this.m(c.instructionMessages),a=e?await this.l(s,i,o):[];if(r.length+a.length>0){const u=`${r.join(`
-`)}
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { match, splitGlobAware } from "../../../../../base/common/glob.js";
+import { ResourceMap, ResourceSet } from "../../../../../base/common/map.js";
+import { Schemas } from "../../../../../base/common/network.js";
+import { basename, joinPath } from "../../../../../base/common/resources.js";
+import { isObject, isString } from "../../../../../base/common/types.js";
+import { localize } from "../../../../../nls.js";
+import { IConfigurationService } from "../../../../../platform/configuration/common/configuration.js";
+import { IFileService } from "../../../../../platform/files/common/files.js";
+import { ILabelService } from "../../../../../platform/label/common/label.js";
+import { ILogService } from "../../../../../platform/log/common/log.js";
+import { IWorkspaceContextService } from "../../../../../platform/workspace/common/workspace.js";
+import { IChatRequestVariableEntry, isPromptFileVariableEntry, toPromptFileVariableEntry, toPromptTextVariableEntry } from "../chatVariableEntries.js";
+import { PromptsConfig } from "./config/config.js";
+import { COPILOT_CUSTOM_INSTRUCTIONS_FILENAME } from "./config/promptFileLocations.js";
+import { PromptsType } from "./promptTypes.js";
+import { IPromptsService } from "./service/promptsService.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+let ComputeAutomaticInstructions = class ComputeAutomaticInstructions2 {
+  static {
+    __name(this, "ComputeAutomaticInstructions");
+  }
+  constructor(_promptsService, _logService, _labelService, _configurationService, _workspaceService, _fileService) {
+    this._promptsService = _promptsService;
+    this._logService = _logService;
+    this._labelService = _labelService;
+    this._configurationService = _configurationService;
+    this._workspaceService = _workspaceService;
+    this._fileService = _fileService;
+    this._parseResults = new ResourceMap();
+    this._autoAddedInstructions = [];
+  }
+  get autoAddedInstructions() {
+    return this._autoAddedInstructions;
+  }
+  async _parsePromptFile(uri, token) {
+    if (this._parseResults.has(uri)) {
+      return this._parseResults.get(uri);
+    }
+    const result = await this._promptsService.parse(uri, token);
+    this._parseResults.set(uri, result);
+    return result;
+  }
+  async collect(variables, addInstructionsSummary, token) {
+    const instructionFiles = await this._promptsService.listPromptFiles(PromptsType.instructions, token);
+    this._logService.trace(`[InstructionsContextComputer] ${instructionFiles.length} instruction files available.`);
+    const context = this._getContext(variables);
+    const autoAddedInstructions = await this.findInstructionFilesFor(instructionFiles, context, token);
+    variables.add(...autoAddedInstructions);
+    this._autoAddedInstructions.push(...autoAddedInstructions);
+    const copilotInstructions = await this._getCopilotInstructions();
+    for (const file of copilotInstructions.files) {
+      variables.add(toPromptFileVariableEntry(file, true));
+    }
+    this._logService.trace(`[InstructionsContextComputer]  ${copilotInstructions.files.size} Copilot instructions files added.`);
+    const copilotInstructionsFromSettings = this._getCopilotTextInstructions(copilotInstructions.instructionMessages);
+    const instructionsWithPatternsList = addInstructionsSummary ? await this._getInstructionsWithPatternsList(instructionFiles, variables, token) : [];
+    if (copilotInstructionsFromSettings.length + instructionsWithPatternsList.length > 0) {
+      const text = `${copilotInstructionsFromSettings.join("\n")}
 
-${a.join(`
-`)}`,C=r.length>0?g.COPILOT_INSTRUCTIONS:void 0;i.add(M(u,C))}this.n(i,o)}async findInstructionFilesFor(i,e,o){const s=[];for(const t of i){const{metadata:n,uri:c}=await this.h(t.uri,o);if(n?.promptType!==$.instructions){this._logService.trace(`[InstructionsContextComputer] Not an instruction file: ${c}`);continue}const r=n?.applyTo;if(!r){this._logService.trace(`[InstructionsContextComputer] No 'applyTo' found: ${c}`);continue}if(e.instructions.has(c)){this._logService.trace(`[InstructionsContextComputer] Skipping already processed instruction file: ${c}`);continue}const a=this.k(e.files,r);if(a){this._logService.trace(`[InstructionsContextComputer] Match for ${c} with ${a.pattern}${a.file?` for file ${a.file}`:""}`);const u=a.file?m(5734,null,r,this.d.getUriLabel(a.file,{relative:!0})):m(5733,null);s.push(p(c,!0,u))}else this._logService.trace(`[InstructionsContextComputer] No match for ${c} with ${r}`)}return s}i(i){const e=new h,o=new h;for(const s of i.asArray())if(w(s))o.add(s.value);else{const t=A.toUri(s);t&&e.add(t)}return{files:e,instructions:o}}async j(){const i=new Set,e=new Set;this.e.getValue(g.USE_COPILOT_INSTRUCTION_FILES)&&e.add(".github/"+V);const s=this.e.inspect(g.COPILOT_INSTRUCTIONS);[s.workspaceFolderValue,s.workspaceValue,s.userValue].forEach(c=>{if(Array.isArray(c))for(const r of c)d(r)?i.add(r):r&&b(r)&&(d(r.text)?i.add(r.text):d(r.file)&&e.add(r.file))});const{folders:t}=this.f.getWorkspace(),n=new h;for(const c of t)for(const r of e){const a=v(c.uri,r);await this.g.exists(a)&&n.add(a)}return{files:n,instructionMessages:i}}k(i,e){const o=T(e,","),s=t=>{if(t=t.trim(),t.length!==0){if(t==="**"||t==="**/*"||t==="*")return{pattern:t};!t.startsWith("/")&&!t.startsWith("**/")&&(t="**/"+t);for(const n of i)if(S(t,n.path))return{pattern:t,file:n}}};for(const t of o){const n=s(t);if(n)return n}}async l(i,e,o){const s=[];for(const t of i){const{metadata:n,uri:c}=await this.h(t.uri,o);if(n?.promptType!==$.instructions)continue;const r=n?.applyTo,a=n?.description??"";r&&r!=="**"&&r!=="**/*"&&r!=="*"&&s.push(`| ${n.applyTo} | '${U(c)}' | ${a} |`)}return s.length===0?s:["Here is a list of instruction files that contain rules for modifying or creating new code.","These files are important for ensuring that the code is modified or created correctly.","Please make sure to follow the rules specified in these files when working with the codebase.","If the file is not already available as attachment, use the `read_file` tool to acquire it.","Make sure to acquire the instructions before making any changes to the code.","| Pattern | File Path | Description |","| ------- | --------- | ----------- |"].concat(s)}m(i){const e=[];for(const o of i)o.trim().length!==0&&(e.push(o),e.push());return e.length===0?[]:["The user has provided the following instructions that you want to follow."].concat(e)}async n(i,e){for(const o of i.asArray())if(w(o)){const s=await this.h(o.value,e);for(const t of s.allValidReferences)if(await this.g.exists(t)){const n=m(5735,null,F(o.value));i.add(p(t,!0,n))}}}};y=_([l(0,L),l(1,N),l(2,R),l(3,x),l(4,j),l(5,O)],y);function U(f){return f.scheme===I.file||f.scheme===I.vscodeRemote?f.fsPath:f.toString()}export{y as $MQb};
+${instructionsWithPatternsList.join("\n")}`;
+      const settingId = copilotInstructionsFromSettings.length > 0 ? PromptsConfig.COPILOT_INSTRUCTIONS : void 0;
+      variables.add(toPromptTextVariableEntry(text, settingId));
+    }
+    this._addReferencedInstructions(variables, token);
+  }
+  /** public for testing */
+  async findInstructionFilesFor(instructionFiles, context, token) {
+    const autoAddedInstructions = [];
+    for (const instructionFile of instructionFiles) {
+      const { metadata, uri } = await this._parsePromptFile(instructionFile.uri, token);
+      if (metadata?.promptType !== PromptsType.instructions) {
+        this._logService.trace(`[InstructionsContextComputer] Not an instruction file: ${uri}`);
+        continue;
+      }
+      const applyTo = metadata?.applyTo;
+      if (!applyTo) {
+        this._logService.trace(`[InstructionsContextComputer] No 'applyTo' found: ${uri}`);
+        continue;
+      }
+      if (context.instructions.has(uri)) {
+        this._logService.trace(`[InstructionsContextComputer] Skipping already processed instruction file: ${uri}`);
+        continue;
+      }
+      const match2 = this._matches(context.files, applyTo);
+      if (match2) {
+        this._logService.trace(`[InstructionsContextComputer] Match for ${uri} with ${match2.pattern}${match2.file ? ` for file ${match2.file}` : ""}`);
+        const reason = !match2.file ? localize("instruction.file.reason.allFiles", "Automatically attached as pattern is **") : localize("instruction.file.reason.specificFile", "Automatically attached as pattern {0} matches {1}", applyTo, this._labelService.getUriLabel(match2.file, { relative: true }));
+        autoAddedInstructions.push(toPromptFileVariableEntry(uri, true, reason));
+      } else {
+        this._logService.trace(`[InstructionsContextComputer] No match for ${uri} with ${applyTo}`);
+      }
+    }
+    return autoAddedInstructions;
+  }
+  _getContext(attachedContext) {
+    const files = new ResourceSet();
+    const instructions = new ResourceSet();
+    for (const variable of attachedContext.asArray()) {
+      if (isPromptFileVariableEntry(variable)) {
+        instructions.add(variable.value);
+      } else {
+        const uri = IChatRequestVariableEntry.toUri(variable);
+        if (uri) {
+          files.add(uri);
+        }
+      }
+    }
+    return { files, instructions };
+  }
+  async _getCopilotInstructions() {
+    const instructionMessages = /* @__PURE__ */ new Set();
+    const instructionFiles = /* @__PURE__ */ new Set();
+    const useCopilotInstructionsFiles = this._configurationService.getValue(PromptsConfig.USE_COPILOT_INSTRUCTION_FILES);
+    if (useCopilotInstructionsFiles) {
+      instructionFiles.add(`.github/` + COPILOT_CUSTOM_INSTRUCTIONS_FILENAME);
+    }
+    const config = this._configurationService.inspect(PromptsConfig.COPILOT_INSTRUCTIONS);
+    [config.workspaceFolderValue, config.workspaceValue, config.userValue].forEach((value) => {
+      if (Array.isArray(value)) {
+        for (const item of value) {
+          if (isString(item)) {
+            instructionMessages.add(item);
+          } else if (item && isObject(item)) {
+            if (isString(item.text)) {
+              instructionMessages.add(item.text);
+            } else if (isString(item.file)) {
+              instructionFiles.add(item.file);
+            }
+          }
+        }
+      }
+    });
+    const { folders } = this._workspaceService.getWorkspace();
+    const files = new ResourceSet();
+    for (const folder of folders) {
+      for (const instructionFilePath of instructionFiles) {
+        const file = joinPath(folder.uri, instructionFilePath);
+        if (await this._fileService.exists(file)) {
+          files.add(file);
+        }
+      }
+    }
+    return { files, instructionMessages };
+  }
+  _matches(files, applyToPattern) {
+    const patterns = splitGlobAware(applyToPattern, ",");
+    const patterMatches = /* @__PURE__ */ __name((pattern) => {
+      pattern = pattern.trim();
+      if (pattern.length === 0) {
+        return void 0;
+      }
+      if (pattern === "**" || pattern === "**/*" || pattern === "*") {
+        return { pattern };
+      }
+      if (!pattern.startsWith("/") && !pattern.startsWith("**/")) {
+        pattern = "**/" + pattern;
+      }
+      for (const file of files) {
+        if (match(pattern, file.path)) {
+          return { pattern, file };
+        }
+      }
+      return void 0;
+    }, "patterMatches");
+    for (const pattern of patterns) {
+      const matchResult = patterMatches(pattern);
+      if (matchResult) {
+        return matchResult;
+      }
+    }
+    return void 0;
+  }
+  async _getInstructionsWithPatternsList(instructionFiles, _existingVariables, token) {
+    const entries = [];
+    for (const instructionFile of instructionFiles) {
+      const { metadata, uri } = await this._parsePromptFile(instructionFile.uri, token);
+      if (metadata?.promptType !== PromptsType.instructions) {
+        continue;
+      }
+      const applyTo = metadata?.applyTo;
+      const description = metadata?.description ?? "";
+      if (applyTo && applyTo !== "**" && applyTo !== "**/*" && applyTo !== "*") {
+        entries.push(`| ${metadata.applyTo} | '${getFilePath(uri)}' | ${description} |`);
+      }
+    }
+    if (entries.length === 0) {
+      return entries;
+    }
+    return [
+      "Here is a list of instruction files that contain rules for modifying or creating new code.",
+      "These files are important for ensuring that the code is modified or created correctly.",
+      "Please make sure to follow the rules specified in these files when working with the codebase.",
+      "If the file is not already available as attachment, use the `read_file` tool to acquire it.",
+      "Make sure to acquire the instructions before making any changes to the code.",
+      "| Pattern | File Path | Description |",
+      "| ------- | --------- | ----------- |"
+    ].concat(entries);
+  }
+  _getCopilotTextInstructions(iterable) {
+    const entries = [];
+    for (const result of iterable) {
+      const message = result.trim();
+      if (message.length !== 0) {
+        entries.push(result);
+        entries.push();
+      }
+    }
+    if (entries.length === 0) {
+      return [];
+    }
+    return ["The user has provided the following instructions that you want to follow."].concat(entries);
+  }
+  async _addReferencedInstructions(attachedContext, token) {
+    for (const variable of attachedContext.asArray()) {
+      if (isPromptFileVariableEntry(variable)) {
+        const result = await this._parsePromptFile(variable.value, token);
+        for (const ref of result.allValidReferences) {
+          if (await this._fileService.exists(ref)) {
+            const reason = localize("instruction.file.reason.referenced", "Referenced by {0}", basename(variable.value));
+            attachedContext.add(toPromptFileVariableEntry(ref, true, reason));
+          }
+        }
+      }
+    }
+  }
+};
+ComputeAutomaticInstructions = __decorate([
+  __param(0, IPromptsService),
+  __param(1, ILogService),
+  __param(2, ILabelService),
+  __param(3, IConfigurationService),
+  __param(4, IWorkspaceContextService),
+  __param(5, IFileService)
+], ComputeAutomaticInstructions);
+function getFilePath(uri) {
+  if (uri.scheme === Schemas.file || uri.scheme === Schemas.vscodeRemote) {
+    return uri.fsPath;
+  }
+  return uri.toString();
+}
+__name(getFilePath, "getFilePath");
+export {
+  ComputeAutomaticInstructions
+};
+//# sourceMappingURL=computeAutomaticInstructions.js.map

@@ -1,1 +1,43 @@
-import*as o from"../../../../nls.js";import{$iI as t,$dI as s,$jI as e}from"../../../../platform/actions/common/actions.js";import{$OM as n}from"../../../../platform/quickinput/common/quickInput.js";e(class i extends t{static{this.ID="workbench.action.showAllSymbols"}static{this.LABEL=o.localize(10800,null)}static{this.ALL_SYMBOLS_PREFIX="#"}constructor(){super({id:"workbench.action.showAllSymbols",title:{...o.localize2(10802,"Go to Symbol in Workspace..."),mnemonicTitle:o.localize(10801,null)},f1:!0,keybinding:{weight:200,primary:2098},menu:{id:s.MenubarGoMenu,group:"3_global_nav",order:2}})}async run(o){o.get(n).quickAccess.show(i.ALL_SYMBOLS_PREFIX)}});
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import * as nls from "../../../../nls.js";
+import { Action2, MenuId, registerAction2 } from "../../../../platform/actions/common/actions.js";
+import { IQuickInputService } from "../../../../platform/quickinput/common/quickInput.js";
+registerAction2(class ShowAllSymbolsAction extends Action2 {
+  static {
+    __name(this, "ShowAllSymbolsAction");
+  }
+  static {
+    this.ID = "workbench.action.showAllSymbols";
+  }
+  static {
+    this.LABEL = nls.localize("showTriggerActions", "Go to Symbol in Workspace...");
+  }
+  static {
+    this.ALL_SYMBOLS_PREFIX = "#";
+  }
+  constructor() {
+    super({
+      id: "workbench.action.showAllSymbols",
+      title: {
+        ...nls.localize2("showTriggerActions", "Go to Symbol in Workspace..."),
+        mnemonicTitle: nls.localize({ key: "miGotoSymbolInWorkspace", comment: ["&& denotes a mnemonic"] }, "Go to Symbol in &&Workspace...")
+      },
+      f1: true,
+      keybinding: {
+        weight: 200,
+        primary: 2048 | 50
+        /* KeyCode.KeyT */
+      },
+      menu: {
+        id: MenuId.MenubarGoMenu,
+        group: "3_global_nav",
+        order: 2
+      }
+    });
+  }
+  async run(accessor) {
+    accessor.get(IQuickInputService).quickAccess.show(ShowAllSymbolsAction.ALL_SYMBOLS_PREFIX);
+  }
+});
+//# sourceMappingURL=searchActionsSymbol.js.map

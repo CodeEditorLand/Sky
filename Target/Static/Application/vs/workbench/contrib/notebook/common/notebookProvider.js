@@ -1,1 +1,101 @@
-import*as n from"../../../../base/common/glob.js";import{$$ as a}from"../../../../base/common/path.js";import{$yL as o}from"./notebookCommon.js";class r{get selectors(){return this._selectors}get options(){return this.a}constructor(t){this.extension=t.extension,this.id=t.id,this.displayName=t.displayName,this._selectors=t.selectors?.map(e=>({include:e.filenamePattern,exclude:e.excludeFileNamePattern||""}))||t._selectors||[],this.priority=t.priority,this.providerDisplayName=t.providerDisplayName,this.a={transientCellMetadata:{},transientDocumentMetadata:{},transientOutputs:!1,cellContentMetadata:{}}}update(t){t.selectors&&(this._selectors=t.selectors),t.options&&(this.a=t.options)}matches(t){return this.selectors?.some(e=>r.selectorMatches(e,t))}static selectorMatches(t,e){if(typeof t=="string"&&n.$_i(t.toLowerCase(),a(e.fsPath).toLowerCase())||n.$bj(t)&&n.$_i(t,a(e.fsPath).toLowerCase()))return!0;if(!o(t))return!1;const i=t.include,s=t.exclude;return n.$_i(i,a(e.fsPath).toLowerCase())?!(s&&n.$_i(s,a(e.fsPath).toLowerCase())):!1}static possibleFileEnding(t){for(const e of t){const i=r.b(e);if(i)return i}}static b(t){const e=/^.*(\.[a-zA-Z0-9_-]+)$/;let i;if(typeof t=="string")i=t;else if(n.$bj(t))i=t.pattern;else if(t.include)return r.b(t.include);if(i){const s=e.exec(i);if(s)return s[1]}}}export{r as $Qyb};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import * as glob from "../../../../base/common/glob.js";
+import { basename } from "../../../../base/common/path.js";
+import { isDocumentExcludePattern } from "./notebookCommon.js";
+class NotebookProviderInfo {
+  static {
+    __name(this, "NotebookProviderInfo");
+  }
+  get selectors() {
+    return this._selectors;
+  }
+  get options() {
+    return this._options;
+  }
+  constructor(descriptor) {
+    this.extension = descriptor.extension;
+    this.id = descriptor.id;
+    this.displayName = descriptor.displayName;
+    this._selectors = descriptor.selectors?.map((selector) => ({
+      include: selector.filenamePattern,
+      exclude: selector.excludeFileNamePattern || ""
+    })) || descriptor._selectors || [];
+    this.priority = descriptor.priority;
+    this.providerDisplayName = descriptor.providerDisplayName;
+    this._options = {
+      transientCellMetadata: {},
+      transientDocumentMetadata: {},
+      transientOutputs: false,
+      cellContentMetadata: {}
+    };
+  }
+  update(args) {
+    if (args.selectors) {
+      this._selectors = args.selectors;
+    }
+    if (args.options) {
+      this._options = args.options;
+    }
+  }
+  matches(resource) {
+    return this.selectors?.some((selector) => NotebookProviderInfo.selectorMatches(selector, resource));
+  }
+  static selectorMatches(selector, resource) {
+    if (typeof selector === "string") {
+      if (glob.match(selector.toLowerCase(), basename(resource.fsPath).toLowerCase())) {
+        return true;
+      }
+    }
+    if (glob.isRelativePattern(selector)) {
+      if (glob.match(selector, basename(resource.fsPath).toLowerCase())) {
+        return true;
+      }
+    }
+    if (!isDocumentExcludePattern(selector)) {
+      return false;
+    }
+    const filenamePattern = selector.include;
+    const excludeFilenamePattern = selector.exclude;
+    if (glob.match(filenamePattern, basename(resource.fsPath).toLowerCase())) {
+      if (excludeFilenamePattern) {
+        if (glob.match(excludeFilenamePattern, basename(resource.fsPath).toLowerCase())) {
+          return false;
+        }
+      }
+      return true;
+    }
+    return false;
+  }
+  static possibleFileEnding(selectors) {
+    for (const selector of selectors) {
+      const ending = NotebookProviderInfo._possibleFileEnding(selector);
+      if (ending) {
+        return ending;
+      }
+    }
+    return void 0;
+  }
+  static _possibleFileEnding(selector) {
+    const pattern = /^.*(\.[a-zA-Z0-9_-]+)$/;
+    let candidate;
+    if (typeof selector === "string") {
+      candidate = selector;
+    } else if (glob.isRelativePattern(selector)) {
+      candidate = selector.pattern;
+    } else if (selector.include) {
+      return NotebookProviderInfo._possibleFileEnding(selector.include);
+    }
+    if (candidate) {
+      const match = pattern.exec(candidate);
+      if (match) {
+        return match[1];
+      }
+    }
+    return void 0;
+  }
+}
+export {
+  NotebookProviderInfo
+};
+//# sourceMappingURL=notebookProvider.js.map

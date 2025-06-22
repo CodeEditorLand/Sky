@@ -1,1 +1,22 @@
-import{$nj as t}from"../../../../platform/instantiation/common/instantiation.js";var r,o;!function(e){e[e.Bug=0]="Bug",e[e.PerformanceIssue=1]="PerformanceIssue",e[e.FeatureRequest=2]="FeatureRequest"}(r||(r={})),function(e){e.VSCode="vscode",e.Extension="extension",e.Marketplace="marketplace"}(o||(o={}));const c=t("issueFormService"),a=t("workbenchIssueService");export{c as $vMb,a as $wMb,o as IssueSource,r as IssueType};
+import { createDecorator } from "../../../../platform/instantiation/common/instantiation.js";
+var IssueType;
+(function(IssueType2) {
+  IssueType2[IssueType2["Bug"] = 0] = "Bug";
+  IssueType2[IssueType2["PerformanceIssue"] = 1] = "PerformanceIssue";
+  IssueType2[IssueType2["FeatureRequest"] = 2] = "FeatureRequest";
+})(IssueType || (IssueType = {}));
+var IssueSource;
+(function(IssueSource2) {
+  IssueSource2["VSCode"] = "vscode";
+  IssueSource2["Extension"] = "extension";
+  IssueSource2["Marketplace"] = "marketplace";
+})(IssueSource || (IssueSource = {}));
+const IIssueFormService = createDecorator("issueFormService");
+const IWorkbenchIssueService = createDecorator("workbenchIssueService");
+export {
+  IIssueFormService,
+  IWorkbenchIssueService,
+  IssueSource,
+  IssueType
+};
+//# sourceMappingURL=issue.js.map

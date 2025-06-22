@@ -1,1 +1,244 @@
-import*as b from"../../../../base/common/strings.js";import{$30 as C}from"../../../../base/common/search.js";class g{constructor(e,t,s){let i,r;this.b=!1,this.a=e,"boolean"==typeof t?(r=t,this.c=s):(i=t,r=!!i.isRegExp,this.c=b.$Mf(i.pattern,!!i.isRegExp,{matchCase:i.isCaseSensitive,wholeWord:i.isWordMatch,multiline:i.isMultiline,global:!1,unicode:!0})),r&&this.f(e),this.c.global&&(this.c=b.$Mf(this.c.source,!0,{matchCase:!this.c.ignoreCase,wholeWord:!1,multiline:this.c.multiline,global:!1})),this.d=new RegExp(/([\s\S]*?)((?:\\[uUlL])+?|)(\$[0-9]+)([\s\S]*?)/g)}get hasParameters(){return this.b}get pattern(){return this.a}get regExp(){return this.c}getReplaceString(e,t){this.c.lastIndex=0;const s=this.c.exec(e);if(s){if(this.hasParameters){const i=this.e(e,this.c,this.buildReplaceString(s,t));return s[0]===e?i:i.substr(s.index,s[0].length-(e.length-i.length))}return this.buildReplaceString(s,t)}return null}e(e,t,s){if(!/\\[uUlL]/.test(s))return e.replace(t,s);const i=t.exec(e);if(null===i)return e.replace(t,s);let r,a="",c=0,l="";for(;null!==(r=this.d.exec(s));){c=r.index;const e=r[0];l=e;let t=r[2];const s=r[3];if(!t){a+=e;continue}const n=i[parseInt(s.slice(1))];if(!n){a+=e;continue}const h=n.length;a+=r[1],t=t.replace(/\\/g,"");let o=0;for(;o<t.length;o++)switch(t[o]){case"U":a+=n.slice(o).toUpperCase(),o=h;break;case"u":a+=n[o].toUpperCase();break;case"L":a+=n.slice(o).toLowerCase(),o=h;break;case"l":a+=n[o].toLowerCase()}o<h&&(a+=n.slice(o)),a+=r[4]}return a+=s.slice(c+l.length),e.replace(t,a)}buildReplaceString(e,t){return t?C(e,this.a):this.a}f(e){if(!e||0===e.length)return;let t=0,s="";for(let i=0,r=e.length;i<r;i++){const a=e.charCodeAt(i);if(92===a){if(i++,i>=r)break;let a=null;switch(e.charCodeAt(i)){case 92:a="\\";break;case 110:a="\n";break;case 116:a="\t"}a&&(s+=e.substring(t,i-1)+a,t=i+1)}if(36===a){if(i++,i>=r)break;const a=e.charCodeAt(i);let c=null;switch(a){case 48:c="$&",this.b=!0;break;case 96:case 39:this.b=!0;break;default:{if(!this.g(a,49,57))break;if(i===e.length-1){this.b=!0;break}let t=e.charCodeAt(++i);if(!this.g(t,48,57)){this.b=!0,--i;break}if(i===e.length-1){this.b=!0;break}if(t=e.charCodeAt(++i),!this.g(t,48,57)){this.b=!0,--i;break}break}}c&&(s+=e.substring(t,i-1)+c,t=i+1)}}0!==t&&(this.a=s+e.substring(t))}g(e,t,s){return t<=e&&e<=s}}export{g as $Oac};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import * as strings from "../../../../base/common/strings.js";
+import { buildReplaceStringWithCasePreserved } from "../../../../base/common/search.js";
+class ReplacePattern {
+  static {
+    __name(this, "ReplacePattern");
+  }
+  constructor(replaceString, arg2, arg3) {
+    this._hasParameters = false;
+    this._replacePattern = replaceString;
+    let searchPatternInfo;
+    let parseParameters;
+    if (typeof arg2 === "boolean") {
+      parseParameters = arg2;
+      this._regExp = arg3;
+    } else {
+      searchPatternInfo = arg2;
+      parseParameters = !!searchPatternInfo.isRegExp;
+      this._regExp = strings.createRegExp(searchPatternInfo.pattern, !!searchPatternInfo.isRegExp, { matchCase: searchPatternInfo.isCaseSensitive, wholeWord: searchPatternInfo.isWordMatch, multiline: searchPatternInfo.isMultiline, global: false, unicode: true });
+    }
+    if (parseParameters) {
+      this.parseReplaceString(replaceString);
+    }
+    if (this._regExp.global) {
+      this._regExp = strings.createRegExp(this._regExp.source, true, { matchCase: !this._regExp.ignoreCase, wholeWord: false, multiline: this._regExp.multiline, global: false });
+    }
+    this._caseOpsRegExp = new RegExp(/([\s\S]*?)((?:\\[uUlL])+?|)(\$[0-9]+)([\s\S]*?)/g);
+  }
+  get hasParameters() {
+    return this._hasParameters;
+  }
+  get pattern() {
+    return this._replacePattern;
+  }
+  get regExp() {
+    return this._regExp;
+  }
+  /**
+  * Returns the replace string for the first match in the given text.
+  * If text has no matches then returns null.
+  */
+  getReplaceString(text, preserveCase) {
+    this._regExp.lastIndex = 0;
+    const match = this._regExp.exec(text);
+    if (match) {
+      if (this.hasParameters) {
+        const replaceString = this.replaceWithCaseOperations(text, this._regExp, this.buildReplaceString(match, preserveCase));
+        if (match[0] === text) {
+          return replaceString;
+        }
+        return replaceString.substr(match.index, match[0].length - (text.length - replaceString.length));
+      }
+      return this.buildReplaceString(match, preserveCase);
+    }
+    return null;
+  }
+  /**
+   * replaceWithCaseOperations applies case operations to relevant replacement strings and applies
+   * the affected $N arguments. It then passes unaffected $N arguments through to string.replace().
+   *
+   * \u			=> upper-cases one character in a match.
+   * \U			=> upper-cases ALL remaining characters in a match.
+   * \l			=> lower-cases one character in a match.
+   * \L			=> lower-cases ALL remaining characters in a match.
+   */
+  replaceWithCaseOperations(text, regex, replaceString) {
+    if (!/\\[uUlL]/.test(replaceString)) {
+      return text.replace(regex, replaceString);
+    }
+    const firstMatch = regex.exec(text);
+    if (firstMatch === null) {
+      return text.replace(regex, replaceString);
+    }
+    let patMatch;
+    let newReplaceString = "";
+    let lastIndex = 0;
+    let lastMatch = "";
+    while ((patMatch = this._caseOpsRegExp.exec(replaceString)) !== null) {
+      lastIndex = patMatch.index;
+      const fullMatch = patMatch[0];
+      lastMatch = fullMatch;
+      let caseOps = patMatch[2];
+      const money = patMatch[3];
+      if (!caseOps) {
+        newReplaceString += fullMatch;
+        continue;
+      }
+      const replacement = firstMatch[parseInt(money.slice(1))];
+      if (!replacement) {
+        newReplaceString += fullMatch;
+        continue;
+      }
+      const replacementLen = replacement.length;
+      newReplaceString += patMatch[1];
+      caseOps = caseOps.replace(/\\/g, "");
+      let i = 0;
+      for (; i < caseOps.length; i++) {
+        switch (caseOps[i]) {
+          case "U":
+            newReplaceString += replacement.slice(i).toUpperCase();
+            i = replacementLen;
+            break;
+          case "u":
+            newReplaceString += replacement[i].toUpperCase();
+            break;
+          case "L":
+            newReplaceString += replacement.slice(i).toLowerCase();
+            i = replacementLen;
+            break;
+          case "l":
+            newReplaceString += replacement[i].toLowerCase();
+            break;
+        }
+      }
+      if (i < replacementLen) {
+        newReplaceString += replacement.slice(i);
+      }
+      newReplaceString += patMatch[4];
+    }
+    newReplaceString += replaceString.slice(lastIndex + lastMatch.length);
+    return text.replace(regex, newReplaceString);
+  }
+  buildReplaceString(matches, preserveCase) {
+    if (preserveCase) {
+      return buildReplaceStringWithCasePreserved(matches, this._replacePattern);
+    } else {
+      return this._replacePattern;
+    }
+  }
+  /**
+   * \n => LF
+   * \t => TAB
+   * \\ => \
+   * $0 => $& (see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/replace#Specifying_a_string_as_a_parameter)
+   * everything else stays untouched
+   */
+  parseReplaceString(replaceString) {
+    if (!replaceString || replaceString.length === 0) {
+      return;
+    }
+    let substrFrom = 0, result = "";
+    for (let i = 0, len = replaceString.length; i < len; i++) {
+      const chCode = replaceString.charCodeAt(i);
+      if (chCode === 92) {
+        i++;
+        if (i >= len) {
+          break;
+        }
+        const nextChCode = replaceString.charCodeAt(i);
+        let replaceWithCharacter = null;
+        switch (nextChCode) {
+          case 92:
+            replaceWithCharacter = "\\";
+            break;
+          case 110:
+            replaceWithCharacter = "\n";
+            break;
+          case 116:
+            replaceWithCharacter = "	";
+            break;
+        }
+        if (replaceWithCharacter) {
+          result += replaceString.substring(substrFrom, i - 1) + replaceWithCharacter;
+          substrFrom = i + 1;
+        }
+      }
+      if (chCode === 36) {
+        i++;
+        if (i >= len) {
+          break;
+        }
+        const nextChCode = replaceString.charCodeAt(i);
+        let replaceWithCharacter = null;
+        switch (nextChCode) {
+          case 48:
+            replaceWithCharacter = "$&";
+            this._hasParameters = true;
+            break;
+          case 96:
+          case 39:
+            this._hasParameters = true;
+            break;
+          default: {
+            if (!this.between(
+              nextChCode,
+              49,
+              57
+              /* CharCode.Digit9 */
+            )) {
+              break;
+            }
+            if (i === replaceString.length - 1) {
+              this._hasParameters = true;
+              break;
+            }
+            let charCode = replaceString.charCodeAt(++i);
+            if (!this.between(
+              charCode,
+              48,
+              57
+              /* CharCode.Digit9 */
+            )) {
+              this._hasParameters = true;
+              --i;
+              break;
+            }
+            if (i === replaceString.length - 1) {
+              this._hasParameters = true;
+              break;
+            }
+            charCode = replaceString.charCodeAt(++i);
+            if (!this.between(
+              charCode,
+              48,
+              57
+              /* CharCode.Digit9 */
+            )) {
+              this._hasParameters = true;
+              --i;
+              break;
+            }
+            break;
+          }
+        }
+        if (replaceWithCharacter) {
+          result += replaceString.substring(substrFrom, i - 1) + replaceWithCharacter;
+          substrFrom = i + 1;
+        }
+      }
+    }
+    if (substrFrom === 0) {
+      return;
+    }
+    this._replacePattern = result + replaceString.substring(substrFrom);
+  }
+  between(value, from, to) {
+    return from <= value && value <= to;
+  }
+}
+export {
+  ReplacePattern
+};
+//# sourceMappingURL=replace.js.map

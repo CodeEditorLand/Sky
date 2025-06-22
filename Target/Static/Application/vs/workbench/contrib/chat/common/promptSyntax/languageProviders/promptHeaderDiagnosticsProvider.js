@@ -1,1 +1,90 @@
-import{$HS as h}from"../service/promptsService.js";import{$Bec as l}from"./providerInstanceBase.js";import{$Tc as d}from"../../../../../../base/common/assert.js";import{$Dec as g}from"./providerInstanceManagerBase.js";import{$lQ as v,$kQ as _}from"../parsers/promptHeader/diagnostics.js";import{$oD as $,MarkerSeverity as m}from"../../../../../../platform/markers/common/markers.js";var u=function(e,r,t,s){var o,n=arguments.length,a=n<3?r:null===s?s=Object.getOwnPropertyDescriptor(r,t):s;if("object"==typeof Reflect&&"function"==typeof Reflect.decorate)a=Reflect.decorate(e,r,t,s);else for(var i=e.length-1;i>=0;i--)(o=e[i])&&(a=(n<3?o(a):n>3?o(r,t,a):o(r,t))||a);return n>3&&a&&Object.defineProperty(r,t,a),a},c=function(e,r){return function(t,s){r(t,s,e)}};const p="prompts-header-diagnostics-provider";let f=class extends l{constructor(e,r,t){super(e,r),this.g=t}b(e,r){this.g.remove(p,[this.f.uri]);const{header:t}=this.c;return void 0===t||t.settled.then((()=>{if(r.isCancellationRequested)return;const e=[];for(const r of t.diagnostics)e.push(R(r));this.g.changeOne(p,this.f.uri,e)})),this}toString(){return`prompt-header-diagnostics:${this.f.uri.path}`}};function R(e){return e instanceof _?{message:e.message,severity:m.Warning,...e.range}:e instanceof v?{message:e.message,severity:m.Error,...e.range}:void d(e,`Unknown prompt metadata diagnostic type '${e}'.`)}f=u([c(1,h),c(2,$)],f);class x extends g{get b(){return f}}export{x as $Fec};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { IPromptsService } from "../service/promptsService.js";
+import { ProviderInstanceBase } from "./providerInstanceBase.js";
+import { assertNever } from "../../../../../../base/common/assert.js";
+import { ProviderInstanceManagerBase } from "./providerInstanceManagerBase.js";
+import { PromptMetadataError, PromptMetadataWarning } from "../parsers/promptHeader/diagnostics.js";
+import { IMarkerService, MarkerSeverity } from "../../../../../../platform/markers/common/markers.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+const MARKERS_OWNER_ID = "prompts-header-diagnostics-provider";
+let PromptHeaderDiagnosticsProvider = class PromptHeaderDiagnosticsProvider2 extends ProviderInstanceBase {
+  static {
+    __name(this, "PromptHeaderDiagnosticsProvider");
+  }
+  constructor(model, promptsService, markerService) {
+    super(model, promptsService);
+    this.markerService = markerService;
+  }
+  /**
+   * Update diagnostic markers for the current editor.
+   */
+  onPromptSettled(_error, token) {
+    this.markerService.remove(MARKERS_OWNER_ID, [this.model.uri]);
+    const { header } = this.parser;
+    if (header === void 0) {
+      return this;
+    }
+    header.settled.then(() => {
+      if (token.isCancellationRequested) {
+        return;
+      }
+      const markers = [];
+      for (const diagnostic of header.diagnostics) {
+        markers.push(toMarker(diagnostic));
+      }
+      this.markerService.changeOne(MARKERS_OWNER_ID, this.model.uri, markers);
+    });
+    return this;
+  }
+  /**
+   * Returns a string representation of this object.
+   */
+  toString() {
+    return `prompt-header-diagnostics:${this.model.uri.path}`;
+  }
+};
+PromptHeaderDiagnosticsProvider = __decorate([
+  __param(1, IPromptsService),
+  __param(2, IMarkerService)
+], PromptHeaderDiagnosticsProvider);
+function toMarker(diagnostic) {
+  if (diagnostic instanceof PromptMetadataWarning) {
+    return {
+      message: diagnostic.message,
+      severity: MarkerSeverity.Warning,
+      ...diagnostic.range
+    };
+  }
+  if (diagnostic instanceof PromptMetadataError) {
+    return {
+      message: diagnostic.message,
+      severity: MarkerSeverity.Error,
+      ...diagnostic.range
+    };
+  }
+  assertNever(diagnostic, `Unknown prompt metadata diagnostic type '${diagnostic}'.`);
+}
+__name(toMarker, "toMarker");
+class PromptHeaderDiagnosticsInstanceManager extends ProviderInstanceManagerBase {
+  static {
+    __name(this, "PromptHeaderDiagnosticsInstanceManager");
+  }
+  get InstanceClass() {
+    return PromptHeaderDiagnosticsProvider;
+  }
+}
+export {
+  PromptHeaderDiagnosticsInstanceManager
+};
+//# sourceMappingURL=promptHeaderDiagnosticsProvider.js.map

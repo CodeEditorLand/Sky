@@ -1,1 +1,143 @@
-import{$vd as O}from"../../../base/common/lifecycle.js";import{URI as P}from"../../../base/common/uri.js";import*as f from"../../../nls.js";import{$sz as d}from"./extensionManagement.js";import{$nn as _}from"../../product/common/productService.js";import{$Uj as p}from"../../../base/common/htmlContent.js";import{$El as D}from"../../configuration/common/configuration.js";import{$6c as C,$1c as V,$7c as v}from"../../../base/common/types.js";import{$df as j}from"../../../base/common/event.js";var R=function(o,e,r,t){var s=arguments.length,i=s<3?e:t===null?t=Object.getOwnPropertyDescriptor(e,r):t,l;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")i=Reflect.decorate(o,e,r,t);else for(var n=o.length-1;n>=0;n--)(l=o[n])&&(i=(s<3?l(i):s>3?l(e,r,i):l(e,r))||i);return s>3&&i&&Object.defineProperty(e,r,i),i},w=function(o,e){return function(r,t){e(r,t,o)}};function z(o){return o.type==="gallery"}function A(o){return o.type===1||o.type===0}const E=/^(?<version>\d+\.\d+\.\d+(-.*)?)(@(?<platform>.+))?$/;let y=class extends O{get allowedExtensionsConfigValue(){return this.b}constructor(e,r){super(),this.f=r,this.c=this.B(new j),this.onDidChangeAllowedExtensionsConfigValue=this.c.event,this.a=e.extensionPublisherOrgs?.map(t=>t.toLowerCase())??[],this.b=this.g(),this.B(this.f.onDidChangeConfiguration(t=>{t.affectsConfiguration(d)&&(this.b=this.g(),this.c.fire())}))}g(){const e=this.f.getValue(d);if(!V(e)||Array.isArray(e))return;const r=Object.entries(e).map(([t,s])=>[t.toLowerCase(),s]);if(!(r.length===1&&r[0][0]==="*"&&r[0][1]===!0))return Object.fromEntries(r)}isAllowed(e){if(!this.b)return!0;let r,t,s,i,l,n;z(e)?(r=e.identifier.id.toLowerCase(),t=e.version,i=e.properties.isPreReleaseVersion,l=e.publisher.toLowerCase(),n=e.publisherDisplayName.toLowerCase(),s=e.properties.targetPlatform):A(e)?(r=e.identifier.id.toLowerCase(),t=e.manifest.version,i=e.preRelease,l=e.manifest.publisher.toLowerCase(),n=e.publisherDisplayName?.toLowerCase(),s=e.targetPlatform):(r=e.id.toLowerCase(),t=e.version??"*",s=e.targetPlatform??"universal",i=e.prerelease??!1,l=e.id.substring(0,e.id.indexOf(".")).toLowerCase(),n=e.publisherDisplayName?.toLowerCase());const u=P.parse(`command:workbench.action.openSettings?${encodeURIComponent(JSON.stringify({query:`@id:${d}`}))}`).toString(),a=this.b[r],b=new p(f.localize(1915,null,u));if(!v(a))return C(a)?a?!0:b:a==="stable"&&i?new p(f.localize(1916,null,u)):t!=="*"&&Array.isArray(a)&&!a.some($=>{const h=E.exec($);if(h&&h.groups){const{platform:g,version:L}=h.groups;return!(L!==t||s!=="universal"&&g&&s!==g)}return!1})?new p(f.localize(1917,null,t,u)):!0;const m=n&&this.a.includes(n)?n:l,c=this.b[m];return v(c)?this.b["*"]===!0?!0:b:C(c)?c?!0:new p(f.localize(1918,null,m,u)):c==="stable"&&i?new p(f.localize(1919,null,m,u)):!0}};y=R([w(0,_),w(1,D)],y);export{y as $Y4};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { Disposable } from "../../../base/common/lifecycle.js";
+import { URI } from "../../../base/common/uri.js";
+import * as nls from "../../../nls.js";
+import { AllowedExtensionsConfigKey } from "./extensionManagement.js";
+import { IProductService } from "../../product/common/productService.js";
+import { MarkdownString } from "../../../base/common/htmlContent.js";
+import { IConfigurationService } from "../../configuration/common/configuration.js";
+import { isBoolean, isObject, isUndefined } from "../../../base/common/types.js";
+import { Emitter } from "../../../base/common/event.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+function isGalleryExtension(extension) {
+  return extension.type === "gallery";
+}
+__name(isGalleryExtension, "isGalleryExtension");
+function isIExtension(extension) {
+  return extension.type === 1 || extension.type === 0;
+}
+__name(isIExtension, "isIExtension");
+const VersionRegex = /^(?<version>\d+\.\d+\.\d+(-.*)?)(@(?<platform>.+))?$/;
+let AllowedExtensionsService = class AllowedExtensionsService2 extends Disposable {
+  static {
+    __name(this, "AllowedExtensionsService");
+  }
+  get allowedExtensionsConfigValue() {
+    return this._allowedExtensionsConfigValue;
+  }
+  constructor(productService, configurationService) {
+    super();
+    this.configurationService = configurationService;
+    this._onDidChangeAllowedExtensions = this._register(new Emitter());
+    this.onDidChangeAllowedExtensionsConfigValue = this._onDidChangeAllowedExtensions.event;
+    this.publisherOrgs = productService.extensionPublisherOrgs?.map((p) => p.toLowerCase()) ?? [];
+    this._allowedExtensionsConfigValue = this.getAllowedExtensionsValue();
+    this._register(this.configurationService.onDidChangeConfiguration((e) => {
+      if (e.affectsConfiguration(AllowedExtensionsConfigKey)) {
+        this._allowedExtensionsConfigValue = this.getAllowedExtensionsValue();
+        this._onDidChangeAllowedExtensions.fire();
+      }
+    }));
+  }
+  getAllowedExtensionsValue() {
+    const value = this.configurationService.getValue(AllowedExtensionsConfigKey);
+    if (!isObject(value) || Array.isArray(value)) {
+      return void 0;
+    }
+    const entries = Object.entries(value).map(([key, value2]) => [key.toLowerCase(), value2]);
+    if (entries.length === 1 && entries[0][0] === "*" && entries[0][1] === true) {
+      return void 0;
+    }
+    return Object.fromEntries(entries);
+  }
+  isAllowed(extension) {
+    if (!this._allowedExtensionsConfigValue) {
+      return true;
+    }
+    let id, version, targetPlatform, prerelease, publisher, publisherDisplayName;
+    if (isGalleryExtension(extension)) {
+      id = extension.identifier.id.toLowerCase();
+      version = extension.version;
+      prerelease = extension.properties.isPreReleaseVersion;
+      publisher = extension.publisher.toLowerCase();
+      publisherDisplayName = extension.publisherDisplayName.toLowerCase();
+      targetPlatform = extension.properties.targetPlatform;
+    } else if (isIExtension(extension)) {
+      id = extension.identifier.id.toLowerCase();
+      version = extension.manifest.version;
+      prerelease = extension.preRelease;
+      publisher = extension.manifest.publisher.toLowerCase();
+      publisherDisplayName = extension.publisherDisplayName?.toLowerCase();
+      targetPlatform = extension.targetPlatform;
+    } else {
+      id = extension.id.toLowerCase();
+      version = extension.version ?? "*";
+      targetPlatform = extension.targetPlatform ?? "universal";
+      prerelease = extension.prerelease ?? false;
+      publisher = extension.id.substring(0, extension.id.indexOf(".")).toLowerCase();
+      publisherDisplayName = extension.publisherDisplayName?.toLowerCase();
+    }
+    const settingsCommandLink = URI.parse(`command:workbench.action.openSettings?${encodeURIComponent(JSON.stringify({ query: `@id:${AllowedExtensionsConfigKey}` }))}`).toString();
+    const extensionValue = this._allowedExtensionsConfigValue[id];
+    const extensionReason = new MarkdownString(nls.localize("specific extension not allowed", "it is not in the [allowed list]({0})", settingsCommandLink));
+    if (!isUndefined(extensionValue)) {
+      if (isBoolean(extensionValue)) {
+        return extensionValue ? true : extensionReason;
+      }
+      if (extensionValue === "stable" && prerelease) {
+        return new MarkdownString(nls.localize("extension prerelease not allowed", "the pre-release versions of this extension are not in the [allowed list]({0})", settingsCommandLink));
+      }
+      if (version !== "*" && Array.isArray(extensionValue) && !extensionValue.some((v) => {
+        const match = VersionRegex.exec(v);
+        if (match && match.groups) {
+          const { platform: p, version: v2 } = match.groups;
+          if (v2 !== version) {
+            return false;
+          }
+          if (targetPlatform !== "universal" && p && targetPlatform !== p) {
+            return false;
+          }
+          return true;
+        }
+        return false;
+      })) {
+        return new MarkdownString(nls.localize("specific version of extension not allowed", "the version {0} of this extension is not in the [allowed list]({1})", version, settingsCommandLink));
+      }
+      return true;
+    }
+    const publisherKey = publisherDisplayName && this.publisherOrgs.includes(publisherDisplayName) ? publisherDisplayName : publisher;
+    const publisherValue = this._allowedExtensionsConfigValue[publisherKey];
+    if (!isUndefined(publisherValue)) {
+      if (isBoolean(publisherValue)) {
+        return publisherValue ? true : new MarkdownString(nls.localize("publisher not allowed", "the extensions from this publisher are not in the [allowed list]({1})", publisherKey, settingsCommandLink));
+      }
+      if (publisherValue === "stable" && prerelease) {
+        return new MarkdownString(nls.localize("prerelease versions from this publisher not allowed", "the pre-release versions from this publisher are not in the [allowed list]({1})", publisherKey, settingsCommandLink));
+      }
+      return true;
+    }
+    if (this._allowedExtensionsConfigValue["*"] === true) {
+      return true;
+    }
+    return extensionReason;
+  }
+};
+AllowedExtensionsService = __decorate([
+  __param(0, IProductService),
+  __param(1, IConfigurationService)
+], AllowedExtensionsService);
+export {
+  AllowedExtensionsService
+};
+//# sourceMappingURL=allowedExtensionsService.js.map

@@ -1,1 +1,41 @@
-import{$bF as n}from"../../../common/editor/editorInput.js";import{localize as t}from"../../../../nls.js";import{$Mj as i}from"../../../../base/common/codicons.js";import{$Ct as r}from"../../../../platform/theme/common/iconRegistry.js";const o=r("disassembly-editor-label-icon",i.debug,t(6935,null));class e extends n{constructor(){super(...arguments),this.resource=void 0}static{this.ID="debug.disassemblyView.input"}get typeId(){return e.ID}static get instance(){return(!e._instance||e._instance.isDisposed())&&(e._instance=new e),e._instance}getName(){return t(6936,null)}getIcon(){return o}matches(t){return t instanceof e}}export{e as $OT};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { EditorInput } from "../../../common/editor/editorInput.js";
+import { localize } from "../../../../nls.js";
+import { Codicon } from "../../../../base/common/codicons.js";
+import { registerIcon } from "../../../../platform/theme/common/iconRegistry.js";
+const DisassemblyEditorIcon = registerIcon("disassembly-editor-label-icon", Codicon.debug, localize("disassemblyEditorLabelIcon", "Icon of the disassembly editor label."));
+class DisassemblyViewInput extends EditorInput {
+  static {
+    __name(this, "DisassemblyViewInput");
+  }
+  constructor() {
+    super(...arguments);
+    this.resource = void 0;
+  }
+  static {
+    this.ID = "debug.disassemblyView.input";
+  }
+  get typeId() {
+    return DisassemblyViewInput.ID;
+  }
+  static get instance() {
+    if (!DisassemblyViewInput._instance || DisassemblyViewInput._instance.isDisposed()) {
+      DisassemblyViewInput._instance = new DisassemblyViewInput();
+    }
+    return DisassemblyViewInput._instance;
+  }
+  getName() {
+    return localize("disassemblyInputName", "Disassembly");
+  }
+  getIcon() {
+    return DisassemblyEditorIcon;
+  }
+  matches(other) {
+    return other instanceof DisassemblyViewInput;
+  }
+}
+export {
+  DisassemblyViewInput
+};
+//# sourceMappingURL=disassemblyViewInput.js.map

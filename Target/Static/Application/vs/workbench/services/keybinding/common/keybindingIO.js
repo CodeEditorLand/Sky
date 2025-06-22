@@ -1,1 +1,76 @@
-import{$Z0 as d}from"../../../../base/common/keybindingParser.js";import{$Bn as o}from"../../../../platform/contextkey/common/contextkey.js";class c{static writeKeybindingItem(e,i){if(!i.resolvedKeybinding)return;const n=JSON.stringify(i.resolvedKeybinding.getUserSettingsLabel());e.write(`{ "key": ${a(n+",",25)} "command": `);const t=i.when?JSON.stringify(i.when.serialize()):"",r=JSON.stringify(i.command);t.length>0?(e.write(`${r},`),e.writeLine(),e.write(`                                     "when": ${t}`)):e.write(`${r}`),i.commandArgs&&(e.write(","),e.writeLine(),e.write(`                                     "args": ${JSON.stringify(i.commandArgs)}`)),e.write(" }")}static readUserKeybindingItem(e){const i="key"in e&&"string"==typeof e.key?d.parseKeybinding(e.key):null,n="when"in e&&"string"==typeof e.when?o.deserialize(e.when):void 0;return{keybinding:i,command:"command"in e&&"string"==typeof e.command?e.command:null,commandArgs:"args"in e&&typeof e.args<"u"?e.args:void 0,when:n,_sourceKey:"key"in e&&"string"==typeof e.key?e.key:void 0}}}function a(e,i){return e.length<i?e+new Array(i-e.length).join(" "):e}class w{constructor(){this.a=[],this.b=""}write(e){this.b+=e}writeLine(e=""){this.a.push(this.b+e),this.b=""}toString(){return this.writeLine(),this.a.join("\n")}}export{c as $t5b,w as $u5b};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { KeybindingParser } from "../../../../base/common/keybindingParser.js";
+import { ContextKeyExpr } from "../../../../platform/contextkey/common/contextkey.js";
+class KeybindingIO {
+  static {
+    __name(this, "KeybindingIO");
+  }
+  static writeKeybindingItem(out, item) {
+    if (!item.resolvedKeybinding) {
+      return;
+    }
+    const quotedSerializedKeybinding = JSON.stringify(item.resolvedKeybinding.getUserSettingsLabel());
+    out.write(`{ "key": ${rightPaddedString(quotedSerializedKeybinding + ",", 25)} "command": `);
+    const quotedSerializedWhen = item.when ? JSON.stringify(item.when.serialize()) : "";
+    const quotedSerializeCommand = JSON.stringify(item.command);
+    if (quotedSerializedWhen.length > 0) {
+      out.write(`${quotedSerializeCommand},`);
+      out.writeLine();
+      out.write(`                                     "when": ${quotedSerializedWhen}`);
+    } else {
+      out.write(`${quotedSerializeCommand}`);
+    }
+    if (item.commandArgs) {
+      out.write(",");
+      out.writeLine();
+      out.write(`                                     "args": ${JSON.stringify(item.commandArgs)}`);
+    }
+    out.write(" }");
+  }
+  static readUserKeybindingItem(input) {
+    const keybinding = "key" in input && typeof input.key === "string" ? KeybindingParser.parseKeybinding(input.key) : null;
+    const when = "when" in input && typeof input.when === "string" ? ContextKeyExpr.deserialize(input.when) : void 0;
+    const command = "command" in input && typeof input.command === "string" ? input.command : null;
+    const commandArgs = "args" in input && typeof input.args !== "undefined" ? input.args : void 0;
+    return {
+      keybinding,
+      command,
+      commandArgs,
+      when,
+      _sourceKey: "key" in input && typeof input.key === "string" ? input.key : void 0
+    };
+  }
+}
+function rightPaddedString(str, minChars) {
+  if (str.length < minChars) {
+    return str + new Array(minChars - str.length).join(" ");
+  }
+  return str;
+}
+__name(rightPaddedString, "rightPaddedString");
+class OutputBuilder {
+  static {
+    __name(this, "OutputBuilder");
+  }
+  constructor() {
+    this._lines = [];
+    this._currentLine = "";
+  }
+  write(str) {
+    this._currentLine += str;
+  }
+  writeLine(str = "") {
+    this._lines.push(this._currentLine + str);
+    this._currentLine = "";
+  }
+  toString() {
+    this.writeLine();
+    return this._lines.join("\n");
+  }
+}
+export {
+  KeybindingIO,
+  OutputBuilder
+};
+//# sourceMappingURL=keybindingIO.js.map

@@ -1,1 +1,109 @@
-import{CancellationToken as p}from"../../../../base/common/cancellation.js";import{$tb as g,$lb as b}from"../../../../base/common/errors.js";import{$ud as f,$pd as h}from"../../../../base/common/lifecycle.js";import{$0c as c}from"../../../../base/common/types.js";import{URI as v}from"../../../../base/common/uri.js";import{$gF as C}from"../../../common/services/model.js";import{$Zn as L}from"../../../../platform/commands/common/commands.js";import{$sT as $}from"../../../common/services/languageFeatures.js";class a{constructor(){this.lenses=[]}static{this.Empty=new a}dispose(){this.c?.dispose()}get isDisposed(){return this.c?.isDisposed??!1}add(t,n){h(t)&&(this.c??=new f,this.c.add(t));for(const r of t.lenses)this.lenses.push({symbol:r,provider:n})}}async function w(u,t,n){const r=u.ordered(t),i=new Map,o=new a,d=r.map(async(e,s)=>{i.set(e,s);try{const l=await Promise.resolve(e.provideCodeLenses(t,n));l&&o.add(l,e)}catch(l){b(l)}});return await Promise.all(d),n.isCancellationRequested?(o.dispose(),a.Empty):(o.lenses=o.lenses.sort((e,s)=>e.symbol.range.startLineNumber<s.symbol.range.startLineNumber?-1:e.symbol.range.startLineNumber>s.symbol.range.startLineNumber?1:i.get(e.provider)<i.get(s.provider)?-1:i.get(e.provider)>i.get(s.provider)?1:e.symbol.range.startColumn<s.symbol.range.startColumn?-1:e.symbol.range.startColumn>s.symbol.range.startColumn?1:0),o)}L.registerCommand("_executeCodeLensProvider",function(u,...t){let[n,r]=t;c(v.isUri(n)),c(typeof r=="number"||!r);const{codeLensProvider:i}=u.get($),o=u.get(C).getModel(n);if(!o)throw g();const d=[],e=new f;return w(i,o,p.None).then(s=>{e.add(s);const l=[];for(const m of s.lenses)r==null||m.symbol.command?d.push(m.symbol):r-- >0&&m.provider.resolveCodeLens&&l.push(Promise.resolve(m.provider.resolveCodeLens(o,m.symbol,p.None)).then(y=>d.push(y||m.symbol)));return Promise.all(l)}).then(()=>d).finally(()=>{setTimeout(()=>e.dispose(),100)})});export{a as $Oib,w as $Pib};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { CancellationToken } from "../../../../base/common/cancellation.js";
+import { illegalArgument, onUnexpectedExternalError } from "../../../../base/common/errors.js";
+import { DisposableStore, isDisposable } from "../../../../base/common/lifecycle.js";
+import { assertType } from "../../../../base/common/types.js";
+import { URI } from "../../../../base/common/uri.js";
+import { IModelService } from "../../../common/services/model.js";
+import { CommandsRegistry } from "../../../../platform/commands/common/commands.js";
+import { ILanguageFeaturesService } from "../../../common/services/languageFeatures.js";
+class CodeLensModel {
+  static {
+    __name(this, "CodeLensModel");
+  }
+  constructor() {
+    this.lenses = [];
+  }
+  static {
+    this.Empty = new CodeLensModel();
+  }
+  dispose() {
+    this._store?.dispose();
+  }
+  get isDisposed() {
+    return this._store?.isDisposed ?? false;
+  }
+  add(list, provider) {
+    if (isDisposable(list)) {
+      this._store ??= new DisposableStore();
+      this._store.add(list);
+    }
+    for (const symbol of list.lenses) {
+      this.lenses.push({ symbol, provider });
+    }
+  }
+}
+async function getCodeLensModel(registry, model, token) {
+  const provider = registry.ordered(model);
+  const providerRanks = /* @__PURE__ */ new Map();
+  const result = new CodeLensModel();
+  const promises = provider.map(async (provider2, i) => {
+    providerRanks.set(provider2, i);
+    try {
+      const list = await Promise.resolve(provider2.provideCodeLenses(model, token));
+      if (list) {
+        result.add(list, provider2);
+      }
+    } catch (err) {
+      onUnexpectedExternalError(err);
+    }
+  });
+  await Promise.all(promises);
+  if (token.isCancellationRequested) {
+    result.dispose();
+    return CodeLensModel.Empty;
+  }
+  result.lenses = result.lenses.sort((a, b) => {
+    if (a.symbol.range.startLineNumber < b.symbol.range.startLineNumber) {
+      return -1;
+    } else if (a.symbol.range.startLineNumber > b.symbol.range.startLineNumber) {
+      return 1;
+    } else if (providerRanks.get(a.provider) < providerRanks.get(b.provider)) {
+      return -1;
+    } else if (providerRanks.get(a.provider) > providerRanks.get(b.provider)) {
+      return 1;
+    } else if (a.symbol.range.startColumn < b.symbol.range.startColumn) {
+      return -1;
+    } else if (a.symbol.range.startColumn > b.symbol.range.startColumn) {
+      return 1;
+    } else {
+      return 0;
+    }
+  });
+  return result;
+}
+__name(getCodeLensModel, "getCodeLensModel");
+CommandsRegistry.registerCommand("_executeCodeLensProvider", function(accessor, ...args) {
+  let [uri, itemResolveCount] = args;
+  assertType(URI.isUri(uri));
+  assertType(typeof itemResolveCount === "number" || !itemResolveCount);
+  const { codeLensProvider } = accessor.get(ILanguageFeaturesService);
+  const model = accessor.get(IModelService).getModel(uri);
+  if (!model) {
+    throw illegalArgument();
+  }
+  const result = [];
+  const disposables = new DisposableStore();
+  return getCodeLensModel(codeLensProvider, model, CancellationToken.None).then((value) => {
+    disposables.add(value);
+    const resolve = [];
+    for (const item of value.lenses) {
+      if (itemResolveCount === void 0 || itemResolveCount === null || Boolean(item.symbol.command)) {
+        result.push(item.symbol);
+      } else if (itemResolveCount-- > 0 && item.provider.resolveCodeLens) {
+        resolve.push(Promise.resolve(item.provider.resolveCodeLens(model, item.symbol, CancellationToken.None)).then((symbol) => result.push(symbol || item.symbol)));
+      }
+    }
+    return Promise.all(resolve);
+  }).then(() => {
+    return result;
+  }).finally(() => {
+    setTimeout(() => disposables.dispose(), 100);
+  });
+});
+export {
+  CodeLensModel,
+  getCodeLensModel
+};
+//# sourceMappingURL=codelens.js.map

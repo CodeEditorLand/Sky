@@ -1,1 +1,120 @@
-import{$Vcb as M}from"./minimapCharRenderer.js";import{$Tcb as B}from"./minimapCharSheet.js";import{$Xcb as b}from"./minimapPreBaked.js";import{$wf as L}from"../../../../base/common/uint.js";class m{static create(t,e){if(this.a&&t===this.a.scale&&e===this.b)return this.a;let a;return a=b[t]?new M(b[t](),t):m.createFromSampleData(m.createSampleData(e).data,t),this.b=e,this.a=a,a}static createSampleData(t){const e=document.createElement("canvas"),a=e.getContext("2d");e.style.height="16px",e.height=16,e.width=960,e.style.width="960px",a.fillStyle="#ffffff",a.font=`bold 16px ${t}`,a.textBaseline="middle";let r=0;for(const t of B)a.fillText(String.fromCharCode(t),r,8),r+=10;return a.getImageData(0,0,960,16)}static createFromSampleData(t,e){if(61440!==t.length)throw new Error("Unexpected source in MinimapCharRenderer");const a=m.d(t,e);return new M(a,e)}static c(t,e,a,r,o){const s=1*o,n=2*o;let i=r,m=0;for(let r=0;r<n;r++){const o=r/n*16,c=(r+1)/n*16;for(let r=0;r<s;r++){const n=r/s*10,l=(r+1)/s*10;let f=0,h=0;for(let a=o;a<c;a++){const r=e+3840*Math.floor(a),o=1-(a-Math.floor(a));for(let e=n;e<l;e++){const a=1-(e-Math.floor(e)),s=r+4*Math.floor(e),n=a*o;h+=n,f+=t[s]*t[s+3]/255*n}}const p=f/h;m=Math.max(m,p),a[i++]=L(p)}}return m}static d(t,e){const a=2*e*1*e,r=96*a,o=new Uint8ClampedArray(r);let s=0,n=0,i=0;for(let r=0;r<96;r++)i=Math.max(i,this.c(t,n,o,s,e)),s+=a,n+=40;if(i>0){const t=255/i;for(let e=0;e<r;e++)o[e]*=t}return o}}export{m as $Ycb};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { MinimapCharRenderer } from "./minimapCharRenderer.js";
+import { allCharCodes } from "./minimapCharSheet.js";
+import { prebakedMiniMaps } from "./minimapPreBaked.js";
+import { toUint8 } from "../../../../base/common/uint.js";
+class MinimapCharRendererFactory {
+  static {
+    __name(this, "MinimapCharRendererFactory");
+  }
+  /**
+   * Creates a new character renderer factory with the given scale.
+   */
+  static create(scale, fontFamily) {
+    if (this.lastCreated && scale === this.lastCreated.scale && fontFamily === this.lastFontFamily) {
+      return this.lastCreated;
+    }
+    let factory;
+    if (prebakedMiniMaps[scale]) {
+      factory = new MinimapCharRenderer(prebakedMiniMaps[scale](), scale);
+    } else {
+      factory = MinimapCharRendererFactory.createFromSampleData(MinimapCharRendererFactory.createSampleData(fontFamily).data, scale);
+    }
+    this.lastFontFamily = fontFamily;
+    this.lastCreated = factory;
+    return factory;
+  }
+  /**
+   * Creates the font sample data, writing to a canvas.
+   */
+  static createSampleData(fontFamily) {
+    const canvas = document.createElement("canvas");
+    const ctx = canvas.getContext("2d");
+    canvas.style.height = `${16}px`;
+    canvas.height = 16;
+    canvas.width = 96 * 10;
+    canvas.style.width = 96 * 10 + "px";
+    ctx.fillStyle = "#ffffff";
+    ctx.font = `bold ${16}px ${fontFamily}`;
+    ctx.textBaseline = "middle";
+    let x = 0;
+    for (const code of allCharCodes) {
+      ctx.fillText(String.fromCharCode(code), x, 16 / 2);
+      x += 10;
+    }
+    return ctx.getImageData(
+      0,
+      0,
+      96 * 10,
+      16
+      /* Constants.SAMPLED_CHAR_HEIGHT */
+    );
+  }
+  /**
+   * Creates a character renderer from the canvas sample data.
+   */
+  static createFromSampleData(source, scale) {
+    const expectedLength = 16 * 10 * 4 * 96;
+    if (source.length !== expectedLength) {
+      throw new Error("Unexpected source in MinimapCharRenderer");
+    }
+    const charData = MinimapCharRendererFactory._downsample(source, scale);
+    return new MinimapCharRenderer(charData, scale);
+  }
+  static _downsampleChar(source, sourceOffset, dest, destOffset, scale) {
+    const width = 1 * scale;
+    const height = 2 * scale;
+    let targetIndex = destOffset;
+    let brightest = 0;
+    for (let y = 0; y < height; y++) {
+      const sourceY1 = y / height * 16;
+      const sourceY2 = (y + 1) / height * 16;
+      for (let x = 0; x < width; x++) {
+        const sourceX1 = x / width * 10;
+        const sourceX2 = (x + 1) / width * 10;
+        let value = 0;
+        let samples = 0;
+        for (let sy = sourceY1; sy < sourceY2; sy++) {
+          const sourceRow = sourceOffset + Math.floor(sy) * 3840;
+          const yBalance = 1 - (sy - Math.floor(sy));
+          for (let sx = sourceX1; sx < sourceX2; sx++) {
+            const xBalance = 1 - (sx - Math.floor(sx));
+            const sourceIndex = sourceRow + Math.floor(sx) * 4;
+            const weight = xBalance * yBalance;
+            samples += weight;
+            value += source[sourceIndex] * source[sourceIndex + 3] / 255 * weight;
+          }
+        }
+        const final = value / samples;
+        brightest = Math.max(brightest, final);
+        dest[targetIndex++] = toUint8(final);
+      }
+    }
+    return brightest;
+  }
+  static _downsample(data, scale) {
+    const pixelsPerCharacter = 2 * scale * 1 * scale;
+    const resultLen = pixelsPerCharacter * 96;
+    const result = new Uint8ClampedArray(resultLen);
+    let resultOffset = 0;
+    let sourceOffset = 0;
+    let brightest = 0;
+    for (let charIndex = 0; charIndex < 96; charIndex++) {
+      brightest = Math.max(brightest, this._downsampleChar(data, sourceOffset, result, resultOffset, scale));
+      resultOffset += pixelsPerCharacter;
+      sourceOffset += 10 * 4;
+    }
+    if (brightest > 0) {
+      const adjust = 255 / brightest;
+      for (let i = 0; i < resultLen; i++) {
+        result[i] *= adjust;
+      }
+    }
+    return result;
+  }
+}
+export {
+  MinimapCharRendererFactory
+};
+//# sourceMappingURL=minimapCharRendererFactory.js.map

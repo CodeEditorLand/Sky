@@ -1,1 +1,90 @@
-import{$o2 as o}from"../../../../base/common/idGenerator.js";import{$6o as n}from"../../../../base/common/objects.js";var i;!function(i){i[i.Created=1]="Created",i[i.Loading=2]="Loading",i[i.Loaded=3]="Loaded",i[i.Errored=4]="Errored",i[i.Disposed=5]="Disposed"}(i||(i={}));class p{get cacheKey(){return this.c!==i.Loaded&&this.h?this.h.cacheKey:this.a}get isLoaded(){const s=this.c===i.Loaded;return s||!this.h?s:this.h.isLoaded}get isUpdating(){const s=this.c===i.Loading;return s||!this.h?s:this.h.isUpdating}constructor(s,t,h,e){if(this.e=s,this.f=t,this.g=h,this.h=e,this.a=o.nextId(),this.b=this.e(this.a),this.c=i.Created,this.h){const i=Object.assign({},this.b,{cacheKey:null}),s=Object.assign({},this.h.b,{cacheKey:null});n(i,s)||(this.h.dispose(),this.h=void 0)}}load(){return this.isUpdating||(this.c=i.Loading,this.d=(async()=>{try{await this.f(this.b),this.c=i.Loaded,this.h&&(this.h.dispose(),this.h=void 0)}catch(s){throw this.c=i.Errored,s}})()),this}dispose(){this.d?(async()=>{try{await this.d}catch{}this.c=i.Disposed,this.g(this.a)})():this.c=i.Disposed,this.h&&(this.h.dispose(),this.h=void 0)}}export{p as $lfc};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { defaultGenerator } from "../../../../base/common/idGenerator.js";
+import { equals } from "../../../../base/common/objects.js";
+var LoadingPhase;
+(function(LoadingPhase2) {
+  LoadingPhase2[LoadingPhase2["Created"] = 1] = "Created";
+  LoadingPhase2[LoadingPhase2["Loading"] = 2] = "Loading";
+  LoadingPhase2[LoadingPhase2["Loaded"] = 3] = "Loaded";
+  LoadingPhase2[LoadingPhase2["Errored"] = 4] = "Errored";
+  LoadingPhase2[LoadingPhase2["Disposed"] = 5] = "Disposed";
+})(LoadingPhase || (LoadingPhase = {}));
+class FileQueryCacheState {
+  static {
+    __name(this, "FileQueryCacheState");
+  }
+  get cacheKey() {
+    if (this.loadingPhase === LoadingPhase.Loaded || !this.previousCacheState) {
+      return this._cacheKey;
+    }
+    return this.previousCacheState.cacheKey;
+  }
+  get isLoaded() {
+    const isLoaded = this.loadingPhase === LoadingPhase.Loaded;
+    return isLoaded || !this.previousCacheState ? isLoaded : this.previousCacheState.isLoaded;
+  }
+  get isUpdating() {
+    const isUpdating = this.loadingPhase === LoadingPhase.Loading;
+    return isUpdating || !this.previousCacheState ? isUpdating : this.previousCacheState.isUpdating;
+  }
+  constructor(cacheQuery, loadFn, disposeFn, previousCacheState) {
+    this.cacheQuery = cacheQuery;
+    this.loadFn = loadFn;
+    this.disposeFn = disposeFn;
+    this.previousCacheState = previousCacheState;
+    this._cacheKey = defaultGenerator.nextId();
+    this.query = this.cacheQuery(this._cacheKey);
+    this.loadingPhase = LoadingPhase.Created;
+    if (this.previousCacheState) {
+      const current = Object.assign({}, this.query, { cacheKey: null });
+      const previous = Object.assign({}, this.previousCacheState.query, { cacheKey: null });
+      if (!equals(current, previous)) {
+        this.previousCacheState.dispose();
+        this.previousCacheState = void 0;
+      }
+    }
+  }
+  load() {
+    if (this.isUpdating) {
+      return this;
+    }
+    this.loadingPhase = LoadingPhase.Loading;
+    this.loadPromise = (async () => {
+      try {
+        await this.loadFn(this.query);
+        this.loadingPhase = LoadingPhase.Loaded;
+        if (this.previousCacheState) {
+          this.previousCacheState.dispose();
+          this.previousCacheState = void 0;
+        }
+      } catch (error) {
+        this.loadingPhase = LoadingPhase.Errored;
+        throw error;
+      }
+    })();
+    return this;
+  }
+  dispose() {
+    if (this.loadPromise) {
+      (async () => {
+        try {
+          await this.loadPromise;
+        } catch (error) {
+        }
+        this.loadingPhase = LoadingPhase.Disposed;
+        this.disposeFn(this._cacheKey);
+      })();
+    } else {
+      this.loadingPhase = LoadingPhase.Disposed;
+    }
+    if (this.previousCacheState) {
+      this.previousCacheState.dispose();
+      this.previousCacheState = void 0;
+    }
+  }
+}
+export {
+  FileQueryCacheState
+};
+//# sourceMappingURL=cacheState.js.map

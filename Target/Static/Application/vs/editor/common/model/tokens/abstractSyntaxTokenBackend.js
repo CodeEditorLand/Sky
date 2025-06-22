@@ -1,1 +1,138 @@
-import{$Sb as h}from"../../../../base/common/arrays.js";import{$Yh as c}from"../../../../base/common/async.js";import{$df as a}from"../../../../base/common/event.js";import{$vd as o}from"../../../../base/common/lifecycle.js";import{$lD as d}from"../../core/ranges/lineRange.js";import{derivedOpts as l,observableSignal as u,observableValueOpts as f}from"../../../../base/common/observable.js";import{$Ld as g,$Kd as b,$Id as p}from"../../../../base/common/equals.js";class q{constructor(){this.c=new a,this.onDidChangeVisibleRanges=this.c.event,this.d=new Set,this.f=u(this),this.visibleLineRanges=l({owner:this,equalsFn:p(b())},e=>(this.f.read(e),d.joinMany([...this.d].map(t=>t.state.read(e)?.visibleLineRanges??[]))))}attachView(){const e=new v(i=>{this.c.fire({view:e,state:i})});return this.d.add(e),this.f.trigger(void 0),e}detachView(e){this.d.delete(e),this.c.fire({view:e,state:void 0}),this.f.trigger(void 0)}}class m{constructor(e,i){this.visibleLineRanges=e,this.stabilized=i}equals(e){return this===e?!0:!(!h(this.visibleLineRanges,e.visibleLineRanges,(i,t)=>i.equals(t))||this.stabilized!==e.stabilized)}}class v{get state(){return this.c}constructor(e){this.d=e,this.c=f({owner:this,equalsFn:g((i,t)=>i.equals(t))},void 0)}setVisibleLines(e,i){const t=e.map(r=>new d(r.startLineNumber,r.endLineNumber+1)),n=new m(t,i);this.c.set(n,void 0,void 0),this.d(n)}}class x extends o{get lineRanges(){return this.g}constructor(e){super(),this.h=e,this.c=this.B(new c(()=>this.j(),50)),this.f=[],this.g=[]}j(){h(this.f,this.g,(e,i)=>e.equals(i))||(this.f=this.g,this.h())}handleStateChange(e){this.g=e.visibleLineRanges,e.stabilized?(this.c.cancel(),this.j()):this.c.schedule()}}class V extends o{get backgroundTokenizationState(){return this.f}constructor(e,i){super(),this.j=e,this.m=i,this.h=this.B(new a),this.onDidChangeTokens=this.h.event}tokenizeIfCheap(e){this.isCheapToTokenize(e)&&this.forceTokenization(e)}}export{q as $gH,m as $hH,x as $iH,V as $jH};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { equals } from "../../../../base/common/arrays.js";
+import { RunOnceScheduler } from "../../../../base/common/async.js";
+import { Emitter } from "../../../../base/common/event.js";
+import { Disposable } from "../../../../base/common/lifecycle.js";
+import { LineRange } from "../../core/ranges/lineRange.js";
+import { derivedOpts, observableSignal, observableValueOpts } from "../../../../base/common/observable.js";
+import { equalsIfDefined, itemEquals, itemsEquals } from "../../../../base/common/equals.js";
+class AttachedViews {
+  static {
+    __name(this, "AttachedViews");
+  }
+  constructor() {
+    this._onDidChangeVisibleRanges = new Emitter();
+    this.onDidChangeVisibleRanges = this._onDidChangeVisibleRanges.event;
+    this._views = /* @__PURE__ */ new Set();
+    this._viewsChanged = observableSignal(this);
+    this.visibleLineRanges = derivedOpts({
+      owner: this,
+      equalsFn: itemsEquals(itemEquals())
+    }, (reader) => {
+      this._viewsChanged.read(reader);
+      const ranges = LineRange.joinMany([...this._views].map((view) => view.state.read(reader)?.visibleLineRanges ?? []));
+      return ranges;
+    });
+  }
+  attachView() {
+    const view = new AttachedViewImpl((state) => {
+      this._onDidChangeVisibleRanges.fire({ view, state });
+    });
+    this._views.add(view);
+    this._viewsChanged.trigger(void 0);
+    return view;
+  }
+  detachView(view) {
+    this._views.delete(view);
+    this._onDidChangeVisibleRanges.fire({ view, state: void 0 });
+    this._viewsChanged.trigger(void 0);
+  }
+}
+class AttachedViewState {
+  static {
+    __name(this, "AttachedViewState");
+  }
+  constructor(visibleLineRanges, stabilized) {
+    this.visibleLineRanges = visibleLineRanges;
+    this.stabilized = stabilized;
+  }
+  equals(other) {
+    if (this === other) {
+      return true;
+    }
+    if (!equals(this.visibleLineRanges, other.visibleLineRanges, (a, b) => a.equals(b))) {
+      return false;
+    }
+    if (this.stabilized !== other.stabilized) {
+      return false;
+    }
+    return true;
+  }
+}
+class AttachedViewImpl {
+  static {
+    __name(this, "AttachedViewImpl");
+  }
+  get state() {
+    return this._state;
+  }
+  constructor(handleStateChange) {
+    this.handleStateChange = handleStateChange;
+    this._state = observableValueOpts({ owner: this, equalsFn: equalsIfDefined((a, b) => a.equals(b)) }, void 0);
+  }
+  setVisibleLines(visibleLines, stabilized) {
+    const visibleLineRanges = visibleLines.map((line) => new LineRange(line.startLineNumber, line.endLineNumber + 1));
+    const state = new AttachedViewState(visibleLineRanges, stabilized);
+    this._state.set(state, void 0, void 0);
+    this.handleStateChange(state);
+  }
+}
+class AttachedViewHandler extends Disposable {
+  static {
+    __name(this, "AttachedViewHandler");
+  }
+  get lineRanges() {
+    return this._lineRanges;
+  }
+  constructor(_refreshTokens) {
+    super();
+    this._refreshTokens = _refreshTokens;
+    this.runner = this._register(new RunOnceScheduler(() => this.update(), 50));
+    this._computedLineRanges = [];
+    this._lineRanges = [];
+  }
+  update() {
+    if (equals(this._computedLineRanges, this._lineRanges, (a, b) => a.equals(b))) {
+      return;
+    }
+    this._computedLineRanges = this._lineRanges;
+    this._refreshTokens();
+  }
+  handleStateChange(state) {
+    this._lineRanges = state.visibleLineRanges;
+    if (state.stabilized) {
+      this.runner.cancel();
+      this.update();
+    } else {
+      this.runner.schedule();
+    }
+  }
+}
+class AbstractSyntaxTokenBackend extends Disposable {
+  static {
+    __name(this, "AbstractSyntaxTokenBackend");
+  }
+  get backgroundTokenizationState() {
+    return this._backgroundTokenizationState;
+  }
+  constructor(_languageIdCodec, _textModel) {
+    super();
+    this._languageIdCodec = _languageIdCodec;
+    this._textModel = _textModel;
+    this._onDidChangeTokens = this._register(new Emitter());
+    this.onDidChangeTokens = this._onDidChangeTokens.event;
+  }
+  tokenizeIfCheap(lineNumber) {
+    if (this.isCheapToTokenize(lineNumber)) {
+      this.forceTokenization(lineNumber);
+    }
+  }
+}
+export {
+  AbstractSyntaxTokenBackend,
+  AttachedViewHandler,
+  AttachedViewState,
+  AttachedViews
+};
+//# sourceMappingURL=abstractSyntaxTokenBackend.js.map

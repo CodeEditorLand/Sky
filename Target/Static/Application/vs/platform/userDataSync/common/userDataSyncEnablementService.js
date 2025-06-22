@@ -1,1 +1,115 @@
-import{$df as u}from"../../../base/common/event.js";import{$vd as b}from"../../../base/common/lifecycle.js";import{$s as d}from"../../../base/common/platform.js";import{$fl as p}from"../../environment/common/environment.js";import{$Ho as E}from"../../storage/common/storage.js";import{$TMb as g,$7Mb as c,$WMb as y}from"./userDataSync.js";var m=function(e,t,s,n){var o,r=arguments.length,i=r<3?t:null===n?n=Object.getOwnPropertyDescriptor(t,s):n;if("object"==typeof Reflect&&"function"==typeof Reflect.decorate)i=Reflect.decorate(e,t,s,n);else for(var a=e.length-1;a>=0;a--)(o=e[a])&&(i=(r<3?o(i):r>3?o(t,s,i):o(t,s))||i);return r>3&&i&&Object.defineProperty(t,s,i),i},h=function(e,t){return function(s,n){t(s,n,e)}};const a="sync.enable";let l=class extends b{constructor(e,t,s){super(),this.c=e,this.f=t,this.g=s,this.a=new u,this.onDidChangeEnablement=this.a.event,this.b=new u,this.onDidChangeResourceEnablement=this.b.event,this.B(e.onDidChangeValue(-1,void 0,this.q)((e=>this.j(e))))}isEnabled(){switch(this.f.sync){case"on":return!0;case"off":return!1}return this.c.getBoolean(a,-1,!1)}canToggleEnablement(){return void 0!==this.g.userDataSyncStore&&void 0===this.f.sync}setEnablement(e){e&&!this.canToggleEnablement()||this.c.store(a,e,-1,1)}isResourceEnabled(e,t){return t=t??"prompts"!==e,this.c.getBoolean(c(e),-1)??t}isResourceEnablementConfigured(e){return void 0!==this.c.getBoolean(c(e),-1)}setResourceEnablement(e,t){if(this.isResourceEnabled(e)!==t){const s=c(e);this.h(s,t)}}getResourceSyncStateVersion(e){}h(e,t){this.c.store(e,t,-1,d?0:1)}j(e){if(a===e.key)return void this.a.fire(this.isEnabled());const t=g.filter((t=>c(t)===e.key))[0];t&&this.b.fire([t,this.isResourceEnabled(t)])}};l=m([h(0,E),h(1,p),h(2,y)],l);export{l as $cBc};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { Emitter } from "../../../base/common/event.js";
+import { Disposable } from "../../../base/common/lifecycle.js";
+import { isWeb } from "../../../base/common/platform.js";
+import { IEnvironmentService } from "../../environment/common/environment.js";
+import { IStorageService } from "../../storage/common/storage.js";
+import { ALL_SYNC_RESOURCES, getEnablementKey, IUserDataSyncStoreManagementService } from "./userDataSync.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+const enablementKey = "sync.enable";
+let UserDataSyncEnablementService = class UserDataSyncEnablementService2 extends Disposable {
+  static {
+    __name(this, "UserDataSyncEnablementService");
+  }
+  constructor(storageService, environmentService, userDataSyncStoreManagementService) {
+    super();
+    this.storageService = storageService;
+    this.environmentService = environmentService;
+    this.userDataSyncStoreManagementService = userDataSyncStoreManagementService;
+    this._onDidChangeEnablement = new Emitter();
+    this.onDidChangeEnablement = this._onDidChangeEnablement.event;
+    this._onDidChangeResourceEnablement = new Emitter();
+    this.onDidChangeResourceEnablement = this._onDidChangeResourceEnablement.event;
+    this._register(storageService.onDidChangeValue(-1, void 0, this._store)((e) => this.onDidStorageChange(e)));
+  }
+  isEnabled() {
+    switch (this.environmentService.sync) {
+      case "on":
+        return true;
+      case "off":
+        return false;
+    }
+    return this.storageService.getBoolean(enablementKey, -1, false);
+  }
+  canToggleEnablement() {
+    return this.userDataSyncStoreManagementService.userDataSyncStore !== void 0 && this.environmentService.sync === void 0;
+  }
+  setEnablement(enabled) {
+    if (enabled && !this.canToggleEnablement()) {
+      return;
+    }
+    this.storageService.store(
+      enablementKey,
+      enabled,
+      -1,
+      1
+      /* StorageTarget.MACHINE */
+    );
+  }
+  isResourceEnabled(resource, defaultValue) {
+    const storedValue = this.storageService.getBoolean(
+      getEnablementKey(resource),
+      -1
+      /* StorageScope.APPLICATION */
+    );
+    defaultValue = defaultValue ?? resource !== "prompts";
+    return storedValue ?? defaultValue;
+  }
+  isResourceEnablementConfigured(resource) {
+    const storedValue = this.storageService.getBoolean(
+      getEnablementKey(resource),
+      -1
+      /* StorageScope.APPLICATION */
+    );
+    return storedValue !== void 0;
+  }
+  setResourceEnablement(resource, enabled) {
+    if (this.isResourceEnabled(resource) !== enabled) {
+      const resourceEnablementKey = getEnablementKey(resource);
+      this.storeResourceEnablement(resourceEnablementKey, enabled);
+    }
+  }
+  getResourceSyncStateVersion(resource) {
+    return void 0;
+  }
+  storeResourceEnablement(resourceEnablementKey, enabled) {
+    this.storageService.store(
+      resourceEnablementKey,
+      enabled,
+      -1,
+      isWeb ? 0 : 1
+      /* StorageTarget.MACHINE */
+    );
+  }
+  onDidStorageChange(storageChangeEvent) {
+    if (enablementKey === storageChangeEvent.key) {
+      this._onDidChangeEnablement.fire(this.isEnabled());
+      return;
+    }
+    const resourceKey = ALL_SYNC_RESOURCES.filter((resourceKey2) => getEnablementKey(resourceKey2) === storageChangeEvent.key)[0];
+    if (resourceKey) {
+      this._onDidChangeResourceEnablement.fire([resourceKey, this.isResourceEnabled(resourceKey)]);
+      return;
+    }
+  }
+};
+UserDataSyncEnablementService = __decorate([
+  __param(0, IStorageService),
+  __param(1, IEnvironmentService),
+  __param(2, IUserDataSyncStoreManagementService)
+], UserDataSyncEnablementService);
+export {
+  UserDataSyncEnablementService
+};
+//# sourceMappingURL=userDataSyncEnablementService.js.map

@@ -1,1 +1,534 @@
-import{$a4 as m}from"../common/terminal.js";import{Event as d,$df as o}from"../../../../base/common/event.js";import{$vd as b,$ud as v,$qd as w,$td as z}from"../../../../base/common/lifecycle.js";import{$x9 as y,Sizing as u}from"../../../../base/browser/ui/splitview/splitview.js";import{$9tb as f,$8tb as S}from"../../../services/layout/browser/layoutService.js";import{$mj as D}from"../../../../platform/instantiation/common/instantiation.js";import{$IYb as $,$FYb as B}from"./terminal.js";import{$YM as x}from"../../../common/views.js";import{TerminalLocation as p}from"../../../../platform/terminal/common/terminal.js";import{getWindow as E}from"../../../../base/browser/dom.js";import{$G6b as C}from"../../../services/views/browser/viewsService.js";import{$mc as V}from"../../../../base/common/arrays.js";var P=function(r,t,i,s){var e=arguments.length,h=e<3?t:s===null?s=Object.getOwnPropertyDescriptor(t,i):s,n;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")h=Reflect.decorate(r,t,i,s);else for(var a=r.length-1;a>=0;a--)(n=r[a])&&(h=(e<3?n(h):e>3?n(t,i,h):n(t,i))||h);return e>3&&h&&Object.defineProperty(t,i,h),h},l=function(r,t){return function(i,s){t(i,s,r)}},I;(function(r){r[r.SplitPaneMinSize=80]="SplitPaneMinSize",r[r.ResizePartCellCount=4]="ResizePartCellCount"})(I||(I={}));class A extends b{get onDidChange(){return this.m}constructor(t,i){super(),this.n=t,this.orientation=i,this.g=this.B(new v),this.h=[],this.j=new Map,this.m=d.None,this.b=this.n.offsetWidth,this.a=this.n.offsetHeight,this.r(),this.f.layout(this.orientation===1?this.b:this.a)}r(){this.g.clear(),this.f=new y(this.n,{orientation:this.orientation}),this.g.add(this.f),this.g.add(this.f.onDidSashReset(()=>this.f.distributeViewSizes()))}split(t,i){this.s(t,i)}resizePane(t,i,s){if(this.h.length<=1)return;const e=[];for(let a=0;a<this.f.length;a++)e.push(this.f.getViewSize(a));const h=t!==this.h.length-1,n=h?t+1:t-1;(h&&i===0||!h&&i===1||h&&i===2||!h&&i===3)&&(s*=-1),e[t]+s<80?s=80-e[t]:e[n]-s<80&&(s=e[n]-80),e[t]+=s,e[n]-=s;for(let a=0;a<this.f.length-1;a++)this.f.resizeView(a,e[a])}resizePanes(t){if(this.h.length<=1)return;t[t.length-1]+=1-t.reduce((s,e)=>s+e,0);let i=0;for(let s=0;s<this.f.length;s++)i+=this.f.getViewSize(s);for(let s=0;s<this.f.length;s++)this.f.resizeView(s,i*t[s])}getPaneSize(t){const i=this.j.get(t);if(!i)return 0;const s=this.h.indexOf(i);return this.f.getViewSize(s)}s(t,i){const s=new O(t,this.orientation===1?this.a:this.b);s.orientation=this.orientation,typeof i=="number"?this.h.splice(i,0,s):this.h.push(s),this.j.set(t,this.h[this.h.indexOf(s)]),this.u(()=>this.f.addView(s,u.Distribute,i)),this.layout(this.b,this.a),this.m=d.any(...this.h.map(e=>e.onDidChange))}remove(t){let i=null;for(let s=0;s<this.h.length;s++)this.h[s].instance===t&&(i=s);i!==null&&(this.h.splice(i,1),this.j.delete(t),this.f.removeView(i,u.Distribute),t.detachFromElement())}layout(t,i){this.b=t,this.a=i,this.orientation===1?(this.h.forEach(s=>s.orthogonalLayout(i)),this.f.layout(t)):(this.h.forEach(s=>s.orthogonalLayout(t)),this.f.layout(i))}setOrientation(t){if(this.orientation!==t){for(this.orientation=t;this.n.children.length>0;)this.n.children[0].remove();this.r(),this.u(()=>{this.h.forEach(i=>{i.orientation=t,this.f.addView(i,1)})})}}u(t){this.h.forEach(i=>i.instance.disableLayout=!0),t(),this.h.forEach(i=>i.instance.disableLayout=!1)}}class O{get onDidChange(){return this.a}constructor(t,i){this.instance=t,this.orthogonalSize=i,this.minimumSize=80,this.maximumSize=Number.MAX_VALUE,this.a=d.None,this.element=document.createElement("div"),this.element.className="terminal-split-pane",this.instance.attachToElement(this.element)}layout(t){!t||!this.orthogonalSize||(this.orientation===0?this.instance.layout({width:this.orthogonalSize,height:t}):this.instance.layout({width:t,height:this.orthogonalSize}))}orthogonalLayout(t){this.orthogonalSize=t}}let g=class extends b{get terminalInstances(){return this.a}constructor(t,i,s,e,h,n,a){super(),this.F=t,this.G=s,this.H=e,this.I=h,this.J=n,this.L=a,this.a=[],this.g=2,this.h=1,this.j=new Map,this.m=-1,this.r=!1,this.s=this.B(new o),this.onDidDisposeInstance=this.s.event,this.u=this.B(new o),this.onDidFocusInstance=this.u.event,this.w=this.B(new o),this.onDidChangeInstanceCapability=this.w.event,this.y=this.B(new o),this.onDisposed=this.y.event,this.z=this.B(new o),this.onInstancesChanged=this.z.event,this.C=this.B(new o),this.onDidChangeActiveInstance=this.C.event,this.D=this.B(new o),this.onPanelOrientationChanged=this.D.event,i&&this.addInstance(i),this.F&&this.attachToElement(this.F),this.D.fire(this.h===1&&f(this.g)?1:0),this.B(z(()=>{this.F&&this.f&&(this.f.remove(),this.f=void 0)}))}addInstance(t,i){let s;const e=i?this.a.findIndex(h=>h.instanceId===i):this.m;"instanceId"in t?s=t:s=this.H.createInstance(t,p.Panel),this.a.length===0?(this.a.push(s),this.m=0):this.a.splice(e+1,0,s),this.M(s),this.b&&this.b.split(s,e+1),this.z.fire()}dispose(){this.a=[],this.z.fire(),this.b?.dispose(),super.dispose()}get activeInstance(){if(this.a.length!==0)return this.a[this.m]}getLayoutInfo(t){const i=this.terminalInstances.filter(e=>typeof e.persistentProcessId=="number"&&e.shouldPersist),s=i.map(e=>this.b?.getPaneSize(e)||0).reduce((e,h)=>e+=h,0);return{isActive:t,activePersistentProcessId:this.activeInstance?this.activeInstance.persistentProcessId:void 0,terminals:i.map(e=>({relativeSize:s>0?this.b.getPaneSize(e)/s:0,terminal:e.persistentProcessId||0}))}}M(t){this.j.set(t.instanceId,[t.onDisposed(i=>{this.s.fire(i),this.N(i)}),t.onDidFocus(i=>{this.P(i),this.u.fire(i)}),t.capabilities.onDidAddCapabilityType(()=>this.w.fire(t)),t.capabilities.onDidRemoveCapabilityType(()=>this.w.fire(t))])}N(t){this.O(t)}removeInstance(t){this.O(t)}O(t){const i=this.a.indexOf(t);if(i===-1)return;const s=t===this.activeInstance;if(this.a.splice(i,1),s&&this.a.length>0){const h=i<this.a.length?i:this.a.length-1;this.setActiveInstanceByIndex(h),this.activeInstance?.focus(!0)}else i<this.m&&this.m--;this.b?.remove(t),this.a.length===0?(this.y.fire(this),this.dispose()):this.z.fire();const e=this.j.get(t.instanceId);e&&(w(e),this.j.delete(t.instanceId))}moveInstance(t,i,s){if(t=V(t),t.some(n=>!this.terminalInstances.includes(n)))return;const h=s==="before"?i:i+1;this.a.splice(h,0,...t);for(const n of t){const a=s==="after"?this.a.indexOf(n):this.a.lastIndexOf(n);this.a.splice(a,1)}if(this.b)for(let n=0;n<t.length;n++){const a=t[n];this.b.remove(a),this.b.split(a,i+(s==="before"?n:0))}this.z.fire()}P(t){this.setActiveInstanceByIndex(this.Q(t.instanceId))}Q(t){let i=-1;if(this.terminalInstances.forEach((s,e)=>{s.instanceId===t&&(i=e)}),i===-1)throw new Error(`Terminal with ID ${t} does not exist (has it already been disposed?)`);return i}setActiveInstanceByIndex(t,i){if(t<0||t>=this.a.length)return;const s=this.activeInstance;this.m=t,(s!==this.activeInstance||i)&&(this.z.fire(),this.C.fire(this.activeInstance))}attachToElement(t){if(this.F=t,this.f||(this.f=document.createElement("div"),this.f.classList.add("terminal-group")),this.F.appendChild(this.f),!this.b){this.g=this.I.getPanelPosition(),this.h=this.J.getViewLocationById(m);const i=this.h===1&&f(this.g)?1:0;this.b=this.L.createInstance(A,this.f,i),this.terminalInstances.forEach(s=>this.b.split(s,this.m+1))}}get title(){if(this.a.length===0)return"";let t=this.terminalInstances[0].title+this.R(this.terminalInstances[0]);this.terminalInstances[0].description&&(t+=` (${this.terminalInstances[0].description})`);for(let i=1;i<this.terminalInstances.length;i++){const s=this.terminalInstances[i];s.title&&(t+=`, ${s.title+this.R(s)}`,s.description&&(t+=` (${s.description})`))}return t}R(t){return this.G.config.enableBell&&t.statusList.statuses.some(i=>i.id==="bell")?"*":""}setVisible(t){this.r=t,this.f&&(this.f.style.display=t?"":"none"),this.terminalInstances.forEach(i=>i.setVisible(t))}split(t){const i=this.H.createInstance(t,p.Panel);return this.addInstance(i,t.parentTerminalId),this.P(i),i}addDisposable(t){this.B(t)}layout(t,i){if(this.b){const s=this.I.getPanelPosition(),e=this.J.getViewLocationById(m);if(s!==this.g||e!==this.h){const n=e===1&&f(s)?1:0;this.b.setOrientation(n),this.g=s,this.h=e,this.D.fire(this.b.orientation)}this.b.layout(t,i),this.n&&this.r&&(this.resizePanes(this.n),this.n=void 0)}}focusPreviousPane(){const t=this.m===0?this.a.length-1:this.m-1;this.setActiveInstanceByIndex(t)}focusNextPane(){const t=this.m===this.a.length-1?0:this.m+1;this.setActiveInstanceByIndex(t)}S(){switch(this.h){case 1:return this.g;case 0:return this.I.getSideBarPosition();case 2:return this.I.getSideBarPosition()===0?1:0}}U(){return f(this.S())?1:0}resizePane(t){if(!this.b)return;const i=t===0||t===1,s=this.U(),e=i&&s===0||!i&&s===1,h=this.G.getFont(E(this.f)),n=i?h.charWidth:h.charHeight;if(n){let a=n*4;if(e){const c=this.S();(c===0&&t===0||c===1&&t===1||c===2&&t===3||c===3&&t===2)&&(a*=-1),this.I.resizePart(C(this.h),a,a)}else this.b.resizePane(this.m,t,a)}}resizePanes(t){if(!this.b){this.n=t;return}this.b.resizePanes(t)}};g=P([l(2,B),l(3,$),l(4,S),l(5,x),l(6,D)],g);export{g as $rrc};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { TERMINAL_VIEW_ID } from "../common/terminal.js";
+import { Event, Emitter } from "../../../../base/common/event.js";
+import { Disposable, DisposableStore, dispose, toDisposable } from "../../../../base/common/lifecycle.js";
+import { SplitView, Sizing } from "../../../../base/browser/ui/splitview/splitview.js";
+import { isHorizontal, IWorkbenchLayoutService } from "../../../services/layout/browser/layoutService.js";
+import { IInstantiationService } from "../../../../platform/instantiation/common/instantiation.js";
+import { ITerminalInstanceService, ITerminalConfigurationService } from "./terminal.js";
+import { IViewDescriptorService } from "../../../common/views.js";
+import { TerminalLocation } from "../../../../platform/terminal/common/terminal.js";
+import { getWindow } from "../../../../base/browser/dom.js";
+import { getPartByLocation } from "../../../services/views/browser/viewsService.js";
+import { asArray } from "../../../../base/common/arrays.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+var Constants;
+(function(Constants2) {
+  Constants2[Constants2["SplitPaneMinSize"] = 80] = "SplitPaneMinSize";
+  Constants2[Constants2["ResizePartCellCount"] = 4] = "ResizePartCellCount";
+})(Constants || (Constants = {}));
+class SplitPaneContainer extends Disposable {
+  static {
+    __name(this, "SplitPaneContainer");
+  }
+  get onDidChange() {
+    return this._onDidChange;
+  }
+  constructor(_container, orientation) {
+    super();
+    this._container = _container;
+    this.orientation = orientation;
+    this._splitViewDisposables = this._register(new DisposableStore());
+    this._children = [];
+    this._terminalToPane = /* @__PURE__ */ new Map();
+    this._onDidChange = Event.None;
+    this._width = this._container.offsetWidth;
+    this._height = this._container.offsetHeight;
+    this._createSplitView();
+    this._splitView.layout(this.orientation === 1 ? this._width : this._height);
+  }
+  _createSplitView() {
+    this._splitViewDisposables.clear();
+    this._splitView = new SplitView(this._container, { orientation: this.orientation });
+    this._splitViewDisposables.add(this._splitView);
+    this._splitViewDisposables.add(this._splitView.onDidSashReset(() => this._splitView.distributeViewSizes()));
+  }
+  split(instance, index) {
+    this._addChild(instance, index);
+  }
+  resizePane(index, direction, amount) {
+    if (this._children.length <= 1) {
+      return;
+    }
+    const sizes = [];
+    for (let i = 0; i < this._splitView.length; i++) {
+      sizes.push(this._splitView.getViewSize(i));
+    }
+    const isSizingEndPane = index !== this._children.length - 1;
+    const indexToChange = isSizingEndPane ? index + 1 : index - 1;
+    if (isSizingEndPane && direction === 0) {
+      amount *= -1;
+    } else if (!isSizingEndPane && direction === 1) {
+      amount *= -1;
+    } else if (isSizingEndPane && direction === 2) {
+      amount *= -1;
+    } else if (!isSizingEndPane && direction === 3) {
+      amount *= -1;
+    }
+    if (sizes[index] + amount < 80) {
+      amount = 80 - sizes[index];
+    } else if (sizes[indexToChange] - amount < 80) {
+      amount = sizes[indexToChange] - 80;
+    }
+    sizes[index] += amount;
+    sizes[indexToChange] -= amount;
+    for (let i = 0; i < this._splitView.length - 1; i++) {
+      this._splitView.resizeView(i, sizes[i]);
+    }
+  }
+  resizePanes(relativeSizes) {
+    if (this._children.length <= 1) {
+      return;
+    }
+    relativeSizes[relativeSizes.length - 1] += 1 - relativeSizes.reduce((totalValue, currentValue) => totalValue + currentValue, 0);
+    let totalSize = 0;
+    for (let i = 0; i < this._splitView.length; i++) {
+      totalSize += this._splitView.getViewSize(i);
+    }
+    for (let i = 0; i < this._splitView.length; i++) {
+      this._splitView.resizeView(i, totalSize * relativeSizes[i]);
+    }
+  }
+  getPaneSize(instance) {
+    const paneForInstance = this._terminalToPane.get(instance);
+    if (!paneForInstance) {
+      return 0;
+    }
+    const index = this._children.indexOf(paneForInstance);
+    return this._splitView.getViewSize(index);
+  }
+  _addChild(instance, index) {
+    const child = new SplitPane(instance, this.orientation === 1 ? this._height : this._width);
+    child.orientation = this.orientation;
+    if (typeof index === "number") {
+      this._children.splice(index, 0, child);
+    } else {
+      this._children.push(child);
+    }
+    this._terminalToPane.set(instance, this._children[this._children.indexOf(child)]);
+    this._withDisabledLayout(() => this._splitView.addView(child, Sizing.Distribute, index));
+    this.layout(this._width, this._height);
+    this._onDidChange = Event.any(...this._children.map((c) => c.onDidChange));
+  }
+  remove(instance) {
+    let index = null;
+    for (let i = 0; i < this._children.length; i++) {
+      if (this._children[i].instance === instance) {
+        index = i;
+      }
+    }
+    if (index !== null) {
+      this._children.splice(index, 1);
+      this._terminalToPane.delete(instance);
+      this._splitView.removeView(index, Sizing.Distribute);
+      instance.detachFromElement();
+    }
+  }
+  layout(width, height) {
+    this._width = width;
+    this._height = height;
+    if (this.orientation === 1) {
+      this._children.forEach((c) => c.orthogonalLayout(height));
+      this._splitView.layout(width);
+    } else {
+      this._children.forEach((c) => c.orthogonalLayout(width));
+      this._splitView.layout(height);
+    }
+  }
+  setOrientation(orientation) {
+    if (this.orientation === orientation) {
+      return;
+    }
+    this.orientation = orientation;
+    while (this._container.children.length > 0) {
+      this._container.children[0].remove();
+    }
+    this._createSplitView();
+    this._withDisabledLayout(() => {
+      this._children.forEach((child) => {
+        child.orientation = orientation;
+        this._splitView.addView(child, 1);
+      });
+    });
+  }
+  _withDisabledLayout(innerFunction) {
+    this._children.forEach((c) => c.instance.disableLayout = true);
+    innerFunction();
+    this._children.forEach((c) => c.instance.disableLayout = false);
+  }
+}
+class SplitPane {
+  static {
+    __name(this, "SplitPane");
+  }
+  get onDidChange() {
+    return this._onDidChange;
+  }
+  constructor(instance, orthogonalSize) {
+    this.instance = instance;
+    this.orthogonalSize = orthogonalSize;
+    this.minimumSize = 80;
+    this.maximumSize = Number.MAX_VALUE;
+    this._onDidChange = Event.None;
+    this.element = document.createElement("div");
+    this.element.className = "terminal-split-pane";
+    this.instance.attachToElement(this.element);
+  }
+  layout(size) {
+    if (!size || !this.orthogonalSize) {
+      return;
+    }
+    if (this.orientation === 0) {
+      this.instance.layout({ width: this.orthogonalSize, height: size });
+    } else {
+      this.instance.layout({ width: size, height: this.orthogonalSize });
+    }
+  }
+  orthogonalLayout(size) {
+    this.orthogonalSize = size;
+  }
+}
+let TerminalGroup = class TerminalGroup2 extends Disposable {
+  static {
+    __name(this, "TerminalGroup");
+  }
+  get terminalInstances() {
+    return this._terminalInstances;
+  }
+  constructor(_container, shellLaunchConfigOrInstance, _terminalConfigurationService, _terminalInstanceService, _layoutService, _viewDescriptorService, _instantiationService) {
+    super();
+    this._container = _container;
+    this._terminalConfigurationService = _terminalConfigurationService;
+    this._terminalInstanceService = _terminalInstanceService;
+    this._layoutService = _layoutService;
+    this._viewDescriptorService = _viewDescriptorService;
+    this._instantiationService = _instantiationService;
+    this._terminalInstances = [];
+    this._panelPosition = 2;
+    this._terminalLocation = 1;
+    this._instanceDisposables = /* @__PURE__ */ new Map();
+    this._activeInstanceIndex = -1;
+    this._visible = false;
+    this._onDidDisposeInstance = this._register(new Emitter());
+    this.onDidDisposeInstance = this._onDidDisposeInstance.event;
+    this._onDidFocusInstance = this._register(new Emitter());
+    this.onDidFocusInstance = this._onDidFocusInstance.event;
+    this._onDidChangeInstanceCapability = this._register(new Emitter());
+    this.onDidChangeInstanceCapability = this._onDidChangeInstanceCapability.event;
+    this._onDisposed = this._register(new Emitter());
+    this.onDisposed = this._onDisposed.event;
+    this._onInstancesChanged = this._register(new Emitter());
+    this.onInstancesChanged = this._onInstancesChanged.event;
+    this._onDidChangeActiveInstance = this._register(new Emitter());
+    this.onDidChangeActiveInstance = this._onDidChangeActiveInstance.event;
+    this._onPanelOrientationChanged = this._register(new Emitter());
+    this.onPanelOrientationChanged = this._onPanelOrientationChanged.event;
+    if (shellLaunchConfigOrInstance) {
+      this.addInstance(shellLaunchConfigOrInstance);
+    }
+    if (this._container) {
+      this.attachToElement(this._container);
+    }
+    this._onPanelOrientationChanged.fire(
+      this._terminalLocation === 1 && isHorizontal(this._panelPosition) ? 1 : 0
+      /* Orientation.VERTICAL */
+    );
+    this._register(toDisposable(() => {
+      if (this._container && this._groupElement) {
+        this._groupElement.remove();
+        this._groupElement = void 0;
+      }
+    }));
+  }
+  addInstance(shellLaunchConfigOrInstance, parentTerminalId) {
+    let instance;
+    const parentIndex = parentTerminalId ? this._terminalInstances.findIndex((t) => t.instanceId === parentTerminalId) : this._activeInstanceIndex;
+    if ("instanceId" in shellLaunchConfigOrInstance) {
+      instance = shellLaunchConfigOrInstance;
+    } else {
+      instance = this._terminalInstanceService.createInstance(shellLaunchConfigOrInstance, TerminalLocation.Panel);
+    }
+    if (this._terminalInstances.length === 0) {
+      this._terminalInstances.push(instance);
+      this._activeInstanceIndex = 0;
+    } else {
+      this._terminalInstances.splice(parentIndex + 1, 0, instance);
+    }
+    this._initInstanceListeners(instance);
+    if (this._splitPaneContainer) {
+      this._splitPaneContainer.split(instance, parentIndex + 1);
+    }
+    this._onInstancesChanged.fire();
+  }
+  dispose() {
+    this._terminalInstances = [];
+    this._onInstancesChanged.fire();
+    this._splitPaneContainer?.dispose();
+    super.dispose();
+  }
+  get activeInstance() {
+    if (this._terminalInstances.length === 0) {
+      return void 0;
+    }
+    return this._terminalInstances[this._activeInstanceIndex];
+  }
+  getLayoutInfo(isActive) {
+    const instances = this.terminalInstances.filter((instance) => typeof instance.persistentProcessId === "number" && instance.shouldPersist);
+    const totalSize = instances.map((t) => this._splitPaneContainer?.getPaneSize(t) || 0).reduce((total, size) => total += size, 0);
+    return {
+      isActive,
+      activePersistentProcessId: this.activeInstance ? this.activeInstance.persistentProcessId : void 0,
+      terminals: instances.map((t) => {
+        return {
+          relativeSize: totalSize > 0 ? this._splitPaneContainer.getPaneSize(t) / totalSize : 0,
+          terminal: t.persistentProcessId || 0
+        };
+      })
+    };
+  }
+  _initInstanceListeners(instance) {
+    this._instanceDisposables.set(instance.instanceId, [
+      instance.onDisposed((instance2) => {
+        this._onDidDisposeInstance.fire(instance2);
+        this._handleOnDidDisposeInstance(instance2);
+      }),
+      instance.onDidFocus((instance2) => {
+        this._setActiveInstance(instance2);
+        this._onDidFocusInstance.fire(instance2);
+      }),
+      instance.capabilities.onDidAddCapabilityType(() => this._onDidChangeInstanceCapability.fire(instance)),
+      instance.capabilities.onDidRemoveCapabilityType(() => this._onDidChangeInstanceCapability.fire(instance))
+    ]);
+  }
+  _handleOnDidDisposeInstance(instance) {
+    this._removeInstance(instance);
+  }
+  removeInstance(instance) {
+    this._removeInstance(instance);
+  }
+  _removeInstance(instance) {
+    const index = this._terminalInstances.indexOf(instance);
+    if (index === -1) {
+      return;
+    }
+    const wasActiveInstance = instance === this.activeInstance;
+    this._terminalInstances.splice(index, 1);
+    if (wasActiveInstance && this._terminalInstances.length > 0) {
+      const newIndex = index < this._terminalInstances.length ? index : this._terminalInstances.length - 1;
+      this.setActiveInstanceByIndex(newIndex);
+      this.activeInstance?.focus(true);
+    } else if (index < this._activeInstanceIndex) {
+      this._activeInstanceIndex--;
+    }
+    this._splitPaneContainer?.remove(instance);
+    if (this._terminalInstances.length === 0) {
+      this._onDisposed.fire(this);
+      this.dispose();
+    } else {
+      this._onInstancesChanged.fire();
+    }
+    const disposables = this._instanceDisposables.get(instance.instanceId);
+    if (disposables) {
+      dispose(disposables);
+      this._instanceDisposables.delete(instance.instanceId);
+    }
+  }
+  moveInstance(instances, index, position) {
+    instances = asArray(instances);
+    const hasInvalidInstance = instances.some((instance) => !this.terminalInstances.includes(instance));
+    if (hasInvalidInstance) {
+      return;
+    }
+    const insertIndex = position === "before" ? index : index + 1;
+    this._terminalInstances.splice(insertIndex, 0, ...instances);
+    for (const item of instances) {
+      const originSourceGroupIndex = position === "after" ? this._terminalInstances.indexOf(item) : this._terminalInstances.lastIndexOf(item);
+      this._terminalInstances.splice(originSourceGroupIndex, 1);
+    }
+    if (this._splitPaneContainer) {
+      for (let i = 0; i < instances.length; i++) {
+        const item = instances[i];
+        this._splitPaneContainer.remove(item);
+        this._splitPaneContainer.split(item, index + (position === "before" ? i : 0));
+      }
+    }
+    this._onInstancesChanged.fire();
+  }
+  _setActiveInstance(instance) {
+    this.setActiveInstanceByIndex(this._getIndexFromId(instance.instanceId));
+  }
+  _getIndexFromId(terminalId) {
+    let terminalIndex = -1;
+    this.terminalInstances.forEach((terminalInstance, i) => {
+      if (terminalInstance.instanceId === terminalId) {
+        terminalIndex = i;
+      }
+    });
+    if (terminalIndex === -1) {
+      throw new Error(`Terminal with ID ${terminalId} does not exist (has it already been disposed?)`);
+    }
+    return terminalIndex;
+  }
+  setActiveInstanceByIndex(index, force) {
+    if (index < 0 || index >= this._terminalInstances.length) {
+      return;
+    }
+    const oldActiveInstance = this.activeInstance;
+    this._activeInstanceIndex = index;
+    if (oldActiveInstance !== this.activeInstance || force) {
+      this._onInstancesChanged.fire();
+      this._onDidChangeActiveInstance.fire(this.activeInstance);
+    }
+  }
+  attachToElement(element) {
+    this._container = element;
+    if (!this._groupElement) {
+      this._groupElement = document.createElement("div");
+      this._groupElement.classList.add("terminal-group");
+    }
+    this._container.appendChild(this._groupElement);
+    if (!this._splitPaneContainer) {
+      this._panelPosition = this._layoutService.getPanelPosition();
+      this._terminalLocation = this._viewDescriptorService.getViewLocationById(TERMINAL_VIEW_ID);
+      const orientation = this._terminalLocation === 1 && isHorizontal(this._panelPosition) ? 1 : 0;
+      this._splitPaneContainer = this._instantiationService.createInstance(SplitPaneContainer, this._groupElement, orientation);
+      this.terminalInstances.forEach((instance) => this._splitPaneContainer.split(instance, this._activeInstanceIndex + 1));
+    }
+  }
+  get title() {
+    if (this._terminalInstances.length === 0) {
+      return "";
+    }
+    let title = this.terminalInstances[0].title + this._getBellTitle(this.terminalInstances[0]);
+    if (this.terminalInstances[0].description) {
+      title += ` (${this.terminalInstances[0].description})`;
+    }
+    for (let i = 1; i < this.terminalInstances.length; i++) {
+      const instance = this.terminalInstances[i];
+      if (instance.title) {
+        title += `, ${instance.title + this._getBellTitle(instance)}`;
+        if (instance.description) {
+          title += ` (${instance.description})`;
+        }
+      }
+    }
+    return title;
+  }
+  _getBellTitle(instance) {
+    if (this._terminalConfigurationService.config.enableBell && instance.statusList.statuses.some(
+      (e) => e.id === "bell"
+      /* TerminalStatus.Bell */
+    )) {
+      return "*";
+    }
+    return "";
+  }
+  setVisible(visible) {
+    this._visible = visible;
+    if (this._groupElement) {
+      this._groupElement.style.display = visible ? "" : "none";
+    }
+    this.terminalInstances.forEach((i) => i.setVisible(visible));
+  }
+  split(shellLaunchConfig) {
+    const instance = this._terminalInstanceService.createInstance(shellLaunchConfig, TerminalLocation.Panel);
+    this.addInstance(instance, shellLaunchConfig.parentTerminalId);
+    this._setActiveInstance(instance);
+    return instance;
+  }
+  addDisposable(disposable) {
+    this._register(disposable);
+  }
+  layout(width, height) {
+    if (this._splitPaneContainer) {
+      const newPanelPosition = this._layoutService.getPanelPosition();
+      const newTerminalLocation = this._viewDescriptorService.getViewLocationById(TERMINAL_VIEW_ID);
+      const terminalPositionChanged = newPanelPosition !== this._panelPosition || newTerminalLocation !== this._terminalLocation;
+      if (terminalPositionChanged) {
+        const newOrientation = newTerminalLocation === 1 && isHorizontal(newPanelPosition) ? 1 : 0;
+        this._splitPaneContainer.setOrientation(newOrientation);
+        this._panelPosition = newPanelPosition;
+        this._terminalLocation = newTerminalLocation;
+        this._onPanelOrientationChanged.fire(this._splitPaneContainer.orientation);
+      }
+      this._splitPaneContainer.layout(width, height);
+      if (this._initialRelativeSizes && this._visible) {
+        this.resizePanes(this._initialRelativeSizes);
+        this._initialRelativeSizes = void 0;
+      }
+    }
+  }
+  focusPreviousPane() {
+    const newIndex = this._activeInstanceIndex === 0 ? this._terminalInstances.length - 1 : this._activeInstanceIndex - 1;
+    this.setActiveInstanceByIndex(newIndex);
+  }
+  focusNextPane() {
+    const newIndex = this._activeInstanceIndex === this._terminalInstances.length - 1 ? 0 : this._activeInstanceIndex + 1;
+    this.setActiveInstanceByIndex(newIndex);
+  }
+  _getPosition() {
+    switch (this._terminalLocation) {
+      case 1:
+        return this._panelPosition;
+      case 0:
+        return this._layoutService.getSideBarPosition();
+      case 2:
+        return this._layoutService.getSideBarPosition() === 0 ? 1 : 0;
+    }
+  }
+  _getOrientation() {
+    return isHorizontal(this._getPosition()) ? 1 : 0;
+  }
+  resizePane(direction) {
+    if (!this._splitPaneContainer) {
+      return;
+    }
+    const isHorizontalResize = direction === 0 || direction === 1;
+    const groupOrientation = this._getOrientation();
+    const shouldResizePart = isHorizontalResize && groupOrientation === 0 || !isHorizontalResize && groupOrientation === 1;
+    const font = this._terminalConfigurationService.getFont(getWindow(this._groupElement));
+    const charSize = isHorizontalResize ? font.charWidth : font.charHeight;
+    if (charSize) {
+      let resizeAmount = charSize * 4;
+      if (shouldResizePart) {
+        const position = this._getPosition();
+        const shouldShrink = position === 0 && direction === 0 || position === 1 && direction === 1 || position === 2 && direction === 3 || position === 3 && direction === 2;
+        if (shouldShrink) {
+          resizeAmount *= -1;
+        }
+        this._layoutService.resizePart(getPartByLocation(this._terminalLocation), resizeAmount, resizeAmount);
+      } else {
+        this._splitPaneContainer.resizePane(this._activeInstanceIndex, direction, resizeAmount);
+      }
+    }
+  }
+  resizePanes(relativeSizes) {
+    if (!this._splitPaneContainer) {
+      this._initialRelativeSizes = relativeSizes;
+      return;
+    }
+    this._splitPaneContainer.resizePanes(relativeSizes);
+  }
+};
+TerminalGroup = __decorate([
+  __param(2, ITerminalConfigurationService),
+  __param(3, ITerminalInstanceService),
+  __param(4, IWorkbenchLayoutService),
+  __param(5, IViewDescriptorService),
+  __param(6, IInstantiationService)
+], TerminalGroup);
+export {
+  TerminalGroup
+};
+//# sourceMappingURL=terminalGroup.js.map

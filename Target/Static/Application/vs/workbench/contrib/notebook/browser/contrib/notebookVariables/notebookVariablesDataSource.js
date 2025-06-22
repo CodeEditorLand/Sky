@@ -1,1 +1,120 @@
-import{$pf as l}from"../../../../../../base/common/cancellation.js";import{localize as h}from"../../../../../../nls.js";import{$IK as a}from"../../../common/notebookKernelService.js";class b{constructor(e){this.b=e,this.a=new l}hasChildren(e){return e.kind==="root"||e.hasNamedChildren||e.indexedChildrenCount>0}cancel(){this.a.cancel(),this.a.dispose(),this.a=new l}async getChildren(e){return e.kind==="empty"?[]:e.kind==="root"?this.e(e.notebook):this.c(e)}async c(e){const i=this.b.getMatchingKernel(e.notebook).selected;if(i&&i.hasVariableProvider){let t=[];if(e.hasNamedChildren){const n=await i.provideVariables(e.notebook.uri,e.extHostId,"named",0,this.a.token).map(d=>this.f(d,e.notebook)).toPromise();t=t.concat(n)}if(e.indexedChildrenCount>0){const o=await this.d(e,i);t=t.concat(o)}return t}return[]}async d(e,i){const t=[];if(e.indexedChildrenCount>a){const o=Math.floor(Math.max(e.indexedChildrenCount/a,100)),n=1e6;let d=e.indexStart??0;const s=d+Math.min(e.indexedChildrenCount,n);for(;d<s;d+=o){let r=d+o;r>s&&(r=s),t.push({kind:"variable",notebook:e.notebook,id:e.id+`${d}`,extHostId:e.extHostId,name:`[${d}..${r-1}]`,value:"",indexedChildrenCount:r-d,indexStart:d,hasNamedChildren:!1})}e.indexedChildrenCount>n&&t.push({kind:"variable",notebook:e.notebook,id:e.id+`${s+1}`,extHostId:e.extHostId,name:h(9177,null),value:"",indexedChildrenCount:0,hasNamedChildren:!1})}else if(e.indexedChildrenCount>0){const o=i.provideVariables(e.notebook.uri,e.extHostId,"indexed",e.indexStart??0,this.a.token);for await(const n of o)if(t.push(this.f(n,e.notebook)),t.length>=a)break}return t}async e(e){const i=this.b.getMatchingKernel(e).selected;return i&&i.hasVariableProvider?await i.provideVariables(e.uri,void 0,"named",0,this.a.token).map(o=>this.f(o,e)).toPromise():[]}f(e,i){return{...e,kind:"variable",notebook:i,extHostId:e.id,id:`${e.id}`}}}export{b as $aec};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { CancellationTokenSource } from "../../../../../../base/common/cancellation.js";
+import { localize } from "../../../../../../nls.js";
+import { variablePageSize } from "../../../common/notebookKernelService.js";
+class NotebookVariableDataSource {
+  static {
+    __name(this, "NotebookVariableDataSource");
+  }
+  constructor(notebookKernelService) {
+    this.notebookKernelService = notebookKernelService;
+    this.cancellationTokenSource = new CancellationTokenSource();
+  }
+  hasChildren(element) {
+    return element.kind === "root" || element.hasNamedChildren || element.indexedChildrenCount > 0;
+  }
+  cancel() {
+    this.cancellationTokenSource.cancel();
+    this.cancellationTokenSource.dispose();
+    this.cancellationTokenSource = new CancellationTokenSource();
+  }
+  async getChildren(element) {
+    if (element.kind === "empty") {
+      return [];
+    } else if (element.kind === "root") {
+      return this.getRootVariables(element.notebook);
+    } else {
+      return this.getVariables(element);
+    }
+  }
+  async getVariables(parent) {
+    const selectedKernel = this.notebookKernelService.getMatchingKernel(parent.notebook).selected;
+    if (selectedKernel && selectedKernel.hasVariableProvider) {
+      let children = [];
+      if (parent.hasNamedChildren) {
+        const variables = selectedKernel.provideVariables(parent.notebook.uri, parent.extHostId, "named", 0, this.cancellationTokenSource.token);
+        const childNodes = await variables.map((variable) => {
+          return this.createVariableElement(variable, parent.notebook);
+        }).toPromise();
+        children = children.concat(childNodes);
+      }
+      if (parent.indexedChildrenCount > 0) {
+        const childNodes = await this.getIndexedChildren(parent, selectedKernel);
+        children = children.concat(childNodes);
+      }
+      return children;
+    }
+    return [];
+  }
+  async getIndexedChildren(parent, kernel) {
+    const childNodes = [];
+    if (parent.indexedChildrenCount > variablePageSize) {
+      const nestedPageSize = Math.floor(Math.max(parent.indexedChildrenCount / variablePageSize, 100));
+      const indexedChildCountLimit = 1e6;
+      let start = parent.indexStart ?? 0;
+      const last = start + Math.min(parent.indexedChildrenCount, indexedChildCountLimit);
+      for (; start < last; start += nestedPageSize) {
+        let end = start + nestedPageSize;
+        if (end > last) {
+          end = last;
+        }
+        childNodes.push({
+          kind: "variable",
+          notebook: parent.notebook,
+          id: parent.id + `${start}`,
+          extHostId: parent.extHostId,
+          name: `[${start}..${end - 1}]`,
+          value: "",
+          indexedChildrenCount: end - start,
+          indexStart: start,
+          hasNamedChildren: false
+        });
+      }
+      if (parent.indexedChildrenCount > indexedChildCountLimit) {
+        childNodes.push({
+          kind: "variable",
+          notebook: parent.notebook,
+          id: parent.id + `${last + 1}`,
+          extHostId: parent.extHostId,
+          name: localize("notebook.indexedChildrenLimitReached", "Display limit reached"),
+          value: "",
+          indexedChildrenCount: 0,
+          hasNamedChildren: false
+        });
+      }
+    } else if (parent.indexedChildrenCount > 0) {
+      const variables = kernel.provideVariables(parent.notebook.uri, parent.extHostId, "indexed", parent.indexStart ?? 0, this.cancellationTokenSource.token);
+      for await (const variable of variables) {
+        childNodes.push(this.createVariableElement(variable, parent.notebook));
+        if (childNodes.length >= variablePageSize) {
+          break;
+        }
+      }
+    }
+    return childNodes;
+  }
+  async getRootVariables(notebook) {
+    const selectedKernel = this.notebookKernelService.getMatchingKernel(notebook).selected;
+    if (selectedKernel && selectedKernel.hasVariableProvider) {
+      const variables = selectedKernel.provideVariables(notebook.uri, void 0, "named", 0, this.cancellationTokenSource.token);
+      return await variables.map((variable) => {
+        return this.createVariableElement(variable, notebook);
+      }).toPromise();
+    }
+    return [];
+  }
+  createVariableElement(variable, notebook) {
+    return {
+      ...variable,
+      kind: "variable",
+      notebook,
+      extHostId: variable.id,
+      id: `${variable.id}`
+    };
+  }
+}
+export {
+  NotebookVariableDataSource
+};
+//# sourceMappingURL=notebookVariablesDataSource.js.map

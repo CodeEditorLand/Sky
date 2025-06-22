@@ -1,1 +1,54 @@
-import{$td as c}from"../../../base/common/lifecycle.js";import{Schemas as o}from"../../../base/common/network.js";import{URI as s}from"../../../base/common/uri.js";import{$oY as a}from"./extHost.protocol.js";class h{static{this.a=new Set([o.http,o.https])}constructor(e){this.c=new Map,this.b=e.getProxy(a.MainThreadUriOpeners)}registerExternalUriOpener(e,r,n,t){if(this.c.has(r))throw new Error(`Opener with id '${r}' already registered`);const i=t.schemes.find(p=>!h.a.has(p));if(i)throw new Error(`Scheme '${i}' is not supported. Only http and https are currently supported.`);return this.c.set(r,n),this.b.$registerUriOpener(r,t.schemes,e,t.label),c(()=>{this.c.delete(r),this.b.$unregisterUriOpener(r)})}async $canOpenUri(e,r,n){const t=this.c.get(e);if(!t)throw new Error(`Unknown opener with id: ${e}`);const i=s.revive(r);return t.canOpenExternalUri(i,n)}async $openUri(e,r,n){const t=this.c.get(e);if(!t)throw new Error(`Unknown opener id: '${e}'`);return t.openExternalUri(s.revive(r.resolvedUri),{sourceUri:s.revive(r.sourceUri)},n)}}export{h as $xMc};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { toDisposable } from "../../../base/common/lifecycle.js";
+import { Schemas } from "../../../base/common/network.js";
+import { URI } from "../../../base/common/uri.js";
+import { MainContext } from "./extHost.protocol.js";
+class ExtHostUriOpeners {
+  static {
+    __name(this, "ExtHostUriOpeners");
+  }
+  static {
+    this.supportedSchemes = /* @__PURE__ */ new Set([Schemas.http, Schemas.https]);
+  }
+  constructor(mainContext) {
+    this._openers = /* @__PURE__ */ new Map();
+    this._proxy = mainContext.getProxy(MainContext.MainThreadUriOpeners);
+  }
+  registerExternalUriOpener(extensionId, id, opener, metadata) {
+    if (this._openers.has(id)) {
+      throw new Error(`Opener with id '${id}' already registered`);
+    }
+    const invalidScheme = metadata.schemes.find((scheme) => !ExtHostUriOpeners.supportedSchemes.has(scheme));
+    if (invalidScheme) {
+      throw new Error(`Scheme '${invalidScheme}' is not supported. Only http and https are currently supported.`);
+    }
+    this._openers.set(id, opener);
+    this._proxy.$registerUriOpener(id, metadata.schemes, extensionId, metadata.label);
+    return toDisposable(() => {
+      this._openers.delete(id);
+      this._proxy.$unregisterUriOpener(id);
+    });
+  }
+  async $canOpenUri(id, uriComponents, token) {
+    const opener = this._openers.get(id);
+    if (!opener) {
+      throw new Error(`Unknown opener with id: ${id}`);
+    }
+    const uri = URI.revive(uriComponents);
+    return opener.canOpenExternalUri(uri, token);
+  }
+  async $openUri(id, context, token) {
+    const opener = this._openers.get(id);
+    if (!opener) {
+      throw new Error(`Unknown opener id: '${id}'`);
+    }
+    return opener.openExternalUri(URI.revive(context.resolvedUri), {
+      sourceUri: URI.revive(context.sourceUri)
+    }, token);
+  }
+}
+export {
+  ExtHostUriOpeners
+};
+//# sourceMappingURL=extHostUriOpener.js.map

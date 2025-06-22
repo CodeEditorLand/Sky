@@ -1,3 +1,1313 @@
-import{Schemas as y}from"../../../../base/common/network.js";import{$vd as R,$ud as H,$qd as le}from"../../../../base/common/lifecycle.js";import{$xm as J}from"../../../../base/common/marshalling.js";import{$ih as me,$dh as se}from"../../../../base/common/resources.js";import{$0c as A}from"../../../../base/common/types.js";import{URI as K}from"../../../../base/common/uri.js";import{$ev as fe}from"../../../../base/common/jsonFormatter.js";import{$gF as Y}from"../../../../editor/common/services/model.js";import{$BD as G}from"../../../../editor/common/languages/language.js";import{$cF as Q}from"../../../../editor/common/services/resolverService.js";import*as i from"../../../../nls.js";import{$Sl as be}from"../../../../platform/configuration/common/configurationRegistry.js";import{$kj as F}from"../../../../platform/instantiation/common/descriptors.js";import{$WB as b}from"../../../../platform/instantiation/common/extensions.js";import{$mj as he}from"../../../../platform/instantiation/common/instantiation.js";import{$Ql as h}from"../../../../platform/registry/common/platform.js";import{$kGb as B}from"../../../browser/editor.js";import{Extensions as ge,$WK as z}from"../../../common/contributions.js";import{$6J as w}from"../../../common/editor.js";import{$1Ub as Z}from"./notebookEditor.js";import{$Yyb as g}from"../common/notebookEditorInput.js";import{$Ryb as X}from"../common/notebookService.js";import{$O0b as ye}from"./services/notebookServiceImpl.js";import{CellKind as ke,CellUri as C,$BL as Ce,$AL as a,NotebookCellsChangeType as v,NotebookMetadataUri as De}from"../common/notebookCommon.js";import{$oI as ze}from"../../../services/editor/common/editorService.js";import{$YE as we}from"../../../../platform/undoRedo/common/undoRedo.js";import{$Tyb as L}from"../common/notebookEditorModelResolverService.js";import{$A0b as S}from"../common/notebookDiffEditorInput.js";import{$i$b as ee}from"./diff/notebookDiffEditor.js";import{$E0b as $e}from"../common/services/notebookWorkerService.js";import{$m$b as ve}from"./services/notebookWorkerServiceImpl.js";import{$21b as Ie}from"../common/notebookCellStatusBarService.js";import{$n$b as Le}from"./services/notebookCellStatusBarServiceImpl.js";import{$QVb as Oe}from"./services/notebookEditorService.js";import{$o$b as Se}from"./services/notebookEditorServiceImpl.js";import{$Rl as Ee}from"../../../../platform/jsonschemas/common/jsonContributionRegistry.js";import{Event as k}from"../../../../base/common/event.js";import{$vzb as te,$uzb as Te}from"./diff/diffElementViewModel.js";import{$p$b as xe}from"../common/notebookEditorModelResolverServiceImpl.js";import{$KK as Ne,$JK as Me}from"../common/notebookKernelService.js";import{$q$b as Pe}from"./services/notebookKernelServiceImpl.js";import{$XO as je}from"../../../services/extensions/common/extensions.js";import{$9I as Re}from"../../../services/workingCopy/common/workingCopyEditorService.js";import{$El as ue}from"../../../../platform/configuration/common/configuration.js";import{$2H as ce}from"../../../../platform/label/common/label.js";import{$kI as Fe}from"../../../services/editor/common/editorGroupsService.js";import{$r$b as Be}from"./services/notebookRendererMessagingServiceImpl.js";import{$WSb as We}from"../common/notebookRendererMessagingService.js";import{$7Ub as Ue,$8Ub as Ve}from"./viewModel/notebookOutlineDataSourceFactory.js";import"./controller/coreActions.js";import"./controller/insertCellActions.js";import"./controller/executeActions.js";import"./controller/sectionActions.js";import"./controller/layoutActions.js";import"./controller/editActions.js";import"./controller/cellOutputActions.js";import"./controller/apiActions.js";import"./controller/foldingController.js";import"./controller/chat/notebook.chat.contribution.js";import"./controller/variablesActions.js";import"./contrib/editorHint/emptyCellEditorHint.js";import"./contrib/clipboard/notebookClipboard.js";import"./contrib/find/notebookFind.js";import"./contrib/format/formatting.js";import"./contrib/saveParticipants/saveParticipants.js";import"./contrib/gettingStarted/notebookGettingStarted.js";import"./contrib/layout/layoutActions.js";import"./contrib/marker/markerProvider.js";import"./contrib/navigation/arrow.js";import"./contrib/outline/notebookOutline.js";import"./contrib/profile/notebookProfile.js";import"./contrib/cellStatusBar/statusBarProviders.js";import"./contrib/cellStatusBar/contributedStatusBarItemController.js";import"./contrib/cellStatusBar/executionStatusBarItemController.js";import"./contrib/editorStatusBar/editorStatusBar.js";import"./contrib/undoRedo/notebookUndoRedo.js";import"./contrib/cellCommands/cellCommands.js";import"./contrib/viewportWarmup/viewportWarmup.js";import"./contrib/troubleshoot/layout.js";import"./contrib/debug/notebookBreakpoints.js";import"./contrib/debug/notebookCellPausing.js";import"./contrib/debug/notebookDebugDecorations.js";import"./contrib/execute/executionEditorProgress.js";import"./contrib/kernelDetection/notebookKernelDetection.js";import"./contrib/cellDiagnostics/cellDiagnostics.js";import"./contrib/multicursor/notebookMulticursor.js";import"./contrib/multicursor/notebookSelectionHighlight.js";import"./contrib/notebookVariables/notebookInlineVariables.js";import"./diff/notebookDiffActions.js";import{editorOptionsRegistry as Ke}from"../../../../editor/common/config/editorOptions.js";import{$4dc as _e}from"./services/notebookExecutionStateServiceImpl.js";import{$5dc as qe}from"./services/notebookExecutionServiceImpl.js";import{$CK as He}from"../common/notebookExecutionService.js";import{$6dc as Je}from"../common/notebookKeymapService.js";import{$9dc as Ae}from"./services/notebookKeymapServiceImpl.js";import{$mE as Ye}from"../../../../editor/common/languages/modesRegistry.js";import{$DK as Ge}from"../common/notebookExecutionStateService.js";import{$sT as Qe}from"../../../../editor/common/services/languageFeatures.js";import{$qTb as Xe}from"../../comments/browser/commentReply.js";import{$0_ as Ze}from"../../../../editor/browser/services/codeEditorService.js";import{$$dc as et}from"./services/notebookKernelHistoryServiceImpl.js";import{$VSb as tt}from"../common/notebookLoggingService.js";import{$_dc as ot}from"./services/notebookLoggingServiceImpl.js";import O from"../../../../platform/product/common/product.js";import{$iec as it}from"./contrib/notebookVariables/notebookVariables.js";import{$bpb as de}from"../../../../platform/accessibility/browser/accessibleViewRegistry.js";import{$jec as rt}from"./notebookAccessibilityHelp.js";import{$kec as nt}from"./notebookAccessibleView.js";import{$mec as U}from"../../format/browser/formatActionsMultiple.js";import{$Vdc as oe}from"./diff/notebookMultiDiffEditor.js";import{$K0b as pe}from"./diff/notebookMultiDiffEditorInput.js";import{$AK as ie}from"../common/model/notebookCellTextModel.js";import{$XUb as at,$YUb as lt}from"./viewModel/notebookOutlineEntryFactory.js";import{$izb as re}from"../common/model/notebookMetadataTextModel.js";import{$pec as ne}from"./outputEditor/notebookOutputEditor.js";import{$nec as I}from"./outputEditor/notebookOutputEditorInput.js";var D=function(c,e,t,o){var r=arguments.length,n=r<3?e:o===null?o=Object.getOwnPropertyDescriptor(e,t):o,s;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")n=Reflect.decorate(c,e,t,o);else for(var l=c.length-1;l>=0;l--)(s=c[l])&&(n=(r<3?s(n):r>3?s(e,t,n):s(e,t))||n);return r>3&&n&&Object.defineProperty(e,t,n),n},u=function(c,e){return function(t,o){e(t,o,c)}},V;h.as(w.EditorPane).registerEditorPane(B.create(Z,Z.ID,"Notebook Editor"),[new F(g)]);h.as(w.EditorPane).registerEditorPane(B.create(ee,ee.ID,"Notebook Diff Editor"),[new F(S)]);h.as(w.EditorPane).registerEditorPane(B.create(ne,ne.ID,"Notebook Output Editor"),[new F(I)]);h.as(w.EditorPane).registerEditorPane(B.create(oe,oe.ID,"Notebook Diff Editor"),[new F(pe)]);let _=class{constructor(e){this.a=e}canSerialize(){return!0}serialize(e){return A(e instanceof S),JSON.stringify({resource:e.resource,originalResource:e.original.resource,name:e.getName(),originalName:e.original.getName(),textDiffName:e.getName(),viewType:e.viewType})}deserialize(e,t){const o=J(t);if(!o)return;const{resource:r,originalResource:n,name:s,viewType:l}=o;if(!(!o||!K.isUri(r)||!K.isUri(n)||typeof s!="string"||typeof l!="string"))return this.a.getValue("notebook.experimental.enableNewDiffEditor")?pe.create(e,r,s,void 0,n,l):S.create(e,r,s,void 0,n,l)}static canResolveBackup(e,t){return!1}};_=D([u(0,ue)],_);class st{canSerialize(e){return e.typeId===g.ID}serialize(e){A(e instanceof g);const t={resource:e.resource,preferredResource:e.preferredResource,viewType:e.viewType,options:e.options};return JSON.stringify(t)}deserialize(e,t){const o=J(t);if(!o)return;const{resource:r,preferredResource:n,viewType:s,options:l}=o;return!o||!K.isUri(r)||typeof s!="string"?void 0:g.getOrCreate(e,r,n,s,l)}}class ut{canSerialize(e){return e.typeId===I.ID}serialize(e){A(e instanceof I);const t=e.getSerializedData();if(t)return JSON.stringify(t)}deserialize(e,t){const o=J(t);return o?e.createInstance(I,o.notebookUri,o.cellIndex,void 0,o.outputIndex):void 0}}h.as(w.EditorFactory).registerEditorSerializer(g.ID,st);h.as(w.EditorFactory).registerEditorSerializer(S.ID,_);h.as(w.EditorFactory).registerEditorSerializer(I.ID,ut);let E=class extends R{static{V=this}static{this.ID="workbench.contrib.notebook"}constructor(e,t,o){super(),this.b=o,this.c(t,e),this.B(t.onDidChangeConfiguration(r=>{r.affectsConfiguration(a.undoRedoPerCell)&&this.c(t,e)})),this.b.registerDecorationType("comment-controller",Xe,{})}c(e,t){const o=e.getValue(a.undoRedoPerCell);o?(this.a?.dispose(),this.a=void 0):this.a||(this.a=t.registerUriComparisonKeyComputer(C.scheme,{getComparisonKey:r=>o?r.toString():V.f(r)}))}static f(e){const t=C.parse(e);return t?t.notebook.toString():e.toString()}dispose(){super.dispose(),this.a?.dispose()}};E=V=D([u(0,we),u(1,ue),u(2,Ze)],E);let T=class{static{this.ID="workbench.contrib.cellContentProvider"}constructor(e,t,o,r){this.b=t,this.c=o,this.d=r,this.a=e.registerTextModelContentProvider(C.scheme,this)}dispose(){this.a.dispose()}async provideTextContent(e){const t=this.b.getModel(e);if(t)return t;const o=C.parse(e);if(!o)return null;const r=await this.d.resolve(o.notebook);let n=null;if(!r.object.isResolved())return null;for(const l of r.object.notebook.cells)if(l.uri.toString()===e.toString()){const m={create:f=>{const W=f===2?`\r
-`:`
-`;return l.textBuffer.setEOL(W),{textBuffer:l.textBuffer,disposable:R.None}},getFirstLineText:f=>l.textBuffer.getLineContent(1).substring(0,f)},d=this.c.getLanguageIdByLanguageName(l.language),p=d?this.c.createById(d):l.cellKind===ke.Markup?this.c.createById("markdown"):this.c.createByFilepathOrFirstLine(e,l.textBuffer.getLineContent(1));n=this.b.createModel(m,p,e);break}if(!n)return r.dispose(),null;const s=k.any(n.onWillDispose,r.object.notebook.onWillDispose)(()=>{s.dispose(),r.dispose()});return n}};T=D([u(0,Q),u(1,Y),u(2,G),u(3,L)],T);let x=class{static{this.ID="workbench.contrib.cellInfoContentProvider"}constructor(e,t,o,r,n){this.b=t,this.c=o,this.d=r,this.f=n,this.a=[],this.a.push(e.registerTextModelContentProvider(y.vscodeNotebookCellMetadata,{provideTextContent:this.provideMetadataTextContent.bind(this)})),this.a.push(e.registerTextModelContentProvider(y.vscodeNotebookCellOutput,{provideTextContent:this.provideOutputTextContent.bind(this)})),this.a.push(this.d.registerFormatter({scheme:y.vscodeNotebookCellMetadata,formatting:{label:"${path} (metadata)",separator:"/"}})),this.a.push(this.d.registerFormatter({scheme:y.vscodeNotebookCellOutput,formatting:{label:"${path} (output)",separator:"/"}}))}dispose(){le(this.a)}async provideMetadataTextContent(e){const t=this.b.getModel(e);if(t)return t;const o=C.parseCellPropertyUri(e,y.vscodeNotebookCellMetadata);if(!o)return null;const r=await this.f.resolve(o.notebook);let n=null;const s=this.c.createById("json"),l=new H;for(const d of r.object.notebook.cells)if(d.handle===o.handle){const p=r.object.notebook.cells.indexOf(d),f=ie(r.object.notebook.transientOptions.transientCellMetadata,d.metadata,d.language,!0);n=this.b.createModel(f,s,e),this.a.push(l.add(r.object.notebook.onDidChangeContent(W=>{if(n&&W.rawEvents.some($=>($.kind===v.ChangeCellMetadata||$.kind===v.ChangeCellLanguage)&&$.index===p)){const $=ie(r.object.notebook.transientOptions.transientCellMetadata,d.metadata,d.language,!0);n.getValue()!==$&&n.setValue($)}})));break}if(!n)return r.dispose(),null;const m=n.onWillDispose(()=>{l.dispose(),m.dispose(),r.dispose()});return n}g(e){if(!e)return;const t=Te(e.outputs);if(t)return{content:t,mode:this.c.createById(Ye)}}h(e,t){let o;const r=this.c.createById("json"),n=t.outputs.find(d=>d.outputId===e.outputId||d.alternativeOutputId===e.outputId),s=this.g(n);if(s)return o=s,o;const l=t.outputs.map(d=>({metadata:d.metadata,outputItems:d.outputs.map(p=>({mimeType:p.mime,data:p.data.toString()}))}));return o={content:fe(l,{}),mode:r},o}async provideOutputsTextContent(e){const t=this.b.getModel(e);if(t)return t;const o=C.parseCellPropertyUri(e,y.vscodeNotebookCellOutput);if(!o)return null;const r=await this.f.resolve(o.notebook),n=r.object.notebook.cells.find(p=>p.handle===o.handle);if(!n)return r.dispose(),null;const s=this.c.createById("json"),l=this.b.createModel(te(n.outputs||[]),s,e,!0),m=k.any(n.onDidChangeOutputs??k.None,n.onDidChangeOutputItems??k.None)(()=>{l.setValue(te(n.outputs||[]))}),d=l.onWillDispose(()=>{d.dispose(),m.dispose(),r.dispose()});return l}async provideOutputTextContent(e){const t=this.b.getModel(e);if(t)return t;const o=C.parseCellOutputUri(e);if(!o)return this.provideOutputsTextContent(e);const r=await this.f.resolve(o.notebook),n=r.object.notebook.cells.find(p=>!!p.outputs.find(f=>f.outputId===o.outputId||f.alternativeOutputId===o.outputId));if(!n)return r.dispose(),null;const s=this.h(o,n);if(!s)return r.dispose(),null;const l=this.b.createModel(s.content,s.mode,e),m=k.any(n.onDidChangeOutputs??k.None,n.onDidChangeOutputItems??k.None)(()=>{const p=this.h(o,n);p&&(l.setValue(p.content),l.setLanguage(p.mode.languageId))}),d=l.onWillDispose(()=>{d.dispose(),m.dispose(),r.dispose()});return l}};x=D([u(0,Q),u(1,Y),u(2,G),u(3,ce),u(4,L)],x);let N=class{static{this.ID="workbench.contrib.notebookMetadataContentProvider"}constructor(e,t,o,r,n){this.b=t,this.c=o,this.d=r,this.f=n,this.a=[],this.a.push(e.registerTextModelContentProvider(y.vscodeNotebookMetadata,{provideTextContent:this.provideMetadataTextContent.bind(this)})),this.a.push(this.d.registerFormatter({scheme:y.vscodeNotebookMetadata,formatting:{label:"${path} (metadata)",separator:"/"}}))}dispose(){le(this.a)}async provideMetadataTextContent(e){const t=this.b.getModel(e);if(t)return t;const o=De.parse(e);if(!o)return null;const r=await this.f.resolve(o);let n=null;const s=this.c.createById("json"),l=new H,m=re(r.object.notebook.transientOptions.transientDocumentMetadata,r.object.notebook.metadata);if(n=this.b.createModel(m,s,e),!n)return r.dispose(),null;this.a.push(l.add(r.object.notebook.onDidChangeContent(p=>{if(n&&p.rawEvents.some(f=>f.kind===v.ChangeCellContent||f.kind===v.ChangeDocumentMetadata||f.kind===v.ModelChange)){const f=re(r.object.notebook.transientOptions.transientDocumentMetadata,r.object.notebook.metadata);n.getValue()!==f&&n.setValue(f)}})));const d=n.onWillDispose(()=>{l.dispose(),d.dispose(),r.dispose()});return n}};N=D([u(0,Q),u(1,Y),u(2,G),u(3,ce),u(4,L)],N);class ae extends R{static{this.ID="workbench.contrib.registerCellSchemas"}constructor(){super(),this.a()}a(){const e=h.as(Ee.JSONContribution),t={properties:{language:{type:"string",description:"The language for the cell"}},additionalProperties:!0,allowTrailingCommas:!0,allowComments:!0};e.registerSchema("vscode://schemas/notebook/cellmetadata",t)}}let M=class{static{this.ID="workbench.contrib.notebookEditorManager"}constructor(e,t,o){this.b=e,this.c=t,this.a=new H,this.a.add(k.debounce(this.c.onDidChangeDirty,(r,n)=>r?[...r,n]:[n],100)(this.d,this)),this.a.add(t.onWillFailWithConflict(r=>{for(const n of o.groups){const s=n.editors.filter(m=>m instanceof g&&m.viewType!==r.viewType&&se(m.resource,r.resource)),l=n.closeEditors(s);r.waitUntil(l)}}))}dispose(){this.a.dispose()}d(e){const t=[];for(const o of e)o.isDirty()&&!this.b.isOpened({resource:o.resource,typeId:g.ID,editorId:o.viewType})&&me(o.resource)!==".interactive"&&t.push({resource:o.resource,options:{inactive:!0,preserveFocus:!0,pinned:!0,override:o.viewType}});t.length>0&&this.b.openEditors(t)}};M=D([u(0,ze),u(1,L),u(2,Fe)],M);let P=class extends R{static{this.ID="workbench.contrib.simpleNotebookWorkingCopyEditorHandler"}constructor(e,t,o,r){super(),this.a=e,this.b=t,this.c=o,this.f=r,this.h()}async handles(e){const t=this.g(e);return t?this.f.canResolve(t):!1}g(e){const t=this.j(e);if(!(!t||t==="interactive"))return t}isOpen(e,t){return this.g(e)?t instanceof g&&t.viewType===this.j(e)&&se(e.resource,t.resource):!1}createEditor(e){return g.getOrCreate(this.a,e.resource,void 0,this.j(e))}async h(){await this.c.whenInstalledExtensionsRegistered(),this.B(this.b.registerHandler(this))}j(e){const t=Ce.parse(e.typeId);if(t&&t.viewType===t.notebookType)return t?.viewType}};P=D([u(0,he),u(1,Re),u(2,je),u(3,X)],P);let j=class{static{this.ID="workbench.contrib.notebookLanguageSelectorScoreRefine"}constructor(e,t){this.a=e,t.setNotebookTypeResolver(this.b.bind(this))}b(e){const t=C.parse(e);if(!t)return;const o=this.a.getNotebookTextModel(t.notebook);if(o)return{uri:o.uri,type:o.viewType}}};j=D([u(0,X),u(1,Qe)],j);const ct=h.as(ge.Workbench);z(E.ID,E,1);z(T.ID,T,1);z(x.ID,x,1);z(N.ID,N,1);z(ae.ID,ae,1);z(M.ID,M,2);z(j.ID,j,2);z(P.ID,P,2);ct.registerWorkbenchContribution(it,4);de.register(new nt);de.register(new rt);b(X,ye,1);b($e,ve,1);b(L,xe,1);b(Ie,Le,1);b(Oe,Se,1);b(Me,Pe,1);b(Ne,et,1);b(He,qe,1);b(Ge,_e,1);b(We,Be,1);b(Je,Ae,1);b(tt,ot,1);b(Ue,Ve,1);b(at,lt,1);const q={};function dt(c){return typeof c.type<"u"||typeof c.anyOf<"u"}for(const c of Ke){const e=c.schema;if(e)if(dt(e))q[`editor.${c.name}`]=e;else for(const t in e)Object.hasOwnProperty.call(e,t)&&(q[t]=e[t])}const pt={description:i.localize(9407,null),default:{},allOf:[{properties:q}],tags:["notebookLayout"]},mt=h.as(be.Configuration);mt.registerConfiguration({id:"notebook",order:100,title:i.localize(9408,null),type:"object",properties:{[a.displayOrder]:{description:i.localize(9409,null),type:"array",items:{type:"string"},default:[]},[a.cellToolbarLocation]:{description:i.localize(9410,null),type:"object",additionalProperties:{markdownDescription:i.localize(9411,null),type:"string",enum:["left","right","hidden"]},default:{default:"right"},tags:["notebookLayout"]},[a.showCellStatusBar]:{description:i.localize(9412,null),type:"string",enum:["hidden","visible","visibleAfterExecute"],enumDescriptions:[i.localize(9413,null),i.localize(9414,null),i.localize(9415,null)],default:"visible",tags:["notebookLayout"]},[a.cellExecutionTimeVerbosity]:{description:i.localize(9416,null),type:"string",enum:["default","verbose"],enumDescriptions:[i.localize(9417,null),i.localize(9418,null)],default:"default",tags:["notebookLayout"]},[a.textDiffEditorPreview]:{description:i.localize(9419,null),type:"boolean",default:!0,tags:["notebookLayout"]},[a.diffOverviewRuler]:{description:i.localize(9420,null),type:"boolean",default:!1,tags:["notebookLayout"]},[a.cellToolbarVisibility]:{markdownDescription:i.localize(9421,null),type:"string",enum:["hover","click"],default:"click",tags:["notebookLayout"]},[a.undoRedoPerCell]:{description:i.localize(9422,null),type:"boolean",default:!0,tags:["notebookLayout"]},[a.compactView]:{description:i.localize(9423,null),type:"boolean",default:!0,tags:["notebookLayout"]},[a.focusIndicator]:{description:i.localize(9424,null),type:"string",enum:["border","gutter"],default:"gutter",tags:["notebookLayout"]},[a.insertToolbarLocation]:{description:i.localize(9425,null),type:"string",enum:["betweenCells","notebookToolbar","both","hidden"],enumDescriptions:[i.localize(9426,null),i.localize(9427,null),i.localize(9428,null),i.localize(9429,null)],default:"both",tags:["notebookLayout"]},[a.globalToolbar]:{description:i.localize(9430,null),type:"boolean",default:!0,tags:["notebookLayout"]},[a.stickyScrollEnabled]:{description:i.localize(9431,null),type:"boolean",default:!1,tags:["notebookLayout"]},[a.stickyScrollMode]:{description:i.localize(9432,null),type:"string",enum:["flat","indented"],enumDescriptions:[i.localize(9433,null),i.localize(9434,null)],default:"indented",tags:["notebookLayout"]},[a.consolidatedOutputButton]:{description:i.localize(9435,null),type:"boolean",default:!0,tags:["notebookLayout"]},[a.showFoldingControls]:{description:i.localize(9436,null),type:"string",enum:["always","never","mouseover"],enumDescriptions:[i.localize(9437,null),i.localize(9438,null),i.localize(9439,null)],default:"mouseover",tags:["notebookLayout"]},[a.dragAndDropEnabled]:{description:i.localize(9440,null),type:"boolean",default:!0,tags:["notebookLayout"]},[a.consolidatedRunButton]:{description:i.localize(9441,null),type:"boolean",default:!1,tags:["notebookLayout"]},[a.globalToolbarShowLabel]:{description:i.localize(9442,null),type:"string",enum:["always","never","dynamic"],default:"always",tags:["notebookLayout"]},[a.textOutputLineLimit]:{markdownDescription:i.localize(9443,null,"`#notebook.output.scrolling#`"),type:"number",default:30,tags:["notebookLayout","notebookOutputLayout"],minimum:1},[a.LinkifyOutputFilePaths]:{description:i.localize(9444,null),type:"boolean",default:!0,tags:["notebookOutputLayout"]},[a.minimalErrorRendering]:{description:i.localize(9445,null),type:"boolean",default:!1,tags:["notebookOutputLayout"]},[a.markupFontSize]:{markdownDescription:i.localize(9446,null,"`0`","`#editor.fontSize#`"),type:"number",default:0,tags:["notebookLayout"]},[a.markdownLineHeight]:{markdownDescription:i.localize(9447,null,"`0`","`normal`"),type:"number",default:0,tags:["notebookLayout"]},[a.cellEditorOptionsCustomizations]:pt,[a.interactiveWindowCollapseCodeCells]:{markdownDescription:i.localize(9448,null),type:"string",enum:["always","never","fromEditor"],default:"fromEditor"},[a.outputLineHeight]:{markdownDescription:i.localize(9449,null),type:"number",default:0,tags:["notebookLayout","notebookOutputLayout"]},[a.outputFontSize]:{markdownDescription:i.localize(9450,null,"`#editor.fontSize#`"),type:"number",default:0,tags:["notebookLayout","notebookOutputLayout"]},[a.outputFontFamily]:{markdownDescription:i.localize(9451,null,"`#editor.fontFamily#`"),type:"string",tags:["notebookLayout","notebookOutputLayout"]},[a.outputScrolling]:{markdownDescription:i.localize(9452,null),type:"boolean",tags:["notebookLayout","notebookOutputLayout"],default:typeof O.quality=="string"&&O.quality!=="stable"},[a.outputWordWrap]:{markdownDescription:i.localize(9453,null),type:"boolean",tags:["notebookLayout","notebookOutputLayout"],default:!1},[a.defaultFormatter]:{description:i.localize(9454,null),type:["string","null"],default:null,enum:U.extensionIds,enumItemLabels:U.extensionItemLabels,markdownEnumDescriptions:U.extensionDescriptions},[a.formatOnSave]:{markdownDescription:i.localize(9455,null,"`#files.autoSave#`"),type:"boolean",tags:["notebookLayout"],default:!1},[a.insertFinalNewline]:{markdownDescription:i.localize(9456,null),type:"boolean",tags:["notebookLayout"],default:!1},[a.formatOnCellExecution]:{markdownDescription:i.localize(9457,null),type:"boolean",default:!1},[a.confirmDeleteRunningCell]:{markdownDescription:i.localize(9458,null),type:"boolean",default:!0},[a.findFilters]:{markdownDescription:i.localize(9459,null),type:"object",properties:{markupSource:{type:"boolean",default:!0},markupPreview:{type:"boolean",default:!0},codeSource:{type:"boolean",default:!0},codeOutput:{type:"boolean",default:!0}},default:{markupSource:!0,markupPreview:!0,codeSource:!0,codeOutput:!0},tags:["notebookLayout"]},[a.remoteSaving]:{markdownDescription:i.localize(9460,null),type:"boolean",default:typeof O.quality=="string"&&O.quality!=="stable",tags:["experimental"]},[a.scrollToRevealCell]:{markdownDescription:i.localize(9461,null,"notebook.cell.executeAndSelectBelow"),type:"string",enum:["fullCell","firstLine","none"],markdownEnumDescriptions:[i.localize(9462,null),i.localize(9463,null),i.localize(9464,null)],default:"fullCell"},[a.cellGenerate]:{markdownDescription:i.localize(9465,null),type:"boolean",default:!0},[a.notebookVariablesView]:{markdownDescription:i.localize(9466,null),type:"boolean",default:!1},[a.notebookInlineValues]:{markdownDescription:i.localize(9467,null),type:"string",enum:["on","auto","off"],enumDescriptions:[i.localize(9468,null),i.localize(9469,null),i.localize(9470,null)],default:"off"},[a.cellFailureDiagnostics]:{markdownDescription:i.localize(9471,null),type:"boolean",default:!0},[a.outputBackupSizeLimit]:{markdownDescription:i.localize(9472,null),type:"number",default:1e4},[a.multiCursor]:{markdownDescription:i.localize(9473,null),type:"boolean",default:!1},[a.markupFontFamily]:{markdownDescription:i.localize(9474,null),type:"string",default:"",tags:["notebookLayout"]}}});export{E as $rec};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { Schemas } from "../../../../base/common/network.js";
+import { Disposable, DisposableStore, dispose } from "../../../../base/common/lifecycle.js";
+import { parse } from "../../../../base/common/marshalling.js";
+import { extname, isEqual } from "../../../../base/common/resources.js";
+import { assertType } from "../../../../base/common/types.js";
+import { URI } from "../../../../base/common/uri.js";
+import { toFormattedString } from "../../../../base/common/jsonFormatter.js";
+import { IModelService } from "../../../../editor/common/services/model.js";
+import { ILanguageService } from "../../../../editor/common/languages/language.js";
+import { ITextModelService } from "../../../../editor/common/services/resolverService.js";
+import * as nls from "../../../../nls.js";
+import { Extensions } from "../../../../platform/configuration/common/configurationRegistry.js";
+import { SyncDescriptor } from "../../../../platform/instantiation/common/descriptors.js";
+import { registerSingleton } from "../../../../platform/instantiation/common/extensions.js";
+import { IInstantiationService } from "../../../../platform/instantiation/common/instantiation.js";
+import { Registry } from "../../../../platform/registry/common/platform.js";
+import { EditorPaneDescriptor } from "../../../browser/editor.js";
+import { Extensions as WorkbenchExtensions, registerWorkbenchContribution2 } from "../../../common/contributions.js";
+import { EditorExtensions } from "../../../common/editor.js";
+import { NotebookEditor } from "./notebookEditor.js";
+import { NotebookEditorInput } from "../common/notebookEditorInput.js";
+import { INotebookService } from "../common/notebookService.js";
+import { NotebookService } from "./services/notebookServiceImpl.js";
+import { CellKind, CellUri, NotebookWorkingCopyTypeIdentifier, NotebookSetting, NotebookCellsChangeType, NotebookMetadataUri } from "../common/notebookCommon.js";
+import { IEditorService } from "../../../services/editor/common/editorService.js";
+import { IUndoRedoService } from "../../../../platform/undoRedo/common/undoRedo.js";
+import { INotebookEditorModelResolverService } from "../common/notebookEditorModelResolverService.js";
+import { NotebookDiffEditorInput } from "../common/notebookDiffEditorInput.js";
+import { NotebookTextDiffEditor } from "./diff/notebookDiffEditor.js";
+import { INotebookEditorWorkerService } from "../common/services/notebookWorkerService.js";
+import { NotebookEditorWorkerServiceImpl } from "./services/notebookWorkerServiceImpl.js";
+import { INotebookCellStatusBarService } from "../common/notebookCellStatusBarService.js";
+import { NotebookCellStatusBarService } from "./services/notebookCellStatusBarServiceImpl.js";
+import { INotebookEditorService } from "./services/notebookEditorService.js";
+import { NotebookEditorWidgetService } from "./services/notebookEditorServiceImpl.js";
+import { Extensions as JSONExtensions } from "../../../../platform/jsonschemas/common/jsonContributionRegistry.js";
+import { Event } from "../../../../base/common/event.js";
+import { getFormattedOutputJSON, getStreamOutputData } from "./diff/diffElementViewModel.js";
+import { NotebookModelResolverServiceImpl } from "../common/notebookEditorModelResolverServiceImpl.js";
+import { INotebookKernelHistoryService, INotebookKernelService } from "../common/notebookKernelService.js";
+import { NotebookKernelService } from "./services/notebookKernelServiceImpl.js";
+import { IExtensionService } from "../../../services/extensions/common/extensions.js";
+import { IWorkingCopyEditorService } from "../../../services/workingCopy/common/workingCopyEditorService.js";
+import { IConfigurationService } from "../../../../platform/configuration/common/configuration.js";
+import { ILabelService } from "../../../../platform/label/common/label.js";
+import { IEditorGroupsService } from "../../../services/editor/common/editorGroupsService.js";
+import { NotebookRendererMessagingService } from "./services/notebookRendererMessagingServiceImpl.js";
+import { INotebookRendererMessagingService } from "../common/notebookRendererMessagingService.js";
+import { INotebookCellOutlineDataSourceFactory, NotebookCellOutlineDataSourceFactory } from "./viewModel/notebookOutlineDataSourceFactory.js";
+import "./controller/coreActions.js";
+import "./controller/insertCellActions.js";
+import "./controller/executeActions.js";
+import "./controller/sectionActions.js";
+import "./controller/layoutActions.js";
+import "./controller/editActions.js";
+import "./controller/cellOutputActions.js";
+import "./controller/apiActions.js";
+import "./controller/foldingController.js";
+import "./controller/chat/notebook.chat.contribution.js";
+import "./controller/variablesActions.js";
+import "./contrib/editorHint/emptyCellEditorHint.js";
+import "./contrib/clipboard/notebookClipboard.js";
+import "./contrib/find/notebookFind.js";
+import "./contrib/format/formatting.js";
+import "./contrib/saveParticipants/saveParticipants.js";
+import "./contrib/gettingStarted/notebookGettingStarted.js";
+import "./contrib/layout/layoutActions.js";
+import "./contrib/marker/markerProvider.js";
+import "./contrib/navigation/arrow.js";
+import "./contrib/outline/notebookOutline.js";
+import "./contrib/profile/notebookProfile.js";
+import "./contrib/cellStatusBar/statusBarProviders.js";
+import "./contrib/cellStatusBar/contributedStatusBarItemController.js";
+import "./contrib/cellStatusBar/executionStatusBarItemController.js";
+import "./contrib/editorStatusBar/editorStatusBar.js";
+import "./contrib/undoRedo/notebookUndoRedo.js";
+import "./contrib/cellCommands/cellCommands.js";
+import "./contrib/viewportWarmup/viewportWarmup.js";
+import "./contrib/troubleshoot/layout.js";
+import "./contrib/debug/notebookBreakpoints.js";
+import "./contrib/debug/notebookCellPausing.js";
+import "./contrib/debug/notebookDebugDecorations.js";
+import "./contrib/execute/executionEditorProgress.js";
+import "./contrib/kernelDetection/notebookKernelDetection.js";
+import "./contrib/cellDiagnostics/cellDiagnostics.js";
+import "./contrib/multicursor/notebookMulticursor.js";
+import "./contrib/multicursor/notebookSelectionHighlight.js";
+import "./contrib/notebookVariables/notebookInlineVariables.js";
+import "./diff/notebookDiffActions.js";
+import { editorOptionsRegistry } from "../../../../editor/common/config/editorOptions.js";
+import { NotebookExecutionStateService } from "./services/notebookExecutionStateServiceImpl.js";
+import { NotebookExecutionService } from "./services/notebookExecutionServiceImpl.js";
+import { INotebookExecutionService } from "../common/notebookExecutionService.js";
+import { INotebookKeymapService } from "../common/notebookKeymapService.js";
+import { NotebookKeymapService } from "./services/notebookKeymapServiceImpl.js";
+import { PLAINTEXT_LANGUAGE_ID } from "../../../../editor/common/languages/modesRegistry.js";
+import { INotebookExecutionStateService } from "../common/notebookExecutionStateService.js";
+import { ILanguageFeaturesService } from "../../../../editor/common/services/languageFeatures.js";
+import { COMMENTEDITOR_DECORATION_KEY } from "../../comments/browser/commentReply.js";
+import { ICodeEditorService } from "../../../../editor/browser/services/codeEditorService.js";
+import { NotebookKernelHistoryService } from "./services/notebookKernelHistoryServiceImpl.js";
+import { INotebookLoggingService } from "../common/notebookLoggingService.js";
+import { NotebookLoggingService } from "./services/notebookLoggingServiceImpl.js";
+import product from "../../../../platform/product/common/product.js";
+import { NotebookVariables } from "./contrib/notebookVariables/notebookVariables.js";
+import { AccessibleViewRegistry } from "../../../../platform/accessibility/browser/accessibleViewRegistry.js";
+import { NotebookAccessibilityHelp } from "./notebookAccessibilityHelp.js";
+import { NotebookAccessibleView } from "./notebookAccessibleView.js";
+import { DefaultFormatter } from "../../format/browser/formatActionsMultiple.js";
+import { NotebookMultiTextDiffEditor } from "./diff/notebookMultiDiffEditor.js";
+import { NotebookMultiDiffEditorInput } from "./diff/notebookMultiDiffEditorInput.js";
+import { getFormattedMetadataJSON } from "../common/model/notebookCellTextModel.js";
+import { INotebookOutlineEntryFactory, NotebookOutlineEntryFactory } from "./viewModel/notebookOutlineEntryFactory.js";
+import { getFormattedNotebookMetadataJSON } from "../common/model/notebookMetadataTextModel.js";
+import { NotebookOutputEditor } from "./outputEditor/notebookOutputEditor.js";
+import { NotebookOutputEditorInput } from "./outputEditor/notebookOutputEditorInput.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+var NotebookContribution_1;
+Registry.as(EditorExtensions.EditorPane).registerEditorPane(EditorPaneDescriptor.create(NotebookEditor, NotebookEditor.ID, "Notebook Editor"), [
+  new SyncDescriptor(NotebookEditorInput)
+]);
+Registry.as(EditorExtensions.EditorPane).registerEditorPane(EditorPaneDescriptor.create(NotebookTextDiffEditor, NotebookTextDiffEditor.ID, "Notebook Diff Editor"), [
+  new SyncDescriptor(NotebookDiffEditorInput)
+]);
+Registry.as(EditorExtensions.EditorPane).registerEditorPane(EditorPaneDescriptor.create(NotebookOutputEditor, NotebookOutputEditor.ID, "Notebook Output Editor"), [
+  new SyncDescriptor(NotebookOutputEditorInput)
+]);
+Registry.as(EditorExtensions.EditorPane).registerEditorPane(EditorPaneDescriptor.create(NotebookMultiTextDiffEditor, NotebookMultiTextDiffEditor.ID, "Notebook Diff Editor"), [
+  new SyncDescriptor(NotebookMultiDiffEditorInput)
+]);
+let NotebookDiffEditorSerializer = class NotebookDiffEditorSerializer2 {
+  static {
+    __name(this, "NotebookDiffEditorSerializer");
+  }
+  constructor(_configurationService) {
+    this._configurationService = _configurationService;
+  }
+  canSerialize() {
+    return true;
+  }
+  serialize(input) {
+    assertType(input instanceof NotebookDiffEditorInput);
+    return JSON.stringify({
+      resource: input.resource,
+      originalResource: input.original.resource,
+      name: input.getName(),
+      originalName: input.original.getName(),
+      textDiffName: input.getName(),
+      viewType: input.viewType
+    });
+  }
+  deserialize(instantiationService, raw) {
+    const data = parse(raw);
+    if (!data) {
+      return void 0;
+    }
+    const { resource, originalResource, name, viewType } = data;
+    if (!data || !URI.isUri(resource) || !URI.isUri(originalResource) || typeof name !== "string" || typeof viewType !== "string") {
+      return void 0;
+    }
+    if (this._configurationService.getValue("notebook.experimental.enableNewDiffEditor")) {
+      return NotebookMultiDiffEditorInput.create(instantiationService, resource, name, void 0, originalResource, viewType);
+    } else {
+      return NotebookDiffEditorInput.create(instantiationService, resource, name, void 0, originalResource, viewType);
+    }
+  }
+  static canResolveBackup(editorInput, backupResource) {
+    return false;
+  }
+};
+NotebookDiffEditorSerializer = __decorate([
+  __param(0, IConfigurationService)
+], NotebookDiffEditorSerializer);
+class NotebookEditorSerializer {
+  static {
+    __name(this, "NotebookEditorSerializer");
+  }
+  canSerialize(input) {
+    return input.typeId === NotebookEditorInput.ID;
+  }
+  serialize(input) {
+    assertType(input instanceof NotebookEditorInput);
+    const data = {
+      resource: input.resource,
+      preferredResource: input.preferredResource,
+      viewType: input.viewType,
+      options: input.options
+    };
+    return JSON.stringify(data);
+  }
+  deserialize(instantiationService, raw) {
+    const data = parse(raw);
+    if (!data) {
+      return void 0;
+    }
+    const { resource, preferredResource, viewType, options } = data;
+    if (!data || !URI.isUri(resource) || typeof viewType !== "string") {
+      return void 0;
+    }
+    const input = NotebookEditorInput.getOrCreate(instantiationService, resource, preferredResource, viewType, options);
+    return input;
+  }
+}
+class NotebookOutputEditorSerializer {
+  static {
+    __name(this, "NotebookOutputEditorSerializer");
+  }
+  canSerialize(input) {
+    return input.typeId === NotebookOutputEditorInput.ID;
+  }
+  serialize(input) {
+    assertType(input instanceof NotebookOutputEditorInput);
+    const data = input.getSerializedData();
+    if (!data) {
+      return void 0;
+    }
+    return JSON.stringify(data);
+  }
+  deserialize(instantiationService, raw) {
+    const data = parse(raw);
+    if (!data) {
+      return void 0;
+    }
+    const input = instantiationService.createInstance(NotebookOutputEditorInput, data.notebookUri, data.cellIndex, void 0, data.outputIndex);
+    return input;
+  }
+}
+Registry.as(EditorExtensions.EditorFactory).registerEditorSerializer(NotebookEditorInput.ID, NotebookEditorSerializer);
+Registry.as(EditorExtensions.EditorFactory).registerEditorSerializer(NotebookDiffEditorInput.ID, NotebookDiffEditorSerializer);
+Registry.as(EditorExtensions.EditorFactory).registerEditorSerializer(NotebookOutputEditorInput.ID, NotebookOutputEditorSerializer);
+let NotebookContribution = class NotebookContribution2 extends Disposable {
+  static {
+    __name(this, "NotebookContribution");
+  }
+  static {
+    NotebookContribution_1 = this;
+  }
+  static {
+    this.ID = "workbench.contrib.notebook";
+  }
+  constructor(undoRedoService, configurationService, codeEditorService) {
+    super();
+    this.codeEditorService = codeEditorService;
+    this.updateCellUndoRedoComparisonKey(configurationService, undoRedoService);
+    this._register(configurationService.onDidChangeConfiguration((e) => {
+      if (e.affectsConfiguration(NotebookSetting.undoRedoPerCell)) {
+        this.updateCellUndoRedoComparisonKey(configurationService, undoRedoService);
+      }
+    }));
+    this.codeEditorService.registerDecorationType("comment-controller", COMMENTEDITOR_DECORATION_KEY, {});
+  }
+  // Add or remove the cell undo redo comparison key based on the user setting
+  updateCellUndoRedoComparisonKey(configurationService, undoRedoService) {
+    const undoRedoPerCell = configurationService.getValue(NotebookSetting.undoRedoPerCell);
+    if (!undoRedoPerCell) {
+      if (!this._uriComparisonKeyComputer) {
+        this._uriComparisonKeyComputer = undoRedoService.registerUriComparisonKeyComputer(CellUri.scheme, {
+          getComparisonKey: /* @__PURE__ */ __name((uri) => {
+            if (undoRedoPerCell) {
+              return uri.toString();
+            }
+            return NotebookContribution_1._getCellUndoRedoComparisonKey(uri);
+          }, "getComparisonKey")
+        });
+      }
+    } else {
+      this._uriComparisonKeyComputer?.dispose();
+      this._uriComparisonKeyComputer = void 0;
+    }
+  }
+  static _getCellUndoRedoComparisonKey(uri) {
+    const data = CellUri.parse(uri);
+    if (!data) {
+      return uri.toString();
+    }
+    return data.notebook.toString();
+  }
+  dispose() {
+    super.dispose();
+    this._uriComparisonKeyComputer?.dispose();
+  }
+};
+NotebookContribution = NotebookContribution_1 = __decorate([
+  __param(0, IUndoRedoService),
+  __param(1, IConfigurationService),
+  __param(2, ICodeEditorService)
+], NotebookContribution);
+let CellContentProvider = class CellContentProvider2 {
+  static {
+    __name(this, "CellContentProvider");
+  }
+  static {
+    this.ID = "workbench.contrib.cellContentProvider";
+  }
+  constructor(textModelService, _modelService, _languageService, _notebookModelResolverService) {
+    this._modelService = _modelService;
+    this._languageService = _languageService;
+    this._notebookModelResolverService = _notebookModelResolverService;
+    this._registration = textModelService.registerTextModelContentProvider(CellUri.scheme, this);
+  }
+  dispose() {
+    this._registration.dispose();
+  }
+  async provideTextContent(resource) {
+    const existing = this._modelService.getModel(resource);
+    if (existing) {
+      return existing;
+    }
+    const data = CellUri.parse(resource);
+    if (!data) {
+      return null;
+    }
+    const ref = await this._notebookModelResolverService.resolve(data.notebook);
+    let result = null;
+    if (!ref.object.isResolved()) {
+      return null;
+    }
+    for (const cell of ref.object.notebook.cells) {
+      if (cell.uri.toString() === resource.toString()) {
+        const bufferFactory = {
+          create: /* @__PURE__ */ __name((defaultEOL) => {
+            const newEOL = defaultEOL === 2 ? "\r\n" : "\n";
+            cell.textBuffer.setEOL(newEOL);
+            return { textBuffer: cell.textBuffer, disposable: Disposable.None };
+          }, "create"),
+          getFirstLineText: /* @__PURE__ */ __name((limit) => {
+            return cell.textBuffer.getLineContent(1).substring(0, limit);
+          }, "getFirstLineText")
+        };
+        const languageId = this._languageService.getLanguageIdByLanguageName(cell.language);
+        const languageSelection = languageId ? this._languageService.createById(languageId) : cell.cellKind === CellKind.Markup ? this._languageService.createById("markdown") : this._languageService.createByFilepathOrFirstLine(resource, cell.textBuffer.getLineContent(1));
+        result = this._modelService.createModel(bufferFactory, languageSelection, resource);
+        break;
+      }
+    }
+    if (!result) {
+      ref.dispose();
+      return null;
+    }
+    const once = Event.any(result.onWillDispose, ref.object.notebook.onWillDispose)(() => {
+      once.dispose();
+      ref.dispose();
+    });
+    return result;
+  }
+};
+CellContentProvider = __decorate([
+  __param(0, ITextModelService),
+  __param(1, IModelService),
+  __param(2, ILanguageService),
+  __param(3, INotebookEditorModelResolverService)
+], CellContentProvider);
+let CellInfoContentProvider = class CellInfoContentProvider2 {
+  static {
+    __name(this, "CellInfoContentProvider");
+  }
+  static {
+    this.ID = "workbench.contrib.cellInfoContentProvider";
+  }
+  constructor(textModelService, _modelService, _languageService, _labelService, _notebookModelResolverService) {
+    this._modelService = _modelService;
+    this._languageService = _languageService;
+    this._labelService = _labelService;
+    this._notebookModelResolverService = _notebookModelResolverService;
+    this._disposables = [];
+    this._disposables.push(textModelService.registerTextModelContentProvider(Schemas.vscodeNotebookCellMetadata, {
+      provideTextContent: this.provideMetadataTextContent.bind(this)
+    }));
+    this._disposables.push(textModelService.registerTextModelContentProvider(Schemas.vscodeNotebookCellOutput, {
+      provideTextContent: this.provideOutputTextContent.bind(this)
+    }));
+    this._disposables.push(this._labelService.registerFormatter({
+      scheme: Schemas.vscodeNotebookCellMetadata,
+      formatting: {
+        label: "${path} (metadata)",
+        separator: "/"
+      }
+    }));
+    this._disposables.push(this._labelService.registerFormatter({
+      scheme: Schemas.vscodeNotebookCellOutput,
+      formatting: {
+        label: "${path} (output)",
+        separator: "/"
+      }
+    }));
+  }
+  dispose() {
+    dispose(this._disposables);
+  }
+  async provideMetadataTextContent(resource) {
+    const existing = this._modelService.getModel(resource);
+    if (existing) {
+      return existing;
+    }
+    const data = CellUri.parseCellPropertyUri(resource, Schemas.vscodeNotebookCellMetadata);
+    if (!data) {
+      return null;
+    }
+    const ref = await this._notebookModelResolverService.resolve(data.notebook);
+    let result = null;
+    const mode = this._languageService.createById("json");
+    const disposables = new DisposableStore();
+    for (const cell of ref.object.notebook.cells) {
+      if (cell.handle === data.handle) {
+        const cellIndex = ref.object.notebook.cells.indexOf(cell);
+        const metadataSource = getFormattedMetadataJSON(ref.object.notebook.transientOptions.transientCellMetadata, cell.metadata, cell.language, true);
+        result = this._modelService.createModel(metadataSource, mode, resource);
+        this._disposables.push(disposables.add(ref.object.notebook.onDidChangeContent((e) => {
+          if (result && e.rawEvents.some((event) => (event.kind === NotebookCellsChangeType.ChangeCellMetadata || event.kind === NotebookCellsChangeType.ChangeCellLanguage) && event.index === cellIndex)) {
+            const value = getFormattedMetadataJSON(ref.object.notebook.transientOptions.transientCellMetadata, cell.metadata, cell.language, true);
+            if (result.getValue() !== value) {
+              result.setValue(value);
+            }
+          }
+        })));
+        break;
+      }
+    }
+    if (!result) {
+      ref.dispose();
+      return null;
+    }
+    const once = result.onWillDispose(() => {
+      disposables.dispose();
+      once.dispose();
+      ref.dispose();
+    });
+    return result;
+  }
+  parseStreamOutput(op) {
+    if (!op) {
+      return;
+    }
+    const streamOutputData = getStreamOutputData(op.outputs);
+    if (streamOutputData) {
+      return {
+        content: streamOutputData,
+        mode: this._languageService.createById(PLAINTEXT_LANGUAGE_ID)
+      };
+    }
+    return;
+  }
+  _getResult(data, cell) {
+    let result = void 0;
+    const mode = this._languageService.createById("json");
+    const op = cell.outputs.find((op2) => op2.outputId === data.outputId || op2.alternativeOutputId === data.outputId);
+    const streamOutputData = this.parseStreamOutput(op);
+    if (streamOutputData) {
+      result = streamOutputData;
+      return result;
+    }
+    const obj = cell.outputs.map((output) => ({
+      metadata: output.metadata,
+      outputItems: output.outputs.map((opit) => ({
+        mimeType: opit.mime,
+        data: opit.data.toString()
+      }))
+    }));
+    const outputSource = toFormattedString(obj, {});
+    result = {
+      content: outputSource,
+      mode
+    };
+    return result;
+  }
+  async provideOutputsTextContent(resource) {
+    const existing = this._modelService.getModel(resource);
+    if (existing) {
+      return existing;
+    }
+    const data = CellUri.parseCellPropertyUri(resource, Schemas.vscodeNotebookCellOutput);
+    if (!data) {
+      return null;
+    }
+    const ref = await this._notebookModelResolverService.resolve(data.notebook);
+    const cell = ref.object.notebook.cells.find((cell2) => cell2.handle === data.handle);
+    if (!cell) {
+      ref.dispose();
+      return null;
+    }
+    const mode = this._languageService.createById("json");
+    const model = this._modelService.createModel(getFormattedOutputJSON(cell.outputs || []), mode, resource, true);
+    const cellModelListener = Event.any(cell.onDidChangeOutputs ?? Event.None, cell.onDidChangeOutputItems ?? Event.None)(() => {
+      model.setValue(getFormattedOutputJSON(cell.outputs || []));
+    });
+    const once = model.onWillDispose(() => {
+      once.dispose();
+      cellModelListener.dispose();
+      ref.dispose();
+    });
+    return model;
+  }
+  async provideOutputTextContent(resource) {
+    const existing = this._modelService.getModel(resource);
+    if (existing) {
+      return existing;
+    }
+    const data = CellUri.parseCellOutputUri(resource);
+    if (!data) {
+      return this.provideOutputsTextContent(resource);
+    }
+    const ref = await this._notebookModelResolverService.resolve(data.notebook);
+    const cell = ref.object.notebook.cells.find((cell2) => !!cell2.outputs.find((op) => op.outputId === data.outputId || op.alternativeOutputId === data.outputId));
+    if (!cell) {
+      ref.dispose();
+      return null;
+    }
+    const result = this._getResult(data, cell);
+    if (!result) {
+      ref.dispose();
+      return null;
+    }
+    const model = this._modelService.createModel(result.content, result.mode, resource);
+    const cellModelListener = Event.any(cell.onDidChangeOutputs ?? Event.None, cell.onDidChangeOutputItems ?? Event.None)(() => {
+      const newResult = this._getResult(data, cell);
+      if (!newResult) {
+        return;
+      }
+      model.setValue(newResult.content);
+      model.setLanguage(newResult.mode.languageId);
+    });
+    const once = model.onWillDispose(() => {
+      once.dispose();
+      cellModelListener.dispose();
+      ref.dispose();
+    });
+    return model;
+  }
+};
+CellInfoContentProvider = __decorate([
+  __param(0, ITextModelService),
+  __param(1, IModelService),
+  __param(2, ILanguageService),
+  __param(3, ILabelService),
+  __param(4, INotebookEditorModelResolverService)
+], CellInfoContentProvider);
+let NotebookMetadataContentProvider = class NotebookMetadataContentProvider2 {
+  static {
+    __name(this, "NotebookMetadataContentProvider");
+  }
+  static {
+    this.ID = "workbench.contrib.notebookMetadataContentProvider";
+  }
+  constructor(textModelService, _modelService, _languageService, _labelService, _notebookModelResolverService) {
+    this._modelService = _modelService;
+    this._languageService = _languageService;
+    this._labelService = _labelService;
+    this._notebookModelResolverService = _notebookModelResolverService;
+    this._disposables = [];
+    this._disposables.push(textModelService.registerTextModelContentProvider(Schemas.vscodeNotebookMetadata, {
+      provideTextContent: this.provideMetadataTextContent.bind(this)
+    }));
+    this._disposables.push(this._labelService.registerFormatter({
+      scheme: Schemas.vscodeNotebookMetadata,
+      formatting: {
+        label: "${path} (metadata)",
+        separator: "/"
+      }
+    }));
+  }
+  dispose() {
+    dispose(this._disposables);
+  }
+  async provideMetadataTextContent(resource) {
+    const existing = this._modelService.getModel(resource);
+    if (existing) {
+      return existing;
+    }
+    const data = NotebookMetadataUri.parse(resource);
+    if (!data) {
+      return null;
+    }
+    const ref = await this._notebookModelResolverService.resolve(data);
+    let result = null;
+    const mode = this._languageService.createById("json");
+    const disposables = new DisposableStore();
+    const metadataSource = getFormattedNotebookMetadataJSON(ref.object.notebook.transientOptions.transientDocumentMetadata, ref.object.notebook.metadata);
+    result = this._modelService.createModel(metadataSource, mode, resource);
+    if (!result) {
+      ref.dispose();
+      return null;
+    }
+    this._disposables.push(disposables.add(ref.object.notebook.onDidChangeContent((e) => {
+      if (result && e.rawEvents.some((event) => event.kind === NotebookCellsChangeType.ChangeCellContent || event.kind === NotebookCellsChangeType.ChangeDocumentMetadata || event.kind === NotebookCellsChangeType.ModelChange)) {
+        const value = getFormattedNotebookMetadataJSON(ref.object.notebook.transientOptions.transientDocumentMetadata, ref.object.notebook.metadata);
+        if (result.getValue() !== value) {
+          result.setValue(value);
+        }
+      }
+    })));
+    const once = result.onWillDispose(() => {
+      disposables.dispose();
+      once.dispose();
+      ref.dispose();
+    });
+    return result;
+  }
+};
+NotebookMetadataContentProvider = __decorate([
+  __param(0, ITextModelService),
+  __param(1, IModelService),
+  __param(2, ILanguageService),
+  __param(3, ILabelService),
+  __param(4, INotebookEditorModelResolverService)
+], NotebookMetadataContentProvider);
+class RegisterSchemasContribution extends Disposable {
+  static {
+    __name(this, "RegisterSchemasContribution");
+  }
+  static {
+    this.ID = "workbench.contrib.registerCellSchemas";
+  }
+  constructor() {
+    super();
+    this.registerMetadataSchemas();
+  }
+  registerMetadataSchemas() {
+    const jsonRegistry = Registry.as(JSONExtensions.JSONContribution);
+    const metadataSchema = {
+      properties: {
+        ["language"]: {
+          type: "string",
+          description: "The language for the cell"
+        }
+      },
+      // patternProperties: allSettings.patternProperties,
+      additionalProperties: true,
+      allowTrailingCommas: true,
+      allowComments: true
+    };
+    jsonRegistry.registerSchema("vscode://schemas/notebook/cellmetadata", metadataSchema);
+  }
+}
+let NotebookEditorManager = class NotebookEditorManager2 {
+  static {
+    __name(this, "NotebookEditorManager");
+  }
+  static {
+    this.ID = "workbench.contrib.notebookEditorManager";
+  }
+  constructor(_editorService, _notebookEditorModelService, editorGroups) {
+    this._editorService = _editorService;
+    this._notebookEditorModelService = _notebookEditorModelService;
+    this._disposables = new DisposableStore();
+    this._disposables.add(Event.debounce(this._notebookEditorModelService.onDidChangeDirty, (last, current) => !last ? [current] : [...last, current], 100)(this._openMissingDirtyNotebookEditors, this));
+    this._disposables.add(_notebookEditorModelService.onWillFailWithConflict((e) => {
+      for (const group of editorGroups.groups) {
+        const conflictInputs = group.editors.filter((input) => input instanceof NotebookEditorInput && input.viewType !== e.viewType && isEqual(input.resource, e.resource));
+        const p = group.closeEditors(conflictInputs);
+        e.waitUntil(p);
+      }
+    }));
+  }
+  dispose() {
+    this._disposables.dispose();
+  }
+  _openMissingDirtyNotebookEditors(models) {
+    const result = [];
+    for (const model of models) {
+      if (model.isDirty() && !this._editorService.isOpened({ resource: model.resource, typeId: NotebookEditorInput.ID, editorId: model.viewType }) && extname(model.resource) !== ".interactive") {
+        result.push({
+          resource: model.resource,
+          options: { inactive: true, preserveFocus: true, pinned: true, override: model.viewType }
+        });
+      }
+    }
+    if (result.length > 0) {
+      this._editorService.openEditors(result);
+    }
+  }
+};
+NotebookEditorManager = __decorate([
+  __param(0, IEditorService),
+  __param(1, INotebookEditorModelResolverService),
+  __param(2, IEditorGroupsService)
+], NotebookEditorManager);
+let SimpleNotebookWorkingCopyEditorHandler = class SimpleNotebookWorkingCopyEditorHandler2 extends Disposable {
+  static {
+    __name(this, "SimpleNotebookWorkingCopyEditorHandler");
+  }
+  static {
+    this.ID = "workbench.contrib.simpleNotebookWorkingCopyEditorHandler";
+  }
+  constructor(_instantiationService, _workingCopyEditorService, _extensionService, _notebookService) {
+    super();
+    this._instantiationService = _instantiationService;
+    this._workingCopyEditorService = _workingCopyEditorService;
+    this._extensionService = _extensionService;
+    this._notebookService = _notebookService;
+    this._installHandler();
+  }
+  async handles(workingCopy) {
+    const viewType = this.handlesSync(workingCopy);
+    if (!viewType) {
+      return false;
+    }
+    return this._notebookService.canResolve(viewType);
+  }
+  handlesSync(workingCopy) {
+    const viewType = this._getViewType(workingCopy);
+    if (!viewType || viewType === "interactive") {
+      return void 0;
+    }
+    return viewType;
+  }
+  isOpen(workingCopy, editor) {
+    if (!this.handlesSync(workingCopy)) {
+      return false;
+    }
+    return editor instanceof NotebookEditorInput && editor.viewType === this._getViewType(workingCopy) && isEqual(workingCopy.resource, editor.resource);
+  }
+  createEditor(workingCopy) {
+    return NotebookEditorInput.getOrCreate(this._instantiationService, workingCopy.resource, void 0, this._getViewType(workingCopy));
+  }
+  async _installHandler() {
+    await this._extensionService.whenInstalledExtensionsRegistered();
+    this._register(this._workingCopyEditorService.registerHandler(this));
+  }
+  _getViewType(workingCopy) {
+    const notebookType = NotebookWorkingCopyTypeIdentifier.parse(workingCopy.typeId);
+    if (notebookType && notebookType.viewType === notebookType.notebookType) {
+      return notebookType?.viewType;
+    }
+    return void 0;
+  }
+};
+SimpleNotebookWorkingCopyEditorHandler = __decorate([
+  __param(0, IInstantiationService),
+  __param(1, IWorkingCopyEditorService),
+  __param(2, IExtensionService),
+  __param(3, INotebookService)
+], SimpleNotebookWorkingCopyEditorHandler);
+let NotebookLanguageSelectorScoreRefine = class NotebookLanguageSelectorScoreRefine2 {
+  static {
+    __name(this, "NotebookLanguageSelectorScoreRefine");
+  }
+  static {
+    this.ID = "workbench.contrib.notebookLanguageSelectorScoreRefine";
+  }
+  constructor(_notebookService, languageFeaturesService) {
+    this._notebookService = _notebookService;
+    languageFeaturesService.setNotebookTypeResolver(this._getNotebookInfo.bind(this));
+  }
+  _getNotebookInfo(uri) {
+    const cellUri = CellUri.parse(uri);
+    if (!cellUri) {
+      return void 0;
+    }
+    const notebook = this._notebookService.getNotebookTextModel(cellUri.notebook);
+    if (!notebook) {
+      return void 0;
+    }
+    return {
+      uri: notebook.uri,
+      type: notebook.viewType
+    };
+  }
+};
+NotebookLanguageSelectorScoreRefine = __decorate([
+  __param(0, INotebookService),
+  __param(1, ILanguageFeaturesService)
+], NotebookLanguageSelectorScoreRefine);
+const workbenchContributionsRegistry = Registry.as(WorkbenchExtensions.Workbench);
+registerWorkbenchContribution2(
+  NotebookContribution.ID,
+  NotebookContribution,
+  1
+  /* WorkbenchPhase.BlockStartup */
+);
+registerWorkbenchContribution2(
+  CellContentProvider.ID,
+  CellContentProvider,
+  1
+  /* WorkbenchPhase.BlockStartup */
+);
+registerWorkbenchContribution2(
+  CellInfoContentProvider.ID,
+  CellInfoContentProvider,
+  1
+  /* WorkbenchPhase.BlockStartup */
+);
+registerWorkbenchContribution2(
+  NotebookMetadataContentProvider.ID,
+  NotebookMetadataContentProvider,
+  1
+  /* WorkbenchPhase.BlockStartup */
+);
+registerWorkbenchContribution2(
+  RegisterSchemasContribution.ID,
+  RegisterSchemasContribution,
+  1
+  /* WorkbenchPhase.BlockStartup */
+);
+registerWorkbenchContribution2(
+  NotebookEditorManager.ID,
+  NotebookEditorManager,
+  2
+  /* WorkbenchPhase.BlockRestore */
+);
+registerWorkbenchContribution2(
+  NotebookLanguageSelectorScoreRefine.ID,
+  NotebookLanguageSelectorScoreRefine,
+  2
+  /* WorkbenchPhase.BlockRestore */
+);
+registerWorkbenchContribution2(
+  SimpleNotebookWorkingCopyEditorHandler.ID,
+  SimpleNotebookWorkingCopyEditorHandler,
+  2
+  /* WorkbenchPhase.BlockRestore */
+);
+workbenchContributionsRegistry.registerWorkbenchContribution(
+  NotebookVariables,
+  4
+  /* LifecyclePhase.Eventually */
+);
+AccessibleViewRegistry.register(new NotebookAccessibleView());
+AccessibleViewRegistry.register(new NotebookAccessibilityHelp());
+registerSingleton(
+  INotebookService,
+  NotebookService,
+  1
+  /* InstantiationType.Delayed */
+);
+registerSingleton(
+  INotebookEditorWorkerService,
+  NotebookEditorWorkerServiceImpl,
+  1
+  /* InstantiationType.Delayed */
+);
+registerSingleton(
+  INotebookEditorModelResolverService,
+  NotebookModelResolverServiceImpl,
+  1
+  /* InstantiationType.Delayed */
+);
+registerSingleton(
+  INotebookCellStatusBarService,
+  NotebookCellStatusBarService,
+  1
+  /* InstantiationType.Delayed */
+);
+registerSingleton(
+  INotebookEditorService,
+  NotebookEditorWidgetService,
+  1
+  /* InstantiationType.Delayed */
+);
+registerSingleton(
+  INotebookKernelService,
+  NotebookKernelService,
+  1
+  /* InstantiationType.Delayed */
+);
+registerSingleton(
+  INotebookKernelHistoryService,
+  NotebookKernelHistoryService,
+  1
+  /* InstantiationType.Delayed */
+);
+registerSingleton(
+  INotebookExecutionService,
+  NotebookExecutionService,
+  1
+  /* InstantiationType.Delayed */
+);
+registerSingleton(
+  INotebookExecutionStateService,
+  NotebookExecutionStateService,
+  1
+  /* InstantiationType.Delayed */
+);
+registerSingleton(
+  INotebookRendererMessagingService,
+  NotebookRendererMessagingService,
+  1
+  /* InstantiationType.Delayed */
+);
+registerSingleton(
+  INotebookKeymapService,
+  NotebookKeymapService,
+  1
+  /* InstantiationType.Delayed */
+);
+registerSingleton(
+  INotebookLoggingService,
+  NotebookLoggingService,
+  1
+  /* InstantiationType.Delayed */
+);
+registerSingleton(
+  INotebookCellOutlineDataSourceFactory,
+  NotebookCellOutlineDataSourceFactory,
+  1
+  /* InstantiationType.Delayed */
+);
+registerSingleton(
+  INotebookOutlineEntryFactory,
+  NotebookOutlineEntryFactory,
+  1
+  /* InstantiationType.Delayed */
+);
+const schemas = {};
+function isConfigurationPropertySchema(x) {
+  return typeof x.type !== "undefined" || typeof x.anyOf !== "undefined";
+}
+__name(isConfigurationPropertySchema, "isConfigurationPropertySchema");
+for (const editorOption of editorOptionsRegistry) {
+  const schema = editorOption.schema;
+  if (schema) {
+    if (isConfigurationPropertySchema(schema)) {
+      schemas[`editor.${editorOption.name}`] = schema;
+    } else {
+      for (const key in schema) {
+        if (Object.hasOwnProperty.call(schema, key)) {
+          schemas[key] = schema[key];
+        }
+      }
+    }
+  }
+}
+const editorOptionsCustomizationSchema = {
+  description: nls.localize("notebook.editorOptions.experimentalCustomization", "Settings for code editors used in notebooks. This can be used to customize most editor.* settings."),
+  default: {},
+  allOf: [
+    {
+      properties: schemas
+    }
+    // , {
+    // 	patternProperties: {
+    // 		'^\\[.*\\]$': {
+    // 			type: 'object',
+    // 			default: {},
+    // 			properties: schemas
+    // 		}
+    // 	}
+    // }
+  ],
+  tags: ["notebookLayout"]
+};
+const configurationRegistry = Registry.as(Extensions.Configuration);
+configurationRegistry.registerConfiguration({
+  id: "notebook",
+  order: 100,
+  title: nls.localize("notebookConfigurationTitle", "Notebook"),
+  type: "object",
+  properties: {
+    [NotebookSetting.displayOrder]: {
+      description: nls.localize("notebook.displayOrder.description", "Priority list for output mime types"),
+      type: "array",
+      items: {
+        type: "string"
+      },
+      default: []
+    },
+    [NotebookSetting.cellToolbarLocation]: {
+      description: nls.localize("notebook.cellToolbarLocation.description", "Where the cell toolbar should be shown, or whether it should be hidden."),
+      type: "object",
+      additionalProperties: {
+        markdownDescription: nls.localize("notebook.cellToolbarLocation.viewType", "Configure the cell toolbar position for for specific file types"),
+        type: "string",
+        enum: ["left", "right", "hidden"]
+      },
+      default: {
+        "default": "right"
+      },
+      tags: ["notebookLayout"]
+    },
+    [NotebookSetting.showCellStatusBar]: {
+      description: nls.localize("notebook.showCellStatusbar.description", "Whether the cell status bar should be shown."),
+      type: "string",
+      enum: ["hidden", "visible", "visibleAfterExecute"],
+      enumDescriptions: [
+        nls.localize("notebook.showCellStatusbar.hidden.description", "The cell Status bar is always hidden."),
+        nls.localize("notebook.showCellStatusbar.visible.description", "The cell Status bar is always visible."),
+        nls.localize("notebook.showCellStatusbar.visibleAfterExecute.description", "The cell Status bar is hidden until the cell has executed. Then it becomes visible to show the execution status.")
+      ],
+      default: "visible",
+      tags: ["notebookLayout"]
+    },
+    [NotebookSetting.cellExecutionTimeVerbosity]: {
+      description: nls.localize("notebook.cellExecutionTimeVerbosity.description", "Controls the verbosity of the cell execution time in the cell status bar."),
+      type: "string",
+      enum: ["default", "verbose"],
+      enumDescriptions: [
+        nls.localize("notebook.cellExecutionTimeVerbosity.default.description", "The cell execution duration is visible, with advanced information in the hover tooltip."),
+        nls.localize("notebook.cellExecutionTimeVerbosity.verbose.description", "The cell last execution timestamp and duration are visible, with advanced information in the hover tooltip.")
+      ],
+      default: "default",
+      tags: ["notebookLayout"]
+    },
+    [NotebookSetting.textDiffEditorPreview]: {
+      description: nls.localize("notebook.diff.enablePreview.description", "Whether to use the enhanced text diff editor for notebook."),
+      type: "boolean",
+      default: true,
+      tags: ["notebookLayout"]
+    },
+    [NotebookSetting.diffOverviewRuler]: {
+      description: nls.localize("notebook.diff.enableOverviewRuler.description", "Whether to render the overview ruler in the diff editor for notebook."),
+      type: "boolean",
+      default: false,
+      tags: ["notebookLayout"]
+    },
+    [NotebookSetting.cellToolbarVisibility]: {
+      markdownDescription: nls.localize("notebook.cellToolbarVisibility.description", "Whether the cell toolbar should appear on hover or click."),
+      type: "string",
+      enum: ["hover", "click"],
+      default: "click",
+      tags: ["notebookLayout"]
+    },
+    [NotebookSetting.undoRedoPerCell]: {
+      description: nls.localize("notebook.undoRedoPerCell.description", "Whether to use separate undo/redo stack for each cell."),
+      type: "boolean",
+      default: true,
+      tags: ["notebookLayout"]
+    },
+    [NotebookSetting.compactView]: {
+      description: nls.localize("notebook.compactView.description", "Control whether the notebook editor should be rendered in a compact form. For example, when turned on, it will decrease the left margin width."),
+      type: "boolean",
+      default: true,
+      tags: ["notebookLayout"]
+    },
+    [NotebookSetting.focusIndicator]: {
+      description: nls.localize("notebook.focusIndicator.description", "Controls where the focus indicator is rendered, either along the cell borders or on the left gutter."),
+      type: "string",
+      enum: ["border", "gutter"],
+      default: "gutter",
+      tags: ["notebookLayout"]
+    },
+    [NotebookSetting.insertToolbarLocation]: {
+      description: nls.localize("notebook.insertToolbarPosition.description", "Control where the insert cell actions should appear."),
+      type: "string",
+      enum: ["betweenCells", "notebookToolbar", "both", "hidden"],
+      enumDescriptions: [
+        nls.localize("insertToolbarLocation.betweenCells", "A toolbar that appears on hover between cells."),
+        nls.localize("insertToolbarLocation.notebookToolbar", "The toolbar at the top of the notebook editor."),
+        nls.localize("insertToolbarLocation.both", "Both toolbars."),
+        nls.localize("insertToolbarLocation.hidden", "The insert actions don't appear anywhere.")
+      ],
+      default: "both",
+      tags: ["notebookLayout"]
+    },
+    [NotebookSetting.globalToolbar]: {
+      description: nls.localize("notebook.globalToolbar.description", "Control whether to render a global toolbar inside the notebook editor."),
+      type: "boolean",
+      default: true,
+      tags: ["notebookLayout"]
+    },
+    [NotebookSetting.stickyScrollEnabled]: {
+      description: nls.localize("notebook.stickyScrollEnabled.description", "Experimental. Control whether to render notebook Sticky Scroll headers in the notebook editor."),
+      type: "boolean",
+      default: false,
+      tags: ["notebookLayout"]
+    },
+    [NotebookSetting.stickyScrollMode]: {
+      description: nls.localize("notebook.stickyScrollMode.description", "Control whether nested sticky lines appear to stack flat or indented."),
+      type: "string",
+      enum: ["flat", "indented"],
+      enumDescriptions: [
+        nls.localize("notebook.stickyScrollMode.flat", "Nested sticky lines appear flat."),
+        nls.localize("notebook.stickyScrollMode.indented", "Nested sticky lines appear indented.")
+      ],
+      default: "indented",
+      tags: ["notebookLayout"]
+    },
+    [NotebookSetting.consolidatedOutputButton]: {
+      description: nls.localize("notebook.consolidatedOutputButton.description", "Control whether outputs action should be rendered in the output toolbar."),
+      type: "boolean",
+      default: true,
+      tags: ["notebookLayout"]
+    },
+    // [NotebookSetting.openOutputInPreviewEditor]: {
+    // 	description: nls.localize('notebook.output.openInPreviewEditor.description', "Controls whether or not the action to open a cell output in a preview editor is enabled. This action can be used via the cell output menu."),
+    // 	type: 'boolean',
+    // 	default: false,
+    // 	tags: ['preview']
+    // },
+    [NotebookSetting.showFoldingControls]: {
+      description: nls.localize("notebook.showFoldingControls.description", "Controls when the Markdown header folding arrow is shown."),
+      type: "string",
+      enum: ["always", "never", "mouseover"],
+      enumDescriptions: [
+        nls.localize("showFoldingControls.always", "The folding controls are always visible."),
+        nls.localize("showFoldingControls.never", "Never show the folding controls and reduce the gutter size."),
+        nls.localize("showFoldingControls.mouseover", "The folding controls are visible only on mouseover.")
+      ],
+      default: "mouseover",
+      tags: ["notebookLayout"]
+    },
+    [NotebookSetting.dragAndDropEnabled]: {
+      description: nls.localize("notebook.dragAndDrop.description", "Control whether the notebook editor should allow moving cells through drag and drop."),
+      type: "boolean",
+      default: true,
+      tags: ["notebookLayout"]
+    },
+    [NotebookSetting.consolidatedRunButton]: {
+      description: nls.localize("notebook.consolidatedRunButton.description", "Control whether extra actions are shown in a dropdown next to the run button."),
+      type: "boolean",
+      default: false,
+      tags: ["notebookLayout"]
+    },
+    [NotebookSetting.globalToolbarShowLabel]: {
+      description: nls.localize("notebook.globalToolbarShowLabel", "Control whether the actions on the notebook toolbar should render label or not."),
+      type: "string",
+      enum: ["always", "never", "dynamic"],
+      default: "always",
+      tags: ["notebookLayout"]
+    },
+    [NotebookSetting.textOutputLineLimit]: {
+      markdownDescription: nls.localize("notebook.textOutputLineLimit", "Controls how many lines of text are displayed in a text output. If {0} is enabled, this setting is used to determine the scroll height of the output.", "`#notebook.output.scrolling#`"),
+      type: "number",
+      default: 30,
+      tags: ["notebookLayout", "notebookOutputLayout"],
+      minimum: 1
+    },
+    [NotebookSetting.LinkifyOutputFilePaths]: {
+      description: nls.localize("notebook.disableOutputFilePathLinks", "Control whether to disable filepath links in the output of notebook cells."),
+      type: "boolean",
+      default: true,
+      tags: ["notebookOutputLayout"]
+    },
+    [NotebookSetting.minimalErrorRendering]: {
+      description: nls.localize("notebook.minimalErrorRendering", "Control whether to render error output in a minimal style."),
+      type: "boolean",
+      default: false,
+      tags: ["notebookOutputLayout"]
+    },
+    [NotebookSetting.markupFontSize]: {
+      markdownDescription: nls.localize("notebook.markup.fontSize", "Controls the font size in pixels of rendered markup in notebooks. When set to {0}, 120% of {1} is used.", "`0`", "`#editor.fontSize#`"),
+      type: "number",
+      default: 0,
+      tags: ["notebookLayout"]
+    },
+    [NotebookSetting.markdownLineHeight]: {
+      markdownDescription: nls.localize("notebook.markdown.lineHeight", "Controls the line height in pixels of markdown cells in notebooks. When set to {0}, {1} will be used", "`0`", "`normal`"),
+      type: "number",
+      default: 0,
+      tags: ["notebookLayout"]
+    },
+    [NotebookSetting.cellEditorOptionsCustomizations]: editorOptionsCustomizationSchema,
+    [NotebookSetting.interactiveWindowCollapseCodeCells]: {
+      markdownDescription: nls.localize("notebook.interactiveWindow.collapseCodeCells", "Controls whether code cells in the interactive window are collapsed by default."),
+      type: "string",
+      enum: ["always", "never", "fromEditor"],
+      default: "fromEditor"
+    },
+    [NotebookSetting.outputLineHeight]: {
+      markdownDescription: nls.localize("notebook.outputLineHeight", "Line height of the output text within notebook cells.\n - When set to 0, editor line height is used.\n - Values between 0 and 8 will be used as a multiplier with the font size.\n - Values greater than or equal to 8 will be used as effective values."),
+      type: "number",
+      default: 0,
+      tags: ["notebookLayout", "notebookOutputLayout"]
+    },
+    [NotebookSetting.outputFontSize]: {
+      markdownDescription: nls.localize("notebook.outputFontSize", "Font size for the output text within notebook cells. When set to 0, {0} is used.", "`#editor.fontSize#`"),
+      type: "number",
+      default: 0,
+      tags: ["notebookLayout", "notebookOutputLayout"]
+    },
+    [NotebookSetting.outputFontFamily]: {
+      markdownDescription: nls.localize("notebook.outputFontFamily", "The font family of the output text within notebook cells. When set to empty, the {0} is used.", "`#editor.fontFamily#`"),
+      type: "string",
+      tags: ["notebookLayout", "notebookOutputLayout"]
+    },
+    [NotebookSetting.outputScrolling]: {
+      markdownDescription: nls.localize("notebook.outputScrolling", "Initially render notebook outputs in a scrollable region when longer than the limit."),
+      type: "boolean",
+      tags: ["notebookLayout", "notebookOutputLayout"],
+      default: typeof product.quality === "string" && product.quality !== "stable"
+      // only enable as default in insiders
+    },
+    [NotebookSetting.outputWordWrap]: {
+      markdownDescription: nls.localize("notebook.outputWordWrap", "Controls whether the lines in output should wrap."),
+      type: "boolean",
+      tags: ["notebookLayout", "notebookOutputLayout"],
+      default: false
+    },
+    [NotebookSetting.defaultFormatter]: {
+      description: nls.localize("notebookFormatter.default", "Defines a default notebook formatter which takes precedence over all other formatter settings. Must be the identifier of an extension contributing a formatter."),
+      type: ["string", "null"],
+      default: null,
+      enum: DefaultFormatter.extensionIds,
+      enumItemLabels: DefaultFormatter.extensionItemLabels,
+      markdownEnumDescriptions: DefaultFormatter.extensionDescriptions
+    },
+    [NotebookSetting.formatOnSave]: {
+      markdownDescription: nls.localize("notebook.formatOnSave", "Format a notebook on save. A formatter must be available and the editor must not be shutting down. When {0} is set to `afterDelay`, the file will only be formatted when saved explicitly.", "`#files.autoSave#`"),
+      type: "boolean",
+      tags: ["notebookLayout"],
+      default: false
+    },
+    [NotebookSetting.insertFinalNewline]: {
+      markdownDescription: nls.localize("notebook.insertFinalNewline", "When enabled, insert a final new line into the end of code cells when saving a notebook."),
+      type: "boolean",
+      tags: ["notebookLayout"],
+      default: false
+    },
+    [NotebookSetting.formatOnCellExecution]: {
+      markdownDescription: nls.localize("notebook.formatOnCellExecution", "Format a notebook cell upon execution. A formatter must be available."),
+      type: "boolean",
+      default: false
+    },
+    [NotebookSetting.confirmDeleteRunningCell]: {
+      markdownDescription: nls.localize("notebook.confirmDeleteRunningCell", "Control whether a confirmation prompt is required to delete a running cell."),
+      type: "boolean",
+      default: true
+    },
+    [NotebookSetting.findFilters]: {
+      markdownDescription: nls.localize("notebook.findFilters", "Customize the Find Widget behavior for searching within notebook cells. When both markup source and markup preview are enabled, the Find Widget will search either the source code or preview based on the current state of the cell."),
+      type: "object",
+      properties: {
+        markupSource: {
+          type: "boolean",
+          default: true
+        },
+        markupPreview: {
+          type: "boolean",
+          default: true
+        },
+        codeSource: {
+          type: "boolean",
+          default: true
+        },
+        codeOutput: {
+          type: "boolean",
+          default: true
+        }
+      },
+      default: {
+        markupSource: true,
+        markupPreview: true,
+        codeSource: true,
+        codeOutput: true
+      },
+      tags: ["notebookLayout"]
+    },
+    [NotebookSetting.remoteSaving]: {
+      markdownDescription: nls.localize("notebook.remoteSaving", "Enables the incremental saving of notebooks between processes and across Remote connections. When enabled, only the changes to the notebook are sent to the extension host, improving performance for large notebooks and slow network connections."),
+      type: "boolean",
+      default: typeof product.quality === "string" && product.quality !== "stable",
+      // only enable as default in insiders
+      tags: ["experimental"]
+    },
+    [NotebookSetting.scrollToRevealCell]: {
+      markdownDescription: nls.localize("notebook.scrolling.revealNextCellOnExecute.description", "How far to scroll when revealing the next cell upon running {0}.", "notebook.cell.executeAndSelectBelow"),
+      type: "string",
+      enum: ["fullCell", "firstLine", "none"],
+      markdownEnumDescriptions: [
+        nls.localize("notebook.scrolling.revealNextCellOnExecute.fullCell.description", "Scroll to fully reveal the next cell."),
+        nls.localize("notebook.scrolling.revealNextCellOnExecute.firstLine.description", "Scroll to reveal the first line of the next cell."),
+        nls.localize("notebook.scrolling.revealNextCellOnExecute.none.description", "Do not scroll.")
+      ],
+      default: "fullCell"
+    },
+    [NotebookSetting.cellGenerate]: {
+      markdownDescription: nls.localize("notebook.cellGenerate", "Enable experimental generate action to create code cell with inline chat enabled."),
+      type: "boolean",
+      default: true
+    },
+    [NotebookSetting.notebookVariablesView]: {
+      markdownDescription: nls.localize("notebook.VariablesView.description", "Enable the experimental notebook variables view within the debug panel."),
+      type: "boolean",
+      default: false
+    },
+    [NotebookSetting.notebookInlineValues]: {
+      markdownDescription: nls.localize("notebook.inlineValues.description", "Control whether to show inline values within notebook code cells after cell execution. Values will remain until the cell is edited, re-executed, or explicitly cleared via the Clear All Outputs toolbar button or the `Notebook: Clear Inline Values` command."),
+      type: "string",
+      enum: ["on", "auto", "off"],
+      enumDescriptions: [
+        nls.localize("notebook.inlineValues.on", "Always show inline values, with a regex fallback if no inline value provider is registered. Note: There may be a performance impact in larger cells if the fallback is used."),
+        nls.localize("notebook.inlineValues.auto", "Show inline values only when an inline value provider is registered."),
+        nls.localize("notebook.inlineValues.off", "Never show inline values.")
+      ],
+      default: "off"
+    },
+    [NotebookSetting.cellFailureDiagnostics]: {
+      markdownDescription: nls.localize("notebook.cellFailureDiagnostics", "Show available diagnostics for cell failures."),
+      type: "boolean",
+      default: true
+    },
+    [NotebookSetting.outputBackupSizeLimit]: {
+      markdownDescription: nls.localize("notebook.backup.sizeLimit", "The limit of notebook output size in kilobytes (KB) where notebook files will no longer be backed up for hot reload. Use 0 for unlimited."),
+      type: "number",
+      default: 1e4
+    },
+    [NotebookSetting.multiCursor]: {
+      markdownDescription: nls.localize("notebook.multiCursor.enabled", "Experimental. Enables a limited set of multi cursor controls across multiple cells in the notebook editor. Currently supported are core editor actions (typing/cut/copy/paste/composition) and a limited subset of editor commands."),
+      type: "boolean",
+      default: false
+    },
+    [NotebookSetting.markupFontFamily]: {
+      markdownDescription: nls.localize("notebook.markup.fontFamily", "Controls the font family of rendered markup in notebooks. When left blank, this will fall back to the default workbench font family."),
+      type: "string",
+      default: "",
+      tags: ["notebookLayout"]
+    }
+  }
+});
+export {
+  NotebookContribution
+};
+//# sourceMappingURL=notebook.contribution.js.map

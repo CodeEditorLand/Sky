@@ -1,1 +1,23 @@
-import{$nj as e}from"../../instantiation/common/instantiation.js";var t;!function(e){e[e.Local=0]="Local",e[e.Remote=1]="Remote"}(t||(t={}));const w=e("workspaceTrustEnablementService"),a=e("workspaceTrustManagementService");var o;!function(e){e[e.Open=1]="Open",e[e.OpenInNewWindow=2]="OpenInNewWindow",e[e.Cancel=3]="Cancel"}(o||(o={}));const m=e("workspaceTrustRequestService");export{w as $QM,a as $RM,m as $SM,t as WorkspaceTrustScope,o as WorkspaceTrustUriResponse};
+import { createDecorator } from "../../instantiation/common/instantiation.js";
+var WorkspaceTrustScope;
+(function(WorkspaceTrustScope2) {
+  WorkspaceTrustScope2[WorkspaceTrustScope2["Local"] = 0] = "Local";
+  WorkspaceTrustScope2[WorkspaceTrustScope2["Remote"] = 1] = "Remote";
+})(WorkspaceTrustScope || (WorkspaceTrustScope = {}));
+const IWorkspaceTrustEnablementService = createDecorator("workspaceTrustEnablementService");
+const IWorkspaceTrustManagementService = createDecorator("workspaceTrustManagementService");
+var WorkspaceTrustUriResponse;
+(function(WorkspaceTrustUriResponse2) {
+  WorkspaceTrustUriResponse2[WorkspaceTrustUriResponse2["Open"] = 1] = "Open";
+  WorkspaceTrustUriResponse2[WorkspaceTrustUriResponse2["OpenInNewWindow"] = 2] = "OpenInNewWindow";
+  WorkspaceTrustUriResponse2[WorkspaceTrustUriResponse2["Cancel"] = 3] = "Cancel";
+})(WorkspaceTrustUriResponse || (WorkspaceTrustUriResponse = {}));
+const IWorkspaceTrustRequestService = createDecorator("workspaceTrustRequestService");
+export {
+  IWorkspaceTrustEnablementService,
+  IWorkspaceTrustManagementService,
+  IWorkspaceTrustRequestService,
+  WorkspaceTrustScope,
+  WorkspaceTrustUriResponse
+};
+//# sourceMappingURL=workspaceTrust.js.map

@@ -1,1 +1,255 @@
-import{$Ic as E}from"../../../../../base/common/map.js";import{$rVb as N,$sVb as R}from"../notebookEditorWidget.js";import{$ud as $}from"../../../../../base/common/lifecycle.js";import{$kI as W}from"../../../../services/editor/common/editorGroupsService.js";import{$mj as _}from"../../../../../platform/instantiation/common/instantiation.js";import{$Zyb as w,$1yb as A,$Yyb as M}from"../../common/notebookEditorInput.js";import{$df as I}from"../../../../../base/common/event.js";import{$oI as P}from"../../../../services/editor/common/editorService.js";import{$Vn as v}from"../../../../../platform/contextkey/common/contextkey.js";import{$wAb as S,$xAb as C}from"../../common/notebookContextKeys.js";import{$lj as D}from"../../../../../platform/instantiation/common/serviceCollection.js";import{$3I as k}from"../../../../../platform/progress/common/progress.js";import{$A0b as G}from"../../common/notebookDiffEditorInput.js";var T=function(g,t,e,o){var h=arguments.length,n=h<3?t:o===null?o=Object.getOwnPropertyDescriptor(t,e):o,f;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")n=Reflect.decorate(g,t,e,o);else for(var i=g.length-1;i>=0;i--)(f=g[i])&&(n=(h<3?f(n):h>3?f(t,e,n):f(t,e))||n);return h>3&&n&&Object.defineProperty(t,e,n),n},m=function(g,t){return function(e,o){t(e,o,g)}};let y=class{constructor(t,e,o,h){this.j=t,this.k=h,this.a=1,this.b=new $,this.c=new Map,this.d=new Map,this.f=new I,this.g=new I,this.onDidAddNotebookEditor=this.f.event,this.onDidRemoveNotebookEditor=this.g.event,this.i=new Map;const n=i=>{const{id:r}=i,c=[];c.push(i.onDidCloseEditor(s=>{const d=this.i.get(i.id);if(!d)return;(s.editor instanceof M||s.editor instanceof G?[s.editor]:w(s.editor)?s.editor.editorInputs:[]).forEach(a=>{const p=d.get(a.resource),b=p?.findIndex(x=>x.editorType===a.typeId);if(!p||b===void 0||b===-1)return;const u=p.splice(b,1)[0];u.token=void 0,this.l(u.widget),u.disposableStore.dispose(),u.widget=void 0})})),c.push(i.onWillMoveEditor(s=>{A(s.editor)&&this.m(s.editor,s.groupId,s.target),w(s.editor)&&s.editor.editorInputs.forEach(d=>{this.m(d,s.groupId,s.target)})})),this.d.set(r,c)};this.b.add(t.onDidAddGroup(n)),t.whenReady.then(()=>t.groups.forEach(n)),this.b.add(t.onDidRemoveGroup(i=>{const r=this.d.get(i.id);r&&(r.forEach(s=>s.dispose()),this.d.delete(i.id));const c=this.i.get(i.id);if(this.i.delete(i.id),c)for(const s of c.values())for(const d of s)d.token=void 0,this.l(d.widget),d.disposableStore.dispose()})),this.h=C.bindTo(o);const f=S.bindTo(o);this.b.add(e.onDidEditorsChange(i=>{i.event.kind===5&&!f.get()?e.editors.find(r=>w(r))&&f.set(!0):i.event.kind===6&&f.get()&&(e.editors.find(r=>w(r))||f.set(!1))}))}dispose(){this.b.dispose(),this.f.dispose(),this.g.dispose(),this.d.forEach(t=>{t.forEach(e=>e.dispose())}),this.d.clear(),this.i.forEach(t=>{t.forEach(e=>{e.forEach(o=>o.disposableStore.dispose())})})}l(t){t.onWillHide();const e=t.getDomNode();t.dispose(),e.remove()}m(t,e,o){const h=this.j.getPart(e),n=this.j.getPart(o);if(h.windowId!==n.windowId)return;const f=this.i.get(o)?.get(t.resource)?.findIndex(d=>d.editorType===t.typeId);if(f!==void 0&&f!==-1)return;const i=this.i.get(e)?.get(t.resource)?.find(d=>d.editorType===t.typeId);if(!i)throw new Error("no widget at source group");const r=this.i.get(e)?.get(t.resource);if(r){const d=r.findIndex(l=>l.editorType===t.typeId);d!==-1&&r.splice(d,1)}let c=this.i.get(o);c||(c=new E,this.i.set(o,c));const s=c.get(t.resource)??[];s?.push(i),c.set(t.resource,s)}retrieveExistingWidgetFromURI(t){for(const e of this.i.values()){const o=e.get(t);if(o&&o.length>0)return this.o(o[0].token,o[0])}}retrieveAllExistingWidgets(){const t=[];for(const e of this.i.values())for(const o of e.values())for(const h of o)t.push(this.o(h.token,h));return t}retrieveWidget(t,e,o,h,n,f){let i=this.i.get(e)?.get(o.resource)?.find(r=>r.editorType===o.typeId);if(i)i.token=this.a++;else{const r=t.get(v),c=t.get(k),s=new $,d=this.n(r,s,c,h,f,n),l=this.a++;i={widget:d,editorType:o.typeId,token:l,disposableStore:s};let a=this.i.get(e);a||(a=new E,this.i.set(e,a));const p=a.get(o.resource)??[];p.push(i),a.set(o.resource,p)}return this.o(i.token,i)}n(t,e,o,h,n,f){const i=e.add(this.k.createChild(new D([v,t],[k,o]))),r=h??N();return i.createInstance(R,{...r,codeWindow:n??r.codeWindow},f)}o(t,e){return{get value(){return e.token===t?e.widget:void 0}}}addNotebookEditor(t){this.c.set(t.getId(),t),this.f.fire(t)}removeNotebookEditor(t){const e=t.getViewModel()?.notebookDocument.uri;this.c.has(t.getId())&&(this.c.delete(t.getId()),this.g.fire(t)),this.h.get()===e?.toString()&&this.h.reset()}getNotebookEditor(t){return this.c.get(t)}listNotebookEditors(){return[...this.c].map(t=>t[1])}updateReplContextKey(t){this.h.set(t)}};y=T([m(0,W),m(1,P),m(2,v),m(3,_)],y);export{y as $o$b};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { ResourceMap } from "../../../../../base/common/map.js";
+import { getDefaultNotebookCreationOptions, NotebookEditorWidget } from "../notebookEditorWidget.js";
+import { DisposableStore } from "../../../../../base/common/lifecycle.js";
+import { IEditorGroupsService } from "../../../../services/editor/common/editorGroupsService.js";
+import { IInstantiationService } from "../../../../../platform/instantiation/common/instantiation.js";
+import { isCompositeNotebookEditorInput, isNotebookEditorInput, NotebookEditorInput } from "../../common/notebookEditorInput.js";
+import { Emitter } from "../../../../../base/common/event.js";
+import { IEditorService } from "../../../../services/editor/common/editorService.js";
+import { IContextKeyService } from "../../../../../platform/contextkey/common/contextkey.js";
+import { InteractiveWindowOpen, MOST_RECENT_REPL_EDITOR } from "../../common/notebookContextKeys.js";
+import { ServiceCollection } from "../../../../../platform/instantiation/common/serviceCollection.js";
+import { IEditorProgressService } from "../../../../../platform/progress/common/progress.js";
+import { NotebookDiffEditorInput } from "../../common/notebookDiffEditorInput.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+let NotebookEditorWidgetService = class NotebookEditorWidgetService2 {
+  static {
+    __name(this, "NotebookEditorWidgetService");
+  }
+  constructor(editorGroupService, editorService, contextKeyService, instantiationService) {
+    this.editorGroupService = editorGroupService;
+    this.instantiationService = instantiationService;
+    this._tokenPool = 1;
+    this._disposables = new DisposableStore();
+    this._notebookEditors = /* @__PURE__ */ new Map();
+    this.groupListener = /* @__PURE__ */ new Map();
+    this._onNotebookEditorAdd = new Emitter();
+    this._onNotebookEditorsRemove = new Emitter();
+    this.onDidAddNotebookEditor = this._onNotebookEditorAdd.event;
+    this.onDidRemoveNotebookEditor = this._onNotebookEditorsRemove.event;
+    this._borrowableEditors = /* @__PURE__ */ new Map();
+    const onNewGroup = /* @__PURE__ */ __name((group) => {
+      const { id } = group;
+      const listeners = [];
+      listeners.push(group.onDidCloseEditor((e) => {
+        const widgetMap = this._borrowableEditors.get(group.id);
+        if (!widgetMap) {
+          return;
+        }
+        const inputs = e.editor instanceof NotebookEditorInput || e.editor instanceof NotebookDiffEditorInput ? [e.editor] : isCompositeNotebookEditorInput(e.editor) ? e.editor.editorInputs : [];
+        inputs.forEach((input) => {
+          const widgets = widgetMap.get(input.resource);
+          const index = widgets?.findIndex((widget) => widget.editorType === input.typeId);
+          if (!widgets || index === void 0 || index === -1) {
+            return;
+          }
+          const value = widgets.splice(index, 1)[0];
+          value.token = void 0;
+          this._disposeWidget(value.widget);
+          value.disposableStore.dispose();
+          value.widget = void 0;
+        });
+      }));
+      listeners.push(group.onWillMoveEditor((e) => {
+        if (isNotebookEditorInput(e.editor)) {
+          this._allowWidgetMove(e.editor, e.groupId, e.target);
+        }
+        if (isCompositeNotebookEditorInput(e.editor)) {
+          e.editor.editorInputs.forEach((input) => {
+            this._allowWidgetMove(input, e.groupId, e.target);
+          });
+        }
+      }));
+      this.groupListener.set(id, listeners);
+    }, "onNewGroup");
+    this._disposables.add(editorGroupService.onDidAddGroup(onNewGroup));
+    editorGroupService.whenReady.then(() => editorGroupService.groups.forEach(onNewGroup));
+    this._disposables.add(editorGroupService.onDidRemoveGroup((group) => {
+      const listeners = this.groupListener.get(group.id);
+      if (listeners) {
+        listeners.forEach((listener) => listener.dispose());
+        this.groupListener.delete(group.id);
+      }
+      const widgets = this._borrowableEditors.get(group.id);
+      this._borrowableEditors.delete(group.id);
+      if (widgets) {
+        for (const values of widgets.values()) {
+          for (const value of values) {
+            value.token = void 0;
+            this._disposeWidget(value.widget);
+            value.disposableStore.dispose();
+          }
+        }
+      }
+    }));
+    this._mostRecentRepl = MOST_RECENT_REPL_EDITOR.bindTo(contextKeyService);
+    const interactiveWindowOpen = InteractiveWindowOpen.bindTo(contextKeyService);
+    this._disposables.add(editorService.onDidEditorsChange((e) => {
+      if (e.event.kind === 5 && !interactiveWindowOpen.get()) {
+        if (editorService.editors.find((editor) => isCompositeNotebookEditorInput(editor))) {
+          interactiveWindowOpen.set(true);
+        }
+      } else if (e.event.kind === 6 && interactiveWindowOpen.get()) {
+        if (!editorService.editors.find((editor) => isCompositeNotebookEditorInput(editor))) {
+          interactiveWindowOpen.set(false);
+        }
+      }
+    }));
+  }
+  dispose() {
+    this._disposables.dispose();
+    this._onNotebookEditorAdd.dispose();
+    this._onNotebookEditorsRemove.dispose();
+    this.groupListener.forEach((listeners) => {
+      listeners.forEach((listener) => listener.dispose());
+    });
+    this.groupListener.clear();
+    this._borrowableEditors.forEach((widgetMap) => {
+      widgetMap.forEach((widgets) => {
+        widgets.forEach((widget) => widget.disposableStore.dispose());
+      });
+    });
+  }
+  // --- group-based editor borrowing...
+  _disposeWidget(widget) {
+    widget.onWillHide();
+    const domNode = widget.getDomNode();
+    widget.dispose();
+    domNode.remove();
+  }
+  _allowWidgetMove(input, sourceID, targetID) {
+    const sourcePart = this.editorGroupService.getPart(sourceID);
+    const targetPart = this.editorGroupService.getPart(targetID);
+    if (sourcePart.windowId !== targetPart.windowId) {
+      return;
+    }
+    const target = this._borrowableEditors.get(targetID)?.get(input.resource)?.findIndex((widget2) => widget2.editorType === input.typeId);
+    if (target !== void 0 && target !== -1) {
+      return;
+    }
+    const widget = this._borrowableEditors.get(sourceID)?.get(input.resource)?.find((widget2) => widget2.editorType === input.typeId);
+    if (!widget) {
+      throw new Error("no widget at source group");
+    }
+    const sourceWidgets = this._borrowableEditors.get(sourceID)?.get(input.resource);
+    if (sourceWidgets) {
+      const indexToRemove = sourceWidgets.findIndex((widget2) => widget2.editorType === input.typeId);
+      if (indexToRemove !== -1) {
+        sourceWidgets.splice(indexToRemove, 1);
+      }
+    }
+    let targetMap = this._borrowableEditors.get(targetID);
+    if (!targetMap) {
+      targetMap = new ResourceMap();
+      this._borrowableEditors.set(targetID, targetMap);
+    }
+    const widgetsAtTarget = targetMap.get(input.resource) ?? [];
+    widgetsAtTarget?.push(widget);
+    targetMap.set(input.resource, widgetsAtTarget);
+  }
+  retrieveExistingWidgetFromURI(resource) {
+    for (const widgetInfo of this._borrowableEditors.values()) {
+      const widgets = widgetInfo.get(resource);
+      if (widgets && widgets.length > 0) {
+        return this._createBorrowValue(widgets[0].token, widgets[0]);
+      }
+    }
+    return void 0;
+  }
+  retrieveAllExistingWidgets() {
+    const ret = [];
+    for (const widgetInfo of this._borrowableEditors.values()) {
+      for (const widgets of widgetInfo.values()) {
+        for (const widget of widgets) {
+          ret.push(this._createBorrowValue(widget.token, widget));
+        }
+      }
+    }
+    return ret;
+  }
+  retrieveWidget(accessor, groupId, input, creationOptions, initialDimension, codeWindow) {
+    let value = this._borrowableEditors.get(groupId)?.get(input.resource)?.find((widget) => widget.editorType === input.typeId);
+    if (!value) {
+      const editorGroupContextKeyService = accessor.get(IContextKeyService);
+      const editorGroupEditorProgressService = accessor.get(IEditorProgressService);
+      const widgetDisposeStore = new DisposableStore();
+      const widget = this.createWidget(editorGroupContextKeyService, widgetDisposeStore, editorGroupEditorProgressService, creationOptions, codeWindow, initialDimension);
+      const token = this._tokenPool++;
+      value = { widget, editorType: input.typeId, token, disposableStore: widgetDisposeStore };
+      let map = this._borrowableEditors.get(groupId);
+      if (!map) {
+        map = new ResourceMap();
+        this._borrowableEditors.set(groupId, map);
+      }
+      const values = map.get(input.resource) ?? [];
+      values.push(value);
+      map.set(input.resource, values);
+    } else {
+      value.token = this._tokenPool++;
+    }
+    return this._createBorrowValue(value.token, value);
+  }
+  // protected for unit testing overrides
+  createWidget(editorGroupContextKeyService, widgetDisposeStore, editorGroupEditorProgressService, creationOptions, codeWindow, initialDimension) {
+    const notebookInstantiationService = widgetDisposeStore.add(this.instantiationService.createChild(new ServiceCollection([IContextKeyService, editorGroupContextKeyService], [IEditorProgressService, editorGroupEditorProgressService])));
+    const ctorOptions = creationOptions ?? getDefaultNotebookCreationOptions();
+    const widget = notebookInstantiationService.createInstance(NotebookEditorWidget, {
+      ...ctorOptions,
+      codeWindow: codeWindow ?? ctorOptions.codeWindow
+    }, initialDimension);
+    return widget;
+  }
+  _createBorrowValue(myToken, widget) {
+    return {
+      get value() {
+        return widget.token === myToken ? widget.widget : void 0;
+      }
+    };
+  }
+  // --- editor management
+  addNotebookEditor(editor) {
+    this._notebookEditors.set(editor.getId(), editor);
+    this._onNotebookEditorAdd.fire(editor);
+  }
+  removeNotebookEditor(editor) {
+    const notebookUri = editor.getViewModel()?.notebookDocument.uri;
+    if (this._notebookEditors.has(editor.getId())) {
+      this._notebookEditors.delete(editor.getId());
+      this._onNotebookEditorsRemove.fire(editor);
+    }
+    if (this._mostRecentRepl.get() === notebookUri?.toString()) {
+      this._mostRecentRepl.reset();
+    }
+  }
+  getNotebookEditor(editorId) {
+    return this._notebookEditors.get(editorId);
+  }
+  listNotebookEditors() {
+    return [...this._notebookEditors].map((e) => e[1]);
+  }
+  updateReplContextKey(uri) {
+    this._mostRecentRepl.set(uri);
+  }
+};
+NotebookEditorWidgetService = __decorate([
+  __param(0, IEditorGroupsService),
+  __param(1, IEditorService),
+  __param(2, IContextKeyService),
+  __param(3, IInstantiationService)
+], NotebookEditorWidgetService);
+export {
+  NotebookEditorWidgetService
+};
+//# sourceMappingURL=notebookEditorServiceImpl.js.map

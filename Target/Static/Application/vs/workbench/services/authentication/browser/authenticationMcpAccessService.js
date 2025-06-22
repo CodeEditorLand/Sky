@@ -1,1 +1,105 @@
-import{$df as d}from"../../../../base/common/event.js";import{$vd as h}from"../../../../base/common/lifecycle.js";import{$WB as p}from"../../../../platform/instantiation/common/extensions.js";import{$nj as a}from"../../../../platform/instantiation/common/instantiation.js";import{$nn as m}from"../../../../platform/product/common/productService.js";import{$Ho as v}from"../../../../platform/storage/common/storage.js";var u=function(c,e,r,s){var t=arguments.length,i=t<3?e:s===null?s=Object.getOwnPropertyDescriptor(e,r):s,o;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")i=Reflect.decorate(c,e,r,s);else for(var n=c.length-1;n>=0;n--)(o=c[n])&&(i=(t<3?o(i):t>3?o(e,r,i):o(e,r))||i);return t>3&&i&&Object.defineProperty(e,r,i),i},f=function(c,e){return function(r,s){e(r,s,c)}};const A=a("IAuthenticationMcpAccessService");let l=class extends h{constructor(e,r){super(),this.b=e,this.c=r,this.a=this.B(new d),this.onDidChangeMcpSessionAccess=this.a.event}isAccessAllowed(e,r,s){const t=this.c.trustedMcpAuthAccess;if(Array.isArray(t)){if(t.includes(s))return!0}else if(t?.[e]?.includes(s))return!0;const o=this.readAllowedMcpServers(e,r).find(n=>n.id===s);if(o)return o.allowed!==void 0?o.allowed:!0}readAllowedMcpServers(e,r){let s=[];try{const t=this.b.get(`mcpserver-${e}-${r}`,-1);t&&(s=JSON.parse(t))}catch{}return s}updateAllowedMcpServers(e,r,s){const t=this.readAllowedMcpServers(e,r);for(const i of s){const o=t.findIndex(n=>n.id===i.id);o===-1?t.push(i):t[o].allowed=i.allowed}this.b.store(`mcpserver-${e}-${r}`,JSON.stringify(t),-1,0),this.a.fire({providerId:e,accountName:r})}removeAllowedMcpServers(e,r){this.b.remove(`mcpserver-${e}-${r}`,-1),this.a.fire({providerId:e,accountName:r})}};l=u([f(0,v),f(1,m)],l);p(A,l,1);export{A as $d3b,l as $e3b};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { Emitter } from "../../../../base/common/event.js";
+import { Disposable } from "../../../../base/common/lifecycle.js";
+import { registerSingleton } from "../../../../platform/instantiation/common/extensions.js";
+import { createDecorator } from "../../../../platform/instantiation/common/instantiation.js";
+import { IProductService } from "../../../../platform/product/common/productService.js";
+import { IStorageService } from "../../../../platform/storage/common/storage.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+const IAuthenticationMcpAccessService = createDecorator("IAuthenticationMcpAccessService");
+let AuthenticationMcpAccessService = class AuthenticationMcpAccessService2 extends Disposable {
+  static {
+    __name(this, "AuthenticationMcpAccessService");
+  }
+  constructor(_storageService, _productService) {
+    super();
+    this._storageService = _storageService;
+    this._productService = _productService;
+    this._onDidChangeMcpSessionAccess = this._register(new Emitter());
+    this.onDidChangeMcpSessionAccess = this._onDidChangeMcpSessionAccess.event;
+  }
+  isAccessAllowed(providerId, accountName, mcpServerId) {
+    const trustedMCPServerAuthAccess = this._productService.trustedMcpAuthAccess;
+    if (Array.isArray(trustedMCPServerAuthAccess)) {
+      if (trustedMCPServerAuthAccess.includes(mcpServerId)) {
+        return true;
+      }
+    } else if (trustedMCPServerAuthAccess?.[providerId]?.includes(mcpServerId)) {
+      return true;
+    }
+    const allowList = this.readAllowedMcpServers(providerId, accountName);
+    const mcpServerData = allowList.find((mcpServer) => mcpServer.id === mcpServerId);
+    if (!mcpServerData) {
+      return void 0;
+    }
+    return mcpServerData.allowed !== void 0 ? mcpServerData.allowed : true;
+  }
+  readAllowedMcpServers(providerId, accountName) {
+    let trustedMCPServers = [];
+    try {
+      const trustedMCPServerSrc = this._storageService.get(
+        `mcpserver-${providerId}-${accountName}`,
+        -1
+        /* StorageScope.APPLICATION */
+      );
+      if (trustedMCPServerSrc) {
+        trustedMCPServers = JSON.parse(trustedMCPServerSrc);
+      }
+    } catch (err) {
+    }
+    return trustedMCPServers;
+  }
+  updateAllowedMcpServers(providerId, accountName, mcpServers) {
+    const allowList = this.readAllowedMcpServers(providerId, accountName);
+    for (const mcpServer of mcpServers) {
+      const index = allowList.findIndex((e) => e.id === mcpServer.id);
+      if (index === -1) {
+        allowList.push(mcpServer);
+      } else {
+        allowList[index].allowed = mcpServer.allowed;
+      }
+    }
+    this._storageService.store(
+      `mcpserver-${providerId}-${accountName}`,
+      JSON.stringify(allowList),
+      -1,
+      0
+      /* StorageTarget.USER */
+    );
+    this._onDidChangeMcpSessionAccess.fire({ providerId, accountName });
+  }
+  removeAllowedMcpServers(providerId, accountName) {
+    this._storageService.remove(
+      `mcpserver-${providerId}-${accountName}`,
+      -1
+      /* StorageScope.APPLICATION */
+    );
+    this._onDidChangeMcpSessionAccess.fire({ providerId, accountName });
+  }
+};
+AuthenticationMcpAccessService = __decorate([
+  __param(0, IStorageService),
+  __param(1, IProductService)
+], AuthenticationMcpAccessService);
+registerSingleton(
+  IAuthenticationMcpAccessService,
+  AuthenticationMcpAccessService,
+  1
+  /* InstantiationType.Delayed */
+);
+export {
+  AuthenticationMcpAccessService,
+  IAuthenticationMcpAccessService
+};
+//# sourceMappingURL=authenticationMcpAccessService.js.map

@@ -1,1 +1,233 @@
-import{localize as T}from"../../../nls.js";import{$4H as w,$3H as v}from"./sideBySideEditorInput.js";import{$9J as b,$0J as N,$cK as _}from"../editor.js";import{$lF as u}from"./textEditorModel.js";import{$tGb as z}from"./diffEditorModel.js";import{$uGb as M}from"./textDiffEditorModel.js";import{$oI as G}from"../../services/editor/common/editorService.js";import{$mm as I}from"../../../base/common/labels.js";import{$Ut as p}from"../../../platform/editor/common/editor.js";var l,D=function(i,t,e,s){var o,r=arguments.length,n=r<3?t:null===s?s=Object.getOwnPropertyDescriptor(t,e):s;if("object"==typeof Reflect&&"function"==typeof Reflect.decorate)n=Reflect.decorate(i,t,e,s);else for(var d=i.length-1;d>=0;d--)(o=i[d])&&(n=(r<3?o(n):r>3?o(t,e,n):o(t,e))||n);return r>3&&n&&Object.defineProperty(t,e,n),n},y=function(i,t){return function(e,s){t(e,s,i)}};let m=class extends v{static{l=this}static{this.ID="workbench.editors.diffEditorInput"}get typeId(){return l.ID}get editorId(){return this.modified.editorId===this.original.editorId?this.modified.editorId:void 0}get capabilities(){let i=super.capabilities;return this.u.forceDescription&&(i|=64),i}constructor(i,t,e,s,o,r){super(i,t,e,s,r),this.original=e,this.modified=s,this.w=o,this.t=void 0,this.u=this.y()}y(){let i,t,e,s,o=!1;if(this.b)i=this.b;else{const t=this.original.getName(),e=this.modified.getName();i=T(4314,null,t,e),o=t===e}if(this.c)t=this.c,e=this.c,s=this.c;else{t=this.z(this.original.getDescription(0),this.modified.getDescription(0)),s=this.z(this.original.getDescription(2),this.modified.getDescription(2));const i=this.original.getDescription(1),o=this.modified.getDescription(1);if("string"==typeof i&&"string"==typeof o&&(i||o)){const[t,s]=I([i,o]);e=this.z(t,s)}}let r=this.z(this.original.getTitle(0)??this.original.getName(),this.modified.getTitle(0)??this.modified.getName()," ↔ "),n=this.z(this.original.getTitle(1)??this.original.getName(),this.modified.getTitle(1)??this.modified.getName()," ↔ "),d=this.z(this.original.getTitle(2)??this.original.getName(),this.modified.getTitle(2)??this.modified.getName()," ↔ ");const a=this.r();return a&&(r=`${a} (${r})`,n=`${a} (${n})`,d=`${a} (${d})`),{name:i,shortDescription:t,mediumDescription:e,longDescription:s,forceDescription:o,shortTitle:r,mediumTitle:n,longTitle:d}}z(i,t,e=" - "){if(i&&t)return i===t?t:`${i}${e}${t}`}getName(){return this.u.name}getDescription(i=1){switch(i){case 0:return this.u.shortDescription;case 2:return this.u.longDescription;default:return this.u.mediumDescription}}getTitle(i){switch(i){case 0:return this.u.shortTitle;case 2:return this.u.longTitle;default:return this.u.mediumTitle}}async resolve(){const i=await this.C();return this.t?.dispose(),this.t=i,this.t}prefersEditorPane(i){return this.w?i.find((i=>i.typeId===N)):i.find((i=>i.typeId===b))}async C(){const[i,t]=await Promise.all([this.original.resolve(),this.modified.resolve()]);return t instanceof u&&i instanceof u?new M(i,t):new z(p(i)?i:void 0,p(t)?t:void 0)}toUntyped(i){const t=super.toUntyped(i);if(t)return{...t,modified:t.primary,original:t.secondary}}matches(i){return this===i||(i instanceof l?this.modified.matches(i.modified)&&this.original.matches(i.original)&&i.w===this.w:!!_(i)&&(this.modified.matches(i.modified)&&this.original.matches(i.original)))}dispose(){this.t&&(this.t.dispose(),this.t=void 0),super.dispose()}};m=l=D([y(5,G)],m);class F extends w{b(i,t,e,s,o){return i.createInstance(m,t,e,s,o,void 0)}}export{m as $vGb,F as $wGb};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { localize } from "../../../nls.js";
+import { AbstractSideBySideEditorInputSerializer, SideBySideEditorInput } from "./sideBySideEditorInput.js";
+import { TEXT_DIFF_EDITOR_ID, BINARY_DIFF_EDITOR_ID, isResourceDiffEditorInput } from "../editor.js";
+import { BaseTextEditorModel } from "./textEditorModel.js";
+import { DiffEditorModel } from "./diffEditorModel.js";
+import { TextDiffEditorModel } from "./textDiffEditorModel.js";
+import { IEditorService } from "../../services/editor/common/editorService.js";
+import { shorten } from "../../../base/common/labels.js";
+import { isResolvedEditorModel } from "../../../platform/editor/common/editor.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+var DiffEditorInput_1;
+let DiffEditorInput = class DiffEditorInput2 extends SideBySideEditorInput {
+  static {
+    __name(this, "DiffEditorInput");
+  }
+  static {
+    DiffEditorInput_1 = this;
+  }
+  static {
+    this.ID = "workbench.editors.diffEditorInput";
+  }
+  get typeId() {
+    return DiffEditorInput_1.ID;
+  }
+  get editorId() {
+    return this.modified.editorId === this.original.editorId ? this.modified.editorId : void 0;
+  }
+  get capabilities() {
+    let capabilities = super.capabilities;
+    if (this.labels.forceDescription) {
+      capabilities |= 64;
+    }
+    return capabilities;
+  }
+  constructor(preferredName, preferredDescription, original, modified, forceOpenAsBinary, editorService) {
+    super(preferredName, preferredDescription, original, modified, editorService);
+    this.original = original;
+    this.modified = modified;
+    this.forceOpenAsBinary = forceOpenAsBinary;
+    this.cachedModel = void 0;
+    this.labels = this.computeLabels();
+  }
+  computeLabels() {
+    let name;
+    let forceDescription = false;
+    if (this.preferredName) {
+      name = this.preferredName;
+    } else {
+      const originalName = this.original.getName();
+      const modifiedName = this.modified.getName();
+      name = localize("sideBySideLabels", "{0} \u2194 {1}", originalName, modifiedName);
+      forceDescription = originalName === modifiedName;
+    }
+    let shortDescription;
+    let mediumDescription;
+    let longDescription;
+    if (this.preferredDescription) {
+      shortDescription = this.preferredDescription;
+      mediumDescription = this.preferredDescription;
+      longDescription = this.preferredDescription;
+    } else {
+      shortDescription = this.computeLabel(this.original.getDescription(
+        0
+        /* Verbosity.SHORT */
+      ), this.modified.getDescription(
+        0
+        /* Verbosity.SHORT */
+      ));
+      longDescription = this.computeLabel(this.original.getDescription(
+        2
+        /* Verbosity.LONG */
+      ), this.modified.getDescription(
+        2
+        /* Verbosity.LONG */
+      ));
+      const originalMediumDescription = this.original.getDescription(
+        1
+        /* Verbosity.MEDIUM */
+      );
+      const modifiedMediumDescription = this.modified.getDescription(
+        1
+        /* Verbosity.MEDIUM */
+      );
+      if (typeof originalMediumDescription === "string" && typeof modifiedMediumDescription === "string" && // we can only `shorten` when both sides are strings...
+      (originalMediumDescription || modifiedMediumDescription)) {
+        const [shortenedOriginalMediumDescription, shortenedModifiedMediumDescription] = shorten([originalMediumDescription, modifiedMediumDescription]);
+        mediumDescription = this.computeLabel(shortenedOriginalMediumDescription, shortenedModifiedMediumDescription);
+      }
+    }
+    let shortTitle = this.computeLabel(this.original.getTitle(
+      0
+      /* Verbosity.SHORT */
+    ) ?? this.original.getName(), this.modified.getTitle(
+      0
+      /* Verbosity.SHORT */
+    ) ?? this.modified.getName(), " \u2194 ");
+    let mediumTitle = this.computeLabel(this.original.getTitle(
+      1
+      /* Verbosity.MEDIUM */
+    ) ?? this.original.getName(), this.modified.getTitle(
+      1
+      /* Verbosity.MEDIUM */
+    ) ?? this.modified.getName(), " \u2194 ");
+    let longTitle = this.computeLabel(this.original.getTitle(
+      2
+      /* Verbosity.LONG */
+    ) ?? this.original.getName(), this.modified.getTitle(
+      2
+      /* Verbosity.LONG */
+    ) ?? this.modified.getName(), " \u2194 ");
+    const preferredTitle = this.getPreferredTitle();
+    if (preferredTitle) {
+      shortTitle = `${preferredTitle} (${shortTitle})`;
+      mediumTitle = `${preferredTitle} (${mediumTitle})`;
+      longTitle = `${preferredTitle} (${longTitle})`;
+    }
+    return { name, shortDescription, mediumDescription, longDescription, forceDescription, shortTitle, mediumTitle, longTitle };
+  }
+  computeLabel(originalLabel, modifiedLabel, separator = " - ") {
+    if (!originalLabel || !modifiedLabel) {
+      return void 0;
+    }
+    if (originalLabel === modifiedLabel) {
+      return modifiedLabel;
+    }
+    return `${originalLabel}${separator}${modifiedLabel}`;
+  }
+  getName() {
+    return this.labels.name;
+  }
+  getDescription(verbosity = 1) {
+    switch (verbosity) {
+      case 0:
+        return this.labels.shortDescription;
+      case 2:
+        return this.labels.longDescription;
+      case 1:
+      default:
+        return this.labels.mediumDescription;
+    }
+  }
+  getTitle(verbosity) {
+    switch (verbosity) {
+      case 0:
+        return this.labels.shortTitle;
+      case 2:
+        return this.labels.longTitle;
+      default:
+      case 1:
+        return this.labels.mediumTitle;
+    }
+  }
+  async resolve() {
+    const resolvedModel = await this.createModel();
+    this.cachedModel?.dispose();
+    this.cachedModel = resolvedModel;
+    return this.cachedModel;
+  }
+  prefersEditorPane(editorPanes) {
+    if (this.forceOpenAsBinary) {
+      return editorPanes.find((editorPane) => editorPane.typeId === BINARY_DIFF_EDITOR_ID);
+    }
+    return editorPanes.find((editorPane) => editorPane.typeId === TEXT_DIFF_EDITOR_ID);
+  }
+  async createModel() {
+    const [originalEditorModel, modifiedEditorModel] = await Promise.all([
+      this.original.resolve(),
+      this.modified.resolve()
+    ]);
+    if (modifiedEditorModel instanceof BaseTextEditorModel && originalEditorModel instanceof BaseTextEditorModel) {
+      return new TextDiffEditorModel(originalEditorModel, modifiedEditorModel);
+    }
+    return new DiffEditorModel(isResolvedEditorModel(originalEditorModel) ? originalEditorModel : void 0, isResolvedEditorModel(modifiedEditorModel) ? modifiedEditorModel : void 0);
+  }
+  toUntyped(options) {
+    const untyped = super.toUntyped(options);
+    if (untyped) {
+      return {
+        ...untyped,
+        modified: untyped.primary,
+        original: untyped.secondary
+      };
+    }
+    return void 0;
+  }
+  matches(otherInput) {
+    if (this === otherInput) {
+      return true;
+    }
+    if (otherInput instanceof DiffEditorInput_1) {
+      return this.modified.matches(otherInput.modified) && this.original.matches(otherInput.original) && otherInput.forceOpenAsBinary === this.forceOpenAsBinary;
+    }
+    if (isResourceDiffEditorInput(otherInput)) {
+      return this.modified.matches(otherInput.modified) && this.original.matches(otherInput.original);
+    }
+    return false;
+  }
+  dispose() {
+    if (this.cachedModel) {
+      this.cachedModel.dispose();
+      this.cachedModel = void 0;
+    }
+    super.dispose();
+  }
+};
+DiffEditorInput = DiffEditorInput_1 = __decorate([
+  __param(5, IEditorService)
+], DiffEditorInput);
+class DiffEditorInputSerializer extends AbstractSideBySideEditorInputSerializer {
+  static {
+    __name(this, "DiffEditorInputSerializer");
+  }
+  createEditorInput(instantiationService, name, description, secondaryInput, primaryInput) {
+    return instantiationService.createInstance(DiffEditorInput, name, description, secondaryInput, primaryInput, void 0);
+  }
+}
+export {
+  DiffEditorInput,
+  DiffEditorInputSerializer
+};
+//# sourceMappingURL=diffEditorInput.js.map

@@ -1,1 +1,221 @@
-import"./media/extension.css";import{$M6 as i,$ as o}from"../../../../base/browser/dom.js";import{$qd as h,$sd as B}from"../../../../base/common/lifecycle.js";import{$M7 as k}from"../../../../base/browser/ui/actionbar/actionbar.js";import{$mj as z}from"../../../../platform/instantiation/common/instantiation.js";import{$hDb as F,$bDb as H}from"../common/extensions.js";import{$dOb as M,$oOb as V,$BOb as q,$5Nb as X,$DOb as G,$6Nb as K,$YNb as U,$2Nb as Y,$3Nb as Z,$ZNb as J,$aOb as Q,$7Nb as ee,$_Nb as te,$sOb as se,$tOb as ne,$9Nb as ie}from"./extensionsActions.js";import{$vz as g}from"../../../../platform/extensionManagement/common/extensionManagementUtil.js";import{$5Ob as oe,$4Ob as re,$8Ob as ce,$0Ob as ae,$$Ob as le,$aPb as pe,$cPb as be,$bPb as me,$9Ob as de,$6Ob as he,$_Ob as ue,$3Ob as fe}from"./extensionsWidgets.js";import{$XO as $e}from"../../../services/extensions/common/extensions.js";import{$9Cb as ge}from"../../../services/extensionManagement/common/extensionManagement.js";import{$RI as Ie}from"../../../../platform/notification/common/notification.js";import{$St as Oe}from"../../../../platform/theme/common/themeService.js";import{ThemeIcon as xe}from"../../../../base/common/themables.js";import{$eub as Ce}from"../../../common/theme.js";import{$ofb as ve}from"../../../../platform/contextview/browser/contextView.js";import{$MOb as De,$LOb as ye}from"../../../services/extensionManagement/common/extensionsIcons.js";var j=function(e,t,s,n){var i,o=arguments.length,a=o<3?t:null===n?n=Object.getOwnPropertyDescriptor(t,s):n;if("object"==typeof Reflect&&"function"==typeof Reflect.decorate)a=Reflect.decorate(e,t,s,n);else for(var r=e.length-1;r>=0;r--)(i=e[r])&&(a=(o<3?i(a):o>3?i(t,s,a):i(t,s))||a);return o>3&&a&&Object.defineProperty(t,s,a),a},m=function(e,t){return function(s,n){t(s,n,e)}};const Ne=72;class Ve{getHeight(){return 72}getTemplateId(){return"extension"}}let N=class{constructor(e,t,s,n,i,o,a,r){this.a=e,this.b=t,this.c=s,this.d=n,this.f=i,this.g=o,this.h=a,this.i=r}get templateId(){return"extension"}renderTemplate(e){const t=this.c.createInstance(ce,i(e,o(".extension-bookmark-container"))),s=this.c.createInstance(de,i(e,o(".extension-bookmark-container"))),n=i(e,o(".extension-list-item")),a=i(n,o(".icon-container")),r=this.c.createInstance(fe,a),c=this.c.createInstance(ae,a,!1),l=this.c.createInstance(le,a),m=i(n,o(".details")),b=i(m,o(".header-container")),p=i(b,o(".header")),d=i(p,o("span.name")),h=i(p,o("span.install-count")),f=i(p,o("span.ratings")),$=i(p,o("span.sync-ignored")),g=i(p,o("span")),x=i(p,o("span.activation-status")),u=i(m,o(".description.ellipsis")),I=i(m,o(".footer")),O=this.c.createInstance(he,i(I,o(".publisher-container")),!0),j=new k(I,{actionViewItemProvider:(e,t)=>e instanceof U?new J(e,{...t,icon:!0,label:!0,menuActionsOrProvider:{getActions:()=>e.menuActions},menuActionClassNames:e.menuActionClassNames},this.i):e instanceof Q?e.createActionViewItem(t):void 0,focusOnlyEnabledItems:!0});j.setFocusable(!1);const v=j.onDidRun((({error:e})=>e&&this.d.error(e))),y=this.c.createInstance(G),D=[this.c.createInstance(q),this.c.createInstance(te,!0),this.c.createInstance(V),this.c.createInstance(ie,!1),this.c.createInstance(Y),this.c.createInstance(Z),this.c.createInstance(se),this.c.createInstance(ne),this.c.createInstance(X,!1),this.c.createInstance(K),this.c.createInstance(ee),y,this.c.createInstance(M)],C=[r,t,s,c,l,O,this.c.createInstance(be,{target:e,position:this.b.hoverOptions.position},y),this.c.createInstance(pe,$),this.c.createInstance(me,this.a,x),this.c.createInstance(re,h,!0),this.c.createInstance(oe,f,!0),this.c.createInstance(ue,g,!0)],N=this.c.createInstance(F,[...D,...C]);j.push(D,{icon:!0,label:!0});return{root:e,element:n,name:d,installCount:h,ratings:f,description:u,disposables:[B(...D,...C,j,v,N)],actionbar:j,extensionDisposables:[],set extension(e){N.extension=e}}}renderPlaceholder(e,t){t.element.classList.add("loading"),t.root.removeAttribute("aria-label"),t.root.removeAttribute("data-extension-id"),t.extensionDisposables=h(t.extensionDisposables),t.name.textContent="",t.description.textContent="",t.installCount.style.display="none",t.ratings.style.display="none",t.extension=null}renderElement(e,t,s){s.element.classList.remove("loading"),s.root.setAttribute("data-extension-id",e.identifier.id),3!==e.state&&!e.server&&(e=this.g.local.filter((t=>t.server===e.server&&g(t.identifier,e.identifier)))[0]||e),s.extensionDisposables=h(s.extensionDisposables);const n=()=>{const t=1===e.state&&!!e.local&&!this.h.isEnabled(e.local),n=!!e.deprecationInfo;s.element.classList.toggle("deprecated",n),s.root.classList.toggle("disabled",t)};n(),this.f.onDidChangeExtensions((()=>n()),this,s.extensionDisposables),s.name.textContent=e.displayName,s.description.textContent=e.description,s.installCount.style.display="",s.ratings.style.display="",s.extension=e,e.gallery&&e.gallery.properties&&e.gallery.properties.localizedLanguages&&e.gallery.properties.localizedLanguages.length&&(s.description.textContent=e.gallery.properties.localizedLanguages.map((e=>e[0].toLocaleUpperCase()+e.slice(1))).join(", ")),this.a.onFocus((t=>{g(e.identifier,t.identifier)&&s.actionbar.setFocusable(!0)}),this,s.extensionDisposables),this.a.onBlur((t=>{g(e.identifier,t.identifier)&&s.actionbar.setFocusable(!1)}),this,s.extensionDisposables)}disposeElement(e,t,s){s.extensionDisposables=h(s.extensionDisposables)}disposeTemplate(e){e.extensionDisposables=h(e.extensionDisposables),e.disposables=h(e.disposables)}};N=j([m(2,z),m(3,Ie),m(4,$e),m(5,H),m(6,ge),m(7,ve)],N),Oe(((e,t)=>{const s=e.getColor(De);if(s){const n=s.transparent(.5).makeOpaque(Ce(e));t.addRule(`.extensions-list .monaco-list .monaco-list-row.disabled:not(.selected) .author .verified-publisher ${xe.asCSSSelector(ye)} { color: ${n}; }`)}}));export{Ve as $jPb,N as $kPb};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import "./media/extension.css";
+import { append, $ } from "../../../../base/browser/dom.js";
+import { dispose, combinedDisposable } from "../../../../base/common/lifecycle.js";
+import { ActionBar } from "../../../../base/browser/ui/actionbar/actionbar.js";
+import { IInstantiationService } from "../../../../platform/instantiation/common/instantiation.js";
+import { ExtensionContainers, IExtensionsWorkbenchService } from "../common/extensions.js";
+import { ManageExtensionAction, ExtensionRuntimeStateAction, ExtensionStatusLabelAction, RemoteInstallAction, ExtensionStatusAction, LocalInstallAction, ButtonWithDropDownExtensionAction, InstallDropdownAction, InstallingLabelAction, ButtonWithDropdownExtensionActionViewItem, DropDownExtensionAction, WebInstallAction, MigrateDeprecatedExtensionAction, SetLanguageAction, ClearLanguageAction, UpdateAction } from "./extensionsActions.js";
+import { areSameExtensions } from "../../../../platform/extensionManagement/common/extensionManagementUtil.js";
+import { RatingsWidget, InstallCountWidget, RecommendationWidget, RemoteBadgeWidget, ExtensionPackCountWidget as ExtensionPackBadgeWidget, SyncIgnoredWidget, ExtensionHoverWidget, ExtensionRuntimeStatusWidget, PreReleaseBookmarkWidget, PublisherWidget, ExtensionKindIndicatorWidget, ExtensionIconWidget } from "./extensionsWidgets.js";
+import { IExtensionService } from "../../../services/extensions/common/extensions.js";
+import { IWorkbenchExtensionEnablementService } from "../../../services/extensionManagement/common/extensionManagement.js";
+import { INotificationService } from "../../../../platform/notification/common/notification.js";
+import { registerThemingParticipant } from "../../../../platform/theme/common/themeService.js";
+import { ThemeIcon } from "../../../../base/common/themables.js";
+import { WORKBENCH_BACKGROUND } from "../../../common/theme.js";
+import { IContextMenuService } from "../../../../platform/contextview/browser/contextView.js";
+import { extensionVerifiedPublisherIconColor, verifiedPublisherIcon } from "../../../services/extensionManagement/common/extensionsIcons.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+const EXTENSION_LIST_ELEMENT_HEIGHT = 72;
+class Delegate {
+  static {
+    __name(this, "Delegate");
+  }
+  getHeight() {
+    return EXTENSION_LIST_ELEMENT_HEIGHT;
+  }
+  getTemplateId() {
+    return "extension";
+  }
+}
+let Renderer = class Renderer2 {
+  static {
+    __name(this, "Renderer");
+  }
+  constructor(extensionViewState, options, instantiationService, notificationService, extensionService, extensionsWorkbenchService, extensionEnablementService, contextMenuService) {
+    this.extensionViewState = extensionViewState;
+    this.options = options;
+    this.instantiationService = instantiationService;
+    this.notificationService = notificationService;
+    this.extensionService = extensionService;
+    this.extensionsWorkbenchService = extensionsWorkbenchService;
+    this.extensionEnablementService = extensionEnablementService;
+    this.contextMenuService = contextMenuService;
+  }
+  get templateId() {
+    return "extension";
+  }
+  renderTemplate(root) {
+    const recommendationWidget = this.instantiationService.createInstance(RecommendationWidget, append(root, $(".extension-bookmark-container")));
+    const preReleaseWidget = this.instantiationService.createInstance(PreReleaseBookmarkWidget, append(root, $(".extension-bookmark-container")));
+    const element = append(root, $(".extension-list-item"));
+    const iconContainer = append(element, $(".icon-container"));
+    const iconWidget = this.instantiationService.createInstance(ExtensionIconWidget, iconContainer);
+    const iconRemoteBadgeWidget = this.instantiationService.createInstance(RemoteBadgeWidget, iconContainer, false);
+    const extensionPackBadgeWidget = this.instantiationService.createInstance(ExtensionPackBadgeWidget, iconContainer);
+    const details = append(element, $(".details"));
+    const headerContainer = append(details, $(".header-container"));
+    const header = append(headerContainer, $(".header"));
+    const name = append(header, $("span.name"));
+    const installCount = append(header, $("span.install-count"));
+    const ratings = append(header, $("span.ratings"));
+    const syncIgnore = append(header, $("span.sync-ignored"));
+    const extensionKindIndicator = append(header, $("span"));
+    const activationStatus = append(header, $("span.activation-status"));
+    const description = append(details, $(".description.ellipsis"));
+    const footer = append(details, $(".footer"));
+    const publisherWidget = this.instantiationService.createInstance(PublisherWidget, append(footer, $(".publisher-container")), true);
+    const actionbar = new ActionBar(footer, {
+      actionViewItemProvider: /* @__PURE__ */ __name((action, options) => {
+        if (action instanceof ButtonWithDropDownExtensionAction) {
+          return new ButtonWithDropdownExtensionActionViewItem(action, {
+            ...options,
+            icon: true,
+            label: true,
+            menuActionsOrProvider: { getActions: /* @__PURE__ */ __name(() => action.menuActions, "getActions") },
+            menuActionClassNames: action.menuActionClassNames
+          }, this.contextMenuService);
+        }
+        if (action instanceof DropDownExtensionAction) {
+          return action.createActionViewItem(options);
+        }
+        return void 0;
+      }, "actionViewItemProvider"),
+      focusOnlyEnabledItems: true
+    });
+    actionbar.setFocusable(false);
+    const actionBarListener = actionbar.onDidRun(({ error }) => error && this.notificationService.error(error));
+    const extensionStatusIconAction = this.instantiationService.createInstance(ExtensionStatusAction);
+    const actions = [
+      this.instantiationService.createInstance(ExtensionStatusLabelAction),
+      this.instantiationService.createInstance(MigrateDeprecatedExtensionAction, true),
+      this.instantiationService.createInstance(ExtensionRuntimeStateAction),
+      this.instantiationService.createInstance(UpdateAction, false),
+      this.instantiationService.createInstance(InstallDropdownAction),
+      this.instantiationService.createInstance(InstallingLabelAction),
+      this.instantiationService.createInstance(SetLanguageAction),
+      this.instantiationService.createInstance(ClearLanguageAction),
+      this.instantiationService.createInstance(RemoteInstallAction, false),
+      this.instantiationService.createInstance(LocalInstallAction),
+      this.instantiationService.createInstance(WebInstallAction),
+      extensionStatusIconAction,
+      this.instantiationService.createInstance(ManageExtensionAction)
+    ];
+    const extensionHoverWidget = this.instantiationService.createInstance(ExtensionHoverWidget, { target: root, position: this.options.hoverOptions.position }, extensionStatusIconAction);
+    const widgets = [
+      iconWidget,
+      recommendationWidget,
+      preReleaseWidget,
+      iconRemoteBadgeWidget,
+      extensionPackBadgeWidget,
+      publisherWidget,
+      extensionHoverWidget,
+      this.instantiationService.createInstance(SyncIgnoredWidget, syncIgnore),
+      this.instantiationService.createInstance(ExtensionRuntimeStatusWidget, this.extensionViewState, activationStatus),
+      this.instantiationService.createInstance(InstallCountWidget, installCount, true),
+      this.instantiationService.createInstance(RatingsWidget, ratings, true),
+      this.instantiationService.createInstance(ExtensionKindIndicatorWidget, extensionKindIndicator, true)
+    ];
+    const extensionContainers = this.instantiationService.createInstance(ExtensionContainers, [...actions, ...widgets]);
+    actionbar.push(actions, { icon: true, label: true });
+    const disposable = combinedDisposable(...actions, ...widgets, actionbar, actionBarListener, extensionContainers);
+    return {
+      root,
+      element,
+      name,
+      installCount,
+      ratings,
+      description,
+      disposables: [disposable],
+      actionbar,
+      extensionDisposables: [],
+      set extension(extension) {
+        extensionContainers.extension = extension;
+      }
+    };
+  }
+  renderPlaceholder(index, data) {
+    data.element.classList.add("loading");
+    data.root.removeAttribute("aria-label");
+    data.root.removeAttribute("data-extension-id");
+    data.extensionDisposables = dispose(data.extensionDisposables);
+    data.name.textContent = "";
+    data.description.textContent = "";
+    data.installCount.style.display = "none";
+    data.ratings.style.display = "none";
+    data.extension = null;
+  }
+  renderElement(extension, index, data) {
+    data.element.classList.remove("loading");
+    data.root.setAttribute("data-extension-id", extension.identifier.id);
+    if (extension.state !== 3 && !extension.server) {
+      extension = this.extensionsWorkbenchService.local.filter((e) => e.server === extension.server && areSameExtensions(e.identifier, extension.identifier))[0] || extension;
+    }
+    data.extensionDisposables = dispose(data.extensionDisposables);
+    const updateEnablement = /* @__PURE__ */ __name(() => {
+      const disabled = extension.state === 1 && !!extension.local && !this.extensionEnablementService.isEnabled(extension.local);
+      const deprecated = !!extension.deprecationInfo;
+      data.element.classList.toggle("deprecated", deprecated);
+      data.root.classList.toggle("disabled", disabled);
+    }, "updateEnablement");
+    updateEnablement();
+    this.extensionService.onDidChangeExtensions(() => updateEnablement(), this, data.extensionDisposables);
+    data.name.textContent = extension.displayName;
+    data.description.textContent = extension.description;
+    data.installCount.style.display = "";
+    data.ratings.style.display = "";
+    data.extension = extension;
+    if (extension.gallery && extension.gallery.properties && extension.gallery.properties.localizedLanguages && extension.gallery.properties.localizedLanguages.length) {
+      data.description.textContent = extension.gallery.properties.localizedLanguages.map((name) => name[0].toLocaleUpperCase() + name.slice(1)).join(", ");
+    }
+    this.extensionViewState.onFocus((e) => {
+      if (areSameExtensions(extension.identifier, e.identifier)) {
+        data.actionbar.setFocusable(true);
+      }
+    }, this, data.extensionDisposables);
+    this.extensionViewState.onBlur((e) => {
+      if (areSameExtensions(extension.identifier, e.identifier)) {
+        data.actionbar.setFocusable(false);
+      }
+    }, this, data.extensionDisposables);
+  }
+  disposeElement(extension, index, data) {
+    data.extensionDisposables = dispose(data.extensionDisposables);
+  }
+  disposeTemplate(data) {
+    data.extensionDisposables = dispose(data.extensionDisposables);
+    data.disposables = dispose(data.disposables);
+  }
+};
+Renderer = __decorate([
+  __param(2, IInstantiationService),
+  __param(3, INotificationService),
+  __param(4, IExtensionService),
+  __param(5, IExtensionsWorkbenchService),
+  __param(6, IWorkbenchExtensionEnablementService),
+  __param(7, IContextMenuService)
+], Renderer);
+registerThemingParticipant((theme, collector) => {
+  const verifiedPublisherIconColor = theme.getColor(extensionVerifiedPublisherIconColor);
+  if (verifiedPublisherIconColor) {
+    const disabledVerifiedPublisherIconColor = verifiedPublisherIconColor.transparent(0.5).makeOpaque(WORKBENCH_BACKGROUND(theme));
+    collector.addRule(`.extensions-list .monaco-list .monaco-list-row.disabled:not(.selected) .author .verified-publisher ${ThemeIcon.asCSSSelector(verifiedPublisherIcon)} { color: ${disabledVerifiedPublisherIconColor}; }`);
+  }
+});
+export {
+  Delegate,
+  Renderer
+};
+//# sourceMappingURL=extensionsList.js.map

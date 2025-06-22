@@ -1,1 +1,188 @@
-import{$qc as g}from"../../../base/common/arrays.js";import{$Mb as N,$Nb as $}from"../../../base/common/arraysFind.js";import{$t_ as C}from"../cursorCommon.js";import{$mdb as w}from"./oneCursor.js";import{$bC as x}from"../core/position.js";import{$cC as P}from"../core/range.js";import{$RC as L}from"../core/selection.js";class B{constructor(t){this.a=t,this.b=[new w(t)],this.d=0}dispose(){for(const t of this.b)t.dispose(this.a)}startTrackingSelections(){for(const t of this.b)t.startTrackingSelection(this.a)}stopTrackingSelections(){for(const t of this.b)t.stopTrackingSelection(this.a)}updateContext(t){this.a=t}ensureValidState(){for(const t of this.b)t.ensureValidState(this.a)}readSelectionFromMarkers(){return this.b.map(t=>t.readSelectionFromMarkers(this.a))}getAll(){return this.b.map(t=>t.asCursorState())}getViewPositions(){return this.b.map(t=>t.viewState.position)}getTopMostViewPosition(){return $(this.b,g(t=>t.viewState.position,x.compare)).viewState.position}getBottomMostViewPosition(){return N(this.b,g(t=>t.viewState.position,x.compare)).viewState.position}getSelections(){return this.b.map(t=>t.modelState.selection)}getViewSelections(){return this.b.map(t=>t.viewState.selection)}setSelections(t){this.setStates(C.fromModelSelections(t))}getPrimaryCursor(){return this.b[0].asCursorState()}setStates(t){t!==null&&(this.b[0].setState(this.a,t[0].modelState,t[0].viewState),this.e(t.slice(1)))}e(t){const s=this.b.length-1,e=t.length;if(s<e){const i=e-s;for(let n=0;n<i;n++)this.f()}else if(s>e){const i=s-e;for(let n=0;n<i;n++)this.g(this.b.length-2)}for(let i=0;i<e;i++)this.b[i+1].setState(this.a,t[i].modelState,t[i].viewState)}killSecondaryCursors(){this.e([])}f(){this.b.push(new w(this.a)),this.d=this.b.length-1}getLastAddedCursorIndex(){return this.b.length===1||this.d===0?0:this.d}g(t){this.d>=t+1&&this.d--,this.b[t+1].dispose(this.a),this.b.splice(t+1,1)}normalize(){if(this.b.length===1)return;const t=this.b.slice(0),s=[];for(let e=0,i=t.length;e<i;e++)s.push({index:e,selection:t[e].modelState.selection});s.sort(g(e=>e.selection,P.compareRangesUsingStarts));for(let e=0;e<s.length-1;e++){const i=s[e],n=s[e+1],u=i.selection,h=n.selection;if(!this.a.cursorConfig.multiCursorMergeOverlapping)continue;let d;if(h.isEmpty()||u.isEmpty()?d=h.getStartPosition().isBeforeOrEqual(u.getEndPosition()):d=h.getStartPosition().isBefore(u.getEndPosition()),d){const m=i.index<n.index?e:e+1,S=i.index<n.index?e+1:e,c=s[S].index,p=s[m].index,r=s[S].selection,l=s[m].selection;if(!r.equalsSelection(l)){const o=r.plusRange(l),v=r.selectionStartLineNumber===r.startLineNumber&&r.selectionStartColumn===r.startColumn,M=l.selectionStartLineNumber===l.startLineNumber&&l.selectionStartColumn===l.startColumn;let f;c===this.d?(f=v,this.d=p):f=M;let a;f?a=new L(o.startLineNumber,o.startColumn,o.endLineNumber,o.endColumn):a=new L(o.endLineNumber,o.endColumn,o.startLineNumber,o.startColumn),s[m].selection=a;const b=C.fromModelSelection(a);t[p].setState(this.a,b.modelState,b.viewState)}for(const o of s)o.index>c&&o.index--;t.splice(c,1),s.splice(S,1),this.g(c-1),e--}}}}export{B as $ndb};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { compareBy } from "../../../base/common/arrays.js";
+import { findLastMax, findFirstMin } from "../../../base/common/arraysFind.js";
+import { CursorState } from "../cursorCommon.js";
+import { Cursor } from "./oneCursor.js";
+import { Position } from "../core/position.js";
+import { Range } from "../core/range.js";
+import { Selection } from "../core/selection.js";
+class CursorCollection {
+  static {
+    __name(this, "CursorCollection");
+  }
+  constructor(context) {
+    this.context = context;
+    this.cursors = [new Cursor(context)];
+    this.lastAddedCursorIndex = 0;
+  }
+  dispose() {
+    for (const cursor of this.cursors) {
+      cursor.dispose(this.context);
+    }
+  }
+  startTrackingSelections() {
+    for (const cursor of this.cursors) {
+      cursor.startTrackingSelection(this.context);
+    }
+  }
+  stopTrackingSelections() {
+    for (const cursor of this.cursors) {
+      cursor.stopTrackingSelection(this.context);
+    }
+  }
+  updateContext(context) {
+    this.context = context;
+  }
+  ensureValidState() {
+    for (const cursor of this.cursors) {
+      cursor.ensureValidState(this.context);
+    }
+  }
+  readSelectionFromMarkers() {
+    return this.cursors.map((c) => c.readSelectionFromMarkers(this.context));
+  }
+  getAll() {
+    return this.cursors.map((c) => c.asCursorState());
+  }
+  getViewPositions() {
+    return this.cursors.map((c) => c.viewState.position);
+  }
+  getTopMostViewPosition() {
+    return findFirstMin(this.cursors, compareBy((c) => c.viewState.position, Position.compare)).viewState.position;
+  }
+  getBottomMostViewPosition() {
+    return findLastMax(this.cursors, compareBy((c) => c.viewState.position, Position.compare)).viewState.position;
+  }
+  getSelections() {
+    return this.cursors.map((c) => c.modelState.selection);
+  }
+  getViewSelections() {
+    return this.cursors.map((c) => c.viewState.selection);
+  }
+  setSelections(selections) {
+    this.setStates(CursorState.fromModelSelections(selections));
+  }
+  getPrimaryCursor() {
+    return this.cursors[0].asCursorState();
+  }
+  setStates(states) {
+    if (states === null) {
+      return;
+    }
+    this.cursors[0].setState(this.context, states[0].modelState, states[0].viewState);
+    this._setSecondaryStates(states.slice(1));
+  }
+  /**
+   * Creates or disposes secondary cursors as necessary to match the number of `secondarySelections`.
+   */
+  _setSecondaryStates(secondaryStates) {
+    const secondaryCursorsLength = this.cursors.length - 1;
+    const secondaryStatesLength = secondaryStates.length;
+    if (secondaryCursorsLength < secondaryStatesLength) {
+      const createCnt = secondaryStatesLength - secondaryCursorsLength;
+      for (let i = 0; i < createCnt; i++) {
+        this._addSecondaryCursor();
+      }
+    } else if (secondaryCursorsLength > secondaryStatesLength) {
+      const removeCnt = secondaryCursorsLength - secondaryStatesLength;
+      for (let i = 0; i < removeCnt; i++) {
+        this._removeSecondaryCursor(this.cursors.length - 2);
+      }
+    }
+    for (let i = 0; i < secondaryStatesLength; i++) {
+      this.cursors[i + 1].setState(this.context, secondaryStates[i].modelState, secondaryStates[i].viewState);
+    }
+  }
+  killSecondaryCursors() {
+    this._setSecondaryStates([]);
+  }
+  _addSecondaryCursor() {
+    this.cursors.push(new Cursor(this.context));
+    this.lastAddedCursorIndex = this.cursors.length - 1;
+  }
+  getLastAddedCursorIndex() {
+    if (this.cursors.length === 1 || this.lastAddedCursorIndex === 0) {
+      return 0;
+    }
+    return this.lastAddedCursorIndex;
+  }
+  _removeSecondaryCursor(removeIndex) {
+    if (this.lastAddedCursorIndex >= removeIndex + 1) {
+      this.lastAddedCursorIndex--;
+    }
+    this.cursors[removeIndex + 1].dispose(this.context);
+    this.cursors.splice(removeIndex + 1, 1);
+  }
+  normalize() {
+    if (this.cursors.length === 1) {
+      return;
+    }
+    const cursors = this.cursors.slice(0);
+    const sortedCursors = [];
+    for (let i = 0, len = cursors.length; i < len; i++) {
+      sortedCursors.push({
+        index: i,
+        selection: cursors[i].modelState.selection
+      });
+    }
+    sortedCursors.sort(compareBy((s) => s.selection, Range.compareRangesUsingStarts));
+    for (let sortedCursorIndex = 0; sortedCursorIndex < sortedCursors.length - 1; sortedCursorIndex++) {
+      const current = sortedCursors[sortedCursorIndex];
+      const next = sortedCursors[sortedCursorIndex + 1];
+      const currentSelection = current.selection;
+      const nextSelection = next.selection;
+      if (!this.context.cursorConfig.multiCursorMergeOverlapping) {
+        continue;
+      }
+      let shouldMergeCursors;
+      if (nextSelection.isEmpty() || currentSelection.isEmpty()) {
+        shouldMergeCursors = nextSelection.getStartPosition().isBeforeOrEqual(currentSelection.getEndPosition());
+      } else {
+        shouldMergeCursors = nextSelection.getStartPosition().isBefore(currentSelection.getEndPosition());
+      }
+      if (shouldMergeCursors) {
+        const winnerSortedCursorIndex = current.index < next.index ? sortedCursorIndex : sortedCursorIndex + 1;
+        const looserSortedCursorIndex = current.index < next.index ? sortedCursorIndex + 1 : sortedCursorIndex;
+        const looserIndex = sortedCursors[looserSortedCursorIndex].index;
+        const winnerIndex = sortedCursors[winnerSortedCursorIndex].index;
+        const looserSelection = sortedCursors[looserSortedCursorIndex].selection;
+        const winnerSelection = sortedCursors[winnerSortedCursorIndex].selection;
+        if (!looserSelection.equalsSelection(winnerSelection)) {
+          const resultingRange = looserSelection.plusRange(winnerSelection);
+          const looserSelectionIsLTR = looserSelection.selectionStartLineNumber === looserSelection.startLineNumber && looserSelection.selectionStartColumn === looserSelection.startColumn;
+          const winnerSelectionIsLTR = winnerSelection.selectionStartLineNumber === winnerSelection.startLineNumber && winnerSelection.selectionStartColumn === winnerSelection.startColumn;
+          let resultingSelectionIsLTR;
+          if (looserIndex === this.lastAddedCursorIndex) {
+            resultingSelectionIsLTR = looserSelectionIsLTR;
+            this.lastAddedCursorIndex = winnerIndex;
+          } else {
+            resultingSelectionIsLTR = winnerSelectionIsLTR;
+          }
+          let resultingSelection;
+          if (resultingSelectionIsLTR) {
+            resultingSelection = new Selection(resultingRange.startLineNumber, resultingRange.startColumn, resultingRange.endLineNumber, resultingRange.endColumn);
+          } else {
+            resultingSelection = new Selection(resultingRange.endLineNumber, resultingRange.endColumn, resultingRange.startLineNumber, resultingRange.startColumn);
+          }
+          sortedCursors[winnerSortedCursorIndex].selection = resultingSelection;
+          const resultingState = CursorState.fromModelSelection(resultingSelection);
+          cursors[winnerIndex].setState(this.context, resultingState.modelState, resultingState.viewState);
+        }
+        for (const sortedCursor of sortedCursors) {
+          if (sortedCursor.index > looserIndex) {
+            sortedCursor.index--;
+          }
+        }
+        cursors.splice(looserIndex, 1);
+        sortedCursors.splice(looserSortedCursorIndex, 1);
+        this._removeSecondaryCursor(looserIndex - 1);
+        sortedCursorIndex--;
+      }
+    }
+  }
+}
+export {
+  CursorCollection
+};
+//# sourceMappingURL=cursorCollection.js.map

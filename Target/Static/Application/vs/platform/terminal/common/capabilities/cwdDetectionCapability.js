@@ -1,1 +1,40 @@
-import{$df as i}from"../../../../base/common/event.js";import{$vd as h}from"../../../../base/common/lifecycle.js";class o extends h{constructor(){super(...arguments),this.type=0,this.a="",this.b=new Map,this.c=this.B(new i),this.onDidChangeCwd=this.c.event}get cwds(){return Array.from(this.b.keys())}getCwd(){return this.a}updateCwd(t){const s=this.a!==t;this.a=t;const e=this.b.get(this.a)||0;this.b.delete(this.a),this.b.set(this.a,e+1),s&&this.c.fire(t)}}export{o as $dYb};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { Emitter } from "../../../../base/common/event.js";
+import { Disposable } from "../../../../base/common/lifecycle.js";
+class CwdDetectionCapability extends Disposable {
+  static {
+    __name(this, "CwdDetectionCapability");
+  }
+  constructor() {
+    super(...arguments);
+    this.type = 0;
+    this._cwd = "";
+    this._cwds = /* @__PURE__ */ new Map();
+    this._onDidChangeCwd = this._register(new Emitter());
+    this.onDidChangeCwd = this._onDidChangeCwd.event;
+  }
+  /**
+   * Gets the list of cwds seen in this session in order of last accessed.
+   */
+  get cwds() {
+    return Array.from(this._cwds.keys());
+  }
+  getCwd() {
+    return this._cwd;
+  }
+  updateCwd(cwd) {
+    const didChange = this._cwd !== cwd;
+    this._cwd = cwd;
+    const count = this._cwds.get(this._cwd) || 0;
+    this._cwds.delete(this._cwd);
+    this._cwds.set(this._cwd, count + 1);
+    if (didChange) {
+      this._onDidChangeCwd.fire(cwd);
+    }
+  }
+}
+export {
+  CwdDetectionCapability
+};
+//# sourceMappingURL=cwdDetectionCapability.js.map

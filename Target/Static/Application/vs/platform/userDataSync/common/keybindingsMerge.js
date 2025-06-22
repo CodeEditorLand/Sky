@@ -1,1 +1,310 @@
-import{$Sb as $}from"../../../base/common/arrays.js";import{$Vu as L}from"../../../base/common/json.js";import*as U from"../../../base/common/objects.js";import{$Bn as M}from"../../contextkey/common/contextkey.js";import*as B from"./content.js";function S(n){return L(n)||[]}async function G(n,t,d,s,a){const i=S(n),o=S(t),e=d?S(d):null,r=[...i,...o,...e||[]].map(u=>u.key),f=await a.resolveUserBindings(r),c=j(i,o,e,f);if(!c.hasLocalForwarded&&!c.hasRemoteForwarded)return{mergeContent:n,hasChanges:!1,hasConflicts:!1};if(!c.hasLocalForwarded&&c.hasRemoteForwarded)return{mergeContent:t,hasChanges:!0,hasConflicts:!1};if(c.hasLocalForwarded&&!c.hasRemoteForwarded)return{mergeContent:n,hasChanges:!0,hasConflicts:!1};const m=b(i),h=b(o),g=e?b(e):null,K=z(m,h,f),p=g?z(g,m,f):{added:[...m.keys()].reduce((u,y)=>(u.add(y),u),new Set),removed:new Set,updated:new Set},v=g?z(g,h,f):{added:[...h.keys()].reduce((u,y)=>(u.add(y),u),new Set),removed:new Set,updated:new Set},l=x(K,p,v);let w=n;for(const u of l.removed.values())l.conflicts.has(u)||(w=I(w,u,s));for(const u of l.added.values()){if(l.conflicts.has(u))continue;const y=h.get(u);if(y.some(k=>k.command!==`-${u}`&&c.conflicts.has(f[k.key]))){l.conflicts.add(u);continue}w=A(w,y,s)}for(const u of l.updated.values()){if(l.conflicts.has(u))continue;const y=h.get(u);if(y.some(k=>k.command!==`-${u}`&&c.conflicts.has(f[k.key]))){l.conflicts.add(u);continue}w=V(w,u,y,s)}return{mergeContent:w,hasChanges:!0,hasConflicts:l.conflicts.size>0}}function x(n,t,d){const s=new Set,a=new Set,i=new Set,o=new Set;for(const e of t.removed.values())d.updated.has(e)&&o.add(e);for(const e of d.removed.values())o.has(e)||(t.updated.has(e)?o.add(e):a.add(e));for(const e of t.added.values())o.has(e)||d.added.has(e)&&n.updated.has(e)&&o.add(e);for(const e of d.added.values())o.has(e)||(t.added.has(e)?n.updated.has(e)&&o.add(e):s.add(e));for(const e of t.updated.values())o.has(e)||d.updated.has(e)&&n.updated.has(e)&&o.add(e);for(const e of d.updated.values())o.has(e)||(t.updated.has(e)?n.updated.has(e)&&o.add(e):i.add(e));return{added:s,removed:a,updated:i,conflicts:o}}function j(n,t,d,s){const a=new Set,i=C(n,s),o=C(t,s),e=d?C(d,s):null,r=F(i,o);if(r.added.size===0&&r.removed.size===0&&r.updated.size===0)return{hasLocalForwarded:!1,hasRemoteForwarded:!1,added:a,removed:a,updated:a,conflicts:a};const f=e?F(e,i):{added:[...i.keys()].reduce((p,v)=>(p.add(v),p),new Set),removed:new Set,updated:new Set};if(f.added.size===0&&f.removed.size===0&&f.updated.size===0)return{hasLocalForwarded:!1,hasRemoteForwarded:!0,added:a,removed:a,updated:a,conflicts:a};const c=e?F(e,o):{added:[...o.keys()].reduce((p,v)=>(p.add(v),p),new Set),removed:new Set,updated:new Set};if(c.added.size===0&&c.removed.size===0&&c.updated.size===0)return{hasLocalForwarded:!0,hasRemoteForwarded:!1,added:a,removed:a,updated:a,conflicts:a};const{added:m,removed:h,updated:g,conflicts:K}=x(r,f,c);return{hasLocalForwarded:!0,hasRemoteForwarded:!0,added:m,removed:h,updated:g,conflicts:K}}function C(n,t){const d=new Map;for(const s of n){const a=t[s.key];let i=d.get(a);i||(i=[],d.set(a,i)),i.push(s)}return d}function b(n){const t=new Map;for(const d of n){const s=d.command[0]==="-"?d.command.substring(1):d.command;let a=t.get(s);a||(a=[],t.set(s,a)),a.push(d)}return t}function F(n,t){const d=[...n.keys()],s=[...t.keys()],a=s.filter(e=>!d.includes(e)).reduce((e,r)=>(e.add(r),e),new Set),i=d.filter(e=>!s.includes(e)).reduce((e,r)=>(e.add(r),e),new Set),o=new Set;for(const e of d){if(i.has(e))continue;const r=n.get(e).map(c=>({...c,key:e})),f=t.get(e).map(c=>({...c,key:e}));$(r,f,(c,m)=>R(c,m))||o.add(e)}return{added:a,removed:i,updated:o}}function z(n,t,d){const s=[...n.keys()],a=[...t.keys()],i=a.filter(r=>!s.includes(r)).reduce((r,f)=>(r.add(f),r),new Set),o=s.filter(r=>!a.includes(r)).reduce((r,f)=>(r.add(f),r),new Set),e=new Set;for(const r of s){if(o.has(r))continue;const f=n.get(r).map(m=>({...m,key:d[m.key]})),c=t.get(r).map(m=>({...m,key:d[m.key]}));q(f,c)||e.add(r)}return{added:i,removed:o,updated:e}}function q(n,t){return!(!$(n.filter(({command:d})=>d[0]!=="-"),t.filter(({command:d})=>d[0]!=="-"),(d,s)=>R(d,s))||!$(n.filter(({command:d})=>d[0]==="-"),t.filter(({command:d})=>d[0]==="-"),(d,s)=>R(d,s)))}function R(n,t){if(n.command!==t.command||n.key!==t.key)return!1;const d=M.deserialize(n.when),s=M.deserialize(t.when);return!(d&&!s||!d&&s||d&&s&&!d.equals(s)||!U.$6o(n.args,t.args))}function A(n,t,d){for(const s of t)n=B.edit(n,[-1],s,d);return n}function I(n,t,d){const s=S(n);for(let a=s.length-1;a>=0;a--)(s[a].command===t||s[a].command===`-${t}`)&&(n=B.edit(n,[a],void 0,d));return n}function V(n,t,d,s){const a=S(n),i=a.findIndex(o=>o.command===t||o.command===`-${t}`);for(let o=a.length-1;o>=0;o--)(a[o].command===t||a[o].command===`-${t}`)&&(n=B.edit(n,[o],void 0,s));for(let o=d.length-1;o>=0;o--)n=B.edit(n,[i],d[o],s);return n}export{G as $szc};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { equals } from "../../../base/common/arrays.js";
+import { parse } from "../../../base/common/json.js";
+import * as objects from "../../../base/common/objects.js";
+import { ContextKeyExpr } from "../../contextkey/common/contextkey.js";
+import * as contentUtil from "./content.js";
+function parseKeybindings(content) {
+  return parse(content) || [];
+}
+__name(parseKeybindings, "parseKeybindings");
+async function merge(localContent, remoteContent, baseContent, formattingOptions, userDataSyncUtilService) {
+  const local = parseKeybindings(localContent);
+  const remote = parseKeybindings(remoteContent);
+  const base = baseContent ? parseKeybindings(baseContent) : null;
+  const userbindings = [...local, ...remote, ...base || []].map((keybinding) => keybinding.key);
+  const normalizedKeys = await userDataSyncUtilService.resolveUserBindings(userbindings);
+  const keybindingsMergeResult = computeMergeResultByKeybinding(local, remote, base, normalizedKeys);
+  if (!keybindingsMergeResult.hasLocalForwarded && !keybindingsMergeResult.hasRemoteForwarded) {
+    return { mergeContent: localContent, hasChanges: false, hasConflicts: false };
+  }
+  if (!keybindingsMergeResult.hasLocalForwarded && keybindingsMergeResult.hasRemoteForwarded) {
+    return { mergeContent: remoteContent, hasChanges: true, hasConflicts: false };
+  }
+  if (keybindingsMergeResult.hasLocalForwarded && !keybindingsMergeResult.hasRemoteForwarded) {
+    return { mergeContent: localContent, hasChanges: true, hasConflicts: false };
+  }
+  const localByCommand = byCommand(local);
+  const remoteByCommand = byCommand(remote);
+  const baseByCommand = base ? byCommand(base) : null;
+  const localToRemoteByCommand = compareByCommand(localByCommand, remoteByCommand, normalizedKeys);
+  const baseToLocalByCommand = baseByCommand ? compareByCommand(baseByCommand, localByCommand, normalizedKeys) : { added: [...localByCommand.keys()].reduce((r, k) => {
+    r.add(k);
+    return r;
+  }, /* @__PURE__ */ new Set()), removed: /* @__PURE__ */ new Set(), updated: /* @__PURE__ */ new Set() };
+  const baseToRemoteByCommand = baseByCommand ? compareByCommand(baseByCommand, remoteByCommand, normalizedKeys) : { added: [...remoteByCommand.keys()].reduce((r, k) => {
+    r.add(k);
+    return r;
+  }, /* @__PURE__ */ new Set()), removed: /* @__PURE__ */ new Set(), updated: /* @__PURE__ */ new Set() };
+  const commandsMergeResult = computeMergeResult(localToRemoteByCommand, baseToLocalByCommand, baseToRemoteByCommand);
+  let mergeContent = localContent;
+  for (const command of commandsMergeResult.removed.values()) {
+    if (commandsMergeResult.conflicts.has(command)) {
+      continue;
+    }
+    mergeContent = removeKeybindings(mergeContent, command, formattingOptions);
+  }
+  for (const command of commandsMergeResult.added.values()) {
+    if (commandsMergeResult.conflicts.has(command)) {
+      continue;
+    }
+    const keybindings = remoteByCommand.get(command);
+    if (keybindings.some((keybinding) => keybinding.command !== `-${command}` && keybindingsMergeResult.conflicts.has(normalizedKeys[keybinding.key]))) {
+      commandsMergeResult.conflicts.add(command);
+      continue;
+    }
+    mergeContent = addKeybindings(mergeContent, keybindings, formattingOptions);
+  }
+  for (const command of commandsMergeResult.updated.values()) {
+    if (commandsMergeResult.conflicts.has(command)) {
+      continue;
+    }
+    const keybindings = remoteByCommand.get(command);
+    if (keybindings.some((keybinding) => keybinding.command !== `-${command}` && keybindingsMergeResult.conflicts.has(normalizedKeys[keybinding.key]))) {
+      commandsMergeResult.conflicts.add(command);
+      continue;
+    }
+    mergeContent = updateKeybindings(mergeContent, command, keybindings, formattingOptions);
+  }
+  return { mergeContent, hasChanges: true, hasConflicts: commandsMergeResult.conflicts.size > 0 };
+}
+__name(merge, "merge");
+function computeMergeResult(localToRemote, baseToLocal, baseToRemote) {
+  const added = /* @__PURE__ */ new Set();
+  const removed = /* @__PURE__ */ new Set();
+  const updated = /* @__PURE__ */ new Set();
+  const conflicts = /* @__PURE__ */ new Set();
+  for (const key of baseToLocal.removed.values()) {
+    if (baseToRemote.updated.has(key)) {
+      conflicts.add(key);
+    }
+  }
+  for (const key of baseToRemote.removed.values()) {
+    if (conflicts.has(key)) {
+      continue;
+    }
+    if (baseToLocal.updated.has(key)) {
+      conflicts.add(key);
+    } else {
+      removed.add(key);
+    }
+  }
+  for (const key of baseToLocal.added.values()) {
+    if (conflicts.has(key)) {
+      continue;
+    }
+    if (baseToRemote.added.has(key)) {
+      if (localToRemote.updated.has(key)) {
+        conflicts.add(key);
+      }
+    }
+  }
+  for (const key of baseToRemote.added.values()) {
+    if (conflicts.has(key)) {
+      continue;
+    }
+    if (baseToLocal.added.has(key)) {
+      if (localToRemote.updated.has(key)) {
+        conflicts.add(key);
+      }
+    } else {
+      added.add(key);
+    }
+  }
+  for (const key of baseToLocal.updated.values()) {
+    if (conflicts.has(key)) {
+      continue;
+    }
+    if (baseToRemote.updated.has(key)) {
+      if (localToRemote.updated.has(key)) {
+        conflicts.add(key);
+      }
+    }
+  }
+  for (const key of baseToRemote.updated.values()) {
+    if (conflicts.has(key)) {
+      continue;
+    }
+    if (baseToLocal.updated.has(key)) {
+      if (localToRemote.updated.has(key)) {
+        conflicts.add(key);
+      }
+    } else {
+      updated.add(key);
+    }
+  }
+  return { added, removed, updated, conflicts };
+}
+__name(computeMergeResult, "computeMergeResult");
+function computeMergeResultByKeybinding(local, remote, base, normalizedKeys) {
+  const empty = /* @__PURE__ */ new Set();
+  const localByKeybinding = byKeybinding(local, normalizedKeys);
+  const remoteByKeybinding = byKeybinding(remote, normalizedKeys);
+  const baseByKeybinding = base ? byKeybinding(base, normalizedKeys) : null;
+  const localToRemoteByKeybinding = compareByKeybinding(localByKeybinding, remoteByKeybinding);
+  if (localToRemoteByKeybinding.added.size === 0 && localToRemoteByKeybinding.removed.size === 0 && localToRemoteByKeybinding.updated.size === 0) {
+    return { hasLocalForwarded: false, hasRemoteForwarded: false, added: empty, removed: empty, updated: empty, conflicts: empty };
+  }
+  const baseToLocalByKeybinding = baseByKeybinding ? compareByKeybinding(baseByKeybinding, localByKeybinding) : { added: [...localByKeybinding.keys()].reduce((r, k) => {
+    r.add(k);
+    return r;
+  }, /* @__PURE__ */ new Set()), removed: /* @__PURE__ */ new Set(), updated: /* @__PURE__ */ new Set() };
+  if (baseToLocalByKeybinding.added.size === 0 && baseToLocalByKeybinding.removed.size === 0 && baseToLocalByKeybinding.updated.size === 0) {
+    return { hasLocalForwarded: false, hasRemoteForwarded: true, added: empty, removed: empty, updated: empty, conflicts: empty };
+  }
+  const baseToRemoteByKeybinding = baseByKeybinding ? compareByKeybinding(baseByKeybinding, remoteByKeybinding) : { added: [...remoteByKeybinding.keys()].reduce((r, k) => {
+    r.add(k);
+    return r;
+  }, /* @__PURE__ */ new Set()), removed: /* @__PURE__ */ new Set(), updated: /* @__PURE__ */ new Set() };
+  if (baseToRemoteByKeybinding.added.size === 0 && baseToRemoteByKeybinding.removed.size === 0 && baseToRemoteByKeybinding.updated.size === 0) {
+    return { hasLocalForwarded: true, hasRemoteForwarded: false, added: empty, removed: empty, updated: empty, conflicts: empty };
+  }
+  const { added, removed, updated, conflicts } = computeMergeResult(localToRemoteByKeybinding, baseToLocalByKeybinding, baseToRemoteByKeybinding);
+  return { hasLocalForwarded: true, hasRemoteForwarded: true, added, removed, updated, conflicts };
+}
+__name(computeMergeResultByKeybinding, "computeMergeResultByKeybinding");
+function byKeybinding(keybindings, keys) {
+  const map = /* @__PURE__ */ new Map();
+  for (const keybinding of keybindings) {
+    const key = keys[keybinding.key];
+    let value = map.get(key);
+    if (!value) {
+      value = [];
+      map.set(key, value);
+    }
+    value.push(keybinding);
+  }
+  return map;
+}
+__name(byKeybinding, "byKeybinding");
+function byCommand(keybindings) {
+  const map = /* @__PURE__ */ new Map();
+  for (const keybinding of keybindings) {
+    const command = keybinding.command[0] === "-" ? keybinding.command.substring(1) : keybinding.command;
+    let value = map.get(command);
+    if (!value) {
+      value = [];
+      map.set(command, value);
+    }
+    value.push(keybinding);
+  }
+  return map;
+}
+__name(byCommand, "byCommand");
+function compareByKeybinding(from, to) {
+  const fromKeys = [...from.keys()];
+  const toKeys = [...to.keys()];
+  const added = toKeys.filter((key) => !fromKeys.includes(key)).reduce((r, key) => {
+    r.add(key);
+    return r;
+  }, /* @__PURE__ */ new Set());
+  const removed = fromKeys.filter((key) => !toKeys.includes(key)).reduce((r, key) => {
+    r.add(key);
+    return r;
+  }, /* @__PURE__ */ new Set());
+  const updated = /* @__PURE__ */ new Set();
+  for (const key of fromKeys) {
+    if (removed.has(key)) {
+      continue;
+    }
+    const value1 = from.get(key).map((keybinding) => ({ ...keybinding, ...{ key } }));
+    const value2 = to.get(key).map((keybinding) => ({ ...keybinding, ...{ key } }));
+    if (!equals(value1, value2, (a, b) => isSameKeybinding(a, b))) {
+      updated.add(key);
+    }
+  }
+  return { added, removed, updated };
+}
+__name(compareByKeybinding, "compareByKeybinding");
+function compareByCommand(from, to, normalizedKeys) {
+  const fromKeys = [...from.keys()];
+  const toKeys = [...to.keys()];
+  const added = toKeys.filter((key) => !fromKeys.includes(key)).reduce((r, key) => {
+    r.add(key);
+    return r;
+  }, /* @__PURE__ */ new Set());
+  const removed = fromKeys.filter((key) => !toKeys.includes(key)).reduce((r, key) => {
+    r.add(key);
+    return r;
+  }, /* @__PURE__ */ new Set());
+  const updated = /* @__PURE__ */ new Set();
+  for (const key of fromKeys) {
+    if (removed.has(key)) {
+      continue;
+    }
+    const value1 = from.get(key).map((keybinding) => ({ ...keybinding, ...{ key: normalizedKeys[keybinding.key] } }));
+    const value2 = to.get(key).map((keybinding) => ({ ...keybinding, ...{ key: normalizedKeys[keybinding.key] } }));
+    if (!areSameKeybindingsWithSameCommand(value1, value2)) {
+      updated.add(key);
+    }
+  }
+  return { added, removed, updated };
+}
+__name(compareByCommand, "compareByCommand");
+function areSameKeybindingsWithSameCommand(value1, value2) {
+  if (!equals(value1.filter(({ command }) => command[0] !== "-"), value2.filter(({ command }) => command[0] !== "-"), (a, b) => isSameKeybinding(a, b))) {
+    return false;
+  }
+  if (!equals(value1.filter(({ command }) => command[0] === "-"), value2.filter(({ command }) => command[0] === "-"), (a, b) => isSameKeybinding(a, b))) {
+    return false;
+  }
+  return true;
+}
+__name(areSameKeybindingsWithSameCommand, "areSameKeybindingsWithSameCommand");
+function isSameKeybinding(a, b) {
+  if (a.command !== b.command) {
+    return false;
+  }
+  if (a.key !== b.key) {
+    return false;
+  }
+  const whenA = ContextKeyExpr.deserialize(a.when);
+  const whenB = ContextKeyExpr.deserialize(b.when);
+  if (whenA && !whenB || !whenA && whenB) {
+    return false;
+  }
+  if (whenA && whenB && !whenA.equals(whenB)) {
+    return false;
+  }
+  if (!objects.equals(a.args, b.args)) {
+    return false;
+  }
+  return true;
+}
+__name(isSameKeybinding, "isSameKeybinding");
+function addKeybindings(content, keybindings, formattingOptions) {
+  for (const keybinding of keybindings) {
+    content = contentUtil.edit(content, [-1], keybinding, formattingOptions);
+  }
+  return content;
+}
+__name(addKeybindings, "addKeybindings");
+function removeKeybindings(content, command, formattingOptions) {
+  const keybindings = parseKeybindings(content);
+  for (let index = keybindings.length - 1; index >= 0; index--) {
+    if (keybindings[index].command === command || keybindings[index].command === `-${command}`) {
+      content = contentUtil.edit(content, [index], void 0, formattingOptions);
+    }
+  }
+  return content;
+}
+__name(removeKeybindings, "removeKeybindings");
+function updateKeybindings(content, command, keybindings, formattingOptions) {
+  const allKeybindings = parseKeybindings(content);
+  const location = allKeybindings.findIndex((keybinding) => keybinding.command === command || keybinding.command === `-${command}`);
+  for (let index = allKeybindings.length - 1; index >= 0; index--) {
+    if (allKeybindings[index].command === command || allKeybindings[index].command === `-${command}`) {
+      content = contentUtil.edit(content, [index], void 0, formattingOptions);
+    }
+  }
+  for (let index = keybindings.length - 1; index >= 0; index--) {
+    content = contentUtil.edit(content, [location], keybindings[index], formattingOptions);
+  }
+  return content;
+}
+__name(updateKeybindings, "updateKeybindings");
+export {
+  merge
+};
+//# sourceMappingURL=keybindingsMerge.js.map

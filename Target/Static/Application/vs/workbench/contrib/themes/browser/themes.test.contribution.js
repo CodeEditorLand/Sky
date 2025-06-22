@@ -1,1 +1,383 @@
-import{URI as y}from"../../../../base/common/uri.js";import{$BD as j}from"../../../../editor/common/languages/language.js";import{$Zn as N}from"../../../../platform/commands/common/commands.js";import{$mj as L}from"../../../../platform/instantiation/common/instantiation.js";import{$FIb as P}from"../../../services/themes/common/workbenchThemeService.js";import{$oI as v}from"../../../services/editor/common/editorService.js";import{$sK as z}from"../../../common/editor.js";import{$OPb as D}from"../../../services/textMate/browser/textMateTokenizationFeature.js";import{$AD as C}from"../../../../editor/common/languages.js";import{$9C as w}from"../../../../editor/common/encodedTokenAttributes.js";import{$MPb as R}from"../../../services/textMate/common/TMHelper.js";import{$hp as x}from"../../../../base/common/color.js";import{$5j as A}from"../../../../platform/files/common/files.js";import{$hh as E}from"../../../../base/common/resources.js";import{Schemas as H}from"../../../../base/common/network.js";import{$Pf as M}from"../../../../base/common/strings.js";import{$cQb as U}from"../../../services/themes/common/colorThemeData.js";import{$gF as B}from"../../../../editor/common/services/model.js";import{Event as J}from"../../../../base/common/event.js";import{$cC as q}from"../../../../editor/common/core/range.js";import{$JH as K}from"../../../../editor/common/model/tokens/treeSitter/treeSitterSyntaxTokenBackend.js";import{waitForState as T}from"../../../../base/common/observable.js";var F=function(e,t,o,r){var n,s=arguments.length,i=s<3?t:null===r?r=Object.getOwnPropertyDescriptor(t,o):r;if("object"==typeof Reflect&&"function"==typeof Reflect.decorate)i=Reflect.decorate(e,t,o,r);else for(var a=e.length-1;a>=0;a--)(n=e[a])&&(i=(s<3?n(i):s>3?n(t,o,i):n(t,o))||i);return s>3&&i&&Object.defineProperty(t,o,i),i},b=function(e,t){return function(o,r){t(o,r,e)}};class ${constructor(e){this.a=e,this.b=Object.create(null),this.d="#000000";for(let e=0,t=this.a.tokenColors.length;e<t;e++){const t=this.a.tokenColors[e];t.scope||(this.d=t.settings.foreground)}}e(e,t){return`${e}: ${x.Format.CSS.formatHexA(t,!0).toUpperCase()}`}explainTokenColor(e,t){const o=this.f(e);if(!o){const o=x.fromHex(this.d);if(!t.equals(o))throw new Error(`[${this.a.label}]: Unexpected color ${x.Format.CSS.formatHexA(t)} for ${e}. Expected default ${x.Format.CSS.formatHexA(o)}`);return this.e("default",t)}const r=x.fromHex(o.settings.foreground);if(!t.equals(r))throw new Error(`[${this.a.label}]: Unexpected color ${x.Format.CSS.formatHexA(t)} for ${e}. Expected ${x.Format.CSS.formatHexA(r)} coming in from ${o.rawSelector}`);return this.e(o.rawSelector,t)}f(e){return this.b[e]||(this.b[e]=R(this.a,e.split(" "))),this.b[e]}}let S=class{constructor(e,t,o,r){this.a=e,this.b=t,this.d=o,this.e=r}f(e,t){const o=C.getColorMap();let r=null;const n=[];let s=0;for(let i=0,a=t.length;i<a;i++){const a=t[i],c=e.tokenizeLine2(a,r);for(let e=0,t=c.tokens.length>>>1;e<t;e++){const r=c.tokens[e<<1],i=c.tokens[1+(e<<1)],l=e+1<t?c.tokens[e+1<<1]:a.length,m=a.substring(r,l),d=w.getForeground(i);n[s++]={text:m,color:o[d]}}r=c.ruleStack}return n}g(e,t){const o=C.getColorMap(),r=Array(e.length),n=this.b.getColorTheme();for(let s=0,i=e.length;s<i;s++){const i=e[s],a=i.t.split(" "),c=U(n,a,this.a.languageIdCodec.encodeLanguageId(t),!1),l=w.getForeground(c);r[s]={text:i.c,color:o[l]}}return r}h(e,t){let o=null;const r=[];let n=0;for(let s=0,i=t.length;s<i;s++){const i=t[s],a=e.tokenizeLine(i,o);let c=null;for(let e=0,t=a.tokens.length;e<t;e++){const t=a.tokens[e],o=i.substring(t.startIndex,t.endIndex),s=t.scopes.join(" ");c===s?r[n-1].c+=o:(c=s,r[n++]={c:o,t:s,r:{dark_plus:void 0,light_plus:void 0,dark_vs:void 0,light_vs:void 0,hc_black:void 0}})}o=a.ruleStack}return r}async k(e,t){const o=this.b.getColorTheme(),r=e=>{const t="vscode-theme-defaults-themes-",o=e.indexOf(t);if(-1!==o)return e.substring(o+29,e.length-5)},n={},s=(await this.b.getColorThemes()).filter((e=>!!r(e.id)));for(const o of s){const s=o.id;if(await this.b.setColorTheme(s,void 0)){n[r(s)]={document:new $(this.b.getColorTheme()),tokens:this.f(e,t)}}}return await this.b.setColorTheme(o.id,void 0),n}async l(e,t){const o=this.b.getColorTheme(),r=e=>{const t="vscode-theme-defaults-themes-",o=e.indexOf(t);if(-1!==o)return e.substring(o+29,e.length-5)},n={},s=(await this.b.getColorThemes()).filter((e=>!!r(e.id)));for(const o of s){const s=o.id;if(await this.b.setColorTheme(s,void 0)){n[r(s)]={document:new $(this.b.getColorTheme()),tokens:this.g(e,t)}}}return await this.b.setColorTheme(o.id,void 0),n}m(e,t){const o={},r=Object.keys(t);for(const e of r)o[e]=0;for(let n=0,s=e.length;n<s;n++){const s=e[n];for(const e of r){const r=t[e].tokens[o[e]];r.text=r.text.substr(s.c.length),r.color&&(s.r[e]=t[e].document.explainTokenColor(s.t,r.color)),0===r.text.length&&o[e]++}}}n(e,t){let o=e.gotoFirstChild();for(;(e.startIndex<t.startIndex||e.endIndex>t.endIndex)&&o;)o=e.endIndex<t.startIndex?e.gotoNextSibling():e.gotoFirstChild()}async o(e,t,o){const r=await T(e.tree);if(!r)return[];const n=r.walk();n.gotoFirstChild();let s=!0;const i=[],a=[{cursor:n,languageId:o,startOffset:0,endOffset:e.textModel.getValueLength()}];do{const o=a[a.length-1],r=o.cursor,n=o.languageId,c=r.currentNode.endIndex>o.endOffset;if(c||0!==r.currentNode.childCount)s=r.gotoFirstChild();else{const o=new q(r.currentNode.startPosition.row+1,r.currentNode.startPosition.column+1,r.currentNode.endPosition.row+1,r.currentNode.endPosition.column+1),c=e.getInjectionTrees(r.currentNode.startIndex,n),l=c?.ranges.find((e=>e.startIndex<=r.currentNode.startIndex&&e.endIndex>=r.currentNode.endIndex)),m=c?.tree.get(),d=c?.languageId;if(m&&d&&l&&l.startIndex===r.currentNode.startIndex){const e=m.walk();for(this.n(e,l),a.push({cursor:e,languageId:d,startOffset:l.startIndex,endOffset:l.endIndex});r.endIndex<=l.endIndex&&(r.gotoNextSibling()||r.gotoParent()););}else{const e=t.captureAtRangeTree(o);for(i.push({c:r.currentNode.text.replace(/\r/g,""),t:e?.map((e=>e.name)).join(" ")??"",r:{dark_plus:void 0,light_plus:void 0,dark_vs:void 0,light_vs:void 0,hc_black:void 0}});!(s=r.gotoNextSibling())&&(s=r.gotoParent()););}}a.length>1&&(!s&&r===a[a.length-1].cursor||c)&&(o.cursor.delete(),a.pop(),s=!0)}while(s);return n.delete(),i}captureSyntaxTokens(e,t){const o=this.a.guessLanguageIdByFilepathOrFirstLine(y.file(e));return this.d.createTokenizer(o).then((e=>{if(!e)return[];const o=M(t),r=this.h(e,o);return this.k(e,o).then((e=>(this.m(r,e),r.filter((e=>e.c.length>0)))))}))}async captureTreeSitterSyntaxTokens(e,t){const o=this.a.guessLanguageIdByFilepathOrFirstLine(e);if(!o)return[];const r=(this.e.getModel(e)??this.e.createModel(t,{languageId:o,onDidChange:J.None},e)).tokenization.tokens.get();if(!(r instanceof K))return[];const n=r.tree,s=r.tokenizationImpl,i=n.get()??await T(n),a=s.get()??await T(s);if(!i)return[];const c=(await this.o(i,a,o)).filter((e=>e.c.length>0)),l=await this.l(c,o);return this.m(c,l),c}};async function O(e,t,o=!1){const r=t=>{const r=e.get(A),n=E(t),s=e.get(L).createInstance(S);return r.readFile(t).then((e=>o?s.captureTreeSitterSyntaxTokens(t,e.value.toString()):s.captureSyntaxTokens(n,e.value.toString())))};if(t)return await r(t);{const t=e.get(v),o=t.activeEditor?z.getCanonicalUri(t.activeEditor,{filterByScheme:H.file}):null;o&&r(o).then((e=>{}))}}S=F([b(0,j),b(1,P),b(2,D),b(3,B)],S),N.registerCommand("_workbench.captureSyntaxTokens",(function(e,t){return O(e,t)})),N.registerCommand("_workbench.captureTreeSitterSyntaxTokens",(function(e,t){return t||(t=e.get(v).activeEditor?.resource),O(e,t,!0)}));
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { URI } from "../../../../base/common/uri.js";
+import { ILanguageService } from "../../../../editor/common/languages/language.js";
+import { CommandsRegistry } from "../../../../platform/commands/common/commands.js";
+import { IInstantiationService } from "../../../../platform/instantiation/common/instantiation.js";
+import { IWorkbenchThemeService } from "../../../services/themes/common/workbenchThemeService.js";
+import { IEditorService } from "../../../services/editor/common/editorService.js";
+import { EditorResourceAccessor } from "../../../common/editor.js";
+import { ITextMateTokenizationService } from "../../../services/textMate/browser/textMateTokenizationFeature.js";
+import { TokenizationRegistry } from "../../../../editor/common/languages.js";
+import { TokenMetadata } from "../../../../editor/common/encodedTokenAttributes.js";
+import { findMatchingThemeRule } from "../../../services/textMate/common/TMHelper.js";
+import { Color } from "../../../../base/common/color.js";
+import { IFileService } from "../../../../platform/files/common/files.js";
+import { basename } from "../../../../base/common/resources.js";
+import { Schemas } from "../../../../base/common/network.js";
+import { splitLines } from "../../../../base/common/strings.js";
+import { findMetadata } from "../../../services/themes/common/colorThemeData.js";
+import { IModelService } from "../../../../editor/common/services/model.js";
+import { Event } from "../../../../base/common/event.js";
+import { Range } from "../../../../editor/common/core/range.js";
+import { TreeSitterSyntaxTokenBackend } from "../../../../editor/common/model/tokens/treeSitter/treeSitterSyntaxTokenBackend.js";
+import { waitForState } from "../../../../base/common/observable.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+class ThemeDocument {
+  static {
+    __name(this, "ThemeDocument");
+  }
+  constructor(theme) {
+    this._theme = theme;
+    this._cache = /* @__PURE__ */ Object.create(null);
+    this._defaultColor = "#000000";
+    for (let i = 0, len = this._theme.tokenColors.length; i < len; i++) {
+      const rule = this._theme.tokenColors[i];
+      if (!rule.scope) {
+        this._defaultColor = rule.settings.foreground;
+      }
+    }
+  }
+  _generateExplanation(selector, color) {
+    return `${selector}: ${Color.Format.CSS.formatHexA(color, true).toUpperCase()}`;
+  }
+  explainTokenColor(scopes, color) {
+    const matchingRule = this._findMatchingThemeRule(scopes);
+    if (!matchingRule) {
+      const expected2 = Color.fromHex(this._defaultColor);
+      if (!color.equals(expected2)) {
+        throw new Error(`[${this._theme.label}]: Unexpected color ${Color.Format.CSS.formatHexA(color)} for ${scopes}. Expected default ${Color.Format.CSS.formatHexA(expected2)}`);
+      }
+      return this._generateExplanation("default", color);
+    }
+    const expected = Color.fromHex(matchingRule.settings.foreground);
+    if (!color.equals(expected)) {
+      throw new Error(`[${this._theme.label}]: Unexpected color ${Color.Format.CSS.formatHexA(color)} for ${scopes}. Expected ${Color.Format.CSS.formatHexA(expected)} coming in from ${matchingRule.rawSelector}`);
+    }
+    return this._generateExplanation(matchingRule.rawSelector, color);
+  }
+  _findMatchingThemeRule(scopes) {
+    if (!this._cache[scopes]) {
+      this._cache[scopes] = findMatchingThemeRule(this._theme, scopes.split(" "));
+    }
+    return this._cache[scopes];
+  }
+}
+let Snapper = class Snapper2 {
+  static {
+    __name(this, "Snapper");
+  }
+  constructor(languageService, themeService, textMateService, modelService) {
+    this.languageService = languageService;
+    this.themeService = themeService;
+    this.textMateService = textMateService;
+    this.modelService = modelService;
+  }
+  _themedTokenize(grammar, lines) {
+    const colorMap = TokenizationRegistry.getColorMap();
+    let state = null;
+    const result = [];
+    let resultLen = 0;
+    for (let i = 0, len = lines.length; i < len; i++) {
+      const line = lines[i];
+      const tokenizationResult = grammar.tokenizeLine2(line, state);
+      for (let j = 0, lenJ = tokenizationResult.tokens.length >>> 1; j < lenJ; j++) {
+        const startOffset = tokenizationResult.tokens[j << 1];
+        const metadata = tokenizationResult.tokens[(j << 1) + 1];
+        const endOffset = j + 1 < lenJ ? tokenizationResult.tokens[j + 1 << 1] : line.length;
+        const tokenText = line.substring(startOffset, endOffset);
+        const color = TokenMetadata.getForeground(metadata);
+        result[resultLen++] = {
+          text: tokenText,
+          color: colorMap[color]
+        };
+      }
+      state = tokenizationResult.ruleStack;
+    }
+    return result;
+  }
+  _themedTokenizeTreeSitter(tokens, languageId) {
+    const colorMap = TokenizationRegistry.getColorMap();
+    const result = Array(tokens.length);
+    const colorThemeData = this.themeService.getColorTheme();
+    for (let i = 0, len = tokens.length; i < len; i++) {
+      const token = tokens[i];
+      const scopes = token.t.split(" ");
+      const metadata = findMetadata(colorThemeData, scopes, this.languageService.languageIdCodec.encodeLanguageId(languageId), false);
+      const color = TokenMetadata.getForeground(metadata);
+      result[i] = {
+        text: token.c,
+        color: colorMap[color]
+      };
+    }
+    return result;
+  }
+  _tokenize(grammar, lines) {
+    let state = null;
+    const result = [];
+    let resultLen = 0;
+    for (let i = 0, len = lines.length; i < len; i++) {
+      const line = lines[i];
+      const tokenizationResult = grammar.tokenizeLine(line, state);
+      let lastScopes = null;
+      for (let j = 0, lenJ = tokenizationResult.tokens.length; j < lenJ; j++) {
+        const token = tokenizationResult.tokens[j];
+        const tokenText = line.substring(token.startIndex, token.endIndex);
+        const tokenScopes = token.scopes.join(" ");
+        if (lastScopes === tokenScopes) {
+          result[resultLen - 1].c += tokenText;
+        } else {
+          lastScopes = tokenScopes;
+          result[resultLen++] = {
+            c: tokenText,
+            t: tokenScopes,
+            r: {
+              dark_plus: void 0,
+              light_plus: void 0,
+              dark_vs: void 0,
+              light_vs: void 0,
+              hc_black: void 0
+            }
+          };
+        }
+      }
+      state = tokenizationResult.ruleStack;
+    }
+    return result;
+  }
+  async _getThemesResult(grammar, lines) {
+    const currentTheme = this.themeService.getColorTheme();
+    const getThemeName = /* @__PURE__ */ __name((id) => {
+      const part = "vscode-theme-defaults-themes-";
+      const startIdx = id.indexOf(part);
+      if (startIdx !== -1) {
+        return id.substring(startIdx + part.length, id.length - 5);
+      }
+      return void 0;
+    }, "getThemeName");
+    const result = {};
+    const themeDatas = await this.themeService.getColorThemes();
+    const defaultThemes = themeDatas.filter((themeData) => !!getThemeName(themeData.id));
+    for (const defaultTheme of defaultThemes) {
+      const themeId = defaultTheme.id;
+      const success = await this.themeService.setColorTheme(themeId, void 0);
+      if (success) {
+        const themeName = getThemeName(themeId);
+        result[themeName] = {
+          document: new ThemeDocument(this.themeService.getColorTheme()),
+          tokens: this._themedTokenize(grammar, lines)
+        };
+      }
+    }
+    await this.themeService.setColorTheme(currentTheme.id, void 0);
+    return result;
+  }
+  async _getTreeSitterThemesResult(tokens, languageId) {
+    const currentTheme = this.themeService.getColorTheme();
+    const getThemeName = /* @__PURE__ */ __name((id) => {
+      const part = "vscode-theme-defaults-themes-";
+      const startIdx = id.indexOf(part);
+      if (startIdx !== -1) {
+        return id.substring(startIdx + part.length, id.length - 5);
+      }
+      return void 0;
+    }, "getThemeName");
+    const result = {};
+    const themeDatas = await this.themeService.getColorThemes();
+    const defaultThemes = themeDatas.filter((themeData) => !!getThemeName(themeData.id));
+    for (const defaultTheme of defaultThemes) {
+      const themeId = defaultTheme.id;
+      const success = await this.themeService.setColorTheme(themeId, void 0);
+      if (success) {
+        const themeName = getThemeName(themeId);
+        result[themeName] = {
+          document: new ThemeDocument(this.themeService.getColorTheme()),
+          tokens: this._themedTokenizeTreeSitter(tokens, languageId)
+        };
+      }
+    }
+    await this.themeService.setColorTheme(currentTheme.id, void 0);
+    return result;
+  }
+  _enrichResult(result, themesResult) {
+    const index = {};
+    const themeNames = Object.keys(themesResult);
+    for (const themeName of themeNames) {
+      index[themeName] = 0;
+    }
+    for (let i = 0, len = result.length; i < len; i++) {
+      const token = result[i];
+      for (const themeName of themeNames) {
+        const themedToken = themesResult[themeName].tokens[index[themeName]];
+        themedToken.text = themedToken.text.substr(token.c.length);
+        if (themedToken.color) {
+          token.r[themeName] = themesResult[themeName].document.explainTokenColor(token.t, themedToken.color);
+        }
+        if (themedToken.text.length === 0) {
+          index[themeName]++;
+        }
+      }
+    }
+  }
+  _moveInjectionCursorToRange(cursor, injectionRange) {
+    let continueCursor = cursor.gotoFirstChild();
+    while ((cursor.startIndex < injectionRange.startIndex || cursor.endIndex > injectionRange.endIndex) && continueCursor) {
+      if (cursor.endIndex < injectionRange.startIndex) {
+        continueCursor = cursor.gotoNextSibling();
+      } else {
+        continueCursor = cursor.gotoFirstChild();
+      }
+    }
+  }
+  async _treeSitterTokenize(treeSitterTree, tokenizationModel, languageId) {
+    const tree = await waitForState(treeSitterTree.tree);
+    if (!tree) {
+      return [];
+    }
+    const cursor = tree.walk();
+    cursor.gotoFirstChild();
+    let cursorResult = true;
+    const tokens = [];
+    const cursors = [{ cursor, languageId, startOffset: 0, endOffset: treeSitterTree.textModel.getValueLength() }];
+    do {
+      const current = cursors[cursors.length - 1];
+      const currentCursor = current.cursor;
+      const currentLanguageId = current.languageId;
+      const isOutsideRange = currentCursor.currentNode.endIndex > current.endOffset;
+      if (!isOutsideRange && currentCursor.currentNode.childCount === 0) {
+        const range = new Range(currentCursor.currentNode.startPosition.row + 1, currentCursor.currentNode.startPosition.column + 1, currentCursor.currentNode.endPosition.row + 1, currentCursor.currentNode.endPosition.column + 1);
+        const injection = treeSitterTree.getInjectionTrees(currentCursor.currentNode.startIndex, currentLanguageId);
+        const treeSitterRange = injection?.ranges.find((r) => r.startIndex <= currentCursor.currentNode.startIndex && r.endIndex >= currentCursor.currentNode.endIndex);
+        const injectionTree = injection?.tree.get();
+        const injectionLanguageId = injection?.languageId;
+        if (injectionTree && injectionLanguageId && treeSitterRange && treeSitterRange.startIndex === currentCursor.currentNode.startIndex) {
+          const injectionCursor = injectionTree.walk();
+          this._moveInjectionCursorToRange(injectionCursor, treeSitterRange);
+          cursors.push({ cursor: injectionCursor, languageId: injectionLanguageId, startOffset: treeSitterRange.startIndex, endOffset: treeSitterRange.endIndex });
+          while (currentCursor.endIndex <= treeSitterRange.endIndex && (currentCursor.gotoNextSibling() || currentCursor.gotoParent())) {
+          }
+        } else {
+          const capture = tokenizationModel.captureAtRangeTree(range);
+          tokens.push({
+            c: currentCursor.currentNode.text.replace(/\r/g, ""),
+            t: capture?.map((cap) => cap.name).join(" ") ?? "",
+            r: {
+              dark_plus: void 0,
+              light_plus: void 0,
+              dark_vs: void 0,
+              light_vs: void 0,
+              hc_black: void 0
+            }
+          });
+          while (!(cursorResult = currentCursor.gotoNextSibling())) {
+            if (!(cursorResult = currentCursor.gotoParent())) {
+              break;
+            }
+          }
+        }
+      } else {
+        cursorResult = currentCursor.gotoFirstChild();
+      }
+      if (cursors.length > 1 && (!cursorResult && currentCursor === cursors[cursors.length - 1].cursor || isOutsideRange)) {
+        current.cursor.delete();
+        cursors.pop();
+        cursorResult = true;
+      }
+    } while (cursorResult);
+    cursor.delete();
+    return tokens;
+  }
+  captureSyntaxTokens(fileName, content) {
+    const languageId = this.languageService.guessLanguageIdByFilepathOrFirstLine(URI.file(fileName));
+    return this.textMateService.createTokenizer(languageId).then((grammar) => {
+      if (!grammar) {
+        return [];
+      }
+      const lines = splitLines(content);
+      const result = this._tokenize(grammar, lines);
+      return this._getThemesResult(grammar, lines).then((themesResult) => {
+        this._enrichResult(result, themesResult);
+        return result.filter((t) => t.c.length > 0);
+      });
+    });
+  }
+  async captureTreeSitterSyntaxTokens(resource, content) {
+    const languageId = this.languageService.guessLanguageIdByFilepathOrFirstLine(resource);
+    if (!languageId) {
+      return [];
+    }
+    const model = this.modelService.getModel(resource) ?? this.modelService.createModel(content, { languageId, onDidChange: Event.None }, resource);
+    const tokenizationPart = model.tokenization.tokens.get();
+    if (!(tokenizationPart instanceof TreeSitterSyntaxTokenBackend)) {
+      return [];
+    }
+    const treeObs = tokenizationPart.tree;
+    const tokenizationImplObs = tokenizationPart.tokenizationImpl;
+    const treeSitterTree = treeObs.get() ?? await waitForState(treeObs);
+    const tokenizationImpl = tokenizationImplObs.get() ?? await waitForState(tokenizationImplObs);
+    if (!treeSitterTree) {
+      return [];
+    }
+    const result = (await this._treeSitterTokenize(treeSitterTree, tokenizationImpl, languageId)).filter((t) => t.c.length > 0);
+    const themeTokens = await this._getTreeSitterThemesResult(result, languageId);
+    this._enrichResult(result, themeTokens);
+    return result;
+  }
+};
+Snapper = __decorate([
+  __param(0, ILanguageService),
+  __param(1, IWorkbenchThemeService),
+  __param(2, ITextMateTokenizationService),
+  __param(3, IModelService)
+], Snapper);
+async function captureTokens(accessor, resource, treeSitter = false) {
+  const process = /* @__PURE__ */ __name((resource2) => {
+    const fileService = accessor.get(IFileService);
+    const fileName = basename(resource2);
+    const snapper = accessor.get(IInstantiationService).createInstance(Snapper);
+    return fileService.readFile(resource2).then((content) => {
+      if (treeSitter) {
+        return snapper.captureTreeSitterSyntaxTokens(resource2, content.value.toString());
+      } else {
+        return snapper.captureSyntaxTokens(fileName, content.value.toString());
+      }
+    });
+  }, "process");
+  if (!resource) {
+    const editorService = accessor.get(IEditorService);
+    const file = editorService.activeEditor ? EditorResourceAccessor.getCanonicalUri(editorService.activeEditor, { filterByScheme: Schemas.file }) : null;
+    if (file) {
+      process(file).then((result) => {
+        console.log(result);
+      });
+    } else {
+      console.log("No file editor active");
+    }
+  } else {
+    const processResult = await process(resource);
+    return processResult;
+  }
+  return void 0;
+}
+__name(captureTokens, "captureTokens");
+CommandsRegistry.registerCommand("_workbench.captureSyntaxTokens", function(accessor, resource) {
+  return captureTokens(accessor, resource);
+});
+CommandsRegistry.registerCommand("_workbench.captureTreeSitterSyntaxTokens", function(accessor, resource) {
+  if (!resource) {
+    const editorService = accessor.get(IEditorService);
+    resource = editorService.activeEditor?.resource;
+  }
+  return captureTokens(accessor, resource, true);
+});
+//# sourceMappingURL=themes.test.contribution.js.map

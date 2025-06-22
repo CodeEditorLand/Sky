@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["../../../../../../../../../../Dependency/Microsoft/Dependency/Editor/out/vs/editor/browser/viewParts/gpuMark/gpuMark.css"],
+  "sourcesContent": ["/*---------------------------------------------------------------------------------------------\r\n *  Copyright (c) Microsoft Corporation. All rights reserved.\r\n *  Licensed under the MIT License. See License.txt in the project root for license information.\r\n *--------------------------------------------------------------------------------------------*/\r\n\r\n.monaco-editor .margin-view-overlays .gpu-mark {\r\n\tposition: absolute;\r\n\ttop: 0;\r\n\tbottom: 0;\r\n\tleft: 0;\r\n\twidth: 100%;\r\n\tdisplay: inline-block;\r\n\tborder-left: solid 2px var(--vscode-editorWarning-foreground);\r\n\topacity: 0.2;\r\n\ttransition: background-color 0.1s linear;\r\n}\r\n\r\n.monaco-editor .margin-view-overlays .gpu-mark:hover {\r\n\tbackground-color: var(--vscode-editorWarning-foreground)\r\n}\r\n"],
+  "mappings": "AAKA,CAAC,cAAc,CAAC,qBAAqB,CAAC;AACrC,YAAU;AACV,OAAK;AACL,UAAQ;AACR,QAAM;AACN,SAAO;AACP,WAAS;AACT,eAAa,MAAM,IAAI,IAAI;AAC3B,WAAS;AACT,cAAY,iBAAiB,KAAK;AACnC;AAEA,CAZC,cAYc,CAZC,qBAYqB,CAZC,QAYQ;AAC7C,oBAAkB,IAAI;AACvB;",
+  "names": []
+}

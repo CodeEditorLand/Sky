@@ -1,1 +1,813 @@
-import"./media/remoteViewlet.css";import*as p from"../../../../nls.js";import*as D from"../../../../base/browser/dom.js";import{URI as A}from"../../../../base/common/uri.js";import{$8tb as ct}from"../../../services/layout/browser/layoutService.js";import{$Po as K}from"../../../../platform/telemetry/common/telemetry.js";import{$hl as G}from"../../../../platform/workspace/common/workspace.js";import{$Ho as mt}from"../../../../platform/storage/common/storage.js";import{$El as U}from"../../../../platform/configuration/common/configuration.js";import{$mj as Q}from"../../../../platform/instantiation/common/instantiation.js";import{$Mt as F}from"../../../../platform/theme/common/themeService.js";import{ThemeIcon as pt}from"../../../../base/common/themables.js";import{$ofb as Z}from"../../../../platform/contextview/browser/contextView.js";import{$XO as ut,$1O as ft}from"../../../services/extensions/common/extensions.js";import{$uxb as dt}from"../../../browser/parts/views/viewsViewlet.js";import{$e4b as P}from"./remoteExplorer.js";import{$Vn as gt}from"../../../../platform/contextkey/common/contextkey.js";import{Extensions as N,$YM as q}from"../../../common/views.js";import{$Ql as S}from"../../../../platform/registry/common/platform.js";import{$4$ as bt}from"../../../../platform/opener/common/opener.js";import{$OM as tt}from"../../../../platform/quickinput/common/quickInput.js";import{$Yn as et}from"../../../../platform/commands/common/commands.js";import{$WI as wt}from"../../../../platform/progress/common/progress.js";import{$YK as it}from"../../../services/remote/common/remoteAgentService.js";import{$_o as It}from"../../../../platform/dialogs/common/dialogs.js";import $t from"../../../../base/common/severity.js";import{$jLb as M}from"../../../browser/actions/windowActions.js";import{$vd as st,$wd as Dt}from"../../../../base/common/lifecycle.js";import{$Auc as yt}from"./explorerViewItems.js";import{$Zc as W}from"../../../../base/common/types.js";import{$s2b as ot}from"../../../services/remote/common/remoteExplorerService.js";import{$KX as nt}from"../../../services/environment/common/environmentService.js";import{$qxb as Tt}from"../../../browser/parts/views/viewPane.js";import{$Gmb as Ct}from"../../../../platform/list/browser/listService.js";import{$ux as kt}from"../../../../platform/keybinding/common/keybinding.js";import{Event as vt,$df as Lt}from"../../../../base/common/event.js";import{$kj as rt}from"../../../../platform/instantiation/common/descriptors.js";import*as g from"./remoteIcons.js";import{$3n as at}from"../../../../platform/log/common/log.js";import{$VYb as xt}from"../../../services/timer/browser/timerService.js";import{$tu as L}from"../../../../platform/remote/common/remoteHosts.js";import{$YX as Rt}from"../../../../platform/workspace/common/virtualWorkspace.js";import{$Juc as Ht}from"../../welcomeGettingStarted/browser/gettingStartedService.js";import{Schemas as O}from"../../../../base/common/network.js";import{$c5 as Pt}from"../../../../base/browser/window.js";import{$ngb as Vt}from"../../../../platform/hover/browser/hover.js";var V=function(c,t,e,i){var o=arguments.length,s=o<3?t:i===null?i=Object.getOwnPropertyDescriptor(t,e):i,a;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")s=Reflect.decorate(c,t,e,i);else for(var n=c.length-1;n>=0;n--)(a=c[n])&&(s=(o<3?a(s):o>3?a(t,e,s):a(t,e))||s);return o>3&&s&&Object.defineProperty(t,e,s),s},r=function(c,t){return function(e,i){t(e,i,c)}};class At{getHeight(t){return 22}getTemplateId(t){return"HelpItemTemplate"}}class Nt{constructor(){this.templateId="HelpItemTemplate"}renderTemplate(t){t.classList.add("remote-help-tree-node-item");const e=D.$M6(t,D.$(".remote-help-tree-node-item-icon"));return{parent:t,icon:e}}renderElement(t,e,i){const o=i.parent;D.$M6(o,i.icon),i.icon.classList.add(...t.element.iconClasses);const s=D.$M6(o,D.$(".help-item-label"));s.innerText=t.element.label}disposeTemplate(t){}}class St{hasChildren(t){return t instanceof j}getChildren(t){return t instanceof j&&t.items?t.items:[]}}class j extends st{constructor(t,e,i,o,s,a,n,m){super(),this.a=t,this.b=e,this.c=i,this.f=o,this.g=s,this.h=a,this.j=n,this.m=m,this.r(),this.B(t.onDidChangeHelpInformation(()=>this.r()))}n(t,e){return new jt(this.f,this.m,t.extensionDescription,typeof t.remoteName=="string"?[t.remoteName]:t.remoteName,t.virtualWorkspace,t[e])}r(){const t=[],e=this.a.helpInformation.filter(s=>s.getStarted);if(e.length){const s=e.map(n=>this.n(n,"getStarted")),a=this.items?.find(n=>n.icon===g.$U3b)??new zt(g.$U3b,p.localize(10175,null),s,this.c,this.h,this.b,this.g,this.j,this.f);a.values=s,t.push(a)}const i=this.a.helpInformation.filter(s=>s.documentation);if(i.length){const s=i.map(n=>this.n(n,"documentation")),a=this.items?.find(n=>n.icon===g.$V3b)??new _(g.$V3b,p.localize(10176,null),s,this.c,this.h,this.b,this.g,this.j);a.values=s,t.push(a)}const o=this.a.helpInformation.filter(s=>s.issues);if(o.length){const s=o.map(n=>this.n(n,"issues")),a=this.items?.find(n=>n.icon===g.$X3b)??new _(g.$X3b,p.localize(10177,null),s,this.c,this.h,this.b,this.g,this.j);a.values=s,t.push(a)}if(t.length){const s=this.a.helpInformation.map(n=>this.n(n,"reportIssue")),a=this.items?.find(n=>n.icon===g.$Y3b)??new Bt(g.$Y3b,p.localize(10178,null),s,this.c,this.h,this.f,this.b,this.g,this.j);a.values=s,t.push(a)}t.length&&(this.items=t)}}class jt{constructor(t,e,i,o,s,a){this.c=t,this.d=e,this.extensionDescription=i,this.remoteAuthority=o,this.virtualWorkspace=s,this.f=a}get description(){return this.g().then(()=>this.b)}get url(){return this.g()}async g(){if(this.a===void 0){if(typeof this.f=="string")if(A.parse(this.f).authority)this.a=this.f;else{const e=this.c.executeCommand(this.f).then(o=>(this.a=o,this.a)),i=new Promise(o=>setTimeout(()=>o(""),500));this.a=await Promise.race([e,i])}else if(this.f?.id)try{const t=`${this.extensionDescription.id}#${this.f.id}`,e=await this.d.getWalkthrough(t);this.b=e.title,this.a=t}catch{}}return this.a===void 0&&(this.a=""),this.a}}class B{constructor(t,e,i,o,s,a,n){this.icon=t,this.label=e,this.values=i,this.a=o,this.b=s,this.c=a,this.d=n,this.iconClasses=[],this.iconClasses.push(...pt.asClassNameArray(t)),this.iconClasses.push("remote-help-tree-node-item-icon")}async f(){return(await Promise.all(this.values.map(async t=>({label:t.extensionDescription.displayName||t.extensionDescription.identifier.value,description:await t.description??await t.url,url:await t.url,extensionDescription:t.extensionDescription})))).filter(t=>t.description)}async handleClick(){const t=this.b.remoteAuthority;if(t){for(let e=0;e<this.c.targetType.length;e++)if(t.startsWith(this.c.targetType[e])){for(const i of this.values)if(i.remoteAuthority){for(const o of i.remoteAuthority)if(t.startsWith(o)){await this.g(i.extensionDescription,await i.url);return}}}}else{const e=Rt(this.d.getWorkspace())?.scheme;if(e){for(let i=0;i<this.c.targetType.length;i++)for(const o of this.values)if(o.virtualWorkspace&&o.remoteAuthority){for(const s of o.remoteAuthority)if(this.c.targetType[i].startsWith(s)&&e.startsWith(o.virtualWorkspace)){await this.g(o.extensionDescription,await o.url);return}}}}if(this.values.length>1){const e=await this.f();if(e.length){const i=await this.a.pick(e,{placeHolder:p.localize(10179,null)});i&&await this.g(i.extensionDescription,i.url)}}else await this.g(this.values[0].extensionDescription,await this.values[0].url)}}class zt extends B{constructor(t,e,i,o,s,a,n,m,d){super(t,e,i,o,s,n,m),this.h=a,this.j=d}async g(t,e){if([O.http,O.https].includes(A.parse(e).scheme)){this.h.open(e,{allowCommands:!0});return}this.j.executeCommand("workbench.action.openWalkthrough",e)}}class _ extends B{constructor(t,e,i,o,s,a,n,m){super(t,e,i,o,s,n,m),this.h=a}async g(t,e){await this.h.open(A.parse(e),{allowCommands:!0})}}class Bt extends B{constructor(t,e,i,o,s,a,n,m,d){super(t,e,i,o,s,m,d),this.h=a,this.j=n}async f(){return Promise.all(this.values.map(async t=>({label:t.extensionDescription.displayName||t.extensionDescription.identifier.value,description:"",url:await t.url,extensionDescription:t.extensionDescription})))}async g(t,e){e?await this.j.open(A.parse(e)):await this.h.executeCommand("workbench.action.openIssueReporter",[t.identifier.value])}}let x=class extends Tt{static{this.ID="~remote.helpPanel"}static{this.TITLE=p.localize2(10190,"Help and feedback")}constructor(t,e,i,o,s,a,n,m,d,y,R,w,h,u,b,f,I){super(e,i,o,a,s,m,n,d,u,b),this.b=t,this.c=y,this.f=R,this.g=w,this.h=h,this.j=f,this.m=I}X(t){super.X(t),t.classList.add("remote-help");const e=document.createElement("div");e.classList.add("remote-help-content"),t.appendChild(e),this.a=this.Fb.createInstance(Ct,"RemoteHelp",e,new At,[new Nt],new St,{accessibilityProvider:{getAriaLabel:o=>o.label,getWidgetAriaLabel:()=>p.localize(10180,null)}});const i=this.B(new j(this.b,this.Gb,this.c,this.f,this.g,this.h,this.j,this.m));this.a.setInput(i),this.B(vt.debounce(this.a.onDidOpen,(o,s)=>s,75,!0)(o=>{o.element?.handleClick()}))}Y(t,e){super.Y(t,e),this.a.layout(t,e)}};x=V([r(2,kt),r(3,Z),r(4,gt),r(5,U),r(6,Q),r(7,q),r(8,bt),r(9,tt),r(10,et),r(11,ot),r(12,nt),r(13,F),r(14,Vt),r(15,G),r(16,Ht)],x);class Et{constructor(t){this.id=x.ID,this.name=x.TITLE,this.canToggleVisibility=!0,this.hideByDefault=!1,this.group="help@50",this.order=-10,this.ctorDescriptor=new rt(x,[t])}}let z=class extends dt{constructor(t,e,i,o,s,a,n,m,d,y,R,w){super(P,y.onDidChangeTargetType,s,t,e,o,a,n,m,d,i,R,w),this.Nb=y,this.Jb=new Et(this),this.helpInformation=[],this.Kb=new Lt,this.onDidChangeHelpInformation=this.Kb.event,this.Lb=!1,this.Cb([this.Jb]),this.B(this.Mb=this.bb.createInstance(yt)),this.B(this.Nb.onDidChangeHelpInformation(u=>{this.Ob(u)})),this.Ob(this.Nb.helpInformation);const h=S.as(N.ViewsRegistry);this.Mb.createOptionItems(h.getViews(this.viewContainer)),this.B(h.onViewsRegistered(u=>{const b=[];for(const f of u)f.viewContainer.id===P&&b.push(...f.views);b.length>0&&this.Mb.createOptionItems(b)})),this.B(h.onViewsDeregistered(u=>{u.viewContainer.id===P&&this.Mb.removeOptionItems(u.views)}))}Ob(t){const e=[];for(const o of t)this.Pb(o,e);this.helpInformation=e,this.Kb.fire();const i=S.as(N.ViewsRegistry);this.helpInformation.length&&!this.Lb?(i.getView(this.Jb.id)||i.registerViews([this.Jb],this.viewContainer),this.Lb=!0):this.Lb&&(i.deregisterViews([this.Jb],this.viewContainer),this.Lb=!1)}Pb(t,e){ft(t.description,"contribRemoteHelp")&&(!t.value.documentation&&!t.value.getStarted&&!t.value.issues||e.push({extensionDescription:t.description,getStarted:t.value.getStarted,documentation:t.value.documentation,reportIssue:t.value.reportIssue,issues:t.value.issues,remoteName:t.value.remoteName,virtualWorkspace:t.value.virtualWorkspace}))}Db(t){return W(t.remoteAuthority)?t.remoteAuthority[0]:t.remoteAuthority}Eb(t){this.Nb.targetType=W(t.remoteAuthority)?t.remoteAuthority:[t.remoteAuthority]}getTitle(){return p.localize(10181,null)}};z=V([r(0,ct),r(1,K),r(2,G),r(3,mt),r(4,U),r(5,Q),r(6,F),r(7,Z),r(8,ut),r(9,ot),r(10,q),r(11,at)],z);S.as(N.ViewContainersRegistry).registerViewContainer({id:P,title:p.localize2(10191,"Remote Explorer"),ctorDescriptor:new rt(z),hideIfEmpty:!0,viewOrderDelegate:{getOrder:c=>{if(!c)return;let t=/^targets@(\d+)$/.exec(c);if(t)return-1e3;if(t=/^details(@(\d+))?$/.exec(c),t)return-500+Number(t[2]);if(t=/^help(@(\d+))?$/.exec(c),t)return-10}},icon:g.$Z3b,order:4},0);let Y=class{constructor(t,e){t.getEnvironment().then(i=>{i&&e.setPerformanceMarks("server",i.marks)})}};Y=V([r(0,it),r(1,xt)],Y);class Mt{get lastReport(){return this.b}constructor(t,e,i,o,s){this.location=e,this.a=!1,this.b=i,this.c=null,this.d=null,this.f=null;const a=new Promise(n=>this.c=n);t.withProgress({location:e,buttons:o},n=>(this.a||(this.d=n),a),n=>s(n,this.b)),this.b&&this.report()}dispose(){this.a=!0,this.c&&(this.c(),this.c=null),this.d=null,this.f&&(this.f.dispose(),this.f=null)}report(t){t&&(this.b=t),this.b&&this.d&&this.d.report({message:this.b})}startTimer(t){this.stopTimer(),this.f=new Wt(this,t)}stopTimer(){this.f&&(this.f.dispose(),this.f=null)}}class Wt{constructor(t,e){this.a=t,this.b=e,this.c=D.$U5(Pt,()=>this.d(),1e3),this.d()}dispose(){this.c.dispose()}d(){const t=this.b-Date.now();if(t<0)return;const e=Math.ceil(t/1e3);e===1?this.a.report(p.localize(10182,null,e)):this.a.report(p.localize(10183,null,e))}}const X=40*1e3;let J=class extends st{constructor(t,e,i,o,s,a,n,m){super(),this.a=!1;const d=t.getConnection();if(d){let f=function(l,$,lt=null){return h&&(h.dispose(),h=null),l||(l=w?15:20),new Mt(e,l,lt,$.map(v=>v.label),(v,ht)=>{typeof v<"u"&&$[v]?$[v].callback():l===20?h=f(15,$,ht):I()})},I=function(){h&&(h.dispose(),h=null)};var y=f,R=I;let w=!1;this.B(s.onShow(()=>w=!0)),this.B(s.onHide(()=>w=!1));let h=null,u=null;const b=this.B(new Dt);let T="",C=0,k=0;const E={label:p.localize(10184,null),callback:()=>{u?.skipWait()}},H={label:p.localize(10185,null),callback:()=>{m.publicLog2("remoteReconnectionReload",{remoteName:L(n.remoteAuthority),reconnectionToken:T,millisSinceLastIncomingData:Date.now()-C,attempt:k}),o.executeCommand(M.ID)}};this.B(d.onDidStateChange(l=>{switch(h?.stopTimer(),b.clear(),l.type){case 0:T=l.reconnectionToken,C=Date.now()-l.millisSinceLastIncomingData,k=0,m.publicLog2("remoteConnectionLost",{remoteName:L(n.remoteAuthority),reconnectionToken:l.reconnectionToken}),(h||l.millisSinceLastIncomingData>X)&&(h||(h=f(null,[E,H])),h.report(p.localize(10186,null)));break;case 1:h&&(u=l,h=f(null,[E,H]),h.startTimer(Date.now()+1e3*l.durationSeconds));break;case 2:T=l.reconnectionToken,C=Date.now()-l.millisSinceLastIncomingData,k=l.attempt,m.publicLog2("remoteReconnectionRunning",{remoteName:L(n.remoteAuthority),reconnectionToken:l.reconnectionToken,millisSinceLastIncomingData:l.millisSinceLastIncomingData,attempt:l.attempt}),(h||l.millisSinceLastIncomingData>X)&&(h=f(null,[H]),h.report(p.localize(10187,null)),b.value=s.onShow(()=>{h&&h.location===20&&(h=f(15,[H],h.lastReport))}));break;case 3:T=l.reconnectionToken,C=Date.now()-l.millisSinceLastIncomingData,k=l.attempt,m.publicLog2("remoteReconnectionPermanentFailure",{remoteName:L(n.remoteAuthority),reconnectionToken:l.reconnectionToken,millisSinceLastIncomingData:l.millisSinceLastIncomingData,attempt:l.attempt,handled:l.handled}),I(),l.handled?a.info("Error handled: Not showing a notification for the error."):this.a||(this.a=!0,i.confirm({type:$t.Error,message:p.localize(10188,null),primaryButton:p.localize(10189,null)}).then($=>{$.confirmed&&o.executeCommand(M.ID)}));break;case 4:T=l.reconnectionToken,C=Date.now()-l.millisSinceLastIncomingData,k=l.attempt,m.publicLog2("remoteConnectionGain",{remoteName:L(n.remoteAuthority),reconnectionToken:l.reconnectionToken,millisSinceLastIncomingData:l.millisSinceLastIncomingData,attempt:l.attempt}),I();break}}))}}};J=V([r(0,it),r(1,wt),r(2,It),r(3,et),r(4,tt),r(5,at),r(6,nt),r(7,K)],J);export{Y as $Puc,J as $Quc};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import "./media/remoteViewlet.css";
+import * as nls from "../../../../nls.js";
+import * as dom from "../../../../base/browser/dom.js";
+import { URI } from "../../../../base/common/uri.js";
+import { IWorkbenchLayoutService } from "../../../services/layout/browser/layoutService.js";
+import { ITelemetryService } from "../../../../platform/telemetry/common/telemetry.js";
+import { IWorkspaceContextService } from "../../../../platform/workspace/common/workspace.js";
+import { IStorageService } from "../../../../platform/storage/common/storage.js";
+import { IConfigurationService } from "../../../../platform/configuration/common/configuration.js";
+import { IInstantiationService } from "../../../../platform/instantiation/common/instantiation.js";
+import { IThemeService } from "../../../../platform/theme/common/themeService.js";
+import { ThemeIcon } from "../../../../base/common/themables.js";
+import { IContextMenuService } from "../../../../platform/contextview/browser/contextView.js";
+import { IExtensionService, isProposedApiEnabled } from "../../../services/extensions/common/extensions.js";
+import { FilterViewPaneContainer } from "../../../browser/parts/views/viewsViewlet.js";
+import { VIEWLET_ID } from "./remoteExplorer.js";
+import { IContextKeyService } from "../../../../platform/contextkey/common/contextkey.js";
+import { Extensions, IViewDescriptorService } from "../../../common/views.js";
+import { Registry } from "../../../../platform/registry/common/platform.js";
+import { IOpenerService } from "../../../../platform/opener/common/opener.js";
+import { IQuickInputService } from "../../../../platform/quickinput/common/quickInput.js";
+import { ICommandService } from "../../../../platform/commands/common/commands.js";
+import { IProgressService } from "../../../../platform/progress/common/progress.js";
+import { IRemoteAgentService } from "../../../services/remote/common/remoteAgentService.js";
+import { IDialogService } from "../../../../platform/dialogs/common/dialogs.js";
+import Severity from "../../../../base/common/severity.js";
+import { ReloadWindowAction } from "../../../browser/actions/windowActions.js";
+import { Disposable, MutableDisposable } from "../../../../base/common/lifecycle.js";
+import { SwitchRemoteViewItem } from "./explorerViewItems.js";
+import { isStringArray } from "../../../../base/common/types.js";
+import { IRemoteExplorerService } from "../../../services/remote/common/remoteExplorerService.js";
+import { IWorkbenchEnvironmentService } from "../../../services/environment/common/environmentService.js";
+import { ViewPane } from "../../../browser/parts/views/viewPane.js";
+import { WorkbenchAsyncDataTree } from "../../../../platform/list/browser/listService.js";
+import { IKeybindingService } from "../../../../platform/keybinding/common/keybinding.js";
+import { Event, Emitter } from "../../../../base/common/event.js";
+import { SyncDescriptor } from "../../../../platform/instantiation/common/descriptors.js";
+import * as icons from "./remoteIcons.js";
+import { ILogService } from "../../../../platform/log/common/log.js";
+import { ITimerService } from "../../../services/timer/browser/timerService.js";
+import { getRemoteName } from "../../../../platform/remote/common/remoteHosts.js";
+import { getVirtualWorkspaceLocation } from "../../../../platform/workspace/common/virtualWorkspace.js";
+import { IWalkthroughsService } from "../../welcomeGettingStarted/browser/gettingStartedService.js";
+import { Schemas } from "../../../../base/common/network.js";
+import { mainWindow } from "../../../../base/browser/window.js";
+import { IHoverService } from "../../../../platform/hover/browser/hover.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+class HelpTreeVirtualDelegate {
+  static {
+    __name(this, "HelpTreeVirtualDelegate");
+  }
+  getHeight(element) {
+    return 22;
+  }
+  getTemplateId(element) {
+    return "HelpItemTemplate";
+  }
+}
+class HelpTreeRenderer {
+  static {
+    __name(this, "HelpTreeRenderer");
+  }
+  constructor() {
+    this.templateId = "HelpItemTemplate";
+  }
+  renderTemplate(container) {
+    container.classList.add("remote-help-tree-node-item");
+    const icon = dom.append(container, dom.$(".remote-help-tree-node-item-icon"));
+    const parent = container;
+    return { parent, icon };
+  }
+  renderElement(element, index, templateData) {
+    const container = templateData.parent;
+    dom.append(container, templateData.icon);
+    templateData.icon.classList.add(...element.element.iconClasses);
+    const labelContainer = dom.append(container, dom.$(".help-item-label"));
+    labelContainer.innerText = element.element.label;
+  }
+  disposeTemplate(templateData) {
+  }
+}
+class HelpDataSource {
+  static {
+    __name(this, "HelpDataSource");
+  }
+  hasChildren(element) {
+    return element instanceof HelpModel;
+  }
+  getChildren(element) {
+    if (element instanceof HelpModel && element.items) {
+      return element.items;
+    }
+    return [];
+  }
+}
+class HelpModel extends Disposable {
+  static {
+    __name(this, "HelpModel");
+  }
+  constructor(viewModel, openerService, quickInputService, commandService, remoteExplorerService, environmentService, workspaceContextService, walkthroughsService) {
+    super();
+    this.viewModel = viewModel;
+    this.openerService = openerService;
+    this.quickInputService = quickInputService;
+    this.commandService = commandService;
+    this.remoteExplorerService = remoteExplorerService;
+    this.environmentService = environmentService;
+    this.workspaceContextService = workspaceContextService;
+    this.walkthroughsService = walkthroughsService;
+    this.updateItems();
+    this._register(viewModel.onDidChangeHelpInformation(() => this.updateItems()));
+  }
+  createHelpItemValue(info, infoKey) {
+    return new HelpItemValue(this.commandService, this.walkthroughsService, info.extensionDescription, typeof info.remoteName === "string" ? [info.remoteName] : info.remoteName, info.virtualWorkspace, info[infoKey]);
+  }
+  updateItems() {
+    const helpItems = [];
+    const getStarted = this.viewModel.helpInformation.filter((info) => info.getStarted);
+    if (getStarted.length) {
+      const helpItemValues = getStarted.map((info) => this.createHelpItemValue(info, "getStarted"));
+      const getStartedHelpItem = this.items?.find((item) => item.icon === icons.getStartedIcon) ?? new GetStartedHelpItem(icons.getStartedIcon, nls.localize("remote.help.getStarted", "Get Started"), helpItemValues, this.quickInputService, this.environmentService, this.openerService, this.remoteExplorerService, this.workspaceContextService, this.commandService);
+      getStartedHelpItem.values = helpItemValues;
+      helpItems.push(getStartedHelpItem);
+    }
+    const documentation = this.viewModel.helpInformation.filter((info) => info.documentation);
+    if (documentation.length) {
+      const helpItemValues = documentation.map((info) => this.createHelpItemValue(info, "documentation"));
+      const documentationHelpItem = this.items?.find((item) => item.icon === icons.documentationIcon) ?? new HelpItem(icons.documentationIcon, nls.localize("remote.help.documentation", "Read Documentation"), helpItemValues, this.quickInputService, this.environmentService, this.openerService, this.remoteExplorerService, this.workspaceContextService);
+      documentationHelpItem.values = helpItemValues;
+      helpItems.push(documentationHelpItem);
+    }
+    const issues = this.viewModel.helpInformation.filter((info) => info.issues);
+    if (issues.length) {
+      const helpItemValues = issues.map((info) => this.createHelpItemValue(info, "issues"));
+      const reviewIssuesHelpItem = this.items?.find((item) => item.icon === icons.reviewIssuesIcon) ?? new HelpItem(icons.reviewIssuesIcon, nls.localize("remote.help.issues", "Review Issues"), helpItemValues, this.quickInputService, this.environmentService, this.openerService, this.remoteExplorerService, this.workspaceContextService);
+      reviewIssuesHelpItem.values = helpItemValues;
+      helpItems.push(reviewIssuesHelpItem);
+    }
+    if (helpItems.length) {
+      const helpItemValues = this.viewModel.helpInformation.map((info) => this.createHelpItemValue(info, "reportIssue"));
+      const issueReporterItem = this.items?.find((item) => item.icon === icons.reportIssuesIcon) ?? new IssueReporterItem(icons.reportIssuesIcon, nls.localize("remote.help.report", "Report Issue"), helpItemValues, this.quickInputService, this.environmentService, this.commandService, this.openerService, this.remoteExplorerService, this.workspaceContextService);
+      issueReporterItem.values = helpItemValues;
+      helpItems.push(issueReporterItem);
+    }
+    if (helpItems.length) {
+      this.items = helpItems;
+    }
+  }
+}
+class HelpItemValue {
+  static {
+    __name(this, "HelpItemValue");
+  }
+  constructor(commandService, walkthroughService, extensionDescription, remoteAuthority, virtualWorkspace, urlOrCommandOrId) {
+    this.commandService = commandService;
+    this.walkthroughService = walkthroughService;
+    this.extensionDescription = extensionDescription;
+    this.remoteAuthority = remoteAuthority;
+    this.virtualWorkspace = virtualWorkspace;
+    this.urlOrCommandOrId = urlOrCommandOrId;
+  }
+  get description() {
+    return this.getUrl().then(() => this._description);
+  }
+  get url() {
+    return this.getUrl();
+  }
+  async getUrl() {
+    if (this._url === void 0) {
+      if (typeof this.urlOrCommandOrId === "string") {
+        const url = URI.parse(this.urlOrCommandOrId);
+        if (url.authority) {
+          this._url = this.urlOrCommandOrId;
+        } else {
+          const urlCommand = this.commandService.executeCommand(this.urlOrCommandOrId).then((result) => {
+            this._url = result;
+            return this._url;
+          });
+          const emptyString = new Promise((resolve) => setTimeout(() => resolve(""), 500));
+          this._url = await Promise.race([urlCommand, emptyString]);
+        }
+      } else if (this.urlOrCommandOrId?.id) {
+        try {
+          const walkthroughId = `${this.extensionDescription.id}#${this.urlOrCommandOrId.id}`;
+          const walkthrough = await this.walkthroughService.getWalkthrough(walkthroughId);
+          this._description = walkthrough.title;
+          this._url = walkthroughId;
+        } catch {
+        }
+      }
+    }
+    if (this._url === void 0) {
+      this._url = "";
+    }
+    return this._url;
+  }
+}
+class HelpItemBase {
+  static {
+    __name(this, "HelpItemBase");
+  }
+  constructor(icon, label, values, quickInputService, environmentService, remoteExplorerService, workspaceContextService) {
+    this.icon = icon;
+    this.label = label;
+    this.values = values;
+    this.quickInputService = quickInputService;
+    this.environmentService = environmentService;
+    this.remoteExplorerService = remoteExplorerService;
+    this.workspaceContextService = workspaceContextService;
+    this.iconClasses = [];
+    this.iconClasses.push(...ThemeIcon.asClassNameArray(icon));
+    this.iconClasses.push("remote-help-tree-node-item-icon");
+  }
+  async getActions() {
+    return (await Promise.all(this.values.map(async (value) => {
+      return {
+        label: value.extensionDescription.displayName || value.extensionDescription.identifier.value,
+        description: await value.description ?? await value.url,
+        url: await value.url,
+        extensionDescription: value.extensionDescription
+      };
+    }))).filter((item) => item.description);
+  }
+  async handleClick() {
+    const remoteAuthority = this.environmentService.remoteAuthority;
+    if (remoteAuthority) {
+      for (let i = 0; i < this.remoteExplorerService.targetType.length; i++) {
+        if (remoteAuthority.startsWith(this.remoteExplorerService.targetType[i])) {
+          for (const value of this.values) {
+            if (value.remoteAuthority) {
+              for (const authority of value.remoteAuthority) {
+                if (remoteAuthority.startsWith(authority)) {
+                  await this.takeAction(value.extensionDescription, await value.url);
+                  return;
+                }
+              }
+            }
+          }
+        }
+      }
+    } else {
+      const virtualWorkspace = getVirtualWorkspaceLocation(this.workspaceContextService.getWorkspace())?.scheme;
+      if (virtualWorkspace) {
+        for (let i = 0; i < this.remoteExplorerService.targetType.length; i++) {
+          for (const value of this.values) {
+            if (value.virtualWorkspace && value.remoteAuthority) {
+              for (const authority of value.remoteAuthority) {
+                if (this.remoteExplorerService.targetType[i].startsWith(authority) && virtualWorkspace.startsWith(value.virtualWorkspace)) {
+                  await this.takeAction(value.extensionDescription, await value.url);
+                  return;
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+    if (this.values.length > 1) {
+      const actions = await this.getActions();
+      if (actions.length) {
+        const action = await this.quickInputService.pick(actions, { placeHolder: nls.localize("pickRemoteExtension", "Select url to open") });
+        if (action) {
+          await this.takeAction(action.extensionDescription, action.url);
+        }
+      }
+    } else {
+      await this.takeAction(this.values[0].extensionDescription, await this.values[0].url);
+    }
+  }
+}
+class GetStartedHelpItem extends HelpItemBase {
+  static {
+    __name(this, "GetStartedHelpItem");
+  }
+  constructor(icon, label, values, quickInputService, environmentService, openerService, remoteExplorerService, workspaceContextService, commandService) {
+    super(icon, label, values, quickInputService, environmentService, remoteExplorerService, workspaceContextService);
+    this.openerService = openerService;
+    this.commandService = commandService;
+  }
+  async takeAction(extensionDescription, urlOrWalkthroughId) {
+    if ([Schemas.http, Schemas.https].includes(URI.parse(urlOrWalkthroughId).scheme)) {
+      this.openerService.open(urlOrWalkthroughId, { allowCommands: true });
+      return;
+    }
+    this.commandService.executeCommand("workbench.action.openWalkthrough", urlOrWalkthroughId);
+  }
+}
+class HelpItem extends HelpItemBase {
+  static {
+    __name(this, "HelpItem");
+  }
+  constructor(icon, label, values, quickInputService, environmentService, openerService, remoteExplorerService, workspaceContextService) {
+    super(icon, label, values, quickInputService, environmentService, remoteExplorerService, workspaceContextService);
+    this.openerService = openerService;
+  }
+  async takeAction(extensionDescription, url) {
+    await this.openerService.open(URI.parse(url), { allowCommands: true });
+  }
+}
+class IssueReporterItem extends HelpItemBase {
+  static {
+    __name(this, "IssueReporterItem");
+  }
+  constructor(icon, label, values, quickInputService, environmentService, commandService, openerService, remoteExplorerService, workspaceContextService) {
+    super(icon, label, values, quickInputService, environmentService, remoteExplorerService, workspaceContextService);
+    this.commandService = commandService;
+    this.openerService = openerService;
+  }
+  async getActions() {
+    return Promise.all(this.values.map(async (value) => {
+      return {
+        label: value.extensionDescription.displayName || value.extensionDescription.identifier.value,
+        description: "",
+        url: await value.url,
+        extensionDescription: value.extensionDescription
+      };
+    }));
+  }
+  async takeAction(extensionDescription, url) {
+    if (!url) {
+      await this.commandService.executeCommand("workbench.action.openIssueReporter", [extensionDescription.identifier.value]);
+    } else {
+      await this.openerService.open(URI.parse(url));
+    }
+  }
+}
+let HelpPanel = class HelpPanel2 extends ViewPane {
+  static {
+    __name(this, "HelpPanel");
+  }
+  static {
+    this.ID = "~remote.helpPanel";
+  }
+  static {
+    this.TITLE = nls.localize2("remote.help", "Help and feedback");
+  }
+  constructor(viewModel, options, keybindingService, contextMenuService, contextKeyService, configurationService, instantiationService, viewDescriptorService, openerService, quickInputService, commandService, remoteExplorerService, environmentService, themeService, hoverService, workspaceContextService, walkthroughsService) {
+    super(options, keybindingService, contextMenuService, configurationService, contextKeyService, viewDescriptorService, instantiationService, openerService, themeService, hoverService);
+    this.viewModel = viewModel;
+    this.quickInputService = quickInputService;
+    this.commandService = commandService;
+    this.remoteExplorerService = remoteExplorerService;
+    this.environmentService = environmentService;
+    this.workspaceContextService = workspaceContextService;
+    this.walkthroughsService = walkthroughsService;
+  }
+  renderBody(container) {
+    super.renderBody(container);
+    container.classList.add("remote-help");
+    const treeContainer = document.createElement("div");
+    treeContainer.classList.add("remote-help-content");
+    container.appendChild(treeContainer);
+    this.tree = this.instantiationService.createInstance(WorkbenchAsyncDataTree, "RemoteHelp", treeContainer, new HelpTreeVirtualDelegate(), [new HelpTreeRenderer()], new HelpDataSource(), {
+      accessibilityProvider: {
+        getAriaLabel: /* @__PURE__ */ __name((item) => {
+          return item.label;
+        }, "getAriaLabel"),
+        getWidgetAriaLabel: /* @__PURE__ */ __name(() => nls.localize("remotehelp", "Remote Help"), "getWidgetAriaLabel")
+      }
+    });
+    const model = this._register(new HelpModel(this.viewModel, this.openerService, this.quickInputService, this.commandService, this.remoteExplorerService, this.environmentService, this.workspaceContextService, this.walkthroughsService));
+    this.tree.setInput(model);
+    this._register(Event.debounce(this.tree.onDidOpen, (last, event) => event, 75, true)((e) => {
+      e.element?.handleClick();
+    }));
+  }
+  layoutBody(height, width) {
+    super.layoutBody(height, width);
+    this.tree.layout(height, width);
+  }
+};
+HelpPanel = __decorate([
+  __param(2, IKeybindingService),
+  __param(3, IContextMenuService),
+  __param(4, IContextKeyService),
+  __param(5, IConfigurationService),
+  __param(6, IInstantiationService),
+  __param(7, IViewDescriptorService),
+  __param(8, IOpenerService),
+  __param(9, IQuickInputService),
+  __param(10, ICommandService),
+  __param(11, IRemoteExplorerService),
+  __param(12, IWorkbenchEnvironmentService),
+  __param(13, IThemeService),
+  __param(14, IHoverService),
+  __param(15, IWorkspaceContextService),
+  __param(16, IWalkthroughsService)
+], HelpPanel);
+class HelpPanelDescriptor {
+  static {
+    __name(this, "HelpPanelDescriptor");
+  }
+  constructor(viewModel) {
+    this.id = HelpPanel.ID;
+    this.name = HelpPanel.TITLE;
+    this.canToggleVisibility = true;
+    this.hideByDefault = false;
+    this.group = "help@50";
+    this.order = -10;
+    this.ctorDescriptor = new SyncDescriptor(HelpPanel, [viewModel]);
+  }
+}
+let RemoteViewPaneContainer = class RemoteViewPaneContainer2 extends FilterViewPaneContainer {
+  static {
+    __name(this, "RemoteViewPaneContainer");
+  }
+  constructor(layoutService, telemetryService, contextService, storageService, configurationService, instantiationService, themeService, contextMenuService, extensionService, remoteExplorerService, viewDescriptorService, logService) {
+    super(VIEWLET_ID, remoteExplorerService.onDidChangeTargetType, configurationService, layoutService, telemetryService, storageService, instantiationService, themeService, contextMenuService, extensionService, contextService, viewDescriptorService, logService);
+    this.remoteExplorerService = remoteExplorerService;
+    this.helpPanelDescriptor = new HelpPanelDescriptor(this);
+    this.helpInformation = [];
+    this._onDidChangeHelpInformation = new Emitter();
+    this.onDidChangeHelpInformation = this._onDidChangeHelpInformation.event;
+    this.hasRegisteredHelpView = false;
+    this.addConstantViewDescriptors([this.helpPanelDescriptor]);
+    this._register(this.remoteSwitcher = this.instantiationService.createInstance(SwitchRemoteViewItem));
+    this._register(this.remoteExplorerService.onDidChangeHelpInformation((extensions) => {
+      this._setHelpInformation(extensions);
+    }));
+    this._setHelpInformation(this.remoteExplorerService.helpInformation);
+    const viewsRegistry = Registry.as(Extensions.ViewsRegistry);
+    this.remoteSwitcher.createOptionItems(viewsRegistry.getViews(this.viewContainer));
+    this._register(viewsRegistry.onViewsRegistered((e) => {
+      const remoteViews = [];
+      for (const view of e) {
+        if (view.viewContainer.id === VIEWLET_ID) {
+          remoteViews.push(...view.views);
+        }
+      }
+      if (remoteViews.length > 0) {
+        this.remoteSwitcher.createOptionItems(remoteViews);
+      }
+    }));
+    this._register(viewsRegistry.onViewsDeregistered((e) => {
+      if (e.viewContainer.id === VIEWLET_ID) {
+        this.remoteSwitcher.removeOptionItems(e.views);
+      }
+    }));
+  }
+  _setHelpInformation(extensions) {
+    const helpInformation = [];
+    for (const extension of extensions) {
+      this._handleRemoteInfoExtensionPoint(extension, helpInformation);
+    }
+    this.helpInformation = helpInformation;
+    this._onDidChangeHelpInformation.fire();
+    const viewsRegistry = Registry.as(Extensions.ViewsRegistry);
+    if (this.helpInformation.length && !this.hasRegisteredHelpView) {
+      const view = viewsRegistry.getView(this.helpPanelDescriptor.id);
+      if (!view) {
+        viewsRegistry.registerViews([this.helpPanelDescriptor], this.viewContainer);
+      }
+      this.hasRegisteredHelpView = true;
+    } else if (this.hasRegisteredHelpView) {
+      viewsRegistry.deregisterViews([this.helpPanelDescriptor], this.viewContainer);
+      this.hasRegisteredHelpView = false;
+    }
+  }
+  _handleRemoteInfoExtensionPoint(extension, helpInformation) {
+    if (!isProposedApiEnabled(extension.description, "contribRemoteHelp")) {
+      return;
+    }
+    if (!extension.value.documentation && !extension.value.getStarted && !extension.value.issues) {
+      return;
+    }
+    helpInformation.push({
+      extensionDescription: extension.description,
+      getStarted: extension.value.getStarted,
+      documentation: extension.value.documentation,
+      reportIssue: extension.value.reportIssue,
+      issues: extension.value.issues,
+      remoteName: extension.value.remoteName,
+      virtualWorkspace: extension.value.virtualWorkspace
+    });
+  }
+  getFilterOn(viewDescriptor) {
+    return isStringArray(viewDescriptor.remoteAuthority) ? viewDescriptor.remoteAuthority[0] : viewDescriptor.remoteAuthority;
+  }
+  setFilter(viewDescriptor) {
+    this.remoteExplorerService.targetType = isStringArray(viewDescriptor.remoteAuthority) ? viewDescriptor.remoteAuthority : [viewDescriptor.remoteAuthority];
+  }
+  getTitle() {
+    const title = nls.localize("remote.explorer", "Remote Explorer");
+    return title;
+  }
+};
+RemoteViewPaneContainer = __decorate([
+  __param(0, IWorkbenchLayoutService),
+  __param(1, ITelemetryService),
+  __param(2, IWorkspaceContextService),
+  __param(3, IStorageService),
+  __param(4, IConfigurationService),
+  __param(5, IInstantiationService),
+  __param(6, IThemeService),
+  __param(7, IContextMenuService),
+  __param(8, IExtensionService),
+  __param(9, IRemoteExplorerService),
+  __param(10, IViewDescriptorService),
+  __param(11, ILogService)
+], RemoteViewPaneContainer);
+Registry.as(Extensions.ViewContainersRegistry).registerViewContainer(
+  {
+    id: VIEWLET_ID,
+    title: nls.localize2("remote.explorer", "Remote Explorer"),
+    ctorDescriptor: new SyncDescriptor(RemoteViewPaneContainer),
+    hideIfEmpty: true,
+    viewOrderDelegate: {
+      getOrder: /* @__PURE__ */ __name((group) => {
+        if (!group) {
+          return;
+        }
+        let matches = /^targets@(\d+)$/.exec(group);
+        if (matches) {
+          return -1e3;
+        }
+        matches = /^details(@(\d+))?$/.exec(group);
+        if (matches) {
+          return -500 + Number(matches[2]);
+        }
+        matches = /^help(@(\d+))?$/.exec(group);
+        if (matches) {
+          return -10;
+        }
+        return;
+      }, "getOrder")
+    },
+    icon: icons.remoteExplorerViewIcon,
+    order: 4
+  },
+  0
+  /* ViewContainerLocation.Sidebar */
+);
+let RemoteMarkers = class RemoteMarkers2 {
+  static {
+    __name(this, "RemoteMarkers");
+  }
+  constructor(remoteAgentService, timerService) {
+    remoteAgentService.getEnvironment().then((remoteEnv) => {
+      if (remoteEnv) {
+        timerService.setPerformanceMarks("server", remoteEnv.marks);
+      }
+    });
+  }
+};
+RemoteMarkers = __decorate([
+  __param(0, IRemoteAgentService),
+  __param(1, ITimerService)
+], RemoteMarkers);
+class VisibleProgress {
+  static {
+    __name(this, "VisibleProgress");
+  }
+  get lastReport() {
+    return this._lastReport;
+  }
+  constructor(progressService, location, initialReport, buttons, onDidCancel) {
+    this.location = location;
+    this._isDisposed = false;
+    this._lastReport = initialReport;
+    this._currentProgressPromiseResolve = null;
+    this._currentProgress = null;
+    this._currentTimer = null;
+    const promise = new Promise((resolve) => this._currentProgressPromiseResolve = resolve);
+    progressService.withProgress({ location, buttons }, (progress) => {
+      if (!this._isDisposed) {
+        this._currentProgress = progress;
+      }
+      return promise;
+    }, (choice) => onDidCancel(choice, this._lastReport));
+    if (this._lastReport) {
+      this.report();
+    }
+  }
+  dispose() {
+    this._isDisposed = true;
+    if (this._currentProgressPromiseResolve) {
+      this._currentProgressPromiseResolve();
+      this._currentProgressPromiseResolve = null;
+    }
+    this._currentProgress = null;
+    if (this._currentTimer) {
+      this._currentTimer.dispose();
+      this._currentTimer = null;
+    }
+  }
+  report(message) {
+    if (message) {
+      this._lastReport = message;
+    }
+    if (this._lastReport && this._currentProgress) {
+      this._currentProgress.report({ message: this._lastReport });
+    }
+  }
+  startTimer(completionTime) {
+    this.stopTimer();
+    this._currentTimer = new ReconnectionTimer(this, completionTime);
+  }
+  stopTimer() {
+    if (this._currentTimer) {
+      this._currentTimer.dispose();
+      this._currentTimer = null;
+    }
+  }
+}
+class ReconnectionTimer {
+  static {
+    __name(this, "ReconnectionTimer");
+  }
+  constructor(parent, completionTime) {
+    this._parent = parent;
+    this._completionTime = completionTime;
+    this._renderInterval = dom.disposableWindowInterval(mainWindow, () => this._render(), 1e3);
+    this._render();
+  }
+  dispose() {
+    this._renderInterval.dispose();
+  }
+  _render() {
+    const remainingTimeMs = this._completionTime - Date.now();
+    if (remainingTimeMs < 0) {
+      return;
+    }
+    const remainingTime = Math.ceil(remainingTimeMs / 1e3);
+    if (remainingTime === 1) {
+      this._parent.report(nls.localize("reconnectionWaitOne", "Attempting to reconnect in {0} second...", remainingTime));
+    } else {
+      this._parent.report(nls.localize("reconnectionWaitMany", "Attempting to reconnect in {0} seconds...", remainingTime));
+    }
+  }
+}
+const DISCONNECT_PROMPT_TIME = 40 * 1e3;
+let RemoteAgentConnectionStatusListener = class RemoteAgentConnectionStatusListener2 extends Disposable {
+  static {
+    __name(this, "RemoteAgentConnectionStatusListener");
+  }
+  constructor(remoteAgentService, progressService, dialogService, commandService, quickInputService, logService, environmentService, telemetryService) {
+    super();
+    this._reloadWindowShown = false;
+    const connection = remoteAgentService.getConnection();
+    if (connection) {
+      let showProgress2 = function(location, buttons, initialReport = null) {
+        if (visibleProgress) {
+          visibleProgress.dispose();
+          visibleProgress = null;
+        }
+        if (!location) {
+          location = quickInputVisible ? 15 : 20;
+        }
+        return new VisibleProgress(progressService, location, initialReport, buttons.map((button) => button.label), (choice, lastReport) => {
+          if (typeof choice !== "undefined" && buttons[choice]) {
+            buttons[choice].callback();
+          } else {
+            if (location === 20) {
+              visibleProgress = showProgress2(15, buttons, lastReport);
+            } else {
+              hideProgress2();
+            }
+          }
+        });
+      }, hideProgress2 = function() {
+        if (visibleProgress) {
+          visibleProgress.dispose();
+          visibleProgress = null;
+        }
+      };
+      var showProgress = showProgress2, hideProgress = hideProgress2;
+      __name(showProgress2, "showProgress");
+      __name(hideProgress2, "hideProgress");
+      let quickInputVisible = false;
+      this._register(quickInputService.onShow(() => quickInputVisible = true));
+      this._register(quickInputService.onHide(() => quickInputVisible = false));
+      let visibleProgress = null;
+      let reconnectWaitEvent = null;
+      const disposableListener = this._register(new MutableDisposable());
+      let reconnectionToken = "";
+      let lastIncomingDataTime = 0;
+      let reconnectionAttempts = 0;
+      const reconnectButton = {
+        label: nls.localize("reconnectNow", "Reconnect Now"),
+        callback: /* @__PURE__ */ __name(() => {
+          reconnectWaitEvent?.skipWait();
+        }, "callback")
+      };
+      const reloadButton = {
+        label: nls.localize("reloadWindow", "Reload Window"),
+        callback: /* @__PURE__ */ __name(() => {
+          telemetryService.publicLog2("remoteReconnectionReload", {
+            remoteName: getRemoteName(environmentService.remoteAuthority),
+            reconnectionToken,
+            millisSinceLastIncomingData: Date.now() - lastIncomingDataTime,
+            attempt: reconnectionAttempts
+          });
+          commandService.executeCommand(ReloadWindowAction.ID);
+        }, "callback")
+      };
+      this._register(connection.onDidStateChange((e) => {
+        visibleProgress?.stopTimer();
+        disposableListener.clear();
+        switch (e.type) {
+          case 0:
+            reconnectionToken = e.reconnectionToken;
+            lastIncomingDataTime = Date.now() - e.millisSinceLastIncomingData;
+            reconnectionAttempts = 0;
+            telemetryService.publicLog2("remoteConnectionLost", {
+              remoteName: getRemoteName(environmentService.remoteAuthority),
+              reconnectionToken: e.reconnectionToken
+            });
+            if (visibleProgress || e.millisSinceLastIncomingData > DISCONNECT_PROMPT_TIME) {
+              if (!visibleProgress) {
+                visibleProgress = showProgress2(null, [reconnectButton, reloadButton]);
+              }
+              visibleProgress.report(nls.localize("connectionLost", "Connection Lost"));
+            }
+            break;
+          case 1:
+            if (visibleProgress) {
+              reconnectWaitEvent = e;
+              visibleProgress = showProgress2(null, [reconnectButton, reloadButton]);
+              visibleProgress.startTimer(Date.now() + 1e3 * e.durationSeconds);
+            }
+            break;
+          case 2:
+            reconnectionToken = e.reconnectionToken;
+            lastIncomingDataTime = Date.now() - e.millisSinceLastIncomingData;
+            reconnectionAttempts = e.attempt;
+            telemetryService.publicLog2("remoteReconnectionRunning", {
+              remoteName: getRemoteName(environmentService.remoteAuthority),
+              reconnectionToken: e.reconnectionToken,
+              millisSinceLastIncomingData: e.millisSinceLastIncomingData,
+              attempt: e.attempt
+            });
+            if (visibleProgress || e.millisSinceLastIncomingData > DISCONNECT_PROMPT_TIME) {
+              visibleProgress = showProgress2(null, [reloadButton]);
+              visibleProgress.report(nls.localize("reconnectionRunning", "Disconnected. Attempting to reconnect..."));
+              disposableListener.value = quickInputService.onShow(() => {
+                if (visibleProgress && visibleProgress.location === 20) {
+                  visibleProgress = showProgress2(15, [reloadButton], visibleProgress.lastReport);
+                }
+              });
+            }
+            break;
+          case 3:
+            reconnectionToken = e.reconnectionToken;
+            lastIncomingDataTime = Date.now() - e.millisSinceLastIncomingData;
+            reconnectionAttempts = e.attempt;
+            telemetryService.publicLog2("remoteReconnectionPermanentFailure", {
+              remoteName: getRemoteName(environmentService.remoteAuthority),
+              reconnectionToken: e.reconnectionToken,
+              millisSinceLastIncomingData: e.millisSinceLastIncomingData,
+              attempt: e.attempt,
+              handled: e.handled
+            });
+            hideProgress2();
+            if (e.handled) {
+              logService.info(`Error handled: Not showing a notification for the error.`);
+              console.log(`Error handled: Not showing a notification for the error.`);
+            } else if (!this._reloadWindowShown) {
+              this._reloadWindowShown = true;
+              dialogService.confirm({
+                type: Severity.Error,
+                message: nls.localize("reconnectionPermanentFailure", "Cannot reconnect. Please reload the window."),
+                primaryButton: nls.localize({ key: "reloadWindow.dialog", comment: ["&& denotes a mnemonic"] }, "&&Reload Window")
+              }).then((result) => {
+                if (result.confirmed) {
+                  commandService.executeCommand(ReloadWindowAction.ID);
+                }
+              });
+            }
+            break;
+          case 4:
+            reconnectionToken = e.reconnectionToken;
+            lastIncomingDataTime = Date.now() - e.millisSinceLastIncomingData;
+            reconnectionAttempts = e.attempt;
+            telemetryService.publicLog2("remoteConnectionGain", {
+              remoteName: getRemoteName(environmentService.remoteAuthority),
+              reconnectionToken: e.reconnectionToken,
+              millisSinceLastIncomingData: e.millisSinceLastIncomingData,
+              attempt: e.attempt
+            });
+            hideProgress2();
+            break;
+        }
+      }));
+    }
+  }
+};
+RemoteAgentConnectionStatusListener = __decorate([
+  __param(0, IRemoteAgentService),
+  __param(1, IProgressService),
+  __param(2, IDialogService),
+  __param(3, ICommandService),
+  __param(4, IQuickInputService),
+  __param(5, ILogService),
+  __param(6, IWorkbenchEnvironmentService),
+  __param(7, ITelemetryService)
+], RemoteAgentConnectionStatusListener);
+export {
+  RemoteAgentConnectionStatusListener,
+  RemoteMarkers
+};
+//# sourceMappingURL=remote.js.map

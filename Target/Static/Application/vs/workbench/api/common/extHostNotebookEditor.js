@@ -1,1 +1,92 @@
-import{$tb as l}from"../../../base/common/errors.js";import*as i from"./extHostTypeConverters.js";import*as s from"./extHostTypes.js";import{$XZ as p}from"./extHostTypes.js";class r{static{this.apiEditorsToExtHost=new WeakMap}constructor(t,e,o,s,i,r,n){this.id=t,this.c=e,this.notebookData=o,this.d=s,this.e=i,this.f=r,this.g=n,this.a=!1}get apiEditor(){if(!this.b){const t=this;this.b={get notebook(){return t.notebookData.apiNotebook},get selection(){return t.e[0]},set selection(t){this.selections=[t]},get selections(){return t.e},set selections(e){if(!Array.isArray(e)||!e.every(s.$XZ.isNotebookRange))throw l("selections");t.e=0===e.length?[new p(0,0)]:e,t.h(t.e)},get visibleRanges(){return t.d},revealRange(e,o){t.c.$tryRevealRange(t.id,i.NotebookRange.from(e),o??s.NotebookEditorRevealType.Default)},get viewColumn(){return t.f},get replOptions(){if("repl"===t.g)return{appendIndex:this.notebook.cellCount-1}},[Symbol.for("debug.description")](){return`NotebookEditor(${this.notebook.uri.toString()})`}},r.apiEditorsToExtHost.set(this.b,this)}return this.b}get visible(){return this.a}_acceptVisibility(t){this.a=t}_acceptVisibleRanges(t){this.d=t}_acceptSelections(t){this.e=t}h(t){this.c.$trySetSelections(this.id,t.map(i.NotebookRange.from))}_acceptViewColumn(t){this.f=t}}export{r as $NLc};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { illegalArgument } from "../../../base/common/errors.js";
+import * as extHostConverter from "./extHostTypeConverters.js";
+import * as extHostTypes from "./extHostTypes.js";
+import { NotebookRange } from "./extHostTypes.js";
+class ExtHostNotebookEditor {
+  static {
+    __name(this, "ExtHostNotebookEditor");
+  }
+  static {
+    this.apiEditorsToExtHost = /* @__PURE__ */ new WeakMap();
+  }
+  constructor(id, _proxy, notebookData, _visibleRanges, _selections, _viewColumn, viewType) {
+    this.id = id;
+    this._proxy = _proxy;
+    this.notebookData = notebookData;
+    this._visibleRanges = _visibleRanges;
+    this._selections = _selections;
+    this._viewColumn = _viewColumn;
+    this.viewType = viewType;
+    this._visible = false;
+  }
+  get apiEditor() {
+    if (!this._editor) {
+      const that = this;
+      this._editor = {
+        get notebook() {
+          return that.notebookData.apiNotebook;
+        },
+        get selection() {
+          return that._selections[0];
+        },
+        set selection(selection) {
+          this.selections = [selection];
+        },
+        get selections() {
+          return that._selections;
+        },
+        set selections(value) {
+          if (!Array.isArray(value) || !value.every(extHostTypes.NotebookRange.isNotebookRange)) {
+            throw illegalArgument("selections");
+          }
+          that._selections = value.length === 0 ? [new NotebookRange(0, 0)] : value;
+          that._trySetSelections(that._selections);
+        },
+        get visibleRanges() {
+          return that._visibleRanges;
+        },
+        revealRange(range, revealType) {
+          that._proxy.$tryRevealRange(that.id, extHostConverter.NotebookRange.from(range), revealType ?? extHostTypes.NotebookEditorRevealType.Default);
+        },
+        get viewColumn() {
+          return that._viewColumn;
+        },
+        get replOptions() {
+          if (that.viewType === "repl") {
+            return { appendIndex: this.notebook.cellCount - 1 };
+          }
+          return void 0;
+        },
+        [Symbol.for("debug.description")]() {
+          return `NotebookEditor(${this.notebook.uri.toString()})`;
+        }
+      };
+      ExtHostNotebookEditor.apiEditorsToExtHost.set(this._editor, this);
+    }
+    return this._editor;
+  }
+  get visible() {
+    return this._visible;
+  }
+  _acceptVisibility(value) {
+    this._visible = value;
+  }
+  _acceptVisibleRanges(value) {
+    this._visibleRanges = value;
+  }
+  _acceptSelections(selections) {
+    this._selections = selections;
+  }
+  _trySetSelections(value) {
+    this._proxy.$trySetSelections(this.id, value.map(extHostConverter.NotebookRange.from));
+  }
+  _acceptViewColumn(value) {
+    this._viewColumn = value;
+  }
+}
+export {
+  ExtHostNotebookEditor
+};
+//# sourceMappingURL=extHostNotebookEditor.js.map

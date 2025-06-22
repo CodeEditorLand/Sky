@@ -1,1 +1,134 @@
-import{$Cb as c}from"../../../../base/common/functional.js";import{$ud as d,$wd as h,$td as l}from"../../../../base/common/lifecycle.js";import{$8_ as g,$6_ as u}from"../../../browser/editorBrowser.js";import{OverviewRulerLane as f}from"../../../common/model.js";import{$dG as m}from"../../../common/core/editorColorRegistry.js";import{$Nt as v}from"../../../../platform/theme/common/themeService.js";import{$b8 as w}from"../../../../base/browser/ui/aria/aria.js";class R{constructor(e){this.a=e,this.j=void 0}provide(e,t,n){const o=new d;e.canAcceptInBackground=!!this.a?.canAcceptInBackground,e.matchOnLabel=e.matchOnDescription=e.matchOnDetail=e.sortByLabel=!1;const i=o.add(new h);return i.value=this.b(e,t,n),o.add(this.h(()=>{i.value=void 0,i.value=this.b(e,t)})),o}b(e,t,n){const o=new d,i=this.i;if(i&&this.c(i)){const s={editor:i},r=g(i);if(r){let a=i.saveViewState()??void 0;o.add(r.onDidChangeCursorPosition(()=>{a=i.saveViewState()??void 0})),s.restoreViewState=()=>{a&&i===this.i&&i.restoreViewState(a)},o.add(c(t.onCancellationRequested)(()=>s.restoreViewState?.()))}o.add(l(()=>this.clearDecorations(i))),o.add(this.d(s,e,t,n))}else o.add(this.e(e,t));return o}c(e){return!0}f({editor:e},t){e.setSelection(t.range,"code.jump"),e.revealRangeInCenter(t.range,0),t.preserveFocus||e.focus();const n=e.getModel();n&&"getLineContent"in n&&w(`${n.getLineContent(t.range.startLineNumber)}`)}g(e){return u(e)?e.getModel()?.modified:e.getModel()}addDecorations(e,t){e.changeDecorations(n=>{const o=[];this.j&&(o.push(this.j.overviewRulerDecorationId),o.push(this.j.rangeHighlightId),this.j=void 0);const i=[{range:t,options:{description:"quick-access-range-highlight",className:"rangeHighlight",isWholeLine:!0}},{range:t,options:{description:"quick-access-range-highlight-overview",overviewRuler:{color:v(m),position:f.Full}}}],[s,r]=n.deltaDecorations(o,i);this.j={rangeHighlightId:s,overviewRulerDecorationId:r}})}clearDecorations(e){const t=this.j;t&&(e.changeDecorations(n=>{n.deltaDecorations([t.overviewRulerDecorationId,t.rangeHighlightId],[])}),this.j=void 0)}}export{R as $jfc};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { createSingleCallFunction } from "../../../../base/common/functional.js";
+import { DisposableStore, MutableDisposable, toDisposable } from "../../../../base/common/lifecycle.js";
+import { getCodeEditor, isDiffEditor } from "../../../browser/editorBrowser.js";
+import { OverviewRulerLane } from "../../../common/model.js";
+import { overviewRulerRangeHighlight } from "../../../common/core/editorColorRegistry.js";
+import { themeColorFromId } from "../../../../platform/theme/common/themeService.js";
+import { status } from "../../../../base/browser/ui/aria/aria.js";
+class AbstractEditorNavigationQuickAccessProvider {
+  static {
+    __name(this, "AbstractEditorNavigationQuickAccessProvider");
+  }
+  constructor(options) {
+    this.options = options;
+    this.rangeHighlightDecorationId = void 0;
+  }
+  //#region Provider methods
+  provide(picker, token, runOptions) {
+    const disposables = new DisposableStore();
+    picker.canAcceptInBackground = !!this.options?.canAcceptInBackground;
+    picker.matchOnLabel = picker.matchOnDescription = picker.matchOnDetail = picker.sortByLabel = false;
+    const pickerDisposable = disposables.add(new MutableDisposable());
+    pickerDisposable.value = this.doProvide(picker, token, runOptions);
+    disposables.add(this.onDidActiveTextEditorControlChange(() => {
+      pickerDisposable.value = void 0;
+      pickerDisposable.value = this.doProvide(picker, token);
+    }));
+    return disposables;
+  }
+  doProvide(picker, token, runOptions) {
+    const disposables = new DisposableStore();
+    const editor = this.activeTextEditorControl;
+    if (editor && this.canProvideWithTextEditor(editor)) {
+      const context = { editor };
+      const codeEditor = getCodeEditor(editor);
+      if (codeEditor) {
+        let lastKnownEditorViewState = editor.saveViewState() ?? void 0;
+        disposables.add(codeEditor.onDidChangeCursorPosition(() => {
+          lastKnownEditorViewState = editor.saveViewState() ?? void 0;
+        }));
+        context.restoreViewState = () => {
+          if (lastKnownEditorViewState && editor === this.activeTextEditorControl) {
+            editor.restoreViewState(lastKnownEditorViewState);
+          }
+        };
+        disposables.add(createSingleCallFunction(token.onCancellationRequested)(() => context.restoreViewState?.()));
+      }
+      disposables.add(toDisposable(() => this.clearDecorations(editor)));
+      disposables.add(this.provideWithTextEditor(context, picker, token, runOptions));
+    } else {
+      disposables.add(this.provideWithoutTextEditor(picker, token));
+    }
+    return disposables;
+  }
+  /**
+   * Subclasses to implement if they can operate on the text editor.
+   */
+  canProvideWithTextEditor(editor) {
+    return true;
+  }
+  gotoLocation({ editor }, options) {
+    editor.setSelection(
+      options.range,
+      "code.jump"
+      /* TextEditorSelectionSource.JUMP */
+    );
+    editor.revealRangeInCenter(
+      options.range,
+      0
+      /* ScrollType.Smooth */
+    );
+    if (!options.preserveFocus) {
+      editor.focus();
+    }
+    const model = editor.getModel();
+    if (model && "getLineContent" in model) {
+      status(`${model.getLineContent(options.range.startLineNumber)}`);
+    }
+  }
+  getModel(editor) {
+    return isDiffEditor(editor) ? editor.getModel()?.modified : editor.getModel();
+  }
+  addDecorations(editor, range) {
+    editor.changeDecorations((changeAccessor) => {
+      const deleteDecorations = [];
+      if (this.rangeHighlightDecorationId) {
+        deleteDecorations.push(this.rangeHighlightDecorationId.overviewRulerDecorationId);
+        deleteDecorations.push(this.rangeHighlightDecorationId.rangeHighlightId);
+        this.rangeHighlightDecorationId = void 0;
+      }
+      const newDecorations = [
+        // highlight the entire line on the range
+        {
+          range,
+          options: {
+            description: "quick-access-range-highlight",
+            className: "rangeHighlight",
+            isWholeLine: true
+          }
+        },
+        // also add overview ruler highlight
+        {
+          range,
+          options: {
+            description: "quick-access-range-highlight-overview",
+            overviewRuler: {
+              color: themeColorFromId(overviewRulerRangeHighlight),
+              position: OverviewRulerLane.Full
+            }
+          }
+        }
+      ];
+      const [rangeHighlightId, overviewRulerDecorationId] = changeAccessor.deltaDecorations(deleteDecorations, newDecorations);
+      this.rangeHighlightDecorationId = { rangeHighlightId, overviewRulerDecorationId };
+    });
+  }
+  clearDecorations(editor) {
+    const rangeHighlightDecorationId = this.rangeHighlightDecorationId;
+    if (rangeHighlightDecorationId) {
+      editor.changeDecorations((changeAccessor) => {
+        changeAccessor.deltaDecorations([
+          rangeHighlightDecorationId.overviewRulerDecorationId,
+          rangeHighlightDecorationId.rangeHighlightId
+        ], []);
+      });
+      this.rangeHighlightDecorationId = void 0;
+    }
+  }
+}
+export {
+  AbstractEditorNavigationQuickAccessProvider
+};
+//# sourceMappingURL=editorNavigationQuickAccess.js.map

@@ -1,1 +1,97 @@
-import{$Mj as s}from"../../../base/common/codicons.js";import{$df as c}from"../../../base/common/event.js";import{$vd as h,$td as u}from"../../../base/common/lifecycle.js";import{$nj as a}from"../../instantiation/common/instantiation.js";import*as l from"../../registry/common/platform.js";import{ColorScheme as i,ThemeTypeSelector as n}from"./theme.js";const x=a("themeService");function S(e){return{id:e}}const H=s.file,R=s.folder;function b(e){switch(e){case i.DARK:return n.VS_DARK;case i.HIGH_CONTRAST_DARK:return n.HC_BLACK;case i.HIGH_CONTRAST_LIGHT:return n.HC_LIGHT;default:return n.VS}}const p={ThemingContribution:"base.contributions.theming"};class T extends h{constructor(){super(),this.a=[],this.a=[],this.b=this.B(new c)}onColorThemeChange(t){return this.a.push(t),this.b.fire(t),u(()=>{const r=this.a.indexOf(t);this.a.splice(r,1)})}get onThemingParticipantAdded(){return this.b.event}getThemingParticipants(){return this.a}}const m=new T;l.$Ql.add(p.ThemingContribution,m);function A(e){return m.onColorThemeChange(e)}class _ extends h{constructor(t){super(),this.n=t,this.h=t.getColorTheme(),this.B(this.n.onDidColorThemeChange(r=>this.w(r)))}w(t){this.h=t,this.updateStyles()}updateStyles(){}z(t,r){let o=this.h.getColor(t);return o&&r&&(o=r(o,this.h)),o?o.toString():null}}export{x as $Mt,S as $Nt,H as $Ot,R as $Pt,b as $Qt,p as $Rt,A as $St,_ as $Tt};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { Codicon } from "../../../base/common/codicons.js";
+import { Emitter } from "../../../base/common/event.js";
+import { Disposable, toDisposable } from "../../../base/common/lifecycle.js";
+import { createDecorator } from "../../instantiation/common/instantiation.js";
+import * as platform from "../../registry/common/platform.js";
+import { ColorScheme, ThemeTypeSelector } from "./theme.js";
+const IThemeService = createDecorator("themeService");
+function themeColorFromId(id) {
+  return { id };
+}
+__name(themeColorFromId, "themeColorFromId");
+const FileThemeIcon = Codicon.file;
+const FolderThemeIcon = Codicon.folder;
+function getThemeTypeSelector(type) {
+  switch (type) {
+    case ColorScheme.DARK:
+      return ThemeTypeSelector.VS_DARK;
+    case ColorScheme.HIGH_CONTRAST_DARK:
+      return ThemeTypeSelector.HC_BLACK;
+    case ColorScheme.HIGH_CONTRAST_LIGHT:
+      return ThemeTypeSelector.HC_LIGHT;
+    default:
+      return ThemeTypeSelector.VS;
+  }
+}
+__name(getThemeTypeSelector, "getThemeTypeSelector");
+const Extensions = {
+  ThemingContribution: "base.contributions.theming"
+};
+class ThemingRegistry extends Disposable {
+  static {
+    __name(this, "ThemingRegistry");
+  }
+  constructor() {
+    super();
+    this.themingParticipants = [];
+    this.themingParticipants = [];
+    this.onThemingParticipantAddedEmitter = this._register(new Emitter());
+  }
+  onColorThemeChange(participant) {
+    this.themingParticipants.push(participant);
+    this.onThemingParticipantAddedEmitter.fire(participant);
+    return toDisposable(() => {
+      const idx = this.themingParticipants.indexOf(participant);
+      this.themingParticipants.splice(idx, 1);
+    });
+  }
+  get onThemingParticipantAdded() {
+    return this.onThemingParticipantAddedEmitter.event;
+  }
+  getThemingParticipants() {
+    return this.themingParticipants;
+  }
+}
+const themingRegistry = new ThemingRegistry();
+platform.Registry.add(Extensions.ThemingContribution, themingRegistry);
+function registerThemingParticipant(participant) {
+  return themingRegistry.onColorThemeChange(participant);
+}
+__name(registerThemingParticipant, "registerThemingParticipant");
+class Themable extends Disposable {
+  static {
+    __name(this, "Themable");
+  }
+  constructor(themeService) {
+    super();
+    this.themeService = themeService;
+    this.theme = themeService.getColorTheme();
+    this._register(this.themeService.onDidColorThemeChange((theme) => this.onThemeChange(theme)));
+  }
+  onThemeChange(theme) {
+    this.theme = theme;
+    this.updateStyles();
+  }
+  updateStyles() {
+  }
+  getColor(id, modify) {
+    let color = this.theme.getColor(id);
+    if (color && modify) {
+      color = modify(color, this.theme);
+    }
+    return color ? color.toString() : null;
+  }
+}
+export {
+  Extensions,
+  FileThemeIcon,
+  FolderThemeIcon,
+  IThemeService,
+  Themable,
+  getThemeTypeSelector,
+  registerThemingParticipant,
+  themeColorFromId
+};
+//# sourceMappingURL=themeService.js.map

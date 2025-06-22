@@ -1,1 +1,8 @@
-import{$nj as e}from"../../instantiation/common/instantiation.js";const o=e("IRemoteExtensionsScannerService"),t="remoteExtensionsScanner";export{o as $R4,t as $S4};
+import { createDecorator } from "../../instantiation/common/instantiation.js";
+const IRemoteExtensionsScannerService = createDecorator("IRemoteExtensionsScannerService");
+const RemoteExtensionsScannerChannelName = "remoteExtensionsScanner";
+export {
+  IRemoteExtensionsScannerService,
+  RemoteExtensionsScannerChannelName
+};
+//# sourceMappingURL=remoteExtensionsScanner.js.map

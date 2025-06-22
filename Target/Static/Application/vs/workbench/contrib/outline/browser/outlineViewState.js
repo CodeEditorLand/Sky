@@ -1,1 +1,83 @@
-import{$df as e}from"../../../../base/common/event.js";class h{constructor(){this.a=!1,this.b=!0,this.c=0,this.d=new e,this.onDidChange=this.d.event}dispose(){this.d.dispose()}set followCursor(t){t!==this.a&&(this.a=t,this.d.fire({followCursor:!0}))}get followCursor(){return this.a}get filterOnType(){return this.b}set filterOnType(t){t!==this.b&&(this.b=t,this.d.fire({filterOnType:!0}))}set sortBy(t){t!==this.c&&(this.c=t,this.d.fire({sortBy:!0}))}get sortBy(){return this.c}persist(t){t.store("outline/state",JSON.stringify({followCursor:this.followCursor,sortBy:this.sortBy,filterOnType:this.filterOnType}),1,1)}restore(t){const s=t.get("outline/state",1);if(!s)return;let e;try{e=JSON.parse(s)}catch{return}this.followCursor=e.followCursor,this.sortBy=e.sortBy??0,"boolean"==typeof e.filterOnType&&(this.filterOnType=e.filterOnType)}}export{h as $ywc};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { Emitter } from "../../../../base/common/event.js";
+class OutlineViewState {
+  static {
+    __name(this, "OutlineViewState");
+  }
+  constructor() {
+    this._followCursor = false;
+    this._filterOnType = true;
+    this._sortBy = 0;
+    this._onDidChange = new Emitter();
+    this.onDidChange = this._onDidChange.event;
+  }
+  dispose() {
+    this._onDidChange.dispose();
+  }
+  set followCursor(value) {
+    if (value !== this._followCursor) {
+      this._followCursor = value;
+      this._onDidChange.fire({ followCursor: true });
+    }
+  }
+  get followCursor() {
+    return this._followCursor;
+  }
+  get filterOnType() {
+    return this._filterOnType;
+  }
+  set filterOnType(value) {
+    if (value !== this._filterOnType) {
+      this._filterOnType = value;
+      this._onDidChange.fire({ filterOnType: true });
+    }
+  }
+  set sortBy(value) {
+    if (value !== this._sortBy) {
+      this._sortBy = value;
+      this._onDidChange.fire({ sortBy: true });
+    }
+  }
+  get sortBy() {
+    return this._sortBy;
+  }
+  persist(storageService) {
+    storageService.store(
+      "outline/state",
+      JSON.stringify({
+        followCursor: this.followCursor,
+        sortBy: this.sortBy,
+        filterOnType: this.filterOnType
+      }),
+      1,
+      1
+      /* StorageTarget.MACHINE */
+    );
+  }
+  restore(storageService) {
+    const raw = storageService.get(
+      "outline/state",
+      1
+      /* StorageScope.WORKSPACE */
+    );
+    if (!raw) {
+      return;
+    }
+    let data;
+    try {
+      data = JSON.parse(raw);
+    } catch (e) {
+      return;
+    }
+    this.followCursor = data.followCursor;
+    this.sortBy = data.sortBy ?? 0;
+    if (typeof data.filterOnType === "boolean") {
+      this.filterOnType = data.filterOnType;
+    }
+  }
+}
+export {
+  OutlineViewState
+};
+//# sourceMappingURL=outlineViewState.js.map

@@ -1,1 +1,303 @@
-import{$kb as w}from"../../../base/common/errors.js";import{Event as g}from"../../../base/common/event.js";import{$vd as $,$Ed as W}from"../../../base/common/lifecycle.js";import{URI as v}from"../../../base/common/uri.js";import{$Rm as E}from"../../../base/common/uuid.js";import{$El as x}from"../../../platform/configuration/common/configuration.js";import{$Ho as y}from"../../../platform/storage/common/storage.js";import{$vGb as C}from"../../common/editor/diffEditorInput.js";import{$$yb as F}from"../../contrib/webview/browser/webview.js";import{$nVb as P}from"../../contrib/webviewPanel/browser/webviewEditorInput.js";import{$jXb as R}from"../../contrib/webviewPanel/browser/webviewWorkbenchService.js";import{$gX as u}from"../../services/editor/common/editorGroupColumn.js";import{$kI as G,$nI as H}from"../../services/editor/common/editorGroupsService.js";import{$pI as l,$oI as D,$qI as p}from"../../services/editor/common/editorService.js";import{$XO as S}from"../../services/extensions/common/extensions.js";import*as z from"../common/extHost.protocol.js";import{$BWb as B,$AWb as _}from"./mainThreadWebviews.js";var b=function(n,e,i,t){var r=arguments.length,s=r<3?e:t===null?t=Object.getOwnPropertyDescriptor(e,i):t,o;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")s=Reflect.decorate(n,e,i,t);else for(var a=n.length-1;a>=0;a--)(o=n[a])&&(s=(r<3?o(s):r>3?o(e,i,s):o(e,i))||s);return r>3&&s&&Object.defineProperty(e,i,s),s},d=function(n,e){return function(i,t){e(i,t,n)}};class j{constructor(){this.a=new Map,this.b=new Map}add(e,i){this.a.set(e,i),this.b.set(i,e)}getHandleForInput(e){return this.b.get(e)}getInputForHandle(e){return this.a.get(e)}delete(e){const i=this.getInputForHandle(e);this.a.delete(e),i&&this.b.delete(i)}get size(){return this.a.size}[Symbol.iterator](){return this.a.values()}}class I{constructor(e){this.prefix=e}fromExternal(e){return this.prefix+e}toExternal(e){return e.startsWith(this.prefix)?e.substr(this.prefix.length):void 0}}let m=class extends ${constructor(e,i,t,r,s,o,a,h){super(),this.h=i,this.j=t,this.m=r,this.n=s,this.r=h,this.a=new I("mainThreadWebview-"),this.c=new j,this.f=this.B(new W),this.g=new F("mainThreadWebviewPanel.origins",a),this.b=e.getProxy(z.$pY.ExtHostWebviewPanels),this.B(g.any(s.onDidActiveEditorChange,s.onDidVisibleEditorsChange,r.onDidAddGroup,r.onDidRemoveGroup,r.onDidMoveGroup)(()=>{this.t(this.n.activeEditor)})),this.B(h.onDidChangeActiveWebviewEditor(f=>{this.t(f)})),this.B(h.registerResolver({canResolve:f=>{const c=this.a.toExternal(f.viewType);return typeof c=="string"&&o.activateByEvent(`onWebviewPanel:${c}`),!1},resolveWebview:()=>{throw new Error("not implemented")}}))}get webviewInputs(){return this.c}addWebviewInput(e,i,t){this.c.add(e,i),this.h.addWebview(e,i.webview,t);const r=i.webview.onDidDispose(()=>{r.dispose(),this.b.$onDidDisposeWebviewPanel(e).finally(()=>{this.c.delete(e)})})}$createWebviewPanel(e,i,t,r,s){const o=this.s(s),a=s?{preserveFocus:!!s.preserveFocus,group:o}:{},h=_(e),f=this.g.getOrigin(t,h.id),c=this.r.openWebview({origin:f,providedViewType:t,title:r.title,options:T(r.panelOptions),contentOptions:B(r.webviewOptions),extension:h},this.a.fromExternal(t),r.title,a);this.addWebviewInput(i,c,{serializeBuffersForPostMessage:r.serializeBuffersForPostMessage})}$disposeWebview(e){const i=this.u(e);i&&i.dispose()}$setTitle(e,i){this.u(e)?.setName(i)}$setIconPath(e,i){const t=this.u(e);t&&(t.iconPath=O(i))}$reveal(e,i){const t=this.u(e);if(!t||t.isDisposed())return;const r=this.s(i);this.r.revealWebview(t,r,!!i.preserveFocus)}s(e){if(typeof e.viewColumn>"u"||e.viewColumn===l||this.m.count===1&&this.m.activeGroup.isEmpty)return l;if(e.viewColumn===p)return p;if(e.viewColumn>=0){const i=this.m.getGroups(2)[e.viewColumn];if(i)return i.id;const t=this.m.findGroup({location:1});if(t){const r=H(this.j);return this.m.addGroup(t,r)}}return l}$registerSerializer(e,i){if(this.f.has(e))throw new Error(`Reviver for ${e} already registered`);this.f.set(e,this.r.registerResolver({canResolve:t=>t.viewType===this.a.fromExternal(e),resolveWebview:async t=>{const r=this.a.toExternal(t.viewType);if(!r){t.webview.setHtml(this.h.getWebviewResolvedFailedContent(t.viewType));return}const s=E();this.addWebviewInput(s,t,i);let o;if(t.webview.state)try{o=JSON.parse(t.webview.state)}catch{}try{await this.b.$deserializeWebviewPanel(s,r,{title:t.getTitle(),state:o,panelOptions:t.webview.options,webviewOptions:t.webview.contentOptions,active:t===this.n.activeEditor},u(this.m,t.group||0))}catch(a){w(a),t.webview.setHtml(this.h.getWebviewResolvedFailedContent(r))}}}))}$unregisterSerializer(e){if(!this.f.has(e))throw new Error(`No reviver for ${e} registered`);this.f.deleteAndDispose(e)}t(e){if(!this.c.size)return;const i={},t=(r,s,o)=>{if(!(o instanceof P))return;o.updateGroup(r.id);const a=this.c.getHandleForInput(o);a&&(i[a]={visible:s===r.activeEditor,active:o===e,position:u(this.m,r.id)})};for(const r of this.m.groups)for(const s of r.editors)s instanceof C?(t(r,s,s.primary),t(r,s,s.secondary)):t(r,s,s);Object.keys(i).length&&this.b.$onDidChangeWebviewPanelViewStates(i)}u(e){return this.c.getInputForHandle(e)}};m=b([d(2,x),d(3,G),d(4,D),d(5,S),d(6,y),d(7,R)],m);function O(n){if(n)return{light:v.revive(n.light),dark:v.revive(n.dark)}}function T(n){return{enableFindWidget:n.enableFindWidget,retainContextWhenHidden:n.retainContextWhenHidden}}export{m as $f1b};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { onUnexpectedError } from "../../../base/common/errors.js";
+import { Event } from "../../../base/common/event.js";
+import { Disposable, DisposableMap } from "../../../base/common/lifecycle.js";
+import { URI } from "../../../base/common/uri.js";
+import { generateUuid } from "../../../base/common/uuid.js";
+import { IConfigurationService } from "../../../platform/configuration/common/configuration.js";
+import { IStorageService } from "../../../platform/storage/common/storage.js";
+import { DiffEditorInput } from "../../common/editor/diffEditorInput.js";
+import { ExtensionKeyedWebviewOriginStore } from "../../contrib/webview/browser/webview.js";
+import { WebviewInput } from "../../contrib/webviewPanel/browser/webviewEditorInput.js";
+import { IWebviewWorkbenchService } from "../../contrib/webviewPanel/browser/webviewWorkbenchService.js";
+import { editorGroupToColumn } from "../../services/editor/common/editorGroupColumn.js";
+import { IEditorGroupsService, preferredSideBySideGroupDirection } from "../../services/editor/common/editorGroupsService.js";
+import { ACTIVE_GROUP, IEditorService, SIDE_GROUP } from "../../services/editor/common/editorService.js";
+import { IExtensionService } from "../../services/extensions/common/extensions.js";
+import * as extHostProtocol from "../common/extHost.protocol.js";
+import { reviveWebviewContentOptions, reviveWebviewExtension } from "./mainThreadWebviews.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+class WebviewInputStore {
+  static {
+    __name(this, "WebviewInputStore");
+  }
+  constructor() {
+    this._handlesToInputs = /* @__PURE__ */ new Map();
+    this._inputsToHandles = /* @__PURE__ */ new Map();
+  }
+  add(handle, input) {
+    this._handlesToInputs.set(handle, input);
+    this._inputsToHandles.set(input, handle);
+  }
+  getHandleForInput(input) {
+    return this._inputsToHandles.get(input);
+  }
+  getInputForHandle(handle) {
+    return this._handlesToInputs.get(handle);
+  }
+  delete(handle) {
+    const input = this.getInputForHandle(handle);
+    this._handlesToInputs.delete(handle);
+    if (input) {
+      this._inputsToHandles.delete(input);
+    }
+  }
+  get size() {
+    return this._handlesToInputs.size;
+  }
+  [Symbol.iterator]() {
+    return this._handlesToInputs.values();
+  }
+}
+class WebviewViewTypeTransformer {
+  static {
+    __name(this, "WebviewViewTypeTransformer");
+  }
+  constructor(prefix) {
+    this.prefix = prefix;
+  }
+  fromExternal(viewType) {
+    return this.prefix + viewType;
+  }
+  toExternal(viewType) {
+    return viewType.startsWith(this.prefix) ? viewType.substr(this.prefix.length) : void 0;
+  }
+}
+let MainThreadWebviewPanels = class MainThreadWebviewPanels2 extends Disposable {
+  static {
+    __name(this, "MainThreadWebviewPanels");
+  }
+  constructor(context, _mainThreadWebviews, _configurationService, _editorGroupService, _editorService, extensionService, storageService, _webviewWorkbenchService) {
+    super();
+    this._mainThreadWebviews = _mainThreadWebviews;
+    this._configurationService = _configurationService;
+    this._editorGroupService = _editorGroupService;
+    this._editorService = _editorService;
+    this._webviewWorkbenchService = _webviewWorkbenchService;
+    this.webviewPanelViewType = new WebviewViewTypeTransformer("mainThreadWebview-");
+    this._webviewInputs = new WebviewInputStore();
+    this._revivers = this._register(new DisposableMap());
+    this.webviewOriginStore = new ExtensionKeyedWebviewOriginStore("mainThreadWebviewPanel.origins", storageService);
+    this._proxy = context.getProxy(extHostProtocol.ExtHostContext.ExtHostWebviewPanels);
+    this._register(Event.any(_editorService.onDidActiveEditorChange, _editorService.onDidVisibleEditorsChange, _editorGroupService.onDidAddGroup, _editorGroupService.onDidRemoveGroup, _editorGroupService.onDidMoveGroup)(() => {
+      this.updateWebviewViewStates(this._editorService.activeEditor);
+    }));
+    this._register(_webviewWorkbenchService.onDidChangeActiveWebviewEditor((input) => {
+      this.updateWebviewViewStates(input);
+    }));
+    this._register(_webviewWorkbenchService.registerResolver({
+      canResolve: /* @__PURE__ */ __name((webview) => {
+        const viewType = this.webviewPanelViewType.toExternal(webview.viewType);
+        if (typeof viewType === "string") {
+          extensionService.activateByEvent(`onWebviewPanel:${viewType}`);
+        }
+        return false;
+      }, "canResolve"),
+      resolveWebview: /* @__PURE__ */ __name(() => {
+        throw new Error("not implemented");
+      }, "resolveWebview")
+    }));
+  }
+  get webviewInputs() {
+    return this._webviewInputs;
+  }
+  addWebviewInput(handle, input, options) {
+    this._webviewInputs.add(handle, input);
+    this._mainThreadWebviews.addWebview(handle, input.webview, options);
+    const disposeSub = input.webview.onDidDispose(() => {
+      disposeSub.dispose();
+      this._proxy.$onDidDisposeWebviewPanel(handle).finally(() => {
+        this._webviewInputs.delete(handle);
+      });
+    });
+  }
+  $createWebviewPanel(extensionData, handle, viewType, initData, showOptions) {
+    const targetGroup = this.getTargetGroupFromShowOptions(showOptions);
+    const mainThreadShowOptions = showOptions ? {
+      preserveFocus: !!showOptions.preserveFocus,
+      group: targetGroup
+    } : {};
+    const extension = reviveWebviewExtension(extensionData);
+    const origin = this.webviewOriginStore.getOrigin(viewType, extension.id);
+    const webview = this._webviewWorkbenchService.openWebview({
+      origin,
+      providedViewType: viewType,
+      title: initData.title,
+      options: reviveWebviewOptions(initData.panelOptions),
+      contentOptions: reviveWebviewContentOptions(initData.webviewOptions),
+      extension
+    }, this.webviewPanelViewType.fromExternal(viewType), initData.title, mainThreadShowOptions);
+    this.addWebviewInput(handle, webview, { serializeBuffersForPostMessage: initData.serializeBuffersForPostMessage });
+  }
+  $disposeWebview(handle) {
+    const webview = this.tryGetWebviewInput(handle);
+    if (!webview) {
+      return;
+    }
+    webview.dispose();
+  }
+  $setTitle(handle, value) {
+    this.tryGetWebviewInput(handle)?.setName(value);
+  }
+  $setIconPath(handle, value) {
+    const webview = this.tryGetWebviewInput(handle);
+    if (webview) {
+      webview.iconPath = reviveWebviewIcon(value);
+    }
+  }
+  $reveal(handle, showOptions) {
+    const webview = this.tryGetWebviewInput(handle);
+    if (!webview || webview.isDisposed()) {
+      return;
+    }
+    const targetGroup = this.getTargetGroupFromShowOptions(showOptions);
+    this._webviewWorkbenchService.revealWebview(webview, targetGroup, !!showOptions.preserveFocus);
+  }
+  getTargetGroupFromShowOptions(showOptions) {
+    if (typeof showOptions.viewColumn === "undefined" || showOptions.viewColumn === ACTIVE_GROUP || this._editorGroupService.count === 1 && this._editorGroupService.activeGroup.isEmpty) {
+      return ACTIVE_GROUP;
+    }
+    if (showOptions.viewColumn === SIDE_GROUP) {
+      return SIDE_GROUP;
+    }
+    if (showOptions.viewColumn >= 0) {
+      const groupInColumn = this._editorGroupService.getGroups(
+        2
+        /* GroupsOrder.GRID_APPEARANCE */
+      )[showOptions.viewColumn];
+      if (groupInColumn) {
+        return groupInColumn.id;
+      }
+      const newGroup = this._editorGroupService.findGroup({
+        location: 1
+        /* GroupLocation.LAST */
+      });
+      if (newGroup) {
+        const direction = preferredSideBySideGroupDirection(this._configurationService);
+        return this._editorGroupService.addGroup(newGroup, direction);
+      }
+    }
+    return ACTIVE_GROUP;
+  }
+  $registerSerializer(viewType, options) {
+    if (this._revivers.has(viewType)) {
+      throw new Error(`Reviver for ${viewType} already registered`);
+    }
+    this._revivers.set(viewType, this._webviewWorkbenchService.registerResolver({
+      canResolve: /* @__PURE__ */ __name((webviewInput) => {
+        return webviewInput.viewType === this.webviewPanelViewType.fromExternal(viewType);
+      }, "canResolve"),
+      resolveWebview: /* @__PURE__ */ __name(async (webviewInput) => {
+        const viewType2 = this.webviewPanelViewType.toExternal(webviewInput.viewType);
+        if (!viewType2) {
+          webviewInput.webview.setHtml(this._mainThreadWebviews.getWebviewResolvedFailedContent(webviewInput.viewType));
+          return;
+        }
+        const handle = generateUuid();
+        this.addWebviewInput(handle, webviewInput, options);
+        let state = void 0;
+        if (webviewInput.webview.state) {
+          try {
+            state = JSON.parse(webviewInput.webview.state);
+          } catch (e) {
+            console.error("Could not load webview state", e, webviewInput.webview.state);
+          }
+        }
+        try {
+          await this._proxy.$deserializeWebviewPanel(handle, viewType2, {
+            title: webviewInput.getTitle(),
+            state,
+            panelOptions: webviewInput.webview.options,
+            webviewOptions: webviewInput.webview.contentOptions,
+            active: webviewInput === this._editorService.activeEditor
+          }, editorGroupToColumn(this._editorGroupService, webviewInput.group || 0));
+        } catch (error) {
+          onUnexpectedError(error);
+          webviewInput.webview.setHtml(this._mainThreadWebviews.getWebviewResolvedFailedContent(viewType2));
+        }
+      }, "resolveWebview")
+    }));
+  }
+  $unregisterSerializer(viewType) {
+    if (!this._revivers.has(viewType)) {
+      throw new Error(`No reviver for ${viewType} registered`);
+    }
+    this._revivers.deleteAndDispose(viewType);
+  }
+  updateWebviewViewStates(activeEditorInput) {
+    if (!this._webviewInputs.size) {
+      return;
+    }
+    const viewStates = {};
+    const updateViewStatesForInput = /* @__PURE__ */ __name((group, topLevelInput, editorInput) => {
+      if (!(editorInput instanceof WebviewInput)) {
+        return;
+      }
+      editorInput.updateGroup(group.id);
+      const handle = this._webviewInputs.getHandleForInput(editorInput);
+      if (handle) {
+        viewStates[handle] = {
+          visible: topLevelInput === group.activeEditor,
+          active: editorInput === activeEditorInput,
+          position: editorGroupToColumn(this._editorGroupService, group.id)
+        };
+      }
+    }, "updateViewStatesForInput");
+    for (const group of this._editorGroupService.groups) {
+      for (const input of group.editors) {
+        if (input instanceof DiffEditorInput) {
+          updateViewStatesForInput(group, input, input.primary);
+          updateViewStatesForInput(group, input, input.secondary);
+        } else {
+          updateViewStatesForInput(group, input, input);
+        }
+      }
+    }
+    if (Object.keys(viewStates).length) {
+      this._proxy.$onDidChangeWebviewPanelViewStates(viewStates);
+    }
+  }
+  tryGetWebviewInput(handle) {
+    return this._webviewInputs.getInputForHandle(handle);
+  }
+};
+MainThreadWebviewPanels = __decorate([
+  __param(2, IConfigurationService),
+  __param(3, IEditorGroupsService),
+  __param(4, IEditorService),
+  __param(5, IExtensionService),
+  __param(6, IStorageService),
+  __param(7, IWebviewWorkbenchService)
+], MainThreadWebviewPanels);
+function reviveWebviewIcon(value) {
+  if (!value) {
+    return void 0;
+  }
+  return {
+    light: URI.revive(value.light),
+    dark: URI.revive(value.dark)
+  };
+}
+__name(reviveWebviewIcon, "reviveWebviewIcon");
+function reviveWebviewOptions(panelOptions) {
+  return {
+    enableFindWidget: panelOptions.enableFindWidget,
+    retainContextWhenHidden: panelOptions.retainContextWhenHidden
+  };
+}
+__name(reviveWebviewOptions, "reviveWebviewOptions");
+export {
+  MainThreadWebviewPanels
+};
+//# sourceMappingURL=mainThreadWebviewPanels.js.map

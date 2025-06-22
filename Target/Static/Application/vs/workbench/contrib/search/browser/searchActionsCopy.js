@@ -1,4 +1,236 @@
-import*as f from"../../../../nls.js";import{$mfb as y}from"../../../../platform/clipboard/common/clipboardService.js";import{$2H as g}from"../../../../platform/label/common/label.js";import{$Jwb as x}from"../../../services/views/common/viewsService.js";import*as u from"../common/constants.js";import{$iI as p,$dI as w,$jI as d}from"../../../../platform/actions/common/actions.js";import{$lbc as m,$obc as b}from"./searchActionsBase.js";import{$m as P}from"../../../../base/common/platform.js";import{$jbc as C}from"./searchCompare.js";import{$$ac as T,$0ac as M,$6ac as A,$7ac as j}from"./searchTreeModel/searchTreeCommon.js";d(class extends p{constructor(){super({id:"search.action.copyMatch",title:f.localize2(10765,"Copy"),category:m,keybinding:{weight:200,when:u.$lZb.FileMatchOrMatchFocusKey,primary:2081},menu:[{id:w.SearchContext,when:u.$lZb.FileMatchOrMatchFocusKey,group:"search_2",order:1}]})}async run(e,r){await O(e,r)}});d(class extends p{constructor(){super({id:"search.action.copyPath",title:f.localize2(10766,"Copy Path"),category:m,keybinding:{weight:200,when:u.$lZb.FileMatchOrFolderMatchWithResourceFocusKey,primary:2593,win:{primary:1569}},menu:[{id:w.SearchContext,when:u.$lZb.FileMatchOrFolderMatchWithResourceFocusKey,group:"search_2",order:2}]})}async run(e,r){await z(e,r)}});d(class extends p{constructor(){super({id:"search.action.copyAll",title:f.localize2(10767,"Copy All"),category:m,menu:[{id:w.SearchContext,when:u.$lZb.HasSearchResults,group:"search_2",order:3}]})}async run(e){await Z(e)}});d(class extends p{constructor(){super({id:"search.action.getSearchResults",title:f.localize2(10768,"Get Search Results"),category:m,f1:!1})}async run(e){const r=e.get(x),o=e.get(g),n=b(r);if(n){const c=n.searchResult,s=S(c.folderMatches(),o),a=S(c.folderMatches(!0),o);return`${s}${i}${i}${a}`}}});const i=P?`\r
-`:`
-`;async function z(t,e){if(!e){const c=L(t);if(!M(c)||j(c))return;e=c}const r=t.get(y),n=t.get(g).getUriLabel(e.resource,{noPrefix:!0});await r.writeText(n)}async function O(t,e){if(!e){const c=L(t);if(!c)return;e=c}const r=t.get(y),o=t.get(g);let n;T(e)?n=R(e):M(e)?n=F(e,o).text:A(e)&&(n=v(e,o).text),n&&await r.writeText(n)}async function Z(t){const e=t.get(x),r=t.get(y),o=t.get(g),n=b(e);if(n){const c=n.searchResult,s=S(c.folderMatches(),o);await r.writeText(s)}}function R(t,e=0){const r=()=>`${t.range().startLineNumber},${t.range().startColumn}`,o=a=>t.range().startLineNumber+a+"",n=t.fullPreviewLines(),c=n.reduce((a,h,l)=>{const $=l===0?r().length:o(l).length;return Math.max($,a)},0);return n.map((a,h)=>{const l=h===0?r():o(h),$=" ".repeat(c-l.length);return`${" ".repeat(e)}${l}: ${$}${a}`}).join(`
-`)}function K(t,e){return M(t)?F(t,e):v(t,e)}function F(t,e){const r=t.matches().sort(C).map(n=>R(n,2));return{text:`${e.getUriLabel(t.resource,{noPrefix:!0})}${i}${r.join(i)}`,count:r.length}}function v(t,e){const r=[];let o=0;return t.matches().sort(C).forEach(c=>{const s=K(c,e);o+=s.count,r.push(s.text)}),{text:r.join(i+i),count:o}}function S(t,e){const r=[];t=t.sort(C);for(let o=0;o<t.length;o++){const n=v(t[o],e);n.count&&r.push(n.text)}return r.join(i+i)}function L(t){const e=t.get(x);return b(e)?.getControl().getSelection()[0]}export{i as $Jnc};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import * as nls from "../../../../nls.js";
+import { IClipboardService } from "../../../../platform/clipboard/common/clipboardService.js";
+import { ILabelService } from "../../../../platform/label/common/label.js";
+import { IViewsService } from "../../../services/views/common/viewsService.js";
+import * as Constants from "../common/constants.js";
+import { Action2, MenuId, registerAction2 } from "../../../../platform/actions/common/actions.js";
+import { category, getSearchView } from "./searchActionsBase.js";
+import { isWindows } from "../../../../base/common/platform.js";
+import { searchMatchComparer } from "./searchCompare.js";
+import { isSearchTreeMatch, isSearchTreeFileMatch, isSearchTreeFolderMatch, isSearchTreeFolderMatchWithResource } from "./searchTreeModel/searchTreeCommon.js";
+registerAction2(class CopyMatchCommandAction extends Action2 {
+  static {
+    __name(this, "CopyMatchCommandAction");
+  }
+  constructor() {
+    super({
+      id: "search.action.copyMatch",
+      title: nls.localize2("copyMatchLabel", "Copy"),
+      category,
+      keybinding: {
+        weight: 200,
+        when: Constants.SearchContext.FileMatchOrMatchFocusKey,
+        primary: 2048 | 33
+      },
+      menu: [{
+        id: MenuId.SearchContext,
+        when: Constants.SearchContext.FileMatchOrMatchFocusKey,
+        group: "search_2",
+        order: 1
+      }]
+    });
+  }
+  async run(accessor, match) {
+    await copyMatchCommand(accessor, match);
+  }
+});
+registerAction2(class CopyPathCommandAction extends Action2 {
+  static {
+    __name(this, "CopyPathCommandAction");
+  }
+  constructor() {
+    super({
+      id: "search.action.copyPath",
+      title: nls.localize2("copyPathLabel", "Copy Path"),
+      category,
+      keybinding: {
+        weight: 200,
+        when: Constants.SearchContext.FileMatchOrFolderMatchWithResourceFocusKey,
+        primary: 2048 | 512 | 33,
+        win: {
+          primary: 1024 | 512 | 33
+          /* KeyCode.KeyC */
+        }
+      },
+      menu: [{
+        id: MenuId.SearchContext,
+        when: Constants.SearchContext.FileMatchOrFolderMatchWithResourceFocusKey,
+        group: "search_2",
+        order: 2
+      }]
+    });
+  }
+  async run(accessor, fileMatch) {
+    await copyPathCommand(accessor, fileMatch);
+  }
+});
+registerAction2(class CopyAllCommandAction extends Action2 {
+  static {
+    __name(this, "CopyAllCommandAction");
+  }
+  constructor() {
+    super({
+      id: "search.action.copyAll",
+      title: nls.localize2("copyAllLabel", "Copy All"),
+      category,
+      menu: [{
+        id: MenuId.SearchContext,
+        when: Constants.SearchContext.HasSearchResults,
+        group: "search_2",
+        order: 3
+      }]
+    });
+  }
+  async run(accessor) {
+    await copyAllCommand(accessor);
+  }
+});
+registerAction2(class GetSearchResultsAction extends Action2 {
+  static {
+    __name(this, "GetSearchResultsAction");
+  }
+  constructor() {
+    super({
+      id: "search.action.getSearchResults",
+      title: nls.localize2("getSearchResultsLabel", "Get Search Results"),
+      category,
+      f1: false
+    });
+  }
+  async run(accessor) {
+    const viewsService = accessor.get(IViewsService);
+    const labelService = accessor.get(ILabelService);
+    const searchView = getSearchView(viewsService);
+    if (searchView) {
+      const root = searchView.searchResult;
+      const textSearchResult = allFolderMatchesToString(root.folderMatches(), labelService);
+      const aiSearchResult = allFolderMatchesToString(root.folderMatches(true), labelService);
+      const text = `${textSearchResult}${lineDelimiter}${lineDelimiter}${aiSearchResult}`;
+      return text;
+    }
+    return void 0;
+  }
+});
+const lineDelimiter = isWindows ? "\r\n" : "\n";
+async function copyPathCommand(accessor, fileMatch) {
+  if (!fileMatch) {
+    const selection = getSelectedRow(accessor);
+    if (!isSearchTreeFileMatch(selection) || isSearchTreeFolderMatchWithResource(selection)) {
+      return;
+    }
+    fileMatch = selection;
+  }
+  const clipboardService = accessor.get(IClipboardService);
+  const labelService = accessor.get(ILabelService);
+  const text = labelService.getUriLabel(fileMatch.resource, { noPrefix: true });
+  await clipboardService.writeText(text);
+}
+__name(copyPathCommand, "copyPathCommand");
+async function copyMatchCommand(accessor, match) {
+  if (!match) {
+    const selection = getSelectedRow(accessor);
+    if (!selection) {
+      return;
+    }
+    match = selection;
+  }
+  const clipboardService = accessor.get(IClipboardService);
+  const labelService = accessor.get(ILabelService);
+  let text;
+  if (isSearchTreeMatch(match)) {
+    text = matchToString(match);
+  } else if (isSearchTreeFileMatch(match)) {
+    text = fileMatchToString(match, labelService).text;
+  } else if (isSearchTreeFolderMatch(match)) {
+    text = folderMatchToString(match, labelService).text;
+  }
+  if (text) {
+    await clipboardService.writeText(text);
+  }
+}
+__name(copyMatchCommand, "copyMatchCommand");
+async function copyAllCommand(accessor) {
+  const viewsService = accessor.get(IViewsService);
+  const clipboardService = accessor.get(IClipboardService);
+  const labelService = accessor.get(ILabelService);
+  const searchView = getSearchView(viewsService);
+  if (searchView) {
+    const root = searchView.searchResult;
+    const text = allFolderMatchesToString(root.folderMatches(), labelService);
+    await clipboardService.writeText(text);
+  }
+}
+__name(copyAllCommand, "copyAllCommand");
+function matchToString(match, indent = 0) {
+  const getFirstLinePrefix = /* @__PURE__ */ __name(() => `${match.range().startLineNumber},${match.range().startColumn}`, "getFirstLinePrefix");
+  const getOtherLinePrefix = /* @__PURE__ */ __name((i) => match.range().startLineNumber + i + "", "getOtherLinePrefix");
+  const fullMatchLines = match.fullPreviewLines();
+  const largestPrefixSize = fullMatchLines.reduce((largest, _, i) => {
+    const thisSize = i === 0 ? getFirstLinePrefix().length : getOtherLinePrefix(i).length;
+    return Math.max(thisSize, largest);
+  }, 0);
+  const formattedLines = fullMatchLines.map((line, i) => {
+    const prefix = i === 0 ? getFirstLinePrefix() : getOtherLinePrefix(i);
+    const paddingStr = " ".repeat(largestPrefixSize - prefix.length);
+    const indentStr = " ".repeat(indent);
+    return `${indentStr}${prefix}: ${paddingStr}${line}`;
+  });
+  return formattedLines.join("\n");
+}
+__name(matchToString, "matchToString");
+function fileFolderMatchToString(match, labelService) {
+  if (isSearchTreeFileMatch(match)) {
+    return fileMatchToString(match, labelService);
+  } else {
+    return folderMatchToString(match, labelService);
+  }
+}
+__name(fileFolderMatchToString, "fileFolderMatchToString");
+function fileMatchToString(fileMatch, labelService) {
+  const matchTextRows = fileMatch.matches().sort(searchMatchComparer).map((match) => matchToString(match, 2));
+  const uriString = labelService.getUriLabel(fileMatch.resource, { noPrefix: true });
+  return {
+    text: `${uriString}${lineDelimiter}${matchTextRows.join(lineDelimiter)}`,
+    count: matchTextRows.length
+  };
+}
+__name(fileMatchToString, "fileMatchToString");
+function folderMatchToString(folderMatch, labelService) {
+  const results = [];
+  let numMatches = 0;
+  const matches = folderMatch.matches().sort(searchMatchComparer);
+  matches.forEach((match) => {
+    const result = fileFolderMatchToString(match, labelService);
+    numMatches += result.count;
+    results.push(result.text);
+  });
+  return {
+    text: results.join(lineDelimiter + lineDelimiter),
+    count: numMatches
+  };
+}
+__name(folderMatchToString, "folderMatchToString");
+function allFolderMatchesToString(folderMatches, labelService) {
+  const folderResults = [];
+  folderMatches = folderMatches.sort(searchMatchComparer);
+  for (let i = 0; i < folderMatches.length; i++) {
+    const folderResult = folderMatchToString(folderMatches[i], labelService);
+    if (folderResult.count) {
+      folderResults.push(folderResult.text);
+    }
+  }
+  return folderResults.join(lineDelimiter + lineDelimiter);
+}
+__name(allFolderMatchesToString, "allFolderMatchesToString");
+function getSelectedRow(accessor) {
+  const viewsService = accessor.get(IViewsService);
+  const searchView = getSearchView(viewsService);
+  return searchView?.getControl().getSelection()[0];
+}
+__name(getSelectedRow, "getSelectedRow");
+export {
+  lineDelimiter
+};
+//# sourceMappingURL=searchActionsCopy.js.map

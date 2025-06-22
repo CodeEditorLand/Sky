@@ -1,1 +1,399 @@
-import*as I from"../../../../base/common/arrays.js";import{$Ih as $,$Ph as _}from"../../../../base/common/async.js";import{CancellationToken as S,$pf as O}from"../../../../base/common/cancellation.js";import{$hp as p}from"../../../../base/common/color.js";import{$pb as T,$kb as y,$lb as V}from"../../../../base/common/errors.js";import{Event as M}from"../../../../base/common/event.js";import{$vd as H,$ud as w}from"../../../../base/common/lifecycle.js";import*as E from"../../../../base/common/strings.js";import{URI as N}from"../../../../base/common/uri.js";import{$cab as B,$bab as F,$hab as U,$gab as A,$kab as j,$fab as z}from"../../../browser/editorExtensions.js";import{$0_ as q}from"../../../browser/services/codeEditorService.js";import{$bC as W}from"../../../common/core/position.js";import{$cC as k}from"../../../common/core/range.js";import{EditorContextKeys as R}from"../../../common/editorContextKeys.js";import{$YH as X}from"../../../common/model/textModel.js";import{$pE as G}from"../../../common/languages/languageConfigurationRegistry.js";import*as L from"../../../../nls.js";import{$Bn as Y,$Vn as K,$Un as Z}from"../../../../platform/contextkey/common/contextkey.js";import{$sT as v}from"../../../common/services/languageFeatures.js";import{$op as J}from"../../../../platform/theme/common/colorRegistry.js";import{$Uib as Q}from"../../../common/services/languageFeatureDebounce.js";import{$0e as tt}from"../../../../base/common/stopwatch.js";import"./linkedEditing.css";var D=function(h,r,t,i){var s=arguments.length,n=s<3?r:i===null?i=Object.getOwnPropertyDescriptor(r,t):i,e;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")n=Reflect.decorate(h,r,t,i);else for(var a=h.length-1;a>=0;a--)(e=h[a])&&(n=(s<3?e(n):s>3?e(r,t,n):e(r,t))||n);return s>3&&n&&Object.defineProperty(r,t,n),n},m=function(h,r){return function(t,i){r(t,i,h)}},b;const P=new Z("LinkedEditingInputVisible",!1),et="linked-editing-decoration";let c=class extends H{static{b=this}static{this.ID="editor.contrib.linkedEditing"}static{this.a=X.register({description:"linked-editing",stickiness:0,className:et})}static get(r){return r.getContribution(b.ID)}constructor(r,t,i,s,n){super(),this.G=s,this.y=0,this.F=this.B(new w),this.f=r,this.g=i.linkedEditingRangeProvider,this.h=!1,this.j=P.bindTo(t),this.m=n.for(this.g,"Linked Editing",{max:200}),this.w=this.f.createDecorationsCollection(),this.z=null,this.C=null,this.D=!1,this.F=this.B(new w),this.n=null,this.r=null,this.s=null,this.t=null,this.u=null,this.B(this.f.onDidChangeModel(()=>this.H(!0))),this.B(this.f.onDidChangeConfiguration(e=>{(e.hasChanged(74)||e.hasChanged(101))&&this.H(!1)})),this.B(this.g.onDidChange(()=>this.H(!1))),this.B(this.f.onDidChangeModelLanguage(()=>this.H(!0))),this.H(!0)}H(r){const t=this.f.getModel(),i=t!==null&&(this.f.getOption(74)||this.f.getOption(101))&&this.g.has(t);if(i===this.h&&!r||(this.h=i,this.clearRanges(),this.F.clear(),!i||t===null))return;this.F.add(M.runAndSubscribe(t.onDidChangeLanguageConfiguration,()=>{this.z=this.G.getLanguageConfiguration(t.getLanguageId()).getWordDefinition()}));const s=new $(this.m.get(t)),n=()=>{this.n=s.trigger(()=>this.updateRanges(),this.b??this.m.get(t))},e=new $(0),a=o=>{this.r=e.trigger(()=>this.I(o))};this.F.add(this.f.onDidChangeCursorPosition(()=>{n()})),this.F.add(this.f.onDidChangeModelContent(o=>{if(!this.D&&this.w.length>0){const g=this.w.getRange(0);if(g&&o.changes.every(l=>g.intersectRanges(l.range))){a(this.y);return}}n()})),this.F.add({dispose:()=>{s.dispose(),e.dispose()}}),this.updateRanges()}I(r){if(!this.f.hasModel()||r!==this.y||this.w.length===0)return;const t=this.f.getModel(),i=this.w.getRange(0);if(!i||i.startLineNumber!==i.endLineNumber)return this.clearRanges();const s=t.getValueInRange(i);if(this.C){const e=s.match(this.C);if((e?e[0].length:0)!==s.length)return this.clearRanges()}const n=[];for(let e=1,a=this.w.length;e<a;e++){const o=this.w.getRange(e);if(o)if(o.startLineNumber!==o.endLineNumber)n.push({range:o,text:s});else{let g=t.getValueInRange(o),l=s,d=o.startColumn,u=o.endColumn;const f=E.$7f(g,l);d+=f,g=g.substr(f),l=l.substr(f);const C=E.$8f(g,l);u-=C,g=g.substr(0,g.length-C),l=l.substr(0,l.length-C),(d!==u||l.length!==0)&&n.push({range:new k(o.startLineNumber,d,o.endLineNumber,u),text:l})}}if(n.length!==0)try{this.f.popUndoStop(),this.D=!0;const e=this.f._getViewModel().getPrevEditOperationType();this.f.executeEdits("linkedEditing",n),this.f._getViewModel().setPrevEditOperationType(e)}finally{this.D=!1}}dispose(){this.clearRanges(),super.dispose()}clearRanges(){this.j.set(!1),this.w.clear(),this.s&&(this.s.cancel(),this.s=null,this.t=null)}get currentUpdateTriggerPromise(){return this.n||Promise.resolve()}get currentSyncTriggerPromise(){return this.r||Promise.resolve()}async updateRanges(r=!1){if(!this.f.hasModel()){this.clearRanges();return}const t=this.f.getPosition();if(!this.h&&!r||this.f.getSelections().length>1){this.clearRanges();return}const i=this.f.getModel(),s=i.getVersionId();if(this.t&&this.u===s){if(t.equals(this.t))return;if(this.w.length>0){const e=this.w.getRange(0);if(e&&e.containsPosition(t))return}}this.clearRanges(),this.t=t,this.u=s;const n=this.s=new O;try{const e=new tt(!1),a=await x(this.g,i,t,n.token);if(this.m.update(i,e.elapsed()),n!==this.s||(this.s=null,s!==i.getVersionId()))return;let o=[];a?.ranges&&(o=a.ranges),this.C=a?.wordPattern||this.z;let g=!1;for(let d=0,u=o.length;d<u;d++)if(k.containsPosition(o[d],t)){if(g=!0,d!==0){const f=o[d];o.splice(d,1),o.unshift(f)}break}if(!g){this.clearRanges();return}const l=o.map(d=>({range:d,options:b.a}));this.j.set(!0),this.w.set(l),this.y++}catch(e){T(e)||y(e),(this.s===n||!this.s)&&this.clearRanges()}}setDebounceDuration(r){this.b=r}};c=b=D([m(1,K),m(2,v),m(3,G),m(4,Q)],c);class it extends B{constructor(){super({id:"editor.action.linkedEditing",label:L.localize2(1403,"Start Linked Editing"),precondition:Y.and(R.writable,R.hasRenameProvider),kbOpts:{kbExpr:R.editorTextFocus,primary:3132,weight:100}})}runCommand(r,t){const i=r.get(q),[s,n]=Array.isArray(t)&&t||[void 0,void 0];return N.isUri(s)&&W.isIPosition(n)?i.openCodeEditor({resource:s},i.getActiveCodeEditor()).then(e=>{e&&(e.setPosition(n),e.invokeWithinContext(a=>(this.q(a,e),this.run(a,e))))},y):super.runCommand(r,t)}run(r,t){const i=c.get(t);return i?Promise.resolve(i.updateRanges(!0)):Promise.resolve()}}const nt=F.bindToContribution(c.get);A(new nt({id:"cancelLinkedEditingInput",precondition:P,handler:h=>h.clearRanges(),kbOpts:{kbExpr:R.editorTextFocus,weight:199,primary:9,secondary:[1033]}}));function x(h,r,t,i){const s=h.ordered(r);return _(s.map(n=>async()=>{try{return await n.provideLinkedEditingRanges(r,t,i)}catch(e){V(e);return}}),n=>!!n&&I.$$b(n?.ranges))}const Lt=J("editor.linkedEditingBackground",{dark:p.fromHex("#f00").transparent(.3),light:p.fromHex("#f00").transparent(.3),hcDark:p.fromHex("#f00").transparent(.3),hcLight:p.white},L.localize(1402,null));z("_executeLinkedEditingProvider",(h,r,t)=>{const{linkedEditingRangeProvider:i}=h.get(v);return x(i,r,t,S.None)});j(c.ID,c,1);U(it);export{P as $Wrb,c as $Xrb,it as $Yrb,Lt as $Zrb};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import * as arrays from "../../../../base/common/arrays.js";
+import { Delayer, first } from "../../../../base/common/async.js";
+import { CancellationToken, CancellationTokenSource } from "../../../../base/common/cancellation.js";
+import { Color } from "../../../../base/common/color.js";
+import { isCancellationError, onUnexpectedError, onUnexpectedExternalError } from "../../../../base/common/errors.js";
+import { Event } from "../../../../base/common/event.js";
+import { Disposable, DisposableStore } from "../../../../base/common/lifecycle.js";
+import * as strings from "../../../../base/common/strings.js";
+import { URI } from "../../../../base/common/uri.js";
+import { EditorAction, EditorCommand, registerEditorAction, registerEditorCommand, registerEditorContribution, registerModelAndPositionCommand } from "../../../browser/editorExtensions.js";
+import { ICodeEditorService } from "../../../browser/services/codeEditorService.js";
+import { Position } from "../../../common/core/position.js";
+import { Range } from "../../../common/core/range.js";
+import { EditorContextKeys } from "../../../common/editorContextKeys.js";
+import { ModelDecorationOptions } from "../../../common/model/textModel.js";
+import { ILanguageConfigurationService } from "../../../common/languages/languageConfigurationRegistry.js";
+import * as nls from "../../../../nls.js";
+import { ContextKeyExpr, IContextKeyService, RawContextKey } from "../../../../platform/contextkey/common/contextkey.js";
+import { ILanguageFeaturesService } from "../../../common/services/languageFeatures.js";
+import { registerColor } from "../../../../platform/theme/common/colorRegistry.js";
+import { ILanguageFeatureDebounceService } from "../../../common/services/languageFeatureDebounce.js";
+import { StopWatch } from "../../../../base/common/stopwatch.js";
+import "./linkedEditing.css";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+var LinkedEditingContribution_1;
+const CONTEXT_ONTYPE_RENAME_INPUT_VISIBLE = new RawContextKey("LinkedEditingInputVisible", false);
+const DECORATION_CLASS_NAME = "linked-editing-decoration";
+let LinkedEditingContribution = class LinkedEditingContribution2 extends Disposable {
+  static {
+    __name(this, "LinkedEditingContribution");
+  }
+  static {
+    LinkedEditingContribution_1 = this;
+  }
+  static {
+    this.ID = "editor.contrib.linkedEditing";
+  }
+  static {
+    this.DECORATION = ModelDecorationOptions.register({
+      description: "linked-editing",
+      stickiness: 0,
+      className: DECORATION_CLASS_NAME
+    });
+  }
+  static get(editor) {
+    return editor.getContribution(LinkedEditingContribution_1.ID);
+  }
+  constructor(editor, contextKeyService, languageFeaturesService, languageConfigurationService, languageFeatureDebounceService) {
+    super();
+    this.languageConfigurationService = languageConfigurationService;
+    this._syncRangesToken = 0;
+    this._localToDispose = this._register(new DisposableStore());
+    this._editor = editor;
+    this._providers = languageFeaturesService.linkedEditingRangeProvider;
+    this._enabled = false;
+    this._visibleContextKey = CONTEXT_ONTYPE_RENAME_INPUT_VISIBLE.bindTo(contextKeyService);
+    this._debounceInformation = languageFeatureDebounceService.for(this._providers, "Linked Editing", { max: 200 });
+    this._currentDecorations = this._editor.createDecorationsCollection();
+    this._languageWordPattern = null;
+    this._currentWordPattern = null;
+    this._ignoreChangeEvent = false;
+    this._localToDispose = this._register(new DisposableStore());
+    this._rangeUpdateTriggerPromise = null;
+    this._rangeSyncTriggerPromise = null;
+    this._currentRequestCts = null;
+    this._currentRequestPosition = null;
+    this._currentRequestModelVersion = null;
+    this._register(this._editor.onDidChangeModel(() => this.reinitialize(true)));
+    this._register(this._editor.onDidChangeConfiguration((e) => {
+      if (e.hasChanged(
+        74
+        /* EditorOption.linkedEditing */
+      ) || e.hasChanged(
+        101
+        /* EditorOption.renameOnType */
+      )) {
+        this.reinitialize(false);
+      }
+    }));
+    this._register(this._providers.onDidChange(() => this.reinitialize(false)));
+    this._register(this._editor.onDidChangeModelLanguage(() => this.reinitialize(true)));
+    this.reinitialize(true);
+  }
+  reinitialize(forceRefresh) {
+    const model = this._editor.getModel();
+    const isEnabled = model !== null && (this._editor.getOption(
+      74
+      /* EditorOption.linkedEditing */
+    ) || this._editor.getOption(
+      101
+      /* EditorOption.renameOnType */
+    )) && this._providers.has(model);
+    if (isEnabled === this._enabled && !forceRefresh) {
+      return;
+    }
+    this._enabled = isEnabled;
+    this.clearRanges();
+    this._localToDispose.clear();
+    if (!isEnabled || model === null) {
+      return;
+    }
+    this._localToDispose.add(Event.runAndSubscribe(model.onDidChangeLanguageConfiguration, () => {
+      this._languageWordPattern = this.languageConfigurationService.getLanguageConfiguration(model.getLanguageId()).getWordDefinition();
+    }));
+    const rangeUpdateScheduler = new Delayer(this._debounceInformation.get(model));
+    const triggerRangeUpdate = /* @__PURE__ */ __name(() => {
+      this._rangeUpdateTriggerPromise = rangeUpdateScheduler.trigger(() => this.updateRanges(), this._debounceDuration ?? this._debounceInformation.get(model));
+    }, "triggerRangeUpdate");
+    const rangeSyncScheduler = new Delayer(0);
+    const triggerRangeSync = /* @__PURE__ */ __name((token) => {
+      this._rangeSyncTriggerPromise = rangeSyncScheduler.trigger(() => this._syncRanges(token));
+    }, "triggerRangeSync");
+    this._localToDispose.add(this._editor.onDidChangeCursorPosition(() => {
+      triggerRangeUpdate();
+    }));
+    this._localToDispose.add(this._editor.onDidChangeModelContent((e) => {
+      if (!this._ignoreChangeEvent) {
+        if (this._currentDecorations.length > 0) {
+          const referenceRange = this._currentDecorations.getRange(0);
+          if (referenceRange && e.changes.every((c) => referenceRange.intersectRanges(c.range))) {
+            triggerRangeSync(this._syncRangesToken);
+            return;
+          }
+        }
+      }
+      triggerRangeUpdate();
+    }));
+    this._localToDispose.add({
+      dispose: /* @__PURE__ */ __name(() => {
+        rangeUpdateScheduler.dispose();
+        rangeSyncScheduler.dispose();
+      }, "dispose")
+    });
+    this.updateRanges();
+  }
+  _syncRanges(token) {
+    if (!this._editor.hasModel() || token !== this._syncRangesToken || this._currentDecorations.length === 0) {
+      return;
+    }
+    const model = this._editor.getModel();
+    const referenceRange = this._currentDecorations.getRange(0);
+    if (!referenceRange || referenceRange.startLineNumber !== referenceRange.endLineNumber) {
+      return this.clearRanges();
+    }
+    const referenceValue = model.getValueInRange(referenceRange);
+    if (this._currentWordPattern) {
+      const match = referenceValue.match(this._currentWordPattern);
+      const matchLength = match ? match[0].length : 0;
+      if (matchLength !== referenceValue.length) {
+        return this.clearRanges();
+      }
+    }
+    const edits = [];
+    for (let i = 1, len = this._currentDecorations.length; i < len; i++) {
+      const mirrorRange = this._currentDecorations.getRange(i);
+      if (!mirrorRange) {
+        continue;
+      }
+      if (mirrorRange.startLineNumber !== mirrorRange.endLineNumber) {
+        edits.push({
+          range: mirrorRange,
+          text: referenceValue
+        });
+      } else {
+        let oldValue = model.getValueInRange(mirrorRange);
+        let newValue = referenceValue;
+        let rangeStartColumn = mirrorRange.startColumn;
+        let rangeEndColumn = mirrorRange.endColumn;
+        const commonPrefixLength = strings.commonPrefixLength(oldValue, newValue);
+        rangeStartColumn += commonPrefixLength;
+        oldValue = oldValue.substr(commonPrefixLength);
+        newValue = newValue.substr(commonPrefixLength);
+        const commonSuffixLength = strings.commonSuffixLength(oldValue, newValue);
+        rangeEndColumn -= commonSuffixLength;
+        oldValue = oldValue.substr(0, oldValue.length - commonSuffixLength);
+        newValue = newValue.substr(0, newValue.length - commonSuffixLength);
+        if (rangeStartColumn !== rangeEndColumn || newValue.length !== 0) {
+          edits.push({
+            range: new Range(mirrorRange.startLineNumber, rangeStartColumn, mirrorRange.endLineNumber, rangeEndColumn),
+            text: newValue
+          });
+        }
+      }
+    }
+    if (edits.length === 0) {
+      return;
+    }
+    try {
+      this._editor.popUndoStop();
+      this._ignoreChangeEvent = true;
+      const prevEditOperationType = this._editor._getViewModel().getPrevEditOperationType();
+      this._editor.executeEdits("linkedEditing", edits);
+      this._editor._getViewModel().setPrevEditOperationType(prevEditOperationType);
+    } finally {
+      this._ignoreChangeEvent = false;
+    }
+  }
+  dispose() {
+    this.clearRanges();
+    super.dispose();
+  }
+  clearRanges() {
+    this._visibleContextKey.set(false);
+    this._currentDecorations.clear();
+    if (this._currentRequestCts) {
+      this._currentRequestCts.cancel();
+      this._currentRequestCts = null;
+      this._currentRequestPosition = null;
+    }
+  }
+  get currentUpdateTriggerPromise() {
+    return this._rangeUpdateTriggerPromise || Promise.resolve();
+  }
+  get currentSyncTriggerPromise() {
+    return this._rangeSyncTriggerPromise || Promise.resolve();
+  }
+  async updateRanges(force = false) {
+    if (!this._editor.hasModel()) {
+      this.clearRanges();
+      return;
+    }
+    const position = this._editor.getPosition();
+    if (!this._enabled && !force || this._editor.getSelections().length > 1) {
+      this.clearRanges();
+      return;
+    }
+    const model = this._editor.getModel();
+    const modelVersionId = model.getVersionId();
+    if (this._currentRequestPosition && this._currentRequestModelVersion === modelVersionId) {
+      if (position.equals(this._currentRequestPosition)) {
+        return;
+      }
+      if (this._currentDecorations.length > 0) {
+        const range = this._currentDecorations.getRange(0);
+        if (range && range.containsPosition(position)) {
+          return;
+        }
+      }
+    }
+    this.clearRanges();
+    this._currentRequestPosition = position;
+    this._currentRequestModelVersion = modelVersionId;
+    const currentRequestCts = this._currentRequestCts = new CancellationTokenSource();
+    try {
+      const sw = new StopWatch(false);
+      const response = await getLinkedEditingRanges(this._providers, model, position, currentRequestCts.token);
+      this._debounceInformation.update(model, sw.elapsed());
+      if (currentRequestCts !== this._currentRequestCts) {
+        return;
+      }
+      this._currentRequestCts = null;
+      if (modelVersionId !== model.getVersionId()) {
+        return;
+      }
+      let ranges = [];
+      if (response?.ranges) {
+        ranges = response.ranges;
+      }
+      this._currentWordPattern = response?.wordPattern || this._languageWordPattern;
+      let foundReferenceRange = false;
+      for (let i = 0, len = ranges.length; i < len; i++) {
+        if (Range.containsPosition(ranges[i], position)) {
+          foundReferenceRange = true;
+          if (i !== 0) {
+            const referenceRange = ranges[i];
+            ranges.splice(i, 1);
+            ranges.unshift(referenceRange);
+          }
+          break;
+        }
+      }
+      if (!foundReferenceRange) {
+        this.clearRanges();
+        return;
+      }
+      const decorations = ranges.map((range) => ({ range, options: LinkedEditingContribution_1.DECORATION }));
+      this._visibleContextKey.set(true);
+      this._currentDecorations.set(decorations);
+      this._syncRangesToken++;
+    } catch (err) {
+      if (!isCancellationError(err)) {
+        onUnexpectedError(err);
+      }
+      if (this._currentRequestCts === currentRequestCts || !this._currentRequestCts) {
+        this.clearRanges();
+      }
+    }
+  }
+  // for testing
+  setDebounceDuration(timeInMS) {
+    this._debounceDuration = timeInMS;
+  }
+};
+LinkedEditingContribution = LinkedEditingContribution_1 = __decorate([
+  __param(1, IContextKeyService),
+  __param(2, ILanguageFeaturesService),
+  __param(3, ILanguageConfigurationService),
+  __param(4, ILanguageFeatureDebounceService)
+], LinkedEditingContribution);
+class LinkedEditingAction extends EditorAction {
+  static {
+    __name(this, "LinkedEditingAction");
+  }
+  constructor() {
+    super({
+      id: "editor.action.linkedEditing",
+      label: nls.localize2("linkedEditing.label", "Start Linked Editing"),
+      precondition: ContextKeyExpr.and(EditorContextKeys.writable, EditorContextKeys.hasRenameProvider),
+      kbOpts: {
+        kbExpr: EditorContextKeys.editorTextFocus,
+        primary: 2048 | 1024 | 60,
+        weight: 100
+        /* KeybindingWeight.EditorContrib */
+      }
+    });
+  }
+  runCommand(accessor, args) {
+    const editorService = accessor.get(ICodeEditorService);
+    const [uri, pos] = Array.isArray(args) && args || [void 0, void 0];
+    if (URI.isUri(uri) && Position.isIPosition(pos)) {
+      return editorService.openCodeEditor({ resource: uri }, editorService.getActiveCodeEditor()).then((editor) => {
+        if (!editor) {
+          return;
+        }
+        editor.setPosition(pos);
+        editor.invokeWithinContext((accessor2) => {
+          this.reportTelemetry(accessor2, editor);
+          return this.run(accessor2, editor);
+        });
+      }, onUnexpectedError);
+    }
+    return super.runCommand(accessor, args);
+  }
+  run(_accessor, editor) {
+    const controller = LinkedEditingContribution.get(editor);
+    if (controller) {
+      return Promise.resolve(controller.updateRanges(true));
+    }
+    return Promise.resolve();
+  }
+}
+const LinkedEditingCommand = EditorCommand.bindToContribution(LinkedEditingContribution.get);
+registerEditorCommand(new LinkedEditingCommand({
+  id: "cancelLinkedEditingInput",
+  precondition: CONTEXT_ONTYPE_RENAME_INPUT_VISIBLE,
+  handler: /* @__PURE__ */ __name((x) => x.clearRanges(), "handler"),
+  kbOpts: {
+    kbExpr: EditorContextKeys.editorTextFocus,
+    weight: 100 + 99,
+    primary: 9,
+    secondary: [
+      1024 | 9
+      /* KeyCode.Escape */
+    ]
+  }
+}));
+function getLinkedEditingRanges(providers, model, position, token) {
+  const orderedByScore = providers.ordered(model);
+  return first(orderedByScore.map((provider) => async () => {
+    try {
+      return await provider.provideLinkedEditingRanges(model, position, token);
+    } catch (e) {
+      onUnexpectedExternalError(e);
+      return void 0;
+    }
+  }), (result) => !!result && arrays.isNonEmptyArray(result?.ranges));
+}
+__name(getLinkedEditingRanges, "getLinkedEditingRanges");
+const editorLinkedEditingBackground = registerColor("editor.linkedEditingBackground", { dark: Color.fromHex("#f00").transparent(0.3), light: Color.fromHex("#f00").transparent(0.3), hcDark: Color.fromHex("#f00").transparent(0.3), hcLight: Color.white }, nls.localize("editorLinkedEditingBackground", "Background color when the editor auto renames on type."));
+registerModelAndPositionCommand("_executeLinkedEditingProvider", (_accessor, model, position) => {
+  const { linkedEditingRangeProvider } = _accessor.get(ILanguageFeaturesService);
+  return getLinkedEditingRanges(linkedEditingRangeProvider, model, position, CancellationToken.None);
+});
+registerEditorContribution(
+  LinkedEditingContribution.ID,
+  LinkedEditingContribution,
+  1
+  /* EditorContributionInstantiation.AfterFirstRender */
+);
+registerEditorAction(LinkedEditingAction);
+export {
+  CONTEXT_ONTYPE_RENAME_INPUT_VISIBLE,
+  LinkedEditingAction,
+  LinkedEditingContribution,
+  editorLinkedEditingBackground
+};
+//# sourceMappingURL=linkedEditing.js.map

@@ -1,1 +1,432 @@
-import{$Ho as x}from"../../../../platform/storage/common/storage.js";import{$rzc as D}from"../../../../platform/userDataSync/common/extensionsSync.js";import{$e7b as P,$f7b as j}from"../../../../platform/userDataSync/common/globalStateSync.js";import{$vzc as O}from"../../../../platform/userDataSync/common/keybindingsSync.js";import{$yzc as q}from"../../../../platform/userDataSync/common/settingsSync.js";import{$Dzc as C}from"../../../../platform/userDataSync/common/snippetsSync.js";import{$5j as S}from"../../../../platform/files/common/files.js";import{$3n as T}from"../../../../platform/log/common/log.js";import{$36b as y}from"../../../../platform/userDataSync/common/userDataSyncStoreService.js";import{$nn as _}from"../../../../platform/product/common/productService.js";import{$mo as A}from"../../../../platform/request/common/request.js";import{$aNb as z,$WMb as N}from"../../../../platform/userDataSync/common/userDataSync.js";import{$b_ as R}from"../../authentication/browser/authenticationService.js";import{$M6b as f}from"../common/userDataSync.js";import{$s as U}from"../../../../base/common/platform.js";import{$Kh as M,Promises as G}from"../../../../base/common/async.js";import{$9y as H,$gz as F,$jz as b,$mz as V}from"../../../../platform/extensionManagement/common/extensionManagement.js";import{$fl as Y}from"../../../../platform/environment/common/environment.js";import{$XO as K,$6O as W}from"../../extensions/common/extensions.js";import{$vz as d}from"../../../../platform/extensionManagement/common/extensionManagementUtil.js";import{$Y7b as X}from"../../../../platform/userDataSync/common/ignoredExtensions.js";import{$ud as B}from"../../../../base/common/lifecycle.js";import{$dh as J}from"../../../../base/common/resources.js";import{CancellationToken as L}from"../../../../base/common/cancellation.js";import{$yo as $}from"../../../../platform/uriIdentity/common/uriIdentity.js";import{$oM as E}from"../../../../platform/extensionManagement/common/extensionStorage.js";import{$Gzc as Q}from"../../../../platform/userDataSync/common/tasksSync.js";import{$Ao as v}from"../../../../platform/userDataProfile/common/userDataProfile.js";import{$2$ as Z}from"../../environment/browser/environmentService.js";import{$Y$ as ii}from"../../../../platform/secrets/common/secrets.js";var u=function(h,i,t,s){var e=arguments.length,n=e<3?i:s===null?s=Object.getOwnPropertyDescriptor(i,t):s,a;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")n=Reflect.decorate(h,i,t,s);else for(var o=h.length-1;o>=0;o--)(a=h[o])&&(n=(e<3?a(n):e>3?a(i,t,n):a(i,t))||n);return e>3&&n&&Object.defineProperty(i,t,n),n},r=function(h,i){return function(t,s){i(t,s,h)}};let g=class{constructor(i,t,s,e,n,a,o,c,l,I){this.f=i,this.g=t,this.h=s,this.i=e,this.j=n,this.k=a,this.l=o,this.m=c,this.n=l,this.o=I,this.a=[],this.b=new M,this.d=null,this.q().then(k=>{k||this.b.open()})}q(){return this.p||(this.p=(async()=>{try{if(!U){this.n.trace("Skipping initializing user data in desktop");return}if(!this.k.isNew(-1)){this.n.trace("Skipping initializing user data as application was opened before");return}if(!this.k.isNew(1)){this.n.trace("Skipping initializing user data as workspace was opened before");return}if(this.f.options?.settingsSyncOptions?.authenticationProvider&&!this.f.options.settingsSyncOptions.enabled){this.n.trace("Skipping initializing user data as settings sync is disabled");return}let i;try{i=await R(this.g,this.l)}catch(n){this.n.error(n)}if(!i){this.n.trace("Skipping initializing user data as authentication session is not set");return}await this.s(i);const t=this.h.userDataSyncStore;if(!t){this.n.trace("Skipping initializing user data as sync service is not provided");return}const s=new y(t.url,this.l,this.m,this.n,this.f,this.i,this.k);if(s.setAuthToken(i.accessToken,i.providerId),await s.manifest(null)===null){s.dispose(),this.n.trace("Skipping initializing user data as there is no data");return}return this.n.info(`Using settings sync service ${t.url.toString()} for initialization`),s}catch(i){this.n.error(i);return}})()),this.p}async s(i){const t=this.h.userDataSyncStore;if(!t?.canSwitch)return;const s=new B;try{const e=s.add(new y(t.url,this.l,this.m,this.n,this.f,this.i,this.k));if(e.setAuthToken(i.accessToken,i.providerId),this.d=await e.readResource("globalState",null),this.d){const n=new j(e,this.k,this.f,this.i,this.n).getSyncStoreType(this.d);n&&(await this.h.switch(n),J(t.url,this.h.userDataSyncStore?.url)||(this.n.info("Switched settings sync store"),this.d=null))}}finally{s.dispose()}}async whenInitializationFinished(){await this.b.wait()}async requiresInitialization(){return this.n.trace("UserDataInitializationService#requiresInitialization"),!!await this.q()}async initializeRequiredResources(){return this.n.trace("UserDataInitializationService#initializeRequiredResources"),this.z(["settings","globalState"])}async initializeOtherResources(i){try{this.n.trace("UserDataInitializationService#initializeOtherResources"),await Promise.allSettled([this.z(["keybindings","snippets","tasks"]),this.t(i)])}finally{this.b.open()}}async t(i){try{await Promise.all([this.initializeInstalledExtensions(i),this.w(i)])}finally{this.a.push("extensions")}}async initializeInstalledExtensions(i){return this.u||(this.u=(async()=>{this.n.trace("UserDataInitializationService#initializeInstalledExtensions");const t=await this.y(i);t&&await i.createInstance(m,t).initialize()})()),this.u}async w(i){return this.v||(this.v=(async()=>{this.n.trace("UserDataInitializationService#initializeNewExtensions");const t=await this.y(i);t&&await i.createInstance(w,t).initialize()})()),this.v}y(i){return this.x||(this.x=(async()=>{const t=await this.q();if(!t)return null;const s=await t.readResource("extensions",null);return i.createInstance(p,s)})()),this.x}async z(i){const t=await this.q();t&&await G.settled(i.map(async s=>{try{if(this.a.includes(s)){this.n.info(`${f(s)} initialized already.`);return}this.a.push(s),this.n.trace(`Initializing ${f(s)}`);const e=this.A(s),n=await t.readResource(s,s==="globalState"?this.d:null);await e.initialize(n),this.n.info(`Initialized ${f(s)}`)}catch(e){this.n.info(`Error while initializing ${f(s)}`),this.n.error(e)}}))}A(i){switch(i){case"settings":return new q(this.i,this.j,this.f,this.n,this.k,this.o);case"keybindings":return new O(this.i,this.j,this.f,this.n,this.k,this.o);case"tasks":return new Q(this.i,this.j,this.f,this.n,this.k,this.o);case"snippets":return new C(this.i,this.j,this.f,this.n,this.k,this.o);case"globalState":return new P(this.k,this.i,this.j,this.f,this.n,this.o)}throw new Error(`Cannot create initializer for ${i}`)}};g=u([r(0,Z),r(1,ii),r(2,N),r(3,S),r(4,v),r(5,x),r(6,_),r(7,A),r(8,T),r(9,$)],g);let p=class extends D{constructor(i,t,s,e,n,a,o,c,l){super(t,s,e,n,a,o,c,l),this.w=i,this.v=null}getPreview(){return this.s||(this.s=super.initialize(this.w).then(()=>this.v)),this.s}initialize(){throw new Error("should not be called directly")}async o(i){const t=await this.t(i);if(!t){this.j.info("Skipping initializing extensions because remote extensions does not exist.");return}const s=await this.p.getInstalled();this.v=this.u(t,s)}};p=u([r(1,b),r(2,X),r(3,S),r(4,v),r(5,Y),r(6,z),r(7,x),r(8,$)],p);let m=class{constructor(i,t,s,e){this.a=i,this.b=t,this.d=s,this.f=e}async initialize(){const i=await this.a.getPreview();if(i){for(const t of i.installedExtensions){const s=i.remoteExtensions.find(({identifier:e})=>d(e,t.identifier));if(s?.state){const e=this.d.getExtensionState(t,!0)||{};Object.keys(s.state).forEach(n=>e[n]=s.state[n]),this.d.setExtensionState(t,e,!0)}}if(i.disabledExtensions.length)for(const t of i.disabledExtensions)this.f.trace("Disabling extension...",t.id),await this.b.disableExtension(t),this.f.info("Disabling extension",t.id)}}};m=u([r(1,V),r(2,E),r(3,z)],m);let w=class{constructor(i,t,s,e,n,a){this.a=i,this.b=t,this.d=s,this.f=e,this.g=n,this.h=a}async initialize(){const i=await this.a.getPreview();if(!i)return;const t=[],s=await this.g.getTargetPlatform(),e=await this.f.getExtensions(i.newExtensions,{targetPlatform:s,compatible:!0},L.None);for(const a of e)try{const o=i.remoteExtensions.find(({identifier:l})=>d(l,a.identifier));if(!o)continue;o.state&&this.d.setExtensionState(a,o.state,!0),this.h.trace("Installing extension...",a.identifier.id);const c=await this.g.installFromGallery(a,{isMachineScoped:!1,donotIncludePackAndDependencies:!0,installGivenVersion:!!o.version,installPreReleaseVersion:o.preRelease,context:{[H]:!0}});i.disabledExtensions.some(l=>d(l,a.identifier))||t.push(c),this.h.info("Installed extension.",a.identifier.id)}catch(o){this.h.error(o)}const n=t.filter(a=>this.b.canAddExtension(W(a)));await this.i(n)||await new Promise((a,o)=>{const c=this.b.onDidChangeExtensions(async()=>{try{await this.i(n)&&(c.dispose(),a())}catch(l){o(l)}})})}async i(i){await this.b.whenInstalledExtensionsRegistered();const t=this.b.extensions;return i.every(s=>t.some(e=>d({id:e.identifier.value},s.identifier)))}};w=u([r(1,K),r(2,E),r(3,F),r(4,b),r(5,z)],w);export{g as $Hzc};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { IStorageService } from "../../../../platform/storage/common/storage.js";
+import { AbstractExtensionsInitializer } from "../../../../platform/userDataSync/common/extensionsSync.js";
+import { GlobalStateInitializer, UserDataSyncStoreTypeSynchronizer } from "../../../../platform/userDataSync/common/globalStateSync.js";
+import { KeybindingsInitializer } from "../../../../platform/userDataSync/common/keybindingsSync.js";
+import { SettingsInitializer } from "../../../../platform/userDataSync/common/settingsSync.js";
+import { SnippetsInitializer } from "../../../../platform/userDataSync/common/snippetsSync.js";
+import { IFileService } from "../../../../platform/files/common/files.js";
+import { ILogService } from "../../../../platform/log/common/log.js";
+import { UserDataSyncStoreClient } from "../../../../platform/userDataSync/common/userDataSyncStoreService.js";
+import { IProductService } from "../../../../platform/product/common/productService.js";
+import { IRequestService } from "../../../../platform/request/common/request.js";
+import { IUserDataSyncLogService, IUserDataSyncStoreManagementService } from "../../../../platform/userDataSync/common/userDataSync.js";
+import { getCurrentAuthenticationSessionInfo } from "../../authentication/browser/authenticationService.js";
+import { getSyncAreaLabel } from "../common/userDataSync.js";
+import { isWeb } from "../../../../base/common/platform.js";
+import { Barrier, Promises } from "../../../../base/common/async.js";
+import { EXTENSION_INSTALL_SKIP_PUBLISHER_TRUST_CONTEXT, IExtensionGalleryService, IExtensionManagementService, IGlobalExtensionEnablementService } from "../../../../platform/extensionManagement/common/extensionManagement.js";
+import { IEnvironmentService } from "../../../../platform/environment/common/environment.js";
+import { IExtensionService, toExtensionDescription } from "../../extensions/common/extensions.js";
+import { areSameExtensions } from "../../../../platform/extensionManagement/common/extensionManagementUtil.js";
+import { IIgnoredExtensionsManagementService } from "../../../../platform/userDataSync/common/ignoredExtensions.js";
+import { DisposableStore } from "../../../../base/common/lifecycle.js";
+import { isEqual } from "../../../../base/common/resources.js";
+import { CancellationToken } from "../../../../base/common/cancellation.js";
+import { IUriIdentityService } from "../../../../platform/uriIdentity/common/uriIdentity.js";
+import { IExtensionStorageService } from "../../../../platform/extensionManagement/common/extensionStorage.js";
+import { TasksInitializer } from "../../../../platform/userDataSync/common/tasksSync.js";
+import { IUserDataProfilesService } from "../../../../platform/userDataProfile/common/userDataProfile.js";
+import { IBrowserWorkbenchEnvironmentService } from "../../environment/browser/environmentService.js";
+import { ISecretStorageService } from "../../../../platform/secrets/common/secrets.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+let UserDataSyncInitializer = class UserDataSyncInitializer2 {
+  static {
+    __name(this, "UserDataSyncInitializer");
+  }
+  constructor(environmentService, secretStorageService, userDataSyncStoreManagementService, fileService, userDataProfilesService, storageService, productService, requestService, logService, uriIdentityService) {
+    this.environmentService = environmentService;
+    this.secretStorageService = secretStorageService;
+    this.userDataSyncStoreManagementService = userDataSyncStoreManagementService;
+    this.fileService = fileService;
+    this.userDataProfilesService = userDataProfilesService;
+    this.storageService = storageService;
+    this.productService = productService;
+    this.requestService = requestService;
+    this.logService = logService;
+    this.uriIdentityService = uriIdentityService;
+    this.initialized = [];
+    this.initializationFinished = new Barrier();
+    this.globalStateUserData = null;
+    this.createUserDataSyncStoreClient().then((userDataSyncStoreClient) => {
+      if (!userDataSyncStoreClient) {
+        this.initializationFinished.open();
+      }
+    });
+  }
+  createUserDataSyncStoreClient() {
+    if (!this._userDataSyncStoreClientPromise) {
+      this._userDataSyncStoreClientPromise = (async () => {
+        try {
+          if (!isWeb) {
+            this.logService.trace(`Skipping initializing user data in desktop`);
+            return;
+          }
+          if (!this.storageService.isNew(
+            -1
+            /* StorageScope.APPLICATION */
+          )) {
+            this.logService.trace(`Skipping initializing user data as application was opened before`);
+            return;
+          }
+          if (!this.storageService.isNew(
+            1
+            /* StorageScope.WORKSPACE */
+          )) {
+            this.logService.trace(`Skipping initializing user data as workspace was opened before`);
+            return;
+          }
+          if (this.environmentService.options?.settingsSyncOptions?.authenticationProvider && !this.environmentService.options.settingsSyncOptions.enabled) {
+            this.logService.trace(`Skipping initializing user data as settings sync is disabled`);
+            return;
+          }
+          let authenticationSession;
+          try {
+            authenticationSession = await getCurrentAuthenticationSessionInfo(this.secretStorageService, this.productService);
+          } catch (error) {
+            this.logService.error(error);
+          }
+          if (!authenticationSession) {
+            this.logService.trace(`Skipping initializing user data as authentication session is not set`);
+            return;
+          }
+          await this.initializeUserDataSyncStore(authenticationSession);
+          const userDataSyncStore = this.userDataSyncStoreManagementService.userDataSyncStore;
+          if (!userDataSyncStore) {
+            this.logService.trace(`Skipping initializing user data as sync service is not provided`);
+            return;
+          }
+          const userDataSyncStoreClient = new UserDataSyncStoreClient(userDataSyncStore.url, this.productService, this.requestService, this.logService, this.environmentService, this.fileService, this.storageService);
+          userDataSyncStoreClient.setAuthToken(authenticationSession.accessToken, authenticationSession.providerId);
+          const manifest = await userDataSyncStoreClient.manifest(null);
+          if (manifest === null) {
+            userDataSyncStoreClient.dispose();
+            this.logService.trace(`Skipping initializing user data as there is no data`);
+            return;
+          }
+          this.logService.info(`Using settings sync service ${userDataSyncStore.url.toString()} for initialization`);
+          return userDataSyncStoreClient;
+        } catch (error) {
+          this.logService.error(error);
+          return;
+        }
+      })();
+    }
+    return this._userDataSyncStoreClientPromise;
+  }
+  async initializeUserDataSyncStore(authenticationSession) {
+    const userDataSyncStore = this.userDataSyncStoreManagementService.userDataSyncStore;
+    if (!userDataSyncStore?.canSwitch) {
+      return;
+    }
+    const disposables = new DisposableStore();
+    try {
+      const userDataSyncStoreClient = disposables.add(new UserDataSyncStoreClient(userDataSyncStore.url, this.productService, this.requestService, this.logService, this.environmentService, this.fileService, this.storageService));
+      userDataSyncStoreClient.setAuthToken(authenticationSession.accessToken, authenticationSession.providerId);
+      this.globalStateUserData = await userDataSyncStoreClient.readResource("globalState", null);
+      if (this.globalStateUserData) {
+        const userDataSyncStoreType = new UserDataSyncStoreTypeSynchronizer(userDataSyncStoreClient, this.storageService, this.environmentService, this.fileService, this.logService).getSyncStoreType(this.globalStateUserData);
+        if (userDataSyncStoreType) {
+          await this.userDataSyncStoreManagementService.switch(userDataSyncStoreType);
+          if (!isEqual(userDataSyncStore.url, this.userDataSyncStoreManagementService.userDataSyncStore?.url)) {
+            this.logService.info("Switched settings sync store");
+            this.globalStateUserData = null;
+          }
+        }
+      }
+    } finally {
+      disposables.dispose();
+    }
+  }
+  async whenInitializationFinished() {
+    await this.initializationFinished.wait();
+  }
+  async requiresInitialization() {
+    this.logService.trace(`UserDataInitializationService#requiresInitialization`);
+    const userDataSyncStoreClient = await this.createUserDataSyncStoreClient();
+    return !!userDataSyncStoreClient;
+  }
+  async initializeRequiredResources() {
+    this.logService.trace(`UserDataInitializationService#initializeRequiredResources`);
+    return this.initialize([
+      "settings",
+      "globalState"
+      /* SyncResource.GlobalState */
+    ]);
+  }
+  async initializeOtherResources(instantiationService) {
+    try {
+      this.logService.trace(`UserDataInitializationService#initializeOtherResources`);
+      await Promise.allSettled([this.initialize([
+        "keybindings",
+        "snippets",
+        "tasks"
+        /* SyncResource.Tasks */
+      ]), this.initializeExtensions(instantiationService)]);
+    } finally {
+      this.initializationFinished.open();
+    }
+  }
+  async initializeExtensions(instantiationService) {
+    try {
+      await Promise.all([this.initializeInstalledExtensions(instantiationService), this.initializeNewExtensions(instantiationService)]);
+    } finally {
+      this.initialized.push(
+        "extensions"
+        /* SyncResource.Extensions */
+      );
+    }
+  }
+  async initializeInstalledExtensions(instantiationService) {
+    if (!this.initializeInstalledExtensionsPromise) {
+      this.initializeInstalledExtensionsPromise = (async () => {
+        this.logService.trace(`UserDataInitializationService#initializeInstalledExtensions`);
+        const extensionsPreviewInitializer = await this.getExtensionsPreviewInitializer(instantiationService);
+        if (extensionsPreviewInitializer) {
+          await instantiationService.createInstance(InstalledExtensionsInitializer, extensionsPreviewInitializer).initialize();
+        }
+      })();
+    }
+    return this.initializeInstalledExtensionsPromise;
+  }
+  async initializeNewExtensions(instantiationService) {
+    if (!this.initializeNewExtensionsPromise) {
+      this.initializeNewExtensionsPromise = (async () => {
+        this.logService.trace(`UserDataInitializationService#initializeNewExtensions`);
+        const extensionsPreviewInitializer = await this.getExtensionsPreviewInitializer(instantiationService);
+        if (extensionsPreviewInitializer) {
+          await instantiationService.createInstance(NewExtensionsInitializer, extensionsPreviewInitializer).initialize();
+        }
+      })();
+    }
+    return this.initializeNewExtensionsPromise;
+  }
+  getExtensionsPreviewInitializer(instantiationService) {
+    if (!this.extensionsPreviewInitializerPromise) {
+      this.extensionsPreviewInitializerPromise = (async () => {
+        const userDataSyncStoreClient = await this.createUserDataSyncStoreClient();
+        if (!userDataSyncStoreClient) {
+          return null;
+        }
+        const userData = await userDataSyncStoreClient.readResource("extensions", null);
+        return instantiationService.createInstance(ExtensionsPreviewInitializer, userData);
+      })();
+    }
+    return this.extensionsPreviewInitializerPromise;
+  }
+  async initialize(syncResources) {
+    const userDataSyncStoreClient = await this.createUserDataSyncStoreClient();
+    if (!userDataSyncStoreClient) {
+      return;
+    }
+    await Promises.settled(syncResources.map(async (syncResource) => {
+      try {
+        if (this.initialized.includes(syncResource)) {
+          this.logService.info(`${getSyncAreaLabel(syncResource)} initialized already.`);
+          return;
+        }
+        this.initialized.push(syncResource);
+        this.logService.trace(`Initializing ${getSyncAreaLabel(syncResource)}`);
+        const initializer = this.createSyncResourceInitializer(syncResource);
+        const userData = await userDataSyncStoreClient.readResource(syncResource, syncResource === "globalState" ? this.globalStateUserData : null);
+        await initializer.initialize(userData);
+        this.logService.info(`Initialized ${getSyncAreaLabel(syncResource)}`);
+      } catch (error) {
+        this.logService.info(`Error while initializing ${getSyncAreaLabel(syncResource)}`);
+        this.logService.error(error);
+      }
+    }));
+  }
+  createSyncResourceInitializer(syncResource) {
+    switch (syncResource) {
+      case "settings":
+        return new SettingsInitializer(this.fileService, this.userDataProfilesService, this.environmentService, this.logService, this.storageService, this.uriIdentityService);
+      case "keybindings":
+        return new KeybindingsInitializer(this.fileService, this.userDataProfilesService, this.environmentService, this.logService, this.storageService, this.uriIdentityService);
+      case "tasks":
+        return new TasksInitializer(this.fileService, this.userDataProfilesService, this.environmentService, this.logService, this.storageService, this.uriIdentityService);
+      case "snippets":
+        return new SnippetsInitializer(this.fileService, this.userDataProfilesService, this.environmentService, this.logService, this.storageService, this.uriIdentityService);
+      case "globalState":
+        return new GlobalStateInitializer(this.storageService, this.fileService, this.userDataProfilesService, this.environmentService, this.logService, this.uriIdentityService);
+    }
+    throw new Error(`Cannot create initializer for ${syncResource}`);
+  }
+};
+UserDataSyncInitializer = __decorate([
+  __param(0, IBrowserWorkbenchEnvironmentService),
+  __param(1, ISecretStorageService),
+  __param(2, IUserDataSyncStoreManagementService),
+  __param(3, IFileService),
+  __param(4, IUserDataProfilesService),
+  __param(5, IStorageService),
+  __param(6, IProductService),
+  __param(7, IRequestService),
+  __param(8, ILogService),
+  __param(9, IUriIdentityService)
+], UserDataSyncInitializer);
+let ExtensionsPreviewInitializer = class ExtensionsPreviewInitializer2 extends AbstractExtensionsInitializer {
+  static {
+    __name(this, "ExtensionsPreviewInitializer");
+  }
+  constructor(extensionsData, extensionManagementService, ignoredExtensionsManagementService, fileService, userDataProfilesService, environmentService, logService, storageService, uriIdentityService) {
+    super(extensionManagementService, ignoredExtensionsManagementService, fileService, userDataProfilesService, environmentService, logService, storageService, uriIdentityService);
+    this.extensionsData = extensionsData;
+    this.preview = null;
+  }
+  getPreview() {
+    if (!this.previewPromise) {
+      this.previewPromise = super.initialize(this.extensionsData).then(() => this.preview);
+    }
+    return this.previewPromise;
+  }
+  initialize() {
+    throw new Error("should not be called directly");
+  }
+  async doInitialize(remoteUserData) {
+    const remoteExtensions = await this.parseExtensions(remoteUserData);
+    if (!remoteExtensions) {
+      this.logService.info("Skipping initializing extensions because remote extensions does not exist.");
+      return;
+    }
+    const installedExtensions = await this.extensionManagementService.getInstalled();
+    this.preview = this.generatePreview(remoteExtensions, installedExtensions);
+  }
+};
+ExtensionsPreviewInitializer = __decorate([
+  __param(1, IExtensionManagementService),
+  __param(2, IIgnoredExtensionsManagementService),
+  __param(3, IFileService),
+  __param(4, IUserDataProfilesService),
+  __param(5, IEnvironmentService),
+  __param(6, IUserDataSyncLogService),
+  __param(7, IStorageService),
+  __param(8, IUriIdentityService)
+], ExtensionsPreviewInitializer);
+let InstalledExtensionsInitializer = class InstalledExtensionsInitializer2 {
+  static {
+    __name(this, "InstalledExtensionsInitializer");
+  }
+  constructor(extensionsPreviewInitializer, extensionEnablementService, extensionStorageService, logService) {
+    this.extensionsPreviewInitializer = extensionsPreviewInitializer;
+    this.extensionEnablementService = extensionEnablementService;
+    this.extensionStorageService = extensionStorageService;
+    this.logService = logService;
+  }
+  async initialize() {
+    const preview = await this.extensionsPreviewInitializer.getPreview();
+    if (!preview) {
+      return;
+    }
+    for (const installedExtension of preview.installedExtensions) {
+      const syncExtension = preview.remoteExtensions.find(({ identifier }) => areSameExtensions(identifier, installedExtension.identifier));
+      if (syncExtension?.state) {
+        const extensionState = this.extensionStorageService.getExtensionState(installedExtension, true) || {};
+        Object.keys(syncExtension.state).forEach((key) => extensionState[key] = syncExtension.state[key]);
+        this.extensionStorageService.setExtensionState(installedExtension, extensionState, true);
+      }
+    }
+    if (preview.disabledExtensions.length) {
+      for (const identifier of preview.disabledExtensions) {
+        this.logService.trace(`Disabling extension...`, identifier.id);
+        await this.extensionEnablementService.disableExtension(identifier);
+        this.logService.info(`Disabling extension`, identifier.id);
+      }
+    }
+  }
+};
+InstalledExtensionsInitializer = __decorate([
+  __param(1, IGlobalExtensionEnablementService),
+  __param(2, IExtensionStorageService),
+  __param(3, IUserDataSyncLogService)
+], InstalledExtensionsInitializer);
+let NewExtensionsInitializer = class NewExtensionsInitializer2 {
+  static {
+    __name(this, "NewExtensionsInitializer");
+  }
+  constructor(extensionsPreviewInitializer, extensionService, extensionStorageService, galleryService, extensionManagementService, logService) {
+    this.extensionsPreviewInitializer = extensionsPreviewInitializer;
+    this.extensionService = extensionService;
+    this.extensionStorageService = extensionStorageService;
+    this.galleryService = galleryService;
+    this.extensionManagementService = extensionManagementService;
+    this.logService = logService;
+  }
+  async initialize() {
+    const preview = await this.extensionsPreviewInitializer.getPreview();
+    if (!preview) {
+      return;
+    }
+    const newlyEnabledExtensions = [];
+    const targetPlatform = await this.extensionManagementService.getTargetPlatform();
+    const galleryExtensions = await this.galleryService.getExtensions(preview.newExtensions, { targetPlatform, compatible: true }, CancellationToken.None);
+    for (const galleryExtension of galleryExtensions) {
+      try {
+        const extensionToSync = preview.remoteExtensions.find(({ identifier }) => areSameExtensions(identifier, galleryExtension.identifier));
+        if (!extensionToSync) {
+          continue;
+        }
+        if (extensionToSync.state) {
+          this.extensionStorageService.setExtensionState(galleryExtension, extensionToSync.state, true);
+        }
+        this.logService.trace(`Installing extension...`, galleryExtension.identifier.id);
+        const local = await this.extensionManagementService.installFromGallery(galleryExtension, {
+          isMachineScoped: false,
+          /* set isMachineScoped to prevent install and sync dialog in web */
+          donotIncludePackAndDependencies: true,
+          installGivenVersion: !!extensionToSync.version,
+          installPreReleaseVersion: extensionToSync.preRelease,
+          context: { [EXTENSION_INSTALL_SKIP_PUBLISHER_TRUST_CONTEXT]: true }
+        });
+        if (!preview.disabledExtensions.some((identifier) => areSameExtensions(identifier, galleryExtension.identifier))) {
+          newlyEnabledExtensions.push(local);
+        }
+        this.logService.info(`Installed extension.`, galleryExtension.identifier.id);
+      } catch (error) {
+        this.logService.error(error);
+      }
+    }
+    const canEnabledExtensions = newlyEnabledExtensions.filter((e) => this.extensionService.canAddExtension(toExtensionDescription(e)));
+    if (!await this.areExtensionsRunning(canEnabledExtensions)) {
+      await new Promise((c, e) => {
+        const disposable = this.extensionService.onDidChangeExtensions(async () => {
+          try {
+            if (await this.areExtensionsRunning(canEnabledExtensions)) {
+              disposable.dispose();
+              c();
+            }
+          } catch (error) {
+            e(error);
+          }
+        });
+      });
+    }
+  }
+  async areExtensionsRunning(extensions) {
+    await this.extensionService.whenInstalledExtensionsRegistered();
+    const runningExtensions = this.extensionService.extensions;
+    return extensions.every((e) => runningExtensions.some((r) => areSameExtensions({ id: r.identifier.value }, e.identifier)));
+  }
+};
+NewExtensionsInitializer = __decorate([
+  __param(1, IExtensionService),
+  __param(2, IExtensionStorageService),
+  __param(3, IExtensionGalleryService),
+  __param(4, IExtensionManagementService),
+  __param(5, IUserDataSyncLogService)
+], NewExtensionsInitializer);
+export {
+  UserDataSyncInitializer
+};
+//# sourceMappingURL=userDataSyncInit.js.map

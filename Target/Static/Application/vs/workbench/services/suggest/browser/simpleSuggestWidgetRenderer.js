@@ -1,1 +1,141 @@
-import{$ as r,$M6 as a,$S6 as O}from"../../../../base/browser/dom.js";import{$Z9 as R}from"../../../../base/browser/ui/iconLabel/iconLabel.js";import{$Mj as P}from"../../../../base/common/codicons.js";import{$df as H}from"../../../../base/common/event.js";import{$Bj as z}from"../../../../base/common/filters.js";import{$ud as $}from"../../../../base/common/lifecycle.js";import{ThemeIcon as M}from"../../../../base/common/themables.js";import{$Mt as q}from"../../../../platform/theme/common/themeService.js";import{$gF as B}from"../../../../editor/common/services/model.js";import{$BD as W}from"../../../../editor/common/languages/language.js";import{$8kb as h}from"../../../../editor/common/services/getIconClasses.js";import{URI as f}from"../../../../base/common/uri.js";import{FileKind as m}from"../../../../platform/files/common/files.js";var E=function(e,t,s,o){var a,i=arguments.length,n=i<3?t:null===o?o=Object.getOwnPropertyDescriptor(t,s):o;if("object"==typeof Reflect&&"function"==typeof Reflect.decorate)n=Reflect.decorate(e,t,s,o);else for(var l=e.length-1;l>=0;l--)(a=e[l])&&(n=(i<3?a(n):i>3?a(t,s,n):a(t,s))||n);return i>3&&n&&Object.defineProperty(t,s,n),n},b=function(e,t){return function(s,o){t(s,o,e)}};function A(e){return`simple-suggest-aria-id-${e}`}let F=class{constructor(e,t,s,o,a){this.c=e,this.d=t,this.e=s,this.f=o,this.g=a,this.a=new H,this.onDidToggleDetails=this.a.event,this.b=new $,this.templateId="suggestion"}dispose(){this.a.dispose(),this.b.dispose()}renderTemplate(e){const t=new $,s=e;s.classList.add("show-file-icons");const o=a(e,r(".icon")),i=a(o,r("span.colorspan")),n=a(e,r(".contents")),l=a(n,r(".main")),c=a(l,r(".icon-label.codicon")),m=a(l,r("span.left")),h=a(l,r("span.right")),f=new R(m,{supportHighlights:!0,supportIcons:!0});t.add(f);const d=a(m,r("span.signature-label")),p=a(m,r("span.qualifier-label")),b=a(h,r("span.details-label")),g=()=>{const{fontFamily:e,fontSize:t,lineHeight:a,fontWeight:i,letterSpacing:n}=this.c(),r=`${t}px`,c=`${a}px`,m=`${n}px`;s.style.fontSize=r,s.style.fontWeight=i,s.style.letterSpacing=m,l.style.fontFamily=e,l.style.fontFeatureSettings="",l.style.lineHeight=c,o.style.height=c,o.style.width=c};return g(),this.b.add(this.d((()=>g()))),{root:s,left:m,right:h,icon:o,colorspan:i,iconLabel:f,iconContainer:c,parametersLabel:d,qualifierLabel:p,detailsLabel:b,disposables:t}}renderElement(e,t,s){const{completion:o}=e;s.root.id=A(t),s.colorspan.style.backgroundColor="";const a={labelEscapeNewLines:!0,matches:z(e.score)};if("File"===o.kindLabel&&this.e.getFileIconTheme().hasFileIcons){s.icon.className="icon hide",s.iconContainer.className="icon hide";const t=h(this.f,this.g,f.from({scheme:"fake",path:e.textLabel}),m.FILE),i=h(this.f,this.g,f.from({scheme:"fake",path:o.detail}),m.FILE);a.extraClasses=t.length>i.length?t:i}else"Folder"===o.kindLabel&&this.e.getFileIconTheme().hasFolderIcons?(s.icon.className="icon hide",s.iconContainer.className="icon hide",a.extraClasses=[h(this.f,this.g,f.from({scheme:"fake",path:e.textLabel}),m.FOLDER),h(this.f,this.g,f.from({scheme:"fake",path:o.detail}),m.FOLDER)].flat()):(s.icon.className="icon hide",s.iconContainer.className="",s.iconContainer.classList.add("suggest-icon",...M.asClassNameArray(o.icon||P.symbolText)));s.iconLabel.setLabel(e.textLabel,void 0,a),"string"==typeof o.label?(s.parametersLabel.textContent="",s.detailsLabel.textContent=d(o.detail||""),s.root.classList.add("string-label")):(s.parametersLabel.textContent=d(o.label.detail||""),s.detailsLabel.textContent=d(o.label.description||""),s.root.classList.remove("string-label")),O(s.detailsLabel),s.right.classList.remove("can-expand-details")}disposeTemplate(e){e.disposables.dispose()}};function d(e){return e.replace(/\r\n|\r|\n/g,"")}F=E([b(2,q),b(3,B),b(4,W)],F);export{A as $jtc,F as $ktc};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { $, append, show } from "../../../../base/browser/dom.js";
+import { IconLabel } from "../../../../base/browser/ui/iconLabel/iconLabel.js";
+import { Codicon } from "../../../../base/common/codicons.js";
+import { Emitter } from "../../../../base/common/event.js";
+import { createMatches } from "../../../../base/common/filters.js";
+import { DisposableStore } from "../../../../base/common/lifecycle.js";
+import { ThemeIcon } from "../../../../base/common/themables.js";
+import { IThemeService } from "../../../../platform/theme/common/themeService.js";
+import { IModelService } from "../../../../editor/common/services/model.js";
+import { ILanguageService } from "../../../../editor/common/languages/language.js";
+import { getIconClasses } from "../../../../editor/common/services/getIconClasses.js";
+import { URI } from "../../../../base/common/uri.js";
+import { FileKind } from "../../../../platform/files/common/files.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+function getAriaId(index) {
+  return `simple-suggest-aria-id-${index}`;
+}
+__name(getAriaId, "getAriaId");
+let SimpleSuggestWidgetItemRenderer = class SimpleSuggestWidgetItemRenderer2 {
+  static {
+    __name(this, "SimpleSuggestWidgetItemRenderer");
+  }
+  constructor(_getFontInfo, _onDidFontConfigurationChange, _themeService, _modelService, _languageService) {
+    this._getFontInfo = _getFontInfo;
+    this._onDidFontConfigurationChange = _onDidFontConfigurationChange;
+    this._themeService = _themeService;
+    this._modelService = _modelService;
+    this._languageService = _languageService;
+    this._onDidToggleDetails = new Emitter();
+    this.onDidToggleDetails = this._onDidToggleDetails.event;
+    this._disposables = new DisposableStore();
+    this.templateId = "suggestion";
+  }
+  dispose() {
+    this._onDidToggleDetails.dispose();
+    this._disposables.dispose();
+  }
+  renderTemplate(container) {
+    const disposables = new DisposableStore();
+    const root = container;
+    root.classList.add("show-file-icons");
+    const icon = append(container, $(".icon"));
+    const colorspan = append(icon, $("span.colorspan"));
+    const text = append(container, $(".contents"));
+    const main = append(text, $(".main"));
+    const iconContainer = append(main, $(".icon-label.codicon"));
+    const left = append(main, $("span.left"));
+    const right = append(main, $("span.right"));
+    const iconLabel = new IconLabel(left, { supportHighlights: true, supportIcons: true });
+    disposables.add(iconLabel);
+    const parametersLabel = append(left, $("span.signature-label"));
+    const qualifierLabel = append(left, $("span.qualifier-label"));
+    const detailsLabel = append(right, $("span.details-label"));
+    const configureFont = /* @__PURE__ */ __name(() => {
+      const fontFeatureSettings = "";
+      const { fontFamily, fontSize, lineHeight, fontWeight, letterSpacing } = this._getFontInfo();
+      const fontSizePx = `${fontSize}px`;
+      const lineHeightPx = `${lineHeight}px`;
+      const letterSpacingPx = `${letterSpacing}px`;
+      root.style.fontSize = fontSizePx;
+      root.style.fontWeight = fontWeight;
+      root.style.letterSpacing = letterSpacingPx;
+      main.style.fontFamily = fontFamily;
+      main.style.fontFeatureSettings = fontFeatureSettings;
+      main.style.lineHeight = lineHeightPx;
+      icon.style.height = lineHeightPx;
+      icon.style.width = lineHeightPx;
+    }, "configureFont");
+    configureFont();
+    this._disposables.add(this._onDidFontConfigurationChange(() => configureFont()));
+    return { root, left, right, icon, colorspan, iconLabel, iconContainer, parametersLabel, qualifierLabel, detailsLabel, disposables };
+  }
+  renderElement(element, index, data) {
+    const { completion } = element;
+    data.root.id = getAriaId(index);
+    data.colorspan.style.backgroundColor = "";
+    const labelOptions = {
+      labelEscapeNewLines: true,
+      matches: createMatches(element.score)
+    };
+    if (completion.kindLabel === "File" && this._themeService.getFileIconTheme().hasFileIcons) {
+      data.icon.className = "icon hide";
+      data.iconContainer.className = "icon hide";
+      const labelClasses = getIconClasses(this._modelService, this._languageService, URI.from({ scheme: "fake", path: element.textLabel }), FileKind.FILE);
+      const detailClasses = getIconClasses(this._modelService, this._languageService, URI.from({ scheme: "fake", path: completion.detail }), FileKind.FILE);
+      labelOptions.extraClasses = labelClasses.length > detailClasses.length ? labelClasses : detailClasses;
+    } else if (completion.kindLabel === "Folder" && this._themeService.getFileIconTheme().hasFolderIcons) {
+      data.icon.className = "icon hide";
+      data.iconContainer.className = "icon hide";
+      labelOptions.extraClasses = [
+        getIconClasses(this._modelService, this._languageService, URI.from({ scheme: "fake", path: element.textLabel }), FileKind.FOLDER),
+        getIconClasses(this._modelService, this._languageService, URI.from({ scheme: "fake", path: completion.detail }), FileKind.FOLDER)
+      ].flat();
+    } else {
+      data.icon.className = "icon hide";
+      data.iconContainer.className = "";
+      data.iconContainer.classList.add("suggest-icon", ...ThemeIcon.asClassNameArray(completion.icon || Codicon.symbolText));
+    }
+    data.iconLabel.setLabel(element.textLabel, void 0, labelOptions);
+    if (typeof completion.label === "string") {
+      data.parametersLabel.textContent = "";
+      data.detailsLabel.textContent = stripNewLines(completion.detail || "");
+      data.root.classList.add("string-label");
+    } else {
+      data.parametersLabel.textContent = stripNewLines(completion.label.detail || "");
+      data.detailsLabel.textContent = stripNewLines(completion.label.description || "");
+      data.root.classList.remove("string-label");
+    }
+    show(data.detailsLabel);
+    data.right.classList.remove("can-expand-details");
+  }
+  disposeTemplate(templateData) {
+    templateData.disposables.dispose();
+  }
+};
+SimpleSuggestWidgetItemRenderer = __decorate([
+  __param(2, IThemeService),
+  __param(3, IModelService),
+  __param(4, ILanguageService)
+], SimpleSuggestWidgetItemRenderer);
+function stripNewLines(str) {
+  return str.replace(/\r\n|\r|\n/g, "");
+}
+__name(stripNewLines, "stripNewLines");
+export {
+  SimpleSuggestWidgetItemRenderer,
+  getAriaId
+};
+//# sourceMappingURL=simpleSuggestWidgetRenderer.js.map

@@ -1,1 +1,57 @@
-import{$3n as u}from"../../../../platform/log/common/log.js";import{$vd as h,$td as l}from"../../../../base/common/lifecycle.js";import{$El as m}from"../../../../platform/configuration/common/configuration.js";import{$Gd as d}from"../../../../base/common/linkedList.js";var f=function(o,t,r,i){var n=arguments.length,e=n<3?t:i===null?i=Object.getOwnPropertyDescriptor(t,r):i,a;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")e=Reflect.decorate(o,t,r,i);else for(var c=o.length-1;c>=0;c--)(a=o[c])&&(e=(n<3?a(e):n>3?a(t,r,e):a(t,r))||e);return n>3&&e&&Object.defineProperty(t,r,e),e},p=function(o,t){return function(r,i){t(r,i,o)}};let s=class extends h{constructor(t,r){super(),this.b=t,this.c=r,this.a=new d}addFileOperationParticipant(t){const r=this.a.push(t);return l(()=>r())}async participate(t,r,i,n){const e=this.c.getValue("files.participants.timeout");if(!(typeof e!="number"||e<=0))for(const a of this.a)try{await a.participate(t,r,i,e,n)}catch(c){this.b.warn(c)}}dispose(){this.a.clear(),super.dispose()}};s=f([p(0,u),p(1,m)],s);export{s as $4I};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { ILogService } from "../../../../platform/log/common/log.js";
+import { Disposable, toDisposable } from "../../../../base/common/lifecycle.js";
+import { IConfigurationService } from "../../../../platform/configuration/common/configuration.js";
+import { LinkedList } from "../../../../base/common/linkedList.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+let WorkingCopyFileOperationParticipant = class WorkingCopyFileOperationParticipant2 extends Disposable {
+  static {
+    __name(this, "WorkingCopyFileOperationParticipant");
+  }
+  constructor(logService, configurationService) {
+    super();
+    this.logService = logService;
+    this.configurationService = configurationService;
+    this.participants = new LinkedList();
+  }
+  addFileOperationParticipant(participant) {
+    const remove = this.participants.push(participant);
+    return toDisposable(() => remove());
+  }
+  async participate(files, operation, undoInfo, token) {
+    const timeout = this.configurationService.getValue("files.participants.timeout");
+    if (typeof timeout !== "number" || timeout <= 0) {
+      return;
+    }
+    for (const participant of this.participants) {
+      try {
+        await participant.participate(files, operation, undoInfo, timeout, token);
+      } catch (err) {
+        this.logService.warn(err);
+      }
+    }
+  }
+  dispose() {
+    this.participants.clear();
+    super.dispose();
+  }
+};
+WorkingCopyFileOperationParticipant = __decorate([
+  __param(0, ILogService),
+  __param(1, IConfigurationService)
+], WorkingCopyFileOperationParticipant);
+export {
+  WorkingCopyFileOperationParticipant
+};
+//# sourceMappingURL=workingCopyFileOperationParticipant.js.map

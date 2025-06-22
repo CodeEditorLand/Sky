@@ -1,1 +1,125 @@
-import{$vd as l}from"../../../../../../base/common/lifecycle.js";import{$Dnb as a}from"../../../../../../editor/contrib/find/browser/findDecorations.js";import{$xr as c,$wr as d}from"../../../../../../platform/theme/common/colorRegistry.js";import{NotebookOverviewRulerLane as h}from"../../notebookBrowser.js";class C extends l{constructor(e,t){super(),this.g=e,this.h=t,this.a=[],this.b=[],this.c=[],this.f=null}get currentMatchDecorations(){return this.f}j(){this.clearCurrentFindMatchDecoration(),this.setAllFindMatchesDecorations([])}async highlightCurrentFindMatchDecorationInCell(e,t){return this.clearCurrentFindMatchDecoration(),this.g.changeModelDecorations(i=>{const r=a._CURRENT_FIND_MATCH_DECORATION,n=[{range:t,options:r}],o={ownerId:e.handle,decorations:n};this.f={kind:"input",decorations:i.deltaDecorations(this.f?.kind==="input"?this.f.decorations:[],[o])}}),this.b=this.g.deltaCellDecorations(this.b,[{handle:e.handle,options:{overviewRuler:{color:c,modelRanges:[t],includeOutput:!1,position:h.Center}}}]),null}async highlightCurrentFindMatchDecorationInWebview(e,t){this.clearCurrentFindMatchDecoration();const i=await this.g.findHighlightCurrent(t,this.h);return this.f={kind:"output",index:t},this.b=this.g.deltaCellDecorations(this.b,[{handle:e.handle,options:{overviewRuler:{color:c,modelRanges:[],includeOutput:!0,position:h.Center}}}]),i}clearCurrentFindMatchDecoration(){this.f?.kind==="input"?this.g.changeModelDecorations(e=>{e.deltaDecorations(this.f?.kind==="input"?this.f.decorations:[],[]),this.f=null}):this.f?.kind==="output"&&this.g.findUnHighlightCurrent(this.f.index,this.h),this.b=this.g.deltaCellDecorations(this.b,[])}setAllFindMatchesDecorations(e){this.g.changeModelDecorations(t=>{const i=a._FIND_MATCH_DECORATION,r=e.map(n=>{const o=new Array(n.contentMatches.length);for(let s=0;s<n.contentMatches.length;s++)o[s]={range:n.contentMatches[s].range,options:i};return{ownerId:n.cell.handle,decorations:o}});this.a=t.deltaDecorations(this.a,r)}),this.c=this.g.deltaCellDecorations(this.c,e.map(t=>({ownerId:t.cell.handle,handle:t.cell.handle,options:{overviewRuler:{color:d,modelRanges:t.contentMatches.map(i=>i.range),includeOutput:t.webviewMatches.length>0,position:h.Center}}})))}stopWebviewFind(){this.g.findStop(this.h)}dispose(){this.j(),super.dispose()}}export{C as $6Rb};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { Disposable } from "../../../../../../base/common/lifecycle.js";
+import { FindDecorations } from "../../../../../../editor/contrib/find/browser/findDecorations.js";
+import { overviewRulerSelectionHighlightForeground, overviewRulerFindMatchForeground } from "../../../../../../platform/theme/common/colorRegistry.js";
+import { NotebookOverviewRulerLane } from "../../notebookBrowser.js";
+class FindMatchDecorationModel extends Disposable {
+  static {
+    __name(this, "FindMatchDecorationModel");
+  }
+  constructor(_notebookEditor, ownerID) {
+    super();
+    this._notebookEditor = _notebookEditor;
+    this.ownerID = ownerID;
+    this._allMatchesDecorations = [];
+    this._currentMatchCellDecorations = [];
+    this._allMatchesCellDecorations = [];
+    this._currentMatchDecorations = null;
+  }
+  get currentMatchDecorations() {
+    return this._currentMatchDecorations;
+  }
+  clearDecorations() {
+    this.clearCurrentFindMatchDecoration();
+    this.setAllFindMatchesDecorations([]);
+  }
+  async highlightCurrentFindMatchDecorationInCell(cell, cellRange) {
+    this.clearCurrentFindMatchDecoration();
+    this._notebookEditor.changeModelDecorations((accessor) => {
+      const findMatchesOptions = FindDecorations._CURRENT_FIND_MATCH_DECORATION;
+      const decorations = [
+        { range: cellRange, options: findMatchesOptions }
+      ];
+      const deltaDecoration = {
+        ownerId: cell.handle,
+        decorations
+      };
+      this._currentMatchDecorations = {
+        kind: "input",
+        decorations: accessor.deltaDecorations(this._currentMatchDecorations?.kind === "input" ? this._currentMatchDecorations.decorations : [], [deltaDecoration])
+      };
+    });
+    this._currentMatchCellDecorations = this._notebookEditor.deltaCellDecorations(this._currentMatchCellDecorations, [{
+      handle: cell.handle,
+      options: {
+        overviewRuler: {
+          color: overviewRulerSelectionHighlightForeground,
+          modelRanges: [cellRange],
+          includeOutput: false,
+          position: NotebookOverviewRulerLane.Center
+        }
+      }
+    }]);
+    return null;
+  }
+  async highlightCurrentFindMatchDecorationInWebview(cell, index) {
+    this.clearCurrentFindMatchDecoration();
+    const offset = await this._notebookEditor.findHighlightCurrent(index, this.ownerID);
+    this._currentMatchDecorations = { kind: "output", index };
+    this._currentMatchCellDecorations = this._notebookEditor.deltaCellDecorations(this._currentMatchCellDecorations, [{
+      handle: cell.handle,
+      options: {
+        overviewRuler: {
+          color: overviewRulerSelectionHighlightForeground,
+          modelRanges: [],
+          includeOutput: true,
+          position: NotebookOverviewRulerLane.Center
+        }
+      }
+    }]);
+    return offset;
+  }
+  clearCurrentFindMatchDecoration() {
+    if (this._currentMatchDecorations?.kind === "input") {
+      this._notebookEditor.changeModelDecorations((accessor) => {
+        accessor.deltaDecorations(this._currentMatchDecorations?.kind === "input" ? this._currentMatchDecorations.decorations : [], []);
+        this._currentMatchDecorations = null;
+      });
+    } else if (this._currentMatchDecorations?.kind === "output") {
+      this._notebookEditor.findUnHighlightCurrent(this._currentMatchDecorations.index, this.ownerID);
+    }
+    this._currentMatchCellDecorations = this._notebookEditor.deltaCellDecorations(this._currentMatchCellDecorations, []);
+  }
+  setAllFindMatchesDecorations(cellFindMatches) {
+    this._notebookEditor.changeModelDecorations((accessor) => {
+      const findMatchesOptions = FindDecorations._FIND_MATCH_DECORATION;
+      const deltaDecorations = cellFindMatches.map((cellFindMatch) => {
+        const newFindMatchesDecorations = new Array(cellFindMatch.contentMatches.length);
+        for (let i = 0; i < cellFindMatch.contentMatches.length; i++) {
+          newFindMatchesDecorations[i] = {
+            range: cellFindMatch.contentMatches[i].range,
+            options: findMatchesOptions
+          };
+        }
+        return { ownerId: cellFindMatch.cell.handle, decorations: newFindMatchesDecorations };
+      });
+      this._allMatchesDecorations = accessor.deltaDecorations(this._allMatchesDecorations, deltaDecorations);
+    });
+    this._allMatchesCellDecorations = this._notebookEditor.deltaCellDecorations(this._allMatchesCellDecorations, cellFindMatches.map((cellFindMatch) => {
+      return {
+        ownerId: cellFindMatch.cell.handle,
+        handle: cellFindMatch.cell.handle,
+        options: {
+          overviewRuler: {
+            color: overviewRulerFindMatchForeground,
+            modelRanges: cellFindMatch.contentMatches.map((match) => match.range),
+            includeOutput: cellFindMatch.webviewMatches.length > 0,
+            position: NotebookOverviewRulerLane.Center
+          }
+        }
+      };
+    }));
+  }
+  stopWebviewFind() {
+    this._notebookEditor.findStop(this.ownerID);
+  }
+  dispose() {
+    this.clearDecorations();
+    super.dispose();
+  }
+}
+export {
+  FindMatchDecorationModel
+};
+//# sourceMappingURL=findMatchDecorationModel.js.map

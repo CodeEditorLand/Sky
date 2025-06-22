@@ -1,1 +1,86 @@
-import{$pY as l,$oY as p}from"../common/extHost.protocol.js";import{$Kyb as u}from"../../services/extensions/common/extHostCustomers.js";import{$Ex as d}from"../../../platform/url/common/url.js";import{$vd as m}from"../../../base/common/lifecycle.js";import{$QZb as b}from"../../services/extensions/browser/extensionUrlHandler.js";import{$Qy as $}from"../../../platform/extensions/common/extensions.js";import{$3Zb as x}from"../../contrib/url/browser/trustedDomainService.js";var f=function(n,e,t,r){var s=arguments.length,i=s<3?e:r===null?r=Object.getOwnPropertyDescriptor(e,t):r,o;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")i=Reflect.decorate(n,e,t,r);else for(var a=n.length-1;a>=0;a--)(o=n[a])&&(i=(s<3?o(i):s>3?o(e,t,i):o(e,t))||i);return s>3&&i&&Object.defineProperty(e,t,i),i},c=function(n,e){return function(t,r){e(t,r,n)}};class y{constructor(e,t,r,s){this.a=e,this.b=t,this.extensionId=r,this.extensionDisplayName=s}async handleURL(e,t){return $.equals(this.extensionId,e.authority)?(await this.a.$handleExternalUri(this.b,e),!0):!1}}let h=class extends m{constructor(e,t,r,s){super(),this.c=r,this.f=s,this.b=new Map,this.a=e.getProxy(l.ExtHostUrls)}async $registerUriHandler(e,t,r){const s=new y(this.a,e,t,r),i=this.c.registerHandler(s);this.b.set(e,{extensionId:t,disposable:i}),this.f.registerExtensionHandler(t,s)}async $unregisterUriHandler(e){const t=this.b.get(e);if(!t)return;const{extensionId:r,disposable:s}=t;this.f.unregisterExtensionHandler(r),this.b.delete(e),s.dispose()}async $createAppUri(e){return this.c.create(e)}dispose(){super.dispose(),this.b.forEach(({disposable:e})=>e.dispose()),this.b.clear()}};h=f([u(p.MainThreadUrls),c(1,x),c(2,d),c(3,b)],h);export{h as $5Zb};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { ExtHostContext, MainContext } from "../common/extHost.protocol.js";
+import { extHostNamedCustomer } from "../../services/extensions/common/extHostCustomers.js";
+import { IURLService } from "../../../platform/url/common/url.js";
+import { Disposable } from "../../../base/common/lifecycle.js";
+import { IExtensionUrlHandler } from "../../services/extensions/browser/extensionUrlHandler.js";
+import { ExtensionIdentifier } from "../../../platform/extensions/common/extensions.js";
+import { ITrustedDomainService } from "../../contrib/url/browser/trustedDomainService.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+class ExtensionUrlHandler {
+  static {
+    __name(this, "ExtensionUrlHandler");
+  }
+  constructor(proxy, handle, extensionId, extensionDisplayName) {
+    this.proxy = proxy;
+    this.handle = handle;
+    this.extensionId = extensionId;
+    this.extensionDisplayName = extensionDisplayName;
+  }
+  async handleURL(uri, options) {
+    if (!ExtensionIdentifier.equals(this.extensionId, uri.authority)) {
+      return false;
+    }
+    await this.proxy.$handleExternalUri(this.handle, uri);
+    return true;
+  }
+}
+let MainThreadUrls = class MainThreadUrls2 extends Disposable {
+  static {
+    __name(this, "MainThreadUrls");
+  }
+  constructor(context, trustedDomainService, urlService, extensionUrlHandler) {
+    super();
+    this.urlService = urlService;
+    this.extensionUrlHandler = extensionUrlHandler;
+    this.handlers = /* @__PURE__ */ new Map();
+    this.proxy = context.getProxy(ExtHostContext.ExtHostUrls);
+  }
+  async $registerUriHandler(handle, extensionId, extensionDisplayName) {
+    const handler = new ExtensionUrlHandler(this.proxy, handle, extensionId, extensionDisplayName);
+    const disposable = this.urlService.registerHandler(handler);
+    this.handlers.set(handle, { extensionId, disposable });
+    this.extensionUrlHandler.registerExtensionHandler(extensionId, handler);
+    return void 0;
+  }
+  async $unregisterUriHandler(handle) {
+    const tuple = this.handlers.get(handle);
+    if (!tuple) {
+      return void 0;
+    }
+    const { extensionId, disposable } = tuple;
+    this.extensionUrlHandler.unregisterExtensionHandler(extensionId);
+    this.handlers.delete(handle);
+    disposable.dispose();
+    return void 0;
+  }
+  async $createAppUri(uri) {
+    return this.urlService.create(uri);
+  }
+  dispose() {
+    super.dispose();
+    this.handlers.forEach(({ disposable }) => disposable.dispose());
+    this.handlers.clear();
+  }
+};
+MainThreadUrls = __decorate([
+  extHostNamedCustomer(MainContext.MainThreadUrls),
+  __param(1, ITrustedDomainService),
+  __param(2, IURLService),
+  __param(3, IExtensionUrlHandler)
+], MainThreadUrls);
+export {
+  MainThreadUrls
+};
+//# sourceMappingURL=mainThreadUrls.js.map

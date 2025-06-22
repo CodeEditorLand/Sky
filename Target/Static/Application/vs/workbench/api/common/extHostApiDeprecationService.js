@@ -1,1 +1,59 @@
-import{$nj as l}from"../../../platform/instantiation/common/instantiation.js";import{$3n as h}from"../../../platform/log/common/log.js";import*as d from"./extHost.protocol.js";import{$i2 as u}from"./extHostRpcService.js";var f=function(e,t,o,r){var i,n=arguments.length,a=n<3?t:null===r?r=Object.getOwnPropertyDescriptor(t,o):r;if("object"==typeof Reflect&&"function"==typeof Reflect.decorate)a=Reflect.decorate(e,t,o,r);else for(var s=e.length-1;s>=0;s--)(i=e[s])&&(a=(n<3?i(a):n>3?i(t,o,a):i(t,o))||a);return n>3&&a&&Object.defineProperty(t,o,a),a},a=function(e,t){return function(o,r){t(o,r,e)}};const v=l("IExtHostApiDeprecationService");let p=class{constructor(e,t){this.c=t,this.a=new Set,this.b=e.getProxy(d.$oY.MainThreadTelemetry)}report(e,t,o){const r=this.d(e,t);this.a.has(r)||(this.a.add(r),t.isUnderDevelopment&&this.c.warn(`[Deprecation Warning] '${e}' is deprecated. ${o}`),this.b.$publicLog2("extHostDeprecatedApiUsage",{extensionId:t.identifier.value,apiId:e}))}d(e,t){return`${e}-${t.identifier.value}`}};p=f([a(0,u),a(1,h)],p);const x=Object.freeze(new class{report(e,t,o){}});export{v as $dKc,p as $eKc,x as $fKc};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { createDecorator } from "../../../platform/instantiation/common/instantiation.js";
+import { ILogService } from "../../../platform/log/common/log.js";
+import * as extHostProtocol from "./extHost.protocol.js";
+import { IExtHostRpcService } from "./extHostRpcService.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+const IExtHostApiDeprecationService = createDecorator("IExtHostApiDeprecationService");
+let ExtHostApiDeprecationService = class ExtHostApiDeprecationService2 {
+  static {
+    __name(this, "ExtHostApiDeprecationService");
+  }
+  constructor(rpc, _extHostLogService) {
+    this._extHostLogService = _extHostLogService;
+    this._reportedUsages = /* @__PURE__ */ new Set();
+    this._telemetryShape = rpc.getProxy(extHostProtocol.MainContext.MainThreadTelemetry);
+  }
+  report(apiId, extension, migrationSuggestion) {
+    const key = this.getUsageKey(apiId, extension);
+    if (this._reportedUsages.has(key)) {
+      return;
+    }
+    this._reportedUsages.add(key);
+    if (extension.isUnderDevelopment) {
+      this._extHostLogService.warn(`[Deprecation Warning] '${apiId}' is deprecated. ${migrationSuggestion}`);
+    }
+    this._telemetryShape.$publicLog2("extHostDeprecatedApiUsage", {
+      extensionId: extension.identifier.value,
+      apiId
+    });
+  }
+  getUsageKey(apiId, extension) {
+    return `${apiId}-${extension.identifier.value}`;
+  }
+};
+ExtHostApiDeprecationService = __decorate([
+  __param(0, IExtHostRpcService),
+  __param(1, ILogService)
+], ExtHostApiDeprecationService);
+const NullApiDeprecationService = Object.freeze(new class {
+  report(_apiId, _extension, _warningMessage) {
+  }
+}());
+export {
+  ExtHostApiDeprecationService,
+  IExtHostApiDeprecationService,
+  NullApiDeprecationService
+};
+//# sourceMappingURL=extHostApiDeprecationService.js.map

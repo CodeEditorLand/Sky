@@ -1,1 +1,97 @@
-import*as t from"../../../../nls.js";import{$hl as c}from"../../../../platform/workspace/common/workspace.js";import{$m as E,$n as _}from"../../../../base/common/platform.js";import{Schemas as d}from"../../../../base/common/network.js";import{$fu as f}from"../../../../platform/native/common/native.js";import{$_H as s}from"../../../../platform/keybinding/common/keybindingsRegistry.js";import{EditorContextKeys as $}from"../../../../editor/common/editorContextKeys.js";import{$ix as v}from"../../../../base/common/keyCodes.js";import{$DHb as S,$BHb as C}from"../browser/files.js";import{$oI as I}from"../../../services/editor/common/editorService.js";import{$YIc as h}from"./fileCommands.js";import{$fI as i,$dI as o}from"../../../../platform/actions/common/actions.js";import{$kO as u}from"../../../common/contextkeys.js";import{$rLb as A,$qLb as O}from"../browser/fileActions.contribution.js";import{SideBySideEditor as w,$sK as y}from"../../../common/editor.js";import{$Bn as M}from"../../../../platform/contextkey/common/contextkey.js";import{$gmb as R}from"../../../../platform/list/browser/listService.js";import{$kI as b}from"../../../services/editor/common/editorGroupsService.js";const n="revealFileInOS",l=E?t.localize2(8149,"Reveal in File Explorer"):_?t.localize2(8150,"Reveal in Finder"):t.localize2(8151,"Open Containing Folder"),r=M.or(u.Scheme.isEqualTo(d.file),u.Scheme.isEqualTo(d.vscodeUserData));s.registerCommandAndKeybindingRule({id:n,weight:200,when:$.focus.toNegated(),primary:2608,win:{primary:1584},handler:(o,e)=>{const r=S(e,o.get(R),o.get(I),o.get(b),o.get(C));h(r,o.get(f),o.get(c))}});const x="workbench.action.files.revealActiveFileInWindows";s.registerCommandAndKeybindingRule({weight:200,when:void 0,primary:v(2089,48),id:x,handler:o=>{const e=o.get(I).activeEditor,r=y.getOriginalUri(e,{filterByScheme:d.file,supportSideBySide:w.PRIMARY});h(r?[r]:[],o.get(f),o.get(c))}}),O(n,l.value,r,"2_files",!1,0);const m={id:n,title:l.value};i.appendMenuItem(o.OpenEditorsContext,{group:"navigation",order:20,command:m,when:r}),i.appendMenuItem(o.OpenEditorsContextShare,{title:t.localize(8148,null),submenu:o.MenubarShare,group:"share",order:3}),i.appendMenuItem(o.ExplorerContext,{group:"navigation",order:20,command:m,when:r});const L=t.localize2(8152,"File");A({id:n,title:l,category:L},r),i.appendMenuItem(o.ChatAttachmentsContext,{group:"navigation",order:20,command:m,when:r}),i.appendMenuItem(o.ChatInlineResourceAnchorContext,{group:"navigation",order:20,command:m,when:r});
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import * as nls from "../../../../nls.js";
+import { IWorkspaceContextService } from "../../../../platform/workspace/common/workspace.js";
+import { isWindows, isMacintosh } from "../../../../base/common/platform.js";
+import { Schemas } from "../../../../base/common/network.js";
+import { INativeHostService } from "../../../../platform/native/common/native.js";
+import { KeybindingsRegistry } from "../../../../platform/keybinding/common/keybindingsRegistry.js";
+import { EditorContextKeys } from "../../../../editor/common/editorContextKeys.js";
+import { KeyChord } from "../../../../base/common/keyCodes.js";
+import { getMultiSelectedResources, IExplorerService } from "../browser/files.js";
+import { IEditorService } from "../../../services/editor/common/editorService.js";
+import { revealResourcesInOS } from "./fileCommands.js";
+import { MenuRegistry, MenuId } from "../../../../platform/actions/common/actions.js";
+import { ResourceContextKey } from "../../../common/contextkeys.js";
+import { appendToCommandPalette, appendEditorTitleContextMenuItem } from "../browser/fileActions.contribution.js";
+import { SideBySideEditor, EditorResourceAccessor } from "../../../common/editor.js";
+import { ContextKeyExpr } from "../../../../platform/contextkey/common/contextkey.js";
+import { IListService } from "../../../../platform/list/browser/listService.js";
+import { IEditorGroupsService } from "../../../services/editor/common/editorGroupsService.js";
+const REVEAL_IN_OS_COMMAND_ID = "revealFileInOS";
+const REVEAL_IN_OS_LABEL = isWindows ? nls.localize2("revealInWindows", "Reveal in File Explorer") : isMacintosh ? nls.localize2("revealInMac", "Reveal in Finder") : nls.localize2("openContainer", "Open Containing Folder");
+const REVEAL_IN_OS_WHEN_CONTEXT = ContextKeyExpr.or(ResourceContextKey.Scheme.isEqualTo(Schemas.file), ResourceContextKey.Scheme.isEqualTo(Schemas.vscodeUserData));
+KeybindingsRegistry.registerCommandAndKeybindingRule({
+  id: REVEAL_IN_OS_COMMAND_ID,
+  weight: 200,
+  when: EditorContextKeys.focus.toNegated(),
+  primary: 2048 | 512 | 48,
+  win: {
+    primary: 1024 | 512 | 48
+    /* KeyCode.KeyR */
+  },
+  handler: /* @__PURE__ */ __name((accessor, resource) => {
+    const resources = getMultiSelectedResources(resource, accessor.get(IListService), accessor.get(IEditorService), accessor.get(IEditorGroupsService), accessor.get(IExplorerService));
+    revealResourcesInOS(resources, accessor.get(INativeHostService), accessor.get(IWorkspaceContextService));
+  }, "handler")
+});
+const REVEAL_ACTIVE_FILE_IN_OS_COMMAND_ID = "workbench.action.files.revealActiveFileInWindows";
+KeybindingsRegistry.registerCommandAndKeybindingRule({
+  weight: 200,
+  when: void 0,
+  primary: KeyChord(
+    2048 | 41,
+    48
+    /* KeyCode.KeyR */
+  ),
+  id: REVEAL_ACTIVE_FILE_IN_OS_COMMAND_ID,
+  handler: /* @__PURE__ */ __name((accessor) => {
+    const editorService = accessor.get(IEditorService);
+    const activeInput = editorService.activeEditor;
+    const resource = EditorResourceAccessor.getOriginalUri(activeInput, { filterByScheme: Schemas.file, supportSideBySide: SideBySideEditor.PRIMARY });
+    const resources = resource ? [resource] : [];
+    revealResourcesInOS(resources, accessor.get(INativeHostService), accessor.get(IWorkspaceContextService));
+  }, "handler")
+});
+appendEditorTitleContextMenuItem(REVEAL_IN_OS_COMMAND_ID, REVEAL_IN_OS_LABEL.value, REVEAL_IN_OS_WHEN_CONTEXT, "2_files", false, 0);
+const revealInOsCommand = {
+  id: REVEAL_IN_OS_COMMAND_ID,
+  title: REVEAL_IN_OS_LABEL.value
+};
+MenuRegistry.appendMenuItem(MenuId.OpenEditorsContext, {
+  group: "navigation",
+  order: 20,
+  command: revealInOsCommand,
+  when: REVEAL_IN_OS_WHEN_CONTEXT
+});
+MenuRegistry.appendMenuItem(MenuId.OpenEditorsContextShare, {
+  title: nls.localize("miShare", "Share"),
+  submenu: MenuId.MenubarShare,
+  group: "share",
+  order: 3
+});
+MenuRegistry.appendMenuItem(MenuId.ExplorerContext, {
+  group: "navigation",
+  order: 20,
+  command: revealInOsCommand,
+  when: REVEAL_IN_OS_WHEN_CONTEXT
+});
+const category = nls.localize2("filesCategory", "File");
+appendToCommandPalette({
+  id: REVEAL_IN_OS_COMMAND_ID,
+  title: REVEAL_IN_OS_LABEL,
+  category
+}, REVEAL_IN_OS_WHEN_CONTEXT);
+MenuRegistry.appendMenuItem(MenuId.ChatAttachmentsContext, {
+  group: "navigation",
+  order: 20,
+  command: revealInOsCommand,
+  when: REVEAL_IN_OS_WHEN_CONTEXT
+});
+MenuRegistry.appendMenuItem(MenuId.ChatInlineResourceAnchorContext, {
+  group: "navigation",
+  order: 20,
+  command: revealInOsCommand,
+  when: REVEAL_IN_OS_WHEN_CONTEXT
+});
+//# sourceMappingURL=fileActions.contribution.js.map

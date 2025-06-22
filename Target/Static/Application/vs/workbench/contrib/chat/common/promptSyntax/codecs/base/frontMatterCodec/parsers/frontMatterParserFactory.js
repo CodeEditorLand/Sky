@@ -1,1 +1,39 @@
-import{$DR as e}from"./frontMatterArray.js";import{$GR as t}from"./frontMatterRecord/frontMatterRecord.js";import{$zR as o}from"./frontMatterRecord/frontMatterRecordName.js";import{$HR as m}from"./frontMatterRecord/frontMatterRecordNameWithDelimiter.js";import{$AR as i}from"./frontMatterSequence.js";import{$BR as n}from"./frontMatterString.js";import{$FR as a}from"./frontMatterValue.js";class h{createRecord(r){return new t(this,r)}createRecordName(r){return new o(this,r)}createRecordNameWithDelimiter(r){return new m(this,r)}createArray(r){return new e(this,r)}createValue(r){return new a(this,r)}createString(r){return new n(r)}createSequence(r){return new i(r)}}export{h as $CR};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { PartialFrontMatterArray } from "./frontMatterArray.js";
+import { PartialFrontMatterRecord } from "./frontMatterRecord/frontMatterRecord.js";
+import { PartialFrontMatterRecordName } from "./frontMatterRecord/frontMatterRecordName.js";
+import { PartialFrontMatterRecordNameWithDelimiter } from "./frontMatterRecord/frontMatterRecordNameWithDelimiter.js";
+import { PartialFrontMatterSequence } from "./frontMatterSequence.js";
+import { PartialFrontMatterString } from "./frontMatterString.js";
+import { PartialFrontMatterValue } from "./frontMatterValue.js";
+class FrontMatterParserFactory {
+  static {
+    __name(this, "FrontMatterParserFactory");
+  }
+  createRecord(tokens) {
+    return new PartialFrontMatterRecord(this, tokens);
+  }
+  createRecordName(startToken) {
+    return new PartialFrontMatterRecordName(this, startToken);
+  }
+  createRecordNameWithDelimiter(tokens) {
+    return new PartialFrontMatterRecordNameWithDelimiter(this, tokens);
+  }
+  createArray(startToken) {
+    return new PartialFrontMatterArray(this, startToken);
+  }
+  createValue(shouldStop) {
+    return new PartialFrontMatterValue(this, shouldStop);
+  }
+  createString(startToken) {
+    return new PartialFrontMatterString(startToken);
+  }
+  createSequence(shouldStop) {
+    return new PartialFrontMatterSequence(shouldStop);
+  }
+}
+export {
+  FrontMatterParserFactory
+};
+//# sourceMappingURL=frontMatterParserFactory.js.map

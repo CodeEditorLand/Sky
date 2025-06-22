@@ -1,1 +1,122 @@
-import{$df as l}from"../../../base/common/event.js";import{$vd as a}from"../../../base/common/lifecycle.js";import{$bC as m}from"../core/position.js";import{$BD as p}from"../languages/language.js";import{$gF as v}from"./model.js";import{$El as b}from"../../../platform/configuration/common/configuration.js";var h=function(e,r,t,i){var o,s=arguments.length,n=s<3?r:null===i?i=Object.getOwnPropertyDescriptor(r,t):i;if("object"==typeof Reflect&&"function"==typeof Reflect.decorate)n=Reflect.decorate(e,r,t,i);else for(var u=e.length-1;u>=0;u--)(o=e[u])&&(n=(s<3?o(n):s>3?o(r,t,n):o(r,t))||n);return s>3&&n&&Object.defineProperty(r,t,n),n},s=function(e,r){return function(t,i){r(t,i,e)}};let o=class extends a{constructor(e,r,t){super(),this.b=e,this.c=r,this.f=t,this.a=this.B(new l),this.onDidChangeConfiguration=this.a.event,this.B(this.b.onDidChangeConfiguration((e=>this.a.fire(this.m(e)))))}getValue(e,r,t){return"string"==typeof t?this.h(e,m.isIPosition(r)?r:null,t):this.h(e,null,"string"==typeof r?r:void 0)}updateValue(e,r,t,i){const o=e?this.j(e,null):null,s=this.b.inspect(r,{resource:e,overrideIdentifier:o});void 0===i&&(i=this.g(s,o));const n=o&&s.overrideIdentifiers?.includes(o)?o:void 0;return this.b.updateValue(r,t,{resource:e,overrideIdentifier:n},i)}g(e,r){if(r){if(void 0!==e.memory?.override)return 8;if(void 0!==e.workspaceFolder?.override)return 6;if(void 0!==e.workspace?.override)return 5;if(void 0!==e.userRemote?.override)return 4;if(void 0!==e.userLocal?.override)return 3}return void 0!==e.memory?.value?8:void 0!==e.workspaceFolder?.value?6:void 0!==e.workspace?.value?5:void 0!==e.userRemote?.value?4:3}h(e,r,t){const i=e?this.j(e,r):void 0;return typeof t>"u"?this.b.getValue({resource:e,overrideIdentifier:i}):this.b.getValue(t,{resource:e,overrideIdentifier:i})}inspect(e,r,t){const i=e?this.j(e,r):void 0;return this.b.inspect(t,{resource:e,overrideIdentifier:i})}j(e,r){const t=this.c.getModel(e);return t?r?t.getLanguageIdAtPosition(r.lineNumber,r.column):t.getLanguageId():this.f.guessLanguageIdByFilepathOrFirstLine(e)}m(e){return{affectedKeys:e.affectedKeys,affectsConfiguration:(r,t)=>{const i=r?this.j(r,null):void 0;return!!e.affectsConfiguration(t,{resource:r,overrideIdentifier:i})||!!i&&e.affectedKeys.has(`[${i}]`)}}}};o=h([s(0,b),s(1,v),s(2,p)],o);export{o as $W7b};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { Emitter } from "../../../base/common/event.js";
+import { Disposable } from "../../../base/common/lifecycle.js";
+import { Position } from "../core/position.js";
+import { ILanguageService } from "../languages/language.js";
+import { IModelService } from "./model.js";
+import { IConfigurationService } from "../../../platform/configuration/common/configuration.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+let TextResourceConfigurationService = class TextResourceConfigurationService2 extends Disposable {
+  static {
+    __name(this, "TextResourceConfigurationService");
+  }
+  constructor(configurationService, modelService, languageService) {
+    super();
+    this.configurationService = configurationService;
+    this.modelService = modelService;
+    this.languageService = languageService;
+    this._onDidChangeConfiguration = this._register(new Emitter());
+    this.onDidChangeConfiguration = this._onDidChangeConfiguration.event;
+    this._register(this.configurationService.onDidChangeConfiguration((e) => this._onDidChangeConfiguration.fire(this.toResourceConfigurationChangeEvent(e))));
+  }
+  getValue(resource, arg2, arg3) {
+    if (typeof arg3 === "string") {
+      return this._getValue(resource, Position.isIPosition(arg2) ? arg2 : null, arg3);
+    }
+    return this._getValue(resource, null, typeof arg2 === "string" ? arg2 : void 0);
+  }
+  updateValue(resource, key, value, configurationTarget) {
+    const language = resource ? this.getLanguage(resource, null) : null;
+    const configurationValue = this.configurationService.inspect(key, { resource, overrideIdentifier: language });
+    if (configurationTarget === void 0) {
+      configurationTarget = this.deriveConfigurationTarget(configurationValue, language);
+    }
+    const overrideIdentifier = language && configurationValue.overrideIdentifiers?.includes(language) ? language : void 0;
+    return this.configurationService.updateValue(key, value, { resource, overrideIdentifier }, configurationTarget);
+  }
+  deriveConfigurationTarget(configurationValue, language) {
+    if (language) {
+      if (configurationValue.memory?.override !== void 0) {
+        return 8;
+      }
+      if (configurationValue.workspaceFolder?.override !== void 0) {
+        return 6;
+      }
+      if (configurationValue.workspace?.override !== void 0) {
+        return 5;
+      }
+      if (configurationValue.userRemote?.override !== void 0) {
+        return 4;
+      }
+      if (configurationValue.userLocal?.override !== void 0) {
+        return 3;
+      }
+    }
+    if (configurationValue.memory?.value !== void 0) {
+      return 8;
+    }
+    if (configurationValue.workspaceFolder?.value !== void 0) {
+      return 6;
+    }
+    if (configurationValue.workspace?.value !== void 0) {
+      return 5;
+    }
+    if (configurationValue.userRemote?.value !== void 0) {
+      return 4;
+    }
+    return 3;
+  }
+  _getValue(resource, position, section) {
+    const language = resource ? this.getLanguage(resource, position) : void 0;
+    if (typeof section === "undefined") {
+      return this.configurationService.getValue({ resource, overrideIdentifier: language });
+    }
+    return this.configurationService.getValue(section, { resource, overrideIdentifier: language });
+  }
+  inspect(resource, position, section) {
+    const language = resource ? this.getLanguage(resource, position) : void 0;
+    return this.configurationService.inspect(section, { resource, overrideIdentifier: language });
+  }
+  getLanguage(resource, position) {
+    const model = this.modelService.getModel(resource);
+    if (model) {
+      return position ? model.getLanguageIdAtPosition(position.lineNumber, position.column) : model.getLanguageId();
+    }
+    return this.languageService.guessLanguageIdByFilepathOrFirstLine(resource);
+  }
+  toResourceConfigurationChangeEvent(configurationChangeEvent) {
+    return {
+      affectedKeys: configurationChangeEvent.affectedKeys,
+      affectsConfiguration: /* @__PURE__ */ __name((resource, configuration) => {
+        const overrideIdentifier = resource ? this.getLanguage(resource, null) : void 0;
+        if (configurationChangeEvent.affectsConfiguration(configuration, { resource, overrideIdentifier })) {
+          return true;
+        }
+        if (overrideIdentifier) {
+          return configurationChangeEvent.affectedKeys.has(`[${overrideIdentifier}]`);
+        }
+        return false;
+      }, "affectsConfiguration")
+    };
+  }
+};
+TextResourceConfigurationService = __decorate([
+  __param(0, IConfigurationService),
+  __param(1, IModelService),
+  __param(2, ILanguageService)
+], TextResourceConfigurationService);
+export {
+  TextResourceConfigurationService
+};
+//# sourceMappingURL=textResourceConfigurationService.js.map

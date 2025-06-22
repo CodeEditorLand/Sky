@@ -1,1 +1,311 @@
-import{$ud as $}from"../../base/common/lifecycle.js";import{localize as t}from"../../nls.js";import{$Vn as x,$Un as e}from"../../platform/contextkey/common/contextkey.js";import{$hh as m,$jh as N,$ih as g,$dh as d}from"../../base/common/resources.js";import{$BD as b}from"../../editor/common/languages/language.js";import{$5j as E}from"../../platform/files/common/files.js";import{$gF as y}from"../../editor/common/services/model.js";import{Schemas as f}from"../../base/common/network.js";import{$7J as I}from"./editor.js";var w=function(i,n,o,r){var c=arguments.length,s=c<3?n:r===null?r=Object.getOwnPropertyDescriptor(n,o):r,a;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")s=Reflect.decorate(i,n,o,r);else for(var p=i.length-1;p>=0;p--)(a=i[p])&&(s=(c<3?a(s):c>3?a(n,o,s):a(n,o))||s);return c>3&&s&&Object.defineProperty(n,o,s),s},u=function(i,n){return function(o,r){n(o,r,i)}},l;const k=new e("workbenchState",void 0,{type:"string",description:t(4238,null)}),A=new e("workspaceFolderCount",0,t(4239,null)),L=new e("openFolderWorkspaceSupport",!0,!0),j=new e("enterMultiRootWorkspaceSupport",!0,!0),W=new e("emptyWorkspaceSupport",!0,!0),_=new e("dirtyWorkingCopies",!1,t(4240,null)),M=new e("remoteName","",t(4241,null)),D=new e("virtualWorkspace","",t(4242,null)),q=new e("temporaryWorkspace",!1,t(4243,null)),z=new e("hasWebFileSystemAccess",!1,!0),U=new e("embedderIdentifier",void 0,t(4244,null)),H=new e("isFullscreen",!1,t(4245,null)),J=new e("isAuxiliaryWindowFocusedContext",!1,t(4246,null)),Z=new e("isWindowAlwaysOnTop",!1,t(4247,null)),Q=new e("isAuxiliaryWindow",!1,t(4248,null)),X=new e("activeEditorIsDirty",!1,t(4249,null)),Y=new e("activeEditorIsNotPreview",!1,t(4250,null)),K=new e("activeEditorIsFirstInGroup",!1,t(4251,null)),ee=new e("activeEditorIsLastInGroup",!1,t(4252,null)),te=new e("activeEditorIsPinned",!1,t(4253,null)),ne=new e("activeEditorIsReadonly",!1,t(4254,null)),se=new e("activeCompareEditorCanSwap",!1,t(4255,null)),oe=new e("activeEditorCanToggleReadonly",!0,t(4256,null)),ie=new e("activeEditorCanRevert",!1,t(4257,null)),re=new e("activeEditorCanSplitInGroup",!0),le=new e("activeEditor",null,{type:"string",description:t(4258,null)}),ce=new e("activeEditorAvailableEditorIds","",t(4259,null)),ae=new e("textCompareEditorVisible",!1,t(4260,null)),ue=new e("textCompareEditorActive",!1,t(4261,null)),pe=new e("sideBySideEditorActive",!1,t(4262,null)),de=new e("groupEditorsCount",0,t(4263,null)),he=new e("activeEditorGroupEmpty",!1,t(4264,null)),fe=new e("activeEditorGroupIndex",0,t(4265,null)),we=new e("activeEditorGroupLast",!1,t(4266,null)),$e=new e("activeEditorGroupLocked",!1,t(4267,null)),F=new e("multipleEditorGroups",!1,t(4268,null)),xe=F.toNegated(),me=new e("multipleEditorsSelectedInGroup",!1,t(4269,null)),Ne=new e("twoEditorsSelectedInGroup",!1,t(4270,null)),ge=new e("SelectedEditorsInGroupFileOrUntitledResourceContextKey",!0,t(4271,null)),S=new e("editorPartMultipleEditorGroups",!1,t(4272,null)),be=S.toNegated(),Ee=new e("editorPartMaximizedEditorGroup",!1,t(4273,null)),ye=new e("editorIsOpen",!1,t(4274,null)),Ie=new e("inZenMode",!1,t(4275,null)),Fe=new e("isCenteredLayout",!1,t(4276,null)),Se=new e("splitEditorsVertically",!1,t(4277,null)),Oe=new e("mainEditorAreaVisible",!0,t(4278,null)),ve=new e("editorTabsVisible",!0,t(4279,null)),Ce=new e("sideBarVisible",!1,t(4280,null)),Re=new e("sideBarFocus",!1,t(4281,null)),Pe=new e("activeViewlet","",t(4282,null)),Te=new e("statusBarFocused",!1,t(4283,null)),Be=new e("titleBarStyle","custom",t(4284,null)),Ge=new e("titleBarVisible",!1,t(4285,null)),Ve=new e("isCompactTitleBar",!1,t(4286,null)),ke=new e("bannerFocused",!1,t(4287,null)),Ae=new e("notificationFocus",!0,t(4288,null)),Le=new e("notificationCenterVisible",!1,t(4289,null)),je=new e("notificationToastsVisible",!1,t(4290,null)),We=new e("activeAuxiliary","",t(4291,null)),_e=new e("auxiliaryBarFocus",!1,t(4292,null)),Me=new e("auxiliaryBarVisible",!1,t(4293,null)),De=new e("activePanel","",t(4294,null)),qe=new e("panelFocus",!1,t(4295,null)),ze=new e("panelPosition","bottom",t(4296,null)),Ue=new e("panelAlignment","center",t(4297,null)),He=new e("panelVisible",!1,t(4298,null)),Je=new e("panelMaximized",!1,t(4299,null)),Ze=new e("focusedView","",t(4300,null));function Qe(i){return`view.${i}.visible`}let h=class{static{l=this}static{this.Scheme=new e("resourceScheme",void 0,{type:"string",description:t(4301,null)})}static{this.Filename=new e("resourceFilename",void 0,{type:"string",description:t(4302,null)})}static{this.Dirname=new e("resourceDirname",void 0,{type:"string",description:t(4303,null)})}static{this.Path=new e("resourcePath",void 0,{type:"string",description:t(4304,null)})}static{this.LangId=new e("resourceLangId",void 0,{type:"string",description:t(4305,null)})}static{this.Resource=new e("resource",void 0,{type:"URI",description:t(4306,null)})}static{this.Extension=new e("resourceExtname",void 0,{type:"string",description:t(4307,null)})}static{this.HasResource=new e("resourceSet",void 0,{type:"boolean",description:t(4308,null)})}static{this.IsFileSystemResource=new e("isFileSystemResource",void 0,{type:"boolean",description:t(4309,null)})}constructor(n,o,r,c){this.m=n,this.n=o,this.o=r,this.p=c,this.a=new $,this.d=l.Scheme.bindTo(this.m),this.f=l.Filename.bindTo(this.m),this.g=l.Dirname.bindTo(this.m),this.h=l.Path.bindTo(this.m),this.i=l.LangId.bindTo(this.m),this.c=l.Resource.bindTo(this.m),this.j=l.Extension.bindTo(this.m),this.k=l.HasResource.bindTo(this.m),this.l=l.IsFileSystemResource.bindTo(this.m),this.a.add(o.onDidChangeFileSystemProviderRegistrations(()=>{const s=this.get();this.l.set(!!(s&&o.hasProvider(s)))})),this.a.add(c.onModelAdded(s=>{d(s.uri,this.get())&&this.q()})),this.a.add(c.onModelLanguageChanged(s=>{d(s.model.uri,this.get())&&this.q()}))}dispose(){this.a.dispose()}q(){const n=this.get();if(!n){this.i.set(null);return}const o=this.p.getModel(n)?.getLanguageId()??this.o.guessLanguageIdByFilepathOrFirstLine(n);this.i.set(o)}set(n){n=n??void 0,!d(this.b,n)&&(this.b=n,this.m.bufferChangeEvents(()=>{this.c.set(n?n.toString():null),this.d.set(n?n.scheme:null),this.f.set(n?m(n):null),this.g.set(n?this.r(N(n)):null),this.h.set(n?this.r(n):null),this.q(),this.j.set(n?g(n):null),this.k.set(!!n),this.l.set(n?this.n.hasProvider(n):!1)}))}r(n){return n.scheme===f.file?n.fsPath:n.path}reset(){this.b=void 0,this.m.bufferChangeEvents(()=>{this.c.reset(),this.d.reset(),this.f.reset(),this.g.reset(),this.h.reset(),this.i.reset(),this.j.reset(),this.k.reset(),this.l.reset()})}get(){return this.b}};h=l=w([u(0,x),u(1,E),u(2,b),u(3,y)],h);function Ye(i,n,o){if(!n){i.set("");return}const r=n.resource;if(r?.scheme===f.untitled&&n.editorId!==I.id)i.set("");else{const c=r?o.getEditors(r).map(s=>s.id):[];i.set(c.join(","))}}export{je as $$N,Le as $0N,Ce as $1N,Re as $2N,Pe as $3N,Te as $4N,Be as $5N,Ge as $6N,Ve as $7N,ke as $8N,Ae as $9N,ie as $AN,re as $BN,le as $CN,ce as $DN,ae as $EN,ue as $FN,pe as $GN,de as $HN,he as $IN,fe as $JN,we as $KN,$e as $LN,F as $MN,xe as $NN,me as $ON,Ne as $PN,ge as $QN,S as $RN,be as $SN,Ee as $TN,ye as $UN,Ie as $VN,Fe as $WN,Se as $XN,Oe as $YN,ve as $ZN,We as $_N,_e as $aO,Me as $bO,De as $cO,k as $dN,qe as $dO,A as $eN,ze as $eO,L as $fN,Ue as $fO,j as $gN,He as $gO,W as $hN,Je as $hO,_ as $iN,Ze as $iO,M as $jN,Qe as $jO,D as $kN,h as $kO,q as $lN,Ye as $lO,z as $mN,U as $nN,H as $oN,J as $pN,Z as $qN,Q as $rN,X as $sN,Y as $tN,K as $uN,ee as $vN,te as $wN,ne as $xN,se as $yN,oe as $zN};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { DisposableStore } from "../../base/common/lifecycle.js";
+import { localize } from "../../nls.js";
+import { IContextKeyService, RawContextKey } from "../../platform/contextkey/common/contextkey.js";
+import { basename, dirname, extname, isEqual } from "../../base/common/resources.js";
+import { ILanguageService } from "../../editor/common/languages/language.js";
+import { IFileService } from "../../platform/files/common/files.js";
+import { IModelService } from "../../editor/common/services/model.js";
+import { Schemas } from "../../base/common/network.js";
+import { DEFAULT_EDITOR_ASSOCIATION } from "./editor.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+var ResourceContextKey_1;
+const WorkbenchStateContext = new RawContextKey("workbenchState", void 0, { type: "string", description: localize("workbenchState", "The kind of workspace opened in the window, either 'empty' (no workspace), 'folder' (single folder) or 'workspace' (multi-root workspace)") });
+const WorkspaceFolderCountContext = new RawContextKey("workspaceFolderCount", 0, localize("workspaceFolderCount", "The number of root folders in the workspace"));
+const OpenFolderWorkspaceSupportContext = new RawContextKey("openFolderWorkspaceSupport", true, true);
+const EnterMultiRootWorkspaceSupportContext = new RawContextKey("enterMultiRootWorkspaceSupport", true, true);
+const EmptyWorkspaceSupportContext = new RawContextKey("emptyWorkspaceSupport", true, true);
+const DirtyWorkingCopiesContext = new RawContextKey("dirtyWorkingCopies", false, localize("dirtyWorkingCopies", "Whether there are any working copies with unsaved changes"));
+const RemoteNameContext = new RawContextKey("remoteName", "", localize("remoteName", "The name of the remote the window is connected to or an empty string if not connected to any remote"));
+const VirtualWorkspaceContext = new RawContextKey("virtualWorkspace", "", localize("virtualWorkspace", "The scheme of the current workspace is from a virtual file system or an empty string."));
+const TemporaryWorkspaceContext = new RawContextKey("temporaryWorkspace", false, localize("temporaryWorkspace", "The scheme of the current workspace is from a temporary file system."));
+const HasWebFileSystemAccess = new RawContextKey("hasWebFileSystemAccess", false, true);
+const EmbedderIdentifierContext = new RawContextKey("embedderIdentifier", void 0, localize("embedderIdentifier", "The identifier of the embedder according to the product service, if one is defined"));
+const IsMainWindowFullscreenContext = new RawContextKey("isFullscreen", false, localize("isFullscreen", "Whether the main window is in fullscreen mode"));
+const IsAuxiliaryWindowFocusedContext = new RawContextKey("isAuxiliaryWindowFocusedContext", false, localize("isAuxiliaryWindowFocusedContext", "Whether an auxiliary window is focused"));
+const IsWindowAlwaysOnTopContext = new RawContextKey("isWindowAlwaysOnTop", false, localize("isWindowAlwaysOnTop", "Whether the window is always on top"));
+const IsAuxiliaryWindowContext = new RawContextKey("isAuxiliaryWindow", false, localize("isAuxiliaryWindow", "Window is an auxiliary window"));
+const ActiveEditorDirtyContext = new RawContextKey("activeEditorIsDirty", false, localize("activeEditorIsDirty", "Whether the active editor has unsaved changes"));
+const ActiveEditorPinnedContext = new RawContextKey("activeEditorIsNotPreview", false, localize("activeEditorIsNotPreview", "Whether the active editor is not in preview mode"));
+const ActiveEditorFirstInGroupContext = new RawContextKey("activeEditorIsFirstInGroup", false, localize("activeEditorIsFirstInGroup", "Whether the active editor is the first one in its group"));
+const ActiveEditorLastInGroupContext = new RawContextKey("activeEditorIsLastInGroup", false, localize("activeEditorIsLastInGroup", "Whether the active editor is the last one in its group"));
+const ActiveEditorStickyContext = new RawContextKey("activeEditorIsPinned", false, localize("activeEditorIsPinned", "Whether the active editor is pinned"));
+const ActiveEditorReadonlyContext = new RawContextKey("activeEditorIsReadonly", false, localize("activeEditorIsReadonly", "Whether the active editor is read-only"));
+const ActiveCompareEditorCanSwapContext = new RawContextKey("activeCompareEditorCanSwap", false, localize("activeCompareEditorCanSwap", "Whether the active compare editor can swap sides"));
+const ActiveEditorCanToggleReadonlyContext = new RawContextKey("activeEditorCanToggleReadonly", true, localize("activeEditorCanToggleReadonly", "Whether the active editor can toggle between being read-only or writeable"));
+const ActiveEditorCanRevertContext = new RawContextKey("activeEditorCanRevert", false, localize("activeEditorCanRevert", "Whether the active editor can revert"));
+const ActiveEditorCanSplitInGroupContext = new RawContextKey("activeEditorCanSplitInGroup", true);
+const ActiveEditorContext = new RawContextKey("activeEditor", null, { type: "string", description: localize("activeEditor", "The identifier of the active editor") });
+const ActiveEditorAvailableEditorIdsContext = new RawContextKey("activeEditorAvailableEditorIds", "", localize("activeEditorAvailableEditorIds", "The available editor identifiers that are usable for the active editor"));
+const TextCompareEditorVisibleContext = new RawContextKey("textCompareEditorVisible", false, localize("textCompareEditorVisible", "Whether a text compare editor is visible"));
+const TextCompareEditorActiveContext = new RawContextKey("textCompareEditorActive", false, localize("textCompareEditorActive", "Whether a text compare editor is active"));
+const SideBySideEditorActiveContext = new RawContextKey("sideBySideEditorActive", false, localize("sideBySideEditorActive", "Whether a side by side editor is active"));
+const EditorGroupEditorsCountContext = new RawContextKey("groupEditorsCount", 0, localize("groupEditorsCount", "The number of opened editor groups"));
+const ActiveEditorGroupEmptyContext = new RawContextKey("activeEditorGroupEmpty", false, localize("activeEditorGroupEmpty", "Whether the active editor group is empty"));
+const ActiveEditorGroupIndexContext = new RawContextKey("activeEditorGroupIndex", 0, localize("activeEditorGroupIndex", "The index of the active editor group"));
+const ActiveEditorGroupLastContext = new RawContextKey("activeEditorGroupLast", false, localize("activeEditorGroupLast", "Whether the active editor group is the last group"));
+const ActiveEditorGroupLockedContext = new RawContextKey("activeEditorGroupLocked", false, localize("activeEditorGroupLocked", "Whether the active editor group is locked"));
+const MultipleEditorGroupsContext = new RawContextKey("multipleEditorGroups", false, localize("multipleEditorGroups", "Whether there are multiple editor groups opened"));
+const SingleEditorGroupsContext = MultipleEditorGroupsContext.toNegated();
+const MultipleEditorsSelectedInGroupContext = new RawContextKey("multipleEditorsSelectedInGroup", false, localize("multipleEditorsSelectedInGroup", "Whether multiple editors have been selected in an editor group"));
+const TwoEditorsSelectedInGroupContext = new RawContextKey("twoEditorsSelectedInGroup", false, localize("twoEditorsSelectedInGroup", "Whether exactly two editors have been selected in an editor group"));
+const SelectedEditorsInGroupFileOrUntitledResourceContextKey = new RawContextKey("SelectedEditorsInGroupFileOrUntitledResourceContextKey", true, localize("SelectedEditorsInGroupFileOrUntitledResourceContextKey", "Whether all selected editors in a group have a file or untitled resource associated"));
+const EditorPartMultipleEditorGroupsContext = new RawContextKey("editorPartMultipleEditorGroups", false, localize("editorPartMultipleEditorGroups", "Whether there are multiple editor groups opened in an editor part"));
+const EditorPartSingleEditorGroupsContext = EditorPartMultipleEditorGroupsContext.toNegated();
+const EditorPartMaximizedEditorGroupContext = new RawContextKey("editorPartMaximizedEditorGroup", false, localize("editorPartEditorGroupMaximized", "Editor Part has a maximized group"));
+const EditorsVisibleContext = new RawContextKey("editorIsOpen", false, localize("editorIsOpen", "Whether an editor is open"));
+const InEditorZenModeContext = new RawContextKey("inZenMode", false, localize("inZenMode", "Whether Zen mode is enabled"));
+const IsMainEditorCenteredLayoutContext = new RawContextKey("isCenteredLayout", false, localize("isMainEditorCenteredLayout", "Whether centered layout is enabled for the main editor"));
+const SplitEditorsVertically = new RawContextKey("splitEditorsVertically", false, localize("splitEditorsVertically", "Whether editors split vertically"));
+const MainEditorAreaVisibleContext = new RawContextKey("mainEditorAreaVisible", true, localize("mainEditorAreaVisible", "Whether the editor area in the main window is visible"));
+const EditorTabsVisibleContext = new RawContextKey("editorTabsVisible", true, localize("editorTabsVisible", "Whether editor tabs are visible"));
+const SideBarVisibleContext = new RawContextKey("sideBarVisible", false, localize("sideBarVisible", "Whether the sidebar is visible"));
+const SidebarFocusContext = new RawContextKey("sideBarFocus", false, localize("sideBarFocus", "Whether the sidebar has keyboard focus"));
+const ActiveViewletContext = new RawContextKey("activeViewlet", "", localize("activeViewlet", "The identifier of the active viewlet"));
+const StatusBarFocused = new RawContextKey("statusBarFocused", false, localize("statusBarFocused", "Whether the status bar has keyboard focus"));
+const TitleBarStyleContext = new RawContextKey("titleBarStyle", "custom", localize("titleBarStyle", "Style of the window title bar"));
+const TitleBarVisibleContext = new RawContextKey("titleBarVisible", false, localize("titleBarVisible", "Whether the title bar is visible"));
+const IsCompactTitleBarContext = new RawContextKey("isCompactTitleBar", false, localize("isCompactTitleBar", "Title bar is in compact mode"));
+const BannerFocused = new RawContextKey("bannerFocused", false, localize("bannerFocused", "Whether the banner has keyboard focus"));
+const NotificationFocusedContext = new RawContextKey("notificationFocus", true, localize("notificationFocus", "Whether a notification has keyboard focus"));
+const NotificationsCenterVisibleContext = new RawContextKey("notificationCenterVisible", false, localize("notificationCenterVisible", "Whether the notifications center is visible"));
+const NotificationsToastsVisibleContext = new RawContextKey("notificationToastsVisible", false, localize("notificationToastsVisible", "Whether a notification toast is visible"));
+const ActiveAuxiliaryContext = new RawContextKey("activeAuxiliary", "", localize("activeAuxiliary", "The identifier of the active auxiliary panel"));
+const AuxiliaryBarFocusContext = new RawContextKey("auxiliaryBarFocus", false, localize("auxiliaryBarFocus", "Whether the auxiliary bar has keyboard focus"));
+const AuxiliaryBarVisibleContext = new RawContextKey("auxiliaryBarVisible", false, localize("auxiliaryBarVisible", "Whether the auxiliary bar is visible"));
+const ActivePanelContext = new RawContextKey("activePanel", "", localize("activePanel", "The identifier of the active panel"));
+const PanelFocusContext = new RawContextKey("panelFocus", false, localize("panelFocus", "Whether the panel has keyboard focus"));
+const PanelPositionContext = new RawContextKey("panelPosition", "bottom", localize("panelPosition", "The position of the panel, always 'bottom'"));
+const PanelAlignmentContext = new RawContextKey("panelAlignment", "center", localize("panelAlignment", "The alignment of the panel, either 'center', 'left', 'right' or 'justify'"));
+const PanelVisibleContext = new RawContextKey("panelVisible", false, localize("panelVisible", "Whether the panel is visible"));
+const PanelMaximizedContext = new RawContextKey("panelMaximized", false, localize("panelMaximized", "Whether the panel is maximized"));
+const FocusedViewContext = new RawContextKey("focusedView", "", localize("focusedView", "The identifier of the view that has keyboard focus"));
+function getVisbileViewContextKey(viewId) {
+  return `view.${viewId}.visible`;
+}
+__name(getVisbileViewContextKey, "getVisbileViewContextKey");
+let ResourceContextKey = class ResourceContextKey2 {
+  static {
+    __name(this, "ResourceContextKey");
+  }
+  static {
+    ResourceContextKey_1 = this;
+  }
+  static {
+    this.Scheme = new RawContextKey("resourceScheme", void 0, { type: "string", description: localize("resourceScheme", "The scheme of the resource") });
+  }
+  static {
+    this.Filename = new RawContextKey("resourceFilename", void 0, { type: "string", description: localize("resourceFilename", "The file name of the resource") });
+  }
+  static {
+    this.Dirname = new RawContextKey("resourceDirname", void 0, { type: "string", description: localize("resourceDirname", "The folder name the resource is contained in") });
+  }
+  static {
+    this.Path = new RawContextKey("resourcePath", void 0, { type: "string", description: localize("resourcePath", "The full path of the resource") });
+  }
+  static {
+    this.LangId = new RawContextKey("resourceLangId", void 0, { type: "string", description: localize("resourceLangId", "The language identifier of the resource") });
+  }
+  static {
+    this.Resource = new RawContextKey("resource", void 0, { type: "URI", description: localize("resource", "The full value of the resource including scheme and path") });
+  }
+  static {
+    this.Extension = new RawContextKey("resourceExtname", void 0, { type: "string", description: localize("resourceExtname", "The extension name of the resource") });
+  }
+  static {
+    this.HasResource = new RawContextKey("resourceSet", void 0, { type: "boolean", description: localize("resourceSet", "Whether a resource is present or not") });
+  }
+  static {
+    this.IsFileSystemResource = new RawContextKey("isFileSystemResource", void 0, { type: "boolean", description: localize("isFileSystemResource", "Whether the resource is backed by a file system provider") });
+  }
+  constructor(_contextKeyService, _fileService, _languageService, _modelService) {
+    this._contextKeyService = _contextKeyService;
+    this._fileService = _fileService;
+    this._languageService = _languageService;
+    this._modelService = _modelService;
+    this._disposables = new DisposableStore();
+    this._schemeKey = ResourceContextKey_1.Scheme.bindTo(this._contextKeyService);
+    this._filenameKey = ResourceContextKey_1.Filename.bindTo(this._contextKeyService);
+    this._dirnameKey = ResourceContextKey_1.Dirname.bindTo(this._contextKeyService);
+    this._pathKey = ResourceContextKey_1.Path.bindTo(this._contextKeyService);
+    this._langIdKey = ResourceContextKey_1.LangId.bindTo(this._contextKeyService);
+    this._resourceKey = ResourceContextKey_1.Resource.bindTo(this._contextKeyService);
+    this._extensionKey = ResourceContextKey_1.Extension.bindTo(this._contextKeyService);
+    this._hasResource = ResourceContextKey_1.HasResource.bindTo(this._contextKeyService);
+    this._isFileSystemResource = ResourceContextKey_1.IsFileSystemResource.bindTo(this._contextKeyService);
+    this._disposables.add(_fileService.onDidChangeFileSystemProviderRegistrations(() => {
+      const resource = this.get();
+      this._isFileSystemResource.set(Boolean(resource && _fileService.hasProvider(resource)));
+    }));
+    this._disposables.add(_modelService.onModelAdded((model) => {
+      if (isEqual(model.uri, this.get())) {
+        this._setLangId();
+      }
+    }));
+    this._disposables.add(_modelService.onModelLanguageChanged((e) => {
+      if (isEqual(e.model.uri, this.get())) {
+        this._setLangId();
+      }
+    }));
+  }
+  dispose() {
+    this._disposables.dispose();
+  }
+  _setLangId() {
+    const value = this.get();
+    if (!value) {
+      this._langIdKey.set(null);
+      return;
+    }
+    const langId = this._modelService.getModel(value)?.getLanguageId() ?? this._languageService.guessLanguageIdByFilepathOrFirstLine(value);
+    this._langIdKey.set(langId);
+  }
+  set(value) {
+    value = value ?? void 0;
+    if (isEqual(this._value, value)) {
+      return;
+    }
+    this._value = value;
+    this._contextKeyService.bufferChangeEvents(() => {
+      this._resourceKey.set(value ? value.toString() : null);
+      this._schemeKey.set(value ? value.scheme : null);
+      this._filenameKey.set(value ? basename(value) : null);
+      this._dirnameKey.set(value ? this.uriToPath(dirname(value)) : null);
+      this._pathKey.set(value ? this.uriToPath(value) : null);
+      this._setLangId();
+      this._extensionKey.set(value ? extname(value) : null);
+      this._hasResource.set(Boolean(value));
+      this._isFileSystemResource.set(value ? this._fileService.hasProvider(value) : false);
+    });
+  }
+  uriToPath(uri) {
+    if (uri.scheme === Schemas.file) {
+      return uri.fsPath;
+    }
+    return uri.path;
+  }
+  reset() {
+    this._value = void 0;
+    this._contextKeyService.bufferChangeEvents(() => {
+      this._resourceKey.reset();
+      this._schemeKey.reset();
+      this._filenameKey.reset();
+      this._dirnameKey.reset();
+      this._pathKey.reset();
+      this._langIdKey.reset();
+      this._extensionKey.reset();
+      this._hasResource.reset();
+      this._isFileSystemResource.reset();
+    });
+  }
+  get() {
+    return this._value;
+  }
+};
+ResourceContextKey = ResourceContextKey_1 = __decorate([
+  __param(0, IContextKeyService),
+  __param(1, IFileService),
+  __param(2, ILanguageService),
+  __param(3, IModelService)
+], ResourceContextKey);
+function applyAvailableEditorIds(contextKey, editor, editorResolverService) {
+  if (!editor) {
+    contextKey.set("");
+    return;
+  }
+  const editorResource = editor.resource;
+  if (editorResource?.scheme === Schemas.untitled && editor.editorId !== DEFAULT_EDITOR_ASSOCIATION.id) {
+    contextKey.set("");
+  } else {
+    const editors = editorResource ? editorResolverService.getEditors(editorResource).map((editor2) => editor2.id) : [];
+    contextKey.set(editors.join(","));
+  }
+}
+__name(applyAvailableEditorIds, "applyAvailableEditorIds");
+export {
+  ActiveAuxiliaryContext,
+  ActiveCompareEditorCanSwapContext,
+  ActiveEditorAvailableEditorIdsContext,
+  ActiveEditorCanRevertContext,
+  ActiveEditorCanSplitInGroupContext,
+  ActiveEditorCanToggleReadonlyContext,
+  ActiveEditorContext,
+  ActiveEditorDirtyContext,
+  ActiveEditorFirstInGroupContext,
+  ActiveEditorGroupEmptyContext,
+  ActiveEditorGroupIndexContext,
+  ActiveEditorGroupLastContext,
+  ActiveEditorGroupLockedContext,
+  ActiveEditorLastInGroupContext,
+  ActiveEditorPinnedContext,
+  ActiveEditorReadonlyContext,
+  ActiveEditorStickyContext,
+  ActivePanelContext,
+  ActiveViewletContext,
+  AuxiliaryBarFocusContext,
+  AuxiliaryBarVisibleContext,
+  BannerFocused,
+  DirtyWorkingCopiesContext,
+  EditorGroupEditorsCountContext,
+  EditorPartMaximizedEditorGroupContext,
+  EditorPartMultipleEditorGroupsContext,
+  EditorPartSingleEditorGroupsContext,
+  EditorTabsVisibleContext,
+  EditorsVisibleContext,
+  EmbedderIdentifierContext,
+  EmptyWorkspaceSupportContext,
+  EnterMultiRootWorkspaceSupportContext,
+  FocusedViewContext,
+  HasWebFileSystemAccess,
+  InEditorZenModeContext,
+  IsAuxiliaryWindowContext,
+  IsAuxiliaryWindowFocusedContext,
+  IsCompactTitleBarContext,
+  IsMainEditorCenteredLayoutContext,
+  IsMainWindowFullscreenContext,
+  IsWindowAlwaysOnTopContext,
+  MainEditorAreaVisibleContext,
+  MultipleEditorGroupsContext,
+  MultipleEditorsSelectedInGroupContext,
+  NotificationFocusedContext,
+  NotificationsCenterVisibleContext,
+  NotificationsToastsVisibleContext,
+  OpenFolderWorkspaceSupportContext,
+  PanelAlignmentContext,
+  PanelFocusContext,
+  PanelMaximizedContext,
+  PanelPositionContext,
+  PanelVisibleContext,
+  RemoteNameContext,
+  ResourceContextKey,
+  SelectedEditorsInGroupFileOrUntitledResourceContextKey,
+  SideBarVisibleContext,
+  SideBySideEditorActiveContext,
+  SidebarFocusContext,
+  SingleEditorGroupsContext,
+  SplitEditorsVertically,
+  StatusBarFocused,
+  TemporaryWorkspaceContext,
+  TextCompareEditorActiveContext,
+  TextCompareEditorVisibleContext,
+  TitleBarStyleContext,
+  TitleBarVisibleContext,
+  TwoEditorsSelectedInGroupContext,
+  VirtualWorkspaceContext,
+  WorkbenchStateContext,
+  WorkspaceFolderCountContext,
+  applyAvailableEditorIds,
+  getVisbileViewContextKey
+};
+//# sourceMappingURL=contextkeys.js.map

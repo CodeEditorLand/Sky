@@ -1,1 +1,135 @@
-import{getWindow as S,$J5 as x,n as y}from"../../../../base/browser/dom.js";import{$vd as M,$ud as T}from"../../../../base/common/lifecycle.js";import{autorun as f,derived as $,disposableObservableValue as A,observableValue as E}from"../../../../base/common/observable.js";import{$reb as I}from"../../../browser/observableCodeEditor.js";import{$qeb as D}from"../../../common/core/2d/point.js";import{$nkb as k}from"../../inlineCompletions/browser/model/animation.js";import{$ceb as L}from"../../../browser/widget/diffEditor/utils.js";import"./middleScroll.css";class v extends M{static{this.ID="editor.contrib.middleScroll"}static get(a){return a.getContribution(v.ID)}constructor(a){super(),this.a=a;const h=I(this.a),g=h.getOption(160);this.B(f(t=>{if(!g.read(t))return;const r=h.domNode.read(t);if(!r)return;const e=t.store.add(A("scrollingSession",void 0));t.store.add(this.a.onMouseDown(o=>{if(e.get()){e.set(void 0,void 0);return}if(!o.event.middleButton)return;o.event.stopPropagation(),o.event.preventDefault();const d=new T,l=new D(o.event.posx,o.event.posy),s=N(S(r),l,d).map(u=>u.subtract(l).withThreshold(5)),n=r.getBoundingClientRect(),b=new D(l.x-n.left,l.y-n.top);e.set({mouseDeltaAfterThreshold:s,initialMousePosInEditor:b,didScroll:!1,dispose:()=>d.dispose()},void 0),d.add(this.a.onMouseUp(u=>{const m=e.get();m&&m.didScroll&&e.set(void 0,void 0)})),d.add(this.a.onKeyDown(u=>{e.set(void 0,void 0)}))})),t.store.add(f(o=>{const i=e.read(o);if(!i)return;let d=Date.now();o.store.add(f(c=>{k.instance.invalidateOnNextAnimationFrame(c);const s=Date.now(),n=s-d;d=s;const b=i.mouseDeltaAfterThreshold.get(),u=n/32,m=b.scale(u),P=new D(this.a.getScrollLeft(),this.a.getScrollTop());this.a.setScrollPosition(O(P.add(m))),m.isZero()||(i.didScroll=!0)}));const l=$(c=>{const s=i.mouseDeltaAfterThreshold.read(c);let n="";return n+=s.y<0?"n":s.y>0?"s":"",n+=s.x<0?"w":s.x>0?"e":"",n});o.store.add(f(c=>{r.setAttribute("data-scroll-direction",l.read(c))}))}));const w=t.store.add(y.div({class:["scroll-editor-on-middle-click-dot",e.map(o=>o?"":"hidden")],style:{left:e.map(o=>o?o.initialMousePosInEditor.x:0),top:e.map(o=>o?o.initialMousePosInEditor.y:0)}}).toDisposableLiveElement());t.store.add(L(r,w.element)),t.store.add(f(o=>{const i=e.read(o);r.classList.toggle("scroll-editor-on-middle-click-editor",!!i)}))}))}}function N(p,a,h){const g=E("pos",a);return h.add(x(p,"mousemove",t=>{g.set(new D(t.pageX,t.pageY),void 0)})),g}function O(p){return{scrollLeft:p.x,scrollTop:p.y}}export{v as $5rb};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { getWindow, addDisposableListener, n } from "../../../../base/browser/dom.js";
+import { Disposable, DisposableStore } from "../../../../base/common/lifecycle.js";
+import { autorun, derived, disposableObservableValue, observableValue } from "../../../../base/common/observable.js";
+import { observableCodeEditor } from "../../../browser/observableCodeEditor.js";
+import { Point } from "../../../common/core/2d/point.js";
+import { AnimationFrameScheduler } from "../../inlineCompletions/browser/model/animation.js";
+import { appendRemoveOnDispose } from "../../../browser/widget/diffEditor/utils.js";
+import "./middleScroll.css";
+class MiddleScrollController extends Disposable {
+  static {
+    __name(this, "MiddleScrollController");
+  }
+  static {
+    this.ID = "editor.contrib.middleScroll";
+  }
+  static get(editor) {
+    return editor.getContribution(MiddleScrollController.ID);
+  }
+  constructor(_editor) {
+    super();
+    this._editor = _editor;
+    const obsEditor = observableCodeEditor(this._editor);
+    const scrollOnMiddleClick = obsEditor.getOption(
+      160
+      /* EditorOption.scrollOnMiddleClick */
+    );
+    this._register(autorun((reader) => {
+      if (!scrollOnMiddleClick.read(reader)) {
+        return;
+      }
+      const editorDomNode = obsEditor.domNode.read(reader);
+      if (!editorDomNode) {
+        return;
+      }
+      const scrollingSession = reader.store.add(disposableObservableValue("scrollingSession", void 0));
+      reader.store.add(this._editor.onMouseDown((e) => {
+        const session = scrollingSession.get();
+        if (session) {
+          scrollingSession.set(void 0, void 0);
+          return;
+        }
+        if (!e.event.middleButton) {
+          return;
+        }
+        e.event.stopPropagation();
+        e.event.preventDefault();
+        const store = new DisposableStore();
+        const initialPos = new Point(e.event.posx, e.event.posy);
+        const mousePos = observeWindowMousePos(getWindow(editorDomNode), initialPos, store);
+        const mouseDeltaAfterThreshold = mousePos.map((v) => v.subtract(initialPos).withThreshold(5));
+        const editorDomNodeRect = editorDomNode.getBoundingClientRect();
+        const initialMousePosInEditor = new Point(initialPos.x - editorDomNodeRect.left, initialPos.y - editorDomNodeRect.top);
+        scrollingSession.set({
+          mouseDeltaAfterThreshold,
+          initialMousePosInEditor,
+          didScroll: false,
+          dispose: /* @__PURE__ */ __name(() => store.dispose(), "dispose")
+        }, void 0);
+        store.add(this._editor.onMouseUp((e2) => {
+          const session2 = scrollingSession.get();
+          if (session2 && session2.didScroll) {
+            scrollingSession.set(void 0, void 0);
+          }
+        }));
+        store.add(this._editor.onKeyDown((e2) => {
+          scrollingSession.set(void 0, void 0);
+        }));
+      }));
+      reader.store.add(autorun((reader2) => {
+        const session = scrollingSession.read(reader2);
+        if (!session) {
+          return;
+        }
+        let lastTime = Date.now();
+        reader2.store.add(autorun((reader3) => {
+          AnimationFrameScheduler.instance.invalidateOnNextAnimationFrame(reader3);
+          const curTime = Date.now();
+          const frameDurationMs = curTime - lastTime;
+          lastTime = curTime;
+          const mouseDelta = session.mouseDeltaAfterThreshold.get();
+          const factor = frameDurationMs / 32;
+          const scrollDelta = mouseDelta.scale(factor);
+          const scrollPos = new Point(this._editor.getScrollLeft(), this._editor.getScrollTop());
+          this._editor.setScrollPosition(toScrollPosition(scrollPos.add(scrollDelta)));
+          if (!scrollDelta.isZero()) {
+            session.didScroll = true;
+          }
+        }));
+        const directionAttr = derived((reader3) => {
+          const delta = session.mouseDeltaAfterThreshold.read(reader3);
+          let direction = "";
+          direction += delta.y < 0 ? "n" : delta.y > 0 ? "s" : "";
+          direction += delta.x < 0 ? "w" : delta.x > 0 ? "e" : "";
+          return direction;
+        });
+        reader2.store.add(autorun((reader3) => {
+          editorDomNode.setAttribute("data-scroll-direction", directionAttr.read(reader3));
+        }));
+      }));
+      const dotDomElem = reader.store.add(n.div({
+        class: ["scroll-editor-on-middle-click-dot", scrollingSession.map((session) => session ? "" : "hidden")],
+        style: {
+          left: scrollingSession.map((session) => session ? session.initialMousePosInEditor.x : 0),
+          top: scrollingSession.map((session) => session ? session.initialMousePosInEditor.y : 0)
+        }
+      }).toDisposableLiveElement());
+      reader.store.add(appendRemoveOnDispose(editorDomNode, dotDomElem.element));
+      reader.store.add(autorun((reader2) => {
+        const session = scrollingSession.read(reader2);
+        editorDomNode.classList.toggle("scroll-editor-on-middle-click-editor", !!session);
+      }));
+    }));
+  }
+}
+function observeWindowMousePos(window, initialPos, store) {
+  const val = observableValue("pos", initialPos);
+  store.add(addDisposableListener(window, "mousemove", (e) => {
+    val.set(new Point(e.pageX, e.pageY), void 0);
+  }));
+  return val;
+}
+__name(observeWindowMousePos, "observeWindowMousePos");
+function toScrollPosition(p) {
+  return {
+    scrollLeft: p.x,
+    scrollTop: p.y
+  };
+}
+__name(toScrollPosition, "toScrollPosition");
+export {
+  MiddleScrollController
+};
+//# sourceMappingURL=middleScrollController.js.map

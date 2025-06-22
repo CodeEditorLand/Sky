@@ -1,1 +1,109 @@
-import{$ as i}from"../../dom.js";class c{constructor(t){this.d=t,this.a=new Map,this.b=new Set,this.c=!1}alloc(t){let e=this.g(t).pop(),s=!1;if(e)s=this.b.has(e.domNode),s&&this.b.delete(e.domNode);else{const s=i(".monaco-list-row");e={domNode:s,templateId:t,templateData:this.h(t).renderTemplate(s)}}return{row:e,isReusingConnectedDomNode:s}}release(t){t&&this.e(t)}transact(t){if(this.c)throw new Error("Already in transaction");this.c=!0;try{t()}finally{for(const t of this.b)this.f(t);this.b.clear(),this.c=!1}}e(t){const{domNode:e,templateId:s}=t;e&&(this.c?this.b.add(e):this.f(e)),this.g(s).push(t)}f(t){t.classList.remove("scrolling"),t.remove()}g(t){let e=this.a.get(t);return e||(e=[],this.a.set(t,e)),e}dispose(){this.a.forEach(((t,e)=>{for(const s of t)this.h(e).disposeTemplate(s.templateData),s.templateData=null})),this.a.clear(),this.b.clear()}h(t){const e=this.d.get(t);if(!e)throw new Error(`No renderer found for ${t}`);return e}}export{c as $h8};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { $ } from "../../dom.js";
+class RowCache {
+  static {
+    __name(this, "RowCache");
+  }
+  constructor(renderers) {
+    this.renderers = renderers;
+    this.cache = /* @__PURE__ */ new Map();
+    this.transactionNodesPendingRemoval = /* @__PURE__ */ new Set();
+    this.inTransaction = false;
+  }
+  /**
+   * Returns a row either by creating a new one or reusing
+   * a previously released row which shares the same templateId.
+   *
+   * @returns A row and `isReusingConnectedDomNode` if the row's node is already in the dom in a stale position.
+   */
+  alloc(templateId) {
+    let result = this.getTemplateCache(templateId).pop();
+    let isStale = false;
+    if (result) {
+      isStale = this.transactionNodesPendingRemoval.has(result.domNode);
+      if (isStale) {
+        this.transactionNodesPendingRemoval.delete(result.domNode);
+      }
+    } else {
+      const domNode = $(".monaco-list-row");
+      const renderer = this.getRenderer(templateId);
+      const templateData = renderer.renderTemplate(domNode);
+      result = { domNode, templateId, templateData };
+    }
+    return { row: result, isReusingConnectedDomNode: isStale };
+  }
+  /**
+   * Releases the row for eventual reuse.
+   */
+  release(row) {
+    if (!row) {
+      return;
+    }
+    this.releaseRow(row);
+  }
+  /**
+   * Begin a set of changes that use the cache. This lets us skip work when a row is removed and then inserted again.
+   */
+  transact(makeChanges) {
+    if (this.inTransaction) {
+      throw new Error("Already in transaction");
+    }
+    this.inTransaction = true;
+    try {
+      makeChanges();
+    } finally {
+      for (const domNode of this.transactionNodesPendingRemoval) {
+        this.doRemoveNode(domNode);
+      }
+      this.transactionNodesPendingRemoval.clear();
+      this.inTransaction = false;
+    }
+  }
+  releaseRow(row) {
+    const { domNode, templateId } = row;
+    if (domNode) {
+      if (this.inTransaction) {
+        this.transactionNodesPendingRemoval.add(domNode);
+      } else {
+        this.doRemoveNode(domNode);
+      }
+    }
+    const cache = this.getTemplateCache(templateId);
+    cache.push(row);
+  }
+  doRemoveNode(domNode) {
+    domNode.classList.remove("scrolling");
+    domNode.remove();
+  }
+  getTemplateCache(templateId) {
+    let result = this.cache.get(templateId);
+    if (!result) {
+      result = [];
+      this.cache.set(templateId, result);
+    }
+    return result;
+  }
+  dispose() {
+    this.cache.forEach((cachedRows, templateId) => {
+      for (const cachedRow of cachedRows) {
+        const renderer = this.getRenderer(templateId);
+        renderer.disposeTemplate(cachedRow.templateData);
+        cachedRow.templateData = null;
+      }
+    });
+    this.cache.clear();
+    this.transactionNodesPendingRemoval.clear();
+  }
+  getRenderer(templateId) {
+    const renderer = this.renderers.get(templateId);
+    if (!renderer) {
+      throw new Error(`No renderer found for ${templateId}`);
+    }
+    return renderer;
+  }
+}
+export {
+  RowCache
+};
+//# sourceMappingURL=rowCache.js.map

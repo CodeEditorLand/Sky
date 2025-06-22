@@ -1,1 +1,12 @@
-import{$_ib as a}from"../colorDetector.js";function o(t){const o=t.target;return!!o&&6===o.type&&o.detail.injectedText?.options.attachedData===a}export{o as $dnb};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { ColorDecorationInjectedTextMarker } from "../colorDetector.js";
+function isOnColorDecorator(mouseEvent) {
+  const target = mouseEvent.target;
+  return !!target && target.type === 6 && target.detail.injectedText?.options.attachedData === ColorDecorationInjectedTextMarker;
+}
+__name(isOnColorDecorator, "isOnColorDecorator");
+export {
+  isOnColorDecorator
+};
+//# sourceMappingURL=hoverColorPicker.js.map

@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["../../../Source/Application/Configuration/Service.ts"],
+  "sourcesContent": ["/**\n * @module Service (Configuration/Application)\n * @description Defines the service interface and Context.Tag for the application-level\n * configuration service, which conforms to the `IConfigurationService` from VS Code.\n */\n\nimport { Context } from \"effect\";\nimport type { IConfigurationService } from \"vs/platform/configuration/common/configuration.js\";\n\n/**\n * The service interface for the Configuration service.\n * This is an alias for VS Code's `IConfigurationService` to ensure API compatibility.\n */\nexport type Interface = IConfigurationService;\n\n/**\n * The Context.Tag for the Configuration service.\n * This tag is used to specify a dependency on the configuration service in the Effect\n * ecosystem, and is identified by the string \"vscode/ConfigurationService\".\n */\nexport class Tag extends Context.Tag(\"vscode/ConfigurationService\")<\n\tInterface,\n\t{}\n>() {}\n"],
+  "mappings": ";;AAMA,SAAS,eAAe;AAcjB,MAAM,YAAY,QAAQ,IAAI,6BAA6B,EAGhE,EAAE;AAAA,EAvBJ,OAuBI;AAAA;AAAA;AAAC;",
+  "names": []
+}

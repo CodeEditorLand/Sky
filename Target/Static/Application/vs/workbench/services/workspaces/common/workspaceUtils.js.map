@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["../../../../../../../../../../Dependency/Microsoft/Dependency/Editor/src/vs/workbench/services/workspaces/common/workspaceUtils.ts"],
+  "sourcesContent": ["/*---------------------------------------------------------------------------------------------\r\n *  Copyright (c) Microsoft Corporation. All rights reserved.\r\n *  Licensed under the MIT License. See License.txt in the project root for license information.\r\n *--------------------------------------------------------------------------------------------*/\r\nimport { IWorkspace } from '../../../../platform/workspace/common/workspace.js';\r\nimport { IFileService } from '../../../../platform/files/common/files.js';\r\n\r\nexport async function areWorkspaceFoldersEmpty(workspace: IWorkspace, fileService: IFileService): Promise<boolean> {\r\n\tfor (const folder of workspace.folders) {\r\n\t\tconst folderStat = await fileService.resolve(folder.uri);\r\n\t\tif (folderStat.children && folderStat.children.length > 0) {\r\n\t\t\treturn false;\r\n\t\t}\r\n\t}\r\n\treturn true;\r\n}\r\n"],
+  "mappings": ";;AAOA,eAAsB,yBAAyB,WAAuB,aAAyB;AAC9F,aAAW,UAAU,UAAU,SAAS;AACvC,UAAM,aAAa,MAAM,YAAY,QAAQ,OAAO,GAAG;AACvD,QAAI,WAAW,YAAY,WAAW,SAAS,SAAS,GAAG;AAC1D,aAAO;IACR;EACD;AACA,SAAO;AACR;AARsB;",
+  "names": []
+}

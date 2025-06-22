@@ -1,1 +1,203 @@
-import{$n as r,$q as d,$s as i}from"../../../base/common/platform.js";const I={WIDTH:400,WIDTH_WITH_VERTICAL_PANEL:600,HEIGHT:270};function V(t){return"number"==typeof t.parentId}function E(t){return!!t.workspaceUri}function S(t){return!!t.folderUri}function y(t){return!!t.fileUri}var a,f,c,s,l,p;function x(t,n){if(i)return!1;const e=w(t,n),u=t.getValue("window");return"native"===u?.menuStyle?!(!r&&!e):"custom"!==u?.menuStyle&&e}function v(t,n){return!i&&(!!r||x(t,n))}function b(t){const n=t.getValue("window.menuBarVisibility");return"default"===n||"compact"===n&&v(t)||r&&d?"classic":n}function h(t,n){return!0}function w(t,n){return n||(n=T(t)),"native"===n}function T(t){if(i)return"custom";const n=t.getValue("window");if(n){if(r&&!0===n.nativeTabs||r&&!1===n.nativeFullScreen)return"native";const t=n.titleBarStyle;if("native"===t||"custom"===t)return t}return"custom"}function $(t){if(i||r||"native"===T(t))return"native";const n=t.getValue("window")?.controlsStyle;return"custom"===n||"hidden"===n?n:"native"}!function(t){t.MenuStyle="window.menuStyle",t.MenuBarVisibility="window.menuBarVisibility"}(a||(a={})),function(t){t.CUSTOM="custom",t.NATIVE="native",t.INHERIT="inherit"}(f||(f={})),function(t){t.TITLE_BAR_STYLE="window.titleBarStyle",t.CUSTOM_TITLE_BAR_VISIBILITY="window.customTitleBarVisibility"}(c||(c={})),function(t){t.NATIVE="native",t.CUSTOM="custom"}(s||(s={})),function(t){t.NATIVE="native",t.CUSTOM="custom",t.HIDDEN="hidden"}(l||(l={})),function(t){t.AUTO="auto",t.WINDOWED="windowed",t.NEVER="never"}(p||(p={}));const N=35;function g(t){if(i||w(t))return!1;if(!r){const n=$(t);if("custom"===n||"hidden"===n)return!1}return!0}function _(t){const n=t.getValue("window");return!(n&&"boolean"==typeof n.nativeFullScreen&&!n.nativeTabs)||!1!==n.nativeFullScreen}function A(t=0){return Math.pow(1.2,t)}const B={width:1200,height:800},U={width:1024,height:768};export{$ as $$t,T as $0t,V as $1t,E as $2t,S as $3t,y as $4t,x as $5t,v as $6t,b as $7t,h as $8t,w as $9t,I as $Zt,N as $_t,g as $au,_ as $bu,A as $cu,B as $du,U as $eu,p as CustomTitleBarVisibility,a as MenuSettings,f as MenuStyleConfiguration,c as TitleBarSetting,s as TitlebarStyle,l as WindowControlsStyle};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { isMacintosh, isNative, isWeb } from "../../../base/common/platform.js";
+const WindowMinimumSize = {
+  WIDTH: 400,
+  WIDTH_WITH_VERTICAL_PANEL: 600,
+  HEIGHT: 270
+};
+function isOpenedAuxiliaryWindow(candidate) {
+  return typeof candidate.parentId === "number";
+}
+__name(isOpenedAuxiliaryWindow, "isOpenedAuxiliaryWindow");
+function isWorkspaceToOpen(uriToOpen) {
+  return !!uriToOpen.workspaceUri;
+}
+__name(isWorkspaceToOpen, "isWorkspaceToOpen");
+function isFolderToOpen(uriToOpen) {
+  return !!uriToOpen.folderUri;
+}
+__name(isFolderToOpen, "isFolderToOpen");
+function isFileToOpen(uriToOpen) {
+  return !!uriToOpen.fileUri;
+}
+__name(isFileToOpen, "isFileToOpen");
+var MenuSettings;
+(function(MenuSettings2) {
+  MenuSettings2["MenuStyle"] = "window.menuStyle";
+  MenuSettings2["MenuBarVisibility"] = "window.menuBarVisibility";
+})(MenuSettings || (MenuSettings = {}));
+var MenuStyleConfiguration;
+(function(MenuStyleConfiguration2) {
+  MenuStyleConfiguration2["CUSTOM"] = "custom";
+  MenuStyleConfiguration2["NATIVE"] = "native";
+  MenuStyleConfiguration2["INHERIT"] = "inherit";
+})(MenuStyleConfiguration || (MenuStyleConfiguration = {}));
+function hasNativeContextMenu(configurationService, titleBarStyle) {
+  if (isWeb) {
+    return false;
+  }
+  const nativeTitle = hasNativeTitlebar(configurationService, titleBarStyle);
+  const windowConfigurations = configurationService.getValue("window");
+  if (windowConfigurations?.menuStyle === "native") {
+    if (!isMacintosh && !nativeTitle) {
+      return false;
+    }
+    return true;
+  }
+  if (windowConfigurations?.menuStyle === "custom") {
+    return false;
+  }
+  return nativeTitle;
+}
+__name(hasNativeContextMenu, "hasNativeContextMenu");
+function hasNativeMenu(configurationService, titleBarStyle) {
+  if (isWeb) {
+    return false;
+  }
+  if (isMacintosh) {
+    return true;
+  }
+  return hasNativeContextMenu(configurationService, titleBarStyle);
+}
+__name(hasNativeMenu, "hasNativeMenu");
+function getMenuBarVisibility(configurationService) {
+  const menuBarVisibility = configurationService.getValue(
+    "window.menuBarVisibility"
+    /* MenuSettings.MenuBarVisibility */
+  );
+  if (menuBarVisibility === "default" || menuBarVisibility === "compact" && hasNativeMenu(configurationService) || isMacintosh && isNative) {
+    return "classic";
+  } else {
+    return menuBarVisibility;
+  }
+}
+__name(getMenuBarVisibility, "getMenuBarVisibility");
+var TitleBarSetting;
+(function(TitleBarSetting2) {
+  TitleBarSetting2["TITLE_BAR_STYLE"] = "window.titleBarStyle";
+  TitleBarSetting2["CUSTOM_TITLE_BAR_VISIBILITY"] = "window.customTitleBarVisibility";
+})(TitleBarSetting || (TitleBarSetting = {}));
+var TitlebarStyle;
+(function(TitlebarStyle2) {
+  TitlebarStyle2["NATIVE"] = "native";
+  TitlebarStyle2["CUSTOM"] = "custom";
+})(TitlebarStyle || (TitlebarStyle = {}));
+var WindowControlsStyle;
+(function(WindowControlsStyle2) {
+  WindowControlsStyle2["NATIVE"] = "native";
+  WindowControlsStyle2["CUSTOM"] = "custom";
+  WindowControlsStyle2["HIDDEN"] = "hidden";
+})(WindowControlsStyle || (WindowControlsStyle = {}));
+var CustomTitleBarVisibility;
+(function(CustomTitleBarVisibility2) {
+  CustomTitleBarVisibility2["AUTO"] = "auto";
+  CustomTitleBarVisibility2["WINDOWED"] = "windowed";
+  CustomTitleBarVisibility2["NEVER"] = "never";
+})(CustomTitleBarVisibility || (CustomTitleBarVisibility = {}));
+function hasCustomTitlebar(configurationService, titleBarStyle) {
+  return true;
+}
+__name(hasCustomTitlebar, "hasCustomTitlebar");
+function hasNativeTitlebar(configurationService, titleBarStyle) {
+  if (!titleBarStyle) {
+    titleBarStyle = getTitleBarStyle(configurationService);
+  }
+  return titleBarStyle === "native";
+}
+__name(hasNativeTitlebar, "hasNativeTitlebar");
+function getTitleBarStyle(configurationService) {
+  if (isWeb) {
+    return "custom";
+  }
+  const configuration = configurationService.getValue("window");
+  if (configuration) {
+    const useNativeTabs = isMacintosh && configuration.nativeTabs === true;
+    if (useNativeTabs) {
+      return "native";
+    }
+    const useSimpleFullScreen = isMacintosh && configuration.nativeFullScreen === false;
+    if (useSimpleFullScreen) {
+      return "native";
+    }
+    const style = configuration.titleBarStyle;
+    if (style === "native" || style === "custom") {
+      return style;
+    }
+  }
+  return "custom";
+}
+__name(getTitleBarStyle, "getTitleBarStyle");
+function getWindowControlsStyle(configurationService) {
+  if (isWeb || isMacintosh || getTitleBarStyle(configurationService) === "native") {
+    return "native";
+  }
+  const configuration = configurationService.getValue("window");
+  const style = configuration?.controlsStyle;
+  if (style === "custom" || style === "hidden") {
+    return style;
+  }
+  return "native";
+}
+__name(getWindowControlsStyle, "getWindowControlsStyle");
+const DEFAULT_CUSTOM_TITLEBAR_HEIGHT = 35;
+function useWindowControlsOverlay(configurationService) {
+  if (isWeb) {
+    return false;
+  }
+  if (hasNativeTitlebar(configurationService)) {
+    return false;
+  }
+  if (!isMacintosh) {
+    const setting = getWindowControlsStyle(configurationService);
+    if (setting === "custom" || setting === "hidden") {
+      return false;
+    }
+  }
+  return true;
+}
+__name(useWindowControlsOverlay, "useWindowControlsOverlay");
+function useNativeFullScreen(configurationService) {
+  const windowConfig = configurationService.getValue("window");
+  if (!windowConfig || typeof windowConfig.nativeFullScreen !== "boolean") {
+    return true;
+  }
+  if (windowConfig.nativeTabs) {
+    return true;
+  }
+  return windowConfig.nativeFullScreen !== false;
+}
+__name(useNativeFullScreen, "useNativeFullScreen");
+function zoomLevelToZoomFactor(zoomLevel = 0) {
+  return Math.pow(1.2, zoomLevel);
+}
+__name(zoomLevelToZoomFactor, "zoomLevelToZoomFactor");
+const DEFAULT_WINDOW_SIZE = { width: 1200, height: 800 };
+const DEFAULT_AUX_WINDOW_SIZE = { width: 1024, height: 768 };
+export {
+  CustomTitleBarVisibility,
+  DEFAULT_AUX_WINDOW_SIZE,
+  DEFAULT_CUSTOM_TITLEBAR_HEIGHT,
+  DEFAULT_WINDOW_SIZE,
+  MenuSettings,
+  MenuStyleConfiguration,
+  TitleBarSetting,
+  TitlebarStyle,
+  WindowControlsStyle,
+  WindowMinimumSize,
+  getMenuBarVisibility,
+  getTitleBarStyle,
+  getWindowControlsStyle,
+  hasCustomTitlebar,
+  hasNativeContextMenu,
+  hasNativeMenu,
+  hasNativeTitlebar,
+  isFileToOpen,
+  isFolderToOpen,
+  isOpenedAuxiliaryWindow,
+  isWorkspaceToOpen,
+  useNativeFullScreen,
+  useWindowControlsOverlay,
+  zoomLevelToZoomFactor
+};
+//# sourceMappingURL=window.js.map

@@ -1,1 +1,117 @@
-import{h as C,$O6 as D}from"../../../../../base/browser/dom.js";import{$vd as I,$td as S}from"../../../../../base/common/lifecycle.js";import{autorun as l,observableFromEvent as u,observableSignal as V,observableSignalFromEvent as b,observableValue as x,transaction as p}from"../../../../../base/common/observable.js";import{$lD as $}from"../../../../common/core/ranges/lineRange.js";import{$bD as f}from"../../../../common/core/ranges/offsetRange.js";class T extends I{constructor(s,i,n){super(),this.m=s,this.n=i,this.r=n,this.a=u(this,this.m.onDidScrollChange,t=>this.m.getScrollTop()),this.b=this.a.map(t=>t===0),this.c=u(this,this.m.onDidChangeModel,t=>this.m.hasModel()),this.f=b("onDidChangeViewZones",this.m.onDidChangeViewZones),this.g=b("onDidContentSizeChange",this.m.onDidContentSizeChange),this.j=V("domNodeSizeChanged"),this.s=new Map,this.n.className="gutter monaco-editor";const m=this.n.appendChild(C("div.scroll-decoration",{role:"presentation",ariaHidden:"true",style:{width:"100%"}}).root),r=new ResizeObserver(()=>{p(t=>{this.j.trigger(t)})});r.observe(this.n),this.B(S(()=>r.disconnect())),this.B(l(t=>{m.className=this.b.read(t)?"":"scroll-decoration"})),this.B(l(t=>this.t(t)))}dispose(){super.dispose(),D(this.n)}t(s){if(!this.c.read(s))return;this.j.read(s),this.f.read(s),this.g.read(s);const i=this.a.read(s),n=this.m.getVisibleRanges(),m=new Set(this.s.keys()),r=f.ofStartAndLength(0,this.n.clientHeight);if(!r.isEmpty)for(const t of n){const h=new $(t.startLineNumber,t.endLineNumber+1),N=this.r.getIntersectingGutterItems(h,s);p(w=>{for(const e of N){if(!e.range.intersect(h))continue;m.delete(e.id);let o=this.s.get(e.id);if(o)o.item.set(e,w);else{const d=document.createElement("div");this.n.appendChild(d);const c=x("item",e),L=this.r.createView(c,d);o=new M(c,L,d),this.s.set(e.id,o)}const a=e.range.startLineNumber<=this.m.getModel().getLineCount()?this.m.getTopForLineNumber(e.range.startLineNumber,!0)-i:this.m.getBottomForLineNumber(e.range.startLineNumber-1,!1)-i,g=(e.range.endLineNumberExclusive===1?Math.max(a,this.m.getTopForLineNumber(e.range.startLineNumber,!1)-i):Math.max(a,this.m.getBottomForLineNumber(e.range.endLineNumberExclusive-1,!0)-i))-a;o.domNode.style.top=`${a}px`,o.domNode.style.height=`${g}px`,o.gutterItemView.layout(f.ofStartAndLength(a,g),r)}})}for(const t of m){const h=this.s.get(t);h.gutterItemView.dispose(),h.domNode.remove(),this.s.delete(t)}}}class M{constructor(s,i,n){this.item=s,this.gutterItemView=i,this.domNode=n}}export{T as $sgb};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { h, reset } from "../../../../../base/browser/dom.js";
+import { Disposable, toDisposable } from "../../../../../base/common/lifecycle.js";
+import { autorun, observableFromEvent, observableSignal, observableSignalFromEvent, observableValue, transaction } from "../../../../../base/common/observable.js";
+import { LineRange } from "../../../../common/core/ranges/lineRange.js";
+import { OffsetRange } from "../../../../common/core/ranges/offsetRange.js";
+class EditorGutter extends Disposable {
+  static {
+    __name(this, "EditorGutter");
+  }
+  constructor(_editor, _domNode, itemProvider) {
+    super();
+    this._editor = _editor;
+    this._domNode = _domNode;
+    this.itemProvider = itemProvider;
+    this.scrollTop = observableFromEvent(this, this._editor.onDidScrollChange, (e) => (
+      /** @description editor.onDidScrollChange */
+      this._editor.getScrollTop()
+    ));
+    this.isScrollTopZero = this.scrollTop.map((scrollTop) => (
+      /** @description isScrollTopZero */
+      scrollTop === 0
+    ));
+    this.modelAttached = observableFromEvent(this, this._editor.onDidChangeModel, (e) => (
+      /** @description editor.onDidChangeModel */
+      this._editor.hasModel()
+    ));
+    this.editorOnDidChangeViewZones = observableSignalFromEvent("onDidChangeViewZones", this._editor.onDidChangeViewZones);
+    this.editorOnDidContentSizeChange = observableSignalFromEvent("onDidContentSizeChange", this._editor.onDidContentSizeChange);
+    this.domNodeSizeChanged = observableSignal("domNodeSizeChanged");
+    this.views = /* @__PURE__ */ new Map();
+    this._domNode.className = "gutter monaco-editor";
+    const scrollDecoration = this._domNode.appendChild(h("div.scroll-decoration", { role: "presentation", ariaHidden: "true", style: { width: "100%" } }).root);
+    const o = new ResizeObserver(() => {
+      transaction((tx) => {
+        this.domNodeSizeChanged.trigger(tx);
+      });
+    });
+    o.observe(this._domNode);
+    this._register(toDisposable(() => o.disconnect()));
+    this._register(autorun((reader) => {
+      scrollDecoration.className = this.isScrollTopZero.read(reader) ? "" : "scroll-decoration";
+    }));
+    this._register(autorun((reader) => (
+      /** @description EditorGutter.Render */
+      this.render(reader)
+    )));
+  }
+  dispose() {
+    super.dispose();
+    reset(this._domNode);
+  }
+  render(reader) {
+    if (!this.modelAttached.read(reader)) {
+      return;
+    }
+    this.domNodeSizeChanged.read(reader);
+    this.editorOnDidChangeViewZones.read(reader);
+    this.editorOnDidContentSizeChange.read(reader);
+    const scrollTop = this.scrollTop.read(reader);
+    const visibleRanges = this._editor.getVisibleRanges();
+    const unusedIds = new Set(this.views.keys());
+    const viewRange = OffsetRange.ofStartAndLength(0, this._domNode.clientHeight);
+    if (!viewRange.isEmpty) {
+      for (const visibleRange of visibleRanges) {
+        const visibleRange2 = new LineRange(visibleRange.startLineNumber, visibleRange.endLineNumber + 1);
+        const gutterItems = this.itemProvider.getIntersectingGutterItems(visibleRange2, reader);
+        transaction((tx) => {
+          for (const gutterItem of gutterItems) {
+            if (!gutterItem.range.intersect(visibleRange2)) {
+              continue;
+            }
+            unusedIds.delete(gutterItem.id);
+            let view = this.views.get(gutterItem.id);
+            if (!view) {
+              const viewDomNode = document.createElement("div");
+              this._domNode.appendChild(viewDomNode);
+              const gutterItemObs = observableValue("item", gutterItem);
+              const itemView = this.itemProvider.createView(gutterItemObs, viewDomNode);
+              view = new ManagedGutterItemView(gutterItemObs, itemView, viewDomNode);
+              this.views.set(gutterItem.id, view);
+            } else {
+              view.item.set(gutterItem, tx);
+            }
+            const top = gutterItem.range.startLineNumber <= this._editor.getModel().getLineCount() ? this._editor.getTopForLineNumber(gutterItem.range.startLineNumber, true) - scrollTop : this._editor.getBottomForLineNumber(gutterItem.range.startLineNumber - 1, false) - scrollTop;
+            const bottom = gutterItem.range.endLineNumberExclusive === 1 ? Math.max(top, this._editor.getTopForLineNumber(gutterItem.range.startLineNumber, false) - scrollTop) : Math.max(top, this._editor.getBottomForLineNumber(gutterItem.range.endLineNumberExclusive - 1, true) - scrollTop);
+            const height = bottom - top;
+            view.domNode.style.top = `${top}px`;
+            view.domNode.style.height = `${height}px`;
+            view.gutterItemView.layout(OffsetRange.ofStartAndLength(top, height), viewRange);
+          }
+        });
+      }
+    }
+    for (const id of unusedIds) {
+      const view = this.views.get(id);
+      view.gutterItemView.dispose();
+      view.domNode.remove();
+      this.views.delete(id);
+    }
+  }
+}
+class ManagedGutterItemView {
+  static {
+    __name(this, "ManagedGutterItemView");
+  }
+  constructor(item, gutterItemView, domNode) {
+    this.item = item;
+    this.gutterItemView = gutterItemView;
+    this.domNode = domNode;
+  }
+}
+export {
+  EditorGutter
+};
+//# sourceMappingURL=editorGutter.js.map

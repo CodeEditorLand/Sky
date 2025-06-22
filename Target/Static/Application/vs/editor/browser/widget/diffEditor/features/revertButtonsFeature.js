@@ -1,1 +1,150 @@
-import{$J5 as c,h as R,$F6 as u}from"../../../../../base/browser/dom.js";import{$F8 as $}from"../../../../../base/browser/ui/iconLabel/iconLabels.js";import{$Mj as y}from"../../../../../base/common/codicons.js";import{$vd as v,$td as C}from"../../../../../base/common/lifecycle.js";import{autorunWithStore as D,derived as j}from"../../../../../base/common/observable.js";import{$lD as w,$mD as L}from"../../../../common/core/ranges/lineRange.js";import{$cC as N}from"../../../../common/core/range.js";import{$aM as S}from"../../../../common/diff/rangeMapping.js";import{GlyphMarginLane as x}from"../../../../common/model.js";import{localize as b}from"../../../../../nls.js";const M=[];class T extends v{constructor(f,g,h,m){super(),this.a=f,this.b=g,this.f=h,this.g=m,this.j=j(this,e=>{const n=this.b.read(e)?.diff.read(e);if(!n)return M;const s=this.a.modifiedSelections.read(e);if(s.every(t=>t.isEmpty()))return M;const r=new L(s.map(t=>w.fromRangeInclusive(t))),o=n.mappings.filter(t=>t.lineRangeMapping.innerChanges&&r.intersects(t.lineRangeMapping.modified)).map(t=>({mapping:t,rangeMappings:t.lineRangeMapping.innerChanges.filter(i=>s.some(l=>N.areIntersecting(i.modifiedRange,l)))}));return o.length===0||o.every(t=>t.rangeMappings.length===0)?M:o}),this.B(D((e,a)=>{if(!this.f.shouldRenderOldRevertArrows.read(e))return;const n=this.b.read(e),s=n?.diff.read(e);if(!n||!s||n.movedTextToCompare.read(e))return;const r=[],p=this.j.read(e),o=new Set(p.map(t=>t.mapping));if(p.length>0){const t=this.a.modifiedSelections.read(e),i=a.add(new d(t[t.length-1].positionLineNumber,this.g,p.flatMap(l=>l.rangeMappings),!0));this.a.modified.addGlyphMarginWidget(i),r.push(i)}for(const t of s.mappings)if(!o.has(t)&&!t.lineRangeMapping.modified.isEmpty&&t.lineRangeMapping.innerChanges){const i=a.add(new d(t.lineRangeMapping.modified.startLineNumber,this.g,t.lineRangeMapping,!1));this.a.modified.addGlyphMarginWidget(i),r.push(i)}a.add(C(()=>{for(const t of r)this.a.modified.removeGlyphMarginWidget(t)}))}))}}class d extends v{static{this.counter=0}getId(){return this.a}constructor(f,g,h,m){super(),this.f=f,this.g=g,this.j=h,this.n=m,this.a=`revertButton${d.counter++}`,this.b=R("div.revertButton",{title:this.n?b(242,null):b(243,null)},[$(y.arrowRight)]).root,this.B(c(this.b,u.MOUSE_DOWN,e=>{e.button!==2&&(e.stopPropagation(),e.preventDefault())})),this.B(c(this.b,u.MOUSE_UP,e=>{e.stopPropagation(),e.preventDefault()})),this.B(c(this.b,u.CLICK,e=>{this.j instanceof S?this.g.revert(this.j):this.g.revertRangeMappings(this.j),e.stopPropagation(),e.preventDefault()}))}getDomNode(){return this.b}getPosition(){return{lane:x.Right,range:{startColumn:1,startLineNumber:this.f,endColumn:1,endLineNumber:this.f},zIndex:10001}}}export{T as $vgb,d as $wgb};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { addDisposableListener, h, EventType } from "../../../../../base/browser/dom.js";
+import { renderIcon } from "../../../../../base/browser/ui/iconLabel/iconLabels.js";
+import { Codicon } from "../../../../../base/common/codicons.js";
+import { Disposable, toDisposable } from "../../../../../base/common/lifecycle.js";
+import { autorunWithStore, derived } from "../../../../../base/common/observable.js";
+import { LineRange, LineRangeSet } from "../../../../common/core/ranges/lineRange.js";
+import { Range } from "../../../../common/core/range.js";
+import { LineRangeMapping } from "../../../../common/diff/rangeMapping.js";
+import { GlyphMarginLane } from "../../../../common/model.js";
+import { localize } from "../../../../../nls.js";
+const emptyArr = [];
+class RevertButtonsFeature extends Disposable {
+  static {
+    __name(this, "RevertButtonsFeature");
+  }
+  constructor(_editors, _diffModel, _options, _widget) {
+    super();
+    this._editors = _editors;
+    this._diffModel = _diffModel;
+    this._options = _options;
+    this._widget = _widget;
+    this._selectedDiffs = derived(this, (reader) => {
+      const model = this._diffModel.read(reader);
+      const diff = model?.diff.read(reader);
+      if (!diff) {
+        return emptyArr;
+      }
+      const selections = this._editors.modifiedSelections.read(reader);
+      if (selections.every((s) => s.isEmpty())) {
+        return emptyArr;
+      }
+      const selectedLineNumbers = new LineRangeSet(selections.map((s) => LineRange.fromRangeInclusive(s)));
+      const selectedMappings = diff.mappings.filter((m) => m.lineRangeMapping.innerChanges && selectedLineNumbers.intersects(m.lineRangeMapping.modified));
+      const result = selectedMappings.map((mapping) => ({
+        mapping,
+        rangeMappings: mapping.lineRangeMapping.innerChanges.filter((c) => selections.some((s) => Range.areIntersecting(c.modifiedRange, s)))
+      }));
+      if (result.length === 0 || result.every((r) => r.rangeMappings.length === 0)) {
+        return emptyArr;
+      }
+      return result;
+    });
+    this._register(autorunWithStore((reader, store) => {
+      if (!this._options.shouldRenderOldRevertArrows.read(reader)) {
+        return;
+      }
+      const model = this._diffModel.read(reader);
+      const diff = model?.diff.read(reader);
+      if (!model || !diff) {
+        return;
+      }
+      if (model.movedTextToCompare.read(reader)) {
+        return;
+      }
+      const glyphWidgetsModified = [];
+      const selectedDiffs = this._selectedDiffs.read(reader);
+      const selectedDiffsSet = new Set(selectedDiffs.map((d) => d.mapping));
+      if (selectedDiffs.length > 0) {
+        const selections = this._editors.modifiedSelections.read(reader);
+        const btn = store.add(new RevertButton(selections[selections.length - 1].positionLineNumber, this._widget, selectedDiffs.flatMap((d) => d.rangeMappings), true));
+        this._editors.modified.addGlyphMarginWidget(btn);
+        glyphWidgetsModified.push(btn);
+      }
+      for (const m of diff.mappings) {
+        if (selectedDiffsSet.has(m)) {
+          continue;
+        }
+        if (!m.lineRangeMapping.modified.isEmpty && m.lineRangeMapping.innerChanges) {
+          const btn = store.add(new RevertButton(m.lineRangeMapping.modified.startLineNumber, this._widget, m.lineRangeMapping, false));
+          this._editors.modified.addGlyphMarginWidget(btn);
+          glyphWidgetsModified.push(btn);
+        }
+      }
+      store.add(toDisposable(() => {
+        for (const w of glyphWidgetsModified) {
+          this._editors.modified.removeGlyphMarginWidget(w);
+        }
+      }));
+    }));
+  }
+}
+class RevertButton extends Disposable {
+  static {
+    __name(this, "RevertButton");
+  }
+  static {
+    this.counter = 0;
+  }
+  getId() {
+    return this._id;
+  }
+  constructor(_lineNumber, _widget, _diffs, _revertSelection) {
+    super();
+    this._lineNumber = _lineNumber;
+    this._widget = _widget;
+    this._diffs = _diffs;
+    this._revertSelection = _revertSelection;
+    this._id = `revertButton${RevertButton.counter++}`;
+    this._domNode = h("div.revertButton", {
+      title: this._revertSelection ? localize("revertSelectedChanges", "Revert Selected Changes") : localize("revertChange", "Revert Change")
+    }, [renderIcon(Codicon.arrowRight)]).root;
+    this._register(addDisposableListener(this._domNode, EventType.MOUSE_DOWN, (e) => {
+      if (e.button !== 2) {
+        e.stopPropagation();
+        e.preventDefault();
+      }
+    }));
+    this._register(addDisposableListener(this._domNode, EventType.MOUSE_UP, (e) => {
+      e.stopPropagation();
+      e.preventDefault();
+    }));
+    this._register(addDisposableListener(this._domNode, EventType.CLICK, (e) => {
+      if (this._diffs instanceof LineRangeMapping) {
+        this._widget.revert(this._diffs);
+      } else {
+        this._widget.revertRangeMappings(this._diffs);
+      }
+      e.stopPropagation();
+      e.preventDefault();
+    }));
+  }
+  /**
+   * Get the dom node of the glyph widget.
+   */
+  getDomNode() {
+    return this._domNode;
+  }
+  /**
+   * Get the placement of the glyph widget.
+   */
+  getPosition() {
+    return {
+      lane: GlyphMarginLane.Right,
+      range: {
+        startColumn: 1,
+        startLineNumber: this._lineNumber,
+        endColumn: 1,
+        endLineNumber: this._lineNumber
+      },
+      zIndex: 10001
+    };
+  }
+}
+export {
+  RevertButton,
+  RevertButtonsFeature
+};
+//# sourceMappingURL=revertButtonsFeature.js.map

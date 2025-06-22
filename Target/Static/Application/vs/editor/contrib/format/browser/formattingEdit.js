@@ -1,1 +1,57 @@
-import{$SC as f}from"../../../common/core/editOperation.js";import{$cC as r}from"../../../common/core/range.js";import{$$db as i}from"../../../browser/stableEditorScroll.js";class s{static a(e,n){let a;const l=[];for(const t of n)typeof t.eol=="number"&&(a=t.eol),t.range&&typeof t.text=="string"&&l.push(t);return typeof a=="number"&&e.hasModel()&&e.getModel().pushEOL(a),l}static b(e,n){if(!e.hasModel())return!1;const a=e.getModel(),l=a.validateRange(n.range);return a.getFullModelRange().equalsRange(l)}static execute(e,n,a){a&&e.pushUndoStop();const l=i.capture(e),t=s.a(e,n);t.length===1&&s.b(e,t[0])?e.executeEdits("formatEditsCommand",t.map(o=>f.replace(r.lift(o.range),o.text))):e.executeEdits("formatEditsCommand",t.map(o=>f.replaceMove(r.lift(o.range),o.text))),a&&e.pushUndoStop(),l.restoreRelativeVerticalPositionOfCursor(e)}}export{s as $Qob};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { EditOperation } from "../../../common/core/editOperation.js";
+import { Range } from "../../../common/core/range.js";
+import { StableEditorScrollState } from "../../../browser/stableEditorScroll.js";
+class FormattingEdit {
+  static {
+    __name(this, "FormattingEdit");
+  }
+  static _handleEolEdits(editor, edits) {
+    let newEol = void 0;
+    const singleEdits = [];
+    for (const edit of edits) {
+      if (typeof edit.eol === "number") {
+        newEol = edit.eol;
+      }
+      if (edit.range && typeof edit.text === "string") {
+        singleEdits.push(edit);
+      }
+    }
+    if (typeof newEol === "number") {
+      if (editor.hasModel()) {
+        editor.getModel().pushEOL(newEol);
+      }
+    }
+    return singleEdits;
+  }
+  static _isFullModelReplaceEdit(editor, edit) {
+    if (!editor.hasModel()) {
+      return false;
+    }
+    const model = editor.getModel();
+    const editRange = model.validateRange(edit.range);
+    const fullModelRange = model.getFullModelRange();
+    return fullModelRange.equalsRange(editRange);
+  }
+  static execute(editor, _edits, addUndoStops) {
+    if (addUndoStops) {
+      editor.pushUndoStop();
+    }
+    const scrollState = StableEditorScrollState.capture(editor);
+    const edits = FormattingEdit._handleEolEdits(editor, _edits);
+    if (edits.length === 1 && FormattingEdit._isFullModelReplaceEdit(editor, edits[0])) {
+      editor.executeEdits("formatEditsCommand", edits.map((edit) => EditOperation.replace(Range.lift(edit.range), edit.text)));
+    } else {
+      editor.executeEdits("formatEditsCommand", edits.map((edit) => EditOperation.replaceMove(Range.lift(edit.range), edit.text)));
+    }
+    if (addUndoStops) {
+      editor.pushUndoStop();
+    }
+    scrollState.restoreRelativeVerticalPositionOfCursor(editor);
+  }
+}
+export {
+  FormattingEdit
+};
+//# sourceMappingURL=formattingEdit.js.map

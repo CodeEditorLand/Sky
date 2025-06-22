@@ -1,1 +1,99 @@
-import{$Sb as c}from"../../../../base/common/arrays.js";import{$dh as d}from"../../../../base/common/resources.js";import{$Rm as $}from"../../../../base/common/uuid.js";import{$Un as m}from"../../../../platform/contextkey/common/contextkey.js";import{$nj as y}from"../../../../platform/instantiation/common/instantiation.js";import{$Ho as b}from"../../../../platform/storage/common/storage.js";import{$6tb as h}from"../../../common/memento.js";var u=function(r,e,t,o){var n=arguments.length,i=n<3?e:o===null?o=Object.getOwnPropertyDescriptor(e,t):o,s;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")i=Reflect.decorate(r,e,t,o);else for(var l=r.length-1;l>=0;l--)(s=r[l])&&(i=(n<3?s(i):n>3?s(e,t,i):s(e,t))||i);return n>3&&i&&Object.defineProperty(e,t,i),i},w=function(r,e){return function(t,o){e(t,o,r)}};const C=new m("webviewFindWidgetVisible",!1),P=new m("webviewFindWidgetFocused",!1),F=new m("webviewFindWidgetEnabled",!1),M=y("webviewService");var f;(function(r){r.NotebookRenderer="notebookRenderer",r.CustomEditor="customEditor",r.WebviewView="webviewView"})(f||(f={}));function E(r,e){return r.allowMultipleAPIAcquire===e.allowMultipleAPIAcquire&&r.allowScripts===e.allowScripts&&r.allowForms===e.allowForms&&c(r.localResourceRoots,e.localResourceRoots,d)&&c(r.portMapping,e.portMapping,(t,o)=>t.extensionHostPort===o.extensionHostPort&&t.webviewPort===o.webviewPort)&&g(r,e)}function g(r,e){return r.enableCommandUris===e.enableCommandUris?!0:Array.isArray(r.enableCommandUris)&&Array.isArray(e.enableCommandUris)?c(r.enableCommandUris,e.enableCommandUris):!1}let a=class{constructor(e,t){this.c=new h(e,t),this.d=this.c.getMemento(-1,1)}getOrigin(e,t){const o=this.e(e,t),n=this.d[o];if(n&&typeof n=="string")return n;const i=$();return this.d[o]=i,this.c.saveMemento(),i}e(e,t){return JSON.stringify({viewType:e,key:t})}};a=u([w(1,b)],a);let p=class{constructor(e,t){this.c=new a(e,t)}getOrigin(e,t){return this.c.getOrigin(e,t.value)}};p=u([w(1,b)],p);export{p as $$yb,a as $0yb,C as $5yb,P as $6yb,F as $7yb,M as $8yb,E as $9yb,f as WebviewContentPurpose};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { equals } from "../../../../base/common/arrays.js";
+import { isEqual } from "../../../../base/common/resources.js";
+import { generateUuid } from "../../../../base/common/uuid.js";
+import { RawContextKey } from "../../../../platform/contextkey/common/contextkey.js";
+import { createDecorator } from "../../../../platform/instantiation/common/instantiation.js";
+import { IStorageService } from "../../../../platform/storage/common/storage.js";
+import { Memento } from "../../../common/memento.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+const KEYBINDING_CONTEXT_WEBVIEW_FIND_WIDGET_VISIBLE = new RawContextKey("webviewFindWidgetVisible", false);
+const KEYBINDING_CONTEXT_WEBVIEW_FIND_WIDGET_FOCUSED = new RawContextKey("webviewFindWidgetFocused", false);
+const KEYBINDING_CONTEXT_WEBVIEW_FIND_WIDGET_ENABLED = new RawContextKey("webviewFindWidgetEnabled", false);
+const IWebviewService = createDecorator("webviewService");
+var WebviewContentPurpose;
+(function(WebviewContentPurpose2) {
+  WebviewContentPurpose2["NotebookRenderer"] = "notebookRenderer";
+  WebviewContentPurpose2["CustomEditor"] = "customEditor";
+  WebviewContentPurpose2["WebviewView"] = "webviewView";
+})(WebviewContentPurpose || (WebviewContentPurpose = {}));
+function areWebviewContentOptionsEqual(a, b) {
+  return a.allowMultipleAPIAcquire === b.allowMultipleAPIAcquire && a.allowScripts === b.allowScripts && a.allowForms === b.allowForms && equals(a.localResourceRoots, b.localResourceRoots, isEqual) && equals(a.portMapping, b.portMapping, (a2, b2) => a2.extensionHostPort === b2.extensionHostPort && a2.webviewPort === b2.webviewPort) && areEnableCommandUrisEqual(a, b);
+}
+__name(areWebviewContentOptionsEqual, "areWebviewContentOptionsEqual");
+function areEnableCommandUrisEqual(a, b) {
+  if (a.enableCommandUris === b.enableCommandUris) {
+    return true;
+  }
+  if (Array.isArray(a.enableCommandUris) && Array.isArray(b.enableCommandUris)) {
+    return equals(a.enableCommandUris, b.enableCommandUris);
+  }
+  return false;
+}
+__name(areEnableCommandUrisEqual, "areEnableCommandUrisEqual");
+let WebviewOriginStore = class WebviewOriginStore2 {
+  static {
+    __name(this, "WebviewOriginStore");
+  }
+  constructor(rootStorageKey, storageService) {
+    this._memento = new Memento(rootStorageKey, storageService);
+    this._state = this._memento.getMemento(
+      -1,
+      1
+      /* StorageTarget.MACHINE */
+    );
+  }
+  getOrigin(viewType, additionalKey) {
+    const key = this._getKey(viewType, additionalKey);
+    const existing = this._state[key];
+    if (existing && typeof existing === "string") {
+      return existing;
+    }
+    const newOrigin = generateUuid();
+    this._state[key] = newOrigin;
+    this._memento.saveMemento();
+    return newOrigin;
+  }
+  _getKey(viewType, additionalKey) {
+    return JSON.stringify({ viewType, key: additionalKey });
+  }
+};
+WebviewOriginStore = __decorate([
+  __param(1, IStorageService)
+], WebviewOriginStore);
+let ExtensionKeyedWebviewOriginStore = class ExtensionKeyedWebviewOriginStore2 {
+  static {
+    __name(this, "ExtensionKeyedWebviewOriginStore");
+  }
+  constructor(rootStorageKey, storageService) {
+    this._store = new WebviewOriginStore(rootStorageKey, storageService);
+  }
+  getOrigin(viewType, extId) {
+    return this._store.getOrigin(viewType, extId.value);
+  }
+};
+ExtensionKeyedWebviewOriginStore = __decorate([
+  __param(1, IStorageService)
+], ExtensionKeyedWebviewOriginStore);
+export {
+  ExtensionKeyedWebviewOriginStore,
+  IWebviewService,
+  KEYBINDING_CONTEXT_WEBVIEW_FIND_WIDGET_ENABLED,
+  KEYBINDING_CONTEXT_WEBVIEW_FIND_WIDGET_FOCUSED,
+  KEYBINDING_CONTEXT_WEBVIEW_FIND_WIDGET_VISIBLE,
+  WebviewContentPurpose,
+  WebviewOriginStore,
+  areWebviewContentOptionsEqual
+};
+//# sourceMappingURL=webview.js.map

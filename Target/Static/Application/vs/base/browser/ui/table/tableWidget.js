@@ -1,5 +1,339 @@
-import{$ as u,$M6 as d,$I5 as w,$_5 as C,$05 as $}from"../../dom.js";import{$W7 as x}from"../../domStylesheets.js";import{$M8 as v}from"../hover/hoverDelegate2.js";import{$K7 as y}from"../hover/hoverDelegateFactory.js";import{$D8 as S,$C8 as H}from"../list/listWidget.js";import{$x9 as I}from"../splitview/splitview.js";import{$df as N,Event as p}from"../../../common/event.js";import{$vd as b,$ud as F}from"../../../common/lifecycle.js";import"./table.css";class c{static{this.TemplateId="row"}constructor(e,t,s){this.f=e,this.g=s,this.templateId=c.TemplateId,this.e=new Set;const n=new Map(t.map(o=>[o.templateId,o]));this.d=[];for(const o of e){const r=n.get(o.templateId);if(!r)throw new Error(`Table cell renderer for template id ${o.templateId} not found.`);this.d.push(r)}}renderTemplate(e){const t=d(e,u(".monaco-table-tr")),s=[],n=[];for(let r=0;r<this.f.length;r++){const h=this.d[r],l=d(t,u(".monaco-table-td",{"data-col-index":r}));l.style.width=`${this.g(r)}px`,s.push(l),n.push(h.renderTemplate(l))}const o={container:e,cellContainers:s,cellTemplateData:n};return this.e.add(o),o}renderElement(e,t,s,n){for(let o=0;o<this.f.length;o++){const h=this.f[o].project(e);this.d[o].renderElement(h,t,s.cellTemplateData[o],n)}}disposeElement(e,t,s,n){for(let o=0;o<this.f.length;o++){const r=this.d[o];if(r.disposeElement){const l=this.f[o].project(e);r.disposeElement(l,t,s.cellTemplateData[o],n)}}}disposeTemplate(e){for(let t=0;t<this.f.length;t++)this.d[t].disposeTemplate(e.cellTemplateData[t]);w(e.container),this.e.delete(e)}layoutColumn(e,t){for(const{cellContainers:s}of this.e)s[e].style.width=`${t}px`}}function E(a){return{getHeight(e){return a.getHeight(e)},getTemplateId(){return c.TemplateId}}}class k extends b{get minimumSize(){return this.column.minimumWidth??120}get maximumSize(){return this.column.maximumWidth??Number.POSITIVE_INFINITY}get onDidChange(){return this.column.onDidChangeWidthConstraints??p.None}constructor(e,t){super(),this.column=e,this.g=t,this.f=new N,this.onDidLayout=this.f.event,this.element=u(".monaco-table-th",{"data-col-index":t},e.label),e.tooltip&&this.B(v().setupManagedHover(y("mouse"),this.element,e.tooltip))}layout(e){this.f.fire([this.g,e])}}class f{static{this.d=0}get onDidChangeFocus(){return this.g.onDidChangeFocus}get onDidChangeSelection(){return this.g.onDidChangeSelection}get onDidScroll(){return this.g.onDidScroll}get onMouseClick(){return this.g.onMouseClick}get onMouseDblClick(){return this.g.onMouseDblClick}get onMouseMiddleClick(){return this.g.onMouseMiddleClick}get onPointer(){return this.g.onPointer}get onMouseUp(){return this.g.onMouseUp}get onMouseDown(){return this.g.onMouseDown}get onMouseOver(){return this.g.onMouseOver}get onMouseMove(){return this.g.onMouseMove}get onMouseOut(){return this.g.onMouseOut}get onTouchStart(){return this.g.onTouchStart}get onTap(){return this.g.onTap}get onContextMenu(){return this.g.onContextMenu}get onDidFocus(){return this.g.onDidFocus}get onDidBlur(){return this.g.onDidBlur}get scrollTop(){return this.g.scrollTop}set scrollTop(e){this.g.scrollTop=e}get scrollLeft(){return this.g.scrollLeft}set scrollLeft(e){this.g.scrollLeft=e}get scrollHeight(){return this.g.scrollHeight}get renderHeight(){return this.g.renderHeight}get onDidDispose(){return this.g.onDidDispose}constructor(e,t,s,n,o,r){this.p=s,this.q=n,this.domId=`table_id_${++f.d}`,this.k=new F,this.m=0,this.o=0,this.domNode=d(t,u(`.monaco-table.${this.domId}`));const h=n.map((i,g)=>this.k.add(new k(i,g))),l={size:h.reduce((i,g)=>i+g.column.weight,0),views:h.map(i=>({size:i.column.weight,view:i}))};this.f=this.k.add(new I(this.domNode,{orientation:1,scrollbarVisibility:2,getSashOrthogonalSize:()=>this.o,descriptor:l})),this.f.el.style.height=`${s.headerRowHeight}px`,this.f.el.style.lineHeight=`${s.headerRowHeight}px`;const m=new c(n,o,i=>this.f.getViewSize(i));this.g=this.k.add(new S(e,this.domNode,E(s),[m],r)),p.any(...h.map(i=>i.onDidLayout))(([i,g])=>m.layoutColumn(i,g),null,this.k),this.f.onDidSashReset(i=>{const g=n.reduce((T,D)=>T+D.weight,0),M=n[i].weight/g*this.m;this.f.resizeView(i,M)},null,this.k),this.j=x(this.domNode),this.style(H)}getColumnLabels(){return this.q.map(e=>e.label)}resizeColumn(e,t){const s=Math.round(t/100*this.m);this.f.resizeView(e,s)}updateOptions(e){this.g.updateOptions(e)}splice(e,t,s=[]){this.g.splice(e,t,s)}rerender(){this.g.rerender()}row(e){return this.g.element(e)}indexOf(e){return this.g.indexOf(e)}get length(){return this.g.length}getHTMLElement(){return this.domNode}layout(e,t){e=e??C(this.domNode),t=t??$(this.domNode),this.m=t,this.o=e,this.f.layout(t);const s=e-this.p.headerRowHeight;this.g.getHTMLElement().style.height=`${s}px`,this.g.layout(s,t)}triggerTypeNavigation(){this.g.triggerTypeNavigation()}style(e){const t=[];t.push(`.monaco-table.${this.domId} > .monaco-split-view2 .monaco-sash.vertical::before {
-			top: ${this.p.headerRowHeight+1}px;
-			height: calc(100% - ${this.p.headerRowHeight}px);
-		}`),this.j.textContent=t.join(`
-`),this.g.style(e)}domFocus(){this.g.domFocus()}setAnchor(e){this.g.setAnchor(e)}getAnchor(){return this.g.getAnchor()}getSelectedElements(){return this.g.getSelectedElements()}setSelection(e,t){this.g.setSelection(e,t)}getSelection(){return this.g.getSelection()}setFocus(e,t){this.g.setFocus(e,t)}focusNext(e=1,t=!1,s){this.g.focusNext(e,t,s)}focusPrevious(e=1,t=!1,s){this.g.focusPrevious(e,t,s)}focusNextPage(e){return this.g.focusNextPage(e)}focusPreviousPage(e){return this.g.focusPreviousPage(e)}focusFirst(e){this.g.focusFirst(e)}focusLast(e){this.g.focusLast(e)}getFocus(){return this.g.getFocus()}getFocusedElements(){return this.g.getFocusedElements()}getRelativeTop(e){return this.g.getRelativeTop(e)}reveal(e,t){this.g.reveal(e,t)}dispose(){this.k.dispose()}}export{f as $k0};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { $, append, clearNode, getContentHeight, getContentWidth } from "../../dom.js";
+import { createStyleSheet } from "../../domStylesheets.js";
+import { getBaseLayerHoverDelegate } from "../hover/hoverDelegate2.js";
+import { getDefaultHoverDelegate } from "../hover/hoverDelegateFactory.js";
+import { List, unthemedListStyles } from "../list/listWidget.js";
+import { SplitView } from "../splitview/splitview.js";
+import { Emitter, Event } from "../../../common/event.js";
+import { Disposable, DisposableStore } from "../../../common/lifecycle.js";
+import "./table.css";
+class TableListRenderer {
+  static {
+    __name(this, "TableListRenderer");
+  }
+  static {
+    this.TemplateId = "row";
+  }
+  constructor(columns, renderers, getColumnSize) {
+    this.columns = columns;
+    this.getColumnSize = getColumnSize;
+    this.templateId = TableListRenderer.TemplateId;
+    this.renderedTemplates = /* @__PURE__ */ new Set();
+    const rendererMap = new Map(renderers.map((r) => [r.templateId, r]));
+    this.renderers = [];
+    for (const column of columns) {
+      const renderer = rendererMap.get(column.templateId);
+      if (!renderer) {
+        throw new Error(`Table cell renderer for template id ${column.templateId} not found.`);
+      }
+      this.renderers.push(renderer);
+    }
+  }
+  renderTemplate(container) {
+    const rowContainer = append(container, $(".monaco-table-tr"));
+    const cellContainers = [];
+    const cellTemplateData = [];
+    for (let i = 0; i < this.columns.length; i++) {
+      const renderer = this.renderers[i];
+      const cellContainer = append(rowContainer, $(".monaco-table-td", { "data-col-index": i }));
+      cellContainer.style.width = `${this.getColumnSize(i)}px`;
+      cellContainers.push(cellContainer);
+      cellTemplateData.push(renderer.renderTemplate(cellContainer));
+    }
+    const result = { container, cellContainers, cellTemplateData };
+    this.renderedTemplates.add(result);
+    return result;
+  }
+  renderElement(element, index, templateData, renderDetails) {
+    for (let i = 0; i < this.columns.length; i++) {
+      const column = this.columns[i];
+      const cell = column.project(element);
+      const renderer = this.renderers[i];
+      renderer.renderElement(cell, index, templateData.cellTemplateData[i], renderDetails);
+    }
+  }
+  disposeElement(element, index, templateData, renderDetails) {
+    for (let i = 0; i < this.columns.length; i++) {
+      const renderer = this.renderers[i];
+      if (renderer.disposeElement) {
+        const column = this.columns[i];
+        const cell = column.project(element);
+        renderer.disposeElement(cell, index, templateData.cellTemplateData[i], renderDetails);
+      }
+    }
+  }
+  disposeTemplate(templateData) {
+    for (let i = 0; i < this.columns.length; i++) {
+      const renderer = this.renderers[i];
+      renderer.disposeTemplate(templateData.cellTemplateData[i]);
+    }
+    clearNode(templateData.container);
+    this.renderedTemplates.delete(templateData);
+  }
+  layoutColumn(index, size) {
+    for (const { cellContainers } of this.renderedTemplates) {
+      cellContainers[index].style.width = `${size}px`;
+    }
+  }
+}
+function asListVirtualDelegate(delegate) {
+  return {
+    getHeight(row) {
+      return delegate.getHeight(row);
+    },
+    getTemplateId() {
+      return TableListRenderer.TemplateId;
+    }
+  };
+}
+__name(asListVirtualDelegate, "asListVirtualDelegate");
+class ColumnHeader extends Disposable {
+  static {
+    __name(this, "ColumnHeader");
+  }
+  get minimumSize() {
+    return this.column.minimumWidth ?? 120;
+  }
+  get maximumSize() {
+    return this.column.maximumWidth ?? Number.POSITIVE_INFINITY;
+  }
+  get onDidChange() {
+    return this.column.onDidChangeWidthConstraints ?? Event.None;
+  }
+  constructor(column, index) {
+    super();
+    this.column = column;
+    this.index = index;
+    this._onDidLayout = new Emitter();
+    this.onDidLayout = this._onDidLayout.event;
+    this.element = $(".monaco-table-th", { "data-col-index": index }, column.label);
+    if (column.tooltip) {
+      this._register(getBaseLayerHoverDelegate().setupManagedHover(getDefaultHoverDelegate("mouse"), this.element, column.tooltip));
+    }
+  }
+  layout(size) {
+    this._onDidLayout.fire([this.index, size]);
+  }
+}
+class Table {
+  static {
+    __name(this, "Table");
+  }
+  static {
+    this.InstanceCount = 0;
+  }
+  get onDidChangeFocus() {
+    return this.list.onDidChangeFocus;
+  }
+  get onDidChangeSelection() {
+    return this.list.onDidChangeSelection;
+  }
+  get onDidScroll() {
+    return this.list.onDidScroll;
+  }
+  get onMouseClick() {
+    return this.list.onMouseClick;
+  }
+  get onMouseDblClick() {
+    return this.list.onMouseDblClick;
+  }
+  get onMouseMiddleClick() {
+    return this.list.onMouseMiddleClick;
+  }
+  get onPointer() {
+    return this.list.onPointer;
+  }
+  get onMouseUp() {
+    return this.list.onMouseUp;
+  }
+  get onMouseDown() {
+    return this.list.onMouseDown;
+  }
+  get onMouseOver() {
+    return this.list.onMouseOver;
+  }
+  get onMouseMove() {
+    return this.list.onMouseMove;
+  }
+  get onMouseOut() {
+    return this.list.onMouseOut;
+  }
+  get onTouchStart() {
+    return this.list.onTouchStart;
+  }
+  get onTap() {
+    return this.list.onTap;
+  }
+  get onContextMenu() {
+    return this.list.onContextMenu;
+  }
+  get onDidFocus() {
+    return this.list.onDidFocus;
+  }
+  get onDidBlur() {
+    return this.list.onDidBlur;
+  }
+  get scrollTop() {
+    return this.list.scrollTop;
+  }
+  set scrollTop(scrollTop) {
+    this.list.scrollTop = scrollTop;
+  }
+  get scrollLeft() {
+    return this.list.scrollLeft;
+  }
+  set scrollLeft(scrollLeft) {
+    this.list.scrollLeft = scrollLeft;
+  }
+  get scrollHeight() {
+    return this.list.scrollHeight;
+  }
+  get renderHeight() {
+    return this.list.renderHeight;
+  }
+  get onDidDispose() {
+    return this.list.onDidDispose;
+  }
+  constructor(user, container, virtualDelegate, columns, renderers, _options) {
+    this.virtualDelegate = virtualDelegate;
+    this.columns = columns;
+    this.domId = `table_id_${++Table.InstanceCount}`;
+    this.disposables = new DisposableStore();
+    this.cachedWidth = 0;
+    this.cachedHeight = 0;
+    this.domNode = append(container, $(`.monaco-table.${this.domId}`));
+    const headers = columns.map((c, i) => this.disposables.add(new ColumnHeader(c, i)));
+    const descriptor = {
+      size: headers.reduce((a, b) => a + b.column.weight, 0),
+      views: headers.map((view) => ({ size: view.column.weight, view }))
+    };
+    this.splitview = this.disposables.add(new SplitView(this.domNode, {
+      orientation: 1,
+      scrollbarVisibility: 2,
+      getSashOrthogonalSize: /* @__PURE__ */ __name(() => this.cachedHeight, "getSashOrthogonalSize"),
+      descriptor
+    }));
+    this.splitview.el.style.height = `${virtualDelegate.headerRowHeight}px`;
+    this.splitview.el.style.lineHeight = `${virtualDelegate.headerRowHeight}px`;
+    const renderer = new TableListRenderer(columns, renderers, (i) => this.splitview.getViewSize(i));
+    this.list = this.disposables.add(new List(user, this.domNode, asListVirtualDelegate(virtualDelegate), [renderer], _options));
+    Event.any(...headers.map((h) => h.onDidLayout))(([index, size]) => renderer.layoutColumn(index, size), null, this.disposables);
+    this.splitview.onDidSashReset((index) => {
+      const totalWeight = columns.reduce((r, c) => r + c.weight, 0);
+      const size = columns[index].weight / totalWeight * this.cachedWidth;
+      this.splitview.resizeView(index, size);
+    }, null, this.disposables);
+    this.styleElement = createStyleSheet(this.domNode);
+    this.style(unthemedListStyles);
+  }
+  getColumnLabels() {
+    return this.columns.map((c) => c.label);
+  }
+  resizeColumn(index, percentage) {
+    const size = Math.round(percentage / 100 * this.cachedWidth);
+    this.splitview.resizeView(index, size);
+  }
+  updateOptions(options) {
+    this.list.updateOptions(options);
+  }
+  splice(start, deleteCount, elements = []) {
+    this.list.splice(start, deleteCount, elements);
+  }
+  rerender() {
+    this.list.rerender();
+  }
+  row(index) {
+    return this.list.element(index);
+  }
+  indexOf(element) {
+    return this.list.indexOf(element);
+  }
+  get length() {
+    return this.list.length;
+  }
+  getHTMLElement() {
+    return this.domNode;
+  }
+  layout(height, width) {
+    height = height ?? getContentHeight(this.domNode);
+    width = width ?? getContentWidth(this.domNode);
+    this.cachedWidth = width;
+    this.cachedHeight = height;
+    this.splitview.layout(width);
+    const listHeight = height - this.virtualDelegate.headerRowHeight;
+    this.list.getHTMLElement().style.height = `${listHeight}px`;
+    this.list.layout(listHeight, width);
+  }
+  triggerTypeNavigation() {
+    this.list.triggerTypeNavigation();
+  }
+  style(styles) {
+    const content = [];
+    content.push(`.monaco-table.${this.domId} > .monaco-split-view2 .monaco-sash.vertical::before {
+			top: ${this.virtualDelegate.headerRowHeight + 1}px;
+			height: calc(100% - ${this.virtualDelegate.headerRowHeight}px);
+		}`);
+    this.styleElement.textContent = content.join("\n");
+    this.list.style(styles);
+  }
+  domFocus() {
+    this.list.domFocus();
+  }
+  setAnchor(index) {
+    this.list.setAnchor(index);
+  }
+  getAnchor() {
+    return this.list.getAnchor();
+  }
+  getSelectedElements() {
+    return this.list.getSelectedElements();
+  }
+  setSelection(indexes, browserEvent) {
+    this.list.setSelection(indexes, browserEvent);
+  }
+  getSelection() {
+    return this.list.getSelection();
+  }
+  setFocus(indexes, browserEvent) {
+    this.list.setFocus(indexes, browserEvent);
+  }
+  focusNext(n = 1, loop = false, browserEvent) {
+    this.list.focusNext(n, loop, browserEvent);
+  }
+  focusPrevious(n = 1, loop = false, browserEvent) {
+    this.list.focusPrevious(n, loop, browserEvent);
+  }
+  focusNextPage(browserEvent) {
+    return this.list.focusNextPage(browserEvent);
+  }
+  focusPreviousPage(browserEvent) {
+    return this.list.focusPreviousPage(browserEvent);
+  }
+  focusFirst(browserEvent) {
+    this.list.focusFirst(browserEvent);
+  }
+  focusLast(browserEvent) {
+    this.list.focusLast(browserEvent);
+  }
+  getFocus() {
+    return this.list.getFocus();
+  }
+  getFocusedElements() {
+    return this.list.getFocusedElements();
+  }
+  getRelativeTop(index) {
+    return this.list.getRelativeTop(index);
+  }
+  reveal(index, relativeTop) {
+    this.list.reveal(index, relativeTop);
+  }
+  dispose() {
+    this.disposables.dispose();
+  }
+}
+export {
+  Table
+};
+//# sourceMappingURL=tableWidget.js.map

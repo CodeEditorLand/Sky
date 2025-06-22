@@ -1,1 +1,303 @@
-import{Schemas as R}from"../../../../base/common/network.js";import{$El as _}from"../../../../platform/configuration/common/configuration.js";import{$Sy as y}from"../../../../platform/extensions/common/extensions.js";import{$3n as E}from"../../../../platform/log/common/log.js";import{$KX as D}from"../../environment/common/environmentService.js";import{$JO as O}from"./extensionHostKind.js";import{$NNb as P}from"./extensionManifestPropertiesService.js";import{$MO as k,$NO as K,$OO as $}from"./extensionRunningLocation.js";var v=function(g,n,i,t){var s=arguments.length,o=s<3?n:t===null?t=Object.getOwnPropertyDescriptor(n,i):t,r;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")o=Reflect.decorate(g,n,i,t);else for(var d=g.length-1;d>=0;d--)(r=g[d])&&(o=(s<3?r(o):s>3?r(n,i,o):r(n,i))||o);return s>3&&o&&Object.defineProperty(n,i,o),o},L=function(g,n){return function(i,t){n(i,t,g)}};let W=class{get maxLocalProcessAffinity(){return this.b}get maxLocalWebWorkerAffinity(){return this.c}constructor(n,i,t,s,o,r){this.d=n,this.f=i,this.g=t,this.h=s,this.i=o,this.j=r,this.a=new y,this.b=0,this.c=0}set(n,i){this.a.set(n,i)}readExtensionKinds(n){return n.isUnderDevelopment&&this.g.extensionDevelopmentKind?this.g.extensionDevelopmentKind:this.j.getExtensionKind(n)}getRunningLocation(n){return this.a.get(n)||null}filterByRunningLocation(n,i){return w(n,this.a,t=>i.equals(t))}filterByExtensionHostKind(n,i){return w(n,this.a,t=>t.kind===i)}filterByExtensionHostManager(n,i){return w(n,this.a,t=>i.representsRunningLocation(t))}k(n,i,t){const s=new y;for(const f of n)(f.main||f.browser)&&s.set(f.identifier,f);for(const f of this.d.getAllExtensionDescriptions())if(f.main||f.browser){const a=this.a.get(f.identifier);a&&a.kind===i&&s.set(f.identifier,f)}const o=new y;let r=0;for(const[f,a]of s)o.set(a.identifier,++r);const d=(f,a)=>{for(const[u,e]of o)e===f&&o.set(u,a)};for(const[f,a]of s){if(!a.extensionDependencies)continue;const u=o.get(a.identifier);for(const e of a.extensionDependencies){const c=o.get(e);c&&c!==u&&d(c,u)}}const l=new Map;let h=0;for(const[f,a]of s){const u=this.a.get(a.identifier);if(u){const e=o.get(a.identifier);l.set(e,u.affinity),h=Math.max(h,u.affinity)}}if(!this.g.isExtensionDevelopment){const f=this.h.getValue("extensions.experimental.affinity")||{},a=Object.keys(f),u=new Map;for(const e of a){const c=f[e];if(typeof c!="number"||c<=0||Math.floor(c)!==c){this.i.info(`Ignoring configured affinity for '${e}' because the value is not a positive integer.`);continue}const p=o.get(e);if(!p)continue;const x=l.get(p);if(x){u.set(c,x);continue}const b=u.get(c);if(b){l.set(p,b);continue}if(!t){this.i.info(`Ignoring configured affinity for '${e}' because extension host(s) are already running. Reload window.`);continue}const A=++h;u.set(c,A),l.set(p,A)}}const m=new y;for(const f of n){const a=o.get(f.identifier)||0,u=l.get(a)||0;m.set(f.identifier,u)}if(h>0&&t)for(let f=1;f<=h;f++){const a=[];for(const u of n)m.get(u.identifier)===f&&a.push(u.identifier);this.i.info(`Placing extension(s) ${a.map(u=>u.value).join(", ")} on a separate extension host.`)}return{affinities:m,maxAffinity:h}}computeRunningLocation(n,i,t){return this.l(this.a,n,i,t).runningLocation}l(n,i,t,s){i=i.filter(e=>!n.has(e.identifier)),t=t.filter(e=>!n.has(e.identifier));const o=O(i,t,e=>this.readExtensionKinds(e),(e,c,p,x,b)=>this.f.pickExtensionHostKind(e,c,p,x,b)),r=new y;for(const e of i)r.set(e.identifier,e);for(const e of t)r.set(e.identifier,e);const d=new y,l=[],h=[];for(const[e,c]of o){let p=null;if(c===1){const x=r.get(e);x&&l.push(x)}else if(c===2){const x=r.get(e);x&&h.push(x)}else c===3&&(p=new $);d.set(e,p)}const{affinities:m,maxAffinity:f}=this.k(l,1,s);for(const e of l){const c=m.get(e.identifier)||0;d.set(e.identifier,new k(c))}const{affinities:a,maxAffinity:u}=this.k(h,2,s);for(const e of h){const c=a.get(e.identifier)||0;d.set(e.identifier,new K(c))}for(const[e,c]of n)c&&d.set(e,c);return{runningLocation:d,maxLocalProcessAffinity:f,maxLocalWebWorkerAffinity:u}}initializeRunningLocation(n,i){const{runningLocation:t,maxLocalProcessAffinity:s,maxLocalWebWorkerAffinity:o}=this.l(this.a,n,i,!0);this.a=t,this.b=s,this.c=o}deltaExtensions(n,i){const t=new y;for(const s of i){const o=s;t.set(o,this.a.get(o)||null),this.a.delete(o)}return this.m(n),t}m(n){const i=[],t=[];for(const r of n){const d=this.readExtensionKinds(r),l=r.extensionLocation.scheme===R.vscodeRemote,h=this.f.pickExtensionHostKind(r.identifier,d,!l,l,0);let m=null;h===1?i.push(r):h===2?t.push(r):h===3&&(m=new $),this.a.set(r.identifier,m)}const{affinities:s}=this.k(i,1,!1);for(const r of i){const d=s.get(r.identifier)||0;this.a.set(r.identifier,new k(d))}const{affinities:o}=this.k(t,2,!1);for(const r of t){const d=o.get(r.identifier)||0;this.a.set(r.identifier,new K(d))}}};W=v([L(2,D),L(3,_),L(4,E),L(5,P)],W);function w(g,n,i){return g.filter(t=>{const s=n.get(t.identifier);return s&&i(s)})}function z(g,n,i){return g.filter(t=>{const s=n.get(t);return s&&i(s)})}export{W as $kAc,w as $lAc,z as $mAc};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { Schemas } from "../../../../base/common/network.js";
+import { IConfigurationService } from "../../../../platform/configuration/common/configuration.js";
+import { ExtensionIdentifierMap } from "../../../../platform/extensions/common/extensions.js";
+import { ILogService } from "../../../../platform/log/common/log.js";
+import { IWorkbenchEnvironmentService } from "../../environment/common/environmentService.js";
+import { determineExtensionHostKinds } from "./extensionHostKind.js";
+import { IExtensionManifestPropertiesService } from "./extensionManifestPropertiesService.js";
+import { LocalProcessRunningLocation, LocalWebWorkerRunningLocation, RemoteRunningLocation } from "./extensionRunningLocation.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+let ExtensionRunningLocationTracker = class ExtensionRunningLocationTracker2 {
+  static {
+    __name(this, "ExtensionRunningLocationTracker");
+  }
+  get maxLocalProcessAffinity() {
+    return this._maxLocalProcessAffinity;
+  }
+  get maxLocalWebWorkerAffinity() {
+    return this._maxLocalWebWorkerAffinity;
+  }
+  constructor(_registry, _extensionHostKindPicker, _environmentService, _configurationService, _logService, _extensionManifestPropertiesService) {
+    this._registry = _registry;
+    this._extensionHostKindPicker = _extensionHostKindPicker;
+    this._environmentService = _environmentService;
+    this._configurationService = _configurationService;
+    this._logService = _logService;
+    this._extensionManifestPropertiesService = _extensionManifestPropertiesService;
+    this._runningLocation = new ExtensionIdentifierMap();
+    this._maxLocalProcessAffinity = 0;
+    this._maxLocalWebWorkerAffinity = 0;
+  }
+  set(extensionId, runningLocation) {
+    this._runningLocation.set(extensionId, runningLocation);
+  }
+  readExtensionKinds(extensionDescription) {
+    if (extensionDescription.isUnderDevelopment && this._environmentService.extensionDevelopmentKind) {
+      return this._environmentService.extensionDevelopmentKind;
+    }
+    return this._extensionManifestPropertiesService.getExtensionKind(extensionDescription);
+  }
+  getRunningLocation(extensionId) {
+    return this._runningLocation.get(extensionId) || null;
+  }
+  filterByRunningLocation(extensions, desiredRunningLocation) {
+    return filterExtensionDescriptions(extensions, this._runningLocation, (extRunningLocation) => desiredRunningLocation.equals(extRunningLocation));
+  }
+  filterByExtensionHostKind(extensions, desiredExtensionHostKind) {
+    return filterExtensionDescriptions(extensions, this._runningLocation, (extRunningLocation) => extRunningLocation.kind === desiredExtensionHostKind);
+  }
+  filterByExtensionHostManager(extensions, extensionHostManager) {
+    return filterExtensionDescriptions(extensions, this._runningLocation, (extRunningLocation) => extensionHostManager.representsRunningLocation(extRunningLocation));
+  }
+  _computeAffinity(inputExtensions, extensionHostKind, isInitialAllocation) {
+    const extensions = new ExtensionIdentifierMap();
+    for (const extension of inputExtensions) {
+      if (extension.main || extension.browser) {
+        extensions.set(extension.identifier, extension);
+      }
+    }
+    for (const extension of this._registry.getAllExtensionDescriptions()) {
+      if (extension.main || extension.browser) {
+        const runningLocation = this._runningLocation.get(extension.identifier);
+        if (runningLocation && runningLocation.kind === extensionHostKind) {
+          extensions.set(extension.identifier, extension);
+        }
+      }
+    }
+    const groups = new ExtensionIdentifierMap();
+    let groupNumber = 0;
+    for (const [_, extension] of extensions) {
+      groups.set(extension.identifier, ++groupNumber);
+    }
+    const changeGroup = /* @__PURE__ */ __name((from, to) => {
+      for (const [key, group] of groups) {
+        if (group === from) {
+          groups.set(key, to);
+        }
+      }
+    }, "changeGroup");
+    for (const [_, extension] of extensions) {
+      if (!extension.extensionDependencies) {
+        continue;
+      }
+      const myGroup = groups.get(extension.identifier);
+      for (const depId of extension.extensionDependencies) {
+        const depGroup = groups.get(depId);
+        if (!depGroup) {
+          continue;
+        }
+        if (depGroup === myGroup) {
+          continue;
+        }
+        changeGroup(depGroup, myGroup);
+      }
+    }
+    const resultingAffinities = /* @__PURE__ */ new Map();
+    let lastAffinity = 0;
+    for (const [_, extension] of extensions) {
+      const runningLocation = this._runningLocation.get(extension.identifier);
+      if (runningLocation) {
+        const group = groups.get(extension.identifier);
+        resultingAffinities.set(group, runningLocation.affinity);
+        lastAffinity = Math.max(lastAffinity, runningLocation.affinity);
+      }
+    }
+    if (!this._environmentService.isExtensionDevelopment) {
+      const configuredAffinities = this._configurationService.getValue("extensions.experimental.affinity") || {};
+      const configuredExtensionIds = Object.keys(configuredAffinities);
+      const configuredAffinityToResultingAffinity = /* @__PURE__ */ new Map();
+      for (const extensionId of configuredExtensionIds) {
+        const configuredAffinity = configuredAffinities[extensionId];
+        if (typeof configuredAffinity !== "number" || configuredAffinity <= 0 || Math.floor(configuredAffinity) !== configuredAffinity) {
+          this._logService.info(`Ignoring configured affinity for '${extensionId}' because the value is not a positive integer.`);
+          continue;
+        }
+        const group = groups.get(extensionId);
+        if (!group) {
+          continue;
+        }
+        const affinity1 = resultingAffinities.get(group);
+        if (affinity1) {
+          configuredAffinityToResultingAffinity.set(configuredAffinity, affinity1);
+          continue;
+        }
+        const affinity2 = configuredAffinityToResultingAffinity.get(configuredAffinity);
+        if (affinity2) {
+          resultingAffinities.set(group, affinity2);
+          continue;
+        }
+        if (!isInitialAllocation) {
+          this._logService.info(`Ignoring configured affinity for '${extensionId}' because extension host(s) are already running. Reload window.`);
+          continue;
+        }
+        const affinity3 = ++lastAffinity;
+        configuredAffinityToResultingAffinity.set(configuredAffinity, affinity3);
+        resultingAffinities.set(group, affinity3);
+      }
+    }
+    const result = new ExtensionIdentifierMap();
+    for (const extension of inputExtensions) {
+      const group = groups.get(extension.identifier) || 0;
+      const affinity = resultingAffinities.get(group) || 0;
+      result.set(extension.identifier, affinity);
+    }
+    if (lastAffinity > 0 && isInitialAllocation) {
+      for (let affinity = 1; affinity <= lastAffinity; affinity++) {
+        const extensionIds = [];
+        for (const extension of inputExtensions) {
+          if (result.get(extension.identifier) === affinity) {
+            extensionIds.push(extension.identifier);
+          }
+        }
+        this._logService.info(`Placing extension(s) ${extensionIds.map((e) => e.value).join(", ")} on a separate extension host.`);
+      }
+    }
+    return { affinities: result, maxAffinity: lastAffinity };
+  }
+  computeRunningLocation(localExtensions, remoteExtensions, isInitialAllocation) {
+    return this._doComputeRunningLocation(this._runningLocation, localExtensions, remoteExtensions, isInitialAllocation).runningLocation;
+  }
+  _doComputeRunningLocation(existingRunningLocation, localExtensions, remoteExtensions, isInitialAllocation) {
+    localExtensions = localExtensions.filter((extension) => !existingRunningLocation.has(extension.identifier));
+    remoteExtensions = remoteExtensions.filter((extension) => !existingRunningLocation.has(extension.identifier));
+    const extensionHostKinds = determineExtensionHostKinds(localExtensions, remoteExtensions, (extension) => this.readExtensionKinds(extension), (extensionId, extensionKinds, isInstalledLocally, isInstalledRemotely, preference) => this._extensionHostKindPicker.pickExtensionHostKind(extensionId, extensionKinds, isInstalledLocally, isInstalledRemotely, preference));
+    const extensions = new ExtensionIdentifierMap();
+    for (const extension of localExtensions) {
+      extensions.set(extension.identifier, extension);
+    }
+    for (const extension of remoteExtensions) {
+      extensions.set(extension.identifier, extension);
+    }
+    const result = new ExtensionIdentifierMap();
+    const localProcessExtensions = [];
+    const localWebWorkerExtensions = [];
+    for (const [extensionIdKey, extensionHostKind] of extensionHostKinds) {
+      let runningLocation = null;
+      if (extensionHostKind === 1) {
+        const extensionDescription = extensions.get(extensionIdKey);
+        if (extensionDescription) {
+          localProcessExtensions.push(extensionDescription);
+        }
+      } else if (extensionHostKind === 2) {
+        const extensionDescription = extensions.get(extensionIdKey);
+        if (extensionDescription) {
+          localWebWorkerExtensions.push(extensionDescription);
+        }
+      } else if (extensionHostKind === 3) {
+        runningLocation = new RemoteRunningLocation();
+      }
+      result.set(extensionIdKey, runningLocation);
+    }
+    const { affinities, maxAffinity } = this._computeAffinity(localProcessExtensions, 1, isInitialAllocation);
+    for (const extension of localProcessExtensions) {
+      const affinity = affinities.get(extension.identifier) || 0;
+      result.set(extension.identifier, new LocalProcessRunningLocation(affinity));
+    }
+    const { affinities: localWebWorkerAffinities, maxAffinity: maxLocalWebWorkerAffinity } = this._computeAffinity(localWebWorkerExtensions, 2, isInitialAllocation);
+    for (const extension of localWebWorkerExtensions) {
+      const affinity = localWebWorkerAffinities.get(extension.identifier) || 0;
+      result.set(extension.identifier, new LocalWebWorkerRunningLocation(affinity));
+    }
+    for (const [extensionIdKey, runningLocation] of existingRunningLocation) {
+      if (runningLocation) {
+        result.set(extensionIdKey, runningLocation);
+      }
+    }
+    return { runningLocation: result, maxLocalProcessAffinity: maxAffinity, maxLocalWebWorkerAffinity };
+  }
+  initializeRunningLocation(localExtensions, remoteExtensions) {
+    const { runningLocation, maxLocalProcessAffinity, maxLocalWebWorkerAffinity } = this._doComputeRunningLocation(this._runningLocation, localExtensions, remoteExtensions, true);
+    this._runningLocation = runningLocation;
+    this._maxLocalProcessAffinity = maxLocalProcessAffinity;
+    this._maxLocalWebWorkerAffinity = maxLocalWebWorkerAffinity;
+  }
+  /**
+   * Returns the running locations for the removed extensions.
+   */
+  deltaExtensions(toAdd, toRemove) {
+    const removedRunningLocation = new ExtensionIdentifierMap();
+    for (const extensionId of toRemove) {
+      const extensionKey = extensionId;
+      removedRunningLocation.set(extensionKey, this._runningLocation.get(extensionKey) || null);
+      this._runningLocation.delete(extensionKey);
+    }
+    this._updateRunningLocationForAddedExtensions(toAdd);
+    return removedRunningLocation;
+  }
+  /**
+   * Update `this._runningLocation` with running locations for newly enabled/installed extensions.
+   */
+  _updateRunningLocationForAddedExtensions(toAdd) {
+    const localProcessExtensions = [];
+    const localWebWorkerExtensions = [];
+    for (const extension of toAdd) {
+      const extensionKind = this.readExtensionKinds(extension);
+      const isRemote = extension.extensionLocation.scheme === Schemas.vscodeRemote;
+      const extensionHostKind = this._extensionHostKindPicker.pickExtensionHostKind(
+        extension.identifier,
+        extensionKind,
+        !isRemote,
+        isRemote,
+        0
+        /* ExtensionRunningPreference.None */
+      );
+      let runningLocation = null;
+      if (extensionHostKind === 1) {
+        localProcessExtensions.push(extension);
+      } else if (extensionHostKind === 2) {
+        localWebWorkerExtensions.push(extension);
+      } else if (extensionHostKind === 3) {
+        runningLocation = new RemoteRunningLocation();
+      }
+      this._runningLocation.set(extension.identifier, runningLocation);
+    }
+    const { affinities } = this._computeAffinity(localProcessExtensions, 1, false);
+    for (const extension of localProcessExtensions) {
+      const affinity = affinities.get(extension.identifier) || 0;
+      this._runningLocation.set(extension.identifier, new LocalProcessRunningLocation(affinity));
+    }
+    const { affinities: webWorkerExtensionsAffinities } = this._computeAffinity(localWebWorkerExtensions, 2, false);
+    for (const extension of localWebWorkerExtensions) {
+      const affinity = webWorkerExtensionsAffinities.get(extension.identifier) || 0;
+      this._runningLocation.set(extension.identifier, new LocalWebWorkerRunningLocation(affinity));
+    }
+  }
+};
+ExtensionRunningLocationTracker = __decorate([
+  __param(2, IWorkbenchEnvironmentService),
+  __param(3, IConfigurationService),
+  __param(4, ILogService),
+  __param(5, IExtensionManifestPropertiesService)
+], ExtensionRunningLocationTracker);
+function filterExtensionDescriptions(extensions, runningLocation, predicate) {
+  return extensions.filter((ext) => {
+    const extRunningLocation = runningLocation.get(ext.identifier);
+    return extRunningLocation && predicate(extRunningLocation);
+  });
+}
+__name(filterExtensionDescriptions, "filterExtensionDescriptions");
+function filterExtensionIdentifiers(extensions, runningLocation, predicate) {
+  return extensions.filter((ext) => {
+    const extRunningLocation = runningLocation.get(ext);
+    return extRunningLocation && predicate(extRunningLocation);
+  });
+}
+__name(filterExtensionIdentifiers, "filterExtensionIdentifiers");
+export {
+  ExtensionRunningLocationTracker,
+  filterExtensionDescriptions,
+  filterExtensionIdentifiers
+};
+//# sourceMappingURL=extensionRunningLocationTracker.js.map

@@ -1,1 +1,991 @@
-import{$nc as tt}from"../../../common/arrays.js";import{$wh as D,$Mh as N}from"../../../common/async.js";import{$Ji as $}from"../../../common/buffer.js";import{CancellationToken as et,$pf as nt}from"../../../common/cancellation.js";import{$tm as it}from"../../../common/decorators.js";import{$qb as L,$Ab as M}from"../../../common/errors.js";import{$df as k,Event as p,$jf as st,$mf as R}from"../../../common/event.js";import{$Cb as rt}from"../../../common/functional.js";import{$ud as _,$qd as K,$td as ot}from"../../../common/lifecycle.js";import{$ym as V}from"../../../common/marshalling.js";import*as W from"../../../common/strings.js";import{$ed as F,$9c as ct}from"../../../common/types.js";var J,Q,C,q=function(t,e,n,s){var i,r=arguments.length,o=r<3?e:null===s?s=Object.getOwnPropertyDescriptor(e,n):s;if("object"==typeof Reflect&&"function"==typeof Reflect.decorate)o=Reflect.decorate(t,e,n,s);else for(var a=t.length-1;a>=0;a--)(i=t[a])&&(o=(r<3?i(o):r>3?i(e,n,o):i(e,n))||o);return r>3&&o&&Object.defineProperty(e,n,o),o};function A(t){switch(t){case 100:return"req";case 101:return"cancel";case 102:return"subscribe";case 103:return"unsubscribe"}}function B(t){switch(t){case 200:return"init";case 201:return"reply:";case 202:case 203:return"replyErr:";case 204:return"event:"}}function P(t){let e=0;for(let n=0;;n+=7){const s=t.read(1);if(e|=(127&s.buffer[0])<<n,!(128&s.buffer[0]))return e}}!function(t){t[t.Promise=100]="Promise",t[t.PromiseCancel=101]="PromiseCancel",t[t.EventListen=102]="EventListen",t[t.EventDispose=103]="EventDispose"}(J||(J={})),function(t){t[t.Initialize=200]="Initialize",t[t.PromiseSuccess=201]="PromiseSuccess",t[t.PromiseError=202]="PromiseError",t[t.PromiseErrorObj=203]="PromiseErrorObj",t[t.EventFire=204]="EventFire"}(Q||(Q={})),function(t){t[t.Uninitialized=0]="Uninitialized",t[t.Idle=1]="Idle"}(C||(C={}));const ht=w(0);function j(t,e){if(0===e)return void t.write(ht);let n=0;for(let t=e;0!==t;t>>>=7)n++;const s=$.alloc(n);for(let t=0;0!==e;t++)s.buffer[t]=127&e,(e>>>=7)>0&&(s.buffer[t]|=128);t.write(s)}class O{constructor(t){this.b=t,this.a=0}read(t){const e=this.b.slice(this.a,this.a+t);return this.a+=e.byteLength,e}}class U{constructor(){this.a=[]}get buffer(){return $.concat(this.a)}write(t){this.a.push(t)}}var g;function w(t){const e=$.alloc(1);return e.writeUInt8(t,0),e}!function(t){t[t.Undefined=0]="Undefined",t[t.String=1]="String",t[t.Buffer=2]="Buffer",t[t.VSBuffer=3]="VSBuffer",t[t.Array=4]="Array",t[t.Object=5]="Object",t[t.Int=6]="Int"}(g||(g={}));const S={Undefined:w(g.Undefined),String:w(g.String),Buffer:w(g.Buffer),VSBuffer:w(g.VSBuffer),Array:w(g.Array),Object:w(g.Object),Uint:w(g.Int)};function I(t,e){if(typeof e>"u")t.write(S.Undefined);else if("string"==typeof e){const n=$.fromString(e);t.write(S.String),j(t,n.byteLength),t.write(n)}else if($.isNativeBuffer(e)){const n=$.wrap(e);t.write(S.Buffer),j(t,n.byteLength),t.write(n)}else if(e instanceof $)t.write(S.VSBuffer),j(t,e.byteLength),t.write(e);else if(Array.isArray(e)){t.write(S.Array),j(t,e.length);for(const n of e)I(t,n)}else if("number"==typeof e&&(0|e)===e)t.write(S.Uint),j(t,e);else{const n=$.fromString(JSON.stringify(e));t.write(S.Object),j(t,n.byteLength),t.write(n)}}function E(t){switch(t.read(1).readUInt8(0)){case g.Undefined:return;case g.String:return t.read(P(t)).toString();case g.Buffer:return t.read(P(t)).buffer;case g.VSBuffer:return t.read(P(t));case g.Array:{const e=P(t),n=[];for(let s=0;s<e;s++)n.push(E(t));return n}case g.Object:return JSON.parse(t.read(P(t)).toString());case g.Int:return P(t)}}class T{constructor(t,e,n=null,s=1e3){this.h=t,this.j=e,this.k=n,this.l=s,this.b=new Map,this.d=new Map,this.g=new Map,this.f=this.h.onMessage((t=>this.q(t))),this.m({type:200})}registerChannel(t,e){this.b.set(t,e),setTimeout((()=>this.w(t)),0)}m(t){switch(t.type){case 200:{const e=this.o([t.type]);return void this.k?.logOutgoing(e,0,1,B(t.type))}case 201:case 202:case 204:case 203:{const e=this.o([t.type,t.id],t.data);return void this.k?.logOutgoing(e,t.id,1,B(t.type),t.data)}}}o(t,e=void 0){const n=new U;return I(n,t),I(n,e),this.p(n.buffer)}p(t){try{return this.h.send(t),t.byteLength}catch{return 0}}q(t){const e=new O(t),n=E(e),s=E(e),i=n[0];switch(i){case 100:return this.k?.logIncoming(t.byteLength,n[1],1,`${A(i)}: ${n[2]}.${n[3]}`,s),this.s({type:i,id:n[1],channelName:n[2],name:n[3],arg:s});case 102:return this.k?.logIncoming(t.byteLength,n[1],1,`${A(i)}: ${n[2]}.${n[3]}`,s),this.t({type:i,id:n[1],channelName:n[2],name:n[3],arg:s});case 101:case 103:return this.k?.logIncoming(t.byteLength,n[1],1,`${A(i)}`),this.u({type:i,id:n[1]})}}s(t){const e=this.b.get(t.channelName);if(!e)return void this.v(t);const n=new nt;let s;try{s=e.call(this.j,t.name,t.arg,n.token)}catch(t){s=Promise.reject(t)}const i=t.id;s.then((t=>{this.m({id:i,data:t,type:201})}),(t=>{t instanceof Error?this.m({id:i,data:{message:t.message,name:t.name,stack:t.stack?t.stack.split("\n"):void 0},type:202}):this.m({id:i,data:t,type:203})})).finally((()=>{r.dispose(),this.d.delete(t.id)}));const r=ot((()=>n.cancel()));this.d.set(t.id,r)}t(t){const e=this.b.get(t.channelName);if(!e)return void this.v(t);const n=t.id,s=e.listen(this.j,t.name,t.arg)((t=>this.m({id:n,data:t,type:204})));this.d.set(t.id,s)}u(t){const e=this.d.get(t.id);e&&(e.dispose(),this.d.delete(t.id))}v(t){let e=this.g.get(t.channelName);e||(e=[],this.g.set(t.channelName,e));const n=setTimeout((()=>{100===t.type&&this.m({id:t.id,data:{name:"Unknown channel",message:`Channel name '${t.channelName}' timed out after ${this.l}ms`,stack:void 0},type:202})}),this.l);e.push({request:t,timeoutTimer:n})}w(t){const e=this.g.get(t);if(e){for(const t of e)switch(clearTimeout(t.timeoutTimer),t.request.type){case 100:this.s(t.request);break;case 102:this.t(t.request)}this.g.delete(t)}}dispose(){this.f&&(this.f.dispose(),this.f=null),K(this.d.values()),this.d.clear()}}var G,Z;!function(t){t[t.LocalSide=0]="LocalSide",t[t.OtherSide=1]="OtherSide"}(G||(G={}));class z{constructor(t,e=null){this.l=t,this.a=!1,this.b=C.Uninitialized,this.d=new Set,this.f=new Map,this.g=0,this.k=new k,this.onDidInitialize=this.k.event,this.h=this.l.onMessage((t=>this.s(t))),this.j=e}getChannel(t){const e=this;return{call:(n,s,i)=>e.a?Promise.reject(new L):e.m(t,n,s,i),listen:(n,s)=>e.a?p.None:e.o(t,n,s)}}m(t,e,n,s=et.None){const i=this.g++,r={id:i,type:100,channelName:t,name:e,arg:n};if(s.isCancellationRequested)return Promise.reject(new L);let o,a;return new Promise(((t,e)=>{if(s.isCancellationRequested)return e(new L);const n=()=>{this.f.set(i,(n=>{switch(n.type){case 201:this.f.delete(i),t(n.data);break;case 202:{this.f.delete(i);const t=new Error(n.data.message);t.stack=Array.isArray(n.data.stack)?n.data.stack.join("\n"):n.data.stack,t.name=n.data.name,e(t);break}case 203:this.f.delete(i),e(n.data)}})),this.p(r)};let c=null;this.b===C.Idle?n():(c=D((t=>this.u())),c.then((()=>{c=null,n()})));const h=()=>{c?(c.cancel(),c=null):this.p({id:i,type:101}),e(new L)};o=s.onCancellationRequested(h),a={dispose:rt((()=>{h(),o.dispose()}))},this.d.add(a)})).finally((()=>{o?.dispose(),this.d.delete(a)}))}o(t,e,n){const s=this.g++,i={id:s,type:102,channelName:t,name:e,arg:n};let r=null;const o=new k({onWillAddFirstListener:()=>{const t=()=>{this.d.add(o),this.p(i)};this.b===C.Idle?t():(r=D((t=>this.u())),r.then((()=>{r=null,t()})))},onDidRemoveLastListener:()=>{r?(r.cancel(),r=null):(this.d.delete(o),this.p({id:s,type:103}))}});return this.f.set(s,(t=>o.fire(t.data))),o.event}p(t){switch(t.type){case 100:case 102:{const e=this.q([t.type,t.id,t.channelName,t.name],t.arg);return void this.j?.logOutgoing(e,t.id,0,`${A(t.type)}: ${t.channelName}.${t.name}`,t.arg)}case 101:case 103:{const e=this.q([t.type,t.id]);return void this.j?.logOutgoing(e,t.id,0,A(t.type))}}}q(t,e=void 0){const n=new U;return I(n,t),I(n,e),this.r(n.buffer)}r(t){try{return this.l.send(t),t.byteLength}catch{return 0}}s(t){const e=new O(t),n=E(e),s=E(e),i=n[0];switch(i){case 200:return this.j?.logIncoming(t.byteLength,0,0,B(i)),this.t({type:n[0]});case 201:case 202:case 204:case 203:return this.j?.logIncoming(t.byteLength,n[1],0,B(i),s),this.t({type:n[0],id:n[1],data:s})}}t(t){if(200===t.type)return this.b=C.Idle,void this.k.fire();this.f.get(t.id)?.(t)}get onDidInitializePromise(){return p.toPromise(this.onDidInitialize)}u(){return this.b===C.Idle?Promise.resolve():this.onDidInitializePromise}dispose(){this.a=!0,this.h&&(this.h.dispose(),this.h=null),K(this.d.values()),this.d.clear()}}q([it],z.prototype,"onDidInitializePromise",null);class St{get connections(){const t=[];return this.f.forEach((e=>t.push(e))),t}constructor(t,e,n){this.a=new Map,this.f=new Set,this.g=new k,this.onDidAddConnection=this.g.event,this.h=new k,this.onDidRemoveConnection=this.h.event,this.j=new _,this.j.add(t((({protocol:t,onDidClientDisconnect:s})=>{const i=p.once(t.onMessage);this.j.add(i((i=>{const r=E(new O(i)),o=new T(t,r,e,n),a=new z(t,e);this.a.forEach(((t,e)=>o.registerChannel(e,t)));const c={channelServer:o,channelClient:a,ctx:r};this.f.add(c),this.g.fire(c),this.j.add(s((()=>{o.dispose(),a.dispose(),this.f.delete(c),this.h.fire(c)})))})))})))}getChannel(t,e){const n=this;return{call(s,i,r){let o;if(F(e)){const t=tt(n.connections.filter(e));o=t?Promise.resolve(t):p.toPromise(p.filter(n.onDidAddConnection,e))}else o=e.routeCall(n,s,i);return H(o.then((e=>e.channelClient.getChannel(t)))).call(s,i,r)},listen(s,i){if(F(e))return n.k(t,e,s,i);return H(e.routeEvent(n,s,i).then((e=>e.channelClient.getChannel(t)))).listen(s,i)}}}k(t,e,n,s){const i=this;let r;const o=new k({onWillAddFirstListener:()=>{r=new _;const a=new st,c=new Map,h=e=>{const i=e.channelClient.getChannel(t).listen(n,s),r=a.add(i);c.set(e,r)};i.connections.filter(e).forEach(h),p.filter(i.onDidAddConnection,e)(h,void 0,r),i.onDidRemoveConnection((t=>{const e=c.get(t);e&&(e.dispose(),c.delete(t))}),void 0,r),a.event(o.fire,o,r),r.add(a)},onDidRemoveLastListener:()=>{r?.dispose(),r=void 0}});return i.j.add(o),o.event}registerChannel(t,e){this.a.set(t,e);for(const n of this.f)n.channelServer.registerChannel(t,e)}dispose(){this.j.dispose();for(const t of this.f)t.channelClient.dispose(),t.channelServer.dispose();this.f.clear(),this.a.clear(),this.g.dispose(),this.h.dispose()}}class Ct{constructor(t,e,n=null){const s=new U;I(s,e),t.send(s.buffer),this.a=new z(t,n),this.d=new T(t,e,n)}getChannel(t){return this.a.getChannel(t)}registerChannel(t,e){this.d.registerChannel(t,e)}dispose(){this.a.dispose(),this.d.dispose()}}function H(t){return{call:(e,n,s)=>t.then((t=>t.call(e,n,s))),listen(e,n){const s=new R;return t.then((t=>s.input=t.listen(e,n))),s.event}}}function Pt(t){let e=!1;return{call:(n,s,i)=>e?t.call(n,s,i):N(0).then((()=>e=!0)).then((()=>t.call(n,s,i))),listen(n,s){if(e)return t.listen(n,s);const i=new R;return N(0).then((()=>e=!0)).then((()=>i.input=t.listen(n,s))),i.event}}}class jt{constructor(t){this.a=t}routeCall(t){return this.b(t)}routeEvent(t){return this.b(t)}async b(t){for(const e of t.connections)if(await Promise.resolve(this.a(e.ctx)))return Promise.resolve(e);return await p.toPromise(t.onDidAddConnection),await this.b(t)}}!function(t){function e(t){return"o"===t[0]&&"n"===t[1]&&W.$4f(t.charCodeAt(2))}function n(t){return/^onDynamic/.test(t)&&W.$4f(t.charCodeAt(9))}t.fromService=function(t,s,i){const r=t,o=i&&i.disableMarshalling,a=new Map;for(const t in r)e(t)&&a.set(t,p.buffer(r[t],!0,void 0,s));return new class{listen(t,i,o){const c=a.get(i);if(c)return c;const h=r[i];if("function"==typeof h){if(n(i))return h.call(r,o);if(e(i))return a.set(i,p.buffer(r[i],!0,void 0,s)),a.get(i)}throw new M(`Event not found: ${i}`)}call(t,e,n){const s=r[e];if("function"==typeof s){if(!o&&Array.isArray(n))for(let t=0;t<n.length;t++)n[t]=V(n[t]);let t=s.apply(r,n);return t instanceof Promise||(t=Promise.resolve(t)),t}throw new M(`Method not found: ${e}`)}}},t.toService=function(t,s){const i=s&&s.disableMarshalling;return new Proxy({},{get(r,o){if("string"==typeof o)return s?.properties?.has(o)?s.properties.get(o):n(o)?function(e){return t.listen(o,e)}:e(o)?t.listen(o):async function(...e){let n;n=s&&!ct(s.context)?[s.context,...e]:e;const r=await t.call(o,n);return i?r:V(r)};throw new M(`Property not found: ${String(o)}`)}})}}(Z||(Z={}));const lt=[["#2977B1","#FC802D","#34A13A","#D3282F","#9366BA"],["#8B564C","#E177C0","#7F7F7F","#BBBE3D","#2EBECD"]];function X(t){if(Array.isArray(t))return t;if(t&&"object"==typeof t&&"function"==typeof t.toString){const e=t.toString();if("[object Object]"!==e)return e}return t}function ft(t){return Array.isArray(t)?t.map(X):X(t)}function Y(t,e,n,s,i,r,o){o=ft(o);const a=lt[i],c=a[s%a.length];let h=[`%c[${t}]%c[${String(e).padStart(7," ")}]%c[len: ${String(n).padStart(5," ")}]%c${String(s).padStart(5," ")} - ${r}`,"color: darkgreen","color: grey","color: grey",`color: ${c}`];/\($/.test(r)?(h=h.concat(o),h.push(")")):h.push(o)}class At{constructor(t,e){this.d=t,this.f=e,this.a=0,this.b=0}logOutgoing(t,e,n,s,i){this.b+=t,Y(this.d,this.b,t,e,n,s,i)}logIncoming(t,e,n,s,i){this.a+=t,Y(this.f,this.a,t,e,n,s,i)}}export{U as $Am,I as $Bm,E as $Cm,T as $Dm,z as $Em,St as $Fm,Ct as $Gm,H as $Hm,Pt as $Im,jt as $Jm,At as $Km,O as $zm,Z as ProxyChannel,G as RequestInitiator};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { getRandomElement } from "../../../common/arrays.js";
+import { createCancelablePromise, timeout } from "../../../common/async.js";
+import { VSBuffer } from "../../../common/buffer.js";
+import { CancellationToken, CancellationTokenSource } from "../../../common/cancellation.js";
+import { memoize } from "../../../common/decorators.js";
+import { CancellationError, ErrorNoTelemetry } from "../../../common/errors.js";
+import { Emitter, Event, EventMultiplexer, Relay } from "../../../common/event.js";
+import { createSingleCallFunction } from "../../../common/functional.js";
+import { DisposableStore, dispose, toDisposable } from "../../../common/lifecycle.js";
+import { revive } from "../../../common/marshalling.js";
+import * as strings from "../../../common/strings.js";
+import { isFunction, isUndefinedOrNull } from "../../../common/types.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var RequestType;
+(function(RequestType2) {
+  RequestType2[RequestType2["Promise"] = 100] = "Promise";
+  RequestType2[RequestType2["PromiseCancel"] = 101] = "PromiseCancel";
+  RequestType2[RequestType2["EventListen"] = 102] = "EventListen";
+  RequestType2[RequestType2["EventDispose"] = 103] = "EventDispose";
+})(RequestType || (RequestType = {}));
+function requestTypeToStr(type) {
+  switch (type) {
+    case 100:
+      return "req";
+    case 101:
+      return "cancel";
+    case 102:
+      return "subscribe";
+    case 103:
+      return "unsubscribe";
+  }
+}
+__name(requestTypeToStr, "requestTypeToStr");
+var ResponseType;
+(function(ResponseType2) {
+  ResponseType2[ResponseType2["Initialize"] = 200] = "Initialize";
+  ResponseType2[ResponseType2["PromiseSuccess"] = 201] = "PromiseSuccess";
+  ResponseType2[ResponseType2["PromiseError"] = 202] = "PromiseError";
+  ResponseType2[ResponseType2["PromiseErrorObj"] = 203] = "PromiseErrorObj";
+  ResponseType2[ResponseType2["EventFire"] = 204] = "EventFire";
+})(ResponseType || (ResponseType = {}));
+function responseTypeToStr(type) {
+  switch (type) {
+    case 200:
+      return `init`;
+    case 201:
+      return `reply:`;
+    case 202:
+    case 203:
+      return `replyErr:`;
+    case 204:
+      return `event:`;
+  }
+}
+__name(responseTypeToStr, "responseTypeToStr");
+var State;
+(function(State2) {
+  State2[State2["Uninitialized"] = 0] = "Uninitialized";
+  State2[State2["Idle"] = 1] = "Idle";
+})(State || (State = {}));
+function readIntVQL(reader) {
+  let value = 0;
+  for (let n = 0; ; n += 7) {
+    const next = reader.read(1);
+    value |= (next.buffer[0] & 127) << n;
+    if (!(next.buffer[0] & 128)) {
+      return value;
+    }
+  }
+}
+__name(readIntVQL, "readIntVQL");
+const vqlZero = createOneByteBuffer(0);
+function writeInt32VQL(writer, value) {
+  if (value === 0) {
+    writer.write(vqlZero);
+    return;
+  }
+  let len = 0;
+  for (let v2 = value; v2 !== 0; v2 = v2 >>> 7) {
+    len++;
+  }
+  const scratch = VSBuffer.alloc(len);
+  for (let i = 0; value !== 0; i++) {
+    scratch.buffer[i] = value & 127;
+    value = value >>> 7;
+    if (value > 0) {
+      scratch.buffer[i] |= 128;
+    }
+  }
+  writer.write(scratch);
+}
+__name(writeInt32VQL, "writeInt32VQL");
+class BufferReader {
+  static {
+    __name(this, "BufferReader");
+  }
+  constructor(buffer) {
+    this.buffer = buffer;
+    this.pos = 0;
+  }
+  read(bytes) {
+    const result = this.buffer.slice(this.pos, this.pos + bytes);
+    this.pos += result.byteLength;
+    return result;
+  }
+}
+class BufferWriter {
+  static {
+    __name(this, "BufferWriter");
+  }
+  constructor() {
+    this.buffers = [];
+  }
+  get buffer() {
+    return VSBuffer.concat(this.buffers);
+  }
+  write(buffer) {
+    this.buffers.push(buffer);
+  }
+}
+var DataType;
+(function(DataType2) {
+  DataType2[DataType2["Undefined"] = 0] = "Undefined";
+  DataType2[DataType2["String"] = 1] = "String";
+  DataType2[DataType2["Buffer"] = 2] = "Buffer";
+  DataType2[DataType2["VSBuffer"] = 3] = "VSBuffer";
+  DataType2[DataType2["Array"] = 4] = "Array";
+  DataType2[DataType2["Object"] = 5] = "Object";
+  DataType2[DataType2["Int"] = 6] = "Int";
+})(DataType || (DataType = {}));
+function createOneByteBuffer(value) {
+  const result = VSBuffer.alloc(1);
+  result.writeUInt8(value, 0);
+  return result;
+}
+__name(createOneByteBuffer, "createOneByteBuffer");
+const BufferPresets = {
+  Undefined: createOneByteBuffer(DataType.Undefined),
+  String: createOneByteBuffer(DataType.String),
+  Buffer: createOneByteBuffer(DataType.Buffer),
+  VSBuffer: createOneByteBuffer(DataType.VSBuffer),
+  Array: createOneByteBuffer(DataType.Array),
+  Object: createOneByteBuffer(DataType.Object),
+  Uint: createOneByteBuffer(DataType.Int)
+};
+function serialize(writer, data) {
+  if (typeof data === "undefined") {
+    writer.write(BufferPresets.Undefined);
+  } else if (typeof data === "string") {
+    const buffer = VSBuffer.fromString(data);
+    writer.write(BufferPresets.String);
+    writeInt32VQL(writer, buffer.byteLength);
+    writer.write(buffer);
+  } else if (VSBuffer.isNativeBuffer(data)) {
+    const buffer = VSBuffer.wrap(data);
+    writer.write(BufferPresets.Buffer);
+    writeInt32VQL(writer, buffer.byteLength);
+    writer.write(buffer);
+  } else if (data instanceof VSBuffer) {
+    writer.write(BufferPresets.VSBuffer);
+    writeInt32VQL(writer, data.byteLength);
+    writer.write(data);
+  } else if (Array.isArray(data)) {
+    writer.write(BufferPresets.Array);
+    writeInt32VQL(writer, data.length);
+    for (const el of data) {
+      serialize(writer, el);
+    }
+  } else if (typeof data === "number" && (data | 0) === data) {
+    writer.write(BufferPresets.Uint);
+    writeInt32VQL(writer, data);
+  } else {
+    const buffer = VSBuffer.fromString(JSON.stringify(data));
+    writer.write(BufferPresets.Object);
+    writeInt32VQL(writer, buffer.byteLength);
+    writer.write(buffer);
+  }
+}
+__name(serialize, "serialize");
+function deserialize(reader) {
+  const type = reader.read(1).readUInt8(0);
+  switch (type) {
+    case DataType.Undefined:
+      return void 0;
+    case DataType.String:
+      return reader.read(readIntVQL(reader)).toString();
+    case DataType.Buffer:
+      return reader.read(readIntVQL(reader)).buffer;
+    case DataType.VSBuffer:
+      return reader.read(readIntVQL(reader));
+    case DataType.Array: {
+      const length = readIntVQL(reader);
+      const result = [];
+      for (let i = 0; i < length; i++) {
+        result.push(deserialize(reader));
+      }
+      return result;
+    }
+    case DataType.Object:
+      return JSON.parse(reader.read(readIntVQL(reader)).toString());
+    case DataType.Int:
+      return readIntVQL(reader);
+  }
+}
+__name(deserialize, "deserialize");
+class ChannelServer {
+  static {
+    __name(this, "ChannelServer");
+  }
+  constructor(protocol, ctx, logger = null, timeoutDelay = 1e3) {
+    this.protocol = protocol;
+    this.ctx = ctx;
+    this.logger = logger;
+    this.timeoutDelay = timeoutDelay;
+    this.channels = /* @__PURE__ */ new Map();
+    this.activeRequests = /* @__PURE__ */ new Map();
+    this.pendingRequests = /* @__PURE__ */ new Map();
+    this.protocolListener = this.protocol.onMessage((msg) => this.onRawMessage(msg));
+    this.sendResponse({
+      type: 200
+      /* ResponseType.Initialize */
+    });
+  }
+  registerChannel(channelName, channel) {
+    this.channels.set(channelName, channel);
+    setTimeout(() => this.flushPendingRequests(channelName), 0);
+  }
+  sendResponse(response) {
+    switch (response.type) {
+      case 200: {
+        const msgLength = this.send([response.type]);
+        this.logger?.logOutgoing(msgLength, 0, 1, responseTypeToStr(response.type));
+        return;
+      }
+      case 201:
+      case 202:
+      case 204:
+      case 203: {
+        const msgLength = this.send([response.type, response.id], response.data);
+        this.logger?.logOutgoing(msgLength, response.id, 1, responseTypeToStr(response.type), response.data);
+        return;
+      }
+    }
+  }
+  send(header, body = void 0) {
+    const writer = new BufferWriter();
+    serialize(writer, header);
+    serialize(writer, body);
+    return this.sendBuffer(writer.buffer);
+  }
+  sendBuffer(message) {
+    try {
+      this.protocol.send(message);
+      return message.byteLength;
+    } catch (err) {
+      return 0;
+    }
+  }
+  onRawMessage(message) {
+    const reader = new BufferReader(message);
+    const header = deserialize(reader);
+    const body = deserialize(reader);
+    const type = header[0];
+    switch (type) {
+      case 100:
+        this.logger?.logIncoming(message.byteLength, header[1], 1, `${requestTypeToStr(type)}: ${header[2]}.${header[3]}`, body);
+        return this.onPromise({ type, id: header[1], channelName: header[2], name: header[3], arg: body });
+      case 102:
+        this.logger?.logIncoming(message.byteLength, header[1], 1, `${requestTypeToStr(type)}: ${header[2]}.${header[3]}`, body);
+        return this.onEventListen({ type, id: header[1], channelName: header[2], name: header[3], arg: body });
+      case 101:
+        this.logger?.logIncoming(message.byteLength, header[1], 1, `${requestTypeToStr(type)}`);
+        return this.disposeActiveRequest({ type, id: header[1] });
+      case 103:
+        this.logger?.logIncoming(message.byteLength, header[1], 1, `${requestTypeToStr(type)}`);
+        return this.disposeActiveRequest({ type, id: header[1] });
+    }
+  }
+  onPromise(request) {
+    const channel = this.channels.get(request.channelName);
+    if (!channel) {
+      this.collectPendingRequest(request);
+      return;
+    }
+    const cancellationTokenSource = new CancellationTokenSource();
+    let promise;
+    try {
+      promise = channel.call(this.ctx, request.name, request.arg, cancellationTokenSource.token);
+    } catch (err) {
+      promise = Promise.reject(err);
+    }
+    const id = request.id;
+    promise.then((data) => {
+      this.sendResponse({
+        id,
+        data,
+        type: 201
+        /* ResponseType.PromiseSuccess */
+      });
+    }, (err) => {
+      if (err instanceof Error) {
+        this.sendResponse({
+          id,
+          data: {
+            message: err.message,
+            name: err.name,
+            stack: err.stack ? err.stack.split("\n") : void 0
+          },
+          type: 202
+          /* ResponseType.PromiseError */
+        });
+      } else {
+        this.sendResponse({
+          id,
+          data: err,
+          type: 203
+          /* ResponseType.PromiseErrorObj */
+        });
+      }
+    }).finally(() => {
+      disposable.dispose();
+      this.activeRequests.delete(request.id);
+    });
+    const disposable = toDisposable(() => cancellationTokenSource.cancel());
+    this.activeRequests.set(request.id, disposable);
+  }
+  onEventListen(request) {
+    const channel = this.channels.get(request.channelName);
+    if (!channel) {
+      this.collectPendingRequest(request);
+      return;
+    }
+    const id = request.id;
+    const event = channel.listen(this.ctx, request.name, request.arg);
+    const disposable = event((data) => this.sendResponse({
+      id,
+      data,
+      type: 204
+      /* ResponseType.EventFire */
+    }));
+    this.activeRequests.set(request.id, disposable);
+  }
+  disposeActiveRequest(request) {
+    const disposable = this.activeRequests.get(request.id);
+    if (disposable) {
+      disposable.dispose();
+      this.activeRequests.delete(request.id);
+    }
+  }
+  collectPendingRequest(request) {
+    let pendingRequests = this.pendingRequests.get(request.channelName);
+    if (!pendingRequests) {
+      pendingRequests = [];
+      this.pendingRequests.set(request.channelName, pendingRequests);
+    }
+    const timer = setTimeout(() => {
+      console.error(`Unknown channel: ${request.channelName}`);
+      if (request.type === 100) {
+        this.sendResponse({
+          id: request.id,
+          data: { name: "Unknown channel", message: `Channel name '${request.channelName}' timed out after ${this.timeoutDelay}ms`, stack: void 0 },
+          type: 202
+          /* ResponseType.PromiseError */
+        });
+      }
+    }, this.timeoutDelay);
+    pendingRequests.push({ request, timeoutTimer: timer });
+  }
+  flushPendingRequests(channelName) {
+    const requests = this.pendingRequests.get(channelName);
+    if (requests) {
+      for (const request of requests) {
+        clearTimeout(request.timeoutTimer);
+        switch (request.request.type) {
+          case 100:
+            this.onPromise(request.request);
+            break;
+          case 102:
+            this.onEventListen(request.request);
+            break;
+        }
+      }
+      this.pendingRequests.delete(channelName);
+    }
+  }
+  dispose() {
+    if (this.protocolListener) {
+      this.protocolListener.dispose();
+      this.protocolListener = null;
+    }
+    dispose(this.activeRequests.values());
+    this.activeRequests.clear();
+  }
+}
+var RequestInitiator;
+(function(RequestInitiator2) {
+  RequestInitiator2[RequestInitiator2["LocalSide"] = 0] = "LocalSide";
+  RequestInitiator2[RequestInitiator2["OtherSide"] = 1] = "OtherSide";
+})(RequestInitiator || (RequestInitiator = {}));
+class ChannelClient {
+  static {
+    __name(this, "ChannelClient");
+  }
+  constructor(protocol, logger = null) {
+    this.protocol = protocol;
+    this.isDisposed = false;
+    this.state = State.Uninitialized;
+    this.activeRequests = /* @__PURE__ */ new Set();
+    this.handlers = /* @__PURE__ */ new Map();
+    this.lastRequestId = 0;
+    this._onDidInitialize = new Emitter();
+    this.onDidInitialize = this._onDidInitialize.event;
+    this.protocolListener = this.protocol.onMessage((msg) => this.onBuffer(msg));
+    this.logger = logger;
+  }
+  getChannel(channelName) {
+    const that = this;
+    return {
+      call(command, arg, cancellationToken) {
+        if (that.isDisposed) {
+          return Promise.reject(new CancellationError());
+        }
+        return that.requestPromise(channelName, command, arg, cancellationToken);
+      },
+      listen(event, arg) {
+        if (that.isDisposed) {
+          return Event.None;
+        }
+        return that.requestEvent(channelName, event, arg);
+      }
+    };
+  }
+  requestPromise(channelName, name, arg, cancellationToken = CancellationToken.None) {
+    const id = this.lastRequestId++;
+    const type = 100;
+    const request = { id, type, channelName, name, arg };
+    if (cancellationToken.isCancellationRequested) {
+      return Promise.reject(new CancellationError());
+    }
+    let disposable;
+    let disposableWithRequestCancel;
+    const result = new Promise((c, e) => {
+      if (cancellationToken.isCancellationRequested) {
+        return e(new CancellationError());
+      }
+      const doRequest = /* @__PURE__ */ __name(() => {
+        const handler = /* @__PURE__ */ __name((response) => {
+          switch (response.type) {
+            case 201:
+              this.handlers.delete(id);
+              c(response.data);
+              break;
+            case 202: {
+              this.handlers.delete(id);
+              const error = new Error(response.data.message);
+              error.stack = Array.isArray(response.data.stack) ? response.data.stack.join("\n") : response.data.stack;
+              error.name = response.data.name;
+              e(error);
+              break;
+            }
+            case 203:
+              this.handlers.delete(id);
+              e(response.data);
+              break;
+          }
+        }, "handler");
+        this.handlers.set(id, handler);
+        this.sendRequest(request);
+      }, "doRequest");
+      let uninitializedPromise = null;
+      if (this.state === State.Idle) {
+        doRequest();
+      } else {
+        uninitializedPromise = createCancelablePromise((_) => this.whenInitialized());
+        uninitializedPromise.then(() => {
+          uninitializedPromise = null;
+          doRequest();
+        });
+      }
+      const cancel = /* @__PURE__ */ __name(() => {
+        if (uninitializedPromise) {
+          uninitializedPromise.cancel();
+          uninitializedPromise = null;
+        } else {
+          this.sendRequest({
+            id,
+            type: 101
+            /* RequestType.PromiseCancel */
+          });
+        }
+        e(new CancellationError());
+      }, "cancel");
+      disposable = cancellationToken.onCancellationRequested(cancel);
+      disposableWithRequestCancel = {
+        dispose: createSingleCallFunction(() => {
+          cancel();
+          disposable.dispose();
+        })
+      };
+      this.activeRequests.add(disposableWithRequestCancel);
+    });
+    return result.finally(() => {
+      disposable?.dispose();
+      this.activeRequests.delete(disposableWithRequestCancel);
+    });
+  }
+  requestEvent(channelName, name, arg) {
+    const id = this.lastRequestId++;
+    const type = 102;
+    const request = { id, type, channelName, name, arg };
+    let uninitializedPromise = null;
+    const emitter = new Emitter({
+      onWillAddFirstListener: /* @__PURE__ */ __name(() => {
+        const doRequest = /* @__PURE__ */ __name(() => {
+          this.activeRequests.add(emitter);
+          this.sendRequest(request);
+        }, "doRequest");
+        if (this.state === State.Idle) {
+          doRequest();
+        } else {
+          uninitializedPromise = createCancelablePromise((_) => this.whenInitialized());
+          uninitializedPromise.then(() => {
+            uninitializedPromise = null;
+            doRequest();
+          });
+        }
+      }, "onWillAddFirstListener"),
+      onDidRemoveLastListener: /* @__PURE__ */ __name(() => {
+        if (uninitializedPromise) {
+          uninitializedPromise.cancel();
+          uninitializedPromise = null;
+        } else {
+          this.activeRequests.delete(emitter);
+          this.sendRequest({
+            id,
+            type: 103
+            /* RequestType.EventDispose */
+          });
+        }
+      }, "onDidRemoveLastListener")
+    });
+    const handler = /* @__PURE__ */ __name((res) => emitter.fire(res.data), "handler");
+    this.handlers.set(id, handler);
+    return emitter.event;
+  }
+  sendRequest(request) {
+    switch (request.type) {
+      case 100:
+      case 102: {
+        const msgLength = this.send([request.type, request.id, request.channelName, request.name], request.arg);
+        this.logger?.logOutgoing(msgLength, request.id, 0, `${requestTypeToStr(request.type)}: ${request.channelName}.${request.name}`, request.arg);
+        return;
+      }
+      case 101:
+      case 103: {
+        const msgLength = this.send([request.type, request.id]);
+        this.logger?.logOutgoing(msgLength, request.id, 0, requestTypeToStr(request.type));
+        return;
+      }
+    }
+  }
+  send(header, body = void 0) {
+    const writer = new BufferWriter();
+    serialize(writer, header);
+    serialize(writer, body);
+    return this.sendBuffer(writer.buffer);
+  }
+  sendBuffer(message) {
+    try {
+      this.protocol.send(message);
+      return message.byteLength;
+    } catch (err) {
+      return 0;
+    }
+  }
+  onBuffer(message) {
+    const reader = new BufferReader(message);
+    const header = deserialize(reader);
+    const body = deserialize(reader);
+    const type = header[0];
+    switch (type) {
+      case 200:
+        this.logger?.logIncoming(message.byteLength, 0, 0, responseTypeToStr(type));
+        return this.onResponse({ type: header[0] });
+      case 201:
+      case 202:
+      case 204:
+      case 203:
+        this.logger?.logIncoming(message.byteLength, header[1], 0, responseTypeToStr(type), body);
+        return this.onResponse({ type: header[0], id: header[1], data: body });
+    }
+  }
+  onResponse(response) {
+    if (response.type === 200) {
+      this.state = State.Idle;
+      this._onDidInitialize.fire();
+      return;
+    }
+    const handler = this.handlers.get(response.id);
+    handler?.(response);
+  }
+  get onDidInitializePromise() {
+    return Event.toPromise(this.onDidInitialize);
+  }
+  whenInitialized() {
+    if (this.state === State.Idle) {
+      return Promise.resolve();
+    } else {
+      return this.onDidInitializePromise;
+    }
+  }
+  dispose() {
+    this.isDisposed = true;
+    if (this.protocolListener) {
+      this.protocolListener.dispose();
+      this.protocolListener = null;
+    }
+    dispose(this.activeRequests.values());
+    this.activeRequests.clear();
+  }
+}
+__decorate([
+  memoize
+], ChannelClient.prototype, "onDidInitializePromise", null);
+class IPCServer {
+  static {
+    __name(this, "IPCServer");
+  }
+  get connections() {
+    const result = [];
+    this._connections.forEach((ctx) => result.push(ctx));
+    return result;
+  }
+  constructor(onDidClientConnect, ipcLogger, timeoutDelay) {
+    this.channels = /* @__PURE__ */ new Map();
+    this._connections = /* @__PURE__ */ new Set();
+    this._onDidAddConnection = new Emitter();
+    this.onDidAddConnection = this._onDidAddConnection.event;
+    this._onDidRemoveConnection = new Emitter();
+    this.onDidRemoveConnection = this._onDidRemoveConnection.event;
+    this.disposables = new DisposableStore();
+    this.disposables.add(onDidClientConnect(({ protocol, onDidClientDisconnect }) => {
+      const onFirstMessage = Event.once(protocol.onMessage);
+      this.disposables.add(onFirstMessage((msg) => {
+        const reader = new BufferReader(msg);
+        const ctx = deserialize(reader);
+        const channelServer = new ChannelServer(protocol, ctx, ipcLogger, timeoutDelay);
+        const channelClient = new ChannelClient(protocol, ipcLogger);
+        this.channels.forEach((channel, name) => channelServer.registerChannel(name, channel));
+        const connection = { channelServer, channelClient, ctx };
+        this._connections.add(connection);
+        this._onDidAddConnection.fire(connection);
+        this.disposables.add(onDidClientDisconnect(() => {
+          channelServer.dispose();
+          channelClient.dispose();
+          this._connections.delete(connection);
+          this._onDidRemoveConnection.fire(connection);
+        }));
+      }));
+    }));
+  }
+  getChannel(channelName, routerOrClientFilter) {
+    const that = this;
+    return {
+      call(command, arg, cancellationToken) {
+        let connectionPromise;
+        if (isFunction(routerOrClientFilter)) {
+          const connection = getRandomElement(that.connections.filter(routerOrClientFilter));
+          connectionPromise = connection ? Promise.resolve(connection) : Event.toPromise(Event.filter(that.onDidAddConnection, routerOrClientFilter));
+        } else {
+          connectionPromise = routerOrClientFilter.routeCall(that, command, arg);
+        }
+        const channelPromise = connectionPromise.then((connection) => connection.channelClient.getChannel(channelName));
+        return getDelayedChannel(channelPromise).call(command, arg, cancellationToken);
+      },
+      listen(event, arg) {
+        if (isFunction(routerOrClientFilter)) {
+          return that.getMulticastEvent(channelName, routerOrClientFilter, event, arg);
+        }
+        const channelPromise = routerOrClientFilter.routeEvent(that, event, arg).then((connection) => connection.channelClient.getChannel(channelName));
+        return getDelayedChannel(channelPromise).listen(event, arg);
+      }
+    };
+  }
+  getMulticastEvent(channelName, clientFilter, eventName, arg) {
+    const that = this;
+    let disposables;
+    const emitter = new Emitter({
+      onWillAddFirstListener: /* @__PURE__ */ __name(() => {
+        disposables = new DisposableStore();
+        const eventMultiplexer = new EventMultiplexer();
+        const map = /* @__PURE__ */ new Map();
+        const onDidAddConnection = /* @__PURE__ */ __name((connection) => {
+          const channel = connection.channelClient.getChannel(channelName);
+          const event = channel.listen(eventName, arg);
+          const disposable = eventMultiplexer.add(event);
+          map.set(connection, disposable);
+        }, "onDidAddConnection");
+        const onDidRemoveConnection = /* @__PURE__ */ __name((connection) => {
+          const disposable = map.get(connection);
+          if (!disposable) {
+            return;
+          }
+          disposable.dispose();
+          map.delete(connection);
+        }, "onDidRemoveConnection");
+        that.connections.filter(clientFilter).forEach(onDidAddConnection);
+        Event.filter(that.onDidAddConnection, clientFilter)(onDidAddConnection, void 0, disposables);
+        that.onDidRemoveConnection(onDidRemoveConnection, void 0, disposables);
+        eventMultiplexer.event(emitter.fire, emitter, disposables);
+        disposables.add(eventMultiplexer);
+      }, "onWillAddFirstListener"),
+      onDidRemoveLastListener: /* @__PURE__ */ __name(() => {
+        disposables?.dispose();
+        disposables = void 0;
+      }, "onDidRemoveLastListener")
+    });
+    that.disposables.add(emitter);
+    return emitter.event;
+  }
+  registerChannel(channelName, channel) {
+    this.channels.set(channelName, channel);
+    for (const connection of this._connections) {
+      connection.channelServer.registerChannel(channelName, channel);
+    }
+  }
+  dispose() {
+    this.disposables.dispose();
+    for (const connection of this._connections) {
+      connection.channelClient.dispose();
+      connection.channelServer.dispose();
+    }
+    this._connections.clear();
+    this.channels.clear();
+    this._onDidAddConnection.dispose();
+    this._onDidRemoveConnection.dispose();
+  }
+}
+class IPCClient {
+  static {
+    __name(this, "IPCClient");
+  }
+  constructor(protocol, ctx, ipcLogger = null) {
+    const writer = new BufferWriter();
+    serialize(writer, ctx);
+    protocol.send(writer.buffer);
+    this.channelClient = new ChannelClient(protocol, ipcLogger);
+    this.channelServer = new ChannelServer(protocol, ctx, ipcLogger);
+  }
+  getChannel(channelName) {
+    return this.channelClient.getChannel(channelName);
+  }
+  registerChannel(channelName, channel) {
+    this.channelServer.registerChannel(channelName, channel);
+  }
+  dispose() {
+    this.channelClient.dispose();
+    this.channelServer.dispose();
+  }
+}
+function getDelayedChannel(promise) {
+  return {
+    call(command, arg, cancellationToken) {
+      return promise.then((c) => c.call(command, arg, cancellationToken));
+    },
+    listen(event, arg) {
+      const relay = new Relay();
+      promise.then((c) => relay.input = c.listen(event, arg));
+      return relay.event;
+    }
+  };
+}
+__name(getDelayedChannel, "getDelayedChannel");
+function getNextTickChannel(channel) {
+  let didTick = false;
+  return {
+    call(command, arg, cancellationToken) {
+      if (didTick) {
+        return channel.call(command, arg, cancellationToken);
+      }
+      return timeout(0).then(() => didTick = true).then(() => channel.call(command, arg, cancellationToken));
+    },
+    listen(event, arg) {
+      if (didTick) {
+        return channel.listen(event, arg);
+      }
+      const relay = new Relay();
+      timeout(0).then(() => didTick = true).then(() => relay.input = channel.listen(event, arg));
+      return relay.event;
+    }
+  };
+}
+__name(getNextTickChannel, "getNextTickChannel");
+class StaticRouter {
+  static {
+    __name(this, "StaticRouter");
+  }
+  constructor(fn) {
+    this.fn = fn;
+  }
+  routeCall(hub) {
+    return this.route(hub);
+  }
+  routeEvent(hub) {
+    return this.route(hub);
+  }
+  async route(hub) {
+    for (const connection of hub.connections) {
+      if (await Promise.resolve(this.fn(connection.ctx))) {
+        return Promise.resolve(connection);
+      }
+    }
+    await Event.toPromise(hub.onDidAddConnection);
+    return await this.route(hub);
+  }
+}
+var ProxyChannel;
+(function(ProxyChannel2) {
+  function fromService(service, disposables, options) {
+    const handler = service;
+    const disableMarshalling = options && options.disableMarshalling;
+    const mapEventNameToEvent = /* @__PURE__ */ new Map();
+    for (const key in handler) {
+      if (propertyIsEvent(key)) {
+        mapEventNameToEvent.set(key, Event.buffer(handler[key], true, void 0, disposables));
+      }
+    }
+    return new class {
+      listen(_, event, arg) {
+        const eventImpl = mapEventNameToEvent.get(event);
+        if (eventImpl) {
+          return eventImpl;
+        }
+        const target = handler[event];
+        if (typeof target === "function") {
+          if (propertyIsDynamicEvent(event)) {
+            return target.call(handler, arg);
+          }
+          if (propertyIsEvent(event)) {
+            mapEventNameToEvent.set(event, Event.buffer(handler[event], true, void 0, disposables));
+            return mapEventNameToEvent.get(event);
+          }
+        }
+        throw new ErrorNoTelemetry(`Event not found: ${event}`);
+      }
+      call(_, command, args) {
+        const target = handler[command];
+        if (typeof target === "function") {
+          if (!disableMarshalling && Array.isArray(args)) {
+            for (let i = 0; i < args.length; i++) {
+              args[i] = revive(args[i]);
+            }
+          }
+          let res = target.apply(handler, args);
+          if (!(res instanceof Promise)) {
+            res = Promise.resolve(res);
+          }
+          return res;
+        }
+        throw new ErrorNoTelemetry(`Method not found: ${command}`);
+      }
+    }();
+  }
+  __name(fromService, "fromService");
+  ProxyChannel2.fromService = fromService;
+  function toService(channel, options) {
+    const disableMarshalling = options && options.disableMarshalling;
+    return new Proxy({}, {
+      get(_target, propKey) {
+        if (typeof propKey === "string") {
+          if (options?.properties?.has(propKey)) {
+            return options.properties.get(propKey);
+          }
+          if (propertyIsDynamicEvent(propKey)) {
+            return function(arg) {
+              return channel.listen(propKey, arg);
+            };
+          }
+          if (propertyIsEvent(propKey)) {
+            return channel.listen(propKey);
+          }
+          return async function(...args) {
+            let methodArgs;
+            if (options && !isUndefinedOrNull(options.context)) {
+              methodArgs = [options.context, ...args];
+            } else {
+              methodArgs = args;
+            }
+            const result = await channel.call(propKey, methodArgs);
+            if (!disableMarshalling) {
+              return revive(result);
+            }
+            return result;
+          };
+        }
+        throw new ErrorNoTelemetry(`Property not found: ${String(propKey)}`);
+      }
+    });
+  }
+  __name(toService, "toService");
+  ProxyChannel2.toService = toService;
+  function propertyIsEvent(name) {
+    return name[0] === "o" && name[1] === "n" && strings.isUpperAsciiLetter(name.charCodeAt(2));
+  }
+  __name(propertyIsEvent, "propertyIsEvent");
+  function propertyIsDynamicEvent(name) {
+    return /^onDynamic/.test(name) && strings.isUpperAsciiLetter(name.charCodeAt(9));
+  }
+  __name(propertyIsDynamicEvent, "propertyIsDynamicEvent");
+})(ProxyChannel || (ProxyChannel = {}));
+const colorTables = [
+  ["#2977B1", "#FC802D", "#34A13A", "#D3282F", "#9366BA"],
+  ["#8B564C", "#E177C0", "#7F7F7F", "#BBBE3D", "#2EBECD"]
+];
+function prettyWithoutArrays(data) {
+  if (Array.isArray(data)) {
+    return data;
+  }
+  if (data && typeof data === "object" && typeof data.toString === "function") {
+    const result = data.toString();
+    if (result !== "[object Object]") {
+      return result;
+    }
+  }
+  return data;
+}
+__name(prettyWithoutArrays, "prettyWithoutArrays");
+function pretty(data) {
+  if (Array.isArray(data)) {
+    return data.map(prettyWithoutArrays);
+  }
+  return prettyWithoutArrays(data);
+}
+__name(pretty, "pretty");
+function logWithColors(direction, totalLength, msgLength, req, initiator, str, data) {
+  data = pretty(data);
+  const colorTable = colorTables[initiator];
+  const color = colorTable[req % colorTable.length];
+  let args = [`%c[${direction}]%c[${String(totalLength).padStart(7, " ")}]%c[len: ${String(msgLength).padStart(5, " ")}]%c${String(req).padStart(5, " ")} - ${str}`, "color: darkgreen", "color: grey", "color: grey", `color: ${color}`];
+  if (/\($/.test(str)) {
+    args = args.concat(data);
+    args.push(")");
+  } else {
+    args.push(data);
+  }
+  console.log.apply(console, args);
+}
+__name(logWithColors, "logWithColors");
+class IPCLogger {
+  static {
+    __name(this, "IPCLogger");
+  }
+  constructor(_outgoingPrefix, _incomingPrefix) {
+    this._outgoingPrefix = _outgoingPrefix;
+    this._incomingPrefix = _incomingPrefix;
+    this._totalIncoming = 0;
+    this._totalOutgoing = 0;
+  }
+  logOutgoing(msgLength, requestId, initiator, str, data) {
+    this._totalOutgoing += msgLength;
+    logWithColors(this._outgoingPrefix, this._totalOutgoing, msgLength, requestId, initiator, str, data);
+  }
+  logIncoming(msgLength, requestId, initiator, str, data) {
+    this._totalIncoming += msgLength;
+    logWithColors(this._incomingPrefix, this._totalIncoming, msgLength, requestId, initiator, str, data);
+  }
+}
+export {
+  BufferReader,
+  BufferWriter,
+  ChannelClient,
+  ChannelServer,
+  IPCClient,
+  IPCLogger,
+  IPCServer,
+  ProxyChannel,
+  RequestInitiator,
+  StaticRouter,
+  deserialize,
+  getDelayedChannel,
+  getNextTickChannel,
+  serialize
+};
+//# sourceMappingURL=ipc.js.map

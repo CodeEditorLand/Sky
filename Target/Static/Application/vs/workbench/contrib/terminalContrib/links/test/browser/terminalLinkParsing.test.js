@@ -1,1 +1,728 @@
-import{deepStrictEqual as n,ok as C,strictEqual as l}from"assert";import{$x$ as g}from"../../../../../../base/test/common/utils.js";import{$yZb as f,$vZb as E,$wZb as $,$uZb as r,$tZb as L}from"../../browser/terminalLinkParsing.js";const m=[3,2,1],u={3:"/test/path/linux",2:"/test/path/macintosh",1:"C:\\test\\path\\windows"},R={3:"[Linux]",2:"[macOS]",1:"[Windows]"},x=339,a=12,h=341,p=789,w=[{link:"foo",prefix:void 0,suffix:void 0,hasRow:!1,hasCol:!1},{link:"foo:339",prefix:void 0,suffix:":339",hasRow:!0,hasCol:!1},{link:"foo:339:12",prefix:void 0,suffix:":339:12",hasRow:!0,hasCol:!0},{link:"foo:339:12-789",prefix:void 0,suffix:":339:12-789",hasRow:!0,hasCol:!0,hasRowEnd:!1,hasColEnd:!0},{link:"foo:339.12",prefix:void 0,suffix:":339.12",hasRow:!0,hasCol:!0},{link:"foo:339.12-789",prefix:void 0,suffix:":339.12-789",hasRow:!0,hasCol:!0,hasRowEnd:!1,hasColEnd:!0},{link:"foo:339.12-341.789",prefix:void 0,suffix:":339.12-341.789",hasRow:!0,hasCol:!0,hasRowEnd:!0,hasColEnd:!0},{link:"foo#339",prefix:void 0,suffix:"#339",hasRow:!0,hasCol:!1},{link:"foo#339:12",prefix:void 0,suffix:"#339:12",hasRow:!0,hasCol:!0},{link:"foo#339:12-789",prefix:void 0,suffix:"#339:12-789",hasRow:!0,hasCol:!0,hasRowEnd:!1,hasColEnd:!0},{link:"foo#339.12",prefix:void 0,suffix:"#339.12",hasRow:!0,hasCol:!0},{link:"foo#339.12-789",prefix:void 0,suffix:"#339.12-789",hasRow:!0,hasCol:!0,hasRowEnd:!1,hasColEnd:!0},{link:"foo#339.12-341.789",prefix:void 0,suffix:"#339.12-341.789",hasRow:!0,hasCol:!0,hasRowEnd:!0,hasColEnd:!0},{link:"foo 339",prefix:void 0,suffix:" 339",hasRow:!0,hasCol:!1},{link:"foo 339:12",prefix:void 0,suffix:" 339:12",hasRow:!0,hasCol:!0},{link:"foo 339:12-789",prefix:void 0,suffix:" 339:12-789",hasRow:!0,hasCol:!0,hasRowEnd:!1,hasColEnd:!0},{link:"foo 339.12",prefix:void 0,suffix:" 339.12",hasRow:!0,hasCol:!0},{link:"foo 339.12-789",prefix:void 0,suffix:" 339.12-789",hasRow:!0,hasCol:!0,hasRowEnd:!1,hasColEnd:!0},{link:"foo 339.12-341.789",prefix:void 0,suffix:" 339.12-341.789",hasRow:!0,hasCol:!0,hasRowEnd:!0,hasColEnd:!0},{link:"foo, 339",prefix:void 0,suffix:", 339",hasRow:!0,hasCol:!1},{link:'"foo",339',prefix:'"',suffix:'",339',hasRow:!0,hasCol:!1},{link:'"foo",339:12',prefix:'"',suffix:'",339:12',hasRow:!0,hasCol:!0},{link:'"foo",339.12',prefix:'"',suffix:'",339.12',hasRow:!0,hasCol:!0},{link:'"foo", line 339',prefix:'"',suffix:'", line 339',hasRow:!0,hasCol:!1},{link:'"foo", line 339, col 12',prefix:'"',suffix:'", line 339, col 12',hasRow:!0,hasCol:!0},{link:'"foo", line 339, column 12',prefix:'"',suffix:'", line 339, column 12',hasRow:!0,hasCol:!0},{link:'"foo":line 339',prefix:'"',suffix:'":line 339',hasRow:!0,hasCol:!1},{link:'"foo":line 339, col 12',prefix:'"',suffix:'":line 339, col 12',hasRow:!0,hasCol:!0},{link:'"foo":line 339, column 12',prefix:'"',suffix:'":line 339, column 12',hasRow:!0,hasCol:!0},{link:'"foo": line 339',prefix:'"',suffix:'": line 339',hasRow:!0,hasCol:!1},{link:'"foo": line 339, col 12',prefix:'"',suffix:'": line 339, col 12',hasRow:!0,hasCol:!0},{link:'"foo": line 339, column 12',prefix:'"',suffix:'": line 339, column 12',hasRow:!0,hasCol:!0},{link:'"foo" on line 339',prefix:'"',suffix:'" on line 339',hasRow:!0,hasCol:!1},{link:'"foo" on line 339, col 12',prefix:'"',suffix:'" on line 339, col 12',hasRow:!0,hasCol:!0},{link:'"foo" on line 339, column 12',prefix:'"',suffix:'" on line 339, column 12',hasRow:!0,hasCol:!0},{link:'"foo" line 339',prefix:'"',suffix:'" line 339',hasRow:!0,hasCol:!1},{link:'"foo" line 339 column 12',prefix:'"',suffix:'" line 339 column 12',hasRow:!0,hasCol:!0},{link:"'foo',339",prefix:"'",suffix:"',339",hasRow:!0,hasCol:!1},{link:"'foo',339:12",prefix:"'",suffix:"',339:12",hasRow:!0,hasCol:!0},{link:"'foo',339.12",prefix:"'",suffix:"',339.12",hasRow:!0,hasCol:!0},{link:"'foo', line 339",prefix:"'",suffix:"', line 339",hasRow:!0,hasCol:!1},{link:"'foo', line 339, col 12",prefix:"'",suffix:"', line 339, col 12",hasRow:!0,hasCol:!0},{link:"'foo', line 339, column 12",prefix:"'",suffix:"', line 339, column 12",hasRow:!0,hasCol:!0},{link:"'foo':line 339",prefix:"'",suffix:"':line 339",hasRow:!0,hasCol:!1},{link:"'foo':line 339, col 12",prefix:"'",suffix:"':line 339, col 12",hasRow:!0,hasCol:!0},{link:"'foo':line 339, column 12",prefix:"'",suffix:"':line 339, column 12",hasRow:!0,hasCol:!0},{link:"'foo': line 339",prefix:"'",suffix:"': line 339",hasRow:!0,hasCol:!1},{link:"'foo': line 339, col 12",prefix:"'",suffix:"': line 339, col 12",hasRow:!0,hasCol:!0},{link:"'foo': line 339, column 12",prefix:"'",suffix:"': line 339, column 12",hasRow:!0,hasCol:!0},{link:"'foo' on line 339",prefix:"'",suffix:"' on line 339",hasRow:!0,hasCol:!1},{link:"'foo' on line 339, col 12",prefix:"'",suffix:"' on line 339, col 12",hasRow:!0,hasCol:!0},{link:"'foo' on line 339, column 12",prefix:"'",suffix:"' on line 339, column 12",hasRow:!0,hasCol:!0},{link:"'foo' line 339",prefix:"'",suffix:"' line 339",hasRow:!0,hasCol:!1},{link:"'foo' line 339 column 12",prefix:"'",suffix:"' line 339 column 12",hasRow:!0,hasCol:!0},{link:"foo, line 339",prefix:void 0,suffix:", line 339",hasRow:!0,hasCol:!1},{link:"foo, line 339, col 12",prefix:void 0,suffix:", line 339, col 12",hasRow:!0,hasCol:!0},{link:"foo, line 339, column 12",prefix:void 0,suffix:", line 339, column 12",hasRow:!0,hasCol:!0},{link:"foo:line 339",prefix:void 0,suffix:":line 339",hasRow:!0,hasCol:!1},{link:"foo:line 339, col 12",prefix:void 0,suffix:":line 339, col 12",hasRow:!0,hasCol:!0},{link:"foo:line 339, column 12",prefix:void 0,suffix:":line 339, column 12",hasRow:!0,hasCol:!0},{link:"foo: line 339",prefix:void 0,suffix:": line 339",hasRow:!0,hasCol:!1},{link:"foo: line 339, col 12",prefix:void 0,suffix:": line 339, col 12",hasRow:!0,hasCol:!0},{link:"foo: line 339, column 12",prefix:void 0,suffix:": line 339, column 12",hasRow:!0,hasCol:!0},{link:"foo on line 339",prefix:void 0,suffix:" on line 339",hasRow:!0,hasCol:!1},{link:"foo on line 339, col 12",prefix:void 0,suffix:" on line 339, col 12",hasRow:!0,hasCol:!0},{link:"foo on line 339, column 12",prefix:void 0,suffix:" on line 339, column 12",hasRow:!0,hasCol:!0},{link:"foo line 339",prefix:void 0,suffix:" line 339",hasRow:!0,hasCol:!1},{link:"foo line 339 column 12",prefix:void 0,suffix:" line 339 column 12",hasRow:!0,hasCol:!0},{link:"foo(339)",prefix:void 0,suffix:"(339)",hasRow:!0,hasCol:!1},{link:"foo(339,12)",prefix:void 0,suffix:"(339,12)",hasRow:!0,hasCol:!0},{link:"foo(339, 12)",prefix:void 0,suffix:"(339, 12)",hasRow:!0,hasCol:!0},{link:"foo (339)",prefix:void 0,suffix:" (339)",hasRow:!0,hasCol:!1},{link:"foo (339,12)",prefix:void 0,suffix:" (339,12)",hasRow:!0,hasCol:!0},{link:"foo (339, 12)",prefix:void 0,suffix:" (339, 12)",hasRow:!0,hasCol:!0},{link:"foo: (339)",prefix:void 0,suffix:": (339)",hasRow:!0,hasCol:!1},{link:"foo: (339,12)",prefix:void 0,suffix:": (339,12)",hasRow:!0,hasCol:!0},{link:"foo: (339, 12)",prefix:void 0,suffix:": (339, 12)",hasRow:!0,hasCol:!0},{link:"foo(339:12)",prefix:void 0,suffix:"(339:12)",hasRow:!0,hasCol:!0},{link:"foo (339:12)",prefix:void 0,suffix:" (339:12)",hasRow:!0,hasCol:!0},{link:"foo[339]",prefix:void 0,suffix:"[339]",hasRow:!0,hasCol:!1},{link:"foo[339,12]",prefix:void 0,suffix:"[339,12]",hasRow:!0,hasCol:!0},{link:"foo[339, 12]",prefix:void 0,suffix:"[339, 12]",hasRow:!0,hasCol:!0},{link:"foo [339]",prefix:void 0,suffix:" [339]",hasRow:!0,hasCol:!1},{link:"foo [339,12]",prefix:void 0,suffix:" [339,12]",hasRow:!0,hasCol:!0},{link:"foo [339, 12]",prefix:void 0,suffix:" [339, 12]",hasRow:!0,hasCol:!0},{link:"foo: [339]",prefix:void 0,suffix:": [339]",hasRow:!0,hasCol:!1},{link:"foo: [339,12]",prefix:void 0,suffix:": [339,12]",hasRow:!0,hasCol:!0},{link:"foo: [339, 12]",prefix:void 0,suffix:": [339, 12]",hasRow:!0,hasCol:!0},{link:"foo[339:12]",prefix:void 0,suffix:"[339:12]",hasRow:!0,hasCol:!0},{link:"foo [339:12]",prefix:void 0,suffix:" [339:12]",hasRow:!0,hasCol:!0},{link:'"foo", line 339, character 12',prefix:'"',suffix:'", line 339, character 12',hasRow:!0,hasCol:!0},{link:'"foo", line 339, characters 12-789',prefix:'"',suffix:'", line 339, characters 12-789',hasRow:!0,hasCol:!0,hasColEnd:!0},{link:'"foo", lines 339-341',prefix:'"',suffix:'", lines 339-341',hasRow:!0,hasCol:!1,hasRowEnd:!0},{link:'"foo", lines 339-341, characters 12-789',prefix:'"',suffix:'", lines 339-341, characters 12-789',hasRow:!0,hasCol:!0,hasRowEnd:!0,hasColEnd:!0},{link:"foo\xA0339:12",prefix:void 0,suffix:"\xA0339:12",hasRow:!0,hasCol:!0},{link:'"foo" on line 339,\xA0column 12',prefix:'"',suffix:'" on line 339,\xA0column 12',hasRow:!0,hasCol:!0},{link:"'foo' on line\xA0339, column 12",prefix:"'",suffix:"' on line\xA0339, column 12",hasRow:!0,hasCol:!0},{link:"foo (339,\xA012)",prefix:void 0,suffix:" (339,\xA012)",hasRow:!0,hasCol:!0},{link:"foo\xA0[339, 12]",prefix:void 0,suffix:"\xA0[339, 12]",hasRow:!0,hasCol:!0}],c=w.filter(e=>!!e.suffix);suite("TerminalLinkParsing",()=>{g(),suite("removeLinkSuffix",()=>{for(const e of w)test("`"+e.link+"`",()=>{n(L(e.link),e.suffix===void 0?e.link:e.link.replace(e.suffix,""))})}),suite("getLinkSuffix",()=>{for(const e of w)test("`"+e.link+"`",()=>{n($(e.link),e.suffix===void 0?null:{row:e.hasRow?x:void 0,col:e.hasCol?a:void 0,rowEnd:e.hasRowEnd?h:void 0,colEnd:e.hasColEnd?p:void 0,suffix:{index:e.link.length-e.suffix.length,text:e.suffix}})})}),suite("detectLinkSuffixes",()=>{for(const e of w)test("`"+e.link+"`",()=>{n(E(e.link),e.suffix===void 0?[]:[{row:e.hasRow?x:void 0,col:e.hasCol?a:void 0,rowEnd:e.hasRowEnd?h:void 0,colEnd:e.hasColEnd?p:void 0,suffix:{index:e.link.length-e.suffix.length,text:e.suffix}}])});test("foo(1, 2) bar[3, 4] baz on line 5",()=>{n(E("foo(1, 2) bar[3, 4] baz on line 5"),[{col:2,row:1,rowEnd:void 0,colEnd:void 0,suffix:{index:3,text:"(1, 2)"}},{col:4,row:3,rowEnd:void 0,colEnd:void 0,suffix:{index:13,text:"[3, 4]"}},{col:void 0,row:5,rowEnd:void 0,colEnd:void 0,suffix:{index:23,text:" on line 5"}}])})}),suite("removeLinkQueryString",()=>{test("should remove any query string from the link",()=>{l(r("?a=b"),""),l(r("foo?a=b"),"foo"),l(r("./foo?a=b"),"./foo"),l(r("/foo/bar?a=b"),"/foo/bar"),l(r("foo?a=b?"),"foo"),l(r("foo?a=b&c=d"),"foo")}),test("should respect ? in UNC paths",()=>{l(r("\\\\?\\foo?a=b"),"\\\\?\\foo")})}),suite("detectLinks",()=>{test('foo(1, 2) bar[3, 4] "baz" on line 5',()=>{n(f('foo(1, 2) bar[3, 4] "baz" on line 5',3),[{path:{index:0,text:"foo"},prefix:void 0,suffix:{col:2,row:1,rowEnd:void 0,colEnd:void 0,suffix:{index:3,text:"(1, 2)"}}},{path:{index:10,text:"bar"},prefix:void 0,suffix:{col:4,row:3,rowEnd:void 0,colEnd:void 0,suffix:{index:13,text:"[3, 4]"}}},{path:{index:21,text:"baz"},prefix:{index:20,text:'"'},suffix:{col:void 0,row:5,rowEnd:void 0,colEnd:void 0,suffix:{index:24,text:'" on line 5'}}}])}),test("should detect multiple links when opening brackets are in the text",()=>{n(f("notlink[foo:45]",3),[{path:{index:0,text:"notlink[foo"},prefix:void 0,suffix:{col:void 0,row:45,rowEnd:void 0,colEnd:void 0,suffix:{index:11,text:":45"}}},{path:{index:8,text:"foo"},prefix:void 0,suffix:{col:void 0,row:45,rowEnd:void 0,colEnd:void 0,suffix:{index:11,text:":45"}}}])}),test("should extract the link prefix",()=>{n(f('"foo", line 5, col 6',3),[{path:{index:1,text:"foo"},prefix:{index:0,text:'"'},suffix:{row:5,col:6,rowEnd:void 0,colEnd:void 0,suffix:{index:4,text:'", line 5, col 6'}}}])}),test("should be smart about determining the link prefix when multiple prefix characters exist",()=>{n(f(`echo '"foo", line 5, col 6'`,3),[{path:{index:7,text:"foo"},prefix:{index:6,text:'"'},suffix:{row:5,col:6,rowEnd:void 0,colEnd:void 0,suffix:{index:10,text:'", line 5, col 6'}}}],"The outer single quotes should be excluded from the link prefix and suffix")}),test("should detect both suffix and non-suffix links on a single line",()=>{n(f(`PS C:\\Github\\microsoft\\vscode> echo '"foo", line 5, col 6'`,1),[{path:{index:3,text:"C:\\Github\\microsoft\\vscode"},prefix:void 0,suffix:void 0},{path:{index:38,text:"foo"},prefix:{index:37,text:'"'},suffix:{row:5,col:6,rowEnd:void 0,colEnd:void 0,suffix:{index:41,text:'", line 5, col 6'}}}])}),suite('"|"',()=>{test("should exclude pipe characters from link paths",()=>{n(f("|C:\\Github\\microsoft\\vscode|",1),[{path:{index:1,text:"C:\\Github\\microsoft\\vscode"},prefix:void 0,suffix:void 0}])}),test("should exclude pipe characters from link paths with suffixes",()=>{n(f("|C:\\Github\\microsoft\\vscode:400|",1),[{path:{index:1,text:"C:\\Github\\microsoft\\vscode"},prefix:void 0,suffix:{col:void 0,row:400,rowEnd:void 0,colEnd:void 0,suffix:{index:27,text:":400"}}}])})}),suite('"<>"',()=>{for(const e of m)test(`should exclude bracket characters from link paths ${R[e]}`,()=>{n(f(`<${u[e]}<`,e),[{path:{index:1,text:u[e]},prefix:void 0,suffix:void 0}]),n(f(`>${u[e]}>`,e),[{path:{index:1,text:u[e]},prefix:void 0,suffix:void 0}])}),test(`should exclude bracket characters from link paths with suffixes ${R[e]}`,()=>{n(f(`<${u[e]}:400<`,e),[{path:{index:1,text:u[e]},prefix:void 0,suffix:{col:void 0,row:400,rowEnd:void 0,colEnd:void 0,suffix:{index:1+u[e].length,text:":400"}}}]),n(f(`>${u[e]}:400>`,e),[{path:{index:1,text:u[e]},prefix:void 0,suffix:{col:void 0,row:400,rowEnd:void 0,colEnd:void 0,suffix:{index:1+u[e].length,text:":400"}}}])})}),suite("query strings",()=>{for(const e of m)test(`should exclude query strings from link paths ${R[e]}`,()=>{n(f(`${u[e]}?a=b`,e),[{path:{index:0,text:u[e]},prefix:void 0,suffix:void 0}]),n(f(`${u[e]}?a=b&c=d`,e),[{path:{index:0,text:u[e]},prefix:void 0,suffix:void 0}])}),test("should not detect links starting with ? within query strings that contain posix-style paths (#204195)",()=>{l(f("http://foo.com/?bar=/a/b&baz=c",e).some(i=>i.path.text.startsWith("?")),!1)}),test("should not detect links starting with ? within query strings that contain Windows-style paths (#204195)",()=>{l(f("http://foo.com/?bar=a:\\b&baz=c",e).some(i=>i.path.text.startsWith("?")),!1)})}),suite("should detect file names in git diffs",()=>{test("--- a/foo/bar",()=>{n(f("--- a/foo/bar",3),[{path:{index:6,text:"foo/bar"},prefix:void 0,suffix:void 0}])}),test("+++ b/foo/bar",()=>{n(f("+++ b/foo/bar",3),[{path:{index:6,text:"foo/bar"},prefix:void 0,suffix:void 0}])}),test("diff --git a/foo/bar b/foo/baz",()=>{n(f("diff --git a/foo/bar b/foo/baz",3),[{path:{index:13,text:"foo/bar"},prefix:void 0,suffix:void 0},{path:{index:23,text:"foo/baz"},prefix:void 0,suffix:void 0}])})}),suite("should detect 3 suffix links on a single line",()=>{for(let e=0;e<c.length-2;e++){const i=c[e],o=c[e+1],s=c[e+2],k=` ${i.link} ${o.link} ${s.link} `;test("`"+k.replaceAll("\xA0","<nbsp>")+"`",()=>{l(f(k,3).length,3),C(i.suffix),C(o.suffix),C(s.suffix);const t={prefix:i.prefix?{index:1,text:i.prefix}:void 0,path:{index:1+(i.prefix?.length??0),text:i.link.replace(i.suffix,"").replace(i.prefix||"","")},suffix:{row:i.hasRow?x:void 0,col:i.hasCol?a:void 0,rowEnd:i.hasRowEnd?h:void 0,colEnd:i.hasColEnd?p:void 0,suffix:{index:1+(i.link.length-i.suffix.length),text:i.suffix}}},d={prefix:o.prefix?{index:(t.prefix?.index??t.path.index)+i.link.length+1,text:o.prefix}:void 0,path:{index:(t.prefix?.index??t.path.index)+i.link.length+1+(o.prefix??"").length,text:o.link.replace(o.suffix,"").replace(o.prefix??"","")},suffix:{row:o.hasRow?x:void 0,col:o.hasCol?a:void 0,rowEnd:o.hasRowEnd?h:void 0,colEnd:o.hasColEnd?p:void 0,suffix:{index:(t.prefix?.index??t.path.index)+i.link.length+1+(o.link.length-o.suffix.length),text:o.suffix}}},b={prefix:s.prefix?{index:(d.prefix?.index??d.path.index)+o.link.length+1,text:s.prefix}:void 0,path:{index:(d.prefix?.index??d.path.index)+o.link.length+1+(s.prefix??"").length,text:s.link.replace(s.suffix,"").replace(s.prefix??"","")},suffix:{row:s.hasRow?x:void 0,col:s.hasCol?a:void 0,rowEnd:s.hasRowEnd?h:void 0,colEnd:s.hasColEnd?p:void 0,suffix:{index:(d.prefix?.index??d.path.index)+o.link.length+1+(s.link.length-s.suffix.length),text:s.suffix}}};n(f(k,3),[t,d,b])})}}),suite("should ignore links with suffixes when the path itself is the empty string",()=>{n(f('""",1',3),[])})})});
+import { deepStrictEqual, ok, strictEqual } from "assert";
+import { ensureNoDisposablesAreLeakedInTestSuite } from "../../../../../../base/test/common/utils.js";
+import { detectLinks, detectLinkSuffixes, getLinkSuffix, removeLinkQueryString, removeLinkSuffix } from "../../browser/terminalLinkParsing.js";
+const operatingSystems = [
+  3,
+  2,
+  1
+  /* OperatingSystem.Windows */
+];
+const osTestPath = {
+  [
+    3
+    /* OperatingSystem.Linux */
+  ]: "/test/path/linux",
+  [
+    2
+    /* OperatingSystem.Macintosh */
+  ]: "/test/path/macintosh",
+  [
+    1
+    /* OperatingSystem.Windows */
+  ]: "C:\\test\\path\\windows"
+};
+const osLabel = {
+  [
+    3
+    /* OperatingSystem.Linux */
+  ]: "[Linux]",
+  [
+    2
+    /* OperatingSystem.Macintosh */
+  ]: "[macOS]",
+  [
+    1
+    /* OperatingSystem.Windows */
+  ]: "[Windows]"
+};
+const testRow = 339;
+const testCol = 12;
+const testRowEnd = 341;
+const testColEnd = 789;
+const testLinks = [
+  // Simple
+  { link: "foo", prefix: void 0, suffix: void 0, hasRow: false, hasCol: false },
+  { link: "foo:339", prefix: void 0, suffix: ":339", hasRow: true, hasCol: false },
+  { link: "foo:339:12", prefix: void 0, suffix: ":339:12", hasRow: true, hasCol: true },
+  { link: "foo:339:12-789", prefix: void 0, suffix: ":339:12-789", hasRow: true, hasCol: true, hasRowEnd: false, hasColEnd: true },
+  { link: "foo:339.12", prefix: void 0, suffix: ":339.12", hasRow: true, hasCol: true },
+  { link: "foo:339.12-789", prefix: void 0, suffix: ":339.12-789", hasRow: true, hasCol: true, hasRowEnd: false, hasColEnd: true },
+  { link: "foo:339.12-341.789", prefix: void 0, suffix: ":339.12-341.789", hasRow: true, hasCol: true, hasRowEnd: true, hasColEnd: true },
+  { link: "foo#339", prefix: void 0, suffix: "#339", hasRow: true, hasCol: false },
+  { link: "foo#339:12", prefix: void 0, suffix: "#339:12", hasRow: true, hasCol: true },
+  { link: "foo#339:12-789", prefix: void 0, suffix: "#339:12-789", hasRow: true, hasCol: true, hasRowEnd: false, hasColEnd: true },
+  { link: "foo#339.12", prefix: void 0, suffix: "#339.12", hasRow: true, hasCol: true },
+  { link: "foo#339.12-789", prefix: void 0, suffix: "#339.12-789", hasRow: true, hasCol: true, hasRowEnd: false, hasColEnd: true },
+  { link: "foo#339.12-341.789", prefix: void 0, suffix: "#339.12-341.789", hasRow: true, hasCol: true, hasRowEnd: true, hasColEnd: true },
+  { link: "foo 339", prefix: void 0, suffix: " 339", hasRow: true, hasCol: false },
+  { link: "foo 339:12", prefix: void 0, suffix: " 339:12", hasRow: true, hasCol: true },
+  { link: "foo 339:12-789", prefix: void 0, suffix: " 339:12-789", hasRow: true, hasCol: true, hasRowEnd: false, hasColEnd: true },
+  { link: "foo 339.12", prefix: void 0, suffix: " 339.12", hasRow: true, hasCol: true },
+  { link: "foo 339.12-789", prefix: void 0, suffix: " 339.12-789", hasRow: true, hasCol: true, hasRowEnd: false, hasColEnd: true },
+  { link: "foo 339.12-341.789", prefix: void 0, suffix: " 339.12-341.789", hasRow: true, hasCol: true, hasRowEnd: true, hasColEnd: true },
+  { link: "foo, 339", prefix: void 0, suffix: ", 339", hasRow: true, hasCol: false },
+  // Double quotes
+  { link: '"foo",339', prefix: '"', suffix: '",339', hasRow: true, hasCol: false },
+  { link: '"foo",339:12', prefix: '"', suffix: '",339:12', hasRow: true, hasCol: true },
+  { link: '"foo",339.12', prefix: '"', suffix: '",339.12', hasRow: true, hasCol: true },
+  { link: '"foo", line 339', prefix: '"', suffix: '", line 339', hasRow: true, hasCol: false },
+  { link: '"foo", line 339, col 12', prefix: '"', suffix: '", line 339, col 12', hasRow: true, hasCol: true },
+  { link: '"foo", line 339, column 12', prefix: '"', suffix: '", line 339, column 12', hasRow: true, hasCol: true },
+  { link: '"foo":line 339', prefix: '"', suffix: '":line 339', hasRow: true, hasCol: false },
+  { link: '"foo":line 339, col 12', prefix: '"', suffix: '":line 339, col 12', hasRow: true, hasCol: true },
+  { link: '"foo":line 339, column 12', prefix: '"', suffix: '":line 339, column 12', hasRow: true, hasCol: true },
+  { link: '"foo": line 339', prefix: '"', suffix: '": line 339', hasRow: true, hasCol: false },
+  { link: '"foo": line 339, col 12', prefix: '"', suffix: '": line 339, col 12', hasRow: true, hasCol: true },
+  { link: '"foo": line 339, column 12', prefix: '"', suffix: '": line 339, column 12', hasRow: true, hasCol: true },
+  { link: '"foo" on line 339', prefix: '"', suffix: '" on line 339', hasRow: true, hasCol: false },
+  { link: '"foo" on line 339, col 12', prefix: '"', suffix: '" on line 339, col 12', hasRow: true, hasCol: true },
+  { link: '"foo" on line 339, column 12', prefix: '"', suffix: '" on line 339, column 12', hasRow: true, hasCol: true },
+  { link: '"foo" line 339', prefix: '"', suffix: '" line 339', hasRow: true, hasCol: false },
+  { link: '"foo" line 339 column 12', prefix: '"', suffix: '" line 339 column 12', hasRow: true, hasCol: true },
+  // Single quotes
+  { link: "'foo',339", prefix: "'", suffix: "',339", hasRow: true, hasCol: false },
+  { link: "'foo',339:12", prefix: "'", suffix: "',339:12", hasRow: true, hasCol: true },
+  { link: "'foo',339.12", prefix: "'", suffix: "',339.12", hasRow: true, hasCol: true },
+  { link: "'foo', line 339", prefix: "'", suffix: "', line 339", hasRow: true, hasCol: false },
+  { link: "'foo', line 339, col 12", prefix: "'", suffix: "', line 339, col 12", hasRow: true, hasCol: true },
+  { link: "'foo', line 339, column 12", prefix: "'", suffix: "', line 339, column 12", hasRow: true, hasCol: true },
+  { link: "'foo':line 339", prefix: "'", suffix: "':line 339", hasRow: true, hasCol: false },
+  { link: "'foo':line 339, col 12", prefix: "'", suffix: "':line 339, col 12", hasRow: true, hasCol: true },
+  { link: "'foo':line 339, column 12", prefix: "'", suffix: "':line 339, column 12", hasRow: true, hasCol: true },
+  { link: "'foo': line 339", prefix: "'", suffix: "': line 339", hasRow: true, hasCol: false },
+  { link: "'foo': line 339, col 12", prefix: "'", suffix: "': line 339, col 12", hasRow: true, hasCol: true },
+  { link: "'foo': line 339, column 12", prefix: "'", suffix: "': line 339, column 12", hasRow: true, hasCol: true },
+  { link: "'foo' on line 339", prefix: "'", suffix: "' on line 339", hasRow: true, hasCol: false },
+  { link: "'foo' on line 339, col 12", prefix: "'", suffix: "' on line 339, col 12", hasRow: true, hasCol: true },
+  { link: "'foo' on line 339, column 12", prefix: "'", suffix: "' on line 339, column 12", hasRow: true, hasCol: true },
+  { link: "'foo' line 339", prefix: "'", suffix: "' line 339", hasRow: true, hasCol: false },
+  { link: "'foo' line 339 column 12", prefix: "'", suffix: "' line 339 column 12", hasRow: true, hasCol: true },
+  // No quotes
+  { link: "foo, line 339", prefix: void 0, suffix: ", line 339", hasRow: true, hasCol: false },
+  { link: "foo, line 339, col 12", prefix: void 0, suffix: ", line 339, col 12", hasRow: true, hasCol: true },
+  { link: "foo, line 339, column 12", prefix: void 0, suffix: ", line 339, column 12", hasRow: true, hasCol: true },
+  { link: "foo:line 339", prefix: void 0, suffix: ":line 339", hasRow: true, hasCol: false },
+  { link: "foo:line 339, col 12", prefix: void 0, suffix: ":line 339, col 12", hasRow: true, hasCol: true },
+  { link: "foo:line 339, column 12", prefix: void 0, suffix: ":line 339, column 12", hasRow: true, hasCol: true },
+  { link: "foo: line 339", prefix: void 0, suffix: ": line 339", hasRow: true, hasCol: false },
+  { link: "foo: line 339, col 12", prefix: void 0, suffix: ": line 339, col 12", hasRow: true, hasCol: true },
+  { link: "foo: line 339, column 12", prefix: void 0, suffix: ": line 339, column 12", hasRow: true, hasCol: true },
+  { link: "foo on line 339", prefix: void 0, suffix: " on line 339", hasRow: true, hasCol: false },
+  { link: "foo on line 339, col 12", prefix: void 0, suffix: " on line 339, col 12", hasRow: true, hasCol: true },
+  { link: "foo on line 339, column 12", prefix: void 0, suffix: " on line 339, column 12", hasRow: true, hasCol: true },
+  { link: "foo line 339", prefix: void 0, suffix: " line 339", hasRow: true, hasCol: false },
+  { link: "foo line 339 column 12", prefix: void 0, suffix: " line 339 column 12", hasRow: true, hasCol: true },
+  // Parentheses
+  { link: "foo(339)", prefix: void 0, suffix: "(339)", hasRow: true, hasCol: false },
+  { link: "foo(339,12)", prefix: void 0, suffix: "(339,12)", hasRow: true, hasCol: true },
+  { link: "foo(339, 12)", prefix: void 0, suffix: "(339, 12)", hasRow: true, hasCol: true },
+  { link: "foo (339)", prefix: void 0, suffix: " (339)", hasRow: true, hasCol: false },
+  { link: "foo (339,12)", prefix: void 0, suffix: " (339,12)", hasRow: true, hasCol: true },
+  { link: "foo (339, 12)", prefix: void 0, suffix: " (339, 12)", hasRow: true, hasCol: true },
+  { link: "foo: (339)", prefix: void 0, suffix: ": (339)", hasRow: true, hasCol: false },
+  { link: "foo: (339,12)", prefix: void 0, suffix: ": (339,12)", hasRow: true, hasCol: true },
+  { link: "foo: (339, 12)", prefix: void 0, suffix: ": (339, 12)", hasRow: true, hasCol: true },
+  { link: "foo(339:12)", prefix: void 0, suffix: "(339:12)", hasRow: true, hasCol: true },
+  { link: "foo (339:12)", prefix: void 0, suffix: " (339:12)", hasRow: true, hasCol: true },
+  // Square brackets
+  { link: "foo[339]", prefix: void 0, suffix: "[339]", hasRow: true, hasCol: false },
+  { link: "foo[339,12]", prefix: void 0, suffix: "[339,12]", hasRow: true, hasCol: true },
+  { link: "foo[339, 12]", prefix: void 0, suffix: "[339, 12]", hasRow: true, hasCol: true },
+  { link: "foo [339]", prefix: void 0, suffix: " [339]", hasRow: true, hasCol: false },
+  { link: "foo [339,12]", prefix: void 0, suffix: " [339,12]", hasRow: true, hasCol: true },
+  { link: "foo [339, 12]", prefix: void 0, suffix: " [339, 12]", hasRow: true, hasCol: true },
+  { link: "foo: [339]", prefix: void 0, suffix: ": [339]", hasRow: true, hasCol: false },
+  { link: "foo: [339,12]", prefix: void 0, suffix: ": [339,12]", hasRow: true, hasCol: true },
+  { link: "foo: [339, 12]", prefix: void 0, suffix: ": [339, 12]", hasRow: true, hasCol: true },
+  { link: "foo[339:12]", prefix: void 0, suffix: "[339:12]", hasRow: true, hasCol: true },
+  { link: "foo [339:12]", prefix: void 0, suffix: " [339:12]", hasRow: true, hasCol: true },
+  // OCaml-style
+  { link: '"foo", line 339, character 12', prefix: '"', suffix: '", line 339, character 12', hasRow: true, hasCol: true },
+  { link: '"foo", line 339, characters 12-789', prefix: '"', suffix: '", line 339, characters 12-789', hasRow: true, hasCol: true, hasColEnd: true },
+  { link: '"foo", lines 339-341', prefix: '"', suffix: '", lines 339-341', hasRow: true, hasCol: false, hasRowEnd: true },
+  { link: '"foo", lines 339-341, characters 12-789', prefix: '"', suffix: '", lines 339-341, characters 12-789', hasRow: true, hasCol: true, hasRowEnd: true, hasColEnd: true },
+  // Non-breaking space
+  { link: "foo\xA0339:12", prefix: void 0, suffix: "\xA0339:12", hasRow: true, hasCol: true },
+  { link: '"foo" on line 339,\xA0column 12', prefix: '"', suffix: '" on line 339,\xA0column 12', hasRow: true, hasCol: true },
+  { link: "'foo' on line\xA0339, column 12", prefix: "'", suffix: "' on line\xA0339, column 12", hasRow: true, hasCol: true },
+  { link: "foo (339,\xA012)", prefix: void 0, suffix: " (339,\xA012)", hasRow: true, hasCol: true },
+  { link: "foo\xA0[339, 12]", prefix: void 0, suffix: "\xA0[339, 12]", hasRow: true, hasCol: true }
+];
+const testLinksWithSuffix = testLinks.filter((e) => !!e.suffix);
+suite("TerminalLinkParsing", () => {
+  ensureNoDisposablesAreLeakedInTestSuite();
+  suite("removeLinkSuffix", () => {
+    for (const testLink of testLinks) {
+      test("`" + testLink.link + "`", () => {
+        deepStrictEqual(removeLinkSuffix(testLink.link), testLink.suffix === void 0 ? testLink.link : testLink.link.replace(testLink.suffix, ""));
+      });
+    }
+  });
+  suite("getLinkSuffix", () => {
+    for (const testLink of testLinks) {
+      test("`" + testLink.link + "`", () => {
+        deepStrictEqual(getLinkSuffix(testLink.link), testLink.suffix === void 0 ? null : {
+          row: testLink.hasRow ? testRow : void 0,
+          col: testLink.hasCol ? testCol : void 0,
+          rowEnd: testLink.hasRowEnd ? testRowEnd : void 0,
+          colEnd: testLink.hasColEnd ? testColEnd : void 0,
+          suffix: {
+            index: testLink.link.length - testLink.suffix.length,
+            text: testLink.suffix
+          }
+        });
+      });
+    }
+  });
+  suite("detectLinkSuffixes", () => {
+    for (const testLink of testLinks) {
+      test("`" + testLink.link + "`", () => {
+        deepStrictEqual(detectLinkSuffixes(testLink.link), testLink.suffix === void 0 ? [] : [{
+          row: testLink.hasRow ? testRow : void 0,
+          col: testLink.hasCol ? testCol : void 0,
+          rowEnd: testLink.hasRowEnd ? testRowEnd : void 0,
+          colEnd: testLink.hasColEnd ? testColEnd : void 0,
+          suffix: {
+            index: testLink.link.length - testLink.suffix.length,
+            text: testLink.suffix
+          }
+        }]);
+      });
+    }
+    test("foo(1, 2) bar[3, 4] baz on line 5", () => {
+      deepStrictEqual(detectLinkSuffixes("foo(1, 2) bar[3, 4] baz on line 5"), [
+        {
+          col: 2,
+          row: 1,
+          rowEnd: void 0,
+          colEnd: void 0,
+          suffix: {
+            index: 3,
+            text: "(1, 2)"
+          }
+        },
+        {
+          col: 4,
+          row: 3,
+          rowEnd: void 0,
+          colEnd: void 0,
+          suffix: {
+            index: 13,
+            text: "[3, 4]"
+          }
+        },
+        {
+          col: void 0,
+          row: 5,
+          rowEnd: void 0,
+          colEnd: void 0,
+          suffix: {
+            index: 23,
+            text: " on line 5"
+          }
+        }
+      ]);
+    });
+  });
+  suite("removeLinkQueryString", () => {
+    test("should remove any query string from the link", () => {
+      strictEqual(removeLinkQueryString("?a=b"), "");
+      strictEqual(removeLinkQueryString("foo?a=b"), "foo");
+      strictEqual(removeLinkQueryString("./foo?a=b"), "./foo");
+      strictEqual(removeLinkQueryString("/foo/bar?a=b"), "/foo/bar");
+      strictEqual(removeLinkQueryString("foo?a=b?"), "foo");
+      strictEqual(removeLinkQueryString("foo?a=b&c=d"), "foo");
+    });
+    test("should respect ? in UNC paths", () => {
+      strictEqual(removeLinkQueryString("\\\\?\\foo?a=b"), "\\\\?\\foo");
+    });
+  });
+  suite("detectLinks", () => {
+    test('foo(1, 2) bar[3, 4] "baz" on line 5', () => {
+      deepStrictEqual(detectLinks(
+        'foo(1, 2) bar[3, 4] "baz" on line 5',
+        3
+        /* OperatingSystem.Linux */
+      ), [
+        {
+          path: {
+            index: 0,
+            text: "foo"
+          },
+          prefix: void 0,
+          suffix: {
+            col: 2,
+            row: 1,
+            rowEnd: void 0,
+            colEnd: void 0,
+            suffix: {
+              index: 3,
+              text: "(1, 2)"
+            }
+          }
+        },
+        {
+          path: {
+            index: 10,
+            text: "bar"
+          },
+          prefix: void 0,
+          suffix: {
+            col: 4,
+            row: 3,
+            rowEnd: void 0,
+            colEnd: void 0,
+            suffix: {
+              index: 13,
+              text: "[3, 4]"
+            }
+          }
+        },
+        {
+          path: {
+            index: 21,
+            text: "baz"
+          },
+          prefix: {
+            index: 20,
+            text: '"'
+          },
+          suffix: {
+            col: void 0,
+            row: 5,
+            rowEnd: void 0,
+            colEnd: void 0,
+            suffix: {
+              index: 24,
+              text: '" on line 5'
+            }
+          }
+        }
+      ]);
+    });
+    test("should detect multiple links when opening brackets are in the text", () => {
+      deepStrictEqual(detectLinks(
+        "notlink[foo:45]",
+        3
+        /* OperatingSystem.Linux */
+      ), [
+        {
+          path: {
+            index: 0,
+            text: "notlink[foo"
+          },
+          prefix: void 0,
+          suffix: {
+            col: void 0,
+            row: 45,
+            rowEnd: void 0,
+            colEnd: void 0,
+            suffix: {
+              index: 11,
+              text: ":45"
+            }
+          }
+        },
+        {
+          path: {
+            index: 8,
+            text: "foo"
+          },
+          prefix: void 0,
+          suffix: {
+            col: void 0,
+            row: 45,
+            rowEnd: void 0,
+            colEnd: void 0,
+            suffix: {
+              index: 11,
+              text: ":45"
+            }
+          }
+        }
+      ]);
+    });
+    test("should extract the link prefix", () => {
+      deepStrictEqual(detectLinks(
+        '"foo", line 5, col 6',
+        3
+        /* OperatingSystem.Linux */
+      ), [
+        {
+          path: {
+            index: 1,
+            text: "foo"
+          },
+          prefix: {
+            index: 0,
+            text: '"'
+          },
+          suffix: {
+            row: 5,
+            col: 6,
+            rowEnd: void 0,
+            colEnd: void 0,
+            suffix: {
+              index: 4,
+              text: '", line 5, col 6'
+            }
+          }
+        }
+      ]);
+    });
+    test("should be smart about determining the link prefix when multiple prefix characters exist", () => {
+      deepStrictEqual(detectLinks(
+        `echo '"foo", line 5, col 6'`,
+        3
+        /* OperatingSystem.Linux */
+      ), [
+        {
+          path: {
+            index: 7,
+            text: "foo"
+          },
+          prefix: {
+            index: 6,
+            text: '"'
+          },
+          suffix: {
+            row: 5,
+            col: 6,
+            rowEnd: void 0,
+            colEnd: void 0,
+            suffix: {
+              index: 10,
+              text: '", line 5, col 6'
+            }
+          }
+        }
+      ], "The outer single quotes should be excluded from the link prefix and suffix");
+    });
+    test("should detect both suffix and non-suffix links on a single line", () => {
+      deepStrictEqual(detectLinks(
+        `PS C:\\Github\\microsoft\\vscode> echo '"foo", line 5, col 6'`,
+        1
+        /* OperatingSystem.Windows */
+      ), [
+        {
+          path: {
+            index: 3,
+            text: "C:\\Github\\microsoft\\vscode"
+          },
+          prefix: void 0,
+          suffix: void 0
+        },
+        {
+          path: {
+            index: 38,
+            text: "foo"
+          },
+          prefix: {
+            index: 37,
+            text: '"'
+          },
+          suffix: {
+            row: 5,
+            col: 6,
+            rowEnd: void 0,
+            colEnd: void 0,
+            suffix: {
+              index: 41,
+              text: '", line 5, col 6'
+            }
+          }
+        }
+      ]);
+    });
+    suite('"|"', () => {
+      test("should exclude pipe characters from link paths", () => {
+        deepStrictEqual(detectLinks(
+          "|C:\\Github\\microsoft\\vscode|",
+          1
+          /* OperatingSystem.Windows */
+        ), [
+          {
+            path: {
+              index: 1,
+              text: "C:\\Github\\microsoft\\vscode"
+            },
+            prefix: void 0,
+            suffix: void 0
+          }
+        ]);
+      });
+      test("should exclude pipe characters from link paths with suffixes", () => {
+        deepStrictEqual(detectLinks(
+          "|C:\\Github\\microsoft\\vscode:400|",
+          1
+          /* OperatingSystem.Windows */
+        ), [
+          {
+            path: {
+              index: 1,
+              text: "C:\\Github\\microsoft\\vscode"
+            },
+            prefix: void 0,
+            suffix: {
+              col: void 0,
+              row: 400,
+              rowEnd: void 0,
+              colEnd: void 0,
+              suffix: {
+                index: 27,
+                text: ":400"
+              }
+            }
+          }
+        ]);
+      });
+    });
+    suite('"<>"', () => {
+      for (const os of operatingSystems) {
+        test(`should exclude bracket characters from link paths ${osLabel[os]}`, () => {
+          deepStrictEqual(detectLinks(`<${osTestPath[os]}<`, os), [
+            {
+              path: {
+                index: 1,
+                text: osTestPath[os]
+              },
+              prefix: void 0,
+              suffix: void 0
+            }
+          ]);
+          deepStrictEqual(detectLinks(`>${osTestPath[os]}>`, os), [
+            {
+              path: {
+                index: 1,
+                text: osTestPath[os]
+              },
+              prefix: void 0,
+              suffix: void 0
+            }
+          ]);
+        });
+        test(`should exclude bracket characters from link paths with suffixes ${osLabel[os]}`, () => {
+          deepStrictEqual(detectLinks(`<${osTestPath[os]}:400<`, os), [
+            {
+              path: {
+                index: 1,
+                text: osTestPath[os]
+              },
+              prefix: void 0,
+              suffix: {
+                col: void 0,
+                row: 400,
+                rowEnd: void 0,
+                colEnd: void 0,
+                suffix: {
+                  index: 1 + osTestPath[os].length,
+                  text: ":400"
+                }
+              }
+            }
+          ]);
+          deepStrictEqual(detectLinks(`>${osTestPath[os]}:400>`, os), [
+            {
+              path: {
+                index: 1,
+                text: osTestPath[os]
+              },
+              prefix: void 0,
+              suffix: {
+                col: void 0,
+                row: 400,
+                rowEnd: void 0,
+                colEnd: void 0,
+                suffix: {
+                  index: 1 + osTestPath[os].length,
+                  text: ":400"
+                }
+              }
+            }
+          ]);
+        });
+      }
+    });
+    suite("query strings", () => {
+      for (const os of operatingSystems) {
+        test(`should exclude query strings from link paths ${osLabel[os]}`, () => {
+          deepStrictEqual(detectLinks(`${osTestPath[os]}?a=b`, os), [
+            {
+              path: {
+                index: 0,
+                text: osTestPath[os]
+              },
+              prefix: void 0,
+              suffix: void 0
+            }
+          ]);
+          deepStrictEqual(detectLinks(`${osTestPath[os]}?a=b&c=d`, os), [
+            {
+              path: {
+                index: 0,
+                text: osTestPath[os]
+              },
+              prefix: void 0,
+              suffix: void 0
+            }
+          ]);
+        });
+        test("should not detect links starting with ? within query strings that contain posix-style paths (#204195)", () => {
+          strictEqual(detectLinks(`http://foo.com/?bar=/a/b&baz=c`, os).some((e) => e.path.text.startsWith("?")), false);
+        });
+        test("should not detect links starting with ? within query strings that contain Windows-style paths (#204195)", () => {
+          strictEqual(detectLinks(`http://foo.com/?bar=a:\\b&baz=c`, os).some((e) => e.path.text.startsWith("?")), false);
+        });
+      }
+    });
+    suite("should detect file names in git diffs", () => {
+      test("--- a/foo/bar", () => {
+        deepStrictEqual(detectLinks(
+          "--- a/foo/bar",
+          3
+          /* OperatingSystem.Linux */
+        ), [
+          {
+            path: {
+              index: 6,
+              text: "foo/bar"
+            },
+            prefix: void 0,
+            suffix: void 0
+          }
+        ]);
+      });
+      test("+++ b/foo/bar", () => {
+        deepStrictEqual(detectLinks(
+          "+++ b/foo/bar",
+          3
+          /* OperatingSystem.Linux */
+        ), [
+          {
+            path: {
+              index: 6,
+              text: "foo/bar"
+            },
+            prefix: void 0,
+            suffix: void 0
+          }
+        ]);
+      });
+      test("diff --git a/foo/bar b/foo/baz", () => {
+        deepStrictEqual(detectLinks(
+          "diff --git a/foo/bar b/foo/baz",
+          3
+          /* OperatingSystem.Linux */
+        ), [
+          {
+            path: {
+              index: 13,
+              text: "foo/bar"
+            },
+            prefix: void 0,
+            suffix: void 0
+          },
+          {
+            path: {
+              index: 23,
+              text: "foo/baz"
+            },
+            prefix: void 0,
+            suffix: void 0
+          }
+        ]);
+      });
+    });
+    suite("should detect 3 suffix links on a single line", () => {
+      for (let i = 0; i < testLinksWithSuffix.length - 2; i++) {
+        const link1 = testLinksWithSuffix[i];
+        const link2 = testLinksWithSuffix[i + 1];
+        const link3 = testLinksWithSuffix[i + 2];
+        const line = ` ${link1.link} ${link2.link} ${link3.link} `;
+        test("`" + line.replaceAll("\xA0", "<nbsp>") + "`", () => {
+          strictEqual(detectLinks(
+            line,
+            3
+            /* OperatingSystem.Linux */
+          ).length, 3);
+          ok(link1.suffix);
+          ok(link2.suffix);
+          ok(link3.suffix);
+          const detectedLink1 = {
+            prefix: link1.prefix ? {
+              index: 1,
+              text: link1.prefix
+            } : void 0,
+            path: {
+              index: 1 + (link1.prefix?.length ?? 0),
+              text: link1.link.replace(link1.suffix, "").replace(link1.prefix || "", "")
+            },
+            suffix: {
+              row: link1.hasRow ? testRow : void 0,
+              col: link1.hasCol ? testCol : void 0,
+              rowEnd: link1.hasRowEnd ? testRowEnd : void 0,
+              colEnd: link1.hasColEnd ? testColEnd : void 0,
+              suffix: {
+                index: 1 + (link1.link.length - link1.suffix.length),
+                text: link1.suffix
+              }
+            }
+          };
+          const detectedLink2 = {
+            prefix: link2.prefix ? {
+              index: (detectedLink1.prefix?.index ?? detectedLink1.path.index) + link1.link.length + 1,
+              text: link2.prefix
+            } : void 0,
+            path: {
+              index: (detectedLink1.prefix?.index ?? detectedLink1.path.index) + link1.link.length + 1 + (link2.prefix ?? "").length,
+              text: link2.link.replace(link2.suffix, "").replace(link2.prefix ?? "", "")
+            },
+            suffix: {
+              row: link2.hasRow ? testRow : void 0,
+              col: link2.hasCol ? testCol : void 0,
+              rowEnd: link2.hasRowEnd ? testRowEnd : void 0,
+              colEnd: link2.hasColEnd ? testColEnd : void 0,
+              suffix: {
+                index: (detectedLink1.prefix?.index ?? detectedLink1.path.index) + link1.link.length + 1 + (link2.link.length - link2.suffix.length),
+                text: link2.suffix
+              }
+            }
+          };
+          const detectedLink3 = {
+            prefix: link3.prefix ? {
+              index: (detectedLink2.prefix?.index ?? detectedLink2.path.index) + link2.link.length + 1,
+              text: link3.prefix
+            } : void 0,
+            path: {
+              index: (detectedLink2.prefix?.index ?? detectedLink2.path.index) + link2.link.length + 1 + (link3.prefix ?? "").length,
+              text: link3.link.replace(link3.suffix, "").replace(link3.prefix ?? "", "")
+            },
+            suffix: {
+              row: link3.hasRow ? testRow : void 0,
+              col: link3.hasCol ? testCol : void 0,
+              rowEnd: link3.hasRowEnd ? testRowEnd : void 0,
+              colEnd: link3.hasColEnd ? testColEnd : void 0,
+              suffix: {
+                index: (detectedLink2.prefix?.index ?? detectedLink2.path.index) + link2.link.length + 1 + (link3.link.length - link3.suffix.length),
+                text: link3.suffix
+              }
+            }
+          };
+          deepStrictEqual(detectLinks(
+            line,
+            3
+            /* OperatingSystem.Linux */
+          ), [detectedLink1, detectedLink2, detectedLink3]);
+        });
+      }
+    });
+    suite("should ignore links with suffixes when the path itself is the empty string", () => {
+      deepStrictEqual(detectLinks(
+        '""",1',
+        3
+        /* OperatingSystem.Linux */
+      ), []);
+    });
+  });
+});
+//# sourceMappingURL=terminalLinkParsing.test.js.map

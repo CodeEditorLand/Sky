@@ -1,1 +1,8 @@
-import{$nj as o}from"../../../../../platform/instantiation/common/instantiation.js";const r="notebookEditorWorkerService",e=o(r);export{r as $D0b,e as $E0b};
+import { createDecorator } from "../../../../../platform/instantiation/common/instantiation.js";
+const ID_NOTEBOOK_EDITOR_WORKER_SERVICE = "notebookEditorWorkerService";
+const INotebookEditorWorkerService = createDecorator(ID_NOTEBOOK_EDITOR_WORKER_SERVICE);
+export {
+  ID_NOTEBOOK_EDITOR_WORKER_SERVICE,
+  INotebookEditorWorkerService
+};
+//# sourceMappingURL=notebookWorkerService.js.map

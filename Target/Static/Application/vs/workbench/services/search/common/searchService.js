@@ -1,1 +1,428 @@
-import*as p from"../../../../base/common/arrays.js";import{$0h as C,$yh as x}from"../../../../base/common/async.js";import{$qb as T}from"../../../../base/common/errors.js";import{$vd as b,$td as M}from"../../../../base/common/lifecycle.js";import{$Ic as S,$Jc as y}from"../../../../base/common/map.js";import{Schemas as u}from"../../../../base/common/network.js";import{$uw as Q}from"../../../../base/common/numbers.js";import{$0e as F}from"../../../../base/common/stopwatch.js";import{$3c as H}from"../../../../base/common/types.js";import{$gF as A}from"../../../../editor/common/services/model.js";import{$5j as I}from"../../../../platform/files/common/files.js";import{$3n as _}from"../../../../platform/log/common/log.js";import{$Po as L}from"../../../../platform/telemetry/common/telemetry.js";import{$yo as O}from"../../../../platform/uriIdentity/common/uriIdentity.js";import{$sK as g,SideBySideEditor as $}from"../../../common/editor.js";import{$oI as W}from"../../editor/common/editorService.js";import{$XO as j}from"../../extensions/common/extensions.js";import{$iP as k,$vP as N,$oP as U,$mP as B,$lP as v,$nP as P,$tP as z,$gP as G,SearchErrorCode as m}from"./search.js";import{$7bc as J,$6bc as K}from"./searchHelpers.js";var E=function(e,t,s,r){var i,o=arguments.length,a=o<3?t:null===r?r=Object.getOwnPropertyDescriptor(t,s):r;if("object"==typeof Reflect&&"function"==typeof Reflect.decorate)a=Reflect.decorate(e,t,s,r);else for(var n=e.length-1;n>=0;n--)(i=e[n])&&(a=(o<3?i(a):o>3?i(t,s,a):i(t,s))||a);return o>3&&a&&Object.defineProperty(t,s,a),a},f=function(e,t){return function(s,r){t(s,r,e)}};let R=class extends b{constructor(e,t,s,r,i,o,a){super(),this.n=e,this.r=t,this.s=s,this.t=r,this.u=i,this.w=o,this.z=a,this.a=new Map,this.b=new Map,this.f=new Map,this.g=new Map,this.h=new Map,this.j=new Map,this.m=new Set}registerSearchResultProvider(e,t,s){let r,i;if(0===t)r=this.a,i=this.g;else if(1===t)r=this.b,i=this.h;else{if(2!==t)throw new Error("Unknown SearchProviderType");r=this.f,i=this.j}return r.set(e,s),i.has(e)&&(i.get(e).complete(s),i.delete(e)),M((()=>{r.delete(e)}))}async textSearch(e,t,s){const r=this.textSearchSplitSyncAsync(e,t,s),i=r.syncResults,o=await r.asyncResults;return{limitHit:o.limitHit||i.limitHit,results:[...o.results,...i.results],messages:[...o.messages,...i.messages]}}async aiTextSearch(e,t,s){return this.C(e,t,(e=>{s&&(v(e)||B(e),s(e)),P(e)&&this.t.debug("SearchService#search",e.message)}))}async getAIName(){return await(this.G(3).get(u.file)?.getAIName())}textSearchSplitSyncAsync(e,t,s,r,i){const o=this.M(e);return s&&p.$7b([...o.results.values()]).filter((e=>!(r&&r.has(e.resource)))).forEach(s),{syncResults:{results:p.$7b([...o.results.values()]),limitHit:o.limitHit??!1,messages:[]},asyncResults:(async()=>{const r=await i??new y;return await this.C(e,t,(e=>{v(e)?!o.results.has(e.resource)&&!r.has(e.resource)&&s&&s(e):s&&s(e),P(e)&&this.t.debug("SearchService#search",e.message)}))})()}}fileSearch(e,t){return this.C(e,t)}schemeHasFileSearchProvider(e){return this.a.has(e)}C(e,t,s){this.t.trace("SearchService#search",JSON.stringify(e));const r=this.D(e),i=[Promise.resolve(null)];r.forEach((e=>i.push(this.u.activateByEvent(`onSearch:${e}`)))),i.push(this.u.activateByEvent("onSearch:file"));const o=(async()=>{if(await Promise.all(i),await this.u.whenInstalledExtensionsRegistered(),t&&t.isCancellationRequested)return Promise.reject(new T);const r=await Promise.all(e.folderQueries.map((e=>this.w.exists(e.folder))));e.folderQueries=e.folderQueries.filter(((e,t)=>r[t]));let o=await this.I(e,(e=>{t&&t.isCancellationRequested||s?.(e)}),t);return o=p.$7b(o),o.length?{limitHit:o[0]&&o[0].limitHit,stats:o[0].stats,messages:p.$7b(o.flatMap((e=>e.messages))).filter(p.$ac((e=>e.type+e.text+e.trusted))),results:o.flatMap((e=>e.results)),aiKeywords:o.flatMap((e=>e.aiKeywords)).filter((e=>void 0!==e))}:{limitHit:!1,results:[],messages:[]}})();return t?x(o,t):o}D(e){const t=new Set;return e.folderQueries?.forEach((e=>t.add(e.folder.scheme))),e.extraFileResources?.forEach((e=>t.add(e.scheme))),t}async F(e,t){const s=this.H(e);if(s.has(t))return s.get(t).p;{const e=new C;return s.set(t,e),e.p}}G(e){switch(e){case 1:return this.a;case 2:return this.b;case 3:return this.f;default:throw new Error(`Unknown query type: ${e}`)}}H(e){switch(e){case 1:return this.g;case 2:return this.h;case 3:return this.j;default:throw new Error(`Unknown query type: ${e}`)}}async I(e,t,s){const r=F.create(!1),i=[],o=this.J(e),a=[...o.keys()].some((t=>this.G(e.type).has(t)));return await Promise.all([...o.keys()].map((async r=>{if(e.onlyFileScheme&&r!==u.file)return;const n=o.get(r);let c=this.G(e.type).get(r);if(!c){if(a)return void(this.m.has(r)||(this.t.warn(`No search provider registered for scheme: ${r}. Another scheme has a provider, not waiting for ${r}`),this.m.add(r)));this.m.has(r)||(this.t.warn(`No search provider registered for scheme: ${r}, waiting`),this.m.add(r)),c=await this.F(e.type,r)}const l={...e,folderQueries:n};i.push(1===e.type?c.fileSearch(l,s):c.textSearch(l,t,s))}))),Promise.all(i).then((t=>{const s=r.elapsed();return this.t.trace(`SearchService#search: ${s}ms`),t.forEach((t=>{this.L(e,s,t)})),t}),(t=>{const s=r.elapsed();this.t.trace(`SearchService#search: ${s}ms`);const i=N(t);throw this.t.trace(`SearchService#searchError: ${i.message}`),this.L(e,s,void 0,i),i}))}J(e){const t=new Map;return e.folderQueries.forEach((e=>{const s=t.get(e.folder.scheme)||[];s.push(e),t.set(e.folder.scheme,s)})),t}L(e,t,s,r){if(!Q(.05))return;const i=e.folderQueries.every((e=>e.folder.scheme===u.file)),o=e.folderQueries.every((e=>e.folder.scheme!==u.file)),a=i?u.file:o?"other":"mixed";if(1===e.type&&s&&s.stats){const r=s.stats;if(r.fromCache){const s=r.detailStats;this.s.publicLog2("cachedSearchComplete",{reason:e._reason,resultCount:r.resultCount,workspaceFolderCount:e.folderQueries.length,endToEndTime:t,sortingTime:r.sortingTime,cacheWasResolved:s.cacheWasResolved,cacheLookupTime:s.cacheLookupTime,cacheFilterTime:s.cacheFilterTime,cacheEntryCount:s.cacheEntryCount,scheme:a})}else{const s=r.detailStats;this.s.publicLog2("searchComplete",{reason:e._reason,resultCount:r.resultCount,workspaceFolderCount:e.folderQueries.length,endToEndTime:t,sortingTime:r.sortingTime,fileWalkTime:s.fileWalkTime,directoriesWalked:s.directoriesWalked,filesWalked:s.filesWalked,cmdTime:s.cmdTime,cmdResultCount:s.cmdResultCount,scheme:a})}}else if(2===e.type){let s;r&&(s=r.code===m.regexParseError?"regex":r.code===m.unknownEncoding?"encoding":r.code===m.globParseError?"glob":r.code===m.invalidLiteral?"literal":r.code===m.other?"other":r.code===m.canceled?"canceled":"unknown"),this.s.publicLog2("textSearchComplete",{reason:e._reason,workspaceFolderCount:e.folderQueries.length,endToEndTime:t,scheme:a,error:s})}}M(e){const t=new S((e=>this.z.extUri.getComparisonKey(e)));let s=!1;if(2===e.type){const r=new S;for(const e of this.r.editors){const t=g.getCanonicalUri(e,{supportSideBySide:$.PRIMARY}),s=g.getOriginalUri(e,{supportSideBySide:$.PRIMARY});t&&r.set(t,s??t)}this.n.getModels().forEach((i=>{const o=i.uri;if(!o||s)return;const a=r.get(o);if(!a||i.getLanguageId()===G&&(!e.includePattern||!e.includePattern["**/*.code-search"])||a.scheme!==u.untitled&&!this.w.hasProvider(a)||"git"===a.scheme||!this.N(a,e))return;const n=(H(e.maxResults)?e.maxResults:k)+1;let c=i.findMatches(e.contentPattern.pattern,!1,!!e.contentPattern.isRegExp,!!e.contentPattern.isCaseSensitive,e.contentPattern.isWordMatch?e.contentPattern.wordSeparators:null,!1,n);if(c.length){n&&c.length>=n&&(s=!0,c=c.slice(0,n-1));const r=new U(a);t.set(a,r);const o=K(c,i,e.previewOptions);r.results=J(o,i,e)}else t.set(a,null)}))}return{results:t,limitHit:s}}N(e,t){return z(t,e.fsPath)}async clearCache(e){const t=Array.from(this.a.values()).map((t=>t&&t.clearCache(e)));await Promise.all(t)}};R=E([f(0,A),f(1,W),f(2,L),f(3,_),f(4,j),f(5,I),f(6,O)],R);export{R as $Pzc};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import * as arrays from "../../../../base/common/arrays.js";
+import { DeferredPromise, raceCancellationError } from "../../../../base/common/async.js";
+import { CancellationError } from "../../../../base/common/errors.js";
+import { Disposable, toDisposable } from "../../../../base/common/lifecycle.js";
+import { ResourceMap, ResourceSet } from "../../../../base/common/map.js";
+import { Schemas } from "../../../../base/common/network.js";
+import { randomChance } from "../../../../base/common/numbers.js";
+import { StopWatch } from "../../../../base/common/stopwatch.js";
+import { isNumber } from "../../../../base/common/types.js";
+import { IModelService } from "../../../../editor/common/services/model.js";
+import { IFileService } from "../../../../platform/files/common/files.js";
+import { ILogService } from "../../../../platform/log/common/log.js";
+import { ITelemetryService } from "../../../../platform/telemetry/common/telemetry.js";
+import { IUriIdentityService } from "../../../../platform/uriIdentity/common/uriIdentity.js";
+import { EditorResourceAccessor, SideBySideEditor } from "../../../common/editor.js";
+import { IEditorService } from "../../editor/common/editorService.js";
+import { IExtensionService } from "../../extensions/common/extensions.js";
+import { DEFAULT_MAX_SEARCH_RESULTS, deserializeSearchError, FileMatch, isAIKeyword, isFileMatch, isProgressMessage, pathIncludedInQuery, SEARCH_RESULT_LANGUAGE_ID, SearchErrorCode } from "./search.js";
+import { getTextSearchMatchWithModelContext, editorMatchesToTextSearchResults } from "./searchHelpers.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+let SearchService = class SearchService2 extends Disposable {
+  static {
+    __name(this, "SearchService");
+  }
+  constructor(modelService, editorService, telemetryService, logService, extensionService, fileService, uriIdentityService) {
+    super();
+    this.modelService = modelService;
+    this.editorService = editorService;
+    this.telemetryService = telemetryService;
+    this.logService = logService;
+    this.extensionService = extensionService;
+    this.fileService = fileService;
+    this.uriIdentityService = uriIdentityService;
+    this.fileSearchProviders = /* @__PURE__ */ new Map();
+    this.textSearchProviders = /* @__PURE__ */ new Map();
+    this.aiTextSearchProviders = /* @__PURE__ */ new Map();
+    this.deferredFileSearchesByScheme = /* @__PURE__ */ new Map();
+    this.deferredTextSearchesByScheme = /* @__PURE__ */ new Map();
+    this.deferredAITextSearchesByScheme = /* @__PURE__ */ new Map();
+    this.loggedSchemesMissingProviders = /* @__PURE__ */ new Set();
+  }
+  registerSearchResultProvider(scheme, type, provider) {
+    let list;
+    let deferredMap;
+    if (type === 0) {
+      list = this.fileSearchProviders;
+      deferredMap = this.deferredFileSearchesByScheme;
+    } else if (type === 1) {
+      list = this.textSearchProviders;
+      deferredMap = this.deferredTextSearchesByScheme;
+    } else if (type === 2) {
+      list = this.aiTextSearchProviders;
+      deferredMap = this.deferredAITextSearchesByScheme;
+    } else {
+      throw new Error("Unknown SearchProviderType");
+    }
+    list.set(scheme, provider);
+    if (deferredMap.has(scheme)) {
+      deferredMap.get(scheme).complete(provider);
+      deferredMap.delete(scheme);
+    }
+    return toDisposable(() => {
+      list.delete(scheme);
+    });
+  }
+  async textSearch(query, token, onProgress) {
+    const results = this.textSearchSplitSyncAsync(query, token, onProgress);
+    const openEditorResults = results.syncResults;
+    const otherResults = await results.asyncResults;
+    return {
+      limitHit: otherResults.limitHit || openEditorResults.limitHit,
+      results: [...otherResults.results, ...openEditorResults.results],
+      messages: [...otherResults.messages, ...openEditorResults.messages]
+    };
+  }
+  async aiTextSearch(query, token, onProgress) {
+    const onProviderProgress = /* @__PURE__ */ __name((progress) => {
+      if (onProgress) {
+        if (isFileMatch(progress) || isAIKeyword(progress)) {
+          onProgress(progress);
+        } else {
+          onProgress(progress);
+        }
+      }
+      if (isProgressMessage(progress)) {
+        this.logService.debug("SearchService#search", progress.message);
+      }
+    }, "onProviderProgress");
+    return this.doSearch(query, token, onProviderProgress);
+  }
+  async getAIName() {
+    const provider = this.getSearchProvider(
+      3
+      /* QueryType.aiText */
+    ).get(Schemas.file);
+    return await provider?.getAIName();
+  }
+  textSearchSplitSyncAsync(query, token, onProgress, notebookFilesToIgnore, asyncNotebookFilesToIgnore) {
+    const openEditorResults = this.getOpenEditorResults(query);
+    if (onProgress) {
+      arrays.coalesce([...openEditorResults.results.values()]).filter((e) => !(notebookFilesToIgnore && notebookFilesToIgnore.has(e.resource))).forEach(onProgress);
+    }
+    const syncResults = {
+      results: arrays.coalesce([...openEditorResults.results.values()]),
+      limitHit: openEditorResults.limitHit ?? false,
+      messages: []
+    };
+    const getAsyncResults = /* @__PURE__ */ __name(async () => {
+      const resolvedAsyncNotebookFilesToIgnore = await asyncNotebookFilesToIgnore ?? new ResourceSet();
+      const onProviderProgress = /* @__PURE__ */ __name((progress) => {
+        if (isFileMatch(progress)) {
+          if (!openEditorResults.results.has(progress.resource) && !resolvedAsyncNotebookFilesToIgnore.has(progress.resource) && onProgress) {
+            onProgress(progress);
+          }
+        } else if (onProgress) {
+          onProgress(progress);
+        }
+        if (isProgressMessage(progress)) {
+          this.logService.debug("SearchService#search", progress.message);
+        }
+      }, "onProviderProgress");
+      return await this.doSearch(query, token, onProviderProgress);
+    }, "getAsyncResults");
+    return {
+      syncResults,
+      asyncResults: getAsyncResults()
+    };
+  }
+  fileSearch(query, token) {
+    return this.doSearch(query, token);
+  }
+  schemeHasFileSearchProvider(scheme) {
+    return this.fileSearchProviders.has(scheme);
+  }
+  doSearch(query, token, onProgress) {
+    this.logService.trace("SearchService#search", JSON.stringify(query));
+    const schemesInQuery = this.getSchemesInQuery(query);
+    const providerActivations = [Promise.resolve(null)];
+    schemesInQuery.forEach((scheme) => providerActivations.push(this.extensionService.activateByEvent(`onSearch:${scheme}`)));
+    providerActivations.push(this.extensionService.activateByEvent("onSearch:file"));
+    const providerPromise = (async () => {
+      await Promise.all(providerActivations);
+      await this.extensionService.whenInstalledExtensionsRegistered();
+      if (token && token.isCancellationRequested) {
+        return Promise.reject(new CancellationError());
+      }
+      const progressCallback = /* @__PURE__ */ __name((item) => {
+        if (token && token.isCancellationRequested) {
+          return;
+        }
+        onProgress?.(item);
+      }, "progressCallback");
+      const exists = await Promise.all(query.folderQueries.map((query2) => this.fileService.exists(query2.folder)));
+      query.folderQueries = query.folderQueries.filter((_, i) => exists[i]);
+      let completes = await this.searchWithProviders(query, progressCallback, token);
+      completes = arrays.coalesce(completes);
+      if (!completes.length) {
+        return {
+          limitHit: false,
+          results: [],
+          messages: []
+        };
+      }
+      return {
+        limitHit: completes[0] && completes[0].limitHit,
+        stats: completes[0].stats,
+        messages: arrays.coalesce(completes.flatMap((i) => i.messages)).filter(arrays.uniqueFilter((message) => message.type + message.text + message.trusted)),
+        results: completes.flatMap((c) => c.results),
+        aiKeywords: completes.flatMap((c) => c.aiKeywords).filter((keyword) => keyword !== void 0)
+      };
+    })();
+    return token ? raceCancellationError(providerPromise, token) : providerPromise;
+  }
+  getSchemesInQuery(query) {
+    const schemes = /* @__PURE__ */ new Set();
+    query.folderQueries?.forEach((fq) => schemes.add(fq.folder.scheme));
+    query.extraFileResources?.forEach((extraFile) => schemes.add(extraFile.scheme));
+    return schemes;
+  }
+  async waitForProvider(queryType, scheme) {
+    const deferredMap = this.getDeferredTextSearchesByScheme(queryType);
+    if (deferredMap.has(scheme)) {
+      return deferredMap.get(scheme).p;
+    } else {
+      const deferred = new DeferredPromise();
+      deferredMap.set(scheme, deferred);
+      return deferred.p;
+    }
+  }
+  getSearchProvider(type) {
+    switch (type) {
+      case 1:
+        return this.fileSearchProviders;
+      case 2:
+        return this.textSearchProviders;
+      case 3:
+        return this.aiTextSearchProviders;
+      default:
+        throw new Error(`Unknown query type: ${type}`);
+    }
+  }
+  getDeferredTextSearchesByScheme(type) {
+    switch (type) {
+      case 1:
+        return this.deferredFileSearchesByScheme;
+      case 2:
+        return this.deferredTextSearchesByScheme;
+      case 3:
+        return this.deferredAITextSearchesByScheme;
+      default:
+        throw new Error(`Unknown query type: ${type}`);
+    }
+  }
+  async searchWithProviders(query, onProviderProgress, token) {
+    const e2eSW = StopWatch.create(false);
+    const searchPs = [];
+    const fqs = this.groupFolderQueriesByScheme(query);
+    const someSchemeHasProvider = [...fqs.keys()].some((scheme) => {
+      return this.getSearchProvider(query.type).has(scheme);
+    });
+    await Promise.all([...fqs.keys()].map(async (scheme) => {
+      if (query.onlyFileScheme && scheme !== Schemas.file) {
+        return;
+      }
+      const schemeFQs = fqs.get(scheme);
+      let provider = this.getSearchProvider(query.type).get(scheme);
+      if (!provider) {
+        if (someSchemeHasProvider) {
+          if (!this.loggedSchemesMissingProviders.has(scheme)) {
+            this.logService.warn(`No search provider registered for scheme: ${scheme}. Another scheme has a provider, not waiting for ${scheme}`);
+            this.loggedSchemesMissingProviders.add(scheme);
+          }
+          return;
+        } else {
+          if (!this.loggedSchemesMissingProviders.has(scheme)) {
+            this.logService.warn(`No search provider registered for scheme: ${scheme}, waiting`);
+            this.loggedSchemesMissingProviders.add(scheme);
+          }
+          provider = await this.waitForProvider(query.type, scheme);
+        }
+      }
+      const oneSchemeQuery = {
+        ...query,
+        ...{
+          folderQueries: schemeFQs
+        }
+      };
+      const doProviderSearch = /* @__PURE__ */ __name(() => {
+        switch (query.type) {
+          case 1:
+            return provider.fileSearch(oneSchemeQuery, token);
+          case 2:
+            return provider.textSearch(oneSchemeQuery, onProviderProgress, token);
+          default:
+            return provider.textSearch(oneSchemeQuery, onProviderProgress, token);
+        }
+      }, "doProviderSearch");
+      searchPs.push(doProviderSearch());
+    }));
+    return Promise.all(searchPs).then((completes) => {
+      const endToEndTime = e2eSW.elapsed();
+      this.logService.trace(`SearchService#search: ${endToEndTime}ms`);
+      completes.forEach((complete) => {
+        this.sendTelemetry(query, endToEndTime, complete);
+      });
+      return completes;
+    }, (err) => {
+      const endToEndTime = e2eSW.elapsed();
+      this.logService.trace(`SearchService#search: ${endToEndTime}ms`);
+      const searchError = deserializeSearchError(err);
+      this.logService.trace(`SearchService#searchError: ${searchError.message}`);
+      this.sendTelemetry(query, endToEndTime, void 0, searchError);
+      throw searchError;
+    });
+  }
+  groupFolderQueriesByScheme(query) {
+    const queries = /* @__PURE__ */ new Map();
+    query.folderQueries.forEach((fq) => {
+      const schemeFQs = queries.get(fq.folder.scheme) || [];
+      schemeFQs.push(fq);
+      queries.set(fq.folder.scheme, schemeFQs);
+    });
+    return queries;
+  }
+  sendTelemetry(query, endToEndTime, complete, err) {
+    if (!randomChance(5 / 100)) {
+      return;
+    }
+    const fileSchemeOnly = query.folderQueries.every((fq) => fq.folder.scheme === Schemas.file);
+    const otherSchemeOnly = query.folderQueries.every((fq) => fq.folder.scheme !== Schemas.file);
+    const scheme = fileSchemeOnly ? Schemas.file : otherSchemeOnly ? "other" : "mixed";
+    if (query.type === 1 && complete && complete.stats) {
+      const fileSearchStats = complete.stats;
+      if (fileSearchStats.fromCache) {
+        const cacheStats = fileSearchStats.detailStats;
+        this.telemetryService.publicLog2("cachedSearchComplete", {
+          reason: query._reason,
+          resultCount: fileSearchStats.resultCount,
+          workspaceFolderCount: query.folderQueries.length,
+          endToEndTime,
+          sortingTime: fileSearchStats.sortingTime,
+          cacheWasResolved: cacheStats.cacheWasResolved,
+          cacheLookupTime: cacheStats.cacheLookupTime,
+          cacheFilterTime: cacheStats.cacheFilterTime,
+          cacheEntryCount: cacheStats.cacheEntryCount,
+          scheme
+        });
+      } else {
+        const searchEngineStats = fileSearchStats.detailStats;
+        this.telemetryService.publicLog2("searchComplete", {
+          reason: query._reason,
+          resultCount: fileSearchStats.resultCount,
+          workspaceFolderCount: query.folderQueries.length,
+          endToEndTime,
+          sortingTime: fileSearchStats.sortingTime,
+          fileWalkTime: searchEngineStats.fileWalkTime,
+          directoriesWalked: searchEngineStats.directoriesWalked,
+          filesWalked: searchEngineStats.filesWalked,
+          cmdTime: searchEngineStats.cmdTime,
+          cmdResultCount: searchEngineStats.cmdResultCount,
+          scheme
+        });
+      }
+    } else if (query.type === 2) {
+      let errorType;
+      if (err) {
+        errorType = err.code === SearchErrorCode.regexParseError ? "regex" : err.code === SearchErrorCode.unknownEncoding ? "encoding" : err.code === SearchErrorCode.globParseError ? "glob" : err.code === SearchErrorCode.invalidLiteral ? "literal" : err.code === SearchErrorCode.other ? "other" : err.code === SearchErrorCode.canceled ? "canceled" : "unknown";
+      }
+      this.telemetryService.publicLog2("textSearchComplete", {
+        reason: query._reason,
+        workspaceFolderCount: query.folderQueries.length,
+        endToEndTime,
+        scheme,
+        error: errorType
+      });
+    }
+  }
+  getOpenEditorResults(query) {
+    const openEditorResults = new ResourceMap((uri) => this.uriIdentityService.extUri.getComparisonKey(uri));
+    let limitHit = false;
+    if (query.type === 2) {
+      const canonicalToOriginalResources = new ResourceMap();
+      for (const editorInput of this.editorService.editors) {
+        const canonical = EditorResourceAccessor.getCanonicalUri(editorInput, { supportSideBySide: SideBySideEditor.PRIMARY });
+        const original = EditorResourceAccessor.getOriginalUri(editorInput, { supportSideBySide: SideBySideEditor.PRIMARY });
+        if (canonical) {
+          canonicalToOriginalResources.set(canonical, original ?? canonical);
+        }
+      }
+      const models = this.modelService.getModels();
+      models.forEach((model) => {
+        const resource = model.uri;
+        if (!resource) {
+          return;
+        }
+        if (limitHit) {
+          return;
+        }
+        const originalResource = canonicalToOriginalResources.get(resource);
+        if (!originalResource) {
+          return;
+        }
+        if (model.getLanguageId() === SEARCH_RESULT_LANGUAGE_ID && !(query.includePattern && query.includePattern["**/*.code-search"])) {
+          return;
+        }
+        if (originalResource.scheme !== Schemas.untitled && !this.fileService.hasProvider(originalResource)) {
+          return;
+        }
+        if (originalResource.scheme === "git") {
+          return;
+        }
+        if (!this.matches(originalResource, query)) {
+          return;
+        }
+        const askMax = (isNumber(query.maxResults) ? query.maxResults : DEFAULT_MAX_SEARCH_RESULTS) + 1;
+        let matches = model.findMatches(query.contentPattern.pattern, false, !!query.contentPattern.isRegExp, !!query.contentPattern.isCaseSensitive, query.contentPattern.isWordMatch ? query.contentPattern.wordSeparators : null, false, askMax);
+        if (matches.length) {
+          if (askMax && matches.length >= askMax) {
+            limitHit = true;
+            matches = matches.slice(0, askMax - 1);
+          }
+          const fileMatch = new FileMatch(originalResource);
+          openEditorResults.set(originalResource, fileMatch);
+          const textSearchResults = editorMatchesToTextSearchResults(matches, model, query.previewOptions);
+          fileMatch.results = getTextSearchMatchWithModelContext(textSearchResults, model, query);
+        } else {
+          openEditorResults.set(originalResource, null);
+        }
+      });
+    }
+    return {
+      results: openEditorResults,
+      limitHit
+    };
+  }
+  matches(resource, query) {
+    return pathIncludedInQuery(query, resource.fsPath);
+  }
+  async clearCache(cacheKey) {
+    const clearPs = Array.from(this.fileSearchProviders.values()).map((provider) => provider && provider.clearCache(cacheKey));
+    await Promise.all(clearPs);
+  }
+};
+SearchService = __decorate([
+  __param(0, IModelService),
+  __param(1, IEditorService),
+  __param(2, ITelemetryService),
+  __param(3, ILogService),
+  __param(4, IExtensionService),
+  __param(5, IFileService),
+  __param(6, IUriIdentityService)
+], SearchService);
+export {
+  SearchService
+};
+//# sourceMappingURL=searchService.js.map

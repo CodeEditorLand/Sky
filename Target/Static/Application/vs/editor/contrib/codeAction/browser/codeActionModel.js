@@ -1,1 +1,331 @@
-import{$wh as L,$Wh as O}from"../../../../base/common/async.js";import{$pb as Q}from"../../../../base/common/errors.js";import{$df as R}from"../../../../base/common/event.js";import{$8C as W}from"../../../../base/common/hierarchicalKind.js";import{$vd as k,$wd as B}from"../../../../base/common/lifecycle.js";import{$dh as q}from"../../../../base/common/resources.js";import{$Un as U}from"../../../../platform/contextkey/common/contextkey.js";import{$YI as x}from"../../../../platform/progress/common/progress.js";import{ShowLightbulbIconMode as F}from"../../../common/config/editorOptions.js";import{$bC as V}from"../../../common/core/position.js";import{$RC as _}from"../../../common/core/selection.js";import{$Qhb as I,CodeActionTriggerSource as M}from"../common/types.js";import{$4hb as v}from"./codeAction.js";const K=new U("supportedCodeAction",""),D="_typescript.applyFixAllCodeAction";class X extends k{constructor(i,e,t,d=250){super(),this.f=i,this.g=e,this.h=t,this.j=d,this.c=this.B(new O),this.B(this.g.onMarkerChanged(c=>this.m(c))),this.B(this.f.onDidChangeCursorPosition(()=>this.n()))}trigger(i){const e=this.r(i);this.h(e?{trigger:i,selection:e}:void 0)}m(i){const e=this.f.getModel();e&&i.some(t=>q(t,e.uri))&&this.n()}n(){this.c.cancelAndSet(()=>{this.trigger({type:2,triggerAction:M.Default})},this.j)}r(i){if(!this.f.hasModel())return;const e=this.f.getSelection();if(i.type===1)return e;const t=this.f.getOption(69).enabled;if(t!==F.Off){{if(t===F.On)return e;if(t===F.OnCode){if(!e.isEmpty())return e;const c=this.f.getModel(),{lineNumber:n,column:r}=e.getPosition(),o=c.getLineContent(n);if(o.length===0)return;if(r===1){if(/\s/.test(o[0]))return}else if(r===c.getLineMaxColumn(n)){if(/\s/.test(o[o.length-1]))return}else if(/\s/.test(o[r-2])&&/\s/.test(o[r-1]))return}}return e}}}var f;(function(m){let i;(function(t){t[t.Empty=0]="Empty",t[t.Triggered=1]="Triggered"})(i=m.Type||(m.Type={})),m.Empty={type:0};class e{constructor(d,c,n){this.trigger=d,this.position=c,this.c=n,this.type=1,this.actions=n.catch(r=>{if(Q(r))return $;throw r})}cancel(){this.c.cancel()}}m.Triggered=e})(f||(f={}));const $=Object.freeze({allActions:[],validActions:[],dispose:()=>{},documentation:[],hasAutoFix:!1,hasAIFix:!1,allAIFixes:!1});class lt extends k{constructor(i,e,t,d,c,n){super(),this.n=i,this.r=e,this.s=t,this.t=c,this.u=n,this.c=this.B(new B),this.f=f.Empty,this.h=this.B(new R),this.onDidChangeState=this.h.event,this.j=this.B(new B),this.m=!1,this.g=K.bindTo(d),this.B(this.n.onDidChangeModel(()=>this.y())),this.B(this.n.onDidChangeModelLanguage(()=>this.y())),this.B(this.r.onDidChange(()=>this.y())),this.B(this.n.onDidChangeConfiguration(r=>{r.hasChanged(69)&&this.y()})),this.y()}dispose(){this.m||(this.m=!0,super.dispose(),this.z(f.Empty,!0))}w(){const i=this.n?.getModel();return this.u?this.u.getValue("editor.codeActionWidget.includeNearbyQuickFixes",{resource:i?.uri}):!1}y(){if(this.m)return;this.c.value=void 0,this.z(f.Empty);const i=this.n.getModel();if(i&&this.r.has(i)&&!this.n.getOption(99)){const e=this.r.all(i).flatMap(t=>t.providedCodeActionKinds??[]);this.g.set(e.join(" ")),this.c.value=new X(this.n,this.s,t=>{if(!t){this.z(f.Empty);return}const d=t.selection.getStartPosition(),c=L(async o=>{if(this.w()&&t.trigger.type===1&&(t.trigger.triggerAction===M.QuickFix||t.trigger.filter?.include?.contains(I.QuickFix))){const s=await v(this.r,i,t.selection,t.trigger,x.None,o);this.j.value=s;const C=[...s.allActions];if(o.isCancellationRequested)return s.dispose(),$;const E=s.validActions?.some(l=>l.action.kind?I.QuickFix.contains(new W(l.action.kind)):!1),g=this.s.read({resource:i.uri});if(E){for(const l of s.validActions)l.action.command?.arguments?.some(a=>typeof a=="string"&&a.includes(D))&&(l.action.diagnostics=[...g.filter(a=>a.relatedInformation)]);return{validActions:s.validActions,allActions:C,documentation:s.documentation,hasAutoFix:s.hasAutoFix,hasAIFix:s.hasAIFix,allAIFixes:s.allAIFixes,dispose:()=>{this.j.value=s}}}else if(!E&&g.length>0){const l=t.selection.getPosition();let a=l,P=Number.MAX_VALUE;const b=[...s.validActions];for(const h of g){const u=h.endColumn,A=h.endLineNumber,w=h.startLineNumber;if(A===l.lineNumber||w===l.lineNumber){a=new V(A,u);const S={type:t.trigger.type,triggerAction:t.trigger.triggerAction,filter:{include:t.trigger.filter?.include?t.trigger.filter?.include:I.QuickFix},autoApply:t.trigger.autoApply,context:{notAvailableMessage:t.trigger.context?.notAvailableMessage||"",position:a}},z=new _(a.lineNumber,a.column,a.lineNumber,a.column),p=await v(this.r,i,z,S,x.None,o);if(o.isCancellationRequested)return p.dispose(),$;if(p.validActions.length!==0){for(const T of p.validActions)T.action.command?.arguments?.some(y=>typeof y=="string"&&y.includes(D))&&(T.action.diagnostics=[...g.filter(y=>y.relatedInformation)]);s.allActions.length===0&&C.push(...p.allActions),Math.abs(l.column-u)<P?b.unshift(...p.validActions):b.push(...p.validActions)}P=Math.abs(l.column-u)}}const j=b.filter((h,u,A)=>A.findIndex(w=>w.action.title===h.action.title)===u);return j.sort((h,u)=>h.action.isPreferred&&!u.action.isPreferred?-1:!h.action.isPreferred&&u.action.isPreferred||h.action.isAI&&!u.action.isAI?1:!h.action.isAI&&u.action.isAI?-1:0),{validActions:j,allActions:C,documentation:s.documentation,hasAutoFix:s.hasAutoFix,hasAIFix:s.hasAIFix,allAIFixes:s.allAIFixes,dispose:()=>{this.j.value=s}}}}if(t.trigger.type===1){const s=await v(this.r,i,t.selection,t.trigger,x.None,o);return this.j.value=s,s}const N=await v(this.r,i,t.selection,t.trigger,x.None,o);return this.j.value=N,N});t.trigger.type===1&&this.t?.showWhile(c,250);const n=new f.Triggered(t.trigger,d,c);let r=!1;this.f.type===1&&(r=this.f.trigger.type===1&&n.type===1&&n.trigger.type===2&&this.f.position!==n.position),r?setTimeout(()=>{this.z(n)},500):this.z(n)},void 0),this.c.value.trigger({type:2,triggerAction:M.Default})}else this.g.reset()}trigger(i){this.c.value?.trigger(i),this.j.dispose()}z(i,e){i!==this.f&&(this.f.type===1&&this.f.cancel(),this.f=i,!e&&!this.m&&this.h.fire(i))}}export{K as $Cib,D as $Dib,lt as $Eib,f as CodeActionsState};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { createCancelablePromise, TimeoutTimer } from "../../../../base/common/async.js";
+import { isCancellationError } from "../../../../base/common/errors.js";
+import { Emitter } from "../../../../base/common/event.js";
+import { HierarchicalKind } from "../../../../base/common/hierarchicalKind.js";
+import { Disposable, MutableDisposable } from "../../../../base/common/lifecycle.js";
+import { isEqual } from "../../../../base/common/resources.js";
+import { RawContextKey } from "../../../../platform/contextkey/common/contextkey.js";
+import { Progress } from "../../../../platform/progress/common/progress.js";
+import { ShowLightbulbIconMode } from "../../../common/config/editorOptions.js";
+import { Position } from "../../../common/core/position.js";
+import { Selection } from "../../../common/core/selection.js";
+import { CodeActionKind, CodeActionTriggerSource } from "../common/types.js";
+import { getCodeActions } from "./codeAction.js";
+const SUPPORTED_CODE_ACTIONS = new RawContextKey("supportedCodeAction", "");
+const APPLY_FIX_ALL_COMMAND_ID = "_typescript.applyFixAllCodeAction";
+class CodeActionOracle extends Disposable {
+  static {
+    __name(this, "CodeActionOracle");
+  }
+  constructor(_editor, _markerService, _signalChange, _delay = 250) {
+    super();
+    this._editor = _editor;
+    this._markerService = _markerService;
+    this._signalChange = _signalChange;
+    this._delay = _delay;
+    this._autoTriggerTimer = this._register(new TimeoutTimer());
+    this._register(this._markerService.onMarkerChanged((e) => this._onMarkerChanges(e)));
+    this._register(this._editor.onDidChangeCursorPosition(() => this._tryAutoTrigger()));
+  }
+  trigger(trigger) {
+    const selection = this._getRangeOfSelectionUnlessWhitespaceEnclosed(trigger);
+    this._signalChange(selection ? { trigger, selection } : void 0);
+  }
+  _onMarkerChanges(resources) {
+    const model = this._editor.getModel();
+    if (model && resources.some((resource) => isEqual(resource, model.uri))) {
+      this._tryAutoTrigger();
+    }
+  }
+  _tryAutoTrigger() {
+    this._autoTriggerTimer.cancelAndSet(() => {
+      this.trigger({ type: 2, triggerAction: CodeActionTriggerSource.Default });
+    }, this._delay);
+  }
+  _getRangeOfSelectionUnlessWhitespaceEnclosed(trigger) {
+    if (!this._editor.hasModel()) {
+      return void 0;
+    }
+    const selection = this._editor.getSelection();
+    if (trigger.type === 1) {
+      return selection;
+    }
+    const enabled = this._editor.getOption(
+      69
+      /* EditorOption.lightbulb */
+    ).enabled;
+    if (enabled === ShowLightbulbIconMode.Off) {
+      return void 0;
+    } else if (enabled === ShowLightbulbIconMode.On) {
+      return selection;
+    } else if (enabled === ShowLightbulbIconMode.OnCode) {
+      const isSelectionEmpty = selection.isEmpty();
+      if (!isSelectionEmpty) {
+        return selection;
+      }
+      const model = this._editor.getModel();
+      const { lineNumber, column } = selection.getPosition();
+      const line = model.getLineContent(lineNumber);
+      if (line.length === 0) {
+        return void 0;
+      } else if (column === 1) {
+        if (/\s/.test(line[0])) {
+          return void 0;
+        }
+      } else if (column === model.getLineMaxColumn(lineNumber)) {
+        if (/\s/.test(line[line.length - 1])) {
+          return void 0;
+        }
+      } else {
+        if (/\s/.test(line[column - 2]) && /\s/.test(line[column - 1])) {
+          return void 0;
+        }
+      }
+    }
+    return selection;
+  }
+}
+var CodeActionsState;
+(function(CodeActionsState2) {
+  let Type;
+  (function(Type2) {
+    Type2[Type2["Empty"] = 0] = "Empty";
+    Type2[Type2["Triggered"] = 1] = "Triggered";
+  })(Type = CodeActionsState2.Type || (CodeActionsState2.Type = {}));
+  CodeActionsState2.Empty = {
+    type: 0
+    /* Type.Empty */
+  };
+  class Triggered {
+    static {
+      __name(this, "Triggered");
+    }
+    constructor(trigger, position, _cancellablePromise) {
+      this.trigger = trigger;
+      this.position = position;
+      this._cancellablePromise = _cancellablePromise;
+      this.type = 1;
+      this.actions = _cancellablePromise.catch((e) => {
+        if (isCancellationError(e)) {
+          return emptyCodeActionSet;
+        }
+        throw e;
+      });
+    }
+    cancel() {
+      this._cancellablePromise.cancel();
+    }
+  }
+  CodeActionsState2.Triggered = Triggered;
+})(CodeActionsState || (CodeActionsState = {}));
+const emptyCodeActionSet = Object.freeze({
+  allActions: [],
+  validActions: [],
+  dispose: /* @__PURE__ */ __name(() => {
+  }, "dispose"),
+  documentation: [],
+  hasAutoFix: false,
+  hasAIFix: false,
+  allAIFixes: false
+});
+class CodeActionModel extends Disposable {
+  static {
+    __name(this, "CodeActionModel");
+  }
+  constructor(_editor, _registry, _markerService, contextKeyService, _progressService, _configurationService) {
+    super();
+    this._editor = _editor;
+    this._registry = _registry;
+    this._markerService = _markerService;
+    this._progressService = _progressService;
+    this._configurationService = _configurationService;
+    this._codeActionOracle = this._register(new MutableDisposable());
+    this._state = CodeActionsState.Empty;
+    this._onDidChangeState = this._register(new Emitter());
+    this.onDidChangeState = this._onDidChangeState.event;
+    this.codeActionsDisposable = this._register(new MutableDisposable());
+    this._disposed = false;
+    this._supportedCodeActions = SUPPORTED_CODE_ACTIONS.bindTo(contextKeyService);
+    this._register(this._editor.onDidChangeModel(() => this._update()));
+    this._register(this._editor.onDidChangeModelLanguage(() => this._update()));
+    this._register(this._registry.onDidChange(() => this._update()));
+    this._register(this._editor.onDidChangeConfiguration((e) => {
+      if (e.hasChanged(
+        69
+        /* EditorOption.lightbulb */
+      )) {
+        this._update();
+      }
+    }));
+    this._update();
+  }
+  dispose() {
+    if (this._disposed) {
+      return;
+    }
+    this._disposed = true;
+    super.dispose();
+    this.setState(CodeActionsState.Empty, true);
+  }
+  _settingEnabledNearbyQuickfixes() {
+    const model = this._editor?.getModel();
+    return this._configurationService ? this._configurationService.getValue("editor.codeActionWidget.includeNearbyQuickFixes", { resource: model?.uri }) : false;
+  }
+  _update() {
+    if (this._disposed) {
+      return;
+    }
+    this._codeActionOracle.value = void 0;
+    this.setState(CodeActionsState.Empty);
+    const model = this._editor.getModel();
+    if (model && this._registry.has(model) && !this._editor.getOption(
+      99
+      /* EditorOption.readOnly */
+    )) {
+      const supportedActions = this._registry.all(model).flatMap((provider) => provider.providedCodeActionKinds ?? []);
+      this._supportedCodeActions.set(supportedActions.join(" "));
+      this._codeActionOracle.value = new CodeActionOracle(this._editor, this._markerService, (trigger) => {
+        if (!trigger) {
+          this.setState(CodeActionsState.Empty);
+          return;
+        }
+        const startPosition = trigger.selection.getStartPosition();
+        const actions = createCancelablePromise(async (token) => {
+          if (this._settingEnabledNearbyQuickfixes() && trigger.trigger.type === 1 && (trigger.trigger.triggerAction === CodeActionTriggerSource.QuickFix || trigger.trigger.filter?.include?.contains(CodeActionKind.QuickFix))) {
+            const codeActionSet2 = await getCodeActions(this._registry, model, trigger.selection, trigger.trigger, Progress.None, token);
+            this.codeActionsDisposable.value = codeActionSet2;
+            const allCodeActions = [...codeActionSet2.allActions];
+            if (token.isCancellationRequested) {
+              codeActionSet2.dispose();
+              return emptyCodeActionSet;
+            }
+            const foundQuickfix = codeActionSet2.validActions?.some((action) => action.action.kind ? CodeActionKind.QuickFix.contains(new HierarchicalKind(action.action.kind)) : false);
+            const allMarkers = this._markerService.read({ resource: model.uri });
+            if (foundQuickfix) {
+              for (const action of codeActionSet2.validActions) {
+                if (action.action.command?.arguments?.some((arg) => typeof arg === "string" && arg.includes(APPLY_FIX_ALL_COMMAND_ID))) {
+                  action.action.diagnostics = [...allMarkers.filter((marker) => marker.relatedInformation)];
+                }
+              }
+              return { validActions: codeActionSet2.validActions, allActions: allCodeActions, documentation: codeActionSet2.documentation, hasAutoFix: codeActionSet2.hasAutoFix, hasAIFix: codeActionSet2.hasAIFix, allAIFixes: codeActionSet2.allAIFixes, dispose: /* @__PURE__ */ __name(() => {
+                this.codeActionsDisposable.value = codeActionSet2;
+              }, "dispose") };
+            } else if (!foundQuickfix) {
+              if (allMarkers.length > 0) {
+                const currPosition = trigger.selection.getPosition();
+                let trackedPosition = currPosition;
+                let distance = Number.MAX_VALUE;
+                const currentActions = [...codeActionSet2.validActions];
+                for (const marker of allMarkers) {
+                  const col = marker.endColumn;
+                  const row = marker.endLineNumber;
+                  const startRow = marker.startLineNumber;
+                  if (row === currPosition.lineNumber || startRow === currPosition.lineNumber) {
+                    trackedPosition = new Position(row, col);
+                    const newCodeActionTrigger = {
+                      type: trigger.trigger.type,
+                      triggerAction: trigger.trigger.triggerAction,
+                      filter: { include: trigger.trigger.filter?.include ? trigger.trigger.filter?.include : CodeActionKind.QuickFix },
+                      autoApply: trigger.trigger.autoApply,
+                      context: { notAvailableMessage: trigger.trigger.context?.notAvailableMessage || "", position: trackedPosition }
+                    };
+                    const selectionAsPosition = new Selection(trackedPosition.lineNumber, trackedPosition.column, trackedPosition.lineNumber, trackedPosition.column);
+                    const actionsAtMarker = await getCodeActions(this._registry, model, selectionAsPosition, newCodeActionTrigger, Progress.None, token);
+                    if (token.isCancellationRequested) {
+                      actionsAtMarker.dispose();
+                      return emptyCodeActionSet;
+                    }
+                    if (actionsAtMarker.validActions.length !== 0) {
+                      for (const action of actionsAtMarker.validActions) {
+                        if (action.action.command?.arguments?.some((arg) => typeof arg === "string" && arg.includes(APPLY_FIX_ALL_COMMAND_ID))) {
+                          action.action.diagnostics = [...allMarkers.filter((marker2) => marker2.relatedInformation)];
+                        }
+                      }
+                      if (codeActionSet2.allActions.length === 0) {
+                        allCodeActions.push(...actionsAtMarker.allActions);
+                      }
+                      if (Math.abs(currPosition.column - col) < distance) {
+                        currentActions.unshift(...actionsAtMarker.validActions);
+                      } else {
+                        currentActions.push(...actionsAtMarker.validActions);
+                      }
+                    }
+                    distance = Math.abs(currPosition.column - col);
+                  }
+                }
+                const filteredActions = currentActions.filter((action, index, self) => self.findIndex((a) => a.action.title === action.action.title) === index);
+                filteredActions.sort((a, b) => {
+                  if (a.action.isPreferred && !b.action.isPreferred) {
+                    return -1;
+                  } else if (!a.action.isPreferred && b.action.isPreferred) {
+                    return 1;
+                  } else if (a.action.isAI && !b.action.isAI) {
+                    return 1;
+                  } else if (!a.action.isAI && b.action.isAI) {
+                    return -1;
+                  } else {
+                    return 0;
+                  }
+                });
+                return { validActions: filteredActions, allActions: allCodeActions, documentation: codeActionSet2.documentation, hasAutoFix: codeActionSet2.hasAutoFix, hasAIFix: codeActionSet2.hasAIFix, allAIFixes: codeActionSet2.allAIFixes, dispose: /* @__PURE__ */ __name(() => {
+                  this.codeActionsDisposable.value = codeActionSet2;
+                }, "dispose") };
+              }
+            }
+          }
+          if (trigger.trigger.type === 1) {
+            const codeActions = await getCodeActions(this._registry, model, trigger.selection, trigger.trigger, Progress.None, token);
+            this.codeActionsDisposable.value = codeActions;
+            return codeActions;
+          }
+          const codeActionSet = await getCodeActions(this._registry, model, trigger.selection, trigger.trigger, Progress.None, token);
+          this.codeActionsDisposable.value = codeActionSet;
+          return codeActionSet;
+        });
+        if (trigger.trigger.type === 1) {
+          this._progressService?.showWhile(actions, 250);
+        }
+        const newState = new CodeActionsState.Triggered(trigger.trigger, startPosition, actions);
+        let isManualToAutoTransition = false;
+        if (this._state.type === 1) {
+          isManualToAutoTransition = this._state.trigger.type === 1 && newState.type === 1 && newState.trigger.type === 2 && this._state.position !== newState.position;
+        }
+        if (!isManualToAutoTransition) {
+          this.setState(newState);
+        } else {
+          setTimeout(() => {
+            this.setState(newState);
+          }, 500);
+        }
+      }, void 0);
+      this._codeActionOracle.value.trigger({ type: 2, triggerAction: CodeActionTriggerSource.Default });
+    } else {
+      this._supportedCodeActions.reset();
+    }
+  }
+  trigger(trigger) {
+    this._codeActionOracle.value?.trigger(trigger);
+    this.codeActionsDisposable.dispose();
+  }
+  setState(newState, skipNotify) {
+    if (newState === this._state) {
+      return;
+    }
+    if (this._state.type === 1) {
+      this._state.cancel();
+    }
+    this._state = newState;
+    if (!skipNotify && !this._disposed) {
+      this._onDidChangeState.fire(newState);
+    }
+  }
+}
+export {
+  APPLY_FIX_ALL_COMMAND_ID,
+  CodeActionModel,
+  CodeActionsState,
+  SUPPORTED_CODE_ACTIONS
+};
+//# sourceMappingURL=codeActionModel.js.map

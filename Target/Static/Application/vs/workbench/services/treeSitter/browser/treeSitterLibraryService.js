@@ -1,1 +1,154 @@
-import{ObservablePromise as h}from"../../../../base/common/observable.js";import{$tI as $,$uI as w}from"../../../../amdX.js";import{$vf as v}from"../../../../base/common/lazy.js";import{$El as y}from"../../../../platform/configuration/common/configuration.js";import{$5j as S,$kk as L}from"../../../../platform/files/common/files.js";import{$3db as b}from"../../../../platform/observable/common/platformObservableUtils.js";import{$uf as g}from"../../../../base/common/cache.js";import{$fl as _}from"../../../../platform/environment/common/environment.js";import{$8g as l,$6g as j,$4g as F}from"../../../../base/common/network.js";import{$vd as P}from"../../../../base/common/lifecycle.js";var p=function(o,e,t,s){var r=arguments.length,i=r<3?e:s===null?s=Object.getOwnPropertyDescriptor(e,t):s,n;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")i=Reflect.decorate(o,e,t,s);else for(var a=o.length-1;a>=0;a--)(n=o[a])&&(i=(r<3?n(i):r>3?n(e,t,i):n(e,t))||i);return r>3&&i&&Object.defineProperty(e,t,i),i},f=function(o,e){return function(t,s){e(t,s,o)}};const T="editor.experimental.preferTreeSitter",J=["css","typescript","ini","regex"],O="@vscode/tree-sitter-wasm/wasm",x="tree-sitter.wasm";function m(o){return`${$&&o.isBuilt?j:F}/${O}`}let d=class extends P{constructor(e,t,s){super(),this.g=e,this.h=t,this.j=s,this.isTest=!1,this.a=new v(async()=>{const r=await w("@vscode/tree-sitter-wasm","wasm/tree-sitter.js"),i=this.j,n=this.isTest;return await r.Parser.init({locateFile(a,u){const c=`${m(i)}/${x}`;return n?l.asFileUri(c).toString(!0):l.asBrowserUri(c).toString(!0)}}),r}),this.b=new g(r=>b(`${T}.${r}`,!1,this.g)),this.c=new g(r=>h.fromFn(async()=>{const i=m(this.j),n=`tree-sitter-${r}`,a=`${i}/${n}.wasm`,[u,c]=await Promise.all([this.a.value,this.h.readFile(l.asFileUri(a))]);return await u.Language.load(c.value.buffer)})),this.f=new g({getCacheKey:JSON.stringify},r=>{const i=async()=>{const n=`vs/editor/common/languages/${r.kind}/${r.languageId}.scm`,a=l.asFileUri(n);if(!this.h.hasProvider(a))return;const u=await E(this.h,a);if(u!==void 0)return u.value.toString()};return h.fromFn(async()=>{const[n,a,u]=await Promise.all([i(),this.c.get(r.languageId).promise,this.a.value]);if(n===void 0)return null;const c=u.Query;return new c(a,n)}).resolvedValue})}supportsLanguage(e,t){return this.b.get(e).read(t)}async getParserClass(){return(await this.a.value).Parser}getLanguage(e,t){return this.supportsLanguage(e,t)?this.c.get(e).resolvedValue.read(t):void 0}getInjectionQueries(e,t){return this.supportsLanguage(e,t)?this.f.get({languageId:e,kind:"injections"}).read(t):void 0}getHighlightingQueries(e,t){return this.supportsLanguage(e,t)?this.f.get({languageId:e,kind:"highlights"}).read(t):void 0}};d=p([f(0,y),f(1,S),f(2,_)],d);async function E(o,e){try{return await o.readFile(e)}catch(t){if(L(t)===1)return;throw t}}export{T as $I7b,J as $J7b,m as $K7b,d as $L7b};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { ObservablePromise } from "../../../../base/common/observable.js";
+import { canASAR, importAMDNodeModule } from "../../../../amdX.js";
+import { Lazy } from "../../../../base/common/lazy.js";
+import { IConfigurationService } from "../../../../platform/configuration/common/configuration.js";
+import { IFileService, toFileOperationResult } from "../../../../platform/files/common/files.js";
+import { observableConfigValue } from "../../../../platform/observable/common/platformObservableUtils.js";
+import { CachedFunction } from "../../../../base/common/cache.js";
+import { IEnvironmentService } from "../../../../platform/environment/common/environment.js";
+import { FileAccess, nodeModulesAsarUnpackedPath, nodeModulesPath } from "../../../../base/common/network.js";
+import { Disposable } from "../../../../base/common/lifecycle.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+const EDITOR_EXPERIMENTAL_PREFER_TREESITTER = "editor.experimental.preferTreeSitter";
+const TREESITTER_ALLOWED_SUPPORT = ["css", "typescript", "ini", "regex"];
+const MODULE_LOCATION_SUBPATH = `@vscode/tree-sitter-wasm/wasm`;
+const FILENAME_TREESITTER_WASM = `tree-sitter.wasm`;
+function getModuleLocation(environmentService) {
+  return `${canASAR && environmentService.isBuilt ? nodeModulesAsarUnpackedPath : nodeModulesPath}/${MODULE_LOCATION_SUBPATH}`;
+}
+__name(getModuleLocation, "getModuleLocation");
+let TreeSitterLibraryService = class TreeSitterLibraryService2 extends Disposable {
+  static {
+    __name(this, "TreeSitterLibraryService");
+  }
+  constructor(_configurationService, _fileService, _environmentService) {
+    super();
+    this._configurationService = _configurationService;
+    this._fileService = _fileService;
+    this._environmentService = _environmentService;
+    this.isTest = false;
+    this._treeSitterImport = new Lazy(async () => {
+      const TreeSitter = await importAMDNodeModule("@vscode/tree-sitter-wasm", "wasm/tree-sitter.js");
+      const environmentService = this._environmentService;
+      const isTest = this.isTest;
+      await TreeSitter.Parser.init({
+        locateFile(_file, _folder) {
+          const location = `${getModuleLocation(environmentService)}/${FILENAME_TREESITTER_WASM}`;
+          if (isTest) {
+            return FileAccess.asFileUri(location).toString(true);
+          } else {
+            return FileAccess.asBrowserUri(location).toString(true);
+          }
+        }
+      });
+      return TreeSitter;
+    });
+    this._supportsLanguage = new CachedFunction((languageId) => {
+      return observableConfigValue(`${EDITOR_EXPERIMENTAL_PREFER_TREESITTER}.${languageId}`, false, this._configurationService);
+    });
+    this._languagesCache = new CachedFunction((languageId) => {
+      return ObservablePromise.fromFn(async () => {
+        const languageLocation = getModuleLocation(this._environmentService);
+        const grammarName = `tree-sitter-${languageId}`;
+        const wasmPath = `${languageLocation}/${grammarName}.wasm`;
+        const [treeSitter, languageFile] = await Promise.all([
+          this._treeSitterImport.value,
+          this._fileService.readFile(FileAccess.asFileUri(wasmPath))
+        ]);
+        const Language = treeSitter.Language;
+        const language = await Language.load(languageFile.value.buffer);
+        return language;
+      });
+    });
+    this._injectionQueries = new CachedFunction({ getCacheKey: JSON.stringify }, (arg) => {
+      const loadQuerySource = /* @__PURE__ */ __name(async () => {
+        const injectionsQueriesLocation = `vs/editor/common/languages/${arg.kind}/${arg.languageId}.scm`;
+        const uri = FileAccess.asFileUri(injectionsQueriesLocation);
+        if (!this._fileService.hasProvider(uri)) {
+          return void 0;
+        }
+        const query = await tryReadFile(this._fileService, uri);
+        if (query === void 0) {
+          return void 0;
+        }
+        return query.value.toString();
+      }, "loadQuerySource");
+      return ObservablePromise.fromFn(async () => {
+        const [querySource, language, treeSitter] = await Promise.all([
+          loadQuerySource(),
+          this._languagesCache.get(arg.languageId).promise,
+          this._treeSitterImport.value
+        ]);
+        if (querySource === void 0) {
+          return null;
+        }
+        const Query = treeSitter.Query;
+        return new Query(language, querySource);
+      }).resolvedValue;
+    });
+  }
+  supportsLanguage(languageId, reader) {
+    return this._supportsLanguage.get(languageId).read(reader);
+  }
+  async getParserClass() {
+    const treeSitter = await this._treeSitterImport.value;
+    return treeSitter.Parser;
+  }
+  getLanguage(languageId, reader) {
+    if (!this.supportsLanguage(languageId, reader)) {
+      return void 0;
+    }
+    const lang = this._languagesCache.get(languageId).resolvedValue.read(reader);
+    return lang;
+  }
+  getInjectionQueries(languageId, reader) {
+    if (!this.supportsLanguage(languageId, reader)) {
+      return void 0;
+    }
+    const query = this._injectionQueries.get({ languageId, kind: "injections" }).read(reader);
+    return query;
+  }
+  getHighlightingQueries(languageId, reader) {
+    if (!this.supportsLanguage(languageId, reader)) {
+      return void 0;
+    }
+    const query = this._injectionQueries.get({ languageId, kind: "highlights" }).read(reader);
+    return query;
+  }
+};
+TreeSitterLibraryService = __decorate([
+  __param(0, IConfigurationService),
+  __param(1, IFileService),
+  __param(2, IEnvironmentService)
+], TreeSitterLibraryService);
+async function tryReadFile(fileService, uri) {
+  try {
+    const result = await fileService.readFile(uri);
+    return result;
+  } catch (e) {
+    if (toFileOperationResult(e) === 1) {
+      return void 0;
+    }
+    throw e;
+  }
+}
+__name(tryReadFile, "tryReadFile");
+export {
+  EDITOR_EXPERIMENTAL_PREFER_TREESITTER,
+  TREESITTER_ALLOWED_SUPPORT,
+  TreeSitterLibraryService,
+  getModuleLocation
+};
+//# sourceMappingURL=treeSitterLibraryService.js.map

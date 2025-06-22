@@ -1,1 +1,54 @@
-import{$Eh as n}from"../../../../base/common/async.js";import{CancellationToken as h}from"../../../../base/common/cancellation.js";import{$df as a}from"../../../../base/common/event.js";import{$vd as l,$td as c}from"../../../../base/common/lifecycle.js";import{$nj as f}from"../../../../platform/instantiation/common/instantiation.js";const p=f("webviewViewService");class u extends l{constructor(){super(...arguments),this.a=new Map,this.b=new Map,this.c=this.B(new a),this.onNewResolverRegistered=this.c.event}register(e,r){if(this.a.has(e))throw new Error(`View resolver already registered for ${e}`);this.a.set(e,r),this.c.fire({viewType:e});const t=this.b.get(e);return t&&r.resolve(t.webview,h.None).then(()=>{this.b.delete(e),t.resolve()}),c(()=>{this.a.delete(e)})}resolve(e,r,t){const s=this.a.get(e);if(!s){if(this.b.has(e))throw new Error("View already awaiting revival");const{promise:o,resolve:i}=n();return this.b.set(e,{webview:r,resolve:i}),o}return s.resolve(r,t)}}export{p as $o1b,u as $p1b};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { promiseWithResolvers } from "../../../../base/common/async.js";
+import { CancellationToken } from "../../../../base/common/cancellation.js";
+import { Emitter } from "../../../../base/common/event.js";
+import { Disposable, toDisposable } from "../../../../base/common/lifecycle.js";
+import { createDecorator } from "../../../../platform/instantiation/common/instantiation.js";
+const IWebviewViewService = createDecorator("webviewViewService");
+class WebviewViewService extends Disposable {
+  static {
+    __name(this, "WebviewViewService");
+  }
+  constructor() {
+    super(...arguments);
+    this._resolvers = /* @__PURE__ */ new Map();
+    this._awaitingRevival = /* @__PURE__ */ new Map();
+    this._onNewResolverRegistered = this._register(new Emitter());
+    this.onNewResolverRegistered = this._onNewResolverRegistered.event;
+  }
+  register(viewType, resolver) {
+    if (this._resolvers.has(viewType)) {
+      throw new Error(`View resolver already registered for ${viewType}`);
+    }
+    this._resolvers.set(viewType, resolver);
+    this._onNewResolverRegistered.fire({ viewType });
+    const pending = this._awaitingRevival.get(viewType);
+    if (pending) {
+      resolver.resolve(pending.webview, CancellationToken.None).then(() => {
+        this._awaitingRevival.delete(viewType);
+        pending.resolve();
+      });
+    }
+    return toDisposable(() => {
+      this._resolvers.delete(viewType);
+    });
+  }
+  resolve(viewType, webview, cancellation) {
+    const resolver = this._resolvers.get(viewType);
+    if (!resolver) {
+      if (this._awaitingRevival.has(viewType)) {
+        throw new Error("View already awaiting revival");
+      }
+      const { promise, resolve } = promiseWithResolvers();
+      this._awaitingRevival.set(viewType, { webview, resolve });
+      return promise;
+    }
+    return resolver.resolve(webview, cancellation);
+  }
+}
+export {
+  IWebviewViewService,
+  WebviewViewService
+};
+//# sourceMappingURL=webviewViewService.js.map

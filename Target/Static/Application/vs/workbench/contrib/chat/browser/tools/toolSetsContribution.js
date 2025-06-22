@@ -1,2 +1,365 @@
-import{$0b as z}from"../../../../../base/common/arrays.js";import{$pf as A}from"../../../../../base/common/cancellation.js";import{Event as J}from"../../../../../base/common/event.js";import{$vd as V,$ud as D,$td as Q}from"../../../../../base/common/lifecycle.js";import{observableFromEvent as I,observableSignalFromEvent as j,autorun as N,transaction as W}from"../../../../../base/common/observable.js";import{$hh as q,$kh as X}from"../../../../../base/common/resources.js";import{$yf as k}from"../../../../../base/common/strings.js";import{ThemeIcon as T}from"../../../../../base/common/themables.js";import{$0c as G,$1c as U}from"../../../../../base/common/types.js";import{localize as m,localize2 as Y}from"../../../../../nls.js";import{$iI as Z,$dI as ee}from"../../../../../platform/actions/common/actions.js";import{$5j as L}from"../../../../../platform/files/common/files.js";import{$3n as oe}from"../../../../../platform/log/common/log.js";import{$OM as te}from"../../../../../platform/quickinput/common/quickInput.js";import{$XO as re}from"../../../../services/extensions/common/extensions.js";import{$RK as se}from"../../../../services/lifecycle/common/lifecycle.js";import{$9X as _}from"../../../../services/userDataProfile/common/userDataProfile.js";import{$VDb as ie}from"../actions/chatActions.js";import{$eQ as M,ToolDataSource as b}from"../../common/languageModelToolsService.js";import{$oI as ne}from"../../../../services/editor/common/editorService.js";import{$Mj as le,$Kj as x}from"../../../../../base/common/codicons.js";import{$Kg as ce}from"../../../../../base/common/extpath.js";import{$fJ as ae}from"../../../../services/textfile/common/textfiles.js";import{$cl as ue}from"../../../../../base/common/jsonc.js";import*as me from"../../../../../platform/jsonschemas/common/jsonContributionRegistry.js";import{$Ql as fe}from"../../../../../platform/registry/common/platform.js";import{$Bn as P}from"../../../../../platform/contextkey/common/contextkey.js";import{$rWb as pe}from"../chat.js";import{ChatContextKeys as F}from"../../common/chatContextKeys.js";var K=function(f,o,i,s){var t=arguments.length,r=t<3?o:s===null?s=Object.getOwnPropertyDescriptor(o,i):s,n;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")r=Reflect.decorate(f,o,i,s);else for(var p=f.length-1;p>=0;p--)(n=f[p])&&(r=(t<3?n(r):t>3?n(o,i,r):n(o,i))||r);return t>3&&r&&Object.defineProperty(o,i,r),r},$=function(f,o){return function(i,s){o(i,s,f)}};const C=[],E=[],B="vscode://schemas/toolsets",de={id:B,allowComments:!0,allowTrailingCommas:!0,defaultSnippets:[{label:m(5631,null),body:{"${1:toolSetName}":{tools:["${2:someTool}","${3:anotherTool}"],description:"${4:description}",icon:"${5:tools}"}}}],type:"object",description:m(5632,null),additionalProperties:{type:"object",required:["tools"],additionalProperties:!1,properties:{tools:{description:m(5633,null),type:"array",minItems:1,items:{type:"string",enum:C,enumDescriptions:E}},icon:{description:m(5634,null),type:"string",enum:Array.from(x(),f=>f.id),markdownEnumDescriptions:Array.from(x(),f=>`$(${f.id})`)},description:{description:m(5635,null),type:"string"}}}},he=fe.as(me.$Rl.JSONContribution);class y{static{this.suffix=".toolsets.jsonc"}static isToolSetFileName(o){return q(o).endsWith(y.suffix)}static from(o,i){if(!U(o))throw new Error("Invalid tool set data");const s=new Map;for(const[t,r]of Object.entries(o))k(t)&&i.error("Tool set name cannot be empty"),z(r.tools)&&i.error(`Tool set '${t}' cannot have an empty tools array`),s.set(t,{name:t,tools:r.tools,description:r.description,icon:r.icon});return new class extends y{}(s)}constructor(o){this.entries=Object.freeze(new Map(o))}}let R=class extends V{static{this.ID="chat.userToolSets"}constructor(o,i,s,t,r,n){super(),this.c=s,this.f=t,this.g=r,this.h=n,Promise.allSettled([o.whenInstalledExtensionsRegistered,i.when(3)]).then(()=>this.j());const p=I(this,s.onDidChangeTools,()=>Array.from(s.getTools())),u=this.q.add(new D);this.q.add(N(d=>{const l=p.read(d),a=this.c.toolSets.read(d),c=[];for(const e of l)e.canBeReferencedInPrompt&&c.push({name:e.toolReferenceName??e.displayName,sourceLabel:b.classify(e.source).label,sourceOrdinal:b.classify(e.source).ordinal,description:e.userDescription??e.modelDescription});for(const e of a)c.push({name:e.referenceName,sourceLabel:b.classify(e.source).label,sourceOrdinal:b.classify(e.source).ordinal,description:e.description});C.length=0,E.length=0,c.sort((e,h)=>e.sourceOrdinal!==h.sourceOrdinal?e.sourceOrdinal-h.sourceOrdinal:e.sourceLabel!==h.sourceLabel?e.sourceLabel.localeCompare(h.sourceLabel):e.name.localeCompare(h.name));for(const e of c)C.push(e.name),E.push(m(5636,null,e.sourceLabel,e.name,e.description));u.clear(),he.registerSchema(B,de,u)}))}j(){const o=I(this,this.f.onDidChangeCurrentProfile,()=>this.f.currentProfile.promptsHome),i=j(this,this.c.onDidChangeTools),s=j(this,J.filter(this.g.onDidFilesChange,n=>n.affects(o.get()))),t=this.q.add(new D),r=async n=>{try{return(await this.g.resolve(n)).children??[]}catch{return[]}};this.q.add(N(async n=>{t.clear(),i.read(n),s.read(n);const p=o.read(n),u=new A;t.add(Q(()=>u.dispose(!0)));const d=await r(p);if(u.token.isCancellationRequested){t.clear();return}for(const l of d){if(!l.isFile||!y.isToolSetFileName(l.resource))continue;t.add(this.g.watch(l.resource));let a;try{const c=await this.g.readFile(l.resource,void 0,u.token),e=ue(c.value.toString());a=y.from(e,this.h)}catch(c){this.h.error(`Error reading tool set file ${l.resource.toString()}:`,c);continue}if(u.token.isCancellationRequested){t.dispose();break}for(const[c,e]of a.entries){const h=[],w=[];if(e.tools.forEach(S=>{const g=this.c.getToolByName(S);if(g){h.push(g);return}const O=this.c.getToolSetByName(S);if(O){w.push(O);return}}),h.length===0&&w.length===0)continue;const v=this.c.createToolSet({type:"user",file:l.resource,label:q(l.resource)},`user/${l.resource.toString()}/${c}`,c,{icon:e.icon?T.fromId(e.icon):void 0,description:e.description});W(S=>{t.add(v),h.forEach(g=>t.add(v.addTool(g,S))),w.forEach(g=>t.add(v.addToolSet(g,S)))})}}}))}};R=K([$(0,re),$(1,se),$(2,M),$(3,_),$(4,L),$(5,oe)],R);class H extends Z{static{this.ID="chat.configureToolSets"}constructor(){super({id:H.ID,title:Y(5642,"Configure Tool Sets..."),category:ie,f1:!0,precondition:P.and(F.enabled,F.Tools.toolsCount.greater(0)),menu:{id:ee.ViewTitle,when:P.equals("view",pe),order:11,group:"2_manage"}})}async run(o){const i=o.get(M),s=o.get(te),t=o.get(ne),r=o.get(_),n=o.get(L),p=o.get(ae),u=[];u.push({label:m(5637,null),alwaysShow:!0,iconClass:T.asClassName(le.plus)});for(const a of i.toolSets.get())a.source.type==="user"&&u.push({label:a.referenceName,toolset:a,tooltip:a.description,iconClass:T.asClassName(a.icon)});const d=await s.pick(u,{canPickMany:!1,placeHolder:m(5638,null)});if(!d)return;let l;if(d.toolset)G(d.toolset.source.type==="user"),l=d.toolset.source.file;else{const a=await s.input({placeHolder:m(5639,null),validateInput:async c=>{if(!c)return m(5640,null);if(!ce(c))return m(5641,null,c)}});if(k(a))return;l=X(r.currentProfile.promptsHome,`${a}${y.suffix}`),await n.exists(l)||await p.write(l,["// Place your tool sets here...","// Example:","// {",'// 	"toolSetName": {','// 		"tools": [','// 			"someTool",','// 			"anotherTool"',"// 		],",'// 		"description": "description",','// 		"icon": "tools"',"// 	}","// }"].join(`
-`))}await t.openEditor({resource:l,options:{pinned:!0}})}}export{R as $nEb,H as $oEb};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { isFalsyOrEmpty } from "../../../../../base/common/arrays.js";
+import { CancellationTokenSource } from "../../../../../base/common/cancellation.js";
+import { Event } from "../../../../../base/common/event.js";
+import { Disposable, DisposableStore, toDisposable } from "../../../../../base/common/lifecycle.js";
+import { observableFromEvent, observableSignalFromEvent, autorun, transaction } from "../../../../../base/common/observable.js";
+import { basename, joinPath } from "../../../../../base/common/resources.js";
+import { isFalsyOrWhitespace } from "../../../../../base/common/strings.js";
+import { ThemeIcon } from "../../../../../base/common/themables.js";
+import { assertType, isObject } from "../../../../../base/common/types.js";
+import { localize, localize2 } from "../../../../../nls.js";
+import { Action2, MenuId } from "../../../../../platform/actions/common/actions.js";
+import { IFileService } from "../../../../../platform/files/common/files.js";
+import { ILogService } from "../../../../../platform/log/common/log.js";
+import { IQuickInputService } from "../../../../../platform/quickinput/common/quickInput.js";
+import { IExtensionService } from "../../../../services/extensions/common/extensions.js";
+import { ILifecycleService } from "../../../../services/lifecycle/common/lifecycle.js";
+import { IUserDataProfileService } from "../../../../services/userDataProfile/common/userDataProfile.js";
+import { CHAT_CATEGORY } from "../actions/chatActions.js";
+import { ILanguageModelToolsService, ToolDataSource } from "../../common/languageModelToolsService.js";
+import { IEditorService } from "../../../../services/editor/common/editorService.js";
+import { Codicon, getAllCodicons } from "../../../../../base/common/codicons.js";
+import { isValidBasename } from "../../../../../base/common/extpath.js";
+import { ITextFileService } from "../../../../services/textfile/common/textfiles.js";
+import { parse } from "../../../../../base/common/jsonc.js";
+import * as JSONContributionRegistry from "../../../../../platform/jsonschemas/common/jsonContributionRegistry.js";
+import { Registry } from "../../../../../platform/registry/common/platform.js";
+import { ContextKeyExpr } from "../../../../../platform/contextkey/common/contextkey.js";
+import { ChatViewId } from "../chat.js";
+import { ChatContextKeys } from "../../common/chatContextKeys.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+const toolEnumValues = [];
+const toolEnumDescriptions = [];
+const toolSetSchemaId = "vscode://schemas/toolsets";
+const toolSetsSchema = {
+  id: toolSetSchemaId,
+  allowComments: true,
+  allowTrailingCommas: true,
+  defaultSnippets: [{
+    label: localize("schema.default", "Empty tool set"),
+    body: { "${1:toolSetName}": { "tools": ["${2:someTool}", "${3:anotherTool}"], "description": "${4:description}", "icon": "${5:tools}" } }
+  }],
+  type: "object",
+  description: localize("toolsetSchema.json", "User tool sets configuration"),
+  additionalProperties: {
+    type: "object",
+    required: ["tools"],
+    additionalProperties: false,
+    properties: {
+      tools: {
+        description: localize("schema.tools", "A list of tools or tool sets to include in this tool set. Cannot be empty and must reference tools the way they are referenced in prompts."),
+        type: "array",
+        minItems: 1,
+        items: {
+          type: "string",
+          enum: toolEnumValues,
+          enumDescriptions: toolEnumDescriptions
+        }
+      },
+      icon: {
+        description: localize("schema.icon", "Icon to use for this tool set in the UI. Uses the `\\$(name)`-syntax, like `\\$(zap)`"),
+        type: "string",
+        enum: Array.from(getAllCodicons(), (icon) => icon.id),
+        markdownEnumDescriptions: Array.from(getAllCodicons(), (icon) => `$(${icon.id})`)
+      },
+      description: {
+        description: localize("schema.description", "A short description of this tool set."),
+        type: "string"
+      }
+    }
+  }
+};
+const reg = Registry.as(JSONContributionRegistry.Extensions.JSONContribution);
+class RawToolSetsShape {
+  static {
+    __name(this, "RawToolSetsShape");
+  }
+  static {
+    this.suffix = ".toolsets.jsonc";
+  }
+  static isToolSetFileName(uri) {
+    return basename(uri).endsWith(RawToolSetsShape.suffix);
+  }
+  static from(data, logService) {
+    if (!isObject(data)) {
+      throw new Error(`Invalid tool set data`);
+    }
+    const map = /* @__PURE__ */ new Map();
+    for (const [name, value] of Object.entries(data)) {
+      if (isFalsyOrWhitespace(name)) {
+        logService.error(`Tool set name cannot be empty`);
+      }
+      if (isFalsyOrEmpty(value.tools)) {
+        logService.error(`Tool set '${name}' cannot have an empty tools array`);
+      }
+      map.set(name, {
+        name,
+        tools: value.tools,
+        description: value.description,
+        icon: value.icon
+      });
+    }
+    return new class extends RawToolSetsShape {
+    }(map);
+  }
+  constructor(entries) {
+    this.entries = Object.freeze(new Map(entries));
+  }
+}
+let UserToolSetsContributions = class UserToolSetsContributions2 extends Disposable {
+  static {
+    __name(this, "UserToolSetsContributions");
+  }
+  static {
+    this.ID = "chat.userToolSets";
+  }
+  constructor(extensionService, lifecycleService, _languageModelToolsService, _userDataProfileService, _fileService, _logService) {
+    super();
+    this._languageModelToolsService = _languageModelToolsService;
+    this._userDataProfileService = _userDataProfileService;
+    this._fileService = _fileService;
+    this._logService = _logService;
+    Promise.allSettled([
+      extensionService.whenInstalledExtensionsRegistered,
+      lifecycleService.when(
+        3
+        /* LifecyclePhase.Restored */
+      )
+    ]).then(() => this._initToolSets());
+    const toolsObs = observableFromEvent(this, _languageModelToolsService.onDidChangeTools, () => Array.from(_languageModelToolsService.getTools()));
+    const store = this._store.add(new DisposableStore());
+    this._store.add(autorun((r) => {
+      const tools = toolsObs.read(r);
+      const toolSets = this._languageModelToolsService.toolSets.read(r);
+      const data = [];
+      for (const tool of tools) {
+        if (tool.canBeReferencedInPrompt) {
+          data.push({
+            name: tool.toolReferenceName ?? tool.displayName,
+            sourceLabel: ToolDataSource.classify(tool.source).label,
+            sourceOrdinal: ToolDataSource.classify(tool.source).ordinal,
+            description: tool.userDescription ?? tool.modelDescription
+          });
+        }
+      }
+      for (const toolSet of toolSets) {
+        data.push({
+          name: toolSet.referenceName,
+          sourceLabel: ToolDataSource.classify(toolSet.source).label,
+          sourceOrdinal: ToolDataSource.classify(toolSet.source).ordinal,
+          description: toolSet.description
+        });
+      }
+      toolEnumValues.length = 0;
+      toolEnumDescriptions.length = 0;
+      data.sort((a, b) => {
+        if (a.sourceOrdinal !== b.sourceOrdinal) {
+          return a.sourceOrdinal - b.sourceOrdinal;
+        }
+        if (a.sourceLabel !== b.sourceLabel) {
+          return a.sourceLabel.localeCompare(b.sourceLabel);
+        }
+        return a.name.localeCompare(b.name);
+      });
+      for (const item of data) {
+        toolEnumValues.push(item.name);
+        toolEnumDescriptions.push(localize("tool.description", "{1} ({0})\n\n{2}", item.sourceLabel, item.name, item.description));
+      }
+      store.clear();
+      reg.registerSchema(toolSetSchemaId, toolSetsSchema, store);
+    }));
+  }
+  _initToolSets() {
+    const promptFolder = observableFromEvent(this, this._userDataProfileService.onDidChangeCurrentProfile, () => this._userDataProfileService.currentProfile.promptsHome);
+    const toolsSig = observableSignalFromEvent(this, this._languageModelToolsService.onDidChangeTools);
+    const fileEventSig = observableSignalFromEvent(this, Event.filter(this._fileService.onDidFilesChange, (e) => e.affects(promptFolder.get())));
+    const store = this._store.add(new DisposableStore());
+    const getFilesInFolder = /* @__PURE__ */ __name(async (folder) => {
+      try {
+        return (await this._fileService.resolve(folder)).children ?? [];
+      } catch (err) {
+        return [];
+      }
+    }, "getFilesInFolder");
+    this._store.add(autorun(async (r) => {
+      store.clear();
+      toolsSig.read(r);
+      fileEventSig.read(r);
+      const uri = promptFolder.read(r);
+      const cts = new CancellationTokenSource();
+      store.add(toDisposable(() => cts.dispose(true)));
+      const entries = await getFilesInFolder(uri);
+      if (cts.token.isCancellationRequested) {
+        store.clear();
+        return;
+      }
+      for (const entry of entries) {
+        if (!entry.isFile || !RawToolSetsShape.isToolSetFileName(entry.resource)) {
+          continue;
+        }
+        store.add(this._fileService.watch(entry.resource));
+        let data;
+        try {
+          const content = await this._fileService.readFile(entry.resource, void 0, cts.token);
+          const rawObj = parse(content.value.toString());
+          data = RawToolSetsShape.from(rawObj, this._logService);
+        } catch (err) {
+          this._logService.error(`Error reading tool set file ${entry.resource.toString()}:`, err);
+          continue;
+        }
+        if (cts.token.isCancellationRequested) {
+          store.dispose();
+          break;
+        }
+        for (const [name, value] of data.entries) {
+          const tools = [];
+          const toolSets = [];
+          value.tools.forEach((name2) => {
+            const tool = this._languageModelToolsService.getToolByName(name2);
+            if (tool) {
+              tools.push(tool);
+              return;
+            }
+            const toolSet = this._languageModelToolsService.getToolSetByName(name2);
+            if (toolSet) {
+              toolSets.push(toolSet);
+              return;
+            }
+          });
+          if (tools.length === 0 && toolSets.length === 0) {
+            continue;
+          }
+          const toolset = this._languageModelToolsService.createToolSet({ type: "user", file: entry.resource, label: basename(entry.resource) }, `user/${entry.resource.toString()}/${name}`, name, {
+            // toolReferenceName: value.referenceName,
+            icon: value.icon ? ThemeIcon.fromId(value.icon) : void 0,
+            description: value.description
+          });
+          transaction((tx) => {
+            store.add(toolset);
+            tools.forEach((tool) => store.add(toolset.addTool(tool, tx)));
+            toolSets.forEach((toolSet) => store.add(toolset.addToolSet(toolSet, tx)));
+          });
+        }
+      }
+    }));
+  }
+};
+UserToolSetsContributions = __decorate([
+  __param(0, IExtensionService),
+  __param(1, ILifecycleService),
+  __param(2, ILanguageModelToolsService),
+  __param(3, IUserDataProfileService),
+  __param(4, IFileService),
+  __param(5, ILogService)
+], UserToolSetsContributions);
+class ConfigureToolSets extends Action2 {
+  static {
+    __name(this, "ConfigureToolSets");
+  }
+  static {
+    this.ID = "chat.configureToolSets";
+  }
+  constructor() {
+    super({
+      id: ConfigureToolSets.ID,
+      title: localize2("chat.configureToolSets", "Configure Tool Sets..."),
+      category: CHAT_CATEGORY,
+      f1: true,
+      precondition: ContextKeyExpr.and(ChatContextKeys.enabled, ChatContextKeys.Tools.toolsCount.greater(0)),
+      menu: {
+        id: MenuId.ViewTitle,
+        when: ContextKeyExpr.equals("view", ChatViewId),
+        order: 11,
+        group: "2_manage"
+      }
+    });
+  }
+  async run(accessor) {
+    const toolsService = accessor.get(ILanguageModelToolsService);
+    const quickInputService = accessor.get(IQuickInputService);
+    const editorService = accessor.get(IEditorService);
+    const userDataProfileService = accessor.get(IUserDataProfileService);
+    const fileService = accessor.get(IFileService);
+    const textFileService = accessor.get(ITextFileService);
+    const picks = [];
+    picks.push({
+      label: localize("chat.configureToolSets.add", "Create new tool sets file..."),
+      alwaysShow: true,
+      iconClass: ThemeIcon.asClassName(Codicon.plus)
+    });
+    for (const toolSet of toolsService.toolSets.get()) {
+      if (toolSet.source.type !== "user") {
+        continue;
+      }
+      picks.push({
+        label: toolSet.referenceName,
+        toolset: toolSet,
+        tooltip: toolSet.description,
+        iconClass: ThemeIcon.asClassName(toolSet.icon)
+      });
+    }
+    const pick = await quickInputService.pick(picks, {
+      canPickMany: false,
+      placeHolder: localize("chat.configureToolSets.placeholder", "Select a tool set to configure")
+    });
+    if (!pick) {
+      return;
+    }
+    let resource;
+    if (!pick.toolset) {
+      const name = await quickInputService.input({
+        placeHolder: localize("input.placeholder", "Type tool sets file name"),
+        validateInput: /* @__PURE__ */ __name(async (input) => {
+          if (!input) {
+            return localize("bad_name1", "Invalid file name");
+          }
+          if (!isValidBasename(input)) {
+            return localize("bad_name2", "'{0}' is not a valid file name", input);
+          }
+          return void 0;
+        }, "validateInput")
+      });
+      if (isFalsyOrWhitespace(name)) {
+        return;
+      }
+      resource = joinPath(userDataProfileService.currentProfile.promptsHome, `${name}${RawToolSetsShape.suffix}`);
+      if (!await fileService.exists(resource)) {
+        await textFileService.write(resource, [
+          "// Place your tool sets here...",
+          "// Example:",
+          "// {",
+          '// 	"toolSetName": {',
+          '// 		"tools": [',
+          '// 			"someTool",',
+          '// 			"anotherTool"',
+          "// 		],",
+          '// 		"description": "description",',
+          '// 		"icon": "tools"',
+          "// 	}",
+          "// }"
+        ].join("\n"));
+      }
+    } else {
+      assertType(pick.toolset.source.type === "user");
+      resource = pick.toolset.source.file;
+    }
+    await editorService.openEditor({ resource, options: { pinned: true } });
+  }
+}
+export {
+  ConfigureToolSets,
+  UserToolSetsContributions
+};
+//# sourceMappingURL=toolSetsContribution.js.map

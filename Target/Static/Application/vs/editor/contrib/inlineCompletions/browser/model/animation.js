@@ -1,1 +1,104 @@
-import{$p6 as h}from"../../../../../base/browser/dom.js";import{observableValue as u,observableSignal as c}from"../../../../../base/common/observable.js";class n{static const(t){return new n(t,t,0)}constructor(t,i,s,o=l){this.startValue=t,this.endValue=i,this.durationMs=s,this.a=o,this.startTimeMs=Date.now(),t===i&&(this.durationMs=0)}isFinished(){return Date.now()>=this.startTimeMs+this.durationMs}getValue(){const t=Date.now()-this.startTimeMs;return t>=this.durationMs?this.endValue:this.a(t,this.startValue,this.endValue-this.startValue,this.durationMs)}}function l(e,t,i,s){return e===s?t+i:i*(-Math.pow(2,-10*e/s)+1)+t}function b(e,t,i,s){return i*((e=e/s-1)*e*e+1)+t}function d(e,t,i,s){return i*e/s+t}class r{static const(t){return new r(n.const(t))}constructor(t){this.a=u(this,t)}setAnimation(t,i){this.a.set(t,i)}changeAnimation(t,i){const s=t(this.a.get());this.a.set(s,i)}getValue(t){const i=this.a.read(t);return i.isFinished()||a.instance.invalidateOnNextAnimationFrame(t),i.getValue()}}class a{constructor(){this.a=c(this),this.b=!1}static{this.instance=new a}invalidateOnNextAnimationFrame(t){this.a.read(t),this.b||(this.b=!0,h().requestAnimationFrame(()=>{this.b=!1,this.c()}))}c(){this.a.trigger(void 0)}}export{n as $ikb,l as $jkb,b as $kkb,d as $lkb,r as $mkb,a as $nkb};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { getActiveWindow } from "../../../../../base/browser/dom.js";
+import { observableValue, observableSignal } from "../../../../../base/common/observable.js";
+class AnimatedValue {
+  static {
+    __name(this, "AnimatedValue");
+  }
+  static const(value) {
+    return new AnimatedValue(value, value, 0);
+  }
+  constructor(startValue, endValue, durationMs, _interpolationFunction = easeOutExpo) {
+    this.startValue = startValue;
+    this.endValue = endValue;
+    this.durationMs = durationMs;
+    this._interpolationFunction = _interpolationFunction;
+    this.startTimeMs = Date.now();
+    if (startValue === endValue) {
+      this.durationMs = 0;
+    }
+  }
+  isFinished() {
+    return Date.now() >= this.startTimeMs + this.durationMs;
+  }
+  getValue() {
+    const timePassed = Date.now() - this.startTimeMs;
+    if (timePassed >= this.durationMs) {
+      return this.endValue;
+    }
+    const value = this._interpolationFunction(timePassed, this.startValue, this.endValue - this.startValue, this.durationMs);
+    return value;
+  }
+}
+function easeOutExpo(passedTime, start, length, totalDuration) {
+  return passedTime === totalDuration ? start + length : length * (-Math.pow(2, -10 * passedTime / totalDuration) + 1) + start;
+}
+__name(easeOutExpo, "easeOutExpo");
+function easeOutCubic(passedTime, start, length, totalDuration) {
+  return length * ((passedTime = passedTime / totalDuration - 1) * passedTime * passedTime + 1) + start;
+}
+__name(easeOutCubic, "easeOutCubic");
+function linear(passedTime, start, length, totalDuration) {
+  return length * passedTime / totalDuration + start;
+}
+__name(linear, "linear");
+class ObservableAnimatedValue {
+  static {
+    __name(this, "ObservableAnimatedValue");
+  }
+  static const(value) {
+    return new ObservableAnimatedValue(AnimatedValue.const(value));
+  }
+  constructor(initialValue) {
+    this._value = observableValue(this, initialValue);
+  }
+  setAnimation(value, tx) {
+    this._value.set(value, tx);
+  }
+  changeAnimation(fn, tx) {
+    const value = fn(this._value.get());
+    this._value.set(value, tx);
+  }
+  getValue(reader) {
+    const value = this._value.read(reader);
+    if (!value.isFinished()) {
+      AnimationFrameScheduler.instance.invalidateOnNextAnimationFrame(reader);
+    }
+    return value.getValue();
+  }
+}
+class AnimationFrameScheduler {
+  static {
+    __name(this, "AnimationFrameScheduler");
+  }
+  constructor() {
+    this._counter = observableSignal(this);
+    this._isScheduled = false;
+  }
+  static {
+    this.instance = new AnimationFrameScheduler();
+  }
+  invalidateOnNextAnimationFrame(reader) {
+    this._counter.read(reader);
+    if (!this._isScheduled) {
+      this._isScheduled = true;
+      getActiveWindow().requestAnimationFrame(() => {
+        this._isScheduled = false;
+        this._update();
+      });
+    }
+  }
+  _update() {
+    this._counter.trigger(void 0);
+  }
+}
+export {
+  AnimatedValue,
+  AnimationFrameScheduler,
+  ObservableAnimatedValue,
+  easeOutCubic,
+  easeOutExpo,
+  linear
+};
+//# sourceMappingURL=animation.js.map

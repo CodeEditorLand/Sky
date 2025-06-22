@@ -1,1 +1,451 @@
-import"./media/notificationsToasts.css";import{localize as E}from"../../../../nls.js";import{$qd as $,$td as b,$ud as C}from"../../../../base/common/lifecycle.js";import{$J5 as p,$F6 as g,$25 as v,$T5 as H,$m6 as y,getWindow as O,$ as m,$75 as F,$t6 as T,$e7 as _,$k6 as B}from"../../../../base/browser/dom.js";import{$mj as V}from"../../../../platform/instantiation/common/instantiation.js";import{$Myc as x}from"./notificationsList.js";import{Event as M,$df as k}from"../../../../base/common/event.js";import{$8tb as W}from"../../../services/layout/browser/layoutService.js";import{$xwb as j,$zwb as P}from"../../../common/theme.js";import{$Mt as U,$Tt as z}from"../../../../platform/theme/common/themeService.js";import{$cr as G}from"../../../../platform/theme/common/colorRegistry.js";import{$kI as A}from"../../../services/editor/common/editorGroupsService.js";import{$Vn as J}from"../../../../platform/contextkey/common/contextkey.js";import{Severity as d,NotificationsFilter as L,NotificationPriority as I,$VI as D}from"../../../../platform/notification/common/notification.js";import{$RK as X}from"../../../services/lifecycle/common/lifecycle.js";import{$8$ as Y}from"../../../services/host/browser/host.js";import{$9h as Z}from"../../../../base/common/async.js";import{$$c as Q}from"../../../../base/common/types.js";import{$$N as q}from"../../../common/contextkeys.js";import{$c5 as w}from"../../../../base/browser/window.js";var N=function(a,t,i,s){var e=arguments.length,o=e<3?t:s===null?s=Object.getOwnPropertyDescriptor(t,i):s,r;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")o=Reflect.decorate(a,t,i,s);else for(var n=a.length-1;n>=0;n--)(r=a[n])&&(o=(e<3?r(o):e>3?r(t,i,o):r(t,i))||o);return e>3&&o&&Object.defineProperty(t,i,o),o},c=function(a,t){return function(i,s){t(i,s,a)}},l,h;(function(a){a[a.HIDDEN_OR_VISIBLE=0]="HIDDEN_OR_VISIBLE",a[a.HIDDEN=1]="HIDDEN",a[a.VISIBLE=2]="VISIBLE"})(h||(h={}));let R=class extends z{static{l=this}static{this.a=450}static{this.b=3}static{this.c={[d.Info]:15e3,[d.Warning]:18e3,[d.Error]:2e4}}static{this.f={interval:800,limit:this.b}}get isVisible(){return!!this.j}constructor(t,i,s,e,o,r,n,f,u){super(o),this.D=t,this.F=i,this.G=s,this.H=e,this.I=r,this.J=f,this.L=u,this.g=this.B(new k),this.onDidChangeVisibility=this.g.event,this.j=!1,this.t=new Map,this.u=new Map,this.C=new Z(l.f.interval),this.y=q.bindTo(n),this.M()}M(){this.B(this.H.onDidLayoutMainContainer(t=>this.layout(v.lift(t)))),this.J.when(3).then(()=>{this.F.notifications.forEach(t=>this.O(t)),this.B(this.F.onDidChangeNotification(t=>this.N(t)))}),this.B(this.F.onDidChangeFilter(({global:t,sources:i})=>{if(t===L.ERROR)this.hide();else if(i)for(const[s]of this.t)typeof s.sourceId=="string"&&i.get(s.sourceId)===L.ERROR&&s.severity!==d.Error&&s.priority!==I.URGENT&&this.R(s)}))}N(t){switch(t.kind){case 0:return this.O(t.item);case 3:return this.R(t.item)}}O(t){if(this.s||t.priority===I.SILENT)return;if(t.priority===I.OPTIONAL){const s=B();if(T(s)&&_(s)&&F(s,this.H.mainContainer))return}if(this.C.increment()>l.f.limit)return;const i=new C;this.u.set(t,i),i.add(H(O(this.D),()=>this.P(t,i)))}P(t,i){let s=this.m;s||(s=this.m=m(".notifications-toasts"),this.D.appendChild(s)),s.classList.add("visible");const e=m(".notification-toast-container"),o=s.firstChild;o?s.insertBefore(e,o):s.appendChild(e);const r=m(".notification-toast");e.appendChild(r);const n=this.G.createInstance(x,r,{verticalScrollMode:2,widgetAriaLabel:t.source?D(E(3845,null,t.message.raw,t.source),t.severity):D(E(3844,null,t.message.raw),t.severity)});i.add(n);const f={item:t,list:n,container:e,toast:r};this.t.set(t,f),i.add(b(()=>this.ab(f,!1))),n.show();const u=this.X();this.Y(u.width),n.updateNotificationsList(0,0,[t]),this.Z(u.height),i.add(t.onDidChangeExpansion(()=>{n.updateNotificationsList(0,1,[t])})),i.add(t.onDidChangeContent(S=>{switch(S.kind){case 2:n.updateNotificationsList(0,1,[t]);break;case 1:t.expanded&&n.updateNotificationHeight(t);break}})),M.once(t.onDidClose)(()=>{this.R(t)}),this.Q(t,e,n,i),this.updateStyles(),this.y.set(!0),r.classList.add("notification-fade-in"),i.add(p(r,"transitionend",()=>{r.classList.remove("notification-fade-in"),r.classList.add("notification-fade-in-done")})),t.updateVisibility(!0),this.j||(this.j=!0,this.g.fire())}Q(t,i,s,e){let o=!1;e.add(p(i,g.MOUSE_OVER,()=>o=!0)),e.add(p(i,g.MOUSE_OUT,()=>o=!1));let r,n;const f=()=>{r=setTimeout(()=>{this.L.hasFocus?t.sticky||s.hasFocus()||o?f():this.R(t):n||(n=this.L.onDidChangeFocus(u=>{u&&f()}),e.add(n))},l.c[t.severity])};f(),e.add(b(()=>clearTimeout(r)))}R(t){let i=!1;const s=this.t.get(t);s&&(y(s.container)&&(i=!(this.focusNext()||this.focusPrevious())),this.t.delete(t));const e=this.u.get(t);e&&($(e),this.u.delete(t)),this.t.size>0?this.layout(this.r):(this.U(),i&&this.I.activeGroup.focus())}S(){this.t.clear(),this.u.forEach(t=>$(t)),this.u.clear(),this.U()}U(){this.m?.classList.remove("visible"),this.y.set(!1),this.j&&(this.j=!1,this.g.fire())}hide(){const t=this.m?y(this.m):!1;this.S(),t&&this.I.activeGroup.focus()}focus(){const t=this.W(h.VISIBLE);return t.length>0?(t[0].list.focusFirst(),!0):!1}focusNext(){const t=this.W(h.VISIBLE);for(let i=0;i<t.length;i++)if(t[i].list.hasFocus()){const e=t[i+1];if(e)return e.list.focusFirst(),!0;break}return!1}focusPrevious(){const t=this.W(h.VISIBLE);for(let i=0;i<t.length;i++)if(t[i].list.hasFocus()){const e=t[i-1];if(e)return e.list.focusFirst(),!0;break}return!1}focusFirst(){const t=this.W(h.VISIBLE)[0];return t?(t.list.focusFirst(),!0):!1}focusLast(){const t=this.W(h.VISIBLE);return t.length>0?(t[t.length-1].list.focusFirst(),!0):!1}update(t){this.s!==t&&(this.s=t,this.s&&this.S())}updateStyles(){this.t.forEach(({toast:t})=>{const i=this.z(P);t.style.background=i||"";const s=this.z(G);t.style.boxShadow=s?`0 0 8px 2px ${s}`:"";const e=this.z(j);t.style.border=e?`1px solid ${e}`:""})}W(t){const i=[];return this.t.forEach(s=>{switch(t){case h.HIDDEN_OR_VISIBLE:i.push(s);break;case h.HIDDEN:this.bb(s)||i.push(s);break;case h.VISIBLE:this.bb(s)&&i.push(s);break}}),i.reverse()}layout(t){this.r=t;const i=this.X();i.height&&this.Z(i.height),this.Y(i.width)}X(){const t=l.a;let i=t,s;return this.r&&(i=this.r.width,i-=2*8,s=this.r.height,this.H.isVisible("workbench.parts.statusbar",w)&&(s-=22),this.H.isVisible("workbench.parts.titlebar",w)&&(s-=22),s-=2*12),new v(Math.min(t,i),s??0)}Y(t){this.t.forEach(({list:i})=>i.layout(t))}Z(t){let i=t,s=Math.round(t*.618),e=0;for(const o of this.W(h.HIDDEN_OR_VISIBLE)){o.container.style.opacity="0",this.ab(o,!0),i-=o.container.offsetHeight,s-=o.container.offsetHeight;let r=!1;e===l.b?r=!1:(e===0&&i>=0||e>0&&s>=0)&&(r=!0),this.ab(o,r),o.container.style.opacity="",r&&e++}}ab(t,i){if(this.bb(t)===i)return;const s=Q(this.m);i?s.appendChild(t.container):t.container.remove(),t.item.updateVisibility(i)}bb(t){return!!t.container.parentElement}};R=l=N([c(2,V),c(3,W),c(4,U),c(5,A),c(6,J),c(7,X),c(8,Y)],R);export{R as $Ryc};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import "./media/notificationsToasts.css";
+import { localize } from "../../../../nls.js";
+import { dispose, toDisposable, DisposableStore } from "../../../../base/common/lifecycle.js";
+import { addDisposableListener, EventType, Dimension, scheduleAtNextAnimationFrame, isAncestorOfActiveElement, getWindow, $, isElementInBottomRightQuarter, isHTMLElement, isEditableElement, getActiveElement } from "../../../../base/browser/dom.js";
+import { IInstantiationService } from "../../../../platform/instantiation/common/instantiation.js";
+import { NotificationsList } from "./notificationsList.js";
+import { Event, Emitter } from "../../../../base/common/event.js";
+import { IWorkbenchLayoutService } from "../../../services/layout/browser/layoutService.js";
+import { NOTIFICATIONS_TOAST_BORDER, NOTIFICATIONS_BACKGROUND } from "../../../common/theme.js";
+import { IThemeService, Themable } from "../../../../platform/theme/common/themeService.js";
+import { widgetShadow } from "../../../../platform/theme/common/colorRegistry.js";
+import { IEditorGroupsService } from "../../../services/editor/common/editorGroupsService.js";
+import { IContextKeyService } from "../../../../platform/contextkey/common/contextkey.js";
+import { Severity, NotificationsFilter, NotificationPriority, withSeverityPrefix } from "../../../../platform/notification/common/notification.js";
+import { ILifecycleService } from "../../../services/lifecycle/common/lifecycle.js";
+import { IHostService } from "../../../services/host/browser/host.js";
+import { IntervalCounter } from "../../../../base/common/async.js";
+import { assertReturnsDefined } from "../../../../base/common/types.js";
+import { NotificationsToastsVisibleContext } from "../../../common/contextkeys.js";
+import { mainWindow } from "../../../../base/browser/window.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+var NotificationsToasts_1;
+var ToastVisibility;
+(function(ToastVisibility2) {
+  ToastVisibility2[ToastVisibility2["HIDDEN_OR_VISIBLE"] = 0] = "HIDDEN_OR_VISIBLE";
+  ToastVisibility2[ToastVisibility2["HIDDEN"] = 1] = "HIDDEN";
+  ToastVisibility2[ToastVisibility2["VISIBLE"] = 2] = "VISIBLE";
+})(ToastVisibility || (ToastVisibility = {}));
+let NotificationsToasts = class NotificationsToasts2 extends Themable {
+  static {
+    __name(this, "NotificationsToasts");
+  }
+  static {
+    NotificationsToasts_1 = this;
+  }
+  static {
+    this.MAX_WIDTH = 450;
+  }
+  static {
+    this.MAX_NOTIFICATIONS = 3;
+  }
+  static {
+    this.PURGE_TIMEOUT = {
+      [Severity.Info]: 15e3,
+      [Severity.Warning]: 18e3,
+      [Severity.Error]: 2e4
+    };
+  }
+  static {
+    this.SPAM_PROTECTION = {
+      // Count for the number of notifications over 800ms...
+      interval: 800,
+      // ...and ensure we are not showing more than MAX_NOTIFICATIONS
+      limit: this.MAX_NOTIFICATIONS
+    };
+  }
+  get isVisible() {
+    return !!this._isVisible;
+  }
+  constructor(container, model, instantiationService, layoutService, themeService, editorGroupService, contextKeyService, lifecycleService, hostService) {
+    super(themeService);
+    this.container = container;
+    this.model = model;
+    this.instantiationService = instantiationService;
+    this.layoutService = layoutService;
+    this.editorGroupService = editorGroupService;
+    this.lifecycleService = lifecycleService;
+    this.hostService = hostService;
+    this._onDidChangeVisibility = this._register(new Emitter());
+    this.onDidChangeVisibility = this._onDidChangeVisibility.event;
+    this._isVisible = false;
+    this.mapNotificationToToast = /* @__PURE__ */ new Map();
+    this.mapNotificationToDisposable = /* @__PURE__ */ new Map();
+    this.addedToastsIntervalCounter = new IntervalCounter(NotificationsToasts_1.SPAM_PROTECTION.interval);
+    this.notificationsToastsVisibleContextKey = NotificationsToastsVisibleContext.bindTo(contextKeyService);
+    this.registerListeners();
+  }
+  registerListeners() {
+    this._register(this.layoutService.onDidLayoutMainContainer((dimension) => this.layout(Dimension.lift(dimension))));
+    this.lifecycleService.when(
+      3
+      /* LifecyclePhase.Restored */
+    ).then(() => {
+      this.model.notifications.forEach((notification) => this.addToast(notification));
+      this._register(this.model.onDidChangeNotification((e) => this.onDidChangeNotification(e)));
+    });
+    this._register(this.model.onDidChangeFilter(({ global, sources }) => {
+      if (global === NotificationsFilter.ERROR) {
+        this.hide();
+      } else if (sources) {
+        for (const [notification] of this.mapNotificationToToast) {
+          if (typeof notification.sourceId === "string" && sources.get(notification.sourceId) === NotificationsFilter.ERROR && notification.severity !== Severity.Error && notification.priority !== NotificationPriority.URGENT) {
+            this.removeToast(notification);
+          }
+        }
+      }
+    }));
+  }
+  onDidChangeNotification(e) {
+    switch (e.kind) {
+      case 0:
+        return this.addToast(e.item);
+      case 3:
+        return this.removeToast(e.item);
+    }
+  }
+  addToast(item) {
+    if (this.isNotificationsCenterVisible) {
+      return;
+    }
+    if (item.priority === NotificationPriority.SILENT) {
+      return;
+    }
+    if (item.priority === NotificationPriority.OPTIONAL) {
+      const activeElement = getActiveElement();
+      if (isHTMLElement(activeElement) && isEditableElement(activeElement) && isElementInBottomRightQuarter(activeElement, this.layoutService.mainContainer)) {
+        return;
+      }
+    }
+    if (this.addedToastsIntervalCounter.increment() > NotificationsToasts_1.SPAM_PROTECTION.limit) {
+      return;
+    }
+    const itemDisposables = new DisposableStore();
+    this.mapNotificationToDisposable.set(item, itemDisposables);
+    itemDisposables.add(scheduleAtNextAnimationFrame(getWindow(this.container), () => this.doAddToast(item, itemDisposables)));
+  }
+  doAddToast(item, itemDisposables) {
+    let notificationsToastsContainer = this.notificationsToastsContainer;
+    if (!notificationsToastsContainer) {
+      notificationsToastsContainer = this.notificationsToastsContainer = $(".notifications-toasts");
+      this.container.appendChild(notificationsToastsContainer);
+    }
+    notificationsToastsContainer.classList.add("visible");
+    const notificationToastContainer = $(".notification-toast-container");
+    const firstToast = notificationsToastsContainer.firstChild;
+    if (firstToast) {
+      notificationsToastsContainer.insertBefore(notificationToastContainer, firstToast);
+    } else {
+      notificationsToastsContainer.appendChild(notificationToastContainer);
+    }
+    const notificationToast = $(".notification-toast");
+    notificationToastContainer.appendChild(notificationToast);
+    const notificationList = this.instantiationService.createInstance(NotificationsList, notificationToast, {
+      verticalScrollMode: 2,
+      widgetAriaLabel: (() => {
+        if (!item.source) {
+          return withSeverityPrefix(localize("notificationAriaLabel", "{0}, notification", item.message.raw), item.severity);
+        }
+        return withSeverityPrefix(localize("notificationWithSourceAriaLabel", "{0}, source: {1}, notification", item.message.raw, item.source), item.severity);
+      })()
+    });
+    itemDisposables.add(notificationList);
+    const toast = { item, list: notificationList, container: notificationToastContainer, toast: notificationToast };
+    this.mapNotificationToToast.set(item, toast);
+    itemDisposables.add(toDisposable(() => this.updateToastVisibility(toast, false)));
+    notificationList.show();
+    const maxDimensions = this.computeMaxDimensions();
+    this.layoutLists(maxDimensions.width);
+    notificationList.updateNotificationsList(0, 0, [item]);
+    this.layoutContainer(maxDimensions.height);
+    itemDisposables.add(item.onDidChangeExpansion(() => {
+      notificationList.updateNotificationsList(0, 1, [item]);
+    }));
+    itemDisposables.add(item.onDidChangeContent((e) => {
+      switch (e.kind) {
+        case 2:
+          notificationList.updateNotificationsList(0, 1, [item]);
+          break;
+        case 1:
+          if (item.expanded) {
+            notificationList.updateNotificationHeight(item);
+          }
+          break;
+      }
+    }));
+    Event.once(item.onDidClose)(() => {
+      this.removeToast(item);
+    });
+    this.purgeNotification(item, notificationToastContainer, notificationList, itemDisposables);
+    this.updateStyles();
+    this.notificationsToastsVisibleContextKey.set(true);
+    notificationToast.classList.add("notification-fade-in");
+    itemDisposables.add(addDisposableListener(notificationToast, "transitionend", () => {
+      notificationToast.classList.remove("notification-fade-in");
+      notificationToast.classList.add("notification-fade-in-done");
+    }));
+    item.updateVisibility(true);
+    if (!this._isVisible) {
+      this._isVisible = true;
+      this._onDidChangeVisibility.fire();
+    }
+  }
+  purgeNotification(item, notificationToastContainer, notificationList, disposables) {
+    let isMouseOverToast = false;
+    disposables.add(addDisposableListener(notificationToastContainer, EventType.MOUSE_OVER, () => isMouseOverToast = true));
+    disposables.add(addDisposableListener(notificationToastContainer, EventType.MOUSE_OUT, () => isMouseOverToast = false));
+    let purgeTimeoutHandle;
+    let listener;
+    const hideAfterTimeout = /* @__PURE__ */ __name(() => {
+      purgeTimeoutHandle = setTimeout(() => {
+        if (!this.hostService.hasFocus) {
+          if (!listener) {
+            listener = this.hostService.onDidChangeFocus((focus) => {
+              if (focus) {
+                hideAfterTimeout();
+              }
+            });
+            disposables.add(listener);
+          }
+        } else if (item.sticky || // never hide sticky notifications
+        notificationList.hasFocus() || // never hide notifications with focus
+        isMouseOverToast) {
+          hideAfterTimeout();
+        } else {
+          this.removeToast(item);
+        }
+      }, NotificationsToasts_1.PURGE_TIMEOUT[item.severity]);
+    }, "hideAfterTimeout");
+    hideAfterTimeout();
+    disposables.add(toDisposable(() => clearTimeout(purgeTimeoutHandle)));
+  }
+  removeToast(item) {
+    let focusEditor = false;
+    const notificationToast = this.mapNotificationToToast.get(item);
+    if (notificationToast) {
+      const toastHasDOMFocus = isAncestorOfActiveElement(notificationToast.container);
+      if (toastHasDOMFocus) {
+        focusEditor = !(this.focusNext() || this.focusPrevious());
+      }
+      this.mapNotificationToToast.delete(item);
+    }
+    const notificationDisposables = this.mapNotificationToDisposable.get(item);
+    if (notificationDisposables) {
+      dispose(notificationDisposables);
+      this.mapNotificationToDisposable.delete(item);
+    }
+    if (this.mapNotificationToToast.size > 0) {
+      this.layout(this.workbenchDimensions);
+    } else {
+      this.doHide();
+      if (focusEditor) {
+        this.editorGroupService.activeGroup.focus();
+      }
+    }
+  }
+  removeToasts() {
+    this.mapNotificationToToast.clear();
+    this.mapNotificationToDisposable.forEach((disposable) => dispose(disposable));
+    this.mapNotificationToDisposable.clear();
+    this.doHide();
+  }
+  doHide() {
+    this.notificationsToastsContainer?.classList.remove("visible");
+    this.notificationsToastsVisibleContextKey.set(false);
+    if (this._isVisible) {
+      this._isVisible = false;
+      this._onDidChangeVisibility.fire();
+    }
+  }
+  hide() {
+    const focusEditor = this.notificationsToastsContainer ? isAncestorOfActiveElement(this.notificationsToastsContainer) : false;
+    this.removeToasts();
+    if (focusEditor) {
+      this.editorGroupService.activeGroup.focus();
+    }
+  }
+  focus() {
+    const toasts = this.getToasts(ToastVisibility.VISIBLE);
+    if (toasts.length > 0) {
+      toasts[0].list.focusFirst();
+      return true;
+    }
+    return false;
+  }
+  focusNext() {
+    const toasts = this.getToasts(ToastVisibility.VISIBLE);
+    for (let i = 0; i < toasts.length; i++) {
+      const toast = toasts[i];
+      if (toast.list.hasFocus()) {
+        const nextToast = toasts[i + 1];
+        if (nextToast) {
+          nextToast.list.focusFirst();
+          return true;
+        }
+        break;
+      }
+    }
+    return false;
+  }
+  focusPrevious() {
+    const toasts = this.getToasts(ToastVisibility.VISIBLE);
+    for (let i = 0; i < toasts.length; i++) {
+      const toast = toasts[i];
+      if (toast.list.hasFocus()) {
+        const previousToast = toasts[i - 1];
+        if (previousToast) {
+          previousToast.list.focusFirst();
+          return true;
+        }
+        break;
+      }
+    }
+    return false;
+  }
+  focusFirst() {
+    const toast = this.getToasts(ToastVisibility.VISIBLE)[0];
+    if (toast) {
+      toast.list.focusFirst();
+      return true;
+    }
+    return false;
+  }
+  focusLast() {
+    const toasts = this.getToasts(ToastVisibility.VISIBLE);
+    if (toasts.length > 0) {
+      toasts[toasts.length - 1].list.focusFirst();
+      return true;
+    }
+    return false;
+  }
+  update(isCenterVisible) {
+    if (this.isNotificationsCenterVisible !== isCenterVisible) {
+      this.isNotificationsCenterVisible = isCenterVisible;
+      if (this.isNotificationsCenterVisible) {
+        this.removeToasts();
+      }
+    }
+  }
+  updateStyles() {
+    this.mapNotificationToToast.forEach(({ toast }) => {
+      const backgroundColor = this.getColor(NOTIFICATIONS_BACKGROUND);
+      toast.style.background = backgroundColor ? backgroundColor : "";
+      const widgetShadowColor = this.getColor(widgetShadow);
+      toast.style.boxShadow = widgetShadowColor ? `0 0 8px 2px ${widgetShadowColor}` : "";
+      const borderColor = this.getColor(NOTIFICATIONS_TOAST_BORDER);
+      toast.style.border = borderColor ? `1px solid ${borderColor}` : "";
+    });
+  }
+  getToasts(state) {
+    const notificationToasts = [];
+    this.mapNotificationToToast.forEach((toast) => {
+      switch (state) {
+        case ToastVisibility.HIDDEN_OR_VISIBLE:
+          notificationToasts.push(toast);
+          break;
+        case ToastVisibility.HIDDEN:
+          if (!this.isToastInDOM(toast)) {
+            notificationToasts.push(toast);
+          }
+          break;
+        case ToastVisibility.VISIBLE:
+          if (this.isToastInDOM(toast)) {
+            notificationToasts.push(toast);
+          }
+          break;
+      }
+    });
+    return notificationToasts.reverse();
+  }
+  layout(dimension) {
+    this.workbenchDimensions = dimension;
+    const maxDimensions = this.computeMaxDimensions();
+    if (maxDimensions.height) {
+      this.layoutContainer(maxDimensions.height);
+    }
+    this.layoutLists(maxDimensions.width);
+  }
+  computeMaxDimensions() {
+    const maxWidth = NotificationsToasts_1.MAX_WIDTH;
+    let availableWidth = maxWidth;
+    let availableHeight;
+    if (this.workbenchDimensions) {
+      availableWidth = this.workbenchDimensions.width;
+      availableWidth -= 2 * 8;
+      availableHeight = this.workbenchDimensions.height;
+      if (this.layoutService.isVisible("workbench.parts.statusbar", mainWindow)) {
+        availableHeight -= 22;
+      }
+      if (this.layoutService.isVisible("workbench.parts.titlebar", mainWindow)) {
+        availableHeight -= 22;
+      }
+      availableHeight -= 2 * 12;
+    }
+    return new Dimension(Math.min(maxWidth, availableWidth), availableHeight ?? 0);
+  }
+  layoutLists(width) {
+    this.mapNotificationToToast.forEach(({ list }) => list.layout(width));
+  }
+  layoutContainer(heightToGive) {
+    let singleToastHeightToGive = heightToGive;
+    let multipleToastsHeightToGive = Math.round(heightToGive * 0.618);
+    let visibleToasts = 0;
+    for (const toast of this.getToasts(ToastVisibility.HIDDEN_OR_VISIBLE)) {
+      toast.container.style.opacity = "0";
+      this.updateToastVisibility(toast, true);
+      singleToastHeightToGive -= toast.container.offsetHeight;
+      multipleToastsHeightToGive -= toast.container.offsetHeight;
+      let makeVisible = false;
+      if (visibleToasts === NotificationsToasts_1.MAX_NOTIFICATIONS) {
+        makeVisible = false;
+      } else if (visibleToasts === 0 && singleToastHeightToGive >= 0 || visibleToasts > 0 && multipleToastsHeightToGive >= 0) {
+        makeVisible = true;
+      }
+      this.updateToastVisibility(toast, makeVisible);
+      toast.container.style.opacity = "";
+      if (makeVisible) {
+        visibleToasts++;
+      }
+    }
+  }
+  updateToastVisibility(toast, visible) {
+    if (this.isToastInDOM(toast) === visible) {
+      return;
+    }
+    const notificationsToastsContainer = assertReturnsDefined(this.notificationsToastsContainer);
+    if (visible) {
+      notificationsToastsContainer.appendChild(toast.container);
+    } else {
+      toast.container.remove();
+    }
+    toast.item.updateVisibility(visible);
+  }
+  isToastInDOM(toast) {
+    return !!toast.container.parentElement;
+  }
+};
+NotificationsToasts = NotificationsToasts_1 = __decorate([
+  __param(2, IInstantiationService),
+  __param(3, IWorkbenchLayoutService),
+  __param(4, IThemeService),
+  __param(5, IEditorGroupsService),
+  __param(6, IContextKeyService),
+  __param(7, ILifecycleService),
+  __param(8, IHostService)
+], NotificationsToasts);
+export {
+  NotificationsToasts
+};
+//# sourceMappingURL=notificationsToasts.js.map

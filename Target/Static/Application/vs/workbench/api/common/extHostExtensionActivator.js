@@ -1,1 +1,339 @@
-import*as $ from"../../../base/common/errors.js";import{$vd as l}from"../../../base/common/lifecycle.js";import{$_zc as b}from"../../services/extensions/common/extensionDescriptionRegistry.js";import{$Sy as y}from"../../../platform/extensions/common/extensions.js";import{$YO as p}from"../../services/extensions/common/extensions.js";import{$3n as x}from"../../../platform/log/common/log.js";import{$Kh as D}from"../../../base/common/async.js";var v=function(a,t,e,i){var n=arguments.length,s=n<3?t:i===null?i=Object.getOwnPropertyDescriptor(t,e):i,o;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")s=Reflect.decorate(a,t,e,i);else for(var r=a.length-1;r>=0;r--)(o=a[r])&&(s=(n<3?o(s):n>3?o(t,e,s):o(t,e))||s);return n>3&&s&&Object.defineProperty(t,e,s),s},w=function(a,t){return function(e,i){t(e,i,a)}};class h{static{this.NONE=new h(!1,-1,-1,-1)}constructor(t,e,i,n){this.startup=t,this.codeLoadingTime=e,this.activateCallTime=i,this.activateResolvedTime=n}}class K{constructor(t){this.a=t,this.b=-1,this.c=-1,this.d=-1,this.f=-1,this.g=-1,this.h=-1}j(t,e){return t===-1||e===-1?-1:e-t}build(){return new h(this.a,this.j(this.b,this.c),this.j(this.d,this.f),this.j(this.g,this.h))}codeLoadingStart(){this.b=Date.now()}codeLoadingStop(){this.c=Date.now()}activateCallStart(){this.d=Date.now()}activateCallStop(){this.f=Date.now()}activateResolveStart(){this.g=Date.now()}activateResolveStop(){this.h=Date.now()}}class u{constructor(t,e,i,n,s,o){this.activationFailed=t,this.activationFailedError=e,this.activationTimes=i,this.module=n,this.exports=s,this.disposable=o}}class S extends u{constructor(t){super(!1,null,t,{activate:void 0,deactivate:void 0},void 0,l.None)}}class C extends u{constructor(){super(!1,null,h.NONE,{activate:void 0,deactivate:void 0},void 0,l.None)}}class c extends u{constructor(t){super(!0,t,h.NONE,{activate:void 0,deactivate:void 0},void 0,l.None)}}let m=class{constructor(t,e,i,n){this.g=n,this.a=t,this.b=e,this.c=i,this.d=new y,this.f=Object.create(null)}dispose(){for(const[t,e]of this.d)e.dispose()}async waitForActivatingExtensions(){const t=[];for(const[e,i]of this.d)t.push(i.wait());await Promise.all(t)}isActivated(t){const e=this.d.get(t);return!!(e&&e.value)}getActivatedExtension(t){const e=this.d.get(t);if(!e||!e.value)throw new Error(`Extension '${t.value}' is not known or not activated`);return e.value}async activateByEvent(t,e){if(this.f[t])return;const i=this.a.getExtensionDescriptionsForActivationEvent(t);await this.h(i.map(n=>({id:n.identifier,reason:{startup:e,extensionId:n.identifier,activationEvent:t}}))),this.f[t]=!0}activateById(t,e){const i=this.a.getExtensionDescription(t);if(!i)throw new Error(`Extension '${t.value}' is not known`);return this.h([{id:i.identifier,reason:e}])}async h(t){const e=t.filter(i=>!this.isActivated(i.id)).map(i=>this.j(i));await Promise.all(e.map(i=>i.wait()))}j(t){if(this.d.has(t.id))return this.d.get(t.id);if(this.l(t.id))return this.k(t,null,[],null);const e=this.a.getExtensionDescription(t.id);if(!e){const s=new Error(`Cannot activate unknown extension '${t.id.value}'`),o=this.k(t,null,[],new c(s));return this.c.onExtensionActivationError(t.id,s,new p(t.id.value)),o}const i=[],n=typeof e.extensionDependencies>"u"?[]:e.extensionDependencies;for(const s of n){if(this.m(s))continue;const o=this.d.get(s);if(o){i.push(o);continue}if(this.l(s)){i.push(this.j({id:this.b.getExtensionDescription(s).identifier,reason:t.reason}));continue}const r=this.a.getExtensionDescription(s);if(r){if(!r.main&&!r.browser)continue;i.push(this.j({id:r.identifier,reason:t.reason}));continue}const g=e.displayName||e.identifier.value,f=new Error(`Cannot activate the '${g}' extension because it depends on unknown extension '${s}'`),E=this.k(t,e.displayName,[],new c(f));return this.c.onExtensionActivationError(e.identifier,f,new p(s)),E}return this.k(t,e.displayName,i,null)}k(t,e,i,n){const s=new d(t.id,e,t.reason,i,n,this.c,this.g);return this.d.set(t.id,s),s}l(t){return b.isHostExtension(t,this.a,this.b)}m(t){const e=this.b.getExtensionDescription(t);return e?!e.main&&!e.browser:!1}};m=v([w(3,x)],m);let d=class{get value(){return this.h}get friendlyName(){return this.d||this.c.value}constructor(t,e,i,n,s,o,r){this.c=t,this.d=e,this.f=i,this.g=n,this.h=s,this.j=o,this.k=r,this.a=new D,this.b=!1,this.l()}dispose(){this.b=!0}wait(){return this.a.wait()}async l(){await this.m(),this.a.open()}async m(){if(!this.h){for(;this.g.length>0;){for(let t=0;t<this.g.length;t++){const e=this.g[t];if(e.value&&!e.value.activationFailed){this.g.splice(t,1),t--;continue}if(e.value&&e.value.activationFailed){const i=new Error(`Cannot activate the '${this.friendlyName}' extension because its dependency '${e.friendlyName}' failed to activate`);i.detail=e.value.activationFailedError,this.h=new c(i),this.j.onExtensionActivationError(this.c,i,null);return}}this.g.length>0&&await Promise.race(this.g.map(t=>t.wait()))}await this.n()}}async n(){try{this.h=await this.j.actualActivateExtension(this.c,this.f)}catch(t){const e=new Error;if(t&&t.name&&(e.name=t.name),t&&t.message?e.message=`Activating extension '${this.c.value}' failed: ${t.message}.`:e.message=`Activating extension '${this.c.value}' failed: ${t}.`,t&&t.stack&&(e.stack=t.stack),this.h=new c(e),this.b&&$.$pb(t))return;this.j.onExtensionActivationError(this.c,e,null),this.k.error(`Activating extension ${this.c.value} failed due to an error:`),this.k.error(t)}}};d=v([w(6,x)],d);export{h as $3Kc,K as $4Kc,u as $5Kc,S as $6Kc,C as $7Kc,m as $8Kc};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import * as errors from "../../../base/common/errors.js";
+import { Disposable } from "../../../base/common/lifecycle.js";
+import { ExtensionDescriptionRegistry } from "../../services/extensions/common/extensionDescriptionRegistry.js";
+import { ExtensionIdentifierMap } from "../../../platform/extensions/common/extensions.js";
+import { MissingExtensionDependency } from "../../services/extensions/common/extensions.js";
+import { ILogService } from "../../../platform/log/common/log.js";
+import { Barrier } from "../../../base/common/async.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+class ExtensionActivationTimes {
+  static {
+    __name(this, "ExtensionActivationTimes");
+  }
+  static {
+    this.NONE = new ExtensionActivationTimes(false, -1, -1, -1);
+  }
+  constructor(startup, codeLoadingTime, activateCallTime, activateResolvedTime) {
+    this.startup = startup;
+    this.codeLoadingTime = codeLoadingTime;
+    this.activateCallTime = activateCallTime;
+    this.activateResolvedTime = activateResolvedTime;
+  }
+}
+class ExtensionActivationTimesBuilder {
+  static {
+    __name(this, "ExtensionActivationTimesBuilder");
+  }
+  constructor(startup) {
+    this._startup = startup;
+    this._codeLoadingStart = -1;
+    this._codeLoadingStop = -1;
+    this._activateCallStart = -1;
+    this._activateCallStop = -1;
+    this._activateResolveStart = -1;
+    this._activateResolveStop = -1;
+  }
+  _delta(start, stop) {
+    if (start === -1 || stop === -1) {
+      return -1;
+    }
+    return stop - start;
+  }
+  build() {
+    return new ExtensionActivationTimes(this._startup, this._delta(this._codeLoadingStart, this._codeLoadingStop), this._delta(this._activateCallStart, this._activateCallStop), this._delta(this._activateResolveStart, this._activateResolveStop));
+  }
+  codeLoadingStart() {
+    this._codeLoadingStart = Date.now();
+  }
+  codeLoadingStop() {
+    this._codeLoadingStop = Date.now();
+  }
+  activateCallStart() {
+    this._activateCallStart = Date.now();
+  }
+  activateCallStop() {
+    this._activateCallStop = Date.now();
+  }
+  activateResolveStart() {
+    this._activateResolveStart = Date.now();
+  }
+  activateResolveStop() {
+    this._activateResolveStop = Date.now();
+  }
+}
+class ActivatedExtension {
+  static {
+    __name(this, "ActivatedExtension");
+  }
+  constructor(activationFailed, activationFailedError, activationTimes, module, exports, disposable) {
+    this.activationFailed = activationFailed;
+    this.activationFailedError = activationFailedError;
+    this.activationTimes = activationTimes;
+    this.module = module;
+    this.exports = exports;
+    this.disposable = disposable;
+  }
+}
+class EmptyExtension extends ActivatedExtension {
+  static {
+    __name(this, "EmptyExtension");
+  }
+  constructor(activationTimes) {
+    super(false, null, activationTimes, { activate: void 0, deactivate: void 0 }, void 0, Disposable.None);
+  }
+}
+class HostExtension extends ActivatedExtension {
+  static {
+    __name(this, "HostExtension");
+  }
+  constructor() {
+    super(false, null, ExtensionActivationTimes.NONE, { activate: void 0, deactivate: void 0 }, void 0, Disposable.None);
+  }
+}
+class FailedExtension extends ActivatedExtension {
+  static {
+    __name(this, "FailedExtension");
+  }
+  constructor(activationError) {
+    super(true, activationError, ExtensionActivationTimes.NONE, { activate: void 0, deactivate: void 0 }, void 0, Disposable.None);
+  }
+}
+let ExtensionsActivator = class ExtensionsActivator2 {
+  static {
+    __name(this, "ExtensionsActivator");
+  }
+  constructor(registry, globalRegistry, host, _logService) {
+    this._logService = _logService;
+    this._registry = registry;
+    this._globalRegistry = globalRegistry;
+    this._host = host;
+    this._operations = new ExtensionIdentifierMap();
+    this._alreadyActivatedEvents = /* @__PURE__ */ Object.create(null);
+  }
+  dispose() {
+    for (const [_, op] of this._operations) {
+      op.dispose();
+    }
+  }
+  async waitForActivatingExtensions() {
+    const res = [];
+    for (const [_, op] of this._operations) {
+      res.push(op.wait());
+    }
+    await Promise.all(res);
+  }
+  isActivated(extensionId) {
+    const op = this._operations.get(extensionId);
+    return Boolean(op && op.value);
+  }
+  getActivatedExtension(extensionId) {
+    const op = this._operations.get(extensionId);
+    if (!op || !op.value) {
+      throw new Error(`Extension '${extensionId.value}' is not known or not activated`);
+    }
+    return op.value;
+  }
+  async activateByEvent(activationEvent, startup) {
+    if (this._alreadyActivatedEvents[activationEvent]) {
+      return;
+    }
+    const activateExtensions = this._registry.getExtensionDescriptionsForActivationEvent(activationEvent);
+    await this._activateExtensions(activateExtensions.map((e) => ({
+      id: e.identifier,
+      reason: { startup, extensionId: e.identifier, activationEvent }
+    })));
+    this._alreadyActivatedEvents[activationEvent] = true;
+  }
+  activateById(extensionId, reason) {
+    const desc = this._registry.getExtensionDescription(extensionId);
+    if (!desc) {
+      throw new Error(`Extension '${extensionId.value}' is not known`);
+    }
+    return this._activateExtensions([{ id: desc.identifier, reason }]);
+  }
+  async _activateExtensions(extensions) {
+    const operations = extensions.filter((p) => !this.isActivated(p.id)).map((ext) => this._handleActivationRequest(ext));
+    await Promise.all(operations.map((op) => op.wait()));
+  }
+  /**
+   * Handle semantics related to dependencies for `currentExtension`.
+   * We don't need to worry about dependency loops because they are handled by the registry.
+   */
+  _handleActivationRequest(currentActivation) {
+    if (this._operations.has(currentActivation.id)) {
+      return this._operations.get(currentActivation.id);
+    }
+    if (this._isHostExtension(currentActivation.id)) {
+      return this._createAndSaveOperation(currentActivation, null, [], null);
+    }
+    const currentExtension = this._registry.getExtensionDescription(currentActivation.id);
+    if (!currentExtension) {
+      const error = new Error(`Cannot activate unknown extension '${currentActivation.id.value}'`);
+      const result = this._createAndSaveOperation(currentActivation, null, [], new FailedExtension(error));
+      this._host.onExtensionActivationError(currentActivation.id, error, new MissingExtensionDependency(currentActivation.id.value));
+      return result;
+    }
+    const deps = [];
+    const depIds = typeof currentExtension.extensionDependencies === "undefined" ? [] : currentExtension.extensionDependencies;
+    for (const depId of depIds) {
+      if (this._isResolvedExtension(depId)) {
+        continue;
+      }
+      const dep = this._operations.get(depId);
+      if (dep) {
+        deps.push(dep);
+        continue;
+      }
+      if (this._isHostExtension(depId)) {
+        deps.push(this._handleActivationRequest({
+          id: this._globalRegistry.getExtensionDescription(depId).identifier,
+          reason: currentActivation.reason
+        }));
+        continue;
+      }
+      const depDesc = this._registry.getExtensionDescription(depId);
+      if (depDesc) {
+        if (!depDesc.main && !depDesc.browser) {
+          continue;
+        }
+        deps.push(this._handleActivationRequest({
+          id: depDesc.identifier,
+          reason: currentActivation.reason
+        }));
+        continue;
+      }
+      const currentExtensionFriendlyName = currentExtension.displayName || currentExtension.identifier.value;
+      const error = new Error(`Cannot activate the '${currentExtensionFriendlyName}' extension because it depends on unknown extension '${depId}'`);
+      const result = this._createAndSaveOperation(currentActivation, currentExtension.displayName, [], new FailedExtension(error));
+      this._host.onExtensionActivationError(currentExtension.identifier, error, new MissingExtensionDependency(depId));
+      return result;
+    }
+    return this._createAndSaveOperation(currentActivation, currentExtension.displayName, deps, null);
+  }
+  _createAndSaveOperation(activation, displayName, deps, value) {
+    const operation = new ActivationOperation(activation.id, displayName, activation.reason, deps, value, this._host, this._logService);
+    this._operations.set(activation.id, operation);
+    return operation;
+  }
+  _isHostExtension(extensionId) {
+    return ExtensionDescriptionRegistry.isHostExtension(extensionId, this._registry, this._globalRegistry);
+  }
+  _isResolvedExtension(extensionId) {
+    const extensionDescription = this._globalRegistry.getExtensionDescription(extensionId);
+    if (!extensionDescription) {
+      return false;
+    }
+    return !extensionDescription.main && !extensionDescription.browser;
+  }
+};
+ExtensionsActivator = __decorate([
+  __param(3, ILogService)
+], ExtensionsActivator);
+let ActivationOperation = class ActivationOperation2 {
+  static {
+    __name(this, "ActivationOperation");
+  }
+  get value() {
+    return this._value;
+  }
+  get friendlyName() {
+    return this._displayName || this._id.value;
+  }
+  constructor(_id, _displayName, _reason, _deps, _value, _host, _logService) {
+    this._id = _id;
+    this._displayName = _displayName;
+    this._reason = _reason;
+    this._deps = _deps;
+    this._value = _value;
+    this._host = _host;
+    this._logService = _logService;
+    this._barrier = new Barrier();
+    this._isDisposed = false;
+    this._initialize();
+  }
+  dispose() {
+    this._isDisposed = true;
+  }
+  wait() {
+    return this._barrier.wait();
+  }
+  async _initialize() {
+    await this._waitForDepsThenActivate();
+    this._barrier.open();
+  }
+  async _waitForDepsThenActivate() {
+    if (this._value) {
+      return;
+    }
+    while (this._deps.length > 0) {
+      for (let i = 0; i < this._deps.length; i++) {
+        const dep = this._deps[i];
+        if (dep.value && !dep.value.activationFailed) {
+          this._deps.splice(i, 1);
+          i--;
+          continue;
+        }
+        if (dep.value && dep.value.activationFailed) {
+          const error = new Error(`Cannot activate the '${this.friendlyName}' extension because its dependency '${dep.friendlyName}' failed to activate`);
+          error.detail = dep.value.activationFailedError;
+          this._value = new FailedExtension(error);
+          this._host.onExtensionActivationError(this._id, error, null);
+          return;
+        }
+      }
+      if (this._deps.length > 0) {
+        await Promise.race(this._deps.map((dep) => dep.wait()));
+      }
+    }
+    await this._activate();
+  }
+  async _activate() {
+    try {
+      this._value = await this._host.actualActivateExtension(this._id, this._reason);
+    } catch (err) {
+      const error = new Error();
+      if (err && err.name) {
+        error.name = err.name;
+      }
+      if (err && err.message) {
+        error.message = `Activating extension '${this._id.value}' failed: ${err.message}.`;
+      } else {
+        error.message = `Activating extension '${this._id.value}' failed: ${err}.`;
+      }
+      if (err && err.stack) {
+        error.stack = err.stack;
+      }
+      this._value = new FailedExtension(error);
+      if (this._isDisposed && errors.isCancellationError(err)) {
+        return;
+      }
+      this._host.onExtensionActivationError(this._id, error, null);
+      this._logService.error(`Activating extension ${this._id.value} failed due to an error:`);
+      this._logService.error(err);
+    }
+  }
+};
+ActivationOperation = __decorate([
+  __param(6, ILogService)
+], ActivationOperation);
+export {
+  ActivatedExtension,
+  EmptyExtension,
+  ExtensionActivationTimes,
+  ExtensionActivationTimesBuilder,
+  ExtensionsActivator,
+  HostExtension
+};
+//# sourceMappingURL=extHostExtensionActivator.js.map

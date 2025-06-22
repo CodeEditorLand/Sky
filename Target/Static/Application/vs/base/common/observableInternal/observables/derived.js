@@ -1,1 +1,86 @@
-import{DisposableStore as s,strictEquals as i}from"../commonFacade/deps.js";import{$Pd as u}from"../debugName.js";import{$le as o}from"./baseObservable.js";import{$qe as t,$re as a}from"./derivedImpl.js";function g(e,n){return n!==void 0?new t(new u(e,void 0,n),n,void 0,void 0,i):new t(new u(void 0,void 0,e),e,void 0,void 0,i)}function q(e,n,r){return new a(new u(e,void 0,n),n,void 0,void 0,i,r)}function $(e,n){return new t(new u(e.owner,e.debugName,e.debugReferenceFn),n,void 0,e.onLastObserverRemoved,e.equalsFn??i)}o($);function v(e,n){return new t(new u(e.owner,e.debugName,void 0),n,e.changeTracker,void 0,e.equalityComparer??i)}function D(e,n){let r,f;n===void 0?(r=e,f=void 0):(f=e,r=n);let d=new s;return new t(new u(f,void 0,r),l=>(d.isDisposed?d=new s:d.clear(),r(l,d)),void 0,()=>d.dispose(),i)}function N(e,n){let r,f;n===void 0?(r=e,f=void 0):(f=e,r=n);let d;return new t(new u(f,void 0,r),l=>{d?d.clear():d=new s;const w=r(l);return w&&d.add(w),w},void 0,()=>{d&&(d.dispose(),d=void 0)},i)}export{g as $3d,q as $4d,$ as $5d,v as $6d,D as $7d,N as $8d};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { DisposableStore, strictEquals } from "../commonFacade/deps.js";
+import { DebugNameData } from "../debugName.js";
+import { _setDerivedOpts } from "./baseObservable.js";
+import { Derived, DerivedWithSetter } from "./derivedImpl.js";
+function derived(computeFnOrOwner, computeFn) {
+  if (computeFn !== void 0) {
+    return new Derived(new DebugNameData(computeFnOrOwner, void 0, computeFn), computeFn, void 0, void 0, strictEquals);
+  }
+  return new Derived(new DebugNameData(void 0, void 0, computeFnOrOwner), computeFnOrOwner, void 0, void 0, strictEquals);
+}
+__name(derived, "derived");
+function derivedWithSetter(owner, computeFn, setter) {
+  return new DerivedWithSetter(new DebugNameData(owner, void 0, computeFn), computeFn, void 0, void 0, strictEquals, setter);
+}
+__name(derivedWithSetter, "derivedWithSetter");
+function derivedOpts(options, computeFn) {
+  return new Derived(new DebugNameData(options.owner, options.debugName, options.debugReferenceFn), computeFn, void 0, options.onLastObserverRemoved, options.equalsFn ?? strictEquals);
+}
+__name(derivedOpts, "derivedOpts");
+_setDerivedOpts(derivedOpts);
+function derivedHandleChanges(options, computeFn) {
+  return new Derived(new DebugNameData(options.owner, options.debugName, void 0), computeFn, options.changeTracker, void 0, options.equalityComparer ?? strictEquals);
+}
+__name(derivedHandleChanges, "derivedHandleChanges");
+function derivedWithStore(computeFnOrOwner, computeFnOrUndefined) {
+  let computeFn;
+  let owner;
+  if (computeFnOrUndefined === void 0) {
+    computeFn = computeFnOrOwner;
+    owner = void 0;
+  } else {
+    owner = computeFnOrOwner;
+    computeFn = computeFnOrUndefined;
+  }
+  let store = new DisposableStore();
+  return new Derived(new DebugNameData(owner, void 0, computeFn), (r) => {
+    if (store.isDisposed) {
+      store = new DisposableStore();
+    } else {
+      store.clear();
+    }
+    return computeFn(r, store);
+  }, void 0, () => store.dispose(), strictEquals);
+}
+__name(derivedWithStore, "derivedWithStore");
+function derivedDisposable(computeFnOrOwner, computeFnOrUndefined) {
+  let computeFn;
+  let owner;
+  if (computeFnOrUndefined === void 0) {
+    computeFn = computeFnOrOwner;
+    owner = void 0;
+  } else {
+    owner = computeFnOrOwner;
+    computeFn = computeFnOrUndefined;
+  }
+  let store = void 0;
+  return new Derived(new DebugNameData(owner, void 0, computeFn), (r) => {
+    if (!store) {
+      store = new DisposableStore();
+    } else {
+      store.clear();
+    }
+    const result = computeFn(r);
+    if (result) {
+      store.add(result);
+    }
+    return result;
+  }, void 0, () => {
+    if (store) {
+      store.dispose();
+      store = void 0;
+    }
+  }, strictEquals);
+}
+__name(derivedDisposable, "derivedDisposable");
+export {
+  derived,
+  derivedDisposable,
+  derivedHandleChanges,
+  derivedOpts,
+  derivedWithSetter,
+  derivedWithStore
+};
+//# sourceMappingURL=derived.js.map

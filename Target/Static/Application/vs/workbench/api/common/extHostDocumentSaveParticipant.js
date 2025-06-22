@@ -1,1 +1,134 @@
-import{URI as v}from"../../../base/common/uri.js";import{$ub as w}from"../../../base/common/errors.js";import{$zY as g}from"./extHostTypes.js";import{Range as y,TextDocumentSaveReason as b,EndOfLine as T}from"./extHostTypeConverters.js";import{$Gd as $}from"../../../base/common/linkedList.js";import{$kX as x}from"../../services/extensions/common/proxyIdentifier.js";class A{constructor(e,n,t,r={timeout:1500,errors:3}){this.c=e,this.d=n,this.f=t,this.g=r,this.a=new $,this.b=new WeakMap}dispose(){this.a.clear()}getOnWillSaveTextDocumentEvent(e){return(n,t,r)=>{const o={dispose:this.a.push([n,t,e])};return Array.isArray(r)&&r.push(o),o}}async $participateInSave(e,n){const t=v.revive(e);let r=!1;const s=setTimeout(()=>r=!0,this.g.timeout),o=[];try{for(const i of[...this.a]){if(r)break;const f=this.d.getDocument(t),l=await this.h(i,{document:f,reason:b.to(n)});o.push(l)}}finally{clearTimeout(s)}return o}h([e,n,t],r){const s=this.b.get(e);return typeof s=="number"&&s>this.g.errors?Promise.resolve(!1):this.i(t,e,n,r).then(()=>!0,o=>{if(this.c.error(`onWillSaveTextDocument-listener from extension '${t.identifier.value}' threw ERROR`),this.c.error(o),!(o instanceof Error)||o.message!=="concurrent_edits"){const i=this.b.get(e);this.b.set(e,i?i+1:1),typeof i=="number"&&i>this.g.errors&&this.c.info(`onWillSaveTextDocument-listener from extension '${t.identifier.value}' will now be IGNORED because of timeouts and/or errors`)}return!1})}i(e,n,t,r){const s=[],o=Date.now(),{document:i,reason:f}=r,{version:l}=i,p=Object.freeze({document:i,reason:f,waitUntil(c){if(Object.isFrozen(s))throw w("waitUntil can not be called async");s.push(Promise.resolve(c))}});try{n.apply(t,[p])}catch(c){return Promise.reject(c)}return Object.freeze(s),new Promise((c,u)=>{const m=setTimeout(()=>u(new Error("timeout")),this.g.timeout);return Promise.all(s).then(a=>{this.c.debug(`onWillSaveTextDocument-listener from extension '${e.identifier.value}' finished after ${Date.now()-o}ms`),clearTimeout(m),c(a)}).catch(a=>{clearTimeout(m),u(a)})}).then(c=>{const u={edits:[]};for(const m of c)if(Array.isArray(m)&&m.every(a=>a instanceof g))for(const{newText:a,newEol:h,range:d}of m)u.edits.push({resource:i.uri,versionId:void 0,textEdit:{range:d&&y.from(d),text:a,eol:h&&T.from(h)}});if(u.edits.length!==0)return l===i.version?this.f.$tryApplyWorkspaceEdit(new x(u)):Promise.reject(new Error("concurrent_edits"))})}}export{A as $GLc};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { URI } from "../../../base/common/uri.js";
+import { illegalState } from "../../../base/common/errors.js";
+import { TextEdit } from "./extHostTypes.js";
+import { Range, TextDocumentSaveReason, EndOfLine } from "./extHostTypeConverters.js";
+import { LinkedList } from "../../../base/common/linkedList.js";
+import { SerializableObjectWithBuffers } from "../../services/extensions/common/proxyIdentifier.js";
+class ExtHostDocumentSaveParticipant {
+  static {
+    __name(this, "ExtHostDocumentSaveParticipant");
+  }
+  constructor(_logService, _documents, _mainThreadBulkEdits, _thresholds = { timeout: 1500, errors: 3 }) {
+    this._logService = _logService;
+    this._documents = _documents;
+    this._mainThreadBulkEdits = _mainThreadBulkEdits;
+    this._thresholds = _thresholds;
+    this._callbacks = new LinkedList();
+    this._badListeners = /* @__PURE__ */ new WeakMap();
+  }
+  dispose() {
+    this._callbacks.clear();
+  }
+  getOnWillSaveTextDocumentEvent(extension) {
+    return (listener, thisArg, disposables) => {
+      const remove = this._callbacks.push([listener, thisArg, extension]);
+      const result = { dispose: remove };
+      if (Array.isArray(disposables)) {
+        disposables.push(result);
+      }
+      return result;
+    };
+  }
+  async $participateInSave(data, reason) {
+    const resource = URI.revive(data);
+    let didTimeout = false;
+    const didTimeoutHandle = setTimeout(() => didTimeout = true, this._thresholds.timeout);
+    const results = [];
+    try {
+      for (const listener of [...this._callbacks]) {
+        if (didTimeout) {
+          break;
+        }
+        const document = this._documents.getDocument(resource);
+        const success = await this._deliverEventAsyncAndBlameBadListeners(listener, { document, reason: TextDocumentSaveReason.to(reason) });
+        results.push(success);
+      }
+    } finally {
+      clearTimeout(didTimeoutHandle);
+    }
+    return results;
+  }
+  _deliverEventAsyncAndBlameBadListeners([listener, thisArg, extension], stubEvent) {
+    const errors = this._badListeners.get(listener);
+    if (typeof errors === "number" && errors > this._thresholds.errors) {
+      return Promise.resolve(false);
+    }
+    return this._deliverEventAsync(extension, listener, thisArg, stubEvent).then(() => {
+      return true;
+    }, (err) => {
+      this._logService.error(`onWillSaveTextDocument-listener from extension '${extension.identifier.value}' threw ERROR`);
+      this._logService.error(err);
+      if (!(err instanceof Error) || err.message !== "concurrent_edits") {
+        const errors2 = this._badListeners.get(listener);
+        this._badListeners.set(listener, !errors2 ? 1 : errors2 + 1);
+        if (typeof errors2 === "number" && errors2 > this._thresholds.errors) {
+          this._logService.info(`onWillSaveTextDocument-listener from extension '${extension.identifier.value}' will now be IGNORED because of timeouts and/or errors`);
+        }
+      }
+      return false;
+    });
+  }
+  _deliverEventAsync(extension, listener, thisArg, stubEvent) {
+    const promises = [];
+    const t1 = Date.now();
+    const { document, reason } = stubEvent;
+    const { version } = document;
+    const event = Object.freeze({
+      document,
+      reason,
+      waitUntil(p) {
+        if (Object.isFrozen(promises)) {
+          throw illegalState("waitUntil can not be called async");
+        }
+        promises.push(Promise.resolve(p));
+      }
+    });
+    try {
+      listener.apply(thisArg, [event]);
+    } catch (err) {
+      return Promise.reject(err);
+    }
+    Object.freeze(promises);
+    return new Promise((resolve, reject) => {
+      const handle = setTimeout(() => reject(new Error("timeout")), this._thresholds.timeout);
+      return Promise.all(promises).then((edits) => {
+        this._logService.debug(`onWillSaveTextDocument-listener from extension '${extension.identifier.value}' finished after ${Date.now() - t1}ms`);
+        clearTimeout(handle);
+        resolve(edits);
+      }).catch((err) => {
+        clearTimeout(handle);
+        reject(err);
+      });
+    }).then((values) => {
+      const dto = { edits: [] };
+      for (const value of values) {
+        if (Array.isArray(value) && value.every((e) => e instanceof TextEdit)) {
+          for (const { newText, newEol, range } of value) {
+            dto.edits.push({
+              resource: document.uri,
+              versionId: void 0,
+              textEdit: {
+                range: range && Range.from(range),
+                text: newText,
+                eol: newEol && EndOfLine.from(newEol)
+              }
+            });
+          }
+        }
+      }
+      if (dto.edits.length === 0) {
+        return void 0;
+      }
+      if (version === document.version) {
+        return this._mainThreadBulkEdits.$tryApplyWorkspaceEdit(new SerializableObjectWithBuffers(dto));
+      }
+      return Promise.reject(new Error("concurrent_edits"));
+    });
+  }
+}
+export {
+  ExtHostDocumentSaveParticipant
+};
+//# sourceMappingURL=extHostDocumentSaveParticipant.js.map

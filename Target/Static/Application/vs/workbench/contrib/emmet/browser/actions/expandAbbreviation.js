@@ -1,1 +1,35 @@
-import*as t from"../../../../../nls.js";import{$Tuc as i}from"../emmetActions.js";import{$hab as r}from"../../../../../editor/browser/editorExtensions.js";import{EditorContextKeys as o}from"../../../../../editor/common/editorContextKeys.js";import{$Bn as e}from"../../../../../platform/contextkey/common/contextkey.js";import{$dI as n}from"../../../../../platform/actions/common/actions.js";class a extends i{constructor(){super({id:"editor.emmet.action.expandAbbreviation",label:t.localize2(7031,"Emmet: Expand Abbreviation"),precondition:o.writable,actionName:"expand_abbreviation",kbOpts:{primary:2,kbExpr:e.and(o.editorTextFocus,o.tabDoesNotMoveFocus,e.has("config.emmet.triggerExpansionOnTab")),weight:100},menuOpts:{menuId:n.MenubarEditMenu,group:"5_insert",title:t.localize(7030,null),order:3}})}}r(a);
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import * as nls from "../../../../../nls.js";
+import { EmmetEditorAction } from "../emmetActions.js";
+import { registerEditorAction } from "../../../../../editor/browser/editorExtensions.js";
+import { EditorContextKeys } from "../../../../../editor/common/editorContextKeys.js";
+import { ContextKeyExpr } from "../../../../../platform/contextkey/common/contextkey.js";
+import { MenuId } from "../../../../../platform/actions/common/actions.js";
+class ExpandAbbreviationAction extends EmmetEditorAction {
+  static {
+    __name(this, "ExpandAbbreviationAction");
+  }
+  constructor() {
+    super({
+      id: "editor.emmet.action.expandAbbreviation",
+      label: nls.localize2("expandAbbreviationAction", "Emmet: Expand Abbreviation"),
+      precondition: EditorContextKeys.writable,
+      actionName: "expand_abbreviation",
+      kbOpts: {
+        primary: 2,
+        kbExpr: ContextKeyExpr.and(EditorContextKeys.editorTextFocus, EditorContextKeys.tabDoesNotMoveFocus, ContextKeyExpr.has("config.emmet.triggerExpansionOnTab")),
+        weight: 100
+        /* KeybindingWeight.EditorContrib */
+      },
+      menuOpts: {
+        menuId: MenuId.MenubarEditMenu,
+        group: "5_insert",
+        title: nls.localize({ key: "miEmmetExpandAbbreviation", comment: ["&& denotes a mnemonic"] }, "Emmet: E&&xpand Abbreviation"),
+        order: 3
+      }
+    });
+  }
+}
+registerEditorAction(ExpandAbbreviationAction);
+//# sourceMappingURL=expandAbbreviation.js.map

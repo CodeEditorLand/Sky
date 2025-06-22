@@ -1,1 +1,197 @@
-import{$Ql as u}from"../../platform/registry/common/platform.js";import{$Kwb as d,$Lwb as A,$Mwb as w}from"./composite.js";import{$mj as b}from"../../platform/instantiation/common/instantiation.js";import{$bm as x}from"../../base/common/actions.js";import{$gI as $}from"../../platform/actions/common/actions.js";import{$ofb as P}from"../../platform/contextview/browser/contextView.js";import{$Ho as y}from"../../platform/storage/common/storage.js";import{$Po as C}from"../../platform/telemetry/common/telemetry.js";import{$Mt as V}from"../../platform/theme/common/themeService.js";import{$hl as v}from"../../platform/workspace/common/workspace.js";import{$vxb as I}from"./parts/views/viewPaneContainer.js";import{$XO as M}from"../services/extensions/common/extensions.js";import{$pxb as S}from"./parts/views/viewPane.js";var g=function(a,t,e,i){var n=arguments.length,s=n<3?t:i===null?i=Object.getOwnPropertyDescriptor(t,e):i,o;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")s=Reflect.decorate(a,t,e,i);else for(var r=a.length-1;r>=0;r--)(o=a[r])&&(s=(n<3?o(s):n>3?o(t,e,s):o(t,e))||s);return n>3&&s&&Object.defineProperty(t,e,s),s},c=function(a,t){return function(e,i){t(e,i,a)}};let p=class extends d{constructor(t,e,i,n,s,o,r,f){super(t,e,s,i),this.b=i,this.c=n,this.f=o,this.g=r,this.j=f}create(t){super.create(t),this.a=this.B(this.m(t)),this.B(this.a.onTitleAreaUpdate(()=>this.R())),this.a.create(t)}setVisible(t){super.setVisible(t),this.a?.setVisible(t)}layout(t){this.a?.layout(t)}setBoundarySashes(t){this.a?.setBoundarySashes(t)}getOptimalWidth(){return this.a?.getOptimalWidth()??0}openView(t,e){return this.a?.openView(t,e)}getViewPaneContainer(){return this.a}getActionsContext(){return this.getViewPaneContainer()?.getActionsContext()}getContextMenuActions(){return this.a?.menuActions?.getContextMenuActions()??[]}getMenuIds(){const t=[];return this.a?.menuActions&&(t.push(this.a.menuActions.menuId),this.a.isViewMergedWithContainer()&&t.push(this.a.panes[0].menuActions.menuId)),t}getActions(){const t=[];if(this.a?.menuActions&&(t.push(...this.a.menuActions.getPrimaryActions()),this.a.isViewMergedWithContainer())){const e=this.a.panes[0];e.shouldShowFilterInHeader()&&t.push(S),t.push(...e.menuActions.getPrimaryActions())}return t}getSecondaryActions(){if(!this.a?.menuActions)return[];const t=this.a.isViewMergedWithContainer()?this.a.panes[0].menuActions.getSecondaryActions():[];let e=this.a.menuActions.getSecondaryActions();const i=e.findIndex(n=>n instanceof $&&n.item.submenu===I);if(i!==-1){const n=e[i];n.actions.some(({enabled:s})=>s)?e.length===1&&t.length===0?e=n.actions.slice():i!==0&&(e=[n,...e.slice(0,i),...e.slice(i+1)]):e.splice(i,1)}return e.length&&t.length?[...e,new x,...t]:e.length?e:t}getActionViewItem(t,e){return this.a?.getActionViewItem(t,e)}getTitle(){return this.a?.getTitle()??""}focus(){super.focus(),this.a?.focus()}};p=g([c(1,C),c(2,y),c(3,b),c(4,V),c(5,P),c(6,M),c(7,v)],p);class l extends A{static create(t,e,i,n,s,o,r){return new l(t,e,i,n,s,o,r)}constructor(t,e,i,n,s,o,r){super(t,e,i,n,s,o),this.iconUrl=r}}const h={Viewlets:"workbench.contributions.viewlets",Panels:"workbench.contributions.panels",Auxiliary:"workbench.contributions.auxiliary"};class m extends w{registerPaneComposite(t){super.f(t)}deregisterPaneComposite(t){super.g(t)}getPaneComposite(t){return this.getComposite(t)}getPaneComposites(){return this.h()}}u.add(h.Viewlets,new m);u.add(h.Panels,new m);u.add(h.Auxiliary,new m);export{h as $Axb,m as $Bxb,p as $yxb,l as $zxb};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { Registry } from "../../platform/registry/common/platform.js";
+import { Composite, CompositeDescriptor, CompositeRegistry } from "./composite.js";
+import { IInstantiationService } from "../../platform/instantiation/common/instantiation.js";
+import { Separator } from "../../base/common/actions.js";
+import { SubmenuItemAction } from "../../platform/actions/common/actions.js";
+import { IContextMenuService } from "../../platform/contextview/browser/contextView.js";
+import { IStorageService } from "../../platform/storage/common/storage.js";
+import { ITelemetryService } from "../../platform/telemetry/common/telemetry.js";
+import { IThemeService } from "../../platform/theme/common/themeService.js";
+import { IWorkspaceContextService } from "../../platform/workspace/common/workspace.js";
+import { ViewsSubMenu } from "./parts/views/viewPaneContainer.js";
+import { IExtensionService } from "../services/extensions/common/extensions.js";
+import { VIEWPANE_FILTER_ACTION } from "./parts/views/viewPane.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+let PaneComposite = class PaneComposite2 extends Composite {
+  static {
+    __name(this, "PaneComposite");
+  }
+  constructor(id, telemetryService, storageService, instantiationService, themeService, contextMenuService, extensionService, contextService) {
+    super(id, telemetryService, themeService, storageService);
+    this.storageService = storageService;
+    this.instantiationService = instantiationService;
+    this.contextMenuService = contextMenuService;
+    this.extensionService = extensionService;
+    this.contextService = contextService;
+  }
+  create(parent) {
+    super.create(parent);
+    this.viewPaneContainer = this._register(this.createViewPaneContainer(parent));
+    this._register(this.viewPaneContainer.onTitleAreaUpdate(() => this.updateTitleArea()));
+    this.viewPaneContainer.create(parent);
+  }
+  setVisible(visible) {
+    super.setVisible(visible);
+    this.viewPaneContainer?.setVisible(visible);
+  }
+  layout(dimension) {
+    this.viewPaneContainer?.layout(dimension);
+  }
+  setBoundarySashes(sashes) {
+    this.viewPaneContainer?.setBoundarySashes(sashes);
+  }
+  getOptimalWidth() {
+    return this.viewPaneContainer?.getOptimalWidth() ?? 0;
+  }
+  openView(id, focus) {
+    return this.viewPaneContainer?.openView(id, focus);
+  }
+  getViewPaneContainer() {
+    return this.viewPaneContainer;
+  }
+  getActionsContext() {
+    return this.getViewPaneContainer()?.getActionsContext();
+  }
+  getContextMenuActions() {
+    return this.viewPaneContainer?.menuActions?.getContextMenuActions() ?? [];
+  }
+  getMenuIds() {
+    const result = [];
+    if (this.viewPaneContainer?.menuActions) {
+      result.push(this.viewPaneContainer.menuActions.menuId);
+      if (this.viewPaneContainer.isViewMergedWithContainer()) {
+        result.push(this.viewPaneContainer.panes[0].menuActions.menuId);
+      }
+    }
+    return result;
+  }
+  getActions() {
+    const result = [];
+    if (this.viewPaneContainer?.menuActions) {
+      result.push(...this.viewPaneContainer.menuActions.getPrimaryActions());
+      if (this.viewPaneContainer.isViewMergedWithContainer()) {
+        const viewPane = this.viewPaneContainer.panes[0];
+        if (viewPane.shouldShowFilterInHeader()) {
+          result.push(VIEWPANE_FILTER_ACTION);
+        }
+        result.push(...viewPane.menuActions.getPrimaryActions());
+      }
+    }
+    return result;
+  }
+  getSecondaryActions() {
+    if (!this.viewPaneContainer?.menuActions) {
+      return [];
+    }
+    const viewPaneActions = this.viewPaneContainer.isViewMergedWithContainer() ? this.viewPaneContainer.panes[0].menuActions.getSecondaryActions() : [];
+    let menuActions = this.viewPaneContainer.menuActions.getSecondaryActions();
+    const viewsSubmenuActionIndex = menuActions.findIndex((action) => action instanceof SubmenuItemAction && action.item.submenu === ViewsSubMenu);
+    if (viewsSubmenuActionIndex !== -1) {
+      const viewsSubmenuAction = menuActions[viewsSubmenuActionIndex];
+      if (viewsSubmenuAction.actions.some(({ enabled }) => enabled)) {
+        if (menuActions.length === 1 && viewPaneActions.length === 0) {
+          menuActions = viewsSubmenuAction.actions.slice();
+        } else if (viewsSubmenuActionIndex !== 0) {
+          menuActions = [viewsSubmenuAction, ...menuActions.slice(0, viewsSubmenuActionIndex), ...menuActions.slice(viewsSubmenuActionIndex + 1)];
+        }
+      } else {
+        menuActions.splice(viewsSubmenuActionIndex, 1);
+      }
+    }
+    if (menuActions.length && viewPaneActions.length) {
+      return [
+        ...menuActions,
+        new Separator(),
+        ...viewPaneActions
+      ];
+    }
+    return menuActions.length ? menuActions : viewPaneActions;
+  }
+  getActionViewItem(action, options) {
+    return this.viewPaneContainer?.getActionViewItem(action, options);
+  }
+  getTitle() {
+    return this.viewPaneContainer?.getTitle() ?? "";
+  }
+  focus() {
+    super.focus();
+    this.viewPaneContainer?.focus();
+  }
+};
+PaneComposite = __decorate([
+  __param(1, ITelemetryService),
+  __param(2, IStorageService),
+  __param(3, IInstantiationService),
+  __param(4, IThemeService),
+  __param(5, IContextMenuService),
+  __param(6, IExtensionService),
+  __param(7, IWorkspaceContextService)
+], PaneComposite);
+class PaneCompositeDescriptor extends CompositeDescriptor {
+  static {
+    __name(this, "PaneCompositeDescriptor");
+  }
+  static create(ctor, id, name, cssClass, order, requestedIndex, iconUrl) {
+    return new PaneCompositeDescriptor(ctor, id, name, cssClass, order, requestedIndex, iconUrl);
+  }
+  constructor(ctor, id, name, cssClass, order, requestedIndex, iconUrl) {
+    super(ctor, id, name, cssClass, order, requestedIndex);
+    this.iconUrl = iconUrl;
+  }
+}
+const Extensions = {
+  Viewlets: "workbench.contributions.viewlets",
+  Panels: "workbench.contributions.panels",
+  Auxiliary: "workbench.contributions.auxiliary"
+};
+class PaneCompositeRegistry extends CompositeRegistry {
+  static {
+    __name(this, "PaneCompositeRegistry");
+  }
+  /**
+   * Registers a viewlet to the platform.
+   */
+  registerPaneComposite(descriptor) {
+    super.registerComposite(descriptor);
+  }
+  /**
+   * Deregisters a viewlet to the platform.
+   */
+  deregisterPaneComposite(id) {
+    super.deregisterComposite(id);
+  }
+  /**
+   * Returns the viewlet descriptor for the given id or null if none.
+   */
+  getPaneComposite(id) {
+    return this.getComposite(id);
+  }
+  /**
+   * Returns an array of registered viewlets known to the platform.
+   */
+  getPaneComposites() {
+    return this.getComposites();
+  }
+}
+Registry.add(Extensions.Viewlets, new PaneCompositeRegistry());
+Registry.add(Extensions.Panels, new PaneCompositeRegistry());
+Registry.add(Extensions.Auxiliary, new PaneCompositeRegistry());
+export {
+  Extensions,
+  PaneComposite,
+  PaneCompositeDescriptor,
+  PaneCompositeRegistry
+};
+//# sourceMappingURL=panecomposite.js.map

@@ -1,1 +1,128 @@
-import*as e from"../../../nls.js";import{$UO as d}from"../../services/extensions/common/extensionsRegistry.js";import*as u from"../../../base/common/resources.js";import{$Yc as c}from"../../../base/common/types.js";import{$vd as m}from"../../../base/common/lifecycle.js";import{Extensions as h}from"../../services/extensionManagement/common/extensionFeatures.js";import{$Ql as y}from"../../../platform/registry/common/platform.js";import{$kj as $}from"../../../platform/instantiation/common/descriptors.js";import{$Uj as g}from"../../../base/common/htmlContent.js";const f=d.registerExtensionPoint({extensionPoint:"jsonValidation",defaultExtensionKind:["workspace","web"],jsonSchema:{description:e.localize(2926,null),type:"array",defaultSnippets:[{body:[{fileMatch:"${1:file.json}",url:"${2:url}"}]}],items:{type:"object",defaultSnippets:[{body:{fileMatch:"${1:file.json}",url:"${2:url}"}}],properties:{fileMatch:{type:["string","array"],description:e.localize(2927,null),items:{type:["string"]}},url:{description:e.localize(2928,null),type:"string"}}}}});class S{constructor(){f.setHandler((r=>{for(const o of r){const r=o.value,t=o.collector,s=o.description.extensionLocation;if(!r||!Array.isArray(r))return void t.error(e.localize(2929,null));r.forEach((r=>{if(!(c(r.fileMatch)||Array.isArray(r.fileMatch)&&r.fileMatch.every(c)))return void t.error(e.localize(2930,null));const o=r.url;if(c(o)){if(o.startsWith("./"))try{const r=u.$kh(s,o);u.$eh(r,s)||t.warn(e.localize(2932,null,f.name,r.toString(),s.path))}catch(r){t.error(e.localize(2933,null,r.message))}else if(!/^[^:/?#]+:\/\//.test(o))return void t.error(e.localize(2934,null))}else t.error(e.localize(2931,null))}))}}))}}class z extends m{constructor(){super(...arguments),this.type="table"}shouldRender(e){return!!e.contributes?.jsonValidation}render(r){const o=r.contributes?.jsonValidation||[];if(!o.length)return{data:{headers:[],rows:[]},dispose:()=>{}};return{data:{headers:[e.localize(2935,null),e.localize(2936,null)],rows:o.map((e=>[(new g).appendMarkdown(`\`${Array.isArray(e.fileMatch)?e.fileMatch.join(", "):e.fileMatch}\``),e.url]))},dispose:()=>{}}}}y.as(h.ExtensionFeaturesRegistry).registerExtensionFeature({id:"jsonValidation",label:e.localize(2937,null),access:{canToggle:!1},renderer:new $(z)});export{S as $Stb};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import * as nls from "../../../nls.js";
+import { ExtensionsRegistry } from "../../services/extensions/common/extensionsRegistry.js";
+import * as resources from "../../../base/common/resources.js";
+import { isString } from "../../../base/common/types.js";
+import { Disposable } from "../../../base/common/lifecycle.js";
+import { Extensions } from "../../services/extensionManagement/common/extensionFeatures.js";
+import { Registry } from "../../../platform/registry/common/platform.js";
+import { SyncDescriptor } from "../../../platform/instantiation/common/descriptors.js";
+import { MarkdownString } from "../../../base/common/htmlContent.js";
+const configurationExtPoint = ExtensionsRegistry.registerExtensionPoint({
+  extensionPoint: "jsonValidation",
+  defaultExtensionKind: ["workspace", "web"],
+  jsonSchema: {
+    description: nls.localize("contributes.jsonValidation", "Contributes json schema configuration."),
+    type: "array",
+    defaultSnippets: [{ body: [{ fileMatch: "${1:file.json}", url: "${2:url}" }] }],
+    items: {
+      type: "object",
+      defaultSnippets: [{ body: { fileMatch: "${1:file.json}", url: "${2:url}" } }],
+      properties: {
+        fileMatch: {
+          type: ["string", "array"],
+          description: nls.localize("contributes.jsonValidation.fileMatch", `The file pattern (or an array of patterns) to match, for example "package.json" or "*.launch". Exclusion patterns start with '!'`),
+          items: {
+            type: ["string"]
+          }
+        },
+        url: {
+          description: nls.localize("contributes.jsonValidation.url", "A schema URL ('http:', 'https:') or relative path to the extension folder ('./')."),
+          type: "string"
+        }
+      }
+    }
+  }
+});
+class JSONValidationExtensionPoint {
+  static {
+    __name(this, "JSONValidationExtensionPoint");
+  }
+  constructor() {
+    configurationExtPoint.setHandler((extensions) => {
+      for (const extension of extensions) {
+        const extensionValue = extension.value;
+        const collector = extension.collector;
+        const extensionLocation = extension.description.extensionLocation;
+        if (!extensionValue || !Array.isArray(extensionValue)) {
+          collector.error(nls.localize("invalid.jsonValidation", "'configuration.jsonValidation' must be a array"));
+          return;
+        }
+        extensionValue.forEach((extension2) => {
+          if (!isString(extension2.fileMatch) && !(Array.isArray(extension2.fileMatch) && extension2.fileMatch.every(isString))) {
+            collector.error(nls.localize("invalid.fileMatch", "'configuration.jsonValidation.fileMatch' must be defined as a string or an array of strings."));
+            return;
+          }
+          const uri = extension2.url;
+          if (!isString(uri)) {
+            collector.error(nls.localize("invalid.url", "'configuration.jsonValidation.url' must be a URL or relative path"));
+            return;
+          }
+          if (uri.startsWith("./")) {
+            try {
+              const colorThemeLocation = resources.joinPath(extensionLocation, uri);
+              if (!resources.isEqualOrParent(colorThemeLocation, extensionLocation)) {
+                collector.warn(nls.localize("invalid.path.1", "Expected `contributes.{0}.url` ({1}) to be included inside extension's folder ({2}). This might make the extension non-portable.", configurationExtPoint.name, colorThemeLocation.toString(), extensionLocation.path));
+              }
+            } catch (e) {
+              collector.error(nls.localize("invalid.url.fileschema", "'configuration.jsonValidation.url' is an invalid relative URL: {0}", e.message));
+            }
+          } else if (!/^[^:/?#]+:\/\//.test(uri)) {
+            collector.error(nls.localize("invalid.url.schema", "'configuration.jsonValidation.url' must be an absolute URL or start with './'  to reference schemas located in the extension."));
+            return;
+          }
+        });
+      }
+    });
+  }
+}
+class JSONValidationDataRenderer extends Disposable {
+  static {
+    __name(this, "JSONValidationDataRenderer");
+  }
+  constructor() {
+    super(...arguments);
+    this.type = "table";
+  }
+  shouldRender(manifest) {
+    return !!manifest.contributes?.jsonValidation;
+  }
+  render(manifest) {
+    const contrib = manifest.contributes?.jsonValidation || [];
+    if (!contrib.length) {
+      return { data: { headers: [], rows: [] }, dispose: /* @__PURE__ */ __name(() => {
+      }, "dispose") };
+    }
+    const headers = [
+      nls.localize("fileMatch", "File Match"),
+      nls.localize("schema", "Schema")
+    ];
+    const rows = contrib.map((v) => {
+      return [
+        new MarkdownString().appendMarkdown(`\`${Array.isArray(v.fileMatch) ? v.fileMatch.join(", ") : v.fileMatch}\``),
+        v.url
+      ];
+    });
+    return {
+      data: {
+        headers,
+        rows
+      },
+      dispose: /* @__PURE__ */ __name(() => {
+      }, "dispose")
+    };
+  }
+}
+Registry.as(Extensions.ExtensionFeaturesRegistry).registerExtensionFeature({
+  id: "jsonValidation",
+  label: nls.localize("jsonValidation", "JSON Validation"),
+  access: {
+    canToggle: false
+  },
+  renderer: new SyncDescriptor(JSONValidationDataRenderer)
+});
+export {
+  JSONValidationExtensionPoint
+};
+//# sourceMappingURL=jsonValidationExtensionPoint.js.map

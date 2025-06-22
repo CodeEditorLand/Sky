@@ -1,1 +1,156 @@
-import*as h from"../../base/common/arrays.js";import*as l from"../../base/common/strings.js";import{$cC as g}from"./core/range.js";class S{constructor(t,s,i,e){this._viewportBrand=void 0,this.top=0|t,this.left=0|s,this.width=0|i,this.height=0|e}}class A{constructor(t,s){this.tabSize=t,this.data=s}}class B{constructor(t,s,i,e,n,a,r){this._viewLineDataBrand=void 0,this.content=t,this.continuesWithWrappedLine=s,this.minColumn=i,this.maxColumn=e,this.startVisibleColumn=n,this.tokens=a,this.inlineDecorations=r}}class c{constructor(t,s,i,e,n,a,r,o,h,l){this.minColumn=t,this.maxColumn=s,this.content=i,this.continuesWithWrappedLine=e,this.isBasicASCII=c.isBasicASCII(i,a),this.containsRTL=c.containsRTL(i,this.isBasicASCII,n),this.tokens=r,this.inlineDecorations=o,this.tabSize=h,this.startVisibleColumn=l}static isBasicASCII(t,s){return!s||l.$hg(t)}static containsRTL(t,s,i){return!(s||!i)&&l.$gg(t)}}var u;!function(t){t[t.Regular=0]="Regular",t[t.Before=1]="Before",t[t.After=2]="After",t[t.RegularAffectingLetterSpacing=3]="RegularAffectingLetterSpacing"}(u||(u={}));class x{constructor(t,s,i){this.range=t,this.inlineClassName=s,this.type=i}}class I{constructor(t,s,i,e){this.startOffset=t,this.endOffset=s,this.inlineClassName=i,this.inlineClassNameAffectsLetterSpacing=e}toInlineDecoration(t){return new x(new g(t,this.startOffset+1,t,this.endOffset+1),this.inlineClassName,this.inlineClassNameAffectsLetterSpacing?3:0)}}class L{constructor(t,s){this._viewModelDecorationBrand=void 0,this.range=t,this.options=s}}class f{constructor(t,s,i){this.color=t,this.zIndex=s,this.data=i}static compareByRenderingProps(t,s){return t.zIndex===s.zIndex?t.color<s.color?-1:t.color>s.color?1:0:t.zIndex-s.zIndex}static equals(t,s){return t.color===s.color&&t.zIndex===s.zIndex&&h.$Sb(t.data,s.data)}static equalsArr(t,s){return h.$Sb(t,s,f.equals)}}export{f as $1_,S as $T_,A as $U_,B as $V_,c as $W_,x as $X_,I as $Y_,L as $Z_,u as InlineDecorationType};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import * as arrays from "../../base/common/arrays.js";
+import * as strings from "../../base/common/strings.js";
+import { Range } from "./core/range.js";
+class Viewport {
+  static {
+    __name(this, "Viewport");
+  }
+  constructor(top, left, width, height) {
+    this._viewportBrand = void 0;
+    this.top = top | 0;
+    this.left = left | 0;
+    this.width = width | 0;
+    this.height = height | 0;
+  }
+}
+class MinimapLinesRenderingData {
+  static {
+    __name(this, "MinimapLinesRenderingData");
+  }
+  constructor(tabSize, data) {
+    this.tabSize = tabSize;
+    this.data = data;
+  }
+}
+class ViewLineData {
+  static {
+    __name(this, "ViewLineData");
+  }
+  constructor(content, continuesWithWrappedLine, minColumn, maxColumn, startVisibleColumn, tokens, inlineDecorations) {
+    this._viewLineDataBrand = void 0;
+    this.content = content;
+    this.continuesWithWrappedLine = continuesWithWrappedLine;
+    this.minColumn = minColumn;
+    this.maxColumn = maxColumn;
+    this.startVisibleColumn = startVisibleColumn;
+    this.tokens = tokens;
+    this.inlineDecorations = inlineDecorations;
+  }
+}
+class ViewLineRenderingData {
+  static {
+    __name(this, "ViewLineRenderingData");
+  }
+  constructor(minColumn, maxColumn, content, continuesWithWrappedLine, mightContainRTL, mightContainNonBasicASCII, tokens, inlineDecorations, tabSize, startVisibleColumn) {
+    this.minColumn = minColumn;
+    this.maxColumn = maxColumn;
+    this.content = content;
+    this.continuesWithWrappedLine = continuesWithWrappedLine;
+    this.isBasicASCII = ViewLineRenderingData.isBasicASCII(content, mightContainNonBasicASCII);
+    this.containsRTL = ViewLineRenderingData.containsRTL(content, this.isBasicASCII, mightContainRTL);
+    this.tokens = tokens;
+    this.inlineDecorations = inlineDecorations;
+    this.tabSize = tabSize;
+    this.startVisibleColumn = startVisibleColumn;
+  }
+  static isBasicASCII(lineContent, mightContainNonBasicASCII) {
+    if (mightContainNonBasicASCII) {
+      return strings.isBasicASCII(lineContent);
+    }
+    return true;
+  }
+  static containsRTL(lineContent, isBasicASCII, mightContainRTL) {
+    if (!isBasicASCII && mightContainRTL) {
+      return strings.containsRTL(lineContent);
+    }
+    return false;
+  }
+}
+var InlineDecorationType;
+(function(InlineDecorationType2) {
+  InlineDecorationType2[InlineDecorationType2["Regular"] = 0] = "Regular";
+  InlineDecorationType2[InlineDecorationType2["Before"] = 1] = "Before";
+  InlineDecorationType2[InlineDecorationType2["After"] = 2] = "After";
+  InlineDecorationType2[InlineDecorationType2["RegularAffectingLetterSpacing"] = 3] = "RegularAffectingLetterSpacing";
+})(InlineDecorationType || (InlineDecorationType = {}));
+class InlineDecoration {
+  static {
+    __name(this, "InlineDecoration");
+  }
+  constructor(range, inlineClassName, type) {
+    this.range = range;
+    this.inlineClassName = inlineClassName;
+    this.type = type;
+  }
+}
+class SingleLineInlineDecoration {
+  static {
+    __name(this, "SingleLineInlineDecoration");
+  }
+  constructor(startOffset, endOffset, inlineClassName, inlineClassNameAffectsLetterSpacing) {
+    this.startOffset = startOffset;
+    this.endOffset = endOffset;
+    this.inlineClassName = inlineClassName;
+    this.inlineClassNameAffectsLetterSpacing = inlineClassNameAffectsLetterSpacing;
+  }
+  toInlineDecoration(lineNumber) {
+    return new InlineDecoration(
+      new Range(lineNumber, this.startOffset + 1, lineNumber, this.endOffset + 1),
+      this.inlineClassName,
+      this.inlineClassNameAffectsLetterSpacing ? 3 : 0
+      /* InlineDecorationType.Regular */
+    );
+  }
+}
+class ViewModelDecoration {
+  static {
+    __name(this, "ViewModelDecoration");
+  }
+  constructor(range, options) {
+    this._viewModelDecorationBrand = void 0;
+    this.range = range;
+    this.options = options;
+  }
+}
+class OverviewRulerDecorationsGroup {
+  static {
+    __name(this, "OverviewRulerDecorationsGroup");
+  }
+  constructor(color, zIndex, data) {
+    this.color = color;
+    this.zIndex = zIndex;
+    this.data = data;
+  }
+  static compareByRenderingProps(a, b) {
+    if (a.zIndex === b.zIndex) {
+      if (a.color < b.color) {
+        return -1;
+      }
+      if (a.color > b.color) {
+        return 1;
+      }
+      return 0;
+    }
+    return a.zIndex - b.zIndex;
+  }
+  static equals(a, b) {
+    return a.color === b.color && a.zIndex === b.zIndex && arrays.equals(a.data, b.data);
+  }
+  static equalsArr(a, b) {
+    return arrays.equals(a, b, OverviewRulerDecorationsGroup.equals);
+  }
+}
+export {
+  InlineDecoration,
+  InlineDecorationType,
+  MinimapLinesRenderingData,
+  OverviewRulerDecorationsGroup,
+  SingleLineInlineDecoration,
+  ViewLineData,
+  ViewLineRenderingData,
+  ViewModelDecoration,
+  Viewport
+};
+//# sourceMappingURL=viewModel.js.map

@@ -1,1 +1,162 @@
-import{$vd as m}from"../../../../../base/common/lifecycle.js";import{$Kc as f}from"../../../../../base/common/map.js";import{localize2 as g}from"../../../../../nls.js";import{$Xn as y}from"../../../../../platform/action/common/actionCommonCategories.js";import{$iI as $,$jI as v}from"../../../../../platform/actions/common/actions.js";import{$Ho as K}from"../../../../../platform/storage/common/storage.js";import{$KK as _,$JK as S}from"../../common/notebookKernelService.js";import{$VSb as O}from"../../common/notebookLoggingService.js";var b=function(o,e,t,s){var i=arguments.length,r=i<3?e:s===null?s=Object.getOwnPropertyDescriptor(e,t):s,n;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")r=Reflect.decorate(o,e,t,s);else for(var l=o.length-1;l>=0;l--)(n=o[l])&&(r=(i<3?n(r):i>3?n(e,t,r):n(e,t))||r);return i>3&&r&&Object.defineProperty(e,t,r),r},h=function(o,e){return function(t,s){e(t,s,o)}},c;const d=5;let p=class extends m{static{c=this}static{this.a="notebook.kernelHistory"}constructor(e,t,s){super(),this.c=e,this.f=t,this.g=s,this.b={},this.j(),this.B(this.c.onWillSaveState(()=>this.h())),this.B(this.c.onDidChangeValue(1,c.a,this.q)(()=>{this.j()}))}getKernels(e){const t=this.f.getMatchingKernel(e),s=t.all,i=t.selected,r=t.all.length===1?t.all[0]:void 0;this.g.debug("History",`getMatchingKernels: ${t.all.length} kernels available for ${e.uri.path}. Selected: ${t.selected?.label}. Suggested: ${r?.label}`);const n=this.b[e.notebookType]?[...this.b[e.notebookType].values()]:[],l=n.map(a=>s.find(u=>u.id===a)).filter(a=>!!a);return this.g.debug("History",`mru: ${n.length} kernels in history, ${l.length} registered already.`),{selected:i??r,all:l}}addMostRecentKernel(e){const t=e.id,s=e.viewType,i=this.b[s]??new f;if(i.set(t,t,1),i.size>d){const r=[...i.entries()].slice(0,d);i.fromJSON(r)}this.b[s]=i}h(){let e=!1;for(const[t,s]of Object.entries(this.b))e=e||s.size>0;if(e){const t=this.m();this.c.store(c.a,JSON.stringify(t),1,0)}else this.c.remove(c.a,1)}j(){const e=this.c.get(c.a,1);if(e)try{this.n(JSON.parse(e))}catch{this.b={}}else this.b={}}m(){const e=Object.create(null);for(const[t,s]of Object.entries(this.b))e[t]={entries:[...s.values()]};return e}n(e){this.b={};for(const[t,s]of Object.entries(e)){const i=new f,r=[];for(const n of s.entries)r.push([n,n]);i.fromJSON(r),this.b[t]=i}}_clear(){this.b={},this.h()}};p=c=b([h(0,K),h(1,S),h(2,O)],p);v(class extends ${constructor(){super({id:"notebook.clearNotebookKernelsMRUCache",title:g(9587,"Clear Notebook Kernels MRU Cache"),category:y.Developer,f1:!0})}async run(o){o.get(_)._clear()}});export{p as $$dc};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { Disposable } from "../../../../../base/common/lifecycle.js";
+import { LinkedMap } from "../../../../../base/common/map.js";
+import { localize2 } from "../../../../../nls.js";
+import { Categories } from "../../../../../platform/action/common/actionCommonCategories.js";
+import { Action2, registerAction2 } from "../../../../../platform/actions/common/actions.js";
+import { IStorageService } from "../../../../../platform/storage/common/storage.js";
+import { INotebookKernelHistoryService, INotebookKernelService } from "../../common/notebookKernelService.js";
+import { INotebookLoggingService } from "../../common/notebookLoggingService.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+var NotebookKernelHistoryService_1;
+const MAX_KERNELS_IN_HISTORY = 5;
+let NotebookKernelHistoryService = class NotebookKernelHistoryService2 extends Disposable {
+  static {
+    __name(this, "NotebookKernelHistoryService");
+  }
+  static {
+    NotebookKernelHistoryService_1 = this;
+  }
+  static {
+    this.STORAGE_KEY = "notebook.kernelHistory";
+  }
+  constructor(_storageService, _notebookKernelService, _notebookLoggingService) {
+    super();
+    this._storageService = _storageService;
+    this._notebookKernelService = _notebookKernelService;
+    this._notebookLoggingService = _notebookLoggingService;
+    this._mostRecentKernelsMap = {};
+    this._loadState();
+    this._register(this._storageService.onWillSaveState(() => this._saveState()));
+    this._register(this._storageService.onDidChangeValue(1, NotebookKernelHistoryService_1.STORAGE_KEY, this._store)(() => {
+      this._loadState();
+    }));
+  }
+  getKernels(notebook) {
+    const allAvailableKernels = this._notebookKernelService.getMatchingKernel(notebook);
+    const allKernels = allAvailableKernels.all;
+    const selectedKernel = allAvailableKernels.selected;
+    const suggested = allAvailableKernels.all.length === 1 ? allAvailableKernels.all[0] : void 0;
+    this._notebookLoggingService.debug("History", `getMatchingKernels: ${allAvailableKernels.all.length} kernels available for ${notebook.uri.path}. Selected: ${allAvailableKernels.selected?.label}. Suggested: ${suggested?.label}`);
+    const mostRecentKernelIds = this._mostRecentKernelsMap[notebook.notebookType] ? [...this._mostRecentKernelsMap[notebook.notebookType].values()] : [];
+    const all = mostRecentKernelIds.map((kernelId) => allKernels.find((kernel) => kernel.id === kernelId)).filter((kernel) => !!kernel);
+    this._notebookLoggingService.debug("History", `mru: ${mostRecentKernelIds.length} kernels in history, ${all.length} registered already.`);
+    return {
+      selected: selectedKernel ?? suggested,
+      all
+    };
+  }
+  addMostRecentKernel(kernel) {
+    const key = kernel.id;
+    const viewType = kernel.viewType;
+    const recentKeynels = this._mostRecentKernelsMap[viewType] ?? new LinkedMap();
+    recentKeynels.set(
+      key,
+      key,
+      1
+      /* Touch.AsOld */
+    );
+    if (recentKeynels.size > MAX_KERNELS_IN_HISTORY) {
+      const reserved = [...recentKeynels.entries()].slice(0, MAX_KERNELS_IN_HISTORY);
+      recentKeynels.fromJSON(reserved);
+    }
+    this._mostRecentKernelsMap[viewType] = recentKeynels;
+  }
+  _saveState() {
+    let notEmpty = false;
+    for (const [_, kernels] of Object.entries(this._mostRecentKernelsMap)) {
+      notEmpty = notEmpty || kernels.size > 0;
+    }
+    if (notEmpty) {
+      const serialized = this._serialize();
+      this._storageService.store(
+        NotebookKernelHistoryService_1.STORAGE_KEY,
+        JSON.stringify(serialized),
+        1,
+        0
+        /* StorageTarget.USER */
+      );
+    } else {
+      this._storageService.remove(
+        NotebookKernelHistoryService_1.STORAGE_KEY,
+        1
+        /* StorageScope.WORKSPACE */
+      );
+    }
+  }
+  _loadState() {
+    const serialized = this._storageService.get(
+      NotebookKernelHistoryService_1.STORAGE_KEY,
+      1
+      /* StorageScope.WORKSPACE */
+    );
+    if (serialized) {
+      try {
+        this._deserialize(JSON.parse(serialized));
+      } catch (e) {
+        this._mostRecentKernelsMap = {};
+      }
+    } else {
+      this._mostRecentKernelsMap = {};
+    }
+  }
+  _serialize() {
+    const result = /* @__PURE__ */ Object.create(null);
+    for (const [viewType, kernels] of Object.entries(this._mostRecentKernelsMap)) {
+      result[viewType] = {
+        entries: [...kernels.values()]
+      };
+    }
+    return result;
+  }
+  _deserialize(serialized) {
+    this._mostRecentKernelsMap = {};
+    for (const [viewType, kernels] of Object.entries(serialized)) {
+      const linkedMap = new LinkedMap();
+      const mapValues = [];
+      for (const entry of kernels.entries) {
+        mapValues.push([entry, entry]);
+      }
+      linkedMap.fromJSON(mapValues);
+      this._mostRecentKernelsMap[viewType] = linkedMap;
+    }
+  }
+  _clear() {
+    this._mostRecentKernelsMap = {};
+    this._saveState();
+  }
+};
+NotebookKernelHistoryService = NotebookKernelHistoryService_1 = __decorate([
+  __param(0, IStorageService),
+  __param(1, INotebookKernelService),
+  __param(2, INotebookLoggingService)
+], NotebookKernelHistoryService);
+registerAction2(class extends Action2 {
+  constructor() {
+    super({
+      id: "notebook.clearNotebookKernelsMRUCache",
+      title: localize2("workbench.notebook.clearNotebookKernelsMRUCache", "Clear Notebook Kernels MRU Cache"),
+      category: Categories.Developer,
+      f1: true
+    });
+  }
+  async run(accessor) {
+    const historyService = accessor.get(INotebookKernelHistoryService);
+    historyService._clear();
+  }
+});
+export {
+  NotebookKernelHistoryService
+};
+//# sourceMappingURL=notebookKernelHistoryServiceImpl.js.map

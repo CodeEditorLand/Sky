@@ -1,1 +1,61 @@
-import{localize as h}from"../../../../nls.js";import{$El as _}from"../../../../platform/configuration/common/configuration.js";import{$ofb as b}from"../../../../platform/contextview/browser/contextView.js";import{$mj as w}from"../../../../platform/instantiation/common/instantiation.js";import{$Ho as v}from"../../../../platform/storage/common/storage.js";import{$Po as d}from"../../../../platform/telemetry/common/telemetry.js";import{$Mt as O}from"../../../../platform/theme/common/themeService.js";import{$hl as P}from"../../../../platform/workspace/common/workspace.js";import{$wxb as g}from"../../../browser/parts/views/viewPaneContainer.js";import{$YM as j}from"../../../common/views.js";import{$XO as x}from"../../../services/extensions/common/extensions.js";import{$8tb as R}from"../../../services/layout/browser/layoutService.js";import{$3n as W}from"../../../../platform/log/common/log.js";var $=function(t,o,e,r){var s,m=arguments.length,n=m<3?o:null===r?r=Object.getOwnPropertyDescriptor(o,e):r;if("object"==typeof Reflect&&"function"==typeof Reflect.decorate)n=Reflect.decorate(t,o,e,r);else for(var i=t.length-1;i>=0;i--)(s=t[i])&&(n=(m<3?s(n):m>3?s(o,e,n):s(o,e))||n);return m>3&&n&&Object.defineProperty(o,e,n),n},t=function(t,o){return function(e,r){o(e,r,t)}};let c=class extends g{constructor(t,o,e,r,s,m,n,i,a,c,f){super("workbench.view.extension.test",{mergeViewWithContainerWhenSingleView:!0},e,n,t,r,o,i,s,m,a,c,f)}create(t){super.create(t),t.classList.add("testing-view-pane")}getOptimalWidth(){return 400}getTitle(){return h(12450,null)}};c=$([t(0,R),t(1,d),t(2,w),t(3,b),t(4,O),t(5,v),t(6,_),t(7,x),t(8,P),t(9,j),t(10,W)],c);export{c as $Pmc};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { localize } from "../../../../nls.js";
+import { IConfigurationService } from "../../../../platform/configuration/common/configuration.js";
+import { IContextMenuService } from "../../../../platform/contextview/browser/contextView.js";
+import { IInstantiationService } from "../../../../platform/instantiation/common/instantiation.js";
+import { IStorageService } from "../../../../platform/storage/common/storage.js";
+import { ITelemetryService } from "../../../../platform/telemetry/common/telemetry.js";
+import { IThemeService } from "../../../../platform/theme/common/themeService.js";
+import { IWorkspaceContextService } from "../../../../platform/workspace/common/workspace.js";
+import { ViewPaneContainer } from "../../../browser/parts/views/viewPaneContainer.js";
+import { IViewDescriptorService } from "../../../common/views.js";
+import { IExtensionService } from "../../../services/extensions/common/extensions.js";
+import { IWorkbenchLayoutService } from "../../../services/layout/browser/layoutService.js";
+import { ILogService } from "../../../../platform/log/common/log.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+let TestingViewPaneContainer = class TestingViewPaneContainer2 extends ViewPaneContainer {
+  static {
+    __name(this, "TestingViewPaneContainer");
+  }
+  constructor(layoutService, telemetryService, instantiationService, contextMenuService, themeService, storageService, configurationService, extensionService, contextService, viewDescriptorService, logService) {
+    super("workbench.view.extension.test", { mergeViewWithContainerWhenSingleView: true }, instantiationService, configurationService, layoutService, contextMenuService, telemetryService, extensionService, themeService, storageService, contextService, viewDescriptorService, logService);
+  }
+  create(parent) {
+    super.create(parent);
+    parent.classList.add("testing-view-pane");
+  }
+  getOptimalWidth() {
+    return 400;
+  }
+  getTitle() {
+    return localize("testing", "Testing");
+  }
+};
+TestingViewPaneContainer = __decorate([
+  __param(0, IWorkbenchLayoutService),
+  __param(1, ITelemetryService),
+  __param(2, IInstantiationService),
+  __param(3, IContextMenuService),
+  __param(4, IThemeService),
+  __param(5, IStorageService),
+  __param(6, IConfigurationService),
+  __param(7, IExtensionService),
+  __param(8, IWorkspaceContextService),
+  __param(9, IViewDescriptorService),
+  __param(10, ILogService)
+], TestingViewPaneContainer);
+export {
+  TestingViewPaneContainer
+};
+//# sourceMappingURL=testingViewPaneContainer.js.map

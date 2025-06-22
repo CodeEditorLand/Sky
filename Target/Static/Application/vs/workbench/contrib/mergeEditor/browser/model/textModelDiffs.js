@@ -1,1 +1,220 @@
-import{$qc as m,$sc as d}from"../../../../../base/common/arrays.js";import{$Bb as f}from"../../../../../base/common/errors.js";import{$vd as b,$td as L}from"../../../../../base/common/lifecycle.js";import{$8Qb as v}from"./mapping.js";import{$WQb as w}from"./editing.js";import{$VQb as a}from"./lineRange.js";import{$P0 as R}from"../../../../../base/common/controlFlow.js";import{autorun as E,observableSignal as O,observableValue as g,transaction as p}from"../../../../../base/common/observable.js";class B extends b{get isApplyingChange(){return this.f.isOccupied}constructor(t,n,r){super(),this.h=t,this.j=n,this.m=r,this.a=0,this.b=g(this,1),this.c=g(this,[]),this.f=new R,this.g=!1,this.n=!0;const e=O("recompute");this.B(E(i=>{e.read(i),this.r(i)})),this.B(t.onDidChangeContent(this.f.makeExclusiveOrSkip(()=>{e.trigger(void 0)}))),this.B(n.onDidChangeContent(this.f.makeExclusiveOrSkip(()=>{e.trigger(void 0)}))),this.B(L(()=>{this.g=!0}))}get state(){return this.b}get diffs(){return this.c}r(t){this.a++;const n=this.a;this.b.get()===1&&(this.n=!0),p(e=>{this.b.set(this.n?1:3,e,0)}),this.m.computeDiff(this.h,this.j,t).then(e=>{this.g||n===this.a&&p(i=>{e.diffs?(this.b.set(2,i,1),this.c.set(e.diffs,i,1)):this.b.set(4,i,1),this.n=!1})})}s(){if(this.state.get()!==2)throw new f("Cannot remove diffs when the model is not up to date")}removeDiffs(t,n,r){this.s(),t.sort(m(i=>i.inputRange.startLineNumber,d)),t.reverse();let e=this.c.get();for(const i of t){const o=e.length;if(e=e.filter(u=>u!==i),o===e.length)throw new f;this.f.runExclusivelyOrThrow(()=>{const u=i.getReverseLineEdit().toEdits(this.j.getLineCount());this.j.pushEditOperations(null,u,()=>null,r)}),e=e.map(u=>u.outputRange.isAfter(i.outputRange)?u.addOutputLineDelta(i.inputRange.length-i.outputRange.length):u)}this.c.set(e,n,0)}applyEditRelativeToOriginal(t,n,r){this.s();const e=new v(t.range,this.h,a.fromLength(t.range.startLineNumber,t.newLines.length),this.j);let i=!1,o=0;const u=new Array;for(const h of this.diffs.get()){if(h.inputRange.intersectsOrTouches(t.range))throw new f("Edit must be conflict free.");h.inputRange.isAfter(t.range)?(i||(i=!0,u.push(e.addOutputLineDelta(o))),u.push(h.addOutputLineDelta(t.newLines.length-t.range.length))):u.push(h),i||(o+=h.outputRange.length-h.inputRange.length)}i||(i=!0,u.push(e.addOutputLineDelta(o))),this.f.runExclusivelyOrThrow(()=>{const h=new w(t.range.delta(o),t.newLines).toEdits(this.j.getLineCount());this.j.pushEditOperations(null,h,()=>null,r)}),this.c.set(u,n,0)}findTouchingDiffs(t){return this.diffs.get().filter(n=>n.inputRange.intersectsOrTouches(t))}t(t,n){let r=0;const e=n?this.diffs.read(n):this.diffs.get();for(const i of e){if(i.inputRange.contains(t)||i.inputRange.endLineNumberExclusive===t)return i;if(i.inputRange.endLineNumberExclusive<t)r=i.resultingDeltaFromOriginalToModified;else break}return t+r}getResultLineRange(t,n){let r=this.t(t.startLineNumber,n);typeof r!="number"&&(r=r.outputRange.startLineNumber);let e=this.t(t.endLineNumberExclusive,n);return typeof e!="number"&&(e=e.outputRange.endLineNumberExclusive),a.fromLineNumbers(r,e)}}var l;(function(s){s[s.other=0]="other",s[s.textChange=1]="textChange"})(l||(l={}));var c;(function(s){s[s.initializing=1]="initializing",s[s.upToDate=2]="upToDate",s[s.updating=3]="updating",s[s.error=4]="error"})(c||(c={}));export{B as $kRb,l as TextModelDiffChangeReason,c as TextModelDiffState};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { compareBy, numberComparator } from "../../../../../base/common/arrays.js";
+import { BugIndicatingError } from "../../../../../base/common/errors.js";
+import { Disposable, toDisposable } from "../../../../../base/common/lifecycle.js";
+import { DetailedLineRangeMapping } from "./mapping.js";
+import { LineRangeEdit } from "./editing.js";
+import { MergeEditorLineRange } from "./lineRange.js";
+import { ReentrancyBarrier } from "../../../../../base/common/controlFlow.js";
+import { autorun, observableSignal, observableValue, transaction } from "../../../../../base/common/observable.js";
+class TextModelDiffs extends Disposable {
+  static {
+    __name(this, "TextModelDiffs");
+  }
+  get isApplyingChange() {
+    return this._barrier.isOccupied;
+  }
+  constructor(baseTextModel, textModel, diffComputer) {
+    super();
+    this.baseTextModel = baseTextModel;
+    this.textModel = textModel;
+    this.diffComputer = diffComputer;
+    this._recomputeCount = 0;
+    this._state = observableValue(
+      this,
+      1
+      /* TextModelDiffState.initializing */
+    );
+    this._diffs = observableValue(this, []);
+    this._barrier = new ReentrancyBarrier();
+    this._isDisposed = false;
+    this._isInitializing = true;
+    const recomputeSignal = observableSignal("recompute");
+    this._register(autorun((reader) => {
+      recomputeSignal.read(reader);
+      this._recompute(reader);
+    }));
+    this._register(baseTextModel.onDidChangeContent(this._barrier.makeExclusiveOrSkip(() => {
+      recomputeSignal.trigger(void 0);
+    })));
+    this._register(textModel.onDidChangeContent(this._barrier.makeExclusiveOrSkip(() => {
+      recomputeSignal.trigger(void 0);
+    })));
+    this._register(toDisposable(() => {
+      this._isDisposed = true;
+    }));
+  }
+  get state() {
+    return this._state;
+  }
+  /**
+   * Diffs from base to input.
+  */
+  get diffs() {
+    return this._diffs;
+  }
+  _recompute(reader) {
+    this._recomputeCount++;
+    const currentRecomputeIdx = this._recomputeCount;
+    if (this._state.get() === 1) {
+      this._isInitializing = true;
+    }
+    transaction((tx) => {
+      this._state.set(
+        this._isInitializing ? 1 : 3,
+        tx,
+        0
+        /* TextModelDiffChangeReason.other */
+      );
+    });
+    const result = this.diffComputer.computeDiff(this.baseTextModel, this.textModel, reader);
+    result.then((result2) => {
+      if (this._isDisposed) {
+        return;
+      }
+      if (currentRecomputeIdx !== this._recomputeCount) {
+        return;
+      }
+      transaction((tx) => {
+        if (result2.diffs) {
+          this._state.set(
+            2,
+            tx,
+            1
+            /* TextModelDiffChangeReason.textChange */
+          );
+          this._diffs.set(
+            result2.diffs,
+            tx,
+            1
+            /* TextModelDiffChangeReason.textChange */
+          );
+        } else {
+          this._state.set(
+            4,
+            tx,
+            1
+            /* TextModelDiffChangeReason.textChange */
+          );
+        }
+        this._isInitializing = false;
+      });
+    });
+  }
+  ensureUpToDate() {
+    if (this.state.get() !== 2) {
+      throw new BugIndicatingError("Cannot remove diffs when the model is not up to date");
+    }
+  }
+  removeDiffs(diffToRemoves, transaction2, group) {
+    this.ensureUpToDate();
+    diffToRemoves.sort(compareBy((d) => d.inputRange.startLineNumber, numberComparator));
+    diffToRemoves.reverse();
+    let diffs = this._diffs.get();
+    for (const diffToRemove of diffToRemoves) {
+      const len = diffs.length;
+      diffs = diffs.filter((d) => d !== diffToRemove);
+      if (len === diffs.length) {
+        throw new BugIndicatingError();
+      }
+      this._barrier.runExclusivelyOrThrow(() => {
+        const edits = diffToRemove.getReverseLineEdit().toEdits(this.textModel.getLineCount());
+        this.textModel.pushEditOperations(null, edits, () => null, group);
+      });
+      diffs = diffs.map((d) => d.outputRange.isAfter(diffToRemove.outputRange) ? d.addOutputLineDelta(diffToRemove.inputRange.length - diffToRemove.outputRange.length) : d);
+    }
+    this._diffs.set(
+      diffs,
+      transaction2,
+      0
+      /* TextModelDiffChangeReason.other */
+    );
+  }
+  /**
+   * Edit must be conflict free.
+   */
+  applyEditRelativeToOriginal(edit, transaction2, group) {
+    this.ensureUpToDate();
+    const editMapping = new DetailedLineRangeMapping(edit.range, this.baseTextModel, MergeEditorLineRange.fromLength(edit.range.startLineNumber, edit.newLines.length), this.textModel);
+    let firstAfter = false;
+    let delta = 0;
+    const newDiffs = new Array();
+    for (const diff of this.diffs.get()) {
+      if (diff.inputRange.intersectsOrTouches(edit.range)) {
+        throw new BugIndicatingError("Edit must be conflict free.");
+      } else if (diff.inputRange.isAfter(edit.range)) {
+        if (!firstAfter) {
+          firstAfter = true;
+          newDiffs.push(editMapping.addOutputLineDelta(delta));
+        }
+        newDiffs.push(diff.addOutputLineDelta(edit.newLines.length - edit.range.length));
+      } else {
+        newDiffs.push(diff);
+      }
+      if (!firstAfter) {
+        delta += diff.outputRange.length - diff.inputRange.length;
+      }
+    }
+    if (!firstAfter) {
+      firstAfter = true;
+      newDiffs.push(editMapping.addOutputLineDelta(delta));
+    }
+    this._barrier.runExclusivelyOrThrow(() => {
+      const edits = new LineRangeEdit(edit.range.delta(delta), edit.newLines).toEdits(this.textModel.getLineCount());
+      this.textModel.pushEditOperations(null, edits, () => null, group);
+    });
+    this._diffs.set(
+      newDiffs,
+      transaction2,
+      0
+      /* TextModelDiffChangeReason.other */
+    );
+  }
+  findTouchingDiffs(baseRange) {
+    return this.diffs.get().filter((d) => d.inputRange.intersectsOrTouches(baseRange));
+  }
+  getResultLine(lineNumber, reader) {
+    let offset = 0;
+    const diffs = reader ? this.diffs.read(reader) : this.diffs.get();
+    for (const diff of diffs) {
+      if (diff.inputRange.contains(lineNumber) || diff.inputRange.endLineNumberExclusive === lineNumber) {
+        return diff;
+      } else if (diff.inputRange.endLineNumberExclusive < lineNumber) {
+        offset = diff.resultingDeltaFromOriginalToModified;
+      } else {
+        break;
+      }
+    }
+    return lineNumber + offset;
+  }
+  getResultLineRange(baseRange, reader) {
+    let start = this.getResultLine(baseRange.startLineNumber, reader);
+    if (typeof start !== "number") {
+      start = start.outputRange.startLineNumber;
+    }
+    let endExclusive = this.getResultLine(baseRange.endLineNumberExclusive, reader);
+    if (typeof endExclusive !== "number") {
+      endExclusive = endExclusive.outputRange.endLineNumberExclusive;
+    }
+    return MergeEditorLineRange.fromLineNumbers(start, endExclusive);
+  }
+}
+var TextModelDiffChangeReason;
+(function(TextModelDiffChangeReason2) {
+  TextModelDiffChangeReason2[TextModelDiffChangeReason2["other"] = 0] = "other";
+  TextModelDiffChangeReason2[TextModelDiffChangeReason2["textChange"] = 1] = "textChange";
+})(TextModelDiffChangeReason || (TextModelDiffChangeReason = {}));
+var TextModelDiffState;
+(function(TextModelDiffState2) {
+  TextModelDiffState2[TextModelDiffState2["initializing"] = 1] = "initializing";
+  TextModelDiffState2[TextModelDiffState2["upToDate"] = 2] = "upToDate";
+  TextModelDiffState2[TextModelDiffState2["updating"] = 3] = "updating";
+  TextModelDiffState2[TextModelDiffState2["error"] = 4] = "error";
+})(TextModelDiffState || (TextModelDiffState = {}));
+export {
+  TextModelDiffChangeReason,
+  TextModelDiffState,
+  TextModelDiffs
+};
+//# sourceMappingURL=textModelDiffs.js.map

@@ -1,1 +1,184 @@
-import*as c from"../../../../nls.js";import{$_l as m}from"../../../common/actions.js";import{$Mj as u}from"../../../common/codicons.js";import{$df as d}from"../../../common/event.js";import{ThemeIcon as p}from"../../../common/themables.js";import{$ as f,$J5 as g,$M6 as h,$F6 as b,h as a}from"../../dom.js";import{$G5 as A}from"../../keyboardEvent.js";import{$X8 as v,$W8 as y}from"../actionbar/actionViewItems.js";import{$M8 as $}from"../hover/hoverDelegate2.js";import{$K7 as w}from"../hover/hoverDelegateFactory.js";import"./dropdown.css";import{$n9 as x}from"./dropdown.js";class N extends y{constructor(t,i,e,n=Object.create(null)){super(null,t,n),this.w=null,this.y=this.B(new d),this.onDidChangeVisibility=this.y.event,this.b=i,this.n=e,this.t=n,this.t.actionRunner&&(this.actionRunner=this.t.actionRunner)}render(t){this.w=t;const i=s=>(this.element=h(s,f("a.action-label")),this.M(this.element)),e=Array.isArray(this.b),n={contextMenuProvider:this.n,labelRenderer:i,menuAsChild:this.t.menuAsChild,actions:e?this.b:void 0,actionProvider:e?void 0:this.b,skipTelemetry:this.t.skipTelemetry};if(this.m=this.B(new x(t,n)),this.B(this.m.onDidChangeVisibility(s=>{this.element?.setAttribute("aria-expanded",`${s}`),this.y.fire(s)})),this.m.menuOptions={actionViewItemProvider:this.t.actionViewItemProvider,actionRunner:this.actionRunner,getKeyBinding:this.t.keybindingProvider,context:this._context},this.t.anchorAlignmentProvider){const s=this;this.m.menuOptions={...this.m.menuOptions,get anchorAlignment(){return s.t.anchorAlignmentProvider()}}}this.G(),this.z()}M(t){let i=[];return typeof this.t.classNames=="string"?i=this.t.classNames.split(/\s+/g).filter(e=>!!e):this.t.classNames&&(i=this.t.classNames),i.find(e=>e==="icon")||i.push("codicon"),t.classList.add(...i),this._action.label&&this.B($().setupManagedHover(this.t.hoverDelegate??w("mouse"),t,this._action.label)),null}N(t){t.setAttribute("role","button"),t.setAttribute("aria-haspopup","true"),t.setAttribute("aria-expanded","false"),t.ariaLabel=this._action.label||""}F(){let t=null;return this.action.tooltip?t=this.action.tooltip:this.action.label&&(t=this.action.label),t??void 0}setActionContext(t){super.setActionContext(t),this.m&&(this.m.menuOptions?this.m.menuOptions.context=t:this.m.menuOptions={context:t})}show(){this.m?.show()}z(){const t=!this.action.enabled;this.w?.classList.toggle("disabled",t),this.element?.classList.toggle("disabled",t)}}class k extends v{constructor(t,i,e,n){super(t,i,e),this.m=n}render(t){if(super.render(t),this.element){this.element.classList.add("action-dropdown-item");const i={getActions:()=>{const s=this.t.menuActionsOrProvider;return Array.isArray(s)?s:s.getActions()}},e=this.t.menuActionClassNames||[],n=a("div.action-dropdown-item-separator",[a("div",{})]).root;n.classList.toggle("prominent",e.includes("prominent")),h(this.element,n),this.g=this.B(new N(this.B(new m("dropdownAction",c.localize(8,null))),i,this.m,{classNames:["dropdown",...p.asClassNameArray(u.dropDownButton),...e],hoverDelegate:this.t.hoverDelegate})),this.g.render(this.element),this.B(g(this.element,b.KEY_DOWN,s=>{if(i.getActions().length===0)return;const o=new A(s);let r=!1;this.g?.isFocused()&&o.equals(15)?(r=!0,this.g?.blur(),this.focus()):this.isFocused()&&o.equals(17)&&(r=!0,this.blur(),this.g?.focus()),r&&(o.preventDefault(),o.stopPropagation())}))}}blur(){super.blur(),this.g?.blur()}setFocusable(t){super.setFocusable(t),this.g?.setFocusable(t)}}export{N as $R9,k as $S9};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import * as nls from "../../../../nls.js";
+import { Action } from "../../../common/actions.js";
+import { Codicon } from "../../../common/codicons.js";
+import { Emitter } from "../../../common/event.js";
+import { ThemeIcon } from "../../../common/themables.js";
+import { $, addDisposableListener, append, EventType, h } from "../../dom.js";
+import { StandardKeyboardEvent } from "../../keyboardEvent.js";
+import { ActionViewItem, BaseActionViewItem } from "../actionbar/actionViewItems.js";
+import { getBaseLayerHoverDelegate } from "../hover/hoverDelegate2.js";
+import { getDefaultHoverDelegate } from "../hover/hoverDelegateFactory.js";
+import "./dropdown.css";
+import { DropdownMenu } from "./dropdown.js";
+class DropdownMenuActionViewItem extends BaseActionViewItem {
+  static {
+    __name(this, "DropdownMenuActionViewItem");
+  }
+  constructor(action, menuActionsOrProvider, contextMenuProvider, options = /* @__PURE__ */ Object.create(null)) {
+    super(null, action, options);
+    this.actionItem = null;
+    this._onDidChangeVisibility = this._register(new Emitter());
+    this.onDidChangeVisibility = this._onDidChangeVisibility.event;
+    this.menuActionsOrProvider = menuActionsOrProvider;
+    this.contextMenuProvider = contextMenuProvider;
+    this.options = options;
+    if (this.options.actionRunner) {
+      this.actionRunner = this.options.actionRunner;
+    }
+  }
+  render(container) {
+    this.actionItem = container;
+    const labelRenderer = /* @__PURE__ */ __name((el) => {
+      this.element = append(el, $("a.action-label"));
+      return this.renderLabel(this.element);
+    }, "labelRenderer");
+    const isActionsArray = Array.isArray(this.menuActionsOrProvider);
+    const options = {
+      contextMenuProvider: this.contextMenuProvider,
+      labelRenderer,
+      menuAsChild: this.options.menuAsChild,
+      actions: isActionsArray ? this.menuActionsOrProvider : void 0,
+      actionProvider: isActionsArray ? void 0 : this.menuActionsOrProvider,
+      skipTelemetry: this.options.skipTelemetry
+    };
+    this.dropdownMenu = this._register(new DropdownMenu(container, options));
+    this._register(this.dropdownMenu.onDidChangeVisibility((visible) => {
+      this.element?.setAttribute("aria-expanded", `${visible}`);
+      this._onDidChangeVisibility.fire(visible);
+    }));
+    this.dropdownMenu.menuOptions = {
+      actionViewItemProvider: this.options.actionViewItemProvider,
+      actionRunner: this.actionRunner,
+      getKeyBinding: this.options.keybindingProvider,
+      context: this._context
+    };
+    if (this.options.anchorAlignmentProvider) {
+      const that = this;
+      this.dropdownMenu.menuOptions = {
+        ...this.dropdownMenu.menuOptions,
+        get anchorAlignment() {
+          return that.options.anchorAlignmentProvider();
+        }
+      };
+    }
+    this.updateTooltip();
+    this.updateEnabled();
+  }
+  renderLabel(element) {
+    let classNames = [];
+    if (typeof this.options.classNames === "string") {
+      classNames = this.options.classNames.split(/\s+/g).filter((s) => !!s);
+    } else if (this.options.classNames) {
+      classNames = this.options.classNames;
+    }
+    if (!classNames.find((c) => c === "icon")) {
+      classNames.push("codicon");
+    }
+    element.classList.add(...classNames);
+    if (this._action.label) {
+      this._register(getBaseLayerHoverDelegate().setupManagedHover(this.options.hoverDelegate ?? getDefaultHoverDelegate("mouse"), element, this._action.label));
+    }
+    return null;
+  }
+  setAriaLabelAttributes(element) {
+    element.setAttribute("role", "button");
+    element.setAttribute("aria-haspopup", "true");
+    element.setAttribute("aria-expanded", "false");
+    element.ariaLabel = this._action.label || "";
+  }
+  getTooltip() {
+    let title = null;
+    if (this.action.tooltip) {
+      title = this.action.tooltip;
+    } else if (this.action.label) {
+      title = this.action.label;
+    }
+    return title ?? void 0;
+  }
+  setActionContext(newContext) {
+    super.setActionContext(newContext);
+    if (this.dropdownMenu) {
+      if (this.dropdownMenu.menuOptions) {
+        this.dropdownMenu.menuOptions.context = newContext;
+      } else {
+        this.dropdownMenu.menuOptions = { context: newContext };
+      }
+    }
+  }
+  show() {
+    this.dropdownMenu?.show();
+  }
+  updateEnabled() {
+    const disabled = !this.action.enabled;
+    this.actionItem?.classList.toggle("disabled", disabled);
+    this.element?.classList.toggle("disabled", disabled);
+  }
+}
+class ActionWithDropdownActionViewItem extends ActionViewItem {
+  static {
+    __name(this, "ActionWithDropdownActionViewItem");
+  }
+  constructor(context, action, options, contextMenuProvider) {
+    super(context, action, options);
+    this.contextMenuProvider = contextMenuProvider;
+  }
+  render(container) {
+    super.render(container);
+    if (this.element) {
+      this.element.classList.add("action-dropdown-item");
+      const menuActionsProvider = {
+        getActions: /* @__PURE__ */ __name(() => {
+          const actionsProvider = this.options.menuActionsOrProvider;
+          return Array.isArray(actionsProvider) ? actionsProvider : actionsProvider.getActions();
+        }, "getActions")
+      };
+      const menuActionClassNames = this.options.menuActionClassNames || [];
+      const separator = h("div.action-dropdown-item-separator", [h("div", {})]).root;
+      separator.classList.toggle("prominent", menuActionClassNames.includes("prominent"));
+      append(this.element, separator);
+      this.dropdownMenuActionViewItem = this._register(new DropdownMenuActionViewItem(this._register(new Action("dropdownAction", nls.localize("moreActions", "More Actions..."))), menuActionsProvider, this.contextMenuProvider, { classNames: ["dropdown", ...ThemeIcon.asClassNameArray(Codicon.dropDownButton), ...menuActionClassNames], hoverDelegate: this.options.hoverDelegate }));
+      this.dropdownMenuActionViewItem.render(this.element);
+      this._register(addDisposableListener(this.element, EventType.KEY_DOWN, (e) => {
+        if (menuActionsProvider.getActions().length === 0) {
+          return;
+        }
+        const event = new StandardKeyboardEvent(e);
+        let handled = false;
+        if (this.dropdownMenuActionViewItem?.isFocused() && event.equals(
+          15
+          /* KeyCode.LeftArrow */
+        )) {
+          handled = true;
+          this.dropdownMenuActionViewItem?.blur();
+          this.focus();
+        } else if (this.isFocused() && event.equals(
+          17
+          /* KeyCode.RightArrow */
+        )) {
+          handled = true;
+          this.blur();
+          this.dropdownMenuActionViewItem?.focus();
+        }
+        if (handled) {
+          event.preventDefault();
+          event.stopPropagation();
+        }
+      }));
+    }
+  }
+  blur() {
+    super.blur();
+    this.dropdownMenuActionViewItem?.blur();
+  }
+  setFocusable(focusable) {
+    super.setFocusable(focusable);
+    this.dropdownMenuActionViewItem?.setFocusable(focusable);
+  }
+}
+export {
+  ActionWithDropdownActionViewItem,
+  DropdownMenuActionViewItem
+};
+//# sourceMappingURL=dropdownActionViewItem.js.map

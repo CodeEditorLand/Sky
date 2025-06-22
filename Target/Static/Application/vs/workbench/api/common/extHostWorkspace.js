@@ -1,1 +1,776 @@
-import{$4b as B,$lc as O}from"../../../base/common/arrays.js";import{$ai as K,$Kh as M}from"../../../base/common/async.js";import{CancellationToken as F}from"../../../base/common/cancellation.js";import{$ff as _,$df as P}from"../../../base/common/event.js";import{$ud as H,$td as T}from"../../../base/common/lifecycle.js";import{$jj as J}from"../../../base/common/ternarySearchTree.js";import{Schemas as X}from"../../../base/common/network.js";import{$pw as Y}from"../../../base/common/numbers.js";import{$hh as Q,$gh as A,$jh as j,$_g as V,$mh as Z}from"../../../base/common/resources.js";import{$Xf as C}from"../../../base/common/strings.js";import{$Dc as ee,URI as g}from"../../../base/common/uri.js";import{localize as re}from"../../../nls.js";import{$nj as te}from"../../../platform/instantiation/common/instantiation.js";import{$3n as ie}from"../../../platform/log/common/log.js";import{Severity as ne}from"../../../platform/notification/common/notification.js";import{$rl as se,$sl as oe}from"../../../platform/workspace/common/workspace.js";import{$hKc as ae}from"./extHostFileSystemInfo.js";import{$y2 as de}from"./extHostInitDataService.js";import{$i2 as le}from"./extHostRpcService.js";import{GlobPattern as W}from"./extHostTypeConverters.js";import{$sY as E}from"./extHostTypes.js";import{$IKc as ue}from"./extHostUriTransformerService.js";import{$kP as U}from"../../services/search/common/search.js";import{$oY as L}from"./extHost.protocol.js";import{$ym as ce}from"../../../base/common/marshalling.js";import{ExcludeSettingOptions as v,$bP as fe,$aP as he}from"../../services/search/common/searchExtTypes.js";import{$Xi as pe,$Ti as ge,$Ji as R}from"../../../base/common/buffer.js";import{$FI as me,$GI as ve,$wI as we}from"../../services/textfile/common/encoding.js";import{$Ai as xe}from"../../../base/common/stream.js";import{$jJ as ye}from"../../services/textfile/common/textfiles.js";var z=function(d,r,e,t){var i=arguments.length,n=i<3?r:t===null?t=Object.getOwnPropertyDescriptor(r,e):t,o;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")n=Reflect.decorate(d,r,e,t);else for(var s=d.length-1;s>=0;s--)(o=d[s])&&(n=(i<3?o(n):i>3?o(r,e,n):o(r,e))||n);return i>3&&n&&Object.defineProperty(r,e,n),n},y=function(d,r){return function(e,t){r(e,t,d)}};function $(d,r,e){return new V(t=>N(t,e)).isEqual(d,r)}function Fe(d,r,e){return $(d.uri,r.uri,e)?0:C(d.uri.toString(),r.uri.toString())}function $e(d,r,e){return d.index!==r.index?d.index<r.index?-1:1:$(d.uri,r.uri,e)?C(d.name,r.name):C(d.uri.toString(),r.uri.toString())}function G(d,r,e,t){const i=d.slice(0).sort((o,s)=>e(o,s,t)),n=r.slice(0).sort((o,s)=>e(o,s,t));return B(i,n,(o,s)=>e(o,s,t))}function N(d,r){const e=r.getCapabilities(d.scheme);return!(e&&e&1024)}class w extends se{static toExtHostWorkspace(r,e,t,i){if(!r)return{workspace:null,added:[],removed:[]};const{id:n,name:o,folders:s,configuration:l,transient:p,isUntitled:a}=r,f=[],u=e;e?s.forEach((h,x)=>{const k=g.revive(h.uri),I=w.o(t||e,k,i);I?(I.name=h.name,I.index=h.index,f.push(I)):f.push({uri:k,name:h.name,index:x})}):f.push(...s.map(({uri:h,name:x,index:k})=>({uri:g.revive(h),name:x,index:k}))),f.sort((h,x)=>h.index<x.index?-1:1);const c=new w(n,o,f,!!p,l?g.revive(l):null,!!a,h=>N(h,i)),{added:m,removed:S}=G(u?u.workspaceFolders:[],c.workspaceFolders,Fe,i);return{workspace:c,added:m,removed:S}}static o(r,e,t){for(let i=0;i<r.folders.length;i++){const n=r.workspaceFolders[i];if($(n.uri,e,t))return n}}constructor(r,e,t,i,n,o,s){super(r,t.map(l=>new oe(l)),i,n,s),this.t=e,this.u=o,this.q=[],this.s=J.forUris(s,()=>!0),t.forEach(l=>{this.q.push(l),this.s.set(l.uri,l)})}get name(){return this.t}get isUntitled(){return this.u}get workspaceFolders(){return this.q.slice(0)}getWorkspaceFolder(r,e){return e&&this.s.get(r)&&(r=j(r)),this.s.findSubstr(r)}resolveWorkspaceFolder(r){return this.s.get(r)}}let D=class{constructor(r,e,t,i,n){this.c=new P,this.onDidChangeWorkspace=this.c.event,this.g=new P,this.onDidGrantWorkspaceTrust=this.g.event,this.u=[],this.v=!1,this.w=new Map,this.B=0,this.C=new _,this.D=new Map,this.h=i,this.s=t,this.t=n,this.j=new Y,this.k=new M,this.o=r.getProxy(L.MainThreadWorkspace),this.q=r.getProxy(L.MainThreadMessageService);const o=e.workspace;this.l=o?new w(o.id,o.name,[],!!o.transient,o.configuration?g.revive(o.configuration):null,!!o.isUntitled,s=>N(s,t)):void 0}$initializeWorkspace(r,e){this.v=e,this.$acceptWorkspaceData(r),this.k.open()}waitForInitializeCall(){return this.k.wait()}get workspace(){return this.x}get name(){return this.x?this.x.name:void 0}get workspaceFile(){if(this.x&&this.x.configuration)return this.x.isUntitled?g.from({scheme:X.untitled,path:Q(j(this.x.configuration))}):this.x.configuration}get x(){return this.n||this.l}getWorkspaceFolders(){if(this.x)return this.x.workspaceFolders.slice(0)}async getWorkspaceFolders2(){if(await this.k.wait(),!!this.x)return this.x.workspaceFolders.slice(0)}updateWorkspaceFolders(r,e,t,...i){const n=[];if(Array.isArray(i)&&i.forEach(a=>{g.isUri(a.uri)&&!n.some(f=>$(f.uri,a.uri,this.s))&&n.push({uri:a.uri,name:a.name||A(a.uri)})}),this.n||[e,t].some(a=>typeof a!="number"||a<0)||t===0&&n.length===0)return!1;const o=this.x?this.x.workspaceFolders:[];if(e+t>o.length)return!1;const s=o.slice(0);s.splice(e,t,...n.map(a=>({uri:a.uri,name:a.name||A(a.uri),index:void 0})));for(let a=0;a<s.length;a++){const f=s[a];if(s.some((u,c)=>c!==a&&$(f.uri,u.uri,this.s)))return!1}s.forEach((a,f)=>a.index=f);const{added:l,removed:p}=G(o,s,$e,this.s);if(l.length===0&&p.length===0)return!1;if(this.o){const a=r.displayName||r.name;this.o.$updateWorkspaceFolders(a,e,t,n).then(void 0,f=>{this.n=void 0;const u={source:{identifier:r.identifier,label:r.displayName||r.name}};this.q.$showMessage(ne.Error,re(2925,null,a,f.toString()),u,[])})}return this.y(s),!0}getWorkspaceFolder(r,e){if(this.x)return this.x.getWorkspaceFolder(r,e)}async getWorkspaceFolder2(r,e){if(await this.k.wait(),!!this.x)return this.x.getWorkspaceFolder(r,e)}async resolveWorkspaceFolder(r){if(await this.k.wait(),!!this.x)return this.x.resolveWorkspaceFolder(r)}getPath(){if(!this.x)return;const{folders:r}=this.x;if(r.length!==0)return r[0].uri.fsPath}getRelativePath(r,e){let t,i="";if(typeof r=="string"?(t=g.file(r),i=r):typeof r<"u"&&(t=r,i=r.fsPath),!t)return i;const n=this.getWorkspaceFolder(t,!0);if(!n)return i;typeof e>"u"&&this.x&&(e=this.x.folders.length>1);let o=Z(n.uri,t);return e&&n.name&&(o=`${n.name}/${o}`),o}y(r){this.x&&(this.n=w.toExtHostWorkspace({id:this.x.id,name:this.x.name,configuration:this.x.configuration,folders:r,isUntitled:this.x.isUntitled},this.x,void 0,this.s).workspace||void 0)}$acceptWorkspaceData(r){const{workspace:e,added:t,removed:i}=w.toExtHostWorkspace(r,this.l,this.n,this.s);this.l=e||void 0,this.n=void 0,this.c.fire(Object.freeze({added:t,removed:i}))}findFiles(r,e,t,i,n=F.None){this.h.trace(`extHostWorkspace#findFiles: fileSearch, extension: ${i.value}, entryPoint: findFiles`);let o="",s=!0;return e===null?s=!1:e!==void 0&&(typeof e=="string"?o=e:o=e.pattern),this.z({type:"include",value:r},{exclude:[o],maxResults:t,useExcludeSettings:s?v.FilesExclude:v.None,useIgnoreFiles:{local:!1}},n)}findFiles2(r,e={},t,i=F.None){return this.h.trace(`extHostWorkspace#findFiles2New: fileSearch, extension: ${t.value}, entryPoint: findFiles2New`),this.z({type:"filePatterns",value:r},e,i)}async z(r,e,t){if(t.isCancellationRequested)return Promise.resolve([]);const i=r.type==="include"?[r.value]:r.value??[];if(!Array.isArray(i))throw new Error(`Invalid file pattern provided ${JSON.stringify(i)}`);const n=i.map(o=>{const s=q(e.exclude),l={ignoreSymlinks:typeof e.followSymlinks=="boolean"?!e.followSymlinks:void 0,disregardIgnoreFiles:typeof e.useIgnoreFiles?.local=="boolean"?!e.useIgnoreFiles.local:void 0,disregardGlobalIgnoreFiles:typeof e.useIgnoreFiles?.global=="boolean"?!e.useIgnoreFiles.global:void 0,disregardParentIgnoreFiles:typeof e.useIgnoreFiles?.parent=="boolean"?!e.useIgnoreFiles.parent:void 0,disregardExcludeSettings:e.useExcludeSettings!==void 0&&e.useExcludeSettings===v.None,disregardSearchExcludeSettings:e.useExcludeSettings!==void 0&&e.useExcludeSettings!==v.SearchAndFilesExclude,maxResults:e.maxResults,excludePattern:s.length>0?s:void 0,_reason:"startFileSearch",shouldGlobSearch:r.type==="include"?void 0:!0},p=b(W.from(o)),a=p?.folder;return r.type==="include"?l.includePattern=p?.pattern:l.filePattern=p?.pattern,{folder:a,options:l}});return this.A(n,t)}async A(r,e){return(await Promise.all(r?.map(i=>this.o.$startFileSearch(i.folder??null,i.options,e).then(n=>Array.isArray(n)?n.map(o=>g.revive(o)):[]))??[])).flat()}findTextInFiles2(r,e,t,i=F.None){this.h.trace(`extHostWorkspace#findTextInFiles2: textSearch, extension: ${t.value}, entryPoint: findTextInFiles2`);const n=u=>{if(!e)return{folder:void 0,options:{}};const c=u?b(W.from(u)):void 0,m=e.exclude?q(e.exclude):void 0;return{options:{ignoreSymlinks:typeof e.followSymlinks=="boolean"?!e.followSymlinks:void 0,disregardIgnoreFiles:typeof e.useIgnoreFiles=="boolean"?!e.useIgnoreFiles:void 0,disregardGlobalIgnoreFiles:typeof e.useIgnoreFiles?.global=="boolean"?!e.useIgnoreFiles?.global:void 0,disregardParentIgnoreFiles:typeof e.useIgnoreFiles?.parent=="boolean"?!e.useIgnoreFiles?.parent:void 0,disregardExcludeSettings:e.useExcludeSettings!==void 0&&e.useExcludeSettings===v.None,disregardSearchExcludeSettings:e.useExcludeSettings!==void 0&&e.useExcludeSettings!==v.SearchAndFilesExclude,fileEncoding:e.encoding,maxResults:e.maxResults,previewOptions:e.previewOptions?{matchLines:e.previewOptions?.numMatchLines??100,charsPerLine:e.previewOptions?.charsPerLine??1e4}:void 0,surroundingContext:e.surroundingContext,includePattern:c?.pattern,excludePattern:m},folder:c?.folder}},s=(e?.include?.map(u=>n(u))??[n(void 0)]).filter(u=>!!u),l=new H,p=l.add(new P),a=this.findTextInFilesBase(r,s,(u,c)=>p.fire({result:u,uri:c}),i);return{results:new K(async u=>{l.add(p.event(c=>{const m=c.result,S=c.uri;U(m)?u.emitOne(new he(S,m.rangeLocations.map(h=>({previewRange:new E(h.preview.startLineNumber,h.preview.startColumn,h.preview.endLineNumber,h.preview.endColumn),sourceRange:new E(h.source.startLineNumber,h.source.startColumn,h.source.endLineNumber,h.source.endColumn)})),m.previewText)):u.emitOne(new fe(S,m.text,m.lineNumber))})),await a}),complete:a.then(u=>(l.dispose(),{limitHit:u?.limitHit??!1}))}}async findTextInFilesBase(r,e,t,i=F.None){const n=this.j.getNext();let o=!1;if(i.onCancellationRequested(s=>{o=!0}),this.u[n]=s=>{if(o)return;const l=g.revive(s.resource);s.results.forEach(p=>{const a=ce(p);t(a,l)})},i.isCancellationRequested)return{};try{const s=await Promise.all(e?.map(l=>this.o.$startTextSearch(r,l.folder??null,l.options,n,i)||{})??[]);return delete this.u[n],s.reduce((l,p)=>({limitHit:l?.limitHit||(p?.limitHit??!1),message:[l?.message??[],p?.message??[]].flat()}),{})??{limitHit:!1}}catch(s){throw delete this.u[n],s}}async findTextInFiles(r,e,t,i,n=F.None){this.h.trace(`extHostWorkspace#findTextInFiles: textSearch, extension: ${i.value}, entryPoint: findTextInFiles`);const o=typeof e.previewOptions>"u"?{matchLines:100,charsPerLine:1e4}:e.previewOptions,s=b(W.from(e.include)),l=typeof e.exclude=="string"?e.exclude:e.exclude?e.exclude.pattern:void 0,p={ignoreSymlinks:typeof e.followSymlinks=="boolean"?!e.followSymlinks:void 0,disregardIgnoreFiles:typeof e.useIgnoreFiles=="boolean"?!e.useIgnoreFiles:void 0,disregardGlobalIgnoreFiles:typeof e.useGlobalIgnoreFiles=="boolean"?!e.useGlobalIgnoreFiles:void 0,disregardParentIgnoreFiles:typeof e.useParentIgnoreFiles=="boolean"?!e.useParentIgnoreFiles:void 0,disregardExcludeSettings:typeof e.useDefaultExcludes=="boolean"?!e.useDefaultExcludes:!0,disregardSearchExcludeSettings:typeof e.useSearchExclude=="boolean"?!e.useSearchExclude:!0,fileEncoding:e.encoding,maxResults:e.maxResults,previewOptions:o,surroundingContext:e.afterContext,includePattern:s?.pattern,excludePattern:l?[{pattern:l}]:void 0},a=(f,u)=>{U(f)?t({uri:u,preview:{text:f.previewText,matches:O(f.rangeLocations,c=>new E(c.preview.startLineNumber,c.preview.startColumn,c.preview.endLineNumber,c.preview.endColumn))},ranges:O(f.rangeLocations,c=>new E(c.source.startLineNumber,c.source.startColumn,c.source.endLineNumber,c.source.endColumn))}):t({uri:u,text:f.text,lineNumber:f.lineNumber})};return this.findTextInFilesBase(r,[{options:p,folder:s?.folder}],a,n)}$handleTextSearchResult(r,e){this.u[e]?.(r)}async save(r){const e=await this.o.$save(r,{saveAs:!1});return g.revive(e)}async saveAs(r){const e=await this.o.$save(r,{saveAs:!0});return g.revive(e)}saveAll(r){return this.o.$saveAll(r)}resolveProxy(r){return this.o.$resolveProxy(r)}lookupAuthorization(r){return this.o.$lookupAuthorization(r)}lookupKerberosAuthorization(r){return this.o.$lookupKerberosAuthorization(r)}loadCertificates(){return this.o.$loadCertificates()}get trusted(){return this.v}requestWorkspaceTrust(r){return this.o.$requestWorkspaceTrust(r)}$onDidGrantWorkspaceTrust(){this.v||(this.v=!0,this.g.fire())}registerEditSessionIdentityProvider(r,e){if(this.w.has(r))throw new Error(`A provider has already been registered for scheme ${r}`);this.w.set(r,e);const t=this.t.transformOutgoingScheme(r),i=this.B++;return this.o.$registerEditSessionIdentityProvider(i,t),T(()=>{this.w.delete(r),this.o.$unregisterEditSessionIdentityProvider(i)})}async $getEditSessionIdentifier(r,e){this.h.info("Getting edit session identifier for workspaceFolder",r);const t=await this.resolveWorkspaceFolder(g.revive(r));if(!t){this.h.warn("Unable to resolve workspace folder");return}this.h.info("Invoking #provideEditSessionIdentity for workspaceFolder",t);const i=this.w.get(t.uri.scheme);if(this.h.info(`Provider for scheme ${t.uri.scheme} is defined: `,!!i),!i)return;const n=await i.provideEditSessionIdentity(t,e);if(this.h.info("Provider returned edit session identifier: ",n),!!n)return n}async $provideEditSessionIdentityMatch(r,e,t,i){this.h.info("Getting edit session identifier for workspaceFolder",r);const n=await this.resolveWorkspaceFolder(g.revive(r));if(!n){this.h.warn("Unable to resolve workspace folder");return}this.h.info("Invoking #provideEditSessionIdentity for workspaceFolder",n);const o=this.w.get(n.uri.scheme);if(this.h.info(`Provider for scheme ${n.uri.scheme} is defined: `,!!o),!o)return;const s=await o.provideEditSessionIdentityMatch?.(e,t,i);if(this.h.info("Provider returned edit session identifier match result: ",s),!!s)return s}getOnWillCreateEditSessionIdentityEvent(r){return(e,t,i)=>{const n=function(s){e.call(t,s)};return n.extension=r,this.C.event(n,void 0,i)}}async $onWillCreateEditSessionIdentity(r,e,t){const i=await this.resolveWorkspaceFolder(g.revive(r));if(i===void 0)throw new Error("Unable to resolve workspace folder");await this.C.fireAsync({workspaceFolder:i},e,async(n,o)=>{const s=Date.now();await Promise.resolve(n),Date.now()-s>t&&this.h.warn("SLOW edit session create-participant",o.extension.identifier)}),e.isCancellationRequested}registerCanonicalUriProvider(r,e){if(this.D.has(r))throw new Error(`A provider has already been registered for scheme ${r}`);this.D.set(r,e);const t=this.t.transformOutgoingScheme(r),i=this.B++;return this.o.$registerCanonicalUriProvider(i,t),T(()=>{this.D.delete(r),this.o.$unregisterCanonicalUriProvider(i)})}async provideCanonicalUri(r,e,t){const i=this.D.get(r.scheme);if(!i)return;const n=await i.provideCanonicalUri?.(g.revive(r),e,t);if(n)return n}async $provideCanonicalUri(r,e,t){return this.provideCanonicalUri(g.revive(r),{targetScheme:e},t)}async decode(r,e){const[t,i]=this.F(e),n=await this.o.$resolveDecoding(t,i),o=(await me(pe(R.wrap(r)),{...n,acceptTextOnly:!0,overwriteEncoding:s=>s===null||s===n.preferredEncoding?Promise.resolve(n.preferredEncoding):this.o.$validateDetectedEncoding(t,s,i)})).stream;return xe(o,s=>s.join(""))}async encode(r,e){const[t,i]=this.F(e),{encoding:n,addBOM:o}=await this.o.$resolveEncoding(t,i);if(n===we&&!o)return R.fromString(r).buffer;const s=await ve(ye(r),n,{addBOM:o});return ge(s).buffer}F(r){const e=ee(r?.uri)?r.uri:void 0,t=typeof r?.encoding=="string"?r.encoding:void 0;return[e,t?{encoding:t}:void 0]}};D=z([y(0,le),y(1,de),y(2,ae),y(3,ie),y(4,ue)],D);const er=te("IExtHostWorkspace");function b(d){let r,e;if(d)return typeof d=="string"?r=d:(r=d.pattern,e=g.revive(d.baseUri)),{pattern:r,folder:e}}function q(d){return(d?.map(r=>{if(typeof r=="string")return r===""?void 0:{pattern:r,uri:void 0};{const e=b(r);return e?{pattern:e.pattern,uri:e.folder}:void 0}})??[]).filter(r=>!!r)}export{D as $KKc,er as $LKc};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { delta as arrayDelta, mapArrayOrNot } from "../../../base/common/arrays.js";
+import { AsyncIterableObject, Barrier } from "../../../base/common/async.js";
+import { CancellationToken } from "../../../base/common/cancellation.js";
+import { AsyncEmitter, Emitter } from "../../../base/common/event.js";
+import { DisposableStore, toDisposable } from "../../../base/common/lifecycle.js";
+import { TernarySearchTree } from "../../../base/common/ternarySearchTree.js";
+import { Schemas } from "../../../base/common/network.js";
+import { Counter } from "../../../base/common/numbers.js";
+import { basename, basenameOrAuthority, dirname, ExtUri, relativePath } from "../../../base/common/resources.js";
+import { compare } from "../../../base/common/strings.js";
+import { isUriComponents, URI } from "../../../base/common/uri.js";
+import { localize } from "../../../nls.js";
+import { createDecorator } from "../../../platform/instantiation/common/instantiation.js";
+import { ILogService } from "../../../platform/log/common/log.js";
+import { Severity } from "../../../platform/notification/common/notification.js";
+import { Workspace, WorkspaceFolder } from "../../../platform/workspace/common/workspace.js";
+import { IExtHostFileSystemInfo } from "./extHostFileSystemInfo.js";
+import { IExtHostInitDataService } from "./extHostInitDataService.js";
+import { IExtHostRpcService } from "./extHostRpcService.js";
+import { GlobPattern } from "./extHostTypeConverters.js";
+import { Range } from "./extHostTypes.js";
+import { IURITransformerService } from "./extHostUriTransformerService.js";
+import { resultIsMatch } from "../../services/search/common/search.js";
+import { MainContext } from "./extHost.protocol.js";
+import { revive } from "../../../base/common/marshalling.js";
+import { ExcludeSettingOptions, TextSearchContext2, TextSearchMatch2 } from "../../services/search/common/searchExtTypes.js";
+import { bufferToStream, readableToBuffer, VSBuffer } from "../../../base/common/buffer.js";
+import { toDecodeStream, toEncodeReadable, UTF8 } from "../../services/textfile/common/encoding.js";
+import { consumeStream } from "../../../base/common/stream.js";
+import { stringToSnapshot } from "../../services/textfile/common/textfiles.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+function isFolderEqual(folderA, folderB, extHostFileSystemInfo) {
+  return new ExtUri((uri) => ignorePathCasing(uri, extHostFileSystemInfo)).isEqual(folderA, folderB);
+}
+__name(isFolderEqual, "isFolderEqual");
+function compareWorkspaceFolderByUri(a, b, extHostFileSystemInfo) {
+  return isFolderEqual(a.uri, b.uri, extHostFileSystemInfo) ? 0 : compare(a.uri.toString(), b.uri.toString());
+}
+__name(compareWorkspaceFolderByUri, "compareWorkspaceFolderByUri");
+function compareWorkspaceFolderByUriAndNameAndIndex(a, b, extHostFileSystemInfo) {
+  if (a.index !== b.index) {
+    return a.index < b.index ? -1 : 1;
+  }
+  return isFolderEqual(a.uri, b.uri, extHostFileSystemInfo) ? compare(a.name, b.name) : compare(a.uri.toString(), b.uri.toString());
+}
+__name(compareWorkspaceFolderByUriAndNameAndIndex, "compareWorkspaceFolderByUriAndNameAndIndex");
+function delta(oldFolders, newFolders, compare2, extHostFileSystemInfo) {
+  const oldSortedFolders = oldFolders.slice(0).sort((a, b) => compare2(a, b, extHostFileSystemInfo));
+  const newSortedFolders = newFolders.slice(0).sort((a, b) => compare2(a, b, extHostFileSystemInfo));
+  return arrayDelta(oldSortedFolders, newSortedFolders, (a, b) => compare2(a, b, extHostFileSystemInfo));
+}
+__name(delta, "delta");
+function ignorePathCasing(uri, extHostFileSystemInfo) {
+  const capabilities = extHostFileSystemInfo.getCapabilities(uri.scheme);
+  return !(capabilities && capabilities & 1024);
+}
+__name(ignorePathCasing, "ignorePathCasing");
+class ExtHostWorkspaceImpl extends Workspace {
+  static {
+    __name(this, "ExtHostWorkspaceImpl");
+  }
+  static toExtHostWorkspace(data, previousConfirmedWorkspace, previousUnconfirmedWorkspace, extHostFileSystemInfo) {
+    if (!data) {
+      return { workspace: null, added: [], removed: [] };
+    }
+    const { id, name, folders, configuration, transient, isUntitled } = data;
+    const newWorkspaceFolders = [];
+    const oldWorkspace = previousConfirmedWorkspace;
+    if (previousConfirmedWorkspace) {
+      folders.forEach((folderData, index) => {
+        const folderUri = URI.revive(folderData.uri);
+        const existingFolder = ExtHostWorkspaceImpl._findFolder(previousUnconfirmedWorkspace || previousConfirmedWorkspace, folderUri, extHostFileSystemInfo);
+        if (existingFolder) {
+          existingFolder.name = folderData.name;
+          existingFolder.index = folderData.index;
+          newWorkspaceFolders.push(existingFolder);
+        } else {
+          newWorkspaceFolders.push({ uri: folderUri, name: folderData.name, index });
+        }
+      });
+    } else {
+      newWorkspaceFolders.push(...folders.map(({ uri, name: name2, index }) => ({ uri: URI.revive(uri), name: name2, index })));
+    }
+    newWorkspaceFolders.sort((f1, f2) => f1.index < f2.index ? -1 : 1);
+    const workspace = new ExtHostWorkspaceImpl(id, name, newWorkspaceFolders, !!transient, configuration ? URI.revive(configuration) : null, !!isUntitled, (uri) => ignorePathCasing(uri, extHostFileSystemInfo));
+    const { added, removed } = delta(oldWorkspace ? oldWorkspace.workspaceFolders : [], workspace.workspaceFolders, compareWorkspaceFolderByUri, extHostFileSystemInfo);
+    return { workspace, added, removed };
+  }
+  static _findFolder(workspace, folderUriToFind, extHostFileSystemInfo) {
+    for (let i = 0; i < workspace.folders.length; i++) {
+      const folder = workspace.workspaceFolders[i];
+      if (isFolderEqual(folder.uri, folderUriToFind, extHostFileSystemInfo)) {
+        return folder;
+      }
+    }
+    return void 0;
+  }
+  constructor(id, _name, folders, transient, configuration, _isUntitled, ignorePathCasing2) {
+    super(id, folders.map((f) => new WorkspaceFolder(f)), transient, configuration, ignorePathCasing2);
+    this._name = _name;
+    this._isUntitled = _isUntitled;
+    this._workspaceFolders = [];
+    this._structure = TernarySearchTree.forUris(ignorePathCasing2, () => true);
+    folders.forEach((folder) => {
+      this._workspaceFolders.push(folder);
+      this._structure.set(folder.uri, folder);
+    });
+  }
+  get name() {
+    return this._name;
+  }
+  get isUntitled() {
+    return this._isUntitled;
+  }
+  get workspaceFolders() {
+    return this._workspaceFolders.slice(0);
+  }
+  getWorkspaceFolder(uri, resolveParent) {
+    if (resolveParent && this._structure.get(uri)) {
+      uri = dirname(uri);
+    }
+    return this._structure.findSubstr(uri);
+  }
+  resolveWorkspaceFolder(uri) {
+    return this._structure.get(uri);
+  }
+}
+let ExtHostWorkspace = class ExtHostWorkspace2 {
+  static {
+    __name(this, "ExtHostWorkspace");
+  }
+  constructor(extHostRpc, initData, extHostFileSystemInfo, logService, uriTransformerService) {
+    this._onDidChangeWorkspace = new Emitter();
+    this.onDidChangeWorkspace = this._onDidChangeWorkspace.event;
+    this._onDidGrantWorkspaceTrust = new Emitter();
+    this.onDidGrantWorkspaceTrust = this._onDidGrantWorkspaceTrust.event;
+    this._activeSearchCallbacks = [];
+    this._trusted = false;
+    this._editSessionIdentityProviders = /* @__PURE__ */ new Map();
+    this._providerHandlePool = 0;
+    this._onWillCreateEditSessionIdentityEvent = new AsyncEmitter();
+    this._canonicalUriProviders = /* @__PURE__ */ new Map();
+    this._logService = logService;
+    this._extHostFileSystemInfo = extHostFileSystemInfo;
+    this._uriTransformerService = uriTransformerService;
+    this._requestIdProvider = new Counter();
+    this._barrier = new Barrier();
+    this._proxy = extHostRpc.getProxy(MainContext.MainThreadWorkspace);
+    this._messageService = extHostRpc.getProxy(MainContext.MainThreadMessageService);
+    const data = initData.workspace;
+    this._confirmedWorkspace = data ? new ExtHostWorkspaceImpl(data.id, data.name, [], !!data.transient, data.configuration ? URI.revive(data.configuration) : null, !!data.isUntitled, (uri) => ignorePathCasing(uri, extHostFileSystemInfo)) : void 0;
+  }
+  $initializeWorkspace(data, trusted) {
+    this._trusted = trusted;
+    this.$acceptWorkspaceData(data);
+    this._barrier.open();
+  }
+  waitForInitializeCall() {
+    return this._barrier.wait();
+  }
+  // --- workspace ---
+  get workspace() {
+    return this._actualWorkspace;
+  }
+  get name() {
+    return this._actualWorkspace ? this._actualWorkspace.name : void 0;
+  }
+  get workspaceFile() {
+    if (this._actualWorkspace) {
+      if (this._actualWorkspace.configuration) {
+        if (this._actualWorkspace.isUntitled) {
+          return URI.from({ scheme: Schemas.untitled, path: basename(dirname(this._actualWorkspace.configuration)) });
+        }
+        return this._actualWorkspace.configuration;
+      }
+    }
+    return void 0;
+  }
+  get _actualWorkspace() {
+    return this._unconfirmedWorkspace || this._confirmedWorkspace;
+  }
+  getWorkspaceFolders() {
+    if (!this._actualWorkspace) {
+      return void 0;
+    }
+    return this._actualWorkspace.workspaceFolders.slice(0);
+  }
+  async getWorkspaceFolders2() {
+    await this._barrier.wait();
+    if (!this._actualWorkspace) {
+      return void 0;
+    }
+    return this._actualWorkspace.workspaceFolders.slice(0);
+  }
+  updateWorkspaceFolders(extension, index, deleteCount, ...workspaceFoldersToAdd) {
+    const validatedDistinctWorkspaceFoldersToAdd = [];
+    if (Array.isArray(workspaceFoldersToAdd)) {
+      workspaceFoldersToAdd.forEach((folderToAdd) => {
+        if (URI.isUri(folderToAdd.uri) && !validatedDistinctWorkspaceFoldersToAdd.some((f) => isFolderEqual(f.uri, folderToAdd.uri, this._extHostFileSystemInfo))) {
+          validatedDistinctWorkspaceFoldersToAdd.push({ uri: folderToAdd.uri, name: folderToAdd.name || basenameOrAuthority(folderToAdd.uri) });
+        }
+      });
+    }
+    if (!!this._unconfirmedWorkspace) {
+      return false;
+    }
+    if ([index, deleteCount].some((i) => typeof i !== "number" || i < 0)) {
+      return false;
+    }
+    if (deleteCount === 0 && validatedDistinctWorkspaceFoldersToAdd.length === 0) {
+      return false;
+    }
+    const currentWorkspaceFolders = this._actualWorkspace ? this._actualWorkspace.workspaceFolders : [];
+    if (index + deleteCount > currentWorkspaceFolders.length) {
+      return false;
+    }
+    const newWorkspaceFolders = currentWorkspaceFolders.slice(0);
+    newWorkspaceFolders.splice(index, deleteCount, ...validatedDistinctWorkspaceFoldersToAdd.map((f) => ({
+      uri: f.uri,
+      name: f.name || basenameOrAuthority(f.uri),
+      index: void 0
+      /* fixed later */
+    })));
+    for (let i = 0; i < newWorkspaceFolders.length; i++) {
+      const folder = newWorkspaceFolders[i];
+      if (newWorkspaceFolders.some((otherFolder, index2) => index2 !== i && isFolderEqual(folder.uri, otherFolder.uri, this._extHostFileSystemInfo))) {
+        return false;
+      }
+    }
+    newWorkspaceFolders.forEach((f, index2) => f.index = index2);
+    const { added, removed } = delta(currentWorkspaceFolders, newWorkspaceFolders, compareWorkspaceFolderByUriAndNameAndIndex, this._extHostFileSystemInfo);
+    if (added.length === 0 && removed.length === 0) {
+      return false;
+    }
+    if (this._proxy) {
+      const extName = extension.displayName || extension.name;
+      this._proxy.$updateWorkspaceFolders(extName, index, deleteCount, validatedDistinctWorkspaceFoldersToAdd).then(void 0, (error) => {
+        this._unconfirmedWorkspace = void 0;
+        const options = { source: { identifier: extension.identifier, label: extension.displayName || extension.name } };
+        this._messageService.$showMessage(Severity.Error, localize("updateerror", "Extension '{0}' failed to update workspace folders: {1}", extName, error.toString()), options, []);
+      });
+    }
+    this.trySetWorkspaceFolders(newWorkspaceFolders);
+    return true;
+  }
+  getWorkspaceFolder(uri, resolveParent) {
+    if (!this._actualWorkspace) {
+      return void 0;
+    }
+    return this._actualWorkspace.getWorkspaceFolder(uri, resolveParent);
+  }
+  async getWorkspaceFolder2(uri, resolveParent) {
+    await this._barrier.wait();
+    if (!this._actualWorkspace) {
+      return void 0;
+    }
+    return this._actualWorkspace.getWorkspaceFolder(uri, resolveParent);
+  }
+  async resolveWorkspaceFolder(uri) {
+    await this._barrier.wait();
+    if (!this._actualWorkspace) {
+      return void 0;
+    }
+    return this._actualWorkspace.resolveWorkspaceFolder(uri);
+  }
+  getPath() {
+    if (!this._actualWorkspace) {
+      return void 0;
+    }
+    const { folders } = this._actualWorkspace;
+    if (folders.length === 0) {
+      return void 0;
+    }
+    return folders[0].uri.fsPath;
+  }
+  getRelativePath(pathOrUri, includeWorkspace) {
+    let resource;
+    let path = "";
+    if (typeof pathOrUri === "string") {
+      resource = URI.file(pathOrUri);
+      path = pathOrUri;
+    } else if (typeof pathOrUri !== "undefined") {
+      resource = pathOrUri;
+      path = pathOrUri.fsPath;
+    }
+    if (!resource) {
+      return path;
+    }
+    const folder = this.getWorkspaceFolder(resource, true);
+    if (!folder) {
+      return path;
+    }
+    if (typeof includeWorkspace === "undefined" && this._actualWorkspace) {
+      includeWorkspace = this._actualWorkspace.folders.length > 1;
+    }
+    let result = relativePath(folder.uri, resource);
+    if (includeWorkspace && folder.name) {
+      result = `${folder.name}/${result}`;
+    }
+    return result;
+  }
+  trySetWorkspaceFolders(folders) {
+    if (this._actualWorkspace) {
+      this._unconfirmedWorkspace = ExtHostWorkspaceImpl.toExtHostWorkspace({
+        id: this._actualWorkspace.id,
+        name: this._actualWorkspace.name,
+        configuration: this._actualWorkspace.configuration,
+        folders,
+        isUntitled: this._actualWorkspace.isUntitled
+      }, this._actualWorkspace, void 0, this._extHostFileSystemInfo).workspace || void 0;
+    }
+  }
+  $acceptWorkspaceData(data) {
+    const { workspace, added, removed } = ExtHostWorkspaceImpl.toExtHostWorkspace(data, this._confirmedWorkspace, this._unconfirmedWorkspace, this._extHostFileSystemInfo);
+    this._confirmedWorkspace = workspace || void 0;
+    this._unconfirmedWorkspace = void 0;
+    this._onDidChangeWorkspace.fire(Object.freeze({
+      added,
+      removed
+    }));
+  }
+  // --- search ---
+  /**
+   * Note, null/undefined have different and important meanings for "exclude"
+   */
+  findFiles(include, exclude, maxResults, extensionId, token = CancellationToken.None) {
+    this._logService.trace(`extHostWorkspace#findFiles: fileSearch, extension: ${extensionId.value}, entryPoint: findFiles`);
+    let excludeString = "";
+    let useFileExcludes = true;
+    if (exclude === null) {
+      useFileExcludes = false;
+    } else if (exclude !== void 0) {
+      if (typeof exclude === "string") {
+        excludeString = exclude;
+      } else {
+        excludeString = exclude.pattern;
+      }
+    }
+    return this._findFilesImpl({ type: "include", value: include }, {
+      exclude: [excludeString],
+      maxResults,
+      useExcludeSettings: useFileExcludes ? ExcludeSettingOptions.FilesExclude : ExcludeSettingOptions.None,
+      useIgnoreFiles: {
+        local: false
+      }
+    }, token);
+  }
+  findFiles2(filePatterns, options = {}, extensionId, token = CancellationToken.None) {
+    this._logService.trace(`extHostWorkspace#findFiles2New: fileSearch, extension: ${extensionId.value}, entryPoint: findFiles2New`);
+    return this._findFilesImpl({ type: "filePatterns", value: filePatterns }, options, token);
+  }
+  async _findFilesImpl(query, options, token) {
+    if (token.isCancellationRequested) {
+      return Promise.resolve([]);
+    }
+    const filePatternsToUse = query.type === "include" ? [query.value] : query.value ?? [];
+    if (!Array.isArray(filePatternsToUse)) {
+      console.error("Invalid file pattern provided", filePatternsToUse);
+      throw new Error(`Invalid file pattern provided ${JSON.stringify(filePatternsToUse)}`);
+    }
+    const queryOptions = filePatternsToUse.map((filePattern) => {
+      const excludePatterns = globsToISearchPatternBuilder(options.exclude);
+      const fileQueries = {
+        ignoreSymlinks: typeof options.followSymlinks === "boolean" ? !options.followSymlinks : void 0,
+        disregardIgnoreFiles: typeof options.useIgnoreFiles?.local === "boolean" ? !options.useIgnoreFiles.local : void 0,
+        disregardGlobalIgnoreFiles: typeof options.useIgnoreFiles?.global === "boolean" ? !options.useIgnoreFiles.global : void 0,
+        disregardParentIgnoreFiles: typeof options.useIgnoreFiles?.parent === "boolean" ? !options.useIgnoreFiles.parent : void 0,
+        disregardExcludeSettings: options.useExcludeSettings !== void 0 && options.useExcludeSettings === ExcludeSettingOptions.None,
+        disregardSearchExcludeSettings: options.useExcludeSettings !== void 0 && options.useExcludeSettings !== ExcludeSettingOptions.SearchAndFilesExclude,
+        maxResults: options.maxResults,
+        excludePattern: excludePatterns.length > 0 ? excludePatterns : void 0,
+        _reason: "startFileSearch",
+        shouldGlobSearch: query.type === "include" ? void 0 : true
+      };
+      const parseInclude = parseSearchExcludeInclude(GlobPattern.from(filePattern));
+      const folderToUse = parseInclude?.folder;
+      if (query.type === "include") {
+        fileQueries.includePattern = parseInclude?.pattern;
+      } else {
+        fileQueries.filePattern = parseInclude?.pattern;
+      }
+      return {
+        folder: folderToUse,
+        options: fileQueries
+      };
+    });
+    return this._findFilesBase(queryOptions, token);
+  }
+  async _findFilesBase(queryOptions, token) {
+    const result = await Promise.all(queryOptions?.map((option) => this._proxy.$startFileSearch(option.folder ?? null, option.options, token).then((data) => Array.isArray(data) ? data.map((d) => URI.revive(d)) : [])) ?? []);
+    return result.flat();
+  }
+  findTextInFiles2(query, options, extensionId, token = CancellationToken.None) {
+    this._logService.trace(`extHostWorkspace#findTextInFiles2: textSearch, extension: ${extensionId.value}, entryPoint: findTextInFiles2`);
+    const getOptions = /* @__PURE__ */ __name((include) => {
+      if (!options) {
+        return {
+          folder: void 0,
+          options: {}
+        };
+      }
+      const parsedInclude = include ? parseSearchExcludeInclude(GlobPattern.from(include)) : void 0;
+      const excludePatterns = options.exclude ? globsToISearchPatternBuilder(options.exclude) : void 0;
+      return {
+        options: {
+          ignoreSymlinks: typeof options.followSymlinks === "boolean" ? !options.followSymlinks : void 0,
+          disregardIgnoreFiles: typeof options.useIgnoreFiles === "boolean" ? !options.useIgnoreFiles : void 0,
+          disregardGlobalIgnoreFiles: typeof options.useIgnoreFiles?.global === "boolean" ? !options.useIgnoreFiles?.global : void 0,
+          disregardParentIgnoreFiles: typeof options.useIgnoreFiles?.parent === "boolean" ? !options.useIgnoreFiles?.parent : void 0,
+          disregardExcludeSettings: options.useExcludeSettings !== void 0 && options.useExcludeSettings === ExcludeSettingOptions.None,
+          disregardSearchExcludeSettings: options.useExcludeSettings !== void 0 && options.useExcludeSettings !== ExcludeSettingOptions.SearchAndFilesExclude,
+          fileEncoding: options.encoding,
+          maxResults: options.maxResults,
+          previewOptions: options.previewOptions ? {
+            matchLines: options.previewOptions?.numMatchLines ?? 100,
+            charsPerLine: options.previewOptions?.charsPerLine ?? 1e4
+          } : void 0,
+          surroundingContext: options.surroundingContext,
+          includePattern: parsedInclude?.pattern,
+          excludePattern: excludePatterns
+        },
+        folder: parsedInclude?.folder
+      };
+    }, "getOptions");
+    const queryOptionsRaw = options?.include?.map((include) => getOptions(include)) ?? [getOptions(void 0)];
+    const queryOptions = queryOptionsRaw.filter((queryOps) => !!queryOps);
+    const disposables = new DisposableStore();
+    const progressEmitter = disposables.add(new Emitter());
+    const complete = this.findTextInFilesBase(query, queryOptions, (result, uri) => progressEmitter.fire({ result, uri }), token);
+    const asyncIterable = new AsyncIterableObject(async (emitter) => {
+      disposables.add(progressEmitter.event((e) => {
+        const result = e.result;
+        const uri = e.uri;
+        if (resultIsMatch(result)) {
+          emitter.emitOne(new TextSearchMatch2(uri, result.rangeLocations.map((range) => ({
+            previewRange: new Range(range.preview.startLineNumber, range.preview.startColumn, range.preview.endLineNumber, range.preview.endColumn),
+            sourceRange: new Range(range.source.startLineNumber, range.source.startColumn, range.source.endLineNumber, range.source.endColumn)
+          })), result.previewText));
+        } else {
+          emitter.emitOne(new TextSearchContext2(uri, result.text, result.lineNumber));
+        }
+      }));
+      await complete;
+    });
+    return {
+      results: asyncIterable,
+      complete: complete.then((e) => {
+        disposables.dispose();
+        return {
+          limitHit: e?.limitHit ?? false
+        };
+      })
+    };
+  }
+  async findTextInFilesBase(query, queryOptions, callback, token = CancellationToken.None) {
+    const requestId = this._requestIdProvider.getNext();
+    let isCanceled = false;
+    token.onCancellationRequested((_) => {
+      isCanceled = true;
+    });
+    this._activeSearchCallbacks[requestId] = (p) => {
+      if (isCanceled) {
+        return;
+      }
+      const uri = URI.revive(p.resource);
+      p.results.forEach((rawResult) => {
+        const result = revive(rawResult);
+        callback(result, uri);
+      });
+    };
+    if (token.isCancellationRequested) {
+      return {};
+    }
+    try {
+      const result = await Promise.all(queryOptions?.map((option) => this._proxy.$startTextSearch(query, option.folder ?? null, option.options, requestId, token) || {}) ?? []);
+      delete this._activeSearchCallbacks[requestId];
+      return result.reduce((acc, val) => {
+        return {
+          limitHit: acc?.limitHit || (val?.limitHit ?? false),
+          message: [acc?.message ?? [], val?.message ?? []].flat()
+        };
+      }, {}) ?? { limitHit: false };
+    } catch (err) {
+      delete this._activeSearchCallbacks[requestId];
+      throw err;
+    }
+  }
+  async findTextInFiles(query, options, callback, extensionId, token = CancellationToken.None) {
+    this._logService.trace(`extHostWorkspace#findTextInFiles: textSearch, extension: ${extensionId.value}, entryPoint: findTextInFiles`);
+    const previewOptions = typeof options.previewOptions === "undefined" ? {
+      matchLines: 100,
+      charsPerLine: 1e4
+    } : options.previewOptions;
+    const parsedInclude = parseSearchExcludeInclude(GlobPattern.from(options.include));
+    const excludePattern = typeof options.exclude === "string" ? options.exclude : options.exclude ? options.exclude.pattern : void 0;
+    const queryOptions = {
+      ignoreSymlinks: typeof options.followSymlinks === "boolean" ? !options.followSymlinks : void 0,
+      disregardIgnoreFiles: typeof options.useIgnoreFiles === "boolean" ? !options.useIgnoreFiles : void 0,
+      disregardGlobalIgnoreFiles: typeof options.useGlobalIgnoreFiles === "boolean" ? !options.useGlobalIgnoreFiles : void 0,
+      disregardParentIgnoreFiles: typeof options.useParentIgnoreFiles === "boolean" ? !options.useParentIgnoreFiles : void 0,
+      disregardExcludeSettings: typeof options.useDefaultExcludes === "boolean" ? !options.useDefaultExcludes : true,
+      disregardSearchExcludeSettings: typeof options.useSearchExclude === "boolean" ? !options.useSearchExclude : true,
+      fileEncoding: options.encoding,
+      maxResults: options.maxResults,
+      previewOptions,
+      surroundingContext: options.afterContext,
+      // TODO: remove ability to have before/after context separately
+      includePattern: parsedInclude?.pattern,
+      excludePattern: excludePattern ? [{ pattern: excludePattern }] : void 0
+    };
+    const progress = /* @__PURE__ */ __name((result, uri) => {
+      if (resultIsMatch(result)) {
+        callback({
+          uri,
+          preview: {
+            text: result.previewText,
+            matches: mapArrayOrNot(result.rangeLocations, (m) => new Range(m.preview.startLineNumber, m.preview.startColumn, m.preview.endLineNumber, m.preview.endColumn))
+          },
+          ranges: mapArrayOrNot(result.rangeLocations, (r) => new Range(r.source.startLineNumber, r.source.startColumn, r.source.endLineNumber, r.source.endColumn))
+        });
+      } else {
+        callback({
+          uri,
+          text: result.text,
+          lineNumber: result.lineNumber
+        });
+      }
+    }, "progress");
+    return this.findTextInFilesBase(query, [{ options: queryOptions, folder: parsedInclude?.folder }], progress, token);
+  }
+  $handleTextSearchResult(result, requestId) {
+    this._activeSearchCallbacks[requestId]?.(result);
+  }
+  async save(uri) {
+    const result = await this._proxy.$save(uri, { saveAs: false });
+    return URI.revive(result);
+  }
+  async saveAs(uri) {
+    const result = await this._proxy.$save(uri, { saveAs: true });
+    return URI.revive(result);
+  }
+  saveAll(includeUntitled) {
+    return this._proxy.$saveAll(includeUntitled);
+  }
+  resolveProxy(url) {
+    return this._proxy.$resolveProxy(url);
+  }
+  lookupAuthorization(authInfo) {
+    return this._proxy.$lookupAuthorization(authInfo);
+  }
+  lookupKerberosAuthorization(url) {
+    return this._proxy.$lookupKerberosAuthorization(url);
+  }
+  loadCertificates() {
+    return this._proxy.$loadCertificates();
+  }
+  // --- trust ---
+  get trusted() {
+    return this._trusted;
+  }
+  requestWorkspaceTrust(options) {
+    return this._proxy.$requestWorkspaceTrust(options);
+  }
+  $onDidGrantWorkspaceTrust() {
+    if (!this._trusted) {
+      this._trusted = true;
+      this._onDidGrantWorkspaceTrust.fire();
+    }
+  }
+  // called by ext host
+  registerEditSessionIdentityProvider(scheme, provider) {
+    if (this._editSessionIdentityProviders.has(scheme)) {
+      throw new Error(`A provider has already been registered for scheme ${scheme}`);
+    }
+    this._editSessionIdentityProviders.set(scheme, provider);
+    const outgoingScheme = this._uriTransformerService.transformOutgoingScheme(scheme);
+    const handle = this._providerHandlePool++;
+    this._proxy.$registerEditSessionIdentityProvider(handle, outgoingScheme);
+    return toDisposable(() => {
+      this._editSessionIdentityProviders.delete(scheme);
+      this._proxy.$unregisterEditSessionIdentityProvider(handle);
+    });
+  }
+  // called by main thread
+  async $getEditSessionIdentifier(workspaceFolder, cancellationToken) {
+    this._logService.info("Getting edit session identifier for workspaceFolder", workspaceFolder);
+    const folder = await this.resolveWorkspaceFolder(URI.revive(workspaceFolder));
+    if (!folder) {
+      this._logService.warn("Unable to resolve workspace folder");
+      return void 0;
+    }
+    this._logService.info("Invoking #provideEditSessionIdentity for workspaceFolder", folder);
+    const provider = this._editSessionIdentityProviders.get(folder.uri.scheme);
+    this._logService.info(`Provider for scheme ${folder.uri.scheme} is defined: `, !!provider);
+    if (!provider) {
+      return void 0;
+    }
+    const result = await provider.provideEditSessionIdentity(folder, cancellationToken);
+    this._logService.info("Provider returned edit session identifier: ", result);
+    if (!result) {
+      return void 0;
+    }
+    return result;
+  }
+  async $provideEditSessionIdentityMatch(workspaceFolder, identity1, identity2, cancellationToken) {
+    this._logService.info("Getting edit session identifier for workspaceFolder", workspaceFolder);
+    const folder = await this.resolveWorkspaceFolder(URI.revive(workspaceFolder));
+    if (!folder) {
+      this._logService.warn("Unable to resolve workspace folder");
+      return void 0;
+    }
+    this._logService.info("Invoking #provideEditSessionIdentity for workspaceFolder", folder);
+    const provider = this._editSessionIdentityProviders.get(folder.uri.scheme);
+    this._logService.info(`Provider for scheme ${folder.uri.scheme} is defined: `, !!provider);
+    if (!provider) {
+      return void 0;
+    }
+    const result = await provider.provideEditSessionIdentityMatch?.(identity1, identity2, cancellationToken);
+    this._logService.info("Provider returned edit session identifier match result: ", result);
+    if (!result) {
+      return void 0;
+    }
+    return result;
+  }
+  getOnWillCreateEditSessionIdentityEvent(extension) {
+    return (listener, thisArg, disposables) => {
+      const wrappedListener = /* @__PURE__ */ __name(function wrapped(e) {
+        listener.call(thisArg, e);
+      }, "wrapped");
+      wrappedListener.extension = extension;
+      return this._onWillCreateEditSessionIdentityEvent.event(wrappedListener, void 0, disposables);
+    };
+  }
+  // main thread calls this to trigger participants
+  async $onWillCreateEditSessionIdentity(workspaceFolder, token, timeout) {
+    const folder = await this.resolveWorkspaceFolder(URI.revive(workspaceFolder));
+    if (folder === void 0) {
+      throw new Error("Unable to resolve workspace folder");
+    }
+    await this._onWillCreateEditSessionIdentityEvent.fireAsync({ workspaceFolder: folder }, token, async (thenable, listener) => {
+      const now = Date.now();
+      await Promise.resolve(thenable);
+      if (Date.now() - now > timeout) {
+        this._logService.warn("SLOW edit session create-participant", listener.extension.identifier);
+      }
+    });
+    if (token.isCancellationRequested) {
+      return void 0;
+    }
+  }
+  // called by ext host
+  registerCanonicalUriProvider(scheme, provider) {
+    if (this._canonicalUriProviders.has(scheme)) {
+      throw new Error(`A provider has already been registered for scheme ${scheme}`);
+    }
+    this._canonicalUriProviders.set(scheme, provider);
+    const outgoingScheme = this._uriTransformerService.transformOutgoingScheme(scheme);
+    const handle = this._providerHandlePool++;
+    this._proxy.$registerCanonicalUriProvider(handle, outgoingScheme);
+    return toDisposable(() => {
+      this._canonicalUriProviders.delete(scheme);
+      this._proxy.$unregisterCanonicalUriProvider(handle);
+    });
+  }
+  async provideCanonicalUri(uri, options, cancellationToken) {
+    const provider = this._canonicalUriProviders.get(uri.scheme);
+    if (!provider) {
+      return void 0;
+    }
+    const result = await provider.provideCanonicalUri?.(URI.revive(uri), options, cancellationToken);
+    if (!result) {
+      return void 0;
+    }
+    return result;
+  }
+  // called by main thread
+  async $provideCanonicalUri(uri, targetScheme, cancellationToken) {
+    return this.provideCanonicalUri(URI.revive(uri), { targetScheme }, cancellationToken);
+  }
+  // --- encodings ---
+  async decode(content, args) {
+    const [uri, opts] = this.toEncodeDecodeParameters(args);
+    const options = await this._proxy.$resolveDecoding(uri, opts);
+    const stream = (await toDecodeStream(bufferToStream(VSBuffer.wrap(content)), {
+      ...options,
+      acceptTextOnly: true,
+      overwriteEncoding: /* @__PURE__ */ __name((detectedEncoding) => {
+        if (detectedEncoding === null || detectedEncoding === options.preferredEncoding) {
+          return Promise.resolve(options.preferredEncoding);
+        }
+        return this._proxy.$validateDetectedEncoding(uri, detectedEncoding, opts);
+      }, "overwriteEncoding")
+    })).stream;
+    return consumeStream(stream, (chunks) => chunks.join(""));
+  }
+  async encode(content, args) {
+    const [uri, options] = this.toEncodeDecodeParameters(args);
+    const { encoding, addBOM } = await this._proxy.$resolveEncoding(uri, options);
+    if (encoding === UTF8 && !addBOM) {
+      return VSBuffer.fromString(content).buffer;
+    }
+    const res = await toEncodeReadable(stringToSnapshot(content), encoding, { addBOM });
+    return readableToBuffer(res).buffer;
+  }
+  toEncodeDecodeParameters(opts) {
+    const uri = isUriComponents(opts?.uri) ? opts.uri : void 0;
+    const encoding = typeof opts?.encoding === "string" ? opts.encoding : void 0;
+    return [uri, encoding ? { encoding } : void 0];
+  }
+};
+ExtHostWorkspace = __decorate([
+  __param(0, IExtHostRpcService),
+  __param(1, IExtHostInitDataService),
+  __param(2, IExtHostFileSystemInfo),
+  __param(3, ILogService),
+  __param(4, IURITransformerService)
+], ExtHostWorkspace);
+const IExtHostWorkspace = createDecorator("IExtHostWorkspace");
+function parseSearchExcludeInclude(include) {
+  let pattern;
+  let includeFolder;
+  if (include) {
+    if (typeof include === "string") {
+      pattern = include;
+    } else {
+      pattern = include.pattern;
+      includeFolder = URI.revive(include.baseUri);
+    }
+    return {
+      pattern,
+      folder: includeFolder
+    };
+  }
+  return void 0;
+}
+__name(parseSearchExcludeInclude, "parseSearchExcludeInclude");
+function globsToISearchPatternBuilder(excludes) {
+  return (excludes?.map((exclude) => {
+    if (typeof exclude === "string") {
+      if (exclude === "") {
+        return void 0;
+      }
+      return {
+        pattern: exclude,
+        uri: void 0
+      };
+    } else {
+      const parsedExclude = parseSearchExcludeInclude(exclude);
+      if (!parsedExclude) {
+        return void 0;
+      }
+      return {
+        pattern: parsedExclude.pattern,
+        uri: parsedExclude.folder
+      };
+    }
+  }) ?? []).filter((e) => !!e);
+}
+__name(globsToISearchPatternBuilder, "globsToISearchPatternBuilder");
+export {
+  ExtHostWorkspace,
+  IExtHostWorkspace
+};
+//# sourceMappingURL=extHostWorkspace.js.map

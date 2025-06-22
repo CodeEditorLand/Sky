@@ -1,1 +1,187 @@
-import{$4 as f,$3 as y}from"../../../../../base/common/path.js";function w(t,e,n,s){const r={start:{x:n.startColumn,y:n.startLineNumber+s},end:{x:n.endColumn-1,y:n.endLineNumber+s}};let o=0;const i=Math.ceil(n.startColumn/e);for(let s=0;s<Math.min(i);s++){const r=Math.min(e,n.startColumn-1-s*e);let i=0;const a=t[s];if(!a)break;for(let t=0;t<Math.min(e,r+i);t++){const e=a.getCell(t);if(!e)break;2===e.getWidth()&&i++;const n=e.getChars();n.length>1&&(i-=n.length-1)}o+=i}let a=0;const l=Math.ceil(n.endColumn/e);for(let s=Math.max(0,i-1);s<l;s++){const r=s===i-1?(n.startColumn-1+o)%e:0,l=Math.min(e,n.endColumn+o-s*e);let c=0;const f=t[s];if(!f)break;for(let t=r;t<Math.min(e,l+c);t++){const n=f.getCell(t);if(!n)break;const s=n.getWidth(),r=n.getChars();2===s&&c++,t===e-1&&""===r&&c++,r.length>1&&(c-=r.length-1)}a+=c}for(r.start.x+=o,r.end.x+=o+a;r.start.x>e;)r.start.x-=e,r.start.y++;for(;r.end.x>e;)r.end.x-=e,r.end.y++;return r}function k(t,e){return{start:{x:t.start.x-1,y:t.start.y-e-1},end:{x:t.end.x-1,y:t.end.y-e-1}}}function M(t,e,n,s){const r=Math.max(2048,2*s);n=Math.min(n,e+r);let o="";for(let r=e;r<=n;r++){const e=t.getLine(r);e&&(o+=e.translateToString(!0,0,s))}return o}function $(t,e,n,s){let r,o=-1,i=-1;const a=[];for(let l=e;l<=n;l++){const e=t.getLine(l);if(e)for(let t=0;t<s;t++){const n=e.getCell(t);if(!n)break;const s=n.isBold()|n.isInverse()|n.isStrikethrough()|n.isUnderline(),c=n.isDim()|n.isItalic();if(-1===o||-1===i)r={x:t,y:l};else if(o!==s||i!==c){const e={x:t,y:l};a.push({start:r,end:e}),r={x:t,y:l}}o=s,i=c}}return a}function v(t,e,n,s,r){const o=t.get(2)?.getCwdForLine(e);if(r.trace("terminalLinkHelpers#updateLinkWithRelativeCwd cwd",o),!o)return;const i=[],a=s.sep;if(n.includes(a)){let t=0,e=0;const r=o.split(a).reverse(),l=n.split(a);for(;e<r.length&&(i.push(s.resolve(o+a+l.slice(t).join(a))),r[e]===l[e]);)t++,e++}else i.push(s.resolve(o+a+n));return i}function A(t){return 1===t?y:f}export{A as $Asc,w as $vsc,k as $wsc,M as $xsc,$ as $ysc,v as $zsc};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { posix, win32 } from "../../../../../base/common/path.js";
+function convertLinkRangeToBuffer(lines, bufferWidth, range, startLine) {
+  const bufferRange = {
+    start: {
+      x: range.startColumn,
+      y: range.startLineNumber + startLine
+    },
+    end: {
+      x: range.endColumn - 1,
+      y: range.endLineNumber + startLine
+    }
+  };
+  let startOffset = 0;
+  const startWrappedLineCount = Math.ceil(range.startColumn / bufferWidth);
+  for (let y = 0; y < Math.min(startWrappedLineCount); y++) {
+    const lineLength = Math.min(bufferWidth, range.startColumn - 1 - y * bufferWidth);
+    let lineOffset = 0;
+    const line = lines[y];
+    if (!line) {
+      break;
+    }
+    for (let x = 0; x < Math.min(bufferWidth, lineLength + lineOffset); x++) {
+      const cell = line.getCell(x);
+      if (!cell) {
+        break;
+      }
+      const width = cell.getWidth();
+      if (width === 2) {
+        lineOffset++;
+      }
+      const char = cell.getChars();
+      if (char.length > 1) {
+        lineOffset -= char.length - 1;
+      }
+    }
+    startOffset += lineOffset;
+  }
+  let endOffset = 0;
+  const endWrappedLineCount = Math.ceil(range.endColumn / bufferWidth);
+  for (let y = Math.max(0, startWrappedLineCount - 1); y < endWrappedLineCount; y++) {
+    const start = y === startWrappedLineCount - 1 ? (range.startColumn - 1 + startOffset) % bufferWidth : 0;
+    const lineLength = Math.min(bufferWidth, range.endColumn + startOffset - y * bufferWidth);
+    let lineOffset = 0;
+    const line = lines[y];
+    if (!line) {
+      break;
+    }
+    for (let x = start; x < Math.min(bufferWidth, lineLength + lineOffset); x++) {
+      const cell = line.getCell(x);
+      if (!cell) {
+        break;
+      }
+      const width = cell.getWidth();
+      const chars = cell.getChars();
+      if (width === 2) {
+        lineOffset++;
+      }
+      if (x === bufferWidth - 1 && chars === "") {
+        lineOffset++;
+      }
+      if (chars.length > 1) {
+        lineOffset -= chars.length - 1;
+      }
+    }
+    endOffset += lineOffset;
+  }
+  bufferRange.start.x += startOffset;
+  bufferRange.end.x += startOffset + endOffset;
+  while (bufferRange.start.x > bufferWidth) {
+    bufferRange.start.x -= bufferWidth;
+    bufferRange.start.y++;
+  }
+  while (bufferRange.end.x > bufferWidth) {
+    bufferRange.end.x -= bufferWidth;
+    bufferRange.end.y++;
+  }
+  return bufferRange;
+}
+__name(convertLinkRangeToBuffer, "convertLinkRangeToBuffer");
+function convertBufferRangeToViewport(bufferRange, viewportY) {
+  return {
+    start: {
+      x: bufferRange.start.x - 1,
+      y: bufferRange.start.y - viewportY - 1
+    },
+    end: {
+      x: bufferRange.end.x - 1,
+      y: bufferRange.end.y - viewportY - 1
+    }
+  };
+}
+__name(convertBufferRangeToViewport, "convertBufferRangeToViewport");
+function getXtermLineContent(buffer, lineStart, lineEnd, cols) {
+  const maxLineLength = Math.max(2048, cols * 2);
+  lineEnd = Math.min(lineEnd, lineStart + maxLineLength);
+  let content = "";
+  for (let i = lineStart; i <= lineEnd; i++) {
+    const line = buffer.getLine(i);
+    if (line) {
+      content += line.translateToString(true, 0, cols);
+    }
+  }
+  return content;
+}
+__name(getXtermLineContent, "getXtermLineContent");
+function getXtermRangesByAttr(buffer, lineStart, lineEnd, cols) {
+  let bufferRangeStart = void 0;
+  let lastFgAttr = -1;
+  let lastBgAttr = -1;
+  const ranges = [];
+  for (let y = lineStart; y <= lineEnd; y++) {
+    const line = buffer.getLine(y);
+    if (!line) {
+      continue;
+    }
+    for (let x = 0; x < cols; x++) {
+      const cell = line.getCell(x);
+      if (!cell) {
+        break;
+      }
+      const thisFgAttr = cell.isBold() | cell.isInverse() | cell.isStrikethrough() | cell.isUnderline();
+      const thisBgAttr = cell.isDim() | cell.isItalic();
+      if (lastFgAttr === -1 || lastBgAttr === -1) {
+        bufferRangeStart = { x, y };
+      } else {
+        if (lastFgAttr !== thisFgAttr || lastBgAttr !== thisBgAttr) {
+          const bufferRangeEnd = { x, y };
+          ranges.push({
+            start: bufferRangeStart,
+            end: bufferRangeEnd
+          });
+          bufferRangeStart = { x, y };
+        }
+      }
+      lastFgAttr = thisFgAttr;
+      lastBgAttr = thisBgAttr;
+    }
+  }
+  return ranges;
+}
+__name(getXtermRangesByAttr, "getXtermRangesByAttr");
+function updateLinkWithRelativeCwd(capabilities, y, text, osPath, logService) {
+  const cwd = capabilities.get(
+    2
+    /* TerminalCapability.CommandDetection */
+  )?.getCwdForLine(y);
+  logService.trace("terminalLinkHelpers#updateLinkWithRelativeCwd cwd", cwd);
+  if (!cwd) {
+    return void 0;
+  }
+  const result = [];
+  const sep = osPath.sep;
+  if (!text.includes(sep)) {
+    result.push(osPath.resolve(cwd + sep + text));
+  } else {
+    let commonDirs = 0;
+    let i = 0;
+    const cwdPath = cwd.split(sep).reverse();
+    const linkPath = text.split(sep);
+    while (i < cwdPath.length) {
+      result.push(osPath.resolve(cwd + sep + linkPath.slice(commonDirs).join(sep)));
+      if (cwdPath[i] === linkPath[i]) {
+        commonDirs++;
+      } else {
+        break;
+      }
+      i++;
+    }
+  }
+  return result;
+}
+__name(updateLinkWithRelativeCwd, "updateLinkWithRelativeCwd");
+function osPathModule(os) {
+  return os === 1 ? win32 : posix;
+}
+__name(osPathModule, "osPathModule");
+export {
+  convertBufferRangeToViewport,
+  convertLinkRangeToBuffer,
+  getXtermLineContent,
+  getXtermRangesByAttr,
+  osPathModule,
+  updateLinkWithRelativeCwd
+};
+//# sourceMappingURL=terminalLinkHelpers.js.map

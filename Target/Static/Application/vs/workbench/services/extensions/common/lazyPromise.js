@@ -1,1 +1,81 @@
-import{$qb as h,$kb as e}from"../../../../base/common/errors.js";class r{constructor(){this.a=null,this.b=null,this.d=null,this.f=!1,this.g=null,this.h=!1,this.i=null}get[Symbol.toStringTag](){return this.toString()}j(){return this.a||(this.a=new Promise((t,i)=>{this.b=t,this.d=i,this.f&&this.b(this.g),this.h&&this.d(this.i)})),this.a}resolveOk(t){this.f||this.h||(this.f=!0,this.g=t,this.a&&this.b(t))}resolveErr(t){this.f||this.h||(this.h=!0,this.i=t,this.a?this.d(t):e(t))}then(t,i){return this.j().then(t,i)}catch(t){return this.j().then(void 0,t)}finally(t){return this.j().finally(t)}}class l extends r{constructor(){super(),this.h=!0,this.i=new h}}export{r as $dAc,l as $eAc};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { CancellationError, onUnexpectedError } from "../../../../base/common/errors.js";
+class LazyPromise {
+  static {
+    __name(this, "LazyPromise");
+  }
+  constructor() {
+    this._actual = null;
+    this._actualOk = null;
+    this._actualErr = null;
+    this._hasValue = false;
+    this._value = null;
+    this._hasErr = false;
+    this._err = null;
+  }
+  get [Symbol.toStringTag]() {
+    return this.toString();
+  }
+  _ensureActual() {
+    if (!this._actual) {
+      this._actual = new Promise((c, e) => {
+        this._actualOk = c;
+        this._actualErr = e;
+        if (this._hasValue) {
+          this._actualOk(this._value);
+        }
+        if (this._hasErr) {
+          this._actualErr(this._err);
+        }
+      });
+    }
+    return this._actual;
+  }
+  resolveOk(value) {
+    if (this._hasValue || this._hasErr) {
+      return;
+    }
+    this._hasValue = true;
+    this._value = value;
+    if (this._actual) {
+      this._actualOk(value);
+    }
+  }
+  resolveErr(err) {
+    if (this._hasValue || this._hasErr) {
+      return;
+    }
+    this._hasErr = true;
+    this._err = err;
+    if (this._actual) {
+      this._actualErr(err);
+    } else {
+      onUnexpectedError(err);
+    }
+  }
+  then(success, error) {
+    return this._ensureActual().then(success, error);
+  }
+  catch(error) {
+    return this._ensureActual().then(void 0, error);
+  }
+  finally(callback) {
+    return this._ensureActual().finally(callback);
+  }
+}
+class CanceledLazyPromise extends LazyPromise {
+  static {
+    __name(this, "CanceledLazyPromise");
+  }
+  constructor() {
+    super();
+    this._hasErr = true;
+    this._err = new CancellationError();
+  }
+}
+export {
+  CanceledLazyPromise,
+  LazyPromise
+};
+//# sourceMappingURL=lazyPromise.js.map

@@ -1,5 +1,132 @@
-import{$tm as u}from"../../../../../base/common/decorators.js";import{$mg as a}from"../../../../../base/common/strings.js";import{$rP as p}from"../../../../services/search/common/search.js";import{$Zac as f}from"./searchTreeCommon.js";import{$cC as m}from"../../../../../editor/common/core/range.js";var c=function(h,r,e,t){var i=arguments.length,n=i<3?r:t===null?t=Object.getOwnPropertyDescriptor(r,e):t,s;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")n=Reflect.decorate(h,r,e,t);else for(var o=h.length-1;o>=0;o--)(s=h[o])&&(n=(i<3?s(n):i>3?s(r,e,n):s(r,e))||n);return i>3&&n&&Object.defineProperty(r,e,n),n};function M(h,r,e){const t=h.previewText.split(`
-`);return h.rangeLocations.map(i=>{const n=i.preview;return new l(r,t,n,i.source,e)})}class l{static{this.b=250}constructor(r,e,t,i,n=!1){this.i=r,this.j=e,this.k=n,this.f=e[t.startLineNumber];const s=t.startLineNumber===t.endLineNumber?t.endColumn:this.f.length;this.g=new p(1,t.startColumn+1,s+1),this.d=new m(i.startLineNumber+1,i.startColumn+1,i.endLineNumber+1,i.endColumn+1),this.h=t,this.c=f+this.i.resource.toString()+">"+this.d+this.getMatchString()}id(){return this.c}parent(){return this.i}text(){return this.f}range(){return this.d}preview(){const r=this.f.substring(0,this.g.startColumn-1),e=a(r,26,"\u2026");let t=this.getMatchString(),i=this.f.substring(this.g.endColumn-1),n=l.b-e.length;return t=t.substr(0,n),n-=t.length,i=i.substr(0,n),{before:e,fullBefore:r,inside:t,after:i}}get replaceString(){const r=this.parent().parent().searchModel;if(!r.replacePattern)throw new Error("searchModel.replacePattern must be set before accessing replaceString");const e=this.fullMatchText();let t=r.replacePattern.getReplaceString(e,r.preserveCase);if(t!==null)return t;const i=e.replace(/\r\n/g,`
-`);if(i!==e&&(t=r.replacePattern.getReplaceString(i,r.preserveCase),t!==null))return t;const n=this.fullMatchText(!0);if(t=r.replacePattern.getReplaceString(n,r.preserveCase),t!==null)return t;const s=n.replace(/\r\n/g,`
-`);return s!==n&&(t=r.replacePattern.getReplaceString(s,r.preserveCase),t!==null)?t:r.replacePattern.pattern}fullMatchText(r=!1){let e;return r?e=this.j:(e=this.j.slice(this.h.startLineNumber,this.h.endLineNumber+1),e[e.length-1]=e[e.length-1].slice(0,this.h.endColumn),e[0]=e[0].slice(this.h.startColumn)),e.join(`
-`)}rangeInPreview(){return{...this.h,startColumn:this.h.startColumn+1,endColumn:this.h.endColumn+1}}fullPreviewLines(){return this.j.slice(this.h.startLineNumber,this.h.endLineNumber+1)}getMatchString(){return this.f.substring(this.g.startColumn-1,this.g.endColumn-1)}get isReadonly(){return this.k}}c([u],l.prototype,"preview",null);export{M as $8bc,l as $9bc};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { memoize } from "../../../../../base/common/decorators.js";
+import { lcut } from "../../../../../base/common/strings.js";
+import { OneLineRange } from "../../../../services/search/common/search.js";
+import { MATCH_PREFIX } from "./searchTreeCommon.js";
+import { Range } from "../../../../../editor/common/core/range.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+function textSearchResultToMatches(rawMatch, fileMatch, isAiContributed) {
+  const previewLines = rawMatch.previewText.split("\n");
+  return rawMatch.rangeLocations.map((rangeLocation) => {
+    const previewRange = rangeLocation.preview;
+    return new MatchImpl(fileMatch, previewLines, previewRange, rangeLocation.source, isAiContributed);
+  });
+}
+__name(textSearchResultToMatches, "textSearchResultToMatches");
+class MatchImpl {
+  static {
+    __name(this, "MatchImpl");
+  }
+  static {
+    this.MAX_PREVIEW_CHARS = 250;
+  }
+  constructor(_parent, _fullPreviewLines, _fullPreviewRange, _documentRange, _isReadonly = false) {
+    this._parent = _parent;
+    this._fullPreviewLines = _fullPreviewLines;
+    this._isReadonly = _isReadonly;
+    this._oneLinePreviewText = _fullPreviewLines[_fullPreviewRange.startLineNumber];
+    const adjustedEndCol = _fullPreviewRange.startLineNumber === _fullPreviewRange.endLineNumber ? _fullPreviewRange.endColumn : this._oneLinePreviewText.length;
+    this._rangeInPreviewText = new OneLineRange(1, _fullPreviewRange.startColumn + 1, adjustedEndCol + 1);
+    this._range = new Range(_documentRange.startLineNumber + 1, _documentRange.startColumn + 1, _documentRange.endLineNumber + 1, _documentRange.endColumn + 1);
+    this._fullPreviewRange = _fullPreviewRange;
+    this._id = MATCH_PREFIX + this._parent.resource.toString() + ">" + this._range + this.getMatchString();
+  }
+  id() {
+    return this._id;
+  }
+  parent() {
+    return this._parent;
+  }
+  text() {
+    return this._oneLinePreviewText;
+  }
+  range() {
+    return this._range;
+  }
+  preview() {
+    const fullBefore = this._oneLinePreviewText.substring(0, this._rangeInPreviewText.startColumn - 1), before = lcut(fullBefore, 26, "\u2026");
+    let inside = this.getMatchString(), after = this._oneLinePreviewText.substring(this._rangeInPreviewText.endColumn - 1);
+    let charsRemaining = MatchImpl.MAX_PREVIEW_CHARS - before.length;
+    inside = inside.substr(0, charsRemaining);
+    charsRemaining -= inside.length;
+    after = after.substr(0, charsRemaining);
+    return {
+      before,
+      fullBefore,
+      inside,
+      after
+    };
+  }
+  get replaceString() {
+    const searchModel = this.parent().parent().searchModel;
+    if (!searchModel.replacePattern) {
+      throw new Error("searchModel.replacePattern must be set before accessing replaceString");
+    }
+    const fullMatchText = this.fullMatchText();
+    let replaceString = searchModel.replacePattern.getReplaceString(fullMatchText, searchModel.preserveCase);
+    if (replaceString !== null) {
+      return replaceString;
+    }
+    const fullMatchTextWithoutCR = fullMatchText.replace(/\r\n/g, "\n");
+    if (fullMatchTextWithoutCR !== fullMatchText) {
+      replaceString = searchModel.replacePattern.getReplaceString(fullMatchTextWithoutCR, searchModel.preserveCase);
+      if (replaceString !== null) {
+        return replaceString;
+      }
+    }
+    const contextMatchTextWithSurroundingContent = this.fullMatchText(true);
+    replaceString = searchModel.replacePattern.getReplaceString(contextMatchTextWithSurroundingContent, searchModel.preserveCase);
+    if (replaceString !== null) {
+      return replaceString;
+    }
+    const contextMatchTextWithoutCR = contextMatchTextWithSurroundingContent.replace(/\r\n/g, "\n");
+    if (contextMatchTextWithoutCR !== contextMatchTextWithSurroundingContent) {
+      replaceString = searchModel.replacePattern.getReplaceString(contextMatchTextWithoutCR, searchModel.preserveCase);
+      if (replaceString !== null) {
+        return replaceString;
+      }
+    }
+    return searchModel.replacePattern.pattern;
+  }
+  fullMatchText(includeSurrounding = false) {
+    let thisMatchPreviewLines;
+    if (includeSurrounding) {
+      thisMatchPreviewLines = this._fullPreviewLines;
+    } else {
+      thisMatchPreviewLines = this._fullPreviewLines.slice(this._fullPreviewRange.startLineNumber, this._fullPreviewRange.endLineNumber + 1);
+      thisMatchPreviewLines[thisMatchPreviewLines.length - 1] = thisMatchPreviewLines[thisMatchPreviewLines.length - 1].slice(0, this._fullPreviewRange.endColumn);
+      thisMatchPreviewLines[0] = thisMatchPreviewLines[0].slice(this._fullPreviewRange.startColumn);
+    }
+    return thisMatchPreviewLines.join("\n");
+  }
+  rangeInPreview() {
+    return {
+      ...this._fullPreviewRange,
+      startColumn: this._fullPreviewRange.startColumn + 1,
+      endColumn: this._fullPreviewRange.endColumn + 1
+    };
+  }
+  fullPreviewLines() {
+    return this._fullPreviewLines.slice(this._fullPreviewRange.startLineNumber, this._fullPreviewRange.endLineNumber + 1);
+  }
+  getMatchString() {
+    return this._oneLinePreviewText.substring(this._rangeInPreviewText.startColumn - 1, this._rangeInPreviewText.endColumn - 1);
+  }
+  get isReadonly() {
+    return this._isReadonly;
+  }
+}
+__decorate([
+  memoize
+], MatchImpl.prototype, "preview", null);
+export {
+  MatchImpl,
+  textSearchResultToMatches
+};
+//# sourceMappingURL=match.js.map

@@ -1,1 +1,262 @@
-import{ok as o}from"../../../base/common/assert.js";import{Schemas as d}from"../../../base/common/network.js";import{$Nf as m}from"../../../base/common/strings.js";import{$nM as b}from"../../../editor/common/model/mirrorTextModel.js";import{$qC as p,$sC as w}from"../../../editor/common/core/wordHelper.js";import{EndOfLine as g,$rY as c,$sY as u}from"./extHostTypes.js";import{$Sb as x}from"../../../base/common/arrays.js";const l=new Map;function q(t,e){e?l.set(t,e):l.delete(t)}function y(t){return l.get(t)}class A extends b{constructor(t,e,r,n,s,i,o,a){super(e,r,n,s),this.o=t,this.p=i,this.q=o,this.r=a,this.n=!1}dispose(){o(!this.n),this.n=!0,this.q=!1}equalLines(t){return x(this.b,t)}get document(){if(!this.m){const t=this;this.m={get uri(){return t.a},get fileName(){return t.a.fsPath},get isUntitled(){return t.a.scheme===d.untitled},get languageId(){return t.p},get version(){return t.d},get isClosed(){return t.n},get isDirty(){return t.q},get encoding(){return t.r},save:()=>t.s(),getText:e=>e?t.t(e):t.getText(),get eol(){return"\n"===t.c?g.LF:g.CRLF},get lineCount(){return t.b.length},lineAt:e=>t.u(e),offsetAt:e=>t.v(e),positionAt:e=>t.w(e),validateRange:e=>t.x(e),validatePosition:e=>t.y(e),getWordRangeAtPosition:(e,r)=>t.z(e,r),[Symbol.for("debug.description")]:()=>`TextDocument(${t.a.toString()})`}}return Object.freeze(this.m)}_acceptLanguageId(t){o(!this.n),this.p=t}_acceptIsDirty(t){o(!this.n),this.q=t}_acceptEncoding(t){o(!this.n),this.r=t}s(){return this.n?Promise.reject(new Error("Document has been closed")):this.o.$trySaveDocument(this.a)}t(t){const e=this.x(t);if(e.isEmpty)return"";if(e.isSingleLine)return this.b[e.start.line].substring(e.start.character,e.end.character);const r=this.c,n=e.start.line,s=e.end.line,i=[];i.push(this.b[n].substring(e.start.character));for(let t=n+1;t<s;t++)i.push(this.b[t]);return i.push(this.b[s].substring(0,e.end.character)),i.join(r)}u(t){let e;if(t instanceof c?e=t.line:"number"==typeof t&&(e=t),"number"!=typeof e||e<0||e>=this.b.length||Math.floor(e)!==e)throw new Error("Illegal value for `line`");return new $(e,this.b[e],e===this.b.length-1)}v(t){return t=this.y(t),this.h(),this.f.getPrefixSum(t.line-1)+t.character}w(t){t=Math.floor(t),t=Math.max(0,t),this.h();const e=this.f.getIndexOf(t),r=this.b[e.index].length;return new c(e.index,Math.min(e.remainder,r))}x(t){if(!(t instanceof u))throw new Error("Invalid argument");const e=this.y(t.start),r=this.y(t.end);return e===t.start&&r===t.end?t:new u(e.line,e.character,r.line,r.character)}y(t){if(!(t instanceof c))throw new Error("Invalid argument");if(0===this.b.length)return t.with(0,0);let{line:e,character:r}=t,n=!1;if(e<0)e=0,r=0,n=!0;else if(e>=this.b.length)e=this.b.length-1,r=this.b[e].length,n=!0;else{const t=this.b[e].length;r<0?(r=0,n=!0):r>t&&(r=t,n=!0)}return n?new c(e,r):t}z(t,e){const r=this.y(t);if(e){if(m(e))throw new Error(`[getWordRangeAtPosition]: ignoring custom regexp '${e.source}' because it matches the empty string.`)}else e=y(this.p);const n=w(r.character+1,p(e),this.b[r.line],0);if(n)return new u(r.line,n.startColumn-1,r.line,n.endColumn-1)}}class ${constructor(t,e,r){this.a=t,this.b=e,this.c=r}get lineNumber(){return this.a}get text(){return this.b}get range(){return new u(this.a,0,this.a,this.b.length)}get rangeIncludingLineBreak(){return this.c?this.range:new u(this.a,0,this.a+1,0)}get firstNonWhitespaceCharacterIndex(){return/^(\s*)/.exec(this.b)[1].length}get isEmptyOrWhitespace(){return this.firstNonWhitespaceCharacterIndex===this.b.length}}export{q as $k2,A as $l2,$ as $m2};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { ok } from "../../../base/common/assert.js";
+import { Schemas } from "../../../base/common/network.js";
+import { regExpLeadsToEndlessLoop } from "../../../base/common/strings.js";
+import { MirrorTextModel } from "../../../editor/common/model/mirrorTextModel.js";
+import { ensureValidWordDefinition, getWordAtText } from "../../../editor/common/core/wordHelper.js";
+import { EndOfLine, Position, Range } from "./extHostTypes.js";
+import { equals } from "../../../base/common/arrays.js";
+const _languageId2WordDefinition = /* @__PURE__ */ new Map();
+function setWordDefinitionFor(languageId, wordDefinition) {
+  if (!wordDefinition) {
+    _languageId2WordDefinition.delete(languageId);
+  } else {
+    _languageId2WordDefinition.set(languageId, wordDefinition);
+  }
+}
+__name(setWordDefinitionFor, "setWordDefinitionFor");
+function getWordDefinitionFor(languageId) {
+  return _languageId2WordDefinition.get(languageId);
+}
+__name(getWordDefinitionFor, "getWordDefinitionFor");
+class ExtHostDocumentData extends MirrorTextModel {
+  static {
+    __name(this, "ExtHostDocumentData");
+  }
+  constructor(_proxy, uri, lines, eol, versionId, _languageId, _isDirty, _encoding) {
+    super(uri, lines, eol, versionId);
+    this._proxy = _proxy;
+    this._languageId = _languageId;
+    this._isDirty = _isDirty;
+    this._encoding = _encoding;
+    this._isDisposed = false;
+  }
+  // eslint-disable-next-line local/code-must-use-super-dispose
+  dispose() {
+    ok(!this._isDisposed);
+    this._isDisposed = true;
+    this._isDirty = false;
+  }
+  equalLines(lines) {
+    return equals(this._lines, lines);
+  }
+  get document() {
+    if (!this._document) {
+      const that = this;
+      this._document = {
+        get uri() {
+          return that._uri;
+        },
+        get fileName() {
+          return that._uri.fsPath;
+        },
+        get isUntitled() {
+          return that._uri.scheme === Schemas.untitled;
+        },
+        get languageId() {
+          return that._languageId;
+        },
+        get version() {
+          return that._versionId;
+        },
+        get isClosed() {
+          return that._isDisposed;
+        },
+        get isDirty() {
+          return that._isDirty;
+        },
+        get encoding() {
+          return that._encoding;
+        },
+        save() {
+          return that._save();
+        },
+        getText(range) {
+          return range ? that._getTextInRange(range) : that.getText();
+        },
+        get eol() {
+          return that._eol === "\n" ? EndOfLine.LF : EndOfLine.CRLF;
+        },
+        get lineCount() {
+          return that._lines.length;
+        },
+        lineAt(lineOrPos) {
+          return that._lineAt(lineOrPos);
+        },
+        offsetAt(pos) {
+          return that._offsetAt(pos);
+        },
+        positionAt(offset) {
+          return that._positionAt(offset);
+        },
+        validateRange(ran) {
+          return that._validateRange(ran);
+        },
+        validatePosition(pos) {
+          return that._validatePosition(pos);
+        },
+        getWordRangeAtPosition(pos, regexp) {
+          return that._getWordRangeAtPosition(pos, regexp);
+        },
+        [Symbol.for("debug.description")]() {
+          return `TextDocument(${that._uri.toString()})`;
+        }
+      };
+    }
+    return Object.freeze(this._document);
+  }
+  _acceptLanguageId(newLanguageId) {
+    ok(!this._isDisposed);
+    this._languageId = newLanguageId;
+  }
+  _acceptIsDirty(isDirty) {
+    ok(!this._isDisposed);
+    this._isDirty = isDirty;
+  }
+  _acceptEncoding(encoding) {
+    ok(!this._isDisposed);
+    this._encoding = encoding;
+  }
+  _save() {
+    if (this._isDisposed) {
+      return Promise.reject(new Error("Document has been closed"));
+    }
+    return this._proxy.$trySaveDocument(this._uri);
+  }
+  _getTextInRange(_range) {
+    const range = this._validateRange(_range);
+    if (range.isEmpty) {
+      return "";
+    }
+    if (range.isSingleLine) {
+      return this._lines[range.start.line].substring(range.start.character, range.end.character);
+    }
+    const lineEnding = this._eol, startLineIndex = range.start.line, endLineIndex = range.end.line, resultLines = [];
+    resultLines.push(this._lines[startLineIndex].substring(range.start.character));
+    for (let i = startLineIndex + 1; i < endLineIndex; i++) {
+      resultLines.push(this._lines[i]);
+    }
+    resultLines.push(this._lines[endLineIndex].substring(0, range.end.character));
+    return resultLines.join(lineEnding);
+  }
+  _lineAt(lineOrPosition) {
+    let line;
+    if (lineOrPosition instanceof Position) {
+      line = lineOrPosition.line;
+    } else if (typeof lineOrPosition === "number") {
+      line = lineOrPosition;
+    }
+    if (typeof line !== "number" || line < 0 || line >= this._lines.length || Math.floor(line) !== line) {
+      throw new Error("Illegal value for `line`");
+    }
+    return new ExtHostDocumentLine(line, this._lines[line], line === this._lines.length - 1);
+  }
+  _offsetAt(position) {
+    position = this._validatePosition(position);
+    this._ensureLineStarts();
+    return this._lineStarts.getPrefixSum(position.line - 1) + position.character;
+  }
+  _positionAt(offset) {
+    offset = Math.floor(offset);
+    offset = Math.max(0, offset);
+    this._ensureLineStarts();
+    const out = this._lineStarts.getIndexOf(offset);
+    const lineLength = this._lines[out.index].length;
+    return new Position(out.index, Math.min(out.remainder, lineLength));
+  }
+  // ---- range math
+  _validateRange(range) {
+    if (!(range instanceof Range)) {
+      throw new Error("Invalid argument");
+    }
+    const start = this._validatePosition(range.start);
+    const end = this._validatePosition(range.end);
+    if (start === range.start && end === range.end) {
+      return range;
+    }
+    return new Range(start.line, start.character, end.line, end.character);
+  }
+  _validatePosition(position) {
+    if (!(position instanceof Position)) {
+      throw new Error("Invalid argument");
+    }
+    if (this._lines.length === 0) {
+      return position.with(0, 0);
+    }
+    let { line, character } = position;
+    let hasChanged = false;
+    if (line < 0) {
+      line = 0;
+      character = 0;
+      hasChanged = true;
+    } else if (line >= this._lines.length) {
+      line = this._lines.length - 1;
+      character = this._lines[line].length;
+      hasChanged = true;
+    } else {
+      const maxCharacter = this._lines[line].length;
+      if (character < 0) {
+        character = 0;
+        hasChanged = true;
+      } else if (character > maxCharacter) {
+        character = maxCharacter;
+        hasChanged = true;
+      }
+    }
+    if (!hasChanged) {
+      return position;
+    }
+    return new Position(line, character);
+  }
+  _getWordRangeAtPosition(_position, regexp) {
+    const position = this._validatePosition(_position);
+    if (!regexp) {
+      regexp = getWordDefinitionFor(this._languageId);
+    } else if (regExpLeadsToEndlessLoop(regexp)) {
+      throw new Error(`[getWordRangeAtPosition]: ignoring custom regexp '${regexp.source}' because it matches the empty string.`);
+    }
+    const wordAtText = getWordAtText(position.character + 1, ensureValidWordDefinition(regexp), this._lines[position.line], 0);
+    if (wordAtText) {
+      return new Range(position.line, wordAtText.startColumn - 1, position.line, wordAtText.endColumn - 1);
+    }
+    return void 0;
+  }
+}
+class ExtHostDocumentLine {
+  static {
+    __name(this, "ExtHostDocumentLine");
+  }
+  constructor(line, text, isLastLine) {
+    this._line = line;
+    this._text = text;
+    this._isLastLine = isLastLine;
+  }
+  get lineNumber() {
+    return this._line;
+  }
+  get text() {
+    return this._text;
+  }
+  get range() {
+    return new Range(this._line, 0, this._line, this._text.length);
+  }
+  get rangeIncludingLineBreak() {
+    if (this._isLastLine) {
+      return this.range;
+    }
+    return new Range(this._line, 0, this._line + 1, 0);
+  }
+  get firstNonWhitespaceCharacterIndex() {
+    return /^(\s*)/.exec(this._text)[1].length;
+  }
+  get isEmptyOrWhitespace() {
+    return this.firstNonWhitespaceCharacterIndex === this._text.length;
+  }
+}
+export {
+  ExtHostDocumentData,
+  ExtHostDocumentLine,
+  setWordDefinitionFor
+};
+//# sourceMappingURL=extHostDocumentData.js.map

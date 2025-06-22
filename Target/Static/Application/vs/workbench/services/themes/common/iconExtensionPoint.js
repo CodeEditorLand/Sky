@@ -1,1 +1,132 @@
-import*as t from"../../../../nls.js";import{$UO as x}from"../../extensions/common/extensionsRegistry.js";import{$ut as z}from"../../../../platform/theme/common/iconRegistry.js";import{$Ql as b}from"../../../../platform/registry/common/platform.js";import{ThemeIcon as y}from"../../../../base/common/themables.js";import*as g from"../../../../base/common/resources.js";import{$_ as I,$4 as C}from"../../../../base/common/path.js";const c=b.as(z.IconContribution),w=c.getIconReferenceSchema(),$=`^${y.iconNameSegment}(-${y.iconNameSegment})+$`,E=x.registerExtensionPoint({extensionPoint:"icons",jsonSchema:{description:t.localize(14586,null),type:"object",propertyNames:{pattern:$,description:t.localize(14587,null),patternErrorMessage:t.localize(14588,null)},additionalProperties:{type:"object",properties:{description:{type:"string",description:t.localize(14589,null)},default:{anyOf:[w,{type:"object",properties:{fontPath:{description:t.localize(14590,null),type:"string"},fontCharacter:{description:t.localize(14591,null),type:"string"}},required:["fontPath","fontCharacter"],defaultSnippets:[{body:{fontPath:"${1:myiconfont.woff}",fontCharacter:"${2:\\\\E001}"}}]}],description:t.localize(14592,null)}},required:["description","default"],defaultSnippets:[{body:{description:"${1:my icon}",default:{fontPath:"${2:myiconfont.woff}",fontCharacter:"${3:\\\\E001}"}}}]},defaultSnippets:[{body:{"${1:my-icon-id}":{description:"${2:my icon}",default:{fontPath:"${3:myiconfont.woff}",fontCharacter:"${4:\\\\E001}"}}}}]}});class q{constructor(){E.setHandler((p,d)=>{for(const e of d.added){const i=e.value,n=e.collector;if(!i||typeof i!="object"){n.error(t.localize(14593,null));return}for(const s in i){if(!s.match($)){n.error(t.localize(14594,null));return}const r=i[s];if(typeof r.description!="string"||r.description.length===0){n.error(t.localize(14595,null));return}const o=r.default;if(typeof o=="string")c.registerIcon(s,{id:o},r.description);else if(typeof o=="object"&&typeof o.fontPath=="string"&&typeof o.fontCharacter=="string"){const u=I(o.fontPath).substring(1),m=S[u];if(!m){n.warn(t.localize(14596,null,u));return}const a=e.description.extensionLocation,f=g.$kh(a,o.fontPath),h=j(e.description,o.fontPath),P=c.registerIconFont(h,{src:[{location:f,format:m}]});if(!g.$eh(f,a)){n.warn(t.localize(14597,null,f.path,a.path));return}c.registerIcon(s,{fontCharacter:o.fontCharacter,font:{id:h,definition:P}},r.description)}else n.error(t.localize(14598,null))}}for(const e of d.removed){const i=e.value;for(const n in i)c.deregisterIcon(n)}})}}const S={ttf:"truetype",woff:"woff",woff2:"woff2"};function j(l,p){return C.join(l.identifier.value,p)}export{q as $Utb};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import * as nls from "../../../../nls.js";
+import { ExtensionsRegistry } from "../../extensions/common/extensionsRegistry.js";
+import { Extensions as IconRegistryExtensions } from "../../../../platform/theme/common/iconRegistry.js";
+import { Registry } from "../../../../platform/registry/common/platform.js";
+import { ThemeIcon } from "../../../../base/common/themables.js";
+import * as resources from "../../../../base/common/resources.js";
+import { extname, posix } from "../../../../base/common/path.js";
+const iconRegistry = Registry.as(IconRegistryExtensions.IconContribution);
+const iconReferenceSchema = iconRegistry.getIconReferenceSchema();
+const iconIdPattern = `^${ThemeIcon.iconNameSegment}(-${ThemeIcon.iconNameSegment})+$`;
+const iconConfigurationExtPoint = ExtensionsRegistry.registerExtensionPoint({
+  extensionPoint: "icons",
+  jsonSchema: {
+    description: nls.localize("contributes.icons", "Contributes extension defined themable icons"),
+    type: "object",
+    propertyNames: {
+      pattern: iconIdPattern,
+      description: nls.localize("contributes.icon.id", "The identifier of the themable icon"),
+      patternErrorMessage: nls.localize("contributes.icon.id.format", "Identifiers can only contain letters, digits and minuses and need to consist of at least two segments in the form `component-iconname`.")
+    },
+    additionalProperties: {
+      type: "object",
+      properties: {
+        description: {
+          type: "string",
+          description: nls.localize("contributes.icon.description", "The description of the themable icon")
+        },
+        default: {
+          anyOf: [
+            iconReferenceSchema,
+            {
+              type: "object",
+              properties: {
+                fontPath: {
+                  description: nls.localize("contributes.icon.default.fontPath", "The path of the icon font that defines the icon."),
+                  type: "string"
+                },
+                fontCharacter: {
+                  description: nls.localize("contributes.icon.default.fontCharacter", "The character for the icon in the icon font."),
+                  type: "string"
+                }
+              },
+              required: ["fontPath", "fontCharacter"],
+              defaultSnippets: [{ body: { fontPath: "${1:myiconfont.woff}", fontCharacter: "${2:\\\\E001}" } }]
+            }
+          ],
+          description: nls.localize("contributes.icon.default", "The default of the icon. Either a reference to an existing ThemeIcon or an icon in an icon font.")
+        }
+      },
+      required: ["description", "default"],
+      defaultSnippets: [{ body: { description: "${1:my icon}", default: { fontPath: "${2:myiconfont.woff}", fontCharacter: "${3:\\\\E001}" } } }]
+    },
+    defaultSnippets: [{ body: { "${1:my-icon-id}": { description: "${2:my icon}", default: { fontPath: "${3:myiconfont.woff}", fontCharacter: "${4:\\\\E001}" } } } }]
+  }
+});
+class IconExtensionPoint {
+  static {
+    __name(this, "IconExtensionPoint");
+  }
+  constructor() {
+    iconConfigurationExtPoint.setHandler((extensions, delta) => {
+      for (const extension of delta.added) {
+        const extensionValue = extension.value;
+        const collector = extension.collector;
+        if (!extensionValue || typeof extensionValue !== "object") {
+          collector.error(nls.localize("invalid.icons.configuration", "'configuration.icons' must be an object with the icon names as properties."));
+          return;
+        }
+        for (const id in extensionValue) {
+          if (!id.match(iconIdPattern)) {
+            collector.error(nls.localize("invalid.icons.id.format", "'configuration.icons' keys represent the icon id and can only contain letter, digits and minuses. They need to consist of at least two segments in the form `component-iconname`."));
+            return;
+          }
+          const iconContribution = extensionValue[id];
+          if (typeof iconContribution.description !== "string" || iconContribution.description.length === 0) {
+            collector.error(nls.localize("invalid.icons.description", "'configuration.icons.description' must be defined and can not be empty"));
+            return;
+          }
+          const defaultIcon = iconContribution.default;
+          if (typeof defaultIcon === "string") {
+            iconRegistry.registerIcon(id, { id: defaultIcon }, iconContribution.description);
+          } else if (typeof defaultIcon === "object" && typeof defaultIcon.fontPath === "string" && typeof defaultIcon.fontCharacter === "string") {
+            const fileExt = extname(defaultIcon.fontPath).substring(1);
+            const format = formatMap[fileExt];
+            if (!format) {
+              collector.warn(nls.localize("invalid.icons.default.fontPath.extension", "Expected `contributes.icons.default.fontPath` to have file extension 'woff', woff2' or 'ttf', is '{0}'.", fileExt));
+              return;
+            }
+            const extensionLocation = extension.description.extensionLocation;
+            const iconFontLocation = resources.joinPath(extensionLocation, defaultIcon.fontPath);
+            const fontId = getFontId(extension.description, defaultIcon.fontPath);
+            const definition = iconRegistry.registerIconFont(fontId, { src: [{ location: iconFontLocation, format }] });
+            if (!resources.isEqualOrParent(iconFontLocation, extensionLocation)) {
+              collector.warn(nls.localize("invalid.icons.default.fontPath.path", "Expected `contributes.icons.default.fontPath` ({0}) to be included inside extension's folder ({0}).", iconFontLocation.path, extensionLocation.path));
+              return;
+            }
+            iconRegistry.registerIcon(id, {
+              fontCharacter: defaultIcon.fontCharacter,
+              font: {
+                id: fontId,
+                definition
+              }
+            }, iconContribution.description);
+          } else {
+            collector.error(nls.localize("invalid.icons.default", "'configuration.icons.default' must be either a reference to the id of an other theme icon (string) or a icon definition (object) with properties `fontPath` and `fontCharacter`."));
+          }
+        }
+      }
+      for (const extension of delta.removed) {
+        const extensionValue = extension.value;
+        for (const id in extensionValue) {
+          iconRegistry.deregisterIcon(id);
+        }
+      }
+    });
+  }
+}
+const formatMap = {
+  "ttf": "truetype",
+  "woff": "woff",
+  "woff2": "woff2"
+};
+function getFontId(description, fontPath) {
+  return posix.join(description.identifier.value, fontPath);
+}
+__name(getFontId, "getFontId");
+export {
+  IconExtensionPoint
+};
+//# sourceMappingURL=iconExtensionPoint.js.map

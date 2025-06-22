@@ -1,1 +1,222 @@
-import{$tm as F}from"../../../../base/common/decorators.js";import{$vd as O}from"../../../../base/common/lifecycle.js";import{$n as $}from"../../../../base/common/platform.js";import{$VC as w}from"../../../common/core/stringBuilder.js";import{$9C as p}from"../../../common/encodedTokenAttributes.js";import{$Obb as j}from"../gpuUtils.js";var m=function(t,e,i,o){var s,n=arguments.length,a=n<3?e:null===o?o=Object.getOwnPropertyDescriptor(e,i):o;if("object"==typeof Reflect&&"function"==typeof Reflect.decorate)a=Reflect.decorate(t,e,i,o);else for(var h=t.length-1;h>=0;h--)(s=t[h])&&(a=(n<3?s(a):n>3?s(e,i,a):s(e,i))||a);return n>3&&a&&Object.defineProperty(e,i,a),a};let v=0;class z extends O{get cacheKey(){return`${this.fontFamily}_${this.fontSize}px`}constructor(t,e,i,o){super(),this.fontSize=t,this.fontFamily=e,this.devicePixelRatio=i,this.n=o,this.id=v++,this.h={source:null,boundingBox:{left:0,bottom:0,right:0,top:0},originOffset:{x:0,y:0},fontBoundingBoxAscent:0,fontBoundingBoxDescent:0},this.j={chars:void 0,tokenMetadata:0,decorationStyleSetId:0},this.m=$?"greyscale":"subpixel";const s=Math.ceil(this.fontSize*i);this.a=new OffscreenCanvas(3*s,3*s),this.c=j(this.a.getContext("2d",{willReadFrequently:!0,alpha:"greyscale"===this.m})),this.c.textBaseline="top",this.c.fillStyle="#FFFFFF",this.c.font=`${s}px ${this.fontFamily}`,this.f=this.c.measureText("A")}rasterizeGlyph(t,e,i,o){return""===t?{source:this.a,boundingBox:{top:0,left:0,bottom:-1,right:-1},originOffset:{x:0,y:0},fontBoundingBoxAscent:0,fontBoundingBoxDescent:0}:this.j.chars===t&&this.j.tokenMetadata===e&&this.j.decorationStyleSetId===i?this.h:(this.j.chars=t,this.j.tokenMetadata=e,this.j.decorationStyleSetId=i,this._rasterizeGlyph(t,e,i,o))}_rasterizeGlyph(t,e,i,o){const s=Math.ceil(this.fontSize*this.devicePixelRatio),n=3*s;this.a.width!==n&&(this.a.width=n,this.a.height=n),this.c.save();const a=(15&e)/10,h=o[p.getBackground(e)],r=this.n.getStyleSet(i);"subpixel"===this.m?(this.c.fillStyle=h,this.c.fillRect(0,0,this.a.width,this.a.height)):this.c.clearRect(0,0,this.a.width,this.a.height);const c=new w(200),l=p.getFontStyle(e);1&l&&c.appendString("italic "),void 0!==r?.bold?r.bold&&c.appendString("bold "):2&l&&c.appendString("bold "),c.appendString(`${s}px ${this.fontFamily}`),this.c.font=c.build();const f=s,d=s;this.c.fillStyle=void 0!==r?.color?`#${r.color.toString(16).padStart(8,"0")}`:o[p.getForeground(e)],this.c.textBaseline="top",void 0!==r?.opacity&&(this.c.globalAlpha=r.opacity),this.c.fillText(t,f+a,d),this.c.restore();const g=this.c.getImageData(0,0,this.a.width,this.a.height);if("subpixel"===this.m){const t=parseInt(h.substring(1,3),16),e=parseInt(h.substring(3,5),16),i=parseInt(h.substring(5,7),16);this.s(g,t,e,i),this.c.putImageData(g,0,0)}return this.t(g,this.h.boundingBox),this.h.source=this.a,this.h.originOffset.x=this.h.boundingBox.left-f,this.h.originOffset.y=this.h.boundingBox.top-d,this.h.fontBoundingBoxAscent=this.f.fontBoundingBoxAscent,this.h.fontBoundingBoxDescent=this.f.fontBoundingBoxDescent,this.h}s(t,e,i,o){for(let s=0;s<t.data.length;s+=4)t.data[s]===e&&t.data[s+1]===i&&t.data[s+2]===o&&(t.data[s+3]=0)}t(t,e){const i=this.a.height,o=this.a.width;let s=!1;for(let n=0;n<i;n++){for(let i=0;i<o;i++){const a=n*o*4+4*i+3;if(0!==t.data[a]){e.top=n,s=!0;break}}if(s)break}e.left=0,s=!1;for(let n=0;n<o;n++){for(let a=0;a<i;a++){const i=a*o*4+4*n+3;if(0!==t.data[i]){e.left=n,s=!0;break}}if(s)break}e.right=o,s=!1;for(let n=o-1;n>=e.left;n--){for(let a=0;a<i;a++){const i=a*o*4+4*n+3;if(0!==t.data[i]){e.right=n,s=!0;break}}if(s)break}e.bottom=e.top,s=!1;for(let n=i-1;n>=0;n--){for(let i=0;i<o;i++){const a=n*o*4+4*i+3;if(0!==t.data[a]){e.bottom=n,s=!0;break}}if(s)break}}getTextMetrics(t){return this.c.measureText(t)}}m([F],z.prototype,"cacheKey",null);export{z as $Qbb};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { memoize } from "../../../../base/common/decorators.js";
+import { Disposable } from "../../../../base/common/lifecycle.js";
+import { isMacintosh } from "../../../../base/common/platform.js";
+import { StringBuilder } from "../../../common/core/stringBuilder.js";
+import { TokenMetadata } from "../../../common/encodedTokenAttributes.js";
+import { ensureNonNullable } from "../gpuUtils.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+let nextId = 0;
+class GlyphRasterizer extends Disposable {
+  static {
+    __name(this, "GlyphRasterizer");
+  }
+  get cacheKey() {
+    return `${this.fontFamily}_${this.fontSize}px`;
+  }
+  constructor(fontSize, fontFamily, devicePixelRatio, _decorationStyleCache) {
+    super();
+    this.fontSize = fontSize;
+    this.fontFamily = fontFamily;
+    this.devicePixelRatio = devicePixelRatio;
+    this._decorationStyleCache = _decorationStyleCache;
+    this.id = nextId++;
+    this._workGlyph = {
+      source: null,
+      boundingBox: {
+        left: 0,
+        bottom: 0,
+        right: 0,
+        top: 0
+      },
+      originOffset: {
+        x: 0,
+        y: 0
+      },
+      fontBoundingBoxAscent: 0,
+      fontBoundingBoxDescent: 0
+    };
+    this._workGlyphConfig = { chars: void 0, tokenMetadata: 0, decorationStyleSetId: 0 };
+    this._antiAliasing = isMacintosh ? "greyscale" : "subpixel";
+    const devicePixelFontSize = Math.ceil(this.fontSize * devicePixelRatio);
+    this._canvas = new OffscreenCanvas(devicePixelFontSize * 3, devicePixelFontSize * 3);
+    this._ctx = ensureNonNullable(this._canvas.getContext("2d", {
+      willReadFrequently: true,
+      alpha: this._antiAliasing === "greyscale"
+    }));
+    this._ctx.textBaseline = "top";
+    this._ctx.fillStyle = "#FFFFFF";
+    this._ctx.font = `${devicePixelFontSize}px ${this.fontFamily}`;
+    this._textMetrics = this._ctx.measureText("A");
+  }
+  /**
+   * Rasterizes a glyph. Note that the returned object is reused across different glyphs and
+   * therefore is only safe for synchronous access.
+   */
+  rasterizeGlyph(chars, tokenMetadata, decorationStyleSetId, colorMap) {
+    if (chars === "") {
+      return {
+        source: this._canvas,
+        boundingBox: { top: 0, left: 0, bottom: -1, right: -1 },
+        originOffset: { x: 0, y: 0 },
+        fontBoundingBoxAscent: 0,
+        fontBoundingBoxDescent: 0
+      };
+    }
+    if (this._workGlyphConfig.chars === chars && this._workGlyphConfig.tokenMetadata === tokenMetadata && this._workGlyphConfig.decorationStyleSetId === decorationStyleSetId) {
+      return this._workGlyph;
+    }
+    this._workGlyphConfig.chars = chars;
+    this._workGlyphConfig.tokenMetadata = tokenMetadata;
+    this._workGlyphConfig.decorationStyleSetId = decorationStyleSetId;
+    return this._rasterizeGlyph(chars, tokenMetadata, decorationStyleSetId, colorMap);
+  }
+  _rasterizeGlyph(chars, tokenMetadata, decorationStyleSetId, colorMap) {
+    const devicePixelFontSize = Math.ceil(this.fontSize * this.devicePixelRatio);
+    const canvasDim = devicePixelFontSize * 3;
+    if (this._canvas.width !== canvasDim) {
+      this._canvas.width = canvasDim;
+      this._canvas.height = canvasDim;
+    }
+    this._ctx.save();
+    const xSubPixelXOffset = (tokenMetadata & 15) / 10;
+    const bgId = TokenMetadata.getBackground(tokenMetadata);
+    const bg = colorMap[bgId];
+    const decorationStyleSet = this._decorationStyleCache.getStyleSet(decorationStyleSetId);
+    if (this._antiAliasing === "subpixel") {
+      this._ctx.fillStyle = bg;
+      this._ctx.fillRect(0, 0, this._canvas.width, this._canvas.height);
+    } else {
+      this._ctx.clearRect(0, 0, this._canvas.width, this._canvas.height);
+    }
+    const fontSb = new StringBuilder(200);
+    const fontStyle = TokenMetadata.getFontStyle(tokenMetadata);
+    if (fontStyle & 1) {
+      fontSb.appendString("italic ");
+    }
+    if (decorationStyleSet?.bold !== void 0) {
+      if (decorationStyleSet.bold) {
+        fontSb.appendString("bold ");
+      }
+    } else if (fontStyle & 2) {
+      fontSb.appendString("bold ");
+    }
+    fontSb.appendString(`${devicePixelFontSize}px ${this.fontFamily}`);
+    this._ctx.font = fontSb.build();
+    const originX = devicePixelFontSize;
+    const originY = devicePixelFontSize;
+    if (decorationStyleSet?.color !== void 0) {
+      this._ctx.fillStyle = `#${decorationStyleSet.color.toString(16).padStart(8, "0")}`;
+    } else {
+      this._ctx.fillStyle = colorMap[TokenMetadata.getForeground(tokenMetadata)];
+    }
+    this._ctx.textBaseline = "top";
+    if (decorationStyleSet?.opacity !== void 0) {
+      this._ctx.globalAlpha = decorationStyleSet.opacity;
+    }
+    this._ctx.fillText(chars, originX + xSubPixelXOffset, originY);
+    this._ctx.restore();
+    const imageData = this._ctx.getImageData(0, 0, this._canvas.width, this._canvas.height);
+    if (this._antiAliasing === "subpixel") {
+      const bgR = parseInt(bg.substring(1, 3), 16);
+      const bgG = parseInt(bg.substring(3, 5), 16);
+      const bgB = parseInt(bg.substring(5, 7), 16);
+      this._clearColor(imageData, bgR, bgG, bgB);
+      this._ctx.putImageData(imageData, 0, 0);
+    }
+    this._findGlyphBoundingBox(imageData, this._workGlyph.boundingBox);
+    this._workGlyph.source = this._canvas;
+    this._workGlyph.originOffset.x = this._workGlyph.boundingBox.left - originX;
+    this._workGlyph.originOffset.y = this._workGlyph.boundingBox.top - originY;
+    this._workGlyph.fontBoundingBoxAscent = this._textMetrics.fontBoundingBoxAscent;
+    this._workGlyph.fontBoundingBoxDescent = this._textMetrics.fontBoundingBoxDescent;
+    return this._workGlyph;
+  }
+  _clearColor(imageData, r, g, b) {
+    for (let offset = 0; offset < imageData.data.length; offset += 4) {
+      if (imageData.data[offset] === r && imageData.data[offset + 1] === g && imageData.data[offset + 2] === b) {
+        imageData.data[offset + 3] = 0;
+      }
+    }
+  }
+  // TODO: Does this even need to happen when measure text is used?
+  _findGlyphBoundingBox(imageData, outBoundingBox) {
+    const height = this._canvas.height;
+    const width = this._canvas.width;
+    let found = false;
+    for (let y = 0; y < height; y++) {
+      for (let x = 0; x < width; x++) {
+        const alphaOffset = y * width * 4 + x * 4 + 3;
+        if (imageData.data[alphaOffset] !== 0) {
+          outBoundingBox.top = y;
+          found = true;
+          break;
+        }
+      }
+      if (found) {
+        break;
+      }
+    }
+    outBoundingBox.left = 0;
+    found = false;
+    for (let x = 0; x < width; x++) {
+      for (let y = 0; y < height; y++) {
+        const alphaOffset = y * width * 4 + x * 4 + 3;
+        if (imageData.data[alphaOffset] !== 0) {
+          outBoundingBox.left = x;
+          found = true;
+          break;
+        }
+      }
+      if (found) {
+        break;
+      }
+    }
+    outBoundingBox.right = width;
+    found = false;
+    for (let x = width - 1; x >= outBoundingBox.left; x--) {
+      for (let y = 0; y < height; y++) {
+        const alphaOffset = y * width * 4 + x * 4 + 3;
+        if (imageData.data[alphaOffset] !== 0) {
+          outBoundingBox.right = x;
+          found = true;
+          break;
+        }
+      }
+      if (found) {
+        break;
+      }
+    }
+    outBoundingBox.bottom = outBoundingBox.top;
+    found = false;
+    for (let y = height - 1; y >= 0; y--) {
+      for (let x = 0; x < width; x++) {
+        const alphaOffset = y * width * 4 + x * 4 + 3;
+        if (imageData.data[alphaOffset] !== 0) {
+          outBoundingBox.bottom = y;
+          found = true;
+          break;
+        }
+      }
+      if (found) {
+        break;
+      }
+    }
+  }
+  getTextMetrics(text) {
+    return this._ctx.measureText(text);
+  }
+}
+__decorate([
+  memoize
+], GlyphRasterizer.prototype, "cacheKey", null);
+export {
+  GlyphRasterizer
+};
+//# sourceMappingURL=glyphRasterizer.js.map

@@ -1,1 +1,21 @@
-import{$ru as i}from"./serviceMachineId.js";import{$Hu as m,$Fu as u}from"../../telemetry/common/telemetryUtils.js";async function f(e,t,r,o,s,n,a){const c={"X-Market-Client-Id":`VSCode ${e}`,"User-Agent":`VSCode ${e} (${t.nameShort})`};if(u(t,r)&&3===m(o)){const e=await i(r,s,n);c["X-Market-User-Id"]=e,c["VSCode-SessionId"]=a.machineId||e}return c}export{f as $Nu};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { getServiceMachineId } from "./serviceMachineId.js";
+import { getTelemetryLevel, supportsTelemetry } from "../../telemetry/common/telemetryUtils.js";
+async function resolveMarketplaceHeaders(version, productService, environmentService, configurationService, fileService, storageService, telemetryService) {
+  const headers = {
+    "X-Market-Client-Id": `VSCode ${version}`,
+    "User-Agent": `VSCode ${version} (${productService.nameShort})`
+  };
+  if (supportsTelemetry(productService, environmentService) && getTelemetryLevel(configurationService) === 3) {
+    const serviceMachineId = await getServiceMachineId(environmentService, fileService, storageService);
+    headers["X-Market-User-Id"] = serviceMachineId;
+    headers["VSCode-SessionId"] = telemetryService.machineId || serviceMachineId;
+  }
+  return headers;
+}
+__name(resolveMarketplaceHeaders, "resolveMarketplaceHeaders");
+export {
+  resolveMarketplaceHeaders
+};
+//# sourceMappingURL=marketplace.js.map

@@ -1,1 +1,681 @@
-import{$QR as p}from"./topError.js";import{ChatMode as m}from"../../constants.js";import{$mR as D}from"./promptHeader/modeHeader.js";import{URI as g}from"../../../../../../base/common/uri.js";import{$RR as F}from"../codecs/tokens/promptToken.js";import*as T from"../../../../../../base/common/path.js";import{$lS as v}from"../codecs/chatPromptCodec.js";import{$mS as f}from"../codecs/tokens/fileReference.js";import{$_c as P}from"../../../../../../base/common/types.js";import{$df as $}from"../../../../../../base/common/event.js";import{$0h as j}from"../../../../../../base/common/async.js";import{$oR as w}from"./promptHeader/instructionsHeader.js";import{$3n as _}from"../../../../../../platform/log/common/log.js";import{$TR as N}from"../codecs/tokens/promptVariable.js";import{$Uc as I,$Tc as R}from"../../../../../../base/common/assert.js";import{$hh as b,$jh as k}from"../../../../../../base/common/resources.js";import{$mQ as B}from"../codecs/base/baseToken.js";import{$lR as M}from"./promptHeader/promptHeader.js";import{$RQ as E}from"../utils/observableDisposable.js";import{PromptsType as x,$fR as A,$gR as O,$eR as L}from"../promptTypes.js";import{$UQ as G}from"../codecs/base/linesCodec/linesDecoder.js";import{$hl as Q}from"../../../../../../platform/workspace/common/workspace.js";import{$mj as S}from"../../../../../../platform/instantiation/common/instantiation.js";import{$8R as u}from"../codecs/base/markdownCodec/tokens/markdownLink.js";import{$sR as V}from"../codecs/base/markdownCodec/tokens/markdownToken.js";import{$vS as z}from"../config/promptFileLocations.js";import{$vR as K}from"../codecs/base/markdownExtensionsCodec/tokens/frontMatterHeader.js";import{$OR as l,$NR as W,$PR as q,$KR as H}from"../../promptFileReferenceErrors.js";import{$zS as J}from"../contentProviders/promptContentsProviderBase.js";var C=function(t,e,r,s){var i,o=arguments.length,n=o<3?e:null===s?s=Object.getOwnPropertyDescriptor(e,r):s;if("object"==typeof Reflect&&"function"==typeof Reflect.decorate)n=Reflect.decorate(t,e,r,s);else for(var a=t.length-1;a>=0;a--)(i=t[a])&&(n=(o<3?i(n):o>3?i(e,r,n):i(e,r))||n);return o>3&&n&&Object.defineProperty(e,r,n),n},a=function(t,e){return function(r,s){e(r,s,t)}};const X={...J,seenReferences:[]};let d=class extends E{get tokens(){return[...this.c]}get header(){return this.g}async getBody(){const t=void 0!==this.header?this.header.range.endLineNumber+1:1,e=(await new G(await this.r.contents).consumeAll()).filter((({range:e})=>e.startLineNumber>=t));return B.render(e)}onSettled(t){const e=this.j.event(t);return(this.w?.ended&&!1===this.w.isDisposed||this.errorCondition)&&setTimeout(t.bind(void 0,this.errorCondition)),e}get errorCondition(){return this.m}get resolveFailed(){if(this.n.gotFirstResult)return!!this.m}async settled(){return I(this.G,"Cannot wait on the parser that did not start yet."),await this.n.promise,this.errorCondition||this.isDisposed||(P(this.w,"No stream reference found."),await this.w.settled,this.g&&await this.g.settled),this}async allSettled(){return await this.settled(),await Promise.allSettled(this.references.map((t=>t.allSettled()))),this}constructor(t,e,r,s,i){super(),this.r=t,this.s=r,this.t=s,this.u=i,this.c=[],this.f=[],this.h=this.B(new $),this.onUpdate=this.h.event,this.j=this.B(new $),this.n=new Y,this.G=!1,this.b={...X,...e};const o=[...this.b.seenReferences];if(o.includes(this.uri.path))return o.push(this.uri.path),this.m=new W(this.uri,o),this.h.fire(),this.n.end(),this;o.push(this.uri.path),this.B(this.r.onContentChanged((t=>{this.y(t,o),this.n.end()}))),this.B(this.r.onDispose(this.dispose.bind(this)))}y(t,e){if(this.w?.dispose(),delete this.w,delete this.m,this.c=[],this.g?.dispose(),delete this.g,this.F(),t instanceof H)return this.m=t,this.h.fire(),void this.j.fire(t);this.w=v.decode(t),this.w.on("error",this.D.bind(this,this.w)),this.w.on("end",this.D.bind(this,this.w)),this.w.on("data",(t=>{if((t instanceof V||t instanceof F)&&this.c.push(t),t instanceof K)return this.z(t);if(t instanceof N)try{this.C(f.from(t),[...e])}catch{}t instanceof u&&!t.isURL&&this.C(t,[...e])})),this.w.isDisposed?this.u.warn(`[prompt parser][${b(this.uri)}] cannot start stream that has been already disposed, aborting`):this.w.start()}z(t){const{languageId:e}=this.r;e===L&&(this.g=new M(t,e)),e===A&&(this.g=new w(t,e)),e===O&&(this.g=new D(t,e)),this.g?.start()}C(t,e){const{parentFolder:r}=this,s=null!==r&&!1===T.$6(t.path)?g.joinPath(r,t.path):g.file(t.path),i=this.r.createNew({uri:s}),o=this.s.createInstance(c,i,t,{seenReferences:e});return this.f.push(o),o.addDisposables(o.onDispose(i.dispose.bind(i)),o.onUpdate(this.h.fire)),this.h.fire(),o.start(),this}D(t,e){return!0===t.isDisposed||(e&&this.u.warn(`[prompt parser][${b(this.uri)}] received an error on the chat prompt decoder stream: ${e}`),this.h.fire(),this.j.fire(e)),this}F(){for(const t of[...this.f])t.dispose();this.f.length=0}start(t){return this.G||(this.G=!0,this.errorCondition||this.r.start(t)),this}get uri(){return this.r.uri}get parentFolder(){if("file"===this.uri.scheme)return k(this.uri);const{folders:t}=this.t.getWorkspace();return 1===t.length?t[0].uri:null}get references(){return[...this.f]}get allReferences(){const t=[];for(const e of this.references)t.push(e),"file"===e.type&&t.push(...e.allReferences);return t}get allValidReferences(){return this.allReferences.filter((t=>{const{errorCondition:e}=t;return!e||!(e instanceof q)&&e instanceof l}))}get metadata(){const{promptType:t}=this.r;if("non-prompt"===t)return null;if(void 0===this.header)return{promptType:t};if(this.header instanceof w)return{promptType:t,...this.header.metadata};const{tools:e,mode:r,description:s}=this.header.metadata,i=void 0!==e?m.Agent:r,o={};return void 0!==s&&(o.description=s),void 0!==e&&(o.tools=e),void 0!==i&&(o.mode=i),{promptType:t,...o}}get allToolsMetadata(){let t=!1;const e=[];if(this.metadata?.promptType!==x.prompt)return null;const{tools:r,mode:s}=this.metadata;if(void 0!==r&&(e.push(...r),t=!0),!1==(!0===t||s===m.Agent))return null;for(const r of this.references){const{allToolsMetadata:s}=r;null!==s&&(e.push(...s),t=!0)}return!1===t?null:[...new Set(e)]}get errors(){const t=[];for(const e of this.references){const{errorCondition:r}=e;r&&!(r instanceof l)&&t.push(r)}return t}get allErrors(){const t=[];for(const e of this.references){const{errorCondition:r}=e;r&&!(r instanceof l)&&t.push({originalError:r,parentUri:this.uri}),t.push(...e.allErrors)}return t}get topError(){if(this.errorCondition)return new p({errorSubject:"root",errorsCount:1,originalError:this.errorCondition});const t=[...this.errors],e=[];for(const t of this.references)e.push(...t.allErrors);if(0===t.length&&0===e.length)return;const r=t[0],s=e[0],i=void 0!==r,o=i?{originalError:r,parentUri:this.uri}:s,n=t.length+e.length;return new p({errorSubject:i?"child":"indirect-child",originalError:o.originalError,parentUri:o.parentUri,errorsCount:n})}sameUri(t){return this.uri.toString()===t.toString()}get isPromptFile(){return z(this.uri)}toString(){return`prompt:${this.uri.path}`}dispose(){this.isDisposed||(this.F(),this.w?.dispose(),delete this.w,this.g?.dispose(),delete this.g,super.dispose())}};d=C([a(2,S),a(3,Q),a(4,_)],d);let c=class extends E{constructor(t,e,r,s){super(),this.c=t,this.token=e,this.b=this.B(s.createInstance(d,this.c,r))}get linkRange(){return this.token instanceof f?this.token.dataRange:this.token instanceof u?this.token.linkRange:void 0}get type(){if(this.token instanceof f||this.token instanceof u)return"file";R(this.token,`Unknown token type '${this.token}'.`)}get subtype(){return this.token instanceof f?"prompt":this.token instanceof u?"markdown":void R(this.token,`Unknown token type '${this.token}'.`)}start(){return this.b.start(),this}onUpdate(...t){return this.b.onUpdate(...t)}get range(){return this.token.range}get path(){return this.token.path}get text(){return this.token.text}get resolveFailed(){return this.b.resolveFailed}get errorCondition(){return this.b.errorCondition}get topError(){return this.b.topError}get uri(){return this.b.uri}get isPromptFile(){return this.b.isPromptFile}get errors(){return this.b.errors}get allErrors(){return this.b.allErrors}get references(){return this.b.references}get allReferences(){return this.b.allReferences}get metadata(){return this.b.metadata}get allToolsMetadata(){return this.b.allToolsMetadata}get allValidReferences(){return this.b.allValidReferences}async settled(){return await this.b.settled(),this}async allSettled(){return await this.b.allSettled(),this}toString(){return`prompt-reference/${this.type}:${this.subtype}/${this.token}`}};c=C([a(3,S)],c);class Y extends j{constructor(){super(...arguments),this.f=!1}get gotFirstResult(){return this.f}get promise(){return this.p}end(){this.f=!0,super.complete(void 0).catch((()=>{}))}}export{d as $BS,c as $CS};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { TopError } from "./topError.js";
+import { ChatMode } from "../../constants.js";
+import { ModeHeader } from "./promptHeader/modeHeader.js";
+import { URI } from "../../../../../../base/common/uri.js";
+import { PromptToken } from "../codecs/tokens/promptToken.js";
+import * as path from "../../../../../../base/common/path.js";
+import { ChatPromptCodec } from "../codecs/chatPromptCodec.js";
+import { FileReference } from "../codecs/tokens/fileReference.js";
+import { assertDefined } from "../../../../../../base/common/types.js";
+import { Emitter } from "../../../../../../base/common/event.js";
+import { DeferredPromise } from "../../../../../../base/common/async.js";
+import { InstructionsHeader } from "./promptHeader/instructionsHeader.js";
+import { ILogService } from "../../../../../../platform/log/common/log.js";
+import { PromptVariableWithData } from "../codecs/tokens/promptVariable.js";
+import { assert, assertNever } from "../../../../../../base/common/assert.js";
+import { basename, dirname } from "../../../../../../base/common/resources.js";
+import { BaseToken } from "../codecs/base/baseToken.js";
+import { PromptHeader } from "./promptHeader/promptHeader.js";
+import { ObservableDisposable } from "../utils/observableDisposable.js";
+import { PromptsType, INSTRUCTIONS_LANGUAGE_ID, MODE_LANGUAGE_ID, PROMPT_LANGUAGE_ID } from "../promptTypes.js";
+import { LinesDecoder } from "../codecs/base/linesCodec/linesDecoder.js";
+import { IWorkspaceContextService } from "../../../../../../platform/workspace/common/workspace.js";
+import { IInstantiationService } from "../../../../../../platform/instantiation/common/instantiation.js";
+import { MarkdownLink } from "../codecs/base/markdownCodec/tokens/markdownLink.js";
+import { MarkdownToken } from "../codecs/base/markdownCodec/tokens/markdownToken.js";
+import { isPromptOrInstructionsFile } from "../config/promptFileLocations.js";
+import { FrontMatterHeader } from "../codecs/base/markdownExtensionsCodec/tokens/frontMatterHeader.js";
+import { NotPromptFile, RecursiveReference, FolderReference, ResolveError } from "../../promptFileReferenceErrors.js";
+import { DEFAULT_OPTIONS as CONTENTS_PROVIDER_DEFAULT_OPTIONS } from "../contentProviders/promptContentsProviderBase.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+const DEFAULT_OPTIONS = {
+  ...CONTENTS_PROVIDER_DEFAULT_OPTIONS,
+  seenReferences: []
+};
+let BasePromptParser = class BasePromptParser2 extends ObservableDisposable {
+  static {
+    __name(this, "BasePromptParser");
+  }
+  /**
+   * List of all tokens that were parsed from the prompt contents so far.
+   */
+  get tokens() {
+    return [...this.receivedTokens];
+  }
+  /**
+   * Reference to the prompt header object that holds metadata associated
+   * with the prompt.
+   */
+  get header() {
+    return this.promptHeader;
+  }
+  /**
+   * Get contents of the prompt body.
+   */
+  async getBody() {
+    const startLineNumber = this.header !== void 0 ? this.header.range.endLineNumber + 1 : 1;
+    const decoder = new LinesDecoder(await this.promptContentsProvider.contents);
+    const tokens = (await decoder.consumeAll()).filter(({ range }) => {
+      return range.startLineNumber >= startLineNumber;
+    });
+    return BaseToken.render(tokens);
+  }
+  /**
+   * Event that is fired when the current prompt parser is settled.
+   */
+  onSettled(callback) {
+    const disposable = this._onSettled.event(callback);
+    const streamEnded = this.stream?.ended && this.stream.isDisposed === false;
+    if (streamEnded || this.errorCondition) {
+      setTimeout(callback.bind(void 0, this.errorCondition));
+      return disposable;
+    }
+    return disposable;
+  }
+  /**
+   * If file reference resolution fails, this attribute will be set
+   * to an error instance that describes the error condition.
+   */
+  get errorCondition() {
+    return this._errorCondition;
+  }
+  /**
+   * Whether file references resolution failed.
+   * Set to `undefined` if the `resolve` method hasn't been ever called yet.
+   */
+  get resolveFailed() {
+    if (!this.firstParseResult.gotFirstResult) {
+      return void 0;
+    }
+    return !!this._errorCondition;
+  }
+  /**
+   * Returned promise is resolved when the parser process is settled.
+   * The settled state means that the prompt parser stream exists and
+   * has ended, or an error condition has been set in case of failure.
+   *
+   * Furthermore, this function can be called multiple times and will
+   * block until the latest prompt contents parsing logic is settled
+   * (e.g., for every `onContentChanged` event of the prompt source).
+   */
+  async settled() {
+    assert(this.started, "Cannot wait on the parser that did not start yet.");
+    await this.firstParseResult.promise;
+    if (this.errorCondition) {
+      return this;
+    }
+    if (this.isDisposed) {
+      return this;
+    }
+    assertDefined(this.stream, "No stream reference found.");
+    await this.stream.settled;
+    if (this.promptHeader) {
+      await this.promptHeader.settled;
+    }
+    return this;
+  }
+  /**
+   * Same as {@link settled} but also waits for all possible
+   * nested child prompt references and their children to be settled.
+   */
+  async allSettled() {
+    await this.settled();
+    await Promise.allSettled(this.references.map((reference) => {
+      return reference.allSettled();
+    }));
+    return this;
+  }
+  constructor(promptContentsProvider, options, instantiationService, workspaceService, logService) {
+    super();
+    this.promptContentsProvider = promptContentsProvider;
+    this.instantiationService = instantiationService;
+    this.workspaceService = workspaceService;
+    this.logService = logService;
+    this.receivedTokens = [];
+    this._references = [];
+    this._onUpdate = this._register(new Emitter());
+    this.onUpdate = this._onUpdate.event;
+    this._onSettled = this._register(new Emitter());
+    this.firstParseResult = new FirstParseResult();
+    this.started = false;
+    this.options = {
+      ...DEFAULT_OPTIONS,
+      ...options
+    };
+    const seenReferences = [...this.options.seenReferences];
+    if (seenReferences.includes(this.uri.path)) {
+      seenReferences.push(this.uri.path);
+      this._errorCondition = new RecursiveReference(this.uri, seenReferences);
+      this._onUpdate.fire();
+      this.firstParseResult.end();
+      return this;
+    }
+    seenReferences.push(this.uri.path);
+    this._register(this.promptContentsProvider.onContentChanged((streamOrError) => {
+      this.onContentsChanged(streamOrError, seenReferences);
+      this.firstParseResult.end();
+    }));
+    this._register(this.promptContentsProvider.onDispose(this.dispose.bind(this)));
+  }
+  /**
+   * Handler the event event that is triggered when prompt contents change.
+   *
+   * @param streamOrError Either a binary stream of file contents, or an error object
+   * 						that was generated during the reference resolve attempt.
+   * @param seenReferences List of parent references that we've have already seen
+   * 					 	during the process of traversing the references tree. It's
+   * 						used to prevent the tree navigation to fall into an infinite
+   * 						references recursion.
+   */
+  onContentsChanged(streamOrError, seenReferences) {
+    this.stream?.dispose();
+    delete this.stream;
+    delete this._errorCondition;
+    this.receivedTokens = [];
+    this.promptHeader?.dispose();
+    delete this.promptHeader;
+    this.disposeReferences();
+    if (streamOrError instanceof ResolveError) {
+      this._errorCondition = streamOrError;
+      this._onUpdate.fire();
+      this._onSettled.fire(streamOrError);
+      return;
+    }
+    this.stream = ChatPromptCodec.decode(streamOrError);
+    this.stream.on("error", this.onStreamEnd.bind(this, this.stream));
+    this.stream.on("end", this.onStreamEnd.bind(this, this.stream));
+    this.stream.on("data", (token) => {
+      if (token instanceof MarkdownToken || token instanceof PromptToken) {
+        this.receivedTokens.push(token);
+      }
+      if (token instanceof FrontMatterHeader) {
+        return this.createHeader(token);
+      }
+      if (token instanceof PromptVariableWithData) {
+        try {
+          this.handleLinkToken(FileReference.from(token), [...seenReferences]);
+        } catch (error) {
+        }
+      }
+      if (token instanceof MarkdownLink && !token.isURL) {
+        this.handleLinkToken(token, [...seenReferences]);
+      }
+    });
+    if (this.stream.isDisposed) {
+      this.logService.warn(`[prompt parser][${basename(this.uri)}] cannot start stream that has been already disposed, aborting`);
+      return;
+    }
+    this.stream.start();
+  }
+  /**
+   * Create header object base on the target prompt file language ID.
+   * The language ID is important here, because it defines what type
+   * of metadata is valid for a prompt file and what type of related
+   * diagnostics we would show to the user.
+   */
+  createHeader(headerToken) {
+    const { languageId } = this.promptContentsProvider;
+    if (languageId === PROMPT_LANGUAGE_ID) {
+      this.promptHeader = new PromptHeader(headerToken, languageId);
+    }
+    if (languageId === INSTRUCTIONS_LANGUAGE_ID) {
+      this.promptHeader = new InstructionsHeader(headerToken, languageId);
+    }
+    if (languageId === MODE_LANGUAGE_ID) {
+      this.promptHeader = new ModeHeader(headerToken, languageId);
+    }
+    this.promptHeader?.start();
+  }
+  /**
+   * Handle a new reference token inside prompt contents.
+   */
+  handleLinkToken(token, seenReferences) {
+    const { parentFolder } = this;
+    const referenceUri = parentFolder !== null && path.isAbsolute(token.path) === false ? URI.joinPath(parentFolder, token.path) : URI.file(token.path);
+    const contentProvider = this.promptContentsProvider.createNew({ uri: referenceUri });
+    const reference = this.instantiationService.createInstance(PromptReference, contentProvider, token, { seenReferences });
+    this._references.push(reference);
+    reference.addDisposables(
+      // the content provider is exclusively owned by the reference
+      // hence dispose it when the reference is disposed
+      reference.onDispose(contentProvider.dispose.bind(contentProvider)),
+      reference.onUpdate(this._onUpdate.fire)
+    );
+    this._onUpdate.fire();
+    reference.start();
+    return this;
+  }
+  /**
+   * Handle the `stream` end event.
+   *
+   * @param stream The stream that has ended.
+   * @param error Optional error object if stream ended with an error.
+   */
+  onStreamEnd(stream, error) {
+    if (stream.isDisposed === true) {
+      return this;
+    }
+    if (error) {
+      this.logService.warn(`[prompt parser][${basename(this.uri)}] received an error on the chat prompt decoder stream: ${error}`);
+    }
+    this._onUpdate.fire();
+    this._onSettled.fire(error);
+    return this;
+  }
+  /**
+   * Dispose all currently held references.
+   */
+  disposeReferences() {
+    for (const reference of [...this._references]) {
+      reference.dispose();
+    }
+    this._references.length = 0;
+  }
+  /**
+   * Start the prompt parser.
+   */
+  start(token) {
+    if (this.started) {
+      return this;
+    }
+    this.started = true;
+    if (this.errorCondition) {
+      return this;
+    }
+    this.promptContentsProvider.start(token);
+    return this;
+  }
+  /**
+   * Associated URI of the prompt.
+   */
+  get uri() {
+    return this.promptContentsProvider.uri;
+  }
+  /**
+   * Get the parent folder URI of the prompt.
+   * For instance, if prompt URI points to a file on a disk, this
+   * function will return the folder URI that contains that file,
+   * but if the URI points to an `untitled` document, will try to
+   * use a different folder URI based on the workspace state.
+   */
+  get parentFolder() {
+    if (this.uri.scheme === "file") {
+      return dirname(this.uri);
+    }
+    const { folders } = this.workspaceService.getWorkspace();
+    if (folders.length === 1) {
+      return folders[0].uri;
+    }
+    return null;
+  }
+  /**
+   * Get a list of immediate child references of the prompt.
+   */
+  get references() {
+    return [...this._references];
+  }
+  /**
+   * Get a list of all references of the prompt, including
+   * all possible nested references its children may have.
+   */
+  get allReferences() {
+    const result = [];
+    for (const reference of this.references) {
+      result.push(reference);
+      if (reference.type === "file") {
+        result.push(...reference.allReferences);
+      }
+    }
+    return result;
+  }
+  /**
+   * Get list of all valid references.
+   */
+  get allValidReferences() {
+    return this.allReferences.filter((reference) => {
+      const { errorCondition } = reference;
+      if (!errorCondition) {
+        return true;
+      }
+      if (errorCondition instanceof FolderReference) {
+        return false;
+      }
+      return errorCondition instanceof NotPromptFile;
+    });
+  }
+  /**
+   * Valid metadata records defined in the prompt header.
+   */
+  get metadata() {
+    const { promptType } = this.promptContentsProvider;
+    if (promptType === "non-prompt") {
+      return null;
+    }
+    if (this.header === void 0) {
+      return { promptType };
+    }
+    if (this.header instanceof InstructionsHeader) {
+      return { promptType, ...this.header.metadata };
+    }
+    const { tools, mode, description } = this.header.metadata;
+    const resultingMode = tools !== void 0 ? ChatMode.Agent : mode;
+    const result = {};
+    if (description !== void 0) {
+      result.description = description;
+    }
+    if (tools !== void 0) {
+      result.tools = tools;
+    }
+    if (resultingMode !== void 0) {
+      result.mode = resultingMode;
+    }
+    return { promptType, ...result };
+  }
+  /**
+   * Entire associated `tools` metadata for this reference and
+   * all possible nested child references.
+   */
+  get allToolsMetadata() {
+    let hasTools = false;
+    const result = [];
+    if (this.metadata?.promptType !== PromptsType.prompt) {
+      return null;
+    }
+    const { tools, mode } = this.metadata;
+    if (tools !== void 0) {
+      result.push(...tools);
+      hasTools = true;
+    }
+    const isRootInAgentMode = hasTools === true || mode === ChatMode.Agent;
+    if (isRootInAgentMode === false) {
+      return null;
+    }
+    for (const reference of this.references) {
+      const { allToolsMetadata } = reference;
+      if (allToolsMetadata === null) {
+        continue;
+      }
+      result.push(...allToolsMetadata);
+      hasTools = true;
+    }
+    if (hasTools === false) {
+      return null;
+    }
+    return [...new Set(result)];
+  }
+  /**
+   * Get list of errors for the direct links of the current reference.
+   */
+  get errors() {
+    const childErrors = [];
+    for (const reference of this.references) {
+      const { errorCondition } = reference;
+      if (errorCondition && !(errorCondition instanceof NotPromptFile)) {
+        childErrors.push(errorCondition);
+      }
+    }
+    return childErrors;
+  }
+  /**
+   * List of all errors that occurred while resolving the current
+   * reference including all possible errors of nested children.
+   */
+  get allErrors() {
+    const result = [];
+    for (const reference of this.references) {
+      const { errorCondition } = reference;
+      if (errorCondition && !(errorCondition instanceof NotPromptFile)) {
+        result.push({
+          originalError: errorCondition,
+          parentUri: this.uri
+        });
+      }
+      result.push(...reference.allErrors);
+    }
+    return result;
+  }
+  /**
+   * The top most error of the current reference or any of its
+   * possible child reference errors.
+   */
+  get topError() {
+    if (this.errorCondition) {
+      return new TopError({
+        errorSubject: "root",
+        errorsCount: 1,
+        originalError: this.errorCondition
+      });
+    }
+    const childErrors = [...this.errors];
+    const nestedErrors = [];
+    for (const reference of this.references) {
+      nestedErrors.push(...reference.allErrors);
+    }
+    if (childErrors.length === 0 && nestedErrors.length === 0) {
+      return void 0;
+    }
+    const firstDirectChildError = childErrors[0];
+    const firstNestedChildError = nestedErrors[0];
+    const hasDirectChildError = firstDirectChildError !== void 0;
+    const firstChildError = hasDirectChildError ? {
+      originalError: firstDirectChildError,
+      parentUri: this.uri
+    } : firstNestedChildError;
+    const totalErrorsCount = childErrors.length + nestedErrors.length;
+    const subject = hasDirectChildError ? "child" : "indirect-child";
+    return new TopError({
+      errorSubject: subject,
+      originalError: firstChildError.originalError,
+      parentUri: firstChildError.parentUri,
+      errorsCount: totalErrorsCount
+    });
+  }
+  /**
+   * Check if the current reference points to a given resource.
+   */
+  sameUri(otherUri) {
+    return this.uri.toString() === otherUri.toString();
+  }
+  /**
+   * Check if the current reference points to a prompt snippet file.
+   */
+  get isPromptFile() {
+    return isPromptOrInstructionsFile(this.uri);
+  }
+  /**
+   * Returns a string representation of this object.
+   */
+  toString() {
+    return `prompt:${this.uri.path}`;
+  }
+  /**
+   * @inheritdoc
+   */
+  dispose() {
+    if (this.isDisposed) {
+      return;
+    }
+    this.disposeReferences();
+    this.stream?.dispose();
+    delete this.stream;
+    this.promptHeader?.dispose();
+    delete this.promptHeader;
+    super.dispose();
+  }
+};
+BasePromptParser = __decorate([
+  __param(2, IInstantiationService),
+  __param(3, IWorkspaceContextService),
+  __param(4, ILogService)
+], BasePromptParser);
+let PromptReference = class PromptReference2 extends ObservableDisposable {
+  static {
+    __name(this, "PromptReference");
+  }
+  constructor(promptContentsProvider, token, options, instantiationService) {
+    super();
+    this.promptContentsProvider = promptContentsProvider;
+    this.token = token;
+    this.parser = this._register(instantiationService.createInstance(BasePromptParser, this.promptContentsProvider, options));
+  }
+  /**
+   * Get the range of the `link` part of the reference.
+   */
+  get linkRange() {
+    if (this.token instanceof FileReference) {
+      return this.token.dataRange;
+    }
+    if (this.token instanceof MarkdownLink) {
+      return this.token.linkRange;
+    }
+    return void 0;
+  }
+  /**
+   * Type of the reference, - either a prompt `#file` variable,
+   * or a `markdown link` reference (`[caption](/path/to/file.md)`).
+   */
+  get type() {
+    if (this.token instanceof FileReference) {
+      return "file";
+    }
+    if (this.token instanceof MarkdownLink) {
+      return "file";
+    }
+    assertNever(this.token, `Unknown token type '${this.token}'.`);
+  }
+  /**
+   * Subtype of the reference, - either a prompt `#file` variable,
+   * or a `markdown link` reference (`[caption](/path/to/file.md)`).
+   */
+  get subtype() {
+    if (this.token instanceof FileReference) {
+      return "prompt";
+    }
+    if (this.token instanceof MarkdownLink) {
+      return "markdown";
+    }
+    assertNever(this.token, `Unknown token type '${this.token}'.`);
+  }
+  /**
+   * Start parsing the reference contents.
+   */
+  start() {
+    this.parser.start();
+    return this;
+  }
+  /**
+   * Subscribe to the `onUpdate` event that is fired when prompt tokens are updated.
+   */
+  onUpdate(...args) {
+    return this.parser.onUpdate(...args);
+  }
+  get range() {
+    return this.token.range;
+  }
+  get path() {
+    return this.token.path;
+  }
+  get text() {
+    return this.token.text;
+  }
+  get resolveFailed() {
+    return this.parser.resolveFailed;
+  }
+  get errorCondition() {
+    return this.parser.errorCondition;
+  }
+  get topError() {
+    return this.parser.topError;
+  }
+  get uri() {
+    return this.parser.uri;
+  }
+  get isPromptFile() {
+    return this.parser.isPromptFile;
+  }
+  get errors() {
+    return this.parser.errors;
+  }
+  get allErrors() {
+    return this.parser.allErrors;
+  }
+  get references() {
+    return this.parser.references;
+  }
+  get allReferences() {
+    return this.parser.allReferences;
+  }
+  get metadata() {
+    return this.parser.metadata;
+  }
+  get allToolsMetadata() {
+    return this.parser.allToolsMetadata;
+  }
+  get allValidReferences() {
+    return this.parser.allValidReferences;
+  }
+  async settled() {
+    await this.parser.settled();
+    return this;
+  }
+  async allSettled() {
+    await this.parser.allSettled();
+    return this;
+  }
+  /**
+   * Returns a string representation of this object.
+   */
+  toString() {
+    return `prompt-reference/${this.type}:${this.subtype}/${this.token}`;
+  }
+};
+PromptReference = __decorate([
+  __param(3, IInstantiationService)
+], PromptReference);
+class FirstParseResult extends DeferredPromise {
+  static {
+    __name(this, "FirstParseResult");
+  }
+  constructor() {
+    super(...arguments);
+    this._gotResult = false;
+  }
+  /**
+   * Whether we've received at least one result.
+   */
+  get gotFirstResult() {
+    return this._gotResult;
+  }
+  /**
+   * Get underlying promise reference.
+   */
+  get promise() {
+    return this.p;
+  }
+  /**
+   * Complete the underlying promise.
+   */
+  end() {
+    this._gotResult = true;
+    super.complete(void 0).catch(() => {
+    });
+    return;
+  }
+}
+export {
+  BasePromptParser,
+  PromptReference
+};
+//# sourceMappingURL=basePromptParser.js.map

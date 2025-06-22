@@ -1,1 +1,369 @@
-import*as w from"../../../../base/browser/dom.js";import{$X8 as v}from"../../../../base/browser/ui/actionbar/actionViewItems.js";import{$bm as x,$cm as $}from"../../../../base/common/actions.js";import{$ud as S}from"../../../../base/common/lifecycle.js";import{$v as C}from"../../../../base/common/platform.js";import{$cab as D,$hab as I,$kab as P}from"../../../browser/editorExtensions.js";import{EditorContextKeys as k}from"../../../common/editorContextKeys.js";import*as a from"../../../../nls.js";import{$eI as z,$gI as V}from"../../../../platform/actions/common/actions.js";import{$Vn as j}from"../../../../platform/contextkey/common/contextkey.js";import{$ofb as _,$nfb as R}from"../../../../platform/contextview/browser/contextView.js";import{$ux as E}from"../../../../platform/keybinding/common/keybinding.js";import{$El as K}from"../../../../platform/configuration/common/configuration.js";import{$hl as N,$Bl as q}from"../../../../platform/workspace/common/workspace.js";var A=function(h,t,e,n){var r=arguments.length,c=r<3?t:n===null?n=Object.getOwnPropertyDescriptor(t,e):n,i;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")c=Reflect.decorate(h,t,e,n);else for(var s=h.length-1;s>=0;s--)(i=h[s])&&(c=(r<3?i(c):r>3?i(t,e,c):i(t,e))||c);return r>3&&c&&Object.defineProperty(t,e,c),c},u=function(h,t){return function(e,n){t(e,n,h)}},g;let p=class{static{g=this}static{this.ID="editor.contrib.contextmenu"}static get(t){return t.getContribution(g.ID)}constructor(t,e,n,r,c,i,s,l){this.d=e,this.f=n,this.g=r,this.h=c,this.i=i,this.j=s,this.k=l,this.a=new S,this.b=0,this.c=t,this.a.add(this.c.onContextMenu(o=>this.l(o))),this.a.add(this.c.onMouseWheel(o=>{if(this.b>0){const d=this.f.getContextViewElement(),m=o.srcElement;m.shadowRoot&&w.$j6(d)===m.shadowRoot||this.f.hideContextView()}})),this.a.add(this.c.onKeyDown(o=>{this.c.getOption(27)&&o.keyCode===58&&(o.preventDefault(),o.stopPropagation(),this.showContextMenu())}))}l(t){if(!this.c.hasModel())return;if(!this.c.getOption(27)){this.c.focus(),t.target.position&&!this.c.getSelection().containsPosition(t.target.position)&&this.c.setPosition(t.target.position);return}if(t.target.type===12||t.target.type===6&&t.target.detail.injectedText)return;if(t.event.preventDefault(),t.event.stopPropagation(),t.target.type===11)return this.o(t.event);if(t.target.type!==6&&t.target.type!==7&&t.target.type!==1)return;if(this.c.focus(),t.target.position){let n=!1;for(const r of this.c.getSelections())if(r.containsPosition(t.target.position)){n=!0;break}n||this.c.setPosition(t.target.position)}let e=null;t.target.type!==1&&(e=t.event),this.showContextMenu(e)}showContextMenu(t){if(!this.c.getOption(27)||!this.c.hasModel())return;const e=this.m(this.c.getModel(),this.c.contextMenuId);e.length>0&&this.n(e,t)}m(t,e){const n=[],r=this.i.getMenuActions(e,this.g,{arg:t.uri});for(const c of r){const[,i]=c;let s=0;for(const l of i)if(l instanceof V){const o=this.m(t,l.item.submenu);o.length>0&&(n.push(new $(l.id,l.label,o)),s++)}else n.push(l),s++;s&&n.push(new x)}return n.length&&n.pop(),n}n(t,e=null){if(!this.c.hasModel())return;const n=this.c.getOption(65);this.c.updateOptions({hover:{enabled:!1}});let r=e;if(!r){this.c.revealPosition(this.c.getPosition(),1),this.c.render();const i=this.c.getScrolledVisiblePosition(this.c.getPosition()),s=w.$65(this.c.getDomNode()),l=s.left+i.left,o=s.top+i.top+i.height;r={x:l,y:o}}const c=this.c.getOption(135)&&!C;this.b++,this.d.showContextMenu({domForShadowRoot:c?this.c.getOverflowWidgetsDomNode()??this.c.getDomNode():void 0,getAnchor:()=>r,getActions:()=>t,getActionViewItem:i=>{const s=this.p(i);if(s)return new v(i,i,{label:!0,keybinding:s.getLabel(),isMenu:!0});const l=i;return typeof l.getActionViewItem=="function"?l.getActionViewItem():new v(i,i,{icon:!0,label:!0,isMenu:!0})},getKeyBinding:i=>this.p(i),onHide:i=>{this.b--,this.c.updateOptions({hover:n})}})}o(t){if(!this.c.hasModel()||q(this.k.getWorkspace()))return;const e=this.c.getOption(77);let n=0;const r=o=>({id:`menu-action-${++n}`,label:o.label,tooltip:"",class:void 0,enabled:typeof o.enabled>"u"?!0:o.enabled,checked:o.checked,run:o.run}),c=(o,d)=>new $(`menu-action-${++n}`,o,d,void 0),i=(o,d,m,M,y)=>{if(!d)return r({label:o,enabled:d,run:()=>{}});const O=f=>()=>{this.j.updateValue(m,f)},b=[];for(const f of y)b.push(r({label:f.label,checked:M===f.value,run:O(f.value)}));return c(o,b)},s=[];s.push(r({label:a.localize(1026,null),checked:e.enabled,run:()=>{this.j.updateValue("editor.minimap.enabled",!e.enabled)}})),s.push(new x),s.push(r({label:a.localize(1027,null),enabled:e.enabled,checked:e.renderCharacters,run:()=>{this.j.updateValue("editor.minimap.renderCharacters",!e.renderCharacters)}})),s.push(i(a.localize(1028,null),e.enabled,"editor.minimap.size",e.size,[{label:a.localize(1029,null),value:"proportional"},{label:a.localize(1030,null),value:"fill"},{label:a.localize(1031,null),value:"fit"}])),s.push(i(a.localize(1032,null),e.enabled,"editor.minimap.showSlider",e.showSlider,[{label:a.localize(1033,null),value:"mouseover"},{label:a.localize(1034,null),value:"always"}]));const l=this.c.getOption(135)&&!C;this.b++,this.d.showContextMenu({domForShadowRoot:l?this.c.getDomNode():void 0,getAnchor:()=>t,getActions:()=>s,onHide:o=>{this.b--,this.c.focus()}})}p(t){return this.h.lookupKeybinding(t.id)}dispose(){this.b>0&&this.f.hideContextView(),this.a.dispose()}};p=g=A([u(1,_),u(2,R),u(3,j),u(4,E),u(5,z),u(6,K),u(7,N)],p);class F extends D{constructor(){super({id:"editor.action.showContextMenu",label:a.localize2(1035,"Show Editor Context Menu"),precondition:void 0,kbOpts:{kbExpr:k.textInputFocus,primary:1092,weight:100}})}run(t,e){p.get(e)?.showContextMenu()}}P(p.ID,p,2);I(F);export{p as $qnb};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import * as dom from "../../../../base/browser/dom.js";
+import { ActionViewItem } from "../../../../base/browser/ui/actionbar/actionViewItems.js";
+import { Separator, SubmenuAction } from "../../../../base/common/actions.js";
+import { DisposableStore } from "../../../../base/common/lifecycle.js";
+import { isIOS } from "../../../../base/common/platform.js";
+import { EditorAction, registerEditorAction, registerEditorContribution } from "../../../browser/editorExtensions.js";
+import { EditorContextKeys } from "../../../common/editorContextKeys.js";
+import * as nls from "../../../../nls.js";
+import { IMenuService, SubmenuItemAction } from "../../../../platform/actions/common/actions.js";
+import { IContextKeyService } from "../../../../platform/contextkey/common/contextkey.js";
+import { IContextMenuService, IContextViewService } from "../../../../platform/contextview/browser/contextView.js";
+import { IKeybindingService } from "../../../../platform/keybinding/common/keybinding.js";
+import { IConfigurationService } from "../../../../platform/configuration/common/configuration.js";
+import { IWorkspaceContextService, isStandaloneEditorWorkspace } from "../../../../platform/workspace/common/workspace.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+var ContextMenuController_1;
+let ContextMenuController = class ContextMenuController2 {
+  static {
+    __name(this, "ContextMenuController");
+  }
+  static {
+    ContextMenuController_1 = this;
+  }
+  static {
+    this.ID = "editor.contrib.contextmenu";
+  }
+  static get(editor) {
+    return editor.getContribution(ContextMenuController_1.ID);
+  }
+  constructor(editor, _contextMenuService, _contextViewService, _contextKeyService, _keybindingService, _menuService, _configurationService, _workspaceContextService) {
+    this._contextMenuService = _contextMenuService;
+    this._contextViewService = _contextViewService;
+    this._contextKeyService = _contextKeyService;
+    this._keybindingService = _keybindingService;
+    this._menuService = _menuService;
+    this._configurationService = _configurationService;
+    this._workspaceContextService = _workspaceContextService;
+    this._toDispose = new DisposableStore();
+    this._contextMenuIsBeingShownCount = 0;
+    this._editor = editor;
+    this._toDispose.add(this._editor.onContextMenu((e) => this._onContextMenu(e)));
+    this._toDispose.add(this._editor.onMouseWheel((e) => {
+      if (this._contextMenuIsBeingShownCount > 0) {
+        const view = this._contextViewService.getContextViewElement();
+        const target = e.srcElement;
+        if (!(target.shadowRoot && dom.getShadowRoot(view) === target.shadowRoot)) {
+          this._contextViewService.hideContextView();
+        }
+      }
+    }));
+    this._toDispose.add(this._editor.onKeyDown((e) => {
+      if (!this._editor.getOption(
+        27
+        /* EditorOption.contextmenu */
+      )) {
+        return;
+      }
+      if (e.keyCode === 58) {
+        e.preventDefault();
+        e.stopPropagation();
+        this.showContextMenu();
+      }
+    }));
+  }
+  _onContextMenu(e) {
+    if (!this._editor.hasModel()) {
+      return;
+    }
+    if (!this._editor.getOption(
+      27
+      /* EditorOption.contextmenu */
+    )) {
+      this._editor.focus();
+      if (e.target.position && !this._editor.getSelection().containsPosition(e.target.position)) {
+        this._editor.setPosition(e.target.position);
+      }
+      return;
+    }
+    if (e.target.type === 12) {
+      return;
+    }
+    if (e.target.type === 6 && e.target.detail.injectedText) {
+      return;
+    }
+    e.event.preventDefault();
+    e.event.stopPropagation();
+    if (e.target.type === 11) {
+      return this._showScrollbarContextMenu(e.event);
+    }
+    if (e.target.type !== 6 && e.target.type !== 7 && e.target.type !== 1) {
+      return;
+    }
+    this._editor.focus();
+    if (e.target.position) {
+      let hasSelectionAtPosition = false;
+      for (const selection of this._editor.getSelections()) {
+        if (selection.containsPosition(e.target.position)) {
+          hasSelectionAtPosition = true;
+          break;
+        }
+      }
+      if (!hasSelectionAtPosition) {
+        this._editor.setPosition(e.target.position);
+      }
+    }
+    let anchor = null;
+    if (e.target.type !== 1) {
+      anchor = e.event;
+    }
+    this.showContextMenu(anchor);
+  }
+  showContextMenu(anchor) {
+    if (!this._editor.getOption(
+      27
+      /* EditorOption.contextmenu */
+    )) {
+      return;
+    }
+    if (!this._editor.hasModel()) {
+      return;
+    }
+    const menuActions = this._getMenuActions(this._editor.getModel(), this._editor.contextMenuId);
+    if (menuActions.length > 0) {
+      this._doShowContextMenu(menuActions, anchor);
+    }
+  }
+  _getMenuActions(model, menuId) {
+    const result = [];
+    const groups = this._menuService.getMenuActions(menuId, this._contextKeyService, { arg: model.uri });
+    for (const group of groups) {
+      const [, actions] = group;
+      let addedItems = 0;
+      for (const action of actions) {
+        if (action instanceof SubmenuItemAction) {
+          const subActions = this._getMenuActions(model, action.item.submenu);
+          if (subActions.length > 0) {
+            result.push(new SubmenuAction(action.id, action.label, subActions));
+            addedItems++;
+          }
+        } else {
+          result.push(action);
+          addedItems++;
+        }
+      }
+      if (addedItems) {
+        result.push(new Separator());
+      }
+    }
+    if (result.length) {
+      result.pop();
+    }
+    return result;
+  }
+  _doShowContextMenu(actions, event = null) {
+    if (!this._editor.hasModel()) {
+      return;
+    }
+    const oldHoverSetting = this._editor.getOption(
+      65
+      /* EditorOption.hover */
+    );
+    this._editor.updateOptions({
+      hover: {
+        enabled: false
+      }
+    });
+    let anchor = event;
+    if (!anchor) {
+      this._editor.revealPosition(
+        this._editor.getPosition(),
+        1
+        /* ScrollType.Immediate */
+      );
+      this._editor.render();
+      const cursorCoords = this._editor.getScrolledVisiblePosition(this._editor.getPosition());
+      const editorCoords = dom.getDomNodePagePosition(this._editor.getDomNode());
+      const posx = editorCoords.left + cursorCoords.left;
+      const posy = editorCoords.top + cursorCoords.top + cursorCoords.height;
+      anchor = { x: posx, y: posy };
+    }
+    const useShadowDOM = this._editor.getOption(
+      135
+      /* EditorOption.useShadowDOM */
+    ) && !isIOS;
+    this._contextMenuIsBeingShownCount++;
+    this._contextMenuService.showContextMenu({
+      domForShadowRoot: useShadowDOM ? this._editor.getOverflowWidgetsDomNode() ?? this._editor.getDomNode() : void 0,
+      getAnchor: /* @__PURE__ */ __name(() => anchor, "getAnchor"),
+      getActions: /* @__PURE__ */ __name(() => actions, "getActions"),
+      getActionViewItem: /* @__PURE__ */ __name((action) => {
+        const keybinding = this._keybindingFor(action);
+        if (keybinding) {
+          return new ActionViewItem(action, action, { label: true, keybinding: keybinding.getLabel(), isMenu: true });
+        }
+        const customActionViewItem = action;
+        if (typeof customActionViewItem.getActionViewItem === "function") {
+          return customActionViewItem.getActionViewItem();
+        }
+        return new ActionViewItem(action, action, { icon: true, label: true, isMenu: true });
+      }, "getActionViewItem"),
+      getKeyBinding: /* @__PURE__ */ __name((action) => {
+        return this._keybindingFor(action);
+      }, "getKeyBinding"),
+      onHide: /* @__PURE__ */ __name((wasCancelled) => {
+        this._contextMenuIsBeingShownCount--;
+        this._editor.updateOptions({
+          hover: oldHoverSetting
+        });
+      }, "onHide")
+    });
+  }
+  _showScrollbarContextMenu(anchor) {
+    if (!this._editor.hasModel()) {
+      return;
+    }
+    if (isStandaloneEditorWorkspace(this._workspaceContextService.getWorkspace())) {
+      return;
+    }
+    const minimapOptions = this._editor.getOption(
+      77
+      /* EditorOption.minimap */
+    );
+    let lastId = 0;
+    const createAction = /* @__PURE__ */ __name((opts) => {
+      return {
+        id: `menu-action-${++lastId}`,
+        label: opts.label,
+        tooltip: "",
+        class: void 0,
+        enabled: typeof opts.enabled === "undefined" ? true : opts.enabled,
+        checked: opts.checked,
+        run: opts.run
+      };
+    }, "createAction");
+    const createSubmenuAction = /* @__PURE__ */ __name((label, actions2) => {
+      return new SubmenuAction(`menu-action-${++lastId}`, label, actions2, void 0);
+    }, "createSubmenuAction");
+    const createEnumAction = /* @__PURE__ */ __name((label, enabled, configName, configuredValue, options) => {
+      if (!enabled) {
+        return createAction({ label, enabled, run: /* @__PURE__ */ __name(() => {
+        }, "run") });
+      }
+      const createRunner = /* @__PURE__ */ __name((value) => {
+        return () => {
+          this._configurationService.updateValue(configName, value);
+        };
+      }, "createRunner");
+      const actions2 = [];
+      for (const option of options) {
+        actions2.push(createAction({
+          label: option.label,
+          checked: configuredValue === option.value,
+          run: createRunner(option.value)
+        }));
+      }
+      return createSubmenuAction(label, actions2);
+    }, "createEnumAction");
+    const actions = [];
+    actions.push(createAction({
+      label: nls.localize("context.minimap.minimap", "Minimap"),
+      checked: minimapOptions.enabled,
+      run: /* @__PURE__ */ __name(() => {
+        this._configurationService.updateValue(`editor.minimap.enabled`, !minimapOptions.enabled);
+      }, "run")
+    }));
+    actions.push(new Separator());
+    actions.push(createAction({
+      label: nls.localize("context.minimap.renderCharacters", "Render Characters"),
+      enabled: minimapOptions.enabled,
+      checked: minimapOptions.renderCharacters,
+      run: /* @__PURE__ */ __name(() => {
+        this._configurationService.updateValue(`editor.minimap.renderCharacters`, !minimapOptions.renderCharacters);
+      }, "run")
+    }));
+    actions.push(createEnumAction(nls.localize("context.minimap.size", "Vertical size"), minimapOptions.enabled, "editor.minimap.size", minimapOptions.size, [{
+      label: nls.localize("context.minimap.size.proportional", "Proportional"),
+      value: "proportional"
+    }, {
+      label: nls.localize("context.minimap.size.fill", "Fill"),
+      value: "fill"
+    }, {
+      label: nls.localize("context.minimap.size.fit", "Fit"),
+      value: "fit"
+    }]));
+    actions.push(createEnumAction(nls.localize("context.minimap.slider", "Slider"), minimapOptions.enabled, "editor.minimap.showSlider", minimapOptions.showSlider, [{
+      label: nls.localize("context.minimap.slider.mouseover", "Mouse Over"),
+      value: "mouseover"
+    }, {
+      label: nls.localize("context.minimap.slider.always", "Always"),
+      value: "always"
+    }]));
+    const useShadowDOM = this._editor.getOption(
+      135
+      /* EditorOption.useShadowDOM */
+    ) && !isIOS;
+    this._contextMenuIsBeingShownCount++;
+    this._contextMenuService.showContextMenu({
+      domForShadowRoot: useShadowDOM ? this._editor.getDomNode() : void 0,
+      getAnchor: /* @__PURE__ */ __name(() => anchor, "getAnchor"),
+      getActions: /* @__PURE__ */ __name(() => actions, "getActions"),
+      onHide: /* @__PURE__ */ __name((wasCancelled) => {
+        this._contextMenuIsBeingShownCount--;
+        this._editor.focus();
+      }, "onHide")
+    });
+  }
+  _keybindingFor(action) {
+    return this._keybindingService.lookupKeybinding(action.id);
+  }
+  dispose() {
+    if (this._contextMenuIsBeingShownCount > 0) {
+      this._contextViewService.hideContextView();
+    }
+    this._toDispose.dispose();
+  }
+};
+ContextMenuController = ContextMenuController_1 = __decorate([
+  __param(1, IContextMenuService),
+  __param(2, IContextViewService),
+  __param(3, IContextKeyService),
+  __param(4, IKeybindingService),
+  __param(5, IMenuService),
+  __param(6, IConfigurationService),
+  __param(7, IWorkspaceContextService)
+], ContextMenuController);
+class ShowContextMenu extends EditorAction {
+  static {
+    __name(this, "ShowContextMenu");
+  }
+  constructor() {
+    super({
+      id: "editor.action.showContextMenu",
+      label: nls.localize2("action.showContextMenu.label", "Show Editor Context Menu"),
+      precondition: void 0,
+      kbOpts: {
+        kbExpr: EditorContextKeys.textInputFocus,
+        primary: 1024 | 68,
+        weight: 100
+        /* KeybindingWeight.EditorContrib */
+      }
+    });
+  }
+  run(accessor, editor) {
+    ContextMenuController.get(editor)?.showContextMenu();
+  }
+}
+registerEditorContribution(
+  ContextMenuController.ID,
+  ContextMenuController,
+  2
+  /* EditorContributionInstantiation.BeforeFirstInteraction */
+);
+registerEditorAction(ShowContextMenu);
+export {
+  ContextMenuController
+};
+//# sourceMappingURL=contextmenu.js.map

@@ -1,1 +1,455 @@
-import{$vd as M,$ud as O,$qd as _,$wd as x}from"../../../../base/common/lifecycle.js";import*as b from"../../../../nls.js";import{$dI as y,$fI as A}from"../../../../platform/actions/common/actions.js";import{$Zn as q}from"../../../../platform/commands/common/commands.js";import{$_o as D}from"../../../../platform/dialogs/common/dialogs.js";import{$WB as k}from"../../../../platform/instantiation/common/extensions.js";import{Severity as z}from"../../../../platform/notification/common/notification.js";import{$OM as C}from"../../../../platform/quickinput/common/quickInput.js";import{$Ho as F}from"../../../../platform/storage/common/storage.js";import{$Dxb as H,$Exb as B}from"../../activity/common/activity.js";import{$d3b as G}from"./authenticationMcpAccessService.js";import{$f3b as S}from"./authenticationMcpUsageService.js";import{$cX as R}from"../common/authentication.js";import{$df as U}from"../../../../base/common/event.js";import{$nn as J}from"../../../../platform/product/common/productService.js";import{$nj as L}from"../../../../platform/instantiation/common/instantiation.js";var E=function(g,t,e,s){var i=arguments.length,o=i<3?t:s===null?s=Object.getOwnPropertyDescriptor(t,e):s,n;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")o=Reflect.decorate(g,t,e,s);else for(var c=g.length-1;c>=0;c--)(n=g[c])&&(o=(i<3?n(o):i>3?n(t,e,o):n(t,e))||o);return i>3&&o&&Object.defineProperty(t,e,o),o},d=function(g,t){return function(e,s){t(e,s,g)}};const m=" ",T=L("IAuthenticationMcpService");let p=class extends M{constructor(t,e,s,i,o,n,c,a){super(),this.j=t,this.m=e,this.n=s,this.r=i,this.s=o,this.t=n,this.u=c,this.w=a,this.a=new Map,this.b=new Map,this.c=this.B(new x),this.f=this.B(new U),this.onDidChangeAccountPreference=this.f.event,this.g=this.s.inheritAuthAccountPreference||{},this.h=Object.entries(this.g).reduce((h,[r,l])=>(l.forEach(u=>{h[u]=r}),h),{}),this.y()}y(){this.B(this.t.onDidChangeSessions(async t=>{t.event.added?.length&&await this.z(t.providerId,t.event.added),t.event.removed?.length&&await this.C(t.providerId,t.event.removed),this.D()})),this.B(this.t.onDidUnregisterAuthenticationProvider(t=>{const e=this.b.get(t.id)||{};Object.keys(e).forEach(s=>{this.F(t.id,s)})}))}async z(t,e){const s=this.a.get(t);s&&Object.keys(s).forEach(i=>{e.some(o=>o.scopes.slice().join(m)===i)&&(s[i]?.disposables.forEach(n=>n.dispose()),delete s[i],Object.keys(s).length===0?this.a.delete(t):this.a.set(t,s))})}async C(t,e){const s=this.b.get(t);s&&Object.keys(s).forEach(i=>{e.forEach(o=>{const n=s[i].possibleSessions.findIndex(c=>c.id===o.id);n&&s[i].possibleSessions.splice(n,1)}),s[i].possibleSessions.length||this.F(t,i)})}D(){this.c.clear();let t=0;if(this.a.forEach(e=>{Object.keys(e).forEach(s=>{t+=e[s].requestingMcpServerIds.length})}),this.b.forEach(e=>{t+=Object.keys(e).length}),t>0){const e=new B(t,()=>b.localize(13819,null));this.c.value=this.j.showAccountsActivity({badge:e})}}F(t,e){const s=this.b.get(t)||{};s[e]&&(_(s[e].disposables),delete s[e],this.D())}updateAccountPreference(t,e,s){const i=this.h[t]??t,o=this.G(i,e);this.m.store(o,s.label,1,1),this.m.store(o,s.label,-1,1);const n=this.g[i],c=n?[i,...n]:[i];this.f.fire({mcpServerIds:c,providerId:e})}getAccountPreference(t,e){const s=this.G(this.h[t]??t,e);return this.m.get(s,1)??this.m.get(s,-1)}removeAccountPreference(t,e){const s=this.G(this.h[t]??t,e);this.m.remove(s,1),this.m.remove(s,-1)}G(t,e){return`${t}-${e}`}updateSessionPreference(t,e,s){const i=`${e}-${t}-${s.scopes.join(m)}`;this.m.store(i,s.id,1,1),this.m.store(i,s.id,-1,1)}getSessionPreference(t,e,s){const i=`${e}-${t}-${s.join(m)}`;return this.m.get(i,1)??this.m.get(i,-1)}removeSessionPreference(t,e,s){const i=`${e}-${t}-${s.join(m)}`;this.m.remove(i,1),this.m.remove(i,-1)}H(t,e,s){this.updateAccountPreference(e,t,s.account),this.updateSessionPreference(t,e,s)}async I(t,e,s,i){let o;(function(c){c[c.Allow=0]="Allow",c[c.Deny=1]="Deny",c[c.Cancel=2]="Cancel"})(o||(o={}));const{result:n}=await this.n.prompt({type:z.Info,message:b.localize(13820,null,i,t.label,e),buttons:[{label:b.localize(13821,null),run:()=>o.Allow},{label:b.localize(13822,null),run:()=>o.Deny}],cancelButton:{run:()=>o.Cancel}});return n!==o.Cancel&&(this.w.updateAllowedMcpServers(t.id,e,[{id:s,name:i,allowed:n===o.Allow}]),this.F(t.id,s)),n===o.Allow}async selectSession(t,e,s,i,o){const n=await this.t.getAccounts(t);if(!n.length)throw new Error("No accounts available");const c=new O,a=c.add(this.r.createQuickPick());a.ignoreFocusOut=!0;const h=new Set,r=o.filter(l=>!h.has(l.account.label)&&h.add(l.account.label)).map(l=>({label:l.account.label,session:l}));return n.forEach(l=>{h.has(l.label)||r.push({label:l.label,account:l})}),r.push({label:b.localize(13823,null)}),a.items=r,a.title=b.localize(13824,null,s,this.t.getProvider(t).label),a.placeholder=b.localize(13825,null,s),await new Promise((l,u)=>{c.add(a.onDidAccept(async w=>{a.dispose();let f=a.selectedItems[0].session;if(!f){const P=a.selectedItems[0].account;try{f=await this.t.createSession(t,i,{account:P})}catch(j){u(j);return}}const $=f.account.label;this.w.updateAllowedMcpServers(t,$,[{id:e,name:s,allowed:!0}]),this.H(t,e,f),this.F(t,e),l(f)})),c.add(a.onDidHide(w=>{a.selectedItems[0]||u("User did not consent to account access"),c.dispose()})),a.show()})}async J(t,e,s,i){const n=(this.b.get(t.id)||{})[e];if(!n||!t)return;const c=n.possibleSessions;let a;if(t.supportsMultipleAccounts)try{a=await this.selectSession(t.id,e,s,i,c)}catch{}else await this.I(t,c[0].account.label,e,s)&&(a=c[0]);a&&this.u.addAccountUsage(t.id,a.account.label,a.scopes,e,s)}requestSessionAccess(t,e,s,i,o){const n=this.b.get(t)||{};if(n[e])return;const a=this.t.getProvider(t),h=A.appendMenuItem(y.AccountsContext,{group:"3_accessRequests",command:{id:`${t}${e}Access`,title:b.localize(13826,null,a.label,s)}}),r=q.registerCommand({id:`${t}${e}Access`,handler:async l=>{this.J(a,e,s,i)}});n[e]={possibleSessions:o,disposables:[h,r]},this.b.set(t,n),this.D()}async requestNewSession(t,e,s,i){this.t.isAuthenticationProviderRegistered(t)||await new Promise((u,w)=>{const f=this.t.onDidRegisterAuthenticationProvider($=>{$.id===t&&(f.dispose(),u())})});let o;try{o=this.t.getProvider(t)}catch{return}const n=this.a.get(t),c=e.join(m);if(n&&n[c]&&n[c].requestingMcpServerIds.includes(s))return;const h=`${t}:${s}:signIn${Object.keys(n||[]).length}`,r=A.appendMenuItem(y.AccountsContext,{group:"2_signInRequests",command:{id:h,title:b.localize(13827,null,o.label,i)}}),l=q.registerCommand({id:h,handler:async u=>{const f=await u.get(R).createSession(t,e);this.w.updateAllowedMcpServers(t,f.account.label,[{id:s,name:i,allowed:!0}]),this.H(t,s,f)}});if(n){const u=n[c]||{disposables:[],requestingMcpServerIds:[]};n[c]={disposables:[...u.disposables,r,l],requestingMcpServerIds:[...u.requestingMcpServerIds,s]},this.a.set(t,n)}else this.a.set(t,{[c]:{disposables:[r,l],requestingMcpServerIds:[s]}});this.D()}};p=E([d(0,H),d(1,F),d(2,D),d(3,C),d(4,J),d(5,R),d(6,S),d(7,G)],p);k(T,p,1);export{T as $h3b,p as $i3b};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { Disposable, DisposableStore, dispose, MutableDisposable } from "../../../../base/common/lifecycle.js";
+import * as nls from "../../../../nls.js";
+import { MenuId, MenuRegistry } from "../../../../platform/actions/common/actions.js";
+import { CommandsRegistry } from "../../../../platform/commands/common/commands.js";
+import { IDialogService } from "../../../../platform/dialogs/common/dialogs.js";
+import { registerSingleton } from "../../../../platform/instantiation/common/extensions.js";
+import { Severity } from "../../../../platform/notification/common/notification.js";
+import { IQuickInputService } from "../../../../platform/quickinput/common/quickInput.js";
+import { IStorageService } from "../../../../platform/storage/common/storage.js";
+import { IActivityService, NumberBadge } from "../../activity/common/activity.js";
+import { IAuthenticationMcpAccessService } from "./authenticationMcpAccessService.js";
+import { IAuthenticationMcpUsageService } from "./authenticationMcpUsageService.js";
+import { IAuthenticationService } from "../common/authentication.js";
+import { Emitter } from "../../../../base/common/event.js";
+import { IProductService } from "../../../../platform/product/common/productService.js";
+import { createDecorator } from "../../../../platform/instantiation/common/instantiation.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+const SCOPESLIST_SEPARATOR = " ";
+const IAuthenticationMcpService = createDecorator("IAuthenticationMcpService");
+let AuthenticationMcpService = class AuthenticationMcpService2 extends Disposable {
+  static {
+    __name(this, "AuthenticationMcpService");
+  }
+  constructor(activityService, storageService, dialogService, quickInputService, _productService, _authenticationService, _authenticationUsageService, _authenticationAccessService) {
+    super();
+    this.activityService = activityService;
+    this.storageService = storageService;
+    this.dialogService = dialogService;
+    this.quickInputService = quickInputService;
+    this._productService = _productService;
+    this._authenticationService = _authenticationService;
+    this._authenticationUsageService = _authenticationUsageService;
+    this._authenticationAccessService = _authenticationAccessService;
+    this._signInRequestItems = /* @__PURE__ */ new Map();
+    this._sessionAccessRequestItems = /* @__PURE__ */ new Map();
+    this._accountBadgeDisposable = this._register(new MutableDisposable());
+    this._onDidAccountPreferenceChange = this._register(new Emitter());
+    this.onDidChangeAccountPreference = this._onDidAccountPreferenceChange.event;
+    this._inheritAuthAccountPreferenceParentToChildren = this._productService.inheritAuthAccountPreference || {};
+    this._inheritAuthAccountPreferenceChildToParent = Object.entries(this._inheritAuthAccountPreferenceParentToChildren).reduce((acc, [parent, children]) => {
+      children.forEach((child) => {
+        acc[child] = parent;
+      });
+      return acc;
+    }, {});
+    this.registerListeners();
+  }
+  registerListeners() {
+    this._register(this._authenticationService.onDidChangeSessions(async (e) => {
+      if (e.event.added?.length) {
+        await this.updateNewSessionRequests(e.providerId, e.event.added);
+      }
+      if (e.event.removed?.length) {
+        await this.updateAccessRequests(e.providerId, e.event.removed);
+      }
+      this.updateBadgeCount();
+    }));
+    this._register(this._authenticationService.onDidUnregisterAuthenticationProvider((e) => {
+      const accessRequests = this._sessionAccessRequestItems.get(e.id) || {};
+      Object.keys(accessRequests).forEach((mcpServerId) => {
+        this.removeAccessRequest(e.id, mcpServerId);
+      });
+    }));
+  }
+  async updateNewSessionRequests(providerId, addedSessions) {
+    const existingRequestsForProvider = this._signInRequestItems.get(providerId);
+    if (!existingRequestsForProvider) {
+      return;
+    }
+    Object.keys(existingRequestsForProvider).forEach((requestedScopes) => {
+      if (addedSessions.some((session) => session.scopes.slice().join(SCOPESLIST_SEPARATOR) === requestedScopes)) {
+        const sessionRequest = existingRequestsForProvider[requestedScopes];
+        sessionRequest?.disposables.forEach((item) => item.dispose());
+        delete existingRequestsForProvider[requestedScopes];
+        if (Object.keys(existingRequestsForProvider).length === 0) {
+          this._signInRequestItems.delete(providerId);
+        } else {
+          this._signInRequestItems.set(providerId, existingRequestsForProvider);
+        }
+      }
+    });
+  }
+  async updateAccessRequests(providerId, removedSessions) {
+    const providerRequests = this._sessionAccessRequestItems.get(providerId);
+    if (providerRequests) {
+      Object.keys(providerRequests).forEach((mcpServerId) => {
+        removedSessions.forEach((removed) => {
+          const indexOfSession = providerRequests[mcpServerId].possibleSessions.findIndex((session) => session.id === removed.id);
+          if (indexOfSession) {
+            providerRequests[mcpServerId].possibleSessions.splice(indexOfSession, 1);
+          }
+        });
+        if (!providerRequests[mcpServerId].possibleSessions.length) {
+          this.removeAccessRequest(providerId, mcpServerId);
+        }
+      });
+    }
+  }
+  updateBadgeCount() {
+    this._accountBadgeDisposable.clear();
+    let numberOfRequests = 0;
+    this._signInRequestItems.forEach((providerRequests) => {
+      Object.keys(providerRequests).forEach((request) => {
+        numberOfRequests += providerRequests[request].requestingMcpServerIds.length;
+      });
+    });
+    this._sessionAccessRequestItems.forEach((accessRequest) => {
+      numberOfRequests += Object.keys(accessRequest).length;
+    });
+    if (numberOfRequests > 0) {
+      const badge = new NumberBadge(numberOfRequests, () => nls.localize("sign in", "Sign in requested"));
+      this._accountBadgeDisposable.value = this.activityService.showAccountsActivity({ badge });
+    }
+  }
+  removeAccessRequest(providerId, mcpServerId) {
+    const providerRequests = this._sessionAccessRequestItems.get(providerId) || {};
+    if (providerRequests[mcpServerId]) {
+      dispose(providerRequests[mcpServerId].disposables);
+      delete providerRequests[mcpServerId];
+      this.updateBadgeCount();
+    }
+  }
+  //#region Account/Session Preference
+  updateAccountPreference(mcpServerId, providerId, account) {
+    const parentMcpServerId = this._inheritAuthAccountPreferenceChildToParent[mcpServerId] ?? mcpServerId;
+    const key = this._getKey(parentMcpServerId, providerId);
+    this.storageService.store(
+      key,
+      account.label,
+      1,
+      1
+      /* StorageTarget.MACHINE */
+    );
+    this.storageService.store(
+      key,
+      account.label,
+      -1,
+      1
+      /* StorageTarget.MACHINE */
+    );
+    const childrenMcpServers = this._inheritAuthAccountPreferenceParentToChildren[parentMcpServerId];
+    const mcpServerIds = childrenMcpServers ? [parentMcpServerId, ...childrenMcpServers] : [parentMcpServerId];
+    this._onDidAccountPreferenceChange.fire({ mcpServerIds, providerId });
+  }
+  getAccountPreference(mcpServerId, providerId) {
+    const key = this._getKey(this._inheritAuthAccountPreferenceChildToParent[mcpServerId] ?? mcpServerId, providerId);
+    return this.storageService.get(
+      key,
+      1
+      /* StorageScope.WORKSPACE */
+    ) ?? this.storageService.get(
+      key,
+      -1
+      /* StorageScope.APPLICATION */
+    );
+  }
+  removeAccountPreference(mcpServerId, providerId) {
+    const key = this._getKey(this._inheritAuthAccountPreferenceChildToParent[mcpServerId] ?? mcpServerId, providerId);
+    this.storageService.remove(
+      key,
+      1
+      /* StorageScope.WORKSPACE */
+    );
+    this.storageService.remove(
+      key,
+      -1
+      /* StorageScope.APPLICATION */
+    );
+  }
+  _getKey(mcpServerId, providerId) {
+    return `${mcpServerId}-${providerId}`;
+  }
+  // TODO@TylerLeonhardt: Remove all of this after a couple iterations
+  updateSessionPreference(providerId, mcpServerId, session) {
+    const key = `${mcpServerId}-${providerId}-${session.scopes.join(SCOPESLIST_SEPARATOR)}`;
+    this.storageService.store(
+      key,
+      session.id,
+      1,
+      1
+      /* StorageTarget.MACHINE */
+    );
+    this.storageService.store(
+      key,
+      session.id,
+      -1,
+      1
+      /* StorageTarget.MACHINE */
+    );
+  }
+  getSessionPreference(providerId, mcpServerId, scopes) {
+    const key = `${mcpServerId}-${providerId}-${scopes.join(SCOPESLIST_SEPARATOR)}`;
+    return this.storageService.get(
+      key,
+      1
+      /* StorageScope.WORKSPACE */
+    ) ?? this.storageService.get(
+      key,
+      -1
+      /* StorageScope.APPLICATION */
+    );
+  }
+  removeSessionPreference(providerId, mcpServerId, scopes) {
+    const key = `${mcpServerId}-${providerId}-${scopes.join(SCOPESLIST_SEPARATOR)}`;
+    this.storageService.remove(
+      key,
+      1
+      /* StorageScope.WORKSPACE */
+    );
+    this.storageService.remove(
+      key,
+      -1
+      /* StorageScope.APPLICATION */
+    );
+  }
+  _updateAccountAndSessionPreferences(providerId, mcpServerId, session) {
+    this.updateAccountPreference(mcpServerId, providerId, session.account);
+    this.updateSessionPreference(providerId, mcpServerId, session);
+  }
+  //#endregion
+  async showGetSessionPrompt(provider, accountName, mcpServerId, mcpServerName) {
+    let SessionPromptChoice;
+    (function(SessionPromptChoice2) {
+      SessionPromptChoice2[SessionPromptChoice2["Allow"] = 0] = "Allow";
+      SessionPromptChoice2[SessionPromptChoice2["Deny"] = 1] = "Deny";
+      SessionPromptChoice2[SessionPromptChoice2["Cancel"] = 2] = "Cancel";
+    })(SessionPromptChoice || (SessionPromptChoice = {}));
+    const { result } = await this.dialogService.prompt({
+      type: Severity.Info,
+      message: nls.localize("confirmAuthenticationAccess", "The MCP server '{0}' wants to access the {1} account '{2}'.", mcpServerName, provider.label, accountName),
+      buttons: [
+        {
+          label: nls.localize({ key: "allow", comment: ["&& denotes a mnemonic"] }, "&&Allow"),
+          run: /* @__PURE__ */ __name(() => SessionPromptChoice.Allow, "run")
+        },
+        {
+          label: nls.localize({ key: "deny", comment: ["&& denotes a mnemonic"] }, "&&Deny"),
+          run: /* @__PURE__ */ __name(() => SessionPromptChoice.Deny, "run")
+        }
+      ],
+      cancelButton: {
+        run: /* @__PURE__ */ __name(() => SessionPromptChoice.Cancel, "run")
+      }
+    });
+    if (result !== SessionPromptChoice.Cancel) {
+      this._authenticationAccessService.updateAllowedMcpServers(provider.id, accountName, [{ id: mcpServerId, name: mcpServerName, allowed: result === SessionPromptChoice.Allow }]);
+      this.removeAccessRequest(provider.id, mcpServerId);
+    }
+    return result === SessionPromptChoice.Allow;
+  }
+  /**
+   * This function should be used only when there are sessions to disambiguate.
+   */
+  async selectSession(providerId, mcpServerId, mcpServerName, scopes, availableSessions) {
+    const allAccounts = await this._authenticationService.getAccounts(providerId);
+    if (!allAccounts.length) {
+      throw new Error("No accounts available");
+    }
+    const disposables = new DisposableStore();
+    const quickPick = disposables.add(this.quickInputService.createQuickPick());
+    quickPick.ignoreFocusOut = true;
+    const accountsWithSessions = /* @__PURE__ */ new Set();
+    const items = availableSessions.filter((session) => !accountsWithSessions.has(session.account.label) && accountsWithSessions.add(session.account.label)).map((session) => {
+      return {
+        label: session.account.label,
+        session
+      };
+    });
+    allAccounts.forEach((account) => {
+      if (!accountsWithSessions.has(account.label)) {
+        items.push({ label: account.label, account });
+      }
+    });
+    items.push({ label: nls.localize("useOtherAccount", "Sign in to another account") });
+    quickPick.items = items;
+    quickPick.title = nls.localize({
+      key: "selectAccount",
+      comment: ["The placeholder {0} is the name of a MCP server. {1} is the name of the type of account, such as Microsoft or GitHub."]
+    }, "The MCP server '{0}' wants to access a {1} account", mcpServerName, this._authenticationService.getProvider(providerId).label);
+    quickPick.placeholder = nls.localize("getSessionPlateholder", "Select an account for '{0}' to use or Esc to cancel", mcpServerName);
+    return await new Promise((resolve, reject) => {
+      disposables.add(quickPick.onDidAccept(async (_) => {
+        quickPick.dispose();
+        let session = quickPick.selectedItems[0].session;
+        if (!session) {
+          const account = quickPick.selectedItems[0].account;
+          try {
+            session = await this._authenticationService.createSession(providerId, scopes, { account });
+          } catch (e) {
+            reject(e);
+            return;
+          }
+        }
+        const accountName = session.account.label;
+        this._authenticationAccessService.updateAllowedMcpServers(providerId, accountName, [{ id: mcpServerId, name: mcpServerName, allowed: true }]);
+        this._updateAccountAndSessionPreferences(providerId, mcpServerId, session);
+        this.removeAccessRequest(providerId, mcpServerId);
+        resolve(session);
+      }));
+      disposables.add(quickPick.onDidHide((_) => {
+        if (!quickPick.selectedItems[0]) {
+          reject("User did not consent to account access");
+        }
+        disposables.dispose();
+      }));
+      quickPick.show();
+    });
+  }
+  async completeSessionAccessRequest(provider, mcpServerId, mcpServerName, scopes) {
+    const providerRequests = this._sessionAccessRequestItems.get(provider.id) || {};
+    const existingRequest = providerRequests[mcpServerId];
+    if (!existingRequest) {
+      return;
+    }
+    if (!provider) {
+      return;
+    }
+    const possibleSessions = existingRequest.possibleSessions;
+    let session;
+    if (provider.supportsMultipleAccounts) {
+      try {
+        session = await this.selectSession(provider.id, mcpServerId, mcpServerName, scopes, possibleSessions);
+      } catch (_) {
+      }
+    } else {
+      const approved = await this.showGetSessionPrompt(provider, possibleSessions[0].account.label, mcpServerId, mcpServerName);
+      if (approved) {
+        session = possibleSessions[0];
+      }
+    }
+    if (session) {
+      this._authenticationUsageService.addAccountUsage(provider.id, session.account.label, session.scopes, mcpServerId, mcpServerName);
+    }
+  }
+  requestSessionAccess(providerId, mcpServerId, mcpServerName, scopes, possibleSessions) {
+    const providerRequests = this._sessionAccessRequestItems.get(providerId) || {};
+    const hasExistingRequest = providerRequests[mcpServerId];
+    if (hasExistingRequest) {
+      return;
+    }
+    const provider = this._authenticationService.getProvider(providerId);
+    const menuItem = MenuRegistry.appendMenuItem(MenuId.AccountsContext, {
+      group: "3_accessRequests",
+      command: {
+        id: `${providerId}${mcpServerId}Access`,
+        title: nls.localize({
+          key: "accessRequest",
+          comment: [`The placeholder {0} will be replaced with an authentication provider''s label. {1} will be replaced with a MCP server name. (1) is to indicate that this menu item contributes to a badge count`]
+        }, "Grant access to {0} for {1}... (1)", provider.label, mcpServerName)
+      }
+    });
+    const accessCommand = CommandsRegistry.registerCommand({
+      id: `${providerId}${mcpServerId}Access`,
+      handler: /* @__PURE__ */ __name(async (accessor) => {
+        this.completeSessionAccessRequest(provider, mcpServerId, mcpServerName, scopes);
+      }, "handler")
+    });
+    providerRequests[mcpServerId] = { possibleSessions, disposables: [menuItem, accessCommand] };
+    this._sessionAccessRequestItems.set(providerId, providerRequests);
+    this.updateBadgeCount();
+  }
+  async requestNewSession(providerId, scopes, mcpServerId, mcpServerName) {
+    if (!this._authenticationService.isAuthenticationProviderRegistered(providerId)) {
+      await new Promise((resolve, _) => {
+        const dispose2 = this._authenticationService.onDidRegisterAuthenticationProvider((e) => {
+          if (e.id === providerId) {
+            dispose2.dispose();
+            resolve();
+          }
+        });
+      });
+    }
+    let provider;
+    try {
+      provider = this._authenticationService.getProvider(providerId);
+    } catch (_e) {
+      return;
+    }
+    const providerRequests = this._signInRequestItems.get(providerId);
+    const scopesList = scopes.join(SCOPESLIST_SEPARATOR);
+    const mcpServerHasExistingRequest = providerRequests && providerRequests[scopesList] && providerRequests[scopesList].requestingMcpServerIds.includes(mcpServerId);
+    if (mcpServerHasExistingRequest) {
+      return;
+    }
+    const commandId = `${providerId}:${mcpServerId}:signIn${Object.keys(providerRequests || []).length}`;
+    const menuItem = MenuRegistry.appendMenuItem(MenuId.AccountsContext, {
+      group: "2_signInRequests",
+      command: {
+        id: commandId,
+        title: nls.localize({
+          key: "signInRequest",
+          comment: [`The placeholder {0} will be replaced with an authentication provider's label. {1} will be replaced with a MCP server name. (1) is to indicate that this menu item contributes to a badge count.`]
+        }, "Sign in with {0} to use {1} (1)", provider.label, mcpServerName)
+      }
+    });
+    const signInCommand = CommandsRegistry.registerCommand({
+      id: commandId,
+      handler: /* @__PURE__ */ __name(async (accessor) => {
+        const authenticationService = accessor.get(IAuthenticationService);
+        const session = await authenticationService.createSession(providerId, scopes);
+        this._authenticationAccessService.updateAllowedMcpServers(providerId, session.account.label, [{ id: mcpServerId, name: mcpServerName, allowed: true }]);
+        this._updateAccountAndSessionPreferences(providerId, mcpServerId, session);
+      }, "handler")
+    });
+    if (providerRequests) {
+      const existingRequest = providerRequests[scopesList] || { disposables: [], requestingMcpServerIds: [] };
+      providerRequests[scopesList] = {
+        disposables: [...existingRequest.disposables, menuItem, signInCommand],
+        requestingMcpServerIds: [...existingRequest.requestingMcpServerIds, mcpServerId]
+      };
+      this._signInRequestItems.set(providerId, providerRequests);
+    } else {
+      this._signInRequestItems.set(providerId, {
+        [scopesList]: {
+          disposables: [menuItem, signInCommand],
+          requestingMcpServerIds: [mcpServerId]
+        }
+      });
+    }
+    this.updateBadgeCount();
+  }
+};
+AuthenticationMcpService = __decorate([
+  __param(0, IActivityService),
+  __param(1, IStorageService),
+  __param(2, IDialogService),
+  __param(3, IQuickInputService),
+  __param(4, IProductService),
+  __param(5, IAuthenticationService),
+  __param(6, IAuthenticationMcpUsageService),
+  __param(7, IAuthenticationMcpAccessService)
+], AuthenticationMcpService);
+registerSingleton(
+  IAuthenticationMcpService,
+  AuthenticationMcpService,
+  1
+  /* InstantiationType.Delayed */
+);
+export {
+  AuthenticationMcpService,
+  IAuthenticationMcpService
+};
+//# sourceMappingURL=authenticationMcpService.js.map

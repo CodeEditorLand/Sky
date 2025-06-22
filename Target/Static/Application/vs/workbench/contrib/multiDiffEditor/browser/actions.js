@@ -1,1 +1,127 @@
-import{$Mj as c}from"../../../../base/common/codicons.js";import{localize2 as f}from"../../../../nls.js";import{$iI as p,$dI as d}from"../../../../platform/actions/common/actions.js";import{$Bn as t}from"../../../../platform/contextkey/common/contextkey.js";import{$gmb as D}from"../../../../platform/list/browser/listService.js";import{$IGb as x}from"../../../browser/parts/editor/editorCommandsContext.js";import{$Tfc as r}from"./multiDiffEditor.js";import{$EXb as C}from"./multiDiffEditorInput.js";import{$kI as w}from"../../../services/editor/common/editorGroupsService.js";import{$oI as u}from"../../../services/editor/common/editorService.js";import{$CN as v}from"../../../common/contextkeys.js";class j extends p{constructor(){super({id:"multiDiffEditor.goToFile",title:f(9065,"Open File"),icon:c.goToFile,precondition:v.isEqualTo(r.ID),menu:{when:v.isEqualTo(r.ID),id:d.MultiDiffEditorFileToolbar,order:22,group:"navigation"}})}async run(o,...l){const n=l[0],i=o.get(u),e=i.activeEditorPane;let s;if(!(e instanceof r))return;const g=e.tryGetCodeEditor(n);g&&(s=g.editor.getSelections()??void 0);let E=n;const a=e.findDocumentDiffItem(n);a&&a.goToFileUri&&(E=a.goToFileUri),await i.openEditor({resource:E,options:{selection:s?.[0],selectionRevealType:1}})}}class G extends p{constructor(){super({id:"multiDiffEditor.collapseAll",title:f(9066,"Collapse All Diffs"),icon:c.collapseAll,precondition:t.and(t.equals("activeEditor",r.ID),t.not("multiDiffEditorAllCollapsed")),menu:[d.EditorTitle,d.CompactWindowEditorTitle].map(o=>({id:o,when:t.and(t.equals("activeEditor",r.ID),t.not("multiDiffEditorAllCollapsed")),group:"navigation",order:100})),f1:!0})}async run(o,...l){const i=x(l,o.get(u),o.get(w),o.get(D)).groupedEditors[0];if(!i)return;const e=i.editors[0];e instanceof C&&(await e.getViewModel()).collapseAll()}}class P extends p{constructor(){super({id:"multiDiffEditor.expandAll",title:f(9067,"Expand All Diffs"),icon:c.expandAll,precondition:t.and(t.equals("activeEditor",r.ID),t.has("multiDiffEditorAllCollapsed")),menu:[d.EditorTitle,d.CompactWindowEditorTitle].map(o=>({id:o,when:t.and(t.equals("activeEditor",r.ID),t.has("multiDiffEditorAllCollapsed")),group:"navigation",order:100})),f1:!0})}async run(o,...l){const i=x(l,o.get(u),o.get(w),o.get(D)).groupedEditors[0];if(!i)return;const e=i.editors[0];e instanceof C&&(await e.getViewModel()).expandAll()}}export{j as $hqc,G as $iqc,P as $jqc};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { Codicon } from "../../../../base/common/codicons.js";
+import { localize2 } from "../../../../nls.js";
+import { Action2, MenuId } from "../../../../platform/actions/common/actions.js";
+import { ContextKeyExpr } from "../../../../platform/contextkey/common/contextkey.js";
+import { IListService } from "../../../../platform/list/browser/listService.js";
+import { resolveCommandsContext } from "../../../browser/parts/editor/editorCommandsContext.js";
+import { MultiDiffEditor } from "./multiDiffEditor.js";
+import { MultiDiffEditorInput } from "./multiDiffEditorInput.js";
+import { IEditorGroupsService } from "../../../services/editor/common/editorGroupsService.js";
+import { IEditorService } from "../../../services/editor/common/editorService.js";
+import { ActiveEditorContext } from "../../../common/contextkeys.js";
+class GoToFileAction extends Action2 {
+  static {
+    __name(this, "GoToFileAction");
+  }
+  constructor() {
+    super({
+      id: "multiDiffEditor.goToFile",
+      title: localize2("goToFile", "Open File"),
+      icon: Codicon.goToFile,
+      precondition: ActiveEditorContext.isEqualTo(MultiDiffEditor.ID),
+      menu: {
+        when: ActiveEditorContext.isEqualTo(MultiDiffEditor.ID),
+        id: MenuId.MultiDiffEditorFileToolbar,
+        order: 22,
+        group: "navigation"
+      }
+    });
+  }
+  async run(accessor, ...args) {
+    const uri = args[0];
+    const editorService = accessor.get(IEditorService);
+    const activeEditorPane = editorService.activeEditorPane;
+    let selections = void 0;
+    if (!(activeEditorPane instanceof MultiDiffEditor)) {
+      return;
+    }
+    const editor = activeEditorPane.tryGetCodeEditor(uri);
+    if (editor) {
+      selections = editor.editor.getSelections() ?? void 0;
+    }
+    let targetUri = uri;
+    const item = activeEditorPane.findDocumentDiffItem(uri);
+    if (item && item.goToFileUri) {
+      targetUri = item.goToFileUri;
+    }
+    await editorService.openEditor({
+      resource: targetUri,
+      options: {
+        selection: selections?.[0],
+        selectionRevealType: 1
+      }
+    });
+  }
+}
+class CollapseAllAction extends Action2 {
+  static {
+    __name(this, "CollapseAllAction");
+  }
+  constructor() {
+    super({
+      id: "multiDiffEditor.collapseAll",
+      title: localize2("collapseAllDiffs", "Collapse All Diffs"),
+      icon: Codicon.collapseAll,
+      precondition: ContextKeyExpr.and(ContextKeyExpr.equals("activeEditor", MultiDiffEditor.ID), ContextKeyExpr.not("multiDiffEditorAllCollapsed")),
+      menu: [MenuId.EditorTitle, MenuId.CompactWindowEditorTitle].map((id) => ({
+        id,
+        when: ContextKeyExpr.and(ContextKeyExpr.equals("activeEditor", MultiDiffEditor.ID), ContextKeyExpr.not("multiDiffEditorAllCollapsed")),
+        group: "navigation",
+        order: 100
+      })),
+      f1: true
+    });
+  }
+  async run(accessor, ...args) {
+    const resolvedContext = resolveCommandsContext(args, accessor.get(IEditorService), accessor.get(IEditorGroupsService), accessor.get(IListService));
+    const groupContext = resolvedContext.groupedEditors[0];
+    if (!groupContext) {
+      return;
+    }
+    const editor = groupContext.editors[0];
+    if (editor instanceof MultiDiffEditorInput) {
+      const viewModel = await editor.getViewModel();
+      viewModel.collapseAll();
+    }
+  }
+}
+class ExpandAllAction extends Action2 {
+  static {
+    __name(this, "ExpandAllAction");
+  }
+  constructor() {
+    super({
+      id: "multiDiffEditor.expandAll",
+      title: localize2("ExpandAllDiffs", "Expand All Diffs"),
+      icon: Codicon.expandAll,
+      precondition: ContextKeyExpr.and(ContextKeyExpr.equals("activeEditor", MultiDiffEditor.ID), ContextKeyExpr.has("multiDiffEditorAllCollapsed")),
+      menu: [MenuId.EditorTitle, MenuId.CompactWindowEditorTitle].map((id) => ({
+        id,
+        when: ContextKeyExpr.and(ContextKeyExpr.equals("activeEditor", MultiDiffEditor.ID), ContextKeyExpr.has("multiDiffEditorAllCollapsed")),
+        group: "navigation",
+        order: 100
+      })),
+      f1: true
+    });
+  }
+  async run(accessor, ...args) {
+    const resolvedContext = resolveCommandsContext(args, accessor.get(IEditorService), accessor.get(IEditorGroupsService), accessor.get(IListService));
+    const groupContext = resolvedContext.groupedEditors[0];
+    if (!groupContext) {
+      return;
+    }
+    const editor = groupContext.editors[0];
+    if (editor instanceof MultiDiffEditorInput) {
+      const viewModel = await editor.getViewModel();
+      viewModel.expandAll();
+    }
+  }
+}
+export {
+  CollapseAllAction,
+  ExpandAllAction,
+  GoToFileAction
+};
+//# sourceMappingURL=actions.js.map

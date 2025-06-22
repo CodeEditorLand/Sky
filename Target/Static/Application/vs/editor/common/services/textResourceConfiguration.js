@@ -1,1 +1,8 @@
-import{$nj as e}from"../../../platform/instantiation/common/instantiation.js";const r=e("textResourceConfigurationService"),t=e("textResourcePropertiesService");export{r as $nF,t as $oF};
+import { createDecorator } from "../../../platform/instantiation/common/instantiation.js";
+const ITextResourceConfigurationService = createDecorator("textResourceConfigurationService");
+const ITextResourcePropertiesService = createDecorator("textResourcePropertiesService");
+export {
+  ITextResourceConfigurationService,
+  ITextResourcePropertiesService
+};
+//# sourceMappingURL=textResourceConfiguration.js.map

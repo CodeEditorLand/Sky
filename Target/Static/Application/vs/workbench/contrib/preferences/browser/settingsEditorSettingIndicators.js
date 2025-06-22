@@ -1,1 +1,554 @@
-import*as d from"../../../../base/browser/dom.js";import{$G5 as y}from"../../../../base/browser/keyboardEvent.js";import{$19 as g}from"../../../../base/browser/ui/iconLabel/simpleIconLabel.js";import{$Yh as S}from"../../../../base/common/async.js";import{$Uj as x}from"../../../../base/common/htmlContent.js";import{$ud as p}from"../../../../base/common/lifecycle.js";import{$BD as I}from"../../../../editor/common/languages/language.js";import{localize as o}from"../../../../nls.js";import{$Yn as T}from"../../../../platform/commands/common/commands.js";import{$ngb as D}from"../../../../platform/hover/browser/hover.js";import{$8Mb as O}from"../../../../platform/userDataSync/common/userDataSync.js";import{$JJ as k}from"../../../services/configuration/common/configuration.js";import{$T8b as A,$J8b as E,$S8b as H}from"../common/preferences.js";var L=function(e,t,s,n){var i,o=arguments.length,l=o<3?t:null===n?n=Object.getOwnPropertyDescriptor(t,s):n;if("object"==typeof Reflect&&"function"==typeof Reflect.decorate)l=Reflect.decorate(e,t,s,n);else for(var a=e.length-1;a>=0;a--)(i=e[a])&&(l=(o<3?i(l):o>3?i(t,s,l):i(t,s))||l);return o>3&&l&&Object.defineProperty(t,s,l),l},f=function(e,t){return function(s,n){t(s,n,e)}};const u=d.$;let w=new Set,v=[],b=class{constructor(e,t,s,n,i,o){this.m=t,this.n=s,this.o=n,this.p=i,this.q=o,this.h=[],this.k=new p,this.l=0,this.r={trapFocus:!0,position:{hoverPosition:2},appearance:{showPointer:!0,compact:!1}},this.a=d.$M6(e,u(".setting-indicators-container")),this.a.style.display="inline",this.b=this.x(),this.h=[this.b],this.c=this.t(),this.d=this.u(),this.f=this.v(),this.g=this.w(),this.j=[this.c,this.d,this.f,this.g]}s(e,t,s){e.clear();const n=e.add(new S((()=>{const t=s(!1);t&&e.add(t)}),this.m.getValue("workbench.hover.delay")));e.add(d.$J5(t,d.$F6.MOUSE_OVER,(()=>{n.isScheduled()||n.schedule()}))),e.add(d.$J5(t,d.$F6.MOUSE_LEAVE,(()=>{n.cancel()}))),e.add(d.$J5(t,d.$F6.KEY_DOWN,(t=>{const n=new y(t);if(n.equals(10)||n.equals(3)){const n=s(!0);n&&e.add(n),t.preventDefault()}})))}t(){const e=new p,t=u("span.setting-indicator.setting-item-workspace-trust"),s=e.add(new g(t));s.text="$(shield) "+o(9914,null);const n=o(9915,null);return this.s(e,t,(e=>this.n.showInstantHover({...this.r,content:n,target:t,actions:[{label:o(9916,null),commandId:"workbench.trust.manage",run:e=>{this.q.executeCommand("workbench.trust.manage")}}]},e))),{element:t,label:s,disposables:e}}u(){const e=new p,t=u("span.setting-item-overrides");return{element:t,label:e.add(new g(t)),disposables:e}}v(){const e=new p,t=u("span.setting-indicator.setting-item-ignored"),s=e.add(new g(t));s.text=o(9917,null);const n=o(9918,null);return this.s(e,t,(e=>this.n.showInstantHover({...this.r,content:n,target:t},e))),{element:t,label:s,disposables:e}}w(){const e=new p,t=u("span.setting-indicator.setting-item-default-overridden"),s=e.add(new g(t));return s.text=o(9919,null),{element:t,label:s,disposables:e}}x(){const e=new p,t=u("span.setting-indicator.setting-item-preview");return{element:t,label:e.add(new g(t)),disposables:e}}y(){this.a.innerText="",this.a.style.display="none";const e=this.h.filter((e=>"none"!==e.element.style.display));if(e.length){this.a.style.display="inline";for(let t=0;t<e.length;t++)d.$M6(this.a,e[t].element)}const t=this.j.filter((e=>"none"!==e.element.style.display));if(t.length){this.a.style.display="inline",d.$M6(this.a,u("span",void 0,"("));for(let e=0;e<t.length-1;e++)d.$M6(this.a,t[e].element),d.$M6(this.a,u("span.comma",void 0," • "));d.$M6(this.a,t[t.length-1].element),d.$M6(this.a,u("span",void 0,")"))}this.z([...e,...t])}z(e){if(this.k.clear(),this.a.role=e.length>=1?"toolbar":"button",!e.length)return;(e[0].focusElement??e[0].element).tabIndex=0,this.k.add(d.$J5(this.a,"keydown",(t=>{const s=new y(t);let n=!0;if(s.equals(14))this.A(e,0);else if(s.equals(13))this.A(e,e.length-1);else if(s.equals(17)){const t=(this.l+1)%e.length;this.A(e,t)}else if(s.equals(15)){const t=this.l?this.l-1:e.length-1;this.A(e,t)}else n=!1;n&&(t.preventDefault(),t.stopPropagation())})))}A(e,t){if(t===this.l)return;const s=e[t],n=s.focusElement??s.element;n.tabIndex=0,n.focus();const i=e[this.l];(i.focusElement??i.element).tabIndex=-1,this.l=t}updateWorkspaceTrust(e){this.c.element.style.display=e.isUntrusted?"inline":"none",this.y()}updateSyncIgnored(e,t){this.f.element.style.display=this.o.isEnabled()&&t.includes(e.setting.key)?"inline":"none",this.y(),v!==t&&(v=t,w=new Set(v))}updatePreviewIndicator(e){const t=e.tags?.has("preview"),s=e.tags?.has("experimental");this.b.element.style.display=t||s?"inline":"none",this.b.label.text=o(t?9920:9921,null);const n=t?H:A;this.s(this.b.disposables,this.b.element,(e=>this.n.showInstantHover({...this.r,content:n,target:this.b.element},e))),this.y()}B(e){const[t,s]=e.split(":"),n=o("user"===t?9922:"workspace"===t?9923:9924,null);return s?`${this.p.getLanguageName(s)} > ${n}`:n}dispose(){this.k.dispose();for(const e of this.h)e.disposables.dispose();for(const e of this.j)e.disposables.dispose()}updateScopeOverrides(e,t,s){if(this.d.disposables.clear(),this.d.element.innerText="",this.d.element.style.display="none",this.d.focusElement=this.d.element,e.hasPolicyValue){this.d.element.style.display="inline",this.d.element.classList.add("setting-indicator"),this.d.label.text="$(briefcase) "+o(9925,null);const e=o(9926,null),t=t=>this.n.showInstantHover({...this.r,content:e,actions:[{label:o(9927,null),commandId:"_settings.action.viewPolicySettings",run:e=>{s.fire(`@${E}`)}}],target:this.d.element},t);this.s(this.d.disposables,this.d.element,t)}else if(3===e.settingsTarget&&this.m.isSettingAppliedForAllProfiles(e.setting.key)){this.d.element.style.display="inline",this.d.element.classList.add("setting-indicator"),this.d.label.text=o(9928,null);const e=o(9929,null),t=t=>this.n.showInstantHover({...this.r,content:e,target:this.d.element},t);this.s(this.d.disposables,this.d.element,t)}else if(e.overriddenScopeList.length||e.overriddenDefaultsLanguageList.length)if(1!==e.overriddenScopeList.length||e.overriddenDefaultsLanguageList.length){this.d.element.style.display="inline",this.d.element.classList.add("setting-indicator");const s=e.isConfigured?o(9932,null):o(9933,null);this.d.label.text=s;let n="";if(e.overriddenScopeList.length){n=e.isConfigured?o(9934,null):o(9935,null);for(const t of e.overriddenScopeList){n+=`\n- [${this.B(t)}](${encodeURIComponent(t)} "${M(t,this.p)}")`}}if(e.overriddenDefaultsLanguageList.length){n&&(n+="\n\n");n+=o(9936,null);for(const t of e.overriddenDefaultsLanguageList){const e=this.p.getLanguageName(t);n+=`\n- [${e}](${encodeURIComponent(`default:${t}`)} "${e}")`}}const i={value:n,isTrusted:!1,supportHtml:!1};this.d.disposables.add(this.n.setupDelayedHover(this.d.element,(()=>({...this.r,content:i,linkHandler:s=>{const[n,i]=decodeURIComponent(s).split(":");t.fire({settingKey:e.setting.key,scope:n,language:i})}})),{setupKeyboardEvents:!0}))}else{this.d.element.style.display="inline",this.d.element.classList.remove("setting-indicator");const s=e.isConfigured?o(9930,null):o(9931,null);this.d.label.text=`${s} `;const n=e.overriddenScopeList[0],i=d.$M6(this.d.element,u("a.modified-scope",void 0,this.B(n)));i.tabIndex=-1,this.d.focusElement=i;const l=s=>{const[i,o]=n.split(":");t.fire({settingKey:e.setting.key,scope:i,language:o}),s.preventDefault(),s.stopPropagation()};this.d.disposables.add(d.$J5(i,d.$F6.CLICK,(e=>{l(e)}))),this.d.disposables.add(d.$J5(i,d.$F6.KEY_DOWN,(e=>{const t=new y(e);(t.equals(10)||t.equals(3))&&l(e)})))}this.y()}updateDefaultOverrideIndicator(e){this.g.element.style.display="none";let t=$(e);if(void 0!==t){let e;this.g.element.style.display="inline",this.g.disposables.clear(),Array.isArray(t)&&1===t.length&&(t=t[0]),Array.isArray(t)?(t=t.map((e=>`\`${e}\``)),e=o(9938,null,t.slice(0,-1).join(", ")+" & "+t.slice(-1))):e=o(9937,null,t);const s=t=>this.n.showInstantHover({content:(new x).appendMarkdown(e),target:this.g.element,position:{hoverPosition:2},appearance:{showPointer:!0,compact:!1}},t);this.s(this.g.disposables,this.g.element,s)}this.y()}};function $(e){let t;const s=e.defaultValueSource;if(s)if(s instanceof Map){t=[];for(const[,e]of s){const s="string"!=typeof e?e.displayName??e.id:e;t.includes(s)||t.push(s)}}else t="string"==typeof s?s:s.displayName??s.id;return t}function M(e,t){const[s,n]=e.split(":"),i=o("user"===s?9939:"workspace"===s?9940:9941,null);return n?o(9942,null,i,t.getLanguageName(n)):i}function P(e,t){const[s,n]=e.split(":"),i=o("user"===s?9943:"workspace"===s?9944:9945,null);return n?o(9946,null,i.toLowerCase(),t.getLanguageName(n)):i}function B(e,t,s,n){const i=[];if(e.tags?.has("preview")?i.push(o(9947,null)):e.tags?.has("experimental")&&i.push(o(9948,null)),e.isUntrusted&&i.push(o(9949,null)),e.hasPolicyValue)i.push(o(9950,null));else if(3===e.settingsTarget&&t.isSettingAppliedForAllProfiles(e.setting.key))i.push(o(9951,null));else{const t=e.isConfigured?o(9952,null):o(9953,null),s=e.overriddenScopeList.map((e=>P(e,n))).join(", ");e.overriddenScopeList.length&&i.push(`${t} ${s}`)}w.has(e.setting.key)&&i.push(o(9954,null));let l=$(e);if(void 0!==l){let e;Array.isArray(l)&&1===l.length&&(l=l[0]),e=Array.isArray(l)?o(9956,null,l.slice(0,-1).join(", ")+" & "+l.slice(-1)):o(9955,null,l),i.push(e)}const a=e.overriddenDefaultsLanguageList.map((e=>n.getLanguageName(e))).join(", ");if(e.overriddenDefaultsLanguageList.length){const e=o(9957,null,a);i.push(e)}return i.join(". ")}b=L([f(1,k),f(2,D),f(3,O),f(4,I),f(5,T)],b);export{b as $X9b,B as $Y9b};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import * as DOM from "../../../../base/browser/dom.js";
+import { StandardKeyboardEvent } from "../../../../base/browser/keyboardEvent.js";
+import { SimpleIconLabel } from "../../../../base/browser/ui/iconLabel/simpleIconLabel.js";
+import { RunOnceScheduler } from "../../../../base/common/async.js";
+import { MarkdownString } from "../../../../base/common/htmlContent.js";
+import { DisposableStore } from "../../../../base/common/lifecycle.js";
+import { ILanguageService } from "../../../../editor/common/languages/language.js";
+import { localize } from "../../../../nls.js";
+import { ICommandService } from "../../../../platform/commands/common/commands.js";
+import { IHoverService } from "../../../../platform/hover/browser/hover.js";
+import { IUserDataSyncEnablementService } from "../../../../platform/userDataSync/common/userDataSync.js";
+import { IWorkbenchConfigurationService } from "../../../services/configuration/common/configuration.js";
+import { EXPERIMENTAL_INDICATOR_DESCRIPTION, POLICY_SETTING_TAG, PREVIEW_INDICATOR_DESCRIPTION } from "../common/preferences.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+const $ = DOM.$;
+let cachedSyncIgnoredSettingsSet = /* @__PURE__ */ new Set();
+let cachedSyncIgnoredSettings = [];
+let SettingsTreeIndicatorsLabel = class SettingsTreeIndicatorsLabel2 {
+  static {
+    __name(this, "SettingsTreeIndicatorsLabel");
+  }
+  constructor(container, configurationService, hoverService, userDataSyncEnablementService, languageService, commandService) {
+    this.configurationService = configurationService;
+    this.hoverService = hoverService;
+    this.userDataSyncEnablementService = userDataSyncEnablementService;
+    this.languageService = languageService;
+    this.commandService = commandService;
+    this.isolatedIndicators = [];
+    this.keybindingListeners = new DisposableStore();
+    this.focusedIndex = 0;
+    this.defaultHoverOptions = {
+      trapFocus: true,
+      position: {
+        hoverPosition: 2
+      },
+      appearance: {
+        showPointer: true,
+        compact: false
+      }
+    };
+    this.indicatorsContainerElement = DOM.append(container, $(".setting-indicators-container"));
+    this.indicatorsContainerElement.style.display = "inline";
+    this.previewIndicator = this.createPreviewIndicator();
+    this.isolatedIndicators = [this.previewIndicator];
+    this.workspaceTrustIndicator = this.createWorkspaceTrustIndicator();
+    this.scopeOverridesIndicator = this.createScopeOverridesIndicator();
+    this.syncIgnoredIndicator = this.createSyncIgnoredIndicator();
+    this.defaultOverrideIndicator = this.createDefaultOverrideIndicator();
+    this.parenthesizedIndicators = [this.workspaceTrustIndicator, this.scopeOverridesIndicator, this.syncIgnoredIndicator, this.defaultOverrideIndicator];
+  }
+  addHoverDisposables(disposables, element, showHover) {
+    disposables.clear();
+    const scheduler = disposables.add(new RunOnceScheduler(() => {
+      const hover = showHover(false);
+      if (hover) {
+        disposables.add(hover);
+      }
+    }, this.configurationService.getValue("workbench.hover.delay")));
+    disposables.add(DOM.addDisposableListener(element, DOM.EventType.MOUSE_OVER, () => {
+      if (!scheduler.isScheduled()) {
+        scheduler.schedule();
+      }
+    }));
+    disposables.add(DOM.addDisposableListener(element, DOM.EventType.MOUSE_LEAVE, () => {
+      scheduler.cancel();
+    }));
+    disposables.add(DOM.addDisposableListener(element, DOM.EventType.KEY_DOWN, (e) => {
+      const evt = new StandardKeyboardEvent(e);
+      if (evt.equals(
+        10
+        /* KeyCode.Space */
+      ) || evt.equals(
+        3
+        /* KeyCode.Enter */
+      )) {
+        const hover = showHover(true);
+        if (hover) {
+          disposables.add(hover);
+        }
+        e.preventDefault();
+      }
+    }));
+  }
+  createWorkspaceTrustIndicator() {
+    const disposables = new DisposableStore();
+    const workspaceTrustElement = $("span.setting-indicator.setting-item-workspace-trust");
+    const workspaceTrustLabel = disposables.add(new SimpleIconLabel(workspaceTrustElement));
+    workspaceTrustLabel.text = "$(shield) " + localize("workspaceUntrustedLabel", "Requires workspace trust");
+    const content = localize("trustLabel", "The setting value can only be applied in a trusted workspace.");
+    const showHover = /* @__PURE__ */ __name((focus) => {
+      return this.hoverService.showInstantHover({
+        ...this.defaultHoverOptions,
+        content,
+        target: workspaceTrustElement,
+        actions: [{
+          label: localize("manageWorkspaceTrust", "Manage Workspace Trust"),
+          commandId: "workbench.trust.manage",
+          run: /* @__PURE__ */ __name((target) => {
+            this.commandService.executeCommand("workbench.trust.manage");
+          }, "run")
+        }]
+      }, focus);
+    }, "showHover");
+    this.addHoverDisposables(disposables, workspaceTrustElement, showHover);
+    return {
+      element: workspaceTrustElement,
+      label: workspaceTrustLabel,
+      disposables
+    };
+  }
+  createScopeOverridesIndicator() {
+    const disposables = new DisposableStore();
+    const otherOverridesElement = $("span.setting-item-overrides");
+    const otherOverridesLabel = disposables.add(new SimpleIconLabel(otherOverridesElement));
+    return {
+      element: otherOverridesElement,
+      label: otherOverridesLabel,
+      disposables
+    };
+  }
+  createSyncIgnoredIndicator() {
+    const disposables = new DisposableStore();
+    const syncIgnoredElement = $("span.setting-indicator.setting-item-ignored");
+    const syncIgnoredLabel = disposables.add(new SimpleIconLabel(syncIgnoredElement));
+    syncIgnoredLabel.text = localize("extensionSyncIgnoredLabel", "Not synced");
+    const syncIgnoredHoverContent = localize("syncIgnoredTitle", "This setting is ignored during sync");
+    const showHover = /* @__PURE__ */ __name((focus) => {
+      return this.hoverService.showInstantHover({
+        ...this.defaultHoverOptions,
+        content: syncIgnoredHoverContent,
+        target: syncIgnoredElement
+      }, focus);
+    }, "showHover");
+    this.addHoverDisposables(disposables, syncIgnoredElement, showHover);
+    return {
+      element: syncIgnoredElement,
+      label: syncIgnoredLabel,
+      disposables
+    };
+  }
+  createDefaultOverrideIndicator() {
+    const disposables = new DisposableStore();
+    const defaultOverrideIndicator = $("span.setting-indicator.setting-item-default-overridden");
+    const defaultOverrideLabel = disposables.add(new SimpleIconLabel(defaultOverrideIndicator));
+    defaultOverrideLabel.text = localize("defaultOverriddenLabel", "Default value changed");
+    return {
+      element: defaultOverrideIndicator,
+      label: defaultOverrideLabel,
+      disposables
+    };
+  }
+  createPreviewIndicator() {
+    const disposables = new DisposableStore();
+    const previewIndicator = $("span.setting-indicator.setting-item-preview");
+    const previewLabel = disposables.add(new SimpleIconLabel(previewIndicator));
+    return {
+      element: previewIndicator,
+      label: previewLabel,
+      disposables
+    };
+  }
+  render() {
+    this.indicatorsContainerElement.innerText = "";
+    this.indicatorsContainerElement.style.display = "none";
+    const isolatedIndicatorsToShow = this.isolatedIndicators.filter((indicator) => {
+      return indicator.element.style.display !== "none";
+    });
+    if (isolatedIndicatorsToShow.length) {
+      this.indicatorsContainerElement.style.display = "inline";
+      for (let i = 0; i < isolatedIndicatorsToShow.length; i++) {
+        DOM.append(this.indicatorsContainerElement, isolatedIndicatorsToShow[i].element);
+      }
+    }
+    const parenthesizedIndicatorsToShow = this.parenthesizedIndicators.filter((indicator) => {
+      return indicator.element.style.display !== "none";
+    });
+    if (parenthesizedIndicatorsToShow.length) {
+      this.indicatorsContainerElement.style.display = "inline";
+      DOM.append(this.indicatorsContainerElement, $("span", void 0, "("));
+      for (let i = 0; i < parenthesizedIndicatorsToShow.length - 1; i++) {
+        DOM.append(this.indicatorsContainerElement, parenthesizedIndicatorsToShow[i].element);
+        DOM.append(this.indicatorsContainerElement, $("span.comma", void 0, " \u2022 "));
+      }
+      DOM.append(this.indicatorsContainerElement, parenthesizedIndicatorsToShow[parenthesizedIndicatorsToShow.length - 1].element);
+      DOM.append(this.indicatorsContainerElement, $("span", void 0, ")"));
+    }
+    this.resetIndicatorNavigationKeyBindings([...isolatedIndicatorsToShow, ...parenthesizedIndicatorsToShow]);
+  }
+  resetIndicatorNavigationKeyBindings(indicators) {
+    this.keybindingListeners.clear();
+    this.indicatorsContainerElement.role = indicators.length >= 1 ? "toolbar" : "button";
+    if (!indicators.length) {
+      return;
+    }
+    const firstElement = indicators[0].focusElement ?? indicators[0].element;
+    firstElement.tabIndex = 0;
+    this.keybindingListeners.add(DOM.addDisposableListener(this.indicatorsContainerElement, "keydown", (e) => {
+      const ev = new StandardKeyboardEvent(e);
+      let handled = true;
+      if (ev.equals(
+        14
+        /* KeyCode.Home */
+      )) {
+        this.focusIndicatorAt(indicators, 0);
+      } else if (ev.equals(
+        13
+        /* KeyCode.End */
+      )) {
+        this.focusIndicatorAt(indicators, indicators.length - 1);
+      } else if (ev.equals(
+        17
+        /* KeyCode.RightArrow */
+      )) {
+        const indexToFocus = (this.focusedIndex + 1) % indicators.length;
+        this.focusIndicatorAt(indicators, indexToFocus);
+      } else if (ev.equals(
+        15
+        /* KeyCode.LeftArrow */
+      )) {
+        const indexToFocus = this.focusedIndex ? this.focusedIndex - 1 : indicators.length - 1;
+        this.focusIndicatorAt(indicators, indexToFocus);
+      } else {
+        handled = false;
+      }
+      if (handled) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+    }));
+  }
+  focusIndicatorAt(indicators, index) {
+    if (index === this.focusedIndex) {
+      return;
+    }
+    const indicator = indicators[index];
+    const elementToFocus = indicator.focusElement ?? indicator.element;
+    elementToFocus.tabIndex = 0;
+    elementToFocus.focus();
+    const currentlyFocusedIndicator = indicators[this.focusedIndex];
+    const previousFocusedElement = currentlyFocusedIndicator.focusElement ?? currentlyFocusedIndicator.element;
+    previousFocusedElement.tabIndex = -1;
+    this.focusedIndex = index;
+  }
+  updateWorkspaceTrust(element) {
+    this.workspaceTrustIndicator.element.style.display = element.isUntrusted ? "inline" : "none";
+    this.render();
+  }
+  updateSyncIgnored(element, ignoredSettings) {
+    this.syncIgnoredIndicator.element.style.display = this.userDataSyncEnablementService.isEnabled() && ignoredSettings.includes(element.setting.key) ? "inline" : "none";
+    this.render();
+    if (cachedSyncIgnoredSettings !== ignoredSettings) {
+      cachedSyncIgnoredSettings = ignoredSettings;
+      cachedSyncIgnoredSettingsSet = new Set(cachedSyncIgnoredSettings);
+    }
+  }
+  updatePreviewIndicator(element) {
+    const isPreviewSetting = element.tags?.has("preview");
+    const isExperimentalSetting = element.tags?.has("experimental");
+    this.previewIndicator.element.style.display = isPreviewSetting || isExperimentalSetting ? "inline" : "none";
+    this.previewIndicator.label.text = isPreviewSetting ? localize("previewLabel", "Preview") : localize("experimentalLabel", "Experimental");
+    const content = isPreviewSetting ? PREVIEW_INDICATOR_DESCRIPTION : EXPERIMENTAL_INDICATOR_DESCRIPTION;
+    const showHover = /* @__PURE__ */ __name((focus) => {
+      return this.hoverService.showInstantHover({
+        ...this.defaultHoverOptions,
+        content,
+        target: this.previewIndicator.element
+      }, focus);
+    }, "showHover");
+    this.addHoverDisposables(this.previewIndicator.disposables, this.previewIndicator.element, showHover);
+    this.render();
+  }
+  getInlineScopeDisplayText(completeScope) {
+    const [scope, language] = completeScope.split(":");
+    const localizedScope = scope === "user" ? localize("user", "User") : scope === "workspace" ? localize("workspace", "Workspace") : localize("remote", "Remote");
+    if (language) {
+      return `${this.languageService.getLanguageName(language)} > ${localizedScope}`;
+    }
+    return localizedScope;
+  }
+  dispose() {
+    this.keybindingListeners.dispose();
+    for (const indicator of this.isolatedIndicators) {
+      indicator.disposables.dispose();
+    }
+    for (const indicator of this.parenthesizedIndicators) {
+      indicator.disposables.dispose();
+    }
+  }
+  updateScopeOverrides(element, onDidClickOverrideElement, onApplyFilter) {
+    this.scopeOverridesIndicator.disposables.clear();
+    this.scopeOverridesIndicator.element.innerText = "";
+    this.scopeOverridesIndicator.element.style.display = "none";
+    this.scopeOverridesIndicator.focusElement = this.scopeOverridesIndicator.element;
+    if (element.hasPolicyValue) {
+      this.scopeOverridesIndicator.element.style.display = "inline";
+      this.scopeOverridesIndicator.element.classList.add("setting-indicator");
+      this.scopeOverridesIndicator.label.text = "$(briefcase) " + localize("policyLabelText", "Managed by organization");
+      const content = localize("policyDescription", "This setting is managed by your organization and its actual value cannot be changed.");
+      const showHover = /* @__PURE__ */ __name((focus) => {
+        return this.hoverService.showInstantHover({
+          ...this.defaultHoverOptions,
+          content,
+          actions: [{
+            label: localize("policyFilterLink", "View policy settings"),
+            commandId: "_settings.action.viewPolicySettings",
+            run: /* @__PURE__ */ __name((_) => {
+              onApplyFilter.fire(`@${POLICY_SETTING_TAG}`);
+            }, "run")
+          }],
+          target: this.scopeOverridesIndicator.element
+        }, focus);
+      }, "showHover");
+      this.addHoverDisposables(this.scopeOverridesIndicator.disposables, this.scopeOverridesIndicator.element, showHover);
+    } else if (element.settingsTarget === 3 && this.configurationService.isSettingAppliedForAllProfiles(element.setting.key)) {
+      this.scopeOverridesIndicator.element.style.display = "inline";
+      this.scopeOverridesIndicator.element.classList.add("setting-indicator");
+      this.scopeOverridesIndicator.label.text = localize("applicationSetting", "Applies to all profiles");
+      const content = localize("applicationSettingDescription", "The setting is not specific to the current profile, and will retain its value when switching profiles.");
+      const showHover = /* @__PURE__ */ __name((focus) => {
+        return this.hoverService.showInstantHover({
+          ...this.defaultHoverOptions,
+          content,
+          target: this.scopeOverridesIndicator.element
+        }, focus);
+      }, "showHover");
+      this.addHoverDisposables(this.scopeOverridesIndicator.disposables, this.scopeOverridesIndicator.element, showHover);
+    } else if (element.overriddenScopeList.length || element.overriddenDefaultsLanguageList.length) {
+      if (element.overriddenScopeList.length === 1 && !element.overriddenDefaultsLanguageList.length) {
+        this.scopeOverridesIndicator.element.style.display = "inline";
+        this.scopeOverridesIndicator.element.classList.remove("setting-indicator");
+        const prefaceText = element.isConfigured ? localize("alsoConfiguredIn", "Also modified in") : localize("configuredIn", "Modified in");
+        this.scopeOverridesIndicator.label.text = `${prefaceText} `;
+        const overriddenScope = element.overriddenScopeList[0];
+        const view = DOM.append(this.scopeOverridesIndicator.element, $("a.modified-scope", void 0, this.getInlineScopeDisplayText(overriddenScope)));
+        view.tabIndex = -1;
+        this.scopeOverridesIndicator.focusElement = view;
+        const onClickOrKeydown = /* @__PURE__ */ __name((e) => {
+          const [scope, language] = overriddenScope.split(":");
+          onDidClickOverrideElement.fire({
+            settingKey: element.setting.key,
+            scope,
+            language
+          });
+          e.preventDefault();
+          e.stopPropagation();
+        }, "onClickOrKeydown");
+        this.scopeOverridesIndicator.disposables.add(DOM.addDisposableListener(view, DOM.EventType.CLICK, (e) => {
+          onClickOrKeydown(e);
+        }));
+        this.scopeOverridesIndicator.disposables.add(DOM.addDisposableListener(view, DOM.EventType.KEY_DOWN, (e) => {
+          const ev = new StandardKeyboardEvent(e);
+          if (ev.equals(
+            10
+            /* KeyCode.Space */
+          ) || ev.equals(
+            3
+            /* KeyCode.Enter */
+          )) {
+            onClickOrKeydown(e);
+          }
+        }));
+      } else {
+        this.scopeOverridesIndicator.element.style.display = "inline";
+        this.scopeOverridesIndicator.element.classList.add("setting-indicator");
+        const scopeOverridesLabelText = element.isConfigured ? localize("alsoConfiguredElsewhere", "Also modified elsewhere") : localize("configuredElsewhere", "Modified elsewhere");
+        this.scopeOverridesIndicator.label.text = scopeOverridesLabelText;
+        let contentMarkdownString = "";
+        if (element.overriddenScopeList.length) {
+          const prefaceText = element.isConfigured ? localize("alsoModifiedInScopes", "The setting has also been modified in the following scopes:") : localize("modifiedInScopes", "The setting has been modified in the following scopes:");
+          contentMarkdownString = prefaceText;
+          for (const scope of element.overriddenScopeList) {
+            const scopeDisplayText = this.getInlineScopeDisplayText(scope);
+            contentMarkdownString += `
+- [${scopeDisplayText}](${encodeURIComponent(scope)} "${getAccessibleScopeDisplayText(scope, this.languageService)}")`;
+          }
+        }
+        if (element.overriddenDefaultsLanguageList.length) {
+          if (contentMarkdownString) {
+            contentMarkdownString += `
+
+`;
+          }
+          const prefaceText = localize("hasDefaultOverridesForLanguages", "The following languages have default overrides:");
+          contentMarkdownString += prefaceText;
+          for (const language of element.overriddenDefaultsLanguageList) {
+            const scopeDisplayText = this.languageService.getLanguageName(language);
+            contentMarkdownString += `
+- [${scopeDisplayText}](${encodeURIComponent(`default:${language}`)} "${scopeDisplayText}")`;
+          }
+        }
+        const content = {
+          value: contentMarkdownString,
+          isTrusted: false,
+          supportHtml: false
+        };
+        this.scopeOverridesIndicator.disposables.add(this.hoverService.setupDelayedHover(this.scopeOverridesIndicator.element, () => ({
+          ...this.defaultHoverOptions,
+          content,
+          linkHandler: /* @__PURE__ */ __name((url) => {
+            const [scope, language] = decodeURIComponent(url).split(":");
+            onDidClickOverrideElement.fire({
+              settingKey: element.setting.key,
+              scope,
+              language
+            });
+          }, "linkHandler")
+        }), { setupKeyboardEvents: true }));
+      }
+    }
+    this.render();
+  }
+  updateDefaultOverrideIndicator(element) {
+    this.defaultOverrideIndicator.element.style.display = "none";
+    let sourceToDisplay = getDefaultValueSourceToDisplay(element);
+    if (sourceToDisplay !== void 0) {
+      this.defaultOverrideIndicator.element.style.display = "inline";
+      this.defaultOverrideIndicator.disposables.clear();
+      if (Array.isArray(sourceToDisplay) && sourceToDisplay.length === 1) {
+        sourceToDisplay = sourceToDisplay[0];
+      }
+      let defaultOverrideHoverContent;
+      if (!Array.isArray(sourceToDisplay)) {
+        defaultOverrideHoverContent = localize("defaultOverriddenDetails", "Default setting value overridden by `{0}`", sourceToDisplay);
+      } else {
+        sourceToDisplay = sourceToDisplay.map((source) => `\`${source}\``);
+        defaultOverrideHoverContent = localize("multipledefaultOverriddenDetails", "A default values has been set by {0}", sourceToDisplay.slice(0, -1).join(", ") + " & " + sourceToDisplay.slice(-1));
+      }
+      const showHover = /* @__PURE__ */ __name((focus) => {
+        return this.hoverService.showInstantHover({
+          content: new MarkdownString().appendMarkdown(defaultOverrideHoverContent),
+          target: this.defaultOverrideIndicator.element,
+          position: {
+            hoverPosition: 2
+          },
+          appearance: {
+            showPointer: true,
+            compact: false
+          }
+        }, focus);
+      }, "showHover");
+      this.addHoverDisposables(this.defaultOverrideIndicator.disposables, this.defaultOverrideIndicator.element, showHover);
+    }
+    this.render();
+  }
+};
+SettingsTreeIndicatorsLabel = __decorate([
+  __param(1, IWorkbenchConfigurationService),
+  __param(2, IHoverService),
+  __param(3, IUserDataSyncEnablementService),
+  __param(4, ILanguageService),
+  __param(5, ICommandService)
+], SettingsTreeIndicatorsLabel);
+function getDefaultValueSourceToDisplay(element) {
+  let sourceToDisplay;
+  const defaultValueSource = element.defaultValueSource;
+  if (defaultValueSource) {
+    if (defaultValueSource instanceof Map) {
+      sourceToDisplay = [];
+      for (const [, value] of defaultValueSource) {
+        const newValue = typeof value !== "string" ? value.displayName ?? value.id : value;
+        if (!sourceToDisplay.includes(newValue)) {
+          sourceToDisplay.push(newValue);
+        }
+      }
+    } else if (typeof defaultValueSource === "string") {
+      sourceToDisplay = defaultValueSource;
+    } else {
+      sourceToDisplay = defaultValueSource.displayName ?? defaultValueSource.id;
+    }
+  }
+  return sourceToDisplay;
+}
+__name(getDefaultValueSourceToDisplay, "getDefaultValueSourceToDisplay");
+function getAccessibleScopeDisplayText(completeScope, languageService) {
+  const [scope, language] = completeScope.split(":");
+  const localizedScope = scope === "user" ? localize("user", "User") : scope === "workspace" ? localize("workspace", "Workspace") : localize("remote", "Remote");
+  if (language) {
+    return localize("modifiedInScopeForLanguage", "The {0} scope for {1}", localizedScope, languageService.getLanguageName(language));
+  }
+  return localizedScope;
+}
+__name(getAccessibleScopeDisplayText, "getAccessibleScopeDisplayText");
+function getAccessibleScopeDisplayMidSentenceText(completeScope, languageService) {
+  const [scope, language] = completeScope.split(":");
+  const localizedScope = scope === "user" ? localize("user", "User") : scope === "workspace" ? localize("workspace", "Workspace") : localize("remote", "Remote");
+  if (language) {
+    return localize("modifiedInScopeForLanguageMidSentence", "the {0} scope for {1}", localizedScope.toLowerCase(), languageService.getLanguageName(language));
+  }
+  return localizedScope;
+}
+__name(getAccessibleScopeDisplayMidSentenceText, "getAccessibleScopeDisplayMidSentenceText");
+function getIndicatorsLabelAriaLabel(element, configurationService, userDataProfilesService, languageService) {
+  const ariaLabelSections = [];
+  if (element.tags?.has("preview")) {
+    ariaLabelSections.push(localize("previewLabel", "Preview"));
+  } else if (element.tags?.has("experimental")) {
+    ariaLabelSections.push(localize("experimentalLabel", "Experimental"));
+  }
+  if (element.isUntrusted) {
+    ariaLabelSections.push(localize("workspaceUntrustedAriaLabel", "Workspace untrusted; setting value not applied"));
+  }
+  if (element.hasPolicyValue) {
+    ariaLabelSections.push(localize("policyDescriptionAccessible", "Managed by organization policy; setting value not applied"));
+  } else if (element.settingsTarget === 3 && configurationService.isSettingAppliedForAllProfiles(element.setting.key)) {
+    ariaLabelSections.push(localize("applicationSettingDescriptionAccessible", "Setting value retained when switching profiles"));
+  } else {
+    const otherOverridesStart = element.isConfigured ? localize("alsoConfiguredIn", "Also modified in") : localize("configuredIn", "Modified in");
+    const otherOverridesList = element.overriddenScopeList.map((scope) => getAccessibleScopeDisplayMidSentenceText(scope, languageService)).join(", ");
+    if (element.overriddenScopeList.length) {
+      ariaLabelSections.push(`${otherOverridesStart} ${otherOverridesList}`);
+    }
+  }
+  if (cachedSyncIgnoredSettingsSet.has(element.setting.key)) {
+    ariaLabelSections.push(localize("syncIgnoredAriaLabel", "Setting ignored during sync"));
+  }
+  let sourceToDisplay = getDefaultValueSourceToDisplay(element);
+  if (sourceToDisplay !== void 0) {
+    if (Array.isArray(sourceToDisplay) && sourceToDisplay.length === 1) {
+      sourceToDisplay = sourceToDisplay[0];
+    }
+    let overriddenDetailsText;
+    if (!Array.isArray(sourceToDisplay)) {
+      overriddenDetailsText = localize("defaultOverriddenDetailsAriaLabel", "{0} overrides the default value", sourceToDisplay);
+    } else {
+      overriddenDetailsText = localize("multipleDefaultOverriddenDetailsAriaLabel", "{0} override the default value", sourceToDisplay.slice(0, -1).join(", ") + " & " + sourceToDisplay.slice(-1));
+    }
+    ariaLabelSections.push(overriddenDetailsText);
+  }
+  const otherLanguageOverridesList = element.overriddenDefaultsLanguageList.map((language) => languageService.getLanguageName(language)).join(", ");
+  if (element.overriddenDefaultsLanguageList.length) {
+    const otherLanguageOverridesText = localize("defaultOverriddenLanguagesList", "Language-specific default values exist for {0}", otherLanguageOverridesList);
+    ariaLabelSections.push(otherLanguageOverridesText);
+  }
+  const ariaLabel = ariaLabelSections.join(". ");
+  return ariaLabel;
+}
+__name(getIndicatorsLabelAriaLabel, "getIndicatorsLabelAriaLabel");
+export {
+  SettingsTreeIndicatorsLabel,
+  getIndicatorsLabelAriaLabel
+};
+//# sourceMappingURL=settingsEditorSettingIndicators.js.map

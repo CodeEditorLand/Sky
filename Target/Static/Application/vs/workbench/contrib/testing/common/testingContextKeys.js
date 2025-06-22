@@ -1,1 +1,107 @@
-import{localize as l}from"../../../../nls.js";import{$Un as n}from"../../../../platform/contextkey/common/contextkey.js";var i;!function(e){e.providerCount=new n("testing.providerCount",0),e.canRefreshTests=new n("testing.canRefresh",!1,{type:"boolean",description:l(12556,null)}),e.isRefreshingTests=new n("testing.isRefreshing",!1,{type:"boolean",description:l(12557,null)}),e.isContinuousModeOn=new n("testing.isContinuousModeOn",!1,{type:"boolean",description:l(12558,null)}),e.hasDebuggableTests=new n("testing.hasDebuggableTests",!1,{type:"boolean",description:l(12559,null)}),e.hasRunnableTests=new n("testing.hasRunnableTests",!1,{type:"boolean",description:l(12560,null)}),e.hasCoverableTests=new n("testing.hasCoverableTests",!1,{type:"boolean",description:l(12561,null)}),e.hasNonDefaultProfile=new n("testing.hasNonDefaultProfile",!1,{type:"boolean",description:l(12562,null)}),e.hasConfigurableProfile=new n("testing.hasConfigurableProfile",!1,{type:"boolean",description:l(12563,null)}),e.supportsContinuousRun=new n("testing.supportsContinuousRun",!1,{type:"boolean",description:l(12564,null)}),e.isParentRunningContinuously=new n("testing.isParentRunningContinuously",!1,{type:"boolean",description:l(12565,null)}),e.activeEditorHasTests=new n("testing.activeEditorHasTests",!1,{type:"boolean",description:l(12566,null)}),e.cursorInsideTestRange=new n("testing.cursorInsideTestRange",!1,{type:"boolean",description:l(12567,null)}),e.isTestCoverageOpen=new n("testing.isTestCoverageOpen",!1,{type:"boolean",description:l(12568,null)}),e.hasCoverageInFile=new n("testing.hasCoverageInFile",!1,{type:"boolean",description:l(12569,null)}),e.hasPerTestCoverage=new n("testing.hasPerTestCoverage",!1,{type:"boolean",description:l(12570,null)}),e.isCoverageFilteredToTest=new n("testing.isCoverageFilteredToTest",!1,{type:"boolean",description:l(12571,null)}),e.coverageToolbarEnabled=new n("testing.coverageToolbarEnabled",!0,{type:"boolean",description:l(12572,null)}),e.inlineCoverageEnabled=new n("testing.inlineCoverageEnabled",!1,{type:"boolean",description:l(12573,null)}),e.canGoToRelatedCode=new n("testing.canGoToRelatedCode",!1,{type:"boolean",description:l(12574,null)}),e.canGoToRelatedTest=new n("testing.canGoToRelatedTest",!1,{type:"boolean",description:l(12575,null)}),e.peekHasStack=new n("testing.peekHasStack",!1,{type:"boolean",description:l(12576,null)}),e.capabilityToContextKey={2:e.hasRunnableTests,8:e.hasCoverableTests,4:e.hasDebuggableTests,16:e.hasNonDefaultProfile,32:e.hasConfigurableProfile,64:e.supportsContinuousRun},e.hasAnyResults=new n("testing.hasAnyResults",!1),e.viewMode=new n("testing.explorerViewMode","list"),e.viewSorting=new n("testing.explorerViewSorting","location"),e.isRunning=new n("testing.isRunning",!1),e.isInPeek=new n("testing.isInPeek",!1),e.isPeekVisible=new n("testing.isPeekVisible",!1),e.peekItemType=new n("peekItemType",void 0,{type:"string",description:l(12577,null)}),e.controllerId=new n("controllerId",void 0,{type:"string",description:l(12578,null)}),e.testItemExtId=new n("testId",void 0,{type:"string",description:l(12579,null)}),e.testItemHasUri=new n("testing.testItemHasUri",!1,{type:"boolean",description:l(12580,null)}),e.testItemIsHidden=new n("testing.testItemIsHidden",!1,{type:"boolean",description:l(12581,null)}),e.testMessageContext=new n("testMessage",void 0,{type:"string",description:l(12582,null)}),e.testResultOutdated=new n("testResultOutdated",void 0,{type:"boolean",description:l(12583,null)}),e.testResultState=new n("testResultState",void 0,{type:"string",description:l(12584,null)}),e.testProfileContextGroup=new n("testing.profile.context.group",void 0,{type:"string",description:l(12585,null)})}(i||(i={}));export{i as TestingContextKeys};
+import { localize } from "../../../../nls.js";
+import { RawContextKey } from "../../../../platform/contextkey/common/contextkey.js";
+var TestingContextKeys;
+(function(TestingContextKeys2) {
+  TestingContextKeys2.providerCount = new RawContextKey("testing.providerCount", 0);
+  TestingContextKeys2.canRefreshTests = new RawContextKey("testing.canRefresh", false, { type: "boolean", description: localize("testing.canRefresh", "Indicates whether any test controller has an attached refresh handler.") });
+  TestingContextKeys2.isRefreshingTests = new RawContextKey("testing.isRefreshing", false, { type: "boolean", description: localize("testing.isRefreshing", "Indicates whether any test controller is currently refreshing tests.") });
+  TestingContextKeys2.isContinuousModeOn = new RawContextKey("testing.isContinuousModeOn", false, { type: "boolean", description: localize("testing.isContinuousModeOn", "Indicates whether continuous test mode is on.") });
+  TestingContextKeys2.hasDebuggableTests = new RawContextKey("testing.hasDebuggableTests", false, { type: "boolean", description: localize("testing.hasDebuggableTests", "Indicates whether any test controller has registered a debug configuration") });
+  TestingContextKeys2.hasRunnableTests = new RawContextKey("testing.hasRunnableTests", false, { type: "boolean", description: localize("testing.hasRunnableTests", "Indicates whether any test controller has registered a run configuration") });
+  TestingContextKeys2.hasCoverableTests = new RawContextKey("testing.hasCoverableTests", false, { type: "boolean", description: localize("testing.hasCoverableTests", "Indicates whether any test controller has registered a coverage configuration") });
+  TestingContextKeys2.hasNonDefaultProfile = new RawContextKey("testing.hasNonDefaultProfile", false, { type: "boolean", description: localize("testing.hasNonDefaultConfig", "Indicates whether any test controller has registered a non-default configuration") });
+  TestingContextKeys2.hasConfigurableProfile = new RawContextKey("testing.hasConfigurableProfile", false, { type: "boolean", description: localize("testing.hasConfigurableConfig", "Indicates whether any test configuration can be configured") });
+  TestingContextKeys2.supportsContinuousRun = new RawContextKey("testing.supportsContinuousRun", false, { type: "boolean", description: localize("testing.supportsContinuousRun", "Indicates whether continous test running is supported") });
+  TestingContextKeys2.isParentRunningContinuously = new RawContextKey("testing.isParentRunningContinuously", false, { type: "boolean", description: localize("testing.isParentRunningContinuously", "Indicates whether the parent of a test is continuously running, set in the menu context of test items") });
+  TestingContextKeys2.activeEditorHasTests = new RawContextKey("testing.activeEditorHasTests", false, { type: "boolean", description: localize("testing.activeEditorHasTests", "Indicates whether any tests are present in the current editor") });
+  TestingContextKeys2.cursorInsideTestRange = new RawContextKey("testing.cursorInsideTestRange", false, { type: "boolean", description: localize("testing.cursorInsideTestRange", "Whether the cursor is currently inside a test range") });
+  TestingContextKeys2.isTestCoverageOpen = new RawContextKey("testing.isTestCoverageOpen", false, { type: "boolean", description: localize("testing.isTestCoverageOpen", "Indicates whether a test coverage report is open") });
+  TestingContextKeys2.hasCoverageInFile = new RawContextKey("testing.hasCoverageInFile", false, { type: "boolean", description: localize("testing.hasCoverageInFile", "Indicates coverage has been reported in the curent editor.") });
+  TestingContextKeys2.hasPerTestCoverage = new RawContextKey("testing.hasPerTestCoverage", false, { type: "boolean", description: localize("testing.hasPerTestCoverage", "Indicates whether per-test coverage is available") });
+  TestingContextKeys2.isCoverageFilteredToTest = new RawContextKey("testing.isCoverageFilteredToTest", false, { type: "boolean", description: localize("testing.isCoverageFilteredToTest", "Indicates whether coverage has been filterd to a single test") });
+  TestingContextKeys2.coverageToolbarEnabled = new RawContextKey("testing.coverageToolbarEnabled", true, { type: "boolean", description: localize("testing.coverageToolbarEnabled", "Indicates whether the coverage toolbar is enabled") });
+  TestingContextKeys2.inlineCoverageEnabled = new RawContextKey("testing.inlineCoverageEnabled", false, { type: "boolean", description: localize("testing.inlineCoverageEnabled", "Indicates whether inline coverage is shown") });
+  TestingContextKeys2.canGoToRelatedCode = new RawContextKey("testing.canGoToRelatedCode", false, { type: "boolean", description: localize("testing.canGoToRelatedCode", "Whether a controller implements a capability to find code related to a test") });
+  TestingContextKeys2.canGoToRelatedTest = new RawContextKey("testing.canGoToRelatedTest", false, { type: "boolean", description: localize("testing.canGoToRelatedTest", "Whether a controller implements a capability to find tests related to code") });
+  TestingContextKeys2.peekHasStack = new RawContextKey("testing.peekHasStack", false, { type: "boolean", description: localize("testing.peekHasStack", "Whether the message shown in a peek view has a stack trace") });
+  TestingContextKeys2.capabilityToContextKey = {
+    [
+      2
+      /* TestRunProfileBitset.Run */
+    ]: TestingContextKeys2.hasRunnableTests,
+    [
+      8
+      /* TestRunProfileBitset.Coverage */
+    ]: TestingContextKeys2.hasCoverableTests,
+    [
+      4
+      /* TestRunProfileBitset.Debug */
+    ]: TestingContextKeys2.hasDebuggableTests,
+    [
+      16
+      /* TestRunProfileBitset.HasNonDefaultProfile */
+    ]: TestingContextKeys2.hasNonDefaultProfile,
+    [
+      32
+      /* TestRunProfileBitset.HasConfigurable */
+    ]: TestingContextKeys2.hasConfigurableProfile,
+    [
+      64
+      /* TestRunProfileBitset.SupportsContinuousRun */
+    ]: TestingContextKeys2.supportsContinuousRun
+  };
+  TestingContextKeys2.hasAnyResults = new RawContextKey("testing.hasAnyResults", false);
+  TestingContextKeys2.viewMode = new RawContextKey(
+    "testing.explorerViewMode",
+    "list"
+    /* TestExplorerViewMode.List */
+  );
+  TestingContextKeys2.viewSorting = new RawContextKey(
+    "testing.explorerViewSorting",
+    "location"
+    /* TestExplorerViewSorting.ByLocation */
+  );
+  TestingContextKeys2.isRunning = new RawContextKey("testing.isRunning", false);
+  TestingContextKeys2.isInPeek = new RawContextKey("testing.isInPeek", false);
+  TestingContextKeys2.isPeekVisible = new RawContextKey("testing.isPeekVisible", false);
+  TestingContextKeys2.peekItemType = new RawContextKey("peekItemType", void 0, {
+    type: "string",
+    description: localize("testing.peekItemType", 'Type of the item in the output peek view. Either a "test", "message", "task", or "result".')
+  });
+  TestingContextKeys2.controllerId = new RawContextKey("controllerId", void 0, {
+    type: "string",
+    description: localize("testing.controllerId", "Controller ID of the current test item")
+  });
+  TestingContextKeys2.testItemExtId = new RawContextKey("testId", void 0, {
+    type: "string",
+    description: localize("testing.testId", "ID of the current test item, set when creating or opening menus on test items")
+  });
+  TestingContextKeys2.testItemHasUri = new RawContextKey("testing.testItemHasUri", false, {
+    type: "boolean",
+    description: localize("testing.testItemHasUri", "Boolean indicating whether the test item has a URI defined")
+  });
+  TestingContextKeys2.testItemIsHidden = new RawContextKey("testing.testItemIsHidden", false, {
+    type: "boolean",
+    description: localize("testing.testItemIsHidden", "Boolean indicating whether the test item is hidden")
+  });
+  TestingContextKeys2.testMessageContext = new RawContextKey("testMessage", void 0, {
+    type: "string",
+    description: localize("testing.testMessage", "Value set in `testMessage.contextValue`, available in editor/content and testing/message/context")
+  });
+  TestingContextKeys2.testResultOutdated = new RawContextKey("testResultOutdated", void 0, {
+    type: "boolean",
+    description: localize("testing.testResultOutdated", "Value available in editor/content and testing/message/context when the result is outdated")
+  });
+  TestingContextKeys2.testResultState = new RawContextKey("testResultState", void 0, {
+    type: "string",
+    description: localize("testing.testResultState", "Value available testing/item/result indicating the state of the item.")
+  });
+  TestingContextKeys2.testProfileContextGroup = new RawContextKey("testing.profile.context.group", void 0, {
+    type: "string",
+    description: localize("testing.profile.context.group", 'Type of menu where the configure testing profile submenu exists. Either "run", "debug", or "coverage"')
+  });
+})(TestingContextKeys || (TestingContextKeys = {}));
+export {
+  TestingContextKeys
+};
+//# sourceMappingURL=testingContextKeys.js.map

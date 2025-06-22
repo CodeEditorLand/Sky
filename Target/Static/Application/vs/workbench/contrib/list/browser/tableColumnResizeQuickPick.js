@@ -1,1 +1,64 @@
-import{$vd as p}from"../../../../base/common/lifecycle.js";import{localize as c}from"../../../../nls.js";import{$OM as m}from"../../../../platform/quickinput/common/quickInput.js";var a=function(i,t,e,r){var l=arguments.length,n=l<3?t:r===null?r=Object.getOwnPropertyDescriptor(t,e):r,o;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")n=Reflect.decorate(i,t,e,r);else for(var u=i.length-1;u>=0;u--)(o=i[u])&&(n=(l<3?o(n):l>3?o(t,e,n):o(t,e))||n);return l>3&&n&&Object.defineProperty(t,e,n),n},f=function(i,t){return function(e,r){t(e,r,i)}};let s=class extends p{constructor(t,e){super(),this.a=t,this.b=e}async show(){const t=[];this.a.getColumnLabels().forEach((n,o)=>{n&&t.push({label:n,index:o})});const e=await this.b.pick(t,{placeHolder:c(8433,null)});if(!e)return;const r=await this.b.input({placeHolder:c(8434,null),prompt:c(8435,null,e.label),validateInput:n=>this.c(n)}),l=r?Number.parseInt(r):void 0;l&&this.a.resizeColumn(e.index,l)}async c(t){const e=Number.parseInt(t);return t&&!Number.isInteger(e)?c(8436,null):e<0||e>100?c(8437,null):null}};s=a([f(1,m)],s);export{s as $Xxc};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { Disposable } from "../../../../base/common/lifecycle.js";
+import { localize } from "../../../../nls.js";
+import { IQuickInputService } from "../../../../platform/quickinput/common/quickInput.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+let TableColumnResizeQuickPick = class TableColumnResizeQuickPick2 extends Disposable {
+  static {
+    __name(this, "TableColumnResizeQuickPick");
+  }
+  constructor(_table, _quickInputService) {
+    super();
+    this._table = _table;
+    this._quickInputService = _quickInputService;
+  }
+  async show() {
+    const items = [];
+    this._table.getColumnLabels().forEach((label, index) => {
+      if (label) {
+        items.push({ label, index });
+      }
+    });
+    const column = await this._quickInputService.pick(items, { placeHolder: localize("table.column.selection", "Select the column to resize, type to filter.") });
+    if (!column) {
+      return;
+    }
+    const value = await this._quickInputService.input({
+      placeHolder: localize("table.column.resizeValue.placeHolder", "i.e. 20, 60, 100..."),
+      prompt: localize("table.column.resizeValue.prompt", "Please enter a width in percentage for the '{0}' column.", column.label),
+      validateInput: /* @__PURE__ */ __name((input) => this._validateColumnResizeValue(input), "validateInput")
+    });
+    const percentageValue = value ? Number.parseInt(value) : void 0;
+    if (!percentageValue) {
+      return;
+    }
+    this._table.resizeColumn(column.index, percentageValue);
+  }
+  async _validateColumnResizeValue(input) {
+    const percentage = Number.parseInt(input);
+    if (input && !Number.isInteger(percentage)) {
+      return localize("table.column.resizeValue.invalidType", "Please enter an integer.");
+    } else if (percentage < 0 || percentage > 100) {
+      return localize("table.column.resizeValue.invalidRange", "Please enter a number greater than 0 and less than or equal to 100.");
+    }
+    return null;
+  }
+};
+TableColumnResizeQuickPick = __decorate([
+  __param(1, IQuickInputService)
+], TableColumnResizeQuickPick);
+export {
+  TableColumnResizeQuickPick
+};
+//# sourceMappingURL=tableColumnResizeQuickPick.js.map

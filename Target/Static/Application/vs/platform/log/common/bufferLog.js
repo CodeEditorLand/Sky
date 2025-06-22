@@ -1,1 +1,43 @@
-import{$wd as h}from"../../../base/common/lifecycle.js";import{$0n as n,$6n as o,log as e}from"./log.js";class p extends n{constructor(s=o){super(),this.n=[],this.r=void 0,this.s=this.B(new h),this.setLevel(s)}set logger(s){this.r=s,this.setLevel(s.getLevel()),this.s.value=s.onDidChangeLogLevel(this.setLevel,this);for(const{level:t,message:i}of this.n)e(s,t,i);this.n=[]}m(s,t){this.r?e(this.r,s,t):this.getLevel()<=s&&this.n.push({level:s,message:t})}dispose(){this.r?.dispose(),super.dispose()}flush(){this.r?.flush()}}export{p as $dB};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { MutableDisposable } from "../../../base/common/lifecycle.js";
+import { AbstractMessageLogger, DEFAULT_LOG_LEVEL, log } from "./log.js";
+class BufferLogger extends AbstractMessageLogger {
+  static {
+    __name(this, "BufferLogger");
+  }
+  constructor(logLevel = DEFAULT_LOG_LEVEL) {
+    super();
+    this.buffer = [];
+    this._logger = void 0;
+    this._logLevelDisposable = this._register(new MutableDisposable());
+    this.setLevel(logLevel);
+  }
+  set logger(logger) {
+    this._logger = logger;
+    this.setLevel(logger.getLevel());
+    this._logLevelDisposable.value = logger.onDidChangeLogLevel(this.setLevel, this);
+    for (const { level, message } of this.buffer) {
+      log(logger, level, message);
+    }
+    this.buffer = [];
+  }
+  log(level, message) {
+    if (this._logger) {
+      log(this._logger, level, message);
+    } else if (this.getLevel() <= level) {
+      this.buffer.push({ level, message });
+    }
+  }
+  dispose() {
+    this._logger?.dispose();
+    super.dispose();
+  }
+  flush() {
+    this._logger?.flush();
+  }
+}
+export {
+  BufferLogger
+};
+//# sourceMappingURL=bufferLog.js.map

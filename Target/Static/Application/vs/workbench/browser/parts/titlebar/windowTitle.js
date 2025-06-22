@@ -1,1 +1,401 @@
-import{localize as w}from"../../../../nls.js";import{$jh as O,$hh as R}from"../../../../base/common/resources.js";import{$El as _}from"../../../../platform/configuration/common/configuration.js";import{$oI as k}from"../../../services/editor/common/editorService.js";import{$vd as z,$ud as H}from"../../../../base/common/lifecycle.js";import{$sK as I,SideBySideEditor as M}from"../../../common/editor.js";import{$2$ as G}from"../../../services/environment/browser/environmentService.js";import{$hl as J}from"../../../../platform/workspace/common/workspace.js";import{$m as U,$s as y,$n as v,$q as K}from"../../../../base/common/platform.js";import{$Hf as Y}from"../../../../base/common/strings.js";import{$nm as Q}from"../../../../base/common/labels.js";import{$2H as X}from"../../../../platform/label/common/label.js";import{$df as q}from"../../../../base/common/event.js";import{$Yh as Z}from"../../../../base/common/async.js";import{$nn as tt}from"../../../../platform/product/common/productService.js";import{Schemas as it}from"../../../../base/common/network.js";import{$YX as et}from"../../../../platform/workspace/common/virtualWorkspace.js";import{$9X as st}from"../../../services/userDataProfile/common/userDataProfile.js";import{$Jwb as ot}from"../../../services/views/common/viewsService.js";import{$5_ as rt,$6_ as nt}from"../../../../editor/browser/editorBrowser.js";import{$Vn as ht}from"../../../../platform/contextkey/common/contextkey.js";import{getWindowById as at}from"../../../../base/browser/dom.js";import{$OEb as ft}from"../../../services/decorations/common/decorations.js";import{$tC as dt}from"../../../../platform/accessibility/common/accessibility.js";var A=function(n,t,i,e){var s=arguments.length,o=s<3?t:e===null?e=Object.getOwnPropertyDescriptor(t,i):e,r;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")o=Reflect.decorate(n,t,i,e);else for(var a=n.length-1;a>=0;a--)(r=n[a])&&(o=(s<3?r(o):s>3?r(t,i,o):r(t,i))||o);return s>3&&o&&Object.defineProperty(t,i,o),o},h=function(n,t){return function(i,e){t(i,e,n)}},f,C;(function(n){n.titleSeparator="window.titleSeparator",n.title="window.title"})(C||(C={}));const ct=(()=>{if(v&&K)return"${activeEditorShort}${separator}${rootName}${separator}${profileName}";const n="${dirty}${activeEditorShort}${separator}${rootName}${separator}${profileName}${separator}${appName}";return y?n+"${separator}${remoteName}":n})(),lt=v?" \u2014 ":" - ";let b=class extends z{static{f=this}static{this.a=U?w(3956,null):w(3957,null)}static{this.b=w(3958,null)}static{this.c="\u25CF "}get value(){return this.n??""}get workspaceName(){return this.D.getWorkspaceLabel(this.C.getWorkspace())}get fileName(){const t=this.y.activeEditor;if(!t)return;const i=t.getTitle(0);return`${t?.isDirty()&&!t.isSaving()?f.c:""}${i}`}constructor(t,i,e,s,o,r,a,c,l,m,p,g){super(),this.u=i,this.w=e,this.y=s,this.z=o,this.C=r,this.D=a,this.F=c,this.G=l,this.H=m,this.I=p,this.J=g,this.f={isPure:!0,isAdmin:!1,prefix:void 0},this.g=new Map,this.h=this.B(new H),this.j=this.B(new Z(()=>this.P(),0)),this.m=new q,this.onDidChange=this.m.event,this.r=!1,this.s=!1,this.t=t.vscodeWindowId,this.N(),this.L()}L(){this.B(this.u.onDidChangeConfiguration(t=>this.M(t))),this.B(this.y.onDidActiveEditorChange(()=>this.O())),this.B(this.C.onDidChangeWorkspaceFolders(()=>this.j.schedule())),this.B(this.C.onDidChangeWorkbenchState(()=>this.j.schedule())),this.B(this.C.onDidChangeWorkspaceName(()=>this.j.schedule())),this.B(this.D.onDidChangeFormatters(()=>this.j.schedule())),this.B(this.F.onDidChangeCurrentProfile(()=>this.j.schedule())),this.B(this.H.onDidChangeFocusedView(()=>{this.r&&this.j.schedule()})),this.B(this.w.onDidChangeContext(t=>{t.affectsSome(this.g)&&this.j.schedule()})),this.B(this.J.onDidChangeScreenReaderOptimized(()=>this.j.schedule()))}M(t){const i=t.affectsConfiguration("window.title");i&&this.N(),(i||t.affectsConfiguration("window.titleSeparator"))&&this.j.schedule()}N(){const t=this.u.getValue("window.title");typeof t=="string"&&(this.r=t.includes("${focusedView}"),this.s=t.includes("${activeEditorState}"))}O(){this.h.clear(),this.j.schedule();const t=this.y.activeEditor;if(t&&(this.h.add(t.onDidChangeDirty(()=>this.j.schedule())),this.h.add(t.onDidChangeLabel(()=>this.j.schedule()))),this.r){const i=this.y.activeTextEditorControl,e=[];rt(i)?e.push(i):nt(i)&&e.push(i.getOriginalEditor(),i.getModifiedEditor());for(const s of e)this.h.add(s.onDidBlurEditorText(()=>this.j.schedule())),this.h.add(s.onDidFocusEditorText(()=>this.j.schedule()))}this.s&&this.h.add(this.I.onDidChangeDecorations(()=>this.j.schedule()))}P(){const t=this.Q();if(t!==this.n){let i=t;Y(i)||(i=this.G.nameLong);const e=at(this.t,!0).window;!e.document.title&&v&&i===this.G.nameLong&&(e.document.title=`${this.G.nameLong} ${f.c}`),e.document.title=i,this.n=t,this.m.fire()}}Q(){const{prefix:t,suffix:i}=this.getTitleDecorations();let e=this.getWindowTitle()||this.G.nameLong;return t&&(e=`${t} ${e}`),i&&(e=`${e} ${i}`),e.replace(/[^\S ]/g," ")}getTitleDecorations(){let t,i;return this.f.prefix&&(t=this.f.prefix),this.z.isExtensionDevelopment&&(t=t?`${f.b} - ${t}`:f.b),this.f.isAdmin&&(i=f.a),{prefix:t,suffix:i}}updateProperties(t){const i=typeof t.isAdmin=="boolean"?t.isAdmin:this.f.isAdmin,e=typeof t.isPure=="boolean"?t.isPure:this.f.isPure,s=typeof t.prefix=="string"?t.prefix:this.f.prefix;(i!==this.f.isAdmin||e!==this.f.isPure||s!==this.f.prefix)&&(this.f.isAdmin=i,this.f.isPure=e,this.f.prefix=s,this.j.schedule())}registerVariables(t){let i=!1;for(const{name:e,contextKey:s}of t)this.g.has(s)||(this.g.set(s,e),i=!0);i&&this.j.schedule()}getWindowTitle(){const t=this.y.activeEditor,i=this.C.getWorkspace();let e;i.configuration?e=i.configuration:i.folders.length&&(e=i.folders[0].uri);const s=I.getOriginalUri(t,{supportSideBySide:M.PRIMARY});let o=s?O(s):void 0;o?.path==="."&&(o=void 0);let r;this.C.getWorkbenchState()===2?r=i.folders[0]:s&&(r=this.C.getWorkspaceFolder(s)??void 0);let a;if(this.z.remoteAuthority&&!y)a=this.D.getHostLabel(it.vscodeRemote,this.z.remoteAuthority);else{const d=et(i);d&&(a=this.D.getHostLabel(d.scheme,d.authority))}const c=t?t.getTitle(0):"",l=t?t.getTitle(1):c,m=t?t.getTitle(2):l,p=o?R(o):"",g=o?this.D.getUriLabel(o,{relative:!0}):"",x=o?this.D.getUriLabel(o):"",S=this.D.getWorkspaceLabel(i),E=this.D.getWorkspaceLabel(i,{verbose:0}),j=e?this.D.getUriLabel(e):"",L=r?r.name:"",N=r?this.D.getUriLabel(r.uri):"",F=t?.isDirty()&&!t.isSaving()?f.c:"",P=this.G.nameLong,T=this.F.currentProfile.isDefault?"":this.F.currentProfile.name,B=this.H.getFocusedViewName(),W=s?this.I.getDecoration(s,!1)?.tooltip:void 0,D={};for(const[d,V]of this.g)D[V]=this.w.getContextKeyValue(d)??"";let u=this.u.getValue("window.title");typeof u!="string"&&(u=ct),!this.s&&this.J.isScreenReaderOptimized()&&this.u.getValue("accessibility.windowTitleOptimized")&&(u+="${separator}${activeEditorState}");let $=this.u.getValue("window.titleSeparator");return typeof $!="string"&&($=lt),Q(u,{...D,activeEditorShort:c,activeEditorLong:m,activeEditorMedium:l,activeFolderShort:p,activeFolderMedium:g,activeFolderLong:x,rootName:S,rootPath:j,rootNameShort:E,folderName:L,folderPath:N,dirty:F,appName:P,remoteName:a,profileName:T,focusedView:B,activeEditorState:W,separator:{label:$}})}isCustomTitleFormat(){if(this.J.isScreenReaderOptimized()||this.s)return!0;const t=this.u.inspect("window.title"),i=this.u.inspect("window.titleSeparator");return t.value!==t.defaultValue||i.value!==i.defaultValue}};b=f=A([h(1,_),h(2,ht),h(3,k),h(4,G),h(5,J),h(6,X),h(7,st),h(8,tt),h(9,ot),h(10,ft),h(11,dt)],b);export{ct as $D3b,lt as $E3b,b as $F3b};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { localize } from "../../../../nls.js";
+import { dirname, basename } from "../../../../base/common/resources.js";
+import { IConfigurationService } from "../../../../platform/configuration/common/configuration.js";
+import { IEditorService } from "../../../services/editor/common/editorService.js";
+import { Disposable, DisposableStore } from "../../../../base/common/lifecycle.js";
+import { EditorResourceAccessor, SideBySideEditor } from "../../../common/editor.js";
+import { IBrowserWorkbenchEnvironmentService } from "../../../services/environment/browser/environmentService.js";
+import { IWorkspaceContextService } from "../../../../platform/workspace/common/workspace.js";
+import { isWindows, isWeb, isMacintosh, isNative } from "../../../../base/common/platform.js";
+import { trim } from "../../../../base/common/strings.js";
+import { template } from "../../../../base/common/labels.js";
+import { ILabelService } from "../../../../platform/label/common/label.js";
+import { Emitter } from "../../../../base/common/event.js";
+import { RunOnceScheduler } from "../../../../base/common/async.js";
+import { IProductService } from "../../../../platform/product/common/productService.js";
+import { Schemas } from "../../../../base/common/network.js";
+import { getVirtualWorkspaceLocation } from "../../../../platform/workspace/common/virtualWorkspace.js";
+import { IUserDataProfileService } from "../../../services/userDataProfile/common/userDataProfile.js";
+import { IViewsService } from "../../../services/views/common/viewsService.js";
+import { isCodeEditor, isDiffEditor } from "../../../../editor/browser/editorBrowser.js";
+import { IContextKeyService } from "../../../../platform/contextkey/common/contextkey.js";
+import { getWindowById } from "../../../../base/browser/dom.js";
+import { IDecorationsService } from "../../../services/decorations/common/decorations.js";
+import { IAccessibilityService } from "../../../../platform/accessibility/common/accessibility.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+var WindowTitle_1;
+var WindowSettingNames;
+(function(WindowSettingNames2) {
+  WindowSettingNames2["titleSeparator"] = "window.titleSeparator";
+  WindowSettingNames2["title"] = "window.title";
+})(WindowSettingNames || (WindowSettingNames = {}));
+const defaultWindowTitle = (() => {
+  if (isMacintosh && isNative) {
+    return "${activeEditorShort}${separator}${rootName}${separator}${profileName}";
+  }
+  const base = "${dirty}${activeEditorShort}${separator}${rootName}${separator}${profileName}${separator}${appName}";
+  if (isWeb) {
+    return base + "${separator}${remoteName}";
+  }
+  return base;
+})();
+const defaultWindowTitleSeparator = isMacintosh ? " \u2014 " : " - ";
+let WindowTitle = class WindowTitle2 extends Disposable {
+  static {
+    __name(this, "WindowTitle");
+  }
+  static {
+    WindowTitle_1 = this;
+  }
+  static {
+    this.NLS_USER_IS_ADMIN = isWindows ? localize("userIsAdmin", "[Administrator]") : localize("userIsSudo", "[Superuser]");
+  }
+  static {
+    this.NLS_EXTENSION_HOST = localize("devExtensionWindowTitlePrefix", "[Extension Development Host]");
+  }
+  static {
+    this.TITLE_DIRTY = "\u25CF ";
+  }
+  get value() {
+    return this.title ?? "";
+  }
+  get workspaceName() {
+    return this.labelService.getWorkspaceLabel(this.contextService.getWorkspace());
+  }
+  get fileName() {
+    const activeEditor = this.editorService.activeEditor;
+    if (!activeEditor) {
+      return void 0;
+    }
+    const fileName = activeEditor.getTitle(
+      0
+      /* Verbosity.SHORT */
+    );
+    const dirty = activeEditor?.isDirty() && !activeEditor.isSaving() ? WindowTitle_1.TITLE_DIRTY : "";
+    return `${dirty}${fileName}`;
+  }
+  constructor(targetWindow, configurationService, contextKeyService, editorService, environmentService, contextService, labelService, userDataProfileService, productService, viewsService, decorationsService, accessibilityService) {
+    super();
+    this.configurationService = configurationService;
+    this.contextKeyService = contextKeyService;
+    this.editorService = editorService;
+    this.environmentService = environmentService;
+    this.contextService = contextService;
+    this.labelService = labelService;
+    this.userDataProfileService = userDataProfileService;
+    this.productService = productService;
+    this.viewsService = viewsService;
+    this.decorationsService = decorationsService;
+    this.accessibilityService = accessibilityService;
+    this.properties = { isPure: true, isAdmin: false, prefix: void 0 };
+    this.variables = /* @__PURE__ */ new Map();
+    this.activeEditorListeners = this._register(new DisposableStore());
+    this.titleUpdater = this._register(new RunOnceScheduler(() => this.doUpdateTitle(), 0));
+    this.onDidChangeEmitter = new Emitter();
+    this.onDidChange = this.onDidChangeEmitter.event;
+    this.titleIncludesFocusedView = false;
+    this.titleIncludesEditorState = false;
+    this.windowId = targetWindow.vscodeWindowId;
+    this.checkTitleVariables();
+    this.registerListeners();
+  }
+  registerListeners() {
+    this._register(this.configurationService.onDidChangeConfiguration((e) => this.onConfigurationChanged(e)));
+    this._register(this.editorService.onDidActiveEditorChange(() => this.onActiveEditorChange()));
+    this._register(this.contextService.onDidChangeWorkspaceFolders(() => this.titleUpdater.schedule()));
+    this._register(this.contextService.onDidChangeWorkbenchState(() => this.titleUpdater.schedule()));
+    this._register(this.contextService.onDidChangeWorkspaceName(() => this.titleUpdater.schedule()));
+    this._register(this.labelService.onDidChangeFormatters(() => this.titleUpdater.schedule()));
+    this._register(this.userDataProfileService.onDidChangeCurrentProfile(() => this.titleUpdater.schedule()));
+    this._register(this.viewsService.onDidChangeFocusedView(() => {
+      if (this.titleIncludesFocusedView) {
+        this.titleUpdater.schedule();
+      }
+    }));
+    this._register(this.contextKeyService.onDidChangeContext((e) => {
+      if (e.affectsSome(this.variables)) {
+        this.titleUpdater.schedule();
+      }
+    }));
+    this._register(this.accessibilityService.onDidChangeScreenReaderOptimized(() => this.titleUpdater.schedule()));
+  }
+  onConfigurationChanged(event) {
+    const affectsTitleConfiguration = event.affectsConfiguration(
+      "window.title"
+      /* WindowSettingNames.title */
+    );
+    if (affectsTitleConfiguration) {
+      this.checkTitleVariables();
+    }
+    if (affectsTitleConfiguration || event.affectsConfiguration(
+      "window.titleSeparator"
+      /* WindowSettingNames.titleSeparator */
+    )) {
+      this.titleUpdater.schedule();
+    }
+  }
+  checkTitleVariables() {
+    const titleTemplate = this.configurationService.getValue(
+      "window.title"
+      /* WindowSettingNames.title */
+    );
+    if (typeof titleTemplate === "string") {
+      this.titleIncludesFocusedView = titleTemplate.includes("${focusedView}");
+      this.titleIncludesEditorState = titleTemplate.includes("${activeEditorState}");
+    }
+  }
+  onActiveEditorChange() {
+    this.activeEditorListeners.clear();
+    this.titleUpdater.schedule();
+    const activeEditor = this.editorService.activeEditor;
+    if (activeEditor) {
+      this.activeEditorListeners.add(activeEditor.onDidChangeDirty(() => this.titleUpdater.schedule()));
+      this.activeEditorListeners.add(activeEditor.onDidChangeLabel(() => this.titleUpdater.schedule()));
+    }
+    if (this.titleIncludesFocusedView) {
+      const activeTextEditorControl = this.editorService.activeTextEditorControl;
+      const textEditorControls = [];
+      if (isCodeEditor(activeTextEditorControl)) {
+        textEditorControls.push(activeTextEditorControl);
+      } else if (isDiffEditor(activeTextEditorControl)) {
+        textEditorControls.push(activeTextEditorControl.getOriginalEditor(), activeTextEditorControl.getModifiedEditor());
+      }
+      for (const textEditorControl of textEditorControls) {
+        this.activeEditorListeners.add(textEditorControl.onDidBlurEditorText(() => this.titleUpdater.schedule()));
+        this.activeEditorListeners.add(textEditorControl.onDidFocusEditorText(() => this.titleUpdater.schedule()));
+      }
+    }
+    if (this.titleIncludesEditorState) {
+      this.activeEditorListeners.add(this.decorationsService.onDidChangeDecorations(() => this.titleUpdater.schedule()));
+    }
+  }
+  doUpdateTitle() {
+    const title = this.getFullWindowTitle();
+    if (title !== this.title) {
+      let nativeTitle = title;
+      if (!trim(nativeTitle)) {
+        nativeTitle = this.productService.nameLong;
+      }
+      const window = getWindowById(this.windowId, true).window;
+      if (!window.document.title && isMacintosh && nativeTitle === this.productService.nameLong) {
+        window.document.title = `${this.productService.nameLong} ${WindowTitle_1.TITLE_DIRTY}`;
+      }
+      window.document.title = nativeTitle;
+      this.title = title;
+      this.onDidChangeEmitter.fire();
+    }
+  }
+  getFullWindowTitle() {
+    const { prefix, suffix } = this.getTitleDecorations();
+    let title = this.getWindowTitle() || this.productService.nameLong;
+    if (prefix) {
+      title = `${prefix} ${title}`;
+    }
+    if (suffix) {
+      title = `${title} ${suffix}`;
+    }
+    return title.replace(/[^\S ]/g, " ");
+  }
+  getTitleDecorations() {
+    let prefix;
+    let suffix;
+    if (this.properties.prefix) {
+      prefix = this.properties.prefix;
+    }
+    if (this.environmentService.isExtensionDevelopment) {
+      prefix = !prefix ? WindowTitle_1.NLS_EXTENSION_HOST : `${WindowTitle_1.NLS_EXTENSION_HOST} - ${prefix}`;
+    }
+    if (this.properties.isAdmin) {
+      suffix = WindowTitle_1.NLS_USER_IS_ADMIN;
+    }
+    return { prefix, suffix };
+  }
+  updateProperties(properties) {
+    const isAdmin = typeof properties.isAdmin === "boolean" ? properties.isAdmin : this.properties.isAdmin;
+    const isPure = typeof properties.isPure === "boolean" ? properties.isPure : this.properties.isPure;
+    const prefix = typeof properties.prefix === "string" ? properties.prefix : this.properties.prefix;
+    if (isAdmin !== this.properties.isAdmin || isPure !== this.properties.isPure || prefix !== this.properties.prefix) {
+      this.properties.isAdmin = isAdmin;
+      this.properties.isPure = isPure;
+      this.properties.prefix = prefix;
+      this.titleUpdater.schedule();
+    }
+  }
+  registerVariables(variables) {
+    let changed = false;
+    for (const { name, contextKey } of variables) {
+      if (!this.variables.has(contextKey)) {
+        this.variables.set(contextKey, name);
+        changed = true;
+      }
+    }
+    if (changed) {
+      this.titleUpdater.schedule();
+    }
+  }
+  /**
+   * Possible template values:
+   *
+   * {activeEditorLong}: e.g. /Users/Development/myFolder/myFileFolder/myFile.txt
+   * {activeEditorMedium}: e.g. myFolder/myFileFolder/myFile.txt
+   * {activeEditorShort}: e.g. myFile.txt
+   * {activeFolderLong}: e.g. /Users/Development/myFolder/myFileFolder
+   * {activeFolderMedium}: e.g. myFolder/myFileFolder
+   * {activeFolderShort}: e.g. myFileFolder
+   * {rootName}: e.g. myFolder1, myFolder2, myFolder3
+   * {rootPath}: e.g. /Users/Development
+   * {folderName}: e.g. myFolder
+   * {folderPath}: e.g. /Users/Development/myFolder
+   * {appName}: e.g. VS Code
+   * {remoteName}: e.g. SSH
+   * {dirty}: indicator
+   * {focusedView}: e.g. Terminal
+   * {separator}: conditional separator
+   * {activeEditorState}: e.g. Modified
+   */
+  getWindowTitle() {
+    const editor = this.editorService.activeEditor;
+    const workspace = this.contextService.getWorkspace();
+    let root;
+    if (workspace.configuration) {
+      root = workspace.configuration;
+    } else if (workspace.folders.length) {
+      root = workspace.folders[0].uri;
+    }
+    const editorResource = EditorResourceAccessor.getOriginalUri(editor, { supportSideBySide: SideBySideEditor.PRIMARY });
+    let editorFolderResource = editorResource ? dirname(editorResource) : void 0;
+    if (editorFolderResource?.path === ".") {
+      editorFolderResource = void 0;
+    }
+    let folder = void 0;
+    if (this.contextService.getWorkbenchState() === 2) {
+      folder = workspace.folders[0];
+    } else if (editorResource) {
+      folder = this.contextService.getWorkspaceFolder(editorResource) ?? void 0;
+    }
+    let remoteName = void 0;
+    if (this.environmentService.remoteAuthority && !isWeb) {
+      remoteName = this.labelService.getHostLabel(Schemas.vscodeRemote, this.environmentService.remoteAuthority);
+    } else {
+      const virtualWorkspaceLocation = getVirtualWorkspaceLocation(workspace);
+      if (virtualWorkspaceLocation) {
+        remoteName = this.labelService.getHostLabel(virtualWorkspaceLocation.scheme, virtualWorkspaceLocation.authority);
+      }
+    }
+    const activeEditorShort = editor ? editor.getTitle(
+      0
+      /* Verbosity.SHORT */
+    ) : "";
+    const activeEditorMedium = editor ? editor.getTitle(
+      1
+      /* Verbosity.MEDIUM */
+    ) : activeEditorShort;
+    const activeEditorLong = editor ? editor.getTitle(
+      2
+      /* Verbosity.LONG */
+    ) : activeEditorMedium;
+    const activeFolderShort = editorFolderResource ? basename(editorFolderResource) : "";
+    const activeFolderMedium = editorFolderResource ? this.labelService.getUriLabel(editorFolderResource, { relative: true }) : "";
+    const activeFolderLong = editorFolderResource ? this.labelService.getUriLabel(editorFolderResource) : "";
+    const rootName = this.labelService.getWorkspaceLabel(workspace);
+    const rootNameShort = this.labelService.getWorkspaceLabel(workspace, {
+      verbose: 0
+      /* LabelVerbosity.SHORT */
+    });
+    const rootPath = root ? this.labelService.getUriLabel(root) : "";
+    const folderName = folder ? folder.name : "";
+    const folderPath = folder ? this.labelService.getUriLabel(folder.uri) : "";
+    const dirty = editor?.isDirty() && !editor.isSaving() ? WindowTitle_1.TITLE_DIRTY : "";
+    const appName = this.productService.nameLong;
+    const profileName = this.userDataProfileService.currentProfile.isDefault ? "" : this.userDataProfileService.currentProfile.name;
+    const focusedView = this.viewsService.getFocusedViewName();
+    const activeEditorState = editorResource ? this.decorationsService.getDecoration(editorResource, false)?.tooltip : void 0;
+    const variables = {};
+    for (const [contextKey, name] of this.variables) {
+      variables[name] = this.contextKeyService.getContextKeyValue(contextKey) ?? "";
+    }
+    let titleTemplate = this.configurationService.getValue(
+      "window.title"
+      /* WindowSettingNames.title */
+    );
+    if (typeof titleTemplate !== "string") {
+      titleTemplate = defaultWindowTitle;
+    }
+    if (!this.titleIncludesEditorState && this.accessibilityService.isScreenReaderOptimized() && this.configurationService.getValue("accessibility.windowTitleOptimized")) {
+      titleTemplate += "${separator}${activeEditorState}";
+    }
+    let separator = this.configurationService.getValue(
+      "window.titleSeparator"
+      /* WindowSettingNames.titleSeparator */
+    );
+    if (typeof separator !== "string") {
+      separator = defaultWindowTitleSeparator;
+    }
+    return template(titleTemplate, {
+      ...variables,
+      activeEditorShort,
+      activeEditorLong,
+      activeEditorMedium,
+      activeFolderShort,
+      activeFolderMedium,
+      activeFolderLong,
+      rootName,
+      rootPath,
+      rootNameShort,
+      folderName,
+      folderPath,
+      dirty,
+      appName,
+      remoteName,
+      profileName,
+      focusedView,
+      activeEditorState,
+      separator: { label: separator }
+    });
+  }
+  isCustomTitleFormat() {
+    if (this.accessibilityService.isScreenReaderOptimized() || this.titleIncludesEditorState) {
+      return true;
+    }
+    const title = this.configurationService.inspect(
+      "window.title"
+      /* WindowSettingNames.title */
+    );
+    const titleSeparator = this.configurationService.inspect(
+      "window.titleSeparator"
+      /* WindowSettingNames.titleSeparator */
+    );
+    return title.value !== title.defaultValue || titleSeparator.value !== titleSeparator.defaultValue;
+  }
+};
+WindowTitle = WindowTitle_1 = __decorate([
+  __param(1, IConfigurationService),
+  __param(2, IContextKeyService),
+  __param(3, IEditorService),
+  __param(4, IBrowserWorkbenchEnvironmentService),
+  __param(5, IWorkspaceContextService),
+  __param(6, ILabelService),
+  __param(7, IUserDataProfileService),
+  __param(8, IProductService),
+  __param(9, IViewsService),
+  __param(10, IDecorationsService),
+  __param(11, IAccessibilityService)
+], WindowTitle);
+export {
+  WindowTitle,
+  defaultWindowTitle,
+  defaultWindowTitleSeparator
+};
+//# sourceMappingURL=windowTitle.js.map

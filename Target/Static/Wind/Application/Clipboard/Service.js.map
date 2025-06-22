@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["../../../Source/Application/Clipboard/Service.ts"],
+  "sourcesContent": ["/**\n * @module Service (Clipboard/Application)\n * @description Defines the service interface and Context.Tag for the application-level\n * clipboard service, which conforms to the `IClipboardService` from VS Code.\n */\n\nimport { Context } from \"effect\";\nimport type { IClipboardService } from \"vs/platform/clipboard/common/clipboardService.js\";\n\n/**\n * The service interface for the Clipboard service.\n * This is an alias for VS Code's `IClipboardService` to ensure API compatibility.\n */\nexport type Interface = IClipboardService;\n\n/**\n * The Context.Tag for the Clipboard service.\n * This tag is used to specify a dependency on the clipboard service in the Effect\n * ecosystem, and is identified by the string \"vscode/ClipboardService\".\n */\nexport class Tag extends Context.Tag(\"vscode/ClipboardService\")<\n\tInterface,\n\t{}\n>() {}\n"],
+  "mappings": ";;AAMA,SAAS,eAAe;AAcjB,MAAM,YAAY,QAAQ,IAAI,yBAAyB,EAG5D,EAAE;AAAA,EAvBJ,OAuBI;AAAA;AAAA;AAAC;",
+  "names": []
+}

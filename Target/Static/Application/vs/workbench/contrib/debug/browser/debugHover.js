@@ -1,1 +1,456 @@
-import*as a from"../../../../base/browser/dom.js";import{$B7 as H}from"../../../../base/browser/ui/scrollbar/scrollableElement.js";import{$7b as x}from"../../../../base/common/arrays.js";import{$pf as M}from"../../../../base/common/cancellation.js";import*as $ from"../../../../base/common/lifecycle.js";import{$nw as T}from"../../../../base/common/numbers.js";import{$n as L}from"../../../../base/common/platform.js";import{$cC as z}from"../../../../editor/common/core/range.js";import{$YH as S}from"../../../../editor/common/model/textModel.js";import{$sT as V}from"../../../../editor/common/services/languageFeatures.js";import*as p from"../../../../nls.js";import{$eI as q,$dI as _}from"../../../../platform/actions/common/actions.js";import{$Vn as j}from"../../../../platform/contextkey/common/contextkey.js";import{$ofb as E}from"../../../../platform/contextview/browser/contextView.js";import{$mj as W}from"../../../../platform/instantiation/common/instantiation.js";import{$Gmb as O}from"../../../../platform/list/browser/listService.js";import{$3n as F}from"../../../../platform/log/common/log.js";import{$jp as f,$Gq as b,$Iq as k,$Hq as B}from"../../../../platform/theme/common/colorRegistry.js";import{$hW as I}from"../common/debug.js";import{$RT as D,$ST as C,$QT as P}from"../common/debugModel.js";import{$zT as G}from"../common/debugUtils.js";import{$M$b as R}from"./baseDebugView.js";import{$kac as J}from"./debugExpressionRenderer.js";import{$oac as N,$nac as g,$mac as K}from"./variablesView.js";var y=function(n,t,s,e){var r=arguments.length,i=r<3?t:e===null?e=Object.getOwnPropertyDescriptor(t,s):e,o;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")i=Reflect.decorate(n,t,s,e);else for(var h=n.length-1;h>=0;h--)(o=n[h])&&(i=(r<3?o(i):r>3?o(t,s,i):o(t,s))||i);return r>3&&i&&Object.defineProperty(t,s,i),i},l=function(n,t){return function(s,e){t(s,e,n)}},d;const u=a.$;var v;(function(n){n[n.NOT_CHANGED=0]="NOT_CHANGED",n[n.NOT_AVAILABLE=1]="NOT_AVAILABLE",n[n.CANCELLED=2]="CANCELLED"})(v||(v={}));async function A(n,t){if(!n)return null;const e=(await n.getChildren()).filter(r=>t[0]===r.name);return e.length!==1?null:t.length===1?e[0]:A(e[0],t.slice(1))}async function Q(n,t){const e=(await n.getScopes()).filter(i=>!i.expensive),r=x(await Promise.all(e.map(i=>A(i,t))));return r.length>0&&r.every(i=>i.value===r[0].value)?r[0]:void 0}let w=class{static{d=this}static{this.ID="debug.hoverWidget"}get isShowingComplexValue(){return this.j?.hidden===!1}constructor(t,s,e,r,i,o){this.u=t,this.w=s,this.z=e,this.A=r,this.B=i,this.C=o,this.allowEditorOverflow=!0,this.t=!1,this.i=this.u.createDecorationsCollection(),this.n=[],this.g=null,this.h=[1,2],this.p=this.z.createInstance(m,this.u),this.q=this.z.createInstance(J)}D(){this.d=u(".debug-hover-widget"),this.j=a.$M6(this.d,u(".complex-value")),this.k=a.$M6(this.j,u(".title")),this.m=a.$M6(this.j,u(".debug-hover-tree")),this.m.setAttribute("role","tree");const t=a.$M6(this.j,u(".tip"));t.textContent=p.localize(6529,null,L?"Option":"Alt");const s=this.z.createInstance(Y);this.f=this.z.createInstance(O,"DebugHover",this.m,new X,[this.z.createInstance(N,this.q),this.z.createInstance(g,this.q)],s,{accessibilityProvider:new U,mouseSupport:!1,horizontalScrolling:!0,useShadows:!1,keyboardNavigationLabelProvider:{getKeyboardNavigationLabel:e=>e.name},overrideStyles:{listBackground:b}}),this.n.push(g.rendererOnVisualizationRange(this.w.getViewModel(),this.f)),this.l=u(".value"),this.l.tabIndex=0,this.l.setAttribute("role","tooltip"),this.o=new H(this.l,{horizontal:2}),this.d.appendChild(this.o.getDomNode()),this.n.push(this.o),this.u.applyFontInfo(this.d),this.d.style.backgroundColor=f(b),this.d.style.border=`1px solid ${f(k)}`,this.d.style.color=f(B),this.n.push(this.f.onContextMenu(async e=>await this.E(e))),this.n.push(this.f.onDidChangeContentHeight(()=>{this.t||this.I()})),this.n.push(this.f.onDidChangeContentWidth(()=>{this.t||this.I()})),this.F(),this.u.addContentWidget(this)}async E(t){const s=t.element;if(!(!(s instanceof C)||!s.value))return K(this.B,this.A,this.C,_.DebugHoverContext,t)}F(){this.n.push(a.$K5(this.d,"keydown",t=>{t.equals(9)&&this.hide()})),this.n.push(this.u.onDidChangeConfiguration(t=>{t.hasChanged(55)&&this.u.applyFontInfo(this.d)})),this.n.push(this.w.getViewModel().onDidEvaluateLazyExpression(async t=>{t instanceof C&&this.f.hasNode(t)&&(await this.f.updateChildren(t,!1,!0),await this.f.expand(t))}))}isHovered(){return!!this.d?.matches(":hover")}isVisible(){return!!this.a}willBeVisible(){return!!this.c}getId(){return d.ID}getDomNode(){return this.d}isInSafeTriangle(t,s){return this.a&&!!this.b?.contains(t,s)}async showAt(t,s,e){this.c?.dispose(!0);const r=this.c=new M,i=this.w.getViewModel().focusedSession;if(!i||!this.u.hasModel())return this.hide(),1;const o=await this.p.compute(t,r.token);if(r.token.isCancellationRequested)return this.hide(),2;if(!o.range)return this.hide(),1;if(this.isVisible()&&!o.rangeChanged)return 0;const h=await this.p.evaluate(i);return r.token.isCancellationRequested?(this.hide(),2):!h||h instanceof D&&!h.available?(this.hide(),1):(this.i.set([{range:o.range,options:d.G}]),this.H(i,o.range.getStartPosition(),h,s,e))}static{this.G=S.register({description:"bdebug-hover-highlight",className:"hoverHighlight"})}async H(t,s,e,r,i){this.d||this.D(),this.g=s;const o=new $.$ud;if(this.a={store:o},!e.hasChildren){this.j.hidden=!0,this.l.hidden=!1,o.add(this.q.renderValue(this.l,e,{showChanged:!1,colorize:!0,hover:!1,session:t})),this.l.title="",this.u.layoutContentWidget(this),this.b=i&&new a.$f7(i.posx,i.posy,this.d),this.o.scanDomNode(),r&&(this.u.render(),this.l.focus());return}this.l.hidden=!0,this.r=e,o.add(this.q.renderValue(this.k,e,{hover:!1,session:t})),this.u.layoutContentWidget(this),this.b=i&&new a.$f7(i.posx,i.posy,this.d),this.f.scrollTop=0,this.f.scrollLeft=0,this.j.hidden=!1,r&&(this.u.render(),this.f.domFocus())}I(){this.J(),this.u.layoutContentWidget(this)}J(){let s=1/0;if(this.g){const o=this.u.getDomNode()?.offsetTop||0,h=this.m.offsetTop+o,c=this.u.getTopForLineNumber(this.g.lineNumber,!0)-this.u.getScrollTop();h<c&&(s=c+o-22)}const e=Math.min(Math.max(266,this.u.getLayoutInfo().height*.55),this.f.contentHeight+10,s),r=this.f.contentWidth,i=T(r,400,550);this.f.layout(e,i),this.m.style.height=`${e}px`,this.o.scanDomNode()}beforeRender(){if(this.r){const t=this.r;this.r=void 0,this.t=!0,this.f.setInput(t).finally(()=>{this.t=!1})}return null}afterRender(t){t&&(this.h=[t])}hide(){this.c&&(this.c.dispose(!0),this.c=void 0),this.a&&(a.$m6(this.d)&&this.u.focus(),this.a.store.dispose(),this.a=void 0,this.i.clear(),this.u.layoutContentWidget(this),this.h=[1,2])}getPosition(){return this.a?{position:this.g,preference:this.h}:null}dispose(){this.n=$.$qd(this.n)}};w=d=y([l(1,I),l(2,W),l(3,q),l(4,j),l(5,E)],w);class U{getWidgetAriaLabel(){return p.localize(6530,null)}getAriaLabel(t){return p.localize(6531,null,t.name,t.value)}}class Y extends R{hasChildren(t){return t.hasChildren}c(t){return t.getChildren()}}class X{getHeight(t){return 18}getTemplateId(t){return t instanceof P?g.ID:N.ID}}let m=class{constructor(t,s,e,r){this.b=t,this.c=s,this.d=e,this.f=r}async compute(t,s){if(!this.c.getViewModel().focusedSession||!this.b.hasModel())return{rangeChanged:!1};const r=this.b.getModel(),i=await G(this.d,r,t,s);if(!i)return{rangeChanged:!1};const{range:o,matchingExpression:h}=i,c=!this.a?.range.equalsRange(o);return this.a={expression:h,range:z.lift(o)},{rangeChanged:c,range:this.a.range}}async evaluate(t){if(!this.a){this.f.error("No expression to evaluate");return}const s=this.b.getModel(),e=s&&t.getSourceForUri(s?.uri);if(t.capabilities.supportsEvaluateForHovers){const r=new D(this.a.expression);return await r.evaluate(t,this.c.getViewModel().focusedStackFrame,"hover",void 0,e?{line:this.a.range.startLineNumber,column:this.a.range.startColumn,source:e.raw}:void 0),r}else{const r=this.c.getViewModel().focusedStackFrame;if(r)return await Q(r,x(this.a.expression.split(".").map(i=>i.trim())))}}};m=y([l(1,I),l(2,V),l(3,F)],m);export{Q as $uac,w as $vac,v as ShowDebugHoverResult};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import * as dom from "../../../../base/browser/dom.js";
+import { DomScrollableElement } from "../../../../base/browser/ui/scrollbar/scrollableElement.js";
+import { coalesce } from "../../../../base/common/arrays.js";
+import { CancellationTokenSource } from "../../../../base/common/cancellation.js";
+import * as lifecycle from "../../../../base/common/lifecycle.js";
+import { clamp } from "../../../../base/common/numbers.js";
+import { isMacintosh } from "../../../../base/common/platform.js";
+import { Range } from "../../../../editor/common/core/range.js";
+import { ModelDecorationOptions } from "../../../../editor/common/model/textModel.js";
+import { ILanguageFeaturesService } from "../../../../editor/common/services/languageFeatures.js";
+import * as nls from "../../../../nls.js";
+import { IMenuService, MenuId } from "../../../../platform/actions/common/actions.js";
+import { IContextKeyService } from "../../../../platform/contextkey/common/contextkey.js";
+import { IContextMenuService } from "../../../../platform/contextview/browser/contextView.js";
+import { IInstantiationService } from "../../../../platform/instantiation/common/instantiation.js";
+import { WorkbenchAsyncDataTree } from "../../../../platform/list/browser/listService.js";
+import { ILogService } from "../../../../platform/log/common/log.js";
+import { asCssVariable, editorHoverBackground, editorHoverBorder, editorHoverForeground } from "../../../../platform/theme/common/colorRegistry.js";
+import { IDebugService } from "../common/debug.js";
+import { Expression, Variable, VisualizedExpression } from "../common/debugModel.js";
+import { getEvaluatableExpressionAtPosition } from "../common/debugUtils.js";
+import { AbstractExpressionDataSource } from "./baseDebugView.js";
+import { DebugExpressionRenderer } from "./debugExpressionRenderer.js";
+import { VariablesRenderer, VisualizedVariableRenderer, openContextMenuForVariableTreeElement } from "./variablesView.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+var DebugHoverWidget_1;
+const $ = dom.$;
+var ShowDebugHoverResult;
+(function(ShowDebugHoverResult2) {
+  ShowDebugHoverResult2[ShowDebugHoverResult2["NOT_CHANGED"] = 0] = "NOT_CHANGED";
+  ShowDebugHoverResult2[ShowDebugHoverResult2["NOT_AVAILABLE"] = 1] = "NOT_AVAILABLE";
+  ShowDebugHoverResult2[ShowDebugHoverResult2["CANCELLED"] = 2] = "CANCELLED";
+})(ShowDebugHoverResult || (ShowDebugHoverResult = {}));
+async function doFindExpression(container, namesToFind) {
+  if (!container) {
+    return null;
+  }
+  const children = await container.getChildren();
+  const filtered = children.filter((v) => namesToFind[0] === v.name);
+  if (filtered.length !== 1) {
+    return null;
+  }
+  if (namesToFind.length === 1) {
+    return filtered[0];
+  } else {
+    return doFindExpression(filtered[0], namesToFind.slice(1));
+  }
+}
+__name(doFindExpression, "doFindExpression");
+async function findExpressionInStackFrame(stackFrame, namesToFind) {
+  const scopes = await stackFrame.getScopes();
+  const nonExpensive = scopes.filter((s) => !s.expensive);
+  const expressions = coalesce(await Promise.all(nonExpensive.map((scope) => doFindExpression(scope, namesToFind))));
+  return expressions.length > 0 && expressions.every((e) => e.value === expressions[0].value) ? expressions[0] : void 0;
+}
+__name(findExpressionInStackFrame, "findExpressionInStackFrame");
+let DebugHoverWidget = class DebugHoverWidget2 {
+  static {
+    __name(this, "DebugHoverWidget");
+  }
+  static {
+    DebugHoverWidget_1 = this;
+  }
+  static {
+    this.ID = "debug.hoverWidget";
+  }
+  get isShowingComplexValue() {
+    return this.complexValueContainer?.hidden === false;
+  }
+  constructor(editor, debugService, instantiationService, menuService, contextKeyService, contextMenuService) {
+    this.editor = editor;
+    this.debugService = debugService;
+    this.instantiationService = instantiationService;
+    this.menuService = menuService;
+    this.contextKeyService = contextKeyService;
+    this.contextMenuService = contextMenuService;
+    this.allowEditorOverflow = true;
+    this.isUpdatingTree = false;
+    this.highlightDecorations = this.editor.createDecorationsCollection();
+    this.toDispose = [];
+    this.showAtPosition = null;
+    this.positionPreference = [
+      1,
+      2
+      /* ContentWidgetPositionPreference.BELOW */
+    ];
+    this.debugHoverComputer = this.instantiationService.createInstance(DebugHoverComputer, this.editor);
+    this.expressionRenderer = this.instantiationService.createInstance(DebugExpressionRenderer);
+  }
+  create() {
+    this.domNode = $(".debug-hover-widget");
+    this.complexValueContainer = dom.append(this.domNode, $(".complex-value"));
+    this.complexValueTitle = dom.append(this.complexValueContainer, $(".title"));
+    this.treeContainer = dom.append(this.complexValueContainer, $(".debug-hover-tree"));
+    this.treeContainer.setAttribute("role", "tree");
+    const tip = dom.append(this.complexValueContainer, $(".tip"));
+    tip.textContent = nls.localize({ key: "quickTip", comment: ['"switch to editor language hover" means to show the programming language hover widget instead of the debug hover'] }, "Hold {0} key to switch to editor language hover", isMacintosh ? "Option" : "Alt");
+    const dataSource = this.instantiationService.createInstance(DebugHoverDataSource);
+    this.tree = this.instantiationService.createInstance(WorkbenchAsyncDataTree, "DebugHover", this.treeContainer, new DebugHoverDelegate(), [
+      this.instantiationService.createInstance(VariablesRenderer, this.expressionRenderer),
+      this.instantiationService.createInstance(VisualizedVariableRenderer, this.expressionRenderer)
+    ], dataSource, {
+      accessibilityProvider: new DebugHoverAccessibilityProvider(),
+      mouseSupport: false,
+      horizontalScrolling: true,
+      useShadows: false,
+      keyboardNavigationLabelProvider: { getKeyboardNavigationLabel: /* @__PURE__ */ __name((e) => e.name, "getKeyboardNavigationLabel") },
+      overrideStyles: {
+        listBackground: editorHoverBackground
+      }
+    });
+    this.toDispose.push(VisualizedVariableRenderer.rendererOnVisualizationRange(this.debugService.getViewModel(), this.tree));
+    this.valueContainer = $(".value");
+    this.valueContainer.tabIndex = 0;
+    this.valueContainer.setAttribute("role", "tooltip");
+    this.scrollbar = new DomScrollableElement(this.valueContainer, {
+      horizontal: 2
+      /* ScrollbarVisibility.Hidden */
+    });
+    this.domNode.appendChild(this.scrollbar.getDomNode());
+    this.toDispose.push(this.scrollbar);
+    this.editor.applyFontInfo(this.domNode);
+    this.domNode.style.backgroundColor = asCssVariable(editorHoverBackground);
+    this.domNode.style.border = `1px solid ${asCssVariable(editorHoverBorder)}`;
+    this.domNode.style.color = asCssVariable(editorHoverForeground);
+    this.toDispose.push(this.tree.onContextMenu(async (e) => await this.onContextMenu(e)));
+    this.toDispose.push(this.tree.onDidChangeContentHeight(() => {
+      if (!this.isUpdatingTree) {
+        this.layoutTreeAndContainer();
+      }
+    }));
+    this.toDispose.push(this.tree.onDidChangeContentWidth(() => {
+      if (!this.isUpdatingTree) {
+        this.layoutTreeAndContainer();
+      }
+    }));
+    this.registerListeners();
+    this.editor.addContentWidget(this);
+  }
+  async onContextMenu(e) {
+    const variable = e.element;
+    if (!(variable instanceof Variable) || !variable.value) {
+      return;
+    }
+    return openContextMenuForVariableTreeElement(this.contextKeyService, this.menuService, this.contextMenuService, MenuId.DebugHoverContext, e);
+  }
+  registerListeners() {
+    this.toDispose.push(dom.addStandardDisposableListener(this.domNode, "keydown", (e) => {
+      if (e.equals(
+        9
+        /* KeyCode.Escape */
+      )) {
+        this.hide();
+      }
+    }));
+    this.toDispose.push(this.editor.onDidChangeConfiguration((e) => {
+      if (e.hasChanged(
+        55
+        /* EditorOption.fontInfo */
+      )) {
+        this.editor.applyFontInfo(this.domNode);
+      }
+    }));
+    this.toDispose.push(this.debugService.getViewModel().onDidEvaluateLazyExpression(async (e) => {
+      if (e instanceof Variable && this.tree.hasNode(e)) {
+        await this.tree.updateChildren(e, false, true);
+        await this.tree.expand(e);
+      }
+    }));
+  }
+  isHovered() {
+    return !!this.domNode?.matches(":hover");
+  }
+  isVisible() {
+    return !!this._isVisible;
+  }
+  willBeVisible() {
+    return !!this.showCancellationSource;
+  }
+  getId() {
+    return DebugHoverWidget_1.ID;
+  }
+  getDomNode() {
+    return this.domNode;
+  }
+  /**
+   * Gets whether the given coordinates are in the safe triangle formed from
+   * the position at which the hover was initiated.
+   */
+  isInSafeTriangle(x, y) {
+    return this._isVisible && !!this.safeTriangle?.contains(x, y);
+  }
+  async showAt(position, focus, mouseEvent) {
+    this.showCancellationSource?.dispose(true);
+    const cancellationSource = this.showCancellationSource = new CancellationTokenSource();
+    const session = this.debugService.getViewModel().focusedSession;
+    if (!session || !this.editor.hasModel()) {
+      this.hide();
+      return 1;
+    }
+    const result = await this.debugHoverComputer.compute(position, cancellationSource.token);
+    if (cancellationSource.token.isCancellationRequested) {
+      this.hide();
+      return 2;
+    }
+    if (!result.range) {
+      this.hide();
+      return 1;
+    }
+    if (this.isVisible() && !result.rangeChanged) {
+      return 0;
+    }
+    const expression = await this.debugHoverComputer.evaluate(session);
+    if (cancellationSource.token.isCancellationRequested) {
+      this.hide();
+      return 2;
+    }
+    if (!expression || expression instanceof Expression && !expression.available) {
+      this.hide();
+      return 1;
+    }
+    this.highlightDecorations.set([{
+      range: result.range,
+      options: DebugHoverWidget_1._HOVER_HIGHLIGHT_DECORATION_OPTIONS
+    }]);
+    return this.doShow(session, result.range.getStartPosition(), expression, focus, mouseEvent);
+  }
+  static {
+    this._HOVER_HIGHLIGHT_DECORATION_OPTIONS = ModelDecorationOptions.register({
+      description: "bdebug-hover-highlight",
+      className: "hoverHighlight"
+    });
+  }
+  async doShow(session, position, expression, focus, mouseEvent) {
+    if (!this.domNode) {
+      this.create();
+    }
+    this.showAtPosition = position;
+    const store = new lifecycle.DisposableStore();
+    this._isVisible = { store };
+    if (!expression.hasChildren) {
+      this.complexValueContainer.hidden = true;
+      this.valueContainer.hidden = false;
+      store.add(this.expressionRenderer.renderValue(this.valueContainer, expression, {
+        showChanged: false,
+        colorize: true,
+        hover: false,
+        session
+      }));
+      this.valueContainer.title = "";
+      this.editor.layoutContentWidget(this);
+      this.safeTriangle = mouseEvent && new dom.SafeTriangle(mouseEvent.posx, mouseEvent.posy, this.domNode);
+      this.scrollbar.scanDomNode();
+      if (focus) {
+        this.editor.render();
+        this.valueContainer.focus();
+      }
+      return void 0;
+    }
+    this.valueContainer.hidden = true;
+    this.expressionToRender = expression;
+    store.add(this.expressionRenderer.renderValue(this.complexValueTitle, expression, { hover: false, session }));
+    this.editor.layoutContentWidget(this);
+    this.safeTriangle = mouseEvent && new dom.SafeTriangle(mouseEvent.posx, mouseEvent.posy, this.domNode);
+    this.tree.scrollTop = 0;
+    this.tree.scrollLeft = 0;
+    this.complexValueContainer.hidden = false;
+    if (focus) {
+      this.editor.render();
+      this.tree.domFocus();
+    }
+  }
+  layoutTreeAndContainer() {
+    this.layoutTree();
+    this.editor.layoutContentWidget(this);
+  }
+  layoutTree() {
+    const scrollBarHeight = 10;
+    let maxHeightToAvoidCursorOverlay = Infinity;
+    if (this.showAtPosition) {
+      const editorTop = this.editor.getDomNode()?.offsetTop || 0;
+      const containerTop = this.treeContainer.offsetTop + editorTop;
+      const hoveredCharTop = this.editor.getTopForLineNumber(this.showAtPosition.lineNumber, true) - this.editor.getScrollTop();
+      if (containerTop < hoveredCharTop) {
+        maxHeightToAvoidCursorOverlay = hoveredCharTop + editorTop - 22;
+      }
+    }
+    const treeHeight = Math.min(Math.max(266, this.editor.getLayoutInfo().height * 0.55), this.tree.contentHeight + scrollBarHeight, maxHeightToAvoidCursorOverlay);
+    const realTreeWidth = this.tree.contentWidth;
+    const treeWidth = clamp(realTreeWidth, 400, 550);
+    this.tree.layout(treeHeight, treeWidth);
+    this.treeContainer.style.height = `${treeHeight}px`;
+    this.scrollbar.scanDomNode();
+  }
+  beforeRender() {
+    if (this.expressionToRender) {
+      const expression = this.expressionToRender;
+      this.expressionToRender = void 0;
+      this.isUpdatingTree = true;
+      this.tree.setInput(expression).finally(() => {
+        this.isUpdatingTree = false;
+      });
+    }
+    return null;
+  }
+  afterRender(positionPreference) {
+    if (positionPreference) {
+      this.positionPreference = [positionPreference];
+    }
+  }
+  hide() {
+    if (this.showCancellationSource) {
+      this.showCancellationSource.dispose(true);
+      this.showCancellationSource = void 0;
+    }
+    if (!this._isVisible) {
+      return;
+    }
+    if (dom.isAncestorOfActiveElement(this.domNode)) {
+      this.editor.focus();
+    }
+    this._isVisible.store.dispose();
+    this._isVisible = void 0;
+    this.highlightDecorations.clear();
+    this.editor.layoutContentWidget(this);
+    this.positionPreference = [
+      1,
+      2
+      /* ContentWidgetPositionPreference.BELOW */
+    ];
+  }
+  getPosition() {
+    return this._isVisible ? {
+      position: this.showAtPosition,
+      preference: this.positionPreference
+    } : null;
+  }
+  dispose() {
+    this.toDispose = lifecycle.dispose(this.toDispose);
+  }
+};
+DebugHoverWidget = DebugHoverWidget_1 = __decorate([
+  __param(1, IDebugService),
+  __param(2, IInstantiationService),
+  __param(3, IMenuService),
+  __param(4, IContextKeyService),
+  __param(5, IContextMenuService)
+], DebugHoverWidget);
+class DebugHoverAccessibilityProvider {
+  static {
+    __name(this, "DebugHoverAccessibilityProvider");
+  }
+  getWidgetAriaLabel() {
+    return nls.localize("treeAriaLabel", "Debug Hover");
+  }
+  getAriaLabel(element) {
+    return nls.localize({ key: "variableAriaLabel", comment: ["Do not translate placeholders. Placeholders are name and value of a variable."] }, "{0}, value {1}, variables, debug", element.name, element.value);
+  }
+}
+class DebugHoverDataSource extends AbstractExpressionDataSource {
+  static {
+    __name(this, "DebugHoverDataSource");
+  }
+  hasChildren(element) {
+    return element.hasChildren;
+  }
+  doGetChildren(element) {
+    return element.getChildren();
+  }
+}
+class DebugHoverDelegate {
+  static {
+    __name(this, "DebugHoverDelegate");
+  }
+  getHeight(element) {
+    return 18;
+  }
+  getTemplateId(element) {
+    if (element instanceof VisualizedExpression) {
+      return VisualizedVariableRenderer.ID;
+    }
+    return VariablesRenderer.ID;
+  }
+}
+let DebugHoverComputer = class DebugHoverComputer2 {
+  static {
+    __name(this, "DebugHoverComputer");
+  }
+  constructor(editor, debugService, languageFeaturesService, logService) {
+    this.editor = editor;
+    this.debugService = debugService;
+    this.languageFeaturesService = languageFeaturesService;
+    this.logService = logService;
+  }
+  async compute(position, token) {
+    const session = this.debugService.getViewModel().focusedSession;
+    if (!session || !this.editor.hasModel()) {
+      return { rangeChanged: false };
+    }
+    const model = this.editor.getModel();
+    const result = await getEvaluatableExpressionAtPosition(this.languageFeaturesService, model, position, token);
+    if (!result) {
+      return { rangeChanged: false };
+    }
+    const { range, matchingExpression } = result;
+    const rangeChanged = !this._current?.range.equalsRange(range);
+    this._current = { expression: matchingExpression, range: Range.lift(range) };
+    return { rangeChanged, range: this._current.range };
+  }
+  async evaluate(session) {
+    if (!this._current) {
+      this.logService.error("No expression to evaluate");
+      return;
+    }
+    const textModel = this.editor.getModel();
+    const debugSource = textModel && session.getSourceForUri(textModel?.uri);
+    if (session.capabilities.supportsEvaluateForHovers) {
+      const expression = new Expression(this._current.expression);
+      await expression.evaluate(session, this.debugService.getViewModel().focusedStackFrame, "hover", void 0, debugSource ? {
+        line: this._current.range.startLineNumber,
+        column: this._current.range.startColumn,
+        source: debugSource.raw
+      } : void 0);
+      return expression;
+    } else {
+      const focusedStackFrame = this.debugService.getViewModel().focusedStackFrame;
+      if (focusedStackFrame) {
+        return await findExpressionInStackFrame(focusedStackFrame, coalesce(this._current.expression.split(".").map((word) => word.trim())));
+      }
+    }
+    return void 0;
+  }
+};
+DebugHoverComputer = __decorate([
+  __param(1, IDebugService),
+  __param(2, ILanguageFeaturesService),
+  __param(3, ILogService)
+], DebugHoverComputer);
+export {
+  DebugHoverWidget,
+  ShowDebugHoverResult,
+  findExpressionInStackFrame
+};
+//# sourceMappingURL=debugHover.js.map

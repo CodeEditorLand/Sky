@@ -1,2 +1,505 @@
-import*as F from"../../../../../base/browser/browser.js";import*as m from"../../../../../base/browser/dom.js";import{$$7 as c}from"../../../../../base/browser/event.js";import{$G5 as y}from"../../../../../base/browser/keyboardEvent.js";import{inputLatency as v}from"../../../../../base/browser/performance.js";import{$Yh as S}from"../../../../../base/common/async.js";import{$df as l,Event as $}from"../../../../../base/common/event.js";import{$vd as b,$wd as E}from"../../../../../base/common/lifecycle.js";import*as z from"../../../../../base/common/strings.js";import{$RC as P}from"../../../../common/core/selection.js";import{$tC as R}from"../../../../../platform/accessibility/common/accessibility.js";import{$3n as N}from"../../../../../platform/log/common/log.js";import{$lcb as T,$jcb as x}from"../clipboardUtils.js";import{$pcb as C,$qcb as f}from"./textAreaEditContextState.js";var A=function(d,t,e,n){var h=arguments.length,r=h<3?t:n===null?n=Object.getOwnPropertyDescriptor(t,e):n,p;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")r=Reflect.decorate(d,t,e,n);else for(var a=d.length-1;a>=0;a--)(p=d[a])&&(r=(h<3?p(r):h>3?p(t,e,r):p(t,e))||r);return h>3&&r&&Object.defineProperty(t,e,r),r},B=function(d,t){return function(e,n){t(e,n,d)}},g;(function(d){d.Tap="-monaco-textarea-synthetic-tap"})(g||(g={}));class j{constructor(){this.a=0}handleCompositionUpdate(t){t=t||"";const e={text:t,replacePrevCharCnt:this.a,replaceNextCharCnt:0,positionDelta:0};return this.a=t.length,e}}let I=class extends b{get textAreaState(){return this.w}constructor(t,e,n,h,r,p){super(),this.D=t,this.F=e,this.G=n,this.H=h,this.I=r,this.J=p,this.a=this.B(new l),this.onFocus=this.a.event,this.b=this.B(new l),this.onBlur=this.b.event,this.c=this.B(new l),this.onKeyDown=this.c.event,this.f=this.B(new l),this.onKeyUp=this.f.event,this.g=this.B(new l),this.onCut=this.g.event,this.h=this.B(new l),this.onPaste=this.h.event,this.j=this.B(new l),this.onType=this.j.event,this.m=this.B(new l),this.onCompositionStart=this.m.event,this.n=this.B(new l),this.onCompositionUpdate=this.n.event,this.r=this.B(new l),this.onCompositionEnd=this.r.event,this.s=this.B(new l),this.onSelectionChangeRequest=this.s.event,this.u=this.B(new E),this.t=this.B(new S(()=>this.g.fire(),0)),this.w=f.EMPTY,this.y=null,this.I.isScreenReaderOptimized()&&this.writeNativeTextAreaContent("ctor"),this.B($.runAndSubscribe(this.I.onDidChangeScreenReaderOptimized,()=>{this.I.isScreenReaderOptimized()&&!this.u.value?this.u.value=this.B(new S(()=>this.writeNativeTextAreaContent("asyncFocusGain"),0)):this.u.clear()})),this.z=!1,this.C=null;let a=null;this.B(this.F.onKeyDown(s=>{const i=new y(s);(i.keyCode===114||this.C&&i.keyCode===1)&&i.stopPropagation(),i.equals(9)&&i.preventDefault(),a=i,this.c.fire(i)})),this.B(this.F.onKeyUp(s=>{const i=new y(s);this.f.fire(i)})),this.B(this.F.onCompositionStart(s=>{const i=new j;if(this.C){this.C=i;return}if(this.C=i,this.G===2&&a&&a.equals(114)&&this.w.selectionStart===this.w.selectionEnd&&this.w.selectionStart>0&&this.w.value.substr(this.w.selectionStart-1,1)===s.data&&(a.code==="ArrowRight"||a.code==="ArrowLeft")){i.handleCompositionUpdate("x"),this.m.fire({data:s.data});return}if(this.H.isAndroid){this.m.fire({data:s.data});return}this.m.fire({data:s.data})})),this.B(this.F.onCompositionUpdate(s=>{const i=this.C;if(!i)return;if(this.H.isAndroid){const u=f.readFromTextArea(this.F,this.w),w=f.deduceAndroidCompositionInput(this.w,u);this.w=u,this.j.fire(w),this.n.fire(s);return}const o=i.handleCompositionUpdate(s.data);this.w=f.readFromTextArea(this.F,this.w),this.j.fire(o),this.n.fire(s)})),this.B(this.F.onCompositionEnd(s=>{const i=this.C;if(!i)return;if(this.C=null,this.H.isAndroid){const u=f.readFromTextArea(this.F,this.w),w=f.deduceAndroidCompositionInput(this.w,u);this.w=u,this.j.fire(w),this.r.fire();return}const o=i.handleCompositionUpdate(s.data);this.w=f.readFromTextArea(this.F,this.w),this.j.fire(o),this.r.fire()})),this.B(this.F.onInput(s=>{if(this.F.setIgnoreSelectionChangeTime("received input event"),this.C)return;const i=f.readFromTextArea(this.F,this.w),o=f.deduceInput(this.w,i,this.G===2);o.replacePrevCharCnt===0&&o.text.length===1&&(z.$9f(o.text.charCodeAt(0))||o.text.charCodeAt(0)===127)||(this.w=i,(o.text!==""||o.replacePrevCharCnt!==0||o.replaceNextCharCnt!==0||o.positionDelta!==0)&&this.j.fire(o))})),this.B(this.F.onCut(s=>{this.F.setIgnoreSelectionChangeTime("received cut event"),this.O(s),this.t.schedule()})),this.B(this.F.onCopy(s=>{this.O(s)})),this.B(this.F.onPaste(s=>{if(this.F.setIgnoreSelectionChangeTime("received paste event"),s.preventDefault(),!s.clipboardData)return;let[i,o]=T.getTextData(s.clipboardData);i&&(o=o||x.INSTANCE.get(i),this.h.fire({text:i,metadata:o}))})),this.B(this.F.onFocus(()=>{const s=this.z;this.M(!0),this.I.isScreenReaderOptimized()&&this.H.isSafari&&!s&&this.z&&(this.u.value||(this.u.value=new S(()=>this.writeNativeTextAreaContent("asyncFocusGain"),0)),this.u.value.schedule())})),this.B(this.F.onBlur(()=>{this.C&&(this.C=null,this.writeNativeTextAreaContent("blurWithoutCompositionEnd"),this.r.fire()),this.M(!1)})),this.B(this.F.onSyntheticTap(()=>{this.H.isAndroid&&this.C&&(this.C=null,this.writeNativeTextAreaContent("tapWithoutCompositionEnd"),this.r.fire())}))}_initializeFromTest(){this.z=!0,this.w=f.readFromTextArea(this.F,null)}L(){let t=0;return m.$J5(this.F.ownerDocument,"selectionchange",e=>{if(v.onSelectionChange(),!this.z||this.C||!this.H.isChrome)return;const n=Date.now(),h=n-t;if(t=n,h<5)return;const r=n-this.F.getIgnoreSelectionChangeTime();if(this.F.resetSelectionChangeTime(),r<100||!this.w.selection)return;const p=this.F.getValue();if(this.w.value!==p)return;const a=this.F.getSelectionStart(),s=this.F.getSelectionEnd();if(this.w.selectionStart===a&&this.w.selectionEnd===s)return;const i=this.w.deduceEditorPosition(a),o=this.D.deduceModelPosition(i[0],i[1],i[2]),u=this.w.deduceEditorPosition(s),w=this.D.deduceModelPosition(u[0],u[1],u[2]),D=new P(o.lineNumber,o.column,w.lineNumber,w.column);this.s.fire(D)})}dispose(){super.dispose(),this.y&&(this.y.dispose(),this.y=null)}focusTextArea(){this.M(!0),this.refreshFocusState()}isFocused(){return this.z}refreshFocusState(){this.M(this.F.hasFocus())}M(t){this.z!==t&&(this.z=t,this.y&&(this.y.dispose(),this.y=null),this.z&&(this.y=this.L()),this.z&&this.writeNativeTextAreaContent("focusgain"),this.z?this.a.fire():this.b.fire())}N(t,e){this.z||(e=e.collapseSelection()),e.isWrittenToTextArea(this.F,this.z)||this.J.trace(`writeTextAreaState(reason: ${t})`),e.writeToTextArea(t,this.F,this.z),this.w=e}writeNativeTextAreaContent(t){!this.I.isScreenReaderOptimized()&&t==="render"||this.C||this.N(t,this.D.getScreenReaderContent())}O(t){const e=this.D.getDataToCopy(),n={version:1,isFromEmptySelection:e.isFromEmptySelection,multicursorText:e.multicursorText,mode:e.mode};x.INSTANCE.set(this.H.isFirefox?e.text.replace(/\r\n/g,`
-`):e.text,n),t.preventDefault(),t.clipboardData&&T.setTextData(t.clipboardData,e.text,e.html,n)}};I=A([B(4,R),B(5,N)],I);class L extends b{get ownerDocument(){return this.c.ownerDocument}constructor(t){super(),this.c=t,this.a=this.B(new l),this.onSyntheticTap=this.a.event,this.b=0,this.onKeyDown=this.B(new c(this.c,"keydown")).event,this.onKeyPress=this.B(new c(this.c,"keypress")).event,this.onKeyUp=this.B(new c(this.c,"keyup")).event,this.onCompositionStart=this.B(new c(this.c,"compositionstart")).event,this.onCompositionUpdate=this.B(new c(this.c,"compositionupdate")).event,this.onCompositionEnd=this.B(new c(this.c,"compositionend")).event,this.onBeforeInput=this.B(new c(this.c,"beforeinput")).event,this.onInput=this.B(new c(this.c,"input")).event,this.onCut=this.B(new c(this.c,"cut")).event,this.onCopy=this.B(new c(this.c,"copy")).event,this.onPaste=this.B(new c(this.c,"paste")).event,this.onFocus=this.B(new c(this.c,"focus")).event,this.onBlur=this.B(new c(this.c,"blur")).event,this.B(this.onKeyDown(()=>v.onKeyDown())),this.B(this.onBeforeInput(()=>v.onBeforeInput())),this.B(this.onInput(()=>v.onInput())),this.B(this.onKeyUp(()=>v.onKeyUp())),this.B(m.$J5(this.c,g.Tap,()=>this.a.fire()))}hasFocus(){const t=m.$j6(this.c);return t?t.activeElement===this.c:this.c.isConnected?m.$k6()===this.c:!1}setIgnoreSelectionChangeTime(t){this.b=Date.now()}getIgnoreSelectionChangeTime(){return this.b}resetSelectionChangeTime(){this.b=0}getValue(){return this.c.value}setValue(t,e){const n=this.c;n.value!==e&&(this.setIgnoreSelectionChangeTime("setValue"),n.value=e)}getSelectionStart(){return this.c.selectionDirection==="backward"?this.c.selectionEnd:this.c.selectionStart}getSelectionEnd(){return this.c.selectionDirection==="backward"?this.c.selectionStart:this.c.selectionEnd}setSelectionRange(t,e,n){const h=this.c;let r=null;const p=m.$j6(h);p?r=p.activeElement:r=m.$k6();const a=m.getWindow(r),s=r===h,i=h.selectionStart,o=h.selectionEnd;if(s&&i===e&&o===n){F.$o5&&a.parent!==a&&h.focus();return}if(s){this.setIgnoreSelectionChangeTime("setSelectionRange"),h.setSelectionRange(e,n),F.$o5&&a.parent!==a&&h.focus();return}try{const u=m.$I6(h);this.setIgnoreSelectionChangeTime("setSelectionRange"),h.focus(),h.setSelectionRange(e,n),m.$J6(h,u)}catch{}}}export{I as $rcb,L as $scb,g as TextAreaSyntethicEvents};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import * as browser from "../../../../../base/browser/browser.js";
+import * as dom from "../../../../../base/browser/dom.js";
+import { DomEmitter } from "../../../../../base/browser/event.js";
+import { StandardKeyboardEvent } from "../../../../../base/browser/keyboardEvent.js";
+import { inputLatency } from "../../../../../base/browser/performance.js";
+import { RunOnceScheduler } from "../../../../../base/common/async.js";
+import { Emitter, Event } from "../../../../../base/common/event.js";
+import { Disposable, MutableDisposable } from "../../../../../base/common/lifecycle.js";
+import * as strings from "../../../../../base/common/strings.js";
+import { Selection } from "../../../../common/core/selection.js";
+import { IAccessibilityService } from "../../../../../platform/accessibility/common/accessibility.js";
+import { ILogService } from "../../../../../platform/log/common/log.js";
+import { ClipboardEventUtils, InMemoryClipboardMetadataManager } from "../clipboardUtils.js";
+import { _debugComposition, TextAreaState } from "./textAreaEditContextState.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+var TextAreaSyntethicEvents;
+(function(TextAreaSyntethicEvents2) {
+  TextAreaSyntethicEvents2.Tap = "-monaco-textarea-synthetic-tap";
+})(TextAreaSyntethicEvents || (TextAreaSyntethicEvents = {}));
+class CompositionContext {
+  static {
+    __name(this, "CompositionContext");
+  }
+  constructor() {
+    this._lastTypeTextLength = 0;
+  }
+  handleCompositionUpdate(text) {
+    text = text || "";
+    const typeInput = {
+      text,
+      replacePrevCharCnt: this._lastTypeTextLength,
+      replaceNextCharCnt: 0,
+      positionDelta: 0
+    };
+    this._lastTypeTextLength = text.length;
+    return typeInput;
+  }
+}
+let TextAreaInput = class TextAreaInput2 extends Disposable {
+  static {
+    __name(this, "TextAreaInput");
+  }
+  get textAreaState() {
+    return this._textAreaState;
+  }
+  constructor(_host, _textArea, _OS, _browser, _accessibilityService, _logService) {
+    super();
+    this._host = _host;
+    this._textArea = _textArea;
+    this._OS = _OS;
+    this._browser = _browser;
+    this._accessibilityService = _accessibilityService;
+    this._logService = _logService;
+    this._onFocus = this._register(new Emitter());
+    this.onFocus = this._onFocus.event;
+    this._onBlur = this._register(new Emitter());
+    this.onBlur = this._onBlur.event;
+    this._onKeyDown = this._register(new Emitter());
+    this.onKeyDown = this._onKeyDown.event;
+    this._onKeyUp = this._register(new Emitter());
+    this.onKeyUp = this._onKeyUp.event;
+    this._onCut = this._register(new Emitter());
+    this.onCut = this._onCut.event;
+    this._onPaste = this._register(new Emitter());
+    this.onPaste = this._onPaste.event;
+    this._onType = this._register(new Emitter());
+    this.onType = this._onType.event;
+    this._onCompositionStart = this._register(new Emitter());
+    this.onCompositionStart = this._onCompositionStart.event;
+    this._onCompositionUpdate = this._register(new Emitter());
+    this.onCompositionUpdate = this._onCompositionUpdate.event;
+    this._onCompositionEnd = this._register(new Emitter());
+    this.onCompositionEnd = this._onCompositionEnd.event;
+    this._onSelectionChangeRequest = this._register(new Emitter());
+    this.onSelectionChangeRequest = this._onSelectionChangeRequest.event;
+    this._asyncFocusGainWriteScreenReaderContent = this._register(new MutableDisposable());
+    this._asyncTriggerCut = this._register(new RunOnceScheduler(() => this._onCut.fire(), 0));
+    this._textAreaState = TextAreaState.EMPTY;
+    this._selectionChangeListener = null;
+    if (this._accessibilityService.isScreenReaderOptimized()) {
+      this.writeNativeTextAreaContent("ctor");
+    }
+    this._register(Event.runAndSubscribe(this._accessibilityService.onDidChangeScreenReaderOptimized, () => {
+      if (this._accessibilityService.isScreenReaderOptimized() && !this._asyncFocusGainWriteScreenReaderContent.value) {
+        this._asyncFocusGainWriteScreenReaderContent.value = this._register(new RunOnceScheduler(() => this.writeNativeTextAreaContent("asyncFocusGain"), 0));
+      } else {
+        this._asyncFocusGainWriteScreenReaderContent.clear();
+      }
+    }));
+    this._hasFocus = false;
+    this._currentComposition = null;
+    let lastKeyDown = null;
+    this._register(this._textArea.onKeyDown((_e) => {
+      const e = new StandardKeyboardEvent(_e);
+      if (e.keyCode === 114 || this._currentComposition && e.keyCode === 1) {
+        e.stopPropagation();
+      }
+      if (e.equals(
+        9
+        /* KeyCode.Escape */
+      )) {
+        e.preventDefault();
+      }
+      lastKeyDown = e;
+      this._onKeyDown.fire(e);
+    }));
+    this._register(this._textArea.onKeyUp((_e) => {
+      const e = new StandardKeyboardEvent(_e);
+      this._onKeyUp.fire(e);
+    }));
+    this._register(this._textArea.onCompositionStart((e) => {
+      if (_debugComposition) {
+        console.log(`[compositionstart]`, e);
+      }
+      const currentComposition = new CompositionContext();
+      if (this._currentComposition) {
+        this._currentComposition = currentComposition;
+        return;
+      }
+      this._currentComposition = currentComposition;
+      if (this._OS === 2 && lastKeyDown && lastKeyDown.equals(
+        114
+        /* KeyCode.KEY_IN_COMPOSITION */
+      ) && this._textAreaState.selectionStart === this._textAreaState.selectionEnd && this._textAreaState.selectionStart > 0 && this._textAreaState.value.substr(this._textAreaState.selectionStart - 1, 1) === e.data && (lastKeyDown.code === "ArrowRight" || lastKeyDown.code === "ArrowLeft")) {
+        if (_debugComposition) {
+          console.log(`[compositionstart] Handling long press case on macOS + arrow key`, e);
+        }
+        currentComposition.handleCompositionUpdate("x");
+        this._onCompositionStart.fire({ data: e.data });
+        return;
+      }
+      if (this._browser.isAndroid) {
+        this._onCompositionStart.fire({ data: e.data });
+        return;
+      }
+      this._onCompositionStart.fire({ data: e.data });
+    }));
+    this._register(this._textArea.onCompositionUpdate((e) => {
+      if (_debugComposition) {
+        console.log(`[compositionupdate]`, e);
+      }
+      const currentComposition = this._currentComposition;
+      if (!currentComposition) {
+        return;
+      }
+      if (this._browser.isAndroid) {
+        const newState = TextAreaState.readFromTextArea(this._textArea, this._textAreaState);
+        const typeInput2 = TextAreaState.deduceAndroidCompositionInput(this._textAreaState, newState);
+        this._textAreaState = newState;
+        this._onType.fire(typeInput2);
+        this._onCompositionUpdate.fire(e);
+        return;
+      }
+      const typeInput = currentComposition.handleCompositionUpdate(e.data);
+      this._textAreaState = TextAreaState.readFromTextArea(this._textArea, this._textAreaState);
+      this._onType.fire(typeInput);
+      this._onCompositionUpdate.fire(e);
+    }));
+    this._register(this._textArea.onCompositionEnd((e) => {
+      if (_debugComposition) {
+        console.log(`[compositionend]`, e);
+      }
+      const currentComposition = this._currentComposition;
+      if (!currentComposition) {
+        return;
+      }
+      this._currentComposition = null;
+      if (this._browser.isAndroid) {
+        const newState = TextAreaState.readFromTextArea(this._textArea, this._textAreaState);
+        const typeInput2 = TextAreaState.deduceAndroidCompositionInput(this._textAreaState, newState);
+        this._textAreaState = newState;
+        this._onType.fire(typeInput2);
+        this._onCompositionEnd.fire();
+        return;
+      }
+      const typeInput = currentComposition.handleCompositionUpdate(e.data);
+      this._textAreaState = TextAreaState.readFromTextArea(this._textArea, this._textAreaState);
+      this._onType.fire(typeInput);
+      this._onCompositionEnd.fire();
+    }));
+    this._register(this._textArea.onInput((e) => {
+      if (_debugComposition) {
+        console.log(`[input]`, e);
+      }
+      this._textArea.setIgnoreSelectionChangeTime("received input event");
+      if (this._currentComposition) {
+        return;
+      }
+      const newState = TextAreaState.readFromTextArea(this._textArea, this._textAreaState);
+      const typeInput = TextAreaState.deduceInput(
+        this._textAreaState,
+        newState,
+        /*couldBeEmojiInput*/
+        this._OS === 2
+        /* OperatingSystem.Macintosh */
+      );
+      if (typeInput.replacePrevCharCnt === 0 && typeInput.text.length === 1) {
+        if (strings.isHighSurrogate(typeInput.text.charCodeAt(0)) || typeInput.text.charCodeAt(0) === 127) {
+          return;
+        }
+      }
+      this._textAreaState = newState;
+      if (typeInput.text !== "" || typeInput.replacePrevCharCnt !== 0 || typeInput.replaceNextCharCnt !== 0 || typeInput.positionDelta !== 0) {
+        this._onType.fire(typeInput);
+      }
+    }));
+    this._register(this._textArea.onCut((e) => {
+      this._textArea.setIgnoreSelectionChangeTime("received cut event");
+      this._ensureClipboardGetsEditorSelection(e);
+      this._asyncTriggerCut.schedule();
+    }));
+    this._register(this._textArea.onCopy((e) => {
+      this._ensureClipboardGetsEditorSelection(e);
+    }));
+    this._register(this._textArea.onPaste((e) => {
+      this._textArea.setIgnoreSelectionChangeTime("received paste event");
+      e.preventDefault();
+      if (!e.clipboardData) {
+        return;
+      }
+      let [text, metadata] = ClipboardEventUtils.getTextData(e.clipboardData);
+      if (!text) {
+        return;
+      }
+      metadata = metadata || InMemoryClipboardMetadataManager.INSTANCE.get(text);
+      this._onPaste.fire({
+        text,
+        metadata
+      });
+    }));
+    this._register(this._textArea.onFocus(() => {
+      const hadFocus = this._hasFocus;
+      this._setHasFocus(true);
+      if (this._accessibilityService.isScreenReaderOptimized() && this._browser.isSafari && !hadFocus && this._hasFocus) {
+        if (!this._asyncFocusGainWriteScreenReaderContent.value) {
+          this._asyncFocusGainWriteScreenReaderContent.value = new RunOnceScheduler(() => this.writeNativeTextAreaContent("asyncFocusGain"), 0);
+        }
+        this._asyncFocusGainWriteScreenReaderContent.value.schedule();
+      }
+    }));
+    this._register(this._textArea.onBlur(() => {
+      if (this._currentComposition) {
+        this._currentComposition = null;
+        this.writeNativeTextAreaContent("blurWithoutCompositionEnd");
+        this._onCompositionEnd.fire();
+      }
+      this._setHasFocus(false);
+    }));
+    this._register(this._textArea.onSyntheticTap(() => {
+      if (this._browser.isAndroid && this._currentComposition) {
+        this._currentComposition = null;
+        this.writeNativeTextAreaContent("tapWithoutCompositionEnd");
+        this._onCompositionEnd.fire();
+      }
+    }));
+  }
+  _initializeFromTest() {
+    this._hasFocus = true;
+    this._textAreaState = TextAreaState.readFromTextArea(this._textArea, null);
+  }
+  _installSelectionChangeListener() {
+    let previousSelectionChangeEventTime = 0;
+    return dom.addDisposableListener(this._textArea.ownerDocument, "selectionchange", (e) => {
+      inputLatency.onSelectionChange();
+      if (!this._hasFocus) {
+        return;
+      }
+      if (this._currentComposition) {
+        return;
+      }
+      if (!this._browser.isChrome) {
+        return;
+      }
+      const now = Date.now();
+      const delta1 = now - previousSelectionChangeEventTime;
+      previousSelectionChangeEventTime = now;
+      if (delta1 < 5) {
+        return;
+      }
+      const delta2 = now - this._textArea.getIgnoreSelectionChangeTime();
+      this._textArea.resetSelectionChangeTime();
+      if (delta2 < 100) {
+        return;
+      }
+      if (!this._textAreaState.selection) {
+        return;
+      }
+      const newValue = this._textArea.getValue();
+      if (this._textAreaState.value !== newValue) {
+        return;
+      }
+      const newSelectionStart = this._textArea.getSelectionStart();
+      const newSelectionEnd = this._textArea.getSelectionEnd();
+      if (this._textAreaState.selectionStart === newSelectionStart && this._textAreaState.selectionEnd === newSelectionEnd) {
+        return;
+      }
+      const _newSelectionStartPosition = this._textAreaState.deduceEditorPosition(newSelectionStart);
+      const newSelectionStartPosition = this._host.deduceModelPosition(_newSelectionStartPosition[0], _newSelectionStartPosition[1], _newSelectionStartPosition[2]);
+      const _newSelectionEndPosition = this._textAreaState.deduceEditorPosition(newSelectionEnd);
+      const newSelectionEndPosition = this._host.deduceModelPosition(_newSelectionEndPosition[0], _newSelectionEndPosition[1], _newSelectionEndPosition[2]);
+      const newSelection = new Selection(newSelectionStartPosition.lineNumber, newSelectionStartPosition.column, newSelectionEndPosition.lineNumber, newSelectionEndPosition.column);
+      this._onSelectionChangeRequest.fire(newSelection);
+    });
+  }
+  dispose() {
+    super.dispose();
+    if (this._selectionChangeListener) {
+      this._selectionChangeListener.dispose();
+      this._selectionChangeListener = null;
+    }
+  }
+  focusTextArea() {
+    this._setHasFocus(true);
+    this.refreshFocusState();
+  }
+  isFocused() {
+    return this._hasFocus;
+  }
+  refreshFocusState() {
+    this._setHasFocus(this._textArea.hasFocus());
+  }
+  _setHasFocus(newHasFocus) {
+    if (this._hasFocus === newHasFocus) {
+      return;
+    }
+    this._hasFocus = newHasFocus;
+    if (this._selectionChangeListener) {
+      this._selectionChangeListener.dispose();
+      this._selectionChangeListener = null;
+    }
+    if (this._hasFocus) {
+      this._selectionChangeListener = this._installSelectionChangeListener();
+    }
+    if (this._hasFocus) {
+      this.writeNativeTextAreaContent("focusgain");
+    }
+    if (this._hasFocus) {
+      this._onFocus.fire();
+    } else {
+      this._onBlur.fire();
+    }
+  }
+  _setAndWriteTextAreaState(reason, textAreaState) {
+    if (!this._hasFocus) {
+      textAreaState = textAreaState.collapseSelection();
+    }
+    if (!textAreaState.isWrittenToTextArea(this._textArea, this._hasFocus)) {
+      this._logService.trace(`writeTextAreaState(reason: ${reason})`);
+    }
+    textAreaState.writeToTextArea(reason, this._textArea, this._hasFocus);
+    this._textAreaState = textAreaState;
+  }
+  writeNativeTextAreaContent(reason) {
+    if (!this._accessibilityService.isScreenReaderOptimized() && reason === "render" || this._currentComposition) {
+      return;
+    }
+    this._setAndWriteTextAreaState(reason, this._host.getScreenReaderContent());
+  }
+  _ensureClipboardGetsEditorSelection(e) {
+    const dataToCopy = this._host.getDataToCopy();
+    const storedMetadata = {
+      version: 1,
+      isFromEmptySelection: dataToCopy.isFromEmptySelection,
+      multicursorText: dataToCopy.multicursorText,
+      mode: dataToCopy.mode
+    };
+    InMemoryClipboardMetadataManager.INSTANCE.set(
+      // When writing "LINE\r\n" to the clipboard and then pasting,
+      // Firefox pastes "LINE\n", so let's work around this quirk
+      this._browser.isFirefox ? dataToCopy.text.replace(/\r\n/g, "\n") : dataToCopy.text,
+      storedMetadata
+    );
+    e.preventDefault();
+    if (e.clipboardData) {
+      ClipboardEventUtils.setTextData(e.clipboardData, dataToCopy.text, dataToCopy.html, storedMetadata);
+    }
+  }
+};
+TextAreaInput = __decorate([
+  __param(4, IAccessibilityService),
+  __param(5, ILogService)
+], TextAreaInput);
+class TextAreaWrapper extends Disposable {
+  static {
+    __name(this, "TextAreaWrapper");
+  }
+  get ownerDocument() {
+    return this._actual.ownerDocument;
+  }
+  constructor(_actual) {
+    super();
+    this._actual = _actual;
+    this._onSyntheticTap = this._register(new Emitter());
+    this.onSyntheticTap = this._onSyntheticTap.event;
+    this._ignoreSelectionChangeTime = 0;
+    this.onKeyDown = this._register(new DomEmitter(this._actual, "keydown")).event;
+    this.onKeyPress = this._register(new DomEmitter(this._actual, "keypress")).event;
+    this.onKeyUp = this._register(new DomEmitter(this._actual, "keyup")).event;
+    this.onCompositionStart = this._register(new DomEmitter(this._actual, "compositionstart")).event;
+    this.onCompositionUpdate = this._register(new DomEmitter(this._actual, "compositionupdate")).event;
+    this.onCompositionEnd = this._register(new DomEmitter(this._actual, "compositionend")).event;
+    this.onBeforeInput = this._register(new DomEmitter(this._actual, "beforeinput")).event;
+    this.onInput = this._register(new DomEmitter(this._actual, "input")).event;
+    this.onCut = this._register(new DomEmitter(this._actual, "cut")).event;
+    this.onCopy = this._register(new DomEmitter(this._actual, "copy")).event;
+    this.onPaste = this._register(new DomEmitter(this._actual, "paste")).event;
+    this.onFocus = this._register(new DomEmitter(this._actual, "focus")).event;
+    this.onBlur = this._register(new DomEmitter(this._actual, "blur")).event;
+    this._register(this.onKeyDown(() => inputLatency.onKeyDown()));
+    this._register(this.onBeforeInput(() => inputLatency.onBeforeInput()));
+    this._register(this.onInput(() => inputLatency.onInput()));
+    this._register(this.onKeyUp(() => inputLatency.onKeyUp()));
+    this._register(dom.addDisposableListener(this._actual, TextAreaSyntethicEvents.Tap, () => this._onSyntheticTap.fire()));
+  }
+  hasFocus() {
+    const shadowRoot = dom.getShadowRoot(this._actual);
+    if (shadowRoot) {
+      return shadowRoot.activeElement === this._actual;
+    } else if (this._actual.isConnected) {
+      return dom.getActiveElement() === this._actual;
+    } else {
+      return false;
+    }
+  }
+  setIgnoreSelectionChangeTime(reason) {
+    this._ignoreSelectionChangeTime = Date.now();
+  }
+  getIgnoreSelectionChangeTime() {
+    return this._ignoreSelectionChangeTime;
+  }
+  resetSelectionChangeTime() {
+    this._ignoreSelectionChangeTime = 0;
+  }
+  getValue() {
+    return this._actual.value;
+  }
+  setValue(reason, value) {
+    const textArea = this._actual;
+    if (textArea.value === value) {
+      return;
+    }
+    this.setIgnoreSelectionChangeTime("setValue");
+    textArea.value = value;
+  }
+  getSelectionStart() {
+    return this._actual.selectionDirection === "backward" ? this._actual.selectionEnd : this._actual.selectionStart;
+  }
+  getSelectionEnd() {
+    return this._actual.selectionDirection === "backward" ? this._actual.selectionStart : this._actual.selectionEnd;
+  }
+  setSelectionRange(reason, selectionStart, selectionEnd) {
+    const textArea = this._actual;
+    let activeElement = null;
+    const shadowRoot = dom.getShadowRoot(textArea);
+    if (shadowRoot) {
+      activeElement = shadowRoot.activeElement;
+    } else {
+      activeElement = dom.getActiveElement();
+    }
+    const activeWindow = dom.getWindow(activeElement);
+    const currentIsFocused = activeElement === textArea;
+    const currentSelectionStart = textArea.selectionStart;
+    const currentSelectionEnd = textArea.selectionEnd;
+    if (currentIsFocused && currentSelectionStart === selectionStart && currentSelectionEnd === selectionEnd) {
+      if (browser.isFirefox && activeWindow.parent !== activeWindow) {
+        textArea.focus();
+      }
+      return;
+    }
+    if (currentIsFocused) {
+      this.setIgnoreSelectionChangeTime("setSelectionRange");
+      textArea.setSelectionRange(selectionStart, selectionEnd);
+      if (browser.isFirefox && activeWindow.parent !== activeWindow) {
+        textArea.focus();
+      }
+      return;
+    }
+    try {
+      const scrollState = dom.saveParentsScrollTop(textArea);
+      this.setIgnoreSelectionChangeTime("setSelectionRange");
+      textArea.focus();
+      textArea.setSelectionRange(selectionStart, selectionEnd);
+      dom.restoreParentsScrollTop(textArea, scrollState);
+    } catch (e) {
+    }
+  }
+}
+export {
+  TextAreaInput,
+  TextAreaSyntethicEvents,
+  TextAreaWrapper
+};
+//# sourceMappingURL=textAreaEditContextInput.js.map

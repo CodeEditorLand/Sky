@@ -1,1 +1,439 @@
-import{$Yh as P}from"../../../base/common/async.js";import{$hf as k,$df as L}from"../../../base/common/event.js";import{$ud as S}from"../../../base/common/lifecycle.js";import{$bI as y,$cI as T,$hI as _,$fI as x,$gI as G}from"./actions.js";import{$Yn as H}from"../../commands/common/commands.js";import{$Vn as A}from"../../contextkey/common/contextkey.js";import{$bm as F,$em as v}from"../../../base/common/actions.js";import{$Ho as O}from"../../storage/common/storage.js";import{$Tb as R}from"../../../base/common/arrays.js";import{localize as I}from"../../../nls.js";import{$ux as K}from"../../keybinding/common/keybinding.js";var g,b,w=function(t,e,s,i){var n,o=arguments.length,r=o<3?e:null===i?i=Object.getOwnPropertyDescriptor(e,s):i;if("object"==typeof Reflect&&"function"==typeof Reflect.decorate)r=Reflect.decorate(t,e,s,i);else for(var h=t.length-1;h>=0;h--)(n=t[h])&&(r=(o<3?n(r):o>3?n(e,s,r):n(e,s))||r);return o>3&&r&&Object.defineProperty(e,s,r),r},a=function(t,e){return function(s,i){e(s,i,t)}};let E=class{constructor(t,e,s){this.d=t,this.f=e,this.c=new M(s)}createMenu(t,e,s){return new $(t,this.c,{emitEventsForSubmenuChanges:!1,eventDebounceDelay:50,...s},this.d,this.f,e)}getMenuActions(t,e,s){const i=new $(t,this.c,{emitEventsForSubmenuChanges:!1,eventDebounceDelay:50,...s},this.d,this.f,e),n=i.getActions(s);return i.dispose(),n}getMenuContexts(t){const e=new m(t,!1);return new Set([...e.structureContextKeys,...e.preconditionContextKeys,...e.toggledContextKeys])}resetHiddenStates(t){this.c.reset(t)}};E=w([a(0,H),a(1,K),a(2,O)],E);let M=class{static{g=this}static{this.c="menu.hiddenCommands"}constructor(t){this.k=t,this.d=new S,this.f=new L,this.onDidChange=this.f.event,this.h=!1,this.j=new Map;try{const e=t.get(g.c,0,"{}");this.i=JSON.parse(e)}catch{this.i=Object.create(null)}this.d.add(t.onDidChangeValue(0,g.c,this.d)((()=>{if(!this.h)try{const e=t.get(g.c,0,"{}");this.i=JSON.parse(e)}catch{}this.f.fire()})))}dispose(){this.f.dispose(),this.d.dispose()}l(t,e){return this.j.get(`${t.id}/${e}`)??!1}setDefaultState(t,e,s){this.j.set(`${t.id}/${e}`,s)}isHidden(t,e){const s=this.l(t,e),i=this.i[t.id]?.includes(e)??!1;return s?!i:i}updateHidden(t,e,s){this.l(t,e)&&(s=!s);const i=this.i[t.id];if(s)i?i.indexOf(e)<0&&i.push(e):this.i[t.id]=[e];else if(i){const s=i.indexOf(e);s>=0&&R(i,s),0===i.length&&delete this.i[t.id]}this.m()}reset(t){if(void 0===t)this.i=Object.create(null),this.m();else{for(const{id:e}of t)this.i[e]&&delete this.i[e];this.m()}}m(){try{this.h=!0;const t=JSON.stringify(this.i);this.k.store(g.c,t,0,0)}finally{this.h=!1}}};M=g=w([a(0,O)],M);class m{constructor(t,e){this.j=t,this.k=e,this.c=[],this.d=new Set,this.f=new Set,this.h=new Set,this.i=new Set,this.refresh()}get allMenuIds(){return this.d}get structureContextKeys(){return this.f}get preconditionContextKeys(){return this.h}get toggledContextKeys(){return this.i}refresh(){this.c.length=0,this.d.clear(),this.f.clear(),this.h.clear(),this.i.clear();const t=this.l(x.getMenuItems(this.j));let e;for(const s of t){const t=s.group||"";(!e||e[0]!==t)&&(e=[t,[]],this.c.push(e)),e[1].push(s),this.m(s)}this.d.add(this.j)}l(t){return t}m(t){if(m.n(t.when,this.f),y(t)){if(t.command.precondition&&m.n(t.command.precondition,this.h),t.command.toggled){const e=t.command.toggled.condition||t.command.toggled;m.n(e,this.i)}}else this.k&&(x.getMenuItems(t.submenu).forEach(this.m,this),this.d.add(t.submenu))}static n(t,e){if(t)for(const s of t.keys())e.add(s)}}let j=b=class extends m{constructor(t,e,s,i,n,o){super(t,s),this.o=e,this.p=i,this.q=n,this.r=o,this.refresh()}createActionGroups(t){const e=[];for(const s of this.c){const[i,n]=s;let o;for(const e of n)if(this.r.contextMatchesRules(e.when)){const s=y(e);s&&this.o.setDefaultState(this.j,e.command.id,!!e.isHiddenByDefault);const i=z(this.j,s?e.command:e,this.o);if(s){const s=B(this.p,this.q,e.command.id,e.when);(o??=[]).push(new _(e.command,e.alt,t,i,s,this.r,this.p))}else{const s=new b(e.submenu,this.o,this.k,this.p,this.q,this.r).createActionGroups(t),n=F.join(...s.map((t=>t[1])));n.length>0&&(o??=[]).push(new G(e,i,n))}}o&&o.length>0&&e.push([i,o])}return e}l(t){return t.sort(b.t)}static t(t,e){const s=t.group,i=e.group;if(s!==i){if(!s)return 1;if(!i)return-1;if("navigation"===s)return-1;if("navigation"===i)return 1;const t=s.localeCompare(i);if(0!==t)return t}const n=t.order||0,o=e.order||0;return n<o?-1:n>o?1:b.u(y(t)?t.command.title:t.title,y(e)?e.command.title:e.title)}static u(t,e){const s="string"==typeof t?t:t.original,i="string"==typeof e?e:e.original;return s.localeCompare(i)}};j=b=w([a(3,H),a(4,K),a(5,A)],j);let $=class{constructor(t,e,s,i,n,o){this.d=new S,this.c=new j(t,e,s.emitEventsForSubmenuChanges,i,n,o);const r=new P((()=>{this.c.refresh(),this.f.fire({menu:this,isStructuralChange:!0,isEnablementChange:!0,isToggleChange:!0})}),s.eventDebounceDelay);this.d.add(r),this.d.add(x.onDidChangeMenu((t=>{for(const e of this.c.allMenuIds)if(t.has(e)){r.schedule();break}})));const h=this.d.add(new S);this.f=new k({onWillAddFirstListener:()=>{h.add(o.onDidChangeContext((t=>{const e=t.affectsSome(this.c.structureContextKeys),s=t.affectsSome(this.c.preconditionContextKeys),i=t.affectsSome(this.c.toggledContextKeys);(e||s||i)&&this.f.fire({menu:this,isStructuralChange:e,isEnablementChange:s,isToggleChange:i})}))),h.add(e.onDidChange((t=>{this.f.fire({menu:this,isStructuralChange:!0,isEnablementChange:!1,isToggleChange:!1})})))},onDidRemoveLastListener:h.clear.bind(h),delay:s.eventDebounceDelay,merge:t=>{let e=!1,s=!1,i=!1;for(const n of t)if(e=e||n.isStructuralChange,s=s||n.isEnablementChange,i=i||n.isToggleChange,e&&s&&i)break;return{menu:this,isStructuralChange:e,isEnablementChange:s,isToggleChange:i}}}),this.onDidChange=this.f.event}getActions(t){return this.c.createActionGroups(t)}dispose(){this.d.dispose(),this.f.dispose()}};function z(t,e,s){const i=T(e)?e.submenu.id:e.id,n="string"==typeof e.title?e.title:e.title.value,o=v({id:`hide/${t.id}/${i}`,label:I(1778,null,n),run(){s.updateHidden(t,i,!0)}}),r=v({id:`toggle/${t.id}/${i}`,label:n,get checked(){return!s.isHidden(t,i)},run(){s.updateHidden(t,i,!!this.checked)}});return{hide:o,toggle:r,get isHidden(){return!r.checked}}}function B(t,e,s,i=void 0,n=!0){return v({id:`configureKeybinding/${s}`,label:I(1779,null),enabled:n,run(){const n=!e.lookupKeybinding(s)&&i?i.serialize():void 0;t.executeCommand("workbench.action.openGlobalKeybindings",`@command:${s}`+(n?` +when:${n}`:""))}})}$=w([a(3,H),a(4,K),a(5,A)],$);export{E as $hgb,B as $igb};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { RunOnceScheduler } from "../../../base/common/async.js";
+import { DebounceEmitter, Emitter } from "../../../base/common/event.js";
+import { DisposableStore } from "../../../base/common/lifecycle.js";
+import { isIMenuItem, isISubmenuItem, MenuItemAction, MenuRegistry, SubmenuItemAction } from "./actions.js";
+import { ICommandService } from "../../commands/common/commands.js";
+import { IContextKeyService } from "../../contextkey/common/contextkey.js";
+import { Separator, toAction } from "../../../base/common/actions.js";
+import { IStorageService } from "../../storage/common/storage.js";
+import { removeFastWithoutKeepingOrder } from "../../../base/common/arrays.js";
+import { localize } from "../../../nls.js";
+import { IKeybindingService } from "../../keybinding/common/keybinding.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+var PersistedMenuHideState_1;
+var MenuInfo_1;
+let MenuService = class MenuService2 {
+  static {
+    __name(this, "MenuService");
+  }
+  constructor(_commandService, _keybindingService, storageService) {
+    this._commandService = _commandService;
+    this._keybindingService = _keybindingService;
+    this._hiddenStates = new PersistedMenuHideState(storageService);
+  }
+  createMenu(id, contextKeyService, options) {
+    return new MenuImpl(id, this._hiddenStates, { emitEventsForSubmenuChanges: false, eventDebounceDelay: 50, ...options }, this._commandService, this._keybindingService, contextKeyService);
+  }
+  getMenuActions(id, contextKeyService, options) {
+    const menu = new MenuImpl(id, this._hiddenStates, { emitEventsForSubmenuChanges: false, eventDebounceDelay: 50, ...options }, this._commandService, this._keybindingService, contextKeyService);
+    const actions = menu.getActions(options);
+    menu.dispose();
+    return actions;
+  }
+  getMenuContexts(id) {
+    const menuInfo = new MenuInfoSnapshot(id, false);
+    return /* @__PURE__ */ new Set([...menuInfo.structureContextKeys, ...menuInfo.preconditionContextKeys, ...menuInfo.toggledContextKeys]);
+  }
+  resetHiddenStates(ids) {
+    this._hiddenStates.reset(ids);
+  }
+};
+MenuService = __decorate([
+  __param(0, ICommandService),
+  __param(1, IKeybindingService),
+  __param(2, IStorageService)
+], MenuService);
+let PersistedMenuHideState = class PersistedMenuHideState2 {
+  static {
+    __name(this, "PersistedMenuHideState");
+  }
+  static {
+    PersistedMenuHideState_1 = this;
+  }
+  static {
+    this._key = "menu.hiddenCommands";
+  }
+  constructor(_storageService) {
+    this._storageService = _storageService;
+    this._disposables = new DisposableStore();
+    this._onDidChange = new Emitter();
+    this.onDidChange = this._onDidChange.event;
+    this._ignoreChangeEvent = false;
+    this._hiddenByDefaultCache = /* @__PURE__ */ new Map();
+    try {
+      const raw = _storageService.get(PersistedMenuHideState_1._key, 0, "{}");
+      this._data = JSON.parse(raw);
+    } catch (err) {
+      this._data = /* @__PURE__ */ Object.create(null);
+    }
+    this._disposables.add(_storageService.onDidChangeValue(0, PersistedMenuHideState_1._key, this._disposables)(() => {
+      if (!this._ignoreChangeEvent) {
+        try {
+          const raw = _storageService.get(PersistedMenuHideState_1._key, 0, "{}");
+          this._data = JSON.parse(raw);
+        } catch (err) {
+          console.log("FAILED to read storage after UPDATE", err);
+        }
+      }
+      this._onDidChange.fire();
+    }));
+  }
+  dispose() {
+    this._onDidChange.dispose();
+    this._disposables.dispose();
+  }
+  _isHiddenByDefault(menu, commandId) {
+    return this._hiddenByDefaultCache.get(`${menu.id}/${commandId}`) ?? false;
+  }
+  setDefaultState(menu, commandId, hidden) {
+    this._hiddenByDefaultCache.set(`${menu.id}/${commandId}`, hidden);
+  }
+  isHidden(menu, commandId) {
+    const hiddenByDefault = this._isHiddenByDefault(menu, commandId);
+    const state = this._data[menu.id]?.includes(commandId) ?? false;
+    return hiddenByDefault ? !state : state;
+  }
+  updateHidden(menu, commandId, hidden) {
+    const hiddenByDefault = this._isHiddenByDefault(menu, commandId);
+    if (hiddenByDefault) {
+      hidden = !hidden;
+    }
+    const entries = this._data[menu.id];
+    if (!hidden) {
+      if (entries) {
+        const idx = entries.indexOf(commandId);
+        if (idx >= 0) {
+          removeFastWithoutKeepingOrder(entries, idx);
+        }
+        if (entries.length === 0) {
+          delete this._data[menu.id];
+        }
+      }
+    } else {
+      if (!entries) {
+        this._data[menu.id] = [commandId];
+      } else {
+        const idx = entries.indexOf(commandId);
+        if (idx < 0) {
+          entries.push(commandId);
+        }
+      }
+    }
+    this._persist();
+  }
+  reset(menus) {
+    if (menus === void 0) {
+      this._data = /* @__PURE__ */ Object.create(null);
+      this._persist();
+    } else {
+      for (const { id } of menus) {
+        if (this._data[id]) {
+          delete this._data[id];
+        }
+      }
+      this._persist();
+    }
+  }
+  _persist() {
+    try {
+      this._ignoreChangeEvent = true;
+      const raw = JSON.stringify(this._data);
+      this._storageService.store(
+        PersistedMenuHideState_1._key,
+        raw,
+        0,
+        0
+        /* StorageTarget.USER */
+      );
+    } finally {
+      this._ignoreChangeEvent = false;
+    }
+  }
+};
+PersistedMenuHideState = PersistedMenuHideState_1 = __decorate([
+  __param(0, IStorageService)
+], PersistedMenuHideState);
+class MenuInfoSnapshot {
+  static {
+    __name(this, "MenuInfoSnapshot");
+  }
+  constructor(_id, _collectContextKeysForSubmenus) {
+    this._id = _id;
+    this._collectContextKeysForSubmenus = _collectContextKeysForSubmenus;
+    this._menuGroups = [];
+    this._allMenuIds = /* @__PURE__ */ new Set();
+    this._structureContextKeys = /* @__PURE__ */ new Set();
+    this._preconditionContextKeys = /* @__PURE__ */ new Set();
+    this._toggledContextKeys = /* @__PURE__ */ new Set();
+    this.refresh();
+  }
+  get allMenuIds() {
+    return this._allMenuIds;
+  }
+  get structureContextKeys() {
+    return this._structureContextKeys;
+  }
+  get preconditionContextKeys() {
+    return this._preconditionContextKeys;
+  }
+  get toggledContextKeys() {
+    return this._toggledContextKeys;
+  }
+  refresh() {
+    this._menuGroups.length = 0;
+    this._allMenuIds.clear();
+    this._structureContextKeys.clear();
+    this._preconditionContextKeys.clear();
+    this._toggledContextKeys.clear();
+    const menuItems = this._sort(MenuRegistry.getMenuItems(this._id));
+    let group;
+    for (const item of menuItems) {
+      const groupName = item.group || "";
+      if (!group || group[0] !== groupName) {
+        group = [groupName, []];
+        this._menuGroups.push(group);
+      }
+      group[1].push(item);
+      this._collectContextKeysAndSubmenuIds(item);
+    }
+    this._allMenuIds.add(this._id);
+  }
+  _sort(menuItems) {
+    return menuItems;
+  }
+  _collectContextKeysAndSubmenuIds(item) {
+    MenuInfoSnapshot._fillInKbExprKeys(item.when, this._structureContextKeys);
+    if (isIMenuItem(item)) {
+      if (item.command.precondition) {
+        MenuInfoSnapshot._fillInKbExprKeys(item.command.precondition, this._preconditionContextKeys);
+      }
+      if (item.command.toggled) {
+        const toggledExpression = item.command.toggled.condition || item.command.toggled;
+        MenuInfoSnapshot._fillInKbExprKeys(toggledExpression, this._toggledContextKeys);
+      }
+    } else if (this._collectContextKeysForSubmenus) {
+      MenuRegistry.getMenuItems(item.submenu).forEach(this._collectContextKeysAndSubmenuIds, this);
+      this._allMenuIds.add(item.submenu);
+    }
+  }
+  static _fillInKbExprKeys(exp, set) {
+    if (exp) {
+      for (const key of exp.keys()) {
+        set.add(key);
+      }
+    }
+  }
+}
+let MenuInfo = MenuInfo_1 = class MenuInfo2 extends MenuInfoSnapshot {
+  static {
+    __name(this, "MenuInfo");
+  }
+  constructor(_id, _hiddenStates, _collectContextKeysForSubmenus, _commandService, _keybindingService, _contextKeyService) {
+    super(_id, _collectContextKeysForSubmenus);
+    this._hiddenStates = _hiddenStates;
+    this._commandService = _commandService;
+    this._keybindingService = _keybindingService;
+    this._contextKeyService = _contextKeyService;
+    this.refresh();
+  }
+  createActionGroups(options) {
+    const result = [];
+    for (const group of this._menuGroups) {
+      const [id, items] = group;
+      let activeActions;
+      for (const item of items) {
+        if (this._contextKeyService.contextMatchesRules(item.when)) {
+          const isMenuItem = isIMenuItem(item);
+          if (isMenuItem) {
+            this._hiddenStates.setDefaultState(this._id, item.command.id, !!item.isHiddenByDefault);
+          }
+          const menuHide = createMenuHide(this._id, isMenuItem ? item.command : item, this._hiddenStates);
+          if (isMenuItem) {
+            const menuKeybinding = createConfigureKeybindingAction(this._commandService, this._keybindingService, item.command.id, item.when);
+            (activeActions ??= []).push(new MenuItemAction(item.command, item.alt, options, menuHide, menuKeybinding, this._contextKeyService, this._commandService));
+          } else {
+            const groups = new MenuInfo_1(item.submenu, this._hiddenStates, this._collectContextKeysForSubmenus, this._commandService, this._keybindingService, this._contextKeyService).createActionGroups(options);
+            const submenuActions = Separator.join(...groups.map((g) => g[1]));
+            if (submenuActions.length > 0) {
+              (activeActions ??= []).push(new SubmenuItemAction(item, menuHide, submenuActions));
+            }
+          }
+        }
+      }
+      if (activeActions && activeActions.length > 0) {
+        result.push([id, activeActions]);
+      }
+    }
+    return result;
+  }
+  _sort(menuItems) {
+    return menuItems.sort(MenuInfo_1._compareMenuItems);
+  }
+  static _compareMenuItems(a, b) {
+    const aGroup = a.group;
+    const bGroup = b.group;
+    if (aGroup !== bGroup) {
+      if (!aGroup) {
+        return 1;
+      } else if (!bGroup) {
+        return -1;
+      }
+      if (aGroup === "navigation") {
+        return -1;
+      } else if (bGroup === "navigation") {
+        return 1;
+      }
+      const value = aGroup.localeCompare(bGroup);
+      if (value !== 0) {
+        return value;
+      }
+    }
+    const aPrio = a.order || 0;
+    const bPrio = b.order || 0;
+    if (aPrio < bPrio) {
+      return -1;
+    } else if (aPrio > bPrio) {
+      return 1;
+    }
+    return MenuInfo_1._compareTitles(isIMenuItem(a) ? a.command.title : a.title, isIMenuItem(b) ? b.command.title : b.title);
+  }
+  static _compareTitles(a, b) {
+    const aStr = typeof a === "string" ? a : a.original;
+    const bStr = typeof b === "string" ? b : b.original;
+    return aStr.localeCompare(bStr);
+  }
+};
+MenuInfo = MenuInfo_1 = __decorate([
+  __param(3, ICommandService),
+  __param(4, IKeybindingService),
+  __param(5, IContextKeyService)
+], MenuInfo);
+let MenuImpl = class MenuImpl2 {
+  static {
+    __name(this, "MenuImpl");
+  }
+  constructor(id, hiddenStates, options, commandService, keybindingService, contextKeyService) {
+    this._disposables = new DisposableStore();
+    this._menuInfo = new MenuInfo(id, hiddenStates, options.emitEventsForSubmenuChanges, commandService, keybindingService, contextKeyService);
+    const rebuildMenuSoon = new RunOnceScheduler(() => {
+      this._menuInfo.refresh();
+      this._onDidChange.fire({ menu: this, isStructuralChange: true, isEnablementChange: true, isToggleChange: true });
+    }, options.eventDebounceDelay);
+    this._disposables.add(rebuildMenuSoon);
+    this._disposables.add(MenuRegistry.onDidChangeMenu((e) => {
+      for (const id2 of this._menuInfo.allMenuIds) {
+        if (e.has(id2)) {
+          rebuildMenuSoon.schedule();
+          break;
+        }
+      }
+    }));
+    const lazyListener = this._disposables.add(new DisposableStore());
+    const merge = /* @__PURE__ */ __name((events) => {
+      let isStructuralChange = false;
+      let isEnablementChange = false;
+      let isToggleChange = false;
+      for (const item of events) {
+        isStructuralChange = isStructuralChange || item.isStructuralChange;
+        isEnablementChange = isEnablementChange || item.isEnablementChange;
+        isToggleChange = isToggleChange || item.isToggleChange;
+        if (isStructuralChange && isEnablementChange && isToggleChange) {
+          break;
+        }
+      }
+      return { menu: this, isStructuralChange, isEnablementChange, isToggleChange };
+    }, "merge");
+    const startLazyListener = /* @__PURE__ */ __name(() => {
+      lazyListener.add(contextKeyService.onDidChangeContext((e) => {
+        const isStructuralChange = e.affectsSome(this._menuInfo.structureContextKeys);
+        const isEnablementChange = e.affectsSome(this._menuInfo.preconditionContextKeys);
+        const isToggleChange = e.affectsSome(this._menuInfo.toggledContextKeys);
+        if (isStructuralChange || isEnablementChange || isToggleChange) {
+          this._onDidChange.fire({ menu: this, isStructuralChange, isEnablementChange, isToggleChange });
+        }
+      }));
+      lazyListener.add(hiddenStates.onDidChange((e) => {
+        this._onDidChange.fire({ menu: this, isStructuralChange: true, isEnablementChange: false, isToggleChange: false });
+      }));
+    }, "startLazyListener");
+    this._onDidChange = new DebounceEmitter({
+      // start/stop context key listener
+      onWillAddFirstListener: startLazyListener,
+      onDidRemoveLastListener: lazyListener.clear.bind(lazyListener),
+      delay: options.eventDebounceDelay,
+      merge
+    });
+    this.onDidChange = this._onDidChange.event;
+  }
+  getActions(options) {
+    return this._menuInfo.createActionGroups(options);
+  }
+  dispose() {
+    this._disposables.dispose();
+    this._onDidChange.dispose();
+  }
+};
+MenuImpl = __decorate([
+  __param(3, ICommandService),
+  __param(4, IKeybindingService),
+  __param(5, IContextKeyService)
+], MenuImpl);
+function createMenuHide(menu, command, states) {
+  const id = isISubmenuItem(command) ? command.submenu.id : command.id;
+  const title = typeof command.title === "string" ? command.title : command.title.value;
+  const hide = toAction({
+    id: `hide/${menu.id}/${id}`,
+    label: localize("hide.label", "Hide '{0}'", title),
+    run() {
+      states.updateHidden(menu, id, true);
+    }
+  });
+  const toggle = toAction({
+    id: `toggle/${menu.id}/${id}`,
+    label: title,
+    get checked() {
+      return !states.isHidden(menu, id);
+    },
+    run() {
+      states.updateHidden(menu, id, !!this.checked);
+    }
+  });
+  return {
+    hide,
+    toggle,
+    get isHidden() {
+      return !toggle.checked;
+    }
+  };
+}
+__name(createMenuHide, "createMenuHide");
+function createConfigureKeybindingAction(commandService, keybindingService, commandId, when = void 0, enabled = true) {
+  return toAction({
+    id: `configureKeybinding/${commandId}`,
+    label: localize("configure keybinding", "Configure Keybinding"),
+    enabled,
+    run() {
+      const hasKeybinding = !!keybindingService.lookupKeybinding(commandId);
+      const whenValue = !hasKeybinding && when ? when.serialize() : void 0;
+      commandService.executeCommand("workbench.action.openGlobalKeybindings", `@command:${commandId}` + (whenValue ? ` +when:${whenValue}` : ""));
+    }
+  });
+}
+__name(createConfigureKeybindingAction, "createConfigureKeybindingAction");
+export {
+  MenuService,
+  createConfigureKeybindingAction
+};
+//# sourceMappingURL=menuService.js.map

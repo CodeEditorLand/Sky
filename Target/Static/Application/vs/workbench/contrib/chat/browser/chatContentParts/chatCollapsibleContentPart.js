@@ -1,1 +1,80 @@
-import{$ as s}from"../../../../../base/browser/dom.js";import{$t9 as u}from"../../../../../base/browser/ui/button/button.js";import{$Mj as d}from"../../../../../base/common/codicons.js";import{$df as a}from"../../../../../base/common/event.js";import{$vd as c}from"../../../../../base/common/lifecycle.js";import{autorun as f,observableValue as l}from"../../../../../base/common/observable.js";import{localize as r}from"../../../../../nls.js";class $ extends c{constructor(t,o){super(),this.g=t,this.h=o,this.b=this.B(new a),this.onDidChangeHeight=this.b.event,this.f=l(this,!1),this.c=this.h.contentIndex+1<this.h.content.length}get domNode(){return this.a??=this.j(),this.a}j(){const t=this.g,o=s(".chat-used-context-label",void 0),e=this.B(new u(o,{buttonBackground:void 0,buttonBorder:void 0,buttonForeground:void 0,buttonHoverBackground:void 0,buttonSecondaryBackground:void 0,buttonSecondaryForeground:void 0,buttonSecondaryHoverBackground:void 0,buttonSeparator:void 0}));this.a=s(".chat-used-context",void 0,o),e.label=t,this.B(e.onDidClick((()=>{const t=this.f.get();this.f.set(!t,void 0)}))),this.B(f((o=>{const s=this.f.read(o);e.icon=s?d.chevronDown:d.chevronRight,this.a?.classList.toggle("chat-used-context-collapsed",!s),this.n(e.element,"string"==typeof t?t:t.value,this.s()),this.a?.isConnected&&queueMicrotask((()=>{this.b.fire()}))})));const i=this.m();return this.a.appendChild(i),this.a}n(t,o,s){t.ariaLabel=r(s?5159:5160,null,o)}addDisposable(t){this.B(t)}get expanded(){return this.f}s(){return this.f.get()}t(t){this.f.set(t,void 0)}}export{$ as $dMb};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { $ } from "../../../../../base/browser/dom.js";
+import { ButtonWithIcon } from "../../../../../base/browser/ui/button/button.js";
+import { Codicon } from "../../../../../base/common/codicons.js";
+import { Emitter } from "../../../../../base/common/event.js";
+import { Disposable } from "../../../../../base/common/lifecycle.js";
+import { autorun, observableValue } from "../../../../../base/common/observable.js";
+import { localize } from "../../../../../nls.js";
+class ChatCollapsibleContentPart extends Disposable {
+  static {
+    __name(this, "ChatCollapsibleContentPart");
+  }
+  constructor(title, context) {
+    super();
+    this.title = title;
+    this.context = context;
+    this._onDidChangeHeight = this._register(new Emitter());
+    this.onDidChangeHeight = this._onDidChangeHeight.event;
+    this._isExpanded = observableValue(this, false);
+    this.hasFollowingContent = this.context.contentIndex + 1 < this.context.content.length;
+  }
+  get domNode() {
+    this._domNode ??= this.init();
+    return this._domNode;
+  }
+  init() {
+    const referencesLabel = this.title;
+    const buttonElement = $(".chat-used-context-label", void 0);
+    const collapseButton = this._register(new ButtonWithIcon(buttonElement, {
+      buttonBackground: void 0,
+      buttonBorder: void 0,
+      buttonForeground: void 0,
+      buttonHoverBackground: void 0,
+      buttonSecondaryBackground: void 0,
+      buttonSecondaryForeground: void 0,
+      buttonSecondaryHoverBackground: void 0,
+      buttonSeparator: void 0
+    }));
+    this._domNode = $(".chat-used-context", void 0, buttonElement);
+    collapseButton.label = referencesLabel;
+    this._register(collapseButton.onDidClick(() => {
+      const value = this._isExpanded.get();
+      this._isExpanded.set(!value, void 0);
+    }));
+    this._register(autorun((r) => {
+      const value = this._isExpanded.read(r);
+      collapseButton.icon = value ? Codicon.chevronDown : Codicon.chevronRight;
+      this._domNode?.classList.toggle("chat-used-context-collapsed", !value);
+      this.updateAriaLabel(collapseButton.element, typeof referencesLabel === "string" ? referencesLabel : referencesLabel.value, this.isExpanded());
+      if (this._domNode?.isConnected) {
+        queueMicrotask(() => {
+          this._onDidChangeHeight.fire();
+        });
+      }
+    }));
+    const content = this.initContent();
+    this._domNode.appendChild(content);
+    return this._domNode;
+  }
+  updateAriaLabel(element, label, expanded) {
+    element.ariaLabel = expanded ? localize("usedReferencesExpanded", "{0}, expanded", label) : localize("usedReferencesCollapsed", "{0}, collapsed", label);
+  }
+  addDisposable(disposable) {
+    this._register(disposable);
+  }
+  get expanded() {
+    return this._isExpanded;
+  }
+  isExpanded() {
+    return this._isExpanded.get();
+  }
+  setExpanded(value) {
+    this._isExpanded.set(value, void 0);
+  }
+}
+export {
+  ChatCollapsibleContentPart
+};
+//# sourceMappingURL=chatCollapsibleContentPart.js.map

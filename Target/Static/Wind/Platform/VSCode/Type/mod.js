@@ -1,1 +1,0 @@
-import{Codicon as p}from"vs/base/common/codicons.js";import{URI as n}from"vs/base/common/uri.js";import{Schemas as i}from"vs/base/common/network.js";export{p as Codicon,i as Scheme,n as Uri};

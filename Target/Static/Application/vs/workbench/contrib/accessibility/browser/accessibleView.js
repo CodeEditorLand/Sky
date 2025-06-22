@@ -1,12 +1,952 @@
-import{$F6 as z,$J5 as J,$p6 as X,$l6 as Z}from"../../../../base/browser/dom.js";import{$G5 as O}from"../../../../base/browser/keyboardEvent.js";import{$a8 as T}from"../../../../base/browser/ui/aria/aria.js";import{$Mj as Y}from"../../../../base/common/codicons.js";import{$vd as W,$ud as x}from"../../../../base/common/lifecycle.js";import*as tt from"../../../../base/common/marked/marked.js";import{Schemas as M}from"../../../../base/common/network.js";import{$n as it,$m as et}from"../../../../base/common/platform.js";import{ThemeIcon as st}from"../../../../base/common/themables.js";import{URI as G}from"../../../../base/common/uri.js";import{EditorExtensionsRegistry as nt}from"../../../../editor/browser/editorExtensions.js";import{$Zdb as ot}from"../../../../editor/browser/widget/codeEditor/codeEditorWidget.js";import{$bC as D}from"../../../../editor/common/core/position.js";import{$gF as ht}from"../../../../editor/common/services/model.js";import{$cF as rt}from"../../../../editor/common/services/resolverService.js";import{AccessibilityHelpNLS as C}from"../../../../editor/common/standaloneStrings.js";import{$Gib as at}from"../../../../editor/contrib/codeAction/browser/codeActionController.js";import{localize as h}from"../../../../nls.js";import{$$ob as m,$apb as I,$_ob as H}from"../../../../platform/accessibility/browser/accessibleView.js";import{$wC as B,$tC as lt}from"../../../../platform/accessibility/common/accessibility.js";import{$0db as V,$5db as dt}from"../../../../platform/accessibilitySignal/browser/accessibilitySignalService.js";import{$agb as ct}from"../../../../platform/actions/browser/menuEntryActionViewItem.js";import{$lgb as ut}from"../../../../platform/actions/browser/toolbar.js";import{$eI as bt,$dI as ft}from"../../../../platform/actions/common/actions.js";import{$Yn as gt}from"../../../../platform/commands/common/commands.js";import{$El as q}from"../../../../platform/configuration/common/configuration.js";import{$Vn as mt}from"../../../../platform/contextkey/common/contextkey.js";import{$nfb as pt}from"../../../../platform/contextview/browser/contextView.js";import{$mj as Q}from"../../../../platform/instantiation/common/instantiation.js";import{$ux as F}from"../../../../platform/keybinding/common/keybinding.js";import{$zhb as yt}from"../../../../platform/layout/browser/layoutService.js";import{$4$ as Ct}from"../../../../platform/opener/common/opener.js";import{$OM as _}from"../../../../platform/quickinput/common/quickInput.js";import{$Ho as wt}from"../../../../platform/storage/common/storage.js";import{$VUb as kt}from"../../../browser/codeeditor.js";import{$qWb as $t}from"../../chat/browser/chat.js";import{$eFb as Lt}from"../../codeEditor/browser/simpleEditorOptions.js";import{$7Db as Pt,$cEb as Gt,$aEb as It,$$Db as Ht,$eEb as xt,$dEb as Dt,$bEb as St,$8Db as Nt,$_Db as Kt,$9Db as vt,$0Db as Tt}from"./accessibilityConfiguration.js";import{$0xc as Mt}from"./accessibleViewKeybindingResolver.js";var K=function(a,t,i,e){var s=arguments.length,n=s<3?t:e===null?e=Object.getOwnPropertyDescriptor(t,i):e,o;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")n=Reflect.decorate(a,t,i,e);else for(var d=a.length-1;d>=0;d--)(o=a[d])&&(n=(s<3?o(n):s>3?o(t,i,n):o(t,i))||n);return s>3&&n&&Object.defineProperty(t,i,n),n},l=function(a,t){return function(i,e){t(i,e,a)}},A;(function(a){a[a.MAX_WIDTH=600]="MAX_WIDTH"})(A||(A={}));let S=class extends W{get editorWidget(){return this.a}constructor(t,i,e,s,n,o,d,c,r,u,f,$,g,w,L,p){super(),this.L=t,this.M=i,this.N=e,this.O=s,this.P=n,this.Q=o,this.R=d,this.S=c,this.U=r,this.W=u,this.X=f,this.Y=$,this.Z=g,this.$=w,this.ab=L,this.bb=p,this.z=!1,this.b=Pt.bindTo(this.Q),this.g=Nt.bindTo(this.Q),this.h=vt.bindTo(this.Q),this.j=Tt.bindTo(this.Q),this.m=Ht.bindTo(this.Q),this.n=It.bindTo(this.Q),this.r=St.bindTo(this.Q),this.s=Gt.bindTo(this.Q),this.f=Kt.bindTo(this.Q),this.t=Dt.bindTo(this.Q),this.u=xt.bindTo(this.Q),this.C=document.createElement("div"),this.C.classList.add("accessible-view"),this.N.getValue("accessibility.hideAccessibleView")&&this.C.classList.add("hide");const y={contributions:nt.getEditorContributions().filter(b=>b.id!==at.ID&&b.id!==kt.ID)},k=document.createElement("div");k.classList.add("accessible-view-title-bar"),this.D=document.createElement("div"),this.D.classList.add("accessible-view-title"),k.appendChild(this.D);const P=document.createElement("div");P.classList.add("accessible-view-action-bar"),k.appendChild(P),this.C.appendChild(k),this.F=this.B(i.createInstance(ut,P,{orientation:0})),this.F.context={viewId:"accessibleView"};const j=this.F.getElement();j.tabIndex=0;const R={...Lt(this.N),lineDecorationsWidth:6,dragAndDrop:!1,cursorWidth:1,wordWrap:"off",wrappingStrategy:"advanced",wrappingIndent:"none",padding:{top:2,bottom:2},quickSuggestions:!1,renderWhitespace:"none",dropIntoEditor:{enabled:!1},readOnly:!0,fontFamily:"var(--monaco-monospace-font)"};this.$.registerTextModelContentProvider(M.accessibleView,this),this.a=this.B(this.M.createInstance(ot,this.C,R,y)),this.B(this.R.onDidChangeScreenReaderOptimized(()=>{this.G&&this.b.get()&&this.show(this.G)})),this.B(this.N.onDidChangeConfiguration(b=>{H(this.G)&&b.affectsConfiguration(this.G.verbositySettingKey)&&(this.b.get()&&this.show(this.G),this.j.set(this.N.getValue(this.G.verbositySettingKey)),this.jb(this.G.actions,this.G.options.type)),b.affectsConfiguration("accessibility.hideAccessibleView")&&this.C.classList.toggle("hide",this.N.getValue("accessibility.hideAccessibleView"))})),this.B(this.a.onDidDispose(()=>this.db())),this.B(this.a.onDidChangeCursorPosition(()=>{this.f.set(this.a.getPosition()?.lineNumber===this.a.getModel()?.getLineCount());const b=this.a.getPosition()?.lineNumber;if(this.w&&b!==void 0){const U=this.w.find(v=>v.startLine<=b&&v.endLine>=b)!==void 0;this.r.set(U)}this.cb()}))}cb(){const t=this.a.getPosition(),i=this.a.getModel();if(!t||!i)return;const e=i.getLineContent(t.lineNumber);e?.startsWith("+")?this.bb.playSignal(V.diffLineInserted):e?.startsWith("-")&&this.bb.playSignal(V.diffLineDeleted)}provideTextContent(t){return this.lb(t)}db(){this.b.reset(),this.g.reset(),this.h.reset(),this.j.reset(),this.m.reset(),this.n.reset(),this.u.reset(),this.t.reset()}getPosition(t){if(!(!t||!this.I||this.I.id!==t))return this.a.getPosition()||void 0}setPosition(t,i,e){if(this.a.setPosition(t),i&&this.a.revealPosition(t),e){const s=this.a.getModel()?.getLineLength(t.lineNumber)??0;s&&this.a.setSelection({startLineNumber:t.lineNumber,startColumn:1,endLineNumber:t.lineNumber,endColumn:s+1})}}getCodeBlockContext(){const t=this.a.getPosition();if(!this.w?.length||!t)return;const i=this.w?.findIndex(s=>s.startLine<=t?.lineNumber&&s.endLine>=t?.lineNumber),e=i!==void 0&&i>-1?this.w[i]:void 0;if(!(!e||i===void 0))return{code:e.code,languageId:e.languageId,codeBlockIndex:i,element:void 0,chatSessionId:e.chatSessionId}}navigateToCodeBlock(t){const i=this.a.getPosition();if(!this.w?.length||!i)return;let e;const s=this.w.slice();t==="previous"?e=s.reverse().find(n=>n.endLine<i.lineNumber):e=s.find(n=>n.startLine>i.lineNumber),e&&this.setPosition(new D(e.startLine,1),!0)}showLastProvider(t){!this.I||this.I.options.id!==t||this.show(this.I)}show(t,i,e,s){if(t=t??this.G,!t)return;t.onOpen?.();const n={getAnchor:()=>({x:X().innerWidth/2-Math.min(this.U.activeContainerDimension.width*.62,600)/2,y:this.U.activeContainerOffset.quickPickTop}),render:o=>(this.J=o,this.J.classList.add("accessible-view-container"),this.ib(t,o,e)),onHide:()=>{e||(this.nb(),this.G?.dispose(),this.G=void 0,this.db())}};this.P.showContextView(n),s&&queueMicrotask(()=>{this.a.revealLine(s.lineNumber),this.a.setSelection({startLineNumber:s.lineNumber,startColumn:s.column,endLineNumber:s.lineNumber,endColumn:s.column})}),i&&this.G&&this.showSymbol(this.G,i),t instanceof m&&t.onDidRequestClearLastProvider&&this.B(t.onDidRequestClearLastProvider(o=>{this.I?.options.id===o&&(this.I=void 0)})),t.options.id&&(this.I=t),(t.id==="panelChat"||t.id==="quickChat")&&this.B(this.Y.registerProvider({getCodeBlockContext:()=>this.getCodeBlockContext()},"accessibleView")),t instanceof I&&this.Z.store(`${B}${t.id}`,!0,-1,0),t.onDidChangeContent&&this.B(t.onDidChangeContent(()=>{this.J&&this.ib(t,this.J,e)}))}previous(){const t=this.G?.providePreviousContent?.();!this.G||!this.J||!t||this.ib(this.G,this.J,void 0,t)}next(){const t=this.G?.provideNextContent?.();!this.G||!this.J||!t||this.ib(this.G,this.J,void 0,t)}eb(){return this.G?H(this.G)?this.N.getValue(this.G.verbositySettingKey)===!0:this.Z.getBoolean(`${B}${this.G.id}`,-1,!1):!1}goToSymbol(){this.G&&(this.z=!0,this.M.createInstance(N,this).show(this.G))}calculateCodeBlocks(t){if(!t||this.G?.id!=="panelChat"&&this.G?.id!=="quickChat"||this.G.options.language&&this.G.options.language!=="markdown")return;const i=t.split(`
-`);this.w=[];let e=!1,s=0,n;i.forEach((o,d)=>{if(!e&&o.startsWith("```"))e=!0,s=d+1,n=o.substring(3).trim();else if(e&&o.endsWith("```")){e=!1;const c=d,r=i.slice(s,c).join(`
-`);this.w?.push({startLine:s,endLine:c,code:r,languageId:n,chatSessionId:void 0})}}),this.s.set(this.w.length>0)}getSymbols(){const t=this.G?this.G:void 0;if(!this.H||!t)return;const i="getSymbols"in t?t.getSymbols?.()||[]:[];if(i?.length)return i;if(t.options.language&&t.options.language!=="markdown")return;const e=tt.marked.lexer(this.H);if(e)return this.fb(e,i),i.length?i:void 0}openHelpLink(){this.G?.options.readMoreUrl&&this.L.open(G.parse(this.G.options.readMoreUrl))}configureKeybindings(t){this.z=!0;const i=this.nb(),e=t?i?.options?.configureKeybindingItems:i?.options?.configuredKeybindingItems;if(!e)return;const s=this.B(new x),n=s.add(this.ab.createQuickPick());n.items=e,n.title=h(4643,null),n.placeholder=h(4644,null),n.show(),s.add(n.onDidAccept(async()=>{const o=n.selectedItems[0];o&&await this.X.executeCommand("workbench.action.openGlobalKeybindings",o.id),n.dispose()})),s.add(n.onDidHide(()=>{!n.selectedItems.length&&i&&this.show(i),s.dispose(),this.z=!1}))}fb(t,i){let e;for(const s of t){let n;if("type"in s)switch(s.type){case"heading":case"paragraph":case"code":n=s.text;break;case"list":{const o=s.items[0];if(!o)break;e=`- ${o.text}`,n=s.items.map(d=>d.text).join(", ");break}}n&&(i.push({markdownToParse:n,label:h(4645,null,s.type,n),ariaLabel:h(4646,null,s.type,n),firstListItem:e}),e=void 0)}}showSymbol(t,i){if(!this.H)return;let e=i.lineNumber;const s=i.markdownToParse;if(!(e===void 0&&s===void 0)){if(e===void 0&&s){const n=this.H.split(`
-`).findIndex(o=>o.includes(s.split(`
-`)[0])||i.firstListItem&&o.includes(i.firstListItem))??-1;n>=0&&(e=n+1)}e!==void 0&&(this.z=!1,this.show(t,void 0,void 0,{lineNumber:e,column:1}),this.gb(t,!0))}}disableHint(){H(this.G)&&(this.N.updateValue(this.G?.verbositySettingKey,!1),T(h(4647,null,this.G.verbositySettingKey)))}gb(t,i){t.options.type==="help"?(this.b.set(i),this.g.reset()):(this.g.set(i),this.b.reset()),this.h.set(t.provideNextContent!==void 0||t.providePreviousContent!==void 0),this.j.set(this.eb()),this.m.set(this.mb()?this.getSymbols()?.length>0:!1)}hb(t,i){let e=i??t.provideContent();if(t.options.type==="view"){this.H=e,this.t.reset(),this.u.reset();return}const s=this.xb(t),n=this.rb(t),o=this.vb(t),d=this.wb(t);let c="",r="";const u=Mt(this.S,o+e+s+n+d);u&&(e=u.content.value,u.configureKeybindingItems?(t.options.configureKeybindingItems=u.configureKeybindingItems,this.t.set(!0),c=this.tb()):this.u.reset(),u.configuredKeybindingItems?(t.options.configuredKeybindingItems=u.configuredKeybindingItems,this.u.set(!0),r=this.ub()):this.u.reset()),this.H=e+c+r}ib(t,i,e,s){this.G=t,this.n.set(t.id);const n=this.eb();this.hb(t,s),this.calculateCodeBlocks(this.H),this.gb(t,!0);const o=this.a.hasTextFocus()||this.a.hasWidgetFocus();this.lb(G.from({path:`accessible-view-${t.id}`,scheme:M.accessibleView,fragment:this.H})).then(r=>{if(!r||(this.a.setModel(r),!this.a.getDomNode()))return;r.setLanguage(t.options.language??"markdown"),i.appendChild(this.C);let f="";const $=this.h.get()||this.j.get()||this.m.get()||t.actions?.length;n&&!e&&$&&(f=t.options.position?h(4648,null):h(4649,null));let g=t.options.type==="help"?h(4650,null):h(4651,null);if(this.D.textContent=g,f&&t.options.type==="view"?g=h(4652,null,f):f&&(g=h(4653,null,f)),et&&o&&(g=""),this.a.updateOptions({ariaLabel:g}),this.a.focus(),this.G?.options.position){const w=this.a.getPosition(),L=w?.lineNumber===1&&w.column===1;if(this.G.options.position==="bottom"||this.G.options.position==="initial-bottom"&&L){const p=this.editorWidget.getModel()?.getLineCount(),y=p!==void 0&&p>0?new D(p,1):void 0;y&&(this.a.setPosition(y),this.a.revealLine(y.lineNumber))}}}),this.jb(this.G.actions,t.options.type);const d=r=>{this.z||t.onClose(),r?.stopPropagation(),this.P.hideContextView(),!this.z&&(this.gb(t,!1),this.I=void 0,this.H=void 0,this.G?.dispose(),this.G=void 0)},c=new x;return c.add(this.a.onKeyDown(r=>{if(r.keyCode===3)this.X.executeCommand("editor.action.openLink");else if(r.keyCode===9||Bt(r.browserEvent,this.S,this.N))d(r);else if(r.keyCode===38&&t.options.readMoreUrl){const u=t.options.readMoreUrl;T(C.openingDocs),this.L.open(G.parse(u)),r.preventDefault(),r.stopPropagation()}t instanceof m&&t.onKeyDown?.(r)})),c.add(J(this.F.getElement(),z.KEY_DOWN,r=>{new O(r).equals(9)&&d(r)})),c.add(this.a.onDidBlurEditorWidget(()=>{Z(this.F.getElement())||d()})),c.add(this.a.onDidContentSizeChange(()=>this.kb())),c.add(this.U.onDidLayoutActiveContainer(()=>this.kb())),c}jb(t,i){this.F.setAriaLabel(i==="help"?h(4654,null):h(4655,null));const e=this.B(this.W.createMenu(ft.AccessibleView,this.Q)),s=ct(e.getActions({}));if(t){for(const n of t)n.class=n.class||st.asClassName(Y.primitiveSquare),n.checked=void 0;this.F.setActions([...t,...s])}else this.F.setActions(s)}kb(){const t=this.U.activeContainerDimension,i=t.height&&t.height*.4,e=Math.min(i,this.a.getContentHeight()),s=Math.min(t.width*.62,600);this.a.layout({width:s,height:e})}async lb(t){const i=this.O.getModel(t);return i&&!i.isDisposed()?i:this.O.createModel(t.fragment,null,t,!1)}mb(){return this.G?this.G.options.type==="help"||this.G.options.language==="markdown"||this.G.options.language===void 0||this.G instanceof m&&!!this.G.getSymbols?.():!1}nb(){const t=this.G;return t?t instanceof m?new m(t.id,t.options,t.provideContent.bind(t),t.onClose.bind(t),t.verbositySettingKey,t.onOpen?.bind(t),t.actions,t.provideNextContent?.bind(t),t.providePreviousContent?.bind(t),t.onDidChangeContent?.bind(t),t.onKeyDown?.bind(t),t.getSymbols?.bind(t)):new I(t.id,t.options,t.provideContent.bind(t),t.onClose.bind(t),t.onOpen?.bind(t),t.provideNextContent?.bind(t),t.providePreviousContent?.bind(t),t.actions,t.onDidChangeContent?.bind(t)):void 0}showAccessibleViewHelp(){const t=this.nb();if(!t)return;let i;t instanceof m?i=new m(t.id,{type:"help"},()=>t.options.customHelp?t?.options.customHelp():this.ob(this.mb()),()=>{this.P.hideContextView(),queueMicrotask(()=>this.show(t))},t.verbositySettingKey):i=new I(t.id,{type:"help"},()=>t.options.customHelp?t?.options.customHelp():this.ob(this.mb()),()=>{this.P.hideContextView(),queueMicrotask(()=>this.show(t))}),this.P.hideContextView(),i&&queueMicrotask(()=>this.show(i,void 0,!0))}ob(t){const i=this.qb(),e=this.sb(t),s=h(4656,null),n=this.pb();let o=h(4657,null);return i&&(o+=" - "+i+`
-`),e&&(o+=" - "+e+`
-`),s&&(o+=" - "+s+`
-`),n&&(o+=n),o}pb(){if(!(this.G?.id!=="panelChat"&&this.G?.id!=="quickChat"))return[h(4658,null,"<keybinding:workbench.action.chat.insertCodeBlock>"),h(4659,null,"<keybinding:workbench.action.chat.insertIntoNewFile>"),h(4660,null,"<keybinding:workbench.action.chat.runInTerminal>")].join(`
-`)}qb(){return h(4661,null,"<keybinding:editor.action.accessibleViewNext","<keybinding:editor.action.accessibleViewPrevious>")}rb(t){return t.options.type==="help"&&this.eb()?h(4662,null,"<keybinding:editor.action.accessibleViewDisableHint>"):""}sb(t){if(t)return h(4663,null,"<keybinding:editor.action.accessibleViewGoToSymbol>")}tb(){const t=this.S.lookupKeybinding("editor.action.accessibilityHelpConfigureKeybindings")?.getAriaLabel(),i=t?"("+t+")":"by assigning a keybinding to the command Accessibility Help Configure Unassigned Keybindings.";return h(4664,null,i)}ub(){const t=this.S.lookupKeybinding("editor.action.accessibilityHelpConfigureAssignedKeybindings")?.getAriaLabel(),i=t?"("+t+")":"by assigning a keybinding to the command Accessibility Help Configure Assigned Keybindings.";return h(4665,null,i)}vb(t){const i=this.R.isScreenReaderOptimized();let e="";const s=it?C.changeConfigToOnMac:C.changeConfigToOnWinLinux;return i&&t.id==="editor"?(e=C.auto_on,e+=`
-`):i||(e=C.auto_off+`
-`+s,e+=`
-`),e}wb(t){return this.eb()&&!t.options.position?h(4666,null):""}xb(t){return t.options.readMoreUrl?h(4667,null,"<keybinding:editor.action.accessibilityHelpOpenHelpLink>"):""}};S=K([l(0,Ct),l(1,Q),l(2,q),l(3,ht),l(4,pt),l(5,mt),l(6,lt),l(7,F),l(8,yt),l(9,bt),l(10,gt),l(11,$t),l(12,wt),l(13,rt),l(14,_),l(15,dt)],S);let E=class extends W{constructor(t,i,e){super(),this.b=t,this.f=i,this.g=e}show(t,i){this.a||(this.a=this.B(this.b.createInstance(S))),this.a.show(t,void 0,void 0,i)}configureKeybindings(t){this.a?.configureKeybindings(t)}openHelpLink(){this.a?.openHelpLink()}showLastProvider(t){this.a?.showLastProvider(t)}next(){this.a?.next()}previous(){this.a?.previous()}goToSymbol(){this.a?.goToSymbol()}getOpenAriaHint(t){if(!this.f.getValue(t))return null;const i=this.g.lookupKeybinding("editor.action.accessibleView")?.getAriaLabel();let e=null;return i?e=h(4668,null,i):e=h(4669,null),e}disableHint(){this.a?.disableHint()}showAccessibleViewHelp(){this.a?.showAccessibleViewHelp()}getPosition(t){return this.a?.getPosition(t)??void 0}getLastPosition(){const t=this.a?.editorWidget.getModel()?.getLineCount();return t!==void 0&&t>0?new D(t,1):void 0}setPosition(t,i,e){this.a?.setPosition(t,i,e)}getCodeBlockContext(){return this.a?.getCodeBlockContext()}navigateToCodeBlock(t){this.a?.navigateToCodeBlock(t)}};E=K([l(0,Q),l(1,q),l(2,F)],E);let N=class{constructor(t,i){this.a=t,this.b=i}show(t){const i=new x,e=i.add(this.b.createQuickPick());e.placeholder=h(4670,null),e.title=h(4671,null);const s=[],n=this.a.getSymbols();if(n){for(const o of n)s.push({label:o.label,ariaLabel:o.ariaLabel,firstListItem:o.firstListItem,lineNumber:o.lineNumber,endLineNumber:o.endLineNumber,markdownToParse:o.markdownToParse});e.canSelectMany=!1,e.items=s,e.show(),i.add(e.onDidAccept(()=>{this.a.showSymbol(t,e.selectedItems[0]),e.hide()})),i.add(e.onDidHide(()=>{e.selectedItems.length===0&&this.a.show(t),i.dispose()}))}}};N=K([l(1,_)],N);function Bt(a,t,i){if(!i.getValue("accessibility.accessibleView.closeOnKeyPress"))return!1;const e=new O(a),n=t.softDispatch(e,e.target).kind===1;return t.inChordMode||n?!1:Vt(a)&&!a.ctrlKey&&!a.altKey&&!a.metaKey&&!a.shiftKey}function Vt(a){return!!a.code.match(/^(Key[A-Z]|Digit[0-9]|Equal|Comma|Period|Slash|Quote|Backquote|Backslash|Minus|Semicolon|Space|Enter)$/)}export{S as $$xc,E as $_xc};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { EventType, addDisposableListener, getActiveWindow, isActiveElement } from "../../../../base/browser/dom.js";
+import { StandardKeyboardEvent } from "../../../../base/browser/keyboardEvent.js";
+import { alert } from "../../../../base/browser/ui/aria/aria.js";
+import { Codicon } from "../../../../base/common/codicons.js";
+import { Disposable, DisposableStore } from "../../../../base/common/lifecycle.js";
+import * as marked from "../../../../base/common/marked/marked.js";
+import { Schemas } from "../../../../base/common/network.js";
+import { isMacintosh, isWindows } from "../../../../base/common/platform.js";
+import { ThemeIcon } from "../../../../base/common/themables.js";
+import { URI } from "../../../../base/common/uri.js";
+import { EditorExtensionsRegistry } from "../../../../editor/browser/editorExtensions.js";
+import { CodeEditorWidget } from "../../../../editor/browser/widget/codeEditor/codeEditorWidget.js";
+import { Position } from "../../../../editor/common/core/position.js";
+import { IModelService } from "../../../../editor/common/services/model.js";
+import { ITextModelService } from "../../../../editor/common/services/resolverService.js";
+import { AccessibilityHelpNLS } from "../../../../editor/common/standaloneStrings.js";
+import { CodeActionController } from "../../../../editor/contrib/codeAction/browser/codeActionController.js";
+import { localize } from "../../../../nls.js";
+import { AccessibleContentProvider, ExtensionContentProvider, isIAccessibleViewContentProvider } from "../../../../platform/accessibility/browser/accessibleView.js";
+import { ACCESSIBLE_VIEW_SHOWN_STORAGE_PREFIX, IAccessibilityService } from "../../../../platform/accessibility/common/accessibility.js";
+import { AccessibilitySignal, IAccessibilitySignalService } from "../../../../platform/accessibilitySignal/browser/accessibilitySignalService.js";
+import { getFlatActionBarActions } from "../../../../platform/actions/browser/menuEntryActionViewItem.js";
+import { WorkbenchToolBar } from "../../../../platform/actions/browser/toolbar.js";
+import { IMenuService, MenuId } from "../../../../platform/actions/common/actions.js";
+import { ICommandService } from "../../../../platform/commands/common/commands.js";
+import { IConfigurationService } from "../../../../platform/configuration/common/configuration.js";
+import { IContextKeyService } from "../../../../platform/contextkey/common/contextkey.js";
+import { IContextViewService } from "../../../../platform/contextview/browser/contextView.js";
+import { IInstantiationService } from "../../../../platform/instantiation/common/instantiation.js";
+import { IKeybindingService } from "../../../../platform/keybinding/common/keybinding.js";
+import { ILayoutService } from "../../../../platform/layout/browser/layoutService.js";
+import { IOpenerService } from "../../../../platform/opener/common/opener.js";
+import { IQuickInputService } from "../../../../platform/quickinput/common/quickInput.js";
+import { IStorageService } from "../../../../platform/storage/common/storage.js";
+import { FloatingEditorClickMenu } from "../../../browser/codeeditor.js";
+import { IChatCodeBlockContextProviderService } from "../../chat/browser/chat.js";
+import { getSimpleEditorOptions } from "../../codeEditor/browser/simpleEditorOptions.js";
+import { accessibilityHelpIsShown, accessibleViewContainsCodeBlocks, accessibleViewCurrentProviderId, accessibleViewGoToSymbolSupported, accessibleViewHasAssignedKeybindings, accessibleViewHasUnassignedKeybindings, accessibleViewInCodeBlock, accessibleViewIsShown, accessibleViewOnLastLine, accessibleViewSupportsNavigation, accessibleViewVerbosityEnabled } from "./accessibilityConfiguration.js";
+import { resolveContentAndKeybindingItems } from "./accessibleViewKeybindingResolver.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+var DIMENSIONS;
+(function(DIMENSIONS2) {
+  DIMENSIONS2[DIMENSIONS2["MAX_WIDTH"] = 600] = "MAX_WIDTH";
+})(DIMENSIONS || (DIMENSIONS = {}));
+let AccessibleView = class AccessibleView2 extends Disposable {
+  static {
+    __name(this, "AccessibleView");
+  }
+  get editorWidget() {
+    return this._editorWidget;
+  }
+  constructor(_openerService, _instantiationService, _configurationService, _modelService, _contextViewService, _contextKeyService, _accessibilityService, _keybindingService, _layoutService, _menuService, _commandService, _codeBlockContextProviderService, _storageService, textModelResolverService, _quickInputService, _accessibilitySignalService) {
+    super();
+    this._openerService = _openerService;
+    this._instantiationService = _instantiationService;
+    this._configurationService = _configurationService;
+    this._modelService = _modelService;
+    this._contextViewService = _contextViewService;
+    this._contextKeyService = _contextKeyService;
+    this._accessibilityService = _accessibilityService;
+    this._keybindingService = _keybindingService;
+    this._layoutService = _layoutService;
+    this._menuService = _menuService;
+    this._commandService = _commandService;
+    this._codeBlockContextProviderService = _codeBlockContextProviderService;
+    this._storageService = _storageService;
+    this.textModelResolverService = textModelResolverService;
+    this._quickInputService = _quickInputService;
+    this._accessibilitySignalService = _accessibilitySignalService;
+    this._isInQuickPick = false;
+    this._accessiblityHelpIsShown = accessibilityHelpIsShown.bindTo(this._contextKeyService);
+    this._accessibleViewIsShown = accessibleViewIsShown.bindTo(this._contextKeyService);
+    this._accessibleViewSupportsNavigation = accessibleViewSupportsNavigation.bindTo(this._contextKeyService);
+    this._accessibleViewVerbosityEnabled = accessibleViewVerbosityEnabled.bindTo(this._contextKeyService);
+    this._accessibleViewGoToSymbolSupported = accessibleViewGoToSymbolSupported.bindTo(this._contextKeyService);
+    this._accessibleViewCurrentProviderId = accessibleViewCurrentProviderId.bindTo(this._contextKeyService);
+    this._accessibleViewInCodeBlock = accessibleViewInCodeBlock.bindTo(this._contextKeyService);
+    this._accessibleViewContainsCodeBlocks = accessibleViewContainsCodeBlocks.bindTo(this._contextKeyService);
+    this._onLastLine = accessibleViewOnLastLine.bindTo(this._contextKeyService);
+    this._hasUnassignedKeybindings = accessibleViewHasUnassignedKeybindings.bindTo(this._contextKeyService);
+    this._hasAssignedKeybindings = accessibleViewHasAssignedKeybindings.bindTo(this._contextKeyService);
+    this._container = document.createElement("div");
+    this._container.classList.add("accessible-view");
+    if (this._configurationService.getValue(
+      "accessibility.hideAccessibleView"
+      /* AccessibilityWorkbenchSettingId.HideAccessibleView */
+    )) {
+      this._container.classList.add("hide");
+    }
+    const codeEditorWidgetOptions = {
+      contributions: EditorExtensionsRegistry.getEditorContributions().filter((c) => c.id !== CodeActionController.ID && c.id !== FloatingEditorClickMenu.ID)
+    };
+    const titleBar = document.createElement("div");
+    titleBar.classList.add("accessible-view-title-bar");
+    this._title = document.createElement("div");
+    this._title.classList.add("accessible-view-title");
+    titleBar.appendChild(this._title);
+    const actionBar = document.createElement("div");
+    actionBar.classList.add("accessible-view-action-bar");
+    titleBar.appendChild(actionBar);
+    this._container.appendChild(titleBar);
+    this._toolbar = this._register(_instantiationService.createInstance(WorkbenchToolBar, actionBar, {
+      orientation: 0
+      /* ActionsOrientation.HORIZONTAL */
+    }));
+    this._toolbar.context = { viewId: "accessibleView" };
+    const toolbarElt = this._toolbar.getElement();
+    toolbarElt.tabIndex = 0;
+    const editorOptions = {
+      ...getSimpleEditorOptions(this._configurationService),
+      lineDecorationsWidth: 6,
+      dragAndDrop: false,
+      cursorWidth: 1,
+      wordWrap: "off",
+      wrappingStrategy: "advanced",
+      wrappingIndent: "none",
+      padding: { top: 2, bottom: 2 },
+      quickSuggestions: false,
+      renderWhitespace: "none",
+      dropIntoEditor: { enabled: false },
+      readOnly: true,
+      fontFamily: "var(--monaco-monospace-font)"
+    };
+    this.textModelResolverService.registerTextModelContentProvider(Schemas.accessibleView, this);
+    this._editorWidget = this._register(this._instantiationService.createInstance(CodeEditorWidget, this._container, editorOptions, codeEditorWidgetOptions));
+    this._register(this._accessibilityService.onDidChangeScreenReaderOptimized(() => {
+      if (this._currentProvider && this._accessiblityHelpIsShown.get()) {
+        this.show(this._currentProvider);
+      }
+    }));
+    this._register(this._configurationService.onDidChangeConfiguration((e) => {
+      if (isIAccessibleViewContentProvider(this._currentProvider) && e.affectsConfiguration(this._currentProvider.verbositySettingKey)) {
+        if (this._accessiblityHelpIsShown.get()) {
+          this.show(this._currentProvider);
+        }
+        this._accessibleViewVerbosityEnabled.set(this._configurationService.getValue(this._currentProvider.verbositySettingKey));
+        this._updateToolbar(this._currentProvider.actions, this._currentProvider.options.type);
+      }
+      if (e.affectsConfiguration(
+        "accessibility.hideAccessibleView"
+        /* AccessibilityWorkbenchSettingId.HideAccessibleView */
+      )) {
+        this._container.classList.toggle("hide", this._configurationService.getValue(
+          "accessibility.hideAccessibleView"
+          /* AccessibilityWorkbenchSettingId.HideAccessibleView */
+        ));
+      }
+    }));
+    this._register(this._editorWidget.onDidDispose(() => this._resetContextKeys()));
+    this._register(this._editorWidget.onDidChangeCursorPosition(() => {
+      this._onLastLine.set(this._editorWidget.getPosition()?.lineNumber === this._editorWidget.getModel()?.getLineCount());
+      const cursorPosition = this._editorWidget.getPosition()?.lineNumber;
+      if (this._codeBlocks && cursorPosition !== void 0) {
+        const inCodeBlock = this._codeBlocks.find((c) => c.startLine <= cursorPosition && c.endLine >= cursorPosition) !== void 0;
+        this._accessibleViewInCodeBlock.set(inCodeBlock);
+      }
+      this._playDiffSignals();
+    }));
+  }
+  _playDiffSignals() {
+    const position = this._editorWidget.getPosition();
+    const model = this._editorWidget.getModel();
+    if (!position || !model) {
+      return void 0;
+    }
+    const lineContent = model.getLineContent(position.lineNumber);
+    if (lineContent?.startsWith("+")) {
+      this._accessibilitySignalService.playSignal(AccessibilitySignal.diffLineInserted);
+    } else if (lineContent?.startsWith("-")) {
+      this._accessibilitySignalService.playSignal(AccessibilitySignal.diffLineDeleted);
+    }
+  }
+  provideTextContent(resource) {
+    return this._getTextModel(resource);
+  }
+  _resetContextKeys() {
+    this._accessiblityHelpIsShown.reset();
+    this._accessibleViewIsShown.reset();
+    this._accessibleViewSupportsNavigation.reset();
+    this._accessibleViewVerbosityEnabled.reset();
+    this._accessibleViewGoToSymbolSupported.reset();
+    this._accessibleViewCurrentProviderId.reset();
+    this._hasAssignedKeybindings.reset();
+    this._hasUnassignedKeybindings.reset();
+  }
+  getPosition(id) {
+    if (!id || !this._lastProvider || this._lastProvider.id !== id) {
+      return void 0;
+    }
+    return this._editorWidget.getPosition() || void 0;
+  }
+  setPosition(position, reveal, select) {
+    this._editorWidget.setPosition(position);
+    if (reveal) {
+      this._editorWidget.revealPosition(position);
+    }
+    if (select) {
+      const lineLength = this._editorWidget.getModel()?.getLineLength(position.lineNumber) ?? 0;
+      if (lineLength) {
+        this._editorWidget.setSelection({ startLineNumber: position.lineNumber, startColumn: 1, endLineNumber: position.lineNumber, endColumn: lineLength + 1 });
+      }
+    }
+  }
+  getCodeBlockContext() {
+    const position = this._editorWidget.getPosition();
+    if (!this._codeBlocks?.length || !position) {
+      return;
+    }
+    const codeBlockIndex = this._codeBlocks?.findIndex((c) => c.startLine <= position?.lineNumber && c.endLine >= position?.lineNumber);
+    const codeBlock = codeBlockIndex !== void 0 && codeBlockIndex > -1 ? this._codeBlocks[codeBlockIndex] : void 0;
+    if (!codeBlock || codeBlockIndex === void 0) {
+      return;
+    }
+    return { code: codeBlock.code, languageId: codeBlock.languageId, codeBlockIndex, element: void 0, chatSessionId: codeBlock.chatSessionId };
+  }
+  navigateToCodeBlock(type) {
+    const position = this._editorWidget.getPosition();
+    if (!this._codeBlocks?.length || !position) {
+      return;
+    }
+    let codeBlock;
+    const codeBlocks = this._codeBlocks.slice();
+    if (type === "previous") {
+      codeBlock = codeBlocks.reverse().find((c) => c.endLine < position.lineNumber);
+    } else {
+      codeBlock = codeBlocks.find((c) => c.startLine > position.lineNumber);
+    }
+    if (!codeBlock) {
+      return;
+    }
+    this.setPosition(new Position(codeBlock.startLine, 1), true);
+  }
+  showLastProvider(id) {
+    if (!this._lastProvider || this._lastProvider.options.id !== id) {
+      return;
+    }
+    this.show(this._lastProvider);
+  }
+  show(provider, symbol, showAccessibleViewHelp, position) {
+    provider = provider ?? this._currentProvider;
+    if (!provider) {
+      return;
+    }
+    provider.onOpen?.();
+    const delegate = {
+      getAnchor: /* @__PURE__ */ __name(() => {
+        return { x: getActiveWindow().innerWidth / 2 - Math.min(
+          this._layoutService.activeContainerDimension.width * 0.62,
+          600
+          /* DIMENSIONS.MAX_WIDTH */
+        ) / 2, y: this._layoutService.activeContainerOffset.quickPickTop };
+      }, "getAnchor"),
+      render: /* @__PURE__ */ __name((container) => {
+        this._viewContainer = container;
+        this._viewContainer.classList.add("accessible-view-container");
+        return this._render(provider, container, showAccessibleViewHelp);
+      }, "render"),
+      onHide: /* @__PURE__ */ __name(() => {
+        if (!showAccessibleViewHelp) {
+          this._updateLastProvider();
+          this._currentProvider?.dispose();
+          this._currentProvider = void 0;
+          this._resetContextKeys();
+        }
+      }, "onHide")
+    };
+    this._contextViewService.showContextView(delegate);
+    if (position) {
+      queueMicrotask(() => {
+        this._editorWidget.revealLine(position.lineNumber);
+        this._editorWidget.setSelection({ startLineNumber: position.lineNumber, startColumn: position.column, endLineNumber: position.lineNumber, endColumn: position.column });
+      });
+    }
+    if (symbol && this._currentProvider) {
+      this.showSymbol(this._currentProvider, symbol);
+    }
+    if (provider instanceof AccessibleContentProvider && provider.onDidRequestClearLastProvider) {
+      this._register(provider.onDidRequestClearLastProvider((id) => {
+        if (this._lastProvider?.options.id === id) {
+          this._lastProvider = void 0;
+        }
+      }));
+    }
+    if (provider.options.id) {
+      this._lastProvider = provider;
+    }
+    if (provider.id === "panelChat" || provider.id === "quickChat") {
+      this._register(this._codeBlockContextProviderService.registerProvider({ getCodeBlockContext: /* @__PURE__ */ __name(() => this.getCodeBlockContext(), "getCodeBlockContext") }, "accessibleView"));
+    }
+    if (provider instanceof ExtensionContentProvider) {
+      this._storageService.store(
+        `${ACCESSIBLE_VIEW_SHOWN_STORAGE_PREFIX}${provider.id}`,
+        true,
+        -1,
+        0
+        /* StorageTarget.USER */
+      );
+    }
+    if (provider.onDidChangeContent) {
+      this._register(provider.onDidChangeContent(() => {
+        if (this._viewContainer) {
+          this._render(provider, this._viewContainer, showAccessibleViewHelp);
+        }
+      }));
+    }
+  }
+  previous() {
+    const newContent = this._currentProvider?.providePreviousContent?.();
+    if (!this._currentProvider || !this._viewContainer || !newContent) {
+      return;
+    }
+    this._render(this._currentProvider, this._viewContainer, void 0, newContent);
+  }
+  next() {
+    const newContent = this._currentProvider?.provideNextContent?.();
+    if (!this._currentProvider || !this._viewContainer || !newContent) {
+      return;
+    }
+    this._render(this._currentProvider, this._viewContainer, void 0, newContent);
+  }
+  _verbosityEnabled() {
+    if (!this._currentProvider) {
+      return false;
+    }
+    return isIAccessibleViewContentProvider(this._currentProvider) ? this._configurationService.getValue(this._currentProvider.verbositySettingKey) === true : this._storageService.getBoolean(`${ACCESSIBLE_VIEW_SHOWN_STORAGE_PREFIX}${this._currentProvider.id}`, -1, false);
+  }
+  goToSymbol() {
+    if (!this._currentProvider) {
+      return;
+    }
+    this._isInQuickPick = true;
+    this._instantiationService.createInstance(AccessibleViewSymbolQuickPick, this).show(this._currentProvider);
+  }
+  calculateCodeBlocks(markdown) {
+    if (!markdown) {
+      return;
+    }
+    if (this._currentProvider?.id !== "panelChat" && this._currentProvider?.id !== "quickChat") {
+      return;
+    }
+    if (this._currentProvider.options.language && this._currentProvider.options.language !== "markdown") {
+      return;
+    }
+    const lines = markdown.split("\n");
+    this._codeBlocks = [];
+    let inBlock = false;
+    let startLine = 0;
+    let languageId;
+    lines.forEach((line, i) => {
+      if (!inBlock && line.startsWith("```")) {
+        inBlock = true;
+        startLine = i + 1;
+        languageId = line.substring(3).trim();
+      } else if (inBlock && line.endsWith("```")) {
+        inBlock = false;
+        const endLine = i;
+        const code = lines.slice(startLine, endLine).join("\n");
+        this._codeBlocks?.push({ startLine, endLine, code, languageId, chatSessionId: void 0 });
+      }
+    });
+    this._accessibleViewContainsCodeBlocks.set(this._codeBlocks.length > 0);
+  }
+  getSymbols() {
+    const provider = this._currentProvider ? this._currentProvider : void 0;
+    if (!this._currentContent || !provider) {
+      return;
+    }
+    const symbols = "getSymbols" in provider ? provider.getSymbols?.() || [] : [];
+    if (symbols?.length) {
+      return symbols;
+    }
+    if (provider.options.language && provider.options.language !== "markdown") {
+      return;
+    }
+    const markdownTokens = marked.marked.lexer(this._currentContent);
+    if (!markdownTokens) {
+      return;
+    }
+    this._convertTokensToSymbols(markdownTokens, symbols);
+    return symbols.length ? symbols : void 0;
+  }
+  openHelpLink() {
+    if (!this._currentProvider?.options.readMoreUrl) {
+      return;
+    }
+    this._openerService.open(URI.parse(this._currentProvider.options.readMoreUrl));
+  }
+  configureKeybindings(unassigned) {
+    this._isInQuickPick = true;
+    const provider = this._updateLastProvider();
+    const items = unassigned ? provider?.options?.configureKeybindingItems : provider?.options?.configuredKeybindingItems;
+    if (!items) {
+      return;
+    }
+    const disposables = this._register(new DisposableStore());
+    const quickPick = disposables.add(this._quickInputService.createQuickPick());
+    quickPick.items = items;
+    quickPick.title = localize("keybindings", "Configure keybindings");
+    quickPick.placeholder = localize("selectKeybinding", "Select a command ID to configure a keybinding for it");
+    quickPick.show();
+    disposables.add(quickPick.onDidAccept(async () => {
+      const item = quickPick.selectedItems[0];
+      if (item) {
+        await this._commandService.executeCommand("workbench.action.openGlobalKeybindings", item.id);
+      }
+      quickPick.dispose();
+    }));
+    disposables.add(quickPick.onDidHide(() => {
+      if (!quickPick.selectedItems.length && provider) {
+        this.show(provider);
+      }
+      disposables.dispose();
+      this._isInQuickPick = false;
+    }));
+  }
+  _convertTokensToSymbols(tokens, symbols) {
+    let firstListItem;
+    for (const token of tokens) {
+      let label = void 0;
+      if ("type" in token) {
+        switch (token.type) {
+          case "heading":
+          case "paragraph":
+          case "code":
+            label = token.text;
+            break;
+          case "list": {
+            const firstItem = token.items[0];
+            if (!firstItem) {
+              break;
+            }
+            firstListItem = `- ${firstItem.text}`;
+            label = token.items.map((i) => i.text).join(", ");
+            break;
+          }
+        }
+      }
+      if (label) {
+        symbols.push({ markdownToParse: label, label: localize("symbolLabel", "({0}) {1}", token.type, label), ariaLabel: localize("symbolLabelAria", "({0}) {1}", token.type, label), firstListItem });
+        firstListItem = void 0;
+      }
+    }
+  }
+  showSymbol(provider, symbol) {
+    if (!this._currentContent) {
+      return;
+    }
+    let lineNumber = symbol.lineNumber;
+    const markdownToParse = symbol.markdownToParse;
+    if (lineNumber === void 0 && markdownToParse === void 0) {
+      return;
+    }
+    if (lineNumber === void 0 && markdownToParse) {
+      const index = this._currentContent.split("\n").findIndex((line) => line.includes(markdownToParse.split("\n")[0]) || symbol.firstListItem && line.includes(symbol.firstListItem)) ?? -1;
+      if (index >= 0) {
+        lineNumber = index + 1;
+      }
+    }
+    if (lineNumber === void 0) {
+      return;
+    }
+    this._isInQuickPick = false;
+    this.show(provider, void 0, void 0, { lineNumber, column: 1 });
+    this._updateContextKeys(provider, true);
+  }
+  disableHint() {
+    if (!isIAccessibleViewContentProvider(this._currentProvider)) {
+      return;
+    }
+    this._configurationService.updateValue(this._currentProvider?.verbositySettingKey, false);
+    alert(localize("disableAccessibilityHelp", "{0} accessibility verbosity is now disabled", this._currentProvider.verbositySettingKey));
+  }
+  _updateContextKeys(provider, shown) {
+    if (provider.options.type === "help") {
+      this._accessiblityHelpIsShown.set(shown);
+      this._accessibleViewIsShown.reset();
+    } else {
+      this._accessibleViewIsShown.set(shown);
+      this._accessiblityHelpIsShown.reset();
+    }
+    this._accessibleViewSupportsNavigation.set(provider.provideNextContent !== void 0 || provider.providePreviousContent !== void 0);
+    this._accessibleViewVerbosityEnabled.set(this._verbosityEnabled());
+    this._accessibleViewGoToSymbolSupported.set(this._goToSymbolsSupported() ? this.getSymbols()?.length > 0 : false);
+  }
+  _updateContent(provider, updatedContent) {
+    let content = updatedContent ?? provider.provideContent();
+    if (provider.options.type === "view") {
+      this._currentContent = content;
+      this._hasUnassignedKeybindings.reset();
+      this._hasAssignedKeybindings.reset();
+      return;
+    }
+    const readMoreLinkHint = this._readMoreHint(provider);
+    const disableHelpHint = this._disableVerbosityHint(provider);
+    const screenReaderModeHint = this._screenReaderModeHint(provider);
+    const exitThisDialogHint = this._exitDialogHint(provider);
+    let configureKbHint = "";
+    let configureAssignedKbHint = "";
+    const resolvedContent = resolveContentAndKeybindingItems(this._keybindingService, screenReaderModeHint + content + readMoreLinkHint + disableHelpHint + exitThisDialogHint);
+    if (resolvedContent) {
+      content = resolvedContent.content.value;
+      if (resolvedContent.configureKeybindingItems) {
+        provider.options.configureKeybindingItems = resolvedContent.configureKeybindingItems;
+        this._hasUnassignedKeybindings.set(true);
+        configureKbHint = this._configureUnassignedKbHint();
+      } else {
+        this._hasAssignedKeybindings.reset();
+      }
+      if (resolvedContent.configuredKeybindingItems) {
+        provider.options.configuredKeybindingItems = resolvedContent.configuredKeybindingItems;
+        this._hasAssignedKeybindings.set(true);
+        configureAssignedKbHint = this._configureAssignedKbHint();
+      } else {
+        this._hasAssignedKeybindings.reset();
+      }
+    }
+    this._currentContent = content + configureKbHint + configureAssignedKbHint;
+  }
+  _render(provider, container, showAccessibleViewHelp, updatedContent) {
+    this._currentProvider = provider;
+    this._accessibleViewCurrentProviderId.set(provider.id);
+    const verbose = this._verbosityEnabled();
+    this._updateContent(provider, updatedContent);
+    this.calculateCodeBlocks(this._currentContent);
+    this._updateContextKeys(provider, true);
+    const widgetIsFocused = this._editorWidget.hasTextFocus() || this._editorWidget.hasWidgetFocus();
+    this._getTextModel(URI.from({ path: `accessible-view-${provider.id}`, scheme: Schemas.accessibleView, fragment: this._currentContent })).then((model) => {
+      if (!model) {
+        return;
+      }
+      this._editorWidget.setModel(model);
+      const domNode = this._editorWidget.getDomNode();
+      if (!domNode) {
+        return;
+      }
+      model.setLanguage(provider.options.language ?? "markdown");
+      container.appendChild(this._container);
+      let actionsHint = "";
+      const hasActions = this._accessibleViewSupportsNavigation.get() || this._accessibleViewVerbosityEnabled.get() || this._accessibleViewGoToSymbolSupported.get() || provider.actions?.length;
+      if (verbose && !showAccessibleViewHelp && hasActions) {
+        actionsHint = provider.options.position ? localize("ariaAccessibleViewActionsBottom", "Explore actions such as disabling this hint (Shift+Tab), use Escape to exit this dialog.") : localize("ariaAccessibleViewActions", "Explore actions such as disabling this hint (Shift+Tab).");
+      }
+      let ariaLabel = provider.options.type === "help" ? localize("accessibility-help", "Accessibility Help") : localize("accessible-view", "Accessible View");
+      this._title.textContent = ariaLabel;
+      if (actionsHint && provider.options.type === "view") {
+        ariaLabel = localize("accessible-view-hint", "Accessible View, {0}", actionsHint);
+      } else if (actionsHint) {
+        ariaLabel = localize("accessibility-help-hint", "Accessibility Help, {0}", actionsHint);
+      }
+      if (isWindows && widgetIsFocused) {
+        ariaLabel = "";
+      }
+      this._editorWidget.updateOptions({ ariaLabel });
+      this._editorWidget.focus();
+      if (this._currentProvider?.options.position) {
+        const position = this._editorWidget.getPosition();
+        const isDefaultPosition = position?.lineNumber === 1 && position.column === 1;
+        if (this._currentProvider.options.position === "bottom" || this._currentProvider.options.position === "initial-bottom" && isDefaultPosition) {
+          const lastLine = this.editorWidget.getModel()?.getLineCount();
+          const position2 = lastLine !== void 0 && lastLine > 0 ? new Position(lastLine, 1) : void 0;
+          if (position2) {
+            this._editorWidget.setPosition(position2);
+            this._editorWidget.revealLine(position2.lineNumber);
+          }
+        }
+      }
+    });
+    this._updateToolbar(this._currentProvider.actions, provider.options.type);
+    const hide = /* @__PURE__ */ __name((e) => {
+      if (!this._isInQuickPick) {
+        provider.onClose();
+      }
+      e?.stopPropagation();
+      this._contextViewService.hideContextView();
+      if (this._isInQuickPick) {
+        return;
+      }
+      this._updateContextKeys(provider, false);
+      this._lastProvider = void 0;
+      this._currentContent = void 0;
+      this._currentProvider?.dispose();
+      this._currentProvider = void 0;
+    }, "hide");
+    const disposableStore = new DisposableStore();
+    disposableStore.add(this._editorWidget.onKeyDown((e) => {
+      if (e.keyCode === 3) {
+        this._commandService.executeCommand("editor.action.openLink");
+      } else if (e.keyCode === 9 || shouldHide(e.browserEvent, this._keybindingService, this._configurationService)) {
+        hide(e);
+      } else if (e.keyCode === 38 && provider.options.readMoreUrl) {
+        const url = provider.options.readMoreUrl;
+        alert(AccessibilityHelpNLS.openingDocs);
+        this._openerService.open(URI.parse(url));
+        e.preventDefault();
+        e.stopPropagation();
+      }
+      if (provider instanceof AccessibleContentProvider) {
+        provider.onKeyDown?.(e);
+      }
+    }));
+    disposableStore.add(addDisposableListener(this._toolbar.getElement(), EventType.KEY_DOWN, (e) => {
+      const keyboardEvent = new StandardKeyboardEvent(e);
+      if (keyboardEvent.equals(
+        9
+        /* KeyCode.Escape */
+      )) {
+        hide(e);
+      }
+    }));
+    disposableStore.add(this._editorWidget.onDidBlurEditorWidget(() => {
+      if (!isActiveElement(this._toolbar.getElement())) {
+        hide();
+      }
+    }));
+    disposableStore.add(this._editorWidget.onDidContentSizeChange(() => this._layout()));
+    disposableStore.add(this._layoutService.onDidLayoutActiveContainer(() => this._layout()));
+    return disposableStore;
+  }
+  _updateToolbar(providedActions, type) {
+    this._toolbar.setAriaLabel(type === "help" ? localize("accessibleHelpToolbar", "Accessibility Help") : localize("accessibleViewToolbar", "Accessible View"));
+    const toolbarMenu = this._register(this._menuService.createMenu(MenuId.AccessibleView, this._contextKeyService));
+    const menuActions = getFlatActionBarActions(toolbarMenu.getActions({}));
+    if (providedActions) {
+      for (const providedAction of providedActions) {
+        providedAction.class = providedAction.class || ThemeIcon.asClassName(Codicon.primitiveSquare);
+        providedAction.checked = void 0;
+      }
+      this._toolbar.setActions([...providedActions, ...menuActions]);
+    } else {
+      this._toolbar.setActions(menuActions);
+    }
+  }
+  _layout() {
+    const dimension = this._layoutService.activeContainerDimension;
+    const maxHeight = dimension.height && dimension.height * 0.4;
+    const height = Math.min(maxHeight, this._editorWidget.getContentHeight());
+    const width = Math.min(
+      dimension.width * 0.62,
+      600
+      /* DIMENSIONS.MAX_WIDTH */
+    );
+    this._editorWidget.layout({ width, height });
+  }
+  async _getTextModel(resource) {
+    const existing = this._modelService.getModel(resource);
+    if (existing && !existing.isDisposed()) {
+      return existing;
+    }
+    return this._modelService.createModel(resource.fragment, null, resource, false);
+  }
+  _goToSymbolsSupported() {
+    if (!this._currentProvider) {
+      return false;
+    }
+    return this._currentProvider.options.type === "help" || this._currentProvider.options.language === "markdown" || this._currentProvider.options.language === void 0 || this._currentProvider instanceof AccessibleContentProvider && !!this._currentProvider.getSymbols?.();
+  }
+  _updateLastProvider() {
+    const provider = this._currentProvider;
+    if (!provider) {
+      return;
+    }
+    const lastProvider = provider instanceof AccessibleContentProvider ? new AccessibleContentProvider(provider.id, provider.options, provider.provideContent.bind(provider), provider.onClose.bind(provider), provider.verbositySettingKey, provider.onOpen?.bind(provider), provider.actions, provider.provideNextContent?.bind(provider), provider.providePreviousContent?.bind(provider), provider.onDidChangeContent?.bind(provider), provider.onKeyDown?.bind(provider), provider.getSymbols?.bind(provider)) : new ExtensionContentProvider(provider.id, provider.options, provider.provideContent.bind(provider), provider.onClose.bind(provider), provider.onOpen?.bind(provider), provider.provideNextContent?.bind(provider), provider.providePreviousContent?.bind(provider), provider.actions, provider.onDidChangeContent?.bind(provider));
+    return lastProvider;
+  }
+  showAccessibleViewHelp() {
+    const lastProvider = this._updateLastProvider();
+    if (!lastProvider) {
+      return;
+    }
+    let accessibleViewHelpProvider;
+    if (lastProvider instanceof AccessibleContentProvider) {
+      accessibleViewHelpProvider = new AccessibleContentProvider(lastProvider.id, {
+        type: "help"
+        /* AccessibleViewType.Help */
+      }, () => lastProvider.options.customHelp ? lastProvider?.options.customHelp() : this._accessibleViewHelpDialogContent(this._goToSymbolsSupported()), () => {
+        this._contextViewService.hideContextView();
+        queueMicrotask(() => this.show(lastProvider));
+      }, lastProvider.verbositySettingKey);
+    } else {
+      accessibleViewHelpProvider = new ExtensionContentProvider(lastProvider.id, {
+        type: "help"
+        /* AccessibleViewType.Help */
+      }, () => lastProvider.options.customHelp ? lastProvider?.options.customHelp() : this._accessibleViewHelpDialogContent(this._goToSymbolsSupported()), () => {
+        this._contextViewService.hideContextView();
+        queueMicrotask(() => this.show(lastProvider));
+      });
+    }
+    this._contextViewService.hideContextView();
+    if (accessibleViewHelpProvider) {
+      queueMicrotask(() => this.show(accessibleViewHelpProvider, void 0, true));
+    }
+  }
+  _accessibleViewHelpDialogContent(providerHasSymbols) {
+    const navigationHint = this._navigationHint();
+    const goToSymbolHint = this._goToSymbolHint(providerHasSymbols);
+    const toolbarHint = localize("toolbar", "Navigate to the toolbar (Shift+Tab).");
+    const chatHints = this._getChatHints();
+    let hint = localize("intro", "In the accessible view, you can:\n");
+    if (navigationHint) {
+      hint += " - " + navigationHint + "\n";
+    }
+    if (goToSymbolHint) {
+      hint += " - " + goToSymbolHint + "\n";
+    }
+    if (toolbarHint) {
+      hint += " - " + toolbarHint + "\n";
+    }
+    if (chatHints) {
+      hint += chatHints;
+    }
+    return hint;
+  }
+  _getChatHints() {
+    if (this._currentProvider?.id !== "panelChat" && this._currentProvider?.id !== "quickChat") {
+      return;
+    }
+    return [
+      localize("insertAtCursor", " - Insert the code block at the cursor{0}.", "<keybinding:workbench.action.chat.insertCodeBlock>"),
+      localize("insertIntoNewFile", " - Insert the code block into a new file{0}.", "<keybinding:workbench.action.chat.insertIntoNewFile>"),
+      localize("runInTerminal", " - Run the code block in the terminal{0}.\n", "<keybinding:workbench.action.chat.runInTerminal>")
+    ].join("\n");
+  }
+  _navigationHint() {
+    return localize("accessibleViewNextPreviousHint", "Show the next item{0} or previous item{1}.", `<keybinding:${"editor.action.accessibleViewNext"}`, `<keybinding:${"editor.action.accessibleViewPrevious"}>`);
+  }
+  _disableVerbosityHint(provider) {
+    if (provider.options.type === "help" && this._verbosityEnabled()) {
+      return localize("acessibleViewDisableHint", "\nDisable accessibility verbosity for this feature{0}.", `<keybinding:${"editor.action.accessibleViewDisableHint"}>`);
+    }
+    return "";
+  }
+  _goToSymbolHint(providerHasSymbols) {
+    if (!providerHasSymbols) {
+      return;
+    }
+    return localize("goToSymbolHint", "Go to a symbol{0}.", `<keybinding:${"editor.action.accessibleViewGoToSymbol"}>`);
+  }
+  _configureUnassignedKbHint() {
+    const configureKb = this._keybindingService.lookupKeybinding(
+      "editor.action.accessibilityHelpConfigureKeybindings"
+      /* AccessibilityCommandId.AccessibilityHelpConfigureKeybindings */
+    )?.getAriaLabel();
+    const keybindingToConfigureQuickPick = configureKb ? "(" + configureKb + ")" : "by assigning a keybinding to the command Accessibility Help Configure Unassigned Keybindings.";
+    return localize("configureKb", "\nConfigure keybindings for commands that lack them {0}.", keybindingToConfigureQuickPick);
+  }
+  _configureAssignedKbHint() {
+    const configureKb = this._keybindingService.lookupKeybinding(
+      "editor.action.accessibilityHelpConfigureAssignedKeybindings"
+      /* AccessibilityCommandId.AccessibilityHelpConfigureAssignedKeybindings */
+    )?.getAriaLabel();
+    const keybindingToConfigureQuickPick = configureKb ? "(" + configureKb + ")" : "by assigning a keybinding to the command Accessibility Help Configure Assigned Keybindings.";
+    return localize("configureKbAssigned", "\nConfigure keybindings for commands that already have assignments {0}.", keybindingToConfigureQuickPick);
+  }
+  _screenReaderModeHint(provider) {
+    const accessibilitySupport = this._accessibilityService.isScreenReaderOptimized();
+    let screenReaderModeHint = "";
+    const turnOnMessage = isMacintosh ? AccessibilityHelpNLS.changeConfigToOnMac : AccessibilityHelpNLS.changeConfigToOnWinLinux;
+    if (accessibilitySupport && provider.id === "editor") {
+      screenReaderModeHint = AccessibilityHelpNLS.auto_on;
+      screenReaderModeHint += "\n";
+    } else if (!accessibilitySupport) {
+      screenReaderModeHint = AccessibilityHelpNLS.auto_off + "\n" + turnOnMessage;
+      screenReaderModeHint += "\n";
+    }
+    return screenReaderModeHint;
+  }
+  _exitDialogHint(provider) {
+    return this._verbosityEnabled() && !provider.options.position ? localize("exit", "\nExit this dialog (Escape).") : "";
+  }
+  _readMoreHint(provider) {
+    return provider.options.readMoreUrl ? localize("openDoc", "\nOpen a browser window with more information related to accessibility{0}.", `<keybinding:${"editor.action.accessibilityHelpOpenHelpLink"}>`) : "";
+  }
+};
+AccessibleView = __decorate([
+  __param(0, IOpenerService),
+  __param(1, IInstantiationService),
+  __param(2, IConfigurationService),
+  __param(3, IModelService),
+  __param(4, IContextViewService),
+  __param(5, IContextKeyService),
+  __param(6, IAccessibilityService),
+  __param(7, IKeybindingService),
+  __param(8, ILayoutService),
+  __param(9, IMenuService),
+  __param(10, ICommandService),
+  __param(11, IChatCodeBlockContextProviderService),
+  __param(12, IStorageService),
+  __param(13, ITextModelService),
+  __param(14, IQuickInputService),
+  __param(15, IAccessibilitySignalService)
+], AccessibleView);
+let AccessibleViewService = class AccessibleViewService2 extends Disposable {
+  static {
+    __name(this, "AccessibleViewService");
+  }
+  constructor(_instantiationService, _configurationService, _keybindingService) {
+    super();
+    this._instantiationService = _instantiationService;
+    this._configurationService = _configurationService;
+    this._keybindingService = _keybindingService;
+  }
+  show(provider, position) {
+    if (!this._accessibleView) {
+      this._accessibleView = this._register(this._instantiationService.createInstance(AccessibleView));
+    }
+    this._accessibleView.show(provider, void 0, void 0, position);
+  }
+  configureKeybindings(unassigned) {
+    this._accessibleView?.configureKeybindings(unassigned);
+  }
+  openHelpLink() {
+    this._accessibleView?.openHelpLink();
+  }
+  showLastProvider(id) {
+    this._accessibleView?.showLastProvider(id);
+  }
+  next() {
+    this._accessibleView?.next();
+  }
+  previous() {
+    this._accessibleView?.previous();
+  }
+  goToSymbol() {
+    this._accessibleView?.goToSymbol();
+  }
+  getOpenAriaHint(verbositySettingKey) {
+    if (!this._configurationService.getValue(verbositySettingKey)) {
+      return null;
+    }
+    const keybinding = this._keybindingService.lookupKeybinding(
+      "editor.action.accessibleView"
+      /* AccessibilityCommandId.OpenAccessibleView */
+    )?.getAriaLabel();
+    let hint = null;
+    if (keybinding) {
+      hint = localize("acessibleViewHint", "Inspect this in the accessible view with {0}", keybinding);
+    } else {
+      hint = localize("acessibleViewHintNoKbEither", "Inspect this in the accessible view via the command Open Accessible View which is currently not triggerable via keybinding.");
+    }
+    return hint;
+  }
+  disableHint() {
+    this._accessibleView?.disableHint();
+  }
+  showAccessibleViewHelp() {
+    this._accessibleView?.showAccessibleViewHelp();
+  }
+  getPosition(id) {
+    return this._accessibleView?.getPosition(id) ?? void 0;
+  }
+  getLastPosition() {
+    const lastLine = this._accessibleView?.editorWidget.getModel()?.getLineCount();
+    return lastLine !== void 0 && lastLine > 0 ? new Position(lastLine, 1) : void 0;
+  }
+  setPosition(position, reveal, select) {
+    this._accessibleView?.setPosition(position, reveal, select);
+  }
+  getCodeBlockContext() {
+    return this._accessibleView?.getCodeBlockContext();
+  }
+  navigateToCodeBlock(type) {
+    this._accessibleView?.navigateToCodeBlock(type);
+  }
+};
+AccessibleViewService = __decorate([
+  __param(0, IInstantiationService),
+  __param(1, IConfigurationService),
+  __param(2, IKeybindingService)
+], AccessibleViewService);
+let AccessibleViewSymbolQuickPick = class AccessibleViewSymbolQuickPick2 {
+  static {
+    __name(this, "AccessibleViewSymbolQuickPick");
+  }
+  constructor(_accessibleView, _quickInputService) {
+    this._accessibleView = _accessibleView;
+    this._quickInputService = _quickInputService;
+  }
+  show(provider) {
+    const disposables = new DisposableStore();
+    const quickPick = disposables.add(this._quickInputService.createQuickPick());
+    quickPick.placeholder = localize("accessibleViewSymbolQuickPickPlaceholder", "Type to search symbols");
+    quickPick.title = localize("accessibleViewSymbolQuickPickTitle", "Go to Symbol Accessible View");
+    const picks = [];
+    const symbols = this._accessibleView.getSymbols();
+    if (!symbols) {
+      return;
+    }
+    for (const symbol of symbols) {
+      picks.push({
+        label: symbol.label,
+        ariaLabel: symbol.ariaLabel,
+        firstListItem: symbol.firstListItem,
+        lineNumber: symbol.lineNumber,
+        endLineNumber: symbol.endLineNumber,
+        markdownToParse: symbol.markdownToParse
+      });
+    }
+    quickPick.canSelectMany = false;
+    quickPick.items = picks;
+    quickPick.show();
+    disposables.add(quickPick.onDidAccept(() => {
+      this._accessibleView.showSymbol(provider, quickPick.selectedItems[0]);
+      quickPick.hide();
+    }));
+    disposables.add(quickPick.onDidHide(() => {
+      if (quickPick.selectedItems.length === 0) {
+        this._accessibleView.show(provider);
+      }
+      disposables.dispose();
+    }));
+  }
+};
+AccessibleViewSymbolQuickPick = __decorate([
+  __param(1, IQuickInputService)
+], AccessibleViewSymbolQuickPick);
+function shouldHide(event, keybindingService, configurationService) {
+  if (!configurationService.getValue(
+    "accessibility.accessibleView.closeOnKeyPress"
+    /* AccessibilityWorkbenchSettingId.AccessibleViewCloseOnKeyPress */
+  )) {
+    return false;
+  }
+  const standardKeyboardEvent = new StandardKeyboardEvent(event);
+  const resolveResult = keybindingService.softDispatch(standardKeyboardEvent, standardKeyboardEvent.target);
+  const isValidChord = resolveResult.kind === 1;
+  if (keybindingService.inChordMode || isValidChord) {
+    return false;
+  }
+  return shouldHandleKey(event) && !event.ctrlKey && !event.altKey && !event.metaKey && !event.shiftKey;
+}
+__name(shouldHide, "shouldHide");
+function shouldHandleKey(event) {
+  return !!event.code.match(/^(Key[A-Z]|Digit[0-9]|Equal|Comma|Period|Slash|Quote|Backquote|Backslash|Minus|Semicolon|Space|Enter)$/);
+}
+__name(shouldHandleKey, "shouldHandleKey");
+export {
+  AccessibleView,
+  AccessibleViewService
+};
+//# sourceMappingURL=accessibleView.js.map

@@ -1,1 +1,51 @@
-import{$Shc as f}from"./extensionRecommendations.js";import{$nn as l}from"../../../../platform/product/common/productService.js";import{localize as p}from"../../../../nls.js";import{$7Cb as b}from"../../../services/extensionManagement/common/extensionManagement.js";var m=function(r,e,t,o){var i=arguments.length,n=i<3?e:o===null?o=Object.getOwnPropertyDescriptor(e,t):o,s;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")n=Reflect.decorate(r,e,t,o);else for(var a=r.length-1;a>=0;a--)(s=r[a])&&(n=(i<3?s(n):i>3?s(e,t,n):s(e,t))||n);return i>3&&n&&Object.defineProperty(e,t,n),n},c=function(r,e){return function(t,o){e(t,o,r)}};let h=class extends f{get recommendations(){return this.a}constructor(e,t){super(),this.b=e,this.g=t,this.a=[]}async c(){this.g.webExtensionManagementServer&&!this.g.localExtensionManagementServer&&!this.g.remoteExtensionManagementServer&&Array.isArray(this.b.webExtensionTips)&&(this.a=this.b.webExtensionTips.map(t=>({extension:t.toLowerCase(),reason:{reasonId:6,reasonText:p(7673,null,this.b.nameLong)}})))}};h=m([c(0,l),c(1,b)],h);export{h as $2hc};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { ExtensionRecommendations } from "./extensionRecommendations.js";
+import { IProductService } from "../../../../platform/product/common/productService.js";
+import { localize } from "../../../../nls.js";
+import { IExtensionManagementServerService } from "../../../services/extensionManagement/common/extensionManagement.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+let WebRecommendations = class WebRecommendations2 extends ExtensionRecommendations {
+  static {
+    __name(this, "WebRecommendations");
+  }
+  get recommendations() {
+    return this._recommendations;
+  }
+  constructor(productService, extensionManagementServerService) {
+    super();
+    this.productService = productService;
+    this.extensionManagementServerService = extensionManagementServerService;
+    this._recommendations = [];
+  }
+  async doActivate() {
+    const isOnlyWeb = this.extensionManagementServerService.webExtensionManagementServer && !this.extensionManagementServerService.localExtensionManagementServer && !this.extensionManagementServerService.remoteExtensionManagementServer;
+    if (isOnlyWeb && Array.isArray(this.productService.webExtensionTips)) {
+      this._recommendations = this.productService.webExtensionTips.map((extensionId) => ({
+        extension: extensionId.toLowerCase(),
+        reason: {
+          reasonId: 6,
+          reasonText: localize("reason", "This extension is recommended for {0} for the Web", this.productService.nameLong)
+        }
+      }));
+    }
+  }
+};
+WebRecommendations = __decorate([
+  __param(0, IProductService),
+  __param(1, IExtensionManagementServerService)
+], WebRecommendations);
+export {
+  WebRecommendations
+};
+//# sourceMappingURL=webRecommendations.js.map

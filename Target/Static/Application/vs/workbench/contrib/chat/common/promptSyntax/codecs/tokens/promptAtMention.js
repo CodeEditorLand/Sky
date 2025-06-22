@@ -1,1 +1,34 @@
-import{$RR as o}from"./promptToken.js";import{$Uc as n}from"../../../../../../../base/common/assert.js";import{$VR as s,$UR as c}from"../parsers/promptVariableParser.js";const i="@";class m extends o{constructor(t,r){for(const t of r)n(!1===s.includes(t)&&!1===c.includes(t),`Mention 'name' cannot contain character '${t}', got '${r}'.`);super(t),this.name=r}get text(){return`${i}${this.name}`}toString(){return`${this.text}${this.range}`}}export{m as $YR};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { PromptToken } from "./promptToken.js";
+import { assert } from "../../../../../../../base/common/assert.js";
+import { INVALID_NAME_CHARACTERS, STOP_CHARACTERS } from "../parsers/promptVariableParser.js";
+const START_CHARACTER = "@";
+class PromptAtMention extends PromptToken {
+  static {
+    __name(this, "PromptAtMention");
+  }
+  constructor(range, name) {
+    for (const character of name) {
+      assert(INVALID_NAME_CHARACTERS.includes(character) === false && STOP_CHARACTERS.includes(character) === false, `Mention 'name' cannot contain character '${character}', got '${name}'.`);
+    }
+    super(range);
+    this.name = name;
+  }
+  /**
+   * Get full text of the token.
+   */
+  get text() {
+    return `${START_CHARACTER}${this.name}`;
+  }
+  /**
+   * Return a string representation of the token.
+   */
+  toString() {
+    return `${this.text}${this.range}`;
+  }
+}
+export {
+  PromptAtMention
+};
+//# sourceMappingURL=promptAtMention.js.map

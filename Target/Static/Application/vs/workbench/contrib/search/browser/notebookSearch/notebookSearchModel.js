@@ -1,2 +1,443 @@
-import{$7b as a}from"../../../../../base/common/arrays.js";import{$Yh as $}from"../../../../../base/common/async.js";import{CancellationToken as I}from"../../../../../base/common/cancellation.js";import{$5E as W}from"../../../../../editor/common/model.js";import{$gF as m}from"../../../../../editor/common/services/model.js";import{$2H as E}from"../../../../../platform/label/common/label.js";import{$kP as g}from"../../../../services/search/common/search.js";import{$7bc as y}from"../../../../services/search/common/searchHelpers.js";import{$6Rb as Y}from"../../../notebook/browser/contrib/find/findMatchDecorationModel.js";import{$7Rb as k}from"../../../notebook/browser/contrib/find/findModel.js";import{$QVb as R}from"../../../notebook/browser/services/notebookEditorService.js";import{NotebookCellsChangeType as u}from"../../../notebook/common/notebookCommon.js";import{$$bc as N}from"../../common/cellSearchModel.js";import{$WW as S,$XW as M}from"../../common/searchNotebookHelpers.js";import{$ebc as A,$dbc as F,$cbc as G,$fbc as _}from"./searchNotebookHelpers.js";import{$Zac as P}from"../searchTreeModel/searchTreeCommon.js";import{$5bc as T}from"../replace.js";import{$0bc as j}from"../searchTreeModel/fileMatch.js";import{$hbc as D}from"./notebookSearchModelBase.js";import{$9bc as L,$8bc as O}from"../searchTreeModel/match.js";var x=function(o,e,t,i){var n=arguments.length,s=n<3?e:i===null?i=Object.getOwnPropertyDescriptor(e,t):i,r;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")s=Reflect.decorate(o,e,t,i);else for(var h=o.length-1;h>=0;h--)(r=o[h])&&(s=(n<3?r(s):n>3?r(e,t,s):r(e,t))||s);return n>3&&s&&Object.defineProperty(e,t,s),s},c=function(o,e){return function(t,i){e(t,i,o)}};class d extends L{constructor(e,t,i,n,s){super(e.parent,t,i,n,!1),this.n=e,this.c=P+this.i.resource.toString()+">"+this.n.cellIndex+(s?"_"+s:"")+"_"+this.o()+this.d+this.getMatchString(),this.l=s}parent(){return this.n.parent}get cellParent(){return this.n}o(){return this.isWebviewMatch()?"webview":"content"}isWebviewMatch(){return this.l!==void 0}get isReadonly(){return super.isReadonly||!this.n.hasCellViewModel()||this.isWebviewMatch()}get cellIndex(){return this.n.cellIndex}get webviewIndex(){return this.l}get cell(){return this.n.cell}}class f{constructor(e,t,i){this.f=e,this.g=t,this.h=i,this.b=new Map,this.c=new Map,this.d=new Map}hasCellViewModel(){return!(this.g instanceof N)}get context(){return new Map(this.d)}matches(){return[...this.b.values(),...this.c.values()]}get contentMatches(){return Array.from(this.b.values())}get webviewMatches(){return Array.from(this.c.values())}remove(e){Array.isArray(e)||(e=[e]);for(const t of e)this.b.delete(t.id()),this.c.delete(t.id())}clearAllMatches(){this.b.clear(),this.c.clear()}addContentMatches(e){p(e,this).forEach(i=>{this.b.set(i.id(),i)}),this.addContext(e)}addContext(e){this.cell&&this.cell.resolveTextModel().then(t=>{y(e,t,this.parent.parent().query).filter(s=>!g(s)).map(s=>({...s,lineNumber:s.lineNumber+1})).forEach(s=>{this.d.set(s.lineNumber,s.text)})})}addWebviewMatches(e){p(e,this).forEach(i=>{this.c.set(i.id(),i)})}setCellModel(e){this.g=e}get parent(){return this.f}get id(){return this.g?.id??`${M}${this.cellIndex}`}get cellIndex(){return this.h}get cell(){return this.g}}let b=class extends j{constructor(e,t,i,n,s,r,h,l,w,v,C){super(e,t,i,n,s,r,l,w,v),this.bb=h,this.cb=C,this.Y=null,this.Z=null,this.db=new Map,this.$=new $(this.updateMatchesForEditorWidget.bind(this),250)}get cellContext(){const e=new Map;return this.db.forEach(t=>{e.set(t.id,t.context)}),e}getCellMatch(e){return this.db.get(e)}addCellMatch(e){const t=new f(this,F(e)?e.cell:void 0,e.index);this.db.set(t.id,t),this.addWebviewMatchesToCell(t.id,e.webviewResults),this.addContentMatchesToCell(t.id,e.contentResults)}addWebviewMatchesToCell(e,t){const i=this.getCellMatch(e);i!==void 0&&i.addWebviewMatches(t)}addContentMatchesToCell(e,t){const i=this.getCellMatch(e);i!==void 0&&i.addContentMatches(t)}eb(e,t){!this.Y||!e.cell||(e.webviewIndex!==void 0?this.Y.getCellIndex(e.cell)!==void 0&&this.Y.revealCellOffsetInCenter(e.cell,t??0):(e.cell.updateEditState(e.cell.getEditState(),"focusNotebookCell"),this.Y.setCellEditorSelection(e.cell,e.range()),this.Y.revealRangeInCenterIfOutsideViewportAsync(e.cell,e.range())))}bindNotebookEditorWidget(e){this.Y!==e&&(this.Y=e,this.Z=this.Y.textModel?.onDidChangeContent(t=>{t.rawEvents.some(i=>i.kind===u.ChangeCellContent||i.kind===u.ModelChange)&&this.$.schedule()})??null,this.fb())}unbindNotebookEditorWidget(e){e&&this.Y!==e||(this.Y&&(this.$.cancel(),this.Z?.dispose()),this.gb(),this.Y=null)}updateNotebookHighlights(){this.parent().showHighlights?(this.fb(),this.ib(Array.from(this.db.values()))):this.gb()}fb(){this.Y&&(this.g?.stopWebviewFind(),this.g?.dispose(),this.g=new Y(this.Y,this.bb),this.y instanceof d&&this.jb(this.y))}gb(){this.g&&(this.g?.stopWebviewFind(),this.g?.dispose(),this.g=void 0)}hb(e,t){if(!this.Y)return;const i=new Map(this.db);this.Y.getId()!==this.ab&&(this.db.clear(),this.ab=this.Y.getId()),e.forEach(n=>{let s=this.db.get(n.cell.id);if(this.Y&&!s){const h=this.Y.getCellIndex(n.cell),l=i.get(`${M}${h}`);l&&(l.setCellModel(n.cell),l.clearAllMatches(),s=l)}s?.clearAllMatches();const r=s??new f(this,n.cell,n.index);r.addContentMatches(A(n.contentMatches,n.cell)),r.addWebviewMatches(_(n.webviewMatches)),this.db.set(r.id,r)}),this.g?.setAllFindMatchesDecorations(e),this.y instanceof d&&this.jb(this.y),this.h.fire({forceUpdateModel:t})}ib(e){if(!this.g)return;const t=a(e.map(i=>{const n=a(i.webviewMatches.map(r=>{if(r.webviewIndex)return{index:r.webviewIndex}}));if(!i.cell)return;const s=i.contentMatches.map(r=>new W(r.range(),[r.text()]));return new k(i.cell,i.cellIndex,s,n)}));try{this.g.setAllFindMatchesDecorations(t)}catch{}}async updateMatchesForEditorWidget(){if(!this.Y)return;this.u=new Map;const e=this.G.isWordMatch&&this.G.wordSeparators?this.G.wordSeparators:null,t=await this.Y.find(this.G.pattern,{regex:this.G.isRegExp,wholeWord:this.G.isWordMatch,caseSensitive:this.G.isCaseSensitive,wordSeparators:e??void 0,includeMarkupInput:this.G.notebookInfo?.isInNotebookMarkdownInput,includeMarkupPreview:this.G.notebookInfo?.isInNotebookMarkdownPreview,includeCodeInput:this.G.notebookInfo?.isInNotebookCellInput,includeOutput:this.G.notebookInfo?.isInNotebookCellOutput},I.None,!1,!0,this.bb);this.hb(t,!0)}async showMatch(e){const t=await this.jb(e);this.setSelectedMatch(e),this.eb(e,t)}async jb(e){return!this.g||!e.cell?null:e.webviewIndex===void 0?this.g.highlightCurrentFindMatchDecorationInCell(e.cell,e.range()):this.g.highlightCurrentFindMatchDecorationInWebview(e.cell,e.webviewIndex)}matches(){const e=Array.from(this.db.values()).flatMap(t=>t.matches());return[...super.matches(),...e]}X(e){e instanceof d?(e.cellParent.remove(e),e.cellParent.matches().length===0&&this.db.delete(e.cellParent.id),this.isMatchSelected(e)?(this.setSelectedMatch(null),this.g?.clearCurrentFindMatchDecoration()):this.updateHighlights(),this.ib(this.cellMatches())):super.X(e)}cellMatches(){return Array.from(this.db.values())}createMatches(){const e=this.N.getModel(this.n);if(e)this.bindModel(e),this.R();else{const t=this.cb.retrieveExistingWidgetFromURI(this.resource);t?.value&&this.bindNotebookEditorWidget(t.value),this.L.results&&this.L.results.filter(g).forEach(i=>{O(i,this,!1).forEach(n=>this.add(n))}),(G(this.L)||S(this.L))&&(this.L.cellResults?.forEach(i=>this.addCellMatch(i)),this.ib(this.cellMatches()),this.h.fire({forceUpdateModel:!0})),this.addContext(this.L.results)}}get hasChildren(){return super.hasChildren||this.db.size>0}setSelectedMatch(e){if(e){if(!this.isMatchSelected(e)&&D(e)){this.y=e;return}if(!this.u.has(e.id())||this.isMatchSelected(e))return}this.y=e,this.updateHighlights()}dispose(){this.unbindNotebookEditorWidget(),super.dispose()}};b=x([c(7,m),c(8,T),c(9,E),c(10,R)],b);function p(o,e){const t=[];return o.forEach(i=>{const n=i.previewText.split(`
-`);i.rangeLocations.map(s=>{const r=s.preview,h=new d(e,n,r,s.source,i.webviewIndex);t.push(h)})}),t}export{d as $_bc,f as $acc,b as $bcc,p as $ccc};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { coalesce } from "../../../../../base/common/arrays.js";
+import { RunOnceScheduler } from "../../../../../base/common/async.js";
+import { CancellationToken } from "../../../../../base/common/cancellation.js";
+import { FindMatch } from "../../../../../editor/common/model.js";
+import { IModelService } from "../../../../../editor/common/services/model.js";
+import { ILabelService } from "../../../../../platform/label/common/label.js";
+import { resultIsMatch } from "../../../../services/search/common/search.js";
+import { getTextSearchMatchWithModelContext } from "../../../../services/search/common/searchHelpers.js";
+import { FindMatchDecorationModel } from "../../../notebook/browser/contrib/find/findMatchDecorationModel.js";
+import { CellFindMatchModel } from "../../../notebook/browser/contrib/find/findModel.js";
+import { INotebookEditorService } from "../../../notebook/browser/services/notebookEditorService.js";
+import { NotebookCellsChangeType } from "../../../notebook/common/notebookCommon.js";
+import { CellSearchModel } from "../../common/cellSearchModel.js";
+import { isINotebookFileMatchNoModel, rawCellPrefix } from "../../common/searchNotebookHelpers.js";
+import { contentMatchesToTextSearchMatches, isINotebookCellMatchWithModel, isINotebookFileMatchWithModel, webviewMatchesToTextSearchMatches } from "./searchNotebookHelpers.js";
+import { MATCH_PREFIX } from "../searchTreeModel/searchTreeCommon.js";
+import { IReplaceService } from "../replace.js";
+import { FileMatchImpl } from "../searchTreeModel/fileMatch.js";
+import { isIMatchInNotebook } from "./notebookSearchModelBase.js";
+import { MatchImpl, textSearchResultToMatches } from "../searchTreeModel/match.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+class MatchInNotebook extends MatchImpl {
+  static {
+    __name(this, "MatchInNotebook");
+  }
+  constructor(_cellParent, _fullPreviewLines, _fullPreviewRange, _documentRange, webviewIndex) {
+    super(_cellParent.parent, _fullPreviewLines, _fullPreviewRange, _documentRange, false);
+    this._cellParent = _cellParent;
+    this._id = MATCH_PREFIX + this._parent.resource.toString() + ">" + this._cellParent.cellIndex + (webviewIndex ? "_" + webviewIndex : "") + "_" + this.notebookMatchTypeString() + this._range + this.getMatchString();
+    this._webviewIndex = webviewIndex;
+  }
+  parent() {
+    return this._cellParent.parent;
+  }
+  get cellParent() {
+    return this._cellParent;
+  }
+  notebookMatchTypeString() {
+    return this.isWebviewMatch() ? "webview" : "content";
+  }
+  isWebviewMatch() {
+    return this._webviewIndex !== void 0;
+  }
+  get isReadonly() {
+    return super.isReadonly || !this._cellParent.hasCellViewModel() || this.isWebviewMatch();
+  }
+  get cellIndex() {
+    return this._cellParent.cellIndex;
+  }
+  get webviewIndex() {
+    return this._webviewIndex;
+  }
+  get cell() {
+    return this._cellParent.cell;
+  }
+}
+class CellMatch {
+  static {
+    __name(this, "CellMatch");
+  }
+  constructor(_parent, _cell, _cellIndex) {
+    this._parent = _parent;
+    this._cell = _cell;
+    this._cellIndex = _cellIndex;
+    this._contentMatches = /* @__PURE__ */ new Map();
+    this._webviewMatches = /* @__PURE__ */ new Map();
+    this._context = /* @__PURE__ */ new Map();
+  }
+  hasCellViewModel() {
+    return !(this._cell instanceof CellSearchModel);
+  }
+  get context() {
+    return new Map(this._context);
+  }
+  matches() {
+    return [...this._contentMatches.values(), ...this._webviewMatches.values()];
+  }
+  get contentMatches() {
+    return Array.from(this._contentMatches.values());
+  }
+  get webviewMatches() {
+    return Array.from(this._webviewMatches.values());
+  }
+  remove(matches) {
+    if (!Array.isArray(matches)) {
+      matches = [matches];
+    }
+    for (const match of matches) {
+      this._contentMatches.delete(match.id());
+      this._webviewMatches.delete(match.id());
+    }
+  }
+  clearAllMatches() {
+    this._contentMatches.clear();
+    this._webviewMatches.clear();
+  }
+  addContentMatches(textSearchMatches) {
+    const contentMatches = textSearchMatchesToNotebookMatches(textSearchMatches, this);
+    contentMatches.forEach((match) => {
+      this._contentMatches.set(match.id(), match);
+    });
+    this.addContext(textSearchMatches);
+  }
+  addContext(textSearchMatches) {
+    if (!this.cell) {
+      return;
+    }
+    this.cell.resolveTextModel().then((textModel) => {
+      const textResultsWithContext = getTextSearchMatchWithModelContext(textSearchMatches, textModel, this.parent.parent().query);
+      const contexts = textResultsWithContext.filter((result) => !resultIsMatch(result));
+      contexts.map((context) => ({ ...context, lineNumber: context.lineNumber + 1 })).forEach((context) => {
+        this._context.set(context.lineNumber, context.text);
+      });
+    });
+  }
+  addWebviewMatches(textSearchMatches) {
+    const webviewMatches = textSearchMatchesToNotebookMatches(textSearchMatches, this);
+    webviewMatches.forEach((match) => {
+      this._webviewMatches.set(match.id(), match);
+    });
+  }
+  setCellModel(cell) {
+    this._cell = cell;
+  }
+  get parent() {
+    return this._parent;
+  }
+  get id() {
+    return this._cell?.id ?? `${rawCellPrefix}${this.cellIndex}`;
+  }
+  get cellIndex() {
+    return this._cellIndex;
+  }
+  get cell() {
+    return this._cell;
+  }
+}
+let NotebookCompatibleFileMatch = class NotebookCompatibleFileMatch2 extends FileMatchImpl {
+  static {
+    __name(this, "NotebookCompatibleFileMatch");
+  }
+  constructor(_query, _previewOptions, _maxResults, _parent, rawMatch, _closestRoot, searchInstanceID, modelService, replaceService, labelService, notebookEditorService) {
+    super(_query, _previewOptions, _maxResults, _parent, rawMatch, _closestRoot, modelService, replaceService, labelService);
+    this.searchInstanceID = searchInstanceID;
+    this.notebookEditorService = notebookEditorService;
+    this._notebookEditorWidget = null;
+    this._editorWidgetListener = null;
+    this._cellMatches = /* @__PURE__ */ new Map();
+    this._notebookUpdateScheduler = new RunOnceScheduler(this.updateMatchesForEditorWidget.bind(this), 250);
+  }
+  get cellContext() {
+    const cellContext = /* @__PURE__ */ new Map();
+    this._cellMatches.forEach((cellMatch) => {
+      cellContext.set(cellMatch.id, cellMatch.context);
+    });
+    return cellContext;
+  }
+  getCellMatch(cellID) {
+    return this._cellMatches.get(cellID);
+  }
+  addCellMatch(rawCell) {
+    const cellMatch = new CellMatch(this, isINotebookCellMatchWithModel(rawCell) ? rawCell.cell : void 0, rawCell.index);
+    this._cellMatches.set(cellMatch.id, cellMatch);
+    this.addWebviewMatchesToCell(cellMatch.id, rawCell.webviewResults);
+    this.addContentMatchesToCell(cellMatch.id, rawCell.contentResults);
+  }
+  addWebviewMatchesToCell(cellID, webviewMatches) {
+    const cellMatch = this.getCellMatch(cellID);
+    if (cellMatch !== void 0) {
+      cellMatch.addWebviewMatches(webviewMatches);
+    }
+  }
+  addContentMatchesToCell(cellID, contentMatches) {
+    const cellMatch = this.getCellMatch(cellID);
+    if (cellMatch !== void 0) {
+      cellMatch.addContentMatches(contentMatches);
+    }
+  }
+  revealCellRange(match, outputOffset) {
+    if (!this._notebookEditorWidget || !match.cell) {
+      return;
+    }
+    if (match.webviewIndex !== void 0) {
+      const index = this._notebookEditorWidget.getCellIndex(match.cell);
+      if (index !== void 0) {
+        this._notebookEditorWidget.revealCellOffsetInCenter(match.cell, outputOffset ?? 0);
+      }
+    } else {
+      match.cell.updateEditState(match.cell.getEditState(), "focusNotebookCell");
+      this._notebookEditorWidget.setCellEditorSelection(match.cell, match.range());
+      this._notebookEditorWidget.revealRangeInCenterIfOutsideViewportAsync(match.cell, match.range());
+    }
+  }
+  bindNotebookEditorWidget(widget) {
+    if (this._notebookEditorWidget === widget) {
+      return;
+    }
+    this._notebookEditorWidget = widget;
+    this._editorWidgetListener = this._notebookEditorWidget.textModel?.onDidChangeContent((e) => {
+      if (!e.rawEvents.some((event) => event.kind === NotebookCellsChangeType.ChangeCellContent || event.kind === NotebookCellsChangeType.ModelChange)) {
+        return;
+      }
+      this._notebookUpdateScheduler.schedule();
+    }) ?? null;
+    this._addNotebookHighlights();
+  }
+  unbindNotebookEditorWidget(widget) {
+    if (widget && this._notebookEditorWidget !== widget) {
+      return;
+    }
+    if (this._notebookEditorWidget) {
+      this._notebookUpdateScheduler.cancel();
+      this._editorWidgetListener?.dispose();
+    }
+    this._removeNotebookHighlights();
+    this._notebookEditorWidget = null;
+  }
+  updateNotebookHighlights() {
+    if (this.parent().showHighlights) {
+      this._addNotebookHighlights();
+      this.setNotebookFindMatchDecorationsUsingCellMatches(Array.from(this._cellMatches.values()));
+    } else {
+      this._removeNotebookHighlights();
+    }
+  }
+  _addNotebookHighlights() {
+    if (!this._notebookEditorWidget) {
+      return;
+    }
+    this._findMatchDecorationModel?.stopWebviewFind();
+    this._findMatchDecorationModel?.dispose();
+    this._findMatchDecorationModel = new FindMatchDecorationModel(this._notebookEditorWidget, this.searchInstanceID);
+    if (this._selectedMatch instanceof MatchInNotebook) {
+      this.highlightCurrentFindMatchDecoration(this._selectedMatch);
+    }
+  }
+  _removeNotebookHighlights() {
+    if (this._findMatchDecorationModel) {
+      this._findMatchDecorationModel?.stopWebviewFind();
+      this._findMatchDecorationModel?.dispose();
+      this._findMatchDecorationModel = void 0;
+    }
+  }
+  updateNotebookMatches(matches, modelChange) {
+    if (!this._notebookEditorWidget) {
+      return;
+    }
+    const oldCellMatches = new Map(this._cellMatches);
+    if (this._notebookEditorWidget.getId() !== this._lastEditorWidgetIdForUpdate) {
+      this._cellMatches.clear();
+      this._lastEditorWidgetIdForUpdate = this._notebookEditorWidget.getId();
+    }
+    matches.forEach((match) => {
+      let existingCell = this._cellMatches.get(match.cell.id);
+      if (this._notebookEditorWidget && !existingCell) {
+        const index = this._notebookEditorWidget.getCellIndex(match.cell);
+        const existingRawCell = oldCellMatches.get(`${rawCellPrefix}${index}`);
+        if (existingRawCell) {
+          existingRawCell.setCellModel(match.cell);
+          existingRawCell.clearAllMatches();
+          existingCell = existingRawCell;
+        }
+      }
+      existingCell?.clearAllMatches();
+      const cell = existingCell ?? new CellMatch(this, match.cell, match.index);
+      cell.addContentMatches(contentMatchesToTextSearchMatches(match.contentMatches, match.cell));
+      cell.addWebviewMatches(webviewMatchesToTextSearchMatches(match.webviewMatches));
+      this._cellMatches.set(cell.id, cell);
+    });
+    this._findMatchDecorationModel?.setAllFindMatchesDecorations(matches);
+    if (this._selectedMatch instanceof MatchInNotebook) {
+      this.highlightCurrentFindMatchDecoration(this._selectedMatch);
+    }
+    this._onChange.fire({ forceUpdateModel: modelChange });
+  }
+  setNotebookFindMatchDecorationsUsingCellMatches(cells) {
+    if (!this._findMatchDecorationModel) {
+      return;
+    }
+    const cellFindMatch = coalesce(cells.map((cell) => {
+      const webviewMatches = coalesce(cell.webviewMatches.map((match) => {
+        if (!match.webviewIndex) {
+          return void 0;
+        }
+        return {
+          index: match.webviewIndex
+        };
+      }));
+      if (!cell.cell) {
+        return void 0;
+      }
+      const findMatches = cell.contentMatches.map((match) => {
+        return new FindMatch(match.range(), [match.text()]);
+      });
+      return new CellFindMatchModel(cell.cell, cell.cellIndex, findMatches, webviewMatches);
+    }));
+    try {
+      this._findMatchDecorationModel.setAllFindMatchesDecorations(cellFindMatch);
+    } catch (e) {
+    }
+  }
+  async updateMatchesForEditorWidget() {
+    if (!this._notebookEditorWidget) {
+      return;
+    }
+    this._textMatches = /* @__PURE__ */ new Map();
+    const wordSeparators = this._query.isWordMatch && this._query.wordSeparators ? this._query.wordSeparators : null;
+    const allMatches = await this._notebookEditorWidget.find(this._query.pattern, {
+      regex: this._query.isRegExp,
+      wholeWord: this._query.isWordMatch,
+      caseSensitive: this._query.isCaseSensitive,
+      wordSeparators: wordSeparators ?? void 0,
+      includeMarkupInput: this._query.notebookInfo?.isInNotebookMarkdownInput,
+      includeMarkupPreview: this._query.notebookInfo?.isInNotebookMarkdownPreview,
+      includeCodeInput: this._query.notebookInfo?.isInNotebookCellInput,
+      includeOutput: this._query.notebookInfo?.isInNotebookCellOutput
+    }, CancellationToken.None, false, true, this.searchInstanceID);
+    this.updateNotebookMatches(allMatches, true);
+  }
+  async showMatch(match) {
+    const offset = await this.highlightCurrentFindMatchDecoration(match);
+    this.setSelectedMatch(match);
+    this.revealCellRange(match, offset);
+  }
+  async highlightCurrentFindMatchDecoration(match) {
+    if (!this._findMatchDecorationModel || !match.cell) {
+      return null;
+    }
+    if (match.webviewIndex === void 0) {
+      return this._findMatchDecorationModel.highlightCurrentFindMatchDecorationInCell(match.cell, match.range());
+    } else {
+      return this._findMatchDecorationModel.highlightCurrentFindMatchDecorationInWebview(match.cell, match.webviewIndex);
+    }
+  }
+  matches() {
+    const matches = Array.from(this._cellMatches.values()).flatMap((e) => e.matches());
+    return [...super.matches(), ...matches];
+  }
+  removeMatch(match) {
+    if (match instanceof MatchInNotebook) {
+      match.cellParent.remove(match);
+      if (match.cellParent.matches().length === 0) {
+        this._cellMatches.delete(match.cellParent.id);
+      }
+      if (this.isMatchSelected(match)) {
+        this.setSelectedMatch(null);
+        this._findMatchDecorationModel?.clearCurrentFindMatchDecoration();
+      } else {
+        this.updateHighlights();
+      }
+      this.setNotebookFindMatchDecorationsUsingCellMatches(this.cellMatches());
+    } else {
+      super.removeMatch(match);
+    }
+  }
+  cellMatches() {
+    return Array.from(this._cellMatches.values());
+  }
+  createMatches() {
+    const model = this.modelService.getModel(this._resource);
+    if (model) {
+      this.bindModel(model);
+      this.updateMatchesForModel();
+    } else {
+      const notebookEditorWidgetBorrow = this.notebookEditorService.retrieveExistingWidgetFromURI(this.resource);
+      if (notebookEditorWidgetBorrow?.value) {
+        this.bindNotebookEditorWidget(notebookEditorWidgetBorrow.value);
+      }
+      if (this.rawMatch.results) {
+        this.rawMatch.results.filter(resultIsMatch).forEach((rawMatch) => {
+          textSearchResultToMatches(rawMatch, this, false).forEach((m) => this.add(m));
+        });
+      }
+      if (isINotebookFileMatchWithModel(this.rawMatch) || isINotebookFileMatchNoModel(this.rawMatch)) {
+        this.rawMatch.cellResults?.forEach((cell) => this.addCellMatch(cell));
+        this.setNotebookFindMatchDecorationsUsingCellMatches(this.cellMatches());
+        this._onChange.fire({ forceUpdateModel: true });
+      }
+      this.addContext(this.rawMatch.results);
+    }
+  }
+  get hasChildren() {
+    return super.hasChildren || this._cellMatches.size > 0;
+  }
+  setSelectedMatch(match) {
+    if (match) {
+      if (!this.isMatchSelected(match) && isIMatchInNotebook(match)) {
+        this._selectedMatch = match;
+        return;
+      }
+      if (!this._textMatches.has(match.id())) {
+        return;
+      }
+      if (this.isMatchSelected(match)) {
+        return;
+      }
+    }
+    this._selectedMatch = match;
+    this.updateHighlights();
+  }
+  dispose() {
+    this.unbindNotebookEditorWidget();
+    super.dispose();
+  }
+};
+NotebookCompatibleFileMatch = __decorate([
+  __param(7, IModelService),
+  __param(8, IReplaceService),
+  __param(9, ILabelService),
+  __param(10, INotebookEditorService)
+], NotebookCompatibleFileMatch);
+function textSearchMatchesToNotebookMatches(textSearchMatches, cell) {
+  const notebookMatches = [];
+  textSearchMatches.forEach((textSearchMatch) => {
+    const previewLines = textSearchMatch.previewText.split("\n");
+    textSearchMatch.rangeLocations.map((rangeLocation) => {
+      const previewRange = rangeLocation.preview;
+      const match = new MatchInNotebook(cell, previewLines, previewRange, rangeLocation.source, textSearchMatch.webviewIndex);
+      notebookMatches.push(match);
+    });
+  });
+  return notebookMatches;
+}
+__name(textSearchMatchesToNotebookMatches, "textSearchMatchesToNotebookMatches");
+export {
+  CellMatch,
+  MatchInNotebook,
+  NotebookCompatibleFileMatch,
+  textSearchMatchesToNotebookMatches
+};
+//# sourceMappingURL=notebookSearchModel.js.map

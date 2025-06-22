@@ -1,1 +1,93 @@
-import{URI as s}from"../../../base/common/uri.js";import{$Ql as a}from"../../../platform/registry/common/platform.js";import{$Sl as m,$9l as l}from"../../../platform/configuration/common/configurationRegistry.js";import{$hl as d}from"../../../platform/workspace/common/workspace.js";import{$oY as $,$pY as C}from"../common/extHost.protocol.js";import{$Kyb as b}from"../../services/extensions/common/extHostCustomers.js";import{$El as _}from"../../../platform/configuration/common/configuration.js";import{$fl as g}from"../../../platform/environment/common/environment.js";var p=function(f,i,r,t){var o=arguments.length,n=o<3?i:t===null?t=Object.getOwnPropertyDescriptor(i,r):t,e;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")n=Reflect.decorate(f,i,r,t);else for(var u=f.length-1;u>=0;u--)(e=f[u])&&(n=(o<3?e(n):o>3?e(i,r,n):e(i,r))||n);return o>3&&n&&Object.defineProperty(i,r,n),n},c=function(f,i){return function(r,t){i(r,t,f)}};let h=class{constructor(i,r,t,o){this.b=r,this.c=t,this.d=o;const n=i.getProxy(C.ExtHostConfiguration);n.$initializeConfiguration(this.f()),this.a=t.onDidChangeConfiguration(e=>{n.$acceptConfigurationChanged(this.f(),e.change)})}f(){const i={...this.c.getConfigurationData(),configurationScopes:[]};return(!this.d.isBuilt||this.d.isExtensionDevelopment)&&(i.configurationScopes=l()),i}dispose(){this.a.dispose()}$updateConfigurationOption(i,r,t,o,n){return o={resource:o?.resource?s.revive(o.resource):void 0,overrideIdentifier:o?.overrideIdentifier},this.g(i,r,t,o,n)}$removeConfigurationOption(i,r,t,o){return t={resource:t?.resource?s.revive(t.resource):void 0,overrideIdentifier:t?.overrideIdentifier},this.g(i,r,void 0,t,o)}g(i,r,t,o,n){i=i??this.i(r,o);const e=this.c.inspect(r,o);switch(i){case 8:return this.h(r,t,i,e?.memory?.override,o,n);case 6:return this.h(r,t,i,e?.workspaceFolder?.override,o,n);case 5:return this.h(r,t,i,e?.workspace?.override,o,n);case 4:return this.h(r,t,i,e?.userRemote?.override,o,n);default:return this.h(r,t,i,e?.userLocal?.override,o,n)}}h(i,r,t,o,n,e){return n=e===!0?n:e===!1?{resource:n.resource}:n.overrideIdentifier&&o!==void 0?n:{resource:n.resource},this.c.updateValue(i,r,n,t,{donotNotifyError:!0})}i(i,r){if(r.resource&&this.b.getWorkbenchState()===3){const t=a.as(m.Configuration).getConfigurationProperties();if(t[i]&&(t[i].scope===5||t[i].scope===6))return 6}return 5}};h=p([b($.MainThreadConfiguration),c(1,d),c(2,_),c(3,g)],h);export{h as $FWb};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { URI } from "../../../base/common/uri.js";
+import { Registry } from "../../../platform/registry/common/platform.js";
+import { Extensions as ConfigurationExtensions, getScopes } from "../../../platform/configuration/common/configurationRegistry.js";
+import { IWorkspaceContextService } from "../../../platform/workspace/common/workspace.js";
+import { MainContext, ExtHostContext } from "../common/extHost.protocol.js";
+import { extHostNamedCustomer } from "../../services/extensions/common/extHostCustomers.js";
+import { IConfigurationService } from "../../../platform/configuration/common/configuration.js";
+import { IEnvironmentService } from "../../../platform/environment/common/environment.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+let MainThreadConfiguration = class MainThreadConfiguration2 {
+  static {
+    __name(this, "MainThreadConfiguration");
+  }
+  constructor(extHostContext, _workspaceContextService, configurationService, _environmentService) {
+    this._workspaceContextService = _workspaceContextService;
+    this.configurationService = configurationService;
+    this._environmentService = _environmentService;
+    const proxy = extHostContext.getProxy(ExtHostContext.ExtHostConfiguration);
+    proxy.$initializeConfiguration(this._getConfigurationData());
+    this._configurationListener = configurationService.onDidChangeConfiguration((e) => {
+      proxy.$acceptConfigurationChanged(this._getConfigurationData(), e.change);
+    });
+  }
+  _getConfigurationData() {
+    const configurationData = { ...this.configurationService.getConfigurationData(), configurationScopes: [] };
+    if (!this._environmentService.isBuilt || this._environmentService.isExtensionDevelopment) {
+      configurationData.configurationScopes = getScopes();
+    }
+    return configurationData;
+  }
+  dispose() {
+    this._configurationListener.dispose();
+  }
+  $updateConfigurationOption(target, key, value, overrides, scopeToLanguage) {
+    overrides = { resource: overrides?.resource ? URI.revive(overrides.resource) : void 0, overrideIdentifier: overrides?.overrideIdentifier };
+    return this.writeConfiguration(target, key, value, overrides, scopeToLanguage);
+  }
+  $removeConfigurationOption(target, key, overrides, scopeToLanguage) {
+    overrides = { resource: overrides?.resource ? URI.revive(overrides.resource) : void 0, overrideIdentifier: overrides?.overrideIdentifier };
+    return this.writeConfiguration(target, key, void 0, overrides, scopeToLanguage);
+  }
+  writeConfiguration(target, key, value, overrides, scopeToLanguage) {
+    target = target !== null && target !== void 0 ? target : this.deriveConfigurationTarget(key, overrides);
+    const configurationValue = this.configurationService.inspect(key, overrides);
+    switch (target) {
+      case 8:
+        return this._updateValue(key, value, target, configurationValue?.memory?.override, overrides, scopeToLanguage);
+      case 6:
+        return this._updateValue(key, value, target, configurationValue?.workspaceFolder?.override, overrides, scopeToLanguage);
+      case 5:
+        return this._updateValue(key, value, target, configurationValue?.workspace?.override, overrides, scopeToLanguage);
+      case 4:
+        return this._updateValue(key, value, target, configurationValue?.userRemote?.override, overrides, scopeToLanguage);
+      default:
+        return this._updateValue(key, value, target, configurationValue?.userLocal?.override, overrides, scopeToLanguage);
+    }
+  }
+  _updateValue(key, value, configurationTarget, overriddenValue, overrides, scopeToLanguage) {
+    overrides = scopeToLanguage === true ? overrides : scopeToLanguage === false ? { resource: overrides.resource } : overrides.overrideIdentifier && overriddenValue !== void 0 ? overrides : { resource: overrides.resource };
+    return this.configurationService.updateValue(key, value, overrides, configurationTarget, { donotNotifyError: true });
+  }
+  deriveConfigurationTarget(key, overrides) {
+    if (overrides.resource && this._workspaceContextService.getWorkbenchState() === 3) {
+      const configurationProperties = Registry.as(ConfigurationExtensions.Configuration).getConfigurationProperties();
+      if (configurationProperties[key] && (configurationProperties[key].scope === 5 || configurationProperties[key].scope === 6)) {
+        return 6;
+      }
+    }
+    return 5;
+  }
+};
+MainThreadConfiguration = __decorate([
+  extHostNamedCustomer(MainContext.MainThreadConfiguration),
+  __param(1, IWorkspaceContextService),
+  __param(2, IConfigurationService),
+  __param(3, IEnvironmentService)
+], MainThreadConfiguration);
+export {
+  MainThreadConfiguration
+};
+//# sourceMappingURL=mainThreadConfiguration.js.map

@@ -1,1 +1,76 @@
-import*as m from"../../../../nls.js";import{$vd as w}from"../../../../base/common/lifecycle.js";import{$Bn as u}from"../../../../platform/contextkey/common/contextkey.js";import{$9vc as g}from"./viewsWelcomeExtensionPoint.js";import{$Ql as v}from"../../../../platform/registry/common/platform.js";import{Extensions as b}from"../../../common/views.js";import{$1O as $}from"../../../services/extensions/common/extensions.js";const x=v.as(b.ViewsRegistry);class B extends w{constructor(s){super(),this.a=new Map,s.setHandler((r,{added:n,removed:i})=>{for(const t of i)for(const e of t.value)this.a.get(e)?.dispose();const a=new Map;for(const t of n)for(const e of t.value){const{group:c,order:f}=h(e,t),l=u.deserialize(e.enablement),d=g[e.view]??e.view;let p=a.get(d);p||(p=new Map,a.set(d,p)),p.set(e,{content:e.contents,when:u.deserialize(e.when),precondition:l,group:c,order:f})}for(const[t,e]of a){const c=x.registerViewWelcomeContent2(t,e);for(const[f,l]of c)this.a.set(f,l)}})}}function h(o,s){let r,n;if(o.group){if(!$(s.description,"contribViewsWelcome"))return s.collector.warn(m.localize(13356,null,s.description.identifier.value)),{group:r,order:n};const i=o.group.lastIndexOf("@");i>0?(r=o.group.substr(0,i),n=Number(o.group.substr(i+1))||void 0):r=o.group}return{group:r,order:n}}export{B as $$vc};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import * as nls from "../../../../nls.js";
+import { Disposable } from "../../../../base/common/lifecycle.js";
+import { ContextKeyExpr } from "../../../../platform/contextkey/common/contextkey.js";
+import { ViewIdentifierMap } from "./viewsWelcomeExtensionPoint.js";
+import { Registry } from "../../../../platform/registry/common/platform.js";
+import { Extensions as ViewContainerExtensions } from "../../../common/views.js";
+import { isProposedApiEnabled } from "../../../services/extensions/common/extensions.js";
+const viewsRegistry = Registry.as(ViewContainerExtensions.ViewsRegistry);
+class ViewsWelcomeContribution extends Disposable {
+  static {
+    __name(this, "ViewsWelcomeContribution");
+  }
+  constructor(extensionPoint) {
+    super();
+    this.viewWelcomeContents = /* @__PURE__ */ new Map();
+    extensionPoint.setHandler((_, { added, removed }) => {
+      for (const contribution of removed) {
+        for (const welcome of contribution.value) {
+          const disposable = this.viewWelcomeContents.get(welcome);
+          disposable?.dispose();
+        }
+      }
+      const welcomesByViewId = /* @__PURE__ */ new Map();
+      for (const contribution of added) {
+        for (const welcome of contribution.value) {
+          const { group, order } = parseGroupAndOrder(welcome, contribution);
+          const precondition = ContextKeyExpr.deserialize(welcome.enablement);
+          const id = ViewIdentifierMap[welcome.view] ?? welcome.view;
+          let viewContentMap = welcomesByViewId.get(id);
+          if (!viewContentMap) {
+            viewContentMap = /* @__PURE__ */ new Map();
+            welcomesByViewId.set(id, viewContentMap);
+          }
+          viewContentMap.set(welcome, {
+            content: welcome.contents,
+            when: ContextKeyExpr.deserialize(welcome.when),
+            precondition,
+            group,
+            order
+          });
+        }
+      }
+      for (const [id, viewContentMap] of welcomesByViewId) {
+        const disposables = viewsRegistry.registerViewWelcomeContent2(id, viewContentMap);
+        for (const [welcome, disposable] of disposables) {
+          this.viewWelcomeContents.set(welcome, disposable);
+        }
+      }
+    });
+  }
+}
+function parseGroupAndOrder(welcome, contribution) {
+  let group;
+  let order;
+  if (welcome.group) {
+    if (!isProposedApiEnabled(contribution.description, "contribViewsWelcome")) {
+      contribution.collector.warn(nls.localize("ViewsWelcomeExtensionPoint.proposedAPI", `The viewsWelcome contribution in '{0}' requires 'enabledApiProposals: ["contribViewsWelcome"]' in order to use the 'group' proposed property.`, contribution.description.identifier.value));
+      return { group, order };
+    }
+    const idx = welcome.group.lastIndexOf("@");
+    if (idx > 0) {
+      group = welcome.group.substr(0, idx);
+      order = Number(welcome.group.substr(idx + 1)) || void 0;
+    } else {
+      group = welcome.group;
+    }
+  }
+  return { group, order };
+}
+__name(parseGroupAndOrder, "parseGroupAndOrder");
+export {
+  ViewsWelcomeContribution
+};
+//# sourceMappingURL=viewsWelcomeContribution.js.map

@@ -1,1 +1,46 @@
-class s{get didDomLayout(){return this.a}e(){if(!this.d){this.d=!0;const t=this.f.getBoundingClientRect();this.markDidDomLayout(),this.b=t.left,this.c=t.width/this.f.offsetWidth}}get clientRectDeltaLeft(){return this.d||this.e(),this.b}get clientRectScale(){return this.d||this.e(),this.c}constructor(t,i){this.f=t,this.endNode=i,this.a=!1,this.b=0,this.c=1,this.d=!1}markDidDomLayout(){this.a=!0}}export{s as $ybb};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+class DomReadingContext {
+  static {
+    __name(this, "DomReadingContext");
+  }
+  get didDomLayout() {
+    return this._didDomLayout;
+  }
+  readClientRect() {
+    if (!this._clientRectRead) {
+      this._clientRectRead = true;
+      const rect = this._domNode.getBoundingClientRect();
+      this.markDidDomLayout();
+      this._clientRectDeltaLeft = rect.left;
+      this._clientRectScale = rect.width / this._domNode.offsetWidth;
+    }
+  }
+  get clientRectDeltaLeft() {
+    if (!this._clientRectRead) {
+      this.readClientRect();
+    }
+    return this._clientRectDeltaLeft;
+  }
+  get clientRectScale() {
+    if (!this._clientRectRead) {
+      this.readClientRect();
+    }
+    return this._clientRectScale;
+  }
+  constructor(_domNode, endNode) {
+    this._domNode = _domNode;
+    this.endNode = endNode;
+    this._didDomLayout = false;
+    this._clientRectDeltaLeft = 0;
+    this._clientRectScale = 1;
+    this._clientRectRead = false;
+  }
+  markDidDomLayout() {
+    this._didDomLayout = true;
+  }
+}
+export {
+  DomReadingContext
+};
+//# sourceMappingURL=domReadingContext.js.map

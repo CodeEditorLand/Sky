@@ -1,1 +1,148 @@
-import{$n7 as d}from"../../../../base/browser/fastDomNode.js";import{$4_ as l}from"../../../common/viewModel/overviewZoneManager.js";import{$S_ as f}from"../../../common/viewEventHandler.js";class H extends f{constructor(t,e){super(),this.a=t;const h=this.a.configuration.options;this.b=d(document.createElement("canvas")),this.b.setClassName(e),this.b.setPosition("absolute"),this.b.setLayerHinting(!0),this.b.setContain("strict"),this.c=new l(o=>this.a.viewLayout.getVerticalOffsetForLineNumber(o)),this.c.setDOMWidth(0),this.c.setDOMHeight(0),this.c.setOuterHeight(this.a.viewLayout.getScrollHeight()),this.c.setLineHeight(h.get(71)),this.c.setPixelRatio(h.get(152)),this.a.addEventHandler(this)}dispose(){this.a.removeEventHandler(this),super.dispose()}onConfigurationChanged(t){const e=this.a.configuration.options;return t.hasChanged(71)&&(this.c.setLineHeight(e.get(71)),this.f()),t.hasChanged(152)&&(this.c.setPixelRatio(e.get(152)),this.b.setWidth(this.c.getDOMWidth()),this.b.setHeight(this.c.getDOMHeight()),this.b.domNode.width=this.c.getCanvasWidth(),this.b.domNode.height=this.c.getCanvasHeight(),this.f()),!0}onFlushed(t){return this.f(),!0}onScrollChanged(t){return t.scrollHeightChanged&&(this.c.setOuterHeight(t.scrollHeight),this.f()),!0}onZonesChanged(t){return this.f(),!0}getDomNode(){return this.b.domNode}setLayout(t){this.b.setTop(t.top),this.b.setRight(t.right);let e=!1;e=this.c.setDOMWidth(t.width)||e,e=this.c.setDOMHeight(t.height)||e,e&&(this.b.setWidth(this.c.getDOMWidth()),this.b.setHeight(this.c.getDOMHeight()),this.b.domNode.width=this.c.getCanvasWidth(),this.b.domNode.height=this.c.getCanvasHeight(),this.f())}setZones(t){this.c.setZones(t),this.f()}f(){if(this.c.getOuterHeight()===0)return!1;const t=this.c.getCanvasWidth(),e=this.c.getCanvasHeight(),h=this.c.resolveColorZones(),o=this.c.getId2Color(),n=this.b.domNode.getContext("2d");return n.clearRect(0,0,t,e),h.length>0&&this.g(n,h,o,t),!0}g(t,e,h,o){let n=0,s=0,i=0;for(const r of e){const a=r.colorId,c=r.from,g=r.to;a!==n?(t.fillRect(0,s,o,i-s),n=a,t.fillStyle=h[n],s=c,i=g):i>=c?i=Math.max(i,g):(t.fillRect(0,s,o,i-s),s=c,i=g)}t.fillRect(0,s,o,i-s)}}export{H as $3cb};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { createFastDomNode } from "../../../../base/browser/fastDomNode.js";
+import { OverviewZoneManager } from "../../../common/viewModel/overviewZoneManager.js";
+import { ViewEventHandler } from "../../../common/viewEventHandler.js";
+class OverviewRuler extends ViewEventHandler {
+  static {
+    __name(this, "OverviewRuler");
+  }
+  constructor(context, cssClassName) {
+    super();
+    this._context = context;
+    const options = this._context.configuration.options;
+    this._domNode = createFastDomNode(document.createElement("canvas"));
+    this._domNode.setClassName(cssClassName);
+    this._domNode.setPosition("absolute");
+    this._domNode.setLayerHinting(true);
+    this._domNode.setContain("strict");
+    this._zoneManager = new OverviewZoneManager((lineNumber) => this._context.viewLayout.getVerticalOffsetForLineNumber(lineNumber));
+    this._zoneManager.setDOMWidth(0);
+    this._zoneManager.setDOMHeight(0);
+    this._zoneManager.setOuterHeight(this._context.viewLayout.getScrollHeight());
+    this._zoneManager.setLineHeight(options.get(
+      71
+      /* EditorOption.lineHeight */
+    ));
+    this._zoneManager.setPixelRatio(options.get(
+      152
+      /* EditorOption.pixelRatio */
+    ));
+    this._context.addEventHandler(this);
+  }
+  dispose() {
+    this._context.removeEventHandler(this);
+    super.dispose();
+  }
+  // ---- begin view event handlers
+  onConfigurationChanged(e) {
+    const options = this._context.configuration.options;
+    if (e.hasChanged(
+      71
+      /* EditorOption.lineHeight */
+    )) {
+      this._zoneManager.setLineHeight(options.get(
+        71
+        /* EditorOption.lineHeight */
+      ));
+      this._render();
+    }
+    if (e.hasChanged(
+      152
+      /* EditorOption.pixelRatio */
+    )) {
+      this._zoneManager.setPixelRatio(options.get(
+        152
+        /* EditorOption.pixelRatio */
+      ));
+      this._domNode.setWidth(this._zoneManager.getDOMWidth());
+      this._domNode.setHeight(this._zoneManager.getDOMHeight());
+      this._domNode.domNode.width = this._zoneManager.getCanvasWidth();
+      this._domNode.domNode.height = this._zoneManager.getCanvasHeight();
+      this._render();
+    }
+    return true;
+  }
+  onFlushed(e) {
+    this._render();
+    return true;
+  }
+  onScrollChanged(e) {
+    if (e.scrollHeightChanged) {
+      this._zoneManager.setOuterHeight(e.scrollHeight);
+      this._render();
+    }
+    return true;
+  }
+  onZonesChanged(e) {
+    this._render();
+    return true;
+  }
+  // ---- end view event handlers
+  getDomNode() {
+    return this._domNode.domNode;
+  }
+  setLayout(position) {
+    this._domNode.setTop(position.top);
+    this._domNode.setRight(position.right);
+    let hasChanged = false;
+    hasChanged = this._zoneManager.setDOMWidth(position.width) || hasChanged;
+    hasChanged = this._zoneManager.setDOMHeight(position.height) || hasChanged;
+    if (hasChanged) {
+      this._domNode.setWidth(this._zoneManager.getDOMWidth());
+      this._domNode.setHeight(this._zoneManager.getDOMHeight());
+      this._domNode.domNode.width = this._zoneManager.getCanvasWidth();
+      this._domNode.domNode.height = this._zoneManager.getCanvasHeight();
+      this._render();
+    }
+  }
+  setZones(zones) {
+    this._zoneManager.setZones(zones);
+    this._render();
+  }
+  _render() {
+    if (this._zoneManager.getOuterHeight() === 0) {
+      return false;
+    }
+    const width = this._zoneManager.getCanvasWidth();
+    const height = this._zoneManager.getCanvasHeight();
+    const colorZones = this._zoneManager.resolveColorZones();
+    const id2Color = this._zoneManager.getId2Color();
+    const ctx = this._domNode.domNode.getContext("2d");
+    ctx.clearRect(0, 0, width, height);
+    if (colorZones.length > 0) {
+      this._renderOneLane(ctx, colorZones, id2Color, width);
+    }
+    return true;
+  }
+  _renderOneLane(ctx, colorZones, id2Color, width) {
+    let currentColorId = 0;
+    let currentFrom = 0;
+    let currentTo = 0;
+    for (const zone of colorZones) {
+      const zoneColorId = zone.colorId;
+      const zoneFrom = zone.from;
+      const zoneTo = zone.to;
+      if (zoneColorId !== currentColorId) {
+        ctx.fillRect(0, currentFrom, width, currentTo - currentFrom);
+        currentColorId = zoneColorId;
+        ctx.fillStyle = id2Color[currentColorId];
+        currentFrom = zoneFrom;
+        currentTo = zoneTo;
+      } else {
+        if (currentTo >= zoneFrom) {
+          currentTo = Math.max(currentTo, zoneTo);
+        } else {
+          ctx.fillRect(0, currentFrom, width, currentTo - currentFrom);
+          currentFrom = zoneFrom;
+          currentTo = zoneTo;
+        }
+      }
+    }
+    ctx.fillRect(0, currentFrom, width, currentTo - currentFrom);
+  }
+}
+export {
+  OverviewRuler
+};
+//# sourceMappingURL=overviewRuler.js.map

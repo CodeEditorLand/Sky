@@ -1,1 +1,93 @@
-import{$Xb as f,$0b as u}from"../../../../../base/common/arrays.js";import{$Xf as d}from"../../../../../base/common/strings.js";import{$8_ as g}from"../../../../../editor/browser/editorBrowser.js";import{$BD as m}from"../../../../../editor/common/languages/language.js";import{$9jb as I}from"../../../../../editor/contrib/snippet/browser/snippetController2.js";import{localize as h,localize2 as S}from"../../../../../nls.js";import{$OM as $}from"../../../../../platform/quickinput/common/quickInput.js";import{$$cc as b}from"./abstractSnippetsActions.js";import{$ZEb as y}from"../snippets.js";import{$oI as k}from"../../../../services/editor/common/editorService.js";class c extends b{static{this.Id="workbench.action.populateFileFromSnippet"}constructor(){super({id:c.Id,title:S(10993,"Fill File with Snippet"),f1:!0})}async run(o){const s=o.get(y),l=o.get($),r=o.get(k),i=o.get(m),t=g(r.activeTextEditorControl);if(!t||!t.hasModel())return;const a=await s.getSnippets(void 0,{fileTemplateSnippets:!0,noRecencySort:!0,includeNoPrefixSnippets:!0});if(a.length===0)return;const e=await this.c(l,i,a);e&&t.hasModel()&&(I.get(t)?.apply([{range:t.getModel().getFullModelRange(),template:e.snippet.body}]),t.getModel().setLanguage(i.createById(e.langId),c.Id),t.focus())}async c(o,s,l){const r=[];for(const e of l)if(u(e.scopes))r.push({langId:"",snippet:e});else for(const n of e.scopes)r.push({langId:n,snippet:e});const i=[],t=f(r,(e,n)=>d(e.langId,n.langId));for(const e of t){let n=!0;for(const p of e)n&&(i.push({type:"separator",label:s.getLanguageName(p.langId)??p.langId}),n=!1),i.push({snippet:p,label:p.snippet.prefix||p.snippet.name,detail:p.snippet.description})}return(await o.pick(i,{placeHolder:h(10992,null),matchOnDetail:!0}))?.snippet}}export{c as $adc};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { groupBy, isFalsyOrEmpty } from "../../../../../base/common/arrays.js";
+import { compare } from "../../../../../base/common/strings.js";
+import { getCodeEditor } from "../../../../../editor/browser/editorBrowser.js";
+import { ILanguageService } from "../../../../../editor/common/languages/language.js";
+import { SnippetController2 } from "../../../../../editor/contrib/snippet/browser/snippetController2.js";
+import { localize, localize2 } from "../../../../../nls.js";
+import { IQuickInputService } from "../../../../../platform/quickinput/common/quickInput.js";
+import { SnippetsAction } from "./abstractSnippetsActions.js";
+import { ISnippetsService } from "../snippets.js";
+import { IEditorService } from "../../../../services/editor/common/editorService.js";
+class ApplyFileSnippetAction extends SnippetsAction {
+  static {
+    __name(this, "ApplyFileSnippetAction");
+  }
+  static {
+    this.Id = "workbench.action.populateFileFromSnippet";
+  }
+  constructor() {
+    super({
+      id: ApplyFileSnippetAction.Id,
+      title: localize2("label", "Fill File with Snippet"),
+      f1: true
+    });
+  }
+  async run(accessor) {
+    const snippetService = accessor.get(ISnippetsService);
+    const quickInputService = accessor.get(IQuickInputService);
+    const editorService = accessor.get(IEditorService);
+    const langService = accessor.get(ILanguageService);
+    const editor = getCodeEditor(editorService.activeTextEditorControl);
+    if (!editor || !editor.hasModel()) {
+      return;
+    }
+    const snippets = await snippetService.getSnippets(void 0, { fileTemplateSnippets: true, noRecencySort: true, includeNoPrefixSnippets: true });
+    if (snippets.length === 0) {
+      return;
+    }
+    const selection = await this._pick(quickInputService, langService, snippets);
+    if (!selection) {
+      return;
+    }
+    if (editor.hasModel()) {
+      SnippetController2.get(editor)?.apply([{
+        range: editor.getModel().getFullModelRange(),
+        template: selection.snippet.body
+      }]);
+      editor.getModel().setLanguage(langService.createById(selection.langId), ApplyFileSnippetAction.Id);
+      editor.focus();
+    }
+  }
+  async _pick(quickInputService, langService, snippets) {
+    const all = [];
+    for (const snippet of snippets) {
+      if (isFalsyOrEmpty(snippet.scopes)) {
+        all.push({ langId: "", snippet });
+      } else {
+        for (const langId of snippet.scopes) {
+          all.push({ langId, snippet });
+        }
+      }
+    }
+    const picks = [];
+    const groups = groupBy(all, (a, b) => compare(a.langId, b.langId));
+    for (const group of groups) {
+      let first = true;
+      for (const item of group) {
+        if (first) {
+          picks.push({
+            type: "separator",
+            label: langService.getLanguageName(item.langId) ?? item.langId
+          });
+          first = false;
+        }
+        picks.push({
+          snippet: item,
+          label: item.snippet.prefix || item.snippet.name,
+          detail: item.snippet.description
+        });
+      }
+    }
+    const pick = await quickInputService.pick(picks, {
+      placeHolder: localize("placeholder", "Select a snippet"),
+      matchOnDetail: true
+    });
+    return pick?.snippet;
+  }
+}
+export {
+  ApplyFileSnippetAction
+};
+//# sourceMappingURL=fileTemplateSnippets.js.map

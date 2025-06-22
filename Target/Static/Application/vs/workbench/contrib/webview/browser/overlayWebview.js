@@ -1,1 +1,376 @@
-import{getWindowById as g}from"../../../../base/browser/dom.js";import{$m7 as b}from"../../../../base/browser/fastDomNode.js";import{$df as n}from"../../../../base/common/event.js";import{$vd as m,$ud as y,$wd as f}from"../../../../base/common/lifecycle.js";import{$Rm as D}from"../../../../base/common/uuid.js";import{$Vn as H}from"../../../../platform/contextkey/common/contextkey.js";import{$8tb as x}from"../../../services/layout/browser/layoutService.js";import{$8yb as C,$7yb as B,$5yb as $}from"./webview.js";var w=function(o,t,i,e){var s=arguments.length,h=s<3?t:e===null?e=Object.getOwnPropertyDescriptor(t,i):e,r;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")h=Reflect.decorate(o,t,i,e);else for(var d=o.length-1;d>=0;d--)(r=o[d])&&(h=(s<3?r(h):s>3?r(t,i,h):r(t,i))||h);return s>3&&h&&Object.defineProperty(t,i,h),h},l=function(o,t){return function(i,e){t(i,e,o)}};let v=class extends m{get z(){return g(this.y,!0).window}constructor(t,i,e,s){super(),this.I=i,this.J=e,this.L=s,this.a=!0,this.b=new Set,this.c=this.B(new f),this.g=this.B(new y),this.h="",this.m=0,this.n=void 0,this.w=void 0,this.y=void 0,this.C=this.B(new f),this.G=!1,this.M=!1,this.N=this.B(new n),this.onDidDispose=this.N.event,this.Q=this.B(new n),this.onDidFocus=this.Q.event,this.R=this.B(new n),this.onDidBlur=this.R.event,this.S=this.B(new n),this.onDidClickLink=this.S.event,this.U=this.B(new n),this.onDidReload=this.U.event,this.W=this.B(new n),this.onDidScroll=this.W.event,this.X=this.B(new n),this.onDidUpdateState=this.X.event,this.Y=this.B(new n),this.onMessage=this.Y.event,this.Z=this.B(new n),this.onMissingCsp=this.Z.event,this.$=this.B(new n),this.onDidWheel=this.$.event,this.ab=this.B(new n),this.onFatalError=this.ab.event,this.providedViewType=t.providedViewType,this.origin=t.origin??D(),this.j=t.title,this.s=t.extension,this.u=t.options,this.t=t.contentOptions}get isFocused(){return!!this.c.value?.isFocused}dispose(){this.M=!0,this.H?.domNode.remove(),this.H=void 0;for(const t of this.b)t.resolve(!1);this.b.clear(),this.N.fire(),super.dispose()}get container(){if(this.M)throw new Error("OverlayWebview has been disposed");if(!this.H){const t=document.createElement("div");t.style.position="absolute",t.style.overflow="hidden",this.H=new b(t),this.H.setVisibility("hidden"),this.I.getContainer(this.z).appendChild(t)}return this.H.domNode}claim(t,i,e){if(this.M)return;const s=this.w;if(this.y!==i.vscodeWindowId&&(this.release(s),this.c.clear(),this.g.clear(),this.H?.domNode.remove(),this.H=void 0),this.w=t,this.y=i.vscodeWindowId,this.P(i),s!==t){const h=e||this.L;this.C.clear(),this.C.value=h.createScoped(this.container);const r=this.D?.get();this.D?.reset(),this.D=$.bindTo(h),this.D.set(!!r),this.F?.reset(),this.F=B.bindTo(h),this.F.set(!!this.options.enableFindWidget),this.c.value?.setContextKeyService(this.C.value)}}release(t){this.w===t&&(this.C.clear(),this.w=void 0,this.H&&this.H.setVisibility("hidden"),this.u.retainContextWhenHidden?(this.G=!!this.D?.get(),this.hideFind(!1)):(this.c.clear(),this.g.clear()))}layoutWebviewOverElement(t,i,e){if(!this.H||!this.H.domNode.parentElement)return;const s=this.I.whenContainerStylesLoaded(this.z);s?s.then(()=>this.O(t,i,e)):this.O(t,i,e)}O(t,i,e){if(!this.H||!this.H.domNode.parentElement)return;const s=t.getBoundingClientRect(),h=this.H.domNode.parentElement.getBoundingClientRect(),r=(h.height-this.H.domNode.parentElement.clientHeight)/2,d=(h.width-this.H.domNode.parentElement.clientWidth)/2;if(this.H.setTop(s.top-h.top-r),this.H.setLeft(s.left-h.left-d),this.H.setWidth(i?i.width:s.width),this.H.setHeight(i?i.height:s.height),e){const{top:a,left:c,right:u,bottom:p}=S(s,e);this.H.domNode.style.clipPath=`polygon(${c}px ${a}px, ${u}px ${a}px, ${u}px ${p}px, ${c}px ${p}px)`}}P(t){if(this.M)throw new Error("OverlayWebview is disposed");if(!this.c.value){const i=this.J.createWebviewElement({providedViewType:this.providedViewType,origin:this.origin,title:this.j,options:this.u,contentOptions:this.t,extension:this.extension});this.c.value=i,i.state=this.n,this.C.value&&this.c.value.setContextKeyService(this.C.value),this.h&&i.setHtml(this.h),this.u.tryRestoreScrollPosition&&(i.initialScrollProgress=this.m),this.F?.set(!!this.options.enableFindWidget),i.mountTo(this.container,t),this.g.clear(),this.g.add(i.onDidFocus(()=>{this.Q.fire()})),this.g.add(i.onDidBlur(()=>{this.R.fire()})),this.g.add(i.onDidClickLink(e=>{this.S.fire(e)})),this.g.add(i.onMessage(e=>{this.Y.fire(e)})),this.g.add(i.onMissingCsp(e=>{this.Z.fire(e)})),this.g.add(i.onDidWheel(e=>{this.$.fire(e)})),this.g.add(i.onDidReload(()=>{this.U.fire()})),this.g.add(i.onFatalError(e=>{this.ab.fire(e)})),this.g.add(i.onDidScroll(e=>{this.m=e.scrollYPercentage,this.W.fire(e)})),this.g.add(i.onDidUpdateState(e=>{this.n=e,this.X.fire(e)})),this.a&&this.b.forEach(async e=>{e.resolve(await i.postMessage(e.message,e.transfer))}),this.a=!1,this.b.clear()}this.options.retainContextWhenHidden&&this.G&&(this.showFind(!1),this.G=!1),this.H?.setVisibility("visible")}setHtml(t){this.h=t,this.bb(i=>i.setHtml(t))}setTitle(t){this.j=t,this.bb(i=>i.setTitle(t))}get initialScrollProgress(){return this.m}set initialScrollProgress(t){this.m=t,this.bb(i=>i.initialScrollProgress=t)}get state(){return this.n}set state(t){this.n=t,this.bb(i=>i.state=t)}get extension(){return this.s}set extension(t){this.s=t,this.bb(i=>i.extension=t)}get options(){return this.u}set options(t){this.u={customClasses:this.u.customClasses,...t}}get contentOptions(){return this.t}set contentOptions(t){this.t=t,this.bb(i=>i.contentOptions=t)}set localResourcesRoot(t){this.bb(i=>i.localResourcesRoot=t)}async postMessage(t,i){if(this.c.value)return this.c.value.postMessage(t,i);if(this.a){let e;const s=new Promise(h=>e=h);return this.b.add({message:t,transfer:i,resolve:e}),s}return!1}focus(){this.c.value?.focus()}reload(){this.c.value?.reload()}selectAll(){this.c.value?.selectAll()}copy(){this.c.value?.copy()}paste(){this.c.value?.paste()}cut(){this.c.value?.cut()}undo(){this.c.value?.undo()}redo(){this.c.value?.redo()}showFind(t=!0){this.c.value&&(this.c.value.showFind(t),this.D?.set(!0))}hideFind(t=!0){this.D?.reset(),this.c.value?.hideFind(t)}runFindAction(t){this.c.value?.runFindAction(t)}bb(t){this.c.value&&t(this.c.value)}windowDidDragStart(){this.c.value?.windowDidDragStart()}windowDidDragEnd(){this.c.value?.windowDidDragEnd()}setContextKeyService(t){this.c.value?.setContextKeyService(t)}};v=w([l(1,x),l(2,C),l(3,H)],v);function S(o,t){const i=t.getBoundingClientRect(),e=Math.max(i.top-o.top,0),s=Math.max(o.width-(o.right-i.right),0),h=Math.max(o.height-(o.bottom-i.bottom),0),r=Math.max(i.left-o.left,0);return{top:e,right:s,bottom:h,left:r}}export{v as $OBc};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { getWindowById } from "../../../../base/browser/dom.js";
+import { FastDomNode } from "../../../../base/browser/fastDomNode.js";
+import { Emitter } from "../../../../base/common/event.js";
+import { Disposable, DisposableStore, MutableDisposable } from "../../../../base/common/lifecycle.js";
+import { generateUuid } from "../../../../base/common/uuid.js";
+import { IContextKeyService } from "../../../../platform/contextkey/common/contextkey.js";
+import { IWorkbenchLayoutService } from "../../../services/layout/browser/layoutService.js";
+import { IWebviewService, KEYBINDING_CONTEXT_WEBVIEW_FIND_WIDGET_ENABLED, KEYBINDING_CONTEXT_WEBVIEW_FIND_WIDGET_VISIBLE } from "./webview.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+let OverlayWebview = class OverlayWebview2 extends Disposable {
+  static {
+    __name(this, "OverlayWebview");
+  }
+  get window() {
+    return getWindowById(this._windowId, true).window;
+  }
+  constructor(initInfo, _layoutService, _webviewService, _baseContextKeyService) {
+    super();
+    this._layoutService = _layoutService;
+    this._webviewService = _webviewService;
+    this._baseContextKeyService = _baseContextKeyService;
+    this._isFirstLoad = true;
+    this._firstLoadPendingMessages = /* @__PURE__ */ new Set();
+    this._webview = this._register(new MutableDisposable());
+    this._webviewEvents = this._register(new DisposableStore());
+    this._html = "";
+    this._initialScrollProgress = 0;
+    this._state = void 0;
+    this._owner = void 0;
+    this._windowId = void 0;
+    this._scopedContextKeyService = this._register(new MutableDisposable());
+    this._shouldShowFindWidgetOnRestore = false;
+    this._isDisposed = false;
+    this._onDidDispose = this._register(new Emitter());
+    this.onDidDispose = this._onDidDispose.event;
+    this._onDidFocus = this._register(new Emitter());
+    this.onDidFocus = this._onDidFocus.event;
+    this._onDidBlur = this._register(new Emitter());
+    this.onDidBlur = this._onDidBlur.event;
+    this._onDidClickLink = this._register(new Emitter());
+    this.onDidClickLink = this._onDidClickLink.event;
+    this._onDidReload = this._register(new Emitter());
+    this.onDidReload = this._onDidReload.event;
+    this._onDidScroll = this._register(new Emitter());
+    this.onDidScroll = this._onDidScroll.event;
+    this._onDidUpdateState = this._register(new Emitter());
+    this.onDidUpdateState = this._onDidUpdateState.event;
+    this._onMessage = this._register(new Emitter());
+    this.onMessage = this._onMessage.event;
+    this._onMissingCsp = this._register(new Emitter());
+    this.onMissingCsp = this._onMissingCsp.event;
+    this._onDidWheel = this._register(new Emitter());
+    this.onDidWheel = this._onDidWheel.event;
+    this._onFatalError = this._register(new Emitter());
+    this.onFatalError = this._onFatalError.event;
+    this.providedViewType = initInfo.providedViewType;
+    this.origin = initInfo.origin ?? generateUuid();
+    this._title = initInfo.title;
+    this._extension = initInfo.extension;
+    this._options = initInfo.options;
+    this._contentOptions = initInfo.contentOptions;
+  }
+  get isFocused() {
+    return !!this._webview.value?.isFocused;
+  }
+  dispose() {
+    this._isDisposed = true;
+    this._container?.domNode.remove();
+    this._container = void 0;
+    for (const msg of this._firstLoadPendingMessages) {
+      msg.resolve(false);
+    }
+    this._firstLoadPendingMessages.clear();
+    this._onDidDispose.fire();
+    super.dispose();
+  }
+  get container() {
+    if (this._isDisposed) {
+      throw new Error(`OverlayWebview has been disposed`);
+    }
+    if (!this._container) {
+      const node = document.createElement("div");
+      node.style.position = "absolute";
+      node.style.overflow = "hidden";
+      this._container = new FastDomNode(node);
+      this._container.setVisibility("hidden");
+      this._layoutService.getContainer(this.window).appendChild(node);
+    }
+    return this._container.domNode;
+  }
+  claim(owner, targetWindow, scopedContextKeyService) {
+    if (this._isDisposed) {
+      return;
+    }
+    const oldOwner = this._owner;
+    if (this._windowId !== targetWindow.vscodeWindowId) {
+      this.release(oldOwner);
+      this._webview.clear();
+      this._webviewEvents.clear();
+      this._container?.domNode.remove();
+      this._container = void 0;
+    }
+    this._owner = owner;
+    this._windowId = targetWindow.vscodeWindowId;
+    this._show(targetWindow);
+    if (oldOwner !== owner) {
+      const contextKeyService = scopedContextKeyService || this._baseContextKeyService;
+      this._scopedContextKeyService.clear();
+      this._scopedContextKeyService.value = contextKeyService.createScoped(this.container);
+      const wasFindVisible = this._findWidgetVisible?.get();
+      this._findWidgetVisible?.reset();
+      this._findWidgetVisible = KEYBINDING_CONTEXT_WEBVIEW_FIND_WIDGET_VISIBLE.bindTo(contextKeyService);
+      this._findWidgetVisible.set(!!wasFindVisible);
+      this._findWidgetEnabled?.reset();
+      this._findWidgetEnabled = KEYBINDING_CONTEXT_WEBVIEW_FIND_WIDGET_ENABLED.bindTo(contextKeyService);
+      this._findWidgetEnabled.set(!!this.options.enableFindWidget);
+      this._webview.value?.setContextKeyService(this._scopedContextKeyService.value);
+    }
+  }
+  release(owner) {
+    if (this._owner !== owner) {
+      return;
+    }
+    this._scopedContextKeyService.clear();
+    this._owner = void 0;
+    if (this._container) {
+      this._container.setVisibility("hidden");
+    }
+    if (this._options.retainContextWhenHidden) {
+      this._shouldShowFindWidgetOnRestore = !!this._findWidgetVisible?.get();
+      this.hideFind(false);
+    } else {
+      this._webview.clear();
+      this._webviewEvents.clear();
+    }
+  }
+  layoutWebviewOverElement(element, dimension, clippingContainer) {
+    if (!this._container || !this._container.domNode.parentElement) {
+      return;
+    }
+    const whenContainerStylesLoaded = this._layoutService.whenContainerStylesLoaded(this.window);
+    if (whenContainerStylesLoaded) {
+      whenContainerStylesLoaded.then(() => this.doLayoutWebviewOverElement(element, dimension, clippingContainer));
+    } else {
+      this.doLayoutWebviewOverElement(element, dimension, clippingContainer);
+    }
+  }
+  doLayoutWebviewOverElement(element, dimension, clippingContainer) {
+    if (!this._container || !this._container.domNode.parentElement) {
+      return;
+    }
+    const frameRect = element.getBoundingClientRect();
+    const containerRect = this._container.domNode.parentElement.getBoundingClientRect();
+    const parentBorderTop = (containerRect.height - this._container.domNode.parentElement.clientHeight) / 2;
+    const parentBorderLeft = (containerRect.width - this._container.domNode.parentElement.clientWidth) / 2;
+    this._container.setTop(frameRect.top - containerRect.top - parentBorderTop);
+    this._container.setLeft(frameRect.left - containerRect.left - parentBorderLeft);
+    this._container.setWidth(dimension ? dimension.width : frameRect.width);
+    this._container.setHeight(dimension ? dimension.height : frameRect.height);
+    if (clippingContainer) {
+      const { top, left, right, bottom } = computeClippingRect(frameRect, clippingContainer);
+      this._container.domNode.style.clipPath = `polygon(${left}px ${top}px, ${right}px ${top}px, ${right}px ${bottom}px, ${left}px ${bottom}px)`;
+    }
+  }
+  _show(targetWindow) {
+    if (this._isDisposed) {
+      throw new Error("OverlayWebview is disposed");
+    }
+    if (!this._webview.value) {
+      const webview = this._webviewService.createWebviewElement({
+        providedViewType: this.providedViewType,
+        origin: this.origin,
+        title: this._title,
+        options: this._options,
+        contentOptions: this._contentOptions,
+        extension: this.extension
+      });
+      this._webview.value = webview;
+      webview.state = this._state;
+      if (this._scopedContextKeyService.value) {
+        this._webview.value.setContextKeyService(this._scopedContextKeyService.value);
+      }
+      if (this._html) {
+        webview.setHtml(this._html);
+      }
+      if (this._options.tryRestoreScrollPosition) {
+        webview.initialScrollProgress = this._initialScrollProgress;
+      }
+      this._findWidgetEnabled?.set(!!this.options.enableFindWidget);
+      webview.mountTo(this.container, targetWindow);
+      this._webviewEvents.clear();
+      this._webviewEvents.add(webview.onDidFocus(() => {
+        this._onDidFocus.fire();
+      }));
+      this._webviewEvents.add(webview.onDidBlur(() => {
+        this._onDidBlur.fire();
+      }));
+      this._webviewEvents.add(webview.onDidClickLink((x) => {
+        this._onDidClickLink.fire(x);
+      }));
+      this._webviewEvents.add(webview.onMessage((x) => {
+        this._onMessage.fire(x);
+      }));
+      this._webviewEvents.add(webview.onMissingCsp((x) => {
+        this._onMissingCsp.fire(x);
+      }));
+      this._webviewEvents.add(webview.onDidWheel((x) => {
+        this._onDidWheel.fire(x);
+      }));
+      this._webviewEvents.add(webview.onDidReload(() => {
+        this._onDidReload.fire();
+      }));
+      this._webviewEvents.add(webview.onFatalError((x) => {
+        this._onFatalError.fire(x);
+      }));
+      this._webviewEvents.add(webview.onDidScroll((x) => {
+        this._initialScrollProgress = x.scrollYPercentage;
+        this._onDidScroll.fire(x);
+      }));
+      this._webviewEvents.add(webview.onDidUpdateState((state) => {
+        this._state = state;
+        this._onDidUpdateState.fire(state);
+      }));
+      if (this._isFirstLoad) {
+        this._firstLoadPendingMessages.forEach(async (msg) => {
+          msg.resolve(await webview.postMessage(msg.message, msg.transfer));
+        });
+      }
+      this._isFirstLoad = false;
+      this._firstLoadPendingMessages.clear();
+    }
+    if (this.options.retainContextWhenHidden && this._shouldShowFindWidgetOnRestore) {
+      this.showFind(false);
+      this._shouldShowFindWidgetOnRestore = false;
+    }
+    this._container?.setVisibility("visible");
+  }
+  setHtml(html) {
+    this._html = html;
+    this._withWebview((webview) => webview.setHtml(html));
+  }
+  setTitle(title) {
+    this._title = title;
+    this._withWebview((webview) => webview.setTitle(title));
+  }
+  get initialScrollProgress() {
+    return this._initialScrollProgress;
+  }
+  set initialScrollProgress(value) {
+    this._initialScrollProgress = value;
+    this._withWebview((webview) => webview.initialScrollProgress = value);
+  }
+  get state() {
+    return this._state;
+  }
+  set state(value) {
+    this._state = value;
+    this._withWebview((webview) => webview.state = value);
+  }
+  get extension() {
+    return this._extension;
+  }
+  set extension(value) {
+    this._extension = value;
+    this._withWebview((webview) => webview.extension = value);
+  }
+  get options() {
+    return this._options;
+  }
+  set options(value) {
+    this._options = { customClasses: this._options.customClasses, ...value };
+  }
+  get contentOptions() {
+    return this._contentOptions;
+  }
+  set contentOptions(value) {
+    this._contentOptions = value;
+    this._withWebview((webview) => webview.contentOptions = value);
+  }
+  set localResourcesRoot(resources) {
+    this._withWebview((webview) => webview.localResourcesRoot = resources);
+  }
+  async postMessage(message, transfer) {
+    if (this._webview.value) {
+      return this._webview.value.postMessage(message, transfer);
+    }
+    if (this._isFirstLoad) {
+      let resolve;
+      const p = new Promise((r) => resolve = r);
+      this._firstLoadPendingMessages.add({ message, transfer, resolve });
+      return p;
+    }
+    return false;
+  }
+  focus() {
+    this._webview.value?.focus();
+  }
+  reload() {
+    this._webview.value?.reload();
+  }
+  selectAll() {
+    this._webview.value?.selectAll();
+  }
+  copy() {
+    this._webview.value?.copy();
+  }
+  paste() {
+    this._webview.value?.paste();
+  }
+  cut() {
+    this._webview.value?.cut();
+  }
+  undo() {
+    this._webview.value?.undo();
+  }
+  redo() {
+    this._webview.value?.redo();
+  }
+  showFind(animated = true) {
+    if (this._webview.value) {
+      this._webview.value.showFind(animated);
+      this._findWidgetVisible?.set(true);
+    }
+  }
+  hideFind(animated = true) {
+    this._findWidgetVisible?.reset();
+    this._webview.value?.hideFind(animated);
+  }
+  runFindAction(previous) {
+    this._webview.value?.runFindAction(previous);
+  }
+  _withWebview(f) {
+    if (this._webview.value) {
+      f(this._webview.value);
+    }
+  }
+  windowDidDragStart() {
+    this._webview.value?.windowDidDragStart();
+  }
+  windowDidDragEnd() {
+    this._webview.value?.windowDidDragEnd();
+  }
+  setContextKeyService(contextKeyService) {
+    this._webview.value?.setContextKeyService(contextKeyService);
+  }
+};
+OverlayWebview = __decorate([
+  __param(1, IWorkbenchLayoutService),
+  __param(2, IWebviewService),
+  __param(3, IContextKeyService)
+], OverlayWebview);
+function computeClippingRect(frameRect, clipper) {
+  const rootRect = clipper.getBoundingClientRect();
+  const top = Math.max(rootRect.top - frameRect.top, 0);
+  const right = Math.max(frameRect.width - (frameRect.right - rootRect.right), 0);
+  const bottom = Math.max(frameRect.height - (frameRect.bottom - rootRect.bottom), 0);
+  const left = Math.max(rootRect.left - frameRect.left, 0);
+  return { top, right, bottom, left };
+}
+__name(computeClippingRect, "computeClippingRect");
+export {
+  OverlayWebview
+};
+//# sourceMappingURL=overlayWebview.js.map

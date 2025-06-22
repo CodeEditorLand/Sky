@@ -1,1 +1,519 @@
-import{$0h as M}from"../../../../base/common/async.js";import{$Ji as f}from"../../../../base/common/buffer.js";import{$df as d,Event as O}from"../../../../base/common/event.js";import{$vf as g}from"../../../../base/common/lazy.js";import{$vd as D}from"../../../../base/common/lifecycle.js";import{observableValue as b}from"../../../../base/common/observable.js";import{$A as y}from"../../../../base/common/platform.js";import{localize as C}from"../../../../nls.js";import{$Po as I}from"../../../../platform/telemetry/common/telemetry.js";import{$PU as U}from"./getComputedState.js";import{$vU as p}from"./testId.js";import{$OU as x,$LU as A,$MU as N,$NU as S}from"./testingStates.js";import{$AU as P,TestResultItem as l}from"./testTypes.js";var L=function(t,e,s,i){var o,n=arguments.length,r=n<3?e:null===i?i=Object.getOwnPropertyDescriptor(e,s):i;if("object"==typeof Reflect&&"function"==typeof Reflect.decorate)r=Reflect.decorate(t,e,s,i);else for(var a=t.length-1;a>=0;a--)(o=t[a])&&(r=(n<3?o(r):n>3?o(e,s,r):o(e,s))||r);return n>3&&r&&Object.defineProperty(e,s,r),r},j=function(t,e){return function(s,i){e(s,i,t)}};const R={buffers:[],length:0,onDidWriteData:O.None,endPromise:Promise.resolve(),getRange:()=>f.alloc(0),getRangeIter:()=>[]};class q{constructor(){this.a=new d,this.c=new M,this.d=0,this.onDidWriteData=this.a.event,this.endPromise=this.c.p,this.buffers=[]}get length(){return this.d}getRange(t,e){const s=f.alloc(e);let i=0;for(const o of this.getRangeIter(t,e))s.buffer.set(o.buffer,i),i+=o.byteLength;return i<e?s.slice(0,i):s}*getRangeIter(t,e){let s=0,i=0;for(const o of this.buffers){if(i+o.byteLength<=t){i+=o.byteLength;continue}const n=Math.max(0,t-i),r=Math.min(o.byteLength,n+e-s);if(yield o.slice(n,r),s+=r-n,i+=o.byteLength,s===e)break}}append(t,e){const s=this.d;let i,o=t.byteLength;if(void 0===e)return this.e(t),{offset:s,length:o};var n;(n=i||(i={}))[n.CR=13]="CR",n[n.LF=10]="LF";const r=f.fromString(w(e,!0)),a=f.fromString(w(e,!1));o+=r.byteLength+a.byteLength,this.e(r);let h=t.byteLength;for(;h>0;h--){const e=t.buffer[h-1];if(13!==e&&10!==e)break}return this.e(t.slice(0,h)),this.e(a),this.e(t.slice(h)),{offset:s,length:o}}e(t){0!==t.byteLength&&(this.buffers.push(t),this.a.fire(t),this.d+=t.byteLength)}end(){this.c.complete()}}const Z=function*(t,e){for(const s of p.fromString(e.item.extId).idsToRoot())yield t.getStateById(s.toString())},Q=t=>{for(const e of N)if(t[e]>0)return e;return 0},w=(t,e)=>`]633;SetMark;Id=${P(t,e)};Hidden`,T=(t,e,s)=>({controllerId:t,expand:0,item:{...e},children:[],tasks:[],ownComputedState:0,computedState:0});var v;!function(t){t[t.ComputedStateChange=0]="ComputedStateChange",t[t.OwnStateChange=1]="OwnStateChange",t[t.NewMessage=2]="NewMessage"}(v||(v={}));let k=class extends D{get completedAt(){return this.n}get tests(){return this.j.values()}getTestById(t){return this.j.get(t)?.item}constructor(t,e,s,i,o){super(),this.id=t,this.persist=e,this.request=s,this.insertOrder=i,this.w=o,this.a=this.B(new d),this.f=this.B(new d),this.g=this.B(new d),this.h=this.B(new d),this.j=new Map,this.m=0,this.startedAt=Date.now(),this.onChange=this.h.event,this.onComplete=this.a.event,this.onNewTask=this.f.event,this.onEndTask=this.g.event,this.tasks=[],this.name=C(12586,null,(new Date).toLocaleString(y)),this.counts=x(),this.u={getOwnState:t=>t.ownComputedState,getCurrentComputedState:t=>t.computedState,setComputedState:(t,e)=>t.computedState=e,getChildren:t=>t.children,getParents:t=>{const{j:e}=this;return function*(){const s=p.fromString(t.item.extId).parentId;if(s)for(const t of s.idsToRoot())yield e.get(t.toString())}()}},this.F=new g((()=>({id:this.id,completedAt:this.completedAt,tasks:this.tasks.map((t=>({id:t.id,name:t.name,ctrlId:t.ctrlId,hasCoverage:!!t.coverage.get()}))),name:this.name,request:this.request,items:[...this.j.values()].map(l.serializeWithoutMessages)}))),this.G=new g((()=>({id:this.id,completedAt:this.completedAt,tasks:this.tasks.map((t=>({id:t.id,name:t.name,ctrlId:t.ctrlId,hasCoverage:!!t.coverage.get()}))),name:this.name,request:this.request,items:[...this.j.values()].map(l.serialize)})))}getStateById(t){return this.j.get(t)}appendOutput(t,e,s,i){const o=t.byteLength>100?t.slice(0,100).toString()+"…":t.toString();let n;(i||s)&&(n=this.m++);const r=this.D(e),a=this.tasks[r],{offset:h,length:m}=a.output.append(t,n),u={location:s,message:o,offset:h,length:m,marker:n,type:1},d=i&&this.j.get(i);d?(d.tasks[r].messages.push(u),this.h.fire({item:d,result:this,reason:2,message:u})):a.otherMessages.push(u)}addTask(t){this.tasks.push({...t,coverage:b(this,void 0),otherMessages:[],output:new q});for(const t of this.tests)t.tasks.push({duration:void 0,messages:[],state:0});this.f.fire(this.tasks.length-1)}addTestChainToRun(t,e){let s=this.j.get(e[0].extId);s||(s=this.C(t,e[0],null));for(let i=1;i<e.length;i++)s=this.C(t,e[i],s.item.extId)}updateState(t,e,s,i){const o=this.j.get(t);if(!o)return;const n=this.D(e),r=S[o.tasks[n].state],a=S[s];void 0!==r&&(void 0===a||a<r)||this.z(o,n,s,i)}appendMessage(t,e,s){const i=this.j.get(t);i&&(i.tasks[this.D(e)].messages.push(s),this.h.fire({item:i,result:this,reason:2,message:s}))}markTaskComplete(t){const e=this.D(t),s=this.tasks[e];s.running=!1,s.output.end(),this.y(0,t,(t=>1===t.state||2===t.state)),this.g.fire(e)}markComplete(){if(void 0!==this.n)throw new Error("cannot complete a test result multiple times");for(const t of this.tasks)t.running&&this.markTaskComplete(t.id);this.n=Date.now(),this.a.fire(),this.w.publicLog2("test.outcomes",{failures:this.counts[6]+this.counts[4],passes:this.counts[3],controller:this.request.targets.map((t=>t.controllerId)).join(",")})}markRetired(t){for(const[e,s]of this.j)!s.retired&&(!t||t.hasKeyOrParent(p.fromString(e).path))&&(s.retired=!0,this.h.fire({reason:0,item:s,result:this}))}toJSON(){return this.completedAt&&this.persist?this.F.value:void 0}toJSONWithMessages(){return this.completedAt&&this.persist?this.G.value:void 0}y(t,e,s){const i=this.D(e);for(const e of this.j.values())s(e.tasks[i],e)&&this.z(e,i,t)}z(t,e,s,i){const o=t.ownComputedState,n=t.ownDuration,r={item:t,result:this,reason:1,previousState:o,previousOwnDuration:n};t.tasks[e].state=s,void 0!==i&&(t.tasks[e].duration=i,t.ownDuration=Math.max(t.ownDuration||0,i));const a=A(...t.tasks.map((t=>t.state)));a!==o?(t.ownComputedState=a,this.counts[o]--,this.counts[a]++,U(this.u,t).forEach((e=>this.h.fire(e===t?r:{item:e,result:this,reason:0})))):i!==n&&this.h.fire(r)}C(t,e,s){const i=T(t,e);if(this.j.set(e.extId,i),this.counts[0]++,s&&this.j.get(s)?.children.push(i),this.tasks.length)for(let t=0;t<this.tasks.length;t++)i.tasks.push({duration:void 0,messages:[],state:0});return i}D(t){const e=this.tasks.findIndex((e=>e.id===t));if(-1===e)throw new Error(`Unknown task ${t} in updateState`);return e}};k=L([j(4,I)],k);class et{get tests(){return this.a.values()}constructor(t,e,s=!0){this.c=e,this.d=s,this.counts=x(),this.a=new Map,this.id=e.id,this.completedAt=e.completedAt,this.tasks=e.tasks.map(((t,e)=>({id:t.id,name:t.name||C(12587,null),ctrlId:t.ctrlId,running:!1,coverage:b(this,void 0),output:R,otherMessages:[]}))),this.name=e.name,this.request=e.request;for(const s of e.items){const e=l.deserialize(t,s);this.counts[e.ownComputedState]++,this.a.set(s.item.extId,e)}}getStateById(t){return this.a.get(t)}toJSON(){return this.d?this.c:void 0}toJSONWithMessages(){return this.toJSON()}}export{k as $1U,et as $2U,q as $XU,Z as $YU,Q as $ZU,v as TestResultItemChangeReason};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { DeferredPromise } from "../../../../base/common/async.js";
+import { VSBuffer } from "../../../../base/common/buffer.js";
+import { Emitter, Event } from "../../../../base/common/event.js";
+import { Lazy } from "../../../../base/common/lazy.js";
+import { Disposable } from "../../../../base/common/lifecycle.js";
+import { observableValue } from "../../../../base/common/observable.js";
+import { language } from "../../../../base/common/platform.js";
+import { localize } from "../../../../nls.js";
+import { ITelemetryService } from "../../../../platform/telemetry/common/telemetry.js";
+import { refreshComputedState } from "./getComputedState.js";
+import { TestId } from "./testId.js";
+import { makeEmptyCounts, maxPriority, statesInOrder, terminalStatePriorities } from "./testingStates.js";
+import { getMarkId, TestResultItem } from "./testTypes.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+const emptyRawOutput = {
+  buffers: [],
+  length: 0,
+  onDidWriteData: Event.None,
+  endPromise: Promise.resolve(),
+  getRange: /* @__PURE__ */ __name(() => VSBuffer.alloc(0), "getRange"),
+  getRangeIter: /* @__PURE__ */ __name(() => [], "getRangeIter")
+};
+class TaskRawOutput {
+  static {
+    __name(this, "TaskRawOutput");
+  }
+  constructor() {
+    this.writeDataEmitter = new Emitter();
+    this.endDeferred = new DeferredPromise();
+    this.offset = 0;
+    this.onDidWriteData = this.writeDataEmitter.event;
+    this.endPromise = this.endDeferred.p;
+    this.buffers = [];
+  }
+  /** @inheritdoc */
+  get length() {
+    return this.offset;
+  }
+  /** @inheritdoc */
+  getRange(start, length) {
+    const buf = VSBuffer.alloc(length);
+    let bufLastWrite = 0;
+    for (const chunk of this.getRangeIter(start, length)) {
+      buf.buffer.set(chunk.buffer, bufLastWrite);
+      bufLastWrite += chunk.byteLength;
+    }
+    return bufLastWrite < length ? buf.slice(0, bufLastWrite) : buf;
+  }
+  /** @inheritdoc */
+  *getRangeIter(start, length) {
+    let soFar = 0;
+    let internalLastRead = 0;
+    for (const b of this.buffers) {
+      if (internalLastRead + b.byteLength <= start) {
+        internalLastRead += b.byteLength;
+        continue;
+      }
+      const bstart = Math.max(0, start - internalLastRead);
+      const bend = Math.min(b.byteLength, bstart + length - soFar);
+      yield b.slice(bstart, bend);
+      soFar += bend - bstart;
+      internalLastRead += b.byteLength;
+      if (soFar === length) {
+        break;
+      }
+    }
+  }
+  /**
+   * Appends data to the output, returning the byte range where the data can be found.
+   */
+  append(data, marker) {
+    const offset = this.offset;
+    let length = data.byteLength;
+    if (marker === void 0) {
+      this.push(data);
+      return { offset, length };
+    }
+    let TrimBytes;
+    (function(TrimBytes2) {
+      TrimBytes2[TrimBytes2["CR"] = 13] = "CR";
+      TrimBytes2[TrimBytes2["LF"] = 10] = "LF";
+    })(TrimBytes || (TrimBytes = {}));
+    const start = VSBuffer.fromString(getMarkCode(marker, true));
+    const end = VSBuffer.fromString(getMarkCode(marker, false));
+    length += start.byteLength + end.byteLength;
+    this.push(start);
+    let trimLen = data.byteLength;
+    for (; trimLen > 0; trimLen--) {
+      const last = data.buffer[trimLen - 1];
+      if (last !== 13 && last !== 10) {
+        break;
+      }
+    }
+    this.push(data.slice(0, trimLen));
+    this.push(end);
+    this.push(data.slice(trimLen));
+    return { offset, length };
+  }
+  push(data) {
+    if (data.byteLength === 0) {
+      return;
+    }
+    this.buffers.push(data);
+    this.writeDataEmitter.fire(data);
+    this.offset += data.byteLength;
+  }
+  /** Signals the output has ended. */
+  end() {
+    this.endDeferred.complete();
+  }
+}
+const resultItemParents = /* @__PURE__ */ __name(function* (results, item) {
+  for (const id of TestId.fromString(item.item.extId).idsToRoot()) {
+    yield results.getStateById(id.toString());
+  }
+}, "resultItemParents");
+const maxCountPriority = /* @__PURE__ */ __name((counts) => {
+  for (const state of statesInOrder) {
+    if (counts[state] > 0) {
+      return state;
+    }
+  }
+  return 0;
+}, "maxCountPriority");
+const getMarkCode = /* @__PURE__ */ __name((marker, start) => `\x1B]633;SetMark;Id=${getMarkId(marker, start)};Hidden\x07`, "getMarkCode");
+const itemToNode = /* @__PURE__ */ __name((controllerId, item, parent) => ({
+  controllerId,
+  expand: 0,
+  item: { ...item },
+  children: [],
+  tasks: [],
+  ownComputedState: 0,
+  computedState: 0
+}), "itemToNode");
+var TestResultItemChangeReason;
+(function(TestResultItemChangeReason2) {
+  TestResultItemChangeReason2[TestResultItemChangeReason2["ComputedStateChange"] = 0] = "ComputedStateChange";
+  TestResultItemChangeReason2[TestResultItemChangeReason2["OwnStateChange"] = 1] = "OwnStateChange";
+  TestResultItemChangeReason2[TestResultItemChangeReason2["NewMessage"] = 2] = "NewMessage";
+})(TestResultItemChangeReason || (TestResultItemChangeReason = {}));
+let LiveTestResult = class LiveTestResult2 extends Disposable {
+  static {
+    __name(this, "LiveTestResult");
+  }
+  /**
+   * @inheritdoc
+   */
+  get completedAt() {
+    return this._completedAt;
+  }
+  /**
+   * @inheritdoc
+   */
+  get tests() {
+    return this.testById.values();
+  }
+  /** Gets an included test item by ID. */
+  getTestById(id) {
+    return this.testById.get(id)?.item;
+  }
+  constructor(id, persist, request, insertOrder, telemetry) {
+    super();
+    this.id = id;
+    this.persist = persist;
+    this.request = request;
+    this.insertOrder = insertOrder;
+    this.telemetry = telemetry;
+    this.completeEmitter = this._register(new Emitter());
+    this.newTaskEmitter = this._register(new Emitter());
+    this.endTaskEmitter = this._register(new Emitter());
+    this.changeEmitter = this._register(new Emitter());
+    this.testById = /* @__PURE__ */ new Map();
+    this.testMarkerCounter = 0;
+    this.startedAt = Date.now();
+    this.onChange = this.changeEmitter.event;
+    this.onComplete = this.completeEmitter.event;
+    this.onNewTask = this.newTaskEmitter.event;
+    this.onEndTask = this.endTaskEmitter.event;
+    this.tasks = [];
+    this.name = localize("runFinished", "Test run at {0}", (/* @__PURE__ */ new Date()).toLocaleString(language));
+    this.counts = makeEmptyCounts();
+    this.computedStateAccessor = {
+      getOwnState: /* @__PURE__ */ __name((i) => i.ownComputedState, "getOwnState"),
+      getCurrentComputedState: /* @__PURE__ */ __name((i) => i.computedState, "getCurrentComputedState"),
+      setComputedState: /* @__PURE__ */ __name((i, s) => i.computedState = s, "setComputedState"),
+      getChildren: /* @__PURE__ */ __name((i) => i.children, "getChildren"),
+      getParents: /* @__PURE__ */ __name((i) => {
+        const { testById: testByExtId } = this;
+        return function* () {
+          const parentId = TestId.fromString(i.item.extId).parentId;
+          if (parentId) {
+            for (const id2 of parentId.idsToRoot()) {
+              yield testByExtId.get(id2.toString());
+            }
+          }
+        }();
+      }, "getParents")
+    };
+    this.doSerialize = new Lazy(() => ({
+      id: this.id,
+      completedAt: this.completedAt,
+      tasks: this.tasks.map((t) => ({ id: t.id, name: t.name, ctrlId: t.ctrlId, hasCoverage: !!t.coverage.get() })),
+      name: this.name,
+      request: this.request,
+      items: [...this.testById.values()].map(TestResultItem.serializeWithoutMessages)
+    }));
+    this.doSerializeWithMessages = new Lazy(() => ({
+      id: this.id,
+      completedAt: this.completedAt,
+      tasks: this.tasks.map((t) => ({ id: t.id, name: t.name, ctrlId: t.ctrlId, hasCoverage: !!t.coverage.get() })),
+      name: this.name,
+      request: this.request,
+      items: [...this.testById.values()].map(TestResultItem.serialize)
+    }));
+  }
+  /**
+   * @inheritdoc
+   */
+  getStateById(extTestId) {
+    return this.testById.get(extTestId);
+  }
+  /**
+   * Appends output that occurred during the test run.
+   */
+  appendOutput(output, taskId, location, testId) {
+    const preview = output.byteLength > 100 ? output.slice(0, 100).toString() + "\u2026" : output.toString();
+    let marker;
+    if (testId || location) {
+      marker = this.testMarkerCounter++;
+    }
+    const index = this.mustGetTaskIndex(taskId);
+    const task = this.tasks[index];
+    const { offset, length } = task.output.append(output, marker);
+    const message = {
+      location,
+      message: preview,
+      offset,
+      length,
+      marker,
+      type: 1
+    };
+    const test = testId && this.testById.get(testId);
+    if (test) {
+      test.tasks[index].messages.push(message);
+      this.changeEmitter.fire({ item: test, result: this, reason: 2, message });
+    } else {
+      task.otherMessages.push(message);
+    }
+  }
+  /**
+   * Adds a new run task to the results.
+   */
+  addTask(task) {
+    this.tasks.push({ ...task, coverage: observableValue(this, void 0), otherMessages: [], output: new TaskRawOutput() });
+    for (const test of this.tests) {
+      test.tasks.push({
+        duration: void 0,
+        messages: [],
+        state: 0
+        /* TestResultState.Unset */
+      });
+    }
+    this.newTaskEmitter.fire(this.tasks.length - 1);
+  }
+  /**
+   * Add the chain of tests to the run. The first test in the chain should
+   * be either a test root, or a previously-known test.
+   */
+  addTestChainToRun(controllerId, chain) {
+    let parent = this.testById.get(chain[0].extId);
+    if (!parent) {
+      parent = this.addTestToRun(controllerId, chain[0], null);
+    }
+    for (let i = 1; i < chain.length; i++) {
+      parent = this.addTestToRun(controllerId, chain[i], parent.item.extId);
+    }
+    return void 0;
+  }
+  /**
+   * Updates the state of the test by its internal ID.
+   */
+  updateState(testId, taskId, state, duration) {
+    const entry = this.testById.get(testId);
+    if (!entry) {
+      return;
+    }
+    const index = this.mustGetTaskIndex(taskId);
+    const oldTerminalStatePrio = terminalStatePriorities[entry.tasks[index].state];
+    const newTerminalStatePrio = terminalStatePriorities[state];
+    if (oldTerminalStatePrio !== void 0 && (newTerminalStatePrio === void 0 || newTerminalStatePrio < oldTerminalStatePrio)) {
+      return;
+    }
+    this.fireUpdateAndRefresh(entry, index, state, duration);
+  }
+  /**
+   * Appends a message for the test in the run.
+   */
+  appendMessage(testId, taskId, message) {
+    const entry = this.testById.get(testId);
+    if (!entry) {
+      return;
+    }
+    entry.tasks[this.mustGetTaskIndex(taskId)].messages.push(message);
+    this.changeEmitter.fire({ item: entry, result: this, reason: 2, message });
+  }
+  /**
+   * Marks the task in the test run complete.
+   */
+  markTaskComplete(taskId) {
+    const index = this.mustGetTaskIndex(taskId);
+    const task = this.tasks[index];
+    task.running = false;
+    task.output.end();
+    this.setAllToState(
+      0,
+      taskId,
+      (t) => t.state === 1 || t.state === 2
+      /* TestResultState.Running */
+    );
+    this.endTaskEmitter.fire(index);
+  }
+  /**
+   * Notifies the service that all tests are complete.
+   */
+  markComplete() {
+    if (this._completedAt !== void 0) {
+      throw new Error("cannot complete a test result multiple times");
+    }
+    for (const task of this.tasks) {
+      if (task.running) {
+        this.markTaskComplete(task.id);
+      }
+    }
+    this._completedAt = Date.now();
+    this.completeEmitter.fire();
+    this.telemetry.publicLog2("test.outcomes", {
+      failures: this.counts[
+        6
+        /* TestResultState.Errored */
+      ] + this.counts[
+        4
+        /* TestResultState.Failed */
+      ],
+      passes: this.counts[
+        3
+        /* TestResultState.Passed */
+      ],
+      controller: this.request.targets.map((t) => t.controllerId).join(",")
+    });
+  }
+  /**
+   * Marks the test and all of its children in the run as retired.
+   */
+  markRetired(testIds) {
+    for (const [id, test] of this.testById) {
+      if (!test.retired && (!testIds || testIds.hasKeyOrParent(TestId.fromString(id).path))) {
+        test.retired = true;
+        this.changeEmitter.fire({ reason: 0, item: test, result: this });
+      }
+    }
+  }
+  /**
+   * @inheritdoc
+   */
+  toJSON() {
+    return this.completedAt && this.persist ? this.doSerialize.value : void 0;
+  }
+  toJSONWithMessages() {
+    return this.completedAt && this.persist ? this.doSerializeWithMessages.value : void 0;
+  }
+  /**
+   * Updates all tests in the collection to the given state.
+   */
+  setAllToState(state, taskId, when) {
+    const index = this.mustGetTaskIndex(taskId);
+    for (const test of this.testById.values()) {
+      if (when(test.tasks[index], test)) {
+        this.fireUpdateAndRefresh(test, index, state);
+      }
+    }
+  }
+  fireUpdateAndRefresh(entry, taskIndex, newState, newOwnDuration) {
+    const previousOwnComputed = entry.ownComputedState;
+    const previousOwnDuration = entry.ownDuration;
+    const changeEvent = {
+      item: entry,
+      result: this,
+      reason: 1,
+      previousState: previousOwnComputed,
+      previousOwnDuration
+    };
+    entry.tasks[taskIndex].state = newState;
+    if (newOwnDuration !== void 0) {
+      entry.tasks[taskIndex].duration = newOwnDuration;
+      entry.ownDuration = Math.max(entry.ownDuration || 0, newOwnDuration);
+    }
+    const newOwnComputed = maxPriority(...entry.tasks.map((t) => t.state));
+    if (newOwnComputed === previousOwnComputed) {
+      if (newOwnDuration !== previousOwnDuration) {
+        this.changeEmitter.fire(changeEvent);
+      }
+      return;
+    }
+    entry.ownComputedState = newOwnComputed;
+    this.counts[previousOwnComputed]--;
+    this.counts[newOwnComputed]++;
+    refreshComputedState(this.computedStateAccessor, entry).forEach((t) => this.changeEmitter.fire(t === entry ? changeEvent : {
+      item: t,
+      result: this,
+      reason: 0
+    }));
+  }
+  addTestToRun(controllerId, item, parent) {
+    const node = itemToNode(controllerId, item, parent);
+    this.testById.set(item.extId, node);
+    this.counts[
+      0
+      /* TestResultState.Unset */
+    ]++;
+    if (parent) {
+      this.testById.get(parent)?.children.push(node);
+    }
+    if (this.tasks.length) {
+      for (let i = 0; i < this.tasks.length; i++) {
+        node.tasks.push({
+          duration: void 0,
+          messages: [],
+          state: 0
+          /* TestResultState.Unset */
+        });
+      }
+    }
+    return node;
+  }
+  mustGetTaskIndex(taskId) {
+    const index = this.tasks.findIndex((t) => t.id === taskId);
+    if (index === -1) {
+      throw new Error(`Unknown task ${taskId} in updateState`);
+    }
+    return index;
+  }
+};
+LiveTestResult = __decorate([
+  __param(4, ITelemetryService)
+], LiveTestResult);
+class HydratedTestResult {
+  static {
+    __name(this, "HydratedTestResult");
+  }
+  /**
+   * @inheritdoc
+   */
+  get tests() {
+    return this.testById.values();
+  }
+  constructor(identity, serialized, persist = true) {
+    this.serialized = serialized;
+    this.persist = persist;
+    this.counts = makeEmptyCounts();
+    this.testById = /* @__PURE__ */ new Map();
+    this.id = serialized.id;
+    this.completedAt = serialized.completedAt;
+    this.tasks = serialized.tasks.map((task, i) => ({
+      id: task.id,
+      name: task.name || localize("testUnnamedTask", "Unnamed Task"),
+      ctrlId: task.ctrlId,
+      running: false,
+      coverage: observableValue(this, void 0),
+      output: emptyRawOutput,
+      otherMessages: []
+    }));
+    this.name = serialized.name;
+    this.request = serialized.request;
+    for (const item of serialized.items) {
+      const de = TestResultItem.deserialize(identity, item);
+      this.counts[de.ownComputedState]++;
+      this.testById.set(item.item.extId, de);
+    }
+  }
+  /**
+   * @inheritdoc
+   */
+  getStateById(extTestId) {
+    return this.testById.get(extTestId);
+  }
+  /**
+   * @inheritdoc
+   */
+  toJSON() {
+    return this.persist ? this.serialized : void 0;
+  }
+  /**
+   * @inheritdoc
+   */
+  toJSONWithMessages() {
+    return this.toJSON();
+  }
+}
+export {
+  HydratedTestResult,
+  LiveTestResult,
+  TaskRawOutput,
+  TestResultItemChangeReason,
+  maxCountPriority,
+  resultItemParents
+};
+//# sourceMappingURL=testResult.js.map

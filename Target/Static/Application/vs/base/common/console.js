@@ -1,1 +1,92 @@
-import{URI as l}from"./uri.js";function m(t){const n=t;return n&&"string"==typeof n.type&&"string"==typeof n.severity}function u(t){const n=[];let e;try{const r=JSON.parse(t.arguments),c=r[r.length-1];c&&c.__$stack&&(r.pop(),e=c.__$stack),n.push(...r)}catch{n.push("Unable to log remote console arguments",t.arguments)}return{args:n,stack:e}}function p(t){if("string"!=typeof t)return p(u(t).stack);if(t){const n=f(t),e=/at [^\/]*((?:(?:[a-zA-Z]+:)|(?:[\/])|(?:\\\\))(?:.+)):(\d+):(\d+)/.exec(n||"");if(e&&4===e.length)return{uri:l.file(e[1]),line:Number(e[2]),column:Number(e[3])}}}function f(t){if(!t)return t;const n=t.indexOf("\n");return-1===n?t:t.substring(0,n)}function a(t,n){const{args:e,stack:r}=u(t),o="string"==typeof e[0]&&1===e.length;let s=f(r);s&&(s=`(${s.trim()})`);let i=[];if(i="string"==typeof e[0]?s&&o?[`%c[${n}] %c${e[0]} %c${s}`,c("blue"),c(""),c("grey")]:[`%c[${n}] %c${e[0]}`,c("blue"),c(""),...e.slice(1)]:[`%c[${n}]%`,c("blue"),...e],s&&!o&&i.push(s),"function"!=typeof console[t.severity])throw new Error("Unknown console method")}function c(t){return`color: ${t}`}export{m as $Tw,u as $Uw,p as $Vw,a as log};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { URI } from "./uri.js";
+function isRemoteConsoleLog(obj) {
+  const entry = obj;
+  return entry && typeof entry.type === "string" && typeof entry.severity === "string";
+}
+__name(isRemoteConsoleLog, "isRemoteConsoleLog");
+function parse(entry) {
+  const args = [];
+  let stack;
+  try {
+    const parsedArguments = JSON.parse(entry.arguments);
+    const stackArgument = parsedArguments[parsedArguments.length - 1];
+    if (stackArgument && stackArgument.__$stack) {
+      parsedArguments.pop();
+      stack = stackArgument.__$stack;
+    }
+    args.push(...parsedArguments);
+  } catch (error) {
+    args.push("Unable to log remote console arguments", entry.arguments);
+  }
+  return { args, stack };
+}
+__name(parse, "parse");
+function getFirstFrame(arg0) {
+  if (typeof arg0 !== "string") {
+    return getFirstFrame(parse(arg0).stack);
+  }
+  const stack = arg0;
+  if (stack) {
+    const topFrame = findFirstFrame(stack);
+    const matches = /at [^\/]*((?:(?:[a-zA-Z]+:)|(?:[\/])|(?:\\\\))(?:.+)):(\d+):(\d+)/.exec(topFrame || "");
+    if (matches && matches.length === 4) {
+      return {
+        uri: URI.file(matches[1]),
+        line: Number(matches[2]),
+        column: Number(matches[3])
+      };
+    }
+  }
+  return void 0;
+}
+__name(getFirstFrame, "getFirstFrame");
+function findFirstFrame(stack) {
+  if (!stack) {
+    return stack;
+  }
+  const newlineIndex = stack.indexOf("\n");
+  if (newlineIndex === -1) {
+    return stack;
+  }
+  return stack.substring(0, newlineIndex);
+}
+__name(findFirstFrame, "findFirstFrame");
+function log(entry, label) {
+  const { args, stack } = parse(entry);
+  const isOneStringArg = typeof args[0] === "string" && args.length === 1;
+  let topFrame = findFirstFrame(stack);
+  if (topFrame) {
+    topFrame = `(${topFrame.trim()})`;
+  }
+  let consoleArgs = [];
+  if (typeof args[0] === "string") {
+    if (topFrame && isOneStringArg) {
+      consoleArgs = [`%c[${label}] %c${args[0]} %c${topFrame}`, color("blue"), color(""), color("grey")];
+    } else {
+      consoleArgs = [`%c[${label}] %c${args[0]}`, color("blue"), color(""), ...args.slice(1)];
+    }
+  } else {
+    consoleArgs = [`%c[${label}]%`, color("blue"), ...args];
+  }
+  if (topFrame && !isOneStringArg) {
+    consoleArgs.push(topFrame);
+  }
+  if (typeof console[entry.severity] !== "function") {
+    throw new Error("Unknown console method");
+  }
+  console[entry.severity].apply(console, consoleArgs);
+}
+__name(log, "log");
+function color(color2) {
+  return `color: ${color2}`;
+}
+__name(color, "color");
+export {
+  getFirstFrame,
+  isRemoteConsoleLog,
+  log,
+  parse
+};
+//# sourceMappingURL=console.js.map

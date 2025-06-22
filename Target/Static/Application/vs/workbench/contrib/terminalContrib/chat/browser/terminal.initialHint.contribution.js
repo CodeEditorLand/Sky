@@ -1,1 +1,412 @@
-import*as c from"../../../../../base/browser/dom.js";import{$S7 as _}from"../../../../../base/browser/formattedTextRenderer.js";import{$B5 as F}from"../../../../../base/browser/mouseEvent.js";import{$b8 as M}from"../../../../../base/browser/ui/aria/aria.js";import{$99 as P}from"../../../../../base/browser/ui/keybindingLabel/keybindingLabel.js";import{$df as S,Event as I}from"../../../../../base/common/event.js";import{$vd as y,$ud as B,$wd as N}from"../../../../../base/common/lifecycle.js";import{OS as O}from"../../../../../base/common/platform.js";import{localize as m}from"../../../../../nls.js";import{$Yn as R}from"../../../../../platform/commands/common/commands.js";import{$El as L}from"../../../../../platform/configuration/common/configuration.js";import{$ofb as K}from"../../../../../platform/contextview/browser/contextView.js";import{$mj as V}from"../../../../../platform/instantiation/common/instantiation.js";import{$ux as J}from"../../../../../platform/keybinding/common/keybinding.js";import{$nn as X}from"../../../../../platform/product/common/productService.js";import{$Ho as A}from"../../../../../platform/storage/common/storage.js";import{$Po as Y}from"../../../../../platform/telemetry/common/telemetry.js";import{$iT as j}from"../../../chat/common/chatAgents.js";import{$GYb as z,$HYb as q,$EYb as W}from"../../../terminal/browser/terminal.js";import{$slc as G}from"../../../terminal/browser/terminalExtensions.js";import{$Hrc as U}from"../../../terminal/browser/terminalInstance.js";import"./media/terminalInitialHint.css";import{ChatAgentLocation as v}from"../../../chat/common/constants.js";var x=function(l,t,i,s){var e=arguments.length,n=e<3?t:s===null?s=Object.getOwnPropertyDescriptor(t,i):s,a;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")n=Reflect.decorate(l,t,i,s);else for(var r=l.length-1;r>=0;r--)(a=l[r])&&(n=(e<3?a(n):e>3?a(t,i,n):a(t,i))||n);return e>3&&n&&Object.defineProperty(t,i,n),n},o=function(l,t){return function(i,s){t(i,s,l)}},C;const g=c.$;var D;(function(l){l.InitialHintHideStorageKey="terminal.initialHint.hide"})(D||(D={}));class Q extends y{get onDidRequestCreateHint(){return this.a.event}constructor(t,i){super(),this.c=t,this.f=i,this.a=this.B(new S),this.b=this.B(new N)}activate(t){const i=this.B(new B);this.b.value=i;const s=this.c.get(2);s?i.add(I.once(s.promptInputModel.onDidStartInput)(()=>this.a.fire())):this.B(this.c.onDidAddCapability(n=>{if(n.id===2){const a=n.capability;i.add(I.once(a.promptInputModel.onDidStartInput)(()=>this.a.fire())),a.promptInputModel.value||this.a.fire()}}));const e=this.f(n=>{n?.locations.includes(v.Terminal)&&(this.a.fire(),e.dispose())});this.b.value?.add(e)}}let b=class extends y{static{C=this}static{this.ID="terminal.initialHint"}static get(t){return t.getContribution(C.ID)}constructor(t,i,s,e,n,a,r){super(),this.g=t,this.h=i,this.j=s,this.m=e,this.n=n,this.r=a,this.s=r,this.B(this.j.onDidChangeConfiguration(d=>{d.affectsConfiguration("terminal.integrated.initialHint")&&this.n.remove("terminal.initialHint.hide",-1)}))}xtermOpen(t){"shellLaunchConfig"in this.g.instance&&(this.g.instance.shellLaunchConfig.isExtensionOwnedTerminal||this.g.instance.shellLaunchConfig.isFeatureTerminal)||this.n.getBoolean("terminal.initialHint.hide",-1,!1)||this.s.instances.length+this.r.instances.length===1&&(this.f=t,this.a=this.B(this.m.createInstance(Q,this.g.instance.capabilities,this.h.onDidChangeAgents)),this.f.raw.loadAddon(this.a),this.B(this.a.onDidRequestCreateHint(()=>this.t())))}t(){const t=this.g.instance instanceof U?this.g.instance:void 0,i=t?.capabilities.get(2);if(!t||!this.f||this.b||!i||i.promptInputModel.value||t.shellLaunchConfig.attachPersistentProcess||!this.j.getValue("terminal.integrated.initialHint"))return;if(!this.c){const e=this.f.raw.registerMarker();if(!e||this.f.raw.buffer.active.cursorX===0)return;this.B(e),this.c=this.f.raw.registerDecoration({marker:e,x:this.f.raw.buffer.active.cursorX+1}),this.c&&this.B(this.c)}this.B(this.f.raw.onKey(()=>this.dispose())),this.B(this.j.onDidChangeConfiguration(e=>{e.affectsConfiguration("terminal.integrated.initialHint")&&!this.j.getValue("terminal.integrated.initialHint")&&this.dispose()}));const s=i.promptInputModel;s&&this.B(s.onDidChangeInput(()=>{s.value&&this.dispose()})),this.c&&(this.B(this.c),this.B(this.c.onRender(e=>{if(!this.b&&this.f?.isFocused&&this.s.instances.length+this.r.instances.length===1){const n=this.h.getActivatedAgents().filter(a=>a.locations.includes(v.Terminal));if(n?.length){const a=this.B(this.m.createInstance($,t));if(this.a?.dispose(),this.b=a.getDomNode(n),!this.b)return;e.appendChild(this.b),e.classList.add("terminal-initial-hint");const r=this.f.getFont();r&&(e.style.fontFamily=r.fontFamily,e.style.fontSize=r.fontSize+"px")}}if(this.b&&this.f){const n=this.b.parentElement;n&&(n.style.width=(this.f.raw.cols-this.f.raw.buffer.active.cursorX)/this.f.raw.cols*100+"%")}})))}};b=C=x([o(1,j),o(2,L),o(3,V),o(4,A),o(5,z),o(6,q)],b);G(b.ID,b,!1);let $=class extends y{constructor(t,i,s,e,n,a,r,d,u,h){super(),this.g=t,this.h=i,this.j=s,this.m=e,this.n=n,this.r=a,this.s=r,this.t=d,this.u=u,this.w=h,this.b=this.B(new B),this.c=!1,this.f="",this.b.add(t.onDidFocus(()=>{this.g.hasFocus&&this.c&&this.f&&this.m.getValue("accessibility.verbosity.terminalChat")&&M(this.f)})),this.b.add(h.onDidChangeInstances(()=>{this.w.instances.length!==1&&this.dispose()})),this.b.add(this.m.onDidChangeConfiguration(f=>{f.affectsConfiguration("terminal.integrated.initialHint")&&!this.m.getValue("terminal.integrated.initialHint")&&this.dispose()}))}y(t){let i=(t.length===1?t[0].fullName:void 0)??this.s.nameShort;const s=this.h.getDefaultAgent(v.Panel);s?.extensionId.value===t[0].extensionId.value&&(i=s.fullName??i);let e=`Ask ${i} something or start typing to dismiss.`;const n=()=>{this.t.store("terminal.initialHint.hide",!0,-1,0),this.u.publicLog2("workbenchActionExecuted",{id:"terminalInlineChat.hintAction",from:"hint"}),this.j.executeCommand("workbench.action.terminal.chat.start",{from:"hint"})};this.b.add(this.j.onDidExecuteCommand(h=>{h.commandId==="workbench.action.terminal.chat.start"&&(this.t.store("terminal.initialHint.hide",!0,-1,0),this.dispose())}));const a={disposables:this.b,callback:(h,f)=>{switch(h){case"0":n();break}}},r=g("div.terminal-initial-hint");r.style.display="block";const d=this.r.lookupKeybinding("workbench.action.terminal.chat.start"),u=d?.getLabel();if(d&&u){const h=m(11991,null,u,i),[f,k]=h.split(u).map(T=>{const H=g("a",void 0,T);return this.b.add(c.$J5(H,c.$F6.CLICK,n)),H});r.appendChild(f);const p=a.disposables.add(new P(r,O));p.set(d),p.element.style.width="min-content",p.element.style.display="inline",p.element.style.cursor="pointer",this.b.add(c.$J5(p.element,c.$F6.CLICK,n)),r.appendChild(k);const w=m(11992,null),E=g("span.detail",void 0,w);r.appendChild(E),e=h.concat(w)}else{const h=m(11993,null,i),f=_(h,{actionHandler:a});r.appendChild(f)}return{ariaLabel:e,hintHandler:a,hintElement:r}}getDomNode(t){if(!this.a){this.a=g(".terminal-initial-hint"),this.a.style.paddingLeft="4px";const{hintElement:i,ariaLabel:s}=this.y(t);this.a.append(i),this.f=s.concat(m(11994,null,"accessibility.verbosity.terminalChat")),this.b.add(c.$J5(this.a,"click",()=>{this.a?.remove(),this.a=void 0})),this.b.add(c.$J5(this.a,c.$F6.CONTEXT_MENU,e=>{this.n.showContextMenu({getAnchor:()=>new F(c.$p6(),e),getActions:()=>[{id:"workench.action.disableTerminalInitialHint",label:m(11995,null),tooltip:m(11996,null),enabled:!0,class:void 0,run:()=>this.m.updateValue("terminal.integrated.initialHint",!1)}]})}))}return this.a}dispose(){this.a?.remove(),super.dispose()}};$=x([o(1,j),o(2,R),o(3,L),o(4,K),o(5,J),o(6,X),o(7,A),o(8,Y),o(9,W)],$);export{Q as $1tc,b as $2tc};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import * as dom from "../../../../../base/browser/dom.js";
+import { renderFormattedText } from "../../../../../base/browser/formattedTextRenderer.js";
+import { StandardMouseEvent } from "../../../../../base/browser/mouseEvent.js";
+import { status } from "../../../../../base/browser/ui/aria/aria.js";
+import { KeybindingLabel } from "../../../../../base/browser/ui/keybindingLabel/keybindingLabel.js";
+import { Emitter, Event } from "../../../../../base/common/event.js";
+import { Disposable, DisposableStore, MutableDisposable } from "../../../../../base/common/lifecycle.js";
+import { OS } from "../../../../../base/common/platform.js";
+import { localize } from "../../../../../nls.js";
+import { ICommandService } from "../../../../../platform/commands/common/commands.js";
+import { IConfigurationService } from "../../../../../platform/configuration/common/configuration.js";
+import { IContextMenuService } from "../../../../../platform/contextview/browser/contextView.js";
+import { IInstantiationService } from "../../../../../platform/instantiation/common/instantiation.js";
+import { IKeybindingService } from "../../../../../platform/keybinding/common/keybinding.js";
+import { IProductService } from "../../../../../platform/product/common/productService.js";
+import { IStorageService } from "../../../../../platform/storage/common/storage.js";
+import { ITelemetryService } from "../../../../../platform/telemetry/common/telemetry.js";
+import { IChatAgentService } from "../../../chat/common/chatAgents.js";
+import { ITerminalEditorService, ITerminalGroupService, ITerminalService } from "../../../terminal/browser/terminal.js";
+import { registerTerminalContribution } from "../../../terminal/browser/terminalExtensions.js";
+import { TerminalInstance } from "../../../terminal/browser/terminalInstance.js";
+import "./media/terminalInitialHint.css";
+import { ChatAgentLocation } from "../../../chat/common/constants.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+var TerminalInitialHintContribution_1;
+const $ = dom.$;
+var Constants;
+(function(Constants2) {
+  Constants2["InitialHintHideStorageKey"] = "terminal.initialHint.hide";
+})(Constants || (Constants = {}));
+class InitialHintAddon extends Disposable {
+  static {
+    __name(this, "InitialHintAddon");
+  }
+  get onDidRequestCreateHint() {
+    return this._onDidRequestCreateHint.event;
+  }
+  constructor(_capabilities, _onDidChangeAgents) {
+    super();
+    this._capabilities = _capabilities;
+    this._onDidChangeAgents = _onDidChangeAgents;
+    this._onDidRequestCreateHint = this._register(new Emitter());
+    this._disposables = this._register(new MutableDisposable());
+  }
+  activate(terminal) {
+    const store = this._register(new DisposableStore());
+    this._disposables.value = store;
+    const capability = this._capabilities.get(
+      2
+      /* TerminalCapability.CommandDetection */
+    );
+    if (capability) {
+      store.add(Event.once(capability.promptInputModel.onDidStartInput)(() => this._onDidRequestCreateHint.fire()));
+    } else {
+      this._register(this._capabilities.onDidAddCapability((e) => {
+        if (e.id === 2) {
+          const capability2 = e.capability;
+          store.add(Event.once(capability2.promptInputModel.onDidStartInput)(() => this._onDidRequestCreateHint.fire()));
+          if (!capability2.promptInputModel.value) {
+            this._onDidRequestCreateHint.fire();
+          }
+        }
+      }));
+    }
+    const agentListener = this._onDidChangeAgents((e) => {
+      if (e?.locations.includes(ChatAgentLocation.Terminal)) {
+        this._onDidRequestCreateHint.fire();
+        agentListener.dispose();
+      }
+    });
+    this._disposables.value?.add(agentListener);
+  }
+}
+let TerminalInitialHintContribution = class TerminalInitialHintContribution2 extends Disposable {
+  static {
+    __name(this, "TerminalInitialHintContribution");
+  }
+  static {
+    TerminalInitialHintContribution_1 = this;
+  }
+  static {
+    this.ID = "terminal.initialHint";
+  }
+  static get(instance) {
+    return instance.getContribution(TerminalInitialHintContribution_1.ID);
+  }
+  constructor(_ctx, _chatAgentService, _configurationService, _instantiationService, _storageService, _terminalEditorService, _terminalGroupService) {
+    super();
+    this._ctx = _ctx;
+    this._chatAgentService = _chatAgentService;
+    this._configurationService = _configurationService;
+    this._instantiationService = _instantiationService;
+    this._storageService = _storageService;
+    this._terminalEditorService = _terminalEditorService;
+    this._terminalGroupService = _terminalGroupService;
+    this._register(this._configurationService.onDidChangeConfiguration((e) => {
+      if (e.affectsConfiguration(
+        "terminal.integrated.initialHint"
+        /* TerminalInitialHintSettingId.Enabled */
+      )) {
+        this._storageService.remove(
+          "terminal.initialHint.hide",
+          -1
+          /* StorageScope.APPLICATION */
+        );
+      }
+    }));
+  }
+  xtermOpen(xterm) {
+    if ("shellLaunchConfig" in this._ctx.instance && (this._ctx.instance.shellLaunchConfig.isExtensionOwnedTerminal || this._ctx.instance.shellLaunchConfig.isFeatureTerminal)) {
+      return;
+    }
+    if (this._storageService.getBoolean("terminal.initialHint.hide", -1, false)) {
+      return;
+    }
+    if (this._terminalGroupService.instances.length + this._terminalEditorService.instances.length !== 1) {
+      return;
+    }
+    this._xterm = xterm;
+    this._addon = this._register(this._instantiationService.createInstance(InitialHintAddon, this._ctx.instance.capabilities, this._chatAgentService.onDidChangeAgents));
+    this._xterm.raw.loadAddon(this._addon);
+    this._register(this._addon.onDidRequestCreateHint(() => this._createHint()));
+  }
+  _createHint() {
+    const instance = this._ctx.instance instanceof TerminalInstance ? this._ctx.instance : void 0;
+    const commandDetectionCapability = instance?.capabilities.get(
+      2
+      /* TerminalCapability.CommandDetection */
+    );
+    if (!instance || !this._xterm || this._hintWidget || !commandDetectionCapability || commandDetectionCapability.promptInputModel.value || !!instance.shellLaunchConfig.attachPersistentProcess) {
+      return;
+    }
+    if (!this._configurationService.getValue(
+      "terminal.integrated.initialHint"
+      /* TerminalInitialHintSettingId.Enabled */
+    )) {
+      return;
+    }
+    if (!this._decoration) {
+      const marker = this._xterm.raw.registerMarker();
+      if (!marker) {
+        return;
+      }
+      if (this._xterm.raw.buffer.active.cursorX === 0) {
+        return;
+      }
+      this._register(marker);
+      this._decoration = this._xterm.raw.registerDecoration({
+        marker,
+        x: this._xterm.raw.buffer.active.cursorX + 1
+      });
+      if (this._decoration) {
+        this._register(this._decoration);
+      }
+    }
+    this._register(this._xterm.raw.onKey(() => this.dispose()));
+    this._register(this._configurationService.onDidChangeConfiguration((e) => {
+      if (e.affectsConfiguration(
+        "terminal.integrated.initialHint"
+        /* TerminalInitialHintSettingId.Enabled */
+      ) && !this._configurationService.getValue(
+        "terminal.integrated.initialHint"
+        /* TerminalInitialHintSettingId.Enabled */
+      )) {
+        this.dispose();
+      }
+    }));
+    const inputModel = commandDetectionCapability.promptInputModel;
+    if (inputModel) {
+      this._register(inputModel.onDidChangeInput(() => {
+        if (inputModel.value) {
+          this.dispose();
+        }
+      }));
+    }
+    if (!this._decoration) {
+      return;
+    }
+    this._register(this._decoration);
+    this._register(this._decoration.onRender((e) => {
+      if (!this._hintWidget && this._xterm?.isFocused && this._terminalGroupService.instances.length + this._terminalEditorService.instances.length === 1) {
+        const terminalAgents = this._chatAgentService.getActivatedAgents().filter((candidate) => candidate.locations.includes(ChatAgentLocation.Terminal));
+        if (terminalAgents?.length) {
+          const widget = this._register(this._instantiationService.createInstance(TerminalInitialHintWidget, instance));
+          this._addon?.dispose();
+          this._hintWidget = widget.getDomNode(terminalAgents);
+          if (!this._hintWidget) {
+            return;
+          }
+          e.appendChild(this._hintWidget);
+          e.classList.add("terminal-initial-hint");
+          const font = this._xterm.getFont();
+          if (font) {
+            e.style.fontFamily = font.fontFamily;
+            e.style.fontSize = font.fontSize + "px";
+          }
+        }
+      }
+      if (this._hintWidget && this._xterm) {
+        const decoration = this._hintWidget.parentElement;
+        if (decoration) {
+          decoration.style.width = (this._xterm.raw.cols - this._xterm.raw.buffer.active.cursorX) / this._xterm.raw.cols * 100 + "%";
+        }
+      }
+    }));
+  }
+};
+TerminalInitialHintContribution = TerminalInitialHintContribution_1 = __decorate([
+  __param(1, IChatAgentService),
+  __param(2, IConfigurationService),
+  __param(3, IInstantiationService),
+  __param(4, IStorageService),
+  __param(5, ITerminalEditorService),
+  __param(6, ITerminalGroupService)
+], TerminalInitialHintContribution);
+registerTerminalContribution(TerminalInitialHintContribution.ID, TerminalInitialHintContribution, false);
+let TerminalInitialHintWidget = class TerminalInitialHintWidget2 extends Disposable {
+  static {
+    __name(this, "TerminalInitialHintWidget");
+  }
+  constructor(_instance, _chatAgentService, _commandService, _configurationService, _contextMenuService, _keybindingService, _productService, _storageService, _telemetryService, _terminalService) {
+    super();
+    this._instance = _instance;
+    this._chatAgentService = _chatAgentService;
+    this._commandService = _commandService;
+    this._configurationService = _configurationService;
+    this._contextMenuService = _contextMenuService;
+    this._keybindingService = _keybindingService;
+    this._productService = _productService;
+    this._storageService = _storageService;
+    this._telemetryService = _telemetryService;
+    this._terminalService = _terminalService;
+    this._toDispose = this._register(new DisposableStore());
+    this._isVisible = false;
+    this._ariaLabel = "";
+    this._toDispose.add(_instance.onDidFocus(() => {
+      if (this._instance.hasFocus && this._isVisible && this._ariaLabel && this._configurationService.getValue(
+        "accessibility.verbosity.terminalChat"
+        /* AccessibilityVerbositySettingId.TerminalChat */
+      )) {
+        status(this._ariaLabel);
+      }
+    }));
+    this._toDispose.add(_terminalService.onDidChangeInstances(() => {
+      if (this._terminalService.instances.length !== 1) {
+        this.dispose();
+      }
+    }));
+    this._toDispose.add(this._configurationService.onDidChangeConfiguration((e) => {
+      if (e.affectsConfiguration(
+        "terminal.integrated.initialHint"
+        /* TerminalInitialHintSettingId.Enabled */
+      ) && !this._configurationService.getValue(
+        "terminal.integrated.initialHint"
+        /* TerminalInitialHintSettingId.Enabled */
+      )) {
+        this.dispose();
+      }
+    }));
+  }
+  _getHintInlineChat(agents) {
+    let providerName = (agents.length === 1 ? agents[0].fullName : void 0) ?? this._productService.nameShort;
+    const defaultAgent = this._chatAgentService.getDefaultAgent(ChatAgentLocation.Panel);
+    if (defaultAgent?.extensionId.value === agents[0].extensionId.value) {
+      providerName = defaultAgent.fullName ?? providerName;
+    }
+    let ariaLabel = `Ask ${providerName} something or start typing to dismiss.`;
+    const handleClick = /* @__PURE__ */ __name(() => {
+      this._storageService.store(
+        "terminal.initialHint.hide",
+        true,
+        -1,
+        0
+        /* StorageTarget.USER */
+      );
+      this._telemetryService.publicLog2("workbenchActionExecuted", {
+        id: "terminalInlineChat.hintAction",
+        from: "hint"
+      });
+      this._commandService.executeCommand("workbench.action.terminal.chat.start", { from: "hint" });
+    }, "handleClick");
+    this._toDispose.add(this._commandService.onDidExecuteCommand((e) => {
+      if (e.commandId === "workbench.action.terminal.chat.start") {
+        this._storageService.store(
+          "terminal.initialHint.hide",
+          true,
+          -1,
+          0
+          /* StorageTarget.USER */
+        );
+        this.dispose();
+      }
+    }));
+    const hintHandler = {
+      disposables: this._toDispose,
+      callback: /* @__PURE__ */ __name((index, _event) => {
+        switch (index) {
+          case "0":
+            handleClick();
+            break;
+        }
+      }, "callback")
+    };
+    const hintElement = $("div.terminal-initial-hint");
+    hintElement.style.display = "block";
+    const keybindingHint = this._keybindingService.lookupKeybinding(
+      "workbench.action.terminal.chat.start"
+      /* TerminalChatCommandId.Start */
+    );
+    const keybindingHintLabel = keybindingHint?.getLabel();
+    if (keybindingHint && keybindingHintLabel) {
+      const actionPart = localize("emptyHintText", "Press {0} to ask {1} to do something. ", keybindingHintLabel, providerName);
+      const [before, after] = actionPart.split(keybindingHintLabel).map((fragment) => {
+        const hintPart = $("a", void 0, fragment);
+        this._toDispose.add(dom.addDisposableListener(hintPart, dom.EventType.CLICK, handleClick));
+        return hintPart;
+      });
+      hintElement.appendChild(before);
+      const label = hintHandler.disposables.add(new KeybindingLabel(hintElement, OS));
+      label.set(keybindingHint);
+      label.element.style.width = "min-content";
+      label.element.style.display = "inline";
+      label.element.style.cursor = "pointer";
+      this._toDispose.add(dom.addDisposableListener(label.element, dom.EventType.CLICK, handleClick));
+      hintElement.appendChild(after);
+      const typeToDismiss = localize("hintTextDismiss", "Start typing to dismiss.");
+      const textHint2 = $("span.detail", void 0, typeToDismiss);
+      hintElement.appendChild(textHint2);
+      ariaLabel = actionPart.concat(typeToDismiss);
+    } else {
+      const hintMsg = localize({
+        key: "inlineChatHint",
+        comment: [
+          "Preserve double-square brackets and their order"
+        ]
+      }, "[[Ask {0} to do something]] or start typing to dismiss.", providerName);
+      const rendered = renderFormattedText(hintMsg, { actionHandler: hintHandler });
+      hintElement.appendChild(rendered);
+    }
+    return { ariaLabel, hintHandler, hintElement };
+  }
+  getDomNode(agents) {
+    if (!this._domNode) {
+      this._domNode = $(".terminal-initial-hint");
+      this._domNode.style.paddingLeft = "4px";
+      const { hintElement, ariaLabel } = this._getHintInlineChat(agents);
+      this._domNode.append(hintElement);
+      this._ariaLabel = ariaLabel.concat(localize(
+        "disableHint",
+        " Toggle {0} in settings to disable this hint.",
+        "accessibility.verbosity.terminalChat"
+        /* AccessibilityVerbositySettingId.TerminalChat */
+      ));
+      this._toDispose.add(dom.addDisposableListener(this._domNode, "click", () => {
+        this._domNode?.remove();
+        this._domNode = void 0;
+      }));
+      this._toDispose.add(dom.addDisposableListener(this._domNode, dom.EventType.CONTEXT_MENU, (e) => {
+        this._contextMenuService.showContextMenu({
+          getAnchor: /* @__PURE__ */ __name(() => {
+            return new StandardMouseEvent(dom.getActiveWindow(), e);
+          }, "getAnchor"),
+          getActions: /* @__PURE__ */ __name(() => {
+            return [
+              {
+                id: "workench.action.disableTerminalInitialHint",
+                label: localize("disableInitialHint", "Disable Initial Hint"),
+                tooltip: localize("disableInitialHint", "Disable Initial Hint"),
+                enabled: true,
+                class: void 0,
+                run: /* @__PURE__ */ __name(() => this._configurationService.updateValue("terminal.integrated.initialHint", false), "run")
+              }
+            ];
+          }, "getActions")
+        });
+      }));
+    }
+    return this._domNode;
+  }
+  dispose() {
+    this._domNode?.remove();
+    super.dispose();
+  }
+};
+TerminalInitialHintWidget = __decorate([
+  __param(1, IChatAgentService),
+  __param(2, ICommandService),
+  __param(3, IConfigurationService),
+  __param(4, IContextMenuService),
+  __param(5, IKeybindingService),
+  __param(6, IProductService),
+  __param(7, IStorageService),
+  __param(8, ITelemetryService),
+  __param(9, ITerminalService)
+], TerminalInitialHintWidget);
+export {
+  InitialHintAddon,
+  TerminalInitialHintContribution
+};
+//# sourceMappingURL=terminal.initialHint.contribution.js.map

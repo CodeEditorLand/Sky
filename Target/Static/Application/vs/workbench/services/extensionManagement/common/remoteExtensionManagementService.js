@@ -1,1 +1,77 @@
-import{$yo as l}from"../../../../platform/uriIdentity/common/uriIdentity.js";import{$B6b as m}from"../../userDataProfile/common/remoteUserDataProfiles.js";import{$HAc as h}from"./extensionManagementChannelClient.js";import{$9X as p}from"../../userDataProfile/common/userDataProfile.js";import{$Ao as d}from"../../../../platform/userDataProfile/common/userDataProfile.js";import{$nn as R}from"../../../../platform/product/common/productService.js";import{$oz as x}from"../../../../platform/extensionManagement/common/extensionManagement.js";var c=function(u,e,t,r){var s=arguments.length,i=s<3?e:r===null?r=Object.getOwnPropertyDescriptor(e,t):r,o;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")i=Reflect.decorate(u,e,t,r);else for(var n=u.length-1;n>=0;n--)(o=u[n])&&(i=(s<3?o(i):s>3?o(e,t,i):o(e,t))||i);return s>3&&i&&Object.defineProperty(e,t,i),i},f=function(u,e){return function(t,r){e(t,r,u)}};let a=class extends h{constructor(e,t,r,s,i,o,n){super(e,t,r,s,n),this.$=i,this.ab=o}async Z(e,t){if(t||!e&&this.M.currentProfile.isDefault)return!0;const r=await this.ab.getRemoteProfile(this.M.currentProfile);return!!this.N.extUri.isEqual(r.extensionsResource,e)}async Y(e){if(!e&&this.M.currentProfile.isDefault)return;e=await super.Y(e);let t=this.$.profiles.find(r=>this.N.extUri.isEqual(r.extensionsResource,e));return t?t=await this.ab.getRemoteProfile(t):t=(await this.ab.getRemoteProfiles()).find(r=>this.N.extUri.isEqual(r.extensionsResource,e)),t?.extensionsResource}async X(e,t,r){const s=await this.ab.getRemoteProfiles(),i=s.find(n=>this.N.extUri.isEqual(n.extensionsResource,e)),o=s.find(n=>this.N.extUri.isEqual(n.extensionsResource,t));return i?.id===o?.id?{added:[],removed:[]}:super.X(e,t,r)}};a=c([f(1,R),f(2,x),f(3,p),f(4,d),f(5,m),f(6,l)],a);export{a as $IAc};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { IUriIdentityService } from "../../../../platform/uriIdentity/common/uriIdentity.js";
+import { IRemoteUserDataProfilesService } from "../../userDataProfile/common/remoteUserDataProfiles.js";
+import { ProfileAwareExtensionManagementChannelClient } from "./extensionManagementChannelClient.js";
+import { IUserDataProfileService } from "../../userDataProfile/common/userDataProfile.js";
+import { IUserDataProfilesService } from "../../../../platform/userDataProfile/common/userDataProfile.js";
+import { IProductService } from "../../../../platform/product/common/productService.js";
+import { IAllowedExtensionsService } from "../../../../platform/extensionManagement/common/extensionManagement.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+let RemoteExtensionManagementService = class RemoteExtensionManagementService2 extends ProfileAwareExtensionManagementChannelClient {
+  static {
+    __name(this, "RemoteExtensionManagementService");
+  }
+  constructor(channel, productService, allowedExtensionsService, userDataProfileService, userDataProfilesService, remoteUserDataProfilesService, uriIdentityService) {
+    super(channel, productService, allowedExtensionsService, userDataProfileService, uriIdentityService);
+    this.userDataProfilesService = userDataProfilesService;
+    this.remoteUserDataProfilesService = remoteUserDataProfilesService;
+  }
+  async filterEvent(profileLocation, applicationScoped) {
+    if (applicationScoped) {
+      return true;
+    }
+    if (!profileLocation && this.userDataProfileService.currentProfile.isDefault) {
+      return true;
+    }
+    const currentRemoteProfile = await this.remoteUserDataProfilesService.getRemoteProfile(this.userDataProfileService.currentProfile);
+    if (this.uriIdentityService.extUri.isEqual(currentRemoteProfile.extensionsResource, profileLocation)) {
+      return true;
+    }
+    return false;
+  }
+  async getProfileLocation(profileLocation) {
+    if (!profileLocation && this.userDataProfileService.currentProfile.isDefault) {
+      return void 0;
+    }
+    profileLocation = await super.getProfileLocation(profileLocation);
+    let profile = this.userDataProfilesService.profiles.find((p) => this.uriIdentityService.extUri.isEqual(p.extensionsResource, profileLocation));
+    if (profile) {
+      profile = await this.remoteUserDataProfilesService.getRemoteProfile(profile);
+    } else {
+      profile = (await this.remoteUserDataProfilesService.getRemoteProfiles()).find((p) => this.uriIdentityService.extUri.isEqual(p.extensionsResource, profileLocation));
+    }
+    return profile?.extensionsResource;
+  }
+  async switchExtensionsProfile(previousProfileLocation, currentProfileLocation, preserveExtensions) {
+    const remoteProfiles = await this.remoteUserDataProfilesService.getRemoteProfiles();
+    const previousProfile = remoteProfiles.find((p) => this.uriIdentityService.extUri.isEqual(p.extensionsResource, previousProfileLocation));
+    const currentProfile = remoteProfiles.find((p) => this.uriIdentityService.extUri.isEqual(p.extensionsResource, currentProfileLocation));
+    if (previousProfile?.id === currentProfile?.id) {
+      return { added: [], removed: [] };
+    }
+    return super.switchExtensionsProfile(previousProfileLocation, currentProfileLocation, preserveExtensions);
+  }
+};
+RemoteExtensionManagementService = __decorate([
+  __param(1, IProductService),
+  __param(2, IAllowedExtensionsService),
+  __param(3, IUserDataProfileService),
+  __param(4, IUserDataProfilesService),
+  __param(5, IRemoteUserDataProfilesService),
+  __param(6, IUriIdentityService)
+], RemoteExtensionManagementService);
+export {
+  RemoteExtensionManagementService
+};
+//# sourceMappingURL=remoteExtensionManagementService.js.map

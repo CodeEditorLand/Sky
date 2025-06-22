@@ -1,1 +1,187 @@
-import"./overlayWidgets.css";import{$n7 as h}from"../../../../base/browser/fastDomNode.js";import{$vbb as l,$ubb as c}from"../../view/viewPart.js";import*as f from"../../../../base/browser/dom.js";class u extends c{constructor(t,i){super(t),this.c=i;const o=this._context.configuration.options.get(154);this.f={},this.j=o.verticalScrollbarWidth,this.n=o.minimap.minimapWidth,this.s=o.horizontalScrollbarHeight,this.t=o.height,this.w=o.width,this.g={top:0,left:0,width:0,height:0},this.h=h(document.createElement("div")),l.write(this.h,4),this.h.setClassName("overlayWidgets"),this.overflowingOverlayWidgetsDomNode=h(document.createElement("div")),l.write(this.overflowingOverlayWidgetsDomNode,5),this.overflowingOverlayWidgetsDomNode.setClassName("overflowingOverlayWidgets")}dispose(){super.dispose(),this.f={}}getDomNode(){return this.h}onConfigurationChanged(t){const e=this._context.configuration.options.get(154);return this.j=e.verticalScrollbarWidth,this.n=e.minimap.minimapWidth,this.s=e.horizontalScrollbarHeight,this.t=e.height,this.w=e.width,!0}addWidget(t){const i=h(t.getDomNode());this.f[t.getId()]={widget:t,preference:null,domNode:i},i.setPosition("absolute"),i.setAttribute("widgetId",t.getId()),t.allowEditorOverflow?this.overflowingOverlayWidgetsDomNode.appendChild(i):this.h.appendChild(i),this.u(),this.y()}setWidgetPosition(t,i){const e=this.f[t.getId()],o=i?i.preference:null,s=i?.stackOridinal;return e.preference===o&&e.stack===s?(this.y(),!1):(e.preference=o,e.stack=s,this.u(),this.y(),!0)}removeWidget(t){const i=t.getId();if(this.f.hasOwnProperty(i)){const o=this.f[i].domNode.domNode;delete this.f[i],o.remove(),this.u(),this.y()}}y(){let t=0;const i=Object.keys(this.f);for(let e=0,o=i.length;e<o;e++){const s=i[e],r=this.f[s].widget.getMinContentWidthInPx?.();typeof r<"u"&&(t=Math.max(t,r))}this._context.viewLayout.setOverlayWidgetsMinWidth(t)}z(t,i){const e=t.domNode;if(t.preference===null){e.setTop("");return}const o=2*this.j+this.n;if(t.preference===0||t.preference===1){if(t.preference===1){const s=e.domNode.clientHeight;e.setTop(this.t-s-2*this.s)}else e.setTop(0);t.stack!==void 0?(e.setTop(i[t.preference]),i[t.preference]+=e.domNode.clientWidth):e.setRight(o)}else if(t.preference===2)e.domNode.style.right="50%",t.stack!==void 0?(e.setTop(i[2]),i[2]+=e.domNode.clientHeight):e.setTop(0);else{const{top:s,left:n}=t.preference;if(this._context.configuration.options.get(47)&&t.widget.allowEditorOverflow){const d=this.g;e.setTop(s+d.top),e.setLeft(n+d.left),e.setPosition("fixed")}else e.setTop(s),e.setLeft(n),e.setPosition("absolute")}}prepareRender(t){this.g=f.$65(this.c.domNode)}render(t){this.h.setWidth(this.w);const i=Object.keys(this.f),e=Array.from({length:3},()=>0);i.sort((o,s)=>(this.f[o].stack||0)-(this.f[s].stack||0));for(let o=0,s=i.length;o<s;o++){const n=i[o];this.z(this.f[n],e)}}}export{u as $1cb};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import "./overlayWidgets.css";
+import { createFastDomNode } from "../../../../base/browser/fastDomNode.js";
+import { PartFingerprints, ViewPart } from "../../view/viewPart.js";
+import * as dom from "../../../../base/browser/dom.js";
+class ViewOverlayWidgets extends ViewPart {
+  static {
+    __name(this, "ViewOverlayWidgets");
+  }
+  constructor(context, viewDomNode) {
+    super(context);
+    this._viewDomNode = viewDomNode;
+    const options = this._context.configuration.options;
+    const layoutInfo = options.get(
+      154
+      /* EditorOption.layoutInfo */
+    );
+    this._widgets = {};
+    this._verticalScrollbarWidth = layoutInfo.verticalScrollbarWidth;
+    this._minimapWidth = layoutInfo.minimap.minimapWidth;
+    this._horizontalScrollbarHeight = layoutInfo.horizontalScrollbarHeight;
+    this._editorHeight = layoutInfo.height;
+    this._editorWidth = layoutInfo.width;
+    this._viewDomNodeRect = { top: 0, left: 0, width: 0, height: 0 };
+    this._domNode = createFastDomNode(document.createElement("div"));
+    PartFingerprints.write(
+      this._domNode,
+      4
+      /* PartFingerprint.OverlayWidgets */
+    );
+    this._domNode.setClassName("overlayWidgets");
+    this.overflowingOverlayWidgetsDomNode = createFastDomNode(document.createElement("div"));
+    PartFingerprints.write(
+      this.overflowingOverlayWidgetsDomNode,
+      5
+      /* PartFingerprint.OverflowingOverlayWidgets */
+    );
+    this.overflowingOverlayWidgetsDomNode.setClassName("overflowingOverlayWidgets");
+  }
+  dispose() {
+    super.dispose();
+    this._widgets = {};
+  }
+  getDomNode() {
+    return this._domNode;
+  }
+  // ---- begin view event handlers
+  onConfigurationChanged(e) {
+    const options = this._context.configuration.options;
+    const layoutInfo = options.get(
+      154
+      /* EditorOption.layoutInfo */
+    );
+    this._verticalScrollbarWidth = layoutInfo.verticalScrollbarWidth;
+    this._minimapWidth = layoutInfo.minimap.minimapWidth;
+    this._horizontalScrollbarHeight = layoutInfo.horizontalScrollbarHeight;
+    this._editorHeight = layoutInfo.height;
+    this._editorWidth = layoutInfo.width;
+    return true;
+  }
+  // ---- end view event handlers
+  addWidget(widget) {
+    const domNode = createFastDomNode(widget.getDomNode());
+    this._widgets[widget.getId()] = {
+      widget,
+      preference: null,
+      domNode
+    };
+    domNode.setPosition("absolute");
+    domNode.setAttribute("widgetId", widget.getId());
+    if (widget.allowEditorOverflow) {
+      this.overflowingOverlayWidgetsDomNode.appendChild(domNode);
+    } else {
+      this._domNode.appendChild(domNode);
+    }
+    this.setShouldRender();
+    this._updateMaxMinWidth();
+  }
+  setWidgetPosition(widget, position) {
+    const widgetData = this._widgets[widget.getId()];
+    const preference = position ? position.preference : null;
+    const stack = position?.stackOridinal;
+    if (widgetData.preference === preference && widgetData.stack === stack) {
+      this._updateMaxMinWidth();
+      return false;
+    }
+    widgetData.preference = preference;
+    widgetData.stack = stack;
+    this.setShouldRender();
+    this._updateMaxMinWidth();
+    return true;
+  }
+  removeWidget(widget) {
+    const widgetId = widget.getId();
+    if (this._widgets.hasOwnProperty(widgetId)) {
+      const widgetData = this._widgets[widgetId];
+      const domNode = widgetData.domNode.domNode;
+      delete this._widgets[widgetId];
+      domNode.remove();
+      this.setShouldRender();
+      this._updateMaxMinWidth();
+    }
+  }
+  _updateMaxMinWidth() {
+    let maxMinWidth = 0;
+    const keys = Object.keys(this._widgets);
+    for (let i = 0, len = keys.length; i < len; i++) {
+      const widgetId = keys[i];
+      const widget = this._widgets[widgetId];
+      const widgetMinWidthInPx = widget.widget.getMinContentWidthInPx?.();
+      if (typeof widgetMinWidthInPx !== "undefined") {
+        maxMinWidth = Math.max(maxMinWidth, widgetMinWidthInPx);
+      }
+    }
+    this._context.viewLayout.setOverlayWidgetsMinWidth(maxMinWidth);
+  }
+  _renderWidget(widgetData, stackCoordinates) {
+    const domNode = widgetData.domNode;
+    if (widgetData.preference === null) {
+      domNode.setTop("");
+      return;
+    }
+    const maxRight = 2 * this._verticalScrollbarWidth + this._minimapWidth;
+    if (widgetData.preference === 0 || widgetData.preference === 1) {
+      if (widgetData.preference === 1) {
+        const widgetHeight = domNode.domNode.clientHeight;
+        domNode.setTop(this._editorHeight - widgetHeight - 2 * this._horizontalScrollbarHeight);
+      } else {
+        domNode.setTop(0);
+      }
+      if (widgetData.stack !== void 0) {
+        domNode.setTop(stackCoordinates[widgetData.preference]);
+        stackCoordinates[widgetData.preference] += domNode.domNode.clientWidth;
+      } else {
+        domNode.setRight(maxRight);
+      }
+    } else if (widgetData.preference === 2) {
+      domNode.domNode.style.right = "50%";
+      if (widgetData.stack !== void 0) {
+        domNode.setTop(stackCoordinates[
+          2
+          /* OverlayWidgetPositionPreference.TOP_CENTER */
+        ]);
+        stackCoordinates[
+          2
+          /* OverlayWidgetPositionPreference.TOP_CENTER */
+        ] += domNode.domNode.clientHeight;
+      } else {
+        domNode.setTop(0);
+      }
+    } else {
+      const { top, left } = widgetData.preference;
+      const fixedOverflowWidgets = this._context.configuration.options.get(
+        47
+        /* EditorOption.fixedOverflowWidgets */
+      );
+      if (fixedOverflowWidgets && widgetData.widget.allowEditorOverflow) {
+        const editorBoundingBox = this._viewDomNodeRect;
+        domNode.setTop(top + editorBoundingBox.top);
+        domNode.setLeft(left + editorBoundingBox.left);
+        domNode.setPosition("fixed");
+      } else {
+        domNode.setTop(top);
+        domNode.setLeft(left);
+        domNode.setPosition("absolute");
+      }
+    }
+  }
+  prepareRender(ctx) {
+    this._viewDomNodeRect = dom.getDomNodePagePosition(this._viewDomNode.domNode);
+  }
+  render(ctx) {
+    this._domNode.setWidth(this._editorWidth);
+    const keys = Object.keys(this._widgets);
+    const stackCoordinates = Array.from({ length: 2 + 1 }, () => 0);
+    keys.sort((a, b) => (this._widgets[a].stack || 0) - (this._widgets[b].stack || 0));
+    for (let i = 0, len = keys.length; i < len; i++) {
+      const widgetId = keys[i];
+      this._renderWidget(this._widgets[widgetId], stackCoordinates);
+    }
+  }
+}
+export {
+  ViewOverlayWidgets
+};
+//# sourceMappingURL=overlayWidgets.js.map

@@ -1,1 +1,110 @@
-import{$vd as b,$td as a}from"../../../../base/common/lifecycle.js";import{$Rc as g}from"../../../../base/common/map.js";import{$3n as l,LogLevel as p}from"../../../../platform/log/common/log.js";import{$Mt as v}from"../../../../platform/theme/common/themeService.js";import{$Ubb as w}from"./textureAtlasShelfAllocator.js";import{$Vbb as _}from"./textureAtlasSlabAllocator.js";var u=function(n,t,e,i){var h=arguments.length,r=h<3?t:i===null?i=Object.getOwnPropertyDescriptor(t,e):i,s;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")r=Reflect.decorate(n,t,e,i);else for(var o=n.length-1;o>=0;o--)(s=n[o])&&(r=(h<3?s(r):h>3?s(t,e,r):s(t,e))||r);return h>3&&r&&Object.defineProperty(t,e,r),r},c=function(n,t){return function(e,i){t(e,i,n)}},f;let m=class extends b{static{f=this}get version(){return this.a}static{this.maximumGlyphCount=5e3}get usedArea(){return this.b}get source(){return this.c}get glyphs(){return this.g.values()}constructor(t,e,i,h,r){switch(super(),this.n=h,this.a=0,this.b={left:0,top:0,right:0,bottom:0},this.f=new g,this.g=new Set,this.c=new OffscreenCanvas(e,e),this.m=r.getColorTheme().tokenColorMap,i){case"shelf":this.j=new w(this.c,t);break;case"slab":this.j=new _(this.c,t);break;default:this.j=i(this.c,t);break}this.B(a(()=>{this.c.width=1,this.c.height=1}))}getGlyph(t,e,i,h){return this.f.get(e,i,h,t.cacheKey)??this.r(t,e,i,h)}r(t,e,i,h){if(this.g.size>=f.maximumGlyphCount)return;const r=t.rasterizeGlyph(e,i,h,this.m),s=this.j.allocate(r);if(s!==void 0)return this.f.set(s,e,i,h,t.cacheKey),this.g.add(s),this.a++,this.b.right=Math.max(this.b.right,s.x+s.w-1),this.b.bottom=Math.max(this.b.bottom,s.y+s.h-1),this.n.getLevel()===p.Trace&&this.n.trace("New glyph",{chars:e,tokenMetadata:i,decorationStyleSetId:h,rasterizedGlyph:r,glyph:s}),s}getUsagePreview(){return this.j.getUsagePreview()}getStats(){return this.j.getStats()}};m=f=u([c(3,l),c(4,v)],m);export{m as $Wbb};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { Disposable, toDisposable } from "../../../../base/common/lifecycle.js";
+import { NKeyMap } from "../../../../base/common/map.js";
+import { ILogService, LogLevel } from "../../../../platform/log/common/log.js";
+import { IThemeService } from "../../../../platform/theme/common/themeService.js";
+import { TextureAtlasShelfAllocator } from "./textureAtlasShelfAllocator.js";
+import { TextureAtlasSlabAllocator } from "./textureAtlasSlabAllocator.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+var TextureAtlasPage_1;
+let TextureAtlasPage = class TextureAtlasPage2 extends Disposable {
+  static {
+    __name(this, "TextureAtlasPage");
+  }
+  static {
+    TextureAtlasPage_1 = this;
+  }
+  get version() {
+    return this._version;
+  }
+  static {
+    this.maximumGlyphCount = 5e3;
+  }
+  get usedArea() {
+    return this._usedArea;
+  }
+  get source() {
+    return this._canvas;
+  }
+  get glyphs() {
+    return this._glyphInOrderSet.values();
+  }
+  constructor(textureIndex, pageSize, allocatorType, _logService, themeService) {
+    super();
+    this._logService = _logService;
+    this._version = 0;
+    this._usedArea = { left: 0, top: 0, right: 0, bottom: 0 };
+    this._glyphMap = new NKeyMap();
+    this._glyphInOrderSet = /* @__PURE__ */ new Set();
+    this._canvas = new OffscreenCanvas(pageSize, pageSize);
+    this._colorMap = themeService.getColorTheme().tokenColorMap;
+    switch (allocatorType) {
+      case "shelf":
+        this._allocator = new TextureAtlasShelfAllocator(this._canvas, textureIndex);
+        break;
+      case "slab":
+        this._allocator = new TextureAtlasSlabAllocator(this._canvas, textureIndex);
+        break;
+      default:
+        this._allocator = allocatorType(this._canvas, textureIndex);
+        break;
+    }
+    this._register(toDisposable(() => {
+      this._canvas.width = 1;
+      this._canvas.height = 1;
+    }));
+  }
+  getGlyph(rasterizer, chars, tokenMetadata, decorationStyleSetId) {
+    return this._glyphMap.get(chars, tokenMetadata, decorationStyleSetId, rasterizer.cacheKey) ?? this._createGlyph(rasterizer, chars, tokenMetadata, decorationStyleSetId);
+  }
+  _createGlyph(rasterizer, chars, tokenMetadata, decorationStyleSetId) {
+    if (this._glyphInOrderSet.size >= TextureAtlasPage_1.maximumGlyphCount) {
+      return void 0;
+    }
+    const rasterizedGlyph = rasterizer.rasterizeGlyph(chars, tokenMetadata, decorationStyleSetId, this._colorMap);
+    const glyph = this._allocator.allocate(rasterizedGlyph);
+    if (glyph === void 0) {
+      return void 0;
+    }
+    this._glyphMap.set(glyph, chars, tokenMetadata, decorationStyleSetId, rasterizer.cacheKey);
+    this._glyphInOrderSet.add(glyph);
+    this._version++;
+    this._usedArea.right = Math.max(this._usedArea.right, glyph.x + glyph.w - 1);
+    this._usedArea.bottom = Math.max(this._usedArea.bottom, glyph.y + glyph.h - 1);
+    if (this._logService.getLevel() === LogLevel.Trace) {
+      this._logService.trace("New glyph", {
+        chars,
+        tokenMetadata,
+        decorationStyleSetId,
+        rasterizedGlyph,
+        glyph
+      });
+    }
+    return glyph;
+  }
+  getUsagePreview() {
+    return this._allocator.getUsagePreview();
+  }
+  getStats() {
+    return this._allocator.getStats();
+  }
+};
+TextureAtlasPage = TextureAtlasPage_1 = __decorate([
+  __param(3, ILogService),
+  __param(4, IThemeService)
+], TextureAtlasPage);
+export {
+  TextureAtlasPage
+};
+//# sourceMappingURL=textureAtlasPage.js.map

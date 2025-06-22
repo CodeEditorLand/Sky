@@ -1,1 +1,69 @@
-import{$df as u}from"../../../../../base/common/event.js";import{$Wj as p,$Uj as h}from"../../../../../base/common/htmlContent.js";import{$vd as l}from"../../../../../base/common/lifecycle.js";import{localize as i}from"../../../../../nls.js";import{$mj as g}from"../../../../../platform/instantiation/common/instantiation.js";import{$UOb as b}from"./chatConfirmationWidget.js";var d=function(n,e,s,r){var o=arguments.length,t=o<3?e:r===null?r=Object.getOwnPropertyDescriptor(e,s):r,a;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")t=Reflect.decorate(n,e,s,r);else for(var f=n.length-1;f>=0;f--)(a=n[f])&&(t=(o<3?a(t):o>3?a(e,s,t):a(e,s))||t);return o>3&&t&&Object.defineProperty(e,s,t),t},m=function(n,e){return function(s,r){e(s,r,n)}};let c=class extends l{constructor(e,s,r){super(),this.b=r,this.a=this.B(new u),this.onDidChangeHeight=this.a.event;const o=[{label:i(5164,null),data:!0},{label:i(5165,null),data:!1,isSecondary:!0}],t=this.B(this.b.createInstance(b,e.title,e.originMessage,this.c(e),o,s.container));t.setShowButtons(e.state==="pending"),this.B(t.onDidChangeHeight(()=>this.a.fire())),this.B(t.onDidClick(async a=>{a.data?await e.accept():await e.reject(),t.setShowButtons(!1),t.updateMessage(this.c(e)),this.a.fire()})),this.domNode=t.domNode}c(e){if(!e.acceptedResult)return e.message;const s=p(e.message)?h.lift(e.message):new h(e.message);return s.appendCodeblock("json",JSON.stringify(e.acceptedResult,null,2)),s}hasSameContent(e){return e.kind==="elicitation"}addDisposable(e){this.B(e)}};c=d([m(2,g)],c);export{c as $GQb};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { Emitter } from "../../../../../base/common/event.js";
+import { isMarkdownString, MarkdownString } from "../../../../../base/common/htmlContent.js";
+import { Disposable } from "../../../../../base/common/lifecycle.js";
+import { localize } from "../../../../../nls.js";
+import { IInstantiationService } from "../../../../../platform/instantiation/common/instantiation.js";
+import { ChatConfirmationWidget } from "./chatConfirmationWidget.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+let ChatElicitationContentPart = class ChatElicitationContentPart2 extends Disposable {
+  static {
+    __name(this, "ChatElicitationContentPart");
+  }
+  constructor(elicitation, context, instantiationService) {
+    super();
+    this.instantiationService = instantiationService;
+    this._onDidChangeHeight = this._register(new Emitter());
+    this.onDidChangeHeight = this._onDidChangeHeight.event;
+    const buttons = [
+      { label: localize("accept", "Respond"), data: true },
+      { label: localize("dismiss", "Cancel"), data: false, isSecondary: true }
+    ];
+    const confirmationWidget = this._register(this.instantiationService.createInstance(ChatConfirmationWidget, elicitation.title, elicitation.originMessage, this.getMessageToRender(elicitation), buttons, context.container));
+    confirmationWidget.setShowButtons(elicitation.state === "pending");
+    this._register(confirmationWidget.onDidChangeHeight(() => this._onDidChangeHeight.fire()));
+    this._register(confirmationWidget.onDidClick(async (e) => {
+      if (e.data) {
+        await elicitation.accept();
+      } else {
+        await elicitation.reject();
+      }
+      confirmationWidget.setShowButtons(false);
+      confirmationWidget.updateMessage(this.getMessageToRender(elicitation));
+      this._onDidChangeHeight.fire();
+    }));
+    this.domNode = confirmationWidget.domNode;
+  }
+  getMessageToRender(elicitation) {
+    if (!elicitation.acceptedResult) {
+      return elicitation.message;
+    }
+    const messageMd = isMarkdownString(elicitation.message) ? MarkdownString.lift(elicitation.message) : new MarkdownString(elicitation.message);
+    messageMd.appendCodeblock("json", JSON.stringify(elicitation.acceptedResult, null, 2));
+    return messageMd;
+  }
+  hasSameContent(other) {
+    return other.kind === "elicitation";
+  }
+  addDisposable(disposable) {
+    this._register(disposable);
+  }
+};
+ChatElicitationContentPart = __decorate([
+  __param(2, IInstantiationService)
+], ChatElicitationContentPart);
+export {
+  ChatElicitationContentPart
+};
+//# sourceMappingURL=chatElicitationContentPart.js.map

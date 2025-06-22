@@ -1,1 +1,21 @@
-import{$vU as o}from"../../common/testId.js";function c(r,t){t instanceof o||(t=o.fromString(t));let n=r;for(const o of t.path){if(!n.children?.hasOwnProperty(o))return;n=n.children[o]}return n.collapsed}export{c as $Qlc};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { TestId } from "../../common/testId.js";
+function isCollapsedInSerializedTestTree(serialized, id) {
+  if (!(id instanceof TestId)) {
+    id = TestId.fromString(id);
+  }
+  let node = serialized;
+  for (const part of id.path) {
+    if (!node.children?.hasOwnProperty(part)) {
+      return void 0;
+    }
+    node = node.children[part];
+  }
+  return node.collapsed;
+}
+__name(isCollapsedInSerializedTestTree, "isCollapsedInSerializedTestTree");
+export {
+  isCollapsedInSerializedTestTree
+};
+//# sourceMappingURL=testingViewState.js.map

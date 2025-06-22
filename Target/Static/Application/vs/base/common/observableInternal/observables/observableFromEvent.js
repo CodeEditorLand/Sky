@@ -1,1 +1,118 @@
-import{$ze as v}from"../transaction.js";import{strictEquals as b}from"../commonFacade/deps.js";import{$Pd as g}from"../debugName.js";import{$te as f}from"../logging/logging.js";import{$pe as $}from"./baseObservable.js";function c(...t){let e,n,i;return t.length===3?[e,n,i]=t:[n,i]=t,new s(new g(e,void 0,i),n,i,()=>s.globalTransaction,b)}function y(t,e,n){return new s(new g(t.owner,t.debugName,t.debugReferenceFn??n),e,n,()=>s.globalTransaction,t.equalsFn??b)}class s extends ${constructor(e,n,i,a,m){super(),this.e=e,this.i=n,this._getValue=i,this.j=a,this.k=m,this.c=!1,this.n=p=>{const h=this._getValue(p),d=this.a,r=!this.c||!this.k(d,h);let u=!1;r&&(this.a=h,this.c&&(u=!0,v(this.j(),l=>{f()?.handleObservableUpdated(this,{oldValue:d,newValue:h,change:void 0,didChange:r,hadValue:this.c});for(const o of this.f)l.updateObserver(o,this),o.handleChange(this,void 0)},()=>{const l=this.l();return"Event fired"+(l?`: ${l}`:"")})),this.c=!0),u||f()?.handleObservableUpdated(this,{oldValue:d,newValue:h,change:void 0,didChange:r,hadValue:this.c})}}l(){return this.e.getDebugName(this)}get debugName(){const e=this.l();return"From Event"+(e?`: ${e}`:"")}g(){this.d=this.i(this.n)}h(){this.d.dispose(),this.d=void 0,this.c=!1,this.a=void 0}get(){return this.d?(this.c||this.n(void 0),this.a):this._getValue(void 0)}debugSetValue(e){this.a=e}}(function(t){t.Observer=s;function e(n,i){let a=!1;s.globalTransaction===void 0&&(s.globalTransaction=n,a=!0);try{i()}finally{a&&(s.globalTransaction=void 0)}}t.batchEventsGlobally=e})(c||(c={}));export{s as $$d,y as $0d,c as $9d};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { subtransaction } from "../transaction.js";
+import { strictEquals } from "../commonFacade/deps.js";
+import { DebugNameData } from "../debugName.js";
+import { getLogger } from "../logging/logging.js";
+import { BaseObservable } from "./baseObservable.js";
+function observableFromEvent(...args) {
+  let owner;
+  let event;
+  let getValue;
+  if (args.length === 3) {
+    [owner, event, getValue] = args;
+  } else {
+    [event, getValue] = args;
+  }
+  return new FromEventObservable(new DebugNameData(owner, void 0, getValue), event, getValue, () => FromEventObservable.globalTransaction, strictEquals);
+}
+__name(observableFromEvent, "observableFromEvent");
+function observableFromEventOpts(options, event, getValue) {
+  return new FromEventObservable(new DebugNameData(options.owner, options.debugName, options.debugReferenceFn ?? getValue), event, getValue, () => FromEventObservable.globalTransaction, options.equalsFn ?? strictEquals);
+}
+__name(observableFromEventOpts, "observableFromEventOpts");
+class FromEventObservable extends BaseObservable {
+  static {
+    __name(this, "FromEventObservable");
+  }
+  constructor(_debugNameData, event, _getValue, _getTransaction, _equalityComparator) {
+    super();
+    this._debugNameData = _debugNameData;
+    this.event = event;
+    this._getValue = _getValue;
+    this._getTransaction = _getTransaction;
+    this._equalityComparator = _equalityComparator;
+    this._hasValue = false;
+    this.handleEvent = (args) => {
+      const newValue = this._getValue(args);
+      const oldValue = this._value;
+      const didChange = !this._hasValue || !this._equalityComparator(oldValue, newValue);
+      let didRunTransaction = false;
+      if (didChange) {
+        this._value = newValue;
+        if (this._hasValue) {
+          didRunTransaction = true;
+          subtransaction(this._getTransaction(), (tx) => {
+            getLogger()?.handleObservableUpdated(this, { oldValue, newValue, change: void 0, didChange, hadValue: this._hasValue });
+            for (const o of this._observers) {
+              tx.updateObserver(o, this);
+              o.handleChange(this, void 0);
+            }
+          }, () => {
+            const name = this.getDebugName();
+            return "Event fired" + (name ? `: ${name}` : "");
+          });
+        }
+        this._hasValue = true;
+      }
+      if (!didRunTransaction) {
+        getLogger()?.handleObservableUpdated(this, { oldValue, newValue, change: void 0, didChange, hadValue: this._hasValue });
+      }
+    };
+  }
+  getDebugName() {
+    return this._debugNameData.getDebugName(this);
+  }
+  get debugName() {
+    const name = this.getDebugName();
+    return "From Event" + (name ? `: ${name}` : "");
+  }
+  onFirstObserverAdded() {
+    this._subscription = this.event(this.handleEvent);
+  }
+  onLastObserverRemoved() {
+    this._subscription.dispose();
+    this._subscription = void 0;
+    this._hasValue = false;
+    this._value = void 0;
+  }
+  get() {
+    if (this._subscription) {
+      if (!this._hasValue) {
+        this.handleEvent(void 0);
+      }
+      return this._value;
+    } else {
+      const value = this._getValue(void 0);
+      return value;
+    }
+  }
+  debugSetValue(value) {
+    this._value = value;
+  }
+}
+(function(observableFromEvent2) {
+  observableFromEvent2.Observer = FromEventObservable;
+  function batchEventsGlobally(tx, fn) {
+    let didSet = false;
+    if (FromEventObservable.globalTransaction === void 0) {
+      FromEventObservable.globalTransaction = tx;
+      didSet = true;
+    }
+    try {
+      fn();
+    } finally {
+      if (didSet) {
+        FromEventObservable.globalTransaction = void 0;
+      }
+    }
+  }
+  __name(batchEventsGlobally, "batchEventsGlobally");
+  observableFromEvent2.batchEventsGlobally = batchEventsGlobally;
+})(observableFromEvent || (observableFromEvent = {}));
+export {
+  FromEventObservable,
+  observableFromEvent,
+  observableFromEventOpts
+};
+//# sourceMappingURL=observableFromEvent.js.map

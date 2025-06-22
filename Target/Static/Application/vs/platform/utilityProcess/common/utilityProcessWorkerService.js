@@ -1,1 +1,5 @@
-const o="utilityProcessWorker";export{o as $fA};
+const ipcUtilityProcessWorkerChannelName = "utilityProcessWorker";
+export {
+  ipcUtilityProcessWorkerChannelName
+};
+//# sourceMappingURL=utilityProcessWorkerService.js.map

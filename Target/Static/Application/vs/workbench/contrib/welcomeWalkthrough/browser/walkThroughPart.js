@@ -1,1 +1,447 @@
-import"../common/walkThroughUtils.js";import"./media/walkThroughPart.css";import{$B7 as W}from"../../../../base/browser/ui/scrollbar/scrollableElement.js";import{EventType as z,$l7 as B}from"../../../../base/browser/touch.js";import*as F from"../../../../base/common/strings.js";import{URI as L}from"../../../../base/common/uri.js";import{$qd as O,$td as V,$ud as N}from"../../../../base/common/lifecycle.js";import{$DDb as J}from"../../../browser/parts/editor/editorPane.js";import{$Po as Y}from"../../../../platform/telemetry/common/telemetry.js";import{$Xvc as p}from"./walkThroughInput.js";import{$4$ as Z}from"../../../../platform/opener/common/opener.js";import{$nF as X}from"../../../../editor/common/services/textResourceConfiguration.js";import{$Zdb as _}from"../../../../editor/browser/widget/codeEditor/codeEditorWidget.js";import{$mj as G}from"../../../../platform/instantiation/common/instantiation.js";import{$ux as Q}from"../../../../platform/keybinding/common/keybinding.js";import{localize as M}from"../../../../nls.js";import{$Ho as tt}from"../../../../platform/storage/common/storage.js";import{$Un as ot,$Vn as it}from"../../../../platform/contextkey/common/contextkey.js";import{$El as st}from"../../../../platform/configuration/common/configuration.js";import{$1c as et}from"../../../../base/common/types.js";import{$Zn as nt}from"../../../../platform/commands/common/commands.js";import{$Mt as rt}from"../../../../platform/theme/common/themeService.js";import{$49 as lt}from"../../../../base/common/keybindingLabels.js";import{OS as I}from"../../../../base/common/platform.js";import{$2o as ct}from"../../../../base/common/objects.js";import{$RI as ht}from"../../../../platform/notification/common/notification.js";import{$J5 as at,$u6 as ft,$y6 as dt,$t6 as R,$86 as x,$45 as pt}from"../../../../base/browser/dom.js";import{$kI as mt}from"../../../services/editor/common/editorGroupsService.js";import{$XO as ut}from"../../../services/extensions/common/extensions.js";var U=function(d,t,o,i){var e=arguments.length,s=e<3?t:i===null?i=Object.getOwnPropertyDescriptor(t,o):i,n;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")s=Reflect.decorate(d,t,o,i);else for(var l=d.length-1;l>=0;l--)(n=d[l])&&(s=(e<3?n(s):e>3?n(t,o,s):n(t,o))||s);return e>3&&s&&Object.defineProperty(t,o,s),s},r=function(d,t){return function(o,i){t(o,i,d)}},C;const gt=new ot("interactivePlaygroundFocus",!1),A=M(13370,null),bt="walkThroughEditorViewState";let q=class extends J{static{C=this}static{this.ID="workbench.editor.walkThroughPart"}constructor(t,o,i,e,s,n,l,c,y,h,T,f,$){super(C.ID,t,o,i,c),this.s=s,this.u=n,this.$=l,this.cb=y,this.db=h,this.eb=T,this.fb=f,this.a=new N,this.b=[],this.g=gt.bindTo(this.cb),this.r=this.ab($,e,bt)}Y(t){this.c=document.createElement("div"),this.c.classList.add("welcomePageFocusElement"),this.c.tabIndex=0,this.c.style.outlineStyle="none",this.f=new W(this.c,{horizontal:1,vertical:1}),this.a.add(this.f),t.appendChild(this.f.getDomNode()),this.lb(),this.mb(),this.a.add(this.f.onScroll(o=>this.hb()))}hb(){const t=this.f.getScrollDimensions(),o=this.f.getScrollPosition(),i=t.scrollHeight;if(i&&this.input instanceof p){const e=o.scrollTop,s=t.height;this.input.relativeScrollPosition(e/i,(e+s)/i)}}ib(t){t.preventDefault(),t.stopPropagation();const o=this.f.getScrollPosition();this.f.setScrollPosition({scrollTop:o.scrollTop-t.translationY})}jb(t,o,i,e){return t.addEventListener(o,i,e),V(()=>{t.removeEventListener(o,i,e)})}lb(){this.a.add(this.jb(this.c,"mousedown",t=>{this.focus()})),this.a.add(this.jb(this.c,"focus",t=>{this.g.set(!0)})),this.a.add(this.jb(this.c,"blur",t=>{this.g.reset()})),this.a.add(this.jb(this.c,"focusin",t=>{if(R(t.target)&&t.target.classList.contains("zone-widget-container")){const o=this.f.getScrollPosition();this.c.scrollTop=o.scrollTop,this.c.scrollLeft=o.scrollLeft}R(t.target)&&(this.j=t.target)}))}mb(){this.c.addEventListener("click",t=>{for(let o=t.target;o;o=o.parentNode)if(ft(o)&&o.href){const i=o.ownerDocument.getElementsByTagName("base")[0]||this.window.location;if(i&&o.href.indexOf(i.href)>=0&&o.hash){const e=this.c.querySelector(o.hash),s=this.c.firstElementChild;if(e&&s){const n=e.getBoundingClientRect().top-20,l=s.getBoundingClientRect().top;this.f.setScrollPosition({scrollTop:n-l})}}else this.nb(L.parse(o.href));t.preventDefault();break}else if(dt(o)){const i=o.getAttribute("data-href");i&&this.nb(L.parse(i));break}else if(o===t.currentTarget)break})}nb(t){if(t.scheme==="command"&&t.path==="git.clone"&&!nt.getCommand("git.clone")){this.eb.info(M(13371,null));return}this.u.open(this.ob(t),{allowCommands:!0})}ob(t){if(t.scheme!=="command"||!(this.input instanceof p))return t;const o=t.query?JSON.parse(t.query):{};return o.from=this.input.getTelemetryFrom(),t.with({query:JSON.stringify(o)})}layout(t){this.m=t,pt(this.c,t.width,t.height),this.pb(),this.b.forEach(i=>{i instanceof _&&i.layout()});const o=this.input instanceof p&&this.input;o&&o.layout&&o.layout(t),this.f.scanDomNode()}pb(){const t=this.c.firstElementChild;this.m&&t&&t.classList.toggle("max-height-685px",this.m.height<=685)}focus(){super.focus();let t=this.c.ownerDocument.activeElement;for(;t&&t!==this.c;)t=t.parentElement;t||(this.j||this.c).focus(),this.g.set(!0)}arrowUp(){const t=this.f.getScrollPosition();this.f.setScrollPosition({scrollTop:t.scrollTop-this.qb()})}arrowDown(){const t=this.f.getScrollPosition();this.f.setScrollPosition({scrollTop:t.scrollTop+this.qb()})}qb(){let t=this.db.getValue("editor.fontSize");return(typeof t!="number"||t<1)&&(t=12),3*t}pageUp(){const t=this.f.getScrollDimensions(),o=this.f.getScrollPosition();this.f.setScrollPosition({scrollTop:o.scrollTop-t.height})}pageDown(){const t=this.f.getScrollDimensions(),o=this.f.getScrollPosition();this.f.setScrollPosition({scrollTop:o.scrollTop+t.height})}setInput(t,o,i,e){const s=new N;return this.b.push(s),this.c.innerText="",super.setInput(t,o,i,e).then(async()=>(t.resource.path.endsWith(".md")&&await this.fb.whenInstalledExtensionsRegistered(),t.resolve())).then(n=>{if(e.isCancellationRequested)return;const l=n.main;if(!t.resource.path.endsWith(".md")){x(this.c,l,{ALLOW_UNKNOWN_PROTOCOLS:!0}),this.pb(),this.tb(),this.b.push(this.$.onDidUpdateKeybindings(()=>this.tb())),t.onReady?.(this.c.firstElementChild,s),this.f.scanDomNode(),this.wb(t),this.hb();return}const c=document.createElement("div");c.classList.add("walkThroughContent");const y=this.sb(l);x(c,y,{ALLOW_UNKNOWN_PROTOCOLS:!0}),this.c.appendChild(c),n.snippets.forEach((h,T)=>{const f=h.textEditorModel;if(!f)return;const $=`snippet-${f.uri.fragment}`,u=c.querySelector(`#${$.replace(/[\\.]/g,"\\$&")}`),j=this.rb(f.getLanguageId()),K={target:this.input instanceof p?this.input.getTelemetryFrom():void 0,snippet:T},a=this.s.createInstance(_,u,j,{telemetryData:K});a.setModel(f),this.b.push(a);const w=m=>{const g=a.getOption(71),b=`${Math.max(f.getLineCount()+1,4)*g}px`;u.style.height!==b&&(u.style.height=b,a.layout(),m||this.f.scanDomNode())};w(!0),this.b.push(a.onDidChangeModelContent(()=>w(!1))),this.b.push(a.onDidChangeCursorPosition(m=>{const g=this.c.firstElementChild;if(g){const b=u.getBoundingClientRect().top,k=g.getBoundingClientRect().top,P=a.getOption(71),S=b+(m.position.lineNumber-1)*P-k,v=S+P,H=this.f.getScrollDimensions(),E=this.f.getScrollPosition().scrollTop,D=H.height;E>S?this.f.setScrollPosition({scrollTop:S}):E<v-D&&this.f.setScrollPosition({scrollTop:v-D})}})),this.b.push(this.db.onDidChangeConfiguration(m=>{m.affectsConfiguration("editor")&&h.textEditorModel&&a.updateOptions(this.rb(h.textEditorModel.getLanguageId()))}))}),this.pb(),this.ub(),this.b.push(this.db.onDidChangeConfiguration(h=>{h.affectsConfiguration("editor.multiCursorModifier")&&this.ub()})),t.onReady?.(c,s),this.f.scanDomNode(),this.wb(t),this.hb(),this.b.push(B.addTarget(c)),this.b.push(at(c,z.Change,h=>this.ib(h)))})}rb(t){const o=ct(this.db.getValue("editor",{overrideIdentifier:t}));return{...et(o)?o:Object.create(null),scrollBeyondLastLine:!1,scrollbar:{verticalScrollbarSize:14,horizontal:"auto",useShadows:!0,verticalHasArrows:!1,horizontalHasArrows:!1,alwaysConsumeMouseWheel:!1},overviewRulerLanes:3,fixedOverflowWidgets:!1,lineNumbersMinChars:1,minimap:{enabled:!1}}}sb(t){return t.replace(/kb\(([a-z.\d\-]+)\)/gi,(o,i)=>{const e=this.$.lookupKeybinding(i),s=e?e.getLabel()||"":A;return`<span class="shortcut">${F.$Cf(s)}</span>`})}tb(){const t=this.c.querySelectorAll(".shortcut[data-command]");Array.prototype.forEach.call(t,i=>{const e=i.getAttribute("data-command"),s=e&&this.$.lookupKeybinding(e),n=s?s.getLabel()||"":A;for(;i.firstChild;)i.firstChild.remove();i.appendChild(document.createTextNode(n))});const o=this.c.querySelectorAll(".if_shortcut[data-command]");Array.prototype.forEach.call(o,i=>{const e=i.getAttribute("data-command"),s=e&&this.$.lookupKeybinding(e);i.style.display=s?"":"none"})}ub(){const t=lt.modifierLabels[I],o=this.db.getValue("editor.multiCursorModifier"),i=t[o==="ctrlCmd"?I===2?"metaKey":"ctrlKey":"altKey"],e=this.c.querySelectorAll(".multi-cursor-modifier");Array.prototype.forEach.call(e,s=>{for(;s.firstChild;)s.firstChild.remove();s.appendChild(document.createTextNode(i))})}vb(t){const o=this.f.getScrollPosition();this.r.saveEditorState(this.group,t,{viewState:{scrollTop:o.scrollTop,scrollLeft:o.scrollLeft}})}wb(t){const o=this.r.loadEditorState(this.group,t);o&&this.f.setScrollPosition(o.viewState)}clearInput(){this.input instanceof p&&this.vb(this.input),this.b=O(this.b),super.clearInput()}I(){this.input instanceof p&&this.vb(this.input),super.I()}dispose(){this.g.reset(),this.b=O(this.b),this.a.dispose(),super.dispose()}};q=C=U([r(1,Y),r(2,rt),r(3,X),r(4,G),r(5,Z),r(6,Q),r(7,tt),r(8,it),r(9,st),r(10,ht),r(11,ut),r(12,mt)],q);export{q as $1vc,gt as $Zvc};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import "../common/walkThroughUtils.js";
+import "./media/walkThroughPart.css";
+import { DomScrollableElement } from "../../../../base/browser/ui/scrollbar/scrollableElement.js";
+import { EventType as TouchEventType, Gesture } from "../../../../base/browser/touch.js";
+import * as strings from "../../../../base/common/strings.js";
+import { URI } from "../../../../base/common/uri.js";
+import { dispose, toDisposable, DisposableStore } from "../../../../base/common/lifecycle.js";
+import { EditorPane } from "../../../browser/parts/editor/editorPane.js";
+import { ITelemetryService } from "../../../../platform/telemetry/common/telemetry.js";
+import { WalkThroughInput } from "./walkThroughInput.js";
+import { IOpenerService } from "../../../../platform/opener/common/opener.js";
+import { ITextResourceConfigurationService } from "../../../../editor/common/services/textResourceConfiguration.js";
+import { CodeEditorWidget } from "../../../../editor/browser/widget/codeEditor/codeEditorWidget.js";
+import { IInstantiationService } from "../../../../platform/instantiation/common/instantiation.js";
+import { IKeybindingService } from "../../../../platform/keybinding/common/keybinding.js";
+import { localize } from "../../../../nls.js";
+import { IStorageService } from "../../../../platform/storage/common/storage.js";
+import { RawContextKey, IContextKeyService } from "../../../../platform/contextkey/common/contextkey.js";
+import { IConfigurationService } from "../../../../platform/configuration/common/configuration.js";
+import { isObject } from "../../../../base/common/types.js";
+import { CommandsRegistry } from "../../../../platform/commands/common/commands.js";
+import { IThemeService } from "../../../../platform/theme/common/themeService.js";
+import { UILabelProvider } from "../../../../base/common/keybindingLabels.js";
+import { OS } from "../../../../base/common/platform.js";
+import { deepClone } from "../../../../base/common/objects.js";
+import { INotificationService } from "../../../../platform/notification/common/notification.js";
+import { addDisposableListener, isHTMLAnchorElement, isHTMLButtonElement, isHTMLElement, safeInnerHtml, size } from "../../../../base/browser/dom.js";
+import { IEditorGroupsService } from "../../../services/editor/common/editorGroupsService.js";
+import { IExtensionService } from "../../../services/extensions/common/extensions.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+var WalkThroughPart_1;
+const WALK_THROUGH_FOCUS = new RawContextKey("interactivePlaygroundFocus", false);
+const UNBOUND_COMMAND = localize("walkThrough.unboundCommand", "unbound");
+const WALK_THROUGH_EDITOR_VIEW_STATE_PREFERENCE_KEY = "walkThroughEditorViewState";
+let WalkThroughPart = class WalkThroughPart2 extends EditorPane {
+  static {
+    __name(this, "WalkThroughPart");
+  }
+  static {
+    WalkThroughPart_1 = this;
+  }
+  static {
+    this.ID = "workbench.editor.walkThroughPart";
+  }
+  constructor(group, telemetryService, themeService, textResourceConfigurationService, instantiationService, openerService, keybindingService, storageService, contextKeyService, configurationService, notificationService, extensionService, editorGroupService) {
+    super(WalkThroughPart_1.ID, group, telemetryService, themeService, storageService);
+    this.instantiationService = instantiationService;
+    this.openerService = openerService;
+    this.keybindingService = keybindingService;
+    this.contextKeyService = contextKeyService;
+    this.configurationService = configurationService;
+    this.notificationService = notificationService;
+    this.extensionService = extensionService;
+    this.disposables = new DisposableStore();
+    this.contentDisposables = [];
+    this.editorFocus = WALK_THROUGH_FOCUS.bindTo(this.contextKeyService);
+    this.editorMemento = this.getEditorMemento(editorGroupService, textResourceConfigurationService, WALK_THROUGH_EDITOR_VIEW_STATE_PREFERENCE_KEY);
+  }
+  createEditor(container) {
+    this.content = document.createElement("div");
+    this.content.classList.add("welcomePageFocusElement");
+    this.content.tabIndex = 0;
+    this.content.style.outlineStyle = "none";
+    this.scrollbar = new DomScrollableElement(this.content, {
+      horizontal: 1,
+      vertical: 1
+      /* ScrollbarVisibility.Auto */
+    });
+    this.disposables.add(this.scrollbar);
+    container.appendChild(this.scrollbar.getDomNode());
+    this.registerFocusHandlers();
+    this.registerClickHandler();
+    this.disposables.add(this.scrollbar.onScroll((e) => this.updatedScrollPosition()));
+  }
+  updatedScrollPosition() {
+    const scrollDimensions = this.scrollbar.getScrollDimensions();
+    const scrollPosition = this.scrollbar.getScrollPosition();
+    const scrollHeight = scrollDimensions.scrollHeight;
+    if (scrollHeight && this.input instanceof WalkThroughInput) {
+      const scrollTop = scrollPosition.scrollTop;
+      const height = scrollDimensions.height;
+      this.input.relativeScrollPosition(scrollTop / scrollHeight, (scrollTop + height) / scrollHeight);
+    }
+  }
+  onTouchChange(event) {
+    event.preventDefault();
+    event.stopPropagation();
+    const scrollPosition = this.scrollbar.getScrollPosition();
+    this.scrollbar.setScrollPosition({ scrollTop: scrollPosition.scrollTop - event.translationY });
+  }
+  addEventListener(element, type, listener, useCapture) {
+    element.addEventListener(type, listener, useCapture);
+    return toDisposable(() => {
+      element.removeEventListener(type, listener, useCapture);
+    });
+  }
+  registerFocusHandlers() {
+    this.disposables.add(this.addEventListener(this.content, "mousedown", (e) => {
+      this.focus();
+    }));
+    this.disposables.add(this.addEventListener(this.content, "focus", (e) => {
+      this.editorFocus.set(true);
+    }));
+    this.disposables.add(this.addEventListener(this.content, "blur", (e) => {
+      this.editorFocus.reset();
+    }));
+    this.disposables.add(this.addEventListener(this.content, "focusin", (e) => {
+      if (isHTMLElement(e.target) && e.target.classList.contains("zone-widget-container")) {
+        const scrollPosition = this.scrollbar.getScrollPosition();
+        this.content.scrollTop = scrollPosition.scrollTop;
+        this.content.scrollLeft = scrollPosition.scrollLeft;
+      }
+      if (isHTMLElement(e.target)) {
+        this.lastFocus = e.target;
+      }
+    }));
+  }
+  registerClickHandler() {
+    this.content.addEventListener("click", (event) => {
+      for (let node = event.target; node; node = node.parentNode) {
+        if (isHTMLAnchorElement(node) && node.href) {
+          const baseElement = node.ownerDocument.getElementsByTagName("base")[0] || this.window.location;
+          if (baseElement && node.href.indexOf(baseElement.href) >= 0 && node.hash) {
+            const scrollTarget = this.content.querySelector(node.hash);
+            const innerContent = this.content.firstElementChild;
+            if (scrollTarget && innerContent) {
+              const targetTop = scrollTarget.getBoundingClientRect().top - 20;
+              const containerTop = innerContent.getBoundingClientRect().top;
+              this.scrollbar.setScrollPosition({ scrollTop: targetTop - containerTop });
+            }
+          } else {
+            this.open(URI.parse(node.href));
+          }
+          event.preventDefault();
+          break;
+        } else if (isHTMLButtonElement(node)) {
+          const href = node.getAttribute("data-href");
+          if (href) {
+            this.open(URI.parse(href));
+          }
+          break;
+        } else if (node === event.currentTarget) {
+          break;
+        }
+      }
+    });
+  }
+  open(uri) {
+    if (uri.scheme === "command" && uri.path === "git.clone" && !CommandsRegistry.getCommand("git.clone")) {
+      this.notificationService.info(localize("walkThrough.gitNotFound", "It looks like Git is not installed on your system."));
+      return;
+    }
+    this.openerService.open(this.addFrom(uri), { allowCommands: true });
+  }
+  addFrom(uri) {
+    if (uri.scheme !== "command" || !(this.input instanceof WalkThroughInput)) {
+      return uri;
+    }
+    const query = uri.query ? JSON.parse(uri.query) : {};
+    query.from = this.input.getTelemetryFrom();
+    return uri.with({ query: JSON.stringify(query) });
+  }
+  layout(dimension) {
+    this.size = dimension;
+    size(this.content, dimension.width, dimension.height);
+    this.updateSizeClasses();
+    this.contentDisposables.forEach((disposable) => {
+      if (disposable instanceof CodeEditorWidget) {
+        disposable.layout();
+      }
+    });
+    const walkthroughInput = this.input instanceof WalkThroughInput && this.input;
+    if (walkthroughInput && walkthroughInput.layout) {
+      walkthroughInput.layout(dimension);
+    }
+    this.scrollbar.scanDomNode();
+  }
+  updateSizeClasses() {
+    const innerContent = this.content.firstElementChild;
+    if (this.size && innerContent) {
+      innerContent.classList.toggle("max-height-685px", this.size.height <= 685);
+    }
+  }
+  focus() {
+    super.focus();
+    let active = this.content.ownerDocument.activeElement;
+    while (active && active !== this.content) {
+      active = active.parentElement;
+    }
+    if (!active) {
+      (this.lastFocus || this.content).focus();
+    }
+    this.editorFocus.set(true);
+  }
+  arrowUp() {
+    const scrollPosition = this.scrollbar.getScrollPosition();
+    this.scrollbar.setScrollPosition({ scrollTop: scrollPosition.scrollTop - this.getArrowScrollHeight() });
+  }
+  arrowDown() {
+    const scrollPosition = this.scrollbar.getScrollPosition();
+    this.scrollbar.setScrollPosition({ scrollTop: scrollPosition.scrollTop + this.getArrowScrollHeight() });
+  }
+  getArrowScrollHeight() {
+    let fontSize = this.configurationService.getValue("editor.fontSize");
+    if (typeof fontSize !== "number" || fontSize < 1) {
+      fontSize = 12;
+    }
+    return 3 * fontSize;
+  }
+  pageUp() {
+    const scrollDimensions = this.scrollbar.getScrollDimensions();
+    const scrollPosition = this.scrollbar.getScrollPosition();
+    this.scrollbar.setScrollPosition({ scrollTop: scrollPosition.scrollTop - scrollDimensions.height });
+  }
+  pageDown() {
+    const scrollDimensions = this.scrollbar.getScrollDimensions();
+    const scrollPosition = this.scrollbar.getScrollPosition();
+    this.scrollbar.setScrollPosition({ scrollTop: scrollPosition.scrollTop + scrollDimensions.height });
+  }
+  setInput(input, options, context, token) {
+    const store = new DisposableStore();
+    this.contentDisposables.push(store);
+    this.content.innerText = "";
+    return super.setInput(input, options, context, token).then(async () => {
+      if (input.resource.path.endsWith(".md")) {
+        await this.extensionService.whenInstalledExtensionsRegistered();
+      }
+      return input.resolve();
+    }).then((model) => {
+      if (token.isCancellationRequested) {
+        return;
+      }
+      const content = model.main;
+      if (!input.resource.path.endsWith(".md")) {
+        safeInnerHtml(this.content, content, { ALLOW_UNKNOWN_PROTOCOLS: true });
+        this.updateSizeClasses();
+        this.decorateContent();
+        this.contentDisposables.push(this.keybindingService.onDidUpdateKeybindings(() => this.decorateContent()));
+        input.onReady?.(this.content.firstElementChild, store);
+        this.scrollbar.scanDomNode();
+        this.loadTextEditorViewState(input);
+        this.updatedScrollPosition();
+        return;
+      }
+      const innerContent = document.createElement("div");
+      innerContent.classList.add("walkThroughContent");
+      const markdown = this.expandMacros(content);
+      safeInnerHtml(innerContent, markdown, { ALLOW_UNKNOWN_PROTOCOLS: true });
+      this.content.appendChild(innerContent);
+      model.snippets.forEach((snippet, i) => {
+        const model2 = snippet.textEditorModel;
+        if (!model2) {
+          return;
+        }
+        const id = `snippet-${model2.uri.fragment}`;
+        const div = innerContent.querySelector(`#${id.replace(/[\\.]/g, "\\$&")}`);
+        const options2 = this.getEditorOptions(model2.getLanguageId());
+        const telemetryData = {
+          target: this.input instanceof WalkThroughInput ? this.input.getTelemetryFrom() : void 0,
+          snippet: i
+        };
+        const editor = this.instantiationService.createInstance(CodeEditorWidget, div, options2, {
+          telemetryData
+        });
+        editor.setModel(model2);
+        this.contentDisposables.push(editor);
+        const updateHeight = /* @__PURE__ */ __name((initial) => {
+          const lineHeight = editor.getOption(
+            71
+            /* EditorOption.lineHeight */
+          );
+          const height = `${Math.max(model2.getLineCount() + 1, 4) * lineHeight}px`;
+          if (div.style.height !== height) {
+            div.style.height = height;
+            editor.layout();
+            if (!initial) {
+              this.scrollbar.scanDomNode();
+            }
+          }
+        }, "updateHeight");
+        updateHeight(true);
+        this.contentDisposables.push(editor.onDidChangeModelContent(() => updateHeight(false)));
+        this.contentDisposables.push(editor.onDidChangeCursorPosition((e) => {
+          const innerContent2 = this.content.firstElementChild;
+          if (innerContent2) {
+            const targetTop = div.getBoundingClientRect().top;
+            const containerTop = innerContent2.getBoundingClientRect().top;
+            const lineHeight = editor.getOption(
+              71
+              /* EditorOption.lineHeight */
+            );
+            const lineTop = targetTop + (e.position.lineNumber - 1) * lineHeight - containerTop;
+            const lineBottom = lineTop + lineHeight;
+            const scrollDimensions = this.scrollbar.getScrollDimensions();
+            const scrollPosition = this.scrollbar.getScrollPosition();
+            const scrollTop = scrollPosition.scrollTop;
+            const height = scrollDimensions.height;
+            if (scrollTop > lineTop) {
+              this.scrollbar.setScrollPosition({ scrollTop: lineTop });
+            } else if (scrollTop < lineBottom - height) {
+              this.scrollbar.setScrollPosition({ scrollTop: lineBottom - height });
+            }
+          }
+        }));
+        this.contentDisposables.push(this.configurationService.onDidChangeConfiguration((e) => {
+          if (e.affectsConfiguration("editor") && snippet.textEditorModel) {
+            editor.updateOptions(this.getEditorOptions(snippet.textEditorModel.getLanguageId()));
+          }
+        }));
+      });
+      this.updateSizeClasses();
+      this.multiCursorModifier();
+      this.contentDisposables.push(this.configurationService.onDidChangeConfiguration((e) => {
+        if (e.affectsConfiguration("editor.multiCursorModifier")) {
+          this.multiCursorModifier();
+        }
+      }));
+      input.onReady?.(innerContent, store);
+      this.scrollbar.scanDomNode();
+      this.loadTextEditorViewState(input);
+      this.updatedScrollPosition();
+      this.contentDisposables.push(Gesture.addTarget(innerContent));
+      this.contentDisposables.push(addDisposableListener(innerContent, TouchEventType.Change, (e) => this.onTouchChange(e)));
+    });
+  }
+  getEditorOptions(language) {
+    const config = deepClone(this.configurationService.getValue("editor", { overrideIdentifier: language }));
+    return {
+      ...isObject(config) ? config : /* @__PURE__ */ Object.create(null),
+      scrollBeyondLastLine: false,
+      scrollbar: {
+        verticalScrollbarSize: 14,
+        horizontal: "auto",
+        useShadows: true,
+        verticalHasArrows: false,
+        horizontalHasArrows: false,
+        alwaysConsumeMouseWheel: false
+      },
+      overviewRulerLanes: 3,
+      fixedOverflowWidgets: false,
+      lineNumbersMinChars: 1,
+      minimap: { enabled: false }
+    };
+  }
+  expandMacros(input) {
+    return input.replace(/kb\(([a-z.\d\-]+)\)/gi, (match, kb) => {
+      const keybinding = this.keybindingService.lookupKeybinding(kb);
+      const shortcut = keybinding ? keybinding.getLabel() || "" : UNBOUND_COMMAND;
+      return `<span class="shortcut">${strings.escape(shortcut)}</span>`;
+    });
+  }
+  decorateContent() {
+    const keys = this.content.querySelectorAll(".shortcut[data-command]");
+    Array.prototype.forEach.call(keys, (key) => {
+      const command = key.getAttribute("data-command");
+      const keybinding = command && this.keybindingService.lookupKeybinding(command);
+      const label = keybinding ? keybinding.getLabel() || "" : UNBOUND_COMMAND;
+      while (key.firstChild) {
+        key.firstChild.remove();
+      }
+      key.appendChild(document.createTextNode(label));
+    });
+    const ifkeys = this.content.querySelectorAll(".if_shortcut[data-command]");
+    Array.prototype.forEach.call(ifkeys, (key) => {
+      const command = key.getAttribute("data-command");
+      const keybinding = command && this.keybindingService.lookupKeybinding(command);
+      key.style.display = !keybinding ? "none" : "";
+    });
+  }
+  multiCursorModifier() {
+    const labels = UILabelProvider.modifierLabels[OS];
+    const value = this.configurationService.getValue("editor.multiCursorModifier");
+    const modifier = labels[value === "ctrlCmd" ? OS === 2 ? "metaKey" : "ctrlKey" : "altKey"];
+    const keys = this.content.querySelectorAll(".multi-cursor-modifier");
+    Array.prototype.forEach.call(keys, (key) => {
+      while (key.firstChild) {
+        key.firstChild.remove();
+      }
+      key.appendChild(document.createTextNode(modifier));
+    });
+  }
+  saveTextEditorViewState(input) {
+    const scrollPosition = this.scrollbar.getScrollPosition();
+    this.editorMemento.saveEditorState(this.group, input, {
+      viewState: {
+        scrollTop: scrollPosition.scrollTop,
+        scrollLeft: scrollPosition.scrollLeft
+      }
+    });
+  }
+  loadTextEditorViewState(input) {
+    const state = this.editorMemento.loadEditorState(this.group, input);
+    if (state) {
+      this.scrollbar.setScrollPosition(state.viewState);
+    }
+  }
+  clearInput() {
+    if (this.input instanceof WalkThroughInput) {
+      this.saveTextEditorViewState(this.input);
+    }
+    this.contentDisposables = dispose(this.contentDisposables);
+    super.clearInput();
+  }
+  saveState() {
+    if (this.input instanceof WalkThroughInput) {
+      this.saveTextEditorViewState(this.input);
+    }
+    super.saveState();
+  }
+  dispose() {
+    this.editorFocus.reset();
+    this.contentDisposables = dispose(this.contentDisposables);
+    this.disposables.dispose();
+    super.dispose();
+  }
+};
+WalkThroughPart = WalkThroughPart_1 = __decorate([
+  __param(1, ITelemetryService),
+  __param(2, IThemeService),
+  __param(3, ITextResourceConfigurationService),
+  __param(4, IInstantiationService),
+  __param(5, IOpenerService),
+  __param(6, IKeybindingService),
+  __param(7, IStorageService),
+  __param(8, IContextKeyService),
+  __param(9, IConfigurationService),
+  __param(10, INotificationService),
+  __param(11, IExtensionService),
+  __param(12, IEditorGroupsService)
+], WalkThroughPart);
+export {
+  WALK_THROUGH_FOCUS,
+  WalkThroughPart
+};
+//# sourceMappingURL=walkThroughPart.js.map

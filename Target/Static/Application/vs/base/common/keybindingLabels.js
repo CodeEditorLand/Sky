@@ -1,1 +1,139 @@
-import*as l from"../../nls.js";class o{constructor(l,e,t=e){this.modifierLabels=[null],this.modifierLabels[2]=l,this.modifierLabels[1]=e,this.modifierLabels[3]=t}toLabel(l,e,t){if(0===e.length)return null;const a=[];for(let r=0,i=e.length;r<i;r++){const i=e[r],s=t(i);if(null===s)return null;a[r]=c(i,s,this.modifierLabels[l])}return a.join(" ")}}const u=new o({ctrlKey:"⌃",shiftKey:"⇧",altKey:"⌥",metaKey:"⌘",separator:""},{ctrlKey:l.localize(125,null),shiftKey:l.localize(126,null),altKey:l.localize(127,null),metaKey:l.localize(128,null),separator:"+"},{ctrlKey:l.localize(129,null),shiftKey:l.localize(130,null),altKey:l.localize(131,null),metaKey:l.localize(132,null),separator:"+"}),f=new o({ctrlKey:l.localize(133,null),shiftKey:l.localize(134,null),altKey:l.localize(135,null),metaKey:l.localize(136,null),separator:"+"},{ctrlKey:l.localize(137,null),shiftKey:l.localize(138,null),altKey:l.localize(139,null),metaKey:l.localize(140,null),separator:"+"},{ctrlKey:l.localize(141,null),shiftKey:l.localize(142,null),altKey:l.localize(143,null),metaKey:l.localize(144,null),separator:"+"}),h=new o({ctrlKey:"Ctrl",shiftKey:"Shift",altKey:"Alt",metaKey:"Cmd",separator:"+"},{ctrlKey:"Ctrl",shiftKey:"Shift",altKey:"Alt",metaKey:"Super",separator:"+"}),p=new o({ctrlKey:"ctrl",shiftKey:"shift",altKey:"alt",metaKey:"cmd",separator:"+"},{ctrlKey:"ctrl",shiftKey:"shift",altKey:"alt",metaKey:"win",separator:"+"},{ctrlKey:"ctrl",shiftKey:"shift",altKey:"alt",metaKey:"meta",separator:"+"});function c(l,e,t){if(null===e)return"";const a=[];return l.ctrlKey&&a.push(t.ctrlKey),l.shiftKey&&a.push(t.shiftKey),l.altKey&&a.push(t.altKey),l.metaKey&&a.push(t.metaKey),""!==e&&a.push(e),a.join(t.separator)}export{o as $39,u as $49,f as $59,h as $69,p as $79};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import * as nls from "../../nls.js";
+class ModifierLabelProvider {
+  static {
+    __name(this, "ModifierLabelProvider");
+  }
+  constructor(mac, windows, linux = windows) {
+    this.modifierLabels = [null];
+    this.modifierLabels[
+      2
+      /* OperatingSystem.Macintosh */
+    ] = mac;
+    this.modifierLabels[
+      1
+      /* OperatingSystem.Windows */
+    ] = windows;
+    this.modifierLabels[
+      3
+      /* OperatingSystem.Linux */
+    ] = linux;
+  }
+  toLabel(OS, chords, keyLabelProvider) {
+    if (chords.length === 0) {
+      return null;
+    }
+    const result = [];
+    for (let i = 0, len = chords.length; i < len; i++) {
+      const chord = chords[i];
+      const keyLabel = keyLabelProvider(chord);
+      if (keyLabel === null) {
+        return null;
+      }
+      result[i] = _simpleAsString(chord, keyLabel, this.modifierLabels[OS]);
+    }
+    return result.join(" ");
+  }
+}
+const UILabelProvider = new ModifierLabelProvider({
+  ctrlKey: "\u2303",
+  shiftKey: "\u21E7",
+  altKey: "\u2325",
+  metaKey: "\u2318",
+  separator: ""
+}, {
+  ctrlKey: nls.localize({ key: "ctrlKey", comment: ["This is the short form for the Control key on the keyboard"] }, "Ctrl"),
+  shiftKey: nls.localize({ key: "shiftKey", comment: ["This is the short form for the Shift key on the keyboard"] }, "Shift"),
+  altKey: nls.localize({ key: "altKey", comment: ["This is the short form for the Alt key on the keyboard"] }, "Alt"),
+  metaKey: nls.localize({ key: "windowsKey", comment: ["This is the short form for the Windows key on the keyboard"] }, "Windows"),
+  separator: "+"
+}, {
+  ctrlKey: nls.localize({ key: "ctrlKey", comment: ["This is the short form for the Control key on the keyboard"] }, "Ctrl"),
+  shiftKey: nls.localize({ key: "shiftKey", comment: ["This is the short form for the Shift key on the keyboard"] }, "Shift"),
+  altKey: nls.localize({ key: "altKey", comment: ["This is the short form for the Alt key on the keyboard"] }, "Alt"),
+  metaKey: nls.localize({ key: "superKey", comment: ["This is the short form for the Super key on the keyboard"] }, "Super"),
+  separator: "+"
+});
+const AriaLabelProvider = new ModifierLabelProvider({
+  ctrlKey: nls.localize({ key: "ctrlKey.long", comment: ["This is the long form for the Control key on the keyboard"] }, "Control"),
+  shiftKey: nls.localize({ key: "shiftKey.long", comment: ["This is the long form for the Shift key on the keyboard"] }, "Shift"),
+  altKey: nls.localize({ key: "optKey.long", comment: ["This is the long form for the Alt/Option key on the keyboard"] }, "Option"),
+  metaKey: nls.localize({ key: "cmdKey.long", comment: ["This is the long form for the Command key on the keyboard"] }, "Command"),
+  separator: "+"
+}, {
+  ctrlKey: nls.localize({ key: "ctrlKey.long", comment: ["This is the long form for the Control key on the keyboard"] }, "Control"),
+  shiftKey: nls.localize({ key: "shiftKey.long", comment: ["This is the long form for the Shift key on the keyboard"] }, "Shift"),
+  altKey: nls.localize({ key: "altKey.long", comment: ["This is the long form for the Alt key on the keyboard"] }, "Alt"),
+  metaKey: nls.localize({ key: "windowsKey.long", comment: ["This is the long form for the Windows key on the keyboard"] }, "Windows"),
+  separator: "+"
+}, {
+  ctrlKey: nls.localize({ key: "ctrlKey.long", comment: ["This is the long form for the Control key on the keyboard"] }, "Control"),
+  shiftKey: nls.localize({ key: "shiftKey.long", comment: ["This is the long form for the Shift key on the keyboard"] }, "Shift"),
+  altKey: nls.localize({ key: "altKey.long", comment: ["This is the long form for the Alt key on the keyboard"] }, "Alt"),
+  metaKey: nls.localize({ key: "superKey.long", comment: ["This is the long form for the Super key on the keyboard"] }, "Super"),
+  separator: "+"
+});
+const ElectronAcceleratorLabelProvider = new ModifierLabelProvider({
+  ctrlKey: "Ctrl",
+  shiftKey: "Shift",
+  altKey: "Alt",
+  metaKey: "Cmd",
+  separator: "+"
+}, {
+  ctrlKey: "Ctrl",
+  shiftKey: "Shift",
+  altKey: "Alt",
+  metaKey: "Super",
+  separator: "+"
+});
+const UserSettingsLabelProvider = new ModifierLabelProvider({
+  ctrlKey: "ctrl",
+  shiftKey: "shift",
+  altKey: "alt",
+  metaKey: "cmd",
+  separator: "+"
+}, {
+  ctrlKey: "ctrl",
+  shiftKey: "shift",
+  altKey: "alt",
+  metaKey: "win",
+  separator: "+"
+}, {
+  ctrlKey: "ctrl",
+  shiftKey: "shift",
+  altKey: "alt",
+  metaKey: "meta",
+  separator: "+"
+});
+function _simpleAsString(modifiers, key, labels) {
+  if (key === null) {
+    return "";
+  }
+  const result = [];
+  if (modifiers.ctrlKey) {
+    result.push(labels.ctrlKey);
+  }
+  if (modifiers.shiftKey) {
+    result.push(labels.shiftKey);
+  }
+  if (modifiers.altKey) {
+    result.push(labels.altKey);
+  }
+  if (modifiers.metaKey) {
+    result.push(labels.metaKey);
+  }
+  if (key !== "") {
+    result.push(key);
+  }
+  return result.join(labels.separator);
+}
+__name(_simpleAsString, "_simpleAsString");
+export {
+  AriaLabelProvider,
+  ElectronAcceleratorLabelProvider,
+  ModifierLabelProvider,
+  UILabelProvider,
+  UserSettingsLabelProvider
+};
+//# sourceMappingURL=keybindingLabels.js.map

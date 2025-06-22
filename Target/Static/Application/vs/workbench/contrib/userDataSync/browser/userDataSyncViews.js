@@ -1,1 +1,769 @@
-import{$Ql as R}from"../../../../platform/registry/common/platform.js";import{Extensions as $,TreeItemCollapsibleState as m}from"../../../common/views.js";import{localize as l,localize2 as y}from"../../../../nls.js";import{$kj as D}from"../../../../platform/instantiation/common/descriptors.js";import{$S3b as V,$P3b as M}from"../../../browser/parts/views/treeView.js";import{$mj as se}from"../../../../platform/instantiation/common/instantiation.js";import{$TMb as W,$9Mb as I,$8Mb as ie,$$Mb as k,$3Mb as j,$VMb as re,$0Mb as N}from"../../../../platform/userDataSync/common/userDataSync.js";import{$jI as w,$iI as g,$dI as v}from"../../../../platform/actions/common/actions.js";import{$Bn as u}from"../../../../platform/contextkey/common/contextkey.js";import{URI as A}from"../../../../base/common/uri.js";import{$oI as ne}from"../../../services/editor/common/editorService.js";import{$Pt as ae}from"../../../../platform/theme/common/themeService.js";import{$in as E}from"../../../../base/common/date.js";import{$_o as X,$bp as oe}from"../../../../platform/dialogs/common/dialogs.js";import{Event as Y}from"../../../../base/common/event.js";import{$vd as ce,$ud as le}from"../../../../base/common/lifecycle.js";import{$Mj as p}from"../../../../base/common/codicons.js";import{$em as ue}from"../../../../base/common/actions.js";import{$L6b as C,$P6b as F,$M6b as O,$R6b as G,$S6b as P,$N6b as he,$Y6b as K,$T6b as de,$U6b as fe}from"../../../services/userDataSync/common/userDataSync.js";import{$JMb as J,$KMb as me}from"../../../../platform/userDataSync/common/userDataSyncMachines.js";import{$OM as pe}from"../../../../platform/quickinput/common/quickInput.js";import{$RI as T,Severity as ye}from"../../../../platform/notification/common/notification.js";import{$hh as b}from"../../../../base/common/resources.js";import{$qHb as Z,$pHb as H}from"../../../browser/parts/editor/editorCommands.js";import{$5j as ee}from"../../../../platform/files/common/files.js";import{$fl as we}from"../../../../platform/environment/common/environment.js";import{$yo as te}from"../../../../platform/uriIdentity/common/uriIdentity.js";import{$Yn as ge}from"../../../../platform/commands/common/commands.js";import{$Ao as z}from"../../../../platform/userDataProfile/common/userDataProfile.js";import{$Iwc as ve}from"./userDataSyncConflictsView.js";var S=function(d,t,e,s){var r=arguments.length,i=r<3?t:s===null?s=Object.getOwnPropertyDescriptor(t,e):s,n;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")i=Reflect.decorate(d,t,e,s);else for(var o=d.length-1;o>=0;o--)(n=d[o])&&(i=(r<3?n(i):r>3?n(t,e,i):n(t,e))||i);return r>3&&i&&Object.defineProperty(t,e,i),i},a=function(d,t){return function(e,s){t(e,s,d)}};let Q=class extends ce{constructor(t,e,s,r,i){super(),this.f=e,this.g=s,this.h=r,this.j=i,this.n(t)}n(t){this.r(t),this.t(t,!0),this.s(t),this.t(t,!1),this.y(t),this.u(t)}r(t){const e=R.as($.ViewsRegistry),s=y(13009,"Conflicts"),r={id:K,name:s,ctorDescriptor:new D(ve),when:u.and(de,fe),canToggleVisibility:!1,canMoveView:!1,treeView:this.f.createInstance(V,K,s.value),collapsed:!1,order:100};e.registerViews([r],t)}s(t){const e="workbench.views.sync.machines",s=y(13010,"Synced Machines"),r=this.f.createInstance(V,e,s.value),i=this.f.createInstance(B,r);r.showRefreshAction=!0,r.canSelectMany=!0,r.dataProvider=i,this.B(Y.any(this.h.onDidChange,this.j.onDidResetRemote)(()=>r.refresh()));const n=R.as($.ViewsRegistry),o={id:e,name:s,ctorDescriptor:new D(M),when:u.and(F.notEqualsTo("uninitialized"),G.isEqualTo("available"),P),canToggleVisibility:!0,canMoveView:!1,treeView:r,collapsed:!1,order:300};n.registerViews([o],t),this.B(w(class extends g{constructor(){super({id:"workbench.actions.sync.editMachineName",title:l(12982,null),icon:p.edit,menu:{id:v.ViewItemContext,when:u.and(u.equals("view",e)),group:"inline"}})}async run(c,h){await i.rename(h.$treeItemHandle)&&await r.refresh()}})),this.B(w(class extends g{constructor(){super({id:"workbench.actions.sync.turnOffSyncOnMachine",title:l(12983,null),menu:{id:v.ViewItemContext,when:u.and(u.equals("view",e),u.equals("viewItem","sync-machine"))}})}async run(c,h,f){await i.disable((f||[h]).map(U=>U.$treeItemHandle))&&await r.refresh()}}))}t(t,e){const s=`workbench.views.sync.${e?"remote":"local"}Activity`,r=e?y(13011,"Sync Activity (Remote)"):y(13012,"Sync Activity (Local)"),i=this.f.createInstance(V,s,r.value);i.showCollapseAllAction=!0,i.showRefreshAction=!0,i.dataProvider=e?this.f.createInstance(q):this.f.createInstance(be),this.B(Y.any(this.g.onDidChangeResourceEnablement,this.g.onDidChangeEnablement,this.j.onDidResetLocal,this.j.onDidResetRemote)(()=>i.refresh()));const n=R.as($.ViewsRegistry),o={id:s,name:r,ctorDescriptor:new D(M),when:u.and(F.notEqualsTo("uninitialized"),G.isEqualTo("available"),P),canToggleVisibility:!0,canMoveView:!1,treeView:i,collapsed:!1,order:e?200:400,hideByDefault:!e};n.registerViews([o],t),this.w(s)}u(t){const e="workbench.views.sync.externalActivity",s=y(13013,"Sync Activity (Developer)"),r=this.f.createInstance(L,void 0),i=this.f.createInstance(V,e,s.value);i.showCollapseAllAction=!1,i.showRefreshAction=!1,i.dataProvider=r;const n=R.as($.ViewsRegistry),o={id:e,name:s,ctorDescriptor:new D(M),when:P,canToggleVisibility:!0,canMoveView:!1,treeView:i,collapsed:!1,hideByDefault:!1};n.registerViews([o],t),this.B(w(class extends g{constructor(){super({id:"workbench.actions.sync.loadActivity",title:l(12984,null),icon:p.cloudUpload,menu:{id:v.ViewTitle,when:u.equals("view",e),group:"navigation"}})}async run(c){const f=await c.get(oe).showOpenDialog({title:l(12985,null),canSelectFiles:!0,canSelectFolders:!0,canSelectMany:!1});f?.[0]&&(r.activityDataResource=f[0],await i.refresh())}}))}w(t){this.B(w(class extends g{constructor(){super({id:`workbench.actions.sync.${t}.resolveResource`,title:l(12986,null),menu:{id:v.ViewItemContext,when:u.and(u.equals("view",t),u.regex("viewItem",/sync-resource-.*/i))}})}async run(e,s){const{resource:r}=JSON.parse(s.$treeItemHandle);await e.get(ne).openEditor({resource:A.parse(r),options:{pinned:!0}})}})),this.B(w(class extends g{constructor(){super({id:`workbench.actions.sync.${t}.compareWithLocal`,title:l(12987,null),menu:{id:v.ViewItemContext,when:u.and(u.equals("view",t),u.regex("viewItem",/sync-associatedResource-.*/i))}})}async run(e,s){const r=e.get(ge),{resource:i,comparableResource:n}=JSON.parse(s.$treeItemHandle),o=A.parse(i),c=A.parse(n);return r.executeCommand(Z,o,c,l(12988,null,l(12989,null,b(o)),l(12990,null,b(c))),void 0)}})),this.B(w(class extends g{constructor(){super({id:`workbench.actions.sync.${t}.replaceCurrent`,title:l(12991,null),icon:p.discard,menu:{id:v.ViewItemContext,when:u.and(u.equals("view",t),u.regex("viewItem",/sync-resource-.*/i),u.notEquals("viewItem","sync-resource-profiles")),group:"inline"}})}async run(e,s){const r=e.get(X),i=e.get(I),{syncResourceHandle:n,syncResource:o}=JSON.parse(s.$treeItemHandle);if((await r.confirm({message:l(12992,null,O(o)),type:"info",title:he.value})).confirmed)return i.replace({created:n.created,uri:A.revive(n.uri)})}}))}y(t){const e="workbench.views.sync.troubleshoot",s=y(13014,"Troubleshoot"),r=this.f.createInstance(V,e,s.value),i=this.f.createInstance(_);r.showRefreshAction=!0,r.dataProvider=i;const n=R.as($.ViewsRegistry),o={id:e,name:s,ctorDescriptor:new D(M),when:P,canToggleVisibility:!0,canMoveView:!1,treeView:r,collapsed:!1,order:500,hideByDefault:!0};n.registerViews([o],t)}};Q=S([a(1,se),a(2,ie),a(3,J),a(4,I)],Q);let x=class{constructor(t,e,s,r,i,n){this.f=t,this.g=e,this.h=s,this.i=r,this.j=i,this.k=n,this.d=new Map}async getChildren(t){try{if(!t)return await this.l();if(t.profile||t.handle===this.k.defaultProfile.id){let e=this.d.get(t.handle);return e||this.d.set(t.handle,e=this.o(t.profile)),await e}return t.syncResourceHandle?await this.n(t):[]}catch(e){throw e instanceof j||(e=j.toUserDataSyncError(e)),e instanceof j&&e.code==="IncompatibleRemoteContent"?this.j.notify({severity:ye.Error,message:e.message,actions:{primary:[ue({id:"reset",label:l(12993,null),run:()=>this.i.resetSyncedData()})]}}):this.j.error(e),e}}async l(){this.d.clear();const t=[],e=await this.q();if(e.length){const s={handle:this.k.defaultProfile.id,label:{label:this.k.defaultProfile.name},collapsibleState:m.Expanded};t.push(s)}else{const s=await this.o();t.push(...s)}for(const s of e){const r={handle:s.id,label:{label:s.name},collapsibleState:m.Collapsed,profile:s};t.push(r)}return t}async n(t){const e=t.syncResourceHandle,s=await this.g.getAssociatedResources(e),r=e.previous?await this.g.getAssociatedResources(e.previous):[];return s.map(({resource:i,comparableResource:n})=>{const o=JSON.stringify({resource:i.toString(),comparableResource:n.toString()}),c=r.find(h=>b(h.resource)===b(i))?.resource;return{handle:o,collapsibleState:m.None,resourceUri:i,command:c?{id:Z,title:"",arguments:[c,i,l(12994,null,`${b(i)} (${E(e.previous.created,!0)})`,`${b(i)} (${E(e.created,!0)})`),void 0]}:{id:H,title:"",arguments:[i,void 0,void 0]},contextValue:`sync-associatedResource-${e.syncResource}`}})}async o(t){const e=[],r=(await Promise.all(W.map(async i=>{const n=await this.r(i,t);return n.map((o,c)=>({...o,syncResource:i,previous:n[c+1]}))}))).flat().sort((i,n)=>n.created-i.created);for(const i of r){const n=JSON.stringify({syncResourceHandle:i,syncResource:i.syncResource});e.push({handle:n,collapsibleState:m.Collapsed,label:{label:O(i.syncResource)},description:E(i.created,!0),tooltip:new Date(i.created).toLocaleString(),themeIcon:ae,syncResourceHandle:i,contextValue:`sync-resource-${i.syncResource}`})}return e}};x=S([a(0,I),a(1,N),a(2,k),a(3,C),a(4,T),a(5,z)],x);class be extends x{r(t,e){return this.g.getLocalSyncResourceHandles(t,e)}async q(){return this.k.profiles.filter(t=>!t.isDefault).map(t=>({id:t.id,collection:t.id,name:t.name}))}}let q=class extends x{constructor(t,e,s,r,i,n,o){super(t,e,s,i,n,o),this.t=r}async getChildren(t){return t||(this.s=void 0),super.getChildren(t)}u(){return this.s===void 0&&(this.s=this.t.getMachines()),this.s}r(t,e){return this.g.getRemoteSyncResourceHandles(t,e)}q(){return this.g.getRemoteSyncedProfiles()}async n(t){const e=await super.n(t);if(e.length){const s=await this.g.getMachineId(t.syncResourceHandle);if(s){const i=(await this.u()).find(({id:n})=>n===s);e[0].description=i?.isCurrent?l(12995,null):i?.name}}return e}};q=S([a(0,I),a(1,N),a(2,k),a(3,J),a(4,C),a(5,T),a(6,z)],q);let L=class extends x{constructor(t,e,s,r,i,n,o,c,h){super(e,s,r,i,n,o),this.activityDataResource=t,this.u=c,this.v=h}async getChildren(t){if(!t){if(this.s=void 0,!this.activityDataResource)return[];if((await this.u.resolve(this.activityDataResource)).isDirectory)this.t=this.activityDataResource;else{this.t=this.v.extUri.joinPath(this.v.extUri.dirname(this.activityDataResource),"remoteActivity");try{await this.u.del(this.t,{recursive:!0})}catch{}await this.f.extractActivityData(this.activityDataResource,this.t)}}return super.getChildren(t)}r(t,e){return this.g.getLocalSyncResourceHandles(t,e,this.t)}async q(){return this.g.getLocalSyncedProfiles(this.t)}async n(t){const e=await super.n(t);if(e.length){const s=await this.g.getMachineId(t.syncResourceHandle);if(s){const i=(await this.z()).find(({id:n})=>n===s);e[0].description=i?.isCurrent?l(12996,null):i?.name}}return e}z(){return this.s===void 0&&(this.s=this.g.getLocalSyncedMachines(this.t)),this.s}};L=S([a(1,I),a(2,N),a(3,k),a(4,C),a(5,T),a(6,z),a(7,ee),a(8,te)],L);let B=class{constructor(t,e,s,r,i,n){this.f=t,this.g=e,this.h=s,this.i=r,this.j=i,this.k=n}async getChildren(t){t||(this.d=void 0);try{let e=await this.l();return e=e.filter(s=>!s.disabled).sort((s,r)=>s.isCurrent?-1:1),this.f.message=e.length?void 0:l(12997,null),e.map(({id:s,name:r,isCurrent:i,platform:n})=>({handle:s,collapsibleState:m.None,label:{label:r},description:i?l(12998,null):void 0,themeIcon:n&&me(n)?p.globe:p.vm,contextValue:"sync-machine"}))}catch(e){return this.i.error(e),[]}}l(){return this.d===void 0&&(this.d=this.g.getMachines()),this.d}async disable(t){const s=(await this.l()).filter(({id:n})=>t.includes(n));if(!s.length)throw new Error(l(12999,null,t.join(",")));if(!(await this.j.confirm({type:"info",message:s.length>1?l(13e3,null):l(13001,null,s[0].name),primaryButton:l(13002,null)})).confirmed)return!1;s.some(n=>n.isCurrent)&&await this.k.turnoff(!1);const i=s.filter(n=>!n.isCurrent).map(n=>[n.id,!1]);return i.length&&await this.g.setEnablements(i),!0}async rename(t){const e=new le,s=e.add(this.h.createInputBox());s.placeholder=l(13003,null),s.busy=!0,s.show();const r=await this.l(),i=r.find(({id:c})=>c===t),n=r.filter(({disabled:c})=>!c);if(!i)throw s.hide(),e.dispose(),new Error(l(13004,null,t));s.busy=!1,s.value=i.name;const o=c=>(c=c.trim(),c&&!n.some(h=>h.id!==t&&h.name===c)?c:null);return e.add(s.onDidChangeValue(()=>s.validationMessage=o(s.value)?"":l(13005,null))),new Promise((c,h)=>{e.add(s.onDidAccept(async()=>{const f=o(s.value);if(e.dispose(),f&&f!==i.name)try{await this.g.renameMachine(t,f),c(!0)}catch(U){h(U)}else c(!1)}))})}};B=S([a(1,J),a(2,pe),a(3,T),a(4,X),a(5,C)],B);let _=class{constructor(t,e,s,r){this.d=t,this.f=e,this.g=s,this.h=r}async getChildren(t){return t?t.handle==="LAST_SYNC_STATES"?this.i():t.handle==="SYNC_LOGS"?this.j():[]:[{handle:"SYNC_LOGS",collapsibleState:m.Collapsed,label:{label:l(13006,null)},themeIcon:p.folder},{handle:"LAST_SYNC_STATES",collapsibleState:m.Collapsed,label:{label:l(13007,null)},themeIcon:p.folder}]}async i(){const t=[];for(const e of W){const s=re(void 0,e,this.g,this.h.extUri);await this.d.exists(s)&&t.push({handle:s.toString(),label:{label:O(e)},collapsibleState:m.None,resourceUri:s,command:{id:H,title:"",arguments:[s,void 0,void 0]}})}return t}async j(){const t=await this.f.getAllLogResources(),e=[];for(const s of t){const r=this.h.extUri.dirname(s);e.push({handle:s.toString(),collapsibleState:m.None,resourceUri:s,label:{label:this.h.extUri.basename(r)},description:this.h.extUri.isEqual(r,this.g.logsHome)?l(13008,null):void 0,command:{id:H,title:"",arguments:[s,void 0,void 0]}})}return e}};_=S([a(0,ee),a(1,C),a(2,we),a(3,te)],_);export{Q as $Jwc};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { Registry } from "../../../../platform/registry/common/platform.js";
+import { Extensions, TreeItemCollapsibleState } from "../../../common/views.js";
+import { localize, localize2 } from "../../../../nls.js";
+import { SyncDescriptor } from "../../../../platform/instantiation/common/descriptors.js";
+import { TreeView, TreeViewPane } from "../../../browser/parts/views/treeView.js";
+import { IInstantiationService } from "../../../../platform/instantiation/common/instantiation.js";
+import { ALL_SYNC_RESOURCES, IUserDataSyncService, IUserDataSyncEnablementService, IUserDataAutoSyncService, UserDataSyncError, getLastSyncResourceUri, IUserDataSyncResourceProviderService } from "../../../../platform/userDataSync/common/userDataSync.js";
+import { registerAction2, Action2, MenuId } from "../../../../platform/actions/common/actions.js";
+import { ContextKeyExpr } from "../../../../platform/contextkey/common/contextkey.js";
+import { URI } from "../../../../base/common/uri.js";
+import { IEditorService } from "../../../services/editor/common/editorService.js";
+import { FolderThemeIcon } from "../../../../platform/theme/common/themeService.js";
+import { fromNow } from "../../../../base/common/date.js";
+import { IDialogService, IFileDialogService } from "../../../../platform/dialogs/common/dialogs.js";
+import { Event } from "../../../../base/common/event.js";
+import { Disposable, DisposableStore } from "../../../../base/common/lifecycle.js";
+import { Codicon } from "../../../../base/common/codicons.js";
+import { toAction } from "../../../../base/common/actions.js";
+import { IUserDataSyncWorkbenchService, CONTEXT_SYNC_STATE, getSyncAreaLabel, CONTEXT_ACCOUNT_STATE, CONTEXT_ENABLE_ACTIVITY_VIEWS, SYNC_TITLE, SYNC_CONFLICTS_VIEW_ID, CONTEXT_ENABLE_SYNC_CONFLICTS_VIEW, CONTEXT_HAS_CONFLICTS } from "../../../services/userDataSync/common/userDataSync.js";
+import { IUserDataSyncMachinesService, isWebPlatform } from "../../../../platform/userDataSync/common/userDataSyncMachines.js";
+import { IQuickInputService } from "../../../../platform/quickinput/common/quickInput.js";
+import { INotificationService, Severity } from "../../../../platform/notification/common/notification.js";
+import { basename } from "../../../../base/common/resources.js";
+import { API_OPEN_DIFF_EDITOR_COMMAND_ID, API_OPEN_EDITOR_COMMAND_ID } from "../../../browser/parts/editor/editorCommands.js";
+import { IFileService } from "../../../../platform/files/common/files.js";
+import { IEnvironmentService } from "../../../../platform/environment/common/environment.js";
+import { IUriIdentityService } from "../../../../platform/uriIdentity/common/uriIdentity.js";
+import { ICommandService } from "../../../../platform/commands/common/commands.js";
+import { IUserDataProfilesService } from "../../../../platform/userDataProfile/common/userDataProfile.js";
+import { UserDataSyncConflictsViewPane } from "./userDataSyncConflictsView.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+let UserDataSyncDataViews = class UserDataSyncDataViews2 extends Disposable {
+  static {
+    __name(this, "UserDataSyncDataViews");
+  }
+  constructor(container, instantiationService, userDataSyncEnablementService, userDataSyncMachinesService, userDataSyncService) {
+    super();
+    this.instantiationService = instantiationService;
+    this.userDataSyncEnablementService = userDataSyncEnablementService;
+    this.userDataSyncMachinesService = userDataSyncMachinesService;
+    this.userDataSyncService = userDataSyncService;
+    this.registerViews(container);
+  }
+  registerViews(container) {
+    this.registerConflictsView(container);
+    this.registerActivityView(container, true);
+    this.registerMachinesView(container);
+    this.registerActivityView(container, false);
+    this.registerTroubleShootView(container);
+    this.registerExternalActivityView(container);
+  }
+  registerConflictsView(container) {
+    const viewsRegistry = Registry.as(Extensions.ViewsRegistry);
+    const viewName = localize2("conflicts", "Conflicts");
+    const viewDescriptor = {
+      id: SYNC_CONFLICTS_VIEW_ID,
+      name: viewName,
+      ctorDescriptor: new SyncDescriptor(UserDataSyncConflictsViewPane),
+      when: ContextKeyExpr.and(CONTEXT_ENABLE_SYNC_CONFLICTS_VIEW, CONTEXT_HAS_CONFLICTS),
+      canToggleVisibility: false,
+      canMoveView: false,
+      treeView: this.instantiationService.createInstance(TreeView, SYNC_CONFLICTS_VIEW_ID, viewName.value),
+      collapsed: false,
+      order: 100
+    };
+    viewsRegistry.registerViews([viewDescriptor], container);
+  }
+  registerMachinesView(container) {
+    const id = `workbench.views.sync.machines`;
+    const name = localize2("synced machines", "Synced Machines");
+    const treeView = this.instantiationService.createInstance(TreeView, id, name.value);
+    const dataProvider = this.instantiationService.createInstance(UserDataSyncMachinesViewDataProvider, treeView);
+    treeView.showRefreshAction = true;
+    treeView.canSelectMany = true;
+    treeView.dataProvider = dataProvider;
+    this._register(Event.any(this.userDataSyncMachinesService.onDidChange, this.userDataSyncService.onDidResetRemote)(() => treeView.refresh()));
+    const viewsRegistry = Registry.as(Extensions.ViewsRegistry);
+    const viewDescriptor = {
+      id,
+      name,
+      ctorDescriptor: new SyncDescriptor(TreeViewPane),
+      when: ContextKeyExpr.and(CONTEXT_SYNC_STATE.notEqualsTo(
+        "uninitialized"
+        /* SyncStatus.Uninitialized */
+      ), CONTEXT_ACCOUNT_STATE.isEqualTo(
+        "available"
+        /* AccountStatus.Available */
+      ), CONTEXT_ENABLE_ACTIVITY_VIEWS),
+      canToggleVisibility: true,
+      canMoveView: false,
+      treeView,
+      collapsed: false,
+      order: 300
+    };
+    viewsRegistry.registerViews([viewDescriptor], container);
+    this._register(registerAction2(class extends Action2 {
+      constructor() {
+        super({
+          id: `workbench.actions.sync.editMachineName`,
+          title: localize("workbench.actions.sync.editMachineName", "Edit Name"),
+          icon: Codicon.edit,
+          menu: {
+            id: MenuId.ViewItemContext,
+            when: ContextKeyExpr.and(ContextKeyExpr.equals("view", id)),
+            group: "inline"
+          }
+        });
+      }
+      async run(accessor, handle) {
+        const changed = await dataProvider.rename(handle.$treeItemHandle);
+        if (changed) {
+          await treeView.refresh();
+        }
+      }
+    }));
+    this._register(registerAction2(class extends Action2 {
+      constructor() {
+        super({
+          id: `workbench.actions.sync.turnOffSyncOnMachine`,
+          title: localize("workbench.actions.sync.turnOffSyncOnMachine", "Turn off Settings Sync"),
+          menu: {
+            id: MenuId.ViewItemContext,
+            when: ContextKeyExpr.and(ContextKeyExpr.equals("view", id), ContextKeyExpr.equals("viewItem", "sync-machine"))
+          }
+        });
+      }
+      async run(accessor, handle, selected) {
+        if (await dataProvider.disable((selected || [handle]).map((handle2) => handle2.$treeItemHandle))) {
+          await treeView.refresh();
+        }
+      }
+    }));
+  }
+  registerActivityView(container, remote) {
+    const id = `workbench.views.sync.${remote ? "remote" : "local"}Activity`;
+    const name = remote ? localize2("remote sync activity title", "Sync Activity (Remote)") : localize2("local sync activity title", "Sync Activity (Local)");
+    const treeView = this.instantiationService.createInstance(TreeView, id, name.value);
+    treeView.showCollapseAllAction = true;
+    treeView.showRefreshAction = true;
+    treeView.dataProvider = remote ? this.instantiationService.createInstance(RemoteUserDataSyncActivityViewDataProvider) : this.instantiationService.createInstance(LocalUserDataSyncActivityViewDataProvider);
+    this._register(Event.any(this.userDataSyncEnablementService.onDidChangeResourceEnablement, this.userDataSyncEnablementService.onDidChangeEnablement, this.userDataSyncService.onDidResetLocal, this.userDataSyncService.onDidResetRemote)(() => treeView.refresh()));
+    const viewsRegistry = Registry.as(Extensions.ViewsRegistry);
+    const viewDescriptor = {
+      id,
+      name,
+      ctorDescriptor: new SyncDescriptor(TreeViewPane),
+      when: ContextKeyExpr.and(CONTEXT_SYNC_STATE.notEqualsTo(
+        "uninitialized"
+        /* SyncStatus.Uninitialized */
+      ), CONTEXT_ACCOUNT_STATE.isEqualTo(
+        "available"
+        /* AccountStatus.Available */
+      ), CONTEXT_ENABLE_ACTIVITY_VIEWS),
+      canToggleVisibility: true,
+      canMoveView: false,
+      treeView,
+      collapsed: false,
+      order: remote ? 200 : 400,
+      hideByDefault: !remote
+    };
+    viewsRegistry.registerViews([viewDescriptor], container);
+    this.registerDataViewActions(id);
+  }
+  registerExternalActivityView(container) {
+    const id = `workbench.views.sync.externalActivity`;
+    const name = localize2("downloaded sync activity title", "Sync Activity (Developer)");
+    const dataProvider = this.instantiationService.createInstance(ExtractedUserDataSyncActivityViewDataProvider, void 0);
+    const treeView = this.instantiationService.createInstance(TreeView, id, name.value);
+    treeView.showCollapseAllAction = false;
+    treeView.showRefreshAction = false;
+    treeView.dataProvider = dataProvider;
+    const viewsRegistry = Registry.as(Extensions.ViewsRegistry);
+    const viewDescriptor = {
+      id,
+      name,
+      ctorDescriptor: new SyncDescriptor(TreeViewPane),
+      when: CONTEXT_ENABLE_ACTIVITY_VIEWS,
+      canToggleVisibility: true,
+      canMoveView: false,
+      treeView,
+      collapsed: false,
+      hideByDefault: false
+    };
+    viewsRegistry.registerViews([viewDescriptor], container);
+    this._register(registerAction2(class extends Action2 {
+      constructor() {
+        super({
+          id: `workbench.actions.sync.loadActivity`,
+          title: localize("workbench.actions.sync.loadActivity", "Load Sync Activity"),
+          icon: Codicon.cloudUpload,
+          menu: {
+            id: MenuId.ViewTitle,
+            when: ContextKeyExpr.equals("view", id),
+            group: "navigation"
+          }
+        });
+      }
+      async run(accessor) {
+        const fileDialogService = accessor.get(IFileDialogService);
+        const result = await fileDialogService.showOpenDialog({
+          title: localize("select sync activity file", "Select Sync Activity File or Folder"),
+          canSelectFiles: true,
+          canSelectFolders: true,
+          canSelectMany: false
+        });
+        if (!result?.[0]) {
+          return;
+        }
+        dataProvider.activityDataResource = result[0];
+        await treeView.refresh();
+      }
+    }));
+  }
+  registerDataViewActions(viewId) {
+    this._register(registerAction2(class extends Action2 {
+      constructor() {
+        super({
+          id: `workbench.actions.sync.${viewId}.resolveResource`,
+          title: localize("workbench.actions.sync.resolveResourceRef", "Show raw JSON sync data"),
+          menu: {
+            id: MenuId.ViewItemContext,
+            when: ContextKeyExpr.and(ContextKeyExpr.equals("view", viewId), ContextKeyExpr.regex("viewItem", /sync-resource-.*/i))
+          }
+        });
+      }
+      async run(accessor, handle) {
+        const { resource } = JSON.parse(handle.$treeItemHandle);
+        const editorService = accessor.get(IEditorService);
+        await editorService.openEditor({ resource: URI.parse(resource), options: { pinned: true } });
+      }
+    }));
+    this._register(registerAction2(class extends Action2 {
+      constructor() {
+        super({
+          id: `workbench.actions.sync.${viewId}.compareWithLocal`,
+          title: localize("workbench.actions.sync.compareWithLocal", "Compare with Local"),
+          menu: {
+            id: MenuId.ViewItemContext,
+            when: ContextKeyExpr.and(ContextKeyExpr.equals("view", viewId), ContextKeyExpr.regex("viewItem", /sync-associatedResource-.*/i))
+          }
+        });
+      }
+      async run(accessor, handle) {
+        const commandService = accessor.get(ICommandService);
+        const { resource, comparableResource } = JSON.parse(handle.$treeItemHandle);
+        const remoteResource = URI.parse(resource);
+        const localResource = URI.parse(comparableResource);
+        return commandService.executeCommand(API_OPEN_DIFF_EDITOR_COMMAND_ID, remoteResource, localResource, localize("remoteToLocalDiff", "{0} \u2194 {1}", localize({ key: "leftResourceName", comment: ["remote as in file in cloud"] }, "{0} (Remote)", basename(remoteResource)), localize({ key: "rightResourceName", comment: ["local as in file in disk"] }, "{0} (Local)", basename(localResource))), void 0);
+      }
+    }));
+    this._register(registerAction2(class extends Action2 {
+      constructor() {
+        super({
+          id: `workbench.actions.sync.${viewId}.replaceCurrent`,
+          title: localize("workbench.actions.sync.replaceCurrent", "Restore"),
+          icon: Codicon.discard,
+          menu: {
+            id: MenuId.ViewItemContext,
+            when: ContextKeyExpr.and(ContextKeyExpr.equals("view", viewId), ContextKeyExpr.regex("viewItem", /sync-resource-.*/i), ContextKeyExpr.notEquals("viewItem", `sync-resource-${"profiles"}`)),
+            group: "inline"
+          }
+        });
+      }
+      async run(accessor, handle) {
+        const dialogService = accessor.get(IDialogService);
+        const userDataSyncService = accessor.get(IUserDataSyncService);
+        const { syncResourceHandle, syncResource } = JSON.parse(handle.$treeItemHandle);
+        const result = await dialogService.confirm({
+          message: localize({ key: "confirm replace", comment: ["A confirmation message to replace current user data (settings, extensions, keybindings, snippets) with selected version"] }, "Would you like to replace your current {0} with selected?", getSyncAreaLabel(syncResource)),
+          type: "info",
+          title: SYNC_TITLE.value
+        });
+        if (result.confirmed) {
+          return userDataSyncService.replace({ created: syncResourceHandle.created, uri: URI.revive(syncResourceHandle.uri) });
+        }
+      }
+    }));
+  }
+  registerTroubleShootView(container) {
+    const id = `workbench.views.sync.troubleshoot`;
+    const name = localize2("troubleshoot", "Troubleshoot");
+    const treeView = this.instantiationService.createInstance(TreeView, id, name.value);
+    const dataProvider = this.instantiationService.createInstance(UserDataSyncTroubleshootViewDataProvider);
+    treeView.showRefreshAction = true;
+    treeView.dataProvider = dataProvider;
+    const viewsRegistry = Registry.as(Extensions.ViewsRegistry);
+    const viewDescriptor = {
+      id,
+      name,
+      ctorDescriptor: new SyncDescriptor(TreeViewPane),
+      when: CONTEXT_ENABLE_ACTIVITY_VIEWS,
+      canToggleVisibility: true,
+      canMoveView: false,
+      treeView,
+      collapsed: false,
+      order: 500,
+      hideByDefault: true
+    };
+    viewsRegistry.registerViews([viewDescriptor], container);
+  }
+};
+UserDataSyncDataViews = __decorate([
+  __param(1, IInstantiationService),
+  __param(2, IUserDataSyncEnablementService),
+  __param(3, IUserDataSyncMachinesService),
+  __param(4, IUserDataSyncService)
+], UserDataSyncDataViews);
+let UserDataSyncActivityViewDataProvider = class UserDataSyncActivityViewDataProvider2 {
+  static {
+    __name(this, "UserDataSyncActivityViewDataProvider");
+  }
+  constructor(userDataSyncService, userDataSyncResourceProviderService, userDataAutoSyncService, userDataSyncWorkbenchService, notificationService, userDataProfilesService) {
+    this.userDataSyncService = userDataSyncService;
+    this.userDataSyncResourceProviderService = userDataSyncResourceProviderService;
+    this.userDataAutoSyncService = userDataAutoSyncService;
+    this.userDataSyncWorkbenchService = userDataSyncWorkbenchService;
+    this.notificationService = notificationService;
+    this.userDataProfilesService = userDataProfilesService;
+    this.syncResourceHandlesByProfile = /* @__PURE__ */ new Map();
+  }
+  async getChildren(element) {
+    try {
+      if (!element) {
+        return await this.getRoots();
+      }
+      if (element.profile || element.handle === this.userDataProfilesService.defaultProfile.id) {
+        let promise = this.syncResourceHandlesByProfile.get(element.handle);
+        if (!promise) {
+          this.syncResourceHandlesByProfile.set(element.handle, promise = this.getSyncResourceHandles(element.profile));
+        }
+        return await promise;
+      }
+      if (element.syncResourceHandle) {
+        return await this.getChildrenForSyncResourceTreeItem(element);
+      }
+      return [];
+    } catch (error) {
+      if (!(error instanceof UserDataSyncError)) {
+        error = UserDataSyncError.toUserDataSyncError(error);
+      }
+      if (error instanceof UserDataSyncError && error.code === "IncompatibleRemoteContent") {
+        this.notificationService.notify({
+          severity: Severity.Error,
+          message: error.message,
+          actions: {
+            primary: [
+              toAction({
+                id: "reset",
+                label: localize("reset", "Reset Synced Data"),
+                run: /* @__PURE__ */ __name(() => this.userDataSyncWorkbenchService.resetSyncedData(), "run")
+              })
+            ]
+          }
+        });
+      } else {
+        this.notificationService.error(error);
+      }
+      throw error;
+    }
+  }
+  async getRoots() {
+    this.syncResourceHandlesByProfile.clear();
+    const roots = [];
+    const profiles = await this.getProfiles();
+    if (profiles.length) {
+      const profileTreeItem = {
+        handle: this.userDataProfilesService.defaultProfile.id,
+        label: { label: this.userDataProfilesService.defaultProfile.name },
+        collapsibleState: TreeItemCollapsibleState.Expanded
+      };
+      roots.push(profileTreeItem);
+    } else {
+      const defaultSyncResourceHandles = await this.getSyncResourceHandles();
+      roots.push(...defaultSyncResourceHandles);
+    }
+    for (const profile of profiles) {
+      const profileTreeItem = {
+        handle: profile.id,
+        label: { label: profile.name },
+        collapsibleState: TreeItemCollapsibleState.Collapsed,
+        profile
+      };
+      roots.push(profileTreeItem);
+    }
+    return roots;
+  }
+  async getChildrenForSyncResourceTreeItem(element) {
+    const syncResourceHandle = element.syncResourceHandle;
+    const associatedResources = await this.userDataSyncResourceProviderService.getAssociatedResources(syncResourceHandle);
+    const previousAssociatedResources = syncResourceHandle.previous ? await this.userDataSyncResourceProviderService.getAssociatedResources(syncResourceHandle.previous) : [];
+    return associatedResources.map(({ resource, comparableResource }) => {
+      const handle = JSON.stringify({ resource: resource.toString(), comparableResource: comparableResource.toString() });
+      const previousResource = previousAssociatedResources.find((previous) => basename(previous.resource) === basename(resource))?.resource;
+      return {
+        handle,
+        collapsibleState: TreeItemCollapsibleState.None,
+        resourceUri: resource,
+        command: previousResource ? {
+          id: API_OPEN_DIFF_EDITOR_COMMAND_ID,
+          title: "",
+          arguments: [
+            previousResource,
+            resource,
+            localize("sideBySideLabels", "{0} \u2194 {1}", `${basename(resource)} (${fromNow(syncResourceHandle.previous.created, true)})`, `${basename(resource)} (${fromNow(syncResourceHandle.created, true)})`),
+            void 0
+          ]
+        } : {
+          id: API_OPEN_EDITOR_COMMAND_ID,
+          title: "",
+          arguments: [resource, void 0, void 0]
+        },
+        contextValue: `sync-associatedResource-${syncResourceHandle.syncResource}`
+      };
+    });
+  }
+  async getSyncResourceHandles(profile) {
+    const treeItems = [];
+    const result = await Promise.all(ALL_SYNC_RESOURCES.map(async (syncResource) => {
+      const resourceHandles = await this.getResourceHandles(syncResource, profile);
+      return resourceHandles.map((resourceHandle, index) => ({ ...resourceHandle, syncResource, previous: resourceHandles[index + 1] }));
+    }));
+    const syncResourceHandles = result.flat().sort((a, b) => b.created - a.created);
+    for (const syncResourceHandle of syncResourceHandles) {
+      const handle = JSON.stringify({ syncResourceHandle, syncResource: syncResourceHandle.syncResource });
+      treeItems.push({
+        handle,
+        collapsibleState: TreeItemCollapsibleState.Collapsed,
+        label: { label: getSyncAreaLabel(syncResourceHandle.syncResource) },
+        description: fromNow(syncResourceHandle.created, true),
+        tooltip: new Date(syncResourceHandle.created).toLocaleString(),
+        themeIcon: FolderThemeIcon,
+        syncResourceHandle,
+        contextValue: `sync-resource-${syncResourceHandle.syncResource}`
+      });
+    }
+    return treeItems;
+  }
+};
+UserDataSyncActivityViewDataProvider = __decorate([
+  __param(0, IUserDataSyncService),
+  __param(1, IUserDataSyncResourceProviderService),
+  __param(2, IUserDataAutoSyncService),
+  __param(3, IUserDataSyncWorkbenchService),
+  __param(4, INotificationService),
+  __param(5, IUserDataProfilesService)
+], UserDataSyncActivityViewDataProvider);
+class LocalUserDataSyncActivityViewDataProvider extends UserDataSyncActivityViewDataProvider {
+  static {
+    __name(this, "LocalUserDataSyncActivityViewDataProvider");
+  }
+  getResourceHandles(syncResource, profile) {
+    return this.userDataSyncResourceProviderService.getLocalSyncResourceHandles(syncResource, profile);
+  }
+  async getProfiles() {
+    return this.userDataProfilesService.profiles.filter((p) => !p.isDefault).map((p) => ({
+      id: p.id,
+      collection: p.id,
+      name: p.name
+    }));
+  }
+}
+let RemoteUserDataSyncActivityViewDataProvider = class RemoteUserDataSyncActivityViewDataProvider2 extends UserDataSyncActivityViewDataProvider {
+  static {
+    __name(this, "RemoteUserDataSyncActivityViewDataProvider");
+  }
+  constructor(userDataSyncService, userDataSyncResourceProviderService, userDataAutoSyncService, userDataSyncMachinesService, userDataSyncWorkbenchService, notificationService, userDataProfilesService) {
+    super(userDataSyncService, userDataSyncResourceProviderService, userDataAutoSyncService, userDataSyncWorkbenchService, notificationService, userDataProfilesService);
+    this.userDataSyncMachinesService = userDataSyncMachinesService;
+  }
+  async getChildren(element) {
+    if (!element) {
+      this.machinesPromise = void 0;
+    }
+    return super.getChildren(element);
+  }
+  getMachines() {
+    if (this.machinesPromise === void 0) {
+      this.machinesPromise = this.userDataSyncMachinesService.getMachines();
+    }
+    return this.machinesPromise;
+  }
+  getResourceHandles(syncResource, profile) {
+    return this.userDataSyncResourceProviderService.getRemoteSyncResourceHandles(syncResource, profile);
+  }
+  getProfiles() {
+    return this.userDataSyncResourceProviderService.getRemoteSyncedProfiles();
+  }
+  async getChildrenForSyncResourceTreeItem(element) {
+    const children = await super.getChildrenForSyncResourceTreeItem(element);
+    if (children.length) {
+      const machineId = await this.userDataSyncResourceProviderService.getMachineId(element.syncResourceHandle);
+      if (machineId) {
+        const machines = await this.getMachines();
+        const machine = machines.find(({ id }) => id === machineId);
+        children[0].description = machine?.isCurrent ? localize({ key: "current", comment: ["Represents current machine"] }, "Current") : machine?.name;
+      }
+    }
+    return children;
+  }
+};
+RemoteUserDataSyncActivityViewDataProvider = __decorate([
+  __param(0, IUserDataSyncService),
+  __param(1, IUserDataSyncResourceProviderService),
+  __param(2, IUserDataAutoSyncService),
+  __param(3, IUserDataSyncMachinesService),
+  __param(4, IUserDataSyncWorkbenchService),
+  __param(5, INotificationService),
+  __param(6, IUserDataProfilesService)
+], RemoteUserDataSyncActivityViewDataProvider);
+let ExtractedUserDataSyncActivityViewDataProvider = class ExtractedUserDataSyncActivityViewDataProvider2 extends UserDataSyncActivityViewDataProvider {
+  static {
+    __name(this, "ExtractedUserDataSyncActivityViewDataProvider");
+  }
+  constructor(activityDataResource, userDataSyncService, userDataSyncResourceProviderService, userDataAutoSyncService, userDataSyncWorkbenchService, notificationService, userDataProfilesService, fileService, uriIdentityService) {
+    super(userDataSyncService, userDataSyncResourceProviderService, userDataAutoSyncService, userDataSyncWorkbenchService, notificationService, userDataProfilesService);
+    this.activityDataResource = activityDataResource;
+    this.fileService = fileService;
+    this.uriIdentityService = uriIdentityService;
+  }
+  async getChildren(element) {
+    if (!element) {
+      this.machinesPromise = void 0;
+      if (!this.activityDataResource) {
+        return [];
+      }
+      const stat = await this.fileService.resolve(this.activityDataResource);
+      if (stat.isDirectory) {
+        this.activityDataLocation = this.activityDataResource;
+      } else {
+        this.activityDataLocation = this.uriIdentityService.extUri.joinPath(this.uriIdentityService.extUri.dirname(this.activityDataResource), "remoteActivity");
+        try {
+          await this.fileService.del(this.activityDataLocation, { recursive: true });
+        } catch (e) {
+        }
+        await this.userDataSyncService.extractActivityData(this.activityDataResource, this.activityDataLocation);
+      }
+    }
+    return super.getChildren(element);
+  }
+  getResourceHandles(syncResource, profile) {
+    return this.userDataSyncResourceProviderService.getLocalSyncResourceHandles(syncResource, profile, this.activityDataLocation);
+  }
+  async getProfiles() {
+    return this.userDataSyncResourceProviderService.getLocalSyncedProfiles(this.activityDataLocation);
+  }
+  async getChildrenForSyncResourceTreeItem(element) {
+    const children = await super.getChildrenForSyncResourceTreeItem(element);
+    if (children.length) {
+      const machineId = await this.userDataSyncResourceProviderService.getMachineId(element.syncResourceHandle);
+      if (machineId) {
+        const machines = await this.getMachines();
+        const machine = machines.find(({ id }) => id === machineId);
+        children[0].description = machine?.isCurrent ? localize({ key: "current", comment: ["Represents current machine"] }, "Current") : machine?.name;
+      }
+    }
+    return children;
+  }
+  getMachines() {
+    if (this.machinesPromise === void 0) {
+      this.machinesPromise = this.userDataSyncResourceProviderService.getLocalSyncedMachines(this.activityDataLocation);
+    }
+    return this.machinesPromise;
+  }
+};
+ExtractedUserDataSyncActivityViewDataProvider = __decorate([
+  __param(1, IUserDataSyncService),
+  __param(2, IUserDataSyncResourceProviderService),
+  __param(3, IUserDataAutoSyncService),
+  __param(4, IUserDataSyncWorkbenchService),
+  __param(5, INotificationService),
+  __param(6, IUserDataProfilesService),
+  __param(7, IFileService),
+  __param(8, IUriIdentityService)
+], ExtractedUserDataSyncActivityViewDataProvider);
+let UserDataSyncMachinesViewDataProvider = class UserDataSyncMachinesViewDataProvider2 {
+  static {
+    __name(this, "UserDataSyncMachinesViewDataProvider");
+  }
+  constructor(treeView, userDataSyncMachinesService, quickInputService, notificationService, dialogService, userDataSyncWorkbenchService) {
+    this.treeView = treeView;
+    this.userDataSyncMachinesService = userDataSyncMachinesService;
+    this.quickInputService = quickInputService;
+    this.notificationService = notificationService;
+    this.dialogService = dialogService;
+    this.userDataSyncWorkbenchService = userDataSyncWorkbenchService;
+  }
+  async getChildren(element) {
+    if (!element) {
+      this.machinesPromise = void 0;
+    }
+    try {
+      let machines = await this.getMachines();
+      machines = machines.filter((m) => !m.disabled).sort((m1, m2) => m1.isCurrent ? -1 : 1);
+      this.treeView.message = machines.length ? void 0 : localize("no machines", "No Machines");
+      return machines.map(({ id, name, isCurrent, platform }) => ({
+        handle: id,
+        collapsibleState: TreeItemCollapsibleState.None,
+        label: { label: name },
+        description: isCurrent ? localize({ key: "current", comment: ["Current machine"] }, "Current") : void 0,
+        themeIcon: platform && isWebPlatform(platform) ? Codicon.globe : Codicon.vm,
+        contextValue: "sync-machine"
+      }));
+    } catch (error) {
+      this.notificationService.error(error);
+      return [];
+    }
+  }
+  getMachines() {
+    if (this.machinesPromise === void 0) {
+      this.machinesPromise = this.userDataSyncMachinesService.getMachines();
+    }
+    return this.machinesPromise;
+  }
+  async disable(machineIds) {
+    const machines = await this.getMachines();
+    const machinesToDisable = machines.filter(({ id }) => machineIds.includes(id));
+    if (!machinesToDisable.length) {
+      throw new Error(localize("not found", "machine not found with id: {0}", machineIds.join(",")));
+    }
+    const result = await this.dialogService.confirm({
+      type: "info",
+      message: machinesToDisable.length > 1 ? localize("turn off sync on multiple machines", "Are you sure you want to turn off sync on selected machines?") : localize("turn off sync on machine", "Are you sure you want to turn off sync on {0}?", machinesToDisable[0].name),
+      primaryButton: localize({ key: "turn off", comment: ["&& denotes a mnemonic"] }, "&&Turn off")
+    });
+    if (!result.confirmed) {
+      return false;
+    }
+    if (machinesToDisable.some((machine) => machine.isCurrent)) {
+      await this.userDataSyncWorkbenchService.turnoff(false);
+    }
+    const otherMachinesToDisable = machinesToDisable.filter((machine) => !machine.isCurrent).map((machine) => [machine.id, false]);
+    if (otherMachinesToDisable.length) {
+      await this.userDataSyncMachinesService.setEnablements(otherMachinesToDisable);
+    }
+    return true;
+  }
+  async rename(machineId) {
+    const disposableStore = new DisposableStore();
+    const inputBox = disposableStore.add(this.quickInputService.createInputBox());
+    inputBox.placeholder = localize("placeholder", "Enter the name of the machine");
+    inputBox.busy = true;
+    inputBox.show();
+    const machines = await this.getMachines();
+    const machine = machines.find(({ id }) => id === machineId);
+    const enabledMachines = machines.filter(({ disabled }) => !disabled);
+    if (!machine) {
+      inputBox.hide();
+      disposableStore.dispose();
+      throw new Error(localize("not found", "machine not found with id: {0}", machineId));
+    }
+    inputBox.busy = false;
+    inputBox.value = machine.name;
+    const validateMachineName = /* @__PURE__ */ __name((machineName) => {
+      machineName = machineName.trim();
+      return machineName && !enabledMachines.some((m) => m.id !== machineId && m.name === machineName) ? machineName : null;
+    }, "validateMachineName");
+    disposableStore.add(inputBox.onDidChangeValue(() => inputBox.validationMessage = validateMachineName(inputBox.value) ? "" : localize("valid message", "Machine name should be unique and not empty")));
+    return new Promise((c, e) => {
+      disposableStore.add(inputBox.onDidAccept(async () => {
+        const machineName = validateMachineName(inputBox.value);
+        disposableStore.dispose();
+        if (machineName && machineName !== machine.name) {
+          try {
+            await this.userDataSyncMachinesService.renameMachine(machineId, machineName);
+            c(true);
+          } catch (error) {
+            e(error);
+          }
+        } else {
+          c(false);
+        }
+      }));
+    });
+  }
+};
+UserDataSyncMachinesViewDataProvider = __decorate([
+  __param(1, IUserDataSyncMachinesService),
+  __param(2, IQuickInputService),
+  __param(3, INotificationService),
+  __param(4, IDialogService),
+  __param(5, IUserDataSyncWorkbenchService)
+], UserDataSyncMachinesViewDataProvider);
+let UserDataSyncTroubleshootViewDataProvider = class UserDataSyncTroubleshootViewDataProvider2 {
+  static {
+    __name(this, "UserDataSyncTroubleshootViewDataProvider");
+  }
+  constructor(fileService, userDataSyncWorkbenchService, environmentService, uriIdentityService) {
+    this.fileService = fileService;
+    this.userDataSyncWorkbenchService = userDataSyncWorkbenchService;
+    this.environmentService = environmentService;
+    this.uriIdentityService = uriIdentityService;
+  }
+  async getChildren(element) {
+    if (!element) {
+      return [{
+        handle: "SYNC_LOGS",
+        collapsibleState: TreeItemCollapsibleState.Collapsed,
+        label: { label: localize("sync logs", "Logs") },
+        themeIcon: Codicon.folder
+      }, {
+        handle: "LAST_SYNC_STATES",
+        collapsibleState: TreeItemCollapsibleState.Collapsed,
+        label: { label: localize("last sync states", "Last Synced Remotes") },
+        themeIcon: Codicon.folder
+      }];
+    }
+    if (element.handle === "LAST_SYNC_STATES") {
+      return this.getLastSyncStates();
+    }
+    if (element.handle === "SYNC_LOGS") {
+      return this.getSyncLogs();
+    }
+    return [];
+  }
+  async getLastSyncStates() {
+    const result = [];
+    for (const syncResource of ALL_SYNC_RESOURCES) {
+      const resource = getLastSyncResourceUri(void 0, syncResource, this.environmentService, this.uriIdentityService.extUri);
+      if (await this.fileService.exists(resource)) {
+        result.push({
+          handle: resource.toString(),
+          label: { label: getSyncAreaLabel(syncResource) },
+          collapsibleState: TreeItemCollapsibleState.None,
+          resourceUri: resource,
+          command: { id: API_OPEN_EDITOR_COMMAND_ID, title: "", arguments: [resource, void 0, void 0] }
+        });
+      }
+    }
+    return result;
+  }
+  async getSyncLogs() {
+    const logResources = await this.userDataSyncWorkbenchService.getAllLogResources();
+    const result = [];
+    for (const syncLogResource of logResources) {
+      const logFolder = this.uriIdentityService.extUri.dirname(syncLogResource);
+      result.push({
+        handle: syncLogResource.toString(),
+        collapsibleState: TreeItemCollapsibleState.None,
+        resourceUri: syncLogResource,
+        label: { label: this.uriIdentityService.extUri.basename(logFolder) },
+        description: this.uriIdentityService.extUri.isEqual(logFolder, this.environmentService.logsHome) ? localize({ key: "current", comment: ["Represents current log file"] }, "Current") : void 0,
+        command: { id: API_OPEN_EDITOR_COMMAND_ID, title: "", arguments: [syncLogResource, void 0, void 0] }
+      });
+    }
+    return result;
+  }
+};
+UserDataSyncTroubleshootViewDataProvider = __decorate([
+  __param(0, IFileService),
+  __param(1, IUserDataSyncWorkbenchService),
+  __param(2, IEnvironmentService),
+  __param(3, IUriIdentityService)
+], UserDataSyncTroubleshootViewDataProvider);
+export {
+  UserDataSyncDataViews
+};
+//# sourceMappingURL=userDataSyncViews.js.map

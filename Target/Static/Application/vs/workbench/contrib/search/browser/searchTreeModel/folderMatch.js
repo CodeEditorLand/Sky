@@ -1,1 +1,471 @@
-import{$df as E}from"../../../../../base/common/event.js";import{$vf as w}from"../../../../../base/common/lazy.js";import{$vd as A}from"../../../../../base/common/lifecycle.js";import{$Ic as d}from"../../../../../base/common/map.js";import{$jj as D}from"../../../../../base/common/ternarySearchTree.js";import{$mj as p}from"../../../../../platform/instantiation/common/instantiation.js";import{$2H as v}from"../../../../../platform/label/common/label.js";import{$yo as M}from"../../../../../platform/uriIdentity/common/uriIdentity.js";import{$5bc as $}from"./../replace.js";import{$kP as U}from"../../../../services/search/common/search.js";import{$8ac as H,$9ac as j,$Xac as z,$abc as C}from"./searchTreeCommon.js";import{$WW as O}from"../../common/searchNotebookHelpers.js";import{$bcc as P}from"../notebookSearch/notebookSearchModel.js";import{$cbc as W,$bbc as B}from"../notebookSearch/searchNotebookHelpers.js";import{$gbc as F}from"../notebookSearch/notebookSearchModelBase.js";import{$8bc as N}from"./match.js";var g=function(u,e,t,s){var r=arguments.length,o=r<3?e:s===null?s=Object.getOwnPropertyDescriptor(e,t):s,i;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")o=Reflect.decorate(u,e,t,s);else for(var h=u.length-1;h>=0;h--)(i=u[h])&&(o=(r<3?i(o):r>3?i(e,t,o):i(e,t))||o);return r>3&&o&&Object.defineProperty(e,t,o),o},a=function(u,e){return function(t,s){e(t,s,u)}},y;let f=y=class extends A{constructor(e,t,s,r,o,i,h,n,c,l,b){super(),this.u=e,this.w=s,this.y=r,this.z=o,this.C=i,this.D=h,this.F=n,this.G=c,this.H=b,this.a=this.B(new E),this.onChange=this.a.event,this.c=this.B(new E),this.onDispose=this.c.event,this.r=!1,this.f=new d,this.g=new d,this.h=D.forUris(I=>this.H.extUri.ignorePathCasing(I)),this.j=new d,this.n=new d,this.s=new w(()=>this.resource?l.getUriBasenameLabel(this.resource):""),this.t=z+t}get searchModel(){return this.C.searchModel}get showHighlights(){return this.z.showHighlights}get closestRoot(){return this.D}set replacingAll(e){this.r=e}id(){return this.t}get resource(){return this.u}index(){return this.w}name(){return this.s.value}parent(){return this.z}isAIContributed(){return!1}get hasChildren(){return this.f.size>0||this.g.size>0}bindModel(e){const t=this.f.get(e.uri);t?t.bindModel(e):this.getFolderMatch(e.uri)?.getDownstreamFileMatch(e.uri)?.bindModel(e)}createIntermediateFolderMatch(e,t,s,r,o){const i=this.B(this.G.createInstance(m,e,t,s,r,this,this.C,o));return this.configureIntermediateMatch(i),this.doAddFolder(i),i}configureIntermediateMatch(e){const t=e.onChange(s=>this.onFolderChange(e,s));this.B(e.onDispose(()=>t.dispose()))}clear(e=!1){const t=this.allDownstreamFileMatches();this.disposeMatches(),this.a.fire({elements:t,removed:!0,added:!1,clearingAll:e})}remove(e){Array.isArray(e)||(e=[e]);const t=C(e);this.doRemoveFile(t)}async replace(e){return this.F.replace([e]).then(()=>{this.doRemoveFile([e],!0,!0,!0)})}replaceAll(){const e=this.matches();return this.N(e)}matches(){return[...this.fileMatchesIterator(),...this.folderMatchesIterator()]}fileMatchesIterator(){return this.f.values()}folderMatchesIterator(){return this.g.values()}isEmpty(){return this.I()+this.J()===0}getDownstreamFileMatch(e){const t=this.f.get(e);if(t)return t;const r=this.getFolderMatch(e)?.getDownstreamFileMatch(e);return r||null}allDownstreamFileMatches(){let e=[];const t=this.folderMatchesIterator();for(const s of t)e=e.concat(s.allDownstreamFileMatches());return[...this.fileMatchesIterator(),...e]}I(){return this.f.size}J(){return this.g.size}count(){return this.I()+this.J()}recursiveFileCount(){return this.allDownstreamFileMatches().length}recursiveMatchCount(){return this.allDownstreamFileMatches().reduce((e,t)=>e+t.count(),0)}get query(){return this.y}doAddFile(e){this.f.set(e.resource,e),this.j.has(e.resource)&&this.j.delete(e.resource)}hasOnlyReadOnlyMatches(){return Array.from(this.f.values()).every(e=>e.hasOnlyReadOnlyMatches())}L(e,t){return this.H.extUri.isEqualOrParent(t,e)&&!this.H.extUri.isEqual(t,e)}M(e){let t=this;for(;t instanceof y;){if(t.id()===e.id())return!0;t=t.parent()}return!1}getFolderMatch(e){return this.h.findSubstr(e)}doAddFolder(e){if(this.resource&&!this.L(this.resource,e.resource))throw Error(`${e.resource} does not belong as a child of ${this.resource}`);if(this.M(e))throw Error(`${e.resource} is a parent of ${this.resource}`);this.g.set(e.resource,e),this.h.set(e.resource,e),this.n.has(e.resource)&&this.n.delete(e.resource)}async N(e){const t=C(e);await this.F.replace(t),this.doRemoveFile(t,!0,!0,!0)}onFileChange(e,t=!1){let s=!1;this.f.has(e.resource)||(this.doAddFile(e),s=!0),e.count()===0&&(this.doRemoveFile([e],!1,!1),s=!1,t=!0),this.r||this.a.fire({elements:[e],added:s,removed:t})}onFolderChange(e,t){this.g.has(e.resource)||this.doAddFolder(e),e.isEmpty()&&(this.g.delete(e.resource),e.dispose()),this.a.fire(t)}doRemoveFile(e,t=!0,s=!0,r=!1){const o=[];for(const i of e)if(this.f.get(i.resource)){if(r&&i.hasReadonlyMatches())continue;this.f.delete(i.resource),t?i.dispose():this.j.set(i.resource,i),o.push(i)}else{const h=this.getFolderMatch(i.resource);if(h)h.doRemoveFile([i],t,s);else throw Error(`FileMatch ${i.resource} is not located within FolderMatch ${this.resource}`)}s&&this.a.fire({elements:o,removed:!0})}async bindNotebookEditorWidget(e,t){const s=this.f.get(t);if(F(s))if(s)s.bindNotebookEditorWidget(e),await s.updateMatchesForEditorWidget();else{const r=this.folderMatchesIterator();for(const o of r)await o.bindNotebookEditorWidget(e,t)}}addFileMatch(e,t,s){const r=[],o=[];e.forEach(h=>{const n=this.getDownstreamFileMatch(h.resource);if(n)h.results&&h.results.filter(U).forEach(c=>{N(c,n,!1).forEach(l=>n.add(l))}),(W(h)||O(h))&&h.cellResults?.forEach(c=>{if(F(n)){const l=n.getCellMatch(B(c));l?(l.addContentMatches(c.contentResults),l.addWebviewMatches(c.webviewResults)):n.addCellMatch(c)}}),o.push(n),h.results&&h.results.length>0&&n.addContext(h.results);else if(H(this)||j(this)){const c=this.createAndConfigureFileMatch(h,s);r.push(c)}});const i=[...r,...o];!t&&i.length&&this.a.fire({elements:i,added:!!r.length})}unbindNotebookEditorWidget(e,t){const s=this.f.get(t);if(F(s))if(s)s.unbindNotebookEditorWidget(e);else{const r=this.folderMatchesIterator();for(const o of r)o.unbindNotebookEditorWidget(e,t)}}disposeMatches(){[...this.f.values()].forEach(e=>e.dispose()),[...this.g.values()].forEach(e=>e.disposeMatches()),[...this.j.values()].forEach(e=>e.dispose()),[...this.n.values()].forEach(e=>e.disposeMatches()),this.f.clear(),this.g.clear(),this.j.clear(),this.n.clear()}dispose(){this.disposeMatches(),this.c.fire(),super.dispose()}};f=y=g([a(7,$),a(8,p),a(9,v),a(10,M)],f);let m=class extends f{constructor(e,t,s,r,o,i,h,n,c,l,b){super(e,t,s,r,o,i,h,n,c,l,b),this.O=new w(()=>this.H.extUri.removeTrailingPathSeparator(this.H.extUri.normalizePath(this.resource)))}get resource(){return this.u}get normalizedResource(){return this.O.value}};m=g([a(7,$),a(8,p),a(9,v),a(10,M)],m);let R=class extends m{constructor(e,t,s,r,o,i,h,n,c){super(e,t,s,r,o,o.parent(),null,i,h,n,c)}P(e){return this.H.extUri.normalizePath(this.H.extUri.dirname(e))}Q(e,t){return this.H.extUri.isEqual(e,t)}R(e,t,s,r,o,i,h){const n=this.G.createInstance(P,e,t,s,r,o,i,h);n.createMatches(),r.doAddFile(n);const c=n.onChange(({didRemove:l})=>r.onFileChange(n,l));return this.B(n.onDispose(()=>c.dispose())),n}createAndConfigureFileMatch(e,t){if(!this.L(this.resource,e.resource))throw Error(`${e.resource} is not a descendant of ${this.resource}`);const s=[];let r=this.P(e.resource);for(;!this.Q(this.normalizedResource,r);){s.unshift(r);const n=r;if(r=this.H.extUri.removeTrailingPathSeparator(this.P(r)),this.Q(n,r))throw Error(`${e.resource} is not correctly configured as a child of ${this.normalizedResource}`)}const o=this.closestRoot??this;let i=this;for(let n=0;n<s.length;n++){let c=i.getFolderMatch(s[n]);c||(c=i.createIntermediateFolderMatch(s[n],s[n].toString(),-1,this.y,o)),i=c}const h=typeof this.y.contentPattern=="string"?{pattern:this.y.contentPattern}:this.y.contentPattern;return this.R(h,this.y.previewOptions,this.y.maxResults,i,e,o,t)}};R=g([a(5,$),a(6,p),a(7,v),a(8,M)],R);let x=class extends f{constructor(e,t,s,r,o,i,h,n){super(null,e,t,s,r,r.parent(),null,o,i,h,n)}createAndConfigureFileMatch(e,t){const s=typeof this.y.contentPattern=="string"?{pattern:this.y.contentPattern}:this.y.contentPattern,r=this.B(this.G.createInstance(P,s,this.y.previewOptions,this.y.maxResults,this,e,null,t));r.createMatches(),this.doAddFile(r);const o=r.onChange(({didRemove:i})=>this.onFileChange(r,i));return this.B(r.onDispose(()=>o.dispose())),r}};x=g([a(4,$),a(5,p),a(6,v),a(7,M)],x);export{f as $dcc,m as $ecc,R as $fcc,x as $gcc};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { Emitter } from "../../../../../base/common/event.js";
+import { Lazy } from "../../../../../base/common/lazy.js";
+import { Disposable } from "../../../../../base/common/lifecycle.js";
+import { ResourceMap } from "../../../../../base/common/map.js";
+import { TernarySearchTree } from "../../../../../base/common/ternarySearchTree.js";
+import { IInstantiationService } from "../../../../../platform/instantiation/common/instantiation.js";
+import { ILabelService } from "../../../../../platform/label/common/label.js";
+import { IUriIdentityService } from "../../../../../platform/uriIdentity/common/uriIdentity.js";
+import { IReplaceService } from "./../replace.js";
+import { resultIsMatch } from "../../../../services/search/common/search.js";
+import { isSearchTreeFolderMatchWorkspaceRoot, isSearchTreeFolderMatchNoRoot, FOLDER_MATCH_PREFIX, getFileMatches } from "./searchTreeCommon.js";
+import { isINotebookFileMatchNoModel } from "../../common/searchNotebookHelpers.js";
+import { NotebookCompatibleFileMatch } from "../notebookSearch/notebookSearchModel.js";
+import { isINotebookFileMatchWithModel, getIDFromINotebookCellMatch } from "../notebookSearch/searchNotebookHelpers.js";
+import { isNotebookFileMatch } from "../notebookSearch/notebookSearchModelBase.js";
+import { textSearchResultToMatches } from "./match.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+var FolderMatchImpl_1;
+let FolderMatchImpl = FolderMatchImpl_1 = class FolderMatchImpl2 extends Disposable {
+  static {
+    __name(this, "FolderMatchImpl");
+  }
+  constructor(_resource, _id, _index, _query, _parent, _searchResult, _closestRoot, replaceService, instantiationService, labelService, uriIdentityService) {
+    super();
+    this._resource = _resource;
+    this._index = _index;
+    this._query = _query;
+    this._parent = _parent;
+    this._searchResult = _searchResult;
+    this._closestRoot = _closestRoot;
+    this.replaceService = replaceService;
+    this.instantiationService = instantiationService;
+    this.uriIdentityService = uriIdentityService;
+    this._onChange = this._register(new Emitter());
+    this.onChange = this._onChange.event;
+    this._onDispose = this._register(new Emitter());
+    this.onDispose = this._onDispose.event;
+    this._replacingAll = false;
+    this._fileMatches = new ResourceMap();
+    this._folderMatches = new ResourceMap();
+    this._folderMatchesMap = TernarySearchTree.forUris((key) => this.uriIdentityService.extUri.ignorePathCasing(key));
+    this._unDisposedFileMatches = new ResourceMap();
+    this._unDisposedFolderMatches = new ResourceMap();
+    this._name = new Lazy(() => this.resource ? labelService.getUriBasenameLabel(this.resource) : "");
+    this._id = FOLDER_MATCH_PREFIX + _id;
+  }
+  get searchModel() {
+    return this._searchResult.searchModel;
+  }
+  get showHighlights() {
+    return this._parent.showHighlights;
+  }
+  get closestRoot() {
+    return this._closestRoot;
+  }
+  set replacingAll(b) {
+    this._replacingAll = b;
+  }
+  id() {
+    return this._id;
+  }
+  get resource() {
+    return this._resource;
+  }
+  index() {
+    return this._index;
+  }
+  name() {
+    return this._name.value;
+  }
+  parent() {
+    return this._parent;
+  }
+  isAIContributed() {
+    return false;
+  }
+  get hasChildren() {
+    return this._fileMatches.size > 0 || this._folderMatches.size > 0;
+  }
+  bindModel(model) {
+    const fileMatch = this._fileMatches.get(model.uri);
+    if (fileMatch) {
+      fileMatch.bindModel(model);
+    } else {
+      const folderMatch = this.getFolderMatch(model.uri);
+      const match = folderMatch?.getDownstreamFileMatch(model.uri);
+      match?.bindModel(model);
+    }
+  }
+  createIntermediateFolderMatch(resource, id, index, query, baseWorkspaceFolder) {
+    const folderMatch = this._register(this.instantiationService.createInstance(FolderMatchWithResourceImpl, resource, id, index, query, this, this._searchResult, baseWorkspaceFolder));
+    this.configureIntermediateMatch(folderMatch);
+    this.doAddFolder(folderMatch);
+    return folderMatch;
+  }
+  configureIntermediateMatch(folderMatch) {
+    const disposable = folderMatch.onChange((event) => this.onFolderChange(folderMatch, event));
+    this._register(folderMatch.onDispose(() => disposable.dispose()));
+  }
+  clear(clearingAll = false) {
+    const changed = this.allDownstreamFileMatches();
+    this.disposeMatches();
+    this._onChange.fire({ elements: changed, removed: true, added: false, clearingAll });
+  }
+  remove(matches) {
+    if (!Array.isArray(matches)) {
+      matches = [matches];
+    }
+    const allMatches = getFileMatches(matches);
+    this.doRemoveFile(allMatches);
+  }
+  async replace(match) {
+    return this.replaceService.replace([match]).then(() => {
+      this.doRemoveFile([match], true, true, true);
+    });
+  }
+  replaceAll() {
+    const matches = this.matches();
+    return this.batchReplace(matches);
+  }
+  matches() {
+    return [...this.fileMatchesIterator(), ...this.folderMatchesIterator()];
+  }
+  fileMatchesIterator() {
+    return this._fileMatches.values();
+  }
+  folderMatchesIterator() {
+    return this._folderMatches.values();
+  }
+  isEmpty() {
+    return this.fileCount() + this.folderCount() === 0;
+  }
+  getDownstreamFileMatch(uri) {
+    const directChildFileMatch = this._fileMatches.get(uri);
+    if (directChildFileMatch) {
+      return directChildFileMatch;
+    }
+    const folderMatch = this.getFolderMatch(uri);
+    const match = folderMatch?.getDownstreamFileMatch(uri);
+    if (match) {
+      return match;
+    }
+    return null;
+  }
+  allDownstreamFileMatches() {
+    let recursiveChildren = [];
+    const iterator = this.folderMatchesIterator();
+    for (const elem of iterator) {
+      recursiveChildren = recursiveChildren.concat(elem.allDownstreamFileMatches());
+    }
+    return [...this.fileMatchesIterator(), ...recursiveChildren];
+  }
+  fileCount() {
+    return this._fileMatches.size;
+  }
+  folderCount() {
+    return this._folderMatches.size;
+  }
+  count() {
+    return this.fileCount() + this.folderCount();
+  }
+  recursiveFileCount() {
+    return this.allDownstreamFileMatches().length;
+  }
+  recursiveMatchCount() {
+    return this.allDownstreamFileMatches().reduce((prev, match) => prev + match.count(), 0);
+  }
+  get query() {
+    return this._query;
+  }
+  doAddFile(fileMatch) {
+    this._fileMatches.set(fileMatch.resource, fileMatch);
+    if (this._unDisposedFileMatches.has(fileMatch.resource)) {
+      this._unDisposedFileMatches.delete(fileMatch.resource);
+    }
+  }
+  hasOnlyReadOnlyMatches() {
+    return Array.from(this._fileMatches.values()).every((fm) => fm.hasOnlyReadOnlyMatches());
+  }
+  uriHasParent(parent, child) {
+    return this.uriIdentityService.extUri.isEqualOrParent(child, parent) && !this.uriIdentityService.extUri.isEqual(child, parent);
+  }
+  isInParentChain(folderMatch) {
+    let matchItem = this;
+    while (matchItem instanceof FolderMatchImpl_1) {
+      if (matchItem.id() === folderMatch.id()) {
+        return true;
+      }
+      matchItem = matchItem.parent();
+    }
+    return false;
+  }
+  getFolderMatch(resource) {
+    const folderMatch = this._folderMatchesMap.findSubstr(resource);
+    return folderMatch;
+  }
+  doAddFolder(folderMatch) {
+    if (this.resource && !this.uriHasParent(this.resource, folderMatch.resource)) {
+      throw Error(`${folderMatch.resource} does not belong as a child of ${this.resource}`);
+    } else if (this.isInParentChain(folderMatch)) {
+      throw Error(`${folderMatch.resource} is a parent of ${this.resource}`);
+    }
+    this._folderMatches.set(folderMatch.resource, folderMatch);
+    this._folderMatchesMap.set(folderMatch.resource, folderMatch);
+    if (this._unDisposedFolderMatches.has(folderMatch.resource)) {
+      this._unDisposedFolderMatches.delete(folderMatch.resource);
+    }
+  }
+  async batchReplace(matches) {
+    const allMatches = getFileMatches(matches);
+    await this.replaceService.replace(allMatches);
+    this.doRemoveFile(allMatches, true, true, true);
+  }
+  onFileChange(fileMatch, removed = false) {
+    let added = false;
+    if (!this._fileMatches.has(fileMatch.resource)) {
+      this.doAddFile(fileMatch);
+      added = true;
+    }
+    if (fileMatch.count() === 0) {
+      this.doRemoveFile([fileMatch], false, false);
+      added = false;
+      removed = true;
+    }
+    if (!this._replacingAll) {
+      this._onChange.fire({ elements: [fileMatch], added, removed });
+    }
+  }
+  onFolderChange(folderMatch, event) {
+    if (!this._folderMatches.has(folderMatch.resource)) {
+      this.doAddFolder(folderMatch);
+    }
+    if (folderMatch.isEmpty()) {
+      this._folderMatches.delete(folderMatch.resource);
+      folderMatch.dispose();
+    }
+    this._onChange.fire(event);
+  }
+  doRemoveFile(fileMatches, dispose = true, trigger = true, keepReadonly = false) {
+    const removed = [];
+    for (const match of fileMatches) {
+      if (this._fileMatches.get(match.resource)) {
+        if (keepReadonly && match.hasReadonlyMatches()) {
+          continue;
+        }
+        this._fileMatches.delete(match.resource);
+        if (dispose) {
+          match.dispose();
+        } else {
+          this._unDisposedFileMatches.set(match.resource, match);
+        }
+        removed.push(match);
+      } else {
+        const folder = this.getFolderMatch(match.resource);
+        if (folder) {
+          folder.doRemoveFile([match], dispose, trigger);
+        } else {
+          throw Error(`FileMatch ${match.resource} is not located within FolderMatch ${this.resource}`);
+        }
+      }
+    }
+    if (trigger) {
+      this._onChange.fire({ elements: removed, removed: true });
+    }
+  }
+  async bindNotebookEditorWidget(editor, resource) {
+    const fileMatch = this._fileMatches.get(resource);
+    if (isNotebookFileMatch(fileMatch)) {
+      if (fileMatch) {
+        fileMatch.bindNotebookEditorWidget(editor);
+        await fileMatch.updateMatchesForEditorWidget();
+      } else {
+        const folderMatches = this.folderMatchesIterator();
+        for (const elem of folderMatches) {
+          await elem.bindNotebookEditorWidget(editor, resource);
+        }
+      }
+    }
+  }
+  addFileMatch(raw, silent, searchInstanceID) {
+    const added = [];
+    const updated = [];
+    raw.forEach((rawFileMatch) => {
+      const existingFileMatch = this.getDownstreamFileMatch(rawFileMatch.resource);
+      if (existingFileMatch) {
+        if (rawFileMatch.results) {
+          rawFileMatch.results.filter(resultIsMatch).forEach((m) => {
+            textSearchResultToMatches(m, existingFileMatch, false).forEach((m2) => existingFileMatch.add(m2));
+          });
+        }
+        if (isINotebookFileMatchWithModel(rawFileMatch) || isINotebookFileMatchNoModel(rawFileMatch)) {
+          rawFileMatch.cellResults?.forEach((rawCellMatch) => {
+            if (isNotebookFileMatch(existingFileMatch)) {
+              const existingCellMatch = existingFileMatch.getCellMatch(getIDFromINotebookCellMatch(rawCellMatch));
+              if (existingCellMatch) {
+                existingCellMatch.addContentMatches(rawCellMatch.contentResults);
+                existingCellMatch.addWebviewMatches(rawCellMatch.webviewResults);
+              } else {
+                existingFileMatch.addCellMatch(rawCellMatch);
+              }
+            }
+          });
+        }
+        updated.push(existingFileMatch);
+        if (rawFileMatch.results && rawFileMatch.results.length > 0) {
+          existingFileMatch.addContext(rawFileMatch.results);
+        }
+      } else {
+        if (isSearchTreeFolderMatchWorkspaceRoot(this) || isSearchTreeFolderMatchNoRoot(this)) {
+          const fileMatch = this.createAndConfigureFileMatch(rawFileMatch, searchInstanceID);
+          added.push(fileMatch);
+        }
+      }
+    });
+    const elements = [...added, ...updated];
+    if (!silent && elements.length) {
+      this._onChange.fire({ elements, added: !!added.length });
+    }
+  }
+  unbindNotebookEditorWidget(editor, resource) {
+    const fileMatch = this._fileMatches.get(resource);
+    if (isNotebookFileMatch(fileMatch)) {
+      if (fileMatch) {
+        fileMatch.unbindNotebookEditorWidget(editor);
+      } else {
+        const folderMatches = this.folderMatchesIterator();
+        for (const elem of folderMatches) {
+          elem.unbindNotebookEditorWidget(editor, resource);
+        }
+      }
+    }
+  }
+  disposeMatches() {
+    [...this._fileMatches.values()].forEach((fileMatch) => fileMatch.dispose());
+    [...this._folderMatches.values()].forEach((folderMatch) => folderMatch.disposeMatches());
+    [...this._unDisposedFileMatches.values()].forEach((fileMatch) => fileMatch.dispose());
+    [...this._unDisposedFolderMatches.values()].forEach((folderMatch) => folderMatch.disposeMatches());
+    this._fileMatches.clear();
+    this._folderMatches.clear();
+    this._unDisposedFileMatches.clear();
+    this._unDisposedFolderMatches.clear();
+  }
+  dispose() {
+    this.disposeMatches();
+    this._onDispose.fire();
+    super.dispose();
+  }
+};
+FolderMatchImpl = FolderMatchImpl_1 = __decorate([
+  __param(7, IReplaceService),
+  __param(8, IInstantiationService),
+  __param(9, ILabelService),
+  __param(10, IUriIdentityService)
+], FolderMatchImpl);
+let FolderMatchWithResourceImpl = class FolderMatchWithResourceImpl2 extends FolderMatchImpl {
+  static {
+    __name(this, "FolderMatchWithResourceImpl");
+  }
+  constructor(_resource, _id, _index, _query, _parent, _searchResult, _closestRoot, replaceService, instantiationService, labelService, uriIdentityService) {
+    super(_resource, _id, _index, _query, _parent, _searchResult, _closestRoot, replaceService, instantiationService, labelService, uriIdentityService);
+    this._normalizedResource = new Lazy(() => this.uriIdentityService.extUri.removeTrailingPathSeparator(this.uriIdentityService.extUri.normalizePath(this.resource)));
+  }
+  get resource() {
+    return this._resource;
+  }
+  get normalizedResource() {
+    return this._normalizedResource.value;
+  }
+};
+FolderMatchWithResourceImpl = __decorate([
+  __param(7, IReplaceService),
+  __param(8, IInstantiationService),
+  __param(9, ILabelService),
+  __param(10, IUriIdentityService)
+], FolderMatchWithResourceImpl);
+let FolderMatchWorkspaceRootImpl = class FolderMatchWorkspaceRootImpl2 extends FolderMatchWithResourceImpl {
+  static {
+    __name(this, "FolderMatchWorkspaceRootImpl");
+  }
+  constructor(_resource, _id, _index, _query, _parent, replaceService, instantiationService, labelService, uriIdentityService) {
+    super(_resource, _id, _index, _query, _parent, _parent.parent(), null, replaceService, instantiationService, labelService, uriIdentityService);
+  }
+  normalizedUriParent(uri) {
+    return this.uriIdentityService.extUri.normalizePath(this.uriIdentityService.extUri.dirname(uri));
+  }
+  uriEquals(uri1, ur2) {
+    return this.uriIdentityService.extUri.isEqual(uri1, ur2);
+  }
+  createFileMatch(query, previewOptions, maxResults, parent, rawFileMatch, closestRoot, searchInstanceID) {
+    const fileMatch = this.instantiationService.createInstance(NotebookCompatibleFileMatch, query, previewOptions, maxResults, parent, rawFileMatch, closestRoot, searchInstanceID);
+    fileMatch.createMatches();
+    parent.doAddFile(fileMatch);
+    const disposable = fileMatch.onChange(({ didRemove }) => parent.onFileChange(fileMatch, didRemove));
+    this._register(fileMatch.onDispose(() => disposable.dispose()));
+    return fileMatch;
+  }
+  createAndConfigureFileMatch(rawFileMatch, searchInstanceID) {
+    if (!this.uriHasParent(this.resource, rawFileMatch.resource)) {
+      throw Error(`${rawFileMatch.resource} is not a descendant of ${this.resource}`);
+    }
+    const fileMatchParentParts = [];
+    let uri = this.normalizedUriParent(rawFileMatch.resource);
+    while (!this.uriEquals(this.normalizedResource, uri)) {
+      fileMatchParentParts.unshift(uri);
+      const prevUri = uri;
+      uri = this.uriIdentityService.extUri.removeTrailingPathSeparator(this.normalizedUriParent(uri));
+      if (this.uriEquals(prevUri, uri)) {
+        throw Error(`${rawFileMatch.resource} is not correctly configured as a child of ${this.normalizedResource}`);
+      }
+    }
+    const root = this.closestRoot ?? this;
+    let parent = this;
+    for (let i = 0; i < fileMatchParentParts.length; i++) {
+      let folderMatch = parent.getFolderMatch(fileMatchParentParts[i]);
+      if (!folderMatch) {
+        folderMatch = parent.createIntermediateFolderMatch(fileMatchParentParts[i], fileMatchParentParts[i].toString(), -1, this._query, root);
+      }
+      parent = folderMatch;
+    }
+    const contentPatternToUse = typeof this._query.contentPattern === "string" ? { pattern: this._query.contentPattern } : this._query.contentPattern;
+    return this.createFileMatch(contentPatternToUse, this._query.previewOptions, this._query.maxResults, parent, rawFileMatch, root, searchInstanceID);
+  }
+};
+FolderMatchWorkspaceRootImpl = __decorate([
+  __param(5, IReplaceService),
+  __param(6, IInstantiationService),
+  __param(7, ILabelService),
+  __param(8, IUriIdentityService)
+], FolderMatchWorkspaceRootImpl);
+let FolderMatchNoRootImpl = class FolderMatchNoRootImpl2 extends FolderMatchImpl {
+  static {
+    __name(this, "FolderMatchNoRootImpl");
+  }
+  constructor(_id, _index, _query, _parent, replaceService, instantiationService, labelService, uriIdentityService) {
+    super(null, _id, _index, _query, _parent, _parent.parent(), null, replaceService, instantiationService, labelService, uriIdentityService);
+  }
+  createAndConfigureFileMatch(rawFileMatch, searchInstanceID) {
+    const contentPatternToUse = typeof this._query.contentPattern === "string" ? { pattern: this._query.contentPattern } : this._query.contentPattern;
+    const fileMatch = this._register(this.instantiationService.createInstance(NotebookCompatibleFileMatch, contentPatternToUse, this._query.previewOptions, this._query.maxResults, this, rawFileMatch, null, searchInstanceID));
+    fileMatch.createMatches();
+    this.doAddFile(fileMatch);
+    const disposable = fileMatch.onChange(({ didRemove }) => this.onFileChange(fileMatch, didRemove));
+    this._register(fileMatch.onDispose(() => disposable.dispose()));
+    return fileMatch;
+  }
+};
+FolderMatchNoRootImpl = __decorate([
+  __param(4, IReplaceService),
+  __param(5, IInstantiationService),
+  __param(6, ILabelService),
+  __param(7, IUriIdentityService)
+], FolderMatchNoRootImpl);
+export {
+  FolderMatchImpl,
+  FolderMatchNoRootImpl,
+  FolderMatchWithResourceImpl,
+  FolderMatchWorkspaceRootImpl
+};
+//# sourceMappingURL=folderMatch.js.map

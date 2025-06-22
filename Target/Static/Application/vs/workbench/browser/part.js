@@ -1,1 +1,249 @@
-import"./media/part.css";import{$7tb as d}from"../common/component.js";import{$25 as r,$45 as l,$o6 as c,$N6 as m}from"../../base/browser/dom.js";import{$df as f}from"../../base/common/event.js";import{$$c as g}from"../../base/common/types.js";import{$td as p}from"../../base/common/lifecycle.js";class S extends d{get dimension(){return this.f}get contentPosition(){return this.g}constructor(t,i,s,e,r){super(t,s,e),this.L=i,this.M=r,this.j=this.B(new f),this.onDidVisibilityChange=this.j.event,this.ab=this.B(new f),this.B(r.registerPart(this))}w(t){this.m&&super.w(t)}create(t,i){this.m=t,this.s=this.O(t,i),this.t=this.Q(t,i),this.J=new n(this.L,this.t),this.updateStyles()}getContainer(){return this.m}O(t,i){}P(){return this.s}Q(t,i){}R(){return this.t}S(t){if(this.r)throw new Error("Header already exists");!this.m||!this.s||(m(this.m,t),t.classList.add("header-or-footer"),t.classList.add("header"),this.r=t,this.J?.setHeaderVisibility(!0),this.Y())}U(t){if(this.u)throw new Error("Footer already exists");!this.m||!this.s||(this.m.appendChild(t),t.classList.add("header-or-footer"),t.classList.add("footer"),this.u=t,this.J?.setFooterVisibility(!0),this.Y())}W(){this.r&&(this.r.remove(),this.r=void 0,this.J?.setHeaderVisibility(!1),this.Y())}X(){this.u&&(this.u.remove(),this.u=void 0,this.J?.setFooterVisibility(!1),this.Y())}Y(){this.dimension&&this.contentPosition&&this.layout(this.dimension.width,this.dimension.height,this.contentPosition.top,this.contentPosition.left)}Z(t,i){return g(this.J).layout(t,i)}get onDidChange(){return this.ab.event}layout(t,i,s,e){this.f=new r(t,i),this.g={top:s,left:e}}setVisible(t){this.j.fire(t)}}class n{static{this.a=35}static{this.b=35}static{this.c=35}constructor(t,i){this.f=t,this.g=i,this.d=!1,this.e=!1}layout(t,i){let s,e,h;s=this.f.hasTitle?new r(t,Math.min(i,n.b)):r.None,e=this.d?new r(t,Math.min(i,n.a)):r.None,h=this.e?new r(t,Math.min(i,n.c)):r.None;let o=t;this.f&&"function"==typeof this.f.borderWidth&&(o-=this.f.borderWidth());const a=new r(o,i-s.height-e.height-h.height);return this.g&&l(this.g,a.width,a.height),{headerSize:e,titleSize:s,contentSize:a,footerSize:h}}setFooterVisibility(t){this.e=t}setHeaderVisibility(t){this.d=t}}class j extends d{constructor(){super(...arguments),this.f=new Set}get parts(){return Array.from(this.f)}registerPart(t){return this.f.add(t),p((()=>this.g(t)))}g(t){this.f.delete(t)}getPart(t){return this.j(t.ownerDocument)}j(t){if(this.f.size>1)for(const i of this.f)if(i.element?.ownerDocument===t)return i;return this.mainPart}get activePart(){return this.j(c())}}export{j as $dub,S as Part};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import "./media/part.css";
+import { Component } from "../common/component.js";
+import { Dimension, size, getActiveDocument, prepend } from "../../base/browser/dom.js";
+import { Emitter } from "../../base/common/event.js";
+import { assertReturnsDefined } from "../../base/common/types.js";
+import { toDisposable } from "../../base/common/lifecycle.js";
+class Part extends Component {
+  static {
+    __name(this, "Part");
+  }
+  get dimension() {
+    return this._dimension;
+  }
+  get contentPosition() {
+    return this._contentPosition;
+  }
+  constructor(id, options, themeService, storageService, layoutService) {
+    super(id, themeService, storageService);
+    this.options = options;
+    this.layoutService = layoutService;
+    this._onDidVisibilityChange = this._register(new Emitter());
+    this.onDidVisibilityChange = this._onDidVisibilityChange.event;
+    this._onDidChange = this._register(new Emitter());
+    this._register(layoutService.registerPart(this));
+  }
+  onThemeChange(theme) {
+    if (this.parent) {
+      super.onThemeChange(theme);
+    }
+  }
+  /**
+   * Note: Clients should not call this method, the workbench calls this
+   * method. Calling it otherwise may result in unexpected behavior.
+   *
+   * Called to create title and content area of the part.
+   */
+  create(parent, options) {
+    this.parent = parent;
+    this.titleArea = this.createTitleArea(parent, options);
+    this.contentArea = this.createContentArea(parent, options);
+    this.partLayout = new PartLayout(this.options, this.contentArea);
+    this.updateStyles();
+  }
+  /**
+   * Returns the overall part container.
+   */
+  getContainer() {
+    return this.parent;
+  }
+  /**
+   * Subclasses override to provide a title area implementation.
+   */
+  createTitleArea(parent, options) {
+    return void 0;
+  }
+  /**
+   * Returns the title area container.
+   */
+  getTitleArea() {
+    return this.titleArea;
+  }
+  /**
+   * Subclasses override to provide a content area implementation.
+   */
+  createContentArea(parent, options) {
+    return void 0;
+  }
+  /**
+   * Returns the content area container.
+   */
+  getContentArea() {
+    return this.contentArea;
+  }
+  /**
+   * Sets the header area
+   */
+  setHeaderArea(headerContainer) {
+    if (this.headerArea) {
+      throw new Error("Header already exists");
+    }
+    if (!this.parent || !this.titleArea) {
+      return;
+    }
+    prepend(this.parent, headerContainer);
+    headerContainer.classList.add("header-or-footer");
+    headerContainer.classList.add("header");
+    this.headerArea = headerContainer;
+    this.partLayout?.setHeaderVisibility(true);
+    this.relayout();
+  }
+  /**
+   * Sets the footer area
+   */
+  setFooterArea(footerContainer) {
+    if (this.footerArea) {
+      throw new Error("Footer already exists");
+    }
+    if (!this.parent || !this.titleArea) {
+      return;
+    }
+    this.parent.appendChild(footerContainer);
+    footerContainer.classList.add("header-or-footer");
+    footerContainer.classList.add("footer");
+    this.footerArea = footerContainer;
+    this.partLayout?.setFooterVisibility(true);
+    this.relayout();
+  }
+  /**
+   * removes the header area
+   */
+  removeHeaderArea() {
+    if (this.headerArea) {
+      this.headerArea.remove();
+      this.headerArea = void 0;
+      this.partLayout?.setHeaderVisibility(false);
+      this.relayout();
+    }
+  }
+  /**
+   * removes the footer area
+   */
+  removeFooterArea() {
+    if (this.footerArea) {
+      this.footerArea.remove();
+      this.footerArea = void 0;
+      this.partLayout?.setFooterVisibility(false);
+      this.relayout();
+    }
+  }
+  relayout() {
+    if (this.dimension && this.contentPosition) {
+      this.layout(this.dimension.width, this.dimension.height, this.contentPosition.top, this.contentPosition.left);
+    }
+  }
+  /**
+   * Layout title and content area in the given dimension.
+   */
+  layoutContents(width, height) {
+    const partLayout = assertReturnsDefined(this.partLayout);
+    return partLayout.layout(width, height);
+  }
+  get onDidChange() {
+    return this._onDidChange.event;
+  }
+  layout(width, height, top, left) {
+    this._dimension = new Dimension(width, height);
+    this._contentPosition = { top, left };
+  }
+  setVisible(visible) {
+    this._onDidVisibilityChange.fire(visible);
+  }
+}
+class PartLayout {
+  static {
+    __name(this, "PartLayout");
+  }
+  static {
+    this.HEADER_HEIGHT = 35;
+  }
+  static {
+    this.TITLE_HEIGHT = 35;
+  }
+  static {
+    this.Footer_HEIGHT = 35;
+  }
+  constructor(options, contentArea) {
+    this.options = options;
+    this.contentArea = contentArea;
+    this.headerVisible = false;
+    this.footerVisible = false;
+  }
+  layout(width, height) {
+    let titleSize;
+    if (this.options.hasTitle) {
+      titleSize = new Dimension(width, Math.min(height, PartLayout.TITLE_HEIGHT));
+    } else {
+      titleSize = Dimension.None;
+    }
+    let headerSize;
+    if (this.headerVisible) {
+      headerSize = new Dimension(width, Math.min(height, PartLayout.HEADER_HEIGHT));
+    } else {
+      headerSize = Dimension.None;
+    }
+    let footerSize;
+    if (this.footerVisible) {
+      footerSize = new Dimension(width, Math.min(height, PartLayout.Footer_HEIGHT));
+    } else {
+      footerSize = Dimension.None;
+    }
+    let contentWidth = width;
+    if (this.options && typeof this.options.borderWidth === "function") {
+      contentWidth -= this.options.borderWidth();
+    }
+    const contentSize = new Dimension(contentWidth, height - titleSize.height - headerSize.height - footerSize.height);
+    if (this.contentArea) {
+      size(this.contentArea, contentSize.width, contentSize.height);
+    }
+    return { headerSize, titleSize, contentSize, footerSize };
+  }
+  setFooterVisibility(visible) {
+    this.footerVisible = visible;
+  }
+  setHeaderVisibility(visible) {
+    this.headerVisible = visible;
+  }
+}
+class MultiWindowParts extends Component {
+  static {
+    __name(this, "MultiWindowParts");
+  }
+  constructor() {
+    super(...arguments);
+    this._parts = /* @__PURE__ */ new Set();
+  }
+  get parts() {
+    return Array.from(this._parts);
+  }
+  registerPart(part) {
+    this._parts.add(part);
+    return toDisposable(() => this.unregisterPart(part));
+  }
+  unregisterPart(part) {
+    this._parts.delete(part);
+  }
+  getPart(container) {
+    return this.getPartByDocument(container.ownerDocument);
+  }
+  getPartByDocument(document) {
+    if (this._parts.size > 1) {
+      for (const part of this._parts) {
+        if (part.element?.ownerDocument === document) {
+          return part;
+        }
+      }
+    }
+    return this.mainPart;
+  }
+  get activePart() {
+    return this.getPartByDocument(getActiveDocument());
+  }
+}
+export {
+  MultiWindowParts,
+  Part
+};
+//# sourceMappingURL=part.js.map

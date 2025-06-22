@@ -1,1 +1,179 @@
-import{Iterable as b}from"../../../../base/common/iterator.js";import{$vd as $}from"../../../../base/common/lifecycle.js";import{$Gd as v}from"../../../../base/common/linkedList.js";import{$s as w}from"../../../../base/common/platform.js";import{URI as E}from"../../../../base/common/uri.js";import*as f from"../../../../editor/common/languages.js";import*as u from"../../../../nls.js";import{$El as P}from"../../../../platform/configuration/common/configuration.js";import{$nj as U}from"../../../../platform/instantiation/common/instantiation.js";import{$3n as _}from"../../../../platform/log/common/log.js";import{$4$ as x}from"../../../../platform/opener/common/opener.js";import{$OM as j}from"../../../../platform/quickinput/common/quickInput.js";import{$6Zb as m,$7Zb as d}from"./configuration.js";import{$YZb as Z}from"../../url/common/urlGlob.js";import{$ZJ as z}from"../../../services/preferences/common/preferences.js";var g=function(l,e,r,n){var i=arguments.length,t=i<3?e:n===null?n=Object.getOwnPropertyDescriptor(e,r):n,o;if(typeof Reflect=="object"&&typeof Reflect.decorate=="function")t=Reflect.decorate(l,e,r,n);else for(var a=l.length-1;a>=0;a--)(o=l[a])&&(t=(i<3?o(t):i>3?o(e,r,t):o(e,r))||t);return i>3&&t&&Object.defineProperty(e,r,t),t},p=function(l,e){return function(r,n){e(r,n,l)}};const C=U("externalUriOpenerService");let O=class extends ${constructor(e,r,n,i,t){super(),this.b=r,this.c=n,this.f=i,this.g=t,this.a=new v,this.B(e.registerExternalOpener(this))}registerExternalOpenerProvider(e){return{dispose:this.a.push(e)}}async h(e,r,n,i){const t=await this.j(e);if(t.size===0)return[];if(n.preferredOpenerId){if(n.preferredOpenerId===m)return[];const s=t.get(n.preferredOpenerId);if(s)return[s]}const o=this.m(t,e);if(o)return o===m?[]:[o];const a=[];if(await Promise.all(Array.from(t.values()).map(async s=>{let c;try{c=await s.canOpen(n.sourceUri,i)}catch(y){this.c.error(y);return}switch(c){case f.ExternalUriOpenerPriority.Option:case f.ExternalUriOpenerPriority.Default:case f.ExternalUriOpenerPriority.Preferred:a.push({opener:s,priority:c});break}})),a.length===0)return[];const h=a.filter(s=>s.priority===f.ExternalUriOpenerPriority.Preferred).at(0);return h?[h.opener]:!r&&a.every(s=>s.priority===f.ExternalUriOpenerPriority.Option)?[]:a.map(s=>s.opener)}async openExternal(e,r,n){const i=typeof e=="string"?E.parse(e):e,t=await this.h(i,!1,r,n);return t.length===0?!1:t.length===1?t[0].openExternalUri(i,r,n):this.n(t,i,r,n)}async getOpener(e,r,n){const i=await this.h(e,!0,r,n);if(i.length>=1)return i[0]}async j(e){const r=new Map;return await Promise.all(b.map(this.a,async n=>{for await(const i of n.getOpeners(e))r.set(i.id,i)})),r}m(e,r){const n=this.b.getValue(d)||{};for(const[i,t]of Object.entries(n))if(Z(r,i)){if(t===m)return"default";const o=e.get(t);if(o)return o}}async n(e,r,n,i){const t=e.map(a=>({label:a.label,opener:a}));t.push({label:w?u.localize(7749,null):u.localize(7750,null),opener:void 0},{type:"separator"},{label:u.localize(7751,null),opener:"configureDefault"});const o=await this.g.pick(t,{placeHolder:u.localize(7752,null,r.toString())});return o?typeof o.opener>"u"?!1:o.opener==="configureDefault"?(await this.f.openUserSettings({jsonEditor:!0,revealSetting:{key:d,edit:!0}}),!0):o.opener.openExternalUri(r,n,i):!0}};O=g([p(0,x),p(1,P),p(2,_),p(3,z),p(4,j)],O);export{C as $$Zb,O as $_Zb};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { Iterable } from "../../../../base/common/iterator.js";
+import { Disposable } from "../../../../base/common/lifecycle.js";
+import { LinkedList } from "../../../../base/common/linkedList.js";
+import { isWeb } from "../../../../base/common/platform.js";
+import { URI } from "../../../../base/common/uri.js";
+import * as languages from "../../../../editor/common/languages.js";
+import * as nls from "../../../../nls.js";
+import { IConfigurationService } from "../../../../platform/configuration/common/configuration.js";
+import { createDecorator } from "../../../../platform/instantiation/common/instantiation.js";
+import { ILogService } from "../../../../platform/log/common/log.js";
+import { IOpenerService } from "../../../../platform/opener/common/opener.js";
+import { IQuickInputService } from "../../../../platform/quickinput/common/quickInput.js";
+import { defaultExternalUriOpenerId, externalUriOpenersSettingId } from "./configuration.js";
+import { testUrlMatchesGlob } from "../../url/common/urlGlob.js";
+import { IPreferencesService } from "../../../services/preferences/common/preferences.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+const IExternalUriOpenerService = createDecorator("externalUriOpenerService");
+let ExternalUriOpenerService = class ExternalUriOpenerService2 extends Disposable {
+  static {
+    __name(this, "ExternalUriOpenerService");
+  }
+  constructor(openerService, configurationService, logService, preferencesService, quickInputService) {
+    super();
+    this.configurationService = configurationService;
+    this.logService = logService;
+    this.preferencesService = preferencesService;
+    this.quickInputService = quickInputService;
+    this._providers = new LinkedList();
+    this._register(openerService.registerExternalOpener(this));
+  }
+  registerExternalOpenerProvider(provider) {
+    const remove = this._providers.push(provider);
+    return { dispose: remove };
+  }
+  async getOpeners(targetUri, allowOptional, ctx, token) {
+    const allOpeners = await this.getAllOpenersForUri(targetUri);
+    if (allOpeners.size === 0) {
+      return [];
+    }
+    if (ctx.preferredOpenerId) {
+      if (ctx.preferredOpenerId === defaultExternalUriOpenerId) {
+        return [];
+      }
+      const preferredOpener = allOpeners.get(ctx.preferredOpenerId);
+      if (preferredOpener) {
+        return [preferredOpener];
+      }
+    }
+    const configuredOpener = this.getConfiguredOpenerForUri(allOpeners, targetUri);
+    if (configuredOpener) {
+      return configuredOpener === defaultExternalUriOpenerId ? [] : [configuredOpener];
+    }
+    const validOpeners = [];
+    await Promise.all(Array.from(allOpeners.values()).map(async (opener) => {
+      let priority;
+      try {
+        priority = await opener.canOpen(ctx.sourceUri, token);
+      } catch (e) {
+        this.logService.error(e);
+        return;
+      }
+      switch (priority) {
+        case languages.ExternalUriOpenerPriority.Option:
+        case languages.ExternalUriOpenerPriority.Default:
+        case languages.ExternalUriOpenerPriority.Preferred:
+          validOpeners.push({ opener, priority });
+          break;
+      }
+    }));
+    if (validOpeners.length === 0) {
+      return [];
+    }
+    const preferred = validOpeners.filter((x) => x.priority === languages.ExternalUriOpenerPriority.Preferred).at(0);
+    if (preferred) {
+      return [preferred.opener];
+    }
+    if (!allowOptional && validOpeners.every((x) => x.priority === languages.ExternalUriOpenerPriority.Option)) {
+      return [];
+    }
+    return validOpeners.map((value) => value.opener);
+  }
+  async openExternal(href, ctx, token) {
+    const targetUri = typeof href === "string" ? URI.parse(href) : href;
+    const allOpeners = await this.getOpeners(targetUri, false, ctx, token);
+    if (allOpeners.length === 0) {
+      return false;
+    } else if (allOpeners.length === 1) {
+      return allOpeners[0].openExternalUri(targetUri, ctx, token);
+    }
+    return this.showOpenerPrompt(allOpeners, targetUri, ctx, token);
+  }
+  async getOpener(targetUri, ctx, token) {
+    const allOpeners = await this.getOpeners(targetUri, true, ctx, token);
+    if (allOpeners.length >= 1) {
+      return allOpeners[0];
+    }
+    return void 0;
+  }
+  async getAllOpenersForUri(targetUri) {
+    const allOpeners = /* @__PURE__ */ new Map();
+    await Promise.all(Iterable.map(this._providers, async (provider) => {
+      for await (const opener of provider.getOpeners(targetUri)) {
+        allOpeners.set(opener.id, opener);
+      }
+    }));
+    return allOpeners;
+  }
+  getConfiguredOpenerForUri(openers, targetUri) {
+    const config = this.configurationService.getValue(externalUriOpenersSettingId) || {};
+    for (const [uriGlob, id] of Object.entries(config)) {
+      if (testUrlMatchesGlob(targetUri, uriGlob)) {
+        if (id === defaultExternalUriOpenerId) {
+          return "default";
+        }
+        const entry = openers.get(id);
+        if (entry) {
+          return entry;
+        }
+      }
+    }
+    return void 0;
+  }
+  async showOpenerPrompt(openers, targetUri, ctx, token) {
+    const items = openers.map((opener) => {
+      return {
+        label: opener.label,
+        opener
+      };
+    });
+    items.push({
+      label: isWeb ? nls.localize("selectOpenerDefaultLabel.web", "Open in new browser window") : nls.localize("selectOpenerDefaultLabel", "Open in default browser"),
+      opener: void 0
+    }, { type: "separator" }, {
+      label: nls.localize("selectOpenerConfigureTitle", "Configure default opener..."),
+      opener: "configureDefault"
+    });
+    const picked = await this.quickInputService.pick(items, {
+      placeHolder: nls.localize("selectOpenerPlaceHolder", "How would you like to open: {0}", targetUri.toString())
+    });
+    if (!picked) {
+      return true;
+    }
+    if (typeof picked.opener === "undefined") {
+      return false;
+    } else if (picked.opener === "configureDefault") {
+      await this.preferencesService.openUserSettings({
+        jsonEditor: true,
+        revealSetting: { key: externalUriOpenersSettingId, edit: true }
+      });
+      return true;
+    } else {
+      return picked.opener.openExternalUri(targetUri, ctx, token);
+    }
+  }
+};
+ExternalUriOpenerService = __decorate([
+  __param(0, IOpenerService),
+  __param(1, IConfigurationService),
+  __param(2, ILogService),
+  __param(3, IPreferencesService),
+  __param(4, IQuickInputService)
+], ExternalUriOpenerService);
+export {
+  ExternalUriOpenerService,
+  IExternalUriOpenerService
+};
+//# sourceMappingURL=externalUriOpenerService.js.map

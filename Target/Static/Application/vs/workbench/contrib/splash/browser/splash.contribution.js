@@ -1,1 +1,27 @@
-import{$WK as s}from"../../../common/contributions.js";import{$7Bc as t}from"./splash.js";import{$WB as m}from"../../../../platform/instantiation/common/extensions.js";import{$8Bc as o}from"./partsSplash.js";m(t,class{async saveWindowSplash(s){const o=JSON.stringify(s);localStorage.setItem("monaco-parts-splash",o)}},1),s(o.ID,o,1);
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { registerWorkbenchContribution2 } from "../../../common/contributions.js";
+import { ISplashStorageService } from "./splash.js";
+import { registerSingleton } from "../../../../platform/instantiation/common/extensions.js";
+import { PartsSplash } from "./partsSplash.js";
+registerSingleton(
+  ISplashStorageService,
+  class SplashStorageService {
+    static {
+      __name(this, "SplashStorageService");
+    }
+    async saveWindowSplash(splash) {
+      const raw = JSON.stringify(splash);
+      localStorage.setItem("monaco-parts-splash", raw);
+    }
+  },
+  1
+  /* InstantiationType.Delayed */
+);
+registerWorkbenchContribution2(
+  PartsSplash.ID,
+  PartsSplash,
+  1
+  /* WorkbenchPhase.BlockStartup */
+);
+//# sourceMappingURL=splash.contribution.js.map

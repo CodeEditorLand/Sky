@@ -1,1 +1,435 @@
-class u{get children(){return this.a}get length(){return this.b}constructor(e){this.height=e,this.a=[],this.b=0}static create(e,t){const n=new u(e.height+1);return n.appendChild(e),n.appendChild(t),n}canAppendChild(){return this.a.length<3}appendChild(e){if(!this.canAppendChild())throw new Error("Cannot insert more than 3 children in a ListNode");this.a.push(e),this.b+=e.length,this.c(e.length),o(e)||(e.parent=this)}c(e){let t=this.parent;for(;t;)t.b+=e,t=t.parent}unappendChild(){const e=this.a.pop();return this.b-=e.length,this.c(-e.length),e}prependChild(e){if(this.a.length>=3)throw new Error("Cannot prepend more than 3 children in a ListNode");this.a.unshift(e),this.b+=e.length,this.c(e.length),o(e)||(e.parent=this)}unprependChild(){const e=this.a.shift();return this.b-=e.length,this.c(-e.length),e}lastChild(){return this.a[this.a.length-1]}dispose(){this.a.splice(0,this.a.length)}}var a;function o(e){return void 0!==e.token}function C(e,t){let n=e;const h=[];let i;for(;;){if(t.height===n.height){i=t;break}if(o(n))throw new Error("unexpected");h.push(n),n=n.lastChild()}for(let e=h.length-1;e>=0;e--){const t=h[e];i&&(t.children.length>=3?i=u.create(t.unappendChild(),i):(t.appendChild(i),i=void 0))}if(i){const t=new u(i.height+1);return t.appendChild(e),t.appendChild(i),t}return e}function b(e,t){let n=e;const h=[];for(;t.height!==n.height;){if(o(n))throw new Error("unexpected");h.push(n),n=n.children[0]}let i=t;for(let e=h.length-1;e>=0;e--){const t=h[e];i&&(t.children.length>=3?i=u.create(i,t.unprependChild()):(t.prependChild(i),i=void 0))}return i?u.create(i,e):e}function L(e,t){return e.height===t.height?u.create(e,t):e.height>t.height?C(e,t):b(t,e)}!function(e){e[e.None=0]="None",e[e.ViewportGuess=1]="ViewportGuess",e[e.EditGuess=2]="EditGuess",e[e.Accurate=3]="Accurate"}(a||(a={}));class N{get root(){return this.a}constructor(e){this.b=e,this.a=this.c()}c(){return{length:this.b.getValueLength(),token:0,height:0,tokenQuality:a.None}}buildStore(e,t){this.a=this.d(e,t)}d(e,t){if(0===e.length)return this.c();let n={length:e[0].length,token:e[0].token,height:0,tokenQuality:t};for(let h=1;h<e.length;h++)n=C(n,{length:e[h].length,token:e[h].token,height:0,tokenQuality:t});return n}update(e,t,n){0!==t.length&&this.e(e,t[0].startOffsetInclusive,t,n)}delete(e,t){this.e(e,t,[],a.EditGuess)}e(e,t,n,h){const i=t+e,s=[],l=[],r=[{node:this.a,offset:0}];for(;r.length>0;){const e=r.pop(),n=e.offset;if(n<t&&n+e.node.length<=t)o(e.node)||(e.node.parent=void 0),s.push(e.node);else if(o(e.node)&&n<t&&s.push({length:t-n,token:e.node.token,height:0,tokenQuality:e.node.tokenQuality}),!(t<=n&&n+e.node.length<=i)){if(n>=i){o(e.node)||(e.node.parent=void 0),l.push(e.node);continue}if(o(e.node)&&n+e.node.length>i){l.push({length:n+e.node.length-i,token:e.node.token,height:0,tokenQuality:e.node.tokenQuality});continue}if(!o(e.node)){let t=n+e.node.length;for(let n=e.node.children.length-1;n>=0;n--)t-=e.node.children[n].length,r.push({node:e.node.children[n],offset:t})}}}let a;a=n.length>0?s.concat(this.d(n,h),l):s.concat(l);let d=a[0];for(let e=1;e<a.length;e++)d=L(d,a[e]);this.a=d??this.c()}f(e,t,n){const h=[{node:this.a,offset:0}];for(;h.length>0;){const{node:i,offset:s}=h.pop();if(!(s+i.length<=e||s>=t)){if(n(i,s))return;if(!o(i)){let e=s+i.length;for(let t=i.children.length-1;t>=0;t--)e-=i.children[t].length,h.push({node:i.children[t],offset:e})}}}}getTokenAt(e){let t;return this.f(e,this.a.length,((e,n)=>!!o(e)&&(t={token:e.token,startOffsetInclusive:n,length:e.length},!0))),t}getTokensInRange(e,t){const n=[];return this.f(e,t,((h,i)=>{if(o(h)){let o=h.length,s=i;i<e&&i+h.length>t?(s=e,o=t-e):i<e?(o-=e-i,s=e):i+h.length>t&&(o-=i+h.length-t),n.push({token:h.token,startOffsetInclusive:s,length:o})}return!1})),n}markForRefresh(e,t){this.f(e,t,(e=>(o(e)&&(e.tokenQuality=a.None),!1)))}rangeHasTokens(e,t,n){let h=!0;return this.f(e,t,(e=>(o(e)&&e.tokenQuality<n&&(h=!1),!1))),h}rangeNeedsRefresh(e,t){let n=!1;return this.f(e,t,(e=>(o(e)&&e.tokenQuality!==a.Accurate&&(n=!0),!1))),n}getNeedsRefresh(){const e=[];return this.f(0,this.b.getValueLength(),((t,n)=>(o(t)&&t.tokenQuality!==a.Accurate&&(e.length>0&&e[e.length-1].endOffset===n?e[e.length-1].endOffset+=t.length:e.push({startOffset:n,endOffset:n+t.length})),!1))),e}deepCopy(){const e=new N(this.b);return e.a=this.g(this.a),e}g(e){const t=o(e)?{length:e.length,token:e.token,tokenQuality:e.tokenQuality,height:e.height}:new u(e.height),n=[[e,t]];for(;n.length>0;){const[e,t]=n.pop();if(!o(e))for(const h of e.children){const e=o(h)?{length:h.length,token:h.token,tokenQuality:h.tokenQuality,height:h.height}:new u(h.height);t.appendChild(e),n.push([h,e])}}return t}printTree(e=this.a){const t=[],n=[[e,0]];for(;n.length>0;){const[e,h]=n.pop(),i="  ".repeat(h);if(o(e))t.push(`${i}Leaf(length: ${e.length}, token: ${e.token}, refresh: ${e.tokenQuality})\n`);else{t.push(`${i}List(length: ${e.length})\n`);for(let t=e.children.length-1;t>=0;t--)n.push([e.children[t],h+1])}}return t.join("")}dispose(){const e=[[this.a,!1]];for(;e.length>0;){const[t,n]=e.pop();if(!o(t))if(n)t.dispose(),t.parent=void 0;else{e.push([t,!0]);for(let n=t.children.length-1;n>=0;n--)e.push([t.children[n],!1])}}this.a=void 0}}export{N as $EH,a as TokenQuality};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+class ListNode {
+  static {
+    __name(this, "ListNode");
+  }
+  get children() {
+    return this._children;
+  }
+  get length() {
+    return this._length;
+  }
+  constructor(height) {
+    this.height = height;
+    this._children = [];
+    this._length = 0;
+  }
+  static create(node1, node2) {
+    const list = new ListNode(node1.height + 1);
+    list.appendChild(node1);
+    list.appendChild(node2);
+    return list;
+  }
+  canAppendChild() {
+    return this._children.length < 3;
+  }
+  appendChild(node) {
+    if (!this.canAppendChild()) {
+      throw new Error("Cannot insert more than 3 children in a ListNode");
+    }
+    this._children.push(node);
+    this._length += node.length;
+    this._updateParentLength(node.length);
+    if (!isLeaf(node)) {
+      node.parent = this;
+    }
+  }
+  _updateParentLength(delta) {
+    let updateParent = this.parent;
+    while (updateParent) {
+      updateParent._length += delta;
+      updateParent = updateParent.parent;
+    }
+  }
+  unappendChild() {
+    const child = this._children.pop();
+    this._length -= child.length;
+    this._updateParentLength(-child.length);
+    return child;
+  }
+  prependChild(node) {
+    if (this._children.length >= 3) {
+      throw new Error("Cannot prepend more than 3 children in a ListNode");
+    }
+    this._children.unshift(node);
+    this._length += node.length;
+    this._updateParentLength(node.length);
+    if (!isLeaf(node)) {
+      node.parent = this;
+    }
+  }
+  unprependChild() {
+    const child = this._children.shift();
+    this._length -= child.length;
+    this._updateParentLength(-child.length);
+    return child;
+  }
+  lastChild() {
+    return this._children[this._children.length - 1];
+  }
+  dispose() {
+    this._children.splice(0, this._children.length);
+  }
+}
+var TokenQuality;
+(function(TokenQuality2) {
+  TokenQuality2[TokenQuality2["None"] = 0] = "None";
+  TokenQuality2[TokenQuality2["ViewportGuess"] = 1] = "ViewportGuess";
+  TokenQuality2[TokenQuality2["EditGuess"] = 2] = "EditGuess";
+  TokenQuality2[TokenQuality2["Accurate"] = 3] = "Accurate";
+})(TokenQuality || (TokenQuality = {}));
+function isLeaf(node) {
+  return node.token !== void 0;
+}
+__name(isLeaf, "isLeaf");
+function append(node, nodeToAppend) {
+  let curNode = node;
+  const parents = [];
+  let nodeToAppendOfCorrectHeight;
+  while (true) {
+    if (nodeToAppend.height === curNode.height) {
+      nodeToAppendOfCorrectHeight = nodeToAppend;
+      break;
+    }
+    if (isLeaf(curNode)) {
+      throw new Error("unexpected");
+    }
+    parents.push(curNode);
+    curNode = curNode.lastChild();
+  }
+  for (let i = parents.length - 1; i >= 0; i--) {
+    const parent = parents[i];
+    if (nodeToAppendOfCorrectHeight) {
+      if (parent.children.length >= 3) {
+        const newList = ListNode.create(parent.unappendChild(), nodeToAppendOfCorrectHeight);
+        nodeToAppendOfCorrectHeight = newList;
+      } else {
+        parent.appendChild(nodeToAppendOfCorrectHeight);
+        nodeToAppendOfCorrectHeight = void 0;
+      }
+    }
+  }
+  if (nodeToAppendOfCorrectHeight) {
+    const newList = new ListNode(nodeToAppendOfCorrectHeight.height + 1);
+    newList.appendChild(node);
+    newList.appendChild(nodeToAppendOfCorrectHeight);
+    return newList;
+  } else {
+    return node;
+  }
+}
+__name(append, "append");
+function prepend(list, nodeToAppend) {
+  let curNode = list;
+  const parents = [];
+  while (nodeToAppend.height !== curNode.height) {
+    if (isLeaf(curNode)) {
+      throw new Error("unexpected");
+    }
+    parents.push(curNode);
+    curNode = curNode.children[0];
+  }
+  let nodeToPrependOfCorrectHeight = nodeToAppend;
+  for (let i = parents.length - 1; i >= 0; i--) {
+    const parent = parents[i];
+    if (nodeToPrependOfCorrectHeight) {
+      if (parent.children.length >= 3) {
+        nodeToPrependOfCorrectHeight = ListNode.create(nodeToPrependOfCorrectHeight, parent.unprependChild());
+      } else {
+        parent.prependChild(nodeToPrependOfCorrectHeight);
+        nodeToPrependOfCorrectHeight = void 0;
+      }
+    }
+  }
+  if (nodeToPrependOfCorrectHeight) {
+    return ListNode.create(nodeToPrependOfCorrectHeight, list);
+  } else {
+    return list;
+  }
+}
+__name(prepend, "prepend");
+function concat(node1, node2) {
+  if (node1.height === node2.height) {
+    return ListNode.create(node1, node2);
+  } else if (node1.height > node2.height) {
+    return append(node1, node2);
+  } else {
+    return prepend(node2, node1);
+  }
+}
+__name(concat, "concat");
+class TokenStore {
+  static {
+    __name(this, "TokenStore");
+  }
+  get root() {
+    return this._root;
+  }
+  constructor(_textModel) {
+    this._textModel = _textModel;
+    this._root = this.createEmptyRoot();
+  }
+  createEmptyRoot() {
+    return {
+      length: this._textModel.getValueLength(),
+      token: 0,
+      height: 0,
+      tokenQuality: TokenQuality.None
+    };
+  }
+  /**
+   *
+   * @param update all the tokens for the document in sequence
+   */
+  buildStore(tokens, tokenQuality) {
+    this._root = this.createFromUpdates(tokens, tokenQuality);
+  }
+  createFromUpdates(tokens, tokenQuality) {
+    if (tokens.length === 0) {
+      return this.createEmptyRoot();
+    }
+    let newRoot = {
+      length: tokens[0].length,
+      token: tokens[0].token,
+      height: 0,
+      tokenQuality
+    };
+    for (let j = 1; j < tokens.length; j++) {
+      newRoot = append(newRoot, { length: tokens[j].length, token: tokens[j].token, height: 0, tokenQuality });
+    }
+    return newRoot;
+  }
+  /**
+   *
+   * @param tokens tokens are in sequence in the document.
+   */
+  update(length, tokens, tokenQuality) {
+    if (tokens.length === 0) {
+      return;
+    }
+    this.replace(length, tokens[0].startOffsetInclusive, tokens, tokenQuality);
+  }
+  delete(length, startOffset) {
+    this.replace(length, startOffset, [], TokenQuality.EditGuess);
+  }
+  /**
+   *
+   * @param tokens tokens are in sequence in the document.
+   */
+  replace(length, updateOffsetStart, tokens, tokenQuality) {
+    const firstUnchangedOffsetAfterUpdate = updateOffsetStart + length;
+    const precedingNodes = [];
+    const postcedingNodes = [];
+    const stack = [{ node: this._root, offset: 0 }];
+    while (stack.length > 0) {
+      const node = stack.pop();
+      const currentOffset = node.offset;
+      if (currentOffset < updateOffsetStart && currentOffset + node.node.length <= updateOffsetStart) {
+        if (!isLeaf(node.node)) {
+          node.node.parent = void 0;
+        }
+        precedingNodes.push(node.node);
+        continue;
+      } else if (isLeaf(node.node) && currentOffset < updateOffsetStart) {
+        precedingNodes.push({ length: updateOffsetStart - currentOffset, token: node.node.token, height: 0, tokenQuality: node.node.tokenQuality });
+      }
+      if (updateOffsetStart <= currentOffset && currentOffset + node.node.length <= firstUnchangedOffsetAfterUpdate) {
+        continue;
+      }
+      if (currentOffset >= firstUnchangedOffsetAfterUpdate) {
+        if (!isLeaf(node.node)) {
+          node.node.parent = void 0;
+        }
+        postcedingNodes.push(node.node);
+        continue;
+      } else if (isLeaf(node.node) && currentOffset + node.node.length > firstUnchangedOffsetAfterUpdate) {
+        postcedingNodes.push({ length: currentOffset + node.node.length - firstUnchangedOffsetAfterUpdate, token: node.node.token, height: 0, tokenQuality: node.node.tokenQuality });
+        continue;
+      }
+      if (!isLeaf(node.node)) {
+        let childOffset = currentOffset + node.node.length;
+        for (let i = node.node.children.length - 1; i >= 0; i--) {
+          childOffset -= node.node.children[i].length;
+          stack.push({ node: node.node.children[i], offset: childOffset });
+        }
+      }
+    }
+    let allNodes;
+    if (tokens.length > 0) {
+      allNodes = precedingNodes.concat(this.createFromUpdates(tokens, tokenQuality), postcedingNodes);
+    } else {
+      allNodes = precedingNodes.concat(postcedingNodes);
+    }
+    let newRoot = allNodes[0];
+    for (let i = 1; i < allNodes.length; i++) {
+      newRoot = concat(newRoot, allNodes[i]);
+    }
+    this._root = newRoot ?? this.createEmptyRoot();
+  }
+  /**
+   *
+   * @param startOffsetInclusive
+   * @param endOffsetExclusive
+   * @param visitor Return true from visitor to exit early
+   * @returns
+   */
+  traverseInOrderInRange(startOffsetInclusive, endOffsetExclusive, visitor) {
+    const stack = [{ node: this._root, offset: 0 }];
+    while (stack.length > 0) {
+      const { node, offset } = stack.pop();
+      const nodeEnd = offset + node.length;
+      if (nodeEnd <= startOffsetInclusive || offset >= endOffsetExclusive) {
+        continue;
+      }
+      if (visitor(node, offset)) {
+        return;
+      }
+      if (!isLeaf(node)) {
+        let childOffset = offset + node.length;
+        for (let i = node.children.length - 1; i >= 0; i--) {
+          childOffset -= node.children[i].length;
+          stack.push({ node: node.children[i], offset: childOffset });
+        }
+      }
+    }
+  }
+  getTokenAt(offset) {
+    let result;
+    this.traverseInOrderInRange(offset, this._root.length, (node, offset2) => {
+      if (isLeaf(node)) {
+        result = { token: node.token, startOffsetInclusive: offset2, length: node.length };
+        return true;
+      }
+      return false;
+    });
+    return result;
+  }
+  getTokensInRange(startOffsetInclusive, endOffsetExclusive) {
+    const result = [];
+    this.traverseInOrderInRange(startOffsetInclusive, endOffsetExclusive, (node, offset) => {
+      if (isLeaf(node)) {
+        let clippedLength = node.length;
+        let clippedOffset = offset;
+        if (offset < startOffsetInclusive && offset + node.length > endOffsetExclusive) {
+          clippedOffset = startOffsetInclusive;
+          clippedLength = endOffsetExclusive - startOffsetInclusive;
+        } else if (offset < startOffsetInclusive) {
+          clippedLength -= startOffsetInclusive - offset;
+          clippedOffset = startOffsetInclusive;
+        } else if (offset + node.length > endOffsetExclusive) {
+          clippedLength -= offset + node.length - endOffsetExclusive;
+        }
+        result.push({ token: node.token, startOffsetInclusive: clippedOffset, length: clippedLength });
+      }
+      return false;
+    });
+    return result;
+  }
+  markForRefresh(startOffsetInclusive, endOffsetExclusive) {
+    this.traverseInOrderInRange(startOffsetInclusive, endOffsetExclusive, (node) => {
+      if (isLeaf(node)) {
+        node.tokenQuality = TokenQuality.None;
+      }
+      return false;
+    });
+  }
+  rangeHasTokens(startOffsetInclusive, endOffsetExclusive, minimumTokenQuality) {
+    let hasAny = true;
+    this.traverseInOrderInRange(startOffsetInclusive, endOffsetExclusive, (node) => {
+      if (isLeaf(node) && node.tokenQuality < minimumTokenQuality) {
+        hasAny = false;
+      }
+      return false;
+    });
+    return hasAny;
+  }
+  rangeNeedsRefresh(startOffsetInclusive, endOffsetExclusive) {
+    let needsRefresh = false;
+    this.traverseInOrderInRange(startOffsetInclusive, endOffsetExclusive, (node) => {
+      if (isLeaf(node) && node.tokenQuality !== TokenQuality.Accurate) {
+        needsRefresh = true;
+      }
+      return false;
+    });
+    return needsRefresh;
+  }
+  getNeedsRefresh() {
+    const result = [];
+    this.traverseInOrderInRange(0, this._textModel.getValueLength(), (node, offset) => {
+      if (isLeaf(node) && node.tokenQuality !== TokenQuality.Accurate) {
+        if (result.length > 0 && result[result.length - 1].endOffset === offset) {
+          result[result.length - 1].endOffset += node.length;
+        } else {
+          result.push({ startOffset: offset, endOffset: offset + node.length });
+        }
+      }
+      return false;
+    });
+    return result;
+  }
+  deepCopy() {
+    const newStore = new TokenStore(this._textModel);
+    newStore._root = this._copyNodeIterative(this._root);
+    return newStore;
+  }
+  _copyNodeIterative(root) {
+    const newRoot = isLeaf(root) ? { length: root.length, token: root.token, tokenQuality: root.tokenQuality, height: root.height } : new ListNode(root.height);
+    const stack = [[root, newRoot]];
+    while (stack.length > 0) {
+      const [oldNode, clonedNode] = stack.pop();
+      if (!isLeaf(oldNode)) {
+        for (const child of oldNode.children) {
+          const childCopy = isLeaf(child) ? { length: child.length, token: child.token, tokenQuality: child.tokenQuality, height: child.height } : new ListNode(child.height);
+          clonedNode.appendChild(childCopy);
+          stack.push([child, childCopy]);
+        }
+      }
+    }
+    return newRoot;
+  }
+  /**
+   * Returns a string representation of the token tree using an iterative approach
+   */
+  printTree(root = this._root) {
+    const result = [];
+    const stack = [[root, 0]];
+    while (stack.length > 0) {
+      const [node, depth] = stack.pop();
+      const indent = "  ".repeat(depth);
+      if (isLeaf(node)) {
+        result.push(`${indent}Leaf(length: ${node.length}, token: ${node.token}, refresh: ${node.tokenQuality})
+`);
+      } else {
+        result.push(`${indent}List(length: ${node.length})
+`);
+        for (let i = node.children.length - 1; i >= 0; i--) {
+          stack.push([node.children[i], depth + 1]);
+        }
+      }
+    }
+    return result.join("");
+  }
+  dispose() {
+    const stack = [[this._root, false]];
+    while (stack.length > 0) {
+      const [node, visited] = stack.pop();
+      if (isLeaf(node)) {
+      } else if (!visited) {
+        stack.push([node, true]);
+        for (let i = node.children.length - 1; i >= 0; i--) {
+          stack.push([node.children[i], false]);
+        }
+      } else {
+        node.dispose();
+        node.parent = void 0;
+      }
+    }
+    this._root = void 0;
+  }
+}
+export {
+  TokenQuality,
+  TokenStore
+};
+//# sourceMappingURL=tokenStore.js.map

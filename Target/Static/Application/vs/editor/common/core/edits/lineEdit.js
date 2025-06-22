@@ -1,1 +1,296 @@
-import{$qc as b,$Yb as E,$sc as x}from"../../../../base/common/arrays.js";import{$Uc as S,$Xc as T}from"../../../../base/common/assert.js";import{$Pf as v}from"../../../../base/common/strings.js";import{$lD as w}from"../ranges/lineRange.js";import{$1L as y,$2L as C}from"./stringEdit.js";import{$bC as c}from"../position.js";import{$cC as f}from"../range.js";import{$_L as d,$$L as P}from"./textEdit.js";class m{static{this.empty=new m([])}static deserialize(e){return new m(e.map((e=>L.deserialize(e))))}static fromEdit(e,n){const t=P.fromStringEdit(e,n);return m.fromTextEdit(t,n)}static fromTextEdit(e,n){const t=e.replacements,i=[],s=[];for(let e=0;e<t.length;e++){const r=t[e],a=e+1<t.length?t[e+1]:void 0;if(s.push(r),a&&a.range.startLineNumber===r.range.endLineNumber)continue;const o=d.joinReplacements(s,n);s.length=0;const g=L.fromSingleTextEdit(o,n);i.push(g)}return new m(i)}static createFromUnsorted(e){const n=e.slice();return n.sort(b((e=>e.lineRange.startLineNumber),x)),new m(n)}constructor(e){this.edits=e,S(T(e,((e,n)=>e.lineRange.endLineNumberExclusive<=n.lineRange.startLineNumber)))}isEmpty(){return 0===this.edits.length}toEdit(e){const n=[];for(const t of this.edits){const i=t.toSingleEdit(e);n.push(i)}return new y(n)}toString(){return this.edits.map((e=>e.toString())).join(",")}serialize(){return this.edits.map((e=>e.serialize()))}getNewLineRanges(){const e=[];let n=0;for(const t of this.edits)e.push(w.ofLength(t.lineRange.startLineNumber+n,t.newLines.length)),n+=t.newLines.length-t.lineRange.length;return e}mapLineNumber(e){let n=0;for(const t of this.edits){if(t.lineRange.endLineNumberExclusive>e)break;n+=t.newLines.length-t.lineRange.length}return e+n}mapLineRange(e){return new w(this.mapLineNumber(e.startLineNumber),this.mapLineNumber(e.endLineNumberExclusive))}mapBackLineRange(e,n){return this.inverse(n).mapLineRange(e)}touches(e){return this.edits.some((n=>e.edits.some((e=>n.lineRange.intersect(e.lineRange)))))}rebase(e){return new m(this.edits.map((n=>new L(e.mapLineRange(n.lineRange),n.newLines))))}humanReadablePatch(e){const n=[];function t(e,t,i,s){const r="unmodified"===i?" ":"deleted"===i?"-":"+";void 0===s&&(s="[[[[[ WARNING: LINE DOES NOT EXIST ]]]]]");const a=-1===e?"   ":e.toString().padStart(3," "),o=-1===t?"   ":t.toString().padStart(3," ");n.push(`${r} ${a} ${o} ${s}`)}let i=0,s=!0;for(const r of E(this.edits,((e,n)=>e.lineRange.distanceToRange(n.lineRange)<=5))){s?s=!1:n.push("---");let a=r[0].lineRange.startLineNumber-2;for(const n of r){for(let s=Math.max(1,a);s<n.lineRange.startLineNumber;s++)t(s,s+i,"unmodified",e[s-1]);const s=n.lineRange,r=n.newLines;for(const n of s.mapToLineArray((e=>e))){t(n,-1,"deleted",e[n-1])}for(let e=0;e<r.length;e++){const n=r[e];t(-1,s.startLineNumber+i+e,"added",n)}a=s.endLineNumberExclusive,i+=n.newLines.length-n.lineRange.length}for(let n=a;n<=Math.min(a+2,e.length);n++)t(n,n+i,"unmodified",e[n-1])}return n.join("\n")}apply(e){const n=[];let t=0;for(const i of this.edits){for(;t<i.lineRange.startLineNumber-1;)n.push(e[t]),t++;for(const e of i.newLines)n.push(e);t=i.lineRange.endLineNumberExclusive-1}for(;t<e.length;)n.push(e[t]),t++;return n}inverse(e){const n=this.getNewLineRanges();return new m(this.edits.map(((t,i)=>new L(n[i],e.slice(t.lineRange.startLineNumber-1,t.lineRange.endLineNumberExclusive-1)))))}}class L{static deserialize(e){return new L(w.ofLength(e[0],e[1]-e[0]),e[2])}static fromSingleTextEdit(e,n){const t=v(e.text);let i=e.range.startLineNumber;const s=n.getValueOfRange(f.fromPositions(new c(e.range.startLineNumber,1),e.range.getStartPosition()));t[0]=s+t[0];let r=e.range.endLineNumber+1;const a=n.getTransformer().getLineLength(e.range.endLineNumber)+1,o=n.getValueOfRange(f.fromPositions(e.range.getEndPosition(),new c(e.range.endLineNumber,a)));t[t.length-1]=t[t.length-1]+o;const g=e.range.startColumn===n.getTransformer().getLineLength(e.range.startLineNumber)+1,m=1===e.range.endColumn;return g&&t[0].length===s.length&&(i++,t.shift()),t.length>0&&i<r&&m&&t[t.length-1].length===o.length&&(r--,t.pop()),new L(new w(i,r),t)}constructor(e,n){this.lineRange=e,this.newLines=n}toSingleTextEdit(e){if(0===this.newLines.length){const n=e.getTransformer().textLength;if(this.lineRange.endLineNumberExclusive===n.lineCount+2){let t;if(this.lineRange.startLineNumber>1){const n=this.lineRange.startLineNumber-1,i=e.getTransformer().getLineLength(n)+1;t=new c(n,i)}else t=new c(1,1);const i=n.addToPosition(new c(1,1));return new d(f.fromPositions(t,i),"")}return new d(new f(this.lineRange.startLineNumber,1,this.lineRange.endLineNumberExclusive,1),"")}if(this.lineRange.isEmpty){let n,t,i;const s=this.lineRange.startLineNumber;return s===e.getTransformer().textLength.lineCount+2?(n=s-1,t=e.getTransformer().getLineLength(n)+1,i=this.newLines.map((e=>"\n"+e)).join("")):(n=s,t=1,i=this.newLines.map((e=>e+"\n")).join("")),new d(f.fromPositions(new c(n,t)),i)}{const n=this.lineRange.endLineNumberExclusive-1,t=e.getTransformer().getLineLength(n)+1,i=new f(this.lineRange.startLineNumber,1,n,t),s=this.newLines.join("\n");return new d(i,s)}}toSingleEdit(e){const n=this.toSingleTextEdit(e),t=e.getTransformer().getOffsetRange(n.range);return new C(t,n.text)}toString(){return`${this.lineRange}->${JSON.stringify(this.newLines)}`}serialize(){return[this.lineRange.startLineNumber,this.lineRange.endLineNumberExclusive,this.newLines]}removeCommonSuffixPrefixLines(e){let n=this.lineRange.startLineNumber,t=this.lineRange.endLineNumberExclusive,i=0;for(;n<t&&i<this.newLines.length&&this.newLines[i]===e.getLineAt(n);)n++,i++;let s=0;for(;n<t&&s+i<this.newLines.length&&this.newLines[this.newLines.length-1-s]===e.getLineAt(t-1);)t--,s++;return 0===i&&0===s?this:new L(new w(n,t),this.newLines.slice(i,this.newLines.length-s))}toLineEdit(){return new m([this])}}var N;(N||(N={})).is=function(e){return Array.isArray(e)&&3===e.length&&"number"==typeof e[0]&&"number"==typeof e[1]&&Array.isArray(e[2])&&e[2].every((e=>"string"==typeof e))};export{m as $Ikb,L as $Jkb,N as SerializedLineReplacement};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { compareBy, groupAdjacentBy, numberComparator } from "../../../../base/common/arrays.js";
+import { assert, checkAdjacentItems } from "../../../../base/common/assert.js";
+import { splitLines } from "../../../../base/common/strings.js";
+import { LineRange } from "../ranges/lineRange.js";
+import { StringEdit, StringReplacement } from "./stringEdit.js";
+import { Position } from "../position.js";
+import { Range } from "../range.js";
+import { TextReplacement, TextEdit } from "./textEdit.js";
+class LineEdit {
+  static {
+    __name(this, "LineEdit");
+  }
+  static {
+    this.empty = new LineEdit([]);
+  }
+  static deserialize(data) {
+    return new LineEdit(data.map((e) => LineReplacement.deserialize(e)));
+  }
+  static fromEdit(edit, initialValue) {
+    const textEdit = TextEdit.fromStringEdit(edit, initialValue);
+    return LineEdit.fromTextEdit(textEdit, initialValue);
+  }
+  static fromTextEdit(edit, initialValue) {
+    const edits = edit.replacements;
+    const result = [];
+    const currentEdits = [];
+    for (let i = 0; i < edits.length; i++) {
+      const edit2 = edits[i];
+      const nextEditRange = i + 1 < edits.length ? edits[i + 1] : void 0;
+      currentEdits.push(edit2);
+      if (nextEditRange && nextEditRange.range.startLineNumber === edit2.range.endLineNumber) {
+        continue;
+      }
+      const singleEdit = TextReplacement.joinReplacements(currentEdits, initialValue);
+      currentEdits.length = 0;
+      const singleLineEdit = LineReplacement.fromSingleTextEdit(singleEdit, initialValue);
+      result.push(singleLineEdit);
+    }
+    return new LineEdit(result);
+  }
+  static createFromUnsorted(edits) {
+    const result = edits.slice();
+    result.sort(compareBy((i) => i.lineRange.startLineNumber, numberComparator));
+    return new LineEdit(result);
+  }
+  constructor(edits) {
+    this.edits = edits;
+    assert(checkAdjacentItems(edits, (i1, i2) => i1.lineRange.endLineNumberExclusive <= i2.lineRange.startLineNumber));
+  }
+  isEmpty() {
+    return this.edits.length === 0;
+  }
+  toEdit(initialValue) {
+    const edits = [];
+    for (const edit of this.edits) {
+      const singleEdit = edit.toSingleEdit(initialValue);
+      edits.push(singleEdit);
+    }
+    return new StringEdit(edits);
+  }
+  toString() {
+    return this.edits.map((e) => e.toString()).join(",");
+  }
+  serialize() {
+    return this.edits.map((e) => e.serialize());
+  }
+  getNewLineRanges() {
+    const ranges = [];
+    let offset = 0;
+    for (const e of this.edits) {
+      ranges.push(LineRange.ofLength(e.lineRange.startLineNumber + offset, e.newLines.length));
+      offset += e.newLines.length - e.lineRange.length;
+    }
+    return ranges;
+  }
+  mapLineNumber(lineNumber) {
+    let lineDelta = 0;
+    for (const e of this.edits) {
+      if (e.lineRange.endLineNumberExclusive > lineNumber) {
+        break;
+      }
+      lineDelta += e.newLines.length - e.lineRange.length;
+    }
+    return lineNumber + lineDelta;
+  }
+  mapLineRange(lineRange) {
+    return new LineRange(this.mapLineNumber(lineRange.startLineNumber), this.mapLineNumber(lineRange.endLineNumberExclusive));
+  }
+  /** TODO improve, dont require originalLines */
+  mapBackLineRange(lineRange, originalLines) {
+    const i = this.inverse(originalLines);
+    return i.mapLineRange(lineRange);
+  }
+  touches(other) {
+    return this.edits.some((e1) => other.edits.some((e2) => e1.lineRange.intersect(e2.lineRange)));
+  }
+  rebase(base) {
+    return new LineEdit(this.edits.map((e) => new LineReplacement(base.mapLineRange(e.lineRange), e.newLines)));
+  }
+  humanReadablePatch(originalLines) {
+    const result = [];
+    function pushLine(originalLineNumber, modifiedLineNumber, kind, content) {
+      const specialChar = kind === "unmodified" ? " " : kind === "deleted" ? "-" : "+";
+      if (content === void 0) {
+        content = "[[[[[ WARNING: LINE DOES NOT EXIST ]]]]]";
+      }
+      const origLn = originalLineNumber === -1 ? "   " : originalLineNumber.toString().padStart(3, " ");
+      const modLn = modifiedLineNumber === -1 ? "   " : modifiedLineNumber.toString().padStart(3, " ");
+      result.push(`${specialChar} ${origLn} ${modLn} ${content}`);
+    }
+    __name(pushLine, "pushLine");
+    function pushSeperator() {
+      result.push("---");
+    }
+    __name(pushSeperator, "pushSeperator");
+    let lineDelta = 0;
+    let first = true;
+    for (const edits of groupAdjacentBy(this.edits, (e1, e2) => e1.lineRange.distanceToRange(e2.lineRange) <= 5)) {
+      if (!first) {
+        pushSeperator();
+      } else {
+        first = false;
+      }
+      let lastLineNumber = edits[0].lineRange.startLineNumber - 2;
+      for (const edit of edits) {
+        for (let i = Math.max(1, lastLineNumber); i < edit.lineRange.startLineNumber; i++) {
+          pushLine(i, i + lineDelta, "unmodified", originalLines[i - 1]);
+        }
+        const range = edit.lineRange;
+        const newLines = edit.newLines;
+        for (const replaceLineNumber of range.mapToLineArray((n) => n)) {
+          const line = originalLines[replaceLineNumber - 1];
+          pushLine(replaceLineNumber, -1, "deleted", line);
+        }
+        for (let i = 0; i < newLines.length; i++) {
+          const line = newLines[i];
+          pushLine(-1, range.startLineNumber + lineDelta + i, "added", line);
+        }
+        lastLineNumber = range.endLineNumberExclusive;
+        lineDelta += edit.newLines.length - edit.lineRange.length;
+      }
+      for (let i = lastLineNumber; i <= Math.min(lastLineNumber + 2, originalLines.length); i++) {
+        pushLine(i, i + lineDelta, "unmodified", originalLines[i - 1]);
+      }
+    }
+    return result.join("\n");
+  }
+  apply(lines) {
+    const result = [];
+    let currentLineIndex = 0;
+    for (const edit of this.edits) {
+      while (currentLineIndex < edit.lineRange.startLineNumber - 1) {
+        result.push(lines[currentLineIndex]);
+        currentLineIndex++;
+      }
+      for (const newLine of edit.newLines) {
+        result.push(newLine);
+      }
+      currentLineIndex = edit.lineRange.endLineNumberExclusive - 1;
+    }
+    while (currentLineIndex < lines.length) {
+      result.push(lines[currentLineIndex]);
+      currentLineIndex++;
+    }
+    return result;
+  }
+  inverse(originalLines) {
+    const newRanges = this.getNewLineRanges();
+    return new LineEdit(this.edits.map((e, idx) => new LineReplacement(newRanges[idx], originalLines.slice(e.lineRange.startLineNumber - 1, e.lineRange.endLineNumberExclusive - 1))));
+  }
+}
+class LineReplacement {
+  static {
+    __name(this, "LineReplacement");
+  }
+  static deserialize(e) {
+    return new LineReplacement(LineRange.ofLength(e[0], e[1] - e[0]), e[2]);
+  }
+  static fromSingleTextEdit(edit, initialValue) {
+    const newLines = splitLines(edit.text);
+    let startLineNumber = edit.range.startLineNumber;
+    const survivingFirstLineText = initialValue.getValueOfRange(Range.fromPositions(new Position(edit.range.startLineNumber, 1), edit.range.getStartPosition()));
+    newLines[0] = survivingFirstLineText + newLines[0];
+    let endLineNumberEx = edit.range.endLineNumber + 1;
+    const editEndLineNumberMaxColumn = initialValue.getTransformer().getLineLength(edit.range.endLineNumber) + 1;
+    const survivingEndLineText = initialValue.getValueOfRange(Range.fromPositions(edit.range.getEndPosition(), new Position(edit.range.endLineNumber, editEndLineNumberMaxColumn)));
+    newLines[newLines.length - 1] = newLines[newLines.length - 1] + survivingEndLineText;
+    const startBeforeNewLine = edit.range.startColumn === initialValue.getTransformer().getLineLength(edit.range.startLineNumber) + 1;
+    const endAfterNewLine = edit.range.endColumn === 1;
+    if (startBeforeNewLine && newLines[0].length === survivingFirstLineText.length) {
+      startLineNumber++;
+      newLines.shift();
+    }
+    if (newLines.length > 0 && startLineNumber < endLineNumberEx && endAfterNewLine && newLines[newLines.length - 1].length === survivingEndLineText.length) {
+      endLineNumberEx--;
+      newLines.pop();
+    }
+    return new LineReplacement(new LineRange(startLineNumber, endLineNumberEx), newLines);
+  }
+  constructor(lineRange, newLines) {
+    this.lineRange = lineRange;
+    this.newLines = newLines;
+  }
+  toSingleTextEdit(initialValue) {
+    if (this.newLines.length === 0) {
+      const textLen = initialValue.getTransformer().textLength;
+      if (this.lineRange.endLineNumberExclusive === textLen.lineCount + 2) {
+        let startPos;
+        if (this.lineRange.startLineNumber > 1) {
+          const startLineNumber = this.lineRange.startLineNumber - 1;
+          const startColumn = initialValue.getTransformer().getLineLength(startLineNumber) + 1;
+          startPos = new Position(startLineNumber, startColumn);
+        } else {
+          startPos = new Position(1, 1);
+        }
+        const lastPosition = textLen.addToPosition(new Position(1, 1));
+        return new TextReplacement(Range.fromPositions(startPos, lastPosition), "");
+      } else {
+        return new TextReplacement(new Range(this.lineRange.startLineNumber, 1, this.lineRange.endLineNumberExclusive, 1), "");
+      }
+    } else if (this.lineRange.isEmpty) {
+      let endLineNumber;
+      let column;
+      let text;
+      const insertionLine = this.lineRange.startLineNumber;
+      if (insertionLine === initialValue.getTransformer().textLength.lineCount + 2) {
+        endLineNumber = insertionLine - 1;
+        column = initialValue.getTransformer().getLineLength(endLineNumber) + 1;
+        text = this.newLines.map((l) => "\n" + l).join("");
+      } else {
+        endLineNumber = insertionLine;
+        column = 1;
+        text = this.newLines.map((l) => l + "\n").join("");
+      }
+      return new TextReplacement(Range.fromPositions(new Position(endLineNumber, column)), text);
+    } else {
+      const endLineNumber = this.lineRange.endLineNumberExclusive - 1;
+      const endLineNumberMaxColumn = initialValue.getTransformer().getLineLength(endLineNumber) + 1;
+      const range = new Range(this.lineRange.startLineNumber, 1, endLineNumber, endLineNumberMaxColumn);
+      const text = this.newLines.join("\n");
+      return new TextReplacement(range, text);
+    }
+  }
+  toSingleEdit(initialValue) {
+    const textEdit = this.toSingleTextEdit(initialValue);
+    const range = initialValue.getTransformer().getOffsetRange(textEdit.range);
+    return new StringReplacement(range, textEdit.text);
+  }
+  toString() {
+    return `${this.lineRange}->${JSON.stringify(this.newLines)}`;
+  }
+  serialize() {
+    return [
+      this.lineRange.startLineNumber,
+      this.lineRange.endLineNumberExclusive,
+      this.newLines
+    ];
+  }
+  removeCommonSuffixPrefixLines(initialValue) {
+    let startLineNumber = this.lineRange.startLineNumber;
+    let endLineNumberEx = this.lineRange.endLineNumberExclusive;
+    let trimStartCount = 0;
+    while (startLineNumber < endLineNumberEx && trimStartCount < this.newLines.length && this.newLines[trimStartCount] === initialValue.getLineAt(startLineNumber)) {
+      startLineNumber++;
+      trimStartCount++;
+    }
+    let trimEndCount = 0;
+    while (startLineNumber < endLineNumberEx && trimEndCount + trimStartCount < this.newLines.length && this.newLines[this.newLines.length - 1 - trimEndCount] === initialValue.getLineAt(endLineNumberEx - 1)) {
+      endLineNumberEx--;
+      trimEndCount++;
+    }
+    if (trimStartCount === 0 && trimEndCount === 0) {
+      return this;
+    }
+    return new LineReplacement(new LineRange(startLineNumber, endLineNumberEx), this.newLines.slice(trimStartCount, this.newLines.length - trimEndCount));
+  }
+  toLineEdit() {
+    return new LineEdit([this]);
+  }
+}
+var SerializedLineReplacement;
+(function(SerializedLineReplacement2) {
+  function is(thing) {
+    return Array.isArray(thing) && thing.length === 3 && typeof thing[0] === "number" && typeof thing[1] === "number" && Array.isArray(thing[2]) && thing[2].every((e) => typeof e === "string");
+  }
+  __name(is, "is");
+  SerializedLineReplacement2.is = is;
+})(SerializedLineReplacement || (SerializedLineReplacement = {}));
+export {
+  LineEdit,
+  LineReplacement,
+  SerializedLineReplacement
+};
+//# sourceMappingURL=lineEdit.js.map

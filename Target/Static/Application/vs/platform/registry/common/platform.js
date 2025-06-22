@@ -1,1 +1,37 @@
-import*as t from"../../../base/common/assert.js";import*as e from"../../../base/common/types.js";class i{constructor(){this.a=new Map}add(s,a){t.ok(e.$Yc(s)),t.ok(e.$1c(a)),t.ok(!this.a.has(s),"There is already an extension with this id"),this.a.set(s,a)}knows(s){return this.a.has(s)}as(s){return this.a.get(s)||null}dispose(){this.a.forEach(s=>{e.$ed(s.dispose)&&s.dispose()}),this.a.clear()}}const r=new i;export{r as $Ql};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import * as Assert from "../../../base/common/assert.js";
+import * as Types from "../../../base/common/types.js";
+class RegistryImpl {
+  static {
+    __name(this, "RegistryImpl");
+  }
+  constructor() {
+    this.data = /* @__PURE__ */ new Map();
+  }
+  add(id, data) {
+    Assert.ok(Types.isString(id));
+    Assert.ok(Types.isObject(data));
+    Assert.ok(!this.data.has(id), "There is already an extension with this id");
+    this.data.set(id, data);
+  }
+  knows(id) {
+    return this.data.has(id);
+  }
+  as(id) {
+    return this.data.get(id) || null;
+  }
+  dispose() {
+    this.data.forEach((value) => {
+      if (Types.isFunction(value.dispose)) {
+        value.dispose();
+      }
+    });
+    this.data.clear();
+  }
+}
+const Registry = new RegistryImpl();
+export {
+  Registry
+};
+//# sourceMappingURL=platform.js.map

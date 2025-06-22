@@ -1,1 +1,293 @@
-import{$s as t,$m as i}from"../../../../base/common/platform.js";import{localize as e}from"../../../../nls.js";const n=["editor.fontSize","editor.formatOnSave","files.autoSave","editor.defaultFormatter","editor.fontFamily","editor.wordWrap","files.exclude","workbench.colorTheme","editor.tabSize","editor.mouseWheelZoom","editor.formatOnPaste"];function r(l){return{id:"commonlyUsed",label:e(9958,null),settings:l?.commonlyUsed??n}}const o={id:"root",label:"root",children:[{id:"editor",label:e(9959,null),settings:["editor.*"],children:[{id:"editor/cursor",label:e(9960,null),settings:["editor.cursor*"]},{id:"editor/find",label:e(9961,null),settings:["editor.find.*"]},{id:"editor/font",label:e(9962,null),settings:["editor.font*"]},{id:"editor/format",label:e(9963,null),settings:["editor.format*"]},{id:"editor/diffEditor",label:e(9964,null),settings:["diffEditor.*"]},{id:"editor/multiDiffEditor",label:e(9965,null),settings:["multiDiffEditor.*"]},{id:"editor/minimap",label:e(9966,null),settings:["editor.minimap.*"]},{id:"editor/suggestions",label:e(9967,null),settings:["editor.*suggest*"]},{id:"editor/files",label:e(9968,null),settings:["files.*"]}]},{id:"workbench",label:e(9969,null),settings:["workbench.*"],children:[{id:"workbench/appearance",label:e(9970,null),settings:["workbench.activityBar.*","workbench.*color*","workbench.fontAliasing","workbench.iconTheme","workbench.sidebar.location","workbench.*.visible","workbench.tips.enabled","workbench.tree.*","workbench.view.*"]},{id:"workbench/breadcrumbs",label:e(9971,null),settings:["breadcrumbs.*"]},{id:"workbench/editor",label:e(9972,null),settings:["workbench.editor.*"]},{id:"workbench/settings",label:e(9973,null),settings:["workbench.settings.*"]},{id:"workbench/zenmode",label:e(9974,null),settings:["zenmode.*"]},{id:"workbench/screencastmode",label:e(9975,null),settings:["screencastMode.*"]}]},{id:"window",label:e(9976,null),settings:["window.*"],children:[{id:"window/newWindow",label:e(9977,null),settings:["window.*newwindow*"]}]},{id:"features",label:e(9978,null),children:[{id:"features/accessibilitySignals",label:e(9979,null),settings:["accessibility.signal*"]},{id:"features/accessibility",label:e(9980,null),settings:["accessibility.*"]},{id:"features/explorer",label:e(9981,null),settings:["explorer.*","outline.*"]},{id:"features/search",label:e(9982,null),settings:["search.*"]},{id:"features/debug",label:e(9983,null),settings:["debug.*","launch"]},{id:"features/testing",label:e(9984,null),settings:["testing.*"]},{id:"features/scm",label:e(9985,null),settings:["scm.*"]},{id:"features/extensions",label:e(9986,null),settings:["extensions.*"]},{id:"features/terminal",label:e(9987,null),settings:["terminal.*"]},{id:"features/task",label:e(9988,null),settings:["task.*"]},{id:"features/problems",label:e(9989,null),settings:["problems.*"]},{id:"features/output",label:e(9990,null),settings:["output.*"]},{id:"features/comments",label:e(9991,null),settings:["comments.*"]},{id:"features/remote",label:e(9992,null),settings:["remote.*"]},{id:"features/timeline",label:e(9993,null),settings:["timeline.*"]},{id:"features/notebook",label:e(9994,null),settings:["notebook.*","interactiveWindow.*"]},{id:"features/mergeEditor",label:e(9995,null),settings:["mergeEditor.*"]},{id:"features/chat",label:e(9996,null),settings:["chat.*","inlineChat.*","mcp"]},{id:"features/issueReporter",label:e(9997,null),settings:["issueReporter.*"],hide:!t}]},{id:"application",label:e(9998,null),children:[{id:"application/http",label:e(9999,null),settings:["http.*"]},{id:"application/keyboard",label:e(1e4,null),settings:["keyboard.*"]},{id:"application/update",label:e(10001,null),settings:["update.*"]},{id:"application/telemetry",label:e(10002,null),settings:["telemetry.*"]},{id:"application/settingsSync",label:e(10003,null),settings:["settingsSync.*"]},{id:"application/experimental",label:e(10004,null),settings:["application.experimental.*"]},{id:"application/other",label:e(10005,null),settings:["application.*"],hide:i}]},{id:"security",label:e(10006,null),settings:["security.*"],children:[{id:"security/workspace",label:e(10007,null),settings:["security.workspace.*"]}]}]};export{r as $K9b,o as $L9b};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { isWeb, isWindows } from "../../../../base/common/platform.js";
+import { localize } from "../../../../nls.js";
+const defaultCommonlyUsedSettings = [
+  "editor.fontSize",
+  "editor.formatOnSave",
+  "files.autoSave",
+  "editor.defaultFormatter",
+  "editor.fontFamily",
+  "editor.wordWrap",
+  "files.exclude",
+  "workbench.colorTheme",
+  "editor.tabSize",
+  "editor.mouseWheelZoom",
+  "editor.formatOnPaste"
+];
+function getCommonlyUsedData(toggleData) {
+  return {
+    id: "commonlyUsed",
+    label: localize("commonlyUsed", "Commonly Used"),
+    settings: toggleData?.commonlyUsed ?? defaultCommonlyUsedSettings
+  };
+}
+__name(getCommonlyUsedData, "getCommonlyUsedData");
+const tocData = {
+  id: "root",
+  label: "root",
+  children: [
+    {
+      id: "editor",
+      label: localize("textEditor", "Text Editor"),
+      settings: ["editor.*"],
+      children: [
+        {
+          id: "editor/cursor",
+          label: localize("cursor", "Cursor"),
+          settings: ["editor.cursor*"]
+        },
+        {
+          id: "editor/find",
+          label: localize("find", "Find"),
+          settings: ["editor.find.*"]
+        },
+        {
+          id: "editor/font",
+          label: localize("font", "Font"),
+          settings: ["editor.font*"]
+        },
+        {
+          id: "editor/format",
+          label: localize("formatting", "Formatting"),
+          settings: ["editor.format*"]
+        },
+        {
+          id: "editor/diffEditor",
+          label: localize("diffEditor", "Diff Editor"),
+          settings: ["diffEditor.*"]
+        },
+        {
+          id: "editor/multiDiffEditor",
+          label: localize("multiDiffEditor", "Multi-File Diff Editor"),
+          settings: ["multiDiffEditor.*"]
+        },
+        {
+          id: "editor/minimap",
+          label: localize("minimap", "Minimap"),
+          settings: ["editor.minimap.*"]
+        },
+        {
+          id: "editor/suggestions",
+          label: localize("suggestions", "Suggestions"),
+          settings: ["editor.*suggest*"]
+        },
+        {
+          id: "editor/files",
+          label: localize("files", "Files"),
+          settings: ["files.*"]
+        }
+      ]
+    },
+    {
+      id: "workbench",
+      label: localize("workbench", "Workbench"),
+      settings: ["workbench.*"],
+      children: [
+        {
+          id: "workbench/appearance",
+          label: localize("appearance", "Appearance"),
+          settings: ["workbench.activityBar.*", "workbench.*color*", "workbench.fontAliasing", "workbench.iconTheme", "workbench.sidebar.location", "workbench.*.visible", "workbench.tips.enabled", "workbench.tree.*", "workbench.view.*"]
+        },
+        {
+          id: "workbench/breadcrumbs",
+          label: localize("breadcrumbs", "Breadcrumbs"),
+          settings: ["breadcrumbs.*"]
+        },
+        {
+          id: "workbench/editor",
+          label: localize("editorManagement", "Editor Management"),
+          settings: ["workbench.editor.*"]
+        },
+        {
+          id: "workbench/settings",
+          label: localize("settings", "Settings Editor"),
+          settings: ["workbench.settings.*"]
+        },
+        {
+          id: "workbench/zenmode",
+          label: localize("zenMode", "Zen Mode"),
+          settings: ["zenmode.*"]
+        },
+        {
+          id: "workbench/screencastmode",
+          label: localize("screencastMode", "Screencast Mode"),
+          settings: ["screencastMode.*"]
+        }
+      ]
+    },
+    {
+      id: "window",
+      label: localize("window", "Window"),
+      settings: ["window.*"],
+      children: [
+        {
+          id: "window/newWindow",
+          label: localize("newWindow", "New Window"),
+          settings: ["window.*newwindow*"]
+        }
+      ]
+    },
+    {
+      id: "features",
+      label: localize("features", "Features"),
+      children: [
+        {
+          id: "features/accessibilitySignals",
+          label: localize("accessibility.signals", "Accessibility Signals"),
+          settings: ["accessibility.signal*"]
+        },
+        {
+          id: "features/accessibility",
+          label: localize("accessibility", "Accessibility"),
+          settings: ["accessibility.*"]
+        },
+        {
+          id: "features/explorer",
+          label: localize("fileExplorer", "Explorer"),
+          settings: ["explorer.*", "outline.*"]
+        },
+        {
+          id: "features/search",
+          label: localize("search", "Search"),
+          settings: ["search.*"]
+        },
+        {
+          id: "features/debug",
+          label: localize("debug", "Debug"),
+          settings: ["debug.*", "launch"]
+        },
+        {
+          id: "features/testing",
+          label: localize("testing", "Testing"),
+          settings: ["testing.*"]
+        },
+        {
+          id: "features/scm",
+          label: localize("scm", "Source Control"),
+          settings: ["scm.*"]
+        },
+        {
+          id: "features/extensions",
+          label: localize("extensions", "Extensions"),
+          settings: ["extensions.*"]
+        },
+        {
+          id: "features/terminal",
+          label: localize("terminal", "Terminal"),
+          settings: ["terminal.*"]
+        },
+        {
+          id: "features/task",
+          label: localize("task", "Task"),
+          settings: ["task.*"]
+        },
+        {
+          id: "features/problems",
+          label: localize("problems", "Problems"),
+          settings: ["problems.*"]
+        },
+        {
+          id: "features/output",
+          label: localize("output", "Output"),
+          settings: ["output.*"]
+        },
+        {
+          id: "features/comments",
+          label: localize("comments", "Comments"),
+          settings: ["comments.*"]
+        },
+        {
+          id: "features/remote",
+          label: localize("remote", "Remote"),
+          settings: ["remote.*"]
+        },
+        {
+          id: "features/timeline",
+          label: localize("timeline", "Timeline"),
+          settings: ["timeline.*"]
+        },
+        {
+          id: "features/notebook",
+          label: localize("notebook", "Notebook"),
+          settings: ["notebook.*", "interactiveWindow.*"]
+        },
+        {
+          id: "features/mergeEditor",
+          label: localize("mergeEditor", "Merge Editor"),
+          settings: ["mergeEditor.*"]
+        },
+        {
+          id: "features/chat",
+          label: localize("chat", "Chat"),
+          settings: ["chat.*", "inlineChat.*", "mcp"]
+        },
+        {
+          id: "features/issueReporter",
+          label: localize("issueReporter", "Issue Reporter"),
+          settings: ["issueReporter.*"],
+          hide: !isWeb
+        }
+      ]
+    },
+    {
+      id: "application",
+      label: localize("application", "Application"),
+      children: [
+        {
+          id: "application/http",
+          label: localize("proxy", "Proxy"),
+          settings: ["http.*"]
+        },
+        {
+          id: "application/keyboard",
+          label: localize("keyboard", "Keyboard"),
+          settings: ["keyboard.*"]
+        },
+        {
+          id: "application/update",
+          label: localize("update", "Update"),
+          settings: ["update.*"]
+        },
+        {
+          id: "application/telemetry",
+          label: localize("telemetry", "Telemetry"),
+          settings: ["telemetry.*"]
+        },
+        {
+          id: "application/settingsSync",
+          label: localize("settingsSync", "Settings Sync"),
+          settings: ["settingsSync.*"]
+        },
+        {
+          id: "application/experimental",
+          label: localize("experimental", "Experimental"),
+          settings: ["application.experimental.*"]
+        },
+        {
+          id: "application/other",
+          label: localize("other", "Other"),
+          settings: ["application.*"],
+          hide: isWindows
+        }
+      ]
+    },
+    {
+      id: "security",
+      label: localize("security", "Security"),
+      settings: ["security.*"],
+      children: [
+        {
+          id: "security/workspace",
+          label: localize("workspace", "Workspace"),
+          settings: ["security.workspace.*"]
+        }
+      ]
+    }
+  ]
+};
+export {
+  getCommonlyUsedData,
+  tocData
+};
+//# sourceMappingURL=settingsLayout.js.map

@@ -1,1 +1,24 @@
-import{$nj as r}from"../../instantiation/common/instantiation.js";const i=r("mainProcessService");class a{constructor(t,n){this.a=t,this.b=n}getChannel(t){return this.a.getChannel(t,this.b)}registerChannel(t,n){this.a.registerChannel(t,n)}}export{i as $lCc,a as $mCc};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { createDecorator } from "../../instantiation/common/instantiation.js";
+const IMainProcessService = createDecorator("mainProcessService");
+class MainProcessService {
+  static {
+    __name(this, "MainProcessService");
+  }
+  constructor(server, router) {
+    this.server = server;
+    this.router = router;
+  }
+  getChannel(channelName) {
+    return this.server.getChannel(channelName, this.router);
+  }
+  registerChannel(channelName, channel) {
+    this.server.registerChannel(channelName, channel);
+  }
+}
+export {
+  IMainProcessService,
+  MainProcessService
+};
+//# sourceMappingURL=mainProcessService.js.map

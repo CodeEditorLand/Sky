@@ -1,1 +1,6 @@
-import{$nj as o}from"../../../../platform/instantiation/common/instantiation.js";const t=o("mcpRegistry");export{t as $BW};
+import { createDecorator } from "../../../../platform/instantiation/common/instantiation.js";
+const IMcpRegistry = createDecorator("mcpRegistry");
+export {
+  IMcpRegistry
+};
+//# sourceMappingURL=mcpRegistryTypes.js.map

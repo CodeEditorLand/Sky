@@ -1,1 +1,9 @@
-import{$WK as r}from"../../../common/contributions.js";import{$fyc as o}from"./scrollLocking.js";r(o.ID,o,4);
+import { registerWorkbenchContribution2 } from "../../../common/contributions.js";
+import { SyncScroll as ScrollLocking } from "./scrollLocking.js";
+registerWorkbenchContribution2(
+  ScrollLocking.ID,
+  ScrollLocking,
+  4
+  /* WorkbenchPhase.Eventually */
+);
+//# sourceMappingURL=scrollLocking.contribution.js.map

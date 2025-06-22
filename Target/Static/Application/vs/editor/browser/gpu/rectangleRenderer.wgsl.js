@@ -1,4 +1,12 @@
-var o;(function(t){t[t.Shapes=0]="Shapes",t[t.LayoutInfoUniform=1]="LayoutInfoUniform",t[t.ScrollOffset=2]="ScrollOffset"})(o||(o={}));const s=`
+var RectangleRendererBindingId;
+(function(RectangleRendererBindingId2) {
+  RectangleRendererBindingId2[RectangleRendererBindingId2["Shapes"] = 0] = "Shapes";
+  RectangleRendererBindingId2[RectangleRendererBindingId2["LayoutInfoUniform"] = 1] = "LayoutInfoUniform";
+  RectangleRendererBindingId2[RectangleRendererBindingId2["ScrollOffset"] = 2] = "ScrollOffset";
+})(RectangleRendererBindingId || (RectangleRendererBindingId = {}));
+const rectangleRendererWgsl = (
+  /*wgsl*/
+  `
 
 struct Vertex {
 	@location(0) position: vec2f,
@@ -26,11 +34,11 @@ struct VSOutput {
 };
 
 // Uniforms
-@group(0) @binding(1) var<uniform>       layoutInfo:      LayoutInfo;
+@group(0) @binding(${1}) var<uniform>       layoutInfo:      LayoutInfo;
 
 // Storage buffers
-@group(0) @binding(0)            var<storage, read> shapes:          array<Shape>;
-@group(0) @binding(2)      var<uniform>       scrollOffset:    ScrollOffset;
+@group(0) @binding(${0})            var<storage, read> shapes:          array<Shape>;
+@group(0) @binding(${2})      var<uniform>       scrollOffset:    ScrollOffset;
 
 @vertex fn vs(
 	vert: Vertex,
@@ -59,4 +67,10 @@ struct VSOutput {
 @fragment fn fs(vsOut: VSOutput) -> @location(0) vec4f {
 	return vsOut.color;
 }
-`;export{s as $1bb,o as RectangleRendererBindingId};
+`
+);
+export {
+  RectangleRendererBindingId,
+  rectangleRendererWgsl
+};
+//# sourceMappingURL=rectangleRenderer.wgsl.js.map

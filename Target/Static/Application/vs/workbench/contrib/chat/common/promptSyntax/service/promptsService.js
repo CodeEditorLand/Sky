@@ -1,1 +1,6 @@
-import{$nj as o}from"../../../../../../platform/instantiation/common/instantiation.js";const t=o("IPromptsService");export{t as $HS};
+import { createDecorator } from "../../../../../../platform/instantiation/common/instantiation.js";
+const IPromptsService = createDecorator("IPromptsService");
+export {
+  IPromptsService
+};
+//# sourceMappingURL=promptsService.js.map

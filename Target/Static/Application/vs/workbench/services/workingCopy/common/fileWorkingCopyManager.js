@@ -1,1 +1,331 @@
-import{localize as n}from"../../../../nls.js";import{$df as N,Event as q}from"../../../../base/common/event.js";import{Promises as z}from"../../../../base/common/async.js";import{CancellationToken as d}from"../../../../base/common/cancellation.js";import{$vd as v}from"../../../../base/common/lifecycle.js";import{$uh as C,$kh as b,$dh as K,$hh as m,$jh as T}from"../../../../base/common/resources.js";import{URI as G}from"../../../../base/common/uri.js";import{$bp as X,$_o as J}from"../../../../platform/dialogs/common/dialogs.js";import{$5j as M}from"../../../../platform/files/common/files.js";import{$hK as R}from"../../../common/editor.js";import{$KX as V}from"../../environment/common/environmentService.js";import{$3X as Z}from"../../path/common/pathService.js";import{$yo as L}from"../../../../platform/uriIdentity/common/uriIdentity.js";import{$01b as Q}from"./storedFileWorkingCopyManager.js";import{$$1b as p}from"./untitledFileWorkingCopy.js";import{$_1b as Y}from"./untitledFileWorkingCopyManager.js";import{$dJ as tt}from"./workingCopyFileService.js";import{$2H as it}from"../../../../platform/label/common/label.js";import{$3n as et}from"../../../../platform/log/common/log.js";import{$RI as st}from"../../../../platform/notification/common/notification.js";import{$oI as rt}from"../../editor/common/editorService.js";import{$$I as ot}from"../../files/common/elevatedFileService.js";import{$7I as nt}from"../../filesConfiguration/common/filesConfigurationService.js";import{$RK as at}from"../../lifecycle/common/lifecycle.js";import{$mF as ht}from"./workingCopyBackup.js";import{$9I as lt}from"./workingCopyEditorService.js";import{$ZH as ft}from"./workingCopyService.js";import{Schemas as g}from"../../../../base/common/network.js";import{$OEb as mt}from"../../decorations/common/decorations.js";import{$Mj as F}from"../../../../base/common/codicons.js";import{$Ws as D}from"../../../../platform/theme/common/colorRegistry.js";import{$WI as dt}from"../../../../platform/progress/common/progress.js";var u,H=function(t,e,i,s){var o,r=arguments.length,a=r<3?e:null===s?s=Object.getOwnPropertyDescriptor(e,i):s;if("object"==typeof Reflect&&"function"==typeof Reflect.decorate)a=Reflect.decorate(t,e,i,s);else for(var n=t.length-1;n>=0;n--)(o=t[n])&&(a=(r<3?o(a):r>3?o(e,i,a):o(e,i))||a);return r>3&&a&&Object.defineProperty(e,i,a),a},o=function(t,e){return function(i,s){e(i,s,t)}};let P=class extends v{static{u=this}static{this.a=R.registerSource("fileWorkingCopyCreate.source",n(14916,null))}static{this.b=R.registerSource("fileWorkingCopyReplace.source",n(14917,null))}constructor(t,e,i,s,o,r,a,n,m,h,l,c,d,f,u,p,g,y,v,w,j,$){super(),this.c=t,this.f=e,this.g=i,this.h=s,this.j=a,this.m=n,this.n=h,this.r=l,this.s=c,this.t=y,this.u=v,this.w=w,this.y=j,this.stored=this.B(new Q(this.c,this.f,s,o,r,a,n,m,h,c,d,f,u,p,g,$)),this.untitled=this.B(new Y(this.c,this.g,(async(t,e)=>!!await this.saveAs(t.resource,void 0,e)),s,r,a,m,d)),this.onDidCreate=q.any(this.stored.onDidCreate,this.untitled.onDidCreate),this.z()}z(){const t=this.B(new class extends v{constructor(t){super(),this.b=t,this.label=n(14918,null),this.a=this.B(new N),this.onDidChange=this.a.event,this.c()}c(){this.B(this.b.onDidResolve((t=>{(t.isReadonly()||t.hasState(4))&&this.a.fire([t.resource])}))),this.B(this.b.onDidRemove((t=>this.a.fire([t])))),this.B(this.b.onDidChangeReadonly((t=>this.a.fire([t.resource])))),this.B(this.b.onDidChangeOrphaned((t=>this.a.fire([t.resource]))))}provideDecorations(t){const e=this.b.get(t);if(!e||e.isDisposed())return;const i=e.isReadonly(),s=e.hasState(4);return i&&s?{color:D,letter:F.lockSmall,strikethrough:!0,tooltip:n(14919,null)}:i?{letter:F.lockSmall,tooltip:n(14920,null)}:s?{color:D,strikethrough:!0,tooltip:n(14921,null)}:void 0}}(this.stored));this.B(this.y.registerDecorationsProvider(t))}get workingCopies(){return[...this.stored.workingCopies,...this.untitled.workingCopies]}get(t){return this.stored.get(t)??this.untitled.get(t)}resolve(t,e){return G.isUri(t)?t.scheme===g.untitled?this.untitled.resolve({untitledResource:t}):this.stored.resolve(t,e):this.untitled.resolve(t)}async saveAs(t,e,i){if(!e){const s=this.get(t);e=s instanceof p&&s.hasAssociatedFilePath?await this.I(t):await this.r.pickFileToSave(await this.I(i?.suggestedTarget??t),i?.availableFileSystems)}if(e){if(this.s.isReadonly(e)){if(!await this.H(e))return;this.s.updateReadonly(e,!1)}return this.h.hasProvider(t)&&K(t,e)?this.C(t,{...i,force:!0}):this.h.hasProvider(t)&&this.n.extUri.isEqual(t,e)&&await this.h.exists(t)?(await this.m.move([{file:{source:t,target:e}}],d.None),await this.C(t,i)??await this.C(e,i)):this.D(t,e,i)}}async C(t,e){const i=this.stored.get(t);if(i&&await i.save(e))return i}async D(t,e,i){let s;const o=this.get(t);s=o?.isResolved()?await o.model.snapshot(1,d.None):(await this.h.readFileStream(t)).value;const{targetFileExists:r,targetStoredFileWorkingCopy:a}=await this.F(t,e);if(!(o instanceof p&&o.hasAssociatedFilePath&&r&&this.n.extUri.isEqual(e,C(o.resource,this.u.remoteAuthority,this.t.defaultUriScheme))&&!await this.G(e)||(await(a.model?.update(s,d.None)),i?.source||(i={...i,source:r?u.b:u.a}),!await a.save({...i,from:t,force:!0})))){try{await(o?.revert())}catch(t){this.j.error(t)}return t.scheme===g.untitled&&this.untitled.notifyDidSave(t,e),a}}async F(t,e){let i=!1,s=this.stored.get(e);return s?.isResolved()?i=!0:(i=await this.h.exists(e),i||await this.m.create([{resource:e}],d.None),s=this.n.extUri.isEqual(t,e)&&this.get(t)?await this.stored.resolve(t):await this.stored.resolve(e)),{targetFileExists:i,targetStoredFileWorkingCopy:s}}async G(t){const{confirmed:e}=await this.w.confirm({type:"warning",message:n(14922,null,m(t)),detail:n(14923,null,m(t),m(T(t))),primaryButton:n(14924,null)});return e}async H(t){const{confirmed:e}=await this.w.confirm({type:"warning",message:n(14925,null,m(t)),detail:n(14926,null),primaryButton:n(14927,null)});return e}async I(t){if(this.h.hasProvider(t))return t;const e=this.get(t);if(e instanceof p&&e.hasAssociatedFilePath)return C(t,this.u.remoteAuthority,this.t.defaultUriScheme);const i=await this.r.defaultFilePath();if(e){const t=b(i,e.name);if(await this.t.hasValidBasename(t,e.name))return t}return b(i,m(t))}async destroy(){await z.settled([this.stored.destroy(),this.untitled.destroy()])}};P=u=H([o(3,M),o(4,at),o(5,it),o(6,et),o(7,tt),o(8,ht),o(9,L),o(10,X),o(11,nt),o(12,ft),o(13,st),o(14,lt),o(15,rt),o(16,ot),o(17,Z),o(18,V),o(19,J),o(20,mt),o(21,dt)],P);export{P as $a2b};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { localize } from "../../../../nls.js";
+import { Emitter, Event } from "../../../../base/common/event.js";
+import { Promises } from "../../../../base/common/async.js";
+import { CancellationToken } from "../../../../base/common/cancellation.js";
+import { Disposable } from "../../../../base/common/lifecycle.js";
+import { toLocalResource, joinPath, isEqual, basename, dirname } from "../../../../base/common/resources.js";
+import { URI } from "../../../../base/common/uri.js";
+import { IFileDialogService, IDialogService } from "../../../../platform/dialogs/common/dialogs.js";
+import { IFileService } from "../../../../platform/files/common/files.js";
+import { SaveSourceRegistry } from "../../../common/editor.js";
+import { IWorkbenchEnvironmentService } from "../../environment/common/environmentService.js";
+import { IPathService } from "../../path/common/pathService.js";
+import { IUriIdentityService } from "../../../../platform/uriIdentity/common/uriIdentity.js";
+import { StoredFileWorkingCopyManager } from "./storedFileWorkingCopyManager.js";
+import { UntitledFileWorkingCopy } from "./untitledFileWorkingCopy.js";
+import { UntitledFileWorkingCopyManager } from "./untitledFileWorkingCopyManager.js";
+import { IWorkingCopyFileService } from "./workingCopyFileService.js";
+import { ILabelService } from "../../../../platform/label/common/label.js";
+import { ILogService } from "../../../../platform/log/common/log.js";
+import { INotificationService } from "../../../../platform/notification/common/notification.js";
+import { IEditorService } from "../../editor/common/editorService.js";
+import { IElevatedFileService } from "../../files/common/elevatedFileService.js";
+import { IFilesConfigurationService } from "../../filesConfiguration/common/filesConfigurationService.js";
+import { ILifecycleService } from "../../lifecycle/common/lifecycle.js";
+import { IWorkingCopyBackupService } from "./workingCopyBackup.js";
+import { IWorkingCopyEditorService } from "./workingCopyEditorService.js";
+import { IWorkingCopyService } from "./workingCopyService.js";
+import { Schemas } from "../../../../base/common/network.js";
+import { IDecorationsService } from "../../decorations/common/decorations.js";
+import { Codicon } from "../../../../base/common/codicons.js";
+import { listErrorForeground } from "../../../../platform/theme/common/colorRegistry.js";
+import { IProgressService } from "../../../../platform/progress/common/progress.js";
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+var FileWorkingCopyManager_1;
+let FileWorkingCopyManager = class FileWorkingCopyManager2 extends Disposable {
+  static {
+    __name(this, "FileWorkingCopyManager");
+  }
+  static {
+    FileWorkingCopyManager_1 = this;
+  }
+  static {
+    this.FILE_WORKING_COPY_SAVE_CREATE_SOURCE = SaveSourceRegistry.registerSource("fileWorkingCopyCreate.source", localize("fileWorkingCopyCreate.source", "File Created"));
+  }
+  static {
+    this.FILE_WORKING_COPY_SAVE_REPLACE_SOURCE = SaveSourceRegistry.registerSource("fileWorkingCopyReplace.source", localize("fileWorkingCopyReplace.source", "File Replaced"));
+  }
+  constructor(workingCopyTypeId, storedWorkingCopyModelFactory, untitledWorkingCopyModelFactory, fileService, lifecycleService, labelService, logService, workingCopyFileService, workingCopyBackupService, uriIdentityService, fileDialogService, filesConfigurationService, workingCopyService, notificationService, workingCopyEditorService, editorService, elevatedFileService, pathService, environmentService, dialogService, decorationsService, progressService) {
+    super();
+    this.workingCopyTypeId = workingCopyTypeId;
+    this.storedWorkingCopyModelFactory = storedWorkingCopyModelFactory;
+    this.untitledWorkingCopyModelFactory = untitledWorkingCopyModelFactory;
+    this.fileService = fileService;
+    this.logService = logService;
+    this.workingCopyFileService = workingCopyFileService;
+    this.uriIdentityService = uriIdentityService;
+    this.fileDialogService = fileDialogService;
+    this.filesConfigurationService = filesConfigurationService;
+    this.pathService = pathService;
+    this.environmentService = environmentService;
+    this.dialogService = dialogService;
+    this.decorationsService = decorationsService;
+    this.stored = this._register(new StoredFileWorkingCopyManager(this.workingCopyTypeId, this.storedWorkingCopyModelFactory, fileService, lifecycleService, labelService, logService, workingCopyFileService, workingCopyBackupService, uriIdentityService, filesConfigurationService, workingCopyService, notificationService, workingCopyEditorService, editorService, elevatedFileService, progressService));
+    this.untitled = this._register(new UntitledFileWorkingCopyManager(this.workingCopyTypeId, this.untitledWorkingCopyModelFactory, async (workingCopy, options) => {
+      const result = await this.saveAs(workingCopy.resource, void 0, options);
+      return result ? true : false;
+    }, fileService, labelService, logService, workingCopyBackupService, workingCopyService));
+    this.onDidCreate = Event.any(this.stored.onDidCreate, this.untitled.onDidCreate);
+    this.provideDecorations();
+  }
+  //#region decorations
+  provideDecorations() {
+    const provider = this._register(new class extends Disposable {
+      constructor(stored) {
+        super();
+        this.stored = stored;
+        this.label = localize("fileWorkingCopyDecorations", "File Working Copy Decorations");
+        this._onDidChange = this._register(new Emitter());
+        this.onDidChange = this._onDidChange.event;
+        this.registerListeners();
+      }
+      registerListeners() {
+        this._register(this.stored.onDidResolve((workingCopy) => {
+          if (workingCopy.isReadonly() || workingCopy.hasState(
+            4
+            /* StoredFileWorkingCopyState.ORPHAN */
+          )) {
+            this._onDidChange.fire([workingCopy.resource]);
+          }
+        }));
+        this._register(this.stored.onDidRemove((workingCopyUri) => this._onDidChange.fire([workingCopyUri])));
+        this._register(this.stored.onDidChangeReadonly((workingCopy) => this._onDidChange.fire([workingCopy.resource])));
+        this._register(this.stored.onDidChangeOrphaned((workingCopy) => this._onDidChange.fire([workingCopy.resource])));
+      }
+      provideDecorations(uri) {
+        const workingCopy = this.stored.get(uri);
+        if (!workingCopy || workingCopy.isDisposed()) {
+          return void 0;
+        }
+        const isReadonly = workingCopy.isReadonly();
+        const isOrphaned = workingCopy.hasState(
+          4
+          /* StoredFileWorkingCopyState.ORPHAN */
+        );
+        if (isReadonly && isOrphaned) {
+          return {
+            color: listErrorForeground,
+            letter: Codicon.lockSmall,
+            strikethrough: true,
+            tooltip: localize("readonlyAndDeleted", "Deleted, Read-only")
+          };
+        } else if (isReadonly) {
+          return {
+            letter: Codicon.lockSmall,
+            tooltip: localize("readonly", "Read-only")
+          };
+        } else if (isOrphaned) {
+          return {
+            color: listErrorForeground,
+            strikethrough: true,
+            tooltip: localize("deleted", "Deleted")
+          };
+        }
+        return void 0;
+      }
+    }(this.stored));
+    this._register(this.decorationsService.registerDecorationsProvider(provider));
+  }
+  //#endregion
+  //#region get / get all
+  get workingCopies() {
+    return [...this.stored.workingCopies, ...this.untitled.workingCopies];
+  }
+  get(resource) {
+    return this.stored.get(resource) ?? this.untitled.get(resource);
+  }
+  resolve(arg1, arg2) {
+    if (URI.isUri(arg1)) {
+      if (arg1.scheme === Schemas.untitled) {
+        return this.untitled.resolve({ untitledResource: arg1 });
+      } else {
+        return this.stored.resolve(arg1, arg2);
+      }
+    }
+    return this.untitled.resolve(arg1);
+  }
+  //#endregion
+  //#region Save
+  async saveAs(source, target, options) {
+    if (!target) {
+      const workingCopy = this.get(source);
+      if (workingCopy instanceof UntitledFileWorkingCopy && workingCopy.hasAssociatedFilePath) {
+        target = await this.suggestSavePath(source);
+      } else {
+        target = await this.fileDialogService.pickFileToSave(await this.suggestSavePath(options?.suggestedTarget ?? source), options?.availableFileSystems);
+      }
+    }
+    if (!target) {
+      return;
+    }
+    if (this.filesConfigurationService.isReadonly(target)) {
+      const confirmed = await this.confirmMakeWriteable(target);
+      if (!confirmed) {
+        return;
+      } else {
+        this.filesConfigurationService.updateReadonly(target, false);
+      }
+    }
+    if (this.fileService.hasProvider(source) && isEqual(source, target)) {
+      return this.doSave(source, {
+        ...options,
+        force: true
+        /* force to save, even if not dirty (https://github.com/microsoft/vscode/issues/99619) */
+      });
+    }
+    if (this.fileService.hasProvider(source) && this.uriIdentityService.extUri.isEqual(source, target) && await this.fileService.exists(source)) {
+      await this.workingCopyFileService.move([{ file: { source, target } }], CancellationToken.None);
+      return await this.doSave(source, options) ?? await this.doSave(target, options);
+    }
+    return this.doSaveAs(source, target, options);
+  }
+  async doSave(resource, options) {
+    const storedFileWorkingCopy = this.stored.get(resource);
+    if (storedFileWorkingCopy) {
+      const success = await storedFileWorkingCopy.save(options);
+      if (success) {
+        return storedFileWorkingCopy;
+      }
+    }
+    return void 0;
+  }
+  async doSaveAs(source, target, options) {
+    let sourceContents;
+    const sourceWorkingCopy = this.get(source);
+    if (sourceWorkingCopy?.isResolved()) {
+      sourceContents = await sourceWorkingCopy.model.snapshot(1, CancellationToken.None);
+    } else {
+      sourceContents = (await this.fileService.readFileStream(source)).value;
+    }
+    const { targetFileExists, targetStoredFileWorkingCopy } = await this.doResolveSaveTarget(source, target);
+    if (sourceWorkingCopy instanceof UntitledFileWorkingCopy && sourceWorkingCopy.hasAssociatedFilePath && targetFileExists && this.uriIdentityService.extUri.isEqual(target, toLocalResource(sourceWorkingCopy.resource, this.environmentService.remoteAuthority, this.pathService.defaultUriScheme))) {
+      const overwrite = await this.confirmOverwrite(target);
+      if (!overwrite) {
+        return void 0;
+      }
+    }
+    await targetStoredFileWorkingCopy.model?.update(sourceContents, CancellationToken.None);
+    if (!options?.source) {
+      options = {
+        ...options,
+        source: targetFileExists ? FileWorkingCopyManager_1.FILE_WORKING_COPY_SAVE_REPLACE_SOURCE : FileWorkingCopyManager_1.FILE_WORKING_COPY_SAVE_CREATE_SOURCE
+      };
+    }
+    const success = await targetStoredFileWorkingCopy.save({
+      ...options,
+      from: source,
+      force: true
+      /* force to save, even if not dirty (https://github.com/microsoft/vscode/issues/99619) */
+    });
+    if (!success) {
+      return void 0;
+    }
+    try {
+      await sourceWorkingCopy?.revert();
+    } catch (error) {
+      this.logService.error(error);
+    }
+    if (source.scheme === Schemas.untitled) {
+      this.untitled.notifyDidSave(source, target);
+    }
+    return targetStoredFileWorkingCopy;
+  }
+  async doResolveSaveTarget(source, target) {
+    let targetFileExists = false;
+    let targetStoredFileWorkingCopy = this.stored.get(target);
+    if (targetStoredFileWorkingCopy?.isResolved()) {
+      targetFileExists = true;
+    } else {
+      targetFileExists = await this.fileService.exists(target);
+      if (!targetFileExists) {
+        await this.workingCopyFileService.create([{ resource: target }], CancellationToken.None);
+      }
+      if (this.uriIdentityService.extUri.isEqual(source, target) && this.get(source)) {
+        targetStoredFileWorkingCopy = await this.stored.resolve(source);
+      } else {
+        targetStoredFileWorkingCopy = await this.stored.resolve(target);
+      }
+    }
+    return { targetFileExists, targetStoredFileWorkingCopy };
+  }
+  async confirmOverwrite(resource) {
+    const { confirmed } = await this.dialogService.confirm({
+      type: "warning",
+      message: localize("confirmOverwrite", "'{0}' already exists. Do you want to replace it?", basename(resource)),
+      detail: localize("overwriteIrreversible", "A file or folder with the name '{0}' already exists in the folder '{1}'. Replacing it will overwrite its current contents.", basename(resource), basename(dirname(resource))),
+      primaryButton: localize({ key: "replaceButtonLabel", comment: ["&& denotes a mnemonic"] }, "&&Replace")
+    });
+    return confirmed;
+  }
+  async confirmMakeWriteable(resource) {
+    const { confirmed } = await this.dialogService.confirm({
+      type: "warning",
+      message: localize("confirmMakeWriteable", "'{0}' is marked as read-only. Do you want to save anyway?", basename(resource)),
+      detail: localize("confirmMakeWriteableDetail", "Paths can be configured as read-only via settings."),
+      primaryButton: localize({ key: "makeWriteableButtonLabel", comment: ["&& denotes a mnemonic"] }, "&&Save Anyway")
+    });
+    return confirmed;
+  }
+  async suggestSavePath(resource) {
+    if (this.fileService.hasProvider(resource)) {
+      return resource;
+    }
+    const workingCopy = this.get(resource);
+    if (workingCopy instanceof UntitledFileWorkingCopy && workingCopy.hasAssociatedFilePath) {
+      return toLocalResource(resource, this.environmentService.remoteAuthority, this.pathService.defaultUriScheme);
+    }
+    const defaultFilePath = await this.fileDialogService.defaultFilePath();
+    if (workingCopy) {
+      const candidatePath = joinPath(defaultFilePath, workingCopy.name);
+      if (await this.pathService.hasValidBasename(candidatePath, workingCopy.name)) {
+        return candidatePath;
+      }
+    }
+    return joinPath(defaultFilePath, basename(resource));
+  }
+  //#endregion
+  //#region Lifecycle
+  async destroy() {
+    await Promises.settled([
+      this.stored.destroy(),
+      this.untitled.destroy()
+    ]);
+  }
+};
+FileWorkingCopyManager = FileWorkingCopyManager_1 = __decorate([
+  __param(3, IFileService),
+  __param(4, ILifecycleService),
+  __param(5, ILabelService),
+  __param(6, ILogService),
+  __param(7, IWorkingCopyFileService),
+  __param(8, IWorkingCopyBackupService),
+  __param(9, IUriIdentityService),
+  __param(10, IFileDialogService),
+  __param(11, IFilesConfigurationService),
+  __param(12, IWorkingCopyService),
+  __param(13, INotificationService),
+  __param(14, IWorkingCopyEditorService),
+  __param(15, IEditorService),
+  __param(16, IElevatedFileService),
+  __param(17, IPathService),
+  __param(18, IWorkbenchEnvironmentService),
+  __param(19, IDialogService),
+  __param(20, IDecorationsService),
+  __param(21, IProgressService)
+], FileWorkingCopyManager);
+export {
+  FileWorkingCopyManager
+};
+//# sourceMappingURL=fileWorkingCopyManager.js.map

@@ -4,6 +4,7 @@
  * This module is responsible for handling IPC messages that originate from the Sky
  * frontend, are proxied through Mountain, and finally arrive in Cocoon via the
  * Vine IPC layer with specially formatted method names (e.g., "ipc:send:channelName",
+
  * "ipc:invoke:channelName").
  *
  * It listens for these messages and attempts to:
@@ -14,9 +15,11 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { EventEmitter } from "events";
-import type { ILogService } from "vs/platform/log/common/log"; // For logging
+// For logging
+import type { ILogService } from "vs/platform/log/common/log";
 
-import { ipcApiInstance, skyToCocoonMessageBus } from "./cocoon-ipc"; // Assuming skyToCocoonMessageBus is exported
+// Assuming skyToCocoonMessageBus is exported
+import { ipcApiInstance, skyToCocoonMessageBus } from "./cocoon-ipc";
 
 // For invoke, we need a way to register and find handlers.
 // This is a simplified placeholder. A real system might use a dedicated service.
@@ -35,6 +38,7 @@ const LOG_PREFIX = "[SkyIpcRouter]";
  */
 export function initializeSkyIpcRouter(logService?: ILogService): void {
 	localLogService = logService;
+
 	logService?.info(LOG_PREFIX, "Initializing Sky IPC Router...");
 
 	// Listen for generic messages from Mountain on the Vine IPC layer
@@ -51,11 +55,15 @@ export function initializeSkyIpcRouter(logService?: ILogService): void {
 			const originalChannel = vineMessage.method.substring(
 				"ipc:send:".length,
 			);
-			const originalArgument = vineMessage.params; // Expected to be an array
+
+			// Expected to be an array
+			const originalArgument = vineMessage.Parameter;
 
 			logService?.debug(
 				LOG_PREFIX,
+
 				`Received forwarded 'send' for original channel '${originalChannel}'. Argument:`,
+
 				originalArgument,
 			);
 
@@ -63,20 +71,26 @@ export function initializeSkyIpcRouter(logService?: ILogService): void {
 			const mockIpcEvent = {
 				sender: {
 					id: "sky-forwarder",
+
 					send: (channel: string, ...args: any[]) => {
 						logService?.warn(
 							LOG_PREFIX,
+
 							`Mock event.sender.send called for channel '${channel}'. This is a NOP from Sky-forwarded event.`,
 						);
 					},
 				},
-				// ports: [], // If MessagePorts were supported
+
+				// If MessagePorts were supported
+				// ports: [],
 			};
 
 			try {
 				skyToCocoonMessageBus.emit(
 					originalChannel,
+
 					mockIpcEvent,
+
 					...(Array.isArray(originalArgument)
 						? originalArgument
 						: [originalArgument]),
@@ -84,11 +98,14 @@ export function initializeSkyIpcRouter(logService?: ILogService): void {
 			} catch (error) {
 				logService?.error(
 					LOG_PREFIX,
+
 					`Error emitting forwarded 'send' on skyToCocoonMessageBus for channel '${originalChannel}':`,
+
 					error,
 				);
 			}
 		}
+
 		// Handle forwarded 'invoke' from Sky
 		else if (
 			vineMessage.msg_type === 1 /* Request */ &&
@@ -97,16 +114,22 @@ export function initializeSkyIpcRouter(logService?: ILogService): void {
 			const originalChannel = vineMessage.method.substring(
 				"ipc:invoke:".length,
 			);
-			const originalArgument = vineMessage.params; // Expected to be an array
+
+			// Expected to be an array
+			const originalArgument = vineMessage.Parameter;
+
 			const requestIdFromMountain = vineMessage.id!;
 
 			logService?.debug(
 				LOG_PREFIX,
+
 				`Received forwarded 'invoke' for channel '${originalChannel}' (MountainReqID: ${requestIdFromMountain}). Argument:`,
+
 				originalArgument,
 			);
 
 			const handler = invokeHandlers.get(originalChannel);
+
 			if (handler) {
 				Promise.resolve(
 					handler(
@@ -118,36 +141,50 @@ export function initializeSkyIpcRouter(logService?: ILogService): void {
 					.then((result) => {
 						ipcApiInstance.sendResponseToMountain(
 							requestIdFromMountain,
+
 							result,
+
 							null,
 						);
 					})
 					.catch((err) => {
 						logService?.error(
 							LOG_PREFIX,
+
 							`Error executing invoke handler for '${originalChannel}':`,
+
 							err,
 						);
+
 						const errorForMountain =
 							err instanceof Error
 								? {
 										message: err.message,
+
 										name: err.name,
+
 										stack: err.stack,
 									}
 								: { message: String(err) };
+
 						ipcApiInstance.sendResponseToMountain(
 							requestIdFromMountain,
+
 							null,
+
 							errorForMountain,
 						);
 					});
 			} else {
 				const errorMsg = `No handler registered in Cocoon for invoke channel: '${originalChannel}' (forwarded from Sky).`;
+
 				logService?.error(LOG_PREFIX, errorMsg);
+
 				ipcApiInstance.sendResponseToMountain(
 					requestIdFromMountain,
+
 					null,
+
 					{ message: errorMsg, name: "NoInvokeHandlerError" },
 				);
 			}
@@ -156,6 +193,7 @@ export function initializeSkyIpcRouter(logService?: ILogService): void {
 
 	logService?.info(
 		LOG_PREFIX,
+
 		"Sky IPC Router initialized and listening for forwarded messages.",
 	);
 }
@@ -168,17 +206,22 @@ export function initializeSkyIpcRouter(logService?: ILogService): void {
  */
 export function registerSkyInvokeHandler(
 	channel: string,
+
 	handler: (...args: any[]) => Promise<any> | any,
 ): void {
 	if (invokeHandlers.has(channel)) {
 		localLogService?.warn(
 			LOG_PREFIX,
+
 			`Overwriting existing invoke handler for channel '${channel}'.`,
 		);
 	}
+
 	invokeHandlers.set(channel, handler);
+
 	localLogService?.debug(
 		LOG_PREFIX,
+
 		`Registered invoke handler for Sky-forwarded channel '${channel}'.`,
 	);
 }
@@ -192,6 +235,7 @@ export function unregisterSkyInvokeHandler(channel: string): void {
 	if (invokeHandlers.delete(channel)) {
 		localLogService?.debug(
 			LOG_PREFIX,
+
 			`Unregistered invoke handler for Sky-forwarded channel '${channel}'.`,
 		);
 	}

@@ -5,6 +5,7 @@
  * to be imported as a module by the Sky/Astro application.
  *
  * For the current primary goal of providing the `window.vscode` global bridge,
+
  * `sky-host-bridge.ts` might be directly imported by Sky. However, if "Wind"
  * evolves to include other client-side services or utilities that the Sky application
  * might consume directly, this file would be the place to export them.
@@ -26,4 +27,5 @@ console.log(
 
 // If sky-host-bridge.ts exports its main object, you could re-export it:
 // import skyHostApiGlobal from './sky-host-bridge';
+
 // export { skyHostApiGlobal };

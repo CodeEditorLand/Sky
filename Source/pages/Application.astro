@@ -172,6 +172,7 @@ console.log(Bundle);
 				default-src
 					'none'
 				;
+
 				
 				img-src
 					'self'
@@ -181,19 +182,23 @@ console.log(Bundle);
 					vscode-managed-remote-resource:
 					https:
 				;
+
 				
 				manifest-src
 					'self'
 				;
+
 				
 				media-src
 					'self'
 				;
+
 				
 				frame-src
 					'self'
 					vscode-webview:
 				;
+
 				
 				script-src
 					'self'
@@ -201,33 +206,40 @@ console.log(Bundle);
 					'unsafe-eval'
 					blob:
 				;
+
 				
 				style-src
 					'self'
 					'unsafe-inline'
 				;
+
 				
 				connect-src
 					'self'
 					wss://tauri.localhost
 					https:
 				;
+
 				
 				font-src
 					'self'
 					vscode-remote-resource:
 					vscode-managed-remote-resource:
 				;
+
 				
 				block-all-mixed-content
 				;
+
 				
 				upgrade-insecure-requests
 				;
+
 				
 				require-trusted-types-for
 					'script'
 				;
+
 				
 				trusted-types
 					WorkerApplication
@@ -245,6 +257,7 @@ console.log(Bundle);
 					tokenizeToString
 					notebookChatEditController
 				;
+
 		"
 		slot="Meta"
 	/>

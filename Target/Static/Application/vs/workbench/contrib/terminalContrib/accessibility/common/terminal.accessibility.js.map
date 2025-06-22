@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["../../../../../../../../../../../Dependency/Microsoft/Dependency/Editor/src/vs/workbench/contrib/terminalContrib/accessibility/common/terminal.accessibility.ts"],
-  "sourcesContent": ["/*---------------------------------------------------------------------------------------------\r\n *  Copyright (c) Microsoft Corporation. All rights reserved.\r\n *  Licensed under the MIT License. See License.txt in the project root for license information.\r\n *--------------------------------------------------------------------------------------------*/\r\n\r\nexport const enum TerminalAccessibilityCommandId {\r\n\tFocusAccessibleBuffer = 'workbench.action.terminal.focusAccessibleBuffer',\r\n\tAccessibleBufferGoToNextCommand = 'workbench.action.terminal.accessibleBufferGoToNextCommand',\r\n\tAccessibleBufferGoToPreviousCommand = 'workbench.action.terminal.accessibleBufferGoToPreviousCommand',\r\n\tScrollToBottomAccessibleView = 'workbench.action.terminal.scrollToBottomAccessibleView',\r\n\tScrollToTopAccessibleView = 'workbench.action.terminal.scrollToTopAccessibleView',\r\n}\r\n\r\nexport const defaultTerminalAccessibilityCommandsToSkipShell = [\r\n\tTerminalAccessibilityCommandId.FocusAccessibleBuffer\r\n];\r\n"],
-  "mappings": "AAKA,IAAkB;CAAlB,SAAkBA,iCAA8B;AAC/C,EAAAA,gCAAA,uBAAA,IAAA;AACA,EAAAA,gCAAA,iCAAA,IAAA;AACA,EAAAA,gCAAA,qCAAA,IAAA;AACA,EAAAA,gCAAA,8BAAA,IAAA;AACA,EAAAA,gCAAA,2BAAA,IAAA;AACD,GANkB,mCAAA,iCAA8B,CAAA,EAAA;AAQzC,MAAM,kDAAkD;;;;",
-  "names": ["TerminalAccessibilityCommandId"]
-}

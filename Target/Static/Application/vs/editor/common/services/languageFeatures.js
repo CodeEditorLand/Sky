@@ -1,6 +1,1 @@
-import { createDecorator } from "../../../platform/instantiation/common/instantiation.js";
-const ILanguageFeaturesService = createDecorator("ILanguageFeaturesService");
-export {
-  ILanguageFeaturesService
-};
-//# sourceMappingURL=languageFeatures.js.map
+import{$nj as e}from"../../../platform/instantiation/common/instantiation.js";const o=e("ILanguageFeaturesService");export{o as $sT};

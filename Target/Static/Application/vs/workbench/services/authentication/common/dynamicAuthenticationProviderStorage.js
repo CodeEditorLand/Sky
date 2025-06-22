@@ -1,6 +1,1 @@
-import { createDecorator } from "../../../../platform/instantiation/common/instantiation.js";
-const IDynamicAuthenticationProviderStorageService = createDecorator("dynamicAuthenticationProviderStorageService");
-export {
-  IDynamicAuthenticationProviderStorageService
-};
-//# sourceMappingURL=dynamicAuthenticationProviderStorage.js.map
+import{$nj as o}from"../../../../platform/instantiation/common/instantiation.js";const t=o("dynamicAuthenticationProviderStorageService");export{t as $D2b};

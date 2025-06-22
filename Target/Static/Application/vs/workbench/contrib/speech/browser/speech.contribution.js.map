@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["../../../../../../../../../../Dependency/Microsoft/Dependency/Editor/src/vs/workbench/contrib/speech/browser/speech.contribution.ts"],
-  "sourcesContent": ["/*---------------------------------------------------------------------------------------------\r\n *  Copyright (c) Microsoft Corporation. All rights reserved.\r\n *  Licensed under the MIT License. See License.txt in the project root for license information.\r\n *--------------------------------------------------------------------------------------------*/\r\n\r\nimport { InstantiationType, registerSingleton } from '../../../../platform/instantiation/common/extensions.js';\r\nimport { ISpeechService } from '../common/speechService.js';\r\nimport { SpeechService } from './speechService.js';\r\n\r\nregisterSingleton(ISpeechService, SpeechService, InstantiationType.Eager /* Reads Extension Points */);\r\n"],
-  "mappings": "AAKA,SAA4B,yBAAyB;AACrD,SAAS,sBAAsB;AAC/B,SAAS,qBAAqB;AAE9B;EAAkB;EAAgB;EAAa;;AAAA;",
-  "names": []
-}

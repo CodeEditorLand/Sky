@@ -1,4 +1,1 @@
-import { registerAction2 } from "../../../../platform/actions/common/actions.js";
-import { HoldToSpeak } from "./inlineChatActions.js";
-registerAction2(HoldToSpeak);
-//# sourceMappingURL=inlineChat.contribution.js.map
+import{$jI as m}from"../../../../platform/actions/common/actions.js";import{$0Jc as o}from"./inlineChatActions.js";m(o);

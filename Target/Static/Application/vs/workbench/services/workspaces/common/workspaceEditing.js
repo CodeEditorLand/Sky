@@ -1,6 +1,1 @@
-import { createDecorator } from "../../../../platform/instantiation/common/instantiation.js";
-const IWorkspaceEditingService = createDecorator("workspaceEditingService");
-export {
-  IWorkspaceEditingService
-};
-//# sourceMappingURL=workspaceEditing.js.map
+import{$nj as o}from"../../../../platform/instantiation/common/instantiation.js";const e=o("workspaceEditingService");export{e as $Nwb};

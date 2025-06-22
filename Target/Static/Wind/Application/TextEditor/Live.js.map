@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["../../../Source/Application/TextEditor/Live.ts"],
-  "sourcesContent": ["/**\n * @module Live (TextEditor/Application)\n * @description Provides the \"live\" implementation of the ITextEditorService as a Layer.\n */\nimport { Layer } from \"effect\";\n\nimport { Definition } from \"./Definition.js\";\nimport { Tag } from \"./Service.js\";\n\n/**\n * The live implementation Layer for the TextEditor service.\n *\n * It has context requirements for the services needed by its definition.\n */\nconst Live: Layer.Layer<\n\timport(\"./Service.js\").Interface,\n\tnever,\n\tInstantiation.Interface | File.Interface // | UntitledTextEditorService.Interface\n> = Layer.effect(Tag, Definition);\n\nexport default Live;\n"],
-  "mappings": "AAIA,SAAS,aAAa;AAEtB,SAAS,kBAAkB;AAC3B,SAAS,WAAW;AAOpB,MAAM,OAIF,MAAM,OAAO,KAAK,UAAU;AAEhC,IAAO,eAAQ;",
-  "names": []
-}

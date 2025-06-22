@@ -1,11 +1,1 @@
-import { localize } from "../../../../nls.js";
-const minimumTranslatedStrings = {
-  showLanguagePackExtensions: localize("showLanguagePackExtensions", "Search language packs in the Marketplace to change the display language to {0}."),
-  searchMarketplace: localize("searchMarketplace", "Search Marketplace"),
-  installAndRestartMessage: localize("installAndRestartMessage", "Install language pack to change the display language to {0}."),
-  installAndRestart: localize("installAndRestart", "Install and Restart")
-};
-export {
-  minimumTranslatedStrings
-};
-//# sourceMappingURL=minimalTranslations.js.map
+import{localize as l}from"../../../../nls.js";const n={showLanguagePackExtensions:l(8499,null),searchMarketplace:l(8500,null),installAndRestartMessage:l(8501,null),installAndRestart:l(8502,null)};export{n as $XIc};

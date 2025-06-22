@@ -1,12 +1,1 @@
-var __defProp = Object.defineProperty;
-var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
-import * as nls from "../../../../nls.js";
-function applyDeprecatedVariableMessage(schema) {
-  schema.pattern = schema.pattern || "^(?!.*\\$\\{(env|config|command)\\.)";
-  schema.patternErrorMessage = schema.patternErrorMessage || nls.localize("deprecatedVariables", "'env.', 'config.' and 'command.' are deprecated, use 'env:', 'config:' and 'command:' instead.");
-}
-__name(applyDeprecatedVariableMessage, "applyDeprecatedVariableMessage");
-export {
-  applyDeprecatedVariableMessage
-};
-//# sourceMappingURL=configurationResolverUtils.js.map
+import*as n from"../../../../nls.js";function t(r){r.pattern=r.pattern||"^(?!.*\\$\\{(env|config|command)\\.)",r.patternErrorMessage=r.patternErrorMessage||n.localize(13920,null)}export{t as $Loc};

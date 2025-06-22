@@ -1,6 +1,1 @@
-import { createDecorator } from "../../../../platform/instantiation/common/instantiation.js";
-const ITreeSitterThemeService = createDecorator("treeSitterThemeService");
-export {
-  ITreeSitterThemeService
-};
-//# sourceMappingURL=treeSitterThemeService.js.map
+import{$nj as e}from"../../../../platform/instantiation/common/instantiation.js";const t=e("treeSitterThemeService");export{t as $FH};

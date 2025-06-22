@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["../../../../../../../../../../Dependency/Microsoft/Dependency/Editor/src/vs/workbench/services/userActivity/browser/userActivityBrowser.ts"],
-  "sourcesContent": ["/*---------------------------------------------------------------------------------------------\r\n *  Copyright (c) Microsoft Corporation. All rights reserved.\r\n *  Licensed under the MIT License. See License.txt in the project root for license information.\r\n *--------------------------------------------------------------------------------------------*/\r\n\r\nimport { DomActivityTracker } from './domActivityTracker.js';\r\nimport { userActivityRegistry } from '../common/userActivityRegistry.js';\r\n\r\nuserActivityRegistry.add(DomActivityTracker);\r\n"],
-  "mappings": "AAKA,SAAS,0BAA0B;AACnC,SAAS,4BAA4B;AAErC,qBAAqB,IAAI,kBAAkB;",
-  "names": []
-}

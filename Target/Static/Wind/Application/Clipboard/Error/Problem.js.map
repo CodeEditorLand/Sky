@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["../../../../Source/Application/Clipboard/Error/Problem.ts"],
-  "sourcesContent": ["/**\n * @module Problem (Clipboard/Error)\n * @description Defines a domain-specific, tagged error for clipboard operations\n * at the application layer.\n */\n\nimport { Data } from \"effect\";\n\nimport type { IntegrationClipboardProblem } from \"../../../Integration/Tauri/Clipboard/Error.js\";\n\n/**\n * Represents a failure within the Clipboard application service.\n *\n * This error acts as a wrapper around a more specific problem from the\n * Integration layer. This allows higher-level code to catch a single,\n * well-defined error type for this domain, while still preserving the\n * original cause for detailed logging and debugging.\n */\nexport class Problem extends Data.TaggedError(\"ApplicationClipboardProblem\")<{\n\t/** The underlying problem from the Integration layer that caused this failure. */\n\treadonly cause: IntegrationClipboardProblem;\n}> {}\n"],
-  "mappings": ";;AAMA,SAAS,YAAY;AAYd,MAAM,gBAAgB,KAAK,YAAY,6BAA6B,EAGxE;AAAA,EArBH,OAqBG;AAAA;AAAA;AAAC;",
-  "names": []
-}

@@ -1,8 +1,1 @@
-import { createDecorator } from "../../instantiation/common/instantiation.js";
-const IExternalTerminalService = createDecorator("externalTerminal");
-const DEFAULT_TERMINAL_OSX = "Terminal.app";
-export {
-  DEFAULT_TERMINAL_OSX,
-  IExternalTerminalService
-};
-//# sourceMappingURL=externalTerminal.js.map
+import{$nj as r}from"../../instantiation/common/instantiation.js";const n=r("externalTerminal"),o="Terminal.app";export{n as $Jw,o as $Kw};

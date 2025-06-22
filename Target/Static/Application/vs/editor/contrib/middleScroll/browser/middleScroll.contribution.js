@@ -1,9 +1,1 @@
-import { registerEditorContribution } from "../../../browser/editorExtensions.js";
-import { MiddleScrollController } from "./middleScrollController.js";
-registerEditorContribution(
-  MiddleScrollController.ID,
-  MiddleScrollController,
-  2
-  /* EditorContributionInstantiation.BeforeFirstInteraction */
-);
-//# sourceMappingURL=middleScroll.contribution.js.map
+import{$kab as m}from"../../../browser/editorExtensions.js";import{$5rb as r}from"./middleScrollController.js";m(r.ID,r,2);

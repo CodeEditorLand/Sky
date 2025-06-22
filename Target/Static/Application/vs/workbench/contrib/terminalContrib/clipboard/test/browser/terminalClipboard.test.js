@@ -1,79 +1,15 @@
-var __defProp = Object.defineProperty;
-var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
-import { strictEqual } from "assert";
-import { ensureNoDisposablesAreLeakedInTestSuite } from "../../../../../../base/test/common/utils.js";
-import { IConfigurationService } from "../../../../../../platform/configuration/common/configuration.js";
-import { TestConfigurationService } from "../../../../../../platform/configuration/test/common/testConfigurationService.js";
-import { IDialogService } from "../../../../../../platform/dialogs/common/dialogs.js";
-import { TestDialogService } from "../../../../../../platform/dialogs/test/common/testDialogService.js";
-import { TestInstantiationService } from "../../../../../../platform/instantiation/test/common/instantiationServiceMock.js";
-import { shouldPasteTerminalText } from "../../browser/terminalClipboard.js";
-suite("TerminalClipboard", function() {
-  const store = ensureNoDisposablesAreLeakedInTestSuite();
-  suite("shouldPasteTerminalText", () => {
-    let instantiationService;
-    let configurationService;
-    setup(async () => {
-      instantiationService = store.add(new TestInstantiationService());
-      configurationService = new TestConfigurationService({
-        [
-          "terminal.integrated.enableMultiLinePasteWarning"
-          /* TerminalSettingId.EnableMultiLinePasteWarning */
-        ]: "auto"
-      });
-      instantiationService.stub(IConfigurationService, configurationService);
-      instantiationService.stub(IDialogService, new TestDialogService(void 0, { result: { confirmed: false } }));
-    });
-    function setConfigValue(value) {
-      configurationService = new TestConfigurationService({
-        [
-          "terminal.integrated.enableMultiLinePasteWarning"
-          /* TerminalSettingId.EnableMultiLinePasteWarning */
-        ]: value
-      });
-      instantiationService.stub(IConfigurationService, configurationService);
-    }
-    __name(setConfigValue, "setConfigValue");
-    test("Single line string", async () => {
-      strictEqual(await instantiationService.invokeFunction(shouldPasteTerminalText, "foo", void 0), true);
-      setConfigValue("always");
-      strictEqual(await instantiationService.invokeFunction(shouldPasteTerminalText, "foo", void 0), true);
-      setConfigValue("never");
-      strictEqual(await instantiationService.invokeFunction(shouldPasteTerminalText, "foo", void 0), true);
-    });
-    test("Single line string with trailing new line", async () => {
-      strictEqual(await instantiationService.invokeFunction(shouldPasteTerminalText, "foo\n", void 0), true);
-      setConfigValue("always");
-      strictEqual(await instantiationService.invokeFunction(shouldPasteTerminalText, "foo\n", void 0), false);
-      setConfigValue("never");
-      strictEqual(await instantiationService.invokeFunction(shouldPasteTerminalText, "foo\n", void 0), true);
-    });
-    test("Multi-line string", async () => {
-      strictEqual(await instantiationService.invokeFunction(shouldPasteTerminalText, "foo\nbar", void 0), false);
-      setConfigValue("always");
-      strictEqual(await instantiationService.invokeFunction(shouldPasteTerminalText, "foo\nbar", void 0), false);
-      setConfigValue("never");
-      strictEqual(await instantiationService.invokeFunction(shouldPasteTerminalText, "foo\nbar", void 0), true);
-    });
-    test("Bracketed paste mode", async () => {
-      strictEqual(await instantiationService.invokeFunction(shouldPasteTerminalText, "foo\nbar", true), true);
-      setConfigValue("always");
-      strictEqual(await instantiationService.invokeFunction(shouldPasteTerminalText, "foo\nbar", true), false);
-      setConfigValue("never");
-      strictEqual(await instantiationService.invokeFunction(shouldPasteTerminalText, "foo\nbar", true), true);
-    });
-    test("Legacy config", async () => {
-      setConfigValue(true);
-      strictEqual(await instantiationService.invokeFunction(shouldPasteTerminalText, "foo\nbar", void 0), false);
-      strictEqual(await instantiationService.invokeFunction(shouldPasteTerminalText, "foo\nbar", true), true);
-      setConfigValue(false);
-      strictEqual(await instantiationService.invokeFunction(shouldPasteTerminalText, "foo\nbar", true), true);
-    });
-    test("Invalid config", async () => {
-      setConfigValue(123);
-      strictEqual(await instantiationService.invokeFunction(shouldPasteTerminalText, "foo\nbar", void 0), false);
-      strictEqual(await instantiationService.invokeFunction(shouldPasteTerminalText, "foo\nbar", true), true);
-    });
-  });
-});
-//# sourceMappingURL=terminalClipboard.test.js.map
+import{strictEqual as e}from"assert";import{$x$ as s}from"../../../../../../base/test/common/utils.js";import{$El as a}from"../../../../../../platform/configuration/common/configuration.js";import{$MFc as r}from"../../../../../../platform/configuration/test/common/testConfigurationService.js";import{$_o as c}from"../../../../../../platform/dialogs/common/dialogs.js";import{$NFc as l}from"../../../../../../platform/dialogs/test/common/testDialogService.js";import{$RFc as d}from"../../../../../../platform/instantiation/test/common/instantiationServiceMock.js";import{$4rc as i}from"../../browser/terminalClipboard.js";suite("TerminalClipboard",function(){const u=s();suite("shouldPasteTerminalText",()=>{let n,o;setup(async()=>{n=u.add(new d),o=new r({"terminal.integrated.enableMultiLinePasteWarning":"auto"}),n.stub(a,o),n.stub(c,new l(void 0,{result:{confirmed:!1}}))});function t(f){o=new r({"terminal.integrated.enableMultiLinePasteWarning":f}),n.stub(a,o)}test("Single line string",async()=>{e(await n.invokeFunction(i,"foo",void 0),!0),t("always"),e(await n.invokeFunction(i,"foo",void 0),!0),t("never"),e(await n.invokeFunction(i,"foo",void 0),!0)}),test("Single line string with trailing new line",async()=>{e(await n.invokeFunction(i,`foo
+`,void 0),!0),t("always"),e(await n.invokeFunction(i,`foo
+`,void 0),!1),t("never"),e(await n.invokeFunction(i,`foo
+`,void 0),!0)}),test("Multi-line string",async()=>{e(await n.invokeFunction(i,`foo
+bar`,void 0),!1),t("always"),e(await n.invokeFunction(i,`foo
+bar`,void 0),!1),t("never"),e(await n.invokeFunction(i,`foo
+bar`,void 0),!0)}),test("Bracketed paste mode",async()=>{e(await n.invokeFunction(i,`foo
+bar`,!0),!0),t("always"),e(await n.invokeFunction(i,`foo
+bar`,!0),!1),t("never"),e(await n.invokeFunction(i,`foo
+bar`,!0),!0)}),test("Legacy config",async()=>{t(!0),e(await n.invokeFunction(i,`foo
+bar`,void 0),!1),e(await n.invokeFunction(i,`foo
+bar`,!0),!0),t(!1),e(await n.invokeFunction(i,`foo
+bar`,!0),!0)}),test("Invalid config",async()=>{t(123),e(await n.invokeFunction(i,`foo
+bar`,void 0),!1),e(await n.invokeFunction(i,`foo
+bar`,!0),!0)})})});

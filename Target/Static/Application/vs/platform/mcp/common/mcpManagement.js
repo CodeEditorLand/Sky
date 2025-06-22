@@ -1,18 +1,1 @@
-import { createDecorator } from "../../instantiation/common/instantiation.js";
-var PackageType;
-(function(PackageType2) {
-  PackageType2["NODE"] = "npm";
-  PackageType2["DOCKER"] = "docker";
-  PackageType2["PYTHON"] = "pypi";
-  PackageType2["REMOTE"] = "remote";
-})(PackageType || (PackageType = {}));
-const IMcpGalleryService = createDecorator("IMcpGalleryService");
-const IMcpManagementService = createDecorator("IMcpManagementService");
-const mcpGalleryServiceUrlConfig = "chat.mcp.gallery.serviceUrl";
-export {
-  IMcpGalleryService,
-  IMcpManagementService,
-  PackageType,
-  mcpGalleryServiceUrlConfig
-};
-//# sourceMappingURL=mcpManagement.js.map
+import{$nj as o}from"../../instantiation/common/instantiation.js";var e;!function(e){e.NODE="npm",e.DOCKER="docker",e.PYTHON="pypi",e.REMOTE="remote"}(e||(e={}));const c=o("IMcpGalleryService"),n=o("IMcpManagementService"),p="chat.mcp.gallery.serviceUrl";export{c as $iW,n as $jW,p as $kW,e as PackageType};

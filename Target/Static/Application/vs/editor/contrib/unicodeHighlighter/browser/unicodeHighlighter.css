@@ -1,6 +1,1 @@
-.monaco-editor .unicode-highlight {
-  border: 1px solid var(--vscode-editorUnicodeHighlight-border);
-  background-color: var(--vscode-editorUnicodeHighlight-background);
-  box-sizing: border-box;
-}
-/*# sourceMappingURL=unicodeHighlighter.css.map */
+.monaco-editor .unicode-highlight{border:1px solid var(--vscode-editorUnicodeHighlight-border);background-color:var(--vscode-editorUnicodeHighlight-background);box-sizing:border-box}

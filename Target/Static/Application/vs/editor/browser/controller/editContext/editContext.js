@@ -1,12 +1,1 @@
-var __defProp = Object.defineProperty;
-var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
-import { ViewPart } from "../../view/viewPart.js";
-class AbstractEditContext extends ViewPart {
-  static {
-    __name(this, "AbstractEditContext");
-  }
-}
-export {
-  AbstractEditContext
-};
-//# sourceMappingURL=editContext.js.map
+import{$ubb as b}from"../../view/viewPart.js";class r extends b{}export{r as $0cb};

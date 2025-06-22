@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["../../../../../../../../../../Dependency/Microsoft/Dependency/Editor/src/vs/editor/common/core/text/positionToOffset.ts"],
-  "sourcesContent": ["/*---------------------------------------------------------------------------------------------\r\n *  Copyright (c) Microsoft Corporation. All rights reserved.\r\n *  Licensed under the MIT License. See License.txt in the project root for license information.\r\n *--------------------------------------------------------------------------------------------*/\r\n\r\nimport { StringEdit, StringReplacement } from '../edits/stringEdit.js';\r\nimport { TextEdit, TextReplacement } from '../edits/textEdit.js';\r\nimport { _setPositionOffsetTransformerDependencies } from './positionToOffsetImpl.js';\r\nimport { TextLength } from './textLength.js';\r\n\r\nexport { PositionOffsetTransformerBase, PositionOffsetTransformer } from './positionToOffsetImpl.js';\r\n\r\n_setPositionOffsetTransformerDependencies({\r\n\tStringEdit: StringEdit,\r\n\tStringReplacement: StringReplacement,\r\n\tTextReplacement: TextReplacement,\r\n\tTextEdit: TextEdit,\r\n\tTextLength: TextLength,\r\n});\r\n"],
-  "mappings": "AAKA,SAAS,YAAY,yBAAyB;AAC9C,SAAS,UAAU,uBAAuB;AAC1C,SAAS,iDAAiD;AAC1D,SAAS,kBAAkB;AAE3B,SAAS,+BAA+B,iCAAiC;AAEzE,0CAA0C;EACzC;EACA;EACA;EACA;EACA;CACA;",
-  "names": []
-}

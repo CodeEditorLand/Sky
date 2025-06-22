@@ -1,18 +1,1 @@
-var __defProp = Object.defineProperty;
-var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
-import { WebviewService } from "../browser/webviewService.js";
-import { ElectronWebviewElement } from "./webviewElement.js";
-class ElectronWebviewService extends WebviewService {
-  static {
-    __name(this, "ElectronWebviewService");
-  }
-  createWebviewElement(initInfo) {
-    const webview = this._instantiationService.createInstance(ElectronWebviewElement, initInfo, this._webviewThemeDataProvider);
-    this.registerNewWebview(webview);
-    return webview;
-  }
-}
-export {
-  ElectronWebviewService
-};
-//# sourceMappingURL=webviewService.js.map
+import{$PBc as r}from"../browser/webviewService.js";import{$KJc as c}from"./webviewElement.js";class o extends r{createWebviewElement(e){const r=this.b.createInstance(c,e,this.a);return this.j(r),r}}export{o as $LJc};

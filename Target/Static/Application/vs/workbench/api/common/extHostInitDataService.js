@@ -1,6 +1,1 @@
-import { createDecorator } from "../../../platform/instantiation/common/instantiation.js";
-const IExtHostInitDataService = createDecorator("IExtHostInitDataService");
-export {
-  IExtHostInitDataService
-};
-//# sourceMappingURL=extHostInitDataService.js.map
+import{$nj as t}from"../../../platform/instantiation/common/instantiation.js";const r=t("IExtHostInitDataService");export{r as $y2};

@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["../../../../../Source/Integration/Mock/Clipboard/Wrap/ReadText.ts"],
-  "sourcesContent": ["/**\n * @module MockReadText (Clipboard Wrapper)\n * @description A mock Effect for reading text from the clipboard.\n */\n\nimport { Effect } from \"effect\";\n\n/**\n * A mock implementation of the `ReadText` integration effect.\n * Instead of calling a Tauri API, it immediately returns a successful Effect\n * with a hardcoded string.\n */\nexport const MockReadText = () => Effect.succeed(\"mock clipboard text\");\n"],
-  "mappings": ";;AAKA,SAAS,cAAc;AAOhB,MAAM,eAAe,6BAAM,OAAO,QAAQ,qBAAqB,GAA1C;",
-  "names": []
-}

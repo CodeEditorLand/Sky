@@ -1,9 +1,1 @@
-import { localize } from "../../../../nls.js";
-import { SyncDescriptor } from "../../../../platform/instantiation/common/descriptors.js";
-import { Registry } from "../../../../platform/registry/common/platform.js";
-import { EditorPaneDescriptor } from "../../../browser/editor.js";
-import { EditorExtensions } from "../../../common/editor.js";
-import { NativeProcessExplorerEditor } from "./processExplorerEditor.js";
-import { ProcessExplorerEditorInput } from "../browser/processExplorerEditorInput.js";
-Registry.as(EditorExtensions.EditorPane).registerEditorPane(EditorPaneDescriptor.create(NativeProcessExplorerEditor, NativeProcessExplorerEditor.ID, localize("processExplorer", "Process Explorer")), [new SyncDescriptor(ProcessExplorerEditorInput)]);
-//# sourceMappingURL=processExplorer.contribution.js.map
+import{localize as o}from"../../../../nls.js";import{$kj as m}from"../../../../platform/instantiation/common/descriptors.js";import{$Ql as i}from"../../../../platform/registry/common/platform.js";import{$kGb as t}from"../../../browser/editor.js";import{$6J as e}from"../../../common/editor.js";import{$nJc as r}from"./processExplorerEditor.js";import{$Jpc as p}from"../browser/processExplorerEditorInput.js";i.as(e.EditorPane).registerEditorPane(t.create(r,r.ID,o(10134,null)),[new m(p)]);

@@ -1,13 +1,1 @@
-import * as nls from "../../../nls.js";
-const open = nls.localize("open", "open");
-const close = nls.localize("close", "close");
-const find = nls.localize("find", "find");
-var localizedStrings_default = {
-  open,
-  close,
-  find
-};
-export {
-  localizedStrings_default as default
-};
-//# sourceMappingURL=localizedStrings.js.map
+import*as l from"../../../nls.js";const o=l.localize(2076,null),n=l.localize(2077,null),e=l.localize(2078,null);var c={open:o,close:n,find:e};export{c as default};

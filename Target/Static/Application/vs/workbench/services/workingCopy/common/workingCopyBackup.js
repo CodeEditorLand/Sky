@@ -1,6 +1,1 @@
-import { createDecorator } from "../../../../platform/instantiation/common/instantiation.js";
-const IWorkingCopyBackupService = createDecorator("workingCopyBackupService");
-export {
-  IWorkingCopyBackupService
-};
-//# sourceMappingURL=workingCopyBackup.js.map
+import{$nj as o}from"../../../../platform/instantiation/common/instantiation.js";const p=o("workingCopyBackupService");export{p as $mF};

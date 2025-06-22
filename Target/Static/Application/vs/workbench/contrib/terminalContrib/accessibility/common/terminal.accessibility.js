@@ -1,17 +1,1 @@
-var TerminalAccessibilityCommandId;
-(function(TerminalAccessibilityCommandId2) {
-  TerminalAccessibilityCommandId2["FocusAccessibleBuffer"] = "workbench.action.terminal.focusAccessibleBuffer";
-  TerminalAccessibilityCommandId2["AccessibleBufferGoToNextCommand"] = "workbench.action.terminal.accessibleBufferGoToNextCommand";
-  TerminalAccessibilityCommandId2["AccessibleBufferGoToPreviousCommand"] = "workbench.action.terminal.accessibleBufferGoToPreviousCommand";
-  TerminalAccessibilityCommandId2["ScrollToBottomAccessibleView"] = "workbench.action.terminal.scrollToBottomAccessibleView";
-  TerminalAccessibilityCommandId2["ScrollToTopAccessibleView"] = "workbench.action.terminal.scrollToTopAccessibleView";
-})(TerminalAccessibilityCommandId || (TerminalAccessibilityCommandId = {}));
-const defaultTerminalAccessibilityCommandsToSkipShell = [
-  "workbench.action.terminal.focusAccessibleBuffer"
-  /* TerminalAccessibilityCommandId.FocusAccessibleBuffer */
-];
-export {
-  TerminalAccessibilityCommandId,
-  defaultTerminalAccessibilityCommandsToSkipShell
-};
-//# sourceMappingURL=terminal.accessibility.js.map
+var o;!function(e){e.FocusAccessibleBuffer="workbench.action.terminal.focusAccessibleBuffer",e.AccessibleBufferGoToNextCommand="workbench.action.terminal.accessibleBufferGoToNextCommand",e.AccessibleBufferGoToPreviousCommand="workbench.action.terminal.accessibleBufferGoToPreviousCommand",e.ScrollToBottomAccessibleView="workbench.action.terminal.scrollToBottomAccessibleView",e.ScrollToTopAccessibleView="workbench.action.terminal.scrollToTopAccessibleView"}(o||(o={}));const c=["workbench.action.terminal.focusAccessibleBuffer"];export{c as $T3,o as TerminalAccessibilityCommandId};

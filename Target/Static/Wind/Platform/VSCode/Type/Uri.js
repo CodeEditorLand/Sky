@@ -1,6 +1,1 @@
-import { URI } from "vs/base/common/uri.js";
-const Uri = URI;
-export {
-  Uri
-};
-//# sourceMappingURL=Uri.js.map
+import{URI as r}from"vs/base/common/uri.js";const t=r;export{t as Uri};

@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["../../../../../../../../../../Dependency/Microsoft/Dependency/Editor/out/vs/base/browser/ui/contextview/contextview.css"],
-  "sourcesContent": ["/*---------------------------------------------------------------------------------------------\r\n *  Copyright (c) Microsoft Corporation. All rights reserved.\r\n *  Licensed under the MIT License. See License.txt in the project root for license information.\r\n *--------------------------------------------------------------------------------------------*/\r\n\r\n.context-view {\r\n\tposition: absolute;\r\n}\r\n\r\n.context-view.fixed {\r\n\tall: initial;\r\n\tfont-family: inherit;\r\n\tfont-size: 13px;\r\n\tposition: fixed;\r\n\tcolor: inherit;\r\n}\r\n"],
-  "mappings": "AAKA,CAAC;AACA,YAAU;AACX;AAEA,CAJC,YAIY,CAAC;AACb,OAAK;AACL,eAAa;AACb,aAAW;AACX,YAAU;AACV,SAAO;AACR;",
-  "names": []
-}

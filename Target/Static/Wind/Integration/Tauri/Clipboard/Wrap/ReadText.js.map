@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["../../../../../Source/Integration/Tauri/Clipboard/Wrap/ReadText.ts"],
-  "sourcesContent": ["/**\n * @module ReadText (Clipboard/Wrap/Integration)\n * @description Provides a declarative Effect for reading text from the system\n * clipboard by wrapping the native Tauri API.\n */\n\nimport { readText as ReadTextFromTauri } from \"@tauri-apps/api/clipboard\";\n\nimport { FromAsync } from \"../../../../Effect/Produce.js\";\n\n/**\n * An error constructor specific to the `ReadText` operation.\n */\nconst CreateProblem = (cause: unknown) =>\n\tnew IntegrationClipboardProblem({ cause, operation: \"ReadText\" });\n\n/**\n * An Effect that, when executed, reads the current text content from the\n * system clipboard.\n *\n * It wraps the `readText` function from `@tauri-apps/api/clipboard` and\n * translates any potential promise rejection into a structured\n * `IntegrationClipboardProblem`.\n *\n * @returns An `Effect<string, IntegrationClipboardProblem>`.\n */\nexport const ReadText = FromAsync(ReadTextFromTauri, CreateProblem, {\n\toperation: \"ReadText\",\n});\n"],
-  "mappings": ";;AAMA,SAAS,YAAY,yBAAyB;AAE9C,SAAS,iBAAiB;AAK1B,MAAM,gBAAgB,wBAAC,UACtB,IAAI,4BAA4B,EAAE,OAAO,WAAW,WAAW,CAAC,GAD3C;AAaf,MAAM,WAAW,UAAU,mBAAmB,eAAe;AAAA,EACnE,WAAW;AACZ,CAAC;",
-  "names": []
-}

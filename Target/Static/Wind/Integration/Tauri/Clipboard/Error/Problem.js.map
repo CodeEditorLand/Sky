@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["../../../../../Source/Integration/Tauri/Clipboard/Error/Problem.ts"],
-  "sourcesContent": ["/**\n * @module Problem (Clipboard/Error/Integration)\n * @description Defines a structured, tagged error for failures that occur when\n * interacting directly with the Tauri clipboard API.\n */\n\nimport { Data } from \"effect\";\n\n/**\n * Represents a failure at the lowest level of clipboard interaction.\n *\n * This error is created by the Effect wrappers in the Integration layer when a\n * call to `@tauri-apps/api/clipboard` rejects. It captures the underlying cause\n * and the specific operation that failed, providing rich diagnostic information.\n */\nexport class Problem extends Data.TaggedError(\"IntegrationClipboardProblem\")<{\n\t/** The original, unknown error thrown by the Tauri API. */\n\treadonly cause: unknown;\n\t/** The specific clipboard operation that was being attempted. */\n\treadonly operation:\n\t\t| \"ReadText\"\n\t\t| \"WriteText\"\n\t\t| \"ReadImage\"\n\t\t| \"WriteImage\"\n\t\t| \"ReadResourceList\"\n\t\t| \"WriteResourceList\"\n\t\t| \"HasResourceList\";\n}> {}\n"],
-  "mappings": ";;AAMA,SAAS,YAAY;AASd,MAAM,gBAAgB,KAAK,YAAY,6BAA6B,EAYxE;AAAA,EA3BH,OA2BG;AAAA;AAAA;AAAC;",
-  "names": []
-}

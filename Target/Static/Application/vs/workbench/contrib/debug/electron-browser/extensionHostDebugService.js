@@ -1,5 +1,1 @@
-import { IExtensionHostDebugService } from "../../../../platform/debug/common/extensionHostDebug.js";
-import { registerMainProcessRemoteService } from "../../../../platform/ipc/electron-browser/services.js";
-import { ExtensionHostDebugChannelClient, ExtensionHostDebugBroadcastChannel } from "../../../../platform/debug/common/extensionHostDebugIpc.js";
-registerMainProcessRemoteService(IExtensionHostDebugService, ExtensionHostDebugBroadcastChannel.ChannelName, { channelClientCtor: ExtensionHostDebugChannelClient });
-//# sourceMappingURL=extensionHostDebugService.js.map
+import{$Xv as m}from"../../../../platform/debug/common/extensionHostDebug.js";import{$nCc as o}from"../../../../platform/ipc/electron-browser/services.js";import{$Zv as r,$Yv as n}from"../../../../platform/debug/common/extensionHostDebugIpc.js";o(m,n.ChannelName,{channelClientCtor:r});

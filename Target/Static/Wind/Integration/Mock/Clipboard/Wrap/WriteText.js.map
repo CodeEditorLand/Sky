@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["../../../../../Source/Integration/Mock/Clipboard/Wrap/WriteText.ts"],
-  "sourcesContent": ["/**\n * @module MockWriteText (Clipboard Wrapper)\n * @description A mock Effect for writing text to the system clipboard.\n */\n\nimport { Effect } from \"effect\";\n\n/**\n * A mock implementation of the `WriteText` integration effect.\n * It immediately returns a successful Effect and can optionally log the input\n * for test verification purposes.\n * @param Text - The text that would have been written to the clipboard.\n */\nexport const MockWriteText = (Text: string) =>\n\tEffect.logInfo(`MockWriteText received: \"${Text}\"`).pipe(Effect.asUnit);\n"],
-  "mappings": ";;AAKA,SAAS,cAAc;AAQhB,MAAM,gBAAgB,wBAAC,SAC7B,OAAO,QAAQ,4BAA4B,IAAI,GAAG,EAAE,KAAK,OAAO,MAAM,GAD1C;",
-  "names": []
-}

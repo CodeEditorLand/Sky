@@ -1,6 +1,1 @@
-import { createDecorator } from "../../instantiation/common/instantiation.js";
-const IKeybindingService = createDecorator("keybindingService");
-export {
-  IKeybindingService
-};
-//# sourceMappingURL=keybinding.js.map
+import{$nj as e}from"../../instantiation/common/instantiation.js";const n=e("keybindingService");export{n as $ux};

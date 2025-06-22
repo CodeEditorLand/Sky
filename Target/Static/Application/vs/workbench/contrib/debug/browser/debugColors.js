@@ -1,123 +1,19 @@
-var __defProp = Object.defineProperty;
-var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
-import { registerColor, foreground, editorInfoForeground, editorWarningForeground, errorForeground, badgeBackground, badgeForeground, listDeemphasizedForeground, contrastBorder, inputBorder, toolbarHoverBackground } from "../../../../platform/theme/common/colorRegistry.js";
-import { registerThemingParticipant } from "../../../../platform/theme/common/themeService.js";
-import { ThemeIcon } from "../../../../base/common/themables.js";
-import { Color } from "../../../../base/common/color.js";
-import { localize } from "../../../../nls.js";
-import * as icons from "./debugIcons.js";
-import { isHighContrast } from "../../../../platform/theme/common/theme.js";
-const debugToolBarBackground = registerColor("debugToolBar.background", {
-  dark: "#333333",
-  light: "#F3F3F3",
-  hcDark: "#000000",
-  hcLight: "#FFFFFF"
-}, localize("debugToolBarBackground", "Debug toolbar background color."));
-const debugToolBarBorder = registerColor("debugToolBar.border", null, localize("debugToolBarBorder", "Debug toolbar border color."));
-const debugIconStartForeground = registerColor("debugIcon.startForeground", {
-  dark: "#89D185",
-  light: "#388A34",
-  hcDark: "#89D185",
-  hcLight: "#388A34"
-}, localize("debugIcon.startForeground", "Debug toolbar icon for start debugging."));
-function registerColors() {
-  const debugTokenExpressionName = registerColor("debugTokenExpression.name", { dark: "#c586c0", light: "#9b46b0", hcDark: foreground, hcLight: foreground }, "Foreground color for the token names shown in the debug views (ie. the Variables or Watch view).");
-  const debugTokenExpressionType = registerColor("debugTokenExpression.type", { dark: "#4A90E2", light: "#4A90E2", hcDark: foreground, hcLight: foreground }, "Foreground color for the token types shown in the debug views (ie. the Variables or Watch view).");
-  const debugTokenExpressionValue = registerColor("debugTokenExpression.value", { dark: "#cccccc99", light: "#6c6c6ccc", hcDark: foreground, hcLight: foreground }, "Foreground color for the token values shown in the debug views (ie. the Variables or Watch view).");
-  const debugTokenExpressionString = registerColor("debugTokenExpression.string", { dark: "#ce9178", light: "#a31515", hcDark: "#f48771", hcLight: "#a31515" }, "Foreground color for strings in the debug views (ie. the Variables or Watch view).");
-  const debugTokenExpressionBoolean = registerColor("debugTokenExpression.boolean", { dark: "#4e94ce", light: "#0000ff", hcDark: "#75bdfe", hcLight: "#0000ff" }, "Foreground color for booleans in the debug views (ie. the Variables or Watch view).");
-  const debugTokenExpressionNumber = registerColor("debugTokenExpression.number", { dark: "#b5cea8", light: "#098658", hcDark: "#89d185", hcLight: "#098658" }, "Foreground color for numbers in the debug views (ie. the Variables or Watch view).");
-  const debugTokenExpressionError = registerColor("debugTokenExpression.error", { dark: "#f48771", light: "#e51400", hcDark: "#f48771", hcLight: "#e51400" }, "Foreground color for expression errors in the debug views (ie. the Variables or Watch view) and for error logs shown in the debug console.");
-  const debugViewExceptionLabelForeground = registerColor("debugView.exceptionLabelForeground", { dark: foreground, light: "#FFF", hcDark: foreground, hcLight: foreground }, "Foreground color for a label shown in the CALL STACK view when the debugger breaks on an exception.");
-  const debugViewExceptionLabelBackground = registerColor("debugView.exceptionLabelBackground", { dark: "#6C2022", light: "#A31515", hcDark: "#6C2022", hcLight: "#A31515" }, "Background color for a label shown in the CALL STACK view when the debugger breaks on an exception.");
-  const debugViewStateLabelForeground = registerColor("debugView.stateLabelForeground", foreground, "Foreground color for a label in the CALL STACK view showing the current session's or thread's state.");
-  const debugViewStateLabelBackground = registerColor("debugView.stateLabelBackground", "#88888844", "Background color for a label in the CALL STACK view showing the current session's or thread's state.");
-  const debugViewValueChangedHighlight = registerColor("debugView.valueChangedHighlight", "#569CD6", "Color used to highlight value changes in the debug views (ie. in the Variables view).");
-  const debugConsoleInfoForeground = registerColor("debugConsole.infoForeground", { dark: editorInfoForeground, light: editorInfoForeground, hcDark: foreground, hcLight: foreground }, "Foreground color for info messages in debug REPL console.");
-  const debugConsoleWarningForeground = registerColor("debugConsole.warningForeground", { dark: editorWarningForeground, light: editorWarningForeground, hcDark: "#008000", hcLight: editorWarningForeground }, "Foreground color for warning messages in debug REPL console.");
-  const debugConsoleErrorForeground = registerColor("debugConsole.errorForeground", errorForeground, "Foreground color for error messages in debug REPL console.");
-  const debugConsoleSourceForeground = registerColor("debugConsole.sourceForeground", foreground, "Foreground color for source filenames in debug REPL console.");
-  const debugConsoleInputIconForeground = registerColor("debugConsoleInputIcon.foreground", foreground, "Foreground color for debug console input marker icon.");
-  const debugIconPauseForeground = registerColor("debugIcon.pauseForeground", {
-    dark: "#75BEFF",
-    light: "#007ACC",
-    hcDark: "#75BEFF",
-    hcLight: "#007ACC"
-  }, localize("debugIcon.pauseForeground", "Debug toolbar icon for pause."));
-  const debugIconStopForeground = registerColor("debugIcon.stopForeground", {
-    dark: "#F48771",
-    light: "#A1260D",
-    hcDark: "#F48771",
-    hcLight: "#A1260D"
-  }, localize("debugIcon.stopForeground", "Debug toolbar icon for stop."));
-  const debugIconDisconnectForeground = registerColor("debugIcon.disconnectForeground", {
-    dark: "#F48771",
-    light: "#A1260D",
-    hcDark: "#F48771",
-    hcLight: "#A1260D"
-  }, localize("debugIcon.disconnectForeground", "Debug toolbar icon for disconnect."));
-  const debugIconRestartForeground = registerColor("debugIcon.restartForeground", {
-    dark: "#89D185",
-    light: "#388A34",
-    hcDark: "#89D185",
-    hcLight: "#388A34"
-  }, localize("debugIcon.restartForeground", "Debug toolbar icon for restart."));
-  const debugIconStepOverForeground = registerColor("debugIcon.stepOverForeground", {
-    dark: "#75BEFF",
-    light: "#007ACC",
-    hcDark: "#75BEFF",
-    hcLight: "#007ACC"
-  }, localize("debugIcon.stepOverForeground", "Debug toolbar icon for step over."));
-  const debugIconStepIntoForeground = registerColor("debugIcon.stepIntoForeground", {
-    dark: "#75BEFF",
-    light: "#007ACC",
-    hcDark: "#75BEFF",
-    hcLight: "#007ACC"
-  }, localize("debugIcon.stepIntoForeground", "Debug toolbar icon for step into."));
-  const debugIconStepOutForeground = registerColor("debugIcon.stepOutForeground", {
-    dark: "#75BEFF",
-    light: "#007ACC",
-    hcDark: "#75BEFF",
-    hcLight: "#007ACC"
-  }, localize("debugIcon.stepOutForeground", "Debug toolbar icon for step over."));
-  const debugIconContinueForeground = registerColor("debugIcon.continueForeground", {
-    dark: "#75BEFF",
-    light: "#007ACC",
-    hcDark: "#75BEFF",
-    hcLight: "#007ACC"
-  }, localize("debugIcon.continueForeground", "Debug toolbar icon for continue."));
-  const debugIconStepBackForeground = registerColor("debugIcon.stepBackForeground", {
-    dark: "#75BEFF",
-    light: "#007ACC",
-    hcDark: "#75BEFF",
-    hcLight: "#007ACC"
-  }, localize("debugIcon.stepBackForeground", "Debug toolbar icon for step back."));
-  registerThemingParticipant((theme, collector) => {
-    const badgeBackgroundColor = theme.getColor(badgeBackground);
-    const badgeForegroundColor = theme.getColor(badgeForeground);
-    const listDeemphasizedForegroundColor = theme.getColor(listDeemphasizedForeground);
-    const debugViewExceptionLabelForegroundColor = theme.getColor(debugViewExceptionLabelForeground);
-    const debugViewExceptionLabelBackgroundColor = theme.getColor(debugViewExceptionLabelBackground);
-    const debugViewStateLabelForegroundColor = theme.getColor(debugViewStateLabelForeground);
-    const debugViewStateLabelBackgroundColor = theme.getColor(debugViewStateLabelBackground);
-    const debugViewValueChangedHighlightColor = theme.getColor(debugViewValueChangedHighlight);
-    const toolbarHoverBackgroundColor = theme.getColor(toolbarHoverBackground);
-    collector.addRule(`
+import{$op as e,$Ap as a,$mq as v,$jq as g,$Cp as ko,$Sp as po,$Tp as Co,$5s as wo,$Gp as $o,$Wr as So,$er as Fo}from"../../../../platform/theme/common/colorRegistry.js";import{$St as mo}from"../../../../platform/theme/common/themeService.js";import{ThemeIcon as r}from"../../../../base/common/themables.js";import{$hp as fo}from"../../../../base/common/color.js";import{localize as c}from"../../../../nls.js";import*as n from"./debugIcons.js";import{$Kt as Bo}from"../../../../platform/theme/common/theme.js";const Vo=e("debugToolBar.background",{dark:"#333333",light:"#F3F3F3",hcDark:"#000000",hcLight:"#FFFFFF"},c(6450,null)),To=e("debugToolBar.border",null,c(6451,null)),vo=e("debugIcon.startForeground",{dark:"#89D185",light:"#388A34",hcDark:"#89D185",hcLight:"#388A34"},c(6452,null));function Ro(){const x=e("debugTokenExpression.name",{dark:"#c586c0",light:"#9b46b0",hcDark:a,hcLight:a},"Foreground color for the token names shown in the debug views (ie. the Variables or Watch view)."),L=e("debugTokenExpression.type",{dark:"#4A90E2",light:"#4A90E2",hcDark:a,hcLight:a},"Foreground color for the token types shown in the debug views (ie. the Variables or Watch view)."),I=e("debugTokenExpression.value",{dark:"#cccccc99",light:"#6c6c6ccc",hcDark:a,hcLight:a},"Foreground color for the token values shown in the debug views (ie. the Variables or Watch view)."),E=e("debugTokenExpression.string",{dark:"#ce9178",light:"#a31515",hcDark:"#f48771",hcLight:"#a31515"},"Foreground color for strings in the debug views (ie. the Variables or Watch view)."),D=e("debugTokenExpression.boolean",{dark:"#4e94ce",light:"#0000ff",hcDark:"#75bdfe",hcLight:"#0000ff"},"Foreground color for booleans in the debug views (ie. the Variables or Watch view)."),A=e("debugTokenExpression.number",{dark:"#b5cea8",light:"#098658",hcDark:"#89d185",hcLight:"#098658"},"Foreground color for numbers in the debug views (ie. the Variables or Watch view)."),V=e("debugTokenExpression.error",{dark:"#f48771",light:"#e51400",hcDark:"#f48771",hcLight:"#e51400"},"Foreground color for expression errors in the debug views (ie. the Variables or Watch view) and for error logs shown in the debug console."),T=e("debugView.exceptionLabelForeground",{dark:a,light:"#FFF",hcDark:a,hcLight:a},"Foreground color for a label shown in the CALL STACK view when the debugger breaks on an exception."),R=e("debugView.exceptionLabelBackground",{dark:"#6C2022",light:"#A31515",hcDark:"#6C2022",hcLight:"#A31515"},"Background color for a label shown in the CALL STACK view when the debugger breaks on an exception."),y=e("debugView.stateLabelForeground",a,"Foreground color for a label in the CALL STACK view showing the current session's or thread's state."),W=e("debugView.stateLabelBackground","#88888844","Background color for a label in the CALL STACK view showing the current session's or thread's state."),O=e("debugView.valueChangedHighlight","#569CD6","Color used to highlight value changes in the debug views (ie. in the Variables view)."),P=e("debugConsole.infoForeground",{dark:v,light:v,hcDark:a,hcLight:a},"Foreground color for info messages in debug REPL console."),z=e("debugConsole.warningForeground",{dark:g,light:g,hcDark:"#008000",hcLight:g},"Foreground color for warning messages in debug REPL console."),H=e("debugConsole.errorForeground",ko,"Foreground color for error messages in debug REPL console."),K=e("debugConsole.sourceForeground",a,"Foreground color for source filenames in debug REPL console."),u=e("debugConsoleInputIcon.foreground",a,"Foreground color for debug console input marker icon."),N=e("debugIcon.pauseForeground",{dark:"#75BEFF",light:"#007ACC",hcDark:"#75BEFF",hcLight:"#007ACC"},c(6453,null)),G=e("debugIcon.stopForeground",{dark:"#F48771",light:"#A1260D",hcDark:"#F48771",hcLight:"#A1260D"},c(6454,null)),q=e("debugIcon.disconnectForeground",{dark:"#F48771",light:"#A1260D",hcDark:"#F48771",hcLight:"#A1260D"},c(6455,null)),j=e("debugIcon.restartForeground",{dark:"#89D185",light:"#388A34",hcDark:"#89D185",hcLight:"#388A34"},c(6456,null)),Z=e("debugIcon.stepOverForeground",{dark:"#75BEFF",light:"#007ACC",hcDark:"#75BEFF",hcLight:"#007ACC"},c(6457,null)),J=e("debugIcon.stepIntoForeground",{dark:"#75BEFF",light:"#007ACC",hcDark:"#75BEFF",hcLight:"#007ACC"},c(6458,null)),M=e("debugIcon.stepOutForeground",{dark:"#75BEFF",light:"#007ACC",hcDark:"#75BEFF",hcLight:"#007ACC"},c(6459,null)),Q=e("debugIcon.continueForeground",{dark:"#75BEFF",light:"#007ACC",hcDark:"#75BEFF",hcLight:"#007ACC"},c(6460,null)),U=e("debugIcon.stepBackForeground",{dark:"#75BEFF",light:"#007ACC",hcDark:"#75BEFF",hcLight:"#007ACC"},c(6461,null));mo((o,t)=>{const s=o.getColor(po),i=o.getColor(Co),X=o.getColor(wo),d=o.getColor(T),b=o.getColor(R),Y=o.getColor(y),_=o.getColor(W),l=o.getColor(O),oo=o.getColor(Fo);t.addRule(`
 			/* Text colour of the call stack row's filename */
 			.debug-pane .debug-call-stack .monaco-list-row:not(.selected) .stack-frame > .file .file-name {
-				color: ${listDeemphasizedForegroundColor}
+				color: ${X}
 			}
 
 			/* Line & column number "badge" for selected call stack row */
 			.debug-pane .monaco-list-row.selected .line-number {
-				background-color: ${badgeBackgroundColor};
-				color: ${badgeForegroundColor};
+				background-color: ${s};
+				color: ${i};
 			}
 
 			/* Line & column number "badge" for unselected call stack row (basically all other rows) */
 			.debug-pane .line-number {
-				background-color: ${badgeBackgroundColor.transparent(0.6)};
-				color: ${badgeForegroundColor.transparent(0.6)};
+				background-color: ${s.transparent(.6)};
+				color: ${i.transparent(.6)};
 			}
 
 			/* State "badge" displaying the active session's current state.
@@ -125,8 +21,8 @@ function registerColors() {
 			*/
 			.debug-pane .debug-call-stack .thread > .state.label,
 			.debug-pane .debug-call-stack .session > .state.label {
-				background-color: ${debugViewStateLabelBackgroundColor};
-				color: ${debugViewStateLabelForegroundColor};
+				background-color: ${_};
+				color: ${Y};
 			}
 
 			/* State "badge" displaying the active session's current state.
@@ -135,124 +31,100 @@ function registerColors() {
 			*/
 			.debug-pane .debug-call-stack .thread > .state.label.exception,
 			.debug-pane .debug-call-stack .session > .state.label.exception {
-				background-color: ${debugViewExceptionLabelBackgroundColor};
-				color: ${debugViewExceptionLabelForegroundColor};
+				background-color: ${b};
+				color: ${d};
 			}
 
 			/* Info "badge" shown when the debugger pauses due to a thrown exception. */
 			.debug-pane .call-stack-state-message > .label.exception {
-				background-color: ${debugViewExceptionLabelBackgroundColor};
-				color: ${debugViewExceptionLabelForegroundColor};
+				background-color: ${b};
+				color: ${d};
 			}
 
 			/* Animation of changed values in Debug viewlet */
 			@keyframes debugViewletValueChanged {
-				0%   { background-color: ${debugViewValueChangedHighlightColor.transparent(0)} }
-				5%   { background-color: ${debugViewValueChangedHighlightColor.transparent(0.9)} }
-				100% { background-color: ${debugViewValueChangedHighlightColor.transparent(0.3)} }
+				0%   { background-color: ${l.transparent(0)} }
+				5%   { background-color: ${l.transparent(.9)} }
+				100% { background-color: ${l.transparent(.3)} }
 			}
 
 			.debug-pane .monaco-list-row .expression .value.changed {
-				background-color: ${debugViewValueChangedHighlightColor.transparent(0.3)};
+				background-color: ${l.transparent(.3)};
 				animation-name: debugViewletValueChanged;
 				animation-duration: 1s;
 				animation-fill-mode: forwards;
 			}
 
 			.monaco-list-row .expression .lazy-button:hover {
-				background-color: ${toolbarHoverBackgroundColor}
+				background-color: ${oo}
 			}
-		`);
-    const contrastBorderColor = theme.getColor(contrastBorder);
-    if (contrastBorderColor) {
-      collector.addRule(`
+		`);const h=o.getColor($o);h&&t.addRule(`
 			.debug-pane .line-number {
-				border: 1px solid ${contrastBorderColor};
+				border: 1px solid ${h};
 			}
-			`);
-    }
-    if (isHighContrast(theme.type)) {
-      collector.addRule(`
+			`),Bo(o.type)&&t.addRule(`
 			.debug-pane .line-number {
-				background-color: ${badgeBackgroundColor};
-				color: ${badgeForegroundColor};
-			}`);
-    }
-    const tokenNameColor = theme.getColor(debugTokenExpressionName);
-    const tokenTypeColor = theme.getColor(debugTokenExpressionType);
-    const tokenValueColor = theme.getColor(debugTokenExpressionValue);
-    const tokenStringColor = theme.getColor(debugTokenExpressionString);
-    const tokenBooleanColor = theme.getColor(debugTokenExpressionBoolean);
-    const tokenErrorColor = theme.getColor(debugTokenExpressionError);
-    const tokenNumberColor = theme.getColor(debugTokenExpressionNumber);
-    collector.addRule(`
+				background-color: ${s};
+				color: ${i};
+			}`);const eo=o.getColor(x),ro=o.getColor(L),no=o.getColor(I),to=o.getColor(E),ao=o.getColor(D),co=o.getColor(V),lo=o.getColor(A);t.addRule(`
 			.monaco-workbench .monaco-list-row .expression .name {
-				color: ${tokenNameColor};
+				color: ${eo};
 			}
 
 			.monaco-workbench .monaco-list-row .expression .type {
-				color: ${tokenTypeColor};
+				color: ${ro};
 			}
 
 			.monaco-workbench .monaco-list-row .expression .value,
 			.monaco-workbench .debug-hover-widget .value {
-				color: ${tokenValueColor};
+				color: ${no};
 			}
 
 			.monaco-workbench .monaco-list-row .expression .value.string,
 			.monaco-workbench .debug-hover-widget .value.string {
-				color: ${tokenStringColor};
+				color: ${to};
 			}
 
 			.monaco-workbench .monaco-list-row .expression .value.boolean,
 			.monaco-workbench .debug-hover-widget .value.boolean {
-				color: ${tokenBooleanColor};
+				color: ${ao};
 			}
 
 			.monaco-workbench .monaco-list-row .expression .error,
 			.monaco-workbench .debug-hover-widget .error,
 			.monaco-workbench .debug-pane .debug-variables .scope .error {
-				color: ${tokenErrorColor};
+				color: ${co};
 			}
 
 			.monaco-workbench .monaco-list-row .expression .value.number,
 			.monaco-workbench .debug-hover-widget .value.number {
-				color: ${tokenNumberColor};
+				color: ${lo};
 			}
-		`);
-    const debugConsoleInputBorderColor = theme.getColor(inputBorder) || Color.fromHex("#80808060");
-    const debugConsoleInfoForegroundColor = theme.getColor(debugConsoleInfoForeground);
-    const debugConsoleWarningForegroundColor = theme.getColor(debugConsoleWarningForeground);
-    const debugConsoleErrorForegroundColor = theme.getColor(debugConsoleErrorForeground);
-    const debugConsoleSourceForegroundColor = theme.getColor(debugConsoleSourceForeground);
-    const debugConsoleInputIconForegroundColor = theme.getColor(debugConsoleInputIconForeground);
-    collector.addRule(`
+		`);const so=o.getColor(So)||fo.fromHex("#80808060"),io=o.getColor(P),go=o.getColor(z),uo=o.getColor(H),bo=o.getColor(K),ho=o.getColor(u);t.addRule(`
 			.repl .repl-input-wrapper {
-				border-top: 1px solid ${debugConsoleInputBorderColor};
+				border-top: 1px solid ${so};
 			}
 
 			.monaco-workbench .repl .repl-tree .output .expression .value.info {
-				color: ${debugConsoleInfoForegroundColor};
+				color: ${io};
 			}
 
 			.monaco-workbench .repl .repl-tree .output .expression .value.warn {
-				color: ${debugConsoleWarningForegroundColor};
+				color: ${go};
 			}
 
 			.monaco-workbench .repl .repl-tree .output .expression .value.error {
-				color: ${debugConsoleErrorForegroundColor};
+				color: ${uo};
 			}
 
 			.monaco-workbench .repl .repl-tree .output .expression .source {
-				color: ${debugConsoleSourceForegroundColor};
+				color: ${bo};
 			}
 
 			.monaco-workbench .repl .repl-tree .monaco-tl-contents .arrow {
-				color: ${debugConsoleInputIconForegroundColor};
+				color: ${ho};
 			}
-		`);
-    if (!theme.defines(debugConsoleInputIconForeground)) {
-      collector.addRule(`
+		`),o.defines(u)||t.addRule(`
 				.monaco-workbench.vs .repl .repl-tree .monaco-tl-contents .arrow {
 					opacity: 0.25;
 				}
@@ -265,55 +137,4 @@ function registerColors() {
 				.monaco-workbench.hc-light .repl .repl-tree .monaco-tl-contents .arrow {
 					opacity: 1;
 				}
-			`);
-    }
-    const debugIconStartColor = theme.getColor(debugIconStartForeground);
-    if (debugIconStartColor) {
-      collector.addRule(`.monaco-workbench ${ThemeIcon.asCSSSelector(icons.debugStart)} { color: ${debugIconStartColor}; }`);
-    }
-    const debugIconPauseColor = theme.getColor(debugIconPauseForeground);
-    if (debugIconPauseColor) {
-      collector.addRule(`.monaco-workbench .part > .title > .title-actions .action-label${ThemeIcon.asCSSSelector(icons.debugPause)}, .monaco-workbench ${ThemeIcon.asCSSSelector(icons.debugPause)} { color: ${debugIconPauseColor}; }`);
-    }
-    const debugIconStopColor = theme.getColor(debugIconStopForeground);
-    if (debugIconStopColor) {
-      collector.addRule(`.monaco-workbench .part > .title > .title-actions .action-label${ThemeIcon.asCSSSelector(icons.debugStop)},.monaco-workbench ${ThemeIcon.asCSSSelector(icons.debugStop)} { color: ${debugIconStopColor}; }`);
-    }
-    const debugIconDisconnectColor = theme.getColor(debugIconDisconnectForeground);
-    if (debugIconDisconnectColor) {
-      collector.addRule(`.monaco-workbench .part > .title > .title-actions .action-label${ThemeIcon.asCSSSelector(icons.debugDisconnect)},.monaco-workbench .debug-view-content ${ThemeIcon.asCSSSelector(icons.debugDisconnect)}, .monaco-workbench .debug-toolbar ${ThemeIcon.asCSSSelector(icons.debugDisconnect)}, .monaco-workbench .command-center-center ${ThemeIcon.asCSSSelector(icons.debugDisconnect)} { color: ${debugIconDisconnectColor}; }`);
-    }
-    const debugIconRestartColor = theme.getColor(debugIconRestartForeground);
-    if (debugIconRestartColor) {
-      collector.addRule(`.monaco-workbench ${ThemeIcon.asCSSSelector(icons.debugRestart)}, .monaco-workbench ${ThemeIcon.asCSSSelector(icons.debugRestartFrame)}, .monaco-workbench .part > .title > .title-actions .action-label${ThemeIcon.asCSSSelector(icons.debugRestart)}, .monaco-workbench .part > .title > .title-actions .action-label${ThemeIcon.asCSSSelector(icons.debugRestartFrame)} { color: ${debugIconRestartColor}; }`);
-    }
-    const debugIconStepOverColor = theme.getColor(debugIconStepOverForeground);
-    if (debugIconStepOverColor) {
-      collector.addRule(`.monaco-workbench .part > .title > .title-actions .action-label${ThemeIcon.asCSSSelector(icons.debugStepOver)}, .monaco-workbench ${ThemeIcon.asCSSSelector(icons.debugStepOver)} { color: ${debugIconStepOverColor}; }`);
-    }
-    const debugIconStepIntoColor = theme.getColor(debugIconStepIntoForeground);
-    if (debugIconStepIntoColor) {
-      collector.addRule(`.monaco-workbench .part > .title > .title-actions .action-label${ThemeIcon.asCSSSelector(icons.debugStepInto)}, .monaco-workbench .part > .title > .title-actions .action-label${ThemeIcon.asCSSSelector(icons.debugStepInto)}, .monaco-workbench ${ThemeIcon.asCSSSelector(icons.debugStepInto)} { color: ${debugIconStepIntoColor}; }`);
-    }
-    const debugIconStepOutColor = theme.getColor(debugIconStepOutForeground);
-    if (debugIconStepOutColor) {
-      collector.addRule(`.monaco-workbench .part > .title > .title-actions .action-label${ThemeIcon.asCSSSelector(icons.debugStepOut)}, .monaco-workbench .part > .title > .title-actions .action-label${ThemeIcon.asCSSSelector(icons.debugStepOut)}, .monaco-workbench ${ThemeIcon.asCSSSelector(icons.debugStepOut)} { color: ${debugIconStepOutColor}; }`);
-    }
-    const debugIconContinueColor = theme.getColor(debugIconContinueForeground);
-    if (debugIconContinueColor) {
-      collector.addRule(`.monaco-workbench .part > .title > .title-actions .action-label${ThemeIcon.asCSSSelector(icons.debugContinue)}, .monaco-workbench ${ThemeIcon.asCSSSelector(icons.debugContinue)}, .monaco-workbench .part > .title > .title-actions .action-label${ThemeIcon.asCSSSelector(icons.debugReverseContinue)}, .monaco-workbench ${ThemeIcon.asCSSSelector(icons.debugReverseContinue)} { color: ${debugIconContinueColor}; }`);
-    }
-    const debugIconStepBackColor = theme.getColor(debugIconStepBackForeground);
-    if (debugIconStepBackColor) {
-      collector.addRule(`.monaco-workbench .part > .title > .title-actions .action-label${ThemeIcon.asCSSSelector(icons.debugStepBack)}, .monaco-workbench ${ThemeIcon.asCSSSelector(icons.debugStepBack)} { color: ${debugIconStepBackColor}; }`);
-    }
-  });
-}
-__name(registerColors, "registerColors");
-export {
-  debugIconStartForeground,
-  debugToolBarBackground,
-  debugToolBarBorder,
-  registerColors
-};
-//# sourceMappingURL=debugColors.js.map
+			`);const k=o.getColor(vo);k&&t.addRule(`.monaco-workbench ${r.asCSSSelector(n.$IBb)} { color: ${k}; }`);const p=o.getColor(N);p&&t.addRule(`.monaco-workbench .part > .title > .title-actions .action-label${r.asCSSSelector(n.$EBb)}, .monaco-workbench ${r.asCSSSelector(n.$EBb)} { color: ${p}; }`);const C=o.getColor(G);C&&t.addRule(`.monaco-workbench .part > .title > .title-actions .action-label${r.asCSSSelector(n.$xBb)},.monaco-workbench ${r.asCSSSelector(n.$xBb)} { color: ${C}; }`);const w=o.getColor(q);w&&t.addRule(`.monaco-workbench .part > .title > .title-actions .action-label${r.asCSSSelector(n.$yBb)},.monaco-workbench .debug-view-content ${r.asCSSSelector(n.$yBb)}, .monaco-workbench .debug-toolbar ${r.asCSSSelector(n.$yBb)}, .monaco-workbench .command-center-center ${r.asCSSSelector(n.$yBb)} { color: ${w}; }`);const $=o.getColor(j);$&&t.addRule(`.monaco-workbench ${r.asCSSSelector(n.$zBb)}, .monaco-workbench ${r.asCSSSelector(n.$wBb)}, .monaco-workbench .part > .title > .title-actions .action-label${r.asCSSSelector(n.$zBb)}, .monaco-workbench .part > .title > .title-actions .action-label${r.asCSSSelector(n.$wBb)} { color: ${$}; }`);const S=o.getColor(Z);S&&t.addRule(`.monaco-workbench .part > .title > .title-actions .action-label${r.asCSSSelector(n.$ABb)}, .monaco-workbench ${r.asCSSSelector(n.$ABb)} { color: ${S}; }`);const F=o.getColor(J);F&&t.addRule(`.monaco-workbench .part > .title > .title-actions .action-label${r.asCSSSelector(n.$BBb)}, .monaco-workbench .part > .title > .title-actions .action-label${r.asCSSSelector(n.$BBb)}, .monaco-workbench ${r.asCSSSelector(n.$BBb)} { color: ${F}; }`);const m=o.getColor(M);m&&t.addRule(`.monaco-workbench .part > .title > .title-actions .action-label${r.asCSSSelector(n.$CBb)}, .monaco-workbench .part > .title > .title-actions .action-label${r.asCSSSelector(n.$CBb)}, .monaco-workbench ${r.asCSSSelector(n.$CBb)} { color: ${m}; }`);const f=o.getColor(Q);f&&t.addRule(`.monaco-workbench .part > .title > .title-actions .action-label${r.asCSSSelector(n.$FBb)}, .monaco-workbench ${r.asCSSSelector(n.$FBb)}, .monaco-workbench .part > .title > .title-actions .action-label${r.asCSSSelector(n.$GBb)}, .monaco-workbench ${r.asCSSSelector(n.$GBb)} { color: ${f}; }`);const B=o.getColor(U);B&&t.addRule(`.monaco-workbench .part > .title > .title-actions .action-label${r.asCSSSelector(n.$DBb)}, .monaco-workbench ${r.asCSSSelector(n.$DBb)} { color: ${B}; }`)})}export{To as $1Bb,vo as $2Bb,Ro as $3Bb,Vo as $ZBb};

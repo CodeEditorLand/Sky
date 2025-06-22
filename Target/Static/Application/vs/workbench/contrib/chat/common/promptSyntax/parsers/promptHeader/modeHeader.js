@@ -1,12 +1,1 @@
-var __defProp = Object.defineProperty;
-var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
-import { PromptHeader } from "./promptHeader.js";
-class ModeHeader extends PromptHeader {
-  static {
-    __name(this, "ModeHeader");
-  }
-}
-export {
-  ModeHeader
-};
-//# sourceMappingURL=modeHeader.js.map
+import{$lR as e}from"./promptHeader.js";class r extends e{}export{r as $mR};

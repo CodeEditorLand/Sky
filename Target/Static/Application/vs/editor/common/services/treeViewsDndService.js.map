@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["../../../../../../../../../Dependency/Microsoft/Dependency/Editor/src/vs/editor/common/services/treeViewsDndService.ts"],
-  "sourcesContent": ["/*---------------------------------------------------------------------------------------------\r\n *  Copyright (c) Microsoft Corporation. All rights reserved.\r\n *  Licensed under the MIT License. See License.txt in the project root for license information.\r\n *--------------------------------------------------------------------------------------------*/\r\n\r\nimport { InstantiationType, registerSingleton } from '../../../platform/instantiation/common/extensions.js';\r\nimport { createDecorator } from '../../../platform/instantiation/common/instantiation.js';\r\nimport { VSDataTransfer } from '../../../base/common/dataTransfer.js';\r\nimport { ITreeViewsDnDService as ITreeViewsDnDServiceCommon, TreeViewsDnDService } from './treeViewsDnd.js';\r\n\r\nexport interface ITreeViewsDnDService extends ITreeViewsDnDServiceCommon<VSDataTransfer> { }\r\nexport const ITreeViewsDnDService = createDecorator<ITreeViewsDnDService>('treeViewsDndService');\r\nregisterSingleton(ITreeViewsDnDService, TreeViewsDnDService, InstantiationType.Delayed);\r\n"],
-  "mappings": "AAKA,SAA4B,yBAAyB;AACrD,SAAS,uBAAuB;AAEhC,SAA6D,2BAA2B;AAGjF,MAAM,uBAAuB,gBAAsC,qBAAqB;AAC/F;EAAkB;EAAsB;EAAmB;;AAAA;",
-  "names": []
-}

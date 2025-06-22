@@ -1,6 +1,1 @@
-import { createDecorator } from "../../../../platform/instantiation/common/instantiation.js";
-const IBrowserElementsService = createDecorator("browserElementsService");
-export {
-  IBrowserElementsService
-};
-//# sourceMappingURL=browserElementsService.js.map
+import{$nj as e}from"../../../../platform/instantiation/common/instantiation.js";const o=e("browserElementsService");export{o as $ugc};

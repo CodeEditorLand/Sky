@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["../../../../Source/Platform/VSCode/Type/Uri.ts"],
-  "sourcesContent": ["/**\n * @module Uri (Platform/VSCode/Type)\n * @description Re-exports the canonical `URI` class from VS Code's base library.\n *\n * This file serves as the single source of truth for the URI type throughout the\n * entire Wind application. By ensuring that all modules import `Uri` from this\n * file, we guarantee that there is only one definition of the `URI` class in the\n * runtime. This is critical for:\n *\n * 1.  **Type-checking:** Ensuring that `instanceof Uri` checks work correctly everywhere.\n * 2.  **API Consistency:** Guaranteeing that all URI objects have the same methods\n *     (`.fsPath`, `.with()`, `.toString()`, etc.).\n * 3.  **Centralized Dependency:** Isolating the direct dependency on `vs/base/common/uri.js`\n *     to a single location in our platform layer.\n */\n\nimport { URI } from \"vs/base/common/uri.js\";\n\n/**\n * The canonical `URI` class used throughout the application.\n */\nexport const Uri = URI;\n\n/**\n * The TypeScript type for the canonical `URI` class.\n */\nexport type Uri = URI;\n"],
-  "mappings": "AAgBA,SAAS,WAAW;AAKb,MAAM,MAAM;",
-  "names": []
-}

@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["../../../../../../../../../../Dependency/Microsoft/Dependency/Editor/out/vs/editor/contrib/middleScroll/browser/middleScroll.css"],
-  "sourcesContent": ["/*---------------------------------------------------------------------------------------------\r\n *  Copyright (c) Microsoft Corporation. All rights reserved.\r\n *  Licensed under the MIT License. See License.txt in the project root for license information.\r\n *--------------------------------------------------------------------------------------------*/\r\n\r\n.monaco-editor {\r\n\t.scroll-editor-on-middle-click-dot {\r\n\t\tcursor: all-scroll;\r\n\t\tposition: absolute;\r\n\t\tz-index: 1;\r\n\t\tbackground-color: var(--vscode-editor-foreground, white);\r\n\t\tborder: 1px solid var(--vscode-editor-background, black);\r\n\t\topacity: 0.5;\r\n\t\twidth: 5px;\r\n\t\theight: 5px;\r\n\t\tborder-radius: 50%;\r\n\t\ttransform: translate(-50%, -50%);\r\n\r\n\t\t&.hidden {\r\n\t\t\tdisplay: none;\r\n\t\t}\r\n\t}\r\n\r\n\t&.scroll-editor-on-middle-click-editor * {\r\n\t\tcursor: all-scroll;\r\n\t}\r\n}\r\n"],
-  "mappings": "AAKA,CAAC;AACA,GAAC;AACA,YAAQ;AACR,cAAU;AACV,aAAS;AACT,sBAAkB,IAAI,0BAA0B,EAAE;AAClD,YAAQ,IAAI,MAAM,IAAI,0BAA0B,EAAE;AAClD,aAAS;AACT,WAAO;AACP,YAAQ;AACR,mBAAe;AACf,eAAW,UAAU,IAAI,EAAE;AAE3B,KAAC,CAAC;AACD,eAAS;AACV;AACD;AAEA,GAAC,CAAC,qCAAqC;AACtC,YAAQ;AACT;AACD;",
-  "names": []
-}

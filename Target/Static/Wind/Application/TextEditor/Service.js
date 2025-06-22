@@ -1,12 +1,1 @@
-var __defProp = Object.defineProperty;
-var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
-import { Context } from "../../effect";
-class Tag extends Context.Tag("vscode/TextEditorService")() {
-  static {
-    __name(this, "Tag");
-  }
-}
-export {
-  Tag
-};
-//# sourceMappingURL=Service.js.map
+import{Context as e}from"../../effect";const r=e.Tag("textFileService");export{r as Tag};

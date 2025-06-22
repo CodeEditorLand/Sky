@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["../../../../../../../../../../../Dependency/Microsoft/Dependency/Editor/src/vs/workbench/contrib/terminalContrib/suggest/browser/lspTerminalUtil.ts"],
-  "sourcesContent": ["/*---------------------------------------------------------------------------------------------\r\n *  Copyright (c) Microsoft Corporation. All rights reserved.\r\n *  Licensed under the MIT License. See License.txt in the project root for license information.\r\n *--------------------------------------------------------------------------------------------*/\r\n\r\nexport const VSCODE_LSP_TERMINAL_PROMPT_TRACKER = 'vscode_lsp_terminal_prompt_tracker= {}\\n';\r\nexport const PYLANCE_DEBUG_DISPLAY_NAME = `ms-python.python(.[\"')`;\r\nexport const PYTHON_LANGUAGE_ID = 'python';\r\n"],
-  "mappings": "AAKO,MAAM,qCAAqC;AAC3C,MAAM,6BAA6B;AACnC,MAAM,qBAAqB;",
-  "names": []
-}

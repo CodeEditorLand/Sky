@@ -1,13 +1,1 @@
-var __defProp = Object.defineProperty;
-var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
-import { onUnexpectedError } from "./commonFacade/deps.js";
-function handleBugIndicatingErrorRecovery(message) {
-  const err = new Error("BugIndicatingErrorRecovery: " + message);
-  onUnexpectedError(err);
-  console.error("recovered from an error that indicates a bug", err);
-}
-__name(handleBugIndicatingErrorRecovery, "handleBugIndicatingErrorRecovery");
-export {
-  handleBugIndicatingErrorRecovery
-};
-//# sourceMappingURL=base.js.map
+import{onUnexpectedError as o}from"./commonFacade/deps.js";function t(r){const e=new Error("BugIndicatingErrorRecovery: "+r);o(e)}export{t as $Od};

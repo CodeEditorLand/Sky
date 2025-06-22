@@ -1,9 +1,1 @@
-var BackgroundTokenizationState;
-(function(BackgroundTokenizationState2) {
-  BackgroundTokenizationState2[BackgroundTokenizationState2["InProgress"] = 1] = "InProgress";
-  BackgroundTokenizationState2[BackgroundTokenizationState2["Completed"] = 2] = "Completed";
-})(BackgroundTokenizationState || (BackgroundTokenizationState = {}));
-export {
-  BackgroundTokenizationState
-};
-//# sourceMappingURL=tokenizationTextModelPart.js.map
+var s;!function(e){e[e.InProgress=1]="InProgress",e[e.Completed=2]="Completed"}(s||(s={}));export{s as BackgroundTokenizationState};

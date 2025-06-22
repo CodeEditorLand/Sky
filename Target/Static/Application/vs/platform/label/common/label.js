@@ -1,13 +1,1 @@
-import { createDecorator } from "../../instantiation/common/instantiation.js";
-const ILabelService = createDecorator("labelService");
-var Verbosity;
-(function(Verbosity2) {
-  Verbosity2[Verbosity2["SHORT"] = 0] = "SHORT";
-  Verbosity2[Verbosity2["MEDIUM"] = 1] = "MEDIUM";
-  Verbosity2[Verbosity2["LONG"] = 2] = "LONG";
-})(Verbosity || (Verbosity = {}));
-export {
-  ILabelService,
-  Verbosity
-};
-//# sourceMappingURL=label.js.map
+import{$nj as O}from"../../instantiation/common/instantiation.js";const p=O("labelService");var M;!function(n){n[n.SHORT=0]="SHORT",n[n.MEDIUM=1]="MEDIUM",n[n.LONG=2]="LONG"}(M||(M={}));export{p as $2H,M as Verbosity};

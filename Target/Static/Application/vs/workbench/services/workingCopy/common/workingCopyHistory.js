@@ -1,8 +1,1 @@
-import { createDecorator } from "../../../../platform/instantiation/common/instantiation.js";
-const IWorkingCopyHistoryService = createDecorator("workingCopyHistoryService");
-const MAX_PARALLEL_HISTORY_IO_OPS = 20;
-export {
-  IWorkingCopyHistoryService,
-  MAX_PARALLEL_HISTORY_IO_OPS
-};
-//# sourceMappingURL=workingCopyHistory.js.map
+import{$nj as o}from"../../../../platform/instantiation/common/instantiation.js";const t=o("workingCopyHistoryService"),c=20;export{t as $Exc,c as $Fxc};

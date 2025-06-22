@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["../../../Source/Application/File/Live.ts"],
-  "sourcesContent": ["/**\n * @module Live (File/Application)\n * @description Provides the live implementation of the IFileService as a Layer.\n */\nimport { Layer } from \"effect\";\n\nimport { Log } from \"../Log.js\";\nimport { Definition } from \"./Definition.js\";\nimport { Tag } from \"./Service.js\";\n\n/**\n * The live implementation Layer for the File service.\n *\n * It uses `Layer.effect` to construct the service instance from its definition.\n *\n * This Layer has context requirements: it needs a `LogService` and a\n * `FileSystemProvider` to be available in the layer provided to it. The master\n * `AppLayer` is responsible for providing these dependencies.\n */\nconst Live: Layer.Layer<\n\timport(\"./Service.js\").Interface,\n\tnever, // This layer itself introduces no new errors.\n\tLog.Interface | FileSystemProvider.Interface\n> = Layer.effect(Tag, Definition);\n\nexport default Live;\n"],
-  "mappings": "AAIA,SAAS,aAAa;AAGtB,SAAS,kBAAkB;AAC3B,SAAS,WAAW;AAWpB,MAAM,OAIF,MAAM,OAAO,KAAK,UAAU;AAEhC,IAAO,eAAQ;",
-  "names": []
-}

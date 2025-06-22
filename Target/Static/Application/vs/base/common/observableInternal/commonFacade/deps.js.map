@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["../../../../../../../../../../Dependency/Microsoft/Dependency/Editor/src/vs/base/common/observableInternal/commonFacade/deps.ts"],
-  "sourcesContent": ["/*---------------------------------------------------------------------------------------------\r\n *  Copyright (c) Microsoft Corporation. All rights reserved.\r\n *  Licensed under the MIT License. See License.txt in the project root for license information.\r\n *--------------------------------------------------------------------------------------------*/\r\n\r\nexport { assertFn } from '../../assert.js';\r\nexport { type EqualityComparer, strictEquals } from '../../equals.js';\r\nexport { BugIndicatingError, onBugIndicatingError, onUnexpectedError } from '../../errors.js';\r\nexport { Event, type IValueWithChangeEvent } from '../../event.js';\r\nexport { DisposableStore, type IDisposable, markAsDisposed, toDisposable, trackDisposable } from '../../lifecycle.js';\r\n"],
-  "mappings": "AAKA,SAAS,gBAAgB;AACzB,SAAgC,oBAAoB;AACpD,SAAS,oBAAoB,sBAAsB,yBAAyB;AAC5E,SAAS,aAAyC;AAClD,SAAS,iBAAmC,gBAAgB,cAAc,uBAAuB;",
-  "names": []
-}

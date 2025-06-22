@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["../../../../../../../../../../../../../Dependency/Microsoft/Dependency/Editor/src/vs/workbench/contrib/chat/common/promptSyntax/codecs/base/textToken.ts"],
-  "sourcesContent": ["/*---------------------------------------------------------------------------------------------\r\n *  Copyright (c) Microsoft Corporation. All rights reserved.\r\n *  Licensed under the MIT License. See License.txt in the project root for license information.\r\n *--------------------------------------------------------------------------------------------*/\r\n\r\nimport { type BaseToken } from './baseToken.js';\r\nimport { CompositeToken } from './compositeToken.js';\r\n\r\n/**\r\n * Tokens that represent a sequence of tokens that does not\r\n * hold an additional meaning in the text.\r\n */\r\nexport class Text<\r\n\tTTokens extends readonly BaseToken[] = readonly BaseToken[],\r\n> extends CompositeToken<TTokens> {\r\n\tpublic override toString(): string {\r\n\t\treturn `text(${this.shortText()})${this.range}`;\r\n\t}\r\n}\r\n"],
-  "mappings": ";;AAMA,SAAS,sBAAsB;AAMzB,MAAO,aAEH,eAAuB;EAdjC,OAciC;;;EAChB,WAAQ;AACvB,WAAO,QAAQ,KAAK,UAAS,CAAE,IAAI,KAAK,KAAK;EAC9C;;",
-  "names": []
-}

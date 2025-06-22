@@ -1,8 +1,1 @@
-import { createDecorator } from "../../../../platform/instantiation/common/instantiation.js";
-const ILocaleService = createDecorator("localizationService");
-const IActiveLanguagePackService = createDecorator("activeLanguageService");
-export {
-  IActiveLanguagePackService,
-  ILocaleService
-};
-//# sourceMappingURL=locale.js.map
+import{$nj as e}from"../../../../platform/instantiation/common/instantiation.js";const t=e("localizationService"),c=e("activeLanguageService");export{t as $PNb,c as $QNb};

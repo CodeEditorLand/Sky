@@ -1,6 +1,1 @@
-import { createDecorator } from "../../instantiation/common/instantiation.js";
-const ILayoutService = createDecorator("layoutService");
-export {
-  ILayoutService
-};
-//# sourceMappingURL=layoutService.js.map
+import{$nj as o}from"../../instantiation/common/instantiation.js";const t=o("layoutService");export{t as $zhb};

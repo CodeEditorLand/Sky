@@ -1,14 +1,1 @@
-import { SyncDescriptor } from "../../../../platform/instantiation/common/descriptors.js";
-import { registerSingleton } from "../../../../platform/instantiation/common/extensions.js";
-import { mcpDiscoveryRegistry } from "../common/discovery/mcpDiscovery.js";
-import { IMcpDevModeDebugging } from "../common/mcpDevMode.js";
-import { McpDevModeDebuggingNode } from "./mcpDevModeDebuggingNode.js";
-import { NativeMcpDiscovery } from "./nativeMpcDiscovery.js";
-mcpDiscoveryRegistry.register(new SyncDescriptor(NativeMcpDiscovery));
-registerSingleton(
-  IMcpDevModeDebugging,
-  McpDevModeDebuggingNode,
-  1
-  /* InstantiationType.Delayed */
-);
-//# sourceMappingURL=mcp.contribution.js.map
+import{$kj as r}from"../../../../platform/instantiation/common/descriptors.js";import{$WB as o}from"../../../../platform/instantiation/common/extensions.js";import{$oic as m}from"../common/discovery/mcpDiscovery.js";import{$Bic as i}from"../common/mcpDevMode.js";import{$_Jc as t}from"./mcpDevModeDebuggingNode.js";import{$aKc as f}from"./nativeMpcDiscovery.js";m.register(new r(f)),o(i,t,1);

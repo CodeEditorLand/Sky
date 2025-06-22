@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["../../../Source/Application/Configuration/Live.ts"],
-  "sourcesContent": ["/**\n * @module Live (Configuration/Application)\n * @description Provides the \"live\" implementation of the IConfigurationService as a Layer.\n */\nimport { Layer } from \"effect\";\n\nimport type { IntegrationConfigurationProblem } from \"../../../Integration/Tauri/Configuration/Error.js\";\nimport type { IntegrationPathProblem } from \"../../../Integration/Tauri/Path/Error.js\";\nimport { Definition } from \"./Definition.js\";\nimport { Tag } from \"./Service.js\";\n\ntype LiveConfigurationError =\n\t| ConfigurationProblem\n\t| IntegrationPathProblem\n\t| IntegrationConfigurationProblem;\n\n/**\n * The live implementation Layer for the Configuration service.\n *\n * It uses `Layer.effect` to construct the service instance from its definition,\n * which is an `Effect` that resolves the application's settings on startup.\n * The Layer's error channel includes all possible errors from the underlying\n * integration services (like file system or path resolution errors).\n */\nconst Live: Layer.Layer<\n\timport(\"./Service.js\").Interface,\n\tLiveConfigurationError,\n\tnever\n> = Layer.effect(Tag, Definition);\n\nexport default Live;\n"],
-  "mappings": "AAIA,SAAS,aAAa;AAItB,SAAS,kBAAkB;AAC3B,SAAS,WAAW;AAepB,MAAM,OAIF,MAAM,OAAO,KAAK,UAAU;AAEhC,IAAO,eAAQ;",
-  "names": []
-}

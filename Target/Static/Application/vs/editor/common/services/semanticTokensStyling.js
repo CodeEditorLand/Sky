@@ -1,6 +1,1 @@
-import { createDecorator } from "../../../platform/instantiation/common/instantiation.js";
-const ISemanticTokensStylingService = createDecorator("semanticTokensStylingService");
-export {
-  ISemanticTokensStylingService
-};
-//# sourceMappingURL=semanticTokensStyling.js.map
+import{$nj as e}from"../../../platform/instantiation/common/instantiation.js";const o=e("semanticTokensStylingService");export{o as $Bsb};

@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["../../../../../../../../../../../../../../Dependency/Microsoft/Dependency/Editor/src/vs/workbench/contrib/chat/common/promptSyntax/codecs/base/frontMatterCodec/constants.ts"],
-  "sourcesContent": ["/*---------------------------------------------------------------------------------------------\r\n *  Copyright (c) Microsoft Corporation. All rights reserved.\r\n *  Licensed under the MIT License. See License.txt in the project root for license information.\r\n *--------------------------------------------------------------------------------------------*/\r\n\r\nimport { NewLine } from '../linesCodec/tokens/newLine.js';\r\nimport { CarriageReturn } from '../linesCodec/tokens/carriageReturn.js';\r\nimport { FormFeed, SpacingToken } from '../simpleCodec/tokens/tokens.js';\r\n\r\n/**\r\n * List of valid \"space\" tokens that are valid between different\r\n * records of a Front Matter header.\r\n */\r\nexport const VALID_INTER_RECORD_SPACING_TOKENS = Object.freeze([\r\n\tSpacingToken, CarriageReturn, NewLine, FormFeed,\r\n]);\r\n"],
-  "mappings": "AAKA,SAAS,eAAe;AACxB,SAAS,sBAAsB;AAC/B,SAAS,UAAU,oBAAoB;AAMhC,MAAM,oCAAoC,OAAO,OAAO;EAC9D;EAAc;EAAgB;EAAS;CACvC;",
-  "names": []
-}

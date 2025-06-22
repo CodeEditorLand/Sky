@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["../../../../../../../../../../../../../../Dependency/Microsoft/Dependency/Editor/src/vs/workbench/contrib/chat/common/promptSyntax/parsers/promptHeader/metadata/index.ts"],
-  "sourcesContent": ["/*---------------------------------------------------------------------------------------------\r\n *  Copyright (c) Microsoft Corporation. All rights reserved.\r\n *  Licensed under the MIT License. See License.txt in the project root for license information.\r\n *--------------------------------------------------------------------------------------------*/\r\n\r\nexport { PromptModeMetadata } from './mode.js';\r\nexport { PromptToolsMetadata } from './tools.js';\r\nexport { PromptDescriptionMetadata } from './description.js';\r\n"],
-  "mappings": "AAKA,SAAS,0BAA0B;AACnC,SAAS,2BAA2B;AACpC,SAAS,iCAAiC;",
-  "names": []
-}

@@ -1,13 +1,1 @@
-import { createDecorator } from "../../../../platform/instantiation/common/instantiation.js";
-var CellExecutionUpdateType;
-(function(CellExecutionUpdateType2) {
-  CellExecutionUpdateType2[CellExecutionUpdateType2["Output"] = 1] = "Output";
-  CellExecutionUpdateType2[CellExecutionUpdateType2["OutputItems"] = 2] = "OutputItems";
-  CellExecutionUpdateType2[CellExecutionUpdateType2["ExecutionState"] = 3] = "ExecutionState";
-})(CellExecutionUpdateType || (CellExecutionUpdateType = {}));
-const INotebookExecutionService = createDecorator("INotebookExecutionService");
-export {
-  CellExecutionUpdateType,
-  INotebookExecutionService
-};
-//# sourceMappingURL=notebookExecutionService.js.map
+import{$nj as u}from"../../../../platform/instantiation/common/instantiation.js";var o;!function(t){t[t.Output=1]="Output",t[t.OutputItems=2]="OutputItems",t[t.ExecutionState=3]="ExecutionState"}(o||(o={}));const m=u("INotebookExecutionService");export{m as $CK,o as CellExecutionUpdateType};

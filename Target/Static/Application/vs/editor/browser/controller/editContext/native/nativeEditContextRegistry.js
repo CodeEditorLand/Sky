@@ -1,1 +1,0 @@
-class s{constructor(){this.a=new Map}register(s,t){return this.a.set(s,t),{dispose:()=>{this.a.delete(s)}}}get(s){return this.a.get(s)}}const r=new s;export{r as $cdb};

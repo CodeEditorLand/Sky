@@ -1,1 +1,0 @@
-function n(n){return n&&"object"==typeof n&&"string"==typeof n.original&&"string"==typeof n.value}function o(n){return!!n&&void 0!==n.condition}export{n as $1n,o as $2n};

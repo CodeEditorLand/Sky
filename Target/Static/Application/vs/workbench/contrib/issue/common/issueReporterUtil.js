@@ -1,1 +1,0 @@
-import{$Jf as s}from"../../../../base/common/strings.js";function t(t){return t.endsWith(".git")&&(t=t.substr(0,t.length-4)),(t=s(t,"/")).endsWith("/new")&&(t=s(t,"/new")),t.endsWith("/issues")&&(t=s(t,"/issues")),t}export{t as $WBc};

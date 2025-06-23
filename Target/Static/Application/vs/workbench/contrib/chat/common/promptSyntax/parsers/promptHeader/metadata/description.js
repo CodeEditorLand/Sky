@@ -1,1 +1,0 @@
-import{$9Q as o}from"./base/string.js";import{FrontMatterRecord as s}from"../../../codecs/base/frontMatterCodec/tokens/index.js";const e="description";class a extends o{get recordName(){return e}constructor(t,r){super(e,t,r)}static isDescriptionRecord(t){return t instanceof s&&t.nameToken.text===e}}export{a as $aR};

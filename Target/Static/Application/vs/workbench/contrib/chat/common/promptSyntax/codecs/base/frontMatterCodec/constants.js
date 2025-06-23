@@ -1,1 +1,0 @@
-import{$OQ as o}from"../linesCodec/tokens/newLine.js";import{$PQ as r}from"../linesCodec/tokens/carriageReturn.js";import{FormFeed as e,SpacingToken as m}from"../simpleCodec/tokens/tokens.js";const i=Object.freeze([m,r,o,e]);export{i as $wR};

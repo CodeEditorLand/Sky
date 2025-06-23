@@ -1,1 +1,0 @@
-import{$_ib as a}from"../colorDetector.js";function o(t){const o=t.target;return!!o&&6===o.type&&o.detail.injectedText?.options.attachedData===a}export{o as $dnb};

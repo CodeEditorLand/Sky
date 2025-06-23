@@ -1,1 +1,0 @@
-import{$oe as t}from"./baseObservable.js";function n(e){return new s(e)}class s extends t{constructor(e){super(),this.a=e}get debugName(){return this.toString()}get(){return this.a}addObserver(e){}removeObserver(e){}log(){return this}toString(){return`Const: ${this.a}`}}export{n as $Ne};

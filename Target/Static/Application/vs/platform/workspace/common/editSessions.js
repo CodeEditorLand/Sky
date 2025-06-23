@@ -1,1 +1,0 @@
-import{$nj as e}from"../../instantiation/common/instantiation.js";const l=e("editSessionIdentityService");var o;!function(t){t[t.Complete=100]="Complete",t[t.Partial=50]="Partial",t[t.None=0]="None"}(o||(o={}));export{l as $PM,o as EditSessionIdentityMatch};

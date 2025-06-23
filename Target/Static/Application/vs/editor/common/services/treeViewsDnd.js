@@ -1,1 +1,0 @@
-class a{constructor(){this.a=new Map}removeDragOperationTransfer(s){if(s&&this.a.has(s)){const a=this.a.get(s);return this.a.delete(s),a}}addDragOperationTransfer(s,a){this.a.set(s,a)}}class s{constructor(s){this.identifier=s}}export{a as $wnb,s as $xnb};

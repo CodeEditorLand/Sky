@@ -1,1 +1,0 @@
-class t{constructor(){this.a={}}get value(){return{...this.a}}mark(t){this.a[t]||(this.a[t]=Date.now())}}export{t as $Xyb};

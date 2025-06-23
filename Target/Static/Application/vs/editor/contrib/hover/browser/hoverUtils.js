@@ -1,1 +1,0 @@
-import*as f from"../../../../base/browser/dom.js";function n(t,o,e){const r=f.$65(t);return!(o<r.left||o>r.left+r.width||e<r.top||e>r.top+r.height)}export{n as $olb};

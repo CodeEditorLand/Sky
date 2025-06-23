@@ -1,1 +1,0 @@
-function c(e,t){let c=0,n=0;const o=e.length;for(;n<o;){const o=e.charCodeAt(n);if(32===o)c++;else{if(9!==o)break;c=c-c%t+t}n++}return n===o?-1:c}export{c as $JG};

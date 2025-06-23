@@ -1,1 +1,0 @@
-import{localize as e}from"../../../../../nls.js";var t;(t||(t={})).Enabled="terminal.integrated.initialHint";const r={"terminal.integrated.initialHint":{restricted:!0,markdownDescription:e(12033,null),type:"boolean",default:!0}};export{r as $W3,t as TerminalInitialHintSettingId};

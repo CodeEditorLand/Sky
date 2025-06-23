@@ -1,1 +1,0 @@
-function s(e,r){const a=(r||"C:").toUpperCase();if("/"===e)return`${a}\\`;const t=e.match(/^\/([a-zA-Z])(\/.*)?$/);if(t){return`${t[1].toUpperCase()}:${t[2]?t[2].replace(/\//g,"\\"):"\\"}`}return e.replace(/\//g,"\\")}function a(e){return e.replace(/^[a-zA-Z]:\\/,(e=>`/${e[0].toLowerCase()}/`)).replace(/\\/g,"/")}export{s as $FZb,a as $GZb};

@@ -1,1 +1,0 @@
-class a{constructor(...t){this.a=new Map;for(const[s,a]of t)this.set(s,a)}set(t,s){const a=this.a.get(t);return this.a.set(t,s),a}has(t){return this.a.has(t)}get(t){return this.a.get(t)}}export{a as $lj};

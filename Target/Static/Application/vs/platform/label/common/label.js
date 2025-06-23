@@ -1,1 +1,0 @@
-import{$nj as O}from"../../instantiation/common/instantiation.js";const p=O("labelService");var M;!function(n){n[n.SHORT=0]="SHORT",n[n.MEDIUM=1]="MEDIUM",n[n.LONG=2]="LONG"}(M||(M={}));export{p as $2H,M as Verbosity};

@@ -1,6 +1,7 @@
 import { fileURLToPath } from "node:url";
 import { defineConfig } from "astro/config";
 import type { ViteDevServer } from "vite";
+import type { ViteStaticCopyOptions } from "vite-plugin-static-copy";
 
 export const { readFile } = await import("node:fs/promises");
 
@@ -41,7 +42,7 @@ export const Link = [
 
 	"@codeeditorland/output",
 
-	"@codeeditorland/wind",
+	// "@codeeditorland/wind",
 
 	"@codeeditorland/worker",
 ];
@@ -64,14 +65,8 @@ export const VSCodeOutput =
 export const KeyboardLayouts =
 	"vs/workbench/services/keybinding/browser/keyboardLayouts";
 
-export const Static = {
-	targets: [
-		{
-			src: "node_modules/@codeeditorland/wind/Target/*",
-
-			dest: "Static/Wind/",
-		},
-	],
+export const Static: ViteStaticCopyOptions = {
+	targets: [],
 
 	structured: false,
 };
@@ -112,10 +107,9 @@ if (Bundle) {
 	Static.targets.push(
 		...[
 			{
-				// TODO: TEST THIS
 				src: `node_modules/@codeeditorland/output/Target/Microsoft/VSCode/${On ? "vs/" : ""}nls.messages.js`,
 
-				dest: ApplicationStatic,
+				dest: `${ApplicationStatic}/${On ? "vs/" : ""}`,
 			},
 
 			{

@@ -1,1 +1,0 @@
-const c=" › ";export{c as $Vlc};

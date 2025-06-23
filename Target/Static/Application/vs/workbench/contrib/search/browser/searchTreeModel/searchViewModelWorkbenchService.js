@@ -1,1 +1,0 @@
-import{$nj as e}from"../../../../../platform/instantiation/common/instantiation.js";const o=e("searchViewModelWorkbenchService");export{o as $mcc};

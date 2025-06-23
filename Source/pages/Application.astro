@@ -17,254 +17,121 @@ const Site = Astro.site;
 
 const Worker = `/Worker.js?BASE_REMOTE=${encodeURIComponent(Site?.toString() ?? Astro.url.origin)}`;
 
-const Default = {
-	// --- Core Local Configuration ---
-	// Explicitly set to null to indicate no remote server authority
-	// @ts-expect-error
-	remoteAuthority: null,
-
-	// Standard base path for web assets
-	// @ts-expect-error
-	serverBasePath: null,
-
-	// No connection token needed for local
-	// @ts-expect-error
-	connectionToken: null,
-
-	// Assume this is the initial load (adjust dynamically if needed)
-	// isInitialStartup: true,
-
-	// --- Explicitly Disable/Exclude Remote/Web Features ---
-	// Do NOT provide a WebSocket factory
-	// @ts-expect-error
-	webSocketFactory: null,
-
-	// Do NOT provide a resource URI provider (used with websockets)
-	// resourceUriProvider: undefined,
-
-	// Do NOT provide a remote resource provider
-	// remoteResourceProvider: undefined,
-
-	// No remote tunnels needed locally
-	// tunnelProvider: undefined,
-
-	// Not needed for local auth (if any)
-	// codeExchangeProxyEndpoints: undefined,
-
-	// No cloud edit session initially
-	// editSessionId: undefined,
-
-	// --- Workspace & Profile ---
-	// Let the backend (Mountain via initData/RPC) determine the workspace after load
-	// workspaceProvider: undefined,
-
-	// Keep workspace trust enabled for testing the feature flow
-	enableWorkspaceTrust: true,
-
-	// Let the backend manage profiles
-	// profile: undefined,
-
-	// No profile preview
-	// profileToPreview: undefined,
-
-	// --- Features & Services (Let Backend/Shims Handle) ---
-	// Let Cocoon's shim provide the proxy to Mountain's native storage
-	// secretStorageProvider: undefined,
-
-	// Disable settings sync for MVP simplicity
-	settingsSyncOptions: { enabled: false },
-
-	// Rely on extensions or backend for auth if needed later
-	// authenticationProviders: undefined,
-
-	// Rely on Mountain's native protocol handler
-	// urlCallbackProvider: undefined,
-
-	// --- Extensions ---
-	// Don't force extra built-ins for now
-	// additionalBuiltinExtensions: undefined,
-
-	// Don't force enable specific extensions for now
-	// enabledExtensions: undefined,
-
-	// --- Branding & UI ---
-	productConfiguration: {
-		// Identify as desktop-like, might influence some UI/feature paths
-		// Important to suggest non-web behavior
-		embedderIdentifier: Browser ? "web" : "desktop",
-
-		// Optional: Branding
-		nameShort: "FIDDEE",
-
-		// Optional: Branding
-		nameLong: "FIDDEE",
-
-		// Optional: Branding
-		applicationName: "fiddee",
-
-		// Add other product overrides if needed
-	},
-
-	// Use default window indicator
-	// windowIndicator: undefined,
-
-	// Use default theme initially
-	// initialColorTheme: undefined,
-
-	// No custom banner
-	// welcomeBanner: undefined,
-
-	// Use default layout
-	// defaultLayout: undefined,
-
-	// No extra default settings from embedder
-	// configurationDefaults: undefined,
-
-	// --- Security & Misc ---
-	// No extra trusted domains initially
-	// additionalTrustedDomains: undefined,
-
-	// No special opener prefixes initially
-	// openerAllowedExternalUrlPrefixes: undefined,
-
-	// No custom telemetry properties initially
-	// resolveCommonTelemetryProperties: undefined,
-
-	// No extra embedder commands initially
-	// commands: undefined,
-
-	// No specific message ports needed for Cocoon/Vine
-	// messagePorts: undefined,
-
-	// Keep this from your example, might be harmlessly ignored
-	// callbackRoute: "/oss-dev/callback",
-
-	// --- Development ---
-	developmentOptions: {
-		// Set to Trace (1) or Debug (2) for maximum insight during development
-		logLevel: On ? 2 : 0,
-
-		enableSmokeTestDriver: On,
-
-		// Only set if running integration tests
-		// extensionTestsPath: undefined,
-
-		// Only set if loading specific dev extensions
-		// extensions: undefined,
-	},
-
-	// --- Update/Quality ---
-	// updateProvider: undefined,
-
-	// productQualityChangeHandler: undefined,
-} satisfies IWorkbenchConstructionOptions as unknown as IWorkbenchConstructionOptions;
-
 const Bust = (Base: string): string =>
 	`${Base}${Base.includes("?") ? "&" : "?"}Time=${encodeURIComponent(Date.now())}`;
-
-console.log(Bundle);
 ---
 
 <Layout>
 	<meta
 		http-equiv="Content-Security-Policy"
-		content="
-				default-src
-					'none'
-				;
+		content={((
+			Configuration: Record<
+				string,
+				string[] | boolean | null | undefined
+			>,
+		): string => {
+			const Policy: string[] = [];
 
-				
-				img-src
-					'self'
-					data:
-					blob:
-					vscode-remote-resource:
-					vscode-managed-remote-resource:
-					https:
-				;
+			for (const Directive in Configuration) {
+				if (
+					Object.prototype.hasOwnProperty.call(
+						Configuration,
+						Directive,
+					)
+				) {
+					const Value = Configuration[Directive];
 
-				
-				manifest-src
-					'self'
-				;
+					if (
+						Value === null ||
+						Value === undefined ||
+						Value === false
+					) {
+						continue;
+					}
 
-				
-				media-src
-					'self'
-				;
+					if (Value === true) {
+						Policy.push(Directive);
+					} else if (Array.isArray(Value) && Value.length > 0) {
+						Policy.push(`${Directive} ${Value.join(" ")}`);
+					}
+				}
+			}
 
-				
-				frame-src
-					'self'
-					vscode-webview:
-				;
-
-				
-				script-src
-					'self'
-					'unsafe-inline'
-					'unsafe-eval'
-					blob:
-				;
-
-				
-				style-src
-					'self'
-					'unsafe-inline'
-				;
-
-				
-				connect-src
-					'self'
-					wss://tauri.localhost
-					https:
-				;
-
-				
-				font-src
-					'self'
-					vscode-remote-resource:
-					vscode-managed-remote-resource:
-				;
-
-				
-				block-all-mixed-content
-				;
-
-				
-				upgrade-insecure-requests
-				;
-
-				
-				require-trusted-types-for
-					'script'
-				;
-
-				
-				trusted-types
-					WorkerApplication
-					amdLoader
-					cellRendererEditorText
-					defaultWorkerFactory
-					diffEditorWidget
-					diffReview
-					domLineBreaksComputer
-					dompurify
-					editorGhostText
-					editorViewLayer
-					notebookRenderer
-					stickyScrollViewLayer
-					tokenizeToString
-					notebookChatEditController
-				;
-
-		"
+			return Policy.join("; ");
+		})({
+			"default-src": ["'none'"],
+			"img-src": [
+				"'self'",
+				"data:",
+				"blob:",
+				"vscode-remote-resource:",
+				"vscode-managed-remote-resource:",
+				"https:",
+			],
+			"manifest-src": ["'self'"],
+			"media-src": ["'self'"],
+			"frame-src": ["'self'", "vscode-webview:"],
+			"script-src": [
+				"'self'",
+				"'unsafe-inline'",
+				"'unsafe-eval'",
+				"blob:",
+			],
+			"style-src": ["'self'", "'unsafe-inline'"],
+			"connect-src": ["'self'", "wss://tauri.localhost", "https:"],
+			"font-src": [
+				"'self'",
+				"vscode-remote-resource:",
+				"vscode-managed-remote-resource:",
+			],
+			"require-trusted-types-for": ["'script'"],
+			"trusted-types": [
+				"WorkerApplication",
+				"amdLoader",
+				"cellRendererEditorText",
+				"defaultWorkerFactory",
+				"diffEditorWidget",
+				"diffReview",
+				"domLineBreaksComputer",
+				"dompurify",
+				"editorGhostText",
+				"editorViewLayer",
+				"notebookRenderer",
+				"stickyScrollViewLayer",
+				"tokenizeToString",
+				"notebookChatEditController",
+			],
+			// Standalone directives are set to true
+			"block-all-mixed-content": true,
+			"upgrade-insecure-requests": true,
+		})}
 		slot="Meta"
 	/>
 
 	<meta
 		id="vscode-workbench-web-configuration"
-		data-settings={JSON.stringify(Default)}
+		data-settings={JSON.stringify({
+			// @ts-expect-error
+			remoteAuthority: null,
+			// @ts-expect-error
+			serverBasePath: null,
+			// @ts-expect-error
+			connectionToken: null,
+			// @ts-expect-error
+			webSocketFactory: null,
+			enableWorkspaceTrust: true,
+			settingsSyncOptions: { enabled: false },
+			productConfiguration: {
+				embedderIdentifier: Browser ? "web" : "desktop",
+				nameShort: "FIDDEE",
+				nameLong: "FIDDEE",
+				applicationName: "fiddee",
+			},
+			developmentOptions: {
+				logLevel: On ? 2 : 0,
+				enableSmokeTestDriver: On,
+			},
+		} satisfies IWorkbenchConstructionOptions as unknown as IWorkbenchConstructionOptions)}
 		slot="Meta"
 	/>
 

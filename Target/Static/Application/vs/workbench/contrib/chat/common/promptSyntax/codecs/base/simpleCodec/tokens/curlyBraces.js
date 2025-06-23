@@ -1,1 +1,0 @@
-import{$oQ as t}from"./simpleToken.js";class r extends t{static{this.symbol="{"}get text(){return r.symbol}toString(){return`left-curly-brace${this.range}`}}class e extends t{static{this.symbol="}"}get text(){return e.symbol}toString(){return`right-curly-brace${this.range}`}}export{r as $HQ,e as $IQ};

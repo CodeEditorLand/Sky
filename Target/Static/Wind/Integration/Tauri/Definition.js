@@ -1,1 +1,0 @@
-import{emit as i,listen as a}from"@tauri-apps/api/event";import{invoke as o}from"@tauri-apps/api/tauri";import{Effect as e}from"../../effect";const s=e.sync(()=>({Invoke:(r,t)=>e.tryPromise({try:()=>o(r,t),catch:n=>n}),Listen:(r,t)=>e.tryPromise({try:()=>a(r,t),catch:n=>n}),Emit:(r,t)=>e.tryPromise({try:()=>i(r,t),catch:n=>n})}));var f=s;export{f as default};

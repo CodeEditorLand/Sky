@@ -1,1 +1,0 @@
-window._LOAD_CSS_WORKER=e=>{const t=e+(e.includes("?")?"&":"?")+"Skip=Intercept";try{if(document.querySelector(`link[href="${t}"]`))return;const e=document.createElement("link");e.rel="stylesheet",e.type="text/css",e.href=t,e.onerror=t=>{e.remove()},e.onload=()=>{},document.head.appendChild(e)}catch{}};var t={};export{t as default};

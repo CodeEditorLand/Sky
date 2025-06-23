@@ -1,1 +1,0 @@
-class t{constructor(){this.a=[]}register(t){this.a.push(t)}getAll(){return this.a}}const e=new t;export{e as $oic};

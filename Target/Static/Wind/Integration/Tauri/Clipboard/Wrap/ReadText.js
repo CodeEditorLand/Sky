@@ -1,1 +1,0 @@
-import{readText as o}from"@tauri-apps/api/clipboard";import{FromAsync as r}from"../../../../Effect/Produce.js";const t=o=>new IntegrationClipboardProblem({cause:o,operation:"ReadText"}),m=r(o,t,{operation:"ReadText"});export{m as ReadText};

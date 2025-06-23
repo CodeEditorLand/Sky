@@ -1,1 +1,0 @@
-var u;function r(t){const n=[];let u=0;for(let r=0;r<t.length-1;r++)(r-u+1>=50||""===t[r+1])&&(n.push(t.substring(u,r+1)),u=r+1,r++);return u!==t.length&&n.push(t.substring(u)),n}!function(t){t[t.WriteMaxChunkSize=50]="WriteMaxChunkSize"}(u||(u={}));export{r as $Dw};

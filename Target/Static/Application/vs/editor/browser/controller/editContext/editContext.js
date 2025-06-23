@@ -1,1 +1,0 @@
-import{$ubb as b}from"../../view/viewPart.js";class r extends b{}export{r as $0cb};

@@ -1,1 +1,0 @@
-const o=globalThis.vscode,e=o.ipcRenderer,t=o.ipcMessagePort,s=o.webFrame,c=o.process,$=o.context,r=o.webUtils;export{e as $g$,t as $h$,s as $i$,c as $j$,$ as $k$,r as $l$};

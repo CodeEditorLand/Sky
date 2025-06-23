@@ -1,1 +1,0 @@
-import{Layer as r}from"../../effect";import{Definition as o}from"./Definition.js";import{Tag as t}from"./Service.js";const i=r.effect(t,o);var f=i;export{f as default};

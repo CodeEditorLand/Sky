@@ -1,1 +1,0 @@
-import{$nR as r}from"./metadata/applyTo.js";import{$JR as a}from"./headerBase.js";class p extends a{g(a){if(r.isApplyToRecord(a)){const s=new r(a,this.languageId);return this.f.push(...s.validate()),this.b.applyTo=s,!0}return!1}}export{p as $oR};

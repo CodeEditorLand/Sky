@@ -1,1 +1,0 @@
-const y=new Map,r=(e,r)=>{y.set(e,r)};export{y as LayerMap,r as RegisterService};

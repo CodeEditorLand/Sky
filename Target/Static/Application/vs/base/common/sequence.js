@@ -1,1 +1,0 @@
-import{$df as t}from"./event.js";class l{constructor(){this.elements=[],this.a=new t,this.onDidSplice=this.a.event}splice(t,e,s=[]){this.elements.splice(t,e,...s),this.a.fire({start:t,deleteCount:e,toInsert:s})}}export{l as $Qb};

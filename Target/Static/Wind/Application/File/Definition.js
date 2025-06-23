@@ -1,1 +1,0 @@
-import{Effect as t}from"../../effect";import{Schemas as n}from"vs/base/common/network.js";import{FileService as c}from"vs/platform/files/common/fileService.js";import{Log as m}from"../Log.js";const f=t.gen(function*(e){const i=yield*e(m.Tag),o=yield*e(FileSystemProvider.Tag),r=new c(i);return r.registerProvider(n.file,o),r});var v=f;export{v as default};

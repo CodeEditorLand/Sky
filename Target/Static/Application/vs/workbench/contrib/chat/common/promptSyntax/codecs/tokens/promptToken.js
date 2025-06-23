@@ -1,1 +1,0 @@
-import{$mQ as e}from"../base/baseToken.js";class r extends e{}export{r as $RR};

@@ -1,1 +1,0 @@
-import{$WK as o}from"../../../common/contributions.js";import{$jI as r}from"../../../../platform/actions/common/actions.js";import{$Awc as m,$Bwc as $}from"./languageStatus.js";o(m.Id,m,3),r($);

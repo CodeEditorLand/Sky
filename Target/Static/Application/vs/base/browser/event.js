@@ -1,1 +1,0 @@
-import{$df as r}from"../common/event.js";class a{get event(){return this.a.event}constructor(e,t,s){const n=e=>this.a.fire(e);this.a=new r({onWillAddFirstListener:()=>e.addEventListener(t,n,s),onDidRemoveLastListener:()=>e.removeEventListener(t,n,s)})}dispose(){this.a.dispose()}}export{a as $$7};

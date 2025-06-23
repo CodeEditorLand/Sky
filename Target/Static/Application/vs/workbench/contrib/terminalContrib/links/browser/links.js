@@ -1,1 +1,0 @@
-import{$nj as c}from"../../../../../platform/instantiation/common/instantiation.js";const a=c("terminalLinkProviderService");var r;!function(r){r.LocalFile="LocalFile",r.LocalFolderOutsideWorkspace="LocalFolderOutsideWorkspace",r.LocalFolderInWorkspace="LocalFolderInWorkspace",r.Search="Search",r.Url="Url"}(r||(r={}));export{a as $AZb,r as TerminalBuiltinLinkType};

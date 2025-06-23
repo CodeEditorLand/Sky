@@ -1,1 +1,0 @@
-class h{constructor(t){this.d=t,this.a=!1}get hasValue(){return this.a}get value(){if(!this.a)try{this.b=this.d()}catch(t){this.c=t}finally{this.a=!0}if(this.c)throw this.c;return this.b}get rawValue(){return this.b}}export{h as $vf};

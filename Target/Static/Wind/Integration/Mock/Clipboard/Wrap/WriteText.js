@@ -1,1 +1,0 @@
-import{Effect as e}from"../../../../effect";const i=t=>e.logInfo(`MockWriteText received: "${t}"`).pipe(e.asUnit);export{i as MockWriteText};

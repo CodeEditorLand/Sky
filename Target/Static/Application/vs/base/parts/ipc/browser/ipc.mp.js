@@ -1,1 +1,0 @@
-import{$8m as r}from"../common/ipc.mp.js";class n extends r{constructor(r,s){super(r,s)}}export{n as $n$};

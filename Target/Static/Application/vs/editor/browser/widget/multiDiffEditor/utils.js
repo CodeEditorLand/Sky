@@ -1,1 +1,0 @@
-import{$am as s}from"../../../../base/common/actions.js";class u extends s{constructor(s){super(),this.a=s}u(s,r){const t=this.a();return super.u(s,t)}}export{u as $rgb};

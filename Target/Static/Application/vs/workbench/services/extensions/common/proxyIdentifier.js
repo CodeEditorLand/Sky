@@ -1,1 +1,0 @@
-class i{static{this.count=0}constructor(s){this._proxyIdentifierBrand=void 0,this.sid=s,this.nid=++i.count}}const s=[];function r(t){const n=new i(t);return s[n.nid]=n,n}function e(t){return s[t].sid}class o{constructor(s){this.value=s}}export{i as $hX,r as $iX,e as $jX,o as $kX};

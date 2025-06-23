@@ -1,1 +1,0 @@
-const e=globalThis.performance.now.bind(globalThis.performance);class s{static create(t){return new s(t)}constructor(s){this.c=!1===s?Date.now:e,this.a=this.c(),this.b=-1}stop(){this.b=this.c()}reset(){this.a=this.c(),this.b=-1}elapsed(){return-1!==this.b?this.b-this.a:this.c()-this.a}}export{s as $0e};

@@ -1,1 +1,0 @@
-import{$lR as e}from"./promptHeader.js";class r extends e{}export{r as $mR};

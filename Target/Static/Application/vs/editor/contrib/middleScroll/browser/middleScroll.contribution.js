@@ -1,1 +1,0 @@
-import{$kab as m}from"../../../browser/editorExtensions.js";import{$5rb as r}from"./middleScrollController.js";m(r.ID,r,2);

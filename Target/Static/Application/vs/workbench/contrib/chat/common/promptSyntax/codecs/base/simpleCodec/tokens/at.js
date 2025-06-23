@@ -1,1 +1,0 @@
-import{$oQ as r}from"./simpleToken.js";class t extends r{static{this.symbol="@"}get text(){return t.symbol}toString(){return`at${this.range}`}}export{t as At};

@@ -1,1 +1,0 @@
-class e{constructor(){this.a=0,this.b()}b(){}debug(...e){new Date}}const o=new e;function n(...e){o.debug(...e)}export{n as $5Bb};

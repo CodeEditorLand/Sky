@@ -1,0 +1,135 @@
+---
+/**
+ * @module Wind
+ * @description The main Astro layout for bootstrapping the 'Wind' workbench application.
+ * This page sets up the necessary HTML structure, metadata, and Content Security Policy,
+ * and then loads the essential scripts to start the application.
+ */
+
+import type { IWorkbenchConstructionOptions } from "vs/workbench/browser/web.api.js";
+
+import Layout from "../Function/Markup/Base.astro";
+
+const IsDevelopment =
+	process.env["NODE_ENV"] === "development" ||
+	process.env["TAURI_ENV_DEBUG"] === "true";
+
+const Bust = (BasePath: string): string =>
+	`${BasePath}${BasePath.includes("?") ? "&" : "?"}Time=${Date.now()}`;
+
+const WindEntryPoint = "/Target/Application/DesktopMain.js";
+const BridgeEntryPoint = "/Target/Bridge.js";
+---
+
+<Layout>
+	<meta
+		http-equiv="Content-Security-Policy"
+		content={((
+			Configuration: Record<
+				string,
+				string[] | boolean | null | undefined
+			>,
+		): string => {
+			const Policy: string[] = [];
+
+			for (const Directive in Configuration) {
+				if (
+					Object.prototype.hasOwnProperty.call(
+						Configuration,
+						Directive,
+					)
+				) {
+					const Value = Configuration[Directive];
+
+					if (
+						Value === null ||
+						Value === undefined ||
+						Value === false
+					) {
+						continue;
+					}
+
+					if (Value === true) {
+						Policy.push(Directive);
+					} else if (Array.isArray(Value) && Value.length > 0) {
+						Policy.push(`${Directive} ${Value.join(" ")}`);
+					}
+				}
+			}
+
+			return Policy.join("; ");
+		})({
+			"default-src": ["'none'"],
+			"img-src": [
+				"'self'",
+				"data:",
+				"blob:",
+				"vscode-remote-resource:",
+				"vscode-managed-remote-resource:",
+				"https:",
+			],
+			"manifest-src": ["'self'"],
+			"media-src": ["'self'"],
+			"frame-src": ["'self'", "vscode-webview:"],
+			"script-src": [
+				"'self'",
+				"'unsafe-inline'",
+				"'unsafe-eval'",
+				"blob:",
+			],
+			"style-src": ["'self'", "'unsafe-inline'"],
+			"connect-src": ["'self'", "wss://tauri.localhost", "https:"],
+			"font-src": [
+				"'self'",
+				"vscode-remote-resource:",
+				"vscode-managed-remote-resource:",
+			],
+			"require-trusted-types-for": ["'script'"],
+			"trusted-types": [
+				"WorkerApplication",
+				"amdLoader",
+				"cellRendererEditorText",
+				"defaultWorkerFactory",
+				"diffEditorWidget",
+				"diffReview",
+				"domLineBreaksComputer",
+				"dompurify",
+				"editorGhostText",
+				"editorViewLayer",
+				"notebookRenderer",
+				"stickyScrollViewLayer",
+				"tokenizeToString",
+				"notebookChatEditController",
+			],
+			// Standalone directives are set to true
+			"block-all-mixed-content": true,
+			"upgrade-insecure-requests": true,
+		})}
+		slot="Meta"
+	/>
+
+	<meta
+		id="vscode-workbench-web-configuration"
+		data-settings={JSON.stringify({
+			remoteAuthority: "",
+			connectionToken: "",
+			productConfiguration: {
+				embedderIdentifier: "desktop",
+				nameShort: "Wind",
+				nameLong: "Wind Workbench",
+				applicationName: "wind",
+			},
+			developmentOptions: {
+				logLevel: IsDevelopment ? 2 : 0, // 2 = trace, 0 = info
+			},
+		} satisfies Partial<IWorkbenchConstructionOptions>)}
+		slot="Meta"
+	/>
+
+	<Fragment slot="Head">
+		<script is:inline type="module" src={Bust(BridgeEntryPoint)}></script>
+
+		<script is:inline type="module" src={Bust(WindEntryPoint)} defer
+		></script>
+	</Fragment>
+</Layout>

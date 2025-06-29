@@ -23,7 +23,7 @@
  * This script effectively acts as a compatibility layer, enabling the VS Code workbench
  * frontend to run within a Tauri-managed webview environment by providing the necessary
  * "Electron-like" globals. It must faithfully implement the contract defined by VS Code's
- * `IMainWindowSandboxGlobals` interface (found in `vs/base/parts/sandbox/electron-sandbox/globals.ts`).
+ * `IMainWindowSandboxGlobals` interface (found in `vs/base/parts/sandbox/electron-browser/globals.ts`).
  *
  * Key communication channels with Mountain (Tauri Rust backend):
  * - `invoke("mountain_get_workbench_configuration")`: Fetches the essential startup

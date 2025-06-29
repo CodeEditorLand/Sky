@@ -146,7 +146,7 @@ if (Bundle) {
 Browser
 	? External.push(
 			...[
-				"@codeeditorland/output/Target/Microsoft/VSCode/vs/code/electron-sandbox/workbench/workbench.js",
+				"@codeeditorland/output/Target/Microsoft/VSCode/vs/code/electron-browser/workbench/workbench.js",
 			],
 		)
 	: {};

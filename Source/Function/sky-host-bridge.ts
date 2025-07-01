@@ -51,9 +51,9 @@ import {
 } from "@tauri-apps/api/event";
 import { invoke } from "@tauri-apps/api/tauri";
 // --- VS Code Utility Imports (Bundled with Sky or from a shared location) ---
-import { URI } from "vs/base/common/uri.js";
-import { generateUuid } from "vs/base/common/uuid.js";
-import { LogLevel } from "vs/platform/log/common/log.js";
+import { URI } from "@codeeditorland/output/Target/Microsoft/VSCode/vs/base/common/uri.js";
+import { generateUuid } from "@codeeditorland/output/Target/Microsoft/VSCode/vs/base/common/uuid.js";
+import { LogLevel } from "@codeeditorland/output/Target/Microsoft/VSCode/vs/platform/log/common/log.js";
 
 // --- Type Definitions (Shim Interfaces) ---
 interface IpcRendererEventShim {

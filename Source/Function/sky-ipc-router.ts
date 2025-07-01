@@ -16,7 +16,7 @@
 
 import { EventEmitter } from "events";
 // For logging
-import type { ILogService } from "vs/platform/log/common/log";
+import type { ILogService } from "@codeeditorland/output/Target/Microsoft/VSCode/vs/platform/log/common/log";
 
 // Assuming skyToCocoonMessageBus is exported
 import { ipcApiInstance, skyToCocoonMessageBus } from "./cocoon-ipc";

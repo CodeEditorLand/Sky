@@ -4,8 +4,6 @@
 	"compilerOptions": {
 		"baseUrl": "./",
 
-		"emitDeclarationOnly": false,
-
 		"emitDecoratorMetadata": true,
 
 		"experimentalDecorators": true,
@@ -14,13 +12,7 @@
 
 		"moduleResolution": "Bundler",
 
-		"noEmit": true,
-
 		"outDir": "Target",
-
-		"paths": {
-			"vs/*": ["../../Dependency/Microsoft/Dependency/Editor/src/vs/*"]
-		},
 
 		"plugins": [
 			{
@@ -28,7 +20,7 @@
 			}
 		],
 
-		"rootDirs": [".", "../../Dependency/Microsoft/Dependency/Editor/src/"],
+		"rootDir": ".",
 
 		"types": ["astro/client", "astro/env"]
 	},

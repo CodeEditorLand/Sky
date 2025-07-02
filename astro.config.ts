@@ -9,6 +9,8 @@ export const Bundle = process.env["Bundle"] === "true";
 
 export const Browser = process.env["Browser"] === "true";
 
+export const Dependency = process.env["Dependency"] ?? "CodeEditorLand/Editor";
+
 export const Tauri = typeof process.env["TAURI_ENV_ARCH"] !== "undefined";
 
 export const Platform = ((Platform) => {
@@ -107,7 +109,7 @@ if (Bundle) {
 	Static.targets.push(
 		...[
 			{
-				src: `node_modules/@codeeditorland/output/Target/Microsoft/VSCode/${On ? "vs/" : ""}nls.messages.js`,
+				src: `node_modules/@codeeditorland/output/Target/${Dependency}/${On ? "vs/" : ""}nls.messages.js`,
 
 				dest: `${ApplicationStatic}/${On ? "vs/" : ""}`,
 			},
@@ -146,7 +148,7 @@ if (Bundle) {
 Browser
 	? External.push(
 			...[
-				"@codeeditorland/output/Target/Microsoft/VSCode/vs/code/electron-browser/workbench/workbench.js",
+				"@codeeditorland/output/vs/code/electron-browser/workbench/workbench.js",
 			],
 		)
 	: {};

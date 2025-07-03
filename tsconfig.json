@@ -4,6 +4,8 @@
 	"compilerOptions": {
 		"baseUrl": "./",
 
+		"composite": true,
+
 		"emitDecoratorMetadata": true,
 
 		"experimentalDecorators": true,

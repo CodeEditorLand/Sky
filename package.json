@@ -36,12 +36,12 @@
 		"@playform/inline": "0.1.2",
 		"astro": "5.11.0",
 		"deepmerge-ts": "7.1.5",
-		"dotenv": "17.1.0",
+		"dotenv": "17.2.0",
 		"typescript": "5.8.3",
 		"vite": "7.0.3",
 		"vite-plugin-static-copy": "3.1.0",
 		"vite-plugin-top-level-await": "1.5.0",
-		"zod": "3.25.76"
+		"zod": "4.0.2"
 	},
 	"devDependencies": {
 		"@astrojs/ts-plugin": "1.10.4",

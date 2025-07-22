@@ -34,13 +34,21 @@
 		"@playform/build": "0.2.5",
 		"@playform/compress": "0.2.0",
 		"@playform/inline": "0.1.2",
+<<<<<<< HEAD
 		"astro": "5.11.2",
+=======
+		"astro": "5.12.0",
+>>>>>>> 966ae64f9c9e11193031b41b2b1fc06d843307ed
 		"deepmerge-ts": "7.1.5",
 		"dotenv": "17.2.0",
 		"typescript": "5.8.3",
 		"vite": "7.0.5",
 		"vite-plugin-static-copy": "3.1.1",
+<<<<<<< HEAD
 		"vite-plugin-top-level-await": "1.5.0",
+=======
+		"vite-plugin-top-level-await": "1.6.0",
+>>>>>>> 966ae64f9c9e11193031b41b2b1fc06d843307ed
 		"zod": "4.0.5"
 	},
 	"devDependencies": {

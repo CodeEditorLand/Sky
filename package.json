@@ -34,7 +34,7 @@
 		"@playform/build": "0.2.5",
 		"@playform/compress": "0.2.0",
 		"@playform/inline": "0.1.2",
-		"astro": "5.13.7",
+		"astro": "5.13.8",
 		"deepmerge-ts": "7.1.5",
 		"dotenv": "17.2.2",
 		"typescript": "5.9.2",

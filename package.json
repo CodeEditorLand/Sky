@@ -45,7 +45,7 @@
 	},
 	"devDependencies": {
 		"@astrojs/ts-plugin": "1.10.6",
-		"ulid": "3.0.1"
+		"ulid": "3.0.2"
 	},
 	"publishConfig": {
 		"access": "restricted",

@@ -32,7 +32,7 @@
 		"@codeeditorland/output": "0.0.1",
 		"@codeeditorland/worker": "0.0.1",
 		"@playform/build": "0.2.6",
-		"@playform/compress": "0.2.0",
+		"@playform/compress": "0.2.1",
 		"@playform/inline": "0.1.2",
 		"astro": "5.16.8",
 		"deepmerge-ts": "7.1.5",

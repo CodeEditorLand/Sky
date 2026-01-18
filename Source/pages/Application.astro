@@ -1,5 +1,5 @@
 ---
-import type { IWorkbenchConstructionOptions } from "@codeeditorland/output/vs/workbench/browser/web.api.js";
+// import type { IWorkbenchConstructionOptions } from "@codeeditorland/output/vs/workbench/browser/web.api.js";
 
 import Layout from "../Function/Markup/Base.astro";
 import BrowserWorkbench from "../Workbench/Browser.astro";
@@ -126,7 +126,8 @@ const Bust = (Base: string): string =>
 				logLevel: On ? 2 : 0,
 				enableSmokeTestDriver: On,
 			},
-		} satisfies IWorkbenchConstructionOptions as unknown as IWorkbenchConstructionOptions)}
+			// } satisfies IWorkbenchConstructionOptions as unknown as IWorkbenchConstructionOptions)}
+		})}
 		slot="Meta"
 	/>
 
@@ -155,9 +156,9 @@ const Bust = (Base: string): string =>
 		Bundle ? (
 			<Fragment>
 				<script>
-					import "@codeeditorland/Worker/Target/Worker/CSS/Load.js";
-					import "@codeeditorland/Worker/Target/Worker/Policy.js";
-					import "@codeeditorland/Worker/Target/Worker/Register.js";
+					import "@codeeditorland/worker/Target/Worker/CSS/Load.js";
+					import "@codeeditorland/worker/Target/Worker/Policy.js";
+					import "@codeeditorland/worker/Target/Worker/Register.js";
 				</script>
 
 				<script

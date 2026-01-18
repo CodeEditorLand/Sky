@@ -109,7 +109,7 @@ if (Bundle) {
 	Static.targets.push(
 		...[
 			{
-				src: `node_modules/@codeeditorland/output/Target/${Dependency}/${On ? "vs/" : ""}nls.messages.js`,
+				src: `node_modules/@codeeditorland/output/Target/${Dependency}/${On ? "vs/" : ""}${On ? "nls.js" : "nls.messages.js"}`,
 
 				dest: `${ApplicationStatic}/${On ? "vs/" : ""}`,
 			},

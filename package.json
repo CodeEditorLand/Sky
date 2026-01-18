@@ -9,7 +9,7 @@
 		"codeeditorland",
 		"playform"
 	],
-	"homepage": "https://GitHub.Com/CodeEditorLand/Sky#readme",
+	"homepage": "https://GitHub.Com/CodeEditorLand/Sky?tab=readme-ov-file",
 	"bugs": {
 		"url": "https://GitHub.Com/CodeEditorLand/Sky/issues"
 	},
@@ -31,17 +31,17 @@
 		"@codeeditorland/common": "0.0.6",
 		"@codeeditorland/output": "0.0.1",
 		"@codeeditorland/worker": "0.0.1",
-		"@playform/build": "0.2.5",
-		"@playform/compress": "0.2.0",
+		"@playform/build": "0.2.6",
+		"@playform/compress": "0.2.1",
 		"@playform/inline": "0.1.2",
-		"astro": "5.16.6",
+		"astro": "5.16.11",
 		"deepmerge-ts": "7.1.5",
 		"dotenv": "17.2.3",
 		"typescript": "5.9.3",
-		"vite": "7.3.0",
+		"vite": "7.3.1",
 		"vite-plugin-static-copy": "3.1.4",
 		"vite-plugin-top-level-await": "1.6.0",
-		"zod": "4.2.1"
+		"zod": "4.3.5"
 	},
 	"devDependencies": {
 		"@astrojs/ts-plugin": "1.10.6",

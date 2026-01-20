@@ -6,11 +6,11 @@
 	</head>
 	<body>
 		<script>
-			// @ts-expect-error
-			window.__TAURI_ISOLATION_HOOK__ = (payload: any) => {
-				console.log("hook", payload);
+			/// <reference path="../env.d.ts" />
+			window.__TAURI_ISOLATION_HOOK__ = (Payload: any) => {
+				console.log(`__TAURI_ISOLATION_HOOK__: ${Payload}`);
 
-				return payload;
+				return Payload;
 			};
 		</script>
 	</body>

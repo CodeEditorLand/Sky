@@ -1,158 +1,46 @@
+/*---------------------------------------------------------------------------------------------
+ * Sky Configuration - Wind Package
+ * --------------------------------------------------------------------------------------------
+ * This is the primary configuration file for the Sky webview frontend (Astro/Vite).
+ *
+ * Responsibilities:
+ * 1. Configure the Astro build framework and integrations (Inline, Compress).
+ * 2. Configure the underlying Vite bundler (Rollup options, Minification, Sourcemaps).
+ * 3. Define static asset copying rules via `vite-plugin-static-copy` (mapped in Debug.ts).
+ * 4. Manage development server settings (HMR, SSL Certificates, Port).
+ *
+ * This configuration delegates all environment resolution, path calculation, and
+ * build context logging to `Element/Sky/Source/Function/Debug.ts`.
+ *--------------------------------------------------------------------------------------------*/
+
 import { fileURLToPath } from "node:url";
+
 import { defineConfig } from "astro/config";
 import type { ViteDevServer } from "vite";
-import type { ViteStaticCopyOptions } from "vite-plugin-static-copy";
 
-export const { readFile } = await import("node:fs/promises");
+// -----------------------------------------------------------------------------
+// IMPORT CONTEXT & TRIGGER DEBUG LOGGING
+// -----------------------------------------------------------------------------
+import {
+	ApplicationStatic,
+	Browser,
+	Bundle,
+	Dependency,
+	External,
+	Host,
+	KeyboardLayouts,
+	Link,
+	On,
+	Platform,
+	readFile,
+	Static,
+	Tauri,
+	VSCodeOutput,
+} from "./Source/Function/Debug";
 
-export const Bundle = process.env["Bundle"] === "true";
-
-export const Browser = process.env["Browser"] === "true";
-
-export const Dependency = process.env["Dependency"] ?? "CodeEditorLand/Editor";
-
-export const Tauri = typeof process.env["TAURI_ENV_ARCH"] !== "undefined";
-
-export const Platform = ((Platform) => {
-	switch (Platform?.toLowerCase()) {
-		case "windows":
-			return "Windows";
-
-		case "darwin":
-			return "Mac";
-
-		case "linux":
-			return "Linux";
-
-		case "android":
-			return "Android";
-
-		case "ios":
-			return "iOS";
-
-		default:
-			return "Windows";
-	}
-})(process.env["TAURI_ENV_PLATFORM"]);
-
-export const On =
-	process.env["NODE_ENV"] === "development" ||
-	process.env["TAURI_ENV_DEBUG"] === "true";
-
-export const Link = [
-	"@codeeditorland/common",
-
-	"@codeeditorland/output",
-
-	// "@codeeditorland/wind",
-
-	"@codeeditorland/worker",
-];
-
-export const External = ["@microsoft/1ds-core-js", "@microsoft/1ds-post-js"];
-
-export const Host = process.env["TAURI_DEV_HOST"]
-	? `https://${process.env["TAURI_DEV_HOST"]}`
-	: Tauri
-		? "https://tauri.localhost"
-		: On
-			? "https://localhost"
-			: "https://editor.land";
-
-export const ApplicationStatic = "Static/Application";
-
-export const VSCodeOutput =
-	"node_modules/@codeeditorland/output/Target/Microsoft/VSCode";
-
-export const KeyboardLayouts =
-	"vs/workbench/services/keybinding/browser/keyboardLayouts";
-
-export const Static: ViteStaticCopyOptions = {
-	targets: [],
-
-	structured: false,
-};
-
-if (Bundle) {
-	switch (Platform) {
-		case "Windows":
-			Static.targets.push({
-				src: `${VSCodeOutput}/${KeyboardLayouts}/*.win.js`,
-
-				dest: `${ApplicationStatic}/${KeyboardLayouts}/`,
-			});
-
-			break;
-
-		case "Mac":
-			Static.targets.push({
-				src: `${VSCodeOutput}/${KeyboardLayouts}/*.darwin.js`,
-
-				dest: `${ApplicationStatic}/${KeyboardLayouts}/`,
-			});
-
-			break;
-
-		case "Linux":
-			Static.targets.push({
-				src: `${VSCodeOutput}/${KeyboardLayouts}/*.linux.js`,
-
-				dest: `${ApplicationStatic}/${KeyboardLayouts}/`,
-			});
-
-			break;
-
-		default:
-			break;
-	}
-
-	Static.targets.push(
-		...[
-			{
-				src: `node_modules/@codeeditorland/output/Target/${Dependency}/${On ? "vs/" : ""}${On ? "nls.js" : "nls.messages.js"}`,
-
-				dest: `${ApplicationStatic}/${On ? "vs/" : ""}`,
-			},
-
-			{
-				src: `${VSCodeOutput}/${KeyboardLayouts}/_.contribution.js`,
-
-				dest: `${ApplicationStatic}/${KeyboardLayouts}/`,
-			},
-
-			{
-				src: "node_modules/@codeeditorland/worker/Target/Worker.js",
-
-				dest: ".",
-			},
-		],
-	);
-} else {
-	Static.targets.push(
-		...[
-			{
-				src: `${VSCodeOutput}/*`,
-
-				dest: ApplicationStatic,
-			},
-
-			{
-				src: "node_modules/@codeeditorland/worker/Target/*",
-
-				dest: ".",
-			},
-		],
-	);
-}
-
-Browser
-	? External.push(
-			...[
-				"@codeeditorland/output/vs/code/electron-browser/workbench/workbench.js",
-			],
-		)
-	: {};
-
+// -----------------------------------------------------------------------------
+// ASTRO CONFIGURATION
+// -----------------------------------------------------------------------------
 export default defineConfig({
 	srcDir: "./Source",
 
@@ -188,9 +76,12 @@ export default defineConfig({
 		clientPrerender: true,
 
 		contentIntellisense: true,
+
+		preserveScriptOrder: true,
 	},
 
 	vite: {
+		// Prevent Vite from clearing the extensive debug report we just logged
 		clearScreen: false,
 
 		build: {
@@ -208,6 +99,7 @@ export default defineConfig({
 
 			terserOptions: On
 				? {
+						// Debug / Development Terser Options (Readable)
 						compress: false,
 
 						ecma: 2020,
@@ -275,6 +167,7 @@ export default defineConfig({
 						toplevel: true,
 					}
 				: {
+						// Release / Production Terser Options (Aggressive)
 						compress: {
 							passes: 3,
 
@@ -340,45 +233,6 @@ export default defineConfig({
 						keep_classnames: false,
 
 						keep_fnames: false,
-
-						// mangle: {
-
-						// 	eval: true,
-
-						// 	keep_classnames: false,
-
-						// 	keep_fnames: false,
-
-						// 	module: true,
-
-						// 	properties: {
-
-						// 		reserved: [
-						// 		 	"WorkerApplication",
-
-						// 		 	"_LOAD_CSS_WORKER",
-
-						// 		 	"_POLICY_WORKER",
-
-						// 		 	"_WORKER",
-
-						// 		 	"value",
-
-						// 		 	"get",
-
-						// ],
-
-						// 		keep_quoted: true,
-
-						// 	},
-
-						// 	reserved: [],
-
-						// 	safari10: false,
-
-						// 	toplevel: true,
-
-						// },
 
 						mangle: false,
 

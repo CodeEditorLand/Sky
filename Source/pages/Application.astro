@@ -15,7 +15,7 @@ const Browser = process.env["Browser"] === "true";
 
 const Site = Astro.site;
 
-const Worker = `/Worker.js?BASE_REMOTE=${encodeURIComponent(Site?.toString() ?? Astro.url.origin)}`;
+const Worker = `/Worker.js?BASE_REMOTE=${encodeURIComponent(Astro.url.origin)}`;
 
 const Bust = (Base: string): string =>
 	`${Base}${Base.includes("?") ? "&" : "?"}Time=${encodeURIComponent(Date.now())}`;
@@ -66,23 +66,53 @@ const Bust = (Base: string): string =>
 				"blob:",
 				"vscode-remote-resource:",
 				"vscode-managed-remote-resource:",
+				"http://localhost:*",
+				"https://tauri.localhost",
 				"https:",
 			],
-			"manifest-src": ["'self'"],
-			"media-src": ["'self'"],
-			"frame-src": ["'self'", "vscode-webview:"],
+			"manifest-src": [
+				"'self'",
+				"http://localhost:*",
+				"https://tauri.localhost",
+			],
+			"media-src": [
+				"'self'",
+				"http://localhost:*",
+				"https://tauri.localhost",
+			],
+			"frame-src": [
+				"'self'",
+				"vscode-webview:",
+				"http://localhost:*",
+				"https://tauri.localhost",
+			],
 			"script-src": [
 				"'self'",
 				"'unsafe-inline'",
 				"'unsafe-eval'",
 				"blob:",
+				"http://localhost:*",
+				"https://tauri.localhost",
 			],
-			"style-src": ["'self'", "'unsafe-inline'"],
-			"connect-src": ["'self'", "wss://tauri.localhost", "https:"],
+			"style-src": [
+				"'self'",
+				"'unsafe-inline'",
+				"http://localhost:*",
+				"https://tauri.localhost",
+			],
+			"connect-src": [
+				"'self'",
+				"http://localhost:*",
+				"https://tauri.localhost",
+				"wss://tauri.localhost",
+				"https:",
+			],
 			"font-src": [
 				"'self'",
 				"vscode-remote-resource:",
 				"vscode-managed-remote-resource:",
+				"http://localhost:*",
+				"https://tauri.localhost",
 			],
 			"require-trusted-types-for": ["'script'"],
 			"trusted-types": [
@@ -100,10 +130,12 @@ const Bust = (Base: string): string =>
 				"stickyScrollViewLayer",
 				"tokenizeToString",
 				"notebookChatEditController",
+				"richScreenReaderContent",
+				"collapsedCellPreview",
 			],
 			// Standalone directives are set to true
 			"block-all-mixed-content": true,
-			"upgrade-insecure-requests": true,
+			"upgrade-insecure-requests": false,
 		})}
 		slot="Meta"
 	/>
@@ -138,8 +170,7 @@ const Bust = (Base: string): string =>
 	/>
 
 	<script is:inline type="module" define:vars={{ Site }} slot="Head">
-		// @ts-expect-error
-		globalThis._VSCODE_FILE_ROOT = `${Site}Static/Application/`;
+		globalThis._VSCODE_FILE_ROOT = `${window.location.origin}/Static/Application/`;
 	</script>
 
 	<script

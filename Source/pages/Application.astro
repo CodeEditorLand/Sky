@@ -242,14 +242,24 @@ const Bust = (Base: string): string =>
 						defer
 					/>
 				) : (
-					<script
-						is:inline
-						type="module"
-						src={Bust(
-							"/Static/Application/vs/code/electron-browser/workbench/workbench.js",
-						)}
-						defer
-					/>
+					<Fragment>
+							<script
+								is:inline
+								type="module"
+								defer
+							>
+								import { Install } from '@codeeditorland/wind';
+								Install({ Configuration });
+							</script>
+						<script
+							is:inline
+							type="module"
+							src={Bust(
+								"/Static/Application/vs/code/electron-browser/workbench/workbench.js",
+							)}
+							defer
+						/>
+					</Fragment>
 				)}
 			</Fragment>
 		)

@@ -1,10 +1,12 @@
 ---
-// import type { IWorkbenchConstructionOptions } from "@codeeditorland/output/vs/workbench/browser/web.api.js";
+// Atomic Bootstrap Integration for Sky Frontend
+// This version uses the new highly atomic, debuggable bootstrap system
 
 import Layout from "../Function/Markup/Base.astro";
 import BrowserWorkbench from "../Workbench/Browser.astro";
 import DefaultWorkbench from "../Workbench/Default.astro";
 
+// Environment detection
 const On =
 	process.env["NODE_ENV"] === "development" ||
 	process.env["TAURI_ENV_DEBUG"] === "true";
@@ -22,6 +24,7 @@ const Bust = (Base: string): string =>
 ---
 
 <Layout>
+	<!-- Content Security Policy -->
 	<meta
 		http-equiv="Content-Security-Policy"
 		content={((
@@ -133,13 +136,13 @@ const Bust = (Base: string): string =>
 				"richScreenReaderContent",
 				"collapsedCellPreview",
 			],
-			// Standalone directives are set to true
 			"block-all-mixed-content": true,
 			"upgrade-insecure-requests": false,
 		})}
 		slot="Meta"
 	/>
 
+	<!-- VSCode Workbench Configuration -->
 	<meta
 		id="vscode-workbench-web-configuration"
 		data-settings={JSON.stringify({
@@ -158,21 +161,23 @@ const Bust = (Base: string): string =>
 				logLevel: On ? 2 : 0,
 				enableSmokeTestDriver: On,
 			},
-			// } satisfies IWorkbenchConstructionOptions as unknown as IWorkbenchConstructionOptions)}
 		})}
 		slot="Meta"
 	/>
 
+	<!-- VSCode Auth Session -->
 	<meta
 		id="vscode-workbench-auth-session"
 		data-settings={JSON.stringify({})}
 		slot="Meta"
 	/>
 
+	<!-- Global VSCode File Root -->
 	<script is:inline type="module" define:vars={{ Site }} slot="Head">
 		globalThis._VSCODE_FILE_ROOT = `${window.location.origin}/Static/Application/`;
 	</script>
 
+	<!-- Worker Configuration -->
 	<script
 		is:inline
 		type="module"
@@ -183,6 +188,13 @@ const Bust = (Base: string): string =>
 		window._WORKER = Worker;
 	</script>
 
+	<!-- Bootstrap Configuration -->
+	<script is:inline type="module" slot="Head">
+		// Set debug mode based on environment
+		globalThis.__BOOTSTRAP_DEBUG__ = ${On ? 'true' : 'false'};
+	</script>
+
+	<!-- Worker Scripts -->
 	{
 		Bundle ? (
 			<Fragment>
@@ -243,14 +255,47 @@ const Bust = (Base: string): string =>
 					/>
 				) : (
 					<Fragment>
-							<script
-								is:inline
-								type="module"
-								defer
-							>
-								import { Install } from '@codeeditorland/wind';
-								Install({ Configuration });
-							</script>
+						<!-- Wind Preload Script -->
+						<script
+							is:inline
+							type="module"
+							defer
+						>
+							import { Install } from '@codeeditorland/wind';
+							Install({ Configuration });
+						</script>
+
+						<!-- Wind Bootstrap Script (Atomic) -->
+						<script
+							is:inline
+							type="module"
+							defer
+						>
+							import { bootstrap } from '@codeeditorland/wind/Bootstrap';
+							
+							console.log('[Sky] Starting atomic bootstrap...');
+							
+							bootstrap({
+								debugMode: ${On},
+								verboseLogging: ${On},
+								showStatusUI: true,
+								pauseBetweenStages: ${On},
+								enablePerformanceTracking: true
+							}).then((result) => {
+								console.log('[Sky] Bootstrap completed:', result.success);
+
+								if (result.success) {
+									console.log('[Sky]  All stages completed successfully');
+									console.log('[Sky] Total duration:', result.totalDuration.toFixed(0), 'ms');
+								} else {
+									console.error('[Sky]  Bootstrap failed');
+								}
+							}).catch((error) => {
+								console.error('[Sky]  Fatal bootstrap error:', error);
+							});
+						</script>
+
+						<!-- VSCode Workbench Script -->
 						<script
 							is:inline
 							type="module"

@@ -1,0 +1,1158 @@
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var ScanError;
+(function(ScanError2) {
+  ScanError2[ScanError2["None"] = 0] = "None";
+  ScanError2[ScanError2["UnexpectedEndOfComment"] = 1] = "UnexpectedEndOfComment";
+  ScanError2[ScanError2["UnexpectedEndOfString"] = 2] = "UnexpectedEndOfString";
+  ScanError2[ScanError2["UnexpectedEndOfNumber"] = 3] = "UnexpectedEndOfNumber";
+  ScanError2[ScanError2["InvalidUnicode"] = 4] = "InvalidUnicode";
+  ScanError2[ScanError2["InvalidEscapeCharacter"] = 5] = "InvalidEscapeCharacter";
+  ScanError2[ScanError2["InvalidCharacter"] = 6] = "InvalidCharacter";
+})(ScanError || (ScanError = {}));
+var SyntaxKind;
+(function(SyntaxKind2) {
+  SyntaxKind2[SyntaxKind2["OpenBraceToken"] = 1] = "OpenBraceToken";
+  SyntaxKind2[SyntaxKind2["CloseBraceToken"] = 2] = "CloseBraceToken";
+  SyntaxKind2[SyntaxKind2["OpenBracketToken"] = 3] = "OpenBracketToken";
+  SyntaxKind2[SyntaxKind2["CloseBracketToken"] = 4] = "CloseBracketToken";
+  SyntaxKind2[SyntaxKind2["CommaToken"] = 5] = "CommaToken";
+  SyntaxKind2[SyntaxKind2["ColonToken"] = 6] = "ColonToken";
+  SyntaxKind2[SyntaxKind2["NullKeyword"] = 7] = "NullKeyword";
+  SyntaxKind2[SyntaxKind2["TrueKeyword"] = 8] = "TrueKeyword";
+  SyntaxKind2[SyntaxKind2["FalseKeyword"] = 9] = "FalseKeyword";
+  SyntaxKind2[SyntaxKind2["StringLiteral"] = 10] = "StringLiteral";
+  SyntaxKind2[SyntaxKind2["NumericLiteral"] = 11] = "NumericLiteral";
+  SyntaxKind2[SyntaxKind2["LineCommentTrivia"] = 12] = "LineCommentTrivia";
+  SyntaxKind2[SyntaxKind2["BlockCommentTrivia"] = 13] = "BlockCommentTrivia";
+  SyntaxKind2[SyntaxKind2["LineBreakTrivia"] = 14] = "LineBreakTrivia";
+  SyntaxKind2[SyntaxKind2["Trivia"] = 15] = "Trivia";
+  SyntaxKind2[SyntaxKind2["Unknown"] = 16] = "Unknown";
+  SyntaxKind2[SyntaxKind2["EOF"] = 17] = "EOF";
+})(SyntaxKind || (SyntaxKind = {}));
+var ParseErrorCode;
+(function(ParseErrorCode2) {
+  ParseErrorCode2[ParseErrorCode2["InvalidSymbol"] = 1] = "InvalidSymbol";
+  ParseErrorCode2[ParseErrorCode2["InvalidNumberFormat"] = 2] = "InvalidNumberFormat";
+  ParseErrorCode2[ParseErrorCode2["PropertyNameExpected"] = 3] = "PropertyNameExpected";
+  ParseErrorCode2[ParseErrorCode2["ValueExpected"] = 4] = "ValueExpected";
+  ParseErrorCode2[ParseErrorCode2["ColonExpected"] = 5] = "ColonExpected";
+  ParseErrorCode2[ParseErrorCode2["CommaExpected"] = 6] = "CommaExpected";
+  ParseErrorCode2[ParseErrorCode2["CloseBraceExpected"] = 7] = "CloseBraceExpected";
+  ParseErrorCode2[ParseErrorCode2["CloseBracketExpected"] = 8] = "CloseBracketExpected";
+  ParseErrorCode2[ParseErrorCode2["EndOfFileExpected"] = 9] = "EndOfFileExpected";
+  ParseErrorCode2[ParseErrorCode2["InvalidCommentToken"] = 10] = "InvalidCommentToken";
+  ParseErrorCode2[ParseErrorCode2["UnexpectedEndOfComment"] = 11] = "UnexpectedEndOfComment";
+  ParseErrorCode2[ParseErrorCode2["UnexpectedEndOfString"] = 12] = "UnexpectedEndOfString";
+  ParseErrorCode2[ParseErrorCode2["UnexpectedEndOfNumber"] = 13] = "UnexpectedEndOfNumber";
+  ParseErrorCode2[ParseErrorCode2["InvalidUnicode"] = 14] = "InvalidUnicode";
+  ParseErrorCode2[ParseErrorCode2["InvalidEscapeCharacter"] = 15] = "InvalidEscapeCharacter";
+  ParseErrorCode2[ParseErrorCode2["InvalidCharacter"] = 16] = "InvalidCharacter";
+})(ParseErrorCode || (ParseErrorCode = {}));
+var ParseOptions;
+(function(ParseOptions2) {
+  ParseOptions2.DEFAULT = {
+    allowTrailingComma: true
+  };
+})(ParseOptions || (ParseOptions = {}));
+function createScanner(text, ignoreTrivia = false) {
+  let pos = 0;
+  const len = text.length;
+  let value = "";
+  let tokenOffset = 0;
+  let token = 16;
+  let scanError = 0;
+  function scanHexDigits(count) {
+    let digits = 0;
+    let hexValue = 0;
+    while (digits < count) {
+      const ch = text.charCodeAt(pos);
+      if (ch >= 48 && ch <= 57) {
+        hexValue = hexValue * 16 + ch - 48;
+      } else if (ch >= 65 && ch <= 70) {
+        hexValue = hexValue * 16 + ch - 65 + 10;
+      } else if (ch >= 97 && ch <= 102) {
+        hexValue = hexValue * 16 + ch - 97 + 10;
+      } else {
+        break;
+      }
+      pos++;
+      digits++;
+    }
+    if (digits < count) {
+      hexValue = -1;
+    }
+    return hexValue;
+  }
+  __name(scanHexDigits, "scanHexDigits");
+  function setPosition(newPosition) {
+    pos = newPosition;
+    value = "";
+    tokenOffset = 0;
+    token = 16;
+    scanError = 0;
+  }
+  __name(setPosition, "setPosition");
+  function scanNumber() {
+    const start = pos;
+    if (text.charCodeAt(pos) === 48) {
+      pos++;
+    } else {
+      pos++;
+      while (pos < text.length && isDigit(text.charCodeAt(pos))) {
+        pos++;
+      }
+    }
+    if (pos < text.length && text.charCodeAt(pos) === 46) {
+      pos++;
+      if (pos < text.length && isDigit(text.charCodeAt(pos))) {
+        pos++;
+        while (pos < text.length && isDigit(text.charCodeAt(pos))) {
+          pos++;
+        }
+      } else {
+        scanError = 3;
+        return text.substring(start, pos);
+      }
+    }
+    let end = pos;
+    if (pos < text.length && (text.charCodeAt(pos) === 69 || text.charCodeAt(pos) === 101)) {
+      pos++;
+      if (pos < text.length && text.charCodeAt(pos) === 43 || text.charCodeAt(pos) === 45) {
+        pos++;
+      }
+      if (pos < text.length && isDigit(text.charCodeAt(pos))) {
+        pos++;
+        while (pos < text.length && isDigit(text.charCodeAt(pos))) {
+          pos++;
+        }
+        end = pos;
+      } else {
+        scanError = 3;
+      }
+    }
+    return text.substring(start, end);
+  }
+  __name(scanNumber, "scanNumber");
+  function scanString() {
+    let result = "", start = pos;
+    while (true) {
+      if (pos >= len) {
+        result += text.substring(start, pos);
+        scanError = 2;
+        break;
+      }
+      const ch = text.charCodeAt(pos);
+      if (ch === 34) {
+        result += text.substring(start, pos);
+        pos++;
+        break;
+      }
+      if (ch === 92) {
+        result += text.substring(start, pos);
+        pos++;
+        if (pos >= len) {
+          scanError = 2;
+          break;
+        }
+        const ch2 = text.charCodeAt(pos++);
+        switch (ch2) {
+          case 34:
+            result += '"';
+            break;
+          case 92:
+            result += "\\";
+            break;
+          case 47:
+            result += "/";
+            break;
+          case 98:
+            result += "\b";
+            break;
+          case 102:
+            result += "\f";
+            break;
+          case 110:
+            result += "\n";
+            break;
+          case 114:
+            result += "\r";
+            break;
+          case 116:
+            result += "	";
+            break;
+          case 117: {
+            const ch3 = scanHexDigits(4);
+            if (ch3 >= 0) {
+              result += String.fromCharCode(ch3);
+            } else {
+              scanError = 4;
+            }
+            break;
+          }
+          default:
+            scanError = 5;
+        }
+        start = pos;
+        continue;
+      }
+      if (ch >= 0 && ch <= 31) {
+        if (isLineBreak(ch)) {
+          result += text.substring(start, pos);
+          scanError = 2;
+          break;
+        } else {
+          scanError = 6;
+        }
+      }
+      pos++;
+    }
+    return result;
+  }
+  __name(scanString, "scanString");
+  function scanNext() {
+    value = "";
+    scanError = 0;
+    tokenOffset = pos;
+    if (pos >= len) {
+      tokenOffset = len;
+      return token = 17;
+    }
+    let code = text.charCodeAt(pos);
+    if (isWhitespace(code)) {
+      do {
+        pos++;
+        value += String.fromCharCode(code);
+        code = text.charCodeAt(pos);
+      } while (isWhitespace(code));
+      return token = 15;
+    }
+    if (isLineBreak(code)) {
+      pos++;
+      value += String.fromCharCode(code);
+      if (code === 13 && text.charCodeAt(pos) === 10) {
+        pos++;
+        value += "\n";
+      }
+      return token = 14;
+    }
+    switch (code) {
+      // tokens: []{}:,
+      case 123:
+        pos++;
+        return token = 1;
+      case 125:
+        pos++;
+        return token = 2;
+      case 91:
+        pos++;
+        return token = 3;
+      case 93:
+        pos++;
+        return token = 4;
+      case 58:
+        pos++;
+        return token = 6;
+      case 44:
+        pos++;
+        return token = 5;
+      // strings
+      case 34:
+        pos++;
+        value = scanString();
+        return token = 10;
+      // comments
+      case 47: {
+        const start = pos - 1;
+        if (text.charCodeAt(pos + 1) === 47) {
+          pos += 2;
+          while (pos < len) {
+            if (isLineBreak(text.charCodeAt(pos))) {
+              break;
+            }
+            pos++;
+          }
+          value = text.substring(start, pos);
+          return token = 12;
+        }
+        if (text.charCodeAt(pos + 1) === 42) {
+          pos += 2;
+          const safeLength = len - 1;
+          let commentClosed = false;
+          while (pos < safeLength) {
+            const ch = text.charCodeAt(pos);
+            if (ch === 42 && text.charCodeAt(pos + 1) === 47) {
+              pos += 2;
+              commentClosed = true;
+              break;
+            }
+            pos++;
+          }
+          if (!commentClosed) {
+            pos++;
+            scanError = 1;
+          }
+          value = text.substring(start, pos);
+          return token = 13;
+        }
+        value += String.fromCharCode(code);
+        pos++;
+        return token = 16;
+      }
+      // numbers
+      case 45:
+        value += String.fromCharCode(code);
+        pos++;
+        if (pos === len || !isDigit(text.charCodeAt(pos))) {
+          return token = 16;
+        }
+      // found a minus, followed by a number so
+      // we fall through to proceed with scanning
+      // numbers
+      case 48:
+      case 49:
+      case 50:
+      case 51:
+      case 52:
+      case 53:
+      case 54:
+      case 55:
+      case 56:
+      case 57:
+        value += scanNumber();
+        return token = 11;
+      // literals and unknown symbols
+      default:
+        while (pos < len && isUnknownContentCharacter(code)) {
+          pos++;
+          code = text.charCodeAt(pos);
+        }
+        if (tokenOffset !== pos) {
+          value = text.substring(tokenOffset, pos);
+          switch (value) {
+            case "true":
+              return token = 8;
+            case "false":
+              return token = 9;
+            case "null":
+              return token = 7;
+          }
+          return token = 16;
+        }
+        value += String.fromCharCode(code);
+        pos++;
+        return token = 16;
+    }
+  }
+  __name(scanNext, "scanNext");
+  function isUnknownContentCharacter(code) {
+    if (isWhitespace(code) || isLineBreak(code)) {
+      return false;
+    }
+    switch (code) {
+      case 125:
+      case 93:
+      case 123:
+      case 91:
+      case 34:
+      case 58:
+      case 44:
+      case 47:
+        return false;
+    }
+    return true;
+  }
+  __name(isUnknownContentCharacter, "isUnknownContentCharacter");
+  function scanNextNonTrivia() {
+    let result;
+    do {
+      result = scanNext();
+    } while (result >= 12 && result <= 15);
+    return result;
+  }
+  __name(scanNextNonTrivia, "scanNextNonTrivia");
+  return {
+    setPosition,
+    getPosition: /* @__PURE__ */ __name(() => pos, "getPosition"),
+    scan: ignoreTrivia ? scanNextNonTrivia : scanNext,
+    getToken: /* @__PURE__ */ __name(() => token, "getToken"),
+    getTokenValue: /* @__PURE__ */ __name(() => value, "getTokenValue"),
+    getTokenOffset: /* @__PURE__ */ __name(() => tokenOffset, "getTokenOffset"),
+    getTokenLength: /* @__PURE__ */ __name(() => pos - tokenOffset, "getTokenLength"),
+    getTokenError: /* @__PURE__ */ __name(() => scanError, "getTokenError")
+  };
+}
+__name(createScanner, "createScanner");
+function isWhitespace(ch) {
+  return ch === 32 || ch === 9 || ch === 11 || ch === 12 || ch === 160 || ch === 5760 || ch >= 8192 && ch <= 8203 || ch === 8239 || ch === 8287 || ch === 12288 || ch === 65279;
+}
+__name(isWhitespace, "isWhitespace");
+function isLineBreak(ch) {
+  return ch === 10 || ch === 13 || ch === 8232 || ch === 8233;
+}
+__name(isLineBreak, "isLineBreak");
+function isDigit(ch) {
+  return ch >= 48 && ch <= 57;
+}
+__name(isDigit, "isDigit");
+var CharacterCodes;
+(function(CharacterCodes2) {
+  CharacterCodes2[CharacterCodes2["nullCharacter"] = 0] = "nullCharacter";
+  CharacterCodes2[CharacterCodes2["maxAsciiCharacter"] = 127] = "maxAsciiCharacter";
+  CharacterCodes2[CharacterCodes2["lineFeed"] = 10] = "lineFeed";
+  CharacterCodes2[CharacterCodes2["carriageReturn"] = 13] = "carriageReturn";
+  CharacterCodes2[CharacterCodes2["lineSeparator"] = 8232] = "lineSeparator";
+  CharacterCodes2[CharacterCodes2["paragraphSeparator"] = 8233] = "paragraphSeparator";
+  CharacterCodes2[CharacterCodes2["nextLine"] = 133] = "nextLine";
+  CharacterCodes2[CharacterCodes2["space"] = 32] = "space";
+  CharacterCodes2[CharacterCodes2["nonBreakingSpace"] = 160] = "nonBreakingSpace";
+  CharacterCodes2[CharacterCodes2["enQuad"] = 8192] = "enQuad";
+  CharacterCodes2[CharacterCodes2["emQuad"] = 8193] = "emQuad";
+  CharacterCodes2[CharacterCodes2["enSpace"] = 8194] = "enSpace";
+  CharacterCodes2[CharacterCodes2["emSpace"] = 8195] = "emSpace";
+  CharacterCodes2[CharacterCodes2["threePerEmSpace"] = 8196] = "threePerEmSpace";
+  CharacterCodes2[CharacterCodes2["fourPerEmSpace"] = 8197] = "fourPerEmSpace";
+  CharacterCodes2[CharacterCodes2["sixPerEmSpace"] = 8198] = "sixPerEmSpace";
+  CharacterCodes2[CharacterCodes2["figureSpace"] = 8199] = "figureSpace";
+  CharacterCodes2[CharacterCodes2["punctuationSpace"] = 8200] = "punctuationSpace";
+  CharacterCodes2[CharacterCodes2["thinSpace"] = 8201] = "thinSpace";
+  CharacterCodes2[CharacterCodes2["hairSpace"] = 8202] = "hairSpace";
+  CharacterCodes2[CharacterCodes2["zeroWidthSpace"] = 8203] = "zeroWidthSpace";
+  CharacterCodes2[CharacterCodes2["narrowNoBreakSpace"] = 8239] = "narrowNoBreakSpace";
+  CharacterCodes2[CharacterCodes2["ideographicSpace"] = 12288] = "ideographicSpace";
+  CharacterCodes2[CharacterCodes2["mathematicalSpace"] = 8287] = "mathematicalSpace";
+  CharacterCodes2[CharacterCodes2["ogham"] = 5760] = "ogham";
+  CharacterCodes2[CharacterCodes2["_"] = 95] = "_";
+  CharacterCodes2[CharacterCodes2["$"] = 36] = "$";
+  CharacterCodes2[CharacterCodes2["_0"] = 48] = "_0";
+  CharacterCodes2[CharacterCodes2["_1"] = 49] = "_1";
+  CharacterCodes2[CharacterCodes2["_2"] = 50] = "_2";
+  CharacterCodes2[CharacterCodes2["_3"] = 51] = "_3";
+  CharacterCodes2[CharacterCodes2["_4"] = 52] = "_4";
+  CharacterCodes2[CharacterCodes2["_5"] = 53] = "_5";
+  CharacterCodes2[CharacterCodes2["_6"] = 54] = "_6";
+  CharacterCodes2[CharacterCodes2["_7"] = 55] = "_7";
+  CharacterCodes2[CharacterCodes2["_8"] = 56] = "_8";
+  CharacterCodes2[CharacterCodes2["_9"] = 57] = "_9";
+  CharacterCodes2[CharacterCodes2["a"] = 97] = "a";
+  CharacterCodes2[CharacterCodes2["b"] = 98] = "b";
+  CharacterCodes2[CharacterCodes2["c"] = 99] = "c";
+  CharacterCodes2[CharacterCodes2["d"] = 100] = "d";
+  CharacterCodes2[CharacterCodes2["e"] = 101] = "e";
+  CharacterCodes2[CharacterCodes2["f"] = 102] = "f";
+  CharacterCodes2[CharacterCodes2["g"] = 103] = "g";
+  CharacterCodes2[CharacterCodes2["h"] = 104] = "h";
+  CharacterCodes2[CharacterCodes2["i"] = 105] = "i";
+  CharacterCodes2[CharacterCodes2["j"] = 106] = "j";
+  CharacterCodes2[CharacterCodes2["k"] = 107] = "k";
+  CharacterCodes2[CharacterCodes2["l"] = 108] = "l";
+  CharacterCodes2[CharacterCodes2["m"] = 109] = "m";
+  CharacterCodes2[CharacterCodes2["n"] = 110] = "n";
+  CharacterCodes2[CharacterCodes2["o"] = 111] = "o";
+  CharacterCodes2[CharacterCodes2["p"] = 112] = "p";
+  CharacterCodes2[CharacterCodes2["q"] = 113] = "q";
+  CharacterCodes2[CharacterCodes2["r"] = 114] = "r";
+  CharacterCodes2[CharacterCodes2["s"] = 115] = "s";
+  CharacterCodes2[CharacterCodes2["t"] = 116] = "t";
+  CharacterCodes2[CharacterCodes2["u"] = 117] = "u";
+  CharacterCodes2[CharacterCodes2["v"] = 118] = "v";
+  CharacterCodes2[CharacterCodes2["w"] = 119] = "w";
+  CharacterCodes2[CharacterCodes2["x"] = 120] = "x";
+  CharacterCodes2[CharacterCodes2["y"] = 121] = "y";
+  CharacterCodes2[CharacterCodes2["z"] = 122] = "z";
+  CharacterCodes2[CharacterCodes2["A"] = 65] = "A";
+  CharacterCodes2[CharacterCodes2["B"] = 66] = "B";
+  CharacterCodes2[CharacterCodes2["C"] = 67] = "C";
+  CharacterCodes2[CharacterCodes2["D"] = 68] = "D";
+  CharacterCodes2[CharacterCodes2["E"] = 69] = "E";
+  CharacterCodes2[CharacterCodes2["F"] = 70] = "F";
+  CharacterCodes2[CharacterCodes2["G"] = 71] = "G";
+  CharacterCodes2[CharacterCodes2["H"] = 72] = "H";
+  CharacterCodes2[CharacterCodes2["I"] = 73] = "I";
+  CharacterCodes2[CharacterCodes2["J"] = 74] = "J";
+  CharacterCodes2[CharacterCodes2["K"] = 75] = "K";
+  CharacterCodes2[CharacterCodes2["L"] = 76] = "L";
+  CharacterCodes2[CharacterCodes2["M"] = 77] = "M";
+  CharacterCodes2[CharacterCodes2["N"] = 78] = "N";
+  CharacterCodes2[CharacterCodes2["O"] = 79] = "O";
+  CharacterCodes2[CharacterCodes2["P"] = 80] = "P";
+  CharacterCodes2[CharacterCodes2["Q"] = 81] = "Q";
+  CharacterCodes2[CharacterCodes2["R"] = 82] = "R";
+  CharacterCodes2[CharacterCodes2["S"] = 83] = "S";
+  CharacterCodes2[CharacterCodes2["T"] = 84] = "T";
+  CharacterCodes2[CharacterCodes2["U"] = 85] = "U";
+  CharacterCodes2[CharacterCodes2["V"] = 86] = "V";
+  CharacterCodes2[CharacterCodes2["W"] = 87] = "W";
+  CharacterCodes2[CharacterCodes2["X"] = 88] = "X";
+  CharacterCodes2[CharacterCodes2["Y"] = 89] = "Y";
+  CharacterCodes2[CharacterCodes2["Z"] = 90] = "Z";
+  CharacterCodes2[CharacterCodes2["ampersand"] = 38] = "ampersand";
+  CharacterCodes2[CharacterCodes2["asterisk"] = 42] = "asterisk";
+  CharacterCodes2[CharacterCodes2["at"] = 64] = "at";
+  CharacterCodes2[CharacterCodes2["backslash"] = 92] = "backslash";
+  CharacterCodes2[CharacterCodes2["bar"] = 124] = "bar";
+  CharacterCodes2[CharacterCodes2["caret"] = 94] = "caret";
+  CharacterCodes2[CharacterCodes2["closeBrace"] = 125] = "closeBrace";
+  CharacterCodes2[CharacterCodes2["closeBracket"] = 93] = "closeBracket";
+  CharacterCodes2[CharacterCodes2["closeParen"] = 41] = "closeParen";
+  CharacterCodes2[CharacterCodes2["colon"] = 58] = "colon";
+  CharacterCodes2[CharacterCodes2["comma"] = 44] = "comma";
+  CharacterCodes2[CharacterCodes2["dot"] = 46] = "dot";
+  CharacterCodes2[CharacterCodes2["doubleQuote"] = 34] = "doubleQuote";
+  CharacterCodes2[CharacterCodes2["equals"] = 61] = "equals";
+  CharacterCodes2[CharacterCodes2["exclamation"] = 33] = "exclamation";
+  CharacterCodes2[CharacterCodes2["greaterThan"] = 62] = "greaterThan";
+  CharacterCodes2[CharacterCodes2["lessThan"] = 60] = "lessThan";
+  CharacterCodes2[CharacterCodes2["minus"] = 45] = "minus";
+  CharacterCodes2[CharacterCodes2["openBrace"] = 123] = "openBrace";
+  CharacterCodes2[CharacterCodes2["openBracket"] = 91] = "openBracket";
+  CharacterCodes2[CharacterCodes2["openParen"] = 40] = "openParen";
+  CharacterCodes2[CharacterCodes2["percent"] = 37] = "percent";
+  CharacterCodes2[CharacterCodes2["plus"] = 43] = "plus";
+  CharacterCodes2[CharacterCodes2["question"] = 63] = "question";
+  CharacterCodes2[CharacterCodes2["semicolon"] = 59] = "semicolon";
+  CharacterCodes2[CharacterCodes2["singleQuote"] = 39] = "singleQuote";
+  CharacterCodes2[CharacterCodes2["slash"] = 47] = "slash";
+  CharacterCodes2[CharacterCodes2["tilde"] = 126] = "tilde";
+  CharacterCodes2[CharacterCodes2["backspace"] = 8] = "backspace";
+  CharacterCodes2[CharacterCodes2["formFeed"] = 12] = "formFeed";
+  CharacterCodes2[CharacterCodes2["byteOrderMark"] = 65279] = "byteOrderMark";
+  CharacterCodes2[CharacterCodes2["tab"] = 9] = "tab";
+  CharacterCodes2[CharacterCodes2["verticalTab"] = 11] = "verticalTab";
+})(CharacterCodes || (CharacterCodes = {}));
+function getLocation(text, position) {
+  const segments = [];
+  const earlyReturnException = new Object();
+  let previousNode = void 0;
+  const previousNodeInst = {
+    value: {},
+    offset: 0,
+    length: 0,
+    type: "object",
+    parent: void 0
+  };
+  let isAtPropertyKey = false;
+  function setPreviousNode(value, offset, length, type) {
+    previousNodeInst.value = value;
+    previousNodeInst.offset = offset;
+    previousNodeInst.length = length;
+    previousNodeInst.type = type;
+    previousNodeInst.colonOffset = void 0;
+    previousNode = previousNodeInst;
+  }
+  __name(setPreviousNode, "setPreviousNode");
+  try {
+    visit(text, {
+      onObjectBegin: /* @__PURE__ */ __name((offset, length) => {
+        if (position <= offset) {
+          throw earlyReturnException;
+        }
+        previousNode = void 0;
+        isAtPropertyKey = position > offset;
+        segments.push("");
+      }, "onObjectBegin"),
+      onObjectProperty: /* @__PURE__ */ __name((name, offset, length) => {
+        if (position < offset) {
+          throw earlyReturnException;
+        }
+        setPreviousNode(name, offset, length, "property");
+        segments[segments.length - 1] = name;
+        if (position <= offset + length) {
+          throw earlyReturnException;
+        }
+      }, "onObjectProperty"),
+      onObjectEnd: /* @__PURE__ */ __name((offset, length) => {
+        if (position <= offset) {
+          throw earlyReturnException;
+        }
+        previousNode = void 0;
+        segments.pop();
+      }, "onObjectEnd"),
+      onArrayBegin: /* @__PURE__ */ __name((offset, length) => {
+        if (position <= offset) {
+          throw earlyReturnException;
+        }
+        previousNode = void 0;
+        segments.push(0);
+      }, "onArrayBegin"),
+      onArrayEnd: /* @__PURE__ */ __name((offset, length) => {
+        if (position <= offset) {
+          throw earlyReturnException;
+        }
+        previousNode = void 0;
+        segments.pop();
+      }, "onArrayEnd"),
+      onLiteralValue: /* @__PURE__ */ __name((value, offset, length) => {
+        if (position < offset) {
+          throw earlyReturnException;
+        }
+        setPreviousNode(value, offset, length, getNodeType(value));
+        if (position <= offset + length) {
+          throw earlyReturnException;
+        }
+      }, "onLiteralValue"),
+      onSeparator: /* @__PURE__ */ __name((sep, offset, length) => {
+        if (position <= offset) {
+          throw earlyReturnException;
+        }
+        if (sep === ":" && previousNode && previousNode.type === "property") {
+          previousNode.colonOffset = offset;
+          isAtPropertyKey = false;
+          previousNode = void 0;
+        } else if (sep === ",") {
+          const last = segments[segments.length - 1];
+          if (typeof last === "number") {
+            segments[segments.length - 1] = last + 1;
+          } else {
+            isAtPropertyKey = true;
+            segments[segments.length - 1] = "";
+          }
+          previousNode = void 0;
+        }
+      }, "onSeparator")
+    });
+  } catch (e) {
+    if (e !== earlyReturnException) {
+      throw e;
+    }
+  }
+  return {
+    path: segments,
+    previousNode,
+    isAtPropertyKey,
+    matches: /* @__PURE__ */ __name((pattern) => {
+      let k = 0;
+      for (let i = 0; k < pattern.length && i < segments.length; i++) {
+        if (pattern[k] === segments[i] || pattern[k] === "*") {
+          k++;
+        } else if (pattern[k] !== "**") {
+          return false;
+        }
+      }
+      return k === pattern.length;
+    }, "matches")
+  };
+}
+__name(getLocation, "getLocation");
+function parse(text, errors = [], options = ParseOptions.DEFAULT) {
+  let currentProperty = null;
+  let currentParent = [];
+  const previousParents = [];
+  function onValue(value) {
+    if (Array.isArray(currentParent)) {
+      currentParent.push(value);
+    } else if (currentProperty !== null) {
+      currentParent[currentProperty] = value;
+    }
+  }
+  __name(onValue, "onValue");
+  const visitor = {
+    onObjectBegin: /* @__PURE__ */ __name(() => {
+      const object = {};
+      onValue(object);
+      previousParents.push(currentParent);
+      currentParent = object;
+      currentProperty = null;
+    }, "onObjectBegin"),
+    onObjectProperty: /* @__PURE__ */ __name((name) => {
+      currentProperty = name;
+    }, "onObjectProperty"),
+    onObjectEnd: /* @__PURE__ */ __name(() => {
+      currentParent = previousParents.pop();
+    }, "onObjectEnd"),
+    onArrayBegin: /* @__PURE__ */ __name(() => {
+      const array = [];
+      onValue(array);
+      previousParents.push(currentParent);
+      currentParent = array;
+      currentProperty = null;
+    }, "onArrayBegin"),
+    onArrayEnd: /* @__PURE__ */ __name(() => {
+      currentParent = previousParents.pop();
+    }, "onArrayEnd"),
+    onLiteralValue: onValue,
+    onError: /* @__PURE__ */ __name((error, offset, length) => {
+      errors.push({ error, offset, length });
+    }, "onError")
+  };
+  visit(text, visitor, options);
+  return currentParent[0];
+}
+__name(parse, "parse");
+function parseTree(text, errors = [], options = ParseOptions.DEFAULT) {
+  let currentParent = { type: "array", offset: -1, length: -1, children: [], parent: void 0 };
+  function ensurePropertyComplete(endOffset) {
+    if (currentParent.type === "property") {
+      currentParent.length = endOffset - currentParent.offset;
+      currentParent = currentParent.parent;
+    }
+  }
+  __name(ensurePropertyComplete, "ensurePropertyComplete");
+  function onValue(valueNode) {
+    currentParent.children.push(valueNode);
+    return valueNode;
+  }
+  __name(onValue, "onValue");
+  const visitor = {
+    onObjectBegin: /* @__PURE__ */ __name((offset) => {
+      currentParent = onValue({ type: "object", offset, length: -1, parent: currentParent, children: [] });
+    }, "onObjectBegin"),
+    onObjectProperty: /* @__PURE__ */ __name((name, offset, length) => {
+      currentParent = onValue({ type: "property", offset, length: -1, parent: currentParent, children: [] });
+      currentParent.children.push({ type: "string", value: name, offset, length, parent: currentParent });
+    }, "onObjectProperty"),
+    onObjectEnd: /* @__PURE__ */ __name((offset, length) => {
+      currentParent.length = offset + length - currentParent.offset;
+      currentParent = currentParent.parent;
+      ensurePropertyComplete(offset + length);
+    }, "onObjectEnd"),
+    onArrayBegin: /* @__PURE__ */ __name((offset, length) => {
+      currentParent = onValue({ type: "array", offset, length: -1, parent: currentParent, children: [] });
+    }, "onArrayBegin"),
+    onArrayEnd: /* @__PURE__ */ __name((offset, length) => {
+      currentParent.length = offset + length - currentParent.offset;
+      currentParent = currentParent.parent;
+      ensurePropertyComplete(offset + length);
+    }, "onArrayEnd"),
+    onLiteralValue: /* @__PURE__ */ __name((value, offset, length) => {
+      onValue({ type: getNodeType(value), offset, length, parent: currentParent, value });
+      ensurePropertyComplete(offset + length);
+    }, "onLiteralValue"),
+    onSeparator: /* @__PURE__ */ __name((sep, offset, length) => {
+      if (currentParent.type === "property") {
+        if (sep === ":") {
+          currentParent.colonOffset = offset;
+        } else if (sep === ",") {
+          ensurePropertyComplete(offset);
+        }
+      }
+    }, "onSeparator"),
+    onError: /* @__PURE__ */ __name((error, offset, length) => {
+      errors.push({ error, offset, length });
+    }, "onError")
+  };
+  visit(text, visitor, options);
+  const result = currentParent.children[0];
+  if (result) {
+    delete result.parent;
+  }
+  return result;
+}
+__name(parseTree, "parseTree");
+function findNodeAtLocation(root, path) {
+  if (!root) {
+    return void 0;
+  }
+  let node = root;
+  for (const segment of path) {
+    if (typeof segment === "string") {
+      if (node.type !== "object" || !Array.isArray(node.children)) {
+        return void 0;
+      }
+      let found = false;
+      for (const propertyNode of node.children) {
+        if (Array.isArray(propertyNode.children) && propertyNode.children[0].value === segment) {
+          node = propertyNode.children[1];
+          found = true;
+          break;
+        }
+      }
+      if (!found) {
+        return void 0;
+      }
+    } else {
+      const index = segment;
+      if (node.type !== "array" || index < 0 || !Array.isArray(node.children) || index >= node.children.length) {
+        return void 0;
+      }
+      node = node.children[index];
+    }
+  }
+  return node;
+}
+__name(findNodeAtLocation, "findNodeAtLocation");
+function getNodePath(node) {
+  if (!node.parent || !node.parent.children) {
+    return [];
+  }
+  const path = getNodePath(node.parent);
+  if (node.parent.type === "property") {
+    const key = node.parent.children[0].value;
+    path.push(key);
+  } else if (node.parent.type === "array") {
+    const index = node.parent.children.indexOf(node);
+    if (index !== -1) {
+      path.push(index);
+    }
+  }
+  return path;
+}
+__name(getNodePath, "getNodePath");
+function getNodeValue(node) {
+  switch (node.type) {
+    case "array":
+      return node.children.map(getNodeValue);
+    case "object": {
+      const obj = /* @__PURE__ */ Object.create(null);
+      for (const prop of node.children) {
+        const valueNode = prop.children[1];
+        if (valueNode) {
+          obj[prop.children[0].value] = getNodeValue(valueNode);
+        }
+      }
+      return obj;
+    }
+    case "null":
+    case "string":
+    case "number":
+    case "boolean":
+      return node.value;
+    default:
+      return void 0;
+  }
+}
+__name(getNodeValue, "getNodeValue");
+function contains(node, offset, includeRightBound = false) {
+  return offset >= node.offset && offset < node.offset + node.length || includeRightBound && offset === node.offset + node.length;
+}
+__name(contains, "contains");
+function findNodeAtOffset(node, offset, includeRightBound = false) {
+  if (contains(node, offset, includeRightBound)) {
+    const children = node.children;
+    if (Array.isArray(children)) {
+      for (let i = 0; i < children.length && children[i].offset <= offset; i++) {
+        const item = findNodeAtOffset(children[i], offset, includeRightBound);
+        if (item) {
+          return item;
+        }
+      }
+    }
+    return node;
+  }
+  return void 0;
+}
+__name(findNodeAtOffset, "findNodeAtOffset");
+function visit(text, visitor, options = ParseOptions.DEFAULT) {
+  const _scanner = createScanner(text, false);
+  function toNoArgVisit(visitFunction) {
+    return visitFunction ? () => visitFunction(_scanner.getTokenOffset(), _scanner.getTokenLength()) : () => true;
+  }
+  __name(toNoArgVisit, "toNoArgVisit");
+  function toOneArgVisit(visitFunction) {
+    return visitFunction ? (arg) => visitFunction(arg, _scanner.getTokenOffset(), _scanner.getTokenLength()) : () => true;
+  }
+  __name(toOneArgVisit, "toOneArgVisit");
+  const onObjectBegin = toNoArgVisit(visitor.onObjectBegin), onObjectProperty = toOneArgVisit(visitor.onObjectProperty), onObjectEnd = toNoArgVisit(visitor.onObjectEnd), onArrayBegin = toNoArgVisit(visitor.onArrayBegin), onArrayEnd = toNoArgVisit(visitor.onArrayEnd), onLiteralValue = toOneArgVisit(visitor.onLiteralValue), onSeparator = toOneArgVisit(visitor.onSeparator), onComment = toNoArgVisit(visitor.onComment), onError = toOneArgVisit(visitor.onError);
+  const disallowComments = options && options.disallowComments;
+  const allowTrailingComma = options && options.allowTrailingComma;
+  function scanNext() {
+    while (true) {
+      const token = _scanner.scan();
+      switch (_scanner.getTokenError()) {
+        case 4:
+          handleError(
+            14
+            /* ParseErrorCode.InvalidUnicode */
+          );
+          break;
+        case 5:
+          handleError(
+            15
+            /* ParseErrorCode.InvalidEscapeCharacter */
+          );
+          break;
+        case 3:
+          handleError(
+            13
+            /* ParseErrorCode.UnexpectedEndOfNumber */
+          );
+          break;
+        case 1:
+          if (!disallowComments) {
+            handleError(
+              11
+              /* ParseErrorCode.UnexpectedEndOfComment */
+            );
+          }
+          break;
+        case 2:
+          handleError(
+            12
+            /* ParseErrorCode.UnexpectedEndOfString */
+          );
+          break;
+        case 6:
+          handleError(
+            16
+            /* ParseErrorCode.InvalidCharacter */
+          );
+          break;
+      }
+      switch (token) {
+        case 12:
+        case 13:
+          if (disallowComments) {
+            handleError(
+              10
+              /* ParseErrorCode.InvalidCommentToken */
+            );
+          } else {
+            onComment();
+          }
+          break;
+        case 16:
+          handleError(
+            1
+            /* ParseErrorCode.InvalidSymbol */
+          );
+          break;
+        case 15:
+        case 14:
+          break;
+        default:
+          return token;
+      }
+    }
+  }
+  __name(scanNext, "scanNext");
+  function handleError(error, skipUntilAfter = [], skipUntil = []) {
+    onError(error);
+    if (skipUntilAfter.length + skipUntil.length > 0) {
+      let token = _scanner.getToken();
+      while (token !== 17) {
+        if (skipUntilAfter.indexOf(token) !== -1) {
+          scanNext();
+          break;
+        } else if (skipUntil.indexOf(token) !== -1) {
+          break;
+        }
+        token = scanNext();
+      }
+    }
+  }
+  __name(handleError, "handleError");
+  function parseString(isValue) {
+    const value = _scanner.getTokenValue();
+    if (isValue) {
+      onLiteralValue(value);
+    } else {
+      onObjectProperty(value);
+    }
+    scanNext();
+    return true;
+  }
+  __name(parseString, "parseString");
+  function parseLiteral() {
+    switch (_scanner.getToken()) {
+      case 11: {
+        let value = 0;
+        try {
+          value = JSON.parse(_scanner.getTokenValue());
+          if (typeof value !== "number") {
+            handleError(
+              2
+              /* ParseErrorCode.InvalidNumberFormat */
+            );
+            value = 0;
+          }
+        } catch (e) {
+          handleError(
+            2
+            /* ParseErrorCode.InvalidNumberFormat */
+          );
+        }
+        onLiteralValue(value);
+        break;
+      }
+      case 7:
+        onLiteralValue(null);
+        break;
+      case 8:
+        onLiteralValue(true);
+        break;
+      case 9:
+        onLiteralValue(false);
+        break;
+      default:
+        return false;
+    }
+    scanNext();
+    return true;
+  }
+  __name(parseLiteral, "parseLiteral");
+  function parseProperty() {
+    if (_scanner.getToken() !== 10) {
+      handleError(3, [], [
+        2,
+        5
+        /* SyntaxKind.CommaToken */
+      ]);
+      return false;
+    }
+    parseString(false);
+    if (_scanner.getToken() === 6) {
+      onSeparator(":");
+      scanNext();
+      if (!parseValue()) {
+        handleError(4, [], [
+          2,
+          5
+          /* SyntaxKind.CommaToken */
+        ]);
+      }
+    } else {
+      handleError(5, [], [
+        2,
+        5
+        /* SyntaxKind.CommaToken */
+      ]);
+    }
+    return true;
+  }
+  __name(parseProperty, "parseProperty");
+  function parseObject() {
+    onObjectBegin();
+    scanNext();
+    let needsComma = false;
+    while (_scanner.getToken() !== 2 && _scanner.getToken() !== 17) {
+      if (_scanner.getToken() === 5) {
+        if (!needsComma) {
+          handleError(4, [], []);
+        }
+        onSeparator(",");
+        scanNext();
+        if (_scanner.getToken() === 2 && allowTrailingComma) {
+          break;
+        }
+      } else if (needsComma) {
+        handleError(6, [], []);
+      }
+      if (!parseProperty()) {
+        handleError(4, [], [
+          2,
+          5
+          /* SyntaxKind.CommaToken */
+        ]);
+      }
+      needsComma = true;
+    }
+    onObjectEnd();
+    if (_scanner.getToken() !== 2) {
+      handleError(7, [
+        2
+        /* SyntaxKind.CloseBraceToken */
+      ], []);
+    } else {
+      scanNext();
+    }
+    return true;
+  }
+  __name(parseObject, "parseObject");
+  function parseArray() {
+    onArrayBegin();
+    scanNext();
+    let needsComma = false;
+    while (_scanner.getToken() !== 4 && _scanner.getToken() !== 17) {
+      if (_scanner.getToken() === 5) {
+        if (!needsComma) {
+          handleError(4, [], []);
+        }
+        onSeparator(",");
+        scanNext();
+        if (_scanner.getToken() === 4 && allowTrailingComma) {
+          break;
+        }
+      } else if (needsComma) {
+        handleError(6, [], []);
+      }
+      if (!parseValue()) {
+        handleError(4, [], [
+          4,
+          5
+          /* SyntaxKind.CommaToken */
+        ]);
+      }
+      needsComma = true;
+    }
+    onArrayEnd();
+    if (_scanner.getToken() !== 4) {
+      handleError(8, [
+        4
+        /* SyntaxKind.CloseBracketToken */
+      ], []);
+    } else {
+      scanNext();
+    }
+    return true;
+  }
+  __name(parseArray, "parseArray");
+  function parseValue() {
+    switch (_scanner.getToken()) {
+      case 3:
+        return parseArray();
+      case 1:
+        return parseObject();
+      case 10:
+        return parseString(true);
+      default:
+        return parseLiteral();
+    }
+  }
+  __name(parseValue, "parseValue");
+  scanNext();
+  if (_scanner.getToken() === 17) {
+    if (options.allowEmptyContent) {
+      return true;
+    }
+    handleError(4, [], []);
+    return false;
+  }
+  if (!parseValue()) {
+    handleError(4, [], []);
+    return false;
+  }
+  if (_scanner.getToken() !== 17) {
+    handleError(9, [], []);
+  }
+  return true;
+}
+__name(visit, "visit");
+function getNodeType(value) {
+  switch (typeof value) {
+    case "boolean":
+      return "boolean";
+    case "number":
+      return "number";
+    case "string":
+      return "string";
+    case "object": {
+      if (!value) {
+        return "null";
+      } else if (Array.isArray(value)) {
+        return "array";
+      }
+      return "object";
+    }
+    default:
+      return "null";
+  }
+}
+__name(getNodeType, "getNodeType");
+export {
+  ParseErrorCode,
+  ParseOptions,
+  ScanError,
+  SyntaxKind,
+  contains,
+  createScanner,
+  findNodeAtLocation,
+  findNodeAtOffset,
+  getLocation,
+  getNodePath,
+  getNodeType,
+  getNodeValue,
+  parse,
+  parseTree,
+  visit
+};
+//# sourceMappingURL=json.js.map

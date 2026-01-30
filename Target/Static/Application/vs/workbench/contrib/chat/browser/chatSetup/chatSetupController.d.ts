@@ -1,0 +1,53 @@
+import { Disposable } from '../../../../../base/common/lifecycle.js';
+import { ICommandService } from '../../../../../platform/commands/common/commands.js';
+import { IConfigurationService } from '../../../../../platform/configuration/common/configuration.js';
+import { IDialogService } from '../../../../../platform/dialogs/common/dialogs.js';
+import { ILogService } from '../../../../../platform/log/common/log.js';
+import { IProductService } from '../../../../../platform/product/common/productService.js';
+import { IProgressService } from '../../../../../platform/progress/common/progress.js';
+import { IQuickInputService } from '../../../../../platform/quickinput/common/quickInput.js';
+import { ITelemetryService } from '../../../../../platform/telemetry/common/telemetry.js';
+import { IActivityService } from '../../../../services/activity/common/activity.js';
+import { IAuthenticationService } from '../../../../services/authentication/common/authentication.js';
+import { ILifecycleService } from '../../../../services/lifecycle/common/lifecycle.js';
+import { IExtensionsWorkbenchService } from '../../../extensions/common/extensions.js';
+import { ChatEntitlementContext, ChatEntitlementRequests } from '../../../../services/chat/common/chatEntitlementService.js';
+import { ChatSetupAnonymous, ChatSetupStep, ChatSetupResultValue } from './chatSetup.js';
+export interface IChatSetupControllerOptions {
+    readonly forceSignIn?: boolean;
+    readonly useSocialProvider?: string;
+    readonly useEnterpriseProvider?: boolean;
+    readonly additionalScopes?: readonly string[];
+    readonly forceAnonymous?: ChatSetupAnonymous;
+}
+export declare class ChatSetupController extends Disposable {
+    private readonly context;
+    private readonly requests;
+    private readonly telemetryService;
+    private readonly authenticationService;
+    private readonly extensionsWorkbenchService;
+    private readonly productService;
+    private readonly logService;
+    private readonly progressService;
+    private readonly activityService;
+    private readonly commandService;
+    private readonly dialogService;
+    private readonly configurationService;
+    private readonly lifecycleService;
+    private readonly quickInputService;
+    private readonly _onDidChange;
+    readonly onDidChange: import("../../../../../base/common/event.js").Event<void>;
+    private _step;
+    get step(): ChatSetupStep;
+    constructor(context: ChatEntitlementContext, requests: ChatEntitlementRequests, telemetryService: ITelemetryService, authenticationService: IAuthenticationService, extensionsWorkbenchService: IExtensionsWorkbenchService, productService: IProductService, logService: ILogService, progressService: IProgressService, activityService: IActivityService, commandService: ICommandService, dialogService: IDialogService, configurationService: IConfigurationService, lifecycleService: ILifecycleService, quickInputService: IQuickInputService);
+    private registerListeners;
+    private setStep;
+    setup(options?: IChatSetupControllerOptions): Promise<ChatSetupResultValue>;
+    private doSetup;
+    private signIn;
+    private install;
+    private doInstallWithRetry;
+    private doInstall;
+    setupWithProvider(options: IChatSetupControllerOptions): Promise<ChatSetupResultValue>;
+    private handleEnterpriseInstance;
+}

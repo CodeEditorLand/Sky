@@ -1,0 +1,60 @@
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { localize } from "../../../../nls.js";
+import { EditorInput } from "../../../common/editor/editorInput.js";
+import { URI } from "../../../../base/common/uri.js";
+import { Schemas } from "../../../../base/common/network.js";
+const agentSessionsWelcomeInputTypeId = "workbench.editors.agentSessionsWelcomeInput";
+class AgentSessionsWelcomeInput extends EditorInput {
+  static {
+    __name(this, "AgentSessionsWelcomeInput");
+  }
+  static {
+    this.ID = agentSessionsWelcomeInputTypeId;
+  }
+  static {
+    this.RESOURCE = URI.from({ scheme: Schemas.walkThrough, authority: "vscode_agent_sessions_welcome" });
+  }
+  get typeId() {
+    return AgentSessionsWelcomeInput.ID;
+  }
+  get editorId() {
+    return this.typeId;
+  }
+  toUntyped() {
+    return {
+      resource: AgentSessionsWelcomeInput.RESOURCE,
+      options: {
+        override: AgentSessionsWelcomeInput.ID,
+        pinned: false
+      }
+    };
+  }
+  get resource() {
+    return AgentSessionsWelcomeInput.RESOURCE;
+  }
+  matches(other) {
+    if (super.matches(other)) {
+      return true;
+    }
+    return other instanceof AgentSessionsWelcomeInput;
+  }
+  constructor(options = {}) {
+    super();
+    this._showTelemetryNotice = !!options.showTelemetryNotice;
+  }
+  getName() {
+    return localize("agentSessionsWelcome", "Welcome");
+  }
+  get showTelemetryNotice() {
+    return this._showTelemetryNotice;
+  }
+  set showTelemetryNotice(value) {
+    this._showTelemetryNotice = value;
+  }
+}
+export {
+  AgentSessionsWelcomeInput,
+  agentSessionsWelcomeInputTypeId
+};
+//# sourceMappingURL=agentSessionsWelcomeInput.js.map

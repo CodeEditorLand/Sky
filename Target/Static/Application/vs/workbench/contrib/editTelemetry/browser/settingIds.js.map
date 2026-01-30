@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["../../../../../../../../../../Dependency/Microsoft/Dependency/Editor/src/vs/workbench/contrib/editTelemetry/browser/settingIds.ts"],
+  "sourcesContent": ["/*---------------------------------------------------------------------------------------------\n *  Copyright (c) Microsoft Corporation. All rights reserved.\n *  Licensed under the MIT License. See License.txt in the project root for license information.\n *--------------------------------------------------------------------------------------------*/\n\nexport const EDIT_TELEMETRY_SETTING_ID = 'telemetry.editStats.enabled';\nexport const AI_STATS_SETTING_ID = 'editor.aiStats.enabled';\n"],
+  "mappings": "AAKO,MAAM,4BAA4B;AAClC,MAAM,sBAAsB;",
+  "names": []
+}

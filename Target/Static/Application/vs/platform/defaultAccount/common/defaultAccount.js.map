@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["../../../../../../../../../Dependency/Microsoft/Dependency/Editor/src/vs/platform/defaultAccount/common/defaultAccount.ts"],
+  "sourcesContent": ["/*---------------------------------------------------------------------------------------------\n *  Copyright (c) Microsoft Corporation. All rights reserved.\n *  Licensed under the MIT License. See License.txt in the project root for license information.\n *--------------------------------------------------------------------------------------------*/\n\nimport { createDecorator } from '../../instantiation/common/instantiation.js';\nimport { Event } from '../../../base/common/event.js';\nimport { IDefaultAccount } from '../../../base/common/defaultAccount.js';\n\nexport const IDefaultAccountService = createDecorator<IDefaultAccountService>('defaultAccountService');\n\nexport interface IDefaultAccountService {\n\n\treadonly _serviceBrand: undefined;\n\n\treadonly onDidChangeDefaultAccount: Event<IDefaultAccount | null>;\n\n\tgetDefaultAccount(): Promise<IDefaultAccount | null>;\n\tsetDefaultAccount(account: IDefaultAccount | null): void;\n}\n"],
+  "mappings": "AAKA,SAAS,uBAAuB;AAIzB,MAAM,yBAAyB,gBAAwC,uBAAuB;",
+  "names": []
+}

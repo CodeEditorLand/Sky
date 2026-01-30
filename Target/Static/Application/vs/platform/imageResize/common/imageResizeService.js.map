@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["../../../../../../../../../Dependency/Microsoft/Dependency/Editor/src/vs/platform/imageResize/common/imageResizeService.ts"],
+  "sourcesContent": ["/*---------------------------------------------------------------------------------------------\n *  Copyright (c) Microsoft Corporation. All rights reserved.\n *  Licensed under the MIT License. See License.txt in the project root for license information.\n *--------------------------------------------------------------------------------------------*/\n\nimport { createDecorator } from '../../instantiation/common/instantiation.js';\n\nexport const IImageResizeService = createDecorator<IImageResizeService>('imageResizeMainService');\n\n\nexport interface IImageResizeService {\n\n\treadonly _serviceBrand: undefined;\n\n\t/**\n\t * Resizes an image to a maximum dimension of 768px while maintaining aspect ratio.\n\t */\n\tresizeImage(data: Uint8Array | string, mimeType?: string): Promise<Uint8Array>;\n}\n"],
+  "mappings": "AAKA,SAAS,uBAAuB;AAEzB,MAAM,sBAAsB,gBAAqC,wBAAwB;",
+  "names": []
+}

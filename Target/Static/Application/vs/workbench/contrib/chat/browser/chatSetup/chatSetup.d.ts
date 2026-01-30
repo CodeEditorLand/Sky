@@ -1,0 +1,55 @@
+import { ICommandService } from '../../../../../platform/commands/common/commands.js';
+export type InstallChatClassification = {
+    owner: 'bpasero';
+    comment: 'Provides insight into chat installation.';
+    installResult: {
+        classification: 'SystemMetaData';
+        purpose: 'FeatureInsight';
+        comment: 'Whether the extension was installed successfully, cancelled or failed to install.';
+    };
+    installDuration: {
+        classification: 'SystemMetaData';
+        purpose: 'FeatureInsight';
+        comment: 'The duration it took to install the extension.';
+    };
+    signUpErrorCode: {
+        classification: 'SystemMetaData';
+        purpose: 'FeatureInsight';
+        comment: 'The error code in case of an error signing up.';
+    };
+    provider: {
+        classification: 'SystemMetaData';
+        purpose: 'FeatureInsight';
+        comment: 'The provider used for the chat installation.';
+    };
+};
+export type InstallChatEvent = {
+    installResult: 'installed' | 'alreadyInstalled' | 'cancelled' | 'failedInstall' | 'failedNotSignedIn' | 'failedSignUp' | 'failedNotTrusted' | 'failedNoSession' | 'failedMaybeLater' | 'failedEnterpriseSetup';
+    installDuration: number;
+    signUpErrorCode: number | undefined;
+    provider: string | undefined;
+};
+export declare enum ChatSetupAnonymous {
+    Disabled = 0,
+    EnabledWithDialog = 1,
+    EnabledWithoutDialog = 2
+}
+export declare enum ChatSetupStep {
+    Initial = 1,
+    SigningIn = 2,
+    Installing = 3
+}
+export declare enum ChatSetupStrategy {
+    Canceled = 0,
+    DefaultSetup = 1,
+    SetupWithoutEnterpriseProvider = 2,
+    SetupWithEnterpriseProvider = 3,
+    SetupWithGoogleProvider = 4,
+    SetupWithAppleProvider = 5
+}
+export type ChatSetupResultValue = boolean | undefined;
+export interface IChatSetupResult {
+    readonly success: ChatSetupResultValue;
+    readonly dialogSkipped: boolean;
+}
+export declare function refreshTokens(commandService: ICommandService): void;

@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["../../../../../../../../../../../Dependency/Microsoft/Dependency/Editor/src/vs/editor/contrib/colorPicker/browser/hoverColorPicker/hoverColorPicker.ts"],
+  "sourcesContent": ["/*---------------------------------------------------------------------------------------------\n *  Copyright (c) Microsoft Corporation. All rights reserved.\n *  Licensed under the MIT License. See License.txt in the project root for license information.\n *--------------------------------------------------------------------------------------------*/\n\nimport { IPartialEditorMouseEvent, MouseTargetType } from '../../../../browser/editorBrowser.js';\nimport { ColorDecorationInjectedTextMarker } from '../colorDetector.js';\n\n\nexport function isOnColorDecorator(mouseEvent: IPartialEditorMouseEvent): boolean {\n\tconst target = mouseEvent.target;\n\treturn !!target\n\t\t&& target.type === MouseTargetType.CONTENT_TEXT\n\t\t&& target.detail.injectedText?.options.attachedData === ColorDecorationInjectedTextMarker;\n}\n"],
+  "mappings": ";;AAMA,SAAS,yCAAyC;AAG5C,SAAU,mBAAmB,YAAoC;AACtE,QAAM,SAAS,WAAW;AAC1B,SAAO,CAAC,CAAC,UACL,OAAO,SAAI,KACX,OAAO,OAAO,cAAc,QAAQ,iBAAiB;AAC1D;AALgB;",
+  "names": []
+}

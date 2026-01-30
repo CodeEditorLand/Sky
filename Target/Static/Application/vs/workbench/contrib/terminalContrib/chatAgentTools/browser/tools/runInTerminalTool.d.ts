@@ -1,0 +1,78 @@
+import { CancellationToken } from '../../../../../../base/common/cancellation.js';
+import { Disposable } from '../../../../../../base/common/lifecycle.js';
+import { ResourceMap } from '../../../../../../base/common/map.js';
+import { OperatingSystem } from '../../../../../../base/common/platform.js';
+import { IConfigurationService } from '../../../../../../platform/configuration/common/configuration.js';
+import { IInstantiationService, type ServicesAccessor } from '../../../../../../platform/instantiation/common/instantiation.js';
+import { ILabelService } from '../../../../../../platform/label/common/label.js';
+import { IStorageService } from '../../../../../../platform/storage/common/storage.js';
+import { ITerminalLogService, ITerminalProfile } from '../../../../../../platform/terminal/common/terminal.js';
+import { IRemoteAgentService } from '../../../../../services/remote/common/remoteAgentService.js';
+import { IChatService } from '../../../../chat/common/chatService/chatService.js';
+import { CountTokensCallback, ILanguageModelToolsService, IPreparedToolInvocation, IToolData, IToolImpl, IToolInvocation, IToolInvocationPreparationContext, IToolResult, ToolProgress } from '../../../../chat/common/tools/languageModelToolsService.js';
+import { ITerminalChatService, ITerminalService } from '../../../../terminal/browser/terminal.js';
+import { ITerminalProfileResolverService } from '../../../../terminal/common/terminal.js';
+import { type IToolTerminal } from '../toolTerminalCreator.js';
+import { ITerminalSandboxService } from '../../common/terminalSandboxService.js';
+import { IWorkspaceContextService } from '../../../../../../platform/workspace/common/workspace.js';
+import { IHistoryService } from '../../../../../services/history/common/history.js';
+import { IChatWidgetService } from '../../../../chat/browser/chat.js';
+export declare function createRunInTerminalToolData(accessor: ServicesAccessor): Promise<IToolData>;
+export interface IRunInTerminalInputParams {
+    command: string;
+    explanation: string;
+    isBackground: boolean;
+    timeout?: number;
+}
+export declare class RunInTerminalTool extends Disposable implements IToolImpl {
+    protected readonly _chatService: IChatService;
+    private readonly _configurationService;
+    private readonly _historyService;
+    private readonly _instantiationService;
+    private readonly _labelService;
+    private readonly _languageModelToolsService;
+    private readonly _remoteAgentService;
+    private readonly _storageService;
+    private readonly _terminalChatService;
+    private readonly _logService;
+    private readonly _terminalService;
+    private readonly _workspaceContextService;
+    private readonly _chatWidgetService;
+    private readonly _sandboxService;
+    private readonly _terminalToolCreator;
+    private readonly _treeSitterCommandParser;
+    private readonly _telemetry;
+    private readonly _commandArtifactCollector;
+    protected readonly _profileFetcher: TerminalProfileFetcher;
+    private readonly _commandLineRewriters;
+    private readonly _commandLineAnalyzers;
+    private readonly _commandLinePresenters;
+    protected readonly _sessionTerminalAssociations: ResourceMap<IToolTerminal>;
+    protected readonly _osBackend: Promise<OperatingSystem>;
+    private static readonly _backgroundExecutions;
+    static getBackgroundOutput(id: string): string;
+    constructor(_chatService: IChatService, _configurationService: IConfigurationService, _historyService: IHistoryService, _instantiationService: IInstantiationService, _labelService: ILabelService, _languageModelToolsService: ILanguageModelToolsService, _remoteAgentService: IRemoteAgentService, _storageService: IStorageService, _terminalChatService: ITerminalChatService, _logService: ITerminalLogService, _terminalService: ITerminalService, _workspaceContextService: IWorkspaceContextService, _chatWidgetService: IChatWidgetService, _sandboxService: ITerminalSandboxService);
+    prepareToolInvocation(context: IToolInvocationPreparationContext, token: CancellationToken): Promise<IPreparedToolInvocation | undefined>;
+    invoke(invocation: IToolInvocation, _countTokens: CountTokensCallback, _progress: ToolProgress, token: CancellationToken): Promise<IToolResult>;
+    private _handleTerminalVisibility;
+    private _initBackgroundTerminal;
+    private _initForegroundTerminal;
+    private _registerInputListener;
+    private _restoreTerminalAssociations;
+    private _setupProcessIdAssociation;
+    private _associateProcessIdWithSession;
+    private _removeProcessIdAssociation;
+    private _cleanupSessionTerminals;
+    private _getExecuteStrategy;
+}
+export declare class TerminalProfileFetcher {
+    private readonly _configurationService;
+    private readonly _terminalProfileResolverService;
+    private readonly _remoteAgentService;
+    readonly osBackend: Promise<OperatingSystem>;
+    constructor(_configurationService: IConfigurationService, _terminalProfileResolverService: ITerminalProfileResolverService, _remoteAgentService: IRemoteAgentService);
+    getCopilotProfile(): Promise<ITerminalProfile>;
+    getCopilotShell(): Promise<string>;
+    private _getChatTerminalProfile;
+    private _isValidChatAgentTerminalProfile;
+}

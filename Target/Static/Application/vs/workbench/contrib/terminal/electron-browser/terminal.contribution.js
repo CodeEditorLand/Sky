@@ -1,0 +1,29 @@
+import { registerSingleton } from "../../../../platform/instantiation/common/extensions.js";
+import { registerMainProcessRemoteService } from "../../../../platform/ipc/electron-browser/services.js";
+import { Registry } from "../../../../platform/registry/common/platform.js";
+import { ILocalPtyService, TerminalIpcChannels } from "../../../../platform/terminal/common/terminal.js";
+import { Extensions as WorkbenchExtensions, registerWorkbenchContribution2 } from "../../../common/contributions.js";
+import { ITerminalProfileResolverService } from "../common/terminal.js";
+import { TerminalNativeContribution } from "./terminalNativeContribution.js";
+import { ElectronTerminalProfileResolverService } from "./terminalProfileResolverService.js";
+import { LocalTerminalBackendContribution } from "./localTerminalBackend.js";
+registerMainProcessRemoteService(ILocalPtyService, TerminalIpcChannels.LocalPty);
+registerSingleton(
+  ITerminalProfileResolverService,
+  ElectronTerminalProfileResolverService,
+  1
+  /* InstantiationType.Delayed */
+);
+const workbenchRegistry = Registry.as(WorkbenchExtensions.Workbench);
+registerWorkbenchContribution2(
+  LocalTerminalBackendContribution.ID,
+  LocalTerminalBackendContribution,
+  1
+  /* WorkbenchPhase.BlockStartup */
+);
+workbenchRegistry.registerWorkbenchContribution(
+  TerminalNativeContribution,
+  3
+  /* LifecyclePhase.Restored */
+);
+//# sourceMappingURL=terminal.contribution.js.map

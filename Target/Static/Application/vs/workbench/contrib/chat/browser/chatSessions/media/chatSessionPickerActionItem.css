@@ -1,0 +1,30 @@
+.monaco-action-bar .action-item.chat-sessionPicker-item {
+  overflow: hidden;
+}
+.monaco-action-bar .action-item .chat-session-option-picker {
+  align-items: center;
+  overflow: hidden;
+  .chat-session-option-label {
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  span.codicon {
+    font-size: 12px;
+    margin-left: 2px;
+  }
+  span.codicon.codicon-chevron-down {
+    font-size: 12px;
+    margin-left: 2px;
+  }
+}
+.monaco-action-bar .action-item.locked .chat-session-option-picker {
+  color: var(--vscode-disabledForeground);
+  cursor: default;
+}
+.monaco-action-bar .action-item.locked .chat-session-option-picker .codicon {
+  color: var(--vscode-disabledForeground);
+}
+.monaco-action-bar .action-item.locked {
+  pointer-events: none;
+}
+/*# sourceMappingURL=chatSessionPickerActionItem.css.map */

@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["../../../../../../../../../../../Dependency/Microsoft/Dependency/Editor/src/vs/workbench/contrib/chat/common/widget/chatLayoutService.ts"],
+  "sourcesContent": ["/*---------------------------------------------------------------------------------------------\n *  Copyright (c) Microsoft Corporation. All rights reserved.\n *  Licensed under the MIT License. See License.txt in the project root for license information.\n *--------------------------------------------------------------------------------------------*/\n\nimport { IObservable } from '../../../../../base/common/observable.js';\nimport { createDecorator } from '../../../../../platform/instantiation/common/instantiation.js';\n\nexport const IChatLayoutService = createDecorator<IChatLayoutService>('chatLayoutService');\n\nexport interface IChatLayoutService {\n\treadonly _serviceBrand: undefined;\n\n\treadonly fontFamily: IObservable<string | null>;\n\treadonly fontSize: IObservable<number>;\n}\n"],
+  "mappings": "AAMA,SAAS,uBAAuB;AAEzB,MAAM,qBAAqB,gBAAoC,mBAAmB;",
+  "names": []
+}

@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["../../../../../../../../../Dependency/Microsoft/Dependency/Editor/src/vs/editor/common/tokens/common.ts"],
+  "sourcesContent": ["/*---------------------------------------------------------------------------------------------\n *  Copyright (c) Microsoft Corporation. All rights reserved.\n *  Licensed under the MIT License. See License.txt in the project root for license information.\n *--------------------------------------------------------------------------------------------*/\n\nexport class RateLimiter {\n\tprivate _lastRun: number;\n\tprivate readonly _minimumTimeBetweenRuns: number;\n\n\tconstructor(public readonly timesPerSecond: number = 5) {\n\t\tthis._lastRun = 0;\n\t\tthis._minimumTimeBetweenRuns = 1000 / timesPerSecond;\n\t}\n\n\tpublic runIfNotLimited(callback: () => void): void {\n\t\tconst now = Date.now();\n\t\tif (now - this._lastRun >= this._minimumTimeBetweenRuns) {\n\t\t\tthis._lastRun = now;\n\t\t\tcallback();\n\t\t}\n\t}\n}\n"],
+  "mappings": ";;AAKM,MAAO,YAAW;EALxB,OAKwB;;;EAIvB,YAA4B,iBAAyB,GAAC;AAA1B,SAAA,iBAAA;AAC3B,SAAK,WAAW;AAChB,SAAK,0BAA0B,MAAO;EACvC;EAEO,gBAAgB,UAAoB;AAC1C,UAAM,MAAM,KAAK,IAAG;AACpB,QAAI,MAAM,KAAK,YAAY,KAAK,yBAAyB;AACxD,WAAK,WAAW;AAChB,eAAQ;IACT;EACD;;",
+  "names": []
+}

@@ -1,0 +1,38 @@
+import './media/chatSetup.css';
+import { Lazy } from '../../../../../base/common/lazy.js';
+import { ICommandService } from '../../../../../platform/commands/common/commands.js';
+import { IInstantiationService } from '../../../../../platform/instantiation/common/instantiation.js';
+import { ChatEntitlementContext } from '../../../../services/chat/common/chatEntitlementService.js';
+import { ChatSetupController } from './chatSetupController.js';
+import { IChatSetupResult, ChatSetupAnonymous } from './chatSetup.js';
+export declare class ChatSetup {
+    private readonly context;
+    private readonly controller;
+    private readonly telemetryService;
+    private readonly layoutService;
+    private readonly keybindingService;
+    private readonly chatEntitlementService;
+    private readonly logService;
+    private readonly configurationService;
+    private readonly widgetService;
+    private readonly workspaceTrustRequestService;
+    private readonly markdownRendererService;
+    private static instance;
+    static getInstance(instantiationService: IInstantiationService, context: ChatEntitlementContext, controller: Lazy<ChatSetupController>): ChatSetup;
+    private pendingRun;
+    private skipDialogOnce;
+    private constructor();
+    skipDialog(): void;
+    run(options?: {
+        disableChatViewReveal?: boolean;
+        forceSignInDialog?: boolean;
+        additionalScopes?: readonly string[];
+        forceAnonymous?: ChatSetupAnonymous;
+    }): Promise<IChatSetupResult>;
+    private doRun;
+    private showDialog;
+    private getButtons;
+    private getDialogTitle;
+    private createDialogFooter;
+}
+export declare function refreshTokens(commandService: ICommandService): void;

@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["../../../../../../../../../../Dependency/Microsoft/Dependency/Editor/src/vs/workbench/contrib/editTelemetry/browser/randomService.ts"],
+  "sourcesContent": ["/*---------------------------------------------------------------------------------------------\n *  Copyright (c) Microsoft Corporation. All rights reserved.\n *  Licensed under the MIT License. See License.txt in the project root for license information.\n *--------------------------------------------------------------------------------------------*/\n\nimport { generateUuid } from '../../../../base/common/uuid.js';\nimport { createDecorator } from '../../../../platform/instantiation/common/instantiation.js';\n\nexport const IRandomService = createDecorator<IRandomService>('randomService');\n\nexport interface IRandomService {\n\treadonly _serviceBrand: undefined;\n\n\tgenerateUuid(): string;\n\tgeneratePrefixedUuid(prefix: string): string;\n}\n\nexport class RandomService implements IRandomService {\n\treadonly _serviceBrand: undefined;\n\n\tgenerateUuid(): string {\n\t\treturn generateUuid();\n\t}\n\n\t/** Namespace should be 3 letter. */\n\tgeneratePrefixedUuid(namespace: string): string {\n\t\treturn `${namespace}-${this.generateUuid()}`;\n\t}\n}\n"],
+  "mappings": ";;AAKA,SAAS,oBAAoB;AAC7B,SAAS,uBAAuB;AAEzB,MAAM,iBAAiB,gBAAgC,eAAe;AASvE,MAAO,cAAa;EAjB1B,OAiB0B;;;EAGzB,eAAY;AACX,WAAO,aAAY;EACpB;;EAGA,qBAAqB,WAAiB;AACrC,WAAO,GAAG,SAAS,IAAI,KAAK,aAAY,CAAE;EAC3C;;",
+  "names": []
+}

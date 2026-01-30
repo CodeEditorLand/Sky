@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["../../../../../../../../../../Dependency/Microsoft/Dependency/Editor/src/vs/workbench/contrib/tags/electron-browser/tags.contribution.ts"],
+  "sourcesContent": ["/*---------------------------------------------------------------------------------------------\n *  Copyright (c) Microsoft Corporation. All rights reserved.\n *  Licensed under the MIT License. See License.txt in the project root for license information.\n *--------------------------------------------------------------------------------------------*/\n\nimport { Registry } from '../../../../platform/registry/common/platform.js';\nimport { IWorkbenchContributionsRegistry, Extensions as WorkbenchExtensions } from '../../../common/contributions.js';\nimport { WorkspaceTags } from './workspaceTags.js';\nimport { LifecyclePhase } from '../../../services/lifecycle/common/lifecycle.js';\n\n// Register Workspace Tags Contribution\nRegistry.as<IWorkbenchContributionsRegistry>(WorkbenchExtensions.Workbench).registerWorkbenchContribution(WorkspaceTags, LifecyclePhase.Eventually);\n"],
+  "mappings": "AAKA,SAAS,gBAAgB;AACzB,SAA0C,cAAc,2BAA2B;AACnF,SAAS,qBAAqB;AAI9B,SAAS,GAAoC,oBAAoB,SAAS,EAAE;EAA8B;EAAa;;AAAA;",
+  "names": []
+}

@@ -1,0 +1,9 @@
+import { Event } from '../../../base/common/event.js';
+import { IDefaultAccount } from '../../../base/common/defaultAccount.js';
+export declare const IDefaultAccountService: import("../../instantiation/common/instantiation.js").ServiceIdentifier<IDefaultAccountService>;
+export interface IDefaultAccountService {
+    readonly _serviceBrand: undefined;
+    readonly onDidChangeDefaultAccount: Event<IDefaultAccount | null>;
+    getDefaultAccount(): Promise<IDefaultAccount | null>;
+    setDefaultAccount(account: IDefaultAccount | null): void;
+}

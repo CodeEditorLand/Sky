@@ -1,0 +1,51 @@
+---
+export const { On } = Astro.props;
+---
+
+<!-- Wind Preload Script -->
+<script is:inline type="module" defer>
+	import { Install } from "@codeeditorland/wind";
+
+	Install({ Configuration });
+</script>
+
+<!-- Wind Bootstrap Script (Atomic) -->
+<script is:inline type="module" defer define:vars={{ On }}>
+	import { bootstrap } from "@codeeditorland/wind/Bootstrap";
+
+	console.log("[Sky] Starting atomic bootstrap...");
+
+	bootstrap({
+		debugMode: On,
+		verboseLogging: On,
+		showStatusUI: true,
+		pauseBetweenStages: On,
+		enablePerformanceTracking: true,
+	})
+		.then((result) => {
+			console.log("[Sky] Bootstrap completed:", result.success);
+
+			if (result.success) {
+				console.log("[Sky] All stages completed successfully");
+				console.log(
+					"[Sky] Total duration:",
+					result.totalDuration.toFixed(0),
+					"ms",
+				);
+			} else {
+				console.error("[Sky] Bootstrap failed");
+			}
+		})
+		.catch((error) => {
+			console.error("[Sky] Fatal bootstrap error:", error);
+		});
+</script>
+
+<!-- VSCode Workbench Script -->
+<script
+	is:inline
+	type="module"
+	src={Bust(
+		"/Static/Application/vs/code/electron-browser/workbench/workbench.js",
+	)}
+	defer></script>

@@ -5,6 +5,7 @@
 import Layout from "../Function/Markup/Base.astro";
 import BrowserWorkbench from "../Workbench/Browser.astro";
 import DefaultWorkbench from "../Workbench/Default.astro";
+import WindWorkbench from "../Workbench/Wind.astro";
 
 // Environment detection
 const On =
@@ -173,7 +174,7 @@ const Bust = (Base: string): string =>
 	/>
 
 	<!-- Global VSCode File Root -->
-	<script is:inline type="module" define:vars={{ Site }} slot="Head">
+	<script is:inline type="module" slot="Head">
 		globalThis._VSCODE_FILE_ROOT = `${window.location.origin}/Static/Application/`;
 	</script>
 
@@ -189,9 +190,9 @@ const Bust = (Base: string): string =>
 	</script>
 
 	<!-- Bootstrap Configuration -->
-	<script is:inline type="module" slot="Head">
+	<script is:inline type="module" slot="Head" define:vars={{ On }}>
 		// Set debug mode based on environment
-		globalThis.__BOOTSTRAP_DEBUG__ = ${On ? 'true' : 'false'};
+		globalThis.__BOOTSTRAP_DEBUG__ = On;
 	</script>
 
 	<!-- Worker Scripts -->
@@ -254,57 +255,7 @@ const Bust = (Base: string): string =>
 						defer
 					/>
 				) : (
-					<Fragment>
-						<!-- Wind Preload Script -->
-						<script
-							is:inline
-							type="module"
-							defer
-						>
-							import { Install } from '@codeeditorland/wind';
-							Install({ Configuration });
-						</script>
-
-						<!-- Wind Bootstrap Script (Atomic) -->
-						<script
-							is:inline
-							type="module"
-							defer
-						>
-							import { bootstrap } from '@codeeditorland/wind/Bootstrap';
-							
-							console.log('[Sky] Starting atomic bootstrap...');
-							
-							bootstrap({
-								debugMode: ${On},
-								verboseLogging: ${On},
-								showStatusUI: true,
-								pauseBetweenStages: ${On},
-								enablePerformanceTracking: true
-							}).then((result) => {
-								console.log('[Sky] Bootstrap completed:', result.success);
-
-								if (result.success) {
-									console.log('[Sky]  All stages completed successfully');
-									console.log('[Sky] Total duration:', result.totalDuration.toFixed(0), 'ms');
-								} else {
-									console.error('[Sky]  Bootstrap failed');
-								}
-							}).catch((error) => {
-								console.error('[Sky]  Fatal bootstrap error:', error);
-							});
-						</script>
-
-						<!-- VSCode Workbench Script -->
-						<script
-							is:inline
-							type="module"
-							src={Bust(
-								"/Static/Application/vs/code/electron-browser/workbench/workbench.js",
-							)}
-							defer
-						/>
-					</Fragment>
+					<WindWorkbench />
 				)}
 			</Fragment>
 		)

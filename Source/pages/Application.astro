@@ -16,11 +16,11 @@ const Bundle = process.env["Bundle"] === "true";
 
 const Browser = process.env["Browser"] === "true";
 
-const Site = Astro.site;
+const Wind = process.env["Wind"] === "true";
 
 const Worker = `/Worker.js?BASE_REMOTE=${encodeURIComponent(Astro.url.origin)}`;
 
-const Bust = (Base: string): string =>
+export const Bust = (Base: string): string =>
 	`${Base}${Base.includes("?") ? "&" : "?"}Time=${encodeURIComponent(Date.now())}`;
 ---
 
@@ -213,7 +213,13 @@ const Bust = (Base: string): string =>
 					)}
 				/>
 
-				{Browser ? <BrowserWorkbench /> : <DefaultWorkbench />}
+				{Wind ? (
+					<WindWorkbench Bust={Bust} />
+				) : Browser ? (
+					<BrowserWorkbench />
+				) : (
+					<DefaultWorkbench />
+				)}
 			</Fragment>
 		) : (
 			<Fragment>
@@ -245,7 +251,9 @@ const Bust = (Base: string): string =>
 					)}
 				/>
 
-				{Browser ? (
+				{Wind ? (
+					<WindWorkbench Bust={Bust} />
+				) : Browser ? (
 					<script
 						is:inline
 						type="module"
@@ -255,7 +263,7 @@ const Bust = (Base: string): string =>
 						defer
 					/>
 				) : (
-					<WindWorkbench />
+					<DefaultWorkbench />
 				)}
 			</Fragment>
 		)

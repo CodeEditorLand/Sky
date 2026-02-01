@@ -1,27 +1,34 @@
 ---
-export const { On } = Astro.props;
+// Receive Bust as a component prop instead of importing circularly
+const { Bust } = Astro.props;
 ---
 
 <!-- Wind Preload Script -->
 <script is:inline type="module" defer>
 	import { Install } from "@codeeditorland/wind";
 
-	Install({ Configuration });
+	Install();
 </script>
 
-<!-- Wind Bootstrap Script (Atomic) -->
-<script is:inline type="module" defer define:vars={{ On }}>
-	import { bootstrap } from "@codeeditorland/wind/Bootstrap";
+<!-- Wind Effect-TS Bootstrap Script -->
+<script is:inline type="module" defer>
+	import { runBootstrap, TauriLiveLayer } from "@codeeditorland/wind/Effect";
+	import { Runtime } from "effect";
 
-	console.log("[Sky] Starting atomic bootstrap...");
+	console.log("[Sky] Starting Effect-TS bootstrap...");
 
-	bootstrap({
-		debugMode: On,
-		verboseLogging: On,
-		showStatusUI: true,
-		pauseBetweenStages: On,
-		enablePerformanceTracking: true,
-	})
+	const debugMode =
+		typeof globalThis !== "undefined" &&
+		globalThis.__BOOTSTRAP_DEBUG__ === true;
+
+	// Run the bootstrap with Tauri layer
+	Runtime.runPromise(Runtime.defaultRuntime)(
+		runBootstrap({
+			debugMode,
+			verboseLogging: debugMode,
+			pauseBetweenStages: debugMode,
+		}).pipe(TauriLiveLayer),
+	)
 		.then((result) => {
 			console.log("[Sky] Bootstrap completed:", result.success);
 
@@ -32,6 +39,16 @@ export const { On } = Astro.props;
 					result.totalDuration.toFixed(0),
 					"ms",
 				);
+
+				// Log each stage result
+				for (const stage of result.stages) {
+					console.log(
+						`[Sky] Stage "${stage.stageName}":`,
+						stage.success
+							? `✓ (${stage.duration}ms)`
+							: `✗ ${stage.error?.message || "failed"}`,
+					);
+				}
 			} else {
 				console.error("[Sky] Bootstrap failed");
 			}
